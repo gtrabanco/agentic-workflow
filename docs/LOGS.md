@@ -4689,3 +4689,154 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 2 (`7d430265` journal-fragment rider repair → the settle commit carrying this entry)
 - **Summary:** Owner instruction "Create the PR" executed. The pre-push gate blocked at `crate-suite-node`: the fragment `c9dd1d88` committed to main by another session carried kind `manual` — outside `journal-fragment-grammar@1`'s closed mechanical|narrative set, its branch slug contradicting its own content header — so `journal aggregate` refused every pending set and the crate's carrier probe failed on any checkout of main. Rider repair `7d430265`: renamed from the entry's own header facts (branch `docs-domain-separation-safeguard`, kind `narrative`, session `local`); crate suites green both runtimes; full local gate `PASS — 12 step(s)`. Pushed and opened PR #455 (`Closes #433`); roadmap row settled to `done · [#455]` (hand edit — the `## Fixes` row has no deterministic writer, disclosed); projection re-rendered, `docs-generate --check` exit 0.
 - **Next:** Owner merge decision on PR #455; after merge the `## Fixes` row is removed per the table's own rule.
+
+## 2026-11-07T18:12:44Z — feat/432-model-memory-tier-0 — manual
+- **Commits:** 26 (`d391280b…7e90382e`)
+- **Files:** 29 files
+- **Summary:** Commit the external verifier's blockers-only receipt and integrate main (cf041cca) — the branch's last blocker.
+- **Decisions:** 1) The verifier's receipt was the tree's only dirty path; the verifier does not commit, so it had to land as a commit before audit-pr-gate hygiene could pass. 2) main merge resolved three conflicts: LOGS.md and ROADMAP.md are append-only indexes so both sides' rows survive verbatim; SKILL_CONTEXT_BUDGETS.json could not be unioned — both branches had re-based real ceilings, so each ceiling was taken from the side the merged tree actually is and verified by measurement (--documents, --routes, DESIGN.md). 3) S15 at the full local gate is red: main's cf041cca landed a fragment with kind 'manual' outside the closed set. Reproduced at origin/main itself; not repaired here — this unit's diff touches no main fragment.
+- **Next:** Run git push origin feat/432-model-memory-tier-0 and open/close PR #447 to merge it. Before merge, fix main's S15 red: conform the cf041cca fragment's kind from 'manual' to 'narrative' so the full gate passes and the push gate is clean.
+
+## 20261107T175204Z — feat/432-model-memory-tier-0 — narrative
+- **Commits:** 13 (`0cad771e…3de02abd`) computed at the pre-merge head `3de02abd` — authored by the dispatched implementer session and two log fragments; this verifying session committed nothing
+- **Files:** 14 files in the range `35fc6e1e..3de02abd`
+- **Summary:** Read-only external verify of fix/432-model-memory-tier-0. The delta verdict at `35fc6e1e` returned 2 blockers — 11 `provenance` cells minted by the batch-2 journal migration asserting `repository` for sources outside the repository, and a `## Retirements` section still claiming nothing was retired — plus 7 advisories; they were triaged with the owner into F1–F7, the route-B correction batch was dispatched to the local apply command and re-checked at `335da04c` → VERIFIED, 0 blockers, 5 advisories. Every quoted number was re-run in the verifying session, the red-first state included: a scratch `git archive` of `99fbb547` gave 15 pass / 2 fail naming exactly the 6 offenders; the same suite at the head gives 17 pass / 0 fail.
+- **Decisions:** Route B — keep the migration, re-label inside the closed four-kind set — chosen over A (revert batch 2) and C (add a fifth kind) on measurement, zero taste: 11 of 148 cells were wrong, 7 already expressible as `version-pinned doc` or `owner answer`, and 3 (2%) with a kind still unclaimed, so one clause widened `version-pinned doc` to an installed-environment observation that records the version observed, instead of growing a closed vocabulary, amending #432 verbatim S1 and touching the 13 surfaces that name the set. The verifier premise was corrected mid-batch and is on the record: pi-serena carries no pin at this head (added `406ce8a7`, removed `f930223a`), so `67 INV-003` lands at `inferred` with the pin left uninvented. Role boundary held: receipts and findings rows only, code and commits stay with the implementer. This entry went to the journal carrier instead of `docs/LOGS.md` because a merge of `origin/main` (`cf041cca`) is in progress in this worktree with `docs/LOGS.md`, `docs/ROADMAP.md` and `docs/workflow/SKILL_CONTEXT_BUDGETS.json` unmerged — appending to a conflicted ledger and committing under a docs(log) message mid-merge would sweep a concurrent conversation's ~70 staged paths into it.
+- **Next:** Let the in-flight `origin/main` merge finish (its three conflicted paths are resolved in the working files, unmerged in the index), then `journal aggregate` folds this fragment into `docs/LOGS.md` by its sanctioned writer — the aggregator is LOGS.md's only writer while the carrier is opted in, and it stays out of the merge window. Then push and merge PR #447: forge-checked at 17:52Z it is state OPEN · mergeable CONFLICTING · head `335da04c` · mergedAt null, and the merge closes #432. Carried forward as recorded-not-repaired: `pi-compat-guard` red in the network leg of the local gate (pre-existing, `docs/fix/405-journal-fragments/SPEC.md` L14, zero `packages/` bytes in this range), the golden-fixture weak-model smoke still skipped per D1, and the `67:26` time-dependent reason clause named in the recheck receipt.
+
+## 20261107T164857Z — feat/432-model-memory-tier-0 — narrative
+- **Summary:** correction batch 3 of #432, folded against the second external-verify receipt. Route B (D7): the batch-2 provenance migration stands and its 11 mislabeled cells are re-derived inside the closed four-kind set — 5 to `version-pinned doc` (the installed tool's own output), 2 to `owner answer` (`gh` forge reads), 4 to `version-pinned doc` at the `inferred` ceiling (config/service reads and a `/latest` registry fetch that record no version; the project pins no `@bacnh85/pi-serena` at this head). DESIGN.md § Provenance gained the installed-environment clause on one line, so the prose-gate anchor still resolves at line 61. The retirement declaration, the swept surface, the hand-off and the freeze marker were re-cut; F1 is pinned in the same suite that judges the rule, red at 99fbb547, green at b3e33756.
+- **Decisions:** D7 (route B; no fifth kind — measured need 3/148; no revert) · the clause rides the same batch on the verifier's recommendation · D6 is not edited; its LEDGERS quotation is bounded by a new dated line (that sentence is the findings-carrier rule, not a planning-evidence rule) · the dated notes above the four touched journals now state the correction.
+- **Next:** the owner's external verify of this head, then push and merge PR #447 (Closes #432). `open-rows: 0`; gates green (root suite 87 PASS / 0 FAIL, knowledge-honesty 17 / 0, crates 388 / 0 and 389 / 0).
+
+## 2026-11-07T15:13:12Z — docs/domain-separation-safeguard — narrative
+- **Commits:** 3 (`7d8dc658…507d12d0`)
+- **Files:** 11 files
+
+## 2026-11-07T13:32:00Z — docs/journal-aggregate-pr-batch — manual
+- **Commits:** 0 (no file changes — diagnostic session only)
+- **Files:** (none — /tmp cleanup only)
+- **Summary:** Cleaned ~344,000 stale inode files from /tmp (test fixtures: journal-*, changeset-*, release-*, session-*, ledger-*, audit-pr-gate-hygiene-*, ceremony-*, review-receipt-emit-*, telemetry-*). Reduced inodes from 344,993 to 1,139 (-99.7%).
+- **Decisions:** No new code — all deletions were test fixture directories no longer in use. Left untouched the directories that may be related to the active session (unit-route-*, test-impact-*).
+- **Next:** No pending work — one-shot cleanup completed
+
+## 2026-11-07T13:31:01Z — docs/journal-aggregate-pr-batch — manual
+- **Commits:** 0 (GitHub issues only; no file changes on this branch)
+- **Files:** — (issue #444 created on GitHub, no committed files touched)
+- **Summary:** Clef/decision-model evaluation for agentic-workflow and creation of issue #444 (decision-substrate)
+- **Decisions:** The category has validated beyond TypeSafe: Clef/Clef-flash (Cloudflare), OpenAI Decisions API GA, AWS Strands Decider 2B, Perplexity decider — all converging on the same POST /v1/systemone API shape; the provider-neutral adapter design (parked N1 from 2026-09-29) is now recoverable. Issue #444 created with blocked-by:#427 (native) and soft Related: #201, #413, #388, #192 — the substrate is a signal layer, never an authority, on the deterministic surfaces that stay model-free. The owner's config-optional design ('works if configured, off otherwise, like embeddings') matches the parked adapter spec exactly.
+- **Next:** Owner review of issue #444 and the parked N1 design reactivation path
+
+## 2026-11-07T13:31:01Z — docs/journal-aggregate-pr-batch — manual
+- **Commits:** 0 (GitHub issues only; no file changes on this branch)
+- **Files:** docs/LOGS.md (uncommitted, appended)
+- **Summary:** Clef/decision-model evaluation for agentic-workflow and creation of issue #444 (decision-substrate)
+- **Decisions:** The category has validated beyond TypeSafe: Clef/Clef-flash (Cloudflare), OpenAI Decisions API GA, AWS Strands Decider 2B, Perplexity decider — all converging on the same POST /v1/systemone API shape; the provider-neutral adapter design (parked N1 from 2026-09-29) is now recoverable. Issue #444 created with blocked-by:#427 (native) and soft Related: #201, #413, #388, #192 — the substrate is a signal layer, never an authority, on the deterministic surfaces that stay model-free. The owner's config-optional design ('works if configured, off otherwise, like embeddings') matches the parked adapter spec exactly.
+- **Next:** Owner review of issue #444 and the parked N1 design reactivation path
+
+## 2026-11-07T13:30:57Z — docs/journal-aggregate-pr-batch — manual
+- **Commits:** 0 (GitHub issues only)
+- **Files:** docs/LOGS.md (uncommitted, appended), GitHub issue #443
+- **Summary:** Debugged whether embeddings are actually used in nan: confirmed via NaN usage API that embeddings were called 302 times (1,610,728 tokens) only on 2026-11-06 at indexing time, with zero query-side embedding calls since. Root cause: CLI defaults to keyword mode, no skill passes --mode hybrid, and embedPendingChunks has no retry/backoff/pacing (429 aborts the pass).
+- **Decisions:** Owner selected: (1) auto-hybrid when provider configured + chunks embedded, (2) --sync embeds by default with backoff, (3) query stays read-only, (4) /aw-index as native command (code only, not skill), (5) backfill approved (~2.6M tokens), (6) Open WebUI excluded from scope.
+- **Next:** Create issue #443 with needs-triage tag (done); owner reviews issue and routes to unit-lane
+
+## 2026-11-07T13:29:31Z — docs/journal-aggregate-pr-batch — manual
+- **Commits:** 1 (`3a2334c3…3a2334c3`)
+- **Files:** .github/workflows/agentic-workflow-journal.yml, template/.agentic-workflow/journal.md, template/.github/workflows/agentic-workflow-journal.yml.example
+- **Summary:** Fix journal-aggregate CI failure by switching from direct push to batched PR mode
+- **Decisions:** Repository rules require a pull request for every change to main (GH013), and the journal-aggregate workflow pushed directly to main. Solution: weekly batch mode (schedule + dispatch), one PR per week via `journal-aggregate-<YYYY-Www>` branch, merge commit (no squash). Both the repo's workflow and the shipped template example are updated to the same mode. The template header explicitly states init-workspace must ask before installing.
+- **Next:** Merge PR #450 on GitHub, then the weekly trigger (Mondays 06:00 UTC) or manual dispatch will open the first journal batch PR and merge it automatically when checks pass.
+
+## 20261107T131326Z — feat/432-model-memory-tier-0 — narrative
+- **Summary:** Log-session: entry appended for the advisory 5 repair batch. Three correction passes completed — blocker (#432 external verify) + 4 advisories fixed, advisory 5 applied as shape-only provenance migration (7 files, 11 tables, 148 rows). All gates green (root suite 87/0). Entry also captures D5/D6 decisions.
+- **Decisions:** advisory 5 applied on owner override; mechanical rule for provenance derivation (first source → type); 3 legacy PE tables left as-is (LEDGERS.md forbids migrating closed units). Three fragment journal entries committed (b50a6106, 530ed8eb, 35fc6e1e + 0cad771e).
+- **Next:** Owner external verify of head 35fc6e1e; then push to PR #447 and merge (Closes #432).
+
+## 2026-11-07T13:13:22Z — feat/432-model-memory-tier-0 — manual
+- **Commits:** 12 (`d391280b…0cad771e`)
+- **Files:** 26 files
+- **Summary:** feat/432-model-memory-tier-0: model memory is never tier-0 — completed and shipped; PR #447 opened
+- **Decisions:** D1 test home = knowledge-honesty-contract.test.mjs (one carrier) · D2 no schema-package change (certainty not versioned) · D3 gate row stays prose (judgment-needed) · D4 keeps owner-provided branch spelling · golden-fixture weakest-model smoke: honestly skipped · pre-existing carrier defect repaired by conforming rename
+- **Next:** Owner merges PR #447; honestly skipped: golden-fixture weak-model smoke (owner runs before merge) · scriptable-checks second slice open in #432's ## Future
+
+## 20261107T130829Z — feat/432-model-memory-tier-0 — narrative
+- **Commits:** 11 (`d391280b…35fc6e1e`)
+- **Files:** 25 files
+- **Summary:** Aplicado a PR #432 inline — tres pasadas de reparación: 1) el blocker de la verify externa (## Next estancado con "on approval, open the PR" mientras PR #447 ya estaba abierto) corregido; 2) 4 de 5 advisories de precisión documental (orient tiers nombrando model memory, conteo 86->87 root suites, receipt de Retirements que no reproduce, stale Next en LOGS.md resuelto con nuevo fragmento de journal). Un advisory 5 declinado por ser falsificación de historial de otras unidades.
+- **Decisions:** D4 el owner ordenó aplicar el advisory 5 que había sido declinado; se aplicó como migración de forma pura — la columna provenance añadida a 11 tablas en 7 journals de claims (148 rows), idempotente y aditivo puro; la derivación es una regla mecánica (primera fuente citada -> tipo), no juicio por fila; D5 tres tablas ### Planning evidence en forma de 4 columnas quedaron fuera (ledgers de unidades cerradas, LEDGERS.md prohíbe reescribirlas) — registrado en D6 como reportado, no cruzado.
+- **Next:** Owner verify externa del head 35fc6e1e; si vuelve limpia: push a PR #447, merge (Closes #432), y decidir si convierte las 3 tablas ### Planning evidence restantes o las deja como están.
+
+## 2026-11-07T13:09:00Z — feat/440-product-audit-rescope — manual
+
+## What happened
+
+- **External verification** of fix/440-product-audit-rescope (base e1d94057, head 9ca435b8)
+  found 6 blockers (all one class: periodic cadence retired in S4 but surviving as live
+  assertion on 5 sibling surfaces) and 6 advisories (3 dated records exempt by declaration,
+  1 under-declared intent, 1 dropped narration qualifier, 1 pre-existing #374 dead citation).
+- **Correction batch** landed under owner order ("Todos los findings parecen legítimos,
+  arreglalos"): 73bbc0b5 (red) → 68549fe0 (green). Recheck: all 6 closed, one new blocker
+  (under-declared intent), folded as 459ee056.
+- **Round 3** under owner order ("Repara los no plegados, los chageset deberían de tener
+  lint propio y determinista"): two deterministic gates shipped — changeset-coverage in
+  version-parity-gate.mjs, tree lint in lint-changeset.test.mjs. All round-2 advisories
+  folded including #374 dead citation repair and explicit-invocation narration pin restored.
+- Self-correction: E23 misread the tree linter exit code (last command of a pipeline masked
+  the exit; the script alone exits 1).
+
+## Key decisions
+
+- D-440-1: fold all blockers as one batch (single root cause)
+- D-440-2: dated records exempt by declaration
+- D-440-3: route-cell retirement qualified to finding-line grammar
+- D-440-5: deterministic gates over release intents
+- D-440-6: repair #374 dead citation rather than exempt
+- D-440-7: restore + pin explicit-invocation narration
+
+## Where to resume
+
+- Owner merge decision on PR #445 at 1bab6c8e; independence-clean pass recommended.
+- pi-compat-guard red at main + journal fragment-name validation gap still riding.
+
+## 2026-11-07T13:08:29Z — feat/440-product-audit-rescope — manual
+- **Commits:** 14
+- **Files:** 28
+- **Summary:** Applied issue #440 (product-audit re-scope) — deterministic-first dimensions, measured triggers, profile-aware scope
+- **Decisions:** route cell becomes the note-7 single-input resolver-verb grammar (continue|fix|review|audit|explain-state), never a command; ceremony context ceilings re-based at ceil(measured*1.10) formula with growth source named; machineLines 109->111 for two declared rows; pi-compat-guard left red (differential-proven pre-existing at main); committed journal fragment-name repaired by rename-only (writer-side validation gap as owner finding); /tmp tmpfs cleaned from 99% inodes; parallel root-suite pool flakiness recorded (sequential --jobs 1 is the verdict). (Fragment was committed malformed by ae56bfbc — repaired 2026-11-07 to the canonical entry block; original content preserved.)
+- **Next:** Owner external verification of PR #445 on feat/440-product-audit-rescope, then merge decision; the roadmap row still shows 'in-progress' for #440 (no emitter for the Fixes status cell) awaiting your decision
+
+## 2026-11-07T13:07:36Z — feat/440-product-audit-rescope — manual
+- **Commits:** 14
+- **Files:** 28
+- **Summary:** Applied issue #440 (product-audit re-scope) — deterministic-first dimensions, measured triggers, profile-aware scope
+- **Decisions:** route cell becomes the note-7 single-input resolver-verb grammar; ceremony context ceilings re-based at ceil(measured*1.10); machineLines 109->111; pi-compat-guard left red; journal fragment-name repaired by rename; /tmp cleaned; parallel flakiness recorded. (Fragment was committed malformed by ae56bfbc — repaired 2026-11-07 to the canonical entry block; original content preserved.)
+- **Next:** Owner external verification of PR #445, then merge decision
+
+## 20261107T120858Z — feat/432-model-memory-tier-0 — narrative
+- **Commits:** 2 (`b50a6106`, `530ed8eb`) plus this second batch — advisory 5, applied on the owner's order
+- **Files:** 10 files — the 7 claim journals, the receipt, the unit doc's log and this entry
+- **Summary:** Advisory 5 was declined (every other unit's `sources.md` still spelled `| id | claim | source | certainty |`); the owner overrode the decline, so it ships as a **shape-only** migration: the `provenance` column lands in 11 tables across 7 claim journals (148 rows) and in the two descriptions that spelled the old header. Each cell is a mechanical classification of the row's own first cited source — repository / version-pinned doc / owner answer / model memory — with a dated note above every table saying so, so nothing reads as newly researched evidence. Proofs: idempotent re-run (0 changes) and byte-identical content against `HEAD` once the added cell and note are stripped. Reported, not crossed: the three ``### Planning evidence`` tables in the retired 4-column shape are legacy ledgers of closed units (canonical form is six columns; `LEDGERS.md` forbids migrating a legacy ledger), and `CHANGELOG.md`'s 2.2.0 note keeps its historical quote.
+- **Decisions:** the derivation had to be a rule, not per-row judgement — a mixed source cell resolves by its FIRST cited source, and the note above each table states exactly that, so any cell can be re-derived or challenged; where a mechanical derivation was impossible (the six-column planning-evidence shape), the batch stops instead of inventing `authority-kind`/`freshness` cells for other units.
+- **Next:** 2026-11-07T12:08:58Z — owner external verify of this head, then merge PR #447 (Closes #432)
+
+## 2026-11-07T11:41:19Z — fix/429-log-session-extension — manual
+- **Commits:** 17 (`fbb8ae84…f941be3b`)
+- **Files:** 23 files
+- **Summary:** Correction batch 1 on the external verify receipt: 0 blockers, 4 advisories, all four repaired with evidence. A1 the Retirements evidence row claimed rg -c registerCommand 3 where the file carries 4 at main and head (the invariant held, the figure did not). A2 pi-compat-guard installed only the pi peers into its scratch project, so every @gtrabanco/agentic-workflow/src import was TS2307; the registry route was measured and rejected (the published 4.10.0 ships no src/journal or src/log) and the guard now links the manifest dependencies from their workspace directories, with a missing sibling failing the step and DEPS[schema-build] declared because it reads the schema dist types. A3 lint-changeset required every cited repo-root path to exist, so the accurate citation of the ignored runtime store killed the whole directory; the ignore rules answer now, and cited committed paths including the journal carrier are judged as before. A4 reconciled the declared-path count in the log, never by rewriting the cut. The first full local gate this branch has ever completed passes: 12 steps in 210s.
+- **Decisions:** Route chosen before any byte changed, per the owner's request: root cause over symptom for both gate defects, with the registry route for the compat guard measured in scratch first and rejected on evidence (published 4.10.0 lacks the journal modules, so a published pin fails on a version skew the guard is not asking about). RED first for both rules: the guard suite died on the absent export and the changeset case failed on the 374 citation before either implementation landed. One consequence is reported, not smoothed: repairing the release-note gate re-tiers the unit from standard to high with the publish signal, which owes review-change and audit-pr while the owner's inline protocol forbids running them — the owner picks the ceremony or the reworded-374 route.
+- **Next:** Owner's choice on the high-tier ceremony versus the reworded-374 route, then the external verdict on PR #448 and the merge. The remaining Future rows stand: the writer scripts are still unshipped to target projects, session-close close still has no invocation-record door, and the class this unit pilots owes the same anchoring for the other prose-dispatched commands.
+
+## 20261107T113150Z — feat/432-model-memory-tier-0 — narrative
+- **Commits:** 1 (`3e02d85c`…correction batch) — the external-verify blocker and four of five advisories
+- **Files:** 4 files — the unit doc, DESIGN.md's tier-0 row, a fresh journal fragment and the verify receipt
+- **Summary:** Correction batch of the external verify of `3e02d85c`: the unit doc's `## Next` named completed actions (verify, open the PR) while PR #447 was open — rewritten to the real next action; `SPEC:47` now says where the tier-0 rule actually lives and the DESIGN.md orient **tier-0** row now excludes model memory (§ Provenance), so `S1`'s "never a tier-0 source" sentence holds at the tier that defines it; `PE-001`'s root-suite count corrected 86 → 87 (the count was a miscount, the green verdict unchanged); the Retirements search receipt replaced with the command that reproduces the claim. The fourth advisory (this journal line) is a NEW entry, never an edit of the stale `Next` at `docs/LOGS.md:4588`. Declined: the fifth advisory (other units' frozen 4-column design records) — those are historical evidence, and editing another unit's frozen record is falsification, not currency.
+- **Decisions:** the blocker is a stale handoff pointer, so its fix is prose, no behaviour change; `S1`'s opening sentence is enforced where `tier-0` is defined rather than only in § Provenance, which is what makes `SPEC:47`'s claim true instead of rewriting the claim away; the correction batch re-ran the touched validators in the foreground and flipped no obligation status (all 13 were already `verified` and stay so).
+- **Next:** 2026-11-07T11:31:50Z — owner external verify of the correction batch, then merge PR #447 (Closes #432)
+
+## 2026-11-07T02:16:30Z — fix/429-log-session-extension — manual
+- **Commits:** 7 (`fbb8ae84…948c2782`)
+- **Files:** 16 files
+- **Summary:** Applied issue #429 inline: /log-session became an extension command in @gtrabanco/pi-agentic-workflow, so the invocation is a fact the harness holds instead of a claim the model makes. The handler records .pi/.session-<id>.log-session (contract log-session-invocation@1), asks the project's own writer (scripts/session-close.mjs render --kind auto) for the mechanical facts and carries its stdout byte for byte into the directive, resolves the entry's exact target through the fragment grammar's owner when the carrier is opted in (the docs/LOGS.md append otherwise), and dispatches the skill through the existing router so routing, the busy guard and the unit attribution keep working. agent_settled now names an invocation that left no entry, once per session, and clears the record when the entry lands.
+- **Decisions:** Ledgers were cut before the first line of code (docs/fix/429-log-session-command/, 17 obligations + 15 evidence rows, standard tier computed by ceremony tier classify) and closed only on foreground validators. The code door binds the catalogue's one name instead of registering a second: pi keeps duplicates and suffixes them (/log-session:1), read from the installed 1.5.0 dist and recorded as PE-002. The handler renders no entry bytes of its own — two narrative shapes already exist in this repository, so reading the writer's stdout keeps feature 66's two-writer split and adds no third owner. A project that ships no writer script is told its facts were not computed (the template carries no scripts/ tree: PE-009, filed as a Future row). One test was re-cut mid-flight: the O4 byte-parity case had compared two independent writer runs and lost a clock race under the whole-suite run; it now compares the writer's bytes through the handler, same case name, no assertion weakened. Two disclosed defects: scripts/lint-changeset.mjs exits 1 directory-wide on the pre-existing 374 changeset (reproduced on main), and the first root-suite attempt aborted on environmental tmpfs inode pressure at 88%, retried green with --jobs 3.
+- **Next:** The owner's external verdict on branch fix/429-log-session-extension: the PR, then the pilot's follow-on — #408's inventory classifies the remaining prose-dispatched commands with unit-lane as the prime suspect, and the missing fix-index emitter is a Future row here.
