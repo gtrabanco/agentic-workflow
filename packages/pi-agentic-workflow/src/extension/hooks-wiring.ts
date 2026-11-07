@@ -16,8 +16,19 @@ import type { InjectedOutcome } from "../hooks/dispatcher.js";
  *  - `post:commit` from the tool result of a `git commit` that already ran — a
  *    failure there cannot block retroactively, so it is reported as a notice.
  *
- * Degradation is latched: a broken config is announced once per project
- * session and then behaves as the declared no-op (O5) — it never blocks.
+ * Every notice the dispatcher produces (a broken file, an inert declaration
+ * without consent) is announced once per project session, and the session seams
+ * report their blocks instead of dropping them: a session seam cannot block the
+ * session, so the teaching message is the only thing that makes the declaration
+ * real (O16, O20).
+ *
+ * The git matcher reads the command as a shell would read its shape — unquoted
+ * operators separate segments, quotes group tokens, a leading `NAME=value` is an
+ * environment prefix, and the git options that take a value consume the next
+ * token — so `git -C <dir> commit` and `GIT_DIR=x git commit` are the same seam
+ * as `git commit` (O17/O18). A git call the extension cannot see (inside a
+ * script, or behind `bash -c`) is out of reach by construction: this is a
+ * guardrail on the agent's own bash calls, never an enforcement boundary.
  */
 
 export interface HooksContext {
@@ -59,25 +70,124 @@ export interface HooksWiring {
   onToolResult(event: HooksToolResultEvent, ctx: HooksContext): Promise<void>;
 }
 
-/** Split a bash command into segments the same way a shell would chain them. */
-function gitSeamsIn(command: string): Array<"pre:commit" | "pre:push" | "post:commit"> {
-  const seams = new Array<"pre:commit" | "pre:push" | "post:commit">();
-  for (const raw of command.split(/(?:\|\||&&|;|\||\r?\n)/u)) {
-    const segment = raw.trim();
-    const match = /^git(?:\s+-{1,2}[\w-]+)*\s+(commit|push)(?:\s|$)/u.exec(segment);
-    if (!match) continue;
-    if (match[1] === "commit") {
-      seams.push("pre:commit", "post:commit");
-    } else {
-      seams.push("pre:push");
+type GitSeam = "pre:commit" | "pre:push" | "post:commit";
+
+/** Split a command at its unquoted shell operators — a quoted `|` stays inside its argument. */
+function splitSegments(command: string): string[] {
+  const segments: string[] = [];
+  let current = "";
+  let quote: "'" | '"' | null = null;
+  for (let index = 0; index < command.length; index += 1) {
+    const char = command[index] as string;
+    if (quote !== null) {
+      current += char;
+      if (char === quote) quote = null;
+      continue;
     }
+    if (char === "'" || char === '"') {
+      quote = char;
+      current += char;
+      continue;
+    }
+    if (char === "\n" || char === ";" || char === "|" || char === "&") {
+      segments.push(current);
+      current = "";
+      const next = command[index + 1];
+      if ((char === "|" || char === "&") && next === char) index += 1;
+      continue;
+    }
+    current += char;
+  }
+  segments.push(current);
+  return segments;
+}
+
+/** Split one segment into tokens: quotes group, and are dropped (there is no shell left to see them). */
+function tokenizeSegment(segment: string): string[] {
+  const tokens: string[] = [];
+  let current = "";
+  let quote: "'" | '"' | null = null;
+  let started = false;
+  for (const char of segment) {
+    if (quote !== null) {
+      if (char === quote) quote = null;
+      else current += char;
+      continue;
+    }
+    if (char === "'" || char === '"') {
+      quote = char;
+      started = true;
+      continue;
+    }
+    if (char === " " || char === "\t") {
+      if (started) tokens.push(current);
+      current = "";
+      started = false;
+      continue;
+    }
+    started = true;
+    current += char;
+  }
+  if (started) tokens.push(current);
+  return tokens;
+}
+
+/** The git options whose following token is a value, never the subcommand. */
+const GIT_VALUE_OPTIONS = new Set([
+  "-C",
+  "-c",
+  "--git-dir",
+  "--work-tree",
+  "--namespace",
+  "--super-prefix",
+  "--exec-path",
+]);
+
+const ENV_ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/u;
+
+/** The git subcommand a segment runs, with env prefixes and option values skipped. */
+function gitSubcommand(tokens: string[]): string | null {
+  let index = 0;
+  while (index < tokens.length && ENV_ASSIGNMENT.test(tokens[index] as string)) index += 1;
+  if (tokens[index] !== "git") return null;
+  index += 1;
+  while (index < tokens.length) {
+    const token = tokens[index] as string;
+    if (token === "--") {
+      index += 1;
+      break;
+    }
+    if (token.startsWith("-") && token.length > 1) {
+      index += GIT_VALUE_OPTIONS.has(token) ? 2 : 1;
+      continue;
+    }
+    break;
+  }
+  return tokens[index] ?? null;
+}
+
+/** The seams a bash command touches, read the way a shell would chain it. */
+function gitSeamsIn(command: string): GitSeam[] {
+  const seams: GitSeam[] = [];
+  for (const segment of splitSegments(command)) {
+    const subcommand = gitSubcommand(tokenizeSegment(segment));
+    if (subcommand === "commit") seams.push("pre:commit", "post:commit");
+    else if (subcommand === "push") seams.push("pre:push");
   }
   return seams;
 }
 
 export function createHooksWiring(deps: HooksWiringDeps): HooksWiring {
-  /** Degradation latch: one announce per project session (O5). */
-  let degradationAnnouncedFor: string | null = null;
+  /** One announce per notice per project session — a broken file or an inert
+   *  declaration explains itself once and then stops talking (O5, O20). */
+  const announced = new Set<string>();
+
+  const announce = (ctx: HooksContext, message: string, kind: "error" | "info" | "warning"): void => {
+    const key = `${ctx.cwd}\u0000${message}`;
+    if (announced.has(key)) return;
+    announced.add(key);
+    ctx.ui.notify(message, kind);
+  };
 
   const run = async (seam: Parameters<typeof runSeam>[0], ctx: HooksContext): Promise<SeamRunResult> => {
     const result = await runSeam(seam, {
@@ -89,11 +199,13 @@ export function createHooksWiring(deps: HooksWiringDeps): HooksWiring {
       spawnHook: deps.spawnHook,
       runGit: deps.runGit,
     });
-    if (result.verdict === "degrade" && degradationAnnouncedFor !== ctx.cwd) {
-      degradationAnnouncedFor = ctx.cwd;
-      for (const notice of result.notices) ctx.ui.notify(notice.message, "warning");
-    }
+    for (const notice of result.notices) announce(ctx, notice.message, notice.kind === "problem" ? "warning" : "info");
     return result;
+  };
+
+  /** A session seam cannot block the session, so its blocks are reported — never swallowed (O16). */
+  const reportBlocks = (ctx: HooksContext, result: SeamRunResult): void => {
+    for (const block of result.blocks) ctx.ui.notify(block, "warning");
   };
 
   const postCommitFailure = async (event: HooksToolResultEvent, ctx: HooksContext): Promise<void> => {
@@ -106,11 +218,11 @@ export function createHooksWiring(deps: HooksWiringDeps): HooksWiring {
 
   return {
     async onSessionStart(ctx) {
-      await run("session:start", ctx);
+      reportBlocks(ctx, await run("session:start", ctx));
     },
 
     async onSessionShutdown(ctx) {
-      await run("session:end", ctx);
+      reportBlocks(ctx, await run("session:end", ctx));
     },
 
     async onToolCall(event, ctx) {

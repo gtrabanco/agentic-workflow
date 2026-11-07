@@ -1,6 +1,7 @@
 import type { ProjectionSeam } from "@gtrabanco/agentic-workflow-schema";
 
 import { loadHooksConfig, readSeamHooksConsent } from "./config.js";
+import { consentFilePath } from "./config.js";
 import type { LoadedHooksConfig, ResolvedHookEntry } from "./config.js";
 import { runArgv, seamBlockMessage, tokenizeHookCommand } from "./runner.js";
 import type { HookRunResult } from "./runner.js";
@@ -22,6 +23,10 @@ import type { HookRunResult } from "./runner.js";
  * This module is Pi-free: the wiring in `../extension/hooks-wiring.ts` binds it
  * to pi's lifecycle. It never writes anything (O13) — the only consent writer
  * is init-workspace's flow.
+ *
+ * Two silence traps are closed here. A broken file degrades with a problem
+ * notice naming it (O5); an `enabled` group that has no consent entry is inert
+ * and says so (O20) — a valid declaration must never look like a gate that ran.
  */
 
 export interface SeamNotice {
@@ -88,8 +93,23 @@ export async function runSeam(seam: ProjectionSeam, deps: SeamDeps): Promise<Sea
   const enabled = loaded.entries.filter((entry) => entry.seam === seam && entry.group.enabled === true);
   if (enabled.length === 0) return allowed(seam);
 
-  const consented = deps.readConsent ? deps.readConsent(deps.agentDir, deps.cwd) : readSeamHooksConsent(deps.agentDir, deps.cwd);
-  if (!consented) return allowed(seam);
+  const consented = deps.readConsent
+    ? deps.readConsent(deps.agentDir, deps.cwd)
+    : readSeamHooksConsent(deps.agentDir, deps.cwd, deps.readFile);
+  if (!consented) {
+    return {
+      seam,
+      verdict: "allow",
+      notices: [
+        {
+          kind: "info",
+          message: `seam-hooks: this project declares enabled hooks but carries no consent entry (${consentFilePath(deps.agentDir)}) — every declared hook is inert until /init-workspace records your consent.`,
+        },
+      ],
+      blocks: [],
+      ran: [],
+    };
+  }
 
   const result = await runEnabledEntries(seam, enabled, deps);
   return result;
@@ -99,13 +119,13 @@ async function runEnabledEntries(seam: ProjectionSeam, entries: ResolvedHookEntr
   const ran: HookRunRecord[] = [];
   const blocks: string[] = [];
 
-  const execute = async (argv: string[], timeoutMs: number | undefined, source: ResolvedHookEntry["source"], command: string): Promise<boolean> => {
+  const execute = async (argv: string[], declared: string, timeoutMs: number | undefined, source: ResolvedHookEntry["source"]): Promise<boolean> => {
     const outcome: InjectedOutcome = deps.spawnHook
       ? await deps.spawnHook(argv, { cwd: deps.cwd, timeoutMs })
       : await runArgv(argv, { cwd: deps.cwd, timeoutMs });
-    ran.push({ source, command, exitCode: outcome.exitCode });
+    ran.push({ source, command: declared, exitCode: outcome.exitCode });
     if (isBlocked(outcome)) {
-      blocks.push(seamBlockMessage(seam, argv, { ...outcome, verdict: "block" }));
+      blocks.push(seamBlockMessage(seam, declared, { ...outcome, verdict: "block" }));
       return false;
     }
     return true;
@@ -119,7 +139,7 @@ async function runEnabledEntries(seam: ProjectionSeam, entries: ResolvedHookEntr
         return { seam, verdict: "block", notices: [], blocks, ran };
       }
       const timeoutMs = hook.timeout !== undefined ? hook.timeout * 1000 : undefined;
-      const proceed = await execute(tokenized.argv, timeoutMs, entry.source, hook.command);
+      const proceed = await execute(tokenized.argv, hook.command, timeoutMs, entry.source);
       if (!proceed) return { seam, verdict: "block", notices: [], blocks, ran };
     }
   }
@@ -130,20 +150,21 @@ async function runEnabledEntries(seam: ProjectionSeam, entries: ResolvedHookEntr
     const message = entry.group.commitMessage as string;
     const add: InjectedOutcome = deps.runGit ? await deps.runGit(["git", "add", "-A"]) : await runArgv(["git", "add", "-A"], { cwd: deps.cwd });
     if (isBlocked(add)) {
-      blocks.push(seamBlockMessage(seam, ["git", "add", "-A"], { ...add, verdict: "block" }));
+      blocks.push(seamBlockMessage(seam, "git add -A", { ...add, verdict: "block" }));
       return { seam, verdict: "block", notices: [], blocks, ran };
     }
+    const commitDeclared = `git commit -m "${message}"`;
     const commit: InjectedOutcome = deps.runGit
       ? await deps.runGit(["git", "commit", "-m", message])
       : await runArgv(["git", "commit", "-m", message], { cwd: deps.cwd });
     if (isBlocked(commit)) {
-      blocks.push(seamBlockMessage(seam, ["git", "commit", "-m", message], { ...commit, verdict: "block" }));
+      blocks.push(seamBlockMessage(seam, commitDeclared, { ...commit, verdict: "block" }));
       return { seam, verdict: "block", notices: [], blocks, ran };
     }
     if (!entry.group.autoPush) continue;
     const push: InjectedOutcome = deps.runGit ? await deps.runGit(["git", "push"]) : await runArgv(["git", "push"], { cwd: deps.cwd });
     if (isBlocked(push)) {
-      blocks.push(seamBlockMessage(seam, ["git", "push"], { ...push, verdict: "block" }));
+      blocks.push(seamBlockMessage(seam, "git push", { ...push, verdict: "block" }));
       return { seam, verdict: "block", notices: [], blocks, ran };
     }
   }
