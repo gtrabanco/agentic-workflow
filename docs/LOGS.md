@@ -4579,6 +4579,72 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Applied issue #374: pluggable session-journal storage — canonical entry schema, store-driver contract, two reference drivers (Markdown, SQLite)
 - **Decisions:** D1 full slice (schema + contract + both drivers + conformance tests + docs); D2 single PR; D3 insert-only contract (corrections are new entries, never edits); D5 reason as core field (byte-parity with AC4's markdown render); D9 monotonic arrival-order ids; D10 programmatic driver selection, no config key; D12 both UTC timestamp precisions accepted
 - **Next:** PR #431 opened against main — review the diff, ledgers at docs/fix/374-pluggable-session-journal/, then either approve merge or request changes
+
+## 20261107T133500Z — feat/435-project-charter — narrative
+- **Commits:** 18 (`6329f417…a8a2704d`)
+- **Files:** 22 files (1049 insertions, 14 deletions)
+- **Summary:** Applied issue #435 (project charter in init-workspace) inline per the owner's standing local workflow: frozen ledgers first, no repo machinery on own surgery, fix found via the owner's review loop, correction batch applied inline, PR #446 shipped. 17 commits on the core change plus the PR-push update and the external-verify repair batch.
+- **Decisions:** (D1) passive verdict's unit-doc carrier chosen by owner instruction; (D2) this repo's own guide not re-cut; (D3) criteria catalogue is its own registered doc; (D4) home docs/fix/435-project-charter per workflow; (D5) audit-count pin 15→16 companion update; (D6) journal fragment renamed to pass push gate — artifact was the blocker, repair made it conform its published grammar; (D7) check 16's identity-slot scan scoped to ## Project charter via POSIX awk, fixing over-match on Hard-rules stub init-workspace leaves unfilled by design.
+- **Next:** Owner review/merge of PR #446. After merge: #436 unblocks.
+
+## 20261107T132850Z — feat/435-project-charter — narrative
+- **Commits:** 18 (`6329f417…a8a2704d`)
+- **Files:** 22 files (1049 insertions, 14 deletions)
+- **Summary:** Applied issue #435 (project charter in init-workspace) inline per the owner's standing local workflow: frozen ledgers first, no repo machinery on own surgery, fix found via the owner's review loop, correction batch applied inline, PR #446 shipped.
+- **Decisions:** (D1) passive verdict's unit-doc carrier chosen by owner instruction; (D2) this repo's own guide not re-cut; (D3) criteria catalogue is its own registered doc; (D4) home docs/fix/435-project-charter per workflow; (D5) audit-count pin 15→16 companion update; (D6) journal fragment renamed to pass push gate — artifact was the blocker, repair made it conform its published grammar; (D7) check 16's identity-slot scan scoped to ## Project charter via POSIX awk, fixing over-match on Hard-rules stub init-workspace leaves unfilled by design.
+- **Next:** Owner review/merge of PR #446. After merge: #436 unblocks.
+
+## 20261107T000000Z — feat/435-project-charter — narrative
+- **Commits:** 18 (`6329f417…a8a2704d`)
+- **Files:** 22 files (1049 insertions, 14 deletions)
+- **Summary:** Applied issue #435 (project charter in init-workspace) inline per the owner's standing local workflow: frozen ledgers first, no repo machinery on own surgery, fix found via the owner's review loop, correction batch applied inline, PR #446 shipped.
+- **Decisions:** (D1) passive verdict's unit-doc carrier chosen by owner instruction; (D2) this repo's own guide not re-cut; (D3) criteria catalogue is its own registered doc; (D4) home docs/fix/435-project-charter per workflow; (D5) audit-count pin 15→16 companion update; (D6) journal fragment renamed to pass push gate — artifact was the blocker, repair made it conform its published grammar; (D7) check 16's identity-slot scan scoped to ## Project charter via POSIX awk, fixing over-match on Hard-rules stub init-workspace leaves unfilled by design.
+- **Next:** Owner review/merge of PR #446. After merge: #436 unblocks.
+
+## 20261107T131210Z — feat/435-project-charter — narrative
+- **Commits:** 1
+- **Files:** 5 files
+- **Summary:** Repaired the repair batch's own defects (owner request, S16): six claims that their own commands contradict, plus a seventh found while fixing them. `rg -c` emits no stdout line on zero matches (exit 1), so AC2/O18's "count is 0" outcome was unobservable — and the same class sat **pre-existing** in O8, now corrected. The differential's corpus was six distinct fixtures, not seven (the copy was the same bytes). The Impact bullet still claimed "prose-only" while the change has carried a suite pin since D5. `## Applicable tests` still read `n/a` while the batch's test impact is `targeted` (3 suites + the pin's). `audit-docs`' 3116 → 3246 est growth after this unit set the ceiling is now recorded in `SKILL_CONTEXT_BUDGETS.json` under the unchanged 3428 (no re-base). P12's validator names three commands instead of "AC1–AC4 hold".
+- **Decisions:** no new RED test — the batch changes text and one command shape, and pinning prose counts would invent ceremony the workflow declines; the RED is each claim run against its own command (E10). Defect 7 is the recurrence: replacing a self-matching validator with another grep of the phrase its own text quotes reproduces the original unreachability — every absence check is now scoped with `awk` to the region that must be clean (E9 log line, PE-015 row, `## Impact`, `## Retirements`).
+- **Next:** Hand the diff to the owner as external verifier. Offline gate PASS 8/8 on the batch head; the `pi-compat-guard` network leg stays red at base (rows 114/115).
+
+## 20261107T115628Z — feat/435-project-charter — narrative
+- **Commits:** 3 (ea0434ec…batch head)
+- **Files:** 5 files
+- **Summary:** Repaired the 2026-11-07 external-verify block (2 blockers, 2 advisories) in one correction batch. Blocker 1: `audit-docs` check 16's unfilled-slot scan was guide-wide, so a healthy scaffold always reported the Hard-rules back-compat stub that `init-workspace` leaves unfilled by design; the scan is now bounded to the `## Project charter` section by one POSIX `awk` (path:line preserved, no new script, no new gate step) with severity per layer (identity HIGH, domain LOW), declared in a `text` fence so its backticks need no POSIX-undefined escaping. Blocker 2: `## Retirements` claimed "no deletion outside this unit doc" while the diff deletes 14 lines in six files plus an R100 rename — the section now enumerates every deletion as the in-place rewrite and log entry it is. Advisories: P10's validator now names the offline gate it actually passes, and O14's recorded run names the empty `local-gate: FAILED` grep instead of reds D6 already repaired.
+- **Decisions:** D7 route selection — pattern-narrowing rejected (a project that adds a slot goes unscanned), a new `scripts/` checker rejected (red-first sibling + gate step for one section read; `audit-docs` checks are declared commands by contract), section-bounded `awk` chosen; the two advisories repaired as claims, because their reds reproduce byte-identically at the base commit on surfaces this unit never touches (A1). Two defects of my own repair were caught by running its validators before commit and fixed: `+659` was already stale at the batch head (now the stable deletion count only), and AC2's and O18's validators quoted the phrase they grep for (now scoped).
+- **Next:** Hand the diff to the owner as external verifier. One gate run reported `root-suite: exit 1` on four suites under CPU contention; each passes in isolation and three consecutive pooled reruns were green, and the final offline gate is PASS 8/8 — recorded, not hidden. The network leg (`pi-compat-guard` TS2307 ×4) stays red at base and belongs to rows 114/115.
+
+## 20261107T015229Z — feat/435-project-charter — narrative
+- **Commits:** 8 (6329f417…508736b8)
+- **Files:** 17 files
+- **Summary:** Applied issue #435 inline per the owner's local workflow — the project-charter unit: ledgers frozen first (SPEC + planning-evidence + planning-obligations + decisions, phase-lint PASS, tier computed passive with the owner-instruction carrier note), then template substrate (charter section + two docs-map rows + VERIFICATION_CRITERIA.md with the closed provenance set), the init-workspace interrogation (identity layer blocking through the existing open-questions@1 flow, domain layer as dated assumptions, non-technical help-mode, upgrade-mode additive offer), audit-docs check 16 (CAPABILITIES-pattern rg commands, fixture-validated on throwaway copies), attribution rows for the three verified arXiv papers, ceiling re-bases with named growth sources (init-workspace 4794/327, audit-docs 3428), fixes-row + changeset + regenerated projection.
+- **Decisions:** D1 the passive verdict's unit-doc carrier replaced the docs/passive readback by owner instruction (never both); D2 this repo's own guide is not re-cut into a charter (scope); D3 the criteria catalogue is its own registered doc, not a charter paragraph (content rule, arXiv 2605.10039); D4 home docs/fix/435-project-charter per the workflow + ~12 row precedents. One live-tree side effect disclosed and cleaned: a transient /tmp-full mktemp failure dropped fixture files into the worktree root; AGENTS.md restored from HEAD, stray file deleted, root cause (no fail-fast before cd) fixed in the rerun.
+- **Next:** Hand the diff to the owner as external verifier (no self-review per the governing workflow); the two pre-existing gate reds (pi-compat-guard TS2307 ×4; journal S15 fragment kind "manual" at 9b27fab9) belong to rows 114/115.
+
+## 2026-11-07T00:16:57Z — main — narrative
+- **Commits:** 0
+- **Files:** —
+
+## 20261106T214127Z — feat/374-pluggable-session-journal — manual
+- **Commits:** 4 (8bf9d539…2d68fd14)
+- **Files:** 36 files
+- **Summary:** External verification of PR #431 and correction of four blockers (publisher carrier precedence, path resolution, kind validation, ledger accuracy) plus the zero-byte placeholder fix
+- **Decisions:** D14: the carrier outranks the journal presence and the publisher resolves paths once against the caller cwd — an opted-in project without docs/LOGS.md no longer loses entries; kind "mechanical" or (string and empty) is validated at the seam, so an unknown or narrative kind is refused before mutation (the fix observed RED with 3 cases, GREEN with all); the .gitkeep placeholder is zero bytes — a placeholder, not a readme, notes live in journal.md beside the carrier (aggregator refuses non-fragment files inside it); another session missing-newline fragment was repaired with the terminator writeFragment enforces, content bytes untouched. Differential verified against base b8e4d15a: all five publisher probes return identical output.
+- **Next:** Open PR #431 (Closes #374) and request external review on the four-blocker report
+
+## 2026-11-06T21:17:21Z — feat/374-pluggable-session-journal — manual
+- **Commits:** 14 (`bcd0830c…270789df`)
+- **Files:** 34 files
+- **Summary:** Verified #260 (subagent-first-execution / roadmap #68) dependency mapping: zero hard blockers. Roadmap prereqs #66 and #67 are CLOSED/merged. Open issues mentioned (#201, #227, #284, #307, #173, #174) are coordination targets, future ties, parent direction, or affected scopes — none constitute execution blockers.
+- **Next:** Proceed to analyze dependencies for the next issue in the #307 blocking chain
+
+## 2026-11-06T19:50:54Z — feat/374-pluggable-session-journal — manual
+- **Commits:** 13 (`bcd0830c…f5af845e`)
+- **Files:** 33 files
+- **Summary:** Applied issue #374: pluggable session-journal storage — canonical entry schema, store-driver contract, two reference drivers (Markdown, SQLite)
+- **Decisions:** D1 full slice (schema + contract + both drivers + conformance tests + docs); D2 single PR; D3 insert-only contract (corrections are new entries, never edits); D5 reason as core field (byte-parity with AC4's markdown render); D9 monotonic arrival-order ids; D10 programmatic driver selection, no config key; D12 both UTC timestamp precisions accepted
+
 ## 2026-11-07T02:30:00Z — feat/440-product-audit-rescope — manual
 - **Commits:** 6 on top of `e1d94057` (`8dbc9e76…33926913`)
 - **Files:** 18
@@ -4602,5 +4668,4 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 3 (`6f3a224a` red → `708b37b0` green, plus this receipt commit)
 - **Files:** 12
 - **Summary:** Round 3 under owner order ("Repara los no plegados, los chageset deberían de tener lint propio y determinista"): everything the recheck had reported but not folded is folded, and the two release-intent gaps got deterministic gates. (1) scripts/version-parity-gate.mjs now refuses `changeset-coverage` when the changeset route is taken through skill entries that miss any skill the PR touched (a package-level entry still covers the whole content source) — the exact class the round-2 recheck caught by hand, judged in memory against this PR's own bytes: shipped intent → changeset-intent, the intent truncated to its round-2 state → changeset-coverage naming audit-pr and review-change. (2) scripts/lint-changeset.test.mjs runs the existing fail-closed linter over this repository's committed `.changeset/` directory from the root suite; the tool was always deterministic, nothing ever pointed it here. It landed red on the real violation it found — #374's pending intent cited `.agentic-workflow/journal-store/entries.db` as if the tree carried it (that store is created on first use), repaired in that file's body with every claim kept. (3) Advisory 1 folded: README.md and docs/workflow/SKILLS.md restore the explicit-invocation qualifier the cadence rewrite dropped, pinned against the frontmatter that owns the constraint; advisory 3 folded: the two budget source rows no longer quote the retired literal. Disclosed by append (E24): E23's "exit 0" for the tree lint came from reading a pipeline's last command — the script alone exits 1 over that tree, so the linter was never the weak link, only its wiring.
-- **Decisions:** D-440-5 gates over the intent surface rather than conventions (the coverage rule lives in the gate that already reads the PR's intent files and changed-file set, not in changeset-create, which writes on demand and refuses to overwrite, so it cannot judge a PR that never runs it); D-440-6 repair #374's dead citation rather than exempt it (an exemption for a path that never existed would launder the defect) — a declared cross-unit touch; D-440-7 restore + pin the invocability narration (a narration that quietly loses a machine-declared constraint is how the next reader concludes the audit self-fires). Scope rider declared in the unit doc rather than smuggled: no behaviour, grammar or vocabulary change, only gates and their receipts; nothing left open for a later issue.
 - **Next:** merge decision on PR #445 at the rider's head; an independence-clean pass over the delta scope is still recommended (one command per suite: product-audit-rescope, lint-changeset, version-parity-gate). pi-compat-guard red at main and the journal fragment-name writer-side gap remain the two owner findings that are not this unit's.
