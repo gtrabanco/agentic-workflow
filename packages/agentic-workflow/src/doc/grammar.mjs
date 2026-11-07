@@ -9,7 +9,7 @@
  * the positional branch carries `--json` for the same switch.
  *
  * Exit codes (D3): 0 success including degraded · 1 usage/IO · 2 refusal
- * (`EDIT REFUSAL` for edit-service path refusals, `DOC REFUSAL` for a
+ * (the edit services' refusal line for path refusals, `DOC REFUSAL` for a
  * selector that resolves to nothing or to several sections).
  */
 

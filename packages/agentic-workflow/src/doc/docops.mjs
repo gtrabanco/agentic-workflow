@@ -13,7 +13,7 @@
  * caller's policy to render (the CLI prints `DOC REFUSAL — <code>` exit 2).
  *
  * No normalization, no clock: the splice outputs carry the source's own
- * bytes, identical runs produce identical receipts.
+ * bytes, identical runs produce identical output blocks.
  */
 
 import { existsSync } from "node:fs";
