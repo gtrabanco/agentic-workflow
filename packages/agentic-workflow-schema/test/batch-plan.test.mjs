@@ -227,3 +227,11 @@ test("batch-plan: every validator refusal is a schema refusal (the two surfaces 
     assert.equal(schemaValidates(m), false, JSON.stringify(mutate.toString()));
   }
 });
+
+test("batch-plan: the committed projection ships with the package (the `files` contract)", () => {
+  // External-verify B7: the schema file is committed, read by this suite and
+  // named by the producer, but a published consumer only receives what
+  // `files` lists — every sibling projection is listed there.
+  const manifest = JSON.parse(readFileSync(`${packageRoot}/package.json`, "utf8"));
+  assert.ok(manifest.files.includes("batch-plan.schema.json"), "the draft-07 projection is part of the published package");
+});
