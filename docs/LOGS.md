@@ -4580,6 +4580,12 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** D1 full slice (schema + contract + both drivers + conformance tests + docs); D2 single PR; D3 insert-only contract (corrections are new entries, never edits); D5 reason as core field (byte-parity with AC4's markdown render); D9 monotonic arrival-order ids; D10 programmatic driver selection, no config key; D12 both UTC timestamp precisions accepted
 - **Next:** PR #431 opened against main — review the diff, ledgers at docs/fix/374-pluggable-session-journal/, then either approve merge or request changes
 
+## 2026-11-07T02:02:54Z — feat/432-model-memory-tier-0 — manual
+- **Commits:** 4 (`d391280b…dacf767c`): unit-doc + ledgers freeze, RED #432 cases, the prose rule, attribution + changeset
+- **Files:** 12 files (+421/−13)
+- **Summary:** Applied issue #432 inline per the owner's local-unpublished-workflow command — no lane machinery ran on its own surgery; the deterministic gates did. Model memory is never tier-0: the design/plan `sources.md` journals gain a `provenance` column (`repository / version-pinned doc / owner answer / model memory`) owned once in DESIGN.md beside `ask-dont-infer@1`; a `model memory` row carries `inferred` at best — never `confirmed`, never tier-0; external implementation-detail claims verify against the project's pinned version before guiding a task (one-fetch receipt; script where deterministic — #359); RESEARCH.md gains the repo-answered exit with its receipt; the gate lands as a prose row of `prose-gate-inventory@1` (judgment-needed); four evidence papers attributed. Test-first (6 red cases → green), §3 fixture-validated in /tmp before the tree, budgets re-based with declared sources, unit doc + planning ledgers at `docs/fix/432-model-memory-tier-0/`.
+- **Decisions:** D1 test home = knowledge-honesty-contract.test.mjs (one carrier) · D2 no schema-package change (certainty not versioned — the issue's own condition) · D3 gate row stays prose (scripted half = deferred slice, recorded in ## Future) · D4 keeps the owner-provided branch spelling feat/432-model-memory-tier-0. Golden-fixture weakest-model smoke: honestly skipped (needs a fleet model) — owner runs it before merge if wanted.
+- **Next:** Owner's external verify of 821b5af5/dacf767c; on approval open the PR closing #432; the scriptable checks stay the issue's open second slice
 ## 20261107T133500Z — feat/435-project-charter — narrative
 - **Commits:** 18 (`6329f417…a8a2704d`)
 - **Files:** 22 files (1049 insertions, 14 deletions)

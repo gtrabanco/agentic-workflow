@@ -18,15 +18,20 @@ references, published by no tool; `grep -n "PRE_EXECUTION_STAGES" packages/agent
 → the open-question ledger's owner is `template/AGENTS.md:164`, read by `scripts/needs-input.mjs`; prior unit
 `docs/fix/258-harden-needs-input-contracts/` → the self-validation loop this unit must not repeat.
 
-| id | claim | source | certainty |
-|---|---|---|---|
-| INV-001 | the issue's owner directive is "investigate, orient and ask, never decide the unknown" | `#303` body §Summary | confirmed |
-| INV-002 | a prohibition-only contract leaves the rest of the space free for a weak model | `#303` body §Why | confirmed |
-| INV-003 | the open-question ledger's grammar is owned by the template agent guide, not by a skill | `template/AGENTS.md:164` + `skills/orchestration-envelope/references/TURN_CONTRACT.md:93` | confirmed |
-| INV-004 | the dispatcher is `scripts/needs-input.mjs`; it parses `id \| date \| type \| question \| blocks \| search-receipt \| options \| route` | `scripts/needs-input.mjs:65` | confirmed |
-| INV-005 | a receipt stage vocabulary is `spec \| plan`; a plan stage token would collide | `packages/agentic-workflow-schema/src/pre-execution-contract.ts:45` | confirmed |
-| INV-006 | `design` runs only for features; `plan` runs for features and fixes | `scripts/catalog.json` (`applies_when`) | confirmed |
-| INV-007 | git archive of `main` does not carry the generated schema `dist/`, so a differential run needs `bun run build` | observed: base copy suite 496/563 before the build, 699/735 after | confirmed |
+> Shape migrated 2026-11-07 to `DESIGN.md` § Provenance: the `provenance` column is a
+> mechanical classification of each row's own first cited source (repository /
+> version-pinned doc / owner answer / model memory). No claim, source or certainty
+> was changed, and no new evidence is asserted — re-derive any cell from the row.
+
+| id | claim | source | provenance | certainty |
+|---|---|---|---|---|
+| INV-001 | the issue's owner directive is "investigate, orient and ask, never decide the unknown" | `#303` body §Summary | owner answer | confirmed |
+| INV-002 | a prohibition-only contract leaves the rest of the space free for a weak model | `#303` body §Why | owner answer | confirmed |
+| INV-003 | the open-question ledger's grammar is owned by the template agent guide, not by a skill | `template/AGENTS.md:164` + `skills/orchestration-envelope/references/TURN_CONTRACT.md:93` | repository | confirmed |
+| INV-004 | the dispatcher is `scripts/needs-input.mjs`; it parses `id \| date \| type \| question \| blocks \| search-receipt \| options \| route` | `scripts/needs-input.mjs:65` | repository | confirmed |
+| INV-005 | a receipt stage vocabulary is `spec \| plan`; a plan stage token would collide | `packages/agentic-workflow-schema/src/pre-execution-contract.ts:45` | repository | confirmed |
+| INV-006 | `design` runs only for features; `plan` runs for features and fixes | `scripts/catalog.json` (`applies_when`) | repository | confirmed |
+| INV-007 | git archive of `main` does not carry the generated schema `dist/`, so a differential run needs `bun run build` | observed: base copy suite 496/563 before the build, 699/735 after | repository | confirmed |
 
 ## Orient — tiers and cost (2026-10-22)
 
@@ -39,10 +44,15 @@ references, published by no tool; `grep -n "PRE_EXECUTION_STAGES" packages/agent
 
 ## After — what was actually built (2026-10-22)
 
-| id | claim | source | certainty |
-|---|---|---|---|
-| INV-008 | the fenced `open-questions@1` example the references publish parses with the real reader | `knowledge-honesty-contract.test.mjs` (passes) | confirmed |
-| INV-009 | both references carry the four stage headings in order | `knowledge-honesty-contract.test.mjs` (passes) | confirmed |
+> Shape migrated 2026-11-07 to `DESIGN.md` § Provenance: the `provenance` column is a
+> mechanical classification of each row's own first cited source (repository /
+> version-pinned doc / owner answer / model memory). No claim, source or certainty
+> was changed, and no new evidence is asserted — re-derive any cell from the row.
+
+| id | claim | source | provenance | certainty |
+|---|---|---|---|---|
+| INV-008 | the fenced `open-questions@1` example the references publish parses with the real reader | `knowledge-honesty-contract.test.mjs` (passes) | repository | confirmed |
+| INV-009 | both references carry the four stage headings in order | `knowledge-honesty-contract.test.mjs` (passes) | repository | confirmed |
 
 ## Discoveries (what the tree taught, after the fact)
 

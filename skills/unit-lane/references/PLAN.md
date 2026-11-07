@@ -20,13 +20,18 @@ claims ("does a validator for this exist?", "is this module already covered?",
 "did a prior unit decide this?"). Journal each claim as a row of the unit
 folder's `sources.md`, with the id prefix `CLAIM-`:
 
-| id | claim | source | certainty |
-|---|---|---|---|
-| CLAIM-001 | <the plan claim, one line> | `<path:line>`, prior `decisions.md:line`, or `owner answer <Q-id>` | confirmed / inferred / unknown |
+| id | claim | source | provenance | certainty |
+|---|---|---|---|---|
+| CLAIM-001 | <the plan claim, one line> | `<path:line>`, prior `decisions.md:line`, or `owner answer <Q-id>` | repository / version-pinned doc / owner answer / model memory | confirmed / inferred / unknown |
 
 Two claims never need a search: the unit's own acceptance criteria (the design
 step cited them) and its non-goals. Everything else does — a plan claim with no
-source and no owner answer is the defect this stage exists to catch.
+source and no owner answer is the defect this stage exists to catch. The
+provenance kinds and the certainty ceiling are owned by `DESIGN.md`
+(§ Provenance — model memory is never tier-0); this table journals the same
+columns, it does not restate the rule. An external implementation-detail claim
+that the pinned-version receipt has not fetched yet stays at its ceiling —
+a `model memory` row can never carry `confirmed`.
 
 ## Stage 2 — orient
 
