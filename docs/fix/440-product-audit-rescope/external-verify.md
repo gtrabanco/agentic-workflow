@@ -101,3 +101,33 @@ Completeness: S1–S6 resolved (unchanged from R1); obligations O1–O10 all `ve
 Spot check: bun test scripts/product-audit-rescope.test.mjs → match (exit 0 · 15 pass / 0 fail at 459ee056, and the round-1 receipt's 14-test figure is now correctly reported as 15 after the sweep case landed). Second spot check `bun test scripts/scaffold-parity.test.mjs` → match (exit 0 · 17 pass / 0 fail). Gate at head: `bun scripts/local-gate.mjs --skip-network` → exit 0 · PASS 8/8 · 88 root suites PASS.
 Verdict: NEEDS-DECISION (1 open blocker) → closed in the same round by `459ee056`; the same blocker did not persist, so per the correction bounds no third round is owed. Merge decision is yours, ideally after an independence-clean pass on the delta scope.
 ```
+
+## Addendum — round 3 (owner order: repair the reported items, and gate the intents)
+
+Owner instruction, verbatim: "Repara los no plegados, los chageset deberían de tener
+lint propio y determinista". Everything R2 reported but did not fold is now folded,
+each with a deterministic gate behind it (unit doc L3, P4, E24–E26, F4, `## Scope
+rider`):
+
+| R2 item | disposition now |
+|---|---|
+| Advisory 1 — explicit-invocation qualifier dropped from the narration | **folded** (`708b37b0`): restored in `README.md` and `docs/workflow/SKILLS.md`, and pinned in `scripts/product-audit-rescope.test.mjs` against the frontmatter that owns the constraint (`user-invocable: true` + `disable-model-invocation: true`) — the pin is the class-closer, not the prose |
+| Advisory 2 — #374's intent cites a path the tree never carried | **folded**: the body now states the store is created on first use under the project's `.agentic-workflow` directory (every other claim kept); the reason it existed at all is the missing gate below |
+| Advisory 3 — the budget rows quoted the retired literal | **folded**: reworded to name the change without quoting it, so no live machine row carries the retired wording |
+| R2 blocker (F3) — the intent under-declared the PR's own skill set | **now gate-caught**: `scripts/version-parity-gate.mjs` refuses `changeset-coverage` when the route is taken through skill entries that miss a touched skill; a package-level entry still covers the whole content source |
+| "lint propio y determinista" | **shipped**: `scripts/lint-changeset.test.mjs` runs the existing fail-closed linter over this repository's committed `.changeset/` directory inside the root suite — the tool was always deterministic; nothing pointed it here |
+
+Evidence (red `6f3a224a` → green `708b37b0`): the three new cases observed failing on
+the current bytes first — the tree-lint case naming #374's file, the coverage case
+because the rule did not yet exist, the narration case naming `README.md`; after the
+implementation `bun test scripts/lint-changeset.test.mjs scripts/version-parity-gate.test.mjs
+scripts/product-audit-rescope.test.mjs` · exit 0 · 82 pass / 0 fail, `bun scripts/lint-changeset.mjs`
+· exit 0, `node scripts/version-parity-gate.mjs --content` · `VERDICT: PASS`, doc-shape suites
+254 pass / 0 fail. Discrimination against this PR's real bytes (E26, in-memory, no live
+mutation): shipped intent → `changeset-intent`; the intent truncated to its round-2 state →
+`changeset-coverage`, naming `audit-pr, review-change`.
+
+**Self-correction, by append:** E23 recorded `bun scripts/lint-changeset.mjs` as
+"exit 0" — that reading came from the last command of a pipeline, not the script.
+The linter is fail-closed: alone over that tree it exits 1. The claim E23 built on it
+(no gate runs it over the committed tree) was true and is what round 3 closed.

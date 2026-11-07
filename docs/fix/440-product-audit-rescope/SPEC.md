@@ -217,27 +217,46 @@ the steps run inline in the `## Tasks` order P1–P7.
 - **E22** — 2026-11-07, at `459ee056`: `bun scripts/local-gate.mjs --skip-network` · exit 0 · `PASS — 8 step(s)`, 88 root suites PASS; `bun test scripts/product-audit-rescope.test.mjs` · exit 0 · 15 pass / 0 fail; `bun test scripts/scaffold-parity.test.mjs` · exit 0 · 17 pass / 0 fail; `bun scripts/check-skill-context.mjs --routes --json` · exit 0 · `failures: []` over 14 routes.
 - **F3** — 2026-11-07, the one blocker R2 found is folded (`459ee056`): the release intent under-declared the batch's own surface set. The rule is that the intent is derived from the PR's modified files, never hand-written (PE-007); the derivation over `origin/main...HEAD` named three skills (`audit-pr`, `product-audit`, `review-change`) while `.changeset/feat-440-…md` declared one. Verified after: `bun scripts/release.mjs plan` lists `audit-pr=minor`, `product-audit=minor`, `review-change=minor`; `bun scripts/lint-changeset.mjs <file>` · exit 0 · `ok`; `node scripts/version-parity-gate.mjs --content` · `VERDICT: PASS`. No gate caught it — the parity gate is satisfied by any declared entry of the Pi package's content source — which is why it is recorded as a finding of the recheck, not of the tooling.
 - **E23** — 2026-11-07, pre-existing defect found while running the intent linter over the whole tree (recorded for honesty, not a class of this unit): `bun scripts/lint-changeset.mjs` · exit 0 with `error: 374-pluggable-session-journal.md: cites a repo path that does not exist: .agentic-workflow/journal-store/entries.db` — reproduced identically on a `git archive` of base `e1d94057` in scratch, so it is not caused by this branch; no gate runs the linter over the committed tree, only over fixtures. Rides the #374 intent file's own owner triage.
+- **L3** — 2026-11-07, the second correction, verbatim:
+  ```
+  Repara los no plegados, los chageset deberían de tener lint propio y determinista
+  ```
+  (round 3: repair the advisories the recheck left reported, and give the release
+  intents a deterministic lint of their own; decisions D-440-5…D-440-7.)
+- **E24** — 2026-11-07, the red side of the rider: `bun test scripts/lint-changeset.test.mjs` · exit 1 · `(fail) the shipped repository's own pending intents all lint clean`, the message carrying `error: 374-pluggable-session-journal.md: cites a repo path that does not exist: .agentic-workflow/journal-store/entries.db`; `bun test scripts/version-parity-gate.test.mjs` · exit 1 · `(fail) content: skill entries that miss a changed skill are refused` (the rule did not exist, so the under-declared intent passed); `bun test scripts/product-audit-rescope.test.mjs` · exit 1 · `(fail) the narration states explicit invocation beside the measured triggers`, naming `README.md`. Red commit `6f3a224a`. E23's "exit 0" was read from a pipeline's last command, not from the script: the linter is fail-closed — `bun scripts/lint-changeset.mjs` alone exits 1 over that tree. Corrected by append here; the earlier line stays as recorded.
+- **P4** — 2026-11-07, the owner-ordered rider lands (D-440-5…D-440-7): the `changeset-coverage` rule in `scripts/version-parity-gate.mjs`, the tree-level intent-lint case in `scripts/lint-changeset.test.mjs`, #374's dead citation repaired, the explicit-invocation qualifier restored in the two narration rows and pinned, the two budget source rows reworded so the retired literal is no longer quoted · `708b37b0`.
+- **E25** — 2026-11-07, the green side: `bun test scripts/lint-changeset.test.mjs scripts/version-parity-gate.test.mjs scripts/product-audit-rescope.test.mjs` · exit 0 · 82 pass / 0 fail; `bun scripts/lint-changeset.mjs` · exit 0 (the whole committed `.changeset/` directory); `node scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS`; `bun scripts/check-skill-context.mjs --routes` / `--budgets` / `--documents` · exit 0; `bun scripts/skill-lint.mjs` · exit 0 · PASS; `bun scripts/docs-generate.mjs --check` · exit 0 · PASS.
+- **E26** — 2026-11-07, the new rule judged against this PR's own bytes: the gate's pure core called in memory with the real `git diff --name-only origin/main...HEAD` set (no live file mutated) — intent as shipped → `changeset-intent`; the same intent truncated to its round-2 state (one skill entry) → `changeset-coverage`, naming `audit-pr, review-change`. The F3 class is now caught by a gate, not by a recheck.
+- **F4** — 2026-11-07, the round-2 advisories are folded; none stays report-only: advisory 1 (the dropped explicit-invocation qualifier) restored in `README.md` and `docs/workflow/SKILLS.md` and pinned against the frontmatter that owns the constraint (D-440-7); advisory 2 (#374's dead path citation) repaired in its intent file with every claim kept (D-440-6); advisory 3 (the budget rows quoting the retired literal) reworded to name the change without re-quoting it. The gates that keep 1 and 2 from drifting again are D-440-5, shipped in the same rider.
+
+## Scope rider (2026-11-07, owner-ordered)
+
+L3 added work this unit did not plan, so it is declared rather than smuggled: two
+deterministic gates over the release-intent surface (`changeset-coverage` in the
+version-parity content gate; the tree-level changeset lint, now run by the root
+suite), the repair of the pre-existing violation the new lint found in #374's pending
+intent file, and the invocability-narration pin. None of it changes `product-audit`'s
+behaviour, the trigger grammar or any vocabulary — it closes the classes that a
+recheck had to catch by hand. Decisions D-440-5…D-440-7 and their path-protection
+rows live in `decisions.md`; nothing is left for a later issue — the rider ships
+complete or not at all.
 
 ## Next
 
-The correction batch R1 asked for has landed (`73bbc0b5` red → `68549fe0` green,
-receipts E15–E20); the blockers-only recheck (R2) confirmed all six closed (V1) and
-found one blocker of its own — the intent file's under-declared surface set — folded
-in `459ee056` (F3, E22). The same blocker did not persist, so per the correction
-bounds no third round is owed: the next step is your merge decision on PR #445, and
-an independence-clean pass by a session that did not write this batch is recommended
-before merging (R2's disclosure). Still open, none of them this unit's:
+Round 3's rider is complete and gated (`6f3a224a` red → `708b37b0` green, receipts
+E24–E26): the six R1 blockers stay closed, the round-2 blocker and all three round-2
+advisories are folded (F4), and the two intent classes now fail a gate instead of
+waiting for a recheck. The next step is your merge decision on PR #445 at the
+rider's head; an independence-clean pass over the delta scope is still recommended
+(R2's disclosure), and it costs one command per suite (`product-audit-rescope`,
+`lint-changeset`, `version-parity-gate`). Still open, none of them this unit's:
 (1) `pi-compat-guard` red at `main` — pre-existing, differential-proven twice (E13,
 E19), the guard type-checks a published package that predates the unpublished
 journal modules; (2) the journal writer-side fragment-name validation gap (F1);
 (3) the advisories kept by declaration — the dated records (D-440-2) and the
 proposal-stream route cells (D-440-3); (4) the #374 intent file's dead path citation
-(E23, pre-existing at `main`); (5) a narration loss R2 reports as advisory, not
-blocker: base `README.md`/`docs/workflow/SKILLS.md` also stated product-audit is
-explicit-invocation-only, and head replaced that clause with the trigger wording —
-the constraint itself is still machine-owned (`disable-model-invocation: true`), so
-no live surface asserts the opposite; it becomes a blocker only if some surface ever
-claims the audit self-fires (a scheduled driver or an autopilot row).
+(E23) — repaired in this branch's rider (F4), so it no longer rides anywhere; (5) the
+narration loss R2 reported as advisory — likewise folded by F4, with a pin behind it.
 
 ## References
 
@@ -262,3 +281,5 @@ none — the blocking set is empty (issue `## Dependencies`: "The skill re-scope
 - Skill context budgets: `bun scripts/check-skill-context.mjs --routes` exits 0.
 - Skill authoring lint: `bun scripts/skill-lint.mjs` exits 0.
 - The retired-cadence sweep (the F51/F53 class the external verify reported): `bun test scripts/product-audit-rescope.test.mjs` exits 0 with the live-surface sweep case — no skill, tutorial page or the root README still asserts the periodic cadence.
+- The release-intent gates (the round-3 rider): `bun test scripts/lint-changeset.test.mjs` exits 0 — including the case that lints this repository's own committed `.changeset/` directory — and `bun test scripts/version-parity-gate.test.mjs` exits 0 — including the `changeset-coverage` refusals and the package-level-entry exemption.
+- The invocability narration pin: `bun test scripts/product-audit-rescope.test.mjs` exits 0 with the case binding `README.md`'s and `docs/workflow/SKILLS.md`'s product-audit rows to `disable-model-invocation: true`.
