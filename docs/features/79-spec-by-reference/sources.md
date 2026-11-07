@@ -52,27 +52,32 @@ Receipt (the greps/reads run, their hits):
 - `ls scripts/fixtures/golden-fixture/` → `toy-spec.md`, `toy-plan.md`,
   `expected/`, `RUN_LOG_NOTES.md` — the fixture corpus the migration extends.
 
-| id | claim | source | certainty |
-|---|---|---|---|
-| INV-001 | The unit document re-cuts to `## Specs` / `## Tasks` / `## Log`, keeps `## Impact`, and folds the Evidence table into `## Log` (one line per observed run: command, exit, output ≤2 lines) | `#308` §Scope 1 | confirmed |
-| INV-002 | `phase-lint.mjs` accepts the new grammar alongside the current one during migration, `unit-route.mjs` reads both, and `normative-surfaces@1` is updated for any new grammar block | `#308` §Scope 2 | confirmed |
-| INV-003 | `review-findings.md` disappears for migrated units: OPEN findings stay a short table (id, S#/file:line, axis, severity, class, route), folded history becomes `## Log` lines (fold sha + what was verified), REVIEW-RAN/GATE-RAN/VF become log lines with exit codes, no new receipt without retiring one | `#308` §Scope 3 | confirmed |
-| INV-004 | Migration is fixture-validated first (golden fixture + a converted copy of fix-258's documents); open units migrate at their next touch; closed units never | `#308` §Scope 4 | confirmed |
-| INV-005 | The plan step is prescribed positively (cut `S#` verbatim, link tasks, keep the log), never as a prohibition list | `#308` §Scope 5; `#303` §Summary | confirmed |
-| INV-006 | Non-goals: no review-machinery change (review-on-slices / review_due is a follow-up unit), no closed/historical doc migration, no schema-package break | `#308` §Non-goals | confirmed |
-| INV-007 | Triage fails closed when the unit doc misses any required section, so the re-cut template cannot route or triage until the machine reads both shapes | `scripts/unit-route.mjs:649-651` | confirmed |
-| INV-008 | The section list is one owner constant mirrored by three surfaces and pinned by one contract suite; a list change is a four-surface, same-PR change | `packages/agentic-workflow-schema/src/pre-execution.ts:225`; `scripts/unit-doc-contract.test.mjs:3-13` | confirmed |
-| INV-009 | The Product selector requires all 14 headings, exact-match and in order; headings outside the list are already tolerated | `packages/agentic-workflow-schema/src/pre-execution.ts:529-556` | confirmed |
-| INV-010 | The linter already runs two grammars behind one verdict contract, so "new grammar alongside the current one" has an in-repo precedent to follow | `scripts/phase-lint.mjs:1-40` | confirmed |
-| INV-011 | The findings ledger is read by `unit-route` (routing), `workflow-status` (sensor), `ledger-provenance` (CLI) and written by `review-change`/`fold-findings`; 6 test suites pin its shape | grep receipt above; `scripts/ledger-ownership.test.mjs`, `scripts/review-loop-discipline.test.mjs`, `scripts/workflow-status-sensor.test.mjs` | confirmed |
-| INV-012 | The ledger's mark grammars (`ledger-ownership@1`, `review-mark@1`, `finding-mark@1`, `gate-ran@1`) are published by `LEDGERS.md`, which the collapse must retire or re-shape one for one | `skills/pre-execution-review/references/LEDGERS.md` | confirmed |
-| INV-013 | A standing rule forbids `S1`/`S2` labels in SPEC/PLAN/TASKS while #308 mandates `S#` as requirement ids — the two need an explicit vocabulary split, not a silent overlap | `AGENTS.md` ("Phases are P1, P2, …"), `skills/unit-lane/references/PLAN.md` checklist; `#308` §Summary | confirmed |
-| INV-014 | The owner already ruled once that a published surface and the machine must not diverge in the permissive direction ("required since #305", not "tolerated extra") — the precedent behind Q1 | `docs/features/77-promise-coherence-guard/decisions.md` D-77-1 | confirmed |
-| INV-015 | Closed units are never migrated, so whatever ships must keep old-shape docs readable by the machine indefinitely | `#308` §Non-goals + §Scope 4 (consequence: dual-shape reading) | inferred |
-| INV-016 | Both named dependencies are closed and merged at this branch's base (#303's four-stage references, #305's promise-coherence guard) | `gh issue view 303/305` → CLOSED; `git log --oneline -1` = `01151e6b` | confirmed |
-| INV-017 | The golden fixture is a committed read-only corpus (`toy-spec.md`, `toy-plan.md`, `expected/`) with an executable suite, so the migration corpus has a home beside it | `ls scripts/fixtures/golden-fixture/`; `scripts/golden-fixture.test.mjs` | confirmed |
-| INV-018 | An M/L unit freezes its planning ledgers as `planning-evidence.md` / `planning-obligations.md` in the unit folder, never both homes | `skills/unit-lane/references/PLAN.md:153-160` | confirmed |
-| INV-019 | `--from-issue <n>` on a tracked issue with no folder is the router's own printed form, and the folder carries the issue number | `scripts/unit-route.mjs:33` (`plan-from-issue`); `#308` has no folder yet | confirmed |
+> Shape migrated 2026-11-07 to `DESIGN.md` § Provenance: the `provenance` column is a
+> mechanical classification of each row's own first cited source (repository /
+> version-pinned doc / owner answer / model memory). No claim, source or certainty
+> was changed, and no new evidence is asserted — re-derive any cell from the row.
+
+| id | claim | source | provenance | certainty |
+|---|---|---|---|---|
+| INV-001 | The unit document re-cuts to `## Specs` / `## Tasks` / `## Log`, keeps `## Impact`, and folds the Evidence table into `## Log` (one line per observed run: command, exit, output ≤2 lines) | `#308` §Scope 1 | owner answer | confirmed |
+| INV-002 | `phase-lint.mjs` accepts the new grammar alongside the current one during migration, `unit-route.mjs` reads both, and `normative-surfaces@1` is updated for any new grammar block | `#308` §Scope 2 | owner answer | confirmed |
+| INV-003 | `review-findings.md` disappears for migrated units: OPEN findings stay a short table (id, S#/file:line, axis, severity, class, route), folded history becomes `## Log` lines (fold sha + what was verified), REVIEW-RAN/GATE-RAN/VF become log lines with exit codes, no new receipt without retiring one | `#308` §Scope 3 | owner answer | confirmed |
+| INV-004 | Migration is fixture-validated first (golden fixture + a converted copy of fix-258's documents); open units migrate at their next touch; closed units never | `#308` §Scope 4 | owner answer | confirmed |
+| INV-005 | The plan step is prescribed positively (cut `S#` verbatim, link tasks, keep the log), never as a prohibition list | `#308` §Scope 5; `#303` §Summary | owner answer | confirmed |
+| INV-006 | Non-goals: no review-machinery change (review-on-slices / review_due is a follow-up unit), no closed/historical doc migration, no schema-package break | `#308` §Non-goals | owner answer | confirmed |
+| INV-007 | Triage fails closed when the unit doc misses any required section, so the re-cut template cannot route or triage until the machine reads both shapes | `scripts/unit-route.mjs:649-651` | repository | confirmed |
+| INV-008 | The section list is one owner constant mirrored by three surfaces and pinned by one contract suite; a list change is a four-surface, same-PR change | `packages/agentic-workflow-schema/src/pre-execution.ts:225`; `scripts/unit-doc-contract.test.mjs:3-13` | repository | confirmed |
+| INV-009 | The Product selector requires all 14 headings, exact-match and in order; headings outside the list are already tolerated | `packages/agentic-workflow-schema/src/pre-execution.ts:529-556` | repository | confirmed |
+| INV-010 | The linter already runs two grammars behind one verdict contract, so "new grammar alongside the current one" has an in-repo precedent to follow | `scripts/phase-lint.mjs:1-40` | repository | confirmed |
+| INV-011 | The findings ledger is read by `unit-route` (routing), `workflow-status` (sensor), `ledger-provenance` (CLI) and written by `review-change`/`fold-findings`; 6 test suites pin its shape | grep receipt above; `scripts/ledger-ownership.test.mjs`, `scripts/review-loop-discipline.test.mjs`, `scripts/workflow-status-sensor.test.mjs` | repository | confirmed |
+| INV-012 | The ledger's mark grammars (`ledger-ownership@1`, `review-mark@1`, `finding-mark@1`, `gate-ran@1`) are published by `LEDGERS.md`, which the collapse must retire or re-shape one for one | `skills/pre-execution-review/references/LEDGERS.md` | repository | confirmed |
+| INV-013 | A standing rule forbids `S1`/`S2` labels in SPEC/PLAN/TASKS while #308 mandates `S#` as requirement ids — the two need an explicit vocabulary split, not a silent overlap | `AGENTS.md` ("Phases are P1, P2, …"), `skills/unit-lane/references/PLAN.md` checklist; `#308` §Summary | repository | confirmed |
+| INV-014 | The owner already ruled once that a published surface and the machine must not diverge in the permissive direction ("required since #305", not "tolerated extra") — the precedent behind Q1 | `docs/features/77-promise-coherence-guard/decisions.md` D-77-1 | repository | confirmed |
+| INV-015 | Closed units are never migrated, so whatever ships must keep old-shape docs readable by the machine indefinitely | `#308` §Non-goals + §Scope 4 (consequence: dual-shape reading) | owner answer | inferred |
+| INV-016 | Both named dependencies are closed and merged at this branch's base (#303's four-stage references, #305's promise-coherence guard) | `gh issue view 303/305` → CLOSED; `git log --oneline -1` = `01151e6b` | repository | confirmed |
+| INV-017 | The golden fixture is a committed read-only corpus (`toy-spec.md`, `toy-plan.md`, `expected/`) with an executable suite, so the migration corpus has a home beside it | `ls scripts/fixtures/golden-fixture/`; `scripts/golden-fixture.test.mjs` | repository | confirmed |
+| INV-018 | An M/L unit freezes its planning ledgers as `planning-evidence.md` / `planning-obligations.md` in the unit folder, never both homes | `skills/unit-lane/references/PLAN.md:153-160` | repository | confirmed |
+| INV-019 | `--from-issue <n>` on a tracked issue with no folder is the router's own printed form, and the folder carries the issue number | `scripts/unit-route.mjs:33` (`plan-from-issue`); `#308` has no folder yet | repository | confirmed |
 
 ## Plan — provenance search (2026-10-21)
 
@@ -106,17 +111,22 @@ prior unit decide this?"):
 - `git status --short` + `git log --oneline -1` → clean tree at `39e2aa3a`,
   base `01151e6b` (= `main`).
 
-| id | claim | source | certainty |
-|---|---|---|---|
-| CLAIM-001 | An `S#` link inside a `P<n>` task bullet is not rejected by any phase-lint box: box 8 reads only the `(validator: …)` span, boxes 1–7 are unit-doc n/a or title-free | `scripts/phase-lint.mjs:640,731-748`; `skills/phase-contract/SKILL.md:83-104`; live `bun scripts/phase-lint.mjs docs/features/79-spec-by-reference/SPEC.md` → PASS | confirmed |
-| CLAIM-002 | A shape with no `## Progress log` needs a replacement derivation for "phases done" in `unit-route`, because that logic reads only that section | `scripts/unit-route.mjs:514-560` | confirmed |
-| CLAIM-003 | Q1=A is a four-surface change (schema constant + selector, SDK `edit/schema.mjs`, producer `UnitDoc.mjs`, router copy) pinned by one suite | `scripts/unit-doc-contract.test.mjs:3-13,70-139`; owner answer `D1` | confirmed |
-| CLAIM-004 | The planning-evidence row shape and vocabularies are read from `LEDGERS.md` §1 + `PLAN.md` + the live M/L ledgers (the old `ROWS.md` owner was absorbed by feature 61) | `skills/pre-execution-review/references/LEDGERS.md:18-39`; `skills/unit-lane/references/PLAN.md:140-160`; `docs/features/37-phase-lint-script/planning-evidence.md:12` | confirmed |
-| CLAIM-005 | A schema-package change ships with a version bump + mirrored types/schema + CHANGELOG row in the same PR | `AGENTS.md:258` and §Packages; `scripts/version-parity-gate.mjs:10` | confirmed |
-| CLAIM-006 | Any change under root `skills/**` requires a `packages/pi-agentic-workflow` version bump + CHANGELOG companion row in the same PR | `scripts/version-parity-gate.mjs:10,36`; `AGENTS.md` §Packages | confirmed |
-| CLAIM-007 | Red-first is the repo rule: tests before implementation with the expected behaviour | `AGENTS.md` (project instructions) | confirmed |
-| CLAIM-008 | `## Findings` as an extra heading is tolerated by the Product selector (only the required names are checked for presence/duplicate/order) | `packages/agentic-workflow-schema/src/pre-execution.ts:529-556`; owner answer `D3` | confirmed |
-| CLAIM-009 | The reader allowlist decides which declared outcomes the coherence guard executes, so obligation validators are `node --test` commands with `exits 0` | `scripts/promise-coherence.mjs:113-114,204,260` | confirmed |
-| CLAIM-010 | Prior-decisions sweep candidates: no NRS artifact is installed and no `## Design status` marker exists in this unit; the two live candidates are `AGENTS.md` and prior `decisions.md` | `find docs -iname "*normalized*"` (feature-18 folder only); `grep -c "Design status" docs/features/79-spec-by-reference/SPEC.md` → 0; `docs/features/77-promise-coherence-guard/decisions.md` D-77-1 | confirmed |
-| CLAIM-011 | The standing "never `S1`/`S2`" guide rule governs *phase labels*; #308's `S#` are requirement ids — the letter of `AGENTS.md`/`PLAN.md` needs the P6 wording amendment so a weak model cannot read the two as one vocabulary | `AGENTS.md` "Phases are P1, P2, …"; `skills/unit-lane/references/PLAN.md` checklist; `#308` §Summary; assumption `A4` | confirmed |
-| CLAIM-012 | Sequence: the converted fixtures must exist and be owner-reviewed (AC7) before this repo's own workflow docs move, so the owner review gates the start of P3 | `#308` §Validation without dogfooding + §Scope 4; owner answer `D1`/`D2` | confirmed |
+> Shape migrated 2026-11-07 to `DESIGN.md` § Provenance: the `provenance` column is a
+> mechanical classification of each row's own first cited source (repository /
+> version-pinned doc / owner answer / model memory). No claim, source or certainty
+> was changed, and no new evidence is asserted — re-derive any cell from the row.
+
+| id | claim | source | provenance | certainty |
+|---|---|---|---|---|
+| CLAIM-001 | An `S#` link inside a `P<n>` task bullet is not rejected by any phase-lint box: box 8 reads only the `(validator: …)` span, boxes 1–7 are unit-doc n/a or title-free | `scripts/phase-lint.mjs:640,731-748`; `skills/phase-contract/SKILL.md:83-104`; live `bun scripts/phase-lint.mjs docs/features/79-spec-by-reference/SPEC.md` → PASS | repository | confirmed |
+| CLAIM-002 | A shape with no `## Progress log` needs a replacement derivation for "phases done" in `unit-route`, because that logic reads only that section | `scripts/unit-route.mjs:514-560` | repository | confirmed |
+| CLAIM-003 | Q1=A is a four-surface change (schema constant + selector, SDK `edit/schema.mjs`, producer `UnitDoc.mjs`, router copy) pinned by one suite | `scripts/unit-doc-contract.test.mjs:3-13,70-139`; owner answer `D1` | repository | confirmed |
+| CLAIM-004 | The planning-evidence row shape and vocabularies are read from `LEDGERS.md` §1 + `PLAN.md` + the live M/L ledgers (the old `ROWS.md` owner was absorbed by feature 61) | `skills/pre-execution-review/references/LEDGERS.md:18-39`; `skills/unit-lane/references/PLAN.md:140-160`; `docs/features/37-phase-lint-script/planning-evidence.md:12` | repository | confirmed |
+| CLAIM-005 | A schema-package change ships with a version bump + mirrored types/schema + CHANGELOG row in the same PR | `AGENTS.md:258` and §Packages; `scripts/version-parity-gate.mjs:10` | repository | confirmed |
+| CLAIM-006 | Any change under root `skills/**` requires a `packages/pi-agentic-workflow` version bump + CHANGELOG companion row in the same PR | `scripts/version-parity-gate.mjs:10,36`; `AGENTS.md` §Packages | repository | confirmed |
+| CLAIM-007 | Red-first is the repo rule: tests before implementation with the expected behaviour | `AGENTS.md` (project instructions) | repository | confirmed |
+| CLAIM-008 | `## Findings` as an extra heading is tolerated by the Product selector (only the required names are checked for presence/duplicate/order) | `packages/agentic-workflow-schema/src/pre-execution.ts:529-556`; owner answer `D3` | repository | confirmed |
+| CLAIM-009 | The reader allowlist decides which declared outcomes the coherence guard executes, so obligation validators are `node --test` commands with `exits 0` | `scripts/promise-coherence.mjs:113-114,204,260` | repository | confirmed |
+| CLAIM-010 | Prior-decisions sweep candidates: no NRS artifact is installed and no `## Design status` marker exists in this unit; the two live candidates are `AGENTS.md` and prior `decisions.md` | `find docs -iname "*normalized*"` (feature-18 folder only); `grep -c "Design status" docs/features/79-spec-by-reference/SPEC.md` → 0; `docs/features/77-promise-coherence-guard/decisions.md` D-77-1 | repository | confirmed |
+| CLAIM-011 | The standing "never `S1`/`S2`" guide rule governs *phase labels*; #308's `S#` are requirement ids — the letter of `AGENTS.md`/`PLAN.md` needs the P6 wording amendment so a weak model cannot read the two as one vocabulary | `AGENTS.md` "Phases are P1, P2, …"; `skills/unit-lane/references/PLAN.md` checklist; `#308` §Summary; assumption `A4` | repository | confirmed |
+| CLAIM-012 | Sequence: the converted fixtures must exist and be owner-reviewed (AC7) before this repo's own workflow docs move, so the owner review gates the start of P3 | `#308` §Validation without dogfooding + §Scope 4; owner answer `D1`/`D2` | owner answer | confirmed |
