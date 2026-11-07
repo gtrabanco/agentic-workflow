@@ -48,13 +48,20 @@ hook below call the same command unchanged.
 ### GitHub Actions example
 
 Shipped as `template/.github/workflows/agentic-workflow-journal.yml.example` —
-rename it to `.yml` on consent. It runs on pushes to the default branch when a
-fragment changed, under a **concurrency group** so two merges seconds apart
-serialize instead of racing. Supported merge strategies: **squash** and
-**merge-commit** both deliver the branch's added fragment files into the
-default branch's tree, and the aggregator consumes the tip's working tree, so
-both work unchanged; a **rebase** merge rewrites the fragment commits but the
-files still land, so it works too.
+`init-workspace` asks before installing it: consent first, then rename to
+`.yml`. It runs on a **weekly schedule** (plus manual dispatch) and aggregates
+the pending fragments on a branch named after the ISO week —
+`journal-aggregate-<YYYY-Www>` — so **at most one PR per week** carries the
+batch: the first run of a week opens it, later runs add commits to the same
+PR. It never pushes to the default branch, so it works unchanged in
+repositories whose rules require a pull request for every change. The batch
+PR merges itself with a **merge commit** (never squash) once required checks
+pass — a repo that squashes by default must still allow merge commits for
+this PR; with no pending fragments the run creates nothing. A concurrency
+group serializes overlapping runs. The merge strategy your own feature PRs
+use needs no switch: squash, merge-commit and rebase all deliver the added
+fragment files into the default branch's tree, and the aggregator consumes
+the tip's working tree.
 
 ### Self-hosted forges: `post-receive` example
 
