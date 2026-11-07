@@ -46,7 +46,7 @@ function issue(number, title, body, blockedBy = [], labels = []) {
   return { number, title, body, blockedBy, labels };
 }
 
-/** Build the roadmap document a scratch root needs. */
+/** Build the roadmap document a scratch root needs (canonical location). */
 function roadmapDoc() {
   return [
     "# Roadmap",
@@ -77,7 +77,8 @@ const baseInput = (issues, root, overrides = {}) => ({
 test("S2: emits a batch-plan@1 envelope with batches, blocked and findings arrays", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"]))];
     const plan = buildBatchPlan(baseInput(issues, root));
     assert.equal(plan.schema, "batch-plan@1");
@@ -97,7 +98,8 @@ test("S2: emits a batch-plan@1 envelope with batches, blocked and findings array
 test("S4: every batched issue carries lane, worktree, launch command and reason", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"]))];
     const plan = buildBatchPlan(baseInput(issues, root));
     const row = plan.batches[0].lanes[0].issues[0];
@@ -115,7 +117,8 @@ test("S4: every batched issue carries lane, worktree, launch command and reason"
 test("S4: bug-labelled issues derive a fix/ worktree prefix", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [issue(20, "Sensor crashes on empty index", whereSection(["scripts/sensor.mjs"]), [], ["bug"])];
     const plan = buildBatchPlan(baseInput(issues, root));
     assert.equal(plan.batches[0].lanes[0].issues[0].worktree, "fix/20-sensor-crashes-on-empty-index");
@@ -129,7 +132,8 @@ test("S4: bug-labelled issues derive a fix/ worktree prefix", () => {
 test("S5: an issue with an open native blocked-by lands in a later batch, named in blocked", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [
       issue(27, "Config schema", whereSection(["packages/config/src/index.ts"])),
       issue(444, "Panel", whereSection(["packages/pi-web/src/panel.ts"]), [27]),
@@ -147,7 +151,8 @@ test("S5: an issue with an open native blocked-by lands in a later batch, named 
 test("S5: a blocker absent from the open set is satisfied (closed issues do not gate)", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [issue(444, "Panel", whereSection(["packages/pi-web/src/panel.ts"]), [27])];
     const plan = buildBatchPlan(baseInput(issues, root));
     assert.equal(plan.blocked.length, 0);
@@ -162,7 +167,8 @@ test("S5: a blocker absent from the open set is satisfied (closed issues do not 
 test("S5: a soft dep orders a same-surface pair inside one lane, never batches them apart", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const deps = depsTable([["#10", "soft", "same area: the doc index consumes the emitter"]]);
     const issues = [
       issue(11, "Doc index queries", `${whereSection(["skills/doc-index/SKILL.md"])}\n\n${deps}`),
@@ -185,7 +191,8 @@ test("S5: a soft dep orders a same-surface pair inside one lane, never batches t
 test("S5: a soft dep whose target is in a later batch pulls the dependent to a batch at or after it", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const deps = depsTable([["#10", "soft", "order preference: design notes land first"]]);
     const issues = [
       issue(11, "Doc index queries", `${whereSection(["skills/alpha/SKILL.md"])}\n\n${deps}`),
@@ -205,7 +212,8 @@ test("S5: a soft dep whose target is in a later batch pulls the dependent to a b
 test("S5: two issues sharing one surface share one lane; disjoint surfaces get disjoint lanes", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [
       issue(10, "Alpha one", whereSection(["skills/alpha/SKILL.md"])),
       issue(11, "Alpha two", whereSection(["skills/alpha/references/A.md"])),
@@ -233,7 +241,8 @@ test("S5: two issues sharing one surface share one lane; disjoint surfaces get d
 test("S5: issues carry a size hint from their declared evidence and lanes an aggregate", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [
       issue(10, "Small fix (S)", whereSection(["skills/alpha/SKILL.md"])),
       issue(11, "Large feature (L)", whereSection(["packages/pi-web/src/a.ts", "packages/pi-web/src/b.ts", "skills/alpha/SKILL.md", "skills/beta/SKILL.md"])),
@@ -254,7 +263,8 @@ test("S5: issues carry a size hint from their declared evidence and lanes an agg
 test("S3: an in-flight unit doc for an issue marks that issue launched, not batched", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     fs.mkdirSync(path.join(root, "docs", "fix", "10-alpha-skill-change"), { recursive: true });
     fs.writeFileSync(path.join(root, "docs", "fix", "10-alpha-skill-change", "SPEC.md"), "# unit\n");
     const issues = [
@@ -275,7 +285,8 @@ test("S3: an in-flight unit doc for an issue marks that issue launched, not batc
 test("S6: a re-run recognizes lanes already claimed in the persisted state file", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"]))];
     const plan1 = buildBatchPlan(baseInput(issues, root));
     const state = updateState(plan1, null, { now: "2026-11-07T00:00:00Z", head: HEAD });
@@ -295,7 +306,8 @@ test("S6: a re-run recognizes lanes already claimed in the persisted state file"
 test("S7: a cyclic blocker wait is a finding and the cycle members are excluded from batches", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [
       issue(10, "A", whereSection(["skills/alpha/SKILL.md"]), [11]),
       issue(11, "B", whereSection(["skills/beta/SKILL.md"]), [10]),
@@ -315,7 +327,8 @@ test("S7: a cyclic blocker wait is a finding and the cycle members are excluded 
 test("S7: an orphaned soft dep (target missing) is a finding", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const deps = depsTable([["#999", "soft", "points at an issue that does not exist"]]);
     const issues = [issue(11, "Doc index queries", `${whereSection(["skills/doc-index/SKILL.md"])}\n\n${deps}`)];
     const plan = buildBatchPlan(baseInput(issues, root));
@@ -330,7 +343,8 @@ test("S7: an orphaned soft dep (target missing) is a finding", () => {
 test("S7: a prose row declared hard with no native blocked-by is a #442 agreement finding", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const deps = depsTable([["#10", "hard", "shared surface"]]);
     const issues = [issue(11, "Doc index queries", `${whereSection(["skills/doc-index/SKILL.md"])}\n\n${deps}`)];
     const plan = buildBatchPlan(baseInput(issues, root));
@@ -347,7 +361,8 @@ test("S7: a prose row declared hard with no native blocked-by is a #442 agreemen
 test("S8: identical inputs produce byte-identical envelopes (no wall clock, no model)", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const deps = depsTable([["#10", "soft", "same area"]]);
     const issues = [
       issue(11, "Doc index queries", `${whereSection(["skills/doc-index/SKILL.md"])}\n\n${deps}`),
@@ -372,12 +387,27 @@ test("S2: an unavailable forge degrades declared, never a silent empty plan", as
   assert.match(degraded.degradations[0], /^unavailable-/);
 });
 
+test("S7: a prose-hard mismatch is suppressed (declared) when the relations are unavailable", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const deps = depsTable([["#10", "hard", "shared surface"]]);
+    const issues = [issue(11, "Doc index queries", `${whereSection(["skills/doc-index/SKILL.md"])}\n\n${deps}`)];
+    const plan = buildBatchPlan(baseInput(issues, root, { relationsKnown: false }));
+    assert.equal(plan.findings.filter((f) => f.code === "prose-native-mismatch").length, 0, "no native data, no mismatch claim");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── CLI — the script runs, prints the envelope last, exits 0 ───────────────
 
 test("CLI: --issues-file --root --no-state --json-only prints the envelope and exits 0", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issuesFile = path.join(root, "issues.json");
     fs.writeFileSync(issuesFile, JSON.stringify([issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"]))]));
     const run = spawnSync(process.execPath, [scriptPath, "--root", root, "--issues-file", issuesFile, "--no-state", "--json-only"], {
@@ -395,7 +425,8 @@ test("CLI: --issues-file --root --no-state --json-only prints the envelope and e
 test("CLI: a run without --no-state persists the state file under the scratch root", () => {
   const root = scratchRoot();
   try {
-    fs.writeFileSync(path.join(root, "ROADMAP.md"), roadmapDoc());
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issuesFile = path.join(root, "issues.json");
     fs.writeFileSync(issuesFile, JSON.stringify([issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"]))]));
     const run = spawnSync(process.execPath, [scriptPath, "--root", root, "--issues-file", issuesFile, "--json-only"], {

@@ -36,7 +36,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { roadmapTableRows } from "../packages/agentic-workflow/src/index-document.mjs";
+import { readRoadmapIndex, roadmapTableRows } from "../packages/agentic-workflow/src/index-document.mjs";
 
 /** The state file's name, under `<root>/.agentic-workflow/` (untracked, durable). */
 export const STATE_FILE_NAME = "batches.json";
@@ -61,14 +61,25 @@ const ZERO_REVISION = "0000000000000000000000000000000000000000";
 export async function collectIssues({ issuesFile, ghBin = "gh", remote = null } = {}) {
   if (issuesFile) {
     const degradations = [];
+    let raw = null;
     try {
-      const raw = JSON.parse(fs.readFileSync(issuesFile, "utf8"));
+      raw = JSON.parse(fs.readFileSync(issuesFile, "utf8"));
       if (!Array.isArray(raw)) throw new Error("issues fixture is not a JSON array");
-      return { issues: normalizeIssues(raw), degradations };
     } catch (cause) {
       degradations.push(`unavailable-forge-issues-file-${sanitizeCause(cause)}`);
-      return { issues: [], degradations };
+      return { issues: [], degradations, relationsKnown: false };
     }
+    // A cache that carries the native relations needs no forge call; one that
+    // does not (a plain `gh issue list` export) fetches them live, best-effort.
+    const hasRelations = raw.every((i) => i !== null && typeof i === "object" && Array.isArray(i.blockedBy));
+    const issues = normalizeIssues(raw);
+    if (hasRelations) return { issues, degradations, relationsKnown: true };
+    const relations = await fetchRelations({ ghBin, remote, degradations });
+    return {
+      issues: issues.map((issue) => ({ ...issue, blockedBy: relations.get(issue.number) ?? [] })),
+      degradations,
+      relationsKnown: relations.size > 0 || degradations.length === 0,
+    };
   }
   return collectIssuesLive({ ghBin, remote });
 }
@@ -87,36 +98,41 @@ async function collectIssuesLive({ ghBin, remote }) {
     listed = JSON.parse(run.stdout);
   } catch (cause) {
     degradations.push(`unavailable-forge-issue-list-${sanitizeCause(cause)}`);
-    return { issues: [], degradations };
+    return { issues: [], degradations, relationsKnown: false };
   }
 
-  const relations = new Map();
-  if (degradations.length === 0) {
-    const origin = remote ?? gitOriginUrl();
-    const parsed = origin !== null ? parseOrigin(origin) : null;
-    if (parsed === null) {
-      degradations.push("unavailable-forge-blocked-by-no-origin");
-    } else {
-      try {
-        const query =
-          "query{repository(owner:\"" + parsed.owner + "\",name:\"" + parsed.name + "\"){"
-          + "issues(first:100,states:OPEN){nodes{number blockedBy(first:20){nodes{number}}}}}}";
-        const run = spawnSync(ghBin, ["api", "graphql", "-f", `query=${query}`], { encoding: "utf8", timeout: 30000 });
-        if (run.error) throw run.error;
-        if (run.status !== 0) throw new Error((run.stderr || "gh api failed").trim().split("\n")[0]);
-        for (const node of JSON.parse(run.stdout).data.repository.issues.nodes) {
-          relations.set(node.number, node.blockedBy.nodes.map((n) => n.number));
-        }
-      } catch {
-        // The relation call failing degrades the plan's gating, never crashes
-        // it: fall back to prose-declared rows and say so.
-        degradations.push("unavailable-forge-blocked-by-graphql-error");
-      }
-    }
-  }
-
+  const relations = await fetchRelations({ ghBin, remote, degradations });
   const issues = normalizeIssues(listed).map((issue) => ({ ...issue, blockedBy: relations.get(issue.number) ?? [] }));
-  return { issues, degradations };
+  return { issues, degradations, relationsKnown: relations.size > 0 || issues.length === 0 };
+}
+
+/**
+ * One GraphQL call for the native `blocked-by` relations of the open issues.
+ * Failures push a degradation and return an empty map — the plan then skips
+ * the prose/native agreement check (it needs native data) and says so.
+ */
+async function fetchRelations({ ghBin, remote, degradations }) {
+  const relations = new Map();
+  const origin = remote ?? gitOriginUrl();
+  const parsed = origin !== null ? parseOrigin(origin) : null;
+  if (parsed === null) {
+    degradations.push("unavailable-forge-blocked-by-no-origin");
+    return relations;
+  }
+  try {
+    const query =
+      'query{repository(owner:"' + parsed.owner + '",name:"' + parsed.name + '"){'
+      + "issues(first:100,states:OPEN){nodes{number blockedBy(first:20){nodes{number}}}}}}";
+    const run = spawnSync(ghBin, ["api", "graphql", "-f", `query=${query}`], { encoding: "utf8", timeout: 30000 });
+    if (run.error) throw run.error;
+    if (run.status !== 0) throw new Error((run.stderr || "gh api failed").trim().split("\n")[0]);
+    for (const node of JSON.parse(run.stdout).data.repository.issues.nodes) {
+      relations.set(node.number, node.blockedBy.nodes.map((n) => n.number));
+    }
+  } catch {
+    degradations.push("unavailable-forge-blocked-by-graphql-error");
+  }
+  return relations;
 }
 
 function gitOriginUrl() {
@@ -247,7 +263,7 @@ function worktreeFor(issue) {
  *   degraded?: string[],
  * }} input
  */
-export function buildBatchPlan({ issues, root, head, previous = null, degraded = [] }) {
+export function buildBatchPlan({ issues, root, head, previous = null, degraded = [], relationsKnown = true }) {
   const degradations = [...degraded];
   const openNumbers = new Set(issues.map((i) => i.number));
   const byNumber = new Map(issues.map((i) => [i.number, i]));
@@ -255,10 +271,12 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   // ── where things live: roadmap state + unit docs on disk ──
   let roadmapText = null;
   try {
-    roadmapText = fs.readFileSync(path.join(root, "ROADMAP.md"), "utf8");
+    const index = readRoadmapIndex(root);
+    roadmapText = index?.text ?? null;
   } catch {
-    degradations.push("unavailable-roadmap-missing");
+    roadmapText = null;
   }
+  if (roadmapText === null) degradations.push("unavailable-roadmap-missing");
   const knownNumbers = new Set();
   if (roadmapText !== null) {
     for (const row of roadmapTableRows(roadmapText, "fix")) {
@@ -305,13 +323,18 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   const findings = [];
   for (const [number, row] of model) {
     const native = byNumber.get(number)?.blockedBy ?? [];
-    for (const target of row.proseHard) {
-      if (native.includes(target)) continue;
-      findings.push({
-        code: "prose-native-mismatch",
-        numbers: [number],
-        detail: `prose row declares #${target} hard but no native blocked-by exists (the #442 agreement check); the native relation is authoritative`,
-      });
+    if (relationsKnown) {
+      // The #442 agreement check needs the native relations; without them a
+      // mismatch would be indistinguishable from missing data, so the check
+      // skips and the degradation above says so.
+      for (const target of row.proseHard) {
+        if (native.includes(target)) continue;
+        findings.push({
+          code: "prose-native-mismatch",
+          numbers: [number],
+          detail: `prose row declares #${target} hard but no native blocked-by exists (the #442 agreement check); the native relation is authoritative`,
+        });
+      }
     }
     if (row.softOrphans.length > 0) {
       findings.push({
@@ -556,12 +579,12 @@ export function saveState(statePath, state) {
 function usage() {
   process.stderr.write(
     "usage: batch-scheduler.mjs [--root <dir>] [--issues-file <json>] [--state <path> | --no-state]\n"
-      + "                           [--mark-launched <n>] [--json-only]\n",
+      + "                           [--remote <url>] [--mark-launched <n>] [--json-only]\n",
   );
 }
 
 async function main(argv) {
-  const args = { root: process.cwd(), jsonOnly: false, noState: false, markLaunched: null, statePath: null, issuesFile: null };
+  const args = { root: process.cwd(), jsonOnly: false, noState: false, markLaunched: null, statePath: null, issuesFile: null, remote: null };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--root") args.root = path.resolve(argv[++i]);
@@ -570,6 +593,7 @@ async function main(argv) {
     else if (arg === "--no-state") args.noState = true;
     else if (arg === "--mark-launched") args.markLaunched = Number(argv[++i]);
     else if (arg === "--json-only") args.jsonOnly = true;
+    else if (arg === "--remote") args.remote = argv[++i];
     else {
       usage();
       process.exit(2);
@@ -600,9 +624,16 @@ async function main(argv) {
     return;
   }
 
-  const [collected, schema] = await Promise.all([collectIssues({ issuesFile: args.issuesFile }), loadSchemaRuntime()]);
+  const [collected, schema] = await Promise.all([collectIssues({ issuesFile: args.issuesFile, remote: args.remote }), loadSchemaRuntime()]);
   const previous = args.noState ? null : loadState(statePath);
-  const plan = buildBatchPlan({ issues: collected.issues, root: args.root, head, previous, degraded: collected.degradations });
+  const plan = buildBatchPlan({
+    issues: collected.issues,
+    root: args.root,
+    head,
+    previous,
+    degraded: collected.degradations,
+    relationsKnown: collected.relationsKnown,
+  });
 
   const check = schema.validateBatchPlan(plan);
   if (!check.ok) {
