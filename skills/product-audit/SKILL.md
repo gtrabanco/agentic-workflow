@@ -258,7 +258,7 @@ enables:
 product-audit (whole product, all axes, measured trigger)
    ├─ composes review-change axes (codebase-wide) + audit-docs (doc coherence)
    ├─ mines feature docs (decisions / known-issues / architecture-notes)
-   ├─ sweeps installed skills / connected MCP servers (product-wide, periodic)
+   ├─ sweeps installed skills / connected MCP servers (product-wide, measured trigger)
    └─ proposes ─┬─ Issues to open ........ ▶ triage-issue / unit-lane --fix
                 ├─ Roadmap: add .......... ▶ unit-lane --from-issue
                 ├─ Roadmap: remove/revise  ▶ triage-issue / roadmap edit   (user decides)

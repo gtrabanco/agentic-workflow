@@ -160,7 +160,7 @@ the frozen ledger and route missing or contradictory state to these skills.
    independently mergeable, and the review axes clean → merge-ready or a list of
    blockers. `done` ≠ merge-ready (a `done` unit can still have an open PR). Never
    merges or edits.
-10. `product-audit` — periodic product-wide health check across every applicable
+10. `product-audit` — measured-trigger product-wide health check across every applicable
    axis + process/docs/roadmap coherence; mine feature docs → propose issues +
    roadmap add/remove. Never auto-fixes; the user decides.
 11. `audit-docs` — audit docs ↔ roadmap ↔ code ↔ fix index for drift; produce a
