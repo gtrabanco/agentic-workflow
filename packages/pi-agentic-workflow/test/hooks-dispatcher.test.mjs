@@ -1,7 +1,7 @@
 // hooks-dispatcher.test.mjs — runSeam orchestration: consent × enabled gates,
 // degradation, teaching messages, auto flags, and the S8 fixture proof on a git
 // sandbox (unit 413, O3/O4/O5/O8/O11/O12/O13).
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -132,6 +132,7 @@ test("missing config is a quiet no-op (the startup notice is the wiring's one-ti
 test("O12 (S8 fixture proof): a git sandbox with a declared pre:commit check sees it run and block on failure", async () => {
   const dir = mkdtempSync(join(tmpdir(), "hooks-sandbox-"));
   try {
+    mkdirSync(join(dir, ".pi"), { recursive: true });
     writeFileSync(join(dir, "check.sh"), "#!/bin/sh\necho template check failed\nexit 1\n");
     chmodSync(join(dir, "check.sh"), 0o755);
     writeFileSync(
@@ -175,25 +176,30 @@ test("O11: autoPush requires autoCommit and appends git push", async () => {
 });
 
 test("O11: a failed auto commit does not push and blocks the seam", async () => {
-  const { base, spawns } = deps({
-    runGit: async (argv) =>
-      argv[0] === "commit" ? { exitCode: 128, output: "nothing to commit", truncated: false, timedOut: false } : { exitCode: 0, output: "", truncated: false, timedOut: false },
-  });
+  const { base, spawns } = deps();
+  base.runGit = async (argv) => {
+    spawns.push([argv, {}]);
+    return argv[1] === "commit"
+      ? { exitCode: 128, output: "nothing to commit", truncated: false, timedOut: false }
+      : { exitCode: 0, output: "", truncated: false, timedOut: false };
+  };
   const auto = projectHooks({
     "phase:end": [{ enabled: true, autoCommit: true, autoPush: true, commitMessage: "m", hooks: [{ type: "command", command: "check pass" }] }],
   });
   const result = await runSeam("phase:end", { ...base, readFile: readProject(auto) });
   assert.equal(result.verdict, "block");
   assert.deepEqual(
-    spawns.map(([argv]) => argv[0]),
-    ["check", "pass", "add", "commit"],
+    spawns.map(([argv]) => argv[1]),
+    ["pass", "add", "commit"],
   );
 });
 
 test("hooks that block at the seam prevent the auto action", async () => {
-  const { base, spawns } = deps({
-    spawnHook: async () => ({ exitCode: 1, output: "", truncated: false, timedOut: false }),
-  });
+  const { base, spawns } = deps();
+  base.spawnHook = async (argv) => {
+    spawns.push([argv, {}]);
+    return { exitCode: 1, output: "", truncated: false, timedOut: false };
+  };
   const auto = projectHooks({
     "phase:end": [{ enabled: true, autoCommit: true, commitMessage: "m", hooks: [{ type: "command", command: "check fails" }] }],
   });

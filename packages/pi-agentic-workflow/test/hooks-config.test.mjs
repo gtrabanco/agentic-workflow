@@ -71,7 +71,7 @@ test("O5: broken JSON is a problem naming the file, never a throw", () => {
   assert.equal(loaded.ok, false);
   assert.equal(loaded.problems.length, 1);
   assert.equal(loaded.problems[0].reason, "config-invalid");
-  assert.ok(loaded.problems[0].detail.includes(paths.project));
+  assert.equal(loaded.problems[0].file, paths.project);
   assert.deepEqual(loaded.entries, []);
 });
 
@@ -115,10 +115,10 @@ test("O10: SessionStart/SessionEnd alias to session:start/session:end", () => {
 test("refusals: non-command handler types, empty commands, out-of-range timeouts", () => {
   const cases = [
     { hooks: { "pre:commit": [{ enabled: true, hooks: [{ type: "http", url: "http://x" }] }] } },
-    { hooks: { "pre:commit": [{ enabled: true, hooks: [{ type: "command", command: "" }] }] },
-    { hooks: { "pre:commit": [{ enabled: true, hooks: [{ type: "command", command: "x", timeout: 0 }] }] },
-    { hooks: { "pre:commit": [{ enabled: true, hooks: [{ type: "command", command: "x", timeout: 601 }] }] },
-    { hooks: { "pre:commit": [{ enabled: true, hooks: "not-an-array" }] },
+    { hooks: { "pre:commit": [{ enabled: true, hooks: [{ type: "command", command: "" }] }] } },
+    { hooks: { "pre:commit": [{ enabled: true, hooks: [{ type: "command", command: "x", timeout: 0 }] }] } },
+    { hooks: { "pre:commit": [{ enabled: true, hooks: [{ type: "command", command: "x", timeout: 601 }] }] } },
+    { hooks: { "pre:commit": [{ enabled: true, hooks: "not-an-array" }] } },
   ];
   for (const hooks of cases) {
     const loaded = loadHooksConfig({

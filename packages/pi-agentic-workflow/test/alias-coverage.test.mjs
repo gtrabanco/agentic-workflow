@@ -278,8 +278,10 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
       // feature 66 P4: session_start carries the ask-first Engram provisioning,
       // which registers on the session rather than at load so an older host
       // degrades instead of throwing.
-      ["agent_settled", "model_select", "session_start", "thinking_level_select", "tool_call"],
-      "the entry subscribes to the lifecycle events routing, the receipt/hygiene guards, the Serena nudge and the Engram provisioning depend on",
+      // issue #413: session_shutdown/tool_result carry the seam-hooks wiring's
+      // session:end and post:commit seams; tool_call carries pre:commit/pre:push.
+      ["agent_settled", "model_select", "session_shutdown", "session_start", "thinking_level_select", "tool_call", "tool_result"],
+      "the entry subscribes to the lifecycle events routing, the receipt/hygiene guards, the Serena nudge, the Engram provisioning and the seam-hooks dispatcher depend on",
     );
 
     // Running a real alias through the real entry must reach Pi's dispatcher.

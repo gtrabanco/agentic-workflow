@@ -18,6 +18,8 @@ import { createHintStore, createSerenaReadinessStore, stateFilePath } from "../r
 import { createSerenaReadinessGate, readInitWorkspaceRevision } from "../routing/serena-readiness.js";
 import { createTelemetryWiring, type TelemetryWiring } from "./telemetry-wiring.js";
 import { createAutoLogSessionWiring, type AutoLogSessionWiring } from "./auto-log-session-wiring.js";
+import { createHooksWiring } from "./hooks-wiring.js";
+import type { HooksContext } from "./hooks-wiring.js";
 import { createInvocationWatch } from "./log-session-command.js";
 import { provisionEngram, readDeclaredServerNamesFrom, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
 import type { EngramServerConfig } from "./engram.js";
@@ -290,6 +292,16 @@ export default function extension(pi: ExtensionAPI): void {
   // says about telemetry or the mechanical journal.
   const invocations = createInvocationWatch();
   const noteCommand = (name: string, args: readonly string[]): void => telemetry?.noteCommand(name, args);
+  // Issue #413 — the seam-hooks dispatcher: consent-gated, opt-in per seam, off
+  // by default, so the wiring itself is inert until init-workspace consent and
+  // a declared `enabled` group both exist. The narrow context is built per
+  // call: the dispatcher never holds a session-bound object.
+  const hooksWiring = createHooksWiring({ agentDir });
+  const toHooksContext = (ctx: ExtensionContext): HooksContext => ({
+    cwd: ctx.cwd,
+    isProjectTrusted: () => ctx.isProjectTrusted(),
+    ui: { notify: (message, kind) => ctx.ui.notify(message, kind) },
+  });
 
   const { router, guards } = createExtension<PiModel>({
     registrar: toRegistrar(pi, noteCommand),
@@ -338,6 +350,11 @@ export default function extension(pi: ExtensionAPI): void {
     const message = serenaReadiness.check(ctx.cwd);
     if (message) ctx.ui.notify(message, "warning");
 
+    // Issue #413 — the seam-hooks session:start seam. Inert until consent + an
+    // `enabled` group exist; a broken hook config is announced here (latched)
+    // and then behaves as the declared no-op.
+    void hooksWiring.onSessionStart(toHooksContext(ctx));
+
     const projectTrusted = ctx.isProjectTrusted();
     const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted });
     if (loaded.config.telemetry?.enabled === true && telemetry === null) {
@@ -373,6 +390,12 @@ export default function extension(pi: ExtensionAPI): void {
   });
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
+  // Issue #413 — the seam-hooks session:end seam, at the session shutdown the
+  // host reports (PE-001). A hook's block cannot undo a closing session, so
+  // the wiring reports instead of blocking; nothing is awaited past shutdown.
+  pi.on("session_shutdown", (_event, ctx) => {
+    void hooksWiring.onSessionShutdown(toHooksContext(ctx));
+  });
   // The inline-receipt path is impossible: a `gh pr comment` carrying a
   // REVIEW-PASS / merge-ready marker is blocked before it runs, and the reason
   // names the script that proves the receipt landed (issue #182). The guard
@@ -382,6 +405,14 @@ export default function extension(pi: ExtensionAPI): void {
     const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
     const receipt = guards.receiptGuard({ toolName: event.toolName, command });
     if (receipt.block) return receipt;
+    // Issue #413 — the pre:commit / pre:push seams: a bash `git commit` or
+    // `git push` first runs the project's declared, consented, enabled checks,
+    // and a failing check blocks the tool call with the requirement quoted.
+    // A bash call never reaches the write/edit prevention below, so the seam
+    // result is the handler's result.
+    if (event.toolName === "bash" && typeof command === "string" && command !== "") {
+      return hooksWiring.onToolCall({ toolName: event.toolName, input: { command } }, toHooksContext(ctx));
+    }
     // Tier 2 path prevention (feature 60): block a write/edit to an existing
     // protected path with no matching justification record; reads and new-file
     // creates pass. Reads the same effective policy the Tier 1 gate reads.
@@ -438,6 +469,15 @@ export default function extension(pi: ExtensionAPI): void {
       recordsText: collectRecordTexts(ctx.cwd),
     });
     return decision.block ? { block: true, reason: decision.reason } : undefined;
+  });
+  // Issue #413 — the post:commit seam: a `git commit` that already ran lets
+  // its declared post-seam checks report; a failure cannot block retroactively,
+  // so it arrives as a warning notice (declared, never silent).
+  pi.on("tool_result", (event, ctx) => {
+    const command = typeof event.input?.command === "string" ? event.input.command : undefined;
+    if (event.toolName !== "bash" || command === undefined) return undefined;
+    void hooksWiring.onToolResult({ toolName: event.toolName, input: { command }, isError: event.isError }, toHooksContext(ctx));
+    return undefined;
   });
   pi.on("agent_settled", (event, ctx) => {
     // pi 1.1.0+: event may carry { aborted: true }
