@@ -1,0 +1,6 @@
+## 2026-11-07T13:29:31Z — docs/journal-aggregate-pr-batch — manual
+- **Commits:** 1 (`3a2334c3…3a2334c3`)
+- **Files:** .github/workflows/agentic-workflow-journal.yml, template/.agentic-workflow/journal.md, template/.github/workflows/agentic-workflow-journal.yml.example
+- **Summary:** Fix journal-aggregate CI failure by switching from direct push to batched PR mode
+- **Decisions:** Repository rules require a pull request for every change to main (GH013), and the journal-aggregate workflow pushed directly to main. Solution: weekly batch mode (schedule + dispatch), one PR per week via `journal-aggregate-<YYYY-Www>` branch, merge commit (no squash). Both the repo's workflow and the shipped template example are updated to the same mode. The template header explicitly states init-workspace must ask before installing.
+- **Next:** Merge PR #450 on GitHub, then the weekly trigger (Mondays 06:00 UTC) or manual dispatch will open the first journal batch PR and merge it automatically when checks pass.

@@ -4,25 +4,34 @@
 # .agentic-workflow/journal/, and THIS workflow is the only writer of
 # docs/LOGS.md after merge. It runs the crate from the tree (no registry
 # dependency) — the same forge-free command the template's example ships.
+#
+# Batched PR mode (owner decision 2026-11-07): repository rules require a pull
+# request for every change to main, so the aggregation never pushes to main.
+# Each run aggregates the pending fragments on a branch named after the ISO
+# week — `journal-aggregate-<YYYY-Www>` — which means one PR per week at most:
+# the first run of a week opens it, later runs just add commits to the same PR
+# as more sessions merge their fragments. The PR merges itself with a MERGE
+# COMMIT (never squash) as soon as required checks pass. With no pending
+# fragments the run is a no-op and creates nothing.
 
 name: journal-aggregate
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".agentic-workflow/journal/**"
+  schedule:
+    # Mondays 06:00 UTC — one intended batch per week. Manual dispatch covers
+    # the "I want to see the whole log now" case.
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
 
-# Two PRs merged seconds apart fire two runs; the group serializes them so the
-# second always sees the first's consumed state. The bot commit itself touches
-# journal/** (the deletions), so it re-triggers one extra run that aggregates
-# nothing and pushes nothing — the loop converges.
+# Two runs overlapping operate on the same week branch; the group serializes
+# them so the second always sees the first's consumed state.
 concurrency:
   group: journal-aggregate
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: write # branch push and merge of the batch PR
+  pull-requests: write # create the PR and enable its merge
 
 jobs:
   aggregate:
@@ -47,28 +56,80 @@ jobs:
       - name: Install workspace
         run: bun install --frozen-lockfile
 
+      - name: Resolve the week branch
+        id: branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          WEEK_BRANCH="journal-aggregate-$(date -u +%G-W%V)"
+          echo "branch=$WEEK_BRANCH" >> "$GITHUB_OUTPUT"
+          count="$(gh pr list --head "$WEEK_BRANCH" --state open --json number --jq 'length' 2>/dev/null || echo 0)"
+          echo "pr=$count" >> "$GITHUB_OUTPUT"
+
       # The forge-free aggregator: appends the pending fragments to
       # docs/LOGS.md newest-first, deletes the consumed fragments, refuses
       # anything ambiguous with exit 2 (and a refusal leaves everything in
-      # place — fragments are never lost, only delayed).
-      - name: Aggregate pending journal fragments
-        run: node packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate
-
-      - name: Bot-commit the aggregated journal
+      # place — fragments are never lost, only delayed). An already-consumed
+      # fragment is dropped without appending again, which makes re-running
+      # against a branch that consumed earlier batches a correct no-op.
+      - name: Aggregate into the week branch
+        id: aggregate
         run: |
+          set -euo pipefail
+          BRANCH="${{ steps.branch.outputs.branch }}"
+          git fetch origin main
+          # The week branch may not exist yet — that is the normal first run.
+          git fetch origin "$BRANCH" || true
+
+          if [ "${{ steps.branch.outputs.pr }}" -gt 0 ]; then
+            # Reuse this week's PR: continue the branch, then pull in whatever
+            # fragments merged to main since. Consumed fragments restored by
+            # that checkout are re-consumed without duplicating their entries.
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+            git checkout origin/main -- .agentic-workflow/journal
+          else
+            git checkout -B "$BRANCH" origin/main
+          fi
+
           git config user.name "journal-bot"
           git config user.email "journal-bot@users.noreply.github.com"
+
+          node packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate
+
           git add .agentic-workflow/journal docs/LOGS.md
           if git diff --cached --quiet; then
             echo "nothing to aggregate"
             exit 0
           fi
-          git commit -m "docs(log): aggregate journal fragments"
-          # A concurrent run may have landed between aggregate and push; rebase
-          # once and re-run the (idempotent) aggregation before giving up.
-          git pull --rebase origin main || {
-            node packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate
-            git add .agentic-workflow/journal docs/LOGS.md
-            git commit -m "docs(log): aggregate journal fragments"
-          }
-          git push
+
+          git commit -m "docs(log): aggregate journal fragments ($BRANCH)"
+          # A reused branch name after a closed-without-merge PR is the only
+          # non-fast-forward case; the lease expects exactly what was fetched.
+          git push origin "$BRANCH" || \
+            git push --force-with-lease=refs/heads/"$BRANCH" origin "$BRANCH"
+          echo "pushed=1" >> "$GITHUB_OUTPUT"
+
+      # One PR per week, merged with a merge commit (no squash) — the batch of
+      # journal entries is one refactor-shaped unit on main, reviewable whole.
+      - name: Merge the batch PR
+        if: steps.aggregate.outputs.pushed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BRANCH="${{ steps.branch.outputs.branch }}"
+
+          if [ "${{ steps.branch.outputs.pr }}" -eq 0 ]; then
+            WEEK="$(date -u +%G-W%V)"
+            gh pr create --base main --head "$BRANCH" \
+              --title "docs(log): aggregate journal fragments ($WEEK)" \
+              --body "Auto-generated weekly journal batch (week $WEEK). One merge commit, never squashed.
+
+              Automated writed using a AI"
+          fi
+
+          # Auto-merge fires once the required checks pass; if the repo does
+          # not have auto-merge enabled, try to merge directly instead.
+          if ! gh pr merge "$BRANCH" --auto --merge --delete-branch; then
+            gh pr merge "$BRANCH" --merge --delete-branch
+          fi
