@@ -57,10 +57,10 @@ your domains.
 > policy — the exact failure `ask-dont-infer` exists to prevent.
 
 **Content rule (evidence-bound).** The charter records **decisions, policies
-and commands — never derivable-from-code description**. A sentence the reader
-could reconstruct by listing the directories does not belong here (repository
-overviews in context files cost tokens with no success gain; instructions
-work). Each answer is positioned and sized per the documentation map above —
+and commands — never derivable-from-code description** (arXiv 2602.11988:
+repository-overview context files cost tokens with no success gain while
+instructions work). A sentence the reader
+could reconstruct by listing the directories does not belong here. Each answer is positioned and sized per the documentation map above —
 the charter stays this section plus the registered docs, never one monolithic
 document.
 
