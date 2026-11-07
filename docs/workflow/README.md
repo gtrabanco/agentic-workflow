@@ -29,6 +29,7 @@ Notion ("Agentic Workflow").
 | [TIER_COST.md](TIER_COST.md) | The measured acceptance for the risk tiers: the `tier-cost@1` row grammar, who writes a sample, what a row never carries, and the `insufficient-corpus` verdict the comparison declares instead of inventing a figure |
 | [PACKAGES.md](PACKAGES.md) | The three companion npm packages: the bun workspace and its single lockfile, the pin rules, the version-parity gate, changesets, and the publish channels |
 | [GATE_INVENTORY.md](GATE_INVENTORY.md) | The carrier inventory: every gate the workflow runs, whether it is script-pinned, a per-run CLI check or prose-only, how the ranking derives its tier, and where a stay-prose gate re-derives after a compaction |
+| [DOMAIN_SEPARATION.md](DOMAIN_SEPARATION.md) | Project-only: the product-vs-dogfooding safeguard in detail — the two domains, the classification test, both drift directions, the legitimate exceptions, and the domain-drift sweep this repo's product-audit runs carry |
 
 ## Data
 
