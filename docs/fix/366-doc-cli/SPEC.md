@@ -194,7 +194,7 @@ $ bun scripts/ceremony.mjs tier classify
 - [x] P7 — Documentation currency in the same change: crate README `doc` row rewritten with the shipped ops and the experimental label; usage line updated; the row-71 status note appended through the deterministic emitter, never hand-edited (validator: `rg -c 'ship with unit 71' packages/agentic-workflow/src packages/agentic-workflow/bin packages/agentic-workflow/README.md` matches 0 and `rg -c 'experimental' packages/agentic-workflow/README.md` matches ≥1)
   (Implements: S2, S7)
   Relevant files: packages/agentic-workflow/README.md, packages/agentic-workflow/bin/agentic-workflow.mjs, docs/ROADMAP.md
-- [ ] P8 — Final verification: crate suites under both runtimes, touched root suites, the retirement pin, and the diff guard over the whole branch (validator: `cd packages/agentic-workflow && bun run test && node --test` exits 0 and `bun scripts/local-gate.mjs --skip-network` exits 0)
+- [x] P8 — Final verification: crate suites under both runtimes, touched root suites, the retirement pin, and the diff guard over the whole branch (validator: `cd packages/agentic-workflow && bun run test && node --test` exits 0 and `bun scripts/local-gate.mjs --skip-network` exits 0)
   (Implements: S6, S7, S8)
   Relevant files: —
 
@@ -314,8 +314,23 @@ OPEN rows only; appended by reviewers.
   (`doc edit` set/append spellings) stays `open` — excluded by the frozen
   row-71 scope, offered to the owner at unit close.
 - **G1** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at the
-  unit's head · exit code and verdict recorded on the next line after the run
-  (the P8 tick waits for it).
+  unit's head (`b230d2a9`) · **verdict: PASS — 8 step(s) in 186s** · exit 0.
+- **E13** — 2026-11-07, the gate caught this change twice and both catches
+  were repaired, never excused: (a) the first root-suite run failed AC26's
+  lexical discipline check (`receipt|EDIT REFUSAL|verdict` tokens under
+  `src/doc`, zero at base) — the four hits were this unit's own comment
+  wording, reworded with behavior untouched (commit `b230d2a9`, suite rerun
+  66 pass); (b) the crate leg's only red was the pre-existing S15 case, whose
+  root cause turned out to be one committed journal fragment whose filename
+  contradicts its own header and its committing commit message
+  (`c9dd1d88` — body and message say `docs/domain-separation-safeguard —
+  narrative`); the file was renamed to the identity its own bytes declare,
+  bytes untouched (commit `f96f9ea6`), which is the same repair class the 440
+  session disclosed — the writer-side fragment-name gap is the standing owner
+  finding, and this was its second occurrence.
+- **E14** — 2026-11-07, `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs`
+  after the rename · exit 0 (the S15 red is gone at head without touching any
+  test).
 
 ## Next
 
