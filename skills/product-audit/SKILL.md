@@ -26,8 +26,9 @@ Product-wide health check. It only writes
 ## Turn contract — verify before ending the turn
 
 ```
-✓ The full PRODUCT AUDIT report was printed in the fixed output format (health by dimension, F-numbered ranked findings, four proposal streams — the roadmap streams always present, `none — <why>` when empty)
-✓ The report was WRITTEN to `docs/audits/<n>-<YYYY-MM-DD>.md` (incremental audit id) and committed — the file is the durable deliverable, the chat print is a copy
+✓ A measured trigger was met (audit-trigger@1) or the owner explicitly requested the sweep — an invocation with none returns the `insufficient-corpus` verdict instead of inventing findings or figures
+✓ Either the full PRODUCT AUDIT report was printed in the fixed output format (health by dimension, F-numbered ranked findings, four proposal streams — the roadmap streams always present, `none — <why>` when empty) or the `insufficient-corpus` verdict block was printed (no report written, nothing invented)
+✓ The report was WRITTEN to `docs/audits/<n>-<YYYY-MM-DD>.md` (incremental audit id) and committed — the file is the durable deliverable, the chat print is a copy (skipped only by the `insufficient-corpus` verdict, which writes nothing)
 ✓ Nothing else was fixed, filed, or changed — the report file is the ONLY mutation
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
@@ -36,9 +37,31 @@ About to end the turn with any box unchecked? The turn is NOT done — complete
 the missing box first (weak models drop end-of-document duties; this list is
 first on purpose).
 
-## When to use
+## When to use — measured triggers, never calendar
 
-- Periodically (every few features) or at a product-ready milestone.
+The audit fires on one of three triggers; a periodic cadence ("every few
+features", a monthly sweep) is retired — it sweeps the same tree whether or
+not anything drifted:
+
+```text
+audit-trigger@1
+trigger | source | receipt when unmet
+drift signal | `audit-docs` findings above the corpus band (design note 12 of #307; the band is #437's measured design) | insufficient-corpus
+threshold debt | accumulated orphans / ARW below the corpus band (design note 11; #437 supplies the measured bands — never invented here) | insufficient-corpus
+owner request | the owner explicitly asks for the sweep (a product-ready milestone, a named worry, an area) | — (always met)
+```
+
+An invocation that cites none of the three — a routine or calendar-driven probe
+— returns the `insufficient-corpus` verdict instead of running a sweep that
+invents findings or figures:
+
+```
+PRODUCT AUDIT — insufficient-corpus
+Triggers checked: drift signal — <the receipt it is unmet | met>; threshold debt — <the receipt>; owner request — <absent | met>
+Verdict: insufficient-corpus — no sweep ran; no findings or figures invented
+→ Next: /workflow-status — the sensor reads what the current signals recommend
+```
+
 - When you want the broad, honest picture — quality, security, debt, docs, and
   roadmap — not the review of a single change (`review-change`) or PR (`audit-pr`).
 - **It owns the repo-wide sweep.** Open-ended, repository-wide bug hunting,
@@ -78,7 +101,9 @@ The reference allowlist is exactly the two paths below. Load both after Step 0,
 in order; they are normative and one hop from this entrypoint.
 
 1. Read [audit dimensions](references/AUDIT_DIMENSIONS.md), mark every dimension
-   applicable or `n-a: <reason>`, and state any sampling.
+   applicable or `n-a: <reason>` (a dimension the project's ceremony profile
+   does not declare is `n-a — not declared by the project's ceremony profile`),
+   state the deterministic-producer pre-pass receipts, and state any sampling.
 2. Read [audit process](references/AUDIT_PROCESS.md), execute all ten steps, then
    return the fixed report below.
 
@@ -105,12 +130,12 @@ Verdict: <one-line honest health verdict>
   Installed tooling ....... ✓ | ⚠ | ✗ | n-a
 
 ## Findings (severity-ranked, one F-sequence for the whole audit)
-  F1 [SEV · impact] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|replan-in-unit|decision-required|proposal|ignore> — route: <the next command for this finding | none — <why>> [· loads: <the one reference that route needs>]
+  F1 [SEV · impact] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|replan-in-unit|decision-required|proposal|ignore> — route: <the finding's resolver hand-off (finding-route@1) | none — <why>> [· loads: <the one reference that route needs>]
   F2 [SEV · impact] ...
   [example — scope-export recurrence] F<k> [WARNING · report-only] Workflow discipline — <N>
     consecutive units exported scope via `## Amendments`/descope issues —
     features are being cut too big for real capacity — evidence: <unit list +
-    amendments/issues> — class: proposal — route: #64 (atomicity/split rules)
+    amendments/issues> — class: proposal — route: fix — #64 [· loads: the atomicity/split rules reference]
 
 ## Delta vs audit <prior-id>
   New: F<k>
@@ -149,10 +174,26 @@ Finding set: F<k> + F<j> + F<m> (print every proposed finding; one finding → F
 Replace every finding placeholder with the complete actual set before printing;
 never print `…` or only the first finding in a live hand-off.
 
-`route:` is the triage taken at flight: the next command for that finding plus,
-optionally, the one reference that command loads. `none` costs no context. It
+`route:` is the triage taken at flight: the resolver hand-off for that finding
+plus, optionally, the one reference that route needs. `none` costs no context. It
 is the progressive-loading decision, not a schema to fill — and stating a route
-never executes it: the report file stays the only mutation.
+never executes it: the report file stays the only mutation. Findings are typed
+**1:1 with review's finding vocabulary** — the published severity ladder, the
+impact cell and the closed class set, all owned by
+`review-implementation/CLASSIFY.md` — so `triage-issue` consumes them without a
+mapping layer; no second finding vocabulary is created here. The hand-off
+grammar:
+
+```text
+finding-route@1
+kind | shape | what it orders
+hand-off | <verb> — <target> | the resolver hand-off for this finding: one of the single-input verbs (continue | fix | review | audit | explain-state) plus the concrete target it resolves (the unit, issue or audit id) — never bespoke prose routes, never a command invocation
+none | none — <why> | no hand-off exists for this finding
+```
+
+The concrete invocation that consumes the whole finding set stays in the
+closing `→ Next:` block — the route cell names the hand-off, the block names
+the command.
 
 `<id>` is the audit's incremental number (Process step 9). A finding is
 addressable forever as `<audit-id> F<k>` — e.g. `triage-issue 3 F2` reads
@@ -186,6 +227,10 @@ security items to track first").
   so — never present partial coverage as exhaustive.
 - Severity-ranked and deduped: cluster the same issue found via multiple axes or
   multiple feature docs into one proposal.
+- **Every dimension starts at its deterministic producer's receipt** (the
+  pre-pass in `references/AUDIT_DIMENSIONS.md`): consume the receipt, never
+  re-derive a measured fact by inspection; the model sweeps only the
+  non-mechanizable remainder.
 - Honor the project's **Workflow conventions** (docs-language, evidence): every
   finding/proposal cites a `file:line`/metric/doc/issue source; mark uncertainties *verify*.
 - **Evidence also passes the fixed evidence-provenance gate** in
@@ -210,10 +255,10 @@ enables:
 ## Relationship to other skills
 
 ```
-product-audit (whole product, all axes, periodic)
+product-audit (whole product, all axes, measured trigger)
    ├─ composes review-change axes (codebase-wide) + audit-docs (doc coherence)
    ├─ mines feature docs (decisions / known-issues / architecture-notes)
-   ├─ sweeps installed skills / connected MCP servers (product-wide, periodic)
+   ├─ sweeps installed skills / connected MCP servers (product-wide, measured trigger)
    └─ proposes ─┬─ Issues to open ........ ▶ triage-issue / unit-lane --fix
                 ├─ Roadmap: add .......... ▶ unit-lane --from-issue
                 ├─ Roadmap: remove/revise  ▶ triage-issue / roadmap edit   (user decides)
@@ -227,7 +272,10 @@ product-audit (whole product, all axes, periodic)
 
 ## Done when
 
-- Every applicable dimension has a health verdict backed by cited evidence, and the
+- A measured trigger was met (or the owner requested the sweep); otherwise the
+  `insufficient-corpus` verdict was returned and nothing else ran.
+- Every applicable dimension has a health verdict backed by cited evidence — its
+  deterministic producer's receipt where one exists — and the
   skipped or sampled ones are stated.
 - A severity-ranked, **F-numbered** findings list plus four proposal streams
   (issues to open, roadmap add, roadmap remove/revise, tooling

@@ -81,6 +81,12 @@ export interface InvocationContext<M extends ModelRef = ModelRef> extends ModelL
   readonly model: M | undefined;
   isIdle(): boolean;
   isProjectTrusted(): boolean;
+  /**
+   * The id the host names for this session, or undefined when it names none
+   * (issue #429). Read-only and never invented: the invocation record keys on it
+   * so one session can neither adopt nor clear another's record.
+   */
+  readonly sessionId?: string;
   /** Pi's `ctx.ui.notify` — the only channel an extension has to the operator. */
   notify(message: string, kind?: "info" | "warning" | "error"): void;
   /** Pi's `ctx.ui`. Routing only notifies through it; the console also asks. */

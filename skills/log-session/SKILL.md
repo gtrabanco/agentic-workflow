@@ -42,6 +42,15 @@ About to end the turn with any box unchecked? The turn is NOT done — complete
 the missing box first (weak models drop end-of-document duties; this list is
 first on purpose).
 
+## Two doors, one behaviour (#429)
+
+With `@gtrabanco/pi-agentic-workflow` loaded, `/log-session` is a command: the
+handler records the invocation (`.pi/.session-<id>.log-session`), runs the writer
+below and names the entry's exact target before this file reaches you; a settled
+turn with no entry there is reported. The record is code's fact, the prose is
+yours. Without the extension, or via `/skill:log-session`, every step below is
+yours.
+
 ## When to use
 
 - **Before `/clear`** (or your agent's context-reset equivalent) — you're about

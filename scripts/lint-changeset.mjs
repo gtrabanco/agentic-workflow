@@ -25,7 +25,12 @@
  * later rename removed is the stale-mention defect the sibling sweep exists to
  * catch. Placeholders (`docs/passive/<id>.md`, `template/docs/**`) and
  * package-relative citations (`src/index.ts`) are prose about shapes, not paths
- * this gate can judge, so they are skipped.
+ * this gate can judge, so they are skipped. A path this repository *ignores* is
+ * a runtime location the project produces and never commits (the journal
+ * store's database, a lock file): accurate to cite, absent by design, and not
+ * the dead-path class — so the ignore rules answer, not this heuristic.
+ * The `journal/` carrier is re-included rather than ignored, so its fragments
+ * stay judged.
  *
  * Usage:
  *   node scripts/lint-changeset.mjs [--changeset-dir DIR] [files...]
@@ -38,6 +43,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
@@ -93,6 +99,19 @@ export function citedRepoPaths(body, rootEntries = null) {
   return [...new Set(cited)];
 }
 
+/**
+ * Whether this repository's ignore rules declare the path — the answer that
+ * separates "a runtime location the project writes" from "a path nobody ever
+ * created". `git check-ignore` is the one authority on that, and it is asked
+ * with the repository at REPO_ROOT rather than the process cwd. Not a
+ * repository, or no git on the box, answers `false`: the citation is judged the
+ * way it always was, never waved through on a failed look.
+ */
+export function isIgnoredRuntimePath(token) {
+  const result = spawnSync("git", ["-C", REPO_ROOT, "check-ignore", "-q", "--", token], { stdio: "ignore" });
+  return result.status === 0;
+}
+
 /** Validate one file; returns an error string or null. */
 export function lintChangesetFile(filePath, knownPackages, knownSkills = []) {
   let content;
@@ -113,9 +132,9 @@ export function lintChangesetFile(filePath, knownPackages, knownSkills = []) {
     }
   }
   for (const cited of citedRepoPaths(parsed.body.join("\n"))) {
-    if (!fs.existsSync(path.join(REPO_ROOT, cited))) {
-      return `cites a repo path that does not exist: ${cited}`;
-    }
+    if (fs.existsSync(path.join(REPO_ROOT, cited))) continue;
+    if (isIgnoredRuntimePath(cited)) continue;
+    return `cites a repo path that does not exist: ${cited}`;
   }
   return null;
 }
