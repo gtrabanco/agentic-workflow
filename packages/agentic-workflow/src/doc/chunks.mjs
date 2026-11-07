@@ -102,18 +102,22 @@ export function scanChunks(markdown, relativePath) {
     }
   }
 
-  // Headings outside fenced code blocks.
+  // Headings outside fenced code blocks. The fence keeps the opener's own
+  // character AND length: a fence closes only on its own character with at
+  // least its own length (CommonMark), so a three-backtick example inside a
+  // four-backtick block stays quoted text and the block's real close is not
+  // mistaken for a new opener (S14/A6).
   const headings = []; // {level, title, line (1-based)}
-  let fence = null;
+  let fence = null; // {char, length} of the open fence
   for (let i = contentStart; i < lines.length; i++) {
     const trimmed = lines[i].trim();
     if (fence !== null) {
-      if (trimmed.startsWith(fence)) fence = null;
+      if (trimmed.startsWith(fence.char.repeat(fence.length))) fence = null;
       continue;
     }
     const f = trimmed.match(FENCE_RE);
     if (f) {
-      fence = f[1][0].repeat(3);
+      fence = { char: f[1][0], length: f[1].length };
       continue;
     }
     const h = trimmed.match(HEADING_RE);
