@@ -38,12 +38,39 @@ repository has been asked.
    receipt is the defect this stage exists to catch.
 2. **Journal** — append one row per claim to the unit folder's `sources.md`:
 
-| id | claim | source | certainty |
-|---|---|---|---|
-| INV-001 | <the claim, one line> | `<path:line>`, `<doc#anchor>`, `owner answer <Q-id>`, or `user request` | confirmed / inferred / unknown |
+| id | claim | source | provenance | certainty |
+|---|---|---|---|---|
+| INV-001 | <the claim, one line> | `<path:line>`, `<doc#anchor>`, `owner answer <Q-id>`, or `user request` | repository / version-pinned doc / owner answer / model memory | confirmed / inferred / unknown |
 
    `confirmed` = verifiable by a command or documented; `inferred` = deduced,
    not yet verified; `unknown` = no evidence found (→ the orient stage must ask).
+
+### Provenance — model memory is never tier-0
+
+The `provenance` column records where a claim came from; a `confirmed`
+certainty demands a **version-pinned, current** source — the project's own
+pinning (below), not a name the run did not read. Evidence layer of
+`ask-dont-infer@1` (above): it makes the no-assumption rule checkable row by
+row, never a rival rule.
+
+| Provenance | What it is | Ceiling |
+|---|---|---|
+| `repository` | read from this repository — a `path:line`, a doc, a prior decision | `confirmed` |
+| `version-pinned doc` | the **pinned version** the project actually uses — lockfile, manifest, GitHub-action SHA, or the current docs of that exact version — never `latest` | `confirmed` |
+| `owner answer` | the owner stated it — a request, an issue, a decision row | `confirmed` |
+| `model memory` | recalled from training — not read this run | `inferred` — never `confirmed`, and never tier-0: it does not settle a claim |
+
+**Version-pin receipt.** An external implementation-detail claim (CI schema,
+tool flag, API version, shell syntax) verifies against the pinned version —
+before it may guide a task. The verification is a cheap one-fetch receipt in
+the research/design evidence row; where the check is deterministic, prefer a script
+(actionlint, schema validation, type-check) — an extension of #359's prose→script
+migration. Until the script ships, the receipt is the floor, and the affected
+row cites what was fetched — a PE row, never memory.
+**Skipped research.** A descriptive question the repository answers does not
+earn external research — the receipt substitutes the fetch; the research step
+owns that exit (`RESEARCH.md`), and this tier is where its receipt lands.
+
 3. **Induce acceptance criteria** from user scenarios — each AC is a claim too,
    and cites the scenario or owner answer it came from.
 4. **Close boundaries**: entities and their roles, actors, accepted and rejected
@@ -228,6 +255,7 @@ rewrites `ac-hash:` — review never edits either side.
 - [ ] The provenance search ran first and its receipt is recorded (`path:line`, the greps, prior units)
 - [ ] Every claim (objective, why, every AC, non-goals) cites its source or an owner answer in `sources.md`, and none lacks one
 - [ ] Every claim carries a certainty (`confirmed` / `inferred` / `unknown`); an `unknown` claim became a question
+- [ ] Every claim carries a provenance (`repository` / `version-pinned doc` / `owner answer` / `model memory`); a `model memory` row never carries `confirmed` (§ Provenance)
 - [ ] Every acceptance criterion (AC1, AC2, …) is induced from a user scenario and cites what induced it
 - [ ] The AC section's hash is recorded in the unit doc's frontmatter (`ac-hash:`)
 - [ ] The orient tiers ran in order: provenance before research before ask
