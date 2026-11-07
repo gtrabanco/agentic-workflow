@@ -39,6 +39,13 @@ export type BatchFindingCode = (typeof BATCH_FINDING_CODES)[number];
 export const BATCH_SIZE_HINTS = ["light", "mixed", "heavy"] as const;
 export type BatchSizeHint = (typeof BATCH_SIZE_HINTS)[number];
 
+/** The closed field-name set the plan grammar block orders (`batch-fields@1`). */
+export const BATCH_PLAN_FIELDS = [
+  "contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary",
+  "n", "lanes", "surface", "occupied_by", "issues", "number", "title", "lane", "worktree", "command", "reason",
+  "size_hint", "claimed", "blockers", "evidence", "code", "numbers", "detail", "open_issues", "batched",
+] as const;
+
 /**
  * Degradations follow the sensor convention `unavailable-<source>-<cause>`
  * (`unavailable-forge-gh-cli`, `unavailable-roadmap-missing`); the prefix is

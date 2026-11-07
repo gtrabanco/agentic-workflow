@@ -72,7 +72,7 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**13 user-facing skills** (one menu entry each) + internal contracts composed
+**14 user-facing skills** (one menu entry each) + internal contracts composed
 for you: the lane's triage-driven step selection (`unit-lane`), the executor
 (`execute-phase`), the internal review pack (`review-code`, `review-security`,
 `review-verify`, `review-debt`, `review-design`, `review-a11y`, `review-brand`,
@@ -150,6 +150,7 @@ Projects that do not declare the document remain compatible.
 | Skill         | What it does                                                                                                                                                                                                                                                                                                                                               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `workflow-status` | **Read-only sensor for programmatic orchestration.** Emits one fixed JSON machine envelope with the full project state — every feature/fix with its dependency closure, roadmap's five-state machine, what is startable and build order, open PRs + audit state, pending findings, the untriaged issue backlog, fix-now findings with derived `suggested_tier`, and the injection-safe `detail.urgent` field. Supports `--last-envelope` (no-progress guard) and `--compact` (drops proved-merged units and evidence memos, ~half the bytes). The resolved `next` command is projected into `next.continuation` with typed refusals at `detail.continuation_refusal`. Never edits anything. |
+| `batch-scheduler` | **Read-only planner for parallel orchestration** (issue #449): reads the live work graph (native `blocked-by` + prose soft deps, touched surfaces per issue, roadmap + unit docs in flight) and emits the fixed `batch-plan@1` machine envelope — batch 1 runnable now, batch N+1 next, one lane per surface with same-surface serialization, per-issue worktree + `/unit-lane --from-issue <N>` command + reason, measured size hints (facts, not a lane-count policy), and cyclic/orphaned/mismatched spots as findings. Persists claimed lanes to `.agentic-workflow/batches.json` so a re-run recognizes what launched (`--no-state` reads pure). Plans and reports only — never spawns, never creates worktrees. Works with no decision model configured. |
 
 ### Repo maintenance
 

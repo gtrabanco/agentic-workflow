@@ -1046,7 +1046,7 @@ test("render-only prose: a restatement that drifts from the machine value is the
   // A stale claim: the surface lost the number the machine recomputes.
   const stale = { ...model };
   const original = read("docs/workflow/SKILLS.md");
-  const mutated = original.replace("**13 user-facing skills**", "**19 user-facing skills**");
+  const mutated = original.replace("**14 user-facing skills**", "**19 user-facing skills**");
   assert.notEqual(mutated, original, "the pinned literal is present in the guide surface");
   {
     // Recompute through a surface model that reads the mutated text instead of writing it.
@@ -1057,7 +1057,7 @@ test("render-only prose: a restatement that drifts from the machine value is the
       const findings = runDriftChecks(buildSurfaceModel()).filter((f) => f.code === "unrendered-value");
       assert.equal(findings.length, 1, "the divergent restatement is refused");
       assert.equal(findings[0].surface, "docs/workflow/SKILLS.md");
-      assert.match(findings[0].message, /recomputes to 13/);
+      assert.match(findings[0].message, /recomputes to 14/);
     } finally {
       fs.readFileSync = realRead;
     }

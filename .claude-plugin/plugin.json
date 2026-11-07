@@ -20,6 +20,7 @@
   "skills": [
     "./skills/audit-docs",
     "./skills/audit-pr",
+    "./skills/batch-scheduler",
     "./skills/discover-repository-state",
     "./skills/execute-phase",
     "./skills/fold-findings",

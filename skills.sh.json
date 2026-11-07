@@ -16,7 +16,8 @@
         "init-workspace",
         "discover-repository-state",
         "resolve-repository-state",
-        "workflow-status"
+        "workflow-status",
+        "batch-scheduler"
       ]
     },
     {
