@@ -19,7 +19,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const scriptPath = fileURLToPath(new URL("./batch-scheduler.mjs", import.meta.url));
-const { buildBatchPlan, collectIssues, updateState, loadState, saveState, STATE_FILE_NAME } =
+const { buildBatchPlan, collectIssues, updateState, loadState, saveState, extractSurfaces, STATE_FILE_NAME } =
   await import(scriptPath);
 
 const HEAD = "b8b1d8147b1ecb79ef92355a53309c2b82a3c3d2";
@@ -236,6 +236,57 @@ test("S5: two issues sharing one surface share one lane; disjoint surfaces get d
     }
 });
 
+// ── B3 — a tree-root token must never split a real surface across lanes ───
+// Reproducer of external-verify B3: `skills/**` and `skills/alpha` landed in
+// two lanes of the same batch, so two issues touching the same skill ran in
+// parallel (S5: "one lane per surface … two skills twice if disjoint").
+
+test("B3: a tree-root token expands over the declared children, never a sibling lane", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(30, "Whole-tree skill sweep", whereSection(["skills/**"])),
+      issue(31, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"])),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    const lanes = plan.batches.flatMap((b) => b.lanes);
+    assert.deepEqual(lanes.map((l) => l.surface), ["skills/alpha"], "the root token joins the child lane, it does not open one");
+    assert.deepEqual(lanes[0].issues.map((i) => i.number), [30, 31], "both serialize in the one real surface");
+    assert.equal(lanes[0].issues[1].reason.kind, "surface-conflict");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("B3: a root token with no declared child keeps the tree-root key, never a wildcard", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const surfaces = extractSurfaces(`## In scope\n\n- \`skills/\`\n- \`packages/**\`\n- \`./scripts/batch-scheduler.mjs\`\n`);
+    assert.deepEqual([...surfaces].sort(), ["packages", "scripts", "skills"], "no wildcard or trailing slash survives");
+    const plan = buildBatchPlan(baseInput([issue(40, "Sweep", whereSection(["skills/**"]))], root));
+    assert.deepEqual(plan.batches[0].lanes.map((l) => l.surface), ["skills"], "the documented tree-root key");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("B3: a body with no Where/In scope section still names its surfaces (the documented fallback)", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const body = "Fixes the emitter at `packages/beta/src/index.ts`; the golden runs over `skills/**`.";
+    const plan = buildBatchPlan(baseInput([issue(50, "No sections", body)], root));
+    assert.deepEqual(plan.batches[0].lanes.map((l) => l.surface).sort(), ["packages/beta", "skills"], "the body is the fallback source");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── S5/O5 — measured-size hints ────────────────────────────────────────────
 
 test("S5: issues carry a size hint from their declared evidence and lanes an aggregate", () => {
@@ -356,6 +407,57 @@ test("S7: a prose row declared hard with no native blocked-by is a #442 agreemen
   }
 });
 
+// ── B4/B5 — an in-flight (launched) target is a state, not a defect ───────
+// Reproducer of external-verify B4: an issue whose open native blocker has a
+// unit doc on disk was emitted as a `cycle` finding ("no batch can ever
+// satisfy it"). B5: a soft dep on the same in-flight issue was emitted as
+// `orphaned-soft-dep` ("neither open nor in the location index").
+
+function withInFlightUnit(root, number, slug) {
+  const dir = path.join(root, "docs", "fix", `${number}-${slug}`);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "SPEC.md"), "# unit\n");
+}
+
+test("B4: an in-flight blocker is blocked, never a cyclic wait", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    withInFlightUnit(root, 20, "in-flight");
+    const issues = [
+      issue(20, "In-flight blocker", whereSection(["skills/alpha/SKILL.md"])),
+      issue(21, "Waits on the in-flight unit", whereSection(["skills/beta/SKILL.md"]), [20]),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(plan.findings, [], "an in-flight wait is a state, not an unresolvable spot");
+    assert.deepEqual(plan.blocked, [{ number: 21, blockers: [20], reason: "blocked-by 20 (open, unit in flight)" }]);
+    assert.ok(!plan.batches.some((b) => b.lanes.some((l) => l.issues.some((i) => i.number === 21))), "never batched while the blocker runs");
+    assert.equal(plan.summary.blocked, 1);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("B5: a soft dep on an in-flight unit is neither orphaned nor gating", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    withInFlightUnit(root, 20, "in-flight");
+    const deps = depsTable([["#20", "soft", "shares the design notes"]]);
+    const issues = [
+      issue(20, "In-flight unit", whereSection(["skills/alpha/SKILL.md"])),
+      issue(21, "Dependent", `${whereSection(["skills/beta/SKILL.md"])}\n\n${deps}`),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(plan.findings, [], "a target that is open and in flight is not an orphan");
+    assert.deepEqual(plan.batches[0].lanes[0].issues.map((i) => i.number), [21], "a soft dep never gates");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── S8 — no decision model anywhere in the path ────────────────────────────
 
 test("S8: identical inputs produce byte-identical envelopes (no wall clock, no model)", () => {
@@ -434,6 +536,58 @@ test("CLI: a run without --no-state persists the state file under the scratch ro
     });
     assert.equal(run.status, 0, run.stderr);
     assert.ok(fs.existsSync(path.join(root, ".agentic-workflow", STATE_FILE_NAME)));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── B6/B8 — the documented option semantics ────────────────────────────────
+// Reproducer of external-verify B6: `--mark-launched` wrote the state file
+// even under `--no-state` ("pure read; writes nothing"). B8: `--remote` fed
+// only the GraphQL call, so a scratch origin still degraded the issue list.
+
+test("B6: --mark-launched with --no-state is a usage error, never a silent write", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const run = spawnSync(process.execPath, [scriptPath, "--root", root, "--mark-launched", "5", "--no-state"], { encoding: "utf8" });
+    assert.equal(run.status, 2, run.stdout + run.stderr);
+    assert.match(run.stderr, /--no-state/u);
+    assert.ok(!fs.existsSync(path.join(root, ".agentic-workflow", STATE_FILE_NAME)), "nothing is written");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("B8: --remote names the forge on the issue list too", async () => {
+  const root = scratchRoot();
+  try {
+    // A `gh` shim that refuses an issue list without -R: the scratch-origin
+    // case the flag documents (gh cannot infer the repository from a local
+    // path remote).
+    const shim = path.join(root, "gh");
+    fs.writeFileSync(
+      shim,
+      [
+        "#!/bin/sh",
+        'if [ "$1" = "issue" ] && [ "$2" = "list" ]; then',
+        '  case " $* " in',
+        "    *\" -R \"*) printf %s '[{\"number\":10,\"title\":\"Alpha\",\"body\":\"\",\"labels\":[]}]' ;;",
+        '    *) echo "none of the git remotes work here" >&2; exit 4 ;;',
+        "  esac",
+        'elif [ "$1" = "api" ]; then',
+        "  printf %s '{\"data\":{\"repository\":{\"issues\":{\"nodes\":[{\"number\":10,\"blockedBy\":{\"nodes\":[]}}]}}}}'",
+        "else",
+        "  exit 5",
+        "fi",
+        "",
+      ].join("\n"),
+    );
+    fs.chmodSync(shim, 0o755);
+    const collected = await collectIssues({ ghBin: shim, remote: "git@github.com:owner/repo.git" });
+    assert.deepEqual(collected.degradations, [], "the documented scratch-origin case must not degrade");
+    assert.deepEqual(collected.issues.map((i) => i.number), [10]);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

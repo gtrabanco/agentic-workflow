@@ -73,9 +73,11 @@ the script emitted.
    - `--issues-file <json>` — inject a fetched issue cache instead of calling
      the forge; a cache without native relations fetches them live (one
      GraphQL call) or degrades declared.
-   - `--no-state` — pure read; writes nothing.
+   - `--no-state` — pure read; writes nothing. It cannot be combined with
+     `--mark-launched` (that pair is a usage error, exit 2).
    - `--remote <url>` — name the forge explicitly when `origin` is not a
-     GitHub URL (a scratch clone).
+     GitHub URL (a scratch clone); it names it for the issue list and the
+     relations call alike.
    - `--mark-launched <n>` — record that you launched issue N's lane outside
      the sensor (the only manual write).
 2. Read the envelope against [the plan grammar](references/PLAN.md):
@@ -97,7 +99,9 @@ the script emitted.
 - **Findings are findings.** `cycle`, `orphaned-soft-dep` and
   `prose-native-mismatch` are work-graph defects the work-graph audit can
   feed; report them with numbers and detail, never fix them here (the prose
-  rows belong to triage, per the #442 contract).
+  rows belong to triage, per the #442 contract). A target that is open and in
+  flight (its unit doc is on disk) is a **state**, not a defect: `blocked[]`
+  names it as in flight and no finding is emitted for it.
 - **Native relations are authoritative.** A prose row declared `hard` without
   a native `blocked-by` is reported as a mismatch; it never gates on its own.
 - **No decision model.** The sensor is fully deterministic with no model
