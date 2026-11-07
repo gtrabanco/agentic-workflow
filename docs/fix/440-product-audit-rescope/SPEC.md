@@ -147,10 +147,28 @@ the steps run inline in the `## Tasks` order P1–P7.
   Apply to this repository: issue #440
   ```
   (S2–S6 quoted verbatim from issue #440 `## Expected behaviour`; see `## Specs`.)
+- **P1** — 2026-11-07, ledgers frozen (SPEC + planning-evidence + planning-obligations + roadmap Fixes row) · `8dbc9e76`.
+- **E1** — 2026-11-07, `bun test scripts/product-audit-rescope.test.mjs` · exit 1 · 12 fail / 2 pass on the unmodified skill — the frozen-failure corpus (FF1 cadence, FF2 pre-pass, FF3 route grammar) observed red · commit `c7478da0`.
+- **E2** — 2026-11-07, `bun test scripts/product-audit-rescope.test.mjs` · exit 0 · 14 pass / 0 fail after implementation.
+- **E3** — 2026-11-07, `bun test scripts/scaffold-parity.test.mjs scripts/review-loop-discipline.test.mjs scripts/residue-dimensions.test.mjs scripts/next-recommendations.test.mjs scripts/normative-drift.test.mjs` · exit 0 · 75 pass / 0 fail (the moved route pin and all untouched behavior pins).
+- **E4** — 2026-11-07, differential: the same five suites run against a `git archive` of base `e1d94057` in scratch · all PASS at base — every stdout difference at head is a requested one (the moved `route:` pin follows S5).
+- **P2** — 2026-11-07, measured triggers + `audit-trigger@1` + `insufficient-corpus` verdict + route grammar + pre-pass/profile/residual-states sections · `e2dacec7`.
+- **E5** — 2026-11-07, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s) in 0 file(s), verdict: PASS`.
+- **E6** — 2026-11-07, `bun scripts/check-skill-context.mjs --routes` · exit 0 · `PASS route budgets: 14 routes`. `--budgets` initially failed (skill grew past 3192 est / 240 lines; AUDIT_DIMENSIONS past 2200 est); ceilings re-based at the declared formula — ceil(3876 × 1.10) = 4264, ceil(288 × 1.10) = 317, ceil(2493 × 1.10) = 2743 — growth source declared in `SKILL_CONTEXT_BUDGETS.json` · re-run exit 0 · `PASS context budgets: 28 skills`.
+- **E7** — 2026-11-07, `bun scripts/check-skill-context.mjs --documents` · initially failed `machine-table lines 111 != declared 109` (the two new normative-surfaces rows); `machineLines` re-pinned to 111 with its source row · re-run exit 0 · `PASS context documents: 4 budgeted documents`.
+- **E8** — 2026-11-07, `bun scripts/changeset-create.mjs` · exit 0 · minor (feat) · `lint-changeset.mjs` ok. `bun scripts/docs-generate.mjs` · exit 0 · `1 written` · `--check` · exit 0 · `verdict: PASS` · `e7ed0eb1`.
+- **E9** — 2026-11-07, `bun scripts/ceremony.mjs tier classify` · on the finished diff · `tier: standard`, reason `2 path(s) carry executable content` (the two test files), `signals: []` — matches the frozen tier.
+- **E10** — 2026-11-07, `bun scripts/test-impact.mjs --base main` · exit 0 · `verdict: targeted`, 2 executable paths, 1 suite; the touched-by-content suites were all run (E3).
+- **E11** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` · exit 0 · `VERDICT: PASS` after the two budget re-pins and the gate-inventory claim (see E14). `workspace-install` / `dependency-pin-gate` / `dependency-advisories` · exit 0 (advisories: report-only, 4 blocking rows classified, never fatal).
+- **F1** — 2026-11-07, pre-existing defect found while running the gate (not a review class, recorded here for honesty): the committed journal fragment `20261107T001707Z-direction-review-odd-hybrid-design-notes-manual.md` violates `fragment-name@1` — no `(mechanical|narrative)` kind token — so `parseFragmentName` refuses it and journal.surfaces S15 fails at the merge-base too (reproduced on the base copy). Its content is already rendered into `docs/LOGS.md` (`9b27fab9`); repaired by renaming the committed file to the contract shape (`...-design-notes-narrative-manual.md`), bytes untouched · `a4110a4d`. Owner finding: the writer that produced that fragment bypassed the fragment-name contract — a writer-side validation gap outside this unit's scope.
+- **E12** — 2026-11-07, `bun scripts/run-root-suite.mjs --jobs 1` · exit 0 · 88 suites PASS, 0 FAIL at head. (The default parallel pool showed random unrelated failures in this container — red-first, unit-route, ceremony-*, docs-generate, diff-guard — each green standalone and green in the base copy's own pool run; environmental, not caused by this diff.)
+- **E13** — 2026-11-07, `bun scripts/local-gate.mjs --only pi-compat-guard` at head · exit 1 · TS2307 (`@gtrabanco/agentic-workflow/src/log/render.mjs` etc. not found — the guard type-checks against the published package, which predates the unpublished journal feature), and the identical failure observed at the base commit — pre-existing, differential-proven, excluded from this unit's verdict.
+- **E14** — 2026-11-07, `bun test scripts/prose-gate-inventory.test.mjs` · initially failed `uncited-surface` ×2 (`product-audit-trigger`, `product-audit-finding-route` claimed by no row); both ids added to the `normative-surface-grammar` row's claim list in `docs/workflow/GATE_INVENTORY.md` · re-run exit 0 · 21 pass.
+- **P3** — 2026-11-07, budget re-bases + gate-inventory claims + journal rename · `a4110a4d` + the closing docs commit.
 
 ## Next
 
-Hand the diff to the owner for external verification (§8 of the applied workflow) — the owner decides merge.
+Owner's external verification (§8 of the applied workflow): review the diff on `feat/440-product-audit-rescope`, run any validator you distrust, then decide merge. Two owner findings ride along: (1) `pi-compat-guard` red at main (pre-existing — the guard type-checks a published package that predates the unpublished journal modules); (2) the journal writer-side fragment-name validation gap (F1).
 
 ## References
 
