@@ -334,18 +334,20 @@ from `log-kind@1`.
 - **E8** — 2026-11-07, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate` · exit 2 block `JOURNAL REFUSAL — unparseable fragment name "20261107T151312Z-docs-batch-2-landing-safeguard-manual.md"` — a stale fragment from another session blocks the whole batch; this unit's entry used the §7 manual-append fallback, the fragment left untouched (Known pre-existing issues).
 - **E9** — 2026-11-07, `git diff --name-only main…HEAD -- scripts/` · names only `precondition-closure.test.mjs` (O10 — no new script for the deliverable itself, S7).
 - **E10** — 2026-11-07, the golden-fixture weak-model smoke (GOLDEN_FIXTURE.md steps 2–4) skipped: this environment exposes no second/weaker model to run the smoke against; the fixture's mechanical half ran in G3. Named skip, not silence.
-- **P5** — 2026-11-07, the obligations closed on foreground runs (E3, G3, G4, E6, E7, E9) and the diff handed to the owner — this receipt commit.
+- **P5** — 2026-11-07, the obligations closed on foreground runs (E3, G3, G4, E6, E7, E9) and the diff handed to the owner — `fb4c94eb`.
+- **E11** — 2026-11-07, the external verifier's verdict arrived as the owner instruction `Create the PR`; the push was blocked by the pre-push gate at `crate-suite-node`, root-caused to the fragment `c9dd1d88` committed to main with kind `manual` (outside `journal-fragment-grammar@1`'s closed set, branch slug contradicting its own header) — unaggregateable and carrier-probe-red on any checkout. Rider repair `7d430265`: renamed from the entry's own header facts (branch `docs-domain-separation-safeguard`, kind `narrative`, session `local` — the documented no-session fallback); crate suites green both runtimes after (bun 388/0, node exit 0).
+- **G5** — 2026-11-07, `bun scripts/local-gate.mjs` · exit 0 · `PASS — 12 step(s) in 231s` (full gate incl. schema-build, schema-node-compat, crate suites, root suites).
+- **P6** — 2026-11-07, pushed `origin/feat/433-precondition-closure` and opened the PR — `## References` carries the URL; the roadmap row settled to `done · [#455]` (hand edit, disclosed) and the projection re-rendered in the follow-up commit.
 
 ## Next
 
-Hand the diff to the owner (external verifier, §8). On the verdict: one
-blockers-only correction batch if blockers are reported (§9); on approval,
-open the PR with `Closes #433`, then settle the roadmap row to
-`done · [#<pr>](<pr-url>)` (hand edit — no writer, disclosed) and merge.
+The PR is open: settle decision with the owner (merge PR #455). After the
+merge, the `## Fixes` row is removed (the table's own rule) and the renamed
+journal fragment is consumable by `journal aggregate` on the merged tree.
 
 ## References
 
-- Issue [#433](https://github.com/gtrabanco/agentic-workflow/issues/433); soft:
+- Issue [#433](https://github.com/gtrabanco/agentic-workflow/issues/433) — PR [#455](https://github.com/gtrabanco/agentic-workflow/pull/455); soft:
   [#307](https://github.com/gtrabanco/agentic-workflow/issues/307) (kernel
   amendment item 3), the charter unit `docs/fix/435-project-charter/`.
 - `docs/workflow/ISSUE_WORKFLOW.md` (dependency semantics — the declared-twice
