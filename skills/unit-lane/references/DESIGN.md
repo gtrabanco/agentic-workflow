@@ -131,6 +131,40 @@ still uses it, asked before breaking (the sweep `fold-findings` runs on a defect
 *why nothing can be removed*. Retirements are a design deliverable, not a
 review-time discovery — the plan step turns each into a planned task.
 
+### Precondition closure (#433)
+
+The three directions close what this change *touches*; they never ask the
+question underneath them: *does the thing I consume exist at all — do you
+provide it, or is a feature missing that feeds it?* This deliverable asks it.
+Stage 1 enumerates the unit's **operational prerequisites** — data sources,
+services, endpoints, tables, credentials, environment — as tier-0 claims with
+search receipts in `sources.md` like every other claim; this stage resolves
+each to one of three outcomes:
+
+| Outcome | What settles it |
+|---|---|
+| `exists (path:line)` | the prerequisite was read where it lives — a cited `path:line` |
+| `confirmed-absent (demonstrated search)` | a demonstrated search shows nothing provides it — the greps run, the scopes swept, the zero hits recorded. **Confirmed-absent is evidence, never `unknown`** |
+| `owner-answered` | the owner stated it — a request, an issue, a decision row |
+
+A prerequisite that resolves to nothing is never dropped and never guessed: it
+is the ask stage's most expensive question class. **Every confirmed-absent
+prerequisite enters the batched ask with exactly four options recorded** — the
+owner's rule, not the lane's echo — as `open-questions@1` rows of the batched
+ask (Stage 3):
+
+- **(a)** owner provides the resource;
+- **(b)** promote a missing feature as a dependency — *declared twice*: the
+  prose dependency and the forge's native `blocked-by` (the dependency
+  semantics are `docs/workflow/ISSUE_WORKFLOW.md`'s);
+- **(c)** build it inside this unit as a prerequisite task — planned before
+  its dependants (the ordering rule is `PLAN.md`'s);
+- **(d)** change scope/AC.
+
+One-shot units half-covered by this closure get their project-level answer
+from the project charter (soft-relate to the charter issue); the per-unit
+remainder still asks.
+
 ### Third-party before homemade (#340)
 
 When the design reaches for code that solves a solved problem, a **widely
@@ -267,6 +301,8 @@ rewrites `ac-hash:` — review never edits either side.
 - [ ] Role closure: every actor/role that interacts with the unit is listed
 - [ ] Expectation sweep: user's accepted and rejected inputs are bounded
 - [ ] The three-direction closure (§ Stage 2) ran: backward, sideways, forward — each with its evidence
+- [ ] The precondition closure (§ Stage 2) ran: every operational prerequisite resolves to `exists` / `confirmed-absent` / `owner-answered`, each with its receipt
+- [ ] Every confirmed-absent prerequisite entered the batched ask with exactly the four options (a)–(d) — or the project charter settled the project-level half, the per-unit remainder still asked
 - [ ] Retirements stated: each retired surface carries its replacement or no-consumer evidence, or the answer says why nothing can be removed
 - [ ] Third-party before homemade (#340): a solved problem prefers a widely community-supported library; own code for a solved problem carries a recorded justification in the design output
 - [ ] Deferrals landed in `## Future`, not in scope
