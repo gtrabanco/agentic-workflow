@@ -130,6 +130,38 @@ function checkedContent(content) {
   return content;
 }
 
+/** The entry block's identity line: `## <timestamp> — <branch> — <label>`. The
+ *  name and the bytes must agree on the branch, or the fragment is refused:
+ *  a name that parses but describes another entry is the 440 incident (a
+ *  committed fragment whose filename contradicted its own header). */
+const ENTRY_HEADING = /^## .+? — (.+?) — .+$/u;
+
+/**
+ * Refuse a fragment whose name and bytes describe different entries.
+ *
+ * The name is the fragment's identity and the aggregator trusts it, so the one
+ * place that can stop a contradiction is the write: the produced name must
+ * round-trip through `parseFragmentName`, and a narrative block's heading must
+ * name the same branch the name records. A refusal is never a partial write.
+ */
+function checkedIdentity(content, identity) {
+  if (identity === null) {
+    throw new FragmentError("the fragment name does not parse back to its identity — refusing to write a fragment the aggregator cannot read");
+  }
+  const headingLine = content.slice(0, content.indexOf("\n"));
+  const heading = ENTRY_HEADING.exec(headingLine);
+  if (heading === null) {
+    throw new FragmentError(
+      `fragment heading must be '## <timestamp> — <branch> — <label>', got ${JSON.stringify(headingLine)}`,
+    );
+  }
+  if (slug(heading[1]) !== identity.branch) {
+    throw new FragmentError(
+      `fragment name records branch ${JSON.stringify(identity.branch)} but its heading names ${JSON.stringify(heading[1])} — a fragment's name and bytes must agree`,
+    );
+  }
+}
+
 /**
  * Write one fragment. Returns `{ ok: true, name, path, bytes }`, or throws
  * `FragmentError` — a refusal is never a partial write.
@@ -137,7 +169,8 @@ function checkedContent(content) {
  *  - `kind: "mechanical"` requires `facts` (`log-facts@1`); the bytes are
  *    `renderEntry(facts)` and nothing else.
  *  - `kind: "narrative"` requires `content` (the entry block the writer
- *    rendered) plus the `branch` the name records.
+ *    rendered) plus the `branch` the name records; the block's own heading must
+ *    name that same branch.
  *  - `timestamp` defaults to `options.now()` (write-time clock, second
  *    precision); passing it pins the name in tests.
  *  - A target that already exists is refused, never overwritten (S10).
@@ -160,6 +193,8 @@ export function writeFragment(options) {
     sessionId: options?.sessionId,
   });
   const dir = path.join(root, options?.dir ?? JOURNAL_DIR);
+  const identity = kind === "narrative" ? parseFragmentName(name) : null;
+  if (kind === "narrative") checkedIdentity(content, identity);
   const target = path.join(dir, name);
   if (fs.existsSync(target)) {
     throw new FragmentError(`fragment ${name} already exists — a collision is refused, never overwritten`);

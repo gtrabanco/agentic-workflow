@@ -226,6 +226,14 @@ function docRefuse(code, message) {
   process.exit(2);
 }
 
+/** The seam an appended block needs at the section's end: a block boundary, so
+ *  the text never glues to the previous line nor to the next heading. */
+function appendSeam(body) {
+  if (body.endsWith("\n\n")) return body;
+  if (body.endsWith("\n")) return `${body}\n`;
+  return `${body}\n\n`;
+}
+
 /** The half-A branch executor. Resolution and replacement reads happen
  *  before any write, so a refusal leaves the file byte-identical. */
 async function runDocOpPositional(g) {
@@ -238,6 +246,11 @@ async function runDocOpPositional(g) {
     }
   };
   if (g.op === "read") {
+    if (g.file === "-" && g.section !== null && g.section.includes("#")) {
+      throw new Error(
+        "a path-qualified section id needs a real document path — with `--file -` use the heading title or its bare slug",
+      );
+    }
     const source = readSource();
     const receipt = { ok: true, command: "read", path: g.file, section: null, bytes: 0 };
     let output;
@@ -256,14 +269,32 @@ async function runDocOpPositional(g) {
   }
   if (g.op === "edit") {
     const source = readFileSync(g.file, "utf8");
-    let replacementText;
+    const bodySource = g.replacement ?? g.set ?? g.append;
+    const bodyMode = g.set !== null ? "set" : g.append !== null ? "append" : "replacement";
+    let text;
     try {
-      replacementText = g.replacement === "-" ? readFileSync(0, "utf8") : readFileSync(g.replacement, "utf8");
+      // `--replacement` names a file; `--set`/`--append` carry their text and
+      // read stdin only for `-`.
+      text =
+        bodySource === "-"
+          ? readFileSync(0, "utf8")
+          : bodyMode === "replacement"
+            ? readFileSync(bodySource, "utf8")
+            : bodySource;
     } catch (e) {
-      throw new Error(`cannot read the replacement (${g.replacement}): ${e.message}`);
+      throw new Error(`cannot read the body source (${bodySource}): ${e.message}`);
     }
     const section = resolveSectionRef(source, relativeDocPath(g.file), g.section);
-    const result = source.slice(0, section.start) + replacementText + source.slice(section.end);
+    // Both text spellings ride the one splice primitive: `--set` places its text
+    // where the section was, `--append` places it after the section's own bytes as
+    // its own block (never glued to the next heading).
+    const result =
+      bodyMode === "append"
+        ? source.slice(0, section.start) +
+          appendSeam(source.slice(section.start, section.end)) +
+          (text.endsWith("\n") ? text : `${text}\n`) +
+          source.slice(section.end)
+        : source.slice(0, section.start) + text + source.slice(section.end);
     if (!g.dryRun) {
       try {
         writeFileSync(g.file, result);
@@ -281,7 +312,7 @@ async function runDocOpPositional(g) {
     };
     if (g.json) process.stdout.write(JSON.stringify(receipt) + "\n");
     else if (g.dryRun) process.stdout.write(result);
-    else console.log(`doc edit: replaced ${g.section} in ${g.file} (lines ${section.lines[0]}-${section.lines[1]})`);
+    else console.log(`doc edit: ${bodyMode === "append" ? "appended to" : "replaced"} ${g.section} in ${g.file} (lines ${section.lines[0]}-${section.lines[1]})`);
     return;
   }
   if (g.op === "index") {
