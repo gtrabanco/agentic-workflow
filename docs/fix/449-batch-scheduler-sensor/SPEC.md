@@ -105,6 +105,43 @@ paths>` at the cut head `b8b1d814`):
 {"contract":"risk-tier-verdict@1","tier":"standard","reason":"1 path(s) carry executable content: scripts/batch-scheduler.mjs","reason_kind":"executable-content","task_size":{"understood":true,"contained_risk":"contained","resumable_from_diff":true,"ceremony":"unit-doc","verification":"gates"},"signals":[]}
 ```
 
+## Acceptance criteria
+
+One observable, testable criterion per `S#`, frozen at cut and re-bound by the
+correction batch (external verify, 11 blockers). Each names the check that
+proves it.
+
+- **AC-S1** — The issue is applied as one change and every external-verify
+  blocker is closed at the bound head. Check: `bun scripts/local-gate.mjs`
+  exits 0, `bun scripts/roadmap-settle.mjs` exits 0 (0 violations), and the
+  `## Log` carries an `E` line per obligation validator.
+- **AC-S2** — The envelope exists, is closed to `batch-plan@1` and is
+  deterministic for identical inputs, and its contract publishes from the
+  schema package. Check: `bun test scripts/batch-scheduler.test.mjs` exits 0;
+  `cd packages/agentic-workflow-schema && bun run test` exits 0 (including the
+  committed projection's `files` contract).
+- **AC-S3** — Surfaces are read from where they live: the issue body is the
+  source, a tree-root token covers every declared child lane, and a soft dep
+  on a running unit is not a defect. Check: the `B3` tests in
+  `scripts/batch-scheduler.test.mjs` exit 0.
+- **AC-S4** — Every batched issue carries its lane, derived worktree,
+  `/unit-lane --from-issue <N>` command and a reason. Check: the `S4` tests.
+- **AC-S5** — Standing constraints are enforced mechanically: hard blockers
+  gate (an open blocker with a unit doc is named as in flight and never
+  batched), soft deps order but never gate, one lane per surface serializes
+  its occupants, and size hints are reported facts. Check: the `S5`, `B4` and
+  `B5` tests.
+- **AC-S6** — Persistence: a re-run recognizes claimed lanes, `--no-state` is
+  a pure read, and the write options are mutually exclusive. Check: the `S6`
+  and `B6` tests.
+- **AC-S7** — Unresolvable spots are findings and resolvable states are never
+  reported as findings: a real cyclic wait is a `cycle` finding, an in-flight
+  target is not. Check: the `S7`, `B4` and `B5` tests.
+- **AC-S8** — No decision model anywhere in the path. Check: the
+  byte-identical determinism test and the `S8` source pins.
+- **AC-S9** — Planner only: never spawns, never creates worktrees; `worktree`
+  and `command` are reported strings. Check: the `S9` source pins.
+
 ## Future
 
 - **2026-11-07, open** — "#295 (final batch) — the panel renders the envelope
@@ -134,17 +171,17 @@ paths>` at the cut head `b8b1d814`):
 
 ## Known pre-existing issues
 
-- **`packages/agentic-workflow/test/journal.surfaces.test.mjs` S15 is red at
-  the base commit** — the committed fragment
+- **`packages/agentic-workflow/test/journal.surfaces.test.mjs` S15 was red at
+  the base commit** — the fragment
   `.agentic-workflow/journal/20261107T151312Z-docs-batch-2-landing-safeguard-manual.md`
-  carries the segment `manual` where the fragment grammar requires
+  carried the segment `manual` where the fragment grammar requires
   `mechanical|narrative` (`parseFragmentName` returns null), so the carrier
-  probe fails. Verified identical at `b8b1d814` (base archive run, this
-  session). It makes the gate's three crate/root-suite steps red on `main`
-  today. **Does not affect this unit** (the fragment predates it; this unit
-  writes no fragments) — but it blocks a fully green gate and needs its own
-  fix unit (owner decision: rename the fragment to the grammar or amend the
-  grammar).
+  probe failed. Verified identical at `b8b1d814` (base archive run, this
+  session). **Repaired in this unit** (E14, out-of-unit and disclosed): the
+  fragment was renamed to the grammar and the crate suite is green since.
+  A later log-session fragment reproduced the same class (`…-session-log.md`)
+  and is repaired here by naming it `narrative` (external verify B11) — the
+  writer that produced both names is a separate finding, not this unit's.
 
 ## Tasks
 
@@ -169,6 +206,21 @@ paths>` at the cut head `b8b1d814`):
   (Implements: S1, S2)
 - P8 — Full verification: root gate + all touched suites in the foreground; obligations ledger closed (validator: `bun scripts/local-gate.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9)
+- P9 — Correction batch I (external verify B3, B4, B5, B6, B8): the frozen reproducers run red first, then the planner normalizes tree-root surfaces, models in-flight targets, refuses the write-option pair and names the forge on both collection sources (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0)
+  (Implements: S2, S3, S5, S6, S7)
+  Relevant files: scripts/batch-scheduler.mjs
+- P10 — Correction batch II (external verify B7): the committed draft-07 projection is declared in the package `files`, like every sibling contract (validator: `cd packages/agentic-workflow-schema && bun run test` exits 0)
+  (Implements: S1, S2)
+  Relevant files: packages/agentic-workflow-schema/package.json
+- P11 — Correction batch III (external verify B2): the guide's source-skill counts state the tree it ships (validator: `rg -c '29 source skills \(14 user-facing' README.md` matches 1)
+  (Implements: S1)
+  Relevant files: README.md
+- P12 — Correction batch IV (external verify B9, B10, B11): the ledger cells name the runner they were measured with, the known-issue section states the repair this unit already made, and the carrier's fragment name parses (validator: `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` exits 0)
+  (Implements: S1)
+  Relevant files: docs/fix/449-batch-scheduler-sensor/
+- P13 — Correction batch V (external verify B1): the roadmap row settles `done` with the PR it carries, the projections are regenerated, and the recheck runs the settle gate and the full gate (validator: `bun scripts/roadmap-settle.mjs` exits 0 and `bun scripts/local-gate.mjs` exits 0)
+  (Implements: S1, S2)
+  Relevant files: docs/ROADMAP.md
 
 ### Planning evidence
 
