@@ -308,7 +308,7 @@ $ bun scripts/ceremony.mjs tier classify
 - [ ] P18 — `F1`–`F8` fold lines: one per folded finding (B1, B2, B3, A2, A5, A1, A6, A7), each naming its fold commit and what was verified (validator: `rg -c '^- \*\*F[0-9]+\*\*' docs/fix/366-doc-cli/SPEC.md` matches 8 and each commit resolves from `HEAD`)
   (Implements: S17)
   Relevant files: docs/fix/366-doc-cli/SPEC.md
-- [ ] P19 — Publish the branch (validator: `git rev-parse origin/feat/366-doc-cli` equals `git rev-parse HEAD`)
+- [ ] P19 — Publish the branch (validator: `git rev-parse origin/feat/366-doc-cli` matches `git rev-parse HEAD`)
   (Implements: S18)
   Relevant files: —
 
