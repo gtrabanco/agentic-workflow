@@ -260,6 +260,43 @@ export function evaluateContent({
       ),
     );
     if (declaring) {
+      // D-440-5b (owner instruction 2026-11-07): a route taken through SKILL entries
+      // is also the PR's own statement of which surfaces it ships — one entry naming
+      // a single skill cannot carry a PR that changed three. A package-level entry
+      // for this package declares the whole content source and needs no per-skill
+      // rows. The derivation is this gate's own `triggered` set, never a second list.
+      const declaresPackageDirectly = changesetIntent.some(
+        (entry) => entry.ok && (entry.entries ?? []).some((e) => e.pkg === packageName),
+      );
+      if (!declaresPackageDirectly) {
+        const touchedSkills = new Set();
+        for (const file of triggered) {
+          const match = /^skills\/([^/]+)\//.exec(file);
+          if (match) touchedSkills.add(match[1]);
+        }
+        const declaredSkills = new Set();
+        for (const entry of changesetIntent) {
+          if (!entry.ok) continue;
+          for (const e of entry.entries ?? []) if (e.kind === "skill") declaredSkills.add(e.pkg);
+        }
+        const missing = [...touchedSkills].filter((name) => !declaredSkills.has(name)).sort();
+        if (missing.length > 0) {
+          return {
+            ok: false,
+            code: "changeset-coverage",
+            message:
+              `GATE REJECTION — changeset-coverage\n` +
+              `  ${packageName} ships changed content and the route is taken through skill entries, but\n` +
+              `  ${missing.length} skill(s) this PR changed are declared by none of them: ${missing.join(", ")}.\n` +
+              `  Files under skills/ are this package's content source, so an intent that names one skill\n` +
+              `  while the PR ships three mis-states the release it is declaring.\n` +
+              `  Fix: add one line per changed skill to the PR's .changeset/*.md (the set is derived from\n` +
+              `  the modified files — scripts/changeset-create.mjs does it), or declare ${packageName}\n` +
+              `  itself, which covers the whole content source.`,
+            triggered,
+          };
+        }
+      }
       return {
         ok: true,
         code: "changeset-intent",
