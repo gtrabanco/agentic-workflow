@@ -217,10 +217,12 @@ function parseJournalArgs(args) {
 
 // ── doc — retrieval + half-A positional entry point (units 65 and #366) ─
 
-/** A typed selector-resolution failure is a refusal: exit 2, stdout empty. */
+/** A typed selector-resolution failure is a refusal: exit 2, stdout empty.
+ *  The detail line carries exactly one `doc:` prefix — a message that already
+ *  names the tool keeps its own text, it never doubles the prefix (S11). */
 function docRefuse(code, message) {
   process.stderr.write(`DOC REFUSAL — ${code}\n`);
-  if (message) process.stderr.write(`doc: ${message}\n`);
+  if (message) process.stderr.write(`doc: ${String(message).replace(/^doc:\s*/, "")}\n`);
   process.exit(2);
 }
 
