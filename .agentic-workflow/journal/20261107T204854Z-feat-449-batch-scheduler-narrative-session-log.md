@@ -1,4 +1,4 @@
-## 2026-11-07T20:48:54Z — feat/449-batch-scheduler-sensor — manual
+## 2026-11-07T20:48:54Z — feat/449-batch-scheduler-sensor — narrative
 - **Commits:** 9 (`a649f3b3…7d6dacf5`)
 - **Files:** 27 files
 - **Summary:** feat/449-batch-scheduler-sensor — deterministic batch scheduler sensor: batch-plan@1 envelope, schema contract, scripts/batch-scheduler.mjs, user skill, 8 commits + PR #454
