@@ -32,6 +32,9 @@ Nothing runs until both are open, and each is explicit:
 2. **Opt-in per seam** — every matcher group in the hook config sets
    `"enabled": true`. Declaring a hook is not consent.
 
+A declaration that is enabled but not consented is not silent either: the first
+seam announces that the project's hooks are inert and names the consent file.
+
 Both gates are proven off-by-default by the package's test suite.
 
 ## Execution guarantees
@@ -39,13 +42,23 @@ Both gates are proven off-by-default by the package's test suite.
 - **No shell** — commands spawn as argv with `shell: false`; shell
   metacharacters are refused `config-invalid` before any process exists, so
   nothing is ever interpolated.
-- **Bounded** — output is capped per stream with a truncation marker; every
+- **Bounded** — output is capped per stream with a truncation marker and the
+  rest drained: volume never costs memory and never decides a verdict. Every
   hook has a hard timeout.
-- **Fail-closed** — a failing check blocks at the seam, and the teaching
-  message quotes the declared requirement as declared (never paraphrased).
+- **Fail-closed** — a failing check blocks where a seam can block
+  (`pre:commit`, `pre:push`: the git command does not run) and reports the same
+  teaching message where it cannot (`session:*`, `post:commit`) — never inside
+  the silence. A command that cannot start at all is a block, never a crash.
+  The message quotes the declared requirement as declared, its own quoting
+  included.
 - **Degradation is declared** — a broken hook config announces itself once and
-  then behaves as a no-op; it never passes silently and never throws into the
+  then behaves as a no-op; an `enabled` declaration with no consent entry says
+  it is inert and why. It never passes silently and never throws into the
   session.
+- **What it does not cover** — the matcher reads the agent's own bash command.
+  A git call made from inside a script, behind `bash -c`, or by another tool is
+  not intercepted; the declaration is a guardrail, not an enforcement
+  boundary.
 - **Auto commit/push are never defaults** — they exist only as explicit
   per-seam flags on `phase:end`/`unit:end`, valid nowhere else.
 
