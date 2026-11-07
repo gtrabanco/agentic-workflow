@@ -57,11 +57,12 @@
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 56,
+        "machineLines": 57,
         "sources": {
           "issue #359 (unit 96-prose-gate-inventory)": "the carrier table is a machine region a gate parses, so it is counted separately from the prose that explains it. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 146 lines / 4,522 est / 54 machine-region lines; ceilings ceil(146 x 1.10) = 161 and ceil(4522 x 1.10) = 4,975, and `machineLines` is pinned exactly because the table is the contract `scripts/prose-gate-inventory.mjs` reads.",
           "issue #420 (unit 420-docs-generated-merge-driver)": "the inventory gains one row, `docs-projection-current`, binding the projection staleness gate this unit's local-gate step runs (`scripts/docs-generate.test.mjs` carries the token). The machine region moves 54 -> 55 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 147 lines / 4,575 est, inside the unchanged ceilings 161 / 4,975, so only `machineLines` is re-pinned.",
-          "merge of fix/359 with issue #294 (unit 82 relay-lane-execution)": "the integration merges both row sets: this branch own projection row plus main relay-status-grammar row, whose binding AGENTS.md#normative-surfaces@1 declares and only this branch gate can see (uncited-surface). The machine region moves 55 -> 56 lines; measured at the merge with `bun scripts/check-skill-context.mjs --documents`: 148 lines / 4,614 est, inside the unchanged ceilings 161 / 4,975, so only `machineLines` is re-pinned."
+          "merge of fix/359 with issue #294 (unit 82 relay-lane-execution)": "the integration merges both row sets: this branch own projection row plus main relay-status-grammar row, whose binding AGENTS.md#normative-surfaces@1 declares and only this branch gate can see (uncited-surface). The machine region moves 55 -> 56 lines; measured at the merge with `bun scripts/check-skill-context.mjs --documents`: 148 lines / 4,614 est, inside the unchanged ceilings 161 / 4,975, so only `machineLines` is re-pinned.",
+          "issue #432 (unit 432-model-memory-tier-0)": "the inventory gains one prose row, `model-memory-provenance`, the gate note the issue names — carrier prose with stay-reason judgment-needed (the scripted check is the deferred second slice) and a rederive pointer into DESIGN.md’s provenance section. The machine region moves 56 -> 57 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: inside the unchanged ceilings, so only `machineLines` is re-pinned."
         }
       },
       "docs/workflow/SKILL_AUTHORING.md": {
@@ -213,12 +214,13 @@
         "issue #360 (unit 360a-risk-tiered-ceremony)": "step 1a reads the risk tier from the closed ceremony CLI (`tier classify`) before any unit doc exists: the three Task Size signals, the passive route, and the pointer to the one owner of the per-tier table. Measured at the change with `bun scripts/check-skill-context.mjs`: 4148 est / 322 lines; ceilings re-based to ceil(4148 x 1.10) = 4563 and ceil(322 x 1.10) = 355.",
         "issue #294 (unit 82 relay-lane-execution)": "the relay hand-off paragraph and close-out pointer grew this entry; measured 4317 est / 331 lines at this cut, so the ceilings are ceil(4317 x 1.10) = 4749 and ceil(331 x 1.10) = 365"
       },
-      "referenceEstimateMax": 3754,
-      "referenceLinesMax": 275,
+      "referenceEstimateMax": 4528,
+      "referenceLinesMax": 322,
       "referenceSources": {
         "fix #303 (investigate → orient → ask → decide)": "the design and plan steps restated positively (investigate search + sources.md citation ledger, orient tiers 0/1/2, ask, decide) — measured DESIGN.md 2529 est / 196 lines, ceiling ceil(2529 x 1.10) = 2782 / ceil(196 x 1.10) = 216",
         "fix 318 (closure lives with the step that executes it)": "S2/S6/S8's three-direction closure, ask-don't-infer, document-or-don't-coin and retirements moved from the conductor's own §3 into the reference each step actually reads: DESIGN.md gains §Three-direction closure plus its checklist items, PLAN.md gains the retirements output contract plus its checklist item, and the conductor keeps only a pointer. The rule now lives where a model running `design` reads it, instead of in a section the step never opens. Measured at this re-basis: DESIGN.md 3004 est / 225 lines and PLAN.md 3017 est / 226 lines (the larger of the two), so the per-skill reference ceilings re-base to exact ceil(3017 × 1.10) = 3319 / ceil(226 × 1.10) = 249",
-        "fix 340 (third-party + ask-dont-infer owner block)": "fix 340 (third-party item + ask-dont-infer@1 owner block): DESIGN.md gains the third-party-before-homemade subsection, the ask-dont-infer@1 owner block and the owner-pointer bullet — measured at this re-basis: DESIGN.md 3412 est / 250 lines (the larger of the two references), so the per-skill reference ceilings re-base to exact ceil(3412 x 1.10) = 3754 / ceil(250 x 1.10) = 275. Growth source = fix 340's DESIGN.md additions"
+        "fix 340 (third-party + ask-dont-infer owner block)": "fix 340 (third-party item + ask-dont-infer@1 owner block): DESIGN.md gains the third-party-before-homemade subsection, the ask-dont-infer@1 owner block and the owner-pointer bullet — measured at this re-basis: DESIGN.md 3412 est / 250 lines (the larger of the two references), so the per-skill reference ceilings re-base to exact ceil(3412 x 1.10) = 3754 / ceil(250 x 1.10) = 275. Growth source = fix 340's DESIGN.md additions",
+        "fix 432 (model memory is never tier-0)": "DESIGN.md gains the provenance-kind table and ceiling (a model-memory row never carries confirmed), the version-pin receipt rule and the coupled skipped-research pointer — tightened once and still over, so the honest route is the declared re-base, not trimmed semantics; measured at the change: DESIGN.md 4116 est / 292 lines (the larger of the two references), so the per-skill reference ceilings re-base to exact ceil(4116 x 1.10) = 4528 / ceil(292 x 1.10) = 322. Growth source = fix 432’s DESIGN.md provenance section"
       }
     }
   },

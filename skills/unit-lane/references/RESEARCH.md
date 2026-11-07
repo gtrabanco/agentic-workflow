@@ -16,6 +16,20 @@ or `unit-lane` by the owning stage.
 Establish what is known and what is uncertain about the unit's domain before
 design decisions are locked in. Depth follows uncertainty and consequence.
 
+## Skipped-research exit
+
+A **descriptive** question the repository already answers does not earn
+external research: the receipt substitutes the fetch, and it records
+**which claim the repo answered and where** (`path:line`, doc section, prior
+decision). The receipt is one `Evidence` row (`R<n>` — "repo-answered — <claim> —
+`<path:line>`"), and the claim's journal row cites the same source. A
+**normative** question (architecture fit, design) never closes on precedent —
+precedent informs the options; the design step's tiers still decide.
+
+Provenance kinds and the certainty ceiling are owned by
+`skills/unit-lane/references/DESIGN.md` (§ Provenance); this step journals
+under them — it does not restate the rule.
+
 ## Inputs
 
 - The unit's SPEC.md objective and why sections
