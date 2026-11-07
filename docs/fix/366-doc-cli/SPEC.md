@@ -129,6 +129,43 @@ naming the fold commit, so a fold is never a row that silently vanished.
 Publish the branch: `origin/feat/366-doc-cli` must carry this unit's head, so PR
 #453 shows the delivered commits instead of the stale `ef63162d` anchor.
 
+**S19 — Prove the release cut (owner request, 2026-11-07).**
+> Arregla 3
+
+Item 3 of the handoff was "the release": this unit ships a `.changeset/` intent
+and `scripts/release.mjs` stamps the versions at cut time — the repository's own
+rule is that no `package.json` bump enters the PR (feature 40). "Fixing" it means
+proving the cut: the read-only `plan` mode must list this change-set with the
+declared bumps and the train must resolve without a missing package.
+
+**S20 — `doc edit` text spellings (owner request, 2026-11-07).**
+> Arregla 4
+
+The first `## Future` row: issue #192's `--set` / `--append` spellings over the
+same splice primitive. `--set <text|->` replaces the located section with the
+given text, `--append <text|->` appends it to the section's body; both are
+mutually exclusive with `--replacement`, and every existing `edit` behaviour
+(refusals before any write, byte-losslessness outside the range, `--dry-run`,
+`--json`) is unchanged.
+
+**S21 — `A3`: a path-qualified id on stdin (owner request, 2026-11-07).**
+> Arregla 4
+
+The second `## Future` row: `doc read --file - --section <full D5 id>` answers
+`NO_MATCH`, which names the symptom and not the cause. It must refuse by name —
+a `path#slug` id carries a document path, and a piped document has none — while
+the title and bare-slug selectors keep working on stdin.
+
+**S22 — Journal writer refuses a name that contradicts its bytes (owner request, 2026-11-07).**
+> Arregla 5
+
+The standing finding from the 440 session, second occurrence in this unit: a
+committed journal fragment whose filename contradicted its own header (and its
+own commit message). The writer is the only place that can stop it: `writeFragment`
+must refuse a fragment whose name does not round-trip through `parseFragmentName`,
+and — for a narrative fragment — whose content heading names a different branch
+than the name records.
+
 ## Impact
 
 - **The runner crate's `bin/agentic-workflow.mjs` router gains its half-A
@@ -311,6 +348,18 @@ $ bun scripts/ceremony.mjs tier classify
 - [ ] P19 — Publish the branch (validator: `git rev-parse origin/feat/366-doc-cli` matches `git rev-parse HEAD`)
   (Implements: S18)
   Relevant files: —
+- [ ] P20 — Prove the release cut in `plan` mode and record the receipt; no version is bumped in the PR (validator: `bun scripts/release.mjs plan` exits 0 and prints `366-doc-cli.md: @gtrabanco/agentic-workflow=minor` and `…-schema=patch`)
+  (Implements: S19)
+  Relevant files: docs/fix/366-doc-cli/SPEC.md
+- [ ] P21 — `doc edit --set <text|->` and `--append <text|->` over the same splice primitive, mutually exclusive with `--replacement`, refusals and byte-losslessness unchanged (validator: `bun test test/doc.docops.test.mjs` exits 0 with the new cases; they fail against the cut head)
+  (Implements: S20)
+  Relevant files: packages/agentic-workflow/src/doc/grammar.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/test/doc.docops.test.mjs
+- [ ] P22 — `A3`: a path-qualified `--section` on `--file -` is refused by name, not answered `NO_MATCH` (validator: `bun test test/doc.docops.test.mjs` exits 0 with the case asserting the exact stderr; it fails against the cut head)
+  (Implements: S21)
+  Relevant files: packages/agentic-workflow/src/doc/docops.mjs, packages/agentic-workflow/src/doc/grammar.mjs
+- [ ] P23 — The journal writer refuses a fragment whose name does not round-trip and a narrative fragment whose content heading names a different branch (validator: `bun test test/journal.test.mjs` exits 0 with the two refusal cases; the cut head accepts both)
+  (Implements: S22)
+  Relevant files: packages/agentic-workflow/src/journal/fragment.mjs, packages/agentic-workflow/test/journal.test.mjs
 
 ## Triaged steps
 
@@ -348,6 +397,10 @@ it.
 | AC-20 | The parity case is red before the fix and asserts the whole invariant afterwards — no named exception list (S16 / L10) | `git show e…`-time red run plus the green run recorded in `E29`/`E30` |
 | AC-21 | Every folded finding carries its `F<n>` line with the fold commit and what was verified (S17 / L9) | `rg -c '^- \*\*F[0-9]+\*\*' docs/fix/366-doc-cli/SPEC.md` matches 8 and each names a commit reachable from `HEAD` |
 | AC-22 | The branch is published (S18) | `git rev-parse origin/feat/366-doc-cli` equals `git rev-parse HEAD` |
+| AC-23 | The release cut is proven without touching a version in the PR: the planner lists this change-set with `@gtrabanco/agentic-workflow=minor` and `@gtrabanco/agentic-workflow-schema=patch`, and the train resolves (S19) | `bun scripts/release.mjs plan` prints both rows and a `train version:` line; exit 0 |
+| AC-24 | `doc edit` accepts `--set` and `--append` over the same splice primitive, mutually exclusive with `--replacement`, with every prior behaviour intact (S20) | `bun test packages/agentic-workflow/test/doc.docops.test.mjs` exits 0 with the new cases and the unchanged ones |
+| AC-25 | A path-qualified id on stdin is refused by name instead of answering `NO_MATCH`, and title/bare-slug selectors keep working (S21) | the same suite's stdin case asserts the exact stderr and exit code |
+| AC-26 | The journal writer refuses a fragment whose name does not round-trip, and a narrative fragment whose content heading names a different branch than its name (S22) | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with the two refusal cases; the cut head writes both fragments |
 
 ## Findings
 
@@ -584,6 +637,18 @@ OPEN rows only; appended by reviewers.
 - **F7** — 2026-11-07, **A6** folded at `c4addf23`: the fence keeps its own
   length, and a store stamped by an older scanner re-scans — verified by the
   nested-fence case, the chunker-version case and the one-file differential.
+- **F9** — 2026-11-07, **S20** folded at `07832973`: `doc edit` takes one body
+  source among `--replacement` (a file), `--set` (inline text) and `--append`
+  (inline text after the section's own bytes), exactly one legal — verified by
+  the four `--set`/`--append` cases and by the unchanged `--replacement` cases.
+- **F10** — 2026-11-07, **S21** (`A3`) folded at `07832973`: a path-qualified
+  selector on stdin is refused by name, exit 1, while the title and bare-slug
+  selectors keep resolving — verified by the stdin case and by the two
+  surviving selectors in the same run.
+- **F11** — 2026-11-07, **S22** folded at `07832973`: the journal writer refuses
+  a narrative fragment whose heading names another branch than its name records,
+  and one whose heading carries no identity — verified by both refusal cases,
+  each asserting the directory stays empty (a refusal is never a partial write).
 - **F8** — 2026-11-07, **A7** folded at `1734ed10`: one heading scanner for both
   halves — verified by the corpus parity case at **9184 chunks = 9184 sections =
   9184 paired, 0 drift, 0 chunk heading without a section, 0 section without a
@@ -649,6 +714,32 @@ OPEN rows only; appended by reviewers.
   `git rev-parse origin/feat/366-doc-cli` = `b52ba02d…`. The commit that carries
   this line is the receipt itself and is pushed right after it, so the published
   head is the receipt's, not the anchor's.
+- **L14** — 2026-11-07, fourth batch, scope read from the owner's verbatim
+  request (`S19`–`S22`): the release-cut proof, the two `## Future` rows
+  (the `doc edit` text spellings and `A3`) and the journal writer gap.
+  Commits: `8936d4c9` (red cases) and `07832973` (the implementations plus the
+  README currency).
+- **E33** — 2026-11-07, the release cut, proven in `plan` mode (read-only, no
+  version touched in the PR):
+  `bun scripts/release.mjs plan` · exit 0 ·
+  `366-doc-cli.md: @gtrabanco/agentic-workflow=minor`,
+  `366-doc-cli.md: @gtrabanco/agentic-workflow-schema=patch`,
+  `train version: 5.0.0 (highest bump: major); unified train: all packages carry it`.
+- **E34** — 2026-11-07, at `07832973`: `bun test test/doc.docops.test.mjs` ·
+  35 pass / 0 fail, including `--set` (splice + byte-lossless outside), `--append`
+  (its own block before the next heading), both stdin forms and the
+  two-sources-refused case; the pre-existing `--replacement` cases unchanged.
+- **E35** — 2026-11-07, the stdin id: `doc read --file - --section some/doc.md#x`
+  → exit 1, `doc: a path-qualified section id needs a real document path …`, no
+  `NO_MATCH`; `--section guide-objective` and `--section Objective` from stdin
+  still print the section's bytes.
+- **E36** — 2026-11-07, at `07832973`: `bun test test/journal.test.mjs` ·
+  26 pass / 0 fail, including the two refusals
+  (`fragment name records branch "docs-batch-2-landing-safeguard" but its heading
+  names "docs/domain-separation-safeguard"` and the heading-less block), each
+  leaving the carrier directory empty.
+- **G6** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at this batch's
+  head · **verdict: PASS — 8 step(s) in 154s** · exit 0.
 - **G4** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at this batch's
   head · **verdict: PASS — 8 step(s) in 130s** · exit 0, `schema-node-compat`
   green in 5s.
