@@ -183,6 +183,17 @@ ledger rows and pinning tests only — so no new runtime suite applies.
   test-bearing push). Repaired on this branch with the same conforming rename
   the journal unit already landed on its own branch (`11e14db2`) — if both
   merge, the renames agree on the same target name and the same bytes.
+- **Second occurrence, 2026-11-07** — the same defect landed again at `main`
+  `cf041cca` with `20261107T151312Z-docs-batch-2-landing-safeguard-manual.md`
+  (kind slot `manual`, outside the closed `mechanical|narrative` set), so S15
+  refuses the carrier set again after this merge. Reproduced at `origin/main`
+  itself, not only on this branch: the file is byte-identical to `main`'s
+  (`git diff origin/main -- .agentic-workflow/journal/` shows only this unit's
+  own fragments), and the suite fails the same assertion there. It is `main`'s
+  red, not this merge's — the fix is the same conforming rename the first
+  occurrence took. Not repaired here: this unit's diff touches no `main`
+  fragment, and rewriting another unit's landed history is not this branch's
+  call.
 - The gate-inventory prose row planned here is unverifiable by script until the
   #359 second slice — affects this unit (it is exactly the unit's product, not
   a gap in it).
