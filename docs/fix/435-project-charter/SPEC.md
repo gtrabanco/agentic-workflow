@@ -52,6 +52,72 @@ interrogation whose answers become tier-0 sources". Open, labels `promoted` +
 **S12 — The catalogue's coverage is computed too.**
 > Coverage of the declared catalogue is computed by `audit-docs` (same pattern as the mandatory sections), not policed by prose.
 
+### Correction batch 2026-11-07 — owner request (frozen verbatim)
+
+The 2026-11-07 `EXTERNAL VERIFY` block (`external-verify.md`) reported two
+blockers and two advisories. The owner's request that routes them is frozen
+here, verbatim:
+
+**S13 — Repair both blockers and both advisories.**
+> arregla tanto los blockers como los advisories
+
+**S14 — Prove the repair with evidence.**
+> verifica con evidencia la reparación
+
+**S15 — Plan and evaluate the route before repairing.**
+> planifica y evalua antes de arreglar cual será la ruta adecuada para arreglar el problema
+
+**Assumption A1 (recorded, not asked).** "arregla … los advisories" is applied
+to the **claims**, not to the reds they point at: both advisories' underlying
+defects reproduce byte-identically at the base commit on surfaces this unit
+never touches (`packages/pi-agentic-workflow/**` for the `pi-compat-guard`
+TS2307 ×4; the crate suites' journals probe for S15), so repairing those here
+would be another unit's surgery. Repairing an advisory means making its claim
+true and re-runnable.
+
+## Acceptance criteria
+
+One observable criterion per requirement of this correction batch; the unit's
+own S1–S12 are proven by tasks P1–P10 and obligations O1–O14.
+
+- **AC1** — `audit-docs` check 16's unfilled-slot scan is bounded to the guide's
+  `## Project charter` section: it prints nothing on a filled charter while
+  honest residual placeholders survive elsewhere in the guide, and it still
+  prints the offending `path:line` for an unfilled identity **or** domain slot.
+  Check: `node --test scripts/review-loop-discipline.test.mjs` (fixture matrix:
+  raw template 11 lines · filled 0 · identity-partial 1 · domain-partial 1 ·
+  no-section 0 · legal `unresolved — <question>` 0). *(S13)*
+- **AC2** — `## Retirements` asserts only what its own command shows: no retired
+  surface, every one of the change's 14 deleted lines enumerated as an in-place
+  rewrite, the R100 fragment rename named, and the "no deletion outside this unit
+  doc" sentence gone. Check:
+  `rg -n "no deletion outside this unit doc" docs/fix/435-project-charter/SPEC.md`
+  → no match, and the section's paths equal the six paths
+  `git diff e1d94057 --numstat` reports with a non-zero deletion count, plus the
+  `--name-status` R100 rename. *(S13)*
+- **AC3** — P10's declared validator reproduces at this head: the offline
+  deterministic gate exits 0, and the default gate's pre-existing network-leg
+  red stays declared in Known pre-existing issues instead of being claimed
+  green. Check: `bun scripts/local-gate.mjs --skip-network` exits 0 with
+  `local-gate: PASS`. *(S13)*
+- **AC4** — O14's recorded run describes what the gate prints now: the
+  `local-gate: FAILED` grep prints nothing on the offline gate, and the
+  pre-existing reds are named as pre-existing. Check:
+  `bun scripts/local-gate.mjs --no-bail --skip-network 2>&1 | rg "^local-gate: FAILED"`
+  → no match, the row still `verified`, the run recorded in `## Log`. *(S13)*
+- **AC5** — One correction batch, no new scope folded in: every edit traces to a
+  finding of the 2026-11-07 verify block, and the batch touches only this unit
+  dir, `skills/audit-docs/SKILL.md`,
+  `scripts/review-loop-discipline.test.mjs` and the session-log fragment. Check:
+  `git diff --name-only 995b28de` at the batch head. *(S15)*
+- **AC6** — Every reproducer of that verify block was observed RED before the
+  edit and GREEN after, both runs recorded. Check: `## Log` `E8` (RED) and
+  `E9`/`G5` (GREEN). *(S14)*
+- **AC7** — No test relaxed to pass: the suite change is additive (the
+  check-16 fixture matrix and its conditional pin), and D5's IS-2 count pin
+  (15 → 16) is untouched. Check: `git diff 995b28de -- scripts/` adds no deleted
+  assertion. *(S13)*
+
 ## Impact
 
 - **`init-workspace` bootstrap** gains a pre-substrate charter step: the identity
@@ -233,8 +299,29 @@ n/a — no tests step for this unit
   (Implements: S1)
   Relevant files: docs/ROADMAP.md .changeset/ docs/LOGS.md
 - [x] P10 — Verification: run every obligation validator in the foreground, close the
-  obligations ledger, run the deterministic gate (validator: `bun scripts/local-gate.mjs` exits 0)
+  obligations ledger, run the offline deterministic gate (validator: `bun scripts/local-gate.mjs --skip-network` exits 0; the default gate's network leg `pi-compat-guard` is red at the base commit too — Known pre-existing issues)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12)
+- [ ] P11 — RED: freeze the correction batch's reproducer corpus as a failing pin
+  in `scripts/review-loop-discipline.test.mjs` — the check-16 slot scan is
+  charter-section-scoped and still catches an unfilled slot, proven by a
+  six-fixture matrix built from `template/AGENTS.md` under `mktemp -d` scratch
+  (validator: `node --test scripts/review-loop-discipline.test.mjs` exits 1
+  before the fix, naming the check-16 scan assertion)
+  (Implements: S13)
+  Relevant files: scripts/review-loop-discipline.test.mjs
+- [ ] P12 — GREEN: scope check 16's slot scan to the `## Project charter`
+  section (one `awk` section scan, severity per layer), rewrite the Retirements
+  evidence to enumerate the 14 in-place rewrites plus the R100 rename, and
+  correct the two advisory claims — P10's validator names the offline gate, O14's
+  recorded run names the empty `FAILED` grep
+  (validator: `node --test scripts/review-loop-discipline.test.mjs` exits 0 and AC1–AC4 hold)
+  (Implements: S13, S15)
+  Relevant files: skills/audit-docs/SKILL.md docs/fix/435-project-charter/SPEC.md docs/fix/435-project-charter/planning-obligations.md
+- [ ] P13 — Close the correction ledger, run the offline deterministic gate and
+  the impacted suites, record the RED-to-GREEN evidence and the docs state
+  (validator: `bun scripts/local-gate.mjs --skip-network` exits 0 and O15–O18 are all `verified`)
+  (Implements: S14)
+  Relevant files: docs/fix/435-project-charter/ docs/LOGS.md
 
 ## Triaged steps
 
