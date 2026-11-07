@@ -132,7 +132,11 @@ function tokenizeSegment(segment: string): string[] {
   return tokens;
 }
 
-/** The git options whose following token is a value, never the subcommand. */
+/** The git options whose following token is a value, never the subcommand.
+ *  Value-less-legal options (git's print-and-exit forms, like a bare
+ *  `--exec-path`) do NOT belong here: they consume nothing, and a bare
+ *  option followed by a subcommand either errors out or never reaches the
+ *  subcommand — quiet either way (O26). */
 const GIT_VALUE_OPTIONS = new Set([
   "-C",
   "-c",
@@ -140,7 +144,6 @@ const GIT_VALUE_OPTIONS = new Set([
   "--work-tree",
   "--namespace",
   "--super-prefix",
-  "--exec-path",
 ]);
 
 const ENV_ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/u;
@@ -179,7 +182,9 @@ function gitSeamsIn(command: string): GitSeam[] {
 
 export function createHooksWiring(deps: HooksWiringDeps): HooksWiring {
   /** One announce per notice per project session — a broken file or an inert
-   *  declaration explains itself once and then stops talking (O5, O20). */
+   *  declaration explains itself once and then stops talking (O5, O20). Reset
+   *  at each session start so a NEW project session hears the announcement
+   *  again: the promise is per session, not per extension instance (DA1). */
   const announced = new Set<string>();
 
   const announce = (ctx: HooksContext, message: string, kind: "error" | "info" | "warning"): void => {
@@ -218,6 +223,9 @@ export function createHooksWiring(deps: HooksWiringDeps): HooksWiring {
 
   return {
     async onSessionStart(ctx) {
+      // A new project session re-announces: clear the latch before the seam
+      // runs so its own notices are fresh for this session (DA1/O25).
+      announced.clear();
       reportBlocks(ctx, await run("session:start", ctx));
     },
 
