@@ -56,7 +56,7 @@ row, never a rival rule.
 | Provenance | What it is | Ceiling |
 |---|---|---|
 | `repository` | read from this repository — a `path:line`, a doc, a prior decision | `confirmed` |
-| `version-pinned doc` | the **pinned version** the project actually uses — lockfile, manifest, GitHub-action SHA, or the current docs of that exact version — never `latest` | `confirmed` |
+| `version-pinned doc` | the **pinned version** the project actually uses — lockfile, manifest, GitHub-action SHA, or the current docs of that exact version — never `latest`; an observation of the installed environment counts here when it records the version observed (a tool's own `--version` / `--help` / `doctor` output is that version's current docs), and one that records none is `inferred` at best | `confirmed` |
 | `owner answer` | the owner stated it — a request, an issue, a decision row | `confirmed` |
 | `model memory` | recalled from training — not read this run | `inferred` — never `confirmed`, and never tier-0: it does not settle a claim |
 

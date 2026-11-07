@@ -50,6 +50,10 @@ Receipt (the greps/reads run, their hits):
 > mechanical classification of each row's own first cited source (repository /
 > version-pinned doc / owner answer / model memory). No claim, source or certainty
 > was changed, and no new evidence is asserted — re-derive any cell from the row.
+>
+> Corrected 2026-11-07 by `docs/fix/432-model-memory-tier-0` (F1): the `gh` reads here
+> are forge reads of the owner's issue text, so they are `owner answer`, not
+> `repository` — the migration's fallback mislabelled them.
 
 | id | claim | source | provenance | certainty |
 |---|---|---|---|---|
@@ -60,7 +64,7 @@ Receipt (the greps/reads run, their hits):
 | INV-005 | The F37/F38/F39 instances are repaired on `main`; scope item 3 is pins on the pattern, not instance repairs | `scripts/workflow-status.mjs:788-840` | repository | confirmed |
 | INV-006 | The six acceptance criteria are the owner's own words and are adopted verbatim | issue #315 §Acceptance criteria | owner answer | confirmed |
 | INV-007 | Sweep declarations stay bounded to the cited surface plus inventory-declared siblings — never repo-wide sweeps | issue #315 §Open questions ("keep the declared set bounded") | owner answer | confirmed |
-| INV-008 | `#305` is merged (PR #309), `#308` merged via PR #311 (roadmap row 79 `done`), `#303` merged (PR #310) — the dependency set of this unit is all landed | `gh api …/issues/305,308,303 --jq .state`; roadmap rows 77/79 | repository | confirmed |
+| INV-008 | `#305` is merged (PR #309), `#308` merged via PR #311 (roadmap row 79 `done`), `#303` merged (PR #310) — the dependency set of this unit is all landed | `gh api …/issues/305,308,303 --jq .state`; roadmap rows 77/79 | owner answer | confirmed |
 | INV-009 | A fold's log entry is where a sweep declaration belongs (the fold already appends `F` lines naming the fold commit and what was verified) | `skills/unit-lane/references/` log grammar (`log-kind@1`, `F` token); `docs/features/79-spec-by-reference/SPEC.md` `## Log` F-line shape | repository | confirmed |
 | INV-010 | Unit 79's live `kept deferred` tokens are recorded debt, not an open defect this unit repairs (closed units stay closed) | `docs/features/79-spec-by-reference/review-findings.md:447`; issue #315 §Out of scope | repository | confirmed |
 | INV-011 | The `skills` CLI + bump-skill rule: any `skills/**` change bumps the pi package version + CHANGELOG row in the same PR | `AGENTS.md` §Packages; `scripts/version-parity-gate.mjs` | repository | confirmed |

@@ -8,16 +8,22 @@ was asked.
 
 > Shape migrated 2026-11-07 to `DESIGN.md` § Provenance: the `provenance` column is a
 > mechanical classification of each row's own first cited source (repository /
-> version-pinned doc / owner answer / model memory). No claim, source or certainty
-> was changed, and no new evidence is asserted — re-derive any cell from the row.
+> version-pinned doc / owner answer / model memory). No claim or source text was
+> changed, and no new evidence is asserted — re-derive any cell from the row.
+>
+> Corrected 2026-11-07 by `docs/fix/432-model-memory-tier-0` (F1): the migration's
+> fallback sent anything that was not obviously a document to `repository`. A row
+> citing the machine, a live service or a registry page now names the kind its own
+> citation is, and a citation that records no observed version sits at `inferred`
+> under the § Provenance ceiling.
 
 | id | claim | source | provenance | certainty |
 |---|---|---|---|---|
 | INV-001 | The repo carries no Engram protocol, provisioning or health text — only two path-ignore mentions | `grep -rn -i "engram" skills/ packages/*/src packages/*/README.md` (R1: `skills/review-change/references/REVIEW_PROCESS.md:95`, `skills/audit-pr/SKILL.md:128`); issue #262 comment 2026-09-27 (triage verdict) | repository | confirmed |
-| INV-002 | Engram is provisioned machine-global for pi, outside the workflow: `~/.pi/agent/mcp.json` → `engram mcp --tools=agent` (exposure `codemode`), `npm:gentle-engram@latest` in settings | `cat ~/.pi/agent/mcp.json`; `grep -n engram ~/.pi/agent/settings.json` (R2) | repository | confirmed |
-| INV-003 | Installed CLI is 3.4.0 with 3.5.2 available; the owner's upstream audit (2026-10-15) covers 3.3.2 / gentle-engram 0.4.1 | `engram --version`, `engram doctor` update notice (R3); issue #262 comment 2026-10-15 | repository | confirmed |
-| INV-004 | `engram doctor` exits 0 while `engram doctor --json` reports `status: "error"` (1 error, 1 blocked, 3 warnings) — exit code cannot be the health signal | `engram doctor`; `engram doctor --json` (R3) | repository | confirmed |
-| INV-005 | The 2026-09-24 "accepted TCP, no HTTP" failure does not reproduce today (`:7437/health` → 200); whether the failing path was HTTP or the stdio `engram mcp` process is unresolved | `curl -m4 :7437/health` (R3); research uncertainty #1 | repository | confirmed (server answers) / unknown (historic cause) |
+| INV-002 | Engram is provisioned machine-global for pi, outside the workflow: `~/.pi/agent/mcp.json` → `engram mcp --tools=agent` (exposure `codemode`), `npm:gentle-engram@latest` in settings | `cat ~/.pi/agent/mcp.json`; `grep -n engram ~/.pi/agent/settings.json` (R2) | version-pinned doc | inferred |
+| INV-003 | Installed CLI is 3.4.0 with 3.5.2 available; the owner's upstream audit (2026-10-15) covers 3.3.2 / gentle-engram 0.4.1 | `engram --version`, `engram doctor` update notice (R3); issue #262 comment 2026-10-15 | version-pinned doc | confirmed |
+| INV-004 | `engram doctor` exits 0 while `engram doctor --json` reports `status: "error"` (1 error, 1 blocked, 3 warnings) — exit code cannot be the health signal | `engram doctor`; `engram doctor --json` (R3) | version-pinned doc | confirmed |
+| INV-005 | The 2026-09-24 "accepted TCP, no HTTP" failure does not reproduce today (`:7437/health` → 200); whether the failing path was HTTP or the stdio `engram mcp` process is unresolved | `curl -m4 :7437/health` (R3); research uncertainty #1 | version-pinned doc | inferred (server answers) / unknown (historic cause) |
 | INV-006 | Engram is required substrate with a degraded path of warn + record; a unit must never hard-fail on memory | issue #262 body §Non-goals; `docs/LOGS.md:2451` (owner decision 2026-09-24, refs #260) | owner answer | confirmed |
 | INV-007 | Recall discipline for 3.3.x+: `mem_context` first (explicitly scoped) → scoped search with explicit `project` → one retry with explicit `all_projects: true`; never an omitted selector as global; `mem_current_project.available_projects` for ambiguous cwd | issue #262 comment 2026-10-15 ("CONTRAADICTS" rewrite, quoted in issue body §Mechanics 4) | owner answer | confirmed |
 | INV-008 | Session attribution: always pass an explicit `session_id`; `mem_session_end` only for confirmed-stale ids; `mem_session_summary` explicit `project` fallback is the escape hatch | issue #262 comment 2026-09-28 item 3; issue #262 comment 2026-10-15 (`mem_session_summary` project fallback) | owner answer | confirmed |
@@ -26,7 +32,7 @@ was asked.
 | INV-011 | The canonical split between `docs/LOGS.md` (log-session) and `mem_session_summary` is not decided anywhere — the issue asks to "decide and record … (e.g. …)" | issue #262 comment 2026-09-28 item 4; `grep -rn -i "mem_session_summary" docs/ skills/` → only this unit's folder | owner answer | unknown → Q2 |
 | INV-012 | #219's parity shape: pi path ships the dependency/registration, non-pi path is a consented `init-workspace` step that reports exactly what was written; health is fail-closed at the claim | issue #219 body §Mechanics + §Scope adjustment | owner answer | confirmed |
 | INV-013 | pi extensions can register an MCP server for the session with `pi.registerMcpServer(name, config)` (shape of an `mcp.json` entry incl. `exposure`) | pi docs `docs/extensions.md:197` (pi 1.x, installed copy) | repository | confirmed |
-| INV-014 | Upstream provisioning exists as `engram setup <agent> [--protocol=slim\|full]` (pi among the agent slugs); cloud sync needs an explicit `--project`, autosync is env-gated | `engram setup --help`, `engram --help` (R5) | repository | confirmed |
+| INV-014 | Upstream provisioning exists as `engram setup <agent> [--protocol=slim\|full]` (pi among the agent slugs); cloud sync needs an explicit `--project`, autosync is env-gated | `engram setup --help`, `engram --help` (R5) | version-pinned doc | confirmed |
 | INV-015 | `init-workspace` consent contract: every install is ask-first, and the run reports exactly what was written | `skills/init-workspace/SKILL.md:45`, `:11`; `skills/init-workspace/references/SERENA.md:84` (R5) | repository | confirmed |
 | INV-016 | Feature 61's published non-goal ("No Engram memory hard dependency — mirroring … optional") conflicts with the later required-substrate decision and must be reconciled, not silently contradicted | `docs/features/61-adaptive-unit-lane/SPEC.md:153`; `docs/LOGS.md:2451`, `:2934` (Serena precedent) | repository | confirmed |
 | INV-017 | Health-probe carrier is unsettled: the repo's gate culture prefers deterministic scripts with tests, but the probe must run in any of the 70+ agents before a memory read | `AGENTS.md` (repo) verification §; `docs/workflow/README.md` core principles 6–7; research R3–R4 (exit code unusable) | repository | inferred → Q1 (options researched at R3–R5) |
@@ -34,7 +40,7 @@ was asked.
 | INV-019 | Save boundaries are unit start, each phase transition, and unit close; carrying surfaces are the lane/executor/log-session skills | issue #262 body §Mechanics 1; `skills/unit-lane/SKILL.md` Process (step per turn-commit), `skills/execute-phase/references/EXECUTION_CONTRACT.md` | owner answer | confirmed (boundaries) / inferred (surface list — plan-owned, cheap to adjust) |
 | INV-020 | Unit scope is `medium` (roadmap row labels the issue M), which is what puts `release` in the triage | `docs/features/ROADMAP.md:76`; `bun scripts/unit-route.mjs --triage 66-engram-memory-substrate` (R6) | repository | confirmed |
 | INV-021 | The 14-section unit-doc contract and evidence/progress rules bind this doc (section order, `Triaged steps` paste, Evidence rows before commit) | `packages/agentic-workflow-schema/src/pre-execution.ts:225`; `skills/unit-lane/SKILL.md` §Turn contract | repository | confirmed |
-| INV-022 | Installed tooling parity check: Serena is registered the same machine-global way (`npm:@bacnh85/pi-serena` in settings) and #219 is the sibling still OPEN — provisioning shapes should stay parallel | `~/.pi/agent/settings.json:24`; `gh issue view 219` (state OPEN, 2026-10-21) | repository | confirmed |
+| INV-022 | Installed tooling parity check: Serena is registered the same machine-global way (`npm:@bacnh85/pi-serena` in settings) and #219 is the sibling still OPEN — provisioning shapes should stay parallel | `~/.pi/agent/settings.json:24`; `gh issue view 219` (state OPEN, 2026-10-21) | version-pinned doc | inferred |
 
 ## Plan claims (CLAIM-*)
 
