@@ -441,6 +441,57 @@ test("CLI: a run without --no-state persists the state file under the scratch ro
 
 // ── S9 — source-level pins: a planner, not an orchestrator ─────────────────
 
+test("parity: the plan grammar inventory matches the emitted envelope and the schema export", async () => {
+  const planSource = fs.readFileSync(new URL("../skills/batch-scheduler/references/PLAN.md", import.meta.url), "utf8");
+  const at = planSource.indexOf("batch-fields@1");
+  const rows = [];
+  for (const line of planSource.slice(at).split("\n").slice(1)) {
+    if (/^\s*\|/.test(line)) rows.push(line.split("|").map((c) => c.trim()).filter(Boolean));
+    else if (rows.length > 0) break;
+  }
+  const inventory = new Map();
+  for (const [object, field] of rows.slice(2)) {
+    if (!inventory.has(object)) inventory.set(object, new Set());
+    inventory.get(object).add(field);
+  }
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(10, "Alpha (S)", whereSection(["skills/alpha/SKILL.md"])),
+      issue(11, "Beta (L)", whereSection(["packages/beta/src/a.ts", "packages/beta/src/b.ts", "skills/alpha/SKILL.md"]), [10]),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    const emitted = new Map([
+      ["batch-plan", Object.keys(plan)],
+      ["batch", Object.keys(plan.batches[0])],
+      ["lane", Object.keys(plan.batches[0].lanes[0])],
+      ["issue", Object.keys(plan.batches[0].lanes[0].issues[0])],
+      ["blocked", plan.blocked.length > 0 ? Object.keys(plan.blocked[0]) : []],
+      ["launched", plan.launched.length > 0 ? Object.keys(plan.launched[0]) : []],
+      ["finding", plan.findings.length > 0 ? Object.keys(plan.findings[0]) : []],
+      ["summary", Object.keys(plan.summary)],
+    ]);
+    for (const [object, keys] of emitted) {
+      const declared = inventory.get(object);
+      assert.ok(declared, `the inventory declares the ${object} object`);
+      for (const key of keys) {
+        assert.ok(declared.has(key), `the inventory declares ${object}.${key}`);
+      }
+    }
+    // Objects that appear only when populated must still be declared.
+    for (const object of ["blocked", "finding"]) {
+      assert.ok(inventory.has(object), `the inventory declares ${object} even when this plan emits none`);
+    }
+    const { BATCH_PLAN_FIELDS } = await import("../packages/agentic-workflow-schema/dist/index.js");
+    const union = new Set([...inventory.values()].flatMap((s) => [...s]));
+    assert.deepEqual([...union].sort(), [...BATCH_PLAN_FIELDS].sort(), "the schema package's field list is the inventory's union");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("S9: the script contains no session spawn, worktree creation or unit launch", async () => {
   const src = fs.readFileSync(scriptPath, "utf8");
   for (const banned of ["spawn(", "execFile(", "worktree add", "gh pr", "gh run"]) {
