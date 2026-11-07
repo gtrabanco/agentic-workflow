@@ -95,6 +95,40 @@ in the previous turn** (`anota A3 en ##Future`; `A4` was `ignore` in the triage
 that turn confirmed). The six rows the previous batch already repaired
 (B1, B2, B3, A2, A5, A1) are closed in `## Findings`, not repaired twice.
 
+**S15 — Fix A7 (owner request, 2026-11-07).**
+> Arregla A7
+
+`A7` is the remaining scanner disagreement: the chunker and the markdown tree
+classify the same document differently. The repair is **one heading scanner for
+both halves** — the chunker derives its headings from the same markdown tree the
+#407 locator builds (mdast), so a quoted example, an inline code span that wraps
+a line, an indented fence inside a list item and a commented `# key:` inside a
+leading frontmatter block are each classified once, for retrieval and for
+`read`/`edit`/`index` alike. A second hand-rolled fence machine is the drift.
+
+**S16 — Fix `L10` (owner request, 2026-11-07).**
+> L10
+
+`L10` recorded that the id-parity case was widened *after* implementation
+(three documents pinned by name) instead of asserting the invariant. Once `A7`
+lands, the case asserts the full invariant again — zero artifact documents,
+zero section the chunker misses, zero id drift — and it is written **red first**.
+
+**S17 — Fix `L9` (owner request, 2026-11-07).**
+> L9
+
+`L9` recorded that six repaired findings simply left the `## Findings` table
+without the record the ledger's own vocabulary requires: `log-kind@1` has a
+`F<n>` kind — "a folded finding — the fold commit and what was verified". Every
+finding this unit folded (B1, B2, B3, A2, A5, A1, A6, A7) gets its `F` line
+naming the fold commit, so a fold is never a row that silently vanished.
+
+**S18 — Push (owner request, 2026-11-07).**
+> luego haz el push
+
+Publish the branch: `origin/feat/366-doc-cli` must carry this unit's head, so PR
+#453 shows the delivered commits instead of the stale `ef63162d` anchor.
+
 ## Impact
 
 - **The runner crate's `bin/agentic-workflow.mjs` router gains its half-A
@@ -265,6 +299,18 @@ $ bun scripts/ceremony.mjs tier classify
 - [ ] P15 — Clear this document's three `phase-lint` reds (two box-4 creation-verb wordings, `P6`'s box-8 expected outcome, the dangling `AC3` link) so the unit doc lints PASS (validator: `bun scripts/phase-lint.mjs docs/fix/366-doc-cli/SPEC.md` prints `verdict PASS`)
   (Implements: S14)
   Relevant files: docs/fix/366-doc-cli/SPEC.md
+- [ ] P16 — One heading scanner: `scanChunks` derives its headings from the #407 locator's markdown tree instead of a second fence state machine, both halves share one frontmatter bound and one raw-title rule, and the store's chunker version moves to 3 so an old cache re-scans (validator: `bun test test/doc.chunks.test.mjs test/doc.sync.test.mjs` exits 0 and the parity case reports `0/0/0`)
+  (Implements: S15)
+  Relevant files: packages/agentic-workflow/src/doc/chunks.mjs, packages/agentic-workflow/src/doc/docops.mjs, packages/agentic-workflow/src/doc/structure.mjs, packages/agentic-workflow/src/doc/sync.mjs
+- [ ] P17 — The id-parity case asserts the whole invariant — zero artifact documents, zero sections the chunker misses, zero id drift — written red first, with the named exception list deleted (validator: `bun test test/doc.structure.test.mjs` exits 0; the case fails against the cut head)
+  (Implements: S16)
+  Relevant files: packages/agentic-workflow/test/doc.structure.test.mjs
+- [ ] P18 — `F1`–`F8` fold lines: one per folded finding (B1, B2, B3, A2, A5, A1, A6, A7), each naming its fold commit and what was verified (validator: `rg -c '^- \*\*F[0-9]+\*\*' docs/fix/366-doc-cli/SPEC.md` matches 8 and each commit resolves from `HEAD`)
+  (Implements: S17)
+  Relevant files: docs/fix/366-doc-cli/SPEC.md
+- [ ] P19 — Publish the branch (validator: `git rev-parse origin/feat/366-doc-cli` equals `git rev-parse HEAD`)
+  (Implements: S18)
+  Relevant files: —
 
 ## Triaged steps
 
@@ -298,6 +344,10 @@ it.
 | AC-16 | A fenced line is never a heading at any nesting depth — a fence closes only on its own character with at least its own length — so every tracked `*.md` scans as the locator sees it (S14 / A6) | `bun test packages/agentic-workflow/test/doc.chunks.test.mjs` exits 0 including the nested-fence cases, and the id-parity case reports zero artifact documents |
 | AC-17 | A store built by the previous scanner is re-scanned, never served (S14 / A6) | `bun test packages/agentic-workflow/test/doc.sync.test.mjs` exits 0 including the chunker-version case |
 | AC-18 | The unit document passes the phase-contract lint (S14) | `bun scripts/phase-lint.mjs docs/fix/366-doc-cli/SPEC.md` prints `verdict PASS` |
+| AC-19 | Both halves share one heading scanner: for every tracked `*.md` the chunk set and the section set are the same headings at the same lines, and no section comes from a leading frontmatter block (S15 / A7) | the parity case in `doc.structure.test.mjs` reports `0` drift, `0` chunk headings without a section and `0` sections without a chunk |
+| AC-20 | The parity case is red before the fix and asserts the whole invariant afterwards — no named exception list (S16 / L10) | `git show e…`-time red run plus the green run recorded in `E29`/`E30` |
+| AC-21 | Every folded finding carries its `F<n>` line with the fold commit and what was verified (S17 / L9) | `rg -c '^- \*\*F[0-9]+\*\*' docs/fix/366-doc-cli/SPEC.md` matches 8 and each names a commit reachable from `HEAD` |
+| AC-22 | The branch is published (S18) | `git rev-parse origin/feat/366-doc-cli` equals `git rev-parse HEAD` |
 
 ## Findings
 
@@ -305,7 +355,6 @@ OPEN rows only; appended by reviewers.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| A7 | S14 · `packages/agentic-workflow/src/doc/chunks.mjs` vs `section-locator.mjs` | scanner agreement | WARNING | report-only | proposal | owner (units 65 / #407) |
 
 ## Log
 
@@ -513,6 +562,32 @@ OPEN rows only; appended by reviewers.
   the dangling `AC3` link).
 - **E28** — 2026-11-07, crate suites at `f5a02989`: `bun run test` ·
   **443 pass / 0 fail**; `node --test` · **444 pass / 0 fail**.
+- **F1** — 2026-11-07, **B1** folded at `7bc11894`: the section id comes from the
+  heading's own line, not the locator's rendered title — verified by the corpus
+  parity case (9058 paired sections, 0 drift) and by `doc read` resolving the
+  chunker's id for `README.md`'s markup-bearing heading.
+- **F2** — 2026-11-07, **B2** folded at `7bc11894`: the phase grammar is the
+  owner's unit-doc shape (tick optional) — verified by the owner-grammar parity
+  case over 45 in-tree unit docs (39 mapped, 0 disagreements, 0 missed).
+- **F3** — 2026-11-07, **B3** folded at `7bc11894`: `--out` is a closed option set
+  — verified by the four `--out` cases (refused on `read`/`edit`, honoured with
+  `--json` on `index`, artifact written and document printed).
+- **F4** — 2026-11-07, **A2** folded at `7bc11894`: one `doc:` prefix per refusal —
+  verified by the exact-stderr case.
+- **F5** — 2026-11-07, **A5** folded at `8ea10e05`: `D4`/`PE-011`'s "the checkbox
+  grammar is frozen" premise corrected — verified by the decision row and the
+  evidence row naming the owner grammar.
+- **F6** — 2026-11-07, **A1** folded at `767de9da`: the `F99` capture does half
+  the per-property work — verified by the suite under four busy loops
+  (12.61 / 8.18 ms) and by the gate step green in 5–7 s against the untouched
+  50 ms assertion.
+- **F7** — 2026-11-07, **A6** folded at `c4addf23`: the fence keeps its own
+  length, and a store stamped by an older scanner re-scans — verified by the
+  nested-fence case, the chunker-version case and the one-file differential.
+- **F8** — 2026-11-07, **A7** folded at `1734ed10`: one heading scanner for both
+  halves — verified by the corpus parity case at **9184 chunks = 9184 sections =
+  9184 paired, 0 drift, 0 chunk heading without a section, 0 section without a
+  chunk**, and by the red run of the same three cases at `2cc0d17a`.
 - **L10** — 2026-11-07, disclosed test adjustment, same class as L8: the parity
   case's artifact pin was written as `[]` on the assumption that the fence
   repair clears every scan corruption. Measurement said otherwise — three
@@ -532,6 +607,43 @@ OPEN rows only; appended by reviewers.
   list item, and the two scanners' opposite frontmatter/`---` conventions.
   Repairing it means one scanner (65's chunker) and one parser (#407's locator)
   agreeing on CommonMark block structure — a unit of its own.
+- **L12** — 2026-11-07, third batch, scope read from the owner's verbatim
+  request (`S15`–`S18`): A7, the `L10` debt and the `L9` debt, then the push.
+  Commits: `2cc0d17a` (red cases), `1734ed10` (the one-scanner repair),
+  `f8ebcc43` (the two corrected fixtures).
+- **L13** — 2026-11-07, disclosed fixture correction, same class as L8/L10 **and
+  closed differently**: the first version of the two new reproducers was written
+  against a guess about CommonMark rather than the real shape. A `## …` line at
+  column 0 *is* a heading even after a backtick opens a code span on the previous
+  line, and a heading inside a list item is not a root section — so the chunker
+  case now reproduces `ISSUE_PROCESS.md`'s real shape (a list continuation) and
+  the index case uses the template's real frontmatter. Because the correction
+  came after the implementation, the red was **re-proven against the pre-fix
+  commit** `2cc0d17a` in a `/tmp` clone: the corrected chunker case fails there
+  (10 pass / 1 fail), the index case fails (17 pass / 1 fail) and the parity case
+  fails on the same run.
+- **E29** — 2026-11-07, red proof at `2cc0d17a` (clone in `/tmp`, removed after,
+  carrying the corrected fixtures): `bun test test/doc.chunks.test.mjs` · exit 1 ·
+  10 pass / **1 fail** (the list-continuation heading); `bun test
+  test/doc.structure.test.mjs` · exit 1 · 17 pass / **2 fail** (the frontmatter
+  section and the parity case).
+- **E30** — 2026-11-07, green at `1734ed10` + `f8ebcc43`:
+  `bun test test/doc.chunks.test.mjs test/doc.structure.test.mjs` · exit 0 ·
+  **30 pass / 0 fail**; crate `bun run test` · **445 pass / 0 fail**;
+  `node --test` · **446 pass / 0 fail**.
+- **E31** — 2026-11-07, the corpus invariant after the repair (measured, not
+  asserted): `1016` tracked `*.md` → **9184 chunks = 9184 sections = 9184 paired
+  sections**, `0` id drift, `0` chunk heading the markdown tree lacks, `0`
+  section the chunker never produced; 45 unit docs still map 39/39 phases with 0
+  disagreements. Differential against `78da35e1`: 9262 → 9278 chunks, **0 renamed**
+  among the 9231 surviving chunks, 11 bogus chunks gone and 27 real ones restored
+  across exactly the four documents A7 named (`224-…/progress.md`,
+  `383-measured-acceptance/SPEC.md`, `docs/features/37-…/planning-findings.md`,
+  `skills/triage-issue/references/ISSUE_PROCESS.md`) — the other 20 diff lines are
+  this unit's own edited documents.
+- **G4** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at this batch's
+  head · **verdict: PASS — 8 step(s) in 130s** · exit 0, `schema-node-compat`
+  green in 5s.
 - **G3** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` twice, at
   `799f4b8f` · **PASS — 8 step(s) in 264s** (the earlier run of the same tree,
   before the receipt line, `245s`) · exit 0 both times, `schema-node-compat`
