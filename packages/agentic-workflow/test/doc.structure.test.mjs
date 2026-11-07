@@ -247,49 +247,63 @@ describe("doc index CLI (S5)", () => {
   });
 });
 
-describe("owner parity (S11)", () => {
-  // The fence repair (S14/A6) removed the fence-caused corruption: the eight
-  // backtick lines that used to close a four-backtick block are quoted text now.
-  // What remains is a different, pre-existing disagreement (A7, owner's call):
-  // these three documents carry a fence structure CommonMark and the chunker read
-  // differently (an indented fence inside a list item, and a fenced example whose
-  // heading-like line one parser honours and the other does not), so the chunker
-  // reports a heading where the markdown tree has none. The list is pinned so the
-  // set can neither grow silently nor disappear unnoticed.
-  const FENCE_ARTIFACT_DOCS = [
-    "docs/fix/224-deterministic-replan-routing/progress.md",
-    "docs/fix/383-measured-acceptance/SPEC.md",
-    "skills/triage-issue/references/ISSUE_PROCESS.md",
-  ];
+describe("one scanner (S15)", () => {
+  it("never publishes a commented key inside a leading frontmatter block as a section", () => {
+    const DOC = [
+      "---",
+      "# ac-hash: deadbeef",
+      "# type: feature | fix | docs | chore",
+      "type: fix",
+      "---",
+      "",
+      "# fix/1-demo",
+      "",
+      "## Tasks",
+      "",
+      "- P1 — one (validator: `true` exits 0)",
+      "",
+    ].join("\n");
+    const index = buildDocIndex([{ path: "docs/fix/1-demo/SPEC.md", content: DOC }]);
+    const ids = index.files[0].sections.map((section) => section.id);
+    deepStrictEqual(ids, ["docs/fix/1-demo/SPEC.md#fix-1-demo", "docs/fix/1-demo/SPEC.md#fix-1-demo-tasks"]);
+    strictEqual(index.files[0].frontmatter.type, "fix");
+  });
+});
 
-  it("carries the chunker's id for every section it scans cleanly", { timeout: 600_000 }, () => {
+describe("owner parity (S11)", () => {
+  it("classifies the same headings as the markdown tree, on every tracked document", { timeout: 600_000 }, () => {
     const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const files = corpusFiles(ROOT);
     assert.ok(files.length > 500, `the corpus shrunk: ${files.length} files`);
     const drifted = [];
     const artifacts = [];
+    const swallowed = [];
     let paired = 0;
     for (const relative of files) {
       const content = fs.readFileSync(path.join(ROOT, relative), "utf8");
       const sections = sectionsWithIds(content, relative);
       const chunks = scanChunks(content, relative).filter((chunk) => chunk.section !== null);
       const sectionLines = new Set(sections.map((section) => section.lines[0]));
-      // A chunk heading with no section at that line is the fence artifact.
-      if (chunks.some((chunk) => !sectionLines.has(chunk.lines[0]))) {
-        artifacts.push(relative);
-        continue;
-      }
       const byLine = new Map(chunks.map((chunk) => [chunk.lines[0], chunk.id]));
+      // Both directions: a chunk heading the tree does not have, and a section
+      // the chunker never produced. One scanner means neither can happen.
+      for (const chunk of chunks) {
+        if (!sectionLines.has(chunk.lines[0])) artifacts.push(`${relative}:${chunk.lines[0]}`);
+      }
       for (const section of sections) {
         const chunkId = byLine.get(section.lines[0]);
-        if (chunkId === undefined) continue;
+        if (chunkId === undefined) {
+          swallowed.push(`${relative}:${section.lines[0]}`);
+          continue;
+        }
         paired += 1;
         if (chunkId !== section.id) drifted.push(`${relative}:${section.lines[0]} chunk=${chunkId} index=${section.id}`);
       }
     }
     assert.ok(paired > 8000, `the corpus shrank: ${paired} paired sections`);
     assert.deepEqual(drifted.slice(0, 5), [], `${drifted.length} section id(s) drift from the chunker's`);
-    assert.deepEqual(artifacts, FENCE_ARTIFACT_DOCS, "a document scan is corrupted: chunk headings with no section");
+    assert.deepEqual(artifacts.slice(0, 5), [], `${artifacts.length} chunk heading(s) the markdown tree does not have`);
+    assert.deepEqual(swallowed.slice(0, 5), [], `${swallowed.length} section(s) the chunker never produced`);
   });
 
   it("maps the template's row shape: the executed-phase tick is state, never shape", () => {

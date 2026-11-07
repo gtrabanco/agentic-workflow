@@ -56,6 +56,25 @@ describe("doc chunker (D5)", () => {
     ok(chunks[0].body.includes("# not a heading"));
   });
 
+  it("never reads a heading out of an inline code span that wraps a line (S15/A7)", () => {
+    const md = [
+      "# Guide",
+      "",
+      "Append the row to the carrier — `SPEC.md",
+      "## Findings` for a migrated unit, `review-findings.md` for a legacy one.",
+      "",
+      "## Real",
+      "",
+      "body",
+    ].join("\n");
+    const chunks = scanChunks(md, "span.md");
+    deepStrictEqual(
+      chunks.filter((chunk) => chunk.section !== null).map((chunk) => chunk.section),
+      ["Guide", "Guide > Real"],
+    );
+    ok(chunks[0].body.includes("## Findings` for a migrated unit"));
+  });
+
   it("never closes a fence on a shorter one, so a nested example is never a heading (S14/A6)", () => {
     const md = [
       "# Real",
