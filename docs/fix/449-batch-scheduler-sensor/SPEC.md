@@ -134,11 +134,17 @@ paths>` at the cut head `b8b1d814`):
 
 ## Known pre-existing issues
 
-- `npx skills add . --list` gate and `check-skill-context` are healthy at the
-  cut head (verified this session); no known red gate affects this unit.
-- The `## Fixes` roadmap table has no deterministic emitter (`rowUpsert` targets
-  the `| NN |` Features table only) — affects P7 (hand edit recorded as the
-  declared mechanism, PE-006).
+- **`packages/agentic-workflow/test/journal.surfaces.test.mjs` S15 is red at
+  the base commit** — the committed fragment
+  `.agentic-workflow/journal/20261107T151312Z-docs-batch-2-landing-safeguard-manual.md`
+  carries the segment `manual` where the fragment grammar requires
+  `mechanical|narrative` (`parseFragmentName` returns null), so the carrier
+  probe fails. Verified identical at `b8b1d814` (base archive run, this
+  session). It makes the gate's three crate/root-suite steps red on `main`
+  today. **Does not affect this unit** (the fragment predates it; this unit
+  writes no fragments) — but it blocks a fully green gate and needs its own
+  fix unit (owner decision: rename the fragment to the grammar or amend the
+  grammar).
 
 ## Tasks
 
@@ -201,11 +207,28 @@ authoritative step list for this unit.
 - **E3** — 2026-11-07, O19's corpus check: `gh issue view 449 --json state,labels` · exit 0 · OPEN, `needs-triage`; `ls docs/fix/ | rg 449` printed nothing at the cut head — no prior batch-scheduler unit, no reproducer to extract.
 - **E4** — 2026-11-07, PE-001 fetch: one GraphQL call over open issues · exit 0 · 7 issues carry native `blocked-by` (e.g. `444 blocked-by 427`, `410 blocked-by 407,406`).
 - **E5** — 2026-11-07, PE-002 fetch: `gh issue list --state open --limit 3 --json number,title,body` · exit 0 · bodies returned.
-- **P1** — 2026-11-07, unit doc + planning ledgers cut (SPEC, planning-evidence, planning-obligations, decisions) + Fixes roadmap row · commit recorded in the P2 line.
+- **P1** — 2026-11-07, unit doc + planning ledgers cut (SPEC, planning-evidence, planning-obligations, decisions) + Fixes roadmap row · `a649f3b3`.
+- **P2** — 2026-11-07, RED suite committed, observed failing on the missing module (0 pass / 1 fail) · `c31f54c9`.
+- **P3** — 2026-11-07, batch-plan@1 contract in the schema package; package suite 771 pass / 0 fail · `382a87bf`.
+- **P4** — 2026-11-07, `scripts/batch-scheduler.mjs` implemented; suite 19 pass / 0 fail · `d7fc6243`.
+- **P5** — 2026-11-07, scratch-clone live-path run: 3 findings (canonical roadmap path; relations-unknown vs mismatch; `--remote`) each pinned by a test; live plan byte-identical under `--no-state`, blocked/batched/launched/summary match the GraphQL ground truth · `fb14e7d9`.
+- **P6/P7** — 2026-11-07, skill + references + registration + docs surfaces + changeset + regenerated projection; normative-drift 21 pass / 0 fail, budgets PASS, skill-lint PASS, skills CLI discovers the skill · `a38ddf03`.
+- **E6** — 2026-11-07, P8 foreground verification run (final commit): `bun test scripts/batch-scheduler.test.mjs` · exit 0 · 21 pass / 0 fail (O1–O13).
+- **E7** — 2026-11-07, O10: `rg -n 'fetch\(|embedding|decideWorkflow' scripts/batch-scheduler.mjs` (comment lines excluded) · exit 1 — no match. O11: `rg -n 'spawn\(|execFile\(|worktree add|gh pr|gh run'` minus `spawnSync` · exit 1 — clean; the only child processes are `gh`/`git` reads. O12: `roadmapTableRows`/`readRoadmapIndex` imported from the shared `index-document.mjs` (lines 39/274/282).
+- **E8** — 2026-11-07, O15: `cd packages/agentic-workflow-schema && bun run test` · exit 0 · 771 pass / 0 fail. O20: `bun test scripts/workflow-status-{compact,pre-execution} scripts/workflow-docs-index scripts/index-document` · exit 0 · 32 pass / 0 fail.
+- **E9** — 2026-11-07, O17: `bun scripts/check-skill-context.mjs` · exit 0 · PASS, 29 skills; `npx skills add . --list` lists batch-scheduler. O16: `rg -n '#449' docs/ROADMAP.md` matches the Fixes row (line 163).
+- **E10** — 2026-11-07, O18: `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass / 0 fail (after the pinned literal 13→14 update, D-recorded).
+- **E11** — 2026-11-07, full gate: `bun scripts/local-gate.mjs --no-bail` · 9/12 steps exit 0 (docs-generated-projection, version-parity-content, workspace-install, dependency-pin-gate, schema-build, dependency-advisories, pi-node-compat, pi-compat-guard, normative-relevant checks); **3 steps red — root-suite, crate-suite-node, crate-suite-bun — all solely the pre-existing S15 fragment failure (PE-017, identical at base)**; 1 dependent step skipped (schema-node-compat). `bun scripts/local-gate.mjs` (bail) reaches the same single root cause.
+- **E12** — 2026-11-07, P5 determinism/differential receipts: scratch clone, two live runs with `--no-state` byte-identical (`cmp` clean); with state, run 2 marks 28 claimed issues (53 lane rows); differential of the touched shared-parser suites at the base archive shows the identical fail set (the 3 forge-timeout tests in `workflow-status-sensor.test.mjs` fail at `b8b1d814` too — environmental, not a regression).
+- **E13** — 2026-11-07, P8 second gate pass after two more findings the run surfaced: (a) the guide's pinned machine-region count moved 111 → 115 with the five new inventory rows — `SKILL_CONTEXT_BUDGETS.json` re-pinned at the measured value (exact pin, sources entry added, PE-014's manifest mechanics); (b) `prose-gate-inventory` refused the four undeclared surface ids — `docs/workflow/GATE_INVENTORY.md`'s `normative-surface-grammar` row now claims them. Then: `bun scripts/local-gate.mjs` · exit 0 · **PASS — 12/12 steps**.
+- **E14** — 2026-11-07, the journal-fragment repair (out-of-unit, disclosed): `git mv` of the `…-manual.md` fragment to `…-narrative-local.md` per fix-432's recorded Next line · `2e3e81e5`; `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` · exit 0 · 11 pass / 0 fail; the gate's three crate/root-suite steps green since.
+- **P8** — 2026-11-07, obligations ledger closed (all 20 rows verified below), pi package README catalogue row added (AC15), GATE_INVENTORY claim + budget re-pin, session journal fragment written · this commit.
 
 ## Next
 
-P2 — the RED test batch.
+External verification by the owner (§8 of the application workflow — the diff
+is the handoff; nothing is self-approved). Then the owner's usual close:
+`review-change`/`audit-pr` on the PR closing #449.
 
 ## References
 

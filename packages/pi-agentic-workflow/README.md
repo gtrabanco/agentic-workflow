@@ -37,6 +37,7 @@ their own — they are composed by the ones above:
 | `/audit-docs` | Check that docs, roadmap, code and the fix index agree. |
 | `/audit-pr` | The merge gate: is this PR ready? |
 | `/discover-repository-state` | Freeze verified repository facts. |
+| `/batch-scheduler` | Plan parallel-execution batches over the open work graph. |
 | `/execute-phase` | Implement the remaining phases of a planned unit. |
 | `/fold-findings` | Repair persisted fix-now findings. |
 | `/init-workspace` | Adapt the workflow scaffold to a repository. |
