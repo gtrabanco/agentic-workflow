@@ -11,6 +11,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -552,6 +553,75 @@ const auditDocs = read("skills/audit-docs/SKILL.md");
 assert.match(auditDocs, /Check \(1-16\)/);
 assert.match(auditDocs, /Checks run: <n>\/16/);
 assert.doesNotMatch(auditDocs, /MEDIUM/);
+
+// IS-2b (issue #435): check 16's charter-slot scan is bounded to the `## Project
+// charter` section. The scan is read out of the skill and run against fixtures
+// built from the shipped template, so this judges the declared command and not a
+// copy of it. An unscoped bullet scan reports the guide's other honest
+// placeholders — the Hard-rules stubs `init-workspace` leaves unfilled by design —
+// which made the check's "prints nothing" pass condition unreachable on a
+// healthy scaffold.
+const charterScan =
+  /```text\n\s*(awk '\/\^## Project charter[^\n]*?AGENTS\.md)\s+→ prints nothing\n\s*```/.exec(auditDocs)?.[1] ?? null;
+assert.ok(charterScan, "check 16 declares a fenced charter-section scan that prints nothing");
+
+const scanGuide = (guide) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "aw-charter-scan-"));
+  try {
+    fs.writeFileSync(path.join(dir, "AGENTS.md"), guide);
+    return execFileSync("sh", ["-c", charterScan], { cwd: dir, encoding: "utf8" }).split("\n").filter(Boolean);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+const templateGuide = read("template/AGENTS.md");
+const guideLines = templateGuide.split("\n");
+const charterAt = guideLines.findIndex((line) => line.startsWith("## Project charter"));
+const afterCharter = guideLines.findIndex((line, index) => index > charterAt && line.startsWith("## "));
+assert.ok(charterAt !== -1 && afterCharter > charterAt, "the shipped template carries a bounded ## Project charter section");
+const fillSlots = (lines) => lines.map((line) => line.replace(/`<[^`]+>`/g, "`filled value`"));
+const filledGuide = [
+  ...guideLines.slice(0, charterAt),
+  ...fillSlots(guideLines.slice(charterAt, afterCharter)),
+  ...guideLines.slice(afterCharter),
+].join("\n");
+const withSlot = (label) =>
+  filledGuide
+    .split("\n")
+    .map((line) => (line.startsWith(`- **${label}:**`) ? `- **${label}:** \`<${label} placeholder>\`` : line))
+    .join("\n");
+const withoutCharter = [...guideLines.slice(0, charterAt), ...guideLines.slice(afterCharter)].join("\n");
+
+// The fixture stays the reproducer only while the guide keeps a non-charter
+// placeholder: without it the pass-shape would be satisfied by accident.
+assert.match(templateGuide, /^- \*\*Backward compatibility — /m, "the template's non-charter stub is still present");
+
+// The raw template is the positive case — every charter slot prints.
+const rawHits = scanGuide(templateGuide);
+assert.equal(rawHits.length, 11, "the raw template prints its 11 charter slots");
+assert.ok(rawHits.every((hit) => !hit.includes("Backward compatibility")), "no hit is the non-charter stub");
+
+// A filled charter with the guide's honest residue elsewhere prints nothing.
+assert.deepEqual(scanGuide(filledGuide), [], "a filled charter reports no unfilled slot");
+
+// An unfilled identity slot and an unfilled domain slot still print, path:line.
+for (const label of ["License", "i18n"]) {
+  const hits = scanGuide(withSlot(label));
+  assert.equal(hits.length, 1, `an unfilled ${label} slot is reported exactly once`);
+  assert.match(hits[0], /^AGENTS\.md:\d+:- \*\*/);
+  assert.ok(hits[0].includes(label), `the ${label} hit names its slot`);
+}
+
+// An older install that declares no charter is n/a, never a finding.
+assert.deepEqual(scanGuide(withoutCharter), [], "a guide with no charter section reports nothing");
+
+// The legal residual form never matches.
+const legalResidual = filledGuide
+  .split("\n")
+  .map((line) => (line.startsWith("- **License:**") ? "- **License:** `unresolved — <which license?>`" : line))
+  .join("\n");
+assert.deepEqual(scanGuide(legalResidual), [], "a legal `unresolved — <question>` value never matches");
 
 // IS-2: audit-docs citation in product-audit / AUDIT_DIMENSIONS.md — audit-docs owns the count.
 const auditDimensions = read("skills/product-audit/references/AUDIT_DIMENSIONS.md");
