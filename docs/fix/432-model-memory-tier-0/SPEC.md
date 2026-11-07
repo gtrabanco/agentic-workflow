@@ -346,7 +346,7 @@ here (`report-only` impact never earns a correction round).
 
 ## Next
 
-The owner's external verify of this correction batch; then push its head to [PR #447](https://github.com/gtrabanco/agentic-workflow/pull/447) and merge it, closing #432.
+Push this batch's head to [PR #447](https://github.com/gtrabanco/agentic-workflow/pull/447) (the batch does it — a fast-forward over the remote tip `3e02d85c`, no rewrite) and merge it: that is the one remaining action, and the merge closes #432. Nothing else is open in this unit — `## Findings` carries no row, every obligation row is `verified`, and the receipt re-runs against `## Log` E17–E22.
 
 ## References
 
