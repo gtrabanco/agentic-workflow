@@ -188,7 +188,7 @@ test("a narrative fragment whose heading names another branch is refused, never 
       error instanceof FragmentError &&
       /branch/.test(error.message) &&
       /docs-batch-2-landing-safeguard/.test(error.message) &&
-      /docs-domain-separation-safeguard/.test(error.message),
+      /docs\/domain-separation-safeguard/.test(error.message),
   );
   assert.equal(fs.readdirSync(path.join(repo, JOURNAL_DIR)).length, 0, "a refused write leaves no fragment behind");
 });

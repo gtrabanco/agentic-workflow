@@ -48,6 +48,8 @@ function parseDocopArgs(argv) {
     file: null,
     section: null,
     replacement: null,
+    set: null,
+    append: null,
     out: null,
     json: false,
     dryRun: false,
@@ -55,7 +57,14 @@ function parseDocopArgs(argv) {
   if (!DOC_OPS.includes(out.op)) {
     throw usageError(`unknown doc op "${out.op ?? ""}" (expected ${DOC_OPS.join(" | ")})`);
   }
-  const VALUE_FLAGS = { "--file": "file", "--section": "section", "--replacement": "replacement", "--out": "out" };
+  const VALUE_FLAGS = {
+    "--file": "file",
+    "--section": "section",
+    "--replacement": "replacement",
+    "--set": "set",
+    "--append": "append",
+    "--out": "out",
+  };
   const seen = new Set();
   let i = 1;
   while (i < argv.length) {
@@ -82,18 +91,21 @@ function parseDocopArgs(argv) {
     throw usageError(`unknown flag "${arg}"`);
   }
   if (out.dryRun && out.op !== "edit") throw usageError("--dry-run belongs to edit");
+  const bodySources = [out.replacement, out.set, out.append].filter((value) => value !== null);
   if (out.op === "index") {
     if (out.file !== null) throw usageError("--file belongs to read/edit");
     if (out.section !== null) throw usageError("--section belongs to read/edit");
-    if (out.replacement !== null) throw usageError("--replacement belongs to edit");
+    if (bodySources.length > 0) throw usageError("--replacement/--set/--append belong to edit");
     return out;
   }
   if (out.out !== null) throw usageError("--out belongs to index");
+  if (out.op === "read" && bodySources.length > 0) throw usageError("--replacement/--set/--append belong to edit");
   if (out.file === null) throw usageError("--file is required");
   if (out.op === "edit") {
     if (out.file === "-") throw usageError("--file - cannot be edited in place; name a document path");
     if (out.section === null) throw usageError("--section is required for edit");
-    if (out.replacement === null) throw usageError("--replacement is required for edit");
+    if (bodySources.length > 1) throw usageError("exactly one of --replacement, --set, --append is allowed");
+    if (bodySources.length === 0) throw usageError("one of --replacement, --set, --append is required for edit");
   }
   return out;
 }
