@@ -69,3 +69,35 @@ and `audit-pr:fix` route ceilings moved 11175 → 11178 = ceil(10161 × 1.10) in
 check first reported it red (exit 1, two failures) and only then green. Root suite
 `--jobs 1` · exit 0. The next recheck should treat that manifest row as part of the
 delta, not as unrelated drift.
+
+---
+
+# External verify — round 2 (blockers-only recheck of the correction batch)
+
+Date: 2026-11-07 · base `e1d94057` (`origin/main`) · head `078895bb` · delta scope
+`9ca435b8..078895bb` (the batch: `73bbc0b5` red → `68549fe0` green → `078895bb`
+receipts) · corrections landed since R1 → **delta verdict**: the six blockers, the
+delta diff, then the spot check.
+
+**Independence disclosure (read this before trusting the verdict):** round 1 was
+produced by a session that only verified; round 2 is produced by the session that
+*implemented* the batch it is rechecking. The evidence below is reproduced from
+commands, not from the earlier receipt, but the repo's own rule wants the end review
+in a conversation that did not implement the change — so this round is
+evidence-complete and not independence-clean. A fresh session re-running the delta
+scope costs one command (`bun test scripts/product-audit-rescope.test.mjs`) plus the
+sibling suites named in E22.
+
+```
+EXTERNAL VERIFY — base: e1d94057 · head: 078895bb
+Blockers: 1 — .changeset/feat-440-product-audit-rescope-…md:2 — reproducer: derive the intent from the PR's own rule (PE-007: affected packages and skills come from the modified files) over `origin/main...HEAD` → 23 changed files, affected skills = `audit-pr, product-audit, review-change`; the file declared 1 entry. base-vs-head: at base `9ca435b8` the derivation named exactly `product-audit` and the file agreed (no defect); the batch added two skill surfaces in `68549fe0` and left the intent under-declared. Class: the F51/F53 shape in the other direction — the change landed on a surface its own release-intent record did not name. No gate catches it (`version-parity-gate --content` is satisfied by any declared entry of the Pi package's content source), which is why it needed a recheck. Smallest action: add the two entries → folded in `459ee056`, verified by `bun scripts/release.mjs plan` (audit-pr=minor, product-audit=minor, review-change=minor), `bun scripts/lint-changeset.mjs <file>` exit 0 `ok`, `node scripts/version-parity-gate.mjs --content` VERDICT: PASS.
+  The six R1 blockers: all closed. Each of the six lines now carries the `audit-trigger@1` wording (SKILL.md:261, audit-pr:212, review-change:218, workflow/README.md:61+85, PORTABLE_PROMPT.md:163); an independent grep — not the sweep — returns no retired-cadence claim on any live surface outside the declared dated records; the sweep is non-vacuous (scratch copy with one literal planted → exit 1, the failure naming that file:line alone: 14 pass / 1 fail), removed after, nothing committed.
+Advisories: 3 —
+  1. README.md:119 / docs/workflow/SKILLS.md:171 — base stated product-audit was explicit-invocation-only and head replaced that clause with the trigger wording. Why advisory: the constraint is machine-owned (`user-invocable: true`, `disable-model-invocation: true`, and the issue's own non-goal "no scheduled calendar run"), so no live surface asserts the opposite; the narration lost a true qualifier rather than gaining a false one. Re-trigger condition: it becomes a blocker the moment a surface claims the audit self-fires (a scheduled driver, an autopilot row, a model-invocation route). Smallest action, if you want the clause back: one qualifier in front of "Measured-trigger" in those two rows.
+  2. .changeset/374-pluggable-session-journal.md — `bun scripts/lint-changeset.mjs` reports `cites a repo path that does not exist: .agentic-workflow/journal-store/entries.db`. Why advisory: reproduced on a `git archive` copy of base `e1d94057` — pre-existing, and no gate runs the linter over the committed tree (only over fixtures). Belongs to #374's intent file, never to this unit.
+  3. docs/workflow/SKILL_CONTEXT_BUDGETS.json:255/280 — the two re-basis rows quote the retired literal (`“product-audit` is the periodic, product-wide full sweep”) inside the growth source. Why advisory: a quoted before-value is history, not an order; the sweep's roots exclude `.json` by construction. Kept because the manifest's own contract is "name the growth source".
+Sibling sweep: clean for the cadence class (the six mentions are gone from every live surface and the mechanized sweep now holds the line); the proposal-stream route cells are the only remaining `route: /triage-issue …` shape and are correct by D-440-3; dated records untouched (`git diff --name-only origin/main...HEAD` names none of MIGRATION.md / REDESIGN.md / CHANGELOG.md / docs/features/09-*).
+Completeness: S1–S6 resolved (unchanged from R1); obligations O1–O10 all `verified` and re-checked — O1's frozen outcome ("the periodic prose is retired") now reproduces tree-wide, which is what R1 said it did not. Open ids: none. The append-only rule held: E10 and E17 are byte-identical to their pre-batch form; their corrections are the appended E18/E20 lines, and the only lines this doc removed in the batch are the retirement bullet and the `## Next` paragraph (prose, not receipts).
+Spot check: bun test scripts/product-audit-rescope.test.mjs → match (exit 0 · 15 pass / 0 fail at 459ee056, and the round-1 receipt's 14-test figure is now correctly reported as 15 after the sweep case landed). Second spot check `bun test scripts/scaffold-parity.test.mjs` → match (exit 0 · 17 pass / 0 fail). Gate at head: `bun scripts/local-gate.mjs --skip-network` → exit 0 · PASS 8/8 · 88 root suites PASS.
+Verdict: NEEDS-DECISION (1 open blocker) → closed in the same round by `459ee056`; the same blocker did not persist, so per the correction bounds no third round is owed. Merge decision is yours, ideally after an independence-clean pass on the delta scope.
+```

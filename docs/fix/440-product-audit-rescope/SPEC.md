@@ -211,19 +211,33 @@ the steps run inline in the `## Tasks` order P1–P7.
   line was captured before the prose fix landed, so it is corrected by this appended
   line, never in place. Root suite after the re-basis: `bun scripts/run-root-suite.mjs
   --jobs 1` · exit 0 · all suites PASS.
+- **R2** — 2026-11-07, blockers-only recheck of the batch · `HEAD 078895bb` against base `e1d94057`, delta scope `9ca435b8..078895bb` · verdict **NEEDS-DECISION (1 open blocker)** · cycle 2 · gate exit 0 — the receipt is the second block in `external-verify.md`. Independence disclosed there: this round was run by the session that implemented the batch, so its verdict is evidence-complete but not independence-clean.
+- **V1** — 2026-11-07, the six blockers of R1 re-checked and **all closed**: the six lines read the trigger grammar's own wording (`skills/product-audit/SKILL.md:261`, `skills/audit-pr/SKILL.md:212`, `skills/review-change/SKILL.md:218`, `docs/workflow/README.md:61` and `:85`, `docs/workflow/PORTABLE_PROMPT.md:163`); the independent grep (not the sweep) returns no retired-cadence claim on any live surface outside the declared dated records; the advisories' dispositions all reproduce — the historical files show zero diff (`git diff --name-only origin/main...HEAD` names none of them), `packages/` shows zero diff (advisory 5's `n/a` holds), E10 and E17 are byte-identical to before the batch (the append-only rule held: the only removed lines in this doc are the retirement bullet and the `## Next` paragraph, both prose).
+- **E21** — 2026-11-07, the new sweep is non-vacuous: a scratch copy (`mktemp -d`, never committed, removed) with `docs/workflow/PORTABLE_PROMPT.md:163` reverted to the retired literal · exit 1 · 14 pass / 1 fail, the failure naming exactly `docs/workflow/PORTABLE_PROMPT.md:163 … (periodic product-wide health check)` — the pin fires on the defect and on nothing else.
+- **E22** — 2026-11-07, at `459ee056`: `bun scripts/local-gate.mjs --skip-network` · exit 0 · `PASS — 8 step(s)`, 88 root suites PASS; `bun test scripts/product-audit-rescope.test.mjs` · exit 0 · 15 pass / 0 fail; `bun test scripts/scaffold-parity.test.mjs` · exit 0 · 17 pass / 0 fail; `bun scripts/check-skill-context.mjs --routes --json` · exit 0 · `failures: []` over 14 routes.
+- **F3** — 2026-11-07, the one blocker R2 found is folded (`459ee056`): the release intent under-declared the batch's own surface set. The rule is that the intent is derived from the PR's modified files, never hand-written (PE-007); the derivation over `origin/main...HEAD` named three skills (`audit-pr`, `product-audit`, `review-change`) while `.changeset/feat-440-…md` declared one. Verified after: `bun scripts/release.mjs plan` lists `audit-pr=minor`, `product-audit=minor`, `review-change=minor`; `bun scripts/lint-changeset.mjs <file>` · exit 0 · `ok`; `node scripts/version-parity-gate.mjs --content` · `VERDICT: PASS`. No gate caught it — the parity gate is satisfied by any declared entry of the Pi package's content source — which is why it is recorded as a finding of the recheck, not of the tooling.
+- **E23** — 2026-11-07, pre-existing defect found while running the intent linter over the whole tree (recorded for honesty, not a class of this unit): `bun scripts/lint-changeset.mjs` · exit 0 with `error: 374-pluggable-session-journal.md: cites a repo path that does not exist: .agentic-workflow/journal-store/entries.db` — reproduced identically on a `git archive` of base `e1d94057` in scratch, so it is not caused by this branch; no gate runs the linter over the committed tree, only over fixtures. Rides the #374 intent file's own owner triage.
 
 ## Next
 
 The correction batch R1 asked for has landed (`73bbc0b5` red → `68549fe0` green,
-receipts E15–E20): the next step is the blockers-only recheck of the batch head,
-then the merge decision on PR #445. The batch also grew two declared ceilings, and
-says so (E20: the `audit-pr` route budgets re-based by two rounding units at the
-declared formula). Still open, none of them this unit's:
+receipts E15–E20); the blockers-only recheck (R2) confirmed all six closed (V1) and
+found one blocker of its own — the intent file's under-declared surface set — folded
+in `459ee056` (F3, E22). The same blocker did not persist, so per the correction
+bounds no third round is owed: the next step is your merge decision on PR #445, and
+an independence-clean pass by a session that did not write this batch is recommended
+before merging (R2's disclosure). Still open, none of them this unit's:
 (1) `pi-compat-guard` red at `main` — pre-existing, differential-proven twice (E13,
 E19), the guard type-checks a published package that predates the unpublished
 journal modules; (2) the journal writer-side fragment-name validation gap (F1);
 (3) the advisories kept by declaration — the dated records (D-440-2) and the
-proposal-stream route cells (D-440-3).
+proposal-stream route cells (D-440-3); (4) the #374 intent file's dead path citation
+(E23, pre-existing at `main`); (5) a narration loss R2 reports as advisory, not
+blocker: base `README.md`/`docs/workflow/SKILLS.md` also stated product-audit is
+explicit-invocation-only, and head replaced that clause with the trigger wording —
+the constraint itself is still machine-owned (`disable-model-invocation: true`), so
+no live surface asserts the opposite; it becomes a blocker only if some surface ever
+claims the audit self-fires (a scheduled driver or an autopilot row).
 
 ## References
 
