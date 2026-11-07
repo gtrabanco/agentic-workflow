@@ -150,11 +150,21 @@ run the command shown, don't infer.
     - the charter section is present when either the section or the row is
       declared — a missing `## Project charter` section is **HIGH** (identity
       answers with no tier-0 home push agents back to guessing);
-    - no unfilled identity slot survives — an identity bullet whose entire
-      value is a `<…>` placeholder is the raw-template failure:
-      `rg -n '^- \*\*[^*]+:\*\* \`?<[^>]+>\`?$' AGENTS.md` must print nothing
-      (the template's own file is the positive case; a legal
-      `unresolved — <question>` value never matches);
+    - no unfilled charter slot survives — a bullet whose entire value is a `<…>`
+      placeholder is the raw-template failure. The scan is **bounded to the
+      `## Project charter` section**, because the guide's other honest
+      placeholders — the Hard-rules stubs `init-workspace` leaves unfilled by
+      design — are not the charter's finding, and a guide-wide scan reports them
+      forever:
+
+      ```text
+      awk '/^## Project charter/{f=1; next} f && /^## /{f=0} f && /^- \*\*[^*]+:\*\* `?<[^>]+>`?$/ {print FILENAME":"FNR":"$0}' AGENTS.md   → prints nothing
+      ```
+
+      (the template's own file is the positive case — its 11 slots print with
+      `path:line`; a legal `unresolved — <question>` value never matches; an
+      identity bullet — the five the template names — is **HIGH**, a domain
+      bullet **LOW**);
     - the catalogue carries no raw placeholder cell — same scan as the
       capability seed: `rg -n '\| *\`?<[^>]+>\`? *\|' docs/workflow/VERIFICATION_CRITERIA.md`
       must print nothing, and every criterion row's provenance cell is one of
