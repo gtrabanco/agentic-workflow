@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-# ac-hash: 6b7b62a11222aa8dc19986bfbd0114aeebfd0a31cb9b1e19429e144793bb6e9b
+# ac-hash: 43604f8056a06a975fb6fecc9ee268fbea6f35f9
 ---
 
 # fix/432-model-memory-tier-0
@@ -58,21 +58,74 @@ references — the surfaces every unit's knowledge-honesty phase reads:
   already pins the design/plan knowledge contract (#303), so the #432 cases
   land there instead of a second suite (one carrier, no second copy).
 
+Batch 2 (`35fc6e1e`, the owner-ordered migration `## Log` D5 records) grew this
+surface, and the fold of the delta receipt grew it again. This is the list an
+executor must sweep, not the first batch's list:
+
+- the `version-pinned doc` row of `skills/unit-lane/references/DESIGN.md`
+  § Provenance — line 59, the one-line clause that admits an observation of the
+  installed environment, and the `inferred` cap the version-less reads fall to;
+- the seven claim journals the migration rewrote —
+  `docs/features/66-engram-memory-substrate/sources.md`,
+  `docs/features/67-serena-provisioning/sources.md`,
+  `docs/features/78-unit-cycle/sources.md`,
+  `docs/features/79-spec-by-reference/sources.md`,
+  `docs/features/82-relay-lane-execution/sources.md`,
+  `docs/features/84-published-vocabulary-sweep-gate/sources.md` and
+  `docs/fix/303-investigate-orient-ask/decisions.md` — where the fold re-derives
+  11 `provenance` cells and the certainty of 4 of them, and where the dated note
+  above each touched table says so;
+- `docs/fix/303-investigate-orient-ask/BRIEF.md` — the one shape sentence that
+  spelled the retired four-column header (batch 2; the fold leaves it);
+- `scripts/knowledge-honesty-contract.test.mjs` again — the same carrier gains
+  the pin that keeps this fold from being prose-only (a new obligation row, O14,
+  carries its red and green receipts).
+
 Consumers: every lane run that journals claims (`sources.md` is
 human-authored prose — no machine parser reads its columns, searched at
-`PE-003`), the inventory validator (`scripts/prose-gate-inventory.mjs`), and
-the context-budget checker (`docs/workflow/SKILL_CONTEXT_BUDGETS.json`).
-Nothing executable changes; the worktree branch is `feat/432-model-memory-tier-0`.
+`PE-003` and re-run at this head: `rg -l "sources\.md" scripts/*.mjs` outside
+the suites still matches nothing. The O14 case reads the columns as a check
+inside a `*.test.mjs`, which is not a consumer the lane must feed, so the
+compatibility invariant O8 states holds unchanged), the inventory validator
+(`scripts/prose-gate-inventory.mjs`), and the context-budget checker
+(`docs/workflow/SKILL_CONTEXT_BUDGETS.json`). Nothing executable changed before
+the pin; with it the only executable surface is the test suite. The worktree
+branch is `feat/432-model-memory-tier-0`.
 
 ## Retirements
 
-Nothing is retired. Empty answer: the change only adds a provenance column, an
-exit rule and ledger rows — no surface, token, helper, contract or narrative
-becomes obsolete, and no prose currently states the certainty vocabulary in a
-place this change would leave stale (searched: `rg -ln "confirmed / inferred / unknown" skills/ template/ packages/`
-— the journal tables in DESIGN.md and PLAN.md are the only live carriers, and
-both are updated here; every other `certainty` hit belongs to another unit's
-frozen design record, which that search excludes by construction).
+The four-column claim-journal shape **is** retired — by this unit's second
+batch, not its first. The sentence this section carried was true at `3e02d85c`
+and `35fc6e1e` made it false; the fold of the delta receipt re-cuts it.
+
+- **Retired surface:** the four-column claim-journal header
+  `id | claim | source | certainty`, the shape `sources.md` and the design
+  journals were written in.
+- **Its replacement:** the five-column grammar § Provenance publishes —
+  `id | claim | source | provenance | certainty` (`provenance` inserted before
+  `certainty`; unit 67's seven-column tables keep their `tier`/`cost` cells
+  after it). Owner: `skills/unit-lane/references/DESIGN.md` § Provenance,
+  mirrored by `skills/unit-lane/references/PLAN.md`.
+- **The batch that applied it:** `35fc6e1e` (2026-11-07, ordered at D5) — 11
+  tables / 148 rows across the seven claim journals `## Impact` lists, plus the
+  two shape descriptions that spelled the old header
+  (`docs/features/66-engram-memory-substrate/sources.md:3`,
+  `docs/fix/303-investigate-orient-ask/BRIEF.md:16`).
+- **Negative-capability pin, with the before/after count:**
+  `rg -c "^\| id \| claim \| source \| certainty \|$" skills/ template/
+  packages/ docs/workflow/` exits 1 — no live normative surface carries the
+  retired shape. Over the whole tree the same pattern counts 9 files / 12 tables
+  at `3e02d85c` (`git grep -c` on that commit) and 3 files / 3 tables at this
+  head — and none of the 3 is a claim journal.
+- **Survivors, each with the reason it is not swept:**
+  `docs/fix/353-residue-shadow-copies/SPEC.md:84`,
+  `docs/fix/375-release-notes-rendering/SPEC.md:104` and
+  `docs/features/103-doc-currency/SPEC.md:156` are legacy `### Planning
+  evidence` ledgers of closed units — the canonical planning-evidence row is the
+  six-column one, so converting them would invent `authority-kind`/`freshness`
+  cells for other units' records (D6, whose citation scope this batch bounds in
+  a new dated `## Log` line); and `CHANGELOG.md:747` quotes the old header inside the
+  published 2.2.0 release note — published history is never rewritten.
 
 ## Non-goals
 
@@ -278,7 +331,7 @@ impact never earns a correction round).
 
 ## Next
 
-The owner's external verify of the correction batch `## Log` records (`E10`–`E14`), which closed that receipt's blocker and advisories; then merge [PR #447](https://github.com/gtrabanco/agentic-workflow/pull/447), which closes #432.
+The owner's external verify of this correction batch; then push its head to [PR #447](https://github.com/gtrabanco/agentic-workflow/pull/447) and merge it, closing #432.
 
 ## References
 
