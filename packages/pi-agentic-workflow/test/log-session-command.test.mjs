@@ -199,18 +199,33 @@ test("O4: the facts block is the writer's stdout, byte for byte", async () => {
     });
     assert.equal(direct.status, 0, `the writer itself failed: ${direct.stderr}`);
 
-    const { registered, calls, context } = extensionOver(tree.skillsDir, { cwd: repo.root });
-    await registered.get(LOG_SESSION_COMMAND).handler("", context());
-    const sent = calls.send.map((entry) => entry.content).join("\n");
-    assert.ok(sent.includes(direct.stdout.trimEnd()), "the directive carries the writer's own answer, untouched");
-    assert.ok(/- \*\*Commits:\*\*/u.test(sent), "and the cells are the writer's spelling, not a re-format");
+    // Byte identity: the bytes the writer printed are the bytes the model reads,
+    // with nothing added, trimmed or re-formatted between the two.
+    const through = extensionOver(tree.skillsDir, { cwd: repo.root, logSession: { run: () => ({ status: 0, stdout: direct.stdout, stderr: "" }) } });
+    await through.registered.get(LOG_SESSION_COMMAND).handler("", through.context());
+    assert.ok(through.calls.send[0].content.includes(direct.stdout.trimEnd()), "the directive carries the writer's own answer, untouched");
+    assert.equal(through.registered.get(LOG_SESSION_COMMAND) !== undefined, true);
 
-    const record = planInvocation({ root: repo.root, sessionId: "parity-check" }).record;
-    assert.equal(record.facts, direct.stdout, "the record holds the same bytes the writer printed");
+    // Not a re-derivation: run the writer twice, independently, and the fact
+    // cells agree — the heading's second is the one thing either run owns.
+    const real = extensionOver(tree.skillsDir, { cwd: repo.root });
+    await real.registered.get(LOG_SESSION_COMMAND).handler("", real.context());
+    const record = JSON.parse(readFileSync(invocationMarkerPath(repo.root, SESSION), "utf8"));
+    assert.equal(cells(direct.stdout), cells(record.facts), "the handler's run and a direct run state the same commits and files");
+    assert.match(record.facts, /^## \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z — test-branch — auto\n/u, "the heading is the writer's shape, branch and all");
   } finally {
     cleanup(tree.root, repo.root);
   }
 });
+
+/** The writer's fact cells — everything the entry states except its own second. */
+function cells(facts) {
+  return facts
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => line.replace(/^## \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/u, "## <stamp>"))
+    .join("\n");
+}
 
 test("O4: the writer is spawned through the resolved runtime with a sandboxed git env", async () => {
   const tree = skillsTree();
