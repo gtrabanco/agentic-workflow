@@ -156,7 +156,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
-| none | — | — | No fix is in flight. A fix gets its row when `/unit-lane --fix <n>` opens its unit doc, and the row is removed after its PR merges. |
+| #440 | `product-audit-rescope` | in-progress | Skill re-scope per #307 design note 13: deterministic-producer pre-pass (receipt-quoted, never re-run), profile-aware `n/a` scope (#436 consumption-side), measured triggers with the `insufficient-corpus` verdict (#437 bands referenced, never invented), findings typed 1:1 with review's vocabulary and resolver-verb route cells (note-7). Unit doc: `docs/fix/440-product-audit-rescope/` |
 
 ## Bureaucracy-reduction execution order (2026-09-15)
 
