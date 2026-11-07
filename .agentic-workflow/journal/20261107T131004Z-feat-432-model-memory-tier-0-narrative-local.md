@@ -1,0 +1,6 @@
+## 20261107T130829Z — feat/432-model-memory-tier-0 — narrative
+- **Commits:** 11 (`d391280b…35fc6e1e`)
+- **Files:** 25 files
+- **Summary:** Aplicado a PR #432 inline — tres pasadas de reparación: 1) el blocker de la verify externa (## Next estancado con "on approval, open the PR" mientras PR #447 ya estaba abierto) corregido; 2) 4 de 5 advisories de precisión documental (orient tiers nombrando model memory, conteo 86->87 root suites, receipt de Retirements que no reproduce, stale Next en LOGS.md resuelto con nuevo fragmento de journal). Un advisory 5 declinado por ser falsificación de historial de otras unidades.
+- **Decisions:** D4 el owner ordenó aplicar el advisory 5 que había sido declinado; se aplicó como migración de forma pura — la columna provenance añadida a 11 tablas en 7 journals de claims (148 rows), idempotente y aditivo puro; la derivación es una regla mecánica (primera fuente citada -> tipo), no juicio por fila; D5 tres tablas ### Planning evidence en forma de 4 columnas quedaron fuera (ledgers de unidades cerradas, LEDGERS.md prohíbe reescribirlas) — registrado en D6 como reportado, no cruzado.
+- **Next:** Owner verify externa del head 35fc6e1e; si vuelve limpia: push a PR #447, merge (Closes #432), y decidir si convierte las 3 tablas ### Planning evidence restantes o las deja como están.
