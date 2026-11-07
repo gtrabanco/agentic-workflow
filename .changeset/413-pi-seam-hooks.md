@@ -8,7 +8,8 @@ Target projects can declare commands that run at the workflow's own lifecycle
 points — `pre:commit`, `session:start`, `phase:end`, … — and the extension
 executes them deterministically, no model in the loop (issue #413, roadmap row
 112). The config form is the Claude Code `hooks.json` shape, so existing
-declarations port: `.pi/hooks.json` (project) over `<agentDir>/hooks.json`
+declarations port: the project's `hooks.json` (under its `.pi` config directory) over
+`<agentDir>/hooks.json`
 (global), the established precedence and trust gate mirrored; `SessionStart` /
 `SessionEnd` alias to `session:start` / `session:end`, every other Claude Code
 event name is refused `config-invalid`, and the nine native `PROJECTION_SEAMS`
