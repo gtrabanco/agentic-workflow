@@ -219,7 +219,7 @@ n/a — no tests step for this unit
   Relevant files: skills/init-workspace/references/UPGRADE.md
 - P8 — `skills/audit-docs/SKILL.md`: charter-coverage check 16 — mandatory
   charter section present and non-placeholder, catalogue rows
-  provenance-typed, per the CAPABILITIES pattern (validator: `rg -n "16\. \*\*Project charter" skills/audit-docs/SKILL.md` matches 1)
+  provenance-typed, per the CAPABILITIES pattern (validator: `rg -n "16\. \*\*Project-charter coverage" skills/audit-docs/SKILL.md` matches 1)
   (Implements: S7, S12)
   Relevant files: skills/audit-docs/SKILL.md
 - P9 — Register the unit and ship the change's own docs state: roadmap `## Fixes`
