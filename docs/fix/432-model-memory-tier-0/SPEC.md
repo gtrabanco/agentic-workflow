@@ -120,6 +120,14 @@ ledger rows and pinning tests only — so no new runtime suite applies.
   projection (registering the Fixes row fixed it). Both recorded because a red
   gate is never excused by an unrecorded issue — after the two repairs the
   pre-edit head runs 86 PASS / 0 FAIL.
+- `packages/agentic-workflow` `test:node` (crate-suite-node) is red at the
+  base tip: `main` carries a committed journal fragment without the contract's
+  kind token (`9b27fab9`: `20261107T001707Z-direction-review-odd-hybrid-design-notes-manual.md`),
+  so the S15 probe refuses the whole carrier set. **Does-not-affect this
+  unit's behaviour; does affect its push gate** (the local gate is full for a
+  test-bearing push). Repaired on this branch with the same conforming rename
+  the journal unit already landed on its own branch (`11e14db2`) — if both
+  merge, the renames agree on the same target name and the same bytes.
 - The gate-inventory prose row planned here is unverifiable by script until the
   #359 second slice — affects this unit (it is exactly the unit's product, not
   a gap in it).
@@ -238,6 +246,7 @@ OPEN rows only. None at cut — the first review is the owner's external verify.
 - **D1** — 2026-11-07, owner decision recorded ahead of the external verify: the golden-fixture smoke run (GOLDEN_FIXTURE.md §When-to-run — optional for a wording edit) is **skipped**, not passed: it needs a fleet weak-model session this change cannot run itself. The owner runs it before merge if wanted.
 - **D2** — 2026-11-07, owner decision recorded ahead of the external verify: the issue's second slice (scripted checks as lane steps) stays `open` in `## Future` — no measured acceptance exists yet (#260 rule), so it is not built here.
 - **D3** — 2026-11-07, the owner's external verify returned approval ("Okey") with no findings — §9 earned no correction batch. The PR was opened closing #432 per the plan's next step.
+- **E9** — 2026-11-07, `bun run test:node` + `bun run test` (packages/agentic-workflow) · exit 0 · 388 pass / 0 fail each, after the conforming fragment rename (recorded pre-existing issue above).
 
 ## Next
 
