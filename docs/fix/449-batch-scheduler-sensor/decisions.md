@@ -1,0 +1,38 @@
+# 449 — batch scheduler sensor · decisions
+
+- **D1 (2026-11-07) — triage: its own skill + script, not a `workflow-status`
+  extended mode.** Authority: S2 ("via `workflow-status` extended mode or its
+  own skill — triage decides"). Grounds: `workflow-status` is strictly
+  read-only (PE-005) and S6 requires a persisted state file; its Envelope v2
+  is consumed by `decideWorkflowAction()` and drivers, and batch grouping is a
+  different question (parallel lanes) with a different consumer (#295 renders
+  it as data). Precedent: producers ship as their own deterministic scripts
+  (`ceremony.mjs`, `workflow-status.mjs`, `risk-tiers.mjs`).
+- **D2 (2026-11-07) — the envelope carries facts, not policy.** Authority: S5's
+  "measured-size hints for lane count" + S9 (planner, not orchestrator). Size
+  hints and lane grouping are computed and reported; the parallelism decision
+  (how many lanes to actually launch) stays with the consumer — the sensor
+  never launches, never caps anything.
+- **D3 (2026-11-07) — the state file is untracked.** Authority: S6 (persist
+  enough state that a re-run recognizes claimed/launched lanes). The file
+  lives at `.agentic-workflow/batches.json`, which the carrier's own
+  `.gitignore` whitelist ignores (PE-008): durable across sessions on the
+  machine, never a commit-churning tracked artifact. `--no-state` gives a
+  pure read.
+- **D4 (2026-11-07) — applied via the owner's local workflow, not the lane.**
+  Authority: owner workflow §4 (never run this repo's machinery on its own
+  surgery). The frozen ledgers are the plan; `unit-route --triage` was not run
+  for the same reason; the repo's deterministic gates (tests, lints) run
+  always.
+- **D5 (2026-11-07, P2) — path-protection records:**
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/batch-scheduler.test.mjs | P2 | 2026-11-07 | execute-phase | initial RED suite authorship plus pre-green alignment repairs in the same cut: two broken test-body fragments and one expected error-message string aligned to the validator's named error — no assertion relaxed
+justification | packages/agentic-workflow-schema/test/batch-plan.test.mjs | P3 | 2026-11-07 | execute-phase | initial contract-vector authorship plus pre-green alignment repairs in the same cut: expected error-message strings aligned to the validator's named errors — no assertion relaxed
+justification | scripts/batch-scheduler.test.mjs | P4 | 2026-11-07 | execute-phase | the S9 source pin banned the literal `/unit-lane ` on every non-comment line, which contradicts S4's required `command` output string; the ban keeps spawn/execFile/worktree-add and the test now pins the command string's exact form in the S4 test instead
+justification | scripts/batch-scheduler.test.mjs | P5 | 2026-11-07 | execute-phase | live-path finding: the planner read root/ROADMAP.md but the canonical index is docs/ROADMAP.md (readRoadmapIndex); fixtures updated to write the canonical location — no assertion relaxed
+justification | scripts/batch-scheduler.test.mjs | P6 | 2026-11-07 | execute-phase | added the plan-grammar parity pin (inventory ↔ emitted envelope ↔ BATCH_PLAN_FIELDS) required by the normative surface's table grammar — extension, nothing relaxed
+justification | scripts/normative-drift.test.mjs | P6 | 2026-11-07 | execute-phase | the render-only-prose mutation test pins the literal current skill count in SKILLS.md; adding the 14th user-facing skill updates the pinned literal 13→14 and its recomputes-to expectation 13→14 — the assertion mechanics are unchanged
+```
