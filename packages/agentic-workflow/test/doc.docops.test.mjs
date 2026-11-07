@@ -170,7 +170,7 @@ describe("doc read CLI (S3)", () => {
   it("prints one section by its path-prefixed D5 id with multi-byte bytes intact", () => {
     const file = fixture(UNIQUE_DOC);
     const name = path.basename(file);
-    const res = run(["doc", "read", "--file", file, "--section", `${name}#next`]);
+    const res = run(["doc", "read", "--file", file, "--section", `${name}#guide-next`]);
     assert.equal(res.status, 0, `stderr: ${res.stderr}`);
     assert.equal(res.stdout, tailSection(UNIQUE_DOC));
   });
@@ -201,9 +201,10 @@ describe("doc read CLI (S3)", () => {
     const file = fixture(DOC);
     const res = run(["doc", "read", "--file", file, "--section", "guide-objective-2"]);
     assert.equal(res.status, 0, `stderr: ${res.stderr}`);
-    assert.match(res.stdout, /duplicate sibling/);
-    assert.doesNotMatch(res.stdout, /body one/);
-    assert.doesNotMatch(res.stdout, /```markdown/);
+    // The second Objective section spans until the next root heading — the
+    // fenced decoy is inside it, which is the point of the fence-aware scan.
+    const start = DOC.indexOf("## Objective", DOC.indexOf("## Objective") + 1);
+    assert.equal(res.stdout, DOC.slice(start, DOC.indexOf("## Next steps")));
   });
 
   it("is a usage error when the file cannot be read", () => {
@@ -293,14 +294,14 @@ describe("doc edit CLI (S4)", () => {
 
   it("emits one JSON receipt under --json", () => {
     const file = fixture(UNIQUE_DOC);
-    const before = fs.readFileSync(file, "utf8").length;
+    const bytesBefore = Buffer.byteLength(UNIQUE_DOC);
     const res = run(["doc", "edit", "--file", file, "--section", "Next 步骤 🚀", "--replacement", "-", "--json"], { stdin: "## Next steps\n\nnew tail\n" });
     assert.equal(res.status, 0);
     const receipt = JSON.parse(res.stdout);
     assert.equal(receipt.ok, true);
     assert.equal(receipt.command, "edit");
     assert.ok(receipt.section.id.endsWith("#guide-next"), receipt.section.id);
-    assert.equal(receipt.bytesBefore, before);
+    assert.equal(receipt.bytesBefore, bytesBefore);
     assert.ok(typeof receipt.bytesAfter === "number" && receipt.bytesAfter !== receipt.bytesBefore);
   });
 
