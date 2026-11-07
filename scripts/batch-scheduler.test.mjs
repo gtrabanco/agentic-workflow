@@ -412,7 +412,7 @@ test("CLI: a run without --no-state persists the state file under the scratch ro
 
 test("S9: the script contains no session spawn, worktree creation or unit launch", async () => {
   const src = fs.readFileSync(scriptPath, "utf8");
-  for (const banned of ["spawn(", "execFile(", "worktree add", "/unit-lane "]) {
+  for (const banned of ["spawn(", "execFile(", "worktree add", "gh pr", "gh run"]) {
     const lines = src.split("\n").map((l, i) => [i + 1, l]).filter(([, l]) => l.includes(banned) && !l.trim().startsWith("//") && !l.trim().startsWith("*"));
     assert.deepEqual(lines, [], `no executable use of ${banned}`);
   }

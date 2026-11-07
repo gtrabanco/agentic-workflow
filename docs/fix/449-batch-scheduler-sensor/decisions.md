@@ -31,4 +31,5 @@ path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/batch-scheduler.test.mjs | P2 | 2026-11-07 | execute-phase | initial RED suite authorship plus pre-green alignment repairs in the same cut: two broken test-body fragments and one expected error-message string aligned to the validator's named error — no assertion relaxed
 justification | packages/agentic-workflow-schema/test/batch-plan.test.mjs | P3 | 2026-11-07 | execute-phase | initial contract-vector authorship plus pre-green alignment repairs in the same cut: expected error-message strings aligned to the validator's named errors — no assertion relaxed
+justification | scripts/batch-scheduler.test.mjs | P4 | 2026-11-07 | execute-phase | the S9 source pin banned the literal `/unit-lane ` on every non-comment line, which contradicts S4's required `command` output string; the ban keeps spawn/execFile/worktree-add and the test now pins the command string's exact form in the S4 test instead
 ```
