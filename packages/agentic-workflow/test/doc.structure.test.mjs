@@ -15,11 +15,15 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { after, describe, it } from "node:test";
 
 import { buildDocIndex, collectDocIndex } from "../src/doc/structure.mjs";
 import { validateDocIndex } from "../src/doc/structure-schema.mjs";
-import { canonicalJson } from "../src/doc/manifest.mjs";
+import { canonicalJson, corpusFiles } from "../src/doc/manifest.mjs";
+import { scanChunks } from "../src/doc/chunks.mjs";
+import { sectionsWithIds } from "../src/doc/docops.mjs";
+import { parseUnitDocPhases } from "../../../scripts/unit-doc-phases.mjs";
 
 const CLI = new URL("../bin/agentic-workflow.mjs", import.meta.url).pathname;
 
@@ -230,5 +234,73 @@ describe("doc index CLI (S5)", () => {
     const res = run(["doc", "index", "--json"], { cwd: root });
     assert.equal(res.status, 0);
     assert.doesNotMatch(res.stdout, /^doc index:/m);
+  });
+
+  it("honours --out together with --json: the artifact is written and the document printed", () => {
+    const out = path.join(root, "derived", "both.json");
+    fs.rmSync(out, { force: true });
+    const res = run(["doc", "index", "--out", out, "--json"], { cwd: root });
+    assert.equal(res.status, 0, `stderr: ${res.stderr}`);
+    assert.equal(fs.existsSync(out), true, "--out must never be dropped with a success exit");
+    const printed = run(["doc", "index", "--json"], { cwd: root }).stdout;
+    assert.equal(fs.readFileSync(out, "utf8"), printed, "--out and --json carry the same canonical bytes");
+  });
+});
+
+describe("owner parity (S11)", () => {
+  it("carries the chunker's id for every tracked *.md — one section id per heading", { timeout: 600_000 }, () => {
+    const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+    const files = corpusFiles(ROOT);
+    assert.ok(files.length > 500, `the corpus shrunk: ${files.length} files`);
+    const drifted = [];
+    let sections = 0;
+    for (const relative of files) {
+      const content = fs.readFileSync(path.join(ROOT, relative), "utf8");
+      const own = new Set(sectionsWithIds(content, relative).map((s) => s.id));
+      for (const chunk of scanChunks(content, relative)) {
+        if (chunk.section === null) continue;
+        sections += 1;
+        if (!own.has(chunk.id)) drifted.push(`${relative}: ${chunk.id}`);
+      }
+    }
+    assert.ok(sections > 8000, `the corpus shrank: ${sections} sections`);
+    assert.deepEqual(drifted.slice(0, 5), [], `${drifted.length} chunk id(s) do not resolve through the index/read id scheme`);
+  });
+
+  it("maps the template's row shape: the executed-phase tick is state, never shape", () => {
+    const TEMPLATE_SHAPE = [
+      "---", "type: fix", "scope: small", "---", "",
+      "# fix/9-demo", "",
+      "## Tasks", "",
+      "- P1 — first deliverable (validator: `true` exits 0)",
+      "- [x] P2 — second deliverable (validator: `true` exits 0)",
+      "- P3 — third deliverable (validator: `true` exits 0)",
+      "",
+    ].join("\n");
+    const unit = buildDocIndex([{ path: "docs/fix/9-demo/SPEC.md", content: TEMPLATE_SHAPE }]).units[0];
+    assert.deepEqual(unit.phases, [
+      { id: "P1", status: "open" },
+      { id: "P2", status: "complete" },
+      { id: "P3", status: "open" },
+    ]);
+    assert.equal(unit.previous, null);
+    assert.equal(unit.current, "P1", "an open phase must never read as `current: null`");
+    assert.equal(unit.next, "P2");
+  });
+
+  it("agrees with the phase-contract owner on every in-tree unit doc", { timeout: 300_000 }, () => {
+    const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+    const index = buildDocIndex(
+      corpusFiles(ROOT).map((p) => ({ path: p, content: fs.readFileSync(path.join(ROOT, p), "utf8") })),
+    );
+    assert.ok(index.units.length > 20, `the unit corpus shrank: ${index.units.length}`);
+    const disagreed = [];
+    for (const unit of index.units) {
+      const text = fs.readFileSync(path.join(ROOT, unit.path), "utf8");
+      const owner = parseUnitDocPhases(text).phases.map((phase) => `P${phase.number}`);
+      const ours = unit.phases.map((phase) => phase.id);
+      if (owner.join(",") !== ours.join(",")) disagreed.push(`${unit.path}: owner=[${owner}] index=[${ours}]`);
+    }
+    assert.deepEqual(disagreed.slice(0, 5), [], `${disagreed.length} unit doc(s) disagree with the owner grammar`);
   });
 });

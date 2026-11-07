@@ -333,3 +333,37 @@ describe("retrieval branch unchanged (S8)", () => {
     assert.match(res.stderr, /--query requires a non-empty term/);
   });
 });
+
+describe("option grammar (S11)", () => {
+  it("refuses --out on read: it belongs to index, and a stray flag is never dropped", () => {
+    const file = fixture(UNIQUE_DOC);
+    const out = path.join(ROOT, "read-out.json");
+    const res = run(["doc", "read", "--file", file, "--out", out]);
+    assert.equal(res.status, 1, `stderr: ${res.stderr}`);
+    assert.match(res.stderr, /--out belongs to index/);
+    assert.equal(fs.existsSync(out), false);
+  });
+
+  it("refuses --out on edit and leaves the document untouched", () => {
+    const file = fixture(UNIQUE_DOC);
+    const out = path.join(ROOT, "edit-out.json");
+    const res = run([
+      "doc", "edit", "--file", file, "--section", "Objective",
+      "--replacement", "-", "--out", out,
+    ], { stdin: "## Objective\n\nnope\n" });
+    assert.equal(res.status, 1, `stderr: ${res.stderr}`);
+    assert.match(res.stderr, /--out belongs to index/);
+    assert.equal(fs.existsSync(out), false);
+    assert.equal(fs.readFileSync(file, "utf8"), UNIQUE_DOC);
+  });
+
+  it("prints exactly one `doc:` prefix on a selector refusal", () => {
+    const file = fixture(UNIQUE_DOC);
+    const res = run(["doc", "read", "--file", file, "--section", "Nonexistent"]);
+    assert.equal(res.status, 2);
+    assert.equal(
+      res.stderr,
+      'DOC REFUSAL — NO_MATCH\ndoc: no section matches --section "Nonexistent"\n',
+    );
+  });
+});
