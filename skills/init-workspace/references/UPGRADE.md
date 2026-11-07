@@ -23,7 +23,14 @@ lacks**. Ten ordered steps:
    row), the portable command-guard pack and detected platform adapter, the
    shipped path-protection `path-policy.json` seed and its `path-protection.md`
    doc page, or the Normalized
-   Repository State ledger (`docs/workflow/REPOSITORY_STATE.md`). This is the
+   Repository State ledger (`docs/workflow/REPOSITORY_STATE.md`). The project
+   charter is offered the same way (issue #435): a missing `## Project charter`
+   section in the guide, its two documentation-map rows, and a missing
+   `docs/workflow/VERIFICATION_CRITERIA.md` are proposed **additively** — the
+   identity slots are filled from repository evidence where it proves them and
+   asked where it does not (the identity layer stays blocking, never guessed),
+   domain items land as dated assumptions, and a project whose guide already
+   records its identity is never re-asked what it already answered. This is the
    diff-against-current-template contract; it is the only source of *what's
    new*. (A missing `docs/CAPABILITIES.md` is proposed by the same contract
    bootstrap runs — the six moves of `capability-inventory@1` in

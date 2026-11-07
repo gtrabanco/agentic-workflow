@@ -17,6 +17,18 @@
    question first and left untouched on a refusal. A declared format is
    rendered by `bun scripts/docs-generate.mjs`; the project's first unit's docs
    step cites the same command, so never hand-write a generated page.
+   **Write the charter answers where tier-0 reads reach them** (issue #435):
+   the identity layer fills the guide's `## Project charter` section verbatim —
+   decisions, policies and commands, never derivable-from-code description —
+   and the domain layer lands as dated assumptions there and in their natural
+   registered docs. The verification-criteria answers fill
+   `docs/workflow/VERIFICATION_CRITERIA.md` (copied from the template) with one
+   provenance value per criterion from the closed set `workflow-generic` /
+   `project-declared` / `stamped assumption (dated)` — a row without one is
+   written `unresolved — <question>` and listed with the residuals, never
+   guessed. Both documentation-map rows (charter, criteria catalogue) are
+   registered so design/plan provenance searches reach the answers without new
+   machinery; `audit-docs`' charter check (16) recomputes the coverage.
 5. **Verify the capability inventory before calling it seeded.** `docs/CAPABILITIES.md`
    is the one written file whose raw form is wrong in both directions — a
    placeholder claims a subsystem the project does not have, and a missing row
