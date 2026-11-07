@@ -98,6 +98,72 @@ const PI_PEER = "@earendil-works/pi-coding-agent";
 const PI_TUI = "@earendil-works/pi-tui";
 
 /**
+ * Every workspace package under the root manifest's `workspaces` patterns, by
+ * published name. The compat guard needs the directory a dependency lives in,
+ * and the workspace is the only place that answers it without a registry.
+ */
+export function workspacePackageDirs(root) {
+  const dirs = new Map();
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+  } catch {
+    return dirs;
+  }
+  for (const pattern of manifest.workspaces ?? []) {
+    if (!String(pattern).endsWith("/*")) continue;
+    const base = path.join(root, String(pattern).slice(0, -2));
+    let entries;
+    try {
+      entries = fs.readdirSync(base, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const dir = path.join(base, entry.name);
+      try {
+        const workspace = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
+        if (typeof workspace.name === "string") dirs.set(workspace.name, dir);
+      } catch {
+        // A directory without a manifest is not a workspace package.
+      }
+    }
+  }
+  return dirs;
+}
+
+/**
+ * The npm install specs for one compat leg: the pi peers at the leg's version,
+ * plus the package's own runtime dependencies, linked from their workspace
+ * directories.
+ *
+ * Both halves are load-bearing. Without the peers there is no floor to test;
+ * without the dependencies every `@gtrabanco/agentic-workflow/src/…` import in
+ * `src/` resolves to nothing and `tsc` reports the guard's own blind spot as
+ * five TS2307 — the failure this function exists to remove (issue #429). They
+ * are linked from the folder rather than installed from the registry because
+ * the source under test is this checkout, whose sibling packages may not be
+ * published yet: a published pin would fail for a version skew the guard is not
+ * asking about. A dependency with no workspace sibling comes back in `missing`
+ * for the caller to report — a dropped dependency turns back into the silent
+ * TS2307 above.
+ */
+export function piCompatInstalls(manifest, leg, workspaceDirByName) {
+  const specs = [`${PI_PEER}@${leg}`, `${PI_TUI}@${leg}`];
+  const missing = [];
+  for (const name of Object.keys(manifest.dependencies ?? {})) {
+    const dir = workspaceDirByName.get(name);
+    if (!dir) {
+      missing.push(name);
+      continue;
+    }
+    specs.push(`${name}@file:${dir}`);
+  }
+  return { specs, missing };
+}
+
+/**
  * One row per check the remote gate carried before it became manual-only. The
  * `mirrors` field names the former job so a reader can trace a step back to the
  * workflow it replaced; `release-workflows.test.mjs` pins the id set.
@@ -208,7 +274,10 @@ export const STEPS = [
  * that resolves dist at import time depend on it. `schema-node-compat` also
  * waits for `root-suite`: its tsc re-emits the dist the root suites read
  * through the spawned crate CLI, and a reader between two emissions imports a
- * half-written module. Every id must name a declared
+ * half-written module. `pi-compat-guard` links the package's workspace
+ * dependencies into its scratch project (issue #429), so it reads the schema's
+ * `dist/` types too and waits for the build that emits them. Every id must name
+ * a declared
  * step, the map is closed over STEPS, and the graph is acyclic — all pinned by
  * `scripts/local-gate.test.mjs`.
  */
@@ -222,7 +291,7 @@ export const DEPS = {
   "docs-generated-projection": [],
   "schema-node-compat": ["workspace-install", "schema-build", "root-suite"],
   "pi-node-compat": ["workspace-install"],
-  "pi-compat-guard": [],
+  "pi-compat-guard": ["schema-build"],
   "dependency-pin-gate": [],
   "dependency-advisories": [],
 };
@@ -443,7 +512,15 @@ function piCompatGuard({ root }) {
     );
     return 1;
   }
+  const dirs = workspacePackageDirs(root);
   for (const leg of [floor, "latest"]) {
+    const { specs, missing } = piCompatInstalls(manifest, leg, dirs);
+    if (missing.length > 0) {
+      process.stderr.write(
+        `local-gate: ${missing.join(", ")} declared as a dependency with no workspace sibling — \`src/\` would type-check against a project where it resolves to nothing\n`,
+      );
+      return 1;
+    }
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pi-compat-"));
     try {
       fs.cpSync(path.join(pkg, "src"), path.join(tmp, "src"), { recursive: true });
@@ -453,14 +530,7 @@ function piCompatGuard({ root }) {
       process.stdout.write(`    pi leg ${leg}: installing…\n`);
       const install = spawnSync(
         "npm",
-        [
-          "install",
-          "--ignore-scripts",
-          "--no-save",
-          "--no-package-lock",
-          `${PI_PEER}@${leg}`,
-          `${PI_TUI}@${leg}`,
-        ],
+        ["install", "--ignore-scripts", "--no-save", "--no-package-lock", ...specs],
         { cwd: tmp, stdio: "inherit", env: stepEnv() },
       );
       if (install.status !== 0) return install.status ?? 1;
