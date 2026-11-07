@@ -205,9 +205,18 @@ paths at the cut; copied verbatim, never written from memory.
 - **Ceremony consequence, stated rather than granted** — a `high` verdict owes
   `/review-change` then `/audit-pr` before merge
   (`skills/execute-phase/references/risk-tiers.md`). The owner's inline-application
-  protocol (S16) forbids running that machinery on this surgery, so neither ran
-  and neither is claimed; the owner decides between the ceremony and dropping
-  the linter route back to a reworded `374` changeset (the cut-tier route).
+  protocol (S16) forbids running that machinery on this surgery, and the owner's
+  decision of 2026-11-07 keeps the `high` verdict with the ceremony **waived for
+  this unit** (`## Log` `D2`): the obligation is recorded as outstanding-by-waiver,
+  never as satisfied, and the merge is the owner's call under feature 20.
+- **The recurrence, named** — the signal is the classifier's path table, not a
+  document (`scripts/risk-tiers.mjs:56-61`, `signal: "publish"` matches
+  `lint-changeset*`, `release*`, `publish*`, `npm-version-gate*`,
+  `changeset-create*`). Every future change touching `scripts/lint-changeset.mjs`
+  or its suite classifies `high` and owes the review pass again, by
+  construction; the table reads the path, never the diff, so a narrowing repair
+  pays it too. Escaping that is a policy change in the same table, a different
+  unit — never a silent exception here.
 
 ## Acceptance criteria
 
@@ -403,6 +412,7 @@ carries no table (the `never both` rule).
 - **P5** — 2026-11-07, A4 folded by reconciliation, never by rewriting the cut: the `## Risk tier` row keeps its cut-time `15` and now points here; `bun scripts/ceremony.mjs tier classify --base main` at the correction batch's close lists **24** changed paths (the two carrier files of the owner-authorized rename, this unit's own session fragment, `external-verify.md`, and the four gate-script paths this batch repairs) and returns `high` / `named-high-risk` over `scripts/lint-changeset.mjs` (signal `publish`) — the re-tier and the ceremony it owes are recorded in `## Risk tier`, not smoothed. No obligation row was added or dropped for the added paths.
 - **G9** — 2026-11-07, the correction batch's recheck of the same receipts: `bun scripts/lint-changeset.mjs` · exit 0 (whole directory, 35 files, `ok 374-pluggable-session-journal.md`); `bun scripts/local-gate.mjs --only pi-compat-guard` · exit 0 · 2 legs `tsc --noEmit clean`; `node --test scripts/local-gate.test.mjs` · exit 0 · 40 pass; `node --test scripts/lint-changeset.test.mjs` · exit 0 · 16 pass; `bun scripts/phase-lint.mjs docs/fix/429-log-session-command/SPEC.md` · exit 0 · `verdict PASS`; `bun test scripts/ledger-ownership.test.mjs` · exit 0 · 14 pass.
 - **G10** — 2026-11-07, the first full local gate this branch has ever completed: `bun scripts/local-gate.mjs` · **exit 0** · `PASS — 12 step(s) in 210s` (before this batch it died fail-fast at `pi-compat-guard`, step 1 of 12; the other 11 — including `crate-suite-bun`, `crate-suite-node`, `root-suite`, `schema-node-compat` — had never run). `schema-node-compat: exit 0 in 14s`, `756 pass 0 fail`.
+- **D2** — (D) Owner decision 2026-11-07, verbatim: "Manten high pero no abrá ceremonia por ahora, entiendo que será un fallo recurrente de documentación?". Decision: the `high` verdict stays as computed, and `/review-change` + `/audit-pr` are **waived for this unit only** — under feature 20 the merge is the owner's, and a merge authority may decline the ceremony it owes; the receipt records the waiver so no later audit reads the unit as reviewed. Scope note: this waives nothing for any other unit and amends no rule. Correction of the premise, recorded because it changes the answer: the recurrence is **not** a documentation flaw — it is the classifier's path table (`scripts/risk-tiers.mjs:56-61`, `signal: "publish"` matching `lint-changeset*`), so any future change to that file or its suite classifies `high` by construction and reads the path, never the diff. Changing it is a policy unit over that table and `risk-tiers.md`; it was not attempted here.
 
 ## Next
 
