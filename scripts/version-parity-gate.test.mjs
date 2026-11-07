@@ -192,6 +192,51 @@ test("content: no changeset intent keeps the historical rejection verbatim", () 
   assert.match(r.message, /Companion npm packages/);
 });
 
+// The coverage rule (D-440-5b): the changeset route may be taken through skill
+// entries — which declare the Pi package by shipping its content source — but then
+// they are also the PR's own statement of WHICH surfaces it changed. The round-2
+// recheck caught by hand the case this closes: a batch that edited three skills
+// while the intent file named one. A package-level entry still covers everything.
+const skillIntent = (names, file = ".changeset/the-change.md") => ({
+  file,
+  ok: true,
+  entries: names.map((name) => ({ pkg: name, kind: "skill", level: "minor" })),
+  error: null,
+});
+
+test("content: skill entries that miss a changed skill are refused (D-440-5b)", () => {
+  const r = contentWithIntent(
+    ["skills/product-audit/SKILL.md", "skills/audit-pr/SKILL.md", ".changeset/the-change.md"],
+    [skillIntent(["product-audit"])],
+  );
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "changeset-coverage");
+  assert.match(r.message, /audit-pr/, "the rejection names the skill the PR shipped without declaring");
+});
+
+test("content: skill entries covering every changed skill pass (D-440-5b)", () => {
+  const r = contentWithIntent(
+    ["skills/product-audit/SKILL.md", "skills/audit-pr/SKILL.md", ".changeset/the-change.md"],
+    [skillIntent(["audit-pr", "product-audit"])],
+  );
+  assert.equal(r.ok, true);
+  assert.equal(r.code, "changeset-intent");
+});
+
+test("content: coverage unions the entries across every intent file of the PR (D-440-5b)", () => {
+  const r = contentWithIntent(
+    ["skills/product-audit/SKILL.md", "skills/audit-pr/SKILL.md", ".changeset/a.md", ".changeset/b.md"],
+    [skillIntent(["product-audit"], ".changeset/a.md"), skillIntent(["audit-pr"], ".changeset/b.md")],
+  );
+  assert.equal(r.ok, true);
+});
+
+test("content: a package-level entry covers the skills without per-skill rows (D-440-5b)", () => {
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md", ".changeset/the-change.md"], [INTENT]);
+  assert.equal(r.ok, true);
+  assert.equal(r.code, "changeset-intent");
+});
+
 test("content: version bump with no triggered change passes without demanding a row", () => {
   const r = content(["AGENTS.md"], "0.20.0", 0);
   assert.equal(r.ok, true);

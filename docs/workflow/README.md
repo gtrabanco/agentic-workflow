@@ -29,6 +29,7 @@ Notion ("Agentic Workflow").
 | [TIER_COST.md](TIER_COST.md) | The measured acceptance for the risk tiers: the `tier-cost@1` row grammar, who writes a sample, what a row never carries, and the `insufficient-corpus` verdict the comparison declares instead of inventing a figure |
 | [PACKAGES.md](PACKAGES.md) | The three companion npm packages: the bun workspace and its single lockfile, the pin rules, the version-parity gate, changesets, and the publish channels |
 | [GATE_INVENTORY.md](GATE_INVENTORY.md) | The carrier inventory: every gate the workflow runs, whether it is script-pinned, a per-run CLI check or prose-only, how the ranking derives its tier, and where a stay-prose gate re-derives after a compaction |
+| [DOMAIN_SEPARATION.md](DOMAIN_SEPARATION.md) | Project-only: the product-vs-dogfooding safeguard in detail — the two domains, the classification test, both drift directions, the legitimate exceptions, and the domain-drift sweep this repo's product-audit runs carry |
 
 ## Data
 
@@ -58,7 +59,7 @@ must not have one.
 6. **Verification gate before every commit.** Type-check, tests, and build must
    pass (use the project's own gate commands).
 7. **Review at the right altitude.** The change (`review-change`), then the PR
-   (`audit-pr`), then — periodically — the whole product (`product-audit`).
+   (`audit-pr`), then — on a measured trigger — the whole product (`product-audit`).
 8. **Architecture changes are explicit.** Applicable architectural invariants
    are evidenced and preserved, or changed through an explicit decision — never
    inferred from a feature SPEC or implementation.
@@ -82,7 +83,7 @@ must not have one.
               └─ promote ──▶ /unit-lane (feature mode)
 
    audit-docs ───── docs ↔ roadmap ↔ code ↔ fix index coherence            (anytime)
-   product-audit ── product-wide health check → issues + roadmap proposals (periodic)
+   product-audit ── product-wide health check → issues + roadmap proposals (measured trigger)
 
    # ship-roadmap is retired (feature 61 P9); its deterministic routing lives
    # in `workflow-status` / `unit-lane`.
