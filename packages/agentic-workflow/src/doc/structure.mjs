@@ -65,9 +65,11 @@ function frontmatterLines(markdown) {
   return [];
 }
 
-/** The first root ATX section whose title is exactly `title`, as source text. */
-function sectionText(markdown, title) {
-  for (const section of sectionsWithIds(markdown, "")) {
+/** The section text of any section whose title is exactly `title` (first
+ *  match in document order, nested headings included — `##` children of a
+ *  root section are inside their parent's range). */
+function sectionText(markdown, sections, title) {
+  for (const section of sections) {
     if (section.title === title) return markdown.slice(section.start, section.end);
   }
   return null;
@@ -101,8 +103,8 @@ function phaseMapping(phases) {
 
 /** The bullet lines of a unit doc's dependencies section (verbatim bodies,
  *  marker stripped). Both spellings the repo's unit docs use are accepted. */
-function parseDependencies(markdown) {
-  const text = sectionText(markdown, "Dependencies") ?? sectionText(markdown, "Depends on");
+function parseDependencies(markdown, sections) {
+  const text = sectionText(markdown, sections, "Dependencies") ?? sectionText(markdown, sections, "Depends on");
   if (text === null) return [];
   const out = [];
   for (const line of text.split("\n").slice(1)) {
@@ -112,25 +114,28 @@ function parseDependencies(markdown) {
   return out;
 }
 
-/** One corpus file's structure row. */
+/** One corpus file's structure row. The document is parsed once — the same
+ *  `sectionsWithIds` pass feeds the range rows, the phase section and the
+ *  dependencies section. */
 export function scanDocFile(path, content) {
+  const sections = sectionsWithIds(content, path);
   const meta = parseFrontmatter(frontmatterLines(content));
   const kind = /(^|\/)SKILL\.md$/.test(path) ? "skill" : "doc";
-  const sections = sectionsWithIds(content, path).map((s) => ({
+  const rows = sections.map((s) => ({
     id: s.id,
     title: s.title,
     depth: s.depth,
     lines: [s.lines[0], s.lines[1]],
   }));
-  const file = { path, kind, frontmatter: meta, triggers: kind === "skill" ? extractTriggers(meta) : [], sections };
+  const file = { path, kind, frontmatter: meta, triggers: kind === "skill" ? extractTriggers(meta) : [], sections: rows };
   if (UNIT_DOC_TYPES.includes(meta.type)) {
-    const phases = parsePhases(sectionText(content, "Tasks"));
+    const phases = parsePhases(sectionText(content, sections, "Tasks"));
     file.unit = {
       path,
       type: meta.type,
       phases,
       ...phaseMapping(phases),
-      dependencies: parseDependencies(content),
+      dependencies: parseDependencies(content, sections),
     };
   }
   return file;
