@@ -56,6 +56,10 @@ Receipt (the greps/reads run, their hits):
 > mechanical classification of each row's own first cited source (repository /
 > version-pinned doc / owner answer / model memory). No claim, source or certainty
 > was changed, and no new evidence is asserted — re-derive any cell from the row.
+>
+> Corrected 2026-11-07 by `docs/fix/432-model-memory-tier-0` (F1): the `gh` reads here
+> are forge reads of the owner's issue text, so they are `owner answer`, not
+> `repository` — the migration's fallback mislabelled them.
 
 | id | claim | source | provenance | certainty |
 |---|---|---|---|---|
@@ -74,7 +78,7 @@ Receipt (the greps/reads run, their hits):
 | INV-013 | A standing rule forbids `S1`/`S2` labels in SPEC/PLAN/TASKS while #308 mandates `S#` as requirement ids — the two need an explicit vocabulary split, not a silent overlap | `AGENTS.md` ("Phases are P1, P2, …"), `skills/unit-lane/references/PLAN.md` checklist; `#308` §Summary | repository | confirmed |
 | INV-014 | The owner already ruled once that a published surface and the machine must not diverge in the permissive direction ("required since #305", not "tolerated extra") — the precedent behind Q1 | `docs/features/77-promise-coherence-guard/decisions.md` D-77-1 | repository | confirmed |
 | INV-015 | Closed units are never migrated, so whatever ships must keep old-shape docs readable by the machine indefinitely | `#308` §Non-goals + §Scope 4 (consequence: dual-shape reading) | owner answer | inferred |
-| INV-016 | Both named dependencies are closed and merged at this branch's base (#303's four-stage references, #305's promise-coherence guard) | `gh issue view 303/305` → CLOSED; `git log --oneline -1` = `01151e6b` | repository | confirmed |
+| INV-016 | Both named dependencies are closed and merged at this branch's base (#303's four-stage references, #305's promise-coherence guard) | `gh issue view 303/305` → CLOSED; `git log --oneline -1` = `01151e6b` | owner answer | confirmed |
 | INV-017 | The golden fixture is a committed read-only corpus (`toy-spec.md`, `toy-plan.md`, `expected/`) with an executable suite, so the migration corpus has a home beside it | `ls scripts/fixtures/golden-fixture/`; `scripts/golden-fixture.test.mjs` | repository | confirmed |
 | INV-018 | An M/L unit freezes its planning ledgers as `planning-evidence.md` / `planning-obligations.md` in the unit folder, never both homes | `skills/unit-lane/references/PLAN.md:153-160` | repository | confirmed |
 | INV-019 | `--from-issue <n>` on a tracked issue with no folder is the router's own printed form, and the folder carries the issue number | `scripts/unit-route.mjs:33` (`plan-from-issue`); `#308` has no folder yet | repository | confirmed |

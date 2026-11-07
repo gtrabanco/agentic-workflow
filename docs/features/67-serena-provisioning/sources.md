@@ -10,14 +10,20 @@ blocking, `assumption` → cheap to change, recorded in `## Assumptions` of
 
 > Shape migrated 2026-11-07 to `DESIGN.md` § Provenance: the `provenance` column is a
 > mechanical classification of each row's own first cited source (repository /
-> version-pinned doc / owner answer / model memory). No claim, source or certainty
-> was changed, and no new evidence is asserted — re-derive any cell from the row.
+> version-pinned doc / owner answer / model memory). No claim or source text was
+> changed, and no new evidence is asserted — re-derive any cell from the row.
+>
+> Corrected 2026-11-07 by `docs/fix/432-model-memory-tier-0` (F1): the migration's
+> fallback sent anything that was not obviously a document to `repository`. A row
+> citing the machine, a live service or a registry page now names the kind its own
+> citation is, and a citation that records no observed version sits at `inferred`
+> under the § Provenance ceiling.
 
 | id | claim | source | provenance | certainty | tier | cost |
 |---|---|---|---|---|---|---|
 | INV-001 | Issue #219 asks for two delivery paths: a `@bacnh85/pi-serena` dependency of `@gtrabanco/pi-agentic-workflow`, and a consented `init-workspace` install step (`uv`/`uvx`, MCP registration) | issue #219 body (forge, read 2026-10-21) | owner answer | confirmed | 0·provenance | settles (the objective's scope; wording of the install command goes through INV-005/006) |
 | INV-002 | pi installs a package's `dependencies` but activates only the resources its **own** `pi` manifest declares; another Pi package used as a dependency is referenced through its `node_modules` resource paths | `docs/packages.md:76-92` (local pi docs) | repository | confirmed | 0·provenance | settles (narrows Q1 to the path-form choice) |
-| INV-003 | `@bacnh85/pi-serena@0.10.0` is a Pi **extension** package (`pi.extensions: ["./extensions/index.ts"]`) exposing 22 `serena_*` tools + `/serena-dashboard`, `/serena-restart`; peers `typebox` and `pi-coding-agent`, both host-supplied (`packages.md:80-86`) | `registry.npmjs.org/@bacnh85/pi-serena/latest` + `pi.dev/packages/@bacnh85/pi-serena` (fetched 2026-10-21) | repository | confirmed | 1·research | settles (no MCP registration is needed on the pi path — pi-serena is an extension, and its README says it "avoids configuring Pi as an MCP client") |
+| INV-003 | `@bacnh85/pi-serena@0.10.0` is a Pi **extension** package (`pi.extensions: ["./extensions/index.ts"]`) exposing 22 `serena_*` tools + `/serena-dashboard`, `/serena-restart`; peers `typebox` and `pi-coding-agent`, both host-supplied (`packages.md:80-86`) | `registry.npmjs.org/@bacnh85/pi-serena/latest` + `pi.dev/packages/@bacnh85/pi-serena` (fetched 2026-10-21) | version-pinned doc | inferred (registry `latest`; the project pins no version — see F1) | 1·research | settles (no MCP registration is needed on the pi path — pi-serena is an extension, and its README says it "avoids configuring Pi as an MCP client") |
 | INV-004 | Which activation shape the pi path uses — decided by the owner: dependency + a second `pi.extensions` entry through `node_modules` (D1) | `docs/packages.md:90`; `grep -rn node_modules packages/pi-agentic-workflow/package.json` → none (the gap the decision fills) | repository | confirmed (D1) | 2·ask → settled | settles (D1: option A, exact-pinned, scratch-install verified; plus the scheduled pin-watch action) |
 | INV-005 | pi-serena cannot run without an installed Serena: it looks for `uv tool dir`'s `serena-agent/bin/python` (or `SERENA_PYTHON`) and its error prescribes `uv tool install -p 3.13 serena-agent && serena init` | `@bacnh85/pi-serena@0.10.0` tarball `extensions/worker.ts:588-602, 698-707` (fetched 2026-10-21) | repository | confirmed | 1·research | settles (the install command is a verified fact, not a preference: an ephemeral `uvx` env would not be discovered) |
 | INV-006 | Serena's canonical install is `uv tool install -p 3.13 serena-agent` (+ `serena init`); canonical run `serena start-mcp-server`; the `uvx --from serena serena start-mcp-server` form does not appear in Serena's docs | serena README §Quick Start, `docs/02-usage/010_installation.md`, `020_running.md` (fetched 2026-10-21) | repository | confirmed | 1·research | assumption (AC2/AC3 wording follows the verified command; the issue's "uvx preferred" wording is corrected with a dated assumption, correctable by the owner) |
@@ -43,19 +49,25 @@ verdict; the plan's ask backlog is empty, see `BRIEF.md`).
 
 > Shape migrated 2026-11-07 to `DESIGN.md` § Provenance: the `provenance` column is a
 > mechanical classification of each row's own first cited source (repository /
-> version-pinned doc / owner answer / model memory). No claim, source or certainty
-> was changed, and no new evidence is asserted — re-derive any cell from the row.
+> version-pinned doc / owner answer / model memory). No claim or source text was
+> changed, and no new evidence is asserted — re-derive any cell from the row.
+>
+> Corrected 2026-11-07 by `docs/fix/432-model-memory-tier-0` (F1): the migration's
+> fallback sent anything that was not obviously a document to `repository`. A row
+> citing the machine, a live service or a registry page now names the kind its own
+> citation is, and a citation that records no observed version sits at `inferred`
+> under the § Provenance ceiling.
 
 | id | claim | source | provenance | certainty | tier | cost |
 |---|---|---|---|---|---|---|
 | CLAIM-001 | Exact pins are the package's own rule, and a test already exists that fails a pin whose registry target published a newer version | `AGENTS.md` → Packages ("Dependency versions are pinned"); `scripts/version-parity-gate.mjs:18-31`; `scripts/version-parity-gate.test.mjs` | repository | confirmed | 0·provenance | settles (P1 pins, P6 re-runs the gate) |
-| CLAIM-002 | The activation mechanism can be verified without a pi session: `pi install ./local/path` is a documented source form and `pi list` reports installed resources | `pi install --help` (Examples: `pi install ./local/path`); pi `docs/packages.md` §Install and manage packages | repository | confirmed | 0·provenance | settles (P2's scratch check) |
+| CLAIM-002 | The activation mechanism can be verified without a pi session: `pi install ./local/path` is a documented source form and `pi list` reports installed resources | `pi install --help` (Examples: `pi install ./local/path`); pi `docs/packages.md` §Install and manage packages | version-pinned doc | confirmed | 0·provenance | settles (P2's scratch check) |
 | CLAIM-003 | The pin watch can reuse the gate's exported evaluator with an injected fetcher, so its test needs no network | `scripts/version-parity-gate.mjs:264` (`export function evaluatePins({ packageName, dependencies, fetchLatest })`) | repository | confirmed | 0·provenance | settles (P3) |
 | CLAIM-004 | No prior decision forbids a scheduled workflow or an action-opened issue; the only adjacent note says **skill execution** never runs `gh issue create` | `docs/features/37-phase-lint-script/decisions.md:217`; sweep: `grep -rn "schedule\|cron\|gh issue create" .github/ AGENTS.md docs/*/*/decisions.md` → no rule | repository | confirmed | 0·provenance | settles (no `contradicts` hit) |
 | CLAIM-005 | The watch may only *report*: dependency upgrades stay deliberate human `fix(deps)` PRs | `AGENTS.md` → Packages ("Dependency upgrades are deliberate `fix(deps)` PRs on a cadence (not side effects of other work)") | repository | confirmed | 0·provenance | settles (the action opens an issue, never a bump) |
 | CLAIM-006 | PR-time pin drift already fails in `root-suite.yml`; the scheduled action is an early warning, complementary and never a second gate | `.github/workflows/root-suite.yml:139-153` | repository | confirmed | 0·provenance | settles (P3 outputs an issue, not a PR verdict) |
 | CLAIM-007 | A project-keyed readiness latch fits the existing state store: read-merge-write, soft on failure, extra keys preserved | `packages/pi-agentic-workflow/src/routing/state.ts:16-93` (hint latch), `:100-157` (profile state, same file, second key) | repository | confirmed | 0·provenance | settles (P5) |
-| CLAIM-008 | The install step can verify the tool with a stable reader command: `serena -V` prints `Serena 1.7.0`, `serena init` creates the global config, `serena start-mcp-server` is the run command | local run `serena --help` / `serena --version` (2026-10-21); serena `docs/02-usage/010_installation.md`, `020_running.md` | repository | confirmed | 0·provenance | settles (P4's health check wording) |
+| CLAIM-008 | The install step can verify the tool with a stable reader command: `serena -V` prints `Serena 1.7.0`, `serena init` creates the global config, `serena start-mcp-server` is the run command | local run `serena --help` / `serena --version` (2026-10-21); serena `docs/02-usage/010_installation.md`, `020_running.md` | version-pinned doc | confirmed | 0·provenance | settles (P4's health check wording) |
 | CLAIM-009 | Editing `init-workspace` requires its own skill version bump + CHANGELOG row via `bump-skill`, and it is **not** in the golden-fixture smoke-test list | `AGENTS.md` → "Version every change", "Smoke-test wording changes to executor-path skills" (list: execute-phase, plan-feature*, design-feature, review-*) | repository | confirmed | 0·provenance | settles (P4 carries the bump) |
 | CLAIM-010 | Any change under `skills/**` or `packages/pi-agentic-workflow/**` must bump the Pi package version and add its CHANGELOG companion row in the same PR | `AGENTS.md` → Packages (feature 75 / #292); `scripts/version-parity-gate.mjs:18-31` | repository | confirmed | 0·provenance | settles (P1 carries the bump; P6 re-runs the gate) |
 | CLAIM-011 | MCP registration writes the detected platform's own config shape (`claude mcp add` / `.mcp.json` / `~/.pi/agent/mcp.json`), never a cross-platform one | `skills/init-workspace/SKILL.md:84-95` (platform routes); serena `docs/02-usage/030_clients.md`; pi `docs/mcp.md` §Configure servers | repository | confirmed | 0·provenance | settles (P4; scope of platforms recorded as assumption A2) |
