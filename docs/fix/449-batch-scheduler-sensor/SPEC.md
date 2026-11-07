@@ -222,19 +222,21 @@ authoritative step list for this unit.
 - **E12** — 2026-11-07, P5 determinism/differential receipts: scratch clone, two live runs with `--no-state` byte-identical (`cmp` clean); with state, run 2 marks 28 claimed issues (53 lane rows); differential of the touched shared-parser suites at the base archive shows the identical fail set (the 3 forge-timeout tests in `workflow-status-sensor.test.mjs` fail at `b8b1d814` too — environmental, not a regression).
 - **E13** — 2026-11-07, P8 second gate pass after two more findings the run surfaced: (a) the guide's pinned machine-region count moved 111 → 115 with the five new inventory rows — `SKILL_CONTEXT_BUDGETS.json` re-pinned at the measured value (exact pin, sources entry added, PE-014's manifest mechanics); (b) `prose-gate-inventory` refused the four undeclared surface ids — `docs/workflow/GATE_INVENTORY.md`'s `normative-surface-grammar` row now claims them. Then: `bun scripts/local-gate.mjs` · exit 0 · **PASS — 12/12 steps**.
 - **E14** — 2026-11-07, the journal-fragment repair (out-of-unit, disclosed): `git mv` of the `…-manual.md` fragment to `…-narrative-local.md` per fix-432's recorded Next line · `2e3e81e5`; `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` · exit 0 · 11 pass / 0 fail; the gate's three crate/root-suite steps green since.
-- **P8** — 2026-11-07, obligations ledger closed (all 20 rows verified below), pi package README catalogue row added (AC15), GATE_INVENTORY claim + budget re-pin, session journal fragment written · this commit.
+- **P8** — 2026-11-07, obligations ledger closed (all 20 rows verified below), pi package README catalogue row added (AC15), GATE_INVENTORY claim + budget re-pin, session journal fragment written · `92e54baa`.
+- **P9** — 2026-11-07, branch pushed (pre-push offline gate PASS; one transient `schema-node-compat` red on the first hook run, green on re-run and standalone) and PR #454 opened with `Closes #449` · PR [454](https://github.com/gtrabanco/agentic-workflow/pull/454).
 
 ## Next
 
 External verification by the owner (§8 of the application workflow — the diff
-is the handoff; nothing is self-approved). Then the owner's usual close:
-`review-change`/`audit-pr` on the PR closing #449.
+is the handoff; nothing is self-approved) on
+[PR #454](https://github.com/gtrabanco/agentic-workflow/pull/454).
 
 ## References
 
 - Issue #449 (this unit), #442 (issue-relationships contract — dependency
   semantics), #444 (decision substrate — optional signal layer over this
   deterministic half), #295 (panel consumer).
+- PR #454 — <https://github.com/gtrabanco/agentic-workflow/pull/454>.
 - `docs/workflow/ISSUE_WORKFLOW.md` §Relationships (owner of the dependency
   semantics the sensor reads).
 
