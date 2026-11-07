@@ -1,6 +1,8 @@
 // hooks-config.test.mjs — discovery, precedence, trust gate, alias mapping and
 // the refusal grammar of the seam-hooks config loader (unit 413, O1/O2/O5/O10).
 import { join } from "node:path";
+import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -59,6 +61,19 @@ test("O2: an untrusted project's hook file is never read", () => {
   });
   assert.deepEqual(reads, [paths.global]);
   assert.deepEqual(loaded.entries, []);
+});
+
+test("the real-filesystem path (no injected reader) maps a missing file to a clean no-op — the ESM contract: no `require`, so node resolves it identically to bun", () => {
+  const dir = mkdtempSync(join(tmpdir(), "hooks-config-fs-"));
+  try {
+    mkdirSync(join(dir, ".pi"), { recursive: true });
+    const loaded = loadHooksConfig({ agentDir: join(dir, "agent"), cwd: dir, projectTrusted: true });
+    assert.equal(loaded.ok, true);
+    assert.deepEqual(loaded.problems, []);
+    assert.deepEqual(loaded.entries, []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("O5: broken JSON is a problem naming the file, never a throw", () => {
