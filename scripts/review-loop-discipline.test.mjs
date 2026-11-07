@@ -544,12 +544,13 @@ assert.match(classify, /D10[\s\S]*verdict[\s\S]*unchanged/i);
 // IS-3: report-note definition cited to LEDGERS.md §3.
 assert.match(classify, /LEDGERS.md.*§3/);
 
-// IS-2: audit-docs report contract — 15 checks, no MEDIUM. The count follows
+// IS-2: audit-docs report contract — 16 checks, no MEDIUM. The count follows
 // the skill (audit-docs owns it, per the citation check below): check 15 moved
-// the header with it, exactly as feature 32 P3 moved it 13 → 14.
+// the header with it, exactly as feature 32 P3 moved it 13 → 14, and issue
+// #435's charter-coverage check added 16 the same way.
 const auditDocs = read("skills/audit-docs/SKILL.md");
-assert.match(auditDocs, /Check \(1-15\)/);
-assert.match(auditDocs, /Checks run: <n>\/15/);
+assert.match(auditDocs, /Check \(1-16\)/);
+assert.match(auditDocs, /Checks run: <n>\/16/);
 assert.doesNotMatch(auditDocs, /MEDIUM/);
 
 // IS-2: audit-docs citation in product-audit / AUDIT_DIMENSIONS.md — audit-docs owns the count.
