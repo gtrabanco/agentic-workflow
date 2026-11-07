@@ -2,7 +2,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**13 user-facing skills** (one menu entry each) + the internal steps
+**14 user-facing skills** (one menu entry each) + the internal steps
 composed for you: `pre-execution-review` (the planning-ledger shapes and
 ownership, ledger-only after feature 61), the `review-change` findings engine
 `review-implementation`, the `phase-contract` lint contract, the
@@ -11,10 +11,11 @@ internal review pack: `review-code`, `review-security`, `review-verify`,
 `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
 `review-seo`. Additionally, **one metadata-internal** contract not discoverable
 by the `skills` CLI (`orchestration-envelope`; it carries `metadata.internal: true`
-which the CLI respects to exclude from `npx skills add` discovery). The 13
+which the CLI respects to exclude from `npx skills add` discovery). The 14
 user-facing skills cover setup, repository-state discovery/resolution, the
 adaptive unit lane, execution, review, audit, finding folds, docs generation,
-issue triage, session logging, and workflow status. The former fixed pipeline
+issue triage, session logging, workflow status, and the batch scheduler. The
+former fixed pipeline
 (`design-feature` → `review-spec` → `plan-feature` → `review-plan`) and the
 autopilot role (`ship-roadmap`) are retired (feature 61): their work lives in
 `unit-lane`'s catalog steps and the companion pi package's deterministic
@@ -145,6 +146,7 @@ roadmap registration are the lane's `plan` catalog step, reached from
 |---|---|---|
 | `log-session` | Write a structured entry — summary, files, decisions + *why*, next step — appended to `docs/LOGS.md`, or written as one fragment under `.agentic-workflow/journal/` when the project opted in to the fragment carrier (#405) — so a cold reader (or the next session) resumes without re-reading git. This is the **git-traveling team journal** half of the recorded split (feature 66 D2): Engram's `mem_session_summary` and the lane's `unit/<NN-slug>/doc` topic are local decision/gotcha recall keyed by unit id, and neither mirrors the other. Manual + rich; `model: sonnet` (cheap). Complemented by free, opt-in `template/.claude/` hooks that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start | `/clear` (session captured) or the resume command in the entry's **Next** line |
 | `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), the roadmap's five-state machine, what is startable now and in which build order, open PRs + audit state, pending fixes and findings awaiting triage, the mandatory review proven from its durable `REVIEW-RAN` mark and never from a ledger that merely exists — and emits it as one fixed JSON machine envelope. The piece an external driver calls between steps. Never edits anything | the driver's next invocation (it never hands off to another skill itself) |
+| `batch-scheduler` | **Read-only planner for parallel orchestration** (issue #449): reads the live work graph — native `blocked-by` (authoritative) + the prose `## Dependencies` soft rows, each issue's touched surfaces from its `Where`/`In scope` sections, the roadmap + unit docs in flight — and emits the fixed `batch-plan@1` machine envelope: batch 1 is the runnable-now set, batch N+1 the next, one lane per surface (same-surface issues serialize, disjoint surfaces run disjoint), per-issue lane/worktree/`/unit-lane --from-issue <N>` command/reason, measured size hints (facts for the lane-count decision, never a policy), and unresolvable spots (cyclic waits, orphaned soft deps, prose/native mismatches) as findings — never silent omissions. Persists claimed lanes to `.agentic-workflow/batches.json` (untracked) so a re-run recognizes what launched; `--no-state` reads pure. Plans and reports — it never spawns sessions, creates worktrees, or launches units. Works with no decision model configured (#444's optional signal layer rides on top) | its per-issue `command` values — the user or the #295 panel picks how many lanes to launch |
 
 ## Repo maintenance (specific to the agentic-workflow repo)
 
@@ -162,6 +164,7 @@ with no arguments uses the default stated here.
 | Skill | Invocation | Arguments & flags |
 |---|---|---|
 | `audit-docs` | `/audit-docs [--fix]` | No args: report-only, findings ranked by severity. `--fix`: additionally applies the **low-risk** fixes — docs are never rewritten without it (or an explicit user go-ahead). |
+| `batch-scheduler` | `/batch-scheduler [--json-only] [--issues-file <json>] [--no-state] [--remote <url>]` | Default: human summary + the machine envelope, and the claimed-lane state persisted to `.agentic-workflow/batches.json`. `--json-only` → envelope only (driver/panel mode). `--issues-file` → run from a cached issue export instead of the forge (a cache without native relations fetches them, or degrades declared). `--no-state` → pure read. `--remote <url>` → name the forge when `origin` is not a GitHub URL (a scratch clone). |
 | `audit-pr` | `/audit-pr [pr-number]` | Defaults to the current branch's PR. A number targets another PR. |
 | `discover-repository-state` | `/discover-repository-state` | Reads repository evidence and writes a frozen Normalized Repository State; contradictions route to `/resolve-repository-state`. |
 | `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] [--max-attempts N] \| [--force]` | Target only → execute every remaining phase and close the unit. Explicit `P<k>` → execute exactly that phase. `--max-attempts N` bounds phase repair attempts (default 3). `--force` is the recorded user-only dependency/status override. |
