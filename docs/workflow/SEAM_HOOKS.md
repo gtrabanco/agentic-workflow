@@ -51,10 +51,10 @@ Both gates are proven off-by-default by the package's test suite.
   the silence. A command that cannot start at all is a block, never a crash.
   The message quotes the declared requirement as declared, its own quoting
   included.
-- **Degradation is declared** — a broken hook config announces itself once and
-  then behaves as a no-op; an `enabled` declaration with no consent entry says
-  it is inert and why. It never passes silently and never throws into the
-  session.
+- **Degradation is declared** — a broken hook config announces itself once per
+  project session (the next session hears it again) and then behaves as a
+  no-op; an `enabled` declaration with no consent entry says it is inert and
+  why. It never passes silently and never throws into the session.
 - **What it does not cover** — the matcher reads the agent's own bash command.
   A git call made from inside a script, behind `bash -c`, or by another tool is
   not intercepted; the declaration is a guardrail, not an enforcement

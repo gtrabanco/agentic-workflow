@@ -118,3 +118,36 @@ into the branch and resolve the conflicts, push the docs half. Evidence:
   `roadmap-settle` PASS 0 violations; `unit-route --triage` exit 0; the offline
   gate's three judging steps PASS. No mutating path touched the live tree; the
   fixture trees stayed under `mkdtemp`.
+
+---
+
+2026-11-08 · delta receipt — corrections landed after the first receipt
+(head `4f48ae7`): B1–B3 re-verified plus the delta diff only, per the delta
+verdict rule. Read-only: no commit, no push, no branch, no forge mutation; the
+only writes this run made inside the tree are the gitignored `node_modules`
+install (`bun install` — the worktree carried no deps) and the gitignored
+`dist/` + skill-bundle staging that the declared validator `bun run test`
+performs by design. Every hook probe ran in `mktemp -d` scratch with its own
+scratch consent store and was removed; no mutating path touched the live tree
+(`git status` clean after the run).
+
+```text
+EXTERNAL VERIFY — base: 4f48ae7db95b33a58bdbb5f89c98a0fc3fb5a77e (delta over the first receipt's head) · head: 60ff9659152766673a6b5e01767dea0b17c54954
+Blockers: 0 — B1 re-run: consented project declaring `missing-tool-xyz run lint` through `runSeam("pre:commit")` (production path — no `spawnHook` injected) → `{"verdict":"block","blocks":["…could not start (spawn missing-tool-xyz ENOENT)…"],"ran":[{…,"exitCode":null}]}` exit 0 under node AND bun, no uncaught `'error'` event; the EACCES form (mode-644 `./.pi/scripts/check.sh`) → `block … could not start (spawn ./.pi/scripts/check.sh EACCES)`. B2 re-run: failing `session:start`/`session:end` hooks through `createHooksWiring({agentDir}).onSessionStart/onSessionShutdown` → one `warning` notice per seam, each the full teaching message — nothing swallowed. B3 re-run: matcher matrix — `git commit`, `git -C . commit`, `git -C /abs/path commit`, `git -c user.email=a@b commit`, `git --git-dir=.git commit`, `GIT_DIR=.git git commit`, `git --no-pager -C . commit`, `git --work-tree=. commit`, `git 'commit' -m x`, `git commit --dry-run` all BLOCK; `git status`, `git log`, `git add -A`, `echo git commit` pass; `git -C . push`/`git -c k=v push`/`GIT_DIR=.git git push` BLOCK against a declared `pre:push`; real-git sandbox proof: `git -C . commit -qm bypass` BLOCKED and `git log` shows zero commits — the bypass no longer lands. Delta diff re-verified: F4 — 128 KiB stdout hook exiting 0 → `verdict: allow, exitCode: 0, truncated: true`, 32 KiB + `[truncated]` marker kept, no kill; F5 — enabled group without consent → info notice naming `seam-hooks-consent.json`, `ran: 0`; F8/F13 — `unitFacts` skips frontmatter before the title scan, 413's projection row reads `fix/413-pi-seam-hooks`, `bun scripts/docs-generate.test.mjs` 22 pass / 0 fail.
+Advisories: 2 — DA1 packages/pi-agentic-workflow/src/extension/hooks-wiring.ts:93-97 + src/extension/index.ts:299: the announce latch is a Set in the wiring closure, and `createHooksWiring` runs once per extension load while index.ts documents that "Pi can hand a new session to the same extension" — so the declared "announces **once** per project session" (README.md:458, hooks-wiring.ts:20) is really once per extension instance: a later session in the same process will not re-see a broken-config or unconsented notice until pi restarts. Quieter direction, prose drift only; smallest action: reword the prose or reset the latch per session. DA2 packages/pi-agentic-workflow/src/extension/hooks-wiring.ts:132-141: `--exec-path` sits in `GIT_VALUE_OPTIONS` but git also accepts it value-less (`git --exec-path` prints the path), so `git --exec-path commit` would mis-skip — not a realistic invocation and it can only cause a miss, never a false block; note only.
+Sibling sweep: clean — no surviving mention of the old `^git(?:\s+-{1,2}[\w-]+)*` regex, the removed `degradationAnnouncedFor` latch, or the old `argv.join(" ")` teaching message outside historical carriers (LOGS.md, the first receipt); `<agentDir>` now resolves in `skills/init-workspace/SKILL.md:150` and `packages/pi-agentic-workflow/README.md:387`; README's event table, execution contract and SEAM_HOOKS.md state the corrected truths (spawn failure = block, `session:*` report rather than swallow, cap truncates without deciding the verdict, `bash -c`/script residual named in "What it does not cover"); SPEC `## Findings` carries the routed rows; the projection's 413 cell no longer quotes the template comment. Surviving residue is exactly DA1's prose drift.
+Completeness: B1–B3 resolved and re-proven here; the delta's new validators re-run green (`bun run test` in packages/pi-agentic-workflow → 606 pass / 0 fail across 52 files; `bun scripts/docs-generate.mjs --check` → 0 missing / 0 stale / 0 orphaned, exit 0; `bun test scripts/docs-generate.test.mjs` → 22/0; `bun scripts/skill-lint.mjs` → 0 findings in 92 files). Main-side #433 commits arrived via merge `d821c3b4` and are out of this unit's delta. Open ids: none.
+Spot check: `bun run test` in packages/pi-agentic-workflow → match (reported 606 pass / 0 fail at the merged head; observed 606 pass / 0 fail, 52 files)
+Verdict: VERIFIED
+```
+
+## Search receipt — /aw-local-apply "fix the findings" · 2026-11-08
+
+Intent bound to the latest `EXTERNAL VERIFY` block for this unit (the delta
+receipt above, head `60ff9659`): verdict `VERIFIED`, blockers `0`. The
+correction batch's row set is empty — nothing to apply. Advisories DA1
+(announce latch is per extension instance, prose says "once per project
+session") and DA2 (`--exec-path` value-less form in `GIT_VALUE_OPTIONS`) are
+open for the owner's decision; per the correction bounds a new advisory never
+earns a cycle on its own. The delta receipt above is uncommitted at this head
+— the owner folds it in with the next docs commit.

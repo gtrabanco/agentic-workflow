@@ -103,8 +103,11 @@ test("O5: a broken hook config announces the degradation once at session start a
     await wiring.onSessionStart(ctx);
     assert.equal(notices.length, 1);
     assert.ok(notices[0].includes("hooks.json"));
-    await wiring.onSessionStart(ctx); // latched
-    assert.equal(notices.length, 1);
+    // O25 supersedes this assertion where a second onSessionStart is a NEW
+    // project session (its own test below); within ONE session the latch
+    // still holds, which is what the seam runs below prove.
+    await wiring.onSessionStart(ctx);
+    assert.equal(notices.length, 2); // a new project session re-announces (O25)
     const decision = await wiring.onToolCall(bashEvent("git commit -m x"), ctx);
     assert.equal(decision, undefined); // declared no-op, not a block
   } finally {
@@ -332,7 +335,9 @@ test("O26 (DA2): a value-less legal git option never consumes a subcommand — `
     }
     // The value-less form prints the exec path and exits without running a
     // subcommand (proven against the local git in the unit's evidence), so
-    // there is no commit to intercept — quiet either way.
+    // there is no commit to intercept — quiet either way. The bare form is
+    // quiet because nothing follows it; the form followed by a path takes the
+    // path as the subcommand slot but git still exits before any commit.
     const quiet = ["git --exec-path", "git --exec-path /custom/libexec/git-core commit -m x"];
     for (const command of quiet) {
       runs.length = 0;
