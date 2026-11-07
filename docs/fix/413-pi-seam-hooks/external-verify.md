@@ -55,3 +55,40 @@ Every claim below was reconstructed independently in fresh `mktemp -d` scratch
 | A4 | owner decision | `done · #456` before merge matches the #429 precedent; revert only if the pre-merge convention is what you want |
 | A7 | optional rename | test title says "git sandbox", the fixture is a tmpdir; behaviour is covered |
 | A9 | fold into B1/B2 | injected `readFile` not threaded to the consent read; test hygiene only |
+
+## Correction batch — 2026-11-08 (implementer side, not a verdict)
+
+One batch, per §9; the owner's re-verify of the new head is what closes it.
+Red first (`8fafc7d3`: `bun run test` exit 1 · 596 pass / 10 fail of 606), then
+the fix (`6385a281`: 606/0), then docs and state in the same change.
+
+| finding | route taken | observed |
+|---|---|---|
+| F1 (B1) | `runArgv` settles from the child's `error` event as a `block` naming the spawn failure; `HookRunResult.spawnError` carries it into the teaching message | `bun test test/hooks-runner.test.mjs` → `O15` passes under bun **and** node (the case dies without the handler: the pre-fix red run surfaced `uncaughtException ENOENT`) |
+| F2 (B2) | `onSessionStart`/`onSessionShutdown` call `reportBlocks` — a session seam reports, it never blocks | wiring case `O16` expects two notices, one per failing session seam, each naming its seam |
+| F3 (B3) | `gitSeamsIn` rewritten: unquoted separators split, quotes group, `NAME=value` prefixes skipped, options that take a value consume the next token | `O17` matrix — 12 firing forms (incl. `git -C .`, `git -c k=v`, `git --git-dir=.git`, `GIT_DIR=x`, `git --no-pager -C .`) and 6 quiet forms |
+| F4 (A5) | capture keeps the first 32 KiB per stream and drains the rest; the verdict is the exit code | `O19`: a 128 KiB hook that exits 0 → `allow`, `truncated: true`; `O7` still bounds the kept output |
+| F5 (A8) | `runSeam` returns an `info` notice when enabled groups meet no consent; the wiring announces each notice once per project session | dispatcher `O20` (zero spawns + the notice naming `seam-hooks-consent.json`) and wiring `O20` (one notice across two seams, latched) |
+| F6 (A6) | `seamBlockMessage(seam, declared, result)` — callers pass the declaration string | `O21` asserts `` `node "my check.mjs" --strict` `` survives verbatim |
+| F7 (A2) | `SKILL.md` and the README resolve `<agentDir>` to `getAgentDir()` / `~/.pi/agent` | prose + `bun scripts/skill-lint.mjs` PASS |
+| F8 (A3) | the template's commented frontmatter block removed from the unit doc; projection re-rendered | `docs/generated/units.md:109` now reads `fix/413-pi-seam-hooks`; the systemic half is recorded in `## Known pre-existing issues` |
+| F9 (A9) | `readSeamHooksConsent(…, deps.readFile)` — one reader for config and consent | dispatcher `O22`: consent resolved through the injected reader, hook spawns |
+| F10 (A7) | the dispatcher fixture is named for what it is; the real-repo commit proof lives in the wiring matrix | test titles only; no assertion weakened |
+| F11 (A1) | the recorded counts corrected against a re-run | G1 → `88 PASS / 0 FAIL`, E3 → `hooks-config 12/0`, each with the reason inline |
+| F12 (A4) | **not a defect** — `scripts/roadmap-settle.mjs` requires `done · [#N](<same url>)` whenever the unit doc carries its PR URL (`pr-url-unsettled`), so the settle stays | `bun scripts/roadmap-settle.mjs` → PASS, 150 docs, 0 violations |
+
+Two existing assertions were adapted, and only because the owner's instruction
+changed the contract they pin: `O8`'s message case now passes the declaration
+string (F6) and `O7`'s fixture produces a bounded loud script instead of the
+unbounded `yes` (F4). No assertion was relaxed, deleted or narrowed.
+
+### Disclosed check, failed then green
+
+`schema-node-compat` (a package **this branch does not touch** —
+`git diff --stat origin/main...HEAD -- packages/agentic-workflow-schema` is
+empty) failed twice on its 50 ms preflight bound (`200,000 rows refused in
+90.51 ms`, `200,000 args refused in 95.74 ms`), once inside the 4-job pool and
+once solo, and then passed twice on the identical command run directly
+(`node --test test/*.test.mjs` → 756/756). It is the timing-bound contention
+class this repo already documented for `unit-route`; it is not change-caused and
+it is not green-by-retry: the suite is green on repeated direct runs at this head.

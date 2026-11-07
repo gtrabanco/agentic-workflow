@@ -1,6 +1,4 @@
 ---
-# Uncomment and set the keys the unit needs; until type/scope are set, the readers fall back to the folder
-# (type) and to the requirement count (scope).
 type: feature
 scope: medium
 ac-hash: 977795d200f3857187ebbef331d387645f4381d2
@@ -118,6 +116,7 @@ Verdict re-classified on the real paths at close (2026-11-08):
 
 ## Known pre-existing issues
 
+- **The unit-doc template's commented frontmatter is read as the H1 by the projection.** `docs/fix/_TEMPLATE/SPEC.md` and `docs/features/_TEMPLATE/SPEC.md` open with `# Uncomment and set the keys …`, and `scripts/docs-generate.mjs:199` takes a unit's title as the first `/^# /` line — so a unit that keeps the template block publishes that prose as its title in `docs/generated/units.md` (this unit did; #432 still does, `ac-hash: 43604f…`). This unit dropped its copy; the durable fix (skip `^# ` inside frontmatter, drop the stale template note) belongs to its own small unit — `does-not-affect` the seam-hooks behaviour.
 - Roadmap row 105 still reads `in-progress` although #406 is closed and merged (PR #426) — `does-not-affect` this unit (its dependency is the closed issue, not the row's prose); noted for the next roadmap sweep.
 - `node_modules/@earendil-works/pi-coding-agent` is resolved from the global bun install, not a workspace pin — `does-not-affect` (peer dependency resolved at install time; the verified event names are recorded in planning evidence with their path).
 
@@ -146,6 +145,9 @@ Verdict re-classified on the real paths at close (2026-11-08):
   Relevant files: docs/ROADMAP.md, docs/generated/
 - P8 — Verification: full package suite, root gate subset, ceremony re-classification on real paths, `docs/LOGS.md` session entry (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S10)
+- P9 — Correction batch over the 2026-11-08 external receipt: the three blockers and the eight `fix-now` advisories, with A4 recorded `not-a-defect` on the gate that proves it (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0 with the ten new cases passing)
+  (Implements: S1, S2, S3, S4, S6, S9, S10)
+  Relevant files: packages/pi-agentic-workflow/src/hooks/runner.ts, src/hooks/dispatcher.ts, src/extension/hooks-wiring.ts, test/hooks-*.test.mjs, README.md, docs/workflow/SEAM_HOOKS.md, skills/init-workspace/SKILL.md
 
 ### Planning evidence
 
@@ -214,6 +216,10 @@ in, or the gate that proves the finding was misattributed.
 | F11 | A1 · `SPEC.md:218,220` | docs | low | G1/E3 recorded 87 PASS and 11/0 where the tree yields 88 and 12/0 | fix-now | the `## Log` receipts are corrected against a re-run (O24) |
 | F12 | A4 · `docs/ROADMAP.md:131` + the `## Fixes` row | docs | low | `done · [#456]` before merge looked like state written ahead of the event | not-a-defect | `bun scripts/roadmap-settle.mjs` requires exactly that settle whenever the unit doc carries its PR URL (`pr-url-unsettled`, PE-012): reverting it fails the gate |
 
+F1–F11 are folded in the P9 batch (each row's `route` names the surface and the
+obligation that pins it); F12 stays `not-a-defect` on the gate's own word. No
+row remains open.
+
 ## Log
 
 - **L1** — 2026-11-08, the request, verbatim:
@@ -246,14 +252,19 @@ in, or the gate that proves the finding was misattributed.
 - **D5** — 2026-11-08, §3 fixtures before the real tree: the four new mechanics were spiked on `mktemp -d` scratch first — the `'error'`-settles-the-round solver (including the double-settle guard when `'close'` also fires), the drain-and-truncate capture, the quote-aware git matcher, and the inert-notice path — then removed; nothing ran against the live tree.
 - **P9-F** — 2026-11-08, ledgers frozen: O15–O25 `planned`, PE-009–PE-012 recorded, the receipt's findings persisted in `## Findings`.
 
+- **P9-R** — 2026-11-08, red commit `8fafc7d3`: `bun run test` (packages/pi-agentic-workflow) · exit 1 · **596 pass / 10 fail** of 606 — the ten new cases (O15–O22) and nothing else; every pre-existing suite green.
+- **P9-G** — 2026-11-08, green: `'error'`-settles-the-round in the runner, drain-and-truncate capture, declared-string teaching message, inert-without-consent notice, one-notice-per-message latch, session seams reporting their blocks, and the shell-shaped git matcher · `bun run test` exit 0 · **606 pass / 0 fail** of 606; the three touched suites under `node --test` · 39 pass / 0 fail (O15's ENOENT case is the one that crashes without the handler).
+- **P9-D** — 2026-11-08, docs in the same change: package README (spawn failure, cap semantics, session-seam reporting, interception residual, `<agentDir>` resolution), `docs/workflow/SEAM_HOOKS.md` (same four contracts), `skills/init-workspace/SKILL.md` (`<agentDir>` = `getAgentDir()` / `~/.pi/agent`), the changeset, this unit doc's frontmatter (the template note the projection read as the title, F8) and `## Next`.
+- **P9-V** — 2026-11-08, foreground verification of this head: `bun run test` (packages/pi-agentic-workflow) exit 0 · **606 pass / 0 fail** of 606 (52 files); `node --test test/hooks-runner.test.mjs test/hooks-dispatcher.test.mjs test/hooks-wiring.test.mjs` · **39 pass / 0 fail**; `node scripts/run-root-suite.mjs` exit 0 · **88 PASS / 0 FAIL**; `bun scripts/docs-generate.mjs --check` exit 0 (3 files, 0 stale); `bun scripts/skill-lint.mjs` PASS (92 files, 0 findings); `bun scripts/check-skill-context.mjs` PASS 28 skills + `--routes` PASS 14 routes; `bun scripts/roadmap-settle.mjs` PASS (150 docs, 0 violations); `bun scripts/unit-route.mjs --triage 413-pi-seam-hooks` exit 0; `bun scripts/local-gate.mjs --skip-network --only version-parity-content,docs-generated-projection,pi-node-compat` exit 0 (changeset route, projection current, the whole package suite green under node); `rg -c 'writeFile|writeFileSync|appendFile' packages/pi-agentic-workflow/src/hooks/` → **0 matches** (O13).
+- **P9-X** — 2026-11-08, disclosed: `schema-node-compat` (a package with **no diff on this branch**) failed twice on its 50 ms preflight bound (90.51 ms / 95.74 ms), once pooled and once solo, then passed twice on the identical direct command (756/756) — the timing-bound contention class `docs/LOGS.md` already records for `unit-route`, not change-caused.
+
 ## Next
 
-The owner's external verdict (§8/§9). The unit is implementation-complete with
-every obligation row closed on foreground runs; no correction cycle has run.
-
-On the owner's verdict: blockers → one correction batch (§9); approval → open
-the PR against `main` (`Closes #413`), flip roadmap row 112 and the Fixes row
-to `done · <PR>` at merge.
+The owner's re-verify of the P9 correction batch at this head. The unit is
+implementation-complete, the receipt's three blockers and eight advisories are
+folded, and PR #456 is open against `main` (`Closes #413`) with the roadmap row
+settled as `roadmap-settle` requires. Nothing is pending in this unit: merging
+PR #456 on the owner's verdict closes #413.
 
 ## References
 

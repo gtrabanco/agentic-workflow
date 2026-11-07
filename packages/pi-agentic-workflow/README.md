@@ -378,14 +378,20 @@ test:
 
 1. **Consent** — `/init-workspace` writes your project's entry into the global
    consent store (`<agentDir>/seam-hooks-consent.json`, keyed by absolute
-   project path) after you say yes. No entry, no execution — ever.
+   project path) after you say yes. No entry, no execution — ever. An `enabled`
+   group without that entry announces itself on the first seam and does not run
+   again until you consent.
 2. **Opt-in per seam** — every matcher group in your `.pi/hooks.json` must set
    `"enabled": true`. Declaring a hook is not consent.
 
+`<agentDir>` is pi's global agent directory — `getAgentDir()` in the extension,
+`~/.pi/agent` on a default install (the same directory that holds
+`pi-agentic-workflow.json` and `mcp.json`).
+
 ### Config form
 
-`.pi/hooks.json` (project) or `<agentDir>/hooks.json` (global), in the Claude
-Code `hooks.json` shape, so existing declarations port:
+`.pi/hooks.json` (project) or `<agentDir>/hooks.json` (global, same `~/.pi/agent`
+default), in the Claude Code `hooks.json` shape, so existing declarations port:
 
 ```json
 {
@@ -416,7 +422,7 @@ never a config trick. Claude Code event names are accepted where they map 1:1.
 | `session:end` | the pi session shuts down | `SessionEnd` |
 | `unit:start` / `unit:end` | the lane's unit boundary — validated, auto flags allowed; firing lands with the lane-boundary wiring | — |
 | `phase:start` / `phase:end` | the executor's phase boundary — same status as `unit:*` | — |
-| `pre:commit` | a bash `git commit` is intercepted, before it runs — a failing check **blocks the commit** | — |
+| `pre:commit` | a bash `git commit` is intercepted, before it runs — a failing check **blocks the commit**. The matcher reads the invocation, not its text: `git -C <dir> commit`, `git -c k=v commit`, `git --git-dir=<p> commit` and `GIT_DIR=x git commit` all reach the seam | — |
 | `post:commit` | after a `git commit` succeeded — a failing check is reported, never retro-blocking | — |
 | `pre:push` | a bash `git push` is intercepted, before it runs — a failing check **blocks the push** | — |
 
@@ -432,12 +438,17 @@ rather than silently dropping the declaration.
   ? [ ] { } ~ #`, newlines) are refused before any process exists — a hook
   that needs a pipeline declares a wrapper script.
 - **Bounded.** Captured output is capped per stream (32 KiB) with a
-  `[truncated]` marker — reaching the cap kills the process; every hook has a
-  hard timeout (declared `timeout` seconds, default 60, capped at 600).
-- **Fail-closed.** Exit 0 → `allow`. Non-zero or timeout → `block`, and the
-  teaching message quotes the declared requirement exactly as declared (command,
-  seam, exit code, bounded output). `pre:commit`/`pre:push` blocks stop the
-  intercepted git command.
+  `[truncated]` marker and the rest drained — a talkative hook costs no memory
+  and no verdict, because the verdict is the exit code, never the volume. Every
+  hook also has a hard timeout (declared `timeout` seconds, default 60, capped
+  at 600).
+- **Fail-closed.** Exit 0 → `allow`. Non-zero, a timeout, or a command that
+  cannot start at all (missing binary, no execute bit) → `block`, and the
+  teaching message quotes the declared requirement exactly as declared (its own
+  quoting included), with the seam, the exit code or spawn failure, and the
+  bounded output. `pre:commit`/`pre:push` blocks stop the intercepted git
+  command; `session:*` and `post:commit` cannot block what already happened, so
+  they report the same message instead of swallowing it.
 - **Auto commit/push are explicit per-seam flags, never defaults.**
   `"autoCommit": true` (+ required `"commitMessage"`) and `"autoPush": true`
   are valid only on `phase:end` / `unit:end` groups, and run only after the
@@ -446,6 +457,11 @@ rather than silently dropping the declaration.
 - **Degradation is declared.** Missing config → quiet no-op. Present-but-broken
   config → the hooks announce the problem **once** per project session and then
   behave as a no-op — never a silent pass, never a throw into your session.
+- **What it does not cover.** The matcher sees the bash command the model runs.
+  A git call it cannot see — inside a script, behind `bash -c`, from another
+  tool — is not intercepted: this is a guardrail on the agent's own commands,
+  not an enforcement boundary. Your commit message's contents, your shell
+  aliases and your own fingers are equally outside it.
 
 The consent marker and the hook config are yours: this extension never writes
 either. `/init-workspace` writes the consent entry; you write `.pi/hooks.json`.

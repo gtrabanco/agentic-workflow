@@ -147,7 +147,9 @@ step 4:
   entry into the global store the extension reads —
   `<agentDir>/seam-hooks-consent.json`, a `projects` map keyed by the
   project's absolute path, `{ "consented": true, "consentedAt": <ISO date> }`
-  — and create nothing else. Never write or edit `.pi/hooks.json` (the
+  — and create nothing else. `<agentDir>` is pi's global agent directory:
+  `getAgentDir()` in the extension, `~/.pi/agent` on a default install (the
+  directory holding `pi-agentic-workflow.json`; `~/.claude` is not it). Never write or edit `.pi/hooks.json` (the
   developer's declarations, not this skill's), never add the consent entry
   without the project's absolute path, and a no writes nothing. The
   dispatcher's own contract — config form, seam vocabulary, refusal grammar —
