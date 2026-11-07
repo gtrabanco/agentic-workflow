@@ -186,7 +186,7 @@ n/a — no tests step for this unit
   (Implements: S1)
   Relevant files: docs/fix/435-project-charter/
 - P2 — Record the adopted-knowledge attribution row (cite-sources clause) in
-  `docs/research/ATTRIBUTION.md` (validator: `rg -c "2602\.11988|2601\.20404|2605\.10039" docs/research/ATTRIBUTION.md` matches 3)
+  `docs/research/ATTRIBUTION.md` (validator: `rg -c "#435" docs/research/ATTRIBUTION.md` matches 3)
   (Implements: S4)
   Relevant files: docs/research/ATTRIBUTION.md
 - P3 — Ship the charter substrate in the template: `## Project charter` skeleton
