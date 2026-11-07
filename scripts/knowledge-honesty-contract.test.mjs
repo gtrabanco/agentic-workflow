@@ -192,6 +192,62 @@ test("#303 S1: the ledger rows the references publish parse with the real ledger
   }
 });
 
+// --- #432: model memory is never tier-0 ---------------------------------------
+// The journal's provenance column and the certainty ceiling are the evidence
+// layer of the no-assumption rule above: they make it checkable row by row.
+
+const GATE_INVENTORY = "docs/workflow/GATE_INVENTORY.md";
+const RESEARCH = "skills/unit-lane/references/RESEARCH.md";
+
+/** The four provenance kinds, in the closed order both journal tables spell. */
+const PROVENANCE_SET = "repository / version-pinned doc / owner answer / model memory";
+
+test("#432 S1: the design and plan journals record provenance over the closed four-kind set", () => {
+  for (const rel of [DESIGN, PLAN]) {
+    const md = read(rel);
+    assert.match(md, /\| id \| claim \| source \| provenance \| certainty \|/, `${rel}: the journal table carries the provenance column`);
+    assert.ok(md.includes(PROVENANCE_SET), `${rel}: the row shape spells the closed four-kind set`);
+  }
+});
+
+test("#432 S1: model memory never carries confirmed — the ceiling is a rule in the single owner", () => {
+  const md = read(DESIGN);
+  assert.match(md, /never `confirmed`, and never tier-0/, "DESIGN.md states the ceiling as a rule: inferred at best, never confirmed, never tier-0");
+  assert.match(md, /version-pinned, current/, "the confirmed demand names the version-pinned, current source it needs");
+  assert.doesNotMatch(md, /never assume/i, "the ceiling stays positive — no bare prohibition takes a stage's place");
+});
+
+test("#432 S2: an external implementation-detail claim verifies against the pinned version before it guides a task", () => {
+  const md = read(DESIGN);
+  assert.match(md, /before it may guide a task/, "the verification gate is stated as an order, not an aspiration");
+  assert.match(md, /one-fetch receipt/, "the verification rides as a cheap one-fetch receipt");
+  assert.match(md, /lockfile, manifest, GitHub-action SHA/, "the pinned source is the project's own pinning, never `latest`");
+});
+
+test("#432 S3: deterministic verification prefers a script, as an extension of #359 — not a rival rule", () => {
+  const md = read(DESIGN);
+  assert.match(md, /prefer a script/, "the script preference is stated");
+  assert.match(md, /actionlint/, "the named deterministic checks are named");
+  assert.match(md, /#359/, "the migration the preference extends is cited");
+});
+
+test("#432 S4: the research step carries the repo-answered exit with its receipt", () => {
+  const md = read(RESEARCH);
+  assert.match(md, /descriptive/, "the exit is for descriptive questions");
+  assert.match(md, /which claim the repo answered and where/, "the receipt records which claim and where");
+  assert.match(md, /never closes on precedent/, "a normative question never closes on precedent");
+  assert.match(md, /owned by/, "the certainty/provenance semantics carry an owner pointer, not a restatement");
+});
+
+test("#432: the model-memory gate is inventoried as prose, and the row resolves", () => {
+  const md = read(GATE_INVENTORY);
+  const row = md.split("\n").find((line) => line.startsWith("| model-memory-provenance "));
+  assert.ok(row, "the inventory carries the model-memory-provenance row");
+  const cells = row.split("|").map((c) => c.trim());
+  assert.ok(cells.includes("prose"), "the row's carrier is prose (the scriptable half is the deferred second slice)");
+  assert.match(row, /DESIGN\.md/, "the row names its carrier file");
+});
+
 // --- the lane's own checklist -------------------------------------------------
 
 test("#303 S1: the lane's turn contract ticks the knowledge-honesty contract", () => {
