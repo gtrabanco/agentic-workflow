@@ -4154,3 +4154,27 @@ export type {
   JournalEntry,
   JournalEntryResult,
 } from "./journal.js";
+export {
+  BATCH_PLAN_CONTRACT_ID,
+  BATCH_PLAN_SCHEMA,
+  BATCH_PLAN_VERSION,
+  BATCH_REASON_KINDS,
+  BATCH_FINDING_CODES,
+  BATCH_SIZE_HINTS,
+  BATCH_PLAN_FIELDS,
+  validateBatchPlan,
+} from "./batch-plan.js";
+export type {
+  BatchReasonKind,
+  BatchFindingCode,
+  BatchSizeHint,
+  BatchIssueReason,
+  BatchIssue,
+  BatchLane,
+  Batch,
+  BatchBlocked,
+  BatchFinding,
+  BatchPlanSummary,
+  BatchPlan,
+  BatchPlanValidationResult,
+} from "./batch-plan.js";

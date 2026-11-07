@@ -368,6 +368,10 @@ ledger-finding-mark-shape | skills/pre-execution-review/references/LEDGERS.md | 
 ledger-gate-ran-mark | skills/pre-execution-review/references/LEDGERS.md | block:gate-ran@1 | n/a | no
 tier-cost-ledger | docs/workflow/TIER_COST.md | block:tier-cost@1 | n/a | no
 sensor-envelope-fields | skills/workflow-status/references/SENSOR_CORE.md | block:sensor-fields@1 | envelope-field | no
+batch-plan-fields | skills/batch-scheduler/references/PLAN.md | table:batch-fields@1 | n/a | no
+batch-reason-kind-vocabulary | packages/agentic-workflow-schema/src/batch-plan.ts | schema-export:BATCH_REASON_KINDS | batch-reason-kind | no
+batch-finding-code-vocabulary | packages/agentic-workflow-schema/src/batch-plan.ts | schema-export:BATCH_FINDING_CODES | batch-finding-code | no
+batch-size-hint-vocabulary | packages/agentic-workflow-schema/src/batch-plan.ts | schema-export:BATCH_SIZE_HINTS | batch-size-hint | no
 continuation-refusal-vocabulary | packages/agentic-workflow-schema/src/continuation.ts | schema-export:CONTINUATION_REFUSALS | continuation-refusal-type | yes
 ask-dont-infer-rule | skills/unit-lane/references/DESIGN.md | block:ask-dont-infer@1 | n/a | no
 relay-status-grammar | skills/unit-lane/references/RELAY.md | block:relay-status@1 | n/a | no
