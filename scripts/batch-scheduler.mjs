@@ -86,11 +86,17 @@ export async function collectIssues({ issuesFile, ghBin = "gh", remote = null } 
 
 async function collectIssuesLive({ ghBin, remote }) {
   const degradations = [];
+  // The documented scratch-origin case: a clone whose `origin` is a local path
+  // cannot tell `gh` which repository to read, so `--remote` names it for BOTH
+  // sources — the issue list and the relations call.
+  const origin = remote ?? gitOriginUrl();
+  const parsed = origin !== null ? parseOrigin(origin) : null;
+  const repoArgs = parsed === null ? [] : ["-R", `${parsed.owner}/${parsed.name}`];
   let listed = null;
   try {
     const run = spawnSync(
       ghBin,
-      ["issue", "list", "--state", "open", "--limit", "200", "--json", "number,title,body,labels"],
+      ["issue", "list", ...repoArgs, "--state", "open", "--limit", "200", "--json", "number,title,body,labels"],
       { encoding: "utf8", timeout: 30000 },
     );
     if (run.error) throw run.error;
@@ -172,7 +178,7 @@ function sanitizeCause(cause) {
 
 // ── surfaces, dependencies, sizes (all read from where they live) ─────────
 
-/** Extract `## Where` / `## In scope` (fallback: the whole body) path tokens. */
+/** Normalize one path token to its lane key (see `surfaceKey`). */
 export function extractSurfaces(body) {
   const sections = [];
   for (const heading of ["## Where", "## In scope"]) {
@@ -185,16 +191,32 @@ export function extractSurfaces(body) {
   const scope = sections.length > 0 ? sections.join("\n") : body;
   const surfaces = new Set();
   for (const match of scope.matchAll(/`([^`]+)`/g)) {
-    const clean = match[1].replace(/^\.\//, "");
-    const top = clean.split("/")[0];
-    if (top === "skills" || top === "packages") {
-      const parts = clean.split("/");
-      surfaces.add(parts.length >= 2 ? `${parts[0]}/${parts[1]}` : top);
-    } else if (["scripts", "docs", "template", ".github"].includes(top)) {
-      surfaces.add(top);
-    }
+    const key = surfaceKey(match[1]);
+    if (key !== null) surfaces.add(key);
   }
   return surfaces;
+}
+
+/**
+ * One lane key from one path token.
+ *
+ * `skills/<name>` and `packages/<name>` are the documented surfaces; a token
+ * that names the tree instead of a child — `skills`, `skills/`, `skills/**`,
+ * a wildcard child — collapses to the tree-root key, never to a wildcard
+ * (a wildcard lane would run beside the concrete lanes it covers). A
+ * top-level directory is its own key; anything else names no surface.
+ */
+function surfaceKey(token) {
+  const clean = String(token).trim().replace(/^\.\//u, "").replace(/(?:\/|\*)+$/u, "");
+  if (clean === "") return null;
+  const parts = clean.split("/").filter(Boolean);
+  const top = parts[0];
+  if (top === "skills" || top === "packages") {
+    const child = parts[1];
+    return child !== undefined && !/^\*+$/u.test(child) ? `${top}/${child}` : top;
+  }
+  if (["scripts", "docs", "template", ".github"].includes(top)) return top;
+  return null;
 }
 
 /**
@@ -291,7 +313,8 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
 
   const launched = [];
   const launchedSurfaces = new Map();
-  const launchable = [];  for (const issue of issues) {
+  const launchable = [];
+  for (const issue of issues) {
     const unitDir = unitDirByIssue.get(issue.number);
     if (unitDir) {
       launched.push({ number: issue.number, evidence: `unit-doc ${unitDir}` });
@@ -301,6 +324,7 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
     }
   }
   launched.sort((a, b) => a.number - b.number);
+  const launchedNumbers = new Set(launched.map((entry) => entry.number));
 
   const model = new Map();
   for (const issue of launchable) {
@@ -315,9 +339,35 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
       size: sizeHint(issue, surfaceSet),
     });
   }
+  // A tree-root declaration (`skills`, `skills/**`, `packages/`) names every
+  // declared child of that tree: it joins their lanes instead of opening a
+  // lane of its own, so a broad issue can never run beside the concrete lane
+  // it covers (S5, "one lane per surface"). The child set is derived from the
+  // run's own declarations, so the plan stays deterministic.
+  const children = new Map();
+  const noteChildren = (surfaces) => {
+    for (const surface of surfaces) {
+      const [root, child] = surface.split("/");
+      if (child === undefined || (root !== "skills" && root !== "packages")) continue;
+      if (!children.has(root)) children.set(root, new Set());
+      children.get(root).add(child);
+    }
+  };
+  for (const row of model.values()) noteChildren(row.surfaces);
+  for (const surfaces of launchedSurfaces.values()) noteChildren(surfaces);
+  const expand = (surface) => {
+    const kids = children.get(surface);
+    return kids === undefined || kids.size === 0 ? [surface] : [...kids].map((child) => `${surface}/${child}`);
+  };
+  for (const row of model.values()) {
+    row.surfaces = [...new Set(row.surfaces.flatMap(expand))].sort((a, b) => a.localeCompare(b));
+  }
+  for (const [number, surfaces] of launchedSurfaces) {
+    launchedSurfaces.set(number, new Set([...surfaces].flatMap(expand)));
+  }
   for (const row of model.values()) {
     row.soft = row.softAll.filter((n) => model.has(n));
-    row.softOrphans = row.softAll.filter((n) => !model.has(n) && !knownNumbers.has(n));
+    row.softOrphans = row.softAll.filter((n) => !model.has(n) && !launchedNumbers.has(n) && !knownNumbers.has(n));
   }
 
   const findings = [];
@@ -348,12 +398,18 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   // ── batches: hard blockers gate; soft deps only order (after the layers) ──
   const batchOf = new Map();
   const unmetByIssue = new Map();
+  const inFlightByIssue = new Map();
   let current = [];
   for (const [number, row] of model) {
     const native = byNumber.get(number)?.blockedBy ?? [];
-    const unmet = native.filter((b) => openNumbers.has(b) && b !== number);
+    // A blocker whose unit doc is on disk is open and in flight: it gates the
+    // issue but no batch will ever contain it, so it is a state to report —
+    // never an unresolvable wait (S7).
+    const inFlight = native.filter((b) => launchedNumbers.has(b));
+    const unmet = native.filter((b) => openNumbers.has(b) && !launchedNumbers.has(b) && b !== number);
+    inFlightByIssue.set(number, inFlight);
     unmetByIssue.set(number, unmet);
-    if (unmet.length === 0) current.push(number);
+    if (unmet.length === 0 && inFlight.length === 0) current.push(number);
   }
   let batchNumber = 0;
   while (current.length > 0) {
@@ -361,11 +417,16 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
     for (const number of current) batchOf.set(number, batchNumber);
     const next = [];
     for (const [number, unmet] of unmetByIssue) {
-      if (!batchOf.has(number) && unmet.every((b) => batchOf.has(b))) next.push(number);
+      if (batchOf.has(number)) continue;
+      if ((inFlightByIssue.get(number) ?? []).length > 0) continue;
+      if (unmet.every((b) => batchOf.has(b))) next.push(number);
     }
     current = next;
   }
-  const unresolvable = [...model.keys()].filter((number) => !batchOf.has(number)).sort((a, b) => a - b);
+  const deferred = new Set(
+    [...inFlightByIssue.entries()].filter(([, inFlight]) => inFlight.length > 0).map(([number]) => number),
+  );
+  const unresolvable = [...model.keys()].filter((number) => !batchOf.has(number) && !deferred.has(number)).sort((a, b) => a - b);
   if (unresolvable.length > 0) {
     findings.push({
       code: "cycle",
@@ -408,9 +469,11 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   const blocked = [];
   for (const number of [...unmetByIssue.keys()].sort((a, b) => a - b)) {
     const unmet = unmetByIssue.get(number);
-    if (unmet.length === 0) continue;
-    const blockers = [...unmet].sort((a, b) => a - b);
-    blocked.push({ number, blockers, reason: `blocked-by ${blockers.join(", ")} (open)` });
+    const inFlight = inFlightByIssue.get(number) ?? [];
+    if (unmet.length === 0 && inFlight.length === 0) continue;
+    const blockers = [...new Set([...unmet, ...inFlight])].sort((a, b) => a - b);
+    const inFlightNote = inFlight.length > 0 ? ", unit in flight" : "";
+    blocked.push({ number, blockers, reason: `blocked-by ${blockers.join(", ")} (open${inFlightNote})` });
   }
 
   findings.sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : a.numbers[0] - b.numbers[0]));
@@ -583,25 +646,36 @@ function usage() {
   );
 }
 
+/** A usage error: the fixed exit 2 and the usage block, never a stack trace. */
+function fail(message) {
+  process.stderr.write(`${message}\n`);
+  usage();
+  process.exit(2);
+}
+
 async function main(argv) {
   const args = { root: process.cwd(), jsonOnly: false, noState: false, markLaunched: null, statePath: null, issuesFile: null, remote: null };
+  const valueAt = (flag, index) => {
+    const value = argv[index];
+    if (value === undefined) fail(`${flag} needs a value`);
+    return value;
+  };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--root") args.root = path.resolve(argv[++i]);
-    else if (arg === "--issues-file") args.issuesFile = path.resolve(argv[++i]);
-    else if (arg === "--state") args.statePath = path.resolve(argv[++i]);
+    if (arg === "--root") args.root = path.resolve(valueAt(arg, ++i));
+    else if (arg === "--issues-file") args.issuesFile = path.resolve(valueAt(arg, ++i));
+    else if (arg === "--state") args.statePath = path.resolve(valueAt(arg, ++i));
     else if (arg === "--no-state") args.noState = true;
-    else if (arg === "--mark-launched") args.markLaunched = Number(argv[++i]);
+    else if (arg === "--mark-launched") args.markLaunched = Number(valueAt(arg, ++i));
     else if (arg === "--json-only") args.jsonOnly = true;
-    else if (arg === "--remote") args.remote = argv[++i];
-    else {
-      usage();
-      process.exit(2);
-    }
+    else if (arg === "--remote") args.remote = valueAt(arg, ++i);
+    else fail(`unknown argument: ${arg}`);
+  }
+  if (args.noState && args.markLaunched !== null) {
+    fail("--mark-launched writes the state file, so it cannot be combined with --no-state (a pure read writes nothing)");
   }
   if (argv.includes("--mark-launched") && (!Number.isInteger(args.markLaunched) || args.markLaunched <= 0)) {
-    process.stderr.write("--mark-launched needs an issue number\n");
-    process.exit(2);
+    fail("--mark-launched needs a positive issue number");
   }
   const statePath = args.statePath ?? path.join(args.root, ".agentic-workflow", STATE_FILE_NAME);
   const head = readHead(args.root);
