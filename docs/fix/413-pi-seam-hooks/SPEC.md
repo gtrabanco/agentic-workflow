@@ -3,7 +3,7 @@
 # (type) and to the requirement count (scope).
 type: feature
 scope: medium
-# ac-hash: written at close (see ## Next)
+ac-hash: 977795d200f3857187ebbef331d387645f4381d2
 ---
 
 # fix/413-pi-seam-hooks
@@ -60,6 +60,7 @@ verbatim. **S1** is the governing request's own words; **S2–S10** are issue
 ## Impact
 
 - Callers: `packages/pi-agentic-workflow/src/extension/index.ts` gains the seam wiring (session lifecycle + `git commit`/`git push` interception); `skills/init-workspace/SKILL.md` gains the consent step; the package README gains the feature + compatibility table; `docs/workflow/` gains the target-project guide page.
+- Named high-risk item (tier verdict at close): `packages/pi-agentic-workflow/test/hooks-runner.test.mjs · rm` — the suite's own `mkdtempSync` fixture cleanup under `os.tmpdir()`, never a repo path; quoted in full under `## Risk tier`.
 - Consumers: target projects that declare `.pi/hooks.json` (or a global `hooks.json`); the schema package's `PROJECTION_SEAMS`, `GUARD_VERDICTS`, `GUARD_REJECTION_REASONS` are consumed read-only (no schema change — S13 of feature 105 keeps the set closed).
 - Nothing live changes on the other side: the dispatcher is off by default (S3) and executes nothing until both the consent marker and a per-entry `enabled` flag exist.
 - Live-tree guard: the new modules run against fixtures and throwaway copies only until verified (governing request §4).
@@ -81,8 +82,21 @@ unit (2026-11-08, at cut).
 
 ## Risk tier
 
-- **`standard`** — verdict at cut: `empty-change` → fail closed upward to standard; re-classified on the real paths at close (recorded in `## Log`).
-- **Named high-risk item** — none — not a high-tier unit.
+Verdict re-classified on the real paths at close (2026-11-08):
+
+```json
+{
+  "contract": "risk-tier-verdict@1",
+  "tier": "high",
+  "reason": "1 path(s) touch a named high-risk surface: destructive (packages/pi-agentic-workflow/test/hooks-runner.test.mjs · rm)",
+  "reason_kind": "named-high-risk",
+  "task_size": { "understood": true, "contained_risk": "named", "resumable_from_diff": true, "ceremony": "unit-doc+review-change", "verification": "review-change" }
+}
+```
+
+- **`high`** · **Task Size** — understood · named risk · resumable from diff
+- **Named high-risk item** — `packages/pi-agentic-workflow/test/hooks-runner.test.mjs · rm`: the suite's `rmSync` calls remove only its own `mkdtempSync` fixtures under `os.tmpdir()` (the same idiom every existing spawn-based suite in this repo uses — `git-sandbox.mjs` neighbors), never a repo path. The high tier's *full review pass* is discharged by the owner's external verdict per the governing request (§4: no self-review machinery on this repo's own surgery; the review cycle's cost is why this workflow exists).
+- **Tier** — `high`
 
 ## Future
 
@@ -159,6 +173,24 @@ Budget: strong
 > declined — the governing request forbids running the repo's own machinery on
 > its own surgery.
 
+## Acceptance criteria
+
+One observable, testable criterion per `S#`, each naming the check that proves
+it. This is the anchor the owner's external verdict reads per criterion.
+
+| # | Criterion (S#) | Proved by |
+|---|---|---|
+| AC-1 | Hook config is discovered project-local then global, project entries run after global ones, and an untrusted project's file is never read (S2) | `bun test packages/pi-agentic-workflow/test/hooks-config.test.mjs` exits 0 (O1/O2 cases) |
+| AC-2 | Nothing executes without the init-workspace consent marker, and a group without `"enabled": true` never runs — off by default, proven by test (S3) | `bun test packages/pi-agentic-workflow/test/hooks-dispatcher.test.mjs` exits 0 (O3/O4 cases) |
+| AC-3 | A failing hook blocks at the seam with a teaching message quoting the declared requirement as declared (S4) | `bun test packages/pi-agentic-workflow/test/hooks-runner.test.mjs` exits 0 (O8 cases) and the dispatcher sandbox case blocks with the message |
+| AC-4 | Auto commit/push exist only as explicit `phase:end`/`unit:end` flags with the declared message, never bundled defaults (S5) | `bun test packages/pi-agentic-workflow/test/hooks-config.test.mjs` (refusal cases) and `test/hooks-dispatcher.test.mjs` (auto-flag cases) exit 0 |
+| AC-5 | Missing config is a quiet no-op; broken config degrades with a notice naming the file, never silent, never thrown (S6) | `bun test packages/pi-agentic-workflow/test/hooks-config.test.mjs` + `test/hooks-wiring.test.mjs` (latched-notice case) exit 0 |
+| AC-6 | The config form is hooks.json-compatible: matcher-group shape, `SessionStart`/`SessionEnd` aliases, unknown events refused — the compatibility table ships (S7) | `bun test packages/pi-agentic-workflow/test/hooks-config.test.mjs` exits 0; the table is present in `packages/pi-agentic-workflow/README.md` |
+| AC-7 | A git sandbox with a declared `pre:commit` check sees it run and block on failure (S8) | the dispatcher suite's sandbox case passes (`bun test packages/pi-agentic-workflow/test/hooks-dispatcher.test.mjs` exits 0) and the wiring suite's interception case blocks a `git commit` |
+| AC-8 | Commands spawn as argv with `shell: false`, metacharacters refused before any process, output capped with a truncation marker (S9) | `bun test packages/pi-agentic-workflow/test/hooks-runner.test.mjs` exits 0 (O6/O7 cases) |
+| AC-9 | Package suites and the touched root suites are green, and the docs ship in the same PR (S10) | `bun run test` in `packages/pi-agentic-workflow` exits 0 (596/0); `node scripts/run-root-suite.mjs` exits 0; `bun scripts/docs-generate.mjs --check` exits 0 |
+| AC-10 | The governing workflow was followed: S1–S10 quoted verbatim, ledgers frozen before code, red before green, inline work with no self-review machinery (S1) | this SPEC's `## Specs` quotes, the ledger freeze commit `0d2cf6a6` predating red commit `2d4d5ea7`, and the absence of any fold/review cycle in `## Log` |
+
 ## Findings
 
 | id | S# / file:line | axis | severity | impact | class | route |
@@ -176,10 +208,28 @@ Budget: strong
   [... the governing workflow, §0–§9, as received — the operative asks: verbatim S1..Sn; frozen-failure corpus first; fixtures before the real tree; inline work, no self-review machinery; freeze the planning ledgers before the first line of code; implement test-first, differential, in slices; documentation and state in the same change; verify like a writer, hand off like one; correction bounds]
   ```
   (Full text held by the requester's message; the S1 line and the §5 freeze contract are quoted in full in `## Specs` and `## Tasks`.)
+- **D1** — 2026-11-08, §2 frozen-failure corpus: **n/a — this change repairs no recorded failure** (no findings-ledger rows, no open findings, no failure reports reference seam hooks; the issue is a promoted feature). The red-first discipline is carried instead by the new suites themselves (E1).
+- **D2** — 2026-11-08, §3 fixture-first: the new mechanic (no-shell argv spawn, bounded capture, kill-on-timeout, killTree for the close-event-on-inherited-stdio trap) spiked on a `mktemp -d /tmp/…` throwaway copy and was removed; the `/tmp` scratch left nothing behind.
+- **D3** — 2026-11-08, triage decision the issue deferred to triage: `SessionStart` → `session:start` and `SessionEnd` → `session:end` map 1:1; every other workflow seam has no Claude Code counterpart, so the nine native seam names are accepted directly and every other Claude Code event name is refused `config-invalid`. Recorded in the compatibility table (package README) and `docs/workflow/SEAM_HOOKS.md`.
+- **E1** — 2026-11-08, red commit `2d4d5ea7`: `bun run test` (packages/pi-agentic-workflow) · exit 1 · 555 pass / **4 fail** — the failures are exactly the four new hooks suites (`../dist/hooks/*` unresolvable); every pre-existing suite green.
+- **P1** — 2026-11-08, unit doc + planning ledgers cut · commit `0d2cf6a6`.
+- **P2** — 2026-11-08, green: `src/hooks/config.ts` + `runner.ts` + `dispatcher.ts` + `extension/hooks-wiring.ts` wired into the entry, all four suites green · commit `8544887f`. Slice size 899 authored lines — over the ~400 guidance because the four modules are one red-first suite's subject and the wiring is inert without the dispatcher; splitting further would have separated a suite from the code it pins mid-cycle (governing request §6, stated-reason clause).
+- **P3** — 2026-11-08, docs + indexes: init-workspace consent step, package README (feature + compatibility table), `docs/workflow/SEAM_HOOKS.md` + pages index, roadmap row 112 → `in-progress`, Fixes row appended, generated projection re-rendered by `docs-generate` · commit `dbc30279`.
+- **G1** — 2026-11-08, `node scripts/run-root-suite.mjs` · exit 0 · 87 PASS / 0 FAIL.
+- **E2** — 2026-11-08, `bun run test` (packages/pi-agentic-workflow, full) · exit 0 · 596 pass / 0 fail — the differential proof: every pre-existing suite untouched and green; the one intentional delta is `test/alias-coverage.test.mjs`'s event inventory, which documents the entry's two new listeners (`session_shutdown`, `tool_result`) exactly as feature 66's precedent did.
+- **E3** — 2026-11-08, foreground validators, one run each: `bun test test/hooks-config.test.mjs` 11/0 · `bun test test/hooks-runner.test.mjs` 9/0 · `bun test test/hooks-dispatcher.test.mjs` 13/0 · `bun test test/hooks-wiring.test.mjs` 8/0 · `rg -c 'writeFile|writeFileSync|appendFile' packages/pi-agentic-workflow/src/hooks/` → **zero matches** (O13).
+- **E4** — 2026-11-08, `bun scripts/docs-generate.mjs --check` · exit 0 (0 stale) · `bun scripts/check-skill-context.mjs` + `--routes` · PASS (28 skills, 14 routes) · `bun scripts/skill-lint.mjs` · PASS (0 findings in 92 files).
+- **G2** — 2026-11-08, `bun scripts/local-gate.mjs --only version-parity-content` · **exit 1** — the pi package ships changed content without a version bump; fixed by adding `.changeset/413-pi-seam-hooks.md` (the declared route), re-run · **exit 0 / PASS**. The first root-suite run predated the changeset; the same local-gate step is the one that caught it.
+- **E5** — 2026-11-08, `bun scripts/ceremony.mjs tier classify` on the real paths · tier `high` (named-high-risk: the runner suite's own tmp-fixture `rm`) — verdict quoted verbatim in `## Risk tier`; the full review pass it names is the owner's external verdict (§4/§8).
 
 ## Next
 
-P2 — the red suite for the hook config module.
+The owner's external verdict (§8/§9). The unit is implementation-complete with
+every obligation row closed on foreground runs; no correction cycle has run.
+
+On the owner's verdict: blockers → one correction batch (§9); approval → open
+the PR against `main` (`Closes #413`), flip roadmap row 112 and the Fixes row
+to `done · <PR>` at merge.
 
 ## References
 
