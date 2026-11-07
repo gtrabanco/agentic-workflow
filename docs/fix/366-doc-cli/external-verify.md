@@ -101,3 +101,63 @@ rg 'ship with unit 71' packages/agentic-workflow/{src,bin,README.md}          �
 git diff --quiet origin/main HEAD -- packages/agentic-workflow-schema         → identical
 retrieval differential (base b8b1d814 vs head, scratch clones): doc --query / doc --status → identical
 ```
+
+## 2026-11-07 — delta verdict (corrections S11–S22 landed after the full verdict above)
+
+```text
+EXTERNAL VERIFY — base: 946037e0 · head: e2544f87 (delta over B1–B3 + the delta diff 946037e0..e2544f87)
+Blockers: 1
+  1. docs/fix/366-doc-cli/SPEC.md — the unit doc's execution record does not reproduce at the commits it
+     names: (a) tasks P9–P23 sit unticked ("[ ]") while their obligations O18–O33 are `verified` and their
+     validators re-run green here; (b) E16 records "exit 0 … 18 pass … 0 fail" at 7bc11894, but a clean
+     clone at that commit shows the id-parity case failing ("20 chunk id(s) do not resolve through the
+     index/read id scheme", bun exit 1 — consistent with L8's own disclosure that the case's green arrived
+     only at 7b2f152b); (c) E34 records "35 pass / 0 fail" at 07832973, but the same command observes
+     37 pass / 0 fail there (clone and live tree, bun and node; the suite file is byte-identical to HEAD).
+       reproducer: git clone <repo>; git checkout 7bc11894; cd packages/agentic-workflow &&
+                   bun test test/doc.docops.test.mjs test/doc.structure.test.mjs → 48 pass / 1 fail;
+                   at 07832973: bun test test/doc.docops.test.mjs → 37 pass (recorded 35).
+       base-vs-head: at base 946037e0 neither the P9–P23 rows nor the E16/E34 figures exist.
+       smallest action: tick P9–P23 and amend E16/E34 to the observed counts — docs-only, route to
+       /aw-local-apply.
+Advisories: 2
+  1. packages/agentic-workflow/test/doc.roundtrip.test.mjs:100-124 (carried from the full receipt above):
+     O12's wording says "reassembly of located sections plus inter-section gaps"; the test drives
+     per-section no-op splices. Bar met over the corpus; only the method differs. Pre-existing.
+  2. Method note for the next verifier: the S11 parity cases enumerate `git ls-files`, so they cannot run
+     in a `git archive` scratch (observed "fatal: not a git repository" → 2 spurious fails). Verify at
+     named commits in a `git clone`, never an archive.
+Sibling sweep: clean — `ship with unit 71`, `positional doc operations`, `doc: doc:`, the repeat(3) fence
+  rule and FENCE_ARTIFACT_DOCS each match nothing at head; D4/PE-011 corrected in the ledgers (F5); the
+  README `doc` row carries the shipped ops with the experimental label (2 hits).
+Completeness: S1–S22 all resolved — S2–S10 via P1–P8 (green at head); S11–S22 via P9–P23 whose validators
+  re-run green here (docops 37/0; structure parity 9187 chunks = 9187 sections = 9187 paired, 0 drift /
+  0 artifact / 0 swallowed; owner-grammar parity green — template shape maps current "P1"; chunks/sync/
+  roundtrip/journal green; F99 7.80/8.04 ms ≤ 17 ms, suite 8/8; phase-lint verdict PASS; `release.mjs plan`
+  exit 0 with both declared bumps and the train line; origin == HEAD == e2544f87). Dispositions unchanged
+  (A4 ignore; A3 delivered as S21's named stdin refusal). Obligations O1–O33 verified and reproducing.
+Spot check: bun test packages/agentic-workflow/test/doc.docops.test.mjs (E34, at 07832973) → mismatch
+  (recorded 35 pass / 0 fail; observed 37 pass / 0 fail under both runtimes) — the receipt's reported
+  figures are untrusted; every substantive check above was re-derived by this run, not taken from the
+  recorded outputs.
+Verdict: NEEDS-DECISION (B-Δ1: the unit doc's execution record — stale P9–P23 boxes, E16/E34 figures that
+  do not reproduce at their named commits; code and behavior fully verified)
+```
+
+### State disclosure
+
+- Read-only run: no commit, no push, no branch, no forge mutation, no file edits except this receipt.
+  New write paths introduced by the delta (`doc edit --set/--append`, `doc index --out`, the journal
+  writer's refusals) were exercised only in `mktemp -d` scratch; the live tree stayed byte-identical
+  (`git status` clean at close).
+- Commands re-run at head: `bun test` docops/structure/chunks/sync/journal/roundtrip (56+48 pass, 0 fail),
+  crate `bun run test` 453/0 and `node --test` 454/0, schema `bun run test` 756/0,
+  `node --test test/verification-preflight.test.mjs` 8/8, `phase-lint` PASS, `release.mjs plan` exit 0.
+- B1 re-proven fixed: chunker id == index/read id for README.md's markup-bearing heading and
+  `doc read --section <that id>` exits 0; B2 re-proven fixed: an unticked-open template-shaped doc maps
+  `current: "P1"`; B3 re-proven fixed: `--out` refused on read/edit (exit 1), honoured on index
+  (`--out --json` → exit 0, artifact byte-identical to stdout, 1 832 333 B over 1017 files / 45 units);
+  one `doc:` prefix per refusal.
+- `bun install` was run once in this workspace (dependencies were absent); `node_modules` is gitignored
+  and the tracked tree is untouched. Two stale `/tmp/a7proto.*` scratch dirs from the implementer's
+  session were found and removed.

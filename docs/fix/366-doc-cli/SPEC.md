@@ -315,49 +315,49 @@ $ bun scripts/ceremony.mjs tier classify
 - [x] P8 — Final verification: crate suites under both runtimes, touched root suites, the retirement pin, and the diff guard over the whole branch (validator: `cd packages/agentic-workflow && bun run test && node --test` exits 0 and `bun scripts/local-gate.mjs --skip-network` exits 0)
   (Implements: S6, S7, S8)
   Relevant files: —
-- [ ] P9 — `--out` grammar: refuse it on `read`/`edit`, honour it with `--json` on `index` (artifact and document both emitted), and print one `doc:` prefix per refusal (validator: `bun test test/doc.docops.test.mjs` exits 0 including the four `--out` cases and the exact-stderr case; red before the fix)
+- [x] P9 — `--out` grammar: refuse it on `read`/`edit`, honour it with `--json` on `index` (artifact and document both emitted), and print one `doc:` prefix per refusal (validator: `bun test test/doc.docops.test.mjs` exits 0 including the four `--out` cases and the exact-stderr case; red before the fix)
   (Implements: S11)
   Relevant files: packages/agentic-workflow/src/doc/grammar.mjs, packages/agentic-workflow/src/doc/structure.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/test/doc.docops.test.mjs
-- [ ] P10 — Derive each section id from the **raw heading line**, so `doc read`/`doc index` carry the chunker's id for every heading (markup-bearing headings included), without touching #407's frozen descriptor shape (validator: `bun test test/doc.structure.test.mjs` exits 0 with the corpus parity case reporting 0 mismatches; red before the fix)
+- [x] P10 — Derive each section id from the **raw heading line**, so `doc read`/`doc index` carry the chunker's id for every heading (markup-bearing headings included), without touching #407's frozen descriptor shape (validator: `bun test test/doc.structure.test.mjs` exits 0 with the corpus parity case reporting 0 mismatches; red before the fix)
   (Implements: S11)
   Relevant files: packages/agentic-workflow/src/doc/docops.mjs, packages/agentic-workflow/test/doc.structure.test.mjs
-- [ ] P11 — Phase mapping reads the owner's unit-doc grammar: the executed-phase tick is optional, exactly as `scripts/unit-doc-phases.mjs:23` and `skills/phase-contract/SKILL.md` define it, with a fixture parity case against the owner rule; correct the `D4`/`PE-011` premise in the same change (validator: `bun test test/doc.structure.test.mjs` exits 0 with the owner-grammar parity case green; red before the fix)
+- [x] P11 — Phase mapping reads the owner's unit-doc grammar: the executed-phase tick is optional, exactly as `scripts/unit-doc-phases.mjs:23` and `skills/phase-contract/SKILL.md` define it, with a fixture parity case against the owner rule; correct the `D4`/`PE-011` premise in the same change (validator: `bun test test/doc.structure.test.mjs` exits 0 with the owner-grammar parity case green; red before the fix)
   (Implements: S11)
   Relevant files: packages/agentic-workflow/src/doc/structure.mjs, packages/agentic-workflow/test/doc.structure.test.mjs, docs/fix/366-doc-cli/decisions.md, docs/fix/366-doc-cli/planning-evidence.md
-- [ ] P12 — `F99` refusal capture: charge a key's canonical units without `JSON.stringify`, and capture keys by assignment except `__proto__` (which keeps `defineProperty`) — same bytes, less work per property (validator: `cd packages/agentic-workflow-schema && bun run test` exits 0 and `node --test test/verification-preflight.test.mjs` prints ≤ 17 ms for both 200 000-item refusals; the 50 ms assertion is never edited)
+- [x] P12 — `F99` refusal capture: charge a key's canonical units without `JSON.stringify`, and capture keys by assignment except `__proto__` (which keeps `defineProperty`) — same bytes, less work per property (validator: `cd packages/agentic-workflow-schema && bun run test` exits 0 and `node --test test/verification-preflight.test.mjs` prints ≤ 17 ms for both 200 000-item refusals; the 50 ms assertion is never edited)
   (Implements: S12)
   Relevant files: packages/agentic-workflow-schema/src/verification-contract.ts
-- [ ] P13 — `A3` recorded in `## Future` with its re-trigger (validator: `rg -n 'file - --section' docs/fix/366-doc-cli/SPEC.md` matches ≥ 1)
+- [x] P13 — `A3` recorded in `## Future` with its re-trigger (validator: `rg -n 'file - --section' docs/fix/366-doc-cli/SPEC.md` matches ≥ 1)
   (Implements: S13)
   Relevant files: docs/fix/366-doc-cli/SPEC.md
-- [ ] P14 — The chunker's fence state keeps the fence's **own character and length** (never collapses to three), so a fenced example is never a heading at any nesting depth, and the store's `meta` carries a chunker version that forces a re-scan of a store built by an older scanner (validator: `bun test test/doc.chunks.test.mjs test/doc.sync.test.mjs` exits 0 with the nesting and chunker-version cases, and `bun test test/doc.structure.test.mjs` exits 0 with the id-parity case reporting zero artifact documents)
+- [x] P14 — The chunker's fence state keeps the fence's **own character and length** (never collapses to three), so a fenced example is never a heading at any nesting depth, and the store's `meta` carries a chunker version that forces a re-scan of a store built by an older scanner (validator: `bun test test/doc.chunks.test.mjs test/doc.sync.test.mjs` exits 0 with the nesting and chunker-version cases, and `bun test test/doc.structure.test.mjs` exits 0 with the id-parity case reporting zero artifact documents)
   (Implements: S14)
   Relevant files: packages/agentic-workflow/src/doc/chunks.mjs, packages/agentic-workflow/src/doc/sync.mjs, packages/agentic-workflow/test/doc.chunks.test.mjs, packages/agentic-workflow/test/doc.sync.test.mjs, packages/agentic-workflow/test/doc.structure.test.mjs
-- [ ] P15 — Clear this document's three `phase-lint` reds (two box-4 creation-verb wordings, `P6`'s box-8 expected outcome, the dangling `AC3` link) so the unit doc lints PASS (validator: `bun scripts/phase-lint.mjs docs/fix/366-doc-cli/SPEC.md` prints `verdict PASS`)
+- [x] P15 — Clear this document's three `phase-lint` reds (two box-4 creation-verb wordings, `P6`'s box-8 expected outcome, the dangling `AC3` link) so the unit doc lints PASS (validator: `bun scripts/phase-lint.mjs docs/fix/366-doc-cli/SPEC.md` prints `verdict PASS`)
   (Implements: S14)
   Relevant files: docs/fix/366-doc-cli/SPEC.md
-- [ ] P16 — One heading scanner: `scanChunks` derives its headings from the #407 locator's markdown tree instead of a second fence state machine, both halves share one frontmatter bound and one raw-title rule, and the store's chunker version moves to 3 so an old cache re-scans (validator: `bun test test/doc.chunks.test.mjs test/doc.sync.test.mjs` exits 0 and the parity case reports `0/0/0`)
+- [x] P16 — One heading scanner: `scanChunks` derives its headings from the #407 locator's markdown tree instead of a second fence state machine, both halves share one frontmatter bound and one raw-title rule, and the store's chunker version moves to 3 so an old cache re-scans (validator: `bun test test/doc.chunks.test.mjs test/doc.sync.test.mjs` exits 0 and the parity case reports `0/0/0`)
   (Implements: S15)
   Relevant files: packages/agentic-workflow/src/doc/chunks.mjs, packages/agentic-workflow/src/doc/docops.mjs, packages/agentic-workflow/src/doc/structure.mjs, packages/agentic-workflow/src/doc/sync.mjs
-- [ ] P17 — The id-parity case asserts the whole invariant — zero artifact documents, zero sections the chunker misses, zero id drift — written red first, with the named exception list deleted (validator: `bun test test/doc.structure.test.mjs` exits 0; the case fails against the cut head)
+- [x] P17 — The id-parity case asserts the whole invariant — zero artifact documents, zero sections the chunker misses, zero id drift — written red first, with the named exception list deleted (validator: `bun test test/doc.structure.test.mjs` exits 0; the case fails against the cut head)
   (Implements: S16)
   Relevant files: packages/agentic-workflow/test/doc.structure.test.mjs
-- [ ] P18 — `F1`–`F8` fold lines: one per folded finding (B1, B2, B3, A2, A5, A1, A6, A7), each naming its fold commit and what was verified (validator: `rg -c '^- \*\*F[0-9]+\*\*' docs/fix/366-doc-cli/SPEC.md` matches 8 and each commit resolves from `HEAD`)
+- [x] P18 — `F1`–`F8` fold lines: one per folded finding (B1, B2, B3, A2, A5, A1, A6, A7), each naming its fold commit and what was verified (validator: `rg -c '^- \*\*F[0-9]+\*\*' docs/fix/366-doc-cli/SPEC.md` matches 8 and each commit resolves from `HEAD`)
   (Implements: S17)
   Relevant files: docs/fix/366-doc-cli/SPEC.md
-- [ ] P19 — Publish the branch (validator: `git rev-parse origin/feat/366-doc-cli` matches `git rev-parse HEAD`)
+- [x] P19 — Publish the branch (validator: `git rev-parse origin/feat/366-doc-cli` matches `git rev-parse HEAD`)
   (Implements: S18)
   Relevant files: —
-- [ ] P20 — Prove the release cut in `plan` mode and record the receipt; no version is bumped in the PR (validator: `bun scripts/release.mjs plan` exits 0 and prints `366-doc-cli.md: @gtrabanco/agentic-workflow=minor` and `…-schema=patch`)
+- [x] P20 — Prove the release cut in `plan` mode and record the receipt; no version is bumped in the PR (validator: `bun scripts/release.mjs plan` exits 0 and prints `366-doc-cli.md: @gtrabanco/agentic-workflow=minor` and `…-schema=patch`)
   (Implements: S19)
   Relevant files: docs/fix/366-doc-cli/SPEC.md
-- [ ] P21 — `doc edit --set <text|->` and `--append <text|->` over the same splice primitive, mutually exclusive with `--replacement`, refusals and byte-losslessness unchanged (validator: `bun test test/doc.docops.test.mjs` exits 0 with the new cases; they fail against the cut head)
+- [x] P21 — `doc edit --set <text|->` and `--append <text|->` over the same splice primitive, mutually exclusive with `--replacement`, refusals and byte-losslessness unchanged (validator: `bun test test/doc.docops.test.mjs` exits 0 with the new cases; they fail against the cut head)
   (Implements: S20)
   Relevant files: packages/agentic-workflow/src/doc/grammar.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/test/doc.docops.test.mjs
-- [ ] P22 — `A3`: a path-qualified `--section` on `--file -` is refused by name, not answered `NO_MATCH` (validator: `bun test test/doc.docops.test.mjs` exits 0 with the case asserting the exact stderr; it fails against the cut head)
+- [x] P22 — `A3`: a path-qualified `--section` on `--file -` is refused by name, not answered `NO_MATCH` (validator: `bun test test/doc.docops.test.mjs` exits 0 with the case asserting the exact stderr; it fails against the cut head)
   (Implements: S21)
   Relevant files: packages/agentic-workflow/src/doc/docops.mjs, packages/agentic-workflow/src/doc/grammar.mjs
-- [ ] P23 — The journal writer refuses a fragment whose name does not round-trip and a narrative fragment whose content heading names a different branch (validator: `bun test test/journal.test.mjs` exits 0 with the two refusal cases; the cut head accepts both)
+- [x] P23 — The journal writer refuses a fragment whose name does not round-trip and a narrative fragment whose content heading names a different branch (validator: `bun test test/journal.test.mjs` exits 0 with the two refusal cases; the cut head accepts both)
   (Implements: S22)
   Relevant files: packages/agentic-workflow/src/journal/fragment.mjs, packages/agentic-workflow/test/journal.test.mjs
 
@@ -537,9 +537,13 @@ OPEN rows only; appended by reviewers.
   `bun test test/doc.docops.test.mjs test/doc.structure.test.mjs` · exit 1 ·
   42 pass / 7 fail — the seven new cases (four `--out`, the single-prefix case,
   the corpus id-parity case, the owner-grammar parity case).
-- **E16** — 2026-11-07, green commit `7bc11894`: the same two suites ·
-  exit 0 · **31 pass** (`doc.docops.test.mjs`) and **18 pass**
-  (`doc.structure.test.mjs`), 0 fail.
+- **E16** — 2026-11-07, green commit `7bc11894`: the same two suites —
+  `doc.docops.test.mjs` · exit 0 · 31 pass / 0 fail; `doc.structure.test.mjs` ·
+  17 pass / **1 fail** — the corpus id-parity case still fails at this commit
+  (20 chunk ids do not resolve through the index/read id scheme); its green is
+  `7b2f152b`, as L8 records. *Corrected 2026-11-07 (external verify B-Δ1): this
+  row originally recorded "exit 0 · 31 pass and 18 pass, 0 fail"; a clean clone
+  at the commit does not reproduce that.*
 - **E17** — 2026-11-07, the option grammar at `7bc11894`:
   `doc read --file <doc> --out x.json` → exit 1 `--out belongs to index`, no
   file; `doc edit … --out x.json` → exit 1, document untouched;
@@ -726,9 +730,11 @@ OPEN rows only; appended by reviewers.
   `366-doc-cli.md: @gtrabanco/agentic-workflow-schema=patch`,
   `train version: 5.0.0 (highest bump: major); unified train: all packages carry it`.
 - **E34** — 2026-11-07, at `07832973`: `bun test test/doc.docops.test.mjs` ·
-  35 pass / 0 fail, including `--set` (splice + byte-lossless outside), `--append`
+  37 pass / 0 fail, including `--set` (splice + byte-lossless outside), `--append`
   (its own block before the next heading), both stdin forms and the
   two-sources-refused case; the pre-existing `--replacement` cases unchanged.
+  *Corrected 2026-11-07 (external verify B-Δ1): originally recorded 35 pass;
+  both runtimes observe 37 at the byte-identical suite.*
 - **E35** — 2026-11-07, the stdin id: `doc read --file - --section some/doc.md#x`
   → exit 1, `doc: a path-qualified section id needs a real document path …`, no
   `NO_MATCH`; `--section guide-objective` and `--section Objective` from stdin
@@ -782,12 +788,26 @@ OPEN rows only; appended by reviewers.
   their stated outcome, and `PE-016`–`PE-019` added for the claims the repairs
   rest on.
 
+- **L15** — 2026-11-07, correction batch on external verify **B-Δ1** (the delta
+  verdict at head `e2544f87`; one blocker, docs-only): tasks `P9`–`P23` ticked —
+  delivered across L6/L9/L12/L14, every obligation row `verified`, all
+  validators re-run green by the verifying session — `E16` and `E34` amended to
+  the observed counts, `## Next` re-pointed at the owner's recheck. Scope is
+  exactly the blocker; the two advisories (O12's roundtrip wording; the
+  clone-not-archive method note) stay as recorded in the receipt
+  ([`external-verify.md`](external-verify.md), delta verdict), which rides this
+  same commit.
+
 ## Next
 
-Owner external verification of the diff at `feat/366-doc-cli` head (§8 of the
-applying order: the diff summary, the obligations ledger state, the
-verification block and the documentation state are presented; the PR against
-`main` is opened only after the verdict).
+Owner recheck of correction batch B-Δ1 (§9: one recheck limited to the
+blockers — the tick state, the E16/E34 figures), then the PR against `main`
+only after the verdict.
+
+Historical (superseded): owner external verification of the diff at
+`feat/366-doc-cli` head (§8 of the applying order: the diff summary, the
+obligations ledger state, the verification block and the documentation state
+are presented; the PR against `main` is opened only after the verdict).
 
 ## References
 
