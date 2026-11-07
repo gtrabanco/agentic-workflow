@@ -33,9 +33,14 @@ the foreground (governing request §8).
 | O23 | S6 · S10 | The docs state the corrected contracts: spawn failure is a block, cap truncates without changing the verdict, enabled-without-consent announces once, the interception residual is named, and `<agentDir>` resolves | P9 | P9 | `README.md` · `docs/workflow/SEAM_HOOKS.md` · `skills/init-workspace/SKILL.md` · `.changeset/413-pi-seam-hooks.md` | `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/skill-lint.mjs` reports 0 findings | E-line in `## Log` | verified |
 | O24 | S10 | The receipts reproduce: the unit doc's run counts are the observed ones, and the generated projection's 413 row carries the unit's title rather than template prose | P9 | P9 | `SPEC.md` · `docs/generated/units.md` | `bun scripts/docs-generate.mjs --check` exits 0 with the 413 row reading `fix/413-pi-seam-hooks` | E-line in `## Log` | verified |
 | O25 | S1 · S10 | Every finding of the 2026-11-08 external receipt is dispositioned — fixed with its validator, or recorded as not-a-defect with the gate that proves it | P9 | P9 | `SPEC.md` `## Findings` | `sed -n '/^## Findings/,/^## Log/p' docs/fix/413-pi-seam-hooks/SPEC.md` matches 12 finding rows, none classed `fix-now` while open | E-line in `## Log` | verified |
+| O26 | S4 | The shutdown seam reports before the process exits and stays inside its budget: the entry returns the handler's promise (pi awaits it before teardown) and every hook at `session:end` is capped at `SHUTDOWN_BUDGET_MS`, so a slow check is a timeout block, never a silent loss and never a held quit | P11 | P11 | `src/extension/index.ts` · `src/extension/hooks-wiring.ts` · `src/hooks/dispatcher.ts` | `bun test packages/pi-agentic-workflow/test/hooks-wiring.test.mjs` and `test/alias-coverage.test.mjs` exit 0 with the bounded-shutdown and returned-promise cases passing | E-line in `## Log` | verified |
 
-Evidence map (2026-11-08, the P9 batch re-ran every row of this batch in the
-foreground and recorded it as `P9-V` in the unit doc): O15, O16, O17, O18, O19,
+Evidence map (2026-11-08, `P11-V`): O26 → the wiring and entry suites at this
+head, 608/0 in the package and 56/0 under `node --test` on the four touched
+suites, the bounded-shutdown and returned-promise cases passing.
+
+Evidence map for the P9 batch (2026-11-08, re-ran every row in the foreground
+and recorded it as `P9-V` in the unit doc): O15, O16, O17, O18, O19,
 O20, O21, O22 → the four hooks suites at this head (606/0 in the package, 39/0
 under `node --test` on the touched three), each named case passing; O23 → the
 prose lands in `README.md`, `docs/workflow/SEAM_HOOKS.md`,
