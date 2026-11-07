@@ -13,7 +13,7 @@ fixed output contract per stage.
 
 | stage | what it forces | where the result lives |
 |---|---|---|
-| investigate | a provenance search **before** any claim; every claim journaled | `sources.md` (`id \| claim \| source \| certainty`) |
+| investigate | a provenance search **before** any claim; every claim journaled | `sources.md` (`id \| claim \| source \| provenance \| certainty`) |
 | orient | tiers 0 provenance → 1 research → 2 ask, then cost of being wrong | the same file's rows |
 | ask | one batched form-turn over the tier-2 backlog only | `decisions.md`'s `open-questions@1` block |
 | decide | the owner's answer, or "Decide for me" + reason | the same block's `decision` rows |
