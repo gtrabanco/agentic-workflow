@@ -1,6 +1,0 @@
-## 2026-11-07T20:47:37Z — feat/433-precondition-closure — manual
-- **Commits:** 8 (`72c271f3…8af2554e`)
-- **Files:** 12 files
-- **Summary:** Applied issue #433 (precondition closure) — design enumerates operational prerequisites as receipted tier-0 claims, plan orders topology-first — via inline application protocol (ledger freeze → red suite → green → docs/state → verify → handoff) — PR #455 open, merged decision pending
-- **Decisions:** Budget breach caught by the gate mid-unit: DESIGN.md exceeded #432 re-based context ceilings (4743/327 > 4528/322); repaired by the declared re-base route (ceil(measured×1.10), growth source named) — not trimmed semantics. The pre-push gate was blocked by a stale malformed journal fragment from another session (kind 'manual' outside closed set) — repaired forward by renaming to the conforming name from the entry's own header.
-- **Next:** Owner merge decision on PR #455 (https://github.com/gtrabanco/agentic-workflow/pull/455). After merge: the ## Fixes row is removed per the table's own rule. The stale malformed fragment is now consumable by journal aggregate on the merged tree.
