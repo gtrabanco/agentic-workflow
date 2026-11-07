@@ -248,10 +248,19 @@ describe("doc index CLI (S5)", () => {
 });
 
 describe("owner parity (S11)", () => {
-  // No document may carry a corrupted scan: the chunker's fence state keeps the
-  // opener's own length (S14/A6), so every chunk heading has a section at that
-  // line and the artifact list is empty. It was four documents before the fix.
-  const FENCE_ARTIFACT_DOCS = [];
+  // The fence repair (S14/A6) removed the fence-caused corruption: the eight
+  // backtick lines that used to close a four-backtick block are quoted text now.
+  // What remains is a different, pre-existing disagreement (A7, owner's call):
+  // these three documents carry a fence structure CommonMark and the chunker read
+  // differently (an indented fence inside a list item, and a fenced example whose
+  // heading-like line one parser honours and the other does not), so the chunker
+  // reports a heading where the markdown tree has none. The list is pinned so the
+  // set can neither grow silently nor disappear unnoticed.
+  const FENCE_ARTIFACT_DOCS = [
+    "docs/fix/224-deterministic-replan-routing/progress.md",
+    "docs/fix/383-measured-acceptance/SPEC.md",
+    "skills/triage-issue/references/ISSUE_PROCESS.md",
+  ];
 
   it("carries the chunker's id for every section it scans cleanly", { timeout: 600_000 }, () => {
     const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
