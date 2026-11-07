@@ -61,6 +61,7 @@ new doc takes ownership of a task:
 | An architecture change or a cross-cutting rule | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md), [`docs/architecture/ARCHITECTURAL_INVARIANTS.md`](docs/architecture/ARCHITECTURAL_INVARIANTS.md) |
 | A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
 | Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) |
+| The product-vs-dogfooding safeguard in full (project-only; the guide's rule is the summary) | [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
 | The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
 
 ## Deep references
@@ -79,6 +80,7 @@ while doing one kind of work is one hop away and read on demand:
 | [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md) | replicating the workflow into another project |
 | [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) | landing a breaking surface, and needing the migration note beside it |
 | [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md) | provisioning this repo's own authoring toolchain |
+| [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) | running product-audit here (the domain-drift sweep's method), or when unsure which domain a decision belongs to |
 
 ## Instruction precedence
 
@@ -191,6 +193,15 @@ under [Working rules](#working-rules)).
   **pin**, not a fork. If a real external consumer ever needs a surface kept, that
   is a new unit with a recorded decision — never a default. The review pack reads
   this rule (its compatibility policy) when classifying an obsolete surface.
+- **Domain separation — product vs dogfooding (owner decision 2026-11-07).**
+  The product ships only what it can build deterministically with its own code
+  and prose; the classification test lives on issue 435. This project's
+  decisions (forge publication, papers sweeps, label semantics, scheduling)
+  never enter a product surface unrequested, either direction. Exceptions:
+  owner-requested dual landing (e.g. #405's journal) and this safeguard itself
+  (project-domain, here only). product-audit runs here add a **project-only
+  domain-drift sweep**: product surfaces checked for dogfooding claims, project
+  surfaces for product rules. Never ships in `skills/product-audit/`.
 - **Every repetition names its owner.** Before a rule, contract or vocabulary
   enters this guide — or any doc — find the surface that owns it and link it.
   A second copy is allowed only where a consumer cannot reach the owner, and it
