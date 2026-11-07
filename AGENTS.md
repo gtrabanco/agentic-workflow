@@ -134,8 +134,12 @@ under [Working rules](#working-rules)).
   resolves an issue never merges while any of that issue's `blocked-by`
   relationships is still open — merging out of order ships a unit whose
   prerequisites are absent; `review-change`/`audit-pr` treat an open blocker of
-  the closed issue as a delivery blocker.
-- **Published history is owner-written.** Work in short branches off `main`;
+  the closed issue as a delivery blocker. Soft order relations (`Related` — no
+  blocker, but a better order: resource optimization, schema/grammar definition,
+  or any recorded reason) live in the `## Dependencies` prose section only, are
+  completed at issue creation and revisited at triage — owner:
+  [docs/workflow/ISSUE_WORKFLOW.md §Relationships](docs/workflow/ISSUE_WORKFLOW.md).
+- **Published history is owner-written.**** Work in short branches off `main`;
   `main` only advances through a PR. When `main` moves and the PR conflicts, the
   branch is brought up to date by integrating `main` and resolving the conflicted
   files on the branch: the agent resolves the files and hands the branch back,
