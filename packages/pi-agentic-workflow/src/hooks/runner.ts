@@ -13,9 +13,13 @@ import { runtimeEnv } from "../runtime.js";
  * there is no shell to interpolate anything into. Any shell metacharacter is
  * refused `config-invalid` before a process exists — a hook that needs a
  * pipeline must declare a wrapper script instead. Output is captured under a
- * byte cap with a truncation marker, and every hook has a hard wall-clock
- * timeout; a hook that cannot prove it holds (non-zero exit, timeout) fails
- * closed to `block` (the guard-verdict policy, PE-004).
+ * byte cap with a truncation marker and the excess drained, so volume costs
+ * memory nothing and never decides a verdict; every hook has a hard wall-clock
+ * timeout. A hook that cannot prove it holds — non-zero exit, timeout, or a
+ * process that cannot start at all — fails closed to `block` (the guard-verdict
+ * policy, PE-004). The spawn-failure case settles from the child's `error`
+ * event: an unlistened one throws at the process level and would take the host
+ * down with it (PE-009/PE-010).
  */
 
 export const HOOK_OUTPUT_CAP_BYTES = 32 * 1024;
@@ -87,6 +91,8 @@ export interface HookRunResult {
   output: string;
   truncated: boolean;
   timedOut: boolean;
+  /** Set when the process could not be started at all (`ENOENT`, `EACCES`). */
+  spawnError?: string;
 }
 
 /** A minimal child contract so tests can inject a fake without a process. */
@@ -96,6 +102,7 @@ export interface HookChild {
   stderr: { on(event: "data", handler: (chunk: Buffer | string) => void): void };
   on(event: "close", handler: (code: number | null, signal: NodeJS.Signals | null) => void): void;
   on(event: "exit", handler: (code: number | null, signal: NodeJS.Signals | null) => void): void;
+  on(event: "error", handler: (error: NodeJS.ErrnoException) => void): void;
   kill(signal?: NodeJS.Signals | number): void;
 }
 
@@ -114,10 +121,11 @@ export function runArgv(argv: string[], options: RunArgvOptions): Promise<HookRu
   return new Promise<HookRunResult>((resolve) => {
     let stdout = "";
     let stderr = "";
+    let outBytes = 0;
+    let errBytes = 0;
     let truncated = false;
     let timedOut = false;
     let settled = false;
-    let capKilled = false;
 
     const child = spawnImpl(argv, {
       cwd: options.cwd,
@@ -128,22 +136,22 @@ export function runArgv(argv: string[], options: RunArgvOptions): Promise<HookRu
 
     const capture = (sink: "stdout" | "stderr") => (chunk: Buffer | string) => {
       const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
-      const target = sink === "stdout" ? stdout : stderr;
-      const room = HOOK_OUTPUT_CAP_BYTES - target.length;
-      if (text.length > room) {
-        if (sink === "stdout") stdout += text.slice(0, Math.max(room, 0));
-        else stderr += text.slice(0, Math.max(room, 0));
+      const room = HOOK_OUTPUT_CAP_BYTES - (sink === "stdout" ? outBytes : errBytes);
+      // The cap bounds what is KEPT, never the process: the remainder is drained
+      // and dropped, so a talkative hook costs no memory and no verdict.
+      if (room <= 0) {
         truncated = true;
-        // The cap is a hard bound, not a soft request: an endless producer is
-        // cut off here rather than streamed to the timeout.
-        if (!capKilled) {
-          capKilled = true;
-          killTree("SIGTERM");
-        }
         return;
       }
-      if (sink === "stdout") stdout += text;
-      else stderr += text;
+      const kept = text.length > room ? text.slice(0, room) : text;
+      if (text.length > room) truncated = true;
+      if (sink === "stdout") {
+        stdout += kept;
+        outBytes += kept.length;
+      } else {
+        stderr += kept;
+        errBytes += kept.length;
+      }
     };
     child.stdout.on("data", capture("stdout"));
     child.stderr.on("data", capture("stderr"));
@@ -169,6 +177,23 @@ export function runArgv(argv: string[], options: RunArgvOptions): Promise<HookRu
       });
     };
 
+    /** A process that cannot start at all emits `'error'` and may never emit
+     *  `'close'`: this is the settle point, and it fails closed. Without it the
+     *  event is unhandled and takes the host process down (PE-009). */
+    const onSpawnError = (error: NodeJS.ErrnoException): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve({
+        verdict: "block",
+        exitCode: null,
+        output: `could not start: ${error.message}`,
+        truncated,
+        timedOut,
+        spawnError: error.message,
+      });
+    };
+
     /** Kill the whole process group: a killed wrapper script must not leave a
      *  grandchild holding the stdio pipes (the close event waits on them). */
     const killTree = (signal: NodeJS.Signals): void => {
@@ -188,6 +213,7 @@ export function runArgv(argv: string[], options: RunArgvOptions): Promise<HookRu
     }, timeoutMs);
     timer.unref?.();
 
+    child.on("error", onSpawnError);
     child.on("close", onDone);
     child.on("exit", onDone);
   });
@@ -228,15 +254,18 @@ export async function runHookCommand(handler: HookCommandHandlerLike, options: R
 
 /**
  * O8: the teaching message — non-zero exit blocks the seam with the declared
- * requirement quoted, exactly as declared, never paraphrased.
+ * requirement quoted exactly as written, its own quoting included, never
+ * paraphrased and never re-joined from the argv (O21).
  */
-export function seamBlockMessage(seam: string, argv: string[], result: HookRunResult): string {
+export function seamBlockMessage(seam: string, declared: string, result: HookRunResult): string {
   const how = result.timedOut
     ? `did not finish within its timeout`
-    : `failed (exit ${result.exitCode ?? "signal"})`;
+    : result.spawnError !== undefined
+      ? `could not start (${result.spawnError})`
+      : `failed (exit ${result.exitCode ?? "signal"})`;
   const output = result.output.trim().length > 0 ? `\nOutput (bounded):\n${result.output.trim()}` : "";
   return (
-    `seam-hooks: blocked at ${seam} — the project's declared requirement \`${argv.join(" ")}\` ${how}.` +
+    `seam-hooks: blocked at ${seam} — the project's declared requirement \`${declared}\` ${how}.` +
     `${output}\n` +
     `The project declares this check at the ${seam} seam (.pi/hooks.json); resolve what it reports before continuing past this seam.`
   );
