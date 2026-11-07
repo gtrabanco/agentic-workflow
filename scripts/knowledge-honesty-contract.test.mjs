@@ -241,7 +241,7 @@ test("#432 S4: the research step carries the repo-answered exit with its receipt
 
 test("#432: the model-memory gate is inventoried as prose, and the row resolves", () => {
   const md = read(GATE_INVENTORY);
-  const row = md.split("\n").find((line) => line.startsWith("| model-memory-provenance "));
+  const row = md.split("\n").find((line) => line.startsWith("model-memory-provenance "));
   assert.ok(row, "the inventory carries the model-memory-provenance row");
   const cells = row.split("|").map((c) => c.trim());
   assert.ok(cells.includes("prose"), "the row's carrier is prose (the scriptable half is the deferred second slice)");
