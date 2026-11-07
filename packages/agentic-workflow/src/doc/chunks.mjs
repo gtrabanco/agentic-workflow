@@ -15,8 +15,7 @@
  * headings at all yields exactly the preamble chunk.
  */
 
-const FENCE_RE = /^(`{3,}|~{3,})/;
-const HEADING_RE = /^(#{1,6})\s+(.*)$/;
+import { listSections } from "./section-locator.mjs";
 
 /**
  * The D5 shared slug rule — half B's chunks and half A's `doc read`/`edit`/
@@ -30,6 +29,26 @@ export function slugify(headingPath) {
     .replace(/[^a-z0-9-]+/g, "-")
     .replace(/-{2,}/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+/** The leading frontmatter block's bound: the 0-based index of the first content
+ *  line (0 when the document carries no `---` block). One owner for both halves —
+ *  the chunker never scans those lines and the section index never publishes a
+ *  section from them, so a commented `# key:` inside frontmatter is not a heading
+ *  anywhere (S15/A7). */
+export function leadingFrontmatterEnd(lines) {
+  if (lines.length === 0 || lines[0].trim() !== "---") return 0;
+  for (let i = 1; i < lines.length; i++) if (lines[i].trim() === "---") return i + 1;
+  return 0;
+}
+
+/** A section's own heading line, verbatim — the id source both halves share.
+ *  The locator's `title` is rendered text (markup stripped), so it is the right
+ *  value for a selector and the wrong one for an id (S11/B1). */
+export function rawHeadingTitle(markdown, section) {
+  const lineEnd = markdown.indexOf("\n", section.start);
+  const line = markdown.slice(section.start, lineEnd === -1 ? markdown.length : lineEnd);
+  return line.replace(/^#{1,6}\s+/, "").trim();
 }
 
 /**
@@ -86,43 +105,17 @@ export function scanChunks(markdown, relativePath) {
   if (lines.length > 1 && lines[lines.length - 1] === "" && /\r?\n$/.test(content)) lines.pop();
 
   // Frontmatter block, only when it opens the file.
-  let contentStart = 0;
-  let meta = {};
-  if (lines.length > 0 && lines[0].trim() === "---") {
-    let end = -1;
-    for (let i = 1; i < lines.length; i++) {
-      if (lines[i].trim() === "---") {
-        end = i;
-        break;
-      }
-    }
-    if (end !== -1) {
-      meta = parseFrontmatter(lines.slice(1, end));
-      contentStart = end + 1;
-    }
-  }
+  const contentStart = leadingFrontmatterEnd(lines);
+  const meta = contentStart > 0 ? parseFrontmatter(lines.slice(1, contentStart - 1)) : {};
 
-  // Headings outside fenced code blocks. The fence keeps the opener's own
-  // character AND length: a fence closes only on its own character with at
-  // least its own length (CommonMark), so a three-backtick example inside a
-  // four-backtick block stays quoted text and the block's real close is not
-  // mistaken for a new opener (S14/A6).
-  const headings = []; // {level, title, line (1-based)}
-  let fence = null; // {char, length} of the open fence
-  for (let i = contentStart; i < lines.length; i++) {
-    const trimmed = lines[i].trim();
-    if (fence !== null) {
-      if (trimmed.startsWith(fence.char.repeat(fence.length))) fence = null;
-      continue;
-    }
-    const f = trimmed.match(FENCE_RE);
-    if (f) {
-      fence = { char: f[1][0], length: f[1].length };
-      continue;
-    }
-    const h = trimmed.match(HEADING_RE);
-    if (h) headings.push({ level: h[1].length, title: h[2].trim(), line: i + 1 });
-  }
+  // One heading scanner for both halves: the markdown tree the section locator
+  // builds, never a second fence state machine. A quoted example, an inline code
+  // span that wraps a line, an indented fence inside a list item and a commented
+  // frontmatter key are therefore classified once, for `doc read`/`edit`/`index`
+  // and for retrieval alike (S15/A7).
+  const headings = listSections(content)
+    .filter((section) => section.lines[0] >= contentStart + 1)
+    .map((section) => ({ level: section.depth, title: rawHeadingTitle(content, section), line: section.lines[0] }));
 
   const chunks = [];
   const usedIds = new Set();

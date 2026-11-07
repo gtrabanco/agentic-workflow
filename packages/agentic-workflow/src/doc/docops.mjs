@@ -20,36 +20,28 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import { listSections, SectionLocatorError } from "./section-locator.mjs";
-import { nextSectionId } from "./chunks.mjs";
+import { leadingFrontmatterEnd, nextSectionId, rawHeadingTitle } from "./chunks.mjs";
 
 export { SectionLocatorError };
 
 /**
- * The heading's own line, verbatim — the exact bytes `chunks.mjs` slugs. The
- * locator's `title` is rendered text (its contract strips inline markup), so it
- * is the right value for a title selector and the wrong one for an id: two
- * halves reading one slugger still drift if they feed it different strings
- * (S11/B1).
- */
-function rawHeadingTitle(markdown, section) {
-  const lineEnd = markdown.indexOf("\n", section.start);
-  const line = markdown.slice(section.start, lineEnd === -1 ? markdown.length : lineEnd);
-  return line.replace(/^#{1,6}\s+/, "").trim();
-}
-
-/**
- * Attach the D5 id to every root section of `markdown`, in document order,
- * mirroring `scanChunks`: one `usedIds` set per scan, the heading-path chain
- * rebuilt by the same depth stack from the same raw titles.
- * Returns the locator's section descriptors each carrying an `id`.
+ * Attach the D5 id to every section of `markdown`, in document order, from the
+ * one heading scanner both halves share (`chunks.mjs` slugs the same raw titles
+ * over the same markdown tree); a leading frontmatter block contributes no
+ * section. Returns the locator's section descriptors each carrying an `id`.
  */
 export function sectionsWithIds(markdown, relativePath) {
-  const sections = listSections(markdown);
+  const source = String(markdown);
+  // The first content line, 1-based: a commented `# key:` inside a leading
+  // frontmatter block is frontmatter, never a section — the chunker hides the
+  // same lines, so the two halves cannot disagree (S15/A7).
+  const firstContentLine = leadingFrontmatterEnd(source.split(/\r?\n/)) + 1;
+  const sections = listSections(source).filter((section) => section.lines[0] >= firstContentLine);
   const usedIds = new Set();
   const stack = []; // {depth, title}
   for (const section of sections) {
     while (stack.length > 0 && stack[stack.length - 1].depth >= section.depth) stack.pop();
-    stack.push({ depth: section.depth, title: rawHeadingTitle(markdown, section) });
+    stack.push({ depth: section.depth, title: rawHeadingTitle(source, section) });
     section.id = nextSectionId(usedIds, relativePath, stack.map((entry) => entry.title).join(" > "));
   }
   return sections;
