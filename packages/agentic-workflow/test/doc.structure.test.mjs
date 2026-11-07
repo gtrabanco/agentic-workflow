@@ -248,19 +248,10 @@ describe("doc index CLI (S5)", () => {
 });
 
 describe("owner parity (S11)", () => {
-  // The chunker's fence state machine collapses a fence longer than three
-  // backticks to three (`chunks.mjs` — `fence = f[1][0].repeat(3)`), so a
-  // ``` line inside a ```` block closes it early and the scanner reads a fenced
-  // example as a heading. Those documents carry a corrupted heading-path chain
-  // and no id agreement can be expected from them; the defect is unit 65's own
-  // and is filed as A6, not repaired here. The list is pinned so the artifact
-  // can neither grow silently nor disappear unnoticed.
-  const FENCE_ARTIFACT_DOCS = [
-    "docs/fix/224-deterministic-replan-routing/progress.md",
-    "docs/fix/338-closed-ceremony-cli/SPEC.md",
-    "docs/fix/383-measured-acceptance/SPEC.md",
-    "skills/triage-issue/references/ISSUE_PROCESS.md",
-  ];
+  // No document may carry a corrupted scan: the chunker's fence state keeps the
+  // opener's own length (S14/A6), so every chunk heading has a section at that
+  // line and the artifact list is empty. It was four documents before the fix.
+  const FENCE_ARTIFACT_DOCS = [];
 
   it("carries the chunker's id for every section it scans cleanly", { timeout: 600_000 }, () => {
     const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -289,7 +280,7 @@ describe("owner parity (S11)", () => {
     }
     assert.ok(paired > 8000, `the corpus shrank: ${paired} paired sections`);
     assert.deepEqual(drifted.slice(0, 5), [], `${drifted.length} section id(s) drift from the chunker's`);
-    assert.deepEqual(artifacts, FENCE_ARTIFACT_DOCS, "the fence-artifact document set changed");
+    assert.deepEqual(artifacts, FENCE_ARTIFACT_DOCS, "a document scan is corrupted: chunk headings with no section");
   });
 
   it("maps the template's row shape: the executed-phase tick is state, never shape", () => {
