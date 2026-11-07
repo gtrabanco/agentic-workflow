@@ -365,6 +365,91 @@ printf '%s' '{"timestamp":"2026-11-04T15:12Z","branch":"main","reason":"quit","c
   | npx @gtrabanco/agentic-workflow log render --facts -
 ```
 
+## Workflow seam hooks (optional, consent-gated — issue #413)
+
+Your project can declare commands that run deterministically at the workflow's
+own lifecycle points (seams) — checks at `pre:commit`, notices at
+`session:start`. The dispatcher runs them with **no model in the loop**: argv
+spawn, bounded output, hard timeout, and a block at the seam with the declared
+requirement quoted when a check fails.
+
+**Nothing runs until two explicit gates are open** — off by default, proven by
+test:
+
+1. **Consent** — `/init-workspace` writes your project's entry into the global
+   consent store (`<agentDir>/seam-hooks-consent.json`, keyed by absolute
+   project path) after you say yes. No entry, no execution — ever.
+2. **Opt-in per seam** — every matcher group in your `.pi/hooks.json` must set
+   `"enabled": true`. Declaring a hook is not consent.
+
+### Config form
+
+`.pi/hooks.json` (project) or `<agentDir>/hooks.json` (global), in the Claude
+Code `hooks.json` shape, so existing declarations port:
+
+```json
+{
+  "hooks": {
+    "pre:commit": [
+      {
+        "enabled": true,
+        "hooks": [{ "type": "command", "command": "bun run lint", "timeout": 30 }]
+      }
+    ]
+  }
+}
+```
+
+Precedence mirrors the routing config: both files load, global first, project
+second; the project's flags win. While the project is untrusted, the project
+file is never read.
+
+### Event compatibility table
+
+Every workflow seam is a member of the closed `PROJECTION_SEAMS` vocabulary
+(`@gtrabanco/agentic-workflow-schema`); growing it is a schema-const change,
+never a config trick. Claude Code event names are accepted where they map 1:1.
+
+| Seam (native name) | Fires when | Claude Code alias |
+|---|---|---|
+| `session:start` | the pi session starts | `SessionStart` |
+| `session:end` | the pi session shuts down | `SessionEnd` |
+| `unit:start` / `unit:end` | the lane's unit boundary — validated, auto flags allowed; firing lands with the lane-boundary wiring | — |
+| `phase:start` / `phase:end` | the executor's phase boundary — same status as `unit:*` | — |
+| `pre:commit` | a bash `git commit` is intercepted, before it runs — a failing check **blocks the commit** | — |
+| `post:commit` | after a `git commit` succeeded — a failing check is reported, never retro-blocking | — |
+| `pre:push` | a bash `git push` is intercepted, before it runs — a failing check **blocks the push** | — |
+
+Any other Claude Code event name (`PreToolUse`, `Stop`, …) is refused
+`config-invalid`: this dispatcher has no seam for it, and the refusal says so
+rather than silently dropping the declaration.
+
+### Execution contract
+
+- **No shell.** Commands are tokenized into an argv and spawned with
+  `shell: false` through the package's runtime module (`bun`-else-`node`, the
+  runtime pi itself runs under). Shell metacharacters (`| & ; < > ( ) $ \` *
+  ? [ ] { } ~ #`, newlines) are refused before any process exists — a hook
+  that needs a pipeline declares a wrapper script.
+- **Bounded.** Captured output is capped per stream (32 KiB) with a
+  `[truncated]` marker — reaching the cap kills the process; every hook has a
+  hard timeout (declared `timeout` seconds, default 60, capped at 600).
+- **Fail-closed.** Exit 0 → `allow`. Non-zero or timeout → `block`, and the
+  teaching message quotes the declared requirement exactly as declared (command,
+  seam, exit code, bounded output). `pre:commit`/`pre:push` blocks stop the
+  intercepted git command.
+- **Auto commit/push are explicit per-seam flags, never defaults.**
+  `"autoCommit": true` (+ required `"commitMessage"`) and `"autoPush": true`
+  are valid only on `phase:end` / `unit:end` groups, and run only after the
+  seam's hooks all allow (`git add -A` → `git commit -m <declared>` → `git
+  push`). Refused anywhere else.
+- **Degradation is declared.** Missing config → quiet no-op. Present-but-broken
+  config → the hooks announce the problem **once** per project session and then
+  behave as a no-op — never a silent pass, never a throw into your session.
+
+The consent marker and the hook config are yours: this extension never writes
+either. `/init-workspace` writes the consent entry; you write `.pi/hooks.json`.
+
 ## When a configured model is unavailable
 
 Default: the command **refuses to start** and tells you why — the model is not in
