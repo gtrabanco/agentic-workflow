@@ -215,7 +215,7 @@ unit's fold cycle — a separate `/fold-findings` invocation, never run by this 
 `replan-in-unit` adds user-confirmed phases, and independent work becomes
 proposals. `audit-pr` consumes
 only the verified PR-comment receipt, never the
-chat report; `product-audit` is the periodic sweep. On `REVIEW-FAIL` the manual
+chat report; `product-audit` is the measured-trigger sweep. On `REVIEW-FAIL` the manual
 correction path is `/fold-findings`, then re-run `/review-change` on the changed
 HEAD (bounded at two cycles — a third cycle never starts without an explicit
 user instruction, per `REVIEW_PROCESS.md`); a programmatic outer driver may run

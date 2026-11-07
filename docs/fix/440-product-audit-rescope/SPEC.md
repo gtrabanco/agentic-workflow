@@ -57,7 +57,16 @@ until #437 supplies the measured bands").
 ## Retirements
 
 - The periodic cadence language in `skills/product-audit/SKILL.md` ("Periodically (every few features)…", "periodic" in the relationship diagram) — retired by S4's measured triggers.
-- The bespoke prose route cell (`route: /triage-issue <id> F<k>`, `route: #64 (atomicity/split rules)` as the finding-line grammar) — retired by S5's resolver hand-off grammar (`finding-route@1`); the `→ Next:` batch hand-off stays (it is a closing hand-off, not the route cell).
+- The bespoke prose route cell **of the finding line** (`route: #64 (atomicity/split
+  rules)` as the finding-line grammar, with `route: <the next command for this
+  finding …>` as its placeholder) — retired by S5's resolver hand-off grammar
+  (`finding-route@1`); the `→ Next:` batch hand-off stays (it is a closing
+  hand-off, not the route cell), and so do the four **proposal-stream** `route:`
+  cells (`route: /triage-issue <id> F<k>` and its siblings), which are proposals
+  naming the command that files them — the stream's own shape since #355, never
+  the finding-line grammar S5 re-scopes (qualified 2026-11-07 by the external
+  verify's advisory 4: the bullet as written read as retiring a literal that was
+  never in its scope; the bytes, not the intent, were correct).
 - Evidence after the edits land: `rg -n "Periodically|periodic" skills/product-audit/` → only the measured-trigger prose may name the retired cadence as history, and the route cell carries `finding-route@1` verbs.
 
 ## Non-goals
