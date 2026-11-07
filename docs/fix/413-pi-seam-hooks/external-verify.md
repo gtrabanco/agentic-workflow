@@ -92,3 +92,29 @@ once solo, and then passed twice on the identical command run directly
 (`node --test test/*.test.mjs` → 756/756). It is the timing-bound contention
 class this repo already documented for `unit-route`; it is not change-caused and
 it is not green-by-retry: the suite is green on repeated direct runs at this head.
+
+## Integration with main and the projected-title root cause — 2026-11-08
+
+Owner's orders at the receipt's close: fix the systemic finding now, merge `main`
+into the branch and resolve the conflicts, push the docs half. Evidence:
+
+- **Merge** `d821c3b4` (two parents). Conflicts were graph-level, not code:
+  `docs/ROADMAP.md` (both sides appended a fixes row — main's `#433` and this
+  branch's `#413` both kept, row 112 keeps the `done · #456` settle), `docs/LOGS.md`
+  (main's aggregate whole, this branch's three entries re-appended after it), the
+  journal fragment `20261107T151312Z-…` (rename/delete — main renamed it too and
+  then aggregated it into `LOGS.md`, so its deletion was accepted) and
+  `docs/generated/units.md` (re-rendered; the driver's incoming projection loses
+  to the renderer). `packages/` had no conflict at all.
+- **F13** (the root cause the receipt's A3 only symptom-saw): `unitFacts` took the
+  first `/^# /` line as the title, so the SPEC template's commented frontmatter
+  became the projected description. Red `930f4542` (21 pass / 1 fail) → green
+  `cefc95f5` (22 pass / 0 fail), with the projection regenerated: `#432`'s stale
+  cell corrected itself without editing a closed unit's doc, and the four SPEC
+  templates were deliberately left alone (their comments are legitimate YAML and
+  now inert).
+- **Gates at the merged head:** root suite exit 0 · 89 PASS / 0 FAIL; package
+  suite 606/0; `docs-generate --check` 0 stale; skill-lint PASS; budgets 28/14;
+  `roadmap-settle` PASS 0 violations; `unit-route --triage` exit 0; the offline
+  gate's three judging steps PASS. No mutating path touched the live tree; the
+  fixture trees stayed under `mkdtemp`.
