@@ -1,3 +1,4 @@
+## 2026-11-07T13:31:01Z — docs/journal-aggregate-pr-batch — manual
 - **Commits:** 0 (GitHub issues only; no file changes on this branch)
 - **Files:** docs/LOGS.md (uncommitted, appended)
 - **Summary:** Clef/decision-model evaluation for agentic-workflow and creation of issue #444 (decision-substrate)
