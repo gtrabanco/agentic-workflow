@@ -16,8 +16,8 @@
  * (issue #192's resolved open question: the structure index is the separate,
  * commit-compatible artifact; the retrieval `.db` stays 65's and untouched).
  *
- * The output is never a decision authority: producers of gates and receipts
- * never read it (#192's transversal rule).
+ * The output is never a decision authority: no producer of gates or decisions
+ * ever reads it (#192's transversal rule).
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -173,7 +173,7 @@ export function collectDocIndex(root) {
 /** The `doc index` CLI op (wired by the bin's half-A branch). `--json`
  *  prints exactly one JSON document (the canonical index); `--out <path>`
  *  writes the identical canonical bytes plus a newline; the plain surface
- *  prints one receipt line. The retrieval store is never opened here. */
+ *  prints one summary line. The retrieval store is never opened here. */
 export async function runDocIndex(g, { rootDir }) {
   const index = collectDocIndex(rootDir);
   const bytes = canonicalJson(index) + "\n";
