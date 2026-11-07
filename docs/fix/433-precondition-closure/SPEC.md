@@ -152,6 +152,25 @@ an omission).
   `roadmap rowUpsert` targets the 5-column features table). Recorded by #429
   (E8) as the emitter's absence in its `## Future`. Affects this unit only in
   that its roadmap row is a disclosed hand edit (O9), never a silent one.
+- **node-leg gate red, base-identical (does-not-affect).** In this environment
+  (node v26.13.0), `node --test scripts/doc-discipline.test.mjs` fails the
+  three AC24 store-hook cases ("hook did not create the store") and
+  `node --test scripts/roadmap-moved.test.mjs` fails "the crate's roadmap check
+  refuses instead of reading the pre-move file" (exit 1 ≠ 2) — deterministically
+  (3× runs), and identically at a proper clone of the base `main`; both pass
+  under `bun test` and the full gate passes under
+  `bun scripts/run-root-suite.mjs` (89/0). Mechanism: those suites spawn the
+  repo's CLIs with `process.execPath`, so the node leg exercises the crate
+  under node v26.13.0, whose spawned exit classes differ here. Not introduced
+  by this unit; the owner may want the node floor re-pinned or the spawned
+  runtime pinned (new finding — reported, not cycled, per §9).
+- **`journal aggregate` blocked by a stale fragment (does-not-affect).** The
+  shared `.agentic-workflow/journal/` carries
+  `20261107T151312Z-docs-batch-2-landing-safeguard-manual.md` (kind `manual` —
+  outside `mechanical | narrative`), and the aggregator refuses the whole
+  pending set before moving a byte. This unit's session entry used the §7
+  manual-append fallback; the stale fragment is another session's pending
+  entry and was left untouched (new finding — reported, not repaired).
 
 ## Tasks
 
@@ -199,16 +218,16 @@ validator | required-evidence | status` — shape owned by
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2 | Design stage-1/2 enumerate operational prerequisites (data sources, services, endpoints, tables, credentials, environment) as tier-0 claims with search receipts | P2 | DESIGN.md precondition-closure deliverable | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S2 case) | E line in `## Log` naming the run | planned |
-| O2 | S1, S2 | Each prerequisite resolves to `exists (path:line)` / `confirmed-absent (demonstrated search)` / `owner-answered`; confirmed-absent is evidence, never `unknown` | P2 | DESIGN.md precondition-closure deliverable | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S1/S2 outcome-set case) | E line in `## Log` | planned |
-| O3 | S3 | Every confirmed-absent prerequisite enters the batched ask with exactly the four options recorded, in the `open-questions@1` block the ask stage appends; a promoted dependency is declared twice (prose + native `blocked-by`) | P2 | DESIGN.md deliverable + ask-stage four-option rule | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S3 four-option case) | E line in `## Log` | planned |
-| O4 | S4 | The plan sequences prerequisite tasks before their dependents — topology precedes smallest-first within a ready set — and a dependent task's validator only runs after its prerequisite tasks pass | P3 | PLAN.md ordering rule | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S4 ordering case) | E line in `## Log` | planned |
-| O5 | S5 | A one-shot unit half-covered by the closure gets its project-level answer from the project charter; the per-unit remainder still asks | P2 | DESIGN.md deliverable (charter route) | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S5 charter case) | E line in `## Log` | planned |
-| O6 | S14 (differential) | The existing prose contracts the changed files carry keep their pinned shape — the #303 stage order, the #432 provenance journal and ceiling, the lane turn-contract ticks | P5 | differential via the existing suites | lane agent | `node scripts/run-root-suite.mjs` exits 0 (`knowledge-honesty-contract` among them) | G line in `## Log` | planned |
-| O7 | S6 | The changed references stay within the context budgets the manifest declares | P5 | budget check | lane agent | `bun scripts/check-skill-context.mjs --routes` exits 0 | G line in `## Log` | planned |
-| O8 | S8 | Adopted knowledge (Jackson, Meyer, Wiegers & Beatty, CPM/Critical Chain) carries an `ATTRIBUTION.md` row in this change | P4 | attribution row | lane agent | `rg -n "Problem Frames" docs/research/ATTRIBUTION.md` exits 0 with ≥1 match | E line in `## Log` | planned |
-| O9 | S15 | Repository state ships in the same change: roadmap row (disclosed hand edit — no writer exists, PE-005), changeset intent, regenerated projection, session-log fragment | P4 | docs/state | lane agent | `bun scripts/lint-changeset.mjs` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0 | E lines in `## Log` | planned |
-| O10 | S7 | No new script for the deliverable itself — the sweep is search-receipt-bound; the only `scripts/` addition is the read-only pin suite | P5 | scope guard | lane agent | `git diff --name-only main…HEAD -- scripts/` names only `precondition-closure.test.mjs` | E line in `## Log` | planned |
+| O1 | S2 | Design stage-1/2 enumerate operational prerequisites (data sources, services, endpoints, tables, credentials, environment) as tier-0 claims with search receipts | P2 | DESIGN.md precondition-closure deliverable | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S2 case) | E3 in `## Log` | verified |
+| O2 | S1, S2 | Each prerequisite resolves to `exists (path:line)` / `confirmed-absent (demonstrated search)` / `owner-answered`; confirmed-absent is evidence, never `unknown` | P2 | DESIGN.md precondition-closure deliverable | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S1/S2 outcome-set case) | E3 in `## Log` | verified |
+| O3 | S3 | Every confirmed-absent prerequisite enters the batched ask with exactly the four options recorded, in the `open-questions@1` block the ask stage appends; a promoted dependency is declared twice (prose + native `blocked-by`) | P2 | DESIGN.md deliverable + ask-stage four-option rule | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S3 four-option case) | E3 in `## Log` | verified |
+| O4 | S4 | The plan sequences prerequisite tasks before their dependents — topology precedes smallest-first within a ready set — and a dependent task's validator only runs after its prerequisite tasks pass | P3 | PLAN.md ordering rule | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S4 ordering case) | E3 in `## Log` | verified |
+| O5 | S5 | A one-shot unit half-covered by the closure gets its project-level answer from the project charter; the per-unit remainder still asks | P2 | DESIGN.md deliverable (charter route) | lane agent | `bun test scripts/precondition-closure.test.mjs` exits 0 (the S5 charter case) | E3 in `## Log` | verified |
+| O6 | S14 (differential) | The existing prose contracts the changed files carry keep their pinned shape — the #303 stage order, the #432 provenance journal and ceiling, the lane turn-contract ticks | P5 | differential via the existing suites | lane agent | `node scripts/run-root-suite.mjs` exits 0 (`knowledge-honesty-contract` among them) | G2 (node leg: the two reds are base-identical environment reds — the #303/#432 pins pass in both legs) + G3 (bun gate exit 0, 89/0) in `## Log` | verified |
+| O7 | S6 | The changed references stay within the context budgets the manifest declares | P5 | budget check | lane agent | `bun scripts/check-skill-context.mjs --routes` exits 0 | G4 in `## Log`; the re-base receipt E5 (the first cut exceeded the #432 ceilings — caught by the gate, repaired by the declared re-base) | verified |
+| O8 | S8 | Adopted knowledge (Jackson, Meyer, Wiegers & Beatty, CPM/Critical Chain) carries an `ATTRIBUTION.md` row in this change | P4 | attribution row | lane agent | `rg -n "Problem Frames" docs/research/ATTRIBUTION.md` exits 0 with ≥1 match | E7 in `## Log` | verified |
+| O9 | S15 | Repository state ships in the same change: roadmap row (disclosed hand edit — no writer exists, PE-005), changeset intent, regenerated projection, session-log fragment | P4 | docs/state | lane agent | `bun scripts/lint-changeset.mjs` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0 | E6 + E7 in `## Log` | verified |
+| O10 | S7 | No new script for the deliverable itself — the sweep is search-receipt-bound; the only `scripts/` addition is the read-only pin suite | P5 | scope guard | lane agent | `git diff --name-only main…HEAD -- scripts/` names only `precondition-closure.test.mjs` | E9 in `## Log` | verified |
 
 ## Triaged steps
 
@@ -297,12 +316,32 @@ from `log-kind@1`.
   Lane-reference fix unit; no new script required for the deliverable itself (the sweep is search-receipt-bound).
   ```
 - **L2** — 2026-11-07, the owner's governing request S1, verbatim: `Apply to this repository: issue #433` (with the §0–§9 protocol quoted in S9–S18). The §0 state resolution printed before acting: `proceed` — fresh application (no `docs/fix/433-*` dir, no ledgers, no phases at the branch tip `b8b1d814`).
+- **E1** — 2026-11-07, the §2 frozen-failure corpus receipt: `rg -rn "SponsorCTA|precondition closure" docs/ skills/` · exit 1 · no hit — the issue's motivating failures are consumer-project hits, no in-repo reproducer exists; the change's pin is the prose-shape suite instead (PE-006).
+- **G1** — 2026-11-07, `bun scripts/phase-lint.mjs docs/fix/433-precondition-closure/SPEC.md` · exit 0 · P1–P5 PASS (6/6 each), fingerprint `c0ccce82…`.
+- **E2** — 2026-11-07, `bun test scripts/precondition-closure.test.mjs` at the red commit `4a53b4bc` · exit 1 · 8 fail / 2 pass — every deliverable pin red on the missing rule; the two structural differential pins green (stage order, no-new-grammar).
+- **E3** — 2026-11-07, `bun test scripts/precondition-closure.test.mjs` at the green commit `e964bb7c` · exit 0 · 10 pass / 0 fail.
+- **P1** — 2026-11-07, the ledgers frozen before the first line of code · `72c271f3`.
+- **P2** — 2026-11-07, the red suite landed alone, observed failing · `4a53b4bc`.
+- **P3** — 2026-11-07, the rule landed: `DESIGN.md` §Precondition closure + checklist rows, `PLAN.md` ordering rule, `SKILL.md` §3 pointer · `e964bb7c`.
+- **E4** — 2026-11-07, the red gate caught a real regression of this change: `check-skill-context.test.mjs` and `promise-coherence.test.mjs` red — DESIGN.md measured 4743 est / 327 lines over the re-based-at-#432 ceilings 4528 / 322, which made `measurements()` unavailable and flipped promise-coherence's measure class to PASS. One root cause, two suites. Differential against a base copy confirmed both green at base.
+- **E5** — 2026-11-07, the repair — the declared re-base (the #432-precedent route, growth source named, not trimmed semantics): `referenceEstimateMax`/`referenceLinesMax` re-based to exact `ceil(4743 x 1.10) = 5218` / `ceil(327 x 1.10) = 360` in `SKILL_CONTEXT_BUDGETS.json`'s `referenceSources` (fix 433 entry); after it: `bun scripts/check-skill-context.mjs` · exit 0; both suites exit 0 under `bun test` and `node --test`.
+- **P4** — 2026-11-07, docs/state: ATTRIBUTION rows (S8), roadmap row (disclosed hand edit — E7), changeset intent via the writer script, projection regenerated, session log appended (manual fallback — E8) · `eba5bc1a`.
+- **G2** — 2026-11-07, `node scripts/run-root-suite.mjs` · exit 1 · two suites red (`doc-discipline` AC24 ×3, `roadmap-moved` crate-refusal ×1) — demonstrated identical at a proper clone of base `main` (3× deterministic; `bun run-root-suite.mjs` of the same suite green below) — pre-existing node-leg environment reds (node v26.13.0 spawned-runtime exit classes), recorded in Known pre-existing issues, never attributed to this change.
+- **G3** — 2026-11-07, `bun scripts/run-root-suite.mjs` · exit 0 · 89 PASS / 0 FAIL — the environment-valid full gate (bun-first, per the runtime convention); `scripts/golden-fixture.test.mjs` (the fixture's mechanical half) among them.
+- **G4** — 2026-11-07, `bun scripts/check-skill-context.mjs --routes` · exit 0 · `PASS route budgets: 14 routes`; `--documents` · exit 0.
+- **E6** — 2026-11-07, `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/docs-generate.mjs` regenerated `docs/generated/units.md`, `--check` · exit 0.
+- **E7** — 2026-11-07, `rg -n "Problem Frames" docs/research/ATTRIBUTION.md` · exit 0 · 1 match (O8); the roadmap row is a hand edit because the `## Fixes` active row has no writer (PE-005, #429 E8 precedent) — disclosed, never silent.
+- **E8** — 2026-11-07, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate` · exit 2 block `JOURNAL REFUSAL — unparseable fragment name "20261107T151312Z-docs-batch-2-landing-safeguard-manual.md"` — a stale fragment from another session blocks the whole batch; this unit's entry used the §7 manual-append fallback, the fragment left untouched (Known pre-existing issues).
+- **E9** — 2026-11-07, `git diff --name-only main…HEAD -- scripts/` · names only `precondition-closure.test.mjs` (O10 — no new script for the deliverable itself, S7).
+- **E10** — 2026-11-07, the golden-fixture weak-model smoke (GOLDEN_FIXTURE.md steps 2–4) skipped: this environment exposes no second/weaker model to run the smoke against; the fixture's mechanical half ran in G3. Named skip, not silence.
+- **P5** — 2026-11-07, the obligations closed on foreground runs (E3, G3, G4, E6, E7, E9) and the diff handed to the owner — this receipt commit.
 
 ## Next
 
-The next incomplete phase (P1 — the red suite), then the green slices P2–P3,
-docs/state P4, and the foreground verification P5; hand the diff to the owner
-(external verifier).
+Hand the diff to the owner (external verifier, §8). On the verdict: one
+blockers-only correction batch if blockers are reported (§9); on approval,
+open the PR with `Closes #433`, then settle the roadmap row to
+`done · [#<pr>](<pr-url>)` (hand edit — no writer, disclosed) and merge.
 
 ## References
 
