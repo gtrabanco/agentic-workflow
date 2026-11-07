@@ -56,18 +56,23 @@ describe("doc chunker (D5)", () => {
     ok(chunks[0].body.includes("# not a heading"));
   });
 
-  it("never reads a heading out of an inline code span that wraps a line (S15/A7)", () => {
+  it("never reads a heading out of a list continuation that opens with `## ` (S15/A7)", () => {
+    // The real shape (skills/triage-issue/references/ISSUE_PROCESS.md): the
+    // carrier name wraps across lines inside a list item, so the continuation
+    // line starts with `## ` at the item's content column. It is paragraph text,
+    // never a root heading — and the chunker must read it exactly as the tree does.
     const md = [
       "# Guide",
       "",
-      "Append the row to the carrier — `SPEC.md",
-      "## Findings` for a migrated unit, `review-findings.md` for a legacy one.",
+      "- repairable as-is → fold into the phase, or",
+      "  append the row to the carrier — `SPEC.md",
+      "  ## Findings` for a migrated unit, `review-findings.md` for a legacy one.",
       "",
       "## Real",
       "",
       "body",
     ].join("\n");
-    const chunks = scanChunks(md, "span.md");
+    const chunks = scanChunks(md, "nested.md");
     deepStrictEqual(
       chunks.filter((chunk) => chunk.section !== null).map((chunk) => chunk.section),
       ["Guide", "Guide > Real"],

@@ -265,8 +265,8 @@ describe("one scanner (S15)", () => {
     ].join("\n");
     const index = buildDocIndex([{ path: "docs/fix/1-demo/SPEC.md", content: DOC }]);
     const ids = index.files[0].sections.map((section) => section.id);
-    deepStrictEqual(ids, ["docs/fix/1-demo/SPEC.md#fix-1-demo", "docs/fix/1-demo/SPEC.md#fix-1-demo-tasks"]);
-    strictEqual(index.files[0].frontmatter.type, "fix");
+    assert.deepEqual(ids, ["docs/fix/1-demo/SPEC.md#fix-1-demo", "docs/fix/1-demo/SPEC.md#fix-1-demo-tasks"]);
+    assert.equal(index.files[0].frontmatter.type, "fix");
   });
 });
 
