@@ -191,7 +191,9 @@ test("O5: without the carrier the target is the docs/LOGS.md append the issue na
     const target = resolveInvocationTarget({ root, sessionId: SESSION, now: NOW });
     assert.equal(target.target, "append");
     assert.equal(target.path, "docs/LOGS.md");
-    assert.equal(composeDirectiveOf(root, SESSION).includes(JOURNAL_DIR), false, "no fragment path is named at a project that did not opt in");
+    const { directive } = planInvocation({ root, sessionId: SESSION, now: NOW });
+    assert.equal(directive.includes(JOURNAL_DIR), false, "no fragment path is named at a project that did not opt in");
+    assert.match(directive, /append to the end of docs\/LOGS\.md/);
   } finally {
     cleanup(root);
   }
@@ -224,10 +226,10 @@ test("O7: another session's record is neither read nor removed", () => {
     assert.equal(readInvocationRecord(root, SESSION), null, "a record is read by the invoking session id only");
     const mine = planInvocation({ root, sessionId: SESSION, now: NOW });
     assert.equal(mine.record.path, foreign.path, "two sessions of one project resolve the same append target");
-    assert.equal(fs.existsSync(foreignFile), true, "a session never clears the record of another");
 
-    assert.equal(reconcileInvocation(root, "crashed-session").status, "none", "the foreign session is not this session's to report");
-    assert.equal(readInvocationRecord(root, "crashed-session") !== null, true, "and its record is left where it fell");
+    assert.equal(reconcileInvocation(root, SESSION).status, "missing", "this session is reported, the foreign one is not");
+    assert.equal(fs.existsSync(foreignFile), true, "and no reconcile of another session clears or adopts its record");
+    assert.equal(reconcileInvocation(root, undefined).status, "none", "and the fallback id is its own key, never a scan of the directory");
   } finally {
     cleanup(root);
   }
@@ -303,8 +305,10 @@ test("O6: the miss, the exact entry, another new fragment and the grown journal 
 
     const e = planInvocation({ root: created.root, sessionId: SESSION, now: NOW });
     assert.equal(reconcileInvocation(created.root, SESSION).status, "missing", "an absent journal is not a delivered entry");
-    fs.writeFileSync(path.join(created.root, "docs/LOGS.md"), "# Session log\n\n## entry\n");
-    assert.equal(reconcileInvocation(created.root, SESSION).status, "landed", "the project creating its journal counts");
+    fs.writeFileSync(path.join(created.root, "docs/LOGS.md"), "# Session log\n\n");
+    assert.equal(reconcileInvocation(created.root, SESSION).status, "missing", "creating the journal is step 0, not the entry");
+    fs.appendFileSync(path.join(created.root, "docs/LOGS.md"), "## 2026-11-07T09:00:00Z — test-branch — manual\n- **Summary:** first entry\n");
+    assert.equal(reconcileInvocation(created.root, SESSION).status, "landed", "the first entry the project creates counts");
   } finally {
     cleanup(miss.root);
     cleanup(exact.root);
@@ -344,6 +348,10 @@ test("the record is one JSON line whose every field is code's, and removeInvocat
     assert.equal(raw.split("\n").length, 2, "one line, one record");
     assert.deepEqual(Object.keys(JSON.parse(raw)).sort(), Object.keys(record).sort());
 
+    removeInvocationRecord(root, SESSION);
+    assert.equal(fs.existsSync(file), false);
+    assert.equal(fs.readFileSync(writeInvocationRecord(root, record), "utf8"), raw, "the store round-trips its own bytes");
+
     removeInvocationRecord(root, "another-session");
     assert.equal(fs.existsSync(file), true, "a removal names the session it clears");
     removeInvocationRecord(root, SESSION);
@@ -357,6 +365,7 @@ test("composeDirective names the resolved target, the record path and the writer
   const { root } = project({ journal: true, carrier: true });
   try {
     const { record, directive } = planInvocation({ root, sessionId: SESSION, now: NOW });
+    assert.equal(composeDirective(readInvocationRecord(root, SESSION)), directive, "the directive is a function of the record, not of the call that wrote it");
     assert.match(directive, new RegExp(record.path.replace(/[/.]/g, (c) => `\\${c}`)), "the exact path the entry must land at");
     assert.match(directive, /\.pi\/\.session-429-session\.log-session/);
     assert.match(directive, /Summary/, "the prose cells are the model's, and only those");
@@ -365,8 +374,3 @@ test("composeDirective names the resolved target, the record path and the writer
     cleanup(root);
   }
 });
-
-/** The directive of a planned invocation, read back off the record like the model would. */
-function composeDirectiveOf(root, sessionId) {
-  return composeDirective(readInvocationRecord(root, sessionId));
-}
