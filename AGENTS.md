@@ -60,8 +60,7 @@ new doc takes ownership of a task:
 | Writing a unit doc | [`docs/features/_TEMPLATE/SPEC.md`](docs/features/_TEMPLATE/SPEC.md), [`docs/fix/_TEMPLATE/SPEC.md`](docs/fix/_TEMPLATE/SPEC.md) |
 | An architecture change or a cross-cutting rule | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md), [`docs/architecture/ARCHITECTURAL_INVARIANTS.md`](docs/architecture/ARCHITECTURAL_INVARIANTS.md) |
 | A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
-| Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) |
-| The product-vs-dogfooding safeguard in full (project-only; the guide's rule is the summary) | [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
+| Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) — the domain-separation safeguard's detail is [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
 | The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
 
 ## Deep references
