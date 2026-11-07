@@ -29,5 +29,6 @@
 ```text
 path-protection-records@1
 kind | paths | phase | date | authority | justification
-justification | scripts/batch-scheduler.test.mjs | P2 | 2026-11-07 | execute-phase | initial RED suite authorship plus two typo repairs within the same cut, before the suite's first run — no assertion relaxed
+justification | scripts/batch-scheduler.test.mjs | P2 | 2026-11-07 | execute-phase | initial RED suite authorship plus pre-green alignment repairs in the same cut: two broken test-body fragments and one expected error-message string aligned to the validator's named error — no assertion relaxed
+justification | packages/agentic-workflow-schema/test/batch-plan.test.mjs | P3 | 2026-11-07 | execute-phase | initial contract-vector authorship plus pre-green alignment repairs in the same cut: expected error-message strings aligned to the validator's named errors — no assertion relaxed
 ```
