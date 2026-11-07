@@ -7,6 +7,8 @@ import type { Router } from "../routing/dispatch.js";
 import { dirtyWorktreeWarning, receiptGuard } from "./receipt-guard.js";
 import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../routing/types.js";
 import { registerAdvanceCommand } from "./conductor-command.js";
+import { LOG_SESSION_COMMAND, registerLogSessionCommand } from "./log-session-command.js";
+import type { PlanInvocation } from "./log-session-command.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
 import { createProfileStateStore, stateFilePath } from "../routing/state.js";
@@ -61,6 +63,17 @@ export interface ExtensionDeps<M extends ModelRef = ModelRef> {
    * `session_start` still hears it once.
    */
   serenaReadiness?: import("../routing/serena-readiness.js").SerenaReadinessGate;
+  /**
+   * Issue #429: the seams of the `/log-session` code door — the Pi-free core
+   * supplies all three in production, and a suite injects them to own the
+   * clock, the writer run and the settled-turn read.
+   */
+  logSession?: {
+    readonly plan?: PlanInvocation;
+    readonly now?: () => number;
+    readonly bin?: string;
+    readonly run?: import("../log-session-invocation.js").WriterSpawn;
+  };
 }
 
 export interface ExtensionHandle<M extends ModelRef = ModelRef> {
@@ -115,6 +128,20 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
   };
 
   for (const command of catalogue.commands) {
+    // Issue #429: a name this package owns in code is registered by its handler,
+    // not by the prose dispatch. The catalogue entry stays (routing, the console
+    // and the typo report read it), and the name is claimed exactly once — Pi
+    // keeps duplicates and suffixes them (`/log-session:1`), so a second door
+    // beside this one is the failure, not the fallback. One binding site, so the
+    // next anchored command lands here and nowhere else.
+    if (command.name === LOG_SESSION_COMMAND) {
+      registerLogSessionCommand<M>(registrar, {
+        command,
+        dispatch: (entry, args, ctx) => router.dispatch(entry, args, ctx),
+        ...(deps.logSession ?? {}),
+      });
+      continue;
+    }
     registrar.registerCommand(command.name, {
       ...(command.description ? { description: command.description } : {}),
       handler: async (args, ctx) => {
