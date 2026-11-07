@@ -55,6 +55,25 @@ export function storedManifest(db) {
   }
 }
 
+/**
+ * The chunker's own version. Bump it whenever `scanChunks` produces different
+ * chunks for unchanged input: change detection is a per-file content hash, so
+ * without this an existing store would keep serving rows the current scanner no
+ * longer produces (S14/A6). The value lives in the store's `meta` table and
+ * never in the canonical manifest — AC12 pins that export's bytes.
+ */
+export const CHUNKER_VERSION = 2;
+
+/** The chunker version stamped in this store, or null when it carries none. */
+function storedChunkerVersion(db) {
+  try {
+    const row = db.prepare("select value from meta where key = 'chunker'").get();
+    return row ? row.value : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Counts for `--status`: `{files, chunks}` over the store at `root`. */
 export async function storeStats(root) {
   const { db } = await openDatabase(storePath(root));
@@ -75,11 +94,12 @@ export async function syncIndex(root) {
   db.exec(SCHEMA);
 
   const stored = storedManifest(db);
+  const sameChunker = storedChunkerVersion(db) === String(CHUNKER_VERSION);
   const oldFiles = stored?.files ?? {};
   const changed = [];
   const deleted = [];
   for (const [path, info] of Object.entries(manifest.files)) {
-    if (oldFiles[path] === undefined || oldFiles[path].sha256 !== info.sha256) changed.push(path);
+    if (!sameChunker || oldFiles[path] === undefined || oldFiles[path].sha256 !== info.sha256) changed.push(path);
   }
   for (const path of Object.keys(oldFiles)) {
     if (manifest.files[path] === undefined) deleted.push(path);
@@ -127,8 +147,10 @@ export async function syncIndex(root) {
     throw e;
   }
 
-  // Persist + export the canonical manifest (AC12's compared artifact).
+  // Persist + export the canonical manifest (AC12's compared artifact), and stamp
+  // the scanner that produced these rows so a future scanner change re-scans.
   db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('manifest', ?)").run(canonicalJson(manifest));
+  db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('chunker', ?)").run(String(CHUNKER_VERSION));
   db.close();
   writeFileSync(manifestExportPath(root), `${canonicalJson(manifest)}\n`);
 
@@ -151,8 +173,9 @@ export async function ensureFresh(root) {
   if (storePresent(root)) {
     const { db } = await openDatabase(storePath(root));
     const stored = storedManifest(db);
+    const sameChunker = storedChunkerVersion(db) === String(CHUNKER_VERSION);
     db.close();
-    if (stored !== null && canonicalJson(stored) === canonicalJson(current)) {
+    if (sameChunker && stored !== null && canonicalJson(stored) === canonicalJson(current)) {
       return { fresh: true, synced: false };
     }
   }
