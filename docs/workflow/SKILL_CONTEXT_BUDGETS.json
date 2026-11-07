@@ -83,7 +83,11 @@
   },
   "skills": {
     "audit-docs": {
-      "descriptionEstimateMax": 240
+      "descriptionEstimateMax": 240,
+      "mainEstimateMax": 3428,
+      "mainSources": {
+        "issue #435 (project charter, unit 435-project-charter)": "check 16 lands: project-charter coverage audited mechanically (the CAPABILITIES pattern) — declared map row's file exists, charter section present, no unfilled identity slot, no raw catalogue placeholder, closed provenance set per criterion — plus the description gains the charter-coverage trigger and the report template counts 16 checks. Measured at the change by `bun scripts/check-skill-context.mjs`: 3116 est / 228 lines; ceiling re-based to ceil(3116 x 1.10) = 3428 (lines stay under the flat default), reason declared (issue #435 charter check)"
+      }
     },
     "fold-findings": {
       "mainEstimateMax": 5944,

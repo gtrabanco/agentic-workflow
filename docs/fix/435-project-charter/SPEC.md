@@ -184,54 +184,54 @@ n/a — no tests step for this unit
 
 ## Tasks
 
-- P1 — Cut the unit doc + planning ledgers (this freeze): `SPEC.md`,
+- [x] P1 — Cut the unit doc + planning ledgers (this freeze): `SPEC.md`,
   `planning-evidence.md`, `planning-obligations.md`, `decisions.md`; paste the
   machine's triaged steps (validator: `bun scripts/phase-lint.mjs docs/fix/435-project-charter/SPEC.md` prints `verdict PASS`)
   (Implements: S1)
   Relevant files: docs/fix/435-project-charter/
-- P2 — Record the adopted-knowledge attribution row (cite-sources clause) in
+- [x] P2 — Record the adopted-knowledge attribution row (cite-sources clause) in
   `docs/research/ATTRIBUTION.md` (validator: `rg -c "#435" docs/research/ATTRIBUTION.md` matches 3)
   (Implements: S4)
   Relevant files: docs/research/ATTRIBUTION.md
-- P3 — Ship the charter substrate in the template: `## Project charter` skeleton
+- [x] P3 — Ship the charter substrate in the template: `## Project charter` skeleton
   (identity slots + domain slots + dated-assumption record + content rule) and
   the two documentation-map rows in `template/AGENTS.md`; the criteria-catalogue
   template `template/docs/workflow/VERIFICATION_CRITERIA.md` with the closed
   provenance set (validator: `rg -c "## Project charter" template/AGENTS.md` matches 1 and `test -f template/docs/workflow/VERIFICATION_CRITERIA.md` exits 0)
   (Implements: S4, S6, S9, S10)
   Relevant files: template/AGENTS.md template/docs/workflow/VERIFICATION_CRITERIA.md
-- P4 — `skills/init-workspace/SKILL.md`: the charter step before any substrate
+- [x] P4 — `skills/init-workspace/SKILL.md`: the charter step before any substrate
   action — identity layer asked and blocking, domain layer open-with-defaults,
   halt through the existing fail-closed dispatcher, answers land per the map
   (validator: `rg -c "Project charter" skills/init-workspace/SKILL.md` matches ≥1 and `bun scripts/check-skill-context.mjs` prints `PASS context budgets`)
   (Implements: S2, S3, S5, S6, S8)
   Relevant files: skills/init-workspace/SKILL.md
-- P5 — `skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md`: the charter
+- [x] P5 — `skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md`: the charter
   interview round — identity questions blocking, domain questions as dated
   assumptions, non-technical help-mode (validator: `rg -c "identity layer" skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md` matches ≥1 and `rg -c "help-mode" skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md` matches ≥1)
   (Implements: S2, S3, S11)
   Relevant files: skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md
-- P6 — `skills/init-workspace/references/BOOTSTRAP_WRITE.md`: where the answers
+- [x] P6 — `skills/init-workspace/references/BOOTSTRAP_WRITE.md`: where the answers
   land — charter section + map rows in the guide, the catalogue doc, the
   charter's own verify step (validator: `rg -c "Project charter" skills/init-workspace/references/BOOTSTRAP_WRITE.md` matches ≥1)
   (Implements: S6, S9)
   Relevant files: skills/init-workspace/references/BOOTSTRAP_WRITE.md
-- P7 — `skills/init-workspace/references/UPGRADE.md`: the additive charter offer
+- [x] P7 — `skills/init-workspace/references/UPGRADE.md`: the additive charter offer
   for existing installs — blocks missing from the diff, never re-asking what the
   project answered (validator: `rg -c "Project charter" skills/init-workspace/references/UPGRADE.md` matches ≥1)
   (Implements: S6, S8)
   Relevant files: skills/init-workspace/references/UPGRADE.md
-- P8 — `skills/audit-docs/SKILL.md`: charter-coverage check 16 — mandatory
+- [x] P8 — `skills/audit-docs/SKILL.md`: charter-coverage check 16 — mandatory
   charter section present and non-placeholder, catalogue rows
   provenance-typed, per the CAPABILITIES pattern (validator: `rg -n "16\. \*\*Project-charter coverage" skills/audit-docs/SKILL.md` matches 1)
   (Implements: S7, S12)
   Relevant files: skills/audit-docs/SKILL.md
-- P9 — Register the unit and ship the change's own docs state: roadmap `## Fixes`
+- [x] P9 — Register the unit and ship the change's own docs state: roadmap `## Fixes`
   row, the changeset intent file (the repo's changeset CLI), rendered
   projections, `docs/LOGS.md` session entry (validator: `rg -n "#435" docs/ROADMAP.md` matches ≥1)
   (Implements: S1)
   Relevant files: docs/ROADMAP.md .changeset/ docs/LOGS.md
-- P10 — Verification: run every obligation validator in the foreground, close the
+- [x] P10 — Verification: run every obligation validator in the foreground, close the
   obligations ledger, run the deterministic gate (validator: `bun scripts/local-gate.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12)
 
@@ -291,7 +291,10 @@ OPEN rows only, appended by `review-change` and `triage-issue` — none at cut.
 - **P2** — 2026-11-07 · phase — P2 done: three idea-adapted rows landing at #435 in `docs/research/ATTRIBUTION.md`; `rg -c "#435" docs/research/ATTRIBUTION.md` → 3. Commit `c3d8ffef`.
 - **P3** — 2026-11-07 · phase — P3 done: `## Project charter` + two docs-map rows in `template/AGENTS.md`; `template/docs/workflow/VERIFICATION_CRITERIA.md` with the provenance closed set. Validated on a throwaway checklist before landing (counts O2/O3/O6/O9/O10 measured: 2/1/1+1/3·5·3/2, `assumed` → 0). Commit `bae6fd5a`.
 - **P4** — 2026-11-07 · phase — P4 done: `init-workspace/SKILL.md` charter step (turn-contract box, route bullet, §Charter); measured 4358 est / 297 lines over the 4066/281 ceilings → re-based to ceil(4358×1.10)=4794 / ceil(297×1.10)=327 in `SKILL_CONTEXT_BUDGETS.json`, growth source named (issue #435). Commit `74f8cfe7`.
-- **P5–P7** — 2026-11-07 · phase — interview round in `BOOTSTRAP_DISCOVERY.md` (identity blocking via the existing fail-closed flow, domain as dated assumptions, help-mode), landing in `BOOTSTRAP_WRITE.md` step 4, additive offer in `UPGRADE.md` step 2 (same commit as P4).
+- **P5** — 2026-11-07 · phase — interview round in `BOOTSTRAP_DISCOVERY.md`: charter block first, identity questions blocking, domain as dated assumptions, help-mode (same commit as P4).
+- **P6** — 2026-11-07 · phase — landing in `BOOTSTRAP_WRITE.md` step 4: charter answers to the guide's section + map rows + catalogue with provenance (same commit as P4).
+- **P7** — 2026-11-07 · phase — additive charter offer in `UPGRADE.md` step 2's diff list, never re-asking answered identity (same commit as P4).
+- **P10** — 2026-11-07 · phase — verification pass complete: all fourteen obligation validators run in the foreground, the ledger closed `verified` ×14, the differential run recorded (E6), the gate runs recorded (G1–G3). Commit `5cec89c7`.
 - **P8** — 2026-11-07 · phase — `audit-docs` check 16 + description trigger + report template 15→16; inventory fixture validated on throwaway copies (`mktemp -d`): fail-shapes detected (missing section, unfilled slot, raw catalogue cells), pass-shapes clean. Ceiling 3116 est over the 2800 flat default → re-based ceil(3116×1.10)=3428, growth source named. Commit `d5e443b5`.
 - **E4** — 2026-11-07 · evidence — **live-tree side effect, disclosed and cleaned:** a transient `/tmp` full made `mktemp` fail and the first fixture script `cd`'d into the repo root — the repo's own `AGENTS.md` was overwritten (+4/−455) and a stray `VERIFICATION_CRITERIA.md` appeared at root; both restored/removed immediately (§4 rule: disclosed, cleaned, never hidden). Root cause fixed: the rerun fails fast before `cd`, and the fixture output below is from the guarded run.
 - **P9** — 2026-11-07 · phase — registered: roadmap `## Fixes` row #435 (in-progress), changeset `feat-435-project-charter-…` (minor, lint ok), `docs-generate` write regenerated `docs/generated/units.md` (`--check` read DRIFT first — one stale file — then rewritten by the renderer, never by hand, and now `verdict: PASS`). Commit `78a1942f`.
