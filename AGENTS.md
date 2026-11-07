@@ -348,6 +348,8 @@ gate-rejection-vocabulary | skills/pre-execution-review/references/POLICY.md | b
 preflight-gate-traces | skills/execute-phase/references/PREFLIGHT.md | fenced:GATE REJECTION — | gate-rejection-type | no
 pre-execution-gate-trace | skills/execute-phase/references/PRE_EXECUTION_GATE.md | fenced:GATE REJECTION — | gate-rejection-type | no
 sensor-labels | skills/workflow-status/references/PRE_EXECUTION.md | table:One label per stage | n/a | no
+product-audit-trigger | skills/product-audit/SKILL.md | block:audit-trigger@1 | n/a | no
+product-audit-finding-route | skills/product-audit/SKILL.md | block:finding-route@1 | n/a | no
 sweep-declaration-grammar | skills/execute-phase/references/FOLDING.md | block:sweep-declaration@1 | n/a | no
 snapshot-commands | skills/pre-execution-review/references/SNAPSHOT.md | fenced:--stage | pre-execution-stage+pre-execution-unit-kind | no
 ledger-ownership-map | skills/pre-execution-review/references/LEDGERS.md | block:ledger-ownership@1 | n/a | no

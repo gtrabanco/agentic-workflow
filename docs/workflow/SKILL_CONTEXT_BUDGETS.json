@@ -34,8 +34,9 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 109,
+        "machineLines": 111,
         "sources": {
+          "fix 440 (product-audit re-scope)": "the normative-surfaces@1 inventory gains the two rows that bind the re-scope's grammars: `product-audit-trigger` (block:audit-trigger@1 — the measured triggers and the insufficient-corpus verdict) and `product-audit-finding-route` (block:finding-route@1 — the note-7 resolver-verb route cell) in skills/product-audit/SKILL.md. The machine region moves 109 -> 111 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: lines, prose and estimate inside the unchanged ceilings, so only `machineLines` is re-pinned.",
           "issue #359 (unit 96-prose-gate-inventory)": "the guide gains the two index rows that budget a new deep reference (the documentation map and the Deep-references index), because a budgeted reference must be reachable in one hop and a doc that owns a task joins the map. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 433 lines / 7,756 est / 336 prose lines inside the unchanged ceilings, so only those two rows are new; the ceilings were re-based on the same measurement to ceil(433 x 1.10) = 477, ceil(336 x 1.10) = 370 and ceil(7756 x 1.10) = 8,532, and `machineLines` stays 97 because no versioned block moved.",
           "issue #332 (unit 332-agents-md-split)": "the split moved the authoring rules and the packages guidance into docs/workflow/ and added the Deep-references index, the documentation map, the precedence ladder, the testing and ownership rules and the measured runtime carve-out. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 357 lines, 6,255 est, 83 machine-region lines, 274 prose lines. Ceilings re-based to ceil(357 x 1.10) = 393, ceil(274 x 1.10) = 302 and ceil(6255 x 1.10) = 6881. Reason declared: S7 pins the guide's size, and A4 records that the issue's literal 120-line target is unreachable while the three machine blocks stay (S3) — the prose core is pinned instead, so any growth still fails the gate.",
           "external verify of fix/360 (correction batch E16)": "the size tier joins the three risk-tier sets in the inventory: one `size-tier-vocabulary` row (schema-export:SIZE_TIER_KINDS, machine size-tier, must-name yes) added to `normative-surfaces@1` by the external-verify correction batch; measured with `bun scripts/check-skill-context.mjs --documents` at this re-base: 89 machine-region lines, 363 lines / 6,436 est, inside the unchanged ceilings 393 / 302 / 6881",
@@ -141,9 +142,15 @@
       }
     },
     "product-audit": {
-      "mainEstimateMax": 3192,
+      "mainEstimateMax": 4264,
+      "mainLinesMax": 317,
       "mainSources": {
-        "feature 69 / issue #270": "the repo-wide-sweep ownership claim (frontmatter description + the `## When to use` bullet) grew SKILL.md from the measured 2799 (one estimate unit under the 2800 default) to 2901; ceiling re-based to ceil(2901 x 1.10) = 3192"
+        "feature 69 / issue #270": "the repo-wide-sweep ownership claim (frontmatter description + the `## When to use` bullet) grew SKILL.md from the measured 2799 (one estimate unit under the 2800 default) to 2901; ceiling re-based to ceil(2901 x 1.10) = 3192",
+        "fix 440 (product-audit re-scope)": "the measured-trigger cadence replaces the periodic one: the audit-trigger@1 grammar block + the insufficient-corpus verdict block + the finding-route@1 resolver-hand-off grammar (S4/S5 of the unit doc). Measured by `scripts/check-skill-context.mjs` at this re-basis: 3876 est / 288 lines; ceilings re-based to ceil(3876 x 1.10) = 4264 and ceil(288 x 1.10) = 317"
+      },
+      "referenceEstimateMax": 2743,
+      "referenceSources": {
+        "fix 440 (product-audit re-scope)": "AUDIT_DIMENSIONS.md gains the deterministic-producer pre-pass section, the profile-aware scope section and the Producer (pre-pass) column (S2/S3). Measured at this re-basis: 2493 est; ceiling re-based to ceil(2493 x 1.10) = 2743"
       }
     },
     "review-implementation": {
@@ -228,7 +235,7 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11175,
+      "routeEstimateMax": 11178,
       "routeLinesMax": 686,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
@@ -244,7 +251,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 10071 est / 619 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
-        "issue #361 (unit 361-finding-severity-ladder)": "the audit route loads `audit-pr`'s process, whose BLOCKED path now writes the seven-column `findings-table@1` row (impact cell, ladder severity) beside the legacy row shape; measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 11175 est and ceil(measured x 1.10) = 686 lines, reason declared."
+        "issue #361 (unit 361-finding-severity-ladder)": "the audit route loads `audit-pr`'s process, whose BLOCKED path now writes the seven-column `findings-table@1` row (impact cell, ladder severity) beside the legacy row shape; measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 11175 est and ceil(measured x 1.10) = 686 lines, reason declared.",
+        "fix 440 (external-verify correction batch)": "the cadence wording the six blockers required — audit-pr’s relationship bullet now names the measured trigger where it stated the retired periodic cadence — grew these routes by two rounding units; measured with `bun scripts/check-skill-context.mjs --routes --json`: 10161 est / 686 lines; ceilings re-based to the exact ceil(10161 x 1.10) = 11178 est, lines unchanged"
       }
     },
     "audit-pr:fix": {
@@ -252,7 +260,7 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11175,
+      "routeEstimateMax": 11178,
       "routeLinesMax": 686,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
@@ -268,7 +276,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 10071 est / 619 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
-        "issue #361 (unit 361-finding-severity-ladder)": "the audit route loads `audit-pr`'s process, whose BLOCKED path now writes the seven-column `findings-table@1` row (impact cell, ladder severity) beside the legacy row shape; measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 11175 est and ceil(measured x 1.10) = 686 lines, reason declared."
+        "issue #361 (unit 361-finding-severity-ladder)": "the audit route loads `audit-pr`'s process, whose BLOCKED path now writes the seven-column `findings-table@1` row (impact cell, ladder severity) beside the legacy row shape; measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 11175 est and ceil(measured x 1.10) = 686 lines, reason declared.",
+        "fix 440 (external-verify correction batch)": "the cadence wording the six blockers required — audit-pr’s relationship bullet now names the measured trigger where it stated the retired periodic cadence — grew these routes by two rounding units; measured with `bun scripts/check-skill-context.mjs --routes --json`: 10161 est / 686 lines; ceilings re-based to the exact ceil(10161 x 1.10) = 11178 est, lines unchanged"
       }
     },
     "execute-phase:descope": {

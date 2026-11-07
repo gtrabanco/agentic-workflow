@@ -237,3 +237,19 @@ test("accepts cited paths that exist and skips placeholders and package-relative
   const result = run(["--changeset-dir", dir]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
 });
+
+// The committed tree is the linter's own consumer (D-440-5a, owner instruction
+// 2026-11-07): the tool was deterministic and fail-closed over any directory it is
+// pointed at, but nothing ever pointed it at this repository's pending release
+// intents — so a committed intent file citing a path that never existed sat there
+// while every fixture case passed. The linter's default target is `.changeset/`, so
+// this is the same invocation an operator runs by hand, in the suite the root gate
+// already executes on every push.
+test("the shipped repository's own pending intents all lint clean (D-440-5a)", () => {
+  const result = run([]);
+  assert.equal(
+    result.status,
+    0,
+    `a committed .changeset/*.md is malformed or cites a path that does not exist:\n${result.stdout}${result.stderr}`,
+  );
+});

@@ -22,8 +22,9 @@ no journal diff beyond the entries it writes.
   answered identically by every driver), and `render(range)` — the Markdown
   journal as a render target. The shipped drivers: the default Markdown
   driver (byte-identical append, carrier-composed with #405's fragments) and
-  the reference SQLite driver (`.agentic-workflow/journal-store/entries.db`,
-  insert-only, reusing feature 65's runtime adapter). One shared conformance
+  the reference SQLite driver (its default store is created on first use under
+  the project's `.agentic-workflow` directory — a runtime location, never a
+  committed file — insert-only, reusing feature 65's runtime adapter). One shared conformance
   suite (`runDriverConformance`) both pass — and a driver that strips
   metadata or mutates stored entries fails it (the failing-driver fixture).
 - The mechanical writer (`createJournalPublisher`) now appends through the
