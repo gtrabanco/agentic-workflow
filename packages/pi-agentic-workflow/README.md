@@ -36,8 +36,8 @@ their own — they are composed by the ones above:
 | --- | --- |
 | `/audit-docs` | Check that docs, roadmap, code and the fix index agree. |
 | `/audit-pr` | The merge gate: is this PR ready? |
-| `/discover-repository-state` | Freeze verified repository facts. |
 | `/batch-scheduler` | Plan parallel-execution batches over the open work graph. |
+| `/discover-repository-state` | Freeze verified repository facts. |
 | `/execute-phase` | Implement the remaining phases of a planned unit. |
 | `/fold-findings` | Repair persisted fix-now findings. |
 | `/init-workspace` | Adapt the workflow scaffold to a repository. |
@@ -45,8 +45,8 @@ their own — they are composed by the ones above:
 | `/product-audit` | Audit the product surface, not just the diff. |
 | `/resolve-repository-state` | Resolve a contradiction in frozen facts. |
 | `/review-change` | Review a change with the applicable axes. |
-| `/unit-lane` | Run the adaptive lane on a unit: triage, steps, evidence, release. |
 | `/triage-issue` | Verify an issue or finding against current code. |
+| `/unit-lane` | Run the adaptive lane on a unit: triage, steps, evidence, release. |
 | `/workflow-status` | Read-only state of the repository and roadmap. |
 
 Arguments are forwarded verbatim: `/execute-phase P3 --fix` reaches the skill as

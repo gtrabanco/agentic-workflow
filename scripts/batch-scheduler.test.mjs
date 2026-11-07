@@ -638,6 +638,13 @@ test("parity: the plan grammar inventory matches the emitted envelope and the sc
     for (const object of ["blocked", "finding"]) {
       assert.ok(inventory.has(object), `the inventory declares ${object} even when this plan emits none`);
     }
+    // Nested objects are declared too: the union comparison cannot see a field
+    // that only lives one level down.
+    const declaredReason = inventory.get("reason");
+    assert.ok(declaredReason, "the inventory declares the reason object");
+    for (const key of Object.keys(plan.batches[0].lanes[0].issues[0].reason)) {
+      assert.ok(declaredReason.has(key), `the inventory declares reason.${key}`);
+    }
     const { BATCH_PLAN_FIELDS } = await import("../packages/agentic-workflow-schema/dist/index.js");
     const union = new Set([...inventory.values()].flatMap((s) => [...s]));
     assert.deepEqual([...union].sort(), [...BATCH_PLAN_FIELDS].sort(), "the schema package's field list is the inventory's union");

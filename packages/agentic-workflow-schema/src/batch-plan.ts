@@ -42,7 +42,7 @@ export type BatchSizeHint = (typeof BATCH_SIZE_HINTS)[number];
 /** The closed field-name set the plan grammar block orders (`batch-fields@1`). */
 export const BATCH_PLAN_FIELDS = [
   "contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary",
-  "n", "lanes", "surface", "occupied_by", "issues", "number", "title", "lane", "worktree", "command", "reason",
+  "n", "lanes", "surface", "occupied_by", "issues", "number", "title", "lane", "worktree", "command", "reason", "kind",
   "size_hint", "claimed", "blockers", "evidence", "code", "numbers", "detail", "open_issues", "batched",
 ] as const;
 
