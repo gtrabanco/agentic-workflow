@@ -44,7 +44,8 @@ references — the surfaces every unit's knowledge-honesty phase reads:
 
 - `skills/unit-lane/references/DESIGN.md` — the single normative owner of the
   provenance kinds and the certainty ceiling (S1, S2, S3). Its `sources.md`
-  journal table and its orient tiers name model memory as never tier-0.
+  journal table, its § Provenance ceiling and its orient tier-0 row name model
+  memory as never tier-0.
 - `skills/unit-lane/references/RESEARCH.md` — the repo-answered exit rule
   (S4) plus a pointer to the provenance owner.
 - `skills/unit-lane/references/PLAN.md` — the `CLAIM-*` journal table carries
@@ -68,9 +69,10 @@ Nothing executable changes; the worktree branch is `feat/432-model-memory-tier-0
 Nothing is retired. Empty answer: the change only adds a provenance column, an
 exit rule and ledger rows — no surface, token, helper, contract or narrative
 becomes obsolete, and no prose currently states the certainty vocabulary in a
-place this change would leave stale (searched: `rg -n certainty skills/ docs/`
-— the journal tables in DESIGN.md and PLAN.md are the only carriers, and both
-are updated here).
+place this change would leave stale (searched: `rg -ln "confirmed / inferred / unknown" skills/ template/ packages/`
+— the journal tables in DESIGN.md and PLAN.md are the only live carriers, and
+both are updated here; every other `certainty` hit belongs to another unit's
+frozen design record, which that search excludes by construction).
 
 ## Non-goals
 
@@ -119,7 +121,7 @@ ledger rows and pinning tests only — so no new runtime suite applies.
   fixed it), the second because the unregistered unit dir stalled the
   projection (registering the Fixes row fixed it). Both recorded because a red
   gate is never excused by an unrecorded issue — after the two repairs the
-  pre-edit head runs 86 PASS / 0 FAIL.
+  pre-edit head runs 87 PASS / 0 FAIL.
 - `packages/agentic-workflow` `test:node` (crate-suite-node) is red at the
   base tip: `main` carries a committed journal fragment without the contract's
   kind token (`9b27fab9`: `20261107T001707Z-direction-review-odd-hybrid-design-notes-manual.md`),
@@ -161,7 +163,7 @@ never a separate file.
 
 | id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
 |---|---|---|---|---|---|
-| PE-001 | known | The pre-edit head is green once the worktree's deps are installed and the unit is registered: 86 root suites, 0 FAIL | `node scripts/run-root-suite.mjs` → 86 `PASS` lines, `FAIL` count 0 (2026-11-07) | current | O1–O13 |
+| PE-001 | known | The pre-edit head is green once the worktree's deps are installed and the unit is registered: 87 root suites, 0 FAIL (count corrected at the correction batch — `scripts/` carries 87 `*.test.mjs` at the base commit, the pre-edit head and the current head; the 86 was a miscount, the green verdict is unchanged) | `node scripts/run-root-suite.mjs` → 87 `PASS` lines, `FAIL` count 0 (2026-11-07) | current | O1–O13 |
 | PE-002 | known | The four papers the journal cites exist with the titles the attribution rows claim: package-hallucination analysis (USENIX Sec 2025), FreshLLMs/FreshQA, inference-time defenses against package hallucination, model-editing mitigation | `web_fetch` of the four `arxiv.org` abs/html pages, 2026-11-07 — titles recorded verbatim in `## Log` E1 | current | O6 |
 | PE-003 | known | No machine parser reads the `sources.md` journal columns — `rg -l "sources.md" scripts/*.mjs` (non-test) matches nothing, so adding a `provenance` column breaks no consumer | `rg -l "sources\.md" scripts/*.mjs` → empty (2026-11-07) | current | O8 |
 | PE-004 | unknown | Whether measured acceptance will justify the issue's second slice (scripted checks as lane steps) is not decidable in this unit — no measurement exists yet | not measured; the slice stays `open` in `## Future` until #260-rule evidence exists | not-applicable | AC coverage (S3 prose ships; S3 machinery deferred) |
@@ -247,10 +249,20 @@ OPEN rows only. None at cut — the first review is the owner's external verify.
 - **D2** — 2026-11-07, owner decision recorded ahead of the external verify: the issue's second slice (scripted checks as lane steps) stays `open` in `## Future` — no measured acceptance exists yet (#260 rule), so it is not built here.
 - **D3** — 2026-11-07, the owner's external verify returned approval ("Okey") with no findings — §9 earned no correction batch. The PR was opened closing #432 per the plan's next step.
 - **E9** — 2026-11-07, `bun run test:node` + `bun run test` (packages/agentic-workflow) · exit 0 · 388 pass / 0 fail each, after the conforming fragment rename (recorded pre-existing issue above).
+- **L2** — 2026-11-07, the request, verbatim:
+  ```
+  Apply to this repository: arregla tanto los blockers como los advisories, verifica con evidencia la reparación y planifica y evalua antes de arreglar cual será la ruta adecuada para arreglar el problema
+  ```
+- **D4** — 2026-11-07, owner decision recorded for this correction batch: the advisories are in scope, not report-only (the verify protocol reports them; the owner ordered them repaired). One is declined — advisory 5 (other units' `sources.md` ledgers still spelling `| id | claim | source | certainty |`) is **not** repaired: those are frozen design records of closed units, and editing another unit's record is falsification, not documentation currency; the live surfaces (`skills/`, `docs/workflow/`, `template/`, `packages/`) carry only the new grammar, which the Retirements receipt now proves by construction.
+- **E10** — 2026-11-07, the frozen corpus, RED before any edit (each reproducer from `external-verify.md`): `rg -n "on approval, open the PR" …/SPEC.md` → 1 match at `:253` (exit 0); `sed -n '81,93p' DESIGN.md | rg -c "model memory"` → 0; `rg -n "86 (root suites|PASS)" …/SPEC.md` → 2 matches vs `ls scripts/*.test.mjs | wc -l` → 87; `rg -n certainty skills/ docs/ | wc -l` → 66 against the claim that the journal tables are the only carriers; `ls .agentic-workflow/journal/ | rg 432` → none.
+- **E11** — 2026-11-07, §3 fixture (throwaway copy at `/tmp/fix432-batch-*`, removed after): the exact patch, applied there first by an assertion-guarded replacer (each old text must match exactly once), then `bun test scripts/knowledge-honesty-contract.test.mjs` 15 pass / 0 fail · `bun test scripts/unit-doc-contract.test.mjs` 19 pass / 0 fail · `bun scripts/check-skill-context.mjs` PASS 28 skills · `--documents` PASS 4 documents · `node scripts/prose-gate-inventory.mjs` PASS · `bun scripts/skill-lint.mjs` 0 findings · `bun scripts/docs-generate.mjs --check` PASS · the fragment write through `writeFragment` (narrative, branch `feat-432-model-memory-tier-0`, session `local`) parsed back correctly and `bun test test/journal.test.mjs` in `packages/agentic-workflow` ran 24 pass / 0 fail with it in the carrier. **Gap disclosed:** that fixture gate set omitted `scripts/roadmap-settle.test.mjs`'s live-tree case, so the first `## Next` rewrite (which names PR #447's URL) went red at the live gate — `pr-url-unsettled` — and the repair was routed back through the same fixture run before it touched the live tree again: the ROADMAP Fixes row settles to the gate's own expected form `done · [#447](…)`, and the projection is regenerated by `bun scripts/docs-generate.mjs`, never hand-written.
+- **E12** — 2026-11-07, the live tree after both patches: `bun test scripts/knowledge-honesty-contract.test.mjs` 15 pass / 0 fail · `bun test scripts/unit-doc-contract.test.mjs` 19 pass / 0 fail · `bun scripts/check-skill-context.mjs` PASS 28 skills (`unit-lane` 331 lines / 4,332 est, ceiling 322 / 4,528) · `--documents` PASS 4 documents (`GATE_INVENTORY.md` 149 / 57 / 4,862) · `node scripts/prose-gate-inventory.mjs` PASS (`model-memory-provenance — prose · DESIGN.md:61`) · `bun scripts/skill-lint.mjs` 0 findings · `node scripts/roadmap-settle.mjs` PASS 146 unit docs / 0 violations · `bun scripts/docs-generate.mjs --check` PASS 3 files / 0 stale · `bun scripts/lint-changeset.mjs` ok.
+- **E13** — 2026-11-07, advisory 4's corrective entry, written as a NEW carrier fragment and never as an edit of the stale `Next` at `docs/LOGS.md:4588`: `writeFragment` → `.agentic-workflow/journal/20261107T113150Z-feat-432-model-memory-tier-0-narrative-local.md` (1,734 bytes, `parseFragmentName` returns `{timestamp, branch: feat-432-model-memory-tier-0, kind: narrative, sessionId: local}`). `docs/LOGS.md` is untouched — the merge aggregator is its only writer while the carrier is opted in.
+- **E14** — 2026-11-07, the batch's final head: `node scripts/run-root-suite.mjs` · exit 0 · 87 PASS / 0 FAIL, run twice (default worker pool and `--jobs 4`). Honest note: one earlier run of the same suite returned 3 FAILs — `ceremony-workspace`, `ceremony-findings-ledger`, `session-close` — and each of the three re-ran green alone (14 / 0, 19 / 0, 28 / 0) with no assertion message attributable to this change, so the batch is attributed to the gate's worker pool under load, not to the diff; two later full runs were 87 / 0. Crate suites: `bun run test:node` 389 pass / 0 fail, `bun run test` 388 pass / 0 fail (packages/agentic-workflow), `bun run test` 530 pass / 0 fail (packages/pi-agentic-workflow).
 
 ## Next
 
-The owner's external verify of `821b5af5` + `dacf767c` (the diff summary is the handoff message); on approval, open the PR closing #432.
+The owner's external verify of the correction batch `## Log` records (`E10`–`E14`), which closed that receipt's blocker and advisories; then merge [PR #447](https://github.com/gtrabanco/agentic-workflow/pull/447), which closes #432.
 
 ## References
 
