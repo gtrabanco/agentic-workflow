@@ -186,6 +186,41 @@ test("fails closed when the body cites a repo path that does not exist", () => {
   );
 });
 
+// A release note may name a path this repository produces at runtime but never
+// commits — the store a driver writes. The citation is accurate and the file is
+// absent by design, so the heuristic that catches a dead path must not fire on
+// it (issue #429 advisory: the 374 changeset cites the SQLite store).
+test("accepts a cited path the repository ignores, because it is a runtime location", () => {
+  const dir = fixtureDir({
+    "runtime-path.md": [
+      "---",
+      '"@gtrabanco/pi-agentic-workflow": patch',
+      "---",
+      "",
+      "fix(pi): the store lives at `.agentic-workflow/journal-store/entries.db`.",
+      "",
+    ].join("\n"),
+  });
+  const result = run(["--changeset-dir", dir]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
+
+test("still fails a cited path inside the carrier, which is committed and re-included", () => {
+  const dir = fixtureDir({
+    "fragment-path.md": [
+      "---",
+      '"@gtrabanco/pi-agentic-workflow": patch',
+      "---",
+      "",
+      "fix(pi): appends `.agentic-workflow/journal/29990101T000000Z-no-such-fragment.md`.",
+      "",
+    ].join("\n"),
+  });
+  const result = run(["--changeset-dir", dir]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr || result.stdout, /cites a repo path that does not exist/);
+});
+
 test("accepts cited paths that exist and skips placeholders and package-relative citations", () => {
   const dir = fixtureDir({
     "real-paths.md": [
@@ -201,4 +236,20 @@ test("accepts cited paths that exist and skips placeholders and package-relative
   });
   const result = run(["--changeset-dir", dir]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
+});
+
+// The committed tree is the linter's own consumer (D-440-5a, owner instruction
+// 2026-11-07): the tool was deterministic and fail-closed over any directory it is
+// pointed at, but nothing ever pointed it at this repository's pending release
+// intents — so a committed intent file citing a path that never existed sat there
+// while every fixture case passed. The linter's default target is `.changeset/`, so
+// this is the same invocation an operator runs by hand, in the suite the root gate
+// already executes on every push.
+test("the shipped repository's own pending intents all lint clean (D-440-5a)", () => {
+  const result = run([]);
+  assert.equal(
+    result.status,
+    0,
+    `a committed .changeset/*.md is malformed or cites a path that does not exist:\n${result.stdout}${result.stderr}`,
+  );
 });

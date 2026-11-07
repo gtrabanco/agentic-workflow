@@ -209,7 +209,7 @@ execute-phase (all phases done) ─▶ review-change (REVIEW-PASS receipt posted
   coverage, invariant result, manual checks) plus the artifacts of `unit-lane` /
   `execute-phase` (SPEC, phases, docs, `Closes #N`).
 - `audit-docs` is the cross-document coherence check; `audit-pr` is per-PR merge
-  readiness; `product-audit` is the periodic, product-wide full sweep.
+  readiness; `product-audit` is the measured-trigger, product-wide full sweep.
 
 ## Done when
 

@@ -58,7 +58,7 @@ must not have one.
 6. **Verification gate before every commit.** Type-check, tests, and build must
    pass (use the project's own gate commands).
 7. **Review at the right altitude.** The change (`review-change`), then the PR
-   (`audit-pr`), then — periodically — the whole product (`product-audit`).
+   (`audit-pr`), then — on a measured trigger — the whole product (`product-audit`).
 8. **Architecture changes are explicit.** Applicable architectural invariants
    are evidenced and preserved, or changed through an explicit decision — never
    inferred from a feature SPEC or implementation.
@@ -82,7 +82,7 @@ must not have one.
               └─ promote ──▶ /unit-lane (feature mode)
 
    audit-docs ───── docs ↔ roadmap ↔ code ↔ fix index coherence            (anytime)
-   product-audit ── product-wide health check → issues + roadmap proposals (periodic)
+   product-audit ── product-wide health check → issues + roadmap proposals (measured trigger)
 
    # ship-roadmap is retired (feature 61 P9); its deterministic routing lives
    # in `workflow-status` / `unit-lane`.

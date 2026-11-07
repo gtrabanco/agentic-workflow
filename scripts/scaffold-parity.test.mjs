@@ -302,8 +302,13 @@ test("#355 the audit's finding line carries `route:` as the triage taken at flig
   // The fixed output block's finding line, not a proposal: S7 says every finding.
   assert.match(skill, /^ {2}F1 \[SEV · impact\] <dimension> — <finding> — evidence: .* — class: <[^>]+> — route: /m,
     "product-audit's fixed finding line must carry `route:` on every finding (the grade cell names both published sets, #361)");
-  // The route states the next command and, optionally, the one reference it loads.
-  assert.match(skill, /route: <the next command for this finding/);
+  // #440 S5: the route cell is the finding-route@1 resolver hand-off (the
+  // note-7 single-input verbs), never a bespoke prose route. The pin moved
+  // with the spec change (unit doc docs/fix/440-product-audit-rescope/).
+  assert.match(skill, /route: <the finding's resolver hand-off \(finding-route@1\)/);
+  assert.match(skill, /finding-route@1/);
+  assert.match(skill, /never bespoke prose routes/);
+  // The route states the hand-off and, optionally, the one reference it loads.
   assert.match(skill, /loads:/);
   // `none` is a real answer and costs no context.
   assert.match(skill, /`none` costs no context/);

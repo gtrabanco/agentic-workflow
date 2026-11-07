@@ -18,6 +18,7 @@ import { createHintStore, createSerenaReadinessStore, stateFilePath } from "../r
 import { createSerenaReadinessGate, readInitWorkspaceRevision } from "../routing/serena-readiness.js";
 import { createTelemetryWiring, type TelemetryWiring } from "./telemetry-wiring.js";
 import { createAutoLogSessionWiring, type AutoLogSessionWiring } from "./auto-log-session-wiring.js";
+import { createInvocationWatch } from "./log-session-command.js";
 import { provisionEngram, readDeclaredServerNamesFrom, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
 import type { EngramServerConfig } from "./engram.js";
 import { runSettingsConsole } from "../settings/console.js";
@@ -110,6 +111,10 @@ export function richUi(ctx: ExtensionContext): SettingsUi {
 function toInvocationContext(ctx: ExtensionContext): InvocationContext<PiModel> {
   return {
     cwd: ctx.cwd,
+    // Issue #429: the invocation record is keyed by the id the host names, read
+    // defensively — a host that names none is the declared fallback the core
+    // states, never an id this adapter invents.
+    sessionId: sessionIdOf(ctx),
     get model() {
       return ctx.model;
     },
@@ -121,6 +126,16 @@ function toInvocationContext(ctx: ExtensionContext): InvocationContext<PiModel> 
     find: (provider, modelId) => ctx.modelRegistry.find(provider, modelId),
     hasConfiguredAuth: (model) => ctx.modelRegistry.hasConfiguredAuth(model),
   };
+}
+
+/**
+ * The session id Pi hands a context, or undefined. Read structurally: the peer
+ * floor is a range, and a context without a session manager is a caller that
+ * named no id rather than a fault to throw on.
+ */
+function sessionIdOf(ctx: ExtensionContext): string | undefined {
+  const id = (ctx.sessionManager as unknown as { getSessionId?: () => unknown } | undefined)?.getSessionId?.();
+  return typeof id === "string" && id !== "" ? id : undefined;
 }
 
 function toRegistrar(pi: ExtensionAPI, noteCommand: (name: string, args: readonly string[]) => void): CommandRegistrar<PiModel> {
@@ -269,6 +284,11 @@ export default function extension(pi: ExtensionAPI): void {
   // turning the log off never stops the measurement, and turning telemetry off
   // never costs the entry. Nothing is registered while the switch says `off`.
   let autoLog: AutoLogSessionWiring | null = null;
+  // Issue #429 — the settled turn's memory of this session's `/log-session`
+  // invocations. It owes nothing to the two switches above: a session that
+  // recorded an invocation and wrote no entry says so once, whatever the config
+  // says about telemetry or the mechanical journal.
+  const invocations = createInvocationWatch();
   const noteCommand = (name: string, args: readonly string[]): void => telemetry?.noteCommand(name, args);
 
   const { router, guards } = createExtension<PiModel>({
@@ -431,6 +451,12 @@ export default function extension(pi: ExtensionAPI): void {
     // when half-applied edits can be left behind).
     const warning = guards.dirtyWorktreeWarning(readGitStatusBounded(ctx.cwd));
     if (warning) ctx.ui.notify(warning, "warning");
+    // The second settled-turn notice (issue #429): a session that invoked
+    // `/log-session` and left no entry is never allowed to end in silence. The
+    // check is a file read of this session's own record — no git, no spawn, no
+    // state for another session.
+    const missed = invocations.check(ctx.cwd, sessionIdOf(ctx));
+    if (missed) ctx.ui.notify(missed, "warning");
   });
 }
 
