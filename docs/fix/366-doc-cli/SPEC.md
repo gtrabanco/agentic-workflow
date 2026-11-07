@@ -532,9 +532,12 @@ OPEN rows only; appended by reviewers.
   list item, and the two scanners' opposite frontmatter/`---` conventions.
   Repairing it means one scanner (65's chunker) and one parser (#407's locator)
   agreeing on CommonMark block structure — a unit of its own.
-- **G3** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at the second
-  batch's head · **verdict: PASS — 8 step(s) in 245s** · exit 0, the
-  `schema-node-compat` step green in 6s with refusal timings `8.79 / 7.07 ms`.
+- **G3** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` twice, at
+  `799f4b8f` · **PASS — 8 step(s) in 264s** (the earlier run of the same tree,
+  before the receipt line, `245s`) · exit 0 both times, `schema-node-compat`
+  green in 6–7s with refusal timings `8.79 / 7.07 ms` and `8.57 / 7.36 ms`.
+  The commit that carries this line is docs-only; `docs-generate --check` and
+  `phase-lint` were re-run green on top of it.
 - **G2** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` twice: at
   `767de9da` · **PASS — 8 step(s) in 133s**, and at the handoff head
   `7b2f152b` · **PASS — 8 step(s) in 128s** · both exit 0, each with
