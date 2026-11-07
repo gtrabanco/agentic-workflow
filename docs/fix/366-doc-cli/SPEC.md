@@ -467,11 +467,12 @@ OPEN rows only; appended by reviewers.
   exclusion can neither grow silently nor disappear unnoticed — the sanctioned
   "a case that genuinely cannot hold is recorded with its reason", not a
   relaxed assertion.
-- **G2** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at the batch
-  head · **verdict: PASS — 8 step(s) in 133s** · exit 0, with
+- **G2** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` twice: at
+  `767de9da` · **PASS — 8 step(s) in 133s**, and at the handoff head
+  `7b2f152b` · **PASS — 8 step(s) in 128s** · both exit 0, each with
   `schema-node-compat: exit 0 in 5s` (the step that was red twice before `A1`
-  was repaired) and its refusal timings `9.86 / 7.47 ms` against the untouched
-  50 ms bar.
+  was repaired) and refusal timings `9.86 / 7.47 ms` and `8.95 / 7.21 ms`
+  against the untouched 50 ms bar.
 - **L7** — 2026-11-07, a new finding surfaced while pinning O19 and goes to the
   owner instead of into this batch (§9): **A6** — `chunks.mjs:116` sets
   `fence = f[1][0].repeat(3)`, so a fence longer than three backticks (or a
