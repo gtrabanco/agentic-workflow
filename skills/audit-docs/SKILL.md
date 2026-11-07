@@ -9,8 +9,9 @@ description: >
   Audit cross-document coherence: docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index ↔ issues.
   Finds drift — features in docs/ not in the roadmap (or vice versa), fix-index
   entries already merged/closed, broken documentation-map links, dependency
-  cycles, artifacts in the wrong language, naming-convention violations — and
-  reports them ranked by severity, fixing only low-risk items on request.
+  cycles, artifacts in the wrong language, naming-convention violations,
+  project-charter coverage — and reports them ranked by severity, fixing only
+  low-risk items on request.
   Model-agnostic: the skill inherits whatever model and effort your agent
   session is already using.
   Triggers: "check doc consistency", "are the docs in sync", "audit the docs",
@@ -138,6 +139,38 @@ run the command shown, don't infer.
     the product-wide sweep, this check is the docs-tree half). Superseded prose
     left standing beside its replacement is **LOW**. Owners: the rule is
     `AGENTS.md` §Working rules, the step is `skills/unit-lane/references/DOCS.md`.
+16. **Project-charter coverage (issue #435).** Applies when the agent guide
+    declares the charter — a `## Project charter` section or a documentation-map
+    row for the criteria catalogue; an older install that declares neither is
+    stated `n/a` (absent structure, never a finding). Mechanical, the
+    CAPABILITIES pattern — run the commands, never infer:
+    - the declared map row's file exists — a row naming
+      `docs/workflow/VERIFICATION_CRITERIA.md` with no such file is **HIGH**
+      (the map points at nothing);
+    - the charter section is present when either the section or the row is
+      declared — a missing `## Project charter` section is **HIGH** (identity
+      answers with no tier-0 home push agents back to guessing);
+    - no unfilled charter slot survives — a bullet whose entire value is a `<…>`
+      placeholder is the raw-template failure. The scan is **bounded to the
+      `## Project charter` section**, because the guide's other honest
+      placeholders — the Hard-rules stubs `init-workspace` leaves unfilled by
+      design — are not the charter's finding, and a guide-wide scan reports them
+      forever:
+
+      ```text
+      awk '/^## Project charter/{f=1; next} f && /^## /{f=0} f && /^- \*\*[^*]+:\*\* `?<[^>]+>`?$/ {print FILENAME":"FNR":"$0}' AGENTS.md   → prints nothing
+      ```
+
+      (the template's own file is the positive case — its 11 slots print with
+      `path:line`; a legal `unresolved — <question>` value never matches; an
+      identity bullet — the five the template names — is **HIGH**, a domain
+      bullet **LOW**);
+    - the catalogue carries no raw placeholder cell — same scan as the
+      capability seed: `rg -n '\| *\`?<[^>]+>\`? *\|' docs/workflow/VERIFICATION_CRITERIA.md`
+      must print nothing, and every criterion row's provenance cell is one of
+      the closed set (`workflow-generic` / `project-declared` /
+      `stamped assumption (dated)`) — a row naming none is **LOW** (it cannot
+      be consumed as declared);
 
 Adapt the list to what the project has; skip checks for absent structures and
 say so.
@@ -151,11 +184,11 @@ say so.
    ```
    AUDIT DOCS — scope: <docs tree / roadmap / fix index / issues checked>
 
-   | # | Check (1-15) | Finding | Sev | Evidence | Proposed fix |
+   | # | Check (1-16) | Finding | Sev | Evidence | Proposed fix |
    |---|-------------|---------|-----|----------|--------------|
    | 1 | <which>     | <what>  | high|low | <path:line / #issue> | <smallest action> |
 
-   Checks run: <n>/15 (skipped: <which + why — absent structures only>)
+   Checks run: <n>/16 (skipped: <which + why — absent structures only>)
    Summary: <1-2 sentences>
    Decision: PASS | FAIL   (FAIL if any high-severity finding is open)
    ```

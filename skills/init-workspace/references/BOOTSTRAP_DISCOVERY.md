@@ -8,6 +8,38 @@
    a private source, `git clone` via SSH and copy the `template/` subtree instead.**
 3. **Interview to adapt** — small batched rounds, each with a recommended default
    drawn from Step 0; skip whatever discovery already answers:
+   - **Project charter — the two-layer interrogation, before every round
+     below.** The consent gates protect bytes; this round captures what the
+     bytes are for. Two layers, one batched round each, every question offered
+     as **recommended option + why, one alternative**, plus the two standing
+     exits "Decide for me" and "Explain the options":
+     - **Identity layer — blocking; the workflow may not guess these:** what
+       the project is (web app / desktop / library / CLI / docs / infra repo);
+       who uses it and why; where it is deployed and how it is served; the
+       project's license; the ceremony-profile seed (recorded conceptually —
+       the profile's machine grammar is the piecewise-ceremony contract's, not
+       invented here). Expensive to undo ⇒ unanswered is **not** a default: an
+       identity question without a concrete answer halts the run through the
+       same fail-closed flow §Consent uses (scratch unit folder +
+       `bun scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1`
+       block verbatim, stop).
+     - **Domain layer — open-with-defaults, cheap to undo as dated
+       assumptions:** tests policy and the project's gate commands; dependency
+       policy (selection criteria, third-party license respect); documentation
+       policy (generated vs authored, serving, audit cadence, captures);
+       required tooling; data/PII; i18n. Unanswered items are recorded
+       `assumed <YYYY-MM-DD> — <value>` in the charter (never re-asked at every
+       bootstrap, surfaced by the first unit that needs them, never a silent
+       default). Where the answer is already in evidence (a lockfile, CI
+       config, an existing guide), propose it and mark it confirmed rather
+       than re-asking.
+     - **Verification-criteria catalogue (the domain layer's last item):**
+       which acceptance criteria exist at project level, which review passes
+       apply per surface type, what "done" means beyond the generic baseline.
+       **Non-technical owners get help-mode:** a project with no declared
+       criteria is walked through a recommended option with its why,
+       "Explain the options", or "Decide for me" — proposals land as recorded
+       dated assumptions, never silent defaults.
    - **Project** — name + one-line purpose.
    - **Gate** — dev / build / test commands and the verification gate (proposed
      from the detected stack; confirm).
