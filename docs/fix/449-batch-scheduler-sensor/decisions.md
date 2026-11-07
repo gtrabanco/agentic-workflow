@@ -24,3 +24,10 @@
   surgery). The frozen ledgers are the plan; `unit-route --triage` was not run
   for the same reason; the repo's deterministic gates (tests, lints) run
   always.
+- **D5 (2026-11-07, P2) — path-protection records:**
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/batch-scheduler.test.mjs | P2 | 2026-11-07 | execute-phase | initial RED suite authorship plus two typo repairs within the same cut, before the suite's first run — no assertion relaxed
+```
