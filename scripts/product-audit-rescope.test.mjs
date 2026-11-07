@@ -198,4 +198,29 @@ test("the proposals-only contract is untouched (S6)", () => {
   assert.match(skill(), /Never auto-fixes, never opens issues, never edits the roadmap/);
 });
 
+// ── 7. The narration keeps the machine's invocability constraint (D-440-7) ───
+
+// S4 rewrote the cadence in the two narration rows that describe the skill, and in
+// doing so dropped the qualifier they both carried: the audit is invoked by a
+// person, never by the model or a calendar. The constraint itself is machine-owned
+// (`user-invocable: true` + `disable-model-invocation: true` in the frontmatter),
+// so no surface was ever falsified — but a reader of the narration alone could now
+// conclude the audit self-fires. The pin binds the prose to the machine surface.
+// "explicit owner request" is NOT what this looks for: that phrase names a trigger,
+// while the claim at stake is about who may invoke the skill at all.
+test("the narration states explicit invocation beside the measured triggers (D-440-7)", () => {
+  const frontmatter = skill().split("---")[1];
+  assert.match(frontmatter, /user-invocable: true/, "the skill stays human-invoked");
+  assert.match(frontmatter, /disable-model-invocation: true/, "and never model-invoked");
+  const INVOCATION = /explicit[- ]invocation|explicitly invoked|human-invoked|manual invocation/i;
+  for (const rel of ["README.md", "docs/workflow/SKILLS.md"]) {
+    const rows = read(rel).split("\n").filter((l) => l.startsWith("| `product-audit` |"));
+    assert.ok(rows.length > 0, `${rel} carries a product-audit row`);
+    assert.ok(
+      rows.some((row) => INVOCATION.test(row)),
+      `${rel} describes product-audit without the explicit-invocation qualifier its frontmatter declares — a reader of the narration alone would think the audit can self-fire`,
+    );
+  }
+});
+
 console.log("PASS product-audit rescope: measured triggers, pre-pass, profile scope, resolver routes pinned");
