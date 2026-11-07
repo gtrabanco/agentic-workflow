@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { readFileSync } from "node:fs";
 
 import {
   PROJECTION_SEAMS,
@@ -112,10 +113,11 @@ export interface LoadHooksConfigInput {
 }
 
 const NOT_THERE = new Set(["ENOENT", "ENOTDIR"]);
+/** Absent is `null`; present-but-unreadable throws so the caller records it
+ *  (the same contract as `../config/load.ts`). A top-level import, never
+ *  `require`: this is ESM, and `require` exists under bun but not under node. */
 const readIfExists = (path: string, readFile?: (path: string) => string | null): string | null => {
   if (readFile) return readFile(path);
-  // Lazy import is avoided on purpose: the node:fs read mirrors load.ts.
-  const { readFileSync } = require("node:fs") as typeof import("node:fs");
   try {
     return readFileSync(path, "utf8");
   } catch (error) {
