@@ -174,10 +174,56 @@ the steps run inline in the `## Tasks` order P1–P7.
 - **E13** — 2026-11-07, `bun scripts/local-gate.mjs --only pi-compat-guard` at head · exit 1 · TS2307 (`@gtrabanco/agentic-workflow/src/log/render.mjs` etc. not found — the guard type-checks against the published package, which predates the unpublished journal feature), and the identical failure observed at the base commit — pre-existing, differential-proven, excluded from this unit's verdict.
 - **E14** — 2026-11-07, `bun test scripts/prose-gate-inventory.test.mjs` · initially failed `uncited-surface` ×2 (`product-audit-trigger`, `product-audit-finding-route` claimed by no row); both ids added to the `normative-surface-grammar` row's claim list in `docs/workflow/GATE_INVENTORY.md` · re-run exit 0 · 21 pass.
 - **P3** — 2026-11-07, budget re-bases + gate-inventory claims + journal rename · `a4110a4d` + the closing docs commit.
+- **R1** — 2026-11-07, external verify · `HEAD 9ca435b8` against base `e1d94057` · verdict **NEEDS-DECISION (6 open blockers)** · cycle 1 · gate exit 0 (`local-gate --skip-network` PASS 8/8, root-suite exit 0) — the verbatim receipt is `external-verify.md` beside this doc; all declared validators and the red-first differential reproduced there.
+- **L2** — 2026-11-07, the correction, verbatim:
+  ```
+  Todos los findings parecen legítimos, arreglalos
+  ```
+  (owner instruction after R1; recorded with its decision rows and path-protection
+  records in `decisions.md` — D-440-1…D-440-4.)
+- **F2** — 2026-11-07, the six blockers of R1 folded as one correction batch, one
+  root cause (the cadence S4 retired kept being asserted by its surviving mentions):
+  `skills/product-audit/SKILL.md:261` · `skills/audit-pr/SKILL.md:212` ·
+  `skills/review-change/SKILL.md:218` · `docs/workflow/README.md:61` ·
+  `docs/workflow/README.md:85` · `docs/workflow/PORTABLE_PROMPT.md:163` — each now
+  carries the measured-trigger wording `audit-trigger@1` declares. Red commit
+  `73bbc0b5` (the new sweep case observed failing: exit 1 · 15 tests · 14 pass /
+  1 fail, the single failure naming exactly those six mentions and nothing else),
+  green commit `68549fe0`. O1's frozen outcome ("the periodic prose is retired")
+  now reproduces tree-wide, and the class is mechanized so it cannot recur; the
+  dated records stay untouched by declaration (D-440-2: `docs/workflow/MIGRATION.md`,
+  `docs/design/REDESIGN.md`, `docs/features/09-…/SPEC.md`, and `CHANGELOG.md`'s
+  1.0.0 row, which the verify's sweep had not named). No finding row persists in
+  `## Findings` — a folded row leaves the table and becomes this line.
+- **E15** — 2026-11-07, `bun test scripts/product-audit-rescope.test.mjs` · exit 0 · 15 pass / 0 fail at `68549fe0`.
+- **E16** — 2026-11-07, `bun test scripts/scaffold-parity.test.mjs scripts/review-loop-discipline.test.mjs scripts/residue-dimensions.test.mjs scripts/next-recommendations.test.mjs scripts/normative-drift.test.mjs scripts/prose-gate-inventory.test.mjs scripts/red-first.test.mjs` · exit 0 · 105 pass / 0 fail (the sibling-sweep class re-checked where its pins live).
+- **E17** — 2026-11-07, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s) in 0 file(s), verdict: PASS`; `bun scripts/check-skill-context.mjs --budgets` · exit 0 · `PASS context budgets: 28 skills` (product-audit 3878 est / 288 lines, inside the unchanged 4264 / 317 ceilings — the batch is word-level, no ceiling moved); `--routes` · exit 0; `--documents` · exit 0 · `PASS context documents: 4 budgeted documents`; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
+- **E18** — 2026-11-07, advisory 6's correction (append, never rewrite E10): `bun scripts/test-impact.mjs --base main` at `9ca435b8` · exit 0 · `verdict: targeted`, **3** executable paths, **4** suites (`check-skill-context`, `guide-split`, `product-audit-rescope`, `promise-coherence`) — E10's recorded "2 paths / 1 suite" was captured before the last commits landed; the verdict reproduces and all four suites run green here, so O10's validator holds.
+- **E19** — 2026-11-07, advisory 5's differential re-run: `bun scripts/local-gate.mjs --only pi-compat-guard` · exit 1 · 4× TS2307 (`@gtrabanco/agentic-workflow/src/log/render.mjs`, `…/log/publish.mjs`, `…/journal/fragment.mjs`) at head; the guard's inputs are byte-identical at base (`git diff e1d94057..9ca435b8 -- packages/` → empty), so it is pre-existing at `main` and never a defect of this unit — disposition `n/a` here, it rides the owner triage named in `## Next`.
+- **E20** — 2026-11-07, the growth this batch caused, disclosed rather than smoothed:
+  `bun scripts/check-skill-context.mjs --routes --json` · exit 1 · two failures —
+  `audit-pr:feature` and `audit-pr:fix`: declared ceiling 11175 < ceil(10161 × 1.10)
+  = 11178, because the batch's own wording fix ("the periodic, product-wide full
+  sweep" → "the measured-trigger, product-wide full sweep") grew `audit-pr`'s SKILL.md
+  by two rounding units — re-based in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` at the
+  declared formula with the growth source named · re-run `--routes --json` · exit 0 ·
+  `failures: []`; `--routes` · exit 0 · `PASS route budgets: 14 routes`. E17's `--routes`
+  line was captured before the prose fix landed, so it is corrected by this appended
+  line, never in place. Root suite after the re-basis: `bun scripts/run-root-suite.mjs
+  --jobs 1` · exit 0 · all suites PASS.
 
 ## Next
 
-Owner's external verification (§8 of the applied workflow): review the diff on `feat/440-product-audit-rescope`, run any validator you distrust, then decide merge. Two owner findings ride along: (1) `pi-compat-guard` red at main (pre-existing — the guard type-checks a published package that predates the unpublished journal modules); (2) the journal writer-side fragment-name validation gap (F1).
+The correction batch R1 asked for has landed (`73bbc0b5` red → `68549fe0` green,
+receipts E15–E20): the next step is the blockers-only recheck of the batch head,
+then the merge decision on PR #445. The batch also grew two declared ceilings, and
+says so (E20: the `audit-pr` route budgets re-based by two rounding units at the
+declared formula). Still open, none of them this unit's:
+(1) `pi-compat-guard` red at `main` — pre-existing, differential-proven twice (E13,
+E19), the guard type-checks a published package that predates the unpublished
+journal modules; (2) the journal writer-side fragment-name validation gap (F1);
+(3) the advisories kept by declaration — the dated records (D-440-2) and the
+proposal-stream route cells (D-440-3).
 
 ## References
 
@@ -201,3 +247,4 @@ none — the blocking set is empty (issue `## Dependencies`: "The skill re-scope
 - Complete finding sets in hand-offs: `bun test scripts/next-recommendations.test.mjs` exits 0.
 - Skill context budgets: `bun scripts/check-skill-context.mjs --routes` exits 0.
 - Skill authoring lint: `bun scripts/skill-lint.mjs` exits 0.
+- The retired-cadence sweep (the F51/F53 class the external verify reported): `bun test scripts/product-audit-rescope.test.mjs` exits 0 with the live-surface sweep case — no skill, tutorial page or the root README still asserts the periodic cadence.
