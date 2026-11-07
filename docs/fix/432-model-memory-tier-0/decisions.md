@@ -1,5 +1,12 @@
 # Decisions — fix/432-model-memory-tier-0
 
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/knowledge-honesty-contract.test.mjs | P1 | 2026-11-07 | execute-phase | The delta receipt's F1 says the fold needs a pin, not only a repair: one case is added to the test home the issue declared, reading the seven migrated claim journals and refusing `provenance: repository` on any row whose first cited source names something outside the repository (`~/`, `$HOME`, `curl `, `gh issue view`, `gh api`, `npm view`, `registry.`, `pi.dev`, `http`). It lands red, before the cells it judges are corrected; no existing assertion is relaxed, narrowed or deleted.
+approval | scripts/knowledge-honesty-contract.test.mjs | P1 | 2026-11-07 | human-owner | The owner ordered this exact case in the correction batch ("F1 necesita un pin no-vacuo, no solo la corrección: añade un caso a scripts/knowledge-honesty-contract.test.mjs"), and named this suite as its home rather than a new one.
+```
+
 ## Sources journal (design step output)
 
 | id | claim | source | provenance | certainty |
