@@ -112,6 +112,27 @@ test("O5: a broken hook config announces the degradation once at session start a
   }
 });
 
+test("O25 (DA1): a new project session re-announces what the previous session announced once", async () => {
+  const fixture = fixtureProject({ consent: true });
+  const { ctx, notices } = makeCtx(fixture.dir, fixture.agentDir);
+  const wiring = createHooksWiring({ agentDir: fixture.agentDir });
+  try {
+    writeFileSync(join(fixture.dir, ".pi", "hooks.json"), "{oops");
+    await wiring.onSessionStart(ctx);
+    assert.equal(notices.length, 1);
+    // A second onSessionStart is a new project session: the latch resets so
+    // the session hears the announcement again — the README's per-session
+    // promise, not a per-extension-instance one. Within one session the seam
+    // runs stay latched.
+    await wiring.onSessionStart(ctx);
+    assert.equal(notices.length, 2);
+    await wiring.onToolCall(bashEvent("git commit -m x"), ctx);
+    assert.equal(notices.length, 2);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("non-git and status-only commands never trigger a seam", async () => {
   const fixture = fixtureProject({ consent: true });
   const { ctx } = makeCtx(fixture.dir, fixture.agentDir);
@@ -278,6 +299,41 @@ test("O17: the git matcher sees option values and environment prefixes, and only
       "echo git commit",
       "ls -C . commit",
     ];
+    for (const command of quiet) {
+      runs.length = 0;
+      assert.equal(await wiring.onToolCall(bashEvent(command), ctx), undefined, command);
+      assert.deepEqual(runs, [], command);
+    }
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("O26 (DA2): a value-less legal git option never consumes a subcommand — `git --exec-path` prints, it does not commit", async () => {
+  const fixture = fixtureProject({ consent: true });
+  const { ctx } = makeCtx(fixture.dir, fixture.agentDir);
+  const runs = [];
+  const wiring = createHooksWiring({
+    agentDir: fixture.agentDir,
+    spawnHook: async (argv) => {
+      runs.push(argv.join(" "));
+      return { exitCode: 0, output: "", truncated: false, timedOut: false };
+    },
+  });
+  try {
+    writeFileSync(join(fixture.dir, ".pi", "hooks.json"), enabledPreCommit("commit-check"));
+    const firing = {
+      "git --exec-path=/custom/libexec/git-core commit -m x": ["commit-check"],
+    };
+    for (const [command, expected] of Object.entries(firing)) {
+      runs.length = 0;
+      await wiring.onToolCall(bashEvent(command), ctx);
+      assert.deepEqual(runs, expected, command);
+    }
+    // The value-less form prints the exec path and exits without running a
+    // subcommand (proven against the local git in the unit's evidence), so
+    // there is no commit to intercept — quiet either way.
+    const quiet = ["git --exec-path", "git --exec-path /custom/libexec/git-core commit -m x"];
     for (const command of quiet) {
       runs.length = 0;
       assert.equal(await wiring.onToolCall(bashEvent(command), ctx), undefined, command);
