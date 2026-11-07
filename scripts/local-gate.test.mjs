@@ -19,7 +19,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { DEPS, STEPS, hookBody, parseImpactVerdict, peerFloor, scheduleSteps, stepEnv } from "./local-gate.mjs";
+import { DEPS, STEPS, hookBody, parseImpactVerdict, peerFloor, piCompatInstalls, scheduleSteps, stepEnv, workspacePackageDirs } from "./local-gate.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = path.join(ROOT, "scripts", "local-gate.mjs");
@@ -219,9 +219,11 @@ test("the dependency map is closed over the step table, acyclic and self-free", 
 
 test("the dist producer and every step that reads or rebuilds dist depend on schema-build", () => {
   // schema-build's tsc writes dist/; schema-node-compat's own tsc writes the
-  // same tree, and the suites resolve dist at import time. Concurrent runs
-  // would race on the same bytes — the graph is what keeps them apart.
-  for (const consumer of ["schema-node-compat", "crate-suite-bun", "crate-suite-node", "root-suite"]) {
+  // same tree, the suites resolve dist at import time, and pi-compat-guard
+  // links the schema package from the folder and reads the very same types
+  // (issue #429). Concurrent runs would race on the same bytes — the graph is
+  // what keeps them apart.
+  for (const consumer of ["schema-node-compat", "crate-suite-bun", "crate-suite-node", "root-suite", "pi-compat-guard"]) {
     assert.ok(DEPS[consumer].includes("schema-build"), `${consumer} must wait for schema-build`);
   }
   assert.deepEqual(DEPS["schema-build"], ["workspace-install"], "the build itself waits only for the install");
@@ -335,6 +337,30 @@ test("peerFloor refuses a spec with no lower bound instead of testing the wrong 
   for (const spec of ["*", "latest", "next", "", null, undefined]) {
     assert.equal(peerFloor(spec), null, `${JSON.stringify(spec)} has no floor to test`);
   }
+});
+
+// The guard copies `src/` into a scratch project and installs what `src/
+// imports`. Forgetting the package's own dependencies type-checks against a
+// project where their specifiers resolve to nothing (issue #429 advisory):
+// every `@gtrabanco/agentic-workflow/src/…` import became TS2307.
+test("the guard installs the package's own workspace dependencies, linked from the folder", () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "packages/pi-agentic-workflow/package.json"), "utf8"));
+  const dirs = workspacePackageDirs(ROOT);
+  const { specs, missing } = piCompatInstalls(manifest, "1.1.0", dirs);
+  assert.deepEqual(missing, [], "a declared dependency with no workspace sibling is reported, never skipped");
+  assert.ok(specs.includes("@earendil-works/pi-coding-agent@1.1.0"), "the pi peer is installed at the leg under test");
+  assert.ok(specs.includes("@earendil-works/pi-tui@1.1.0"), "the tui peer travels with the pi peer");
+  for (const name of Object.keys(manifest.dependencies ?? {})) {
+    const spec = specs.find((entry) => entry.startsWith(`${name}@file:`));
+    assert.ok(spec, `${name} is installed from the folder, not from a published version that may lag src/`);
+    assert.equal(spec, `${name}@file:${dirs.get(name)}`, "the spec names the workspace directory itself");
+  }
+});
+
+test("a dependency with no workspace sibling is reported, never silently dropped", () => {
+  const { specs, missing } = piCompatInstalls({ dependencies: { "@gtrabanco/not-a-sibling": "1.0.0" } }, "2.0.0", new Map());
+  assert.deepEqual(missing, ["@gtrabanco/not-a-sibling"]);
+  assert.equal(specs.filter((entry) => entry.startsWith("@gtrabanco/not-a-sibling")).length, 0);
 });
 
 test("the guard's floor leg is the floor the pi manifest declares, not a typed literal", () => {
