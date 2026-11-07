@@ -641,6 +641,14 @@ OPEN rows only; appended by reviewers.
   `383-measured-acceptance/SPEC.md`, `docs/features/37-…/planning-findings.md`,
   `skills/triage-issue/references/ISSUE_PROCESS.md`) — the other 20 diff lines are
   this unit's own edited documents.
+- **G5** — 2026-11-07, the `pre-push` hook ran the offline gate subset inside the
+  push itself: `local-gate: PASS — 8 step(s) in 132s`, `schema-node-compat: exit 0
+  in 6s` (the hook refuses the push on a red gate; it did not).
+- **E32** — 2026-11-07, published: `git push origin feat/366-doc-cli` ·
+  `ef63162d..b52ba02d feat/366-doc-cli -> feat/366-doc-cli` · exit 0;
+  `git rev-parse origin/feat/366-doc-cli` = `b52ba02d…`. The commit that carries
+  this line is the receipt itself and is pushed right after it, so the published
+  head is the receipt's, not the anchor's.
 - **G4** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at this batch's
   head · **verdict: PASS — 8 step(s) in 130s** · exit 0, `schema-node-compat`
   green in 5s.
