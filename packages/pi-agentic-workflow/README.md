@@ -40,7 +40,7 @@ their own — they are composed by the ones above:
 | `/execute-phase` | Implement the remaining phases of a planned unit. |
 | `/fold-findings` | Repair persisted fix-now findings. |
 | `/init-workspace` | Adapt the workflow scaffold to a repository. |
-| `/log-session` | Append a structured session entry to `docs/LOGS.md`. |
+| `/log-session` | Log the session: the invocation is recorded and the entry target resolved by code; you write Summary, Decisions and Next. |
 | `/product-audit` | Audit the product surface, not just the diff. |
 | `/resolve-repository-state` | Resolve a contradiction in frozen facts. |
 | `/review-change` | Review a change with the applicable axes. |
@@ -50,6 +50,54 @@ their own — they are composed by the ones above:
 
 Arguments are forwarded verbatim: `/execute-phase P3 --fix` reaches the skill as
 `P3 --fix`.
+
+One command is anchored in code rather than in prose dispatch: `/log-session`
+([#429](https://github.com/gtrabanco/agentic-workflow/issues/429)). Its name
+still comes from the skill's frontmatter — routing, the settings console and the
+configuration above read the same catalogue entry — but a handler runs first, so
+the mechanical part is a fact the harness holds instead of a claim the model
+makes. See [The `/log-session` code door](#the-log-session-code-door-issued-429).
+
+## The `/log-session` code door (issue #429)
+
+A skill invocation is a context injection: nothing executes behind the slash, so
+a model can read `/log-session` and *describe* it. This command is the pilot
+instance of anchoring the invocation itself in code; the prose contract in
+`skills/log-session/SKILL.md` stays the same and stays the door for agents
+without this package.
+
+What the handler does before the skill reaches the model:
+
+- **records the invocation** at `.pi/.session-<id>.log-session`
+  (`log-session-invocation@1`): the resolved target, the session id it belongs
+  to, and the baseline an entry is measured against. Nothing scans for it and no
+  session reads another's record; a run that recorded nothing claims no
+  invocation.
+- **asks the project's own writer** for the facts — `scripts/session-close.mjs
+  render --kind auto`, through the runtime that launched pi — and carries its
+  answer **byte for byte** into the directive. The package renders no journal
+  entry of its own: feature 66's two-writer split holds, so where a project
+  ships no writer script the directive says so instead of inventing facts.
+- **resolves where the entry must land**: with the fragment carrier
+  `.agentic-workflow/journal/` present, the exact fragment name from the
+  grammar's owner (`agentic-workflow journal name --kind narrative` — the same
+  function, verified against the CLI); without it, the `docs/LOGS.md` append.
+  It creates nothing: the carrier's presence is the opt-in, and a project
+  without a journal creates it once, itself.
+- **keeps the routing chain**: the skill is dispatched with the resolved values
+  as its request, so `commands: { "log-session": { model: … } }`, the busy
+  guard, the in-flight refusal and the first-run hint all behave as they did.
+
+Then, when the turn settles, the extension checks its own record: an entry at
+the resolved path clears it; none does not pass in silence — one warning names
+the path it waited for, said once per invocation. A record that no longer parses
+is reported and left alone, never deleted on a guess.
+
+The record is package bookkeeping, so ignore it beside the start marker:
+
+```gitignore
+.pi/.session-*.log-session
+```
 
 ## Model routing
 
