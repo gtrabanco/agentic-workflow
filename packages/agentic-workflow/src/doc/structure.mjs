@@ -30,7 +30,6 @@ import { sectionsWithIds } from "./docops.mjs";
 /** The closed unit-doc frontmatter `type` set (the unit-doc template's keys). */
 export const UNIT_DOC_TYPES = Object.freeze(["feature", "fix", "docs", "chore"]);
 
-const PHASE_RE = /^- \[([ xX])\] (P\d+[a-z]?)\s*[—-]/;
 const TRIGGERS_RE = /Triggers:\s*(.+)$/s;
 const QUOTED_RE = /"([^"]+)"/g;
 
@@ -75,14 +74,35 @@ function sectionText(markdown, sections, title) {
   return null;
 }
 
-/** Phase rows from a `## Tasks` section's checkbox bullets; a fenced row is
- *  never a phase (the section text carries fences, the bullets never parse). */
+/** Phase rows from a `## Tasks` section's bullets. The grammar is the
+ *  phase-contract's unit-doc shape — `scripts/unit-doc-phases.mjs`'
+ *  `UNIT_DOC_BULLET`: one `P<n> —` bullet, the executed-phase `[x]` tick
+ *  OPTIONAL because the tick is state, never a second shape. A fenced example
+ *  is quoted text and never a phase. The copy exists because this crate cannot
+ *  import the repository's script tree; the parity case beside this file runs
+ *  both parsers over the in-tree unit docs so they cannot drift. */
+const PHASE_RE = /^ {0,3}[-*+] (?:\[([ xX])\] )?P(\d+)\s*[—-]\s+\S/;
+
 function parsePhases(tasksText) {
   if (tasksText === null) return [];
   const phases = [];
+  let fence = null;
   for (const line of tasksText.split("\n")) {
+    const trimmed = line.trim();
+    if (fence !== null) {
+      if (trimmed.startsWith(fence)) fence = null;
+      continue;
+    }
+    const opened = /^(`{3,}|~{3,})/.exec(trimmed);
+    if (opened) {
+      fence = opened[1][0].repeat(3);
+      continue;
+    }
     const match = PHASE_RE.exec(line);
-    if (match) phases.push({ id: match[2], status: match[1].trim() === "" ? "open" : "complete" });
+    if (match) {
+      const tick = match[1];
+      phases.push({ id: `P${match[2]}`, status: tick === undefined || tick.trim() === "" ? "open" : "complete" });
+    }
   }
   return phases;
 }
@@ -173,15 +193,13 @@ export function collectDocIndex(root) {
 /** The `doc index` CLI op (wired by the bin's half-A branch). `--json`
  *  prints exactly one JSON document (the canonical index); `--out <path>`
  *  writes the identical canonical bytes plus a newline; the plain surface
- *  prints one summary line. The retrieval store is never opened here. */
+ *  prints one summary line. Both switches together do both — an explicit
+ *  option is never dropped with a success exit (S11). The retrieval store is
+ *  never opened here. */
 export async function runDocIndex(g, { rootDir }) {
   const index = collectDocIndex(rootDir);
   const bytes = canonicalJson(index) + "\n";
   const sections = index.files.reduce((n, f) => n + f.sections.length, 0);
-  if (g.json) {
-    process.stdout.write(bytes);
-    return;
-  }
   if (g.out !== null) {
     const target = resolve(rootDir, g.out);
     try {
@@ -191,7 +209,15 @@ export async function runDocIndex(g, { rootDir }) {
     } catch (e) {
       throw new Error(`doc index: cannot write the artifact (${target}): ${e.message}`);
     }
+    if (g.json) {
+      process.stdout.write(bytes);
+      return;
+    }
     console.log(`doc index: files=${index.files.length} sections=${sections} units=${index.units.length} written=${target}`);
+    return;
+  }
+  if (g.json) {
+    process.stdout.write(bytes);
     return;
   }
   console.log(`doc index: files=${index.files.length} sections=${sections} units=${index.units.length}`);

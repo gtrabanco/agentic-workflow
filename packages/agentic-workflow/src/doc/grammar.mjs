@@ -36,8 +36,10 @@ function usageError(msg) {
  * `{branch: "docop", op, file, section, replacement, out, json, dryRun}`.
  * A missing optional `--section` on `read` means the whole document; `edit`
  * requires `--file` (a real path, never stdin), `--section` and
- * `--replacement`; `index` takes only `--out`. Retrieval flags on this branch
- * are unknown flags — one grammar, no aliases (D2).
+ * `--replacement`; `index` takes only `--out`. A flag that belongs to another
+ * operation is a usage error, never a silent no-op (issue #366, S11): the
+ * grammar's own option set is closed, so `--out` on `read`/`edit` is refused
+ * exactly as `--file` on `index` is.
  */
 function parseDocopArgs(argv) {
   const out = {
@@ -86,6 +88,7 @@ function parseDocopArgs(argv) {
     if (out.replacement !== null) throw usageError("--replacement belongs to edit");
     return out;
   }
+  if (out.out !== null) throw usageError("--out belongs to index");
   if (out.file === null) throw usageError("--file is required");
   if (out.op === "edit") {
     if (out.file === "-") throw usageError("--file - cannot be edited in place; name a document path");
