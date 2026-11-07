@@ -24,7 +24,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 import { canonicalJson, corpusFiles } from "./manifest.mjs";
-import { parseFrontmatter } from "./chunks.mjs";
+import { leadingFrontmatterEnd, parseFrontmatter } from "./chunks.mjs";
 import { sectionsWithIds } from "./docops.mjs";
 
 /** The closed unit-doc frontmatter `type` set (the unit-doc template's keys). */
@@ -56,12 +56,9 @@ export function extractTriggers(meta) {
 /** The frontmatter block's lines, or an empty block when the file opens
  *  with anything else (including a lone `---` with no closer). */
 function frontmatterLines(markdown) {
-  const lines = markdown.split("\n");
-  if (lines[0]?.trim() !== "---") return [];
-  for (let i = 1; i < lines.length; i++) {
-    if (lines[i].trim() === "---") return lines.slice(1, i);
-  }
-  return [];
+  const lines = String(markdown).split(/\r?\n/);
+  const end = leadingFrontmatterEnd(lines);
+  return end === 0 ? [] : lines.slice(1, end - 1);
 }
 
 /** The section text of any section whose title is exactly `title` (first

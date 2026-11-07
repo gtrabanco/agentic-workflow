@@ -62,7 +62,7 @@ export function storedManifest(db) {
  * longer produces (S14/A6). The value lives in the store's `meta` table and
  * never in the canonical manifest — AC12 pins that export's bytes.
  */
-export const CHUNKER_VERSION = 2;
+export const CHUNKER_VERSION = 3;
 
 /** The chunker version stamped in this store, or null when it carries none. */
 function storedChunkerVersion(db) {
