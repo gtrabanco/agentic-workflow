@@ -291,6 +291,7 @@ OPEN rows only; appended by reviewers.
 | A5 | S11 · `docs/fix/366-doc-cli/decisions.md:13`, `planning-evidence.md:23` | documentation | WARNING | docs-only | fix-now | P11 |
 | A1 | S12 · `packages/agentic-workflow-schema/test/verification-preflight.test.mjs:104,122` | performance | WARNING | blocking | fix-now | P12 |
 | A3 | S13 · `packages/agentic-workflow/src/doc/docops.mjs:80-93` | edge case | WARNING | blocking | proposal | `## Future` |
+| A6 | S11 · `packages/agentic-workflow/src/doc/chunks.mjs:116` | retrieval correctness | WARNING | report-only | proposal | owner (unit 65) |
 
 ## Log
 
@@ -411,6 +412,65 @@ OPEN rows only; appended by reviewers.
 - **E14** — 2026-11-07, `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs`
   after the rename · exit 0 (the S15 red is gone at head without touching any
   test).
+- **L6** — 2026-11-07, the correction batch applied under the owner's request.
+  Commits: `8ea10e05` (ledger freeze), `f068f66e` (red-first cases),
+  `7bc11894` (the doc-branch repairs), `767de9da` (the `F99` capture). Scope was
+  exactly the `fix-now` set (B1, B2, B3, A2, A5) plus the owner's override (A1)
+  and the A3 `## Future` row; `A4` stayed `ignore`.
+- **E15** — 2026-11-07, red commit `f068f66e`:
+  `bun test test/doc.docops.test.mjs test/doc.structure.test.mjs` · exit 1 ·
+  42 pass / 7 fail — the seven new cases (four `--out`, the single-prefix case,
+  the corpus id-parity case, the owner-grammar parity case).
+- **E16** — 2026-11-07, green commit `7bc11894`: the same two suites ·
+  exit 0 · **31 pass** (`doc.docops.test.mjs`) and **18 pass**
+  (`doc.structure.test.mjs`), 0 fail.
+- **E17** — 2026-11-07, the option grammar at `7bc11894`:
+  `doc read --file <doc> --out x.json` → exit 1 `--out belongs to index`, no
+  file; `doc edit … --out x.json` → exit 1, document untouched;
+  `doc index --out x.json --json` → exit 0, artifact written, 1 826 238 B
+  printed, identical to the `--json` bytes; refusals now print
+  `DOC REFUSAL — NO_MATCH` + exactly one `doc:` prefix.
+- **E18** — 2026-11-07, id parity at `7bc11894` over the tracked corpus:
+  1016 files · 9174 chunk sections · **9058 paired sections, 0 drift**; the
+  four documents whose chunker scan is corrupted by its own fence rule
+  (`chunks.mjs:116` collapses a fence longer than three backticks — A6) are
+  pinned by name in the case instead of silently skipped.
+- **E19** — 2026-11-07, phase parity at `7bc11894`: 45 in-tree unit docs —
+  index maps phases in **39**, the phase-contract owner
+  (`parseUnitDocPhases`) in **39**, **0 missed, 0 disagreements** (the cut head
+  mapped 12 and missed 27).
+- **E20** — 2026-11-07, `F99` at `767de9da`:
+  `node --test test/verification-preflight.test.mjs` · exit 0 · 8/8, timings
+  `200k plan refusal 9.11 ms` / `200k receipt refusal 9.04 ms` (cut head:
+  21.74 / 19.42 ms); under four concurrent busy loops the same suite · exit 0 ·
+  8/8 with 12.61 / 8.18 ms against the untouched 50 ms assertion.
+- **E21** — 2026-11-07, crate suites at the batch head: `bun run test` ·
+  **441 pass / 0 fail**; `node --test` · **442 pass / 0 fail**.
+- **E22** — 2026-11-07, schema suites at `767de9da`: `bun run test` · exit 0 ·
+  756 pass (both legs); `node --test test/*.test.mjs` · **756 pass / 0 fail**.
+- **E23** — 2026-11-07, differential against the pre-correction head
+  `946037e0` (worktree in `/tmp`, removed after): `doc index --json` differs
+  only in `README.md` and `CHANGELOG.md` (the markup-bearing ids, now identical
+  to the chunker's) plus this unit's own four edited docs and the new receipt
+  file — no other file moves; `doc read --file` (whole and `--section`),
+  `doc edit --dry-run` and the retrieval branch are byte-identical
+  (`md5sum` equal on both sides), except the intended single-prefix refusal
+  message.
+- **G2** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at the batch
+  head · **verdict: PASS — 8 step(s) in 133s** · exit 0, with
+  `schema-node-compat: exit 0 in 5s` (the step that was red twice before `A1`
+  was repaired) and its refusal timings `9.86 / 7.47 ms` against the untouched
+  50 ms bar.
+- **L7** — 2026-11-07, a new finding surfaced while pinning O19 and goes to the
+  owner instead of into this batch (§9): **A6** — `chunks.mjs:116` sets
+  `fence = f[1][0].repeat(3)`, so a fence longer than three backticks (or a
+  three-backtick example inside a four-backtick block) closes early and the
+  retrieval scanner reads a fenced example as a heading. Measured on the
+  corpus: 4 documents carry a corrupted heading-path chain, 5 real headings
+  inherit a fenced example's title, and 46 real sections are never chunked at
+  all (so `doc --query` cannot find them). Pre-existing, unit 65's surface, and
+  repairing it would change published chunk ids — hence a proposal, not this
+  correction.
 - **L5** — 2026-11-07, the external verification receipt
   ([`external-verify.md`](external-verify.md)) returned `NEEDS-DECISION` with
   three blockers and five advisories at base `b8b1d814` / head `946037e0`. The
