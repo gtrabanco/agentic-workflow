@@ -53,6 +53,15 @@ Cite the evidence (paths, counts, line refs) in the decision.
 If the call hinges on product/risk judgment rather than evidence, present the
 verdict + options and let the user decide before acting.
 
+## Relationships — blockers and `Related` order, kept current
+
+Completed **at issue creation** and revisited **at every triage**. A relationship added later is a defect only when the dependency was knowable at creation or a preceding triage — the check that names it then is the fix, not archaeology.
+
+- **Hard blocker** — the other issue genuinely must land first: declared twice, prose *and* native (`## Dependencies` row with the *why* + native `blocked-by` via `addBlockedBy`, per the agent guide); the native relationship is authoritative. Never a guess: a blocker whose necessity depends on a decision not yet made is soft until the decision lands.
+- **Soft relation — `Related`** — does not block, but doing it first is better (resource optimization, schema/grammar definition, shared vocabulary, adjacent tooling unblocked): declared in the prose `## Dependencies` table only (the forge has no native "related" relationship), one row — *which* issue + *why the order helps*. A soft relation carries a checkable reason, not sympathy; "same area" is not a reason.
+- **Conversion rule**: when planning hardens and a soft reason becomes a real prerequisite, it flips to `blocked-by` — and back if it softens. The flip is recorded in the triage comment; implementation never starts from a wrong-graph unit.
+- **Where this is checked**: `triage-issue` verifies the two tables agree with the native relationships on every triage pass (the Stage 0 read includes them); a mismatch is itself a finding.
+
 ## Stage 4 — The fix path (when fix-now)
 
 **Open-unit note.** A `fix-in-unit` verdict skips this fix path entirely — the
