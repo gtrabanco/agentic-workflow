@@ -75,6 +75,39 @@ TS2307 ×4; the crate suites' journals probe for S15), so repairing those here
 would be another unit's surgery. Repairing an advisory means making its claim
 true and re-runnable.
 
+### Repair of the repair 2026-11-07 — owner request (frozen verbatim)
+
+**S16 — Repair the repair batch's own defects.**
+> Arregla los defectos de tu reparación
+
+The defects are the batch's **own claims that its own commands contradict** —
+not new findings, so this is the second correction batch the owner ordered, not
+a cycle earned by the review:
+
+1. AC2 and O18 stated a validator outcome nobody can observe: `rg -c` prints
+   **nothing** on zero matches (exit 1), so "prints `0`" is not an outcome the
+   command produces.
+2. "seven fixtures" overstated the differential's corpus: the copy is the same
+   bytes as the shipped template, so there are **six** distinct inputs.
+3. The Impact bullet still read "prose-only" while the change has touched
+   `scripts/review-loop-discipline.test.mjs` since D5.
+4. `## Applicable tests` still read `n/a` while the repair batch's test impact
+   is `targeted`.
+5. `audit-docs` grew 3116 → 3246 est after this unit set its ceiling, and the
+   growth was recorded nowhere.
+6. P12's validator ended in "AC1–AC4 hold", a claim rather than a command and
+   an outcome.
+7. Found while applying 1–6: their replacements reproduced defect 1 — a
+   validator that greps for a phrase its own text quotes matches itself, so the
+   clean claim stayed unreachable. Every grep whose target is "this must be
+   absent" is now scoped to the region that must be clean (`awk` over the `E9`
+   log line, the `PE-015` row, the `## Impact` block), never the whole tree.
+
+Route: all six are **text corrections plus one command rewrite**, no behaviour
+changes, so there is no new RED test — pinning prose counts would invent the
+ceremony §6 declines. The RED of this batch is each claim's own command run
+against the claim (`## Log` `E10`).
+
 ## Acceptance criteria
 
 One observable criterion per requirement of this correction batch; the unit's
@@ -96,7 +129,7 @@ own S1–S12 are proven by tasks P1–P10 and obligations O1–O14.
   `git diff e1d94057 --numstat` reports with a non-zero deletion count, plus the
   `--name-status` R100 rename. Check:
   `awk '/^## Retirements/,/^## Non-goals/' docs/fix/435-project-charter/SPEC.md | rg -c 'no deletion outside'`
-  → prints `0`. *(S13)*
+  → prints nothing (exit 1 — `rg -c` emits no `0` line). *(S13)*
 - **AC3** — P10's declared validator reproduces at this head: the offline
   deterministic gate exits 0, and the default gate's pre-existing network-leg
   red stays declared in Known pre-existing issues instead of being claimed
@@ -107,11 +140,11 @@ own S1–S12 are proven by tasks P1–P10 and obligations O1–O14.
   pre-existing reds are named as pre-existing. Check:
   `bun scripts/local-gate.mjs --no-bail --skip-network 2>&1 | rg "^local-gate: FAILED"`
   → no match, the row still `verified`, the run recorded in `## Log`. *(S13)*
-- **AC5** — One correction batch, no new scope folded in: every edit traces to a
-  finding of the 2026-11-07 verify block, and the batch touches only this unit
-  dir, `skills/audit-docs/SKILL.md`,
+- **AC5** — One correction batch, no new scope folded in: every edit of the
+  first batch traces to a finding of the 2026-11-07 verify block, and that batch
+  touched only this unit dir, `skills/audit-docs/SKILL.md`,
   `scripts/review-loop-discipline.test.mjs` and the session-log fragment. Check:
-  `git diff --name-only 995b28de` at the batch head. *(S15)*
+  `git diff --name-only 995b28de..2941ec6c` → those seven paths. *(S15)*
 - **AC6** — Every reproducer of that verify block was observed RED before the
   edit and GREEN after, both runs recorded. Check: `## Log` `E8` (RED) and
   `E9`/`G5` (GREEN). *(S14)*
@@ -119,6 +152,27 @@ own S1–S12 are proven by tasks P1–P10 and obligations O1–O14.
   check-16 fixture matrix and its conditional pin), and D5's IS-2 count pin
   (15 → 16) is untouched. Check: `git diff 995b28de -- scripts/` adds no deleted
   assertion. *(S13)*
+- **AC8** — Every validator states an outcome its command produces: AC2 and O18
+  read "prints nothing (exit 1)" for the `rg -c` form, because `rg -c` prints
+  nothing on zero matches. Check: the two commands re-run and their stdout is
+  empty with exit 1. *(S16)*
+- **AC9** — The unit doc's own claims survive their commands: the differential
+  covers **six** distinct fixtures (the shipped template plus five derived — the
+  copy is the same bytes), the Impact bullet names the suite the change touches,
+  and `## Applicable tests` records the `targeted` set. Check — each grep scoped
+  to the region that must be clean, because a validator quoting its own pattern
+  matches itself:
+  `awk '/^- \*\*E9\*\*/' docs/fix/435-project-charter/SPEC.md | rg -c "seven fixtures"`
+  → prints nothing (exit 1);
+  `awk '/^## Impact/,/^## Retirements/' docs/fix/435-project-charter/SPEC.md | rg -c "prose-only"`
+  → prints nothing (exit 1);
+  `awk -F'|' '/^\| PE-015 /' docs/fix/435-project-charter/planning-evidence.md | rg -c "seven fixtures"`
+  → prints nothing (exit 1). *(S16)*
+- **AC10** — `docs/workflow/SKILL_CONTEXT_BUDGETS.json` records `audit-docs`'
+  post-repair measurement under the same ceiling (no re-base needed), so the
+  growth the batch caused is visible where the ceiling was declared. Check:
+  `rg -c "3246" docs/workflow/SKILL_CONTEXT_BUDGETS.json` matches ≥1 and
+  `bun scripts/check-skill-context.mjs` prints `PASS context budgets`. *(S16)*
 
 ## Impact
 
@@ -145,8 +199,11 @@ own S1–S12 are proven by tasks P1–P10 and obligations O1–O14.
   machine grammar (this unit asks for the seed conceptually); #366's doc CLI is
   the future cheap reader; the #357 AGENTS.md-evidence rider composes at
   implementation.
-- **Nothing live is touched**: this is prose-only across skill docs, template
-  docs, the attribution ledger, the roadmap row and this unit doc.
+- **Nothing live is touched**: skill prose, template docs, the attribution
+  ledger, the roadmap row and this unit doc — plus one **suite pin**
+  (`scripts/review-loop-discipline.test.mjs`: D5's contract-count update and the
+  repair batch's IS-2b check-16 pin) whose only effect is to judge prose. No
+  script, schema or package gains a runtime path.
 
 ## Retirements
 
@@ -248,7 +305,17 @@ both).
 
 ## Applicable tests
 
-n/a — no tests step for this unit
+`n/a — no tests step` at cut: the machine's triage skipped it (`tests: tests
+n/a`, prose-only unit). The change is not test-free any more, and the two
+correction batches own the impact: D5 re-pointed the `audit-docs` contract count
+(non-empty `scripts/` impact), and the 2026-11-07 repair batch added IS-2b in
+`scripts/review-loop-discipline.test.mjs`.
+
+`bun scripts/test-impact.mjs --base 995b28de` → `TEST IMPACT — verdict:
+targeted · executable: 1 · suites: scripts/check-skill-context.test.mjs,
+scripts/guide-split.test.mjs, scripts/promise-coherence.test.mjs`; the pin's own
+suite is `scripts/review-loop-discipline.test.mjs`. All four run green at the
+batch heads.
 
 ## Known pre-existing issues
 
@@ -331,9 +398,26 @@ n/a — no tests step for this unit
   evidence to enumerate the 14 in-place rewrites plus the R100 rename, and
   correct the two advisory claims — P10's validator names the offline gate, O14's
   recorded run names the empty `FAILED` grep
-  (validator: `node --test scripts/review-loop-discipline.test.mjs` exits 0 and AC1–AC4 hold)
+  (validator: `bun scripts/local-gate.mjs --skip-network` exits 0, `bun scripts/skill-lint.mjs` prints `verdict: PASS` and `node --test scripts/review-loop-discipline.test.mjs` exits 0)
   (Implements: S13, S15)
   Relevant files: skills/audit-docs/SKILL.md docs/fix/435-project-charter/SPEC.md docs/fix/435-project-charter/planning-obligations.md
+- [x] P14 — Audit the repair batch's own claims: run each claim's command
+  against the claim and record the mismatch as the batch's RED corpus
+  (validator: `rg -c "E10" docs/fix/435-project-charter/SPEC.md` matches 1, the line naming the five mismatches)
+  (Implements: S16)
+  Relevant files: docs/fix/435-project-charter/
+- [x] P15 — Correct the six defects the audit found: the two `rg -c` outcomes,
+  the fixture count, the Impact bullet's "prose-only" claim, `## Applicable
+  tests`, the unrecorded `audit-docs` growth, and P12's validator shape
+  (validator: `bun scripts/check-skill-context.mjs` prints `PASS context
+  budgets` and `awk '/^- \*\*E9\*\*/' docs/fix/435-project-charter/SPEC.md | rg -c "seven fixtures"` prints nothing, exit 1)
+  (Implements: S16)
+  Relevant files: docs/fix/435-project-charter/ docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- [x] P16 — Re-run the corrected commands, close O19–O20 and the offline gate
+  (validator: `bun scripts/local-gate.mjs --skip-network` exits 0 and O19–O20
+  are both `verified`)
+  (Implements: S16)
+  Relevant files: docs/fix/435-project-charter/
 - [x] P13 — Close the correction ledger, run the offline deterministic gate and
   the impacted suites, record the RED-to-GREEN evidence and the docs state
   (validator: `bun scripts/local-gate.mjs --skip-network` exits 0 and O15–O18 are all `verified`)
@@ -414,8 +498,14 @@ OPEN rows only, appended by `review-change` and `triage-issue` — none at cut.
 - **E7** — 2026-11-07 · evidence — final state of the impacted deterministic checks after the last commits: `guide-split` 14/0 · `check-skill-context` 1/0 · `promise-coherence` 37/0 · `review-loop-discipline` 1/0 · `check-skill-context.mjs` → `PASS context budgets: 28 skills` · `skill-lint` → PASS · `docs-generate --check` → PASS · `phase-lint` on the unit doc → PASS · ceremony docs checks (tasks-ticks, progress-entry, phase-labels) → all `valid: true`.
 - **D7** — 2026-11-07 · decision (repair route) — the 2026-11-07 `EXTERNAL VERIFY` batch, applied by the owner's request (S13–S15). Routes weighed before editing: **(a)** narrow the slot regex to a hardcoded list of the template's eleven slot labels — rejected, a project that adds a charter slot then goes unscanned, so coverage would depend on a name list this repo would have to keep in two places; **(b)** a new `scripts/` checker — rejected, a new script owes a red-first sibling suite and a gate step for what is one section read, and the `audit-docs` checks are declared commands by contract (CAPABILITIES pattern), not scripts; **(c)** bound the existing scan to the `## Project charter` section — **chosen**: one POSIX `awk` (`FILENAME":"FNR` preserved, so findings stay `path:line`), no new file, no new gate step, and the earlier inline `\`` escapes (undefined in POSIX awk) disappear because the command now sits in a `text` fence where backticks need no escaping. Severity is layered instead of duplicated: an identity bullet is **HIGH** (the blocking layer), a domain bullet **LOW** (it should carry the mandated `assumed <date> — <value>` form). The two advisories were repaired as **claims**: their reds reproduce byte-identically at the base commit on surfaces this unit never touches (A1), so P10's validator now names the offline gate it actually passes and O14's recorded run names the empty `FAILED` grep.
 - **E8** — 2026-11-07 · evidence (RED, before any edit) — the frozen corpus, five reproducers, all observed failing: (1) the declared guide-wide slot scan over a **filled** charter still printed `AGENTS.md:387: - **Backward compatibility — …` — a healthy scaffold's permanent false positive, and the check's pass condition unreachable; (2) `rg -n "no deletion outside this unit doc" …/SPEC.md` → 1 hit while `git diff e1d94057 --numstat` → 14 deletions outside the unit doc, so the Retirements evidence contradicted its own command; (3) P10's validator `bun scripts/local-gate.mjs` exits 0 → observed exit 1 at `pi-compat-guard`; (4) O14's recorded run named `crate-suite-node`/`crate-suite-bun` as `FAILED`, which the offline gate no longer prints; (5) `scripts/review-loop-discipline.test.mjs` carried no check-16 pin (`rg -c "Project charter" → exit 1`).
-- **E9** — 2026-11-07 · evidence (route proof, before the edit) — the `awk` section scan was differentially measured against `rg` over `sed -n '/^## Project charter/,/^## /p'` on seven fixtures built under `mktemp -d` from `template/AGENTS.md` (raw template, filled, identity-partial, domain-partial, no-section, legal `unresolved — <question>`, the template itself): **byte-identical match sets in all seven** under `mawk 1.3.4`. Fixture matrix after the fix, exit 0 each: raw template 11 lines (5 identity + 6 domain, none the back-compat stub) · filled 0 · identity-partial 1 · domain-partial 1 · no-section 0 · legal residual 0.
+- **E9** — 2026-11-07 · evidence (route proof, before the edit) — the `awk` section scan was differentially measured against `rg` over `sed -n '/^## Project charter/,/^## /p'` on **six distinct** fixtures (the shipped template, plus five derived under `mktemp -d`: filled, identity-partial, domain-partial, no-section, legal `unresolved — <question>`): **byte-identical match sets in all six** under `mawk 1.3.4`. The template was measured twice — once as the tracked file and once as a copy — and counted once. Fixture matrix after the fix, exit 0 each: raw template 11 lines (5 identity + 6 domain, none the back-compat stub) · filled 0 · identity-partial 1 · domain-partial 1 · no-section 0 · legal residual 0.
 - **P11** — 2026-11-07 · phase — RED pin landed in `scripts/review-loop-discipline.test.mjs` (IS-2b): the declared scan is read **out of** `skills/audit-docs/SKILL.md` and executed against the six fixtures, so the pin judges the shipped command, not a copy. Observed before the fix: `node --test scripts/review-loop-discipline.test.mjs` → `fail 1`, `AssertionError: check 16 declares a fenced charter-section scan that prints nothing`. Commit `61687756`.
 - **P12** — 2026-11-07 · phase — GREEN: check 16's slot scan bounded to the `## Project charter` section (fenced `awk`, severity per layer); `## Retirements` rewritten to enumerate the 14 deleted lines as in-place rewrites plus the R100 rename; P10's validator re-pointed at the offline gate (landed with the freeze commit); O14's recorded run corrected. Two defects of my own repair were caught by running its validators and fixed before commit: the first Retirements rewrite quoted `+659 / -14`, already stale at the batch head (the doc's own growth perturbs insertions), so the text now states the stable deletion count only; and AC2's and O18's validators quoted the very phrase they grep for, so both were scoped (`awk` over the `## Retirements` / `O14` row) instead of self-matching. Observed after the fix: `review-loop-discipline` 1/0 · `phase-lint` `verdict PASS` · `skill-lint` PASS · `check-skill-context` `PASS context budgets: 28 skills` (audit-docs 3246 est / 238 lines, under the 3428 ceiling — no re-base).
 - **P13** — 2026-11-07 · phase — ledger closed (O15–O18 `verified`, validators re-run in the foreground), differential run against a `995b28de` copy clean (only audit-docs moved: 3116→3246 est, 228→238 lines, the asked-for delta; `skill-lint` and `docs-generate --check` byte-identical verdicts), gate green (G5), test-impact `targeted` → 3 suites all green, session fragment written.
+- **E10** — 2026-11-07 · evidence (RED for the repair-of-the-repair, before any edit) — each of the batch's own claims run against its own command, all observed mismatching: (1) AC2 and O18 stated an `rg -c` outcome of a zero count, but `rg -c` emits **no stdout line** on zero matches (exit 1) — observed through `awk … | rg -c …`, so the stated outcome was unobservable; (2) "seven fixtures" — the differential's copy is the same bytes as the shipped template, so six inputs were distinct; (3) the Impact bullet still read "prose-only" while `git diff --name-only 995b28de` lists `scripts/review-loop-discipline.test.mjs`; (4) `## Applicable tests` read `n/a` while `bun scripts/test-impact.mjs --base 995b28de` reported `targeted / executable: 1 / 3 suites`; (5) `audit-docs` measured 3246 est / 238 lines while `docs/workflow/SKILL_CONTEXT_BUDGETS.json` recorded only the 3116 measurement the ceiling was set from.
+- **E11** — 2026-11-07 · evidence — applying the fixes reproduced defect 1 twice more, both caught by running the validators before committing: the replacement checks grepped for the phrase their own text quotes (`seven fixtures`, `prose-only`), so the clean claim stayed unreachable; every such check is now scoped with `awk` to the region that must be clean (the `E9` log line, the `PE-015` row, the `## Impact` block, the `## Retirements` section) instead of the whole tree. The O19 sweep then surfaced a **pre-existing** instance of the same class in O8 (`… | rg -c '^-.*[Cc]onsent'` claimed a zero count); O8's cell now states the observable outcome too, and both cells re-run empty at exit 1.
+- **P14** — 2026-11-07 · phase — the batch's RED corpus recorded (`E10`, five mismatches) and the frozen defect list extended with the recurrence found while applying it (defect 7, `E11`). No new RED test: the batch changes text and one command shape, so pinning prose counts would invent ceremony the workflow declines.
+- **P15** — 2026-11-07 · phase — the six defects plus the recurrence corrected: AC2/O8/O18/O19 state the observable `rg -c` outcome, six distinct fixtures, the Impact bullet names the suite pin, `## Applicable tests` records the `targeted` set, `SKILL_CONTEXT_BUDGETS.json` carries the 3246 re-measurement under the unchanged 3428 ceiling, and P12's validator names three commands instead of "AC1–AC4 hold". Observed: `phase-lint` `verdict PASS` · `check-skill-context` `PASS context budgets: 28 skills` · the scoped greps all print nothing (exit 1) · `rg -c "3246" SKILL_CONTEXT_BUDGETS.json` matches 1.
+- **P16** — 2026-11-07 · phase — O19/O20 `verified` with their validators re-run in the foreground, the offline gate green (G6) and the outstanding set green: `review-loop-discipline` 1/0 · `check-skill-context` 1/0 · `guide-split` 14/0 · `promise-coherence` 37/0 · ledger suites 14/23/4 · `skill-lint` PASS · `docs-generate --check` PASS.
+- **G6** — 2026-11-07 · gate — `bun scripts/local-gate.mjs --no-bail --skip-network` on the repair-of-the-repair head: **PASS, 8 steps** — docs-generated-projection 0 · version-parity-content 0 · schema-build 0 · pi-node-compat 0 · crate-suite-node 0 · crate-suite-bun 0 · root-suite 0 · schema-node-compat 0. The network leg is unchanged (pi-compat-guard TS2307 ×4, red at base — Known pre-existing issues).
 - **G5** — 2026-11-07 · gate — `bun scripts/local-gate.mjs --no-bail --skip-network`: **PASS, 8 steps in 104s** (docs-generated-projection 0 · version-parity-content 0 · schema-build 0 · pi-node-compat 0 · crate-suite-node 0 · crate-suite-bun 0 · root-suite 0 · schema-node-compat 0). One earlier run of the same command reported `root-suite: exit 1` naming four suites (`workflow-status-compact`, `turn-contract-grammar`, `unit-route`, `workflow-status-sensor`) that the gate runs alongside the crate suites: each passes in isolation, and three consecutive `node scripts/run-root-suite.mjs --bail` pooled runs then reported `fail 0` — CPU contention across the gate's concurrent steps, not this change (none of the four reads a file this batch touches). Recorded, not hidden; the network leg is unchanged (`pi-compat-guard` TS2307 ×4, red at base — Known pre-existing issues).
