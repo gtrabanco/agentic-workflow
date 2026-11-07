@@ -40,10 +40,61 @@ your domains.
 | Domain / business rules | `docs/domain/*`, `docs/business/*` |
 | Legal / compliance | `docs/legal/*` |
 | Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks)* |
+| Project identity, deployment, license & policies | the **Project charter** section (below) — written by `/init-workspace`, read before any design or plan |
+| Acceptance criteria & review passes per surface | `docs/workflow/VERIFICATION_CRITERIA.md` *(the project's criteria catalogue; extended only with a recorded decision)* |
 | Cross-session memory | Engram, the workflow's memory substrate *(ask-first: provisioned by `/init-workspace` on a non-pi host, or by the pi package's `memory.engram` consent; the save/recall protocol is `unit-lane`'s `references/MEMORY.md`)* |
 | Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
 | Architectural constraints | `docs/architecture/ARCHITECTURAL_INVARIANTS.md` *(optional; explicit rules that architectural changes must preserve)* |
 | LSP navigation & diagnostics | Serena *(optional: installed via `/init-workspace`; provides symbol lookup, diagnostics, and rename; document verification stays a deterministic script's job)* |
+
+## Project charter
+
+> **Written by `/init-workspace` — never guessed by an agent.** The charter is
+> this project's own answer to *what this project is and how it wants to be
+> worked on*, captured at bootstrap in two layers. It exists because a workflow
+> that consents to every byte it writes but never asks *what the project is*
+> leaves every agent to assume product identity, platform, deployment, and
+> policy — the exact failure `ask-dont-infer` exists to prevent.
+
+**Content rule (evidence-bound).** The charter records **decisions, policies
+and commands — never derivable-from-code description**. A sentence the reader
+could reconstruct by listing the directories does not belong here (repository
+overviews in context files cost tokens with no success gain; instructions
+work). Each answer is positioned and sized per the documentation map above —
+the charter stays this section plus the registered docs, never one monolithic
+document.
+
+**Identity layer — filled at bootstrap, blocking.** `/init-workspace` asks
+these before writing any substrate byte; the workflow may not guess them, and
+an unanswered one halts the run through the fail-closed open-question flow
+(cheap-to-undo answers may be recorded as dated assumptions instead — but
+these five are expensive to undo, so they are answered or the run stops):
+
+- **Project kind:** `<web app | desktop | library | CLI | docs | infra repo>`
+- **Who uses it and why:** `<the users and the job the project does for them>`
+- **Deployment & serving:** `<where it is deployed and how it is served, or "not deployed">`
+- **License:** `<the project's license>`
+- **Ceremony profile seed:** `<the project's chosen ceremony profile — recorded here conceptually; the profile's machine grammar is the piecewise-ceremony contract's>`
+
+**Domain layer — open-with-defaults.** Asked once at bootstrap; an unanswered
+item is recorded as a **dated assumption** (`assumed <YYYY-MM-DD> — <value>;
+surfaced and re-confirmed by the first unit that needs it`), never re-asked at
+every bootstrap, never a silent default:
+
+- **Tests & gate policy:** `<what must be green before a commit; the gate commands>`
+- **Dependency policy:** `<selection criteria; third-party license respect>`
+- **Documentation policy:** `<generated vs authored, serving, audit cadence, captures>`
+- **Required tooling:** `<tools every session must have available>`
+- **Data / PII:** `<what data the project handles and its handling rules, or "none">`
+- **i18n:** `<locales and the translation policy, or "none">`
+
+**Verification-criteria catalogue.** What "done" means *at this project*,
+beyond the workflow's generic baseline — per-surface acceptance criteria,
+which review passes apply per surface type, framework-specific gate commands,
+docs coverage, captures, manual-check rows — lives in
+[`docs/workflow/VERIFICATION_CRITERIA.md`](docs/workflow/VERIFICATION_CRITERIA.md)
+with its provenance per criterion. Triage and execution consume the catalogue
+and never invent acceptance criteria silently.
 
 ## Docs site *(optional)*
 
