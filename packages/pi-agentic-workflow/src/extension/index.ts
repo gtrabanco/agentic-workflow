@@ -392,10 +392,10 @@ export default function extension(pi: ExtensionAPI): void {
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
   // Issue #413 — the seam-hooks session:end seam, at the session shutdown the
   // host reports (PE-001). A hook's block cannot undo a closing session, so
-  // the wiring reports instead of blocking; nothing is awaited past shutdown.
-  pi.on("session_shutdown", (_event, ctx) => {
-    void hooksWiring.onSessionShutdown(toHooksContext(ctx));
-  });
+  // the wiring reports instead of blocking — inside its shutdown budget.
+  // The promise is returned: pi awaits every `session_shutdown` handler before
+  // teardown completes, so the seam's report lands before the process exits (N3).
+  pi.on("session_shutdown", (_event, ctx) => hooksWiring.onSessionShutdown(toHooksContext(ctx)));
   // The inline-receipt path is impossible: a `gh pr comment` carrying a
   // REVIEW-PASS / merge-ready marker is blocked before it runs, and the reason
   // names the script that proves the receipt landed (issue #182). The guard

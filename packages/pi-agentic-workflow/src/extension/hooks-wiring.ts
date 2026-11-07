@@ -20,7 +20,10 @@ import type { InjectedOutcome } from "../hooks/dispatcher.js";
  * without consent) is announced once per project session, and the session seams
  * report their blocks instead of dropping them: a session seam cannot block the
  * session, so the teaching message is the only thing that makes the declaration
- * real (O16, O20).
+ * real (O16, O20). The shutdown seam additionally runs inside
+ * `SHUTDOWN_BUDGET_MS` and returns its promise to the host, which awaits the
+ * handler before teardown — a slow check is reported as a timeout, never lost
+ * to the exit (N3).
  *
  * The git matcher reads the command as a shell would read its shape — unquoted
  * operators separate segments, quotes group tokens, a leading `NAME=value` is an
@@ -53,8 +56,15 @@ export interface HooksBlockDecision {
   reason: string;
 }
 
+/** The wall clock the shutdown seam may spend: pi is exiting, so a declared
+ *  `session:end` check either reports inside this bound or is reported as a
+ *  timeout — it never outlives the session (N3). */
+export const SHUTDOWN_BUDGET_MS = 5_000;
+
 export interface HooksWiringDeps {
   agentDir: string;
+  /** Overrides the shutdown seam's budget (tests). */
+  shutdownBudgetMs?: number;
   readFile?: (path: string) => string | null;
   readConsent?: (agentDir: string, cwd: string) => boolean;
   /** Overrides the tokenized argv execution (tests; defaults to the runner). */
@@ -189,7 +199,7 @@ export function createHooksWiring(deps: HooksWiringDeps): HooksWiring {
     ctx.ui.notify(message, kind);
   };
 
-  const run = async (seam: Parameters<typeof runSeam>[0], ctx: HooksContext): Promise<SeamRunResult> => {
+  const run = async (seam: Parameters<typeof runSeam>[0], ctx: HooksContext, budgetMs?: number): Promise<SeamRunResult> => {
     const result = await runSeam(seam, {
       agentDir: deps.agentDir,
       cwd: ctx.cwd,
@@ -198,6 +208,7 @@ export function createHooksWiring(deps: HooksWiringDeps): HooksWiring {
       readConsent: deps.readConsent,
       spawnHook: deps.spawnHook,
       runGit: deps.runGit,
+      ...(budgetMs === undefined ? {} : { budgetMs }),
     });
     for (const notice of result.notices) announce(ctx, notice.message, notice.kind === "problem" ? "warning" : "info");
     return result;
@@ -222,7 +233,9 @@ export function createHooksWiring(deps: HooksWiringDeps): HooksWiring {
     },
 
     async onSessionShutdown(ctx) {
-      reportBlocks(ctx, await run("session:end", ctx));
+      // The host awaits this handler before teardown completes (N3), so the
+      // report lands — inside the shutdown budget, never past it.
+      reportBlocks(ctx, await run("session:end", ctx, deps.shutdownBudgetMs ?? SHUTDOWN_BUDGET_MS));
     },
 
     async onToolCall(event, ctx) {
