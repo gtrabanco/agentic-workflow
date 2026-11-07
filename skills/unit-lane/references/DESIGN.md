@@ -85,7 +85,7 @@ settles the claim wins, and the repository always speaks first:
 
 | Tier | When it settles the claim | What this stage does |
 |---|---|---|
-| **0 · provenance** | A recorded `path:line`, doc, or prior decision answers it | Nothing to ask — point the row at the source |
+| **0 · provenance** | A recorded `path:line`, doc, or prior decision answers it — never model memory, which is no source (§ Provenance) | Nothing to ask — point the row at the source |
 | **1 · research** | External and unresearched, in tier 0 or outside it | Research it into 2–3 options with trade-offs |
 | **2 · ask** | No evidence exists anywhere | Backlog it for the ask stage — never decided here |
 
