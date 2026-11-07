@@ -156,6 +156,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
+| #440 | `product-audit-rescope` | in-progress | Skill re-scope per #307 design note 13: deterministic-producer pre-pass (receipt-quoted, never re-run), profile-aware `n/a` scope (#436 consumption-side), measured triggers with the `insufficient-corpus` verdict (#437 bands referenced, never invented), findings typed 1:1 with review's vocabulary and resolver-verb route cells (note-7). Unit doc: `docs/fix/440-product-audit-rescope/` |
 | [#429](https://github.com/gtrabanco/agentic-workflow/issues/429) | `log-session-command` | `done` · [`#448`](https://github.com/gtrabanco/agentic-workflow/pull/448) | PR #448 open against main; unit doc `docs/fix/429-log-session-command/`, ledgers cut at the base commit and closed on foreground validators; awaits the owner's external verdict and merge |
 
 A fix gets its row when `/unit-lane --fix <n>` opens its unit doc (or when the
