@@ -344,3 +344,27 @@ test("O20: enabled without consent announces itself once and still spawns nothin
     fixture.cleanup();
   }
 });
+
+test("N3: the shutdown seam is bounded — a slow session:end hook is reported as a timeout inside the budget", async () => {
+  const fixture = fixtureProject({ consent: true });
+  const { ctx, notices } = makeCtx(fixture.dir, fixture.agentDir);
+  const slow = join(fixture.dir, "slow.sh");
+  writeFileSync(slow, "#!/bin/sh\nsleep 5\nexit 0\n");
+  chmodSync(slow, 0o755);
+  const wiring = createHooksWiring({ agentDir: fixture.agentDir, shutdownBudgetMs: 300 });
+  try {
+    writeFileSync(
+      join(fixture.dir, ".pi", "hooks.json"),
+      JSON.stringify({ hooks: { "session:end": [{ enabled: true, hooks: [{ type: "command", command: slow }] }] } }),
+    );
+    const started = Date.now();
+    await wiring.onSessionShutdown(ctx);
+    const elapsed = Date.now() - started;
+    assert.ok(elapsed < 2500, `teardown waited ${elapsed}ms — the shutdown seam must stay inside its budget`);
+    assert.equal(notices.length, 1, "the timed-out shutdown hook must report, not vanish");
+    assert.ok(notices[0].includes("session:end"));
+    assert.ok(notices[0].includes("did not finish within its timeout"), notices[0]);
+  } finally {
+    fixture.cleanup();
+  }
+});
