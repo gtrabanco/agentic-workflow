@@ -18,7 +18,12 @@
 const FENCE_RE = /^(`{3,}|~{3,})/;
 const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 
-function slugify(headingPath) {
+/**
+ * The D5 shared slug rule — half B's chunks and half A's `doc read`/`edit`/
+ * `index` consume this one export, so the two halves cannot drift (issue #366,
+ * 65's D5). Exported without behavior change for the retrieval path.
+ */
+export function slugify(headingPath) {
   return headingPath
     .toLowerCase()
     .replace(/\s*>\s*/g, "-")
@@ -27,8 +32,24 @@ function slugify(headingPath) {
     .replace(/^-+|-+$/g, "");
 }
 
-/** Minimal frontmatter: top-level `key: value` scalars, comma lists, and `>`/`|` folded blocks. */
-function parseFrontmatter(lines) {
+/**
+ * The D5 shared id for one heading path within one document scan:
+ * `<relative-path>#<slug>` with `-2` style dedupe against `usedIds`. Callers
+ * pass one `usedIds` set per document so dedupe order is document order —
+ * the identical scheme `scanChunks` has always emitted.
+ */
+export function nextSectionId(usedIds, relativePath, headingPath) {
+  const slug = slugify(headingPath);
+  let id = `${relativePath}#${slug}`;
+  let n = 2;
+  while (usedIds.has(id)) id = `${relativePath}#${slug}-${n++}`;
+  usedIds.add(id);
+  return id;
+}
+
+/** Minimal frontmatter: top-level `key: value` scalars, comma lists, and `>`/`|` folded blocks.
+ *  Exported for half A's structure index (issue #366): one parser, both halves. */
+export function parseFrontmatter(lines) {
   const meta = {};
   for (let i = 0; i < lines.length; i++) {
     const m = lines[i].match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
@@ -101,14 +122,7 @@ export function scanChunks(markdown, relativePath) {
 
   const chunks = [];
   const usedIds = new Set();
-  const nextId = (headingPath) => {
-    const slug = slugify(headingPath);
-    let id = `${relativePath}#${slug}`;
-    let n = 2;
-    while (usedIds.has(id)) id = `${relativePath}#${slug}-${n++}`;
-    usedIds.add(id);
-    return id;
-  };
+  const nextId = (headingPath) => nextSectionId(usedIds, relativePath, headingPath);
 
   // Preamble chunk — only when its range is non-empty and body is non-blank
   // (AC10: skip frontmatter-only preamble to avoid empty-body noise).
