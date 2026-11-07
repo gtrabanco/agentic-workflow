@@ -19,7 +19,7 @@ the new head is still what closes the unit.
 
 | item | route taken | observed |
 |---|---|---|
-| Blocker — stale `## Next` (`SPEC.md:253`) | rewritten to the single next action: the owner's verify of this batch, then merge PR #447 | `rg -n "on approval, open the PR"` → no match |
+| Blocker — stale `## Next` (`SPEC.md:253`) | rewritten to the single next action: the owner's verify of this batch, then merge PR #447 | `sed -n "/^## Next/,+2p" SPEC.md` → `…then merge [PR #447](…), which closes #432`; the literal reproducer `rg -n "on approval, open the PR" SPEC.md` still returns **1** match — `## Log` `E10` quotes the reproducer itself, so read the `## Next` block, never the raw count |
 | Advisory 1 — Impact claimed the orient tiers name model memory | the claim was made true rather than deleted: DESIGN.md's Stage 2 **tier-0** row now excludes model memory (S1's own opening sentence lives at the tier that defines `tier-0`), and the Impact bullet names both the tier-0 row and § Provenance | `sed -n '81,93p' DESIGN.md \| rg -c "model memory"` → 1 |
 | Advisory 2 — `PE-001` counted 86 root suites | corrected to 87 with the correction noted in the row; `scripts/` carries 87 `*.test.mjs` at base, pre-edit head and head | `rg -n "86 (root suites\|PASS)" SPEC.md` → no match |
 | Advisory 3 — Retirements' search receipt did not reproduce | replaced with `rg -ln "confirmed / inferred / unknown" skills/ template/ packages/`, which returns exactly DESIGN.md + PLAN.md; the 33-file `certainty` hit set is other units' frozen records, excluded by construction | command reproduces the claim |
