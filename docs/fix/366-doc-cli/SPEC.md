@@ -173,25 +173,25 @@ $ bun scripts/ceremony.mjs tier classify
 
 ## Tasks
 
-- [ ] P1 — Freeze the positional `-` dispatch so first-token retrieval flags are untouched and `read` / `edit` / `index` parse, with two unit-level refusal pins: unknown op and retrieval-flags-after-op (validator: `bun test test/doc.docops.test.mjs` exits 0)
+- [x] P1 — Freeze the positional `-` dispatch so first-token retrieval flags are untouched and `read` / `edit` / `index` parse, with two unit-level refusal pins: unknown op and retrieval-flags-after-op (validator: `bun test test/doc.docops.test.mjs` exits 0)
   (Implements: S2)
   Relevant files: packages/agentic-workflow/src/doc/grammar.mjs, packages/agentic-workflow/test/doc.docops.test.mjs
-- [ ] P2 — `doc read` and `doc edit` over the #407 primitive: `--section <id|title>` resolves through the shared D5 id scheme with the locator's AST positions, splices are byte-lossless outside the replaced range, refusals (`NO_MATCH` / `AMBIGUOUS_MATCH` / `BAD_SELECTOR`) exit 2 before any write, and the pre-existing retrieval branch keeps its exact base behavior (validator: `bun test test/doc.docops.test.mjs` exits 0)
+- [x] P2 — `doc read` and `doc edit` over the #407 primitive: `--section <id|title>` resolves through the shared D5 id scheme with the locator's AST positions, splices are byte-lossless outside the replaced range, refusals (`NO_MATCH` / `AMBIGUOUS_MATCH` / `BAD_SELECTOR`) exit 2 before any write, and the pre-existing retrieval branch keeps its exact base behavior (validator: `bun test test/doc.docops.test.mjs` exits 0)
   (Implements: S2, S3, S4, S8)
   Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/test/doc.docops.test.mjs
-- [ ] P3 — `structure.mjs` builder + `structure-schema.mjs` TypeBox validation: corpus scan, parsed frontmatter, skill triggers, unit-doc phase mapping (previous/current/next) and dependencies, canonical byte-identical two-run output, and the deliberately invalid fixture rejected (validator: `bun test test/doc.structure.test.mjs` exits 0)
+- [x] P3 — `structure.mjs` builder + `structure-schema.mjs` TypeBox validation: corpus scan, parsed frontmatter, skill triggers, unit-doc phase mapping (previous/current/next) and dependencies, canonical byte-identical two-run output, and the deliberately invalid fixture rejected (validator: `bun test test/doc.structure.test.mjs` exits 0)
   (Implements: S5)
   Relevant files: packages/agentic-workflow/src/doc/structure.mjs, packages/agentic-workflow/src/doc/structure-schema.mjs, packages/agentic-workflow/test/doc.structure.test.mjs
-- [ ] P4 — `doc index` CLI wiring over the builder: `--out` (default off, stdout `--json`), receipt line, and the off-line artifact written without touching the retrieval store (validator: `bun test test/doc.structure.test.mjs` exits 0)
+- [x] P4 — `doc index` CLI wiring over the builder: `--out` (default off, stdout `--json`), receipt line, and the off-line artifact written without touching the retrieval store (validator: `bun test test/doc.structure.test.mjs` exits 0)
   (Implements: S5)
   Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/src/doc/structure.mjs, packages/agentic-workflow/test/doc.structure.test.mjs
-- [ ] P5 — Lossless roundtrip golden over `skills/**`: reassembly of located sections plus inter-gaps equals the original bytes; `ALLOWED_NORMALIZATIONS` pinned empty in the test (validator: `bun test test/doc.roundtrip.test.mjs` exits 0)
+- [x] P5 — Lossless roundtrip golden over `skills/**`: reassembly of located sections plus inter-gaps equals the original bytes; `ALLOWED_NORMALIZATIONS` pinned empty in the test (validator: `bun test test/doc.roundtrip.test.mjs` exits 0)
   (Implements: S6)
   Relevant files: packages/agentic-workflow/test/doc.roundtrip.test.mjs
-- [ ] P6 — The measured section-load savings demo recorded in `## Log` as `E` lines (token/byte delta) (validator: the `E` line's byte deltas reproduce from the recorded command)
+- [x] P6 — The measured section-load savings demo recorded in `## Log` as `E` lines (token/byte delta) (validator: the `E` line's byte deltas reproduce from the recorded command)
   (Implements: S6, AC3 of `docs/features/71-doc-cli/SPEC.md`)
   Relevant files: docs/fix/366-doc-cli/SPEC.md
-- [ ] P7 — Documentation currency in the same change: crate README `doc` row rewritten with the shipped ops and the experimental label; usage line updated; the row-71 status note appended through the deterministic emitter, never hand-edited (validator: `rg -c 'ship with unit 71' packages/agentic-workflow/src packages/agentic-workflow/bin packages/agentic-workflow/README.md` matches 0 and `rg -c 'experimental' packages/agentic-workflow/README.md` matches ≥1)
+- [x] P7 — Documentation currency in the same change: crate README `doc` row rewritten with the shipped ops and the experimental label; usage line updated; the row-71 status note appended through the deterministic emitter, never hand-edited (validator: `rg -c 'ship with unit 71' packages/agentic-workflow/src packages/agentic-workflow/bin packages/agentic-workflow/README.md` matches 0 and `rg -c 'experimental' packages/agentic-workflow/README.md` matches ≥1)
   (Implements: S2, S7)
   Relevant files: packages/agentic-workflow/README.md, packages/agentic-workflow/bin/agentic-workflow.mjs, docs/ROADMAP.md
 - [ ] P8 — Final verification: crate suites under both runtimes, touched root suites, the retirement pin, and the diff guard over the whole branch (validator: `cd packages/agentic-workflow && bun run test && node --test` exits 0 and `bun scripts/local-gate.mjs --skip-network` exits 0)
@@ -244,9 +244,85 @@ OPEN rows only; appended by reviewers.
   - Roadmap row 71 · issue #192 (closed completed by 65 — see the closure note) · feature 65 (`doc-toolchain`, PR #282, D6 split).
   ```
 
+- **L3** — 2026-11-06, decisions recorded in `decisions.md` (D1–D5): the
+  retired refusal surface (D1); S4's "(remark AST)" delivered as
+  locate-through-mdast plus byte-offset splice — no remark dependency (D2,
+  under 65's D8 with the golden corpus as its re-trigger); the positional
+  branch's own receipts instead of reusing the retrieval envelope's closed
+  `DOC_COMMANDS` vocabulary (D3); the index corpus, phase mapping and
+  dependencies spellings (D4); the `Triggers:` clause convention (D5).
+- **E1** — 2026-11-06, `bun test test/doc.docops.test.mjs` (red, commit
+  `5a022a74`) · exit 1 · 23 fail / 5 pass — the only passing cases are the
+  retrieval-grammar pins.
+- **E2** — 2026-11-06, `bun test test/doc.docops.test.mjs` (green, commit
+  `b8e23003`) · exit 0 · 28 pass · 0 fail; `node --test test/doc.docops.test.mjs`
+  · exit 0 · 28 pass.
+- **E3** — 2026-11-06, `bun test test/doc.structure.test.mjs` (red, commit
+  `13d9c7b7`) · exit 1 · `Cannot find module '../src/doc/structure.mjs'`.
+- **E4** — 2026-11-06, `bun test test/doc.structure.test.mjs` (green, commit
+  `c01c2bfb`) · exit 0 · 14 pass · 0 fail; `node --test` · exit 0 · 14 pass.
+- **E5** — 2026-11-06, full crate suites at the P5 head: `bun run test` ·
+  434 pass / 1 fail — the one fail is the pre-existing
+  `journal.surfaces.test.mjs` S15, reproduced identically on the stashed base
+  (it reads the live `.agentic-workflow/journal` carrier state, not this
+  unit's code); `node --test` · 434 pass / 1 fail, same case.
+- **E6** — 2026-11-06, differential vs base `b8b1d814` (worktree copy in
+  `/tmp/aw-366-base`): `doc --sync` identical receipt, `doc --query Objective`
+  identical row and score (`doc.md · Guide > Objective · L3-5 · 8.8e-7`, exit
+  0 both), bare `agentic-workflow` identical usage (exit 1 both); the one
+  output difference is the positional `doc read` refusal whose retirement is
+  D1 — `positional doc operations … ship with unit 71 …` replaced by `--file
+  is required`, exit 1 both sides.
+- **E7** — 2026-11-06, savings demo (AC3): `wc -c
+  skills/review-change/SKILL.md` → 12,740 B; `doc read --section "Progressive
+  loading — choose one review route"` → 2,055 B + `--section "Reviewer
+  anti-invention rule (S10, from #205)"` → 678 B = 2,733 B for a second
+  review-change-style pass (≈3,186 → ≈683 tokens at 4 B/token; 10,007 B /
+  78.5% saved); unit-doc second pass: `doc read --file
+  docs/fix/407-section-locator-core/SPEC.md --section Tasks` → 1,768 B vs
+  21,390 B whole (≈4,906 B / 91.7% saved).
+- **E8** — 2026-11-06, structure index over the full corpus in scratch
+  (live-tree guard respected): `doc index --out` twice over a git-archive copy
+  (1,007 files · 9,179 sections · 45 unit docs) · 12.1 s · exit 0 · `cmp` of
+  the two artifacts byte-identical, and the artifact identical before/after
+  the perf slice.
+- **E9** — 2026-11-06, golden roundtrip (commit `bd06b8a8`):
+  `bun test test/doc.roundtrip.test.mjs` · exit 0 · 3 pass over 92 skills docs
+  / 536 sections, plus the stubborn fixture (frontmatter, setext, fences,
+  unicode); `node --test` · exit 0 · 3 pass. `ALLOWED_NORMALIZATIONS` pinned
+  empty inside the test.
+- **E10** — 2026-11-06, P7 receipts: `rg -c 'ship with unit 71'
+  packages/agentic-workflow/src packages/agentic-workflow/bin
+  packages/agentic-workflow/README.md` → no match (exit 1 — the retired
+  sentence is gone); `rg -ci 'experimental'
+  packages/agentic-workflow/README.md` → 2;
+  `bun scripts/lint-changeset.mjs .changeset/366-doc-cli.md` · exit 0 · `ok
+  366-doc-cli.md`; row 71 flipped `defined → in-progress` through the emitter
+  (`roadmap rowUpsert` receipt `before:1dcc7df3 after:0ce717eb`), then
+  `scripts/docs-generate.mjs` + `--check` · verdict PASS.
+- **E11** — 2026-11-07, touched root suites at head:
+  `bun test packages/agentic-workflow/test/roadmap-check.test.mjs` · 24 pass
+  `bun test scripts/red-first.test.mjs` · 9 pass (one earlier run showed 8/1
+  on the `O4` shipped-history case; two immediate reruns green both runtimes —
+  reported, not hidden); `bun test scripts/path-protection.test.mjs` ·
+  21 pass; `bun scripts/invocation-drift.mjs` · exit 0.
+- **E12** — 2026-11-07, obligations ledger closed: every row in
+  `planning-obligations.md` flipped `planned → verified` against the
+  foreground runs recorded in E1–E11 (O16's local-gate receipt rides the `G`
+  line).
+- **L4** — 2026-11-06, the `## Future` row extracted from issue #192's wording
+  (`doc edit` set/append spellings) stays `open` — excluded by the frozen
+  row-71 scope, offered to the owner at unit close.
+- **G1** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at the
+  unit's head · exit code and verdict recorded on the next line after the run
+  (the P8 tick waits for it).
+
 ## Next
 
-RED: write the P1/P2 suite and observe it fail on the missing branch.
+Owner external verification of the diff at `feat/366-doc-cli` head (§8 of the
+applying order: the diff summary, the obligations ledger state, the
+verification block and the documentation state are presented; the PR against
+`main` is opened only after the verdict).
 
 ## References
 
