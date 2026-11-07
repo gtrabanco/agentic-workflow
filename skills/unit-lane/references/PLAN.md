@@ -5,7 +5,8 @@
 Run **investigate → orient → ask → decide** over the plan itself: cite every
 task, sweep every claim against what the repository already decided, ask only
 what no source answers, and record the answers. Each task names its validator;
-smallest first; no future-phase work.
+the plan sequences prerequisite tasks **before** their dependants (topology
+precedes smallest-first — smallest within a ready set); no future-phase work.
 
 ## Inputs
 
@@ -112,6 +113,11 @@ P<n+1> — release settle, when the unit opens a PR: after the PR exists, settle
   executor owns, never a missing courtesy)
 ```
 
+Order is dependency-topological first, smallest within a ready set — a
+prerequisite task precedes its dependants even when larger, and a dependent
+task's validator only runs after its prerequisite tasks pass (execution runs
+phases in label order, so the plan's sequence is what the executor follows).
+
 Both phase grammars are accepted (owner: `phase-contract`): these bullets, or
 full plan-style `## P<n> —` blocks when the unit doc already carries them —
 `phase-lint` parses either and answers `no-phases` only when it finds neither.
@@ -201,7 +207,7 @@ name those files instead.
 - [ ] The plan obeys the all-stages no-assumption rule — **ask-don't-infer**, owner `skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`); a claim no source settles is asked, never invented
 - [ ] Reuse-first (#340): every task that adds functionality names the pre-existing parts it reuses (functions, scripts, skills, schemas, prose surfaces) — or records why reuse is not possible; a task that re-implements an existing part without saying why does not pass
 - [ ] Replace-implies-delete (#340): every task that changes a feature for another, or adds a function/code path that supersedes an existing one, carries the superseded part's deletion as its own planned task with its evidence — and where no superseded part exists, nothing is deleted: the obligation exists when the case exists, never as a ritual
-- [ ] Tasks are ordered smallest first
+- [ ] Tasks are ordered dependency-topological first, smallest within a ready set — a prerequisite task precedes its dependants even when larger, and a dependent task's validator only runs after its prerequisite tasks pass
 - [ ] Each task names its validator (a backticked command plus its expected outcome)
 - [ ] Final task is verification (proves the whole unit works); a unit that
       opens a PR ends with the release-settle task (#316)

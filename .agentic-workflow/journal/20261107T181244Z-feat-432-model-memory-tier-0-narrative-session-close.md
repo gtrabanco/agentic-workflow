@@ -1,6 +1,0 @@
-## 2026-11-07T18:12:44Z — feat/432-model-memory-tier-0 — manual
-- **Commits:** 26 (`d391280b…7e90382e`)
-- **Files:** 29 files
-- **Summary:** Commit the external verifier's blockers-only receipt and integrate main (cf041cca) — the branch's last blocker.
-- **Decisions:** 1) The verifier's receipt was the tree's only dirty path; the verifier does not commit, so it had to land as a commit before audit-pr-gate hygiene could pass. 2) main merge resolved three conflicts: LOGS.md and ROADMAP.md are append-only indexes so both sides' rows survive verbatim; SKILL_CONTEXT_BUDGETS.json could not be unioned — both branches had re-based real ceilings, so each ceiling was taken from the side the merged tree actually is and verified by measurement (--documents, --routes, DESIGN.md). 3) S15 at the full local gate is red: main's cf041cca landed a fragment with kind 'manual' outside the closed set. Reproduced at origin/main itself; not repaired here — this unit's diff touches no main fragment.
-- **Next:** Run git push origin feat/432-model-memory-tier-0 and open/close PR #447 to merge it. Before merge, fix main's S15 red: conform the cf041cca fragment's kind from 'manual' to 'narrative' so the full gate passes and the push gate is clean.
