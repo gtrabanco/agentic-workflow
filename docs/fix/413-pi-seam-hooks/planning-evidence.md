@@ -1,0 +1,17 @@
+# Planning evidence — fix/413-pi-seam-hooks
+
+One row per Engineering claim the change rests on (`id | authority-kind | claim | source | freshness | affected-decision-or-obligation`).
+Unsampled assumptions about a tool's or model's behaviour are `unknown` with an
+owner, never a silent citation. Freshness checked 2026-11-08 against the
+workspace at `b8b1d814`.
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | version-pinned source | The pi extension API fires `session_start`, `session_shutdown`, `tool_call` and `tool_result` extension events, and registers commands via `pi.registerCommand` — the seams the wiring can attach to. | `/home/agent/.bun/install/global/node_modules/@earendil-works/pi-coding-agent/dist/core/extensions/types.d.ts:1212,1219,1248` (read 2026-11-08; peer dep `>=1.1.0`, installed here) | current — read this session | O12 |
+| PE-002 | version-pinned source | A `tool_call` handler can block a tool call ("Fired before a tool executes. Can block."), and the block result shape is `{ block: true, reason }` (the receipt-guard precedent). | `types.d.ts:997-1002` + `packages/pi-agentic-workflow/src/extension/receipt-guard.ts:37-39` | current — read this session | O12 |
+| PE-003 | version-pinned source | `PROJECTION_SEAMS` is the closed nine-member seam set (`session:start`, `session:end`, `unit:start`, `unit:end`, `phase:start`, `phase:end`, `pre:commit`, `post:commit`, `pre:push`); growing it is a schema-const change, never a prose edit. | `packages/agentic-workflow-schema/src/vocabularies.ts:133-144` | current — read this session | O5, non-goals |
+| PE-004 | version-pinned source | The fail-closed verdict vocabulary is `allow | block | degrade` and the rejection-reason vocabulary is `rule-violation | guard-unavailable | guard-error | config-invalid` — reused as the dispatcher's grammar. | `packages/agentic-workflow-schema/src/vocabularies.ts:177-190` | current — read this session | O8, O6 |
+| PE-005 | version-pinned doc | Claude Code `hooks.json` shape: top-level `"hooks"` map keyed by event name (`PreToolUse`, `Stop`, `PostToolUse`, `SessionStart`, `SessionEnd`, …); each value a list of matcher groups `{ "matcher": …, "hooks": [ { "type": "command", "command": …, "timeout": 30 } ] }`. | https://docs.claude.com/en/docs/claude-code/hooks (fetched 2026-11-08, one fetch per the governing §6) | current | S7, O10 |
+| PE-006 | version-pinned source | Established config precedence is project-over-global, and an untrusted project file is not read at all (`loadConfig` gates on `projectTrusted`). | `packages/pi-agentic-workflow/src/config/load.ts:33-52` + `src/config/merge.ts:12-15` | current — read this session | O1, O2 |
+| PE-007 | version-pinned source | The runtime module exposes `runtimeBin()` / `runtimeEnv()` so spawned children inherit pi's runtime choice (bun-else-node); hook execution spawns through it. | `packages/pi-agentic-workflow/src/runtime.ts:21-79` | current — read this session | O9 |
+| PE-008 | version-pinned source | Bun's test runner (`bun test test/*.test.mjs`) is the package's declared test entry, tests import from `../dist/` after `tsc`, and `node:test` + `node:assert/strict` is the in-repo test idiom. | `packages/pi-agentic-workflow/package.json` scripts + `test/untrusted-project-config.test.mjs:1-14` | current — read this session | P2–P5 validators |
