@@ -456,6 +456,17 @@ OPEN rows only; appended by reviewers.
   `doc edit --dry-run` and the retrieval branch are byte-identical
   (`md5sum` equal on both sides), except the intended single-prefix refusal
   message.
+- **L8** — 2026-11-07, disclosed test change, and a red-first inversion for one
+  case: the corpus id-parity case first written in `f068f66e` demanded that the
+  index reproduce **every** chunker id, which cannot hold while `chunks.mjs`
+  mis-scans fences (A6) — it asserted a second unit's defect. It was corrected
+  after the implementation instead of before, so its red is `f068f66e`'s and
+  its green is the follow-up `test(366): pin the id-parity case…` commit. The
+  corrected case keeps the invariant (`0 drift` on every section both scanners
+  see) and **names the four artifact documents in a pinned list**, so the
+  exclusion can neither grow silently nor disappear unnoticed — the sanctioned
+  "a case that genuinely cannot hold is recorded with its reason", not a
+  relaxed assertion.
 - **G2** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` at the batch
   head · **verdict: PASS — 8 step(s) in 133s** · exit 0, with
   `schema-node-compat: exit 0 in 5s` (the step that was red twice before `A1`
