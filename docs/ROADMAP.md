@@ -156,7 +156,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
-| none | — | — | No fix is in flight. A fix gets its row when `/unit-lane --fix <n>` opens its unit doc, and the row is removed after its PR merges. |
+| [#432](https://github.com/gtrabanco/agentic-workflow/issues/432) | model-memory-tier-0 | in-progress | Model memory is never tier-0: the design/plan `sources.md` journal grows a `provenance` column (`repository / version-pinned doc / owner answer / model memory`), a `model-memory` row can never carry `confirmed`, external implementation-detail claims verify against the project's **pinned** version before they guide a task (one-fetch receipt; script where deterministic — #359's migration), and the research step gains its repo-answered exit with the receipt naming the claim and the `path:line`. Prose rule + journal grammar first; the scriptable checks are the second slice only if measured acceptance justifies them |
 
 ## Bureaucracy-reduction execution order (2026-09-15)
 
