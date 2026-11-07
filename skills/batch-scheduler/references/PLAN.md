@@ -33,6 +33,8 @@ vocabularies and the validator.
 | issue | worktree |
 | issue | command |
 | issue | reason |
+| reason | kind |
+| reason | detail |
 | issue | size_hint |
 | issue | claimed |
 | blocked | number |

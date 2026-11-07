@@ -221,6 +221,18 @@ proves it.
 - P13 — Correction batch V (external verify B1): the roadmap row settles `done` with the PR it carries, the projections are regenerated, and the recheck runs the settle gate and the full gate (validator: `bun scripts/roadmap-settle.mjs` exits 0 and `bun scripts/local-gate.mjs` exits 0)
   (Implements: S1, S2)
   Relevant files: docs/ROADMAP.md
+- P14 — Correction batch VI (A5): the plan grammar declares the nested `reason` fields and the parity pin refuses nested drift (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0 and `cd packages/agentic-workflow-schema && bun run test` exits 0)
+  (Implements: S1)
+  Relevant files: skills/batch-scheduler/
+- P15 — Correction batch VII (X1): the changed-set comparison reads its dirty list through the one parsing owner, and a staged rename is pinned both ways (validator: `bun test scripts/version-parity-gate.test.mjs` exits 0 in a tree carrying a staged rename)
+  (Implements: S1)
+  Relevant files: scripts/version-parity-gate.test.mjs
+- P16 — Correction batch VIII (A1, A2): the budget narration counts its own rows and the portable prompt states the tree's counts (validator: `bun scripts/check-skill-context.mjs --documents` exits 0 and `rg -U -c '14\s+user-facing skills \+ 15 internal steps' docs/workflow/PORTABLE_PROMPT.md` matches 1)
+  (Implements: S1)
+  Relevant files: docs/workflow/
+- P17 — Correction batch IX (A3): the pi catalogue lists its commands in the table's order (validator: `rg -o '^\| ./[a-z-]+.' packages/pi-agentic-workflow/README.md | LC_ALL=C sort -c` exits 0)
+  (Implements: S1)
+  Relevant files: packages/pi-agentic-workflow/README.md
 
 ### Planning evidence
 
@@ -282,6 +294,10 @@ authoritative step list for this unit.
 - **E18** — 2026-11-07, P11 (O28): `rg -c '29 source skills \(14 user-facing' README.md` · 1; `npx skills add . --list` · "Found 28 skills" (the tree's 29 minus the repo-only `skill-lint`).
 - **E19** — 2026-11-07, P12 (O29): `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` · exit 0 · 11 pass / 0 fail (S15 green with `…-narrative-session-log.md`); `bun scripts/roadmap-settle.mjs` · exit 0 · `verdict: PASS`, 0 violations · `a2836adb`.
 - **E20** — 2026-11-07, P13 + recheck (O27): the live-path fixture, a `mktemp -d` copy of the worktree (removed after; never the live tree): live forge run · exit 0 · 28 open issues, `degraded: []`, every lane key inside the documented set (no `skills/`, no `skills/**`), `#284` root declaration serialized into each declared skills lane, no `cycle` finding, 72 lane rows / 27 claimed on the re-run, two `--no-state` runs byte-identical. Then `bun scripts/local-gate.mjs` · exit 0 · **PASS — 12/12 steps** (155 s) at `a2836adb`.
+- **E21** — 2026-11-07, the second batch's legitimacy pass (S1): every remaining finding reproduced first — A1's narration said "five rows / four schema-export" where `AGENTS.md` gained four rows (one table, three schema-export); A2's prompt said "16 user-facing + 13 internal" against a 14 + 15 tree; A3's catalogue row sat between `/discover-repository-state` and `/execute-phase` and the table itself broke order at `triage-issue`; A5's `batch-fields@1` declared `issue | reason` and no nested field; X1 reproduced in a scratch clone with `git mv` staged (`bun test scripts/version-parity-gate.test.mjs` → 50 pass / 1 fail). The reported fragment-writer finding was closed by evidence, not code: the carrier already refuses an unparseable kind three ways (PE-024).
+- **E22** — 2026-11-07, P14 (O30): `bun test scripts/batch-scheduler.test.mjs` · exit 0 · 28 pass / 0 fail (the nested `reason.kind` / `reason.detail` pin; RED before the grammar rows and the `BATCH_PLAN_FIELDS` name); `cd packages/agentic-workflow-schema && bun run test` · exit 0 · 772 pass / 0 fail.
+- **E23** — 2026-11-07, P15 (O31): the reproducer clone with a staged rename — before the fix 50 pass / 1 fail, after it 52 pass / 0 fail. The suite in the live tree: `bun test scripts/version-parity-gate.test.mjs` · exit 0 · 52 pass / 0 fail (the dirty list now reads the same `-z` form the producer does, and `porcelainPaths` pins both sides of a rename).
+- **E24** — 2026-11-07, P16/P17 (O32, O33): `bun scripts/check-skill-context.mjs --documents` · exit 0 · PASS (4 budgeted documents); `rg -U -c '14\s+user-facing skills \+ 15 internal steps' docs/workflow/PORTABLE_PROMPT.md` · 1; `rg -o '^\| ./[a-z-]+.' packages/pi-agentic-workflow/README.md | LC_ALL=C sort -c` · exit 0 (the catalogue's own order, `triage-issue` included).
 - **P9** — 2026-11-07, branch pushed (pre-push offline gate PASS; one transient `schema-node-compat` red on the first hook run, green on re-run and standalone) and PR #454 opened with `Closes #449` · PR [454](https://github.com/gtrabanco/agentic-workflow/pull/454).
 
 ## Next
