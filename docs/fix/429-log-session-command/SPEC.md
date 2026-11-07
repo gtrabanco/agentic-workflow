@@ -122,6 +122,17 @@ What this change touches beyond its own lines:
   the "these values are computed for you when the extension is loaded" pointer;
   its Process steps, Turn contract and guardrails stay the owner of the
   procedure (the code directive carries values, never procedure).
+- `scripts/local-gate.mjs` — the `pi-compat-guard` step installs the package's
+  own workspace dependencies beside the pi peers (correction batch 1, advisory
+  A2): without them the scratch project resolved no `@gtrabanco/agentic-workflow/src/…`
+  specifier and the guard reported its own blind spot as five `TS2307`. The
+  step also joins `DEPS["schema-build"]`, because it reads the schema's `dist/`
+  types through the workspace link.
+- `scripts/lint-changeset.mjs` — **the named high-risk item** (signal `publish`,
+  correction batch 1, advisory A3): a cited repo-root path this repository
+  *ignores* is a runtime location, not a dead citation, so the ignore rules
+  answer instead of the existence heuristic. Every committed citation, the
+  `journal/` carrier included, is judged exactly as before.
 - `.gitignore` — the invocation marker needs its own narrow rule, beside
   `.pi/.session-*.start`.
 - `docs/generated/**` — re-rendered by the renderer, never by hand.
@@ -135,9 +146,10 @@ Nothing is deleted by this unit, and the reason is a rule, not an omission:
   kept deliberately by S5 ("The skill stays"), so `readCatalogue` still lists the
   command and `/skill:log-session` still reaches the same `SKILL.md`. Evidence
   that no second surface is left behind: `rg -c 'registerCommand'
-  packages/pi-agentic-workflow/src/extension/factory.ts` → 3 (the catalogue loop,
-  the advance command, the settings pair) before and after — no new registration
-  site is added, the loop's handler for one name is delegated.
+  packages/pi-agentic-workflow/src/extension/factory.ts` → 4 (the registrar
+  interface's own signature, the catalogue loop, and the settings pair) before
+  and after — no new registration site is added, the loop's handler for one name
+  is delegated.
 - The **unverifiable invocation** ("nothing marks that the skill was invoked")
   retires: the invocation record is its replacement, owned by
   `log-session-invocation@1` in this package.
@@ -173,8 +185,29 @@ Nothing is deleted by this unit, and the reason is a rule, not an omission:
 Computed by `bun scripts/ceremony.mjs tier classify` over this unit's declared
 paths at the cut; copied verbatim, never written from memory.
 
-- **Tier** — `standard` · **Task Size** — `understood: true`, `contained_risk: contained`, `resumable_from_diff: true`, `ceremony: unit-doc`, `verification: gates` (15 declared paths → size tier `large`, so the two planning ledgers are separate files beside this doc — never both)
-- **Named high-risk item** — `none — not a high-tier unit`
+- **Cut verdict** — `standard` · **Task Size** — `understood: true`,
+  `contained_risk: contained`, `resumable_from_diff: true`,
+  `ceremony: unit-doc`, `verification: gates` (15 declared paths at the cut →
+  size tier `large`, so the two planning ledgers are separate files beside this
+  doc — never both; the branch grew to 24 paths, reconciled in `## Log` P5)
+- **Verdict at correction batch 1** — recomputed because the batch repaired two
+  gate scripts: `bun scripts/ceremony.mjs tier classify --base main` reports
+  `high` · `reason_kind: named-high-risk` · `signals: [{ path:
+  "scripts/lint-changeset.mjs", signal: "publish" }]` · `task_size`
+  `{understood: true, contained_risk: named, resumable_from_diff: true,
+  ceremony: "unit-doc+review-change", verification: "review-change"}`. The
+  signal is the release-note gate itself: a changeset linter that lets a dead
+  citation through ships a release note pointing at nothing.
+- **Named high-risk item** — `scripts/lint-changeset.mjs` (signal `publish`):
+  the citation rule now exempts paths this repository *ignores*, and nothing
+  else — a cited committed path, the fragment carrier included, is judged as
+  before (`bun test scripts/lint-changeset.test.mjs`).
+- **Ceremony consequence, stated rather than granted** — a `high` verdict owes
+  `/review-change` then `/audit-pr` before merge
+  (`skills/execute-phase/references/risk-tiers.md`). The owner's inline-application
+  protocol (S16) forbids running that machinery on this surgery, so neither ran
+  and neither is claimed; the owner decides between the ceremony and dropping
+  the linter route back to a reworded `374` changeset (the cut-tier route).
 
 ## Acceptance criteria
 
@@ -244,6 +277,11 @@ the frozen requirement text and `## Log` its receipts.
   `scripts/invocation-drift.test.mjs`)
 - the repo lints this change owes: `bun scripts/skill-lint.mjs`,
   `bun scripts/check-skill-context.mjs`, `bun scripts/docs-generate.mjs --check`
+- the two gate scripts this change repairs (correction batch 1, advisories A2/A3
+  of [`external-verify.md`](external-verify.md)): `bun test
+  scripts/local-gate.test.mjs`, `bun test scripts/lint-changeset.test.mjs`, and
+  their end-to-end receipts `bun scripts/local-gate.mjs --only pi-compat-guard`
+  and `bun scripts/lint-changeset.mjs`
 
 ## Known pre-existing issues
 
@@ -358,6 +396,13 @@ carries no table (the `never both` rule).
 - **E14** — (L, correction of `E13`'s action) 2026-11-07: leaving that divergence in place would have handed the owner a merge conflict of my own making, so the rename is aligned onto the name the two sibling branches already ship — `git mv` to `.agentic-workflow/journal/20261107T001707Z-main-narrative-local.md`, with `git hash-object` before and after = `0de3f888dc678914e9aea1ac7a62fb09609a021b` (the bytes `9b27fab9` committed are untouched), `parseFragmentName` non-null for all four carrier files, and `bun scripts/local-gate.mjs --only crate-suite-bun,crate-suite-node` · **exit 0** (both legs green again). Why this is not a new cycle: it is the same file, the same one-line repair the owner authorized in `D1`, only aimed at the target the other two open PRs use; `E13` stands as the observation, unedited.
 - **V1** — 2026-11-07, O1–O17: every row's validator ran in the foreground in the runs above and each row flipped `planned → verified`; no row was deferred out of the unit and no status was granted without its command.
 - **P3** — 2026-11-07, one declared-path correction, recorded rather than silent: the change landed **16** paths, not the 15 the `## Risk tier` row declared — `docs/generated/units.md` joined, written by `scripts/docs-generate.mjs` (O15) and never hand-edited. The tier is unchanged by it (`bun scripts/ceremony.mjs tier classify --base main` at head reports `standard` / `executable-content`, and the size tier was already `large`), and no obligation row was added or dropped for it.
+- **L2** — 2026-11-07, owner correction request verbatim: "arregla tanto los blockers como los advisories, verifica con evidencia la reparación y planifica y evalua antes de arreglar cual será la ruta adecuada para arreglar el problema". Authority: [[external-verify receipt](external-verify.md)] — 0 blockers, 4 advisories; this is correction batch 1 on the advisory set, inside §9's "one batch → one recheck of the same ids".
+- **F1** — 2026-11-07, A1 folded (docs-only, `report-only`): `docs/fix/429-log-session-command/SPEC.md` Retirements claimed `rg -c 'registerCommand' → 3`; the file carries **4** matching lines at both `main` and head (the registrar interface's own signature, the catalogue loop, the settings pair). The invariant it evidences — unchanged between sides, no new registration site — held; only the figure was wrong. Verified: `rg -c 'registerCommand' packages/pi-agentic-workflow/src/extension/factory.ts` → `4` at `main` and at head.
+- **F2** — 2026-11-07, A2 folded (pre-existing at base, `report-only`, class `source`): `scripts/local-gate.mjs` `piCompatGuard` copied `src/` + `tsconfig.json` + `package.json` into a scratch project and installed **only** the two pi peers, so every `@gtrabanco/agentic-workflow/src/…` import was TS2307. Route chosen after measuring both: the registry route is wrong — the **published** `@gtrabanco/agentic-workflow@4.10.0` ships `src/{doc,edit,memory,path-policy.mjs}` and **no** `src/journal` or `src/log` (observed in a scratch install), so a published pin fails for a version skew the guard is not asking about; the guard now links the manifest's `dependencies` from their workspace directories. RED first: `piCompatInstalls`/`workspacePackageDirs` were missing (the suite died on the absent export), then `node --test scripts/local-gate.test.mjs` → `40 pass 0 fail`. Proof: `bun scripts/local-gate.mjs --only pi-compat-guard` · exit 0 · both legs `tsc --noEmit clean` (was exit 1, 5 × TS2307).
+- **F3** — 2026-11-07, A3 folded (pre-existing at base, `report-only`, class `source`): `scripts/lint-changeset.mjs` required every cited repo-root path to exist, so `.changeset/374-pluggable-session-journal.md`'s accurate citation of the ignored runtime store `.agentic-workflow/journal-store/entries.db` failed the whole directory. The ignore rules now answer: a cited path this repository ignores is a runtime location, and `git check-ignore -q` is the authority; the carrier stays judged because `.agentic-workflow/.gitignore` **re-includes** `journal/`. RED first: the new case failed with `cites a repo path that does not exist: .agentic-workflow/journal-store/entries.db`, then `node --test scripts/lint-changeset.test.mjs` → `16 pass 0 fail`. Proof: `bun scripts/lint-changeset.mjs` (whole directory) · exit 0 · `ok 374-pluggable-session-journal.md` among 35 files (was exit 1).
+- **P5** — 2026-11-07, A4 folded by reconciliation, never by rewriting the cut: the `## Risk tier` row keeps its cut-time `15` and now points here; `bun scripts/ceremony.mjs tier classify --base main` at the correction batch's close lists **24** changed paths (the two carrier files of the owner-authorized rename, this unit's own session fragment, `external-verify.md`, and the four gate-script paths this batch repairs) and returns `high` / `named-high-risk` over `scripts/lint-changeset.mjs` (signal `publish`) — the re-tier and the ceremony it owes are recorded in `## Risk tier`, not smoothed. No obligation row was added or dropped for the added paths.
+- **G9** — 2026-11-07, the correction batch's recheck of the same receipts: `bun scripts/lint-changeset.mjs` · exit 0 (whole directory, 35 files, `ok 374-pluggable-session-journal.md`); `bun scripts/local-gate.mjs --only pi-compat-guard` · exit 0 · 2 legs `tsc --noEmit clean`; `node --test scripts/local-gate.test.mjs` · exit 0 · 40 pass; `node --test scripts/lint-changeset.test.mjs` · exit 0 · 16 pass; `bun scripts/phase-lint.mjs docs/fix/429-log-session-command/SPEC.md` · exit 0 · `verdict PASS`; `bun test scripts/ledger-ownership.test.mjs` · exit 0 · 14 pass.
+- **G10** — 2026-11-07, the first full local gate this branch has ever completed: `bun scripts/local-gate.mjs` · **exit 0** · `PASS — 12 step(s) in 210s` (before this batch it died fail-fast at `pi-compat-guard`, step 1 of 12; the other 11 — including `crate-suite-bun`, `crate-suite-node`, `root-suite`, `schema-node-compat` — had never run). `schema-node-compat: exit 0 in 14s`, `756 pass 0 fail`.
 
 ## Next
 
