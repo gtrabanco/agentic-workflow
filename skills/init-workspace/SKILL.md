@@ -25,6 +25,9 @@ raw placeholders.
   every install, hook, and overwrite is explicit; a consent gap runs the
   three-tier dispatch and stops with the dispatcher's `open-questions@1` block
   — against a scratch unit folder when no unit exists yet (§Consent).
+✓ The project charter's identity layer was asked and answered before any
+  substrate byte was copied — never guessed; an unanswered identity question
+  halts through the same `open-questions@1` flow (§Charter).
 ✓ The adapted scaffold and repository-state ledger are written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed, registered (MCP) or overwritten — including the global
   Serena config — without an explicit yes
@@ -89,7 +92,9 @@ or portability unless the runtime platform has no named adapter at all.
 
 - Bare/foreign repository: read
   [bootstrap discovery](references/BOOTSTRAP_DISCOVERY.md), complete its
-  interview, then read [bootstrap write](references/BOOTSTRAP_WRITE.md).
+  interview — **the charter round first: the identity layer is blocking, the
+  domain layer is open-with-defaults (§Charter below)** — then read
+  [bootstrap write](references/BOOTSTRAP_WRITE.md).
   Both the discovery and write routes load
   [SERENA language servers](references/SERENA.md) for stack detection.
 - Existing agentic-workflow scaffold: read [upgrade](references/UPGRADE.md)
@@ -110,6 +115,27 @@ installation consent, and residual reporting are fixed contracts. Missing
 template/migration evidence is reported by the selected route, never filled by
 guessing. An existing OpenCode scaffold with only its safety adapter missing
 loads exactly upgrade and skips bootstrap plus portability.
+
+## Charter — what the project is, asked before the substrate
+
+The consent gates protect **bytes**; the charter captures **what the bytes are
+for**. Before the scaffold is adapted, run the two-layer owner interrogation
+owned by [bootstrap discovery](references/BOOTSTRAP_DISCOVERY.md) §Charter
+interview and written per [bootstrap write](references/BOOTSTRAP_WRITE.md)
+step 4:
+
+- **Identity layer — blocking, never guessed** (project kind, users,
+  deployment, license, ceremony-profile seed): an unanswered identity question
+  is not a default — it halts through the same `open-questions@1` flow §Consent
+  uses.
+- **Domain layer — open-with-defaults** (tests/gate, dependency, docs, tooling,
+  data/PII, i18n): unanswered items are recorded as **dated assumptions**,
+  surfaced by the first unit that needs them, never re-asked, never silent
+  defaults.
+- **Content rule + landing:** decisions, policies and commands — never
+  derivable-from-code description — in the agent guide's `## Project charter`
+  section plus the registered criteria catalogue; coverage computed by
+  `audit-docs` (check 16), never policed here.
 
 ## Guardrails
 

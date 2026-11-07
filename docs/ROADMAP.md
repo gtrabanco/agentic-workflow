@@ -156,12 +156,9 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
+| [#435](https://github.com/gtrabanco/agentic-workflow/issues/435) | project-charter | done · [#446](https://github.com/gtrabanco/agentic-workflow/pull/446) | Project charter in `init-workspace`: two-layer owner interrogation (identity layer blocking, domain layer open-with-defaults as dated assumptions), answers land in the agent guide + registered docs (charter section, `VERIFICATION_CRITERIA.md` catalogue with per-criterion provenance), `audit-docs` check 16 computes coverage; mechanics reuse `needs-input.mjs`/`open-questions@1`, no new grammar, all consent gates preserved. Unit doc `docs/fix/435-project-charter/`. Ceremony-profile machine grammar is #436's (soft dep #366) |
 | #440 | `product-audit-rescope` | in-progress | Skill re-scope per #307 design note 13: deterministic-producer pre-pass (receipt-quoted, never re-run), profile-aware `n/a` scope (#436 consumption-side), measured triggers with the `insufficient-corpus` verdict (#437 bands referenced, never invented), findings typed 1:1 with review's vocabulary and resolver-verb route cells (note-7). Unit doc: `docs/fix/440-product-audit-rescope/` |
 | [#429](https://github.com/gtrabanco/agentic-workflow/issues/429) | `log-session-command` | `done` · [`#448`](https://github.com/gtrabanco/agentic-workflow/pull/448) | PR #448 open against main; unit doc `docs/fix/429-log-session-command/`, ledgers cut at the base commit and closed on foreground validators; awaits the owner's external verdict and merge |
-
-A fix gets its row when `/unit-lane --fix <n>` opens its unit doc (or when the
-owner's own command cuts the ledgers for it), and the row is removed after its PR
-merges.
 
 ## Bureaucracy-reduction execution order (2026-09-15)
 
