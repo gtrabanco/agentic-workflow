@@ -800,6 +800,22 @@ function canonicalLeafUnits(value: string | number | boolean): number {
 }
 
 /**
+ * UTF-16 length of a key's canonical fragment without serializing it: the
+ * fragment is `"` + escaped key + `"`, and an escape is only needed for a quote,
+ * a backslash or a control character. Non-ASCII is emitted verbatim by the
+ * canonical serializer, so `length + 2` is exact for every other key. This is
+ * the capture's hot path — F99 bounds its own refusal work, and a
+ * `JSON.stringify` allocation per property was half of that work.
+ */
+function canonicalKeyUnits(key: string): number {
+  for (let index = 0; index < key.length; index += 1) {
+    const code = key.charCodeAt(index);
+    if (code < 0x20 || code === 0x22 || code === 0x5c) return JSON.stringify(key).length;
+  }
+  return key.length + 2;
+}
+
+/**
  * F97 — capture one submitted value as data, reading every accessor exactly once.
  *
  * Plain objects become own-enumerable-key copies, arrays become element copies, and
@@ -884,17 +900,22 @@ function captureContractValue(value: unknown, pointer: string, context: CaptureC
         : new VerificationInputCaptureError(pointer);
     }
     if (!context.nonAscii) context.nonAscii = !isAscii(key);
-    keyUnits += JSON.stringify(key).length + 1;
-    // `defineProperty`, never assignment: a submitted own `__proto__` key (what
-    // `JSON.parse` produces) is an ordinary data property, but plain assignment
-    // would hit the inherited `Object.prototype.__proto__` setter and drop the key
-    // the structural pass exists to refuse (P7).
-    Object.defineProperty(captured, key, {
-      value: item,
-      enumerable: true,
-      writable: false,
-      configurable: false,
-    });
+    keyUnits += canonicalKeyUnits(key) + 1;
+    // `defineProperty` only for a submitted own `__proto__` key (what `JSON.parse`
+    // produces): it is an ordinary data property there, but plain assignment would
+    // hit the inherited `Object.prototype.__proto__` setter and drop the key the
+    // structural pass exists to refuse (P7). Every other key is a plain assignment:
+    // it creates the same own data property, without the per-property define trap.
+    if (key === "__proto__") {
+      Object.defineProperty(captured, key, {
+        value: item,
+        enumerable: true,
+        writable: false,
+        configurable: false,
+      });
+    } else {
+      captured[key] = item;
+    }
   }
   charge(context, 2 + keyUnits + Math.max(keys.length - 1, 0));
   return Object.freeze(captured);
