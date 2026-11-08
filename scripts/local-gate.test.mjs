@@ -67,6 +67,7 @@ test("every former remote check survives as a step, and the ids are unique", () 
     "root-suite",
     "version-parity-content",
     "docs-generated-projection",
+    "journal-carrier-check",
     "schema-node-compat",
     "pi-node-compat",
     "pi-compat-guard",
@@ -92,6 +93,31 @@ test("every command step points at a file or script this repository carries", ()
     if (target && target.endsWith(".mjs")) {
       assert.ok(fs.existsSync(path.join(cwd, target)), `${step.id} runs ${target}, which exists`);
     }
+  }
+});
+
+test("journal-carrier-check fails on a malformed fixture carrier and moves no byte", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "journal-carrier-"));
+  try {
+    const carrier = path.join(dir, ".agentic-workflow", "journal");
+    fs.mkdirSync(carrier, { recursive: true });
+    fs.writeFileSync(
+      path.join(carrier, "20261108T121830Z-main-manual-narrative-local.md"),
+      "## 2026-11-08T12:18:30Z — main — manual\n- **Summary:** the incident's shape\n",
+    );
+    const step = STEPS.find((candidate) => candidate.id === "journal-carrier-check");
+    assert.ok(step, "the carrier check is a declared gate step");
+    const result = spawnSync(step.argv[0], [...step.argv.slice(1), "--dir", dir], {
+      cwd: ROOT,
+      encoding: "utf8",
+      env: stepEnv(),
+    });
+    assert.equal(result.status, 2, result.stderr);
+    assert.match(result.stderr, /^JOURNAL REFUSAL — 1 non-conforming fragment/u);
+    assert.match(result.stderr, /main-manual-narrative-local\.md/u);
+    assert.deepEqual(fs.readdirSync(carrier), ["20261108T121830Z-main-manual-narrative-local.md"], "validate-only: nothing consumed");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 });
 
@@ -502,7 +528,7 @@ test("--push-base with an empty verdict plans the gate without the test steps", 
       "--repo", dir, "--push-base", "HEAD", "--dry-run", "--skip-network",
     ]);
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(plannedSteps(result.stdout), ["version-parity-content", "docs-generated-projection"],
+    assert.deepEqual(plannedSteps(result.stdout), ["version-parity-content", "docs-generated-projection", "journal-carrier-check"],
       "only the offline non-test steps survive an empty impact set");
     assert.match(result.stdout, /skipping .*test step/, "the skip names what it skipped and why");
     assert.match(result.stdout, /test-impact/);
