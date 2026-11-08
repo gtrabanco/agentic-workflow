@@ -31,7 +31,7 @@ const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 /** A Pi-shaped API that records the handlers instead of registering them. */
 function piDouble(options = {}) {
-  const calls = { setModel: [], setThinkingLevel: [], sendUserMessage: [], notify: [], registerMcpServer: [] };
+  const calls = { setModel: [], setThinkingLevel: [], sendUserMessage: [], notify: [], registerMcpServer: [], registerTool: [] };
   // Stateful like a session: `setThinkingLevel` moves the level the router reads
   // back, so settle's "only write when it differs" guard is exercised too.
   const state = { thinking: options.thinking ?? "medium" };
@@ -61,6 +61,9 @@ function piDouble(options = {}) {
     // operator's own list; an empty one makes the `mcp.json` files the only
     // declaration surface, which is exactly the F6 case.
     registerMcpServer: (name, config) => calls.registerMcpServer.push([name, config]),
+    // Issue #274: the deferred workflow tools register at load; the double
+    // records the registrations without exercising them.
+    registerTool: (tool) => calls.registerTool.push(tool),
     getMcpServers: () => (options.mcpServers ?? []).map((name) => ({ name })),
   };
   // Pi applies an operator's choice to the session and *then* emits the event, so
@@ -570,6 +573,34 @@ test("F6 through the adapter: an opted-in session with nothing declared does reg
     assert.ok(
       entry.calls.notify.some(([message]) => message.includes("registered MCP server")),
       JSON.stringify(entry.calls.notify),
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("issue #274 through the adapter: the shipped entry registers the deferred workflow tools", async () => {
+  // The host names registerTool (pi >= 0.99 always does), so the five
+  // envelope-emitting scripts land as deferred tools in the agentic-workflow
+  // namespace — never declared to the model, read-only annotated.
+  const entry = await shippedEntry();
+  try {
+    assert.equal(entry.calls.registerTool.length, 5, "all five tools register");
+    for (const tool of entry.calls.registerTool) {
+      assert.equal(tool.exposure, "deferred", `${tool.name} is deferred`);
+      assert.equal(tool.namespace.name, "agentic-workflow");
+      assert.equal(tool.annotations.readOnlyHint, true, `${tool.name} is read-only`);
+      assert.ok(typeof tool.execute === "function", `${tool.name} carries an execute`);
+    }
+    assert.deepEqual(
+      entry.calls.registerTool.map((tool) => tool.name).sort(),
+      [
+        "agentic_workflow_audit_pr_gate",
+        "agentic_workflow_diff_guard",
+        "agentic_workflow_phase_lint",
+        "agentic_workflow_snapshot_verify",
+        "agentic_workflow_status",
+      ],
     );
   } finally {
     entry.cleanup();

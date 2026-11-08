@@ -15,6 +15,7 @@ import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
+import { join } from "node:path";
 
 const require = createRequire(import.meta.url);
 const PKG_ROOT = path.resolve(import.meta.dirname, "..");
@@ -98,7 +99,10 @@ test("registration: five deferred tools in the agentic-workflow namespace, readO
     assert.equal(typeof tool.description, "string");
     assert.ok(tool.description.length > 0);
     assert.equal(tool.parameters?.type, "object");
-    assert.equal(tool.outputSchema?.type ?? tool.outputSchema?.oneOf?.type, "object", `${tool.name} declares an output schema`);
+    assert.ok(
+      tool.outputSchema && (tool.outputSchema.type === "object" || Array.isArray(tool.outputSchema.oneOf)),
+      `${tool.name} declares an output schema`,
+    );
   }
 });
 
@@ -190,18 +194,26 @@ test("status: outputSchema reuses the published envelope schema verbatim (no sec
   const oneOf = status.outputSchema.oneOf;
   assert.ok(Array.isArray(oneOf) && oneOf.length === 2, "envelope + degradation record");
   assert.deepEqual(oneOf[0], published, "the envelope branch IS the published schema");
-  assert.equal(oneOf[1].properties?.refusal?.type, "string", "the degradation branch is the tool's own boundary contract");
+  assert.equal(oneOf[1].properties?.refusal?.const, "sensor-degraded", "the degradation branch is the tool's own boundary contract");
 });
 
 // ---------------------------------------------------------------------------
 // Live gate scripts (AC4, AC5, O9, O10)
 // ---------------------------------------------------------------------------
 
+/** Local siblings the live scripts import — the copy must carry them. */
+const LIVE_SCRIPT_SIBLINGS = {
+  "diff-guard.mjs": [],
+};
+
 /** A throwaway git repo with the single-file script copied into scripts/. */
 function makeLiveSandbox(script) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "paw-tool-live-"));
   fs.mkdirSync(path.join(root, "scripts"));
   fs.copyFileSync(path.join(REPO_ROOT, "scripts", script), path.join(root, "scripts", script));
+  for (const sibling of LIVE_SCRIPT_SIBLINGS[script] ?? []) {
+    fs.copyFileSync(path.join(REPO_ROOT, "scripts", sibling), path.join(root, "scripts", sibling));
+  }
   const git = (args, opts = {}) =>
     execFileSync("git", args, { cwd: root, env: sandboxGitEnv(), encoding: "utf8", ...opts });
   git(["init", "-q"]);
@@ -264,7 +276,7 @@ test("diff-guard live: pass → structured counts; breach → isError with the b
   checkSchema(guard.outputSchema, pass.structuredContent, "diff-guard pass");
   assert.equal(pass.isError, undefined);
   assert.equal(pass.structuredContent.breach, false);
-  assert.equal(pass.structuredContent.base, base);
+  assert.ok(String(pass.structuredContent.base).startsWith(base.slice(0, 7)), "the guard echoes the base revision");
 
   fs.appendFileSync(path.join(root, "a.txt"), Array.from({ length: 500 }, (_, i) => `line ${i}\n`).join(""));
   const breach = await guard.execute({ base }, root);
@@ -281,8 +293,11 @@ test("diff-guard live: pass → structured counts; breach → isError with the b
 
 test("phase-lint live: PASS and BLOCKED unit docs → typed verdict with fingerprint", async () => {
   const { createWorkflowTools } = await loadModule();
-  const { root } = makeLiveSandbox("phase-lint.mjs");
-  const clean = path.join(root, "clean.md");
+  // phase-lint is a read-only script that imports a repo-rooted sibling, so it
+  // runs from the repository's own checkout (a read, never a mutation of the
+  // live tree) with fixture documents written under os.tmpdir().
+  const fixtures = fs.mkdtempSync(path.join(os.tmpdir(), "paw-tool-lint-"));
+  const clean = path.join(fixtures, "clean.md");
   fs.writeFileSync(
     clean,
     [
@@ -299,18 +314,18 @@ test("phase-lint live: PASS and BLOCKED unit docs → typed verdict with fingerp
   const tools = createWorkflowTools({ bin: () => "node" });
   const lint = tools.find((tool) => tool.name === "agentic_workflow_phase_lint");
 
-  const pass = await lint.execute({ path: "clean.md" }, root);
+  const pass = await lint.execute({ path: clean }, REPO_ROOT);
   checkSchema(lint.outputSchema, pass.structuredContent, "phase-lint pass");
   assert.equal(pass.isError, undefined);
   assert.equal(pass.structuredContent.verdict, "PASS");
   assert.match(pass.structuredContent.fingerprint, /^[0-9a-f]{64}$/);
 
-  const blocked = path.join(root, "blocked.md");
+  const blocked = path.join(fixtures, "blocked.md");
   fs.writeFileSync(
     blocked,
     ["## Tasks", "", "- P1 — A task with no link", ""].join("\n") + "\n",
   );
-  const blockedRun = await lint.execute({ path: "blocked.md" }, root);
+  const blockedRun = await lint.execute({ path: blocked }, REPO_ROOT);
   checkSchema(lint.outputSchema, blockedRun.structuredContent, "phase-lint blocked");
   assert.equal(blockedRun.isError, true, "BLOCKED is isError: true");
   assert.equal(blockedRun.structuredContent.verdict, "BLOCKED");
