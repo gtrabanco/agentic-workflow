@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { detectHost, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
+import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
 
 const BIN = fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url));
@@ -433,4 +433,43 @@ test("CLI: resources bound prints the systemd envelope lines", () => {
   assert.equal(run.status, 0, run.stdout + run.stderr);
   assert.match(run.stdout, /systemd-run --user --scope/u);
   assert.match(run.stdout, /systemctl --user show/u);
+});
+
+test("CLI: resources bound refuses --json — it prints the shell envelope, never a JSON receipt", () => {
+  const run = spawnSync(
+    "bun",
+    [BIN, "resources", "bound", "--task", "cli-bound", "--cmd", "bun test test/", "--json"],
+    { encoding: "utf8" },
+  );
+  assert.equal(run.status, 2, run.stdout + run.stderr);
+  assert.match(run.stderr, /RESOURCES REFUSAL —/u);
+  assert.match(run.stderr, /--json/u);
+  assert.equal(run.stdout, "", "a refusal writes nothing on stdout");
+});
+
+test("CLI: a malformed brief is a refusal (exit 2), never a stack trace", () => {
+  const cases = [
+    { expected_duration: "1m", requirements: { memory: "12 TB" } }, // unit outside GB|MB|KB
+    { expected_duration: "1m", requirements: { cpu: 2 } }, // unknown requirement key
+    { expected_duration: "1m", requirements: { memory: "1 GB", threads: 0 } }, // bad thread count
+    { expected_duration: "1m", requirements: { memory: "1 GB" }, expected_seconds: -1 }, // bad machine expectation
+  ];
+  for (const expect of cases) {
+    const run = spawnSync("bun", [BIN, "resources", "admit", "--task", "cli-bad", "--expect", JSON.stringify(expect)], { encoding: "utf8" });
+    assert.equal(run.status, 2, `${JSON.stringify(expect)}\n${run.stdout}${run.stderr}`);
+    assert.match(run.stderr, /RESOURCES REFUSAL —/u);
+    assert.doesNotMatch(run.stderr, /at admitTrial|Bun v/u, "a usage mistake is not a crash");
+    assert.equal(run.stdout, "");
+  }
+  const notAnObject = spawnSync("bun", [BIN, "resources", "admit", "--task", "cli-bad", "--expect", "[]"], { encoding: "utf8" });
+  assert.equal(notAnObject.status, 2, notAnObject.stdout + notAnObject.stderr);
+  assert.match(notAnObject.stderr, /RESOURCES REFUSAL —/u);
+});
+
+test("admit's malformed-input throws are typed — the CLI maps them to a refusal", () => {
+  const envelope = detectHost({ readings: bigHost });
+  assert.throws(
+    () => admitTrial({ task: "t-bad", expect: { expected_duration: "1m", requirements: { memory: "12 TB" } }, envelope }),
+    ResourcesError,
+  );
 });
