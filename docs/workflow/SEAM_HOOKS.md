@@ -51,6 +51,10 @@ Both gates are proven off-by-default by the package's test suite.
   the silence. A command that cannot start at all is a block, never a crash.
   The message quotes the declared requirement as declared, its own quoting
   included.
+- **Shutdown is bounded** — the `session:end` seam runs while the session is
+  torn down and the host waits for it, so its report is not lost to the exit;
+  the seam gets a 5 s budget regardless of a larger declared timeout, and a slow
+  check is reported as a timeout instead of delaying the quit.
 - **Degradation is declared** — a broken hook config announces itself once per
   project session (the next session hears it again) and then behaves as a
   no-op; an `enabled` declaration with no consent entry says it is inert and

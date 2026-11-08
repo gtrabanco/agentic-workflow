@@ -35,9 +35,32 @@ the foreground (governing request §8).
 | O25 | S1 · S10 | Every finding of the 2026-11-08 external receipt is dispositioned — fixed with its validator, or recorded as not-a-defect with the gate that proves it | P9 | P9 | `SPEC.md` `## Findings` | `sed -n '/^## Findings/,/^## Log/p' docs/fix/413-pi-seam-hooks/SPEC.md` matches 12 finding rows, none classed `fix-now` while open | E-line in `## Log` | verified |
 | O26 | DA1 · S6 | The announce latch is per project session: a NEW session (`session_start`) re-announces a broken-config or inert-notice that the previous session already heard, while the seams within one session stay latched | P11 | P11 | `src/extension/hooks-wiring.ts` | `bun test packages/pi-agentic-workflow/test/hooks-wiring.test.mjs` exits 0 with the `O25 (DA1)` re-announce case passing | E-line in `## Log` | verified |
 | O27 | DA2 · S6 | Git's value-less-legal options are absent from `GIT_VALUE_OPTIONS`: a bare option consumes nothing, and no option in the set can swallow a subcommand that git would otherwise run | P11 | P11 | `src/extension/hooks-wiring.ts` | `bun test packages/pi-agentic-workflow/test/hooks-wiring.test.mjs` exits 0 with the `O26 (DA2)` exec-path case passing (`--exec-path=<p> commit` fires, both bare forms quiet) | E-line in `## Log` | verified |
+| O28 | S4 | The shutdown seam reports before the process exits and stays inside its budget: the entry returns the handler's promise (pi awaits it before teardown) and every hook at `session:end` is capped at `SHUTDOWN_BUDGET_MS`, so a slow check is a timeout block, never a silent loss and never a held quit | P11 | P11 | `src/extension/index.ts` · `src/extension/hooks-wiring.ts` · `src/hooks/dispatcher.ts` | `bun test packages/pi-agentic-workflow/test/hooks-wiring.test.mjs` and `test/alias-coverage.test.mjs` exit 0 with the bounded-shutdown and returned-promise cases passing | E-line in `## Log` | verified |
 
 Evidence map (2026-11-08, the P9 batch re-ran every row of this batch in the
 foreground and recorded it as `P9-V` in the unit doc): O15, O16, O17, O18, O19,
+O20, O21, O22 → the four hooks suites at this head (606/0 in the package, 39/0
+under `node --test` on the touched three), each named case passing; O23 → the
+prose lands in `README.md`, `docs/workflow/SEAM_HOOKS.md`,
+`skills/init-workspace/SKILL.md` and the changeset, with `skill-lint` and
+`docs-generate --check` green; O24 → `docs-generate --check` exit 0 with the 413
+row reading `fix/413-pi-seam-hooks`; O25 → `## Findings` carries 12 rows, F1–F11
+folded and F12 `not-a-defect` on `roadmap-settle`'s own word.
+
+Evidence map for the P11 batch (2026-11-08, rows closed in the same
+foreground session, recorded as `P11-V` in the unit doc): O26 → the `O25 (DA1)`
+case in `test/hooks-wiring.test.mjs` (a second `onSessionStart` re-announces,
+the same-session seam run stays latched), suite 14/0 under bun and `node
+--test`; O27 → the `O26 (DA2)` case (`git --exec-path=<p> commit` fires, `git
+--exec-path` and `git --exec-path <p> commit` stay quiet), same suite — resting
+on PE-013's git probe (the value-less form exits before any subcommand). Red
+run: `10555db8` · 12 pass / 2 fail; green: `5c8e3f98` · 14/0, package 608/0.
+O28 → the wiring and entry suites at this head, 608/0 in the package and 56/0
+under `node --test` on the four touched suites, the bounded-shutdown and
+returned-promise cases passing (red `d7952e27` · 606/2; green `e135927c`).
+
+Evidence map for the P9 batch (2026-11-08, re-ran every row in the foreground
+and recorded it as `P9-V` in the unit doc): O15, O16, O17, O18, O19,
 O20, O21, O22 → the four hooks suites at this head (606/0 in the package, 39/0
 under `node --test` on the touched three), each named case passing; O23 → the
 prose lands in `README.md`, `docs/workflow/SEAM_HOOKS.md`,
