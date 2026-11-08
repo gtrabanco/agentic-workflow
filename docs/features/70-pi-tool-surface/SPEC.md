@@ -209,11 +209,44 @@ carries nothing else.
   `enhancement`, `backlog`, `postponed`; requirement text sampled for S1.
 - **E2** — 2026-11-08, `bun scripts/ceremony.mjs tier classify --paths …` ·
   exit 0 · tier `standard`, task_size `understood/contained/resumable-from-diff`.
+- **E3** — 2026-11-08, `bun test test/workflow-tools.test.mjs` · exit 1 · RED on
+  the missing module: 11 tests, 0 pass (commit `342b4d7f`).
+- **P1** — 2026-11-08, ledgers frozen + RED suite committed · `342b4d7f`.
+- **P2** — 2026-11-08, `workflow-tools.ts` (five Pi-free specs) + additive
+  sensor envelope field + factory/adapter wiring · `7a80138c`.
+- **E4** — 2026-11-08, `bun test test/workflow-tools.test.mjs` · exit 0 · 11 pass
+  (registration shape, status happy/degraded/failure/schema-source, diff-guard
+  live pass/breach/error in a git sandbox, phase-lint live PASS/BLOCKED,
+  audit-pr-gate and snapshot-verify exit mapping).
+- **E5** — 2026-11-08, `bun test test/conductor-sensor.test.mjs` · exit 0 ·
+  7 pass — the suite untouched (O6).
+- **E6** — 2026-11-08, `bun test test/shipped-adapter.test.mjs
+  test/settings-console.test.mjs test/serena-readiness.test.mjs` · exit 0 ·
+  94 pass, one additive `registerTool` stub in the pi double (O8).
+- **E7** — 2026-11-08, `bun run test` (packages/pi-agentic-workflow) · exit 0 ·
+  622 pass / 0 fail; base HEAD `0cb26ee2` measured 610 pass / 0 fail (O13, O18).
+- **G1** — 2026-11-08, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS
+  — 13 step(s) in 182s` (O18).
+- **P3** — 2026-11-08, README tool-surface section + minor changeset + roadmap
+  row 70 → `in-progress` via the crate `rowUpsert` CLI · `8dd6bc5b`.
+- **G2** — 2026-11-08, `bun scripts/roadmap-settle.mjs` · exit 0 · `verdict:
+  PASS · violations: 0`; `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  `verdict: PASS` after regeneration (O16).
+- **E8** — 2026-11-08, `bun test test/shipped-adapter.test.mjs` (entry-level)
+  · exit 0 · the shipped entry registers the five deferred tools through a
+  host that names `registerTool` (17 pass in the file).
+- **V-AC1..AC6** — 2026-11-08, every acceptance criterion's named check re-run
+  in the foreground at the handoff head; all green (see E4–E8, G1–G2).
+  Deferred to the owner: the codemode end-to-end call (AC1's live half) needs
+  a real pi session — the suite proves the result shapes; the owner verdict
+  is the external confirmation.
 
 ## Next
 
-Implement P1 (RED suite) against the frozen ledgers, then hand the diff to the
-owner for external verification.
+Hand the diff to the owner for external verification (the local workflow's
+verifier is the owner, never this session). Open the PR on `main` with
+`Closes #274` only after the owner's verdict; the PR settles the roadmap row
+to `done · [#PR]` via `rowUpsert` and `roadmap-settle` re-checks it.
 
 ## References
 
