@@ -396,6 +396,7 @@ log-kind-vocabulary | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.
 findings-carrier | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:findings-table@1 | n/a | no
 findings-severity-ladder | skills/review-implementation/references/CLASSIFY.md | block:finding-severity-ladder@1 | finding-severity-ladder | no
 findings-impact | skills/review-implementation/references/CLASSIFY.md | block:finding-impact@1 | finding-impact | no
+pass-name-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PASS_NAMES | pass-name | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
 risk-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_KINDS | risk-tier | yes
 risk-tier-signals | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_SIGNAL_KINDS | risk-tier-signal | yes
