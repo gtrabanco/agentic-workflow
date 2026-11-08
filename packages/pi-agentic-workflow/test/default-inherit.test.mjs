@@ -60,6 +60,10 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // Issue #394: the journal writer is opt-in as well — off, and no publisher
     // named, so a fresh install writes nothing at either switch.
     autoLogSession: { mode: "off", publisher: null },
+    // Issue #201: no shipped pass entries — the resolver owns the fail-closed
+    // chain, so an unconfigured install resolves every pass to the documented
+    // floor (cheap tier, else inline) rather than a compiled-in model.
+    passes: {},
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });
