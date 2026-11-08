@@ -167,7 +167,7 @@ paths → `standard` (executable content in `workflow-tools.ts`), task_size
   Relevant files: packages/pi-agentic-workflow/src/extension/factory.ts, packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/test/shipped-adapter.test.mjs
 - P4 — Docs and release surface: package README section, `.changeset/` minor
   intent, roadmap row 70 → `in-progress` via the crate CLI
-  (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0; `rg -n "workflow tools" packages/pi-agentic-workflow/README.md` matches ≥ 1)
+  (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0; `rg -n "^## Workflow tools" packages/pi-agentic-workflow/README.md` matches 1)
   (Implements: S1)
   Relevant files: packages/pi-agentic-workflow/README.md
 - P5 — Verification: full package suite plus the root gate's package-relevant
@@ -270,13 +270,79 @@ carries nothing else.
   the `isError`-with-envelope path: **AC1's both halves verified live** —
   envelope as `structuredContent` without parsing, and the degraded case as an
   error that still delivers data. Scratch removed after the run.
+- **E10** — 2026-11-08, correction batch 1 (external-verify `26b4919c` B1–B6):
+  the frozen-failure corpus first. The suite's schema helper could never fail
+  (`filter(Boolean)` kept a failure *string* as truthy) — its reproducer was
+  observed red against the pre-batch helper
+  (`old_helper_threw_on_mismatch: false`), then
+  `bun test test/workflow-tools.test.mjs` · exit 1 · 12 pass / 3 fail, the three
+  reds being exactly the reported schema/composition defects (diff-guard error
+  report, snapshot missing-receipt report, audit-pr-gate live run degrading).
+- **E11** — 2026-11-08, `scripts/diff-guard.mjs --json` sampled on all three
+  paths in a throwaway repo · exit 0 / 1 / 2 · `breach` is `false`, `true`, and
+  the reason string respectively; `base` is `null` and `error` present only on
+  the error path, and the pass/breach JSON omits `error` entirely. PE-006
+  corrected to that shape; the tool's declared `breach` widened to
+  `["boolean", "string"]` (D4).
+- **E12** — 2026-11-08, `bun test test/workflow-tools.test.mjs` · exit 0 ·
+  15 pass / 0 fail. Two new live cases: the snapshot tool against a tmp fixture
+  (plan stage, fix kind, explicit dir) answering the missing-receipt report, and
+  the audit tool against a tmp repo whose `gh` is a PATH shim (offline,
+  deterministic) reaching the script's own BLOCKED report.
+- **E13** — 2026-11-08, real-tree reproducers re-run through the tools in this
+  checkout: `agentic_workflow_snapshot_verify({stage:'spec',unit:'70-pi-tool-surface'})`
+  → `{"current":false,"code":"missing-receipt-snapshot",…}` validating against
+  the declared union; `agentic_workflow_audit_pr_gate({pr:'465'})` → the real
+  report (`verdict: BLOCKED`, `reason: no REVIEW-PASS marker…`, `route`,
+  `head`, `pr: 465`, `action: none`) instead of `gate-unavailable`.
+- **E14** — 2026-11-08, `bun run test` (packages/pi-agentic-workflow) · exit 0 ·
+  626 pass / 0 fail (622 before the batch); `bun scripts/local-gate.mjs` · exit
+  0 · `local-gate: PASS — 13 step(s) in 142s`; `bun scripts/roadmap-settle.mjs` ·
+  exit 0 · `verdict: PASS · violations: 0`; `bun scripts/docs-generate.mjs
+  --check` · exit 0 · `verdict: PASS`.
+- **E15** — 2026-11-08, the two amended declared validators re-run:
+  `rg -n "^## Workflow tools" packages/pi-agentic-workflow/README.md` → 1 match
+  (the frozen `rg -n "workflow tools"` matched 0 — case); and
+  `awk -F'|' '$2 ~ /^ 70 /' docs/ROADMAP.md | rg -c 'done · \[#465\]'` → 1
+  (the frozen `in-progress` probe matched 0 once the row settled).
+- **E16** — 2026-11-08, `agentic-workflow journal write --kind narrative …` · exit 0
+  · fragment `20261108T220003Z-feat-274-pi-package-tool-surface-narrative-local.md`
+  (1856 bytes); `journal aggregate --check` · exit 0 ·
+  `{"ok":true,"checked":21,"refusals":[]}` (O17, carrier mode — the direct
+  `docs/LOGS.md` append stays refused by design).
+- **D3** — 2026-11-08 · decision (ledger amendment, external-verify B6) —
+  O16's validator asserted the row's `in-progress` state, which the settle
+  superseded; the row reached `done · [#465]` through `rowUpsert` (8dd6bc5b,
+  26b4919c), so the conforming validator asserts the settled row the emitter
+  wrote plus `roadmap-settle`'s exit 0. Frozen-validator amendment recorded
+  here, the same route as D1.
+- **D4** — 2026-11-08 · decision (schema sourcing, external-verify B1/B2) —
+  the gate tools keep declaring the scripts' *real* output: `breach` admits the
+  script's reason string, and the snapshot tool declares two sibling report
+  branches (freshness report, missing-receipt report) beside the degradation
+  record, because the verifier emits both shapes. Normalizing inside the tool
+  was rejected: rewriting `breach` to a boolean would change data nobody asked
+  to change and put a second truth next to the script's.
+- **D5** — 2026-11-08 · decision (audit composition, external-verify B4) —
+  `--repo <cwd>` dropped: it is a forge scope (`[HOST/]OWNER/REPO`) and `gh`
+  refused the path, so every run degraded before the script could answer. The
+  spawn cwd already is the project under work (git is read there, `gh` infers
+  the repository). A cross-repo `--repo owner/name` parameter was not added:
+  the tool senses the session's own project, and that scope was not requested.
+- **D6** — 2026-11-08 · decision (advisory triage, external-verify A1–A5) —
+  A2 fixed (strict `exposure === "deferred"` assertion), A3 fixed (the sensor
+  header documents the additive `envelope`), A4 fixed through the emitter
+  (`rowUpsert` with the backticked slug and `—` for no dependency), A5 fixed
+  (PE-006 restated). **A1 left unchanged on purpose**: `fix/370`'s
+  `registerTool → 0` row is the frozen cut-head evidence of a merged unit, and
+  rewriting it would falsify an audit record — the date scopes the claim to
+  the head it was sampled at.
 
 ## Next
 
-Hand the diff to the owner for external verification (the local workflow's
-verifier is the owner, never this session). Open the PR on `main` with
-`Closes #274` only after the owner's verdict; the PR settles the roadmap row
-to `done · [#PR]` via `rowUpsert` and `roadmap-settle` re-checks it.
+The corrected head needs the owner's delta re-verify (B1–B6 re-checked and the
+advisories' disposition read). Then the PR settles against `main` with
+`Closes #274`.
 
 ## References
 
