@@ -226,6 +226,17 @@ export const STEPS = [
     mirrors: "no former remote job — the projection staleness has no remote twin",
   },
   {
+    id: "journal-carrier-check",
+    title: "Journal fragment carrier is conforming (offline)",
+    cwd: ".",
+    argv: [NODE, "packages/agentic-workflow/bin/agentic-workflow.mjs", "journal", "aggregate", "--check"],
+    // Not a `tests:` step on purpose: the pre-push hook skips test-bearing steps
+    // on an empty test-impact verdict, and a prose-only push is exactly the push
+    // that can carry a malformed fragment into `main` (issue #452 S3).
+    tests: false,
+    mirrors: "no former remote job — the carrier lint rides the pre-push offline subset and CI",
+  },
+  {
     id: "schema-node-compat",
     title: "Schema package (node runtime — the guaranteed fallback)",
     cwd: "packages/agentic-workflow-schema",
@@ -289,6 +300,7 @@ export const DEPS = {
   "root-suite": ["workspace-install", "schema-build"],
   "version-parity-content": [],
   "docs-generated-projection": [],
+  "journal-carrier-check": ["workspace-install"],
   "schema-node-compat": ["workspace-install", "schema-build", "root-suite"],
   "pi-node-compat": ["workspace-install"],
   "pi-compat-guard": ["schema-build"],
