@@ -48,9 +48,11 @@ so at runtime rather than assuming a path.
 
 ## 2. Create the skills under `.claude/skills/<name>/SKILL.md`
 Each file: YAML frontmatter (`name`, `user-invocable`, a trigger-rich
-`description`, and a pre-set `model`/`effort`) + a body with `When to use`,
-`Step 0 — Discover the project (always first)`, `Process`, `Guardrails`,
-`Relationship to other skills`, `Done when`. Make every skill discover-first and
+`description`) + a body with `When to use`, `Step 0 — Discover the project (always
+first)`, `Process`, `Guardrails`, `Relationship to other skills`, `Done when`, and
+a closing `→ Next:` block. Pin no per-skill model or effort: every skill inherits
+the session's tier, and a boundary that needs another tier hands off instead of
+composing. Make every skill discover-first and
 reference THIS project's real paths/commands/language.
 
 **Repository state**
@@ -63,142 +65,104 @@ Before design or planning, create the Normalized Repository State contract:
 All planning, execution, review, audit, status, and orchestration skills consume
 the frozen ledger and route missing or contradictory state to these skills.
 
-**Design**
-1. `design-feature` — product definition. Fold in a raw-idea interview
-   (proactively ask, small batched rounds, recommended defaults) when starting
-   from zero, then walk the **capability-closure** checklist: for each entity
-   introduced/touched, CRUD + state transitions, each with a UI entry point +
-   API surface + test, or an explicit `n/a: <reason>`; for each capability, its
-   entry point + who may execute it; for each role, where it's
-   assigned/revoked/viewed. The filled rows become the acceptance criteria.
-   Estimate the feature's **size** (`XS/S/M/L`); offer to open a tracking
-   issue. Writes the SPEC's **product half** and stamps `## Design status:
-   designed`. Upserts on re-run (never destroys recorded decisions).
+**The lane** (the fixed pipeline is retired — its stages are catalog steps now)
+1. `unit-lane` — the conductor. Given a slug (`--from-issue <n>` for a tracked
+   issue, `--fix <n>` for a fix), it creates ONE unit doc from the template —
+   `## Specs` numbering the owner's requirements `S#` verbatim, `## Tasks` with
+   phases `P1…Pn` (never `Step N`/`S1`), an evidence carrier (an `## Evidence`
+   table, or `## Log` `E` lines on a re-cut unit), and an append-only `## Log` —
+   then runs triage (returns the ordered catalog steps that apply) and
+   orchestrates the whole lane: research → design → plan → implement → tests →
+   evidence → review → docs → release. Each step runs as an atomic gate/commit and
+   gets a fresh worker context; the triage block in the unit doc is the only step
+   authority.
+2. `execute-phase` — the step executor: one step (or all remaining) with frozen
+   acceptance, the **derived test-impact set** (tests first on core/domain and
+   orchestration work — the unit doc's scenarios are the test list, red →
+   green), the project's verification gate before every commit — **never commit
+   red** (unfixable-in-scope failures → known issues + stop) — the diff-size
+   guard, and red-gate repair. When reality contradicts the plan, return to the
+   lane instead of silently diverging. A failing test is repaired by changing the
+   code it judges, never by relaxing the assertion. A finished unit **always opens
+   its PR** (never branch-only) and **flips the roadmap row to `done` at PR-open**
+   (built, not merged — merge state is the forge's).
 
-**Lane conductor**
-2. `unit-lane` — the lane conductor. Given a slug, creates the unit doc from
-   the template, runs triage (returns ordered catalog steps), and orchestrates
-   the full lane: research → design → plan → implement → tests → evidence →
-   review → docs → release. Triage decides which steps apply; each runs as an
-   atomic gate/commit. The triage catalog lists closed-step names, their
-   applicability rules, and budget tiers.
-3. `execute-phase` — run one catalog step as an atomic gate/commit (or all
-   remaining steps). Each step gets a fresh worker context, acceptance-blob
-   check, and commit.
-
-**Lane catalog steps** (`user-invocable: false` — invoked by `unit-lane`)
-4. `planning-preflight` — internal planning gate: consumes the normalized
-   repository state and makes the final architectural classification;
-   used by the lane's design and plan steps.
-5. `replan-findings` — conditional replan entry: loaded when triage detects
-   a unit outgrowing the light path; turns the router's bounded read set into
-   appended catalog steps without a full planning preflight.
-6. `implementation-discovery` — bounded, read-only pre-write mapper contract:
-   closes seven evidence questions, emits one fixed compact map, and routes
-   `READY | REPLAN | NEEDS-DESIGN | BLOCKED` before any source write.
-7. `evidence-grounding` — authoring-side evidence contract + readiness
-   **sized** SPEC product half (confirm it's a feature, not a bug/debt; translate
-   to docs language; map to roadmap; close gaps by asking, or hand a thin issue
-   to `design-feature`; wire `Closes #N`; satisfy capability closure).
-5. `plan-feature-scaffold` — fill the **engineering half** + scaffold planning
-   artifacts **scaled to the size**: XS/S → SPEC-only (no ceremony), with
-   **≥ 2 phases in the SPEC** (`P1` implementation, final
-   `P2 — Hardening & PR` = the close-out); M/L → the full set, whose plan
-   always ends in a **hardening phase** (edge cases + the SPEC's failure
-   modes). Register in the roadmap.
-   Docs only; no code, no branch.
-
-**Execute**
-6. `execute-phase` — with only a feature or fix target, implement all remaining
-   phases; an explicit `P<n>` executes exactly one phase. XS/S and fix
-   phases live in the SPEC's `## Phases` (their final phase is always
-   `Hardening & PR`, the close-out); a legacy SPEC without `## Phases` runs
-   end-to-end in one pass. Branch safety; on P1 commit the planning
-   artifacts separately before any code. **Tests-first** on core/domain and
-   orchestration work (the SPEC's dev scenarios are the test list, red → green).
-   The project's verification gate before every commit — **never commit red**
-   (unfixable-in-scope failures → known-issues + stop). When reality contradicts
-   the plan, update TASKS/PLAN and record why — never silently diverge. Per-phase
-   doc discipline; no intermediate reviews in unit-loop mode. A finished unit
-   hands off to the mandatory manual review→fold path
-   (`/fold-findings`, then re-run `/review-change`), which reuses a current
-   exact-SHA receipt or reviews context-clean and keeps review and correction
-   contexts separate. A finished unit (the final `Hardening & PR` phase for
-   XS/S and fixes, a feature's final phase, or a legacy single pass)
-   **always opens its PR** (never branch-only) and **flips to `done` at PR-open**
-   (built, not merged — merge state lives in the forge). Print the next step.
+The retired stages are catalog steps inside those two — never recreate them as
+standalone commands: `design-feature` → the `design` step (capability closure:
+per entity CRUD + state transitions, each with a UI entry point + API surface +
+test or an explicit `n/a: <reason>`; per capability its entry point and who may
+execute it; the filled rows become the acceptance criteria); `plan-feature`,
+`plan-feature-scaffold`, `plan-feature-from-issue` → the `plan` step (sizing and
+phase scaffolding, planned from recorded decisions rather than open questions);
+`plan-fix` → the lane's fix mode; `review-spec`/`review-plan` → the `review`
+step; `planning-preflight`/`replan-findings` → triage and replanning;
+`implementation-discovery` → the bounded, read-only pre-write mapper inside
+`execute-phase` (seven evidence questions, one compact map, routing
+`READY | REPLAN | NEEDS-DESIGN | BLOCKED` before the first write);
+`evidence-grounding` → the `evidence` step.
 
 **Review & audit** (change → PR → product)
-7. `review-implementation` (`user-invocable: false` — the engine `review-change`
-   composes) — two-phase review of a change. Phase 1 FIND (no
-   refactor) across: bugs, architecture violations, removable/dead code (EXCEPT
-   code intentionally staged for an in-progress/planned feature — cross-check
-   roadmap/SPEC/known-issues), security/cybersecurity, platform/runtime
-   incompatibilities, overengineering & premature optimization, bundle-size
-    risk, and tests (failing AND missing). Phase 2 CLASSIFY each finding as
-    fix-now / replan-in-unit / decision-required / proposal / ignore in a
-    decision table with WHY, implementation risk, long-term impact, and a
-    premature-optimization flag.
-   Findings only — never refactor.
-8. `review-change` — platform-adaptive orchestrator, **mandatory before every
+3. `review-change` — platform-adaptive orchestrator, **mandatory before every
    merge**: run only the reviews that apply to this project + change (compose
-   `review-implementation` + the project's companion review skills), check **SPEC
-   drift** (diff vs. the governing SPEC's scope and acceptance criteria — nothing
-   contradicted, silently exceeded, or left untouched), and synthesize ONE classified
-   table + an explicit manual-verification checklist. Give **every finding a
-   destination**: fix-now folds into the current unit's open phase, replan-in-unit
-   runs `bun scripts/unit-route.mjs <unit>` so the planner its `route: replan`
-   line names appends user-confirmed phases, decision-required surfaces to the user, and
-   independent proposals are batched for explicit user triage (never create
-   backlog yourself). Findings only; on failure recommend the manual path
-   `/fold-findings`, then re-run `/review-change`; unresolved findings route to
-   `triage-issue --prioritize-now`; only a clean current receipt proceeds to
-   `audit-pr`.
-9. `audit-pr` — PR-level merge gate: SPEC acceptance met, all phases complete,
-   docs updated (**never merge with pending docs**), `Closes #N`, the issue/fix-index
-   entry still tracked (removed only after merge), tests, CI green, branch
-   independently mergeable, and the review axes clean → merge-ready or a list of
-   blockers. `done` ≠ merge-ready (a `done` unit can still have an open PR). Never
-   merges or edits.
-10. `product-audit` — measured-trigger product-wide health check across every applicable
-   axis + process/docs/roadmap coherence; mine feature docs → propose issues +
-   roadmap add/remove. Never auto-fixes; the user decides.
-11. `audit-docs` — audit docs ↔ roadmap ↔ code ↔ fix index for drift; produce a
+   `review-implementation` + the project's companion review skills), check
+   **acceptance drift** (the diff against the unit doc's criteria — nothing
+   contradicted, silently exceeded, or left untouched), and synthesize ONE
+   classified table + an explicit manual-verification checklist. Give **every
+   finding a destination**: fix-now is persisted to the unit's fold ledger and
+   handed to `/fold-findings`; replan-in-unit returns to the lane;
+   decision-required surfaces to the user, and independent proposals are batched
+   for explicit user triage (never create backlog yourself). A finished unit
+   walks the review→fold path (`/review-change` → `/fold-findings` → re-review the
+   delta), keeping the reviewing context clean of the one that wrote the diff.
+4. `review-implementation` (`user-invocable: false` — the classification engine
+   `review-change` composes) — two-phase review of a change. Phase 1 FIND (no
+   refactor) across: bugs, architecture violations, removable/dead code (EXCEPT
+   code intentionally staged for an in-progress unit — cross-check the roadmap and
+   unit docs), security/cybersecurity, platform/runtime incompatibilities,
+   overengineering & premature optimization, bundle-size risk, and tests (failing
+   AND missing). Phase 2 CLASSIFY each finding as fix-now / replan-in-unit /
+   decision-required / proposal / ignore on one severity ladder, with WHY.
+   Findings only — never refactor.
+5. `audit-pr` — PR-level delivery gate: acceptance met, tasks and evidence
+   complete, docs updated (**never merge with pending docs**), `Closes #N`, the
+   fix row tracked until merge, tests, CI green, branch independently mergeable,
+   capability closure, and a current SHA-bound review receipt → **MERGE-READY or
+   evidenced blockers**, always with the full URL. `done` ≠ merge-ready (a `done`
+   unit can still have an open PR). Never merges or edits.
+6. `product-audit` — measured-trigger product-wide health check across every
+   applicable axis + process/docs/roadmap coherence; proposes issues and roadmap
+   rows. Never auto-fixes; the user decides.
+7. `audit-docs` — audit docs ↔ roadmap ↔ code ↔ fix index for drift; produce a
    severity-ranked report; fix only low-risk items on request.
-
-**Supporting workflow skills**
-- `fold-findings` — repair every persisted fix-now finding one at a time, with a
-  green gate, one commit, and one push per finding.
-- `log-session` — append a structured session handoff to the project journal.
-- `workflow-status` — emit the read-only Envelope v2 sensor result for external drivers.
-
-**Decide**
-12. `triage-issue` — classify an issue (fix-now / promote-to-feature / postpone /
+8. `fold-findings` — repair every persisted fix-now finding in compatible atomic
+   batches: root-cause fix, green gate, commit, and the per-row `folded: yes`
+   update. Never reclassify, never substitute backlog notes.
+9. `triage-issue` — classify an issue (fix-now / promote-to-feature / postpone /
    wontfix). Parse the issue's own "when to fix"/trigger and VERIFY it against the
    current code (grep counts, thresholds, repro). Route, or leave open with a
    dated re-confirmation comment. Never implement deferred work inline. Accept
    several issue numbers in one batch (independent verdicts, one summary table).
+10. `workflow-status` — the read-only sensor: emit the deterministic Envelope v2
+    result (what can run now, what is blocked and by what) and interpret it;
+    never decide for the driver.
+11. `batch-scheduler` — the deterministic batch planner: the parallel,
+    order-respecting, collision-free batches the live work graph allows.
+12. `log-session` — append a structured session handoff to the project journal, so
+    the next session resumes the thread without re-reading git history.
 
-**Autopilot** (retired — feature 61 P9)
-13. `ship-roadmap` — the former end-to-end conductor driven by /loop. ONE upfront
-   interview (product/scale/lifespan; features — elicit and build the complete
-   roadmap if absent; stack — use or recommend; architecture — use or recommend
-   PROPORTIONAL to the app, never defaulting to a named pattern; quality bars;
-   ops; forge; autonomy and budget), then founds the substrate if missing, writes
-   the roadmap, and loops: plan (compose plan-feature in-turn) → execute (one
-   cheap-tier subagent per phase following execute-phase) → review (compose
-   review-change) → PR → merge gate (compose audit-pr) → next feature. Default:
-   opens PRs, the human merges; --fullauto is the sole automated merge
-   authority and, after a fresh SHA-bound audit, calls the repository's
-   transient wrapper (direct merge commands stay blocked) under fail-closed
-   safety floors (never red, sensitive/destructive pauses, no bypass). Run
-   policy lives in a committed decision record; an untracked run log carries
-   iteration state. Ends with a final report: per-feature outcomes, issues to
-   open (with reopening triggers), discovered feature proposals, manual
-   verification checklist, product-audit cadence. The conductor's tier must be
-   >= every skill it composes; the product-audit skill is always a hand-off.
-   Retired (feature 61 P9): its deterministic routing lives in `workflow-status`
-   / `unit-lane` and the unattended-conductor role is deferred to roadmap row 62.
+**Internal contracts** (`user-invocable: false`): `orchestration-envelope` (the
+machine-result contract a driver parses), `phase-contract` (the phase-lint rules),
+`pre-execution-review` (the planning ledgers and the pre-execution cycle),
+`verification-contract` (the acceptance artifact and its execution receipt), the
+review pack's per-axis skills (`review-code`, `review-security`, `review-a11y`,
+`review-design`, `review-brand`, `review-perf`, `review-seo`, `review-verify`,
+`review-debt`), and `skill-lint` (this repository's own authoring lint — it is not
+installed in target projects).
+
+**Autopilot** — retired (feature 61 P9): `ship-roadmap`'s deterministic routing
+lives in `workflow-status` and the lane, and the unattended conductor is a roadmap
+row (62) rather than a skill. There is no end-to-end loop skill: a driver composes
+the skills above.
 
 Compose with (do not duplicate) the project's own companion review skills
 (`/code-review`, `/security-review`, `/verify`, and any design/a11y/brand/perf/SEO
@@ -212,9 +176,8 @@ profile from `@gtrabanco/agentic-workflow-schema`, appends the generated
 `renderOutputInstruction(skill)` to a worker invocation, and parses the final
 result with `parseTurn({skill, text, context})`. `workflow-status` keeps the
 strict Envelope v2 sensor result; other driven workers return compact
-SkillOutcome v1. `workflow-status` is the sensor (Envelope v2); the former
-conductor (`ship-roadmap`) kept its native `SHIP:` banner and closing `→ Next:`
-block, so it was not a worker profile.
+SkillOutcome v1. `workflow-status` is the sensor (Envelope v2); every other skill
+stays interactive-first, so none carries a worker profile.
 
 On an absent, malformed, or invalid result, the driver re-invokes the same
 session exactly once with `Emit only the machine result for the turn above.` A

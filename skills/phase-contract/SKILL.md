@@ -58,8 +58,8 @@ blocks emission/execution until the phase is re-cut or split.
 **The executed-phase exemption (boxes 3 and 7 only).** A fully-ticked phase is historical:
 those two boxes are positional — box 3's budget and box 7's `gh pr`
 placement both key off the plan's last phase — and a replan appends its work
-*after* an executed hardening (`replan-findings`' `PHASE_APPEND.md`), which would
-otherwise retro-block work that already passed this gate when it was emitted.
+*after* an executed hardening (the lane's replan append), which would otherwise
+retro-block work that already passed this gate when it was emitted.
 The exemption is scoped to those two boxes: boxes 1, 2, 4, 5, 6 and 8 stay armed for an
 executed phase, and for an unemitted phase every box stays armed, so pre-ticking
 a phase to dodge a check is a defect, never a pass.
