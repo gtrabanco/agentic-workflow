@@ -17,6 +17,7 @@
  *   agentic-workflow journal name --kind <mechanical|narrative> [--dir <root>] [--branch <b>] [--session <id>]
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *   agentic-workflow resolve-passes [--global <path>] [--project <path>] [--command <name>]
+ *   agentic-workflow verify <unit-doc-path>
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -38,6 +39,16 @@
  * and `obligations` verifies the unit's obligations ledger is closed. It is the
  * same module `scripts/relay-packet.mjs` runs, so a project that carries only
  * the crate gets the identical block. Read-only: it writes nothing.
+ *
+ * `verify` (issue #260) is the document verifier — non-negotiable #2's tool,
+ * distinct from the `edit` writer CLI: it reads one unit document against the
+ * frozen schemas (required sections per accepted shape, evidence columns,
+ * progress entries, log kind tokens, the obligations ledger closed) and the
+ * receipt marks (`REVIEW-RAN`/`GATE-RAN`/`R`/`G` lines must name a commit that
+ * exists in the containing repo — a mark produced as plausible text is a
+ * refusal, never a pass). Read-only: it writes nothing. Clean → exit 0 with
+ * the `verify@1` receipt; a violation → exit 2 and
+ * `VERIFY REFUSAL — <violations>` on stderr.
  *
  * `resolve-passes` (issue #201) is the spawned-pass model resolution: it reads
  * the two routing config files (global, then project — the project file wins
@@ -106,6 +117,7 @@ import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from 
 import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
+import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -350,7 +362,7 @@ async function runDocOpPositional(g) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal|resolve-passes> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal|resolve-passes|verify> ...");
   process.exit(1);
 }
 
@@ -429,6 +441,46 @@ switch (command) {
       process.exit(2);
     }
     process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
+    process.exit(0);
+    break;
+  }
+
+  // ── verify — the document verifier, distinct from the edit writer (issue #260) ──
+  case "verify": {
+    const positional = [];
+    for (const arg of restArgs) {
+      if (arg === "--no-git") continue; // skip the receipt-sha resolution (no repo context)
+      else if (arg.startsWith("--")) sensorRefuse("VERIFY", `unknown argument "${arg}" (usage: verify <unit-doc-path> [--no-git])`);
+      else positional.push(arg);
+    }
+    if (positional.length !== 1) {
+      sensorRefuse("VERIFY", `expected exactly one unit-doc path (usage: verify <unit-doc-path> [--no-git])`);
+    }
+    const docPath = resolve(positional[0]);
+    let text;
+    try {
+      text = readFileSync(docPath, "utf8");
+    } catch (error) {
+      sensorRefuse("VERIFY", `unit doc is present but unreadable: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    // headExists wires the fabricated-receipt check to the containing repo:
+    // a receipt naming a commit the repo does not hold attests nothing.
+    const headExists = restArgs.includes("--no-git")
+      ? null
+      : (sha) =>
+          spawnSync("git", ["-C", dirname(docPath), "cat-file", "-e", `${sha}^{commit}`], {
+            stdio: "ignore",
+          }).status === 0;
+    const result = verifyUnitDoc({ text, path: docPath, headExists, now: null });
+    if (!result.ok) {
+      process.stderr.write(
+        `VERIFY REFUSAL — ${result.violations.length} violation(s)\n` +
+          result.violations.map((v) => `  ${v.code}: ${v.message}`).join("\n") +
+          "\n",
+      );
+      process.exit(2);
+    }
+    process.stdout.write(`VERIFY PASS — ${JSON.stringify({ ...result, violations: [] }, null, 2)}\n`);
     process.exit(0);
     break;
   }
