@@ -72,9 +72,17 @@ describe("doc grammar", () => {
     throws(() => parseDocArgs([]), /usage/i);
   });
 
-  it("rejects a positional first token (half-A ops ship with unit 71)", () => {
-    throws(() => parseDocArgs(["read", "--file", "x"]), /usage/i);
-    throws(() => parseDocArgs(["read"]), /71/);
+  // Issue #366 supersedes the by-name refusal: a positional first token now
+  // parses into the half-A branch (the full read/edit/index coverage lives in
+  // test/doc.docops.test.mjs; this pin keeps the retrieval grammar's border).
+  it("dispatches a positional first token to the half-A branch (issue #366)", () => {
+    const parsed = parseDocArgs(["read", "--file", "x"]);
+    strictEqual(parsed.branch, "docop");
+    strictEqual(parsed.op, "read");
+  });
+
+  it("still refuses a positional token that is not a doc op", () => {
+    throws(() => parseDocArgs(["watch"]), /usage/i);
   });
 
   it("rejects --query without a term", () => {
@@ -230,10 +238,10 @@ describe("doc CLI", () => {
     strictEqual(env.command, "sync");
   });
 
-  it("exits 1 on a positional first token (usage error)", () => {
-    const r = spawnSync(process.execPath, [BIN, "doc", "read", "--file", "x"], { cwd: tmp, encoding: "utf8" });
+  it("exits 1 on a positional first token that is not a doc op (usage error)", () => {
+    const r = spawnSync(process.execPath, [BIN, "doc", "watch"], { cwd: tmp, encoding: "utf8" });
     strictEqual(r.status, 1);
-    match(r.stderr, /usage|71/i);
+    match(r.stderr, /usage|unknown doc op/i);
     strictEqual(r.stdout, "");
   });
 

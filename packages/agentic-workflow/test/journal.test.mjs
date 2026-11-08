@@ -170,6 +170,40 @@ test("a narrative fragment is one ##-headed entry block, newline-terminated", ()
   assert.throws(() => writeFragment({ root: repo, kind: "narrative", content: "## heading\n- x", branch: "feat/x", sessionId: "s1", now: () => NOW }), FragmentError);
 });
 
+test("a narrative fragment whose heading names another branch is refused, never written", () => {
+  const repo = newRepo("name-bytes-branch");
+  fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
+  const content = "## 2026-11-05T10:00Z — docs/domain-separation-safeguard — manual\n- **Summary:** x\n";
+  assert.throws(
+    () =>
+      writeFragment({
+        root: repo,
+        kind: "narrative",
+        content,
+        branch: "docs-batch-2-landing-safeguard",
+        sessionId: "local",
+        now: () => NOW,
+      }),
+    (error) =>
+      error instanceof FragmentError &&
+      /branch/.test(error.message) &&
+      /docs-batch-2-landing-safeguard/.test(error.message) &&
+      /docs\/domain-separation-safeguard/.test(error.message),
+  );
+  assert.equal(fs.readdirSync(path.join(repo, JOURNAL_DIR)).length, 0, "a refused write leaves no fragment behind");
+});
+
+test("a narrative fragment whose heading carries no identity is refused", () => {
+  const repo = newRepo("name-bytes-heading");
+  fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
+  const content = "## an entry with no identity line\n- **Summary:** x\n";
+  assert.throws(
+    () => writeFragment({ root: repo, kind: "narrative", content, branch: "feat/x", sessionId: "s1", now: () => NOW }),
+    (error) => error instanceof FragmentError && /heading/.test(error.message),
+  );
+  assert.equal(fs.readdirSync(path.join(repo, JOURNAL_DIR)).length, 0);
+});
+
 // ── The race fixture — the frozen-failure reproducer (AC4) ───────────────
 
 test("two branches carrying fragments merge with zero conflicts and zero lost or duplicated entries", () => {

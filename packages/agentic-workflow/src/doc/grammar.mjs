@@ -3,12 +3,14 @@
  *
  * One grammar branch: the first token after `doc` starting with `-` selects
  * a retrieval operation (`--sync` / `--query <term>` / `--status` /
- * `--rebuild`); a positional first token is a half-A doc operation that ships
- * with unit 71 and is refused here. `--json-only` may appear anywhere and
- * switches stdout to exactly one JSON document (AC8).
+ * `--rebuild`); a positional first token is a half-A doc operation — `read`,
+ * `edit` or `index` (issue #366). `--json-only` may appear anywhere on the
+ * retrieval branch and switches stdout to exactly one JSON document (AC8);
+ * the positional branch carries `--json` for the same switch.
  *
- * Exit codes (D3): 0 success including degraded · 1 usage/IO · 2 path
- * refusal (owned by the crate's edit services, not this grammar).
+ * Exit codes (D3): 0 success including degraded · 1 usage/IO · 2 refusal
+ * (the edit services' refusal line for path refusals, `DOC REFUSAL` for a
+ * selector that resolves to nothing or to several sections).
  */
 
 export const RETRIEVAL_FLAGS = {
@@ -17,6 +19,9 @@ export const RETRIEVAL_FLAGS = {
   "--status": "status",
   "--rebuild": "rebuild",
 };
+
+/** The closed half-A operation set (issue #366). */
+export const DOC_OPS = Object.freeze(["read", "edit", "index"]);
 
 function usageError(msg) {
   const e = new Error(
@@ -27,8 +32,88 @@ function usageError(msg) {
 }
 
 /**
- * Parse the arguments after `doc`. Returns
- * `{op: "sync"|"query"|"status"|"rebuild", query: string|null, jsonOnly: boolean}`.
+ * Parse the half-A positional arguments after `doc`. Returns
+ * `{branch: "docop", op, file, section, replacement, out, json, dryRun}`.
+ * A missing optional `--section` on `read` means the whole document; `edit`
+ * requires `--file` (a real path, never stdin), `--section` and
+ * `--replacement`; `index` takes only `--out`. A flag that belongs to another
+ * operation is a usage error, never a silent no-op (issue #366, S11): the
+ * grammar's own option set is closed, so `--out` on `read`/`edit` is refused
+ * exactly as `--file` on `index` is.
+ */
+function parseDocopArgs(argv) {
+  const out = {
+    branch: "docop",
+    op: argv[0],
+    file: null,
+    section: null,
+    replacement: null,
+    set: null,
+    append: null,
+    out: null,
+    json: false,
+    dryRun: false,
+  };
+  if (!DOC_OPS.includes(out.op)) {
+    throw usageError(`unknown doc op "${out.op ?? ""}" (expected ${DOC_OPS.join(" | ")})`);
+  }
+  const VALUE_FLAGS = {
+    "--file": "file",
+    "--section": "section",
+    "--replacement": "replacement",
+    "--set": "set",
+    "--append": "append",
+    "--out": "out",
+  };
+  const seen = new Set();
+  let i = 1;
+  while (i < argv.length) {
+    const arg = argv[i];
+    if (arg === "--json") {
+      out.json = true;
+      i++;
+      continue;
+    }
+    if (arg === "--dry-run") {
+      out.dryRun = true;
+      i++;
+      continue;
+    }
+    if (arg in VALUE_FLAGS) {
+      const value = argv[i + 1];
+      if (value === undefined || value === "") throw usageError(`${arg} requires a non-empty value`);
+      if (seen.has(arg)) throw usageError(`${arg} given twice`);
+      seen.add(arg);
+      out[VALUE_FLAGS[arg]] = value;
+      i += 2;
+      continue;
+    }
+    throw usageError(`unknown flag "${arg}"`);
+  }
+  if (out.dryRun && out.op !== "edit") throw usageError("--dry-run belongs to edit");
+  const bodySources = [out.replacement, out.set, out.append].filter((value) => value !== null);
+  if (out.op === "index") {
+    if (out.file !== null) throw usageError("--file belongs to read/edit");
+    if (out.section !== null) throw usageError("--section belongs to read/edit");
+    if (bodySources.length > 0) throw usageError("--replacement/--set/--append belong to edit");
+    return out;
+  }
+  if (out.out !== null) throw usageError("--out belongs to index");
+  if (out.op === "read" && bodySources.length > 0) throw usageError("--replacement/--set/--append belong to edit");
+  if (out.file === null) throw usageError("--file is required");
+  if (out.op === "edit") {
+    if (out.file === "-") throw usageError("--file - cannot be edited in place; name a document path");
+    if (out.section === null) throw usageError("--section is required for edit");
+    if (bodySources.length > 1) throw usageError("exactly one of --replacement, --set, --append is allowed");
+    if (bodySources.length === 0) throw usageError("one of --replacement, --set, --append is required for edit");
+  }
+  return out;
+}
+
+/**
+ * Parse the arguments after `doc`. A positional first token selects the
+ * half-A branch ({branch: "docop", …}); a `-` first token selects retrieval
+ * and returns `{op: …, query, jsonOnly, quiet, …}` as before.
  * Throws a usage error (exit 1 territory) on any malformed invocation.
  */
 export function parseDocArgs(argv) {
@@ -40,11 +125,9 @@ export function parseDocArgs(argv) {
   let sawMode = false;
   if (!Array.isArray(argv) || argv.length === 0) throw usageError("no operation given");
 
-  // D2: a positional first token is the half-A branch — not shipped in this unit.
+  // D2: a positional first token is the half-A branch (issue #366).
   if (!argv[0].startsWith("-")) {
-    throw usageError(
-      `positional doc operations (read/edit/index) ship with unit 71; retrieval ops: ${Object.keys(RETRIEVAL_FLAGS).join(" | ")}`,
-    );
+    return parseDocopArgs(argv);
   }
 
   let i = 0;
