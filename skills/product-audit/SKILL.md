@@ -23,19 +23,20 @@ description: >
 Product-wide health check. It only writes
 `docs/audits/<n>-<YYYY-MM-DD>.md`; every proposed action remains a user decision.
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn; the additions below narrow the sanctioned mutation to the one report file (box 3's commit/push covers it). Skill-specific additions (the `→ Next:` box is canonical-owned and not restated here):
 
 ```
 ✓ A measured trigger was met (audit-trigger@1) or the owner explicitly requested the sweep — an invocation with none returns the `insufficient-corpus` verdict instead of inventing findings or figures
 ✓ Either the full PRODUCT AUDIT report was printed in the fixed output format (health by dimension, F-numbered ranked findings, four proposal streams — the roadmap streams always present, `none — <why>` when empty) or the `insufficient-corpus` verdict block was printed (no report written, nothing invented)
 ✓ The report was WRITTEN to `docs/audits/<n>-<YYYY-MM-DD>.md` (incremental audit id) and committed — the file is the durable deliverable, the chat print is a copy (skipped only by the `insufficient-corpus` verdict, which writes nothing)
 ✓ Nothing else was fixed, filed, or changed — the report file is the ONLY mutation
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Missing reference → STOP. About to end the turn with any box unchecked? The
+turn is NOT done — complete the missing box first (weak models drop
+end-of-document duties; this list is first on purpose).
 
 ## When to use — measured triggers, never calendar
 

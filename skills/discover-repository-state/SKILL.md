@@ -16,13 +16,17 @@ Create a reviewable evidence snapshot before planning or implementation.
 
 ## Turn contract
 
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions:
+
 ```
 ✓ Repository evidence was read or commands were run for every fact
 ✓ Facts, documentation, planned work, decisions, and inference are separated
 ✓ Snapshot status is frozen unless a contradiction was recorded
 ✓ No accepted decision or existing frozen fact was silently changed
-✓ The closing → Next: block is printed last
 ```
+
+Missing reference → STOP. About to end the turn with any box unchecked? The
+turn is NOT done — complete the missing box first.
 
 ## Step 0 — Discover the project (always first)
 

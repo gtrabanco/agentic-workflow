@@ -60,6 +60,27 @@ stdout:     exactly one line; diagnostics never (git/gh evidence stays in the
             agent's transcript)
 ```
 
+## Read-only profile (skills that edit nothing)
+
+A skill that edits nothing — the sensors, the auditors that read and
+persuade, the reviewers that only report — still loads this contract; its
+skill-specific additions stand in for the boxes that have no object there.
+Where a skill declares the **read-only profile**, boxes 1–5 are substituted
+wholesale by one box the skill recites in its own additions:
+
+```
+✓ Nothing was edited, committed, pushed, or created in the repository —
+  read-only, always (a read-only skill's sanctioned side effects, if any,
+  are declared in its additions and never exceed them)
+```
+
+Boxes 6–11 are unchanged: the artifact-language rule and the closing `→ Next:`
+block still apply to a read-only turn, and the machine result is still emitted
+when a driver requested one. The profile never weakens a box — it stops a
+read-only skill from contradicting the contract by reciting commit, push, and
+PR boxes it can never run. A read-only skill complies when it loads this file,
+names the read-only profile beside its additions, and carries nothing else.
+
 ## Hand-off grammar (versioned — read by `scripts/normative-drift.test.mjs`)
 
 Box 9's closing hand-off and box 10's machine result are ordered here, so the
