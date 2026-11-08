@@ -368,7 +368,10 @@ verification is the owner's).
 
 ## Next
 
-External verification by the owner (§8 handoff); the PR closes #201.
+External verification by the owner; the open PR is
+[#464](https://github.com/gtrabanco/agentic-workflow/pull/464) (Closes #201).
+At merge: `roadmap-settle` flips feature row 45 to `done · [#464](…)` and the
+Fixes row is removed.
 
 ## References
 
