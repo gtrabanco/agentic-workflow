@@ -240,6 +240,15 @@ carries nothing else.
   Deferred to the owner: the codemode end-to-end call (AC1's live half) needs
   a real pi session — the suite proves the result shapes; the owner verdict
   is the external confirmation.
+- **D1** — 2026-11-08, ledger amendment (authority: `docs/LOGS.md` header, the
+  fragment rule #405/#452): O17's frozen validator (`rg LOGS.md` ≥ 1) cannot
+  reproduce in carrier mode — a direct LOGS.md append is refused by design and
+  `journal aggregate` (CI) is the only writer. The validator becomes the
+  carrier fragment's existence + `journal aggregate --check` conformance (both
+  run: fragment `20261108T191629Z-…-narrative-local.md` exists · 2154 bytes;
+  `aggregate --check` → `{"ok":true,"checked":20,"refusals":[]}` · exit 0).
+  The entry lands in `docs/LOGS.md` at the next aggregation, as the carrier
+  contract orders.
 
 ## Next
 
