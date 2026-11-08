@@ -118,16 +118,41 @@ export function parseFragmentName(name) {
 
 /**
  * One entry block: newline-terminated, CR-free, `## `-headed — the shape both
- * the mechanical renderer and the narrative writers already produce.
+ * the mechanical renderer and the narrative writers already produce. The
+ * predicate is shared with the read side (`fragmentFault`) so the carrier's
+ * lint and the writer can never disagree about what a conforming block is.
+ *
+ * Returns the closed fault code, or `null` for a conforming block.
  */
+function contentFault(content) {
+  if (typeof content !== "string" || content === "") return "empty";
+  if (content.includes("\r")) return "cr";
+  if (!content.endsWith("\n")) return "newline";
+  if (!content.startsWith("## ")) return "heading";
+  return null;
+}
+
+/** The write-side wording of one content fault. */
 function checkedContent(content) {
-  if (typeof content !== "string" || content === "") {
-    throw new FragmentError(`fragment content must be a non-empty string, got ${JSON.stringify(content)}`);
+  switch (contentFault(content)) {
+    case "empty":
+      throw new FragmentError(`fragment content must be a non-empty string, got ${JSON.stringify(content)}`);
+    case "cr":
+      throw new FragmentError("fragment content must not contain CR");
+    case "newline":
+      throw new FragmentError("fragment content must be newline-terminated");
+    case "heading":
+      throw new FragmentError("fragment content must be one entry block starting with '## '");
+    default:
+      return content;
   }
-  if (content.includes("\r")) throw new FragmentError("fragment content must not contain CR");
-  if (!content.endsWith("\n")) throw new FragmentError("fragment content must be newline-terminated");
-  if (!content.startsWith("## ")) throw new FragmentError("fragment content must be one entry block starting with '## '");
-  return content;
+}
+
+/** The read-side wording of one content fault, carrying the fragment's name. */
+function contentFaultReason(name, fault) {
+  if (fault === "cr") return `fragment "${name}" contains CR`;
+  if (fault === "heading") return `fragment "${name}" does not start with an entry heading`;
+  return `fragment "${name}" is not a newline-terminated entry block`;
 }
 
 /** The entry block's identity line: `## <timestamp> — <branch> — <label>`. The
@@ -160,6 +185,42 @@ function checkedIdentity(content, identity) {
       `fragment name records branch ${JSON.stringify(identity.branch)} but its heading names ${JSON.stringify(heading[1])} — a fragment's name and bytes must agree`,
     );
   }
+}
+
+/**
+ * Validate one fragment's identity and bytes — the ONE predicate
+ * `journal aggregate --check`, `session-close close` and the write CLI share
+ * (issue #452, S2/S3/S5). Returns `{ ok: true, parsed }` or
+ * `{ ok: false, reason }` in the read side's wording; it never repairs.
+ *
+ * `identity: false` keeps the aggregator's documented contract: it validates
+ * the name's grammar and the body's shape and then trusts the name (S6 forbids
+ * moving that contract). The heading/name contradiction is caught one step
+ * earlier — at the write, at the carrier lint and at the close — where it can
+ * still be repaired by the session that made it.
+ */
+export function fragmentFault(name, content, options = {}) {
+  const parsed = parseFragmentName(name);
+  if (parsed === null) return { ok: false, reason: `unparseable fragment name "${name}" — a fragment's name is its identity` };
+  const fault = contentFault(content);
+  if (fault !== null) return { ok: false, reason: contentFaultReason(name, fault) };
+  if (options.identity === false) return { ok: true, parsed };
+  try {
+    checkedIdentity(content, parsed);
+  } catch (error) {
+    // The predicate's wording names the contradiction; a lint line must also
+    // name the file it belongs to, so a multi-fault carrier stays actionable.
+    if (error instanceof FragmentError) return { ok: false, reason: `fragment "${name}": ${error.message}` };
+    throw error;
+  }
+  return { ok: true, parsed };
+}
+
+/** `fragmentFault` as a thrower: a caller that must refuse uses one call, not a branch. */
+export function assertFragment(name, content) {
+  const fault = fragmentFault(name, content);
+  if (!fault.ok) throw new FragmentError(fault.reason);
+  return fault.parsed;
 }
 
 /**
@@ -196,11 +257,18 @@ export function writeFragment(options) {
   const identity = kind === "narrative" ? parseFragmentName(name) : null;
   if (kind === "narrative") checkedIdentity(content, identity);
   const target = path.join(dir, name);
-  if (fs.existsSync(target)) {
-    throw new FragmentError(`fragment ${name} already exists — a collision is refused, never overwritten`);
+  // Exclusive create is the collision rule itself: a check-then-write lets a
+  // racing second writer pass the check and overwrite the first entry. `wx`
+  // makes the filesystem the arbiter and leaves the loser's refusal explicit.
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(target, content, { flag: "wx" });
+  } catch (error) {
+    if (error?.code === "EEXIST") {
+      throw new FragmentError(`fragment ${name} already exists — a collision is refused, never overwritten`);
+    }
+    throw error;
   }
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(target, content);
   return { ok: true, name, path: target, bytes: Buffer.byteLength(content, "utf8") };
 }
 

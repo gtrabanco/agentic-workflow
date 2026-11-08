@@ -128,11 +128,11 @@ test("journal write: the block equals the session-close renderer for the same fa
   const run = runCli(["journal", "write", "--kind", "narrative", "--session", "s1", ...cells], repo);
   assert.equal(run.status, 0, run.stderr);
   const receipt = JSON.parse(run.stdout);
-  const block = fs.readFileSync(path.join(repo, receipt.path), "utf8").split("\n");
+  const block = fs.readFileSync(receipt.path, "utf8").split("\n");
   const rendered = writer.stdout.split("\n");
   // The heading label is the entry's own (`narrative` for a fragment, `manual`
   // for the journal writer); every fact and prose cell below it must agree.
-  assert.match(block[0], /^\d{8}T\d{6}Z$|^## \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z — main — narrative$/u);
+  assert.match(block[0], /^## \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z — main — narrative$/u);
   assert.match(rendered[0], /^## \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z — main — manual$/u);
   assert.deepEqual(block.slice(1), rendered.slice(1), "facts and prose cells are one renderer's bytes");
 });
@@ -145,7 +145,7 @@ test("journal write: --content - writes the stdin bytes unchanged", () => {
   });
   assert.equal(run.status, 0, run.stderr);
   const receipt = JSON.parse(run.stdout);
-  assert.equal(fs.readFileSync(path.join(repo, receipt.path), "utf8"), input);
+  assert.equal(fs.readFileSync(receipt.path, "utf8"), input);
 });
 
 test("journal write: the manual label in the kind slot is refused", () => {
@@ -247,7 +247,7 @@ test("journal write: a mechanical fragment is exactly log render's bytes", () =>
   );
   assert.equal(run.status, 0, run.stderr);
   const receipt = JSON.parse(run.stdout);
-  assert.equal(fs.readFileSync(path.join(repo, receipt.path), "utf8"), renderEntry(facts));
+  assert.equal(fs.readFileSync(receipt.path, "utf8"), renderEntry(facts));
 });
 
 // ── aggregate --check — the carrier lint (S3) ────────────────────────────
