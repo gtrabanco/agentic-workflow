@@ -47,7 +47,7 @@ function tmp(label) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `journal-write-${label}-`));
 }
 
-function newRepo(label) {
+function newRepo(label, { carrier = true } = {}) {
   const dir = tmp(label);
   const r = spawnSync("git", ["init", "-q", "-b", "main", dir], { encoding: "utf8", env: sandboxGitEnv() });
   assert.equal(r.status, 0, r.stderr);
@@ -57,7 +57,7 @@ function newRepo(label) {
   git(dir, "config", "user.email", "t@example.com");
   git(dir, "config", "user.name", "test");
   git(dir, "commit", "-qm", "base");
-  fs.mkdirSync(path.join(dir, JOURNAL_DIR), { recursive: true });
+  if (carrier) fs.mkdirSync(path.join(dir, JOURNAL_DIR), { recursive: true });
   return dir;
 }
 
@@ -230,6 +230,21 @@ test("journal write: the name is the grammar owner's answer, never a second nami
   );
 });
 
+test("journal write: an absent carrier is refused, never created (opt-in stays deliberate)", () => {
+  const repo = newRepo("no-carrier", { carrier: false });
+  const run = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "Would opt the project in.", "--session", "s1", "--timestamp", PINNED],
+    repo,
+  );
+  assert.equal(run.status, 2, run.stderr);
+  assert.match(run.stderr, /JOURNAL REFUSAL/u);
+  assert.match(run.stderr, /carrier/u, "the refusal names the carrier it will not create");
+  assert.match(run.stderr, /opt-in/u, "the refusal names the opt-in rule");
+  assert.equal(run.stdout, "", "a refusal prints no receipt");
+  assert.equal(fs.existsSync(path.join(repo, JOURNAL_DIR)), false, "the writer never creates the carrier");
+  assert.equal(fs.existsSync(path.join(repo, ".agentic-workflow")), false, "not even the parent directory");
+});
+
 test("journal write: a mechanical fragment is exactly log render's bytes", () => {
   const repo = newRepo("mechanical");
   const facts = {
@@ -294,6 +309,12 @@ test("the skill's fragment step names journal write, not a hand-composed name", 
   assert.match(skill, /journal write/u, "the prose door names the one writer");
   assert.doesNotMatch(skill, /save the entry bytes unchanged as that\s+file/u, "the hand-save instruction is gone");
   assert.match(skill, /journal-fragment-grammar@1/u, "the grammar's owner stays named");
+});
+
+test("the template's fragment rules name the writer and its grammar owner", () => {
+  const doc = fs.readFileSync(path.join(repoRoot, "template", ".agentic-workflow", "journal.md"), "utf8");
+  assert.match(doc, /journal write/u, "a target project's carrier doc names the writer, not only the naming service");
+  assert.match(doc, /journal-write-grammar@1/u, "and names the grammar owner instead of restating it");
 });
 
 test("the extension's invocation record names the same writer", () => {
