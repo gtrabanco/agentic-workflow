@@ -152,6 +152,15 @@ excluded). The orchestrator retains tables, not sources, and fuses them in step
 7. Inline fallback is sequential table reduction. A pass runs at its own tier or
 stronger, never weaker.
 
+**Pass model routing (issue #201).** Resolve every pass's model **before**
+spawning from the operator's approved table, not the session model:
+`agentic-workflow resolve-passes` (the `resolve-passes@1` receipt) → launch
+each pass with its row's pinned `model` and record the row's `source` in the
+pass record. `spawn: "auto"` = the operator delegated the choice (record the
+tier justification in the report); `spawn: "inline"` — or a pinned model
+unresolvable at spawn time — runs inline at the orchestrator's model,
+**stated in the report**.
+
 
 ## Progressive loading — choose one review route
 
