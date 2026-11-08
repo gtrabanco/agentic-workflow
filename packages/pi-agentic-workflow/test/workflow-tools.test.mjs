@@ -94,7 +94,7 @@ test("registration: five deferred tools in the agentic-workflow namespace, readO
   );
   assert.equal(WORKFLOW_TOOLS_NAMESPACE.name, "agentic-workflow");
   for (const tool of tools) {
-    assert.equal(tool.exposure ?? "deferred", "deferred", `${tool.name} must be deferred`);
+    assert.equal(tool.exposure, "deferred", `${tool.name} must declare deferred exposure`);
     assert.equal(tool.annotations?.readOnlyHint, true, `${tool.name} is read-only`);
     assert.equal(typeof tool.description, "string");
     assert.ok(tool.description.length > 0);
@@ -201,18 +201,19 @@ test("status: outputSchema reuses the published envelope schema verbatim (no sec
 // Live gate scripts (AC4, AC5, O9, O10)
 // ---------------------------------------------------------------------------
 
-/** Local siblings the live scripts import — the copy must carry them. */
-const LIVE_SCRIPT_SIBLINGS = {
+/** Local siblings each live script imports — the copy must carry its closure. */
+const SCRIPT_CLOSURE = {
   "diff-guard.mjs": [],
+  "audit-pr-gate.mjs": ["review-receipt.mjs", "scope-manifest.mjs"],
+  "pre-execution-snapshot.mjs": ["pre-execution-contract.mjs"],
 };
 
-/** A throwaway git repo with the single-file script copied into scripts/. */
+/** A throwaway git repo with the script and its import closure copied into scripts/. */
 function makeLiveSandbox(script) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "paw-tool-live-"));
   fs.mkdirSync(path.join(root, "scripts"));
-  fs.copyFileSync(path.join(REPO_ROOT, "scripts", script), path.join(root, "scripts", script));
-  for (const sibling of LIVE_SCRIPT_SIBLINGS[script] ?? []) {
-    fs.copyFileSync(path.join(REPO_ROOT, "scripts", sibling), path.join(root, "scripts", sibling));
+  for (const name of [script, ...(SCRIPT_CLOSURE[script] ?? [])]) {
+    fs.copyFileSync(path.join(REPO_ROOT, "scripts", name), path.join(root, "scripts", name));
   }
   const git = (args, opts = {}) =>
     execFileSync("git", args, { cwd: root, env: sandboxGitEnv(), encoding: "utf8", ...opts });
@@ -222,20 +223,39 @@ function makeLiveSandbox(script) {
   return { root, git };
 }
 
-/** Minimal JSON-schema check for the shapes these schemas declare. */
+/**
+ * Minimal JSON-schema check for the shapes these schemas declare. It reports the
+ * reason a value does not match (`null` when it does), so `checkSchema` can tell a
+ * match from a mismatch: `someOf` is satisfied by ANY branch passing.
+ */
 function checkSchema(schema, value, where = "value") {
-  if (schema.oneOf) {
-    const errors = schema.oneOf.map((variant) => matchesSchema(variant, value)).filter(Boolean);
-    assert.ok(errors.length > 0, `${where} matches no oneOf branch`);
-    return;
-  }
   const error = matchesSchema(schema, value);
-  assert.ok(error === true, `${where}: ${error}`);
+  assert.equal(error, null, `${where}: ${error}`);
 }
 
 function matchesSchema(schema, value) {
-  if (schema.type === "object" || schema.properties) {
-    if (typeof value !== "object" || value === null || Array.isArray(value)) return "object expected";
+  if (Array.isArray(schema.oneOf)) {
+    const failures = schema.oneOf.map((variant) => matchesSchema(variant, value));
+    if (failures.some((failure) => failure === null)) return null;
+    return `matches no oneOf branch (${failures.join(" | ")})`;
+  }
+  const type = schema.type;
+  if (type !== undefined) {
+    const types = Array.isArray(type) ? type : [type];
+    const actual = value === null ? "null" : Array.isArray(value) ? "array" : typeof value;
+    const accepted = types.some((candidate) => {
+      if (candidate === "integer") return Number.isInteger(value);
+      // JSON Schema: every integer IS a number; `number` never means "non-integer".
+      if (candidate === "number") return typeof value === "number" && Number.isFinite(value);
+      return candidate === actual;
+    });
+    if (!accepted) return `expected ${types.join("|")}, got ${actual}`;
+  }
+  if (Array.isArray(schema.enum)) {
+    if (!schema.enum.includes(value)) return `expected one of ${schema.enum.join("|")}`;
+  }
+  if ("const" in schema && value !== schema.const) return `expected const ${JSON.stringify(schema.const)}`;
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
     for (const name of schema.required ?? []) {
       if (!(name in value)) return `missing required property ${name}`;
     }
@@ -248,18 +268,37 @@ function matchesSchema(schema, value) {
     for (const [name, sub] of Object.entries(schema.properties ?? {})) {
       if (name in value) {
         const result = matchesSchema(sub, value[name]);
-        if (result !== true) return `${name}: ${result}`;
+        if (result !== null) return `${name}: ${result}`;
       }
     }
-    return true;
   }
-  if (schema.enum) return schema.enum.includes(value) || `expected one of ${schema.enum.join("|")}`;
-  const type = schema.type;
-  const actual = Array.isArray(value) ? "array" : value === null ? "null" : typeof value;
-  if (type === "integer") return (Number.isInteger(value) ? true : `expected integer`);
-  if (Array.isArray(type)) return type.includes(actual) || `expected ${type.join("|")}`;
-  return type === actual || `expected ${type}`;
+  if (Array.isArray(value) && schema.items) {
+    for (let index = 0; index < value.length; index += 1) {
+      const result = matchesSchema(schema.items, value[index]);
+      if (result !== null) return `[${index}]: ${result}`;
+    }
+  }
+  return null;
 }
+
+test("schema helper: a value matching no oneOf branch fails the check", () => {
+  // The frozen failure (external-verify 26b4919c B3): `filter(Boolean)` kept a
+  // failure *string* as truthy, so this assertion could never fail and the five
+  // gate schemas were never actually validated against live output.
+  const schema = {
+    oneOf: [
+      { type: "object", required: ["a"], properties: { a: { type: "string" } } },
+      { type: "object", required: ["b"], properties: { b: { type: "string" } } },
+    ],
+  };
+  assert.throws(() => checkSchema(schema, { unrelated: true }, "self-check"), /matches no oneOf branch/);
+  checkSchema(schema, { b: "ok" }, "self-check");
+});
+
+test("schema helper: `number` admits an integer, `integer` rejects a fraction", () => {
+  checkSchema({ type: "number" }, 3, "integer-as-number");
+  assert.throws(() => checkSchema({ type: "integer" }, 3.5, "fraction"), /expected integer/);
+});
 
 test("diff-guard live: pass → structured counts; breach → isError with the breach data", async () => {
   const { createWorkflowTools } = await loadModule();
@@ -287,8 +326,41 @@ test("diff-guard live: pass → structured counts; breach → isError with the b
 
   const missing = await guard.execute({ base: "not-a-ref" }, root);
   assert.equal(missing.isError, true, "an error run is isError: true");
+  // The script reports an unmeasurable run as the breach *reason* (diff-guard.mjs
+  // `breach: error || …`), so the declared schema must admit the string form.
+  assert.equal(typeof missing.structuredContent.breach, "string", "the error path carries the reason in `breach`");
   checkSchema(guard.outputSchema, missing.structuredContent, "diff-guard error");
   assert.ok(missing.structuredContent.error);
+});
+
+test("snapshot-verify live: a unit with no receipt answers the missing-receipt report, schema-valid", async () => {
+  const { createWorkflowTools } = await loadModule();
+  // The script resolves the schema runtime from its own checkout, so the fixture
+  // carries the repository's `packages/` tree and the script's import closure.
+  const { root, git } = makeLiveSandbox("pre-execution-snapshot.mjs");
+  fs.symlinkSync(path.join(REPO_ROOT, "packages"), path.join(root, "packages"));
+  fs.mkdirSync(path.join(root, "docs", "fix", "probe-unit"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "docs", "fix", "probe-unit", "SPEC.md"),
+    "# probe-unit\n\n## Specs\n\n**S1 — probe.**\n",
+  );
+  git(["add", "."]);
+  git(["commit", "-qm", "fixture"]);
+
+  const tools = createWorkflowTools({ bin: () => "node" });
+  const verify = tools.find((tool) => tool.name === "agentic_workflow_snapshot_verify");
+  // A fix unit binds no parent (D6); the explicit dir keeps the fixture's unit
+  // outside the `docs/features/` default.
+  const result = await verify.execute(
+    { stage: "plan", unit: "probe-unit", unitKind: "fix", dir: "docs/fix/probe-unit" },
+    root,
+  );
+  // Exit 3: the report carries the reason code and no digest at all.
+  assert.equal(result.isError, true);
+  assert.equal(result.structuredContent.current, false);
+  assert.equal(result.structuredContent.code, "missing-receipt-snapshot");
+  assert.equal(result.structuredContent.unit, "probe-unit");
+  checkSchema(verify.outputSchema, result.structuredContent, "snapshot missing-receipt");
 });
 
 test("phase-lint live: PASS and BLOCKED unit docs → typed verdict with fingerprint", async () => {
@@ -373,7 +445,7 @@ test("audit-pr-gate: exit 0 → structured report; exit 2 → isError with the r
   assert.equal(garbage.structuredContent.refusal, "gate-unavailable");
 });
 
-test("audit-pr-gate: the spawn names evaluate with the project's checkout as --repo", async () => {
+test("audit-pr-gate: the spawn leaves the forge scope to the spawn cwd", async () => {
   const { createWorkflowTools } = await loadModule();
   const requests = [];
   const tools = createWorkflowTools({
@@ -389,7 +461,45 @@ test("audit-pr-gate: the spawn names evaluate with the project's checkout as --r
   assert.equal(requests[0].cwd, "/fixture/project");
   assert.equal(requests[0].bin, "bun");
   assert.equal(requests[0].script, "scripts/audit-pr-gate.mjs");
-  assert.deepEqual(requests[0].args, ["evaluate", "--repo", "/fixture/project", "--pr", "9", "--head", "c".repeat(40)]);
+  // `--repo`/`-R` is a forge scope (`[HOST/]OWNER/REPO`), never a filesystem
+  // path: the script reads git in its cwd and `gh` infers the repo from it.
+  assert.deepEqual(requests[0].args, ["evaluate", "--pr", "9", "--head", "c".repeat(40)]);
+});
+
+test("audit-pr-gate live: the tool reaches the script's own report contract", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const { root } = makeLiveSandbox("audit-pr-gate.mjs");
+  // The script's import closure resolves the schema runtime from its own
+  // checkout (`<root>/packages/...`), exactly as it does in the repository.
+  fs.symlinkSync(path.join(REPO_ROOT, "packages"), path.join(root, "packages"));
+  const head = "e".repeat(40);
+  // A `gh` shim on PATH answers the forge read: the only network surface the
+  // script has, pinned so the fixture stays deterministic and offline.
+  const binDir = path.join(root, "bin");
+  fs.mkdirSync(binDir);
+  const shim = path.join(binDir, "gh");
+  fs.writeFileSync(
+    shim,
+    `#!/usr/bin/env node\nprocess.stdout.write(JSON.stringify({ headRefOid: ${JSON.stringify(head)}, number: 1, isDraft: false, mergeable: "MERGEABLE", comments: [] }));\n`,
+    { mode: 0o755 },
+  );
+  const previousPath = process.env.PATH;
+  process.env.PATH = `${binDir}${path.delimiter}${previousPath}`;
+  try {
+    const tools = createWorkflowTools({ bin: () => "node" });
+    const gate = tools.find((tool) => tool.name === "agentic_workflow_audit_pr_gate");
+    const result = await gate.execute({ pr: "1" }, root);
+    // No receipt for this head → BLOCKED (exit 2), reported with data instead of
+    // the `gate-unavailable` degradation the forge-scope flag used to cause.
+    assert.equal(result.structuredContent.refusal, undefined, "the script answered, so no degradation record");
+    assert.equal(result.isError, true);
+    assert.equal(result.structuredContent.verdict, "BLOCKED");
+    assert.equal(result.structuredContent.head, head);
+    assert.equal(result.structuredContent.action, "none");
+    checkSchema(gate.outputSchema, result.structuredContent, "audit-pr-gate live blocked");
+  } finally {
+    process.env.PATH = previousPath;
+  }
 });
 
 test("snapshot-verify: exit 0 fresh; exit 3/4 → isError with the report", async () => {
