@@ -127,12 +127,12 @@ the HEAD sha and start time at session open.
        --decisions "<choices + why>" --next "<next step>" [--session <id>]
      ```
 
-     It computes the timestamp, branch and name, renders the block, refuses a
-     name or body the aggregator could not read, and never overwrites — the
+     It computes the timestamp, branch and name, renders the block, refuses
+     bytes the aggregator could not read, and never overwrites — the
      filename is never composed here. Grammar:
-     `journal-fragment-grammar@1` + `journal-write-grammar@1` in the writer's
-     README; long prose: `… render … | … journal write --kind narrative
-     --content -`.
+     `journal-fragment-grammar@1` + `journal-write-grammar@1` in
+     `@gtrabanco/agentic-workflow`'s README; long prose: `… render … | …
+     journal write --kind narrative --content -`.
 
    Omit `--decisions` / `--next` when there is nothing real to record — the script drops the line
    rather than emitting an empty one. A user-supplied note is prepended to the
