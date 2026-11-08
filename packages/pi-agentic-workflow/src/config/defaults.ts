@@ -35,6 +35,10 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   // chain, and an unconfigured install resolves every pass to the documented
   // floor (cheap tier, else inline) rather than a compiled-in model.
   passes: {},
+  // Issue #260 — no shipped subagent resource limits: the resource layer owns
+  // the self-detected envelope (conservative defaults), and an unconfigured
+  // install runs automatic, never compiled-in caps.
+  subagents: {},
   // Feature 63 — model profiles: declared keys (none, zero-config).
   declared: { default: { model: false, thinking: false } as RouteDeclaration, commands: {} as Record<string, RouteDeclaration> },
 };
