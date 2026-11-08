@@ -30,7 +30,7 @@ Never infer a step ID absent from the triage block in the unit doc.
 
 ## Turn contract
 
-Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn; the per-consumer push supplement for mid-phase commits stays in [`references/PREFLIGHT.md`](references/PREFLIGHT.md) as the canonical contract's own supplement rule orders. Skill-specific additions (the `→ Next:` box is canonical-owned and not restated here):
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn; the contract's Push policy supplement governs mid-phase commits when a PR is already open. Skill-specific additions (the `→ Next:` box is canonical-owned and not restated here):
 
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Nothing here
