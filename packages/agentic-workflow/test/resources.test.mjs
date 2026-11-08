@@ -180,14 +180,20 @@ test("admit without a record dir never persists and never blocks", () => {
 
 // ── CLI ──────────────────────────────────────────────────────────────────
 
-test("CLI: resources detect prints the envelope and is byte-stable", () => {
+test("CLI: resources detect prints the envelope and is structurally stable", () => {
   const a = spawnSync("bun", [BIN, "resources", "detect", "--json"], { encoding: "utf8" });
   assert.equal(a.status, 0, a.stdout + a.stderr);
   const envelope = JSON.parse(a.stdout);
   assert.equal(envelope.contract, RESOURCES_DETECT_CONTRACT_ID);
   assert.ok(envelope.memory.totalBytes > 0);
+  // Byte-stability holds for the same readings (asserted on injected readings);
+  // live MemAvailable moves between runs by nature, so the CLI assertion is
+  // structural: the shape, keys and derived rule are identical.
   const b = spawnSync("bun", [BIN, "resources", "detect", "--json"], { encoding: "utf8" });
-  assert.equal(a.stdout, b.stdout);
+  const second = JSON.parse(b.stdout);
+  assert.deepEqual(Object.keys(second), Object.keys(envelope));
+  assert.deepEqual(Object.keys(second.memory), Object.keys(envelope.memory));
+  assert.equal(second.derived.parallelism, envelope.derived.parallelism);
 });
 
 test("CLI: resources admit refuses without expectations and allows a fitting trial", () => {
