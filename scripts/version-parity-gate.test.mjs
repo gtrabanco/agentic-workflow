@@ -30,6 +30,7 @@ import {
   newestMatching,
   semverGt,
   changelogRowCount,
+  porcelainPaths,
   contentTriggerPrefixes,
   packageDirs,
   localPackageVersions,
@@ -41,13 +42,29 @@ const PKG = "@gtrabanco/pi-agentic-workflow";
 const REPO_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_DIR = path.resolve(REPO_ROOT, "..");
 
-/** `git status --porcelain` entries of this repository — the dirty-tree fixture. */
+/**
+ * The dirty tree, read independently of the module under test — in the `-z`
+ * form, because a rename needs it: the line form renders one `R  old -> new`
+ * line where the NUL form carries the new path first and the old one in the
+ * next field. A reader that sliced both alike reported a phantom path.
+ */
 function gitPorcelain() {
-  const r = spawnSync("git", ["status", "--porcelain=v1", "--untracked-files=all"], {
+  const r = spawnSync("git", ["status", "--porcelain=v1", "-z", "--untracked-files=all"], {
     cwd: REPO_ROOT,
     encoding: "utf8",
   });
-  return r.stdout.split("\n").filter(Boolean);
+  const entries = r.stdout.split("\0");
+  const paths = [];
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    if (entry.length < 4) continue;
+    paths.push(entry.slice(3));
+    if (entry.slice(0, 2).includes("R") || entry.slice(0, 2).includes("C")) {
+      const original = entries[(index += 1)];
+      if (original) paths.push(original);
+    }
+  }
+  return paths;
 }
 
 /** The committed range alone, read independently of the module under test. */
@@ -280,13 +297,20 @@ test("content: similarly-named paths outside the trigger set do not trigger", ()
 // committed: `git diff <base>...HEAD` is blind to an uncommitted tree, so a PR
 // whose skills/package edits are still unstaged read as "no triggered change"
 // and the gate passed exactly where it exists to enforce the bump.
+test("a staged rename keeps both sides of the dirty tree, never an arrow", () => {
+  // The reproducer behind the fix: one staged rename used to render as the
+  // single string "old -> new", so the union comparison reported a phantom
+  // path and a clean change failed the gate.
+  assert.deepEqual(porcelainPaths("R  new.md\0old.md\0 M plain.md\0"), ["new.md", "old.md", "plain.md"]);
+});
+
 test("changedFilesSince unions the uncommitted tree into the committed range", () => {
   const head = changedFilesSince("HEAD");
   const main = changedFilesSince("main");
   // The committed range against the current commit is empty by definition, so
   // anything `HEAD` names is working-tree work — the list a `...HEAD`-only diff
   // could never return.
-  const dirty = gitPorcelain().map((entry) => entry.slice(3));
+  const dirty = gitPorcelain();
   assert.deepEqual(
     [...head].sort(),
     dirty.sort(),

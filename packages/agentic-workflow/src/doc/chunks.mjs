@@ -15,10 +15,14 @@
  * headings at all yields exactly the preamble chunk.
  */
 
-const FENCE_RE = /^(`{3,}|~{3,})/;
-const HEADING_RE = /^(#{1,6})\s+(.*)$/;
+import { listSections } from "./section-locator.mjs";
 
-function slugify(headingPath) {
+/**
+ * The D5 shared slug rule — half B's chunks and half A's `doc read`/`edit`/
+ * `index` consume this one export, so the two halves cannot drift (issue #366,
+ * 65's D5). Exported without behavior change for the retrieval path.
+ */
+export function slugify(headingPath) {
   return headingPath
     .toLowerCase()
     .replace(/\s*>\s*/g, "-")
@@ -27,8 +31,44 @@ function slugify(headingPath) {
     .replace(/^-+|-+$/g, "");
 }
 
-/** Minimal frontmatter: top-level `key: value` scalars, comma lists, and `>`/`|` folded blocks. */
-function parseFrontmatter(lines) {
+/** The leading frontmatter block's bound: the 0-based index of the first content
+ *  line (0 when the document carries no `---` block). One owner for both halves —
+ *  the chunker never scans those lines and the section index never publishes a
+ *  section from them, so a commented `# key:` inside frontmatter is not a heading
+ *  anywhere (S15/A7). */
+export function leadingFrontmatterEnd(lines) {
+  if (lines.length === 0 || lines[0].trim() !== "---") return 0;
+  for (let i = 1; i < lines.length; i++) if (lines[i].trim() === "---") return i + 1;
+  return 0;
+}
+
+/** A section's own heading line, verbatim — the id source both halves share.
+ *  The locator's `title` is rendered text (markup stripped), so it is the right
+ *  value for a selector and the wrong one for an id (S11/B1). */
+export function rawHeadingTitle(markdown, section) {
+  const lineEnd = markdown.indexOf("\n", section.start);
+  const line = markdown.slice(section.start, lineEnd === -1 ? markdown.length : lineEnd);
+  return line.replace(/^#{1,6}\s+/, "").trim();
+}
+
+/**
+ * The D5 shared id for one heading path within one document scan:
+ * `<relative-path>#<slug>` with `-2` style dedupe against `usedIds`. Callers
+ * pass one `usedIds` set per document so dedupe order is document order —
+ * the identical scheme `scanChunks` has always emitted.
+ */
+export function nextSectionId(usedIds, relativePath, headingPath) {
+  const slug = slugify(headingPath);
+  let id = `${relativePath}#${slug}`;
+  let n = 2;
+  while (usedIds.has(id)) id = `${relativePath}#${slug}-${n++}`;
+  usedIds.add(id);
+  return id;
+}
+
+/** Minimal frontmatter: top-level `key: value` scalars, comma lists, and `>`/`|` folded blocks.
+ *  Exported for half A's structure index (issue #366): one parser, both halves. */
+export function parseFrontmatter(lines) {
   const meta = {};
   for (let i = 0; i < lines.length; i++) {
     const m = lines[i].match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
@@ -65,50 +105,21 @@ export function scanChunks(markdown, relativePath) {
   if (lines.length > 1 && lines[lines.length - 1] === "" && /\r?\n$/.test(content)) lines.pop();
 
   // Frontmatter block, only when it opens the file.
-  let contentStart = 0;
-  let meta = {};
-  if (lines.length > 0 && lines[0].trim() === "---") {
-    let end = -1;
-    for (let i = 1; i < lines.length; i++) {
-      if (lines[i].trim() === "---") {
-        end = i;
-        break;
-      }
-    }
-    if (end !== -1) {
-      meta = parseFrontmatter(lines.slice(1, end));
-      contentStart = end + 1;
-    }
-  }
+  const contentStart = leadingFrontmatterEnd(lines);
+  const meta = contentStart > 0 ? parseFrontmatter(lines.slice(1, contentStart - 1)) : {};
 
-  // Headings outside fenced code blocks.
-  const headings = []; // {level, title, line (1-based)}
-  let fence = null;
-  for (let i = contentStart; i < lines.length; i++) {
-    const trimmed = lines[i].trim();
-    if (fence !== null) {
-      if (trimmed.startsWith(fence)) fence = null;
-      continue;
-    }
-    const f = trimmed.match(FENCE_RE);
-    if (f) {
-      fence = f[1][0].repeat(3);
-      continue;
-    }
-    const h = trimmed.match(HEADING_RE);
-    if (h) headings.push({ level: h[1].length, title: h[2].trim(), line: i + 1 });
-  }
+  // One heading scanner for both halves: the markdown tree the section locator
+  // builds, never a second fence state machine. A quoted example, an inline code
+  // span that wraps a line, an indented fence inside a list item and a commented
+  // frontmatter key are therefore classified once, for `doc read`/`edit`/`index`
+  // and for retrieval alike (S15/A7).
+  const headings = listSections(content)
+    .filter((section) => section.lines[0] >= contentStart + 1)
+    .map((section) => ({ level: section.depth, title: rawHeadingTitle(content, section), line: section.lines[0] }));
 
   const chunks = [];
   const usedIds = new Set();
-  const nextId = (headingPath) => {
-    const slug = slugify(headingPath);
-    let id = `${relativePath}#${slug}`;
-    let n = 2;
-    while (usedIds.has(id)) id = `${relativePath}#${slug}-${n++}`;
-    usedIds.add(id);
-    return id;
-  };
+  const nextId = (headingPath) => nextSectionId(usedIds, relativePath, headingPath);
 
   // Preamble chunk — only when its range is non-empty and body is non-blank
   // (AC10: skip frontmatter-only preamble to avoid empty-body noise).

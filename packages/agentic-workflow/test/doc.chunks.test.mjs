@@ -56,6 +56,54 @@ describe("doc chunker (D5)", () => {
     ok(chunks[0].body.includes("# not a heading"));
   });
 
+  it("never reads a heading out of a list continuation that opens with `## ` (S15/A7)", () => {
+    // The real shape (skills/triage-issue/references/ISSUE_PROCESS.md): the
+    // carrier name wraps across lines inside a list item, so the continuation
+    // line starts with `## ` at the item's content column. It is paragraph text,
+    // never a root heading — and the chunker must read it exactly as the tree does.
+    const md = [
+      "# Guide",
+      "",
+      "- repairable as-is → fold into the phase, or",
+      "  append the row to the carrier — `SPEC.md",
+      "  ## Findings` for a migrated unit, `review-findings.md` for a legacy one.",
+      "",
+      "## Real",
+      "",
+      "body",
+    ].join("\n");
+    const chunks = scanChunks(md, "nested.md");
+    deepStrictEqual(
+      chunks.filter((chunk) => chunk.section !== null).map((chunk) => chunk.section),
+      ["Guide", "Guide > Real"],
+    );
+    ok(chunks[0].body.includes("## Findings` for a migrated unit"));
+  });
+
+  it("never closes a fence on a shorter one, so a nested example is never a heading (S14/A6)", () => {
+    const md = [
+      "# Real",
+      "````markdown",
+      "## example inside a four-backtick block",
+      "```",
+      "## still quoted after the inner fence",
+      "````",
+      "tail",
+      "",
+      "## After",
+      "",
+      "after body",
+    ].join("\n");
+    const chunks = scanChunks(md, "nested.md");
+    deepStrictEqual(
+      chunks.filter((chunk) => chunk.section !== null).map((chunk) => chunk.section),
+      ["Real", "Real > After"],
+    );
+    ok(chunks[0].body.includes("## example inside a four-backtick block"));
+    ok(chunks[0].body.includes("## still quoted after the inner fence"));
+    strictEqual(chunks[1].id, "nested.md#real-after");
+  });
+
   it("handles tilde fences and indented fences the same way", () => {
     const md = ["# T", "~~~", "# fenced", "~~~", "end"].join("\n");
     const chunks = scanChunks(md, "t.md");
