@@ -42,5 +42,11 @@ test("AC1: the package's own extension entry is still declared", () => {
     entries.includes("./dist/extension/index.js"),
     "the package's own compiled extension must still load",
   );
-  assert.equal(entries.length, 1, "the manifest declares exactly one extension entry (own)");
+  // Issue #260 added the piew subagents extension (the durable-subagent
+  // substrate, owner call 2026-11-08) — exactly one second entry, never the
+  // serena bridge (whose registration is consent-gated elsewhere).
+  assert.deepEqual(entries, [
+    "./dist/extension/index.js",
+    "./node_modules/pi-extensible-workflows/dist/subagents/index.js",
+  ]);
 });
