@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -553,15 +554,19 @@ function blockEndIndex(source, startIdx, openCh, closeCh) {
   assert.equal(dup.key, "routeLinesMax");
 }
 
-// Documents (the guide layer) — issue #332, S7's budget coverage.
-
-const documentsHead = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--documents", "--json"], { encoding: "utf8" });
-assert.equal(documentsHead.status, 0, documentsHead.stderr);
-const documentsReport = JSON.parse(documentsHead.stdout);
-assert.equal(documentsReport.ok, true, "the head is inside every declared guide-layer ceiling");
-assert.ok(documentsReport.documents.some((row) => row.file === "AGENTS.md"), "the guide is budgeted");
-const guideRow = documentsReport.documents.find((row) => row.file === "AGENTS.md");
-assert.ok(guideRow.machine > 0 && guideRow.prose > 0, "the guide's report splits its machine region from its prose");
+// Documents (the guide layer) — issue #332, S7's budget coverage. A named case,
+// not a load-time guard: a budget break must name what broke and let the
+// fixture guards below still run, instead of aborting the file (`0 pass`,
+// one error, nothing after it executed) — issue #452's correction batch (F8).
+test("the guide layer is inside every declared ceiling (issue #332)", () => {
+  const documentsHead = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--documents", "--json"], { encoding: "utf8" });
+  assert.equal(documentsHead.status, 0, documentsHead.stderr);
+  const documentsReport = JSON.parse(documentsHead.stdout);
+  assert.equal(documentsReport.ok, true, "the head is inside every declared guide-layer ceiling");
+  assert.ok(documentsReport.documents.some((row) => row.file === "AGENTS.md"), "the guide is budgeted");
+  const guideRow = documentsReport.documents.find((row) => row.file === "AGENTS.md");
+  assert.ok(guideRow.machine > 0 && guideRow.prose > 0, "the guide's report splits its machine region from its prose");
+});
 
 const GUIDE_FIXTURE = [
   "# AGENTS.md",
