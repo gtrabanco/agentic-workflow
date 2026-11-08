@@ -255,6 +255,10 @@ here:
   refuses a spawn whose brief declares no `expected_duration`/`requirements`,
   refuses a requirement over the cap, and blocks an identical re-run after a
   recorded bound-kill — re-decide with the receipt, never retry blind.
+  `resources check` reads a recorded trial's receipt for the check-in verdict
+  (within or over the estimate, unmeasurable, bound-killed) and
+  `resources bound` prints the `systemd-run` trial envelope with its
+  after-exit `systemctl show` receipt read.
 - Entries merge project-over-global per key, like every other config scope.
 
 ## Model profiles
