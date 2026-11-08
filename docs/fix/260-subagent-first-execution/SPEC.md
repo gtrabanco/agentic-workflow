@@ -226,7 +226,7 @@ packages/pi-agentic-workflow/src/config`, exit 0, 2026-11-08.)
 ## Acceptance criteria
 
 - [ ] AC1 (read-verified, S2+S3): the orchestrate contract is in the two
-      executing skills — `rg -n "never executes|orchestrate" skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` → ≥1 match each; the delegate brief names exact target files, exact gate command, exact expected values, `expected_duration` and resource `requirements`; verification is "run the gate and read the diff — never by trusting the subagent's summary"; and `bun scripts/check-skill-context.mjs` exits 0 after the edits.
+      executing skills — `rg -ni "orchestrate mode|orchestrate path" skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` → ≥1 match each and `rg -n "never by trusting" skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` → ≥1 match each; the delegate brief names exact target files, exact gate command, exact expected values, `expected_duration` and resource `requirements`; verification is "run the gate and read the diff — never by trusting the subagent's summary"; and `bun scripts/check-skill-context.mjs` exits 0 after the edits.
 - [ ] AC2 (command-verified, S4): `rg -n '"pi-extensible-workflows"' packages/pi-agentic-workflow/package.json` → the exact `6.3.0` pin; `rg -n 'pi-extensible-workflows' packages/pi-agentic-workflow/package.json` shows the `pi.extensions` registration path into `node_modules`; `bun install` exits 0; the registration loads only the subagents extension (grep of the package.json `pi` block — the engine/starter/trajectory extensions are absent).
 - [ ] AC3 (command-verified, S5): `agentic-workflow resources detect --json` exits 0 and prints the host envelope (memory total/available, cores, cgroup limit if any, derived parallelism); the envelope is byte-stable for the same readings (asserted on injected readings — live `MemAvailable` moves between runs by nature, so the CLI assertion is structural), and with caps forced low the derived parallelism is `serial`.
 - [ ] AC4 (command-verified, S6): `agentic-workflow resources admit` refuses a spawn whose brief carries no expectations (exit 2, reason names the missing field), refuses a requirement over the declared cap (exit 2, receipt names requirement vs cap), admits a fitting bounded trial (exit 0), and blocks an identical re-run after a recorded bound-kill receipt unless the task spec changes (exit 2, `receipt` names the prior task).
@@ -380,6 +380,38 @@ frozen ledgers are the plan; no Relay packet is created.)
 
 - **D4** — 2026-11-08, owner delivery decision (answer to the #464 state report): "Esperar a que #464 se mergee, luego se incorporan los cambios en esta PR, se reconcilian y se revisa si se ha roto algo o falta algo por integrar o hay que modificar algo. Luego review independiente y si no hay findings, merge manual hecho por mi". Delivery order: (1) #464 merges first (owner's PR, owner's verdict — this branch never pushes to it); (2) main is integrated into `feat/260-subagent-first-execution` and reconciled — the branch already carries #201's content via merge 203a9875, so the integration is expected to be content-neutral or minimal, verified by the differential check; (3) reconcile-check for breakage or missing integration; (4) an independent review pass — the owner's explicit order here overrides this apply-request's inline-surgery rule for that one pass; (5) the owner merges manually. The prior handoff report's claim that #201 was "sin PR" was wrong (PR #464 existed, opened by the #201 session) — corrected to the owner when the state was re-checked.
 - **D5** — 2026-11-08, owner follow-up: "Crea la PR de esta feature primero" — the explicit order supersedes D4's wait step; the branch is pushed (the pre-push hook ran the offline gate subset: PASS, 9 steps) and **PR #467** opened (base main, `Closes #260`, evidence pack per the template). D4's post-merge order stands unchanged: integrate main, reconcile, independent review, owner merges.
+
+- **L4** — 2026-11-08, the correction-batch request, verbatim:
+  ```
+  Apply to this repository: Verify the findings are legit, if they are legit undestand full the context of the finding, undestand why it is failing, make a plan and check how to fix it, make sure the fix doesnt break another thing if it beaks another thing just make some workaround to fix and avoid break a context (symbol) of anything by full fixing.
+  ```
+  Bound to the unit's `external-verify.md`: its 4 blockers and adversarials 1,
+  3 and 4 (advisory 2, the shared parser's accept-more flag leniency, is left
+  as accepted behaviour — a flag on another subcommand's path is out of
+  domain and accepting it breaks nothing).
+- **D8** — 2026-11-08, disclosed, the AC1/O1 anchor repair: both declared
+  `rg -n "never executes" skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md`,
+  a phrase neither skill ever carried (`git log -S "never executes"` → empty;
+  execute-phase writes "**Orchestrate path**", both write "never by trusting
+  the summary"). The prose is the authority and stays byte-identical — no skill
+  edit, no budget moved — and the declared anchors are re-pointed at the
+  shipped sentences. Root cause of the mis-specification: the anchor was
+  written from intent, never run at cut time, and E4 recorded it green without
+  the rg output.
+- **D9** — 2026-11-08, disclosed, `resources bound --json`: refused instead of
+  given an invented JSON shape — no `bound@1` contract exists, and publishing a
+  shape to satisfy a flag would add an undocumented surface (the crate's rule:
+  a contract id per receipt). The parser comment that claimed "the receipt is
+  always JSON" was false and is corrected to name detect/admit/check.
+- **D10** — 2026-11-08, disclosed, admit's shape throws: typed as
+  `ResourcesError` (the detect module's own class, reused — no new class) so
+  the CLI's existing mapping prints `RESOURCES REFUSAL` exit 2. The module's
+  stated contract still throws for a malformed expect; only the vocabulary of
+  the throw changed, so no module-level contract moved.
+- **E15** — 2026-11-08, foreground, the corrected anchors: `rg -ni "orchestrate mode\|orchestrate path" skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` · exit 0 · unit-lane:215, execute-phase:149; `rg -n "never by trusting" skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` · exit 0 · unit-lane:219, execute-phase:154 (AC1, O1).
+- **E16** — 2026-11-08, the repair red-first: suite red e3bb8dfe (`resources bound --json` exit 0 with shell lines; a malformed brief exit 1 with a Bun stack trace; README usage line and Commands table missing `verify`/`resources`; admit's throws untyped) → green a1465075 · `bun test test/cli.surface.test.mjs` 2 pass, `bun test test/resources.test.mjs` 30 pass, `cd packages/agentic-workflow && bun run test` **534 pass · 0 fail** (O18).
+- **E17** — 2026-11-08, differential vs `git archive 86bfa163` in `mktemp -d` (scratch removed after): `resources detect --json`, `resources admit` (valid brief), `resources bound`, `verify <201 SPEC>`, `resolve-passes` — stdout/stderr/exit **SAME** once the live `MemAvailable` reading and the echoed tree path are normalized (a same-tree repeat run drifts `availableBytes` identically, proving the field is the host); `journal name` differs only by the clock second.
+- **E18** — 2026-11-08, `bun scripts/check-skill-context.mjs` · exit 0 · PASS (29 skills, unchanged); `bun scripts/skill-lint.mjs` · exit 0 · PASS (0 findings); `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/260-subagent-first-execution/SPEC.md` · exit 0 · VERIFY PASS; `roadmap check docs/fix/260-subagent-first-execution/SPEC.md` · exit 0 · PASS 0 violations.
 
 ## Next
 
