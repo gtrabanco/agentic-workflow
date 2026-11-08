@@ -250,19 +250,31 @@ test("the ownership rule is stated, with its gate named (S17)", () => {
 // 5. The budget the guide layer must stay inside
 // ---------------------------------------------------------------------------
 
+test("the branch/PR rule has one statement in the core, never a second copy", () => {
+  const guide = guideText();
+  assert.match(guide, /never stack PRs/u, "the rule's owner statement is present");
+  assert.doesNotMatch(
+    guide,
+    /short branches off/u,
+    "the overlapping second statement is gone — `Every repetition names its owner` allows no second copy inside the guide",
+  );
+});
+
 test("the guide layer is inside the ceilings the manifest declares (S1, S7)", () => {
+  // The ceiling enforcement lives in one owner: `scripts/check-skill-context.test.mjs`
+  // asserts `--documents` exits 0, so one budget break is one named red. This case
+  // reads the same report for the linkage the owner cannot answer: the manifest
+  // budgets the guide, the report splits its machine region from its prose, and the
+  // three required documents are the ones declared. A checker crash still fails
+  // here, because the JSON it prints is what this case parses.
   const result = spawnSync(process.execPath, [path.join(ROOT, "scripts/check-skill-context.mjs"), "--documents", "--json"], {
     encoding: "utf8",
     cwd: ROOT,
   });
-  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   const report = JSON.parse(result.stdout);
-  assert.equal(report.ok, true);
   const guide = report.documents.find((row) => row.file === GUIDE);
   assert.ok(guide, "the report budgets the guide");
   assert.ok(guide.prose > 0 && guide.machine > 0, "the report splits prose from the machine region");
-  assert.ok(guide.prose <= guide.proseLinesMax, `prose ${guide.prose} > ${guide.proseLinesMax}`);
-  assert.ok(guide.lines <= guide.linesMax, `lines ${guide.lines} > ${guide.linesMax}`);
   const declared = manifest().documents;
   assert.deepEqual(declared.requiredFiles.sort(), [GUIDE, "docs/workflow/PACKAGES.md", "docs/workflow/SKILL_AUTHORING.md"].sort(),
     "the guide layer's three documents are the ones the manifest requires");
