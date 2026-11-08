@@ -7,6 +7,10 @@
  *
  * Any failure path (spawn error, non-JSON, invalid JSON, schema invalid,
  * degradations present) returns `{ ok: false, refusal: "sensor-degraded", detail }`.
+ * A run that parsed and validated an envelope but carries degradations also
+ * returns that envelope as an additive `envelope` field, so a consumer (issue
+ * #274's tool surface) can attach the data to the error instead of losing it;
+ * the refusal contract itself is unchanged.
  */
 
 import { spawn } from "node:child_process";
@@ -21,6 +25,19 @@ const TIMEOUT_MS = 30_000;
 function coerceEnvelope(raw: Envelope): EnvelopeLike {
   return raw as unknown as EnvelopeLike;
 }
+
+/**
+ * A degraded sensor run that still parsed an envelope: the refusal contract
+ * (`ok/refusal/detail`) is unchanged, and the envelope rides along additively
+ * so a consumer (issue #274's tool surface) can attach the data to the error
+ * instead of losing it.
+ */
+export type DegradedSensorResult = {
+  ok: false;
+  refusal: "sensor-degraded";
+  detail: string;
+  envelope?: EnvelopeLike;
+};
 
 function resolveCwd(cwd: string): string {
   try {
@@ -127,6 +144,10 @@ function tryParseAndValidate(
       ok: false,
       refusal: "sensor-degraded",
       detail: `sensor degraded: ${detail.degradations.join(", ")}`,
+      // Issue #274: the parsed envelope rides along on the degraded run so
+      // the tool surface can attach it to the error (additive; the refusal
+      // contract above is unchanged).
+      envelope: coerceEnvelope(envelope),
     });
     return;
   }

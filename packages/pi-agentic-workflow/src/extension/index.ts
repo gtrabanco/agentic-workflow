@@ -264,6 +264,21 @@ function declaredServerNames(pi: ExtensionAPI, agentDir: string, ctx: ExtensionC
   return [...names];
 }
 
+/**
+ * Pi's tool registrar, read structurally like `registerMcpServer` above: the
+ * peer floor is a range and a partial host (or a test double) that names no
+ * `registerTool` registers no tools — real pi ≥ 0.99 always does (issue #274).
+ */
+function toolRegistrar(pi: ExtensionAPI): { registerTool(tool: unknown): void } | null {
+  const candidate = (pi as unknown as { registerTool?: unknown }).registerTool;
+  if (typeof candidate !== "function") return null;
+  return {
+    registerTool: (tool) => {
+      (candidate as (this: ExtensionAPI, t: unknown) => void).call(pi, tool);
+    },
+  };
+}
+
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
@@ -305,6 +320,9 @@ export default function extension(pi: ExtensionAPI): void {
 
   const { router, guards } = createExtension<PiModel>({
     registrar: toRegistrar(pi, noteCommand),
+    // Issue #274: the deferred workflow tools register alongside the commands,
+    // through the one structural read above — absent on a host without the API.
+    toolRegistrar: toolRegistrar(pi) ?? undefined,
     // Resolved per call: the router must never hold a session-bound object
     // between turns, because Pi can hand a new session to the same extension.
     surface: () => ({
