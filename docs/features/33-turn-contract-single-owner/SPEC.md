@@ -297,6 +297,27 @@ One observable criterion per `S#`.
   review/fold machinery on this change; §8 makes the owner the external
   verifier).
 
+- **E1** — 2026-11-08, `bun test scripts/turn-contract-single-owner.test.mjs` (RED) · exit 1 · the failure lists 14 bespoke sections: `resolve-repository-state`, `discover-repository-state`, `skill-lint`, `workflow-status`, `batch-scheduler`, `triage-issue`, `log-session`, `audit-pr`, `audit-docs`, `product-audit`, `init-workspace`, `unit-lane`, `execute-phase`, `fold-findings` — equal to the recount's bespoke column (O12).
+- **E2** — 2026-11-08, scratch fixture (`mktemp -d`, mirror of `skills/` + `scripts/`) · one skill converted to the loader shape in scratch · the gate's bespoke list shrank 14 → 13 · scratch deleted (§3).
+- **P1** — 2026-11-08, gate test cut red · commit `fd706da2`; ledgers frozen at `0998d1d3` (SPEC passes `bun scripts/phase-lint.mjs docs/features/33-turn-contract-single-owner/SPEC.md` → verdict PASS).
+- **P2** — 2026-11-08, read-only profile added to the canonical contract (prose; versioned blocks byte-intact: `turn-contract-grammar` 52 pass, `normative-drift` 21 pass) · commit `f253f30a`.
+- **P3** — 2026-11-08, `resolve-repository-state` migrated (loader line + 4 additions; duplicated `→ Next:` box removed — canonical box 9 owns it); `check-skill-context --skill resolve-repository-state` PASS (849/83), `skill-lint --skill resolve-repository-state` PASS · commit `c783e1ef`.
+- **P4** — 2026-11-08, `discover-repository-state` migrated (loader line + 4 additions; duplicated `→ Next:` box removed) · `check-skill-context --skill` PASS · commit `1b1d5a74`.
+- **P5** — 2026-11-08, `skill-lint` migrated (loader + read-only profile; additions intact) · `check-skill-context --skill` PASS · commit `36a7f722`.
+- **P6** — 2026-11-08, `workflow-status` migrated (loader + read-only profile) · `check-skill-context --skill` PASS · commit `5ebb8024`.
+- **P7** — 2026-11-08, `batch-scheduler` migrated (loader + read-only profile; planner's own untracked state file stays the declared sanctioned side effect) · `check-skill-context --skill` PASS · commit `d2ec922f`.
+- **P8** — 2026-11-08, `triage-issue` migrated (loader + 5 additions; duplicated docs-language and `→ Next:` boxes removed — canonical boxes 6 and 9 own them) · `check-skill-context --skill` PASS · commit `cb040e43`.
+- **P9** — 2026-11-08, `log-session` migrated as carrier-flow alignment (fragment carrier #405 + two doors #429 own the entry write; duplicated docs-language and `→ Next:` boxes removed) · `check-skill-context` flagged the skill over ceiling → manifest re-based `ceil(2810 × 1.10) = 3091` with reason (`a3b98651`, with the orchestration-envelope reference ceiling `2573 → 3020` for P2's prose) · commit `a1191850`.
+- **P10** — 2026-11-08, `audit-pr` migrated (loader + read-only profile; the PR-state hygiene and SHA-bound comment boxes are skill-specific additions, not canonical box 3–5 restatements) · `check-skill-context --skill` PASS · commit `4b09077e`.
+- **P11** — 2026-11-08, `audit-docs` migrated (loader + 2 additions; duplicated `→ Next:` box removed) · `check-skill-context --skill` PASS · commit `44177a1a`.
+- **P12** — 2026-11-08, `product-audit` migrated (loader + 4 additions; the one-report-file mutation narrowing kept) · `check-skill-context --skill` PASS · commit `30a8cc8d`.
+- **P13** — 2026-11-08, `init-workspace` migrated (loader line; duplicated docs-language and `→ Next:` boxes removed, additions intact) · `check-skill-context --skill` PASS · commit `04f2790c`.
+- **P14** — 2026-11-08, `unit-lane` migrated (loader line; duplicated `→ Next:` box removed, additions intact) · `check-skill-context --skill` PASS · commit `13c2e528`.
+- **P15** — 2026-11-08, `execute-phase` migrated (loader line; duplicated `→ Next:` box removed, additions intact; the push-supplement wording cites the contract's own supplement rule — `references/PREFLIGHT.md` carries no push rules, so no dangling pointer was written) · `check-skill-context --skill` PASS · commits `9dc5c59e`, `b9f883fb`.
+- **P16** — 2026-11-08, `fold-findings` migrated (loader line; all 11 fold-specific additions kept — none duplicates canonical-owned boxes) · `check-skill-context --skill` PASS · commit `aed5da51`; the gate first reads GREEN here (`bun test scripts/turn-contract-single-owner.test.mjs` 3 pass / 0 fail) — O1's second half.
+- **P17** — 2026-11-08, authoring rule amended to the loader shape; changeset intent cut; full 14-skill lint PASS; budgets route ceilings re-based (10 routes at the checker's `ceil(measured × 1.10)`, growth source named per route); docs-generate projection regenerated (155 units) · this Log is the commit.
+- **E3** — 2026-11-08, incident disclosure — during the pre-existing-failure baseline check, `git worktree add`/`prune` plumbing run from inside this worktree corrupted the worktree's own `.git` pointer and the working tree was wiped (seen as 1,600 phantom deletions). All committed work was safe on the branch; the `.git` pointer was restored and `git restore .` rebuilt the checkout from `918338bd`; the three uncommitted edits (route re-base, this Log, the projection) were re-applied. No other tree, branch, or shared surface was touched.
+
 ## Next
 
 Hand the diff to the owner for verification (§8) — then PR + roadmap
