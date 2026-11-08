@@ -99,6 +99,7 @@ computed | utc second · branch via git · session slug · fragment name · bloc
 timestamp-pin | --timestamp <iso> | pins the write-time second for a reproducer or a test; the clock is the default
 self-check | parseFragmentName(name) before the write | a name the aggregator could not read is never written
 collision | exclusive create · refusal | an existing target is refused, never overwritten
+carrier-absent | exit 2 · no directory is ever created | the carrier's presence is the opt-in, so a write into a project without it is refused instead of opting the project in
 refusal | exit 2 "JOURNAL REFUSAL — <reason>" | an unknown flag, a foreign kind, a bad body or a collision — before any byte lands
 carrier-check | journal aggregate --check | validate-only: every non-conforming name/body in the carrier listed, no byte moved, exit 0 conforming / 2 otherwise
 ```

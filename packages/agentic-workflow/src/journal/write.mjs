@@ -20,9 +20,13 @@
  * fragment is.
  */
 
+import fs from "node:fs";
+import path from "node:path";
+
 import {
   FRAGMENT_KINDS,
   FragmentError,
+  JOURNAL_DIR,
   fragmentName,
   parseFragmentName,
   writeFragment,
@@ -103,6 +107,16 @@ export function writeJournal(options) {
   const kind = options?.kind;
   if (!FRAGMENT_KINDS.includes(kind)) {
     throw new JournalWriteError(`--kind must be one of ${FRAGMENT_KINDS.join(", ")}, got ${JSON.stringify(kind ?? "")}`);
+  }
+  // The carrier directory's presence is the opt-in (issue #405), so the writer
+  // never creates it: a single write that sprang the directory into existence
+  // would flip `session-close close` into carrier mode and hand the project's
+  // journal to an aggregator nobody wired. Opting in stays a deliberate act.
+  const carrier = options?.journalDir ?? JOURNAL_DIR;
+  if (!fs.existsSync(path.join(root, carrier))) {
+    throw new JournalWriteError(
+      `the fragment carrier ${carrier} does not exist — its presence is the opt-in (issue #405), so this writer never creates it; opt the project in deliberately (mkdir -p ${carrier}) and re-run`,
+    );
   }
 
   let timestamp;
