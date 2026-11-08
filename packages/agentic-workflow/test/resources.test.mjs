@@ -267,3 +267,170 @@ test("CLI: --record-dir records the trial receipt (the anti-retry store)", () =>
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// ── S11 edge 2 — the runtime observation half (check-in with data, never a
+//    silent kill; the S6 layer-A systemd trial envelope) ────────────────────
+
+import { checkTrial, boundLine, parseDuration, CheckError } from "../src/resources/check.mjs";
+
+test("admit accepts a machine expected_seconds and stamps recordedAt", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-check-"));
+  try {
+    const expect2 = { ...EXPECT, expected_seconds: 300 };
+    const run = admitTrial({ task: "t7", expect: expect2, envelope: detectHost({ readings: bigHost }), recordDir: dir });
+    assert.equal(run.verdict, "allow");
+    const recorded = JSON.parse(readFileSync(join(dir, "receipts", `${run.receipt.digest.slice(0, 16)}.json`), "utf8"));
+    assert.ok(Number.isFinite(Date.parse(recorded.recordedAt)), "recordedAt is an ISO stamp");
+    assert.equal(recorded.expect.expected_seconds, 300);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("admit rejects a non-numeric expected_seconds", () => {
+  assert.throws(
+    () => admitTrial({ task: "t8", expect: { ...EXPECT, expected_seconds: "soon" }, envelope: detectHost({ readings: bigHost }) }),
+    /expected_seconds/u,
+  );
+});
+
+test("checkTrial refuses an unknown trial (exit-2 class)", () => {
+  assert.throws(() => checkTrial({ task: "never-recorded", recordDir: mkdtempSync(join(tmpdir(), "aw-check-x-")) }), CheckError);
+});
+
+test("checkTrial: within the estimate reports moving, with the recorded prose expectation", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-check-"));
+  try {
+    admitTrial({ task: "t9", expect: { ...EXPECT, expected_seconds: 3600 }, envelope: detectHost({ readings: bigHost }), recordDir: dir });
+    const r = checkTrial({ task: "t9", recordDir: dir, elapsedSeconds: 300 });
+    assert.equal(r.verdict, "within-estimate");
+    assert.match(r.message, /t9/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("checkTrial: over the estimate carries the check-in message with data (never a kill)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-check-"));
+  try {
+    admitTrial({ task: "t10", expect: { expected_duration: "about 5 minutes", expected_seconds: 300, requirements: EXPECT.requirements }, envelope: detectHost({ readings: bigHost }), recordDir: dir });
+    const r = checkTrial({ task: "t10", recordDir: dir, elapsedSeconds: 2820 });
+    assert.equal(r.verdict, "over-estimate");
+    assert.match(r.message, /t10/u);
+    assert.match(r.message, /about 5 minutes/u);
+    assert.match(r.message, /47m|2820s/u);
+    assert.match(r.message, /wait explicitly|investigate|stop/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("checkTrial: a receipt without expected_seconds is unmeasurable, naming the field", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-check-"));
+  try {
+    admitTrial({ task: "t11", expect: EXPECT, envelope: detectHost({ readings: bigHost }), recordDir: dir });
+    const r = checkTrial({ task: "t11", recordDir: dir, elapsedSeconds: 60 });
+    assert.equal(r.verdict, "unmeasurable");
+    assert.match(r.message, /expected_seconds/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("checkTrial: a bound-killed receipt reports the re-decide receipt, never a silent retry", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-check-"));
+  try {
+    admitTrial({ task: "t12", expect: { ...EXPECT, expected_seconds: 300 }, envelope: detectHost({ readings: bigHost }), recordDir: dir });
+    const p = join(dir, "receipts");
+    for (const name of readdirSync(p)) {
+      const rec = JSON.parse(readFileSync(join(p, name), "utf8"));
+      rec.verdict = "bound-kill";
+      rec.peak = "7 GB";
+      writeFileSync(join(p, name), JSON.stringify(rec, null, 2));
+    }
+    const r = checkTrial({ task: "t12", recordDir: dir, elapsedSeconds: 10 });
+    assert.equal(r.verdict, "bound-killed");
+    assert.match(r.message, /bound-kill|re-decide/u);
+    assert.match(r.message, /7 GB/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("checkTrial: the pid reading is reported — advancing or stalled against the previous reading", () => {
+  const within = checkTrial({
+    task: "t",
+    recordDir: mkdtempSync(join(tmpdir(), "aw-check-x-")),
+    allowUnknownForPid: true,
+    elapsedSeconds: 1,
+    pid: { state: "R", cpuSeconds: 12.4, prevCpuSeconds: 10.0 },
+  });
+  assert.match(within.message, /advancing/u);
+  const stalled = checkTrial({
+    task: "t",
+    recordDir: within.recordDir,
+    allowUnknownForPid: true,
+    elapsedSeconds: 1,
+    pid: { state: "S", cpuSeconds: 12.4, prevCpuSeconds: 12.4 },
+  });
+  assert.match(stalled.message, /stalled/u);
+  rmSync(within.recordDir, { recursive: true, force: true });
+  rmSync(stalled.recordDir, { recursive: true, force: true });
+});
+
+test("boundLine emits the S6 layer-A systemd trial envelope and its receipt read, byte-stable", () => {
+  const envelope = detectHost({ readings: bigHost, caps: { memoryCap: "7 of 64 GB", threadCap: "1 of 80 threads" } });
+  const a = boundLine({ task: "t13", envelope, command: "bun test test/" });
+  const b = boundLine({ task: "t13", envelope, command: "bun test test/" });
+  assert.equal(a, b);
+  assert.match(a, /systemd-run --user --scope/u);
+  assert.match(a, /-p MemoryMax=7168M/u);
+  assert.match(a, /-p MemoryHigh=6451M/u);
+  assert.match(a, /-p CPUQuota=100%/u);
+  assert.match(a, /--unit=task-.* bun test test\//u);
+  assert.match(a, /systemctl --user show task-.*\.scope -p MemoryPeak,CPUPeak,ExecMainStatus/u);
+});
+
+test("parseDuration reads the machine forms and refuses the rest", () => {
+  assert.equal(parseDuration("90s"), 90);
+  assert.equal(parseDuration("47m"), 2820);
+  assert.equal(parseDuration("2h"), 7200);
+  assert.throws(() => parseDuration("about 5 minutes"), /duration/u);
+});
+
+test("CLI: resources check — unknown trial exits 2; over-estimate exits 0 with the verdict", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-check-cli-"));
+  try {
+    const unknown = spawnSync("bun", [BIN, "resources", "check", "--task", "ghost", "--record-dir", dir], { encoding: "utf8" });
+    assert.equal(unknown.status, 2);
+    assert.match(unknown.stderr, /RESOURCES REFUSAL —/u);
+
+    admitTrial2(dir);
+    const over = spawnSync(
+      "bun",
+      [BIN, "resources", "check", "--task", "cli-check", "--record-dir", dir, "--elapsed", "47m"],
+      { encoding: "utf8" },
+    );
+    assert.equal(over.status, 0, over.stdout + over.stderr);
+    assert.match(over.stdout, /"verdict": "over-estimate"/u);
+    assert.match(over.stdout, /wait explicitly/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+function admitTrial2(dir) {
+  const run = spawnSync(
+    "bun",
+    [BIN, "resources", "admit", "--task", "cli-check", "--expect", JSON.stringify({ expected_duration: "about 5 minutes", expected_seconds: 300, requirements: EXPECT.requirements }), "--record-dir", dir],
+    { encoding: "utf8" },
+  );
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+}
+
+test("CLI: resources bound prints the systemd envelope lines", () => {
+  const run = spawnSync("bun", [BIN, "resources", "bound", "--task", "cli-bound", "--memory-cap", "7 of 64 GB", "--cmd", "bun test test/"], { encoding: "utf8" });
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  assert.match(run.stdout, /systemd-run --user --scope/u);
+  assert.match(run.stdout, /systemctl --user show/u);
+});
