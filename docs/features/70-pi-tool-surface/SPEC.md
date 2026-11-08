@@ -237,9 +237,10 @@ carries nothing else.
   host that names `registerTool` (17 pass in the file).
 - **V-AC1..AC6** — 2026-11-08, every acceptance criterion's named check re-run
   in the foreground at the handoff head; all green (see E4–E8, G1–G2).
-  Deferred to the owner: the codemode end-to-end call (AC1's live half) needs
-  a real pi session — the suite proves the result shapes; the owner verdict
-  is the external confirmation.
+  AC1's live half — a codemode script calling the tool in a real pi session —
+  was closed the same day by owner instruction (D2/E9): both halves verified
+  live against pi 1.5.0 with `nan/qwen3.6` on a scratch clone. The owner
+  verdict on the diff remains the external confirmation.
 - **D1** — 2026-11-08, ledger amendment (authority: `docs/LOGS.md` header, the
   fragment rule #405/#452): O17's frozen validator (`rg LOGS.md` ≥ 1) cannot
   reproduce in carrier mode — a direct LOGS.md append is refused by design and
@@ -249,6 +250,26 @@ carries nothing else.
   `aggregate --check` → `{"ok":true,"checked":20,"refusals":[]}` · exit 0).
   The entry lands in `docs/LOGS.md` at the next aggregation, as the carrier
   contract orders.
+- **D2** — 2026-11-08, owner instruction: launch a real pi instance
+  (model `nan/qwen3.6`) to close AC1's live half end-to-end, without touching
+  pi-web or this session. Executed as a headless one-shot run against a scratch
+  clone (`/tmp/pi274-live`, removed after), never against the live tree
+  (local workflow §3/§4 respected).
+- **E9** — 2026-11-08, live end-to-end (headless pi 1.5.0 · `nan/qwen3.6` ·
+  extension via `-e` from the scratch clone at `32b4a478` · codemode enabled
+  with `-t +codemode` · `--no-session`): the model's single codemode script
+  resolved both tools as objects —
+  `tools.agentic_workflow_status({})` → the full Envelope v2 object
+  (`keys: [blockers, dependencies, detail, findings, gates, needs_input, next,
+  phase, pr, recommendations, skill, state, summary, unit]`,
+  `statusHasSkillAndState: true`) and
+  `tools.agentic_workflow_snapshot_verify({stage:'spec',unit:'nonexistent-unit-xyz'})`
+  → the `tool-degraded` record (`contract, detail, refusal, tool, version`).
+  The sensor's direct re-run in the same clone showed the envelope carried one
+  degradation (`unavailable-forge-no-network`), so the status call exercised
+  the `isError`-with-envelope path: **AC1's both halves verified live** —
+  envelope as `structuredContent` without parsing, and the degraded case as an
+  error that still delivers data. Scratch removed after the run.
 
 ## Next
 
