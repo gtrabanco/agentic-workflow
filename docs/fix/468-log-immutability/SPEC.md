@@ -207,10 +207,31 @@ this unit; the review step is the owner's external verification.
   ```
 - **L2** — 2026-11-08, owner apply-request, verbatim: "Apply to this repository: issue #468" — plain prose; state resolved it to **continue** (red commit merged, implementation uncommitted, scopes 2–3 not started).
 - **E1** — 2026-11-08, `node --test scripts/log-immutability.test.mjs` at `5ba1d670` in a scratch `git archive` copy · suite fails on the missing module (RED confirmed at base, before any further code).
+- **P1** — 2026-11-08 22:55, unit doc + ledgers + roadmap row cut · `16995817`.
+- **P2** — 2026-11-08 23:02, gate implementation landed · `9b873e03`.
+- **P3** — 2026-11-08 23:10, step-id pins landed, observed red · `168d4b16`.
+- **P4** — 2026-11-08 23:15, offline step + DEPS + GATE_INVENTORY row + crate changeset · `e0b03e5d`.
+- **P5** — 2026-11-08 23:20, crate RED suite landed, observed red (2 fail of 19) · `1bdcbb2a`.
+- **P6** — 2026-11-08 23:30, writer's already-registered check + grammar/skill prose · `2e80db4f`.
+- **P7** — 2026-11-08 23:35, budget re-base · `656205f3`; pi changeset · `2da2bbfa`.
+- **P8** — 2026-11-08 23:50, live-tree fixes (maxBuffer ceiling, like-for-like carrier diff) · `fc6b20ca`.
+- **E2** — 2026-11-08, `bun test scripts/local-gate.test.mjs scripts/release-workflows.test.mjs` at `168d4b16` without the step · 62 pass 3 fail (the three step-id pins red — O8's red half).
+- **E3** — 2026-11-08, `bun test packages/agentic-workflow/test/journal.write.test.mjs` at `1bdcbb2a` · 17 pass 2 fail (the two already-registered cases red; the fallback-slug differential pin green before and after — O10).
+- **E4** — 2026-11-08, `bun test scripts/log-immutability.test.mjs` at `9b873e03` · exit 0 · 16 pass 0 fail (O1–O6, including the §2 reproducer pair).
+- **E5** — 2026-11-08, the two pin suites after `e0b03e5d` · exit 0 · 65 pass 0 fail (O7/O8 green half).
+- **E6** — 2026-11-08, crate suites at `2e80db4f`: `bun run test` · 493 pass 0 fail; `bun run test:node` · 494 pass 0 fail (O9/O10).
+- **E7** — 2026-11-08, the gate's first foreground run on the live tree found two fixture-invisible defects (spawnSync's 1 MiB maxBuffer vs the 1,054,227-byte real journal; a tracked `.gitkeep` misread as a lost entry) — fixed at `fc6b20ca`, suite 18 pass 0 fail, live gate PASS over this branch's own range.
+- **G1** — 2026-11-08, `node scripts/run-root-suite.mjs` · exit 0 · 92/92 suites PASS (twice: at `656205f3` and after `fc6b20ca`).
+- **G2** — 2026-11-08, `bun scripts/local-gate.mjs --only log-immutability,journal-carrier-check,docs-generated-projection,version-parity-content` · exit 0 · `PASS — 4 step(s)`.
+- **G3** — 2026-11-08, `node scripts/local-gate.mjs --list` lists `log-immutability` (O7) · `node scripts/version-parity-gate.mjs --content` · exit 0 after both changesets · `node scripts/docs-generate.mjs --check` · exit 0 · `bun scripts/check-skill-context.mjs` + `--documents` · PASS · `bun scripts/skill-lint.mjs` · 0 findings · `bun scripts/unit-route.mjs --triage 468-log-immutability` · exit 0 · `bun scripts/phase-lint.mjs docs/fix/468-log-immutability/SPEC.md` · verdict PASS.
 
 ## Next
 
-P2 — land the gate implementation, green for the red suite.
+The owner's external verification — the diff (`5ba1d670..fc6b20ca` plus the
+handoff summary) is handed over unapproved; no self-issued verdict replaces it.
+After the verdict: the PR to `main` (`Closes #468`) stays the owner's call —
+the branch has already been merged once locally, so the delivery shape is the
+owner's decision.
 
 ## References
 
