@@ -7,6 +7,10 @@
  *
  * Any failure path (spawn error, non-JSON, invalid JSON, schema invalid,
  * degradations present) returns `{ ok: false, refusal: "sensor-degraded", detail }`.
+ * A run that parsed and validated an envelope but carries degradations also
+ * returns that envelope as an additive `envelope` field, so a consumer (issue
+ * #274's tool surface) can attach the data to the error instead of losing it;
+ * the refusal contract itself is unchanged.
  */
 
 import { spawn } from "node:child_process";

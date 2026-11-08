@@ -304,9 +304,15 @@ const DIFF_GUARD_RESULT_SCHEMA: Record<string, unknown> = {
     deletions: { type: "integer" },
     maxLines: { type: "integer" },
     maxFiles: { type: "integer" },
-    breach: { type: "boolean" },
-    base: { type: ["string", "null"] },
-    error: { type: ["string", "null"] },
+    // The script reports a breach as `true`, and an unmeasurable run as the
+    // reason string (`breach: error || …`, diff-guard.mjs) — the declared
+    // contract states the script's real output, never a normalized copy of it.
+    breach: {
+      type: ["boolean", "string"],
+      description: "true/false on a measured run; the reason string when the run could not measure.",
+    },
+    base: { type: ["string", "null"], description: "The measured base revision, null when the run failed." },
+    error: { type: ["string", "null"], description: "Present only on an unmeasurable run." },
   },
 };
 
@@ -356,13 +362,25 @@ const AUDIT_PR_GATE_RESULT_SCHEMA: Record<string, unknown> = {
   },
 };
 
-const SNAPSHOT_VERIFY_RESULT_SCHEMA: Record<string, unknown> = {
+const SNAPSHOT_MISSING_RECEIPT_SCHEMA: Record<string, unknown> = {
   type: "object",
   additionalProperties: false,
-  required: ["current", "stage", "unit", "observedDigest", "digestMatches", "verdictIsPass"],
+  required: ["current", "code", "stage", "unit", "seen"],
   properties: {
     current: { type: "boolean" },
-    code: { type: "string" },
+    code: { type: "string", description: "The verifier's reason code (missing-receipt-snapshot)." },
+    stage: { type: "string" },
+    unit: { type: "string" },
+    seen: { type: "array", description: "The receipts the verifier saw for this stage; empty when there are none." },
+  },
+};
+
+const SNAPSHOT_FRESHNESS_REPORT_SCHEMA: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["current", "stage", "unit", "receipt", "observedDigest", "digestMatches", "verdictIsPass", "structural"],
+  properties: {
+    current: { type: "boolean" },
     stage: { type: "string" },
     unit: { type: "string" },
     receipt: { type: "object" },
@@ -372,6 +390,13 @@ const SNAPSHOT_VERIFY_RESULT_SCHEMA: Record<string, unknown> = {
     structural: { type: "object" },
     seen: { type: "array" },
   },
+};
+
+const SNAPSHOT_VERIFY_RESULT_SCHEMA: Record<string, unknown> = {
+  // Two report shapes leave the verifier: a snapshot it could bind to a receipt
+  // (fresh or stale — `current` tells them apart) and, on exit 3, the bare
+  // missing-receipt report that carries no digest at all.
+  oneOf: [SNAPSHOT_FRESHNESS_REPORT_SCHEMA, SNAPSHOT_MISSING_RECEIPT_SCHEMA],
 };
 
 /** The phase-lint block parser: the byte-stable grammar `phase-lint.mjs` prints. */
@@ -529,7 +554,7 @@ function auditPrGateSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
       type: "object",
       additionalProperties: false,
       properties: {
-        pr: { type: "string", description: "The PR number or owner/name; forge-read when omitted and no other source is given." },
+        pr: { type: "string", description: "The PR number to evaluate; it must belong to the repository at the session's cwd." },
         head: { type: "string", description: "The head SHA to judge, when it cannot be read from the PR." },
       },
     },
@@ -540,7 +565,11 @@ function auditPrGateSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
           name: "agentic_workflow_audit_pr_gate",
           parse: parseJsonObject,
           spawn: (bin, p) => {
-            const args = ["evaluate", "--repo", cwd];
+            // The spawn cwd *is* the project under work: the script reads git
+            // there and `gh` infers the repository from it. Passing that cwd as
+            // a forge scope was refused (`gh` wants [HOST/]OWNER/REPO) and turned
+            // every run into `gate-unavailable` before the script could answer.
+            const args = ["evaluate"];
             const pr = optionalString(p, "pr");
             if (pr !== undefined) args.push("--pr", pr);
             const head = optionalString(p, "head");
@@ -581,8 +610,7 @@ function snapshotVerifySpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
         sourceRevision: { type: "string", description: "The expected source revision (40-hex)." },
       },
     },
-    outputSchema: { oneOf: [SNAPSHOT_VERIFY_RESULT_SCHEMA, degradedSchema("gate-unavailable")] },
-    async execute(params, cwd) {
+    outputSchema: { oneOf: [SNAPSHOT_VERIFY_RESULT_SCHEMA, degradedSchema("gate-unavailable")] },    async execute(params, cwd) {
       return runGateTool(
         {
           name: "agentic_workflow_snapshot_verify",
