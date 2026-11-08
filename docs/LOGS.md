@@ -4944,3 +4944,17 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merge PR #456 into feat/413-pi-seam-hooks — resolved all conflicts with origin/feat/413-pi-seam-hooks and origin/main, kept both sides' work, repaired P11 journal fragment to pass the pre-push gate
 - **Decisions:** Integrated remote branch by merging (not rebasing) to preserve all 7 commits without force-push (repo rules forbid agent force-push). Resolved 4 doc conflicts by keeping both sides' work: LOGS.md (P11 + N3 entries), external-verify.md (delta receipt + N3 section), planning-obligations.md (renumbered O26→O28 to include both batches), SEAM_HOOKS.md (kept both shutdown-bounded and degradation bullets). Merged origin/main as append-only verbatim union in LOGS.md per de95a237 precedent. Repaired P11 journal fragment (missing session slug in name, wrong entry block shape) so the fragment grammar test passes and local-gate turns green.
 - **Next:** Owner merge PR #456 against main — PR is MERGEABLE/CLEAN with 31 commits. After merge, update roadmap row 112 from 'done · #456' to the changeset release.
+
+## 2026-11-08T11:23:41Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** ROADMAP.md: merge issue ids as feature/fix numbers (owner decision 2026-11-07), register 11 new issue rows (features 434/436/437/438/441/443/444/427/388, fixes 452/424), mark 99/100 as folded
+- **Decisions:** Changed roadmap numbering convention: feature/fix row numbers ARE the GitHub issue id (not a second sequential number). One truth rule: row number, folder, branch, receipts all carry the issue id. Historical rows 01-115 keep old numbers (never reused). Also registered 11 open issues that lacked roadmap rows and absorbed rows 99/100 into 437 (review-findings-corpus).
+- **Next:** Triaje de los 11 nuevos issues (unit-lane --from-issue) y consolidación de las ramas feat/366 y feat/413
+
+## 2026-11-08T11:23:59Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Created and fixed worktrees for issues 432, 435, 440, 429, plus fixed Serena .serena/project.yml parsing
+- **Decisions:** Fixed .serena/project.yml language_servers indentation (was bare `- typescript`, required 2-space indent for serena-readiness.ts parser to detect them)
+- **Next:** Work on the 4 worktree branches (feat/432-model-memory-tier-0, feat/435-project-charter, feat/440-product-audit-rescope, fix/429-log-session-extension)
