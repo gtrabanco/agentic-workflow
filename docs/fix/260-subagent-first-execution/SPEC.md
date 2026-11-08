@@ -297,13 +297,32 @@ frozen ledgers are the plan; no Relay packet is created.)
 - **L2** — 2026-11-08, the owner's three apply answers, verbatim: substrate —
   "selected piew-dependency"; sequencing — "selected 201-first"; delivery —
   "selected single-pr".
-- **P1** — 2026-11-08, #201's merged surface landed as the base (12 commits,
-  local gate PASS on its branch per its E16) · merge commit 203a9875.
-- **P2** — 2026-11-08, unit ledgers frozen (this commit).
+- **E1** — 2026-11-08, `bun scripts/ceremony.mjs tier classify --paths skills/unit-lane skills/execute-phase packages/agentic-workflow/src packages/pi-agentic-workflow/src/config` · exit 0 · `tier: standard`, `reason_kind: executable-content`, `signals: []`.
+- **E2** — 2026-11-08, `bun scripts/unit-route.mjs --triage 260-subagent-first-execution` · exit 0 · steps plan/implement/tests/evidence/review/docs; block pasted into `## Triaged steps` (the relay bootstrap hint declined by the apply-request's inline-surgery rule).
+- **P1** — 2026-11-08, #201's merged surface landed as the base (12 commits, gate PASS on its branch per its E16) · merge 203a9875.
+- **P2** — 2026-11-08, unit ledgers frozen (SPEC + planning-evidence + planning-obligations) · 4665f88f.
+- **P3** — 2026-11-08, document verifier red-first: suite red b3322a6c (missing module) → green c74ce777 (`verify` + CLI; 12 tests).
+- **D1** — 2026-11-08, disclosed checker decision found on the published 201 doc: the fix-lane templates' `## Acceptance criteria` is a tolerated section in the re-cut shape (feature 61 made it the canonical acceptance source; the #308 shape list predates it) — recorded on the checker, never on the shape grammar; `Evidence`/`Progress log` remain half-migration signals.
+- **D2** — 2026-11-08, disclosed checker decisions found on the published 201 ledger: cells split on unescaped pipes (`\|` is markdown escaping), and a status cell of `verified — <evidence pointer>` closes (the token boundary, not equality).
+- **P4** — 2026-11-08, resource layer red-first: suite red 3718268b (missing module) → green c0f04c66 (`detect` + `admit` + CLI; 13 tests); AC3's byte-stability wording corrected to same-readings (live MemAvailable moves between runs) with the ac-hash re-stamped.
+- **P5** — 2026-11-08, pi config `subagents` red-first: suites red 98bef6b2 (8 failing) → green dc973305 (types/schema/merge/defaults; 632 pass bun + node); the `default-inherit` shipped-shape pin records the new key (the 201 precedent) and the `subagents` key validates strictly (parallelism serial|auto|positive-int; cap strings "<n> of <m> <unit>").
+- **P6** — 2026-11-08, substrate adoption: piew 6.3.0 pinned exact, the subagents extension registered through the node_modules resource path, README documents substrate + disable knob + `subagents` key · ab678011.
+- **E3** — 2026-11-08, PE-011 closed: `node -e 'import("./node_modules/pi-extensible-workflows/dist/subagents/index.js")'` → import ok; the dist's own tool table names exactly `subagents_run`, `subagents_inspect`, `subagents_steer`, `subagents_stop`, `subagents_retry` (dist/subagents/index.js:5787–5791, 10754–10791); `subagents_run` takes `model: "provider/model:thinking or alias[:thinking]"`. Only the subagents extension is registered.
+- **P7** — 2026-11-08, orchestrate prose: `skills/unit-lane/references/ORCHESTRATE.md` (the contract's owner) + the declared-mode pointers in both SKILL.md files; route ceilings re-based with the growth source declared · df3ac095.
+- **P8** — 2026-11-08, wiring: roadmap row 68 re-cut by `roadmap docs/ROADMAP.md rowUpsert` (findRow re-emit, status "in-progress · carried by fix #260"); the `## Fixes` row is a disclosed hand edit (no row-writer for the 4-column shape, the 201 D3(a) precedent); changeset; `docs-generate` regenerated the projection · 5f0c2fa0.
+- **E4** — 2026-11-08, `bun scripts/skill-lint.mjs` · exit 0 · PASS; `bun scripts/check-skill-context.mjs` · exit 0 · PASS (29 skills); `--routes` · exit 0 · PASS (14 routes, after the declared re-basis).
+- **P9** — 2026-11-08, gate extension red-first: the pi-compat guard's every-dependency-is-a-sibling premise refused the first third-party dependency; suite red 71e501a8 → guard extended (third-party deps install at their declared spec; @gtrabanco deps without a sibling still refuse) · 9dab6821.
+- **E5** — 2026-11-08, differential vs `git archive 203a9875` in `mktemp -d` (scratch removed after): `memory probe --json`, `journal name --kind mechanical`, `log render --facts -` (malformed), `resolve-passes` golden — stdout/exit **SAME** in all four.
+- **D3** — 2026-11-08, disclosed live-tree-guard catch: the foreground `resources detect --memory-cap "1 of 64 GB"` run exposed the CLI storing kebab-case flags under literal keys (`memory-cap`) while the caps block read `memoryCap` — the operator's cap silently dropped and the envelope derived "max". Fixed red-then-green: the suite gained the missing CLI flag layer, the parser maps each flag to the key the code reads · aaacc4d4.
+- **E6** — 2026-11-08, foreground: `agentic-workflow verify docs/fix/201-operator-approved-pass-routing/SPEC.md` · exit 0 · VERIFY PASS (O6); `agentic-workflow resources detect --json` · exit 0 · envelope 11.4 GB effective / 6 cores / derived max, and `--memory-cap "1 of 64 GB"` → effective 1 GB / derived serial (O3); `resources admit --expect '{}'` · exit 2 · refusal names expected_duration + requirements (O4); the anti-retry foreground run: allow → receipt flipped to bound-kill → identical re-run refused exit 2 naming the prior task (O4, scratch record dir removed after).
+- **E7** — 2026-11-08, `bun scripts/local-gate.mjs` · exit 0 · **PASS — 13 step(s) in 149s** at the final tree.
+- **E8** — 2026-11-08, Engram persistence at the unit boundary: the unit's goal, ACs and discoveries saved (observation id 2577, topic key `unit-260-subagent-first-execution`); recallable via the topic key (O12; AC8).
+- **E9** — 2026-11-08, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/260-subagent-first-execution/SPEC.md` · exit 0 · PASS, 0 violations (O13).
+- **E10** — 2026-11-08, `bun test packages/agentic-workflow/test/` at the final tree · exit 0 · 515 pass · 0 fail (crate suites incl. verify, resources, resolve-passes).
 
 ## Next
 
-P2 — the document verifier, red-first.
+External verification by the owner (§8 handoff); the single PR closes #260.
 
 ## References
 
