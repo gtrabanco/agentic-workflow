@@ -159,15 +159,21 @@ classify` over the planned paths.)
 
 ## Known pre-existing issues
 
-- The strict validator's unknown-key message for the config root lists the
-  allowed keys inline (schema.ts `validateConfig`) — it already drifts from
-  `ROOT_KEYS` by omitting `autoLogSession` (`does-not-affect`: this unit adds
-  `passes` to both and pins the rendered-facts row so the prose cannot drift
-  silently — the rendered-facts gate recomputes it).
+- The strict validator's unknown-key message for the config root listed the
+  allowed keys inline (schema.ts `validateConfig`) and had already drifted
+  from `ROOT_KEYS` by omitting `autoLogSession` — **repaired in this unit**
+  (the message is now derived from `ROOT_KEYS`, Log D4), so the prose can no
+  longer drift.
 - `resolve-passes` cannot probe model availability/auth (that is runtime
   information a CLI does not have) — `does-not-affect`: the resolver emits
   declared references; availability failure at spawn time is S3's degrade
   path.
+- The budgets emitter (`agentic-workflow budgets`, `ceilingRebase`) writes
+  `estimateMax`/`linesMax` while the route checker reads
+  `routeEstimateMax`/`routeLinesMax` — `affects` this unit's budget re-basis
+  only in that the route keys needed a disclosed hand edit (Log D3b); the
+  emitter/checker drift itself is pre-existing and reported to the owner as a
+  finding (route: owner decision, not folded here — inline application).
 
 ## Acceptance criteria
 
@@ -334,6 +340,31 @@ verification is the owner's).
   > The **`passes` config + `resolve-passes`** for spawned review passes: operator-defined named passes (which model/thinking level each `review-change --adversarial N` reviewer uses), resolution order, and the approval flow when a configured route is unavailable.
 - **E1** — 2026-11-08, `bun scripts/ceremony.mjs tier classify --paths <planned paths>` · exit 0 · `tier: standard`, `reason_kind: executable-content`, `signals: []`.
 - **E2** — 2026-11-08, `bun scripts/unit-route.mjs --triage 201-operator-approved-pass-routing` · exit 0 · 9 steps, none skipped; block pasted into `## Triaged steps`.
+- **E3** — 2026-11-08, `bun test packages/pi-agentic-workflow/test/config-schema-passes.test.mjs packages/pi-agentic-workflow/test/config-merge-passes.test.mjs` · exit 0 · 14 pass · 0 fail (O1, O2).
+- **E4** — 2026-11-08, `bun test packages/agentic-workflow/test/resolve-passes.test.mjs` · exit 0 · 19 pass · 0 fail (O3–O6, O10; includes the golden fixtures and the refusal states).
+- **E5** — 2026-11-08, foreground golden run: `agentic-workflow resolve-passes --global <mktemp fixture>` · exit 0 · `review-code → pinned/passes.review-code`, `verify → auto`, `classify → inherit → pinned/commands.review-change`, `review-security` and `debt → pinned/commands.execute-phase` (cheap tier), an unconfigured pass with nothing declared → `inline/floor` with reason (O3, O4, O5, O10). Scratch fixture removed after the run.
+- **E6** — 2026-11-08, `bun scripts/skill-lint.mjs` · exit 0 · PASS; `bun scripts/check-skill-context.mjs` · exit 0 · PASS (29 skills); `--routes` · exit 0 · PASS (14 routes) (O7).
+- **E7** — 2026-11-08, `rg -c "Until it lands" skills/review-change/references/ADVERSARIAL_SETUP.md` · exit 1 · zero matches — the superseded sentence is gone (O8).
+- **E8** — 2026-11-08, `bun run test` in `packages/agentic-workflow-schema` · exit 0 · 775 pass · 0 fail (O9).
+- **E9** — 2026-11-08, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass · 0 fail (O9).
+- **E10** — 2026-11-08, `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 624 pass · 0 fail (O11, O14).
+- **E11** — 2026-11-08, `bun run test` in `packages/agentic-workflow` · exit 0 · 488 pass · 0 fail (O11, O13).
+- **E12** — 2026-11-08, differential vs `git archive main` in `mktemp -d`: `memory probe --json`, `log render --facts -` (valid + malformed), `journal name --kind mechanical`, unknown service — stdout/stderr/exit **SAME** in every case; the one observed `journal name` difference was the branch-derived input (archive is detached HEAD), identical with `--branch` pinned (O11).
+- **E13** — 2026-11-08, `bun scripts/docs-generate.mjs --check` · exit 0 · PASS (O12).
+- **E14** — 2026-11-08, `agentic-workflow roadmap check docs/fix/201-operator-approved-pass-routing/SPEC.md` · exit 0 · PASS, 0 violations (O12).
+- **E15** — 2026-11-08, `bun run test:node` in `packages/agentic-workflow` · exit 0 · 489 tests, 0 fail (O13).
+- **E16** — 2026-11-08, `bun scripts/local-gate.mjs` · exit 0 · **PASS — 13 step(s) in 146s**.
+- **D1** — 2026-11-08, owner-decision interpretation (S1b × S1a): the 2026-10-12 fail-closed default and the issue body's inline rule are both honored — the cheap tier (`passes.default`, else `commands.execute-phase`) is the resolution floor while configured, and the inline-at-orchestrator row is the recorded last resort when nothing is configured; never a spontaneous model choice. Flagged in the handoff for the owner's verdict.
+- **D2** — 2026-11-08, the `suggested_tier` amplification (2026-09-29) is parked as a non-goal per the 2026-11-03 re-scope cut; PE-011 carries it as the owner question in the handoff.
+- **P1** — 2026-11-08, SPEC + planning ledgers cut and frozen · 6c97dd22.
+- **P2** — 2026-11-08, `PASS_NAMES` published (red fb1dfcb1 → green df7adb70).
+- **P3** — 2026-11-08, pi config `passes` validation + merge (red 52e666e2 → green 5a16780b).
+- **P4** — 2026-11-08, crate `resolve-passes` subcommand (red f8f24e3a → green fc9fce5c).
+- **P5** — 2026-11-08, skill contract prose + normative-surfaces pin · 00df30e1.
+- **P6** — 2026-11-08, docs, indexes via emitters, changeset, budget re-basis · a3975849, 201226f0, 6e7228ae.
+- **P7** — 2026-11-08, verification: local gate PASS (E16), obligations closed, handoff to the owner.
+- **D3** — 2026-11-08, hand edits disclosed (no emitter owns these surfaces): (a) the `## Fixes` table row for #201 — the fix index has no row-writer; (b) the four `routes[].routeEstimateMax`/`routeLinesMax` keys and `policy.declared` re-basis #13 in `SKILL_CONTEXT_BUDGETS.json` — the budgets emitter (`ceilingRebase`) writes `estimateMax`/`linesMax`, which the route checker does not read; (c) `AGENTS.md`'s pinned `machineLines: 117` — the documents entry has no emitter. Item (b) is a pre-existing emitter/checker drift, reported to the owner as a finding, not fixed here.
+- **D4** — 2026-11-08, in-scope repairs of recorded pre-existing issues: the config root's unknown-key message is now derived from `ROOT_KEYS` (its inline list had already drifted — `autoLogSession` was missing, SPEC Known pre-existing issues row 1), and the projection suite's README table slice is scoped to its own section (assertions unchanged) because the README legitimately gained a second vocabulary table.
 
 ## Next
 
