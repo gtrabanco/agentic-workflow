@@ -117,6 +117,8 @@ import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from 
 import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
+import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
+import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
 import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -362,7 +364,7 @@ async function runDocOpPositional(g) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal|resolve-passes|verify> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal|resolve-passes|verify|resources> ...");
   process.exit(1);
 }
 
@@ -482,6 +484,73 @@ switch (command) {
     }
     process.stdout.write(`VERIFY PASS — ${JSON.stringify({ ...result, violations: [] }, null, 2)}\n`);
     process.exit(0);
+    break;
+  }
+
+  // ── resources — the trial-envelope + admission layer (issue #260) ──
+  case "resources": {
+    const sub = restArgs[0];
+    if (sub !== "detect" && sub !== "admit") {
+      sensorRefuse("RESOURCES", `unknown subcommand "${sub ?? ""}" (usage: resources detect [caps…] | resources admit --task <id> --expect <json> [--record-dir <dir>])`);
+    }
+    const flags = {};
+    const positional = [];
+    for (let i = 1; i < restArgs.length; i++) {
+      const arg = restArgs[i];
+      if (arg === "--task" || arg === "--expect" || arg === "--record-dir") {
+        if (i + 1 >= restArgs.length) sensorRefuse("RESOURCES", `${arg} requires a value`);
+        flags[arg.slice(2)] = restArgs[++i];
+      } else if (arg === "--memory-cap" || arg === "--thread-cap" || arg === "--parallelism") {
+        if (i + 1 >= restArgs.length) sensorRefuse("RESOURCES", `${arg} requires a value`);
+        flags[arg.slice(2)] = restArgs[++i];
+      } else if (arg === "--json") {
+        // the receipt is always JSON; the flag exists for explicitness
+      } else {
+        sensorRefuse("RESOURCES", `unknown argument "${arg}"`);
+      }
+    }
+    const caps = {};
+    if (flags.memoryCap !== undefined) caps.memoryCap = flags.memoryCap;
+    if (flags.threadCap !== undefined) caps.threadCap = flags.threadCap;
+    if (flags.parallelism !== undefined) {
+      caps.parallelism = flags.parallelism === "serial" || flags.parallelism === "auto"
+        ? flags.parallelism
+        : Number(flags.parallelism);
+    }
+    try {
+      const envelope = detectHost({ caps: Object.keys(caps).length > 0 ? caps : null });
+      if (sub === "detect") {
+        process.stdout.write(`${JSON.stringify(envelope, null, 2)}\n`);
+        process.exit(0);
+      }
+      // admit
+      if (!flags.task) sensorRefuse("RESOURCES", "admit requires --task <id>");
+      if (flags.expect === undefined) sensorRefuse("RESOURCES", "admit requires --expect <json>");
+      let expect;
+      try {
+        expect = JSON.parse(flags.expect);
+      } catch (error) {
+        sensorRefuse("RESOURCES", `--expect is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      const verdict = admitTrial({
+        task: flags.task,
+        expect,
+        envelope,
+        recordDir: flags.recordDir ?? null,
+      });
+      if (verdict.verdict !== "allow") {
+        process.stderr.write(
+          `RESOURCES REFUSAL — ${verdict.reason}\n` +
+            `  receipt: ${JSON.stringify(verdict.receipt)}\n`,
+        );
+        process.exit(2);
+      }
+      process.stdout.write(`${JSON.stringify(verdict, null, 2)}\n`);
+      process.exit(0);
+    } catch (e) {
+      if (!(e instanceof ResourcesError)) throw e;
+      sensorRefuse("RESOURCES", e.message);
+    }
     break;
   }
 

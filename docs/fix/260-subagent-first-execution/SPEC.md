@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: large
-ac-hash: 0e439962920e2e2c4fcaabdba366ebaf96368848e82f08e6600b4a5bf3610524
+ac-hash: b40f4a04c4be19d6654b7545eaf6f9baf7c21e2509ea6345b78a5393a6451038
 ---
 
 # fix/260-subagent-first-execution
@@ -208,7 +208,7 @@ packages/pi-agentic-workflow/src/config`, exit 0, 2026-11-08.)
 - [ ] AC1 (read-verified, S2+S3): the orchestrate contract is in the two
       executing skills — `rg -n "never executes|orchestrate" skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` → ≥1 match each; the delegate brief names exact target files, exact gate command, exact expected values, `expected_duration` and resource `requirements`; verification is "run the gate and read the diff — never by trusting the subagent's summary"; and `bun scripts/check-skill-context.mjs` exits 0 after the edits.
 - [ ] AC2 (command-verified, S4): `rg -n '"pi-extensible-workflows"' packages/pi-agentic-workflow/package.json` → the exact `6.3.0` pin; `rg -n 'pi-extensible-workflows' packages/pi-agentic-workflow/package.json` shows the `pi.extensions` registration path into `node_modules`; `bun install` exits 0; the registration loads only the subagents extension (grep of the package.json `pi` block — the engine/starter/trajectory extensions are absent).
-- [ ] AC3 (command-verified, S5): `agentic-workflow resources detect --json` exits 0 and prints the host envelope (memory total/available, cores, cgroup limit if any, derived parallelism); two runs on the same host are byte-identical; with caps forced low the derived parallelism is `serial`.
+- [ ] AC3 (command-verified, S5): `agentic-workflow resources detect --json` exits 0 and prints the host envelope (memory total/available, cores, cgroup limit if any, derived parallelism); the envelope is byte-stable for the same readings (asserted on injected readings — live `MemAvailable` moves between runs by nature, so the CLI assertion is structural), and with caps forced low the derived parallelism is `serial`.
 - [ ] AC4 (command-verified, S6): `agentic-workflow resources admit` refuses a spawn whose brief carries no expectations (exit 2, reason names the missing field), refuses a requirement over the declared cap (exit 2, receipt names requirement vs cap), admits a fitting bounded trial (exit 0), and blocks an identical re-run after a recorded bound-kill receipt unless the task spec changes (exit 2, `receipt` names the prior task).
 - [ ] AC5 (command-verified, S5): the pi package suite covers the `subagents` key — valid shapes accepted (`parallelism: "serial"|"auto"|<int>`, cap strings), unknown inner keys rejected, merge carries the key project-over-global; `cd packages/pi-agentic-workflow && bun run test` exits 0.
 - [ ] AC6 (command-verified, S7): `agentic-workflow verify docs/fix/201-operator-approved-pass-routing/SPEC.md` exits 0 (a real published unit doc passes); a fixture doc (a) missing a required section, (b) carrying an unclosed (`planned`) obligations row, or (c) carrying a fabricated receipt mark (head sha absent from git, or a mark dated in the future) exits 2 with `VERIFY REFUSAL —` naming each violation — reproducers for the 2026-09-24 fabricated receipt and the fix-258 unclosed-ledger failures.
