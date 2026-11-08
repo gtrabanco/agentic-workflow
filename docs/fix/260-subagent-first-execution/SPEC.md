@@ -319,10 +319,11 @@ frozen ledgers are the plan; no Relay packet is created.)
 - **E8** — 2026-11-08, Engram persistence at the unit boundary: the unit's goal, ACs and discoveries saved (observation id 2577, topic key `unit-260-subagent-first-execution`); recallable via the topic key (O12; AC8).
 - **E9** — 2026-11-08, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/260-subagent-first-execution/SPEC.md` · exit 0 · PASS, 0 violations (O13).
 - **E10** — 2026-11-08, `bun test packages/agentic-workflow/test/` at the final tree · exit 0 · 515 pass · 0 fail (crate suites incl. verify, resources, resolve-passes).
+- **D4** — 2026-11-08, owner delivery decision (answer to the #464 state report): "Esperar a que #464 se mergee, luego se incorporan los cambios en esta PR, se reconcilian y se revisa si se ha roto algo o falta algo por integrar o hay que modificar algo. Luego review independiente y si no hay findings, merge manual hecho por mi". Delivery order: (1) #464 merges first (owner's PR, owner's verdict — this branch never pushes to it); (2) main is integrated into `feat/260-subagent-first-execution` and reconciled — the branch already carries #201's content via merge 203a9875, so the integration is expected to be content-neutral or minimal, verified by the differential check; (3) reconcile-check for breakage or missing integration; (4) an independent review pass — the owner's explicit order here overrides this apply-request's inline-surgery rule for that one pass; (5) the owner merges manually. The prior handoff report's claim that #201 was "sin PR" was wrong (PR #464 existed, opened by the #201 session) — corrected to the owner when the state was re-checked.
 
 ## Next
 
-External verification by the owner (§8 handoff); the single PR closes #260.
+Wait for PR #464 (#201) to merge — the owner's call — then integrate main into this branch, reconcile (D4's order), run the declared verification, and hand to the independent review pass.
 
 ## References
 
