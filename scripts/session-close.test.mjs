@@ -387,10 +387,13 @@ test("end to end (carrier): a malformed name is refused before anything is stage
   );
   const result = run(dir, ["close"]);
   assert.equal(result.status, 1, result.stdout);
-  assert.match(result.stderr, /unparseable fragment name/u);
+  // The today-shape parses back with the writer label folded into the branch
+  // slug (`main-manual`), so the refusal is the name/heading contradiction —
+  // the same predicate, one step earlier than the aggregator.
   assert.match(result.stderr, /main-manual-narrative-local\.md/u);
+  assert.match(result.stderr, /name and bytes must agree/u);
   assert.equal(git("rev-parse", "HEAD").stdout.trim(), before, "nothing was committed");
-  assert.match(git("status", "--porcelain").stdout, /^\?\? \.agentic-workflow\/journal\//mu, "the fragment is still untracked, not staged");
+  assert.match(git("status", "--porcelain").stdout, /^\?\? \.agentic-workflow\//mu, "the fragment is still untracked, not staged");
 });
 
 test("end to end (carrier): a non-newline-terminated body is refused before anything is staged (issue #452)", () => {
