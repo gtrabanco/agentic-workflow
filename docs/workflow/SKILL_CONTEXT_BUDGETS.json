@@ -123,7 +123,11 @@
       }
     },
     "log-session": {
-      "descriptionEstimateMax": 230
+      "descriptionEstimateMax": 230,
+      "mainEstimateMax": 3091,
+      "mainSources": {
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract loads the canonical TURN_CONTRACT.md (P9 migration); the loader line pushed the measured estimate over the flat default. Measured at the change by `bun scripts/check-skill-context.mjs`: 2810 est / 221 lines; ceiling re-based to ceil(2810 x 1.10) = 3091 (lines stay under the flat default), reason declared (single-owner migration)."
+      }
     },
     "audit-pr": {
       "mainEstimateMax": 3294,
@@ -139,9 +143,10 @@
     },
     "orchestration-envelope": {
       "descriptionEstimateMax": 170,
-      "referenceEstimateMax": 2573,
+      "referenceEstimateMax": 3020,
       "referenceSources": {
-        "fix 258 / #258 harden-needs-input": "the open-questions@1 grammar (the needs-input halt: header/fields/fail-block/route, produced by scripts/needs-input.mjs) grew TURN_CONTRACT.md from the measured 2200 (the default reference ceiling) to 2339 est; ceiling re-based to ceil(2339 x 1.10) = 2573. This per-skill referenceEstimateMax bounds every reference file this skill loads; no per-reference ceiling exists in schemaVersion 1."
+        "fix 258 / #258 harden-needs-input": "the open-questions@1 grammar (the needs-input halt: header/fields/fail-block/route, produced by scripts/needs-input.mjs) grew TURN_CONTRACT.md from the measured 2200 (the default reference ceiling) to 2339 est; ceiling re-based to ceil(2339 x 1.10) = 2573. This per-skill referenceEstimateMax bounds every reference file this skill loads; no per-reference ceiling exists in schemaVersion 1.",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the read-only profile (P2) added the skills-that-edit-nothing substitution prose to TURN_CONTRACT.md, growing it to a measured 2745 est; ceiling re-based to ceil(2745 x 1.10) = 3020, reason declared (single-owner migration)."
       }
     },
     "pre-execution-review": {
