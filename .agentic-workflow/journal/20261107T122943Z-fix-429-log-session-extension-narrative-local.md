@@ -1,6 +1,0 @@
-## 2026-11-07T12:29:43Z — fix/429-log-session-extension — manual
-- **Commits:** 20 (`fbb8ae84…d9350e64`)
-- **Files:** 25 files
-- **Summary:** Apply #429: anchor /log-session as a Pi extension command, repair the journal carrier fragment that reddens the crate suite across all branches, and open PR #448 for external verification.
-- **Decisions:** 1) /log-session became an extension command (log-session-invocation.ts + log-session-command.ts) so the invocation is code-owned, not model-prose. 2) The malformed fragment 20261107T001707Z-direction-review-odd-hybrid-design-notes-manual.md was renamed to 20261107T001707Z-main-narrative-local.md to fix the crate suite on every branch; then aligned to the same target chosen by sibling PRs #446/#447 to avoid a merge conflict (bytes untouched, blob 0de3f888). 3) No self-review machinery ran; all verification was local (root-suite exit 0, pi suite 555/0, both crate suite legs). 4) CI's root-suite.yml manual run failed at pi-compat-guard (pre-existing TS2307 on shipped files); the failure hides the other 11 steps due to fail-fast.
-- **Next:** Owner reviews PR #448 and merges. If merged blockers appear, run fold-findings limited to those blockers then recheck the same rows.
