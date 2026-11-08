@@ -4107,6 +4107,7 @@ export {
   PROJECTION_HASH_ALGORITHMS,
   GUARD_VERDICTS,
   GUARD_REJECTION_REASONS,
+  PASS_NAMES,
 } from "./vocabularies.js";
 export type {
   ProjectionSeam,
@@ -4115,6 +4116,7 @@ export type {
   ProjectionHashAlgorithm,
   GuardVerdictKind,
   GuardRejectionReason,
+  PassName,
 } from "./vocabularies.js";
 export {
   PROJECTION_MANIFEST_CONTRACT_ID,

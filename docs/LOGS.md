@@ -5086,3 +5086,141 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Repaired both root-suite defects (F8 budget-case abort, F9 guide-split duplication) and stated the branch/PR rule once in AGENTS.md (F9 dedup)
 - **Decisions:** The split is by responsibility: budget owner asserts ceilings, guide-split keeps linkage; template/AGENTS.md, README principles and RELEASE.md are product surfaces whose consumer cannot reach this guide (the one exception the ownership rule allows — D11). Path-protection records now live in the unit's decisions.md (carrier the guard reads). D10 placement refactors left for their own unit.
 - **Next:** Owner reviews PR #459 for F8/F9/D11 and merges; then D10's placement refactors (gate-operations block, worktree section) as their own unit
+
+## 2026-11-08T19:41:18Z — feat/201-operator-model-routing — fix/201-operator-approved-pass-routing: passes config + resolve-passes applied inline
+- **Commits:** 12 (`0cb26ee2…6e7228ae`)
+- **Files:** 30 files
+- **Summary:** Applied issue #201 at the owner's inline-application procedure: the 2026-11-03 re-scoped scope only — PASS_NAMES published in the schema package (mirrored in the crate with provenance), the passes config key validated/merged in the pi package (inherit/auto/reference/chain, strict unknown-pass rejection, project-over-global), the resolve-passes crate subcommand emitting the fail-closed resolve-passes@1 chain (pass entry → default escape → cheap tier → recorded inline floor), and review-change's spawn contract resolving every pass from the resolved table before spawning. Red-first suites per rule, differential vs git archive main clean, local gate PASS 13 steps.
+- **Decisions:** D1: the 2026-10-12 fail-closed default (cheap tier) and the issue body's inline rule coexist — cheap tier is the floor while configured, the inline row is the recorded last resort; owner verdict requested. D2: the suggested_tier amplification parked as a non-goal per the re-scope cut; owner question. D3: hand edits disclosed where no emitter owns the surface (Fixes-table row, route* budget keys + policy.declared note, AGENTS.md machineLines) — the ceilingRebase/route-checker key drift is reported, not fixed.
+- **Next:** External verification by the owner (SPEC ## Next); PR closing #201 against main; the ceilingRebase route-key drift and the parked suggested_tier amplification await the owner's routing.
+
+## 2026-11-08T18:44:16Z — main — narrative
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Session 2026-11-08: merged fix/audit-1-doc-drift-repairs (PR #463), ran batch-scheduler plan relay, diagnosed why workflow-status and batch-scheduler execute ad-hoc JS (missing scripts in installed package), and posted scope gap comment in #352
+- **Decisions:** batch-scheduler ad-hoc JS: both scripts.mjs exist only in repo scripts/ not in npm crate bin surface (relay|doc|memory|log|journal|unit-doc|roadmap|changelog|budgets|manifest|section). Registered scope gap in #352. Owner decided #352 over #460 since #352 owns sensor migration question.
+- **Next:** Owner review #352 comment on scope addition; then route #352 or separate batch-scheduler fix unit
+
+## 2026-11-08T18:43:35Z — main — narrative
+- **Commits:** 2 (`92d3cde0…85d0852f`)
+- **Files:** .agentic-workflow/journal/20261108T182917Z-fix-audit-1-doc-drift-repairs-narrative-01a1bc27-6e0e-719c-b592-05cf01047257.md
+- **Summary:** Ran workflow-status and batch-scheduler sensors to assess pipeline state. The pipeline is blocked on ~100 reopened findings (all 'provenance unproven' — commits that claimed to resolve findings but didn't properly name them). Resolved that only 4 issues (#173, #201, #260, #274) can actually start in parallel across different worktrees, despite 13 lanes being reported. #460 (batch-scheduler fix) is serialised behind up to 5 issues in every lane it touches.
+- **Decisions:** Identified that '13 lanes' from batch-scheduler output overstates parallelism: issues repeat across lanes, so only 4 unique issues can launch in parallel. Distinguished between lanes (surface-level serialization) and truly independent issues.
+- **Next:** Choose one of the 4 parallel issues to work on: /unit-lane --from-issue 173, 201, 260, or 274; or triage a blocked issue (#307, #444) to unblock batch 2
+
+## 2026-11-08T18:29:17Z — fix/audit-1-doc-drift-repairs — narrative
+- **Commits:** 3 (`ba241005…0f761b1e`)
+- **Files:** 24 files
+- **Summary:** Cleaned up /tmp: removed ~7,600 orphaned git worktrees and test fixtures from audit-pr-gate-hygiene, ceremony, changeset-create, release-fixture, risk-tier-repo, telemetry, workflow-status-fixture, and related test directories that had accumulated across many sessions. Reclaimed 285K inodes (from 28% to 1%) and freed disk space from 1.3G to 38M.
+- **Decisions:** Identified that /tmp contained ~3,000+ active git worktrees (with .git/index) plus ~4,300 orphaned worktrees (without .git/index), all test fixtures from the agentic-workflow repo's test suites that were never cleaned up. Removed all test worktrees, leaving only system directories (node-compile-cache, jiti, systemd-private, gh-cli-cache, miniflare).
+- **Next:** Monitor /tmp inode usage periodically; the test suites should clean up their worktrees after use to prevent re-accumulation.
+
+## 2026-11-08T18:28:12Z — fix/audit-1-doc-drift-repairs — narrative
+- **Commits:** 2 (`ba241005…ed40930a`)
+- **Files:** 23 files
+- **Summary:** Product-audit 1: full product sweep across skills/, packages/, scripts/, docs/ and .github/. The audit found five findings (F1-F5); the owner directed that all five be repaired inline on a single branch rather than opening issues. F3 (portability prose duplication) and F4 (finder-contract duplication, 8 byte-identical Scope+Materiality blocks) were deduplicated by extraction to single-owner files under skills/orchestration-envelope/references/ and skills/review-implementation/references/ respectively, and the carrier skills updated to cite them. F1 was verified and widened to 18 rows (the true set of done feature rows whose units ran through the fix lane), each annotated carried by fix #N in the roadmap index. F2 was not reported per owner decision (dev-toolchain-only undici exposure). F5 was corrected as a false positive (links were quoted historical evidence in code spans, not live navigation links). Context route ceilings for review-change:* were re-based with the growth source declared. The audit report was written to docs/audits/1-2026-11-08.md, committed, and a correction block was appended. A changeset intent was created. All checks passed: local-gate PASS (13 steps), skill-lint PASS, check-skill-context PASS (29 skills, routes exit 0), docs-generate PASS.
+- **Decisions:** 1) The owner hypothesis that the flagged done rows were fix-lane units was confirmed 18 rows mapped 1:1 to docs/fix/<issue>-<topic>/ folders. 2) F2 undici advisories not reported per owner instruction exposure is dev-only and covered by the dependency-advisories gate step plus pin-watch. 3) F5 was a false positive from the audit link checker not stripping code spans no real broken links exist. 4) Portability preamble extracted to skills/orchestration-envelope/references/PORTABILITY.md with seven carriers citing it. 5) Finder contract extracted to skills/review-implementation/references/FINDER_CONTRACT.md the 8 finders cite it and the review-change:* route ceilings were re-based at declared re-basis with growth source.
+- **Next:** PR created gtrabanco/agentic-workflow#463 on branch fix/audit-1-doc-drift-repairs targeting main. Pushed and submitted with full verification results in the PR description.
+
+## 2026-11-08T17:12:29Z — fix/audit-docs-findings-sweep — narrative
+- **Commits:** 6 (`8baa5dd2…995b71cc`)
+- **Files:** 11 files
+- **Summary:** Audit-docs sweep + roadmap reconciliation + provenance-stamp row
+- **Decisions:** audit-docs: fixed roadmap rows 112 (merged-PR note) + bureaucracy-order tail; legacy Step 0/Step 8 and pre-tick ledgers are known noise under retired grammar carriers; opened issue #462 + row 462 for doc-provenance stamping (three-axis version: content grammar + carrier format + forensic tool/schema, major-to-major migration dispatch); corrected dependency graph: #352 got reciprocal soft relation to #462, #424 got triage note about feedback mechanism home colliding with #352's migration
+- **Next:** PR #461 needs the owner's external verdict and merge; row 462 (doc-provenance-stamp) on roadmap as idea; two laguna notes on #352 and #424
+
+## 2026-11-08T16:31:50Z — fix/audit-docs-findings-sweep — narrative
+- **Commits:** 2 (`8baa5dd2…e87e5b19`)
+- **Files:** 10 files
+- **Summary:** Audit-docs sweep on agentic-workflow: ran /audit-docs (FAIL, 10 findings), then repaired all findings in one batch. Created PR #461 on branch fix/audit-docs-findings-sweep.
+- **Decisions:** PORTABLE_PROMPT.md rewritten to the lane's live set (12 entries) with retired names only in an 'absorbed' map — no longer instructs creating skills that don't exist. Skill-context budgets are byte/line-fragile: audit-docs at exactly 240 lines, every added line breaks --routes; net-neutral rewrites are the only safe edit. Local-gate journal-carrier-check can fail transiently during concurrent workspace writes — re-run before believing it. check-progress-entry red on pre-tick done units is by design: MIGRATION.md forbids rewriting closed units, so the severity rule splits it: ticked-but-unlogged = HIGH, pre-tick-shape done = LOW/never repaired.
+- **Next:** Run /audit-pr 461 for the delivery gate (re-sha-bound, CI, mergeability). If audit-pr returns MERGE-READY, merge by hand.
+
+## 2026-11-08T16:25:22Z — main — narrative
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Triage issue #443 (doc-index-auto-hybrid): classified as fix-now (M severity) with evidence-backed verdict. Checked keyword default in grammar.mjs, embedPendingChunks retry gap, and no skill using --mode hybrid. No open unit scope overlap. Posted verdict comment, routed to /unit-lane --fix 443.
+- **Decisions:** Classified as fix-now (not postpone) because the cost leak (1.6M tokens on unused embedding path) is real and measurable, even though keyword search works. Owner had already validated six explicit design decisions in the issue body, reducing re-discovery cost.
+- **Next:** Run /unit-lane --fix 443 to create the fix unit docs/fix/443-doc-index-auto-hybrid/ and begin implementation: auto-hybrid mode resolution, embedPendingChunks retry/backoff/pacing, sync embeds-by-default, and /aw-index native command.
+
+## 2026-11-08T16:22:55Z — main — narrative
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Triage issue #460: batch-scheduler plan verifies nothing (lifecycle delta, triage readiness, cross-lane soft deps, fail-closed dep parser) — verdict: fix-now, added to fix index, routed to /unit-lane --fix 460
+- **Decisions:** Issue #460 identified four real gaps in batch-scheduler.mjs: no lifecycle delta (state file only tracks claimed lanes, never open-issue set), no triage-readiness signal (BATCH_REASON_KINDS has no triage-unready kind), cross-lane soft deps invisible (softOrphans only flags truly orphaned deps), and prose parser fails open (harvests numbers from non-standard table shapes) — classified as fix-now with no urgency label (not high-severity), removed needs-triage label, posted verdict comment, added fix index entry in ROADMAP.md
+- **Next:** Run /unit-lane --fix 460 to implement the four gaps: lifecycle delta with new_issues/closed_since, triage-readiness reason kind, cross-lane soft-dep caveat reason, and fail-closed prose parser
+
+## 2026-11-08T16:22:15Z — main — narrative
+- **Commits:** 1 (`40de075f…40de075f`)
+- **Files:** .agentic-workflow/journal/20261108T161834Z-main-narrative-01a1bbea-f46a-719c-b592-05c70fc36ca9.md
+- **Summary:** batch-scheduler plan relay: verified all claims against live forge, diagnosed 4 evidence-backed gaps (no lifecycle delta, no triage flag, cross-lane soft deps invisible, fail-open prose parser), created issue #460 covering all four. Reconciled #307 dependency relations: rewrote prose to #442 standard, corrected native blocked-by via GraphQL (removed 3 rancid rants: #362/#363/#414 absorbed into #437/#410; added #437 as blocker), now 10 open blockers — all false #307 findings gone. Confirmed workflow-status needs no issue.
+- **Decisions:** Issue #460 as single unit for all four gaps rather than separate issues: parser fix is independent first slice. #307 prose was dogfooding (triage-issue owns it); native mutations were machine-level. Lifecycle delta goes in batch-scheduler's state file, not workflow-status which is stateless.
+- **Next:** Implement #460 slice 1: fix extractProseDependencies to fail-closed on nonstandard tables. Then triage the 4 remaining genuine soft-dep findings (#434→#433, #436→#359, #437→#358/#359/#362, #438→#435/#433). Then tackle lifecycle delta, triage flag, and cross-lane soft-dep caveat rows.
+
+## 2026-11-08T16:18:34Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Format changelog release notes for v5.0.0-canary.20261108.1: grouped changes by category (Features, Fixes, Docs), added install/rollback instructions for canary and stable versions, iterated on markdown backtick escaping until a four-backtick wrapper was found.
+- **Decisions:** Use four backticks (````) as the outer code fence for markdown content containing triple backticks — avoids render-breaking collisions
+- **Next:** Post the formatted changelog to the release page or PR
+
+## 2026-11-08T16:06:40Z — main — narrative
+- **Commits:** 1 (`171cf6c0…171cf6c0`)
+- **Files:** .agentic-workflow/journal/20261108T160619Z-main-narrative-01a1bbb6-537a-719c-b592-05bbd2d88a85.md
+- **Summary:** audit-docs and fold-findings: fixed the roadmap's 9 ledger defects (7 merged fix rows removed, 5 in-progress feature rows bumped to done, row 103 deduped, 6 rows escaped, slugs fixed, dead anchor repaired) and re-cut three closed lane-era units' Tasks/Log (104, 394, 396).
+- **Decisions:** Roadmap status was stale: 7 #Fix rows still registered after merge, 5 #Feature rows still in-progress after PR merged, row 103's summary absorbed a 50-char duplicate tail from row 102, six rows split across extra columns via unescaped pipes, row 71's unclosed backtick broke its cell. Fixed with one atomic commit so no intermediate state is visible.
+- **Next:** Re-review on a branch: /review-change (delta mode optional — batch is docs-only but not all rows were docs: two units gained 23 new Log lines)
+
+## 2026-11-08T16:06:19Z — main — narrative
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Product-audit sweep declined — insufficient-corpus: no measured trigger (drift signal, threshold debt, or explicit owner request) was met
+
+## 2026-11-08T14:54:18Z — fix/452-journal-fragment-validation — narrative
+- **Commits:** 28 (`95cde38a…4871eb6e`)
+- **Files:** 34 files
+- **Summary:** Applied the owner's aw-local-apply batch (L5) to the two open defects of the correction chain: the guide-layer budget case is now a named test so one break no longer aborts check-skill-context.test.mjs whole, guide-split stopped duplicating the budget owner's exit-code assertions, and the branch/PR rule is stated once in AGENTS.md with a new case pinning it. Root suite stays 90/90.
+- **Decisions:** The split is by responsibility (D11): the budget owner asserts the ceilings, guide-split keeps the linkage; the 26 load-time mutation guards stay fail-fast on purpose. My earlier claim that template/AGENTS.md, the README principles and RELEASE.md were 'copies' was overstated — those are product surfaces whose consumer cannot reach this repository's guide, the one exception the ownership rule allows, so only the in-doc duplicate was removed. Path-protection records now live in the unit's decisions.md, the carrier the guard reads. D10's placement refactors stay for their own unit.
+- **Next:** Owner recheck of F8/F9 and D11 on PR #459, then D10's placement refactors (gate-operations block, worktree section) as their own unit; merge authority and the push stay with the owner.
+
+## 2026-11-08T14:29:04Z — fix/452-journal-fragment-validation — narrative
+- **Commits:** 25 (`95cde38a…db0b3394`)
+- **Files:** 30 files
+- **Summary:** Re-based the AGENTS.md guide ceilings on the owner's decision (D9): measured 574 lines / 458 prose / 9,664 est, re-based by ceil(measured x 1.10) to 632 / 504 / 10,631 with the reason in the manifest, machineLines unchanged at 116. Both root-suite reds were one predicate (check-skill-context --documents exit 0), so the root suite is now 90/90 green at this head; base stays 88/90.
+- **Decisions:** D9 is the owner's call taken while the branch is open, so it supersedes D4/D7's 'not re-based' for the future while those lines keep recording the cut. D10 names three trim candidates (the branch/PR rule stated twice, the ~34-line gate-operations block, the ~100-line worktree section) for their own unit, because moving a section needs a reference doc, map row, index row and budget re-check. AGENTS.md:143's malformed bold repaired without changing the line count.
+- **Next:** Owner recheck of F2-F7 plus D9/D10 on PR #459 and the merge; the offline gate is now green, so the push no longer needs the hatch — pushing is the owner's call.
+
+## 2026-11-08T14:13:33Z — fix/452-journal-fragment-validation — narrative
+- **Commits:** 22 (`95cde38a…0d89aea4`)
+- **Files:** 29 files
+- **Summary:** Applied the external verify's correction batch on issue #452: filed F1-F7 with their real scope, then repaired F2-F7 - the template carrier doc names journal write and journal-write-grammar@1, O18/O20 state what the tree and the push actually did, and journal write now refuses an absent carrier instead of opting a project in.
+- **Decisions:** The carrier-absent refusal is the owner's newer instruction (L3/D8): the CLI policy changed, the library writeFragment still creates the directory for the store driver that configures its own carrier. D6 leaves the S12 reading of the earlier AGENTIC_WORKFLOW_SKIP_LOCAL_GATE push to the owner and writes no waiver; D7 names the base-export comparison (the two ceiling suites) because a bare export also reds git-dependent suites. This batch does not push: pushing would repeat the hatch over the pre-existing red.
+- **Next:** Owner recheck of F2-F7 and the merge on PR #459; push and the hatch reading are the owner's call. On a verdict of blockers: one correction batch limited to them, then a recheck of the same rows.
+
+## 2026-11-08T13:21:07Z — fix/452-journal-fragment-validation — narrative
+- **Commits:** 18 (`95cde38a…ca7fa491`)
+- **Files:** 26 files
+- **Summary:** Opened PR #459 (Closes #452) — correcting the earlier entry this session: the branch IS pushed and the fix row is settled to done.
+- **Decisions:** The push used the hook escape hatch once, blocked at the pre-existing root-suite pair, and the reason is recorded in the PR body per the hook own instruction; the later docs-only pushes passed the gate normally. Validation: 1628 additions, 99 deletions, 26 files, mergeable CLEAN, closingIssuesReferences #452.
+- **Next:** The owner verdict and merge on https://github.com/gtrabanco/agentic-workflow/pull/459; on blockers, one correction batch limited to them.
+
+## 2026-11-08T13:09:07Z — fix/452-journal-fragment-validation — narrative
+- **Commits:** 13 (`95cde38a…3b256020`)
+- **Files:** 25 files
+- **Summary:** Applied issue #452: the journal fragment writer is now a programmatic CLI, the carrier has a validate-only lint in the pre-push gate, and session-close validates the fragments it commits.
+- **Decisions:** Decision D1 validate-at-close (the issue 5(a)): the close runs minutes after the mistake, the gate hours later. Only the exact machineLines pins were re-pinned; the AGENTS line/prose/estimate ceilings were already red at c7258644 and were recorded, not re-based. The branch is not pushed: the pre-push hook is red only on that pre-existing root-suite pair.
+- **Next:** The owner external verdict on fix/452-journal-fragment-validation; then one blocker-limited correction batch if needed, and the push decision for the pre-existing gate red.
+
+## 2026-11-08T12:22:44Z — main — manual
+- **Commits:** 1 (`3c2b64a9…3c2b64a9`)
+- **Files:** .agentic-workflow/journal/20261108T121830Z-main-manual-narrative-local.md
+- **Summary:** Diagnosed Publish packages CI failure: S15 test blocked by a malformed journal fragment from a prior session's hand-save path; traced the write-path hole (writeFragment validates, but session-close close does not; the skill's prose instructs the model to compute the name and paste the bytes, which strips trailing newlines via command substitution).
+- **Decisions:** Chose to reproduce the failure deterministically in a disposable worktree on the exact failing SHA rather than guessing; confirmed writeFragment refuses the bytes, session-close close does not; verified main's carrier is now clean after weekly aggregation PR #458; updated issue #452 body with four corrections (already implemented, already done, scope redefined, missing enforcement point) and a diagnostic comment with evidence; declined a separate linter feature for #452 because the existing --check validates-only surface plus S15 in the publish gate already cover both roles.
+- **Next:** Implement the write-side gap in #452: decide on the session-close close validation (5(a) vs non-goal), then write the journal write CLI and wire the gate check
+
+## 2026-11-08T12:18:30Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Diagnosed GitHub Actions journal-aggregate PR creation failure: GITHUB_TOKEN lacks pull-requests:create permission; fixed via Settings → Actions → General → 'Allow GitHub Actions to create and approve pull requests' toggle
+- **Decisions:** Enabled the PR create/allow toggle in repo settings rather than modifying workflow YAML; the GITHUB_TOKEN default is read-only contents + packages, but the PR creation permission is a separate workflow-level toggle (not a GITHUB_TOKEN scope)
+- **Next:** Verify that the scheduled journal-aggregate workflow runs successfully on next push or manually trigger it

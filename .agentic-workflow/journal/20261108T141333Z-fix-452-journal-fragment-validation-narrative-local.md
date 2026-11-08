@@ -1,6 +1,0 @@
-## 2026-11-08T14:13:33Z — fix/452-journal-fragment-validation — narrative
-- **Commits:** 22 (`95cde38a…0d89aea4`)
-- **Files:** 29 files
-- **Summary:** Applied the external verify's correction batch on issue #452: filed F1-F7 with their real scope, then repaired F2-F7 - the template carrier doc names journal write and journal-write-grammar@1, O18/O20 state what the tree and the push actually did, and journal write now refuses an absent carrier instead of opting a project in.
-- **Decisions:** The carrier-absent refusal is the owner's newer instruction (L3/D8): the CLI policy changed, the library writeFragment still creates the directory for the store driver that configures its own carrier. D6 leaves the S12 reading of the earlier AGENTIC_WORKFLOW_SKIP_LOCAL_GATE push to the owner and writes no waiver; D7 names the base-export comparison (the two ceiling suites) because a bare export also reds git-dependent suites. This batch does not push: pushing would repeat the hatch over the pre-existing red.
-- **Next:** Owner recheck of F2-F7 and the merge on PR #459; push and the hatch reading are the owner's call. On a verdict of blockers: one correction batch limited to them, then a recheck of the same rows.

@@ -6,7 +6,7 @@ import {
   DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS,
   DEFAULT_PROFILE_FALLBACK,
 } from "./types.js";
-import type { AdvanceConfig, AutoLogSessionConfig, AutoLogSessionPublisherFile, ConfigFile, EffectiveConfig, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile } from "./types.js";
+import type { AdvanceConfig, AutoLogSessionConfig, AutoLogSessionPublisherFile, ConfigFile, EffectiveConfig, PassRouteFile, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile } from "./types.js";
 
 /**
  * Project-over-global merge (SPEC S5, S6).
@@ -150,6 +150,26 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     commands[name] = resolveRoute(effectiveDefault, globalCommands[name], projectCommands[name]);
   }
 
+  // Issue #201 — spawned-pass routes merge at entry and per route-key
+  // granularity, the same transaction rule the commands above follow: a
+  // project entry that sets only `model` keeps the global `thinking`, and a
+  // pass neither scope mentions contributes nothing (the resolver owns the
+  // fail-closed chain from there).
+  const globalPasses = globalFile.passes ?? {};
+  const projectPasses = projectFile.passes ?? {};
+  const passes: Record<string, PassRouteFile> = {};
+  for (const name of new Set([...Object.keys(globalPasses), ...Object.keys(projectPasses)])) {
+    const entry: PassRouteFile = {};
+    const model = projectPasses[name]?.model ?? globalPasses[name]?.model;
+    if (model !== undefined) entry.model = model;
+    const projectThinking = projectPasses[name]?.thinking;
+    const globalThinking = globalPasses[name]?.thinking;
+    if (projectThinking !== undefined || globalThinking !== undefined) {
+      entry.thinking = pick(DEFAULT_ROUTE.thinking, projectThinking, globalThinking);
+    }
+    passes[name] = entry;
+  }
+
   // Feature 63 — model profiles: computed declaredness from raw files.
   const declaredDefault: RouteDeclaration = {
     model: globalFile.default?.model !== undefined || projectFile.default?.model !== undefined,
@@ -196,6 +216,7 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     profiles: mergeProfiles(globalFile.profiles, projectFile.profiles),
     profileOrder: pick([], projectFile.profileOrder, globalFile.profileOrder),
     profileFallback: mergeProfileFallback(globalFile.profileFallback, projectFile.profileFallback),
+    passes,
     declared: { default: declaredDefault, commands: declaredCommands },
   };
   // Advance knobs appear only when a scope declares them, so configs that

@@ -16,6 +16,7 @@
  *   agentic-workflow journal write --kind <mechanical|narrative> [fields] [--session <id>]
  *   agentic-workflow journal name --kind <mechanical|narrative> [--dir <root>] [--branch <b>] [--session <id>]
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
+ *   agentic-workflow resolve-passes [--global <path>] [--project <path>] [--command <name>]
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -37,6 +38,16 @@
  * and `obligations` verifies the unit's obligations ledger is closed. It is the
  * same module `scripts/relay-packet.mjs` runs, so a project that carries only
  * the crate gets the identical block. Read-only: it writes nothing.
+ *
+ * `resolve-passes` (issue #201) is the spawned-pass model resolution: it reads
+ * the two routing config files (global, then project — the project file wins
+ * per entry and per key) and prints the `resolve-passes@1` JSON table for
+ * every published pass name, with the fail-closed chain applied in code —
+ * `passes.<name>` → `passes.default` → the configured cheap tier
+ * (`commands.execute-phase`) → the inline floor at the orchestrator's model,
+ * recorded with a reason. A malformed selected route is a refusal (exit 2,
+ * `PASSES REFUSAL — <reason>`), never a silent fallback. Read-only: it writes
+ * nothing.
  *
  * `log render` (feature #394) is a pure renderer with no session behind it: it
  * reads a `log-facts@1` payload and prints the journal entry, so a human, a test
@@ -94,6 +105,7 @@ import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragmen
 import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from "../src/journal/write.mjs";
 import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
+import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -132,6 +144,13 @@ function parseArgs(args) {
 
 function refuse(reason) {
   process.stderr.write(`EDIT REFUSAL — ${reason}\n`);
+  process.exit(2);
+}
+
+/** A refusal with a non-EDIT prefix (the read-only sensors refuse with their
+ *  own vocabulary, e.g. `PASSES REFUSAL`). */
+function sensorRefuse(prefix, reason) {
+  process.stderr.write(`${prefix} REFUSAL — ${reason}\n`);
   process.exit(2);
 }
 
@@ -331,7 +350,7 @@ async function runDocOpPositional(g) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal|resolve-passes> ...");
   process.exit(1);
 }
 
@@ -368,6 +387,49 @@ switch (command) {
     }
     process.stdout.write(`${result.lines.join("\n")}\n`);
     process.exit(result.exit);
+    break;
+  }
+
+  // ── resolve-passes — the spawned-pass model resolution (issue #201) ──
+  case "resolve-passes": {
+    // Its own flag parser: the shared parseArgs only knows the receipt
+    // flags, and an unknown flag here is a usage refusal, not a positional.
+    const flags = {};
+    for (let i = 0; i < restArgs.length; i++) {
+      const arg = restArgs[i];
+      if (arg === "--global" || arg === "--project" || arg === "--command") {
+        if (i + 1 >= restArgs.length) {
+          sensorRefuse("PASSES", `${arg} requires a value`);
+        }
+        flags[arg.slice(2)] = restArgs[++i];
+      } else {
+        sensorRefuse("PASSES", `unknown argument "${arg}" (usage: resolve-passes [--global <path>] [--project <path>] [--command <name>])`);
+      }
+    }
+    const readText = (path, scope) => {
+      if (path === undefined) return null;
+      let text;
+      try {
+        text = readFileSync(resolve(path), "utf8");
+      } catch (error) {
+        sensorRefuse("PASSES", `${scope} config is present but unreadable: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      return text;
+    };
+    let receipt;
+    try {
+      receipt = resolvePasses({
+        globalText: readText(flags.global, "global"),
+        projectText: readText(flags.project, "project"),
+        command: flags.command ?? DEFAULT_REVIEW_COMMAND,
+      });
+    } catch (e) {
+      if (!(e instanceof PassesError)) throw e;
+      process.stderr.write(`PASSES REFUSAL — ${e.message}\n`);
+      process.exit(2);
+    }
+    process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
+    process.exit(0);
     break;
   }
 
