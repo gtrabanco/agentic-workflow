@@ -11,7 +11,9 @@ description: >
   "check the skill rules", "scan skills for smells".
 ---
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) before ending every turn; the **read-only profile** substitutes boxes 1–5 (the lint reports only — nothing was edited, committed, pushed, or created; its one sanctioned output is the git add + commit command block printed for the human, never executed). Skill-specific additions:
 
 ```
 ✓ `bun scripts/skill-lint.mjs` ran and its report block is pasted verbatim
@@ -24,8 +26,8 @@ description: >
 ✓ The git add + commit command block is printed as the ABSOLUTE last output
 ```
 
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first.
+Missing reference → STOP. About to end the turn with any box unchecked? The
+turn is NOT done — complete the missing box first.
 
 ## When to use
 
