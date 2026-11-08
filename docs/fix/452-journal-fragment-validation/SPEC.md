@@ -441,6 +441,9 @@ relay-next: create .pi-web/relays/452-journal-fragment-validation/ (charter → 
 - **P16** — 2026-11-08, the release intent · `4f858baf`.
 - **P17** — 2026-11-08, the unit registered `in-progress` in the `## Fixes` table (the table has no emitter — reported) · `95cde38a`.
 - **P18** — 2026-11-08, the ledgers closed on foreground runs, the projection rendered by its generator, and the session entry written through this unit's own CLI · `4f55cd3c` and `23f6bb60`.
+- **P19** — 2026-11-08, the branch pushed and **PR [#459](https://github.com/gtrabanco/agentic-workflow/pull/459)** opened against `main` with `Closes #452`; the `## Fixes` row settled to `done · #459` (hand edit — that table has no emitter).
+- **D5** — (D) 2026-11-08, **the push used the hook's documented escape hatch**: a normal push was attempted first and blocked at `root-suite`, exactly at D4's pre-existing pair. The hook's own instruction ("Escape hatch (record why in the PR)") is satisfied by PR #459's "Gate status" section, which names the failure, proves it identical at `c7258644`, and records that no ceiling was re-based. The exception covers the push only — it grants nothing to any later unit and waives no gate.
+- **E10** — 2026-11-08, the forge state after opening: PR #459, `Closes #452`, base `main`, head `fix/452-journal-fragment-validation`; the roadmap row reads `done · #459` and `bun scripts/unit-route.mjs 452-journal-fragment-validation` now routes `close-out` (the merge gate is the next step, which is the owner's).
 - **D1** — (D) 2026-11-08, **validate-at-close**: the issue's S5 offers (a) close validates or (b) an evidenced non-goal. Chosen: (a). The close runs minutes after the mistake; the gate and the aggregator run hours later, so the first net must be the one nearest the writer. Evidence for the prototype's claim is O4's case: the exact incident fragment is refused before staging and its bytes stay untouched.
 - **D2** — (D) 2026-11-08, **the write-time second is the clock, with an explicit pin**: `--timestamp <iso>` exists so a reproducer and a suite can name the same fragment twice, and it is declared in `journal-write-grammar@1`. It is the only datum the caller may pin; the branch, the session slug and the name stay computed (S1).
 - **D3** — (D) 2026-11-08, **red-first test corrections, disclosed rather than hidden**: five expectations were corrected against the honest behaviour, none relaxed — (1) `--check` prints its `JOURNAL REFUSAL` summary first and the per-file faults after it (the product changed to satisfy the test, not the reverse); (2) an identity contradiction now carries the filename in the lint line; (3) the incident name does not fail the name parser at all — it parses as branch `main-manual`, so the refusal is the name/heading contradiction, and the close case asserts that (the test still fails at the red commit); (4) the write receipt's `path` is absolute, so the fixture stops joining it under the repo; (5) the close fixture's carrier is untracked as a directory, so its porcelain line is `?? .agentic-workflow/`.
@@ -461,15 +464,10 @@ relay-next: create .pi-web/relays/452-journal-fragment-validation/ (charter → 
 
 ## Next
 
-The owner's external verdict on this branch. The branch is **not pushed**: the
-installed `pre-push` hook runs the offline gate, whose only red is the
-pre-existing `root-suite` pair recorded in D4, so pushing needs the owner's
-decision (the red is identical at `c7258644` and is not this unit's). On a
-verdict of blockers: one correction batch limited to them, then one recheck of
-the same rows (§9). The `## Fixes` row stays `in-progress` until a PR exists —
-`bun scripts/unit-route.mjs 452-journal-fragment-validation` fails closed with
-"all phases recorded but status is 'in-progress'", which is the router naming
-exactly this boundary, not a defect to paper over.
+The owner's verdict on PR [#459](https://github.com/gtrabanco/agentic-workflow/pull/459) and the
+merge (merge authority stays with the owner). On a verdict of blockers: one correction batch
+limited to them, then one recheck of the same rows (§9); a new finding goes back to the owner and
+the turn ends.
 
 ## References
 
