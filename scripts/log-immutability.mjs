@@ -102,20 +102,25 @@ export function resolveBase({ root = ".", explicit, env, gitQuery = defaultGitQu
   return { ok: false, reason: "no base to diff against — pass --base" };
 }
 
+/** spawnSync's default maxBuffer is 1 MiB — a real year-old journal is past it
+ *  (observed live: `git show <base>:docs/LOGS.md` killed at ~1 MB). Every git
+ *  read gets an explicit 64 MiB ceiling, the repo's own suites' allowance. */
+const GIT_MAX_BUFFER = 64 * 1024 * 1024;
+
 function defaultGitQuery(root, args) {
-  const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+  const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8", maxBuffer: GIT_MAX_BUFFER });
   return result.status === 0 ? result.stdout.trim() : null;
 }
 
 function gitOut(root, args) {
-  const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+  const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8", maxBuffer: GIT_MAX_BUFFER });
   if (result.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${(result.stderr || "").trim()}`);
   return result.stdout;
 }
 
 /** The blob at `<rev>:<path>`, or `null` when that revision has no such file. */
 function blobAt(root, rev, rel) {
-  if (spawnSync("git", ["-C", root, "cat-file", "-e", `${rev}:${rel}`, "--"], { encoding: "utf8" }).status !== 0) return null;
+  if (spawnSync("git", ["-C", root, "cat-file", "-e", `${rev}:${rel}`, "--"], { encoding: "utf8", maxBuffer: GIT_MAX_BUFFER }).status !== 0) return null;
   return gitOut(root, ["show", `${rev}:${rel}`]);
 }
 
@@ -283,7 +288,11 @@ export function checkWorkingTree({ root }) {
     violations.push(...logShapeViolations(blobAt(root, "HEAD", LOG), fs.readFileSync(logPath, "utf8")));
   }
   const committed = gitOut(root, ["ls-tree", "-r", "--name-only", "HEAD", "--", CARRIER])
-    .split("\n").filter(Boolean).map((entry) => path.basename(entry));
+    .split("\n").filter(Boolean).map((entry) => path.basename(entry))
+    // Fragments only, like-for-like with the working list below: the carrier
+    // also carries non-entry placeholders (`.gitkeep`), whose deletion is a
+    // normal git concern, never a lost entry.
+    .filter((name) => name.endsWith(".md"));
   const working = fs.existsSync(path.join(root, CARRIER))
     ? fs.readdirSync(path.join(root, CARRIER)).filter((name) => name.endsWith(".md"))
     : [];
