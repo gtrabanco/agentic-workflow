@@ -33,6 +33,32 @@ export type ModelSetting = "inherit" | ModelRef | ModelChain;
 export const MAX_MODEL_CHAIN = 4;
 
 // ---------------------------------------------------------------------------
+// Spawned-pass routing (issue #201)
+// ---------------------------------------------------------------------------
+
+/**
+ * A spawned pass's declared model: the route settings plus `"auto"` — the
+ * operator's explicit delegation of the model choice to the orchestrating
+ * agent. It exists only because the operator wrote it (issue #201 S1).
+ */
+export type PassModelSetting = "inherit" | "auto" | ModelRef | ModelChain;
+
+/** One pass entry: the same optional route keys a command route carries. */
+export interface PassRouteFile {
+  model?: PassModelSetting;
+  thinking?: ThinkingSetting;
+}
+
+/**
+ * The `passes` map: each published pass name (`PASS_NAMES`, the schema
+ * package's one machine owner) may declare an entry, plus the `default`
+ * escape that resolves the cheap tier for unlisted passes (owner decision
+ * 2026-10-12). `default` is deliberately not a member of `PASS_NAMES` — it is
+ * a config-layer name, not a spawned pass.
+ */
+export type PassesConfigFile = Record<string, PassRouteFile>;
+
+// ---------------------------------------------------------------------------
 // Model-profiles fields (feature 63)
 // ---------------------------------------------------------------------------
 
@@ -100,6 +126,9 @@ export interface ConfigFile {
   telemetry?: TelemetryConfigFile;
   /** #394: automatic session logging on exit. */
   autoLogSession?: AutoLogSessionConfigFile;
+  /** Issue #201: per-pass model/thinking declarations for spawned review
+   *  passes, keyed by the published pass names plus the `default` escape. */
+  passes?: PassesConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -227,6 +256,9 @@ export interface EffectiveConfig {
   telemetry: TelemetryConfig;
   /** #394: automatic session logging mode, resolved. */
   autoLogSession: AutoLogSessionConfig;
+  /** Issue #201: the declared pass routes, merged project-over-global; empty
+   *  when no scope declares one — the resolver owns the fail-closed chain. */
+  passes: Record<string, PassRouteFile>;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }

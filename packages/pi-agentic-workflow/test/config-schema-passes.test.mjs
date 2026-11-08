@@ -22,12 +22,7 @@ const chain = (n) =>
 
 test("every published pass name plus passes.default is accepted with pinned references", () => {
   const result = parseConfigFile(`{"passes":${chain(PASS_NAMES.length)}}`);
-  assert.deepEqual(
-    result.issues,
-    [],
-    `expected a valid config, got ${JSON.stringify(result.issues)}`,
-  );
-  assert.equal(result.ok, true);
+  assert.equal(result.ok, true, JSON.stringify(result.issues ?? []));
   assert.deepEqual(result.config.passes["review-code"], { model: "prov/m0" });
   assert.deepEqual(result.config.passes.default, { model: "inherit", thinking: "low" });
 });
@@ -61,7 +56,7 @@ test("an invalid model reference reports $.passes.<name>.model (issue #201 Tests
   assert.equal(result.ok, false);
   assert.equal(result.issues.length, 1);
   assert.equal(result.issues[0].path, "$.passes.classify.model");
-  assert.match(result.issues[0].message, /must be "inherit", "auto", "provider\/modelId", or a chain/);
+  assert.match(result.issues[0].message, /must be "inherit", "auto", "provider\/modelId", or a non-empty chain of references/);
 });
 
 test("an unknown pass name is rejected per the strict-validator rule", () => {

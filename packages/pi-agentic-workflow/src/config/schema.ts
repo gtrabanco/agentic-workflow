@@ -9,6 +9,7 @@ import {
   AUTO_LOG_SESSION_MAX_ARGV,
   AUTO_LOG_SESSION_MAX_TIMEOUT_MS,
 } from "./types.js";
+import { PASS_NAMES } from "@gtrabanco/agentic-workflow-schema";
 import type {
   ConfigFile,
   ConfigIssue,
@@ -22,6 +23,9 @@ import type {
   TelemetryConfigFile,
   AutoLogSessionConfigFile,
   AutoLogSessionPublisherFile,
+  PassModelSetting,
+  PassRouteFile,
+  PassesConfigFile,
 } from "./types.js";
 import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
 import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
@@ -50,6 +54,7 @@ const ROOT_KEYS = new Set([
   "memory",
   "telemetry",
   "autoLogSession",
+  "passes",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -293,6 +298,102 @@ function describe(value: unknown): string {
   return typeof value === "string" ? `"${value}"` : JSON.stringify(value) ?? String(value);
 }
 
+/** The one config-layer name that is not a spawned pass: the `default` escape
+ *  that resolves the cheap tier for unlisted passes (issue #201, owner
+ *  decision 2026-10-12). */
+const PASS_DEFAULT_NAME = "default";
+const PASS_ENTRY_KEYS = new Set(["model", "thinking"]);
+
+/** Strict validator for a `passes` entry's `model`: the route settings plus
+ *  `"auto"`. A chain follows the same rules as a command route's chain
+ *  (non-empty, references only, capped at `MAX_MODEL_CHAIN`). */
+function checkPassModel(value: unknown, path: string, issues: ConfigIssue[]): PassModelSetting | undefined {
+  if (value === "auto") return value;
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      issues.push({
+        path: `${path}.model`,
+        message: `must be "inherit", "auto", "provider/modelId", or a non-empty chain of references, got an empty array`,
+      });
+      return undefined;
+    }
+    if (value.length > MAX_MODEL_CHAIN) {
+      issues.push({
+        path: `${path}.model`,
+        message: `chain holds ${value.length} entries; ${MAX_MODEL_CHAIN} is the maximum`,
+      });
+      return undefined;
+    }
+    for (let index = 0; index < value.length; index += 1) {
+      if (!isModelReference(value[index])) {
+        issues.push({
+          path: `${path}.model`,
+          message: `chain entry ${index + 1} (${describe(value[index])}) must be "provider/modelId"`,
+        });
+        return undefined;
+      }
+    }
+    return value as ModelRef[];
+  }
+  if (value !== "inherit" && !isModelReference(value)) {
+    issues.push({
+      path: `${path}.model`,
+      message: `must be "inherit", "auto", "provider/modelId", or a non-empty chain of references, got ${describe(value)}`,
+    });
+    return undefined;
+  }
+  return value as PassModelSetting;
+}
+
+/** Strict validator for the `passes` map (issue #201): each key is a published
+ *  pass name or the `default` escape; each entry carries the same optional
+ *  model/thinking keys a route does, with `"auto"` added to the model
+ *  settings. Unknown pass names are rejected per the strict-validator rule —
+ *  a typo'd pass would otherwise resolve nothing and hide the misspelling. */
+function checkPasses(value: unknown, issues: ConfigIssue[]): PassesConfigFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path: "$.passes", message: "must be an object mapping pass names to pass entries" });
+    return undefined;
+  }
+  const passes: PassesConfigFile = {};
+  for (const [name, raw] of Object.entries(value)) {
+    const path = `$.passes.${displayKey(name)}`;
+    if (name !== PASS_DEFAULT_NAME && !(PASS_NAMES as readonly string[]).includes(name)) {
+      issues.push({
+        path,
+        message: `unknown pass name "${displayKey(name)}" (allowed: ${PASS_DEFAULT_NAME}, ${PASS_NAMES.join(", ")})`,
+      });
+      continue;
+    }
+    if (!isRecord(raw)) {
+      issues.push({ path, message: "pass entry must be an object with optional model/thinking keys" });
+      continue;
+    }
+    const entry: PassRouteFile = {};
+    for (const [key, entryValue] of Object.entries(raw)) {
+      if (!PASS_ENTRY_KEYS.has(key)) {
+        issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown pass key "${key}" (allowed: model, thinking)` });
+        continue;
+      }
+      if (key === "model") {
+        const model = checkPassModel(entryValue, path, issues);
+        if (model !== undefined) entry.model = model;
+        continue;
+      }
+      if (!isThinkingSetting(entryValue)) {
+        issues.push({
+          path: `${path}.thinking`,
+          message: `must be "inherit" or one of ${THINKING_LEVELS.join(", ")}, got ${describe(entryValue)}`,
+        });
+        continue;
+      }
+      entry.thinking = entryValue;
+    }
+    passes[name] = entry;
+  }
+  return passes;
+}
+
 function checkRoute(value: unknown, path: string, issues: ConfigIssue[]): RouteFile | undefined {
   if (!isRecord(value)) {
     issues.push({ path, message: "must be an object with optional model/thinking keys" });
@@ -374,7 +475,7 @@ function validateConfig(value: unknown): ParseResult {
     if (!ROOT_KEYS.has(key)) {
       issues.push({
         path: `$.${displayKey(key)}`,
-        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance, recommendedModels, profiles, profileOrder, profileFallback, memory, telemetry)`,
+        message: `unknown config key "${key}" (allowed: ${[...ROOT_KEYS].join(", ")})`,
       });
     }
   }
@@ -481,6 +582,11 @@ function validateConfig(value: unknown): ParseResult {
   if (value.profileFallback !== undefined) {
     const fb = checkProfileFallback(value.profileFallback, issues);
     if (fb) config.profileFallback = fb;
+  }
+
+  if (value.passes !== undefined) {
+    const passes = checkPasses(value.passes, issues);
+    if (passes) config.passes = passes;
   }
 
   return issues.length > 0 ? { ok: false, issues } : { ok: true, config };
