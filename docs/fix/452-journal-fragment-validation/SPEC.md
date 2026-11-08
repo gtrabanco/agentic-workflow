@@ -335,58 +335,58 @@ proves it.
 
 P1…P18 with stable IDs, dependency-topological, smallest within a ready set.
 
-- P1 — Freeze this unit doc with its two planning ledgers (validator: `bun scripts/phase-lint.mjs docs/fix/452-journal-fragment-validation/SPEC.md` exits 0)
+- [x] P1 — Freeze this unit doc with its two planning ledgers (validator: `bun scripts/phase-lint.mjs docs/fix/452-journal-fragment-validation/SPEC.md` exits 0)
   (Implements: S9, S13, S17)
   Relevant files: docs/fix/452-journal-fragment-validation/SPEC.md
-- P2 — Land the RED corpus suite for the write CLI, the carrier check and the close refusal, observed failing on the absent operations (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits non-zero at the red commit)
+- [x] P2 — Land the RED corpus suite for the write CLI, the carrier check and the close refusal, observed failing on the absent operations (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits non-zero at the red commit)
   (Implements: S10, S11, S14)
   Relevant files: packages/agentic-workflow/test/journal.write.test.mjs
-- P3 — Land the RED close-refusal cases in the session-close suite (validator: `bun test scripts/session-close.test.mjs` exits non-zero at the red commit)
+- [x] P3 — Land the RED close-refusal cases in the session-close suite (validator: `bun test scripts/session-close.test.mjs` exits non-zero at the red commit)
   (Implements: S10, S14)
   Relevant files: scripts/session-close.test.mjs
-- P4 — Extract the read-side fragment validator and the narrative block owner into the crate (validator: `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0)
+- [x] P4 — Extract the read-side fragment validator and the narrative block owner into the crate (validator: `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0)
   (Implements: S2, S14)
   Relevant files: packages/agentic-workflow/src/journal/fragment.mjs, packages/agentic-workflow/src/journal/block.mjs
-- P5 — Implement the write service the CLI calls (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits 0 with the write cases green)
+- [x] P5 — Implement the write service the CLI calls (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits 0 with the write cases green)
   (Implements: S1, S2)
   Relevant files: packages/agentic-workflow/src/journal/write.mjs
-- P6 — Implement the validate-only carrier reader beside the aggregator (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits 0 with the `--check` cases green)
+- [x] P6 — Implement the validate-only carrier reader beside the aggregator (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits 0 with the `--check` cases green)
   (Implements: S3, S6)
   Relevant files: packages/agentic-workflow/src/journal/aggregate.mjs
-- P7 — Wire `journal write` and `journal aggregate --check` into the CLI router (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits 0)
+- [x] P7 — Wire `journal write` and `journal aggregate --check` into the CLI router (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits 0)
   (Implements: S1, S2, S3, S9)
   Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs
-- P8 — Validate added fragments in `session-close close` and delegate its block and facts to the crate owner (validator: `bun test scripts/session-close.test.mjs` exits 0)
+- [x] P8 — Validate added fragments in `session-close close` and delegate its block and facts to the crate owner (validator: `bun test scripts/session-close.test.mjs` exits 0)
   (Implements: S5, S14)
   Relevant files: scripts/session-close.mjs
-- P9 — Repair the carrier's committed malformed fragment by rename only (validator: `cd packages/agentic-workflow && bun test test/journal.surfaces.test.mjs` exits 0)
+- [x] P9 — Repair the carrier's committed malformed fragment by rename only (validator: `cd packages/agentic-workflow && bun test test/journal.surfaces.test.mjs` exits 0)
   (Implements: S4, S4a, S10)
   Relevant files: .agentic-workflow/journal/
-- P10 — Wire the carrier check into the local gate's offline subset and pin the step list (validator: `bun test scripts/local-gate.test.mjs` exits 0)
+- [x] P10 — Wire the carrier check into the local gate's offline subset and pin the step list (validator: `bun test scripts/local-gate.test.mjs` exits 0)
   (Implements: S3, S7)
   Relevant files: scripts/local-gate.mjs, scripts/local-gate.test.mjs
-- P11 — Route the skill's fragment step through the write CLI (validator: `bun scripts/skill-lint.mjs` exits 0)
+- [x] P11 — Route the skill's fragment step through the write CLI (validator: `bun scripts/skill-lint.mjs` exits 0)
   (Implements: S1, S7)
   Relevant files: skills/log-session/SKILL.md
-- P12 — Route the extension's directive through the write CLI (validator: `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 0)
+- [x] P12 — Route the extension's directive through the write CLI (validator: `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 0)
   (Implements: S1, S7)
   Relevant files: packages/pi-agentic-workflow/src/log-session-invocation.ts
-- P13 — Publish the write grammar in the crate README (validator: `bun test scripts/normative-drift.test.mjs` exits 0)
+- [x] P13 — Publish the write grammar in the crate README (validator: `bun test scripts/normative-drift.test.mjs` exits 0)
   (Implements: S7)
   Relevant files: packages/agentic-workflow/README.md
-- P14 — Declare the normative surface and re-pin the guide's machine region (validator: `bun scripts/check-skill-context.mjs --documents` exits 0)
+- [x] P14 — Declare the normative surface and re-pin the guide's machine region (validator: `bun scripts/check-skill-context.mjs --documents` exits 0)
   (Implements: S7, S15)
   Relevant files: AGENTS.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
-- P15 — Name the gate step's carrier in the gate inventory (validator: `bun scripts/prose-gate-inventory.mjs` exits 0)
+- [x] P15 — Name the gate step's carrier in the gate inventory (validator: `bun scripts/prose-gate-inventory.mjs` exits 0)
   (Implements: S3, S7)
   Relevant files: docs/workflow/GATE_INVENTORY.md
-- P16 — Ship the release intent (validator: `bun scripts/lint-changeset.mjs .changeset/452-journal-fragment-validation.md` exits 0)
+- [x] P16 — Ship the release intent (validator: `bun scripts/lint-changeset.mjs .changeset/452-journal-fragment-validation.md` exits 0)
   (Implements: S15)
   Relevant files: .changeset/452-journal-fragment-validation.md
-- P17 — Register the unit in the `## Fixes` table (validator: `bun scripts/roadmap-settle.mjs` exits 0)
+- [x] P17 — Register the unit in the `## Fixes` table (validator: `bun scripts/roadmap-settle.mjs` exits 0)
   (Implements: S15)
   Relevant files: docs/ROADMAP.md
-- P18 — Close the ledgers on foreground runs, render the projection and record the session entry (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
+- [x] P18 — Close the ledgers on foreground runs, render the projection and record the session entry (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
   (Implements: S8, S11, S12, S16, S18)
   Relevant files: docs/fix/452-journal-fragment-validation/planning-obligations.md
 
@@ -420,11 +420,56 @@ relay-next: create .pi-web/relays/452-journal-fragment-validation/ (charter → 
 ## Log
 
 - **L1** — (L) 2026-11-08, owner request verbatim: "Apply to this repository: issue #452" + the ten-step inline-application protocol, frozen as S9–S17 above; the issue's own words are S1–S8.
-- **P1** — 2026-11-08, ledgers cut at `c7258644` (main tip at the cut): unit doc + `planning-obligations.md` (O1–O20, all `planned`) + `planning-evidence.md` (PE-001–PE-016).
+- **P1** — 2026-11-08, ledgers cut at `c7258644` (main tip at the cut): unit doc + `planning-obligations.md` (O1–O27, all `planned`) + `planning-evidence.md` (PE-001–PE-018); the unit registered `in-progress` in the `## Fixes` table · `95cde38a`.
+- **E1** — 2026-11-08, the frozen failure at the cut: `cd packages/agentic-workflow && bun test test/journal.surfaces.test.mjs` at `c7258644` · exit 1 · `10 pass 1 fail`, `S15 … 20261108T121830Z-main-manual-narrative-local.md is not a newline-terminated CR-free block`. The file is the issue's own shape committed again by `3c2b64a9` (blob `926869b0`): the writer label in the kind slot **and** no trailing newline, while the issue's S4 had recorded the carrier as empty (S4a corrects it).
+- **E2** — 2026-11-08, the RED corpus: `bun test packages/agentic-workflow/test/journal.write.test.mjs` at `e1ee3247` · exit 1 · `0 pass 14 fail` — the write operation, the carrier check and both route statements did not exist. Committed red before any implementation.
+- **E3** — 2026-11-08, the RED close: `bun test scripts/session-close.test.mjs` at `e7593aec` · exit 1 · `28 pass 2 fail` — the malformed-name and non-terminated-body fragments were committed by `close` without complaint, the issue's S5 hole reproduced.
+- **P2** — 2026-11-08, the RED corpus suite: the write CLI, stdin, the two today-shape refusals, the collision, the name parity, the mechanical kind and both `--check` cases, observed `0 pass 14 fail` · `e1ee3247`.
+- **P3** — 2026-11-08, the RED close cases in the session-close suite, observed `28 pass 2 fail` · `e7593aec`.
+- **P4** — 2026-11-08, the crate's one read-side predicate (`fragmentFault`/`assertFragment`) and the narrative block owner `src/journal/block.mjs`, which the aggregator and the close now share · `3ad6bd7f`.
+- **P5** — 2026-11-08, the write service `src/journal/write.mjs`: field validation, block rendering, name computation, `parseFragmentName` self-check, exclusive-create write · `3ad6bd7f`.
+- **P6** — 2026-11-08, `checkJournal` — the validate-only carrier reader that lists every fault and moves no byte · `3ad6bd7f`.
+- **P7** — 2026-11-08, the two CLI operations (`journal write`, `journal aggregate --check`) and their closed flag parser · `3ad6bd7f`.
+- **P8** — 2026-11-08, `session-close close` validates every added fragment before the first `git add` and delegates its block and facts to the crate owner · `4320628e`.
+- **P9** — 2026-11-08, the carrier's committed fragment repaired: rename to the identity its own heading records plus its missing terminator, blob `926869b0` preserved · `b33b546a`.
+- **P10** — 2026-11-08, the gate step `journal-carrier-check` in the offline subset, with the step-list pins re-aimed (`local-gate.test.mjs`, `release-workflows.test.mjs`) · `ab501e6b`, `4f55cd3c`.
+- **P11** — 2026-11-08, the skill's fragment step routes through `journal write` inside its ceiling · `4f858baf`, `b5f2631d`.
+- **P12** — 2026-11-08, the extension's directive names the same command and keeps the resolved path for the settled-turn check; the pi fixture ships the modules the writer imports · `4f858baf`.
+- **P13** — 2026-11-08, `journal-write-grammar@1` published in the crate README beside the fragment grammar · `d96a2a5e`.
+- **P14** — 2026-11-08, the `normative-surfaces@1` row and the exact `machineLines` re-pin (115 → 116), with the pre-existing ceiling drift recorded instead of re-based · `d96a2a5e`, `af8efa04`.
+- **P15** — 2026-11-08, the `journal-carrier-check` row in the gate inventory, claiming both journal grammars · `d96a2a5e`.
+- **P16** — 2026-11-08, the release intent · `4f858baf`.
+- **P17** — 2026-11-08, the unit registered `in-progress` in the `## Fixes` table (the table has no emitter — reported) · `95cde38a`.
+- **P18** — 2026-11-08, the ledgers closed on foreground runs, the projection rendered by its generator, and the session entry written through this unit's own CLI · `4f55cd3c` and the entry's own commit.
+- **D1** — (D) 2026-11-08, **validate-at-close**: the issue's S5 offers (a) close validates or (b) an evidenced non-goal. Chosen: (a). The close runs minutes after the mistake; the gate and the aggregator run hours later, so the first net must be the one nearest the writer. Evidence for the prototype's claim is O4's case: the exact incident fragment is refused before staging and its bytes stay untouched.
+- **D2** — (D) 2026-11-08, **the write-time second is the clock, with an explicit pin**: `--timestamp <iso>` exists so a reproducer and a suite can name the same fragment twice, and it is declared in `journal-write-grammar@1`. It is the only datum the caller may pin; the branch, the session slug and the name stay computed (S1).
+- **D3** — (D) 2026-11-08, **red-first test corrections, disclosed rather than hidden**: five expectations were corrected against the honest behaviour, none relaxed — (1) `--check` prints its `JOURNAL REFUSAL` summary first and the per-file faults after it (the product changed to satisfy the test, not the reverse); (2) an identity contradiction now carries the filename in the lint line; (3) the incident name does not fail the name parser at all — it parses as branch `main-manual`, so the refusal is the name/heading contradiction, and the close case asserts that (the test still fails at the red commit); (4) the write receipt's `path` is absolute, so the fixture stops joining it under the repo; (5) the close fixture's carrier is untracked as a directory, so its porcelain line is `?? .agentic-workflow/`.
+- **D4** — (D) 2026-11-08, **pre-existing reds are reported, not repaired**: `bun scripts/check-skill-context.mjs --documents` and its two suites (`check-skill-context`, `guide-split`) fail at `c7258644` — in a `git archive main` export — with `AGENTS.md: lines 573 > 477`, `estimate 9639 > 9462`, `prose lines 458 > 370`. This unit re-pins only the exact `machineLines` value its one row moves (115 → 116; the inventory 57 → 58) and does **not** re-base a ceiling it did not spend. The root suite is therefore 88/90 at this head, 88/90 at the base.
+- **E4** — 2026-11-08, **differential** (base `c7258644` exported to `mktemp -d`, head exported beside it, both against identical pinned-date fixture repositories): `session-close render` manual/auto/`--base nope`/missing-`--summary` → byte-identical after normalizing the wall-clock second; `session-close close` append mode and carrier mode → identical receipts (same sha, same leftovers); `journal aggregate` first run and no-op re-run, `journal name`, the bin's no-arg usage, an unknown-service refusal and `log render` valid/invalid → identical after normalizing the clock second. No unrequested stdout/stderr/exit difference.
+- **E5** — 2026-11-08, the carrier after the rider: `journal aggregate --check` · exit 0 · `{"ok":true,"checked":2,"refusals":[]}`; the rename kept the entry's blob `926869b0…` and the repair added exactly one terminating newline (`git diff` = `1 insertion(+), 1 deletion(-)`, `\ No newline at end of file` gone).
+- **E6** — 2026-11-08, the new suites: `bun test packages/agentic-workflow/test/journal.write.test.mjs` · exit 0 · 14 pass; `bun test packages/agentic-workflow/test/journal.test.mjs` · exit 0 · 26 pass (no assertion edited); `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` · exit 0 · 11 pass; `bun test scripts/session-close.test.mjs` · exit 0 · 30 pass; `bun test scripts/local-gate.test.mjs` · exit 0 · 41 pass; `bun test scripts/release-workflows.test.mjs` · exit 0 · 24 pass.
+- **E7** — 2026-11-08, the pi door: `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 610 pass / 0 fail across 52 files (the fixture now copies the three crate modules `session-close.mjs` imports, because the writer genuinely resolves them).
+- **G1** — 2026-11-08, `bun scripts/phase-lint.mjs docs/fix/452-journal-fragment-validation/SPEC.md` · exit 0 · `verdict PASS`, fingerprint `c04741e6…01ba` (all 18 phases `PASS (6/6)`).
+- **G2** — 2026-11-08, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass; `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS` with `journal-carrier-check` resolved at `scripts/local-gate.mjs` and `journal-carrier-check` claimed.
+- **G3** — 2026-11-08, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s) in 0 file(s)`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 29 skills` (`log-session` main estimate 2800 against its declared 2800); `--documents` reports no `machine-table lines` failure (the line/prose/estimate failures are D4's pre-existing ones).
+- **G4** — 2026-11-08, `bun scripts/lint-changeset.mjs .changeset/452-journal-fragment-validation.md` · exit 0 · `ok`; `bun scripts/roadmap-settle.mjs` · exit 0 · `154 unit docs checked · 0 fix docs skipped` · `violations: 0`; `bun scripts/docs-generate.mjs` · exit 0 · `1 written`, then `--check` · exit 0 · `verdict: PASS`.
+- **G5** — 2026-11-08, `bun scripts/local-gate.mjs --skip-network --no-bail` · **exit 1** · every step green except `root-suite` (D4's two pre-existing suites; `schema-node-compat` skipped as its dependent and run alone: exit 0, 756 pass). `crate-suite-bun` exit 0, `crate-suite-node` exit 0, `pi-node-compat` exit 0 (610 pass), `journal-carrier-check` exit 0, `version-parity-content` exit 0, `docs-generated-projection` exit 0. The four network steps were run separately: `workspace-install` exit 0 (167 installs, no changes), `pi-compat-guard` exit 0 (both legs `tsc --noEmit clean`), `dependency-pin-gate` exit 0, `dependency-advisories` report-only exit 0.
+- **E8** — 2026-11-08, the ledger's mechanical cells: `rg -c 'fragment content must be one entry block' src/journal/fragment.mjs` → 1 and the same pattern in `write.mjs` → no match (exit 1), so the byte refusal has one home (O11); `rg -c 'validate-at-close' SPEC.md` → 2 and `rg -c '5\(a\)' SPEC.md` → 4 (O17); `rg -c '^\| 452 \|' ROADMAP.md` → 1 (O26).
+- **E9** — 2026-11-08, the live-tree guard: every write/close/aggregate fixture ran under `mktemp -d` (`journal-write-*`, `session-close-*`, `local-gate-*`, `journal-carrier-*`, `aw452-diff-*`); `journal aggregate` without `--check` never ran against this worktree (the mutating mode was exercised only in the scratch export and in fixtures); `ls -d /tmp/journal-* /tmp/aw452-diff-* 2>/dev/null` → 0 entries after cleanup; `git status --porcelain` names no scratch path.
+- **V1** — 2026-11-08, every obligation row's validator ran in the foreground in the runs above and each row flipped `planned → verified`; no row was deferred out of the unit. O20 is verified on the gate's observed state (only D4's base-identical `root-suite` red) and O23 on the exact `machineLines` pins, because the three ceilings it does not touch were red before this unit existed — recorded, never excused.
+- **P6** — 2026-11-08, the session entry is written through the CLI this unit ships and committed by `session-close close` (below).
 
 ## Next
 
-P2 — land the RED corpus suite.
+The owner's external verdict on this branch. The branch is **not pushed**: the
+installed `pre-push` hook runs the offline gate, whose only red is the
+pre-existing `root-suite` pair recorded in D4, so pushing needs the owner's
+decision (the red is identical at `c7258644` and is not this unit's). On a
+verdict of blockers: one correction batch limited to them, then one recheck of
+the same rows (§9). The `## Fixes` row stays `in-progress` until a PR exists —
+`bun scripts/unit-route.mjs 452-journal-fragment-validation` fails closed with
+"all phases recorded but status is 'in-progress'", which is the router naming
+exactly this boundary, not a defect to paper over.
 
 ## References
 
