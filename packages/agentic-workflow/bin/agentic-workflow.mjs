@@ -495,14 +495,21 @@ switch (command) {
     }
     const flags = {};
     const positional = [];
+    // flag name → the camelCase key the code reads; `--json` is accepted and
+    // ignored (the receipt is always JSON, the flag exists for explicitness).
+    const VALUE_FLAGS = new Map([
+      ["--task", "task"],
+      ["--expect", "expect"],
+      ["--record-dir", "recordDir"],
+      ["--memory-cap", "memoryCap"],
+      ["--thread-cap", "threadCap"],
+      ["--parallelism", "parallelism"],
+    ]);
     for (let i = 1; i < restArgs.length; i++) {
       const arg = restArgs[i];
-      if (arg === "--task" || arg === "--expect" || arg === "--record-dir") {
+      if (VALUE_FLAGS.has(arg)) {
         if (i + 1 >= restArgs.length) sensorRefuse("RESOURCES", `${arg} requires a value`);
-        flags[arg.slice(2)] = restArgs[++i];
-      } else if (arg === "--memory-cap" || arg === "--thread-cap" || arg === "--parallelism") {
-        if (i + 1 >= restArgs.length) sensorRefuse("RESOURCES", `${arg} requires a value`);
-        flags[arg.slice(2)] = restArgs[++i];
+        flags[VALUE_FLAGS.get(arg)] = restArgs[++i];
       } else if (arg === "--json") {
         // the receipt is always JSON; the flag exists for explicitness
       } else {

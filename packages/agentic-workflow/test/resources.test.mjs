@@ -14,7 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -234,4 +234,36 @@ test("CLI: resources detect refuses an unknown subcommand or flag", () => {
   const bad = spawnSync("bun", [BIN, "resources", "explode"], { encoding: "utf8" });
   assert.equal(bad.status, 2);
   assert.match(bad.stderr, /RESOURCES REFUSAL —/u);
+});
+
+// The CLI's kebab-case flags must reach the library as the camelCase keys the
+// code reads — a flag the parser stores under the wrong key silently drops the
+// operator's cap (caught live: `--memory-cap "1 of 64 GB"` derived "max").
+test("CLI: the kebab-case cap flags reach the envelope", () => {
+  const run = spawnSync(
+    "bun",
+    [BIN, "resources", "detect", "--json", "--memory-cap", "1 of 64 GB"],
+    { encoding: "utf8" },
+  );
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  const envelope = JSON.parse(run.stdout);
+  assert.equal(envelope.memory.effectiveLimitBytes, 1024 ** 3, "the cap bounds the effective limit");
+  assert.equal(envelope.derived.parallelism, "serial", "a forced-low envelope derives serial");
+  assert.equal(envelope.caps.memoryCap, "1 of 64 GB");
+});
+
+test("CLI: --record-dir records the trial receipt (the anti-retry store)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-admit-cli-rec-"));
+  try {
+    const run = spawnSync(
+      "bun",
+      [BIN, "resources", "admit", "--task", "rec-1", "--expect", JSON.stringify(EXPECT), "--record-dir", dir],
+      { encoding: "utf8" },
+    );
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    assert.ok(existsSync(join(dir, "receipts")), "the receipt lands under <record-dir>/receipts");
+    assert.equal(readdirSync(join(dir, "receipts")).length, 1, "exactly one receipt file");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
