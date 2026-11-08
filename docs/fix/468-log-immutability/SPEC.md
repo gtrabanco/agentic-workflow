@@ -225,6 +225,9 @@ this unit; the review step is the owner's external verification.
 - **G2** — 2026-11-08, `bun scripts/local-gate.mjs --only log-immutability,journal-carrier-check,docs-generated-projection,version-parity-content` · exit 0 · `PASS — 4 step(s)`.
 - **G3** — 2026-11-08, `node scripts/local-gate.mjs --list` lists `log-immutability` (O7) · `node scripts/version-parity-gate.mjs --content` · exit 0 after both changesets · `node scripts/docs-generate.mjs --check` · exit 0 · `bun scripts/check-skill-context.mjs` + `--documents` · PASS · `bun scripts/skill-lint.mjs` · 0 findings · `bun scripts/unit-route.mjs --triage 468-log-immutability` · exit 0 · `bun scripts/phase-lint.mjs docs/fix/468-log-immutability/SPEC.md` · verdict PASS.
 
+- **L3** — 2026-11-08, owner instruction, verbatim: "create the pr".
+- **P9** — 2026-11-08, branch pushed (`5ba1d670..3eda945f`, pre-push gate `PASS — 10 step(s)` both pushes) and PR opened: [#469](https://github.com/gtrabanco/agentic-workflow/pull/469) · the roadmap row reads `done` with the PR open.
+
 ## Next
 
 The owner's external verification — the diff (`5ba1d670..fc6b20ca` plus the
