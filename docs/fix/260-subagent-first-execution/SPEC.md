@@ -367,12 +367,23 @@ frozen ledgers are the plan; no Relay packet is created.)
 - **E11** — 2026-11-08, `bun scripts/check-skill-context.mjs` · exit 0 · PASS (29 skills); `--routes` · exit 0 · PASS (14 routes, after the merge re-basis); `docs-generate --check` · exit 0 · PASS.
 - **D7** — 2026-11-08, disclosed: the `roadmap check` pr-url-unsettled violation existed since commit 784642e3 (the PR URL entered `## Next` and the check was not re-run; the push hook does not carry it). Resolved per the 7f9b5ec1 precedent: the Fixes row settled to `done · [#467]` while the PR is open (verification complete), `roadmap check` → PASS 0 violations.
 - **E12** — 2026-11-08, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/260-subagent-first-execution/SPEC.md` · exit 0 · PASS, 0 violations (after D7).
+- **L3** — 2026-11-08, the S11 amendment request, verbatim:
+  ```
+  Implementa los bordes que se quedaban fuera, porque estaba condicionado a acabar la feature de la issue #201 y eso ya se hizo
+  ```
+  (the named edges are the handoff's items 2 and 4, quoted verbatim in the S11 block; edge 1 stays `open` under the receipt-neutrality rule — O17; edge 3 is the independent-review pass on PR #467, process not code).
+- **P13** — 2026-11-08, amendment ledgers frozen (S11 + AC10/AC11 + O15–O17 + P10–P12, ac-hash re-stamped 45013a5f) · f4f04788.
+- **P14** — 2026-11-08, runtime observation half red-first: suite red 41609259 (missing module) → green 064df9fe (`resources check` check-in verdicts + pid reading + `resources bound` systemd envelope + admit's machine `expected_seconds` + `recordedAt` stamp; 27 pass, crate 529/530 both runtimes).
+- **E13** — 2026-11-08, foreground: `resources check --elapsed 2m` → `within-estimate` with the prose expectation; `--elapsed 47m` → `over-estimate` carrying "wait explicitly, investigate, or stop"; `resources bound --memory-cap "7 of 64 GB"` → `systemd-run --user --scope -p MemoryHigh=6451M -p MemoryMax=7168M -p CPUQuota=600%` + the `systemctl show` receipt read; unknown trial → exit 2 refusal; scratch record dirs removed after.
+- **P15** — 2026-11-08, init-workspace config offer: bootstrap step 11 (ask-first, additive, residuals) + upgrade's additive block · 4b55a0f9; skill-lint PASS, budgets PASS 29 skills.
+- **E14** — 2026-11-08, `bun scripts/local-gate.mjs` at the amendment's tree · exit 0 · **PASS — 13 step(s)**.
+
 - **D4** — 2026-11-08, owner delivery decision (answer to the #464 state report): "Esperar a que #464 se mergee, luego se incorporan los cambios en esta PR, se reconcilian y se revisa si se ha roto algo o falta algo por integrar o hay que modificar algo. Luego review independiente y si no hay findings, merge manual hecho por mi". Delivery order: (1) #464 merges first (owner's PR, owner's verdict — this branch never pushes to it); (2) main is integrated into `feat/260-subagent-first-execution` and reconciled — the branch already carries #201's content via merge 203a9875, so the integration is expected to be content-neutral or minimal, verified by the differential check; (3) reconcile-check for breakage or missing integration; (4) an independent review pass — the owner's explicit order here overrides this apply-request's inline-surgery rule for that one pass; (5) the owner merges manually. The prior handoff report's claim that #201 was "sin PR" was wrong (PR #464 existed, opened by the #201 session) — corrected to the owner when the state was re-checked.
 - **D5** — 2026-11-08, owner follow-up: "Crea la PR de esta feature primero" — the explicit order supersedes D4's wait step; the branch is pushed (the pre-push hook ran the offline gate subset: PASS, 9 steps) and **PR #467** opened (base main, `Closes #260`, evidence pack per the template). D4's post-merge order stands unchanged: integrate main, reconcile, independent review, owner merges.
 
 ## Next
 
-PR #467 open (https://github.com/gtrabanco/agentic-workflow/pull/467); main fully integrated (#464 + #466 + #465), reconciled, differential SAME ×4, gate re-run pending owner merge. The independent review pass (D4 step 4) is next.
+PR #467 open (https://github.com/gtrabanco/agentic-workflow/pull/467) with the S11 amendment landed; the independent review pass (D4 step 4) is next.
 
 ## References
 
