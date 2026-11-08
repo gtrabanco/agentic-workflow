@@ -1,5 +1,6 @@
 ---
 "@gtrabanco/agentic-workflow": minor
+"@gtrabanco/pi-agentic-workflow": minor
 ---
 
 feat: the journal carrier is aggregator-only at push level (issue #468)
