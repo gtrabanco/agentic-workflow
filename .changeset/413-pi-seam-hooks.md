@@ -25,7 +25,9 @@ a truncation marker and the excess drained (volume never decides a verdict),
 hard timeout per hook, and a non-zero exit — or a command that cannot start at
 all — blocks at the seam with the declared requirement quoted as declared (the
 teaching-message contract). A seam that cannot block what already happened
-(`session:*`, `post:commit`) reports the same message instead of swallowing it;
+(`session:*`, `post:commit`) reports the same message instead of swallowing it,
+and `session:end` is awaited by the host and bounded to 5 s at teardown, so the
+report outlives neither the session nor a slow check;
 an `enabled` declaration with no consent entry announces that it is inert.
 Auto commit/push exist only as explicit `phase:end`/`unit:end` per-seam flags
 (`autoCommit` requires `commitMessage`; `autoPush` requires `autoCommit`) —

@@ -151,3 +151,29 @@ session") and DA2 (`--exec-path` value-less form in `GIT_VALUE_OPTIONS`) are
 open for the owner's decision; per the correction bounds a new advisory never
 earns a cycle on its own. The delta receipt above is uncommitted at this head
 — the owner folds it in with the next docs commit.
+
+## N3 — the shutdown seam, closed (2026-11-08)
+
+The unit's last open item. Host evidence first: pi awaits every `session_shutdown`
+handler (`emitSessionShutdownEvent` → `await extensionRunner.emit`, and
+`AgentSessionRuntime.dispose()` awaits that) — the discard, not the host, was the
+defect.
+
+- **Red** `d7952e27` (606 pass / 2 fail): a `session:end` hook sleeping 5 s held
+  teardown the full 5 s and reported nothing; the entry's handler returned
+  `undefined`.
+- **Green** `e135927c` (608 pass / 0 fail): the handler returns the wiring's
+  promise; `SeamDeps.budgetMs` caps the seam at `SHUTDOWN_BUDGET_MS` (5 s, over a
+  larger declaration), so a slow check is a timeout block carrying its message
+  inside the bound. Four touched suites 56/0 under `node --test`.
+- Docs state it in the package README and `docs/workflow/SEAM_HOOKS.md`.
+
+**Environment incident (disclosed, 2026-11-07T22:55–23:20Z).** This session's
+worktrees were deleted twice from outside the session (and `/tmp` exhausted its
+inode table, then reset); afterwards the shared repository's branch ref pointed
+at another session's commit and this branch's local objects were gc'd — including
+the already-pushed `60ff9659`. Nothing shipped was lost (origin held the pushed
+head) and no published history was rewritten: the batch continued from a plain
+clone of the shared repo at `60ff9659`, with N3 re-applied from the transcript
+and both its red and green runs repeated here. The other session's ref and work
+were left untouched.

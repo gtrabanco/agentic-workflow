@@ -450,6 +450,11 @@ rather than silently dropping the declaration.
   bounded output. `pre:commit`/`pre:push` blocks stop the intercepted git
   command; `session:*` and `post:commit` cannot block what already happened, so
   they report the same message instead of swallowing it.
+- **Shutdown is bounded.** `session:end` runs while pi is tearing the session
+  down, and pi awaits the handler — so the seam's report lands instead of dying
+  with the process. Awaiting has a price, so this seam alone carries a 5 s
+  budget that overrides a larger declared `timeout`: a slow check is reported as
+  a timeout inside the bound rather than holding your quit.
 - **Auto commit/push are explicit per-seam flags, never defaults.**
   `"autoCommit": true` (+ required `"commitMessage"`) and `"autoPush": true`
   are valid only on `phase:end` / `unit:end` groups, and run only after the
