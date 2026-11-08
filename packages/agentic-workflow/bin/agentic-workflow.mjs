@@ -496,8 +496,10 @@ switch (command) {
     }
     const flags = {};
     const positional = [];
-    // flag name → the camelCase key the code reads; `--json` is accepted and
-    // ignored (the receipt is always JSON, the flag exists for explicitness).
+    // flag name → the camelCase key the code reads. `--json` is accepted where
+    // the output IS a JSON receipt (detect, admit, check); `bound` prints the
+    // shell envelope, so it refuses the flag instead of ignoring it silently.
+    let jsonAsked = false;
     const VALUE_FLAGS = new Map([
       ["--task", "task"],
       ["--expect", "expect"],
@@ -516,7 +518,7 @@ switch (command) {
         if (i + 1 >= restArgs.length) sensorRefuse("RESOURCES", `${arg} requires a value`);
         flags[VALUE_FLAGS.get(arg)] = restArgs[++i];
       } else if (arg === "--json") {
-        // the receipt is always JSON; the flag exists for explicitness
+        jsonAsked = true;
       } else {
         sensorRefuse("RESOURCES", `unknown argument "${arg}"`);
       }
@@ -561,6 +563,9 @@ switch (command) {
         process.exit(0);
       }
       if (sub === "bound") {
+        if (jsonAsked) {
+          sensorRefuse("RESOURCES", "bound prints the systemd envelope as shell lines, not a JSON receipt — drop --json (the flag is accepted by detect, admit and check)");
+        }
         if (!flags.task) sensorRefuse("RESOURCES", "bound requires --task <id>");
         if (!flags.cmd) sensorRefuse("RESOURCES", 'bound requires --cmd "<command to wrap>"');
         process.stdout.write(`${boundLine({ task: flags.task, envelope, command: flags.cmd })}\n`);

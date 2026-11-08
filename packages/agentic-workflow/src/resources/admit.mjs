@@ -20,7 +20,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { parseCap } from "./detect.mjs";
+import { parseCap, ResourcesError } from "./detect.mjs";
 
 export const ADMIT_CONTRACT_ID = "resources-admit@1";
 
@@ -34,10 +34,10 @@ const isRecord = (v) => typeof v === "object" && v !== null && !Array.isArray(v)
 
 function parseMemoryRequirement(text) {
   if (typeof text !== "string") {
-    throw new Error(`requirements.memory must be a "<n> <unit>" string, got ${JSON.stringify(text)}`);
+    throw new ResourcesError(`requirements.memory must be a "<n> <unit>" string, got ${JSON.stringify(text)}`);
   }
   const m = text.match(/^(\d+(?:\.\d+)?)\s*(GB|MB|KB)$/u);
-  if (!m) throw new Error(`requirements.memory "${text}" does not match "<n> <unit>" (unit: GB|MB|KB)`);
+  if (!m) throw new ResourcesError(`requirements.memory "${text}" does not match "<n> <unit>" (unit: GB|MB|KB)`);
   return { bytes: Number(m[1]) * UNIT_BYTES[m[2]], text };
 }
 
@@ -71,12 +71,14 @@ function readPriorReceipts(recordDir) {
  *   runtime can later flip to `bound-kill` when MemoryMax discovers "does not
  *   fit".
  *
- * Throws on a malformed expect shape (a caller bug, not a host condition).
+ * Throws `ResourcesError` on a malformed expect shape — a caller bug, not a
+ * host condition, but the CLI boundary turns it into a `RESOURCES REFUSAL`
+ * (exit 2) instead of a stack trace: the operator typed the brief.
  */
 export function admitTrial({ task, expect, envelope, recordDir = null }) {
-  if (typeof task !== "string" || task.trim() === "") throw new Error("task id is required");
-  if (!isRecord(expect)) throw new Error("expect must be a record");
-  if (!isRecord(envelope) || !isRecord(envelope.memory)) throw new Error("envelope must be a detectHost() result");
+  if (typeof task !== "string" || task.trim() === "") throw new ResourcesError("task id is required");
+  if (!isRecord(expect)) throw new ResourcesError("expect must be a JSON object (the brief's expectations)");
+  if (!isRecord(envelope) || !isRecord(envelope.memory)) throw new ResourcesError("envelope must be a detectHost() result");
 
   const missing = [];
   if (typeof expect.expected_duration !== "string" || expect.expected_duration.trim() === "") {
@@ -97,20 +99,20 @@ export function admitTrial({ task, expect, envelope, recordDir = null }) {
   // in the check-in message, expected_seconds is what the check compares.
   if (expect.expected_seconds !== undefined &&
       (typeof expect.expected_seconds !== "number" || !Number.isFinite(expect.expected_seconds) || expect.expected_seconds <= 0)) {
-    throw new Error(`expected_seconds must be a positive number of seconds, got ${JSON.stringify(expect.expected_seconds)}`);
+    throw new ResourcesError(`expected_seconds must be a positive number of seconds, got ${JSON.stringify(expect.expected_seconds)}`);
   }
 
   const reqs = {};
   if (expect.requirements.memory !== undefined) reqs.memory = parseMemoryRequirement(expect.requirements.memory);
   if (expect.requirements.threads !== undefined) {
     if (!Number.isInteger(expect.requirements.threads) || expect.requirements.threads < 1) {
-      throw new Error(`requirements.threads must be a positive integer, got ${JSON.stringify(expect.requirements.threads)}`);
+      throw new ResourcesError(`requirements.threads must be a positive integer, got ${JSON.stringify(expect.requirements.threads)}`);
     }
     reqs.threads = expect.requirements.threads;
   }
   const unknownReq = Object.keys(expect.requirements).filter((k) => !["memory", "threads"].includes(k));
   if (unknownReq.length > 0) {
-    throw new Error(`unknown requirements key(s): ${unknownReq.join(", ")} (allowed: memory, threads)`);
+    throw new ResourcesError(`unknown requirements key(s): ${unknownReq.join(", ")} (allowed: memory, threads)`);
   }
 
   if (reqs.memory && reqs.memory.bytes > envelope.memory.effectiveLimitBytes) {
