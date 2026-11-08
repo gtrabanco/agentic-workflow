@@ -148,6 +148,16 @@ owns the block and the RED-evidence shape) and write tests-first where they pay
 commits red (observed failing, naming the targeted suite), implementation green;
 UI/adapter glue may test after.
 
+**Orchestrate path** (only when the unit or the operator declares it, issue
+#260): the step dispatches instead of executing in-orchestrator — freeze the
+delegate brief (exact files, exact gate command, exact expected values,
+`expected_duration` + resource requirements, the model from
+`agentic-workflow resolve-passes`), pass `resources admit` before spawning,
+then verify by running the gate and reading the diff — never by trusting the
+subagent's summary. [Orchestrate](../../unit-lane/references/ORCHESTRATE.md)
+owns the contract; a refused admission or an unresolvable model degrades
+inline, stated in the report.
+
 ### 5. Claim-evidence loop (S5 — before post-step)
 
 Before running post-step, verify every claim the step's repair introduces. This
