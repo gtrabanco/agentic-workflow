@@ -281,6 +281,7 @@ to `done · [#PR]` via `rowUpsert` and `roadmap-settle` re-checks it.
 ## References
 
 - Issue [#274](https://github.com/gtrabanco/agentic-workflow/issues/274) (closes via the PR)
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/465
 - Roadmap row 70 (`pi-tool-surface`)
 - Related (soft) — #409: the gate receipt envelope is one of the schemas these
   deferred tools expose as `outputSchema` (issue's own triage note)
