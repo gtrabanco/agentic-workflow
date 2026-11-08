@@ -1,0 +1,6 @@
+## 2026-11-08T12:22:44Z — main — manual
+- **Commits:** 1 (`3c2b64a9…3c2b64a9`)
+- **Files:** .agentic-workflow/journal/20261108T121830Z-main-manual-narrative-local.md
+- **Summary:** Diagnosed Publish packages CI failure: S15 test blocked by a malformed journal fragment from a prior session's hand-save path; traced the write-path hole (writeFragment validates, but session-close close does not; the skill's prose instructs the model to compute the name and paste the bytes, which strips trailing newlines via command substitution).
+- **Decisions:** Chose to reproduce the failure deterministically in a disposable worktree on the exact failing SHA rather than guessing; confirmed writeFragment refuses the bytes, session-close close does not; verified main's carrier is now clean after weekly aggregation PR #458; updated issue #452 body with four corrections (already implemented, already done, scope redefined, missing enforcement point) and a diagnostic comment with evidence; declined a separate linter feature for #452 because the existing --check validates-only surface plus S15 in the publish gate already cover both roles.
+- **Next:** Implement the write-side gap in #452: decide on the session-close close validation (5(a) vs non-goal), then write the journal write CLI and wire the gate check
