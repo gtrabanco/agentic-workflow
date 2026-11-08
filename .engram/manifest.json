@@ -112,6 +112,14 @@
       "sessions": 54,
       "memories": 31,
       "prompts": 168
+    },
+    {
+      "id": "a2796c76",
+      "created_by": "agent",
+      "created_at": "2026-11-08T16:23:48.908470011Z",
+      "sessions": 105,
+      "memories": 39,
+      "prompts": 378
     }
   ]
 }
