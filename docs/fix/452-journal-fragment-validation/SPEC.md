@@ -416,10 +416,62 @@ relay-next: create .pi-web/relays/452-journal-fragment-validation/ (charter → 
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F2 | S7 · template/.agentic-workflow/journal.md:96 | docs | WARNING | docs-only | source | fold |
+| F3 | S15 · planning-obligations.md:31 (O18) | evidence | WARNING | docs-only | plan | fold |
+| F4 | S12 · planning-obligations.md:33 (O20) · SPEC.md:445 (D5) | evidence | WARNING | docs-only | plan | fold |
+| F5 | S12 · SPEC.md:450 (D4) · planning-obligations.md:33 (O20) | evidence | WARNING | docs-only | plan | fold |
+| F6 | S1 · packages/agentic-workflow/src/journal/write.mjs | behavior | WARNING | blocking | source | fold |
+
+### Correction batch — scope of each finding, before any repair
+
+The external verify of 2026-11-08 (`external-verify.md`) reported one blocker
+and six advisories. The blocker (B1) is already folded as `F1` by `c9b2669d`,
+which found the six advisories "not folded"; the owner's newer instruction
+(`L3`) supersedes that reading and folds every one of them here. The scope
+below is written before the repair, per that request, so the blast radius of
+each fix is named instead of assumed.
+
+- **F2** — what: `template/.agentic-workflow/journal.md:96` still presents
+  `journal name` as the writer's path and never names `journal write` or
+  `journal-write-grammar@1`. Scope: documentation shipped to target projects;
+  no code reads it, but a project following it recreates the retired hand-save
+  act. Action: name the writer and the second grammar block in the same
+  paragraph; keep `journal name` as the read-only answer (the unit keeps it
+  deliberately).
+- **F3** — what: `O18` says the fragment block "gains the write and check
+  rows"; the tree publishes a separate `journal-write-grammar@1` block and
+  leaves the fragment block unchanged. Scope: evidence wording only;
+  `normative-drift` and `journal.surfaces` verify the substance. Action: state
+  what the tree does (a second block beside the first, no restatement).
+- **F4** — what: `O20` asserts "no gate exception" while `D5` records the push
+  used `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` on the base-identical red. Scope:
+  the row's invariant, not the push (history is not rewritten); the S12 reading
+  stays the owner's call at merge. Action: state the disclosed fact in the row
+  and record the open reading as a decision line — no waiver is written.
+- **F5** — what: `D4`/`O20` say the root suite reproduces "identically at the
+  base export"; only the two ceiling suites compare (a bare `git archive`
+  export also reds git-dependent suites for want of a `.git`). Scope: evidence
+  precision; the pre-existing-red conclusion holds. Action: name which suites
+  compare and how.
+- **F6** — what: `journal write` in a project without the carrier created
+  `.agentic-workflow/journal/` (observed in scratch), silently flipping the
+  documented opt-in (`session-close close` then enters carrier mode). Scope:
+  behaviour of the new writer only — the library `writeFragment` keeps creating
+  the directory for the store driver, which configures its own carrier; the
+  CLI's policy changes. Action: refuse when the carrier is absent, publish the
+  rule in `journal-write-grammar@1`, pin it with a RED case, and differential
+  the with-carrier path to prove it is untouched.
+- **A6** — what: PR #459's compact verification list reads `check-skill-context
+  … exit 0`, true for the skills mode and false for `--documents` (exit 1).
+  Scope: the forge body only; no file in the tree carries it. Action: name the
+  mode in that line of the PR body. It is a `SUGGESTION` on the ladder
+  (`never persisted`), so it earns no table row — the fix and its check are
+  recorded as an `F` line here instead.
 
 ## Log
 
 - **L1** — (L) 2026-11-08, owner request verbatim: "Apply to this repository: issue #452" + the ten-step inline-application protocol, frozen as S9–S17 above; the issue's own words are S1–S8.
+- **L3** — (L) 2026-11-08, owner correction request verbatim: "Apply to this repository: arregla todos los findings advisories y bloqueantes de la review, trata de solucionar toda la cadena de error para evitar producir nuevos findings al acabar, para arreglarlo redacta primero una nota de alcance real de cada findings, para revisar que no se rompe otra cosa o no se deja otra cosa rota al hacer la reparación y trata de reparar toda la cadena" — one correction batch, scope first (`## Findings`), RED before the repair; it supersedes `F1`'s "advisories not folded" reading.
 - **P1** — 2026-11-08, ledgers cut at `c7258644` (main tip at the cut): unit doc + `planning-obligations.md` (O1–O27, all `planned`) + `planning-evidence.md` (PE-001–PE-018); the unit registered `in-progress` in the `## Fixes` table · `95cde38a`.
 - **E1** — 2026-11-08, the frozen failure at the cut: `cd packages/agentic-workflow && bun test test/journal.surfaces.test.mjs` at `c7258644` · exit 1 · `10 pass 1 fail`, `S15 … 20261108T121830Z-main-manual-narrative-local.md is not a newline-terminated CR-free block`. The file is the issue's own shape committed again by `3c2b64a9` (blob `926869b0`): the writer label in the kind slot **and** no trailing newline, while the issue's S4 had recorded the carrier as empty (S4a corrects it).
 - **E2** — 2026-11-08, the RED corpus: `bun test packages/agentic-workflow/test/journal.write.test.mjs` at `e1ee3247` · exit 1 · `0 pass 14 fail` — the write operation, the carrier check and both route statements did not exist. Committed red before any implementation.
