@@ -189,3 +189,27 @@ export const GUARD_REJECTION_REASONS = Object.freeze([
   "config-invalid",
 ]);
 export type GuardRejectionReason = (typeof GUARD_REJECTION_REASONS)[number];
+
+/** The spawned review passes an operator may route by name
+ *  (`pass-name`, issue #201): exactly the eleven passes the issue's Mechanics 1
+ *  lists — the eight `review-change` finder axes, the verification pass, the
+ *  classifier and the debt transform. `passes.default` is deliberately NOT a
+ *  member: it is the config-layer escape that resolves the cheap tier for
+ *  unlisted passes (owner decision 2026-10-12), never a spawned pass itself.
+ *  The pi package's config validator imports this set; the runner crate
+ *  mirrors it with a provenance comment until issue #427 unifies the reading —
+ *  extending this list updates the mirror in the same PR. */
+export const PASS_NAMES = Object.freeze([
+  "review-code",
+  "review-security",
+  "review-verify",
+  "review-design",
+  "review-a11y",
+  "review-brand",
+  "review-perf",
+  "review-seo",
+  "verify",
+  "classify",
+  "debt",
+]);
+export type PassName = (typeof PASS_NAMES)[number];
