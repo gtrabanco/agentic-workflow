@@ -1,8 +1,8 @@
 # Portable prompt — install the agentic workflow skill system
 
 Paste the prompt below into Claude Code (or any capable coding agent) **from the
-root of the target repository**. It regenerates the agentic workflow — **16
-user-facing skills + 13 internal steps** (minus `init-workspace`, which this
+root of the target repository**. It regenerates the agentic workflow — **14
+user-facing skills + 15 internal steps** (minus `init-workspace`, which this
 prompt itself replaces as the bootstrap) — **adapted to that project's**
 architecture, documentation, and conventions, rather than copying this repo's
 specifics verbatim.

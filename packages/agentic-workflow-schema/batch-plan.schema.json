@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/batch-plan.schema.json",
+  "title": "agentic-workflow batch plan v1",
+  "description": "The deterministic batch scheduler's machine envelope (issue #449): parallel-execution batches over the live work graph, one lane per surface, facts only — the planner never launches.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary"],
+  "properties": {
+    "contract": { "const": "agentic-workflow/batch-plan" },
+    "version": { "const": 1 },
+    "schema": { "const": "batch-plan@1" },
+    "source_revision": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+    "degraded": { "type": "array", "items": { "type": "string", "pattern": "^unavailable-[a-z0-9-]+$" } },
+    "batches": { "type": "array", "items": { "$ref": "#/definitions/batch" } },
+    "blocked": { "type": "array", "items": { "$ref": "#/definitions/blocked" } },
+    "launched": { "type": "array", "items": { "$ref": "#/definitions/launched" } },
+    "findings": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "summary": { "$ref": "#/definitions/summary" }
+  },
+  "definitions": {
+    "batch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "lanes"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 1 },
+        "lanes": { "type": "array", "items": { "$ref": "#/definitions/lane" } }
+      }
+    },
+    "lane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "occupied_by", "size_hint", "issues"],
+      "properties": {
+        "surface": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "occupied_by": { "type": ["string", "null"], "maxLength": 1024 },
+        "size_hint": { "enum": ["light", "mixed", "heavy"] },
+        "issues": { "type": "array", "items": { "$ref": "#/definitions/issue" } }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "title", "lane", "worktree", "command", "reason", "size_hint"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "lane": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "worktree": { "type": "string", "pattern": "^[a-z][a-z0-9-]*/\\d+-[a-z0-9-]*$" },
+        "command": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "reason": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "detail"],
+          "properties": {
+            "kind": { "enum": ["satisfied-inputs", "surface-conflict", "soft-ordered"] },
+            "detail": { "type": "string", "minLength": 1, "maxLength": 1024 }
+          }
+        },
+        "size_hint": { "enum": ["light", "mixed", "heavy"] },
+        "claimed": { "type": "boolean" }
+      }
+    },
+    "blocked": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "blockers", "reason"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "blockers": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1 } },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 1024 }
+      }
+    },
+    "launched": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "evidence"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "evidence": { "type": "string", "minLength": 1, "maxLength": 1024 }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "numbers", "detail"],
+      "properties": {
+        "code": { "enum": ["cycle", "orphaned-soft-dep", "prose-native-mismatch"] },
+        "numbers": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1 } },
+        "detail": { "type": "string", "minLength": 1, "maxLength": 1024 }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["open_issues", "batched", "blocked", "launched", "findings", "batches"],
+      "properties": {
+        "open_issues": { "type": "integer", "minimum": 0 },
+        "batched": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "launched": { "type": "integer", "minimum": 0 },
+        "findings": { "type": "integer", "minimum": 0 },
+        "batches": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

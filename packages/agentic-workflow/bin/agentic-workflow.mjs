@@ -73,6 +73,7 @@ import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
 import { parseDocArgs } from "../src/doc/grammar.mjs";
 import { runDocOp } from "../src/doc/retrieval.mjs";
+import { relativeDocPath, resolveSectionRef } from "../src/doc/docops.mjs";
 import { parseSectionArgs } from "../src/doc/section-grammar.mjs";
 import {
   SectionLocatorError,
@@ -214,6 +215,113 @@ function parseJournalArgs(args) {
 
 // ── Router ───────────────────────────────────────────────────────────────
 
+// ── doc — retrieval + half-A positional entry point (units 65 and #366) ─
+
+/** A typed selector-resolution failure is a refusal: exit 2, stdout empty.
+ *  The detail line carries exactly one `doc:` prefix — a message that already
+ *  names the tool keeps its own text, it never doubles the prefix (S11). */
+function docRefuse(code, message) {
+  process.stderr.write(`DOC REFUSAL — ${code}\n`);
+  if (message) process.stderr.write(`doc: ${String(message).replace(/^doc:\s*/, "")}\n`);
+  process.exit(2);
+}
+
+/** The seam an appended block needs at the section's end: a block boundary, so
+ *  the text never glues to the previous line nor to the next heading. */
+function appendSeam(body) {
+  if (body.endsWith("\n\n")) return body;
+  if (body.endsWith("\n")) return `${body}\n`;
+  return `${body}\n\n`;
+}
+
+/** The half-A branch executor. Resolution and replacement reads happen
+ *  before any write, so a refusal leaves the file byte-identical. */
+async function runDocOpPositional(g) {
+  const readSource = () => {
+    if (g.file === "-") return readFileSync(0, "utf8");
+    try {
+      return readFileSync(g.file, "utf8");
+    } catch (e) {
+      throw new Error(`cannot read the document (${g.file}): ${e.message}`);
+    }
+  };
+  if (g.op === "read") {
+    if (g.file === "-" && g.section !== null && g.section.includes("#")) {
+      throw new Error(
+        "a path-qualified section id needs a real document path — with `--file -` use the heading title or its bare slug",
+      );
+    }
+    const source = readSource();
+    const receipt = { ok: true, command: "read", path: g.file, section: null, bytes: 0 };
+    let output;
+    if (g.section === null) {
+      output = source;
+      receipt.bytes = Buffer.byteLength(source);
+    } else {
+      const section = resolveSectionRef(source, relativeDocPath(g.file), g.section);
+      output = source.slice(section.start, section.end);
+      receipt.section = { id: section.id, title: section.title, depth: section.depth, lines: section.lines };
+      receipt.bytes = Buffer.byteLength(output);
+    }
+    if (g.json) process.stdout.write(JSON.stringify(receipt) + "\n");
+    else process.stdout.write(output);
+    return;
+  }
+  if (g.op === "edit") {
+    const source = readFileSync(g.file, "utf8");
+    const bodySource = g.replacement ?? g.set ?? g.append;
+    const bodyMode = g.set !== null ? "set" : g.append !== null ? "append" : "replacement";
+    let text;
+    try {
+      // `--replacement` names a file; `--set`/`--append` carry their text and
+      // read stdin only for `-`.
+      text =
+        bodySource === "-"
+          ? readFileSync(0, "utf8")
+          : bodyMode === "replacement"
+            ? readFileSync(bodySource, "utf8")
+            : bodySource;
+    } catch (e) {
+      throw new Error(`cannot read the body source (${bodySource}): ${e.message}`);
+    }
+    const section = resolveSectionRef(source, relativeDocPath(g.file), g.section);
+    // Both text spellings ride the one splice primitive: `--set` places its text
+    // where the section was, `--append` places it after the section's own bytes as
+    // its own block (never glued to the next heading).
+    const result =
+      bodyMode === "append"
+        ? source.slice(0, section.start) +
+          appendSeam(source.slice(section.start, section.end)) +
+          (text.endsWith("\n") ? text : `${text}\n`) +
+          source.slice(section.end)
+        : source.slice(0, section.start) + text + source.slice(section.end);
+    if (!g.dryRun) {
+      try {
+        writeFileSync(g.file, result);
+      } catch (e) {
+        docRefuse("WRITE", `cannot write the document (${g.file}): ${e.message}`);
+      }
+    }
+    const receipt = {
+      ok: true,
+      command: "edit",
+      path: g.file,
+      section: { id: section.id, title: section.title, depth: section.depth, lines: section.lines },
+      bytesBefore: Buffer.byteLength(source),
+      bytesAfter: Buffer.byteLength(result),
+    };
+    if (g.json) process.stdout.write(JSON.stringify(receipt) + "\n");
+    else if (g.dryRun) process.stdout.write(result);
+    else console.log(`doc edit: ${bodyMode === "append" ? "appended to" : "replaced"} ${g.section} in ${g.file} (lines ${section.lines[0]}-${section.lines[1]})`);
+    return;
+  }
+  if (g.op === "index") {
+    const { runDocIndex } = await import("../src/doc/structure.mjs");
+    await runDocIndex(g, { rootDir: process.cwd() });
+    return;
+  }
+}
+
 const command = process.argv[2];
 if (!command) {
   console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal> ...");
@@ -256,7 +364,7 @@ switch (command) {
     break;
   }
 
-  // ── doc — retrieval entry point (unit 65, D2) ────────────────────────
+  // ── doc — retrieval + half-A entry point (unit 65 D2, issue #366) ────
   case "doc": {
     let grammar;
     try {
@@ -264,6 +372,16 @@ switch (command) {
     } catch (e) {
       process.stderr.write(`doc: ${e.message}\n`);
       process.exit(1);
+    }
+    if (grammar.branch === "docop") {
+      try {
+        await runDocOpPositional(grammar);
+      } catch (e) {
+        if (e instanceof SectionLocatorError) docRefuse(e.code, e.message);
+        process.stderr.write(`doc: ${e.message}\n`);
+        process.exit(1);
+      }
+      break;
     }
     let envelope;
     try {

@@ -37,7 +37,8 @@
     "./pre-execution-review-receipt.schema.json": "./pre-execution-review-receipt.schema.json",
     "./projection-manifest.schema.json": "./projection-manifest.schema.json",
     "./guard-verdict.schema.json": "./guard-verdict.schema.json",
-    "./journal-entry.schema.json": "./journal-entry.schema.json"
+    "./journal-entry.schema.json": "./journal-entry.schema.json",
+    "./batch-plan.schema.json": "./batch-plan.schema.json"
   },
   "files": [
     "dist",
@@ -53,6 +54,7 @@
     "projection-manifest.schema.json",
     "guard-verdict.schema.json",
     "journal-entry.schema.json",
+    "batch-plan.schema.json",
     "README.md",
     "LICENSE"
   ],
