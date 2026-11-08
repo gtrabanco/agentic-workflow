@@ -265,6 +265,61 @@ test("journal write: a mechanical fragment is exactly log render's bytes", () =>
   assert.equal(fs.readFileSync(receipt.path, "utf8"), renderEntry(facts));
 });
 
+// ── already registered — one entry per conversation (issue #468 S3) ─────
+
+test("journal write: an explicit session already registered is refused, never duplicated", () => {
+  const repo = newRepo("registered");
+  const first = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "First entry.", "--session", "s1", "--timestamp", PINNED],
+    repo,
+  );
+  assert.equal(first.status, 0, first.stderr);
+  const second = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "Second entry.", "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(second.status, 2, second.stdout);
+  assert.match(second.stderr, /JOURNAL REFUSAL — already registered/u);
+  assert.match(second.stderr, /20261108T123000Z-main-narrative-s1\.md/u, "the refusal names the fragment that landed");
+  assert.deepEqual(names(repo), ["20261108T123000Z-main-narrative-s1.md"], "no byte written");
+});
+
+test("journal write: the registered check spans kinds — a mechanical write for the same session is refused too", () => {
+  const repo = newRepo("registered-mixed");
+  const facts = {
+    timestamp: "2026-11-08T12:30Z",
+    branch: "main",
+    reason: "quit",
+    commits: { count: 1, range: "1a2b3c4d…9e8f7a6b" },
+    files: ["docs/LOGS.md"],
+  };
+  const factsPath = path.join(repo, "facts.json");
+  fs.writeFileSync(factsPath, `${JSON.stringify(facts)}\n`);
+  const narrative = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "The session's entry.", "--session", "s1", "--timestamp", PINNED],
+    repo,
+  );
+  assert.equal(narrative.status, 0, narrative.stderr);
+  const mechanical = runCli(
+    ["journal", "write", "--kind", "mechanical", "--facts", factsPath, "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(mechanical.status, 2, mechanical.stdout);
+  assert.match(mechanical.stderr, /already registered/u);
+});
+
+test("journal write: the fallback session is not a conversation identity — unflagged writes keep landing", () => {
+  const repo = newRepo("fallback");
+  for (const [timestamp, summary] of [
+    [PINNED, "One conversation's entry."],
+    ["2026-11-08T13:30:00Z", "Another conversation's entry."],
+  ]) {
+    const run = runCli(["journal", "write", "--kind", "narrative", "--summary", summary, "--timestamp", timestamp], repo);
+    assert.equal(run.status, 0, run.stderr);
+  }
+  assert.equal(names(repo).length, 2, "both unflagged writes land — the check never fires on the fallback slug");
+});
+
 // ── aggregate --check — the carrier lint (S3) ────────────────────────────
 
 test("journal aggregate --check: every fault is listed and no byte moves", () => {
