@@ -879,3 +879,15 @@ in the same PR, never a prose edit. The table below is pinned to the consts by
 | `PROJECTION_HASH_ALGORITHMS` | `sha256` | The digest algorithm a rule's content hash uses |
 | `GUARD_VERDICTS` | `allow` · `block` · `degrade` | The fail-closed guard answers |
 | `GUARD_REJECTION_REASONS` | `rule-violation` · `guard-unavailable` · `guard-error` · `config-invalid` | Why a guard blocked or degraded |
+
+## Review-pass routing vocabularies (issue #201)
+
+The spawned review passes an operator may route by name. The set is the one
+machine owner; the pi package's config validator imports it and the runner
+crate mirrors it with a provenance comment until issue #427 unifies the
+reading. Growing it is a schema-const change plus the inventory row in
+`AGENTS.md`'s `normative-surfaces@1`, in the same PR.
+
+| Export | Values | Meaning |
+| --- | --- | --- |
+| `PASS_NAMES` | `review-code` · `review-security` · `review-verify` · `review-design` · `review-a11y` · `review-brand` · `review-perf` · `review-seo` · `verify` · `classify` · `debt` | The spawned review passes; `passes.default` is the config-layer escape for unlisted passes, never a member |
