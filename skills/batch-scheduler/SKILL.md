@@ -22,7 +22,9 @@ graph and prints the document. This skill runs the script, reads the JSON, and
 interprets it against [the plan grammar](references/PLAN.md) — it never
 assembles the envelope by hand.
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) before ending every turn; the **read-only profile** substitutes boxes 1–5 (the one sanctioned side effect is the planner's own untracked state file, declared here). Skill-specific additions:
 
 ```
 ✓ The script was RUN — `bun scripts/batch-scheduler.mjs [--json-only] [--root
