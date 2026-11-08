@@ -373,13 +373,17 @@ test("the guard installs the package's own workspace dependencies, linked from t
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "packages/pi-agentic-workflow/package.json"), "utf8"));
   const dirs = workspacePackageDirs(ROOT);
   const { specs, missing } = piCompatInstalls(manifest, "1.1.0", dirs);
-  assert.deepEqual(missing, [], "a declared dependency with no workspace sibling is reported, never skipped");
+  assert.deepEqual(missing, [], "a @gtrabanco dependency with no workspace sibling is reported, never skipped");
   assert.ok(specs.includes("@earendil-works/pi-coding-agent@1.1.0"), "the pi peer is installed at the leg under test");
   assert.ok(specs.includes("@earendil-works/pi-tui@1.1.0"), "the tui peer travels with the pi peer");
-  for (const name of Object.keys(manifest.dependencies ?? {})) {
-    const spec = specs.find((entry) => entry.startsWith(`${name}@file:`));
-    assert.ok(spec, `${name} is installed from the folder, not from a published version that may lag src/`);
-    assert.equal(spec, `${name}@file:${dirs.get(name)}`, "the spec names the workspace directory itself");
+  for (const [name, spec] of Object.entries(manifest.dependencies ?? {})) {
+    if (dirs.has(name)) {
+      const entry = specs.find((e) => e.startsWith(`${name}@file:`));
+      assert.ok(entry, `${name} is installed from the folder, not from a published version that may lag src/`);
+      assert.equal(entry, `${name}@file:${dirs.get(name)}`, "the spec names the workspace directory itself");
+    } else {
+      assert.ok(specs.includes(`${name}@${spec}`), `${name} (third-party) installs at its declared spec`);
+    }
   }
 });
 
