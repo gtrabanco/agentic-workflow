@@ -188,6 +188,7 @@ test("project command routes merge per key — a project thinking override keeps
       "execute-phase": { model: "nan/qwen3.6", thinking: "low" },
       "review-change": { model: "nan/glm5.3-flash" },
     },
+    passes: { classify: { model: "inherit" } },
   });
   const project = JSON.stringify({
     commands: { "execute-phase": { thinking: "high" }, "review-change": { thinking: "medium" } },

@@ -147,6 +147,40 @@ function checkPassesMap(passes) {
   return out;
 }
 
+/** Merge the two scopes' command routes **per key** — the loader's merge rule
+ *  (AC3): a project route that sets only `thinking` keeps the global `model`,
+ *  the same transaction rule pi's `resolveRoute` applies to every route
+ *  scope. A present-but-malformed map is a refusal here (mirroring
+ *  `$.passes`); a malformed route in either scope is carried unspread to the
+ *  lazy `selectedCommandModel` validation, so a selected malformed route
+ *  refuses instead of resolving to the floor. */
+function mergeCommandRoutes(globalCommands, projectCommands) {
+  const checkMap = (value) => {
+    if (value === undefined) return {};
+    if (!isRecord(value)) {
+      throw new PassesError("$.commands: must be an object mapping command names to routes");
+    }
+    return value;
+  };
+  const global = checkMap(globalCommands);
+  const project = checkMap(projectCommands);
+  const merged = {};
+  for (const name of new Set([...Object.keys(global), ...Object.keys(project)])) {
+    const g = global[name];
+    const p = project[name];
+    if (g === undefined || p === undefined) {
+      merged[name] = g === undefined ? p : g;
+    } else if (isRecord(g) && isRecord(p)) {
+      merged[name] = { ...g, ...p };
+    } else {
+      // One side is malformed: hand the malformed value to the lazy
+      // validator — never spread it into a valid-looking route.
+      merged[name] = isRecord(p) ? g : p;
+    }
+  }
+  return merged;
+}
+
 /** The selected command route's model, validated lazily (fail closed on a
  *  malformed *selected* route) — `inherit` here means "no concrete model". */
 function selectedCommandModel(commands, commandName) {
@@ -220,7 +254,7 @@ export function resolvePasses({ globalText = null, projectText = null, command =
     };
   }
 
-  const commands = { ...(globalConfig.commands ?? {}), ...(projectConfig.commands ?? {}) };
+  const commands = mergeCommandRoutes(globalConfig.commands, projectConfig.commands);
   const passes = {};
   for (const name of PASS_NAMES) {
     const entry = merged[name] ?? merged[PASS_DEFAULT_NAME];
