@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: large
-ac-hash: b40f4a04c4be19d6654b7545eaf6f9baf7c21e2509ea6345b78a5393a6451038
+ac-hash: 45013a5f22fa787d01e6ecf7855f10b417b9ccea574d7276b7081b3bfa470f43
 ---
 
 # fix/260-subagent-first-execution
@@ -101,6 +101,26 @@ are the owner's three apply-request answers of 2026-11-08.
 > 5. **Execution layer ownership** (owner, 2026-10-28): the subagent
 >    execution layer stays **in `@gtrabanco/pi-agentic-workflow`** — it does
 >    not move to the future runtime-platform project.
+
+**S11 — Implement the remaining edges now that #201 merged (owner order, 2026-11-08).**
+> Implementa los bordes que se quedaban fuera, porque estaba condicionado a
+> acabar la feature de la issue #201 y eso ya se hizo
+
+Antecedent — the named edges are the handoff's own words (2026-11-08, verbatim):
+> 2. **La capa de observación en ejecución (S6 en su mitad de runtime)** —
+>    … el *heartbeat* y el *check-in* con datos vivos son deber del
+>    orquestador según el contrato en prosa, apoyados en los registros
+>    duraderos de piew (`subagents_inspect`). No construí un script de
+>    heartbeat — si lo quieres determinista, es una unidad pequeña posterior.
+> 4. **init-workspace no escribe la nueva clave `subagents`** — la config está
+>    documentada en el README del paquete, pero el bootstrap no ofrece el paso
+>    de escritura (igual que #201 dejó fuera el suyo tras el re-scope).
+
+Edge 1 (measured acceptance) stays `open` in `## Future`: #307's
+receipt-neutrality rule bars a speculative recording ledger with no data, and
+its data (≥3 real units executed post-landing) cannot exist in this turn.
+Edge 3 (the independent review) is process, not code — it runs on PR #467
+after this amendment lands.
 
 ## Impact
 
@@ -215,6 +235,8 @@ packages/pi-agentic-workflow/src/config`, exit 0, 2026-11-08.)
 - [ ] AC7 (command-verified, S8): the differential check — every touched deterministic command run against `git archive` of the base commit in `mktemp -d` produces stdout/stderr/exit identical to the change for pre-existing inputs; `bun scripts/local-gate.mjs` exits 0 at HEAD.
 - [ ] AC8 (evidence, S9): the unit's goal, acceptance criteria and discoveries are persisted to Engram at the unit boundary (observation id recorded in `## Log`); `mem_context` returns the project's unit-boundary record.
 - [ ] AC9 (command-verified, S1+S8+S10): the delivery wiring is machine-emitted — ROADMAP row 68 re-cut by the emitter's shapes, the `## Fixes` row and changeset present, the piew registration lives in `packages/pi-agentic-workflow/` (execution-layer rule), and the work arrived as conventional commits on `feat/260-subagent-first-execution` for one PR; hand-edited surfaces (the `## Fixes` row) are disclosed in `## Log` as the 201 unit did.
+- [ ] AC10 (command-verified, S11 edge 2): the runtime observation half of S6 is deterministic — `resources check` reads the recorded trial receipt and emits the check-in verdict with data (`within-estimate` / `over-estimate` naming task, expected and elapsed; `unmeasurable` naming the missing `expected_seconds`; an unknown trial refuses exit 2); `--pid` reads the live process state and cumulative CPU time (injected readings in tests); `resources bound` emits the S6 layer-A systemd trial envelope (`systemd-run --user --scope -p MemoryHigh=… -p MemoryMax=… -p CPUQuota=…`) plus its after-exit receipt read, derived from the envelope — `bun test packages/agentic-workflow/test/resources.test.mjs` exits 0 (red at cut) and the foreground runs show each verdict.
+- [ ] AC11 (command-verified, S11 edge 4): the routing/subagent config enters the bootstrap — `rg -n "subagents" skills/init-workspace/references/BOOTSTRAP_WRITE.md skills/init-workspace/references/UPGRADE.md` → ≥1 match in each; the step writes `passes` recommended entries **and** the `subagents` key, ask-first (never auto-written without consent, the #201 Mechanics-4 shape), and `bun scripts/check-skill-context.mjs` exits 0 after the edit.
 
 ## Tasks
 
@@ -265,6 +287,27 @@ packages/pi-agentic-workflow/src/config`, exit 0, 2026-11-08.)
   (validator: `bun scripts/local-gate.mjs` exits 0)
   (Implements: S1, S7, S9)
   Relevant files: docs/LOGS.md
+- P9 — Main integration + reconcile after #464 merged (owner order D4):
+  conflicts resolved, budgets merge re-based, the verifier's truncated-sha
+  rule scoped to receipt marks, differential vs origin/main
+  (validator: `bun scripts/local-gate.mjs` exits 0)
+  (Implements: S8)
+- P10 — The runtime observation half (S11 edge 2), red-first: `resources
+  check` (the check-in verdict with data; the machine `expected_seconds`
+  expectation; the recordedAt stamp) + `resources bound` (the S6 layer-A
+  systemd trial envelope emitter)
+  (validator: `bun test packages/agentic-workflow/test/resources.test.mjs` exits 0)
+  (Implements: S6, S11)
+  Relevant files: packages/agentic-workflow/src/resources/, packages/agentic-workflow/bin/agentic-workflow.mjs
+- P11 — init-workspace offers the routing/subagent config (S11 edge 4):
+  the bootstrap step and the upgrade additive block, ask-first
+  (validator: `rg -n "subagents" skills/init-workspace/references/BOOTSTRAP_WRITE.md skills/init-workspace/references/UPGRADE.md` → ≥1 match each; `bun scripts/check-skill-context.mjs` exits 0)
+  (Implements: S3, S11)
+  Relevant files: skills/init-workspace/references/
+- P12 — Verification and handoff for the amendment: gate, foreground
+  validators, ledgers closed, log
+  (validator: `bun scripts/local-gate.mjs` exits 0)
+  (Implements: S11)
 
 ## Triaged steps
 
