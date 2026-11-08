@@ -27,7 +27,9 @@ its separate fail-closed merge step.
 evidence, blocks on a missing or stale receipt routed to `/review-change`, and
 independently evaluates only the delivery gates below.
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn; the **read-only profile** substitutes boxes 1–5 for the repo (audit-pr commits, pushes, and merges nothing — its sanctioned side effect is the SHA-bound comment posted in the additions). Skill-specific additions (the `→ Next:` box is canonical-owned and not restated here):
 
 ```
 ✓ The review receipt was consumed from one PR snapshot: `headRefOid` + newest
@@ -64,12 +66,11 @@ independently evaluates only the delivery gates below.
   never skipped silently)
 ✓ Architectural-invariant preservation was evaluated and its result stated
   explicitly: pass / blocker / n-a (no project document → n-a; never skipped)
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Missing reference → STOP. About to end the turn with any box unchecked? The
+turn is NOT done — complete the missing box first (weak models drop
+end-of-document duties; this list is first on purpose).
 
 ## When to use
 
