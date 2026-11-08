@@ -119,6 +119,7 @@ import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Pack
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
 import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
+import { checkTrial, boundLine, parseDuration, CheckError, readPidLive } from "../src/resources/check.mjs";
 import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -487,11 +488,11 @@ switch (command) {
     break;
   }
 
-  // ── resources — the trial-envelope + admission layer (issue #260) ──
+  // ── resources — the trial-envelope + admission + observation layer (issue #260) ──
   case "resources": {
     const sub = restArgs[0];
-    if (sub !== "detect" && sub !== "admit") {
-      sensorRefuse("RESOURCES", `unknown subcommand "${sub ?? ""}" (usage: resources detect [caps…] | resources admit --task <id> --expect <json> [--record-dir <dir>])`);
+    if (sub !== "detect" && sub !== "admit" && sub !== "check" && sub !== "bound") {
+      sensorRefuse("RESOURCES", `unknown subcommand "${sub ?? ""}" (usage: resources detect [caps…] | resources admit --task <id> --expect <json> [--record-dir <dir>] | resources check --task <id> --record-dir <dir> [--elapsed <n>s|m|h] [--pid <n> [--prev-cpu <s>]] | resources bound --task <id> --cmd "<command>" [caps…])`);
     }
     const flags = {};
     const positional = [];
@@ -504,6 +505,10 @@ switch (command) {
       ["--memory-cap", "memoryCap"],
       ["--thread-cap", "threadCap"],
       ["--parallelism", "parallelism"],
+      ["--elapsed", "elapsed"],
+      ["--pid", "pid"],
+      ["--prev-cpu", "prevCpu"],
+      ["--cmd", "cmd"],
     ]);
     for (let i = 1; i < restArgs.length; i++) {
       const arg = restArgs[i];
@@ -528,6 +533,37 @@ switch (command) {
       const envelope = detectHost({ caps: Object.keys(caps).length > 0 ? caps : null });
       if (sub === "detect") {
         process.stdout.write(`${JSON.stringify(envelope, null, 2)}\n`);
+        process.exit(0);
+      }
+      if (sub === "check") {
+        if (!flags.task) sensorRefuse("RESOURCES", "check requires --task <id>");
+        if (!flags.recordDir) sensorRefuse("RESOURCES", "check requires --record-dir <dir> (the admit run's record dir)");
+        const elapsedSeconds = flags.elapsed !== undefined ? parseDuration(flags.elapsed) : null;
+        const pid = flags.pid !== undefined
+          ? { ...readPidLive(flags.pid), prevCpuSeconds: flags.prevCpu !== undefined ? Number(flags.prevCpu) : null }
+          : null;
+        let verdict;
+        try {
+          verdict = checkTrial({
+            task: flags.task,
+            recordDir: flags.recordDir,
+            elapsedSeconds,
+            pid,
+          });
+        } catch (e) {
+          if (!(e instanceof CheckError)) throw e;
+          sensorRefuse("RESOURCES", e.message);
+        }
+        // A check is information, never a refusal: within/over/unmeasurable all
+        // exit 0 — the orchestrator decides on the message. Only the caller's
+        // errors (unknown trial, bad duration) refused above.
+        process.stdout.write(`${JSON.stringify(verdict, null, 2)}\n`);
+        process.exit(0);
+      }
+      if (sub === "bound") {
+        if (!flags.task) sensorRefuse("RESOURCES", "bound requires --task <id>");
+        if (!flags.cmd) sensorRefuse("RESOURCES", 'bound requires --cmd "<command to wrap>"');
+        process.stdout.write(`${boundLine({ task: flags.task, envelope, command: flags.cmd })}\n`);
         process.exit(0);
       }
       // admit

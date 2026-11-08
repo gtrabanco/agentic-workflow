@@ -93,6 +93,12 @@ export function admitTrial({ task, expect, envelope, recordDir = null }) {
       receipt: { task, missing },
     };
   }
+  // The machine-readable expectation (S11): the prose expected_duration travels
+  // in the check-in message, expected_seconds is what the check compares.
+  if (expect.expected_seconds !== undefined &&
+      (typeof expect.expected_seconds !== "number" || !Number.isFinite(expect.expected_seconds) || expect.expected_seconds <= 0)) {
+    throw new Error(`expected_seconds must be a positive number of seconds, got ${JSON.stringify(expect.expected_seconds)}`);
+  }
 
   const reqs = {};
   if (expect.requirements.memory !== undefined) reqs.memory = parseMemoryRequirement(expect.requirements.memory);
@@ -144,13 +150,18 @@ export function admitTrial({ task, expect, envelope, recordDir = null }) {
     task,
     digest,
     verdict: "allow",
-    expect: { expected_duration: expect.expected_duration, requirements: expect.requirements },
+    expect: {
+      expected_duration: expect.expected_duration,
+      ...(expect.expected_seconds !== undefined ? { expected_seconds: expect.expected_seconds } : {}),
+      requirements: expect.requirements,
+    },
     recordedAt: null,
   };
 
   if (recordDir) {
     const receiptsDir = join(recordDir, "receipts");
     mkdirSync(receiptsDir, { recursive: true });
+    receipt.recordedAt = new Date().toISOString();
     writeFileSync(join(receiptsDir, `${digest.slice(0, 16)}.json`), `${JSON.stringify(receipt, null, 2)}\n`);
   }
 
