@@ -28,7 +28,9 @@ It does **not** scan the diff: every finding concern has exactly one owning
 pass (see the [axis ownership map](references/FIND.md)) — the per-axis passes
 (`review-code`, `review-security`, `review-verify`, `review-perf`,
 design/a11y/brand/SEO) find, and this engine classifies. No broad findings
-scan here.
+scan here. The finders' shared `## Scope` and `## Materiality bar` sections
+are owned by the [finder contract](references/FINDER_CONTRACT.md) — the
+finders cite it instead of copying them.
 
 ## When to use
 
