@@ -325,29 +325,46 @@ export function removeInvocationRecord(root: string, sessionId?: string): void {
  * — this names targets and steps by number, never restates their rules.
  */
 export function composeDirective(record: InvocationRecord): string {
+  const fragment = record.target === "fragment";
   const lines = [
     "/log-session — the extension command ran: the invocation is recorded and the mechanical work is done. The prose is the only part left to you.",
     "",
     `Record: .pi/.session-${record.session}${RECORD_SUFFIX} (${record.contract}, invoked ${record.invokedAt})`,
-    record.target === "fragment"
-      ? `Entry target — the fragment carrier is opted in, so write this one file and never touch ${record.journal}:`
-      : `Entry target — append to the end of ${record.journal} (never a past entry):`,
-    record.path,
-    "",
   ];
+  if (fragment) {
+    // The one writer both doors name (issue #452 S1): the carrier's CLI takes
+    // the prose fields, computes the name, the timestamp and the bytes, and
+    // refuses a fragment the aggregator could not read. The resolved path is
+    // still stated because it is what the settled turn reconciles against.
+    lines.push(
+      `Entry target — the fragment carrier is opted in: hand the entry to its writer, which computes the name and bytes, and never touch ${record.journal}:`,
+    );
+    lines.push(
+      `agentic-workflow journal write --kind narrative --session ${record.session} --summary "<your Summary>" [--decisions "<…>"] [--next "<…>"]`,
+    );
+    lines.push(`Run at this second it lands at ${record.path}; the CLI never overwrites a collision.`);
+  } else {
+    lines.push(`Entry target — append to the end of ${record.journal} (never a past entry):`);
+    lines.push(record.path);
+  }
+  lines.push("");
   if (record.writer === "script" && record.facts !== null) {
     lines.push("Session facts, from the project's own writer at invocation (`" + WRITER_SCRIPT + " render --kind auto`):");
     lines.push(record.facts.trimEnd());
     lines.push("");
     lines.push(
-      `Run the skill's Process steps 3–5 with these values: render the entry with your Summary, Decisions and Next, save it at the exact target path above, then run \`${WRITER_SCRIPT} close\`.`,
+      fragment
+        ? `Run the skill's Process steps 3 and 5 with these values: write the entry with your Summary, Decisions and Next through the command above, then run \`${WRITER_SCRIPT} close\`.`
+        : `Run the skill's Process steps 3–5 with these values: render the entry with your Summary, Decisions and Next, save it at the exact target path above, then run \`${WRITER_SCRIPT} close\`.`,
     );
   } else {
     lines.push(
       `Writer: \`${WRITER_SCRIPT}\` is absent from this project${record.reason ? ` (${record.reason})` : ""}, so its facts were not computed here.`,
     );
     lines.push(
-      "Gather the mechanical facts yourself per the skill's Process step 2 (git), then follow its steps 4–5 to write the Summary, Decisions and Next at the target above.",
+      fragment
+        ? "Gather the mechanical facts yourself per the skill's Process step 2 (git), then write the Summary, Decisions and Next through the command above."
+        : "Gather the mechanical facts yourself per the skill's Process step 2 (git), then follow its steps 4–5 to write the Summary, Decisions and Next at the target above.",
     );
   }
   lines.push("");

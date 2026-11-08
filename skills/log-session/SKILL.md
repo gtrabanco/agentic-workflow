@@ -106,8 +106,8 @@ the HEAD sha and start time at session open.
      review must chase (fix #157's F14). Write the actual state: "PR #N open,
      awaiting the human merge".
 
-4. **Render the entry** — the mechanical facts (timestamp, branch, commit count
-   and range, files touched) are computed for you:
+4. **Render and write the entry** — the mechanical facts (timestamp, branch,
+   commit count and range, files touched) are computed for you:
 
    ```
    bun scripts/session-close.mjs render --summary "<what this session did>" \
@@ -119,14 +119,20 @@ the HEAD sha and start time at session open.
    - **No fragment carrier** (the default): append to the **end** of
      `docs/LOGS.md` (append-only, chronological) with your editing tool.
    - **Fragment carrier** (`.agentic-workflow/journal/` exists — issue #405):
-     write a **fragment file** there instead and never touch `docs/LOGS.md`
-     (the merge-to-main aggregator is its only writer). Compute the name with
-     the carrier's CLI — `agentic-workflow journal name --kind narrative
-     [--session <session id>]` — and save the entry bytes unchanged as that
-     file. The name grammar has one owner
-     (`journal-fragment-grammar@1` in `@gtrabanco/agentic-workflow`); never
-     hand-roll it. One fragment per session; a refused name is a collision,
-     not a cue to invent another.
+     hand the entry to its writer, never to `docs/LOGS.md` (the aggregator
+     owns that file):
+
+     ```
+     agentic-workflow journal write --kind narrative --summary "<summary>" \
+       --decisions "<choices + why>" --next "<next step>" [--session <id>]
+     ```
+
+     It computes the timestamp, branch and name, renders the block, refuses a
+     name or body the aggregator could not read, and never overwrites — the
+     filename is never composed here. Grammar:
+     `journal-fragment-grammar@1` + `journal-write-grammar@1` in the writer's
+     README; long prose: `… render … | … journal write --kind narrative
+     --content -`.
 
    Omit `--decisions` / `--next` when there is nothing real to record — the script drops the line
    rather than emitting an empty one. A user-supplied note is prepended to the
