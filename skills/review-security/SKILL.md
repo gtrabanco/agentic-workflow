@@ -19,8 +19,9 @@ never refactors.**
 
 ## Scope
 
-The diff or path/glob the caller passes; default the current change vs the
-default branch. State the scope at the top of the returned table.
+The caller's diff or path/glob — the shape is the finder contract's
+(`skills/review-implementation/references/FINDER_CONTRACT.md`, this section's owner). State the scope at the top of the
+returned table.
 
 ## Checklist (evaluate EVERY item — none is optional; n/a must be stated)
 
@@ -47,12 +48,8 @@ default branch. State the scope at the top of the returned table.
 
 ## Materiality bar
 
-Report a row only when a competent user's outcome changes or a rule the project
-explicitly declares is violated — cite the rule it violates beside the evidence.
-Not findings: comment/punctuation typos, formatting-only drift, style preference
-with no cited rule, hypothetical robustness beyond the SPEC's named scenarios.
-An empty table with `Decision: PASS` is the expected result for a well-formed
-change — never pad the table.
+The bar is owned by `skills/review-implementation/references/FINDER_CONTRACT.md` —
+apply it as written: cite the rule it violates beside the evidence; never pad the table.
 
 ## Return exactly
 

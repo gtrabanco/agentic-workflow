@@ -1,12 +1,8 @@
 ## Portability (agents other than Claude Code)
 
-The workflow is the contract; Claude Code features are conveniences. On an
-agent that lacks one, apply the fallback — never skip the step the feature
-enables:
-
-- **No slash-command menu** — where this skill says `/<skill>`, open that
-  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
-  literally, in a fresh conversation: hand-offs assume a clean context.
+- **No slash-command menu** — the universal fallback is the portability
+  owner's (`skills/orchestration-envelope/references/PORTABILITY.md`); "Compose in-turn" means the opposite: run that step
+  within this same conversation, as part of this review.
   "Compose in-turn" means the opposite: run that step within this same
   conversation, as part of this review.
 - **Default-pass isolation** — the *Isolation rule* uses the same three spawn

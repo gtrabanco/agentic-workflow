@@ -185,9 +185,7 @@ memory reference, `../unit-lane/references/MEMORY.md`.
 
 ## Portability (agents other than Claude Code)
 
-The workflow is the contract; Claude Code features are conveniences. On an
-agent that lacks one, apply the fallback — never skip the step the feature
-enables:
+Preamble: owned by `skills/orchestration-envelope/references/PORTABILITY.md` — this skill's own fallbacks:
 
 - **No Claude Code hooks** — the template's auto-logging hooks (SessionStart
   marker, SessionEnd entry) don't run on other agents, so there is no marker

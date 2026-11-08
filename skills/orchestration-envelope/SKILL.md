@@ -18,7 +18,9 @@ validated result at the boundary; it does not add a repeated JSON section to
 every user-facing skill.
 
 The canonical [Turn contract](references/TURN_CONTRACT.md) remains here for
-the executor and review skills that load it.
+the executor and review skills that load it. The workflow's portability
+preamble has its owner here too: [Portability](references/PORTABILITY.md) —
+skills cite it instead of copying the preamble.
 
 The executable source of truth is
 [`@gtrabanco/agentic-workflow-schema`](../../packages/agentic-workflow-schema/):
