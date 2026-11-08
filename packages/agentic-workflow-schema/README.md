@@ -149,8 +149,8 @@ const result = compileWorkflowSnapshot({
   documents: [
     { path: "docs/workflow/REPOSITORY_STATE.md", content: repositoryState },
     { path: "docs/ROADMAP.md", content: roadmap },
-    { path: "docs/features/12-machine-contract/SPEC.md", content: spec },
-    { path: "docs/features/12-machine-contract/progress.md", content: progress },
+    { path: "docs/features/29-bounded-implementation-discovery/SPEC.md", content: spec },
+    { path: "docs/features/29-bounded-implementation-discovery/decisions.md", content: decisions },
   ],
 });
 if (!result.ok) throw new Error(result.errors.join("; "));
