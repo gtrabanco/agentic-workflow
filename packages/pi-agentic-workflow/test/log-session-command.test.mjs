@@ -16,7 +16,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 import { createExtension } from "../dist/extension/factory.js";
 import { readCatalogue } from "../dist/routing/catalogue.js";
@@ -35,6 +35,11 @@ import { sandboxGitEnv } from "./git-sandbox.mjs";
 const PKG_DIR = resolve(import.meta.dirname, "..");
 const BUNDLE_SKILLS = join(PKG_DIR, "skills");
 const WRITER_SOURCE = resolve(PKG_DIR, "..", "..", "scripts", "session-close.mjs");
+const WRITER_MODULES = [
+  "packages/agentic-workflow/src/journal/fragment.mjs",
+  "packages/agentic-workflow/src/journal/block.mjs",
+  "packages/agentic-workflow/src/log/render.mjs",
+];
 const SESSION = "429-command";
 
 const skillFile = (name) =>
@@ -123,6 +128,13 @@ function project({ journal = false, carrier = false, writer = false } = {}) {
   if (writer) {
     mkdirSync(join(root, "scripts"), { recursive: true });
     writeFileSync(join(root, "scripts/session-close.mjs"), readFileSync(WRITER_SOURCE, "utf8"));
+    // The writer imports the crate's one block owner and fragment predicate
+    // (issue #452), so a project that ships the script ships those modules
+    // beside it — the fixture copies exactly what the script resolves.
+    for (const rel of WRITER_MODULES) {
+      mkdirSync(join(root, dirname(rel)), { recursive: true });
+      writeFileSync(join(root, rel), readFileSync(resolve(PKG_DIR, "..", "..", rel), "utf8"));
+    }
   }
   writeFileSync(join(root, "seed.txt"), "seed\n");
   git(["add", "."]);

@@ -375,5 +375,42 @@ test("end to end (carrier): no new fragment, an edited fragment and a deleted fr
   assert.match(deleted.stderr, /deletion is a lost entry/);
 });
 
+test("end to end (carrier): a malformed name is refused before anything is staged (issue #452)", () => {
+  const { dir, git } = makeRepo();
+  fs.mkdirSync(path.join(dir, ".agentic-workflow", "journal"), { recursive: true });
+  git("add", "-A");
+  git("commit", "-q", "-m", "chore: carrier");
+  const before = git("rev-parse", "HEAD").stdout.trim();
+  fs.writeFileSync(
+    path.join(dir, ".agentic-workflow", "journal", "20261108T121830Z-main-manual-narrative-local.md"),
+    "## 2026-11-08T12:18:30Z — main — manual\n- **Summary:** the incident's name\n",
+  );
+  const result = run(dir, ["close"]);
+  assert.equal(result.status, 1, result.stdout);
+  // The today-shape parses back with the writer label folded into the branch
+  // slug (`main-manual`), so the refusal is the name/heading contradiction —
+  // the same predicate, one step earlier than the aggregator.
+  assert.match(result.stderr, /main-manual-narrative-local\.md/u);
+  assert.match(result.stderr, /name and bytes must agree/u);
+  assert.equal(git("rev-parse", "HEAD").stdout.trim(), before, "nothing was committed");
+  assert.match(git("status", "--porcelain").stdout, /^\?\? \.agentic-workflow\//mu, "the fragment is still untracked, not staged");
+});
+
+test("end to end (carrier): a non-newline-terminated body is refused before anything is staged (issue #452)", () => {
+  const { dir, git } = makeRepo();
+  fs.mkdirSync(path.join(dir, ".agentic-workflow", "journal"), { recursive: true });
+  git("add", "-A");
+  git("commit", "-q", "-m", "chore: carrier");
+  const before = git("rev-parse", "HEAD").stdout.trim();
+  fs.writeFileSync(
+    path.join(dir, ".agentic-workflow", "journal", "20261108T121830Z-main-narrative-local.md"),
+    "## 2026-11-08T12:18:30Z — main — manual\n- **Summary:** no terminator",
+  );
+  const result = run(dir, ["close"]);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /not a newline-terminated entry block/u);
+  assert.equal(git("rev-parse", "HEAD").stdout.trim(), before, "nothing was committed");
+});
+
 console.log("PASS session-close: facts computed, entry committed alone, leftovers named not swept");
 
