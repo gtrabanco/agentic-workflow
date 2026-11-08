@@ -12,7 +12,8 @@
  *   agentic-workflow section <locate|remove|replace> --file <path|-> --selector <json> [--replacement <path|->] [--write] [--json]
  *   agentic-workflow memory probe [--json]
  *   agentic-workflow log render --facts <path|-> [--raw]
- *   agentic-workflow journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--json]
+ *   agentic-workflow journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--check] [--json]
+ *   agentic-workflow journal write --kind <mechanical|narrative> [fields] [--session <id>]
  *   agentic-workflow journal name --kind <mechanical|narrative> [--dir <root>] [--branch <b>] [--session <id>]
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *
@@ -48,9 +49,14 @@
  * `.agentic-workflow/journal/` to `docs/LOGS.md` newest-first (ties: branch,
  * kind, session ascending), deletes the consumed fragments and refuses anything
  * ambiguous with exit 2 and "JOURNAL REFUSAL — <reason>" — re-running on an
- * aggregated set is a no-op. `name` prints the deterministic fragment name for
- * a writer to use, never writing anything. The example GitHub workflow and the
- * documented `post-receive` hook both call `journal aggregate` unchanged.
+ * aggregated set is a no-op. `aggregate --check` is the same validation as a
+ * read-only lint: it lists every non-conforming entry and moves no byte (issue
+ * #452 S3). `write` is the programmatic writer (issue #452 S1): the caller
+ * supplies prose fields or a rendered block on stdin, and the name, timestamp,
+ * branch and bytes are computed — a caller never composes a filename. `name`
+ * prints the deterministic fragment name for a reader, never writing anything.
+ * The example GitHub workflow and the documented `post-receive` hook both call
+ * `journal aggregate` unchanged.
  */
 
 import { readFileSync, existsSync, writeFileSync, renameSync } from "node:fs";
@@ -83,8 +89,9 @@ import {
 } from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
-import { JournalAggregateError, aggregateJournal } from "../src/journal/aggregate.mjs";
+import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
 import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragment.mjs";
+import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from "../src/journal/write.mjs";
 import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 
@@ -459,12 +466,33 @@ switch (command) {
     break;
   }
 
-  // ── journal — the fragment carrier's forge-free CLI (issue #405) ─────
+  // ── journal — the fragment carrier's forge-free CLI (issues #405, #452) ─
   case "journal": {
-    const op = rawArgs[0] ?? parseJournalArgs(restArgs).positions[0];
+    const op = parseJournalArgs(restArgs).positions[0] ?? rawArgs[0];
     const rootDir = parsed.dir ? resolve(parsed.dir) : process.cwd();
     if (op === "aggregate") {
       const { flags } = parseJournalArgs(restArgs);
+      const checkOnly = restArgs.includes("--check");
+      if (checkOnly) {
+        let receipt;
+        try {
+          receipt = checkJournal({ root: rootDir, journalDir: flags["journal-dir"] });
+        } catch (error) {
+          if (error instanceof JournalAggregateError) journalRefuse(error.message);
+          throw error;
+        }
+        if (!receipt.ok) {
+          // The refusal line leads (the block contract's first line), then the
+          // lint's whole job: one line per fault, so a PR author sees all of it.
+          process.stderr.write(
+            `JOURNAL REFUSAL — ${receipt.refusals.length} non-conforming fragment(s) in ${receipt.journalDir} — a malformed fragment never reaches main\n`,
+          );
+          for (const refusal of receipt.refusals) process.stderr.write(`  ${refusal.reason}\n`);
+          process.exit(2);
+        }
+        process.stdout.write(`${JSON.stringify(receipt, null, parsed.json ? 2 : 0)}\n`);
+        break;
+      }
       let receipt;
       try {
         receipt = aggregateJournal({
@@ -474,6 +502,59 @@ switch (command) {
         });
       } catch (error) {
         if (error instanceof JournalAggregateError) journalRefuse(error.message);
+        throw error;
+      }
+      process.stdout.write(`${JSON.stringify(receipt, null, parsed.json ? 2 : 0)}\n`);
+      break;
+    }
+    if (op === "write") {
+      let flags;
+      try {
+        flags = parseWriteArgs(restArgs);
+      } catch (error) {
+        if (error instanceof JournalWriteError) journalRefuse(error.message);
+        throw error;
+      }
+      const readSource = (value, label) => {
+        if (value === "-") return readFileSync(0, "utf8");
+        try {
+          return readFileSync(resolve(rootDir, value), "utf8");
+        } catch (error) {
+          journalRefuse(`cannot read the ${label} (${value}): ${error.message}`);
+        }
+      };
+      let facts;
+      if (flags.facts !== undefined) {
+        const text = readSource(flags.facts, "facts payload");
+        try {
+          facts = JSON.parse(text);
+        } catch (error) {
+          journalRefuse(`the facts payload is not JSON: ${error.message}`);
+        }
+      }
+      let content;
+      // Inline text is the normal spelling; stdin is the escape hatch for long
+      // prose, and only `-` is a source — a summary that happens to look like a
+      // path is text, never a file read.
+      if (flags.content !== undefined) content = flags.content === "-" ? readFileSync(0, "utf8") : flags.content;
+      let receipt;
+      try {
+        receipt = writeJournal({
+          root: rootDir,
+          kind: flags.kind,
+          session: flags.session,
+          timestamp: flags.timestamp,
+          title: flags.title,
+          summary: flags.summary,
+          decisions: flags.decisions,
+          next: flags.next,
+          content,
+          facts,
+          base: flags.base,
+          journalDir: flags["journal-dir"],
+        });
+      } catch (error) {
+        if (WRITE_REFUSALS.some((kindOf) => error instanceof kindOf)) journalRefuse(error.message);
         throw error;
       }
       process.stdout.write(`${JSON.stringify(receipt, null, parsed.json ? 2 : 0)}\n`);
@@ -501,7 +582,7 @@ switch (command) {
       process.stdout.write(`${flags["journal-dir"] ?? JOURNAL_DIR}/${name}\n`);
       break;
     }
-    journalRefuse(`journal requires the \`aggregate\` or \`name\` operation, got "${op ?? ""}"`);
+    journalRefuse(`journal requires the \`aggregate\`, \`write\` or \`name\` operation, got "${op ?? ""}"`);
     break;
   }
 

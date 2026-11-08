@@ -29,7 +29,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { JOURNAL_DIR, parseFragmentName } from "./fragment.mjs";
+import { JOURNAL_DIR, fragmentFault } from "./fragment.mjs";
 
 /** A refused aggregation. The CLI maps this to exit 2, "JOURNAL REFUSAL — <reason>". */
 export class JournalAggregateError extends Error {
@@ -42,26 +42,56 @@ export class JournalAggregateError extends Error {
 /** The project journal, relative to the project root. */
 export const DEFAULT_LOG = "docs/LOGS.md";
 
-/** One pending fragment: parsed identity + bytes. */
+/** One pending fragment: parsed identity + bytes, validated by the one predicate. */
 function loadFragment(dir, name) {
-  const parsed = parseFragmentName(name);
-  if (parsed === null) throw new JournalAggregateError(`unparseable fragment name "${name}" — a fragment's name is its identity`);
   let content;
   try {
     content = fs.readFileSync(path.join(dir, name), "utf8");
   } catch {
     throw new JournalAggregateError(`fragment "${name}" is not readable`);
   }
-  if (content === "" || !content.endsWith("\n")) {
-    throw new JournalAggregateError(`fragment "${name}" is not a newline-terminated entry block`);
+  // The aggregator validates the name's grammar and the body's shape, then
+  // trusts the name — its documented contract (S6). The heading/name
+  // contradiction is the write path's, the lint's and the close's refusal.
+  const fault = fragmentFault(name, content, { identity: false });
+  if (!fault.ok) throw new JournalAggregateError(fault.reason);
+  return { name, ...fault.parsed, content };
+}
+
+/**
+ * The carrier's lint: validate every pending fragment, list every fault, move
+ * no byte (issue #452 S3). `aggregate` refuses at the first fault because it
+ * must not half-apply; a lint's job is the whole list, so a PR author sees all
+ * of it in one run.
+ *
+ * Returns `{ ok, checked, refusals, journalDir }`; `ok` is true only for a
+ * conforming carrier (which includes the `.gitkeep` placeholder, skipped by
+ * the same rule the aggregator uses).
+ */
+export function checkJournal(options) {
+  const root = options?.root;
+  if (typeof root !== "string" || root === "") throw new JournalAggregateError("checkJournal: root is required");
+  const journalDir = options?.journalDir ?? JOURNAL_DIR;
+  const dir = path.join(root, journalDir);
+  if (!fs.existsSync(dir)) return { ok: true, checked: 0, refusals: [], journalDir };
+  if (!fs.statSync(dir).isDirectory()) throw new JournalAggregateError(`${journalDir} is not a directory`);
+  const names = fs
+    .readdirSync(dir)
+    .filter((name) => fs.statSync(path.join(dir, name)).isFile() && name !== ".gitkeep")
+    .sort();
+  const refusals = [];
+  for (const name of names) {
+    let content;
+    try {
+      content = fs.readFileSync(path.join(dir, name), "utf8");
+    } catch {
+      refusals.push({ name, reason: `fragment "${name}" is not readable` });
+      continue;
+    }
+    const fault = fragmentFault(name, content);
+    if (!fault.ok) refusals.push({ name, reason: fault.reason });
   }
-  if (content.includes("\r")) {
-    throw new JournalAggregateError(`fragment "${name}" contains CR`);
-  }
-  if (!content.startsWith("## ")) {
-    throw new JournalAggregateError(`fragment "${name}" does not start with an entry heading`);
-  }
-  return { name, ...parsed, content };
+  return { ok: refusals.length === 0, checked: names.length, refusals, journalDir };
 }
 
 /**

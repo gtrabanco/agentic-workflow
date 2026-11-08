@@ -44,7 +44,8 @@ writing anything**.
 | `memory probe [--json]` | The five-check memory-substrate health sensor (below) — writes nothing, always exits 0 |
 | `relay <check\|budget\|tiers\|obligations> <unit> [--repo <dir>] [--packet <dir>]` | The **Relay packet checker** (unit 82): the lane's offline half of pi-web's Relay contract. `check` validates the three documents pi-web dispatches (pointer-shaped charter, baton with a closed state, leg and phase cursor, one log entry per leg); `budget` measures the leg handover against the manifest's `relays` ceiling; `tiers` reads each leg's tier from the catalog; `obligations` verifies the unit's ledger is closed. Read-only, stdout is one fixed block ending in `verdict: PASS\|FAIL`, exit 0 pass · 1 fail · 2 usage. One owner for the grammar — `src/relay/Packet.mjs` — which `scripts/relay-packet.mjs` also runs, so both entry points print the identical block |
 | `log render --facts <path\|-> [--raw]` | The **journal entry renderer** (feature 394): reads a frozen `log-facts@1` payload (`timestamp`, `branch`, `reason`, `commits{count,range}`, `files[]`) and prints the `docs/LOGS.md` block the pi extension writes at session shutdown. JSON on stdout (`--raw` for the entry alone, so `diff` needs no parsing); exit 0 rendered, exit 2 refused with `LOG REFUSAL — <reason>`. Pure: no clock, no git, no session, so a test or a CI job regenerates and byte-diffs an entry. One owner for the shape — `src/log/render.mjs` — which the extension imports and the parity suite compares against `template/.claude/hooks/log-session-end.sh` |
-| `journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--json]` | The **merge-to-main aggregator** (issue #405): appends the pending fragments under `.agentic-workflow/journal/` to `docs/LOGS.md` newest-first (ties: branch, kind, session ascending), deletes the consumed fragments, consumes already-present bytes without appending (a crash between append and delete re-runs as a no-op), and refuses anything ambiguous before the first byte moves — exit 2, `JOURNAL REFUSAL — <reason>`. Forge-free by contract (AC5): the example GitHub workflow and the documented `post-receive` hook call this command unchanged |
+| `journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--check] [--json]` | The **merge-to-main aggregator** (issue #405) and, with `--check`, the carrier's **validate-only lint** (issue #452 S3): appends the pending fragments under `.agentic-workflow/journal/` to `docs/LOGS.md` newest-first (ties: branch, kind, session ascending), deletes the consumed fragments, consumes already-present bytes without appending (a crash between append and delete re-runs as a no-op), and refuses anything ambiguous before the first byte moves — exit 2, `JOURNAL REFUSAL — <reason>`. `--check` moves no byte and lists *every* non-conforming entry (exit 0 conforming · 2 otherwise), so the local gate's offline subset can run it on every push. Forge-free by contract (AC5): the example GitHub workflow and the documented `post-receive` hook call this command unchanged |
+| `journal write --kind <mechanical\|narrative> [fields] [--session <id>]` | The **programmatic fragment writer** (issue #452): the caller supplies prose fields (`--summary`, `--decisions`, `--next`, `--title`) or a rendered block (`--content -`), or `--facts <path\|->` for the mechanical kind, and the CLI computes the UTC second, the branch, the session slug, the block bytes and the fragment name, self-validates the name and lands the file with an exclusive create. A caller never composes a filename (`--name` does not exist), a foreign kind or a bad body is exit 2 `JOURNAL REFUSAL — <reason>` before any byte lands, and a collision is refused, never overwritten. The write grammar below is `journal-write-grammar@1` |
 | `journal name --kind <mechanical\|narrative> [--dir <root>] [--branch <b>] [--session <id>]` | Prints the deterministic fragment name for a writer to use — the grammar below, computed, never hand-rolled. Writes nothing; a missing `--kind` is exit 2 |
 
 Two sibling binaries ship in the same package and are invoked by the skills:
@@ -80,6 +81,34 @@ One owner: `src/journal/fragment.mjs` (naming, content) and
 `src/journal/aggregate.mjs` (consumption). A collision — a target name that
 already exists — is refused, never overwritten (two sessions on one branch
 differ by session slug, so concurrent names cannot collide by construction).
+
+### The writer — fields in, one conforming fragment out (issue #452)
+
+A model may not compose a filename: the fragment's name is its identity, and a
+model that types it bypasses the library. `journal write` takes the prose (or a
+rendered block on stdin) and computes everything else:
+
+```text
+journal-write-grammar@1
+kind | shape | what it orders
+write | journal write --kind <mechanical|narrative> [--session <id>] [--journal-dir <p>] [--dir <root>] | the one writer both doors name; the caller supplies fields, never a name
+narrative-fields | --summary <text> [--decisions <text>] [--next <text>] [--title <label>] | the prose cells; the block is rendered from them plus the session's git facts
+narrative-stdin | --content <block|-> | the rendered block itself; "-" reads stdin so long prose keeps its own bytes
+mechanical-facts | --facts <path|-> | a log-facts@1 payload; the bytes are exactly log render's
+computed | utc second · branch via git · session slug · fragment name · block bytes | never supplied by the caller
+timestamp-pin | --timestamp <iso> | pins the write-time second for a reproducer or a test; the clock is the default
+self-check | parseFragmentName(name) before the write | a name the aggregator could not read is never written
+collision | exclusive create · refusal | an existing target is refused, never overwritten
+refusal | exit 2 "JOURNAL REFUSAL — <reason>" | an unknown flag, a foreign kind, a bad body or a collision — before any byte lands
+carrier-check | journal aggregate --check | validate-only: every non-conforming name/body in the carrier listed, no byte moved, exit 0 conforming / 2 otherwise
+```
+
+The read side and the write side share one predicate
+(`fragmentFault` in `src/journal/fragment.mjs`), so the carrier lint, the close
+and the writer cannot disagree about what a conforming fragment is. The
+narrative block itself — heading, `Commits`, `Files`, `Summary`, `Decisions`,
+`Next` — has one owner, `src/journal/block.mjs`, which
+`scripts/session-close.mjs` also runs.
 
 ## Store drivers — where a journal entry lives (issue #374)
 
