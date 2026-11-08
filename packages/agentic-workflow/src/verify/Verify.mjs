@@ -112,8 +112,16 @@ function checkReceipts(text, { headExists, nowMs }, out) {
     }
     // HEAD sha citations: R (review) and G (gate) lines must carry a sha;
     // every 40-hex sha must resolve in the repo.
+    // Receipt lines (R/G log lines and REVIEW-RAN/GATE-RAN comment marks) must
+    // carry a resolvable full 40-hex sha: a mark attests a reviewed/gated state,
+    // and a state cited by an elided prefix can never be pinned to a revision —
+    // the fabricated mark's exact shape (2026-09-24). Ordinary prose sha
+    // prefixes elsewhere in the Log are normal git citations and stay valid.
     const isReceiptLine = /^- \*\*[RG]\d+[a-z]?\*\* —/u.test(line);
     if (isReceiptLine) {
+      if (/[0-9a-f]{4,39}…/iu.test(line)) {
+        out.push(violation("receipt-malformed-head", `receipt line carries a truncated sha: ${line.trim().slice(0, 80)}`));
+      }
       const headMatch = line.match(/HEAD[ \t]+([0-9a-f]{40})/iu);
       if (headMatch) shas.add(headMatch[1].toLowerCase());
       else if (!/\bHEAD\b/iu.test(line)) {
@@ -122,12 +130,6 @@ function checkReceipts(text, { headExists, nowMs }, out) {
         out.push(violation("receipt-malformed-head", `receipt line without a HEAD sha: ${line.trim().slice(0, 80)}`));
       }
     }
-    // Truncated shas anywhere in the Log: a `…`-elided sha can never be
-    // resolved, so a mark carrying one attests nothing (the fabricated
-    // mark's exact shape).
-    for (const m of line.matchAll(/\b([0-9a-f]{4,39})…/giu)) {
-      out.push(violation("receipt-malformed-head", `truncated sha in the Log: ${m[1]}…`));
-    }
     // Review-mark comments (the legacy ledger carrier): <!-- REVIEW-RAN:date:head=sha:cycle=n -->
     for (const m of line.matchAll(/<!--\s*(REVIEW-RAN|GATE-RAN):([0-9T:Z-]+):head=([0-9a-f…]+)[^>]*-->/giu)) {
       if (nowMs !== null) {
@@ -135,6 +137,9 @@ function checkReceipts(text, { headExists, nowMs }, out) {
         if (Number.isFinite(t) && t > nowMs) {
           out.push(violation("receipt-future-date", `${m[1]} mark is dated in the future (${m[2]})`));
         }
+      }
+      if (!SHA_40.test(m[3].toLowerCase())) {
+        out.push(violation("receipt-malformed-head", `${m[1]} mark carries a truncated sha: ${m[3]}`));
       }
       shas.add(m[3].toLowerCase());
     }
