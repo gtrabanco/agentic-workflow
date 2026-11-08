@@ -318,10 +318,28 @@ One observable criterion per `S#`.
 - **P17** — 2026-11-08, authoring rule amended to the loader shape; changeset intent cut; full 14-skill lint PASS; budgets route ceilings re-based (10 routes at the checker's `ceil(measured × 1.10)`, growth source named per route); docs-generate projection regenerated (155 units) · this Log is the commit.
 - **E3** — 2026-11-08, incident disclosure — during the pre-existing-failure baseline check, `git worktree add`/`prune` plumbing run from inside this worktree corrupted the worktree's own `.git` pointer and the working tree was wiped (seen as 1,600 phantom deletions). All committed work was safe on the branch; the `.git` pointer was restored and `git restore .` rebuilt the checkout from `918338bd`; the three uncommitted edits (route re-base, this Log, the projection) were re-applied. No other tree, branch, or shared surface was touched.
 
+- **P18** — 2026-11-08, verification block in the foreground; obligations ledger all `verified` (see the Verification section below) · commit in flight.
+
+- **G1** — 2026-11-08, `node scripts/run-root-suite.mjs` · exit 0 · 91 suites, 0 fail.
+- **G2** — 2026-11-08, `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 610 pass, 0 fail.
+- **G3** — 2026-11-08, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 29 skills`; `--documents` PASS 4 documents; `--routes --json` `failures: []` after the 10-route re-base.
+- **G4** — 2026-11-08, `bun scripts/lint-changeset.mjs` · exit 0 · and `node scripts/version-parity-gate.mjs --content --base main` → `VERDICT: PASS`.
+- **G5** — 2026-11-08, `bun scripts/docs-generate.mjs --check` · exit 0 · projection current.
 ## Next
 
 Hand the diff to the owner for verification (§8) — then PR + roadmap
 `done` row + `Closes #173`.
+
+## Verification (foreground, 2026-11-08)
+
+- `node scripts/run-root-suite.mjs` — 91 suites · 0 fail · exit 0 (the gate includes `turn-contract-single-owner`, `turn-contract-grammar`, `normative-drift`, `golden-fixture`, `check-skill-context`, `doc-discipline`).
+- `cd packages/pi-agentic-workflow && bun run test` — 610 pass · 0 fail.
+- `bun scripts/check-skill-context.mjs` / `--documents` / `--routes --json` — PASS / PASS / `failures: []` (after the 10-route re-base, growth source named per route).
+- `bun scripts/skill-lint.mjs --skill <n>` ×14 — verdict PASS each.
+- `bun scripts/lint-changeset.mjs` — exit 0; `node scripts/version-parity-gate.mjs --content --base main` — `VERDICT: PASS`.
+- `bun scripts/docs-generate.mjs --check` — PASS; projection regenerated (155 units) and committed.
+- `bun scripts/phase-lint.mjs docs/features/33-turn-contract-single-owner/SPEC.md` — verdict PASS (fingerprint `5c084539…`).
+- Pre-existing red carried, not caused here: `bun test scripts/local-gate.test.mjs` fails `journal-carrier-check…` on **main** too (verified on a throwaway clone of `main` under `/tmp`, since removed).
 
 ## References
 
