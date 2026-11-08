@@ -23,17 +23,18 @@ description: >
 A read-first audit answering "do the docs still match reality?" Produces a
 findings report; it does not silently rewrite docs.
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn (the `--fix` path commits and pushes like any editing turn). Skill-specific additions (the `→ Next:` box is canonical-owned and not restated here):
 
 ```
 ✓ The AUDIT DOCS fixed-format report was printed, ending in `Decision: PASS | FAIL`
 ✓ No doc was rewritten without explicit --fix / user go-ahead
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Missing reference → STOP. About to end the turn with any box unchecked? The
+turn is NOT done — complete the missing box first (weak models drop
+end-of-document duties; this list is first on purpose).
 
 ## When to use
 

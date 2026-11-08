@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-ac-hash: 56b627e00107909e65a5fca47e991ec5c03935fa07750ea1a1ec98e7af2c7691
+ac-hash: b23b7c3da9f9a21f4e605d2498515b200309b41989be4378e42b760d9decd1e2
 ---
 
 # fix/201-operator-approved-pass-routing
@@ -146,8 +146,8 @@ classify` over the planned paths.)
 
 - `packages/pi-agentic-workflow/test/config-schema-passes.test.mjs` (new) —
   strict-validator rows for `passes` (S1).
-- `packages/pi-agentic-workflow/test/config-merge.test.mjs` (extended, name
-  follows the existing suite layout) — project-over-global merge of `passes`.
+- `packages/pi-agentic-workflow/test/config-merge-passes.test.mjs` (new, beside
+  the existing merge suite) — project-over-global merge of `passes`.
 - `packages/agentic-workflow/test/resolve-passes.test.mjs` (new) — golden
   fixtures for the resolution chain, `auto` pass-through, chain pass-through,
   malformed-route refusal (S2, S1a, S2b).
@@ -220,8 +220,9 @@ classify` over the planned paths.)
   normative-surfaces inventory. (check: `bun test
   scripts/normative-drift.test.mjs` exits 0)
 - **AC7** — the repository indexes and docs ship in the same change:
-  roadmap row 45 and the Fixes-table row are written by the deterministic
-  emitters (never hand-edited), the pi package README's Model routing section
+  roadmap row 45 is written by the deterministic emitter (never hand-edited),
+  and the Fixes-table row ships in the change — hand-written, because the fix
+  index has no row-writer (disclosed in Log D3); the pi package README's Model routing section
   and the crate README/bin usage document `passes`/`resolve-passes`, a
   changeset declares the release intent, and the generated projection is
   regenerated. (check: `bun scripts/docs-generate.mjs --check` exits 0 AND
@@ -273,7 +274,8 @@ classify` over the planned paths.)
   skills/review-change/references/ADVERSARIAL_SETUP.md, AGENTS.md
 - P5 — Documentation and state via surfaces: pi README Model routing section
   (`passes`), crate README + bin usage (`resolve-passes`), changeset, roadmap
-  row 45 and Fixes-table row via the emitters, generated projection
+  row 45 via the emitter and the Fixes-table row present (hand-written — no
+  row-writer exists), generated projection
   regenerated (validator: `bun scripts/docs-generate.mjs --check` exits 0 AND
   `node packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check
   docs/fix/201-operator-approved-pass-routing/SPEC.md` exits 0)
@@ -365,10 +367,18 @@ verification is the owner's).
 - **P7** — 2026-11-08, verification: local gate PASS (E16), obligations closed, handoff to the owner.
 - **D3** — 2026-11-08, hand edits disclosed (no emitter owns these surfaces): (a) the `## Fixes` table row for #201 — the fix index has no row-writer; (b) the four `routes[].routeEstimateMax`/`routeLinesMax` keys and `policy.declared` re-basis #13 in `SKILL_CONTEXT_BUDGETS.json` — the budgets emitter (`ceilingRebase`) writes `estimateMax`/`linesMax`, which the route checker does not read; (c) `AGENTS.md`'s pinned `machineLines: 117` — the documents entry has no emitter. Item (b) is a pre-existing emitter/checker drift, reported to the owner as a finding, not fixed here.
 - **D4** — 2026-11-08, in-scope repairs of recorded pre-existing issues: the config root's unknown-key message is now derived from `ROOT_KEYS` (its inline list had already drifted — `autoLogSession` was missing, SPEC Known pre-existing issues row 1), and the projection suite's README table slice is scoped to its own section (assertions unchanged) because the README legitimately gained a second vocabulary table.
+- **E17** — 2026-11-08, correction red (§9 batch): `bun test packages/agentic-workflow/test/resolve-passes.test.mjs` · exit 1 · 19 pass · 2 fail at 781005a1 — both new cases failing exactly as the findings predict (two-scope thinking override resolving to the floor; malformed `commands` map exiting 0).
+- **E18** — 2026-11-08, correction green: same command at 32f432aa · exit 0 · 21 pass · 0 fail; `bun run test` in `packages/agentic-workflow` · exit 0 · 490 pass; `bun run test:node` · exit 0; `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 624 pass (touched rows O3–O6, O10, O11, O13 re-run after the fix; the 19 pre-fix cases stayed green throughout = the differential pin).
+- **E19** — 2026-11-08, doc/ledger recheck (blockers 2–3, advisories 2–3): `bun scripts/docs-generate.mjs` · 0 written · `--check` PASS; `roadmap check …SPEC.md` · PASS · 0 violations; `ac-hash` recomputed with the DESIGN.md `sectionText` recipe — the pre-edit recompute reproduced the frozen `56b627e0…` byte-for-byte before the rewrite to `b23b7c3d…`, equality re-verified; fix/358 O14's re-scoped validators · link `rg -c '#201'` → 2 (≥ 1), both `5df5575d` tree sweeps → no match (exit 1), positive control → 3 files; fix/358 O9's content half → 1; `rg -c "config-merge.test.mjs" …SPEC.md` → 0; `node scripts/run-root-suite.mjs` · exit 0.
+- **D5** — 2026-11-08, correction-batch triage (owner-directed, §9 bounds): blockers 1–3 all probe-confirmed fixable → folded (this batch); advisory 3 (stale test filename) folded; advisory 2 (fix/358 O9 diff half) annotated as branch-scoped point-in-time; advisory 1 (`default`-route fallback the resolver never applies) is **decision-required** — AC3's frozen chain ends at `commands.execute-phase` → inline floor and never names `default`, so applying pi's fallback would amend the frozen acceptance (owner to rule: chain amendment vs floor-as-written). One new probe beside blocker 1: a non-object `commands` map used to spread into junk keys and fall to the floor with exit 0 — triaged into the same fix as the fail-closed guard it is (S2b detail 2 / O6 family), disclosed at handoff.
+- **P8** — 2026-11-08, correction commits: red 781005a1 → green 32f432aa → docs 6e23a424 (receipts commit follows).
 
 ## Next
 
-External verification by the owner (§8 handoff); the PR closes #201.
+External verification by the owner; the open PR is
+[#464](https://github.com/gtrabanco/agentic-workflow/pull/464) (Closes #201).
+At merge: `roadmap-settle` flips feature row 45 to `done · [#464](…)` and the
+Fixes row is removed.
 
 ## References
 
