@@ -17,7 +17,9 @@ description: >
 Repair persisted fix-now findings. `review-change` and `audit-pr` classify; this
 skill fixes each root cause, never relabeling, deferring, or weakening its check.
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn; box 1 of that contract (branch) and box 2 note the folded batches' gate runs. Skill-specific additions:
 
 ```
 ✓ 1. Every finding taken up this turn produced its fixed per-finding output
@@ -48,7 +50,7 @@ skill fixes each root cause, never relabeling, deferring, or weakening its check
 ✓ 11. Closure status printed: `closure: complete | open(n)`. (S4)
 ```
 
-Any unchecked box means the turn is not done.
+Missing reference → STOP. Any unchecked box means the turn is not done.
 
 ## When to use
 
