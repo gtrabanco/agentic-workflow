@@ -9,6 +9,7 @@ import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../ro
 import { registerAdvanceCommand } from "./conductor-command.js";
 import { LOG_SESSION_COMMAND, registerLogSessionCommand } from "./log-session-command.js";
 import type { PlanInvocation } from "./log-session-command.js";
+import { createWorkflowTools } from "./workflow-tools.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
 import { createProfileStateStore, stateFilePath } from "../routing/state.js";
@@ -45,6 +46,12 @@ export type SettingsHandler<M extends ModelRef = ModelRef> = (input: {
 
 export interface ExtensionDeps<M extends ModelRef = ModelRef> {
   registrar: CommandRegistrar<M>;
+  /**
+   * Issue #274: the deferred workflow-tool registrar. Optional so a session
+   * that registers no tools (and every existing double) is unaffected; when
+   * present it receives the Pi-free specs from `workflow-tools.ts`.
+   */
+  toolRegistrar?: { registerTool(tool: unknown): void };
   /** Pi's API is session-bound, so the router resolves the surface per call. */
   surface: (ctx: InvocationContext<M>) => ExtensionSurface<M>;
   /** Directory holding the bundled `skills/` tree. */
@@ -184,6 +191,16 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     description: "Show and configure per-command model routing",
     handler: settingsHandler,
   });
+
+  // Issue #274 — the deferred tool surface: the envelope-emitting scripts as
+  // thin wrappers over the same spawns the skills take. Deferred exposure
+  // means registration costs the session nothing until `tool_search` or a
+  // codemode script reaches for one.
+  if (deps.toolRegistrar) {
+    for (const tool of createWorkflowTools()) {
+      deps.toolRegistrar.registerTool(tool);
+    }
+  }
 
   return { router, catalogue, guards: { receiptGuard, dirtyWorktreeWarning } };
 }
