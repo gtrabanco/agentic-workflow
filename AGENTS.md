@@ -140,8 +140,7 @@ under [Working rules](#working-rules)).
   or any recorded reason) live in the `## Dependencies` prose section only, are
   completed at issue creation and revisited at triage — owner:
   [docs/workflow/ISSUE_WORKFLOW.md §Relationships](docs/workflow/ISSUE_WORKFLOW.md).
-- **Published history is owner-written.** Work in short branches off `main`;
-  `main` only advances through a PR. When `main` moves and the PR conflicts, the
+- **Published history is owner-written.** When `main` moves and the PR conflicts, the
   branch is brought up to date by integrating `main` and resolving the conflicted
   files on the branch: the agent resolves the files and hands the branch back,
   and the owner runs the integration. Pushed commits are a shared surface — a
