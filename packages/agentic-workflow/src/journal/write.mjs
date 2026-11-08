@@ -29,6 +29,7 @@ import {
   JOURNAL_DIR,
   fragmentName,
   parseFragmentName,
+  slug,
   writeFragment,
 } from "./fragment.mjs";
 import { currentBranch, isoSecond, readSessionFacts, renderEntryBlock, resolveBase } from "./block.mjs";
@@ -91,6 +92,24 @@ export function parseWriteArgs(argv) {
 export const WRITE_REFUSALS = Object.freeze([JournalWriteError, FragmentError, LogFactsError]);
 
 /**
+ * The carrier's conforming fragment names — the read side of the
+ * already-registered check: a fragment's name carries its session's slug, so
+ * the carrier itself answers whether this conversation already landed an
+ * entry. Unreadable entries are skipped; the carrier lint owns them.
+ */
+function registeredSessions(root, carrier) {
+  let names;
+  try {
+    names = fs.readdirSync(path.join(root, carrier));
+  } catch {
+    return [];
+  }
+  return names
+    .map((name) => ({ name, parsed: parseFragmentName(name) }))
+    .filter((entry) => entry.parsed !== null);
+}
+
+/**
  * Write one fragment from fields.
  *
  * `kind: "narrative"` needs `content` or at least `summary`; the block is
@@ -134,6 +153,25 @@ export function writeJournal(options) {
     throw new JournalWriteError(
       `the computed fragment name ${JSON.stringify(name)} does not parse back to its identity — refusing to write a fragment the aggregator cannot read`,
     );
+  }
+  // The already-registered check (issue #468 S3): before writing, ask the
+  // carrier whether this conversation already landed an entry — a fragment
+  // whose name carries this session's slug. Scoped to an explicit `--session`:
+  // the fallback slug (`local`) is shared by every unflagged write on the
+  // machine, so a match there identifies no conversation and refusing it would
+  // break the shipped multi-conversation default; an explicit `local` is
+  // indistinguishable from the fallback and gets the same courtesy. The
+  // computed name itself is excluded — an identical name is the grammar's own
+  // collision refusal below (same entry slot), never an "already registered".
+  if (options?.session !== undefined && slug(options.session) !== "local") {
+    const registered = registeredSessions(root, carrier).find(
+      (entry) => entry.parsed.sessionId === slug(options.session) && entry.name !== name,
+    );
+    if (registered !== undefined) {
+      throw new JournalWriteError(
+        `already registered: ${carrier}/${registered.name} already carries session ${JSON.stringify(slug(options.session))}'s entry — one entry per conversation; pass another --session id only if this is genuinely a different conversation`,
+      );
+    }
   }
 
   let content;
