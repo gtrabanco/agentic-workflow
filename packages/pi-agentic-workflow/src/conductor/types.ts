@@ -80,7 +80,18 @@ export function mergeAdvanceConfig(
 /** Result returned by runSensor — success or refusal. */
 export type SensorResult =
   | { ok: true; envelope: EnvelopeLike }
-  | { ok: false; refusal: "sensor-degraded"; detail: string };
+  | {
+      ok: false;
+      refusal: "sensor-degraded";
+      detail: string;
+      /**
+       * Issue #274: the parsed envelope rides along on a degraded run when the
+       * sensor parsed and validated one (degradations present), so the tool
+       * surface can attach the data to the error. Absent on spawn/parse
+       * failures; the refusal contract above is otherwise unchanged.
+       */
+      envelope?: EnvelopeLike;
+    };
 
 // ---------------------------------------------------------------------------
 // Invocation
