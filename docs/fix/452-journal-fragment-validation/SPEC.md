@@ -416,57 +416,6 @@ relay-next: create .pi-web/relays/452-journal-fragment-validation/ (charter → 
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F2 | S7 · template/.agentic-workflow/journal.md:96 | docs | WARNING | docs-only | source | fold |
-| F3 | S15 · planning-obligations.md:31 (O18) | evidence | WARNING | docs-only | plan | fold |
-| F4 | S12 · planning-obligations.md:33 (O20) · SPEC.md:445 (D5) | evidence | WARNING | docs-only | plan | fold |
-| F5 | S12 · SPEC.md:450 (D4) · planning-obligations.md:33 (O20) | evidence | WARNING | docs-only | plan | fold |
-| F6 | S1 · packages/agentic-workflow/src/journal/write.mjs | behavior | WARNING | blocking | source | fold |
-
-### Correction batch — scope of each finding, before any repair
-
-The external verify of 2026-11-08 (`external-verify.md`) reported one blocker
-and six advisories. The blocker (B1) is already folded as `F1` by `c9b2669d`,
-which found the six advisories "not folded"; the owner's newer instruction
-(`L3`) supersedes that reading and folds every one of them here. The scope
-below is written before the repair, per that request, so the blast radius of
-each fix is named instead of assumed.
-
-- **F2** — what: `template/.agentic-workflow/journal.md:96` still presents
-  `journal name` as the writer's path and never names `journal write` or
-  `journal-write-grammar@1`. Scope: documentation shipped to target projects;
-  no code reads it, but a project following it recreates the retired hand-save
-  act. Action: name the writer and the second grammar block in the same
-  paragraph; keep `journal name` as the read-only answer (the unit keeps it
-  deliberately).
-- **F3** — what: `O18` says the fragment block "gains the write and check
-  rows"; the tree publishes a separate `journal-write-grammar@1` block and
-  leaves the fragment block unchanged. Scope: evidence wording only;
-  `normative-drift` and `journal.surfaces` verify the substance. Action: state
-  what the tree does (a second block beside the first, no restatement).
-- **F4** — what: `O20` asserts "no gate exception" while `D5` records the push
-  used `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` on the base-identical red. Scope:
-  the row's invariant, not the push (history is not rewritten); the S12 reading
-  stays the owner's call at merge. Action: state the disclosed fact in the row
-  and record the open reading as a decision line — no waiver is written.
-- **F5** — what: `D4`/`O20` say the root suite reproduces "identically at the
-  base export"; only the two ceiling suites compare (a bare `git archive`
-  export also reds git-dependent suites for want of a `.git`). Scope: evidence
-  precision; the pre-existing-red conclusion holds. Action: name which suites
-  compare and how.
-- **F6** — what: `journal write` in a project without the carrier created
-  `.agentic-workflow/journal/` (observed in scratch), silently flipping the
-  documented opt-in (`session-close close` then enters carrier mode). Scope:
-  behaviour of the new writer only — the library `writeFragment` keeps creating
-  the directory for the store driver, which configures its own carrier; the
-  CLI's policy changes. Action: refuse when the carrier is absent, publish the
-  rule in `journal-write-grammar@1`, pin it with a RED case, and differential
-  the with-carrier path to prove it is untouched.
-- **A6** — what: PR #459's compact verification list reads `check-skill-context
-  … exit 0`, true for the skills mode and false for `--documents` (exit 1).
-  Scope: the forge body only; no file in the tree carries it. Action: name the
-  mode in that line of the PR body. It is a `SUGGESTION` on the ladder
-  (`never persisted`), so it earns no table row — the fix and its check are
-  recorded as an `F` line here instead.
 
 ## Log
 
@@ -516,13 +465,28 @@ each fix is named instead of assumed.
 - **E9** — 2026-11-08, the live-tree guard: every write/close/aggregate fixture ran under `mktemp -d` (`journal-write-*`, `session-close-*`, `local-gate-*`, `journal-carrier-*`, `aw452-diff-*`); `journal aggregate` without `--check` never ran against this worktree (the mutating mode was exercised only in the scratch export and in fixtures); `ls -d /tmp/journal-* /tmp/aw452-diff-* 2>/dev/null` → 0 entries after cleanup; `git status --porcelain` names no scratch path.
 - **V1** — 2026-11-08, every obligation row's validator ran in the foreground in the runs above and each row flipped `planned → verified`; no row was deferred out of the unit. O20 is verified on the gate's observed state (only D4's base-identical `root-suite` red) and O23 on the exact `machineLines` pins, because the three ceilings it does not touch were red before this unit existed — recorded, never excused.
 - **P6** — 2026-11-08, the session entry is written through the CLI this unit ships and committed by `session-close close` (below).
+- **F2** — 2026-11-08, **folded** (the receipt's A1): `template/.agentic-workflow/journal.md` now hands the entry to `agentic-workflow journal write` and names `journal-write-grammar@1` beside `journal-fragment-grammar@1`, keeping `journal name` as the read-only answer. Scope: documentation shipped to target projects — no code reads it, and the paragraph still names the owner instead of restating it. Verified: `bun test packages/agentic-workflow/test/journal.write.test.mjs` · exit 0 · 16 pass (case `the template's fragment rules name the writer and its grammar owner`, RED at `b4de037f`); `journal.surfaces.test.mjs` · 11 pass (AC9 still holds).
+- **F3** — 2026-11-08, **folded** (A2): `O18`'s invariant now states what the tree does — a second block, `journal-write-grammar@1`, beside the unchanged fragment block, no restated rows. Scope: evidence wording only. Verified: `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass; `journal.surfaces.test.mjs` · 11 pass.
+- **F4** — 2026-11-08, **folded** (A3): `O20`'s "no gate exception" becomes the recorded fact — the push rode `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` over the base-identical red, disclosed in PR #459 — plus `D6`, which leaves the S12 reading to the owner and writes no waiver. Scope: the row's invariant only; `D5` and the pushed history are untouched. Verified: `rg -c 'no gate exception' planning-obligations.md` → 0 and the row names D5/D6; `rg -c '^- \*\*R' SPEC.md` → 0.
+- **F5** — 2026-11-08, **folded** (A4): `O20`'s validator cell and `D7` now name which suites compare with the base export and why a bare export cannot. Scope: evidence precision; the pre-existing-red conclusion is unchanged. Verified: both ceiling suites at both ends (`E11`).
+- **F6** — 2026-11-08, **folded** (A5, behaviour): `writeJournal` refuses when the carrier directory is absent instead of creating it, because its presence is the opt-in (issue #405) and one write must not flip `session-close close` into carrier mode; `journal-write-grammar@1` publishes the `carrier-absent` row. Scope: the new CLI's policy only — the library `writeFragment` keeps creating the directory for the store driver that configures its own carrier. Verified: the RED case at `b4de037f` → green here; `journal.test.mjs` 26 pass (driver path untouched); with-carrier differential identical (`E12`, `D8`).
+- **F7** — 2026-11-08, **folded** (A6, `SUGGESTION`, never persisted): PR #459's compact verification list now names the mode (`check-skill-context (skills)`) because `--documents` exits 1 on the pre-existing ceilings. No file in the tree carries that line; the fix is the PR body, recorded here for the audit trail.
+- **D6** — (D) 2026-11-08, **the hatch's S12 reading belongs to the owner**: `D5`'s fact stays as recorded. This batch states it plainly in `O20` and writes no waiver either way — "a disclosed hatch over a base-identical red satisfies S12" and "it does not" are both the owner's to choose at merge; the exception still grants nothing to any later unit.
+- **D7** — (D) 2026-11-08, **the base reproduction's scope, stated**: the two ceiling suites (`check-skill-context`, `guide-split`) fail identically in kind at the base and the head; a bare `git archive` export also reds git-dependent suites for want of a `.git`, and the schema `dist` is a build product beside it — so only the ceiling pair is a valid comparison. `D4`'s "identically" is read as that pair, never as the whole root suite.
+- **D8** — (D) 2026-11-08, **the writer never opts a project in**: on the owner's correction request (`L3`), `journal write` refuses an absent carrier instead of creating it — the directory's presence flips `session-close close` into carrier mode and hands the journal to an aggregator the project never wired, so opting in stays deliberate (`mkdir -p …`, the consent-gated install). The mechanical kind is refused the same way.
+- **E11** — 2026-11-08, RED then green: `bun test packages/agentic-workflow/test/journal.write.test.mjs` at `b4de037f` exported to `mktemp -d` · exit 1 · `14 pass 2 fail` (both new cases), at the head · exit 0 · `16 pass`. Base export for `F5`: both ceiling suites fail at `c7258644` and at the head with `AGENTS.md` lines 573/574 > 477, estimate 9639/9664 > 9462, prose 458 > 370.
+- **E12** — 2026-11-08, differential for `F6`, three exports side by side (`c7258644` base, `2d980397` the unit's previous head, this head) against clean pinned fixtures: **(A)** every existing command (`journal name`, `journal aggregate`, `log render`, `session-close render`) is byte-identical base vs here, exit codes included — the only difference is the router's refusal text naming `write` (same exit 2); **(B)** the new writer **with** a carrier: previous head vs here → same receipt (paths normalised) and byte-identical fragment; **(C)** the new writer **without** a carrier: previous head wrote `20261108T141044Z-feat-diff-narrative-s1.md` into a directory it created, this head exits 2 with `JOURNAL REFUSAL — the fragment carrier .agentic-workflow/journal does not exist …` and creates nothing, not even the parent.
+- **E13** — 2026-11-08, the batch's suites: `bun test packages/agentic-workflow/test/journal.write.test.mjs` · exit 0 · 16 pass; `packages/agentic-workflow` `bun run test` · exit 0 · 469 pass 0 fail; `scripts/session-close.test.mjs` · 30 pass; `scripts/local-gate.test.mjs` · 41 pass; `scripts/release-workflows.test.mjs` · 24 pass; `scripts/normative-drift.test.mjs` · 21 pass; `packages/pi-agentic-workflow` `bun run test` · 610 pass 0 fail; `journal aggregate --check` on this carrier · exit 0 · `checked 4, refusals 0`; `skill-lint` · PASS; `prose-gate-inventory` · PASS; `roadmap-settle` · PASS; `lint-changeset` · ok; `docs-generate --check` · PASS; `phase-lint` · PASS.
 
 ## Next
 
-The owner's verdict on PR [#459](https://github.com/gtrabanco/agentic-workflow/pull/459) and the
-merge (merge authority stays with the owner). On a verdict of blockers: one correction batch
-limited to them, then one recheck of the same rows (§9); a new finding goes back to the owner and
-the turn ends.
+The owner's recheck of the correction batch — `F1` folded by `c9b2669d`, `F2`–`F7` folded here — and
+the merge (merge authority stays with the owner). This batch does **not** push: the installed
+`pre-push` hook still runs the offline gate, whose only red is the pre-existing pair (`D4`/`D7`),
+and §4 forbids a self-granted hatch, so pushing is the owner's call — as is the `S12` reading of
+the hatch the earlier push used (`D6`). On a verdict of blockers: one correction batch limited to
+them, then one recheck of the same rows (§9); a new finding goes back to the owner and the turn
+ends.
 
 ## References
 

@@ -92,10 +92,15 @@ carried are aggregated by its own push's run or the next one.
 The naming grammar and the content rules have **one owner**:
 `journal-fragment-grammar@1` in `@gtrabanco/agentic-workflow`
 (`packages/agentic-workflow/README.md`, implemented in
-`src/journal/fragment.mjs`). Writers compute the name — never hand-roll it:
-`agentic-workflow journal name --kind <mechanical|narrative>`. One fragment
-per session per kind; an existing target is refused, never overwritten; the
-narrative rules (append-only, git-facts, refusal) hold at fragment level.
+`src/journal/fragment.mjs`). Hand the entry to the writer and let it compute
+the name, the timestamp and the bytes — a writer never composes a filename:
+`agentic-workflow journal write --kind <mechanical|narrative>` takes the prose
+fields (or `--facts` for the mechanical kind), and its own field contract is
+`journal-write-grammar@1` in the same owner file. `agentic-workflow journal
+name` stays the read-only answer for a caller that wants to inspect the name.
+One fragment per session per kind; an existing target is refused, never
+overwritten; the narrative rules (append-only, git-facts, refusal) hold at
+fragment level.
 
 ## Where this slots into the pluggable journal contract
 
