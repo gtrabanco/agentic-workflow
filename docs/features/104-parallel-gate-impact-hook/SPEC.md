@@ -96,7 +96,7 @@ Computed with `bun scripts/ceremony.mjs tier classify` (2026-11-05):
 
 ## Tasks
 
-- P1 — tests first, observed red: the pool contract suite and the local-gate cases (validator: `bun test scripts/run-root-suite.test.mjs scripts/local-gate.test.mjs` exits non-zero before implementation)
+- [x] P1 — tests first, observed red: the pool contract suite and the local-gate cases (validator: `bun test scripts/run-root-suite.test.mjs scripts/local-gate.test.mjs` exits non-zero before implementation)
   (Implements: S1, S3)
 - [x] P2 — the worker pool in `scripts/run-root-suite.mjs` (`--jobs <n>`, default one worker per CPU, `--bail` kills in-flight suites) (validator: `bun scripts/run-root-suite.mjs --bail` exits 0)
   (Implements: S1, S2)
@@ -104,7 +104,7 @@ Computed with `bun scripts/ceremony.mjs tier classify` (2026-11-05):
   (Implements: S2, S3)
 - [x] P4 — docs currency: `AGENTS.md` §Verification, both script headers, hook reinstall (validator: `bun scripts/invocation-drift.mjs` exits 0)
   (Implements: S1, S2, S3)
-- P5 — verification: the derived impact set green, then the full local gate (validator: `bun scripts/local-gate.mjs` exits 0)
+- [x] P5 — verification: the derived impact set green, then the full local gate (validator: `bun scripts/local-gate.mjs` exits 0)
   (Implements: S1, S2, S3)
 
 ## Triaged steps
@@ -148,6 +148,9 @@ Budget: strong
   delegates to `scripts/local-gate.mjs` (pinned by `release-workflows.test.mjs`),
   so the pool covers CI's node leg through the same script; editing the workflow
   would duplicate the wiring the delegation pin exists to prevent.
+- **P1** — 2026-11-05, the red commit: the pool contract suite and the local-gate
+  cases, observed failing on the missing exports and flags · `352ae5e5` (the
+  red run is `E2`).
 - **P2** — 2026-11-05, the worker pool in `scripts/run-root-suite.mjs` · `f17b7b94`.
 - **P3** — 2026-11-05, the `tests:` markers, `--push-base` and the regenerated
   hook body in `scripts/local-gate.mjs` · `f17b7b94`.
@@ -161,6 +164,8 @@ Budget: strong
 - **E4** — 2026-11-05, `bun scripts/local-gate.mjs --push-base <rev> --dry-run`
   · exit 0 · `targeted` verdict keeps every step planned; the stub-driven empty
   case plans only `version-parity-content` (suite-asserted).
+- **P5** — 2026-11-05, verification over the whole change: the derived impact set
+  then the full local gate · `f17b7b94` (the runs themselves are `E3` and `G2`).
 
 ## Next
 

@@ -44,7 +44,7 @@ committed layout carries no working-copy activation surface. Authoring sessions
 opt in by creating a local, gitignored mount (`ln -sfn ../skills .claude/skills`)
 or by exercising a single working-copy skill via per-session flags (e.g.
 `pi --no-skills --skill skills/<name>/SKILL.md`). **One home:** the rationale and
-the export path are [`README.md`](README.md#dogfooding-the-authoring-model).
+the export path are [`README.md`](README.md#whats-inside).
 
 ## Documentation map
 

@@ -225,49 +225,49 @@ change's own diff (the tier is the classifier's, never this document's):
   exits 0)
   (Implements: S2)
   Relevant files: docs/ROADMAP.md
-- P10 — Commit the generated projection this repository's own fallback format
+- [x] P10 — Commit the generated projection this repository's own fallback format
   produces (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S2, S6, S7)
   Relevant files: docs/generated
-- P11 — Cut the release intent (validator:
+- [x] P11 — Cut the release intent (validator:
   `bun scripts/lint-changeset.mjs .changeset/396-doc-gen.md` → `ok`)
   (Implements: S2)
   Relevant files: .changeset/396-doc-gen.md
-- P12 — Record the shipped surface in the changelog (validator:
+- [x] P12 — Record the shipped surface in the changelog (validator:
   `bun scripts/check-changelog-row.mjs "Unreleased" 4.10.0` → the table's row count
   is unchanged, and `rg -c "docs-generate" CHANGELOG.md` matches 1)
   (Implements: S2)
   Relevant files: CHANGELOG.md
-- P13 — Verification over the whole change (validator:
+- [x] P13 — Verification over the whole change (validator:
   `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
-- P14 — Guard the dependency walk so a declared cycle terminates and is reported
+- [x] P14 — Guard the dependency walk so a declared cycle terminates and is reported
   (validator: `bun test scripts/workflow-status-sensor.test.mjs --timeout=60000`
   exits 0 with the `declared dependency cycle` case passing)
   (Implements: S9)
   Relevant files: scripts/workflow-status.mjs, scripts/workflow-status-sensor.test.mjs
-- P15 — Drop the impossible direction of the roadmap cycle: row 98 is `done` and
+- [x] P15 — Drop the impossible direction of the roadmap cycle: row 98 is `done` and
   cannot depend on the `idea` row 100 (validator: `bun scripts/workflow-status.mjs`
   exits 0 and its envelope carries no `dependency cycle` blocker)
   (Implements: S9)
   Relevant files: docs/ROADMAP.md
-- P16 — Verification over the whole change after S9 (validator:
+- [x] P16 — Verification over the whole change after S9 (validator:
   `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9)
-- P17 — Strip the repository-locator variables from every gate step, one
+- [x] P17 — Strip the repository-locator variables from every gate step, one
   definition used by both entry points (validator: `bun test scripts/git-env.test.mjs`
   exits 0, and the crate suite run with `GIT_DIR` exported leaves the checkout's
   branch and head unchanged)
   (Implements: S10)
   Relevant files: scripts/git-env.mjs, scripts/git-env.test.mjs, scripts/local-gate.mjs, scripts/run-root-suite.mjs
-- P18 — Integrate `origin/main` by merge — the append-only journal resolved as a
+- [x] P18 — Integrate `origin/main` by merge — the append-only journal resolved as a
   timestamp-ordered union — and publish it as a fast-forward of the branch, never
   a rewritten history (validator: `git merge-base --is-ancestor 0c45d08e HEAD`
   exits 0 after the push, and `git rev-parse HEAD` equals
   `git rev-parse origin/feat/396-doc-gen`)
   (Implements: S10)
   Relevant files: docs/LOGS.md, AGENTS.md
-- P19 — Verification over the whole change after S10 (validator:
+- [x] P19 — Verification over the whole change after S10 (validator:
   `bun scripts/local-gate.mjs` exits 0 — the repository's own gate)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10)
 
@@ -422,6 +422,16 @@ proves it. Frozen at cut.
 - **D9** — 2026-11-04, decision: of the three advisories, two are repaired and one is `n/a`. Advisory 1 (the docs step commands a generator path a skills-only tree does not have) is repaired as a reach caveat in the docs step. Advisory 3 (a legacy unit doc's first template quote surfaced as the "What it shipped" cell) is repaired in the generator. Advisory 2 (task P12's frozen validator no longer reproduces) is `n/a`: its supersession is already evidenced as `D6`, and the frozen task text is not rewritten — the Log is the append-only carrier of the supersession.
 - **P8** — 2026-11-04, the generator's one-line repair: the frozen corpus gained the legacy case alone and observed red (`64dc8858` · `20 pass · 1 fail`), then the one-line became the `> One-line:` quote — the unit-doc grammar's only declared carrier — with the title as the legacy fallback (`3ec8d1d7` · `21 pass · 0 fail` under bun and node), and the projection regenerated (`1 written · 0 deleted · 2 unchanged`; `--check` exit 0).
 - **P9** — 2026-11-04, the docs step's reach caveat: the generator is reachable where the tree carries the workflow's scripts; a skills-only tree records the pending projection instead of hand-writing a stand-in.
+- **P10** — 2026-11-04, the committed projection this repository's markdown fallback renders (`docs/generated`, `ca7fa491`; the check is `G10`).
+- **P11** — 2026-11-04, the release intent (`d326ca4e`; the lint is `G6`).
+- **P12** — 2026-11-04, no changelog row for this unit (`D6`: the changelog tables are the release script's surface).
+- **P13** — 2026-11-04, verification over the whole change (`G11`); superseded by `P16` and `P19` once S9 and S10 widened the scope.
+- **P14** — 2026-11-04, the dependency walk's cycle guard (`E10` observed red, `E11` green).
+- **P15** — 2026-11-04, row 98's impossible dependency on the `idea` row 100 dropped (`E12`).
+- **P16** — 2026-11-04, verification over the whole change after S9 (`G10`).
+- **P17** — 2026-11-04, the repository locator stripped from every gate step through the one `git-env` definition (`9ae75357`).
+- **P18** — 2026-11-04, `origin/main` integrated by merge and published as a fast-forward, never a rewritten history (`d9f920d7`).
+- **P19** — 2026-11-04, verification over the whole change after S10; the run that closed the unit is `G11`.
 - **G10** — 2026-11-04, `bun scripts/run-root-suite.mjs` over the repairs · exit 0 · `1542 pass · 1 skip · 0 fail` (1543 tests across 76 files); `bun scripts/skill-lint.mjs` · exit 0 · `verdict: PASS`; `bun scripts/check-skill-context.mjs` and `… --documents` · exit 0 both; `bun scripts/phase-lint.mjs docs/features/396-doc-gen/SPEC.md` · exit 0 · `verdict PASS`; `bun scripts/docs-generate.mjs --check` · exit 0.
 
 ## Next
