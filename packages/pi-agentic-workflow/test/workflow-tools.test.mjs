@@ -8,7 +8,7 @@
 // and the two dependency-free gate scripts are exercised live against fixture
 // trees under os.tmpdir() (never against the live repository).
 
-import { test } from "node:test";
+import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -20,6 +20,17 @@ import { join } from "node:path";
 const require = createRequire(import.meta.url);
 const PKG_ROOT = path.resolve(import.meta.dirname, "..");
 const REPO_ROOT = path.resolve(PKG_ROOT, "..", "..");
+
+/** Every scratch dir this file creates, removed when the file finishes. */
+const SCRATCH = [];
+function scratchDir(prefix) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  SCRATCH.push(dir);
+  return dir;
+}
+after(() => {
+  for (const dir of SCRATCH) fs.rmSync(dir, { recursive: true, force: true });
+});
 
 function sandboxGitEnv(env = process.env) {
   const clean = { ...env };
@@ -63,7 +74,7 @@ function makeValidEnv(overrides = {}) {
  * `conductor-sensor.test.mjs`, currently used only where a file path is the
  * simplest double. */
 function writeFakeScript(content) {
-  const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "paw-tool-fake-")), "fake.js");
+  const tmp = path.join(scratchDir("paw-tool-fake-"), "fake.js");
   fs.writeFileSync(tmp, "#!/usr/bin/env node\n" + content + "\n", { mode: 0o755 });
   return tmp;
 }
@@ -210,7 +221,7 @@ const SCRIPT_CLOSURE = {
 
 /** A throwaway git repo with the script and its import closure copied into scripts/. */
 function makeLiveSandbox(script) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "paw-tool-live-"));
+  const root = scratchDir("paw-tool-live-");
   fs.mkdirSync(path.join(root, "scripts"));
   for (const name of [script, ...(SCRIPT_CLOSURE[script] ?? [])]) {
     fs.copyFileSync(path.join(REPO_ROOT, "scripts", name), path.join(root, "scripts", name));
@@ -368,7 +379,7 @@ test("phase-lint live: PASS and BLOCKED unit docs → typed verdict with fingerp
   // phase-lint is a read-only script that imports a repo-rooted sibling, so it
   // runs from the repository's own checkout (a read, never a mutation of the
   // live tree) with fixture documents written under os.tmpdir().
-  const fixtures = fs.mkdtempSync(path.join(os.tmpdir(), "paw-tool-lint-"));
+  const fixtures = scratchDir("paw-tool-lint-");
   const clean = path.join(fixtures, "clean.md");
   fs.writeFileSync(
     clean,
