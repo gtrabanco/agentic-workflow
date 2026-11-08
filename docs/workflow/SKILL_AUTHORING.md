@@ -131,8 +131,7 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > bumped by the train with nothing declared says so explicitly.
 
 > **Smoke-test wording changes to executor-path skills.** After editing
-> `execute-phase`, `plan-feature`, `plan-feature-scaffold`,
-> `plan-feature-from-issue`, `design-feature`, or a `review-*` skill, run the
+> `unit-lane`, `execute-phase`, or a `review-*` skill, run the
 > manual procedure in
 > [`docs/workflow/GOLDEN_FIXTURE.md`](GOLDEN_FIXTURE.md) — it
 > drives a fixed toy fixture through the changed skill with the weakest model
@@ -141,31 +140,23 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 
 ### Hand off, don't compose across a model/effort boundary
 
-A skill's `model` and `effort` are **fixed at the start of its turn** and do **not**
-change when it loads another skill mid-turn (verified against the Claude Code
-skills / model-config docs). So invoking skill B from skill A runs B at **A's**
-model and effort, not B's — silently under- or over-powering B.
+No skill pins a tier: `model` and `effort` come from the invocation (the routed
+command profile or the session), and a tier **cannot change mid-turn** — loading
+another skill runs it at the caller's tier, never at its own. So a composer that
+runs B in-turn silently under-powers B (or needlessly over-powers it).
 
 **Rule (the test is ≥, not "same"):** before composing skill B in-turn, compare
-tiers. Compose **only when A's model/effort is ≥ B's** (so B isn't under-powered).
-If B needs a **higher** model or effort than A, **hand off** instead — print
-`run /<skill>` / the next command and let the user invoke B in a fresh turn at its
-own tier. Most of the flow already hands off (`plan-feature` prints
-`execute-phase NN P1`; `plan-fix` stops and suggests `execute-phase --fix`;
-`triage-issue`/`review-change`/`audit-pr` route with suggestions; `execute-phase`
-hands off to `/review-change` at its review checkpoint).
+tiers. Compose **only when the caller's tier is ≥ B's expected tier**. If B needs
+a **higher** model or effort, **hand off** instead — print `run /<skill>` / the
+next command and let it be invoked in a fresh turn at its own tier. Most of the
+flow already hands off (`unit-lane` triages and hands its steps to
+`execute-phase`; `triage-issue`/`review-change`/`audit-pr` route with suggestions;
+`execute-phase` hands off to `/review-change` at its review checkpoint).
 
-**Why ≥ and not "same":** composing at a *higher* tier (e.g. `product-audit` at
-`opus`/`max` running `audit-docs`'s `sonnet`/`medium` checks) over-powers B —
-harmless, just costlier. Composing at a *lower* tier (the bug we hit: `execute-phase`
-at `sonnet`/`medium` running `review-change` at `opus`/`high`) **under-powers** B — a
-real regression. So the orchestrators and routers, which are the high-tier (`opus`,
-`high`/`max`) skills, may safely compose what they synthesize: `review-change` →
-`review-implementation` + companions; `product-audit` → its sub-checks; the
-`plan-feature` router → its `opus` internals (it carries the highest effort of its
-paths). Everything else hands off.
-
-> Note: `ultracode` is a Claude Code **session setting** (xhigh effort + automatic
-> multi-agent workflow orchestration), **not** a frontmatter `effort:` value — a
-> skill cannot declare it. The accepted `effort:` values are `low`/`medium`/`high`/
-> `xhigh`/`max`.
+**Why ≥ and not "same":** composing at a *higher* tier over-powers B — harmless,
+just costlier. Composing at a *lower* tier **under-powers** B — a real regression
+(the bug we hit: a cheap-tier executor composing the review at its own tier). So a
+skill may compose only what it synthesizes at or below its own tier:
+`review-change` → `review-implementation` + companions; `product-audit` → its
+sub-checks; the `unit-lane` conductor → its catalog steps. Everything else hands
+off.

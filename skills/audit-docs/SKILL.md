@@ -87,26 +87,28 @@ run the command shown, don't infer.
       since #308 `S#` is the requirement id.
     - **legacy carriers only** — `grep -rnE '\bS[0-9]+\b|\bStep [0-9]' docs/features/*/{PLAN,TASKS,progress}.md`
       must return nothing: plans use `P1, P2, …` ("phases") only. Any hit: LOW
-      (rename), plus check the executor argument still resolves. Today's 22 hits
-      are all literal `Step 0 — Discover the project` citations; the grep is the
-      legacy carrier's, so a lane-era `S#` is never read through it.
+      (rename), plus check the executor argument still resolves; a hit quoting only
+      the required `Step 0 — Discover the project` section is no phase label, and no
+      count is restated here — the checker's own output enumerates them.
 11. **Per-phase doc discipline — keyed on the unit's own carrier.** Pick the
     carrier mechanically, never by guess: `TASKS.md` in the unit folder means
     legacy carriage; its absence means the unit doc's `## Tasks`/`## Log`.
     - **lane-era** — `bun scripts/ceremony.mjs docs check-tasks-ticks --slug <slug>`
-      and `bun scripts/ceremony.mjs docs check-progress-entry --slug <slug>`
-      must both report `valid: true`: every `- [x] P<n>` has its `P<n>` line in
+      and `bun scripts/ceremony.mjs docs check-progress-entry --slug <slug>` must
+      both report `valid: true`: every `- [x] P<n>` has its `P<n>` line in
       `## Log`, and no task lacks one. Cite those two fields, never `check-all`
-      (its `commit-format`/`docs-language` fields are checks 14 and 7). A doc
-      with no `## Tasks` section answers `n/a` — `no ## Tasks section — legacy
-      carrier` — so the vacuous case routes to the legacy branch, never to a
-      silent pass.
+      (its `commit-format`/`docs-language` fields are checks 14 and 7). A doc with
+      no `## Tasks` section answers `n/a` (`no ## Tasks section — legacy carrier`),
+      so the vacuous case routes to the legacy branch, never to a silent pass.
     - **legacy** — the original assertions on that unit's own files: completed
       phases ticked in `TASKS.md`, one `progress.md` entry per completed phase,
       the literal close-out tasks in the final phase.
-    - **Severity** — a `done` unit whose ledger disagrees with its tasks: HIGH.
-      The same on an `in-progress` unit: LOW (it may still be settling). Only
-      `high`/`low` exist in this report's legend.
+    - **Severity** — a ticked task with no `P<n>` log line, or a log naming a task
+      never ticked: HIGH on a `done` unit (the doc claims a receipt its carrier
+      lacks), LOW on an open one (still settling). A `done` unit written before
+      the tick grammar (`- P<n>` bullets, receipts in `E` lines) is red on
+      `check-progress-entry` by construction — LOW, recorded, **never repaired**
+      (`MIGRATION.md`: a closed unit keeps the shape it was written in).
     - **Close-out** is `audit-pr`'s contract (receipt + ordered gates): cite its
       verdict, never re-derive the retired literal tasks here.
 12. **Branch & PR discipline vs the forge.** For every `done` unit: its PR

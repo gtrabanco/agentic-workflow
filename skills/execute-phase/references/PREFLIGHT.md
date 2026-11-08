@@ -113,9 +113,8 @@ Read the unit doc's status from the location index (the five-state machine —
 A triaged unit says the artifacts exist, never that an independent reviewer accepted
 them. The lane conductor (`unit-lane`) triages at invocation and the unit doc's
 triage block is the authority. The slot immediately after this gate and before
-the first write is owned by the bounded implementation discovery contract — load
-[`implementation-discovery`](<../implementation-discovery/SKILL.md>) and settle it
-before any branch/planning/source write; it routes READY | REPLAN | NEEDS-DESIGN
+the first write is owned by this skill's bounded pre-write mapper contract — settle
+it before any branch/planning/source write; it routes READY | REPLAN | NEEDS-DESIGN
 | BLOCKED and is the only contract allowed to confirm the map here. Full rule,
 block text, no-forgery and legacy detail:
 [pre-execution gate](PRE_EXECUTION_GATE.md).
