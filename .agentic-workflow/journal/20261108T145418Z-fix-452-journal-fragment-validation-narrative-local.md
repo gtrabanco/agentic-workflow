@@ -1,6 +1,0 @@
-## 2026-11-08T14:54:18Z — fix/452-journal-fragment-validation — narrative
-- **Commits:** 28 (`95cde38a…4871eb6e`)
-- **Files:** 34 files
-- **Summary:** Applied the owner's aw-local-apply batch (L5) to the two open defects of the correction chain: the guide-layer budget case is now a named test so one break no longer aborts check-skill-context.test.mjs whole, guide-split stopped duplicating the budget owner's exit-code assertions, and the branch/PR rule is stated once in AGENTS.md with a new case pinning it. Root suite stays 90/90.
-- **Decisions:** The split is by responsibility (D11): the budget owner asserts the ceilings, guide-split keeps the linkage; the 26 load-time mutation guards stay fail-fast on purpose. My earlier claim that template/AGENTS.md, the README principles and RELEASE.md were 'copies' was overstated — those are product surfaces whose consumer cannot reach this repository's guide, the one exception the ownership rule allows, so only the in-doc duplicate was removed. Path-protection records now live in the unit's decisions.md, the carrier the guard reads. D10's placement refactors stay for their own unit.
-- **Next:** Owner recheck of F8/F9 and D11 on PR #459, then D10's placement refactors (gate-operations block, worktree section) as their own unit; merge authority and the push stay with the owner.

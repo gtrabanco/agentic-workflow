@@ -186,9 +186,12 @@ test("the published schemas and the validators agree on every closed vocabulary"
 
 test("the README's closed-vocabulary table restates exactly the published sets", () => {
   const readme = readFileSync(packageFile("README.md"), "utf8");
-  // lastIndexOf: the pre-execution and verification sections carry their own
-  // closed-vocabulary tables, and this contract's is the last one.
-  const section = readme.slice(readme.lastIndexOf("### Closed vocabularies"));
+  // Slice to this contract's own section: the README carries further
+  // closed-vocabulary tables (issue #201's pass-routing one follows it), and a
+  // row outside this contract's section is not this contract's restatement.
+  const sectionStart = readme.indexOf("### Closed vocabularies", readme.indexOf("## The workflow-projection contract (issue #406)"));
+  const sectionEnd = readme.indexOf("## Review-pass routing vocabularies");
+  const section = readme.slice(sectionStart, sectionEnd === -1 ? undefined : sectionEnd);
   const rows = section.split("\n").filter((line) => /^\| `[A-Z_]+` \|/u.test(line));
   const table = new Map(
     rows.map((line) => {

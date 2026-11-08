@@ -85,6 +85,15 @@ turn-contract box still applies to the orchestrator):
    slower, the documented floor-of-last-resort so no agent is blocked from
    using this mode.
 
+**Reviewer model routing (issue #201).** Each reviewer's model resolves from
+the same resolved table as every other pass (`agentic-workflow
+resolve-passes`, the `SKILL.md` isolation rule): the finder passes a reviewer
+runs resolve per pass name, the adversarial passes may be pinned to a
+**different model family** than the orchestrator when the operator's table
+pins them so (the cross-family recommendation below), and a row the table
+leaves at the inline floor runs inline at the orchestrator's model — stated
+in the report, never silently.
+
 ## Verdict layer — the pass verifies, it does not enumerate
 
 A finder's table entry is a **candidate**, never a finding. On this route the
@@ -122,10 +131,11 @@ evidence is printed beside the kill so a human can overturn it. No recall-side
 machinery exists on this route: nothing auto-resurrects a killed finding, and the
 documented risk is accepted here rather than engineered around.
 
-**Cross-model-family reviewers** stay the recommendation they already are; the
-configurable half — which model families a pass uses — resolves through issue
-`#201`'s `passes` config, linked here and not built in this skill. Until it
-lands, an agent with one family runs N same-family reviewers and says so.
+**Cross-model-family reviewers** stay the recommendation they already are;
+the configurable half — which model families a pass uses — is the operator's
+`passes` config (issue #201): pin the finder and adversarial pass entries to
+the families the catalog allows, and the resolved table carries them to each
+spawn. An agent with one family runs N same-family reviewers and says so.
 
 **The record is checked, not trusted.** The pass writes one record for the whole
 arbitration and the conductor runs one command over it and the reviewed diff:
