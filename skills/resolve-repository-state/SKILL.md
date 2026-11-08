@@ -16,13 +16,17 @@ Resolve evidence conflicts explicitly and publish the next frozen snapshot.
 
 ## Turn contract
 
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions:
+
 ```
 ✓ A named contradiction and both evidence sources were read
 ✓ The disposition is accepted, rejected, or needs-input
 ✓ Accepted/rejected results publish a frozen snapshot; needs-input stops without freezing
 ✓ No unrelated fact or decision changed
-✓ The closing → Next: block is printed last
 ```
+
+Missing reference → STOP. About to end the turn with any box unchecked? The
+turn is NOT done — complete the missing box first.
 
 ## Step 0 — Discover the project (always first)
 

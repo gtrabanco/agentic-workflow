@@ -17,8 +17,7 @@ design-feature, plan-feature, review-spec, review-plan.
 
 ## Turn contract
 
-Tick every box before ending the turn; an unchecked box means the turn is not
-done:
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (the `→ Next:` box is canonical-owned and not restated here):
 
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Nothing here
@@ -46,7 +45,6 @@ done:
   recorded (dated Progress entry, or a `## Log` `P` line) before every commit
 ✓ Memory boundaries ran — probe verdict once, saves at unit start / each phase
   transition / close under `unit/<NN-slug>/doc`, degradation recorded as pending
-✓ → Next: block printed as the absolute last output
 ```
 
 ## When to use
