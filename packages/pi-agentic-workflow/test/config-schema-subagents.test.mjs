@@ -49,11 +49,18 @@ test("cap strings must match the <n> of <m> <unit> shape", () => {
 
   const badMemory = parseConfigFile('{"subagents":{"memoryCap":"12 GB"}}');
   assert.equal(badMemory.ok, false);
-  assert.ok(badMemory.issues.some((i) => i.path === "$.subagents.memoryCap"), JSON.stringify(badMemory.issues));
+  // the shipped path convention quotes non-slug keys (displayKey)
+  assert.ok(
+    badMemory.issues.some((i) => i.path.startsWith("$.subagents.") && i.path.includes("memoryCap")),
+    JSON.stringify(badMemory.issues),
+  );
 
   const overOf = parseConfigFile('{"subagents":{"threadCap":"90 of 80 threads"}}');
   assert.equal(overOf.ok, false);
-  assert.ok(overOf.issues.some((i) => i.path === "$.subagents.threadCap"), JSON.stringify(overOf.issues));
+  assert.ok(
+    overOf.issues.some((i) => i.path.startsWith("$.subagents.") && i.path.includes("threadCap")),
+    JSON.stringify(overOf.issues),
+  );
 });
 
 test("unknown inner keys are rejected; pre-existing keys stay byte-identical", () => {

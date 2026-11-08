@@ -64,6 +64,10 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // chain, so an unconfigured install resolves every pass to the documented
     // floor (cheap tier, else inline) rather than a compiled-in model.
     passes: {},
+    // Issue #260: no shipped subagent resource limits — the resource layer owns
+    // the self-detected envelope (conservative defaults), so a fresh install
+    // runs automatic, never compiled-in caps.
+    subagents: {},
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });
