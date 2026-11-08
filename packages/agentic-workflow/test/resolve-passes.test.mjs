@@ -178,6 +178,50 @@ test("project entries override global ones; global entries survive untouched", (
   assert.equal(receipt.passes.classify.source, "passes.classify");
 });
 
+test("project command routes merge per key — a project thinking override keeps the global model (AC3's loader merge rule)", () => {
+  // Correction batch 2026-11-08 (fix/201 external-verify blocker 1): the crate
+  // used to replace whole command routes, so a project route that set only
+  // `thinking` clobbered the global `model` and the cheap tier silently fell
+  // to the floor — pi's loader merges the same two files per key.
+  const global = JSON.stringify({
+    commands: {
+      "execute-phase": { model: "nan/qwen3.6", thinking: "low" },
+      "review-change": { model: "nan/glm5.3-flash" },
+    },
+    passes: { classify: { model: "inherit" } },
+  });
+  const project = JSON.stringify({
+    commands: { "execute-phase": { thinking: "high" }, "review-change": { thinking: "medium" } },
+  });
+  assert.deepEqual(rowFor("review-security", global, project), {
+    model: "nan/qwen3.6",
+    thinking: "inherit",
+    source: "commands.execute-phase",
+    spawn: "pinned",
+    reason: null,
+  });
+  assert.deepEqual(rowFor("classify", global, project, "review-change"), {
+    model: "nan/glm5.3-flash",
+    thinking: "inherit",
+    source: "commands.review-change",
+    spawn: "pinned",
+    reason: null,
+  });
+});
+
+test("fail-closed: a malformed commands map is a refusal, never a silent floor", () => {
+  // Correction batch 2026-11-08 (triaged beside blocker 1): a non-object
+  // `commands` value used to spread into junk keys, so the selected route was
+  // simply not found and the pass fell to the floor with exit 0 — the same
+  // fail-open the `$.passes` guard already refuses.
+  assert.throws(() => receiptFor('{"commands":"not-an-object"}'), (e) => {
+    assert.ok(e instanceof PassesError);
+    assert.match(e.message, /\$\.commands/);
+    return true;
+  });
+  assert.throws(() => receiptFor(GLOBAL_EMPTY, '{"commands":"not-an-object"}'), PassesError);
+});
+
 test("fail-closed: invalid JSON in a present file is a refusal, never a fallback", () => {
   assert.throws(() => receiptFor("{not json"), PassesError);
 });
