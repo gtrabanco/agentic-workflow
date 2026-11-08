@@ -210,13 +210,8 @@ say so.
 
 ## Portability (agents other than Claude Code)
 
-The workflow is the contract; Claude Code features are conveniences. On an
-agent that lacks one, apply the fallback — never skip the step the feature
-enables:
-
-- **No slash-command menu** — where this skill says `/<skill>`, open that
-  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
-  literally, in a fresh conversation: hand-offs assume a clean context.
+Preamble + no-slash-menu fallback: owned by `skills/orchestration-envelope/references/PORTABILITY.md` — this section
+keeps only its own fallbacks:
 - **No per-skill `model:`/`effort:`** — no skill pins a tier; pick tiers yourself:
   these are mostly mechanical cross-document checks — a mid-tier model is
   enough; escalate to your strongest only for a deep audit.
