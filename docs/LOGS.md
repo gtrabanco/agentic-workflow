@@ -4958,3 +4958,124 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Created and fixed worktrees for issues 432, 435, 440, 429, plus fixed Serena .serena/project.yml parsing
 - **Decisions:** Fixed .serena/project.yml language_servers indentation (was bare `- typescript`, required 2-space indent for serena-readiness.ts parser to detect them)
 - **Next:** Work on the 4 worktree branches (feat/432-model-memory-tier-0, feat/435-project-charter, feat/440-product-audit-rescope, fix/429-log-session-extension)
+
+## 2026-11-08T11:55:00Z — fix/journal-fragment-newline — narrative
+
+- **Commits:** 1 (`13bbbe60…13bbbe60`)
+- **Files:** .agentic-workflow/journal/20261108T112440Z-main-manual-narrative-local.md (newline), .agentic-workflow/journal/20261108T113017Z-docs-board-analysis-safeguard-manual.md → .agentic-workflow/journal/20261108T113017Z-main-narrative-manual.md (rename)
+- **Summary:** Fixed journal-aggregate CI: repaired two fragments that the merge-to-main aggregator refuses (unterminated newline + unparseable name)
+- **Next:** Merge PR #457 and verify the next scheduled journal-aggregate run succeeds
+
+## 2026-11-08T11:30:34Z — main — manual
+- **Commits:** 1 (`068d95c3…068d95c3`)
+- **Files:** .agentic-workflow/journal/20261108T113017Z-docs-board-analysis-safeguard-manual.md
+- **Summary:** Diagnosed log-session fragment carrier issue: canary outdated, confirmed need for release
+- **Next:** Cut canary/release and update pi package to fix log-session fragment routing
+
+## 2026-11-08T11:30:17Z — main — narrative
+- **Commits:** 0
+- **Files:** —
+
+## Narrative session log fragment
+
+- **Summary:** Created and fixed worktrees for issues 432, 435, 440, 429; fixed .serena/project.yml language_servers indentation (bare items failed parser); added worktree creation guide to AGENTS.md
+- **Decisions:** Fixed .serena/project.yml language_servers indentation (bare `- item` failed serena-readiness.ts regex); created worktrees inside .git/worktrees/ as required by Serena/MCP detection; added AGENTS.md worktree creation procedure (steps 1-6 + failure modes)
+- **Next:** Work on the 4 worktree branches (feat/432-model-memory-tier-0, feat/435-project-charter, feat/440-product-audit-rescope, fix/429-log-session-extension), feat/413-pi-seam-hooks, feat/366-doc-cli
+
+## Narrative session log fragment
+
+- **Summary:** ROADMAP.md: merge issue ids as feature/fix numbers (owner decision 2026-11-07), register 11 new issue rows (features 434/436/437/438/441/443/444/427/388, fixes 452/424), mark 99/100 as folded
+- **Decisions:** Changed roadmap numbering convention: feature/fix row numbers ARE the GitHub issue id (not a second sequential number). One truth rule. Historical rows 01-115 keep old numbers (never reused). Also registered 11 open issues that lacked roadmap rows and absorbed rows 99/100 into 437 (review-findings-corpus).
+- **Next:** Triaje de los 11 nuevos issues (unit-lane --from-issue) y consolidación de las ramas feat/366 y feat/413
+
+## 2026-11-08T00:10:00Z — feat/366-doc-cli — manual
+- **Commits:** 2 (`9d6ce4c0` the main integration, plus the fragment commit)
+- **Files:** 65 (the merge's union: 64 from main + the resolution)
+- **Summary:** Integrated main into feat/366-doc-cli for PR #453 (main moved 35 commits: units 433, 449, 429, 413). The rename/rename conflict on the c9dd1d88 journal fragment — the same name/bytes repair landed on both sides with different names — resolved to the branch's rename: its name matches the fragment's own heading, while main's 7d430265 kept the contradicting branch slug the S22 writer now refuses; bytes identical either way. docs/LOGS.md resolved as the append-only union per the de95a237 precedent (main's aggregated batch first, the branch's 366 entries 16:20–23:30 at the tail); both sides' rows survive verbatim, no interleaving. docs/generated regenerated with docs-generate.mjs (--check PASS). One merge trap disclosed: the DD original of the rename/rename kept unmerged index stage entries, so git ls-files still listed it and the corpus parity cases died on ENOENT — git rm -f recorded the double deletion and the cases went green; not a scanner regression. local-gate --skip-network PASS — 8 step(s) in 153s; pushed bd9776a2..9d6ce4c0 (non-force), PR #453 now MERGEABLE/CLEAN at 9d6ce4c0.
+- **Decisions:** On a rename/rename of the same repair, the name that agrees with the content wins — the fragment name is the aggregator's identity and the writer (S22) refuses a name whose branch slug contradicts the heading. LOGS.md conflicts resolve as a verbatim union of both appended batches, never interleaved.
+- **Next:** Owner merge decision on PR #453 (CLEAN); after merge flip roadmap row 71 to done through the emitter and let the changeset carry the release (agentic-workflow minor, schema patch).
+
+## 2026-11-07T23:25:37Z — feat/366-doc-cli — manual
+- **Commits:** 1 (`160df420` — correction batch + the delta receipt; session range `e2544f87..160df420`, 2 files)
+- **Files:** 2 (`docs/fix/366-doc-cli/SPEC.md`, `docs/fix/366-doc-cli/external-verify.md`)
+- **Summary:** External verification of the 366 doc-CLI head returned a delta verdict — one blocker, B-Δ1: the unit doc's execution record (tasks P9–P23 unticked while delivered; E16 recorded '0 fail' at 7bc11894 where a clean clone shows the id-parity case failing; E34 recorded 35 pass where both runtimes observe 37 at 07832973), the code itself fully verified: crate 453/454 green under both runtimes, schema 756 green, corpus parity 9187 chunks = 9187 sections = 9187 paired with 0 drift / 0 artifact / 0 swallowed, F99 refusals 7.80/8.04 ms against the untouched 50 ms bar, phase-lint PASS, release.mjs plan exit 0, origin == head. Applied the one-blocker correction batch: P9–P23 ticked, E16/E34 amended to the observed counts with dated correction notes, phase-lint PASS; the delta receipt rides the same commit.
+- **Decisions:** Evidence rows are amended with a dated correction note, never silently rewritten — a historical figure that does not reproduce is corrected on the record (E16 now carries the parity case's true red at 7bc11894 with its green at 7b2f152b, matching L8's disclosure). One receipt per external verify run in external-verify.md; the delta verdict names its base/head so the next run is a one-row delta. The first LOGS.md append was reverted: the carrier is opted in, so the aggregator owns the journal and the session writes a fragment instead.
+- **Next:** Owner recheck of B-Δ1 per the correction bounds (one recheck limited to the blockers: the tick state and the E16/E34 figures), then push feat/366-doc-cli (2 local commits ahead) and open the PR against main.
+
+## 2026-11-07T22:58:25Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Applied issues #433 (precondition closure), #413 (pi seam-hooks), #449 (batch scheduler sensor), and #366 (doc-cli) inline; created and pushed PRs #453, #455, #456; merged #454 and #455 into main; fixed pi-compat-guard spawn failures and docs-generate commented-frontmatter read bug
+- **Decisions:** Changed remote URL from HTTPS to SSH which caused worktree corruption; restored remotes via git fetch after the remote was corrupted
+- **Next:** Complete PR #453 (feat/366-doc-cli) and PR #456 (feat/413-pi-seam-hooks); create work for issue #441 (triage-issue re-scope)
+
+## 2026-11-07T22:45:15Z — feat/449-batch-scheduler-sensor — narrative
+- **Commits:** 16 (`a649f3b3…65f44f18`)
+- **Files:** 33 files
+- **Summary:** External verification of unit 449 (batch scheduler), then two correction batches that closed every finding it produced. Verdict first: the feature itself works (suite 21/21, schema 771/771, determinism, real persistence) but the pushed head failed the root gate on the roadmap settle, so it was not mergeable as it stood. Every finding was reproduced before it was corrected, including the staged-rename reproducer in a throwaway clone. Closed: the planner's zero-collision claim (a tree-root surface like skills/** opened a sibling lane beside skills/alpha, and a body fallback invented lanes from prose), false findings for in-flight targets, --no-state silently writing, --remote inert on the issue list, the batch-plan projection missing from the package files and exports, the unsettled roadmap row, the README counts, the nested reason fields, the changed-set dirty list, the budget narration, the portable prompt counts and the pi catalogue order. The branch is pushed to 65f44f18 and PR #454 is open (state read from the forge).
+- **Decisions:** Broad surface declarations cover their declared child lanes instead of opening one, read from S5's own words, and the real tree proved it: #284's 'No skills/ changes' no longer gets a skills/ lane. An open blocker with a unit doc on disk is a state, not a finding, so blocked[] names it as in flight. In the schema package files and exports are one contract, so a new projection needs both. The roadmap ## Fixes row is a hand edit because no emitter exists for its shape, and the settle gate validates it. A staged rename needs the -z porcelain form on both sides, so the fixture reads it the way its producer does. The fragment carrier already refuses invalid names three ways, so the reported writer needed no new guard. A new finding never earned a correction cycle: X1 and the advisories were reported first and fixed when the owner asked for the remaining findings.
+- **Next:** The owner's recheck of the 16 findings on 65f44f18 (PR #454, open), then review-change / audit-pr and the merge decision. Nothing pending on my side: obligations 33/33 verified, gate PASS 12/12.
+
+
+## 2026-11-07T22:43:35Z — feat/366-doc-cli — manual
+- **Commits:** 21 (`8ea10e05…1e8ad1bd`)
+- **Files:** 21 files
+- **Summary:** External verification of the 366 doc-CLI unit returned three blockers; the session closed them in three correction batches and published the branch. Batch 1 (S11-S13) fixed the D5 id drift (ids now derive from the raw heading line: 9058 paired sections, 0 drift), the phase grammar (the owner's unit-doc shape, tick optional: 45 unit docs, 39 mapped, 0 disagreements), the silently ignored --out, the doubled doc: prefix and the F99 capture cost (21.7 to 9.1 ms, the 50 ms assertion untouched). Batch 2 (S14) fixed A6: the chunker collapsed every fence opener to three characters, so fenced examples were scanned as headings; the fence keeps its own length and the store stamps CHUNKER_VERSION so a stale cache re-scans. Batch 3 (S15-S18) closed A7 by deleting the second scanner (the chunker now reads the same mdast tree as the #407 locator: 9184 chunks = 9184 sections = 9184 paired, 0 drift, 0 artifact, 0 missed), paid L9 with F1-F8 fold lines and L10 by making the parity case assert the whole invariant, then published the branch. Batch 4 (S19-S22) proved the release cut in plan mode, shipped the doc edit --set/--append spellings, closed A3 (a path-qualified id on stdin is refused by name) and gave the journal writer its name/bytes guard. Obligations 33/33 verified, F1-F11 folded, local gate PASS 8/8 at every batch head.
+- **Decisions:** One heading scanner for both halves (D9): a hand-rolled fence machine is a second classifier of the same documents and drifts, so scanChunks derives its headings from the locator's markdown tree and both halves share one frontmatter bound and one raw-title rule. Derive a section id from the heading's raw line, never the rendered title (D7) - a shared slugger is not a shared id. The release route is the changeset (feature 40), so item 3 was proven with release.mjs plan instead of bumping a version in the PR. The journal's name/bytes agreement is enforced at the write, because the name is the aggregator's identity. Three test corrections were disclosed instead of hidden (L8, L10, L13) and two of them were re-proven red against the pre-fix commit in a /tmp clone.
+- **Next:** Owner external verification of head 1e8ad1bd, then the push: the branch is 3 commits ahead of origin/feat/366-doc-cli and PR #453 is OPEN at 7c518e20 (mergedAt null), so it does not yet show the last three commits. After the verdict: merge #453, flip roadmap row 71 to done through the emitter, record #192's closure, and let the release cut carry the changeset (agentic-workflow minor, schema patch).
+
+## 2026-11-07T22:16:34Z — feat/449-batch-scheduler-sensor — narrative
+- **Commits:** 1 (`+ this record`)
+- **Files:** 11 (plan grammar + schema field list + parity pin, changed-set suite, budget narration, portable prompt, pi catalogue, unit doc + ledgers, this fragment)
+- **Summary:** Closed the findings the first correction batch left open, each after reproducing it: the plan grammar now declares the nested `reason` fields and the parity pin refuses a nested drift the union comparison could not see; the changed-set dirty list reads the same `-z` form its producer does, so a staged rename keeps both sides instead of a phantom `old -> new`; the budget narration counts its own four rows (one table, three schema-export) instead of five/four; the portable prompt states the tree (14 user-facing + 15 internal); the pi catalogue keeps its table order (`batch-scheduler` in place, `triage-issue` moved back where it belongs). The reported fragment-writer finding closed by evidence, not code.
+- **Decisions:** (1) The importer of a wrong count is not fixed by loosening the count: the narration was corrected to the rows that exist. (2) The changed-set test keeps its independence (it reads git itself) but reads the NUL form and splits the same way, so producer and fixture still disagree only if the contract changes. (3) The catalogue's own order was broken by a pre-existing row (`triage-issue` after `unit-lane`), fixed in the same table so the pin is truthful. (4) The fragment writer needed no guard: `fragmentName`/`writeFragment` throw on an unknown kind, `journal aggregate` refuses the set, S15 pins the carrier, and the offending commit never reached the pre-push gate.
+- **Next:** the owner's recheck, then `review-change` / `audit-pr` and the merge decision; the branch is pushed.
+
+## 2026-11-07T21:49:01Z — feat/449-batch-scheduler-sensor — narrative
+- **Commits:** 3 (`b8eb69e8`, `c120b4a3`, `a2836adb` + this record)
+- **Files:** 13 (scheduler + suite + skill docs, schema `files`/`exports` + package test, README counts, roadmap row, generated projection, unit doc + ledgers, one carrier fragment renamed)
+- **Summary:** Closed the 11 external-verify blockers after re-verifying every one of them red first. The planner now collapses a tree-root surface (`skills`, `skills/**`) onto the child lanes the run declares instead of opening a sibling lane — the S5 collision is gone and the real tree proves it (#284's "No `skills/` cambios" no longer gets a `skills/` lane). An open blocker whose unit doc is on disk is reported in flight in `blocked[]` and never batched, instead of being called a `cycle`; a soft dep on it is no longer an orphan. `--no-state` and `--mark-launched` are mutually exclusive; `--remote` names the forge for the issue list too; the batch-plan projection ships in the package `files`+`exports`; the roadmap row settles `done` with PR #454; the guide's counts state the tree; the carrier fragment is named to the grammar.
+- **Decisions:** (1) The root-token rule is read from S5's own words ("one lane per surface … two skills twice if disjoint"): a broad declaration *covers* the child lanes, so it serializes there instead of running beside them — the conservative direction. (2) In-flight targets are a state, not a finding: `blocked[]` names them and the issue waits outside every batch, which needs no new vocabulary. (3) The roadmap row is a hand edit because no emitter exists for the `## Fixes` shape (`rowUpsert` requires the `| NN |` header) — disclosed, and the settle gate validates it. (4) The carrier fragment is renamed to `narrative`, never deleted: the writer that produced two unparseable names is a separate finding. (5) A new finding (a staged rename trips `version-parity-gate.test.mjs`'s dirty-list comparison) is recorded in the unit's Findings table, not fixed — a new finding never earns a cycle.
+- **Next:** the owner's recheck of the 11 blockers on the bound head, then `review-change` / `audit-pr` and the merge decision.
+
+## 20261107T212847Z — feat/413-pi-seam-hooks — narrative
+- **Commits:** 10 (`0d2cf6a6…4f48ae7d`) on top of `main` (`b8b1d814`)
+- **Files:** 23
+- **Summary:** Applied issue #413 (seam-hooks dispatcher) inline under the owner's local unpublished workflow. Unit doc cut with planning ledgers frozen before the first line of code; red-first suites (555 pass / 4 fail on the missing modules); dispatcher implementation (config, runner, dispatcher, extension wiring); docs/indexes shipped (init-workspace consent step, package README contract table, workflow guide, roadmap rows, changeset); pre-push gate reds resolved (node-compat ESM import fix, journal-fragment name repair, changeset lint reword) — PR #456 open and MERGEABLE awaiting the owner's external verdict.
+- **Decisions:** D3 triage: SessionStart/SessionEnd alias 1:1, nine native seam names accepted, every other Claude Code event refused config-invalid; post:commit failures report (never retro-block), pre:commit/pre:push block; unit:*/phase:* seams validate but don't fire (pi has no event there, declared Future); require inside ESM is a bun/node divergence — pi-node-compat caught it on first push (bun-first suites can't).
+- **Next:** Owner's external verdict on PR #456 (per-criterion AC-1..AC-10 in the PR body). Blockers → one correction batch (§9). Approval → merge (#413 auto-closes).
+
+## 20261107T212729Z — feat/413-pi-seam-hooks — narrative
+- **Commits:** 9 (`0d2cf6a6…4f48ae7d`)
+- **Files:** 22
+- **Summary:** Applied issue #413 (seam-hooks dispatcher) inline under the owner's local unpublished workflow. Unit doc cut with planning ledgers frozen before the first line of code; red-first suites (555 pass / 4 fail on the missing modules); dispatcher implementation (config, runner, dispatcher, extension wiring); docs/indexes shipped (init-workspace consent step, package README contract table, workflow guide, roadmap rows, changeset); pre-push gate reds resolved (node-compat ESM import fix, journal-fragment name repair, changeset lint reword) — PR #456 open and MERGEABLE awaiting the owner's external verdict.
+- **Decisions:** D3 triage: SessionStart/SessionEnd alias 1:1, nine native seam names accepted, every other Claude Code event refused config-invalid; post:commit failures report (never retro-block), pre:commit/pre:push block; unit:*/phase:* seams validate but don't fire (pi has no event there, declared Future); require inside ESM is a bun/node divergence — pi-node-compat caught it on first push (bun-first suites can't).
+- **Next:** Owner's external verdict on PR #456 (per-criterion AC-1..AC-10 in the PR body). Blockers → one correction batch (§9). Approval → merge (#413 auto-closes).
+
+## 2026-11-07T20:48:54Z — feat/449-batch-scheduler-sensor — narrative
+- **Commits:** 9 (`a649f3b3…7d6dacf5`)
+- **Files:** 27 files
+- **Summary:** feat/449-batch-scheduler-sensor — deterministic batch scheduler sensor: batch-plan@1 envelope, schema contract, scripts/batch-scheduler.mjs, user skill, 8 commits + PR #454
+- **Decisions:** Own skill + script over workflow-status extended mode (read-only contract + S6 persistence); facts-not-policy (never caps lanes or launches); schema package as the closed contract; out-of-unit disclosed repair of pre-existing gate red (fragment name per fix-432's Next line); SKILL_CONTEXT_BUDGETS machineLines re-pinned exact 111→115; GATE_INVENTORY claim added for the four new normative surface ids
+- **Next:** Owner external verification on PR #454, then merge decision
+
+## 2026-11-07T19:40:00Z — feat/449-batch-scheduler-sensor — narrative
+- **Commits:** 7 (`a649f3b3…<final>`)
+- **Files:** 24 files (2511 additions, 7 deletions)
+- **Summary:** Applied issue #449 through the owner's local unpublished workflow (frozen ledgers, no self-review machinery): the batch scheduler sensor — `scripts/batch-scheduler.mjs` emits the `batch-plan@1` machine envelope (schema package contract `agentic-workflow/batch-plan`): batch 1 runnable now, batch N+1 next, hard `blocked-by` gates, prose soft rows order, one lane per touched surface with serialization, measured size hints as facts, claimed lanes persisted to `.agentic-workflow/batches.json` (untracked), cyclic/orphaned/prose-native spots as findings. New user-facing skill `batch-scheduler` registered everywhere (plugin.json, skills.sh.json, SKILLS.md, README count 13→14, normative-surfaces rows, changeset, pi README catalogue).
+- **Decisions:** (1) Own skill + script, not a workflow-status extended mode — workflow-status is strictly read-only and persistence is required; precedent: producers as own scripts. (2) The envelope carries facts, never policy — the lane-count decision stays with the consumer. (3) The state file is untracked via the carrier's existing whitelist, no `.gitignore` change. (4) The normative field inventory ships as a `table:` grammar — the gate's `block:` field machinery resolves only envelope families. (5) The gate's pre-existing S15 red (a committed fragment name with kind `manual` outside the closed set) was repaired here by the fix-432 close-out's own recorded Next line, disclosed as an out-of-unit repair.
+- **Next:** External verification by the owner (the diff is the handoff); then `review-change`/`audit-pr` and the PR closing #449.
+
+## 2026-11-07T12:29:43Z — fix/429-log-session-extension — manual
+- **Commits:** 20 (`fbb8ae84…d9350e64`)
+- **Files:** 25 files
+- **Summary:** Apply #429: anchor /log-session as a Pi extension command, repair the journal carrier fragment that reddens the crate suite across all branches, and open PR #448 for external verification.
+- **Decisions:** 1) /log-session became an extension command (log-session-invocation.ts + log-session-command.ts) so the invocation is code-owned, not model-prose. 2) The malformed fragment 20261107T001707Z-direction-review-odd-hybrid-design-notes-manual.md was renamed to 20261107T001707Z-main-narrative-local.md to fix the crate suite on every branch; then aligned to the same target chosen by sibling PRs #446/#447 to avoid a merge conflict (bytes untouched, blob 0de3f888). 3) No self-review machinery ran; all verification was local (root-suite exit 0, pi suite 555/0, both crate suite legs). 4) CI's root-suite.yml manual run failed at pi-compat-guard (pre-existing TS2307 on shipped files); the failure hides the other 11 steps due to fail-fast.
+- **Next:** Owner reviews PR #448 and merges. If merged blockers appear, run fold-findings limited to those blockers then recheck the same rows.
+
+## 2026-11-07T12:28:31Z — fix/429-log-session-extension — manual
+- **Commits:** 19 (`fbb8ae84…e1ee7d0b`)
+- **Files:** 24 files
+- **Summary:** Correction batch 1 on the external verify for fix/429-log-session-command: 0 blockers, 4 advisories all repaired with evidence. A2: pi-compat-guard now links the package workspace dependencies via file: specs so src/ type-checks against its own dependencies (the published 4.10.0 tarball lacks src/journal and src/log, so a published pin keeps TS2307). A3: lint-changeset exempts ignored runtime paths (git check-ignore is the authority) so the accurate citation of the journal store no longer kills the whole directory. A1: the evidence figure 3 corrected to 4. A4: path count reconciled in the log. The first full local gate this branch has ever completed: 12/12 steps green. Re-tiered high, signal publish — the waiver recorded.
+- **Decisions:** Route chosen before any byte changed: root cause over symptom for both gate defects, with the registry route for the compat guard measured in scratch and rejected on evidence (published 4.10.0 ships no src/journal or src/log). RED first for both rules: absent export, then green. High-tier review waived by the merge authority for this unit only, not a policy change. A false-positive pre-existing at main (374 changeset cites a runtime path). The recurrence of the high-tier is the classifier's path table, not a document — changing it is a separate policy unit.
+- **Next:** Owner's external verdict on PR #448 and the merge. Open policy question: a unit to make the high-tier review obligation checkable or drop it from the grammar (neither done here, both would be separate units). The crate's src/journal and src/log modules still need shipping at the next release cut so the published line matches what src/ imports.
