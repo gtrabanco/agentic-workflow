@@ -31,6 +31,10 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   profiles: {},
   profileOrder: [],
   profileFallback: { ...DEFAULT_PROFILE_FALLBACK },
+  // Issue #201 — no shipped pass entries: the resolver owns the fail-closed
+  // chain, and an unconfigured install resolves every pass to the documented
+  // floor (cheap tier, else inline) rather than a compiled-in model.
+  passes: {},
   // Feature 63 — model profiles: declared keys (none, zero-config).
   declared: { default: { model: false, thinking: false } as RouteDeclaration, commands: {} as Record<string, RouteDeclaration> },
 };
