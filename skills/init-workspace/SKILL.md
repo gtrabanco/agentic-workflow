@@ -139,6 +139,22 @@ step 4:
 
 ## Guardrails
 
+- **Seam hooks are consent-gated and opt-in per seam (issue #413).** The pi
+  extension runs project-declared commands at workflow seams only after two
+  gates, both explicit: init-workspace's consent marker, and the per-seam
+  `"enabled": true` flag in the project's own `.pi/hooks.json`. On an explicit
+  yes to "enable workflow seam hooks for this project?", write the consent
+  entry into the global store the extension reads —
+  `<agentDir>/seam-hooks-consent.json`, a `projects` map keyed by the
+  project's absolute path, `{ "consented": true, "consentedAt": <ISO date> }`
+  — and create nothing else. `<agentDir>` is pi's global agent directory:
+  `getAgentDir()` in the extension, `~/.pi/agent` on a default install (the
+  directory holding `pi-agentic-workflow.json`; `~/.claude` is not it). Never write or edit `.pi/hooks.json` (the
+  developer's declarations, not this skill's), never add the consent entry
+  without the project's absolute path, and a no writes nothing. The
+  dispatcher's own contract — config form, seam vocabulary, refusal grammar —
+  is owned by `@gtrabanco/pi-agentic-workflow`'s README; this skill never
+  restates it.
 - **The session-log fragment carrier is opt-in, off by default (issue #405).**
   The template ships the documentation (`template/.agentic-workflow/journal.md`)
   and the CI example (`*.yml.example`) — never the carrier directory itself, so

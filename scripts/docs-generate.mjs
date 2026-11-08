@@ -195,12 +195,17 @@ function unitDirs(dir) {
 /** The unit's title and one-line, read from its own doc. The one-line is the
  * `> One-line:` quote — the unit-doc grammar's only declared carrier for it. A
  * legacy doc without that quote falls back to its title rather than surfacing
- * whatever template prose sits in its first blockquote. */
+ * whatever template prose sits in its first blockquote. The frontmatter is
+ * skipped before either scan: the SPEC template opens with `# ` comments, and a
+ * YAML comment is not a heading — reading it as one published template prose as
+ * the unit's description (issue #413's receipt, F8). */
 function unitFacts(specText) {
   const lines = specText.split("\n");
-  const title = lines.find((line) => /^# /.test(line))?.slice(2).trim() ?? "";
+  const frontmatterEnd = lines[0]?.trim() === "---" ? lines.findIndex((line, index) => index > 0 && line.trim() === "---") : -1;
+  const body = lines.slice(frontmatterEnd + 1);
+  const title = body.find((line) => /^# /.test(line))?.slice(2).trim() ?? "";
   const oneLine =
-    lines
+    body
       .map((line) => /^> One-line:\s*(.+)$/.exec(line)?.[1]?.trim() ?? "")
       .find((value) => value !== "") ?? "";
   return { title, oneLine };

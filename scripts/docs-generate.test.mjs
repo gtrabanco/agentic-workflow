@@ -254,6 +254,41 @@ test("units: a legacy spec without a One-line quote falls back to its title, nev
   }
 });
 
+test("units: a commented frontmatter note is never read as the title (the template's own shape)", () => {
+  const root = fixture({
+    units: [
+      {
+        dir: "02-commented",
+        spec: [
+          "---",
+          "# Uncomment and set the keys the unit needs; until type/scope are set, the readers fall back to the folder",
+          "# (type) and to the requirement count (scope).",
+          "# type: feature | fix | docs | chore",
+          "# ac-hash: <sha256 of the ## Acceptance criteria section — the design step writes it>",
+          "type: fix",
+          "scope: medium",
+          "---",
+          "",
+          "# 02 — commented",
+          "",
+          "## Goal",
+          "",
+          "Ship the other thing.",
+        ].join("\n"),
+      },
+    ],
+  });
+  try {
+    assert.equal(run(root).status, 0);
+    const units = fs.readFileSync(path.join(root, "docs", "generated", "units.md"), "utf8");
+    assert.doesNotMatch(units, /Uncomment and set the keys/, "the commented frontmatter note leaked into the units page");
+    assert.doesNotMatch(units, /ac-hash: <sha256/, "a commented frontmatter key leaked into the units page");
+    assert.match(units, /\| 02-commented \| feature \| — \| 02 — commented \|/, "the cell does not carry the unit's H1");
+  } finally {
+    cleanup(root);
+  }
+});
+
 test("dry-run: reports the plan, writes nothing", () => {
   const root = declared("html", { contentDir: false });
   try {
