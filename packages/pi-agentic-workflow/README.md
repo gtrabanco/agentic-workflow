@@ -142,6 +142,37 @@ whatever the session already had, because the shipped default route is
 - Unknown keys, `null`s and malformed references are **rejected**, not ignored: a
   typo that silently did nothing is the bug you would never find.
 
+### Spawned passes (issue #201)
+
+The passes a review spawns — the `review-*` finders, the verification pass,
+the classifier, the debt transform — do not route through `commands`: they
+run wherever the spawning agent sends them. The top-level `passes` key gives
+the operator the approved table for them:
+
+```json
+{
+  "passes": {
+    "review-code": { "model": "nan/qwen3.6", "thinking": "low" },
+    "verify": { "model": "auto" },
+    "default": { "model": ["nan/qwen3.6", "google/gemini-3-flash"] }
+  }
+}
+```
+
+- Keys are the published pass names (`PASS_NAMES` in
+  `@gtrabanco/agentic-workflow-schema`) plus the `default` escape. Unknown
+  pass names are rejected.
+- `model` is `"inherit"`, `"auto"`, a `provider/modelId` reference, or a
+  1–4 reference chain. `"auto"` — only ever valid because the operator wrote
+  it — delegates the model choice to the orchestrating agent.
+- Resolution is deterministic and fail-closed, applied in code by the
+  `resolve-passes` command of `@gtrabanco/agentic-workflow`:
+  `passes.<name>` → `passes.default` → the configured cheap tier
+  (`commands.execute-phase`) → inline at the orchestrator's model, recorded
+  with a reason. A spawned pass never lands on an unapproved model silently.
+- Project entries merge over global per entry and per key, like every other
+  route scope; an untrusted project's file is not read at all.
+
 The first workflow command you run after install says once that routing is
 configurable, then never again. That acknowledgement is stored in
 `~/.pi/agent/pi-agentic-workflow-state.json`, not in your config.
