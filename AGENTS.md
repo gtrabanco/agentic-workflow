@@ -126,7 +126,14 @@ under [Working rules](#working-rules)).
   Step owner: [`skills/unit-lane/references/DOCS.md`](skills/unit-lane/references/DOCS.md);
   `audit-docs` check 15 audits it.
 - **One PR per unit of work, always against `main`.** Never work on `main`
-  directly; never stack PRs.
+  directly; never stack PRs. **Owner-applied inline batches are the one
+  exception**: the owner may direct a correction batch to land straight on
+  `main` without a branch or PR (a docs/a11y/wording repair he orders
+  mid-session, applied where he asked for it). Such a batch keeps the
+  conventional-commit format, is recorded in the unit doc or session log that
+  owns it, and is not a general licence — an agent never pushes to `main` on its
+  own initiative, and every unit of work that is not one of those batches still
+  arrives through a PR.
 - **Forge issue dependencies are declared twice and must agree.** An issue that
   depends on others carries a `## Dependencies` section (prose, for triage) AND
   the native GitHub `blocked-by` relationship (machine; GraphQL mutation
