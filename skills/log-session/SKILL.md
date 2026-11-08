@@ -28,19 +28,19 @@ cluster models carry **no token counter**, so this skill pays in bytes, not
 quota): structured summarization, not judgment. It must never reach for an
 expensive model.
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn; the entry write itself is the skill-specific commit box — the fragment carrier (issue #405) and the two-doors flow (#429) own where the entry lands, not an inline contract. Skill-specific additions (the docs-language and `→ Next:` boxes are canonical-owned and not restated here):
 
 ```
 ✓ The entry was WRITTEN with accurate git facts: appended to docs/LOGS.md, or — when the fragment carrier `.agentic-workflow/journal/` exists (issue #405) — written as a new fragment there (the aggregator owns the journal; a direct append is refused)
 ✓ `bun scripts/session-close.mjs close` RAN and exited 0 (or 2, with the leftover paths named) — the entry is committed, not left riding along
 ✓ No past entry was edited
-✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Missing reference → STOP. About to end the turn with any box unchecked? The
+turn is NOT done — complete the missing box first (weak models drop
+end-of-document duties; this list is first on purpose).
 
 ## Two doors, one behaviour (#429)
 

@@ -5224,3 +5224,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Diagnosed GitHub Actions journal-aggregate PR creation failure: GITHUB_TOKEN lacks pull-requests:create permission; fixed via Settings → Actions → General → 'Allow GitHub Actions to create and approve pull requests' toggle
 - **Decisions:** Enabled the PR create/allow toggle in repo settings rather than modifying workflow YAML; the GITHUB_TOKEN default is read-only contents + packages, but the PR creation permission is a separate workflow-level toggle (not a GITHUB_TOKEN scope)
 - **Next:** Verify that the scheduled journal-aggregate workflow runs successfully on next push or manually trigger it
+
+## 2026-11-08T20:30:00Z — feat/173-single-owner-turn-contract — manual
+- **Commits:** 22 (`0998d1d3…` this branch)
+- **Files:** 24 files changed vs main (+676/−74)
+- **Summary:** Feature 33 (issue #173) executed to the pre-handoff state under the owner's apply-command workflow: the canonical turn contract gained a read-only profile, and every one of the 14 skills carrying a bespoke inline `## Turn contract` now loads the canonical `orchestration-envelope/references/TURN_CONTRACT.md` + skill-specific additions only (duplicated docs-language/`→ Next:` boxes removed; the read-only skills adopt the profile). The single-owner rule is pinned by a new root-suite test, committed red-first against the 14-skill tree and green at close; budgets and route ceilings re-based where the loader lines demanded (`ceil(measured × 1.10)` with named growth sources).
+- **Decisions:** Unit home `docs/features/33-turn-contract-single-owner/` (feature convention, roadmap-row naming) — D-33-1. Scope widened 9→14 at the in-section metric because execute-phase/init-workspace/unit-lane never loaded the canonical file — D-33-3. `fold-findings` migrated because it is still in the tree (S7 honored); `log-session` migrated as carrier-flow alignment. The repo's own review/fold machinery was never run on this change (inline application; the owner is the external verifier).
+- **Next:** Owner verifies the diff; then PR against `main` (`Closes #173`), roadmap row 33 settled to `done · [#<pr>]` and the PR-time follow-up commit. A later unit may bridge ODD-hybrid trimming of the recited boxes.
+

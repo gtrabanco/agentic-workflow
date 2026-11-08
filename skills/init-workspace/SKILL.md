@@ -20,6 +20,8 @@ raw placeholders.
 
 ## Turn contract — verify before ending the turn
 
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (the docs-language and `→ Next:` boxes are canonical-owned and not restated here):
+
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Consent for
   every install, hook, and overwrite is explicit; a consent gap runs the
@@ -31,8 +33,6 @@ raw placeholders.
 ✓ The adapted scaffold and repository-state ledger are written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed, registered (MCP) or overwritten — including the global
   Serena config — without an explicit yes
-✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete

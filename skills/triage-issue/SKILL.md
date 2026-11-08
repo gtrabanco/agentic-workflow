@@ -20,7 +20,9 @@ Decide what happens to an issue, grounded in evidence — not vibes. Prevents bo
 premature work (acting on a deferred item whose trigger is unmet) and silent rot
 (a fix-now bug left to drift).
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (the docs-language and `→ Next:` boxes are canonical-owned and not restated here):
 
 ```
 ✓ One fixed-format verdict block per issue (Trigger / Checked / Evidence / VERDICT / Action) — plus the summary table when batched
@@ -28,13 +30,11 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 ✓ Audit-finding mode (`<audit-id> F<k>`): the audit file carries its `↳ triaged` note, and any opened issue cites `Origin: product audit <id>, finding F<k>`
 ✓ Review-finding mode (`--prioritize-now <unit> F<k>`): every named unresolved finding gets a verdict **and a route** — a `fix-now` row is routed to `/fold-findings` (or an explicit `/execute-phase <unit> P<n>`), never implemented in this turn
 ✓ Batched input? The closing recommendation maps every issue/finding ID to its own next command, joined with ` + `; it never collapses to one generic action
-✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Missing reference → STOP. About to end the turn with any box unchecked? The
+turn is NOT done — complete the missing box first (weak models drop
+end-of-document duties; this list is first on purpose).
 
 ## When to use
 

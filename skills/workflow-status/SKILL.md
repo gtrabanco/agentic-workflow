@@ -21,7 +21,9 @@ next command is.** The **script is the deterministic producer**:
 reads the JSON, interprets it against the references below, and prints the human
 report — it never assembles the envelope by hand.
 
-## Turn contract — verify before ending the turn
+## Turn contract
+
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) before ending every turn; the **read-only profile** substitutes boxes 1–5 (nothing was edited, committed, pushed, or created — read-only, always). Skill-specific additions:
 
 ```
 ✓ The script was RUN — `bun scripts/workflow-status.mjs [--json-only]
