@@ -59,6 +59,38 @@ configuration above read the same catalogue entry — but a handler runs first, 
 the mechanical part is a fact the harness holds instead of a claim the model
 makes. See [The `/log-session` code door](#the-log-session-code-door-issued-429).
 
+## Workflow tools (deferred — issue #274)
+
+Beside the commands, the package registers the five envelope-emitting
+deterministic scripts as **deferred pi tools** in the `agentic-workflow`
+namespace. Deferred means the model is never shown them: there is no standing
+token cost, `tool_search` can find and activate them, and codemode scripts can
+call them by name at any time.
+
+| Tool | Wraps | Returns as `structuredContent` |
+| --- | --- | --- |
+| `agentic_workflow_status` | `scripts/workflow-status.mjs --json-only` | The validated Envelope v2 (the schema package's published `envelope.schema.json`, reused verbatim) |
+| `agentic_workflow_diff_guard` | `scripts/diff-guard.mjs --json` | Measured lines/files/additions/deletions against the budget |
+| `agentic_workflow_phase_lint` | `scripts/phase-lint.mjs` | `{ verdict, fingerprint, phases[], docFindings[] }` parsed from the byte-stable block |
+| `agentic_workflow_audit_pr_gate` | `scripts/audit-pr-gate.mjs evaluate` | The merge verdict report (`verdict`, `action`, `actionReason`, head/pr) |
+| `agentic_workflow_snapshot_verify` | `scripts/pre-execution-snapshot.mjs verify` | The freshness report (`current`, `digestMatches`, `structural`) |
+
+Two properties hold for every tool:
+
+- **The project's own checkout runs.** Each tool spawns the script in the
+  session's cwd — the repository being worked on — never the package's pinned
+  copy, and never an in-process import. The receipts are the same ones the
+  skills' bash wording produces.
+- **Red gates are errors with data.** A breach, a `BLOCKED` verdict, a stale or
+  missing receipt, or a non-`MERGE-READY` gate returns `isError: true` with the
+  structured result still attached, so a programmatic consumer reads findings
+  as data instead of re-parsing an exit code.
+
+The model-facing text of a successful run is the same JSON, so nothing is lost
+for a consumer that ignores structured content. Skills never change: the bash
+wording stays the portable path across agents, and these tools are the
+pi-native shortcut — not a second source of truth for any receipt.
+
 ## The `/log-session` code door (issue #429)
 
 A skill invocation is a context injection: nothing executes behind the slash, so
