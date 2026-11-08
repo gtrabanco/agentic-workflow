@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-ac-hash: 56b627e00107909e65a5fca47e991ec5c03935fa07750ea1a1ec98e7af2c7691
+ac-hash: b23b7c3da9f9a21f4e605d2498515b200309b41989be4378e42b760d9decd1e2
 ---
 
 # fix/201-operator-approved-pass-routing
@@ -146,8 +146,8 @@ classify` over the planned paths.)
 
 - `packages/pi-agentic-workflow/test/config-schema-passes.test.mjs` (new) —
   strict-validator rows for `passes` (S1).
-- `packages/pi-agentic-workflow/test/config-merge.test.mjs` (extended, name
-  follows the existing suite layout) — project-over-global merge of `passes`.
+- `packages/pi-agentic-workflow/test/config-merge-passes.test.mjs` (new, beside
+  the existing merge suite) — project-over-global merge of `passes`.
 - `packages/agentic-workflow/test/resolve-passes.test.mjs` (new) — golden
   fixtures for the resolution chain, `auto` pass-through, chain pass-through,
   malformed-route refusal (S2, S1a, S2b).
@@ -220,8 +220,9 @@ classify` over the planned paths.)
   normative-surfaces inventory. (check: `bun test
   scripts/normative-drift.test.mjs` exits 0)
 - **AC7** — the repository indexes and docs ship in the same change:
-  roadmap row 45 and the Fixes-table row are written by the deterministic
-  emitters (never hand-edited), the pi package README's Model routing section
+  roadmap row 45 is written by the deterministic emitter (never hand-edited),
+  and the Fixes-table row ships in the change — hand-written, because the fix
+  index has no row-writer (disclosed in Log D3); the pi package README's Model routing section
   and the crate README/bin usage document `passes`/`resolve-passes`, a
   changeset declares the release intent, and the generated projection is
   regenerated. (check: `bun scripts/docs-generate.mjs --check` exits 0 AND
@@ -273,7 +274,8 @@ classify` over the planned paths.)
   skills/review-change/references/ADVERSARIAL_SETUP.md, AGENTS.md
 - P5 — Documentation and state via surfaces: pi README Model routing section
   (`passes`), crate README + bin usage (`resolve-passes`), changeset, roadmap
-  row 45 and Fixes-table row via the emitters, generated projection
+  row 45 via the emitter and the Fixes-table row present (hand-written — no
+  row-writer exists), generated projection
   regenerated (validator: `bun scripts/docs-generate.mjs --check` exits 0 AND
   `node packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check
   docs/fix/201-operator-approved-pass-routing/SPEC.md` exits 0)
