@@ -1,7 +1,6 @@
 ## Portability (agents other than Claude Code)
 
-The workflow is the contract; Claude Code features are conveniences. This
-skill has no Claude Code dependency at all — it is the piece that lets ANY
+Preamble: `skills/orchestration-envelope/references/PORTABILITY.md`. This skill has no Claude Code dependency at all — it is the piece that lets ANY
 driver (a shell loop, a CI job, another agent) orchestrate the workflow:
 
 - **No slash-command menu** — open this `SKILL.md` and follow it literally in
