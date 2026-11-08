@@ -261,10 +261,18 @@ declared paths at the cut; copied verbatim, never written from memory.
   `c7258644`. **Affects this unit**: it is the frozen-failure reproducer (O1) and
   is repaired by rename-only on this branch, so the gate can read green. The
   issue's own S4/S4a records the same drift.
-- **`pi-compat-guard` was red at `main` when this unit was cut** — it type-checks
-  the published crate against the workspace's unpublished `src/journal` modules.
-  **Does not affect this unit** unless it reproduces identically on the base
-  export; if it does, it is disclosed as environmental and not repaired here.
+- **The guide's line/prose/estimate ceilings are red at the cut**:
+  `bun scripts/check-skill-context.mjs --documents` fails at `c7258644` with
+  `AGENTS.md: lines 573 > 477`, `estimate 9639 > 9462`, `prose lines 458 > 370`
+  (measured in a `git archive main` export). **Affects this unit's validator
+  only**: the machine-region pin it changes is re-pinned exactly (115 → 116), and
+  the three ceilings are **not** re-based — they are a pre-existing governance
+  drift this unit did not spend. `bun test scripts/check-skill-context.test.mjs`
+  is therefore red at `main` and at this head, identically.
+- **`pi-compat-guard` may be red at `main`** — it type-checks the published crate
+  against the workspace's unpublished `src/journal` modules. **Does not affect
+  this unit** unless it reproduces identically on the base export; if it does, it
+  is disclosed as environmental and not repaired here.
 - **`## Fixes` has no deterministic emitter** — `rowUpsert` writes the
   `## Features` table and `scripts/ceremony.mjs` lists `roadmap` as deferred. The
   fix row is a hand edit, **reported** here as the defect the owner's §7 rule
@@ -306,8 +314,10 @@ proves it.
    `docs/workflow/GATE_INVENTORY.md` — proven by `bun test scripts/normative-drift.test.mjs`
    and `bun scripts/prose-gate-inventory.mjs`.
 8. **S7** — `bun scripts/skill-lint.mjs` exits 0 and
-   `bun scripts/check-skill-context.mjs --documents` exits 0 with the re-pinned
-   `machineLines`.
+   `bun scripts/check-skill-context.mjs --documents` reports no
+   `machine-table lines` failure (both `machineLines` pins match; the line,
+   prose and estimate ceilings were already red at the cut — see
+   `## Known pre-existing issues`).
 9. **S10** — the frozen-failure reproducer is red before the change and green
    after: `cd packages/agentic-workflow && bun test test/journal.surfaces.test.mjs`
    fails at `c7258644` naming `20261108T121830Z-main-manual-narrative-local.md`
