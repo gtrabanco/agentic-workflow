@@ -1,0 +1,179 @@
+# External verify — fix/413-pi-seam-hooks
+
+2026-11-08 · first receipt for this unit (no prior `EXTERNAL VERIFY` block for
+413 anywhere in `docs/fix/` → full verdict, once). Read-only: no commit, no
+push, no branch, no forge mutation, no correction. Every probe ran in
+`mktemp -d` scratch and was removed; the only writes this run made inside the
+tree are the gitignored `dist/` rebuild and skill-bundle staging that the
+declared validator `bun run test` performs by design.
+
+```text
+EXTERNAL VERIFY — base: b8b1d8147b1ecb79ef92355a53309c2b82a3c3d2 · head: 4f48ae7db95b33a58bdbb5f89c98a0fc3fb5a77e
+Blockers: 3 — B1 packages/pi-agentic-workflow/src/hooks/runner.ts:122-192 · reproducer: a consented project declaring `{"hooks":{"pre:commit":[{"enabled":true,"hooks":[{"type":"command","command":"missing-tool-xyz run lint"}]}]}}` in `.pi/hooks.json` (consent store `<agentDir>/seam-hooks-consent.json` keyed by the project's absolute path) and `runSeam("pre:commit", …)` → `Error: spawn missing-tool-xyz ENOENT` thrown as an UNHANDLED `'error'` event (`node:events:505 "throw er; // Unhandled 'error' event"`), process exit 1, no verdict reached; same shape for a present-but-non-executable command (`./scripts/check.sh`, mode 644 → `Error: spawn ./scripts/check.sh EACCES`), control run with the exec bit → `{"verdict":"allow",…,"ran":[{"source":"project",…,"exitCode":0}]}`; under bun the same probe dies with `error: Executable not found in $PATH: "missing-tool-xyz"`; with a process-level `uncaughtException` handler installed (as a host may install) the seam promise never settles — the probe was still pending at 3s, so the tool call hangs instead of blocking · why it is a defect: `runArgv` attaches `stdout`/`stderr`/`close`/`exit` handlers (runner.ts:155-192) and never `child.on("error")`, so a spawn failure escapes the promise; the host's own process-level uncaught path, so the whole session dies rather than the seam closing — pi's interactive mode registers `prependListener("uncaughtException", …)`, prints `pi exiting due to uncaughtException` and calls `process.exit(1)` (`@earendil-works/pi-coding-agent/dist/modes/interactive/interactive-mode.js:3612-3633`, registered at :682), while the headless print/rpc modes register only SIGTERM/SIGHUP (`modes/print-mode.js:31`, `modes/rpc/rpc-mode.js:275`) and die on Node's default unhandled-`'error'` throw; the README's own contract says "never a throw into your session" (README.md:448) while the base commit's own spawn site guards exactly this (`src/conductor/sensor.ts:61` registers `child.on("error", …)` and resolves a `sensor-degraded` refusal) · base-vs-head: `git cat-file -e b8b1d814:packages/pi-agentic-workflow/src/hooks/runner.ts` → `exists on disk, but not in 'b8b1d814'` — no code at base executes a project-declared command, so the crash does not reproduce there · stability: fires only through `runArgv` on a declared-but-unspawnable argv; no untouched surface carries the reproducer (the only other `spawn(` in the package, `conductor/sensor.ts`, handles `'error'`) · smallest action: attach `child.on("error", …)` in `runArgv` and settle it as a `block` (or the dispatcher's declared `degrade`) with the error in the output — route to /aw-local-apply · B2 packages/pi-agentic-workflow/src/extension/hooks-wiring.ts:108-114 + src/extension/index.ts:356,397 · reproducer: same consented project, `.pi/hooks.json` declaring an `enabled` `session:start` group whose command exits 1 → `await wiring.onSessionStart(ctx)` then `onSessionShutdown(ctx)` → `notices: []`, no block, no teaching message, zero output; `index.ts` reaches the seam through `void hooksWiring.onSessionStart(…)` and the wiring returns `Promise<void>`, discarding `SeamRunResult.blocks` · why it is a defect: `docs/workflow/SEAM_HOOKS.md` promises "Fail-closed — a failing check blocks at the seam, and the teaching message quotes the declared requirement as declared" and README.md:437-441 says "Non-zero or timeout → `block`, and the teaching message quotes the declared requirement" with no session exemption (only the `pre:commit`/`pre:push` sentence is qualified), and S4's own words are "non-zero exit → block at the seam with the declared requirement quoted"; the sibling seam `post:commit` does surface its blocks (`hooks-wiring.ts` `postCommitFailure` → `ctx.ui.notify`), so the session seams are the one path that swallows a declared failure — a silent pass through a seam the project declared as a gate · base-vs-head: the seam does not fire at base (no hooks module, no `session_start`/`session_shutdown` seam wiring; `git show b8b1d814:packages/pi-agentic-workflow/src/extension/hooks-wiring.ts` → absent in b8b1d814) · stability: the reproducer touches only the new session seams; the wiring's other seams (tool_call/tool_result) still surface blocks · smallest action: notify `result.blocks` for `session:start`/`session:end` the way `postCommitFailure` already does (they cannot block a session, but they must not be silent) and pin it with a failing-hook case — route to /aw-local-apply · B3 packages/pi-agentic-workflow/src/extension/hooks-wiring.ts:63-75 (`gitSeamsIn`) · reproducer: same consented project with an `enabled` `pre:commit` check that exits 1, driven through `createHooksWiring({agentDir}).onToolCall({toolName:"bash",input:{command}})` → `"git commit -m x"` BLOCKED, `"git -C . commit -m x"` PASSED, `"git -C /abs/path commit -m x"` PASSED, `"git -c user.email=a@b commit -m x"` PASSED, `"git --git-dir=.git commit -m x"` PASSED, `"GIT_DIR=.git git commit -m x"` PASSED, `"bash -c 'git commit -m x'"` PASSED · why it is a defect: README.md:419 (the event table) states "`pre:commit` | a bash `git commit` is intercepted, before it runs — a failing check **blocks the commit**" and the SPEC's AC-7 rests on the same sentence; the regex `^git(?:\s+-{1,2}[\w-]+)*\s+(commit|push)` swallows a bare flag but not a flag that carries a value, nor a leading `VAR=value` assignment, so those invocations skip the declared gate and the commit succeeds with the check never run — silently ignored with success · base-vs-head: no git interception exists at base (`git show b8b1d814:packages/pi-agentic-workflow/src/extension/index.ts | rg -c "git commit|gitSeams"` → 0) · stability: fires only on the new matcher; the pre-existing receipt guard's own command filter is a different function and is unaffected · smallest action: skip the value of `-C`/`-c`/`--git-dir=`/`--work-tree=` (and allow a leading `NAME=value` prefix) in `gitSeamsIn`, with one case per form in `test/hooks-wiring.test.mjs` — route to /aw-local-apply
+Advisories: 10 — A1 docs/fix/413-pi-seam-hooks/SPEC.md:218 (G1) and :220 (E3): the recorded counts do not reproduce — G1 says "87 PASS / 0 FAIL" and the tree carries 88 `scripts/*.test.mjs` at base, at `dbc30279` and at this head, and the observed run is `88 PASS / 0 FAIL` exit 0; E3 says `hooks-config` 11/0 while `E6` pinned one more case into that suite and the observed run is 12/0 — the green substance holds in both, only the recorded numbers are stale (A2 class: a receipt that cannot be re-derived) · A2 skills/init-workspace/SKILL.md:148 and packages/pi-agentic-workflow/README.md:380,387: the consent store and the global config are named `<agentDir>/…` and `<agentDir>` is never resolved anywhere in the skills, while the same README spells the concrete `~/.pi/agent/…` five times (README.md:23,108,146,209,232) and `skills/init-workspace/references/SERENA.md` spells `~/.pi/agent/mcp.json` for its own global write; the consent entry is the only activation path (S3), so a target-project agent executing the step must guess the path — advisory because `getAgentDir()`'s default makes the guess right · A3 docs/generated/units.md (413 row): the description cell renders "Uncomment and set the keys the unit needs; until type/scope are set, the readers fall back to the folder" — the generator picked the SPEC's commented-out frontmatter note; the same rendering already sits on #432's row, so the generator behaviour is base-present and this unit only mints one more instance · A4 docs/ROADMAP.md:131 (row 112) and the `## Fixes` row: both carry `done · [#456]` while the same cells read "PR #456 open against main … awaits the owner's external verdict and merge", and the unit's own `## Next` says the flip happens at merge — state written ahead of the merge (precedent: #429's row); projected correctly into `docs/generated/units.md`, so the gate cannot see it · A5 packages/pi-agentic-workflow/src/hooks/runner.ts:139-141 + :162: reaching the 32 KiB per-stream cap SIGTERMs the hook (and its group), so `allow` becomes false and a verbose-but-passing check (`bun run test` output over the cap) blocks the seam; README.md:435 declares exactly this ("reaching the cap kills the process"), so the behaviour matches its documentation — flagged because the declared contract is a sharp edge a project will meet · A6 packages/pi-agentic-workflow/src/hooks/runner.ts:233-241: the teaching message quotes `argv.join(" ")`, so a declaration carrying its own quoting is reported unquoted (`node "my check.mjs"` → `` `node my check.mjs` ``) — O8/README say "quotes the declared requirement … exactly as declared"; the seam, the exit code and the bounded output are accurate · A7 packages/pi-agentic-workflow/test/hooks-dispatcher.test.mjs:132: the case called the "git sandbox" fixture creates a tmpdir with a shell script — no git repository is initialised and no commit is attempted; it does run the real spawn path (control reproduced here), and the interception half is proven separately at `test/hooks-wiring.test.mjs:54`, so AC-7's behaviour is demonstrated while the fixture name overstates it · A8 packages/pi-agentic-workflow/src/hooks/dispatcher.ts:91-92: with `enabled: true` but no consent entry the seam returns `allow` with no notice at all — documented as "no entry, no execution", but it is the one failure mode where an accepted-and-valid config produces nothing forever, and the docs' degradation promise is scoped to broken files only (S6) · A9 packages/pi-agentic-workflow/src/hooks/dispatcher.ts:91: the consent read bypasses the injected `readFile` (`readSeamHooksConsent(deps.agentDir, deps.cwd)`), so a suite injecting the config reader still reads the real consent store — a test-seam inconsistency, no user-visible effect (the real-filesystem path was exercised here and works) · A10 docs/fix/413-pi-seam-hooks/SPEC.md `## Findings`: the table is empty while these three blockers are open, so the carrier owes a row per blocker (§Findings is where a routed correction is persisted for the next delta run)
+Sibling sweep: clean — `test/alias-coverage.test.mjs:281-283` is the only extension-event inventory in the tree and it was updated to the seven-event set (no surviving five-event list in docs, READMEs, skills or other suites; the only other `session_shutdown` prose, `docs/workflow/TIER_COST.md:15`, is pi's turn lifecycle, not the extension's subscriptions); the schema-side 413 mentions (`packages/agentic-workflow-schema/README.md:799`, `src/projection.ts:6,361`, `src/vocabularies.ts:122`, `docs/features/105-…/SPEC.md:137`) still say what the code does (a consumer of the closed vocabularies, no schema change); the new `docs/workflow/README.md` index row resolves and `docs/workflow/SEAM_HOOKS.md` points at the README section that exists; `bun scripts/skill-lint.mjs` 0 findings in 92 files, `bun scripts/check-skill-context.mjs` PASS 28 skills and `--routes` PASS 14 routes, `bun scripts/docs-generate.mjs --check` 0 missing / 0 stale / 0 orphaned; surviving stale-truth residue is exactly the advisories A2 (`<agentDir>` unresolved), A3 (generated description cell) and A4 (roadmap state ahead of the merge) — no surface still asserts a pre-hooks truth
+Completeness: S1–S10 resolved — every S# has a task carrying `(Implements: S#)` (S1→P1, S2→P2/P5, S3→P2/P6, S4→P3/P4/P5, S5→P4, S6→P2/P5, S7→P2/P6, S8→P4, S9→P3, S10→P6/P7/P8) and its validator re-ran green here: `bun scripts/unit-route.mjs --triage 413-pi-seam-hooks` exit 0; `bun run test` in packages/pi-agentic-workflow exit 0, 597 pass / 0 fail; the four suites separately 12/0, 9/0, 13/0, 8/0; `bun scripts/check-skill-context.mjs` and `--routes` PASS; `bun scripts/docs-generate.mjs --check` exit 0; `bun scripts/skill-lint.mjs` PASS; `node scripts/run-root-suite.mjs` exit 0, 88 PASS / 0 FAIL; `bun scripts/local-gate.mjs --skip-network --only version-parity-content,docs-generated-projection,pi-node-compat,schema-node-compat` PASS 4/4 (version-parity routes through `.changeset/413-pi-seam-hooks.md`, pi-node-compat green); `rg -n 'writeFile|writeFileSync|appendFile' packages/pi-agentic-workflow/src/hooks/` → 0 matches (O13). Obligations O1–O14 all `verified` and every stated validator re-runs green; open ids: none. Caveat the owner should read with the blockers: the green ledger is not a proof of claim closure — no suite declares an unspawnable command (B1), a failing `session:start` hook (B2) or an option-carrying `git commit` (B3), so O5/O8/O12 pass on the cases they pin while the claim they name fails on the cases they do not
+Spot check: `bun test packages/pi-agentic-workflow/test/hooks-dispatcher.test.mjs` → match (reported E3: 13 pass / 0 fail; observed: 13 pass / 0 fail), and `bun run test` in the package → match against E6's superseding count (reported 597 pass / 0 fail; observed 597 pass / 0 fail, 52 files) — the only receipt numbers that do not reproduce are the stale counts in A1
+Verdict: NEEDS-DECISION (B1 packages/pi-agentic-workflow/src/hooks/runner.ts:122-192 · B2 packages/pi-agentic-workflow/src/extension/hooks-wiring.ts:108-114 + src/extension/index.ts:356,397 · B3 packages/pi-agentic-workflow/src/extension/hooks-wiring.ts:63-75)
+```
+
+## What the owner is deciding
+
+The unit's implementation, its ledgers and every declared validator are green,
+and the run reproduced all of them. Three defects the suites never exercise
+stand between that and a proven claim: a declared hook that cannot be spawned
+crashes the host (B1), a failing `session:start`/`session:end` hook is swallowed
+whole (B2), and a declared `pre:commit`/`pre:push` check is silently skipped for
+git invocations that carry an option value (B3). Each names a file:line and the
+smallest action; the corrections belong to `/aw-local-apply` under its own
+bounds (one batch → blockers-only recheck → a second only if the same blocker
+persists), and the next verify of this unit is a delta verdict over those three
+blockers and their diff.
+
+## Triage — 2026-11-08 (evidence re-run from scratch, then classified)
+
+Every claim below was reconstructed independently in fresh `mktemp -d` scratch
+(removed after); nothing here repeats a previous run's word.
+
+- B1 re-run: `loadHooksConfig` on a declared `"command": "missing-tool-xyz run lint"` → `ok=true, problems=[], entries=1` (no executability check exists in `src/hooks/config.ts`); `runSeam("pre:commit")` → host-side `uncaughtException ENOENT` under both node and bun (probe exits 7); with the uncaught path swallowed → "PENDING at 3s — the tool_call awaits a seam that never returns a verdict". **Legitimate, severity high.**
+- B2 re-run: dispatcher returns `verdict=block, blocks=1` for a failing `session:start` hook; the same case through `createHooksWiring().onSessionStart` → `notices=[]`; the sibling `post:commit` failure through `onToolResult` → the teaching message is notified verbatim. The seam's verdict is produced and then dropped one layer up. **Legitimate, severity medium (a declared gate that reports nothing).**
+- B3 re-run in a real git sandbox with a declared `pre:commit` check that exits 1: `git commit -m x` → `BLOCKED`; `git -C . commit -m x` → `PASSED`; `git -c user.email=a@b commit` → `PASSED`; `git --git-dir=.git commit` → `PASSED`; `GIT_DIR=.git git commit` → `PASSED`; `bash -c 'git commit -m v'` → `PASSED`. The bypass command then executed for real (`git -C . commit -qam …` → `1353eda bypass commit`): a genuine commit landed with the declared check never run. **Legitimate, severity medium; the flag/env forms are cheaply closeable, the script-wrapping form is inherent to string interception and must be documented as a residual.**
+- A3 root cause corrected: `scripts/docs-generate.mjs:199` takes the unit title as `lines.find((line) => /^# /.test(line))`, and this SPEC opens its frontmatter with `# Uncomment and set the keys …` — so the comment *is* the projected title. The carrier is the shared template (`docs/fix/_TEMPLATE/SPEC.md` and `docs/features/_TEMPLATE/SPEC.md` ship the same block), which is why `432` shows `ac-hash: 43604f…` in the same cell: **systemic in the template, pre-existing for 432, change-caused for 413**; the 413 fix is deleting the two comment lines + `docs-generate`, the durable fix (generator skips `^# ` inside frontmatter, template drops the stale note) is its own small unit.
+
+| id | decision | why |
+|---|---|---|
+| B1 | fix now | host-killing crash from a plausible declaration; 8 lines + 1 test (`child.on("error", …)` → block, the `conductor/sensor.ts:61` precedent) |
+| B2 | fix now | gate reports nothing; 4 lines + 1 test (notify `result.blocks` for the session seams, as `post:commit` already does) |
+| B3 | fix now (flag/env forms) + document residual | `-C`/`-c`/`--git-dir=`/`NAME=value` skipped silently; ~10 lines + 4 cases; script wrapping stays a documented boundary |
+| A2 | fix now | 1 line: `~/.pi/agent` / `getAgentDir()` — the consent entry is the only activation path |
+| A3 | fix now (instance) | 2 lines deleted + regenerate; template/generator split out as its own unit |
+| A6 | fix now | carry the raw declared command string into `seamBlockMessage`; trivial |
+| A10 | fix with the batch | `## Findings` owes one row per routed blocker |
+| A5 | owner decision | cap-kill turning a verbose passing hook into a block is documented, not silent; changing the semantics (truncate, drain, decide by exit code) is a behaviour change |
+| A8 | owner decision | enabled-but-unconsented is silent by design; a one-time info notice changes the documented quiet no-op |
+| A1 | note only | historical E/G counts; the green substance reproduces (88 PASS / 0 FAIL, 597/0) |
+| A4 | owner decision | `done · #456` before merge matches the #429 precedent; revert only if the pre-merge convention is what you want |
+| A7 | optional rename | test title says "git sandbox", the fixture is a tmpdir; behaviour is covered |
+| A9 | fold into B1/B2 | injected `readFile` not threaded to the consent read; test hygiene only |
+
+## Correction batch — 2026-11-08 (implementer side, not a verdict)
+
+One batch, per §9; the owner's re-verify of the new head is what closes it.
+Red first (`8fafc7d3`: `bun run test` exit 1 · 596 pass / 10 fail of 606), then
+the fix (`6385a281`: 606/0), then docs and state in the same change.
+
+| finding | route taken | observed |
+|---|---|---|
+| F1 (B1) | `runArgv` settles from the child's `error` event as a `block` naming the spawn failure; `HookRunResult.spawnError` carries it into the teaching message | `bun test test/hooks-runner.test.mjs` → `O15` passes under bun **and** node (the case dies without the handler: the pre-fix red run surfaced `uncaughtException ENOENT`) |
+| F2 (B2) | `onSessionStart`/`onSessionShutdown` call `reportBlocks` — a session seam reports, it never blocks | wiring case `O16` expects two notices, one per failing session seam, each naming its seam |
+| F3 (B3) | `gitSeamsIn` rewritten: unquoted separators split, quotes group, `NAME=value` prefixes skipped, options that take a value consume the next token | `O17` matrix — 12 firing forms (incl. `git -C .`, `git -c k=v`, `git --git-dir=.git`, `GIT_DIR=x`, `git --no-pager -C .`) and 6 quiet forms |
+| F4 (A5) | capture keeps the first 32 KiB per stream and drains the rest; the verdict is the exit code | `O19`: a 128 KiB hook that exits 0 → `allow`, `truncated: true`; `O7` still bounds the kept output |
+| F5 (A8) | `runSeam` returns an `info` notice when enabled groups meet no consent; the wiring announces each notice once per project session | dispatcher `O20` (zero spawns + the notice naming `seam-hooks-consent.json`) and wiring `O20` (one notice across two seams, latched) |
+| F6 (A6) | `seamBlockMessage(seam, declared, result)` — callers pass the declaration string | `O21` asserts `` `node "my check.mjs" --strict` `` survives verbatim |
+| F7 (A2) | `SKILL.md` and the README resolve `<agentDir>` to `getAgentDir()` / `~/.pi/agent` | prose + `bun scripts/skill-lint.mjs` PASS |
+| F8 (A3) | the template's commented frontmatter block removed from the unit doc; projection re-rendered | `docs/generated/units.md:109` now reads `fix/413-pi-seam-hooks`; the systemic half is recorded in `## Known pre-existing issues` |
+| F9 (A9) | `readSeamHooksConsent(…, deps.readFile)` — one reader for config and consent | dispatcher `O22`: consent resolved through the injected reader, hook spawns |
+| F10 (A7) | the dispatcher fixture is named for what it is; the real-repo commit proof lives in the wiring matrix | test titles only; no assertion weakened |
+| F11 (A1) | the recorded counts corrected against a re-run | G1 → `88 PASS / 0 FAIL`, E3 → `hooks-config 12/0`, each with the reason inline |
+| F12 (A4) | **not a defect** — `scripts/roadmap-settle.mjs` requires `done · [#N](<same url>)` whenever the unit doc carries its PR URL (`pr-url-unsettled`), so the settle stays | `bun scripts/roadmap-settle.mjs` → PASS, 150 docs, 0 violations |
+
+Two existing assertions were adapted, and only because the owner's instruction
+changed the contract they pin: `O8`'s message case now passes the declaration
+string (F6) and `O7`'s fixture produces a bounded loud script instead of the
+unbounded `yes` (F4). No assertion was relaxed, deleted or narrowed.
+
+### Disclosed check, failed then green
+
+`schema-node-compat` (a package **this branch does not touch** —
+`git diff --stat origin/main...HEAD -- packages/agentic-workflow-schema` is
+empty) failed twice on its 50 ms preflight bound (`200,000 rows refused in
+90.51 ms`, `200,000 args refused in 95.74 ms`), once inside the 4-job pool and
+once solo, and then passed twice on the identical command run directly
+(`node --test test/*.test.mjs` → 756/756). It is the timing-bound contention
+class this repo already documented for `unit-route`; it is not change-caused and
+it is not green-by-retry: the suite is green on repeated direct runs at this head.
+
+## Integration with main and the projected-title root cause — 2026-11-08
+
+Owner's orders at the receipt's close: fix the systemic finding now, merge `main`
+into the branch and resolve the conflicts, push the docs half. Evidence:
+
+- **Merge** `d821c3b4` (two parents). Conflicts were graph-level, not code:
+  `docs/ROADMAP.md` (both sides appended a fixes row — main's `#433` and this
+  branch's `#413` both kept, row 112 keeps the `done · #456` settle), `docs/LOGS.md`
+  (main's aggregate whole, this branch's three entries re-appended after it), the
+  journal fragment `20261107T151312Z-…` (rename/delete — main renamed it too and
+  then aggregated it into `LOGS.md`, so its deletion was accepted) and
+  `docs/generated/units.md` (re-rendered; the driver's incoming projection loses
+  to the renderer). `packages/` had no conflict at all.
+- **F13** (the root cause the receipt's A3 only symptom-saw): `unitFacts` took the
+  first `/^# /` line as the title, so the SPEC template's commented frontmatter
+  became the projected description. Red `930f4542` (21 pass / 1 fail) → green
+  `cefc95f5` (22 pass / 0 fail), with the projection regenerated: `#432`'s stale
+  cell corrected itself without editing a closed unit's doc, and the four SPEC
+  templates were deliberately left alone (their comments are legitimate YAML and
+  now inert).
+- **Gates at the merged head:** root suite exit 0 · 89 PASS / 0 FAIL; package
+  suite 606/0; `docs-generate --check` 0 stale; skill-lint PASS; budgets 28/14;
+  `roadmap-settle` PASS 0 violations; `unit-route --triage` exit 0; the offline
+  gate's three judging steps PASS. No mutating path touched the live tree; the
+  fixture trees stayed under `mkdtemp`.
+
+---
+
+2026-11-08 · delta receipt — corrections landed after the first receipt
+(head `4f48ae7`): B1–B3 re-verified plus the delta diff only, per the delta
+verdict rule. Read-only: no commit, no push, no branch, no forge mutation; the
+only writes this run made inside the tree are the gitignored `node_modules`
+install (`bun install` — the worktree carried no deps) and the gitignored
+`dist/` + skill-bundle staging that the declared validator `bun run test`
+performs by design. Every hook probe ran in `mktemp -d` scratch with its own
+scratch consent store and was removed; no mutating path touched the live tree
+(`git status` clean after the run).
+
+```text
+EXTERNAL VERIFY — base: 4f48ae7db95b33a58bdbb5f89c98a0fc3fb5a77e (delta over the first receipt's head) · head: 60ff9659152766673a6b5e01767dea0b17c54954
+Blockers: 0 — B1 re-run: consented project declaring `missing-tool-xyz run lint` through `runSeam("pre:commit")` (production path — no `spawnHook` injected) → `{"verdict":"block","blocks":["…could not start (spawn missing-tool-xyz ENOENT)…"],"ran":[{…,"exitCode":null}]}` exit 0 under node AND bun, no uncaught `'error'` event; the EACCES form (mode-644 `./.pi/scripts/check.sh`) → `block … could not start (spawn ./.pi/scripts/check.sh EACCES)`. B2 re-run: failing `session:start`/`session:end` hooks through `createHooksWiring({agentDir}).onSessionStart/onSessionShutdown` → one `warning` notice per seam, each the full teaching message — nothing swallowed. B3 re-run: matcher matrix — `git commit`, `git -C . commit`, `git -C /abs/path commit`, `git -c user.email=a@b commit`, `git --git-dir=.git commit`, `GIT_DIR=.git git commit`, `git --no-pager -C . commit`, `git --work-tree=. commit`, `git 'commit' -m x`, `git commit --dry-run` all BLOCK; `git status`, `git log`, `git add -A`, `echo git commit` pass; `git -C . push`/`git -c k=v push`/`GIT_DIR=.git git push` BLOCK against a declared `pre:push`; real-git sandbox proof: `git -C . commit -qm bypass` BLOCKED and `git log` shows zero commits — the bypass no longer lands. Delta diff re-verified: F4 — 128 KiB stdout hook exiting 0 → `verdict: allow, exitCode: 0, truncated: true`, 32 KiB + `[truncated]` marker kept, no kill; F5 — enabled group without consent → info notice naming `seam-hooks-consent.json`, `ran: 0`; F8/F13 — `unitFacts` skips frontmatter before the title scan, 413's projection row reads `fix/413-pi-seam-hooks`, `bun scripts/docs-generate.test.mjs` 22 pass / 0 fail.
+Advisories: 2 — DA1 packages/pi-agentic-workflow/src/extension/hooks-wiring.ts:93-97 + src/extension/index.ts:299: the announce latch is a Set in the wiring closure, and `createHooksWiring` runs once per extension load while index.ts documents that "Pi can hand a new session to the same extension" — so the declared "announces **once** per project session" (README.md:458, hooks-wiring.ts:20) is really once per extension instance: a later session in the same process will not re-see a broken-config or unconsented notice until pi restarts. Quieter direction, prose drift only; smallest action: reword the prose or reset the latch per session. DA2 packages/pi-agentic-workflow/src/extension/hooks-wiring.ts:132-141: `--exec-path` sits in `GIT_VALUE_OPTIONS` but git also accepts it value-less (`git --exec-path` prints the path), so `git --exec-path commit` would mis-skip — not a realistic invocation and it can only cause a miss, never a false block; note only.
+Sibling sweep: clean — no surviving mention of the old `^git(?:\s+-{1,2}[\w-]+)*` regex, the removed `degradationAnnouncedFor` latch, or the old `argv.join(" ")` teaching message outside historical carriers (LOGS.md, the first receipt); `<agentDir>` now resolves in `skills/init-workspace/SKILL.md:150` and `packages/pi-agentic-workflow/README.md:387`; README's event table, execution contract and SEAM_HOOKS.md state the corrected truths (spawn failure = block, `session:*` report rather than swallow, cap truncates without deciding the verdict, `bash -c`/script residual named in "What it does not cover"); SPEC `## Findings` carries the routed rows; the projection's 413 cell no longer quotes the template comment. Surviving residue is exactly DA1's prose drift.
+Completeness: B1–B3 resolved and re-proven here; the delta's new validators re-run green (`bun run test` in packages/pi-agentic-workflow → 606 pass / 0 fail across 52 files; `bun scripts/docs-generate.mjs --check` → 0 missing / 0 stale / 0 orphaned, exit 0; `bun test scripts/docs-generate.test.mjs` → 22/0; `bun scripts/skill-lint.mjs` → 0 findings in 92 files). Main-side #433 commits arrived via merge `d821c3b4` and are out of this unit's delta. Open ids: none.
+Spot check: `bun run test` in packages/pi-agentic-workflow → match (reported 606 pass / 0 fail at the merged head; observed 606 pass / 0 fail, 52 files)
+Verdict: VERIFIED
+```
+
+## Search receipt — /aw-local-apply "fix the findings" · 2026-11-08
+
+Intent bound to the latest `EXTERNAL VERIFY` block for this unit (the delta
+receipt above, head `60ff9659`): verdict `VERIFIED`, blockers `0`. The
+correction batch's row set is empty — nothing to apply. Advisories DA1
+(announce latch is per extension instance, prose says "once per project
+session") and DA2 (`--exec-path` value-less form in `GIT_VALUE_OPTIONS`) are
+open for the owner's decision; per the correction bounds a new advisory never
+earns a cycle on its own. The delta receipt above is uncommitted at this head
+— the owner folds it in with the next docs commit.
+
+## N3 — the shutdown seam, closed (2026-11-08)
+
+The unit's last open item. Host evidence first: pi awaits every `session_shutdown`
+handler (`emitSessionShutdownEvent` → `await extensionRunner.emit`, and
+`AgentSessionRuntime.dispose()` awaits that) — the discard, not the host, was the
+defect.
+
+- **Red** `d7952e27` (606 pass / 2 fail): a `session:end` hook sleeping 5 s held
+  teardown the full 5 s and reported nothing; the entry's handler returned
+  `undefined`.
+- **Green** `e135927c` (608 pass / 0 fail): the handler returns the wiring's
+  promise; `SeamDeps.budgetMs` caps the seam at `SHUTDOWN_BUDGET_MS` (5 s, over a
+  larger declaration), so a slow check is a timeout block carrying its message
+  inside the bound. Four touched suites 56/0 under `node --test`.
+- Docs state it in the package README and `docs/workflow/SEAM_HOOKS.md`.
+
+**Environment incident (disclosed, 2026-11-07T22:55–23:20Z).** This session's
+worktrees were deleted twice from outside the session (and `/tmp` exhausted its
+inode table, then reset); afterwards the shared repository's branch ref pointed
+at another session's commit and this branch's local objects were gc'd — including
+the already-pushed `60ff9659`. Nothing shipped was lost (origin held the pushed
+head) and no published history was rewritten: the batch continued from a plain
+clone of the shared repo at `60ff9659`, with N3 re-applied from the transcript
+and both its red and green runs repeated here. The other session's ref and work
+were left untouched.

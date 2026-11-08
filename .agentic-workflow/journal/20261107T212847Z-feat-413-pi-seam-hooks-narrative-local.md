@@ -1,0 +1,6 @@
+## 20261107T212847Z — feat/413-pi-seam-hooks — narrative
+- **Commits:** 10 (`0d2cf6a6…4f48ae7d`) on top of `main` (`b8b1d814`)
+- **Files:** 23
+- **Summary:** Applied issue #413 (seam-hooks dispatcher) inline under the owner's local unpublished workflow. Unit doc cut with planning ledgers frozen before the first line of code; red-first suites (555 pass / 4 fail on the missing modules); dispatcher implementation (config, runner, dispatcher, extension wiring); docs/indexes shipped (init-workspace consent step, package README contract table, workflow guide, roadmap rows, changeset); pre-push gate reds resolved (node-compat ESM import fix, journal-fragment name repair, changeset lint reword) — PR #456 open and MERGEABLE awaiting the owner's external verdict.
+- **Decisions:** D3 triage: SessionStart/SessionEnd alias 1:1, nine native seam names accepted, every other Claude Code event refused config-invalid; post:commit failures report (never retro-block), pre:commit/pre:push block; unit:*/phase:* seams validate but don't fire (pi has no event there, declared Future); require inside ESM is a bun/node divergence — pi-node-compat caught it on first push (bun-first suites can't).
+- **Next:** Owner's external verdict on PR #456 (per-criterion AC-1..AC-10 in the PR body). Blockers → one correction batch (§9). Approval → merge (#413 auto-closes).

@@ -244,6 +244,41 @@ test("the runtime scanner agrees with the bundler on every real skill", () => {
 // loads — a session double and check what it registers. Type-level compatibility
 // with `ExtensionAPI` is enforced by `tsc`; this is the runtime half.
 
+test("AC3: the entry's session_shutdown handler returns a promise, so the host awaits the seam report", async () => {
+  const root = mkdtempSync(join(tmpdir(), "paw-shutdown-"));
+  const previousAgentDir = process.env.PI_CODING_AGENT_DIR;
+  process.env.PI_CODING_AGENT_DIR = join(root, "agent");
+  try {
+    const { default: extension } = await import("../dist/extension/index.js");
+    const { registrar } = recorder();
+    const handlers = new Map();
+    const pi = {
+      registerCommand: (name, options) => registrar.registerCommand(name, options),
+      sendUserMessage: () => {},
+      setModel: async () => true,
+      getThinkingLevel: () => "medium",
+      setThinkingLevel: () => {},
+      on: (type, handler) => handlers.set(type, handler),
+    };
+    extension(pi);
+    const shutdown = handlers.get("session_shutdown");
+    assert.equal(typeof shutdown, "function", "the entry must subscribe to session_shutdown");
+    // Pi awaits every handler of this event before teardown completes
+    // (`emitSessionShutdownEvent` -> `await emit`, then `dispose()`); a handler
+    // that returns undefined lets the process exit before the seam reports.
+    const returned = shutdown(
+      { type: "session_shutdown", reason: "quit" },
+      { cwd: root, isProjectTrusted: () => false, ui: { notify: () => {} } },
+    );
+    assert.ok(returned && typeof returned.then === "function", "session_shutdown must return the seam's promise");
+    await returned;
+  } finally {
+    if (previousAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR;
+    else process.env.PI_CODING_AGENT_DIR = previousAgentDir;
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("AC3: the shipped entry registers the full alias set against a Pi-shaped API", async () => {
   const root = mkdtempSync(join(tmpdir(), "paw-entry-"));
   const previousAgentDir = process.env.PI_CODING_AGENT_DIR;
@@ -278,8 +313,10 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
       // feature 66 P4: session_start carries the ask-first Engram provisioning,
       // which registers on the session rather than at load so an older host
       // degrades instead of throwing.
-      ["agent_settled", "model_select", "session_start", "thinking_level_select", "tool_call"],
-      "the entry subscribes to the lifecycle events routing, the receipt/hygiene guards, the Serena nudge and the Engram provisioning depend on",
+      // issue #413: session_shutdown/tool_result carry the seam-hooks wiring's
+      // session:end and post:commit seams; tool_call carries pre:commit/pre:push.
+      ["agent_settled", "model_select", "session_shutdown", "session_start", "thinking_level_select", "tool_call", "tool_result"],
+      "the entry subscribes to the lifecycle events routing, the receipt/hygiene guards, the Serena nudge, the Engram provisioning and the seam-hooks dispatcher depend on",
     );
 
     // Running a real alias through the real entry must reach Pi's dispatcher.
