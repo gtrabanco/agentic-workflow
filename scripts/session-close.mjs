@@ -42,6 +42,9 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import { assertFragment } from "../packages/agentic-workflow/src/journal/fragment.mjs";
+import { currentBranch, readSessionFacts, renderEntryBlock, resolveBase } from "../packages/agentic-workflow/src/journal/block.mjs";
+
 /** The documented default; a project's documentation map may point elsewhere. */
 export const DEFAULT_LOG = "docs/LOGS.md";
 
@@ -55,20 +58,23 @@ export function parsePorcelain(output) {
 }
 
 /**
- * The entry block, in the log's own documented format. Optional sections are
- * omitted rather than left empty — an empty `**Decisions:**` line reads as a
- * decision that was never made.
+ * The entry block, in the log's own documented format. The layout is the crate
+ * owner's (`src/journal/block.mjs`, issue #452 S1/S7) so the session writer and
+ * `journal write` cannot drift; `kind` selects the prose cells, exactly as it
+ * always has.
  */
 export function renderEntry({ timestamp, branch, kind = "manual", commits, files, summary, decisions, next }) {
-  const lines = [`## ${timestamp} — ${branch} — ${kind}`];
-  lines.push(`- **Commits:** ${commits?.count ?? 0}${commits?.range ? ` (\`${commits.range}\`)` : ""}`);
-  lines.push(`- **Files:** ${files}`);
-  if (kind === "manual") {
-    lines.push(`- **Summary:** ${String(summary ?? "").trim()}`);
-    if (String(decisions ?? "").trim()) lines.push(`- **Decisions:** ${String(decisions).trim()}`);
-    if (String(next ?? "").trim()) lines.push(`- **Next:** ${String(next).trim()}`);
-  }
-  return `${lines.join("\n")}\n`;
+  return renderEntryBlock({
+    timestamp,
+    branch,
+    label: kind,
+    commits,
+    files,
+    summary,
+    decisions,
+    next,
+    prose: kind === "manual",
+  });
 }
 
 /**
@@ -121,33 +127,10 @@ function mustGit(args) {
 
 /** The repository's base branch, resolved the same way the skills do. An
  * explicit `--base` that does not resolve is a usage error, never a silent
- * fallback to `origin/main` (issue #182 F7). */
-function resolveBase(explicit) {
-  if (explicit !== undefined && explicit !== null && String(explicit).trim() !== "") {
-    if (git(["rev-parse", "--verify", "--quiet", explicit]).status !== 0) {
-      throw new Error(`--base ${explicit} does not resolve to a known revision`);
-    }
-    return explicit;
-  }
-  for (const candidate of ["origin/main", "main"]) {
-    if (git(["rev-parse", "--verify", "--quiet", candidate]).status === 0) return candidate;
-  }
-  return null;
-}
-
-function sessionFacts(base) {
-  if (!base) return { commits: { count: 0, range: null }, files: "—", touched: [] };
-  const shas = mustGit(["rev-list", "--reverse", `${base}..HEAD`]).split("\n").filter(Boolean);
-  const touched = mustGit(["diff", "--name-only", `${base}...HEAD`]).split("\n").filter(Boolean);
-  const short = (sha) => sha.slice(0, 8);
-  return {
-    commits: {
-      count: shas.length,
-      range: shas.length > 0 ? `${short(shas[0])}…${short(shas[shas.length - 1])}` : null,
-    },
-    files: touched.length === 0 ? "—" : touched.length <= 5 ? touched.join(", ") : `${touched.length} files`,
-    touched,
-  };
+ * fallback to `origin/main` (issue #182 F7). The resolution itself lives with
+ * the facts it bounds (`src/journal/block.mjs`). */
+function baseOf(explicit) {
+  return resolveBase(process.cwd(), explicit);
 }
 
 
@@ -320,6 +303,22 @@ function closeFragments(rel, journalRel) {
     throw new Error(`no new fragment under ${rel} — write the entry first (a fragment per session), then re-run close`);
   }
 
+  // Issue #452 S5 / D1 (validate-at-close): every added fragment answers the
+  // same predicate the aggregator and the carrier lint use, before the first
+  // `git add`. The incident fragment — a writer label in the kind slot, a body
+  // without its terminator — used to be committed here silently and only
+  // refused hours later by the weekly aggregation or the publish gate.
+  const addedContent = new Map();
+  for (const name of added) {
+    const text = fs.readFileSync(path.join(dir, name), "utf8");
+    try {
+      assertFragment(name, text);
+    } catch (error) {
+      throw new Error(`${error.message} — refusing to commit a fragment the aggregator cannot read`);
+    }
+    addedContent.set(name, text);
+  }
+
   // The carrier's contract (AC1): in fragment mode nothing may touch the
   // journal directly — the merge-to-main aggregator is its only writer.
   const logStatus = git(["status", "--porcelain", "--", journalRel]);
@@ -329,7 +328,7 @@ function closeFragments(rel, journalRel) {
     );
   }
 
-  const first = fs.readFileSync(path.join(dir, added[0]), "utf8");
+  const first = addedContent.get(added[0]);
   // The commit subject is the entry's own Summary when it has one, else the heading.
   const summary = /^- \*\*Summary:\*\* (.*)$/mu.exec(first)?.[1];
   const heading = /^## (.*)$/mu.exec(first)?.[1];
@@ -380,8 +379,8 @@ function main() {
         `the narrative contradicts the tree (${claims.length} claim(s)) — re-derive it before logging:\n${lines.join("\n")}`,
       );
     }
-    const facts = sessionFacts(resolveBase(opts.base));
-    const branch = mustGit(["branch", "--show-current"]).trim() || "detached";
+    const facts = readSessionFacts(process.cwd(), baseOf(opts.base));
+    const branch = currentBranch(process.cwd());
     process.stdout.write(
       renderEntry({
         timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
