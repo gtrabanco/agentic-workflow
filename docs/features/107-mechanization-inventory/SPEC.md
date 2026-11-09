@@ -252,7 +252,7 @@ exits 0.
   (Implements: S16)
   Relevant files: skills/audit-docs/SKILL.md, .changeset/408-mechanization-inventory.md
 - P8 — Push the branch and open the PR against `main`
-  (validator: `gh pr view --json url -q .url` prints a URL and `rg -c 'pull/' docs/features/107-mechanization-inventory/SPEC.md` matches 1)
+  (validator: `gh pr view --json url -q .url` prints a URL and `rg -c '^- PR \[#482\]' docs/features/107-mechanization-inventory/SPEC.md` matches 1)
   (Implements: S16)
   Relevant files: docs/features/107-mechanization-inventory/SPEC.md
 
@@ -388,6 +388,9 @@ None — no review pass ran (S12).
 - **P6** — 2026-11-09, D1 fixed: the entry aggregated into the journal, the
   gate made to accept the aggregator's separator · commits `6e3d9ea7` (red) and
   `d41f7844` (green).
+- **P8** — 2026-11-09, branch pushed and PR
+  [#482](https://github.com/gtrabanco/agentic-workflow/pull/482) opened against `main`;
+  the index row settled to `done · [#482](…)` through the emitter.
 - **P7** — 2026-11-09, `audit-docs` check 13 repaired with its changeset;
   `skill-lint`, the context budgets, the changeset lint and the version-parity
   gate all green.
@@ -405,3 +408,5 @@ plus its score — never a rewrite of the method.
 - The inventory: [`INVENTORY.md`](INVENTORY.md).
 - Feeds the pilot issue and all follow-up extraction units (S10): roadmap
   row 109 (the folded #410/#411/#412/#414 chain).
+- PR [#482](https://github.com/gtrabanco/agentic-workflow/pull/482) —
+  `Closes #408`.
