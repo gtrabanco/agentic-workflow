@@ -74,6 +74,9 @@ A developer (or an agent session) can run any test, leave a worktree behind, or 
 | P4 | `node scripts/local-gate.mjs --list` | 0 | at P4 |
 | P5 | `node scripts/run-root-suite.mjs` | 0 | at P5 |
 | P6 | `bun scripts/local-gate.mjs --jobs 4` | 0 — PASS, 16 step(s) in 151 s | at close |
+| P7 | `bun scripts/local-gate.mjs --jobs 4 --no-bail` (post-merge, 17 steps) | 0 for 16 step(s); `log-immutability` red on `base 9a635063 · range 83 commits`, green on `--base origin/main` — its six violations are commits already published on `main`, none from this unit | at integration |
+| P7 | `node scripts/log-immutability.mjs --base origin/main` | 0 — PASS, 0 violations over the 16 commits this branch carries | at integration |
+| P7 | `bun scripts/check-skill-context.mjs --documents` | 0 — `GATE_INVENTORY.md` 154 lines / 62 machine / 5,217 est, inside 161 / 5,542 | at integration |
 
 ## Progress log
 
@@ -85,6 +88,7 @@ A developer (or an agent session) can run any test, leave a worktree behind, or 
 - E5 — P5: the root gate green (see Evidence).
 - E6b — close: the full local gate green (16 steps, 151 s) — the three new offline steps ran live: the GC swept the machine roots, the floor found zero leak-capable files, the audit reported the relocated worktrees as report-only OUTSIDE lines.
 - E6 — owner correction mid-unit (2026-11-09): the `HEAD`/`gitdir` untracked files inside worktrees are the symptom of a corrupted worktree, not a temp-file class — the guard gains the `CORRUPTED` finding and repairs it with `git worktree repair` (non-destructive), never by pruning; a naive `git worktree prune` on a severed link destroys the recovery path.
+- E7 — integration (2026-11-09): `origin/main` moved to `d9a02efc` (units 460, 468, 174, 227 landed) and the PR conflicted on four files. Resolved by merge, never by rebase — the pushed branch tip `9a635063` is published history. The union keeps both step sets (`log-immutability` from main, then `temp-hygiene`/`tmp-gc`/`worktree-guard` from this branch) and the same order in both pinned step-list expectations; the `GATE_INVENTORY` budget keeps both provenance entries, adds the merge entry, and re-pins `machineLines` 59 → 62 (the measured union). The three surfaces main also carried (`scripts/log-immutability.mjs`, the 468 unit docs, its changeset, the `contentFault` export) merged to identical bytes, and the fragments main's aggregator consumed stay consumed.
 
 ## Next
 
