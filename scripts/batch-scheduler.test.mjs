@@ -622,6 +622,42 @@ test("T2: the human summary states which issues are untriaged", () => {
   }
 });
 
+test("T2: a roadmap status carrying its PR annotation (done · #999) is triaged, not untriaged", () => {
+  // The fix index renders a delivered unit as `done · [#<pr>](…)` (docs/ROADMAP.md's
+  // own `#460` row is the live shape). Reading that annotation as a status value
+  // would mark a delivered row untriaged and drop its `satisfied-inputs`.
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    const status = "done · [#999](https://example.invalid/pull/999)";
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDocWithFixes([[32, "delivered-unit", status, "PR open"]]));
+    const issues = [issue(32, "Delivered unit", whereSection(["skills/alpha/SKILL.md"]))];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    const row = plan.batches[0].lanes[0].issues[0];
+    assert.equal(row.triaged, undefined, "a delivered row is triaged");
+    assert.equal(row.reason.kind, "satisfied-inputs");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("T2: an issue with no roadmap fix row carries no triage signal (D4)", () => {
+  // D4 (SPEC ## Log): a missing row is not an untriaged row — it carries no
+  // signal at all. Only a row present with a status below `planned` marks.
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(33, "Unregistered unit", whereSection(["skills/alpha/SKILL.md"]))];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    const row = plan.batches[0].lanes[0].issues[0];
+    assert.equal(row.triaged, undefined, "no row, no triage flag");
+    assert.equal(row.reason.kind, "satisfied-inputs");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── D3 — cross-lane soft-dep caveat (issue #460, S4) ───────────────────────
 // Reproducer of gap 3: #441 appeared in batch 2 as `satisfied-inputs` while its
 // declared soft deps #436/#438 sat in batch 2, other lanes — concurrent, not
@@ -919,6 +955,32 @@ test("parity: the plan grammar inventory matches the emitted envelope and the sc
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("envelope: no owned surface keeps the superseded batch-plan@1 token", () => {
+  // The v2 bump rewrote the token; a sibling that keeps narrating the old one
+  // asserts a contract the document no longer carries (issue #460's own
+  // external-verify sibling sweep). Only the validator's wrong-value vector
+  // may name it, and it is recognised by its mutation, not by its line.
+  const owned = [
+    "scripts/batch-scheduler.mjs",
+    "packages/agentic-workflow-schema/src/batch-plan.ts",
+    "packages/agentic-workflow-schema/test/batch-plan.test.mjs",
+    "skills/batch-scheduler/SKILL.md",
+    "skills/batch-scheduler/references/PLAN.md",
+    "README.md",
+    "docs/workflow/SKILLS.md",
+  ];
+  const stale = [];
+  for (const rel of owned) {
+    const lines = fs.readFileSync(new URL(`../${rel}`, import.meta.url), "utf8").split("\n");
+    lines.forEach((line, index) => {
+      if (!line.includes("batch-plan@1")) return;
+      if (line.includes('m.schema = "batch-plan@1"')) return;
+      stale.push(`${rel}:${index + 1}`);
+    });
+  }
+  assert.deepEqual(stale, [], "every owned surface names batch-plan@2");
 });
 
 test("S9: the script contains no session spawn, worktree creation or unit launch", async () => {
