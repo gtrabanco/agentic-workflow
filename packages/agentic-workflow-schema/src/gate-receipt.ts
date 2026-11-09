@@ -21,8 +21,11 @@
  * provenance and freshness never compares them.
  *
  * **Core is closed and bounded.** An unknown key anywhere is refused, and the
- * published limits keep the document compact: ≤64 checks, ≤8 fragments of ≤240
- * characters each, ≤4096 manifest entries, ≤64 KiB of canonical JSON.
+ * published limits keep what a consumer *reads* compact: ≤64 checks, ≤8
+ * fragments of ≤240 characters each. The manifest is data, not context — it
+ * carries one `{path, sha256}` row per signed file (≤16,384 rows, ≤1 MiB of
+ * canonical JSON, sized from a measured 1,568-file closure at 217 KiB), because
+ * freshness must re-hash exactly the bytes the claim covers.
  *
  * The Draft-07 projection (`gate-receipt.schema.json`) is hand-maintained beside
  * this module, the `batch-plan` precedent, and `test/gate-receipt.test.mjs` pins
@@ -85,11 +88,11 @@ export const GATE_RECEIPT_LIMITS = Object.freeze({
   checks: 64,
   fragments: 8,
   fragmentChars: 240,
-  manifestEntries: 4096,
+  manifestEntries: 16_384,
   pathChars: 1024,
   logRefChars: 1024,
   commandArgChars: 512,
-  bytes: 65_536,
+  bytes: 1_048_576,
 });
 
 const CHECK_ID = /^[a-z0-9][a-z0-9._-]*$/u;

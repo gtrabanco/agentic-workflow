@@ -219,11 +219,16 @@ test("gate-receipt: the declared limits refuse an over-wide document", () => {
 });
 
 test("gate-receipt: the whole document is bounded by a declared byte budget", () => {
+  // The manifest is the document's bulk, so it is the vector that can cross the
+  // budget: one row per signed file, padded here to the declared ceiling's size.
+  const perRow = 260;
+  const rows = Math.ceil(GATE_RECEIPT_LIMITS.bytes / perRow) + 10;
   const wide = clone(CANONICAL);
-  wide.checks[0].status = "failed";
-  wide.verdict = "fail";
-  wide.checks[0].fragments = Array.from({ length: GATE_RECEIPT_LIMITS.fragments }, () => "x".repeat(GATE_RECEIPT_LIMITS.fragmentChars));
-  wide.checks = Array.from({ length: 40 }, (_, index) => ({ ...wide.checks[0], id: `check-${index}` }));
+  wide.manifest.entries = Array.from({ length: rows }, (_, index) => {
+    const stem = String(index).padStart(8, "0");
+    return { path: `${stem}/${"p".repeat(perRow - 80)}.js`, sha256: SHA_A };
+  }).sort((left, right) => (left.path < right.path ? -1 : 1));
+  wide.manifest.digest = digestGateManifest(wide.manifest.entries);
   const result = validateGateReceipt(wide);
   assert.equal(result.ok, false);
   assert.match(result.errors.join("\n"), /byte budget/u);

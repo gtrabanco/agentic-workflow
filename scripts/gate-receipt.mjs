@@ -15,6 +15,12 @@
  * mutated signed byte cannot leave it current. No gate re-run is needed to
  * answer "is this evidence still true?" — a local hash comparison answers it.
  *
+ * The runner's own limits are the schema's: the inlined fragments are bounded
+ * (≤8 rows of ≤240 characters) and the manifest is data, not context (one row
+ * per signed file; 1,568 rows / 217 KiB measured on this repository). A filtered
+ * run (`-- --only …`) records what ran but is `degraded` with
+ * `partial-gate-selection` — a subset is never merge evidence.
+ *
  * The gate handshake is declared: `<gate> --json <path>` writes a
  * `local-gate-result@1` document (`scripts/local-gate.mjs` does; a project's own
  * gate script can). Anything else — no document, an unreadable one, a foreign
@@ -148,7 +154,7 @@ export function boundedFragments(text) {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
-  const signal = /(not ok|\berror\b|assertion|expected|failed|fail\b|✗)/iu;
+  const signal = /(not ok|\berror\b|assertion|expected|failed|fail\b|finding|✗)/iu;
   const prioritized = lines.filter((line) => signal.test(line));
   const picked = (prioritized.length > 0 ? prioritized : lines).slice(0, MAX_FRAGMENTS);
   return picked.map((line) => (line.length > MAX_FRAGMENT_CHARS ? `${line.slice(0, MAX_FRAGMENT_CHARS - 3)}...` : line));
@@ -165,7 +171,7 @@ function checkStatus(step) {
  * missing or foreign result document is a degraded receipt whose single row
  * carries the bounded raw tail — never a pass.
  */
-export async function assembleReceipt({ root, entries, argv, headSha, now, logRef, exitCode, durationMs, result, rawTail = "" }) {
+export async function assembleReceipt({ root, entries, argv, headSha, now, logRef, exitCode, durationMs, result, rawTail = "", partial = false }) {
   const { validateGateReceipt } = await schema();
   const failedExit = Number.isInteger(exitCode) ? exitCode : null;
   let checks;
@@ -194,9 +200,14 @@ export async function assembleReceipt({ root, entries, argv, headSha, now, logRe
     if (failed > 0) {
       verdict = "fail";
       degraded = [];
-    } else if (checks.length > 0 && checks.every((check) => check.status === "passed")) {
+    } else if (checks.length > 0 && checks.every((check) => check.status === "passed") && !partial) {
       verdict = "pass";
       degraded = [];
+    } else if (checks.length > 0 && checks.every((check) => check.status === "passed")) {
+      // A filtered run (`-- --only …`) proves only the steps it ran. It is a
+      // usable record, never merge evidence, so it can never say `pass`.
+      verdict = "degraded";
+      degraded = ["partial-gate-selection"];
     } else {
       // A run that produced no check, or one that only skipped, is evidence of
       // nothing: the receipt says so instead of implying green.
@@ -412,6 +423,7 @@ async function runGate(options, resultPath) {
     durationMs: Date.now() - started,
     result,
     rawTail,
+    partial: options.passthrough.length > 0,
   });
   fs.writeFileSync(receiptAbsolute, `${JSON.stringify(receipt, null, 2)}\n`);
 

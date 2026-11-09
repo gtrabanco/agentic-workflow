@@ -96,10 +96,11 @@ One observable criterion per requirement, each naming the check that proves it.
    raw log is inlined. Check:
    `bun test packages/agentic-workflow-schema/test/gate-receipt.test.mjs` exits 0
    (the shape and the closed-core cases).
-2. **S2** — the envelope is compact by construction: at most 8 fragments per
-   check, 240 chars each, 64 checks, 4096 manifest entries, and the whole
-   receipt under a declared byte budget. Check: the same suite's `limits` cases
-   exit 0.
+2. **S2** — what a consumer reads is compact by construction: at most 8
+   fragments per check of 240 chars each and 64 checks; the manifest is bounded
+   data (one `{path, sha256}` row per signed file, ≤16,384 rows) and the whole
+   receipt stays under 1 MiB of canonical JSON. Check: the same suite's `limits`
+   cases exit 0.
 3. **S3** — the contract is declared once in
    `packages/agentic-workflow-schema/src/gate-receipt.ts`, exported from the
    package root, and bound to the manifest digest. Check: the same suite's
@@ -182,8 +183,10 @@ later owner directive; recorded here rather than edited out of the verbatim quot
 Computed, never chosen:
 
 ```text
-$ bun scripts/ceremony.mjs tier classify --paths packagessrc,scripts,skills,docs
+$ bun scripts/ceremony.mjs tier classify --paths packages/agentic-workflow-schema,scripts,skills,docs,AGENTS.md
 "tier": "standard"
+"reason_kind": "executable-content"
+"task_size": { "understood": true, "contained_risk": "contained", "resumable_from_diff": true }
 ```
 
 - **Tier** — `standard` · **Task Size** — understood · contained risk · resumable from diff
@@ -316,12 +319,75 @@ machinery is deliberately not run on this unit.
 - **D3** — 2026-11-09, validity is the declared content manifest and HEAD sha is
   provenance only (S12/S13), superseding S3's "bound to head SHA" wording.
 - **P1** — 2026-11-09, ledgers cut: 14 requirements, 14 acceptance criteria,
-  12 planning-evidence rows, 17 obligation rows.
+  13 planning-evidence rows, 17 obligation rows · `b3011c4d`.
+- **D4** — 2026-11-09, the red-first suite landed before its implementation, and
+  the runner's API was finalized before any green existed (`buildManifest` and
+  `judgeGateReceipt` are async because the contract lives in the built schema
+  runtime; the receipt body in the audit fixture comes from the one renderer).
+  No assertion was relaxed in either edit.
+- **D5** — 2026-11-09, two declared sets were **extended by name**, never
+  loosened: `normative-drift.test.mjs`'s closed set of `must-name` vocabularies
+  gained `gate-check-status` and `gate-receipt-verdict`, and the audit gate set
+  gained `gate-receipt`. Both are the gates' own declaration homes.
+- **D6** — 2026-11-09, two context budgets were re-based at their declared
+  mechanism with the growth source named in the manifest's `sources`: the two
+  `audit-pr` routes (10,273 est / 619 lines → ceilings 11,301 / 681) and
+  `AGENTS.md`'s exact `machineLines` pin (120 → 124, the four new
+  `normative-surfaces@1` rows). No prose rule was deleted to fit.
+- **E1** — 2026-11-09, `bun test --timeout=60000 packages/agentic-workflow-schema/test/gate-receipt.test.mjs` — exit 0, 20 pass / 0 fail.
+- **E2** — 2026-11-09, `cd packages/agentic-workflow-schema && bun run test` — exit 0, 811 pass / 0 fail (the two `npm`-spawning cases pass with the environment's node/npm on `PATH`).
+- **E3** — 2026-11-09, `cd packages/agentic-workflow-schema && bun run test:node` — exit 0, 811 pass / 0 fail.
+- **E4** — 2026-11-09, `bun test --timeout=60000 scripts/gate-receipt.test.mjs` — exit 0, 9 pass / 0 fail (closure, green/red run, degraded output, provenance-only freshness, stale, missing/invalid, audit-pr gate).
+- **E5** — 2026-11-09, `bun test --timeout=60000 scripts/local-gate.test.mjs` — exit 0, 44 pass / 0 fail (`--json` result shape and the unchanged step table).
+- **E6** — 2026-11-09, `bun test --timeout=60000 scripts/audit-pr-receipt.test.mjs` — exit 0, 28 pass / 0 fail.
+- **E7** — 2026-11-09, `bun test --timeout=60000 scripts/normative-drift.test.mjs` — exit 0, 21 pass / 0 fail (the four new rows resolve; `must-name` extended by name).
+- **E8** — 2026-11-09, `bun test --timeout=60000 scripts/vocabulary-parity.test.mjs` — exit 0, 20 pass / 0 fail (the three sets import from the built runtime).
+- **E9** — 2026-11-09, `bun test --timeout=60000 scripts/prose-gate-inventory.test.mjs` — exit 0 (every new normative id is claimed by an inventory row).
+- **E10** — 2026-11-09, `bun scripts/lint-changeset.mjs .changeset/409-machine-gate-receipts.md` — exit 0 (`ok 409-machine-gate-receipts.md`, schema + pi package declared).
+- **E11** — 2026-11-09, `node scripts/version-parity-gate.mjs --content` — exit 0, `VERDICT: PASS` (changeset route for both packages).
+- **E12** — 2026-11-09, `bun scripts/docs-generate.mjs` then `--check` — exit 0, projection regenerated (`docs/generated/{code,units}.md`).
+- **E13** — 2026-11-09, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/features/108-machine-gate-receipts/SPEC.md` — exit 0, `verdict: PASS`, 0 violations.
+- **E14** — 2026-11-09, `rg -c 'gate-receipt.mjs verify' skills/review-verify/SKILL.md` → 1; `rg -c 'schema-export:(GATE_RECEIPT_VERDICTS|GATE_CHECK_STATUSES|GATE_RECEIPT_FRESHNESS_CODES)' AGENTS.md` → 3.
+- **E15** — 2026-11-09, `git diff --name-only origin/main...HEAD -- packages/pi-agentic-workflow .github docs/workflow/TIER_COST.md` — empty (S7).
+- **E16** — 2026-11-09, `bun scripts/skill-lint.mjs` — exit 0, 0 findings; `bun scripts/check-skill-context.mjs` / `--documents` / `--routes` — PASS (budgets re-based per D6).
+- **E17** — 2026-11-09, the declared verification commands were also run through their suites under the node leg (`node scripts/run-root-suite.mjs`): every suite PASS after D6.
+- **G1** — 2026-11-09, `bun scripts/local-gate.mjs --skip-network --no-bail --only workspace-install,schema-build,crate-suite-bun,crate-suite-node,root-suite,version-parity-content,docs-generated-projection,journal-carrier-check,log-immutability,temp-hygiene,tmp-gc,schema-node-compat,pi-node-compat` — exit 0, `PASS — 12 step(s) in 361s`.
+- **G2** — 2026-11-09, `bun scripts/local-gate.mjs --skip-network` — exit 1, **one** red and it is not this unit's: `worktree-guard` reports `FINDING .git/worktrees/feat-427-config-unified-config-file-schema — STALE: branch feat/427-config-unified-config-file-schema is merged into origin/main · dirty`. That worktree is another live session's checkout at `2a28f038` with uncommitted files; the live-tree guard forbids touching it, so O17 stays open (see `## Next`). Every other offline step passed in G1.
+- **P2** — 2026-11-09, schema contract + red-first suite green · `6008f218` (red), `78ac7c82` (green).
+- **P3** — 2026-11-09, runner + local-gate handshake + audit gate · `2ee2ef4d` (red), `a3617445` (green).
+- **P4** — 2026-11-09, consumers + registration + changeset · `5da9131c`.
+- **P5** — 2026-11-09, roadmap row, projection, capability row, journal entry · `dd5db383`.
+- **D7** — 2026-11-09, the live run (G3) proved the cut-time limits wrong: the
+  declared closure is 1,568 files / 217 KiB, so the 64 KiB and 4,096-entry
+  ceilings could not hold their own manifest. Corrected to **1 MiB canonical
+  bytes / 16,384 entries** (and O2's text with them), the inlined-fragment
+  bounds untouched; the budget still bounds the document, and the "compact"
+  claim now says where compactness lives — in what a consumer reads, not in the
+  data rows freshness must re-hash.
+- **G3** — 2026-11-09, live-tree end to end, after the verification suites:
+  `bun scripts/gate-receipt.mjs verify` → exit 3 `status: missing`; `bun
+  scripts/gate-receipt.mjs run` → exit 1 (the same foreign `worktree-guard`
+  red as G2), envelope 273,998 bytes / 1,568 manifest rows / digest `7808695b…`,
+  `checks: 8 passed, 1 failed, 8 skipped`, log 4,905 bytes referenced as
+  `.agentic-workflow/gate/gate-receipt.log`; then `verify --json` → `status:
+  current`, `verdict: fail`, `consumed: true`, `changed_paths: []` (freshness is
+  the manifest, the HEAD sha is provenance). The receipt files were removed
+  afterwards; the directory is gitignored.
+- **G4** — 2026-11-09, `bun scripts/gate-receipt.mjs run -- --only worktree-guard`
+  → exit 1, and the envelope is a `fail` for the check that ran; the
+  `partial-gate-selection` degradation is pinned by the sibling suite's filtered-run
+  case instead, where the filtered check passes.
 
 ## Next
 
-Close the obligations ledger with the validators actually run, then hand the diff
-to the owner as the external verifier.
+Hand the diff to the owner as the external verifier with **one open obligation**:
+O17 (`bun scripts/local-gate.mjs --skip-network` exits 0) is `in-progress` because
+the repository-wide `worktree-guard` step is red on a **foreign** worktree
+(`feat-427-config-unified-config-file-schema`, at `2a28f038`, dirty — another live
+session's checkout). Everything this unit touches passed in G1's 12-step run.
+The owner decides between cleaning that worktree (it is merged into `origin/main`)
+or accepting the gate's subset as this unit's receipt; no repo file is changed by
+this unit to make the guard green.
 
 ## References
 

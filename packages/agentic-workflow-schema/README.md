@@ -929,7 +929,7 @@ describe one run and freshness never compares them.
 | `compareGateReceiptToCurrent(receipt, entries)` | `{ fresh: true }` or `{ fresh: false, reasonCode, changedPaths }` — the content-freshness predicate |
 | `digestGateManifest(entries)` / `digestGateReceipt(receipt)` | the manifest digest and the whole-document digest |
 | `GATE_MANIFEST_PATTERNS` | the declared, minimal closure a gate claim covers |
-| `GATE_RECEIPT_LIMITS` | the published bounds (checks, fragments, entries, canonical bytes) |
+| `GATE_RECEIPT_LIMITS` | the published bounds (64 checks, 8 fragments of 240 chars, 16,384 manifest entries, 1 MiB canonical bytes) |
 
 ### Closed vocabularies
 
