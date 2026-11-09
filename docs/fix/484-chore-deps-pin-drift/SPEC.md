@@ -78,8 +78,7 @@ unit read at its own cut, which is never rewritten.
   therefore does not hold for the wired gate. Reported as F1, not fixed here:
   it is a behavior change to a gate, needs its own unit, and this unit must not
   widen its own diff.
-- The `npm`-less environment (no `node`, no `npm` in PATH) — an environment
-  fact, recorded as PE-008, not repaired here.
+- The runner's `node` **is** installed (`v26.13.0` via `fnm`, `/home/agent/.local/share/fnm/node-versions/v26.13.0/installation/bin`) — it is missing from the non-interactive shell's `PATH`, not from the machine. An earlier pass of this unit concluded the opposite from `which node`; PE-009 corrects it and E12–E14 re-run every leg under the real binary.
 - A version bump of the crate itself: the release train moves package versions
   at cut (`scripts/release.mjs apply`), and the release intent is the changeset
   (PE-004). No manual bump, no second 4.10.x row.
@@ -152,8 +151,8 @@ must satisfy already has an owner-backed check. The suite set it runs:
   the only path that loads `typebox`.
 
 The differential (§6) is the crate suite at base vs head: no new failure is
-allowed, and the three `node`-spawning failures are identical on both sides
-(PE-008).
+allowed, and the base copy's three `node`-spawning failures disappear once the
+runner is on `PATH` (E12: 586/586 at head on both runtimes).
 
 ## Known pre-existing issues
 
@@ -164,12 +163,18 @@ allowed, and the three `node`-spawning failures are identical on both sides
   **does-not-affect** this unit's deliverable (the drift is caught by
   `pin-watch` and by `--pins --package packages/agentic-workflow`); it
   **affects** the premise S1 quotes. Recorded as F1 for the owner.
-- **No `node` binary in this environment** (bun only, no `npm`) — three crate
-  suites spawn `node` and fail identically at base and head
-  (`CLI smoke > spawn bin/agentic-workflow.mjs unit-doc create --json parses`,
-  `box2 phase-lint green`, `the box2 phase-lint clause is read-only`).
-  **does-not-affect** the differential verdict; it narrows the runnable gate to
-  the bun leg (`node --test` fallback unavailable). Disclosed in the handoff.
+- **No `node` on the non-interactive `PATH`** (it is installed via `fnm` at
+  `/home/agent/.local/share/fnm/node-versions/v26.13.0/installation/bin`) —
+  with it on `PATH` every leg is green (E12–E14); without it three crate suites
+  that spawn `node` fail and the `node --test` leg cannot run at all.
+  **does-not-affect** the verdict; it is a shell-environment gap, corrected by
+  PE-009.
+- **A stale, dirty worktree other than this one**
+  (`feat-427-config-unified-config-file-schema`, merged into `origin/main`) —
+  `scripts/worktree-guard.mjs` reports it and the local gate therefore fails
+  that one step. Reproduced from the primary checkout itself, so it is
+  repository-local state **does-not-affect** this unit; it is not repaired here
+  (deleting another session's worktree is not this unit's business).
 - **Worktree root carries git's admin files as untracked entries** (`HEAD`,
   `index`, `logs/`, …) because the worktree lives at `.git/worktrees/<name>` —
   **does-not-affect** this unit; explicit revs are used for every diff.
@@ -202,7 +207,8 @@ One row per Engineering claim (column order and vocabularies owned by
 | PE-005 | repository | no deterministic emitter writes a single package's companion CHANGELOG row: `insertCompanionRow` runs only inside `release.mjs apply` (the whole train), and the crate's `changelog` op cannot address the `#### [\`name\`](path)` heading | `scripts/release.mjs:817`; `packages/agentic-workflow/src/edit/Changelog.mjs:44` (`^#### \`(.+)\`` regex); `packages/agentic-workflow/bin/agentic-workflow.mjs:1145` | current | O4 |
 | PE-006 | tool-behaviour | `typebox` 1.4.6 changes no surface the crate reaches: the crate imports `Type` builders and `typebox/compile` only, while the release's changes are in `Schema.Pointer` / `Schema.Resolve` namespacing, pointer fragments and the engine's internal imports | `packages/agentic-workflow/src/doc/envelope.mjs:32-34`; npm tarball diff 1.4.5 vs 1.4.6 (24 files differ, 2 removed: `build/schema/engine/_pathing.{mjs,d.mts}`, none added, `fileCount` 1421 → 1419) | current | O6 |
 | PE-007 | registry | upstream publishes no GitHub release notes for this window: the `releases` API answers an empty array, so the recorded effect is the npm tarball diff | `https://api.github.com/repos/sinclairzx81/typebox/releases?per_page=5` fetched 2026-11-09 → `[]` | current | O4 |
-| PE-008 | environment | this checkout has no `node` and no `npm` in PATH (bun 1.4.4 only), so three crate suites that spawn `node` fail at base and at head alike, and the `node --test` fallback cannot run | `which node npm` → nothing; `bun test --timeout=30000 test/` in the crate → 583 pass / 3 fail at base (E3) | current | O6 |
+| PE-008 | environment | ~~this checkout has no `node` and no `npm` in PATH (bun 1.4.4 only), so three crate suites that spawn `node` fail at base and at head alike, and the `node --test` fallback cannot run~~ — **superseded by PE-009** | `which node npm` → nothing (a `PATH` gap, not an absent binary) | superseded 2026-11-09 | O6 |
+| PE-009 | environment | the runner is installed and usable: `node` `v26.13.0` + `npm` `11.20.0` at `/home/agent/.local/share/fnm/node-versions/v26.13.0/installation/bin`; with it on `PATH` the crate suite is 586/586 and the root suite 97/97 under **both** runtimes, and the local gate runs its own harness | `node --version` → `v26.13.0`; E12–E14, G4 | current | O6, O1, O2, O7 |
 
 ### Obligations
 
@@ -291,13 +297,21 @@ owner's external verification.
 - **G2** — 2026-11-09, the gate's steps run individually (G3 explains why): `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` · `bun scripts/docs-generate.mjs --check` · exit 0 after regenerating `docs/generated/units.md` with the renderer · `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":16,"refusals":[]}` · `bun scripts/log-immutability.mjs` · exit 0 · `0 violations · base 2a28f038 · range 2 commits` · `bun scripts/roadmap-settle.mjs` · `verdict: PASS`, `violations: 0` · `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/484-chore-deps-pin-drift/SPEC.md` · `verdict: PASS` · `bun scripts/phase-lint.mjs docs/fix/484-chore-deps-pin-drift/SPEC.md` · `verdict PASS` · `bun scripts/unit-route.mjs --triage 484-chore-deps-pin-drift` · exit 0 · `bun scripts/promise-coherence.mjs` · `verdict PASS` (34 checked, 16 skipped) · `bun scripts/lint-changeset.mjs` · exit 0 · `bun scripts/version-parity-gate.mjs --pins` (as wired, flagless) · exit 0.
 - **G3** — 2026-11-09, `bun scripts/local-gate.mjs --only …` is unrunnable in this checkout: the harness spawns `node`, which is absent (`local-gate: could not run node: Executable not found in $PATH`) — no gate exception was granted, every step's own script was run under bun instead (G2). Disclosed in the handoff.
 - **D3** — 2026-11-09, decision (evidence shape): the two local commits were re-made after the cut because the first version wrote every obligation row `verified` before any validator ran. Rows are `planned` at cut and flip only on a foreground run (E4–E11); the hashes above are the re-made pair — unpublished, my own, same session.
+- **L3** — 2026-11-09, owner correction, verbatim: "node si existe en el sistema así que corre la prueba también con nodejs" — state resolves it to **re-verify** with the runner on `PATH`; it also corrects PE-008.
+- **E12** — 2026-11-09, runner located at `/home/agent/.local/share/fnm/node-versions/v26.13.0/installation/bin` (`node v26.13.0`, `npm 11.20.0`) and put on `PATH` · crate suite `bun test --timeout=30000 test/` in `packages/agentic-workflow` · **586 pass / 0 fail** (163s), i.e. the three failures of E4/E7 were the missing binary, nothing else (O6).
+- **E13** — 2026-11-09, `node --test test/` in `packages/agentic-workflow` · **586 pass / 0 fail** (67s) — the `node --test` fallback leg now runs and AGREES with the bun leg (O6).
+- **E14** — 2026-11-09, `bun scripts/run-root-suite.mjs` · exit 0 · **97/97 suites PASS**; `node scripts/run-root-suite.mjs` · exit 0 · **97/97 suites PASS** — the 16 failures of G1 were the same missing binary (no `gh` failure survived either; the forge fixtures use their own fakes) (O6).
+- **E15** — 2026-11-09, the pin reproducers re-run with the real `npm` (the scratch shim of E1/E4 is gone): `bun scripts/pin-watch.mjs --check` · exit 0 · `VERDICT: PASS`; `bun scripts/version-parity-gate.mjs --pins --package packages/agentic-workflow` · exit 0 · `VERDICT: PASS`; `--pins` flagless · exit 0 · `VERDICT: PASS` (O1, O2).
+- **G4** — 2026-11-09, the gate's own harness now runs: `node scripts/local-gate.mjs --only version-parity-content,docs-generated-projection,journal-carrier-check,log-immutability,temp-hygiene,tmp-gc,dependency-pin-gate` · **PASS — 7 step(s) in 9s**; `node scripts/local-gate.mjs --no-bail` over all 17 steps completed 15 (all green) before this session's 50-minute cap — `crate-suite-node` `exit 0 in 216s`, `crate-suite-bun` `exit 0 in 291s`, `pi-node-compat` `exit 0 in 61s`, `pi-compat-guard` `exit 0 in 108s`, plus `schema-node-compat` `PASS — 1 step(s)`, and `root-suite` run separately at 97/97 under both runtimes (E14) · the one red is **`worktree-guard`** (`exit 1`), reporting a **different, stale and dirty worktree** (`feat-427-config-unified-config-file-schema`, merged into `origin/main`) — reproduced from the primary checkout, so repository-local state, not this change (G3's "harness unrunnable" is superseded by G4).
+- **D4** — 2026-11-09, decision (the owner's correction stands): the environment verdict was wrong, not the tooling — `which node` answers the non-interactive shell's `PATH`, and the runner is installed, so E12–E14 replace the "environment failures" narration of E7/G1, and PE-009 supersedes PE-008. Nothing else in the ledger moved: the pin, the lock, the changeset and the differential are unchanged by the correction.
 
 ## Next
 
-P5 — the session entry and the owner's external verification. The branch is
-handed back with the obligations ledger closed (8 verified) and the diff
-unpushed; nothing here self-approves, and the pre-push gate cannot run in this
-checkout (G3, the missing `node`).
+The unit is verified end to end under both runtimes (E12–E15, G4) and handed
+back for the owner's external verdict. Open, deliberately out of this unit: F1
+(the `--pins` default never checks the crate) and the owner's question whether
+the local-sibling pin rule still earns its keep now the train moves every
+package to one version.
 
 ## References
 
@@ -321,8 +335,8 @@ none — independent.
 
 | Scenario | Verified by |
 |---|---|
-| The crate's `doc` envelope validation still accepts the shipped envelopes on 1.4.6 (the only `typebox` load path) | `bun test --timeout=30000 test/` in `packages/agentic-workflow` — the `doc` suites green at head, same count as base (O6) |
-| The rest of the crate suite is unchanged by the bump — no new failure, no newly-skipped case | the base-vs-head differential in E3/E7 (O6) |
+| The crate's `doc` envelope validation still accepts the shipped envelopes on 1.4.6 (the only `typebox` load path) | `bun test --timeout=30000 test/` in `packages/agentic-workflow` — 586/586 at head on both runtimes (E12) |
+| The rest of the crate suite is unchanged by the bump — no new failure, no newly-skipped case | the base-vs-head differential in E3/E7/E12 (O6) |
 | A fresh checkout stays installable from the committed lock | `bun install --frozen-lockfile` at the repo root exits 0 (O5) |
 | The sibling packages' pins that live in the same lock are untouched | `git diff origin/main...HEAD -- bun.lock` touches only the `typebox` entry (O3) |
 | The release train still reads the crate's intent | `bun scripts/release.mjs plan` lists `@gtrabanco/agentic-workflow` and resolves without the new changeset breaking the plan (E6) |
