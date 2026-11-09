@@ -147,6 +147,10 @@ deterministic gate (S13) plus the coverage/row-count receipts recorded in
   fix-lane templates (recorded in the log).
 - No doc-gate defect at base: `bun scripts/docs-generate.mjs --check` and
   `bun scripts/roadmap-settle.mjs` are green at `1fa39fe1`.
+- `scripts/workflow-status-sensor.test.mjs` fails 16 tests at `1fa39fe1` (sensor
+  forge/label/continuation cases) and the same 16 fail on a scratch copy of
+  `main`; **does not affect** this unit, and no test is touched (G1 records
+  both runs).
 
 ## Acceptance criteria
 
@@ -296,3 +300,28 @@ plus its score — never a rewrite of the method.
 - The inventory: [`INVENTORY.md`](INVENTORY.md).
 - Feeds the pilot issue and all follow-up extraction units (S10): roadmap
   row 109 (the folded #410/#411/#412/#414 chain).
+
+- **D1** — 2026-11-09, the session entry is written through the journal carrier's
+  own writer (`.agentic-workflow/journal/*-narrative-local.md`), not by
+  appending `docs/LOGS.md`: `scripts/log-immutability.mjs` (unit 468) names the
+  aggregator as that file's only legal writer, so the letter of S14 ("manual
+  append") would have reddened the gate S13 orders me to run. The entry exists
+  before the handoff — the requirement's substance — via the declared writer.
+- **D2** — 2026-11-09, the computed `passive` tier says a passive unit carries no
+  unit doc; the governing request (S1–S15) orders the ledgers frozen in this
+  folder. The request wins (instruction precedence), the deviation is recorded
+  in `## Risk tier`, and no ceremony beyond the ledgers is carried.
+- **E4** — 2026-11-09, `bun /tmp/408-inv/row.mjs` (the `roadmap rowUpsert` emitter over `docs/ROADMAP.md`) · exit 0 · `{"service":"roadmap","op":"rowUpsert","before":"4500b1fb","after":"9417fa80","ok":true}`.
+- **E5** — 2026-11-09, `bun scripts/docs-generate.mjs` · exit 0 · `Sources: 165 units · 131 roadmap rows · 3 packages · 29 skills · 57 scripts`, `1 written`, `verdict: PASS`; `--check` afterwards: `0 missing · 0 stale · 0 orphaned`, `verdict: PASS`.
+- **E6** — 2026-11-09, `bun scripts/roadmap-settle.mjs` · exit 0 · `165 unit docs checked · 0 fix docs skipped`, `verdict: PASS`, `violations: 0`.
+- **E7** — 2026-11-09, `bun scripts/test-impact.mjs --base main` · exit 0 · `changed: 2 · executable: 0 · suites (0)`, `reason: no executable path changed` (the empty verdict, recorded instead of an invented test).
+- **E8** — 2026-11-09, `bun scripts/phase-lint.mjs docs/features/107-mechanization-inventory/SPEC.md` · exit 0 · `P1…P5 Phase-lint: PASS (6/6)`, `verdict PASS`.
+- **E9** — 2026-11-09, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/107-mechanization-inventory/SPEC.md` · exit 0 · `VERIFY PASS`, `ok: true`, `violations: []`, shape `spec-by-reference`.
+- **E10** — 2026-11-09, the acceptance counts: `rg -c '^\| [A-Z]{2}[0-9]{2} \|' INVENTORY.md` → 338; `rg -c '^### [a-z]' INVENTORY.md` → 29; `rg -c '^\| [0-9]+ \| [A-Z]{2}[0-9]{2} \| .* \| [0-9] \| [0-9] \| [0-9] \| [0-9]+ \|' INVENTORY.md` → 253; the S4 section-parity `diff` → exit 0 (no output).
+- **G1** — 2026-11-09, `bun scripts/run-root-suite.mjs` · exit 1 at head `7b5027d3689f03f6396b0ab244b8af050d4159c1` · 62 pass / 16 fail, all 16 in `scripts/workflow-status-sensor.test.mjs`; the identical 16 fail on a `git archive main` scratch copy of `1fa39fe1` — pre-existing, not caused by this change (see `## Known pre-existing issues`).
+- **P2** — 2026-11-09, `INVENTORY.md` authored: 29 section maps, 338 classified
+  rows, 253-row priority ranking, residue table, limits and receipts · commit `a3ecba02`.
+- **P3** — 2026-11-09, roadmap row 107 written by the emitter and the generated
+  projection re-rendered · commit `7b5027d3`.
+- **P4** — 2026-11-09, session entry written through the journal writer:
+  `.agentic-workflow/journal/20261109T153901Z-feat-408-mechanization-inventory-narrative-local.md`.
