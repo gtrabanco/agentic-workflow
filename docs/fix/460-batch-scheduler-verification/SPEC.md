@@ -242,6 +242,19 @@ it.
   differential check base-vs-change (validator: `bun scripts/local-gate.mjs`
   exits 0) (Implements: S1, S6)
 
+- P10 — Correction batch 1 (the external verify's blockers): the delivered-row
+  status reads the token before its `· [#pr]` annotation, every surface that
+  describes the plan names `batch-plan@2` (the rejection trace interpolating the
+  published constant), the D4 reconciliation in O4/P5, and the `--no-state`
+  declaration under the route budget (validator:
+  `bun test scripts/batch-scheduler.test.mjs` exits 0 and
+  `bun scripts/check-skill-context.mjs --routes --budgets` exits 0)
+  (Implements: S3, S6)
+  Relevant files: scripts/batch-scheduler.mjs,
+  packages/agentic-workflow-schema/src/batch-plan.ts,
+  packages/agentic-workflow-schema/test/batch-plan.test.mjs,
+  skills/batch-scheduler/references/PLAN.md
+
 ### Planning evidence
 
 M/L unit: the ledger lives in this folder's
@@ -353,10 +366,122 @@ surgery (workflow §4).
   suites (bun + node), docs-generated-projection: all exit 0. O14 stays open
   on this evidence — the gate cannot exit 0 on main until #468's implementation
   branch merges.
+- **L2** — 2026-11-09, the correction request, verbatim:
+  ```
+  Apply to this repository: make triage of the findings, verify the finding
+  undestanding all the context, try to find a way to fix it and make sure all
+  context (symbol) of the issue is fixed and the fix doesnt break any other
+  thing, when finish the fix check if it is fixed and probe it, if it is not
+  fully fixed restart this loop
+  ```
+- **D5** — 2026-11-09, ledger amendment at correction batch 1 (authority: this
+  unit's `external-verify.md` receipt, blocker 2, read together with D4 above):
+  O4 and P5 carried the clause D4 superseded at cut (`defined`/missing →
+  untriaged). Both now state D4 — a row present below `planned` marks, a
+  missing row carries no signal — and O4's invariant also names the
+  `done · [#pr](…)` annotation the fix index renders. O17 (the superseded-token
+  sweep) and O18 (the delivered-row status) are cut for the two corrections,
+  each with the test that pins it.
+- **E8** — 2026-11-09, red corpus at `985faacb`: `bun test
+  scripts/batch-scheduler.test.mjs` · exit 1 · 41 pass / 2 fail — the delivered
+  row read `triaged: false`, and the sweep listed five stale-token lines
+  (`scripts/batch-scheduler.mjs:6,850`,
+  `packages/agentic-workflow-schema/src/batch-plan.ts:2,212`,
+  `packages/agentic-workflow-schema/test/batch-plan.test.mjs:9`).
+- **E9** — 2026-11-09, green at `a2c0e0ba`: `bun test
+  scripts/batch-scheduler.test.mjs` · exit 0 · 43 pass; `cd
+  packages/agentic-workflow-schema && bun run test` · exit 0 · 776 pass.
+- **E10** — 2026-11-09, differential, previous head `a7f7fd16` vs the
+  correction head on an identical fixture (scratch, removed after): 11 diff
+  lines — the one `done · [#999]` row flips `untriaged` → `satisfied-inputs`
+  and loses `triaged: false`. Every other row (`idea`, `pending`,
+  `in-progress`, no-row, `soft-deps-open`, the malformed-table degradation),
+  every batch, lane, size hint, summary and the whole state file are
+  byte-identical: the correction moved one symbol (`isTriaged`) and nothing
+  else.
+- **E11** — 2026-11-09, a regression the integrated tree caught and this batch
+  repaired: `bun scripts/check-skill-context.mjs --routes --budgets` · exit 1 ·
+  `batch-scheduler/PLAN.md: estimate 2248 > 2200`, from the first wording of
+  the advisory-4 `--no-state` declaration (the plain skill-budget mode does not
+  measure it). Folded into the paragraph that owns the seen set, dropping the
+  duplicate v1 sentence the field table already carries, at `82c52063` · exit 0
+  · estimate 2183.
+- **E12** — 2026-11-09, the integrated tree (scratch clone of this branch with
+  `origin/main` `fc62c03f` merged; the single conflict,
+  `docs/generated/units.md`, resolved by re-running `bun
+  scripts/docs-generate.mjs` — a generated projection is never hand-edited):
+  `bun scripts/local-gate.mjs --jobs 2` · exit 0 · every step green —
+  `root-suite` 180s, `crate-suite-bun` 192s, `crate-suite-node` 73s,
+  `log-immutability` 1s, `schema-node-compat` 6s, `pi-node-compat`,
+  `pi-compat-guard`, `schema-build`, `workspace-install`, `dependency-pin-gate`,
+  `dependency-advisories`, `journal-carrier-check`, `version-parity-content`,
+  `docs-generated-projection`; 0 skipped.
+- **E13** — 2026-11-09, why this head's own gate is red (E7/G1/G2): `bun test
+  scripts/log-immutability.test.mjs` · exit 1 · 0 pass / 1 fail / 1 error
+  (`Cannot find module './log-immutability.mjs'`), byte-identical at the bound
+  base `f24b726f` (same test blob `481a8b71`). The integration supplies the
+  module: the suite passes 18/18 there and the gate step exits 0 (E12).
+- **G2** — 2026-11-09, `bun scripts/local-gate.mjs` on this head · exit 1 ·
+  FAILED at root-suite, whose only red is `scripts/log-immutability.test.mjs`
+  (E13); every other step exits 0. Stated plainly rather than counted as
+  checked: this row's validator reproduces green on the integrated tree (E12),
+  not on the unintegrated head.
+- **F1** — 2026-11-09, folded `O14` (the gate red, class environment): the red
+  is the pre-existing #468 pair absent from this branch; `main` carries it
+  (`fc62c03f`), the integration's gate exits 0 (E12), and O14's evidence names
+  that tree. Folded at `82c52063`/`a2c0e0ba`; verified by E12.
+- **F2** — 2026-11-09, folded finding (blocker 2, class plan): O4 and P5 stated
+  the pre-D4 rule while the implementation follows D4. Folded at `a2c0e0ba`
+  (D5); verified by the new D4 pin in the suite.
+- **F3** — 2026-11-09, folded finding (blocker 3, class source):
+  `scripts/batch-scheduler.mjs:6` narrated `batch-plan@1`. Folded at
+  `a2c0e0ba`; verified by the sweep test (O17).
+- **F4** — 2026-11-09, folded finding (blocker 4, class source): the rejection
+  trace at `scripts/batch-scheduler.mjs:850` named a contract the validator no
+  longer enforces. Folded at `a2c0e0ba` — it now interpolates the published
+  `BATCH_PLAN_SCHEMA`, so it cannot drift again; verified by O17.
+- **F5** — 2026-11-09, folded finding (blocker 5, class source):
+  `packages/agentic-workflow-schema/src/batch-plan.ts:2` module header. Folded
+  at `a2c0e0ba`; verified by O17.
+- **F6** — 2026-11-09, folded finding (blocker 6, class source): the
+  `validateBatchPlan` JSDoc at `batch-plan.ts:212`. Folded at `a2c0e0ba`;
+  verified by O17.
+- **F7** — 2026-11-09, folded finding (blocker 7, class source): the package
+  corpus header `batch-plan.test.mjs:9`; the wrong-value refusal vector at
+  `:234` stays, recognised by its mutation. Folded at `a2c0e0ba`; verified by
+  O17.
+- **F8** — 2026-11-09, folded finding (advisory 1, class source):
+  `isTriaged` read the `done · [#pr](…)` cell as a status value, so a delivered
+  row lost its `satisfied-inputs` (latent — `done` implies a unit doc implies
+  launched). Folded at `a2c0e0ba`; verified by O18 and the E10 differential.
+- **F9** — 2026-11-09, folded finding (advisory 2, class docs): the pending
+  #449 changeset narrated `batch-plan@1` as the current envelope in the same
+  release as this bump. Folded at `a2c0e0ba`; `bun scripts/lint-changeset.mjs`
+  · exit 0 · 50 entries ok.
+- **F10** — 2026-11-09, folded finding (advisory 4, class docs): `--no-state`
+  reads no history, so every such run reports all open issues as new — now
+  declared in `PLAN.md`'s state section. Folded at `82c52063` after E11's
+  budget repair; verified by `--routes --budgets` exit 0 and the context
+  budget test in the gate.
+- **F11** — 2026-11-09, folded finding (advisory 3, class environment): the
+  base-caused `log-immutability` red. Report-only (it reproduced at the bound
+  base), resolved by the same integration as F1; its ledger consequence was
+  counted once, as F1.
+- **P10** — 2026-11-09, correction batch 1: the red corpus `985faacb`, the
+  fixes `a2c0e0ba`, the route-budget repair `82c52063`.
 
 ## Next
 
-The owner merges [PR #475](https://github.com/gtrabanco/agentic-workflow/pull/475) (closes #460); O14 (gate exit 0) closes when #468's implementation branch lands.
+The owner integrates `origin/main` (`fc62c03f`, carrying #468) into
+`fix/460-batch-scheduler-verification` — the merge is conflict-free except
+`docs/generated/units.md`, a generated projection both branches inserted a row
+into, resolved by re-running `bun scripts/docs-generate.mjs` (verified: the
+renderer lands both rows and reports PASS) — then re-runs
+`bun scripts/local-gate.mjs` on the integrated head and merges [PR
+#475](https://github.com/gtrabanco/agentic-workflow/pull/475) (closes #460).
+The gate is green on that integrated tree today (E12); the integration itself
+is the owner's step per the guide's published-history rule, which is why O14's
+evidence names the integrated tree rather than this head.
 
 ## References
 
