@@ -16,6 +16,7 @@ import { createTelemetryWiring, sessionChangedPaths } from "../dist/extension/te
 import { execFileSync } from "node:child_process";
 import { parseConfigFile } from "../dist/config/schema.js";
 import { mergeConfigs } from "../dist/config/merge.js";
+import { tempRoot } from "../../../scripts/temp-root.mjs";
 
 /** A `pi` double: it records handlers so the test can fire them. */
 function fakePi() {
@@ -32,7 +33,7 @@ function fakePi() {
 }
 
 function project() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "telemetry-wiring-"));
+  const root = tempRoot("telemetry-wiring-");
   fs.mkdirSync(path.join(root, "docs/fix/383-measured-acceptance"), { recursive: true });
   fs.writeFileSync(path.join(root, "docs/fix/383-measured-acceptance/SPEC.md"), "# fix/383-measured-acceptance\n\n## Risk tier\n\n- **Tier** — `standard` · **Task Size** — `small`\n");
   return root;
@@ -116,7 +117,7 @@ test("the session id comes from the start context when the caller injected none"
 });
 
 test("the path count is the session's own work, measured when the sample is written", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "telemetry-paths-"));
+  const root = tempRoot("telemetry-paths-");
   const run = (...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8" });
   run("init", "-q");
   run("config", "user.email", "t@example.com");
@@ -196,7 +197,7 @@ test("the switch is one boolean, off by default, and a stray key is refused", ()
 });
 
 test("a session's own scope is counted from git: its commits plus what is still uncommitted", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "telemetry-scope-"));
+  const root = tempRoot("telemetry-scope-");
   const run = (...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8" });
   run("init", "-q");
   run("config", "user.email", "t@example.com");

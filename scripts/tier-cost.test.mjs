@@ -24,6 +24,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { tempRoot } from "./temp-root.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = path.join(ROOT, "scripts/tier-cost.mjs");
@@ -33,7 +34,7 @@ const { COLUMNS, CEREMONY_STEPS, TIER_COST_CONTRACT_ID, parseLedger, readLedger,
 
 /** A throwaway project root; the caller fills it and it is removed by the OS. */
 function project(files) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tier-cost-"));
+  const dir = tempRoot("tier-cost-");
   for (const [rel, text] of Object.entries(files)) {
     fs.mkdirSync(path.join(dir, path.dirname(rel)), { recursive: true });
     fs.writeFileSync(path.join(dir, rel), text);
