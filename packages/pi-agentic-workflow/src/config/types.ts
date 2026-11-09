@@ -71,6 +71,57 @@ export interface SubagentsConfigFile {
 }
 
 // ---------------------------------------------------------------------------
+// State Flow lifecycle (issue #174)
+// ---------------------------------------------------------------------------
+
+/** The backends v1 accepts. v1 ships exactly one: the soft integration target. */
+export const STATE_FLOW_BACKENDS = ["pi-state-flow"] as const;
+export type StateFlowBackend = (typeof STATE_FLOW_BACKENDS)[number];
+
+/** The stop policies v1 accepts: the episode ends when the command settles —
+ *  the same moment model routing restores the session. */
+export const STATE_FLOW_STOP_POLICIES = ["command_settled"] as const;
+export type StateFlowStopPolicy = (typeof STATE_FLOW_STOP_POLICIES)[number];
+
+/** What a dispatch does when the backend is not installed. */
+export const STATE_FLOW_MISSING_POLICIES = ["noop", "refuse"] as const;
+export type StateFlowMissingPolicy = (typeof STATE_FLOW_MISSING_POLICIES)[number];
+
+/** The shipped allowlist: the longest procedural loops only. */
+export const DEFAULT_STATE_FLOW_COMMANDS = ["execute-phase", "fold-findings"] as const;
+
+/** What an operator WRITES under `stateFlow` (issue #174). Everything optional. */
+export interface StateFlowConfigFile {
+  /** Master switch; shipped `false` until dogfooded. */
+  enabled?: boolean;
+  /** v1: `"pi-state-flow"` only. */
+  backend?: StateFlowBackend;
+  /** Allowlist of friendly command names (no leading slash). */
+  commands?: string[];
+  /** v1: `"command_settled"` only. */
+  stopOn?: StateFlowStopPolicy;
+  /** `"noop"` (warn once) or `"refuse"` when the backend is absent. */
+  onBackendMissing?: StateFlowMissingPolicy;
+}
+
+/** What the extension READS: every `stateFlow` knob resolved (issue #174). */
+export interface StateFlowConfig {
+  enabled: boolean;
+  backend: StateFlowBackend;
+  commands: string[];
+  stopOn: StateFlowStopPolicy;
+  onBackendMissing: StateFlowMissingPolicy;
+}
+
+export const DEFAULT_STATE_FLOW: StateFlowConfig = {
+  enabled: false,
+  backend: "pi-state-flow",
+  commands: [...DEFAULT_STATE_FLOW_COMMANDS],
+  stopOn: "command_settled",
+  onBackendMissing: "noop",
+};
+
+// ---------------------------------------------------------------------------
 // Model-profiles fields (feature 63)
 // ---------------------------------------------------------------------------
 
@@ -146,6 +197,8 @@ export interface ConfigFile {
    *  the "<n> of <m> <unit>" shape. Optional: absent means the automatic
    *  default (self-detected host envelope, conservative defaults). */
   subagents?: SubagentsConfigFile;
+  /** Issue #174: the opt-in, command-scoped State Flow episode lifecycle. */
+  stateFlow?: StateFlowConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -280,6 +333,8 @@ export interface EffectiveConfig {
    *  project-over-global; empty when no scope declares one — the resource
    *  layer owns the self-detected envelope and the derived parallelism. */
   subagents: SubagentsConfigFile;
+  /** Issue #174: the State Flow episode lifecycle, resolved. */
+  stateFlow: StateFlowConfig;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }
