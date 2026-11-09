@@ -53,6 +53,9 @@ the homes of the prose; this table is the index that makes them enumerable.
 
 ## The inventory
 
+findings-corpus | the findings corpus is harvested from both carriers, admission-gated and attributed | script | scripts/findings-corpus.test.mjs | - | the real tree yields the counts the planning ledger froze | - | 3 | 3 | 3 | script | - | -
+correction-budget | the correction budget is measured from the corpus, bounded, and stopped when spent | script | scripts/correction-budget.test.mjs | - | the budget is bounded and computed from the measured batch size | - | 2 | 3 | 3 | script | - | -
+differential-baseline | a base failure is an advisory; a base-pass/head-fail is a regression | script | scripts/differential-baseline.test.mjs | - | a base failure alone is an advisory | - | 3 | 3 | 3 | script | - | -
 ```text
 prose-gate-inventory@1
 # gate-suites: scripts/*-discipline.test.mjs + scripts/*-contract.test.mjs + scripts/*-quality.test.mjs + scripts/*-parity.test.mjs
