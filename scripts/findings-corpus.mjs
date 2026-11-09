@@ -44,6 +44,8 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import { sectionBounds } from "./unit-doc-phases.mjs";
+
 export const CORPUS_CONTRACT = "findings-corpus@1";
 export const DEFAULT_MIN_RECURRENCE = 2;
 export const DEFAULT_THRESHOLD = 2;
@@ -102,7 +104,6 @@ const FOLD_ANNOTATION = /·\s*fold\s+([0-9a-f]{7,40})/;
 const LOG_FOLD = /^-\s*\*\*F(\d+)\*\*.*?·\s*fold\s+([0-9a-f]{7,40})/;
 const LOG_REVIEW = /^-\s*\*\*R\d+\*\*/;
 const LOG_FINDING = /^-\s*\*\*V\d+\*\*/;
-const HEADING = /^##\s+/;
 
 function fail(code, message) {
   process.stderr.write(`findings-corpus: ${message}\n`);
@@ -265,20 +266,18 @@ export function parseMigratedCarrier(text, { file, unit }) {
   let verifiedMarks = 0;
   let cycle = 1;
 
-  const start = lines.findIndex((line) => /^##\s+Findings\s*$/.test(line));
-  if (start === -1) {
+  // The one fence-aware reader owns section bounds (#308 F28/F39); this parser
+  // never searches for a heading itself.
+  const range = sectionBounds(source, "Findings");
+  if (range === null) {
     return { findings, reviewMarks, verifiedMarks, unparsable, migratedRows: 0 };
   }
-  let end = lines.length;
-  for (let i = start + 1; i < lines.length; i += 1) {
-    if (HEADING.test(lines[i])) {
-      end = i;
-      break;
-    }
-  }
+  const lineOf = (offset) => source.slice(0, offset).split("\n").length - 1;
+  const startLine = lineOf(range[0]);
+  const endLine = lineOf(range[1]);
 
   let columns = null;
-  for (let index = start + 1; index < end; index += 1) {
+  for (let index = startLine + 1; index < endLine; index += 1) {
     const line = lines[index];
     if (!line.startsWith("|")) {
       columns = null;
@@ -320,11 +319,12 @@ export function parseMigratedCarrier(text, { file, unit }) {
     });
   }
 
-  const logStart = lines.findIndex((line) => /^##\s+Log\s*$/.test(line));
-  if (logStart !== -1) {
-    for (let index = logStart + 1; index < lines.length; index += 1) {
+  const logRange = sectionBounds(source, "Log");
+  if (logRange !== null) {
+    const logStart = lineOf(logRange[0]);
+    const logEnd = lineOf(logRange[1]);
+    for (let index = logStart + 1; index < logEnd; index += 1) {
       const line = lines[index];
-      if (HEADING.test(line)) break;
       const reviewCycle = line.match(/cycle\s+(\d+)/i);
       if (LOG_REVIEW.test(line)) {
         reviewMarks += 1;
@@ -560,7 +560,7 @@ export function buildCorpus(root, { resolveFold = () => null, minRecurrence = DE
     }
     if (entry.hasSpec) {
       const text = fs.readFileSync(entry.spec, "utf8");
-      if (/^##\s+Findings\s*$/m.test(text)) {
+      if (sectionBounds(text, "Findings") !== null) {
         migratedCarriers += 1;
         const parsed = parseMigratedCarrier(text, { file: path.relative(root, entry.spec), unit: entry.unit });
         findings.push(...parsed.findings);
