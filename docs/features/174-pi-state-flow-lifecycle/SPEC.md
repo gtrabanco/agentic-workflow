@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-# ac-hash: <sha256 of the ## Acceptance criteria section — frozen below>
+# ac-hash: 2e0d9a5c721a545a35e96c85b26e66499ea131df57b83e9affd4f62201cad2f5
 ---
 
 # 174 — pi-state-flow-lifecycle
@@ -216,7 +216,7 @@ its validator, an `(Implements: …)` line, and may carry a nested
   .changeset/, docs/ROADMAP.md, docs/LOGS.md
 - P6 — verification: full package suite plus the root gates named by the
   touched surfaces; differential run of the package suite at the base commit
-  (validator: `bun run test --cwd packages/pi-agentic-workflow` exits 0, and
+  (validator: `bun run --cwd packages/pi-agentic-workflow test` exits 0, and
   `git diff --name-only 6f5d5453 -- skills/` outputs nothing)
   (Implements: S1)
 
@@ -256,7 +256,7 @@ anchor a review's per-criterion coverage table reads.
   unchanged when the state-flow wrapper is enabled. Check: the differential
   suite run — the package suite passes at the base commit and at the change,
   with the only new failures being the new tests' RED-first pairs
-  (`bun run test --cwd packages/pi-agentic-workflow` exits 0 at both).
+  (`bun run --cwd packages/pi-agentic-workflow test` exits 0 at both).
 - **AC5 (S1 → issue §Success criteria 5).** Canonical skills stay untouched:
   no file under `skills/` changes in this unit. Check:
   `git diff --name-only 6f5d5453 -- skills/` outputs nothing (exit 0).
@@ -373,7 +373,7 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   `bun run test` → **648 pass / 0 fail**; at the change — **691 pass / 0 fail**.
   The only difference is this unit's 43 new tests; no existing behavior moved.
 - **E5** — 2026-11-09, obligation validators in the foreground:
-  `bun run test` (packages/pi-agentic-workflow) · exit 0 · 691/0;
+  `bun run --cwd packages/pi-agentic-workflow test` · exit 0 · 691/0;
   `rg -c "State Flow" packages/pi-agentic-workflow/README.md` → 2 (≥1, O10);
   `rg -c "arXiv:2608.26263" README.md` → 1 (≥1, O10);
   `rg -c "pi-state-flow" packages/pi-agentic-workflow/package.json` → 0
@@ -419,6 +419,27 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   validator run in the foreground (E4–E6, G1–G5); statuses flipped in
   `planning-obligations.md`; the root gate's single red is the pre-existing
   log-immutability suite (G3, Known pre-existing issues).
+- **E7** — 2026-11-09, correction batch 1 (external verify B1): the declared
+  validator `bun run test --cwd packages/pi-agentic-workflow` was unrunnable as
+  written — bun 1.4.4 parses the trailing `--cwd packages/pi-agentic-workflow`
+  as a script vararg and forwards it to `bun test`, which dies with `missing
+  argument after 'packages/pi-agentic-workflow'` (exit 2, zero tests run).
+  Corrected in the three carriers that declare it — P6, AC4 and O6 — to the
+  repo's own documented form `bun run --cwd packages/pi-agentic-workflow test`
+  (`docs/features/394-auto-log-session/SPEC.md:165`). Validator evidence: the
+  corrected string exits 0 at HEAD (**691 pass / 0 fail**) and at the pinned
+  base `f24b726f` in a throwaway clone (**648 pass / 0 fail**), so O6's
+  differential claim holds on both sides. The AC section changed, so the
+  at-triage freeze was recomputed and rewritten (`ac-hash:
+  2e0d9a5c…2f5`, `unit-doc-phases.mjs` `sectionText` semantics, per DESIGN.md
+  "An AC change after the freeze is a plan repair"). Gates after the edit:
+  phase-lint 6/6 PASS, `docs-generate --check` PASS, `roadmap-settle` PASS,
+  `lint-changeset` ok, context budgets PASS, `skills/` untouched.
+  Stopping rule observed: once a red proved environmental (a 5s per-test
+  timeout under a loadavg above 12 — 438s wall for one test), each remaining
+  step ran with one continuation and no retry loop; the full suite passed on
+  both the extended-timeout and the default-configuration runs once the load
+  dropped.
 
 ## Next
 
