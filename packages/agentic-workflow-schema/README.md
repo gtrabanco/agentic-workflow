@@ -891,3 +891,78 @@ reading. Growing it is a schema-const change plus the inventory row in
 | Export | Values | Meaning |
 | --- | --- | --- |
 | `PASS_NAMES` | `review-code` · `review-security` · `review-verify` · `review-design` · `review-a11y` · `review-brand` · `review-perf` · `review-seo` · `verify` · `classify` · `debt` | The spawned review passes; `passes.default` is the config-layer escape for unlisted passes, never a member |
+
+## Document provenance stamps (issue #462)
+
+Every machine-read document the workflow writes can declare its **provenance**:
+which grammar and carrier layout it speaks, and which tool and schema version
+wrote it. A reader dispatches the right parser from that declaration instead of
+guessing the grammar generation from artifact presence (a `TASKS.md` beside the
+SPEC used to mean "legacy carrier").
+
+**Three axes, never merged.** One merged version number is the defect this
+contract removes: the content grammar, the carrier layout and the writer's
+identity move for different reasons and at different times.
+
+- `grammars` — which vocabulary the **content** speaks (requirement ids,
+  task-link grammar, the findings table, the log kinds, the obligations ledger).
+- `format` — which **carrier layout** the document was written under: a
+  `unit-doc@<generation>` token. Generation 1 is the legacy 14-section carrier;
+  generation 2 is the `spec-by-reference` re-cut (#308). A major re-cut rewrites
+  this axis wholesale.
+- `written_by` / `schema` — the **forensic** half, so a breakage is reproducible
+  and bisectable across the train (D-40-14's single train version is what makes
+  the pair deterministic).
+
+The carried form is one fenced block in the document's preamble, four
+`key: value` lines under the `doc-provenance@1` marker (the table below is the
+shape; `src/doc-provenance.ts` documents the spelling).
+
+**Reader semantics.** A reader answers `current | degrade | refuse` against its
+*own* published contract: an older generation degrades inside the declared
+compatibility window, a newer one refuses typed, an unknown family refuses, a
+newer grammar generation refuses. A silent misparse is never an answer. An
+**absent stamp** is a declared degradation — the generation is derived from the
+carrier the document actually carries — so a document written before this
+contract stays readable and is never backstamped.
+
+```text
+doc-provenance@1
+field | presence | shape | what it orders
+written_by | required | <tool>@<semver> | the writer's identity; the tool comes from the published writer set
+schema | required | @gtrabanco/agentic-workflow-schema@<semver> | the schema package version whose grammar table the writer spoke
+format | required | one published `unit-doc@<generation>` token | the carrier layout generation the document was written under
+grammars | required | a non-empty object of published family keys to integer generations | the content vocabularies the document declares, so a reader picks the right parser for each
+```
+
+| Verdict | Reasons | What the reader does |
+| --- | --- | --- |
+| `current` | `stamp-current` | read it with its own parsers |
+| `degrade` | `absent-stamp` · `format-older-compatible` · `grammar-older-compatible` | read it, declaring the degraded dimension (`derived_format` for an absent stamp) |
+| `refuse` | `format-newer-than-reader` · `format-too-old` · `format-unknown-to-reader` · `grammar-newer-than-reader` · `grammar-unknown-to-reader` · `stamp-invalid` | refuse with the typed reason, never misparse; `format-too-old` carries the `MIGRATION.md` note |
+
+### Public entries
+
+| Entry | Contract |
+| --- | --- |
+| `validateDocProvenance(value, contract?)` | `{ valid, errors }` — structural validity plus the published generations the contract names |
+| `parseDocProvenance(text)` | `{ value, errors }` — the document's carried block; an absent block is `{ value: null, errors: [] }` |
+| `serializeDocProvenance(value)` | the canonical fenced block text (grammar keys sorted, so two writers agree byte for byte) |
+| `readDocProvenance(text, reader?)` | `{ verdict, reason, stamp, derived_format?, note? }` — the semver dispatch |
+| `deriveFormat(headings)` | the carrier format a heading set satisfies, or `null` |
+| `formatFamilyOf` · `formatGenerationOf` | `unit-doc@2` → `unit-doc` / `2` |
+| `CURRENT_READER` | this package's own reader contract |
+
+### Closed vocabularies
+
+| Export | Values | Meaning |
+| --- | --- | --- |
+| `DOC_PROVENANCE_FORMATS` | `unit-doc@1` · `unit-doc@2` | The carrier layouts a document may declare |
+| `DOC_GRAMMAR_FAMILIES` | `findings-table` · `log-kind` · `obligations` · `unit-doc` | The content vocabularies a stamp may declare |
+| `DOC_GRAMMAR_VERSIONS` | `1` per family | The generation this package publishes for each family |
+| `DOC_PROVENANCE_TOOLS` | `agentic-workflow` | The writers allowed to stamp a document |
+
+The runner crate ships without a dependency on this package (AC21 of unit 61), so
+it mirrors these sets with a provenance comment and `scripts/unit-doc-contract.test.mjs`
+pins the two — a drifting mirror is the defect, not the second copy.
+
