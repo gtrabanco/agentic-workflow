@@ -56,3 +56,42 @@ Verdict: NEEDS-DECISION (7 open blockers: O14; O4/P5; scripts/batch-scheduler.mj
 Correction bound per the verify contract: findings above are reported only —
 reproducers and smallest actions are named for `/aw-local-apply`, which owns
 every correction.
+
+## Delta verify — 2026-11-12 (corrections `985faacb…bd4ba3f7` landed since the full receipt)
+
+Corrections landed since the last receipt → delta verdict: the 7 blockers and
+4 advisories re-verified, plus the delta diff, plus the spot check. Base
+unchanged (`f24b726f`; merge-base `6f5d5453`). `origin/main` advanced to
+`1a93c522` (#474 merged) after the pinned integration base `fc62c03f`; the
+unit's surfaces are byte-identical across both
+(`git diff --stat fc62c03f 1a93c522 -- scripts/batch-scheduler.* packages/agentic-workflow-schema skills/batch-scheduler docs/fix/460-batch-scheduler-verification` → empty), so the O14 reproduction below was re-run against the **current** tip — stronger than the pinned evidence.
+
+```text
+EXTERNAL VERIFY — base: f24b726fa155ba536ba1f9906668a83f201df86f · head: bd4ba3f7 (delta over a7f7fd16: 985faacb…bd4ba3f7)
+Blockers: 0 — all 7 resolved: O14 re-produced green on a mktemp scratch clone of this branch merged with the current origin/main 1a93c522 (conflict on docs/generated/units.md resolved by re-running bun scripts/docs-generate.mjs, same method as E12) → bun scripts/local-gate.mjs --jobs 2 · exit 0 · PASS, 14 steps, 166s, 0 skipped; O4/P5 now state D4 (SPEC.md:216, planning-obligations.md:15 — the remaining defined/missing mentions are the SPEC Log's own history records D3/F2, not survivors); batch-plan@1 gone from scripts/batch-scheduler.mjs:6, :850 (interpolates BATCH_PLAN_SCHEMA), batch-plan.ts:2, :212, batch-plan.test.mjs:9. Red-first for the correction corpus proven: at 985faacb (dist built in scratch) the suite runs 41 pass / 2 fail — exactly the two intended reds (T2 done·#999, envelope token) — commit order test→fix (985faacb→a2c0e0ba).
+Advisories: 1 — scripts/log-immutability.mjs is still absent on this unintegrated head, so `bun scripts/local-gate.mjs` on this head alone remains red (same base-caused red as the first receipt's advisory 3, blob-identical at f24b726f). Disclosed honestly in the ledger (G2/E13) as the owner's integration step, not change-caused; the integrated-tree reproduction above is the row's stated outcome and it reproduces. No other advisory survives: the done· flip is fixed (O18/D4 pin), the #449 changeset carries an explicit supersession note (F9), the --no-state declaration is folded into PLAN.md's state paragraph (F10; recomputed estimate 2183 ≤ 2200).
+Sibling sweep: clean — the only batch-plan@1 mentions outside history are the O17 scanner's own strings (scripts/batch-scheduler.test.mjs:960,978,979) and the intentional wrong-value refusal vector (batch-plan.test.mjs:234), both recognised by mutation; no surviving D3-clause, state-shape or manifest narrations.
+Completeness: S1–S6 resolved; obligations O1–O18 all `verified` with validators re-run green here (script suite 43 pass / 0 fail; schema package 776 pass / 0 fail; normative-drift 21 pass; context budgets PASS 29 skills; local-gate PASS on the integrated tree). The head-alone gate red is the owner's pending integration, not an open obligation.
+Spot check: bun scripts/check-skill-context.mjs --routes --budgets → match (exit 0 · PASS 29 skills · 14 routes; batch-scheduler/PLAN.md estimate recomputed 2183 = F12's recorded figure).
+Verdict: VERIFIED
+```
+
+Annex — commands re-run and observed (2026-11-12):
+
+| command | observed |
+|---|---|
+| `bun test scripts/batch-scheduler.test.mjs` | exit 0 · 43 pass / 0 fail |
+| `cd packages/agentic-workflow-schema && bun run test` | exit 0 · 776 pass / 0 fail |
+| `bun test scripts/normative-drift.test.mjs` | exit 0 · 21 pass |
+| `bun scripts/check-skill-context.mjs --routes --budgets` | exit 0 · PASS 29 skills · 14 routes |
+| integrated-tree gate (mktemp scratch clone, branch + origin/main `1a93c522`, `docs/generated/units.md` re-generated) | `bun scripts/local-gate.mjs --jobs 2` · exit 0 · PASS — 14 steps, 166s, 0 skipped |
+| red-first (mktemp `git archive 985faacb`, dist built in place) | 41 pass / 2 fail — only `T2: a roadmap status carrying its PR annotation (done · #999)` and `envelope: no owned surface keeps the superseded batch-plan@1 token` |
+| `PLAN.md` estimate recomputed | 2183 ≤ 2200 (= F12) |
+
+Disclosures: no commit, no push, no branch, no forge mutation; the receipt
+above is appended uncommitted — the owner's batch carries it. The live tree's
+`bun install` populated gitignored `node_modules` and the schema `dist/`
+(build output) so the declared validators could run in this fresh checkout.
+Mid-run observation: `docs/LOGS.md` carries an uncommitted session-close
+fragment dated 2026-11-09T11:42:03Z written outside this verification (the
+implementer session's close); left untouched. Scratch roots removed.
