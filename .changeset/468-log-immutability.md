@@ -15,7 +15,9 @@ a tracked fragment must carry the closed aggregator identity (committer
 `GITHUB_ACTOR=github-actions[bot]` in CI). Additions to the carrier stay legal
 for anyone — that door is the flow — and a working-tree half mirrors
 `session-close close` before any commit can carry a violation. The fragment
-writer refuses an explicit `--session` whose conversation already landed an
-entry: `JOURNAL REFUSAL — … already registered …`, no byte written; writes
-without `--session` are unchanged (the fallback slug is not a conversation
-identity).
+writer refuses a second entry of the same kind from an explicit `--session` whose
+conversation already landed one: `JOURNAL REFUSAL — … already registered …`, no
+byte written. One entry per conversation per kind — the auto-log's mechanical
+entry and `/log-session`'s narrative one belong to the same conversation and
+both land; writes without `--session`, and with `--session local`, are unchanged
+(`local` is a shared identity, not a conversation).
