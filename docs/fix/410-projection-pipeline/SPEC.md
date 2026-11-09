@@ -186,6 +186,15 @@ silently taken.
   measure instead of invoking it. Observed at the cut head. **Does not affect**
   this unit's behavior; a root option is the pi-guards phase's concern if it
   wants gate-level budgets on the staged copy.
+- **`scripts/log-immutability.test.mjs` is red at `main` (`6f5d5453`)**: the
+  suite landed on `main` without the `scripts/log-immutability.mjs` module it
+  imports — the implementation sits unmerged on `feat/468-log-immutability-guard`
+  (`9b873e03`). Reproduced in a pristine base checkout (`git archive 6f5d5453`),
+  so it is not this change's doing. **Affects** this unit's gate receipt only:
+  the root-suite step bails there, so the root suites were re-run without that
+  file (91/91 PASS, exit 0) and the scripted `local-gate` command as a whole
+does not exit 0 on `main` today for this reason. **Does not affect** this
+  unit's shipped behavior.
 
 ## Tasks
 
@@ -250,6 +259,55 @@ task list above; the deterministic routers still judge the document.
 - **L2** — 2026-11-08, the issue body and triage update as they were written
   (frozen request; see S2–S18 for the verbatim cells, cut from
   `gh issue view 410` at head `6f5d5453`).
+- **D1** — 2026-11-08, S16 (the issue's own "Open questions / risks" row): the
+  `bundle-skills.mjs` header contract "Nothing here edits skill prose" is
+  deliberately rewritten — the new contract states the manifest-driven
+  transform that edits the staged copy only, never the source tree. Recorded
+  in the header at `packages/pi-agentic-workflow/scripts/bundle-skills.mjs:1-13`.
+- **D2** — 2026-11-08, pointerize removed-bytes boundary pinned: a `pointerize`
+  binds the section body — everything after the heading line's newline, blank
+  separator included — and its replacement preserves the body's trailing
+  newline shape. `except` entries are child heading paths relative to the
+  removed section. Pinned by `test/projection.test.mjs` and the golden fixture.
+- **L3** — 2026-11-08, S8 reading recorded: "golden fixture runs against the
+  stripped copy too" is delivered as (a) the committed projection golden
+  fixture (toy source + manifest + expected stripped bytes, byte-compared —
+  O11) and (b) the repo's own `scripts/golden-fixture.test.mjs` suite passing
+  on the tree that carries the projection pipeline (G1). The empty manifest
+  makes the second a no-op delta today; the first real manifest entry re-drives
+  both without shape changes.
+- **E1** — 2026-11-08, `bun test packages/pi-agentic-workflow/test/projection.test.mjs`
+  · exit 1 at the red commit (`37112245`, module missing), exit 0 after P2 —
+  18 pass / 0 fail; `node --test` same file · 18 pass / 0 fail.
+- **E2** — 2026-11-08, `bun run --cwd packages/pi-agentic-workflow test` ·
+  exit 0 · 667 pass / 0 fail (post-parity).
+- **E3** — 2026-11-08, `bun run --cwd packages/pi-agentic-workflow test:node` ·
+  exit 0 · 667 pass / 0 fail (post-parity).
+- **E4** — 2026-11-08, differential check (§6 of the direct-application
+  workflow): `bundle-skills.mjs` run at base `6f5d5453` (in a scratch `git
+  archive` tree) and at this change — `diff -r` of the two staged bundles:
+  byte-identical (28 skills, 94 files, projected 0). Zero unasked deltas.
+- **E5** — 2026-11-08, `npm pack --dry-run --json` in `packages/pi-agentic-workflow`
+  · exit 0 · 185 packed files, zero matches for `projection-manifest` or the
+  projection script (O12).
+- **E6** — 2026-11-08, `rg -c 'Nothing here edits skill prose' packages/pi-agentic-workflow/scripts/bundle-skills.mjs`
+  · 0 matches (O8). `rg -c 'remark AST edit' docs/ROADMAP.md` · 0 matches (O13).
+- **E7** — 2026-11-08, `bun scripts/check-skill-context.mjs` · PASS (29 skills);
+  `--documents` · PASS (4 budgeted documents); `--routes` · PASS (14 routes);
+  `npx skills add . --list` · all skills discovered.
+- **P1** — 2026-11-08, red suite for the projection transform · commit `37112245`.
+- **P2** — 2026-11-08, projection module + bundle wiring + EMPTY manifest +
+  golden fixture · commit `9d672ab0`.
+- **P3** — 2026-11-08, parity suite redefined to declared projection · commit
+  `a852c180`.
+- **G1** — 2026-11-08, `node scripts/run-root-suite.mjs --bail <91 suites>
+  (every `scripts/*.test.mjs` except the pre-existing red `log-immutability`)
+  · exit 0 · 91/91 PASS (see Known pre-existing issues).
+- **G2** — 2026-11-08, `bun scripts/local-gate.mjs --skip-network` · workspace
+  install, schema build, crate suites (bun+node), version parity, docs
+  projection, journal carrier, schema/pi node-compat: all exit 0; the root-suite
+  step bails at the pre-existing `log-immutability` red only (G1 records the
+  91/91 exclusion run).
 
 ## Next
 

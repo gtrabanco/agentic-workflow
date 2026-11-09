@@ -5,8 +5,13 @@ method into [Pi](https://github.com/badlogic/pi-mono): the canonical skills, a
 friendly slash command for each of them, and optional per-command model routing
 that gives your session back afterwards.
 
-- **Canonical skills, unchanged.** The package ships the same `SKILL.md` files as
-  this repository, byte for byte — no Pi-specific fork to drift.
+- **Canonical skills, projected.** The package ships the same `SKILL.md` sources
+  as this repository — no Pi-specific fork to drift. A repo-internal manifest
+  (`projection-manifest.json`, committed but never packed) declares prose
+  sections the pi bundle drops or pointerizes because deterministic code
+  enforces them; every file no rule names stays byte-identical to its source,
+  and the parity suite recomputes the declared projection on every build
+  (issue [#410](https://github.com/gtrabanco/agentic-workflow/issues/410)).
 - **Friendly commands.** Type `/unit-lane <slug>`, not
   `/skill:unit-lane <slug>`.
 - **Routing you can forget about.** Nothing is configured by default: every
