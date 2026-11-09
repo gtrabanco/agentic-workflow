@@ -597,16 +597,28 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   the base clone's (E7). O18 is therefore recorded as verified **with the
   pre-existing environment red shown on the base tree**, never as a green gate.
 
+- **P7** — 2026-11-09, delivery: branch pushed (`16a67702`), the pull request
+  opened — [PR #486](https://github.com/gtrabanco/agentic-workflow/pull/486) (`Closes #443` in the body, the verification
+  table, the two pre-existing environment reds and the pre-push skip disclosed) —
+  and the index row settled `done · #486`. The push happened **after** a
+  worktree repair: the linked worktree's `HEAD` named a flattened duplicate ref
+  (`refs/heads/feat-443-doc-index`) instead of `refs/heads/feat/443-doc-index`, so
+  the first push shipped the empty branch; the fix was `git update-ref` on the
+  intended ref and `git symbolic-ref HEAD` (a fast-forward, nothing rewritten),
+  the flattened ref left in place as a safety copy. Backup of the seven commits
+  taken first (`aw443-doc-index.bundle` + per-commit patches + the head tree).
+
 ## Next
 
-The handoff to the owner (external verifier): the diff summary, the obligations
-ledger state, the verification block and every failed/skipped check. No PR is
-opened and nothing is merged by this unit.
+External verification of [PR #486](https://github.com/gtrabanco/agentic-workflow/pull/486),
+then its merge and the two post-merge steps: open/close the backfill run (O22,
+the owner's ~2.6M-token pass) and remove the `## Fixes` row after the merge.
 
 ## References
 
 - Issue [#443](https://github.com/gtrabanco/agentic-workflow/issues/443) — the
-  request; the triage comment of 2026-11-08 returned fix-now (M).
+  request; the triage comment of 2026-11-08 returned fix-now (M). Closed by
+  [PR #486](https://github.com/gtrabanco/agentic-workflow/pull/486).
 - `docs/features/65-doc-toolchain/` — the retrieval index this unit repairs
   (AC13/AC15/AC16/AC19 are the fixtures it holds the new default path to).
 - `docs/ROADMAP.md` — the `## Features` row 443 (now `carried by fix #443`) and
