@@ -37,6 +37,7 @@ import {
   PACKAGE_DIR,
   TRIGGER_PREFIXES,
 } from "./version-parity-gate.mjs";
+import { tempRoot } from "./temp-root.mjs";
 
 const PKG = "@gtrabanco/pi-agentic-workflow";
 const REPO_ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -515,7 +516,7 @@ test("content-all: nothing triggered anywhere passes", () => {
 });
 
 test("packageDirs derives every package under packages/ — a new package inherits the gate by existing", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "gate-dirs-"));
+  const root = tempRoot("gate-dirs-");
   fs.mkdirSync(path.join(root, "packages/with-manifest"), { recursive: true });
   fs.writeFileSync(path.join(root, "packages/with-manifest/package.json"), "{}\n");
   fs.mkdirSync(path.join(root, "packages/without-manifest"), { recursive: true });

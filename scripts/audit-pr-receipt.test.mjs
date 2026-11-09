@@ -28,6 +28,7 @@ import {
   newestAuditComment,
 } from "./audit-pr-gate.mjs";
 import { receiptStatus, renderReceiptBody } from "./review-receipt.mjs";
+import { tempRoot } from "./temp-root.mjs";
 
 /** The receipt body builder, by its historical name in this file. */
 const reviewBody = renderReceiptBody;
@@ -274,7 +275,7 @@ test("CLI hygiene: without --pr the draft flag is unobserved, so pr-ready fails 
 
 /** A throwaway git repo whose tree is clean, so only the draft flag blocks. */
 const makeRepo = ({ withRemote = true } = {}) => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "audit-pr-gate-hygiene-"));
+  const dir = tempRoot("audit-pr-gate-hygiene-");
   const repo = path.join(dir, "repo");
   fs.mkdirSync(repo);
   const git = (...args) => spawnSync("git", args, { cwd: repo, encoding: "utf8" });
