@@ -37,6 +37,20 @@ test("init writes a commented file and refuses to overwrite it", () => {
   }
 });
 
+test("init refuses to overwrite a present-but-broken file", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json");
+    writeFileSync(file, '{ "logSession": ');
+    const again = run(["init", "--project", project, "--global-dir", global]);
+    assert.equal(again.status, 2);
+    assert.equal(readFileSync(file, "utf8"), '{ "logSession": ', "the broken bytes are evidence, not scratch");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("get reads the effective default without a file", () => {
   const { root, global, project } = fixture();
   try {
