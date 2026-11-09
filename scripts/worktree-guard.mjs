@@ -183,17 +183,28 @@ function isCorrupted(full) {
   return fs.existsSync(full) && !fs.existsSync(path.join(full, ".git"));
 }
 
-/** The audit itself: one finding per leftover signature. */
+/** The main repository root behind the calling checkout (a linked worktree
+ *  resolves to the common one): the legal-home default and the relative
+ *  paths hang off it, never off the calling worktree. */
+function mainRepoRoot(repo) {
+  const common = (git(["rev-parse", "--path-format=absolute", "--git-common-dir"], repo).stdout ?? "").trim();
+  return common ? path.dirname(common) : repo;
+}
+
+/** The audit itself: one finding per leftover signature, plus report-only
+ *  lines for states that inform without blocking. */
 export function audit(repo, home) {
-  const entries = listWorktrees(repo);
+  const root = mainRepoRoot(repo);
+  const entries = listWorktrees(root);
   const primary = entries[0];
-  const legalHome = home ?? path.join(repo, ".git", "worktrees");
-  const base = baseRef(repo);
-  const gitDir = (git(["rev-parse", "--absolute-git-dir"], repo).stdout ?? "").trim();
-  const inProgress = gitDir ? operationInProgress(repo, gitDir) : false;
+  const legalHome = home ?? path.join(root, ".git", "worktrees");
+  const base = baseRef(root);
+  const gitDir = (git(["rev-parse", "--absolute-git-dir"], root).stdout ?? "").trim();
+  const inProgress = gitDir ? operationInProgress(root, gitDir) : false;
   const findings = [];
+  const reports = [];
   for (const entry of entries.slice(1)) {
-    const rel = path.relative(repo, entry.path) || entry.path;
+    const rel = path.relative(root, entry.path) || entry.path;
     const dirExists = fs.existsSync(entry.path);
     if (entry.prunable || !dirExists) {
       // Git reports a vanished directory and a severed .git link with the
@@ -221,8 +232,11 @@ export function audit(repo, home) {
       });
       continue;
     }
+    // Report-only: the legal home is a convention, and the owner may keep
+    // live unit worktrees elsewhere — what blocks is a leftover signature,
+    // never a location the owner chose.
     if (!entry.path.startsWith(legalHome + path.sep) && entry.path !== legalHome) {
-      findings.push({ path: rel, code: "OUTSIDE", detail: `worktrees live under ${legalHome}` });
+      reports.push({ path: rel, code: "OUTSIDE", detail: `outside the legal home ${legalHome}` });
       continue;
     }
     if (entry.detached) {
@@ -242,12 +256,13 @@ export function audit(repo, home) {
       });
     }
   }
-  return { entries, primary, findings };
+  return { entries, primary, root, findings, reports };
 }
 
 function main(argv) {
   const { repo, home, prune, json } = parseArgs(argv);
   const first = audit(repo, home);
+  const root = first.root;
   let repaired = [];
   let pruned = [];
   let skipped = [];
@@ -257,8 +272,8 @@ function main(argv) {
     for (const finding of first.findings) {
       if (finding.code === "PRUNABLE") continue; // handled by the one `git worktree prune` below
       if (finding.code === "CORRUPTED") {
-        const full = path.join(repo, finding.path);
-        git(["worktree", "repair", full], repo);
+        const full = path.join(root, finding.path);
+        git(["worktree", "repair", full], root);
         if (isCorrupted(full)) {
           skipped.push({ ...finding, detail: `${finding.detail} — repair failed; recover manually` });
         } else {
@@ -270,8 +285,8 @@ function main(argv) {
         skipped.push(finding);
         continue;
       }
-      const full = path.join(repo, finding.path);
-      const result = git(["worktree", "remove", full], repo);
+      const full = path.join(root, finding.path);
+      const result = git(["worktree", "remove", full], root);
       if (result.status !== 0) {
         skipped.push({ ...finding, detail: `${finding.detail} — remove failed: ${(result.stderr ?? "").trim().split("\n")[0]}` });
         continue;
@@ -280,18 +295,20 @@ function main(argv) {
       if (finding.branch) suggestions.push(`SUGGEST git branch -D ${finding.branch}`);
     }
     if (first.findings.some((finding) => finding.code === "PRUNABLE")) {
-      git(["worktree", "prune"], repo);
+      git(["worktree", "prune"], root);
     }
   }
 
   const remaining = prune ? audit(repo, home).findings : first.findings;
+  const reports = prune ? audit(repo, home).reports : first.reports;
   const verdict = remaining.length === 0 ? "PASS" : "FAIL";
   if (json) {
     console.log(
       JSON.stringify({
         worktrees: first.entries.length,
-        primary: path.relative(repo, first.primary.path) || first.primary.path,
+        primary: path.relative(root, first.primary.path) || first.primary.path,
         findings: remaining.map(({ path: findingPath, code, detail }) => ({ path: findingPath, code, detail })),
+        reports: reports.map(({ path: reportPath, code, detail }) => ({ path: reportPath, code, detail })),
         repaired: repaired.map((finding) => finding.path),
         pruned: pruned.map((finding) => finding.path),
         skipped: skipped.map((finding) => finding.path),
@@ -299,11 +316,12 @@ function main(argv) {
       }),
     );
   } else {
-    console.log(`worktree-guard — ${first.entries.length} worktree(s) · primary ${path.relative(repo, first.primary.path) || first.primary.path}`);
+    console.log(`worktree-guard — ${first.entries.length} worktree(s) · primary ${path.relative(root, first.primary.path) || first.primary.path}`);
     for (const finding of first.findings) {
       console.log(`FINDING ${finding.path} — ${finding.code}: ${finding.detail}`);
     }
     for (const finding of repaired) console.log(`REPAIRED ${finding.path}`);
+    for (const report of reports) console.log(`REPORT ${report.path} — ${report.code}: ${report.detail}`);
     for (const finding of pruned) console.log(`PRUNED ${finding.path}`);
     for (const finding of skipped) console.log(`SKIP ${finding.path} — dirty; remove manually`);
     for (const line of suggestions) console.log(line);
