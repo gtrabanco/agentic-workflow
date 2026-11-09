@@ -241,7 +241,10 @@ export function checkUnitDoc({ nn, slug, kind, docText, indexText }) {
 
 /**
  * annotate(nn, note) — appends a note to the description cell of the row
- * identified by nn.  The note is appended with a newline and "—" prefix.
+ * identified by nn.  The note is appended on the same physical line, with a
+ * space and "—" prefix: a newline inside a cell terminates the row, and a
+ * renderer turns its tail into a malformed extra row (the 2026-11-09 unit-227
+ * damage to this repository's index).
  *
  * Returns a receipt.  Throws if the row is not found.
  */
@@ -260,7 +263,8 @@ export function annotate(table, nn, note) {
 
   // Parse the existing row and append to the description (5th column, 0-indexed: 4)
   const parts = lines[existingRowIdx].split("|").map((p) => p.trim());
-  parts[5] = (parts[5] || "").trim() + "\n— " + note.trim();
+  const annotation = `— ${note.trim()}`;
+  parts[5] = [(parts[5] || "").trim(), annotation].filter(Boolean).join(" ");
   const newRow = parts.map((p, i) => (i === 0 || i === parts.length - 1 ? p : " " + p + " ")).join("|");
 
   lines[existingRowIdx] = newRow;
