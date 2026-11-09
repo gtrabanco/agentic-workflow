@@ -64,6 +64,9 @@ export interface ExtensionDeps<M extends ModelRef = ModelRef> {
   loadConfig?: (ctx: InvocationContext<M>) => LoadedConfig;
   /** P4: profile demotion state store (optional — defaults to file-backed). */
   profileState?: import("../routing/state.js").ProfileStateStore;
+  /** Issue #174: the state-flow episode lifecycle (optional — absent on a host
+   *  without the wiring, and injectable in tests). */
+  stateFlow?: import("../stateflow/lifecycle.js").StateFlowLifecycle;
   /**
    * Feature 67 D5/AC9: the Serena readiness nudge. Consulted at the first
    * workflow-command dispatch, so a session that never starts through
@@ -125,7 +128,7 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
   ]);
   // P4: build the profile state store when not provided.
   const profileState = deps.profileState ?? createProfileStateStore({ path: stateFilePath(agentDir) });
-  const router = createRouter<M>({ surface, loadConfig: read, hint, settingsCommand: SETTINGS_COMMAND, knownCommands, profileState });
+  const router = createRouter<M>({ surface, loadConfig: read, hint, settingsCommand: SETTINGS_COMMAND, knownCommands, profileState, stateFlow: deps.stateFlow });
 
   // Said once per state, not once per command: the gate latches in memory for
   // this session and in the package's state file for later ones.

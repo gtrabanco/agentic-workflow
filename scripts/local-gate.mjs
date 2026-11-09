@@ -244,6 +244,18 @@ export const STEPS = [
     mirrors: "no former remote job — the carrier lint rides the pre-push offline subset and CI",
   },
   {
+    id: "log-immutability",
+    title: "Log immutability: the journal is aggregator-only over the push range (offline)",
+    cwd: ".",
+    argv: [NODE, "scripts/log-immutability.mjs"],
+    // Not a `tests:` step on purpose, same reason as journal-carrier-check: a
+    // prose-only push is exactly the push that can hand-append to docs/LOGS.md
+    // or delete a pending fragment (issue #468). The script resolves its own
+    // base (upstream, then origin/main, then HEAD) and writes nothing.
+    tests: false,
+    mirrors: "no former remote job — the journal write-path gate rides the pre-push offline subset and CI (issue #468)",
+  },
+  {
     id: "temp-hygiene",
     title: "Temp-dir hygiene floor (offline)",
     cwd: ".",
@@ -332,6 +344,7 @@ export const DEPS = {
   "version-parity-content": [],
   "docs-generated-projection": [],
   "journal-carrier-check": ["workspace-install"],
+  "log-immutability": [],
   "temp-hygiene": [],
   "tmp-gc": [],
   "worktree-guard": [],
