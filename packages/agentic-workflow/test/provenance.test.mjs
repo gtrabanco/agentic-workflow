@@ -142,8 +142,8 @@ const cleanup = (dir) => rmSync(dir, { recursive: true, force: true });
 test("the crate mirrors the published contract and its own manifest versions", () => {
   assert.equal(DOC_PROVENANCE_CONTRACT_ID, "doc-provenance@1");
   assert.deepEqual(Object.keys(DOC_GRAMMAR_VERSIONS).sort(), [...DOC_GRAMMAR_FAMILIES].sort());
-  assert.ok(DOC_PROVENANCE_FORMATS.includes("unit-doc-spec-by-reference@1"));
-  assert.ok(DOC_PROVENANCE_FORMATS.includes("unit-doc-legacy@1"));
+  assert.ok(DOC_PROVENANCE_FORMATS.includes("unit-doc@2"));
+  assert.ok(DOC_PROVENANCE_FORMATS.includes("unit-doc@1"));
   const versions = toolVersions();
   assert.equal(versions.tool, "agentic-workflow");
   assert.equal(versions.tool_version, PACKAGE.version, "the writer reads its own manifest, never a literal");
@@ -184,7 +184,7 @@ test("a re-cut restamps in place, keeping the document's own body", () => {
     contract: "doc-provenance@1",
     written_by: "agentic-workflow@4.9.0",
     schema: "@gtrabanco/agentic-workflow-schema@4.9.0",
-    format: "unit-doc-spec-by-reference@1",
+    format: "unit-doc@2",
     grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 1 },
   }));
   const restamped = stampDocument(doc, toolVersions());
@@ -213,21 +213,21 @@ test("an absent stamp degrades and derives the format from the carrier", () => {
   const reading = readProvenance(SPEC_REF_DOC());
   assert.equal(reading.verdict, "degrade");
   assert.equal(reading.reason, "absent-stamp");
-  assert.equal(reading.derived_format, "unit-doc-spec-by-reference@1");
+  assert.equal(reading.derived_format, "unit-doc@2");
   assert.equal(reading.stamp, null);
 
   const legacy = readProvenance(LEGACY_DOC());
   assert.equal(legacy.verdict, "degrade");
-  assert.equal(legacy.derived_format, "unit-doc-legacy@1");
+  assert.equal(legacy.derived_format, "unit-doc@1");
 });
 
 test("an older document degrades inside the window and refuses outside it", () => {
-  const reader = { ...CURRENT_READER, format: "unit-doc-spec-by-reference@2" };
+  const reader = { ...CURRENT_READER, format: "unit-doc@3" };
   const doc = SPEC_REF_DOC(withStamp({
     contract: "doc-provenance@1",
     written_by: "agentic-workflow@4.10.0",
     schema: "@gtrabanco/agentic-workflow-schema@4.10.0",
-    format: "unit-doc-spec-by-reference@1",
+    format: "unit-doc@2",
     grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 1 },
   }));
   assert.equal(readProvenance(doc, reader).reason, "format-older-compatible");
@@ -237,7 +237,7 @@ test("an older document degrades inside the window and refuses outside it", () =
     contract: "doc-provenance@1",
     written_by: "agentic-workflow@9.0.0",
     schema: "@gtrabanco/agentic-workflow-schema@9.0.0",
-    format: "unit-doc-spec-by-reference@2",
+    format: "unit-doc@3",
     grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 1 },
   })));
   assert.equal(newer.verdict, "refuse");
@@ -249,7 +249,7 @@ test("verify refuses a declared format that disagrees with the carrier", () => {
     contract: "doc-provenance@1",
     written_by: `agentic-workflow@${PACKAGE.version}`,
     schema: `@gtrabanco/agentic-workflow-schema@${PACKAGE.version}`,
-    format: "unit-doc-spec-by-reference@1",
+    format: "unit-doc@2",
     grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 1 },
   }));
   const result = verifyUnitDoc({ text: doc, path: "docs/features/462-example/SPEC.md" });
@@ -262,7 +262,7 @@ test("verify refuses a declaration that omits a grammar family the carrier publi
     contract: "doc-provenance@1",
     written_by: `agentic-workflow@${PACKAGE.version}`,
     schema: `@gtrabanco/agentic-workflow-schema@${PACKAGE.version}`,
-    format: "unit-doc-spec-by-reference@1",
+    format: "unit-doc@2",
     grammars: { "obligations": 1, "unit-doc": 1 },
   }));
   const codes = verifyUnitDoc({ text: doc, path: "docs/features/462-example/SPEC.md" }).violations.map((v) => v.code);
@@ -284,7 +284,7 @@ test("verify refuses an unpublished format and a newer-than-reader generation", 
     contract: "doc-provenance@1",
     written_by: `agentic-workflow@${PACKAGE.version}`,
     schema: `@gtrabanco/agentic-workflow-schema@${PACKAGE.version}`,
-    format: "unit-doc-spec-by-reference@2",
+    format: "unit-doc@3",
     grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 1 },
   }));
   const codesB = verifyUnitDoc({ text: newer, path: "docs/features/462-example/SPEC.md" }).violations.map((v) => v.code);
@@ -294,7 +294,7 @@ test("verify refuses an unpublished format and a newer-than-reader generation", 
     contract: "doc-provenance@1",
     written_by: `agentic-workflow@${PACKAGE.version}`,
     schema: `@gtrabanco/agentic-workflow-schema@${PACKAGE.version}`,
-    format: "unit-doc-spec-by-reference@1",
+    format: "unit-doc@2",
     grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 2 },
   }));
   const codesC = verifyUnitDoc({ text: newerGrammar, path: "docs/features/462-example/SPEC.md" }).violations.map((v) => v.code);
