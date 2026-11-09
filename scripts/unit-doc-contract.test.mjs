@@ -419,8 +419,8 @@ test("#462 the crate's mirror equals the schema package's published vocabulary",
   assert.deepEqual({ ...provenance.DOC_GRAMMAR_VERSIONS }, schemaGrammarVersions(),
     "the published generations are the schema package's, never the crate's own");
   for (const family of schemaQuotedList("DOC_GRAMMAR_FAMILIES")) {
-    assert.ok(Array.isArray(provenance.DOC_FORMAT_GRAMMARS["unit-doc-spec-by-reference@1"])
-      && provenance.DOC_FORMAT_GRAMMARS["unit-doc-spec-by-reference@1"].includes(family),
+    assert.ok(Array.isArray(provenance.DOC_FORMAT_GRAMMARS["unit-doc@2"])
+      && provenance.DOC_FORMAT_GRAMMARS["unit-doc@2"].includes(family),
       `the re-cut carrier publishes every family it carries (${family})`);
   }
 });
