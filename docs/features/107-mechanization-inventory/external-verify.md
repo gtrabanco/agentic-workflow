@@ -41,5 +41,28 @@ Receipt note: this block was written by the external-verify session into this fi
 only (no commit, no push, no forge mutation; the two mutation-capable surfaces the
 change touches — `log-immutability.mjs`, the roadmap emitter — were not executed
 against the live tree by the verifier; `log-immutability` ran in its check-only
-mode). Left uncommitted for the implementer/owner to carry with the B1/B2
-corrections.
+mode). Carried as commit `19391ef4` (`chore(review): external verification`), so
+the verdict is bound to head `bb00d341` and this file is the unit's committed
+evidence carrier.
+
+## Correction recheck — 2026-11-09 (delta, blockers only)
+
+Batch: `fix(107)` — the two blockers above, nothing else.
+
+- **B1 — closed.** `SPEC.md`'s `### Obligations` table no longer carries the
+  stray fragment; the reproducer (`awk` over the table for rows that are not
+  `| O<n> |`) reports 0. History preserved: the deleted line was a truncated copy
+  of `O14`'s last cell, added by `77db19e8`.
+- **B2 — closed.** `AC7`/`O6`'s validator is anchored and names S16's four
+  authorized paths exactly (`0` now instead of `4`); the negative control still
+  reports a path outside the carve, so the check still fails closed. `O13`'s
+  quoted count now matches `G1` (`80 pass / 16 fail`).
+- Re-ran the touched rows' validators only: `AC7`/`O6` → `0`, `O13` → quoted
+  count equals `G1`, `bun scripts/docs-generate.mjs --check` → PASS,
+  `bun scripts/roadmap-settle.mjs` → PASS (violations 0),
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify` → `VERIFY PASS`,
+  `bun scripts/phase-lint.mjs` → PASS, `bun scripts/log-immutability.mjs --base
+  main` → 0 violations.
+
+Verdict after the batch: both blockers closed, no new finding carried by the
+batch. The final verdict stays with the external verifier.

@@ -184,8 +184,8 @@ One observable criterion per `S#`; each names the check that proves it.
 exits 0.
 - **AC6 (S5)** — English-only artifacts:
   `rg -c '[\x{e1}\x{e9}\x{ed}\x{f3}\x{fa}\x{f1}]' docs/features/107-mechanization-inventory/SPEC.md docs/features/107-mechanization-inventory/INVENTORY.md` matches 0; owner review before merge — `manual:` the owner's verdict on the handoff.
-- **AC7 (S6)** — classification only:
-  `git diff --name-only main -- | rg -v '^(docs/features/107-mechanization-inventory/|docs/ROADMAP.md|docs/LOGS.md|.agentic-workflow/journal/|docs/generated/)' | wc -l` matches 0.
+- **AC7 (S6)** — classification only, with S16's two authorized repairs excluded:
+  `git diff --name-only main -- | rg -v '^(docs/features/107-mechanization-inventory/.*|docs/ROADMAP\.md|docs/LOGS\.md|\.agentic-workflow/journal/.*|docs/generated/.*|\.changeset/408-mechanization-inventory\.md|scripts/log-immutability\.mjs|scripts/log-immutability\.test\.mjs|skills/audit-docs/SKILL\.md)$' | wc -l` matches 0.
 - **AC8 (S7)** — every row carries a one-line reason (no empty final cell):
   `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*\|  \|$' docs/features/107-mechanization-inventory/INVENTORY.md` matches 0.
 - **AC9 (S8)** — every row's `duplicate-of-code` cell and its carrier cell agree:
@@ -280,16 +280,15 @@ exits 0.
 | O3 | S3 | Each row carries frequency, stability, enforcement value and a computed score, and the priority table ranks by it. | P2 | P2 | author (inline) | `rg -c '^\| [0-9]+ \| [A-Z]{2}[0-9]{2} \| .* \| [0-9] \| [0-9] \| [0-9] \| [0-9]+ \|' docs/features/107-mechanization-inventory/INVENTORY.md` matches 253 | §4 ranking plus the scoring command in §7 | verified |
 | O4 | S4 | Every skill's section map carries heading paths and one-line roles whose counts equal the file's headings. | P2 | P2 | author (inline) | the §7 section-count command exits 0 | the command and its output in §7 | verified |
 | O5 | S5 | The artifacts are English-only and the owner reviews them before merge. | P1 | P1 | author (inline) | `rg -c '[\x{e1}\x{e9}\x{ed}\x{f3}\x{fa}\x{f1}]' docs/features/107-mechanization-inventory/SPEC.md docs/features/107-mechanization-inventory/INVENTORY.md` matches 0 | the count plus the owner's verdict in the handoff | verified |
-| O6 | S6 | No implementation, manifest entry or skill-prose edit lands with this unit. | P5 | P5 | author (inline) | `git diff --name-only main -- \| rg -v '^(docs/features/107-mechanization-inventory/\|docs/ROADMAP.md\|docs/LOGS.md\|.agentic-workflow/journal/\|docs/generated/)' \| wc -l` matches 0 | the path list in the log | verified |
+| O6 | S6 | No implementation, manifest entry or skill-prose edit lands with this unit beyond the two repairs S16 authorizes. | P5 | P5 | author (inline) | `git diff --name-only main -- \| rg -v '^(docs/features/107-mechanization-inventory/.*\|docs/ROADMAP\.md\|docs/LOGS\.md\|\.agentic-workflow/journal/.*\|docs/generated/.*\|\.changeset/408-mechanization-inventory\.md\|scripts/log-immutability\.mjs\|scripts/log-immutability\.test\.mjs\|skills/audit-docs/SKILL\.md)$' \| wc -l` matches 0 | the path list in the log | verified |
 | O7 | S7 | Every row carries a one-line reason; no row is left unexplained. | P2 | P2 | author (inline) | `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*\|  \|$' docs/features/107-mechanization-inventory/INVENTORY.md` matches 0 | the count | verified |
 | O8 | S8 | Every row naming an existing runner-crate command or script carries its `duplicate-of-code` flag. | P2 | P2 | author (inline) | `awk -F'\|' '/^\| [A-Z]{2}[0-9]{2} / { gsub(/ /,"",$6); gsub(/ /,"",$7); if (($6=="no") != ($7=="none")) print }' docs/features/107-mechanization-inventory/INVENTORY.md \| wc -l` matches 0 | the count plus the residue table §5 | verified |
 | O9 | S9 | The docs checks pass and roadmap row 107 links the inventory doc. | P3 | P3 | author (inline) | `bun scripts/docs-generate.mjs --check` exits 0; `bun scripts/roadmap-settle.mjs` exits 0; `rg -c 'INVENTORY.md' docs/ROADMAP.md` matches 1 | both gate outputs plus the row | verified |
 | O10 | S10 | No dependency is declared and the pilot feed is recorded. | P1 | P1 | author (inline) | `rg -c 'Feeds the pilot issue' docs/features/107-mechanization-inventory/SPEC.md` matches 4 | four occurrences: the requirement quote, the Impact line and the References line | verified |
 | O11 | S11 | Every multi-step procedure with one judgment branch is split into its deterministic sub-steps plus a row naming the branch. | P2 | P2 | author (inline) | `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*mixed' docs/features/107-mechanization-inventory/INVENTORY.md` matches 17, and every such row's reason contains `branch:` | §2 mixed count and the rows | verified |
 | O12 | S12 | No `review-change`/`audit-pr`/fold run touches this unit. | P5 | P5 | author (inline) | `rg -c '^- \*\*R[0-9]' docs/features/107-mechanization-inventory/SPEC.md` matches 0 | the count | verified |
-| O13 | S13 | The deterministic gate runs at the delivered head and every red it reports is reproduced at the base. | P5 | P5 | author (inline) | `bun scripts/docs-generate.mjs --check` exits 0; `G1` records the root suite's 62 pass / 16 fail with the same 16 reproduced at `1fa39fe1` | the `G1` line with both runs | verified |
+| O13 | S13 | The deterministic gate runs at the delivered head and every red it reports is reproduced at the base. | P5 | P5 | author (inline) | `bun scripts/docs-generate.mjs --check` exits 0; `G1` records the root suite's 80 pass / 16 fail with the same 16 reproduced at `1fa39fe1` | the `G1` line with both runs | verified |
 | O14 | S14 | The session entry reaches the journal itself before the handoff. | P4 | P4 | author (inline) | `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` matches 1 | the appended block | verified |
- docs/LOGS.md` matches 1 | the appended block | verified |
 | O16 | S16 | The aggregator's own output passes the gate that judges it (D1), pinned red-first. | P6 | P6 | author (inline) | `bun scripts/log-immutability.mjs --base main` exits 0; its suite reports 19 pass / 0 fail | `E11`/`G3` lines and the two commits (test red, fix green) | verified |
 | O17 | S16 | `audit-docs` check 13 reads as one grammatical, current check. | P7 | P7 | author (inline) | `bun scripts/skill-lint.mjs --skill audit-docs` exits 0 and `bun scripts/lint-changeset.mjs` exits 0 | `E12` line | verified |
 | O18 | S16 | The unit is opened as a PR against `main`. | P8 | P8 | author (inline) | `gh pr view --json url` prints a URL | the URL in `## References` | verified |
@@ -394,6 +393,30 @@ None — no review pass ran (S12).
 - **P7** — 2026-11-09, `audit-docs` check 13 repaired with its changeset;
   `skill-lint`, the context budgets, the changeset lint and the version-parity
   gate all green.
+- **L3** — 2026-11-09, the external verifier's verdict (`external-verify.md`, two
+  blockers), and the correction request, verbatim:
+  ```
+  Apply to this repository: fix the findings, just relevant, make sure dont break
+  other thing when fixing, if you do fix that and make a loop until no issue is
+  report due a finding report
+  ```
+- **D5** — 2026-11-09, the verifier's B1 and B2 repaired. **B1**: the stray
+  fragment at the end of this file's `### Obligations` table (a truncated copy of
+  O14's last cell, introduced by `77db19e8`) is deleted. **B2**: the S6 validator
+  in `AC7`/`O6` had stopped reproducing — it reported 4 paths, because S16's two
+  authorized repairs (`.changeset/408-mechanization-inventory.md`,
+  `scripts/log-immutability.mjs` + its suite, `skills/audit-docs/SKILL.md`) fall
+  outside the S6-era carve. The pattern is now anchored and names those four
+  paths exactly rather than a directory prefix, so a new file under a carved
+  prefix is still caught and the negative control still fails closed. `O13`
+  quoted `62 pass / 16 fail` where `G1` records `96 suites: 80 pass, 16 fail`;
+  corrected to `80`.
+- **E14** — 2026-11-09, the three reproducers re-run at the corrected head:
+  stray rows in the `### Obligations` table → 0 (header row excluded); the `AC7`
+  command → `0`, with the negative control still listing an uncarved path
+  (`scripts/roadmap-settle.mjs`) while the carved set passes;
+  `root suite's 80 pass / 16 fail` matches `G1`'s `80 pass, 16 fail`.
+
 ## Next
 
 The owner's verdict on the handoff. If the classification stands, promote the
