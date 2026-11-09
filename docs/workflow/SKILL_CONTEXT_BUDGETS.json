@@ -59,12 +59,13 @@
       },
       "docs/workflow/GATE_INVENTORY.md": {
         "linesMax": 161,
-        "estimateMax": 4975,
+        "estimateMax": 5542,
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 58,
+        "machineLines": 59,
         "sources": {
+          "issue #468 (log-immutability, 2026-11-08)": "the inventory gains one row, `log-immutability`: the push-level write-path gate (byte-prefix appends only, one grammar owner, one writer identity over base..HEAD), citing its suite scripts/log-immutability.test.mjs. The machine region moves 58 -> 59 lines and the measured estimate is 5,038, over the 4,975 ceiling — re-based to ceil(5038 x 1.10) = 5,542; lines stay inside 161 (measured at the change with `bun scripts/check-skill-context.mjs --documents`).",
           "issue #452 (journal carrier check, 2026-11-08)": "the inventory gains one row, `journal-carrier-check`: the local-gate step that runs `journal aggregate --check` in the offline pre-push subset, claiming `journal-fragment-grammar` and `journal-write-grammar`. The machine region moves 57 -> 58 lines; lines and estimate stay inside their ceilings (measured at the change with `bun scripts/check-skill-context.mjs --documents`).",
           "issue #359 (unit 96-prose-gate-inventory)": "the carrier table is a machine region a gate parses, so it is counted separately from the prose that explains it. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 146 lines / 4,522 est / 54 machine-region lines; ceilings ceil(146 x 1.10) = 161 and ceil(4522 x 1.10) = 4,975, and `machineLines` is pinned exactly because the table is the contract `scripts/prose-gate-inventory.mjs` reads.",
           "issue #420 (unit 420-docs-generated-merge-driver)": "the inventory gains one row, `docs-projection-current`, binding the projection staleness gate this unit's local-gate step runs (`scripts/docs-generate.test.mjs` carries the token). The machine region moves 54 -> 55 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 147 lines / 4,575 est, inside the unchanged ceilings 161 / 4,975, so only `machineLines` is re-pinned.",

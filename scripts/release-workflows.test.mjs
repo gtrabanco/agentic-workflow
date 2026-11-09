@@ -341,6 +341,7 @@ test("every former remote check survives as a step of the local gate", () => {
     "version-parity-content",
     "docs-generated-projection",
     "journal-carrier-check",
+    "log-immutability",
     "schema-node-compat",
     "pi-node-compat",
     "pi-compat-guard",
