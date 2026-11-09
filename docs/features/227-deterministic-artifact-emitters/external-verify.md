@@ -120,3 +120,50 @@ the owner. What the next run should re-verify instead of re-deriving:
   git-dir files are the repo's worktree layout.
 - One red the batch itself caused and fixed: `scripts/index-document.test.mjs`
   O8 refused the literal index path in the new comment (`E13`).
+
+## 2026-11-09 — delta verdict (correction batch re-verified)
+
+EXTERNAL VERIFY — base: e59b7717 (last receipt's head; delta base) · head: 2344d87d
+Blockers: 0 — both blockers of the 2026-11-09 NEEDS-DECISION receipt re-verified repaired:
+  1. (was blocker 1) `packages/agentic-workflow/bin/agentic-workflow.mjs` `inventoryGateIds`
+     — reproducer inverted in `mktemp -d` scratch (`git archive` + `git init` copies of
+     e59b7717 and 2344d87d, SPEC minus its G lines, removed after): base → `cited-gate-unknown:
+     … model-memory-provenance` exit 2; head → `VERIFY PASS` exit 0. The header cell
+     `` `gate-id` `` stays refused at head (exit 2, as the fix specifies) and was equally
+     unpublished at base — no regression. The published doc
+     `docs/fix/432-model-memory-tier-0/SPEC.md` no longer names `cited-gate-unknown` (its
+     remaining refusals — obligations-open O6, two pruned-journal path citations — are the
+     historical drift E11 records, present at base). Stability: control doc without the
+     citation exits 0 at base and head; the fix only widens the published set, so no
+     previously passing doc can regress.
+  2. (was blocker 2) `docs/ROADMAP.md` row 53 — `rg -c "^— " docs/ROADMAP.md` → 0 matches;
+     GFM render (`gh api markdown`, header + rows 53/54) → 3 `<tr>`, no stray em-dash row,
+     the settle note inline in row 53's cell; producer fixed (`annotate` appends on the same
+     physical line, single-line case green in `test/edit.test.mjs` 19/0).
+Advisories: 2 —
+  1. `scripts/log-immutability.test.mjs` — still red in this worktree (the #468 red-first
+     pair this branch inherits from `f24b726f`; #469 cleared it on `main`) — pre-existing,
+     environmental, not in the delta diff.
+  2. this checkout — `node_modules` was absent (worktrees share none), so the declared
+     validators failed with `ERR_MODULE_NOT_FOUND` until `bun install --frozen-lockfile`
+     ran (wrote only gitignored `node_modules`; no tracked byte changed); the prior
+     receipt's green runs predate this checkout state — environmental.
+Sibling sweep: clean — no surface still asserts the old truths: `Roadmap.mjs`'s newline
+  join is gone (comment rewritten, `rg "\\n— " src/edit/Roadmap.mjs` → 0), the README row
+  documents the same-line semantics, the changeset carries the fix note, the old
+  markdown-pipe regex is gone from the bin, and the delta touches no other surface that
+  narrates the resolver or the writer.
+Completeness: S1–S2 resolved — obligations O1–O10 all verified, the two opened by the
+  correction batch re-run green here (O9: `bun test packages/agentic-workflow/test/verify.test.mjs`
+  → 21/0 and the 432 doc names no `cited-gate-unknown`; O10: `bun test
+  packages/agentic-workflow/test/edit.test.mjs` → 19/0 and both ROADMAP counts hold);
+  O3/O8 re-confirmed (`verify docs/fix/201-operator-approved-pass-routing/SPEC.md` exit 0;
+  `node scripts/version-parity-gate.mjs --content` → PASS); O6 re-confirmed
+  (`bun scripts/docs-generate.mjs --check` → PASS, 0 missing/stale/orphaned); O7
+  re-confirmed (PR #472 open). No open ids.
+Spot check: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify
+  docs/features/227-deterministic-artifact-emitters/SPEC.md` → match (reported E14 "exit 0 ·
+  VERIFY PASS, checks include cited-paths and cited-gates"; observed exit 0, `ok: true`,
+  checks `[sections, obligations-closure, receipt-marks, log-kinds, cited-paths,
+  cited-gates]`). Crate suite also re-run: 544 pass / 0 fail (28 files) — matches G5.
+Verdict: VERIFIED
