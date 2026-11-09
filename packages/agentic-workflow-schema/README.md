@@ -892,6 +892,53 @@ reading. Growing it is a schema-const change plus the inventory row in
 | --- | --- | --- |
 | `PASS_NAMES` | `review-code` · `review-security` · `review-verify` · `review-design` · `review-a11y` · `review-brand` · `review-perf` · `review-seo` · `verify` · `classify` · `debt` | The spawned review passes; `passes.default` is the config-layer escape for unlisted passes, never a member |
 
+## Machine gate receipts (issue #409)
+
+The project's verification gate writes one bounded document instead of a wall of
+conversation text, and the consumers (`review-verify`, `audit-pr`) read it rather
+than re-running the gate. The **content manifest is the validity criterion**: the
+HEAD sha under `provenance` records where the run happened and is never a test of
+whether the evidence still holds, so an unrelated commit cannot invalidate a
+receipt and a single mutated signed byte cannot leave it "valid". Freshness is a
+pure local hash comparison (`compareGateReceiptToCurrent`) — no gate re-run.
+
+```text
+gate-receipt@1
+field | presence | shape | meaning
+contract | required | const:agentic-workflow/gate-receipt | the contract identity this receipt carries
+version | required | 1 | the receipt grammar version
+schema | required | const:gate-receipt@1 | the schema token consumers switch on
+verdict | required | one receipt verdict | pass, fail or degraded — never inferred from a missing check
+degraded | required | array of degradation tokens, empty unless degraded | why the run could not be judged in its native shape
+provenance | required | head_sha, generated_at, gate_command | where and when the run happened; records about the run, never its validity
+manifest | required | digest plus path-ordered entries | the declared closure the claim covers; the digest is the validity criterion
+gate | required | exit_code, duration_ms, log_ref | the whole-run result and the full log's on-disk reference (never inlined)
+checks | required | array of check rows | one row per gate step, with only bounded failing fragments inlined
+```
+
+`manifest.entries` rows are `{path, sha256}` and `manifest.digest` is
+`digestGateManifest(entries)` — the canonical SHA-256 over the path-sorted rows —
+so the two cannot disagree. `duration_ms` and `generated_at` are provenance: they
+describe one run and freshness never compares them.
+
+### Public entries
+
+| Entry | Contract |
+| --- | --- |
+| `validateGateReceipt(value)` | `{ ok, receipt?, errors }` — the sole validation authority for `gate-receipt@1` |
+| `compareGateReceiptToCurrent(receipt, entries)` | `{ fresh: true }` or `{ fresh: false, reasonCode, changedPaths }` — the content-freshness predicate |
+| `digestGateManifest(entries)` / `digestGateReceipt(receipt)` | the manifest digest and the whole-document digest |
+| `GATE_MANIFEST_PATTERNS` | the declared, minimal closure a gate claim covers |
+| `GATE_RECEIPT_LIMITS` | the published bounds (64 checks, 8 fragments of 240 chars, 16,384 manifest entries, 1 MiB canonical bytes) |
+
+### Closed vocabularies
+
+| Export | Values | Meaning |
+| --- | --- | --- |
+| `GATE_RECEIPT_VERDICTS` | `pass` · `fail` · `degraded` | What the run's evidence says; `pass` requires every check to have passed |
+| `GATE_CHECK_STATUSES` | `passed` · `failed` · `skipped` | One gate step's terminal state |
+| `GATE_RECEIPT_FRESHNESS_CODES` | `current` · `missing` · `invalid` · `stale-manifest` | What a consumer routes on when it reads a receipt |
+
 ## Document provenance stamps (issue #462)
 
 Every machine-read document the workflow writes can declare its **provenance**:

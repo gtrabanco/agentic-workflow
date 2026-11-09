@@ -62,6 +62,9 @@ export const GATE_NAMES = Object.freeze([
   "tree-clean",
   "branch-pushed",
   "pr-ready",
+  // The gate receipt (issue #409): a missing or stale envelope is a blocker, so
+  // a caller that omits the name fails closed exactly like a failed gate.
+  "gate-receipt",
 ]);
 
 /** The hygiene subset, in report order. */
@@ -225,10 +228,34 @@ function aheadCount() {
   return result.status === 0 ? Number(result.stdout.trim()) || 0 : null;
 }
 
+/**
+ * The `gate-receipt` gate (issue #409): the merge gate reads the machine
+ * envelope instead of trusting a prose claim that the suite is green.
+ *
+ * The judgment is delegated to `scripts/gate-receipt.mjs verify --json` — one
+ * implementation of the freshness rule, never a second copy here. A subprocess
+ * that cannot run, prints no verdict, or answers anything but
+ * `status: current` + `verdict: pass` fails the gate closed: a missing or stale
+ * envelope is a blocker routed to a re-run, never an assumption.
+ */
+export function gateReceiptGate({ receipt = null, root = process.cwd() } = {}) {
+  // The runner is this checkout's own script; `--root` names the project whose
+  // receipt is being read, so a receipt is judged in the tree it signs.
+  const args = [path.join(path.dirname(fileURLToPath(import.meta.url)), "gate-receipt.mjs"), "verify", "--json", "--root", root];
+  if (receipt) args.push("--receipt", receipt);
+  const result = spawnSync(process.execPath, args, { encoding: "utf8" });
+  try {
+    const report = JSON.parse(result.stdout);
+    return report.status === "current" && report.verdict === "pass" ? "pass" : "fail";
+  } catch {
+    return "fail";
+  }
+}
+
 const USAGE = `usage: audit-pr-gate <command> [options]
 
   evaluate  (--pr <N> | --comments-json <file|->) [--head <40-hex>] [--gates-json <file>]
-            [-R owner/name] [--hygiene]
+            [-R owner/name] [--hygiene] [--receipt <path>]
             Print the merge verdict as JSON. Exit 0 MERGE-READY, 2 BLOCKED.
 
   hygiene   [--pr <N>] [-R owner/name] [--apply] [--gates-json <file>]
@@ -239,7 +266,7 @@ const USAGE = `usage: audit-pr-gate <command> [options]
             Post the merge-ready comment idempotently and confirm it landed.
 `;
 
-const VALUE_FLAGS = new Set(["--pr", "--repo", "--head", "--gates-json", "--comments-json"]);
+const VALUE_FLAGS = new Set(["--pr", "--repo", "--head", "--gates-json", "--comments-json", "--receipt"]);
 const BOOLEAN_FLAGS = new Set(["--hygiene", "--apply"]);
 const FLAG_ALIASES = { "-R": "--repo" };
 
@@ -325,6 +352,11 @@ function main() {
   if (opts.hygiene) {
     const h = hygieneFromState({ treePorcelain: run("git", ["status", "--porcelain"]).stdout, branchAhead: aheadCount(), isDraft: forge.isDraft ?? null });
     Object.assign(gates, h.gates);
+  }
+  // The receipt gate is read from the machine envelope unless the caller
+  // supplied it explicitly; an absent one fails closed like a failed gate.
+  if (!Object.hasOwn(gates, "gate-receipt")) {
+    gates["gate-receipt"] = gateReceiptGate({ receipt: opts.receipt ?? null });
   }
 
   if (command === "evaluate") {

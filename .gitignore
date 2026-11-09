@@ -35,6 +35,10 @@ packages/*/.serena/
 # The #429 invocation record: one per session, written by the `/log-session`
 # command handler, and as local as the start marker above.
 .pi/.session-*.log-session
+# The machine gate receipt and its full log (issue #409): a run record, local to
+# the checkout like the pre-execution gates below — never a committed artifact.
+.agentic-workflow/gate/
+
 # Local state the pre-execution sensor writes inside the worktree.
 # Keep narrow: this ignores only the gates directory, not the full .claude/ tree.
 .claude/pre-execution-gates/

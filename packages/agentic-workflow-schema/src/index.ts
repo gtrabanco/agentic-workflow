@@ -4222,3 +4222,34 @@ export type {
   DocProvenanceTool,
   DocProvenanceViolation,
 } from "./doc-provenance.js";
+
+// ── The machine gate receipt (issue #409) ──────────────────────────────────
+// The project verification gate's output as one bounded document: the content
+// manifest is the validity criterion and the HEAD sha is provenance only.
+export {
+  GATE_CHECK_STATUSES,
+  GATE_MANIFEST_PATTERNS,
+  GATE_RECEIPT_CONTRACT_ID,
+  GATE_RECEIPT_FRESHNESS_CODES,
+  GATE_RECEIPT_LIMITS,
+  GATE_RECEIPT_SCHEMA,
+  GATE_RECEIPT_VERDICTS,
+  GATE_RECEIPT_VERSION,
+  compareGateReceiptToCurrent,
+  digestGateManifest,
+  digestGateReceipt,
+  validateGateReceipt,
+} from "./gate-receipt.js";
+export type {
+  GateCheckReceipt,
+  GateCheckStatus,
+  GateManifestEntry,
+  GateReceiptFreshnessCode,
+  GateReceiptFreshnessResult,
+  GateReceiptManifest,
+  GateReceiptProvenance,
+  GateReceiptV1,
+  GateReceiptValidationResult,
+  GateReceiptVerdict,
+  GateRunReceipt,
+} from "./gate-receipt.js";
