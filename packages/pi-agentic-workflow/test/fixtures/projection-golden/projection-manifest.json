@@ -1,0 +1,27 @@
+{
+  "contract": "agentic-workflow/projection-manifest",
+  "version": 1,
+  "rules": [
+    {
+      "id": "golden-remove-guarded-prose",
+      "op": "remove",
+      "source": "skills/golden-skill/SKILL.md",
+      "selector": {
+        "path": ["Golden skill", "Guarded prose"]
+      },
+      "except": [["Kept example"]],
+      "enforcingCommand": "doc read",
+      "contentHash": "sha256:d4bd74b433a96b4d1d19ada82d34620c9ab4c5687948cda8761df6a1eaf2c41f"
+    },
+    {
+      "id": "golden-pointerize-checkpoint-policy",
+      "op": "pointerize",
+      "source": "skills/golden-skill/SKILL.md",
+      "selector": {
+        "path": ["Golden skill", "Checkpoint policy"]
+      },
+      "enforcingCommand": "doc read",
+      "contentHash": "sha256:180a39f7681be37edffa3bf7bb41650363dd362f5e276a176ad1da925bebd77c"
+    }
+  ]
+}

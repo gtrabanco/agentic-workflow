@@ -65,6 +65,9 @@ function piDouble(options = {}) {
     // records the registrations without exercising them.
     registerTool: (tool) => calls.registerTool.push(tool),
     getMcpServers: () => (options.mcpServers ?? []).map((name) => ({ name })),
+    // Issue #174: the State Flow backend is detected through the session's
+    // command list; the double scripts what the host could see.
+    getCommands: () => options.commands ?? [],
   };
   // Pi applies an operator's choice to the session and *then* emits the event, so
   // the doubles below do the same: mutate, then notify. Otherwise the router's
@@ -601,6 +604,107 @@ test("issue #274 through the adapter: the shipped entry registers the deferred w
         "agentic_workflow_snapshot_verify",
         "agentic_workflow_status",
       ],
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+// --- Issue #174: the State Flow episode lifecycle through the shipped adapter ---
+
+/** The command list a session with `@llblab/pi-state-flow` installed could see. */
+const STATE_FLOW_COMMANDS = [
+  { name: "state-flow-active", source: "extension" },
+  { name: "state-flow-passive", source: "extension" },
+  { name: "state-flow-off", source: "extension" },
+  { name: "state-flow-status", source: "extension" },
+];
+
+test("#174 through the adapter: an allowlisted enabled command opens and closes an episode with no manual commands", async () => {
+  const entry = await shippedEntry({ globalConfig: { stateFlow: { enabled: true } }, commands: STATE_FLOW_COMMANDS });
+  try {
+    await entry.registered.get("execute-phase").handler("P1", entry.context());
+    assert.deepEqual(
+      entry.calls.sendUserMessage.map(([content, opts]) => [content, opts?.expandPromptTemplates === true]),
+      [
+        ["/state-flow-active", true],
+        ["/skill:execute-phase P1", true],
+      ],
+      "the episode starts before the skill prompt, through extension-command dispatch",
+    );
+    // The command settles: the package-owned episode stops.
+    entry.handlers.get("agent_settled")(undefined, entry.context());
+    await flush();
+    assert.deepEqual(
+      entry.calls.sendUserMessage.map(([content]) => content),
+      ["/state-flow-active", "/skill:execute-phase P1", "/state-flow-off"],
+      "the episode stops on settle",
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("#174 through the adapter: the default config never sends a state-flow command", async () => {
+  const entry = await shippedEntry({ commands: STATE_FLOW_COMMANDS });
+  try {
+    await entry.registered.get("execute-phase").handler("P1", entry.context());
+    entry.handlers.get("agent_settled")(undefined, entry.context());
+    await flush();
+    assert.deepEqual(
+      entry.calls.sendUserMessage.map(([content]) => content),
+      ["/skill:execute-phase P1"],
+      "opt-in means off: absent stateFlow config sends no episode commands",
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("#174 through the adapter: a non-allowlisted command never touches state-flow", async () => {
+  const entry = await shippedEntry({ globalConfig: { stateFlow: { enabled: true } }, commands: STATE_FLOW_COMMANDS });
+  try {
+    await entry.registered.get("review-change").handler("", entry.context());
+    entry.handlers.get("agent_settled")(undefined, entry.context());
+    await flush();
+    assert.deepEqual(
+      entry.calls.sendUserMessage.map(([content]) => content),
+      ["/skill:review-change"],
+      "design/review surfaces stay history-preserving under the default allowlist",
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("#174 through the adapter: a missing backend with noop warns once and the command still runs", async () => {
+  const entry = await shippedEntry({ globalConfig: { stateFlow: { enabled: true } } });
+  try {
+    await entry.registered.get("execute-phase").handler("P1", entry.context());
+    await entry.registered.get("execute-phase").handler("P2", entry.context());
+    const warnings = entry.calls.notify.filter(([message, kind]) => kind === "warning" && /stateFlow|state-mode/u.test(message));
+    assert.equal(warnings.length, 1, `exactly one warning: ${JSON.stringify(entry.calls.notify)}`);
+    assert.match(warnings[0][0], /pi-state-flow/u);
+    assert.deepEqual(
+      entry.calls.sendUserMessage.map(([content]) => content),
+      ["/skill:execute-phase P1", "/skill:execute-phase P2"],
+      "the commands still run without state-mode",
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("#174 through the adapter: an aborted settle still clears the package-owned episode", async () => {
+  const entry = await shippedEntry({ globalConfig: { stateFlow: { enabled: true } }, commands: STATE_FLOW_COMMANDS });
+  try {
+    await entry.registered.get("fold-findings").handler("", entry.context());
+    entry.handlers.get("agent_settled")({ aborted: true }, entry.context());
+    await flush();
+    assert.deepEqual(
+      entry.calls.sendUserMessage.map(([content]) => content),
+      ["/state-flow-active", "/skill:fold-findings", "/state-flow-off"],
+      "an aborted run leaves no episode behind",
     );
   } finally {
     entry.cleanup();

@@ -98,9 +98,11 @@ the name, the timestamp and the bytes — a writer never composes a filename:
 fields (or `--facts` for the mechanical kind), and its own field contract is
 `journal-write-grammar@1` in the same owner file. `agentic-workflow journal
 name` stays the read-only answer for a caller that wants to inspect the name.
-One fragment per session per kind; an existing target is refused, never
-overwritten; the narrative rules (append-only, git-facts, refusal) hold at
-fragment level.
+One entry per conversation per kind: a second entry of the same kind from
+one session is refused (`already registered`, exit 2) — the auto-log's
+mechanical entry and this skill's narrative one are the same conversation's
+two kinds and both land. An existing target is refused, never overwritten;
+the narrative rules (append-only, git-facts, refusal) hold at fragment level.
 
 ## Where this slots into the pluggable journal contract
 
