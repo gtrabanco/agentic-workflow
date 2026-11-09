@@ -122,7 +122,10 @@ export function parseFragmentName(name) {
  * predicate is shared with the read side (`fragmentFault`) so the carrier's
  * lint and the writer can never disagree about what a conforming block is.
  *
- * Returns the closed fault code, or `null` for a conforming block.
+ * Returns the closed fault code, or `null` for a conforming block. Exported
+ * for the push-level write-path gate (`scripts/log-immutability.mjs`), which
+ * judges blocks already appended to the journal — the same shape predicate,
+ * never a second copy of the grammar.
  */
 export function contentFault(content) {
   if (typeof content !== "string" || content === "") return "empty";

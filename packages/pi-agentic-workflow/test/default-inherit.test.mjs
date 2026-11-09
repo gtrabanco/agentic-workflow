@@ -68,6 +68,15 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // the self-detected envelope (conservative defaults), so a fresh install
     // runs automatic, never compiled-in caps.
     subagents: {},
+    // Issue #174: the State Flow episode lifecycle is opt-in — off, the
+    // two-command allowlist, and a missing backend degrades to a warning.
+    stateFlow: {
+      enabled: false,
+      backend: "pi-state-flow",
+      commands: ["execute-phase", "fold-findings"],
+      stopOn: "command_settled",
+      onBackendMissing: "noop",
+    },
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });

@@ -5,8 +5,9 @@ import {
   DEFAULT_AUTO_LOG_SESSION,
   DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS,
   DEFAULT_PROFILE_FALLBACK,
+  DEFAULT_STATE_FLOW,
 } from "./types.js";
-import type { AdvanceConfig, AutoLogSessionConfig, AutoLogSessionPublisherFile, ConfigFile, EffectiveConfig, PassRouteFile, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile, SubagentsConfigFile } from "./types.js";
+import type { AdvanceConfig, AutoLogSessionConfig, AutoLogSessionPublisherFile, ConfigFile, EffectiveConfig, PassRouteFile, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile, StateFlowConfig, SubagentsConfigFile } from "./types.js";
 
 /**
  * Project-over-global merge (SPEC S5, S6).
@@ -221,6 +222,10 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     // project over global; a scope declaring none contributes nothing (the
     // resource layer owns the self-detected envelope from there).
     subagents: mergeSubagents(globalFile.subagents, projectFile.subagents),
+    // Issue #174 — scalars resolve field by field (project, then global, then
+    // the shipped floor); the allowlist resolves whole, so a project can
+    // narrow or widen the set in one declaration and can never half-merge it.
+    stateFlow: mergeStateFlow(globalFile.stateFlow, projectFile.stateFlow),
     declared: { default: declaredDefault, commands: declaredCommands },
   };
   // Advance knobs appear only when a scope declares them, so configs that
@@ -228,6 +233,21 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
   const advance = mergeAdvance(globalFile.advance, projectFile.advance);
   if (advance !== undefined) merged.advance = advance;
   return merged;
+}
+
+/** Issue #174 — project-over-global merge of the `stateFlow` block. Scalars
+ *  per field; the allowlist whole (a half-merged allowlist would silently
+ *  widen or narrow the command set the operator believes they chose). An empty
+ *  project allowlist is a deliberate disable, never refilled from global. */
+function mergeStateFlow(globalStateFlow: ConfigFile["stateFlow"], projectStateFlow: ConfigFile["stateFlow"]): StateFlowConfig {
+  const commands = pick(undefined, projectStateFlow?.commands, globalStateFlow?.commands);
+  return {
+    enabled: pick(DEFAULT_STATE_FLOW.enabled, projectStateFlow?.enabled, globalStateFlow?.enabled) === true,
+    backend: pick(DEFAULT_STATE_FLOW.backend, projectStateFlow?.backend, globalStateFlow?.backend),
+    commands: commands === undefined ? [...DEFAULT_STATE_FLOW.commands] : [...commands],
+    stopOn: pick(DEFAULT_STATE_FLOW.stopOn, projectStateFlow?.stopOn, globalStateFlow?.stopOn),
+    onBackendMissing: pick(DEFAULT_STATE_FLOW.onBackendMissing, projectStateFlow?.onBackendMissing, globalStateFlow?.onBackendMissing),
+  };
 }
 
 /** Issue #260 — project-over-global merge of the `subagents` resource limits
