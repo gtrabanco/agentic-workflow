@@ -481,6 +481,90 @@ printf '%s' '{"timestamp":"2026-11-04T15:12Z","branch":"main","reason":"quit","c
   | npx @gtrabanco/agentic-workflow log render --facts -
 ```
 
+## State Flow (optional — issue #174)
+
+An opt-in, command-scoped **episode lifecycle**: the long-running executor
+commands (`/execute-phase`, `/fold-findings`) automatically enter and leave an
+explicit execution-state mode, so their many-step runs keep compact working
+state instead of replaying a growing transcript. You never type a state-flow
+command on the happy path. Design, plan, review and audit commands are never
+touched — they rely on readable history and clean-context receipts.
+
+**Off by default, and the backend is a soft dependency.** The lifecycle is
+driven through [llblab/pi-state-flow](https://github.com/llblab/pi-state-flow)
+(a Pi extension inspired by the SKILL.state paper) if — and only if — it is
+installed:
+
+```bash
+pi install npm:@llblab/pi-state-flow
+```
+
+Nothing in this package requires it: a session without the backend runs every
+command exactly as before.
+
+### Config
+
+Both config files (`~/.pi/agent/pi-agentic-workflow.json`; project
+`.pi/pi-agentic-workflow.json` — the project file wins per field):
+
+```json
+{
+  "stateFlow": {
+    "enabled": false,
+    "backend": "pi-state-flow",
+    "commands": ["execute-phase", "fold-findings"],
+    "stopOn": "command_settled",
+    "onBackendMissing": "noop"
+  }
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `enabled` | Master switch; shipped `false` until you dogfood it |
+| `backend` | v1: `"pi-state-flow"` only |
+| `commands` | The allowlist of friendly command names (no leading slash); merges whole, never per entry |
+| `stopOn` | v1: `"command_settled"` — the episode ends when the command settles (the same moment model routing restores the session) |
+| `onBackendMissing` | `"noop"` (default; the command runs, one warning per session) or `"refuse"` (the command is refused before anything is dispatched) |
+
+The same switch is editable in `/agentic-workflow-settings` (the **State Flow**
+section shows the effective status — enabled, allowlist, backend, missing
+policy — beside the edit path).
+
+### Lifecycle
+
+For an allowlisted command with `stateFlow.enabled: true` and the backend
+present: the episode starts just before the skill prompt is sent, and it stops
+when the command settles — **including on abort or error**, so a cancelled run
+never leaves the session in state-mode. Only one package-owned episode exists
+at a time: a second allowlisted dispatch stops the previous episode first. The
+package stops only an episode **it** started; a mode you selected manually is
+yours.
+
+### Limitations (v1 vs full SKILLSTATE)
+
+- v1 is the episode lifecycle only — not SKILLSTATE's per-tool-step projection
+  (each LLM call seeing only the skill spec, the structured state and the last
+  observation). The backend keeps Pi's native trace and does its own state
+  compilation.
+- A single logical execution spanning several user prompts (an `/execute-phase`
+  phase continued by hand) is covered only for the first command turn: the
+  episode stops when that turn settles. A follow-up can track the episode until
+  a phase receipt or roadmap advance instead.
+- An operator-started episode cannot be detected (the backend exposes no
+  machine-readable mode read): the package never stops what it did not start,
+  and re-selecting the mode re-runs the backend's bootstrap in an existing
+  conversation.
+- Orchestration coordination (issue #174, refs #260): the lifecycle follows the
+  command turn. #260's orchestrator is one turn that spawns subagents and waits,
+  so `stopOn: "command_settled"` covers it; a future orchestration that moves
+  execution out of the command turn will need the episode to follow the spawned
+  work.
+
+The paper behind the design: Sanket Badhe, Priyanka Tiwari, and Jonghyun Chung,
+"SKILL.state: Scalable Long-Horizon Agent Skills," arXiv:2608.26263 — cited in
+the root README's References together with the prior-art extension.
+
 ## Workflow seam hooks (optional, consent-gated — issue #413)
 
 Your project can declare commands that run deterministically at the workflow's
