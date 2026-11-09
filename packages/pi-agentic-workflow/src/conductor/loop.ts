@@ -20,10 +20,13 @@ import { DEFAULT_CONDUCTOR_CONFIG } from "./types.js";
 import type {
   CloseoutStatus,
   ContinuationPrecondition,
+  InterruptedRunLike,
   LoopDeps,
   LoopResult,
 } from "./types.js";
 import { checkCloseout } from "./closeout.js";
+import { formatJournalRow } from "./journal.js";
+import { crashVerdict, decideResume } from "./resume.js";
 
 /**
  * The one shipped default, owned by `types.ts` (deeply frozen so that merges
@@ -53,29 +56,36 @@ const FALLBACK_COMMANDS = new Set([
 const FORBIDDEN_VERBS = new Set(["merge", "fullauto-merge"]);
 
 // ---------------------------------------------------------------------------
-// Formatting helpers
-// ---------------------------------------------------------------------------
-
-function formatDate(now: Date): string {
-  const pad = (n: number): string => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-}
-
-function formatLogLine(kind: string, code: string, invocation: string, iteration: number, cap: number): string {
-  return `${formatDate(new Date())} — ${kind}/${code} — ${invocation} — ${iteration}/${cap}`;
-}
-
-// ---------------------------------------------------------------------------
-// Main loop
+// Run boundary + main loop
 // ---------------------------------------------------------------------------
 
 /**
- * Run the conductor loop until convergence, stop, cap, or park.
- * All I/O is injected through deps; the loop itself is deterministic.
+ * Run the conductor loop until convergence, stop, cap, or park, wrapped in the
+ * run boundary the resume entry reads (issue #284):
+ *
+ *   run/start  <run-id> pid=<pid>
+ *   …iteration rows…
+ *   run/stop   <stop-code|continue>
+ *
+ * A process that dies (SIGKILL, OOM, redeploy) writes no `run/stop` — that
+ * missing row is exactly what the operator supervisor detects and what
+ * `advance --resume` reconciles. All I/O stays injected; the loop is
+ * deterministic.
  */
 export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
   const config = deps.config ?? DEFAULT_CONDUCTOR_CONFIG;
   const cap = config.iterationsCap ?? 12;
+  const meta = deps.runMeta?.() ?? { id: `r-${process.pid}-${Date.now()}`, pid: process.pid };
+  deps.appendRunLog(formatJournalRow("run", "start", `${meta.id} pid=${meta.pid}`, 0, cap));
+  const result = await runLoopBody(deps, config, cap);
+  deps.appendRunLog(
+    formatJournalRow("run", "stop", result.stopCode ?? "continue", result.iterations, cap),
+  );
+  return result;
+}
+
+/** The loop proper; the exported wrapper above owns the run boundary. */
+async function runLoopBody(deps: LoopDeps, config: NonNullable<LoopDeps["config"]>, cap: number): Promise<LoopResult> {
   const commandNames = deps.commandNames ?? FALLBACK_COMMANDS;
   const cwd = deps.cwd ?? process.cwd();
   const bin = deps.runtimeBin ?? "bun";
@@ -84,13 +94,21 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
   let consecutiveDeferred = 0;
   let invoked = 0;
 
+  // The resume entry (issue #284): an interrupted journal, or `--resume`,
+  // arms the reconcile gate on the first iteration. The journal is the hint;
+  // the sensor's crash verdict is the ground truth the gate reads.
+  const interrupted: InterruptedRunLike | null = deps.resumePreflight
+    ? await deps.resumePreflight()
+    : null;
+  const reconcileDue = deps.resume === true || interrupted !== null;
+
   for (let iteration = 1; iteration <= cap; iteration++) {
     // ── 1. Sensor ───────────────────────────────────────────────────────
     const sensorResult = await deps.runSensor(cwd, bin);
 
     if (!sensorResult.ok) {
       deps.appendRunLog(
-        formatLogLine("stop", sensorResult.refusal, "sensor-refused", iteration, cap),
+        formatJournalRow("stop", sensorResult.refusal, "sensor-refused", iteration, cap),
       );
       return {
         banner: "ADVANCE: STOPPED",
@@ -102,13 +120,57 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
 
     const envelope = sensorResult.envelope;
 
-    // ── 2. Banner pre-check: COMPLETE or BLOCKED before any decision (AC8) ──
+    // ── 2. Crash reconcile (issue #284) ─────────────────────────────────
+    // Resume continues ONLY on CLEAN/RESUMABLE; AMBIGUOUS halts before any
+    // invocation and records the stop. A missing verdict is AMBIGUOUS.
+    if (iteration === 1 && reconcileDue) {
+      const verdict = crashVerdict(envelope);
+      const decision = decideResume({
+        interrupted,
+        forced: deps.resume === true,
+        verdict: verdict.verdict,
+        resumeCommand: verdict.resumeCommand,
+        recommended: String((envelope.next as Record<string, unknown>)?.recommended ?? ""),
+      });
+      if (decision.action === "halt") {
+        deps.appendRunLog(formatJournalRow("resume", "halted", decision.verdict ?? "AMBIGUOUS", 0, cap));
+        return {
+          banner: "ADVANCE: STOPPED",
+          stopCode: "stop-crash-ambiguous",
+          detail: decision.detail,
+          iterations: 0,
+        };
+      }
+      if (interrupted) {
+        const last = interrupted.lastInvocation ? ` last=${interrupted.lastInvocation}` : "";
+        deps.appendRunLog(
+          formatJournalRow(
+            "resume",
+            "detected",
+            `${interrupted.runId ?? "unknown"} iteration=${interrupted.iteration}${last}`,
+            interrupted.iteration,
+            cap,
+          ),
+        );
+      }
+      deps.appendRunLog(
+        formatJournalRow(
+          "resume",
+          `verdict:${decision.verdict ?? "AMBIGUOUS"}`,
+          decision.resumeCommand ?? decision.detail,
+          iteration - 1,
+          cap,
+        ),
+      );
+    }
+
+    // ── 3. Banner pre-check: COMPLETE or BLOCKED before any decision (AC8) ──
     // COMPLETE: nothing startable — no recommended action and no blockers
     const nextRecommended = (envelope.next as Record<string, unknown>)?.recommended;
     const blockers = (envelope.blockers as Array<Record<string, unknown>>) ?? [];
     if (!nextRecommended && blockers.length === 0) {
       deps.appendRunLog(
-        formatLogLine("stop", "stop-nothing-startable", "nothing-startable", iteration, cap),
+        formatJournalRow("stop", "stop-nothing-startable", "nothing-startable", iteration, cap),
       );
       return {
         banner: "ADVANCE: COMPLETE",
@@ -124,7 +186,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
         .map((b) => `${(b.kind as string) ?? "unknown"}: ${(b.detail as string) ?? ""}`)
         .join("; ");
       deps.appendRunLog(
-        formatLogLine("stop", "stop-blocked", "blocked", iteration, cap),
+        formatJournalRow("stop", "stop-blocked", "blocked", iteration, cap),
       );
       return {
         banner: "ADVANCE: BLOCKED",
@@ -134,21 +196,21 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
       };
     }
 
-    // ── 3. Urgency judge (deterministic; AC5) ───────────────────────────
+    // ── 4. Urgency judge (deterministic; AC5) ───────────────────────────
     const urgency = deps.judgeUrgency(envelope);
     if (urgency.verdict === "interrupt-now") {
       // Park the in-flight unit, then let the next iteration's sensor route
       // to the urgent issue (the sensor's priority queue already ranks it).
       await deps.parkInFlight();
       deps.appendRunLog(
-        formatLogLine("urgent", "INTERRUPT_NOW", `issue ${urgency.issue ?? "?"}`, iteration, cap),
+        formatJournalRow("urgent", "INTERRUPT_NOW", `issue ${urgency.issue ?? "?"}`, iteration, cap),
       );
       continue;
     }
     // finish-first (incl. fix-next head-of-line and the fail-safe default):
     // proceed normally — the sensor ranks the urgent fix for a later iteration.
 
-    // ── 3. Git probe & closeout (AC7) ───────────────────────────────────
+    // ── 5. Git probe & closeout (AC7) ───────────────────────────────────
     const gitStatus = await deps.gitProbe();
     const closeout: CloseoutStatus = checkCloseout(gitStatus.porcelain, gitStatus.ahead);
 
@@ -156,7 +218,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
       consecutivePartials++;
       if (consecutivePartials >= 3) {
         deps.appendRunLog(
-          formatLogLine("stop", "parked", "consecutive-partials", iteration, cap),
+          formatJournalRow("stop", "parked", "consecutive-partials", iteration, cap),
         );
         return {
           banner: "ADVANCE: STOPPED",
@@ -169,7 +231,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
       consecutivePartials = 0;
     }
 
-    // ── 4. Decide ───────────────────────────────────────────────────────
+    // ── 6. Decide ───────────────────────────────────────────────────────
     const decision = deps.decide({
       envelope,
       lastOutcome: null,
@@ -177,7 +239,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
       policy: deps.policy ?? { allowedIntents: [...FALLBACK_COMMANDS], forgeWriteAuthorized: true },
     });
 
-    // ── 5. Handle decision ──────────────────────────────────────────────
+    // ── 7. Handle decision ──────────────────────────────────────────────
     if (decision.kind === "invoke") {
       const invResult = deps.invocation(decision, {
         commandNames,
@@ -201,7 +263,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
 
       if (!invResult.ok) {
         deps.appendRunLog(
-          formatLogLine("stop", invResult.refusal, "invocation-failed", iteration, cap),
+          formatJournalRow("stop", invResult.refusal, "invocation-failed", iteration, cap),
         );
         return {
           banner: "ADVANCE: STOPPED",
@@ -224,7 +286,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
       const verb = invocation.replace(/^\/skill:/, "").split(" ")[0];
       if (FORBIDDEN_VERBS.has(verb)) {
         deps.appendRunLog(
-          formatLogLine("stop", "stop-policy-denied", invocation, iteration, cap),
+          formatJournalRow("stop", "stop-policy-denied", invocation, iteration, cap),
         );
         return {
           banner: "ADVANCE: STOPPED",
@@ -236,7 +298,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
 
       const sendResult = await deps.sendUserMessage(invocation);
       if (sendResult.ok === false) {
-        deps.appendRunLog(formatLogLine("stop", "stop-dispatch-refused", invocation, iteration, cap));
+        deps.appendRunLog(formatJournalRow("stop", "stop-dispatch-refused", invocation, iteration, cap));
         return {
           banner: "ADVANCE: STOPPED",
           stopCode: "stop-dispatch-refused",
@@ -247,17 +309,17 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
       if (sendResult.deferred === true) {
         // AC10 restart: the routing recorded the demotion instead of sending; re-run
         // the iteration so the stage is decided and served under the fallback profile.
-        deps.appendRunLog(formatLogLine("switch", `${sendResult.profileSwitched?.from ?? "?"}->${sendResult.profileSwitched?.to ?? "?"}`, invocation, iteration, cap));
+        deps.appendRunLog(formatJournalRow("switch", `${sendResult.profileSwitched?.from ?? "?"}->${sendResult.profileSwitched?.to ?? "?"}`, invocation, iteration, cap));
         consecutiveDeferred++;
         if (consecutiveDeferred >= 2) {
-          deps.appendRunLog(formatLogLine("stop", "stop-profile-switch-loop", "deferred-twice", iteration, cap));
+          deps.appendRunLog(formatJournalRow("stop", "stop-profile-switch-loop", "deferred-twice", iteration, cap));
           return { banner: "ADVANCE: STOPPED", stopCode: "stop-profile-switch-loop", detail: "profile switch deferred twice without progress", iterations: iteration - 1 };
         }
         continue; // do NOT increment `invoked`
       }
       consecutiveDeferred = 0;
       deps.appendRunLog(
-        formatLogLine("invoke", decision.reasonCode, invocation, iteration, cap),
+        formatJournalRow("invoke", decision.reasonCode, invocation, iteration, cap),
       );
       // One-stage-per-invocation wiring: the invoked skill must settle before
       // the next sensor run can see its effect, so the default wiring stops
@@ -275,7 +337,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
       consecutiveSenses++;
       if (consecutiveSenses >= 2) {
         deps.appendRunLog(
-          formatLogLine("stop", decision.reasonCode, "sense-stale", iteration, cap),
+          formatJournalRow("stop", decision.reasonCode, "sense-stale", iteration, cap),
         );
         return {
           banner: "ADVANCE: STOPPED",
@@ -285,13 +347,13 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
         };
       }
       deps.appendRunLog(
-        formatLogLine("sense", decision.reasonCode, "re-sense", iteration, cap),
+        formatJournalRow("sense", decision.reasonCode, "re-sense", iteration, cap),
       );
       continue;
     } else {
       // Stop decision — surface the code and detail to the operator (AC4).
       deps.appendRunLog(
-        formatLogLine("stop", decision.reasonCode, "stop", iteration, cap),
+        formatJournalRow("stop", decision.reasonCode, "stop", iteration, cap),
       );
       return {
         banner: "ADVANCE: STOPPED",
@@ -302,7 +364,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
     }
   }
 
-  // ── 6. Cap exceeded (AC8) ───────────────────────────────────────────
+  // ── 8. Cap exceeded (AC8) ───────────────────────────────────────────
   return {
     banner: "ADVANCE: STOPPED",
     stopCode: "stop-failed",
