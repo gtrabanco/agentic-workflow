@@ -73,6 +73,7 @@ A developer (or an agent session) can run any test, leave a worktree behind, or 
 | P3 | `bun test` over the 14 repaired suites | 0 | at P3 |
 | P4 | `node scripts/local-gate.mjs --list` | 0 | at P4 |
 | P5 | `node scripts/run-root-suite.mjs` | 0 | at P5 |
+| P6 | `bun scripts/local-gate.mjs --jobs 4` | 0 — PASS, 16 step(s) in 151 s | at close |
 
 ## Progress log
 
@@ -82,6 +83,7 @@ A developer (or an agent session) can run any test, leave a worktree behind, or 
 - E3 — P3: `temp-hygiene` 0 findings on the repaired tree; the 14 repaired suites pass.
 - E4 — P4: the three steps listed; `DEPS` closed; timeout flags on both legs of every runner path.
 - E5 — P5: the root gate green (see Evidence).
+- E6b — close: the full local gate green (16 steps, 151 s) — the three new offline steps ran live: the GC swept the machine roots, the floor found zero leak-capable files, the audit reported the relocated worktrees as report-only OUTSIDE lines.
 - E6 — owner correction mid-unit (2026-11-09): the `HEAD`/`gitdir` untracked files inside worktrees are the symptom of a corrupted worktree, not a temp-file class — the guard gains the `CORRUPTED` finding and repairs it with `git worktree repair` (non-destructive), never by pruning; a naive `git worktree prune` on a severed link destroys the recovery path.
 
 ## Next
