@@ -431,6 +431,8 @@ obligations ledger; correction bounds per the applying workflow's §9.
 - Issue [#174](https://github.com/gtrabanco/agentic-workflow/issues/174) —
   the requirement source (feat(pi-agentic-workflow): opt-in State Flow /
   SKILLSTATE lifecycle on long-running workflow commands).
+- PR: [#473](https://github.com/gtrabanco/agentic-workflow/pull/473) —
+  the delivery PR for this unit.
 - Roadmap row 41 (`pi-state-flow-lifecycle`) — `docs/ROADMAP.md` §Features.
 - Sanket Badhe, Priyanka Tiwari, and Jonghyun Chung, "SKILL.state: Scalable
   Long-Horizon Agent Skills," arXiv:2608.26263, 2026.
