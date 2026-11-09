@@ -66,3 +66,38 @@ Batch: `fix(107)` — the two blockers above, nothing else.
 
 Verdict after the batch: both blockers closed, no new finding carried by the
 batch. The final verdict stays with the external verifier.
+
+## Delivered head and the two findings the batch could not close
+
+Delivered: `94316d78` (the repair) and `e16d5433` (the journal append, by the
+aggregator identity), both on `feat-408-mechanization-inventory`.
+
+Gate at `e16d5433`, all foreground:
+
+```text
+bun scripts/local-gate.mjs                   → PASS · 17 step(s)
+bun packages/agentic-workflow/bin/agentic-workflow.mjs verify …/SPEC.md → VERIFY PASS · violations []
+bun scripts/phase-lint.mjs …/SPEC.md         → PASS
+bun scripts/docs-generate.mjs --check        → PASS · 0 missing · 0 stale · 0 orphaned
+bun scripts/roadmap-settle.mjs               → PASS · violations 0
+bun scripts/log-immutability.mjs --base main → 0 violations · 14 commits
+bun scripts/skill-lint.mjs --skill audit-docs→ 0 findings
+bun scripts/check-skill-context.mjs          → PASS · 29 skills
+bun scripts/lint-changeset.mjs               → PASS
+AC1…AC13, AC16…AC19                           → every count matches the frozen value
+```
+
+**N1 — `docs/LOGS.md` carries two `main` session blocks.** A concurrent
+aggregation ran on this branch's carrier mid-batch and appended the
+`2026-11-09T15:04:20Z` and `15:06:33Z` `main` entries, whose fragments are
+still pending here and on `main` (2 each); merging this branch would then
+duplicate them. The repair is a truncation of `docs/LOGS.md`, which the
+pre-push gate judges against the push range and `e16d5433` is already
+published — so it needs a history rewrite, which only the owner authorizes.
+
+**N2 — AC15's frozen count observes 3, not 1.** Two entries beyond the original
+`15:39:01Z` one: this batch's (`17:31:14Z`) and another concurrent session's
+`17:31:52Z` record of the same unit. The criterion's intent (the entry is in the
+journal, not pending; 0 fragments) holds and the fragment count is 0, but its
+literal `matches 1` no longer reproduces. Changing an acceptance criterion to
+fit the tree is a test change — the owner's call, not this batch's.
