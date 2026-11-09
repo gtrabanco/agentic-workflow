@@ -156,20 +156,26 @@ export function writeJournal(options) {
   }
   // The already-registered check (issue #468 S3): before writing, ask the
   // carrier whether this conversation already landed an entry — a fragment
-  // whose name carries this session's slug. Scoped to an explicit `--session`:
-  // the fallback slug (`local`) is shared by every unflagged write on the
-  // machine, so a match there identifies no conversation and refusing it would
-  // break the shipped multi-conversation default; an explicit `local` is
-  // indistinguishable from the fallback and gets the same courtesy. The
-  // computed name itself is excluded — an identical name is the grammar's own
-  // collision refusal below (same entry slot), never an "already registered".
+  // whose name carries this session's slug. The unit is the conversation PER
+  // KIND, exactly as `journal-write-grammar@1` states it: the auto-log writes
+  // the mechanical entry at shutdown and `/log-session` writes the narrative
+  // one, both naming the same session, so a kind-wide refusal would refuse the
+  // shipped flow (`docs/fix/468-log-immutability`: correction batch 1). Scoped
+  // to an explicit `--session`: the fallback slug (`local`) is shared by every
+  // unflagged write on the machine, so a match there identifies no
+  // conversation, and an explicit `local` slugs to the same shared identity and
+  // gets the same exemption. The computed name itself is excluded — an
+  // identical name is the grammar's own collision refusal below (same entry
+  // slot), never an "already registered"; and a fragment this conversation and
+  // kind already hold (the SessionEnd hook names its own) is the entry being
+  // rewritten, so it is never the reason to refuse a new one.
   if (options?.session !== undefined && slug(options.session) !== "local") {
     const registered = registeredSessions(root, carrier).find(
-      (entry) => entry.parsed.sessionId === slug(options.session) && entry.name !== name,
+      (entry) => entry.parsed.sessionId === slug(options.session) && entry.parsed.kind === kind && entry.name !== name,
     );
     if (registered !== undefined) {
       throw new JournalWriteError(
-        `already registered: ${carrier}/${registered.name} already carries session ${JSON.stringify(slug(options.session))}'s entry — one entry per conversation; pass another --session id only if this is genuinely a different conversation`,
+        `already registered: ${carrier}/${registered.name} already carries session ${JSON.stringify(slug(options.session))}'s ${kind} entry — one entry per conversation per kind; a second ${kind} entry for this conversation is a duplicate, and another --session id is a different conversation`,
       );
     }
   }
