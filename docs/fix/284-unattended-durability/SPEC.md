@@ -442,8 +442,8 @@ it has open work. No triage block reorders the frozen task list.
 
 ## Next
 
-Push the branch and open the PR (`Closes #284`), then hand the diff to the
-external verifier: P1 and the P2 spike are green, the verdict is `REJECT`
+The external verifier reviews PR [#485](https://github.com/gtrabanco/agentic-workflow/pull/485)
+(`Closes #284`): P1 and the P2 spike are green, the P2 verdict is `REJECT`
 (defer) with its flip conditions, and the two environmental failures are
 disclosed.
 
@@ -452,6 +452,8 @@ disclosed.
 - Issue [#284](https://github.com/gtrabanco/agentic-workflow/issues/284) — P1 of
   this document; P2 stays open on the issue.
 - Roadmap row 81 (`unattended-durability`), fix row #284.
+- PR [#485](https://github.com/gtrabanco/agentic-workflow/pull/485) — the
+  delivery of this unit.
 - Feature 62 (`docs/features/62-pi-native-conductor/`) — the loop this unit
   makes recoverable.
 - Features 03/38 — the `crash_recovery` verdict this unit reads.
