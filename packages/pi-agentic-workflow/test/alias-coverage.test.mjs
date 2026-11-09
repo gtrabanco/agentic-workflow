@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { readCatalogue, readSkillMeta } from "../dist/routing/catalogue.js";
 import { createExtension } from "../dist/extension/factory.js";
-import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
+import { ADVANCE_COMMAND, AW_INDEX_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
 import { createRouter } from "../dist/routing/dispatch.js";
 import { configFor, modelRef } from "./helpers/session.mjs";
 import { listSkills, parseSkillFrontmatter } from "../scripts/bundle-skills.mjs";
@@ -93,7 +93,7 @@ test("AC3: `agentic-workflow-settings` is registered alongside the skill aliases
     writeFileSync(join(skillsDir, "synthetic", "SKILL.md"), skillFile("synthetic", { description: "Synthetic fixture skill" }));
 
     const { registered } = extensionOver(skillsDir);
-    assert.deepEqual([...registered.keys()], ["synthetic", ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS]);
+    assert.deepEqual([...registered.keys()], ["synthetic", ADVANCE_COMMAND, AW_INDEX_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS]);
     assert.equal(registered.get("synthetic").description, "Synthetic fixture skill");
     assert.equal(typeof registered.get(SETTINGS_COMMAND).handler, "function");
     assert.equal(typeof registered.get(SETTINGS_COMMAND_ALIAS).handler, "function");
@@ -112,8 +112,9 @@ test("AC6/OB-5: the /aw-settings alias opens the same settings handler with no s
     const { registered, calls, noopContext } = extensionOver(skillsDir);
     assert.equal(registered.get(SETTINGS_COMMAND).description, "Show and configure per-command model routing");
     assert.equal(registered.get(SETTINGS_COMMAND_ALIAS).description, registered.get(SETTINGS_COMMAND).description, "the alias keeps the same description");
-    // Registered-command count: exactly the skill command plus the two console names.
-    assert.equal([...registered.keys()].length, 4, "synthetic + advance + settings command + aw-settings alias");
+    // Registered-command count: exactly the skill command, the two native commands
+    // (advance, aw-index) and the two console names (issue #443 S5).
+    assert.equal([...registered.keys()].length, 5, "synthetic + advance + aw-index + settings command + aw-settings alias");
 
     // The alias handler opens the same console: it invokes the shared settings
     // handler, so no separate route key or config surface is introduced.
@@ -168,7 +169,7 @@ test("AC3: catalogue problems are reported once, on the first command of the ses
     mkdirSync(join(skillsDir, "no-file"), { recursive: true });
 
     const { registered, calls, noopContext } = extensionOver(skillsDir);
-    assert.deepEqual([...registered.keys()], ["alpha", ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS]);
+    assert.deepEqual([...registered.keys()], ["alpha", ADVANCE_COMMAND, AW_INDEX_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS]);
     assert.equal(calls.notify.length, 0, "nothing is reported before a command runs");
 
     registered.get("alpha").handler("", noopContext);
@@ -301,7 +302,7 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
 
     const expected = readCatalogue(bundleSkills).commands.map((command) => command.name).sort();
     const names = [...registered.keys()]
-      .filter((name) => name !== SETTINGS_COMMAND && name !== SETTINGS_COMMAND_ALIAS && name !== ADVANCE_COMMAND)
+      .filter((name) => name !== SETTINGS_COMMAND && name !== SETTINGS_COMMAND_ALIAS && name !== ADVANCE_COMMAND && name !== AW_INDEX_COMMAND)
       .sort();
     assert.deepEqual(names, expected);
     assert.ok(registered.has(SETTINGS_COMMAND), "the settings command comes from the entry too");

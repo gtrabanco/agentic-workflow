@@ -104,11 +104,120 @@ describe("hybrid grammar", () => {
     deepStrictEqual(parseDocArgs(["--mode", "keyword", "--query", "t"]).mode, "keyword");
   });
 
-  it("defaults to keyword and rejects the flag elsewhere or with an unknown value", () => {
-    strictEqual(parseDocArgs(["--query", "t"]).mode, "keyword");
+  it("leaves the mode absent so the query path resolves it (S2/D2), and rejects the flag elsewhere or with an unknown value", () => {
+    // Issue #443 D2: the grammar stops DEFAULTING the mode; an absent flag is
+    // `undefined` (auto at query time), never `"keyword"`.
+    strictEqual(parseDocArgs(["--query", "t"]).mode, undefined);
+    strictEqual(parseDocArgs(["--query", "t", "--mode", "keyword"]).mode, "keyword");
     throws(() => parseDocArgs(["--query", "t", "--mode", "quantum"]), /usage/i);
     throws(() => parseDocArgs(["--sync", "--mode", "hybrid"]), /usage/i);
     throws(() => parseDocArgs(["--query", "t", "--mode"]), /usage/i);
+  });
+});
+
+// ── S2 — auto resolution at query time (issue #443, decision D1) ─────────
+
+/** A throwaway git repo carrying `files` (path → markdown), synced but un-embedded. */
+function autoFixture(files) {
+  const dir = mkdtempSync(join(tmpdir(), "doc-auto-"));
+  execFileSync("git", ["init", "-q"], { cwd: dir });
+  execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: dir });
+  execFileSync("git", ["config", "user.name", "t"], { cwd: dir });
+  for (const [rel, body] of Object.entries(files)) writeFileSync(join(dir, rel), body);
+  execFileSync("git", ["add", "-A"], { cwd: dir });
+  execFileSync("git", ["commit", "-qm", "fixture"], { cwd: dir });
+  return dir;
+}
+
+describe("S2 auto mode — resolution at query time (D1)", () => {
+  it("S2: no --mode runs hybrid when a provider is configured and the store is embedded under the pinned model", async () => {
+    const env = await queryIndex(root, "transient failure handling", {}, { embedder: semanticEmbedder() });
+    ok(env.results.length >= 1, JSON.stringify(env.results));
+    // The AC15 judge fixture holds through the new default path.
+    strictEqual(env.results[0].path, "retry.md");
+    deepStrictEqual(env.degradations, []);
+  });
+
+  it("S2: an auto query with no provider configured stays keyword and declares unavailable-embeddings-not-configured", async () => {
+    const env = await queryIndex(root, "transient failure handling", {}, {});
+    strictEqual(env.ok, true);
+    deepStrictEqual(env.results, []);
+    deepStrictEqual(env.degradations, ["unavailable-embeddings-not-configured"]);
+  });
+
+  it("S2: a store holding no embedded rows declares unavailable-embeddings-not-indexed", async () => {
+    const bare = autoFixture({ "a.md": "# Alpha\nalpha body\n" });
+    try {
+      await syncIndex(bare);
+      const env = await queryIndex(bare, "alpha", {}, { embedder: semanticEmbedder() });
+      strictEqual(env.ok, true);
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-not-indexed"]);
+      ok(env.results.some((r) => r.path === "a.md")); // keyword still answered
+    } finally {
+      rmSync(bare, { recursive: true, force: true });
+    }
+  });
+
+  it("S2: a configured model that differs from the store pin declares embeddings-model-mismatch", async () => {
+    const env = await queryIndex(root, "backoff", {}, { embedder: semanticEmbedder("judge-2") });
+    strictEqual(env.ok, true);
+    deepStrictEqual(env.degradations, ["embeddings-model-mismatch"]);
+    ok(env.results.some((r) => r.path === "retry.md"));
+  });
+
+  it("S2: a provider that is down during the auto pass declares unavailable-embeddings-provider-down", async () => {
+    const dead = {
+      model: "judge-1",
+      async embed() {
+        throw new Error("ECONNREFUSED");
+      },
+    };
+    const env = await queryIndex(root, "backoff", {}, { embedder: dead });
+    strictEqual(env.ok, true);
+    deepStrictEqual(env.degradations, ["unavailable-embeddings-provider-down"]);
+    ok(env.results.some((r) => r.path === "retry.md"));
+  });
+
+  it("S2: an explicit --mode keyword still forces keyword and declares nothing", async () => {
+    const env = await queryIndex(root, "transient failure handling", {}, { mode: "keyword", embedder: semanticEmbedder() });
+    deepStrictEqual(env.results, []);
+    deepStrictEqual(env.degradations, []);
+  });
+
+  it("S9: an auto query with a configured provider makes exactly one provider call (the query embedding)", async () => {
+    const e = semanticEmbedder();
+    await queryIndex(root, "transient failure handling", {}, { embedder: e });
+    strictEqual(e.state.calls, 1);
+  });
+});
+
+// ── S4 — the query path stays read-only (issue #443 decision 3) ──────────
+
+describe("S4 read-only query path", () => {
+  it("S4: a stale store is re-chunked by the inline sync but never re-embedded", async () => {
+    const dir = autoFixture({ "retry.md": "# Resilience\n\nThe backoff policy for retryable errors uses exponential delays with jitter.\n" });
+    try {
+      await syncIndex(dir);
+      await embedPendingChunks(dir, semanticEmbedder());
+      // New content lands (staged, so it is part of the tracked corpus) and the
+      // query must refresh the chunks without paying for a vector.
+      writeFileSync(join(dir, "fresh.md"), "# Fresh\n\ntransient failure handling notes\n");
+      execFileSync("git", ["add", "-A"], { cwd: dir });
+      const e = semanticEmbedder();
+      const env = await queryIndex(dir, "transient failure handling", {}, {}).catch(() => null);
+      // auto with no injected provider: keyword + declared cause, and still 0 calls
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-not-configured"]);
+      const hybrid = await queryIndex(dir, "transient failure handling", {}, { embedder: e });
+      strictEqual(e.state.calls, 1, "only the query embedding may hit the provider");
+      ok(hybrid.ok);
+      const { db } = await openDatabase(storePath(dir));
+      const fresh = db.prepare("select embedding from chunks where path = 'fresh.md'").all();
+      db.close();
+      ok(fresh.length > 0, "the inline sync must have chunked the new file");
+      for (const row of fresh) strictEqual(row.embedding, null, "the query path must never embed");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 
@@ -268,6 +377,49 @@ describe("sync-side degradations (F45 — the AC17/AC18 sync half)", () => {
       deepStrictEqual(env.degradations, ["embeddings-model-mismatch"]);
       deepStrictEqual(Object.keys(env.store.lastSync), ["files_scanned", "files_changed", "files_deleted", "embedded"]);
       strictEqual(env.store.lastSync.embedded, 0);
+    } finally {
+      if (prev === undefined) delete process.env[ENV_KEY];
+      else process.env[ENV_KEY] = prev;
+      rmSync(cfgRoot, { recursive: true, force: true });
+    }
+  });
+
+  // ── S8/D3 — the sync envelope the native command renders (issue #443) ──
+
+  it("S8: a successful sync reports pending 0 and the pinned model inside store, lastSync intact", async () => {
+    const cfgRoot = syncFixture();
+    const prev = process.env[ENV_KEY];
+    process.env[ENV_KEY] = "k";
+    try {
+      const env = await runDocOp({ op: "sync" }, { rootDir: cfgRoot, embedder: semanticEmbedder("m1") });
+      deepStrictEqual(env.degradations, []);
+      strictEqual(env.store.pending, 0);
+      strictEqual(env.store.model, "m1");
+      deepStrictEqual(Object.keys(env.store.lastSync), ["files_scanned", "files_changed", "files_deleted", "embedded"]);
+      ok(env.store.lastSync.embedded > 0);
+    } finally {
+      if (prev === undefined) delete process.env[ENV_KEY];
+      else process.env[ENV_KEY] = prev;
+      rmSync(cfgRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("S8: a sync whose provider is down reports every chunk pending and a null pin", async () => {
+    const cfgRoot = syncFixture();
+    const prev = process.env[ENV_KEY];
+    process.env[ENV_KEY] = "k";
+    try {
+      const dead = {
+        model: "m1",
+        async embed() {
+          throw new Error("ECONNREFUSED");
+        },
+      };
+      const env = await runDocOp({ op: "sync" }, { rootDir: cfgRoot, embedder: dead });
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-provider-down"]);
+      strictEqual(env.store.model, null);
+      strictEqual(env.store.pending, env.store.chunks);
+      ok(env.store.pending > 0);
     } finally {
       if (prev === undefined) delete process.env[ENV_KEY];
       else process.env[ENV_KEY] = prev;
