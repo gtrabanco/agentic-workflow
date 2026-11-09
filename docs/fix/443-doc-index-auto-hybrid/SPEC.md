@@ -582,6 +582,21 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   README's retrieval paragraph, `docs/CAPABILITIES.md`'s Search row, the
   changeset intent, the regenerated `docs/generated/units.md` and the completed
   frozen pins · commit <this commit>.
+- **G1** — 2026-11-09, final gate at this head: `bun scripts/local-gate.mjs
+  --no-bail` · exit 1 · 17 steps: `workspace-install`, `schema-build` and
+  `crate-suite-bun` (152 s) exit 0; every other step exits 1 **before running its
+  check** because the gate invokes `node` and this container has no `node` binary
+  (nine `local-gate: could not run node: Executable not found in $PATH: "node"`
+  lines, then `exit 1 in 0s` for `version-parity-content`,
+  `docs-generated-projection`, `log-immutability`, `temp-hygiene`, `tmp-gc`,
+  `worktree-guard`, `journal-carrier-check`, `crate-suite-node`, `root-suite`,
+  `pi-node-compat`), plus the three steps that need the registry
+  (`dependency-pin-gate`, `dependency-advisories`, `pi-compat-guard`). Run
+  directly under bun, each offline step passes: E9 and E10. The two node runtime
+  legs cannot run here at all (E8), and the root suite's red set is identical to
+  the base clone's (E7). O18 is therefore recorded as verified **with the
+  pre-existing environment red shown on the base tree**, never as a green gate.
+
 ## Next
 
 The handoff to the owner (external verifier): the diff summary, the obligations
