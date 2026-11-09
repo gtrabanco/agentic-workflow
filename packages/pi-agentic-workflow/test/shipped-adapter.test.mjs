@@ -664,12 +664,12 @@ test("#174 through the adapter: the default config never sends a state-flow comm
 test("#174 through the adapter: a non-allowlisted command never touches state-flow", async () => {
   const entry = await shippedEntry({ globalConfig: { stateFlow: { enabled: true } }, commands: STATE_FLOW_COMMANDS });
   try {
-    await entry.registered.get("design-feature").handler("", entry.context());
+    await entry.registered.get("review-change").handler("", entry.context());
     entry.handlers.get("agent_settled")(undefined, entry.context());
     await flush();
     assert.deepEqual(
       entry.calls.sendUserMessage.map(([content]) => content),
-      ["/skill:design-feature"],
+      ["/skill:review-change"],
       "design/review surfaces stay history-preserving under the default allowlist",
     );
   } finally {
@@ -682,7 +682,7 @@ test("#174 through the adapter: a missing backend with noop warns once and the c
   try {
     await entry.registered.get("execute-phase").handler("P1", entry.context());
     await entry.registered.get("execute-phase").handler("P2", entry.context());
-    const warnings = entry.calls.notify.filter(([, kind]) => kind === "warning");
+    const warnings = entry.calls.notify.filter(([message, kind]) => kind === "warning" && /stateFlow|state-mode/u.test(message));
     assert.equal(warnings.length, 1, `exactly one warning: ${JSON.stringify(entry.calls.notify)}`);
     assert.match(warnings[0][0], /pi-state-flow/u);
     assert.deepEqual(

@@ -101,7 +101,9 @@ export type RefusalReason =
   | "routed-turn-in-flight"
   | "unavailable-route"
   /** `sendUserMessage` itself threw: the turn never started, so the routing is undone. */
-  | "dispatch-failed";
+  | "dispatch-failed"
+  /** Issue #174: the stateFlow backend is absent and `onBackendMissing` is `"refuse"`. */
+  | "state-flow-backend-missing";
 
 export type DispatchOutcome =
   | { status: "dispatched"; routed: boolean; hintShown: boolean; profileSwitched?: { from: string; to: string }; deferred?: boolean }
