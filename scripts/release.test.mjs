@@ -971,7 +971,7 @@ const STAMPED_TEMPLATE = [
   "doc-provenance@1",
   "written_by: agentic-workflow@0.9.0",
   "schema: @gtrabanco/agentic-workflow-schema@0.9.0",
-  "format: unit-doc-spec-by-reference@1",
+  "format: unit-doc@2",
   'grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}',
   "```",
   "",
@@ -997,7 +997,7 @@ test("apply stamps the unit-doc templates' provenance block with the train versi
     const text = fs.readFileSync(path.join(root, dir, "SPEC.md"), "utf8");
     assert.match(text, /^written_by: agentic-workflow@1\.1\.0$/m, `${dir}: the writer names the train version`);
     assert.match(text, /^schema: @gtrabanco\/agentic-workflow-schema@1\.1\.0$/m, `${dir}: the forensic pair moves together`);
-    assert.match(text, /^format: unit-doc-spec-by-reference@1$/m, `${dir}: the carrier axis is untouched`);
+    assert.match(text, /^format: unit-doc@2$/m, `${dir}: the carrier axis is untouched`);
     assert.match(text, /^## Specs$/m, `${dir}: the template body is untouched`);
   }
   assert.match(result.stdout, /templates: 4 unit-doc provenance stamp\(s\) stamped/);
