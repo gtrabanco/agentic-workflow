@@ -90,7 +90,7 @@ head `6f5d5453`.
 | PE-003 | known | the published gate sources in this repository are the inventory's `gate-id` column and audit-pr's `GATE_NAMES`; published docs also cite skills and script stems as gates, so the resolver must accept tree-resolvable names of those kinds too | `docs/workflow/GATE_INVENTORY.md` (prose-gate-inventory@1), `scripts/audit-pr-gate.mjs` (`GATE_NAMES`, 13 names), sampled spans of `docs/fix/201-operator-approved-pass-routing/SPEC.md` | current | O2, O4 |
 | PE-004 | known | the citation shapes published unit docs actually carry are root-relative paths (with optional `:line` suffixes), brace-expansion shorthand, context-relative fragments and commands; only the root-relative path form is a decidable claim for a verifier | `rg -o` sample over `docs/fix/201-operator-approved-pass-routing/SPEC.md` (42 spans containing a slash) | current | O1 |
 | PE-005 | known | `docs/generated/units.md` is a committed projection of the unit dirs; a new unit dir must be rendered by the generator, never hand-added | the `2f2210ba` diff stat (`docs/generated/units.md` +2) and the repository guide's normalizer inventory | current | O6 |
-| PE-006 | known | a crate source change ships no changeset file: the recent verifier commits (`c74ce777`, `2f2210ba`) touched only crate and doc files; stamping happens at cut | `git show --stat c74ce777 2f2210ba` | current | O7 |
+| PE-006 | known | a PR changing a package's shipped content declares its release intent in a valid `.changeset/*.md` naming the package (the release applies it) — the version-parity gate refuses an unchanged version with no changeset; the two direct-to-`main` verifier commits (`c74ce777`, `2f2210ba`) carried none because they were owner-applied batches, not PR units | `scripts/version-parity-gate.mjs --content` rejection observed 2026-11-09 at `38e7c548`; the `.changeset/260-subagent-first-execution.md` shape | current | O8 |
 
 ### Obligations
 
@@ -108,6 +108,7 @@ foreground and the evidence recorded where `required-evidence` says.
 | O5 | S1 (documentation currency) | the crate README documents the closed citation grammar, the two codes and the skip semantics | P4 | P4 | `packages/agentic-workflow/README.md` | `rg -c "cited-path-missing" packages/agentic-workflow/README.md` matches 1 | `E` line in `## Log` | planned |
 | O6 | S1 (generated projection) | adding this unit dir re-renders `docs/generated/units.md` through the generator | P1 | P1 | `scripts/docs-generate.mjs` | `bun scripts/docs-generate.mjs --check` exits 0 | `G` line in `## Log` | planned |
 | O7 | S2 | one PR against `main` from `feat/227-deterministic-artifact-emitters`, conventional commits, body naming the interpretation | P6 | P6 | the session (`gh`) | `gh pr list --head feat/227-deterministic-artifact-emitters --state open --json url` matches 1 | `E` line in `## Log` | planned |
+| O8 | S1 (the version-parity gate's rejection at `38e7c548` — re-cut 2026-11-09, see `## Log` `D2`) | a PR changing the crate's shipped content declares the bump intent in a valid `.changeset/*.md` naming `@gtrabanco/agentic-workflow` | P6 | P6 | `.changeset/227-deterministic-artifact-emitters.md` | `node scripts/version-parity-gate.mjs --content` exits 0 | `G` line in `## Log` | planned |
 
 ## Triaged steps
 
@@ -163,13 +164,16 @@ One observable, testable criterion per requirement. Frozen at cut.
   resolution was reported as a `mismatch` with three options; the owner's
   "Create the PR" selected delivering the residual cross-checks as one PR.
   The retired producer emitters stay retired.
+- **D2** — 2026-11-09, ledger re-cut forced by the gate: the pre-push local gate rejected `version-parity-content` at `38e7c548` — a PR changing the crate's shipped content must declare the bump intent in a changeset (the release applies it). This disproves `PE-006` as first sampled (the no-changeset precedent was the owner's direct-to-`main` batches, not a PR rule); `PE-006` is corrected and `O8` added. The changeset `.changeset/227-deterministic-artifact-emitters.md` (minor, `@gtrabanco/agentic-workflow`) is the repair.
 - **E1** — 2026-11-09, `bun scripts/ceremony.mjs tier classify --paths packages/agentic-workflow/src/verify/Verify.mjs packages/agentic-workflow/bin/agentic-workflow.mjs packages/agentic-workflow/test/verify.test.mjs packages/agentic-workflow/README.md` · exit 0 · tier `standard`, signals `[]`.
 - **E2** — 2026-11-09, `bun scripts/unit-route.mjs --triage 227-deterministic-artifact-emitters` · exit 0 · steps `research, design, plan, implement, tests, evidence, review, docs`; relay lines recorded, not acted on.
 - **P1** — 2026-11-09, planning ledgers frozen (Planning evidence `PE-001…PE-006`, Obligations `O1…O7`, all `planned`) and the generated projection re-rendered · commit recorded in `## Log` `P2` after the push.
 
 ## Next
 
-P2 — RED corpus in the verifier suite.
+P2 — RED corpus in the verifier suite — done through `38e7c548`; remaining: push, the PR (O7), the parity re-run (O8), the roadmap settle and the session log.
+
+Also — P1's commit and the RED/GREEN runs get their `P`/`E` lines appended in the settle batch.
 
 ## References
 
