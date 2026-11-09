@@ -3,6 +3,7 @@ import type { ProfileCandidate } from "../config/types.js";
 import { parseModelReference } from "../config/schema.js";
 import type { LoadedConfig } from "../config/load.js";
 import type { SettlePolicy, ThinkingLevel } from "../config/types.js";
+import type { StateFlowLifecycle } from "../stateflow/lifecycle.js";
 import type {
   DispatchOutcome,
   ExtensionSurface,
@@ -67,6 +68,9 @@ export interface RouterDeps<M extends ModelRef = ModelRef> {
   knownCommands: ReadonlySet<string>;
   /** Profile demotion state store (P4, feature 63). */
   profileState?: ProfileStateStore;
+  /** Issue #174: the state-flow episode lifecycle. Optional so every existing
+   *  double and a host without the wiring are unaffected. */
+  stateFlow?: StateFlowLifecycle;
   /** Wall-clock now (P4). Default: Date.now. */
   now?: () => number;
 }
@@ -126,6 +130,7 @@ export function createRouter<M extends ModelRef = ModelRef>({
   settingsCommand,
   knownCommands,
   profileState,
+  stateFlow,
   now,
 }: RouterDeps<M>): Router<M> {
   let pending: PendingTurn<M> | undefined;
@@ -379,6 +384,30 @@ export function createRouter<M extends ModelRef = ModelRef>({
       }
 
       // -----------------------------------------------------------------
+      // Issue #174: the state-flow episode consult. Placed after the
+      // deferred-restart return and before the model application, because the
+      // deferred path re-enters dispatch: an episode started before a possible
+      // defer would sit open behind no turn. The lifecycle owns the allowlist
+      // gate; the router owns the refusal and the once-per-session warning.
+      // -----------------------------------------------------------------
+      if (stateFlow) {
+        const episode = stateFlow.start(command.name, loaded.config.stateFlow);
+        if (episode.status === "refuse-missing") {
+          return refuse(
+            ctx,
+            "state-flow-backend-missing",
+            `/${command.name} refused: the stateFlow backend ("pi-state-flow") is not installed in this session and onBackendMissing is "refuse". Install it with 'pi install npm:@llblab/pi-state-flow', or change the policy with /${settingsCommand}.`,
+          );
+        }
+        if (episode.status === "noop-missing" && episode.warn) {
+          ctx.notify(
+            `/${command.name}: stateFlow is enabled but the backend ("pi-state-flow") is not installed, so the command runs without state-mode. Install it with 'pi install npm:@llblab/pi-state-flow'. This warning appears once.`,
+            "warning",
+          );
+        }
+      }
+
+      // -----------------------------------------------------------------
       // Legacy: model application (target + thinking)
       // -----------------------------------------------------------------
       const snapshot = { model: ctx.model, thinking: session.getThinkingLevel() };
@@ -450,6 +479,10 @@ export function createRouter<M extends ModelRef = ModelRef>({
         session.sendUserMessage(invocation, { expandPromptTemplates: true });
       } catch (error) {
         pending = undefined;
+        // Issue #174: the turn never started, so the episode the consult just
+        // opened would sit open behind nothing — clear it now, exactly like the
+        // routing rollback.
+        stateFlow?.settle(true);
         const rolledBack = Boolean(applied.model || applied.thinking);
         if (rolledBack) {
           await restore(
