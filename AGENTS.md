@@ -62,7 +62,6 @@ new doc takes ownership of a task:
 | A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
 | Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) — the domain-separation safeguard's detail is [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
 | The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
-| Adding or changing a config key, or a package's config section | [`docs/workflow/CONFIG.md`](docs/workflow/CONFIG.md) — the files/scopes, the fill-in resolution, the CLI/API, and the `config-extension@1` plugin contract |
 
 ## Deep references
 
