@@ -2,7 +2,17 @@
 // repository `skills/` tree. `skills/` at the repo root is the single source of
 // truth: it is the only skills tree in git, and the copy this script stages
 // under the package is pack-time build output, gitignored and removed again by
-// `--clean` once the tarball exists. Nothing here edits skill prose.
+// `--clean` once the tarball exists.
+//
+// Projection contract (issue #410 — deliberately rewritten from "nothing here
+// edits skill prose"): the staged copy is a *projection* of the canonical tree
+// driven by `projection-manifest.json` at the package root. Each manifest rule
+// removes or pointerizes one declared prose section, resolved through the
+// #407 section locator and hash-bound to the exact bytes it removes
+// (`scripts/projection.mjs`). Files no rule names are byte-identical to their
+// source — always. The standalone `skills/` tree is never edited: rules read
+// it and write only into the staged copy. The manifest ships EMPTY (no rules),
+// which makes this a byte-identical no-op until the first entries land.
 //
 // Lifecycle (package.json): `prepare` stages it for local work, `test` stages it
 // before asserting, `prepublishOnly` stages it before the gate, and `postpack`
@@ -21,9 +31,11 @@
 // folded scalars (`description: >`) are skipped because every continuation line
 // is indented, so no nested line can be mistaken for a top-level key.
 
-import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { ProjectionError, applyProjection, loadProjectionManifest, rulesFor } from "./projection.mjs";
 
 const SKILL_FILE = "SKILL.md";
 
@@ -117,17 +129,48 @@ export function listFiles(dir, prefix = "") {
 }
 
 /**
+ * Apply the declared projection to one staged skill directory: for every file
+ * a manifest rule names, the rule is applied to the *source* bytes and the
+ * result replaces the staged copy's file. A file no rule names is left exactly
+ * as copied. Any projection failure aborts the build — fail-closed, never a
+ * partial bundle.
+ * @param {{ dir: string, slug: string }} skill the source skill
+ * @param {string} stagedDir the copied skill directory in the bundle
+ * @param {readonly object[]} rules the whole validated manifest rule list
+ * @returns {number} how many files were projected
+ */
+function projectSkill(skill, stagedDir, rules) {
+  let projected = 0;
+  for (const rel of listFiles(stagedDir)) {
+    const fileRules = rulesFor(rules, `skills/${skill.slug}/${rel}`);
+    if (fileRules.length === 0) continue;
+    const source = readFileSync(join(skill.dir, rel), "utf8");
+    const out = applyProjection(source, fileRules, `skills/${skill.slug}/${rel}`);
+    writeFileSync(join(stagedDir, rel), out);
+    projected += 1;
+  }
+  return projected;
+}
+
+/**
  * Rebuild the bundle from a skills source tree: the target is wiped and
  * re-copied, so a deleted source skill can never survive as a stale copy.
- * @param {{ sourceDir: string, targetDir: string }} options
- * @returns {{ included: string[], excluded: string[], files: number }}
+ * With a projection manifest, the copy becomes the declared projection of the
+ * source (issue #410); without one, it is the plain byte-copy.
+ * @param {{ sourceDir: string, targetDir: string, manifestPath?: string }} options
+ * @returns {{ included: string[], excluded: string[], files: number, projected: number }}
  */
-export function bundleSkills({ sourceDir, targetDir }) {
+export function bundleSkills({ sourceDir, targetDir, manifestPath }) {
   const source = resolve(sourceDir);
   const target = resolve(targetDir);
   const skills = listSkills(source);
   const included = [];
   const excluded = [];
+
+  const rules = manifestPath !== undefined && existsSync(manifestPath)
+    ? loadProjectionManifest(manifestPath).rules
+    : [];
+  let projected = 0;
 
   // Wipe first: a rebuild must never merge over a stale copy.
   rmSync(target, { recursive: true, force: true });
@@ -146,11 +189,12 @@ export function bundleSkills({ sourceDir, targetDir }) {
         return !rel.some((part) => part.startsWith(".") || part === "node_modules");
       },
     });
+    if (rules.length > 0) projected += projectSkill(skill, join(target, skill.slug), rules);
     included.push(skill.slug);
   }
 
   const files = included.reduce((total, slug) => total + listFiles(join(target, slug)).length, 0);
-  return { included, excluded, files };
+  return { included, excluded, files, projected };
 }
 
 /**
@@ -168,6 +212,9 @@ if (invokedDirectly) {
   const dirs = {
     sourceDir: join(packageDir, "..", "..", "skills"),
     targetDir: join(packageDir, "skills"),
+    // The repo-internal manifest: committed at the package root, outside the
+    // `files:` whitelist — it drives the projection, never ships in the tarball.
+    manifestPath: join(packageDir, "projection-manifest.json"),
   };
 
   if (process.argv.includes("--clean")) {
@@ -176,7 +223,7 @@ if (invokedDirectly) {
   } else {
     const result = bundleSkills(dirs);
     console.log(
-      `bundled ${result.included.length} skills (${result.files} files) · excluded: ${result.excluded.join(", ") || "none"}`,
+      `bundled ${result.included.length} skills (${result.files} files) · projected: ${result.projected} files · excluded: ${result.excluded.join(", ") || "none"}`,
     );
   }
 }

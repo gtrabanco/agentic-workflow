@@ -1,0 +1,20 @@
+# 410 — projection-pipeline · planning evidence
+
+One row per Engineering claim this change rests on. `authority-kind` is the
+closed cell the unit-lane plan step writes (`known | assumption | unknown |
+spec`); `freshness` is `current | stale | not-applicable`; every row was sampled
+at the cut head (`6f5d5453`). Column order and vocabularies are owned by
+`skills/pre-execution-review/references/LEDGERS.md` §1.
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | known | the schema package publishes `validateProjectionManifestV1` plus the projection vocabularies — ops `remove`/`pointerize`/`prereq`, selector kinds `heading`/`path`/`headingRegex`/`line`, hash algorithms `sha256`, the `except` keep-list on `remove`, and the `contentHash` pattern `sha256:<64 hex>` | `packages/agentic-workflow-schema/src/projection.ts:299` and the type block above it; exported at `packages/agentic-workflow-schema/src/index.ts:4127`; `projection-manifest.schema.json` ships beside it | current | O1, O2, O5, P2 |
+| PE-002 | known | the runner crate exports `locate`, `remove`, `replace` and `SECTION_ERROR_CODES` (`NO_MATCH`, `AMBIGUOUS_MATCH`, `BAD_SELECTOR`); offsets are UTF-16 indices and the splice is lossless outside edited ranges | `packages/agentic-workflow/src/doc/section-locator.mjs:39,198,330,342,352,357`; suite `packages/agentic-workflow/test/doc.section-locator.test.mjs` | current | O3, P2 |
+| PE-003 | known | the pi package already deep-imports runner-crate modules by package path (the crate has no `exports` map), so the bundle script can import the locator the same way | `packages/pi-agentic-workflow/src/log-session-invocation.ts:36`; `packages/agentic-workflow/package.json` (`files: [bin, src, …]`, no exports map) | current | P2 |
+| PE-004 | known | `bundle-skills.mjs`'s header states "Nothing here edits skill prose"; the staged bundle is wiped-and-rebuilt gitignored output, and `test/bundle-lifecycle.test.mjs` pins wipe-on-rebuild, `--clean` and source-untouched | `packages/pi-agentic-workflow/scripts/bundle-skills.mjs:1-5`; `packages/pi-agentic-workflow/test/bundle-lifecycle.test.mjs` | current | O7, O8, P3 |
+| PE-005 | known | `test/skill-parity.test.mjs` asserts byte-identity of every bundled file today (`AC2: every bundled file is byte-identical to its skills/ source`) and the directory-set/`internal`-exclusion checks that must survive the redefinition | `packages/pi-agentic-workflow/test/skill-parity.test.mjs:100-105` and the surrounding suite | current | O9, P4 |
+| PE-006 | known | the crate CLI dispatches its top-level commands via `case "<token>"` in `bin/agentic-workflow.mjs` — relay, resolve-passes, verify, resources, doc, memory, log, journal, unit-doc, roadmap, changelog, budgets, manifest, section — so enforcing-command existence is checkable from that switch's tokens | `packages/agentic-workflow/bin/agentic-workflow.mjs:376-1068` | current | O4, P2 |
+| PE-007 | known | the context-budget metric is `ceil(UTF-8 bytes / 4)` and `check-skill-context.mjs` is hardcoded to the repo `skills/` root, so the stripped-copy budget check reimplements the same measure | `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (`metric`); `scripts/check-skill-context.mjs:11` | current | O10, P4 |
+| PE-008 | known | the pi package `files:` whitelist is `[dist, skills, package.json, README.md, LICENSE]`, so a package-root `projection-manifest.json` is committed to git but never packed | `packages/pi-agentic-workflow/package.json:36-42` | current | O12, P3 |
+| PE-009 | known | the local gate runs the pi package suite under node (`pi-node-compat`: `bun run test:node` = `bundle:skills` + `tsc` + `node --test test/*.test.mjs`), so projection checks land in CI with no workflow edit | `scripts/local-gate.mjs:242-249` | current | O15, P6 |
+| PE-010 | known | roadmap row 65 claims "remark AST edit" for the doc toolchain while #407/#366 shipped AST-located byte-offset splice over the original string | `docs/ROADMAP.md:84`; commits `88248ccf` (#407) and `b8e23003` (doc edit over the #407 primitive) | current | O13, P6 |
