@@ -112,6 +112,15 @@ decisions that are not acceptance criteria run through the design step's
 assumptions. See
 [the unit doc template](references/STEPS.md) for section order.
 
+The template carries the unit doc's **provenance stamp**
+(`doc-provenance@1` — the carrier `format`, the content `grammars`, and the
+writer/schema versions; owner: the schema package's README block). Keep it. It
+is written at creation and at a re-cut only, never per edit, so its version
+lines are never hand-edited: a re-cut re-stamps with
+`agentic-workflow unit-doc <slug> provenance`. A unit doc without a stamp stays
+readable — its generation is derived from the sections it carries — and a
+closed unit is never backstamped.
+
 ### 1a. Risk tier — read the verdict, never decide it
 
 Before the unit doc is created, the change's **risk tier** decides whether it
