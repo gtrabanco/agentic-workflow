@@ -15,6 +15,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { tempRoot } from "./temp-root.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const script = path.join(repoRoot, "scripts/lint-changeset.mjs");
@@ -23,7 +24,7 @@ const run = (args) =>
   spawnSync(process.execPath, [script, ...args], { cwd: repoRoot, encoding: "utf8" });
 
 function fixtureDir(files) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "changeset-fixture-"));
+  const dir = tempRoot("changeset-fixture-");
   for (const [name, content] of Object.entries(files)) {
     fs.writeFileSync(path.join(dir, name), content);
   }

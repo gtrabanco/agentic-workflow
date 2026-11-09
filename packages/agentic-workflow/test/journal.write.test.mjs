@@ -35,6 +35,7 @@ import { fileURLToPath } from "node:url";
 import { renderEntry } from "../src/log/render.mjs";
 import { JOURNAL_DIR, fragmentName, parseFragmentName } from "../src/journal/fragment.mjs";
 import { git, sandboxGitEnv } from "./fixtures.mjs";
+import { tempRoot } from "../../../scripts/temp-root.mjs";
 
 const binPath = new URL("../bin/agentic-workflow.mjs", import.meta.url).pathname;
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -44,7 +45,7 @@ const sessionClose = path.join(repoRoot, "scripts", "session-close.mjs");
 const PINNED = "2026-11-08T12:30:00Z";
 
 function tmp(label) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `journal-write-${label}-`));
+  return tempRoot(`journal-write-${label}-`);
 }
 
 function newRepo(label, { carrier = true } = {}) {
