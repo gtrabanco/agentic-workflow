@@ -118,7 +118,8 @@ test("AC9: decide stop-needs-input does NOT invoke merge", async () => {
   assert.ok(!sentMessages.some(m => m.includes("merge")));
 });
 
-// AC10: run log format
+// AC10: run log format — one iteration row per iteration, around one run boundary
+// (the boundary rows are issue #284's: the resume entry reads them).
 test("AC10: one log line per iteration — format: YYYY-MM-DD HH:MM — kind/code — cmd — k/cap", async () => {
   let count = 0;
   let logLines = [];
@@ -127,8 +128,14 @@ test("AC10: one log line per iteration — format: YYYY-MM-DD HH:MM — kind/cod
     appendRunLog: (line) => logLines.push(line),
   });
   await runConductorLoop(deps);
-  assert.equal(logLines.length, 2);
-  const line0 = logLines[0];
+  const kindOf = (line) => line.split(" — ")[1];
+  assert.deepEqual(logLines.map(kindOf).filter((k) => k === "run/start"), ["run/start"], "exactly one run boundary opener");
+  assert.deepEqual(logLines.map(kindOf).filter((k) => k === "run/stop"), ["run/stop"], "exactly one run boundary closer");
+  assert.equal(logLines[0], logLines.find((l) => kindOf(l) === "run/start"), "the opener comes first");
+  assert.equal(logLines[logLines.length - 1], logLines.find((l) => kindOf(l) === "run/stop"), "the closer comes last");
+  const iterationLines = logLines.filter((l) => !/^run\//u.test(kindOf(l)));
+  assert.equal(iterationLines.length, 2, "one iteration row per iteration");
+  const line0 = iterationLines[0];
   assert.ok(/\d{4}-\d{2}-\d{2}/.test(line0), "date present");
   assert.ok(/\d{2}:\d{2}/.test(line0), "time present");
   assert.ok(line0.includes("invoke"), "invoke in first line");
