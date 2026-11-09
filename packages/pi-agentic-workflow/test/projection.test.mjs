@@ -163,6 +163,29 @@ test("projection: remove honors a line-in-scope selector (the matched line only)
   assert.equal(out, TOY_SKILL.replace("Detail two.\n", ""));
 });
 
+test("projection: remove honors a plain heading selector (not path) — A3 coverage", () => {
+  const rule = {
+    id: "remove-heading", op: "remove",
+    source: "skills/toy-skill/SKILL.md",
+    selector: { heading: "Enforced section" },
+    enforcingCommand: "doc read",
+    contentHash: sha256(ENFORCED_SECTION),
+  };
+  const out = applyProjection(TOY_SKILL, [rule]);
+  assert.equal(out, `---
+name: toy-skill
+---
+
+# Toy skill
+
+Intro line.
+
+## Other section
+
+Untouched body.
+`);
+});
+
 test("projection: pointerize keeps the heading and replaces the body with one pointer line", () => {
   const out = applyProjection(TOY_SKILL, [pointerizeOther()]);
   assert.equal(
