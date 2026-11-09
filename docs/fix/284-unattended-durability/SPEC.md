@@ -364,6 +364,10 @@ it has open work. No triage block reorders the frozen task list.
 - **P1** — 2026-11-09, the five modules and their suites landed: the run journal,
   the resume gate, the supervisor renderer, the loop boundary + reconcile gate
   and the `advance` wiring · 9c40e590.
+- **P2** — 2026-11-09, the ledgers, the operator runbook, the roadmap/fix rows, the
+  changeset and the regenerated projection landed · 3f721446.
+- **P3** — 2026-11-09, the session journal fragment landed
+  (`.agentic-workflow/journal/20261109T155402Z-feat-284-unattended-durability-narrative-local.md`).
 - **G1** — 2026-11-09, HEAD 9c40e590 · `bun scripts/version-parity-gate.mjs
   --content --base 1fa39fe1` · exit 0 · `changeset-intent` route,
   `VERDICT: PASS`.
