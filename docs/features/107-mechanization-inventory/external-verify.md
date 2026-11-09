@@ -101,3 +101,38 @@ published — so it needs a history rewrite, which only the owner authorizes.
 journal, not pending; 0 fragments) holds and the fragment count is 0, but its
 literal `matches 1` no longer reproduces. Changing an acceptance criterion to
 fit the tree is a test change — the owner's call, not this batch's.
+
+EXTERNAL VERIFY — 2026-11-09 — base: 1fa39fe137e1265e5fcb239bfd8e24803e99a112 · head: fe07d52c (delta over bb00d341)
+Delta basis: corrections landed since the last receipt (`19391ef4`, `94316d78`, `e16d5433`, `fe07d52c`) →
+re-verified B1/B2 + the delta diff (`bb00d341..fe07d52c`: docs only — `docs/LOGS.md`,
+`docs/features/107-mechanization-inventory/SPEC.md`, `external-verify.md`) only, then the spot check.
+Blockers: 1
+- B3 — docs/features/107-mechanization-inventory/SPEC.md:239 (P4 validator), :291 (O14) and AC15 —
+  the frozen criterion `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` `matches 1`
+  observes **3** (`15:39:01Z`, `17:31:14Z`, `17:31:52Z`); it observed 1 at the last verified head
+  `bb00d341`. One extra entry is the delta's own (`e16d5433`), one a concurrent session's —
+  delta-caused, reproduces here, disclosed by the batch as N2 with the criterion correctly left
+  unedited (a test is never edited to pass). Same class as the closed B2: a `verified` row whose
+  stated outcome no longer reproduces. Smallest action: owner amends the frozen count (or records
+  the concurrent-session disposition) — owner-only, the batch refused it correctly.
+Advisories: 1
+- N1 (merge-order, not base-caused) — `docs/LOGS.md` carries two `main` session blocks
+  (`15:04:20Z`, `15:06:33Z`) whose fragments are still pending here and on `main` (2 fragments in
+  `.agentic-workflow/journal/` confirmed); merging this branch as-is duplicates them. The gate is
+  green on the current range, so not a blocker here; the repair is a `docs/LOGS.md` truncation
+  judged against an already-published head → history rewrite, owner-only. Re-trigger: any merge of
+  this branch before the fragments are resolved.
+Sibling sweep: clean apart from the blocker's own family — the closed B2's old text (`62 pass`, the
+  unanchored S6 carve) survives only as the historical record (SPEC D5, the receipt); the stale
+  `matches 1` copies are exactly AC15/O14/P4 (named in B3). `docs/fix/468`'s `62 pass` is an
+  unrelated unit's count.
+Completeness: S1–S16 remain resolved (full-verify receipts stand; delta touched ledger text only);
+  open id: O14/AC15 validator (B3). B1 re-checked closed (0 stray rows, header excluded);
+  B2 re-checked closed (AC7 → 0, negative control → 5 fails closed, O13's 80 = G1's 80).
+Spot check: `bun scripts/log-immutability.mjs --base main` → exit 0, `0 violations · base 1fa39fe1 ·
+  range 15 commits` — match with the reported verdict (range grew 14→15 by the docs-only `fe07d52c`,
+  expected).
+Verdict: NEEDS-DECISION (1 open blocker — B3, owner call on the frozen AC15/O14/P4 count)
+Read-only compliance: no commit, no push, no branch, no forge mutation, no other file edit; the
+delta introduces no mutation-capable surface (docs only) and none was executed against the live tree
+beyond the check-only `log-immutability` run above.
