@@ -2,34 +2,40 @@
 /**
  * worktree-guard.mjs — the worktree audit (issue #476).
  *
- * The repository's rule: worktrees live inside the repository tree, on a unit
- * branch, and are removed when the unit closes. The incident: finished
- * sessions left worktrees behind — some detached, which pi-web lists as
- * "detached" — and they accumulated until the owner cleaned them by hand.
- * This gate audits `git worktree list --porcelain` and fails on the leftover
+ * The incident: finished sessions left worktrees behind — some detached,
+ * which pi-web lists as "detached" — and they accumulated until the owner
+ * cleaned them by hand. A second failure mode surfaced the same day: a
+ * session mover severed the worktree `.git` link files, and the corrupted
+ * worktrees then leaked their git-administration files (HEAD, gitdir, index,
+ * commondir, logs/) into the working tree as untracked junk. This gate
+ * audits `git worktree list --porcelain` and fails on the leftover
  * signatures:
  *
- *   PRUNABLE  the worktree's directory vanished (stale metadata)
- *   OUTSIDE   a non-primary worktree outside the repository tree (for this
- *             repository: outside the `.git/worktrees` home)
- *   DETACHED  a non-primary worktree with a detached HEAD (skipped while a
- *             rebase/merge/cherry-pick is in progress — the primary checkout
- *             is legitimately detached mid-operation)
- *   STALE     a non-primary worktree on a branch fully merged into the base
- *             (origin/main when it resolves, main otherwise) — the finished
- *             unit nobody removed; a dirty tree appends a dirty marker
+ *   CORRUPTED  a registered worktree whose directory lost its `.git` link
+ *              file — the administration metadata then bleeds into the
+ *              working tree; `--prune` repairs it with `git worktree repair`
+ *              (non-destructive: working files and commits are never touched)
+ *   PRUNABLE   the worktree's directory vanished (stale admin metadata)
+ *   OUTSIDE    a non-primary worktree outside the legal home
+ *              (`--home`, default `<repo>/.git/worktrees`)
+ *   DETACHED   a non-primary worktree with a detached HEAD (skipped while a
+ *              rebase/merge/cherry-pick is in progress — the primary checkout
+ *              is legitimately detached mid-operation)
+ *   STALE      a non-primary worktree on a branch fully merged into the base
+ *              (origin/main when it resolves, main otherwise) — the finished
+ *              unit nobody removed; a dirty tree appends a dirty marker
  *
- * `--prune` fixes what it can: `git worktree prune` for vanished entries,
- * `git worktree remove` for clean ones, and a `SKIP — dirty; remove
- * manually` line for a dirty worktree (never removed, never forced). Branches
- * are never deleted — a removed branch worktree prints
- * `SUGGEST git branch -D <branch>` instead. The primary checkout is never a
- * finding and never removed.
+ * `--prune` fixes what it can: `git worktree repair` for corrupted links,
+ * `git worktree prune` for vanished entries, `git worktree remove` for clean
+ * leftovers, and a `SKIP — dirty; remove manually` line for a dirty worktree
+ * (never removed, never forced). Branches are never deleted — a removed
+ * branch worktree prints `SUGGEST git branch -D <branch>` instead. The
+ * primary checkout is never a finding and never touched.
  *
  * stdout: a `worktree-guard —` header with the worktree count, one
  * `FINDING <path> — <CODE>: <detail>` line per finding in path order, the
- * PRUNED/SKIP/SUGGEST lines when pruning, the remaining tally, then the
- * verdict. exit: 0 only when the verdict is `PASS`; 1 on findings; 2 on
+ * REPAIRED/PRUNED/SKIP/SUGGEST lines when pruning, the remaining tally, then
+ * the verdict. exit: 0 only when the verdict is `PASS`; 1 on findings; 2 on
  * usage. Its sibling suite is `scripts/worktree-guard.test.mjs`.
  */
 
@@ -41,15 +47,18 @@ import { fileURLToPath } from "node:url";
 
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-const USAGE = `usage: worktree-guard [--repo <dir>] [--prune] [--json]
+const USAGE = `usage: worktree-guard [--repo <dir>] [--home <dir>] [--prune] [--json]
 
   --repo <dir>  the repository to audit (default: this one)
-  --prune       remove what the audit flagged (vanished, clean outside/detached/
-                stale worktrees); dirty worktrees are skipped, never forced
+  --home <dir>  the legal worktree home (default: <repo>/.git/worktrees)
+  --prune       fix what the audit flagged: repair corrupted links, prune
+                vanished entries, remove clean leftovers; dirty worktrees are
+                skipped, never forced
   --json        one JSON object instead of the fixed text block
 
-stdout: one "FINDING <path> — <CODE>" line per finding, the PRUNED/SKIP/SUGGEST
-lines when pruning, the tally, the verdict. exit: 0 pass · 1 findings · 2 usage`;
+stdout: one "FINDING <path> — <CODE>" line per finding, the REPAIRED/PRUNED/
+SKIP/SUGGEST lines when pruning, the tally, the verdict.
+exit: 0 pass · 1 findings · 2 usage`;
 
 const IN_PROGRESS_MARKERS = ["rebase-merge", "rebase-apply", "MERGE_HEAD", "CHERRY_PICK_HEAD"];
 
@@ -61,6 +70,7 @@ function usage(message) {
 
 export function parseArgs(argv) {
   let repo = null;
+  let home = null;
   let prune = false;
   let json = false;
   for (let index = 0; index < argv.length; index += 1) {
@@ -70,11 +80,16 @@ export function parseArgs(argv) {
       if (value === undefined) usage("--repo needs a directory");
       repo = path.resolve(value);
       index += 1;
+    } else if (arg === "--home") {
+      const value = argv[index + 1];
+      if (value === undefined) usage("--home needs a directory");
+      home = path.resolve(value);
+      index += 1;
     } else if (arg === "--prune") prune = true;
     else if (arg === "--json") json = true;
     else usage(`unknown argument ${arg}`);
   }
-  return { repo: repo ?? DEFAULT_ROOT, prune, json };
+  return { repo: repo ?? DEFAULT_ROOT, home, prune, json };
 }
 
 function git(args, cwd) {
@@ -124,16 +139,19 @@ function isMerged(branchRef, base, repo) {
 }
 
 /**
- * The worktree-administration file names that live inside a worktree whose
- * directory shares its path with the git metadata directory (this
- * repository.s worktree home): they are git-owned, never a human change, and
- * must not make a worktree read as dirty.
+ * The worktree-administration file names that bleed into a corrupted
+ * worktree's working tree when the `.git` link is severed: they are
+ * git-owned, never a human change, and must not make a worktree read as
+ * dirty. A healthy worktree never shows them — their presence is what the
+ * CORRUPTED finding reports.
  */
 const WORKTREE_ADMIN_FILES = new Set([
   "HEAD",
   "index",
+  "index.lock",
   "commondir",
   "gitdir",
+  "logs",
   "ORIG_HEAD",
   "FETCH_HEAD",
   "COMMIT_EDITMSG",
@@ -141,17 +159,15 @@ const WORKTREE_ADMIN_FILES = new Set([
   "CHERRY_PICK_HEAD",
   "REVERT_HEAD",
   "BISECT_LOG",
-  "index.lock",
-  "logs",
   "rebase-merge",
   "rebase-apply",
   "sequencer",
 ]);
 
 /** Whether the worktree at `full` carries any human change: a tracked
- *  modification, or an untracked file that is not worktree administration. */
+ *  modification, or an untracked file that is not leaked administration. */
 function isDirty(full) {
-  if (git(["diff", "--quiet", "HEAD"], full).status === 1) return true;
+  if (git(["diff", "--quiet", "HEAD", "--"], full).status === 1) return true;
   const others = git(["ls-files", "--others", "--exclude-standard"], full);
   if (others.status !== 0) return false;
   return others.stdout
@@ -161,23 +177,52 @@ function isDirty(full) {
     .some((name) => !WORKTREE_ADMIN_FILES.has(name.split("/")[0]));
 }
 
+/** Whether the worktree at `full` lost its `.git` link file — the corruption
+ *  whose symptom is the administration files bleeding into the tree. */
+function isCorrupted(full) {
+  return fs.existsSync(full) && !fs.existsSync(path.join(full, ".git"));
+}
+
 /** The audit itself: one finding per leftover signature. */
-export function audit(repo) {
+export function audit(repo, home) {
   const entries = listWorktrees(repo);
   const primary = entries[0];
-  const legalHome = path.join(repo, ".git", "worktrees");
+  const legalHome = home ?? path.join(repo, ".git", "worktrees");
   const base = baseRef(repo);
   const gitDir = (git(["rev-parse", "--absolute-git-dir"], repo).stdout ?? "").trim();
   const inProgress = gitDir ? operationInProgress(repo, gitDir) : false;
   const findings = [];
   for (const entry of entries.slice(1)) {
     const rel = path.relative(repo, entry.path) || entry.path;
-    if (entry.prunable || !fs.existsSync(entry.path)) {
-      findings.push({ path: rel, code: "PRUNABLE", detail: entry.prunable ?? "the worktree directory is gone" });
+    const dirExists = fs.existsSync(entry.path);
+    if (entry.prunable || !dirExists) {
+      // Git reports a vanished directory and a severed .git link with the
+      // same prunable reason ("gitdir file points to non-existent location")
+      // — but they are opposites: a vanished directory is a leftover whose
+      // stale metadata a prune removes, while an existing directory that
+      // lost its link is recoverable, and a naive prune here destroys the
+      // admin metadata the repair needs. Corruption wins the branch.
+      if (dirExists && isCorrupted(entry.path)) {
+        findings.push({
+          path: rel,
+          code: "CORRUPTED",
+          detail: "the .git link file is gone — git administration bleeds into the working tree",
+        });
+      } else {
+        findings.push({ path: rel, code: "PRUNABLE", detail: entry.prunable ?? "the worktree directory is gone" });
+      }
+      continue;
+    }
+    if (isCorrupted(entry.path)) {
+      findings.push({
+        path: rel,
+        code: "CORRUPTED",
+        detail: "the .git link file is gone — git administration bleeds into the working tree",
+      });
       continue;
     }
     if (!entry.path.startsWith(legalHome + path.sep) && entry.path !== legalHome) {
-      findings.push({ path: rel, code: "OUTSIDE", detail: `worktrees live under ${path.relative(repo, legalHome) || legalHome}` });
+      findings.push({ path: rel, code: "OUTSIDE", detail: `worktrees live under ${legalHome}` });
       continue;
     }
     if (entry.detached) {
@@ -201,18 +246,26 @@ export function audit(repo) {
 }
 
 function main(argv) {
-  const { repo, prune, json } = parseArgs(argv);
-  const first = audit(repo);
+  const { repo, home, prune, json } = parseArgs(argv);
+  const first = audit(repo, home);
+  let repaired = [];
   let pruned = [];
   let skipped = [];
   let suggestions = [];
 
   if (prune) {
-    if (first.findings.some((finding) => finding.code === "PRUNABLE")) {
-      git(["worktree", "prune"], repo);
-    }
     for (const finding of first.findings) {
-      if (finding.code === "PRUNABLE") continue; // handled by `git worktree prune`
+      if (finding.code === "PRUNABLE") continue; // handled by the one `git worktree prune` below
+      if (finding.code === "CORRUPTED") {
+        const full = path.join(repo, finding.path);
+        git(["worktree", "repair", full], repo);
+        if (isCorrupted(full)) {
+          skipped.push({ ...finding, detail: `${finding.detail} — repair failed; recover manually` });
+        } else {
+          repaired.push(finding);
+        }
+        continue;
+      }
       if (finding.dirty) {
         skipped.push(finding);
         continue;
@@ -226,9 +279,12 @@ function main(argv) {
       pruned.push(finding);
       if (finding.branch) suggestions.push(`SUGGEST git branch -D ${finding.branch}`);
     }
+    if (first.findings.some((finding) => finding.code === "PRUNABLE")) {
+      git(["worktree", "prune"], repo);
+    }
   }
 
-  const remaining = prune ? audit(repo).findings : first.findings;
+  const remaining = prune ? audit(repo, home).findings : first.findings;
   const verdict = remaining.length === 0 ? "PASS" : "FAIL";
   if (json) {
     console.log(
@@ -236,6 +292,7 @@ function main(argv) {
         worktrees: first.entries.length,
         primary: path.relative(repo, first.primary.path) || first.primary.path,
         findings: remaining.map(({ path: findingPath, code, detail }) => ({ path: findingPath, code, detail })),
+        repaired: repaired.map((finding) => finding.path),
         pruned: pruned.map((finding) => finding.path),
         skipped: skipped.map((finding) => finding.path),
         verdict,
@@ -246,6 +303,7 @@ function main(argv) {
     for (const finding of first.findings) {
       console.log(`FINDING ${finding.path} — ${finding.code}: ${finding.detail}`);
     }
+    for (const finding of repaired) console.log(`REPAIRED ${finding.path}`);
     for (const finding of pruned) console.log(`PRUNED ${finding.path}`);
     for (const finding of skipped) console.log(`SKIP ${finding.path} — dirty; remove manually`);
     for (const line of suggestions) console.log(line);
