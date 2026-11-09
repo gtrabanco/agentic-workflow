@@ -213,6 +213,15 @@ yet.
   ```
   Apply to this repository: issue #437
   ```
+- **E1** — 2026-11-09, `bun scripts/findings-corpus.mjs` · exit 0 ·
+  `findings | 1149 · legacy-ledgers | 56 · fold-annotated | 229 · review-marks | 173`.
+- **D2** — 2026-11-09, measurement correction, authority: this unit's P1. The
+  cut-time `rg` estimate frozen in O1/PE-001 (1147 rows, 373 fold-annotated, 162
+  marks) counted the first column of a prose table (a fold receipt in
+  `27-pi-agentic-workflow`) as findings and read only the legacy carrier. The
+  reader's shape-scoped count is the frozen value and the ledger cells are
+  corrected to it before green; the `rg` invocations that produced the wrong
+  estimate are kept in PE-001's source cell rather than deleted.
 - **D1** — 2026-11-09, owner selected `composed` for the review-staleness
   decision the issue relocated from #363: the **mechanism** is the scope digest
   (`scripts/scope-manifest.mjs`, fix/286) and the **policy** is a declared

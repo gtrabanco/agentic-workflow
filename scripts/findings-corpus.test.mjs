@@ -90,11 +90,12 @@ const MIGRATED = `## Findings
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  assert.equal(corpus.findings.length, 1147, "every legacy F row is in the corpus");
+  assert.equal(corpus.findings.length, 1149, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
-  assert.equal(corpus.foldAnnotated, 373);
-  assert.equal(corpus.reviewMarks, 162);
-  assert.ok(corpus.units.length >= 118);
+  assert.equal(corpus.foldAnnotated, 229);
+  assert.equal(corpus.reviewMarks, 173);
+  assert.ok(corpus.units.length >= 171);
+  assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));
 });
 
@@ -109,6 +110,20 @@ test("harvest: provenance digest moves with the bytes and never with a re-deriva
   assert.equal(rows.findings[0].severity, "high");
   assert.equal(rows.findings[0].band, "material");
   assert.equal(rows.findings[1].band, "below-floor");
+});
+
+test("harvest: a prose table whose first column is also F<n> is never a finding", () => {
+  const withReceipt = `${LEGACY}
+## Fold receipt
+
+| Row | Repaired in | What the fold had to get right |
+|---|---|---|
+| F1 | scripts/a.mjs | the level is restored whenever the turn touched the session |
+`;
+  const parsed = parseLegacyLedger(withReceipt, { file: "docs/fix/1-x/review-findings.md", unit: "fix-1-x" });
+  assert.equal(parsed.findings.length, 2);
+  assert.equal(parsed.reviewMarks, 1);
+  assert.deepEqual(parsed.unparsable, []);
 });
 
 test("harvest: the migrated carrier reads its rows, its fold line and its marks", () => {
@@ -132,19 +147,24 @@ test("admission: a fold that repaired another path never admits the row", () => 
 });
 
 test("admission: both gates pass only for a repaired, recurring row", () => {
+  const second = `# review findings
+
+Cycle 1 — reviewed head 3333333333333333333333333333333333333333 (PR #2, open).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F9 | scripts/a.mjs:10 | code | high | fix-now | fold into current unit · fold ccccccc | yes |
+`;
   const rows = [
     ...parseLegacyLedger(LEGACY, { file: "docs/fix/1-x/review-findings.md", unit: "fix-1-x" }).findings,
-    ...parseLegacyLedger(LEGACY.replace("F1 |", "F9 |").replace("aaaaaaa", "ccccccc"), {
-      file: "docs/fix/2-z/review-findings.md",
-      unit: "fix-2-z",
-    }).findings,
+    ...parseLegacyLedger(second, { file: "docs/fix/2-z/review-findings.md", unit: "fix-2-z" }).findings,
   ];
   const admitAll = admit(rows, {
     minRecurrence: 2,
     resolveFold: () => ({ sha: "x", paths: ["scripts/a.mjs"] }),
   });
   const admittedRows = admitAll.filter((row) => row.status === "admitted");
-  assert.ok(admittedRows.length >= 2, "the code axis recurs across two units");
+  assert.equal(admittedRows.length, 2, "the code axis recurs across two units and both folds repaired it");
   assert.ok(admitAll.some((row) => row.status === "annotated" && /recurrence/.test(row.reason)));
 });
 
@@ -206,7 +226,7 @@ test("required failure state: a ledger whose rows all fail to parse is refused, 
   const broken = tempTree();
   write(
     path.join(broken, "docs", "fix", "1-x", "review-findings.md"),
-    "| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n| not-a-finding | x | y |\n",
+    "| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n| F1 | x | y |\n",
   );
   const result = run(["--repo", broken]);
   assert.equal(result.status, 1);
