@@ -182,6 +182,21 @@ describe("Roadmap", () => {
     const content = readFileSync(roadmapPath, "utf8");
     ok(content.includes("— Added annotation note"));
   });
+
+  it("annotate keeps the row on one physical line (a table row never wraps)", () => {
+    annotate(roadmapPath, "61", "Second note on the same row");
+    const lines = readFileSync(roadmapPath, "utf8").split("\n");
+    const rowIdx = lines.findIndex((l) => l.startsWith("| 61 |"));
+    ok(rowIdx > -1);
+    ok(lines[rowIdx].includes("— Second note on the same row"));
+    // A note on its own line terminates the row: renderers turn the tail into
+    // a new, malformed row (the 2026-11-09 unit-227 damage).
+    ok(!/^\s*— /u.test(lines[rowIdx + 1] ?? ""), lines.slice(rowIdx, rowIdx + 3).join("\n"));
+    const headerIdx = lines.findIndex((l) => l.includes("| NN |"));
+    for (const line of lines.slice(headerIdx)) {
+      if (line.trim() !== "") ok(line.startsWith("|"), line);
+    }
+  });
 });
 
 // ── Changelog tests ──────────────────────────────────────────────────────

@@ -510,6 +510,50 @@ test("CLI: the verify cross-checks wire to the containing repo, and --no-git ski
   }
 });
 
+test("CLI: gate citations resolve against the inventory's prose block, never the header cell (unit 227 corpus)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-verify-inventory-"));
+  try {
+    mkdirSync(join(dir, "docs", "workflow"), { recursive: true });
+    // The live inventory's rows are `id | …` lines inside the
+    // `prose-gate-inventory@1` text block; only its legend and migration notes
+    // are markdown. A resolver reading markdown pipes publishes nothing, so
+    // every real inventory id is refused as unknown.
+    writeFileSync(
+      join(dir, "docs", "workflow", "GATE_INVENTORY.md"),
+      [
+        "# Gate inventory",
+        "",
+        "| Carrier | What it means |",
+        "|---|---|",
+        "| `script` | a root suite re-runs it |",
+        "",
+        "```text",
+        "prose-gate-inventory@1",
+        "# gate-suites: scripts/*-discipline.test.mjs",
+        "gate-id | statement | carrier | file | section | token | surfaces | safety | recurrence | checkability | tier | stay-reason | rederive",
+        "model-memory-provenance | a journaled claim's provenance | prose | skills/unit-lane/references/DESIGN.md | Provenance | never `confirmed` | - | 2 | 3 | 2 | prose | judgment-needed | skills/unit-lane/references/DESIGN.md#Provenance",
+        "```",
+        "",
+      ].join("\n"),
+    );
+    const path = join(dir, "SPEC.md");
+
+    const cited = BASE_DOC.replace("## References\nnone\n", "## References\nThe `model-memory-provenance` gate is an inventory row.\n");
+    writeFileSync(path, cited);
+    const ok = spawnSync("bun", [BIN, "verify", path], { encoding: "utf8" });
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+    assert.match(ok.stdout, /cited-gates/u);
+
+    // The header cell is a column name, not a published gate.
+    writeFileSync(path, BASE_DOC.replace("## References\nnone\n", "## References\nThe `gate-id` gate is cited.\n"));
+    const header = spawnSync("bun", [BIN, "verify", path], { encoding: "utf8" });
+    assert.equal(header.status, 2, header.stdout + header.stderr);
+    assert.match(header.stderr, /cited-gate-unknown: .*gate-id/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ── CLI wiring ──────────────────────────────────────────────────────────────
 
 test("CLI: verify on the published 201 unit doc exits 0", () => {
