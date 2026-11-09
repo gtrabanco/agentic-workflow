@@ -88,3 +88,15 @@ turned into a proposal.
 
 Every new script follows the repo's convention: `0` pass, `1` a real verdict or
 block, `2` usage error; diagnostics to stderr, the fixed block to stdout.
+
+## Path-protection records
+
+This unit writes three new suites and three new scripts; the guard requires the
+escape declared before the bytes change.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/findings-corpus.test.mjs,scripts/correction-budget.test.mjs,scripts/differential-baseline.test.mjs | P2 | 2026-11-09 | execute-phase | red-first sibling suites: each new reader lands its test commit before its implementation, so the test files must be authored in this unit
+justification | scripts/findings-corpus.mjs,scripts/correction-budget.mjs,scripts/differential-baseline.mjs | P3 | 2026-11-09 | execute-phase | the three read-only readers this unit delivers (S2, S8, S9)
+```
