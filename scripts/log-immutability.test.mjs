@@ -122,6 +122,22 @@ test("resolveBase: explicit flag, then env, then upstream/origin merge-base, the
   assert.ok(calls.some((line) => line.includes("@{upstream}")), "falls through to the upstream");
 });
 
+test("PASS: a journal past spawnSync's 1 MiB default maxBuffer still reads (the live-tree find)", (t) => {
+  const fx = fixture(t);
+  // A real year-old journal is >1 MiB; the default spawnSync maxBuffer killed
+  // `git show <base>:docs/LOGS.md` on the live tree (the gate's first
+  // foreground run on this repository). The fix is the explicit 64 MiB
+  // ceiling; this fixture is the pin (justification: decisions.md, P8).
+  const grown = `# Session log\n\n<!-- ${"x".repeat(1024 * 1024)} -->\n\n${BASE_ENTRY}`;
+  fs.writeFileSync(path.join(fx.root, LOG), grown);
+  const grew = fx.commit("grow the journal past the default maxBuffer");
+  fx.editLog(CONFORMING, true);
+  fx.commit("bot: append the entry", BOT);
+  const result = run(fx.root, ["--base", grew]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /verdict: PASS/);
+});
+
 // ---------------------------------------------------------------------------
 // Range checks against throwaway repositories
 // ---------------------------------------------------------------------------
@@ -235,6 +251,15 @@ test("FAIL: an uncommitted pending-fragment deletion is refused before any commi
   const result = checkWorkingTree({ root: fx.root });
   assert.equal(result.ok, false);
   assert.equal(result.violations[0].code, "fragment-hand-deleted");
+});
+
+test("PASS: a carrier placeholder's deletion is not a lost entry — fragments only, like-for-like", (t) => {
+  const fx = fixture(t);
+  fs.writeFileSync(path.join(fx.root, CARRIER, ".gitkeep"), "");
+  fx.commit("track the carrier placeholder");
+  fs.rmSync(path.join(fx.root, CARRIER, ".gitkeep"));
+  const result = checkWorkingTree({ root: fx.root });
+  assert.equal(result.ok, true, JSON.stringify(result.violations));
 });
 
 // ---------------------------------------------------------------------------
