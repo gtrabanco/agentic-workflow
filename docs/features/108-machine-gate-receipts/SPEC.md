@@ -373,6 +373,11 @@ machinery is deliberately not run on this unit.
   current`, `verdict: fail`, `consumed: true`, `changed_paths: []` (freshness is
   the manifest, the HEAD sha is provenance). The receipt files were removed
   afterwards; the directory is gitignored.
+- **G5** — 2026-11-09, the final-tree gate run (after D7's limit correction):
+  `bun scripts/local-gate.mjs --skip-network --no-bail --only
+  schema-build,root-suite,schema-node-compat,docs-generated-projection,version-parity-content,journal-carrier-check,log-immutability,temp-hygiene,tmp-gc`
+  — exit 0, `PASS — 9 step(s) in 178s` (root-suite 164s, schema node leg 13s).
+  `bun scripts/red-first.mjs` — `verdict: PASS`, 48 pairs, 0 findings.
 - **G4** — 2026-11-09, `bun scripts/gate-receipt.mjs run -- --only worktree-guard`
   → exit 1, and the envelope is a `fail` for the check that ran; the
   `partial-gate-selection` degradation is pinned by the sibling suite's filtered-run
