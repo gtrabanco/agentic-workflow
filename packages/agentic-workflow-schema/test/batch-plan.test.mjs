@@ -67,6 +67,7 @@ const CANONICAL = {
               command: "/unit-lane --from-issue 10",
               reason: { kind: "satisfied-inputs", detail: "no open blockers; surface free" },
               size_hint: "light",
+              triaged: false,
             },
           ],
         },
@@ -97,6 +98,8 @@ const CANONICAL = {
   ],
   blocked: [{ number: 445, blockers: [444], reason: "blocked-by 444 (open)" }],
   launched: [{ number: 443, evidence: "unit-doc docs/fix/443-doc-index" }],
+  new_issues: [{ number: 446, title: "Freshly filed" }],
+  closed_since: [{ number: 442, title: "Closed since the last plan", batch: 1, lane: "skills/gamma", last_seen: "2026-11-08T00:00:00Z" }],
   findings: [
     { code: "cycle", numbers: [401, 402], detail: "cyclic blocked-by wait" },
     { code: "orphaned-soft-dep", numbers: [406], detail: "soft dep targets a missing issue" },
@@ -116,13 +119,13 @@ test("batch-plan: the canonical vector validates under strict Ajv", () => {
 
 test("batch-plan: contract id, version and schema token agree", () => {
   assert.equal(BATCH_PLAN_CONTRACT_ID, "agentic-workflow/batch-plan");
-  assert.equal(BATCH_PLAN_VERSION, 1);
-  assert.equal(BATCH_PLAN_SCHEMA, "batch-plan@1");
+  assert.equal(BATCH_PLAN_VERSION, 2);
+  assert.equal(BATCH_PLAN_SCHEMA, "batch-plan@2");
   assert.equal(`${BATCH_PLAN_CONTRACT_ID.split("/")[1]}@${BATCH_PLAN_VERSION}`, BATCH_PLAN_SCHEMA);
 });
 
 test("batch-plan: the closed vocabularies are exactly the published sets", () => {
-  assert.deepEqual([...BATCH_REASON_KINDS], ["satisfied-inputs", "surface-conflict", "soft-ordered"]);
+  assert.deepEqual([...BATCH_REASON_KINDS], ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"]);
   assert.deepEqual([...BATCH_FINDING_CODES], ["cycle", "orphaned-soft-dep", "prose-native-mismatch"]);
   assert.deepEqual([...BATCH_SIZE_HINTS], ["light", "mixed", "heavy"]);
 });
@@ -192,8 +195,25 @@ test("batch-plan: a worktree outside the <prefix>/<issue>-<slug> shape is refuse
 
 test("batch-plan: a non-object is refused with a single named error", () => {
   assert.deepEqual(validateBatchPlan(null), { ok: false, errors: ["batch plan is not a JSON object"] });
-  assert.deepEqual(validateBatchPlan("batch-plan@1"), { ok: false, errors: ["batch plan is not a JSON object"] });
+  assert.deepEqual(validateBatchPlan("batch-plan@2"), { ok: false, errors: ["batch plan is not a JSON object"] });
   assert.deepEqual(validateBatchPlan([CANONICAL]), { ok: false, errors: ["batch plan is not a JSON object"] });
+});
+
+test("batch-plan: the lifecycle delta fields carry their row shapes (issue #460)", () => {
+  // new_issues[] rows are {number, title}; closed_since[] rows carry the last
+  // known row (title, batch, lane, last_seen); the triaged flag is boolean.
+  const mutated = structuredClone(CANONICAL);
+  mutated.new_issues = [{ number: 1, extra: true }];
+  assert.equal(validateBatchPlan(mutated).ok, false);
+  assert.equal(schemaValidates(mutated), false);
+  const mutated2 = structuredClone(CANONICAL);
+  mutated2.closed_since = [{ number: 1, title: "t", batch: "one", lane: null, last_seen: "" }];
+  assert.equal(validateBatchPlan(mutated2).ok, false);
+  assert.equal(schemaValidates(mutated2), false);
+  const mutated3 = structuredClone(CANONICAL);
+  mutated3.batches[0].lanes[0].issues[0].triaged = "no";
+  assert.equal(validateBatchPlan(mutated3).ok, false);
+  assert.equal(schemaValidates(mutated3), false);
 });
 
 test("batch-plan: batch numbers must be strictly ascending (batch 1 is the runnable-now set)", () => {
@@ -210,14 +230,16 @@ test("batch-plan: every validator refusal is a schema refusal (the two surfaces 
   // rules; each mutated document must fail BOTH surfaces.
   const mutations = [
     (m) => { m.contract = "other/batch-plan"; },
-    (m) => { m.version = 2; },
-    (m) => { m.schema = "batch-plan@2"; },
+    (m) => { m.version = 1; },
+    (m) => { m.schema = "batch-plan@1"; },
     (m) => { m.source_revision = "HEAD"; },
     (m) => { m.degraded = "unavailable-forge"; },
     (m) => { m.batches = {}; },
     (m) => { m.blocked = [{ number: 1 }]; },
     (m) => { m.launched = [{ number: 1 }]; },
     (m) => { m.findings = [{ code: "cycle", numbers: [1] }]; },
+    (m) => { m.new_issues = [{ number: 1 }]; },
+    (m) => { m.closed_since = [{ number: 1 }]; },
     (m) => { m.summary = { ...m.summary, extra: 1 }; },
   ];
   for (const mutate of mutations) {
