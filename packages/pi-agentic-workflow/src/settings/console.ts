@@ -15,10 +15,11 @@
 
 import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
+import type { StateFlowConfig } from "../config/types.js";
 
 import { effectiveRoute } from "../config/merge.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
-import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
+import { MAX_MODEL_CHAIN, SETTLE_POLICIES, STATE_FLOW_MISSING_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
 import type { RoutingControls, SettingsUi } from "../routing/types.js";
 import type { ConfigFile, ModelRef, ModelSetting, ProfileFile, Route, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 
@@ -79,6 +80,17 @@ export const prompts = {
   addAnother: "Add another?",
   policy: "Set the unavailable-route policy",
   settle: "Set the post-command model keep/restore policy",
+  stateFlow: "State Flow (execution-state mode)",
+  stateFlowAction: "What should change in State Flow?",
+  stateFlowToggle: "Toggle the enabled switch",
+  stateFlowAllowlistAdd: "Add a command to the allowlist",
+  stateFlowAllowlistRemove: "Remove a command from the allowlist",
+  stateFlowMissing: "Set the missing-backend policy",
+  stateFlowMissingChoice: "What should a command do when the state-flow backend is missing?",
+  stateFlowDone: "Done with State Flow",
+  stateFlowStatus: (sf: StateFlowConfig): string =>
+    `stateFlow: enabled=${sf.enabled} · backend=${sf.backend} · allowlist=[${sf.commands.join(", ")}] · onBackendMissing=${sf.onBackendMissing}`,
+  stateFlowAllowlistNotEmpty: "The allowlist cannot be emptied — that would disable state-mode for every command. Remove entries only while at least one remains.",
   save: "Save",
   cancel: "Cancel",
   model: (target: string): string => `Model for ${target}?`,
@@ -134,6 +146,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       prompts.toggleRecommended,
       prompts.policy,
       prompts.settle,
+      prompts.stateFlow,
       ...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),
       prompts.save,
       prompts.cancel,
@@ -317,6 +330,10 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
     if (choice === prompts.settle) {
       const picked = await deps.ui.select(prompts.settleChoice, [...SETTLE_POLICIES]);
       if (isSettle(picked)) draft = { ...draft, onSettle: picked };
+      continue;
+    }
+    if (choice === prompts.stateFlow) {
+      draft = await editStateFlow(deps, draft, merged.config.stateFlow);
       continue;
     }
     if (choice === prompts.save) {
@@ -696,6 +713,75 @@ async function saveScope(
   return true;
 }
 
+/**
+ * The State Flow submenu (issue #174): the effective status first, then the
+ * three editable knobs. The allowlist edit works on the file draft but seeds
+ * from the effective list, because the allowlist resolves whole — a file that
+ * names only `enabled` already means "the shipped two-command allowlist".
+ */
+async function editStateFlow(deps: SettingsDeps, draft: ConfigFile, effective: StateFlowConfig): Promise<ConfigFile> {
+  for (;;) {
+    // The status line follows the draft: what the file declares overrides the
+    // effective value field by field, so the operator sees the edit land.
+    const fileStateFlow = draft.stateFlow ?? {};
+    const shown: StateFlowConfig = {
+      enabled: fileStateFlow.enabled ?? effective.enabled,
+      backend: fileStateFlow.backend ?? effective.backend,
+      commands: fileStateFlow.commands ?? effective.commands,
+      stopOn: fileStateFlow.stopOn ?? effective.stopOn,
+      onBackendMissing: fileStateFlow.onBackendMissing ?? effective.onBackendMissing,
+    };
+    deps.ui.notify(prompts.stateFlowStatus(shown), "info");
+    const action = await deps.ui.select(prompts.stateFlowAction, [
+      prompts.stateFlowToggle,
+      prompts.stateFlowAllowlistAdd,
+      prompts.stateFlowAllowlistRemove,
+      prompts.stateFlowMissing,
+      prompts.stateFlowDone,
+    ]);
+    if (action === undefined || action === prompts.stateFlowDone) return draft;
+
+    if (action === prompts.stateFlowToggle) {
+      // Toggle against what the file declares, else against the effective value.
+      const current = fileStateFlow.enabled ?? effective.enabled;
+      draft = { ...draft, stateFlow: { ...fileStateFlow, enabled: !current } };
+      continue;
+    }
+
+    // The list in force is what the edit seeds from: the file's declaration,
+    // else the effective allowlist — so the saved file always names the whole
+    // intended set (the merge never half-merges a list).
+    const currentList = fileStateFlow.commands ?? effective.commands;
+    if (action === prompts.stateFlowAllowlistAdd) {
+      const candidates = deps.commands.filter((name) => !currentList.includes(name));
+      if (candidates.length === 0) {
+        deps.ui.notify("Every command is already in the allowlist.", "info");
+        continue;
+      }
+      const picked = await deps.ui.select(prompts.stateFlowAllowlistAdd, [...candidates]);
+      if (picked === undefined) continue;
+      draft = { ...draft, stateFlow: { ...fileStateFlow, commands: [...currentList, picked] } };
+      continue;
+    }
+    if (action === prompts.stateFlowAllowlistRemove) {
+      if (currentList.length <= 1) {
+        deps.ui.notify(prompts.stateFlowAllowlistNotEmpty, "warning");
+        continue;
+      }
+      const picked = await deps.ui.select(prompts.stateFlowAllowlistRemove, [...currentList]);
+      if (picked === undefined) continue;
+      draft = { ...draft, stateFlow: { ...fileStateFlow, commands: currentList.filter((name) => name !== picked) } };
+      continue;
+    }
+    if (action === prompts.stateFlowMissing) {
+      const picked = await deps.ui.select(prompts.stateFlowMissingChoice, [...STATE_FLOW_MISSING_POLICIES]);
+      if (picked === undefined || !isStateFlowMissing(picked)) continue;
+      draft = { ...draft, stateFlow: { ...fileStateFlow, onBackendMissing: picked } };
+      continue;
+    }
+  }
+}
+
 async function discard(ui: SettingsUi): Promise<boolean> {
   const dropped = await ui.confirm(prompts.discard, "Your edits are not in any config file yet.");
   if (!dropped) ui.notify("Draft kept — nothing was saved.", "info");
@@ -826,4 +912,8 @@ function isPolicy(value: string | undefined): value is UnavailableRoutePolicy {
 
 function isSettle(value: string | undefined): value is SettlePolicy {
   return value === "keep" || value === "restore";
+}
+
+function isStateFlowMissing(value: string): value is (typeof STATE_FLOW_MISSING_POLICIES)[number] {
+  return (STATE_FLOW_MISSING_POLICIES as readonly string[]).includes(value);
 }
