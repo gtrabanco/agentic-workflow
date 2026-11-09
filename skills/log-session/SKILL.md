@@ -129,9 +129,11 @@ the HEAD sha and start time at session open.
 
      It computes the timestamp, branch and name, renders the block, refuses
      bytes the aggregator could not read, never overwrites, and refuses a
-     session that already registered its entry (`already registered` — one
-     entry per conversation; re-running this skill in the same conversation is
-     the case it stops) — the
+     second entry of the same kind from a session that already registered one
+     (`already registered` — one entry per conversation per kind; re-running
+     this skill in the same conversation is the case it stops, while the
+     auto-log's mechanical entry is the same conversation's other kind and
+     does not block it) — the
      filename is never composed here. Grammar:
      `journal-fragment-grammar@1` + `journal-write-grammar@1` in
      `@gtrabanco/agentic-workflow`'s README; long prose: `… render … | …
