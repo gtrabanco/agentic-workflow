@@ -406,7 +406,9 @@ it has open work. No triage block reorders the frozen task list.
   new phase. The verdict is `REJECT` (defer) on the evidence in
   `docs/research/284-pi-durable-spike.md`: the mechanism is validated, the
   substrate is still explicitly experimental, and AC7's token half needs a
-  provider this environment does not have.
+  provider, which the spike's session did not have (corrected 2026-11-09: the
+  owner's environment carries NaN/qwen3.6 — the measurement is reproducible
+  there; the report's flip conditions 1 and 3 are unaffected).
 - **D6** — 2026-11-09, the worktree is not repaired. It stays usable for commit
   and push: the backup (`git bundle`, the patch series and a tarball) is taken,
   and the only blocker found was a missing `node`/`npm` on `PATH` for the

@@ -37,9 +37,12 @@ One lane = the conductor's three stages, each stage a durable task:
 - a second invocation of the same lane is the resume: `harness.resume()`
   continues what the killed process left, and nothing is re-created.
 
-The stage body is a scripted receipt write, not a model turn: **no provider is
-configured in this environment**, so the token/turn half of AC7 is out of reach
-here (see "What was not measured").
+The stage body is a scripted receipt write, not a model turn: **no provider was
+configured in the session that ran this spike**, so the token/turn half of AC7
+was out of reach there (see "What was not measured"). Correction 2026-11-09:
+the owner's environment does carry a provider — NaN (`@gtrabanco/pi-nan-provider`,
+`qwen3.6`) — so this half is reproducible there; the claim "this environment has
+no provider" was true only of the spike's session.
 
 ## Recorded runs
 
@@ -100,8 +103,10 @@ does not remove the need for a restarter (something must open the storage).
 ## What was not measured
 
 - **Tokens and turns wasted by P1's re-invocation.** Needs a configured model
-  provider; this environment has none. The structural half is measured (two
-  conductor steps per crash), the token half is not.
+  provider; the spike's session had none (corrected 2026-11-09: the owner's
+  environment does — NaN/qwen3.6 — so the measurement is reproducible there).
+  The structural half is measured (two conductor steps per crash), the token
+  half is not.
 - **Mid-run steering, durable subagents, multi-client inspection.** Read from the
   package's contract and its README; not exercised by this spike.
 - **Behaviour under a real unit lane** (LLM stages). The lane's stage bodies here
