@@ -13,6 +13,9 @@
  *                      half-migration) via `UnitDoc.validate`; the
  *                      obligations ledger (embedded `### Obligations` table
  *                      or the sibling `planning-obligations.md`) closed;
+ *                      the provenance stamp well-formed, published and in
+ *                      parity with the carrier (issue #462) — an absent stamp
+ *                      is a degradation, never a violation;
  *                      receipt marks (`REVIEW-RAN` / `GATE-RAN` / `R`/`G`
  *                      log lines) carry a resolvable 40-hex HEAD sha and no
  *                      future-dated stamp; the tree cross-checks (issue
@@ -60,6 +63,7 @@ import { join, dirname } from "node:path";
 
 import { validate as validateShape } from "../edit/UnitDoc.mjs";
 import { resolveUnitDocShape, EVIDENCE_COLUMNS, PROGRESS_ENTRY_REGEX } from "../edit/schema.mjs";
+import { DOC_FORMAT_GRAMMARS, deriveFormat, parseProvenance, readProvenance, validateProvenance } from "../edit/Provenance.mjs";
 
 /** The receipt's fixed contract id (same `<name>@<n>` shape as the other crate receipts). */
 export const VERIFY_CONTRACT_ID = "verify@1";
@@ -116,6 +120,59 @@ function checkObligations(docText, siblingText, out) {
     if (!CLOSED_STATUS.test(status)) {
       out.push(violation("obligations-open", `obligations row ${id} is not closed (status: ${status || "blank"})`));
     }
+  }
+}
+
+/**
+ * The document provenance stamp (issue #462).
+ *
+ * Three questions, one pass: is the stamp well-formed and does it speak a
+ * generation this package publishes (`provenance-invalid` / `provenance-
+ * unpublished` / `provenance-newer-than-reader`), and does the declaration agree
+ * with the carrier the document actually carries (`provenance-format-mismatch`,
+ * `provenance-grammar-mismatch` — S8's parity, both ways).
+ *
+ * An absent stamp is a declared degradation, never a violation: closed units are
+ * never backstamped (S5).
+ */
+function checkProvenance(text, headings, out) {
+  const parsed = parseProvenance(text);
+  if (parsed.value === null) {
+    if (parsed.errors.length > 0) {
+      out.push(violation("provenance-invalid", parsed.errors.join("; ")));
+    }
+    return;
+  }
+  const stamp = parsed.value;
+
+  for (const { code, detail } of validateProvenance(stamp).errors) {
+    const published = code.startsWith("unpublished-");
+    out.push(violation(published ? "provenance-unpublished" : "provenance-invalid", detail));
+  }
+
+  const reading = readProvenance(text);
+  if (reading.verdict === "refuse") {
+    const code = reading.reason === "stamp-invalid" || reading.reason === "format-too-old"
+      ? "provenance-invalid"
+      : reading.reason === "format-unknown-to-reader"
+        ? "provenance-unpublished"
+        : "provenance-newer-than-reader";
+    out.push(violation(code, `${stamp.format} · ${reading.reason}`));
+  }
+
+  const derived = deriveFormat(headings);
+  if (derived !== null && stamp.format !== derived) {
+    out.push(violation("provenance-format-mismatch", `declared format ${stamp.format}, but the carrier is ${derived}`));
+  }
+  const expected = DOC_FORMAT_GRAMMARS[stamp.format] ?? [];
+  const declared = Object.keys(stamp.grammars);
+  const missing = expected.filter((family) => !declared.includes(family));
+  const extra = declared.filter((family) => !expected.includes(family));
+  if (missing.length > 0 || extra.length > 0) {
+    out.push(violation(
+      "provenance-grammar-mismatch",
+      `the carrier declares [${expected.join(", ")}] and the stamp declares [${declared.join(", ")}]`,
+    ));
   }
 }
 
@@ -348,6 +405,7 @@ export function verifyUnitDoc({ text, path, headExists = null, now = null, sibli
   }
 
   checkObligations(text, siblingText, violations);
+  checkProvenance(text, headings, violations);
   checkReceipts(text, { headExists, nowMs }, violations);
   checkLogKinds(text, shape, violations);
   if (shape === null || shape === "legacy") checkLegacyTables(text, violations);
@@ -356,6 +414,7 @@ export function verifyUnitDoc({ text, path, headExists = null, now = null, sibli
   const checks = [
     "sections",
     "obligations-closure",
+    "provenance-stamp",
     "receipt-marks",
     shape === "spec-by-reference" ? "log-kinds" : "evidence-columns+progress-entries",
   ];
