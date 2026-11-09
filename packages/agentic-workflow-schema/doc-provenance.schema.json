@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/doc-provenance.schema.json",
+  "title": "agentic-workflow document provenance stamp v1",
+  "description": "The parsed value of a document's `doc-provenance@1` block (issue #462): which tool and schema version wrote it, which carrier format it speaks, and which grammar generations its content declares. Three axes, never merged. Source of truth: @gtrabanco/agentic-workflow-schema (src/doc-provenance.ts). The carried block is the fenced `doc-provenance@1` text form; this schema describes its parsed object, which is what `validateDocProvenance` judges.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "written_by", "schema", "format", "grammars"],
+  "properties": {
+    "contract": { "const": "doc-provenance@1" },
+    "written_by": {
+      "type": "string",
+      "pattern": "^agentic-workflow@\\d+\\.\\d+\\.\\d+$",
+      "description": "The forensic half's writer: `<tool>@<train-version>`, the tool from the published writer set."
+    },
+    "schema": {
+      "type": "string",
+      "pattern": "^@gtrabanco/agentic-workflow-schema@\\d+\\.\\d+\\.\\d+$",
+      "description": "The forensic half's schema package: the version whose grammar table the writer spoke."
+    },
+    "format": {
+      "enum": ["unit-doc@1", "unit-doc@2"],
+      "description": "The carrier layout generation the document was written under — the axis a major re-cut rewrites wholesale."
+    },
+    "grammars": {
+      "type": "object",
+      "description": "The content grammars the document declares: closed family keys, integer generations, at least one.",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "findings-table": { "type": "integer", "minimum": 1, "maximum": 1 },
+        "log-kind": { "type": "integer", "minimum": 1, "maximum": 1 },
+        "obligations": { "type": "integer", "minimum": 1, "maximum": 1 },
+        "unit-doc": { "type": "integer", "minimum": 1, "maximum": 1 }
+      }
+    }
+  }
+}

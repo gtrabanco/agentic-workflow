@@ -4180,3 +4180,45 @@ export type {
   BatchPlan,
   BatchPlanValidationResult,
 } from "./batch-plan.js";
+
+// ── The document provenance stamp (issue #462) ──────────────────────────────
+// One versioned grammar, three axes (content grammars, carrier format, forensic
+// tool/schema pair), semver-dispatched readers. The grammar block is published
+// in this package's README; the carried text form is documented in
+// `src/doc-provenance.ts`.
+export {
+  CURRENT_READER,
+  DOC_FORMAT_GRAMMARS,
+  DOC_FORMAT_SHAPES,
+  DOC_GRAMMAR_FAMILIES,
+  DOC_GRAMMAR_VERSIONS,
+  DOC_PROVENANCE_CONTRACT_ID,
+  DOC_PROVENANCE_FIELDS,
+  DOC_PROVENANCE_FORMATS,
+  DOC_PROVENANCE_PUBLISHED,
+  DOC_PROVENANCE_READER_REASONS,
+  DOC_PROVENANCE_READER_VERDICTS,
+  DOC_PROVENANCE_REFUSALS,
+  DOC_PROVENANCE_SCHEMA_PACKAGE,
+  DOC_PROVENANCE_TOOLS,
+  deriveFormat,
+  formatFamilyOf,
+  formatGenerationOf,
+  parseDocProvenance,
+  readDocProvenance,
+  serializeDocProvenance,
+  validateDocProvenance,
+} from "./doc-provenance.js";
+export type {
+  DocGrammarFamily,
+  DocProvenance,
+  DocProvenanceContract,
+  DocProvenanceFormat,
+  DocProvenanceReader,
+  DocProvenanceReaderReason,
+  DocProvenanceReaderVerdict,
+  DocProvenanceReading,
+  DocProvenanceRefusal,
+  DocProvenanceTool,
+  DocProvenanceViolation,
+} from "./doc-provenance.js";
