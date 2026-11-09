@@ -30,7 +30,7 @@ export function routePair({ model = "inherit", thinking = "inherit" } = {}) {
 }
 
 /** EffectiveConfig from the same merge the shipped loader performs. */
-export function configFor({ default: def, commands, onUnavailableRoute, onSettle, profiles, profileOrder, recommendedModels, profileFallback }) {
+export function configFor({ default: def, commands, onUnavailableRoute, onSettle, profiles, profileOrder, recommendedModels, profileFallback, stateFlow }) {
   return mergeConfigs(
     {
       ...(def ? { default: def } : {}),
@@ -41,6 +41,7 @@ export function configFor({ default: def, commands, onUnavailableRoute, onSettle
       ...(profileOrder ? { profileOrder } : {}),
       ...(recommendedModels !== undefined ? { recommendedModels } : {}),
       ...(profileFallback ? { profileFallback } : {}),
+      ...(stateFlow ? { stateFlow } : {}),
     },
     {},
   );
@@ -76,6 +77,8 @@ export function createSession(options = {}) {
     supportedThinking = {},
     /** P4: profile state store for demotion testing. */
     profileState,
+    /** Issue #174: the state-flow lifecycle injected into the router. */
+    stateFlow,
   } = options;
 
   let sent = false;
@@ -172,6 +175,7 @@ export function createSession(options = {}) {
     settingsCommand: SETTINGS_COMMAND,
     knownCommands: new Set(options.knownCommands ?? ["plan-feature", "design-feature", "execute-phase", SETTINGS_COMMAND]),
     profileState,
+    stateFlow,
   });
 
   return {

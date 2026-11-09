@@ -1556,3 +1556,108 @@ test("F4: saving keeps the keys the console never prompts for — memory, pathPr
   assert.deepEqual(saved.advance, existing.advance, "the conductor knobs survive");
   assert.deepEqual(saved.default, { model: "openai/gpt-5.2", thinking: "low" }, "and the untouched route is still written");
 });
+
+// --- Issue #174: the State Flow section in the console ---
+
+test("#174: the console shows the effective stateFlow status and toggles enabled, saving to the file", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.stateFlow, prompts.save, prompts.cancel],
+        [prompts.stateFlowAction]: [prompts.stateFlowToggle, prompts.stateFlowDone],
+        [prompts.saveTo(paths.global)]: true,
+      },
+      commands: ["design-feature", "execute-phase", "fold-findings", "plan-feature"],
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.deepEqual(JSON.parse(written.get(paths.global)).stateFlow, { enabled: true }, written.get(paths.global));
+  assert.ok(
+    scripted.notify.some((entry) => entry.message.includes("stateFlow: enabled=false") && entry.message.includes("execute-phase, fold-findings")),
+    `the status line names the effective allowlist: ${JSON.stringify(scripted.notify)}`,
+  );
+});
+
+test("#174: a command is added to the allowlist from the command registry", async () => {
+  const { outcome, written } = await run(
+    {},
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.stateFlow, prompts.save, prompts.cancel],
+        [prompts.stateFlowAction]: [prompts.stateFlowAllowlistAdd, prompts.stateFlowDone],
+        [prompts.stateFlowAllowlistAdd]: "plan-feature",
+        [prompts.saveTo(paths.global)]: true,
+      },
+      commands: ["design-feature", "execute-phase", "fold-findings", "plan-feature"],
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.deepEqual(JSON.parse(written.get(paths.global)).stateFlow.commands, ["execute-phase", "fold-findings", "plan-feature"]);
+});
+
+test("#174: a command is removed from the allowlist", async () => {
+  const { outcome, written } = await run(
+    { [paths.global]: '{"stateFlow":{"enabled":true,"commands":["execute-phase","fold-findings"]}}' },
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.stateFlow, prompts.save, prompts.cancel],
+        [prompts.stateFlowAction]: [prompts.stateFlowAllowlistRemove, prompts.stateFlowDone],
+        [prompts.stateFlowAllowlistRemove]: "fold-findings",
+        [prompts.saveTo(paths.global)]: true,
+      },
+      commands: ["execute-phase", "fold-findings"],
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.deepEqual(JSON.parse(written.get(paths.global)).stateFlow.commands, ["execute-phase"]);
+});
+
+test("#174: the allowlist cannot be emptied — removing the last command is refused with a stated reason", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"stateFlow":{"enabled":true,"commands":["execute-phase"]}}' },
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.stateFlow, prompts.save, prompts.cancel],
+        [prompts.stateFlowAction]: [prompts.stateFlowAllowlistRemove, prompts.stateFlowDone],
+        [prompts.stateFlowAllowlistRemove]: "execute-phase",
+        [prompts.saveTo(paths.global)]: true,
+      },
+      commands: ["execute-phase"],
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.stateFlow.commands, ["execute-phase"], "the removal never lands");
+  assert.ok(
+    scripted.notify.some((entry) => entry.message.toLowerCase().includes("cannot be emptied")),
+    `the refusal is said out loud: ${JSON.stringify(scripted.notify)}`,
+  );
+});
+
+test("#174: the missing-backend policy is editable", async () => {
+  const { outcome, written } = await run(
+    {},
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.stateFlow, prompts.save, prompts.cancel],
+        [prompts.stateFlowAction]: [prompts.stateFlowMissing, prompts.stateFlowDone],
+        [prompts.stateFlowMissingChoice]: "refuse",
+        [prompts.saveTo(paths.global)]: true,
+      },
+      commands: ["execute-phase", "fold-findings"],
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).stateFlow.onBackendMissing, "refuse");
+});

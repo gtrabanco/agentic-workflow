@@ -8,6 +8,9 @@ import {
   AUTO_LOG_SESSION_MODES,
   AUTO_LOG_SESSION_MAX_ARGV,
   AUTO_LOG_SESSION_MAX_TIMEOUT_MS,
+  STATE_FLOW_BACKENDS,
+  STATE_FLOW_MISSING_POLICIES,
+  STATE_FLOW_STOP_POLICIES,
 } from "./types.js";
 import { PASS_NAMES } from "@gtrabanco/agentic-workflow-schema";
 import type {
@@ -23,6 +26,7 @@ import type {
   TelemetryConfigFile,
   AutoLogSessionConfigFile,
   AutoLogSessionPublisherFile,
+  StateFlowConfigFile,
   PassModelSetting,
   PassRouteFile,
   PassesConfigFile,
@@ -57,6 +61,7 @@ const ROOT_KEYS = new Set([
   "autoLogSession",
   "passes",
   "subagents",
+  "stateFlow",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -661,6 +666,11 @@ function validateConfig(value: unknown): ParseResult {
     if (subagents) config.subagents = subagents;
   }
 
+  if (value.stateFlow !== undefined) {
+    const stateFlow = checkStateFlow(value.stateFlow, "$.stateFlow", issues);
+    if (stateFlow) config.stateFlow = stateFlow;
+  }
+
   return issues.length > 0 ? { ok: false, issues } : { ok: true, config };
 }
 
@@ -792,6 +802,88 @@ function checkAutoLogPublisher(value: unknown, path: string, issues: ConfigIssue
       unknown = true;
     } else {
       out.timeoutMs = timeout as number;
+    }
+  }
+  return unknown ? undefined : out;
+}
+
+/**
+ * Strict validator for the `stateFlow` block (issue #174): the opt-in episode
+ * lifecycle switch. An allowlist entry must be a non-empty command name — a
+ * typo that reaches the vocabulary in the README (a leading slash, whitespace)
+ * would silently match nothing and the operator would believe state-mode is
+ * active when it never starts.
+ */
+function checkStateFlow(value: unknown, path: string, issues: ConfigIssue[]): StateFlowConfigFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
+    return undefined;
+  }
+  let unknown = false;
+  for (const key of Object.keys(value)) {
+    if (key !== "enabled" && key !== "backend" && key !== "commands" && key !== "stopOn" && key !== "onBackendMissing") {
+      unknown = true;
+      issues.push({
+        path: `${path}.${displayKey(key)}`,
+        message: `unknown stateFlow key "${key}" (allowed: enabled, backend, commands, stopOn, onBackendMissing)`,
+      });
+    }
+  }
+  const out: StateFlowConfigFile = {};
+  if (value.enabled !== undefined) {
+    if (typeof value.enabled !== "boolean") {
+      issues.push({ path: `${path}.enabled`, message: `must be a boolean, got ${describe(value.enabled)}` });
+      unknown = true;
+    } else {
+      out.enabled = value.enabled;
+    }
+  }
+  if (value.backend !== undefined) {
+    if (!(STATE_FLOW_BACKENDS as readonly string[]).includes(value.backend as string)) {
+      issues.push({
+        path: `${path}.backend`,
+        message: `must be one of ${STATE_FLOW_BACKENDS.join(", ")}, got ${describe(value.backend)}`,
+      });
+      unknown = true;
+    } else {
+      out.backend = value.backend as StateFlowConfigFile["backend"];
+    }
+  }
+  if (value.commands !== undefined) {
+    if (
+      !Array.isArray(value.commands)
+      || value.commands.length === 0
+      || value.commands.some((entry) => typeof entry !== "string" || entry.trim() === "")
+    ) {
+      issues.push({
+        path: `${path}.commands`,
+        message: "must be a non-empty array of non-empty command names",
+      });
+      unknown = true;
+    } else {
+      out.commands = value.commands as string[];
+    }
+  }
+  if (value.stopOn !== undefined) {
+    if (!(STATE_FLOW_STOP_POLICIES as readonly string[]).includes(value.stopOn as string)) {
+      issues.push({
+        path: `${path}.stopOn`,
+        message: `must be one of ${STATE_FLOW_STOP_POLICIES.join(", ")}, got ${describe(value.stopOn)}`,
+      });
+      unknown = true;
+    } else {
+      out.stopOn = value.stopOn as StateFlowConfigFile["stopOn"];
+    }
+  }
+  if (value.onBackendMissing !== undefined) {
+    if (!(STATE_FLOW_MISSING_POLICIES as readonly string[]).includes(value.onBackendMissing as string)) {
+      issues.push({
+        path: `${path}.onBackendMissing`,
+        message: `must be one of ${STATE_FLOW_MISSING_POLICIES.join(", ")}, got ${describe(value.onBackendMissing)}`,
+      });
+      unknown = true;
+    } else {
+      out.onBackendMissing = value.onBackendMissing as StateFlowConfigFile["onBackendMissing"];
     }
   }
   return unknown ? undefined : out;
