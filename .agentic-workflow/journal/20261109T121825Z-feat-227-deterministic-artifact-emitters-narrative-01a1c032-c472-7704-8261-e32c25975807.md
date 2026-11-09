@@ -1,6 +1,0 @@
-## 2026-11-09T12:18:25Z — feat/227-deterministic-artifact-emitters — narrative
-- **Commits:** 12 (`7886ecc5…2344d87d`)
-- **Files:** 13 files
-- **Summary:** External verification of unit 227 (deterministic-artifact-emitters) — delta verdict after the correction batch. Both blockers from the previous NEEDS-DECISION verdict are re-verified repaired: inventoryGateIds now parses the prose-gate-inventory@1 block so published gates resolve (reproducer inverts base exit 2 → head exit 0), and Roadmap.annotate keeps rows on one physical line (edit.test.mjs 19/0, GFM render clean). Verified by scratch reproducer (mktemp, git archive + init copies, removed after), live 432 doc pass, spot check match, crate suite 544/0, O1-O10 green. Verdict: VERIFIED. PR #472 merge-ready.
-- **Decisions:** External verify is read-only by design: no commits, pushes, forge mutations or live-tree execution of new paths; scratch copies isolated. First scratch attempt omitted git init, so root resolver fell back to doc directory and produced a false refusal — redoing with git-inited copies is mandatory for the reproduce/verify pattern. The correction batch already landed (D3, P5-P6) on the branch; this run only re-ran the validators that bound the prior blockers.
-- **Next:** Owner merge PR #472 (https://github.com/gtrabanco/agentic-workflow/pull/472); the unit is VERIFIED with no blockers.
