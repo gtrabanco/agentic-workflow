@@ -222,6 +222,34 @@ yet.
   reader's shape-scoped count is the frozen value and the ledger cells are
   corrected to it before green; the `rg` invocations that produced the wrong
   estimate are kept in PE-001's source cell rather than deleted.
+- **P1** — 2026-11-09 19:40, the unit doc and both planning ledgers frozen before
+  the first line of code · `856577d3`.
+- **D3** — 2026-11-09, ledger correction, authority: this unit's P2–P5. Nine
+  obligation validators named fixture labels that the suites never used (the
+  suites name their cases in prose) and O11's measured sample was 118 before the
+  resolver learned to skip the one unprovable short sha; the cells now name the
+  cases that actually run and the value the run produced (`sample | 70`). No
+  obligation, phase or scope changed — only how its validator is identified.
+- **E2** — 2026-11-09, `bun test scripts/findings-corpus.test.mjs` · exit 0 · 14
+  pass, 0 fail (red at `39e8c376`, green at `3bcf6387`).
+- **E3** — 2026-11-09, `bun scripts/findings-corpus.mjs` · exit 0 ·
+  `findings | 1149 · review-marks | 173 · fold-annotated | 229 · admitted | 125 ·
+  repeat-classes | 9 · findings-per-cycle | 6.02 · arw | 0.88 · arw-band measured`.
+- **E4** — 2026-11-09, `bun scripts/correction-budget.mjs --measure` · exit 0 ·
+  `batch-size | 1 · sample | 70 · source | findings-corpus` (red at `b9c99499`,
+  green at `7a0149cc`).
+- **E5** — 2026-11-09, `bun test scripts/differential-baseline.test.mjs` · exit 0
+  · 9 pass, 0 fail (red at `1b26195b`, green at `baf34cf3`).
+- **E6** — 2026-11-09, `bun scripts/differential-baseline.mjs --base main --head
+  HEAD --validators <tmp> --reviewed main` · exit 0 · both validators
+  `base exit 0 · head exit 0 · pass`, `verdict | PASS`, `staleness | stale` with
+  the six new scripts affecting and the four unit docs trivial.
+- **E7** — 2026-11-09, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 29 skills`, the `fold-findings` row at 5920 est / 403 lines / 3 references inside its 5944 / 411 ceilings.
+- **G1** — 2026-11-09, `bun scripts/run-root-suite.mjs` (Node 26.13.0 on PATH) ·
+  exit 0 · every suite PASS, zero failures.
+- **G2** — 2026-11-09, `bun scripts/red-first.mjs` · exit 0 · 51 pairs, 0
+  findings; `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS`;
+  `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
 - **D1** — 2026-11-09, owner selected `composed` for the review-staleness
   decision the issue relocated from #363: the **mechanism** is the scope digest
   (`scripts/scope-manifest.mjs`, fix/286) and the **policy** is a declared
