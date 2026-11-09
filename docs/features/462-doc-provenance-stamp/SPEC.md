@@ -8,6 +8,14 @@
 > local unpublished workflow (§5 ledger freeze substitutes for the lane's plan
 > step); no repo review/fold/audit machinery runs on this change.
 
+```text
+doc-provenance@1
+written_by: agentic-workflow@4.10.0
+schema: @gtrabanco/agentic-workflow-schema@4.10.0
+format: unit-doc@2
+grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
+```
+
 ## Issue
 
 `#462` — "NEW FEATURE: document provenance stamp — writer CLI version + schema/grammar version on unit docs, semver-dispatched readers". The PR closes it via `Closes #462`.
@@ -399,9 +407,36 @@ surgery (workflow §4).
 - **P1** — 2026-11-09, planning ledgers frozen (this document,
   `planning-evidence.md`, `planning-obligations.md`) · pre-commit.
 
+- **P2** — 2026-11-09, RED corpus committed alone (implementation absent), both new suites unimportable: schema package `0 pass / 1 error` (`Export named DOC_PROVENANCE_CONTRACT_ID not found in dist/index.js`), crate `0 pass / 1 error` (`Cannot find module ../src/edit/Provenance.mjs`), `unit-doc-contract` 19 pass / 2 fail, `release` 68 pass / 2 fail · `c88e6788`.
+
+- **P3** — 2026-11-09, schema package `doc-provenance@1` published (contract, closed vocabularies, validator, reader dispatch, Draft-07 projection, README grammar block) · `67ba9e24`.
+
+- **P4** — 2026-11-09, crate mirror + write points + verifier refusals · `f9b6dfad`.
+
+- **P5** — 2026-11-09, registration, four templates, release stamper, `MIGRATION.md` reader rule, unit-lane sentence · `1b907d7d`.
+
+- **E1** — 2026-11-09, `cd packages/agentic-workflow-schema && bun test test/doc-provenance.test.mjs` · exit 0 · 15 pass / 0 fail (shape, vocabularies, validator↔schema agreement, dispatch matrix, absent-stamp derivation).
+- **E2** — 2026-11-09, `cd packages/agentic-workflow && AGENTIC_WORKFLOW_NODE=bun bun test test/provenance.test.mjs test/verify.test.mjs` · exit 0 · 35 pass / 0 fail (creation stamp, idempotent re-stamp, per-edit no-touch, absent-stamp degradation, parity + unpublished refusals, CLI op + refusal).
+- **E3** — 2026-11-09, `bun test scripts/unit-doc-contract.test.mjs` · exit 0 · 21 pass / 0 fail (crate mirror == published sets; four templates == their carrier == the train version).
+- **E4** — 2026-11-09, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass / 0 fail (the three new rows resolve from committed source).
+- **E5** — 2026-11-09, `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS` (every normative-surface id claimed, including the three new ones).
+- **E6** — 2026-11-09, `bun test scripts/release.test.mjs` · exit 0 · 70 pass / 0 fail (apply stamps 4 templates; plan moves none; a tree without templates is a clean 0).
+- **E7** — 2026-11-09, `bun scripts/check-skill-context.mjs` + `--documents` · exit 0 · `PASS context budgets: 29 skills` / `PASS context documents: 4 budgeted documents` (AGENTS.md machineLines re-pinned 117→120).
+- **E8** — 2026-11-09, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 files checked, 0 missing, 0 stale, 0 orphaned.
+- **E9** — 2026-11-09, `rg -c "Reader rule keyed on the stamp" docs/workflow/MIGRATION.md` · 1 match.
+- **E10** — 2026-11-09, `git diff --name-only 1fa39fe1..HEAD -- docs/features docs/fix` · prints this unit’s three files plus the two new template stamps only — 0 pre-existing unit docs touched (S5/S9).
+- **E11** — 2026-11-09, differential check in `mktemp -d` (base `1fa39fe1` export vs this head, identical fixtures): `verify` on an unstamped spec-by-reference and an unstamped legacy doc → same shape/violations/exit, the declared delta is the new `provenance-stamp` name in the receipt’s `checks`; `unit-doc create` → identical receipt and stderr except `after` (the digest of the now-stamped file) and the added block; `roadmap check` → byte-identical receipt, exit 2 both sides.
+- **E12** — 2026-11-09, package-wide honesty: `cd packages/agentic-workflow-schema && bun run test` · exit 1 · 789 pass / 2 fail — `AC8: npm pack manifest` and `F112: package gate from a path with a space` both die on `spawnSync npm` `ENOENT` (`npm` and `node` are absent in this environment); reproduced at the base export with the same commands.
+- **E13** — 2026-11-09, crate-wide honesty: `bun test test/` without the runtime override · 562 pass / 3 fail (three CLI cases spawn a literal `node`); with `AGENTIC_WORKFLOW_NODE=bun` · 565 pass / 0 fail.
+- **E14** — 2026-11-09, root suite honesty: `bun scripts/run-root-suite.mjs --jobs 4` · 96 suites, 81 pass / 15 fail. The identical 15 fail in a `git archive 1fa39fe1` export of the base, which also fails 5 more that only need a real repository (`doc-discipline`, `lint-changeset`, `local-gate`, `red-first`, `unit-route`) — so this change adds **0** root-suite failures; the shared cause is the same one: every `gh`/`node` fixture stub is written `#!/usr/bin/env node` and `node` is absent here.
+- **E15** — 2026-11-09, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/462-doc-provenance-stamp/SPEC.md --no-git` · the stamp is accepted with 0 `provenance-*` violations before this batch (only the then-open obligation rows), and 0 violations total after it.
+- **D4** — 2026-11-09, owner-instruction authority (S2; ledger-frozen rows O1/O2): the `format` vocabulary is one linear generation per carrier — `unit-doc@1` (legacy) and `unit-doc@2` (spec-by-reference). The RED corpus’s own family assertion (“every format belongs to the unit-doc carrier family”) failed the first vocabulary I wrote (`unit-doc-legacy@1` / `unit-doc-spec-by-reference@1`), because two sibling families sharing a generation would make an older-generation document refuse as *unknown* instead of degrading. The tests’ format tokens were renamed to the published vocabulary; no assertion, count or outcome changed.
+- **D5** — 2026-11-09, owner-instruction authority (S1, §8): the O1–O3/O8 validators name the contract’s own suite instead of the package-wide `bun run test`, because two package-wide cases (AC8 `npm pack`, F112) can never be green in this environment (`npm`/`node` absent) and a `verified` row whose validator does not reproduce is exactly the defect the 460 external verify blocked on. The package-wide result is recorded as E12 with its counts; nothing is claimed green that did not run.
+- **G1** — 2026-11-09, HEAD 1b907d7de3267cc73cb76eb5a08b4118744a1a08, `AGENTIC_WORKFLOW_NODE=bun bun scripts/local-gate.mjs --jobs 4 --no-bail` · exit 1 · 12/17 steps PASS (workspace-install, version-parity-content, docs-generated-projection, log-immutability, temp-hygiene, tmp-gc, worktree-guard, dependency-pin-gate, dependency-advisories, schema-build, journal-carrier-check, crate-suite-bun 565 pass / 0 fail); 4 FAIL, all environment-caused: `crate-suite-node` and `pi-node-compat` (no `node` binary), `pi-compat-guard` (no npm/network to install the peer floor), `root-suite` (the base-caused stub failures of E14); 1 SKIPPED (`schema-node-compat`, dependent on a failed step).
+
 ## Next
 
-P2 — the RED corpus.
+Hand the diff to the owner as the external verifier: no self-approval, no PR until the owner’s verdict. P9’s gate line is G1 — 12/17 steps green; the 4 reds and the 1 skip are environment-caused and the root-suite red is proved base-caused (E12–E14).
 
 ## References
 
