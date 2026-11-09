@@ -14,8 +14,8 @@ import path from "node:path";
 
 import { createTelemetryWiring, sessionChangedPaths } from "../dist/extension/telemetry-wiring.js";
 import { execFileSync } from "node:child_process";
-import { parseConfigFile } from "../dist/config/schema.js";
 import { mergeConfigs } from "../dist/config/merge.js";
+import { BASE_CONFIG_SECTIONS, validateSectionValue } from "@gtrabanco/agentic-workflow-schema";
 import { tempRoot } from "../../../scripts/temp-root.mjs";
 
 /** A `pi` double: it records handlers so the test can fire them. */
@@ -188,12 +188,11 @@ test("a command with no resolvable unit directory leaves the previous unit unset
 });
 
 test("the switch is one boolean, off by default, and a stray key is refused", () => {
-  assert.equal(parseConfigFile('{"telemetry":{"enabled":true}}').config.telemetry.enabled, true);
-  const refused = parseConfigFile('{"telemetry":{"off":true}}');
-  assert.equal(refused.ok, false, "an unknown telemetry key is a parse failure, not a silent no-op");
-  assert.match(refused.issues.map((issue) => issue.message).join(" "), /unknown telemetry key "off"/);
-  assert.equal(parseConfigFile('{"telemetry":{"enabled":"yes"}}').ok, false, "a non-boolean is refused");
-  assert.equal(mergeConfigs(parseConfigFile("{}").config, parseConfigFile("{}").config).telemetry.enabled, false, "a fresh install measures nothing");
+  const section = BASE_CONFIG_SECTIONS.find((entry) => entry.key === "telemetry");
+  assert.deepEqual(validateSectionValue(section, { enabled: true }), []);
+  assert.equal(validateSectionValue(section, { off: true }).length, 1, "an unknown telemetry key is a validation failure, not a silent no-op");
+  assert.equal(validateSectionValue(section, { enabled: "yes" }).length, 1, "a non-boolean is refused");
+  assert.equal(mergeConfigs({}, {}).telemetry.enabled, false, "a fresh install measures nothing");
 });
 
 test("a session's own scope is counted from git: its commits plus what is still uncommitted", () => {
