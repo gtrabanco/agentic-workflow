@@ -208,6 +208,44 @@ function stampSkillVersions(root, version) {
   return stamped;
 }
 
+/**
+ * The unit-doc templates carry a `doc-provenance@1` stamp whose forensic half
+ * names the train version (issue #462). Stamped by code at apply time for the
+ * same reason skill frontmatter is: a version literal maintained by hand is the
+ * defect the stamp exists to remove.
+ *
+ * Only the two forensic lines move. `format` and `grammars` are the content
+ * axes — a re-cut owns them, never a release. A template without a stamp, or a
+ * tree without the templates (every target project), is a clean zero; the
+ * repository's own parity gate refuses a missing template stamp.
+ */
+function stampTemplateProvenance(root, version) {
+  const templates = [
+    "docs/features/_TEMPLATE/SPEC.md",
+    "docs/fix/_TEMPLATE/SPEC.md",
+    "template/docs/features/_TEMPLATE/SPEC.md",
+    "template/docs/fix/_TEMPLATE/SPEC.md",
+  ];
+  let stamped = 0;
+  for (const relative of templates) {
+    const file = path.join(root, relative);
+    if (!fs.existsSync(file)) continue;
+    const before = fs.readFileSync(file, "utf8");
+    if (!before.includes("doc-provenance@1")) continue;
+    const after = before
+      .replace(/^written_by: agentic-workflow@\d+\.\d+\.\d+$/mu, `written_by: agentic-workflow@${version}`)
+      .replace(
+        /^schema: @gtrabanco\/agentic-workflow-schema@\d+\.\d+\.\d+$/mu,
+        `schema: @gtrabanco/agentic-workflow-schema@${version}`,
+      );
+    if (after !== before) {
+      fs.writeFileSync(file, after);
+      stamped += 1;
+    }
+  }
+  return stamped;
+}
+
 /** Highest stable v-tag, or null when the repo has none / is not a repo. */
 function lastStableTag(root) {
   const tags = stableTags(root);
@@ -933,6 +971,8 @@ function main() {
       rewriteLocalPins(root, packages, version);
       const stamped = stampSkillVersions(root, version);
       console.log(`skills: ${stamped} SKILL.md frontmatter(s) stamped with the train version (D-40-14 — the skill version IS the ecosystem version)`);
+      const stampedTemplates = stampTemplateProvenance(root, version);
+      console.log(`templates: ${stampedTemplates} unit-doc provenance stamp(s) stamped with the train version`);
       // Consume the intent that was just applied — the changesets-tool
       // behavior this format adopted. Without the deletion the files ride
       // into the next cut, whose bump level and notes then re-apply stale

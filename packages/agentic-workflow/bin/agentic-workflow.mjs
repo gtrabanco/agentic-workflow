@@ -83,7 +83,7 @@
 
 import { readFileSync, existsSync, writeFileSync, renameSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { join, resolve, basename, dirname } from "node:path";
+import { join, resolve, basename, dirname, relative } from "node:path";
 
 // Import SDK modules
 import { create, setSection, evidence_addRow, progress_logEntry, validate } from "../src/edit/UnitDoc.mjs";
@@ -99,6 +99,7 @@ import {
 import { rowAdd } from "../src/edit/Changelog.mjs";
 import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
+import { stampFile } from "../src/edit/Provenance.mjs";
 import { parseDocArgs } from "../src/doc/grammar.mjs";
 import { runDocOp } from "../src/doc/retrieval.mjs";
 import { relativeDocPath, resolveSectionRef } from "../src/doc/docops.mjs";
@@ -993,6 +994,22 @@ switch (command) {
         const result = validate(content);
         if (parsed.json) console.log(JSON.stringify(result, null, 2));
         else console.log(JSON.stringify(result, null, 2));
+      } catch (e) {
+        refuse(e.message);
+      }
+    } else if (op === "provenance") {
+      // The stamp's write point (issue #462): creation and a re-cut. Feature and
+      // fix units share the op, so the document is resolved from both homes
+      // rather than from the feature path every other op assumes.
+      const candidates = [join(unitDir, "SPEC.md"), join(rootDir, "docs", "fix", slug, "SPEC.md")];
+      const target = candidates.find((candidate) => existsSync(candidate));
+      if (!target) {
+        refuse(`no unit doc found for ${slug} (checked ${candidates.map((c) => relative(rootDir, c)).join(" and ")})`);
+      }
+      try {
+        const receipt = stampFile(target);
+        if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
+        else printReceipt(receipt);
       } catch (e) {
         refuse(e.message);
       }

@@ -17,6 +17,14 @@
 > before the re-cut keeps the legacy 14-section shape — both are accepted, and a
 > legacy doc is never rewritten to migrate it.
 
+```text
+doc-provenance@1
+written_by: agentic-workflow@4.10.0
+schema: @gtrabanco/agentic-workflow-schema@4.10.0
+format: unit-doc@2
+grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
+```
+
 ## Issue
 
 `#<n>` — tracked issue in the project's forge. Required. The PR must close it

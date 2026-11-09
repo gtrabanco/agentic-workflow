@@ -29,7 +29,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -370,5 +370,80 @@ test("#308 every reader resolves a shape instead of duplicating one list", () =>
     assert.ok(declares || imports, `${file} must read the shape table instead of duplicating one list`);
     assert.match(source, /resolveUnitDocShape|resolveSectionShape/,
       `${file} must derive the shape from the headings a document carries`);
+  }
+});
+
+// ── #462 — the provenance stamp: one contract, five producers, zero drift ────
+// The stamp is a fourth contract the same four producers carry (each template)
+// plus the crate's writer, and the schema package publishes its vocabularies.
+// The parity is a test because the crate ships without a dependency on the
+// schema package (AC21 of unit 61) — a drifting mirror is the defect, not the
+// second copy.
+
+const TEMPLATES_462 = [
+  "docs/features/_TEMPLATE/SPEC.md",
+  "docs/fix/_TEMPLATE/SPEC.md",
+  "template/docs/features/_TEMPLATE/SPEC.md",
+  "template/docs/fix/_TEMPLATE/SPEC.md",
+];
+const SCHEMA_PROVENANCE_SOURCE = "packages/agentic-workflow-schema/src/doc-provenance.ts";
+
+/** The quoted strings of `export const NAME = [ … ]` in the schema source. */
+function schemaQuotedList(name) {
+  const source = read(SCHEMA_PROVENANCE_SOURCE);
+  const at = source.indexOf(`export const ${name} = [`);
+  assert.notEqual(at, -1, `${SCHEMA_PROVENANCE_SOURCE} publishes ${name}`);
+  const close = source.indexOf("]", at);
+  return [...source.slice(at, close).matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+}
+
+/** The `"family": N` pairs of the schema source's published generation map. */
+function schemaGrammarVersions() {
+  const source = read(SCHEMA_PROVENANCE_SOURCE);
+  const at = source.indexOf("export const DOC_GRAMMAR_VERSIONS = Object.freeze({");
+  assert.notEqual(at, -1, `${SCHEMA_PROVENANCE_SOURCE} publishes DOC_GRAMMAR_VERSIONS`);
+  const close = source.indexOf("})", at);
+  const out = {};
+  for (const m of source.slice(at, close).matchAll(/"([a-z0-9-]+)":\s*(\d+)/g)) out[m[1]] = Number(m[2]);
+  return out;
+}
+
+const packageVersion = (dir) => JSON.parse(read(`${dir}/package.json`)).version;
+
+test("#462 the crate's mirror equals the schema package's published vocabulary", async () => {
+  const provenance = await import(pathToFileURL(path.join(ROOT, "packages/agentic-workflow/src/edit/Provenance.mjs")).href);
+  assert.deepEqual([...provenance.DOC_PROVENANCE_FORMATS].sort(), schemaQuotedList("DOC_PROVENANCE_FORMATS").sort(),
+    "the format vocabulary is one set, mirrored not re-decided");
+  assert.deepEqual([...provenance.DOC_GRAMMAR_FAMILIES].sort(), schemaQuotedList("DOC_GRAMMAR_FAMILIES").sort(),
+    "the grammar-family set is one set, mirrored not re-decided");
+  assert.deepEqual({ ...provenance.DOC_GRAMMAR_VERSIONS }, schemaGrammarVersions(),
+    "the published generations are the schema package's, never the crate's own");
+  for (const family of schemaQuotedList("DOC_GRAMMAR_FAMILIES")) {
+    assert.ok(Array.isArray(provenance.DOC_FORMAT_GRAMMARS["unit-doc@2"])
+      && provenance.DOC_FORMAT_GRAMMARS["unit-doc@2"].includes(family),
+      `the re-cut carrier publishes every family it carries (${family})`);
+  }
+});
+
+test("#462 every unit-doc template stamps its own carrier and the train version", async () => {
+  const provenance = await import(pathToFileURL(path.join(ROOT, "packages/agentic-workflow/src/edit/Provenance.mjs")).href);
+  const train = packageVersion("packages/agentic-workflow");
+  assert.equal(packageVersion("packages/agentic-workflow-schema"), train,
+    "D-40-14: one train version — the forensic pair is only deterministic while this holds");
+  assert.equal(packageVersion("packages/pi-agentic-workflow"), train, "D-40-14: one train version across the three packages");
+  for (const template of TEMPLATES_462) {
+    const text = read(template);
+    const markers = [...text.matchAll(/^doc-provenance@1$/gm)];
+    assert.equal(markers.length, 1, `${template} carries exactly one doc-provenance@1 block`);
+    const { value, errors } = provenance.parseProvenance(text);
+    assert.deepEqual(errors, [], `${template}: ${errors.join(", ")}`);
+    assert.ok(value, `${template} carries a parsable stamp`);
+    assert.equal(provenance.validateProvenance(value).valid, true, `${template} carries a valid stamp`);
+    assert.equal(value.format, provenance.deriveFormat(headings(text)),
+      `${template}'s declared format is the carrier it actually carries`);
+    assert.deepEqual(Object.keys(value.grammars).sort(), [...provenance.DOC_FORMAT_GRAMMARS[value.format]].sort(),
+      `${template} declares exactly the grammar families its carrier publishes`);
+    assert.equal(value.written_by, `agentic-workflow@${train}`, `${template} names the train version the stamper writes`);
+    assert.equal(value.schema, `@gtrabanco/agentic-workflow-schema@${train}`, `${template} names the schema train version`);
   }
 });

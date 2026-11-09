@@ -1,5 +1,52 @@
 # Migration notes
 
+## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
+
+**What changed.** A machine-read unit doc can carry a `doc-provenance@1` block —
+one fenced block in the preamble, written at creation and at a re-cut, never per
+edit. It declares three axes that are never merged (owner:
+`packages/agentic-workflow-schema/README.md`, block `doc-provenance@1`):
+
+- `format` — the **carrier layout** generation (`unit-doc@1` is the legacy
+  14-section carrier, `unit-doc@2` the re-cut `spec-by-reference` one);
+- `grammars` — the **content** vocabularies the document speaks;
+- `written_by` / `schema` — the **forensic** pair: which tool and schema version
+  wrote it, so a breakage is reproduced and bisected across the train instead of
+  guessed.
+
+**Reader rule keyed on the stamp.** A train major (vN → vN+1) no longer needs a
+repo-wide sweep of unit docs: the reader dispatches per document, mechanically,
+and the choice is recorded here once per major:
+
+| The stamp's `format` | What the reader does |
+| --- | --- |
+| newer than the reader's own generation | typed refusal (`format-newer-than-reader`) — never a silent misparse |
+| a generation inside the declared compatibility window | degrade (`format-older-compatible`) and read it with the generation's parser |
+| at or below the reader's declared window floor | typed refusal (`format-too-old`) carrying the note `written under <format> — see MIGRATION.md` |
+| an unknown carrier family | typed refusal (`format-unknown-to-reader`) |
+| absent | degrade (`absent-stamp`): the generation is derived from the carrier the document carries — **never an error** |
+
+A generation the schema package does not publish is red at `verify`
+(`provenance-unpublished` / `provenance-newer-than-reader`), and the declared
+`format`/`grammars` must agree with the carrier the document actually carries
+(`provenance-format-mismatch`, `provenance-grammar-mismatch`).
+
+**What you have to do:**
+
+- **A unit doc opened before this release** keeps its bytes. It carries no
+  stamp, which is a declared degradation — the reader derives the generation
+  from its sections. **Closed units are never backstamped**: a stamp added to
+  frozen evidence would falsify the record it describes.
+- **A re-cut of the carrier** (a section-set change) adds a `format` generation
+  and its row above, and re-stamps the in-flight units with
+  `agentic-workflow unit-doc <slug> provenance`. One generation per layout: two
+  layouts sharing a generation is exactly the silent misparse this contract
+  removes.
+- **Consuming the stamp from another language?** Read the four fields as the
+  grammar block describes them; the JSON projection is
+  `doc-provenance.schema.json`, and the runner crate's mirror follows the same
+  sets (a parity test pins the two).
+
 ## 2026-11-04 — the findings carrier gains a severity ladder and an impact column (issue #361)
 
 **What changed.** The `findings-table@1` carrier — the `## Findings` table a

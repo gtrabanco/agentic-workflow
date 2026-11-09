@@ -22,6 +22,7 @@ import {
   resolveUnitDocShape,
   unitDocSectionsFor,
 } from "./schema.mjs";
+import { stampDocument } from "./Provenance.mjs";
 
 // ── Canonical skeletons matching docs/{features,fix}/_TEMPLATE/SPEC.md ────
 // The legacy shape is emitted by `create`; the re-cut shape by
@@ -265,7 +266,11 @@ export function create(dir, slug) {
     throw new Error(`Directory does not exist: ${dir}`);
   }
   const target = join(dir, "SPEC.md");
-  const content = CANONICAL_SKELETON;
+  // Creation is a write point for the provenance stamp (issue #462): the writer
+  // reads its own manifest version here, so no version literal is maintained by
+  // hand. Absence would be a legal degradation, but a document the writer itself
+  // created should never start out undeclared.
+  const content = stampDocument(CANONICAL_SKELETON);
   const beforeHash = existsSync(target) ? sha256(readFileSync(target, "utf8")) : "empty";
   atomicWrite(target, content);
   const afterHash = sha256(readFileSync(target, "utf8"));
@@ -336,7 +341,9 @@ export function createSpecByReference(dir, slug) {
     throw new Error(`Directory does not exist: ${dir}`);
   }
   const target = join(dir, "SPEC.md");
-  const content = CANONICAL_SPEC_REF_SKELETON;
+  // Same write point as `create`: the stamp is emitted at creation, never per
+  // edit, and a re-cut re-stamps through the `provenance` op (issue #462).
+  const content = stampDocument(CANONICAL_SPEC_REF_SKELETON);
   const beforeHash = existsSync(target) ? sha256(readFileSync(target, "utf8")) : "empty";
   atomicWrite(target, content);
   const afterHash = sha256(readFileSync(target, "utf8"));
