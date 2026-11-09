@@ -19,7 +19,7 @@ import { execFileSync } from "node:child_process";
 
 import { encodeVector, decodeVector, VECTOR_TAG } from "../src/doc/embeddings.mjs";
 import { resolveEmbedConfig, makeOpenAIProvider } from "../src/doc/embeddings.mjs";
-import { embedPendingChunks, storedEmbeddingModel } from "../src/doc/embeddings.mjs";
+import { embedPendingChunks, storedEmbeddingModel, resolvePacing, DEFAULT_PACING } from "../src/doc/embeddings.mjs";
 import { syncIndex } from "../src/doc/sync.mjs";
 import { storePath } from "../src/doc/store.mjs";
 import { openDatabase } from "../src/doc/sqlite.mjs";
@@ -209,8 +209,7 @@ describe("embeddings write path", () => {
   });
 });
 
-async function chunkEmbeddings(root) {
-  const { db } = await openDatabase(storePath(root));
+async function chunkEmbeddings(root) {  const { db } = await openDatabase(storePath(root));
   const rows = db.prepare("select chunk_id, embedding from chunks where embedding is not null").all();
   db.close();
   return Object.fromEntries(rows.map((r) => [r.chunk_id, r.embedding]));
@@ -222,5 +221,275 @@ describe("openai-compatible provider", () => {
     const p = makeOpenAIProvider({ baseUrl: "http://127.0.0.1:9", apiKey: "k", model: "m", fetchImpl: async () => { throw new Error("offline"); } });
     strictEqual(p.model, "m");
     await rejects(() => p.embed(["x"]), /offline/); // dead endpoint throws, never silently returns junk
+  });
+});
+
+// ── S3/S9/S10 — sync resilience: pacing, retry, resume (issue #443) ───────
+//
+// The defects these cover: `embedPendingChunks` called `provider.embed` with no
+// try/catch, no retry, no pacing and no batch cap, and wrote the pinned-model
+// meta only after the whole pass — one 429 aborted the run and left the store
+// 38 % embedded and unpinned (issue #443 background).
+
+/** A throwaway git repo carrying `files` (path → markdown). */
+function resilienceFixture(files) {
+  const dir = mkdtempSync(join(tmpdir(), "doc-pace-"));
+  execFileSync("git", ["init", "-q"], { cwd: dir });
+  execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: dir });
+  execFileSync("git", ["config", "user.name", "t"], { cwd: dir });
+  for (const [rel, body] of Object.entries(files)) writeFileSync(join(dir, rel), body);
+  execFileSync("git", ["add", "-A"], { cwd: dir });
+  execFileSync("git", ["commit", "-qm", "fixture"], { cwd: dir });
+  return dir;
+}
+
+/** `count` single-section files — one chunk each, so one batch each. */
+function manyFiles(count) {
+  const files = {};
+  for (let i = 0; i < count; i += 1) files[`f${String(i).padStart(3, "0")}.md`] = `# File ${i}\nbody ${i}\n`;
+  return files;
+}
+
+/** A virtual clock so a paced run is measured without waiting. */
+function virtualClock() {
+  let t = 0;
+  const sleeps = [];
+  return {
+    sleeps,
+    now: () => t,
+    sleep: async (ms) => {
+      sleeps.push(ms);
+      t += ms;
+    },
+  };
+}
+
+/** A provider that records every batch it was handed. */
+function recordingEmbedder(model = "mock-1") {
+  const state = { calls: 0, batches: [] };
+  return {
+    model,
+    state,
+    async embed(texts) {
+      state.calls += 1;
+      state.batches.push([...texts]);
+      return texts.map((_, i) => [i + 1, i + 2, i + 3]);
+    },
+  };
+}
+
+/** A 429/500 carrying the machine-readable status the retry policy branches on. */
+function providerError(status, message) {
+  const error = new Error(message ?? `embeddings provider ${status}`);
+  error.status = status;
+  return error;
+}
+
+describe("S10 pacing resolution (D4)", () => {
+  it("S10: resolves the provider's published limits as defaults", () => {
+    deepStrictEqual(resolvePacing({}), { ...DEFAULT_PACING });
+    strictEqual(DEFAULT_PACING.batchSize, 32);
+    strictEqual(DEFAULT_PACING.requestsPerMinute, 60);
+  });
+
+  it("S10: a config value overrides its default and leaves the rest alone", () => {
+    const pacing = resolvePacing({ config: { provider: { pacing: { batchSize: 8, requestsPerMinute: 120 } } } });
+    strictEqual(pacing.batchSize, 8);
+    strictEqual(pacing.requestsPerMinute, 120);
+    strictEqual(pacing.maxAttempts, DEFAULT_PACING.maxAttempts);
+  });
+
+  it("S10: an environment override wins over the config, per parameter", () => {
+    const pacing = resolvePacing({
+      config: { provider: { pacing: { batchSize: 8 } } },
+      env: {
+        AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BATCH_SIZE: "5",
+        AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_ATTEMPTS: "2",
+      },
+    });
+    strictEqual(pacing.batchSize, 5);
+    strictEqual(pacing.maxAttempts, 2);
+  });
+
+  it("S10: a non-positive or unparseable value is refused by name, never paced as NaN", () => {
+    for (const value of ["0", "-1", "abc", ""]) {
+      throws(
+        () => resolvePacing({ env: { AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BATCH_SIZE: value } }),
+        /AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BATCH_SIZE|batchSize/,
+        `accepted ${JSON.stringify(value)}`,
+      );
+    }
+    throws(() => resolvePacing({ config: { provider: { pacing: { requestsPerMinute: 1.5 } } } }), /requestsPerMinute/);
+  });
+});
+
+describe("S3/S9 sync resilience (D5)", () => {
+  it("S3: survives a provider that 429s every 20th batch — the run completes, everything is embedded, the pin is written", async () => {
+    const dir = resilienceFixture(manyFiles(20));
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      const inner = recordingEmbedder("mock-retry");
+      const flaky = {
+        model: inner.model,
+        async embed(texts) {
+          inner.state.calls += 1;
+          if (inner.state.calls % 20 === 0) throw providerError(429, "429 too many requests");
+          inner.state.batches.push([...texts]);
+          return texts.map((_, i) => [i + 1, i + 2, i + 3]);
+        },
+      };
+      const result = await embedPendingChunks(dir, flaky, { sleep: clock.sleep, now: clock.now, random: () => 0 });
+      strictEqual(result.embedded, 20);
+      strictEqual(inner.state.calls, 21, "the 20th request is retried once");
+      strictEqual(await storedEmbeddingModel(dir), "mock-retry");
+      const { db } = await openDatabase(storePath(dir));
+      const pending = db.prepare("select count(*) as n from chunks where embedding is null").get().n;
+      db.close();
+      strictEqual(pending, 0);
+      ok(clock.sleeps.length >= 1, "the retry must back off before it re-sends");
+
+      // AC19 bound unchanged: a warm store makes 0 API calls.
+      const warm = recordingEmbedder("mock-retry");
+      const again = await embedPendingChunks(dir, warm, { sleep: clock.sleep, now: clock.now, random: () => 0 });
+      strictEqual(again.calls, 0);
+      strictEqual(warm.state.calls, 0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S3: one request never carries more texts than batchSize (the provider's 32-text cap)", async () => {
+    const sections = Array.from({ length: 40 }, (_, i) => `## Section ${i}\nbody ${i}\n`).join("\n");
+    const dir = resilienceFixture({ "big.md": `# Big\nintro\n\n${sections}` });
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      const e = recordingEmbedder("mock-cap");
+      await embedPendingChunks(dir, e, { sleep: clock.sleep, now: clock.now, random: () => 0, pacing: { batchSize: 32 } });
+      ok(e.state.batches.length >= 2, `batches=${e.state.batches.length}`);
+      for (const batch of e.state.batches) ok(batch.length <= 32, `batch of ${batch.length}`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S3: requests are paced at the configured rate — the recorded waits respect the interval", async () => {
+    const dir = resilienceFixture(manyFiles(3));
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      const e = recordingEmbedder("mock-pace");
+      await embedPendingChunks(dir, e, { sleep: clock.sleep, now: clock.now, random: () => 0, pacing: { requestsPerMinute: 60 } });
+      strictEqual(e.state.calls, 3);
+      deepStrictEqual(clock.sleeps, [1000, 1000]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S9: a run that stops part-way is resumed — the re-run embeds only the remainder", async () => {
+    const dir = resilienceFixture(manyFiles(6));
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      // Batch 3 fails with a non-retryable status: batches 1-2 landed and are
+      // committed, so the store's own pending predicate is the resume point.
+      const failing = {
+        model: "mock-resume",
+        calls: 0,
+        async embed(texts) {
+          this.calls += 1;
+          if (this.calls === 3) throw providerError(400, "400 bad request");
+          return texts.map((_, i) => [i + 1, i + 2, i + 3]);
+        },
+      };
+      await rejects(() => embedPendingChunks(dir, failing, { sleep: clock.sleep, now: clock.now, random: () => 0 }), /400/);
+      const { db } = await openDatabase(storePath(dir));
+      const landed = db.prepare("select chunk_id, body from chunks where embedding is not null order by chunk_id").all();
+      const pending = db.prepare("select chunk_id, body from chunks where embedding is null order by path, rowid").all();
+      db.close();
+      strictEqual(landed.length, 2, "the two landed batches stay committed");
+      strictEqual(pending.length, 4);
+
+      const resumed = recordingEmbedder("mock-resume");
+      const result = await embedPendingChunks(dir, resumed, { sleep: clock.sleep, now: clock.now, random: () => 0 });
+      strictEqual(resumed.state.calls, pending.length, "one request per remaining chunk, none re-sent");
+      strictEqual(result.embedded, pending.length);
+      // The already-embedded rows were never part of a re-sent batch.
+      const resent = new Set(resumed.state.batches.flat());
+      for (const row of landed) strictEqual(resent.has(row.body), false, "an embedded chunk was re-sent");
+      for (const row of pending) strictEqual(resent.has(row.body), true, "a pending chunk was skipped");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S3: a partially successful pass pins the model that produced the stored vectors", async () => {
+    const dir = resilienceFixture(manyFiles(4));
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      const failing = {
+        model: "mock-pin",
+        calls: 0,
+        async embed(texts) {
+          this.calls += 1;
+          if (this.calls >= 2) throw providerError(500, "500 server error");
+          return texts.map((_, i) => [i + 1, i + 2, i + 3]);
+        },
+      };
+      await rejects(() => embedPendingChunks(dir, failing, { sleep: clock.sleep, now: clock.now, random: () => 0, pacing: { maxAttempts: 2 } }));
+      strictEqual(await storedEmbeddingModel(dir), "mock-pin", "the first landed batch must pin the store");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S3: a non-retryable provider error fails fast instead of burning the attempt budget", async () => {
+    const dir = resilienceFixture(manyFiles(2));
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      const bad = {
+        model: "mock-bad",
+        calls: 0,
+        async embed() {
+          this.calls += 1;
+          throw providerError(401, "401 unauthorized");
+        },
+      };
+      await rejects(() => embedPendingChunks(dir, bad, { sleep: clock.sleep, now: clock.now, random: () => 0 }), /401/);
+      strictEqual(bad.calls, 1);
+      deepStrictEqual(clock.sleeps, []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S3: Retry-After is honoured when the provider names it", async () => {
+    const dir = resilienceFixture(manyFiles(2));
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      const provider = {
+        model: "mock-after",
+        calls: 0,
+        async embed(texts) {
+          this.calls += 1;
+          if (this.calls === 1) {
+            const error = providerError(429, "429 too many requests");
+            error.retryAfter = 3;
+            throw error;
+          }
+          return texts.map((_, i) => [i + 1, i + 2, i + 3]);
+        },
+      };
+      await embedPendingChunks(dir, provider, { sleep: clock.sleep, now: clock.now, random: () => 0, pacing: { requestsPerMinute: 60000 } });
+      strictEqual(provider.calls, 3); // one 429 + one retry + the second file
+      ok(clock.sleeps.includes(3000), `sleeps=${JSON.stringify(clock.sleeps)}`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
