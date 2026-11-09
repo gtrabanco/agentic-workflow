@@ -151,11 +151,16 @@ export function logShapeViolations(baseline, current, { what = LOG } = {}) {
   if (baseline !== null && current.startsWith(baseline)) {
     const suffix = current.slice(baseline.length);
     if (suffix === "") return [];
-    if (!suffix.startsWith("## ")) {
+    // The aggregator appends its block behind a blank-line separator; that
+    // separator is structural, so the entry-heading test runs on the payload
+    // that follows it. Without this the gate reports the aggregator's own
+    // output as malformed (a blank line is not an entry heading).
+    const appended = suffix.replace(/^\n+/, "");
+    if (!appended.startsWith("## ")) {
       return [{ code: "log-block-malformed", detail: `${what}: the appended bytes do not start with an entry heading` }];
     }
     const violations = [];
-    for (const block of splitBlocks(suffix)) {
+    for (const block of splitBlocks(appended)) {
       const fault = contentFault(block);
       if (fault !== null) {
         violations.push({
