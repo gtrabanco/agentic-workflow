@@ -116,7 +116,7 @@ test("the tally names the file count and the creating count", () => {
     (root) => {
       const result = gate(root);
       assert.equal(result.status, 1);
-      assert.match(result.stdout, /temp-hygiene — 3 file\(s\) scanned · 1 creating/);
+      assert.match(result.stdout, /temp-hygiene — 3 file\(s\) scanned · 2 creating/);
       assert.match(result.stdout, /temp-hygiene: 1 finding\(s\)/);
     },
   );
