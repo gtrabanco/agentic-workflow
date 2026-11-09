@@ -1,6 +1,0 @@
-## 2026-11-08T23:21:10Z — feat/468-log-immutability-guard — narrative
-- **Commits:** 10 (`16995817…4026610a`)
-- **Files:** 20 files
-- **Summary:** Applied issue #468 inline (owner's local workflow): the push-level log-immutability gate landed green for its merged red suite (maxBuffer + like-for-like carrier defects found and fixed on the live tree), the offline local-gate step rides the pre-push subset with both step-id pin suites re-pinned, and journal write refuses an explicit session that already registered its entry. Unit doc + both planning ledgers cut mid-flight (the prior session had cut code before them - disclosed). Root suite 92/92, offline gate steps PASS, obligations 11/11 verified.
-- **Decisions:** S3's check is scoped to explicit --session values (PE-004: the fallback slug 'local' is shared by every unflagged write, so a match there identifies no conversation); the identical computed name stays the grammar's collision refusal, not an already-registered refusal; the delivery shape (the branch was already merged locally once) is left to the owner.
-- **Next:** Owner verdict on the diff 5ba1d670..HEAD; then the PR (Closes #468) and the two open out-of-scope decisions the issue names (fragment provenance stamp, CODEOWNERS/ruleset).
