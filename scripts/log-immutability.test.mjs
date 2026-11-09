@@ -197,6 +197,19 @@ test("FAIL log-rewritten: an existing entry line is edited", (t) => {
   assert.match(result.stdout, /log-rewritten/, "even the bot's identity cannot launder a rewrite");
 });
 
+test("PASS: an append separated by a blank line is a heading extension (the aggregator's byte shape)", (t) => {
+  const fx = fixture(t);
+  // The aggregator appends `\n` + the fragment block, so after the log's last
+  // entry the suffix is a blank-line separator followed by the `## ` heading.
+  // The separator is structural, not payload: the range must still see the
+  // append as an entry block rather than report the blank line as a malformed one.
+  fx.editLog(`\n${CONFORMING}`, true);
+  fx.commit("bot: append a blank-line-separated block", BOT);
+  const result = run(fx.root, ["--base", fx.base]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /verdict: PASS/);
+});
+
 test("FAIL log-block-malformed: an appended block that is not newline-terminated", (t) => {
   const fx = fixture(t);
   fx.editLog(CONFORMING.trimEnd(), true);
