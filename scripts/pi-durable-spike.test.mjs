@@ -9,9 +9,10 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 
 const {
   SpikeRefusal,
@@ -88,22 +89,30 @@ test("SP5: the receipt is the fixed spike contract, no free-form field", () => {
   assert.equal(receipt.phases, 1);
 });
 
-test("SP6: with a scratch substrate installed, a killed lane resumes without re-running a committed stage", async (t) => {
+test("SP6: with a scratch substrate installed, a killed lane resumes without re-running a committed stage", (t) => {
   if (!process.env.PI_DURABLE_DIR) {
     t.skip("PI_DURABLE_DIR is not set — the real lane run is recorded in docs/research/284-pi-durable-spike.md");
     return;
   }
-  const { runLane } = await import("./pi-durable-spike.mjs");
   const dir = mkdtempSync(join(tmpdir(), "aw-spike-lane-"));
+  const script = new URL("./pi-durable-spike.mjs", import.meta.url).pathname;
+  const lane = ["--dir", dir, "--stage", "s1", "--stage", "s2", "--stage", "s3"];
+  const run = (extra) => spawnSync(process.execPath, [script, ...lane, ...extra], {
+    encoding: "utf8",
+    env: { ...process.env },
+    timeout: 120_000,
+  });
   try {
-    const args = { dir, stages: ["s1", "s2", "s3"], killAfter: null, killDuring: null, json: true };
-    const first = await runLane({ ...args, killDuring: "s2" });
-    assert.equal(first.resumed, false);
-    assert.deepEqual(first.receipt.reexecuted, ["s2"], "the in-flight phase re-runs — at-least-once");
-    const second = await runLane(args);
-    assert.equal(second.resumed, true);
-    assert.deepEqual(second.receipt.per_stage, { s1: 1, s2: 2, s3: 1 }, "committed stages are never re-run");
-    assert.deepEqual(second.receipt.reexecuted, ["s2"]);
+    // The child kills ITSELF inside s2's phase, before the commit — the test
+    // process must never carry that signal.
+    const first = run(["--kill-during", "s2"]);
+    assert.equal(first.signal, "SIGKILL", `the in-flight phase died (status ${first.status})`);
+    const second = run(["--json"]);
+    const receipt = JSON.parse(second.stdout);
+    assert.equal(second.status, 0, second.stderr);
+    assert.equal(receipt.resumed, true);
+    assert.deepEqual(receipt.per_stage, { s1: 1, s2: 2, s3: 1 }, "committed stages are never re-run");
+    assert.deepEqual(receipt.reexecuted, ["s2"], "only the uncommitted phase re-runs — at-least-once");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

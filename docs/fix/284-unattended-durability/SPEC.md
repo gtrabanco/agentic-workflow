@@ -63,6 +63,12 @@ scope: medium
 > plan; implement against it, hand the diff to me. The one exception is the
 > repo's deterministic gates (tests, lints) — run those always."
 
+**S10 — the P2 spike is authorized now (owner amendment, 2026-11-09).**
+> "Hazlo aunque sea experimental."
+
+**S11 — publish the unit: commit, push and open the PR.**
+> "Cuando acabes commit y push y crea la PR."
+
 ## Acceptance criteria
 
 One observable criterion per requirement, each naming the check that proves it.
@@ -100,6 +106,13 @@ One observable criterion per requirement, each naming the check that proves it.
 - **AC-S9** — no repo review machinery ran on this change (no `review-change`,
   no `audit-pr`, no fold cycle), and the deterministic gates did run. Proved by
   the `## Log` `G` lines and the absence of `R`/`F` lines.
+- **AC-S10** — the P2 spike ran on the real substrate, was killed in two places,
+  resumed without a human, and recorded a verdict with its numbers. Proved by
+  the receipts in `docs/research/284-pi-durable-spike.md` and by `bun test
+  scripts/pi-durable-spike.test.mjs` (the offline contract; SP6 replays the
+  killed lane when `PI_DURABLE_DIR` is set).
+- **AC-S11** — the branch is pushed and an open PR closes the issue. Proved by
+  the pushed head and the PR URL recorded in the `## Log`.
 
 ## Impact
 
@@ -276,6 +289,22 @@ regression witness.
   Relevant files: docs/fix/284-unattended-durability/planning-evidence.md,
   docs/fix/284-unattended-durability/planning-obligations.md
 
+- P13 — the spike harness: one durable task per stage, the lane document
+  committed with it, and the two real death points.
+  (validator: `bun test scripts/pi-durable-spike.test.mjs` exits 0)
+  (Implements: S10)
+  Relevant files: scripts/pi-durable-spike.mjs,
+  scripts/pi-durable-spike.test.mjs
+- P14 — the spike report: the recorded runs, the numbers and the verdict.
+  (validator: `rg -c 'Verdict: `REJECT`' docs/research/284-pi-durable-spike.md`
+  matches 1)
+  (Implements: S10)
+  Relevant files: docs/research/284-pi-durable-spike.md
+- P15 — publication: the commit, the push and the PR closing the issue.
+  (validator: `gh pr list --head feat/284-unattended-durability --state open --json number` matches 1)
+  (Implements: S11)
+  Relevant files: docs/fix/284-unattended-durability/SPEC.md
+
 ### Planning evidence
 
 Frozen in `planning-evidence.md` (medium unit: the ledger lives beside this
@@ -368,6 +397,29 @@ it has open work. No triage block reorders the frozen task list.
   changeset and the regenerated projection landed · 3f721446.
 - **P3** — 2026-11-09, the session journal fragment landed
   (`.agentic-workflow/journal/20261109T155402Z-feat-284-unattended-durability-narrative-local.md`).
+- **L4** — 2026-11-09, the owner's amendment, verbatim: "Hazlo aunque sea
+  experimental. Cuando acabes commit y push y crea la PR. El worktree está
+  corrupto, copia los cambios y haz un backup de ellos y repara el worktree si,
+  y solo si, es necesario para poder hacer commit y push"
+- **D5** — 2026-11-09, the unit's scope is extended by that amendment: P2 (the
+  Pi Durable spike) is cut as P13–P15 and AC-S10/AC-S11, with one obligation per
+  new phase. The verdict is `REJECT` (defer) on the evidence in
+  `docs/research/284-pi-durable-spike.md`: the mechanism is validated, the
+  substrate is still explicitly experimental, and AC7's token half needs a
+  provider this environment does not have.
+- **D6** — 2026-11-09, the worktree is not repaired. It stays usable for commit
+  and push: the backup (`git bundle`, the patch series and a tarball) is taken,
+  and the only blocker found was a missing `node`/`npm` on `PATH` for the
+  pre-push gate, not the layout.
+- **E10** — 2026-11-09, RED: `bun test scripts/pi-durable-spike.test.mjs` with
+  the harness absent · 0 pass / 1 error (missing module). GREEN after P13 · 5
+  pass / 1 skip without the substrate, 6 pass with
+  `PI_DURABLE_DIR=/tmp/pdspike`.
+- **E11** — 2026-11-09, the recorded substrate runs (pi-durable 1.5.0): clean
+  lane `phases 3`, `reexecuted []`; `--kill-after 1` attempt exit **137**, then
+  `resumed true`, `phases 3`, `reexecuted []`; `--kill-during stage-2` attempt
+  exit **137**, then `resumed true`, `phases 4`,
+  `per_stage {stage-1: 1, stage-2: 2, stage-3: 1}`.
 - **G1** — 2026-11-09, HEAD 9c40e590 · `bun scripts/version-parity-gate.mjs
   --content --base 1fa39fe1` · exit 0 · `changeset-intent` route,
   `VERDICT: PASS`.
@@ -386,8 +438,10 @@ it has open work. No triage block reorders the frozen task list.
 
 ## Next
 
-Hand the diff to the external verifier: the P1 deliveries are green, the two
-environmental failures are disclosed, and P2 waits on the owner.
+Push the branch and open the PR (`Closes #284`), then hand the diff to the
+external verifier: P1 and the P2 spike are green, the verdict is `REJECT`
+(defer) with its flip conditions, and the two environmental failures are
+disclosed.
 
 ## References
 
