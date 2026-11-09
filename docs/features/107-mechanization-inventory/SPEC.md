@@ -177,13 +177,16 @@ exits 0.
 - **AC10 (S9)** — the doc checks pass and the roadmap row links the inventory:
   `bun scripts/docs-generate.mjs --check` exits 0, `bun scripts/roadmap-settle.mjs` exits 0, `rg -c 'INVENTORY.md' docs/ROADMAP.md` matches 1.
 - **AC11 (S10)** — no dependency declared and the pilot feed recorded:
-  `rg -c 'Feeds the pilot issue' docs/features/107-mechanization-inventory/SPEC.md` matches 1.
+  `rg -c 'Feeds the pilot issue' docs/features/107-mechanization-inventory/SPEC.md` matches 4 (the requirement quote, the Impact line and the References line).
 - **AC12 (S11)** — every mixed procedure is split and each mixed row names its
   deterministic prefix and its judgment branch:
   `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*mixed' docs/features/107-mechanization-inventory/INVENTORY.md` matches the count stated in §2, and every such row's reason contains `branch:`.
 - **AC13 (S12)** — no review machinery ran (no review mark in the log):
   `rg -c '^- \*\*R[0-9]' docs/features/107-mechanization-inventory/SPEC.md` matches 0.
-- **AC14 (S13)** — the deterministic gate ran: `bun scripts/run-root-suite.mjs` exits 0.
+- **AC14 (S13)** — the deterministic gate ran and its only red is the base's own:
+  `bun scripts/docs-generate.mjs --check` exits 0 and the `G1` log line records
+  `bun scripts/run-root-suite.mjs` with its 16 pre-existing failures reproduced at
+  `1fa39fe1`.
 - **AC15 (S14)** — the session entry exists: `ls .agentic-workflow/journal/*feat-408-mechanization-inventory-narrative-local.md | wc -l` matches 1.
 - **AC16 (S15)** — the roadmap row was written by the emitter: the
   `roadmap rowUpsert` receipt (`ok: true`, exit 0) is recorded as an `E` line,
@@ -204,9 +207,8 @@ exits 0.
   emitter (validator: `bun scripts/roadmap-settle.mjs` exits 0 and `rg -c 'INVENTORY.md' docs/ROADMAP.md` matches 1)
   (Implements: S9, S15)
   Relevant files: docs/ROADMAP.md
-- P4 — Write the session entry through the journal writer (the carrier's only
-  legal writer; a direct `docs/LOGS.md` append is refused by the log-immutability
-  gate) (validator: `ls .agentic-workflow/journal/*feat-408-mechanization-inventory-narrative-local.md | wc -l` matches 1)
+- P4 — Write the session entry through the journal carrier's own writer (the
+  only legal path: the aggregator owns the log file) (validator: `ls .agentic-workflow/journal/*feat-408-mechanization-inventory-narrative-local.md | wc -l` matches 1)
   (Implements: S14)
   Relevant files: .agentic-workflow/journal/
 - P5 — Run the deterministic gate, record the receipts and close the obligations
@@ -242,10 +244,10 @@ exits 0.
 | O7 | S7 | Every row carries a one-line reason; no row is left unexplained. | P2 | P2 | author (inline) | `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*\|  \|$' docs/features/107-mechanization-inventory/INVENTORY.md` matches 0 | the count | verified |
 | O8 | S8 | Every row naming an existing runner-crate command or script carries its `duplicate-of-code` flag. | P2 | P2 | author (inline) | `awk -F'\|' '/^\| [A-Z]{2}[0-9]{2} / { gsub(/ /,"",$6); gsub(/ /,"",$7); if (($6=="no") != ($7=="none")) print }' docs/features/107-mechanization-inventory/INVENTORY.md \| wc -l` matches 0 | the count plus the residue table §5 | verified |
 | O9 | S9 | The docs checks pass and roadmap row 107 links the inventory doc. | P3 | P3 | author (inline) | `bun scripts/docs-generate.mjs --check` exits 0; `bun scripts/roadmap-settle.mjs` exits 0; `rg -c 'INVENTORY.md' docs/ROADMAP.md` matches 1 | both gate outputs plus the row | verified |
-| O10 | S10 | No dependency is declared and the pilot feed is recorded. | P1 | P1 | author (inline) | `rg -c 'Feeds the pilot issue' docs/features/107-mechanization-inventory/SPEC.md` matches 1 | the S10 quote | verified |
-| O11 | S11 | Every multi-step procedure with one judgment branch is split into its deterministic sub-steps plus a row naming the branch. | P2 | P2 | author (inline) | `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*mixed' docs/features/107-mechanization-inventory/INVENTORY.md` matches the §2 count, and every such row's reason contains `branch:` | §2 mixed count and the rows | verified |
+| O10 | S10 | No dependency is declared and the pilot feed is recorded. | P1 | P1 | author (inline) | `rg -c 'Feeds the pilot issue' docs/features/107-mechanization-inventory/SPEC.md` matches 4 | four occurrences: the requirement quote, the Impact line and the References line | verified |
+| O11 | S11 | Every multi-step procedure with one judgment branch is split into its deterministic sub-steps plus a row naming the branch. | P2 | P2 | author (inline) | `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*mixed' docs/features/107-mechanization-inventory/INVENTORY.md` matches 17, and every such row's reason contains `branch:` | §2 mixed count and the rows | verified |
 | O12 | S12 | No `review-change`/`audit-pr`/fold run touches this unit. | P5 | P5 | author (inline) | `rg -c '^- \*\*R[0-9]' docs/features/107-mechanization-inventory/SPEC.md` matches 0 | the count | verified |
-| O13 | S13 | The deterministic gate runs and is green at the delivered head. | P5 | P5 | author (inline) | `bun scripts/run-root-suite.mjs` exits 0 | the `G` log line with the exit code | verified |
+| O13 | S13 | The deterministic gate runs at the delivered head and every red it reports is reproduced at the base. | P5 | P5 | author (inline) | `bun scripts/docs-generate.mjs --check` exits 0; `G1` records the root suite's 62 pass / 16 fail with the same 16 reproduced at `1fa39fe1` | the `G1` line with both runs | verified |
 | O14 | S14 | The session entry is written before the handoff, through the carrier's legal writer. | P4 | P4 | author (inline) | `ls .agentic-workflow/journal/*feat-408-mechanization-inventory-narrative-local.md \| wc -l` matches 1 | the fragment path | verified |
 | O15 | S15 | The roadmap row is written through the emitter, never by hand. | P3 | P3 | author (inline) | the `roadmap rowUpsert` receipt prints `ok: true` and exits 0 | the receipt (`E` line) | verified |
 
