@@ -215,6 +215,8 @@ The ledger is [`planning-obligations.md`](planning-obligations.md) (M/L unit; no
 - **E3** — 2026-11-09, targeted pi config suites (`config-extension`, `auto-log-session-config`, `default-inherit`, `path-protection`, `auto-log-session-wiring`, `shipped-adapter`, `telemetry-extension`, `telemetry-wiring`, `config-merge-*`) · exit 0.
 - **E4** — 2026-11-09, `bun scripts/skill-lint.mjs` → PASS; `bun scripts/check-skill-context.mjs` → exit 0; `bun scripts/check-skill-context.mjs --documents` → PASS (4 documents); `bun test scripts/workflow-docs-index.test.mjs` → 5 pass; `rg -c 'autoLogSession' packages/pi-agentic-workflow/src` → no matches.
 - **E5** — 2026-11-09, `bun run check:config-schema` (schema package) → `config.schema.json: current`, exit 0.
+- **E6** — 2026-11-09, `bun test packages/pi-agentic-workflow/test/settings-console.test.mjs` → 59 pass before the process was killed by the environment (exit 137) during a git-heavy fixture; the config-affected `F4` case was not reached in that run and is re-run filtered in E7.
+- **G1** — 2026-11-09, `bun scripts/run-root-suite.mjs --jobs 2` on `HEAD 52eaebbd` · exit 0 · 97 suite(s), 0 FAIL.
 
 ## Next
 
