@@ -39,7 +39,8 @@
     "./guard-verdict.schema.json": "./guard-verdict.schema.json",
     "./journal-entry.schema.json": "./journal-entry.schema.json",
     "./batch-plan.schema.json": "./batch-plan.schema.json",
-    "./doc-provenance.schema.json": "./doc-provenance.schema.json"
+    "./doc-provenance.schema.json": "./doc-provenance.schema.json",
+    "./gate-receipt.schema.json": "./gate-receipt.schema.json"
   },
   "files": [
     "dist",
@@ -58,7 +59,8 @@
     "batch-plan.schema.json",
     "README.md",
     "LICENSE",
-    "doc-provenance.schema.json"
+    "doc-provenance.schema.json",
+    "gate-receipt.schema.json"
   ],
   "engines": {
     "node": ">=18",
