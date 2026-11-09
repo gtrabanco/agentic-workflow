@@ -133,13 +133,14 @@ test("a detached worktree inside the legal home is a DETACHED finding", () => {
   });
 });
 
-test("a worktree outside the legal home is an OUTSIDE finding", () => {
+test("a worktree outside the legal home is a report-only line, never a finding", () => {
   withRepo(({ root, git }) => {
     const outside = path.join(root, "outside-wt");
     git(["worktree", "add", "-b", "feat/outside", outside]);
     const result = guard(root);
-    assert.equal(result.status, 1);
-    assert.match(result.stdout, /FINDING .* — OUTSIDE/);
+    assert.equal(result.status, 0, `a location the owner chose never blocks (stdout: ${result.stdout})`);
+    assert.match(result.stdout, /REPORT .* — OUTSIDE/);
+    assert.match(result.stdout, /verdict: PASS/);
   });
 });
 
@@ -187,7 +188,7 @@ test("--prune repairs the corrupted link and removes prunable, detached, outside
     assert.match(result.stdout, /REPAIRED/);
     assert.equal(fs.existsSync(path.join(severed, ".git")), true, "the corrupted link is repaired");
     assert.equal(fs.existsSync(detached), false, "the detached worktree is removed");
-    assert.equal(fs.existsSync(outside), false, "the outside worktree is removed");
+    assert.equal(fs.existsSync(outside), true, "the outside worktree is report-only and stays");
     assert.equal(fs.existsSync(done), false, "the stale worktree is removed");
     assert.match(result.stdout, /SUGGEST git branch -D feat\/done/, "the branch-delete suggestion names the branch");
 
