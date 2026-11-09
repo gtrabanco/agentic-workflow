@@ -275,6 +275,9 @@ owner's external verification.
 - **G4** — 2026-11-09, the gate's offline steps with `node` on `PATH`: `node scripts/local-gate.mjs --only version-parity-content,docs-generated-projection,journal-carrier-check,log-immutability,temp-hygiene,tmp-gc,dependency-pin-gate` · **PASS — 7 step(s)**, and `docs-generate --check` exit 0 after regenerating the units projection · `roadmap-settle` `verdict: PASS`, 0 violations · `phase-lint` `verdict PASS` (5/5) · `promise-coherence` `verdict PASS` · `journal aggregate --check` `{"ok":true}` · `roadmap check` `verdict: PASS`.
 - **D3** — 2026-11-09, note for the handoff: `--pins --package packages/agentic-workflow` is RED **on this branch** because `typebox` is still `1.4.5` here — that is issue #484's drift, fixed on its own branch, not a regression of this unit.
 
+- **P4** — 2026-11-09, the watch's mirror cases landed in their own commit (`2618320c`) — P3's line above lists them inside `b29cde0e`, which staged only the implementation and the prose; the cases were left unstaged and are committed here. The green runs already exercised these exact bytes (the working tree carried them), so no run is invalidated, but the split is recorded rather than glossed.
+- **D4** — 2026-11-09, disclosure: `efab6335` (`chore(spec): spec change`) is **not this session's commit**. It appeared between `b29cde0e` and the ledger close, authored with the repository identity, carrying exactly this unit's SPEC amendment (`35 insertions, 14 deletions`) — an external process in this environment auto-committed the file. The content is the intended amendment (verified by diff against the surrounding commits), so nothing was lost or altered; it is disclosed because an unattributed commit in a unit's own history is exactly the kind of side effect that must never be silent.
+
 ## Next
 
 The unit is verified on both runtimes and handed back for the owner's external
