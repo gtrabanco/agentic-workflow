@@ -86,14 +86,16 @@ const removeEnforced = (over = {}) => ({
   ...over,
 });
 
-/** A pointerize rule for the toy skill's `Other section`, hash-bound for real. */
+/** A pointerize rule for the toy skill's `Other section`, hash-bound for real.
+ *  The bound bytes are the section body: everything after the heading line's
+ *  newline (the blank separator line included). */
 const pointerizeOther = (over = {}) => ({
   id: "pointerize-other",
   op: "pointerize",
   source: "skills/toy-skill/SKILL.md",
   selector: { path: ["Toy skill", "Other section"] },
   enforcingCommand: "doc read",
-  contentHash: sha256(OTHER_SECTION_BODY),
+  contentHash: sha256("\nUntouched body.\n"),
   ...over,
 });
 
@@ -203,7 +205,7 @@ test("projection: zero matches fails stale-rule", () => {
 
 test("projection: several matches fail ambiguous-match", () => {
   assert.throws(
-    () => applyProjection(TOY_SKILL, [removeEnforced({ selector: { heading: "Kept child" } })]),
+    () => applyProjection(TOY_SKILL, [removeEnforced({ selector: { headingRegex: { source: "section$", flags: "" } } })]),
     (error) => error instanceof ProjectionError && error.code === "ambiguous-match",
   );
 });
