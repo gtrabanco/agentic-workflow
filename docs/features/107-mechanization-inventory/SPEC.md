@@ -205,8 +205,12 @@ exits 0.
   `1fa39fe1`.
 - **AC15 (S14)** — the session entry is in the journal itself, not a pending
   fragment: `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md`
-  matches 1 and `ls .agentic-workflow/journal/*408-mechanization-inventory*`
-  matches 0.
+  matches 4 and `ls .agentic-workflow/journal/*408-mechanization-inventory*`
+  matches 0. (Refrozen 2026-11-09 by the owner's B3 order: the original `matches 1`
+  predates two later entries for this unit — the correction batch's own (`17:31:14Z`)
+  and a concurrent session's (`17:31:52Z`) — and this batch's aggregation added the
+  fourth (`18:11:04Z`); the criterion's substance is unchanged: every entry is in the
+  journal and no fragment is pending.)
 - **AC16 (S15)** — the roadmap row was written by the emitter: the
   `roadmap rowUpsert` receipt (`ok: true`, exit 0) is recorded as an `E` line,
   and `rg -c 'INVENTORY.md' docs/ROADMAP.md` matches 1.
@@ -236,7 +240,7 @@ exits 0.
   (Implements: S9, S15)
   Relevant files: docs/ROADMAP.md
 - P4 — Write the session entry through the journal carrier, whose aggregator
-  consumes it into the journal (validator: `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` matches 1)
+  consumes it into the journal (validator: `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` matches 4)
   (Implements: S14)
   Relevant files: docs/LOGS.md
 - P5 — Run the deterministic gate, record the receipts and close the obligations
@@ -288,7 +292,7 @@ exits 0.
 | O11 | S11 | Every multi-step procedure with one judgment branch is split into its deterministic sub-steps plus a row naming the branch. | P2 | P2 | author (inline) | `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*mixed' docs/features/107-mechanization-inventory/INVENTORY.md` matches 17, and every such row's reason contains `branch:` | §2 mixed count and the rows | verified |
 | O12 | S12 | No `review-change`/`audit-pr`/fold run touches this unit. | P5 | P5 | author (inline) | `rg -c '^- \*\*R[0-9]' docs/features/107-mechanization-inventory/SPEC.md` matches 0 | the count | verified |
 | O13 | S13 | The deterministic gate runs at the delivered head and every red it reports is reproduced at the base. | P5 | P5 | author (inline) | `bun scripts/docs-generate.mjs --check` exits 0; `G1` records the root suite's 80 pass / 16 fail with the same 16 reproduced at `1fa39fe1` | the `G1` line with both runs | verified |
-| O14 | S14 | The session entry reaches the journal itself before the handoff. | P4 | P4 | author (inline) | `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` matches 1 | the appended block | verified |
+| O14 | S14 | The session entry reaches the journal itself before the handoff. | P4 | P4 | author (inline) | `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` matches 4 | the appended block | verified |
 | O16 | S16 | The aggregator's own output passes the gate that judges it (D1), pinned red-first. | P6 | P6 | author (inline) | `bun scripts/log-immutability.mjs --base main` exits 0; its suite reports 19 pass / 0 fail | `E11`/`G3` lines and the two commits (test red, fix green) | verified |
 | O17 | S16 | `audit-docs` check 13 reads as one grammatical, current check. | P7 | P7 | author (inline) | `bun scripts/skill-lint.mjs --skill audit-docs` exits 0 and `bun scripts/lint-changeset.mjs` exits 0 | `E12` line | verified |
 | O18 | S16 | The unit is opened as a PR against `main`. | P8 | P8 | author (inline) | `gh pr view --json url` prints a URL | the URL in `## References` | verified |
@@ -416,6 +420,25 @@ None — no review pass ran (S12).
   command → `0`, with the negative control still listing an uncarved path
   (`scripts/roadmap-settle.mjs`) while the carved set passes;
   `root suite's 80 pass / 16 fail` matches `G1`'s `80 pass, 16 fail`.
+- **D6** — 2026-11-09, the owner's fix-B3 order authorizes the amendment the
+  delta verify named as owner-only: `AC15`/`O14`/`P4`'s frozen `matches 1` is
+  refrozen to `matches 4` — two later entries for this unit (the correction
+  batch's own `17:31:14Z` and a concurrent session's `17:31:52Z`) predate this
+  batch, whose aggregation adds the fourth (`18:11:04Z`, written through the
+  journal writer and aggregated from a temp carrier holding only this batch's
+  fragment; the two pending `main` fragments of advisory N1 are untouched).
+  The criterion's substance is unchanged: every entry is in the journal, no
+  fragment pending. Re-trigger: a future entry for this unit moves the count
+  again — the count is a ledger fact, refreeze it with a dated note, never
+  hand-edit `docs/LOGS.md`.
+- **E15** — 2026-11-09, the B3 validator re-run at the amended head:
+  `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` → 4;
+  `ls .agentic-workflow/journal/*408-mechanization-inventory* | wc -l` → 0;
+  `bun scripts/log-immutability.mjs --base main` → exit 0, `0 violations`;
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify …/SPEC.md` →
+  `VERIFY PASS`, `violations: []`; `bun scripts/phase-lint.mjs …/SPEC.md` →
+  PASS; `bun scripts/docs-generate.mjs --check` → PASS; `bun
+  scripts/roadmap-settle.mjs` → PASS, violations 0.
 
 ## Next
 
