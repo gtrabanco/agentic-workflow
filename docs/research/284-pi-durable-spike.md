@@ -100,17 +100,56 @@ does not remove the need for a restarter (something must open the storage).
   (`scripts/unit-cycle.mjs`, the conductor loop), which is a second reason to
   keep it out of the shipped package.
 
+## Provider-backed measurement (2026-11-09, NaN/qwen3.6 only, owner-ordered)
+
+The first bullet above is now measured. A real lane in scratch (`mktemp -d`,
+removed after): 3 stages × 2 `pi -p` model turns each (`--provider nan --model
+qwen3.6`, the owner's only authorized model), receipt per stage, tokens read
+from the session files pi writes per turn. Four runs:
+
+| run | death point | turns counted | fresh input | cacheRead | totalTokens | redone work |
+|---|---|---|---|---|---|---|
+| A | none (baseline) | 6 | 38,849 | 67,072 | 105,987 | — |
+| A2 | none (baseline repeat) | 6 | 22,094 | 83,840 | 106,000 | — (0.01% vs A) |
+| B | mid-stage-2: SIGKILL after its turn-1, before its receipt | 7 | 18,833 | 83,840 | 102,748 | stage-2 redone from turn-1: **+1 turn** |
+| B2 | stage boundary: SIGKILL after stage-2's receipt | 6 | 5,319 | 100,608 | 105,993 | **none** — receipts skipped stage-1 and stage-2 |
+
+Findings:
+
+1. **A boundary death costs nothing.** B2's restart re-ran zero turns: the
+   receipts are the ground truth the restarted entry reads, exactly P1's
+   design.
+2. **A mid-stage death costs exactly one extra model turn** — the uncommitted
+   stage's redo. The re-sense is the deterministic sensor script: zero tokens.
+3. **A stage-commit checkpoint saves none of that.** pi-durable's own spike
+   resume also re-executed the uncommitted stage (`per_stage {stage-2: 2}`):
+   at stage granularity, P2's checkpoint and P1's receipt restart redo the
+   same turn. Saving it would need a mid-stage conversation checkpoint, which
+   neither P1 nor the spike's stage-commit checkpoint provides.
+4. **Raw token totals are noisy; turn count is the robust metric.** The
+   per-turn total (~17.7k) is system-prompt dominated and mostly provider-cached
+   (cacheRead ≈ 16.8k of it), and the cache did not survive a restart (the
+   redo turn paid fresh input, cacheRead 0). Exact token deltas between runs
+   vary more than the crash cost itself.
+5. `pi -p --provider nan --model qwen3.6` ran headless and exited 0 on every
+   turn (PE-009 is now sampled).
+
+**Evaluation of flip condition 2:** the measured P1 restart cost is bounded at
+one stage redo per mid-stage crash and zero at boundaries — the same work a
+stage-commit checkpoint would redo. On this number, the cost is **not
+material** against adopting an experimental substrate; condition 2 resolves
+negative.
+
 ## What was not measured
 
-- **Tokens and turns wasted by P1's re-invocation.** Needs a configured model
-  provider; the spike's session had none (corrected 2026-11-09: the owner's
-  environment does — NaN/qwen3.6 — so the measurement is reproducible there).
-  The structural half is measured (two conductor steps per crash), the token
-  half is not.
 - **Mid-run steering, durable subagents, multi-client inspection.** Read from the
   package's contract and its README; not exercised by this spike.
-- **Behaviour under a real unit lane** (LLM stages). The lane's stage bodies here
-  are scripted receipts.
+- **Behaviour under a real unit lane** (LLM stages with multi-turn reasoning
+  inside one stage). The measurement above used fixed-reply turns; a stage
+  whose turns carry large evolving context could make the redo turn more
+  expensive than the fixed-reply bound measured here.
+- **Provider cache economics.** cacheRead vs fresh input pricing under NaN was
+  not itemized; the measurement reports raw counts.
 
 ## Verdict and flip conditions
 
@@ -119,7 +158,10 @@ does not remove the need for a restarter (something must open the storage).
 1. the package leaves the experimental banner (or a pinned version is declared
    stable) **and** its release cadence settles;
 2. a provider-backed measurement shows P1's restart cost is material on a real
-   overnight lane (the number this spike could not take);
+   overnight lane — **taken 2026-11-09 (NaN/qwen3.6, above): condition resolved
+   negative** — the restart cost is bounded at one stage redo per mid-stage
+   death, zero at boundaries, and a stage-commit checkpoint redoes the same
+   turn;
 3. the ownership question the issue records (2026-10-28) is answered: the durable
    driver belongs to a runtime/platform project, and this repository keeps P1.
 

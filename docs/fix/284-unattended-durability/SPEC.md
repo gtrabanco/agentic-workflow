@@ -422,6 +422,15 @@ it has open work. No triage block reorders the frozen task list.
   `resumed true`, `phases 3`, `reexecuted []`; `--kill-during stage-2` attempt
   exit **137**, then `resumed true`, `phases 4`,
   `per_stage {stage-1: 1, stage-2: 2, stage-3: 1}`.
+- **E12** — 2026-11-09, the provider-backed measurement (owner-ordered, NaN/qwen3.6
+  only) closed the token half of AC7: baseline lane 6 turns (two clean runs,
+  105,987 vs 106,000 tokens — stable); SIGKILL mid-stage costs **+1 turn** (the
+  uncommitted stage's redo); SIGKILL at a stage boundary costs **0** (receipts
+  skip committed stages); the re-sense is deterministic (0 tokens). Flip
+  condition 2 of `docs/research/284-pi-durable-spike.md` resolves **negative**:
+  a stage-commit checkpoint would redo the same turn, so the restart cost is
+  not material against adopting an experimental substrate. PE-009 is now
+  sampled (`pi -p` headless exit 0).
 - **G5** — 2026-11-09, HEAD 2b6059eb · `bun scripts/local-gate.mjs --skip-network --push-base
   1fa39fe1` · exit 0 · `local-gate: PASS — 13 step(s)`; the same hook run gated
   the push, and PR [#485](https://github.com/gtrabanco/agentic-workflow/pull/485)
@@ -446,8 +455,8 @@ it has open work. No triage block reorders the frozen task list.
 
 The external verifier reviews PR [#485](https://github.com/gtrabanco/agentic-workflow/pull/485)
 (`Closes #284`): P1 and the P2 spike are green, the P2 verdict is `REJECT`
-(defer) with its flip conditions, and the two environmental failures are
-disclosed.
+(defer) with flip condition 2 now measured and resolved negative (E12), and the
+two environmental failures are disclosed.
 
 ## References
 
