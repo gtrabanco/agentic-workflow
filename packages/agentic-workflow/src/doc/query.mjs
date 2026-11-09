@@ -18,7 +18,7 @@ import { decodeVector } from "./embeddings.mjs";
 import { openDatabase } from "./sqlite.mjs";
 import { storePath, storePresent } from "./store.mjs";
 import { ensureFresh } from "./sync.mjs";
-import { storedEmbeddingModel, resolveEmbedConfig, makeOpenAIProvider } from "./embeddings.mjs";
+import { storedEmbeddingModel, resolveEmbedConfig, makeOpenAIProvider, embeddingStats } from "./embeddings.mjs";
 import { buildEnvelope, buildResultRow } from "./envelope.mjs";
 import { loadConfig } from "./config.mjs";
 
@@ -92,13 +92,19 @@ async function storeValue(root) {
 /**
  * Run one query. `filters` carries the optional AC14 structured filter
  * `{since, until, file}`; when any is present, results narrow to matching
- * `docs/LOGS.md` entries. `opts.mode` is `"keyword"` (default) or
- * `"hybrid"` (P7); `opts.embedder` overrides the resolved provider for
- * tests. Returns the canonical query envelope — degraded hybrid answers
- * keyword-only with the cause declared (AC17/AC18), exit-0 ok throughout.
+ * `docs/LOGS.md` entries. `opts.mode` is `"keyword"`, `"hybrid"`, or absent —
+ * **absent means auto** (issue #443 S2, decision D1): the mode is resolved at
+ * query time from the configured provider and the store's own embeddings, and
+ * a shape that cannot run hybrid answers keyword with its cause declared.
+ * `opts.embedder` overrides the resolved provider for tests (an explicit `null`
+ * stands for "no provider configured"). Returns the canonical query envelope —
+ * degraded hybrid answers keyword-only with the cause declared (AC17/AC18),
+ * exit-0 ok throughout.
  */
 export async function queryIndex(root, term, filters = {}, opts = {}) {
-  const mode = opts.mode ?? "keyword";
+  const requested = opts.mode ?? null;
+  const providerOf = () => (opts.embedder !== undefined ? opts.embedder : realProviderOrNull(root));
+
   await ensureFresh(root);
   const store = await storeValue(root);
 
@@ -121,8 +127,18 @@ export async function queryIndex(root, term, filters = {}, opts = {}) {
 
   const hasLogFilters = filters.since != null || filters.until != null || filters.file != null;
 
+  // D1: one probe, five branches. A partially embedded store is S2's own case
+  // ("has chunks embedded") and runs hybrid; keyword carries the remainder.
+  let mode = requested ?? "keyword";
+  let autoDegradations = [];
+  if (requested === null) {
+    const auto = await resolveAutoMode(root, providerOf());
+    mode = auto.mode;
+    autoDegradations = auto.degradations;
+  }
+
   if (mode === "hybrid") {
-    const provider = opts.embedder !== undefined ? opts.embedder : realProviderOrNull(root);
+    const provider = providerOf();
     if (provider === null) {
       // AC17: no key ⇒ declared degradation, keyword still answers.
       return buildEnvelope({
@@ -211,7 +227,22 @@ export async function queryIndex(root, term, filters = {}, opts = {}) {
   }
 
   const results = toResults(keywordRows, hasLogFilters, filters);
-  return buildEnvelope({ command: "query", results, degradations: [], store });
+  return buildEnvelope({ command: "query", results, degradations: autoDegradations, store });
+}
+
+/**
+ * The auto-resolution probe (issue #443 S2, decision D1). `provider` is the
+ * resolved provider or `null` when none is configured; every branch but the
+ * last answers `keyword` with the cause the caller must declare.
+ */
+async function resolveAutoMode(root, provider) {
+  if (provider === null) return { mode: "keyword", degradations: ["unavailable-embeddings-not-configured"] };
+  const stats = await embeddingStats(root, provider.model);
+  if (stats.model === null) return { mode: "keyword", degradations: ["unavailable-embeddings-not-indexed"] };
+  if (stats.model !== provider.model) return { mode: "keyword", degradations: ["embeddings-model-mismatch"] };
+  if (stats.embedded === 0) return { mode: "keyword", degradations: ["unavailable-embeddings-not-indexed"] };
+  if (stats.foreign > 0) return { mode: "keyword", degradations: ["embeddings-model-mismatch"] };
+  return { mode: "hybrid", degradations: [] };
 }
 
 /** Map ranked store rows to result rows, applying the AC14 log filters. */
