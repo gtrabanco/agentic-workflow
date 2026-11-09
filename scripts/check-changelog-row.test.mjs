@@ -7,6 +7,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { tempRoot } from "./temp-root.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const script = path.join(repoRoot, "scripts/check-changelog-row.mjs");
@@ -40,7 +41,7 @@ test("check-changelog-row is scoped, not file-wide (the fix #244 F3 defect)", ()
 });
 
 test("check-changelog-row scopes to the named table in a fixture", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "check-changelog-row-"));
+  const tmp = tempRoot("check-changelog-row-");
   const fixture = path.join(tmp, "CHANGELOG.md");
   fs.writeFileSync(
     fixture,

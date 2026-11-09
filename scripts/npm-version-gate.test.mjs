@@ -33,6 +33,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { decidePublish } from "./npm-version-gate.mjs";
+import { tempRoot } from "./temp-root.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(repoRoot, "scripts", "npm-version-gate.mjs");
@@ -42,7 +43,7 @@ const run = (args, { cwd = repoRoot } = {}) =>
   spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8", cwd });
 
 const writePkg = (version) => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "npm-version-gate-"));
+  const dir = tempRoot("npm-version-gate-");
   fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "@fixture/pkg", version }));
   return path.join(dir, "package.json");
 };

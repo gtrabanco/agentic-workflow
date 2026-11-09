@@ -33,6 +33,7 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { tempRoot } from "./temp-root.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CRATE_MODULE = "packages/agentic-workflow/src/index-document.mjs";
@@ -62,7 +63,7 @@ function codeFiles(dir) {
 
 /** A throwaway repository tree: `{ [relative]: content }`. */
 function tree(files) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "index-doc-"));
+  const root = tempRoot("index-doc-");
   for (const [relative, content] of Object.entries(files)) {
     const abs = path.join(root, relative);
     fs.mkdirSync(path.dirname(abs), { recursive: true });
