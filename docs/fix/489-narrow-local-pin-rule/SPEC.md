@@ -51,11 +51,17 @@ scope: xs
 - `scripts/version-parity-gate.test.mjs` — two cases encode the superseded
   contract (`:570`, `:590`) and are superseded with the new one; the ahead case
   gains the registry-unreachable variant S4 asks for.
-- Consumers: `scripts/local-gate.mjs`'s `dependency-pin-gate` step and
-  `scripts/pin-watch.mjs`'s local rule use the same evaluator — pin-watch reads
-  the *same* manifest pair and files drift on a pin that is not the local
-  version, so a behind pin still reaches the owner as a watch finding. Nothing
-  in the crate, the schema package or the skills reads this predicate.
+- **`scripts/pin-watch.mjs` shares the evaluator** (`import { evaluatePins }`,
+  line 78) — the watch cannot disagree with the gate by design, so the rule
+  narrows there too: a sibling pin that lags becomes a report notice (surfaced
+  through `collectDrift`'s notices, which the report prints) and only a pin
+  ahead is a filed drift. Its bump plan gains the matching target rule
+  (`localVersion ?? latest`): for a local-sibling finding the local version is
+  the only one that will exist, while `latest` pointed at a version the pin was
+  already past. D1 records this as a plan amendment the cut got wrong (PE-007).
+- `scripts/local-gate.mjs`'s `dependency-pin-gate` step consumes the same
+  evaluator; its shape does not change. Nothing in the crate, the schema package
+  or the skills reads this predicate.
 - No package version bump and no changeset: `scripts/` is outside the
   version-parity content trigger set (`contentTriggerPrefixes`), verified as
   PE-006.
@@ -75,15 +81,22 @@ rather than discovered at review:
   implementation pass: the assertion changes with the rule it asserts.
 - The header sentence "a pin behind it recreates the post-publish red window"
   and its mirror in `PACKAGES.md` — deleted, not reworded into a second truth.
+- The watch's lagging-pin case, `drift: a pin on a local sibling that lags its
+  package is a finding naming the local version`
+  (`scripts/pin-watch.test.mjs`), replaced by the mirror pair: a lagging pin is a
+  notice (not drift) and a leading pin is the drift with its bump target. The
+  watch's docstring sentence stating the mirror gains the direction it now
+  mirrors. D1 records why this was not visible at the cut.
 
 ## Non-goals
 
 - The `--pins` default wiring (`PACKAGE_DIR` vs every package): S5 keeps it out;
   it needs its own unit and this diff must not touch `runPins`/`main()`.
-- `pin-watch.mjs`'s own local comparison. It is a different surface with a
-  different audience (a filed issue, not a red gate) and no spec here asks for
-  it; changing it would silently drop a made drift from the watch.
 - Third-party pins — the registry rule and its degraded contract are untouched.
+- Re-deciding whether the watch should keep reporting a lagging sibling pin at
+  all: it keeps reporting it, as a notice, because the mirror rule is the repo's
+  stated invariant and a silent watch is worse than a noisy one. Turning the
+  notice into silence would be a new spec.
 
 ## Risk tier
 
@@ -121,7 +134,11 @@ declared paths at the cut; copied verbatim, never written from memory.
   origin/main...HEAD -- scripts/version-parity-gate.test.mjs` shows two replaced
   `test(` headers plus the additions.
 - **AC6 (S5)** — the diff never touches the wiring: `git diff --stat
-  origin/main...HEAD` names exactly the four declared paths.
+  origin/main...HEAD` names only the declared paths (the cut's four plus
+  `scripts/pin-watch.mjs` and `scripts/pin-watch.test.mjs`, which D1 adds).
+- **AC7 (D1)** — the watch mirrors the narrowed rule: a lagging sibling pin is a
+  notice, a leading one is a drift and its bump plan targets the local version —
+  proven by `bun test scripts/pin-watch.test.mjs` exiting 0.
 
 ## Future
 
@@ -139,9 +156,10 @@ is a separate tracked finding, not a deferred row of this unit.
 
 `scripts/version-parity-gate.test.mjs` — the frozen-failure corpus: the two
 superseded cases, the new ahead/behind cases (registry answering and throwing),
-and every untouched case in the file. Plus the root suite as the regression net
-for the suites that import the gate (`scripts/local-gate.test.mjs`,
-`scripts/pin-watch.test.mjs`).
+and every untouched case in the file · `scripts/pin-watch.test.mjs` — the
+mirror's two replaced cases (lagging = notice, leading = drift + bump target) ·
+`scripts/local-gate.test.mjs` unchanged, as the step that consumes the gate.
+`bun scripts/test-impact.mjs --base origin/main` derives exactly the first two.
 
 ## Known pre-existing issues
 
@@ -182,7 +200,8 @@ for the suites that import the gate (`scripts/local-gate.test.mjs`,
 | PE-004 | repository | a registry that cannot be answered is a degraded pass, never a failure — so an offline behind pin must not invent a violation | `scripts/version-parity-gate.mjs` header ("A registry that cannot be reached is a clearly-degraded pass … exit 0") | current | O3 |
 | PE-005 | repository | the two superseded cases assert the retired contract and are the only ones that do | `scripts/version-parity-gate.test.mjs:570` (`crate bumped in the same PR without the pin fails offline`), `:590` (`registry unreachable + pin != local version still fails`) | current | O5 |
 | PE-006 | repository | `scripts/` is outside the version-parity content trigger set, so this change owes no package bump and no changeset | `scripts/version-parity-gate.mjs:76-88` (`contentTriggerPrefixes`/`packageDirs` — only `packages/**` + `skills/`) | current | O7 |
-| PE-007 | repository | `pin-watch.mjs` keeps its own local comparison (a filed issue, not a red gate), so narrowing this gate does not silence the watch | `scripts/pin-watch.mjs` local rule; `scripts/pin-watch.test.mjs` cases at `:390`/`:446` | current | Non-goals |
+| PE-007 | repository | ~~`pin-watch.mjs` keeps its own local comparison, so narrowing this gate does not reach the watch~~ — **wrong, corrected by PE-008 and D1** | asserted at the cut from the watch's prose; the import was not read | superseded 2026-11-09 | Non-goals, O9 |
+| PE-008 | repository | `pin-watch.mjs` **imports the gate's evaluator** (`import { evaluatePins } from "./version-parity-gate.mjs"`, line 78) and delegates every exact pin to it, so the mirror invariant ("the watch cannot disagree with the gate") makes the narrowing reach the watch and its lagging-pin case | `scripts/pin-watch.mjs:78`, `:230` (`evaluatePins(...)` call), `:104` (the lagging-pin test); `bun test scripts/pin-watch.test.mjs` → 1 fail / 54 pass when the gate narrowed alone (E5) | current | O9, O10 |
 
 ### Obligations
 
@@ -195,7 +214,9 @@ for the suites that import the gate (`scripts/local-gate.test.mjs`,
 | O5 | S4, PE-005 | the two superseded cases are replaced, not deleted, and the rest of the file's cases keep passing | P1 | P2 | execute-phase | `bun test scripts/version-parity-gate.test.mjs` exits 0 with the same case count plus the additions | the E line with the pass count before and after | planned |
 | O6 | S3 | both prose surfaces state the narrowed rule and neither promises a behind-pin rejection | P1 | P4 | execute-phase | `rg -c 'ahead of the local version' scripts/version-parity-gate.mjs docs/workflow/PACKAGES.md` matches 1 each | the E line with both counts | planned |
 | O7 | S5, PE-006 | the change ships without a package bump or changeset and touches no wiring | P1 | P5 | execute-phase | `git diff --stat origin/main...HEAD` names exactly the four declared paths and `bun scripts/version-parity-gate.mjs --content --base origin/main` exits 0 | the stat and the content-gate verdict in the E lines | planned |
-| O8 | S6 | every case that does not encode the superseded semantics keeps passing, under both runtimes | P1 | P5 | execute-phase | `bun test scripts/version-parity-gate.test.mjs` and `node --test scripts/version-parity-gate.test.mjs` both exit 0; `node scripts/run-root-suite.mjs` exits 0 | the two suite runs + the root-suite line | planned |
+| O8 | S6 | every case that does not encode the superseded semantics keeps passing, under both runtimes | P1 | P5 | execute-phase | `bun test scripts/version-parity-gate.test.mjs` and `node --test scripts/version-parity-gate.test.mjs` both exit 0; `bun scripts/run-root-suite.mjs` exits 0 | the two suite runs + the root-suite line | planned |
+| O9 | S1, PE-008 | the watch mirrors the gate: a lagging sibling pin is a notice, a leading one is the drift | P1 | P3 | execute-phase | `bun test scripts/pin-watch.test.mjs` exits 0 with both mirror cases green | the E line for the pin-watch pair | planned |
+| O10 | S1, PE-008 | the watch's bump plan targets the local version, never a registry version the pin is already past | P1 | P3 | execute-phase | `bun test scripts/pin-watch.test.mjs` exits 0 with the bump-plan assertion (`0.9.9 -> 0.5.0`) | the same E line | planned |
 
 ## Triaged steps
 
