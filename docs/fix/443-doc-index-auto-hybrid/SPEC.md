@@ -273,7 +273,12 @@ and the root gate (`bun scripts/local-gate.mjs`) before handoff.
   "…with merge_ready"): the suite's `makeValidEnv()` fixture predates fields the
   schema package now requires, so `validateEnvelope` refuses it. Does-not-affect:
   this unit (no sensor or schema change); reproduced identically on the base
-  tree — evidence in the Log (E-base).
+  tree — evidence in the Log (E-base). **Correction (2026-11-09, external
+  verification):** the two failures do **not** reproduce in the verification
+  checkout — 7/7 green at base `1fa39fe1` and at head — so the red is
+  environment-dependent, not a stable pre-existing failure; the E-base/E4
+  observations stand as recorded. At the corrected head the full suite is
+  **719 pass / 0 fail** (E12).
 - The worktree convention (`.git/worktrees/<dir>`) leaks the git-dir internals
   (`HEAD`, `index`, `logs/`, `refs/`, `commondir`, `gitdir`, `ORIG_HEAD` at the
   worktree root) as untracked junk. Does-not-affect: this unit's commits (every
@@ -318,9 +323,12 @@ it.
 - **AC-S8** — The declared surfaces move together: the crate README grammar
   documents the auto default, the pacing surface and the two new `store` fields;
   the pi README carries the command; `skills/` carries no mode flag; the
-  changeset names the three packages. Check:
+  changeset names the two touched packages (the schema package is untouched and
+  `version-parity-gate --content` accepts the two-package intent — corrected
+  wording, correction batch 2026-11-09; the original text said "three"). Check:
   `bun scripts/check-skill-context.mjs` exits 0, `rg -n -- '--mode' skills/`
-  → no match, and the changeset file lists the three package names.
+  → no match, and the changeset file lists `@gtrabanco/agentic-workflow` and
+  `@gtrabanco/pi-agentic-workflow`.
 - **AC-S9** — The four acceptance bullets hold as tests: auto-hybrid's degraded
   shapes, sync resilience, progressive/idempotent resume (mock call count), the
   `/aw-index` no-store case, and the offline re-wording (0 network calls with no
@@ -607,6 +615,42 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   intended ref and `git symbolic-ref HEAD` (a fast-forward, nothing rewritten),
   the flattened ref left in place as a safety copy. Backup of the seven commits
   taken first (`aw443-doc-index.bundle` + per-commit patches + the head tree).
+
+- **P8** — 2026-11-09, correction batch per the 2026-11-09 EXTERNAL VERIFY
+  (`external-verify.md`, verdict NEEDS-DECISION (1)). Request, verbatim: `Apply
+  to this repository: fix Blockers & Advisorie 1 & Advisorie 2 if they are
+  confirmed`. All three confirmed; advisory 3 was not named and is untouched.
+  - **Blocker 1 (fixed)** — the AC15 README-table pin
+    (`packages/pi-agentic-workflow/test/alias-coverage.test.mjs:343`) swept the
+    new code-doors rows (`/advance`, `/aw-index`, the second `/log-session`) and
+    deepEqual-failed against the catalogue alone (observed RED 15 pass / 1 fail
+    before the edit; base `1fa39fe1` green in the removed scratch clone). The
+    pin expands to the exact documented surface — catalogue ∪ {advance,
+    aw-index}, duplicates collapsed — never a relaxation; the expansion carries
+    a `path-protection-records@1` justification row in `decisions.md` (phase
+    P7). Observed GREEN 16 pass / 0 fail; full suite 719 pass / 0 fail (E12).
+  - **Advisory 1 (corrected)** — AC-S8 and O17 said the changeset "names the
+    three packages"; the changeset correctly names the two touched packages
+    (schema untouched, `version-parity-gate --content` → VERDICT: PASS). The
+    unit-doc wording is corrected; the artifact is unchanged (E13).
+  - **Advisory 2 (corrected)** — the recorded pi-suite evidence drift: the
+    "2 pre-existing conductor-sensor failures" do not reproduce in the
+    verification checkout (green at base and head); PR #486's AC-S5 cell said
+    "9 pass" for an 8-test suite. The Known-pre-existing-issues bullet is
+    annotated above and the PR body carries a dated verification update.
+- **E12** — 2026-11-09, corrected head: `cd packages/pi-agentic-workflow && bun
+  test test/alias-coverage.test.mjs` · exit 0 · 16 pass / 0 fail; `bun run
+  test` · exit 0 · **719 pass / 0 fail** — the first fully-green pi-suite run
+  recorded for this unit; `bun packages/agentic-workflow/bin/path-guard.mjs
+  --unit docs/fix/443-doc-index-auto-hybrid --phase P7` · exit 0 ·
+  `PATH-GUARD pass — justified`, `offenders: none`.
+- **E13** — 2026-11-09, advisory-1 recheck: `rg -n 'agentic-workflow-schema'
+  .changeset/443-doc-index-auto-hybrid.md` · exit 1 (two packages listed, the
+  schema package untouched); `bun scripts/version-parity-gate.mjs --content` ·
+  exit 0 · `VERDICT: PASS`. Advisory-2 recheck: `bun test
+  test/conductor-sensor.test.mjs` · exit 0 · 7 pass at head, and 7 pass on a
+  removed base clone at `1fa39fe1`; `bun test test/aw-index-command.test.mjs` ·
+  exit 0 · 8 pass.
 
 ## Next
 
