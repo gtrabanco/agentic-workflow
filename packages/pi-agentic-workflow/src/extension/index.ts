@@ -18,6 +18,7 @@ import { createHintStore, createSerenaReadinessStore, stateFilePath } from "../r
 import { createSerenaReadinessGate, readInitWorkspaceRevision } from "../routing/serena-readiness.js";
 import { createTelemetryWiring, type TelemetryWiring } from "./telemetry-wiring.js";
 import { createAutoLogSessionWiring, type AutoLogSessionWiring } from "./auto-log-session-wiring.js";
+import { createStateFlowLifecycle, type StateFlowBackend, type StateFlowLifecycle } from "../stateflow/lifecycle.js";
 import { createHooksWiring } from "./hooks-wiring.js";
 import type { HooksContext } from "./hooks-wiring.js";
 import { createInvocationWatch } from "./log-session-command.js";
@@ -138,6 +139,36 @@ function toInvocationContext(ctx: ExtensionContext): InvocationContext<PiModel> 
 function sessionIdOf(ctx: ExtensionContext): string | undefined {
   const id = (ctx.sessionManager as unknown as { getSessionId?: () => unknown } | undefined)?.getSessionId?.();
   return typeof id === "string" && id !== "" ? id : undefined;
+}
+
+/** Issue #174 — the backend's two mode commands, as 0.27.x registers them. */
+const STATE_FLOW_START_COMMAND = "state-flow-active";
+const STATE_FLOW_STOP_COMMAND = "state-flow-off";
+
+/**
+ * The shipped State Flow backend over Pi's documented API (issue #174, PE-002,
+ * PE-003). Detection reads the session's command list and fails closed on the
+ * mode **pair**: dispatching a mode command the session does not have would
+ * fall through `prompt()` to the model as a literal prompt, so half a backend
+ * counts as no backend. The mode switches are extension-command dispatches,
+ * which Pi executes immediately and without starting a turn.
+ */
+function createStateFlowBackend(pi: ExtensionAPI): StateFlowBackend {
+  const hasCommand = (name: string): boolean => {
+    try {
+      if (typeof pi.getCommands !== "function") return false;
+      return pi.getCommands().some((command) => command.name === name && command.source === "extension");
+    } catch {
+      // A host that cannot name its commands cannot promise the dispatch lands:
+      // fail closed to "backend missing".
+      return false;
+    }
+  };
+  return {
+    detect: () => hasCommand(STATE_FLOW_START_COMMAND) && hasCommand(STATE_FLOW_STOP_COMMAND),
+    start: () => void pi.sendUserMessage(`/${STATE_FLOW_START_COMMAND}`, { expandPromptTemplates: true }),
+    stop: () => void pi.sendUserMessage(`/${STATE_FLOW_STOP_COMMAND}`, { expandPromptTemplates: true }),
+  };
 }
 
 function toRegistrar(pi: ExtensionAPI, noteCommand: (name: string, args: readonly string[]) => void): CommandRegistrar<PiModel> {
@@ -318,11 +349,17 @@ export default function extension(pi: ExtensionAPI): void {
     ui: { notify: (message, kind) => ctx.ui.notify(message, kind) },
   });
 
+  // Issue #174: one lifecycle per session — its ownership flag must not leak
+  // across sessions, so it is built where the session-bound `pi` is in scope.
+  const stateFlow: StateFlowLifecycle = createStateFlowLifecycle(createStateFlowBackend(pi));
+
   const { router, guards } = createExtension<PiModel>({
     registrar: toRegistrar(pi, noteCommand),
     // Issue #274: the deferred workflow tools register alongside the commands,
     // through the one structural read above — absent on a host without the API.
     toolRegistrar: toolRegistrar(pi) ?? undefined,
+    // Issue #174: the episode lifecycle, bound to the shipped backend.
+    stateFlow,
     // Resolved per call: the router must never hold a session-bound object
     // between turns, because Pi can hand a new session to the same extension.
     surface: () => ({
@@ -501,6 +538,11 @@ export default function extension(pi: ExtensionAPI): void {
     // pi 1.1.0+: event may carry { aborted: true }
     const aborted = (event as unknown as Record<string, unknown>)?.aborted === true;
     void router.settle(toInvocationContext(ctx), aborted);
+    // Issue #174: the episode lifecycle settles on the same event — the stop
+    // is dispatched through `sendUserMessage`, which Pi defers while the
+    // settled actions drain, so it lands right after the restore and an abort
+    // still clears the package-owned episode.
+    void stateFlow.settle(aborted);
     // Terminal hygiene is said out loud once the turn is over; a clean tree
     // stays silent. The probe is time-bounded (2000 ms) and swallows timeout,
     // spawn error and non-zero status, so an unresponsive git can never park

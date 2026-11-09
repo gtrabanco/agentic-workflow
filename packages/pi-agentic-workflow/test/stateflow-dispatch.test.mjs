@@ -89,6 +89,7 @@ test("a noop-missing outcome with warn=true warns once and the command still run
   const session = sessionWith(lifecycle);
   const first = await session.dispatch(COMMAND, "P1");
   assert.equal(first.status, "dispatched");
+  await session.settle();
   const second = await session.dispatch(COMMAND, "P2");
   assert.equal(second.status, "dispatched");
   const warnings = session.log.notify.filter((entry) => entry.kind === "warning");
