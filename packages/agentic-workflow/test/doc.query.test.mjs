@@ -112,7 +112,10 @@ describe("doc query core", () => {
       return a.score >= r.score && (a.score !== r.score || a.path <= r.path);
     });
     ok(isSorted, JSON.stringify(env.results.map((r) => [r.path, r.score])));
-    deepStrictEqual(env.degradations, []); // keyword mode: no degradations, no network
+    // Issue #443 S2/D1: this fixture configures no provider, so the auto path
+    // answers keyword and declares why hybrid did not run. Nothing was
+    // attempted, so there is no other degradation.
+    deepStrictEqual(env.degradations, ["unavailable-embeddings-not-configured"]);
   });
 
   it("hits the right section with 1-based inclusive lines", async () => {
@@ -130,11 +133,13 @@ describe("doc query core", () => {
     deepStrictEqual(a, b);
   });
 
-  it("answers offline with no key and no network (AC13)", async () => {
+  it("answers offline with no key and no network (AC13, re-stated by issue #443 S9)", async () => {
     const env = await queryIndex(root, "zanzibar");
     strictEqual(env.ok, true);
     ok(env.results.length > 0);
-    deepStrictEqual(env.degradations, []);
+    // 100 % offline: no provider is configured, nothing is attempted, and the
+    // cause hybrid did not run is declared instead of silently missing.
+    deepStrictEqual(env.degradations, ["unavailable-embeddings-not-configured"]);
   });
 
   it("answers with an empty result set for a term that matches nothing", async () => {
@@ -246,7 +251,7 @@ describe("doc CLI — query/status/rebuild end-to-end", () => {
     ok(env.store.chunks > 0);
   });
 
-  it("answers offline at the CLI level too (AC13): no key, dead proxy, still exit 0", () => {
+  it("answers offline at the CLI level too (AC13, re-stated by issue #443 S9): no key, dead proxy, still exit 0", () => {
     const r = spawnSync(process.execPath, [BIN, "doc", "--query", "zanzibar", "--json-only"], {
       cwd: root,
       encoding: "utf8",
@@ -255,7 +260,7 @@ describe("doc CLI — query/status/rebuild end-to-end", () => {
     strictEqual(r.status, 0);
     const env = JSON.parse(r.stdout);
     ok(env.results.length >= 2);
-    deepStrictEqual(env.degradations, []);
+    deepStrictEqual(env.degradations, ["unavailable-embeddings-not-configured"]);
   });
 
   it("a fresh repo without a store reports status present:false and answers empty (grep fallback intact)", () => {

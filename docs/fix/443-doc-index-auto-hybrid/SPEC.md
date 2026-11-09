@@ -147,7 +147,7 @@ read: `.agentic-workflow/index.json` `provider.pacing` =
 `{batchSize, requestsPerMinute, maxAttempts, baseDelayMs, maxDelayMs}`, each
 overridable by `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_<PARAM>` for an operator and by
 the `cli` seam for a caller; defaults are the provider's published limits
-(`batchSize: 32`, `requestsPerMinute: 60`, `maxAttempts: 5`,
+(`batchSize: 32`, `requestsPerMinute: 60`, `maxAttempts: 3`,
 `baseDelayMs: 1000`, `maxDelayMs: 60000`). A non-positive, non-integer or
 unparseable value is a usage/IO error (exit 1 territory) naming the parameter —
 never a silent NaN that would pace at zero. S10's "not hardcoded NaN numbers" is
@@ -490,7 +490,98 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   sessions' worktrees + this branch before its first commit);
   `bun scripts/ceremony.mjs tier classify` · `standard` ·
   `task_size.understood=true`.
-
+- **P1** — 2026-11-09, planning ledgers frozen (this document, the two M-size
+  ledgers and `decisions.md` with the path-protection plan + records) and the
+  unit registered: the Features row moved to `in-progress · carried by fix #443`
+  through the crate's `roadmap rowUpsert` writer, the `## Fixes` row added by
+  hand because that four-column table has no emitter (unit 460's PE-007) ·
+  commit `9d368ede`.
+- **P2** — 2026-11-09, RED corpus committed alone, observed failing (E2) ·
+  commit `0257894c`. The commit was **amended once, unpushed and
+  agent-authored**, to include the two query-object pins and the two
+  `doc.query` degradation pins the full-suite run exposed (the first pass had
+  run only the two suites the change names); the amend is disclosed here rather
+  than left implicit.
+- **E2** — 2026-11-09, RED observed at `0257894c` with the implementation stashed
+  (the base sources, the new tests): `bun test --timeout 30000 test/doc` · exit 1
+  · 198 pass / 15 fail — the grammar default, the four auto-resolution
+  degradations, the read-only query path, the two sync-envelope fields, the
+  pacing import (`Export named 'resolvePacing' not found`) and the five
+  grammar/degradation pins; `bun test test/aw-index-command.test.mjs` · exit 1 ·
+  `Cannot find module '../dist/extension/aw-index-command.js'`.
+- **P4** — 2026-11-09, embeddings resilience: pacing resolution, batch cap,
+  retry/backoff/`Retry-After`, the first-landed-batch pin and `embeddingStats` ·
+  commit `71df5627`. Committed **before** P3 because P3 consumes
+  `embeddingStats` — dependency-topological order, per §5's task ordering.
+- **P3** — 2026-11-09, query-time mode resolution, the declared auto
+  degradations, the read-only query path and the sync envelope's
+  `pending`/`model` · commit `b1f5dc4d`.
+- **E3** — 2026-11-09, GREEN at `b1f5dc4d`: `cd packages/agentic-workflow && bun
+  test --timeout 30000 test/doc.hybrid.test.mjs test/doc.embeddings.test.mjs` ·
+  exit 0 · 49 pass. Full crate suite at the final head: `bun test --timeout
+  30000 test/` · exit 1 · 569 pass / 3 fail — all three pre-existing and identical on the base
+  clone (`box2 phase-lint green`, `the box2 phase-lint clause is read-only`, the
+  `unit-doc create --json` CLI smoke), because the harness spawns `node`, which
+  this environment does not have (E7).
+- **P5** — 2026-11-09, the native `/aw-index` command (the name constant, the
+  module, registration beside `/advance`, the four exact-set pins) · commit
+  `591a2806`.
+- **E4** — 2026-11-09, GREEN at `591a2806`: `cd packages/pi-agentic-workflow &&
+  bun run test` · exit 1 · 717 pass / 2 fail — the same two pre-existing
+  `conductor-sensor.test.mjs` AC3 failures as the base (709 pass / 2 fail), and
+  8 new passing cases from `aw-index-command.test.mjs` plus the four expanded
+  command-set pins.
+- **E5** — 2026-11-09, `bun packages/agentic-workflow/bin/path-guard.mjs --unit
+  docs/fix/443-doc-index-auto-hybrid --phase P2 --base 1fa39fe1` · exit 0 ·
+  `PATH-GUARD pass — justified`, `checked: 36`, `DEGRADED — missing-config:
+  shipped defaults in force` (the repository carries no committed
+  `path-policy.json`, so the shipped policy applies).
+- **E6** — 2026-11-09, differential (O19) in two `mktemp -d` scratch trees
+  (removed after): the base commit's entry point vs the change, on identical
+  fixtures, for `doc --sync/--status/--query/--query --mode keyword/--query
+  --mode hybrid/--mode quantum/--rebuild`, `doc read` (whole file, a resolved
+  section, `NO_MATCH`), `doc index` and `section locate`. Every run is
+  byte-identical after normalizing the fixture root **except** the two declared
+  deltas: `sync` gains `store.pending`/`store.model`, and the default `query`
+  gains `degradations: ["unavailable-embeddings-not-configured"]`. Exit codes
+  identical throughout.
+- **E7** — 2026-11-09, root gate base vs head: `bun scripts/run-root-suite.mjs`
+  · exit 1 on both · 16 failing suites on the base clone (`/tmp/aw443-base2` at
+  `1fa39fe1`) and the **identical 16** on this head (`diff` of the two FAIL
+  lists is empty). Cause is environmental: those harnesses spawn `node`
+  (`execFileSync("node", …)`, e.g. `scripts/ceremony/testing.mjs:34`) and this
+  container has no `node` binary (`which node` → nothing).
+- **E8** — 2026-11-09, runtime legs: `cd packages/agentic-workflow && bun run
+  test:node` · exit 1 · `Missing script to execute` (no `node` on PATH) —
+  identical on the base clone; the same absence is why `schema-node-compat`,
+  `pi-node-compat`, `crate-suite-node` and `pi-compat-guard` cannot pass here.
+- **E9** — 2026-11-09, the touched-surface gates run alone: `bun
+  scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS`
+  (changeset route accepted for `@gtrabanco/pi-agentic-workflow`); `bun
+  packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` ·
+  exit 0 · `checked: 2, refusals: []`; `bun scripts/log-immutability.mjs` ·
+  exit 0 · `0 violations`, base `1fa39fe1`; `bun scripts/temp-hygiene.mjs` ·
+  exit 0 · `0 finding(s)`; `bun scripts/tmp-gc.mjs` · exit 0 · `0 candidate(s)`;
+  `bun scripts/worktree-guard.mjs` · exit 0 · `0 finding(s)` (it failed at the
+  cut only because this branch had no commit yet); `bun
+  scripts/docs-generate.mjs --check` · exit 0 · `0 stale` after the renderer was
+  run (`bun scripts/docs-generate.mjs` → `1 written`).
+- **E10** — 2026-11-09, documentation gates: `bun scripts/check-skill-context.mjs`
+  · exit 0 · `PASS context budgets: 29 skills`; `bun test --timeout 30000
+  scripts/normative-drift.test.mjs scripts/doc-discipline.test.mjs` · exit 0 ·
+  42 pass.
+- **E11** — 2026-11-09, `rg -n -- '--mode (keyword|hybrid)' skills/` · exit 1 ·
+  no match (the only `--mode` in `skills/` is `degit`'s `--mode=git` in
+  `init-workspace`'s bootstrap reference, unrelated to the doc CLI). The calling
+  skills needed no edit: they never passed the flag, which is exactly why the
+  read path never used the vectors.
+- **P6** — 2026-11-09, docs and state: the crate README's `doc` section (the
+  `doc-retrieval@1` grammar block: mode resolution, pacing, retry, resume, pin,
+  the sync report and the closed degradation set) and its command-table row, the
+  pi README's code-door table + `The /aw-index command` section, the root
+  README's retrieval paragraph, `docs/CAPABILITIES.md`'s Search row, the
+  changeset intent, the regenerated `docs/generated/units.md` and the completed
+  frozen pins · commit <this commit>.
 ## Next
 
 The handoff to the owner (external verifier): the diff summary, the obligations

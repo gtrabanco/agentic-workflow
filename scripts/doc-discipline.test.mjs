@@ -82,6 +82,11 @@ describe("AC25: store paths are referenced only from the entry point's surfaces"
     /^scripts\/doc-discipline\.test\.mjs$/, // this suite (self-reference)
     /^CHANGELOG\.md$/, // release notes
     /^packages\/(agentic-workflow-schema|pi-agentic-workflow)\/README\.md$/, // package docs
+    // Issue #443: the native /aw-index command's suite renders a realistic sync
+    // envelope, whose store path is the literal index.db. The command never
+    // opens the store — it prints the path the runner reports — and no other
+    // pi-package file is exempt, so the single-entry-point guard keeps biting.
+    /^packages\/pi-agentic-workflow\/test\/aw-index-command\.test\.mjs$/, //
     /^template\/docs\//, // target-project scaffold docs
   ];
 
