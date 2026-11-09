@@ -295,6 +295,13 @@ task list above; the deterministic routers still judge the document.
 - **E7** — 2026-11-08, `bun scripts/check-skill-context.mjs` · PASS (29 skills);
   `--documents` · PASS (4 budgeted documents); `--routes` · PASS (14 routes);
   `npx skills add . --list` · all skills discovered.
+- **D3** — 2026-11-09, the pre-push hook refused the push at the root-suite
+  step because of the pre-existing `log-immutability` red (see Known
+  pre-existing issues) — unrelated to this push range. The hook's own contract
+  declares the escape hatch `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` with "record
+  why in the PR": used once for this push, reason recorded here and in the PR
+  body. The gate evidence stands as recorded in G1/G2 (91/91 excluding the
+  pre-existing red; every other gate step exit 0).
 - **P1** — 2026-11-08, red suite for the projection transform · commit `37112245`.
 - **P2** — 2026-11-08, projection module + bundle wiring + EMPTY manifest +
   golden fixture · commit `9d672ab0`.
