@@ -60,11 +60,17 @@ test("disposeTempRoots is idempotent and safe on an empty tracker", () => {
 });
 
 test("the exit hook is installed once, no matter how many roots are created", () => {
+  // Earlier tests in this file may already have installed the hooks, so the
+  // delta is 0 or 1 — what the contract forbids is growth per call: three
+  // roots must never mean three hooks.
   const before = process.listenerCount("exit");
   tempRoot(PREFIX);
   tempRoot(PREFIX);
   tempRoot(PREFIX);
-  assert.equal(process.listenerCount("exit"), before + 1, "exactly one exit hook for the whole process");
+  assert.ok(
+    process.listenerCount("exit") <= before + 1,
+    `at most one exit hook for the whole process (before: ${before}, after: ${process.listenerCount("exit")})`,
+  );
   disposeTempRoots();
 });
 
