@@ -1,11 +1,14 @@
-// skill-parity.test.mjs — AC2 (SPEC S2, D-E3)
+// skill-parity.test.mjs — AC2 (SPEC S2, D-E3; redefined by issue #410)
 //
-// Bundled skills are build copies, never sources: every file under
-// `packages/pi-agentic-workflow/skills/` must be byte-identical to the
-// canonical repository `skills/` tree, every `user-invocable: true` skill and
-// every internal composed skill must be present, and every
-// `metadata.internal: true` skill must be absent. This suite is the drift
-// guard that lets the package ship skill prose without forking it.
+// Bundled skills are build copies, never sources: the staged bundle is the
+// *declared projection* of the canonical repository `skills/` tree. Every file
+// no projection rule names must be byte-identical to its source — always;
+// every file a rule names must equal the rule's declared projection applied to
+// the source (recomputed here, never trusted from the build). Every
+// `user-invocable: true` skill and every internal composed skill must be
+// present, every `metadata.internal: true` skill must be absent, and the
+// projection must never grow a skill (context budget). This suite is the drift
+// guard that lets the package ship projected skill prose without forking it.
 //
 // Written red-first: it landed before the bundling script produced any output,
 // so a stale or hand-edited bundle fails the build instead of the review.
@@ -18,10 +21,12 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { bundleSkills, listFiles, listSkills } from "../scripts/bundle-skills.mjs";
+import { applyProjection, loadProjectionManifest, rulesFor } from "../scripts/projection.mjs";
 
 const PKG_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const REPO_SKILLS = join(PKG_DIR, "..", "..", "skills");
 const BUNDLE_SKILLS = join(PKG_DIR, "skills");
+const MANIFEST = loadProjectionManifest(join(PKG_DIR, "projection-manifest.json"));
 
 const readSourceSkills = () => listSkills(REPO_SKILLS);
 const expectedSlugs = () => readSourceSkills().filter((s) => !s.internal).map((s) => s.slug);
@@ -83,9 +88,48 @@ test("AC2: internal composed skills are bundled, metadata.internal skills are no
   }
 });
 
-test("AC2: every bundled file is byte-identical to its skills/ source", () => {
+test("AC2: every bundled file equals its declared projection — byte-identical when no rule names it", () => {
+  // Issue #410: the parity contract is declared projection, not unconditional
+  // byte-identity. With the EMPTY manifest this is byte-identity everywhere,
+  // proven by recomputation; the first real manifest entries re-drive this test
+  // without touching it.
   for (const slug of expectedSlugs()) {
-    assertByteIdentical(join(REPO_SKILLS, slug), join(BUNDLE_SKILLS, slug), slug);
+    const sourceDir = join(REPO_SKILLS, slug);
+    const bundleDir = join(BUNDLE_SKILLS, slug);
+    const fromSource = listFiles(sourceDir);
+    const fromBundle = listFiles(bundleDir);
+    assert.deepEqual(fromBundle, fromSource, `${slug}: bundle file set drifted from skills/ source`);
+    for (const rel of fromSource) {
+      const a = readFileSync(join(sourceDir, rel), "utf8");
+      const b = readFileSync(join(bundleDir, rel), "utf8");
+      const rules = rulesFor(MANIFEST.rules, `skills/${slug}/${rel}`);
+      if (rules.length === 0) {
+        assert.equal(b, a, `${slug}/${rel}: bundle bytes drifted from skills/ source with no rule naming it`);
+      } else {
+        assert.equal(b, applyProjection(a, rules, `skills/${slug}/${rel}`), `${slug}/${rel}: bundle is not the declared projection of its source`);
+      }
+    }
+  }
+});
+
+test("AC2: the projection never grows a skill (context budget on the stripped copy)", () => {
+  // The same ceil(UTF-8 bytes / 4) measure the repo's context budgets use
+  // (docs/workflow/SKILL_CONTEXT_BUDGETS.json). The projection removes or
+  // pointerizes prose; it must never add weight.
+  const estimate = (text) => Math.ceil(Buffer.byteLength(text, "utf8") / 4);
+  for (const slug of expectedSlugs()) {
+    const sourceDir = join(REPO_SKILLS, slug);
+    const bundleDir = join(BUNDLE_SKILLS, slug);
+    for (const rel of listFiles(sourceDir)) {
+      const rules = rulesFor(MANIFEST.rules, `skills/${slug}/${rel}`);
+      if (rules.length === 0) continue;
+      const a = readFileSync(join(sourceDir, rel), "utf8");
+      const b = readFileSync(join(bundleDir, rel), "utf8");
+      assert.ok(
+        estimate(b) <= estimate(a),
+        `${slug}/${rel}: the projected copy (${estimate(b)}) outweighs its source (${estimate(a)})`,
+      );
+    }
   }
 });
 
