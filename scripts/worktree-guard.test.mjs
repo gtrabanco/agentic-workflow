@@ -85,8 +85,12 @@ test("a clean worktree on an unmerged branch inside .git/worktrees/ is healthy",
 
 test("a worktree whose directory vanished is a PRUNABLE finding", () => {
   withRepo(({ root, git }) => {
-    const target = addWorktree(git, root, "vanished", ["-b", "feat/vanished"]);
-    fs.rmSync(target, { recursive: true, force: true });
+    // The vanished worktree sits outside the legal home: only then do the
+    // admin metadata outlive the directory (inside .git/worktrees the two
+    // are the same path, so removing one removes both and git auto-heals).
+    const vanished = path.join(root, "vanished-wt");
+    git(["worktree", "add", "-b", "feat/vanished", vanished]);
+    fs.rmSync(vanished, { recursive: true, force: true });
     const result = guard(root);
     assert.equal(result.status, 1);
     assert.match(result.stdout, /FINDING .* — PRUNABLE/);
@@ -141,7 +145,8 @@ test("a dirty worktree carries a dirty marker and --prune never removes it", () 
 
 test("--prune removes the prunable, detached, outside and stale worktrees", () => {
   withRepo(({ root, git }) => {
-    const vanished = addWorktree(git, root, "vanished", ["-b", "feat/vanished"]);
+    const vanished = path.join(root, "vanished-wt");
+    git(["worktree", "add", "-b", "feat/vanished", vanished]);
     fs.rmSync(vanished, { recursive: true, force: true });
     const detached = addWorktree(git, root, "detached", ["--detach"]);
     const outside = path.join(root, "outside-wt");
