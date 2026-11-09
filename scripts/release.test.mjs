@@ -28,6 +28,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { contributorLines, previousReleaseTag } from "./release.mjs";
+import { tempRoot } from "./temp-root.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const script = path.join(repoRoot, "scripts/release.mjs");
@@ -42,7 +43,7 @@ const PACKAGES = [
 ];
 
 function fixture({ changesets = { "the-change.md": ["pi:patch"] }, bodies = {}, version = "1.0.0", git = false } = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "release-fixture-"));
+  const root = tempRoot("release-fixture-");
   for (const name of PACKAGES) {
     const dirName = name.replace("@gtrabanco/", "");
     const dir = path.join(root, "packages", dirName);

@@ -53,6 +53,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { tempRoot } from "./temp-root.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 /** Re-pointable so the suite runs red against an injected tree (P9's gotcha 3). */
@@ -1150,7 +1151,7 @@ test("#224 canonical destination vocabulary: the router publishes one closed rou
 
 test("the gate fails closed: a surface that loses its grammar block is refused", (t) => {
   if (isChildRun) return t.skip("the child run is itself the injected tree");
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "normative-drift-"));
+  const tmp = tempRoot("normative-drift-");
   const files = [...live.readFiles].filter((rel) => exists(rel));
   for (const rel of files) {
     fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true });

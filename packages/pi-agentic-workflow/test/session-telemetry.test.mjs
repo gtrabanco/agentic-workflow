@@ -14,6 +14,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { createSessionTelemetry, unitFromCommand } from "../dist/session-telemetry.js";
+import { tempRoot } from "../../../scripts/temp-root.mjs";
 
 /** A clock the test owns, in milliseconds. */
 function clockAt(start = 0) {
@@ -181,7 +182,7 @@ test("the provenance string is resolved at emit time, so one builder can name ea
 });
 
 test("a unit is resolved from the command invocation, deterministically, or not at all", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "telemetry-unit-"));
+  const root = tempRoot("telemetry-unit-");
   fs.mkdirSync(path.join(root, "docs/fix/383-measured-acceptance"), { recursive: true });
   fs.mkdirSync(path.join(root, "docs/features/12-a-feature"), { recursive: true });
 

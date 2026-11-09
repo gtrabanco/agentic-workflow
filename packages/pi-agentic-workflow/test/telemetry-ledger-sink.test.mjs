@@ -15,6 +15,7 @@ import path from "node:path";
 
 import { createLedgerSink } from "../dist/telemetry-sinks.js";
 import { parseLedger, readLedger, compare } from "../../../scripts/tier-cost.mjs";
+import { tempRoot } from "../../../scripts/temp-root.mjs";
 
 const DATE = "2026-11-03";
 
@@ -40,7 +41,7 @@ function ledgerText(rows = []) {
 
 /** A throwaway project carrying one unit doc, so a row's tier can be resolved. */
 function project(ledgerRows = []) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-sink-"));
+  const root = tempRoot("ledger-sink-");
   fs.mkdirSync(path.join(root, "docs/fix/383-measured-acceptance"), { recursive: true });
   fs.writeFileSync(
     path.join(root, "docs/fix/383-measured-acceptance/SPEC.md"),
