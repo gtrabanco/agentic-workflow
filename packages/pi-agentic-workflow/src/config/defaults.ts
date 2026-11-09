@@ -1,6 +1,6 @@
 import type { EffectiveConfig, Route, RouteDeclaration } from "./types.js";
 import { SHIPPED_PATH_POLICY, intersectPathPolicy } from "./path-policy.js";
-import { DEFAULT_PROFILE_FALLBACK } from "./types.js";
+import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW } from "./types.js";
 
 /**
  * The in-package default (SPEC S6, D-P6): a fresh install with no config file
@@ -39,6 +39,10 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   // the self-detected envelope (conservative defaults), and an unconfigured
   // install runs automatic, never compiled-in caps.
   subagents: {},
+  // Issue #174 — the State Flow episode lifecycle is opt-in: off by default,
+  // the shipped allowlist covers the two longest procedural loops, and a
+  // missing backend degrades to a single warning, never a refused command.
+  stateFlow: { ...DEFAULT_STATE_FLOW, commands: [...DEFAULT_STATE_FLOW.commands] },
   // Feature 63 — model profiles: declared keys (none, zero-config).
   declared: { default: { model: false, thinking: false } as RouteDeclaration, commands: {} as Record<string, RouteDeclaration> },
 };
