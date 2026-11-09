@@ -421,7 +421,8 @@ surgery (workflow §4).
   (`Cannot find module './log-immutability.mjs'`), byte-identical at the bound
   base `f24b726f` (same test blob `481a8b71`). The integration supplies the
   module: the suite passes 18/18 there and the gate step exits 0 (E12).
-- **G2** — 2026-11-09, `bun scripts/local-gate.mjs` on this head · exit 1 ·
+- **G2** — 2026-11-09, `HEAD 3d9ce0563c6601e4164b14df505c910c11e8c454`,
+  `bun scripts/local-gate.mjs` on this head · exit 1 ·
   FAILED at root-suite, whose only red is `scripts/log-immutability.test.mjs`
   (E13); every other step exits 0. Stated plainly rather than counted as
   checked: this row's validator reproduces green on the integrated tree (E12),
@@ -467,8 +468,19 @@ surgery (workflow §4).
   base-caused `log-immutability` red. Report-only (it reproduced at the bound
   base), resolved by the same integration as F1; its ledger consequence was
   counted once, as F1.
+- **F12** — 2026-11-09, folded finding (class plan, discovered by running the
+  unit-doc verifier on this batch's own ledger): O8 and O9 carried a literal
+  markdown table inside a cell, so every pipe-based reader shifted their
+  columns and reported them open (the verifier read `Issue` and `P7` as their
+  statuses). Reworded to name the columns instead of drawing them — the claims
+  are unchanged, the cells parse. Pre-existing at `a7f7fd16` (the same
+  refusals reproduced there); folded at `3d9ce056`. The third refusal,
+  `G1` citing no HEAD sha, stays open and is reported, not guessed: rewriting
+  an earlier `## Log` line is against `log-kind@1`, and the commit that run
+  happened at is not in this branch's history.
 - **P10** — 2026-11-09, correction batch 1: the red corpus `985faacb`, the
-  fixes `a2c0e0ba`, the route-budget repair `82c52063`.
+  fixes `a2c0e0ba`, the route-budget repair `82c52063`, the ledger and receipt
+  close `3d9ce056`.
 
 ## Next
 
