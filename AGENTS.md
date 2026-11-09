@@ -483,9 +483,6 @@ as the source and preserve its full history (do not create a new branch from
 ### Step 2 — Clean up stale state
 
 ```bash
-# Delete any local branch with the same name (even if tracking origin)
-git branch -D <branch-name> 2>/dev/null
-
 # Remove any orphan worktree dirs (from prior failed attempts)
 rm -rf .git/worktrees/<worktree-dir>
 ```
@@ -493,24 +490,43 @@ rm -rf .git/worktrees/<worktree-dir>
 If a previous branch was deleted but its worktree metadata remains under
 `.git/worktrees/`, remove the directory first so git stops complaining.
 
-### Step 3 — Create the branch
+### Step 3 — Remove the local branch if it exists
 
-If the remote branch exists:
+The local branch is recreated by the worktree creation. If it already exists,
+git will refuse to create it again:
 
 ```bash
-git branch -f <branch-name> origin/<branch-name>
+git branch -D <branch-name> 2>/dev/null
 ```
 
-If the issue is new with no commits yet, create from `main`:
+### Step 4 — Create the worktree (robust method)
+
+The standard `git worktree add -b` command corrupts the worktree by leaving
+`index.lock`, `MERGE_RR`, `COMMIT_EDITMSG`, and `ORIG_HEAD` files inside it,
+which make git refuse `worktree remove --force` later. Instead, create the
+worktree as detached HEAD first, then wire up the branch:
 
 ```bash
+# 1. Create worktree from remote branch (detached HEAD)
+git worktree add .git/worktrees/<worktree-dir> origin/<branch-name>
+
+# 2. Create the tracking branch inside the worktree
+cd .git/worktrees/<worktree-dir>
+git branch -u origin/<branch-name> <branch-name>
+
+# 3. Switch to the branch
+git checkout <branch-name>
+```
+
+For a **new issue with no remote branch yet**, create from `main` first:
+
+```bash
+# Create remote branch locally and push it (or let the agent do it)
 git branch <branch-name> main
-```
+git push -u origin <branch-name>
 
-### Step 4 — Create the worktree
-
-```bash
-git worktree add -b <branch-name> .git/worktrees/<worktree-dir> <branch-name>
+# Then follow the detached-HEAD pattern above, using the local branch
+# as the source until push succeeds, then re-attach origin tracking.
 ```
 
 `<worktree-dir>` should be a short name matching the branch purpose (e.g.
