@@ -226,6 +226,17 @@ test("gate-receipt: an unrecognized gate output is degraded, never a silent pass
   assert.ok(receipt.checks[0].fragments.length > 0, "the bounded raw tail is recorded");
 });
 
+test("gate-receipt: a filtered run is degraded, never a pass", () => {
+  const root = toyProject();
+  const gate = writeGate(root, [{ id: "root-suite", status: "passed" }]);
+  const result = run(root, ["run", "--gate", gate, "--root", root, "--", "--only", "root-suite"]);
+  assert.equal(result.status, 1, "a degraded envelope never exits 0");
+  const receipt = receiptOf(root);
+  assert.equal(receipt.verdict, "degraded");
+  assert.deepEqual(receipt.degraded, ["partial-gate-selection"]);
+  assert.equal(receipt.checks[0].status, "passed", "what ran is still recorded");
+});
+
 test("gate-receipt: freshness ignores the HEAD sha and unsigned files, and flips on a signed byte", () => {
   const root = toyProject();
   const gate = writeGate(root, [{ id: "root-suite", status: "passed" }]);
