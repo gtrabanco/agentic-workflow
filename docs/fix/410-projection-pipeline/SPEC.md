@@ -316,6 +316,19 @@ task list above; the deterministic routers still judge the document.
   projection, journal carrier, schema/pi node-compat: all exit 0; the root-suite
   step bails at the pre-existing `log-immutability` red only (G1 records the
   91/91 exclusion run, re-run at HEAD `99c2f3c7`).
+- **D1** — 2026-11-09, external-verify advisory A1: O15's required-evidence
+  cell described the log-imm red as current at merge-base `f24b726f` but
+  `origin/main` now carries the fix (PR #469 merged `log-immutability.mjs`;
+  `bun test` 18/0 exit 0). Updated O15's evidence cell to record that the
+  red is base-resolved at main while the branch tree is still based on
+  `f24b726f` (pre-#469 merge), so the gate bails identically here. Advisory
+  A2: the branch behind main (one `skills/log-session/SKILL.md` delta from
+  #468); merge-tree confirms clean merge onto `origin/main` — integrate main
+  before PR merge. Advisory A3: no projection-suite case covers the plain
+  `{heading}` selector form; added `projection: remove honors a plain heading
+  selector (not path) — A3 coverage` test case, hash-verified against the
+  toy fixture's `Enforced section`; `bun test projection.test.mjs` 19/0 exit 0
+  (was 18/0).
 
 ## Next
 
