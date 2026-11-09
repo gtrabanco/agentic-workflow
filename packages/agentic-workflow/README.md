@@ -38,7 +38,7 @@ writing anything**.
 | `changelog [file] <json>` | Appends a changelog row through the writer (defaults to `./CHANGELOG.md`) |
 | `budgets [file] <json>` | Re-bases one context-budget ceiling with its growth source; a ceiling shrinkage without a growth source is refused |
 | `manifest [plugin.json] <op>` | `skillAdd` / `skillRemove` on the plugin manifest — the alphabetical machine-surface registration |
-| `doc (--sync \| --query <term> \| --status \| --rebuild) [--json-only]` | The **retrieval index** (feature 65): one gitignored SQLite store under `.agentic-workflow/index/`, freshness checked on every query, `--query` answering over FTS5 keyword search and — when `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL` / `_MODEL` / `_API_KEY` are set — a hybrid pass over stored vectors. Degradations are declared, never silent: `unavailable-embeddings-not-configured`, `unavailable-embeddings-not-indexed`, `embeddings-model-mismatch`, `unavailable-embeddings-provider-down`. Discovery only: no gate reads it. **Experimental.** |
+| `doc (--sync \| --query <term> \| --status \| --rebuild) [--json-only]` | The **retrieval index** (feature 65, hardened by issue #443): one gitignored SQLite store under `.agentic-workflow/index/`, freshness checked on every query. `--query` resolves its mode **at query time** (see the `doc` section below): hybrid when a provider is configured and the store holds chunks embedded under the pinned model, keyword with the declared cause otherwise; an explicit `--mode keyword\|hybrid` always wins. `--sync` chunks incrementally and then embeds the pending chunks with pacing and retry. Degradations are declared, never silent: `unavailable-embeddings-not-configured`, `unavailable-embeddings-not-indexed`, `embeddings-model-mismatch`, `unavailable-embeddings-provider-down`. Discovery only: no gate reads it. The pi package's native `/aw-index` command runs the same sync and prints its report. **Experimental.** |
 | `doc read \| edit \| index` | The **doc CLI** (issue #366, half A of #192): section-level reads and splices over the #407 locator plus a derived structure index. `doc read --file <path\|-> [--section <id\|title>] [--json]` prints the located section's original bytes (no `--section` → the whole file; the reference is a D5 id `path#slug`, its bare slug, or the exact heading title — a path-qualified id needs a real document path, so with `--file -` the title or the bare slug is the reference); `doc edit --file <path> --section <id\|title> (--replacement <path\|-> \| --set <text\|-> \| --append <text\|->) [--dry-run] [--json]` splices one body source over the located section in place — `--replacement` names a file, `--set`/`--append` carry their text inline (stdin with `-`), exactly one is legal, and `--append` places its block after the section's own bytes; every byte outside the range is the source's own, and a selector resolving to nothing or to several sections is refused (`DOC REFUSAL — NO_MATCH\|AMBIGUOUS_MATCH\|BAD_SELECTOR`, exit 2, before any write); `doc index [--out <path>] [--json]` regenerates the derived JSON structure document (stable section IDs through 65's shared D5 function, parsed frontmatter, skill triggers, unit-doc phase mapping previous/current/next, dependencies) validated against TypeBox schemas — content only, so two runs over an unchanged corpus are byte-identical, and `--out` is where a project decides to keep it. It never opens the retrieval store and is **experimental** until promotion is earned (issue #192's constraint). |
 | `section <locate|remove|replace> --file <path\|-> --selector <json> [--replacement <path\|->] [--write] [--json]` | The **section locator** (issue #407): one Markdown document parsed with `mdast-util-from-markdown`, section bounds from node positions (a fenced `##`-like line is never a heading), and a byte-offset splice of the original string. Selectors: heading title, depth-aware heading path, heading regex, and line-in-scope exact/regex. `locate` prints the range receipt, `remove`/`replace` print the transformed document (or persist it with `--write`), `--json` emits one receipt, a selector resolving to 0 or >1 sections refuses with exit 2 (`SECTION REFUSAL — <code>`), a malformed invocation is exit 1 |
 | `memory probe [--json]` | The five-check memory-substrate health sensor (below) — writes nothing, always exits 0 |
@@ -57,6 +57,32 @@ Two sibling binaries ship in the same package and are invoked by the skills:
 |---|---|
 | `bin/path-guard.mjs` | Tier 1 path-protection gate (feature 60): `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`, read-only and offline, printing `PATH-GUARD <pass\|fail> — <code>` · exit 0 pass, 1 fail, 2 usage |
 | `bin/turn-contract.mjs` | Verifies the canonical turn contract's mechanical boxes: prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>`; `--finished` also requires the pushed branch with its open pull request |
+
+## `doc` — the retrieval index (feature 65, hardened by issue #443)
+
+One gitignored SQLite store under `.agentic-workflow/index/` (committed decisions:
+`.agentic-workflow/index.json`), a git-tracked corpus of `*.md` files, FTS5 for
+keyword search and float32 vectors for the semantic half. The shape a consumer
+targets is this block; the code that owns it is `src/doc/`.
+
+```text
+doc-retrieval@1
+command | shape | what it orders
+sync | doc --sync [--quiet] [--json-only] | incremental chunking of the tracked corpus, then one embeddings pass over the chunks that have no vector
+query | doc --query <term> [--since <ISO>] [--until <ISO>] [--file <path>] [--mode keyword|hybrid] [--json-only] | freshness-synced read; an absent --mode is resolved at query time, an explicit one always wins
+mode-resolution | absent --mode ⇒ hybrid when a provider is configured AND the store holds chunks embedded under the pinned model; otherwise keyword with the declared cause | a partially embedded store runs hybrid (keyword carries the remainder); no new degradation value exists
+query-calls | exactly one provider call per hybrid query (the query embedding) | the read path never embeds: the inline freshness sync chunks, it never calls the provider
+pacing | index.json provider.pacing {batchSize, requestsPerMinute, maxAttempts, baseDelayMs, maxDelayMs} · AGENTIC_WORKFLOW_DOC_EMBEDDINGS_<PARAM> · defaults 32 · 60 · 3 · 1000 · 60000 | one request carries at most batchSize texts; request starts are paced; a non-positive or unparseable value is a named usage error
+retry | 429 · 5xx · 408 · network errors are retryable with bounded exponential backoff, honouring Retry-After; 4xx fails fast | the run survives a rate limit instead of aborting the pass
+resume | the store's own `embedding is null` predicate | a run killed part-way re-runs only the remainder; nothing already embedded is re-sent
+pin | meta.emb_model written by the first landed batch (and by a zero-pending pass) | a partial pass can never leave an unpinned, mixed store
+sync-report | store.{path, present, files, chunks, pending, model, lastSync{files_scanned, files_changed, files_deleted, embedded}} | `pending` and `model` are additive inside the open `store` record — the top-level key order and the degradation vocabulary are frozen
+degradations | unavailable-embeddings-not-configured · unavailable-embeddings-not-indexed · unavailable-embeddings-provider-down · embeddings-model-mismatch | a closed vocabulary; an unknown value is refused at construction
+```
+
+**A query never pays write cost.** Vectors catch up on the next explicit sync —
+a freshness hook, `/aw-index`, or `doc --sync` — and until then the hybrid pass
+ranks over the chunks that do have vectors while keyword answers the rest.
 
 ## `journal` — the session-log fragment carrier (issue #405)
 

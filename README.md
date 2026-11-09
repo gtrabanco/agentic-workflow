@@ -41,14 +41,20 @@ docs/fix/                fix SPEC template (the active-fixes index lives in docs
 .github/                 issue + PR templates the workflow expects
 ```
 
-The runner crate ships the **`doc` retrieval index** (feature 65): one gitignored
-SQLite store under `.agentic-workflow/index/` that answers `agentic-workflow
-doc --query <term>` — FTS5 keyword search today, an optional OpenAI-compatible
-embeddings endpoint (`AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`) when a key is
-configured, with declared degradations instead of silent failure. It is a
-**discovery aid, never authority**: no gate or decision reads it. Positional
-document operations (`doc read|edit|index`) are unit `71`, still `defined` — the
-CLI refuses them by name and only accepts the four retrieval flags.
+The runner crate ships the **`doc` retrieval index** (feature 65, hardened by
+issue #443): one gitignored SQLite store under `.agentic-workflow/index/` that
+answers `agentic-workflow doc --query <term>` over FTS5 keyword search plus an
+optional OpenAI-compatible embeddings endpoint (`AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`).
+The mode is resolved **at query time** — hybrid when a provider is configured and
+the store holds vectors under the pinned model, keyword with the declared cause
+otherwise, and an explicit `--mode` always wins — so the vectors the sync pays for
+are the ones the query uses. `doc --sync` embeds the pending chunks with pacing,
+retry/backoff and a resume point, and the pi package's native `/aw-index` command
+runs that sync and prints its report (pending chunks, pinned model, last sync,
+degradations). It is a **discovery aid, never authority**: no gate or decision
+reads it. Positional document operations (`doc read|edit|index`) are unit `71`,
+still `defined` — the CLI refuses them by name and only accepts the four
+retrieval flags.
 
 **Dogfooding model (authoring):** repo sessions consume the workflow from the
 installed release (Pi package / installed plugin), not from the working copy.
