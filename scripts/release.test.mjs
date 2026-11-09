@@ -949,3 +949,69 @@ test("a canary base already cut as stable refuses to re-promote", () => {
   assert.equal(result.status, 1, "v5.0.0 already exists as a stable tag — the suggestion would collide");
   assert.match(result.stderr || result.stdout, /5\.0\.0/);
 });
+
+// #462: the unit-doc templates carry a `doc-provenance@1` stamp whose forensic
+// half is the train version. Stamped by code at apply time for the same reason
+// skill frontmatter is (D-40-14): a version literal maintained by hand is the
+// defect the stamp exists to remove. The stamper updates the block in place and
+// never touches the template's body.
+const TEMPLATE_STAMP_DIRS = [
+  "docs/features/_TEMPLATE",
+  "docs/fix/_TEMPLATE",
+  "template/docs/features/_TEMPLATE",
+  "template/docs/fix/_TEMPLATE",
+];
+
+const STAMPED_TEMPLATE = [
+  "# NN — example",
+  "",
+  "> one line",
+  "",
+  "```text",
+  "doc-provenance@1",
+  "written_by: agentic-workflow@0.9.0",
+  "schema: @gtrabanco/agentic-workflow-schema@0.9.0",
+  "format: unit-doc-spec-by-reference@1",
+  'grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}',
+  "```",
+  "",
+  "## Specs",
+  "",
+  "x",
+  "",
+].join("\n");
+
+function withTemplates(root) {
+  for (const dir of TEMPLATE_STAMP_DIRS) {
+    fs.mkdirSync(path.join(root, dir), { recursive: true });
+    fs.writeFileSync(path.join(root, dir, "SPEC.md"), STAMPED_TEMPLATE);
+  }
+  return root;
+}
+
+test("apply stamps the unit-doc templates' provenance block with the train version", () => {
+  const root = withTemplates(fixture({ changesets: { "a.md": ["pi:minor"] } }));
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  for (const dir of TEMPLATE_STAMP_DIRS) {
+    const text = fs.readFileSync(path.join(root, dir, "SPEC.md"), "utf8");
+    assert.match(text, /^written_by: agentic-workflow@1\.1\.0$/m, `${dir}: the writer names the train version`);
+    assert.match(text, /^schema: @gtrabanco\/agentic-workflow-schema@1\.1\.0$/m, `${dir}: the forensic pair moves together`);
+    assert.match(text, /^format: unit-doc-spec-by-reference@1$/m, `${dir}: the carrier axis is untouched`);
+    assert.match(text, /^## Specs$/m, `${dir}: the template body is untouched`);
+  }
+  assert.match(result.stdout, /templates: 4 unit-doc provenance stamp\(s\) stamped/);
+});
+
+test("plan never rewrites the templates, and a tree without them is a clean zero", () => {
+  const root = withTemplates(fixture({ changesets: { "a.md": ["pi:minor"] } }));
+  const before = fs.readFileSync(path.join(root, TEMPLATE_STAMP_DIRS[0], "SPEC.md"), "utf8");
+  const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
+  assert.equal(planned.status, 0, planned.stderr || planned.stdout);
+  assert.equal(fs.readFileSync(path.join(root, TEMPLATE_STAMP_DIRS[0], "SPEC.md"), "utf8"), before);
+
+  const bare = fixture({ changesets: { "a.md": ["pi:minor"] } });
+  const applied = run(["apply", "--root", bare, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
+  assert.equal(applied.status, 0, applied.stderr || applied.stdout);
+  assert.match(applied.stdout, /templates: 0 unit-doc provenance stamp\(s\) stamped/, "a project without the template scaffold is not a failure");
+});
