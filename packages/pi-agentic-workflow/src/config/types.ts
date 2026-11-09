@@ -58,6 +58,18 @@ export interface PassRouteFile {
  */
 export type PassesConfigFile = Record<string, PassRouteFile>;
 
+/** Issue #260 (owner decision 6, 2026-10-28): the subagent layer's optional
+ *  resource-limit configuration. `parallelism` is the spawn-overlap policy —
+ *  `serial` (one at a time), `auto` (derived from the self-detected host
+ *  envelope), or a fixed positive count; the caps are the decision-6 strings
+ *  ("12 of 64 GB", "2 of 80 threads") that bound the trial envelope tighter
+ *  than the host. All keys optional; validation is strict (no coercion). */
+export interface SubagentsConfigFile {
+  parallelism?: "serial" | "auto" | number;
+  memoryCap?: string;
+  threadCap?: string;
+}
+
 // ---------------------------------------------------------------------------
 // Model-profiles fields (feature 63)
 // ---------------------------------------------------------------------------
@@ -129,6 +141,11 @@ export interface ConfigFile {
   /** Issue #201: per-pass model/thinking declarations for spawned review
    *  passes, keyed by the published pass names plus the `default` escape. */
   passes?: PassesConfigFile;
+  /** Issue #260 (owner decision 6, 2026-10-28): the optional resource-limit
+   *  configuration for the subagent layer — parallelism plus explicit caps in
+   *  the "<n> of <m> <unit>" shape. Optional: absent means the automatic
+   *  default (self-detected host envelope, conservative defaults). */
+  subagents?: SubagentsConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -259,6 +276,10 @@ export interface EffectiveConfig {
   /** Issue #201: the declared pass routes, merged project-over-global; empty
    *  when no scope declares one — the resolver owns the fail-closed chain. */
   passes: Record<string, PassRouteFile>;
+  /** Issue #260: the declared subagent resource limits, merged key-wise
+   *  project-over-global; empty when no scope declares one — the resource
+   *  layer owns the self-detected envelope and the derived parallelism. */
+  subagents: SubagentsConfigFile;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }

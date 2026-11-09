@@ -209,6 +209,58 @@ The first workflow command you run after install says once that routing is
 configurable, then never again. That acknowledgement is stored in
 `~/.pi/agent/pi-agentic-workflow-state.json`, not in your config.
 
+## Subagent layer (issue #260)
+
+The execution topology behind the lane's orchestrate path: the orchestrating
+agent designs, briefs and verifies while atomic work runs in context-free
+subagents on the cheap tier the `passes` table approves. Two pieces ship
+here:
+
+- **Durable subagents** (`pi-extensible-workflows` 6.3.0, pinned — the
+  substrate the owner adopted in 2026-11-08 for issue #260). The package
+  registers only that extension's five tools: `subagents_run`,
+  `subagents_inspect`, `subagents_steer`, `subagents_stop`,
+  `subagents_retry` — subagent runs persist durable records with their own
+  model/tools/cost accounting, and a crash reconciles the record instead of
+  losing the work. The workflow-engine, starter and trajectory extensions
+  are **not** loaded. To disable the substrate entirely, remove the
+  `./node_modules/pi-extensible-workflows/dist/subagents/index.js` line from
+  this package's `pi.extensions` (a local `package.json` edit — pi has no
+  per-extension switch).
+- **Resource limits, optional** (owner decision 6, 2026-10-28): the
+  top-level `subagents` config key bounds the trial envelope — parallelism
+  plus explicit caps. Absent, the layer self-detects the host with
+  conservative defaults (small hosts spawn one subagent at a time; the
+  2026-10-27 OOM's lesson: every spawn is a bounded, observable trial with
+  expectations declared in the brief, never an unobserved flood).
+
+```json
+{
+  "subagents": {
+    "parallelism": "auto",
+    "memoryCap": "12 of 64 GB",
+    "threadCap": "2 of 80 threads"
+  }
+}
+```
+
+- `parallelism` is `"serial"`, `"auto"` (derived from the host: ≤4 GB or
+  ≤2 cores → serial; ≤8 GB or ≤4 threads → 2; larger hosts are bounded only
+  by the caps), or a positive integer.
+- `memoryCap` / `threadCap` are the `"<n> of <m> <unit>"` strings; a cap only
+  ever bounds tighter than the host. Unknown inner keys are rejected.
+- Admission is deterministic and fail-closed, applied in code by the
+  `resources` command of `@gtrabanco/agentic-workflow`:
+  `resources detect` prints the self-detected envelope; `resources admit`
+  refuses a spawn whose brief declares no `expected_duration`/`requirements`,
+  refuses a requirement over the cap, and blocks an identical re-run after a
+  recorded bound-kill — re-decide with the receipt, never retry blind.
+  `resources check` reads a recorded trial's receipt for the check-in verdict
+  (within or over the estimate, unmeasurable, bound-killed) and
+  `resources bound` prints the `systemd-run` trial envelope with its
+  after-exit `systemctl show` receipt read.
+- Entries merge project-over-global per key, like every other config scope.
+
 ## Model profiles
 
 The routing config above is the **`default` profile**. A profile is one coherent

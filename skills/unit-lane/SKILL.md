@@ -212,6 +212,14 @@ prints `relay: bootstrap-needed` (with the packet path and the leg count) and
 [relay legs](references/RELAY.md) owns the rest — the packet, one phase per leg,
 the leg tier from `scripts/catalog.json` and the fresh-context coherence review.
 
+When the operator or the unit declares **orchestrate mode**, implementation
+phases dispatch instead of handing off: the lane becomes the non-executing
+orchestrator — it freezes the delegate brief, spawns the context-free subagent
+on the approved cheap tier, and verifies by running the gate and reading the
+diff, never by trusting the summary. The brief, admission and check-in
+contract is [orchestrate](references/ORCHESTRATE.md)'s; the deterministic
+inputs are `resolve-passes` and `resources detect|admit`.
+
 ### 5. Diff-size guard (after each implement step)
 
 Run `bun scripts/diff-guard.mjs --base <last-reviewed-ref> --unit <NN>`. Paste
