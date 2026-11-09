@@ -1,5 +1,6 @@
 ---
 "@gtrabanco/agentic-workflow-schema": minor
+"@gtrabanco/pi-agentic-workflow": minor
 ---
 
 feat(schema): publish the machine gate receipt contract

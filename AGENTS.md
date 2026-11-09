@@ -382,6 +382,10 @@ doc-provenance-format-vocabulary | packages/agentic-workflow-schema/src/doc-prov
 doc-provenance-grammar-family-vocabulary | packages/agentic-workflow-schema/src/doc-provenance.ts | schema-export:DOC_GRAMMAR_FAMILIES | doc-grammar-family | no
 doc-provenance-stamp | packages/agentic-workflow-schema/README.md | block:doc-provenance@1 | doc-provenance-format+doc-grammar-family | no
 continuation-refusal-vocabulary | packages/agentic-workflow-schema/src/continuation.ts | schema-export:CONTINUATION_REFUSALS | continuation-refusal-type | yes
+gate-receipt-verdicts | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_RECEIPT_VERDICTS | gate-receipt-verdict | yes
+gate-receipt-check-statuses | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_CHECK_STATUSES | gate-check-status | yes
+gate-receipt-freshness | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_RECEIPT_FRESHNESS_CODES | gate-receipt-freshness | no
+gate-receipt-grammar | packages/agentic-workflow-schema/README.md | block:gate-receipt@1 | n/a | no
 ask-dont-infer-rule | skills/unit-lane/references/DESIGN.md | block:ask-dont-infer@1 | n/a | no
 relay-status-grammar | skills/unit-lane/references/RELAY.md | block:relay-status@1 | n/a | no
 journal-fragment-grammar | packages/agentic-workflow/README.md | block:journal-fragment-grammar@1 | n/a | no
