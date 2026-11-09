@@ -113,6 +113,12 @@ export type DispatchOutcome =
 /** The native conductor command (feature 62): sensor → decide → invoke loop. */
 export const ADVANCE_COMMAND = "advance";
 
+/**
+ * The native doc-index command (issue #443 S5): one progressive, resumable sync
+ * plus its report. Code, not a skill — no `SKILL.md`, no argument hint.
+ */
+export const AW_INDEX_COMMAND = "aw-index";
+
 export const SETTINGS_COMMAND = "agentic-workflow-settings";
 /** Shorthand alias for the same console — a pointer to the same handler, never a separate route (OB-5, AC6). */
 export const SETTINGS_COMMAND_ALIAS = "aw-settings";
