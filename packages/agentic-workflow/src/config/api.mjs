@@ -15,6 +15,8 @@ import {
   validateSectionValue,
 } from "@gtrabanco/agentic-workflow-schema";
 
+import { existsSync } from "node:fs";
+
 import { scopeDirectories, readScopeDocuments, writeConfigDocument, writeConfigText } from "./store.mjs";
 
 export class ConfigError extends Error {
@@ -192,7 +194,7 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
       }
       return nodes.map((node) => ({
         ...node,
-        value: clone(deepGet(effective[sectionKeyOf(node.path, sections)], node.path.split(".").slice(1))),
+        value: clone(deepGet(effective[node.path.split(".")[0]], node.path.split(".").slice(1))),
       }));
     },
     showResolved() {
@@ -247,19 +249,14 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
     init(scope) {
       if (!SCOPES.has(scope)) throw new ConfigError("SCOPE", `unknown scope "${scope}" (allowed: global, project)`);
       const path = `${directories[scope]}/${BASE_CONFIG_FILE}`;
-      const read = readScopeDocuments(directories[scope], [{ file: BASE_CONFIG_FILE }]);
-      if (read.documents[BASE_CONFIG_FILE] !== undefined) {
+      // A present-but-broken file is evidence, not scratch: never overwrite it.
+      if (existsSync(path)) {
         throw new ConfigError("EXISTS", `refusing to overwrite ${path}; edit it or remove it first`);
       }
       writeConfigText(path, renderInitTemplate());
       return { scope, path, created: true };
     },
   };
-}
-
-function sectionKeyOf(path, sections) {
-  const head = path.split(".")[0];
-  return sections.some((section) => section.key === head) ? head : head;
 }
 
 /** The `init` template: every section documented, nothing enabled by surprise. */
