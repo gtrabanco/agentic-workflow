@@ -6,6 +6,8 @@ import { createRouter } from "../routing/dispatch.js";
 import type { Router } from "../routing/dispatch.js";
 import { dirtyWorktreeWarning, receiptGuard } from "./receipt-guard.js";
 import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../routing/types.js";
+import { registerAwIndexCommand } from "./aw-index-command.js";
+import type { AwIndexCommandDeps } from "./aw-index-command.js";
 import { registerAdvanceCommand } from "./conductor-command.js";
 import { LOG_SESSION_COMMAND, registerLogSessionCommand } from "./log-session-command.js";
 import type { PlanInvocation } from "./log-session-command.js";
@@ -84,6 +86,12 @@ export interface ExtensionDeps<M extends ModelRef = ModelRef> {
     readonly bin?: string;
     readonly run?: import("../log-session-invocation.js").WriterSpawn;
   };
+  /**
+   * Issue #443 S5: the seams of the native `/aw-index` command — the runner
+   * spawn and the entry-point resolution, both real in production and injected
+   * by the suite that owns argv, cwd and exit status.
+   */
+  awIndex?: AwIndexCommandDeps;
 }
 
 export interface ExtensionHandle<M extends ModelRef = ModelRef> {
@@ -185,6 +193,10 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
   // The native conductor command (feature 62): registered in code, not derived
   // from a skill dir, and able to invoke every catalogue command by name.
   registerAdvanceCommand(registrar, { router, readConfig: read }, knownCommands);
+
+  // The native doc-index command (issue #443 S5): one code door beside the
+  // conductor, with no skill dir behind it and no catalogue entry to keep.
+  registerAwIndexCommand<M>(registrar, deps.awIndex ?? {});
 
   registrar.registerCommand(SETTINGS_COMMAND, {
     description: "Show and configure per-command model routing",
