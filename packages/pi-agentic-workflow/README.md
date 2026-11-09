@@ -64,6 +64,86 @@ configuration above read the same catalogue entry — but a handler runs first, 
 the mechanical part is a fact the harness holds instead of a claim the model
 makes. See [The `/log-session` code door](#the-log-session-code-door-issued-429).
 
+## Unattended durability — supervisor resume (issue #284)
+
+`/advance` is the deterministic conductor: sensor → decide → invoke, one stage
+per invocation, or the bounded full loop with `--continue`. A run that loses its
+process (OOM, redeploy, suspend, `kill -9`) can be resumed by an external
+restarter without a human — and the resume never trusts the restarter.
+
+### What a run writes
+
+Every run opens and closes a boundary in the run log
+(`.agentic-workflow/advance-run.log`, `advance.runLogPath`), in the log's
+historical row grammar:
+
+```text
+2026-11-09 15:04 — run/start — r-4242-1762700640000 pid=4242 — 0/12
+2026-11-09 15:04 — invoke/invoke-proven-transition — /skill:execute-phase 284 P1 — 1/12
+2026-11-09 15:06 — resume/detected — r-1200-1762700730000 iteration=1 last=/skill:execute-phase 284 P1 — 1/12
+2026-11-09 15:06 — resume/verdict:RESUMABLE — /skill:execute-phase 284 P2 — 0/12
+2026-11-09 15:09 — run/stop — stop-nothing-startable — 3/12
+```
+
+A run with a `run/start` and no later `run/stop` **died**. Every exit writes
+its closer — a clean stop, the one-stage `--continue` hand-off and the
+iteration-cap stop included — so the missing row is unambiguous.
+
+### `--resume`
+
+`/advance --resume` runs the crash reconcile before anything is invoked and
+continues only on the sensor's verdict:
+
+| Verdict (from `workflow-status`, `detail.crash_recovery`) | What the run does |
+| --- | --- |
+| `CLEAN` | Continues — nothing was in flight. |
+| `RESUMABLE` | Continues from the sensor's own recommendation (the ledger's unique next phase). |
+| `AMBIGUOUS` | **Stops before any invocation** with `stop-crash-ambiguous`; a human decides. |
+
+Resume is automatic when the journal shows an interrupted run, and `--resume`
+forces the reconcile even when it does not. A missing or unreadable verdict
+fails closed to `AMBIGUOUS`. The journal is a hint, never an authority: the
+verdict is recomputed from git and the docs on every run, exactly like
+`--last-envelope`.
+
+### The supervisor (operator-side, ask-first)
+
+Nothing is installed by the package. `/advance --print-supervisor` prints a
+dependency-free POSIX shell script; read it, then install it under the
+supervisor you already run. It re-invokes `pi -p '--resume --continue'` and
+restarts **only** when the previous attempt appended no `run/stop` row:
+
+```sh
+# systemd (user unit) — write the printed script to
+# ~/.config/agentic-workflow/advance-supervisor.sh, then:
+systemd-run --user --unit=aw-advance --collect \
+  ~/.config/agentic-workflow/advance-supervisor.sh
+
+# cron — one line, every 10 minutes; the script itself decides whether to restart
+*/10 * * * * ~/.config/agentic-workflow/advance-supervisor.sh >> ~/aw-advance.log 2>&1
+
+# launchd — wrap the same script in a plist with KeepAlive=false and
+# StartInterval=600; the script is the whole restart policy.
+```
+
+The script's exit codes are the operator's signal:
+
+| Exit | Meaning |
+| --- | --- |
+| `0` | The run reached a terminal row and stopped on its own. |
+| `1` | The restart cap was exhausted — `supervisor/exhausted` is in the run log. |
+| `3` | A human-decision stop: `stop-crash-ambiguous`, `stop-needs-input` or `stop-blocked`. The loop is not retried. |
+
+Rows the restarter adds to the run log keep the same grammar:
+`supervisor/restart` (attempt `k/CAP`) and `supervisor/exhausted`.
+
+The minimum pi version is **1.3.0** (`sessionResumption` keeps the session's
+tools across resumptions, so a resumed conductor keeps its command surface).
+Set `PI_BIN` when `pi` is not on the service manager's `PATH`.
+
+> The Pi Durable driver spike (issue #284's P2) is a separate, experimental
+> phase and is not part of this surface.
+
 ## Workflow tools (deferred — issue #274)
 
 Beside the commands, the package registers the five envelope-emitting
