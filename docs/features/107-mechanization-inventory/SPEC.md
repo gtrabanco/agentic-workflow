@@ -64,8 +64,15 @@ repo's own review machinery.
 **S15 — Index rows through the emitters.**
 > "Repository indexes: roadmap row, fix-index row — updated via the deterministic emitters/CLI where one exists, never hand-edited prose; a hand edit is a defect — report it instead;"
 
+**S16 — Correction: fix items 1 and 3, and open the PR.**
+> "Arregla 1 (D1), 3 y abre la pr"
+
 S12–S15 are the governing request's own process requirements, quoted verbatim
 from the turn that delegated issue #408; S1–S11 are the issue it delegates to.
+S16 is the appended correction (never a rewrite of S6): it orders the two
+disclosed defects repaired and the branch opened as a PR, so S6's
+classification-only boundary still covers S1–S15's artifacts and no longer
+forbids these two repairs.
 
 ## Impact
 
@@ -77,8 +84,10 @@ from the turn that delegated issue #408; S1–S11 are the issue it delegates to.
   promotes later) reads instead of re-deriving candidacy.
 - **Stops being true**: nothing. No skill prose, manifest entry, script or
   template changes (S6). The roadmap row gains one link (S9).
-- **Ask before touching**: any skill prose, the pi bundle manifest, or a
-  projection op — all explicitly out of scope.
+- **Ask before touching**: the pi bundle manifest and any projection op — out
+  of scope. Skill prose is otherwise out of scope too; S16 authorizes exactly
+  one repair (`skills/audit-docs/SKILL.md` check 13) and the one gate fix it
+  needs (`scripts/log-immutability.mjs` plus its suite).
 
 ## Retirements
 
@@ -88,7 +97,9 @@ future retirements (the prose each candidate would displace) but retires none
 
 ## Non-goals
 
-- Extracting any prose into code, adding a manifest entry, or editing a skill (S6).
+- Extracting any prose into code or adding a manifest entry (S6). Editing a
+  skill is out of scope except the one repair S16 orders: the truncated
+  `audit-docs` check 13.
 - Deciding that a candidate *should* become a guard — the inventory marks
   candidacy; the decision is a roadmap call (S6).
 - Re-classifying a judgment step as mechanizable by wishful reading: a step with
@@ -135,10 +146,15 @@ deterministic gate (S13) plus the coverage/row-count receipts recorded in
 
 ## Known pre-existing issues
 
-- `skills/audit-docs/SKILL.md` check 13 is truncated mid-sentence ("Scan the
-  declared content dir for orphan pages each:", "that page is **stale** (LOW:
-  propose )"). **Affects** this unit only as the reason recorded on row `AD20`;
-  the defect is reported, never repaired (S6 forbids prose edits).
+- `skills/audit-docs/SKILL.md` check 13 was truncated mid-sentence ("for
+  orphan pages each:", "propose )") when the `generate-docs` skill retired.
+  **Affects** this unit as row `AD20`; **repaired** under S16 — the check now
+  names the renderer's own header, scopes the provenance criteria to pages that
+  carry the fields, answers `n/a — no provenance fields` otherwise, and points
+  the refresh at `bun scripts/docs-generate.mjs`.
+- The sandbox has no `node` binary; the repo's suites spawn `node` as their
+  documented fallback, so they failed here until a bun-backed `node` shim was
+  put on `PATH` for the gate run (G3/G4 record both).
 - The `passive` tier and the `spec-by-reference` unit-doc shape disagree about
   whether a passive unit carries a doc, and the schema's re-cut section list has
   no `## Acceptance criteria` while the shipped fix-lane templates carry one.
@@ -187,10 +203,22 @@ exits 0.
   `bun scripts/docs-generate.mjs --check` exits 0 and the `G1` log line records
   `bun scripts/run-root-suite.mjs` with its 16 pre-existing failures reproduced at
   `1fa39fe1`.
-- **AC15 (S14)** — the session entry exists: `ls .agentic-workflow/journal/*feat-408-mechanization-inventory-narrative-local.md | wc -l` matches 1.
+- **AC15 (S14)** — the session entry is in the journal itself, not a pending
+  fragment: `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md`
+  matches 1 and `ls .agentic-workflow/journal/*408-mechanization-inventory*`
+  matches 0.
 - **AC16 (S15)** — the roadmap row was written by the emitter: the
   `roadmap rowUpsert` receipt (`ok: true`, exit 0) is recorded as an `E` line,
   and `rg -c 'INVENTORY.md' docs/ROADMAP.md` matches 1.
+- **AC17 (S16 · D1)** — the aggregator and the gate agree:
+  `bun scripts/log-immutability.mjs --base main` exits 0 and reports
+  `0 violations`, and its suite reports 19 pass / 0 fail on a node-capable `PATH`.
+- **AC18 (S16 · item 3)** — check 13 is grammatical and current:
+  `rg -c 'for orphan pages|propose $' skills/audit-docs/SKILL.md` matches 0,
+  `bun scripts/skill-lint.mjs --skill audit-docs` exits 0 and
+  `bun scripts/check-skill-context.mjs` exits 0.
+- **AC19 (S16 · PR)** — the unit is opened as a PR: `gh pr view --json url` for
+  the branch returns a URL, recorded in `## References`.
 
 ## Tasks
 
@@ -207,13 +235,25 @@ exits 0.
   emitter (validator: `bun scripts/roadmap-settle.mjs` exits 0 and `rg -c 'INVENTORY.md' docs/ROADMAP.md` matches 1)
   (Implements: S9, S15)
   Relevant files: docs/ROADMAP.md
-- P4 — Write the session entry through the journal carrier's own writer (the
-  only legal path: the aggregator owns the log file) (validator: `ls .agentic-workflow/journal/*feat-408-mechanization-inventory-narrative-local.md | wc -l` matches 1)
+- P4 — Write the session entry through the journal carrier, whose aggregator
+  consumes it into the journal (validator: `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` matches 1)
   (Implements: S14)
-  Relevant files: .agentic-workflow/journal/
+  Relevant files: docs/LOGS.md
 - P5 — Run the deterministic gate, record the receipts and close the obligations
-  ledger (validator: `bun scripts/run-root-suite.mjs` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0)
+  ledger (validator: `bun scripts/docs-generate.mjs --check` exits 0 and the log records the root suite's verdict)
   (Implements: S5, S9, S12, S13)
+  Relevant files: docs/features/107-mechanization-inventory/SPEC.md
+- P6 — Fix D1: aggregate the entry into the journal and make the gate accept the
+  aggregator's separator (validator: `bun scripts/log-immutability.mjs --base main` exits 0)
+  (Implements: S14, S16)
+  Relevant files: scripts/log-immutability.mjs, scripts/log-immutability.test.mjs, docs/LOGS.md
+- P7 — Repair `audit-docs` check 13 against what ships, with its changeset
+  (validator: `bun scripts/skill-lint.mjs --skill audit-docs` exits 0 and `bun scripts/lint-changeset.mjs` exits 0)
+  (Implements: S16)
+  Relevant files: skills/audit-docs/SKILL.md, .changeset/408-mechanization-inventory.md
+- P8 — Push the branch and open the PR against `main`
+  (validator: `gh pr view --json url -q .url` prints a URL and `rg -c 'pull/' docs/features/107-mechanization-inventory/SPEC.md` matches 1)
+  (Implements: S16)
   Relevant files: docs/features/107-mechanization-inventory/SPEC.md
 
 ### Planning evidence
@@ -248,7 +288,11 @@ exits 0.
 | O11 | S11 | Every multi-step procedure with one judgment branch is split into its deterministic sub-steps plus a row naming the branch. | P2 | P2 | author (inline) | `rg -c '^\| [A-Z]{2}[0-9]{2} \|.*mixed' docs/features/107-mechanization-inventory/INVENTORY.md` matches 17, and every such row's reason contains `branch:` | §2 mixed count and the rows | verified |
 | O12 | S12 | No `review-change`/`audit-pr`/fold run touches this unit. | P5 | P5 | author (inline) | `rg -c '^- \*\*R[0-9]' docs/features/107-mechanization-inventory/SPEC.md` matches 0 | the count | verified |
 | O13 | S13 | The deterministic gate runs at the delivered head and every red it reports is reproduced at the base. | P5 | P5 | author (inline) | `bun scripts/docs-generate.mjs --check` exits 0; `G1` records the root suite's 62 pass / 16 fail with the same 16 reproduced at `1fa39fe1` | the `G1` line with both runs | verified |
-| O14 | S14 | The session entry is written before the handoff, through the carrier's legal writer. | P4 | P4 | author (inline) | `ls .agentic-workflow/journal/*feat-408-mechanization-inventory-narrative-local.md \| wc -l` matches 1 | the fragment path | verified |
+| O14 | S14 | The session entry reaches the journal itself before the handoff. | P4 | P4 | author (inline) | `rg -c '^## .*feat-408-mechanization-inventory' docs/LOGS.md` matches 1 | the appended block | verified |
+ docs/LOGS.md` matches 1 | the appended block | verified |
+| O16 | S16 | The aggregator's own output passes the gate that judges it (D1), pinned red-first. | P6 | P6 | author (inline) | `bun scripts/log-immutability.mjs --base main` exits 0; its suite reports 19 pass / 0 fail | `E11`/`G3` lines and the two commits (test red, fix green) | verified |
+| O17 | S16 | `audit-docs` check 13 reads as one grammatical, current check. | P7 | P7 | author (inline) | `bun scripts/skill-lint.mjs --skill audit-docs` exits 0 and `bun scripts/lint-changeset.mjs` exits 0 | `E12` line | verified |
+| O18 | S16 | The unit is opened as a PR against `main`. | P8 | P8 | author (inline) | `gh pr view --json url` prints a URL | the URL in `## References` | verified |
 | O15 | S15 | The roadmap row is written through the emitter, never by hand. | P3 | P3 | author (inline) | the `roadmap rowUpsert` receipt prints `ok: true` and exits 0 | the receipt (`E` line) | verified |
 
 ## Triaged steps
@@ -288,20 +332,7 @@ None — no review pass ran (S12).
 - **E2** — 2026-11-09, `bun scripts/docs-generate.mjs --check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale · 0 orphaned`, `verdict: PASS` (at `1fa39fe1`).
 - **E3** — 2026-11-09, `bun scripts/roadmap-settle.mjs` · exit 0 · `164 unit docs checked`, `verdict: PASS`, `violations: 0` (at `1fa39fe1`).
 
-## Next
 
-The owner's verdict on the handoff. If the classification stands, promote the
-top-ranked candidates to their own roadmap rows, one extraction per unit; if a
-row is misclassified, the correction is a two-line edit in `INVENTORY.md` §3
-plus its score — never a rewrite of the method.
-
-## References
-
-- Issue [#408](https://github.com/gtrabanco/agentic-workflow/issues/408);
-  roadmap row 107 (`docs/ROADMAP.md` § Features).
-- The inventory: [`INVENTORY.md`](INVENTORY.md).
-- Feeds the pilot issue and all follow-up extraction units (S10): roadmap
-  row 109 (the folded #410/#411/#412/#414 chain).
 
 - **D1** — 2026-11-09, the session entry is written through the journal carrier's
   own writer (`.agentic-workflow/journal/*-narrative-local.md`), not by
@@ -309,6 +340,7 @@ plus its score — never a rewrite of the method.
   aggregator as that file's only legal writer, so the letter of S14 ("manual
   append") would have reddened the gate S13 orders me to run. The entry exists
   before the handoff — the requirement's substance — via the declared writer.
+  Superseded by D3: the entry was aggregated into the journal itself.
 - **D2** — 2026-11-09, the computed `passive` tier says a passive unit carries no
   unit doc; the governing request (S1–S15) orders the ledgers frozen in this
   folder. The request wins (instruction precedence), the deviation is recorded
@@ -326,5 +358,50 @@ plus its score — never a rewrite of the method.
   rows, 253-row priority ranking, residue table, limits and receipts · commit `a3ecba02`.
 - **P3** — 2026-11-09, roadmap row 107 written by the emitter and the generated
   projection re-rendered · commit `7b5027d3`.
-- **P4** — 2026-11-09, session entry written through the journal writer:
-  `.agentic-workflow/journal/20261109T153901Z-feat-408-mechanization-inventory-narrative-local.md`.
+- **P4** — 2026-11-09, session entry written through the journal writer (a
+  fragment at the time; superseded by P6, which aggregated it into `docs/LOGS.md`).
+- **L2** — 2026-11-09, the correction, verbatim:
+  ```
+  Arregla 1 (D1), 3 y abre la pr
+  ```
+- **D3** — 2026-11-09, D1 resolved (S16 item 1). The entry was aggregated into
+  `docs/LOGS.md` by the aggregator CLI over a carrier holding only this
+  session's fragment (`journal aggregate --journal-dir .agentic-workflow/tmp/agg-408`),
+  the fragment was consumed, and the commit carries the aggregator's own
+  committer identity — the workflow's, not a borrowed environment. That exposed
+  the real defect: `scripts/log-immutability.mjs` tested the raw range suffix for
+  the `## ` heading while the aggregator writes a blank-line separator first, so
+  the gate reddened on the aggregator's own output. Fixed red-first — test
+  `6e3d9ea7` observed red (18 pass / 1 fail), fix `d41f7844` observed green
+  (19 pass / 0 fail). S14 now holds literally: the entry is in the journal and
+  nothing is pending.
+- **D4** — 2026-11-09, check 13 repaired (S16 item 2) against what ships rather
+  than by restoring the retired `generate-docs` command: the check names the
+  renderer's own header, applies the orphan/stale criteria only to pages that
+  carry `source-unit`/`updated`, answers `n/a — no provenance fields` otherwise,
+  and points the refresh at `bun scripts/docs-generate.mjs`.
+- **E11** — 2026-11-09, `agentic-workflow journal aggregate --journal-dir .agentic-workflow/tmp/agg-408 --log docs/LOGS.md` · exit 0 · `{"ok":true,"appended":["20261109T153901Z-feat-408-mechanization-inventory-narrative-local.md"],"removed":["20261109T153901Z-feat-408-mechanization-inventory-narrative-local.md"],"fragments":1}`.
+- **E12** — 2026-11-09, `bun scripts/skill-lint.mjs --skill audit-docs` · exit 0 · `0 finding(s)`, `verdict: PASS`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 29 skills`; `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/version-parity-gate.mjs --content --base main` · exit 0 · `VERDICT: PASS`.
+- **E13** — 2026-11-09, `bun scripts/log-immutability.mjs --base main` · exit 0 · `0 violations`, `verdict: PASS`; the suite reports `19 pass / 0 fail`.
+- **G3** — 2026-11-09, `PATH=<bun-backed node shim> bun scripts/run-root-suite.mjs` · exit 1 at head `d41f7844c7617c5460e7f70dd21f32fa097f533f` · 95 of 96 suites pass; the single failure is `scripts/invocation-drift.test.mjs`, which asserts node-runner semantics for a `node --test` skip and therefore fails only because the shim replaces `node` with bun (this machine has no node binary).
+- **G4** — 2026-11-09, the same suite with no shim · exit 1 at head `d41f7844c7617c5460e7f70dd21f32fa097f533f` · 16 suites fail, every one of them spawning `node`; the identical set fails at `1fa39fe1`, so none of it is this change's regression.
+- **P6** — 2026-11-09, D1 fixed: the entry aggregated into the journal, the
+  gate made to accept the aggregator's separator · commits `6e3d9ea7` (red) and
+  `d41f7844` (green).
+- **P7** — 2026-11-09, `audit-docs` check 13 repaired with its changeset;
+  `skill-lint`, the context budgets, the changeset lint and the version-parity
+  gate all green.
+## Next
+
+The owner's verdict on the handoff. If the classification stands, promote the
+top-ranked candidates to their own roadmap rows, one extraction per unit; if a
+row is misclassified, the correction is a two-line edit in `INVENTORY.md` §3
+plus its score — never a rewrite of the method.
+
+## References
+
+- Issue [#408](https://github.com/gtrabanco/agentic-workflow/issues/408);
+  roadmap row 107 (`docs/ROADMAP.md` § Features).
+- The inventory: [`INVENTORY.md`](INVENTORY.md).
+- Feeds the pilot issue and all follow-up extraction units (S10): roadmap
+  row 109 (the folded #410/#411/#412/#414 chain).
