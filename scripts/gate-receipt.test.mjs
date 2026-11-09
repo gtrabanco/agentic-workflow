@@ -119,9 +119,9 @@ const run = (root, argv) =>
 
 const receiptOf = (root) => JSON.parse(fs.readFileSync(path.join(root, GATE_RECEIPT_PATH), "utf8"));
 
-test("gate-receipt: the manifest closure signs gate inputs and never signs build output or dependencies", () => {
+test("gate-receipt: the manifest closure signs gate inputs and never signs build output or dependencies", async () => {
   const root = toyProject();
-  const entries = buildManifest(root);
+  const entries = await buildManifest(root);
   const paths = entries.map((entry) => entry.path);
   for (const required of ["bun.lock", "package.json", "scripts/local-gate.mjs", "skills/demo/SKILL.md", "docs/ROADMAP.md", "packages/demo/src/index.js", "packages/demo/test/index.test.mjs"]) {
     assert.ok(paths.includes(required), `closure signs ${required}`);
@@ -152,10 +152,10 @@ test("gate-receipt: fragment bounding is deterministic, ANSI-free and capped", (
   assert.equal(boundedFragments("   \n\n  ").length, 0);
 });
 
-test("gate-receipt: assembleReceipt marks duration and timestamp as provenance and keeps the log out", () => {
+test("gate-receipt: assembleReceipt marks duration and timestamp as provenance and keeps the log out", async () => {
   const root = toyProject();
-  const entries = buildManifest(root);
-  const receipt = assembleReceipt({
+  const entries = await buildManifest(root);
+  const receipt = await assembleReceipt({
     root,
     entries,
     argv: ["node", "gate.mjs"],
@@ -253,13 +253,13 @@ test("gate-receipt: freshness ignores the HEAD sha and unsigned files, and flips
   assert.match(stale.stdout, /route: re-run/u);
 });
 
-test("gate-receipt: a missing or invalid receipt is a blocker, not an assumption", () => {
+test("gate-receipt: a missing or invalid receipt is a blocker, not an assumption", async () => {
   const root = toyProject();
   const missing = run(root, ["verify", "--root", root]);
   assert.equal(missing.status, GATE_VERIFY_EXITS.missing);
   assert.match(missing.stdout, /status: missing/u);
 
-  const judgement = judgeGateReceipt({ root });
+  const judgement = await judgeGateReceipt({ root });
   assert.equal(judgement.status, "missing");
   assert.equal(judgement.consumed, false);
   assert.equal(judgement.verdict, "fail");
@@ -270,23 +270,35 @@ test("gate-receipt: a missing or invalid receipt is a blocker, not an assumption
   fs.writeFileSync(path.join(root, GATE_RECEIPT_PATH), '{"contract":"nope"}\n');
   const invalid = run(root, ["verify", "--root", root]);
   assert.equal(invalid.status, GATE_VERIFY_EXITS.invalid);
-  assert.equal(judgeGateReceipt({ root }).status, "invalid");
+  assert.equal((await judgeGateReceipt({ root })).status, "invalid");
 });
 
 test("gate-receipt: the audit-pr gate blocks on a missing or stale receipt", async () => {
-  const { GATE_NAMES, auditVerdict } = await import("./audit-pr-gate.mjs");
+  const { GATE_NAMES, auditVerdict, gateReceiptGate } = await import("./audit-pr-gate.mjs");
+  const { renderReceiptBody } = await import("./review-receipt.mjs");
   assert.ok(GATE_NAMES.includes("gate-receipt"), "the gate joins the closed audit set");
 
   const root = toyProject();
-  const missing = judgeGateReceipt({ root });
+  const missing = await judgeGateReceipt({ root });
   assert.equal(missing.verdict, "fail");
 
+  // The CLI helper reads the envelope and fails closed on the missing file.
+  assert.equal(gateReceiptGate({ root, receipt: null }), "fail");
+
+  const sha = "a".repeat(40);
+  const receipt = renderReceiptBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" });
   const allPass = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
   const blocked = auditVerdict({
-    comments: [{ body: `<!-- review-change:pass sha=${"a".repeat(40)} -->` }],
-    headSha: "a".repeat(40),
+    comments: [{ body: receipt }],
+    headSha: sha,
     gates: { ...allPass, "gate-receipt": missing.verdict },
   });
   assert.equal(blocked.verdict, "BLOCKED");
   assert.ok(blocked.blockers.some((blocker) => blocker.includes("gate-receipt")));
+
+  // And a current, passing envelope is what lets the same gate pass.
+  const root2 = toyProject();
+  const gate = writeGate(root2, [{ id: "root-suite", status: "passed" }]);
+  assert.equal(run(root2, ["run", "--gate", gate, "--root", root2]).status, 0);
+  assert.equal(gateReceiptGate({ root: root2 }), "pass");
 });
