@@ -420,6 +420,10 @@ it has open work. No triage block reorders the frozen task list.
   `resumed true`, `phases 3`, `reexecuted []`; `--kill-during stage-2` attempt
   exit **137**, then `resumed true`, `phases 4`,
   `per_stage {stage-1: 1, stage-2: 2, stage-3: 1}`.
+- **G5** — 2026-11-09, HEAD 2b6059eb · `bun scripts/local-gate.mjs --skip-network --push-base
+  1fa39fe1` · exit 0 · `local-gate: PASS — 13 step(s)`; the same hook run gated
+  the push, and PR [#485](https://github.com/gtrabanco/agentic-workflow/pull/485)
+  is open against `main`.
 - **G1** — 2026-11-09, HEAD 9c40e590 · `bun scripts/version-parity-gate.mjs
   --content --base 1fa39fe1` · exit 0 · `changeset-intent` route,
   `VERDICT: PASS`.
