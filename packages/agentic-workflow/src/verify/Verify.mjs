@@ -15,7 +15,10 @@
  *                      or the sibling `planning-obligations.md`) closed;
  *                      receipt marks (`REVIEW-RAN` / `GATE-RAN` / `R`/`G`
  *                      log lines) carry a resolvable 40-hex HEAD sha and no
- *                      future-dated stamp.
+ *                      future-dated stamp; the tree cross-checks (issue
+ *                      #227's 2026-11-03 re-scope residual) — a root-relative
+ *                      path citation exists in the tree and a gate citation
+ *                      resolves to something published.
  *   legacy only      — the Evidence table's columns; the Progress-log entry
  *                      pattern.
  *   spec-ref only    — Log lines carry a kind token from the closed set.
@@ -29,6 +32,27 @@
  *
  * Read-only: verify writes nothing. Refusals carry a closed violation-code
  * vocabulary — new checks append codes, never rename them.
+ *
+ * Tree cross-checks (issue #227, injected `pathExists`/`rootHasDir`/`gateKnown`):
+ * the 2026-11-03 re-scope's residual half — "referenced paths exist, cited
+ * gates are the published ones". The claim grammar is closed and lexical:
+ *   path claim — an inline code span (outside fenced blocks) with no
+ *     whitespace and no `{ } < > | *` character, containing a slash, ending in
+ *     a known extension, optionally followed by a `:line`/`:Lline` citation
+ *     suffix, whose FIRST segment is a real directory at the repo root.
+ *     Everything else — context-relative shorthand (`src/…`), brace expansion
+ *     (`{a,b}.ts`), commands, branch names, URLs — is not a claim a verifier
+ *     can decide, so it is never checked. Unresolvable != absent is a
+ *     deliberate boundary: the check refuses what the tree disproves, not
+ *     what it cannot interpret.
+ *   gate claim — an inline span that is a bare kebab-case id immediately
+ *     followed by the word "gate" (`the `phase-lint-rules` gate`). The id must
+ *     resolve to something published: the repo's sources decide (the CLI
+ *     builds the set from the gate inventory, audit-pr's `GATE_NAMES`, existing
+ *     skills and script stems); the module only takes `gateKnown` injected.
+ * With `null` deps (no repo context, `--no-git`) a cross-check is skipped and
+ * its name stays out of the receipt's `checks` — skipped, never silently
+ * passed: the same contract `headExists` established for sha resolution.
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -54,6 +78,15 @@ const SHA_40 = /^[0-9a-f]{40}$/u;
 const DATE_PREFIX = /^- \*\*(?:[A-Z]\d+|L\d+[a-z]?)\*\* — (\d{4}-\d{2}-\d{2})/;
 const LOG_LINE = /^- \*\*([A-Z])(\d+[a-z]?)\*\* —/;
 const RECEIPT_HEAD = /\bHEAD[ \t]+([0-9a-f]{6,64}[0-9a-f…]*|\b)/giu;
+
+/** Tree cross-checks (issue #227): the closed path-claim and gate-claim shapes. */
+const PATH_EXTENSIONS = new Set([
+  "md", "mdx", "mjs", "cjs", "js", "mts", "cts", "ts", "tsx", "jsx",
+  "json", "yml", "yaml", "txt", "sh", "html", "css",
+]);
+const PATH_CLAIM = /^([A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.@+-]+)+)\.([A-Za-z0-9]{1,5})(?::(?:\d+|L\d+))?$/u;
+const NOT_A_PATH = /[\s{}<>|*]/u;
+const GATE_CLAIM = /`([a-z0-9][a-z0-9-]{0,63})` gate\b/gu;
 
 const isRecord = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 
@@ -218,12 +251,66 @@ function checkLogKinds(text, shape, out) {
 }
 
 /**
- * verifyUnitDoc({ text, path, headExists?, now?, siblingDir? }) — the
- * verifier's whole read. Returns `{ contract, path, shape, checks, ok,
- * violations }`; `ok` is false exactly when `violations` is non-empty.
- * Writes nothing.
+ * Inline code spans outside fenced blocks. Verbatim quotes in the Log live in
+ * fences and are never scanned — a quote is evidence, not a claim of the
+ * quoting doc.
  */
-export function verifyUnitDoc({ text, path, headExists = null, now = null, siblingDir = null }) {
+function inlineSpans(text) {
+  const spans = [];
+  let fenced = false;
+  for (const line of text.split("\n")) {
+    if (/^\s*```/u.test(line)) {
+      fenced = !fenced;
+      continue;
+    }
+    if (fenced) continue;
+    for (const m of line.matchAll(/`([^`\n]+)`/gu)) spans.push(m[1]);
+  }
+  return spans;
+}
+
+function checkCitations(text, { pathExists, rootHasDir, gateKnown }, out) {
+  if (pathExists && rootHasDir) {
+    for (const span of inlineSpans(text)) {
+      if (NOT_A_PATH.test(span)) continue;
+      const m = span.match(PATH_CLAIM);
+      if (!m || !PATH_EXTENSIONS.has(m[2].toLowerCase())) continue;
+      // PATH_CLAIM's group 1 stops before the extension dot; the claim is the
+      // whole file path, with the citation suffix (`:line`) already dropped.
+      const target = `${m[1]}.${m[2]}`;
+      if (!rootHasDir(m[1].split("/")[0])) continue;
+      if (!pathExists(target)) {
+        out.push(violation("cited-path-missing", `cited path does not exist in the tree: ${span}`));
+      }
+    }
+  }
+  if (gateKnown) {
+    // Rebuild the fence state instead of reusing inlineSpans: the gate claim
+    // is a span-plus-following-word shape, so it needs the surrounding text.
+    let stripped = "";
+    let fenced = false;
+    for (const line of text.split("\n")) {
+      if (/^\s*```/u.test(line)) {
+        fenced = !fenced;
+        continue;
+      }
+      if (!fenced) stripped += line + "\n";
+    }
+    for (const m of stripped.matchAll(GATE_CLAIM)) {
+      if (!gateKnown(m[1])) {
+        out.push(violation("cited-gate-unknown", `gate citation resolves to nothing published: ${m[1]}`));
+      }
+    }
+  }
+}
+
+/**
+ * verifyUnitDoc({ text, path, headExists?, now?, siblingDir?, pathExists?,
+ * rootHasDir?, gateKnown? }) — the verifier's whole read. Returns `{ contract,
+ * path, shape, checks, ok, violations }`; `ok` is false exactly when
+ * `violations` is non-empty. Writes nothing.
+ */
+export function verifyUnitDoc({ text, path, headExists = null, now = null, siblingDir = null, pathExists = null, rootHasDir = null, gateKnown = null }) {
   const violations = [];
   if (typeof text !== "string" || text.trim() === "") {
     return { contract: VERIFY_CONTRACT_ID, path, shape: null, checks: [], ok: false, violations: [violation("empty-document", "the document is empty")] };
@@ -264,6 +351,7 @@ export function verifyUnitDoc({ text, path, headExists = null, now = null, sibli
   checkReceipts(text, { headExists, nowMs }, violations);
   checkLogKinds(text, shape, violations);
   if (shape === null || shape === "legacy") checkLegacyTables(text, violations);
+  checkCitations(text, { pathExists, rootHasDir, gateKnown }, violations);
 
   const checks = [
     "sections",
@@ -271,6 +359,8 @@ export function verifyUnitDoc({ text, path, headExists = null, now = null, sibli
     "receipt-marks",
     shape === "spec-by-reference" ? "log-kinds" : "evidence-columns+progress-entries",
   ];
+  if (pathExists && rootHasDir) checks.push("cited-paths");
+  if (gateKnown) checks.push("cited-gates");
 
   return {
     contract: VERIFY_CONTRACT_ID,
