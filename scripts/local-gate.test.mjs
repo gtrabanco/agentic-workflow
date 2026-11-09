@@ -68,6 +68,9 @@ test("every former remote check survives as a step, and the ids are unique", () 
     "version-parity-content",
     "docs-generated-projection",
     "journal-carrier-check",
+    "temp-hygiene",
+    "tmp-gc",
+    "worktree-guard",
     "schema-node-compat",
     "pi-node-compat",
     "pi-compat-guard",
@@ -549,8 +552,14 @@ test("--push-base with an empty verdict plans the gate without the test steps", 
       "--repo", dir, "--push-base", "HEAD", "--dry-run", "--skip-network",
     ]);
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(plannedSteps(result.stdout), ["version-parity-content", "docs-generated-projection", "journal-carrier-check"],
-      "only the offline non-test steps survive an empty impact set");
+    assert.deepEqual(plannedSteps(result.stdout), [
+      "version-parity-content",
+      "docs-generated-projection",
+      "journal-carrier-check",
+      "temp-hygiene",
+      "tmp-gc",
+      "worktree-guard",
+    ], "only the offline non-test steps survive an empty impact set");
     assert.match(result.stdout, /skipping .*test step/, "the skip names what it skipped and why");
     assert.match(result.stdout, /test-impact/);
   } finally {

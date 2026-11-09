@@ -124,7 +124,9 @@ export async function runSuites({ suites: files, jobs, bail = false, spawnSuite,
 // Bun uses `bun test <files>` (subcommand), Node uses `node --test <files>` (flag).
 // Bun defaults to a 5-second per-test timeout; budget 60s to cover bun→bun spawn
 // overhead and the full-history git walks on tests that are fast in node but slow
-// under bun (node keeps its no-default timeout model).
+// under bun. Node keeps no default at all — the incident beside this file saw a
+// hung suite eat 6.4 GB for over an hour — so the node leg pins the same 60s
+// budget with `--test-timeout` (issue #476).
 const isBun = process.execPath.includes("bun");
 const childEnv = scrubGitLocator({
   ...process.env,
@@ -136,7 +138,7 @@ const childEnv = scrubGitLocator({
 const argvFor = (file, bail) =>
   isBun
     ? ["test", "--timeout=60000", ...(bail ? ["--bail=1"] : []), file]
-    : ["--test", file];
+    : ["--test", "--test-timeout=60000", file];
 
 function spawnReal(file, bail, signal) {
   const child = spawn(process.execPath, argvFor(file, bail), {
