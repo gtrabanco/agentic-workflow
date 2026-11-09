@@ -32,3 +32,4 @@ if (process.argv.includes("--check")) {
 
 writeFileSync(target, text, "utf8");
 process.stdout.write("wrote config.schema.json\n");
+process.exit(0);
