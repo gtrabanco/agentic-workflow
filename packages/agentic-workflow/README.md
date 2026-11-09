@@ -34,7 +34,7 @@ writing anything**.
 | Command | What it does |
 |---|---|
 | `unit-doc <NN-slug> <op>` | Typed unit-document service: `create`, `setSection`, `evidence`, `progress`, `validate` — schema-checked, unknown sections refused |
-| `roadmap <op>` | Roadmap writer: `rowUpsert` and `annotate` take a table path, and `roadmap check <unit-doc> [--roadmap <f>] [--index <f>] [--json]` returns named violation codes (0 clean · 1 violations · 2 usage) |
+| `roadmap <op>` | Roadmap writer: `rowUpsert` and `annotate` take a table path — `annotate` appends its note inside the row's description cell on the same physical line, never across a line break, because a newline ends the row and a renderer turns the tail into a malformed extra row — and `roadmap check <unit-doc> [--roadmap <f>] [--index <f>] [--json]` returns named violation codes (0 clean · 1 violations · 2 usage) |
 | `changelog [file] <json>` | Appends a changelog row through the writer (defaults to `./CHANGELOG.md`) |
 | `budgets [file] <json>` | Re-bases one context-budget ceiling with its growth source; a ceiling shrinkage without a growth source is refused |
 | `manifest [plugin.json] <op>` | `skillAdd` / `skillRemove` on the plugin manifest — the alphabetical machine-surface registration |

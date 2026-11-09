@@ -174,6 +174,9 @@ function digest(text) {
   return createHash("sha256").update(text, "utf8").digest("hex").slice(0, 8);
 }
 
+/** The block marker a gate inventory declares its rows under (owner:
+ *  `scripts/prose-gate-inventory.mjs`, which parses the same block). */
+const INVENTORY_MARKER = "prose-gate-inventory@1";
 /**
  * Every real file and directory under `root`, as root-relative paths — the
  * membership set the `verify` tree cross-checks resolve against (issue #227).
@@ -207,11 +210,44 @@ function collectTree(root) {
 }
 
 /**
+ * The `gate-id`s a gate inventory declares. Rows are `id | statement | …`
+ * lines inside the `prose-gate-inventory@1` fence — the shape
+ * `scripts/prose-gate-inventory.mjs` owns — and a project spelling the same
+ * rows as a markdown table (`| id | … |`) resolves the same way. The header
+ * cell, the `#` directives and every other table contribute nothing.
+ */
+function inventoryGateIds(text) {
+  const ids = [];
+  let fence = null;
+  let collecting = false;
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (fence === null) {
+      const opened = /^(```+|~~~+)/u.exec(trimmed);
+      if (opened) fence = opened[1];
+      continue;
+    }
+    if (trimmed.startsWith(fence)) {
+      fence = null;
+      collecting = false;
+      continue;
+    }
+    if (!collecting) {
+      if (trimmed === INVENTORY_MARKER) collecting = true;
+      continue;
+    }
+    const m = trimmed.match(/^\|?\s*([a-z0-9][a-z0-9-]*)\s*\|/u);
+    if (m && m[1] !== "gate-id") ids.push(m[1]);
+  }
+  return ids;
+}
+
+/**
  * The published-gate resolver for the `verify` gate citation check (issue
  * #227): a cited `` `id` gate `` must resolve to something this repository
  * publishes. Four sources, read fresh from the tree, never hard-coded here:
  *   1. the gate inventory's `gate-id` column (docs/workflow/GATE_INVENTORY.md,
- *      the prose-gate-inventory@1 block — every gate the workflow runs);
+ *      the `INVENTORY_MARKER` block — every gate the workflow runs);
  *   2. audit-pr's `GATE_NAMES` (scripts/audit-pr-gate.mjs, the receipt gates);
  *   3. existing skills (a doc may cite a skill's gate colloquially);
  *   4. existing script stems (scripts/<name>.mjs / <name>.test.mjs).
@@ -221,9 +257,8 @@ function collectTree(root) {
 function publishedGates(root) {
   const names = new Set();
   try {
-    for (const line of readFileSync(join(root, "docs", "workflow", "GATE_INVENTORY.md"), "utf8").split("\n")) {
-      const m = line.match(/^\| ([a-z0-9-]+) \|/u);
-      if (m && m[1] !== "gate-id" && !/^-+$/u.test(m[1])) names.add(m[1]);
+    for (const id of inventoryGateIds(readFileSync(join(root, "docs", "workflow", "GATE_INVENTORY.md"), "utf8"))) {
+      names.add(id);
     }
   } catch {}
   try {
