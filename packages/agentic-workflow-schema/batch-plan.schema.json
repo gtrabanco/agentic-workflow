@@ -1,21 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/batch-plan.schema.json",
-  "title": "agentic-workflow batch plan v1",
-  "description": "The deterministic batch scheduler's machine envelope (issue #449): parallel-execution batches over the live work graph, one lane per surface, facts only — the planner never launches.",
+  "title": "agentic-workflow batch plan v2",
+  "description": "The deterministic batch scheduler's machine envelope (issues #449 and #460): parallel-execution batches over the live work graph, one lane per surface, facts only — the planner never launches. v2 adds the lifecycle delta (`new_issues[]`, `closed_since[]`), the triage-readiness flag (`triaged`) and the `untriaged`/`soft-deps-open` reason kinds.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary"],
+  "required": ["contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "new_issues", "closed_since", "summary"],
   "properties": {
     "contract": { "const": "agentic-workflow/batch-plan" },
-    "version": { "const": 1 },
-    "schema": { "const": "batch-plan@1" },
+    "version": { "const": 2 },
+    "schema": { "const": "batch-plan@2" },
     "source_revision": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
     "degraded": { "type": "array", "items": { "type": "string", "pattern": "^unavailable-[a-z0-9-]+$" } },
     "batches": { "type": "array", "items": { "$ref": "#/definitions/batch" } },
     "blocked": { "type": "array", "items": { "$ref": "#/definitions/blocked" } },
     "launched": { "type": "array", "items": { "$ref": "#/definitions/launched" } },
     "findings": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "new_issues": { "type": "array", "items": { "$ref": "#/definitions/newIssue" } },
+    "closed_since": { "type": "array", "items": { "$ref": "#/definitions/closedSince" } },
     "summary": { "$ref": "#/definitions/summary" }
   },
   "definitions": {
@@ -54,12 +56,34 @@
           "additionalProperties": false,
           "required": ["kind", "detail"],
           "properties": {
-            "kind": { "enum": ["satisfied-inputs", "surface-conflict", "soft-ordered"] },
+            "kind": { "enum": ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"] },
             "detail": { "type": "string", "minLength": 1, "maxLength": 1024 }
           }
         },
         "size_hint": { "enum": ["light", "mixed", "heavy"] },
-        "claimed": { "type": "boolean" }
+        "claimed": { "type": "boolean" },
+        "triaged": { "type": "boolean" }
+      }
+    },
+    "newIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "title"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 512 }
+      }
+    },
+    "closedSince": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "title", "batch", "lane", "last_seen"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "batch": { "type": ["integer", "null"], "minimum": 0 },
+        "lane": { "type": ["string", "null"], "minLength": 1, "maxLength": 1024 },
+        "last_seen": { "type": "string", "minLength": 1, "maxLength": 64 }
       }
     },
     "blocked": {

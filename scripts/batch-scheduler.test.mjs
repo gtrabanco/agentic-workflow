@@ -93,14 +93,14 @@ const baseInput = (issues, root, overrides = {}) => ({
 
 // ── S2/O1 — the envelope exists, is shaped, and is deterministic ───────────
 
-test("S2: emits a batch-plan@1 envelope with batches, blocked and findings arrays", () => {
+test("S2: emits a batch-plan@2 envelope with batches, blocked and findings arrays", () => {
   const root = scratchRoot();
   try {
     fs.mkdirSync(path.join(root, "docs"), { recursive: true });
     fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"]))];
     const plan = buildBatchPlan(baseInput(issues, root));
-    assert.equal(plan.schema, "batch-plan@1");
+    assert.equal(plan.schema, "batch-plan@2");
     assert.equal(plan.source_revision, HEAD);
     assert.deepEqual(plan.degraded, []);
     assert.ok(Array.isArray(plan.batches));
@@ -495,6 +495,8 @@ test("L1: the state file persists the last-seen open-issue set (seen)", () => {
     assert.deepEqual(Object.keys(state.seen).sort(), ["10", "11"], "every open issue is last-seen recorded");
     assert.equal(state.seen["10"].title, "Alpha skill change");
     assert.equal(state.seen["11"].last_seen, "2026-11-09T00:00:00Z");
+    assert.equal(state.seen["10"].batch, 1, "a batched issue's seen entry carries its last batch");
+    assert.equal(state.seen["10"].lane, "skills/alpha", "…and its last lane (the last known row)");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -715,11 +717,13 @@ test("P4: a non-declared Dependencies table shape degrades declared, naming the 
 
 test("P4: extractProseDependencies parses the declared form and refuses every other shape", () => {
   const declared = extractProseDependencies(`## Dependencies\n\n| Depends on | Kind | Why |\n|---|---|---|\n| #10 | soft | order |\n| #11 | hard | blocks |\n`);
-  assert.deepEqual(declared, { soft: [10], proseHard: [11] }, "the declared form parses exactly as before");
+  assert.deepEqual(declared, { soft: [10], proseHard: [11], malformed: false }, "the declared form parses exactly as before");
   const nonDeclared = extractProseDependencies(featureTableBody);
-  assert.deepEqual(nonDeclared, { soft: [], proseHard: [] }, "any other shape is refused, never guessed");
+  assert.deepEqual(nonDeclared, { soft: [], proseHard: [], malformed: true }, "any other shape is refused, never guessed");
   const noSection = extractProseDependencies("## Where\n\n- `skills/x`\n");
-  assert.deepEqual(noSection, { soft: [], proseHard: [] });
+  assert.deepEqual(noSection, { soft: [], proseHard: [], malformed: false });
+  const noTable = extractProseDependencies("## Dependencies\n\nProse bullets, no table.\n");
+  assert.deepEqual(noTable, { soft: [], proseHard: [], malformed: false });
 });
 
 // ── S8 — no decision model anywhere in the path ────────────────────────────
@@ -781,7 +785,7 @@ test("CLI: --issues-file --root --no-state --json-only prints the envelope and e
     });
     assert.equal(run.status, 0, run.stderr);
     const plan = JSON.parse(run.stdout);
-    assert.equal(plan.schema, "batch-plan@1");
+    assert.equal(plan.schema, "batch-plan@2");
     assert.ok(!fs.existsSync(path.join(root, ".agentic-workflow", STATE_FILE_NAME)), "--no-state writes nothing");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
