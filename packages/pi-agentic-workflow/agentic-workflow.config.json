@@ -1,0 +1,351 @@
+{
+  "contract": "config-extension@1",
+  "key": "pi",
+  "file": "pi-agentic-workflow.json",
+  "description": "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "default": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "maxItems": 4
+              }
+            ]
+          },
+          "thinking": {
+            "type": "string",
+            "enum": [
+              "off",
+              "minimal",
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max",
+              "inherit"
+            ]
+          }
+        }
+      },
+      "commands": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "model": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1,
+                  "maxItems": 4
+                }
+              ]
+            },
+            "thinking": {
+              "type": "string",
+              "enum": [
+                "off",
+                "minimal",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max",
+                "inherit"
+              ]
+            }
+          }
+        }
+      },
+      "onUnavailableRoute": {
+        "type": "string",
+        "enum": [
+          "stop",
+          "inherit"
+        ]
+      },
+      "onSettle": {
+        "type": "string",
+        "enum": [
+          "keep",
+          "restore"
+        ]
+      },
+      "recommendedModels": {
+        "type": "boolean"
+      },
+      "profiles": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "model": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "minItems": 1,
+                      "maxItems": 4
+                    }
+                  ]
+                },
+                "thinking": {
+                  "type": "string",
+                  "enum": [
+                    "off",
+                    "minimal",
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max",
+                    "inherit"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "model": {
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1,
+                        "maxItems": 4
+                      }
+                    ]
+                  },
+                  "thinking": {
+                    "type": "string",
+                    "enum": [
+                      "off",
+                      "minimal",
+                      "low",
+                      "medium",
+                      "high",
+                      "xhigh",
+                      "max",
+                      "inherit"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "profileOrder": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "profileFallback": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "applyTo": {
+            "type": "string",
+            "enum": [
+              "flow",
+              "command"
+            ]
+          },
+          "resume": {
+            "type": "string",
+            "enum": [
+              "continue",
+              "restart"
+            ]
+          },
+          "retryAfterSeconds": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "passes": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "model": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1,
+                  "maxItems": 4
+                }
+              ]
+            },
+            "thinking": {
+              "type": "string",
+              "enum": [
+                "off",
+                "minimal",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max",
+                "inherit"
+              ]
+            }
+          }
+        }
+      },
+      "subagents": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "parallelism": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "serial",
+                  "auto"
+                ]
+              },
+              {
+                "type": "integer",
+                "minimum": 1
+              }
+            ]
+          },
+          "memoryCap": {
+            "type": "string",
+            "minLength": 1
+          },
+          "threadCap": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "stateFlow": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "backend": {
+            "type": "string",
+            "enum": [
+              "pi-state-flow"
+            ]
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "stopOn": {
+            "type": "string",
+            "enum": [
+              "command_settled"
+            ]
+          },
+          "onBackendMissing": {
+            "type": "string",
+            "enum": [
+              "noop",
+              "refuse"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "defaults": {
+    "default": {
+      "model": "inherit",
+      "thinking": "inherit"
+    },
+    "commands": {},
+    "onUnavailableRoute": "stop",
+    "onSettle": "keep",
+    "recommendedModels": true,
+    "profiles": {},
+    "profileOrder": [],
+    "profileFallback": {
+      "applyTo": "flow",
+      "resume": "continue",
+      "retryAfterSeconds": 86400
+    },
+    "passes": {},
+    "subagents": {},
+    "stateFlow": {
+      "enabled": false,
+      "backend": "pi-state-flow",
+      "commands": [
+        "execute-phase",
+        "fold-findings"
+      ],
+      "stopOn": "command_settled",
+      "onBackendMissing": "noop"
+    }
+  }
+}

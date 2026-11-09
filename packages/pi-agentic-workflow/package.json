@@ -33,7 +33,8 @@
     "skills",
     "package.json",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "agentic-workflow.config.json"
   ],
   "engines": {
     "node": ">=18",
@@ -66,5 +67,8 @@
   "devDependencies": {
     "@types/node": "26.6.6",
     "typescript": "7"
+  },
+  "agenticWorkflow": {
+    "config": "./agentic-workflow.config.json"
   }
 }

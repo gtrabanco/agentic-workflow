@@ -107,7 +107,7 @@ function session(wiring, { id = SESSION, reason = "quit", start = {}, shutdown =
 test("AW-01 off registers no listener at all and writes nothing", () => {
   const { root } = project();
   const pi = fakePi();
-  createAutoLogSessionWiring({ root, mode: "off" }).register(pi.pi);
+  createAutoLogSessionWiring({ root, enabled: false }).register(pi.pi);
   assert.deepEqual(pi.registered(), []);
   assert.equal(fs.existsSync(markerPath(root, SESSION)), false);
   assert.equal(fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8"), "# Session log\n\n");
@@ -116,7 +116,7 @@ test("AW-01 off registers no listener at all and writes nothing", () => {
 
 test("AW-02 one session writes the marker on start and exactly one entry on shutdown", () => {
   const { root, run } = project();
-  const wiring = createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW });
+  const wiring = createAutoLogSessionWiring({ root, enabled: true, now: NOW });
   const driven = session(wiring);
   const marker = readMarker(root, SESSION);
   assert.ok(marker, "session_start must record the marker");
@@ -137,7 +137,7 @@ test("AW-02 one session writes the marker on start and exactly one entry on shut
 
 test("AW-02b a shutdown reason outside the entry grammar is normalized, never dropped", () => {
   const { root, run } = project();
-  const wiring = createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW });
+  const wiring = createAutoLogSessionWiring({ root, enabled: true, now: NOW });
   const driven = session(wiring);
   const marker = readMarker(root, SESSION);
   driven.shutdown({ reason: "session_shutdown" });
@@ -154,7 +154,7 @@ test("AW-02b a shutdown reason outside the entry grammar is normalized, never dr
 
 test("AW-03 a second shutdown for the same session appends nothing", () => {
   const { root } = project();
-  const driven = session(createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW }));
+  const driven = session(createAutoLogSessionWiring({ root, enabled: true, now: NOW }));
   driven.shutdown();
   const once = fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8");
   driven.shutdown();
@@ -166,7 +166,7 @@ test("AW-04 a project without a journal did not opt in: no marker, no entry, no 
   const { root } = project({ journal: false });
   let published = 0;
   const publisher = { name: "spy", publish: () => { published += 1; return { ok: true }; } };
-  const driven = session(createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW, extraPublishers: [publisher] }));
+  const driven = session(createAutoLogSessionWiring({ root, enabled: true, now: NOW, extraPublishers: [publisher] }));
   assert.equal(fs.existsSync(markerPath(root, SESSION)), false);
   driven.shutdown();
   assert.equal(fs.existsSync(path.join(root, "docs/LOGS.md")), false, "the journal is never created");
@@ -182,7 +182,7 @@ test("AW-05 a marker left by another session is never adopted and never removed"
 
   // This session marks its own HEAD, commits, then shuts down: its range must be
   // the work it did, never the crashed marker's sha.
-  const wiring = createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW });
+  const wiring = createAutoLogSessionWiring({ root, enabled: true, now: NOW });
   const pi = fakePi();
   wiring.register(pi.pi);
   const ctx = { sessionManager: { getSessionId: () => SESSION } };
@@ -201,7 +201,7 @@ test("AW-05 a marker left by another session is never adopted and never removed"
 test("AW-06 a shutdown with no session_start wrote nothing — no entry from an unmarked session", () => {
   const { root } = project();
   const pi = fakePi();
-  createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW }).register(pi.pi);
+  createAutoLogSessionWiring({ root, enabled: true, now: NOW }).register(pi.pi);
   pi.fire("session_shutdown", { reason: "quit" }, { sessionManager: { getSessionId: () => SESSION } });
   assert.equal(fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8"), "# Session log\n\n");
   fs.rmSync(root, { recursive: true, force: true });
@@ -211,7 +211,7 @@ test("AW-07 a failing publisher keeps the local entry and never escapes shutdown
   const { root } = project();
   const wiring = createAutoLogSessionWiring({
     root,
-    mode: "mechanical",
+    enabled: true,
     now: NOW,
     extraPublishers: [
       { name: "boom", publish: () => { throw new Error("backend down"); } },
@@ -231,7 +231,7 @@ test("AW-08 the declared publisher receives the frozen payload, journal first", 
   const recorder = (name) => ({ name, publish: (facts) => { seen.push([name, facts]); return { ok: true }; } });
   const wiring = createAutoLogSessionWiring({
     root,
-    mode: "mechanical",
+    enabled: true,
     now: NOW,
     extraPublishers: [recorder("second")],
   });
@@ -249,11 +249,11 @@ test("AW-08 the declared publisher receives the frozen payload, journal first", 
 test("AW-09 the switch the config resolves to is the switch the wiring obeys", () => {
   const { root } = project();
   const off = fakePi();
-  createAutoLogSessionWiring({ root, mode: "off", now: NOW }).register(off.pi);
+  createAutoLogSessionWiring({ root, enabled: false, now: NOW }).register(off.pi);
   assert.deepEqual(off.registered(), [], "off registers nothing to obey it");
   assert.equal(fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8"), "# Session log\n\n");
 
-  session(createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW }), { id: "session-on" }).shutdown();
+  session(createAutoLogSessionWiring({ root, enabled: true, now: NOW }), { id: "session-on" }).shutdown();
   assert.match(fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8"), /auto \(quit\)/u);
   fs.rmSync(root, { recursive: true, force: true });
 });
@@ -265,7 +265,7 @@ test("AW-10 telemetry on with the log off writes the ledger row and no journal e
   const pi = fakePi();
   const telemetry = createTelemetryWiring({ root, enabled: true, now: () => NOW(), date: () => "2026-11-04", sessionId: () => "tel-1" });
   telemetry.register(pi.pi);
-  createAutoLogSessionWiring({ root, mode: "off", now: NOW }).register(pi.pi);
+  createAutoLogSessionWiring({ root, enabled: false, now: NOW }).register(pi.pi);
   assert.deepEqual(pi.registered(), ["session_shutdown", "session_start", "tool_execution_end", "turn_end", "turn_start"]);
   telemetry.noteCommand("unit-lane", ["394-auto-log-session"]);
   pi.fire("session_start", {}, { sessionManager: { getSessionId: () => "tel-1" } });
@@ -281,7 +281,7 @@ test("AW-10 telemetry on with the log off writes the ledger row and no journal e
 test("AW-11 the log on with telemetry off writes the entry and no ledger row", () => {
   const { root } = project({ ledger: true });
   const pi = fakePi();
-  createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW }).register(pi.pi);
+  createAutoLogSessionWiring({ root, enabled: true, now: NOW }).register(pi.pi);
   const ctx = { sessionManager: { getSessionId: () => SESSION } };
   pi.fire("session_start", {}, ctx);
   pi.fire("session_shutdown", { reason: "quit" }, ctx);
@@ -293,7 +293,7 @@ test("AW-11 the log on with telemetry off writes the entry and no ledger row", (
 test("AW-12 in a carrier project the entry goes to a fragment and docs/LOGS.md is untouched (issue #405, AC1)", () => {
   const { root, run } = project();
   fs.mkdirSync(path.join(root, ".agentic-workflow", "journal"), { recursive: true });
-  const wiring = createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW });
+  const wiring = createAutoLogSessionWiring({ root, enabled: true, now: NOW });
   const driven = session(wiring);
   const marker = readMarker(root, SESSION);
   assert.ok(marker, "session_start must record the marker");

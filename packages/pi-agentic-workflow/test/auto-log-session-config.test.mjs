@@ -1,75 +1,72 @@
-// auto-log-session-config.test.mjs — the `autoLogSession` switch (feature #394,
-// S1/S3), its strict schema and its resolution order.
+// auto-log-session-config.test.mjs — the `logSession` switch (issue #427,
+// absorbing #394): its boolean-like vocabulary, its strict publisher block and
+// its resolution across the two config files.
 //
-// Three rules this suite pins, all of them S1's and S3's own words:
-//
-//  - **`off` by default.** An absent block resolves to `off`, and an install that
-//    never mentions the switch writes nothing.
-//  - **Project → global.** The same order every routed model already follows:
-//    the project file wins, the global file is the fallback, the shipped default
-//    is the floor.
-//  - **The declared publisher is validated here, not at shutdown.** A malformed
-//    argv is a config problem the operator can see; discovering it while a
-//    session tears down would be the worst possible moment.
+// The switch now lives in the base `agentic-workflow.json` (feature config,
+// cross-tool), while the pi file keeps routing. This suite pins the loader's
+// half: the base file is read and normalized into the effective shape.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { DEFAULT_CONFIG } from "../dist/config/defaults.js";
-import { mergeConfigs } from "../dist/config/merge.js";
-import { parseConfigFile } from "../dist/config/schema.js";
-import { AUTO_LOG_SESSION_MODES } from "../dist/config/types.js";
+import { configFilePaths, loadConfig } from "../dist/config/load.js";
 
-const parse = (value) => parseConfigFile(JSON.stringify(value));
+const agentDir = "/fixture/agent";
+const cwd = "/fixture/repo";
+const paths = configFilePaths(agentDir, cwd);
+const readFrom = (map) => (path) => (path in map ? map[path] : null);
+const load = (map) => loadConfig({ agentDir, cwd, projectTrusted: true, readFile: readFrom(map) });
 
-test("ACFG-01 the shipped default is off and declares no publisher", () => {
-  assert.deepEqual(DEFAULT_CONFIG.autoLogSession, { mode: "off", publisher: null });
-  assert.deepEqual([...AUTO_LOG_SESSION_MODES], ["off", "mechanical"]);
+test("ACFG-01 the shipped default is disabled and declares no publisher", () => {
+  assert.deepEqual(DEFAULT_CONFIG.logSession, { enabled: false, publisher: null });
 });
 
-test("ACFG-02 an absent block resolves to off; a declared one is taken", () => {
-  assert.deepEqual(mergeConfigs({}, {}).autoLogSession, { mode: "off", publisher: null });
-  const merged = mergeConfigs({}, { autoLogSession: { mode: "mechanical" } });
-  assert.equal(merged.autoLogSession.mode, "mechanical");
-  assert.equal(merged.autoLogSession.publisher, null);
-});
-
-test("ACFG-03 the project file wins over the global file, field by field", () => {
-  const global = { autoLogSession: { mode: "mechanical", publisher: { command: ["global-publisher"] } } };
-  const project = { autoLogSession: { mode: "off" } };
-  const merged = mergeConfigs(global, project);
-  // The mode is the project's, and the publisher the project never mentions is
-  // still the global one: one switch, resolved per field, never wholesale.
-  assert.equal(merged.autoLogSession.mode, "off");
-  assert.deepEqual(merged.autoLogSession.publisher, { command: ["global-publisher"], timeoutMs: 5000 });
-  const flipped = mergeConfigs(global, {});
-  assert.equal(flipped.autoLogSession.mode, "mechanical");
-});
-
-test("ACFG-04 the mode vocabulary is closed", () => {
-  for (const mode of ["mechanical", "off"]) {
-    assert.equal(parse({ autoLogSession: { mode } }).ok, true, mode);
+test("ACFG-02 an absent block is off; the boolean-like values switch it", () => {
+  assert.deepEqual(load({}).config.logSession, { enabled: false, publisher: null });
+  for (const value of [true, 1, "on"]) {
+    assert.deepEqual(load({ [paths.globalBase]: JSON.stringify({ logSession: value }) }).config.logSession, { enabled: true, publisher: null });
   }
-  for (const mode of ["rich", "on", "true", ""]) {
-    const result = parse({ autoLogSession: { mode } });
-    assert.equal(result.ok, false, `${mode} must be refused`);
-    assert.match(result.ok ? "" : result.issues[0].message, /must be one of off, mechanical/u);
+  for (const value of [false, 0, "off"]) {
+    assert.deepEqual(load({ [paths.globalBase]: JSON.stringify({ logSession: value }) }).config.logSession, { enabled: false, publisher: null });
   }
 });
 
-test("ACFG-05 the block is strict: unknown keys and non-objects are refused", () => {
-  assert.equal(parse({ autoLogSession: { mode: "mechanical", capture: true } }).ok, false);
-  assert.equal(parse({ autoLogSession: "mechanical" }).ok, false);
-  assert.equal(parse({ autoLogSession: [] }).ok, false);
-  assert.equal(parse({ autoLogSession: { publisher: { nope: 1 } } }).ok, false);
-  assert.equal(parse({ autoLogSession: {} }).ok, true, "an empty block is the default, not an error");
+test("ACFG-03 the project base file wins over the global base file, field by field", () => {
+  const result = load({
+    [paths.globalBase]: JSON.stringify({ logSession: { enabled: true, publisher: { command: ["global-publisher"] } } }),
+    [paths.projectBase]: JSON.stringify({ logSession: { enabled: false } }),
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.problems));
+  // The switch is the project's; the publisher the project never mentions is
+  // still the global one.
+  assert.deepEqual(result.config.logSession, {
+    enabled: false,
+    publisher: { command: ["global-publisher"], timeoutMs: 5000 },
+  });
+});
+
+test("ACFG-04 the vocabulary is closed: the old mode string is refused", () => {
+  const refused = load({ [paths.globalBase]: JSON.stringify({ logSession: "mechanical" }) });
+  assert.equal(refused.ok, false);
+  assert.match(refused.problems[0].message, /does not match any allowed shape/);
+});
+
+test("ACFG-05 the block is strict: unknown keys and bad values are refused", () => {
+  for (const value of [{ publisher: { nope: 1 } }, { enabled: "yes" }, []]) {
+    const result = load({ [paths.globalBase]: JSON.stringify({ logSession: value }) });
+    assert.equal(result.ok, false, `${JSON.stringify(value)} must be refused`);
+  }
+  const empty = load({ [paths.globalBase]: JSON.stringify({ logSession: {} }) });
+  assert.equal(empty.ok, true, JSON.stringify(empty.problems));
+  assert.deepEqual(empty.config.logSession, { enabled: false, publisher: null });
 });
 
 test("ACFG-06 the declared publisher's argv and timeout are validated", () => {
-  const good = { autoLogSession: { mode: "mechanical", publisher: { command: ["curl", "-sS", "-d", "@-", "https://example.test/hook"], timeoutMs: 2500 } } };
-  const parsed = parse(good);
-  assert.equal(parsed.ok, true, parsed.ok ? "" : parsed.issues.map((issue) => issue.message).join("; "));
-  assert.deepEqual(parsed.config.autoLogSession.publisher, { command: ["curl", "-sS", "-d", "@-", "https://example.test/hook"], timeoutMs: 2500 });
+  const good = { logSession: { enabled: true, publisher: { command: ["curl", "-sS", "@-", "https://example.test/hook"], timeoutMs: 2500 } } };
+  const parsed = load({ [paths.globalBase]: JSON.stringify(good) });
+  assert.equal(parsed.ok, true, JSON.stringify(parsed.problems));
+  assert.deepEqual(parsed.config.logSession.publisher, { command: ["curl", "-sS", "@-", "https://example.test/hook"], timeoutMs: 2500 });
 
   const bad = [
     { command: [] },
@@ -82,16 +79,16 @@ test("ACFG-06 the declared publisher's argv and timeout are validated", () => {
     { timeoutMs: 1000 },
   ];
   for (const publisher of bad) {
-    const result = parse({ autoLogSession: { publisher } });
+    const result = load({ [paths.globalBase]: JSON.stringify({ logSession: { publisher } }) });
     assert.equal(result.ok, false, `${JSON.stringify(publisher)} must be refused`);
   }
 });
 
 test("ACFG-07 a publisher declared while the log is off is kept, not an error", () => {
-  // Two files, one decision each: the project turns logging off while the global
-  // file names a publisher. Nothing runs (the mode is off) and nothing is
-  // rewritten — the operator's global declaration is not ours to drop.
-  const merged = mergeConfigs({ autoLogSession: { publisher: { command: ["sink"] } } }, { autoLogSession: { mode: "off" } });
-  assert.equal(merged.autoLogSession.mode, "off");
-  assert.deepEqual(merged.autoLogSession.publisher, { command: ["sink"], timeoutMs: 5000 });
+  const result = load({
+    [paths.globalBase]: JSON.stringify({ logSession: { publisher: { command: ["sink"] } } }),
+    [paths.projectBase]: JSON.stringify({ logSession: { enabled: false } }),
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.problems));
+  assert.deepEqual(result.config.logSession, { enabled: false, publisher: { command: ["sink"], timeoutMs: 5000 } });
 });
