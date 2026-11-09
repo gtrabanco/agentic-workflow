@@ -288,6 +288,70 @@ surgery (workflow §4).
 - **D3** — 2026-11-09, owner-workflow interpretation (authority: S3): untriaged
   = roadmap fix-row status `idea`/`defined`/missing, per Decision D3; the RED
   corpus tests `idea` per S3's words. See Decision D3.
+- **D4** — 2026-11-09, correction of D3 before implementation (authority: the
+  sensor's own launch logic + the roadmap conventions): a **missing** roadmap
+  row carries no triage signal — the issue stays unmarked. Untriaged = a row
+  present with status below `planned`. In practice the only reachable
+  untriaged status is `idea`: `defined`+ implies a unit doc on disk, which
+  makes the issue launched (excluded from every lane). This kept the
+  differential surface minimal (only `idea` rows change behavior) and avoided
+  inventing a rule the issue never asked for.
+- **E1** — 2026-11-09, baseline at the cut head `6f5d5453`: `bun test
+  scripts/batch-scheduler.test.mjs` · exit 0 · 28 pass; `cd
+  packages/agentic-workflow-schema && bun run test` · exit 0 · 775 pass.
+- **E2** — 2026-11-09, RED corpus observed at commit `23e545ad`: `bun test
+  scripts/batch-scheduler.test.mjs` · exit 1 · 9 fail (the four gaps:
+  L1×4, T2×2, D3×1, P4×2 — one P4 pin passes trivially), 31 pass; `cd
+  packages/agentic-workflow-schema && bun run test` · exit 1 · 4 fail (the v2
+  contract), 772 pass.
+- **E3** — 2026-11-09, GREEN at commit `252a7bbf`: `bun test
+  scripts/batch-scheduler.test.mjs` · exit 0 · 40 pass; `cd
+  packages/agentic-workflow-schema && bun run test` · exit 0 · 776 pass.
+- **E4** — 2026-11-09, `bun test scripts/normative-drift.test.mjs` · exit 0 ·
+  21 pass; `bun scripts/check-skill-context.mjs` · exit 0 · PASS context
+  budgets: 29 skills (after trimming PLAN.md and the SKILL description to
+  budget).
+- **E5** — 2026-11-09, differential check (O12) in `mktemp -d /tmp/aw460-diff-*`
+  (removed after): base `6f5d5453` archive copy vs the change, identical
+  3-issue fixture through `buildBatchPlan` + `updateState` — the only diffs are
+  the declared set (version/schema token, `new_issues[]`/`closed_since[]`,
+  state `version` + `seen`). The run also caught a real defect before the
+  commit: `updateState` dropped the batch/lane from batched issues' `seen`
+  entries when `openIssues` was passed — fixed in `252a7bbf` and pinned by an
+  extended L1 assertion.
+- **E6** — 2026-11-09, `bun scripts/roadmap-settle.mjs` · exit 0 · 159 unit
+  docs checked, 0 violations (after the Fixes row's topic was corrected to
+  `batch-scheduler-verification` — the row's original `batch-scheduler-plan-fix`
+  slug-mismatched the unit folder and failed `roadmap-settle.test.mjs`'s
+  live-tree check).
+- **E7** — 2026-11-09, `bun scripts/local-gate.mjs` · exit 1 · FAILED at
+  root-suite only: `scripts/log-immutability.test.mjs` — the issue #468
+  red-first suite landed on main awaiting its implementation branch
+  (`feat/468-log-immutability-guard`, commit `fc6b20ca` not merged). Verified
+  pre-existing: the same suite fails identically on a base archive of
+  `6f5d5453`; the cascade FAILs under `--bail` (lane-era-lineage,
+  ledger-provenance, local-gate, unit-route, docs-generate) all pass
+  standalone and in a fail-fast-off root run. Every other gate step: exit 0.
+- **P1** — 2026-11-09, planning ledgers frozen (SPEC + the two M-size ledger
+  files) · commit `1c4c39fc`.
+- **P2** — 2026-11-09, RED corpus committed alone, observed failing (E2) ·
+  commit `23e545ad`.
+- **P3** — 2026-11-09, batch-plan@2 implemented: schema package (types,
+  vocabularies, validator, `batch-plan.schema.json` projection), script
+  (lifecycle delta, triage readiness, soft-deps-open caveat, fail-closed
+  parser, state `seen`), PLAN.md/SKILL.md grammar + guardrails — tests and
+  docs alongside behavior, observed green (E3/E4) · commit `252a7bbf`.
+- **P4** — 2026-11-09, indexes and state: README + docs/workflow/SKILLS.md
+  currency, roadmap `## Fixes` row (topic corrected + `in-progress`, hand edit
+  per PE-007 — no emitter exists for that table), changeset intent
+  (lint-changeset ok), `docs/generated/units.md` via the renderer
+  (`bun scripts/docs-generate.mjs`), this Log · commit <this commit>.
+- **G1** — 2026-11-09, final `bun scripts/local-gate.mjs` run · exit 1 ·
+  FAILED at root-suite only (E7's pre-existing #468 red); schema projection,
+  changeset lint, version parity, normative drift, context budgets, crate
+  suites (bun + node), docs-generated-projection: all exit 0. O14 stays open
+  on this evidence — the gate cannot exit 0 on main until #468's implementation
+  branch merges.
 
 ## Next
 
