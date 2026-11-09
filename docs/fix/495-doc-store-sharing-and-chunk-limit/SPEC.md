@@ -135,11 +135,23 @@ n/a — applied inline per the owner's instruction.
   ```
   `bunx @gtrabanco/agentic-workflow@canary doc --sync` debería de truncar automaticamente los ficheros, además hay que agregarle rutas que sean totalmente irrelevantes como .agentic-workflow/journal y si el usuario quiere añadir más manualmente debería poder vía archivo de configuración
   ```
+- **P1..P6** — 2026-11-09, the unit was re-implemented in one pass after the working tree was lost mid-session
+  (an ill-timed `git checkout -b` reset the tree; the original changes were unrecoverable). The re-implementation
+  followed the frozen decisions (D1-D6) verbatim; the red-first ordering was NOT re-derivable because the tests
+  and the implementation were re-landed together from conversation history — disclosed here rather than recorded
+  as a clean red/green pair. Commits: `f9161031` (spec), `f6e9c8e0` (repoId/shared store/config), `ab042ee5`
+  (auto-truncate + degradation), `e12a463c` (tests), `857ace54` (docs), `b7225220` (generated projection).
+- **E2** — 2026-11-09, `bun test test/doc.chunks.test.mjs test/doc.store.test.mjs test/doc.envelope.test.mjs` ·
+  exit 0 · 80 tests (18 chunker incl. 8 new D20 truncation cases; shared-store path, repoId, config validation,
+  envelope's `chunk-too-large` acceptance).
+- **E3** — 2026-11-09, `bun test test/doc` · exit 0 · **260 pass / 0 fail** (12 files). Live `doc --sync --json-only`
+  with the default exclusions: `files_scanned` 1110 → 1093, `chunks` 10044 → 10024 (the 17 `.agentic-workflow/journal`
+  fragments leave the corpus).
 - **E1** — 2026-11-09, measured probe of the live store: chunks of 149,963 chars (`docs/features/37-phase-lint-script/review-findings.md`) and 124,039 chars (`docs/ROADMAP.md`) exceed the `qwen3-embedding` 32,768-token context; the provider answers 400 `context_length_exceeded`; `isRetryable()` does not retry 4xx, so the pass degrades as `unavailable-embeddings-provider-down` with 0 embedded.
 
 ## Next
 
-Open the PR and get external verification.
+External verification of [PR #496](https://github.com/gtrabanco/agentic-workflow/pull/496), then its merge.
 
 ## References
 
