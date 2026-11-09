@@ -265,7 +265,7 @@ test("journal write: a mechanical fragment is exactly log render's bytes", () =>
   assert.equal(fs.readFileSync(receipt.path, "utf8"), renderEntry(facts));
 });
 
-// ── already registered — one entry per conversation (issue #468 S3) ─────
+// ── already registered — one entry per conversation per kind (issue #468 S3) ─
 
 test("journal write: an explicit session already registered is refused, never duplicated", () => {
   const repo = newRepo("registered");
@@ -284,28 +284,96 @@ test("journal write: an explicit session already registered is refused, never du
   assert.deepEqual(names(repo), ["20261108T123000Z-main-narrative-s1.md"], "no byte written");
 });
 
-test("journal write: the registered check spans kinds — a mechanical write for the same session is refused too", () => {
-  const repo = newRepo("registered-mixed");
-  const facts = {
-    timestamp: "2026-11-08T12:30Z",
-    branch: "main",
-    reason: "quit",
-    commits: { count: 1, range: "1a2b3c4d…9e8f7a6b" },
-    files: ["docs/LOGS.md"],
-  };
-  const factsPath = path.join(repo, "facts.json");
-  fs.writeFileSync(factsPath, `${JSON.stringify(facts)}\n`);
+// ── one entry per conversation per kind (issue #468 S3, correction batch 1) ─
+//
+// The auto-log names the session explicitly at shutdown (the Pi extension,
+// kind `mechanical`) and `/log-session` names the same session for its
+// narrative door, so a kind-wide refusal would block the shipped flow. The
+// writer's own grammar already says one entry per conversation PER KIND; these
+// cases pin the two orders a session really writes in, plus the boundary the
+// template SessionEnd hook needs (a second mechanical fragment it created
+// itself is never rewritten).
+
+const FACTS = {
+  timestamp: "2026-11-08T12:30Z",
+  branch: "main",
+  reason: "quit",
+  commits: { count: 1, range: "1a2b3c4d…9e8f7a6b" },
+  files: ["docs/LOGS.md"],
+};
+
+function factsFile(repo, label) {
+  const factsPath = path.join(repo, `facts-${label}.json`);
+  fs.writeFileSync(factsPath, `${JSON.stringify(FACTS)}\n`);
+  return factsPath;
+}
+
+test("journal write: the auto-log's mechanical entry then the narrative door — both land, one entry per kind", () => {
+  const repo = newRepo("order-mechanical-first");
+  const mechanical = runCli(
+    ["journal", "write", "--kind", "mechanical", "--facts", factsFile(repo, "m"), "--session", "s1", "--timestamp", PINNED],
+    repo,
+  );
+  assert.equal(mechanical.status, 0, mechanical.stderr);
   const narrative = runCli(
-    ["journal", "write", "--kind", "narrative", "--summary", "The session's entry.", "--session", "s1", "--timestamp", PINNED],
+    ["journal", "write", "--kind", "narrative", "--summary", "The rich entry.", "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(narrative.status, 0, narrative.stderr);
+  assert.deepEqual(names(repo), ["20261108T123000Z-main-mechanical-s1.md", "20261108T133000Z-main-narrative-s1.md"]);
+});
+
+test("journal write: the narrative door then the shutdown's mechanical entry — both land", () => {
+  const repo = newRepo("order-narrative-first");
+  const narrative = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "The rich entry.", "--session", "s1", "--timestamp", PINNED],
     repo,
   );
   assert.equal(narrative.status, 0, narrative.stderr);
   const mechanical = runCli(
-    ["journal", "write", "--kind", "mechanical", "--facts", factsPath, "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    ["journal", "write", "--kind", "mechanical", "--facts", factsFile(repo, "m"), "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
     repo,
   );
-  assert.equal(mechanical.status, 2, mechanical.stdout);
-  assert.match(mechanical.stderr, /already registered/u);
+  assert.equal(mechanical.status, 0, mechanical.stderr);
+  assert.equal(names(repo).length, 2, "a conversation holds one entry per kind, in either order");
+});
+
+test("journal write: a second fragment of the same kind is refused, the first one's bytes untouched", () => {
+  const repo = newRepo("same-kind");
+  const first = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "First entry.", "--session", "s1", "--timestamp", PINNED],
+    repo,
+  );
+  assert.equal(first.status, 0, first.stderr);
+  const landed = fs.readFileSync(path.join(repo, JOURNAL_DIR, "20261108T123000Z-main-narrative-s1.md"), "utf8");
+  const second = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "Second entry.", "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(second.status, 2, second.stdout);
+  assert.match(second.stderr, /already registered/u);
+  assert.match(second.stderr, /one entry per conversation per kind/u, "the refusal states its own unit — the kind, not the kind-wide session");
+  assert.deepEqual(names(repo), ["20261108T123000Z-main-narrative-s1.md"], "no byte written for the second entry");
+  assert.equal(
+    fs.readFileSync(path.join(repo, JOURNAL_DIR, "20261108T123000Z-main-narrative-s1.md"), "utf8"),
+    landed,
+    "the first entry's bytes survive the refusal",
+  );
+});
+
+test("journal write: a second mechanical fragment the SessionEnd hook created is not a duplicate — its own re-run is not refused", () => {
+  const repo = newRepo("born-before");
+  // The template hook names the fragment itself (log-session-end.sh): two
+  // mechanical fragments of one session can already be in the carrier when the
+  // writer runs. The guard judges a NEW entry, never the ones already there.
+  const hookName = "20261108T120000Z-main-mechanical-s1.md";
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, hookName), "## 2026-11-08T12:00:00Z — main — mechanical\n- **Session:** quit\n");
+  const author = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "The session's narrative.", "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(author.status, 0, author.stderr);
+  assert.deepEqual(names(repo), [hookName, "20261108T133000Z-main-narrative-s1.md"], "the hook's fragment is never rewritten and never blocks the writer");
 });
 
 test("journal write: the fallback session is not a conversation identity — unflagged writes keep landing", () => {
@@ -370,6 +438,24 @@ test("the template's fragment rules name the writer and its grammar owner", () =
   const doc = fs.readFileSync(path.join(repoRoot, "template", ".agentic-workflow", "journal.md"), "utf8");
   assert.match(doc, /journal write/u, "a target project's carrier doc names the writer, not only the naming service");
   assert.match(doc, /journal-write-grammar@1/u, "and names the grammar owner instead of restating it");
+});
+
+// ── the prose states the writer's real unit (issue #468, correction batch 1) ─
+//
+// The grammar row and the template carrier doc are what a caller reads before
+// writing; the guard's unit is the conversation PER KIND, so both say so and
+// both keep the shared `local` identity out — a row that says more than the
+// code is the same defect as code that does more than the row.
+
+test("the declared prose states one entry per conversation per kind and the shared local identity", () => {
+  const readme = fs.readFileSync(path.join(repoRoot, "packages", "agentic-workflow", "README.md"), "utf8");
+  const row = /^already-registered \| ([^\n]+)$/mu.exec(readme);
+  assert.ok(row, "the grammar row exists in the one owner file");
+  assert.match(row[1], /per kind/u, "the row's unit is the kind, as the writer enforces it");
+  assert.match(row[1], /explicit `--session local`/u, "the row names the explicit-`local` exemption, not only the absent flag");
+  const doc = fs.readFileSync(path.join(repoRoot, "template", ".agentic-workflow", "journal.md"), "utf8");
+  assert.match(doc, /per conversation per kind/u, "the carrier doc carries the writer's refusal, not its own older summary");
+  assert.doesNotMatch(doc, /One fragment per session per kind/u, "the superseded summary is gone");
 });
 
 test("the extension's invocation record names the same writer", () => {
