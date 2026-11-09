@@ -6,17 +6,18 @@ argument-hint: "[--json-only] [--issues-file <json>] [--no-state] [--remote <url
 description: >
   Deterministic batch planner: read the live work graph and emit
   parallel-execution batches (order-respecting, collision-free) as the fixed
-  `batch-plan@1` machine envelope — which issues can run together now, which
-  are blocked and by what, and which surface each lane occupies. Triggers:
-  "batch scheduler", "what can run in parallel", "plan the batches", "batch
-  plan".
+  `batch-plan@2` machine envelope — which issues can run together now, which
+  are blocked and by what, which surface each lane occupies, what changed
+  since the previous plan (new/closed issues, untriaged rows, open cross-lane
+  soft deps). Triggers: "batch scheduler", "what can run in parallel", "plan
+  the batches", "batch plan".
 ---
 
 # Batch Scheduler (the parallel planner's sensor)
 
 One pass that answers the parallel question the single-next sensor cannot:
 **which open issues can run together right now, in which lane, in which
-order** — emitted as the fixed `batch-plan@1` machine envelope. The **script is
+order** — emitted as the fixed `batch-plan@2` machine envelope. The **script is
 the deterministic producer**: `scripts/batch-scheduler.mjs` reads the live work
 graph and prints the document. This skill runs the script, reads the JSON, and
 interprets it against [the plan grammar](references/PLAN.md) — it never
@@ -85,13 +86,16 @@ the script emitted.
 2. Read the envelope against [the plan grammar](references/PLAN.md):
    `batches[]` in order (batch 1 = runnable now), each lane one surface with
    its size hint and its issue rows (`number`, `worktree`, `command`,
-   `reason.kind` + `detail`, `claimed`), `blocked[]` with the open blockers
-   that gate each issue, `launched[]` with the evidence that marked them,
-   `findings[]` with the unresolvable spots, `degraded[]` with anything that
-   could not be read, and `summary` as the totals.
+   `reason.kind` + `detail`, `claimed`, `triaged`), `blocked[]` with the open
+   blockers that gate each issue, `launched[]` with the evidence that marked
+   them, `new_issues[]` and `closed_since[]` with the lifecycle delta since
+   the previous plan, `findings[]` with the unresolvable spots, `degraded[]`
+   with anything that could not be read, and `summary` as the totals.
 3. Print the human summary: one line per lane in batch 1 (surface, size hint,
    issues with their commands), then the blocked issues with their blockers,
-   then every finding, then every degradation. **Launch nothing yourself** —
+   then the untriaged issues (`triaged: false` — scope undetermined;
+   co-scheduling provisional until their lane triage runs), then every
+   finding, then every degradation. **Launch nothing yourself** —
    hand the per-issue `command` to the user or the panel, and let them decide
    how many lanes to run (the size hints inform that choice; they are facts,
    not a lane-count policy).
@@ -104,6 +108,14 @@ the script emitted.
   rows belong to triage, per the #442 contract). A target that is open and in
   flight (its unit doc is on disk) is a **state**, not a defect: `blocked[]`
   names it as in flight and no finding is emitted for it.
+- **Untriaged is provisional, not launchable-as-usual.** A row with
+  `reason.kind: untriaged` (or `triaged: false`) has no lane triage yet —
+  report it as co-scheduling-provisional in the summary, never as a plain
+  ready lane. `soft-deps-open` rows start before their declared inputs exist:
+  name the open deps and their batches when reporting.
+- **The prose parser fails closed.** A non-standard `## Dependencies` table
+  produces a declared degradation naming the issue and zero prose
+  dependencies — never false findings, never a guess (issue #460).
 - **Native relations are authoritative.** A prose row declared `hard` without
   a native `blocked-by` is reported as a mismatch; it never gates on its own.
 - **No decision model.** The sensor is fully deterministic with no model

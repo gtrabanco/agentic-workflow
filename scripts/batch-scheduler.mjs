@@ -3,7 +3,7 @@
 /**
  * batch-scheduler — the deterministic batch planner (issue #449).
  *
- * One pass over the live work graph that emits the fixed `batch-plan@1`
+ * One pass over the live work graph that emits the fixed `batch-plan@2`
  * document (schema package: `agentic-workflow/batch-plan`): which open issues
  * can run together now (batch 1), which come next (batch N+1…), which surface
  * each lane occupies, and which spots are unresolvable — always findings,
@@ -41,7 +41,7 @@ import { readRoadmapIndex, roadmapTableRows } from "../packages/agentic-workflow
 /** The state file's name, under `<root>/.agentic-workflow/` (untracked, durable). */
 export const STATE_FILE_NAME = "batches.json";
 
-const STATE_VERSION = 1;
+const STATE_VERSION = 2;
 const SIZE_ORDER = { light: 0, mixed: 1, heavy: 2 };
 const SIZE_FROM_TOKEN = { S: "light", M: "light", L: "heavy", XL: "heavy" };
 const REVISION_RE = /^[0-9a-f]{7,40}$/u;
@@ -221,20 +221,30 @@ function surfaceKey(token) {
 
 /**
  * Parse the prose `## Dependencies` table (the #442 contract's soft rows and
- * prose-declared hard rows) out of an issue body.
+ * prose-declared hard rows) out of an issue body — fail-closed (issue #460,
+ * S5): only the declared table form (`| Depends on | Kind | Why |`) is parsed;
+ * any other table shape in the section is refused (`malformed: true`) instead
+ * of harvesting `#\d+` from arbitrary columns, so a non-conforming issue can
+ * never produce false findings. A section with no table at all parses as no
+ * dependencies — there is nothing to refuse.
  *
- * @returns {{soft: number[], proseHard: number[]}}
+ * @returns {{soft: number[], proseHard: number[], malformed: boolean}}
  */
 export function extractProseDependencies(body) {
   const idx = body.indexOf("## Dependencies");
-  if (idx === -1) return { soft: [], proseHard: [] };
+  if (idx === -1) return { soft: [], proseHard: [], malformed: false };
   const rest = body.slice(idx + "## Dependencies".length);
   const end = rest.indexOf("\n## ");
   const section = end === -1 ? rest : rest.slice(0, end);
+  const tableLines = section.split("\n").filter((line) => line.trim().startsWith("|"));
+  if (tableLines.length === 0) return { soft: [], proseHard: [], malformed: false };
+  // The declared form's header row names its columns; anything else is refused.
+  const header = tableLines[0].split("|").map((c) => c.trim());
+  const declared = header[1] === "Depends on" && header[2] === "Kind" && header[3] === "Why";
+  if (!declared) return { soft: [], proseHard: [], malformed: true };
   const soft = [];
   const proseHard = [];
-  for (const line of section.split("\n")) {
-    if (!line.trim().startsWith("|")) continue;
+  for (const line of tableLines.slice(1)) {
     const cells = line.split("|").map((c) => c.trim());
     if (cells.length < 4) continue;
     const depCell = cells[1];
@@ -250,7 +260,7 @@ export function extractProseDependencies(body) {
       }
     }
   }
-  return { soft, proseHard };
+  return { soft, proseHard, malformed: false };
 }
 
 /** Measured-size hint: declared `(S)/(M)/(L)/(XL)` token first, then surface count. */
@@ -260,6 +270,23 @@ export function sizeHint(issue, surfaces) {
   if (surfaces.size >= 3) return "heavy";
   if (surfaces.size === 2) return "mixed";
   return "light";
+}
+
+/**
+ * Triage readiness from the roadmap fix-row status (issue #460, S3, decision
+ * D3/D4): a unit is executable only once the lane's triage produced its Tasks
+ * (`planned`+), so a row below `planned` marks the issue untriaged. A missing
+ * row carries no triage signal — the issue stays unmarked. In practice the
+ * only reachable untriaged status is `idea`: `defined`+ implies a unit doc on
+ * disk, which makes the issue launched (excluded from every lane).
+ *
+ * The cell often carries a PR annotation after the status (`done · [#475](…)`,
+ * the fix index's own rendering), so the value read is the token before it.
+ */
+function isTriaged(status) {
+  if (status === undefined) return true;
+  const token = status.split("·")[0].trim();
+  return ["planned", "in-progress", "done"].includes(token);
 }
 
 function slugify(title) {
@@ -300,9 +327,13 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   }
   if (roadmapText === null) degradations.push("unavailable-roadmap-missing");
   const knownNumbers = new Set();
+  /** The roadmap fix-row status per issue number — the triage signal (issue #460, S3). */
+  const fixStatusByNumber = new Map();
   if (roadmapText !== null) {
     for (const row of roadmapTableRows(roadmapText, "fix")) {
       for (const match of (row[0] ?? "").matchAll(/#(\d+)/g)) knownNumbers.add(Number(match[1]));
+      const issueMatch = /#(\d+)/.exec(row[0] ?? "");
+      if (issueMatch) fixStatusByNumber.set(Number(issueMatch[1]), (row[2] ?? "").trim());
     }
   }
   const unitDirByIssue = new Map();
@@ -331,12 +362,19 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
     const surfaces = extractSurfaces(issue.body);
     const surfaceSet = surfaces.size > 0 ? surfaces : new Set(["general"]);
     const prose = extractProseDependencies(issue.body);
+    if (prose.malformed) {
+      // Fail closed (issue #460, S5): a non-declared table shape degrades
+      // declared, naming the issue, instead of harvesting `#\d+` from
+      // arbitrary columns.
+      degradations.push(`unavailable-prose-dependencies-issue-${issue.number}-undeclared-table-shape`);
+    }
     model.set(issue.number, {
       issue,
       surfaces: [...surfaceSet].sort((a, b) => a.localeCompare(b)),
       softAll: prose.soft,
       proseHard: prose.proseHard,
       size: sizeHint(issue, surfaceSet),
+      triaged: isTriaged(fixStatusByNumber.get(issue.number)),
     });
   }
   // A tree-root declaration (`skills`, `skills/**`, `packages/`) names every
@@ -454,6 +492,26 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
     }
   }
 
+  // ── lifecycle delta vs the previous plan (issue #460, S2) ────────────
+  // The state file's `seen` map is the last-seen open-issue set; every run
+  // reports what changed, so a closed blocker or a fresh issue is never
+  // silent. A state file from before v2 carries no `seen` — the first run
+  // then reports every open issue as newly seen (a declared, honest delta).
+  const previousSeen = previous?.seen ?? {};
+  const new_issues = issues
+    .filter((issue) => previousSeen[String(issue.number)] === undefined)
+    .map((issue) => ({ number: issue.number, title: issue.title }));
+  const closed_since = Object.entries(previousSeen)
+    .filter(([key]) => !openNumbers.has(Number(key)))
+    .map(([key, entry]) => ({
+      number: Number(key),
+      title: typeof entry?.title === "string" && entry.title !== "" ? entry.title : `#${key}`,
+      batch: Number.isInteger(entry?.batch) ? entry.batch : null,
+      lane: typeof entry?.lane === "string" && entry.lane !== "" ? entry.lane : null,
+      last_seen: typeof entry?.last_seen === "string" && entry.last_seen !== "" ? entry.last_seen : "unknown",
+    }))
+    .sort((a, b) => a.number - b.number);
+
   const numbersByBatch = new Map();
   for (const number of [...batchOf.keys()].sort((a, b) => a - b)) {
     const batch = batchOf.get(number);
@@ -461,9 +519,18 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
     numbersByBatch.get(batch).push(number);
   }
   const normalized = [...numbersByBatch.entries()].sort((a, b) => a[0] - b[0]);
-  const batches = normalized.map(([, numbers], index) => ({
+  // The document renumbers batches 1..N; the caveat strings must name the
+  // document's batch numbers, so map the internal batch ids onto them.
+  const documentBatchOf = new Map(normalized.map(([original], index) => [original, index + 1]));
+  const batches = normalized.map(([original, numbers], index) => ({
     n: index + 1,
-    lanes: buildLanes(numbers, model, launched, launchedSurfaces),
+    lanes: buildLanes(numbers, model, launched, launchedSurfaces, {
+      batchOf,
+      documentBatchOf,
+      documentBatch: index + 1,
+      openNumbers,
+      launchedNumbers,
+    }),
   }));
 
   const blocked = [];
@@ -484,14 +551,16 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
 
   const plan = {
     contract: "agentic-workflow/batch-plan",
-    version: 1,
-    schema: "batch-plan@1",
+    version: 2,
+    schema: "batch-plan@2",
     source_revision: head,
     degraded: degradations.sort((a, b) => a.localeCompare(b)),
     batches,
     blocked,
     launched,
     findings,
+    new_issues,
+    closed_since,
     summary: {
       open_issues: issues.length,
       batched: batchOf.size,
@@ -510,7 +579,7 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
 }
 
 /** Group one batch's issues into lanes — one lane per surface, soft-ordered. */
-function buildLanes(numbers, model, launched, launchedSurfaces) {
+function buildLanes(numbers, model, launched, launchedSurfaces, { batchOf, documentBatchOf, documentBatch, openNumbers, launchedNumbers }) {
   const bySurface = new Map();
   for (const number of numbers) {
     const row = model.get(number);
@@ -535,13 +604,51 @@ function buildLanes(numbers, model, launched, launchedSurfaces) {
     const issues = unique.map((number, index) => {
       const row = model.get(number);
       const softTarget = (row.soft ?? []).find((t) => unique.includes(t) && unique.indexOf(t) < index);
+      // Cross-lane soft-dep caveat (issue #460, S4, decision D2): an open
+      // soft dep the plan does not deliver strictly before this issue —
+      // same-batch other-lane, same-batch later in the lane, or unbatched —
+      // is an input the issue starts without.
+      const undelivered = [];
+      for (const target of row.softAll) {
+        if (target === number || !openNumbers.has(target)) continue;
+        const targetDocumentBatch = batchOf.get(target) !== undefined ? documentBatchOf.get(batchOf.get(target)) : undefined;
+        if (targetDocumentBatch !== undefined && targetDocumentBatch < documentBatch) continue;
+        if (targetDocumentBatch === documentBatch) {
+          const targetIndex = unique.indexOf(target);
+          if (targetIndex !== -1 && targetIndex < index) continue;
+        }
+        const state = launchedNumbers.has(target)
+          ? "in flight"
+          : targetDocumentBatch !== undefined
+            ? `batch ${targetDocumentBatch}`
+            : "blocked";
+        undelivered.push(`#${target} (${state})`);
+      }
+      const parts = [];
+      if (index > 0) {
+        parts.push(
+          softTarget !== undefined
+            ? `soft dep on #${softTarget} in the same lane`
+            : `shares the ${surface} lane; serializes after #${unique[index - 1]}`,
+        );
+      }
+      if (!row.triaged) {
+        parts.push("no triage yet (roadmap status below planned) — scope undetermined; co-scheduling provisional until the lane's triage runs");
+      }
+      if (undelivered.length > 0) parts.push(`open soft deps: ${undelivered.join(", ")}`);
       let reason;
-      if (index === 0) {
+      if (!row.triaged && index === 0) {
+        reason = { kind: "untriaged", detail: parts.join("; ") };
+      } else if (undelivered.length > 0) {
+        reason = { kind: "soft-deps-open", detail: parts.join("; ") };
+      } else if (!row.triaged) {
+        reason = { kind: "untriaged", detail: parts.join("; ") };
+      } else if (index === 0) {
         reason = { kind: "satisfied-inputs", detail: "no open blockers; surface free" };
       } else if (softTarget !== undefined) {
-        reason = { kind: "soft-ordered", detail: `soft dep on #${softTarget} in the same lane` };
+        reason = { kind: "soft-ordered", detail: parts.join("; ") };
       } else {
-        reason = { kind: "surface-conflict", detail: `shares the ${surface} lane; serializes after #${unique[index - 1]}` };
+        reason = { kind: "surface-conflict", detail: parts.join("; ") };
       }
       return {
         number,
@@ -551,6 +658,7 @@ function buildLanes(numbers, model, launched, launchedSurfaces) {
         command: `/unit-lane --from-issue ${number}`,
         reason,
         size_hint: row.size,
+        ...(row.triaged ? {} : { triaged: false }),
       };
     });
     const laneHint = issues.reduce((max, issue) => Math.max(max, SIZE_ORDER[issue.size_hint]), 0);
@@ -597,9 +705,14 @@ function listUnitDirs(root) {
 
 /**
  * Merge this run's lanes into the persisted state: claimed numbers keep their
- * first_seen; new claims enter with this run's batch and lane.
+ * first_seen; new claims enter with this run's batch and lane. The state also
+ * carries the last-seen open-issue set (`seen`, issue #460) — every open
+ * issue of this run, batched or not, so the next run can diff the work
+ * graph's lifecycle. `openIssues` (the collected issue list) supplies the
+ * titles for issues outside the batches; without it the plan's own rows are
+ * the source.
  */
-export function updateState(plan, previous, { now, head }) {
+export function updateState(plan, previous, { now, head, openIssues = null } = {}) {
   const claimed = {};
   const previousClaims = previous?.claimed ?? {};
   for (const batch of plan.batches) {
@@ -616,11 +729,39 @@ export function updateState(plan, previous, { now, head }) {
       }
     }
   }
+  const previousSeen = previous?.seen ?? {};
+  // Batch/lane come from the plan's own rows (blocked, launched and
+  // unresolvable issues never batched → null); `openIssues` supplies the
+  // titles and the issues the plan's rows cannot see (cycle members).
+  const planInfo = new Map();
+  for (const batch of plan.batches) {
+    for (const lane of batch.lanes) {
+      for (const row of lane.issues) planInfo.set(row.number, { batch: batch.n, lane: row.lane });
+    }
+  }
+  const seen = {};
+  const open = openIssues ?? [
+    ...plan.batches.flatMap((batch) => batch.lanes.flatMap((lane) => lane.issues.map((row) => ({ number: row.number, title: row.title })))),
+    ...plan.blocked.map((row) => ({ number: row.number, title: null })),
+    ...plan.launched.map((row) => ({ number: row.number, title: null })),
+  ];
+  for (const entry of open) {
+    const prior = previousSeen[String(entry.number)];
+    const info = planInfo.get(entry.number) ?? { batch: null, lane: null };
+    seen[String(entry.number)] = {
+      title: entry.title ?? prior?.title ?? `#${entry.number}`,
+      batch: info.batch,
+      lane: info.lane,
+      first_seen: prior?.first_seen ?? now,
+      last_seen: now,
+    };
+  }
   return {
     version: STATE_VERSION,
     written_at: now,
     source_revision: head,
     claimed,
+    seen,
   };
 }
 
@@ -711,12 +852,12 @@ async function main(argv) {
 
   const check = schema.validateBatchPlan(plan);
   if (!check.ok) {
-    process.stderr.write(`BATCH-PLAN REJECTED — the produced document violates batch-plan@1:\n${check.errors.map((e) => `  - ${e}`).join("\n")}\n`);
+    process.stderr.write(`BATCH-PLAN REJECTED — the produced document violates ${schema.BATCH_PLAN_SCHEMA}:\n${check.errors.map((e) => `  - ${e}`).join("\n")}\n`);
     process.exit(1);
   }
 
   if (!args.noState) {
-    const state = updateState(plan, previous, { now: new Date().toISOString(), head });
+    const state = updateState(plan, previous, { now: new Date().toISOString(), head, openIssues: collected.issues });
     saveState(statePath, state);
   }
 
@@ -750,6 +891,15 @@ function printHumanSummary(plan) {
     }
   }
   for (const row of plan.blocked) console.log(`\nblocked #${row.number}: ${row.reason}`);
+  const untriaged = plan.batches
+    .flatMap((batch) => batch.lanes)
+    .flatMap((lane) => lane.issues)
+    .filter((row) => row.triaged === false);
+  if (untriaged.length > 0) {
+    console.log(
+      `\nuntriaged: ${untriaged.map((row) => `#${row.number}`).join(", ")} — scope undetermined; co-scheduling provisional until their lane triage runs`,
+    );
+  }
   for (const finding of plan.findings) console.log(`finding ${finding.code}: ${finding.numbers.map((n) => `#${n}`).join(", ")} — ${finding.detail}`);
   for (const d of plan.degraded) console.log(`degraded: ${d}`);
 }
