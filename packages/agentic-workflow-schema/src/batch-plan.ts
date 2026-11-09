@@ -1,5 +1,5 @@
 /**
- * The canonical batch plan (`batch-plan@1`) — issue #449's machine envelope:
+ * The canonical batch plan (`batch-plan@2`) — issue #449's machine envelope:
  * the deterministic batch scheduler's document, read as data by the owner and
  * by the #295 panel.
  *
@@ -209,7 +209,7 @@ function issueNumber(value: unknown, label: string, errors: string[]): boolean {
 }
 
 /**
- * Validate one document against `batch-plan@1`. Structural and
+ * Validate one document against `batch-plan@2`. Structural and
  * vocabulary-closed; ordering/semantics stay the producer's tests.
  */
 export function validateBatchPlan(value: unknown): BatchPlanValidationResult {

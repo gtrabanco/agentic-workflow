@@ -135,7 +135,10 @@ open-issue set — every open issue of the run, batched or not, which is what
 `new_issues[]` and `closed_since[]` are diffed against. A v1 state file loads
 with an empty seen set: the first v2 run reports every open issue as newly
 seen. A re-run marks every still-planned issue present in `claimed` with
-`claimed: true`. `--no-state` skips the write entirely; `--mark-launched <n>`
+`claimed: true`. `--no-state` skips the write entirely — so it also reads no
+history: every `--no-state` run reports all open issues in `new_issues[]` and
+nothing in `closed_since[]`, run after run. That is honest (no memory, no
+delta), not an error. `--mark-launched <n>`
 records that the operator launched issue N's lane outside the sensor. The two
 are mutually exclusive (the pair is a usage error, exit 2) — a pure read never
 writes. Nothing else on disk is ever touched.

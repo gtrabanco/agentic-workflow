@@ -3,7 +3,7 @@
 /**
  * batch-scheduler — the deterministic batch planner (issue #449).
  *
- * One pass over the live work graph that emits the fixed `batch-plan@1`
+ * One pass over the live work graph that emits the fixed `batch-plan@2`
  * document (schema package: `agentic-workflow/batch-plan`): which open issues
  * can run together now (batch 1), which come next (batch N+1…), which surface
  * each lane occupies, and which spots are unresolvable — always findings,
@@ -279,9 +279,14 @@ export function sizeHint(issue, surfaces) {
  * row carries no triage signal — the issue stays unmarked. In practice the
  * only reachable untriaged status is `idea`: `defined`+ implies a unit doc on
  * disk, which makes the issue launched (excluded from every lane).
+ *
+ * The cell often carries a PR annotation after the status (`done · [#475](…)`,
+ * the fix index's own rendering), so the value read is the token before it.
  */
 function isTriaged(status) {
-  return status === undefined || ["planned", "in-progress", "done"].includes(status);
+  if (status === undefined) return true;
+  const token = status.split("·")[0].trim();
+  return ["planned", "in-progress", "done"].includes(token);
 }
 
 function slugify(title) {
@@ -847,7 +852,7 @@ async function main(argv) {
 
   const check = schema.validateBatchPlan(plan);
   if (!check.ok) {
-    process.stderr.write(`BATCH-PLAN REJECTED — the produced document violates batch-plan@1:\n${check.errors.map((e) => `  - ${e}`).join("\n")}\n`);
+    process.stderr.write(`BATCH-PLAN REJECTED — the produced document violates ${schema.BATCH_PLAN_SCHEMA}:\n${check.errors.map((e) => `  - ${e}`).join("\n")}\n`);
     process.exit(1);
   }
 
