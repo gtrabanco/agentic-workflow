@@ -3,20 +3,25 @@
  * worktree-guard.test.mjs — the fixture corpus for `scripts/worktree-guard.mjs`
  * (issue #476).
  *
- * The guard audits `git worktree list`: entries whose directory vanished
- * (`PRUNABLE`), worktrees the repository's own rule forbids — outside
- * `.git/worktrees/` (`OUTSIDE`) or a detached HEAD (`DETACHED`, skipped while
- * a rebase/merge is in progress) — and the leftover signature of a finished
- * unit: a clean tree on a branch already merged into the base (`STALE`).
- * `--prune` removes what it flagged (`git worktree prune` for vanished
- * entries, `git worktree remove` for clean ones), never deletes a branch and
- * never touches the primary checkout; a dirty worktree is reported, never
- * removed. The incident it pins: finished sessions left worktrees behind —
- * some detached — and they accumulated until the owner cleaned them by hand.
+ * The guard audits `git worktree list`: corrupted links (`CORRUPTED` — a
+ * registered worktree whose `.git` link file vanished, the failure whose
+ * symptom is git administration bleeding into the working tree), entries
+ * whose directory vanished (`PRUNABLE`), worktrees outside the legal home
+ * (`OUTSIDE`), detached HEADs (`DETACHED`, skipped while a rebase/merge is in
+ * progress) and the leftover signature of a finished unit: a clean tree on a
+ * branch already merged into the base (`STALE`). `--prune` fixes what it can
+ * — `git worktree repair` for corrupted links (non-destructive), `git
+ * worktree prune` for vanished entries, `git worktree remove` for clean ones
+ * — never deletes a branch and never touches the primary checkout; a dirty
+ * worktree is reported, never removed.
  *
- * Every case builds a throwaway git repository (the `run-root-suite` fixture
- * pattern — signing neutralized, `mktemp -d` under `TMPDIR || /var/tmp`,
- * removed in a `finally`) and runs the guard over it with `--repo`. The
+ * The fixtures model a healthy layout: worktrees live under `<root>/wts`
+ * (the `--home` the cases pass), so each worktree carries its own `.git`
+ * link file and the git administration stays in the repository's
+ * `.git/worktrees` — the collision that produces the corrupted state is what
+ * the CORRUPTED cases create deliberately. Every case builds a throwaway git
+ * repository (the `run-root-suite` fixture pattern — signing neutralized,
+ * `mktemp -d` under `TMPDIR || /var/tmp`, removed in a `finally`). The
  * shipped tree is never scanned from this suite; the local-gate step
  * (`worktree-guard`) does that on every push.
  *
@@ -59,23 +64,27 @@ function withRepo(run) {
   }
 }
 
-/** Add a worktree inside the fixture's `.git/worktrees/` (the legal home). */
+/** Add a healthy worktree inside the fixture's legal home (`<root>/wts`):
+ *  its own `.git` link file, git administration in `<root>/.git/worktrees`. */
 function addWorktree(git, root, name, args = []) {
-  const target = path.join(root, ".git", "worktrees", name);
+  const target = path.join(root, "wts", name);
   git(["worktree", "add", ...args, target]);
   return target;
 }
 
 function guard(root, args = []) {
-  const result = spawnSync(process.execPath, [GUARD, "--repo", root, ...args], { encoding: "utf8" });
+  const result = spawnSync(process.execPath, [GUARD, "--repo", root, "--home", path.join(root, "wts"), ...args], {
+    encoding: "utf8",
+  });
   assert.equal(result.status !== null, true, `the guard spawned (stderr: ${result.stderr})`);
   return result;
 }
 
-test("a clean worktree on an unmerged branch inside .git/worktrees/ is healthy", () => {
+test("a clean worktree on an unmerged branch inside the legal home is healthy", () => {
   withRepo(({ root, git }) => {
-    addWorktree(git, root, "live", ["-b", "feat/live"]);
-    git(["-C", path.join(root, ".git", "worktrees", "live"), "commit", "--allow-empty", "-m", "wip"]);
+    const live = addWorktree(git, root, "live", ["-b", "feat/live"]);
+    assert.equal(fs.existsSync(path.join(live, ".git")), true, "the worktree carries its .git link");
+    git(["-C", live, "commit", "--allow-empty", "-m", "wip"]);
     const result = guard(root);
     assert.equal(result.status, 0, `exit 0 (stdout: ${result.stdout})`);
     assert.match(result.stdout, /verdict: PASS/);
@@ -83,11 +92,28 @@ test("a clean worktree on an unmerged branch inside .git/worktrees/ is healthy",
   });
 });
 
+test("a worktree whose .git link is severed is a CORRUPTED finding --prune repairs", () => {
+  withRepo(({ root, git }) => {
+    const target = addWorktree(git, root, "severed", ["-b", "feat/severed"]);
+    git(["-C", target, "commit", "--allow-empty", "-m", "wip"]);
+    fs.rmSync(path.join(target, ".git"));
+    const result = guard(root);
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /FINDING .* — CORRUPTED/);
+
+    const fixed = guard(root, ["--prune"]);
+    assert.equal(fixed.status, 0, `the repair is non-destructive and succeeds (stdout: ${fixed.stdout})`);
+    assert.match(fixed.stdout, /REPAIRED/);
+    assert.equal(fs.existsSync(path.join(target, ".git")), true, "the .git link is back");
+    assert.equal(git(["-C", target, "rev-parse", "HEAD"]).trim().length, 40, "the worktree resolves HEAD again");
+  });
+});
+
 test("a worktree whose directory vanished is a PRUNABLE finding", () => {
   withRepo(({ root, git }) => {
-    // The vanished worktree sits outside the legal home: only then do the
-    // admin metadata outlive the directory (inside .git/worktrees the two
-    // are the same path, so removing one removes both and git auto-heals).
+    // Outside the legal home: only then do the admin metadata outlive the
+    // directory (inside the home the two are separate, and a vanished
+    // directory leaves the registration dangling either way).
     const vanished = path.join(root, "vanished-wt");
     git(["worktree", "add", "-b", "feat/vanished", vanished]);
     fs.rmSync(vanished, { recursive: true, force: true });
@@ -98,7 +124,7 @@ test("a worktree whose directory vanished is a PRUNABLE finding", () => {
   });
 });
 
-test("a detached worktree inside .git/worktrees/ is a DETACHED finding", () => {
+test("a detached worktree inside the legal home is a DETACHED finding", () => {
   withRepo(({ root, git }) => {
     addWorktree(git, root, "detached", ["--detach"]);
     const result = guard(root);
@@ -107,7 +133,7 @@ test("a detached worktree inside .git/worktrees/ is a DETACHED finding", () => {
   });
 });
 
-test("a worktree outside .git/worktrees/ is an OUTSIDE finding", () => {
+test("a worktree outside the legal home is an OUTSIDE finding", () => {
   withRepo(({ root, git }) => {
     const outside = path.join(root, "outside-wt");
     git(["worktree", "add", "-b", "feat/outside", outside]);
@@ -121,7 +147,6 @@ test("a clean worktree on a branch merged into the base is a STALE finding", () 
   withRepo(({ root, git }) => {
     const target = addWorktree(git, root, "done", ["-b", "feat/done"]);
     git(["-C", target, "commit", "--allow-empty", "-m", "merged work"]);
-    git(["checkout", "-q", "main"]);
     git(["merge", "-q", "--ff-only", "feat/done"]);
     const result = guard(root);
     assert.equal(result.status, 1);
@@ -133,7 +158,6 @@ test("a dirty worktree carries a dirty marker and --prune never removes it", () 
   withRepo(({ root, git }) => {
     const target = addWorktree(git, root, "dirty", ["-b", "feat/dirty"]);
     fs.writeFileSync(path.join(target, "scratch.txt"), "untracked\n");
-    git(["checkout", "-q", "main"]);
     git(["merge", "-q", "--ff-only", "feat/dirty"]);
     const result = guard(root, ["--prune"]);
     assert.equal(result.status, 1, `a dirty finding is not fixable (stdout: ${result.stdout})`);
@@ -143,8 +167,11 @@ test("a dirty worktree carries a dirty marker and --prune never removes it", () 
   });
 });
 
-test("--prune removes the prunable, detached, outside and stale worktrees", () => {
+test("--prune repairs the corrupted link and removes prunable, detached, outside and stale worktrees", () => {
   withRepo(({ root, git }) => {
+    const severed = addWorktree(git, root, "severed", ["-b", "feat/severed"]);
+    git(["-C", severed, "commit", "--allow-empty", "-m", "wip"]);
+    fs.rmSync(path.join(severed, ".git"));
     const vanished = path.join(root, "vanished-wt");
     git(["worktree", "add", "-b", "feat/vanished", vanished]);
     fs.rmSync(vanished, { recursive: true, force: true });
@@ -152,12 +179,13 @@ test("--prune removes the prunable, detached, outside and stale worktrees", () =
     const outside = path.join(root, "outside-wt");
     git(["worktree", "add", "-b", "feat/outside", outside]);
     const done = addWorktree(git, root, "done", ["-b", "feat/done"]);
-    git(["checkout", "-q", "main"]);
     git(["merge", "-q", "--ff-only", "feat/done"]);
 
     const result = guard(root, ["--prune"]);
     assert.equal(result.status, 0, `every fixable finding is fixed (stdout: ${result.stdout})`);
     assert.match(result.stdout, /verdict: PASS/);
+    assert.match(result.stdout, /REPAIRED/);
+    assert.equal(fs.existsSync(path.join(severed, ".git")), true, "the corrupted link is repaired");
     assert.equal(fs.existsSync(detached), false, "the detached worktree is removed");
     assert.equal(fs.existsSync(outside), false, "the outside worktree is removed");
     assert.equal(fs.existsSync(done), false, "the stale worktree is removed");
@@ -189,7 +217,7 @@ test("an unknown flag is a usage error", () => {
 test("a target that is not a git repository is a usage error", () => {
   const notRepo = fs.mkdtempSync(path.join(tmpBase, "worktree-guard-nogit-"));
   try {
-    const result = guard(notRepo);
+    const result = spawnSync(process.execPath, [GUARD, "--repo", notRepo], { encoding: "utf8" });
     assert.equal(result.status, 2);
   } finally {
     fs.rmSync(notRepo, { recursive: true, force: true });
