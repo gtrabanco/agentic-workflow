@@ -1,5 +1,6 @@
 /**
- * Embeddings write path for the `doc` retrieval index (unit 65, P6).
+ * Embeddings write path for the `doc` retrieval index (unit 65, P6; resilience
+ * by issue #443 S3).
  *
  * D10 provider resolution: CLI flag > direct pi-style environment variables
  * > the config-named env var + config file > default (none ⇒ keyword-only,
@@ -9,20 +10,87 @@
  * can form (AC18); `--rebuild` under the new model is the documented path.
  *
  * Incrementalism (AC16): embedding runs only over chunks with no stored
- * vector, batched per file, so a warm sync makes 0 API calls (AC19's write
- * half) and changing one file re-embeds exactly that file's chunks.
+ * vector, so a warm sync makes 0 API calls (AC19's write half) and changing
+ * one file re-embeds exactly that file's chunks.
+ *
+ * Resilience (issue #443 S3/S9, decisions D4/D5): one request carries at most
+ * `batchSize` texts, request starts are paced at `requestsPerMinute`, and a
+ * retryable failure (429, 5xx, a network error, a named `Retry-After`) is
+ * retried with exponential backoff before the pass aborts. Every landed batch
+ * commits its rows and — on the first one — pins the store's model, so a run
+ * that stops part-way resumes from the store's own pending predicate instead of
+ * re-embedding what already landed.
  */
 
 export const VECTOR_TAG = "awkvec-f32le1";
 
 import { openDatabase } from "./sqlite.mjs";
 import { storePath } from "./store.mjs";
+import { loadConfig } from "./config.mjs";
 
 const DIRECT_ENV = {
   baseUrl: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL",
   model: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL",
   apiKey: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY",
 };
+
+/**
+ * The pacing/write-policy defaults — the provider's published limits
+ * (`32 texts/batch`, `60 requests/min`) plus a bounded retry ladder. Every one
+ * of them is overridable (config `provider.pacing`, then the
+ * `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_<PARAM>` environment variables), so an
+ * operator never edits code to match a provider's real limits (issue #443 S10).
+ */
+export const DEFAULT_PACING = Object.freeze({
+  batchSize: 32,
+  requestsPerMinute: 60,
+  maxAttempts: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 60000,
+});
+
+const PACING_ENV = Object.freeze({
+  batchSize: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BATCH_SIZE",
+  requestsPerMinute: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_REQUESTS_PER_MINUTE",
+  maxAttempts: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_ATTEMPTS",
+  baseDelayMs: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_DELAY_MS",
+  maxDelayMs: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_DELAY_MS",
+});
+
+/** A pacing parameter, or a named refusal — a zero/NaN pace is never accepted. */
+function positiveInteger(value, name) {
+  const parsed = typeof value === "number" ? value : Number(String(value).trim());
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(
+      `invalid pacing parameter ${name}: ${JSON.stringify(value)} (expected a positive integer; ` +
+        `set it in index.json provider.pacing or ${PACING_ENV[name]})`,
+    );
+  }
+  return parsed;
+}
+
+/**
+ * Resolve the pacing/write policy once: `cli` > environment > config
+ * `provider.pacing` > the shipped defaults (D4). Every value is validated, so
+ * no loop downstream can pace on `NaN`.
+ */
+export function resolvePacing({ config = {}, env = {}, cli = {} } = {}) {
+  const own = config.provider?.pacing ?? {};
+  const resolved = {};
+  for (const name of Object.keys(DEFAULT_PACING)) {
+    const envName = PACING_ENV[name];
+    const raw = cli[name] ?? (envName ? env[envName] : undefined) ?? own[name] ?? DEFAULT_PACING[name];
+    resolved[name] = positiveInteger(raw, name);
+  }
+  return resolved;
+}
+
+/** A failure worth another attempt: a rate limit, a server fault, a timeout, or no status at all (network). */
+function isRetryable(error) {
+  const status = error?.status;
+  if (status === undefined || status === null) return true;
+  return status === 408 || status === 429 || (status >= 500 && status < 600);
+}
 
 /** Encode a float vector as the tagged little-endian float32 blob. */
 export function encodeVector(vector) {
@@ -64,7 +132,9 @@ export function resolveEmbedConfig({ config = {}, env = {}, cli = {} } = {}) {
 /**
  * OpenAI-compatible embeddings provider. One POST per batch; `fetchImpl`
  * is injectable for tests. A failed call throws — it never silently
- * returns junk vectors.
+ * returns junk vectors — and the error carries the machine-readable pieces
+ * the retry policy branches on (`status`, and `retryAfter` when the provider
+ * names one), never a message a caller has to parse.
  */
 export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl } = {}) {
   const doFetch = fetchImpl ?? ((url, init) => fetch(url, init));
@@ -77,7 +147,12 @@ export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl } = {}) {
         body: JSON.stringify({ model, input: texts }),
       });
       if (!response.ok) {
-        throw new Error(`embeddings provider ${response.status} ${response.statusText}`);
+        const error = new Error(`embeddings provider ${response.status} ${response.statusText}`);
+        error.status = response.status;
+        const retryAfter = response.headers?.get?.("retry-after");
+        const seconds = Number(retryAfter);
+        if (retryAfter && Number.isFinite(seconds) && seconds >= 0) error.retryAfter = seconds;
+        throw error;
       }
       const data = await response.json();
       return data.data.map((d) => d.embedding);
@@ -86,13 +161,57 @@ export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl } = {}) {
 }
 
 /**
- * Embed every chunk that has no stored vector, batched per file. The
- * store's pinned model (meta `emb_model`) fails closed on mismatch (AC18):
- * the new provider is never called, the old vectors stay consistent, and
- * the caller degrades — `--rebuild` re-embeds under the new model.
- * Returns `{embedded, calls, model}` or `{skipped: true, reason}`.
+ * Counts the write path and the native report need, over one store: embedded
+ * rows, pending rows (no vector), rows embedded under a foreign model, and the
+ * store's pinned model. A store without the chunks/meta tables (never synced)
+ * answers zeros instead of throwing — the caller is asking a question, not
+ * proving a table exists.
  */
-export async function embedPendingChunks(root, provider) {
+export async function embeddingStats(root, model = null) {
+  const { db } = await openDatabase(storePath(root));
+  try {
+    const tables = new Set(
+      db.prepare("select name from sqlite_master where type = 'table'").all().map((row) => row.name),
+    );
+    if (!tables.has("chunks")) return { embedded: 0, pending: 0, foreign: 0, model: null };
+    const columns = db.prepare("pragma table_info(chunks)").all().map((row) => row.name);
+    if (!columns.includes("embedding")) return { embedded: 0, pending: 0, foreign: 0, model: null };
+    const embedded = db.prepare("select count(*) as n from chunks where embedding is not null").get().n;
+    const pending = db.prepare("select count(*) as n from chunks where embedding is null").get().n;
+    const foreign =
+      model === null
+        ? 0
+        : db
+            .prepare(
+              "select count(*) as n from chunks where embedding is not null and (emb_model is null or emb_model is not ?)",
+            )
+            .get(model).n;
+    const pinned = tables.has("meta") ? db.prepare("select value from meta where key = 'emb_model'").get() : null;
+    return { embedded, pending, foreign, model: pinned ? pinned.value : null };
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Embed every chunk that has no stored vector. The store's pinned model (meta
+ * `emb_model`) fails closed on mismatch (AC18): the new provider is never
+ * called, the old vectors stay consistent, and the caller degrades —
+ * `--rebuild` re-embeds under the new model. Returns
+ * `{embedded, calls, model}` or `{skipped: true, reason}`.
+ *
+ * Resilience (issue #443 S3/S9, D4/D5): `opts` carries the seams a test owns —
+ * `pacing` (a partial merged over the resolved policy), `sleep`, `now` and
+ * `random`; production resolves the policy from the config + environment and
+ * sleeps for real.
+ */
+export async function embedPendingChunks(root, provider, opts = {}) {
+  const pacing = { ...resolvePacing({ config: loadConfig(root), env: process.env }), ...(opts.pacing ?? {}) };
+  for (const name of Object.keys(DEFAULT_PACING)) pacing[name] = positiveInteger(pacing[name], name);
+  const sleep = opts.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const now = opts.now ?? (() => Date.now());
+  const random = opts.random ?? Math.random;
+
   const { db } = await openDatabase(storePath(root));
   try {
     ensureEmbeddingColumns(db);
@@ -101,32 +220,73 @@ export async function embedPendingChunks(root, provider) {
       return { skipped: true, reason: "embeddings-model-mismatch", model: provider.model, stored: pinned.value };
     }
 
+    const pin = () =>
+      db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('emb_model', ?)").run(provider.model);
+
     const pending = db
       .prepare(
         "select rowid, path, body from chunks where embedding is null order by path, rowid",
       )
       .all();
     if (pending.length === 0) {
-      db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('emb_model', ?)").run(provider.model);
+      pin();
       return { embedded: 0, calls: 0, model: provider.model };
     }
 
     let calls = 0;
     let embedded = 0;
+    let lastStart = null;
+
+    // Pacing: two request starts are never closer than the configured interval.
+    const pace = async () => {
+      if (lastStart !== null) {
+        const interval = 60000 / pacing.requestsPerMinute;
+        const elapsed = now() - lastStart;
+        if (elapsed < interval) await sleep(interval - elapsed);
+      }
+      lastStart = now();
+    };
+
+    // One request, retried on a retryable failure with bounded exponential
+    // backoff (and `Retry-After` when the provider named one).
+    const request = async (texts) => {
+      for (let attempt = 1; ; attempt += 1) {
+        await pace();
+        calls += 1;
+        try {
+          return await provider.embed(texts);
+        } catch (error) {
+          if (!isRetryable(error) || attempt >= pacing.maxAttempts) throw error;
+          const backoff = Math.min(pacing.maxDelayMs, pacing.baseDelayMs * 2 ** (attempt - 1));
+          const jitter = Math.floor(random() * backoff * 0.25);
+          const named = error?.retryAfter === undefined ? 0 : error.retryAfter * 1000;
+          await sleep(Math.max(named, backoff + jitter));
+        }
+      }
+    };
+
     let batch = [];
     const flush = async () => {
       if (batch.length === 0) return;
-      const vectors = await provider.embed(batch.map((c) => c.body));
-      calls += 1;
-      for (let i = 0; i < batch.length; i++) {
+      const carrying = batch;
+      batch = [];
+      const vectors = await request(carrying.map((c) => c.body));
+      if (!Array.isArray(vectors) || vectors.length !== carrying.length) {
+        throw new Error(
+          `embeddings provider returned ${vectors?.length ?? 0} vectors for ${carrying.length} texts`,
+        );
+      }
+      // D5: the pin names the model that produced the first stored vector, so a
+      // pass that stops part-way can never leave an unpinned, mixed store.
+      if (embedded === 0) pin();
+      for (let i = 0; i < carrying.length; i++) {
         db.prepare("update chunks set embedding = ?, emb_model = ? where rowid = ?").run(
           encodeVector(vectors[i]),
           provider.model,
-          batch[i].rowid,
+          carrying[i].rowid,
         );
         embedded += 1;
       }
-      batch = [];
     };
 
     let currentPath = null;
@@ -134,10 +294,13 @@ export async function embedPendingChunks(root, provider) {
       if (currentPath !== null && chunk.path !== currentPath) await flush();
       currentPath = chunk.path;
       batch.push(chunk);
+      // The provider refuses more texts than its batch cap; the cap, never the
+      // file boundary, is what a request must respect (D4).
+      if (batch.length >= pacing.batchSize) await flush();
     }
     await flush();
 
-    db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('emb_model', ?)").run(provider.model);
+    pin();
     return { embedded, calls, model: provider.model };
   } finally {
     db.close();

@@ -41,7 +41,9 @@ describe("doc grammar", () => {
     deepStrictEqual(parseDocArgs(["--rebuild"]), { op: "rebuild", query: null, jsonOnly: false, quiet: false });
   });
 
-  it("parses --query with its term", () => {
+  // Issue #443 S2/D2: the grammar no longer defaults the mode — an absent flag
+  // stays absent so the query path resolves it at run time.
+  it("parses --query with its term, leaving the mode to the query path", () => {
     deepStrictEqual(parseDocArgs(["--query", "backoff"]), {
       op: "query",
       query: "backoff",
@@ -49,9 +51,9 @@ describe("doc grammar", () => {
       since: null,
       until: null,
       file: null,
-      mode: "keyword",
       quiet: false,
     });
+    strictEqual(parseDocArgs(["--query", "backoff"]).mode, undefined);
   });
 
   it("parses --json-only in any position", () => {
@@ -62,7 +64,6 @@ describe("doc grammar", () => {
       since: null,
       until: null,
       file: null,
-      mode: "keyword",
       quiet: false,
     });
     deepStrictEqual(parseDocArgs(["--sync", "--json-only"]), { op: "sync", query: null, jsonOnly: true, quiet: false });

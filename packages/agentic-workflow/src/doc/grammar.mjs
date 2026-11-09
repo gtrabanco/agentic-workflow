@@ -179,12 +179,16 @@ export function parseDocArgs(argv) {
   }
 
   if (!out.op) throw usageError("no retrieval operation given");
-  // AC14's structured filters and the P7 mode flag belong to queries only.
+  // AC14's structured filters and the mode flag belong to queries only. The
+  // mode is deliberately left ABSENT when the flag is not given (issue #443 S2,
+  // D2): the query path resolves it at run time (hybrid when the provider is
+  // configured and the store is embedded under the pinned model, keyword with
+  // the declared cause otherwise), and a grammar default here would make that
+  // resolution unreachable.
   if (out.op === "query") {
     out.since = filters.since;
     out.until = filters.until;
     out.file = filters.file;
-    out.mode = out.mode ?? "keyword";
   } else if (sawFilter || sawMode) {
     throw usageError("--since/--until/--file/--mode are query flags and require --query");
   }

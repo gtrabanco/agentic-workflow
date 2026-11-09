@@ -28,7 +28,7 @@ import {
 import { invocationMarkerPath, planInvocation } from "../dist/log-session-invocation.js";
 import { JOURNAL_DIR } from "@gtrabanco/agentic-workflow/src/journal/fragment.mjs";
 import { runtimeBin } from "../dist/runtime.js";
-import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
+import { ADVANCE_COMMAND, AW_INDEX_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
 import { configFor, modelRef } from "./helpers/session.mjs";
 import { sandboxGitEnv } from "./git-sandbox.mjs";
 
@@ -156,7 +156,7 @@ test("O3: one command named log-session, and it is the code handler", async () =
     assert.equal(names.filter((name) => name === LOG_SESSION_COMMAND).length, 1, "Pi would suffix a second registration into /log-session:1");
     assert.deepEqual(
       names.slice().sort(),
-      [LOG_SESSION_COMMAND, "review-code", ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS].sort(),
+      [LOG_SESSION_COMMAND, "review-code", ADVANCE_COMMAND, AW_INDEX_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS].sort(),
     );
     assert.ok(readCatalogue(tree.skillsDir).commands.some((command) => command.name === LOG_SESSION_COMMAND), "the catalogue keeps the entry, so routing and the console still know the name");
 

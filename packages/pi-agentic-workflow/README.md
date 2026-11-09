@@ -57,12 +57,57 @@ their own — they are composed by the ones above:
 Arguments are forwarded verbatim: `/execute-phase P3 --fix` reaches the skill as
 `P3 --fix`.
 
-One command is anchored in code rather than in prose dispatch: `/log-session`
-([#429](https://github.com/gtrabanco/agentic-workflow/issues/429)). Its name
-still comes from the skill's frontmatter — routing, the settings console and the
+Three names are **code doors** rather than skill doors — they have no `SKILL.md`,
+no argument hint and no catalogue entry, and each does its work in code before
+any model turn starts:
+
+| Command | Use it for |
+| --- | --- |
+| `/advance` | The deterministic conductor: sensor → decide → invoke the next stage (feature 62). |
+| `/aw-index` | Index the project docs now: a progressive, resumable sync that reports pending chunks, the pinned embedding model, the last sync and any degradation ([#443](#the-aw-index-command-issue-443)). |
+| `/log-session` | Log the session: the invocation is recorded and the entry target resolved by code ([#429](#the-log-session-code-door-issued-429)). |
+
+`/log-session` is the one door of the three that still also ships a skill: its
+name comes from the skill's frontmatter — routing, the settings console and the
 configuration above read the same catalogue entry — but a handler runs first, so
 the mechanical part is a fact the harness holds instead of a claim the model
 makes. See [The `/log-session` code door](#the-log-session-code-door-issued-429).
+`/aw-index` has no skill at all; see
+[The `/aw-index` command](#the-aw-index-command-issue-443).
+
+## The `/aw-index` command (issue #443)
+
+`/aw-index` is the docs retrieval index's write path, reachable in one press. It
+carries no `SKILL.md`, no argument hint, no context budget and no catalogue
+entry — the same vehicle as `/advance` — because there is nothing for a model to
+decide: the work is one sync, and the report is its receipt.
+
+It spawns the runner crate's own entry point
+(`@gtrabanco/agentic-workflow/bin/agentic-workflow.mjs`, resolved from this
+package's dependency) as `doc --sync --json-only` in the project directory and
+renders the report from that one envelope:
+
+```text
+aw-index — <store path>
+files: <n> · chunks: <n>
+pending: <n|unknown> · model: <pinned model|none>
+last sync: scanned <n> · changed <n> · deleted <n> · embedded <n>
+degradations: <comma-separated|none>
+```
+
+- **Progressive and idempotent.** The sync embeds only the chunks that have no
+  vector, so a run killed part-way resumes from the remainder and re-embeds
+  nothing that already landed.
+- **Safe on a cold project.** No store yet is not an error: the sync creates it.
+  Rebuild is deliberately not reachable here — that stays a manual
+  `agentic-workflow doc --rebuild`.
+- **Declared, never silent.** A provider that is down, a missing key or a model
+  mismatch arrives in `degradations:`; a failed spawn, a non-zero exit or
+  unparseable output is reported as an error instead of an empty report.
+
+Since the write path is paced and retried, this command is also the honest way
+to backfill a store that a rate limit interrupted — it makes progress on every
+run instead of aborting on the first 429.
 
 ## Workflow tools (deferred — issue #274)
 
