@@ -341,13 +341,24 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
 });
 
 test("AC15: the README command table is the catalogue", () => {
-  const expected = readCatalogue(bundleSkills).commands.map((command) => command.name).sort();
+  const catalogue = readCatalogue(bundleSkills).commands.map((command) => command.name).sort();
+  // The two native code doors are documented in the README beside the catalogue
+  // (issue #443 correction batch, 2026-11-09) and are not catalogue entries — the
+  // pin keeps asserting the exact documented surface, catalogue plus doors,
+  // nothing invented (an expansion of the pin, never a relaxation).
+  const doors = [ADVANCE_COMMAND, AW_INDEX_COMMAND].sort();
   const readme = (file) => {
     const text = readFileSync(new URL(file, import.meta.url), "utf8");
-    return [...text.matchAll(/^\| `(\/[^`]+)` /gmu)].map(([, name]) => name.slice(1)).sort();
+    // /log-session is legitimately listed twice (catalogue row + code-door row);
+    // the surface is the set of names, so duplicates collapse before the compare.
+    return [...new Set([...text.matchAll(/^\| `(\/[^`]+)` /gmu)].map(([, name]) => name.slice(1)))].sort();
   };
 
-  assert.deepEqual(readme("../README.md"), expected, "README.md lists exactly the commands that exist");
+  assert.deepEqual(
+    readme("../README.md"),
+    [...catalogue, ...doors].sort(),
+    "README.md lists exactly the commands that exist — every catalogue command plus the native code doors",
+  );
 });
 
 test("AC15: the troubleshooting table quotes messages the code actually emits", () => {
