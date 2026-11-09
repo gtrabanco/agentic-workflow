@@ -307,14 +307,15 @@ task list above; the deterministic routers still judge the document.
   golden fixture · commit `9d672ab0`.
 - **P3** — 2026-11-08, parity suite redefined to declared projection · commit
   `a852c180`.
-- **G1** — 2026-11-08, `node scripts/run-root-suite.mjs --bail <91 suites>
-  (every `scripts/*.test.mjs` except the pre-existing red `log-immutability`)
-  · exit 0 · 91/91 PASS (see Known pre-existing issues).
-- **G2** — 2026-11-08, `bun scripts/local-gate.mjs --skip-network` · workspace
+- **G1** — 2026-11-09, HEAD `99c2f3c7`: `node scripts/run-root-suite.mjs --bail <91
+  suites> (every `scripts/*.test.mjs` except the pre-existing red
+  `log-immutability`) · exit 0 · 91/91 PASS (see Known pre-existing issues).
+- **G2** — 2026-11-08 (head `a852c180`; the only later commits are docs and the
+  unit log), `bun scripts/local-gate.mjs --skip-network` · workspace
   install, schema build, crate suites (bun+node), version parity, docs
   projection, journal carrier, schema/pi node-compat: all exit 0; the root-suite
   step bails at the pre-existing `log-immutability` red only (G1 records the
-  91/91 exclusion run).
+  91/91 exclusion run, re-run at HEAD `99c2f3c7`).
 
 ## Next
 
