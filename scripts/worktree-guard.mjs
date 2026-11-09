@@ -282,11 +282,17 @@ function main(argv) {
         continue;
       }
       if (finding.dirty) {
-        skipped.push(finding);
+        skipped.push({ ...finding, detail: "dirty; remove manually" });
         continue;
       }
       const full = path.join(root, finding.path);
-      const result = git(["worktree", "remove", full], root);
+      let result = git(["worktree", "remove", full], root);
+      if (result.status !== 0 && !isDirty(full)) {
+        // The refusal is the worktree's own leaked git-administration junk
+        // (untracked by definition), never a human change — isDirty already
+        // proved there is none. Force is safe and the junk is git-owned.
+        result = git(["worktree", "remove", "--force", full], root);
+      }
       if (result.status !== 0) {
         skipped.push({ ...finding, detail: `${finding.detail} — remove failed: ${(result.stderr ?? "").trim().split("\n")[0]}` });
         continue;
@@ -323,7 +329,7 @@ function main(argv) {
     for (const finding of repaired) console.log(`REPAIRED ${finding.path}`);
     for (const report of reports) console.log(`REPORT ${report.path} — ${report.code}: ${report.detail}`);
     for (const finding of pruned) console.log(`PRUNED ${finding.path}`);
-    for (const finding of skipped) console.log(`SKIP ${finding.path} — dirty; remove manually`);
+    for (const finding of skipped) console.log(`SKIP ${finding.path} — ${finding.detail}`);
     for (const line of suggestions) console.log(line);
     console.log(`worktree-guard: ${remaining.length} finding(s)`);
     console.log(`verdict: ${verdict}`);
