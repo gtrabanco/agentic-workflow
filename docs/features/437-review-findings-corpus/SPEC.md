@@ -121,7 +121,7 @@ token, script or section is deleted or superseded. Evidence:
 
 ## Risk tier
 
-- **Tier** — `standard` · **Task Size** — understood + contained risk + resumable-from-diff (3 new read-only scripts with sibling suites, one reference, doc surfaces)
+- **Tier** — `standard` (computed: `bun scripts/ceremony.mjs tier classify --paths <the branch's changed paths>` → `{"tier":"standard","reason_kind":"executable-content"}` at HEAD e2494fefe25da0c3fffe80c3fc592299ea2bc3e6) · **Task Size** — `understood · contained · resumable` (3 new read-only scripts with sibling suites, one reference, doc surfaces)
 - **Named high-risk item** — `none — not a high-tier unit`
 
 ## Future
@@ -257,7 +257,11 @@ yet.
 
 ## Next
 
-P1: record the pre-change measurement, then land the three suites red-first.
+Hand the diff to the owner as the external verifier: the suites, the real-tree
+readings, the closed obligations ledger and the verification block in
+`## Log`. Any finding the owner reports is repaired in one bounded correction
+batch limited to the blockers named, then those obligation rows' validators are
+re-run before their statuses move again.
 
 ## References
 
