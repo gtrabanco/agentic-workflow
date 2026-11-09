@@ -10,7 +10,7 @@
  */
 
 import { execFile } from "node:child_process";
-import { appendFileSync, mkdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 import { DEFAULT_ADVANCE_CONFIG } from "../config/types.js";
@@ -20,6 +20,9 @@ import { runConductorLoop } from "../conductor/loop.js";
 import { decideFromEnvelope } from "../conductor/decide.js";
 import { invocationFromDecision } from "../conductor/invoke.js";
 import { judgeUrgency } from "../conductor/urgency.js";
+import { interruptedRun, readJournal } from "../conductor/journal.js";
+import { parseAdvanceFlags } from "../conductor/resume.js";
+import { renderSupervisorScript } from "../conductor/supervisor.js";
 import type { ConductorConfig, LoopResult } from "../conductor/types.js";
 import type { CommandRegistrar } from "./factory.js";
 import type { InvocationContext, ModelRef } from "../routing/types.js";
@@ -51,6 +54,21 @@ function appendRunLog(config: ConductorConfig, cwd: string, line: string): void 
   }
 }
 
+/**
+ * The journal's interrupted-run finding, read before the first sensor run
+ * (issue #284). An unreadable log reads as "no interruption": `--resume` still
+ * reconciles, and the reconcile itself fails closed on a verdict it cannot
+ * verify.
+ */
+function readPreflight(config: ConductorConfig, cwd: string): ReturnType<typeof interruptedRun> {
+  const path = resolve(cwd, config.runLogPath ?? ".agentic-workflow/advance-run.log");
+  try {
+    return interruptedRun(readJournal(readFileSync(path, "utf8")));
+  } catch {
+    return null;
+  }
+}
+
 async function parkInFlight(cwd: string): Promise<void> {
   await git(["add", "-A"], cwd);
   await git(["commit", "-m", "wip: parked by advance (urgent interrupt)"], cwd);
@@ -68,11 +86,11 @@ export function registerAdvanceCommand<M extends ModelRef = ModelRef>(
 ): void {
   registrar.registerCommand(ADVANCE_COMMAND, {
     description:
-      "Deterministic conductor: sensor → decide → invoke the next stage; stops on needs_input/stop. Never merges.",
+      "Deterministic conductor: sensor → decide → invoke the next stage; stops on needs_input/stop. Never merges. --resume reconciles a crashed run; --print-supervisor prints the operator restarter.",
     handler: async (_args: string, ctx: InvocationContext<M>): Promise<void> => {
-      const flags = _args.split(/\s+/).filter(Boolean);
-      const attended = !flags.includes("--fullauto") && !flags.includes("--unattended");
-      const continueLoop = flags.includes("--continue");
+      const flags = parseAdvanceFlags(_args);
+      const attended = flags.attended;
+      const continueLoop = flags.continueLoop;
 
       // The effective advance knobs: the merged config when it carries the
       // key, the shipped defaults otherwise.
@@ -90,6 +108,21 @@ export function registerAdvanceCommand<M extends ModelRef = ModelRef>(
         // `resume` stays "continue".
       }
 
+      // Issue #284: print the operator restarter and stop — printing never runs
+      // the loop, never writes a file and never installs anything (ask-first).
+      if (flags.printSupervisor) {
+        ctx.notify(
+          renderSupervisorScript({
+            cwd: ctx.cwd,
+            piBin: process.env.PI_BIN ?? "pi",
+            advanceArgs: "--resume --continue",
+            runLogPath: config.runLogPath,
+          }),
+          "info",
+        );
+        return;
+      }
+
       const result: LoopResult = await runConductorLoop({
         cwd: ctx.cwd,
         runtimeBin: runtimeBin(),
@@ -97,6 +130,9 @@ export function registerAdvanceCommand<M extends ModelRef = ModelRef>(
         maxInvokes: continueLoop ? undefined : 1,
         attended,
         config,
+        resume: flags.resume,
+        runMeta: () => ({ id: `r-${process.pid}-${Date.now()}`, pid: process.pid }),
+        resumePreflight: async () => readPreflight(config, ctx.cwd),
         runSensor: (cwd, bin) =>
           import("../conductor/sensor.js").then(({ runSensor }) => runSensor(cwd, bin as "bun" | "node")),
         decide: decideFromEnvelope,

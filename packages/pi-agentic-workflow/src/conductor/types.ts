@@ -159,6 +159,22 @@ export interface LoopDeps {
   /** Stop after this many successful invocations (1 = one stage per invocation).
    *  Unlimited when omitted (tests drive the full loop). */
   maxInvokes?: number;
+  /** The run journal's finding, read before the first sensor run (issue #284).
+   *  Wiring: `interruptedRun(readJournal(<run log contents>))`. Absent → no
+   *  interruption is known and only `resume` can arm the reconcile gate. */
+  resumePreflight?: () => Promise<InterruptedRunLike | null>;
+  /** `advance --resume`: reconcile even when the journal shows no death. */
+  resume?: boolean;
+  /** Identity of this process for the `run/start` row (default: pid + clock). */
+  runMeta?: () => { id: string; pid: number };
+}
+
+/** The journal's interrupted-run shape as the loop consumes it. */
+export interface InterruptedRunLike {
+  runId: string | null;
+  pid: number | null;
+  iteration: number;
+  lastInvocation: string | null;
 }
 
 export interface LoopResult {
