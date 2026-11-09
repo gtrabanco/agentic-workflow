@@ -42,9 +42,24 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = path.join(ROOT, "scripts", "findings-corpus.mjs");
 
+const cleanupDirs = [];
+
 function tempTree() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "findings-corpus-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "findings-corpus-"));
+  cleanupDirs.push(dir);
+  return dir;
 }
+
+test.after(() => {
+  for (const dir of cleanupDirs) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // best effort
+    }
+  }
+  cleanupDirs.length = 0;
+});
 
 function write(file, text) {
   fs.mkdirSync(path.dirname(file), { recursive: true });

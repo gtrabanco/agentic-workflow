@@ -38,7 +38,8 @@ function tempUnit(name, ledger) {
   const unitDir = path.join(dir, "docs", "fix", name);
   fs.mkdirSync(unitDir, { recursive: true });
   fs.writeFileSync(path.join(unitDir, "review-findings.md"), ledger);
-  return unitDir;
+  cleanupDirs.push({ dir });
+  return { dir, unitDir };
 }
 
 function tempSpec(name, spec) {
@@ -46,8 +47,22 @@ function tempSpec(name, spec) {
   const unitDir = path.join(dir, "docs", "fix", name);
   fs.mkdirSync(unitDir, { recursive: true });
   fs.writeFileSync(path.join(unitDir, "SPEC.md"), spec);
-  return unitDir;
+  cleanupDirs.push({ dir });
+  return { dir, unitDir };
 }
+
+const cleanupDirs = [];
+
+test.after(() => {
+  for (const { dir } of cleanupDirs) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // best effort
+    }
+  }
+  cleanupDirs.length = 0;
+});
 
 const LEDGER = `| id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
@@ -73,13 +88,13 @@ test("--measure prints the measured constants and the sample size", () => {
 });
 
 test("open rows: the fold ledger's open rows are read, folded ones are not", () => {
-  const unitDir = tempUnit("1-x", LEDGER);
+  const { unitDir } = tempUnit("1-x", LEDGER);
   const rows = openRowsOf(unitDir);
   assert.deepEqual(rows.map((row) => row.id), ["F1", "F2", "F3"]);
 });
 
 test("nimio: a below-floor finding is classified and never counts as a finding", () => {
-  const unitDir = tempUnit("1-x", LEDGER);
+  const { unitDir } = tempUnit("1-x", LEDGER);
   const budget = computeBudget({ rows: openRowsOf(unitDir), batchSize: 2, roundsSpent: 0 });
   assert.equal(budget.findings, 2);
   assert.equal(budget.nimio, 1);
@@ -88,7 +103,7 @@ test("nimio: a below-floor finding is classified and never counts as a finding",
 });
 
 test("nimio: a report-only impact is below the floor even at a material severity", () => {
-  const unitDir = tempSpec(
+  const { unitDir } = tempSpec(
     "2-y",
     `## Findings
 
@@ -133,7 +148,7 @@ test("an exhausted budget stops with a typed NEEDS-YOUR-DECISION, never another 
 });
 
 test("the CLI refuses a budget already spent, exiting 1 with the block", () => {
-  const unitDir = tempUnit("3-z", LEDGER);
+  const { unitDir } = tempUnit("3-z", LEDGER);
   const result = run(["--unit", unitDir, "--rounds-spent", "9"]);
   assert.equal(result.status, 1);
   assert.match(result.stdout, new RegExp(`^${BUDGET_CONTRACT}$`, "m"));
@@ -141,7 +156,7 @@ test("the CLI refuses a budget already spent, exiting 1 with the block", () => {
 });
 
 test("the CLI prints the block for a unit with an open correction", () => {
-  const unitDir = tempUnit("4-w", LEDGER);
+  const { unitDir } = tempUnit("4-w", LEDGER);
   const result = run(["--unit", unitDir, "--rounds-spent", "0"]);
   assert.equal(result.status, 0);
   assert.equal(field(result.stdout, "findings"), "2");
