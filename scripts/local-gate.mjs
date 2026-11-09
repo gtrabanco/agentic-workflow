@@ -152,10 +152,17 @@ export function workspacePackageDirs(root) {
 export function piCompatInstalls(manifest, leg, workspaceDirByName) {
   const specs = [`${PI_PEER}@${leg}`, `${PI_TUI}@${leg}`];
   const missing = [];
-  for (const name of Object.keys(manifest.dependencies ?? {})) {
+  for (const [name, spec] of Object.entries(manifest.dependencies ?? {})) {
     const dir = workspaceDirByName.get(name);
     if (!dir) {
-      missing.push(name);
+      // A workspace package (the `@gtrabanco/*` family) must link from its
+      // folder — its src/ is what our src/ imports, and a published version
+      // may lag. A third-party dependency has no folder to link from and its
+      // published version is exactly what consumers install (issue #260: the
+      // pinned piew substrate is the first one), so it installs at its
+      // declared spec instead of refusing the guard.
+      if (name.startsWith("@gtrabanco/")) missing.push(name);
+      else specs.push(`${name}@${spec}`);
       continue;
     }
     specs.push(`${name}@file:${dir}`);

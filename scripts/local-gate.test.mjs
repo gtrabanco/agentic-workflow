@@ -373,20 +373,41 @@ test("the guard installs the package's own workspace dependencies, linked from t
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "packages/pi-agentic-workflow/package.json"), "utf8"));
   const dirs = workspacePackageDirs(ROOT);
   const { specs, missing } = piCompatInstalls(manifest, "1.1.0", dirs);
-  assert.deepEqual(missing, [], "a declared dependency with no workspace sibling is reported, never skipped");
+  assert.deepEqual(missing, [], "a @gtrabanco dependency with no workspace sibling is reported, never skipped");
   assert.ok(specs.includes("@earendil-works/pi-coding-agent@1.1.0"), "the pi peer is installed at the leg under test");
   assert.ok(specs.includes("@earendil-works/pi-tui@1.1.0"), "the tui peer travels with the pi peer");
-  for (const name of Object.keys(manifest.dependencies ?? {})) {
-    const spec = specs.find((entry) => entry.startsWith(`${name}@file:`));
-    assert.ok(spec, `${name} is installed from the folder, not from a published version that may lag src/`);
-    assert.equal(spec, `${name}@file:${dirs.get(name)}`, "the spec names the workspace directory itself");
+  for (const [name, spec] of Object.entries(manifest.dependencies ?? {})) {
+    if (dirs.has(name)) {
+      const entry = specs.find((e) => e.startsWith(`${name}@file:`));
+      assert.ok(entry, `${name} is installed from the folder, not from a published version that may lag src/`);
+      assert.equal(entry, `${name}@file:${dirs.get(name)}`, "the spec names the workspace directory itself");
+    } else {
+      assert.ok(specs.includes(`${name}@${spec}`), `${name} (third-party) installs at its declared spec`);
+    }
   }
 });
 
-test("a dependency with no workspace sibling is reported, never silently dropped", () => {
+test("a workspace dependency with no sibling is reported, never silently dropped", () => {
   const { specs, missing } = piCompatInstalls({ dependencies: { "@gtrabanco/not-a-sibling": "1.0.0" } }, "2.0.0", new Map());
   assert.deepEqual(missing, ["@gtrabanco/not-a-sibling"]);
   assert.equal(specs.filter((entry) => entry.startsWith("@gtrabanco/not-a-sibling")).length, 0);
+});
+
+// Issue #260 added the first third-party runtime dependency (the pinned
+// pi-extensible-workflows substrate): it has no workspace sibling and its
+// published version is exactly what consumers install, so the guard installs
+// it at the declared spec instead of refusing the whole guard. Only workspace
+// packages need the folder link — their src/ is what our src/ imports.
+test("a third-party dependency installs at its declared spec, not a refusal", () => {
+  const dirs = new Map([["@gtrabanco/agentic-workflow", "/ws/packages/agentic-workflow"]]);
+  const { specs, missing } = piCompatInstalls(
+    { dependencies: { "@gtrabanco/agentic-workflow": "4.10.0", "pi-extensible-workflows": "6.3.0" } },
+    "1.1.0",
+    dirs,
+  );
+  assert.deepEqual(missing, [], "a published dependency is not a missing workspace sibling");
+  assert.ok(specs.includes("pi-extensible-workflows@6.3.0"), "installed at the pinned spec the consumers get");
+  assert.ok(specs.includes("@gtrabanco/agentic-workflow@file:/ws/packages/agentic-workflow"), "workspace siblings still link from the folder");
 });
 
 test("the guard's floor leg is the floor the pi manifest declares, not a typed literal", () => {

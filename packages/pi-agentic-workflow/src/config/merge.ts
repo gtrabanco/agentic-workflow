@@ -6,7 +6,7 @@ import {
   DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS,
   DEFAULT_PROFILE_FALLBACK,
 } from "./types.js";
-import type { AdvanceConfig, AutoLogSessionConfig, AutoLogSessionPublisherFile, ConfigFile, EffectiveConfig, PassRouteFile, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile } from "./types.js";
+import type { AdvanceConfig, AutoLogSessionConfig, AutoLogSessionPublisherFile, ConfigFile, EffectiveConfig, PassRouteFile, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile, SubagentsConfigFile } from "./types.js";
 
 /**
  * Project-over-global merge (SPEC S5, S6).
@@ -217,12 +217,30 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     profileOrder: pick([], projectFile.profileOrder, globalFile.profileOrder),
     profileFallback: mergeProfileFallback(globalFile.profileFallback, projectFile.profileFallback),
     passes,
+    // Issue #260 — the subagent resource limits merge at key granularity,
+    // project over global; a scope declaring none contributes nothing (the
+    // resource layer owns the self-detected envelope from there).
+    subagents: mergeSubagents(globalFile.subagents, projectFile.subagents),
     declared: { default: declaredDefault, commands: declaredCommands },
   };
   // Advance knobs appear only when a scope declares them, so configs that
   // predate feature 62 keep their exact resolved shape (no undefined key).
   const advance = mergeAdvance(globalFile.advance, projectFile.advance);
   if (advance !== undefined) merged.advance = advance;
+  return merged;
+}
+
+/** Issue #260 — project-over-global merge of the `subagents` resource limits
+ *  (owner decision 6): per-key, the same granularity the passes entries use.
+ *  An empty record when neither scope declares any — the resolved shape of
+ *  configs that predate the key is byte-stable. */
+function mergeSubagents(globalSubagents?: SubagentsConfigFile, projectSubagents?: SubagentsConfigFile): SubagentsConfigFile {
+  const merged: SubagentsConfigFile = {};
+  const keys = new Set([...Object.keys(globalSubagents ?? {}), ...Object.keys(projectSubagents ?? {})]) as Set<keyof SubagentsConfigFile>;
+  for (const key of keys) {
+    const value = projectSubagents?.[key] ?? globalSubagents?.[key];
+    if (value !== undefined) (merged as Record<string, unknown>)[key] = value;
+  }
   return merged;
 }
 

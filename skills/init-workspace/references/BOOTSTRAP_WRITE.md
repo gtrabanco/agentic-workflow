@@ -86,7 +86,10 @@
    declaration untouched, and report exactly what was written. An absent binary
    becomes a residual with the documented install route — never a failed run.
    Skip this step when the pi package provisions the host itself.
-11. **Install accepted agent safety hooks.** Keep the canonical policy and
+11. **Offer the subagent routing and resource config (issue #260, S11 edge 4; #201's Mechanics-4 shape, ask-first).** If the project installs `@gtrabanco/pi-agentic-workflow`, offer to seed `pi-agentic-workflow.json` with the subagent layer's two operator surfaces — **never written without a yes**:
+    - the `passes` recommended entries for the review family (one cheap tier for the finders, `"auto"` left out unless the operator wants delegated choice);
+    - the optional `subagents` key (`"parallelism": "auto"` plus caps shaped `"<n> of <m> <unit>"`, or the key omitted entirely — absent means the self-detected envelope with conservative defaults).
+    An existing owner-written file is never rewritten: propose the additive keys, show the exact JSON, and record a declined offer as a residual. When the pi package is absent, this step is a residual with the package README's `Spawned passes` + `Subagent layer` sections as the documented route.** Keep the canonical policy and
    fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
    path-protection policy at `.agentic-workflow/path-policy.json` and its doc
    page at `.agentic-workflow/path-protection.md`, beside the hooks — the
@@ -99,10 +102,23 @@
    an unknown payload, or an existing customized hook file becomes a residual,
    never a silent overwrite. Direct merges remain blocked; do not create a
    `.automerge` exception.
-12. **Offer the workflow skills.** Propose installing them:
+12. **Install accepted agent safety hooks.** Keep the canonical policy and
+    fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
+    path-protection policy at `.agentic-workflow/path-policy.json` and its doc
+    page at `.agentic-workflow/path-protection.md`, beside the hooks — the
+    `path-policy.json` seed is byte-identical to the producer crate's canonical
+    default, so a fresh install gets the guard with zero config. Leave an
+    existing owner-written `.agentic-workflow/path-policy.json` untouched and
+    report it as a residual. For each accepted platform,
+    activate only its repository config/example as documented in the hook pack.
+    Run `bash .agentic-workflow/hooks/tests/test-command-guard.sh`; missing `jq`,
+    an unknown payload, or an existing customized hook file becomes a residual,
+    never a silent overwrite. Direct merges remain blocked; do not create a
+    `.automerge` exception.
+13. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-13. **State that reviews are self-contained; offer optional extras.** The
+14. **State that reviews are self-contained; offer optional extras.** The
    workflow ships its **own internal review pack** (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
@@ -112,7 +128,7 @@
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
-14. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
+15. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
    two capability-gated GitHub labels `triage-issue` owns and applies
    (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
    vocabulary — this step only seeds it, never redefines it):
@@ -125,7 +141,7 @@
    forge is unavailable or the user declines forge setup, skip this step and
    list the two labels as a residual for the user to create manually later
    (never fail the whole scaffold on it).
-15. **Report.** List what was created, which placeholders still need human input,
+16. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
    skipped, with reason), and the next step:
    `discover-repository-state` → `/unit-lane` (or `workflow-status`) → catalog

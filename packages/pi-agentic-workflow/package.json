@@ -21,7 +21,8 @@
   "type": "module",
   "pi": {
     "extensions": [
-      "./dist/extension/index.js"
+      "./dist/extension/index.js",
+      "./node_modules/pi-extensible-workflows/dist/subagents/index.js"
     ],
     "skills": [
       "./skills"
@@ -59,7 +60,8 @@
   },
   "dependencies": {
     "@gtrabanco/agentic-workflow": "4.10.0",
-    "@gtrabanco/agentic-workflow-schema": "4.10.0"
+    "@gtrabanco/agentic-workflow-schema": "4.10.0",
+    "pi-extensible-workflows": "6.3.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
