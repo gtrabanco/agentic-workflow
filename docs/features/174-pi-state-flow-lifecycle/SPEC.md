@@ -162,6 +162,13 @@ suites as the differential baseline (O6).
   `--paths` cannot read the merge-base diff. `does-not-affect` this unit's
   code (repo-wide layout convention, pre-existing); the tier was computed with
   the explicit `--paths` scope above.
+- **Root gate red: `scripts/log-immutability.test.mjs` cannot import its
+  module.** The test is tracked on `main` but `scripts/log-immutability.mjs`
+  exists only on the unmerged branch `feat/468-log-immutability-guard`
+  (commits 9b873e03, fc6b20ca). `affects` this unit only in that the root gate
+  reports exit 1 for a reason this change did not introduce (G3);
+  `does-not-affect` the change itself — the suite fails identically at the
+  base commit's tree.
 
 ## Tasks
 
@@ -355,11 +362,69 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **E2** — 2026-11-09, `bun scripts/ceremony.mjs tier classify --paths …` ·
   exit 0 · `risk-tier-verdict@1`: tier `standard`, `signals: []`, task size
   understood/contained/resumable.
+- **E3** — 2026-11-09, RED runs observed before each implementation commit:
+  `bun test test/config-schema-stateflow.test.mjs test/config-merge-stateflow.test.mjs`
+  → 2 pass / 14 fail (commit daa9e455); `bun test test/stateflow-lifecycle.test.mjs`
+  → 0 pass / 1 error, module missing (3a2abd6e); `bun test test/stateflow-dispatch.test.mjs`
+  → 3 pass / 5 fail (e347b5f9); `bun test test/settings-console.test.mjs`
+  → 60 pass / 5 fail (dce082b6).
+- **E4** — 2026-11-09, differential baseline (O6/AC4): the package suite at the
+  base commit `6f5d5453` in a throwaway worktree (removed after) —
+  `bun run test` → **648 pass / 0 fail**; at the change — **691 pass / 0 fail**.
+  The only difference is this unit's 43 new tests; no existing behavior moved.
+- **E5** — 2026-11-09, obligation validators in the foreground:
+  `bun run test` (packages/pi-agentic-workflow) · exit 0 · 691/0;
+  `rg -c "State Flow" packages/pi-agentic-workflow/README.md` → 2 (≥1, O10);
+  `rg -c "arXiv:2608.26263" README.md` → 1 (≥1, O10);
+  `rg -c "pi-state-flow" packages/pi-agentic-workflow/package.json` → 0
+  matches (O12, no runtime dependency);
+  `git diff --name-only 6f5d5453 -- skills/` → empty (O8/AC5).
+- **D2** — 2026-11-09, incident disclosure (workflow §4 live-tree guard): the
+  P5 commit initially swallowed this worktree's git admin files (`HEAD`,
+  `index`, `index.lock`, `logs/`…) via `git add -A` — the worktree-at-
+  `.git/worktrees` layout quirk makes them visible to `add -A`. The commit was
+  amended to carry only the five intended files (fccd008f); nothing was pushed,
+  so no history rewrite is involved. The stray files are back to untracked.
+- **P1** — 2026-11-09, stateFlow config (schema, default, merge) · red
+  daa9e455 → green b7e54b61 (also extends the shipped-default pin in
+  `test/default-inherit.test.mjs`, the established per-feature convention).
+- **P2** — 2026-11-09, Pi-free episode lifecycle module · red 3a2abd6e →
+  green 2a75093b.
+- **P3** — 2026-11-09, dispatch consult + `agent_settled` stop + shipped
+  backend over Pi's documented API · red e347b5f9 → green 683507ee.
+- **P4** — 2026-11-09, settings console State Flow section · red dce082b6 →
+  green 5a19f1eb.
+- **P5** — 2026-11-09, docs + state surfaces: package README section, root
+  README References (both bibliography entries, deduped), changeset intent,
+  roadmap rows 41 (folded → 174) and 174 (in-progress) via the crate's
+  `rowUpsert`, docs projection re-rendered · fccd008f.
+- **G1** — 2026-11-09, `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  0 missing / 0 stale / 0 orphaned.
+- **G2** — 2026-11-09, `node scripts/roadmap-settle.mjs` · exit 0 ·
+  159 unit docs checked, 0 violations.
+- **G3** — 2026-11-09, `bun scripts/run-root-suite.mjs` · exit 1 ·
+  **91 PASS / 1 FAIL** — the single FAIL is `scripts/log-immutability.test.mjs`,
+  which cannot import `./log-immutability.mjs`: the module exists only on the
+  unmerged sibling branch `feat/468-log-immutability-guard` while its test is
+  tracked on `main`. Pre-existing red, unrelated to this unit (recorded under
+  Known pre-existing issues); every other root suite passes.
+- **G4** — 2026-11-09, `bun scripts/lint-changeset.mjs` · exit 0 ·
+  `ok 174-state-flow-lifecycle.md`.
+- **G5** — 2026-11-09, `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 29 skills`.
+- **E6** — 2026-11-09, the two sibling packages' suites: `bun run test`
+  (packages/agentic-workflow-schema) · exit 0 · 775/0; `bun run test`
+  (packages/agentic-workflow) · exit 0 · 534/0.
+- **P6** — 2026-11-09, verification close-out: every obligation row's
+  validator run in the foreground (E4–E6, G1–G5); statuses flipped in
+  `planning-obligations.md`; the root gate's single red is the pre-existing
+  log-immutability suite (G3, Known pre-existing issues).
 
 ## Next
 
-Implement P1 (test-first), then P2–P6 in the frozen order; hand the diff to the
-owner for external verify.
+External verify (the owner is the verifier): review the diff on
+`feat/174-state-flow-lifecycle` against the frozen acceptance criteria and the
+obligations ledger; correction bounds per the applying workflow's §9.
 
 ## References
 
