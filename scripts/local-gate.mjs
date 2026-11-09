@@ -45,6 +45,7 @@
  *   bun scripts/local-gate.mjs --jobs 2          # cap the worker count
  *   bun scripts/local-gate.mjs --no-bail         # run everything, report all
  *   bun scripts/local-gate.mjs --dry-run         # print the plan, run nothing
+ *   bun scripts/local-gate.mjs --json <path>     # also write the machine result document
  *   bun scripts/local-gate.mjs --install-hook    # write .git/hooks/pre-push
  *   bun scripts/local-gate.mjs --install-hook --force   # replace a foreign hook
  *   bun scripts/local-gate.mjs --repo <dir>      # gate another checkout
@@ -362,6 +363,43 @@ export function defaultJobs() {
   return Math.min(4, Math.max(1, os.availableParallelism?.() ?? os.cpus().length));
 }
 
+/** The per-step output tail the machine result keeps: enough for a bounded
+ *  failing fragment, never the whole log (`scripts/gate-receipt.mjs` owns the
+ *  full log and the receipt). */
+export const OUTPUT_TAIL_BYTES = 16 * 1024;
+
+/** The machine result document's schema token (consumed by `gate-receipt.mjs`). */
+export const GATE_RESULT_SCHEMA = "local-gate-result@1";
+
+/**
+ * The machine result of one gate run — the handshake `scripts/gate-receipt.mjs`
+ * turns into a `gate-receipt@1` envelope. It carries facts only: the step table's
+ * ids, each step's terminal status, its exit code and duration, and a bounded
+ * output tail per stream. Steps whose prerequisites failed under `--no-bail`, or
+ * that were never dispatched under fail-fast, are `not-run` — never `passed`.
+ */
+export function gateResultDocument({ steps, statuses, exits = new Map(), durations = new Map(), outputs = new Map(), bail = true, jobs = 1, durationMs = 0, status = 0 }) {
+  return {
+    schema: GATE_RESULT_SCHEMA,
+    status,
+    bail,
+    jobs,
+    duration_ms: Math.max(0, Math.round(durationMs)),
+    steps: steps.map((step) => {
+      const output = outputs.get(step.id);
+      return {
+        id: step.id,
+        title: step.title,
+        status: statuses.get(step.id) ?? "not-run",
+        exit_code: exits.has(step.id) ? exits.get(step.id) : null,
+        duration_ms: Math.max(0, Math.round(durations.get(step.id) ?? 0)),
+        stdout_tail: output ? String(output.stdout ?? "").slice(-OUTPUT_TAIL_BYTES) : "",
+        stderr_tail: output ? String(output.stderr ?? "").slice(-OUTPUT_TAIL_BYTES) : "",
+      };
+    }),
+  };
+}
+
 /**
  * The dependency-aware worker pool: `jobs` workers pull the next step whose
  * prerequisites have all passed, so independent steps overlap while a step's
@@ -481,11 +519,11 @@ async function runStepAsync(step, root, onSpawnOutput) {
     child.stdout.on("data", (chunk) => out.push(chunk));
     child.stderr.on("data", (chunk) => err.push(chunk));
     child.on("error", (error) => {
-      onSpawnOutput(Buffer.from(`local-gate: could not run ${step.argv[0]}: ${error.message}\n`), Buffer.alloc(0));
+      onSpawnOutput(step, Buffer.from(`local-gate: could not run ${step.argv[0]}: ${error.message}\n`), Buffer.alloc(0));
       resolve(1);
     });
     child.on("close", (code) => {
-      onSpawnOutput(Buffer.concat(out), Buffer.concat(err));
+      onSpawnOutput(step, Buffer.concat(out), Buffer.concat(err));
       resolve(code ?? 1);
     });
   });
@@ -494,6 +532,7 @@ async function runStepAsync(step, root, onSpawnOutput) {
 const USAGE = [
   "usage: bun scripts/local-gate.mjs [--list] [--only <id,id>] [--skip-network]",
   "                                    [--push-base <rev>] [--no-bail] [--jobs <n>] [--dry-run]",
+  "                                    [--json <path>]",
   "                                    [--install-hook [--force]] [--repo <dir>]",
   "       (node fallback, same argv)",
 ].join("\n");
@@ -512,6 +551,7 @@ function parseArgs(argv) {
     bail: true,
     jobs: null,
     dryRun: false,
+    json: null,
     list: false,
     installHook: false,
     force: false,
@@ -543,6 +583,11 @@ function parseArgs(argv) {
         usage(`--jobs needs a positive integer${value === undefined ? "" : `, got ${JSON.stringify(value)}`}`);
       }
       options.jobs = Number(value);
+      index += 1;
+    } else if (arg === "--json") {
+      const value = argv[index + 1];
+      if (!value) usage("--json needs a path");
+      options.json = path.resolve(value);
       index += 1;
     } else if (arg === "--dry-run") {
       options.dryRun = true;
@@ -795,9 +840,17 @@ async function main(argv) {
   const started = Date.now();
   const total = runnable.length;
   let dispatched = 0;
-  const onSpawnOutput = (stdout, stderr) => {
+  const exits = new Map();
+  const durations = new Map();
+  const outputs = new Map();
+  const onSpawnOutput = (step, stdout, stderr) => {
     if (stdout.length > 0) process.stdout.write(stdout);
     if (stderr.length > 0) process.stderr.write(stderr);
+    const previous = outputs.get(step.id) ?? { stdout: Buffer.alloc(0), stderr: Buffer.alloc(0) };
+    outputs.set(step.id, {
+      stdout: Buffer.concat([previous.stdout, stdout]).subarray(-OUTPUT_TAIL_BYTES),
+      stderr: Buffer.concat([previous.stderr, stderr]).subarray(-OUTPUT_TAIL_BYTES),
+    });
   };
   const result = await scheduleSteps(
     runnable,
@@ -806,12 +859,34 @@ async function main(argv) {
       const stepStarted = Date.now();
       process.stdout.write(`\n[${total - runnable.length + dispatched}/${total}] ${step.id} — ${step.title}\n`);
       const exit = await runStepAsync(step, options.root, onSpawnOutput);
+      exits.set(step.id, exit);
+      durations.set(step.id, Date.now() - stepStarted);
       const verdict = exit === 0 ? "exit 0" : `exit ${exit}`;
       process.stdout.write(`${step.id}: ${verdict} in ${Math.round((Date.now() - stepStarted) / 1000)}s\n`);
       return exit;
     },
     { jobs: options.jobs ?? defaultJobs(), bail: options.bail },
   );
+  if (options.json) {
+    fs.writeFileSync(
+      options.json,
+      JSON.stringify(
+        gateResultDocument({
+          steps: runnable,
+          statuses: result.statuses,
+          exits,
+          durations,
+          outputs,
+          bail: options.bail,
+          jobs: options.jobs ?? defaultJobs(),
+          durationMs: Date.now() - started,
+          status: result.status,
+        }),
+        null,
+        2,
+      ) + "\n",
+    );
+  }
 
   const seconds = Math.round((Date.now() - started) / 1000);
   if (result.failures.length > 0) {
