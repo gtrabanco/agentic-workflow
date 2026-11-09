@@ -31,6 +31,29 @@ on Envelope v2 (use `null` when empty); skill-specific extensions belong inside
 it. The schemas are exported at `./envelope.schema.json`,
 `./skill-outcome.schema.json`, and `./workflow-snapshot.schema.json`.
 
+## Unified config contract (issue #427)
+
+The unified config's machine surface lives here so the CLI and the extension
+cannot disagree about a key, its type or its shipped default:
+
+- `BASE_CONFIG_SECTIONS` — the cross-tool feature sections and their JSON
+  Schema fragments: `logSession`, `memory`, `telemetry`, `guards`, `advance`,
+  `pathProtection`.
+- `CONFIG_EXTENSION_CONTRACT` (`config-extension@1`) — the descriptor a package
+  ships to publish its own section and file. `validateConfigExtension` refuses
+  a malformed descriptor or one that redefines a base section.
+- `resolveConfigDocuments` — project over global, then shipped defaults for
+  keys the operator left undefined, then strict validation. `pathProtection`
+  merges tighter-only (globs union, requirements take the higher rank).
+- `parseJsonc` — dependency-free JSONC (comments, trailing commas, BOM) with a
+  line and column on every error.
+- `composeConfigSchema` — one object schema naming every section.
+
+The committed [`config.schema.json`](./config.schema.json) is generated from
+the same descriptors (`bun run generate:config-schema`; `--check` is the drift
+gate). The human guide is `docs/workflow/CONFIG.md`; the operator CLI is
+`@gtrabanco/agentic-workflow config`.
+
 ## Content-bound review receipts (v1)
 
 Two new versioned contracts prove exactly which diff a review evaluated:
