@@ -113,7 +113,7 @@ test("the run classifies every validator and exits 1 only on a regression", () =
     [
       "test -f stable.txt",
       "test -f added-at-head.txt",
-      "test ! -f removed-at-head.txt",
+      "test -f removed-at-head.txt",
       "false",
     ].join("\n"),
   );
@@ -121,7 +121,7 @@ test("the run classifies every validator and exits 1 only on a regression", () =
   assert.equal(result.status, 1, result.stderr);
   assert.match(result.stdout, /^validator — test -f stable\.txt · base exit 0 · head exit 0 · pass$/m);
   assert.match(result.stdout, /^validator — test -f added-at-head\.txt · base exit 1 · head exit 0 · repaired$/m);
-  assert.match(result.stdout, /^validator — test ! -f removed-at-head\.txt · base exit 0 · head exit 1 · regression$/m);
+  assert.match(result.stdout, /^validator — test -f removed-at-head\.txt · base exit 0 · head exit 1 · regression$/m);
   assert.match(result.stdout, /^validator — false · base exit 1 · head exit 1 · pre-existing-failure$/m);
   assert.equal(field(result.stdout, "verdict"), "REGRESSION");
 });
