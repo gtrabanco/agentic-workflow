@@ -14,13 +14,14 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { tempRoot } from "./temp-root.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const script = path.join(repoRoot, "scripts/changeset-create.mjs");
 const GIT = ["-c", "user.email=t@t", "-c", "user.name=t", "-c", "commit.gpgsign=false"];
 
 function fixture({ commits = [], dirty = [] } = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "changeset-create-"));
+  const root = tempRoot("changeset-create-");
   const run = (...args) => execFileSync("git", [...GIT, "-C", root, ...args], { encoding: "utf8" });
   fs.mkdirSync(path.join(root, "packages/pi-agentic-workflow"), { recursive: true });
   fs.writeFileSync(path.join(root, "packages/pi-agentic-workflow/package.json"),
