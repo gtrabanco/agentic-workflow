@@ -62,6 +62,7 @@ new doc takes ownership of a task:
 | A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
 | Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) — the domain-separation safeguard's detail is [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
 | The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
+| Adding or changing a config key, or a package's config section | [`docs/workflow/CONFIG.md`](docs/workflow/CONFIG.md) — the files/scopes, the fill-in resolution, the CLI/API, and the `config-extension@1` plugin contract |
 
 ## Deep references
 
@@ -444,6 +445,31 @@ CHANGELOG.md | package-versions | package:version | equals-each
 The two schema generators show the split: one script rewrites a projection or
 reports on it, and only the reporting mode may run after a freeze. No script or
 skill may keep a second copy of this list.
+
+## Config policy for new features
+
+The unified config (issue #427) is the only place a user-tunable setting lives.
+Before a new key enters it, the four questions are asked in order — owner:
+[`docs/workflow/CONFIG.md`](docs/workflow/CONFIG.md).
+
+1. **Is it really configurable?** A flag, a derived default or a value inferred
+   from context is not config. Only an intentionally user-tunable setting is.
+2. **Which section?** Cross-tool behaviour goes in a base feature section
+   (`agentic-workflow.json`); behaviour that only makes sense inside this
+   package goes in its extension section (`pi-agentic-workflow.json`). The two
+   never overlap.
+3. **Schema first.** Define the type, the JSON Schema fragment and the shipped
+   default together in the section owner (`packages/agentic-workflow-schema/src/config.ts`
+   for a base section; the package's descriptor for an extension). New keys are
+   optional; no coercion; unknown keys are refused, never merged. Regenerate
+   `config.schema.json` with the generator, never by hand.
+4. **Docs, init, changeset, roadmap.** Update the human doc, offer the value in
+   `init-workspace` when it has a meaningful default, add a `.changeset/` entry
+   (`feat` for a new key), and record the section in the roadmap when it ships.
+
+A key that no runtime reads is not shipped: publish the consumer or keep the key
+out. A section's defaults are read from the section owner (the schema package)
+by the runtime, so the CLI and the extension cannot disagree about "absent".
 
 ## Conventions
 
