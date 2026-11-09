@@ -37,10 +37,12 @@ ac-hash: 16e20c6fd2c9e23a08489d4d66d7f3737285f651458db32e2851590297a46219
   no behavior change on any existing caller.
 - `packages/agentic-workflow/src/journal/write.mjs` gains a refusal; every
   caller of `agentic-workflow journal write` with an explicit `--session` that
-  already landed an entry now gets exit 2 `already registered` instead of a
-  second fragment. The `/log-session` directive's composed command carries
-  `--session`, so it is the affected door; the skill's step-4 prose names the
-  same writer.
+  already landed an entry **of the same kind** now gets exit 2 `already
+  registered` instead of a second fragment. Both composed commands carry
+  `--session`, so both are affected doors: the `/log-session` directive's
+  `--kind narrative` is refused only by a second narrative, and the auto-log's
+  `--kind mechanical` only by a second mechanical — the two kinds coexist (see
+  O12, correction batch 1). The skill's step-4 prose names the same writer.
 - `docs/workflow/GATE_INVENTORY.md` gains one row (the new gate is enumerated
   there); `packages/agentic-workflow/README.md`'s `journal-write-grammar@1`
   block gains the refusal row; `skills/log-session/SKILL.md` names the refusal.
@@ -83,8 +85,8 @@ declared paths at the cut; copied verbatim, never written from memory.
   edit by a non-aggregator commit each fail `scripts/log-immutability.mjs`
   (exit 1, named code), while the aggregator's appends, fragment consumptions
   and anyone's carrier additions pass (exit 0) — proven by
-  `bun test scripts/log-immutability.test.mjs` exiting 0 (16 tests, including
-  the two uncommitted working-tree refusals).
+  `bun test scripts/log-immutability.test.mjs` exiting 0, including the two
+  uncommitted working-tree refusals.
 - **AC2 (S2)** — `node scripts/local-gate.mjs --list` lists `log-immutability`
   among the offline non-test-bearing steps, and both step-id pin suites pass:
   `bun test scripts/local-gate.test.mjs scripts/release-workflows.test.mjs`
@@ -94,6 +96,12 @@ declared paths at the cut; copied verbatim, never written from memory.
   `JOURNAL REFUSAL — … already registered …` and writes no byte, while two
   writes without `--session` still both land — proven by
   `bun test packages/agentic-workflow/test/journal.write.test.mjs` exiting 0.
+- **AC4 (S3, A2)** — one entry per conversation **per kind**: the conversation's
+  two write orders both land (auto-log mechanical then `/log-session`
+  narrative; narrative then the shutdown's mechanical write), and a second
+  fragment of the same kind for that conversation is refused with its bytes
+  untouched — proven by `bun test packages/agentic-workflow/test/journal.write.test.mjs`
+  exiting 0 with the two write-order cases and the same-kind refusal case.
 
 ## Future
 
@@ -143,6 +151,8 @@ step-id pin suites) · `packages/agentic-workflow/test/journal.write.test.mjs`
   (Implements: S1, S2, S3)
 - P8 — Verification: root suite + the offline gate steps in the foreground; journal fragment + session close (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3)
+- P9 — Correction batch 1, the external verification's advisories (A1–A3): the guard's unit is (session, kind) so the shipped write orders land; the grammar row and the template carrier doc state the same-kind scope and both `local` exemptions; AC1's stale count drops (validator: `bun test packages/agentic-workflow/test/journal.write.test.mjs` and `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` exit 0)
+  (Implements: S3)
 
 ### Planning evidence
 
@@ -227,14 +237,25 @@ this unit; the review step is the owner's external verification.
 
 - **L3** — 2026-11-08, owner instruction, verbatim: "create the pr".
 - **P9** — 2026-11-08, branch pushed (`5ba1d670..3eda945f`, pre-push gate `PASS — 10 step(s)` both pushes) and PR opened: [#469](https://github.com/gtrabanco/agentic-workflow/pull/469) · the roadmap row reads `done` with the PR open.
+- **L4** — 2026-11-09, owner instruction, verbatim: "Apply to this repository: fix the findings but just after verify are legit and after understand full context, make sure dont let other bugs open due the reach of the first fix, do this in loop until full fix is done. Make sure you havent broken other thing and fix all context (symbol)."
+- **D1** — 2026-11-09, decision (correction batch 1, O12): the external verification's A2 is a **behavioral** finding, not a wording one. The `already-registered` guard was kind-wide; the auto-log passes an explicit session at shutdown (`auto-log-session-wiring.ts`:94, kind `mechanical`) and the `/log-session` directive hands the model `--session ${record.session} --kind narrative` (`log-session-invocation.ts`:343), so with that exact session the documented narrative door was refused — reproduced in scratch: mechanical `sess-A` exit 0, then the skill's own `--content -` narrative `sess-A` exit 2. S3 says "instead of writing a duplicate", and `journal-write-grammar@1` already says **one entry per session per kind**, so the guard's unit is (session, kind). Fixing prose alone would have left the refusal wider than its own contract and split the shipped flow.
+- **D2** — 2026-11-09, decision (O12's boundary): the guard never fires when a fragment of that conversation and kind already exists — the template SessionEnd hook writes `${now_second}-${branch}-mechanical-${session}` itself (`log-session-end.sh`:69) and a session can already carry two mechanical fragments, so a naive same-kind rule would red that population on re-run. Same kind **and** a different target name is the refusal (PE-009).
+- **P10** — 2026-11-09, RED first (correction batch 1), against the pre-fix writer: the four AC4/shape cases written before the guard moved (the two write orders, the born-before measurement, the same-kind refusal) · observed 4 fail of 22 in `packages/agentic-workflow/test/journal.write.test.mjs`.
+- **P11** — 2026-11-09, the guard's unit becomes (session, kind) and the spanning case is replaced by the same-kind refusal · `packages/agentic-workflow/src/journal/write.mjs`.
+- **P12** — 2026-11-09, the declared prose: the grammar row (same-kind scope, both `local` exemptions) and the template carrier doc (the refusal + one entry per conversation per kind, replacing its own older summary); AC1's stale count dropped · `packages/agentic-workflow/README.md`, `template/.agentic-workflow/journal.md`, this doc's AC1.
+- **E8** — 2026-11-09, `bun test packages/agentic-workflow/test/journal.write.test.mjs` at `4974bbbc` (RED commit, pre-fix writer) · 20 pass 3 fail — the auto-log-then-narrative order, the narrative-then-auto-log order and the hook-created-fragment case red, exactly the three P11 must turn green (O12).
+- **E9** — 2026-11-09, `bun test packages/agentic-workflow/test/journal.write.test.mjs` at `fdb9ac34` · exit 0 · 22 pass 0 fail, then 23 pass after the prose pin in the same commit (O12; O13's validator on the README row and the carrier doc).
+- **E10** — 2026-11-09, differential against base `5ba1d670` (a real `bun add` of the crate's two declared deps in a `mktemp -d` archive, removed after): unflagged narrative, explicit `--session local`, a first-ever explicit `s1`, `journal name`, an unknown flag, a missing `--summary`, an absent carrier and `journal aggregate --check` — all 8 byte-identical in stdout/exit at base and head; the only diffs are the asked-for same-kind second entry and, at head, the shipped order now landing.
+- **E11** — 2026-11-09, `bun run test` in `packages/agentic-workflow` · 497 pass 0 fail; `bun run test:node` · 498 pass 0 fail; `bun run test` in `packages/pi-agentic-workflow` · 640 pass 0 fail (O12/O13, P9).
+- **G4** — 2026-11-09, `node scripts/run-root-suite.mjs` · exit 0 · 92/92 suites PASS; `bun scripts/local-gate.mjs --only log-immutability,journal-carrier-check,docs-generated-projection,version-parity-content` · exit 0 · `PASS — 4 step(s)`; `node scripts/log-immutability.mjs` on the live tree · `verdict: PASS`; `node scripts/docs-generate.mjs --check` · exit 0 · `node scripts/roadmap-settle.mjs` · verdict PASS · `bun scripts/check-skill-context.mjs` + `--documents` · PASS · `bun scripts/skill-lint.mjs` · 0 findings · `bun scripts/phase-lint.mjs docs/fix/468-log-immutability/SPEC.md` · verdict PASS.
 
 ## Next
 
-The owner's external verification — the diff (`5ba1d670..fc6b20ca` plus the
-handoff summary) is handed over unapproved; no self-issued verdict replaces it.
-After the verdict: the PR to `main` (`Closes #468`) stays the owner's call —
-the branch has already been merged once locally, so the delivery shape is the
-owner's decision.
+Correction batch 1 is applied and verified by its own commands; the branch is
+handed back for the owner's re-verification (a delta verdict over
+`a4692ad1..`, limited to A1–A3 plus the spot check). The PR to `main`
+(`Closes #468`) stays the owner's call — the branch has already been merged
+once locally, so the delivery shape is the owner's decision.
 
 ## References
 
@@ -257,5 +278,7 @@ none — independent.
 | A project without the fragment carrier still refuses `journal write` (the opt-in rule) | `packages/agentic-workflow/test/journal.write.test.mjs` — "an absent carrier is refused, never created" |
 | Two writes without `--session` in one carrier both land (the multi-conversation default flow) | O10's differential test (P6) |
 | Every existing local-gate step keeps its id, order and tests marker | `bun test scripts/local-gate.test.mjs scripts/release-workflows.test.mjs` |
+| One conversation's two kinds both land, in either write order — the auto-log at shutdown plus the `/log-session` narrative (AC4) | `packages/agentic-workflow/test/journal.write.test.mjs` — the two write-order cases |
+| A session's second fragment of the same kind is still refused, its bytes untouched (the S3 rule, scoped) | `packages/agentic-workflow/test/journal.write.test.mjs` — the same-kind refusal case |
 | The aggregator's read side (`journal aggregate --check`) is untouched | `bun run test` in `packages/agentic-workflow` (crate suite) |
 | The gate never writes a byte (read-only) | the suite's fixtures assert stdout/exit only; `scripts/log-immutability.mjs` performs no fs writes |
