@@ -81,7 +81,7 @@
  * `journal aggregate` unchanged.
  */
 
-import { readFileSync, existsSync, writeFileSync, renameSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, renameSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, basename, dirname } from "node:path";
 
@@ -172,6 +172,113 @@ function sensorRefuse(prefix, reason) {
 /** The 8-hex digest the receipt blocks report. */
 function digest(text) {
   return createHash("sha256").update(text, "utf8").digest("hex").slice(0, 8);
+}
+
+/** The block marker a gate inventory declares its rows under (owner:
+ *  `scripts/prose-gate-inventory.mjs`, which parses the same block). */
+const INVENTORY_MARKER = "prose-gate-inventory@1";
+/**
+ * Every real file and directory under `root`, as root-relative paths — the
+ * membership set the `verify` tree cross-checks resolve against (issue #227).
+ * `.git` and `node_modules` are skipped; symlinks are skipped, so a citation
+ * resolving only through a link is "absent" — the tree the repo commits is
+ * what citations answer to, not the checkout's mount points.
+ */
+function collectTree(root) {
+  const set = new Set();
+  const stack = [[root, ""]];
+  while (stack.length > 0) {
+    const [dir, rel] = stack.pop();
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.name === ".git" || entry.name === "node_modules") continue;
+      const path = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        set.add(path);
+        stack.push([join(dir, entry.name), path]);
+      } else if (entry.isFile()) {
+        set.add(path);
+      }
+    }
+  }
+  return set;
+}
+
+/**
+ * The `gate-id`s a gate inventory declares. Rows are `id | statement | …`
+ * lines inside the `prose-gate-inventory@1` fence — the shape
+ * `scripts/prose-gate-inventory.mjs` owns — and a project spelling the same
+ * rows as a markdown table (`| id | … |`) resolves the same way. The header
+ * cell, the `#` directives and every other table contribute nothing.
+ */
+function inventoryGateIds(text) {
+  const ids = [];
+  let fence = null;
+  let collecting = false;
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (fence === null) {
+      const opened = /^(```+|~~~+)/u.exec(trimmed);
+      if (opened) fence = opened[1];
+      continue;
+    }
+    if (trimmed.startsWith(fence)) {
+      fence = null;
+      collecting = false;
+      continue;
+    }
+    if (!collecting) {
+      if (trimmed === INVENTORY_MARKER) collecting = true;
+      continue;
+    }
+    const m = trimmed.match(/^\|?\s*([a-z0-9][a-z0-9-]*)\s*\|/u);
+    if (m && m[1] !== "gate-id") ids.push(m[1]);
+  }
+  return ids;
+}
+
+/**
+ * The published-gate resolver for the `verify` gate citation check (issue
+ * #227): a cited `` `id` gate `` must resolve to something this repository
+ * publishes. Four sources, read fresh from the tree, never hard-coded here:
+ *   1. the gate inventory's `gate-id` column (docs/workflow/GATE_INVENTORY.md,
+ *      the `INVENTORY_MARKER` block — every gate the workflow runs);
+ *   2. audit-pr's `GATE_NAMES` (scripts/audit-pr-gate.mjs, the receipt gates);
+ *   3. existing skills (a doc may cite a skill's gate colloquially);
+ *   4. existing script stems (scripts/<name>.mjs / <name>.test.mjs).
+ * A repo carrying none of a source simply contributes nothing; in a target
+ * project without the inventory or audit-pr the remaining sources still hold.
+ */
+function publishedGates(root) {
+  const names = new Set();
+  try {
+    for (const id of inventoryGateIds(readFileSync(join(root, "docs", "workflow", "GATE_INVENTORY.md"), "utf8"))) {
+      names.add(id);
+    }
+  } catch {}
+  try {
+    const block = readFileSync(join(root, "scripts", "audit-pr-gate.mjs"), "utf8").match(
+      /export const GATE_NAMES = Object\.freeze\(\[([^\]]*)\]/su,
+    );
+    if (block) for (const m of block[1].matchAll(/"([^"]+)"/gu)) names.add(m[1]);
+  } catch {}
+  try {
+    for (const entry of readdirSync(join(root, "skills"), { withFileTypes: true })) {
+      if (entry.isDirectory()) names.add(entry.name);
+    }
+  } catch {}
+  try {
+    for (const file of readdirSync(join(root, "scripts"))) {
+      const m = file.match(/^(.+)\.mjs$/u);
+      if (m) names.add(m[1].replace(/\.test$/u, ""));
+    }
+  } catch {}
+  return (id) => names.has(id);
 }
 
 /**
@@ -474,7 +581,19 @@ switch (command) {
           spawnSync("git", ["-C", dirname(docPath), "cat-file", "-e", `${sha}^{commit}`], {
             stdio: "ignore",
           }).status === 0;
-    const result = verifyUnitDoc({ text, path: docPath, headExists, now: null });
+    // Tree cross-checks (issue #227): repo context decides both claims, so
+    // `--no-git` (no repo context) skips them exactly like the sha resolution.
+    let pathExists = null, rootHasDir = null, gateKnown = null;
+    if (headExists !== null) {
+      const root =
+        spawnSync("git", ["-C", dirname(docPath), "rev-parse", "--show-toplevel"], { encoding: "utf8" }).stdout.trim()
+        || dirname(docPath);
+      const tree = collectTree(root);
+      pathExists = (p) => tree.has(p);
+      rootHasDir = (seg) => tree.has(seg);
+      gateKnown = publishedGates(root);
+    }
+    const result = verifyUnitDoc({ text, path: docPath, headExists, now: null, pathExists, rootHasDir, gateKnown });
     if (!result.ok) {
       process.stderr.write(
         `VERIFY REFUSAL — ${result.violations.length} violation(s)\n` +

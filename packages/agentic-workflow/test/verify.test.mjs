@@ -14,7 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -345,6 +345,216 @@ test("CLI: verify exits 0 with a receipt block on a clean doc, 2 with VERIFY REF
     cleanup();
   }
 });
+
+// ── Tree cross-checks (issue #227's 2026-11-03 re-scope residual) ──────────
+
+// The frozen-failure corpus of unit 227: a doc whose citations drift from the
+// tree used to pass verification. `pathExists`/`rootHasDir`/`gateKnown` are
+// injected exactly like `headExists`; `null` (no repo context, `--no-git`)
+// skips the check it feeds instead of passing silently on a stale claim.
+
+const CITATION_DOC = BASE_DOC.replace(
+  "## References\nnone\n",
+  "## References\n- `packages/agentic-workflow/src/verify/Verify.mjs:305` — the receipt checker\n",
+);
+
+const TREE = new Set([
+  "docs",
+  "docs/fix",
+  "docs/fix/201-operator-approved-pass-routing",
+  "docs/fix/201-operator-approved-pass-routing/SPEC.md",
+  "packages",
+  "packages/agentic-workflow",
+  "packages/agentic-workflow/src",
+  "packages/agentic-workflow/src/verify",
+  "packages/agentic-workflow/src/verify/Verify.mjs",
+  "scripts",
+  "scripts/audit-pr-gate.mjs",
+  "skills",
+  "skills/unit-lane",
+  "skills/unit-lane/SKILL.md",
+]);
+const treeContext = {
+  pathExists: (p) => TREE.has(p),
+  rootHasDir: (seg) => TREE.has(seg),
+  gateKnown: (id) =>
+    TREE.has(`skills/${id}/SKILL.md`) || id === "phase-lint-rules" || id === "branch-pushed",
+};
+
+test("verify refuses a root-relative path citation the tree does not hold (unit 227 corpus)", () => {
+  const stale = CITATION_DOC.replace("packages/agentic-workflow/src/verify/Verify.mjs:305", "scripts/retracted-gate.mjs:12");
+  const { path, cleanup } = writeDoc(stale);
+  try {
+    const result = verifyUnitDoc({ text: readFileSync(path, "utf8"), path, headExists: () => true, now: "2026-11-08", ...treeContext });
+    assert.equal(result.ok, false);
+    assert.ok(
+      result.violations.some((v) => v.code === "cited-path-missing" && v.message.includes("scripts/retracted-gate.mjs")),
+      JSON.stringify(result.violations),
+    );
+  } finally {
+    cleanup();
+  }
+});
+
+test("verify keeps a resolvable :line citation and refuses only the missing file", () => {
+  const { path, cleanup } = writeDoc(CITATION_DOC);
+  try {
+    const ok = verifyUnitDoc({ text: readFileSync(path, "utf8"), path, headExists: () => true, now: "2026-11-08", ...treeContext });
+    assert.equal(ok.ok, true, JSON.stringify(ok.violations));
+  } finally {
+    cleanup();
+  }
+});
+
+test("verify does not treat context-relative shorthand, brace expansion or commands as path claims", () => {
+  const shapes = [
+    "- `src/passes/` shorthand without an extension",
+    "- `references/ADVERSARIAL_SETUP.md` context-relative (no root `references/` dir)",
+    "- `packages/pi-agentic-workflow/src/config/{types,schema}.ts` brace expansion",
+    "- `bun test packages/agentic-workflow/test/verify.test.mjs` a command, not a path",
+    "- `feat/227-deterministic-artifact-emitters` a branch name (no root dir, no extension)",
+  ];
+  const body = CITATION_DOC.replace("## References\n- `packages/agentic-workflow/src/verify/Verify.mjs:305` — the receipt checker\n", `## References\n${shapes.join("\n")}\n`);
+  const { path, cleanup } = writeDoc(body);
+  try {
+    const result = verifyUnitDoc({ text: readFileSync(path, "utf8"), path, headExists: () => true, now: "2026-11-08", ...treeContext });
+    assert.equal(result.ok, true, JSON.stringify(result.violations));
+  } finally {
+    cleanup();
+  }
+});
+
+test("verify refuses a gate citation nothing publishes (unit 227 corpus)", () => {
+  const cited = CITATION_DOC.replace(
+    "## References\n- `packages/agentic-workflow/src/verify/Verify.mjs:305` — the receipt checker\n",
+    "## References\nThe `retracted-gate` gate was never published.\n",
+  );
+  const { path, cleanup } = writeDoc(cited);
+  try {
+    const result = verifyUnitDoc({ text: readFileSync(path, "utf8"), path, headExists: () => true, now: "2026-11-08", ...treeContext });
+    assert.equal(result.ok, false);
+    assert.ok(
+      result.violations.some((v) => v.code === "cited-gate-unknown" && v.message.includes("retracted-gate")),
+      JSON.stringify(result.violations),
+    );
+  } finally {
+    cleanup();
+  }
+});
+
+test("verify accepts gate citations that resolve to published sources", () => {
+  const cited = CITATION_DOC.replace(
+    "## References\n- `packages/agentic-workflow/src/verify/Verify.mjs:305` — the receipt checker\n",
+    "## References\nThe `unit-lane` gate, the `phase-lint-rules` gate and the `branch-pushed` gate are published.\n",
+  );
+  const { path, cleanup } = writeDoc(cited);
+  try {
+    const result = verifyUnitDoc({ text: readFileSync(path, "utf8"), path, headExists: () => true, now: "2026-11-08", ...treeContext });
+    assert.equal(result.ok, true, JSON.stringify(result.violations));
+  } finally {
+    cleanup();
+  }
+});
+
+test("verify skips the cross-checks when the repo context is absent (null deps, --no-git)", () => {
+  const stale = CITATION_DOC.replace("packages/agentic-workflow/src/verify/Verify.mjs:305", "scripts/retracted-gate.mjs:12")
+    + "\nThe `retracted-gate` gate, too.\n";
+  const { path, cleanup } = writeDoc(stale);
+  try {
+    const result = verifyUnitDoc({ text: readFileSync(path, "utf8"), path, headExists: null, now: "2026-11-08", pathExists: null, rootHasDir: null, gateKnown: null });
+    assert.equal(result.ok, true, JSON.stringify(result.violations));
+    assert.ok(!result.checks.includes("cited-paths") && !result.checks.includes("cited-gates"), result.checks.join(","));
+  } finally {
+    cleanup();
+  }
+});
+
+test("verify does not scan fenced blocks for citation claims", () => {
+  const fenced = CITATION_DOC.replace(
+    "## References\n- `packages/agentic-workflow/src/verify/Verify.mjs:305` — the receipt checker\n",
+    "## References\nVerbatim quotes stay verbatim:\n```\nThe `retracted-gate` gate and `scripts/retracted-gate.mjs:12` live in the quote only.\n```\n",
+  );
+  const { path, cleanup } = writeDoc(fenced);
+  try {
+    const result = verifyUnitDoc({ text: readFileSync(path, "utf8"), path, headExists: () => true, now: "2026-11-08", ...treeContext });
+    assert.equal(result.ok, true, JSON.stringify(result.violations));
+  } finally {
+    cleanup();
+  }
+});
+
+test("CLI: the verify cross-checks wire to the containing repo, and --no-git skips them", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-verify-cli-"));
+  try {
+    // Outside a repo the root falls back to the doc's directory, so a cited
+    // path resolves against it: `sub/real.mjs` exists, `sub/missing.mjs` does not.
+    mkdirSync(join(dir, "sub"));
+    writeFileSync(join(dir, "sub", "real.mjs"), "// tree member\n");
+    const okDoc = join(dir, "SPEC.md");
+    writeFileSync(okDoc, CITATION_DOC.replace("packages/agentic-workflow/src/verify/Verify.mjs:305", "sub/real.mjs"));
+    const ok = spawnSync("bun", [BIN, "verify", okDoc], { encoding: "utf8" });
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+    assert.match(ok.stdout, /cited-paths/u);
+
+    const staleDoc = join(dir, "STALE.md");
+    writeFileSync(staleDoc, CITATION_DOC.replace("packages/agentic-workflow/src/verify/Verify.mjs:305", "sub/missing.mjs"));
+    const stale = spawnSync("bun", [BIN, "verify", staleDoc], { encoding: "utf8" });
+    assert.equal(stale.status, 2);
+    assert.match(stale.stderr, /cited-path-missing/u);
+
+    const skipped = spawnSync("bun", [BIN, "verify", staleDoc, "--no-git"], { encoding: "utf8" });
+    assert.equal(skipped.status, 0, skipped.stdout + skipped.stderr);
+    assert.doesNotMatch(skipped.stdout, /cited-paths/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("CLI: gate citations resolve against the inventory's prose block, never the header cell (unit 227 corpus)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw-verify-inventory-"));
+  try {
+    mkdirSync(join(dir, "docs", "workflow"), { recursive: true });
+    // The live inventory's rows are `id | …` lines inside the
+    // `prose-gate-inventory@1` text block; only its legend and migration notes
+    // are markdown. A resolver reading markdown pipes publishes nothing, so
+    // every real inventory id is refused as unknown.
+    writeFileSync(
+      join(dir, "docs", "workflow", "GATE_INVENTORY.md"),
+      [
+        "# Gate inventory",
+        "",
+        "| Carrier | What it means |",
+        "|---|---|",
+        "| `script` | a root suite re-runs it |",
+        "",
+        "```text",
+        "prose-gate-inventory@1",
+        "# gate-suites: scripts/*-discipline.test.mjs",
+        "gate-id | statement | carrier | file | section | token | surfaces | safety | recurrence | checkability | tier | stay-reason | rederive",
+        "model-memory-provenance | a journaled claim's provenance | prose | skills/unit-lane/references/DESIGN.md | Provenance | never `confirmed` | - | 2 | 3 | 2 | prose | judgment-needed | skills/unit-lane/references/DESIGN.md#Provenance",
+        "```",
+        "",
+      ].join("\n"),
+    );
+    const path = join(dir, "SPEC.md");
+
+    const cited = BASE_DOC.replace("## References\nnone\n", "## References\nThe `model-memory-provenance` gate is an inventory row.\n");
+    writeFileSync(path, cited);
+    const ok = spawnSync("bun", [BIN, "verify", path], { encoding: "utf8" });
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+    assert.match(ok.stdout, /cited-gates/u);
+
+    // The header cell is a column name, not a published gate.
+    writeFileSync(path, BASE_DOC.replace("## References\nnone\n", "## References\nThe `gate-id` gate is cited.\n"));
+    const header = spawnSync("bun", [BIN, "verify", path], { encoding: "utf8" });
+    assert.equal(header.status, 2, header.stdout + header.stderr);
+    assert.match(header.stderr, /cited-gate-unknown: .*gate-id/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── CLI wiring ──────────────────────────────────────────────────────────────
 
 test("CLI: verify on the published 201 unit doc exits 0", () => {
   const published = fileURLToPath(
