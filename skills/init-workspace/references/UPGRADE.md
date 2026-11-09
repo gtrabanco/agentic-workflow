@@ -94,7 +94,13 @@ lacks**. Ten ordered steps:
    platform hook config. A missing `path-policy.json` seed and its
    `path-protection.md` page are proposed from the template; an existing
    owner-written `path-policy.json` is never clobbered and is listed as a
-   residual instead. Leave honest placeholders where the user skipped.
+   residual instead. A missing subagent routing config (issue #260, S11 edge 4)
+   is **offered the same way, additive and ask-first**: seed `pi-agentic-workflow.json`
+   with the recommended `passes` entries for the review family and the optional
+   `subagents` key (caps shaped `"<n> of <m> <unit>"`, or the key omitted —
+   absent means the self-detected envelope) only on an explicit yes; an existing
+   owner-written file is never rewritten, and a declined offer is a residual.
+   Leave honest placeholders where the user skipped.
 7. **Retire the legacy `CLAUDE.md` — only with an explicit yes, never as a side
    effect.** Older releases of this workflow wrote the guide as `CLAUDE.md`;
    current ones write `AGENTS.md`, and current Claude Code reads `AGENTS.md`.

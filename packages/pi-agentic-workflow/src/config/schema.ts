@@ -26,6 +26,7 @@ import type {
   PassModelSetting,
   PassRouteFile,
   PassesConfigFile,
+  SubagentsConfigFile,
 } from "./types.js";
 import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
 import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
@@ -55,6 +56,7 @@ const ROOT_KEYS = new Set([
   "telemetry",
   "autoLogSession",
   "passes",
+  "subagents",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -394,6 +396,71 @@ function checkPasses(value: unknown, issues: ConfigIssue[]): PassesConfigFile | 
   return passes;
 }
 
+/** Strict validator for the `subagents` block (issue #260, owner decision 6):
+ *  the optional resource-limit configuration. `parallelism` is `serial`,
+ *  `auto` or a positive integer; the caps are "<n> of <m> <unit>" strings
+ *  with 0 < n <= m (memoryCap: GB|MB|KB; threadCap: threads|cores). Unknown
+ *  inner keys are rejected — a silently dropped cap lets a spawn run outside
+ *  the envelope the operator believed it bounded. */
+const SUBAGENTS_KEYS = new Set(["parallelism", "memoryCap", "threadCap"]);
+const SUBAGENTS_CAP = /^(\d+(?:\.\d+)?)\s+of\s+(\d+(?:\.\d+)?)\s+(GB|MB|KB|threads|cores)$/u;
+
+function checkSubagents(value: unknown, issues: ConfigIssue[]): SubagentsConfigFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path: "$.subagents", message: `must be a JSON object, got ${describe(value)}` });
+    return undefined;
+  }
+  const subagents: SubagentsConfigFile = {};
+  for (const [key, entry] of Object.entries(value)) {
+    const path = `$.subagents.${displayKey(key)}`;
+    if (!SUBAGENTS_KEYS.has(key)) {
+      issues.push({ path, message: `unknown subagents key "${key}" (allowed: parallelism, memoryCap, threadCap)` });
+      continue;
+    }
+    if (key === "parallelism") {
+      const valid =
+        entry === "serial" ||
+        entry === "auto" ||
+        (typeof entry === "number" && Number.isInteger(entry) && entry >= 1);
+      if (!valid) {
+        issues.push({
+          path,
+          message: `parallelism must be "serial", "auto" or a positive integer, got ${describe(entry)}`,
+        });
+        continue;
+      }
+      subagents.parallelism = entry as "serial" | "auto" | number;
+      continue;
+    }
+    // memoryCap / threadCap — the decision-6 cap strings.
+    if (typeof entry !== "string" || !SUBAGENTS_CAP.test(entry)) {
+      issues.push({
+        path,
+        message: `${key} must match "<n> of <m> <unit>" (memoryCap: GB|MB|KB; threadCap: threads|cores), got ${describe(entry)}`,
+      });
+      continue;
+    }
+    const m = entry.match(SUBAGENTS_CAP)!;
+    const unit = m[3];
+    const memoryUnit = unit === "GB" || unit === "MB" || unit === "KB";
+    if (key === "memoryCap" && !memoryUnit) {
+      issues.push({ path, message: `memoryCap unit must be GB|MB|KB, got "${unit}"` });
+      continue;
+    }
+    if (key === "threadCap" && memoryUnit) {
+      issues.push({ path, message: `threadCap unit must be threads|cores, got "${unit}"` });
+      continue;
+    }
+    if (Number(m[1]) > Number(m[2])) {
+      issues.push({ path, message: `${key} "${entry}" must carry 0 < n <= m` });
+      continue;
+    }
+    if (key === "memoryCap") subagents.memoryCap = entry;
+    else subagents.threadCap = entry;
+  }
+  return subagents;
+}
+
 function checkRoute(value: unknown, path: string, issues: ConfigIssue[]): RouteFile | undefined {
   if (!isRecord(value)) {
     issues.push({ path, message: "must be an object with optional model/thinking keys" });
@@ -587,6 +654,11 @@ function validateConfig(value: unknown): ParseResult {
   if (value.passes !== undefined) {
     const passes = checkPasses(value.passes, issues);
     if (passes) config.passes = passes;
+  }
+
+  if (value.subagents !== undefined) {
+    const subagents = checkSubagents(value.subagents, issues);
+    if (subagents) config.subagents = subagents;
   }
 
   return issues.length > 0 ? { ok: false, issues } : { ok: true, config };

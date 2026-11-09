@@ -1,6 +1,0 @@
-## 2026-11-08T22:03:58Z — feat/201-operator-model-routing — narrative
-- **Commits:** 19 (6c97dd22…388031de)
-- **Files:** 53 files
-- **Summary:** Resolved merge conflict in docs/LOGS.md when bringing main up to date with feat/201-operator-model-routing. Main had merged PR #466 (feature 33 / issue #173 - single-owner turn contract) which added its log entry at 20:30, while the feat/201 branch had its own log at 19:41 plus narrative journal logs from main (12:18-18:44). The conflict markers were resolved by keeping all log entries in chronological order. No docs/LOGS.md content was edited — only the conflict region was resolved, and all journal narrative logs from main were preserved as they are added by the CI journal aggregator.
-- **Decisions:** The merge conflict was purely in the LOGS.md conflict markers between feat/201's local narrative logs and main's feature #173 log. Kept all entries because LOGS.md is append-only: feat/201's log (19:41), main's narrative logs (12:18-18:44, from CI journal), and main's feature #173 log (20:30, from PR #466). No manual edits to existing entries — only the conflict block was resolved.
-- **Next:** Push the merged branch to origin and create/update the PR to close issue #201

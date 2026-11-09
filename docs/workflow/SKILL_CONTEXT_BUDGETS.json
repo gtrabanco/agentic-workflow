@@ -317,8 +317,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15816,
-      "routeLinesMax": 1186,
+      "routeEstimateMax": 15987,
+      "routeLinesMax": 1202,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -343,7 +343,9 @@
         "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13856 est / 1045 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 15242 / 1150; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword.",
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "issue #294 (unit 82 relay-lane-execution)": "every execute-phase route loads the executor entrypoint this unit touched; measured 14343 est / 1078 lines, ceilings re-set to ceil(14343 x 1.10) = 15778 and ceil(1078 x 1.10) = 1186",
-        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15778 -> 15816 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration)."
+        "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 14488 est / 1088 lines at the change, ceilings re-based to ceil(14488 x 1.10) = 15937 / ceil(1088 x 1.10) = 1197. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15778 -> 15816 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
+        "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis."
       }
     },
     "execute-phase:feature": {
@@ -360,8 +362,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15101,
-      "routeLinesMax": 1137,
+      "routeEstimateMax": 15272,
+      "routeLinesMax": 1148,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -385,7 +387,9 @@
         "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword.",
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "issue #294 (unit 82 relay-lane-execution)": "every execute-phase route loads the executor entrypoint this unit touched; measured 13693 est / 1033 lines, ceilings re-set to ceil(13693 x 1.10) = 15063 and ceil(1033 x 1.10) = 1137",
-        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration)."
+        "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
+        "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis."
       }
     },
     "execute-phase:final-pr": {
@@ -403,8 +407,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15666,
-      "routeLinesMax": 1163,
+      "routeEstimateMax": 15841,
+      "routeLinesMax": 1179,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -429,7 +433,9 @@
         "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13719 est / 1024 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 15091 / 1127; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword.",
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "issue #294 (unit 82 relay-lane-execution)": "every execute-phase route loads the executor entrypoint this unit touched; measured 14206 est / 1057 lines, ceilings re-set to ceil(14206 x 1.10) = 15627 and ceil(1057 x 1.10) = 1163",
-        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15627 -> 15666 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration)."
+        "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 14351 est / 1067 lines at the change, ceilings re-based to ceil(14351 x 1.10) = 15787 / ceil(1067 x 1.10) = 1174. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15627 -> 15666 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
+        "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis."
       }
     },
     "execute-phase:finding": {
@@ -446,8 +452,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15101,
-      "routeLinesMax": 1137,
+      "routeEstimateMax": 15272,
+      "routeLinesMax": 1148,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -470,7 +476,9 @@
         "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword.",
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "issue #294 (unit 82 relay-lane-execution)": "every execute-phase route loads the executor entrypoint this unit touched; measured 13693 est / 1033 lines, ceilings re-set to ceil(13693 x 1.10) = 15063 and ceil(1033 x 1.10) = 1137",
-        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration)."
+        "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
+        "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis."
       }
     },
     "execute-phase:fix": {
@@ -487,8 +495,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15101,
-      "routeLinesMax": 1137,
+      "routeEstimateMax": 15272,
+      "routeLinesMax": 1148,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -511,7 +519,9 @@
         "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword.",
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "issue #294 (unit 82 relay-lane-execution)": "every execute-phase route loads the executor entrypoint this unit touched; measured 13693 est / 1033 lines, ceilings re-set to ceil(13693 x 1.10) = 15063 and ceil(1033 x 1.10) = 1137",
-        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration)."
+        "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
+        "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis."
       }
     },
     "execute-phase:legacy": {
@@ -528,8 +538,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15101,
-      "routeLinesMax": 1137,
+      "routeEstimateMax": 15272,
+      "routeLinesMax": 1148,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -552,7 +562,9 @@
         "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword.",
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "issue #294 (unit 82 relay-lane-execution)": "every execute-phase route loads the executor entrypoint this unit touched; measured 13693 est / 1033 lines, ceilings re-set to ceil(13693 x 1.10) = 15063 and ceil(1033 x 1.10) = 1137",
-        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration)."
+        "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
+        "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis."
       }
     },
     "execute-phase:small": {
@@ -569,8 +581,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15101,
-      "routeLinesMax": 1137,
+      "routeEstimateMax": 15272,
+      "routeLinesMax": 1148,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -594,7 +606,9 @@
         "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword.",
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "issue #294 (unit 82 relay-lane-execution)": "every execute-phase route loads the executor entrypoint this unit touched; measured 13693 est / 1033 lines, ceilings re-set to ceil(13693 x 1.10) = 15063 and ceil(1033 x 1.10) = 1137",
-        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration)."
+        "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
+        "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis."
       }
     },
     "execute-phase:unit-loop": {
@@ -611,8 +625,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15101,
-      "routeLinesMax": 1137,
+      "routeEstimateMax": 15272,
+      "routeLinesMax": 1148,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -633,7 +647,9 @@
         "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword.",
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "issue #294 (unit 82 relay-lane-execution)": "every execute-phase route loads the executor entrypoint this unit touched; measured 13693 est / 1033 lines, ceilings re-set to ceil(13693 x 1.10) = 15063 and ceil(1033 x 1.10) = 1137",
-        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration)."
+        "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
+        "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
+        "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis."
       }
     },
     "review-change:adversarial": {

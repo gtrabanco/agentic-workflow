@@ -17,6 +17,7 @@
  *   agentic-workflow journal name --kind <mechanical|narrative> [--dir <root>] [--branch <b>] [--session <id>]
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *   agentic-workflow resolve-passes [--global <path>] [--project <path>] [--command <name>]
+ *   agentic-workflow verify <unit-doc-path>
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -38,6 +39,16 @@
  * and `obligations` verifies the unit's obligations ledger is closed. It is the
  * same module `scripts/relay-packet.mjs` runs, so a project that carries only
  * the crate gets the identical block. Read-only: it writes nothing.
+ *
+ * `verify` (issue #260) is the document verifier — non-negotiable #2's tool,
+ * distinct from the `edit` writer CLI: it reads one unit document against the
+ * frozen schemas (required sections per accepted shape, evidence columns,
+ * progress entries, log kind tokens, the obligations ledger closed) and the
+ * receipt marks (`REVIEW-RAN`/`GATE-RAN`/`R`/`G` lines must name a commit that
+ * exists in the containing repo — a mark produced as plausible text is a
+ * refusal, never a pass). Read-only: it writes nothing. Clean → exit 0 with
+ * the `verify@1` receipt; a violation → exit 2 and
+ * `VERIFY REFUSAL — <violations>` on stderr.
  *
  * `resolve-passes` (issue #201) is the spawned-pass model resolution: it reads
  * the two routing config files (global, then project — the project file wins
@@ -106,6 +117,10 @@ import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from 
 import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
+import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
+import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
+import { checkTrial, boundLine, parseDuration, CheckError, readPidLive } from "../src/resources/check.mjs";
+import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -350,7 +365,7 @@ async function runDocOpPositional(g) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal|resolve-passes> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal|resolve-passes|verify|resources> ...");
   process.exit(1);
 }
 
@@ -430,6 +445,160 @@ switch (command) {
     }
     process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
     process.exit(0);
+    break;
+  }
+
+  // ── verify — the document verifier, distinct from the edit writer (issue #260) ──
+  case "verify": {
+    const positional = [];
+    for (const arg of restArgs) {
+      if (arg === "--no-git") continue; // skip the receipt-sha resolution (no repo context)
+      else if (arg.startsWith("--")) sensorRefuse("VERIFY", `unknown argument "${arg}" (usage: verify <unit-doc-path> [--no-git])`);
+      else positional.push(arg);
+    }
+    if (positional.length !== 1) {
+      sensorRefuse("VERIFY", `expected exactly one unit-doc path (usage: verify <unit-doc-path> [--no-git])`);
+    }
+    const docPath = resolve(positional[0]);
+    let text;
+    try {
+      text = readFileSync(docPath, "utf8");
+    } catch (error) {
+      sensorRefuse("VERIFY", `unit doc is present but unreadable: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    // headExists wires the fabricated-receipt check to the containing repo:
+    // a receipt naming a commit the repo does not hold attests nothing.
+    const headExists = restArgs.includes("--no-git")
+      ? null
+      : (sha) =>
+          spawnSync("git", ["-C", dirname(docPath), "cat-file", "-e", `${sha}^{commit}`], {
+            stdio: "ignore",
+          }).status === 0;
+    const result = verifyUnitDoc({ text, path: docPath, headExists, now: null });
+    if (!result.ok) {
+      process.stderr.write(
+        `VERIFY REFUSAL — ${result.violations.length} violation(s)\n` +
+          result.violations.map((v) => `  ${v.code}: ${v.message}`).join("\n") +
+          "\n",
+      );
+      process.exit(2);
+    }
+    process.stdout.write(`VERIFY PASS — ${JSON.stringify({ ...result, violations: [] }, null, 2)}\n`);
+    process.exit(0);
+    break;
+  }
+
+  // ── resources — the trial-envelope + admission + observation layer (issue #260) ──
+  case "resources": {
+    const sub = restArgs[0];
+    if (sub !== "detect" && sub !== "admit" && sub !== "check" && sub !== "bound") {
+      sensorRefuse("RESOURCES", `unknown subcommand "${sub ?? ""}" (usage: resources detect [caps…] | resources admit --task <id> --expect <json> [--record-dir <dir>] | resources check --task <id> --record-dir <dir> [--elapsed <n>s|m|h] [--pid <n> [--prev-cpu <s>]] | resources bound --task <id> --cmd "<command>" [caps…])`);
+    }
+    const flags = {};
+    const positional = [];
+    // flag name → the camelCase key the code reads. `--json` is accepted where
+    // the output IS a JSON receipt (detect, admit, check); `bound` prints the
+    // shell envelope, so it refuses the flag instead of ignoring it silently.
+    let jsonAsked = false;
+    const VALUE_FLAGS = new Map([
+      ["--task", "task"],
+      ["--expect", "expect"],
+      ["--record-dir", "recordDir"],
+      ["--memory-cap", "memoryCap"],
+      ["--thread-cap", "threadCap"],
+      ["--parallelism", "parallelism"],
+      ["--elapsed", "elapsed"],
+      ["--pid", "pid"],
+      ["--prev-cpu", "prevCpu"],
+      ["--cmd", "cmd"],
+    ]);
+    for (let i = 1; i < restArgs.length; i++) {
+      const arg = restArgs[i];
+      if (VALUE_FLAGS.has(arg)) {
+        if (i + 1 >= restArgs.length) sensorRefuse("RESOURCES", `${arg} requires a value`);
+        flags[VALUE_FLAGS.get(arg)] = restArgs[++i];
+      } else if (arg === "--json") {
+        jsonAsked = true;
+      } else {
+        sensorRefuse("RESOURCES", `unknown argument "${arg}"`);
+      }
+    }
+    const caps = {};
+    if (flags.memoryCap !== undefined) caps.memoryCap = flags.memoryCap;
+    if (flags.threadCap !== undefined) caps.threadCap = flags.threadCap;
+    if (flags.parallelism !== undefined) {
+      caps.parallelism = flags.parallelism === "serial" || flags.parallelism === "auto"
+        ? flags.parallelism
+        : Number(flags.parallelism);
+    }
+    try {
+      const envelope = detectHost({ caps: Object.keys(caps).length > 0 ? caps : null });
+      if (sub === "detect") {
+        process.stdout.write(`${JSON.stringify(envelope, null, 2)}\n`);
+        process.exit(0);
+      }
+      if (sub === "check") {
+        if (!flags.task) sensorRefuse("RESOURCES", "check requires --task <id>");
+        if (!flags.recordDir) sensorRefuse("RESOURCES", "check requires --record-dir <dir> (the admit run's record dir)");
+        const elapsedSeconds = flags.elapsed !== undefined ? parseDuration(flags.elapsed) : null;
+        const pid = flags.pid !== undefined
+          ? { ...readPidLive(flags.pid), prevCpuSeconds: flags.prevCpu !== undefined ? Number(flags.prevCpu) : null }
+          : null;
+        let verdict;
+        try {
+          verdict = checkTrial({
+            task: flags.task,
+            recordDir: flags.recordDir,
+            elapsedSeconds,
+            pid,
+          });
+        } catch (e) {
+          if (!(e instanceof CheckError)) throw e;
+          sensorRefuse("RESOURCES", e.message);
+        }
+        // A check is information, never a refusal: within/over/unmeasurable all
+        // exit 0 — the orchestrator decides on the message. Only the caller's
+        // errors (unknown trial, bad duration) refused above.
+        process.stdout.write(`${JSON.stringify(verdict, null, 2)}\n`);
+        process.exit(0);
+      }
+      if (sub === "bound") {
+        if (jsonAsked) {
+          sensorRefuse("RESOURCES", "bound prints the systemd envelope as shell lines, not a JSON receipt — drop --json (the flag is accepted by detect, admit and check)");
+        }
+        if (!flags.task) sensorRefuse("RESOURCES", "bound requires --task <id>");
+        if (!flags.cmd) sensorRefuse("RESOURCES", 'bound requires --cmd "<command to wrap>"');
+        process.stdout.write(`${boundLine({ task: flags.task, envelope, command: flags.cmd })}\n`);
+        process.exit(0);
+      }
+      // admit
+      if (!flags.task) sensorRefuse("RESOURCES", "admit requires --task <id>");
+      if (flags.expect === undefined) sensorRefuse("RESOURCES", "admit requires --expect <json>");
+      let expect;
+      try {
+        expect = JSON.parse(flags.expect);
+      } catch (error) {
+        sensorRefuse("RESOURCES", `--expect is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      const verdict = admitTrial({
+        task: flags.task,
+        expect,
+        envelope,
+        recordDir: flags.recordDir ?? null,
+      });
+      if (verdict.verdict !== "allow") {
+        process.stderr.write(
+          `RESOURCES REFUSAL — ${verdict.reason}\n` +
+            `  receipt: ${JSON.stringify(verdict.receipt)}\n`,
+        );
+        process.exit(2);
+      }
+      process.stdout.write(`${JSON.stringify(verdict, null, 2)}\n`);
+      process.exit(0);
+    } catch (e) {
+      if (!(e instanceof ResourcesError)) throw e;
+      sensorRefuse("RESOURCES", e.message);
+    }
     break;
   }
 
