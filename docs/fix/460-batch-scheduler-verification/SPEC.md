@@ -213,9 +213,10 @@ it.
   (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0 — `L1` tests)
   (Implements: S2)
   Relevant files: scripts/batch-scheduler.mjs
-- P5 — Script: triage readiness — roadmap fix-row status read; `idea`/`defined`
-  /missing → `triaged: false` + `reason.kind: untriaged` (never plain
-  `satisfied-inputs`); human summary names the untriaged (validator:
+- P5 — Script: triage readiness — roadmap fix-row status read; a row present
+  below `planned` (in practice `idea`) → `triaged: false` +
+  `reason.kind: untriaged` (never plain `satisfied-inputs`); a missing row
+  carries no signal (D4); human summary names the untriaged (validator:
   `bun test scripts/batch-scheduler.test.mjs` exits 0 — `T2` tests)
   (Implements: S3)
   Relevant files: scripts/batch-scheduler.mjs

@@ -6,7 +6,7 @@
  * application workflow: one test per requested rule, red first). The contract
  * it pins:
  *
- *  - **One versioned document.** `batch-plan@1` — contract id + version + the
+ *  - **One versioned document.** `batch-plan@2` — contract id + version + the
  *    convenience `schema` token, the journal-entry precedent.
  *  - **Core is closed, wholly.** Unlike the journal entry there is no
  *    `metadata` escape: the plan is a computed projection of the live work
