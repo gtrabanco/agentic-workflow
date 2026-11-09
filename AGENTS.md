@@ -461,6 +461,13 @@ This repo uses git worktrees under `.git/worktrees/<path>` (not under
 `.worktrees/` or `/tmp` — Serena and other MCPs detect worktrees as separate
 project paths and break when worktrees live outside the repo tree).
 
+⚠️ **CRITICAL: Worktrees inside `.git/worktrees/` get corrupted by `git worktree
+add`** — git writes `HEAD`, `gitdir`, `commondir`, `index`, `logs/`, `ORIG_HEAD`
+files inside the worktree that it then reports as "untracked files", making
+`git worktree remove` fail until `--force` is used (and even then the files
+persist). **Always use the two-step pattern below** — create in a temporary
+path on the same filesystem, then `git worktree move` to the final location.
+
 When asked to create a worktree for an issue or branch, always follow the
 steps below **in order** — they are not optional and have no shortcuts.
 
@@ -499,35 +506,39 @@ git will refuse to create it again:
 git branch -D <branch-name> 2>/dev/null
 ```
 
-### Step 4 — Create the worktree (robust method)
+### Step 4 — Create the worktree (two-step pattern)
 
-The standard `git worktree add -b` command corrupts the worktree by leaving
-`index.lock`, `MERGE_RR`, `COMMIT_EDITMSG`, and `ORIG_HEAD` files inside it,
-which make git refuse `worktree remove --force` later. Instead, create the
-worktree as detached HEAD first, then wire up the branch:
+**Never** call `git worktree add` directly on a path under `.git/worktrees/` —
+it corrupts the worktree with control files (`HEAD`, `gitdir`, `index`, etc.)
+that make `git worktree remove` fail.
+
+Use this two-step pattern:
 
 ```bash
-# 1. Create worktree from remote branch (detached HEAD)
-git worktree add .git/worktrees/<worktree-dir> origin/<branch-name>
+# 1. Create in a temporary path on the same filesystem (must be on the same
+#    filesystem as the repo for git worktree move to work)
+git worktree add -b <branch-name> /home/agent/projects/temp-worktrees/<worktree-dir> <branch-name-or-sha>
 
-# 2. Create the tracking branch inside the worktree
-cd .git/worktrees/<worktree-dir>
-git branch -u origin/<branch-name> <branch-name>
-
-# 3. Switch to the branch
-git checkout <branch-name>
+# 2. Move the worktree to the final location (git worktree move renames the
+#    metadata entry automatically and keeps the working tree clean)
+git worktree move /home/agent/projects/temp-worktrees/<worktree-dir> .git/worktrees/<worktree-dir>
 ```
+
+`<worktree-dir>` should be a short name matching the branch purpose (e.g.
+`feat/432-model-memory`). The worktree must live **inside** `.git/worktrees/`.
+**Never** use `/tmp` or any path outside the repo.
 
 For a **new issue with no remote branch yet**, create from `main` first:
 
 ```bash
-# Create remote branch locally and push it (or let the agent do it)
+# Create local branch from main
 git branch <branch-name> main
-git push -u origin <branch-name>
 
-# Then follow the detached-HEAD pattern above, using the local branch
-# as the source until push succeeds, then re-attach origin tracking.
+# Then use the two-step pattern above, using the local branch name
 ```
+
+**Never** use `git worktree add -b <branch-name> .git/worktrees/<worktree-dir> <branch-name>`
+— it corrupts the worktree.
 
 `<worktree-dir>` should be a short name matching the branch purpose (e.g.
 `feat/432-model-memory`). The worktree must live **inside** `.git/worktrees/`.
