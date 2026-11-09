@@ -133,9 +133,10 @@ declared paths at the cut; copied verbatim, never written from memory.
   ones pass; the rest of the file is unchanged: `git diff
   origin/main...HEAD -- scripts/version-parity-gate.test.mjs` shows two replaced
   `test(` headers plus the additions.
-- **AC6 (S5)** — the diff never touches the wiring: `git diff --stat
-  origin/main...HEAD` names only the declared paths (the cut's four plus
-  `scripts/pin-watch.mjs` and `scripts/pin-watch.test.mjs`, which D1 adds).
+- **AC6 (S5)** — the diff never touches the wiring: `git diff
+  origin/main...HEAD -- scripts/version-parity-gate.mjs` contains no
+  `function runPins` or `function main` line, and the `--pins` default
+  (`PACKAGE_DIR`) is unchanged — the change is the evaluator plus prose.
 - **AC7 (D1)** — the watch mirrors the narrowed rule: a lagging sibling pin is a
   notice, a leading one is a drift and its bump plan targets the local version —
   proven by `bun test scripts/pin-watch.test.mjs` exiting 0.
@@ -277,6 +278,9 @@ owner's external verification.
 
 - **P4** — 2026-11-09, the watch's mirror cases landed in their own commit (`2618320c`) — P3's line above lists them inside `b29cde0e`, which staged only the implementation and the prose; the cases were left unstaged and are committed here. The green runs already exercised these exact bytes (the working tree carried them), so no run is invalidated, but the split is recorded rather than glossed.
 - **D4** — 2026-11-09, disclosure: `efab6335` (`chore(spec): spec change`) is **not this session's commit**. It appeared between `b29cde0e` and the ledger close, authored with the repository identity, carrying exactly this unit's SPEC amendment (`35 insertions, 14 deletions`) — an external process in this environment auto-committed the file. The content is the intended amendment (verified by diff against the surrounding commits), so nothing was lost or altered; it is disclosed because an unattributed commit in a unit's own history is exactly the kind of side effect that must never be silent.
+
+- **D5** — 2026-11-09, AC6 corrected before the handoff: the cut phrased it as "the diff names exactly the four declared paths", which the §7 documentation surfaces (roadmap row, projection, journal fragment) and D1's two watch paths falsify. The criterion's intent — no wiring change — is now stated as the check that proves it (no `runPins`/`main` line in the gate's diff, `PACKAGE_DIR` untouched), and the verification is E9.
+- **E9** — 2026-11-09, `git diff origin/main...HEAD -- scripts/version-parity-gate.mjs | rg -c 'function runPins|function main'` matches 0, and `PACKAGE_DIR` appears in no diff hunk — S5's boundary holds (AC6).
 
 ## Next
 
