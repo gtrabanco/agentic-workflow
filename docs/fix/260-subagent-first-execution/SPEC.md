@@ -413,9 +413,14 @@ frozen ledgers are the plan; no Relay packet is created.)
 - **E17** — 2026-11-08, differential vs `git archive 86bfa163` in `mktemp -d` (scratch removed after): `resources detect --json`, `resources admit` (valid brief), `resources bound`, `verify <201 SPEC>`, `resolve-passes` — stdout/stderr/exit **SAME** once the live `MemAvailable` reading and the echoed tree path are normalized (a same-tree repeat run drifts `availableBytes` identically, proving the field is the host); `journal name` differs only by the clock second.
 - **E18** — 2026-11-08, `bun scripts/check-skill-context.mjs` · exit 0 · PASS (29 skills, unchanged); `bun scripts/skill-lint.mjs` · exit 0 · PASS (0 findings); `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/260-subagent-first-execution/SPEC.md` · exit 0 · VERIFY PASS; `roadmap check docs/fix/260-subagent-first-execution/SPEC.md` · exit 0 · PASS 0 violations.
 
+- **E19** — 2026-11-09, `bun scripts/local-gate.mjs` at the correction batch's tree · exit 0 · **PASS — 13 step(s) in 165s**.
+
 ## Next
 
-PR #467 open (https://github.com/gtrabanco/agentic-workflow/pull/467) with the S11 amendment landed; the independent review pass (D4 step 4) is next.
+PR #467 open (https://github.com/gtrabanco/agentic-workflow/pull/467) with the S11 amendment
+and the external-verify correction batch landed (the receipt is
+[`external-verify.md`](external-verify.md)); the owner's verdict, then the
+independent review pass (D4 step 4).
 
 ## References
 
