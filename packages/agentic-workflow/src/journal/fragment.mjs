@@ -124,7 +124,7 @@ export function parseFragmentName(name) {
  *
  * Returns the closed fault code, or `null` for a conforming block.
  */
-function contentFault(content) {
+export function contentFault(content) {
   if (typeof content !== "string" || content === "") return "empty";
   if (content.includes("\r")) return "cr";
   if (!content.endsWith("\n")) return "newline";
