@@ -1,5 +1,5 @@
 /**
- * The canonical batch plan (`batch-plan@1`) — issue #449's machine envelope:
+ * The canonical batch plan (`batch-plan@2`) — issue #449's machine envelope:
  * the deterministic batch scheduler's document, read as data by the owner and
  * by the #295 panel.
  *
@@ -22,13 +22,13 @@
 export const BATCH_PLAN_CONTRACT_ID = "agentic-workflow/batch-plan";
 
 /** The schema token printed in the document's `schema` field. */
-export const BATCH_PLAN_SCHEMA = "batch-plan@1";
+export const BATCH_PLAN_SCHEMA = "batch-plan@2";
 
 /** The version constant: adding or changing a core field bumps this. */
-export const BATCH_PLAN_VERSION = 1;
+export const BATCH_PLAN_VERSION = 2;
 
 /** The closed reason-kind set — why an issue sits where it sits (S4). */
-export const BATCH_REASON_KINDS = ["satisfied-inputs", "surface-conflict", "soft-ordered"] as const;
+export const BATCH_REASON_KINDS = ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"] as const;
 export type BatchReasonKind = (typeof BATCH_REASON_KINDS)[number];
 
 /** The closed finding-code set — unresolvable spots are findings, never silent (S7). */
@@ -42,8 +42,9 @@ export type BatchSizeHint = (typeof BATCH_SIZE_HINTS)[number];
 /** The closed field-name set the plan grammar block orders (`batch-fields@1`). */
 export const BATCH_PLAN_FIELDS = [
   "contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary",
+  "new_issues", "closed_since",
   "n", "lanes", "surface", "occupied_by", "issues", "number", "title", "lane", "worktree", "command", "reason", "kind",
-  "size_hint", "claimed", "blockers", "evidence", "code", "numbers", "detail", "open_issues", "batched",
+  "size_hint", "claimed", "triaged", "blockers", "evidence", "code", "numbers", "detail", "open_issues", "batched",
 ] as const;
 
 /**
@@ -72,6 +73,24 @@ export interface BatchIssueReason {
   detail: string;
 }
 
+/** A row of `new_issues[]`: an issue first seen in this run (issue #460). */
+export interface BatchNewIssue {
+  number: number;
+  title: string;
+}
+
+/** A row of `closed_since[]`: an issue in the previous plan, closed now, with its last known row. */
+export interface BatchClosedIssue {
+  number: number;
+  title: string;
+  /** The last batch the issue sat in, when the previous plan batched it. */
+  batch: number | null;
+  /** The last lane the issue occupied, when the previous plan batched it. */
+  lane: string | null;
+  /** The instant the previous run last saw the issue open. */
+  last_seen: string;
+}
+
 export interface BatchIssue {
   number: number;
   title: string;
@@ -85,6 +104,8 @@ export interface BatchIssue {
   size_hint: BatchSizeHint;
   /** Set by a re-run that recognizes the lane in the persisted state (S6). */
   claimed?: boolean;
+  /** False when the issue's roadmap row shows no triage yet (issue #460); absent when triaged. */
+  triaged?: boolean;
 }
 
 export interface BatchLane {
@@ -138,6 +159,10 @@ export interface BatchPlan {
   launched: { number: number; evidence: string }[];
   /** Unresolvable spots: cyclic waits, orphaned soft deps, prose/native disagreements (S7). */
   findings: BatchFinding[];
+  /** Issues first seen in this run (issue #460) — a fresh issue is reported, never silent. */
+  new_issues: BatchNewIssue[];
+  /** Issues in the previous plan, closed now, with their last known row (issue #460). */
+  closed_since: BatchClosedIssue[];
   summary: BatchPlanSummary;
 }
 
@@ -184,7 +209,7 @@ function issueNumber(value: unknown, label: string, errors: string[]): boolean {
 }
 
 /**
- * Validate one document against `batch-plan@1`. Structural and
+ * Validate one document against `batch-plan@2`. Structural and
  * vocabulary-closed; ordering/semantics stay the producer's tests.
  */
 export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
@@ -193,7 +218,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
   rejectUnexpectedKeys(
     value,
     "batch plan",
-    ["contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary"],
+    ["contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary", "new_issues", "closed_since"],
     errors,
   );
   if (value.contract !== BATCH_PLAN_CONTRACT_ID) errors.push(`contract must be ${BATCH_PLAN_CONTRACT_ID}`);
@@ -241,7 +266,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
           const rowLabel = `${laneLabel}.issues[${ii}]`;
           issueCount += 1;
           if (!isObj(row)) return errors.push(`${rowLabel} must be an object`);
-          rejectUnexpectedKeys(row, rowLabel, ["number", "title", "lane", "worktree", "command", "reason", "size_hint", "claimed"], errors);
+          rejectUnexpectedKeys(row, rowLabel, ["number", "title", "lane", "worktree", "command", "reason", "size_hint", "claimed", "triaged"], errors);
           issueNumber(row.number, `${rowLabel}.number`, errors);
           boundedString(row.title, `${rowLabel}.title`, MAX_TITLE, errors);
           boundedString(row.lane, `${rowLabel}.lane`, MAX_PATH, errors);
@@ -258,6 +283,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
           }
           if (!(BATCH_SIZE_HINTS as readonly string[]).includes(row.size_hint as BatchSizeHint)) errors.push(`${rowLabel}.size_hint must be light|mixed|heavy`);
           if (row.claimed !== undefined && typeof row.claimed !== "boolean") errors.push(`${rowLabel}.claimed must be a boolean when present`);
+          if (row.triaged !== undefined && typeof row.triaged !== "boolean") errors.push(`${rowLabel}.triaged must be a boolean when present`);
         });
       });
     });
@@ -303,6 +329,37 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
       if (!Array.isArray(row.numbers) || row.numbers.length === 0) errors.push(`${label}.numbers must be a non-empty array`);
       else for (const n of row.numbers) issueNumber(n, `${label}.numbers[]`, errors);
       boundedString(row.detail, `${label}.detail`, MAX_DETAIL, errors);
+    });
+  }
+
+  if (!Array.isArray(value.new_issues)) errors.push("new_issues must be an array");
+  else {
+    if (value.new_issues.length > MAX_ITEMS) errors.push(`new_issues exceeds ${MAX_ITEMS} entries`);
+    value.new_issues.forEach((row, ni) => {
+      const label = `new_issues[${ni}]`;
+      if (!isObj(row)) return errors.push(`${label} must be an object`);
+      rejectUnexpectedKeys(row, label, ["number", "title"], errors);
+      issueNumber(row.number, `${label}.number`, errors);
+      boundedString(row.title, `${label}.title`, MAX_TITLE, errors);
+    });
+  }
+
+  if (!Array.isArray(value.closed_since)) errors.push("closed_since must be an array");
+  else {
+    if (value.closed_since.length > MAX_ITEMS) errors.push(`closed_since exceeds ${MAX_ITEMS} entries`);
+    value.closed_since.forEach((row, ci) => {
+      const label = `closed_since[${ci}]`;
+      if (!isObj(row)) return errors.push(`${label} must be an object`);
+      rejectUnexpectedKeys(row, label, ["number", "title", "batch", "lane", "last_seen"], errors);
+      issueNumber(row.number, `${label}.number`, errors);
+      boundedString(row.title, `${label}.title`, MAX_TITLE, errors);
+      if (row.batch !== null && (typeof row.batch !== "number" || !Number.isInteger(row.batch) || row.batch < 0)) {
+        errors.push(`${label}.batch must be a non-negative integer or null`);
+      }
+      if (row.lane !== null) boundedString(row.lane, `${label}.lane`, MAX_PATH, errors);
+      if (typeof row.last_seen !== "string" || row.last_seen.length === 0 || row.last_seen.length > 64) {
+        errors.push(`${label}.last_seen must be a non-empty string of at most 64 characters`);
+      }
     });
   }
 
