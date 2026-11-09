@@ -245,11 +245,10 @@ yet.
   `base exit 0 · head exit 0 · pass`, `verdict | PASS`, `staleness | stale` with
   the six new scripts affecting and the four unit docs trivial.
 - **E7** — 2026-11-09, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 29 skills`, the `fold-findings` row at 5920 est / 403 lines / 3 references inside its 5944 / 411 ceilings.
-- **G1** — 2026-11-09, `bun scripts/run-root-suite.mjs` (Node 26.13.0 on PATH) ·
-  exit 0 · every suite PASS, zero failures.
-- **G2** — 2026-11-09, `bun scripts/red-first.mjs` · exit 0 · 51 pairs, 0
-  findings; `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS`;
-  `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
+- **G1** — 2026-11-09, HEAD 4ed4d50f4a808a111d256c1629b7c93e353d79ad, `bun scripts/run-root-suite.mjs` (Node 26.13.0 on PATH) · exit 0 · every suite PASS, zero failures.
+
+- **G2** — 2026-11-09, HEAD 4ed4d50f4a808a111d256c1629b7c93e353d79ad, `bun scripts/red-first.mjs` · exit 0 · 51 pairs, 0 findings; `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS`; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
+
 - **D1** — 2026-11-09, owner selected `composed` for the review-staleness
   decision the issue relocated from #363: the **mechanism** is the scope digest
   (`scripts/scope-manifest.mjs`, fix/286) and the **policy** is a declared
