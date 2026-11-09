@@ -309,8 +309,11 @@ export function parseMigratedCarrier(text, { file, unit }) {
       band: severityBandOf(severity),
       impact: pick("impact"),
       klass: pick("klass") || "unclassified",
+      // In the migrated carrier a folded row leaves the table, so an OPEN row's
+      // `fold` route is a destination, never a receipt: only a `## Log` `F` line
+      // proves the repair.
       routeHead: String(pick("route").split("·")[0]).trim(),
-      folded: /^fold\b/i.test(pick("route")),
+      folded: false,
       foldSha: null,
       cycle,
       verified: false,
@@ -376,27 +379,74 @@ export function discoverUnits(root) {
   return units;
 }
 
-/** Fold gate: does `sha` resolve, and does its own diff touch `relPath`? */
+/** Fold gate: does `sha` resolve, and does its own diff touch `relPath`?
+ *
+ * The history is read once (`git log --format=%H --name-only`) instead of once
+ * per annotation: a corpus of 229 annotations over 118 commits would otherwise
+ * cost 236 subprocesses, and the reader runs on every push. */
 export function makeGitFoldResolver(root) {
-  const cache = new Map();
-  return (row) => {
-    if (!row.foldSha) return null;
-    if (cache.has(row.foldSha)) return cache.get(row.foldSha);
-    const resolved = spawnSync("git", ["-C", root, "rev-parse", "--verify", "--quiet", `${row.foldSha}^{commit}`], {
-      encoding: "utf8",
-    });
-    if (resolved.status !== 0) {
-      const missing = { sha: row.foldSha, paths: null };
-      cache.set(row.foldSha, missing);
-      return missing;
+  const history = new Map();
+  const byShort = new Map();
+
+  const ingest = (text) => {
+    let current = null;
+    for (const line of String(text).split("\n")) {
+      if (line.startsWith("\u0000")) {
+        current = line.slice(1).trim();
+        if (!history.has(current)) history.set(current, []);
+        byShort.set(current.slice(0, 7), current);
+        continue;
+      }
+      const rel = line.trim();
+      if (current && rel) history.get(current).push(rel);
     }
-    const sha = resolved.stdout.trim();
-    const show = spawnSync("git", ["-C", root, "show", "--name-only", "--format=", sha], { encoding: "utf8" });
-    const paths = show.status === 0 ? show.stdout.split("\n").map((p) => p.trim()).filter(Boolean) : null;
-    const record = { sha, paths };
-    cache.set(row.foldSha, record);
-    return record;
   };
+
+  /** Two subprocesses for every annotation: resolve the abbreviations in one
+   *  `cat-file --batch-check` (one unprovable short sha must not fail the rest),
+   *  then read only those commits with `--no-walk`. */
+  const warm = (shas) => {
+    const pending = [...new Set(shas)].filter((sha) => sha && !byShort.has(sha.slice(0, 7)));
+    if (pending.length === 0) return;
+    const check = spawnSync("git", ["-C", root, "cat-file", "--batch-check"], {
+      encoding: "utf8",
+      input: `${pending.join("\n")}\n`,
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    if (check.status !== 0) return;
+    const full = [];
+    for (const line of check.stdout.split("\n")) {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length >= 3 && parts[1] === "commit") full.push(parts[0]);
+    }
+    if (full.length === 0) return;
+    const show = spawnSync(
+      "git",
+      ["-C", root, "log", "--no-walk", "--no-renames", "--format=%x00%H", "--name-only", ...full],
+      { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 },
+    );
+    if (show.status === 0) ingest(show.stdout);
+  };
+
+  const resolver = (row) => {
+    if (!row.foldSha) return null;
+    let full = history.has(row.foldSha) ? row.foldSha : byShort.get(row.foldSha.slice(0, 7)) ?? null;
+    if (!full) {
+      const resolved = spawnSync("git", ["-C", root, "rev-parse", "--verify", "--quiet", `${row.foldSha}^{commit}`], {
+        encoding: "utf8",
+      });
+      if (resolved.status !== 0) return { sha: row.foldSha, paths: null };
+      full = resolved.stdout.trim();
+      const show = spawnSync("git", ["-C", root, "show", "--name-only", "--no-renames", "--format=", full], {
+        encoding: "utf8",
+      });
+      if (show.status === 0) history.set(full, show.stdout.split("\n").map((p) => p.trim()).filter(Boolean));
+      byShort.set(full.slice(0, 7), full);
+    }
+    return { sha: full, paths: history.get(full) ?? null };
+  };
+  resolver.warm = warm;
+  return resolver;
 }
 
 /**
@@ -521,6 +571,9 @@ export function buildCorpus(root, { resolveFold = () => null, minRecurrence = DE
     }
   }
 
+  if (typeof resolveFold.warm === "function") {
+    resolveFold.warm(findings.map((row) => row.foldSha).filter(Boolean));
+  }
   const rows = admit(findings, { minRecurrence, resolveFold });
   const admitted = rows.filter((row) => row.status === "admitted");
   const classes = attribute(rows, { threshold });

@@ -41,6 +41,14 @@ function tempUnit(name, ledger) {
   return unitDir;
 }
 
+function tempSpec(name, spec) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "correction-budget-"));
+  const unitDir = path.join(dir, "docs", "fix", name);
+  fs.mkdirSync(unitDir, { recursive: true });
+  fs.writeFileSync(path.join(unitDir, "SPEC.md"), spec);
+  return unitDir;
+}
+
 const LEDGER = `| id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
 | F1 | scripts/a.mjs:1 | code | high | fix-now | fold into current unit | no |
@@ -76,13 +84,15 @@ test("nimio: a below-floor finding is classified and never counts as a finding",
   assert.equal(budget.findings, 2);
   assert.equal(budget.nimio, 1);
   assert.deepEqual(budget.nimioRows.map((row) => row.id), ["F3"]);
-  assert.ok(budget.nimioRows.every((row) => /^\\d{4}-\\d{2}-\\d{2}$/.test(row.noteDate)));
+  assert.ok(budget.nimioRows.every((row) => /^\d{4}-\d{2}-\d{2}$/.test(row.noteDate)));
 });
 
 test("nimio: a report-only impact is below the floor even at a material severity", () => {
-  const unitDir = tempUnit(
+  const unitDir = tempSpec(
     "2-y",
-    `| id | S# / file:line | axis | severity | impact | class | route |
+    `## Findings
+
+| id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
 | F1 | S1 · scripts/a.mjs:1 | code | WARNING | report-only | source | fold |
 | F2 | S2 · scripts/b.mjs:2 | code | WARNING | blocking | source | fold |
