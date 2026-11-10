@@ -23,7 +23,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 
 ```
 ✓ 1. Every finding taken up this turn produced its fixed per-finding output
-     line (FOLDED <sha> | DISPUTED <reason> | BLOCKED <missing input> |
+     line (FOLDED <sha> | NIMIO <note-path> | DISPUTED <reason> | BLOCKED <missing input> |
      REPLAN <proposed phase(s)>) — no finding silently skipped.
 ✓ 2. For each FOLDED batch: the gate was RUN (not assumed) and green, one
      atomic commit was RUN with its sha pasted, and (if the branch has an open PR)
@@ -172,7 +172,7 @@ Cycle-count stops being the health metric; closure is the invariant.
 Per finding, in processing order:
 
 ```
-| <finding-id> | verdict: FOLDED <sha> | DISPUTED <reason → user decision> | BLOCKED <missing input> | REPLAN <proposed phase(s) → /execute-phase> |
+| <finding-id> | verdict: FOLDED <sha> | NIMIO <note-path> | DISPUTED <reason → user decision> | BLOCKED <missing input> | REPLAN <proposed phase(s) → /execute-phase> |
 ```
 
 Then exactly:
@@ -313,6 +313,17 @@ Use explicit fallbacks when a primitive is absent: open named `SKILL.md` files i
 a fresh context; use the strongest model for subtle logic/security and never
 weaker than the author; process the compatible queue once and re-run only after
 new review evidence.
+
+## The `nimio` disposition (below the floor)
+
+A finding whose severity band is `below-floor` or whose `impact` is
+`report-only` is **not folded and not disputed**: it records one dated note with
+a re-trigger condition in the unit's `known-issues.md` and opens no correction
+round — it never becomes a `fix-now` row and never spends the budget. The floor,
+the note shape and the exclusions are stated once in
+[`references/NIMIO.md`](references/NIMIO.md); the machine reading is
+`bun scripts/correction-budget.mjs --unit <unit-dir>`, whose `nimio` count is
+already subtracted from the computed budget.
 
 ## Relationship to other skills
 

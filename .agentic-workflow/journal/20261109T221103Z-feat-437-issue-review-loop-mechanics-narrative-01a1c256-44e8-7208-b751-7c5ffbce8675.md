@@ -1,0 +1,6 @@
+## 2026-11-09T22:11:03Z — feat/437-issue-review-loop-mechanics — narrative
+- **Commits:** 13 (`856577d3…5a38163d`)
+- **Files:** 20 files
+- **Summary:** External verify of docs/features/437-review-findings-corpus: full verification with 0 blockers, VERIFIED. Three new scripts (findings-corpus.mjs, correction-budget.mjs, differential-baseline.mjs) each with sibling test suites — 33 new test pass, 0 fail. All 24 obligations verified against re-runnable validators. All 17 spec claims resolved to task implementations. Root-suite has 16 pre-existing failures (forge fixture/environment issues, confirmed at base) not caused by this change. Sibling sweep clean. Differential baseline correctly classifies new scripts as pre-existing-failure at base. Skill context budgets pass (fold-findings at 5920/403/3 refs inside 5944/411 ceilings). Gate inventory, roadmap, generated docs, and attribution ledger all correctly updated.
+- **Decisions:** External verify confirmed: no change-caused defects, all pre-existing root-suite failures belong to base. Delta verdict on any future verification would only recheck the delta diff.
+- **Next:** Owner can merge feat/437-issue-review-loop-mechanics — unit is VERIFIED with 0 blockers
