@@ -15,7 +15,8 @@
  * never as a side effect. A pin whose target is a local package under
  * `packages/` is judged against that package's own version, read from the
  * manifest: the same rule and the same evaluator the PR gate applies, so the
- * watch cannot disagree with the gate.
+ * watch cannot disagree with the gate — a pin ahead of it is drift, a pin
+ * behind it is a notice (#489).
  *
  * A **partial** pin (`7`, `7.0`) names a range the committed lock resolves and
  * the registry moves inside, so the PR gate has nothing to compare: drift there
@@ -241,6 +242,9 @@ export function collectDrift({
         .map((entry) => ({ ...entry, package: pkg.name, dir: pkg.dir })),
     );
     degraded.push(...result.degraded.map((entry) => ({ ...entry, package: pkg.name })));
+    // The evaluator's notices surface too: a local sibling's pin that is behind
+    // is not drift (#489) but it is still something the owner should see.
+    notices.push(...result.notices.map((entry) => ({ ...entry, package: pkg.name })));
     for (const violation of result.violations) {
       findings.push({
         package: pkg.name,
@@ -411,7 +415,11 @@ export function planBumps({ findings }) {
       );
       continue;
     }
-    const to = finding.latest ?? finding.localVersion;
+    // A finding that names a local sibling carries the LOCAL version: it is the
+    // one the merge publishes, and — for the ahead rule the gate now owns — the
+    // only version that can exist. The registry's latest is the fallback for a
+    // foreign dependency, where it is the target.
+    const to = finding.localVersion ?? finding.latest;
     if (!to) {
       notes.push(`${finding.package}/${finding.dependency}: drift detected without a target version — bump it by hand.`);
       continue;

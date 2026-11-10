@@ -567,27 +567,36 @@ test("pins: pin below the registry fails even when it matches the local version 
   assert.match(r.violations[0].message, /registry published 0\.5\.0/);
 });
 
-test("pins: crate bumped in the same PR without the pin fails offline — the same-PR coupling is enforced", () => {
+// #489 S1: the local half is a DIRECTION rule. A pin behind the local version is
+// a state the unified train cannot produce (`release.mjs apply` rewrites every
+// local pin to the train version) and one the registry rule already owns; the
+// local half uniquely owns the opposite direction — a pin AHEAD of the local
+// version, a version the registry has never published, which no install can
+// satisfy.
+test("pins: a pin behind the local version passes the local half and names the registry rule as its owner", () => {
   const r = pinsLocal(
     { "@gtrabanco/agentic-workflow": "0.4.0" },
     () => "0.4.0",
     { "@gtrabanco/agentic-workflow": "0.5.0" },
   );
-  assert.equal(r.violations.length, 1);
-  assert.match(r.violations[0].message, /local package version is 0\.5\.0/);
+  assert.equal(r.violations.length, 0, r.violations.map((v) => v.message).join("\n"));
+  assert.ok(
+    r.notices.some((n) => /behind the local package version 0\.5\.0/.test(n.message) && /registry rule/.test(n.message)),
+    JSON.stringify(r.notices),
+  );
 });
 
-test("pins: pin ahead of the registry that matches no local version fails (points at a version that will never exist)", () => {
+test("pins: a pin ahead of the local version fails — the version no install can satisfy", () => {
   const r = pinsLocal(
     { "@gtrabanco/agentic-workflow": "0.9.9" },
     () => "0.4.0",
     { "@gtrabanco/agentic-workflow": "0.5.0" },
   );
   assert.equal(r.violations.length, 1);
-  assert.match(r.violations[0].message, /neither published nor the local package version/);
+  assert.match(r.violations[0].message, /ahead of the local package version 0\.5\.0/);
 });
 
-test("pins: registry unreachable + pin != local version still fails (the local check is offline-deterministic)", () => {
+test("pins: registry unreachable + pin behind the local version is a degraded notice, never a verdict", () => {
   const r = pinsLocal(
     { "@gtrabanco/agentic-workflow": "0.4.0" },
     () => {
@@ -595,8 +604,22 @@ test("pins: registry unreachable + pin != local version still fails (the local c
     },
     { "@gtrabanco/agentic-workflow": "0.5.0" },
   );
+  assert.equal(r.violations.length, 0);
+  assert.equal(r.degraded.length, 1);
+  assert.ok(r.notices.some((n) => /behind the local package version/.test(n.message)));
+});
+
+test("pins: registry unreachable + pin ahead of the local version still fails (the forward rule is offline-deterministic)", () => {
+  const r = pinsLocal(
+    { "@gtrabanco/agentic-workflow": "0.9.9" },
+    () => {
+      throw new Error("network ECONNREFUSED");
+    },
+    { "@gtrabanco/agentic-workflow": "0.5.0" },
+  );
   assert.equal(r.violations.length, 1);
   assert.equal(r.degraded.length, 1);
+  assert.match(r.violations[0].message, /ahead of the local package version 0\.5\.0/);
 });
 
 test("pins: registry unreachable + pin == local version is the degraded pass (AC3 preserved)", () => {

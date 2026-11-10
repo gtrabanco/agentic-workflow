@@ -23,18 +23,23 @@
  *               2026-10-15: registry 0.19.1's bundle 5 files behind main's
  *               skills/; schema pin 4.5.0 vs registry 4.6.0).
  *
- *   --pins      Online + offline. For EVERY package under `packages/` (not just
- *               the Pi one) and every exact `dependencies` pin whose target has
- *               a local sibling package, the pin must equal the LOCAL package
- *               version (the one this merge publishes) — a pin behind it
- *               recreates the post-publish red window, a pin ahead of
- *               everything points at a version that will never exist; this
- *               check is offline-deterministic and holds even when the
- *               registry is unreachable. Both sides are read from the two
- *               manifests, never from a number written in a test or a doc.
- *               Without a local sibling, the registry's latest is compared
- *               against the pin; registry > pin ⇒ fail with the fix in the
- *               message ("bump the pin + the package version in the same PR").
+ *   --pins      Online + offline. For every exact `dependencies` pin, the
+ *               registry's latest is compared against it: `registry > pin` ⇒
+ *               fail. A pin whose target has a local sibling package is then
+ *               checked offline against that sibling's version (the one this
+ *               merge publishes) in ONE direction only (issue #489): a pin
+ *               ahead of the local version names a version no package carries
+ *               and the registry has never published, so no install can satisfy
+ *               it — that fails. A pin behind the local version is the registry
+ *               rule's case (the unified train rewrites every local pin to the
+ *               train version, so the pipeline cannot produce it); the offline
+ *               half reports it as a notice instead of a verdict, so an
+ *               unreachable registry degrades rather than inventing one. Both
+ *               sides are read from the two manifests, never from a number
+ *               written in a test or a doc.
+ *               Without a local sibling the registry rule is the whole check,
+ *               with the fix in the message ("bump the pin + the package
+ *               version in the same PR").
  *               A registry that cannot be reached is a clearly-degraded pass
  *               (visible ::warning::, exit 0) — a network blip must never redden
  *               a PR no commit caused (AC3).
@@ -558,24 +563,33 @@ export function evaluatePins({ packageName, dependencies, fetchLatest, localVers
       });
       continue;
     }
-    // Local rule: a pin whose target has a local package under packages/ is
-    // verified against the LOCAL version — the one this merge will publish —
-    // closing the registry-vs-local bind: a pin behind it recreates the
-    // post-publish red window, a pin ahead of everything points at a version
-    // that will never exist. Offline-deterministic: it holds even when the
-    // registry is unreachable (a network blip still degrades, never fails, a
-    // pin that matches its local package — AC3).
+    // Local rule (issue #489): a DIRECTION rule, not an equality rule. The
+    // unified train sets every package to one version and rewrites every exact
+    // local pin to it, so "behind" is a state the pipeline cannot produce — and
+    // the registry rule above already rejects it whenever the registry answers.
+    // What only this half can see is the opposite direction: a pin AHEAD of the
+    // local version, which no package carries and the registry never published,
+    // so no install can satisfy it. Offline-deterministic: that rejection holds
+    // even when the registry is unreachable, while a pin behind degrades with
+    // the registry instead of inventing a verdict from a missing answer.
     if (localVersion !== undefined) {
-      if (spec !== localVersion) {
+      if (semverGt(spec, localVersion)) {
         violations.push({
           name,
           pin: spec,
           localVersion,
           message:
             `GATE REJECTION — dependency-pin-drift\n` +
-            `  ${packageName} pins ${name} at ${spec} but the local package version is ${localVersion}.\n` +
-            `  The pin points at a version that is neither published nor the local package version.\n` +
-            `  Fix: bump the pin to the local package version in the same PR (the merge publishes it; consumers cannot reach a package the pin does not name).`,
+            `  ${packageName} pins ${name} at ${spec}, ahead of the local package version ${localVersion}.\n` +
+            `  No package carries that version and the registry has never published it, so the pin names a version no install can satisfy.\n` +
+            `  Fix: pin ${localVersion} in the same PR — the merge publishes it, and it is the version this tree ships.`,
+        });
+        continue;
+      }
+      if (semverGt(localVersion, spec)) {
+        notices.push({
+          name,
+          message: `${name}: pin ${spec} is behind the local package version ${localVersion} — the registry rule owns that case (it rejects a pin behind the published latest); this offline check rejects only a pin ahead of it`,
         });
         continue;
       }

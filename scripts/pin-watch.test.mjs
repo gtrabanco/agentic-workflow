@@ -88,12 +88,24 @@ test("drift: a published version above the pin is a finding naming both versions
   assert.equal(result.ok, false, "a drift fails the run");
 });
 
-test("drift: a pin on a local sibling that lags its package is a finding naming the local version", () => {
-  // A pin whose target lives in this repository is judged against that
-  // package's own version, not against the registry alone: the merge publishes
-  // the local one, so a pin behind it is the drift that reddens the next PR.
+// #489: the watch cannot disagree with the gate — it decides exact pins with
+// the gate's own evaluator. The gate's local half is a DIRECTION rule now (a pin
+// ahead of the sibling's local version), because the unified train rewrites
+// every local pin to one version and the pipeline cannot produce a lagging one.
+test("drift: a pin on a local sibling that lags its package is not a finding — the gate rejects only a pin ahead of it", () => {
   const result = collectDrift({
     packages: [{ name: PI, dir: "packages/pi-agentic-workflow", dependencies: { [RUNNER]: "0.4.0" } }],
+    fetchLatest: registry({ [RUNNER]: "0.4.0" }),
+    localVersions: { [RUNNER]: "0.5.0" },
+  });
+
+  assert.equal(result.findings.length, 0, JSON.stringify(result.findings));
+  assert.ok(result.notices.some((n) => /behind the local package version/u.test(n.message)), JSON.stringify(result.notices));
+});
+
+test("drift: a pin on a local sibling that runs ahead of it is a finding naming the local version, and the bump targets it", () => {
+  const result = collectDrift({
+    packages: [{ name: PI, dir: "packages/pi-agentic-workflow", dependencies: { [RUNNER]: "0.9.9" } }],
     fetchLatest: registry({ [RUNNER]: "0.4.0" }),
     localVersions: { [RUNNER]: "0.5.0" },
   });
@@ -102,8 +114,14 @@ test("drift: a pin on a local sibling that lags its package is a finding naming 
   assert.equal(result.findings[0].localVersion, "0.5.0");
   assert.match(
     renderReport(result),
-    /0\.4\.0 → 0\.5\.0 \(local package version\)/u,
+    /0\.9\.9 → 0\.5\.0 \(local package version\)/u,
     "the report names the local version the pin should carry",
+  );
+  const plan = planBumps({ findings: result.findings });
+  assert.deepEqual(
+    plan.bumps.map((b) => `${b.dependency}:${b.from}->${b.to}`),
+    [`${RUNNER}:0.9.9->0.5.0`],
+    "the bump plan targets the local version, never a registry version the pin is already past",
   );
 });
 
@@ -740,7 +758,7 @@ test("pypi json payload: the API's info.version parses; junk and empty degrade t
 const PR_FINDINGS = [
   // Exact pin behind the registry: the bumpable case.
   { package: PI, dir: "packages/pi-agentic-workflow", dependency: "left-pad", pin: "1.3.0", latest: "1.3.1" },
-  // Pin behind its local sibling: the bump target is the local version.
+  // Pin ahead of its local sibling (#489): the bump target is the local version — the only one that exists.
   { package: RUNNER, dir: "packages/agentic-workflow", dependency: "chalk", pin: "5.0.0", localVersion: "5.1.0" },
   // Partial pin: the fix is a lock refresh (`bun install`), not a spec edit.
   { package: PI, dir: "packages/pi-agentic-workflow", dependency: "zod", pin: "7", resolved: "7.0.0", latest: "7.1.0", kind: "partial" },
