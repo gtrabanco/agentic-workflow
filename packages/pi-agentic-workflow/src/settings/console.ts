@@ -25,6 +25,7 @@ import type { ConfigFile, ModelRef, ModelSetting, ProfileFile, Route, RouteFile,
 
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 import { SELECT_OPTION_LIMIT, pagedSelect, providerOf } from "./picker.js";
+import { getProviderPresets, resolvePresetEntry } from "../config/presets.js";
 
 export interface SettingsDeps {
   ui: SettingsUi;
@@ -119,9 +120,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
     renderMergedConfig(
       merged,
       deps.commands,
-      merged.config.profiles?.nan !== undefined || (deps.models ?? []).some((m) => m.startsWith("nan/"))
-        ? { providerAvailable: (provider) => (deps.models ?? []).some((m) => m.startsWith(`${provider}/`)) }
-        : undefined,
+      { providerAvailable: (provider) => (deps.models ?? []).some((m) => m.startsWith(`${provider}/`)) },
     ).join("\n"),
     "info",
   );
@@ -164,10 +163,10 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
     if (choice === prompts.switchProfile) {
       const picked = await pickProfile(deps, draft, { allowNew: true });
       if (picked === undefined) continue;
-      // P5: the built-in "nan" profile cannot be edited — create a profile
-      // to override it.
-      if (picked === "nan" && draft.profiles?.nan === undefined) {
-        deps.ui.notify(prompts.profileBuiltIn("nan"), "warning");
+      // P5: a preset-contributed profile cannot be edited — create a profile
+      // to override it (issue #388: the rule generalizes to every preset).
+      if (resolvePresetEntry(picked) !== undefined && draft.profiles?.[picked] === undefined) {
+        deps.ui.notify(prompts.profileBuiltIn(picked), "warning");
         continue;
       }
       if (picked !== "default" && !Object.prototype.hasOwnProperty.call(draft.profiles ?? {}, picked)) {
@@ -367,8 +366,17 @@ function profileOf(draft: ConfigFile, name: string): ProfileFile {
  */
 async function pickProfile(deps: SettingsDeps, draft: ConfigFile, { allowNew }: { allowNew: boolean }): Promise<string | undefined> {
   const names = ["default", ...Object.keys(draft.profiles ?? {}).filter((n) => n !== "default")];
-  // "nan" is always listed (built-in unless user-defined)
-  if (!names.includes("nan")) names.push("nan");
+  // Every registered preset's provider is always listed (contributed profile,
+  // unless user-defined — issue #388).
+  for (const preset of getProviderPresets()) {
+    if (!names.includes(preset.provider)) names.push(preset.provider);
+    // Amendment 2: a catalog preset also lists each profile entry it carries,
+    // under its chain name.
+    for (const profile of preset.profiles ?? []) {
+      const compound = `${preset.provider}.${profile}`;
+      if (!names.includes(compound)) names.push(compound);
+    }
+  }
   const options = allowNew ? [...names, prompts.newProfile] : names;
   const picked = await pagedSelect((title, list) => deps.ui.select(title, list), prompts.profile, options);
   if (picked === undefined) return undefined;
@@ -704,10 +712,12 @@ async function saveScope(
   merged: { config: { recommendedModels: boolean } },
 ): Promise<boolean> {
   const file = clean(draft);
-  // P5: materialize recommendedModels when the nan provider is available but
-  // the key is absent — the save writes the effective value (AC11).
-  const nanAvailable = (deps.models ?? []).some((m) => m.startsWith("nan/"));
-  if (file.recommendedModels === undefined && nanAvailable) {
+  // P5: materialize recommendedModels when a registered preset's provider is
+  // available but the key is absent — the save writes the effective value (AC11).
+  const presetAvailable = getProviderPresets().some((preset) =>
+    (deps.models ?? []).some((m) => m.startsWith(`${preset.provider}/`)),
+  );
+  if (file.recommendedModels === undefined && presetAvailable) {
     file.recommendedModels = merged.config.recommendedModels;
   }
   const text = `${JSON.stringify(file, null, 2)}\n`;
@@ -817,6 +827,10 @@ function describeRouting(file: ConfigFile): string {
     ...Object.entries(file.commands ?? {}).map(([name, route]) => `${name}: ${route.model ?? "inherit"} / ${route.thinking ?? "inherit"}`),
     ...(file.profileOrder && file.profileOrder.length > 0 ? [`profiles: ${file.profileOrder.join(" → ")}`] : []),
     ...(file.recommendedModels !== undefined ? [`recommended models: ${file.recommendedModels}`] : []),
+    ...(file.tierRouting !== undefined ? [`tier routing: ${describeTierRouting(file.tierRouting)}`] : []),
+    ...(file.presetProfile !== undefined
+      ? [`preset profile: ${Array.isArray(file.presetProfile) ? file.presetProfile.join(" → ") : file.presetProfile}`]
+      : []),
     `unavailable: ${file.onUnavailableRoute ?? "stop"}`,
     `settle: ${file.onSettle ?? "keep"}`,
   ];
@@ -838,6 +852,8 @@ const KEY_ORDER = [
   "pathProtection",
   "advance",
   "recommendedModels",
+  "tierRouting",
+  "presetProfile",
   "memory",
   "telemetry",
   "profiles",
@@ -916,6 +932,15 @@ function dirty(a: ConfigFile, b: ConfigFile): boolean {
 
 function isThinkingLevel(value: string): value is ThinkingSetting {
   return (THINKING_LEVELS as readonly string[]).includes(value);
+}
+
+/** The save-confirmation line for the tier-routing opt-out (issue #388). */
+function describeTierRouting(value: NonNullable<ConfigFile["tierRouting"]>): string {
+  if (typeof value === "boolean") return value ? "on" : "off";
+  const parts: string[] = [];
+  if (value.enabled !== undefined) parts.push(value.enabled ? "on" : "off");
+  if (value.skills) parts.push(Object.entries(value.skills).map(([name, flag]) => `${name}: ${flag ? "on" : "off"}`).join(", "));
+  return parts.length > 0 ? parts.join(" · ") : "on";
 }
 
 function isPolicy(value: string | undefined): value is UnavailableRoutePolicy {

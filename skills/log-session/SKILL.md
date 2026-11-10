@@ -23,10 +23,10 @@ Capture the *why* and the *what-next* of a working session — the context that
 git history alone never records. A commit says what changed; a session log says
 what you were trying to do, what you decided, and where to resume.
 
-Deliberately cheap (`qwen3.6`/`reasoning_config: none` — unlimited; the NaN
-cluster models carry **no token counter**, so this skill pays in bytes, not
-quota): structured summarization, not judgment. It must never reach for an
-expensive model.
+Deliberately cheap (use the cheapest available model, with reasoning/thinking
+off where the provider allows it — a quota-free tier when the plan offers one,
+so this skill pays in bytes, not quota): structured summarization, not
+judgment. It must never reach for an expensive model.
 
 ## Turn contract
 
@@ -177,9 +177,9 @@ memory reference, `../unit-lane/references/MEMORY.md`.
 
 ## Guardrails
 
-- **Never use an expensive model for this.** It's summarization; `qwen3.6`
-  (`reasoning_config: none` → zero thinking tokens) is the natural ceiling on
-  the cluster plan, and the hooks do the free mechanical version.
+- **Never use an expensive model for this.** It's summarization; the cheapest
+  available model (reasoning off where the provider allows → zero thinking
+  tokens) is the ceiling, and the hooks do the free mechanical version.
 - **Don't invent facts.** Decisions and next steps come from the actual session
   (your context + git), not plausible-sounding filler. If a section has nothing
   real, omit its line rather than padding.
@@ -200,9 +200,10 @@ Preamble: owned by `skills/orchestration-envelope/references/PORTABILITY.md` —
 - **No `/clear`** — read it as your agent's context-reset / new-conversation
   equivalent, in the triggers and in the closing block alike.
 - **No per-skill `model:`/`effort:`** — the intent stands: use the cheapest
-  available model for this. It's summarization, never judgment. On NaN the
-  cluster models (qwen3.6, gemma4) carry no token counter — set
-  `reasoning_config: none` so the append pays zero thinking tokens.
+  available model for this. It's summarization, never judgment. Turn
+  reasoning/thinking off where the provider allows so the append pays zero
+  thinking tokens; a vendor preset (installed separately) may route this skill
+  to a quota-free tier automatically.
 
 ## Relationship to other skills
 

@@ -75,6 +75,25 @@ const PI_SCHEMA = {
         retryAfterSeconds: { type: "integer", minimum: 0 },
       },
     },
+    presetProfile: {
+      anyOf: [
+        { type: "string", pattern: "^[a-z0-9][a-z0-9._-]*$" },
+        { type: "array", items: { type: "string", pattern: "^[a-z0-9][a-z0-9._-]*$" }, minItems: 1, maxItems: 8 },
+      ],
+    },
+    tierRouting: {
+      anyOf: [
+        { type: "boolean" },
+        {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            enabled: { type: "boolean" },
+            skills: { type: "object", additionalProperties: { type: "boolean" } },
+          },
+        },
+      ],
+    },
     passes: { type: "object", additionalProperties: ROUTE },
     subagents: {
       type: "object",

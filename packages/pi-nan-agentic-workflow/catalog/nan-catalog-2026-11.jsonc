@@ -1,0 +1,392 @@
+// nan-catalog-2026-11.jsonc — the recorded NaN catalog/tariff snapshot the
+// preset's facts derive from (issue #388 amendment 2).
+//
+// PROVENANCE (repo rule: third-party content carries source, author, version,
+// license):
+//   What:        billing/tariff/catalog dump for the NaN chat fleet — plans,
+//                credit packs, per-model free allowances, credits-per-1M
+//                rates, rate limits, and the provider's own model descriptions.
+//   Source:      https://nan.builders/docs/models (catalog & capabilities)
+//                https://nan.builders/es/model-guide (community guide by
+//                @ntizar, published by NaN — cost comparisons only)
+//                https://nan.builders/privacy (operator identity)
+//                plus a raw tariff quote supplied to the project owner via
+//                the NaN credits panel / owner channel (the JSON body below,
+//                passed verbatim on 2026-11-10).
+//   Author:      NaN / Helmcode S.L. (operator); guide section by @ntizar;
+//                owner-supplied quote transcribed as received.
+//   As of:       2026-11-10 — tariffs dated November 2026 by the provider.
+//   License:     factual tariff/catalog data published by the provider's own
+//                surfaces; the guide text is © Helmcode — this file quotes
+//                facts, not creative prose.
+//   Evidence:    the benchmark half lives outside this file — the independent
+//                evaluators (Artificial Analysis, Vals AI, NIST CAISI) and the
+//                vendor-run tables this README cites are listed with URLs in
+//                the README's "Sources — where these numbers come from"
+//                section.
+//   Winner rule: where this snapshot and the provider's docs/models page
+//                disagree, docs/models wins unless the owner directs
+//                otherwise (known example: this quote's per-model
+//                concurrency row for glm5.3 says base 7 / premium 10 — the
+//                docs page confirms 7/10; the model entry's "premium only"
+//                concurrency note was superseded).
+//
+// This file is NOT machine-consumed by the runtime: the source of truth for
+// route data stays `src/preset.ts` (NAN_MODELS + PROFILE_LADDERS) and the
+// prose source of truth stays the package README. `test/catalog-parity.test.mjs`
+// pins the snapshot to both of them, so a provider change becomes: update THIS
+// snapshot (edit in place, keep the provenance header current), then follow
+// the test failures to the tier map, ladders and README rows.
+
+{
+  "rate_limits": {
+    "requests_per_minute": 60,
+    "concurrent": { "base_plan": 7, "premium_plan": 10 },
+    "per_model": {
+      "glm5.3":         { "base": 7,  "premium": 10 },
+      "glm5.3-flash":   { "base": 7,  "premium": 10 },
+      "deepseek-v4-flash": { "base": 7, "premium": 10 },
+      "qwen3.8-flash":  { "base": 7,  "premium": 10 },
+      "mimo-v2.6-flash": { "base": 5,  "premium": 5  },
+      "qwen3.6":        { "base": 5,  "premium": 5  },
+      "gemma4":         { "base": 5,  "premium": 5  }
+    },
+    "audio_embedding_rerank": "Sin límite de concurrencia",
+    "tokens_per_minute": {
+      "deepseek-v4-flash": 1500000,
+      "mimo-v2.6-flash":   1500000,
+      "qwen3.6":           1500000,
+      "gemma4":            1500000
+    },
+    "rerank_rpm": 1000
+  },
+
+  // Suscripciones — se renuevan cada billing period
+  "subscriptions": [
+    { "price_eur": 70, "credits_per_month": 7000 },
+    { "price_eur": 200, "credits_per_month": 20000 }
+  ],
+
+  // Credit packs — compra ÚNICA, no se renuevan, se consumen tras agotar el período
+  "credit_packs": [
+    { "amount": 1000, "price_eur": 24.70, "note": "5% discount ya aplicado" },
+    { "amount": 5000, "price_eur": 116.85, "note": "5% discount ya aplicado" },
+    { "amount": 25000, "price_eur": 550.05, "note": "5% discount ya aplicado" }
+  ],
+  "custom_pack": { "min_eur": 5, "max_eur": 1000 },
+
+  base_url: "https://api.nan.builders/v1",
+  helmcode_url: "https://api.helmcode.com/v1",
+
+  // ============================================================
+  // MODELOS — cada uno con "cost" en créditos
+  // cost = 0 → ilimitado (o cuota fija separada)
+  // cost > 0 → se pagan con credits; ver rates por detalle
+  // ============================================================
+  "models": [
+    // ——— CHAT ILIMITADOS — sin cuota, sin costo ———
+    {
+      "name": "Gemma 4",
+      "slug": "gemma4",
+      "type": "chat",
+      "size": "26B MoE (4B active)",
+      "context": 262144,
+      "modalities": { "input": ["text", "image"], "output": ["text"] },
+      "cost": 0,
+      "capabilities": ["Tool calling (XML)", "Reasoning control", "Vision", "Streaming"],
+      "rate_limits": { "concurrent": { "base": 5, "premium": 5 }, "tpm": 1500000 }
+    },
+    {
+      "name": "Qwen 3.6",
+      "slug": "qwen3.6",
+      "type": "chat",
+      "size": "35B MoE (3B active)",
+      "context": 262144,
+      "modalities": { "input": ["text", "image"], "output": ["text"] },
+      "cost": 0,
+      "capabilities": ["Tool calling (XML)", "Reasoning control", "Vision", "Streaming", "Speculative decoding"],
+      "rate_limits": { "concurrent": { "base": 5, "premium": 5 }, "tpm": 1500000 },
+      "note": "Generación anterior — deepseek-v4-flash recomendado como punto de partida"
+    },
+
+    // ——— CHAT CON CUOTA GRATUITA → luego se cobran credits ———
+    {
+      "name": "DeepSeek V4-Flash",
+      "slug": "deepseek-v4-flash",
+      "type": "chat",
+      "size": "305B MoE (Vision-Exp)",
+      "context": 1000000,
+      "modalities": { "input": ["text", "image"], "output": ["text"] },
+      "free_quota": 3000000000,
+      "cost": 0,
+      "credits_when_exceeded": {
+        "input":  { "usd_per_1m": 0.295, "credits_per_1m": 10.50 },
+        "cached": { "usd_per_1m": 0.0059, "credits_per_1m": 0.21 },
+        "output": { "usd_per_1m": 1.18,  "credits_per_1m": 42.00 }
+      },
+      "typical_credits_per_1m": 1.1,
+      "tags": ["ZDR"],
+      "capabilities": ["Tool calling", "Reasoning control", "Vision", "JSON mode", "json_schema"],
+      "max_output": 393216,
+      "rate_limits": { "concurrent": { "base": 7, "premium": 10 }, "tpm": 1500000 },
+      "note": "3B tokens gratis/mes. reasoning tokens cuentan dentro del output budget"
+    },
+    {
+      "name": "GLM 5.3 Flash",
+      "slug": "glm5.3-flash",
+      "type": "chat",
+      "size": "320B MoE (18B active)",
+      "context": 1000000,
+      "modalities": { "input": ["text", "image"], "output": ["text"] },
+      "free_quota": 2000000000,
+      "cost": 0,
+      "credits_when_exceeded": {
+        "input":  { "usd_per_1m": 0.147, "credits_per_1m": 5.25  },
+        "cached": { "usd_per_1m": 0.0295,"credits_per_1m": 1.05  },
+        "output": { "usd_per_1m": 0.491, "credits_per_1m": 17.50 }
+      },
+      "typical_credits_per_1m": 1.4,
+      "tags": ["ZDR"],
+      "license": "MIT",
+      "capabilities": ["Tool calling", "Reasoning (always on)", "Vision", "Streaming"],
+      "rate_limits": { "concurrent": { "base": 7, "premium": 10 }, "tpm": 1500000 }
+    },
+    {
+      "name": "Qwen 3.8 Flash",
+      "slug": "qwen3.8-flash",
+      "type": "chat",
+      "size": "125B MoE (6B active)",
+      "context": 1000000,
+      "max_output": 131072,
+      "modalities": { "input": ["text", "image"], "output": ["text"] },
+      "free_quota": 500000000,
+      "cost": 0,
+      "credits_when_exceeded": {
+        "input":  { "usd_per_1m": 0.211, "credits_per_1m": 7.50  },
+        "cached": { "usd_per_1m": 0.0225,"credits_per_1m": 0.80  },
+        "output": { "usd_per_1m": 0.66,  "credits_per_1m": 23.50 }
+      },
+      "typical_credits_per_1m": 1.9,
+      "tags": ["ZDR"],
+      "license": "qwen-community-1.0",
+      "capabilities": ["Tool calling (XML)", "Reasoning on by default", "Vision", "Streaming"],
+      "rate_limits": { "concurrent": { "base": 7, "premium": 10 }, "tpm": 1500000 },
+      "note": "Razonamiento on por defecto — apagar con `none`"
+    },
+    {
+      "name": "MiMo V2.6 Flash",
+      "slug": "mimo-v2.6-flash",
+      "type": "chat",
+      "description": "Xiaomi omni-modal",
+      "context": 1000000,
+      "modalities": { "input": ["text", "image", "audio"], "output": ["text"] },
+      "free_quota": 1000000000,
+      "cost": 0,
+      "credits_when_exceeded": {
+        "input":  { "usd_per_1m": 0.197, "credits_per_1m": 7.00  },
+        "cached": { "usd_per_1m": 0.0039,"credits_per_1m": 0.14  },
+        "output": { "usd_per_1m": 0.393, "credits_per_1m": 14.00 }
+      },
+      "typical_credits_per_1m": 0.6,
+      "tags": ["ZDR", "External provider"],
+      "capabilities": ["Tool calling", "Reasoning control", "Vision", "Audio", "Streaming"],
+      "rate_limits": { "concurrent": { "base": 5, "premium": 5 }, "tpm": 1500000 }
+    },
+    {
+      "name": "GLM 5.3 (full)",
+      "slug": "glm5.3",
+      "type": "chat",
+      "size": "~753B MoE",
+      "context": 1000000,
+      "modalities": { "input": ["text", "image", "audio", "video"], "output": ["text"] },
+      "premium_required": true,
+      "free_quota": 3000000000,
+      "rolling_4h_limit": 400000000,
+      "cost": 0,
+      "credits_when_exceeded": {
+        "input":  { "usd_per_1m": 1.38,  "credits_per_1m": 49.00 },
+        "cached": { "usd_per_1m": 0.0295,"credits_per_1m": 1.05  },
+        "output": { "usd_per_1m": 4.32,  "credits_per_1m": 154.00 }
+      },
+      "typical_credits_per_1m": 11.5,
+      "tags": ["ZDR"],
+      "capabilities": ["Tool calling", "Reasoning (always on)", "Vision", "Audio", "Video", "Streaming"],
+      "note": "Premium REQUIRED. 3B gratis/mes, tope 400M/4h rolling. GLM siempre razona — `none` → minimal.",
+      "rate_limits": { "concurrent": { "premium": 10 } }
+    },
+
+    // ——— MODELOS SOLO CON CREDITOS — sin cuota gratuita ———
+    {
+      "name": "Kimi K3.1 Pro",
+      "slug": "kimi-k3.1-pro",
+      "type": "chat",
+      "provider": "Moonshot",
+      "tags": ["ZDR", "External provider"],
+      "description": "Moonshot frontier reasoning model, 1M context",
+      "cost": "pay per token — ver rates abajo",
+      "rates": {
+        "input":       { "usd_per_1m": 2.81, "credits_per_1m": 100.00 },
+        "cached":      { "usd_per_1m": 0.281, "credits_per_1m": 10.00  },
+        "output":      { "usd_per_1m": 14.04, "credits_per_1m": 500.00 },
+        "cache_write": { "usd_per_1m": 2.81,  "credits_per_1m": 100.00 }
+      },
+      "typical_credits_per_1m": 19.9,
+      "tokens_per_1000_credits": 50300000
+    },
+    {
+      "name": "Qwen3.8 Max",
+      "slug": "qwen3.8-max",
+      "type": "chat",
+      "provider": "External",
+      "tags": ["ZDR", "External provider"],
+      "description": "Largest Qwen 3.8, hard reasoning & agents, 1M context",
+      "cost": "pay per token — ver rates abajo",
+      "rates": {
+        "input":  { "usd_per_1m": 2.81, "credits_per_1m": 100.00 },
+        "cached": { "usd_per_1m": 0.351, "credits_per_1m": 12.50 },
+        "output": { "usd_per_1m": 8.42,  "credits_per_1m": 300.00 }
+      },
+      "typical_credits_per_1m": 20.2,
+      "tokens_per_1000_credits": 49500000
+    },
+    {
+      "name": "DeepSeek V4-Pro",
+      "slug": "deepseek-v4-pro",
+      "type": "chat",
+      "provider": "External",
+      "tags": ["ZDR", "External provider"],
+      "description": "DeepSeek large reasoning & coding, 1M context",
+      "cost": "pay per token — ver rates arriba",
+      "rates": {
+        "input":  { "usd_per_1m": 1.85, "credits_per_1m": 66.00  },
+        "cached": { "usd_per_1m": 0.0618,"credits_per_1m": 2.20  },
+        "output": { "usd_per_1m": 5.56,  "credits_per_1m": 198.00 }
+      },
+      "typical_credits_per_1m": 7.7,
+      "tokens_per_1000_credits": 130000000
+    },
+    {
+      "name": "Hy4",
+      "slug": "hy4",
+      "type": "chat",
+      "provider": "Tencent (Hunyuan 4)",
+      "tags": ["ZDR", "External provider"],
+      "description": "Hunyuan 4 agents & long docs, 1M context",
+      "cost": "pay per token — ver rates arriba",
+      "rates": {
+        "input":  { "usd_per_1m": 1.17, "credits_per_1m": 41.70 },
+        "cached": { "usd_per_1m": 0.059, "credits_per_1m": 2.10  },
+        "output": { "usd_per_1m": 3.51,  "credits_per_1m": 125.05 }
+      },
+      "typical_credits_per_1m": 5.5,
+      "tokens_per_1000_credits": 181000000
+    },
+
+    // ——— EMBEDDING — ilimitado ———
+    {
+      "name": "Qwen3-Embedding",
+      "slug": "qwen3-embedding",
+      "type": "embedding",
+      "cost": 0,
+      "dimensions": 4096,
+      "max_input": 32768,
+      "precision": "BF16",
+      "mteb_score": 70.58,
+      "languages": "100+ (español, code)",
+      "use_cases": ["Semantic search", "RAG", "Classification", "Cross-lingual similarity"]
+    },
+
+    // ——— RERANK — ilimitado ———
+    {
+      "name": "Rerank",
+      "slug": "rerank",
+      "type": "rerank",
+      "cost": 0,
+      "model": "Qwen3-Reranker-8B",
+      "precision": "BF16",
+      "languages": "100+ (español, code, cross-lingual)",
+      "endpoints": ["/v1/rerank", "/v2/rerank"],
+      "use_cases": ["RAG pipelines", "Cross-lingual search", "Code retrieval", "Relevance scoring"],
+      "rate_limits": { "rpm": 1000 }
+    },
+
+    // ——— TTS — ilimitado ———
+    {
+      "name": "Kokoro",
+      "slug": "kokoro",
+      "type": "tts",
+      "cost": 0,
+      "version": "v1.0",
+      "parameters": "82M",
+      "voices": 67,
+      "latency": "<1s",
+      "available_voices": [
+        { "id": "af_heart", "language": "English", "gender": "female" },
+        { "id": "ef_dora",  "language": "Spanish",  "gender": "female" },
+        { "id": "em_alex",  "language": "Spanish",  "gender": "male" }
+      ]
+    },
+
+    // ——— STT — ilimitado ———
+    {
+      "name": "Whisper",
+      "slug": "whisper",
+      "type": "stt",
+      "cost": 0,
+      "model": "large-v3",
+      "languages": 99,
+      "wer_es": "3.2%",
+      "max_file_size_mb": 25,
+      "timeout_seconds": 180,
+      "recommended_formats": ["OGG/Opus", "MP3"],
+      "note": "Formatos comprimidos aprovechan mejor el límite de 25MB"
+    },
+
+    // ——— IMAGE GENERATION — 100 imágenes/mes, NO cuenta en credits ———
+    {
+      "name": "FLUX 2 Klein",
+      "slug": "flux-2-klein",
+      "type": "image",
+      "cost": 0,
+      // 100 imágenes al mes, separadas de los créditos de chat/embedding/etc
+      // Requiere inference-tier membership
+      "modalities": ["text→image", "image→image"],
+      "resolution_range": [256, 1536],
+      "images_per_request": [1, 4],
+      "monthly_limit": 100,
+      "shared_with": ["qwen-image-2.1"]
+    },
+    {
+      "name": "Qwen Image 2.1",
+      "slug": "qwen-image-2.1",
+      "type": "image",
+      "cost": 0,
+      // 100 imágenes al mes compartidas con flux-2-klein, separadas de credits
+      // Requiere inference-tier membership
+      "modalities": ["text→image"],
+      "resolution_range": [512, 1280],
+      "images_per_request": [1, 4],
+      "monthly_limit": 100,
+      "shared_with": ["flux-2-klein"]
+    }
+  ],
+
+  // ============================================================
+  // GLOSARIO
+  // ============================================================
+  "glossary": {
+    "ZDR": "Zero Data Retention — prompts y completions NO se almacenan",
+    "External provider": "Modelo servido por proveedor tercero, no GPUs de NaN",
+    "credits_when_exceeded": "Rates que se aplican después de agotar la cuota gratuita mensual",
+    "cost": 0,
+    "free_quota": "Mensual, se reinicia con cada billing period",
+    "typical_credits_per_1m": "Promedio de créditos/1M tokens en uso real combinado",
+    "subscriber_discount": "5% ya aplicado en precios de packs mostrados",
+    "credit_packs": "Compra única, NO se renuevan — se consumen después de agotar el período actual",
+    "credits_validity_months": 6,
+    "auto_recharge": "Compra automática de pack cuando se agote el balance (por defecto OFF)",
+    "reasoning_effort_values": ["none", "minimal", "low", "medium", "high", "xhigh", "max"],
+    "reasoning_effort_none": "Apaga razonamiento — NO funciona en GLM 5.3 (always on, `none` → minimal)",
+    "inference_tier": "Tier necesario para acceder a FLUX y Qwen Image"
+  }
+}

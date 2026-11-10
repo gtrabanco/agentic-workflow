@@ -8,7 +8,33 @@ import { mergeConfigs, effectiveRoute } from "../dist/config/merge.js";
 import { parseConfigFile } from "../dist/config/schema.js";
 import { DEFAULT_CONFIG } from "../dist/config/defaults.js";
 import { effectiveProfileOrder, resolveProfileChain } from "../dist/config/profiles.js";
-import { RECOMMENDED_PROFILES } from "../dist/config/recommended.js";
+import { registerProviderPreset, clearProviderPresets } from "../dist/config/presets.js";
+
+// Issue #388: the built-in vendor profile is retired — ladders arrive from an
+// installed companion preset through the seam. These tests register a fixture
+// preset standing in for one (any provider name) and clean the global registry
+// afterwards. The vendor's own ladder + its README parity live in the
+// companion package now.
+const FIXTURE = {
+  provider: "acme",
+  default: ["acme/big", "acme/small"],
+  commands: {
+    "review-change": { model: ["acme/strong", "acme/big"], thinking: "high" },
+    "product-audit": { model: ["acme/strong", "acme/big", "acme/small"], thinking: "high" },
+    "execute-phase": { model: ["acme/big", "acme/small"], thinking: "inherit" },
+    "log-session": { model: ["acme/big", "acme/small"], thinking: "inherit" },
+  },
+};
+function registerFixture() {
+  registerProviderPreset({
+    provider: FIXTURE.provider,
+    resolveProfile: () => ({
+      default: { model: FIXTURE.default, thinking: "inherit" },
+      commands: Object.fromEntries(Object.entries(FIXTURE.commands).map(([k, v]) => [k, { ...v }])),
+    }),
+  });
+  return () => clearProviderPresets();
+}
 
 const valid = (json, label) => {
   const result = parseConfigFile(json);
@@ -203,248 +229,170 @@ test("AC5: profileFallback merges key-by-key", () => {
 // Resolution (AC1, AC2, AC3, AC4, AC5, AC6, AC7)
 // ---------------------------------------------------------------------------
 
-const nanUp = { providerAvailable: (p) => p === "nan" };
-const nanDown = { providerAvailable: () => false };
+const fixtureUp = () => {
+  const done = registerFixture();
+  return { opts: { providerAvailable: (p) => p === FIXTURE.provider }, done };
+};
+const fixtureDown = { providerAvailable: () => false };
 
-test("AC1: effectiveProfileOrder with nan up returns default then nan", () => {
-  const order = effectiveProfileOrder(DEFAULT_CONFIG, nanUp);
-  assert.deepEqual(order, ["default", "nan"]);
+test("AC1: effectiveProfileOrder with the preset provider up returns default then the preset", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    assert.deepEqual(effectiveProfileOrder(DEFAULT_CONFIG, opts), ["default", FIXTURE.provider]);
+  } finally { done(); }
 });
 
-test("AC3: effectiveProfileOrder with nan down returns only default", () => {
-  const order = effectiveProfileOrder(DEFAULT_CONFIG, nanDown);
-  assert.deepEqual(order, ["default"]);
+test("AC3: effectiveProfileOrder with the provider down returns only default", () => {
+  assert.deepEqual(effectiveProfileOrder(DEFAULT_CONFIG, fixtureDown), ["default"]);
 });
 
-test("AC1: recommendedModels=false disables nan", () => {
-  const config = { ...DEFAULT_CONFIG, recommendedModels: false };
-  const order = effectiveProfileOrder(config, nanUp);
-  assert.deepEqual(order, ["default"]);
+test("AC1: recommendedModels=false disables the preset", () => {
+  const { done } = fixtureUp();
+  try {
+    const config = { ...DEFAULT_CONFIG, recommendedModels: false };
+    assert.deepEqual(effectiveProfileOrder(config, { providerAvailable: () => true }), ["default"]);
+  } finally { done(); }
 });
 
 test("AC5: custom profileOrder prepends to base", () => {
-  const cfg = mergeConfigs(
-    valid('{"profileOrder":["work","default"]}'),
-    {},
-  );
-  const order = effectiveProfileOrder(cfg, nanUp);
-  assert.deepEqual(order, ["work", "default", "nan"]);
+  const { opts, done } = fixtureUp();
+  try {
+    const cfg = mergeConfigs(valid('{"profileOrder":["work","default"]}'), {});
+    assert.deepEqual(effectiveProfileOrder(cfg, opts), ["work", "default", FIXTURE.provider]);
+  } finally { done(); }
 });
 
-test("AC5: custom profileOrder no duplicate nan", () => {
-  const cfg = mergeConfigs(
-    valid('{"profileOrder":["work","default","nan"]}'),
-    {},
-  );
-  const order = effectiveProfileOrder(cfg, nanUp);
-  assert.deepEqual(order, ["work", "default", "nan"]);
+test("AC5: custom profileOrder no duplicate preset", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    const cfg = mergeConfigs(valid(`{"profileOrder":["work","default","${FIXTURE.provider}"]}`), {});
+    assert.deepEqual(effectiveProfileOrder(cfg, opts), ["work", "default", FIXTURE.provider]);
+  } finally { done(); }
 });
 
-test("AC2: resolveProfileChain execute-phase returns nan profile with expected route", () => {
-  const candidates = resolveProfileChain(DEFAULT_CONFIG, "execute-phase", nanUp);
-  assert.equal(candidates.length, 1);
-  assert.equal(candidates[0].profile, "nan");
-  assert.deepEqual(candidates[0].route.model, [
-    "nan/deepseek-v4-flash",
-    "nan/glm5.3-flash",
-  ]);
-  assert.equal(candidates[0].declared.model, true);
+test("AC2: resolveProfileChain returns the preset's ladder with expected route", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    const candidates = resolveProfileChain(DEFAULT_CONFIG, "execute-phase", opts);
+    assert.equal(candidates.length, 1);
+    assert.equal(candidates[0].profile, FIXTURE.provider);
+    assert.deepEqual(candidates[0].route.model, ["acme/big", "acme/small"]);
+    assert.equal(candidates[0].declared.model, true);
+    assert.equal(candidates[0].builtIn, true);
+  } finally { done(); }
 });
 
-test("AC2: resolveProfileChain product-audit returns nan with 3-model chain and high thinking", () => {
-  const candidates = resolveProfileChain(DEFAULT_CONFIG, "product-audit", nanUp);
-  assert.deepEqual(candidates[0].route.model, [
-    "nan/glm5.3",
-    "nan/mimo-v2.6-flash",
-    "nan/deepseek-v4-flash",
-  ]);
-  assert.equal(candidates[0].route.thinking, "high");
+test("AC2: resolveProfileChain judgment slot returns the declared thinking", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    const candidates = resolveProfileChain(DEFAULT_CONFIG, "review-change", opts);
+    assert.deepEqual(candidates[0].route.model, ["acme/strong", "acme/big"]);
+    assert.equal(candidates[0].route.thinking, "high");
+  } finally { done(); }
 });
 
-test("AC2: resolveProfileChain audit-pr returns expected route", () => {
-  const candidates = resolveProfileChain(DEFAULT_CONFIG, "audit-pr", nanUp);
-  assert.deepEqual(candidates[0].route, {
-    model: ["nan/mimo-v2.6-flash", "nan/deepseek-v4-flash"],
-    thinking: "high",
-  });
+test("AC2: resolveProfileChain unknown command returns the preset default route", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    const candidates = resolveProfileChain(DEFAULT_CONFIG, "anything-else", opts);
+    assert.equal(candidates[0].profile, FIXTURE.provider);
+    assert.deepEqual(candidates[0].route.model, ["acme/big", "acme/small"]);
+  } finally { done(); }
 });
 
-test("AC2: resolveProfileChain review-change returns expected route", () => {
-  const candidates = resolveProfileChain(DEFAULT_CONFIG, "review-change", nanUp);
-  assert.deepEqual(candidates[0].route, {
-    model: ["nan/mimo-v2.6-flash", "nan/glm5.3-flash", "nan/deepseek-v4-flash"],
-    thinking: "high",
-  });
+test("AC3: resolveProfileChain with provider down returns empty array", () => {
+  const { done } = fixtureUp();
+  try {
+    assert.deepEqual(resolveProfileChain(DEFAULT_CONFIG, "execute-phase", fixtureDown), []);
+  } finally { done(); }
 });
 
-test("AC2: resolveProfileChain unit-lane returns expected route", () => {
-  const candidates = resolveProfileChain(DEFAULT_CONFIG, "unit-lane", nanUp);
-  assert.deepEqual(candidates[0].route, {
-    model: ["nan/mimo-v2.6-flash", "nan/glm5.3-flash", "nan/deepseek-v4-flash"],
-    thinking: "high",
-  });
+test("AC4: user override wins over the preset profile", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    const cfg = mergeConfigs({}, valid('{"commands":{"execute-phase":{"model":"x/1","thinking":"low"}}}'));
+    const candidates = resolveProfileChain(cfg, "execute-phase", opts);
+    assert.equal(candidates[0].profile, "default");
+    assert.deepEqual(candidates[0].route, { model: "x/1", thinking: "low" });
+    assert.equal(candidates[1].profile, FIXTURE.provider);
+  } finally { done(); }
 });
 
-test("AC2: resolveProfileChain advance returns expected route", () => {
-  const candidates = resolveProfileChain(DEFAULT_CONFIG, "advance", nanUp);
-  assert.deepEqual(candidates[0].route, {
-    model: ["nan/glm5.3-flash", "nan/deepseek-v4-flash"],
-    thinking: "inherit",
-  });
-});
-
-test("AC2: resolveProfileChain log-session returns expected route", () => {
-  const candidates = resolveProfileChain(DEFAULT_CONFIG, "log-session", nanUp);
-  assert.deepEqual(candidates[0].route, {
-    model: ["nan/deepseek-v4-flash", "nan/glm5.3-flash"],
-    thinking: "inherit",
-  });
-});
-
-test("AC2: resolveProfileChain unknown command returns nan default route", () => {
-  const candidates = resolveProfileChain(
-    DEFAULT_CONFIG,
-    "anything-else",
-    nanUp,
-  );
-  assert.equal(candidates[0].profile, "nan");
-  assert.deepEqual(candidates[0].route.model, [
-    "nan/deepseek-v4-flash",
-    "nan/glm5.3-flash",
-  ]);
-});
-
-test("AC3: resolveProfileChain with nan down returns empty array", () => {
-  const candidates = resolveProfileChain(DEFAULT_CONFIG, "execute-phase", nanDown);
-  assert.deepEqual(candidates, []);
-});
-
-test("AC4: user override wins over nan profile", () => {
-  const cfg = mergeConfigs(
-    {},
-    valid(
-      '{"commands":{"execute-phase":{"model":"x/1","thinking":"low"}}}',
-    ),
-  );
-  const candidates = resolveProfileChain(cfg, "execute-phase", nanUp);
-  assert.equal(candidates[0].profile, "default");
-  assert.deepEqual(candidates[0].route, { model: "x/1", thinking: "low" });
-  assert.equal(candidates[1].profile, "nan");
-});
-
-test("AC4: an explicit command model:\"inherit\" is a declaration and stops the nan fallback", () => {
-  const cfg = mergeConfigs(
-    {},
-    valid('{"commands":{"execute-phase":{"model":"inherit"}}}'),
-  );
-  const candidates = resolveProfileChain(cfg, "execute-phase", nanUp);
-  assert.equal(candidates[0].profile, "default");
-  assert.equal(candidates[0].declared.model, true);
-  assert.equal(candidates[0].route.model, "inherit");
-  assert.equal(candidates[1].profile, "nan");
+test("AC4: an explicit command model:'inherit' is a declaration and stops the preset fallback", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    const cfg = mergeConfigs({}, valid('{"commands":{"execute-phase":{"model":"inherit"}}}'));
+    const candidates = resolveProfileChain(cfg, "execute-phase", opts);
+    assert.equal(candidates[0].profile, "default");
+    assert.equal(candidates[0].declared.model, true);
+    assert.equal(candidates[0].route.model, "inherit");
+    assert.equal(candidates[1].profile, FIXTURE.provider);
+  } finally { done(); }
 });
 
 test("AC4: an explicit top-level default model:\"inherit\" declares every command", () => {
-  const cfg = mergeConfigs(
-    {},
-    valid('{"default":{"model":"inherit"}}'),
-  );
-  const candidates = resolveProfileChain(cfg, "anything", nanUp);
-  assert.equal(candidates[0].profile, "default");
-  assert.equal(candidates[0].declared.model, true);
+  const { opts, done } = fixtureUp();
+  try {
+    const cfg = mergeConfigs(
+      {},
+      valid('{"default":{"model":"inherit"}}'),
+    );
+    const candidates = resolveProfileChain(cfg, "anything", opts);
+    assert.equal(candidates[0].profile, "default");
+    assert.equal(candidates[0].declared.model, true);
+  } finally { done(); }
 });
 
 test("AC4: an explicit thinking:\"inherit\" is a declaration", () => {
-  const cfg = mergeConfigs(
-    {},
-    valid('{"commands":{"execute-phase":{"thinking":"inherit"}}}'),
-  );
-  const candidates = resolveProfileChain(cfg, "execute-phase", nanUp);
-  assert.equal(candidates[0].profile, "default");
-  assert.equal(candidates[0].declared.thinking, true);
-  assert.equal(candidates[0].declared.model, false);
-});
-
-test("AC5/AC6: user profile command wins; other command falls through to nan", () => {
-  const cfg = mergeConfigs(
-    valid(
-      '{"profileOrder":["work","default"],"profiles":{"work":{"commands":{"execute-phase":{"model":"w/1","thinking":"max"}}}}}',
-    ),
-    {},
-  );
-  const execCandidates = resolveProfileChain(cfg, "execute-phase", nanUp);
-  assert.equal(execCandidates[0].profile, "work");
-  assert.deepEqual(execCandidates[0].route, { model: "w/1", thinking: "max" });
-  const otherCandidates = resolveProfileChain(cfg, "other", nanUp);
-  assert.equal(otherCandidates[0].profile, "nan");
-});
-
-test("AC7: per-key independence — default declares thinking only, nan declares model", () => {
-  const cfg = mergeConfigs(
-    {},
-    valid('{"commands":{"execute-phase":{"thinking":"max"}}}'),
-  );
-  const candidates = resolveProfileChain(cfg, "execute-phase", nanUp);
-  // default candidate first, declares thinking only
-  assert.equal(candidates[0].profile, "default");
-  assert.equal(candidates[0].declared.model, false);
-  assert.equal(candidates[0].declared.thinking, true);
-  // nan candidate second, declares model
-  assert.equal(candidates[1].profile, "nan");
-  assert.equal(candidates[1].declared.model, true);
-});
-
-test("AC2: RECOMMENDED_PROFILES.nan.commands[execute-phase].model", () => {
-  assert.deepEqual(
-    RECOMMENDED_PROFILES.nan.commands["execute-phase"].model,
-    ["nan/deepseek-v4-flash", "nan/glm5.3-flash"],
-  );
-});
-
-// --- Docs parity. The root README's NaN guidance is the human-facing source of
-// truth for the built-in profile (the package README says so verbatim: the
-// profile "carries the per-command ladders from the README's NaN section").
-// Nothing used to assert this, so a catalog refresh that moved one side and not
-// the other passed silently — which is how the two surfaces had to be reconciled
-// by hand. Two directions are pinned: every model the profile routes to must be
-// documented, and every judgment rung the README names must actually be routed.
-
-test("AC: every model the built-in nan profile routes to is documented in the README's NaN guidance", () => {
-  const root = readFileSync(new URL("../../../README.md", import.meta.url), "utf8");
-  const profiled = new Set(
-    Object.values(RECOMMENDED_PROFILES)
-      .flatMap((profile) => [profile.default, ...Object.values(profile.commands)])
-      .filter(Boolean)
-      .flatMap((route) => route.model ?? [])
-      .map((ref) => ref.split("/")[1]),
-  );
-  assert.ok(profiled.size >= 4, `expected the profile to route several models, got: ${[...profiled]}`);
-  for (const id of profiled) {
-    assert.ok(
-      root.includes(`**${id}**`) || root.includes(`\`${id}\``),
-      `the README's NaN guidance does not document \`${id}\``,
+  const { opts, done } = fixtureUp();
+  try {
+    const cfg = mergeConfigs(
+      {},
+      valid('{"commands":{"execute-phase":{"thinking":"inherit"}}}'),
     );
-  }
+    const candidates = resolveProfileChain(cfg, "execute-phase", opts);
+    assert.equal(candidates[0].profile, "default");
+    assert.equal(candidates[0].declared.thinking, true);
+    assert.equal(candidates[0].declared.model, false);
+  } finally { done(); }
 });
 
-test("AC: the README's judgment ladders and the built-in profile agree on rung 1", () => {
-  const root = readFileSync(new URL("../../../README.md", import.meta.url), "utf8");
-  const rung1 = (task) => {
-    const row = new RegExp(`^\\| \\*\\*${task}\\*\\* \\|.*$`, "mu").exec(root);
-    assert.ok(row, `the README has no ladder row for ${task}`);
-    const model = /1\. \*\*([^*]+)\*\*/.exec(row[0]);
-    assert.ok(model, `the ${task} row declares no rung 1`);
-    return model[1];
-  };
-  const routed = new Set(
-    Object.values(RECOMMENDED_PROFILES.nan.commands)
-      .flatMap((route) => route.model ?? [])
-      .map((ref) => ref.split("/")[1]),
-  );
-  for (const task of ["Merge gates", "Product definition", "Execution / mechanical"]) {
-    assert.ok(
-      routed.has(rung1(task)),
-      `${task} rung 1 (\`${rung1(task)}\`) is not routed by the built-in profile`,
+test("AC5/AC6: user profile command wins; other command falls through to the preset", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    const cfg = mergeConfigs(
+      valid(
+        '{"profileOrder":["work","default"],"profiles":{"work":{"commands":{"execute-phase":{"model":"w/1","thinking":"max"}}}}}',
+      ),
+      {},
     );
-  }
+    const execCandidates = resolveProfileChain(cfg, "execute-phase", opts);
+    assert.equal(execCandidates[0].profile, "work");
+    assert.deepEqual(execCandidates[0].route, { model: "w/1", thinking: "max" });
+    const otherCandidates = resolveProfileChain(cfg, "other", opts);
+    assert.equal(otherCandidates[0].profile, FIXTURE.provider);
+  } finally { done(); }
 });
+
+test("AC7: per-key independence — default declares thinking only, the preset declares model", () => {
+  const { opts, done } = fixtureUp();
+  try {
+    const cfg = mergeConfigs(
+      {},
+      valid('{"commands":{"execute-phase":{"thinking":"max"}}}'),
+    );
+    const candidates = resolveProfileChain(cfg, "execute-phase", opts);
+    // default candidate first, declares thinking only
+    assert.equal(candidates[0].profile, "default");
+    assert.equal(candidates[0].declared.model, false);
+    assert.equal(candidates[0].declared.thinking, true);
+    // preset candidate second, declares model
+    assert.equal(candidates[1].profile, FIXTURE.provider);
+    assert.equal(candidates[1].declared.model, true);
+  } finally { done(); }
+});
+
+// The docs-parity tests that pinned the built-in profile against the root
+// README's NaN guidance moved to the companion package (issue #388): the
+// vendor's ladder and its human-facing source of truth are the companion's
+// surfaces now.
