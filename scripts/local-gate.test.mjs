@@ -19,7 +19,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { DEPS, STEPS, hookBody, parseImpactVerdict, peerFloor, piCompatInstalls, scheduleSteps, stepEnv, workspacePackageDirs } from "./local-gate.mjs";
+import { DEPS, GATE_RESULT_SCHEMA, OUTPUT_TAIL_BYTES, STEPS, gateResultDocument, hookBody, parseImpactVerdict, peerFloor, piCompatInstalls, scheduleSteps, stepEnv, workspacePackageDirs } from "./local-gate.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = path.join(ROOT, "scripts", "local-gate.mjs");
@@ -635,4 +635,52 @@ test("the hook reads the push refs from stdin and passes a proven base to the ga
   assert.match(body, /if \[ -n "\$base" \]/, "the gate gets --push-base only when a base was proven");
   assert.match(body, /--push-base "\$base"/);
   assert.match(body, /merge-base/, "a new branch falls back to the remote default branch");
+});
+
+/* ------------------------------------------------------- the machine result */
+
+test("gateResultDocument keeps the step table's facts and marks an unattempted step not-run", () => {
+  const document = gateResultDocument({
+    steps: [
+      { id: "root-suite", title: "Root suites" },
+      { id: "schema-build", title: "Build" },
+      { id: "docs", title: "Docs" },
+    ],
+    statuses: new Map([["root-suite", "passed"], ["schema-build", "failed"]]),
+    exits: new Map([["root-suite", 0], ["schema-build", 1]]),
+    durations: new Map([["root-suite", 12]]),
+    outputs: new Map([["schema-build", {
+      stdout: "x".repeat(OUTPUT_TAIL_BYTES + 10),
+      stderr: "not ok 1 - the failing case\n",
+    }]]),
+    bail: true,
+    jobs: 2,
+    durationMs: 40,
+    status: 1,
+  });
+  assert.equal(document.schema, GATE_RESULT_SCHEMA);
+  assert.equal(document.status, 1);
+  assert.equal(document.bail, true);
+  assert.equal(document.jobs, 2);
+  assert.deepEqual(document.steps.map((step) => step.status), ["passed", "failed", "not-run"]);
+  assert.equal(document.steps[2].exit_code, null, "a step that never ran has no exit code");
+  assert.equal(document.steps[1].stdout_tail.length, OUTPUT_TAIL_BYTES, "the kept tail is bounded");
+  assert.match(document.steps[1].stderr_tail, /not ok 1/u);
+});
+
+test("--json writes the machine result beside the human log", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-json-"));
+  const target = path.join(dir, "result.json");
+  try {
+    const result = gate(["--only", "version-parity-content", "--json", target]);
+    assert.equal(result.status, 0, result.stderr);
+    const document = JSON.parse(fs.readFileSync(target, "utf8"));
+    assert.equal(document.schema, GATE_RESULT_SCHEMA);
+    assert.equal(document.steps.length, 1);
+    assert.equal(document.steps[0].id, "version-parity-content");
+    assert.equal(document.steps[0].status, "passed");
+    assert.equal(document.steps[0].exit_code, 0);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

@@ -29,7 +29,8 @@
  *   * The closed set for the machine → text direction is exactly the vocabularies
  *     marked `must-name: yes` in that inventory: `gate-rejection-type`,
  *     `pre-execution-verdict`, the `next` object of the envelope, the four
- *     risk/size-tier sets and the six workflow-projection sets. They are what an
+ *     risk/size-tier sets, the two gate-receipt sets and the six
+ *     workflow-projection sets. They are what an
  *     agent chooses between at the end of a turn and what a projection consumer
  *     reads as grammar. Internal constants (`SKILL_*` capability classes,
  *     `PRE_EXECUTION_LIMITS`, the sense/stop/invoke reason codes, the 11 envelope
@@ -925,7 +926,8 @@ test("text → machine: the live repository orders nothing the machine surface d
 test("machine → text: every value of the must-name vocabularies is ordered by a surface", () => {
   const vocabularies = live.surfaces.filter((s) => s.mustName).flatMap((s) => s.machine);
   assert.deepEqual(uniq(vocabularies).sort(), [
-    "continuation-refusal-type", "envelope-field:next", "gate-rejection-type",
+    "continuation-refusal-type", "envelope-field:next", "gate-check-status",
+    "gate-receipt-verdict", "gate-rejection-type",
     "guard-rejection-reason", "guard-verdict", "projection-hash-algorithm",
     "projection-op", "projection-seam", "projection-selector-kind",
     "risk-tier", "risk-tier-reason", "risk-tier-signal", "size-tier",
