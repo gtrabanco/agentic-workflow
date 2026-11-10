@@ -340,8 +340,11 @@ function mirrorSensorGraph(tmp) {
   fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "src"), { recursive: true });
   fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src", "relay"), { recursive: true });
   for (const file of ["workflow-status.mjs", "schema-runtime.mjs", "pre-execution-contract.mjs", "unit-route.mjs",
-    "phase-lint.mjs", "unit-doc-phases.mjs", "risk-tiers.mjs", "capabilities.mjs"]) {
-    fs.copyFileSync(path.join(repoRoot, "scripts", file), path.join(tmp, "scripts", file));
+    "phase-lint.mjs", "unit-doc-phases.mjs", "risk-tiers.mjs", "capabilities.mjs",
+    "ceremony/tier.mjs", "ceremony/lib.mjs"]) {
+    const dest = path.join(tmp, "scripts", file);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(path.join(repoRoot, "scripts", file), dest);
   }
   fs.copyFileSync(
     path.join(repoRoot, "packages", "agentic-workflow-schema", "src", "vocabularies.ts"),
