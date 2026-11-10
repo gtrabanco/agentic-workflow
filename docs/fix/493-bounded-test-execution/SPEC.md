@@ -86,8 +86,9 @@ annotated allowlist). Negative-capability pin at delivery:
 
 - **`standard`** · **Task Size** — understood, contained risk, resumable-from-diff
 - **Named high-risk item** — none — not a high-tier unit
-  (verdict at cut on an empty change: `standard`, `empty-change`, fail-closed-upward;
-  re-classified with the real paths at P7 and recorded in the Log.)
+  (re-classified at P7 with the real paths — E11: `tier: standard`,
+  `reason_kind: executable-content`, 10 executable paths, no high-risk signals;
+  the cut-time verdict was `standard`/`empty-change` on an empty diff)
 
 ## Future
 
@@ -175,10 +176,103 @@ unit. No Relay packet is cut and no self-granted gate exception is issued.
   deleting that worktree; it made no commits and the branch carried no unique
   work, so this unit restarts clean on `fix/493-bounded-test-execution`
   (fast-forwarded to `main` @ `f349d7b5`, which now carries the merged #427).
+- **L3** — 2026-11-10, environment incident disclosed: while the ledgers were
+  being cut, the worktree at `.git/worktrees/fix/493-bounded-test-execution`
+  was deleted twice mid-run by a concurrent actor (it was also re-registered in
+  git's worktree list as removed while this session held it as cwd). The
+  session restored it each time via the two-step `git worktree add` + `move`
+  pattern, salvaged the just-written ledger files through a `/tmp` backup, and
+  committed them immediately to make the state durable. No other checkout was
+  touched; no content was lost.
+- **L4** — 2026-11-10, discovery: guard 4 (the `scriptedUi` anti-loop trap)
+  already shipped on `main` — commit `68330216` (the #427 lane) consumes
+  scripted scalar answers once and throws on a re-ask, with `repeat(value)` as
+  the declared opt-in and a dry array returning `undefined` (the closed-dialog
+  escape). This unit pins that shipped contract instead of re-implementing it;
+  the first draft of the pin expected the issue's literal dry-array throw and
+  was corrected to the shipped refinement before the green run (P lines below).
+- **L5** — 2026-11-10, discovery: `scripts/red-first.test.mjs`'s
+  shipped-history walk exceeds bun's own 5s standalone default — the failure is
+  pre-existing at `f349d7b5` (reproduced on a base checkout), masked until now
+  by the gate's 60s budget; it enters the measured allowlist rather than being
+  "fixed" by loosening a runner default.
+- **E1** — 2026-11-10, `bun test scripts/run-root-suite.test.mjs` (base
+  `f349d7b5`, red corpus) · exit 1 · `SyntaxError: Export named 'argvFor' not
+  found` — module-absent red, 0 pass / 1 error.
+- **E2** — 2026-11-10, `bun test -t "scriptedUi trap"
+  test/settings-console.test.mjs` (base, first draft pins) · 2 fail bounded
+  (~1 ms each; expectations corrected per L4 before the green run).
+- **E3** — 2026-11-10, `bun test -t "validation dead-end"` (pre-implementation,
+  stale-dist state) · the case hung until the external `timeout 60` killed the
+  runner (exit 124) — the incident class reproduced as the red, bounded only by
+  the external killer this unit adds.
+- **E4** — 2026-11-10, `bun test scripts/run-root-suite.test.mjs` (head) · exit
+  0 · 23 pass; the end-to-end `SUITE TIMEOUT` case completed in 2072 ms and
+  `SUITE MEMORY CAP` in 1152 ms. Same suite under `node --test`: 23 pass.
+- **E5** — 2026-11-10, differential (scratch `mktemp -d`, base `f349d7b5` vs
+  head, same fixture suites): passing suite byte-identical apart from the
+  header's declared `· suite bound 120.0s · mem cap 1536 MB`; the hang suite at
+  base runs unbounded (external `timeout 8` kills it, exit 124, silent) while
+  at head it dies at the 2.0s bound with `FAIL … — SUITE TIMEOUT`, exit 1.
+  Nothing undeclared differs.
+- **E6** — 2026-11-10, injected-loop survival (scratch, 4 suites, no operator
+  wrapper): `node scripts/run-root-suite-head.mjs --suite-timeout 3` → 3
+  healthy suites PASS while the injected infinite loop dies at 3.0s with the
+  named verdict; exit 1.
+- **E7** — 2026-11-10, `timeout 300 bun test --timeout=60000 -t "forge"
+  scripts/workflow-status-sensor.test.mjs` · exit 0 · the two timeout-path
+  tests measure 10572 ms and 10568 ms — the allowlist's first entry.
+- **E8** — 2026-11-10, `rg -c '60000' scripts/run-root-suite.mjs
+  packages/pi-agentic-workflow/package.json
+  packages/agentic-workflow-schema/package.json` · exit 1 (0 matches).
+- **E9** — 2026-11-10, `bun scripts/invocation-drift.mjs` · exit 0 ·
+  `verdict: PASS` with the re-pinned tokens; its suite 13 pass under bun and
+  node after the compliant-tree fixture superseded with the contract.
+- **E10** — 2026-11-10, `bun scripts/check-skill-context.mjs --documents` ·
+  exit 0 · `PASS context documents: 4 budgeted documents` after the ceiling
+  re-base (643/519/10876 measured, `ceil(measured × 1.10)` → 708/571/11964,
+  source named in the manifest).
+- **E11** — 2026-11-10, `bun scripts/ceremony.mjs tier classify --base
+  f349d7b5` · exit 0 · `tier: standard`, `reason_kind: executable-content`, no
+  high-risk signals — recorded under `## Risk tier`.
+- **E12** — 2026-11-10, `bun scripts/lint-changeset.mjs` · exit 0 · the new
+  `.changeset/493-bounded-test-execution.md` accepted.
+- **P1** — 2026-11-10 01:19, unit doc + both ledgers cut and the `## Fixes` row
+  registered · `2e5c4129` (re-committed after the L3 worktree wipe; the
+  `bun scripts/unit-route.mjs --triage 493-bounded-test-execution` validator
+  exits 0).
+- **P2** — 2026-11-10, red corpus committed observed red · `3a28bdb2` (E1, E2,
+  E3).
+- **P3** — 2026-11-10, external wall-clock killer + RSS watchdog · `37323b5e`
+  (E4; the end-to-end cases also surfaced and pinned the `NODE_TEST_CONTEXT`
+  silent-pass latent bug).
+- **P4** — 2026-11-10, 10s default + allowlist + drift pin + AGENTS.md ·
+  `99ff71a3` (E8, E9, E10).
+- **P5** — 2026-11-10, the trap pinned (shipped already, L4) · `3f222afd`;
+  package suite 760 pass / 0 fail.
+- **P6** — 2026-11-10, bounded re-ask in `openAScope` · `fb59db75` (E3 red →
+  green in ~7 ms; suite 761 pass under bun and node).
+- **P7** — 2026-11-10, measured allowlist + projection · the allowlist commit
+  (E6, E7); `bun scripts/docs-generate.mjs` re-rendered `docs/generated/units.md`
+  by the emitter (1 written, 2 unchanged), `scripts/docs-generate.test.mjs` 22
+  pass.
+- **G1** — 2026-11-10, `bun scripts/run-root-suite.mjs` (bun leg, bounds armed,
+  10s default + measured allowlist, no operator wrapper) · exit 0 · 101/101
+  suites PASS, including `workflow-status-sensor` (50.8s) under its measured
+  30s budget.
+- **G2** — 2026-11-10, `node scripts/run-root-suite.mjs` (the CI shape) · exit
+  0 · 101/101 suites PASS.
+- **G3** — 2026-11-10, both packages' `bun run test` · exit 0 ·
+  `agentic-workflow-schema` 836 pass / `pi-agentic-workflow` 761 pass, both
+  under the 10s default.
+- **G4** — 2026-11-10, `bun scripts/local-gate.mjs` · <recorded at the final
+  handoff run>
 
 ## Next
 
-P2 — the frozen-failure corpus, RED.
+External verification — the owner reads the diff, the ledgers and the evidence
+above and delivers the verdict; per the owner's workflow (§8) no gate result
+here self-approves the change.
 
 ## References
 
