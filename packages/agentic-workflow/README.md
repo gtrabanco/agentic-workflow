@@ -77,7 +77,10 @@ retry | 429 · 5xx · 408 · network errors are retryable with bounded exponenti
 resume | the store's own `embedding is null` predicate | a run killed part-way re-runs only the remainder; nothing already embedded is re-sent
 pin | meta.emb_model written by the first landed batch (and by a zero-pending pass) | a partial pass can never leave an unpinned, mixed store
 sync-report | store.{path, present, files, chunks, pending, model, lastSync{files_scanned, files_changed, files_deleted, embedded}} | `pending` and `model` are additive inside the open `store` record — the top-level key order and the degradation vocabulary are frozen
-degradations | unavailable-embeddings-not-configured · unavailable-embeddings-not-indexed · unavailable-embeddings-provider-down · embeddings-model-mismatch | a closed vocabulary; an unknown value is refused at construction
+degradations | unavailable-embeddings-not-configured · unavailable-embeddings-not-indexed · unavailable-embeddings-provider-down · embeddings-model-mismatch · chunk-too-large | a closed vocabulary; an unknown value is refused at construction
+chunk-limit | index.json provider.chunk_limit (positive integer) · default 0 = unlimited | chunk bodies exceeding the limit are automatically truncated (never skipped) to fit — the chunk stays searchable under its heading and line range; a sync that shortened at least one chunk declares `chunk-too-large`
+store-share | index.json store.share {enabled: bool, base_dir?: string} · default disabled (local `.agentic-workflow/index/`) | when enabled the store lives under `<base>/agentic-workflow/<repoId>/index.db` where `<repoId>` is the repo's commit-object SHA (`git rev-parse HEAD^{commit}`) and `<base>` is `base_dir` or the XDG data dir — worktrees of the same repo share one index; the F36/F37 containment check is skipped in this mode only
+excludes | index.json index.excludes (array of path prefixes, or null) · defaults `.agentic-workflow/` + `node_modules/` | tracked files under any exclusion prefix leave the corpus (the journal fragments and vendored trees are never indexed); an explicit array replaces the defaults entirely, `null` restores them
 ```
 
 **A query never pays write cost.** Vectors catch up on the next explicit sync —

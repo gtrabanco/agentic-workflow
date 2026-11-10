@@ -44,6 +44,9 @@ const {
   PROJECTION_HASH_ALGORITHMS,
   GUARD_VERDICTS,
   GUARD_REJECTION_REASONS,
+  GATE_RECEIPT_VERDICTS,
+  GATE_CHECK_STATUSES,
+  GATE_RECEIPT_FRESHNESS_CODES,
 } = await import(schemaRuntimePath);
 
 const read = (relative) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -81,6 +84,9 @@ test("the schema package publishes every canonical set, non-empty", () => {
     ["PROJECTION_HASH_ALGORITHMS", PROJECTION_HASH_ALGORITHMS],
     ["GUARD_VERDICTS", GUARD_VERDICTS],
     ["GUARD_REJECTION_REASONS", GUARD_REJECTION_REASONS],
+    ["GATE_RECEIPT_VERDICTS", GATE_RECEIPT_VERDICTS],
+    ["GATE_CHECK_STATUSES", GATE_CHECK_STATUSES],
+    ["GATE_RECEIPT_FRESHNESS_CODES", GATE_RECEIPT_FRESHNESS_CODES],
   ]) {
     assert.ok(Array.isArray(set) && set.length > 0, `${name} is a published const array`);
   }
