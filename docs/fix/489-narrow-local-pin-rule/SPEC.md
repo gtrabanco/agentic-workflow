@@ -131,8 +131,10 @@ declared paths at the cut; copied verbatim, never written from memory.
   `docs/workflow/PACKAGES.md` matches 1.
 - **AC5 (S4)** — the two superseded cases are replaced (not deleted) and the new
   ones pass; the rest of the file is unchanged: `git diff
-  origin/main...HEAD -- scripts/version-parity-gate.test.mjs` shows two replaced
-  `test(` headers plus the additions.
+  origin/main...HEAD -- scripts/version-parity-gate.test.mjs` shows the two
+  superseded `test(` headers rewritten, the ahead-header's assertion followed
+  the changed violation text (three `-test(` / four `+test(` lines), and the
+  additions are present.
 - **AC6 (S5)** — the diff never touches the wiring: `git diff
   origin/main...HEAD -- scripts/version-parity-gate.mjs` contains no
   `function runPins` or `function main` line, and the `--pins` default
@@ -214,7 +216,7 @@ mirror's two replaced cases (lagging = notice, leading = drift + bump target) ·
 | O4 | S1, PE-002 | the registry rule keeps owning "behind": with the registry answering, the same behind pin is still a violation naming the published version | P1 | P3 | execute-phase | `bun test scripts/version-parity-gate.test.mjs` exits 0 with the behind-with-registry case matching `/registry published/` | the E line for the unchanged registry cases | verified |
 | O5 | S4, PE-005 | the two superseded cases are replaced, not deleted, and the rest of the file's cases keep passing | P1 | P2 | execute-phase | `bun test scripts/version-parity-gate.test.mjs` exits 0 with the same case count plus the additions | the E line with the pass count before and after | verified |
 | O6 | S3 | both prose surfaces state the narrowed rule and neither promises a behind-pin rejection | P1 | P4 | execute-phase | `rg -c 'ahead of the local version' scripts/version-parity-gate.mjs docs/workflow/PACKAGES.md` matches 1 each | the E line with both counts | verified |
-| O7 | S5, PE-006 | the change ships without a package bump or changeset and touches no wiring | P1 | P5 | execute-phase | `git diff --stat origin/main...HEAD` names exactly the four declared paths and `bun scripts/version-parity-gate.mjs --content --base origin/main` exits 0 | the stat and the content-gate verdict in the E lines | verified |
+| O7 | S5, PE-006 | the change ships without a package bump or changeset and touches no wiring | P1 | P5 | execute-phase | `git diff origin/main...HEAD -- scripts/version-parity-gate.mjs` carries no `function runPins\|function main` line and no `PACKAGE_DIR` hunk, and `bun scripts/version-parity-gate.mjs --content --base origin/main` exits 0 | the wiring checks and the content-gate verdict in the E lines | verified |
 | O8 | S6 | every case that does not encode the superseded semantics keeps passing, under both runtimes | P1 | P5 | execute-phase | `bun test scripts/version-parity-gate.test.mjs` and `node --test scripts/version-parity-gate.test.mjs` both exit 0; `bun scripts/run-root-suite.mjs` exits 0 | the two suite runs + the root-suite line | verified |
 | O9 | S1, PE-008 | the watch mirrors the gate: a lagging sibling pin is a notice, a leading one is the drift | P1 | P3 | execute-phase | `bun test scripts/pin-watch.test.mjs` exits 0 with both mirror cases green | the E line for the pin-watch pair | verified |
 | O10 | S1, PE-008 | the watch's bump plan targets the local version, never a registry version the pin is already past | P1 | P3 | execute-phase | `bun test scripts/pin-watch.test.mjs` exits 0 with the bump-plan assertion (`0.9.9 -> 0.5.0`) | the same E line | verified |
@@ -281,6 +283,8 @@ owner's external verification.
 
 - **D5** — 2026-11-09, AC6 corrected before the handoff: the cut phrased it as "the diff names exactly the four declared paths", which the §7 documentation surfaces (roadmap row, projection, journal fragment) and D1's two watch paths falsify. The criterion's intent — no wiring change — is now stated as the check that proves it (no `runPins`/`main` line in the gate's diff, `PACKAGE_DIR` untouched), and the verification is E9.
 - **E9** — 2026-11-09, `git diff origin/main...HEAD -- scripts/version-parity-gate.mjs | rg -c 'function runPins|function main'` matches 0, and `PACKAGE_DIR` appears in no diff hunk — S5's boundary holds (AC6).
+- **D6** — 2026-11-09, the external verification's correction batch (one batch, per the correction bounds): the receipt (`external-verify.md`) reported one blocker — O7's validator still asserted the superseded four-path stat reading D5 had corrected into AC6 — and two advisories (AC5's "two replaced `test(` headers" vs the observed three rewritten; the watch corpus's `Pin behind its local sibling` fixture comment modeling an input the narrowed evaluator can no longer produce). All three are one-line doc/comment residues on surfaces the batch touches; no behavior changes, so no new red-first corpus is owed. AC5 reworded to the observed three/four shape, O7's validator re-stated as AC6's wiring form, the fixture comment relabeled to the ahead direction. The receipt is appended uncommitted by the verify contract and is carried by this batch.
+- **E10** — 2026-11-09, the batch's recheck (blockers-only, per the correction bounds): O7's re-stated validator — `git diff origin/main...HEAD -- scripts/version-parity-gate.mjs | rg -c 'function runPins|function main|PACKAGE_DIR'` matches 0 and `bun scripts/version-parity-gate.mjs --content --base origin/main` exits 0 · `VERDICT: PASS` · no-triggered-change on all three packages; AC5's re-stated shape — the diff shows 3 `-test(` / 4 `+test(` lines; `bun test scripts/pin-watch.test.mjs` exit 0 · 55 pass / 0 fail (comment-only edit); `bun test scripts/version-parity-gate.test.mjs` exit 0 · 53 pass / 0 fail (regression guard over the touched unit).
 
 ## Next
 
