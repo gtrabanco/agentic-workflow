@@ -77,9 +77,11 @@ from the registry and fails).
   publish). CI publishes on merge to `main` when the version differs from the
   registry — one consolidated workflow since 2026-10-28
   (`.github/workflows/publish.yml`; its jobs chain schema → crate → the pi
-  pair; D-40-12); Trusted Publisher records pin the workflow filename, so the
-  consolidation required re-registering the then-three packages' records on
-  npmjs.com (owner one-time step; until then a publish fails E403). Releases
+  pair → the nan companion, issue #502; D-40-12); Trusted Publisher records
+  pin the workflow filename, so the consolidation required re-registering the
+  then-three packages' records on npmjs.com (owner one-time step; until then
+  a publish fails E403) — the companion's fourth record needs the same
+  one-time registration bound to `publish.yml` before its first publish. Releases
   are cut by dispatching `publish.yml` with `mode: cut` (`channel: stable` =
   train + publish, dist-tag `latest`; `channel: canary` = prerelease cut for
   the declared packages — the channel set is closed, the old `latest` channel

@@ -20,7 +20,7 @@
  *   - registry empty / lookup failed → publish (first publish stays manual)
  *   - npm's single-version `--json` string quirk is accepted
  *   - stdout is `$GITHUB_OUTPUT`-shaped; exit 2 fails closed on a bad path
- *   - all three publish workflows call this gate and none keep the old
+ *   - all four publish jobs call this gate and none keep the old
  *     `npm view … version` dist-tag comparison
  */
 
@@ -134,7 +134,7 @@ test("an unknown flag is a usage error (exit 2)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// The wiring (all three publish workflows)
+// The wiring (the publish workflow's jobs)
 // ---------------------------------------------------------------------------
 
 test("every publish workflow routes the decision through the gate script", () => {
