@@ -149,7 +149,8 @@ step 4:
   project's absolute path, `{ "consented": true, "consentedAt": <ISO date> }`
   — and create nothing else. `<agentDir>` is pi's global agent directory:
   `getAgentDir()` in the extension, `~/.pi/agent` on a default install (the
-  directory holding `pi-agentic-workflow.json`; `~/.claude` is not it). Never write or edit `.pi/hooks.json` (the
+  directory holding the unified config files — `agentic-workflow.json` and
+  `pi-agentic-workflow.json`; `~/.claude` is not it). Never write or edit `.pi/hooks.json` (the
   developer's declarations, not this skill's), never add the consent entry
   without the project's absolute path, and a no writes nothing. The
   dispatcher's own contract — config form, seam vocabulary, refusal grammar —
@@ -212,6 +213,13 @@ step 4:
   are only a freshness fast path), and never write `.git/hooks/` or the config
   on a later visit without a fresh yes. The hooks are best-effort by contract
   (`doc --sync --quiet`, always exit 0 — a fast path never breaks git).
+- **Unified config is offered, never hand-written (issue #427).** One consented
+  question offers the project config; a yes runs
+  `bunx @gtrabanco/agentic-workflow config init --scope project` (which refuses
+  to overwrite), a no writes nothing and records the residual. The two files,
+  their scopes, the resolution order and the new-feature policy are owned by
+  [CONFIG](references/CONFIG.md); this skill never restates a schema or edits a
+  package's extension file.
 - **Never redefine the urgency label vocabulary here.** `skills/triage-issue
   /SKILL.md` is the sole owner of the `urgent`/`fix-next` names, colors, and
   apply rules — this skill only seeds those two labels into the repo; it never

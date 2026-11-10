@@ -88,16 +88,31 @@ function piDouble(options = {}) {
  * the hint state live) and its own repo cwd (where `.pi/` would live), so the
  * adapter's real file reads are exercised without touching this machine's `~/.pi`.
  */
+const FEATURE_KEYS = new Set(["logSession", "memory", "telemetry", "guards", "advance", "pathProtection"]);
+
+function splitConfig(config) {
+  const feature = {};
+  const pi = {};
+  for (const [key, value] of Object.entries(config)) (FEATURE_KEYS.has(key) ? feature : pi)[key] = value;
+  return { feature, pi };
+}
+
 async function shippedEntry({ globalConfig, projectConfig, ...piOptions } = {}) {
   const root = mkdtempSync(join(tmpdir(), "paw-adapter-"));
   const agentDir = join(root, "agent");
   const cwd = join(root, "repo");
   mkdirSync(agentDir, { recursive: true });
   mkdirSync(cwd, { recursive: true });
-  if (globalConfig) writeFileSync(join(agentDir, "pi-agentic-workflow.json"), JSON.stringify(globalConfig));
+  if (globalConfig) {
+    const { feature, pi } = splitConfig(globalConfig);
+    if (Object.keys(pi).length > 0) writeFileSync(join(agentDir, "pi-agentic-workflow.json"), JSON.stringify(pi));
+    if (Object.keys(feature).length > 0) writeFileSync(join(agentDir, "agentic-workflow.json"), JSON.stringify(feature));
+  }
   if (projectConfig) {
     mkdirSync(join(cwd, ".pi"), { recursive: true });
-    writeFileSync(join(cwd, ".pi", "pi-agentic-workflow.json"), JSON.stringify(projectConfig));
+    const { feature, pi } = splitConfig(projectConfig);
+    if (Object.keys(pi).length > 0) writeFileSync(join(cwd, ".pi", "pi-agentic-workflow.json"), JSON.stringify(pi));
+    if (Object.keys(feature).length > 0) writeFileSync(join(cwd, ".pi", "agentic-workflow.json"), JSON.stringify(feature));
   }
 
   const double = piDouble(piOptions);
@@ -277,7 +292,7 @@ test("AC13 through the factory: an untrusted project is never read, even when th
       availableModels: () => [{ provider: "openai", id: "gpt-5.2" }],
     };
     await router.dispatch({ name: "unit-lane", skill: "unit-lane" }, "", ctx);
-    assert.deepEqual(readPaths, [join(agentDir, "pi-agentic-workflow.json")], "the project file is not opened");
+    assert.deepEqual(readPaths, [join(agentDir, "pi-agentic-workflow.json"), join(agentDir, "agentic-workflow.json")], "the project files are not opened");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
