@@ -10,6 +10,14 @@
  *   rebuild — discard the disposable cache and resync from scratch
  * Degradations come only from D3's closed vocabulary, as engines grow into
  * the hybrid mode (P6/P7).
+ *
+ * D20 (issue #470): reads the `provider.chunk_limit` config and passes it to
+ * syncIndex; the `truncated` count adds the `chunk-too-large` degradation when
+ * any chunk was shortened.
+ *
+ * D21: reads the `index.excludes` config and passes it to syncIndex so
+ * irrelevant paths (`.agentic-workflow/`, `node_modules/`, and whatever the
+ * project configures) leave the corpus.
  */
 
 import { buildEnvelope } from "./envelope.mjs";
@@ -30,28 +38,40 @@ export async function runDocOp(grammar, ctx = {}) {
   const root = ctx.rootDir ?? process.cwd();
 
   if (grammar.op === "sync") {
-    const r = await syncIndex(root);
+    // D20/D21: read the chunk limit and the exclusion list from the config and
+    // pass both to syncIndex.
+    const cfg = loadConfig(root);
+    const maxChunkChars = cfg.provider?.chunk_limit ?? 0;
+    const exclusions = cfg.index?.excludes;
+    const r = await syncIndex(root, { maxChunkChars, exclusions });
     // P6: when a provider is configured (D10), embed pending chunks in the
     // same pass; otherwise the store answers keyword-only (AC17's root). The
     // pass is resilient (issue #443 S3): pacing, retry/backoff and a pin the
     // first landed batch writes, so a 429 no longer aborts the run.
-    const cfg = resolveEmbedConfig({ config: loadConfig(root), env: process.env });
-    const provider = ctx.embedder !== undefined ? ctx.embedder : cfg.configured ? makeOpenAIProvider(cfg) : null;
+    const embedCfg = resolveEmbedConfig({ config: cfg, env: process.env });
+    const provider = ctx.embedder !== undefined ? ctx.embedder : embedCfg.configured ? makeOpenAIProvider(embedCfg) : null;
     let embedded = 0;
     let degradations = [];
+    if (r.truncated > 0) {
+      degradations.push("chunk-too-large");
+    }
     if (provider !== null) {
       try {
         const result = await embedPendingChunks(root, provider);
         if (result.skipped === true) {
           // Model mismatch: keep the frozen key and declare the cause.
           // (AC18: embeddings-model-mismatch; D3 frozen key set.)
-          degradations = [result.reason || "embeddings-model-mismatch"];
+          degradations = ["embeddings-model-mismatch"];
         } else {
           embedded = result.embedded;
         }
       } catch (e) {
         // AC17: provider-down ⇒ declared cause, ok:true, keyword results survive.
-        degradations = ["unavailable-embeddings-provider-down"];
+        // Only add if not already present (the chunk-too-large degradation
+        // can coexist with provider-down).
+        if (!degradations.includes("unavailable-embeddings-provider-down")) {
+          degradations.push("unavailable-embeddings-provider-down");
+        }
         embedded = 0;
       }
     }
@@ -97,7 +117,12 @@ export async function runDocOp(grammar, ctx = {}) {
   }
 
   if (grammar.op === "rebuild") {
-    const r = await rebuildIndex(root);
+    // D20/D21: rebuild honors the same config surfaces the sync pass reads.
+    const cfg = loadConfig(root);
+    const r = await rebuildIndex(root, {
+      maxChunkChars: cfg.provider?.chunk_limit ?? 0,
+      exclusions: cfg.index?.excludes,
+    });
     return buildEnvelope({
       command: "rebuild",
       results: [],

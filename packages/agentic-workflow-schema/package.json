@@ -40,7 +40,8 @@
     "./journal-entry.schema.json": "./journal-entry.schema.json",
     "./batch-plan.schema.json": "./batch-plan.schema.json",
     "./doc-provenance.schema.json": "./doc-provenance.schema.json",
-    "./config.schema.json": "./config.schema.json"
+    "./config.schema.json": "./config.schema.json",
+    "./gate-receipt.schema.json": "./gate-receipt.schema.json"
   },
   "files": [
     "dist",
@@ -60,7 +61,8 @@
     "README.md",
     "LICENSE",
     "doc-provenance.schema.json",
-    "config.schema.json"
+    "config.schema.json",
+    "gate-receipt.schema.json"
   ],
   "engines": {
     "node": ">=18",

@@ -12,6 +12,14 @@
  * Freshness invariant (AC9): `ensureFresh` compares the stored manifest
  * (hashes + git HEAD) against the live corpus on every call; a stale store
  * gets an inline incremental sync before the caller answers.
+ *
+ * D20 chunk limit (issue #470): `syncIndex` accepts `opts.maxChunkChars`;
+ * chunk bodies exceeding it are automatically truncated (never skipped) and
+ * the count lands in the result's `truncated`.
+ *
+ * D21 file exclusion: `syncIndex` accepts `opts.exclusions`; the manifest
+ * filters these prefix paths before chunking. The chunker version is bumped
+ * so existing stores rescan and excluded files' chunks are reaped (AC11).
  */
 
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -62,7 +70,7 @@ export function storedManifest(db) {
  * longer produces (S14/A6). The value lives in the store's `meta` table and
  * never in the canonical manifest — AC12 pins that export's bytes.
  */
-export const CHUNKER_VERSION = 3;
+export const CHUNKER_VERSION = 5; // bumped for D21: exclusion filtering reshapes the corpus
 
 /** The chunker version stamped in this store, or null when it carries none. */
 function storedChunkerVersion(db) {
@@ -85,11 +93,18 @@ export async function storeStats(root) {
 
 /**
  * One incremental sync pass over the tracked markdown corpus at `root`.
- * Returns `{filesScanned, filesChanged, filesDeleted, chunks}`.
+ * Returns `{filesScanned, filesChanged, filesDeleted, chunks, truncated}`.
+ *
+ * D20: `opts.maxChunkChars` limits chunk body length; chunks exceeding it are
+ * automatically truncated (never skipped).
+ * D21: `opts.exclusions` is the file exclusion-prefix list; the manifest
+ * filters these paths before chunking.
  */
-export async function syncIndex(root) {
+export async function syncIndex(root, opts = {}) {
+  const maxChunkChars = opts.maxChunkChars ?? 0;
+  const exclusions = opts.exclusions;
   loadConfig(root); // config errors surface here too (usage/IO), even in sync
-  const manifest = collectManifest(root);
+  const manifest = collectManifest(root, { exclusions });
   const { db } = await openDatabase(storePath(root));
   db.exec(SCHEMA);
 
@@ -118,14 +133,16 @@ export async function syncIndex(root) {
   db.exec("BEGIN");
   try {
     for (const path of deleted) reap.run(path);
+    let truncated = 0;
     for (const path of changed) {
       const src = join(root, path);
       try {
         // Reap existing chunks for this path before re-inserting (original
         // reap.run(path) before the read — preserved for the non-ENOENT path).
         reap.run(path);
-        const rows = scanChunks(readFileSync(src, "utf8"), path);
-        for (const c of rows) {
+        const result = scanChunks(readFileSync(src, "utf8"), path, maxChunkChars);
+        truncated += result.truncated;
+        for (const c of result.chunks) {
           insert.run(c.id, c.path, c.section, c.lines[0], c.lines[1], JSON.stringify(c.meta), c.body);
         }
       } catch (e) {
@@ -138,6 +155,22 @@ export async function syncIndex(root) {
       }
     }
     db.exec("COMMIT");
+
+    // Persist + export the canonical manifest (AC12's compared artifact), and stamp
+    // the scanner that produced these rows so a future scanner change re-scans.
+    db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('manifest', ?)").run(canonicalJson(manifest));
+    db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('chunker', ?)").run(String(CHUNKER_VERSION));
+    db.close();
+    writeFileSync(manifestExportPath(root), `${canonicalJson(manifest)}\n`);
+
+    const stats = await storeStats(root);
+    return {
+      filesScanned: Object.keys(manifest.files).length,
+      filesChanged: changed.length,
+      filesDeleted: deleted.length,
+      chunks: stats.chunks,
+      truncated,
+    };
   } catch (e) {
     try {
       db.exec("ROLLBACK");
@@ -146,21 +179,6 @@ export async function syncIndex(root) {
     }
     throw e;
   }
-
-  // Persist + export the canonical manifest (AC12's compared artifact), and stamp
-  // the scanner that produced these rows so a future scanner change re-scans.
-  db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('manifest', ?)").run(canonicalJson(manifest));
-  db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('chunker', ?)").run(String(CHUNKER_VERSION));
-  db.close();
-  writeFileSync(manifestExportPath(root), `${canonicalJson(manifest)}\n`);
-
-  const stats = await storeStats(root);
-  return {
-    filesScanned: Object.keys(manifest.files).length,
-    filesChanged: changed.length,
-    filesDeleted: deleted.length,
-    chunks: stats.chunks,
-  };
 }
 
 /**
@@ -168,8 +186,8 @@ export async function syncIndex(root) {
  * store; stale or missing ⇒ inline incremental sync before answering.
  * Returns `{fresh, synced}`.
  */
-export async function ensureFresh(root) {
-  const current = collectManifest(root);
+export async function ensureFresh(root, opts = {}) {
+  const current = collectManifest(root, { exclusions: opts.exclusions });
   if (storePresent(root)) {
     const { db } = await openDatabase(storePath(root));
     const stored = storedManifest(db);
@@ -179,7 +197,7 @@ export async function ensureFresh(root) {
       return { fresh: true, synced: false };
     }
   }
-  await syncIndex(root);
+  await syncIndex(root, opts);
   return { fresh: false, synced: true };
 }
 
@@ -188,12 +206,12 @@ export async function ensureFresh(root) {
  * manifest export) and resync from scratch. Returns the fresh sync counts
  * with `rebuilt: true`.
  */
-export async function rebuildIndex(root) {
+export async function rebuildIndex(root, opts = {}) {
   const base = storePath(root);
   rmSync(base, { force: true });
   rmSync(`${base}-wal`, { force: true });
   rmSync(`${base}-shm`, { force: true });
   rmSync(manifestExportPath(root), { force: true });
-  const r = await syncIndex(root);
+  const r = await syncIndex(root, opts);
   return { rebuilt: true, ...r };
 }

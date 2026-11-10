@@ -54,12 +54,17 @@ member's version resolves from the registry and fails).
   gate if packages ever ship outside `packages/`); the **registry** half (a
   separate job, clearly-degraded-when-
   unreachable) fails an exact pin whose target has published a newer version,
-  and — for pins whose target is a local package under `packages/` — a pin that
-  does not equal the **local package version** (the one the merge publishes;
-  verified offline even when the registry is unreachable): a pin behind it
-  recreates the post-publish red window, a pin ahead of everything points at a
-  version that will never exist — fix: bump the pin + the package version in
-  the same PR. The workspace is what makes that instruction executable: the
+  and — for pins whose target is a local package under `packages/` — fails a
+  **pin ahead of the local version** (the one the merge publishes; verified
+  offline even when the registry is unreachable): such a pin names a version no
+  package carries and the registry never published, so no install can satisfy
+  it — fix: pin the local version in the same PR. That direction is the rule's
+  whole scope (issue #489); the reverse one belongs to the registry half,
+  because the unified train sets every package to one version and rewrites every
+  exact local pin to it — a pin *behind* its sibling is a state the pipeline
+  cannot produce, a hand edit that creates one is rejected by the registry half
+  whenever the registry answers, and offline it is a notice, never a verdict.
+  The workspace is what makes that instruction executable: the
   member resolves its sibling from the folder, so the pin may name a version
   the merge has not published yet, and the root lock stays installable with
   `--frozen-lockfile` (before the workspace, that same instruction was

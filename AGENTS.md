@@ -382,6 +382,10 @@ doc-provenance-format-vocabulary | packages/agentic-workflow-schema/src/doc-prov
 doc-provenance-grammar-family-vocabulary | packages/agentic-workflow-schema/src/doc-provenance.ts | schema-export:DOC_GRAMMAR_FAMILIES | doc-grammar-family | no
 doc-provenance-stamp | packages/agentic-workflow-schema/README.md | block:doc-provenance@1 | doc-provenance-format+doc-grammar-family | no
 continuation-refusal-vocabulary | packages/agentic-workflow-schema/src/continuation.ts | schema-export:CONTINUATION_REFUSALS | continuation-refusal-type | yes
+gate-receipt-verdicts | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_RECEIPT_VERDICTS | gate-receipt-verdict | yes
+gate-receipt-check-statuses | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_CHECK_STATUSES | gate-check-status | yes
+gate-receipt-freshness | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_RECEIPT_FRESHNESS_CODES | gate-receipt-freshness | no
+gate-receipt-grammar | packages/agentic-workflow-schema/README.md | block:gate-receipt@1 | n/a | no
 ask-dont-infer-rule | skills/unit-lane/references/DESIGN.md | block:ask-dont-infer@1 | n/a | no
 relay-status-grammar | skills/unit-lane/references/RELAY.md | block:relay-status@1 | n/a | no
 journal-fragment-grammar | packages/agentic-workflow/README.md | block:journal-fragment-grammar@1 | n/a | no
@@ -486,6 +490,13 @@ This repo uses git worktrees under `.git/worktrees/<path>` (not under
 `.worktrees/` or `/tmp` — Serena and other MCPs detect worktrees as separate
 project paths and break when worktrees live outside the repo tree).
 
+⚠️ **CRITICAL: Worktrees inside `.git/worktrees/` get corrupted by `git worktree
+add`** — git writes `HEAD`, `gitdir`, `commondir`, `index`, `logs/`, `ORIG_HEAD`
+files inside the worktree that it then reports as "untracked files", making
+`git worktree remove` fail until `--force` is used (and even then the files
+persist). **Always use the two-step pattern below** — create in a temporary
+path on the same filesystem, then `git worktree move` to the final location.
+
 When asked to create a worktree for an issue or branch, always follow the
 steps below **in order** — they are not optional and have no shortcuts.
 
@@ -508,9 +519,6 @@ as the source and preserve its full history (do not create a new branch from
 ### Step 2 — Clean up stale state
 
 ```bash
-# Delete any local branch with the same name (even if tracking origin)
-git branch -D <branch-name> 2>/dev/null
-
 # Remove any orphan worktree dirs (from prior failed attempts)
 rm -rf .git/worktrees/<worktree-dir>
 ```
@@ -518,29 +526,48 @@ rm -rf .git/worktrees/<worktree-dir>
 If a previous branch was deleted but its worktree metadata remains under
 `.git/worktrees/`, remove the directory first so git stops complaining.
 
-### Step 3 — Create the branch
+### Step 3 — Remove the local branch if it exists
 
-If the remote branch exists:
+The local branch is recreated by the worktree creation. If it already exists,
+git will refuse to create it again:
 
 ```bash
-git branch -f <branch-name> origin/<branch-name>
+git branch -D <branch-name> 2>/dev/null
 ```
 
-If the issue is new with no commits yet, create from `main`:
+### Step 4 — Create the worktree (two-step pattern)
+
+**Never** call `git worktree add` directly on a path under `.git/worktrees/` —
+it corrupts the worktree with control files (`HEAD`, `gitdir`, `index`, etc.)
+that make `git worktree remove` fail.
+
+Use this two-step pattern:
 
 ```bash
-git branch <branch-name> main
-```
+# 1. Create in a temporary path on the same filesystem (must be on the same
+#    filesystem as the repo for git worktree move to work)
+git worktree add -b <branch-name> /home/agent/projects/temp-worktrees/<worktree-dir> <branch-name-or-sha>
 
-### Step 4 — Create the worktree
-
-```bash
-git worktree add -b <branch-name> .git/worktrees/<worktree-dir> <branch-name>
+# 2. Move the worktree to the final location (git worktree move renames the
+#    metadata entry automatically and keeps the working tree clean)
+git worktree move /home/agent/projects/temp-worktrees/<worktree-dir> .git/worktrees/<worktree-dir>
 ```
 
 `<worktree-dir>` should be a short name matching the branch purpose (e.g.
 `feat/432-model-memory`). The worktree must live **inside** `.git/worktrees/`.
 **Never** use `/tmp` or any path outside the repo.
+
+For a **new issue with no remote branch yet**, create from `main` first:
+
+```bash
+# Create local branch from main
+git branch <branch-name> main
+
+# Then use the two-step pattern above, using the local branch name
+```
+
+**Never** use `git worktree add -b <branch-name> .git/worktrees/<worktree-dir> <branch-name>`
+— it corrupts the worktree.
 
 ### Step 5 — Copy Serena configuration
 

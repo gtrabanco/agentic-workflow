@@ -1,0 +1,6 @@
+## 2026-11-10T00:01:48Z — fix/489-narrow-local-pin-rule — fix/489 — verify receipt's correction batch applied
+- **Commits:** 9 (`d3d67863…77a35036`)
+- **Files:** 10 files
+- **Summary:** Correction batch on unit 489's first external-verify receipt (external-verify.md, one blocker): O7's validator still asserted the superseded four-path diff-stat reading that the unit's own D5 had corrected into AC6; re-stated as AC6's wiring form (no runPins/main/PACKAGE_DIR line in the gate's diff + content gate exit 0). The two advisories folded in the same batch: AC5 reworded to the observed three -test(/four +test( rewritten-header shape, and the watch corpus's PR_FINDINGS comment relabeled to the ahead direction the narrowed evaluator actually produces. The receipt file ships with the batch. No behavior change; no new red-first corpus owed.
+- **Decisions:** One batch per the correction bounds (§9): blockers + same-surface advisories together, then one recheck limited to those blockers; obligations O1-O10 re-verified green in the foreground (content gate PASS, wiring grep 0 matches, watch suite 55/0, gate suite 53/0, AC5 shape 3/4). Receipt appended uncommitted by the verify contract and carried by this batch, never rewritten.
+- **Next:** External verifier's blockers-only recheck (delta verdict) on 2a28f038..HEAD; then the PR (Closes #489).

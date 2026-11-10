@@ -261,6 +261,26 @@ The ledger is [`planning-obligations.md`](planning-obligations.md) (M/L unit; no
   (A status quo vs B project vs C host-keyed, recommending A and never B).
 - **G2** — 2026-11-09, `node scripts/run-root-suite.mjs --jobs 2` · HEAD `e50db2c7`
   · exit 0 · 97 suite(s), 0 FAIL (the correction batch's head; every suite PASS).
+- **P7** — 2026-11-10, `main` moved 71 commits past this branch's cut and the PR turned
+  CONFLICTING; the branch integrates `origin/main` @ `55ea4140`. Two files conflicted,
+  both the tail of the schema package's published surface: `src/index.ts` (each side
+  appended its own export block — this unit's config contract, feature 108's gate
+  receipt) and `package.json` (each side appended its own `exports` and `files` entry).
+  Both resolved as the union: `config.schema.json` and `gate-receipt.schema.json` ship,
+  both export blocks stand, no side's symbol is dropped. `docs/generated/units.md` took
+  the merge driver's incoming projection and was regenerated. The guide: this unit's
+  `## Config policy for new features` section on top of main's worktree-creation rewrite
+  put `AGENTS.md` over all three ceilings, so Step 4's duplicated `<worktree-dir>`
+  paragraph (main left it twice) was deleted and the ceilings re-based with the reason
+  recorded in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — no rule lost, no ceiling
+  moved that this merge did not spend.
+- **E12** — 2026-11-10, `bun scripts/check-skill-context.mjs --documents` · exit 0
+  · 636 lines / 512 prose / 10,768 est inside the re-based 700 / 564 / 11,845, machine
+  region unchanged at 124.
+- **G3** — 2026-11-10, `bun scripts/local-gate.mjs --no-bail` · HEAD `5dd2cb37` with
+  the resolved merge staged · exit 0 · 17 steps, 0 failures (root suites 604 pass /
+  0 fail, the crate suites under bun and node, both node-compat legs, the parity, pin,
+  projection and carrier gates).
 
 ## Next
 
