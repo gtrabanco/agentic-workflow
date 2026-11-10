@@ -259,6 +259,8 @@ The ledger is [`planning-obligations.md`](planning-obligations.md) (M/L unit; no
   criterion, config staying host-scoped in `.pi/`, `tmp/` as a retirement
   candidate) and the `pi-agentic-workflow-state.json` location evaluation
   (A status quo vs B project vs C host-keyed, recommending A and never B).
+- **G2** — 2026-11-09, `node scripts/run-root-suite.mjs --jobs 2` · HEAD `e50db2c7`
+  · exit 0 · 97 suite(s), 0 FAIL (the correction batch's head; every suite PASS).
 
 ## Next
 
