@@ -18,7 +18,20 @@ import { runSettingsConsole, prompts } from "../dist/settings/console.js";
 import { PAGED_SELECT_NEXT, PAGED_SELECT_PREV, SELECT_OPTION_LIMIT } from "../dist/settings/picker.js";
 import { renderMergedConfig } from "../dist/settings/view.js";
 import { loadConfig, configFilePaths } from "../dist/config/load.js";
+import { registerProviderPreset, clearProviderPresets } from "../dist/config/presets.js";
 import { SETTINGS_COMMAND } from "../dist/routing/types.js";
+
+/** Issue #388: the console lists preset-contributed profiles from the seam
+ *  registry, so these tests register a fixture preset (any provider name) and
+ *  clean the global registry afterwards. */
+const FIXTURE_PROVIDER = "acme";
+function registerFixturePreset() {
+  registerProviderPreset({
+    provider: FIXTURE_PROVIDER,
+    resolveProfile: () => ({ default: { model: [`${FIXTURE_PROVIDER}/big`, `${FIXTURE_PROVIDER}/small`], thinking: "inherit" }, commands: {} }),
+  });
+  return () => clearProviderPresets();
+}
 
 const agentDir = "/fixture/agent";
 const cwd = "/fixture/repo";
@@ -1455,11 +1468,13 @@ test("AC11: toggling recommended models writes recommendedModels:false", async (
   assert.equal(saved.recommendedModels, false, "recommendedModels is written as false");
 });
 
-test("AC11: saving with the nan provider available materializes recommendedModels:true when absent", async () => {
+test("AC11: saving with a preset provider available materializes recommendedModels:true when absent", async () => {
+  const done = registerFixturePreset();
+  try {
   const { outcome, written } = await run(
     {},
     {
-      models: ["nan/deepseek-v4-flash"],
+      models: ["acme/big"],
       answers: {
         [prompts.scope]: "Global",
         [prompts.menu]: [prompts.setDefaultRoute, prompts.save],
@@ -1474,16 +1489,19 @@ test("AC11: saving with the nan provider available materializes recommendedModel
   assert.equal(outcome.status, "saved");
   const saved = JSON.parse(written.get(paths.global));
   assert.equal(saved.recommendedModels, true, "recommendedModels is materialized as true");
+  } finally { done(); }
 });
 
-test("AC11: the built-in nan profile is not editable — cancels after warning", async () => {
+test("AC11: the built-in preset-contributed profile is not editable — cancels after warning", async () => {
+  const done = registerFixturePreset();
+  try {
   const { outcome, scripted } = await run(
     {},
     {
       answers: {
         [prompts.scope]: "Global",
         [prompts.menu]: [prompts.switchProfile, prompts.cancel],
-        [prompts.profile]: "nan",
+        [prompts.profile]: FIXTURE_PROVIDER,
         [prompts.discard]: false,
       },
     },
@@ -1492,12 +1510,15 @@ test("AC11: the built-in nan profile is not editable — cancels after warning",
   assert.equal(outcome.status, "cancelled");
   const messages = scripted.notify.map((entry) => entry.message);
   assert.ok(
-    messages.some((m) => /nan.*built into the package/iu.test(m)),
-    `the console warned that nan is built-in: ${messages.join("\n")}`,
+    messages.some((m) => new RegExp(`${FIXTURE_PROVIDER}.*built into the package`, "iu").test(m)),
+    `the console warned that ${FIXTURE_PROVIDER} is built-in: ${messages.join("\n")}`,
   );
+  } finally { done(); }
 });
 
-test("AC14: the merged view renders the profile order and the nan provider", () => {
+test("AC14: the merged view renders the profile order and a registered preset provider", () => {
+  const done = registerFixturePreset();
+  try {
   const text = renderMergedConfig(
     loadConfig({
       agentDir,
@@ -1506,13 +1527,14 @@ test("AC14: the merged view renders the profile order and the nan provider", () 
       readFile: readFrom({}),
     }),
     commands,
-    { providerAvailable: (p) => p === "nan" },
+    { providerAvailable: (p) => p === FIXTURE_PROVIDER },
   ).join("\n");
 
   assert.match(text, /profiles:/iu, "the profiles line is present");
-  assert.match(text, /default → nan/u, "the profile order shows default → nan");
+  assert.match(text, new RegExp(`default → ${FIXTURE_PROVIDER}`, "u"), "the profile order shows default → the preset provider");
   assert.match(text, /recommended models: on/u, "recommended models is on");
-  assert.match(text, /built-in nan profile in the chain/u, "nan is marked as built-in");
+  assert.match(text, new RegExp(`built-in ${FIXTURE_PROVIDER} profile in the chain`, "u"), "the preset provider is marked as built-in");
+  } finally { done(); }
 });
 
 test("AC11: selecting the default profile does not create a profiles.default entry", async () => {
