@@ -314,9 +314,9 @@ the operator the approved table for them:
 ```json
 {
   "passes": {
-    "review-code": { "model": "nan/qwen3.6", "thinking": "low" },
+    "review-code": { "model": "acme/qwen3.6", "thinking": "low" },
     "verify": { "model": "auto" },
-    "default": { "model": ["nan/qwen3.6", "google/gemini-3-flash"] }
+    "default": { "model": ["acme/qwen3.6", "google/gemini-3-flash"] }
   }
 }
 ```
@@ -417,13 +417,20 @@ set of routes, and you can define as many as you like under `profiles`:
 - **`profiles`** — unlimited named profiles. The implicit **`default`** profile is
   the top-level `default` + `commands` above, so a config with just those two keys
   resolves exactly as before.
-- **Built-in `nan` profile.** With `recommendedModels: true` (the default), when the
-  session has models from the `nan` provider, a code-only `nan` profile is appended
-  to the end of the chain (or used alone when you set no `profileOrder`). It carries
-  the per-command ladders from the README's NaN section. Any route you declare —
-  including an explicit `"inherit"` — wins over it. Set `recommendedModels: false`
-  to switch it off; the settings console writes the key explicitly on save when the
-  provider is available.
+- **Companion preset profiles (issue #388).** With `recommendedModels: true`
+  (the default), when an installed companion preset package contributes a
+  provider preset, a code-only profile is appended to the end of the chain
+  under the preset's provider name (or used alone when you set no
+  `profileOrder`). It carries the vendor's own ladder and tier policy; the main
+  package ships provider-neutral and names no provider — see `packages/` for
+  the available companions. With **no** companion installed,
+  `recommendedModels: true` is a documented no-op — every command routes on
+  your session's model.
+  Any route you declare — including an explicit `"inherit"` — wins over a preset
+  profile. Set `recommendedModels: false` to switch preset profiles off; the
+  settings console writes the key explicitly on save when a preset provider is
+  available. A preset may also read the generic `tierRouting` opt-out
+  (`false`, or `{ "enabled": false }` global / `{ "skills": { … } }` per skill).
 - **`profileFallback`** — what happens when the preferred profile's model is
   unusable:
   - `applyTo`: `"flow"` (default) records the switch so later commands keep using the
@@ -437,7 +444,7 @@ set of routes, and you can define as many as you like under `profiles`:
 - **Rotation.** `/agentic-workflow-settings` is scope → profile → routes: pick the
   scope, pick the profile to edit, then edit its routes. `Rotate the active profile`
   moves a profile to the front of `profileOrder` and clears any recorded demotion.
-  The built-in `nan` profile is shown but not editable — create a profile to
+  A preset-contributed profile is shown but not editable — create a profile to
   override it.
 
 ## Serena (native MCP registration)
