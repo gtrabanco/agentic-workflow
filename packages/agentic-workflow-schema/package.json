@@ -40,6 +40,7 @@
     "./journal-entry.schema.json": "./journal-entry.schema.json",
     "./batch-plan.schema.json": "./batch-plan.schema.json",
     "./doc-provenance.schema.json": "./doc-provenance.schema.json",
+    "./config.schema.json": "./config.schema.json",
     "./gate-receipt.schema.json": "./gate-receipt.schema.json"
   },
   "files": [
@@ -60,6 +61,7 @@
     "README.md",
     "LICENSE",
     "doc-provenance.schema.json",
+    "config.schema.json",
     "gate-receipt.schema.json"
   ],
   "engines": {
@@ -83,7 +85,9 @@
     "probe:sha256-paths": "bun scripts/probe-sha256-paths.mjs",
     "test:verification-docs": "bun test test/verification-docs.test.mjs",
     "gate:verification": "bun run test && bun run check:verification-schemas && bun run check:verification-package && bun run test:verification-docs && bun run bench:verification -- --commands 128",
-    "gate:pre-execution": "bun run test && bun run check:pre-execution-schemas && bun run check:pre-execution-package && bun run test:pre-execution-docs"
+    "gate:pre-execution": "bun run test && bun run check:pre-execution-schemas && bun run check:pre-execution-package && bun run test:pre-execution-docs",
+    "generate:config-schema": "bun run build && node scripts/generate-config-schema.mjs",
+    "check:config-schema": "bun run build && node scripts/generate-config-schema.mjs --check"
   },
   "devDependencies": {
     "ajv": "8.20.0",

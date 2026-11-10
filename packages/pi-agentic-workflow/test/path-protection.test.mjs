@@ -25,7 +25,7 @@ import {
   normalizeTarget,
 } from "../dist/config/path-policy.js";
 import { mergeConfigs } from "../dist/config/merge.js";
-import { parseConfigFile } from "../dist/config/schema.js";
+import { BASE_CONFIG_SECTIONS, resolveConfigDocuments, validateSectionValue } from "@gtrabanco/agentic-workflow-schema";
 import { SHIPPED_PATH_POLICY as CRATE_SHIPPED } from "../../agentic-workflow/src/path-policy.mjs";
 
 const FLOOR = intersectPathPolicy(SHIPPED_PATH_POLICY, {});
@@ -44,16 +44,18 @@ test("AC10 parity: the pi mirror equals the crate's shipped-default projection",
 
 /* ------------------------------------------------------------ config shape */
 
+const pathSection = BASE_CONFIG_SECTIONS.find((section) => section.key === "pathProtection");
+
 test("the strict schema accepts a shaped override and rejects unknown keys", () => {
-  const good = parseConfigFile(JSON.stringify({ pathProtection: { protectedGlobs: ["spec/**"], requirements: { "pre-freeze": { modify: "approval" } } } }));
-  assert.equal(good.ok, true, JSON.stringify(good.ok ? [] : good.issues));
-  assert.equal(parseConfigFile(JSON.stringify({ pathProtection: { nope: true } })).ok, false);
-  assert.equal(parseConfigFile(JSON.stringify({ pathProtection: { requirements: { "pre-freeze": { modify: "maybe" } } } })).ok, false);
-  assert.equal(parseConfigFile(JSON.stringify({ pathProtection: { protectedGlobs: [""] } })).ok, false);
+  const good = validateSectionValue(pathSection, { protectedGlobs: ["spec/**"], requirements: { "pre-freeze": { modify: "approval" } } });
+  assert.deepEqual(good, []);
+  assert.equal(validateSectionValue(pathSection, { nope: true }).length > 0, true);
+  assert.equal(validateSectionValue(pathSection, { requirements: { "pre-freeze": { modify: "maybe" } } }).length > 0, true);
+  assert.equal(validateSectionValue(pathSection, { protectedGlobs: [""] }).length > 0, true);
 });
 
 test("F29 mirror: the strict schema rejects a protectedGlobs entry over the glob-length bound", () => {
-  assert.equal(parseConfigFile(JSON.stringify({ pathProtection: { protectedGlobs: ["a".repeat(PATH_GLOB_MAX_LENGTH + 1)] } })).ok, false);
+  assert.equal(validateSectionValue(pathSection, { protectedGlobs: ["a".repeat(PATH_GLOB_MAX_LENGTH + 1)] }).length > 0, true);
 });
 
 /* --------------------------------------------------------------- tighten-only */
@@ -91,10 +93,20 @@ test("overrides merge across scopes with globs union and requirements max", () =
   assert.equal(merged.requirements["pre-freeze"].delete, "approval");
 });
 
-test("mergeConfigs applies the cross-scope override to the effective policy", () => {
-  const globalCfg = parseConfigFile(JSON.stringify({ pathProtection: { protectedGlobs: ["g/**"] } })).config;
-  const projectCfg = parseConfigFile(JSON.stringify({ pathProtection: { protectedGlobs: ["p/**"] } })).config;
-  const merged = mergeConfigs(globalCfg, projectCfg);
+test("the base resolver applies the cross-scope override to the effective policy", () => {
+  const resolved = resolveConfigDocuments({
+    sections: BASE_CONFIG_SECTIONS,
+    global: { "agentic-workflow.json": { pathProtection: { protectedGlobs: ["g/**"] } } },
+    project: { "agentic-workflow.json": { pathProtection: { protectedGlobs: ["p/**"] } } },
+  });
+  const merged = mergeConfigs({}, {}, {
+    logSession: { enabled: false, publisher: null },
+    memory: { engram: false },
+    telemetry: { enabled: false },
+    guards: { merge: false, history: false, ci: false, cost: { maxTokens: 500000 } },
+    advance: { iterationsCap: 12, sensitivePaths: [], securityPaths: [], runLogPath: ".agentic-workflow/advance-run.log" },
+    pathProtection: intersectPathPolicy(SHIPPED_PATH_POLICY, resolved.config.pathProtection),
+  });
   assert.equal(isProtectedPath(merged.pathProtection, "g/x.mjs"), true);
   assert.equal(isProtectedPath(merged.pathProtection, "p/x.mjs"), true);
   assert.equal(merged.pathProtection.matrix["post-freeze"].modify, "approval");

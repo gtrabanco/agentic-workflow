@@ -18,6 +18,7 @@
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *   agentic-workflow resolve-passes [--global <path>] [--project <path>] [--command <name>]
  *   agentic-workflow verify <unit-doc-path>
+ *   agentic-workflow config <get|set|list|show|validate|init|reset|schema> [path] [value] [--scope global|project|resolved|both] [--project <dir>] [--global-dir <dir>] [--json]
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -118,6 +119,8 @@ import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from 
 import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
+import { ConfigError, createConfigApi, renderInitTemplate } from "../src/config/api.mjs";
+import { discoverConfigExtensions } from "../src/config/discovery.mjs";
 import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
 import { checkTrial, boundLine, parseDuration, CheckError, readPidLive } from "../src/resources/check.mjs";
@@ -471,9 +474,61 @@ async function runDocOpPositional(g) {
   }
 }
 
+const CONFIG_USAGE = `agentic-workflow config — the unified config CLI (issue #427)
+
+Usage:
+  agentic-workflow config get <path>                [--scope global|project|resolved]
+  agentic-workflow config set <path> <value>        [--scope global|project]
+  agentic-workflow config list                      [--scope global|project|resolved] [--category feature|pi]
+  agentic-workflow config show                      [--json]
+  agentic-workflow config validate                  [--scope global|project|both] [--sanitize] [--no-warn-unknown]
+  agentic-workflow config init                      [--scope global|project]
+  agentic-workflow config reset <path>              [--scope global|project]
+  agentic-workflow config schema
+
+Options:
+  --project <dir>       Project root (default: cwd).
+  --global-dir <dir>    Global scope directory (default: $PI_CODING_AGENT_DIR or ~/.pi/agent).
+  --json                Machine receipt.
+`;
+
+function parseConfigArgs(args) {
+  const flags = { json: false, sanitize: false, noWarnUnknown: false, help: false, scope: undefined, category: undefined, projectDir: process.cwd(), globalDir: undefined };
+  const positional = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    const take = (name) => {
+      if (arg === `--${name}`) return args[++index];
+      if (arg.startsWith(`--${name}=`)) return arg.slice(name.length + 3);
+      return undefined;
+    };
+    const scope = take("scope");
+    if (scope !== undefined) { flags.scope = scope; continue; }
+    const category = take("category");
+    if (category !== undefined) { flags.category = category; continue; }
+    const project = take("project") ?? take("dir");
+    if (project !== undefined) { flags.projectDir = project; continue; }
+    const globalDir = take("global-dir");
+    if (globalDir !== undefined) { flags.globalDir = globalDir; continue; }
+    if (arg === "--json") flags.json = true;
+    else if (arg === "--sanitize") flags.sanitize = true;
+    else if (arg === "--no-warn-unknown") flags.noWarnUnknown = true;
+    else if (arg === "--help" || arg === "-h") flags.help = true;
+    else positional.push(arg);
+  }
+  return { flags, positional };
+}
+
+function configRefusal(message, issues, json) {
+  process.stderr.write(`CONFIG REFUSAL — ${message}\n`);
+  for (const issue of issues ?? []) process.stderr.write(`  ${issue.path}: ${issue.message}\n`);
+  if (json) process.stdout.write(`${JSON.stringify({ ok: false, service: "config", message, issues: issues ?? [] })}\n`);
+  process.exit(2);
+}
+
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal|resolve-passes|verify|resources> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources> ...");
   process.exit(1);
 }
 
@@ -1196,6 +1251,87 @@ switch (command) {
       }
     } else {
       refuse(`Unknown manifest operation: ${op}`);
+    }
+    break;
+  }
+
+  // ── config — the unified config CLI (issue #427) ──
+  case "config": {
+    const { flags, positional } = parseConfigArgs(restArgs);
+    const op = positional[0] ?? "help";
+    if (flags.help || op === "help") {
+      process.stdout.write(CONFIG_USAGE);
+      break;
+    }
+    const discovered = discoverConfigExtensions({ projectDir: flags.projectDir, globalDir: flags.globalDir });
+    let api;
+    try {
+      api = createConfigApi({
+        projectDir: flags.projectDir,
+        globalDir: flags.globalDir,
+        extensions: discovered.extensions.map((entry) => entry.descriptor),
+      });
+    } catch (error) {
+      if (error instanceof ConfigError) configRefusal(error.message, error.issues, flags.json);
+      throw error;
+    }
+    const path = (positional[1] ?? "").split(".").filter(Boolean);
+    try {
+      if (op === "get") {
+        const result = api.get(flags.scope ?? "project", path);
+        if (flags.json) process.stdout.write(`${JSON.stringify(result)}\n`);
+        else process.stdout.write(`${typeof result.value === "string" ? result.value : JSON.stringify(result.value, null, 2)}\n`);
+      } else if (op === "set") {
+        if (positional.length < 3) throw new ConfigError("USAGE", "config set requires <path> <value>");
+        let value;
+        try {
+          value = JSON.parse(positional.slice(2).join(" "));
+        } catch {
+          value = positional.slice(2).join(" ");
+        }
+        const result = api.set(flags.scope ?? "project", path, value);
+        if (flags.json) process.stdout.write(`${JSON.stringify(result)}\n`);
+        else console.log(`CONFIG set ${result.path.join(".")} — ${result.file}`);
+      } else if (op === "list") {
+        const nodes = api.list({ scope: flags.scope ?? "resolved", category: flags.category });
+        if (flags.json) process.stdout.write(`${JSON.stringify(nodes, null, 2)}\n`);
+        else for (const node of nodes) console.log(`${node.path} · ${node.type} · ${node.category} · default ${JSON.stringify(node.defaultValue)}`);
+      } else if (op === "show") {
+        const shown = api.showResolved();
+        if (flags.json) process.stdout.write(`${JSON.stringify(shown, null, 2)}\n`);
+        else {
+          for (const [key, value] of Object.entries(shown.config)) console.log(`${key}: ${JSON.stringify(value)}`);
+          for (const issue of shown.issues) console.error(`${issue.path}: ${issue.message}`);
+        }
+        if (!shown.ok) process.exit(2);
+      } else if (op === "validate") {
+        const results = api.validate(flags.scope ?? "both", { sanitize: flags.sanitize, noWarnUnknown: flags.noWarnUnknown });
+        if (flags.json) process.stdout.write(`${JSON.stringify(results, null, 2)}\n`);
+        else {
+          for (const result of results) {
+            console.log(`${result.scope}: ${result.ok ? "ok" : `${result.issues.length} issue(s)`}${result.sanitized ? " · sanitized" : ""}`);
+            for (const issue of result.issues) console.error(`  ${issue.path}: ${issue.message}`);
+          }
+        }
+        if (results.some((result) => !result.ok)) process.exit(2);
+      } else if (op === "init") {
+        const result = api.init(flags.scope ?? "project");
+        if (flags.json) process.stdout.write(`${JSON.stringify(result)}\n`);
+        else console.log(`CONFIG init — ${result.path}`);
+      } else if (op === "reset") {
+        if (path.length === 0) throw new ConfigError("USAGE", "config reset requires <path>");
+        const result = api.reset(flags.scope ?? "project", path);
+        if (flags.json) process.stdout.write(`${JSON.stringify(result)}\n`);
+        else console.log(`CONFIG reset ${result.path.join(".")} — ${result.file}`);
+      } else if (op === "schema") {
+        const schema = api.schema({ merged: true });
+        process.stdout.write(`${JSON.stringify(schema, null, 2)}\n`);
+      } else {
+        throw new ConfigError("USAGE", `unknown config operation "${op}"`);
+      }
+    } catch (error) {
+      if (!(error instanceof ConfigError)) throw error;
+      configRefusal(error.message, error.issues, flags.json);
     }
     break;
   }
