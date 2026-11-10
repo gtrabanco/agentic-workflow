@@ -1,0 +1,52 @@
+{
+  "name": "@gtrabanco/pi-nan-agentic-workflow",
+  "version": "4.10.0",
+  "description": "Pi companion package: the NaN.builders preset for agentic-workflow model routing — provider profile, per-skill model ladder, and quota-tier routing.",
+  "keywords": [
+    "pi-package",
+    "agentic-workflow",
+    "pi",
+    "model-routing",
+    "nan"
+  ],
+  "license": "MIT",
+  "author": "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtrabanco/agentic-workflow.git",
+    "directory": "packages/pi-nan-agentic-workflow"
+  },
+  "homepage": "https://github.com/gtrabanco/agentic-workflow/tree/main/packages/pi-nan-agentic-workflow#readme",
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./dist/extension.js"
+    ]
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18",
+    "bun": ">=1.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && bun test --timeout=60000 test/*.test.mjs",
+    "test:node": "tsc && node --test --test-timeout=60000 test/*.test.mjs"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=1.1.0",
+    "@gtrabanco/pi-agentic-workflow": ">=4.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7"
+  }
+}
