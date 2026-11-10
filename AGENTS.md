@@ -21,7 +21,7 @@ stack, framework, or architecture pattern.
 ```
 skills/                  the workflow skills (one SKILL.md each) — the installable source
 template/                the exportable documentation scaffold (generic, copyable)
-packages/                three companion npm packages (bun-managed islands — docs/workflow/PACKAGES.md)
+packages/                four companion npm packages (bun-managed islands — docs/workflow/PACKAGES.md)
 scripts/                 the deterministic gates and generators, each with its sibling *.test.mjs
 docs/workflow/           the tutorial: feature flow, issue flow, skill reference, replication
 docs/ROADMAP.md          the single Features+Fixes index — the worklist
@@ -190,7 +190,7 @@ under [Working rules](#working-rules)).
   states the hold, and every skill honors it before acting.
 - **No backward-compatibility support (owner decision).** This repository ships
   one version at a time and never keeps an old surface alive for an older
-  consumer: every dependency is pinned, the skills and the three packages carry
+  consumer: every dependency is pinned, the skills and the four packages carry
   one train version (D-40-14), and the version-parity gate plus the pin-watch job
   keep the pair aligned. A superseded helper, script, doc, flag or prose block is
   deleted in the change that supersedes it; a copy of a published artifact is

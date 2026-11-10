@@ -27,11 +27,12 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 
 ```
 skills/                  29 source skills (14 user-facing + 14 workflow internals + 1 metadata-internal; 28 discoverable — skill-lint is repo-only)
-packages/                three companion npm packages: @gtrabanco/agentic-workflow (the runner crate —
+packages/                four companion npm packages: @gtrabanco/agentic-workflow (the runner crate —
                          `agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log>`, typed file
                          services, guards and the `doc` retrieval index), @gtrabanco/agentic-workflow-schema
-                         (machine contracts) and @gtrabanco/pi-agentic-workflow (one-command install for Pi —
-                         see Install)
+                         (machine contracts), @gtrabanco/pi-agentic-workflow (one-command install for Pi —
+                         see Install) and @gtrabanco/pi-nan-agentic-workflow (the optional NaN.builders
+                         preset: provider profile, model ladder, quota-tier routing)
 scripts/                 the deterministic gates, sensors and generators, each with its sibling *.test.mjs
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -174,7 +175,7 @@ never as a dependency. See `docs/workflow/RECOMMENDED_SKILLS.md`.
 > [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) — three skills were
 > renamed, so re-add to update + delete the three old folders.
 >
-> **Versioning.** The skills and the three packages carry **one train version**
+> **Versioning.** The skills and the four packages carry **one train version**
 > (`version:` in its frontmatter, stamped by `scripts/release.mjs apply` at cut
 > time — D-40-14); changes are logged in [`CHANGELOG.md`](CHANGELOG.md). Upgrade
 > an install with `npx skills update`.

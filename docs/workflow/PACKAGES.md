@@ -6,21 +6,30 @@
 
 ## Packages
 
+Four members (issue #388 added the fourth — the **optional NaN.builders
+companion preset** `@gtrabanco/pi-nan-agentic-workflow`: the `nan` provider
+profile, the model ladder and quota-tier routing as data, registering into the
+pi package's provider-preset seam at load time). The pi layer's neutrality is a
+measurable gate, not prose: `packages/pi-agentic-workflow/test/vendor-neutral.test.mjs`
+fails the suite if the main package's src or README names a provider the code
+does not resolve from the seam — a vendor model ladder is only ever sanctioned
+in a companion preset package; adding one is adding a `packages/<name>/`
+member the workspace, parity gate and release train pick up automatically.
+
 The packages under `packages/` are members of a **bun workspace**: a private
 root `package.json` declares `workspaces: ["packages/*"]` and carries no
 identity of its own. Members link each other **from the folder**, so a package
 that pins a sibling installs that sibling's working copy — not a published
 tarball — while the manifest keeps the exact version every consumer receives
 (`npm publish` does not rewrite a `workspace:` spec, so the exact version is
-what ships and the protocol is never used).
-
-The reason is not convenience: a sibling pin used to name a version that only
-existed **after** the merge that changed it, so a bump and its pin move could
-never share a commit — the pin named an unpublished version (uninstallable) and
-the lockfile could not be regenerated before the publish `--frozen-lockfile`
-requires. The workspace removes that ordering trap; the pin rule below is still
-enforced, and install itself enforces it (a pin that does not match the
-member's version resolves from the registry and fails).
+what ships and the protocol is never used). The reason is not convenience: a
+sibling pin used to name a version that only existed **after** the merge that
+changed it, so a bump and its pin move could never share a commit — the pin
+named an unpublished version (uninstallable) and the lockfile could not be
+regenerated before the publish `--frozen-lockfile` requires. The workspace
+removes that ordering trap; the pin rule below is still enforced, and install
+itself enforces it (a pin that does not match the member's version resolves
+from the registry and fails).
 
 - **bun is the package manager, everywhere, with ONE lockfile.** `bun.lock` at
   the repository root (committed) is the sole lockfile for every member:
@@ -38,22 +47,19 @@ member's version resolves from the registry and fails).
   Bump `version:` in the touched package's `package.json` and add a row to the
   "Companion npm packages" table in `CHANGELOG.md` in the same PR — or, since
   feature 40, ship a valid `.changeset/*.md` declaring the package (the
-  release train applies it at cut time). The rule is no longer prose-only:
-  `scripts/local-gate.mjs` runs `scripts/version-parity-gate.mjs` — locally on
-  every pre-merge run, and remotely when the manual gate is dispatched (the
-  local-first rule is [`AGENTS.md`](../../AGENTS.md) → Verification) — with two
-  halves — the **content** half (offline, deterministic) fails any change
-  under the trigger set of **every package under `packages/` (derived from the
-  tree at runtime — a new package inherits the gate by existing; nothing to
-  extend)** plus **`skills/**`** as the Pi package's shipped content, unless
-  each triggered package is bumped + has its CHANGELOG companion row or is
-  declared by a changeset (root `skills/` is the Pi package's staged content,
-  which is exactly why a skills-only merge used to publish nothing; the
-  skills-content-source mapping is the gate's only declared constant — extend
-  it if a new package ever becomes a `skills/` content source, and audit the
-  gate if packages ever ship outside `packages/`); the **registry** half (a
-  separate job, clearly-degraded-when-
-  unreachable) fails an exact pin whose target has published a newer version,
+  release train applies it at cut time). The rule is CI-enforced:
+  `scripts/local-gate.mjs` runs `scripts/version-parity-gate.mjs` (local-first
+  rule: [`AGENTS.md`](../../AGENTS.md) → Verification) with two halves — the
+  **content** half (offline, deterministic) fails any change under the trigger
+  set of **every package under `packages/` (derived from the tree at runtime —
+  a new package inherits the gate by existing; nothing to extend)** plus
+  **`skills/**`** as the Pi package's staged content, unless each triggered
+  package is bumped + has its CHANGELOG companion row or is declared by a
+  changeset (the skills-content-source mapping is the gate's only declared
+  constant — extend it if a new package ever becomes a `skills/` content
+  source, and audit the gate if packages ever ship outside `packages/`); the
+  **registry** half (a separate job, clearly-degraded-when-unreachable) fails
+  an exact pin whose target has published a newer version,
   and — for pins whose target is a local package under `packages/` — fails a
   **pin ahead of the local version** (the one the merge publishes; verified
   offline even when the registry is unreachable): such a pin names a version no
@@ -64,24 +70,21 @@ member's version resolves from the registry and fails).
   exact local pin to it — a pin *behind* its sibling is a state the pipeline
   cannot produce, a hand edit that creates one is rejected by the registry half
   whenever the registry answers, and offline it is a notice, never a verdict.
-  The workspace is what makes that instruction executable: the
-  member resolves its sibling from the folder, so the pin may name a version
-  the merge has not published yet, and the root lock stays installable with
-  `--frozen-lockfile` (before the workspace, that same instruction was
-  unsatisfiable — an unpublished pin did not resolve, and a stale lock failed
-  the install — so the pin could only chase a publish). CI publishes on merge
-  to `main` when the version differs
-  from the registry — one consolidated workflow since 2026-10-28
-  (`.github/workflows/publish.yml`, three jobs chained schema → crate → pi;
-  D-40-12): npm Trusted Publisher records pin the workflow filename, so the
-  consolidation required re-registering the three packages' records to
-  `publish.yml` on npmjs.com (owner one-time step; until then a publish
-  fails E403). Releases are cut by dispatching `publish.yml` with `mode: cut`
-  (`channel: stable` = train + publish, npm dist-tag `latest`;
-  `channel: canary` = prerelease cut for the declared packages — the channel
-  set is closed, and the old `latest` channel name is retired in favour of
-  `stable`) — `mode: suggest` previews the
-  versions read-only; everything runs `scripts/release.mjs` in CI.
+  The workspace makes that executable: the member resolves its sibling from
+  the folder, so the pin may name a version the merge has not published yet,
+  and the root lock stays installable with `--frozen-lockfile` (before the
+  workspace, that instruction was unsatisfiable — the pin could only chase a
+  publish). CI publishes on merge to `main` when the version differs from the
+  registry — one consolidated workflow since 2026-10-28
+  (`.github/workflows/publish.yml`; its jobs chain schema → crate → the pi
+  pair; D-40-12); Trusted Publisher records pin the workflow filename, so the
+  consolidation required re-registering the then-three packages' records on
+  npmjs.com (owner one-time step; until then a publish fails E403). Releases
+  are cut by dispatching `publish.yml` with `mode: cut` (`channel: stable` =
+  train + publish, dist-tag `latest`; `channel: canary` = prerelease cut for
+  the declared packages — the channel set is closed, the old `latest` channel
+  name retired); `mode: suggest` previews the versions read-only; everything
+  runs `scripts/release.mjs` in CI.
 - **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>"` or `"<skill-name>"`: patch|minor|major — the highest severity in the set always wins the train (D-40-15) — plus a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring a package satisfies the version-parity gate's content half for that package in place of a manual package.json bump (the gate covers every package under `packages/` + `skills/` as the Pi package's content source); the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
 
 **The release body is rendered, not concatenated** (issue #375).
