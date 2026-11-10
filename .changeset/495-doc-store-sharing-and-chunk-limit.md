@@ -29,7 +29,8 @@ files' chunks are reaped.
 
 **Worktree-shared store.** `index.json` gains `store.share`
 (`{enabled: boolean, base_dir?: string}`). When enabled, the store resolves to
-`<base>/agentic-workflow/<repoId>/index.db` — a user-level directory identified
+a dedicated file under `<base>/agentic-workflow/<repoId>/` — a user-level
+directory identified
 by the repository's commit-object SHA (`git rev-parse HEAD^{commit}`, stable
 across worktrees, renames and clones of the same repo) — so worktrees of the
 same repository share one index instead of each building its own from scratch.
