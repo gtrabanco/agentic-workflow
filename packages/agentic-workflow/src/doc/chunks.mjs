@@ -13,6 +13,13 @@
  * (content before the first heading) is a chunk with `section: null` and id
  * `<path>#` — emitted only when that range is non-empty. A file with no
  * headings at all yields exactly the preamble chunk.
+ *
+ * D20 auto-truncation (issue #470): `scanChunks` accepts an optional
+ * `maxChunkChars` parameter; chunk bodies exceeding it are automatically
+ * truncated to the limit — never skipped — so the chunk stays in the FTS5
+ * index under its own heading and line range. `truncated` counts the sections
+ * that were shortened. When the limit is absent or zero, all bodies are
+ * emitted unchanged (the existing behavior).
  */
 
 import { listSections } from "./section-locator.mjs";
@@ -94,10 +101,15 @@ export function parseFrontmatter(lines) {
 
 /**
  * Scan `markdown` into chunks attributed to `relativePath`.
- * Returns rows `{id, path, section, lines: [start, end], meta, body}` in
- * document order. Deterministic: identical input ⇒ identical output.
+ * Returns `{chunks, truncated}` in document order. Deterministic: identical
+ * input ⇒ identical output.
+ *
+ * D20: `maxChunkChars` limits the body length per chunk; chunks exceeding it
+ * are automatically truncated (never skipped) to fit. When absent or zero,
+ * all bodies are emitted unchanged (the existing behavior). `truncated`
+ * counts the sections that were shortened to fit.
  */
-export function scanChunks(markdown, relativePath) {
+export function scanChunks(markdown, relativePath, maxChunkChars = 0) {
   const content = String(markdown);
   const lines = content.split(/\r?\n/);
   // A file ending in a newline splits into one phantom trailing element; it is
@@ -120,17 +132,23 @@ export function scanChunks(markdown, relativePath) {
   const chunks = [];
   const usedIds = new Set();
   const nextId = (headingPath) => nextSectionId(usedIds, relativePath, headingPath);
+  let truncated = 0;
 
   // Preamble chunk — only when its range is non-empty and body is non-blank
   // (AC10: skip frontmatter-only preamble to avoid empty-body noise).
   const firstHeadingLine = headings.length > 0 ? headings[0].line : lines.length + 1;
   if (firstHeadingLine > 1 || headings.length === 0) {
     const to = headings.length > 0 ? firstHeadingLine - 1 : lines.length;
-    const body = lines
+    let body = lines
       .slice(0, to)
       .filter((_, idx) => !(idx < contentStart))
       .join("\n");
     if (body.trim() !== "") {
+      // D20: truncate the body to fit the limit
+      if (maxChunkChars > 0 && body.length > maxChunkChars) {
+        body = body.slice(0, maxChunkChars);
+        truncated += 1;
+      }
       chunks.push({
         id: `${relativePath}#`,
         path: relativePath,
@@ -151,15 +169,21 @@ export function scanChunks(markdown, relativePath) {
     stack.push({ level: heading.level, title: heading.title });
     const headingPath = stack.map((e) => e.title).join(" > ");
     const to = s + 1 < headings.length ? headings[s + 1].line - 1 : lines.length;
+    let body = lines.slice(heading.line - 1, to).join("\n");
+    // D20: truncate the body to fit the limit
+    if (maxChunkChars > 0 && body.length > maxChunkChars) {
+      body = body.slice(0, maxChunkChars);
+      truncated += 1;
+    }
     chunks.push({
       id: nextId(headingPath),
       path: relativePath,
       section: headingPath,
       lines: [heading.line, to],
       meta,
-      body: lines.slice(heading.line - 1, to).join("\n"),
+      body,
     });
   }
 
-  return chunks;
+  return { chunks, truncated };
 }
