@@ -108,6 +108,14 @@ billing model, in one paragraph:
   that first, so the ladders below keep premium rungs for judgment slots and
   never for volume.
 
+**Where the numbers come from.** Every tariff, allowance and limit quoted on
+this page restates the recorded snapshot at
+[`catalog/nan-catalog-2026-11.jsonc`](catalog/nan-catalog-2026-11.jsonc) —
+source URLs, capture date and the docs-vs-quote winner rule in its provenance
+header. When the provider changes anything (prices, allowances, the catalog),
+update that snapshot first; `test/catalog-parity.test.mjs` then fails on every
+tier map, ladder and README row that disagrees, walking you through the rest.
+
 ### The fleet
 
 Tariffs are credits per 1M tokens *after* the free allowance (November 2026
@@ -120,7 +128,7 @@ as an order of magnitude, not a quote.
 | **kimi-k3.1-pro** | Moonshot frontier (external) | 1M | paid · ZDR | 100 / 10 / 500 (+100 cache write) | 19.9 cr |
 | **qwen3.8-max** | 2.4T-class Qwen (external) | 1M | paid · ZDR | 100 / 12.5 / 300 | 20.2 cr |
 | **deepseek-v4-pro** | DeepSeek large (external) | 1M | paid · ZDR | 66 / 2.2 / 198 | 7.7 cr |
-| **hy4** | Tencent Hunyuan 4 (external) | 1M | paid · ZDR | 41.7 / 2.1 / 125 | 5.5 cr |
+| **hy4** | Tencent Hunyuan 4 (external) | 1M | paid · ZDR | 41.7 / 2.1 / 125.05 | 5.5 cr |
 | **deepseek-v4-flash** | 305B MoE | 1M | 3B free/mo · ZDR · JSON mode + `json_schema` (no tools) | 10.5 / 0.21 / 42 | 1.1 cr |
 | **glm5.3-flash** | 320B (18B active) · MIT | 1M | 2B free/mo · ZDR | 5.25 / 1.05 / 17.5 | 1.4 cr |
 | **qwen3.8-flash** | 125B (6B active) · qwen license | 1M | 500M free/mo · ZDR · XML tools | 7.5 / 0.8 / 23.5 | 1.9 cr |
