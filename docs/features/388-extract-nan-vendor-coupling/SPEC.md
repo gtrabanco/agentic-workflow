@@ -1,0 +1,177 @@
+---
+type: feature
+scope: large
+---
+
+# 388 — extract-nan-vendor-coupling
+
+> One-line: extract every NaN vendor decision out of `@gtrabanco/pi-agentic-workflow` into a new optional companion package `@gtrabanco/pi-nan-agentic-workflow`, with tier-aware quota routing as preset data.
+
+```text
+doc-provenance@1
+written_by: agentic-workflow@4.10.0
+schema: @gtrabanco/agentic-workflow-schema@4.10.0
+format: unit-doc@2
+grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
+```
+
+## Specs
+
+**S1 — extract the vendor coupling (issue #388 Goal, verbatim).**
+> `@gtrabanco/pi-agentic-workflow` currently hardcodes NaN-specific vendor decisions: a built-in `nan` provider profile with a per-skill model ladder, provider special-casing in the settings console, and NaN prose inside a skill. This feature extracts all of it into a new optional companion package, `@gtrabanco/pi-nan-agentic-workflow`, so the main pi layer ships provider-neutral and NaN becomes an opt-in install — the owner's decisions about models stop being baked into the generic package.
+
+**S2 — in scope (issue #388, verbatim bullets).**
+> - New package `@gtrabanco/pi-nan-agentic-workflow` (pi package): ships the NaN preset — provider id, the per-skill model ladder, and the token-counter quirk guidance — as data/defaults consumed by the main package.
+> - `@gtrabanco/pi-agentic-workflow` becomes provider-neutral: a preset/profile contribution seam replaces the built-in `nan` default; `recommendedModels: true` without any companion preset is a documented no-op.
+> - Settings console/view generalized: profiles listed from config + contributed presets; the built-in-not-editable (P5) rule applies to preset-contributed profiles.
+> - `skills/log-session/SKILL.md` prose neutralized (skills stay product-agnostic).
+> - README split: generic docs stay; NaN guidance moves to the new package.
+> - `docs/workflow/PACKAGES.md` adoption for the 4th package: bun workspace, single lockfile, version-parity train + pin rules, changeset; sibling test suites per repo rules.
+> - Measurable lock-in gate: a suite asserting the main package (src + README) contains no `nan` provider literals.
+
+**S3 — tier-aware quota routing (issue #388 amendment 1, verbatim bullets).**
+> - **Tier metadata as data**: every model in the preset declares its quota tier (`unlimited` | `limited`). Tier facts live in the companion package, never in the generic one, and are trivially editable when the provider changes its quota structure.
+> - **Unlimited-first defaults for low-stakes work**: skills/task classes that can be done with a weaker model (summarization, mechanical logging, triage-style passes, cheap catalog steps) default to `qwen3.6`-first; the limited-tier ladder is reserved for skills whose output quality is load-bearing (review axes, audits, planning). The current ladders were written quota-blind — this re-cuts them tier-aware.
+> - **Subagent and child-task routing included**: tasks that skills spawn (subagents, child sessions, conductor continuations) follow the same tier policy — unlimited-first unless the task class is declared strength-sensitive.
+> - **Explicit opt-out**: a global flag (e.g. `tierRouting: off`) plus per-skill override. The unlimited tier is weaker and/or slower, so the routing must be avoidable — a user who prefers strength everywhere, or cannot tolerate latency on a given task, disables it without losing the rest of the preset.
+
+**S4 — acceptance criteria (issue #388, verbatim bullets).**
+> - `@gtrabanco/pi-agentic-workflow` src and README contain zero occurrences of the `nan` provider id (enforced by a test, not by prose).
+> - Installing only `@gtrabanco/pi-agentic-workflow` with `recommendedModels: true` yields no built-in vendor profile; behavior documented.
+> - Installing the companion package restores today's behavior (same ladder, same settings UX) without user config changes.
+> - `skills/log-session/SKILL.md` names no provider or model id.
+> - Root suites + package suites pass; version-parity gate covers the new package.
+
+**S5 — tier routing acceptance criteria (issue #388 amendment 1, verbatim bullets).**
+> - The preset declares a tier per model as data; ladders derive their order from tier + task class, never from a hand-ordered array that silently drifts from the tier facts.
+> - With tier routing on, every unlimited-eligible skill lists `qwen3.6` first; limited-tier models appear in a skill's ladder only where the skill is classified strength-sensitive, and the classification is visible (documented per skill, not folklore).
+> - With the opt-out on (global or per skill), the ladders match today's published order — no silent quality regression for users who disable routing.
+> - Subagent/child-task routing is covered by tests: a spawned task classified low-stakes resolves to the unlimited tier under routing-on, and to the non-routing ladder under routing-off.
+
+**S6 — out of scope (issue #388, verbatim bullets).**
+> - Any NaN API integration beyond the preset data (embeddings providers etc. belong to their own units).
+> - Changing the crate (`agentic-workflow`) or the schema package — the coupling is confined to the pi layer + one skill.
+> - Removing the generic per-skill model routing feature — only the hardcoded vendor default moves.
+
+**S7 — dependency relations (issue #388 triage update, verbatim).**
+> - **Related (soft) — #427, after it**: the vendor config keys re-home onto the unified schema; never a parallel home.
+> - **Related (soft) — #201**: the tier-routing policy shares the pass→model vocabulary that #201 defines.
+
+### Frozen request (verbatim, §1)
+
+- **S1** — "Apply to this repository: issue #388" (the user's entire message; issue #388 body carries the requirements quoted above).
+
+**Interpretation decision D1** (recorded, not silent): S4 bullet 3 ("restores today's behavior (same ladder, same settings UX)") predates amendment 1, which states the ladders "were written quota-blind — this re-cuts them tier-aware" and S5 pins routing-on ladders to `qwen3.6`-first. Reading the two together: installing the companion restores model routing out of the box (same profile name, same settings UX, no config change) with the tier-aware ladder as the new default; routing-off (opt-out) restores today's exact published ladders (S5 bullet 3). The non-routing ladder data is byte-pinned to today's `RECOMMENDED_PROFILES.nan`.
+
+## Impact
+
+- Consumers of the built-in `nan` profile: `src/config/profiles.ts` (resolution), `src/routing/dispatch.ts` (chain probing — already generic via `providerAvailable`), settings console/view (display + P5 edit rule), README docs, five test suites.
+- New consumer: the companion package's registration extension (imports the main package's preset registry — a new cross-package seam; the main package must not name any provider).
+- Config schema gains one optional generic key (`tierRouting`); the strict parser must reject malformed shapes (fail-closed, same discipline as `profileFallback`).
+- `docs/features/_TEMPLATE` unaffected; root README's NaN section moves to the companion README (an asset reference `docs/assets/nan-cloud.svg` moves with it).
+- The generated docs projection (`docs/generated/**`) re-renders from the roadmap row — via `bun scripts/docs-generate.mjs`, never hand-edited.
+
+## Retirements
+
+- `RECOMMENDED_PROVIDERS` and `RECOMMENDED_PROFILES` in `packages/pi-agentic-workflow/src/config/recommended.ts` — replaced by the preset registry; replacement evidence: `rg -n 'RECOMMENDED_PROVIDERS|RECOMMENDED_PROFILES' packages/` → 0 after the change.
+- `packages/pi-agentic-workflow/src/config/recommended.ts` itself — its generic `RecommendedProfile` interface moves to `src/config/types.ts`; the file is deleted.
+- The root README's `#### Running on NaN.builders` section (lines ~244–420) — moved to `packages/pi-nan-agentic-workflow/README.md`.
+- The `nan` literals in `src/settings/console.ts` (~5), `src/settings/view.ts` (1), `src/config/profiles.ts` (special cases), `src/config/types.ts` (doc comment) — replaced by registry-driven generic code.
+
+## Non-goals
+
+- No NaN API integration beyond preset data (S6).
+- No changes to `packages/agentic-workflow` or `packages/agentic-workflow-schema` (S6).
+- No removal of generic per-skill model routing (S6).
+- No re-home of config keys onto the unified schema — that is #427's unit, after this one (S7).
+
+## Risk tier
+
+- **Tier** — `standard` · **Task Size** — `understood · contained · resumable_from_diff · ceremony: unit-doc · verification: gates`
+- **Named high-risk item** — none — `signals[]` empty (verdict `risk-tier-verdict@1`, `bun scripts/ceremony.mjs tier classify`, 2026-11-09).
+
+## Future cost
+
+- The tier classification is "for now": when NaN announces quota changes, a tier edit in `packages/pi-nan-agentic-workflow/src/preset.ts` is a one-line data edit (S3). Re-trigger condition: provider quota-structure announcement.
+- The npm Trusted Publisher record for the 4th package name must be registered on npmjs.com by the owner (one-time step, same as the 2026-10-28 consolidation) — `publish.yml` derives the package list from the tree, so no workflow edit is needed, but the first publish fails E403 until the record exists.
+
+## Applicable tests
+
+- `bun test packages/pi-agentic-workflow/test/vendor-neutral.test.mjs` (new — the lock-in gate + skill neutrality, RED before implementation).
+- `bun test packages/pi-agentic-workflow/test/provider-presets.test.mjs` (new — the seam).
+- `bun test packages/pi-agentic-workflow/test/model-profiles.test.mjs` (rewritten onto the seam — the built-in-profile assertions it pinned are retired by S2, the seam behavior replaces them).
+- `bun test packages/pi-agentic-workflow/test/settings-console.test.mjs`, `test/profile-fallback.test.mjs`, `test/config-schema-*.test.mjs` (existing behavior over changed code).
+- `bun test packages/pi-nan-agentic-workflow/test/*.test.mjs` (new package suites: tier data, derivation, routing on/off, task classes, registration).
+- `node scripts/run-root-suite.mjs` (root gate), `bun scripts/version-parity-gate.mjs` (parity), `bun scripts/check-skill-context.mjs` (budgets).
+
+## Known pre-existing issues
+
+- Roadmap row 45 notes #201 (pass→model vocabulary) is still `in-progress` — affects: this unit's tier-routing reuses command names, not #201's vocabulary; does-not-affect: the preset data shape (additive config, not the pass catalog).
+- `agent.md` AGENTS.md rule "Never change a test to pass it": the `model-profiles.test.mjs` rewrite below is driven by S2 retiring the built-in profile, recorded here before the edit; every assertion maps 1:1 to a seam equivalent and none is deleted or narrowed (docs-parity tests re-home to the companion).
+
+## Tasks
+
+- P1 — RED corpus: vendor-neutral lock-in gate + preset-seam tests, observed failing on the current tree (validator: `bun test packages/pi-agentic-workflow/test/vendor-neutral.test.mjs` exits 1 on the pre-change tree, then 0)
+  (Implements: S4)
+- P2 — provider-preset seam in the main package: registry, generic profile resolution, `tierRouting` config (schema/defaults/merge/types), delete `recommended.ts` tables (validator: `bun run test --cwd packages/pi-agentic-workflow` exits 0)
+  (Implements: S2, S4)
+- P3 — settings console/view generalized onto the registry; P5 for preset profiles; existing suites hold (validator: `bun test packages/pi-agentic-workflow/test/settings-console.test.mjs` exits 0)
+  (Implements: S2, S4)
+- P4 — companion package `@gtrabanco/pi-nan-agentic-workflow`: preset data + tier catalog + derivation + registration extension + package tests (validator: `bun test packages/pi-nan-agentic-workflow/test/*.test.mjs` exits 0)
+  (Implements: S1, S2, S3, S5)
+- P5 — prose neutrality + README split: `skills/log-session/SKILL.md`, root README NaN section → companion README, pi package README generalization (validator: `bun test packages/pi-agentic-workflow/test/vendor-neutral.test.mjs` exits 0)
+  (Implements: S1, S2, S4)
+- P6 — packaging + docs state: `PACKAGES.md` 4th-package adoption, changeset intent, roadmap row, `bun.lock`, `docs/LOGS.md`, docs projection via `bun scripts/docs-generate.mjs` (validator: `bun scripts/docs-generate.mjs --check` exits 0)
+  (Implements: S2, S4)
+- P7 — full foreground verification: root suite, parity gate, context budgets, differential check (validator: `node scripts/run-root-suite.mjs` exits 0)
+  (Implements: S4, S5)
+
+### Planning evidence
+
+M/L unit — the ledger lives in [planning-evidence.md](planning-evidence.md) (this section names it, never embeds it).
+
+### Obligations
+
+M/L unit — the ledger lives in [planning-obligations.md](planning-obligations.md) (this section names it, never embeds it).
+
+## Triaged steps
+
+> Paste of `bun scripts/unit-route.mjs --triage 388-extract-nan-vendor-coupling` (2026-11-09, exit 0), verbatim. Per the owner's local workflow (§4) this unit is applied **inline** — the lane's relay dispatch and review/fold cycle are not run on the repo's own surgery; the deterministic gates are.
+
+```text
+TRIAGE — 388-extract-nan-vendor-coupling (feature)
+Steps: research, design, plan, implement, tests, evidence, review, docs, release
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
+Skipped: none
+Budget: strong
+```
+
+The `relay: bootstrap-needed` line of the raw output is declined: the owner's workflow replaces the lane's relay orchestration with the inline ledger freeze (§4/§5).
+
+## Findings
+
+OPEN rows only, appended by `review-change` and `triage-issue` (`findings-table@1`):
+
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+
+## Log
+
+- **L1** — 2026-11-09, the request, verbatim:
+  ```
+  Apply to this repository: issue #388
+  ```
+- **E1** — 2026-11-09, `bun scripts/unit-route.mjs --triage 388-extract-nan-vendor-coupling` · exit 0 · steps: research…release, none skipped, budget strong; relay bootstrap declined (inline per owner workflow §4).
+- **E2** — 2026-11-09, `bun scripts/ceremony.mjs tier classify` · exit 0 · tier `standard`, signals `[]`, task_size `understood/contained/resumable_from_diff`.
+- **D1** — 2026-11-09, owner-workflow interpretation (recorded in `## Specs`): S4's "same ladder" (pre-amendment) is superseded by amendment 1's tier-aware re-cut; routing-off restores the published ladders (S5 bullet 3).
+- **P0** — 2026-11-09, planning ledgers frozen (this doc + `planning-evidence.md` + `planning-obligations.md`); the freeze substitutes for the lane's plan step.
+
+## Next
+
+P1 — RED corpus (`vendor-neutral.test.mjs` + `provider-presets.test.mjs` + companion suites), observed failing before implementation.
+
+## References
+
+- Issue #388 (feature, OPEN) — `Closes #388` in the PR.
+- Soft order: #427 (after — unified schema re-home), #201 (pass→model vocabulary).
+- Roadmap: `docs/ROADMAP.md` (new feature row 388).
