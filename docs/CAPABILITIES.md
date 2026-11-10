@@ -16,7 +16,7 @@
 > yet).
 >
 > **This project's type.** Markdown skills + a copyable documentation scaffold +
-> deterministic Node scripts, published as three npm packages: no server, no UI,
+> deterministic Node scripts, published as four npm packages: no server, no UI,
 > no request path. Every row below carries the path that proves its state (a
 > `no` carries the surface inspected and found absent). Rows deleted because the
 > project type cannot carry the surface — no question asked, per issue #333:
