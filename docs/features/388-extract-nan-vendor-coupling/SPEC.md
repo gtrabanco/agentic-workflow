@@ -165,10 +165,24 @@ OPEN rows only, appended by `review-change` and `triage-issue` (`findings-table@
 - **E2** — 2026-11-09, `bun scripts/ceremony.mjs tier classify` · exit 0 · tier `standard`, signals `[]`, task_size `understood/contained/resumable_from_diff`.
 - **D1** — 2026-11-09, owner-workflow interpretation (recorded in `## Specs`): S4's "same ladder" (pre-amendment) is superseded by amendment 1's tier-aware re-cut; routing-off restores the published ladders (S5 bullet 3).
 - **P0** — 2026-11-09, planning ledgers frozen (this doc + `planning-evidence.md` + `planning-obligations.md`); the freeze substitutes for the lane's plan step.
+- **E3** — 2026-11-09, `bun test packages/pi-agentic-workflow/test/vendor-neutral.test.mjs test/provider-presets.test.mjs test/config-schema-tier-routing.test.mjs` (RED run, pre-implementation) · exit 1 · 3 vendor-neutral fails, 12 tierRouting-schema fails, preset-seam suite fails on the missing `dist/config/presets.js` — the frozen-failure corpus (§2).
+- **E4** — 2026-11-09, base-copy differential (§6): `git archive main` → `/tmp` scratch, `bun install --frozen-lockfile` + `bun test test/*.test.mjs` in the pi package · base 758 tests/69 files with 2 fails (`lifecycle: the staged copy is gitignored and untracked` — a git-metadata artifact of the archive copy, not a behavior difference); change 777 tests/71 files, 0 fail · deltas = the new seam/gate suites and the 1:1 model-profiles re-aim only.
+- **P1** — 2026-11-09, RED corpus committed (`d4341117`).
+- **P2** — 2026-11-09, seam implemented: `config/presets.ts` registry, generic `profiles.ts`, `recommended.ts` retired, `tierRouting` config (schema/merge/types), console/view generalized · commit `68b8a763`.
+- **P4** — 2026-11-09, companion package `@gtrabanco/pi-nan-agentic-workflow` (preset data, tier derivation, registration extension, README split, docs-parity re-home) · commit `cc133a7d`.
+- **P6** — 2026-11-09, packaging + docs state: changeset, CHANGELOG row, PACKAGES.md adoption, roadmap row slug fix, docs projection regenerated via `bun scripts/docs-generate.mjs` (emitter, never hand-edited), AGENTS/README/CAPABILITIES counts 3 → 4 packages.
+- **G1** — 2026-11-09, `bun scripts/lint-changeset.mjs .changeset/388-extract-nan-vendor-coupling.md` · exit 0.
+- **G2** — 2026-11-09, `bun scripts/version-parity-gate.mjs --content` · exit 0 · content parity holds, companion row present (after adding the CHANGELOG 4.10.0 row; the first run failed `companion-row-missing` — repaired, not waived).
+- **G3** — 2026-11-09, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 checked, 0 stale (after emitter regeneration; first run DRIFT — repaired via the emitter).
+- **G4** — 2026-11-09, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PACKAGES.md 101 lines / 2380 estimate` within ceilings (two intermediate runs over budget were repaired by trimming wordiness; no rule text lost).
+- **G5** — 2026-11-09, `node scripts/run-root-suite.mjs` · exit 0 · 101 suites PASS, 0 fail (final run; the run before the repairs failed 2: `check-skill-context` and `roadmap-settle` slug-mismatch — both repaired).
+- **E5** — 2026-11-09, `bun test` packages/pi-agentic-workflow (777 pass / 0 fail) and packages/pi-nan-agentic-workflow (20 pass / 0 fail).
+- **E6** — 2026-11-09, `git diff HEAD -- packages/agentic-workflow packages/agentic-workflow-schema` · empty (O13 holds on this branch's base). **Discovery: the branch is 19 commits behind `main` — #427 (unified config schema) merged mid-unit; `git merge-tree` reports content conflicts in `src/config/{merge,schema,types}.ts`. Reported to the owner with options; no integration guessed.
+- **P7** — 2026-11-09, obligations ledger closed: all 15 rows `verified` on foreground runs (O13 with the base-scope note above). Handoff awaits the owner's verdict (§8) and the integration decision (E6).
 
 ## Next
 
-P1 — RED corpus (`vendor-neutral.test.mjs` + `provider-presets.test.mjs` + companion suites), observed failing before implementation.
+Owner verdict on the diff, then the integration decision on E6 (integrate main + resolve the 3 conflicted config files on this branch, or deliver on the pre-#427 base and integrate after).
 
 ## References
 
