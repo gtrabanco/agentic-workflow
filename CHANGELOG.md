@@ -1,7 +1,7 @@
 # Changelog
 
 Every skill (`skills/<name>/SKILL.md`) carries `version:` in frontmatter, and the
-skills and the three packages move as **one train version** (stamped by
+skills and the four packages move as **one train version** (stamped by
 `scripts/release.mjs apply` at cut time — D-40-14). The per-skill tables below
 are the source of truth for
 **what changed between each version**; a condensed chronological log follows.
@@ -79,6 +79,11 @@ How pinning actually works, verified against the `skills` CLI:
 > GitHub Release notes (the changeset bodies).
 
 ### Companion npm packages
+
+#### [`@gtrabanco/pi-nan-agentic-workflow`](packages/pi-nan-agentic-workflow/)
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 4.10.0 | 2026-11-09 | minor | feat(388): new package — the optional NaN.builders preset for the pi layer (provider profile, per-skill model ladder, quota-tier routing as data, registration extension; the NaN fleet guidance moved here from the root README). First release. |
 
 #### [`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)
 | Version | Date | Type | What changed |

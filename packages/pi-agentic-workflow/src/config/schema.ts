@@ -45,6 +45,8 @@ const ROOT_KEYS = new Set([
   "profiles",
   "profileOrder",
   "profileFallback",
+  "tierRouting",
+  "presetProfile",
   "passes",
   "subagents",
   "stateFlow",
@@ -95,6 +97,82 @@ function isSettlePolicy(value: unknown): value is SettlePolicy {
 /** Strict validator for `recommendedModels` (feature 63, AC1). */
 function isRecommendedModels(value: unknown): value is boolean {
   return typeof value === "boolean";
+}
+
+/** Strict validator for the `tierRouting` opt-out (issue #388 amendment 1):
+ *  a boolean shorthand or `{ enabled?, skills? }` with boolean values. */
+function checkTierRouting(value: unknown, issues: ConfigIssue[]): NonNullable<ConfigFile["tierRouting"]> | undefined {
+  if (typeof value === "boolean") return value;
+  if (!isRecord(value)) {
+    issues.push({ path: "$.tierRouting", message: `must be a boolean or an object with enabled/skills, got ${describe(value)}` });
+    return undefined;
+  }
+  const out: { enabled?: boolean; skills?: Record<string, boolean> } = {};
+  for (const key of Object.keys(value)) {
+    if (key !== "enabled" && key !== "skills") {
+      issues.push({ path: `$.tierRouting.${displayKey(key)}`, message: `unknown tierRouting key "${key}" (allowed: enabled, skills)` });
+    }
+  }
+  if (value.enabled !== undefined) {
+    if (typeof value.enabled !== "boolean") {
+      issues.push({ path: "$.tierRouting.enabled", message: `must be a boolean, got ${describe(value.enabled)}` });
+    } else {
+      out.enabled = value.enabled;
+    }
+  }
+  if (value.skills !== undefined) {
+    if (!isRecord(value.skills)) {
+      issues.push({ path: "$.tierRouting.skills", message: `must be an object mapping command names to booleans, got ${describe(value.skills)}` });
+    } else {
+      const skills: Record<string, boolean> = {};
+      for (const [name, flag] of Object.entries(value.skills)) {
+        if (typeof flag !== "boolean") {
+          issues.push({ path: `$.tierRouting.skills.${displayKey(name)}`, message: `must be a boolean, got ${describe(flag)}` });
+          continue;
+        }
+        skills[name] = flag;
+      }
+      out.skills = skills;
+    }
+  }
+  if (issues.some((issue) => issue.path.startsWith("$.tierRouting"))) return undefined;
+  return out;
+}
+
+/** Strict validator for the `presetProfile` selection (issue #388 amendment
+ *  2): one profile slug or an ordered array of profile slugs. The NAMES are
+ *  companion-defined — this validates the shape only; the registry filters
+ *  unknown names at chain build. */
+function checkPresetProfile(value: unknown, issues: ConfigIssue[]): NonNullable<ConfigFile["presetProfile"]> | undefined {
+  const slug = (v: unknown, path: string): string | undefined => {
+    if (typeof v !== "string" || !COMMAND_NAME.test(v)) {
+      issues.push({ path, message: `must be a lowercase slug, got ${describe(v)}` });
+      return undefined;
+    }
+    return v;
+  };
+  if (typeof value === "string") {
+    return slug(value, "$.presetProfile");
+  }
+  if (!Array.isArray(value)) {
+    issues.push({ path: "$.presetProfile", message: `must be a profile name or an array of profile names, got ${describe(value)}` });
+    return undefined;
+  }
+  if (value.length === 0) {
+    issues.push({ path: "$.presetProfile", message: "must name at least one profile (an empty selection selects nothing)" });
+    return undefined;
+  }
+  const names: string[] = [];
+  let invalid = false;
+  value.forEach((entry, index) => {
+    const name = slug(entry, `$.presetProfile.${index}`);
+    if (name === undefined) {
+      invalid = true;
+      return;
+    }
+    names.push(name);
+  });
+  return invalid ? undefined : names;
 }
 
 /** Strict validator for the `profileOrder` array (feature 63, AC6). */
@@ -527,6 +605,16 @@ function validateConfig(value: unknown): ParseResult {
   if (value.profileFallback !== undefined) {
     const fb = checkProfileFallback(value.profileFallback, issues);
     if (fb) config.profileFallback = fb;
+  }
+
+  if (value.tierRouting !== undefined) {
+    const tierRouting = checkTierRouting(value.tierRouting, issues);
+    if (tierRouting !== undefined) config.tierRouting = tierRouting;
+  }
+
+  if (value.presetProfile !== undefined) {
+    const presetProfile = checkPresetProfile(value.presetProfile, issues);
+    if (presetProfile !== undefined) config.presetProfile = presetProfile;
   }
 
   if (value.passes !== undefined) {
