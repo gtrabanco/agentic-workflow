@@ -42,7 +42,7 @@ async function shipped({ enabled = true } = {}) {
   writeFileSync(join(cwd, "docs/fix/383-measured-acceptance/SPEC.md"), "# fix/383-measured-acceptance\n\n## Risk tier\n\n- **Tier** — `standard`\n");
   const ledgerPath = join(cwd, "docs/workflow/TIER_COST.md");
   writeFileSync(ledgerPath, ledgerText());
-  writeFileSync(join(agentDir, "pi-agentic-workflow.json"), JSON.stringify({ telemetry: { enabled } }));
+  writeFileSync(join(agentDir, "agentic-workflow.json"), JSON.stringify({ telemetry: { enabled } }));
 
   const handlers = new Map();
   const registered = new Map();

@@ -27,7 +27,7 @@ import { JOURNAL_DIR } from "@gtrabanco/agentic-workflow/src/journal/fragment.mj
 
 import { FRAGMENT_DIR, JOURNAL_PATH, buildFacts, createMarker, hasJournal, removeMarker } from "../auto-log-session.js";
 import type { GitReader, Marker } from "../auto-log-session.js";
-import type { AutoLogSessionConfig } from "../config/types.js";
+import type { LogSessionConfig } from "../config/types.js";
 
 /** The slice of `pi` the wiring needs. Pi hands every handler its context. */
 export interface PiLike {
@@ -51,10 +51,10 @@ export function normalizeShutdownReason(reason: unknown): string {
 
 export interface AutoLogSessionWiringOptions {
   readonly root: string;
-  /** The resolved switch: `off` registers nothing. */
-  readonly mode: AutoLogSessionConfig["mode"];
+  /** The resolved switch: `false` registers nothing. */
+  readonly enabled: boolean;
   /** The resolved publisher, or `null` for the local journal alone. */
-  readonly publisher?: AutoLogSessionConfig["publisher"];
+  readonly publisher?: LogSessionConfig["publisher"];
   /** Where the journal lives, relative to `root`. */
   readonly journalPath?: string;
   /** Injected clock, so the suite owns the timestamp. */
@@ -101,7 +101,7 @@ export function createAutoLogSessionWiring(options: AutoLogSessionWiringOptions)
 
   return {
     register(pi) {
-      if (options.mode === "off") return;
+      if (!options.enabled) return;
 
       pi.on("session_start", (_event, ctx) => {
         if (!hasJournal(options.root)) return;

@@ -1,0 +1,27 @@
+# External verify — 427-unified-config
+
+First (and full) external verification of this unit — no prior `EXTERNAL VERIFY`
+block existed → full verdict, once. Read-only run: no commits, no pushes, no
+branch creation, no forge mutations, no code edits. The two npm-dependent test
+failures and the gate's first run are environment artifacts, disclosed below.
+No unproven mutation path was executed against the live tree: the only new
+command run by hand was `agentic-workflow config --help` (read-only); the
+CLI/API suites exercised writes in their own throwaway project fixtures.
+Setup side effects: `bun install --frozen-lockfile` + `bun run build` in
+`packages/agentic-workflow-schema` (gitignored `dist/`/`node_modules`; tree
+clean before and after). Base = merge-base `2a28f038` (PE rows' pinned main);
+`origin/main` has since moved to `d7b391b4`.
+
+EXTERNAL VERIFY — 2026-11-09 — base: 2a28f038a246d35ba159037620ebe337a56e57ed (merge-base with origin/main) · head: e78855578d7c786d144b86303561a80c0bad4058
+Blockers: 4 —
+1. `template/.agentic-workflow/journal.md:17` — the writer table row "The pi extension (`autoLogSession: mechanical`)" teaches target projects the config key this unit deleted; the unified strict schema refuses `autoLogSession` as an unknown key and the mechanical writer is configured via `logSession`, so a project following the template produces a config `config validate` rejects and the wiring stays off. Reproducer: `rg -n 'autoLogSession' template/.agentic-workflow/journal.md` → 1 hit; base side: key valid at `2a28f038` (`packages/pi-agentic-workflow/src/extension/index.ts:425` read `config.autoLogSession.mode`), head side: O13 pin `rg -c 'autoLogSession' packages/pi-agentic-workflow/src` → 0 matches. Note `packages/agentic-workflow/test/journal.surfaces.test.mjs:45` pins the old row name and must move with the template fix. Smallest action: rename the row's key to `logSession` and update the pinning assertion — route to `/aw-local-apply`.
+2. `docs/LOGS.md:4` — the live journal header still says "The pi extension's `autoLogSession: mechanical`", asserting the deleted key. Reproducer: `rg -n 'autoLogSession' docs/LOGS.md` (line 4, live prose — the historical session entries at lines 4573/4265 are records, not claims). Base-vs-head: accurate at base, false at head (key renamed to `logSession`). Smallest action: rename the mention — route to `/aw-local-apply`.
+3. `packages/agentic-workflow/src/log/publish.d.mts:30` and `packages/agentic-workflow/src/log/publish.mjs:174` — operator/API prose still says a publisher is declared "in `autoLogSession.publisher`"; the unified path is `logSession.publisher` (`BASE_CONFIG_SECTIONS`, AC1). Reproducer: `rg -n 'autoLogSession' packages/agentic-workflow/src/log/publish.{mjs,d.mts}` → 2 hits; base side: key existed at `2a28f038`. Smallest action: rename both mentions — route to `/aw-local-apply`.
+4. Completeness — S12's M10 ("Add notes to the issue about `.agentic-workflow/` internal structure and `pi-agentic-workflow-state.json` location evaluation") has neither a validator nor a dated recorded disposition: issue #427 carries 0 comments (`gh issue view 427 --json comments` → 0), and SPEC `## Future` misrecords the M10 proposals as "deferred by the issue itself" while the issue itself requests the notes. Smallest action: post the two proposal notes to #427, or record a dated `decision-required` disposition in the SPEC — needs the owner's decision.
+Advisories: 2 —
+1. `packages/agentic-workflow-schema/test/verification-gates.test.mjs` (F112, AC8) and the same-named pair in `packages/agentic-workflow` fail with `Executable not found in $PATH: "npm"` — npm is absent in this environment; both tests are byte-identical at base and were untouched by the branch. Environment advisory, not a change defect.
+2. First gate run: `scripts/invocation-drift.test.mjs` FAILed because `/home/agent/.bun/bin/node` is a 24-byte shim (`exec bun "$@"`), so `node --test` ran bun's runner and broke a legal `test.skip` in the untouched `scripts/pre-execution-quality.test.mjs:52`. With a real node (`/tmp/node-v26.13.0-linux-x64/bin/node`) the gate is green. Environment advisory; spot-check disclosure below.
+Sibling sweep: not clean — blockers 1–3 above (rename survivors in live surfaces); `docs/fix/452/.../SPEC.md:200` and `docs/LOGS.md:4573` are historical records, excluded.
+Completeness: S1–S11, S1a, S1b resolved via P1–P5 validators re-run green here (details in this file's evidence list); S12: M1–M9 resolved the same way; **M10 open** (blocker 4). Obligations O1–O13, O15: verified with validators re-run green here; O14: verified with the npm-absent caveat (1409 pass / 2 env-fails, both pre-existing at base).
+Spot check: `node scripts/run-root-suite.mjs --jobs 2` → mismatch on first run (exit 1, environment shim, advisory 2), **match** after correcting PATH: exit 0, 97 suite(s), 0 FAIL — same shape as the recorded G1 (which ran at `52eaebbd`; head adds only the docs commit `e7885557`). Other validators re-run: P1 suites 25 pass / 0 fail · P2 suites 12 pass / 0 fail · P3 suites 44 pass / 0 fail · `bun scripts/check-skill-context.mjs` PASS (29 skills) · `bun test scripts/workflow-docs-index.test.mjs` 5 pass · `bun run check:config-schema` → `config.schema.json: current` · `rg -c 'autoLogSession' packages/pi-agentic-workflow/src` → no matches · `settings-console.test.mjs` 65 pass / 0 fail (E6's limitation no longer reproduces).
+Verdict: NEEDS-DECISION (blockers 1–4)

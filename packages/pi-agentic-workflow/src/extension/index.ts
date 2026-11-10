@@ -422,11 +422,11 @@ export default function extension(pi: ExtensionAPI): void {
     // Issue #394 — the same first chance, a separate switch: `off` registers no
     // listener at all, and an opted-in project gets the journal writer whether
     // or not telemetry is enabled (S1, S4).
-    if (loaded.config.autoLogSession.mode !== "off" && autoLog === null) {
+    if (loaded.config.logSession.enabled && autoLog === null) {
       autoLog = createAutoLogSessionWiring({
         root: ctx.cwd,
-        mode: loaded.config.autoLogSession.mode,
-        publisher: loaded.config.autoLogSession.publisher,
+        enabled: loaded.config.logSession.enabled,
+        publisher: loaded.config.logSession.publisher,
       });
       autoLog.register(pi);
     }
