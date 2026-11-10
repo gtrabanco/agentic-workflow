@@ -127,3 +127,29 @@ directory exists); mid-batch concurrency — another session landed `fca3ce2c` a
 `dca16598` and the owner opened PR #508 at `d257a867` (this batch is local-only).
 
 Verdict unchanged: **NEEDS-DECISION (B1–B3)** until the owner's delta recheck.
+
+## Second-pass folds — 2026-11-10 (S1: "fold the new findings")
+
+Owner authorized the cycle for the four disclosed non-batch items:
+
+- **ac-hash staleness** — already resolved by batch 1's plan-repair re-stamp
+  (`2418c5f6`); re-verified: the sectionText recipe reproduces the frontmatter
+  value on the current bytes (`cacc3cb433aed6be2aee22f74bfb30664946c6d7e3462f6c2de4a5f52c0d71c6`).
+- **G1/G2 `receipt-malformed-head`** — folded at `88d26cfa`: both lines
+  completed in place with `HEAD 49d7dcb119e4bf01d25f1e1a3154b10af465937b`
+  (d257a867's parent — the head the close-session runs happened under;
+  commands, exits and outputs untouched; in-place pin precedent fix/460's
+  `c7ecce2d`).
+- **O5/E5 scratch-path citation** — folded at `88d26cfa`: E5's span is the `ls`
+  command that produced the evidence (commands are never claims under the
+  verify contract); the claim itself is unchanged.
+- **E6's "5 matches"** — corrected by append (E12), never by editing E6:
+  7 matches — the five named categories plus the rewrite's move/remove lines;
+  no validator depends on the count.
+
+GREEN: `agentic-workflow verify` → **exit 0 · `VERIFY PASS` · violations `[]`**
+on the live tree with `.worktrees` present (the condition that armed the
+citation), identical in a mktemp fixture; phase-lint exit 0; docs-generate
+PASS on the clean head; ac-hash unchanged.
+
+Verdict pending: the owner's delta recheck of B1–B3 plus these four folds.
