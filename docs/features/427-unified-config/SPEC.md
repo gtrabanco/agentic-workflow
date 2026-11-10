@@ -124,7 +124,10 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 ## Future
 
 - `.agentic-workflow/index.json` and `pi-agentic-workflow-state.json` location
-  proposals (M10) — `open`, deferred by the issue itself.
+  proposals (M10) — `posted` 2026-11-09 as the two proposal notes on issue
+  [#427](https://github.com/gtrabanco/agentic-workflow/issues/427#issuecomment-6754915466);
+  neither is implemented here (the issue asked for the notes, not the change),
+  and the note recommends keeping the status-quo state location.
 
 ## Future cost
 
@@ -217,10 +220,49 @@ The ledger is [`planning-obligations.md`](planning-obligations.md) (M/L unit; no
 - **E5** — 2026-11-09, `bun run check:config-schema` (schema package) → `config.schema.json: current`, exit 0.
 - **E6** — 2026-11-09, `bun test packages/pi-agentic-workflow/test/settings-console.test.mjs` → 59 pass before the process was killed by the environment (exit 137) during a git-heavy fixture; the config-affected `F4` case was not reached in that run and is re-run filtered in E7.
 - **G1** — 2026-11-09, `bun scripts/run-root-suite.mjs --jobs 2` on `HEAD 52eaebbd` · exit 0 · 97 suite(s), 0 FAIL.
+- **L2** — 2026-11-09, external verification returned four blockers, verbatim from the
+  receipt: the template carrier doc's writer table, this repository's carrier doc
+  and the crate's publish prose still teach `autoLogSession`; and S12's M10 had
+  neither a validator nor a dated disposition. Correction batch (this Log):
+  `D2`, `P6`, `E7`–`E10`, `G2`, `L3`, `L4`.
+- **D2** — 2026-11-09, replan (ledgers `427-plan-1` → `427-plan-2`): the correction
+  batch adds obligations `O16`–`O19` and evidence `PE-013`. Authority is `S10`/`O13`
+  (the retirement has no surviving teacher), `S12`/`M10` (the notes), and the
+  repository's own journal guard for the one surface that cannot be edited.
+- **P6** — 2026-11-09, the correction batch: the writer-table pin moved to the
+  shipped key (red first), the four live surfaces and the carrier doc corrected,
+  the M10 proposals posted to the issue, and the journal header's stale key
+  corrected by the sanctioned route (a narrative fragment).
+- **E7** — 2026-11-09, `rg -c 'autoLogSession'` over the four corrected live
+  surfaces (`template/.agentic-workflow/journal.md`, `.agentic-workflow/journal.md`,
+  `packages/agentic-workflow/src/log`, `packages/pi-agentic-workflow/test/config-merge-stateflow.test.mjs`)
+  · exit 1 · no matches.
+- **E8** — 2026-11-09, the pin moved before the doc: `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs`
+  · exit 1 · `the writer table names logSession` failed against the still-stale template (the red half).
+- **E9** — 2026-11-09, `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs`
+  · exit 0 · 11 pass (the green half, after the four surfaces were corrected).
+- **E10** — 2026-11-09, `node scripts/log-immutability.mjs --base e7885557` · exit 0
+  · the carrier holds the new fragment and `docs/LOGS.md` is untouched.
+- **E11** — 2026-11-09, `gh issue view 427 --json comments` · the M10 note is comment
+  `6754915466`, and one comment names `pi-agentic-workflow-state.json`.
+- **L3** — 2026-11-09, the journal header's stale key: `docs/LOGS.md:4` still names
+  the retired `autoLogSession`, and it cannot be edited — the guard refuses both
+  halves (`log-rewritten`, then `log-hand-appended`), proven in a scratch
+  repository (`PE-013`). The correction is the sanctioned one: a narrative
+  fragment written by `journal write --kind narrative`
+  (`20261110T000624Z-feat-427-config-unified-config-file-schema-narrative-local.md`),
+  which the aggregator appends as this journal's correcting line. The header
+  bytes stay exactly as they were cut, by rule.
+- **L4** — 2026-11-09, M10's two proposals are on the issue, not in this tree:
+  [`#427` comment 6754915466](https://github.com/gtrabanco/agentic-workflow/issues/427#issuecomment-6754915466)
+  covers the `.agentic-workflow/` internal structure (a history-or-consent
+  criterion, config staying host-scoped in `.pi/`, `tmp/` as a retirement
+  candidate) and the `pi-agentic-workflow-state.json` location evaluation
+  (A status quo vs B project vs C host-keyed, recommending A and never B).
 
 ## Next
 
-External verification of the branch by the owner; then the plan/fix-index/roadmap rows and the PR.
+Owner review of the correction batch; then the plan/fix-index/roadmap rows and the PR.
 
 ## References
 
