@@ -4,6 +4,7 @@
 
 import type { ConfigProblem, EffectiveConfig, Route } from "../config/types.js";
 import { effectiveProfileOrder } from "../config/profiles.js";
+import { getProviderPresets } from "../config/presets.js";
 import type { LoadedConfig } from "../config/load.js";
 /** The label for the unqualified route, so `default` is never mistaken for a command name. */
 export const DEFAULT_ROUTE = "the default route";
@@ -26,11 +27,20 @@ export function renderMergedConfig(
   const order = effectiveProfileOrder(loaded.config, {
     providerAvailable: opts?.providerAvailable ?? (() => false),
   });
+  // Issue #388: one hint per registered preset whose provider is actually in
+  // the live registry — the hint names the contributed profile, never a
+  // hardcoded provider.
+  const availablePresets = getProviderPresets().filter(
+    (preset) => loaded.config.recommendedModels && opts?.providerAvailable?.(preset.provider),
+  );
+  const hint = availablePresets.length > 0
+    ? ` (${availablePresets.map((p) => `built-in ${p.provider} profile in the chain`).join(", ")})`
+    : "";
   return [
     "agentic-workflow routing — what each command runs on right now",
     `  profiles: ${order.join(" → ")}`,
     `  active profile: ${order[0] ?? "default"}`,
-    `  recommended models: ${loaded.config.recommendedModels ? "on" : "off"}${loaded.config.recommendedModels && opts?.providerAvailable?.("nan") ? " (built-in nan profile in the chain)" : ""}`,
+    `  recommended models: ${loaded.config.recommendedModels ? "on" : "off"}${hint}`,
     ...configLines(loaded.config, commands),
     ...problems(loaded.problems),
   ];

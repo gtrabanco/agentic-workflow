@@ -1,5 +1,5 @@
 import type { EffectiveConfig, ProfileCandidate, Route, RouteFile, RouteDeclaration } from "./types.js";
-import { RECOMMENDED_PROFILES } from "./recommended.js";
+import { findProviderPreset, getProviderPresets } from "./presets.js";
 
 /** Options for recommended-profile resolution. */
 export interface RecommendedOptions {
@@ -11,8 +11,9 @@ export interface RecommendedOptions {
  *
  * Rules:
  *  - Start from `config.profileOrder` if non-empty, else `["default"]`.
- *  - If `config.recommendedModels` is true and the `nan` provider is available,
- *    append `"nan"` (unless it is already present in the order).
+ *  - If `config.recommendedModels` is true, append every registered provider
+ *    preset whose provider is available (issue #388) — unless it is already
+ *    present in the order. No preset registered → nothing appended.
  *  - Returns a fresh array so callers may mutate without side effects.
  */
 export function effectiveProfileOrder(
@@ -22,9 +23,12 @@ export function effectiveProfileOrder(
   const base: string[] =
     config.profileOrder.length > 0 ? config.profileOrder : ["default"];
   const result = [...base];
-  if (config.recommendedModels && opts.providerAvailable("nan")) {
-    if (!result.includes("nan")) {
-      result.push("nan");
+  if (config.recommendedModels) {
+    for (const preset of getProviderPresets()) {
+      if (result.includes(preset.provider)) continue;
+      if (opts.providerAvailable(preset.provider)) {
+        result.push(preset.provider);
+      }
     }
   }
   return result;
@@ -34,8 +38,9 @@ export function effectiveProfileOrder(
  * Resolve a profile chain for one command.
  *
  * Iterates the ordered profile names from `effectiveProfileOrder`. For each name:
- *  - `nan` → uses `config.profiles.nan` if the user overrode it, else
- *    the built-in `RECOMMENDED_PROFILES.nan`.
+ *  - a registered preset's provider → the preset's derived ladder
+ *    (`resolveProfile({ config })`), unless the user overrode the profile in
+ *    `config.profiles[name]` (issue #388).
  *  - `default` → the implicit profile made from `config.default` and
  *    `config.commands` (top-level, already-merged).
  *  - Any other name → `config.profiles[name]` (user-defined profile).
@@ -44,8 +49,8 @@ export function effectiveProfileOrder(
  * For each candidate, compute the route file from the command's explicit
  * command route or the profile's default route. Skip if neither is defined.
  *
- * Built-in nan profile (`RECOMMENDED_PROFILES.nan`, never user-overridden)
- * always reports `declared = { model: true, thinking: true }`.
+ * A preset-backed profile the user did not override always reports
+ * `declared = { model: true, thinking: true }`.
  *
  * Returns candidates in order, each with its route and per-key declaration
  * status.
@@ -59,10 +64,11 @@ export function resolveProfileChain(
   const candidates: ProfileCandidate[] = [];
 
   for (const name of profileNames) {
+    const preset = findProviderPreset(name);
     let def: { default?: RouteFile; commands?: Record<string, RouteFile> } | undefined;
 
-    if (name === "nan") {
-      def = config.profiles.nan ?? RECOMMENDED_PROFILES.nan;
+    if (preset) {
+      def = config.profiles[name] ?? preset.resolveProfile({ config });
     } else if (name === "default") {
       def = { default: config.default, commands: config.commands };
     } else {
@@ -82,16 +88,17 @@ export function resolveProfileChain(
     // Determine per-key declaredness from the raw file presence (not value).
     // For the "default" profile the declared info comes from the merged
     // EffectiveConfig.declared surface; for named profiles we check raw
-    // presence; the built-in nan always declares both.
+    // presence; a preset-backed profile the user did not override always
+    // declares both.
     let declared: RouteDeclaration;
-    if (name === "nan" && config.profiles.nan === undefined) {
-      // Built-in nan always declares both keys.
+    if (preset && config.profiles[name] === undefined) {
+      // Preset-contributed profile: the companion declares both keys.
       declared = { model: true, thinking: true };
     } else if (name === "default") {
       // Use the merged declared surface (carries raw-file presence).
       declared = config.declared.commands[command] ?? config.declared.default;
     } else {
-      // User-defined named profile (including a user-defined "nan"): check raw presence.
+      // User-defined named profile (including one shadowing a preset): check raw presence.
       const routeFileDef = config.profiles[name];
       const rFile = routeFileDef?.commands?.[command] ?? routeFileDef?.default;
       declared = {
@@ -111,7 +118,7 @@ export function resolveProfileChain(
       thinking: routeFile.thinking ?? "inherit",
     };
 
-    const builtIn = name === "nan" && config.profiles.nan === undefined;
+    const builtIn = preset !== undefined && config.profiles[name] === undefined;
 
     candidates.push({
       profile: name,
