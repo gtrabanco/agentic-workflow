@@ -23,3 +23,9 @@ Evidence re-run (this session, foreground):
 - No unproven mutation path executed: the change introduces no new write-capable command surface (the companion's registration extension is in-memory registry mutation at pi load time); all gates run were check/test modes.
 - Receipt written uncommitted by the verifying session; the implementer owns the commit.
 ```
+
+Follow-up (2026-11-09, owner-directed correction): the advisory was routed and
+repaired by the owner's instruction — issue #500, passive unit
+`docs/passive/2026-11-09-declare-docs-site.md` (branch
+`fix/500-declare-docs-site-block`, PR #501). The emitter now reports
+`Format: md (declared)` with no degraded note.
