@@ -1,0 +1,6 @@
+## 2026-11-09T21:59:00Z — feat/409-new-feature-machine-gate-receipts — narrative
+- **Commits:** 9 (`b3011c4d…10975fff`)
+- **Files:** 29 files
+- **Summary:** External verify of unit 108 (machine-gate-receipts): full-verification verdict, no prior receipt. All 14 claims (S1–S14) pass — schema suite 20 pass, runner suite 10 pass, local-gate 44 pass, audit-pr-receipt 28 pass, registration suites all green, red-first 48 pairs, changeset ok, version-parity pass, docs-projection fresh, roadmap check 0 violations. S7 confirmed: no pi-package/remote-CI/TIER_COST touches. One open obligation: O17 gate-blocked by a foreign dirty worktree (not change-caused). All mutation paths exercised only in scratch. Six initial test failures proved environmental (node absent from PATH), not change-caused.
+- **Decisions:** node-absence proved environmental via base-scratch; all six suite failures reproduce at origin/main in a fresh mktemp-d copy. Worktree-guard red is persistent foreign state across multiple sessions (first feat-427, now fix-489 merged-but-dirty) — never a unit's defect. O17 needs owner decision: clean foreign worktree or accept 12-step subset.
+- **Next:** Owner: either remove .git/worktrees/fix-489-narrow-local-pin-rule (it's merged into main) or accept G1/G5's 12-step gate subset as this unit's receipt. Then hand the diff for merge.

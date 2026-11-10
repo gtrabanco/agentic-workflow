@@ -282,7 +282,7 @@ describe("owner parity (S11)", () => {
     for (const relative of files) {
       const content = fs.readFileSync(path.join(ROOT, relative), "utf8");
       const sections = sectionsWithIds(content, relative);
-      const chunks = scanChunks(content, relative).filter((chunk) => chunk.section !== null);
+      const chunks = scanChunks(content, relative).chunks.filter((chunk) => chunk.section !== null);
       const sectionLines = new Set(sections.map((section) => section.lines[0]));
       const byLine = new Map(chunks.map((chunk) => [chunk.lines[0], chunk.id]));
       // Both directions: a chunk heading the tree does not have, and a section

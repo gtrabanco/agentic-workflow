@@ -6,6 +6,15 @@
  * sorted keys at every level, no timestamps — so AC12's byte-for-byte
  * determinism assertion compares two `collectManifest` runs' exports
  * directly. `manifestHash` is the store's freshness fingerprint.
+ *
+ * D20 repo identification: `repoId()` returns the commit object SHA
+ * (`git rev-parse HEAD^{commit}`), a stable 40-char identifier that is
+ * identical across worktrees, renames, and clones of the same repo (but
+ * differs across branches because the HEAD commit differs).
+ *
+ * D21 file exclusion: `collectManifest` filters out files whose repo-relative
+ * path starts with any exclusion prefix (default: `.agentic-workflow/`,
+ * `node_modules/`). An explicit list overrides the defaults.
  */
 
 import { createHash } from "node:crypto";
@@ -51,17 +60,34 @@ export function corpusFiles(root) {
 }
 
 /**
- * Collect the manifest over the live repo at `root`: git HEAD plus one
- * sha256 per tracked markdown file. Deterministic for an unchanged corpus
- * (AC12): same files, same bytes, same HEAD ⇒ byte-identical canonical form.
+ * Default file exclusion prefixes — paths that are irrelevant for the index.
+ * `.agentic-workflow/` covers the store, the journal fragments and every
+ * runtime artifact; `node_modules/` covers vendored installs in target
+ * projects.
  */
-export function collectManifest(root) {
+export const DEFAULT_EXCLUSIONS = Object.freeze([".agentic-workflow/", "node_modules/"]);
+
+/**
+ * Collect the manifest over the live repo at `root`: git HEAD plus one
+ * sha256 per tracked markdown file, filtered by exclusion prefixes.
+ * Deterministic for an unchanged corpus (AC12): same files, same bytes, same
+ * HEAD ⇒ byte-identical canonical form.
+ *
+ * D21: `opts.exclusions` is the exclusion-prefix list; `null`/`undefined`
+ * resolves to `DEFAULT_EXCLUSIONS`, and an explicit array replaces the
+ * defaults entirely (the caller re-lists the defaults if it wants them).
+ */
+export function collectManifest(root, opts = {}) {
+  const exclusions = opts.exclusions == null ? DEFAULT_EXCLUSIONS : opts.exclusions;
   const head = execFileSync("git", ["rev-parse", "HEAD"], {
     cwd: root,
     encoding: "utf8",
     maxBuffer: 1024 * 1024,
   }).trim();
   const files = corpusFiles(root).map((rel) => {
+    // D21: skip excluded paths
+    if (exclusions.some((exc) => rel.startsWith(exc))) return null;
+
     const abs = join(root, rel);
     let bytes;
     try {
@@ -79,6 +105,26 @@ export function collectManifest(root) {
       sha256: createHash("sha256").update(bytes).digest("hex"),
       bytes: bytes.length,
     };
-  }).filter((f) => f !== null); // drop missing files
+  }).filter((f) => f !== null); // drop missing/excluded files
   return buildManifest({ head, files });
+}
+
+/**
+ * Return the repository's unique commit-object SHA: `git rev-parse HEAD^{commit}`.
+ * This is a stable 40-char hex string, identical across worktrees, renames,
+ * and clones of the same repo (because it resolves the commit object, not the
+ * ref). Differs across branches because the HEAD commit differs.
+ *
+ * Returns `null` when git is unavailable (the caller decides the fallback).
+ */
+export function repoId(root) {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD^{commit}"], {
+      cwd: root,
+      encoding: "utf8",
+      maxBuffer: 1024 * 1024,
+    }).trim();
+  } catch {
+    return null;
+  }
 }
