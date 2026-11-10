@@ -8,7 +8,7 @@
  *    fully resolved, so no downstream code has to reason about optionality.
  */
 
-import type { PathProtectionOverride, ResolvedPathPolicy } from "./path-policy.js";
+import type { ResolvedPathPolicy } from "./path-policy.js";
 
 /** Pi's thinking levels, mirrored here so the domain layer stays Pi-free. */
 export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
@@ -196,10 +196,6 @@ export interface ConfigFile {
   onUnavailableRoute?: UnavailableRoutePolicy;
   /** What happens to the routed model and thinking level after the command settles. */
   onSettle?: SettlePolicy;
-  /** The tighten-only path-protection override (feature 60, AC10). */
-  pathProtection?: PathProtectionOverride;
-  /** Conductor (advance) knobs (feature 62). */
-  advance?: AdvanceConfigFile;
   /** When true (default), the provider profiles contributed by installed
    *  companion preset packages are included in the resolution chain
    *  (feature 63, AC1; issue #388). With no companion installed this is a
@@ -210,13 +206,6 @@ export interface ConfigFile {
    *  means tier routing stays on; the tier policy itself lives in the
    *  preset, never here. */
   tierRouting?: boolean | TierRoutingConfig;
-  /** Feature 66 (AC3/D3): the memory-substrate consent surface — Engram's MCP
-   *  registration is ask-first, so nothing is provisioned unless this says so. */
-  memory?: MemoryConfigFile;
-  /** Issue #383: the per-unit cost sample. */
-  telemetry?: TelemetryConfigFile;
-  /** #394: automatic session logging on exit. */
-  autoLogSession?: AutoLogSessionConfigFile;
   /** Issue #201: per-pass model/thinking declarations for spawned review
    *  passes, keyed by the published pass names plus the `default` escape. */
   passes?: PassesConfigFile;
@@ -247,62 +236,23 @@ export type UnavailableRoutePolicy = "stop" | "inherit";
 export type SettlePolicy = "keep" | "restore";
 
 /** One rejected field inside one config file, addressed by a JSON-path-ish string. */
-/** What an operator WRITES under `memory` (feature 66). */
-export interface MemoryConfigFile {
-  /** Opt in to the package registering the Engram MCP server when its binary
-   *  resolves. Absent or `false` registers nothing. */
-  engram?: boolean;
-}
-
 /** What the extension READS: every `memory` knob resolved (feature 66). */
 export interface MemoryConfig {
   engram: boolean;
 }
 
-/**
- * The modes `autoLogSession` accepts (#394). Two states, not three: a rich,
- * narrative entry stays `/log-session`'s job (the issue's non-goals), so the
- * extension only ever writes the mechanical, git-facts block.
- */
-export const AUTO_LOG_SESSION_MODES = ["off", "mechanical"] as const;
-
-export type AutoLogSessionMode = (typeof AUTO_LOG_SESSION_MODES)[number];
-
-/** The bound a declared publisher's argv may reach, and its timeout window. */
-export const AUTO_LOG_SESSION_MAX_ARGV = 32;
-export const AUTO_LOG_SESSION_MAX_TIMEOUT_MS = 60_000;
-
-/**
- * A publisher an operator declares in config (#394, S3). The *interface* ships
- * here; the backend is whatever the argv runs (`curl`, `tee`, a queue CLI), so a
- * project can publish to an HTTP endpoint, a path outside the repo or a log sink
- * without this package carrying a client for it.
- */
-export interface AutoLogSessionPublisherFile {
-  /** The argv to run; the frozen facts payload arrives as JSON on stdin. */
-  command?: string[];
-  /** How long the command may take before it is abandoned. Default: 5000. */
-  timeoutMs?: number;
-}
-
-/** What an operator WRITES under `autoLogSession` (#394). */
-export interface AutoLogSessionConfigFile {
-  /** Which level of automatic logging to enable. Default: "off". */
-  mode?: AutoLogSessionMode;
-  /** A second strategy besides the local `docs/LOGS.md` append (S3). */
-  publisher?: AutoLogSessionPublisherFile;
-}
-
-/** What the extension READS: the switch resolved, and the publisher normalized. */
-export interface AutoLogSessionConfig {
-  mode: AutoLogSessionMode;
+/** What the extension READS: automatic session logging, resolved. */
+export interface LogSessionConfig {
+  enabled: boolean;
   publisher: { command: string[]; timeoutMs: number } | null;
 }
 
-/** What an operator WRITES under `telemetry` (issue #383). */
-export interface TelemetryConfigFile {
-  /** Opt in to the per-unit cost sample. Absent or `false` measures nothing. */
-  enabled?: boolean;
+/** What the extension READS: guard switches, resolved. */
+export interface GuardsConfig {
+  merge: boolean;
+  history: boolean;
+  ci: boolean;
+  cost: { maxTokens: number };
 }
 
 /** What the extension READS: the telemetry switch, resolved (issue #383). */
@@ -319,15 +269,6 @@ export const UNAVAILABLE_ROUTE_POLICIES: readonly UnavailableRoutePolicy[] = ["s
 
 export const SETTLE_POLICIES: readonly SettlePolicy[] = ["keep", "restore"];
 
-/** Default for autoLogSession (issue #394): off, and no declared publisher. */
-export const DEFAULT_AUTO_LOG_SESSION: Readonly<AutoLogSessionConfig> = {
-  mode: "off",
-  publisher: null,
-};
-
-/** Default timeout for a declared publisher (#394), milliseconds. */
-export const DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS = 5000;
-
 export interface EffectiveConfig {
   default: Route;
   commands: Record<string, Route>;
@@ -335,10 +276,8 @@ export interface EffectiveConfig {
   onSettle: SettlePolicy;
   /** The effective path-protection policy: the shipped floor tightened by any override. */
   pathProtection: ResolvedPathPolicy;
-  /** The effective advance (conductor) knobs (feature 62). Resolved by
-   *  mergeConfigs; the shipped DEFAULT_CONFIG predates it and leaves it
-   *  absent — consumers fall back to DEFAULT_ADVANCE_CONFIG. */
-  advance?: AdvanceConfig;
+  /** The effective advance (conductor) knobs (feature 62). */
+  advance: AdvanceConfig;
   /** Whether the provider profiles contributed by installed companion preset
    *  packages are included in the resolution chain (feature 63, AC1; issue
    *  #388). No companion installed → no preset profiles, by design. */
@@ -356,8 +295,10 @@ export interface EffectiveConfig {
   memory: MemoryConfig;
   /** Issue #383: the measured acceptance is opt-in, like every other runtime cost. */
   telemetry: TelemetryConfig;
-  /** #394: automatic session logging mode, resolved. */
-  autoLogSession: AutoLogSessionConfig;
+  /** #394: automatic session logging, resolved. */
+  logSession: LogSessionConfig;
+  /** Guard switches, resolved. */
+  guards: GuardsConfig;
   /** Issue #201: the declared pass routes, merged project-over-global; empty
    *  when no scope declares one — the resolver owns the fail-closed chain. */
   passes: Record<string, PassRouteFile>;
@@ -377,23 +318,19 @@ export interface ConfigProblem {
   message: string;
 }
 
-/** Absolute paths of the two dedicated JSON files (never Pi `settings.json`). */
+/** Absolute paths of the dedicated JSON files (never Pi `settings.json`). */
 export interface ConfigPaths {
+  /** The pi extension file: package-specific config. */
   global: string;
   project: string;
+  /** The base feature file every agentic-workflow install shares. */
+  globalBase: string;
+  projectBase: string;
 }
 
 // ---------------------------------------------------------------------------
 // Advance (conductor) configuration
 // ---------------------------------------------------------------------------
-
-/** Per-iteration control knobs for the conductor loop. */
-export interface AdvanceConfigFile {
-  iterationsCap?: number;
-  sensitivePaths?: string[];
-  securityPaths?: string[];
-  runLogPath?: string;
-}
 
 /** Effective advance configuration with all fields resolved. */
 export interface AdvanceConfig {

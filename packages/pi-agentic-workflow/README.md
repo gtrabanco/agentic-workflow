@@ -264,12 +264,16 @@ The record is package bookkeeping, so ignore it beside the start marker:
 
 ## Model routing
 
-Two JSON files, both optional:
+Two JSONC files, both optional. Model routing lives in this package's extension
+file; cross-tool feature config (`logSession`, `memory`, `telemetry`, `guards`,
+`advance`, `pathProtection`) lives in the base `agentic-workflow.json` at the
+same scope (guide: `docs/workflow/CONFIG.md`, machine contract:
+`@gtrabanco/agentic-workflow-schema`).
 
 | Scope | Path | Read when |
 | --- | --- | --- |
-| Global | `~/.pi/agent/pi-agentic-workflow.json` | always |
-| Project | `<repo>/.pi/pi-agentic-workflow.json` | the project is trusted |
+| Global | `~/.pi/agent/pi-agentic-workflow.json` (routing) · `~/.pi/agent/agentic-workflow.json` (features) | always |
+| Project | `<repo>/.pi/pi-agentic-workflow.json` (routing) · `<repo>/.pi/agentic-workflow.json` (features) | the project is trusted |
 
 ```json
 {
@@ -560,12 +564,17 @@ ever enters the entry — the same git facts the template's Claude Code hook
 writes, byte for byte (a test runs that hook and diffs the bytes).
 
 **Off by default, and it never creates the journal.** A project participates by
-carrying `docs/LOGS.md`; enable the writer in either config file
-(`.pi/pi-agentic-workflow.json`; the project file wins over the global one):
+carrying `docs/LOGS.md`; enable the writer in the feature config file
+(`.pi/agentic-workflow.json`; the project file wins over the global one):
 
 ```json
-{ "autoLogSession": { "mode": "mechanical" } }
+{ "logSession": true }
 ```
+
+`logSession` accepts `true`/`1`/`"on"` (append), `false`/`0`/`"off"` (off), or
+an object `{ "enabled": true, "publisher": { "command": [...], "timeoutMs": 5000 } }`.
+The old `autoLogSession: { "mode": "mechanical" }` form is gone; `config
+validate` names it and `docs/workflow/CONFIG.md` has the migration table.
 
 Two cases write nothing at all, on purpose: a project that is not a git
 repository (there are no facts to record), and a session that started before
@@ -595,8 +604,8 @@ a path outside the repo, a log sink, whatever the argv runs:
 
 ```json
 {
-  "autoLogSession": {
-    "mode": "mechanical",
+  "logSession": {
+    "enabled": true,
     "publisher": { "command": ["curl", "-sS", "-X", "POST", "--data-binary", "@-", "https://example.test/journal"], "timeoutMs": 5000 }
   }
 }

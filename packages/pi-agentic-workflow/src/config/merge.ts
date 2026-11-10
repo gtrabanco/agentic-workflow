@@ -1,21 +1,30 @@
-import { DEFAULT_CONFIG, DEFAULT_ROUTE } from "./defaults.js";
-import { SHIPPED_PATH_POLICY, intersectPathPolicy, mergePathProtectionOverrides } from "./path-policy.js";
-import {
-  DEFAULT_ADVANCE_CONFIG,
-  DEFAULT_AUTO_LOG_SESSION,
-  DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS,
-  DEFAULT_PROFILE_FALLBACK,
-  DEFAULT_STATE_FLOW,
+import { DEFAULT_PI_CONFIG, DEFAULT_ROUTE, BASE_EFFECTIVE_DEFAULTS } from "./defaults.js";
+import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW } from "./types.js";
+import type {
+  ConfigFile,
+  EffectiveConfig,
+  PassRouteFile,
+  ProfileFile,
+  ProfileFallbackConfig,
+  Route,
+  RouteDeclaration,
+  RouteFile,
+  StateFlowConfig,
+  SubagentsConfigFile,
 } from "./types.js";
-import type { AdvanceConfig, AutoLogSessionConfig, AutoLogSessionPublisherFile, ConfigFile, EffectiveConfig, PassRouteFile, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile, StateFlowConfig, SubagentsConfigFile } from "./types.js";
 
 /**
- * Project-over-global merge (SPEC S5, S6).
+ * Project-over-global merge (SPEC S5, S6) for the pi extension file.
  *
  * Merge granularity is the individual route key, not the route object: a
  * project that sets only `commands.x.model` keeps the global `thinking` for
  * that command. A command neither scope mentions falls back to the resolved
  * default route, and an absent default is the shipped `inherit`.
+ *
+ * The feature sections are not merged here: they live in the base file and are
+ * resolved by the shared schema package before this function runs. `base` is
+ * the already-resolved feature half, so the result is one complete
+ * `EffectiveConfig` and no consumer reasons about which file a value came from.
  *
  * Inputs are validated files — an invalid file never reaches this function
  * (D-E5) — and both are treated as read-only: the result is built from fresh
@@ -27,24 +36,6 @@ function pick<T>(fallback: T, ...values: (T | undefined)[]): T {
   return fallback;
 }
 
-/**
- * The declared publisher, resolved per field (#394): the project's argv wins over
- * the global one, each falling back on its own, and an absent timeout takes the
- * shipped 5 s. `null` — the shipped value — means the local journal is the only
- * strategy.
- */
-function mergeAutoLogPublisher(
-  project: AutoLogSessionPublisherFile | undefined,
-  global: AutoLogSessionPublisherFile | undefined,
-): AutoLogSessionConfig["publisher"] {
-  const command = pick(undefined, project?.command, global?.command);
-  if (command === undefined) return null;
-  return {
-    command: [...command],
-    timeoutMs: pick(DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS, project?.timeoutMs, global?.timeoutMs),
-  };
-}
-
 /** Merge two RouteFiles key-by-key (used for profile routes). */
 function mergeRouteFiles(
   globalRoute: RouteFile | undefined,
@@ -53,8 +44,6 @@ function mergeRouteFiles(
   if (globalRoute === undefined && projectRoute === undefined) return undefined;
   const out: RouteFile = {};
   if (globalRoute?.model !== undefined || projectRoute?.model !== undefined) {
-    // A chain declared only at global scope survives.
-    // Per-key: project chain wins, or global chain, or inherited string.
     if (projectRoute?.model !== undefined) {
       out.model = projectRoute.model;
     } else if (globalRoute?.model !== undefined) {
@@ -62,59 +51,37 @@ function mergeRouteFiles(
     }
   }
   if (globalRoute?.thinking !== undefined || projectRoute?.thinking !== undefined) {
-    out.thinking = pick(DEFAULT_ROUTE.thinking, projectRoute?.thinking, globalRoute?.thinking);
+    out.thinking = projectRoute?.thinking ?? globalRoute?.thinking;
   }
-  return Object.keys(out).length > 0 ? out : undefined;
+  return out;
 }
 
-/** Per-profile merge: each profile's default and commands merge key-by-key.
- *  A profile name may exist in one scope but not the other; the missing
- *  scope simply contributes nothing. */
+/** Merge two profile maps: a profile present in either scope resolves per route key. */
 function mergeProfiles(
   globalProfiles: Record<string, ProfileFile> | undefined,
   projectProfiles: Record<string, ProfileFile> | undefined,
 ): Record<string, ProfileFile> {
-  const allNames = new Set([
-    ...Object.keys(globalProfiles ?? {}),
-    ...Object.keys(projectProfiles ?? {}),
-  ]);
-  const result: Record<string, ProfileFile> = {};
-  for (const name of allNames) {
-    const gDef = globalProfiles?.[name];
-    const pDef = projectProfiles?.[name];
-    const mergedDef: ProfileFile = {};
-
-    // Merge default routes key-by-key.
-    if (gDef?.default !== undefined || pDef?.default !== undefined) {
-      const mergedDefault: RouteFile = {};
-      if (pDef?.default !== undefined && pDef.default.model !== undefined) {
-        mergedDefault.model = pDef.default.model;
-      } else if (gDef?.default !== undefined && gDef.default.model !== undefined) {
-        mergedDefault.model = gDef!.default.model;
-      }
-      if (gDef?.default?.thinking !== undefined || pDef?.default?.thinking !== undefined) {
-        mergedDefault.thinking = pick(DEFAULT_ROUTE.thinking, pDef?.default?.thinking, gDef?.default?.thinking);
-      }
-      mergedDef.default = mergedDefault;
+  const out: Record<string, ProfileFile> = {};
+  const names = new Set([...Object.keys(globalProfiles ?? {}), ...Object.keys(projectProfiles ?? {})]);
+  for (const name of names) {
+    const globalProfile = globalProfiles?.[name];
+    const projectProfile = projectProfiles?.[name];
+    const profile: ProfileFile = {};
+    const defaultRoute = mergeRouteFiles(globalProfile?.default, projectProfile?.default);
+    if (defaultRoute !== undefined) profile.default = defaultRoute;
+    const commands: Record<string, RouteFile> = {};
+    const commandNames = new Set([
+      ...Object.keys(globalProfile?.commands ?? {}),
+      ...Object.keys(projectProfile?.commands ?? {}),
+    ]);
+    for (const command of commandNames) {
+      const merged = mergeRouteFiles(globalProfile?.commands?.[command], projectProfile?.commands?.[command]);
+      if (merged !== undefined) commands[command] = merged;
     }
-
-    // Merge commands key-by-key.
-    const gCmds = gDef?.commands ?? {};
-    const pCmds = pDef?.commands ?? {};
-    const allCmdNames = new Set([...Object.keys(gCmds), ...Object.keys(pCmds)]);
-    if (allCmdNames.size > 0) {
-      mergedDef.commands = {};
-      for (const cmd of allCmdNames) {
-        const mergedCmd = mergeRouteFiles(gCmds[cmd], pCmds[cmd]);
-        if (mergedCmd) mergedDef.commands[cmd] = mergedCmd;
-      }
-    }
-
-    if (Object.keys(mergedDef).length > 0) {
-      result[name] = mergedDef;
-    }
+    if (Object.keys(commands).length > 0) profile.commands = commands;
+    out[name] = profile;
   }
-  return result;
+  return out;
 }
 
 /** Issue #388 amendment 1 — merge for the `tierRouting` opt-out. A boolean
@@ -162,7 +129,11 @@ function resolveRoute(
   };
 }
 
-export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFile = {}): EffectiveConfig {
+export function mergeConfigs(
+  globalFile: ConfigFile = {},
+  projectFile: ConfigFile = {},
+  base: Pick<EffectiveConfig, "logSession" | "memory" | "telemetry" | "guards" | "advance" | "pathProtection"> = BASE_EFFECTIVE_DEFAULTS,
+): EffectiveConfig {
   const effectiveDefault = resolveRoute(DEFAULT_ROUTE, globalFile.default, projectFile.default);
 
   const globalCommands = globalFile.commands ?? {};
@@ -173,10 +144,7 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
   }
 
   // Issue #201 — spawned-pass routes merge at entry and per route-key
-  // granularity, the same transaction rule the commands above follow: a
-  // project entry that sets only `model` keeps the global `thinking`, and a
-  // pass neither scope mentions contributes nothing (the resolver owns the
-  // fail-closed chain from there).
+  // granularity, the same transaction rule the commands above follow.
   const globalPasses = globalFile.passes ?? {};
   const projectPasses = projectFile.passes ?? {};
   const passes: Record<string, PassRouteFile> = {};
@@ -205,67 +173,34 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     };
   }
 
-  const merged: EffectiveConfig = {
+  // Issue #388 amendment 1 — the tier-routing opt-out (see the return below).
+  const tierRouting = mergeTierRouting(globalFile.tierRouting, projectFile.tierRouting);
+
+  return {
+    ...base,
     default: effectiveDefault,
     commands,
-    onUnavailableRoute:
-      projectFile.onUnavailableRoute ?? globalFile.onUnavailableRoute ?? DEFAULT_CONFIG.onUnavailableRoute,
-    onSettle: projectFile.onSettle ?? globalFile.onSettle ?? DEFAULT_CONFIG.onSettle,
-    pathProtection: intersectPathPolicy(
-      SHIPPED_PATH_POLICY,
-      mergePathProtectionOverrides(globalFile.pathProtection, projectFile.pathProtection),
-    ),
-    // Feature 63 — model profiles.
+    onUnavailableRoute: (projectFile.onUnavailableRoute ?? globalFile.onUnavailableRoute ?? DEFAULT_PI_CONFIG.onUnavailableRoute) as EffectiveConfig["onUnavailableRoute"],
+    onSettle: (projectFile.onSettle ?? globalFile.onSettle ?? DEFAULT_PI_CONFIG.onSettle) as EffectiveConfig["onSettle"],
     recommendedModels: pick(true, projectFile.recommendedModels, globalFile.recommendedModels),
-    // Feature 66 — the consent switch resolves like any other boolean knob:
-    // project wins, then global, then the shipped "no".
-    memory: {
-      engram: pick(false, projectFile.memory?.engram, globalFile.memory?.engram) === true,
-    },
-    // Issue #383 — the same boolean resolution: project, then global, then the
-    // shipped "no".
-    telemetry: {
-      enabled: pick(false, projectFile.telemetry?.enabled, globalFile.telemetry?.enabled) === true,
-    },
-    // #394 — auto log-session: project wins, then global, then "off". The
-    // publisher resolves field by field for the same reason the mode does: a
-    // project that only turns the log off must not silently drop the publisher
-    // the global file declares — it simply never runs while the mode is off.
-    autoLogSession: {
-      mode: pick(DEFAULT_AUTO_LOG_SESSION.mode, projectFile.autoLogSession?.mode, globalFile.autoLogSession?.mode),
-      publisher: mergeAutoLogPublisher(projectFile.autoLogSession?.publisher, globalFile.autoLogSession?.publisher),
-    },
     profiles: mergeProfiles(globalFile.profiles, projectFile.profiles),
     profileOrder: pick([], projectFile.profileOrder, globalFile.profileOrder),
     profileFallback: mergeProfileFallback(globalFile.profileFallback, projectFile.profileFallback),
+    // Issue #388 amendment 1 — the tier-routing opt-out: a boolean wins
+    // wholesale (project, then global); two objects merge key-wise (enabled
+    // scalar, skills per command). Absent in both scopes means routing on, and
+    // the key stays absent so the resolved shape never carries an undefined.
+    ...(tierRouting !== undefined ? { tierRouting } : {}),
     passes,
-    // Issue #260 — the subagent resource limits merge at key granularity,
-    // project over global; a scope declaring none contributes nothing (the
-    // resource layer owns the self-detected envelope from there).
     subagents: mergeSubagents(globalFile.subagents, projectFile.subagents),
-    // Issue #174 — scalars resolve field by field (project, then global, then
-    // the shipped floor); the allowlist resolves whole, so a project can
-    // narrow or widen the set in one declaration and can never half-merge it.
     stateFlow: mergeStateFlow(globalFile.stateFlow, projectFile.stateFlow),
     declared: { default: declaredDefault, commands: declaredCommands },
   };
-  // Advance knobs appear only when a scope declares them, so configs that
-  // predate feature 62 keep their exact resolved shape (no undefined key).
-  const advance = mergeAdvance(globalFile.advance, projectFile.advance);
-  if (advance !== undefined) merged.advance = advance;
-  // Issue #388 amendment 1 — the tier-routing opt-out: a boolean wins
-  // wholesale (project, then global); two objects merge key-wise (enabled
-  // scalar, skills per command). Absent in both scopes means routing on, and
-  // the key stays absent so the resolved shape never carries an undefined.
-  const tierRouting = mergeTierRouting(globalFile.tierRouting, projectFile.tierRouting);
-  if (tierRouting !== undefined) merged.tierRouting = tierRouting;
-  return merged;
 }
 
 /** Issue #174 — project-over-global merge of the `stateFlow` block. Scalars
  *  per field; the allowlist whole (a half-merged allowlist would silently
- *  widen or narrow the command set the operator believes they chose). An empty
- *  project allowlist is a deliberate disable, never refilled from global. */
+ *  widen or narrow the command set the operator believes they chose). */
 function mergeStateFlow(globalStateFlow: ConfigFile["stateFlow"], projectStateFlow: ConfigFile["stateFlow"]): StateFlowConfig {
   const commands = pick(undefined, projectStateFlow?.commands, globalStateFlow?.commands);
   return {
@@ -278,9 +213,8 @@ function mergeStateFlow(globalStateFlow: ConfigFile["stateFlow"], projectStateFl
 }
 
 /** Issue #260 — project-over-global merge of the `subagents` resource limits
- *  (owner decision 6): per-key, the same granularity the passes entries use.
- *  An empty record when neither scope declares any — the resolved shape of
- *  configs that predate the key is byte-stable. */
+ *  (owner decision 6): per-key. An empty record when neither scope declares
+ *  any — the resolved shape of configs that predate the key is byte-stable. */
 function mergeSubagents(globalSubagents?: SubagentsConfigFile, projectSubagents?: SubagentsConfigFile): SubagentsConfigFile {
   const merged: SubagentsConfigFile = {};
   const keys = new Set([...Object.keys(globalSubagents ?? {}), ...Object.keys(projectSubagents ?? {})]) as Set<keyof SubagentsConfigFile>;
@@ -289,19 +223,6 @@ function mergeSubagents(globalSubagents?: SubagentsConfigFile, projectSubagents?
     if (value !== undefined) (merged as Record<string, unknown>)[key] = value;
   }
   return merged;
-}
-
-/** Project-over-global merge of the advance (conductor) knobs (feature 62).
- *  Absent from the result when neither scope declares any — the resolved
- *  shape of pre-62 configs is byte-stable. */
-function mergeAdvance(global: ConfigFile["advance"], project: ConfigFile["advance"]): AdvanceConfig | undefined {
-  if (global === undefined && project === undefined) return undefined;
-  return {
-    iterationsCap: pick(DEFAULT_ADVANCE_CONFIG.iterationsCap, project?.iterationsCap, global?.iterationsCap),
-    sensitivePaths: project?.sensitivePaths ?? global?.sensitivePaths ?? [...DEFAULT_ADVANCE_CONFIG.sensitivePaths],
-    securityPaths: project?.securityPaths ?? global?.securityPaths ?? [...DEFAULT_ADVANCE_CONFIG.securityPaths],
-    runLogPath: pick(DEFAULT_ADVANCE_CONFIG.runLogPath, project?.runLogPath, global?.runLogPath),
-  };
 }
 
 /** The route a command runs under: its own resolved override, else the default route. */

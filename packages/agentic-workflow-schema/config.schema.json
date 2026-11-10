@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/config.schema.json",
+  "title": "agentic-workflow config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "logSession": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "string",
+          "enum": [
+            "on",
+            "off"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Append the mechanical entry to docs/LOGS.md."
+            },
+            "publisher": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "command"
+              ],
+              "properties": {
+                "command": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1,
+                  "maxItems": 32
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 60000
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "engram": {
+          "type": "boolean"
+        }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "guards": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "merge": {
+          "type": "boolean"
+        },
+        "history": {
+          "type": "boolean"
+        },
+        "ci": {
+          "type": "boolean"
+        },
+        "cost": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maxTokens": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "advance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "iterationsCap": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sensitivePaths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "securityPaths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "runLogPath": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "pathProtection": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A tighten-only override: the shipped floor is always kept.",
+      "properties": {
+        "protectedGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "requirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pre-freeze": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "create": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "modify": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "delete": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "rename": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                }
+              }
+            },
+            "post-freeze": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "create": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "modify": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "delete": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "rename": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                }
+              }
+            },
+            "always": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "create": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "modify": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "delete": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                },
+                "rename": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "justification",
+                    "approval"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

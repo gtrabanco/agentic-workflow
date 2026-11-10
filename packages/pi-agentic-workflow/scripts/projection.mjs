@@ -71,6 +71,7 @@ export class ProjectionError extends Error {
 export const CRATE_COMMANDS = Object.freeze([
   "budgets",
   "changelog",
+  "config",
   "doc",
   "journal",
   "log",

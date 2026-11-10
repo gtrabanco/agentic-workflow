@@ -14,12 +14,15 @@ here as one fragment file, and the merge-to-main aggregation workflow
   Writers compute the name: `node packages/agentic-workflow/bin/agentic-workflow.mjs
   journal name --kind <mechanical|narrative>`. Never hand-roll it.
 - **Mechanical entries** are written by the pi extension when
-  `autoLogSession` is `mechanical` in `.pi/pi-agentic-workflow.json`; it is
-  `{}` today, so they are not automatic yet. Activation (merge → release →
-  install the released pi package → restart the session daemon → set
-  `{"autoLogSession":{"mode":"mechanical"}}`) is the runbook in
-  `docs/fix/405-journal-fragments/SPEC.md` → Log D8. Until then a session's
-  mechanical entry is written by the template hook, and the narrative entry is
-  always `/log-session`'s manual job.
+  `logSession` is enabled (`true`) in `.pi/agentic-workflow.json` (the base
+  config file the unified config owns, issue #427); `.pi/pi-agentic-workflow.json`
+  keeps only the `pi` section and is `{}` today, so they are not automatic
+  yet. Activation (merge → release → install the released pi package →
+  restart the session daemon → set `{"logSession": true}` in
+  `.pi/agentic-workflow.json`) is the runbook in
+  `docs/fix/405-journal-fragments/SPEC.md` → Log D8; that record is frozen at
+  its cut, so its config payload still spells the pre-#427 key. Until then a
+  session's mechanical entry is written by the template hook, and the narrative
+  entry is always `/log-session`'s manual job.
 - Full carrier contract: `docs/fix/405-journal-fragments/SPEC.md` and the
   upstream carrier doc `template/.agentic-workflow/journal.md`.
