@@ -449,6 +449,18 @@ The two schema generators show the split: one script rewrites a projection or
 reports on it, and only the reporting mode may run after a freeze. No script or
 skill may keep a second copy of this list.
 
+## Docs site
+
+The generated documentation projection (`docs/generated/**` — the reverse edge
+of "docs drive the work", issue #396) is plain markdown, rendered only by the
+repository's own emitter (`bun scripts/docs-generate.mjs`), never hand-written.
+The declaration the emitter reads; omitting `content-dir`, `build` and `map`
+keeps the emitter's defaults (`docs/generated`, no build step, no map script):
+
+```
+- format: md
+```
+
 ## Config policy for new features
 
 The unified config (issue #427) is the only place a user-tunable setting lives.
