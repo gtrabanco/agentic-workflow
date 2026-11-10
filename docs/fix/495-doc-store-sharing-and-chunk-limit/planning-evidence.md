@@ -1,0 +1,20 @@
+# 470 — doc store sharing and chunk limit · planning evidence
+
+One row per Engineering claim the change rests on. Column order and
+vocabularies owned by `skills/pre-execution-review/references/LEDGERS.md`.
+`freshness`: when the claim was last verified against its source.
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | measured-probe | Oversized chunks exist in the live repo: `docs/features/37-phase-lint-script/review-findings.md` yields a 149,963-char chunk, `docs/ROADMAP.md` a 124,039-char chunk — both exceed the `qwen3-embedding` model's 32,768-token limit. | this session's probe of the SQLite store at `.agentic-workflow/index/index.db` | probe 2026-11-09 | S1; O1 |
+| PE-002 | measured-probe | The provider returns 400 `context_length_exceeded` for oversized batches: a batch of 32 chunks from the live repo's pending set triggers `{"error":{"message":"Context length exceeded for model 'qwen3-embedding'...maximum context length is 32768 tokens."}}`. | this session's `fetch` probe against `api.nan.builders/v1/embeddings` | probe 2026-11-09 | S1; O1 |
+| PE-003 | committed-source | The `isRetryable()` function only retries 408/429/5xx and network errors; a 400 is not retried, so the error propagates and the caller's generic catch surfaces `unavailable-embeddings-provider-down`. | `packages/agentic-workflow/src/doc/embeddings.mjs` `isRetryable()` | read 2026-11-09 | S1; O1, O5 |
+| PE-004 | committed-source | The store path is always under `.agentic-workflow/index/index.db`: `storePath()` resolves under the project root and `containStorePath()` enforces containment in `.agentic-workflow/`. | `packages/agentic-workflow/src/doc/store.mjs` + `config.mjs` | read 2026-11-09 | S2; O2 |
+| PE-005 | committed-source | `.agentic-workflow/index/` is gitignored (`​.agentic-workflow/index/` and `**/.agentic-workflow/index/` rules), so every worktree builds its own store from scratch. | `.gitignore` | read 2026-11-09 | S2; O2 |
+| PE-006 | measured-probe | `git rev-parse --verify HEAD^{commit}` resolves the commit object, not the ref: identical across worktrees of the same repo at the same HEAD, and independent of the checkout path. | this session's probe from the repo root and a test worktree | probe 2026-11-09 | S3; O4 |
+| PE-007 | committed-source | The manifest already captures `git rev-parse HEAD` per sync — but HEAD changes per branch, so it is not a stable sharing identity; the commit-object form (`HEAD^{commit}`) is the right shape for repo identity. | `packages/agentic-workflow/src/doc/manifest.mjs` `collectManifest()` | read 2026-11-09 | D2; O4 |
+| PE-008 | committed-source | The config file is `.agentic-workflow/index.json` with `{version, store, provider}`; the version stays 1 and the new keys are additive. | `packages/agentic-workflow/src/doc/config.mjs` `DEFAULT_CONFIG` | read 2026-11-09 | S3; O3 |
+| PE-009 | committed-source | `containStorePath()` rejects any store.path outside `.agentic-workflow/` — the shared mode must skip that check explicitly (D4), never bypass it silently. | `packages/agentic-workflow/src/doc/config.mjs` `containStorePath()` | read 2026-11-09 | S3; O3, O6 |
+| PE-010 | committed-source | The chunker (`scanChunks`) produces one chunk per ATX-heading section with no size limit; the section body can be any size. | `packages/agentic-workflow/src/doc/chunks.mjs` | read 2026-11-09 | S1, S4; O1 |
+| PE-011 | user-observation | `.agentic-workflow/journal` fragments are runtime session-log files, irrelevant for retrieval; `node_modules/` is likewise irrelevant. The default exclusion list covers both via prefix matching. | this session's user request (L2) | read 2026-11-09 | S4; O7 |
+| PE-012 | measured-probe | The live repo's sync after the exclusion fix: `files_scanned` drops from 1110 to 1093 (the 17 `.agentic-workflow/journal` fragments leave the corpus) and `chunks` from 10044 to 10024. | this session's `doc --sync --json-only` run | run 2026-11-09 | S4; O7 |

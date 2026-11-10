@@ -14,6 +14,7 @@
  *   unavailable-embeddings-not-configured
  *   unavailable-embeddings-<cause>      (kebab-case cause)
  *   embeddings-model-mismatch           (AC18 fails closed)
+ *   chunk-too-large                     (D20: a chunk body was truncated to fit the limit)
  * An unknown value is rejected at construction time — it fails, never ships.
  *
  * Exit codes (D3): 0 success including degraded · 1 usage/IO · 2 path
@@ -68,6 +69,7 @@ const DEGRADATION_PATTERNS = [
   /^unavailable-embeddings-not-configured$/,
   /^unavailable-embeddings-[a-z0-9]+(?:-[a-z0-9]+)*$/,
   /^embeddings-model-mismatch$/,
+  /^chunk-too-large$/,
 ];
 
 /** True only for values in the closed degradation vocabulary (D3). */
