@@ -210,6 +210,19 @@ it.
 | O6 | S1 | previously-working behaviour does not regress: the guard's existing finding classes (CORRUPTED, PRUNABLE, OUTSIDE, DETACHED, STALE), `--prune` semantics, `--json` and usage errors are byte-identical (differential vs the base commit on a fixture repo: only the declared differences — the new finding, the new default-home reports — differ) | P3 | P3 | scripts/worktree-guard.mjs | the differential run in `mktemp -d` comparing base-commit output vs head output on the fixture repo: `diff` shows only the declared differences; `bun test scripts/worktree-guard.test.mjs` exits 0 (all pre-existing cases unchanged) | the E line with the diff summary | planned |
 | O7 | S1 | documentation and state ship in the same change: ROADMAP `## Fixes` row, `docs/generated` projection re-rendered by its emitter (never hand-written), GATE_INVENTORY row description, session log entry, and the completed obligations ledger | P5 | P5 | docs/ROADMAP.md, docs/generated/*, docs/workflow/GATE_INVENTORY.md, docs/LOGS.md | `bun scripts/docs-generate.mjs --check` exits 0 after the emitter run | the E line with the check exit | planned |
 
+## Path protection
+
+The plan declares the protected set this unit authors (the frozen suite is
+edited with `justification` rows, never a quiet relaxation). The records live
+in this folder's [`decisions.md`](decisions.md).
+
+```text
+path-protection-plan@1
+freeze-after: P2
+kind | path | justification
+not-created | scripts/worktree-guard.test.mjs | the guard's own sibling suite: P1 extends it with the nested-container, basename-collision, default-home and .worktrees-clean cases — every pre-existing case keeps its exact assertions
+```
+
 ## Triaged steps
 
 > The owner's apply workflow (§5) substitutes its ledger freeze for the lane's
