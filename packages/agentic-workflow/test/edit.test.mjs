@@ -15,7 +15,8 @@ import { spawn } from "node:child_process";
 
 // ── SDK imports ──────────────────────────────────────────────────────────
 import { create, setSection, evidence_addRow, progress_logEntry, validate } from "../src/edit/UnitDoc.mjs";
-import { rowUpsert, annotate } from "../src/edit/Roadmap.mjs";
+import { rowUpsert, annotate, fixRowUpsert } from "../src/edit/Roadmap.mjs";
+import { readShared } from "../src/writer/driver.mjs";
 import { rowAdd } from "../src/edit/Changelog.mjs";
 import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
@@ -367,6 +368,285 @@ describe("CLI smoke", () => {
     proc.on("error", (e) => {
       rmSync(testDir, { recursive: true, force: true });
       done(e);
+    });
+  });
+});
+
+// ── Roadmap on the writer driver (issue #498) ─────────────────────────────
+//
+// The roadmap family writes through the shared writer driver (`src/writer/
+// driver.mjs`): key-based splice instead of a whole-file rewrite, optional CAS
+// (`expected`) refusing with a named `stale-read`, existing receipt shapes
+// preserved.
+
+describe("Roadmap on the writer driver (issue #498)", () => {
+  let dir;
+  let roadmapPath;
+  let PROSE_BEFORE;
+  let PROSE_AFTER;
+
+  const FIXTURE = [
+    "# Index",
+    "",
+    "intro prose line",
+    "",
+    "| NN | slug | status | depends-on | description |",
+    "|---|---|---|---|---|",
+    "| 12 | first-unit | idea | — | first row |",
+    "",
+    "closing prose line",
+    "",
+  ].join("\n");
+
+  before(() => {
+    dir = mkdtempSync(join(tmpdir(), "aw-roadmap-driver-"));
+    roadmapPath = join(dir, "ROADMAP.md");
+    writeFileSync(roadmapPath, FIXTURE, "utf8");
+  });
+
+  after(() => {
+    if (dir && existsSync(dir)) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("previous behavior holds: receipt shape, row content, and foreign bytes untouched", () => {
+    PROSE_BEFORE = readFileSync(roadmapPath, "utf8");
+    const receipt = rowUpsert(roadmapPath, {
+      nn: "12",
+      slug: "first-unit",
+      status: "in-progress",
+      dependsOn: "—",
+      description: "first row, settled",
+    });
+    // The receipt shape the CLI and the settle validators read, unchanged.
+    strictEqual(receipt.service, "roadmap");
+    strictEqual(receipt.op, "rowUpsert");
+    strictEqual(receipt.schema, "roadmap-table@1");
+    strictEqual(receipt.ok, true);
+    ok(/^[0-9a-f]{8}$/.test(receipt.before));
+    ok(/^[0-9a-f]{8}$/.test(receipt.after));
+    ok(receipt.before !== receipt.after);
+    // The splice: only the row line moved, every other byte carried through.
+    PROSE_AFTER = readFileSync(roadmapPath, "utf8");
+    ok(PROSE_AFTER.includes("| 12 | first-unit | in-progress | — | first row, settled |"));
+    for (const line of ["intro prose line", "closing prose line", "# Index"]) {
+      ok(PROSE_AFTER.includes(line), line);
+    }
+  });
+
+  it("FF-1 — rowUpsert with a stale read refuses with a named rejection, before mutation", () => {
+    const read = readShared(roadmapPath);
+    // A concurrent writer moves the table forward.
+    annotate(roadmapPath, "12", "a concurrent write");
+    const afterConcurrent = readFileSync(roadmapPath, "utf8");
+    throws(
+      () =>
+        rowUpsert(roadmapPath, {
+          nn: "12",
+          slug: "first-unit",
+          status: "done",
+          dependsOn: "—",
+          description: "stale",
+          expected: read.revision,
+        }),
+      (error) => {
+        strictEqual(error.name, "WriterError");
+        strictEqual(error.reason, "stale-read");
+        strictEqual(error.details.expected, read.revision);
+        ok(/^[0-9a-f]{64}$/.test(error.details.actual));
+        ok(error.details.expected !== error.details.actual);
+        return true;
+      },
+    );
+    // Nothing moved.
+    strictEqual(readFileSync(roadmapPath, "utf8"), afterConcurrent);
+  });
+
+  it("annotate with the revision it read succeeds; a stale annotate refuses", () => {
+    const read = readShared(roadmapPath);
+    const receipt = annotate(roadmapPath, "12", "CAS annotate", { expected: read.revision });
+    strictEqual(receipt.ok, true);
+    ok(readFileSync(roadmapPath, "utf8").includes("— CAS annotate"));
+    throws(
+      () => annotate(roadmapPath, "12", "stale annotate", { expected: "0".repeat(64) }),
+      (error) => {
+        strictEqual(error.reason, "stale-read");
+        return true;
+      },
+    );
+  });
+
+  it("FF-2 — fixRowUpsert inserts and updates a `## Fixes` row by issue number", () => {
+    const fixesPath = join(dir, "FIXES.md");
+    writeFileSync(
+      fixesPath,
+      [
+        "# Index",
+        "",
+        "## Fixes",
+        "",
+        "| Issue | Topic | Status | Notes |",
+        "|---|---|---|---|",
+        "| [#498](https://github.com/x/y/issues/498) | shared-writer-driver | in-progress | this unit |",
+        "",
+        "legend prose",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    const receipt = fixRowUpsert(fixesPath, {
+      issue: 502,
+      url: "https://github.com/x/y/issues/502",
+      topic: "nan-publish-stable",
+      status: "pending",
+      notes: "inserted by the writer",
+    });
+    strictEqual(receipt.ok, true);
+    strictEqual(receipt.service, "roadmap");
+    strictEqual(receipt.op, "fixRowUpsert");
+    const content = readFileSync(fixesPath, "utf8");
+    ok(content.includes("| [#502](https://github.com/x/y/issues/502) | nan-publish-stable | pending | inserted by the writer |"));
+    // Update the same issue without duplicating.
+    fixRowUpsert(fixesPath, {
+      issue: 502,
+      url: "https://github.com/x/y/issues/502",
+      topic: "nan-publish-stable",
+      status: "in-progress",
+      notes: "settled by the writer",
+    });
+    const updated = readFileSync(fixesPath, "utf8");
+    strictEqual(updated.split("[#502]").length - 1, 1);
+    ok(updated.includes("nan-publish-stable | in-progress | settled by the writer"));
+    // The `[#498]` row and the foreign bytes carried through.
+    ok(updated.includes("| [#498](https://github.com/x/y/issues/498) | shared-writer-driver | in-progress | this unit |"));
+    ok(updated.includes("legend prose"));
+  });
+
+  it("fixRowUpsert never touches a feature table in the same document", () => {
+    const bothPath = join(dir, "BOTH.md");
+    writeFileSync(
+      bothPath,
+      [
+        "# Index",
+        "",
+        "## Features",
+        "",
+        "| NN | slug | status | depends-on | description |",
+        "|---|---|---|---|---|",
+        "| 12 | feature-unit | idea | — | a feature row |",
+        "",
+        "## Fixes",
+        "",
+        "| Issue | Topic | Status | Notes |",
+        "|---|---|---|---|",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    const receipt = fixRowUpsert(bothPath, {
+      issue: 7,
+      url: "https://github.com/x/y/issues/7",
+      topic: "a-fix",
+      status: "pending",
+      notes: "—",
+    });
+    strictEqual(receipt.ok, true);
+    const content = readFileSync(bothPath, "utf8");
+    ok(content.includes("| [#7](https://github.com/x/y/issues/7) | a-fix | pending | — |"));
+    ok(content.includes("| 12 | feature-unit | idea | — | a feature row |"));
+  });
+
+  it("CLI: roadmap read answers a revision receipt; stale writes refuse with exit 2", (t, done) => {
+    const cliDir = mkdtempSync(join(tmpdir(), "aw-roadmap-cli-"));
+    const cliPath = join(cliDir, "ROADMAP.md");
+    writeFileSync(cliPath, FIXTURE, "utf8");
+    const agwoPath = join(fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url)));
+    const readProc = spawn("node", [agwoPath, "roadmap", "read", cliPath, "--json"], { cwd: cliDir, timeout: 10000 });
+    let readOut = "";
+    readProc.stdout.on("data", (d) => { readOut += d.toString(); });
+    readProc.on("close", (code) => {
+      try {
+        strictEqual(code, 0);
+        const receipt = JSON.parse(readOut);
+        strictEqual(receipt.op, "read");
+        strictEqual(receipt.ok, true);
+        ok(/^[0-9a-f]{64}$/.test(receipt.revision));
+        runStaleRowUpsert(receipt.revision);
+      } catch (e) {
+        rmSync(cliDir, { recursive: true, force: true });
+        done(e);
+      }
+    });
+
+    function runStaleRowUpsert(revision) {
+      const payload = JSON.stringify({ nn: "12", slug: "first-unit", status: "done", dependsOn: "—", description: "stale", expected: revision });
+      // First write moves the file; the second write with the same read refuses.
+      const first = spawn("node", [agwoPath, "roadmap", cliPath, "annotate", "12", "moves the table", "--json"], { cwd: cliDir, timeout: 10000 });
+      first.on("close", (c1) => {
+        try {
+          strictEqual(c1, 0);
+          const second = spawn("node", [agwoPath, "roadmap", cliPath, "rowUpsert", payload, "--json"], { cwd: cliDir, timeout: 10000 });
+          let err = "";
+          let out = "";
+          second.stdout.on("data", (d) => { out += d.toString(); });
+          second.stderr.on("data", (d) => { err += d.toString(); });
+          second.on("close", (c2) => {
+            try {
+              strictEqual(c2, 2);
+              ok(err.includes("stale-read"), err);
+              ok(err.includes("EDIT REFUSAL"), err);
+              const readBack = readShared(cliPath);
+              const third = spawn("node", [agwoPath, "roadmap", cliPath, "annotate", "12", "CAS via CLI", "--expect", readBack.revision, "--json"], { cwd: cliDir, timeout: 10000 });
+              let okOut = "";
+              third.stdout.on("data", (d) => { okOut += d.toString(); });
+              third.on("close", (c3) => {
+                try {
+                  strictEqual(c3, 0);
+                  strictEqual(JSON.parse(okOut).ok, true);
+                  ok(readFileSync(cliPath, "utf8").includes("— CAS via CLI"));
+                  rmSync(cliDir, { recursive: true, force: true });
+                  done();
+                } catch (e) {
+                  rmSync(cliDir, { recursive: true, force: true });
+                  done(e);
+                }
+              });
+            } catch (e) {
+              rmSync(cliDir, { recursive: true, force: true });
+              done(e);
+            }
+          });
+        } catch (e) {
+          rmSync(cliDir, { recursive: true, force: true });
+          done(e);
+        }
+      });
+    }
+  });
+
+  it("CLI: roadmap fixrow writes a Fixes row — no hand edit", (t, done) => {
+    const cliDir = mkdtempSync(join(tmpdir(), "aw-fixrow-cli-"));
+    const cliPath = join(cliDir, "ROADMAP.md");
+    writeFileSync(
+      cliPath,
+      ["# Index", "", "## Fixes", "", "| Issue | Topic | Status | Notes |", "|---|---|---|---|", ""].join("\n"),
+      "utf8",
+    );
+    const agwoPath = join(fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url)));
+    const payload = JSON.stringify({ issue: 499, url: "https://github.com/x/y/issues/499", topic: "next-fix", status: "pending", notes: "via CLI" });
+    const proc = spawn("node", [agwoPath, "roadmap", "fixrow", cliPath, payload, "--json"], { cwd: cliDir, timeout: 10000 });
+    let stdout = "";
+    proc.stdout.on("data", (d) => { stdout += d.toString(); });
+    proc.on("close", (code) => {
+      try {
+        strictEqual(code, 0);
+        strictEqual(JSON.parse(stdout).ok, true);
+        ok(readFileSync(cliPath, "utf8").includes("| [#499](https://github.com/x/y/issues/499) | next-fix | pending | via CLI |"));
+        rmSync(cliDir, { recursive: true, force: true });
+        done();
+      } catch (e) {
+        rmSync(cliDir, { recursive: true, force: true });
+        done(e);
+      }
     });
   });
 });
