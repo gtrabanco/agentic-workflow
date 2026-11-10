@@ -265,8 +265,7 @@ unit. No Relay packet is cut and no self-granted gate exception is issued.
 - **G3** — 2026-11-10, both packages' `bun run test` · exit 0 ·
   `agentic-workflow-schema` 836 pass / `pi-agentic-workflow` 761 pass, both
   under the 10s default.
-- **G4** — 2026-11-10, `bun scripts/local-gate.mjs` · <recorded at the final
-  handoff run>
+- **G4** — 2026-11-10, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 17 step(s) in 166s` (all 17 steps: workspace-install, version-parity, projection, log-immutability, temp-hygiene, tmp-gc, worktree-guard, pins, advisories, schema-build, journal-carrier, pi node-compat, crate suites both runtimes, root-suite, pi-compat-guard, schema node-compat)
 
 ## Next
 
