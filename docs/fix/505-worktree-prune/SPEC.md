@@ -77,9 +77,12 @@ records (`docs/fix/493-*`, `docs/LOGS.md`, older unit docs) keep their
   no container pre-create, no cross-device failure mode.
 - The `.git/worktrees` legal home — replaced by `<repo>/.worktrees` in the
   guard default and the guide.
-- Evidence: `rg -c 'worktree move' AGENTS.md` → 0 after the rewrite;
-  `rg -c '\.git/worktrees' AGENTS.md scripts/worktree-guard.mjs` → 0 matches
-  outside the new forbidden-location finding and the mechanism explanation.
+- Evidence: `rg -c 'temp-worktrees' AGENTS.md` → 0 (the two-step temp+`move`
+  creation pattern is retired); `rg -n '\.git/worktrees' AGENTS.md` matches
+  only the forbidden-location rule, the mechanism explanation and the recovery
+  path (the one remaining `git worktree move` mention recovers a mis-placed
+  worktree out of the admin namespace, agreeing with the guard's `SKIP`
+  suggestion).
 
 ## Non-goals
 
@@ -141,10 +144,10 @@ it.
 - **AC-S2** — AGENTS.md's Worktree creation section prescribes
   `<repo>/.worktrees/<flat-unit-name>`, explicitly forbids `.git/worktrees/` as
   a working-tree location, keeps the Serena/MCP rationale, and states the
-  prune-destruction mechanism beside the rule. Check: `rg -n '\.worktrees/'
+  prune-destruction mechanism beside the rule. Check: `rg -n '\.worktrees/<flat-name>'
   AGENTS.md` matches the prescribed recipe; `rg -n '\.git/worktrees' AGENTS.md`
-  matches only the forbidden-location rule and the mechanism explanation; `rg
-  -c 'worktree move' AGENTS.md` exits 1 (0 matches).
+  matches only the forbidden-location rule, the mechanism explanation and the
+  recovery path; `rg -c 'temp-worktrees' AGENTS.md` exits 1 (0 matches).
 - **AC-S3** — The guard's default `--home` is `<repo>/.worktrees` and the
   header/usage text says so; the temp+`move` step is dropped from the recipe it
   documents. Check: the default-home and `.worktrees/`-clean cases in
@@ -202,7 +205,7 @@ it.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2, S7 | AGENTS.md prescribes `<repo>/.worktrees/<flat-unit-name>`, explicitly forbids `.git/worktrees/` as a working-tree location, keeps the Serena/MCP rationale, and states the prune-destruction mechanism beside the rule (PE-002); the two-step recipe and its `move` step are gone (PE-007) | P4 | P4 | AGENTS.md | `rg -c 'worktree move' AGENTS.md` exits 1 (0 matches); `rg -n '\.worktrees/' AGENTS.md` matches the prescribed recipe; the prune-destruction sentence is present beside the rule | the E line with both rg exits and the mechanism sentence | planned |
+| O1 | S2, S7 | AGENTS.md prescribes `<repo>/.worktrees/<flat-unit-name>`, explicitly forbids `.git/worktrees/` as a working-tree location, keeps the Serena/MCP rationale, and states the prune-destruction mechanism beside the rule (PE-002); the two-step temp+`move` creation pattern is gone (PE-007) | P4 | P4 | AGENTS.md | `rg -c 'temp-worktrees' AGENTS.md` exits 1 (0 matches); `rg -n '\.worktrees/<flat-name>' AGENTS.md` matches the prescribed recipe; the prune-destruction warning is present beside the rule | the E line with the rg exits and the mechanism sentence | planned |
 | O2 | S3, S7 | the guard's default `--home` is `<repo>/.worktrees` (PE-001, PE-004): a worktree there is inside the legal home (no OUTSIDE report), a worktree elsewhere stays report-only, and the header/usage text says the new default | P2 | P2 | scripts/worktree-guard.mjs | `bun test scripts/worktree-guard.test.mjs` exits 0 including the default-home case and the `.worktrees/`-clean case | the E line with the suite exit and the case names | planned |
 | O3 | S4 | the guard emits a blocking `ADMIN_NAMESPACE` finding for every worktree whose path starts with `<repo>/.git/worktrees/` — the nested-container case and the basename-collision case both flag — and `--prune` never removes or moves such a worktree (S Non-goals: relocating a live checkout is the collateral class) | P2 | P1, P2 | scripts/worktree-guard.mjs, scripts/worktree-guard.test.mjs | `bun test scripts/worktree-guard.test.mjs` exits 0 with the nested-container and basename-collision cases asserting the finding and the `--prune` SKIP; the red runs at base are recorded before the green commit | the E lines naming the red runs (command + exit + failing cases) and the green run | planned |
 | O4 | S5 | the gate is green with the new default home: `worktree-guard` reports `0 finding(s)` on this tree (both unit worktrees under `.worktrees/`) and the local gate's offline subset passes | P5 | P5 | scripts/local-gate.mjs (worktree-guard step) | `node scripts/worktree-guard.mjs` exits 0 with `0 finding(s)`; `bun scripts/local-gate.mjs --skip-network` exits 0 | the G line with the gate exit and the guard verdict line | planned |
@@ -242,6 +245,7 @@ not-created | scripts/worktree-guard.test.mjs | the guard's own sibling suite: P
   Apply to this repository: issue #505
   ```
 - **E1** — 2026-11-10, the issue's reproducer against the *current* documented recipe (two-step temp+`move` into `.git/worktrees/`), scratch `mktemp -d` · exit 0 for `git worktree prune` · RED confirmed: both working trees destroyed (`prunable`, containers `feat/` and `fix/` deleted recursively), `precious.txt` gone, stale admin dirs `aw505-t1`/`aw505-t2` left behind; branches survive.
+- **L2** — 2026-11-10, ledger amendment before P4 (self, pre-implementation): O1's validator and AC-S2's check originally demanded `rg -c 'worktree move' AGENTS.md` → 0; the new recipe deliberately keeps one `git worktree move` mention — the recovery of a mis-placed worktree out of the admin namespace, byte-identical to the guard's `SKIP` suggestion — so the validator narrows to what is actually retired: `rg -c 'temp-worktrees' AGENTS.md` → 0. Amendment recorded here before the validator runs; the ledger freeze is otherwise untouched.
 - **P1** — 2026-11-10, ledger freeze (this document + ROADMAP row) before the first line of code.
 
 ## Next
