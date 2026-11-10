@@ -29,6 +29,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { parseUnitDocPhases, loggedPhases, parseLog, parseSpecs, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
+import { recordedTier } from "./ceremony/tier.mjs";
 import { batonOf } from "../packages/agentic-workflow/src/relay/Packet.mjs";
 import {
   FIX_INDEX_DOCUMENT,
@@ -745,7 +746,41 @@ function unitFacts(doc, unitDir) {
   }
   const testsBody = sectionBody(doc, "Applicable tests") || "";
   const tests = /n\/a/i.test(testsBody) ? "n/a" : "declared";
-  return { type, scope, tests };
+  // Issue #434: the fused design/plan pass is conditioned on the tier the unit
+  // doc recorded, read by the tier module's single reader — never a second
+  // parser. `null` keeps the separated (pre-fusion) behaviour.
+  const tier = recordedTier(doc);
+  return { type, scope, tests, tier };
+}
+
+/**
+ * The fused design/plan pair triage annotates, or `null` when the pass runs
+ * separated. The catalog's `activityFusion` declaration is the single source of
+ * the rule; a missing declaration keeps today's behaviour (an older catalog
+ * re-pointed into a sandbox never fuses), while a present-but-malformed one
+ * fails closed with a named diagnostic — the same doctrine as a missing
+ * `budget_tier` (#291 AC4).
+ */
+function fusedActivity(catalog, tier, steps) {
+  const declared = catalog.activityFusion;
+  if (declared === undefined) return null;
+  const malformed =
+    typeof declared !== "object" ||
+    declared === null ||
+    declared.schemaVersion !== 1 ||
+    !Array.isArray(declared.steps) ||
+    declared.steps.length !== 2 ||
+    declared.steps[0] !== "design" ||
+    declared.steps[1] !== "plan" ||
+    typeof declared.applies_when !== "string" ||
+    typeof declared.skipped_when !== "string" ||
+    declared.carriers !== "separated" ||
+    declared.gates !== "separated";
+  if (malformed) {
+    triageFail(2, "catalog: the activityFusion declaration is malformed (expected schemaVersion 1, steps [design, plan], carriers and gates separated)");
+  }
+  if (tier !== "standard") return null;
+  return steps.includes("design") && steps.includes("plan") ? ["design", "plan"] : null;
 }
 
 function triageSteps(catalog, facts) {
@@ -791,7 +826,8 @@ function triageSteps(catalog, facts) {
     tiers[step] = tier;
   }
   const budget = steps.some((step) => tiers[step] === "strong") ? "strong" : "cheap";
-  return { steps, skipped, tiers, budget };
+  const fused = fusedActivity(catalog, facts.tier, steps);
+  return { steps, skipped, tiers, budget, fused };
 }
 
 /**
@@ -967,10 +1003,19 @@ function runTriage(token, { json = false } = {}) {
       `Tiers: ${result.steps.map((step) => `${step}: ${result.tiers[step]}`).join(", ")}\n` +
       `Skipped: ${skippedText}\n` +
       `Budget: ${result.budget}\n` +
+      // Issue #434: an additive annotation — the fixed line-prefix parsers
+      // (unit-cycle, unit-lineage) read named lines only, so the extra line is
+      // invisible to them while the block still records the pass's shape.
+      (result.fused === null ? "" : `Fused: ${result.fused.join(" + ")} — one investigate→orient→ask→decide pass, carriers separated (activity-fusion@1)\n`) +
       (relay === null ? "" : `${relayLines(relay).join("\n")}\n`),
     );
   }
-  return { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, tiers: result.tiers, budget: result.budget, relay };
+  const answer = { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, tiers: result.tiers, budget: result.budget };
+  // The `fused` key exists only when the pass actually fuses, so a consumer
+  // distinguishes the fused run from the separated one by key presence.
+  if (result.fused !== null) answer.fused = { steps: result.fused };
+  answer.relay = relay;
+  return answer;
 }
 
 function main(argv) {

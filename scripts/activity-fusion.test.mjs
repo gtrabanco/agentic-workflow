@@ -244,7 +244,7 @@ test("a standard-tier feature unit prints the additive Fused line and keeps its 
   assert.ok(text.fused, "the Fused line is present");
   assert.match(text.fused, /design \+ plan/);
   assert.match(text.fused, /activity-fusion@1/);
-  assert.deepEqual(text.steps, ["research", "design", "plan", "implement", "tests", "evidence", "review", "docs"]);
+  assert.deepEqual(text.steps, ["research", "design", "plan", "implement", "tests", "evidence", "review", "docs", "release"]);
   assert.equal(text.budget, "strong");
   const json = JSON.parse(run(["--triage", slug, "--json"], { catalog: CATALOG_PATH }).stdout);
   assert.deepEqual(json.fused, { steps: ["design", "plan"] });
