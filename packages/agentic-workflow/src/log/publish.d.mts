@@ -27,7 +27,7 @@ export interface Publisher {
   publish(facts: LogFacts): PublisherResult | void;
 }
 
-/** A publisher as an operator declares it in `autoLogSession.publisher`. */
+/** A publisher as an operator declares it in `logSession.publisher`. */
 export interface DeclaredPublisher {
   command: string[];
   timeoutMs?: number;
