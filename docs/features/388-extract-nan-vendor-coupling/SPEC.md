@@ -57,6 +57,20 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 > - **Related (soft) — #427, after it**: the vendor config keys re-home onto the unified schema; never a parallel home.
 > - **Related (soft) — #201**: the tier-routing policy shares the pass→model vocabulary that #201 defines.
 
+**S8 — fleet refresh + four cost postures (owner request 2026-11-10, recorded).**
+> NaN launched new plans and models (four paid "larger" models: kimi-k3.1-pro, qwen3.8-max, deepseek-v4-pro, hy4; a credits-based tariff with per-model monthly free allowances; base/premium concurrency). The preset's recommendations are re-cut against benchmark evidence — independent evaluations (Artificial Analysis, Vals AI, NIST) preferred, vendor claims flagged where unreplicated — into FOUR approved profiles: best quality (cost no object, with cross-model verification discipline), a balanced default living inside the free allowances, a cost-minimal posture optimized for performance per completed task, and a no-credits posture that never spends credits. The provider's own guide is a cost-only input, never taken on faith (e.g. deepseek-v4-pro's unreplicated vendor numbers keep it out of leading rungs; qwen3.8-max's weak agentic evidence keeps it out of every ladder).
+
+**S9 — profile selection surface (owner decisions 2026-11-10, recorded).**
+> The config stays flexible but opinionated by default: absent any selection, the preset resolves the `economy` posture. Selection is a generic key (`presetProfile`: one name or an ordered array, first = most preferred) so the chain can demote between postures as credits run out; user-defined profiles and per-skill overrides compose on top (the mechanisms feature 63 and amendment 1 already ship). Profile names: `quality`, `balanced`, `economy`, `no-credits-continue-working`. The companion README must state the default and the flexibility prominently, on top.
+
+**S10 — amendment 2 acceptance criteria.**
+> - The seam accepts a preset that contributes a NAMED profile catalog; each entry travels as `<provider>.<profile>` in the chain, the bare `<provider>` name resolves the preset's default profile, and legacy single-profile presets keep today's bare-name behavior.
+> - `presetProfile` parses strict (slug string or non-empty slug array), merges project-over-global wholesale, and is published in the pi section descriptor.
+> - Unknown profile names are skipped; a selection naming nothing the catalog carries falls back to the preset's default entry — a typo never silently drops the provider out of the chain.
+> - The companion declares the four postures with `economy` as the default; every profile publishes a full ladder; `PUBLISHED_LADDER` continues to pin the balanced reference; the billing tier map carries the November 2026 tariff facts.
+> - Tier routing (on by default) demotes only the mechanical one-way passes plus non-strength-sensitive spawned tasks to the zero-credit chain; `tierRouting: false` byte-matches the selected profile's published ladder.
+> - The companion README documents all four ladders, the plans/credits picture, the corrected reasoning-control matrix (mimo-v2.6-flash and deepseek-v4-flash switchable; qwen3.8-flash at 1M context), and the out-of-credits guidance.
+
 ### Frozen request (verbatim, §1)
 
 - **S1** — "Apply to this repository: issue #388" (the user's entire message; issue #388 body carries the requirements quoted above).
@@ -125,6 +139,14 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
   (Implements: S2, S4)
 - P7 — full foreground verification: root suite, parity gate, context budgets, differential check (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S4, S5)
+- P8 — seam extension for multi-profile presets (main package): `ProviderPreset.profiles`/`defaultProfile` + profile-aware resolution, `presetProfile` config (schema/merge/types/descriptor), settings listing, pi README docs; red-first `config-schema-preset-profile.test.mjs` + `preset-profiles.test.mjs` (validator: `bun test packages/pi-agentic-workflow/test/preset-profiles.test.mjs test/config-schema-preset-profile.test.mjs` red before, green after)
+  (Implements: S9, S10)
+- P9 — companion re-cut: billing-tier map + four published ladders + profile-aware resolver + registration catalog; test re-aims justified in `decisions.md` (validator: `bun test packages/pi-nan-agentic-workflow/test/*.test.mjs` exits 0)
+  (Implements: S8, S9, S10)
+- P10 — companion README rewrite: four-ladder tables, plans & credits, corrected reasoning matrix, out-of-credits guidance (validator: `bun test packages/pi-nan-agentic-workflow/test/docs-parity.test.mjs` exits 0)
+  (Implements: S8, S10)
+- P11 — unit state: changeset amendment, this doc's log, gates re-run (validator: `bun scripts/lint-changeset.mjs .changeset/388-extract-nan-vendor-coupling.md` exits 0)
+  (Implements: S8, S10)
 
 ### Planning evidence
 
@@ -180,6 +202,13 @@ OPEN rows only, appended by `review-change` and `triage-issue` (`findings-table@
 - **E6** — 2026-11-09, `git diff HEAD -- packages/agentic-workflow packages/agentic-workflow-schema` · empty (O13 holds on this branch's base). **Discovery: the branch is 19 commits behind `main` — #427 (unified config schema) merged mid-unit; `git merge-tree` reports content conflicts in `src/config/{merge,schema,types}.ts`. Reported to the owner with options; no integration guessed.
 - **E7** — 2026-11-09, owner decision `integrate-now`: `git merge main` (19 commits, #427 unified config) resolved on the branch — tierRouting re-homed beside the routing keys the pi section owns (strict-parser ROOT_KEYS, ConfigFile/EffectiveConfig with #427's base-file split kept, project-over-global merge, and #427's published descriptor `PI_CONFIG_EXTENSION` + committed `agentic-workflow.config.json`, byte-pin intact); roadmap rows 427/388 both kept. Post-merge verification: pi package 779/0, companion 20/0, crate 604/0, schema 836/0, root suite 101 PASS / 0 FAIL, `docs-generate --check` PASS, parity gate PASS; O13 re-verified clean against the new main (`git diff main -- packages/agentic-workflow packages/agentic-workflow-schema` empty). Merge commit `6cd67e3b` + projection regeneration.
 - **P7** — 2026-11-09, obligations ledger closed: all 15 rows `verified` on foreground runs. Handoff awaits the owner's verdict on the integrated diff (§8).
+- **E8** — 2026-11-10, owner verdict on the request to re-cut the recommendations onto the refreshed NaN fleet: benchmark research run (independent evaluators preferred — Artificial Analysis Intelligence Index/√-bench families, Vals AI Terminal-Bench runs, NIST CAISI replication gaps; vendor tables flagged where unreplicated: deepseek-v4-pro's SWE-bench 80.6 claim measured 74.0 by NIST and Terminal-Bench 87.9 measured 54.68 by Vals AI; AA Intelligence Index 53 vs Flash's 52) — qwen3.8-max (strong reasoner, weak agentic) and hy4 (vendor-run evidence only) kept out of every default ladder; glm5.3-flash's pre-launch independent verification (57 vs glm5.3's 60 on the AA Index, GDPval-AA Elo tie) grounds its promotion.
+- **E9** — 2026-11-10, RED corpus (pre-implementation): `bun test packages/pi-agentic-workflow/test/preset-profiles.test.mjs test/config-schema-preset-profile.test.mjs` → 19 fail / 4 pass (the 4 passing rows are the legacy single-profile behavior already covered); companion suites red on the missing exports (`PROFILES`, `PROFILE_LADDERS`, `freeChain`, …).
+- **P8** — 2026-11-10, seam extension: `ProviderPreset.profiles`/`defaultProfile` + profile-aware resolution (`resolvePresetEntry`, per-entry chain names), `presetProfile` config (strict slug shape, wholesale project-over-global merge, descriptor regenerated +17 lines), settings console/view generalized (catalog entries listed, P5 guard on chain names), pi README section rewritten · commit `8e8faeb8`.
+- **P9** — 2026-11-10, companion re-cut: billing-tier map (`free`/`quota`/`paid`, 11 chat models), four published ladders (`PROFILE_LADDERS`, owner-approved tables), profile-aware resolver with the narrow demotion set (`log-session`/`workflow-status`/`audit-docs` + non-strength task classes → zero-credit chain), registration declares the catalog with `economy` default · commit `bc2fafb3`.
+- **P10** — 2026-11-10, companion README rewrite: default-and-flexibility statement on top, posture selection how-to (ordered array = ride down as credits run out; user profiles win via `profiles` shadowing), plans/credits picture (subscriptions, packs, allowances, rate limits), 11-model tariff table with free quotas, corrected reasoning-control matrix, four-ladder table, per-pick benchmark provenance, out-of-credits guidance · landed with P9's commit.
+- **P11** — 2026-11-10, unit state: changeset amendment appended, SPEC S8–S10 + tasks P8–P11 recorded, test re-aims justified in `decisions.md`, journal fragment written.
+- **G6** — 2026-11-10, verification: pi package 802 pass / 0 fail (74 files), companion 24 pass / 0 fail · `bun scripts/lint-changeset.mjs` exit 0 · `bun scripts/version-parity-gate.mjs --content` PASS · `bun scripts/docs-generate.mjs --check` PASS (0 stale) · `bun scripts/check-skill-context.mjs --documents` PASS · `node scripts/run-root-suite.mjs` 101 PASS / 0 fail (two runs).
 
 ## Next
 
