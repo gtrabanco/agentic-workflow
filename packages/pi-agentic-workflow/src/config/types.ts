@@ -136,6 +136,27 @@ export interface ProfileFile {
   commands?: Record<string, RouteFile>;
 }
 
+/**
+ * The ladder shape a provider preset contributes (issue #388): an optional
+ * default route plus per-command overrides, exactly the file shape a user
+ * profile carries. The preset owns how its ladder is derived — tier routing
+ * lives in the companion, never here.
+ */
+export interface RecommendedProfile {
+  default?: RouteFile;
+  commands: Record<string, RouteFile>;
+}
+
+/**
+ * Issue #388 amendment 1: the tier-routing opt-out. `enabled: false` is the
+ * global off switch; `skills` overrides per command name. Absent keys mean
+ * routing on for that command.
+ */
+export interface TierRoutingConfig {
+  enabled?: boolean;
+  skills?: Record<string, boolean>;
+}
+
 export interface ProfileFallbackConfig {
   applyTo: ProfileFallbackApplyTo;
   resume: ProfileFallbackResume;
@@ -179,9 +200,16 @@ export interface ConfigFile {
   pathProtection?: PathProtectionOverride;
   /** Conductor (advance) knobs (feature 62). */
   advance?: AdvanceConfigFile;
-  /** When true (default), the built-in provider profiles are included in the
-   *  resolution chain (feature 63, AC1). */
+  /** When true (default), the provider profiles contributed by installed
+   *  companion preset packages are included in the resolution chain
+   *  (feature 63, AC1; issue #388). With no companion installed this is a
+   *  documented no-op. */
   recommendedModels?: boolean;
+  /** Issue #388 amendment 1: the opt-out for tier-aware presets — a global
+   *  flag (`false`) or per-skill overrides ({ enabled, skills }). Absent
+   *  means tier routing stays on; the tier policy itself lives in the
+   *  preset, never here. */
+  tierRouting?: boolean | TierRoutingConfig;
   /** Feature 66 (AC3/D3): the memory-substrate consent surface — Engram's MCP
    *  registration is ask-first, so nothing is provisioned unless this says so. */
   memory?: MemoryConfigFile;
@@ -311,9 +339,13 @@ export interface EffectiveConfig {
    *  mergeConfigs; the shipped DEFAULT_CONFIG predates it and leaves it
    *  absent — consumers fall back to DEFAULT_ADVANCE_CONFIG. */
   advance?: AdvanceConfig;
-  /** Whether the built-in provider profiles (currently only "nan") are
-   *  included in the resolution chain (feature 63, AC1). */
+  /** Whether the provider profiles contributed by installed companion preset
+   *  packages are included in the resolution chain (feature 63, AC1; issue
+   *  #388). No companion installed → no preset profiles, by design. */
   recommendedModels: boolean;
+  /** Issue #388 amendment 1: the tier-routing opt-out, merged project over
+   *  global. Absent means routing on. */
+  tierRouting?: boolean | TierRoutingConfig;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe (feature 63, AC6). */

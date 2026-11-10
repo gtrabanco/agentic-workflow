@@ -140,8 +140,8 @@ export function providerOf(reference: string): string {
  * - A token matched as a *subsequence* (characters in order, not necessarily
  *   contiguous): `flash` matches any reference containing `flash`, `a/c`
  *   matches `anthropic/claude`.
- * - A token ending in `/` constrains to the provider: `nan/` matches provider
- *   `nan` only, never a model id that merely contains `nan`.
+ * - A token ending in `/` constrains to the provider: `acme/` matches provider
+ *   `acme` only, never a model id that merely contains `acme`.
  */
 export function filterReferences(query: string, refs: readonly string[]): string[] {
   const tokens = query.trim().split(/\s+/u).filter((token) => token !== "");

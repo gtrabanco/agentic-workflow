@@ -117,6 +117,27 @@ function mergeProfiles(
   return result;
 }
 
+/** Issue #388 amendment 1 — merge for the `tierRouting` opt-out. A boolean
+ *  declaration overrides the other scope wholesale (it is the whole policy);
+ *  two objects merge key-wise so a project's per-skill override keeps the
+ *  global `enabled`. Undefined when neither scope declares one — routing on. */
+function mergeTierRouting(
+  globalTr: ConfigFile["tierRouting"],
+  projectTr: ConfigFile["tierRouting"],
+): ConfigFile["tierRouting"] | undefined {
+  if (typeof projectTr === "boolean" || typeof globalTr === "boolean") {
+    return pick(undefined, typeof projectTr === "boolean" ? projectTr : undefined, typeof globalTr === "boolean" ? globalTr : undefined);
+  }
+  if (projectTr === undefined && globalTr === undefined) return undefined;
+  const skills: Record<string, boolean> = { ...(globalTr?.skills ?? {}) };
+  for (const [name, flag] of Object.entries(projectTr?.skills ?? {})) skills[name] = flag;
+  const merged: { enabled?: boolean; skills?: Record<string, boolean> } = {};
+  const enabled = projectTr?.enabled ?? globalTr?.enabled;
+  if (enabled !== undefined) merged.enabled = enabled;
+  if (Object.keys(skills).length > 0) merged.skills = skills;
+  return merged;
+}
+
 /** Per-key merge for profileFallback: each field independently
  *  takes project value, then global value, then the shipped default. */
 function mergeProfileFallback(
@@ -232,6 +253,12 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
   // predate feature 62 keep their exact resolved shape (no undefined key).
   const advance = mergeAdvance(globalFile.advance, projectFile.advance);
   if (advance !== undefined) merged.advance = advance;
+  // Issue #388 amendment 1 — the tier-routing opt-out: a boolean wins
+  // wholesale (project, then global); two objects merge key-wise (enabled
+  // scalar, skills per command). Absent in both scopes means routing on, and
+  // the key stays absent so the resolved shape never carries an undefined.
+  const tierRouting = mergeTierRouting(globalFile.tierRouting, projectFile.tierRouting);
+  if (tierRouting !== undefined) merged.tierRouting = tierRouting;
   return merged;
 }
 

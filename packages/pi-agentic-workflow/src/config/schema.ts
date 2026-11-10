@@ -56,6 +56,7 @@ const ROOT_KEYS = new Set([
   "profiles",
   "profileOrder",
   "profileFallback",
+  "tierRouting",
   "memory",
   "telemetry",
   "autoLogSession",
@@ -109,6 +110,46 @@ function isSettlePolicy(value: unknown): value is SettlePolicy {
 /** Strict validator for `recommendedModels` (feature 63, AC1). */
 function isRecommendedModels(value: unknown): value is boolean {
   return typeof value === "boolean";
+}
+
+/** Strict validator for the `tierRouting` opt-out (issue #388 amendment 1):
+ *  a boolean shorthand or `{ enabled?, skills? }` with boolean values. */
+function checkTierRouting(value: unknown, issues: ConfigIssue[]): NonNullable<ConfigFile["tierRouting"]> | undefined {
+  if (typeof value === "boolean") return value;
+  if (!isRecord(value)) {
+    issues.push({ path: "$.tierRouting", message: `must be a boolean or an object with enabled/skills, got ${describe(value)}` });
+    return undefined;
+  }
+  const out: { enabled?: boolean; skills?: Record<string, boolean> } = {};
+  for (const key of Object.keys(value)) {
+    if (key !== "enabled" && key !== "skills") {
+      issues.push({ path: `$.tierRouting.${displayKey(key)}`, message: `unknown tierRouting key "${key}" (allowed: enabled, skills)` });
+    }
+  }
+  if (value.enabled !== undefined) {
+    if (typeof value.enabled !== "boolean") {
+      issues.push({ path: "$.tierRouting.enabled", message: `must be a boolean, got ${describe(value.enabled)}` });
+    } else {
+      out.enabled = value.enabled;
+    }
+  }
+  if (value.skills !== undefined) {
+    if (!isRecord(value.skills)) {
+      issues.push({ path: "$.tierRouting.skills", message: `must be an object mapping command names to booleans, got ${describe(value.skills)}` });
+    } else {
+      const skills: Record<string, boolean> = {};
+      for (const [name, flag] of Object.entries(value.skills)) {
+        if (typeof flag !== "boolean") {
+          issues.push({ path: `$.tierRouting.skills.${displayKey(name)}`, message: `must be a boolean, got ${describe(flag)}` });
+          continue;
+        }
+        skills[name] = flag;
+      }
+      out.skills = skills;
+    }
+  }
+  if (issues.some((issue) => issue.path.startsWith("$.tierRouting"))) return undefined;
+  return out;
 }
 
 /** Strict validator for the `profileOrder` array (feature 63, AC6). */
@@ -654,6 +695,11 @@ function validateConfig(value: unknown): ParseResult {
   if (value.profileFallback !== undefined) {
     const fb = checkProfileFallback(value.profileFallback, issues);
     if (fb) config.profileFallback = fb;
+  }
+
+  if (value.tierRouting !== undefined) {
+    const tierRouting = checkTierRouting(value.tierRouting, issues);
+    if (tierRouting !== undefined) config.tierRouting = tierRouting;
   }
 
   if (value.passes !== undefined) {
