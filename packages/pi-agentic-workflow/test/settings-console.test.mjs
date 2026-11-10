@@ -80,22 +80,26 @@ function scriptedUi(answers) {
 const readFrom = (map) => (path) => (path in map ? map[path] : null);
 
 // Issue #493 (S5): the harness converts the whole hang class into a red
-// failure — a scalar answer consumed a second time, or an array run dry,
-// throws instead of feeding the console's re-ask loops forever.
-test("scriptedUi trap: a scalar answer consumed a second time throws, and an array that runs dry throws", async () => {
+// failure. The trap shipped on main via 68330216 (the #427 lane): a scalar
+// answer is consumed once and a re-ask throws; a legitimately re-asked prompt
+// opts in with repeat(value); a dry array returns undefined — the dialog
+// escape an operator's closed dialog maps to, never an infinite loop.
+test("scriptedUi trap: a scalar answer consumed a second time throws, and a dry array escapes with undefined", async () => {
   const harness = scriptedUi({ "Pick one": "first", "List": ["a", "b"] });
   assert.equal(await harness.ui.select("Pick one"), "first");
-  await assert.rejects(() => harness.ui.select("Pick one"), /no scripted select answer for: Pick one/);
+  await assert.rejects(() => harness.ui.select("Pick one"), /already consumed/);
   assert.equal(await harness.ui.select("List"), "a");
   assert.equal(await harness.ui.select("List"), "b");
-  await assert.rejects(() => harness.ui.select("List"), /no scripted select answer for: List/);
+  assert.equal(await harness.ui.select("List"), undefined, "a dry array is the escape, not a loop");
 });
 
-test("scriptedUi trap: a dead-end re-ask fails red in under 100 ms, never hangs", async () => {
-  const harness = scriptedUi({ "Dead end": "only" });
+test("scriptedUi trap: a re-asked opt-in repeat() re-serves forever, and a dead-end re-ask fails red in under 100 ms, never hangs", async () => {
+  const harness = scriptedUi({ "Dead end": "only", "Loop": repeat("same") });
+  assert.equal(await harness.ui.confirm("Loop"), "same");
+  assert.equal(await harness.ui.confirm("Loop"), "same", "the declared repeat re-serves");
   const started = performance.now();
-  assert.equal(await harness.ui.confirm("Dead end"), true);
-  await assert.rejects(() => harness.ui.confirm("Dead end"), /no scripted confirm answer for: Dead end/);
+  assert.equal(await harness.ui.confirm("Dead end"), "only");
+  await assert.rejects(() => harness.ui.confirm("Dead end"), /already consumed/);
   const elapsed = performance.now() - started;
   assert.ok(elapsed < 100, `the trap fired in ${elapsed.toFixed(1)} ms, never hangs`);
 });
