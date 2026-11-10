@@ -41,8 +41,12 @@ returned table.
 ✓ **Unit-route triage currency.** Re-run `bun scripts/unit-route.mjs --triage
   <slug>` and compare the `Steps:` line against the unit doc's Evidence section.
   Mismatch → stale triage.
-✓ The project's verification gate ran in THIS review (type-check, tests, build
-  per the project's declared commands) — paste exit status per command
+✓ **Gate evidence is consumed, not re-run.** Run `bun scripts/gate-receipt.mjs verify`; it answers the receipt's state: `current` + `pass` (exit 0) means the
+  declared closure has not moved — cite its `checks[]` ids and `manifest.digest`
+  as the gate evidence; `missing` (3), `stale` (4) or `invalid` (5) is a finding
+  routed to `bun scripts/gate-receipt.mjs run`, never a prompt to run the gate
+  from this review and never an implicit pass; a current `fail`/`degraded`
+  receipt fails the review with the failing check ids and their fragments
 ✓ The change's primary claimed behavior was exercised for real (run the
   CLI/endpoint/function; paste the actual observed output) — *in addition to*
   the evidence audit, verify at least one behavioral claim not covered by

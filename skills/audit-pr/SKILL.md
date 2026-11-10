@@ -36,6 +36,8 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
   matching `review-change:pass` marker fetched together; absent or any SHA
   mismatch → blocker routed to `/review-change`, current → its scope/axes/
   acceptance coverage/manual checks acknowledged without re-review
+✓ Gate evidence: `bun scripts/gate-receipt.mjs verify` answered `current` +
+  `pass` (missing/stale/invalid → BLOCKER, route `gate-receipt.mjs run`)
 ✓ Terminal hygiene was read from state, not assumed: tree clean, branch pushed,
   PR not a draft (`bun scripts/audit-pr-gate.mjs hygiene --pr <N> --apply`)
 ✓ Upstream lineage was re-verified (current plan receipt + parent spec receipt,
@@ -76,8 +78,6 @@ end-of-document duties; this list is first on purpose).
 
 - After the work is "done" and before merging — the final gate once `review-change`
   is clean (its `REVIEW-PASS` receipt is posted) and all phases are committed.
-- When you want one defensible answer to "is this PR actually ready?" rather than
-  trusting that every loose end was tied off.
 
 `review-change` reviews the *diff* for quality and posts its SHA-bound receipt;
 `audit-pr` consumes that receipt and audits the *PR as a unit of delivery* — that
