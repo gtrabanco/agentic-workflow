@@ -1,7 +1,7 @@
 // config-merge-stateflow.test.mjs — issue #174: `stateFlow` project-over-global.
 //
 // The merge granularity is the individual field, matching every other scalar
-// block in the file (`memory`, `telemetry`, `autoLogSession`): a project that
+// block in the file (`memory`, `telemetry`, `logSession`): a project that
 // sets only `enabled` keeps the global allowlist, and a scope declaring no
 // `stateFlow` at all contributes nothing. The allowlist array resolves whole —
 // `project.commands ?? global.commands ?? shipped default` — because a

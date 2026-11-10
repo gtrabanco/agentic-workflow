@@ -42,7 +42,7 @@ test("AC7 the carrier doc states the consent-gated install and the writer flip",
   assert.match(doc, /opt-in/iu);
   // Open question 6: the writer flip is one table, not prose folklore.
   assert.match(doc, /\| Writer \|/u);
-  for (const writer of ["log-session-end.sh", "autoLogSession", "/log-session", "aggregator"]) {
+  for (const writer of ["log-session-end.sh", "logSession", "/log-session", "aggregator"]) {
     assert.match(doc, new RegExp(writer.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), `the writer table names ${writer}`);
   }
 });
