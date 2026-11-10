@@ -17,11 +17,20 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import path from "node:path";
+import { writeFileSync } from "node:fs";
+import path, { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { defaultJobs, parseArgs, runSuites } from "./run-root-suite.mjs";
+import {
+  argvFor,
+  defaultJobs,
+  parseArgs,
+  readAllowlist,
+  runSuites,
+  testBudgetFor,
+} from "./run-root-suite.mjs";
+import { tempRoot } from "./temp-root.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(ROOT, "scripts", "run-root-suite.mjs");
@@ -64,14 +73,46 @@ function fakeSpawn(script = new Map()) {
 
 /* --------------------------------------------------------------- parseArgs */
 
-test("parseArgs: no arguments means every suite, no bail, and the default worker count", () => {
+// Superseded by issue #493 (S2, S3): parseArgs also carries the suite-level
+// execution bounds — the wall-clock suite timeout and the per-worker memory cap.
+test("parseArgs: no arguments means every suite, no bail, the default worker count and the default bounds", () => {
   const parsed = parseArgs([]);
-  assert.deepEqual(parsed, { bail: false, jobs: null, selected: [] });
+  assert.deepEqual(parsed, {
+    bail: false,
+    jobs: null,
+    selected: [],
+    suiteTimeoutMs: 120_000,
+    suiteMemCapMb: 1536,
+  });
 });
 
 test("parseArgs: --bail, --jobs and a suite subset are all read", () => {
   const parsed = parseArgs(["--bail", "--jobs", "4", "scripts/a.test.mjs", "scripts/b.test.mjs"]);
-  assert.deepEqual(parsed, { bail: true, jobs: 4, selected: ["scripts/a.test.mjs", "scripts/b.test.mjs"] });
+  assert.deepEqual(parsed, {
+    bail: true,
+    jobs: 4,
+    selected: ["scripts/a.test.mjs", "scripts/b.test.mjs"],
+    suiteTimeoutMs: 120_000,
+    suiteMemCapMb: 1536,
+  });
+});
+
+test("parseArgs: --suite-timeout and --suite-mem-cap override the bounds", () => {
+  const parsed = parseArgs(["--suite-timeout", "5", "--suite-mem-cap", "256"]);
+  assert.equal(parsed.suiteTimeoutMs, 5_000);
+  assert.equal(parsed.suiteMemCapMb, 256);
+});
+
+test("parseArgs: --suite-timeout refuses zero, negatives, non-numbers and a missing value", () => {
+  for (const argv of [["--suite-timeout", "0"], ["--suite-timeout", "-5"], ["--suite-timeout", "soon"], ["--suite-timeout"]]) {
+    assert.throws(() => parseArgs(argv), undefined, `expected a refusal for ${JSON.stringify(argv)}`);
+  }
+});
+
+test("parseArgs: --suite-mem-cap refuses zero, negatives, non-numbers and a missing value", () => {
+  for (const argv of [["--suite-mem-cap", "0"], ["--suite-mem-cap", "-64"], ["--suite-mem-cap", "lots"], ["--suite-mem-cap"]]) {
+    assert.throws(() => parseArgs(argv), undefined, `expected a refusal for ${JSON.stringify(argv)}`);
+  }
 });
 
 test("parseArgs: a bare `--` separator is tolerated and dropped", () => {
@@ -150,6 +191,114 @@ test("jobs below one is clamped to one, not a zero-worker hang", async () => {
   const exit = await runSuites({ suites: ["a"], jobs: 0, spawnSuite: fake.spawnSuite });
   assert.equal(exit, 0);
   assert.deepEqual(fake.started, ["a"]);
+});
+
+/* -------------------------------------------------------------- allowlist */
+
+test("readAllowlist: a missing file is an empty allowlist, not an error", () => {
+  const allowlist = readAllowlist(join(tempRoot("root-suite-allow-"), "absent.json"));
+  assert.equal(allowlist.size, 0);
+});
+
+test("readAllowlist: every entry carries its own budget, reason and measured cost", () => {
+  const dir = tempRoot("root-suite-allow-");
+  const file = join(dir, "test-timeout-allowlist.json");
+  writeFileSync(
+    file,
+    JSON.stringify([
+      { path: "scripts/slow.test.mjs", timeoutMs: 60_000, reason: "full-history git walks", measured: "41.2s max per test, 2026-11-10" },
+    ]),
+  );
+  const allowlist = readAllowlist(file);
+  assert.equal(allowlist.size, 1);
+  assert.deepEqual(allowlist.get("scripts/slow.test.mjs"), {
+    timeoutMs: 60_000,
+    reason: "full-history git walks",
+    measured: "41.2s max per test, 2026-11-10",
+  });
+});
+
+test("readAllowlist: malformed JSON, a bare entry, a missing reason or measured cost, and a non-suite path are all refused", () => {
+  const dir = tempRoot("root-suite-allow-");
+  const refusals = [
+    ["malformed", "not json at all"],
+    ["not-an-object-list", JSON.stringify({ scripts: [] })],
+    ["missing-reason", JSON.stringify([{ path: "scripts/a.test.mjs", timeoutMs: 60_000, measured: "41s" }])],
+    ["missing-measured", JSON.stringify([{ path: "scripts/a.test.mjs", timeoutMs: 60_000, reason: "git walks" }])],
+    ["missing-timeout", JSON.stringify([{ path: "scripts/a.test.mjs", reason: "git walks", measured: "41s" }])],
+    ["not-a-suite", JSON.stringify([{ path: "src/index.ts", timeoutMs: 60_000, reason: "git walks", measured: "41s" }])],
+  ];
+  for (const [name, content] of refusals) {
+    const file = join(dir, `${name}.json`);
+    writeFileSync(file, content);
+    assert.throws(() => readAllowlist(file), undefined, `expected a refusal for ${name}`);
+  }
+});
+
+/* ------------------------------------------------------- per-test budget */
+
+test("the per-test budget defaults to 10s and lands in the child's own runner flags", () => {
+  assert.deepEqual(argvFor("scripts/a.test.mjs", false, 10_000), ["test", "--timeout=10000", "scripts/a.test.mjs"]);
+  assert.deepEqual(argvFor("scripts/a.test.mjs", true, 10_000), ["test", "--timeout=10000", "--bail=1", "scripts/a.test.mjs"]);
+  assert.deepEqual(argvFor("scripts/a.test.mjs", false, 10_000, "node"), ["--test", "--test-timeout=10000", "scripts/a.test.mjs"]);
+});
+
+test("testBudgetFor: an allowlisted suite gets its own budget, everything else the 10s default", () => {
+  const allowlist = new Map([["scripts/slow.test.mjs", { timeoutMs: 60_000, reason: "r", measured: "m" }]]);
+  assert.equal(testBudgetFor("scripts/slow.test.mjs", allowlist), 60_000);
+  assert.equal(testBudgetFor("scripts/fast.test.mjs", allowlist), 10_000);
+  assert.equal(testBudgetFor("scripts/fast.test.mjs", new Map()), 10_000);
+});
+
+/* -------------------------------------------------- execution bounds (live) */
+
+/** A suite whose only test loops on already-resolved promises — the incident
+ *  class of issue #493: bun's timer-based per-test timeout never fires, so
+ *  only the gate's external signal can end it. */
+function writeHangingFixture(dir) {
+  const file = join(dir, "hang.test.mjs");
+  writeFileSync(
+    file,
+    'import { test } from "node:test";\n' +
+      'test("hangs on a microtask-starved loop", async () => { for (;;) await Promise.resolve(); });\n',
+  );
+  return file;
+}
+
+/** A suite that allocates ~1.5 GB then passes — past any reasonable cap when
+ *  the watchdog is armed, harmless (if hungry) when it is not. */
+function writeAllocatingFixture(dir) {
+  const file = join(dir, "alloc.test.mjs");
+  writeFileSync(
+    file,
+    'import { test } from "node:test";\n' +
+      'test("allocates past the cap", () => { const buffers = []; for (let i = 0; i < 96; i += 1) buffers.push(Buffer.alloc(16 * 1024 * 1024, 1)); });\n',
+  );
+  return file;
+}
+
+test("end-to-end: a suite that hangs past the suite bound dies with a named SUITE TIMEOUT verdict", () => {
+  const fixture = writeHangingFixture(tempRoot("root-suite-hang-"));
+  const result = spawnSync(
+    process.execPath,
+    [SCRIPT, "--jobs", "1", "--suite-timeout", "2", fixture],
+    { cwd: ROOT, encoding: "utf8", timeout: 30_000 },
+  );
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /SUITE TIMEOUT/, "the verdict is named, never a silent pass");
+  assert.match(result.stdout, /FAIL .*hang\.test\.mjs/);
+});
+
+test("end-to-end: a suite that allocates past the memory cap dies with a named SUITE MEMORY CAP verdict", () => {
+  const fixture = writeAllocatingFixture(tempRoot("root-suite-alloc-"));
+  const result = spawnSync(
+    process.execPath,
+    [SCRIPT, "--jobs", "1", "--suite-mem-cap", "512", fixture],
+    { cwd: ROOT, encoding: "utf8", timeout: 60_000 },
+  );
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /SUITE MEMORY CAP/, "the verdict is named, never a silent pass");
+  assert.match(result.stdout, /FAIL .*alloc\.test\.mjs/);
 });
 
 /* ------------------------------------------------------------ integration */
