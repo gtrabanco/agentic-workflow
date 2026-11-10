@@ -75,6 +75,12 @@ const PI_SCHEMA = {
         retryAfterSeconds: { type: "integer", minimum: 0 },
       },
     },
+    presetProfile: {
+      anyOf: [
+        { type: "string", pattern: "^[a-z0-9][a-z0-9._-]*$" },
+        { type: "array", items: { type: "string", pattern: "^[a-z0-9][a-z0-9._-]*$" }, minItems: 1, maxItems: 8 },
+      ],
+    },
     tierRouting: {
       anyOf: [
         { type: "boolean" },

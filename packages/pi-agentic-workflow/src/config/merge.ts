@@ -175,6 +175,10 @@ export function mergeConfigs(
 
   // Issue #388 amendment 1 — the tier-routing opt-out (see the return below).
   const tierRouting = mergeTierRouting(globalFile.tierRouting, projectFile.tierRouting);
+  // Issue #388 amendment 2 — the presetProfile selection: wholesale
+  // project-over-global (an ordered selection is one declaration, like
+  // profileOrder); absent in both scopes means each preset's own default.
+  const presetProfile = pick(undefined, projectFile.presetProfile, globalFile.presetProfile);
 
   return {
     ...base,
@@ -191,6 +195,7 @@ export function mergeConfigs(
     // scalar, skills per command). Absent in both scopes means routing on, and
     // the key stays absent so the resolved shape never carries an undefined.
     ...(tierRouting !== undefined ? { tierRouting } : {}),
+    ...(presetProfile !== undefined ? { presetProfile } : {}),
     passes,
     subagents: mergeSubagents(globalFile.subagents, projectFile.subagents),
     stateFlow: mergeStateFlow(globalFile.stateFlow, projectFile.stateFlow),
