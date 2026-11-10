@@ -16,7 +16,10 @@ key you can override. With nothing configured, the preset routes everything
 through the **`economy`** posture: the ladder tuned to deliver a reasonable
 quality on most tasks while living almost entirely inside the free monthly
 allowances. If you want something else, say so once in config — the nearest
-instruction wins, and nothing in the preset fights you.
+instruction wins, and nothing in the preset fights you. One distinction worth
+reading before you pick: the models are not all processed in the same place —
+see [Data residency](#data-residency--what-runs-where) for what runs on the
+EU cluster and the manual overrides that keep each posture EU-compliant.
 
 ## Install
 
@@ -149,6 +152,135 @@ Reasoning traces arrive in `message.reasoning_content`. Cap any agentic loop's
 `max_tokens` with headroom, stream long outputs, and note that a reasoning-only
 stream is closed by the platform (a `finish_reason: "length"` on an empty
 delta, not billed) if a model plans without converging.
+
+## Data residency — what runs where
+
+**Not every model in the tables above processes under the same legal
+roof.** The chat models split in two, and the split is the one marked in the
+catalog:
+
+- **Runs on the EU cluster.** `glm5.3`, `glm5.3-flash`, `deepseek-v4-flash`,
+  `qwen3.8-flash`, `qwen3.6` and `gemma4` are served from the operator's own
+  infrastructure — Helmcode S.L., Spain (platform policy supervised by the
+  Spanish DPA, the AEPD), all of them ZDR: prompts and completions are not
+  stored.
+- **External provider — do not assume EU processing.** `mimo-v2.6-flash`,
+  `kimi-k3.1-pro`, `qwen3.8-max`, `deepseek-v4-pro` and `hy4` are served by
+  third-party providers. The catalog documents zero data retention for them,
+  but it does not name the third parties or say where their GPUs sit. If EU
+  processing is crucial for you (a regulatory duty, a data-processing
+  agreement, a sector rule), treat these five as **not EU-compliant until you
+  verify the serving route yourself** — and therefore as rungs to strip out of
+  the ladders.
+
+The preset ships no separate EU profiles — the flexible way to get them is the
+mechanism that already exists: **a user-defined profile shadowing a preset
+chain name wins over the preset entirely**. Paste the blocks below into your
+`pi-agentic-workflow.json` and every posture stays EU-only, whatever
+`presetProfile` selects. Keep `tierRouting` exactly as you had it; it keeps routing the rest of the
+chain (the `default` profile and anything not shadowed).
+
+```json
+{
+  "profiles": {
+    "nan.quality": {
+      "default": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+      "commands": {
+        "audit-pr": { "model": ["nan/glm5.3", "nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "product-audit": { "model": ["nan/glm5.3", "nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "unit-lane": { "model": ["nan/glm5.3", "nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "review-change": { "model": ["nan/glm5.3-flash", "nan/glm5.3", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "triage-issue": { "model": ["nan/glm5.3-flash", "nan/glm5.3", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "init-workspace": { "model": ["nan/glm5.3-flash", "nan/glm5.3", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "advance": { "model": ["nan/glm5.3-flash", "nan/glm5.3", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "execute-phase": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "fold-findings": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "discover-repository-state": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "resolve-repository-state": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "audit-docs": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" },
+        "log-session": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" },
+        "workflow-status": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" }
+      }
+    },
+    "nan.balanced": {
+      "default": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash"], "thinking": "inherit" },
+      "commands": {
+        "audit-pr": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash", "nan/glm5.3"], "thinking": "high" },
+        "product-audit": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash", "nan/glm5.3"], "thinking": "high" },
+        "unit-lane": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash", "nan/glm5.3"], "thinking": "high" },
+        "review-change": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "triage-issue": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "init-workspace": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "advance": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "execute-phase": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash"], "thinking": "inherit" },
+        "fold-findings": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash"], "thinking": "inherit" },
+        "discover-repository-state": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash"], "thinking": "inherit" },
+        "resolve-repository-state": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash"], "thinking": "inherit" },
+        "audit-docs": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" },
+        "log-session": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" },
+        "workflow-status": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" }
+      }
+    },
+    "nan.economy": {
+      "default": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+      "commands": {
+        "audit-pr": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "product-audit": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "unit-lane": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "review-change": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "triage-issue": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "init-workspace": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "advance": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "inherit" },
+        "audit-docs": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" },
+        "log-session": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" },
+        "workflow-status": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" }
+      }
+    },
+    "nan.no-credits-continue-working": {
+      "default": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash", "nan/qwen3.8-flash", "nan/qwen3.6"], "thinking": "inherit" },
+      "commands": {
+        "audit-pr": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash", "nan/qwen3.6"], "thinking": "high" },
+        "product-audit": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash", "nan/qwen3.6"], "thinking": "high" },
+        "unit-lane": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash"], "thinking": "high" },
+        "triage-issue": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash", "nan/qwen3.8-flash"], "thinking": "inherit" },
+        "init-workspace": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash", "nan/qwen3.8-flash"], "thinking": "inherit" },
+        "advance": { "model": ["nan/glm5.3-flash", "nan/deepseek-v4-flash", "nan/qwen3.8-flash"], "thinking": "inherit" },
+        "execute-phase": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash", "nan/qwen3.8-flash", "nan/qwen3.6"], "thinking": "inherit" },
+        "fold-findings": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash", "nan/qwen3.8-flash", "nan/qwen3.6"], "thinking": "inherit" },
+        "discover-repository-state": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash", "nan/qwen3.8-flash", "nan/qwen3.6"], "thinking": "inherit" },
+        "resolve-repository-state": { "model": ["nan/deepseek-v4-flash", "nan/glm5.3-flash", "nan/qwen3.8-flash", "nan/qwen3.6"], "thinking": "inherit" },
+        "audit-docs": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" },
+        "log-session": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" },
+        "workflow-status": { "model": ["nan/qwen3.6", "nan/gemma4"], "thinking": "inherit" }
+      }
+    }
+  }
+}
+```
+
+The blocks above are deliberately **complete**: a user-defined profile
+replaces the preset's derivation wholesale — including tier routing, which no
+longer applies to a shadowed chain name — so every command is spelled out,
+with the mechanical rows pinned to the zero-credit EU chain by hand. Three
+boundaries to know:
+
+- **Spawned review passes are separate.** The per-pass model declarations
+  (`passes` in the config, issue #201) route `review-change`'s spawned passes
+  independently of the command ladder — if you pin EU routes for commands,
+  pin the passes you actually use the same way.
+- **Spawned task classes are not user-overridable today.** A low-stakes class
+  (`summarization`, `triage`, `mechanical-logging`, `catalog-step`,
+  `conduction`) already resolves to the zero-credit EU chain under tier routing
+  — EU-safe on every posture. A strength-sensitive class (`review-axis`,
+  `audit-verdict`, `planning`) resolves from the selected posture's published
+  default ladder, which still contains external-provider rungs in `quality`
+  and `balanced` (the `mimo-v2.6-flash` design rung) — that route is not
+  reachable by either knob above. If EU-only spawned planning matters for you,
+  it is a real gap: say so and it becomes a unit.
+- **ZDR is not residency.** All ten models document zero data retention, which
+  bounds what is kept — it says nothing about where the GPUs processing your
+  prompts sit. The two claims live in different sections of the catalog on
+  purpose.
 
 ## The preferred ladders
 
