@@ -5,6 +5,11 @@
  * Usage:
  *   agentic-workflow unit-doc <NN-slug> [--dir <root>] <op> [args...]
  *   agentic-workflow roadmap <op> [args...]
+ *   agentic-workflow roadmap read <table-path> [--nn <n>] [--json]   (issue #498: the read half of the CAS loop)
+ *   agentic-workflow roadmap fixrow <table-path> <json> [--json]     (issue #498: the `## Fixes` row writer)
+ *   rowUpsert/annotate carry the revision they read as `expected` (JSON field
+ *   or `--expect <hash>`); a table moved since the read refuses with
+ *   `EDIT REFUSAL — stale-read …` naming both revisions (issue #498).
  *   agentic-workflow changelog <op> [args...]
  *   agentic-workflow budgets <op> [args...]
  *   agentic-workflow manifest <op> [args...]
@@ -88,7 +93,8 @@ import { join, resolve, basename, dirname, relative } from "node:path";
 
 // Import SDK modules
 import { create, setSection, evidence_addRow, progress_logEntry, validate } from "../src/edit/UnitDoc.mjs";
-import { rowUpsert, annotate as roadmapAnnotate, checkUnitDoc, ROADMAP_CHECK_CODES } from "../src/edit/Roadmap.mjs";
+import { rowUpsert, annotate as roadmapAnnotate, checkUnitDoc, findRow, fixRowUpsert, ROADMAP_CHECK_CODES } from "../src/edit/Roadmap.mjs";
+import { readShared } from "../src/writer/driver.mjs";
 import {
   FIX_INDEX_DOCUMENT,
   ROADMAP_DOCUMENT,
@@ -1084,6 +1090,61 @@ switch (command) {
       process.stderr.write(`usage: agentic-workflow roadmap <table-path> ${rawArgs[0]} <json>\n`);
       process.exit(2);
     }
+
+    // `roadmap read <table-path> [--nn <n>]` (issue #498) — the read half of
+    // the CAS loop: answers the revision the next write carries as `expected`.
+    // Read-only: it writes nothing and never refuses a stale state (there is
+    // none to be stale against).
+    if (rawArgs[0] === "read") {
+      if (!rawArgs[1]) {
+        process.stderr.write("usage: agentic-workflow roadmap read <table-path> [--nn <n>] [--json]\n");
+        process.exit(2);
+      }
+      const filePath = resolve(rawArgs[1]);
+      const nnIdx = restArgs.indexOf("--nn");
+      const nn = nnIdx !== -1 ? restArgs[nnIdx + 1] : undefined;
+      try {
+        const read = readShared(filePath);
+        if (!read.ok) refuse(`${read.reason} — ${read.detail ?? filePath}`);
+        const row = nn ? findRow(filePath, nn) : undefined;
+        const receipt = {
+          service: "roadmap",
+          op: "read",
+          path: filePath,
+          schema: "roadmap-table@1",
+          revision: read.revision,
+          ok: true,
+          ...(nn ? { nn, row: row ?? null } : {}),
+        };
+        if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
+        else {
+          console.log(`roadmap-read: ${filePath}`);
+          console.log(`revision: ${read.revision}`);
+          if (row) console.log(`row: ${row.line}`);
+        }
+      } catch (e) {
+        refuse(e.message);
+      }
+      break;
+    }
+
+    // `roadmap fixrow <table-path> <json>` (issue #498) — the `## Fixes` row
+    // writer: a Fixes row is keyed by the issue number in its leading
+    // `[#N](url)` cell, the link is passed in explicitly, and the row is
+    // written as one splice — a Fixes row is never a hand edit again.
+    if (rawArgs[0] === "fixrow" || (rawArgs[0] && rawArgs[1] === "fixrow")) {
+      const filePath = rawArgs[0] === "fixrow" ? resolve(rawArgs[1] ?? join(process.cwd(), "ROADMAP.md")) : resolve(rawArgs[0]);
+      const data = JSON.parse(rawArgs[2] || "{}");
+      try {
+        const receipt = fixRowUpsert(filePath, data);
+        if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
+        else printReceipt(receipt);
+      } catch (e) {
+        refuse(e.message);
+      }
+      break;
+    }
+
     const filePath = rawArgs[0] ? resolve(rawArgs[0]) : join(process.cwd(), "ROADMAP.md");
 
     if (rawArgs[0] === "rowUpsert" || (rawArgs[0] && rawArgs[1] === "rowUpsert")) {
@@ -1099,8 +1160,12 @@ switch (command) {
     } else if (rawArgs[0] === "annotate" || (rawArgs[0] && rawArgs[1] === "annotate")) {
       const nn = rawArgs[1] === "annotate" ? rawArgs[2] : rawArgs[1];
       const note = rawArgs[1] === "annotate" ? rawArgs[3] || "" : (rawArgs[2] || "");
+      // `--expect <hash>` (issue #498): the revision the caller read — a table
+      // that moved since refuses with stale-read instead of last-write-wins.
+      const expectIdx = restArgs.indexOf("--expect");
+      const expected = expectIdx !== -1 ? restArgs[expectIdx + 1] : undefined;
       try {
-        const receipt = roadmapAnnotate(filePath, nn, note);
+        const receipt = roadmapAnnotate(filePath, nn, note, expected !== undefined ? { expected } : undefined);
         if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
         else printReceipt(receipt);
       } catch (e) {

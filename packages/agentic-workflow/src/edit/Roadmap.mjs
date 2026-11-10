@@ -5,11 +5,21 @@
  *   | NN | slug | status | depends-on | description |
  *
  * Operations validate post-state against the schema and emit receipts.
+ *
+ * Since issue #498 every write goes through the shared writer driver
+ * (`src/writer/driver.mjs`): a key-based **splice** — only the target row's
+ * byte range moves, every other byte is carried through — with optional
+ * **CAS**: `expected` (the `revision` a `readShared` answered) refuses with a
+ * named `stale-read` rejection instead of last-write-wins. Receipts keep
+ * their published shape (`service/op/path/schema/before/after/ok`, 8-char
+ * hashes); `fixRowUpsert` adds the missing writer for the `## Fixes` table
+ * (4 columns, keyed by the issue link's number).
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { roadmapTableRows } from "../index-document.mjs";
+import { roadmapTableRows, ROADMAP_FIXES_HEADING } from "../index-document.mjs";
+import { writeShared, WriterError } from "../writer/driver.mjs";
 
 /**
  * The separator rule matches the table that exists in this repository
@@ -36,9 +46,73 @@ function makeReceipt(service, op, path, schema, before, after, ok) {
   return { service, op, path, schema, before, after, ok };
 }
 
-function atomicWrite(targetPath, content) {
-  writeFileSync(targetPath, content, "utf8");
-  return targetPath;
+/**
+ * Throw a writer refusal as a typed WriterError whose message is the refusal's
+ * own detail — the exact text the pre-driver writers threw, so the CLI's
+ * `EDIT REFUSAL — <message>` output is unchanged.
+ */
+function throwRefusal(result) {
+  const error = new WriterError(result.reason, result);
+  error.message = result.detail ?? result.reason;
+  throw error;
+}
+
+/**
+ * Walk the line starts of `content` once: offsets[i] is the character index
+ * of lines[i] inside content — the map a splice edit needs to name a line's
+ * byte range without touching any other byte.
+ */
+function lineOffsets(content) {
+  const lines = content.split("\n");
+  const offsets = new Array(lines.length);
+  let cursor = 0;
+  for (let i = 0; i < lines.length; i += 1) {
+    offsets[i] = cursor;
+    cursor += lines[i].length + 1;
+  }
+  return { lines, offsets, total: content.length };
+}
+
+/**
+ * A row insert after `sepIdx` as one splice edit, newline-safe: after the
+ * separator's own newline when there is one, or appended to the document
+ * (with its leading newline) when the separator is the last line.
+ */
+function insertAfterLineEdit(lines, offsets, total, sepIdx, replacement) {
+  const afterNewline = offsets[sepIdx] + lines[sepIdx].length + 1;
+  if (sepIdx === lines.length - 1 && afterNewline > total) {
+    return { start: total, end: total, replacement: `\n${replacement}` };
+  }
+  return { start: afterNewline, end: afterNewline, replacement: `${replacement}\n` };
+}
+
+/** The splice declaration for `rowUpsert`: locate the row (or the insert
+ * position) and declare that one range — never the whole content. */
+function rowUpsertEdits(content, { nn, slug, status, dependsOn, description }) {
+  const { lines, offsets, total } = lineOffsets(content);
+
+  const headerIdx = lines.findIndex((l) => l.includes("| NN |"));
+  if (headerIdx === -1) {
+    return { ok: false, reason: "invalid-document", detail: "Roadmap table header not found (expected line with | NN |)" };
+  }
+  const sepIdx = lines.findIndex(isSeparatorLine);
+  if (sepIdx === -1) {
+    return { ok: false, reason: "invalid-document", detail: "Roadmap table separator not found (expected line with |---|)" };
+  }
+
+  const existingRowIdx = lines.findIndex((l) => {
+    return /^\| (\d+) \|/.test(l) && l.trim().startsWith(`| ${nn} |`);
+  });
+
+  const newRow = `| ${nn} | ${slug || ""} | ${status || ""} | ${dependsOn || ""} | ${description || ""} |`;
+
+  if (existingRowIdx !== -1) {
+    return {
+      ok: true,
+      edits: [{ start: offsets[existingRowIdx], end: offsets[existingRowIdx] + lines[existingRowIdx].length, replacement: newRow }],
+    };
+  }
+  return { ok: true, edits: [insertAfterLineEdit(lines, offsets, total, sepIdx, newRow)] };
 }
 
 // ── Public API ───────────────────────────────────────────────────────────
@@ -56,48 +130,13 @@ function atomicWrite(targetPath, content) {
  *
  * Returns a receipt.
  */
-export function rowUpsert(table, { nn, slug, status, dependsOn, description }) {
-  const content = readFileSync(table, "utf8");
-  const beforeHash = sha256(content);
-
-  // Find the header line (contains "| NN |")
-  const headerLine = content.split("\n").find((l) => l.includes("| NN |"));
-  if (!headerLine) {
-    throw new Error("Roadmap table header not found (expected line with | NN |)");
-  }
-
-  // Find the separator line (a rule of pipes, dashes, colons and spaces)
-  const separatorLine = content.split("\n").find(isSeparatorLine);
-  if (!separatorLine) {
-    throw new Error("Roadmap table separator not found (expected line with |---|)");
-  }
-
-  // Find existing row for this NN
-  const lines = content.split("\n");
-  const existingRowIdx = lines.findIndex((l) => {
-    // Match | NN | at the start of a data row (after header and separator)
-    return /^\| (\d+) \|/.test(l) && l.trim().startsWith(`| ${nn} |`);
-  });
-
-  const newRow = `| ${nn} | ${slug || ""} | ${status || ""} | ${dependsOn || ""} | ${description || ""} |`;
-
-  let newContent;
-  if (existingRowIdx !== -1) {
-    // Update existing row
-    lines[existingRowIdx] = newRow;
-    newContent = lines.join("\n");
-  } else {
-    // Insert new row after the separator
-    const sepIdx = lines.indexOf(separatorLine);
-    lines.splice(sepIdx + 1, 0, newRow);
-    newContent = lines.join("\n");
-  }
-
-  atomicWrite(table, newContent);
-  const afterHash = sha256(readFileSync(table, "utf8"));
+export function rowUpsert(table, { nn, slug, status, dependsOn, description, expected }) {
+  const result = writeShared({ path: table, expected, apply: (content) => rowUpsertEdits(content, { nn, slug, status, dependsOn, description }) });
+  if (!result.ok) throwRefusal(result);
 
   // Validate: check column count by counting pipe separators
-  const dataLine = newContent.split("\n").find((l) => /^\| (\d+) \|/.test(l) && l.trim().startsWith(`| ${nn} |`));
+  const content = readFileSync(table, "utf8");
+  const dataLine = content.split("\n").find((l) => /^\| (\d+) \|/.test(l) && l.trim().startsWith(`| ${nn} |`));
   // A 5-column table row has 6 pipe characters (including leading and trailing)
   const pipeCount = dataLine ? (dataLine.match(/\|/g) || []).length : 0;
   const ok = pipeCount >= 6;
@@ -107,8 +146,8 @@ export function rowUpsert(table, { nn, slug, status, dependsOn, description }) {
     "rowUpsert",
     table,
     "roadmap-table@1",
-    shaPrefix(beforeHash),
-    shaPrefix(afterHash),
+    shaPrefix(result.before),
+    shaPrefix(result.after),
     ok,
   );
 }
@@ -240,46 +279,115 @@ export function checkUnitDoc({ nn, slug, kind, docText, indexText }) {
 }
 
 /**
- * annotate(nn, note) — appends a note to the description cell of the row
+ * annotate(nn, note, { expected }) — appends a note to the description cell of the row
  * identified by nn.  The note is appended on the same physical line, with a
  * space and "—" prefix: a newline inside a cell terminates the row, and a
  * renderer turns its tail into a malformed extra row (the 2026-11-09 unit-227
- * damage to this repository's index).
+ * damage to this repository's index). The write is a one-line splice through
+ * the shared writer driver; `expected` (the revision a `readShared` answered)
+ * closes the CAS loop — a moved table refuses with `stale-read`.
  *
  * Returns a receipt.  Throws if the row is not found.
  */
-export function annotate(table, nn, note) {
-  const content = readFileSync(table, "utf8");
-  const beforeHash = sha256(content);
-  const lines = content.split("\n");
-
-  const existingRowIdx = lines.findIndex((l) => {
-    return /^\| (\d+) \|/.test(l) && l.trim().startsWith(`| ${nn} |`);
+export function annotate(table, nn, note, { expected } = {}) {
+  const result = writeShared({
+    path: table,
+    expected,
+    apply: (content) => {
+      const { lines, offsets } = lineOffsets(content);
+      const existingRowIdx = lines.findIndex((l) => {
+        return /^\| (\d+) \|/.test(l) && l.trim().startsWith(`| ${nn} |`);
+      });
+      if (existingRowIdx === -1) {
+        return { ok: false, reason: "invalid-document", detail: `Roadmap row for NN ${nn} not found` };
+      }
+      // Parse the existing row and append to the description (5th column, 0-indexed: 4)
+      const parts = lines[existingRowIdx].split("|").map((p) => p.trim());
+      const annotation = `— ${note.trim()}`;
+      parts[5] = [(parts[5] || "").trim(), annotation].filter(Boolean).join(" ");
+      const newRow = parts.map((p, i) => (i === 0 || i === parts.length - 1 ? p : " " + p + " ")).join("|");
+      return {
+        ok: true,
+        edits: [{ start: offsets[existingRowIdx], end: offsets[existingRowIdx] + lines[existingRowIdx].length, replacement: newRow }],
+      };
+    },
   });
-
-  if (existingRowIdx === -1) {
-    throw new Error(`Roadmap row for NN ${nn} not found`);
-  }
-
-  // Parse the existing row and append to the description (5th column, 0-indexed: 4)
-  const parts = lines[existingRowIdx].split("|").map((p) => p.trim());
-  const annotation = `— ${note.trim()}`;
-  parts[5] = [(parts[5] || "").trim(), annotation].filter(Boolean).join(" ");
-  const newRow = parts.map((p, i) => (i === 0 || i === parts.length - 1 ? p : " " + p + " ")).join("|");
-
-  lines[existingRowIdx] = newRow;
-  const newContent = lines.join("\n");
-
-  atomicWrite(table, newContent);
-  const afterHash = sha256(readFileSync(table, "utf8"));
+  if (!result.ok) throwRefusal(result);
 
   return makeReceipt(
     "roadmap",
     "annotate",
     table,
     "roadmap-table@1",
-    shaPrefix(beforeHash),
-    shaPrefix(afterHash),
+    shaPrefix(result.before),
+    shaPrefix(result.after),
     true,
+  );
+}
+
+/** The Fixes-table row key: the issue number inside the leading `[#N](url)`
+ * link cell (a bare `| N |` first cell is accepted for link-less rows). */
+function fixRowKey(line) {
+  const linked = /^\|\s*\[#(\d+)\]/.exec(line);
+  if (linked) return linked[1];
+  const bare = /^\|\s*(\d+)\s*\|/.exec(line);
+  return bare ? bare[1] : null;
+}
+
+/** The splice declaration for `fixRowUpsert`: scope the `## Fixes` table, key
+ * the row by issue number, declare one range. */
+function fixRowUpsertEdits(content, { issue, url, topic, status, notes }) {
+  const { lines, offsets, total } = lineOffsets(content);
+  const fixesIdx = lines.findIndex((l) => l.trim() === `## ${ROADMAP_FIXES_HEADING}`);
+  if (fixesIdx === -1) {
+    return { ok: false, reason: "invalid-document", detail: `Roadmap Fixes table not found (expected '## ${ROADMAP_FIXES_HEADING}')` };
+  }
+  const headerIdx = lines.findIndex((l, i) => i > fixesIdx && /^\|\s*Issue\s*\|/.test(l.trim()));
+  if (headerIdx === -1 || headerIdx < fixesIdx) {
+    return { ok: false, reason: "invalid-document", detail: `Roadmap Fixes table not found (expected an | Issue | table under '## ${ROADMAP_FIXES_HEADING}')` };
+  }
+  const sepIdx = lines.findIndex((l, i) => i > headerIdx && isSeparatorLine(l));
+  if (sepIdx === -1) {
+    return { ok: false, reason: "invalid-document", detail: "Roadmap Fixes table separator not found (expected line with |---|)" };
+  }
+
+  const newRow = `| [#${issue}](${url || ""}) | ${topic || ""} | ${status || ""} | ${notes || ""} |`;
+  for (let i = sepIdx + 1; i < lines.length && lines[i].startsWith("|"); i += 1) {
+    if (fixRowKey(lines[i]) === String(issue)) {
+      return { ok: true, edits: [{ start: offsets[i], end: offsets[i] + lines[i].length, replacement: newRow }] };
+    }
+  }
+  return { ok: true, edits: [insertAfterLineEdit(lines, offsets, total, sepIdx, newRow)] };
+}
+
+/**
+ * fixRowUpsert(table, { issue, url, topic, status, notes, expected }) — the
+ * writer for the `## Fixes` table (issue #498: the rows RELEASE.md said were
+ * edited by hand because "no `NN` column, so `rowUpsert` does not apply"). The
+ * row is keyed by the issue number in the leading `[#N](url)` cell; the link
+ * is passed in explicitly — the writer never invents issue links. Upserts:
+ * an existing row is updated in place, a new one inserts after the table's
+ * separator. The write is a one-line splice; `expected` closes the CAS loop.
+ *
+ * Returns a receipt. Throws a WriterError when the `## Fixes` table is absent
+ * or malformed.
+ */
+export function fixRowUpsert(table, { issue, url, topic, status, notes, expected }) {
+  const result = writeShared({ path: table, expected, apply: (content) => fixRowUpsertEdits(content, { issue, url, topic, status, notes }) });
+  if (!result.ok) throwRefusal(result);
+
+  const content = readFileSync(table, "utf8");
+  const dataLine = content.split("\n").find((l) => fixRowKey(l) === String(issue) && l.includes(`[#${issue}]`));
+  const pipeCount = dataLine ? (dataLine.match(/\|/g) || []).length : 0;
+  const ok = pipeCount >= 5;
+
+  return makeReceipt(
+    "roadmap",
+    "fixRowUpsert",
+    table,
+    "roadmap-table@1",
+    shaPrefix(result.before),
+    shaPrefix(result.after),
+    ok,
   );
 }
