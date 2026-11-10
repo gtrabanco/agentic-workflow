@@ -474,6 +474,10 @@ test("roadmap: derivation falls back One-line → Goal → title, and ## Depends
     ],
     roadmapRows: [],
   });
+  fs.writeFileSync(
+    path.join(root, "docs", "ROADMAP.md"),
+    ["# Roadmap", "", "## Features", "", "| NN | Slug | Status | Depends on | Summary |", "|----|------|--------|------------|---------|", ""].join("\n"),
+  );
   try {
     assert.equal(run(root).status, 0);
     const roadmap = fs.readFileSync(path.join(root, "docs", "ROADMAP.md"), "utf8");
@@ -529,6 +533,22 @@ test("roadmap: fix rows are never appended — the Fixes lifecycle is owner-mana
     assert.doesNotMatch(roadmap, /driver-write/,
       "a rowless fix folder gains no row — merged fixes would be resurrected");
     assert.match(roadmap, /\| \[#443\]\(https:\/\/example\.test\/issues\/443\) \| doc-index-auto-hybrid \| done \| merged row kept by hand \|/);
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("roadmap: a hand row whose summary carries unescaped pipes is seen, never duplicated", () => {
+  const root = fixture({
+    guide: DOCS_SITE(["format: markdown"]),
+    units: [{ dir: "01-shipped", title: "Shipped", oneLine: "one delivered feature" }],
+    roadmapRows: ["| 01 | shipped | done | — | a | b | c |"],
+  });
+  try {
+    assert.equal(run(root).status, 0);
+    const roadmap = fs.readFileSync(path.join(root, "docs", "ROADMAP.md"), "utf8");
+    assert.equal((roadmap.match(/\| 01 \|/g) ?? []).length, 1, "the irregular row is matched by its slug cell, not its cell count");
+    assert.match(roadmap, /\| 01 \| shipped \| done \| — \| a \| b \| c \|/, "the irregular row passes through verbatim");
   } finally {
     cleanup(root);
   }
