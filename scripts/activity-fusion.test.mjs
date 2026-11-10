@@ -289,3 +289,67 @@ test("a malformed activityFusion declaration fails closed", () => {
   assert.equal(result.status, 2, `${result.stdout}${result.stderr}`);
   assert.match(result.stderr, /activityFusion/);
 });
+
+// ===========================================================================
+// Prose half (P3): the plan reference owns the rule; the conductor and the
+// design reference carry pointers, never restatements.
+// ===========================================================================
+
+const plan = fs.readFileSync(path.join(REPO_ROOT, "skills", "unit-lane", "references", "PLAN.md"), "utf8");
+const design = fs.readFileSync(path.join(REPO_ROOT, "skills", "unit-lane", "references", "DESIGN.md"), "utf8");
+const skill = fs.readFileSync(path.join(REPO_ROOT, "skills", "unit-lane", "SKILL.md"), "utf8");
+const agents = fs.readFileSync(path.join(REPO_ROOT, "AGENTS.md"), "utf8");
+
+test("PLAN.md owns the activity-fusion@1 block with both tier rows", () => {
+  const block = /```text\nactivity-fusion@1\n([\s\S]*?)```/.exec(plan);
+  assert.ok(block, "the versioned activity-fusion@1 block exists in PLAN.md");
+  const standardRow = /standard \|/.test(block[1]);
+  const highRow = /high \|/.test(block[1]);
+  assert.ok(standardRow, "the block declares the standard pass");
+  assert.ok(highRow, "the block declares the high shape");
+  assert.match(block[1], /standard \|.*one investigate→orient→ask→decide pass/, "standard = one pass");
+  assert.match(block[1], /standard \|.*one conductor session/, "standard = one conductor session");
+  assert.match(block[1], /standard \|.*tagged/, "decision points are tagged design/plan");
+  assert.match(block[1], /carriers \| separated/, "carriers stay separated");
+  assert.match(block[1], /gates \| separated/, "gates stay separated");
+  assert.match(block[1], /separated stages/, "high keeps separated stages");
+  assert.match(block[1], /cold pre-execution-review/, "the cold pre-execution-review separation is named");
+});
+
+test("PLAN.md carries the delta-provenance rule and the AC-as-input guard", () => {
+  assert.match(plan, /only.*claims the design pass did not already journal/i, "the plan journals only delta claims");
+  assert.match(plan, /sweep only the delta/i, "the sweep runs over the delta rows only");
+  assert.match(plan, /input/, "the AC-as-input guard stays");
+  assert.match(plan, /not re-decide|no task re-decides an acceptance criterion/, "no task re-decides an AC");
+});
+
+test("the superseded full re-run sentence is deleted (replace-implies-delete)", () => {
+  assert.equal((plan.match(/same provenance search/g) ?? []).length, 0,
+    "PLAN.md no longer orders the design step's provenance search re-run in full");
+});
+
+test("the conductor and the design reference point at the block instead of restating it", () => {
+  const skillMentions = (skill.match(/activity-fusion@1/g) ?? []).length;
+  assert.ok(skillMentions >= 1 && skillMentions <= 2, `SKILL.md mentions the block by id ${skillMentions} time(s) with an owner pointer, never a restatement`);
+  assert.match(skill, /owner[^\n]*references\/PLAN\.md|references\/PLAN\.md[^\n]*activity-fusion@1/);
+  const designMentions = (design.match(/activity-fusion@1/g) ?? []).length;
+  assert.ok(designMentions >= 1 && designMentions <= 2, `DESIGN.md mentions the block by id ${designMentions} time(s) with an owner pointer`);
+});
+
+test("no reviewer pass is resurrected in the lane references", () => {
+  for (const [name, text] of [["SKILL.md", skill], ["PLAN.md", plan], ["DESIGN.md", design]]) {
+    assert.equal((text.match(/SPEC-REVIEW-PASS|PLAN-REVIEW-PASS/g) ?? []).length, 0,
+      `${name} introduces no reviewer verdict`);
+  }
+});
+
+test("the topological precedence rule stands after the change (S4)", () => {
+  assert.match(plan, /dependency-topological first, smallest within a ready set/);
+  assert.match(plan, /validator only runs after its prerequisite tasks pass/);
+});
+
+test("the normative-surfaces inventory registers the new block", () => {
+  const row = agents.split("\n").find((l) => l.startsWith("activity-fusion "));
+  assert.ok(row, "AGENTS.md normative-surfaces@1 has an activity-fusion row");
+  assert.match(row, /skills\/unit-lane\/references\/PLAN\.md \| block:activity-fusion@1/);
+});
