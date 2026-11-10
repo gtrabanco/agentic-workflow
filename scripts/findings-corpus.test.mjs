@@ -105,7 +105,7 @@ const MIGRATED = `## Findings
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  assert.equal(corpus.findings.length, 1150, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1152, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
   assert.equal(corpus.reviewMarks, 173);
