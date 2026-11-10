@@ -171,7 +171,7 @@ export function createCommandPublisher(options) {
 }
 
 /**
- * The shipped strategies for one resolved `autoLogSession` config: the journal
+ * The shipped strategies for one resolved `logSession` config: the journal
  * first, the declared command second when one is declared.
  *
  * `publisher: null` = the local journal alone (Q3: the interface ships, not the

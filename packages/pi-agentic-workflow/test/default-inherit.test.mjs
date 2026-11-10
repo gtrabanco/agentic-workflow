@@ -57,9 +57,18 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // Issue #383: the measured acceptance is opt-in, so the shipped shape carries
     // it switched off — the same record feature 66's memory consent uses here.
     telemetry: { enabled: false },
-    // Issue #394: the journal writer is opt-in as well — off, and no publisher
-    // named, so a fresh install writes nothing at either switch.
-    autoLogSession: { mode: "off", publisher: null },
+    // Issue #394 / #427: the journal writer is opt-in as well — off, and no
+    // publisher named, so a fresh install writes nothing at either switch.
+    logSession: { enabled: false, publisher: null },
+    // #427: tool-safety guard switches and the token ceiling.
+    guards: { merge: false, history: false, ci: false, cost: { maxTokens: 500000 } },
+    // Feature 62: the conductor knobs are always resolved from the base file.
+    advance: {
+      iterationsCap: 12,
+      sensitivePaths: [],
+      securityPaths: [],
+      runLogPath: ".agentic-workflow/advance-run.log",
+    },
     // Issue #201: no shipped pass entries — the resolver owns the fail-closed
     // chain, so an unconfigured install resolves every pass to the documented
     // floor (cheap tier, else inline) rather than a compiled-in model.
@@ -137,6 +146,8 @@ test("AC6: the loader reads the two documented files, and real absence is zero-c
     assert.deepEqual(configFilePaths("/x/agent", "/y/repo"), {
       global: join("/x/agent", "pi-agentic-workflow.json"),
       project: join("/y/repo", ".pi", "pi-agentic-workflow.json"),
+      globalBase: join("/x/agent", "agentic-workflow.json"),
+      projectBase: join("/y/repo", ".pi", "agentic-workflow.json"),
     });
 
     // No injected reader: the loader's own filesystem read must report the

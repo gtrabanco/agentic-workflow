@@ -5,9 +5,6 @@ import {
   UNAVAILABLE_ROUTE_POLICIES,
   PROFILE_FALLBACK_APPLY_TO,
   PROFILE_FALLBACK_RESUME,
-  AUTO_LOG_SESSION_MODES,
-  AUTO_LOG_SESSION_MAX_ARGV,
-  AUTO_LOG_SESSION_MAX_TIMEOUT_MS,
   STATE_FLOW_BACKENDS,
   STATE_FLOW_MISSING_POLICIES,
   STATE_FLOW_STOP_POLICIES,
@@ -22,18 +19,12 @@ import type {
   ThinkingSetting,
   UnavailableRoutePolicy,
   ProfileFile,
-  MemoryConfigFile,
-  TelemetryConfigFile,
-  AutoLogSessionConfigFile,
-  AutoLogSessionPublisherFile,
   StateFlowConfigFile,
   PassModelSetting,
   PassRouteFile,
   PassesConfigFile,
   SubagentsConfigFile,
 } from "./types.js";
-import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
-import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
 
 /**
  * Strict validator for one config file (SPEC S5-S8, D-E5).
@@ -50,15 +41,10 @@ const ROOT_KEYS = new Set([
   "commands",
   "onUnavailableRoute",
   "onSettle",
-  "pathProtection",
-  "advance",
   "recommendedModels",
   "profiles",
   "profileOrder",
   "profileFallback",
-  "memory",
-  "telemetry",
-  "autoLogSession",
   "passes",
   "subagents",
   "stateFlow",
@@ -209,97 +195,6 @@ function checkProfileFile(value: unknown, path: string, issues: ConfigIssue[]): 
 }
 
 /** Strict validator for the optional `advance` conductor config (feature 62). */
-const ADVANCE_KEYS = new Set(["iterationsCap", "sensitivePaths", "securityPaths", "runLogPath"]);
-
-function checkAdvance(value: unknown, path: string, issues: ConfigIssue[]): ConfigFile["advance"] | undefined {
-  if (!isRecord(value)) {
-    issues.push({ path, message: "must be an object" });
-    return undefined;
-  }
-  const out: NonNullable<ConfigFile["advance"]> = {};
-  for (const key of Object.keys(value)) {
-    if (!ADVANCE_KEYS.has(key)) {
-      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown advance key "${key}" (allowed: iterationsCap, sensitivePaths, securityPaths, runLogPath)` });
-      continue;
-    }
-    const v = value[key];
-    if (key === "iterationsCap") {
-      if (typeof v !== "number" || !Number.isInteger(v) || v < 1) {
-        issues.push({ path: `${path}.iterationsCap`, message: "must be a positive integer" });
-        continue;
-      }
-      out.iterationsCap = v;
-    } else if (key === "runLogPath") {
-      if (typeof v !== "string" || v.length === 0) {
-        issues.push({ path: `${path}.runLogPath`, message: "must be a non-empty string" });
-        continue;
-      }
-      out.runLogPath = v;
-    } else {
-      if (!Array.isArray(v) || v.some((e) => typeof e !== "string")) {
-        issues.push({ path: `${path}.${key}`, message: "must be an array of strings" });
-        continue;
-      }
-      (out as Record<string, unknown>)[key] = v;
-    }
-  }
-  return out;
-}
-
-/** Strict validator for the optional `pathProtection` override (feature 60, AC10). */
-function checkPathProtection(value: unknown, path: string, issues: ConfigIssue[]): PathProtectionOverride | undefined {
-  if (!isRecord(value)) {
-    issues.push({ path, message: "must be an object with optional protectedGlobs/requirements keys" });
-    return undefined;
-  }
-  const override: PathProtectionOverride = {};
-  for (const key of Object.keys(value)) {
-    if (key !== "protectedGlobs" && key !== "requirements") {
-      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown pathProtection key "${key}" (allowed: protectedGlobs, requirements)` });
-    }
-  }
-  if (value.protectedGlobs !== undefined) {
-    if (!Array.isArray(value.protectedGlobs) || value.protectedGlobs.some((glob) => typeof glob !== "string" || glob.trim() === "")) {
-      issues.push({ path: `${path}.protectedGlobs`, message: "must be an array of non-empty glob strings" });
-    } else if (value.protectedGlobs.some((glob) => (glob as string).length > PATH_GLOB_MAX_LENGTH)) {
-      issues.push({ path: `${path}.protectedGlobs`, message: `a glob must be at most ${PATH_GLOB_MAX_LENGTH} characters` });
-    } else {
-      override.protectedGlobs = value.protectedGlobs as string[];
-    }
-  }
-  if (value.requirements !== undefined) {
-    if (!isRecord(value.requirements)) {
-      issues.push({ path: `${path}.requirements`, message: "must be an object keyed by phase state" });
-    } else {
-      const requirements: PathProtectionOverride["requirements"] = {};
-      for (const [state, raw] of Object.entries(value.requirements)) {
-        if (!(PHASE_STATES as readonly string[]).includes(state)) {
-          issues.push({ path: `${path}.requirements.${displayKey(state)}`, message: `unknown phase state "${state}"` });
-          continue;
-        }
-        if (!isRecord(raw)) {
-          issues.push({ path: `${path}.requirements.${displayKey(state)}`, message: "must be an object keyed by operation" });
-          continue;
-        }
-        const row: Partial<Record<PathOperation, PathRequirement>> = {};
-        for (const [operation, requirement] of Object.entries(raw)) {
-          if (!(OPERATIONS as readonly string[]).includes(operation)) {
-            issues.push({ path: `${path}.requirements.${displayKey(state)}.${displayKey(operation)}`, message: `unknown operation "${operation}"` });
-            continue;
-          }
-          if (!(REQUIREMENTS as readonly string[]).includes(requirement as string)) {
-            issues.push({ path: `${path}.requirements.${displayKey(state)}.${displayKey(operation)}`, message: `must be one of ${REQUIREMENTS.join(", ")}` });
-            continue;
-          }
-          row[operation as PathOperation] = requirement as PathRequirement;
-        }
-        requirements[state as PathPhaseState] = row;
-      }
-      override.requirements = requirements;
-    }
-  }
-  return override;
-}
 
 function describe(value: unknown): string {
   return typeof value === "string" ? `"${value}"` : JSON.stringify(value) ?? String(value);
@@ -596,15 +491,6 @@ function validateConfig(value: unknown): ParseResult {
     }
   }
 
-  if (value.advance !== undefined) {
-    const advance = checkAdvance(value.advance, "$.advance", issues);
-    if (advance) config.advance = advance;
-  }
-  if (value.pathProtection !== undefined) {
-    const override = checkPathProtection(value.pathProtection, "$.pathProtection", issues);
-    if (override) config.pathProtection = override;
-  }
-
   if (value.recommendedModels !== undefined) {
     if (!isRecommendedModels(value.recommendedModels)) {
       issues.push({
@@ -614,19 +500,6 @@ function validateConfig(value: unknown): ParseResult {
     } else {
       config.recommendedModels = value.recommendedModels;
     }
-  }
-
-  if (value.telemetry !== undefined) {
-    const telemetry = checkTelemetry(value.telemetry, "$.telemetry", issues);
-    if (telemetry) config.telemetry = telemetry;
-  }
-  if (value.memory !== undefined) {
-    const memory = checkMemory(value.memory, "$.memory", issues);
-    if (memory) config.memory = memory;
-  }
-  if (value.autoLogSession !== undefined) {
-    const autoLogSession = checkAutoLogSession(value.autoLogSession, "$.autoLogSession", issues);
-    if (autoLogSession) config.autoLogSession = autoLogSession;
   }
 
   if (value.profiles !== undefined) {
@@ -679,134 +552,6 @@ function validateConfig(value: unknown): ParseResult {
  * the loader can treat "nothing declared" like "nothing present" without a
  * second read.
  */
-/** Strict validator for the `telemetry` block (issue #383): one boolean switch. */
-function checkTelemetry(value: unknown, path: string, issues: ConfigIssue[]): TelemetryConfigFile | undefined {
-  if (!isRecord(value)) {
-    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
-    return undefined;
-  }
-  let unknown = false;
-  for (const key of Object.keys(value)) {
-    if (key !== "enabled") {
-      unknown = true;
-      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown telemetry key "${key}" (allowed: enabled)` });
-    }
-  }
-  const out: TelemetryConfigFile = {};
-  if (value.enabled !== undefined) {
-    if (typeof value.enabled !== "boolean") {
-      issues.push({ path: `${path}.enabled`, message: `must be a boolean, got ${describe(value.enabled)}` });
-    } else {
-      out.enabled = value.enabled;
-    }
-  }
-  return unknown ? undefined : out;
-}
-
-/** Strict validator for the `memory` consent block (feature 66, AC3). */
-function checkMemory(value: unknown, path: string, issues: ConfigIssue[]): MemoryConfigFile | undefined {
-  if (!isRecord(value)) {
-    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
-    return undefined;
-  }
-  let unknown = false;
-  for (const key of Object.keys(value)) {
-    if (key !== "engram") {
-      unknown = true;
-      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown memory key "${key}" (allowed: engram)` });
-    }
-  }
-  const out: MemoryConfigFile = {};
-  if (value.engram !== undefined) {
-    if (typeof value.engram !== "boolean") {
-      issues.push({ path: `${path}.engram`, message: `must be a boolean, got ${describe(value.engram)}` });
-    } else {
-      out.engram = value.engram;
-    }
-  }
-  return unknown ? undefined : out;
-}
-
-/**
- * Strict validator for the `autoLogSession` block (#394): a mode and, when the
- * operator declares one, a publisher argv.
- *
- * The argv is validated here rather than at session shutdown on purpose: a
- * malformed command discovered while a session tears down is a failure the
- * operator can neither see nor fix at that moment.
- */
-function checkAutoLogSession(value: unknown, path: string, issues: ConfigIssue[]): AutoLogSessionConfigFile | undefined {
-  if (!isRecord(value)) {
-    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
-    return undefined;
-  }
-  let unknown = false;
-  for (const key of Object.keys(value)) {
-    if (key !== "mode" && key !== "publisher") {
-      unknown = true;
-      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown autoLogSession key "${key}" (allowed: mode, publisher)` });
-    }
-  }
-  const out: AutoLogSessionConfigFile = {};
-  if (value.mode !== undefined) {
-    if (!(AUTO_LOG_SESSION_MODES as readonly string[]).includes(value.mode as string)) {
-      issues.push({ path: `${path}.mode`, message: `must be one of ${AUTO_LOG_SESSION_MODES.join(", ")}, got ${describe(value.mode)}` });
-    } else {
-      out.mode = value.mode as AutoLogSessionConfigFile["mode"];
-    }
-  }
-  if (value.publisher !== undefined) {
-    const publisher = checkAutoLogPublisher(value.publisher, `${path}.publisher`, issues);
-    if (publisher) out.publisher = publisher;
-    else unknown = true;
-  }
-  return unknown ? undefined : out;
-}
-
-/** The declared publisher's argv and timeout (#394, S3). */
-function checkAutoLogPublisher(value: unknown, path: string, issues: ConfigIssue[]): AutoLogSessionPublisherFile | undefined {
-  if (!isRecord(value)) {
-    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
-    return undefined;
-  }
-  let unknown = false;
-  for (const key of Object.keys(value)) {
-    if (key !== "command" && key !== "timeoutMs") {
-      unknown = true;
-      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown publisher key "${key}" (allowed: command, timeoutMs)` });
-    }
-  }
-  const out: AutoLogSessionPublisherFile = {};
-  if (value.command === undefined) {
-    issues.push({ path: `${path}.command`, message: "is required — a publisher with no command publishes nothing" });
-    unknown = true;
-  } else if (!Array.isArray(value.command)) {
-    issues.push({ path: `${path}.command`, message: `must be an array of strings, got ${describe(value.command)}` });
-    unknown = true;
-  } else if (value.command.length === 0 || value.command.length > AUTO_LOG_SESSION_MAX_ARGV) {
-    issues.push({ path: `${path}.command`, message: `must carry 1 to ${AUTO_LOG_SESSION_MAX_ARGV} elements, got ${value.command.length}` });
-    unknown = true;
-  } else if (value.command.some((part) => typeof part !== "string" || part.trim() === "")) {
-    issues.push({ path: `${path}.command`, message: "every element must be a non-empty string" });
-    unknown = true;
-  } else {
-    out.command = value.command as string[];
-  }
-  if (value.timeoutMs !== undefined) {
-    const timeout = value.timeoutMs;
-    if (!Number.isInteger(timeout) || (timeout as number) < 1 || (timeout as number) > AUTO_LOG_SESSION_MAX_TIMEOUT_MS) {
-      issues.push({
-        path: `${path}.timeoutMs`,
-        message: `must be an integer between 1 and ${AUTO_LOG_SESSION_MAX_TIMEOUT_MS}, got ${describe(timeout)}`,
-      });
-      unknown = true;
-    } else {
-      out.timeoutMs = timeout as number;
-    }
-  }
-  return unknown ? undefined : out;
-}
-
 /**
  * Strict validator for the `stateFlow` block (issue #174): the opt-in episode
  * lifecycle switch. An allowlist entry must be a non-empty command name — a

@@ -304,7 +304,7 @@ These files must be loaded when their topic is active:
 - Never write to `docs/LOGS.md` (S9 4b): LOGS.md must be pure code output —
   no model writes it. The journal is append-only: a wrong past line gets a
   *new correcting line*, never an edit. Machine-authored git-facts entries
-  (the extension's `autoLogSession: mechanical`, #394) also kill the
+  (the extension's `logSession: true`, #394/#427) also kill the
   "hand-tallied figure" class.
 - Self-audit box (S9 d): before committing, re-derive every claim the step's
   persist introduces with pasted output. The turn does not end with unreproduced

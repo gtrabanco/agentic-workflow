@@ -5,7 +5,7 @@
  * A skill invocation in pi is a context injection: nothing behind the slash
  * executes, so a model can read `/log-session` and *narrate* it. The mechanical
  * half of that skill was already code (`session-close.mjs`, the crate's
- * `journal name`, `autoLogSession`); this module anchors the remaining three
+ * `journal name`, `logSession`); this module anchors the remaining three
  * things a claim used to cover:
  *
  *  - **that the command ran** — `.pi/.session-<id>.log-session`, written by the
