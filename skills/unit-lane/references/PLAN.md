@@ -4,9 +4,29 @@
 
 Run **investigate → orient → ask → decide** over the plan itself: cite every
 task, sweep every claim against what the repository already decided, ask only
-what no source answers, and record the answers. Each task names its validator;
-the plan sequences prerequisite tasks **before** their dependants (topology
-precedes smallest-first — smallest within a ready set); no future-phase work.
+what no source answers, and record the answers. The plan journals **delta
+provenance** — only the claims the design pass did not already journal in
+`sources.md`, and it sweeps only those delta rows (§ Stage 1, § Stage 2). The
+loop itself runs fused or separated per the unit's recorded risk tier (block
+`activity-fusion@1` below). Each task names its validator; the plan sequences
+prerequisite tasks **before** their dependants (topology precedes smallest-first
+— smallest within a ready set); no future-phase work.
+
+### Activity fusion (`activity-fusion@1`)
+
+The same four-stage loop runs once or twice per unit; the unit's recorded risk
+tier decides which, never a judgment call:
+
+```text
+activity-fusion@1
+tier | pass shape | carriers | gates
+standard | one investigate→orient→ask→decide pass over the unit in one conductor session, the decision points tagged design (schemas, boundaries, retirements) and plan (tasks, validators, orders); stages 1–3 above run once — executing the loop again at standard is the defect this block owns | separated — sources.md / decisions.md / the SPEC's design half vs the unit doc's Tasks / Evidence | separated — both stages' pre-execution contracts bind per their owners (`PRE_EXECUTION_GATE.md`, `SNAPSHOT.md`); the fusion changes session composition, never gate ownership
+high | separated stages — the `design` step, then the `plan` step; the cold pre-execution-review separation stays where its owners put it, and this rule resurrects no reviewer pass | unchanged | unchanged
+```
+
+The conductor reads the tier from the unit doc's recorded verdict, the triage
+block's `Fused:` line is the run's machine annotation, and a `high` or
+unrecorded tier runs the steps separated exactly as before the fusion.
 
 ## Inputs
 
@@ -16,18 +36,21 @@ precedes smallest-first — smallest within a ready set); no future-phase work.
 
 ## Stage 1 — investigate
 
-Open with the same provenance search the design step ran, aimed at the plan's own
-claims ("does a validator for this exist?", "is this module already covered?",
-"did a prior unit decide this?"). Journal each claim as a row of the unit
-folder's `sources.md`, with the id prefix `CLAIM-`:
+Open with the plan's own claims — "does a validator for this exist?", "is this
+module already covered?", "did a prior unit decide this?" — and journal **delta
+provenance**: a claim enters the unit folder's `sources.md` as a `CLAIM-*` row
+only when the design pass did not already journal it. The `INV-*` rows the
+design stage wrote settle themselves; re-journaling a settled claim is a
+defect, not thoroughness — one claim, one row, whichever stage wrote it first.
 
 | id | claim | source | provenance | certainty |
 |---|---|---|---|---|
 | CLAIM-001 | <the plan claim, one line> | `<path:line>`, prior `decisions.md:line`, or `owner answer <Q-id>` | repository / version-pinned doc / owner answer / model memory | confirmed / inferred / unknown |
 
 Two claims never need a search: the unit's own acceptance criteria (the design
-step cited them) and its non-goals. Everything else does — a plan claim with no
-source and no owner answer is the defect this stage exists to catch. The
+step cited them) and its non-goals. Everything else the design pass did not
+settle does — a plan claim with no source and no owner answer is the defect
+this stage exists to catch. The
 provenance kinds and the certainty ceiling are owned by `DESIGN.md`
 (§ Provenance — model memory is never tier-0); this table journals the same
 columns, it does not restate the rule. An external implementation-detail claim
@@ -36,15 +59,16 @@ a `model memory` row can never carry `confirmed`.
 
 ## Stage 2 — orient
 
-Re-run the provenance tier over the plan's claims, then sweep every one of them
-against what the repository has **already decided in writing** — a plan must not
-contradict a prior decision in architecture, engineering, product, or any other
-domain. A claim the provenance search explains is settled at tier 0: point the
-row at `path:line` and move on. **Record where you looked** for every row the
-search did not settle — the greps meant for it and the prior units of the same
-area. In the same pass, check that the acceptance criteria are the plan's
-*input*, not a claim it re-decides: a task that would change an AC belongs to the
-design step, not here.
+Sweep only the delta rows — the `CLAIM-*` rows this pass added — against what
+the repository has **already decided in writing**; a plan must not contradict a
+prior decision in architecture, engineering, product, or any other domain. The
+`INV-*` rows the design pass journaled were swept there, and sweeping them
+again buys one search twice. A delta claim the provenance search explains is
+settled at tier 0: point the row at `path:line` and move on. **Record where you
+looked** for every row the search did not settle — the greps meant for it and
+the prior units of the same area. In the same pass, check that the acceptance
+criteria are the plan's *input*, not a claim it re-decides: a task that would
+change an AC belongs to the design step, not here.
 
 **Candidate sources** — deterministic keyword/FTS matching, no new index and no
 new tooling: `docs/features/<NN>-<slug>/decisions.md`,
@@ -62,7 +86,7 @@ user, per the existing rules. A plan with **no candidate match is clean and
 proceeds** — a miss never blocks it, a missed candidate can never void a plan,
 and the sweep issues no stage verdict and grants no gate of its own.
 
-Pass only if: ✓ the provenance search ran and where you looked is recorded ✓ every `CLAIM-*` row was swept ✓ every `contradicts` hit is either
+Pass only if: ✓ the provenance search ran and where you looked is recorded ✓ every delta `CLAIM-*` row was swept ✓ every `contradicts` hit is either
 resolved from a frozen NRS fact or backlogged for the ask stage ✓ no task
 re-decides an acceptance criterion.
 
@@ -198,9 +222,10 @@ name those files instead.
 
 ## Checklist (pass only if)
 
-- [ ] The provenance search ran first and its receipt is recorded for every plan claim
-- [ ] Every claim (CLAIM-001, …) cites its source or an owner answer in `sources.md`, including every acceptance criterion it rests on — none is blank, `—`, or `n/a`
-- [ ] Every claim was swept against the candidate sources; each `contradicts` hit is resolved or asked
+- [ ] The provenance search ran first over the delta claims and its receipt is recorded for each — an `INV-*` row the design pass journaled is not re-searched
+- [ ] Every claim (CLAIM-001, …) cites its source or an owner answer in `sources.md`, including every acceptance criterion it rests on — none is blank, `—`, or `n/a`; an `INV-*` claim the design pass already journaled is never re-journaled (delta provenance)
+- [ ] Every delta claim was swept against the candidate sources; each `contradicts` hit is resolved or asked
+- [ ] The recorded risk tier decides the pass shape (block `activity-fusion@1`): at `standard` the design and plan decision points share one investigate→orient→ask→decide loop in one conductor session and no stage was re-run; at `high` or unrecorded the steps ran separated
 - [ ] Every question asked was recorded in `decisions.md` with its resolution (or the questions pane says `none`)
 - [ ] Every AC maps to at least one task, and no task re-decides an AC
 - [ ] Every retirement the design declared is its own task, carrying the negative-capability pin as its validator plus the sweep grep and the before/after reference count — or the plan states why nothing can be removed

@@ -310,8 +310,8 @@ test("PLAN.md owns the activity-fusion@1 block with both tier rows", () => {
   assert.match(block[1], /standard \|.*one investigate→orient→ask→decide pass/, "standard = one pass");
   assert.match(block[1], /standard \|.*one conductor session/, "standard = one conductor session");
   assert.match(block[1], /standard \|.*tagged/, "decision points are tagged design/plan");
-  assert.match(block[1], /carriers \| separated/, "carriers stay separated");
-  assert.match(block[1], /gates \| separated/, "gates stay separated");
+  assert.match(block[1], /\|\s*separated — sources\.md/, "carriers stay separated");
+  assert.match(block[1], /\|\s*separated — both stages/, "gates stay separated");
   assert.match(block[1], /separated stages/, "high keeps separated stages");
   assert.match(block[1], /cold pre-execution-review/, "the cold pre-execution-review separation is named");
 });
@@ -320,7 +320,7 @@ test("PLAN.md carries the delta-provenance rule and the AC-as-input guard", () =
   assert.match(plan, /only.*claims the design pass did not already journal/i, "the plan journals only delta claims");
   assert.match(plan, /sweep only the delta/i, "the sweep runs over the delta rows only");
   assert.match(plan, /input/, "the AC-as-input guard stays");
-  assert.match(plan, /not re-decide|no task re-decides an acceptance criterion/, "no task re-decides an AC");
+  assert.match(plan, /no task\s+re-decides an acceptance criterion/, "no task re-decides an AC");
 });
 
 test("the superseded full re-run sentence is deleted (replace-implies-delete)", () => {
