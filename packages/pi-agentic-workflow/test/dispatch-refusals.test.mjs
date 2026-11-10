@@ -142,8 +142,13 @@ test("AC6/AC12: real absence stays zero-config while an unreadable file is a pro
     cwd: "/fixture/repo",
     projectTrusted: true,
     readFile: (path) => {
-      if (path.includes("/.pi/")) return null;
-      throw Object.assign(new Error("EISDIR: illegal operation on a directory"), { code: "EISDIR" });
+      // #427 put two files in the agent dir (the pi file and the base feature
+      // file); name the one file that is unreadable instead of throwing for the
+      // whole directory, so "one unreadable file" stays one problem.
+      if (path === "/fixture/agent/pi-agentic-workflow.json") {
+        throw Object.assign(new Error("EISDIR: illegal operation on a directory"), { code: "EISDIR" });
+      }
+      return null;
     },
   });
   assert.equal(unreadable.ok, false);

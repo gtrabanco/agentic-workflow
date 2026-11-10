@@ -12,6 +12,7 @@
         "agentic-workflow": "./bin/agentic-workflow.mjs",
       },
       "dependencies": {
+        "@gtrabanco/agentic-workflow-schema": "4.10.0",
         "mdast-util-from-markdown": "2.1.0",
         "typebox": "1.4.6",
       },

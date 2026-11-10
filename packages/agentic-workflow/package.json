@@ -18,8 +18,8 @@
     "bun": ">=1.4"
   },
   "scripts": {
-    "test": "bun test --timeout=30000 test/",
-    "test:node": "node --test"
+    "test": "bun run --cwd ../agentic-workflow-schema build && bun test --timeout=30000 test/",
+    "test:node": "bun run --cwd ../agentic-workflow-schema build && node --test"
   },
   "files": [
     "bin",
@@ -27,6 +27,7 @@
     "README.md"
   ],
   "dependencies": {
+    "@gtrabanco/agentic-workflow-schema": "4.10.0",
     "mdast-util-from-markdown": "2.1.0",
     "typebox": "1.4.6"
   }

@@ -38,42 +38,52 @@ const cwd = "/fixture/repo";
 const paths = configFilePaths(agentDir, cwd);
 const commands = ["design-feature", "execute-phase", "plan-feature"];
 
-/** Answer queue keyed by the exact prompt title; arrays are consumed in order. */
+/** Answer queue keyed by the exact prompt title; arrays are consumed in order.
+ *  A scalar is consumed once — a re-served scalar is the signature of an
+ *  infinite re-prompt loop (a refused scope or a save that keeps failing), so
+ *  the second ask throws instead of feeding the loop. A prompt that is
+ *  legitimately re-asked with the same answer (the per-route field chooser's
+ *  console-level default) is declared with `repeat(value)`, which re-serves
+ *  forever and can never mask a loop the fixture did not opt into. */
+const REPEAT = Symbol("scripted-repeat");
+const repeat = (value) => ({ [REPEAT]: value });
+
 function scriptedUi(answers) {
   const asked = [];
   const notify = [];
-  const take = (title, kind) => {
-    asked.push({ title, kind });
+  const consumed = new Set();
+  const serve = (title, kind, entry, { whole = false } = {}) => {
+    asked.push(entry ?? { title, kind });
     if (!Object.hasOwn(answers, title)) throw new Error(`no scripted ${kind} answer for: ${title}`);
     const value = answers[title];
-    return Array.isArray(value) ? value.shift() : value;
+    if (value !== null && typeof value === "object" && REPEAT in value) return value[REPEAT];
+    if (Array.isArray(value)) return whole ? value : value.shift();
+    if (consumed.has(title)) throw new Error(`scripted ${kind} answer for "${title}" was already consumed — re-asked scalars loop forever; wrap the value in repeat() or script an array`);
+    consumed.add(title);
+    return value;
   };
   return {
     asked,
     notify,
     ui: {
       select: async (title, options) => {
-        asked.push({ title, kind: "select", options });
         // The ordered chain builder asks "Model chain for <target>?" after every
         // model pick; default it to Done so a single-model route needs no extra
         // answer. A test that builds a chain provides an explicit chainAction slot.
         if (!Object.hasOwn(answers, title) && /^Model chain for .+\?$/u.test(title)) {
+          asked.push({ title, kind: "select", options });
           return prompts.chainDone;
         }
-        if (!Object.hasOwn(answers, title)) throw new Error(`no scripted select answer for: ${title}`);
-        const value = answers[title];
-        return Array.isArray(value) ? value.shift() : value;
+        return serve(title, "select", { title, kind: "select", options });
       },
       pick: async (title, options, opts = {}) => {
-        asked.push({ title, kind: "pick", options, opts });
-        if (!Object.hasOwn(answers, title)) throw new Error(`no scripted pick answer for: ${title}`);
-        const value = answers[title];
+        const value = serve(title, "pick", { title, kind: "pick", options, opts }, { whole: !!opts.multiple });
         // A multiple pick returns the whole selection; a single pick consumes a queue.
         if (opts.multiple) return Array.isArray(value) ? value : [value];
-        return Array.isArray(value) ? value.shift() : value;
+        return value;
       },
-      input: async (title) => take(title, "input"),
-      confirm: async (title) => take(title, "confirm"),
+      input: async (title) => serve(title, "input"),
+      confirm: async (title) => serve(title, "confirm"),
       notify: (message, kind) => notify.push({ message, kind }),
     },
     questions: () => asked.map((entry) => entry.title),
@@ -92,7 +102,8 @@ function consoleOver(files, { trusted = true, answers = {}, models, rich = true,
   // P5 added the field chooser to every route edit. Default to "both" so the
   // pre-existing fixtures (which supply model + thinking answers) behave as
   // before; tests that exercise field independence override `prompts.fields`.
-  const scripted = scriptedUi({ [prompts.fields]: prompts.fieldsBoth, ...answers });
+  // The default is `repeat()`ed because the chooser is asked once per route edit.
+  const scripted = scriptedUi({ [prompts.fields]: repeat(prompts.fieldsBoth), ...answers });
   // `rich: false` strips the picker so the non-TUI fallback path is exercised
   // (OB-12): a console without a rich picker must still complete via select/input.
   const ui = rich
@@ -1548,17 +1559,20 @@ test("AC11: selecting the default profile does not create a profiles.default ent
   assert.deepEqual(saved.default, { model: "w/1", thinking: "high" });
 });
 
-test("F4: saving keeps the keys the console never prompts for — memory, pathProtection, advance", async () => {
-  // The consent switch the Engram substrate ships behind (feature 66, AC3) lives
-  // in this file. `clean()` enumerated the keys it copied, so any key outside
-  // that list — `memory`, and the pre-existing `pathProtection` / `advance` —
-  // was parsed into the draft and then dropped on write: an operator who opted
-  // in by hand lost the opt-in the next time they saved a route.
+test("F4: saving keeps the keys the console never prompts for — passes, subagents", async () => {
+  // `clean()` enumerated the keys it copied, so any key outside that list was
+  // parsed into the draft and then dropped on write. The pi file's own sections
+  // the console does not edit are the live case now that feature config lives
+  // in the base file (#427): an operator's pass routes and resource limits must
+  // survive a route save.
+  // #201 closes the pass vocabulary: the key must be a published pass name or
+  // `default`, so the fixture uses `review-code` — a member of PASS_NAMES. A
+  // typo'd pass name is refused at parse time and `openScope` then refuses to
+  // open the file at all (it is evidence, not noise to clobber).
   const existing = {
     default: { model: "openai/gpt-5.2", thinking: "low" },
-    memory: { engram: true },
-    pathProtection: { protectedGlobs: ["scripts/**"] },
-    advance: { iterationsCap: 3, runLogPath: ".agentic-workflow/tmp/advance.jsonl" },
+    passes: { "review-code": { model: "openai/gpt-5.2" } },
+    subagents: { parallelism: 2 },
   };
   const { outcome, written } = await run(
     { [paths.global]: JSON.stringify(existing) },
@@ -1573,9 +1587,8 @@ test("F4: saving keeps the keys the console never prompts for — memory, pathPr
 
   assert.equal(outcome.status, "saved");
   const saved = JSON.parse(written.get(paths.global));
-  assert.deepEqual(saved.memory, { engram: true }, "the Engram opt-in survives a save");
-  assert.deepEqual(saved.pathProtection, { protectedGlobs: ["scripts/**"] }, "the tighten-only override survives");
-  assert.deepEqual(saved.advance, existing.advance, "the conductor knobs survive");
+  assert.deepEqual(saved.passes, existing.passes, "the pass routes survive a save");
+  assert.deepEqual(saved.subagents, existing.subagents, "the subagent limits survive");
   assert.deepEqual(saved.default, { model: "openai/gpt-5.2", thinking: "low" }, "and the untouched route is still written");
 });
 

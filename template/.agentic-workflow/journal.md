@@ -14,7 +14,7 @@ Creating `.agentic-workflow/journal/` **is** the opt-in. From then on:
 | Writer | Without the carrier | With the carrier |
 |---|---|---|
 | The template's SessionEnd hook (`.claude/hooks/log-session-end.sh`) | appends the mechanical entry to `docs/LOGS.md` | writes a **fragment** under `.agentic-workflow/journal/`; never touches `docs/LOGS.md` |
-| The pi extension (`autoLogSession: mechanical`) | same append | same fragment behaviour (one crate, one grammar) |
+| The pi extension (`logSession: mechanical`) | same append | same fragment behaviour (one crate, one grammar) |
 | `/log-session` (narrative entry) | appends to `docs/LOGS.md` | writes one narrative fragment; `session-close close` commits the fragments and **refuses a touched `docs/LOGS.md`** |
 | The **aggregator** (this carrier's merge step) | — | the **only** writer of `docs/LOGS.md`: appends the pending fragments newest-first and deletes them |
 

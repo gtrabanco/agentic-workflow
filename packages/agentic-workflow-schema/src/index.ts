@@ -4223,6 +4223,38 @@ export type {
   DocProvenanceViolation,
 } from "./doc-provenance.js";
 
+// ---------------------------------------------------------------------------
+// Unified config contract (issue #427)
+// ---------------------------------------------------------------------------
+export {
+  BASE_CONFIG_FILE,
+  BASE_CONFIG_SECTIONS,
+  CONFIG_EXTENSION_CONTRACT,
+  CONFIG_EXTENSIONS_DIR,
+  composeConfigSchema,
+  effectiveSections,
+  fillDefaults,
+  normalizeLogSession,
+  resolveConfigDocuments,
+  sanitizeJsonSchema,
+  sanitizeSectionValue,
+  validateConfigExtension,
+  validateJsonSchema,
+  validateSectionValue,
+} from "./config.js";
+export type {
+  ConfigCategory,
+  ConfigDocuments,
+  ConfigExtensionDescriptor,
+  ConfigIssue,
+  ConfigSectionSpec,
+  JsonSchema,
+  ResolveConfigInput,
+  ResolvedConfig,
+} from "./config.js";
+export { parseJsonc, stringifyJsoncValue } from "./config-jsonc.js";
+export type { JsoncError, JsoncResult } from "./config-jsonc.js";
+
 // ── The machine gate receipt (issue #409) ──────────────────────────────────
 // The project verification gate's output as one bounded document: the content
 // manifest is the validity criterion and the HEAD sha is provenance only.
