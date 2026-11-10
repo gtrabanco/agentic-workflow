@@ -1,0 +1,9 @@
+# The generated projection and the roadmap tables are functions of the tree,
+# never hand-merged surfaces (scripts/docs-generate.mjs). Two branches that
+# insert rows at the same position in one of these tables collide on bytes
+# neither author wrote; this driver answers the incoming side and the local
+# gate's `docs-generated-projection` step keeps a mechanically-resolved file
+# honest. Arm the driver once per checkout (optional):
+#   bun scripts/docs-generated-merge.mjs --install
+docs/generated/** merge=docs-generated
+docs/ROADMAP.md merge=docs-generated
