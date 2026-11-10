@@ -99,3 +99,31 @@ Spot check: `bun test scripts/worktree-guard.test.mjs` → match (E3 reported ex
   (docs-generate --check → PASS) were also re-run end-to-end and matched.
 Verdict: NEEDS-DECISION (B1 spec-unlinked S7/S8 · B2 P4 validator stale · B3 AC-S5/P5 gate-exit-0 unamended)
 ```
+
+## Correction batch — 2026-11-10 (S1: "Apply to this repository: fix these findings")
+
+Scope (stated assumption): the three blockers only; the five advisories stay report-only.
+
+- **B1 folded** · `2418c5f6` — P3 links S7, P5 links S8. RED before: phase-lint
+  exit 1 (`spec-unlinked` ×2). Re-run: `node scripts/phase-lint.mjs docs/fix/505-worktree-prune/SPEC.md`
+  → exit 0, verdict PASS, all five fingerprints unchanged.
+- **B2 folded** · `2418c5f6` — P4's validator carries L2's amended demand
+  (`rg -c 'temp-worktrees' AGENTS.md` exits 1) and the three-category
+  `.git/worktrees` match. Re-run: exit 1 (0 matches) as declared.
+- **B3 folded** · `2418c5f6` — AC-S5's Check and P5's validator state the gate as
+  it reproduces; ac-hash re-stamped `cacc3cb433aed6be2aee22f74bfb30664946c6d7e3462f6c2de4a5f52c0d71c6`
+  with the sectionText recipe. G3 at `HEAD 2418c5f6…`: 9 dispatched gate steps
+  exit 0; `worktree-guard` run directly exit 0 · 0 finding(s); `bun run test:node`
+  (pi-node-compat) exit 0; standalone `node scripts/run-root-suite.mjs` →
+  exit 1 · **100 PASS / 1 FAIL** — the single red is `roadmap-settle` 494
+  row-missing (base class); every load-flake green standalone.
+
+Disclosed, none change-caused, none in the batch's scope (§9: owner's call):
+the pre-batch `ac-hash` matched no committed state (stale since the cut — the
+plan-repair re-stamp above resolves it); `verify` still answers the 2 pre-existing
+`receipt-malformed-head` violations (G1/G2 lack a HEAD sha — proven on base bytes)
+and the O5/E5 scratch-path citation (proven on base bytes whenever a `.worktrees`
+directory exists); mid-batch concurrency — another session landed `fca3ce2c` and
+`dca16598` and the owner opened PR #508 at `d257a867` (this batch is local-only).
+
+Verdict unchanged: **NEEDS-DECISION (B1–B3)** until the owner's delta recheck.
