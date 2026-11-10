@@ -178,11 +178,12 @@ OPEN rows only, appended by `review-change` and `triage-issue` (`findings-table@
 - **G5** — 2026-11-09, `node scripts/run-root-suite.mjs` · exit 0 · 101 suites PASS, 0 fail (final run; the run before the repairs failed 2: `check-skill-context` and `roadmap-settle` slug-mismatch — both repaired).
 - **E5** — 2026-11-09, `bun test` packages/pi-agentic-workflow (777 pass / 0 fail) and packages/pi-nan-agentic-workflow (20 pass / 0 fail).
 - **E6** — 2026-11-09, `git diff HEAD -- packages/agentic-workflow packages/agentic-workflow-schema` · empty (O13 holds on this branch's base). **Discovery: the branch is 19 commits behind `main` — #427 (unified config schema) merged mid-unit; `git merge-tree` reports content conflicts in `src/config/{merge,schema,types}.ts`. Reported to the owner with options; no integration guessed.
-- **P7** — 2026-11-09, obligations ledger closed: all 15 rows `verified` on foreground runs (O13 with the base-scope note above). Handoff awaits the owner's verdict (§8) and the integration decision (E6).
+- **E7** — 2026-11-09, owner decision `integrate-now`: `git merge main` (19 commits, #427 unified config) resolved on the branch — tierRouting re-homed beside the routing keys the pi section owns (strict-parser ROOT_KEYS, ConfigFile/EffectiveConfig with #427's base-file split kept, project-over-global merge, and #427's published descriptor `PI_CONFIG_EXTENSION` + committed `agentic-workflow.config.json`, byte-pin intact); roadmap rows 427/388 both kept. Post-merge verification: pi package 779/0, companion 20/0, crate 604/0, schema 836/0, root suite 101 PASS / 0 FAIL, `docs-generate --check` PASS, parity gate PASS; O13 re-verified clean against the new main (`git diff main -- packages/agentic-workflow packages/agentic-workflow-schema` empty). Merge commit `6cd67e3b` + projection regeneration.
+- **P7** — 2026-11-09, obligations ledger closed: all 15 rows `verified` on foreground runs. Handoff awaits the owner's verdict on the integrated diff (§8).
 
 ## Next
 
-Owner verdict on the diff, then the integration decision on E6 (integrate main + resolve the 3 conflicted config files on this branch, or deliver on the pre-#427 base and integrate after).
+Owner verdict on the integrated diff (the branch now carries #427's main + this change; E7 records the resolution).
 
 ## References
 
