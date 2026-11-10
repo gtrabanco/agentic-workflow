@@ -238,8 +238,8 @@ test("readAllowlist: malformed JSON, a bare entry, a missing reason or measured 
 /* ------------------------------------------------------- per-test budget */
 
 test("the per-test budget defaults to 10s and lands in the child's own runner flags", () => {
-  assert.deepEqual(argvFor("scripts/a.test.mjs", false, 10_000), ["test", "--timeout=10000", "scripts/a.test.mjs"]);
-  assert.deepEqual(argvFor("scripts/a.test.mjs", true, 10_000), ["test", "--timeout=10000", "--bail=1", "scripts/a.test.mjs"]);
+  assert.deepEqual(argvFor("scripts/a.test.mjs", false, 10_000, "bun"), ["test", "--timeout=10000", "scripts/a.test.mjs"]);
+  assert.deepEqual(argvFor("scripts/a.test.mjs", true, 10_000, "bun"), ["test", "--timeout=10000", "--bail=1", "scripts/a.test.mjs"]);
   assert.deepEqual(argvFor("scripts/a.test.mjs", false, 10_000, "node"), ["--test", "--test-timeout=10000", "scripts/a.test.mjs"]);
 });
 
@@ -252,27 +252,31 @@ test("testBudgetFor: an allowlisted suite gets its own budget, everything else t
 
 /* -------------------------------------------------- execution bounds (live) */
 
-/** A suite whose only test loops on already-resolved promises — the incident
- *  class of issue #493: bun's timer-based per-test timeout never fires, so
- *  only the gate's external signal can end it. */
+/** A suite whose only test never resolves while keeping the event loop alive
+ *  (a keep-alive timer, no test completion): past the suite bound, the runner's
+ *  own per-test timer (10 s by default) has not fired, so only the gate's
+ *  external, signal-based killer can end it — the verdict must be named
+ *  (`SUITE TIMEOUT`), never a silent pass (issue #493 S2, S7). */
 function writeHangingFixture(dir) {
   const file = join(dir, "hang.test.mjs");
   writeFileSync(
     file,
     'import { test } from "node:test";\n' +
-      'test("hangs on a microtask-starved loop", async () => { for (;;) await Promise.resolve(); });\n',
+      'test("never resolves", () => new Promise(() => setInterval(() => {}, 1_000)));\n',
   );
   return file;
 }
 
-/** A suite that allocates ~1.5 GB then passes — past any reasonable cap when
- *  the watchdog is armed, harmless (if hungry) when it is not. */
+/** A suite that grows ~1.5 GB a few MB at a time and never finishes — the
+ *  watchdog (250 ms sampling) must catch it long before the allocation lands
+ *  when the cap is armed; without the cap it runs until the outer bound. */
 function writeAllocatingFixture(dir) {
   const file = join(dir, "alloc.test.mjs");
   writeFileSync(
     file,
     'import { test } from "node:test";\n' +
-      'test("allocates past the cap", () => { const buffers = []; for (let i = 0; i < 96; i += 1) buffers.push(Buffer.alloc(16 * 1024 * 1024, 1)); });\n',
+      'const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n' +
+      'test("grows past the cap", async () => { const buffers = []; for (let i = 0; i < 192; i += 1) { buffers.push(Buffer.alloc(8 * 1024 * 1024, 1)); await pause(20); } await new Promise(() => {}); });\n',
   );
   return file;
 }
