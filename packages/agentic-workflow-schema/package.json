@@ -73,8 +73,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsc && tsc -p tsconfig.test.json && bun test --timeout=60000 test/*.test.mjs",
-    "test:node": "tsc && tsc -p tsconfig.test.json && node --test --test-timeout=60000 test/*.test.mjs",
+    "test": "tsc && tsc -p tsconfig.test.json && bun test --timeout=10000 test/*.test.mjs",
+    "test:node": "tsc && tsc -p tsconfig.test.json && node --test --test-timeout=10000 test/*.test.mjs",
     "prepublishOnly": "bun run test",
     "check:verification-schemas": "tsc && bun scripts/generate-verification-schemas.mjs --check",
     "check:verification-package": "bun scripts/check-verification-package.mjs",
