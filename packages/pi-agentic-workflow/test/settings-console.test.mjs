@@ -79,6 +79,27 @@ function scriptedUi(answers) {
 
 const readFrom = (map) => (path) => (path in map ? map[path] : null);
 
+// Issue #493 (S5): the harness converts the whole hang class into a red
+// failure — a scalar answer consumed a second time, or an array run dry,
+// throws instead of feeding the console's re-ask loops forever.
+test("scriptedUi trap: a scalar answer consumed a second time throws, and an array that runs dry throws", async () => {
+  const harness = scriptedUi({ "Pick one": "first", "List": ["a", "b"] });
+  assert.equal(await harness.ui.select("Pick one"), "first");
+  await assert.rejects(() => harness.ui.select("Pick one"), /no scripted select answer for: Pick one/);
+  assert.equal(await harness.ui.select("List"), "a");
+  assert.equal(await harness.ui.select("List"), "b");
+  await assert.rejects(() => harness.ui.select("List"), /no scripted select answer for: List/);
+});
+
+test("scriptedUi trap: a dead-end re-ask fails red in under 100 ms, never hangs", async () => {
+  const harness = scriptedUi({ "Dead end": "only" });
+  const started = performance.now();
+  assert.equal(await harness.ui.confirm("Dead end"), true);
+  await assert.rejects(() => harness.ui.confirm("Dead end"), /no scripted confirm answer for: Dead end/);
+  const elapsed = performance.now() - started;
+  assert.ok(elapsed < 100, `the trap fired in ${elapsed.toFixed(1)} ms, never hangs`);
+});
+
 function writeCollector() {
   const written = new Map();
   return { written, writeFile: (path, text) => written.set(path, text) };
