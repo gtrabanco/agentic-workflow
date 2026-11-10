@@ -206,6 +206,11 @@ export interface ConfigFile {
    *  means tier routing stays on; the tier policy itself lives in the
    *  preset, never here. */
   tierRouting?: boolean | TierRoutingConfig;
+  /** Issue #388 amendment 2: the ordered selection for multi-profile presets —
+   *  one profile name or an array (first = most preferred). The names are
+   *  companion-defined; absent means each preset resolves its own default
+   *  profile. */
+  presetProfile?: string | string[];
   /** Issue #201: per-pass model/thinking declarations for spawned review
    *  passes, keyed by the published pass names plus the `default` escape. */
   passes?: PassesConfigFile;
@@ -285,6 +290,9 @@ export interface EffectiveConfig {
   /** Issue #388 amendment 1: the tier-routing opt-out, merged project over
    *  global. Absent means routing on. */
   tierRouting?: boolean | TierRoutingConfig;
+  /** Issue #388 amendment 2: the presetProfile selection, merged project over
+   *  global. Absent means each preset resolves its own default profile. */
+  presetProfile?: string | string[];
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe (feature 63, AC6). */

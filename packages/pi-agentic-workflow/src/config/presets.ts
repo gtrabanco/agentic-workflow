@@ -15,9 +15,16 @@
 
 import type { EffectiveConfig, RecommendedProfile } from "./types.js";
 
-/** What a preset's resolver receives: the merged, validated config. */
+/** What a preset's resolver receives: the merged, validated config, plus —
+ *  amendment 2 — the named profile the chain asked for. `profile` is present
+ *  only when a catalog profile is addressed (a `<provider>.<profile>` chain
+ *  name, or the preset's own default); absent means the preset's whole-catalog
+ *  default. */
 export interface PresetResolutionInput {
   config: EffectiveConfig;
+  /** The profile name the chain selected — a catalog member, never the
+   *  compound chain name. */
+  profile?: string;
 }
 
 /**
@@ -30,6 +37,15 @@ export interface ProviderPreset {
   /** The provider id the preset routes to (`provider/modelId` prefix) and the
    *  profile name it contributes to the chain. */
   provider: string;
+  /** Amendment 2: the named profiles the preset contributes, in the order the
+   *  provider documents them. Defined → the chain names each entry
+   *  `provider.profile`; undefined → the single legacy profile carried under
+   *  the bare provider name. */
+  profiles?: readonly string[];
+  /** Which catalog profile the bare provider name (and an empty or fully
+   *  unknown `presetProfile` selection) resolves to. Required whenever
+   *  `profiles` is set. */
+  defaultProfile?: string;
   resolveProfile(input: PresetResolutionInput): RecommendedProfile;
 }
 
@@ -64,4 +80,27 @@ export function getProviderPresets(): readonly ProviderPreset[] {
 /** Look one preset up by provider id. */
 export function findProviderPreset(provider: string): ProviderPreset | undefined {
   return registry.get(provider);
+}
+
+/** The chain name one preset profile travels under: bare provider for the
+ *  legacy single-profile shape, `provider.profile` for a catalog member. */
+export function presetChainName(preset: ProviderPreset, profileName: string | undefined): string {
+  return profileName === undefined ? preset.provider : `${preset.provider}.${profileName}`;
+}
+
+/** Which preset (and which of its catalog profiles) one chain name addresses.
+ *  An exact provider hit wins (legacy bare name, resolved to the preset's
+ *  default profile when it carries a catalog); otherwise a first-dot split
+ *  must hit a registered provider whose catalog contains the profile. */
+export function resolvePresetEntry(name: string): { preset: ProviderPreset; profile: string | undefined } | undefined {
+  const exact = findProviderPreset(name);
+  if (exact) {
+    return { preset: exact, profile: exact.profiles ? (exact.defaultProfile ?? exact.profiles[0]) : undefined };
+  }
+  const dot = name.indexOf(".");
+  if (dot <= 0 || dot === name.length - 1) return undefined;
+  const preset = findProviderPreset(name.slice(0, dot));
+  const profile = name.slice(dot + 1);
+  if (preset && preset.profiles?.includes(profile)) return { preset, profile };
+  return undefined;
 }

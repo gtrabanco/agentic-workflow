@@ -46,6 +46,7 @@ const ROOT_KEYS = new Set([
   "profileOrder",
   "profileFallback",
   "tierRouting",
+  "presetProfile",
   "passes",
   "subagents",
   "stateFlow",
@@ -136,6 +137,42 @@ function checkTierRouting(value: unknown, issues: ConfigIssue[]): NonNullable<Co
   }
   if (issues.some((issue) => issue.path.startsWith("$.tierRouting"))) return undefined;
   return out;
+}
+
+/** Strict validator for the `presetProfile` selection (issue #388 amendment
+ *  2): one profile slug or an ordered array of profile slugs. The NAMES are
+ *  companion-defined — this validates the shape only; the registry filters
+ *  unknown names at chain build. */
+function checkPresetProfile(value: unknown, issues: ConfigIssue[]): NonNullable<ConfigFile["presetProfile"]> | undefined {
+  const slug = (v: unknown, path: string): string | undefined => {
+    if (typeof v !== "string" || !COMMAND_NAME.test(v)) {
+      issues.push({ path, message: `must be a lowercase slug, got ${describe(v)}` });
+      return undefined;
+    }
+    return v;
+  };
+  if (typeof value === "string") {
+    return slug(value, "$.presetProfile");
+  }
+  if (!Array.isArray(value)) {
+    issues.push({ path: "$.presetProfile", message: `must be a profile name or an array of profile names, got ${describe(value)}` });
+    return undefined;
+  }
+  if (value.length === 0) {
+    issues.push({ path: "$.presetProfile", message: "must name at least one profile (an empty selection selects nothing)" });
+    return undefined;
+  }
+  const names: string[] = [];
+  let invalid = false;
+  value.forEach((entry, index) => {
+    const name = slug(entry, `$.presetProfile.${index}`);
+    if (name === undefined) {
+      invalid = true;
+      return;
+    }
+    names.push(name);
+  });
+  return invalid ? undefined : names;
 }
 
 /** Strict validator for the `profileOrder` array (feature 63, AC6). */
@@ -573,6 +610,11 @@ function validateConfig(value: unknown): ParseResult {
   if (value.tierRouting !== undefined) {
     const tierRouting = checkTierRouting(value.tierRouting, issues);
     if (tierRouting !== undefined) config.tierRouting = tierRouting;
+  }
+
+  if (value.presetProfile !== undefined) {
+    const presetProfile = checkPresetProfile(value.presetProfile, issues);
+    if (presetProfile !== undefined) config.presetProfile = presetProfile;
   }
 
   if (value.passes !== undefined) {

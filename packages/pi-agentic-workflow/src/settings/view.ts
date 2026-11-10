@@ -34,7 +34,13 @@ export function renderMergedConfig(
     (preset) => loaded.config.recommendedModels && opts?.providerAvailable?.(preset.provider),
   );
   const hint = availablePresets.length > 0
-    ? ` (${availablePresets.map((p) => `built-in ${p.provider} profile in the chain`).join(", ")})`
+    ? ` (${availablePresets
+        .map((p) =>
+          p.profiles
+            ? `built-in ${p.provider} profiles: ${p.profiles.join(", ")}${p.defaultProfile ? ` — default ${p.defaultProfile}` : ""}`
+            : `built-in ${p.provider} profile in the chain`,
+        )
+        .join(", ")})`
     : "";
   return [
     "agentic-workflow routing — what each command runs on right now",

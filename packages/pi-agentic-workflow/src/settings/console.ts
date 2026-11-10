@@ -25,7 +25,7 @@ import type { ConfigFile, ModelRef, ModelSetting, ProfileFile, Route, RouteFile,
 
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 import { SELECT_OPTION_LIMIT, pagedSelect, providerOf } from "./picker.js";
-import { findProviderPreset, getProviderPresets } from "../config/presets.js";
+import { getProviderPresets, resolvePresetEntry } from "../config/presets.js";
 
 export interface SettingsDeps {
   ui: SettingsUi;
@@ -165,7 +165,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       if (picked === undefined) continue;
       // P5: a preset-contributed profile cannot be edited — create a profile
       // to override it (issue #388: the rule generalizes to every preset).
-      if (findProviderPreset(picked) !== undefined && draft.profiles?.[picked] === undefined) {
+      if (resolvePresetEntry(picked) !== undefined && draft.profiles?.[picked] === undefined) {
         deps.ui.notify(prompts.profileBuiltIn(picked), "warning");
         continue;
       }
@@ -370,6 +370,12 @@ async function pickProfile(deps: SettingsDeps, draft: ConfigFile, { allowNew }: 
   // unless user-defined — issue #388).
   for (const preset of getProviderPresets()) {
     if (!names.includes(preset.provider)) names.push(preset.provider);
+    // Amendment 2: a catalog preset also lists each profile entry it carries,
+    // under its chain name.
+    for (const profile of preset.profiles ?? []) {
+      const compound = `${preset.provider}.${profile}`;
+      if (!names.includes(compound)) names.push(compound);
+    }
   }
   const options = allowNew ? [...names, prompts.newProfile] : names;
   const picked = await pagedSelect((title, list) => deps.ui.select(title, list), prompts.profile, options);
@@ -810,6 +816,9 @@ function describeRouting(file: ConfigFile): string {
     ...(file.profileOrder && file.profileOrder.length > 0 ? [`profiles: ${file.profileOrder.join(" → ")}`] : []),
     ...(file.recommendedModels !== undefined ? [`recommended models: ${file.recommendedModels}`] : []),
     ...(file.tierRouting !== undefined ? [`tier routing: ${describeTierRouting(file.tierRouting)}`] : []),
+    ...(file.presetProfile !== undefined
+      ? [`preset profile: ${Array.isArray(file.presetProfile) ? file.presetProfile.join(" → ") : file.presetProfile}`]
+      : []),
     `unavailable: ${file.onUnavailableRoute ?? "stop"}`,
     `settle: ${file.onSettle ?? "keep"}`,
   ];
@@ -832,6 +841,7 @@ const KEY_ORDER = [
   "advance",
   "recommendedModels",
   "tierRouting",
+  "presetProfile",
   "memory",
   "telemetry",
   "profiles",

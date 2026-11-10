@@ -1,9 +1,37 @@
 import type { EffectiveConfig, ProfileCandidate, Route, RouteFile, RouteDeclaration } from "./types.js";
-import { findProviderPreset, getProviderPresets } from "./presets.js";
+import { findProviderPreset, getProviderPresets, presetChainName, resolvePresetEntry } from "./presets.js";
 
 /** Options for recommended-profile resolution. */
 export interface RecommendedOptions {
   providerAvailable: (provider: string) => boolean;
+}
+
+/** The `presetProfile` selection as the chain consumes it: an ordered list of
+ *  profile names, one entry per requested profile (string → one-element
+ *  list). Absent → undefined. */
+export function normalizePresetProfile(config: EffectiveConfig): string[] | undefined {
+  const value = config.presetProfile;
+  if (value === undefined) return undefined;
+  return Array.isArray(value) ? [...value] : [value];
+}
+
+/** The chain names one preset contributes given the merged selection:
+ *  legacy presets always contribute their bare provider name; catalog presets
+ *  contribute one `provider.profile` entry per requested catalog member, in
+ *  request order, falling back to the preset's default entry when the
+ *  selection is empty or names nothing the catalog carries (a typo must not
+ *  silently drop the provider out of the chain). */
+function presetEntries(config: EffectiveConfig, preset: NonNullable<ReturnType<typeof findProviderPreset>>): string[] {
+  const catalog = preset.profiles;
+  if (catalog === undefined) return [preset.provider];
+  const selection = normalizePresetProfile(config);
+  const names = (selection ?? [])
+    .filter((name) => catalog.includes(name))
+    .map((name) => presetChainName(preset, name));
+  if (names.length === 0) {
+    names.push(presetChainName(preset, preset.defaultProfile ?? catalog[0]));
+  }
+  return names;
 }
 
 /**
@@ -25,9 +53,9 @@ export function effectiveProfileOrder(
   const result = [...base];
   if (config.recommendedModels) {
     for (const preset of getProviderPresets()) {
-      if (result.includes(preset.provider)) continue;
-      if (opts.providerAvailable(preset.provider)) {
-        result.push(preset.provider);
+      if (!opts.providerAvailable(preset.provider)) continue;
+      for (const entry of presetEntries(config, preset)) {
+        if (!result.includes(entry)) result.push(entry);
       }
     }
   }
@@ -64,11 +92,12 @@ export function resolveProfileChain(
   const candidates: ProfileCandidate[] = [];
 
   for (const name of profileNames) {
-    const preset = findProviderPreset(name);
+    const entry = resolvePresetEntry(name);
     let def: { default?: RouteFile; commands?: Record<string, RouteFile> } | undefined;
 
-    if (preset) {
-      def = config.profiles[name] ?? preset.resolveProfile({ config });
+    if (entry) {
+      const { preset, profile } = entry;
+      def = config.profiles[name] ?? preset.resolveProfile({ config, profile });
     } else if (name === "default") {
       def = { default: config.default, commands: config.commands };
     } else {
@@ -91,7 +120,7 @@ export function resolveProfileChain(
     // presence; a preset-backed profile the user did not override always
     // declares both.
     let declared: RouteDeclaration;
-    if (preset && config.profiles[name] === undefined) {
+    if (entry && config.profiles[name] === undefined) {
       // Preset-contributed profile: the companion declares both keys.
       declared = { model: true, thinking: true };
     } else if (name === "default") {
@@ -118,7 +147,7 @@ export function resolveProfileChain(
       thinking: routeFile.thinking ?? "inherit",
     };
 
-    const builtIn = preset !== undefined && config.profiles[name] === undefined;
+    const builtIn = entry !== undefined && config.profiles[name] === undefined;
 
     candidates.push({
       profile: name,

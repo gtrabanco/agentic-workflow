@@ -423,18 +423,35 @@ set of routes, and you can define as many as you like under `profiles`:
   resolves exactly as before.
 - **Companion preset profiles (issue #388).** With `recommendedModels: true`
   (the default), when an installed companion preset package contributes a
-  provider preset, a code-only profile is appended to the end of the chain
-  under the preset's provider name (or used alone when you set no
-  `profileOrder`). It carries the vendor's own ladder and tier policy; the main
-  package ships provider-neutral and names no provider — see `packages/` for
-  the available companions. With **no** companion installed,
-  `recommendedModels: true` is a documented no-op — every command routes on
-  your session's model.
-  Any route you declare — including an explicit `"inherit"` — wins over a preset
-  profile. Set `recommendedModels: false` to switch preset profiles off; the
-  settings console writes the key explicitly on save when a preset provider is
+  provider preset, its code-only profile(s) are appended to the end of the
+  chain (or used alone when you set no `profileOrder`). It carries the
+  vendor's own ladder and tier policy; the main package ships provider-neutral
+  and names no provider — see `packages/` for the available companions. With
+  **no** companion installed, `recommendedModels: true` is a documented no-op
+  — every command routes on your session's model.
+  A preset may carry several **named profiles** (issue #388 amendment 2) — a
+  cost-posture catalog such as `quality` / `balanced` / `economy` — each under
+  the chain name `<provider>.<profile>`; the bare `<provider>` entry resolves
+  the preset's default profile. Select with **`presetProfile`** — one profile
+  name or an ordered array (first = most preferred; when a profile's models
+  are unusable, profile fallback demotes to the next entry, which is how you
+  ride down the catalog as credits run out):
+
+  ```json
+  { "presetProfile": ["quality", "economy"] }
+  ```
+
+  Profile names are companion-defined; the registry filters unknown names at
+  chain build, and if a selection names nothing the preset carries, the
+  preset's default profile is used (a typo never silently drops the provider
+  out of the chain). Any route you declare — including your own `profiles`
+  entry under the same chain name — wins over a preset profile. Set
+  `recommendedModels: false` to switch preset profiles off; the settings
+  console writes the key explicitly on save when a preset provider is
   available. A preset may also read the generic `tierRouting` opt-out
-  (`false`, or `{ "enabled": false }` global / `{ "skills": { … } }` per skill).
+  (`false`, or `{ "enabled": false }` global / `{ "skills": { … } }` per
+  skill) — the cost policy the names stand for lives in the companion, never
+  here.
 - **`profileFallback`** — what happens when the preferred profile's model is
   unusable:
   - `applyTo`: `"flow"` (default) records the switch so later commands keep using the
