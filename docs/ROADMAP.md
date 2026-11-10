@@ -13,6 +13,13 @@ its carrier is then `docs/fix/<issue-number>-<topic>/`, never a feature
 folder). Every fix folder under `docs/fix/<issue-number>-<topic>/` is
 registered in `## Fixes` while its work is open.
 
+The two tables are **machine-synced** (fix #507): `bun scripts/docs-generate.mjs`
+appends a row for every feature folder missing one, applies a unit doc's
+`roadmap_summary:` over its row's summary cell, and never rewrites a hand row —
+status, depends-on, summaries and every `idea`/`declined`/`carried by` row stay
+owner-written, and fix rows stay owner-managed end to end (the lifecycle below
+removes them post-merge).
+
 ## Features
 
 | NN | Slug | Status | Depends on | Summary |
