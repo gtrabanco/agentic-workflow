@@ -660,6 +660,19 @@ test("AC10: a project edit is refused while the project is untrusted", async () 
   assert.match(scripted.notify.map((entry) => entry.message).join("\n"), /untrusted|not trusted/iu);
 });
 
+// Issue #493 (S6): a validation dead-end must surface a refusal instead of
+// looping — the incident's exact loop (invalid file → re-ask scope → forever).
+test("the console refuses a validation dead-end instead of re-asking forever", async () => {
+  const { outcome, scripted } = await run(
+    { [paths.global]: "{ not json" },
+    { answers: { [prompts.scope]: repeat("Global") } },
+  );
+  const scopeAsks = scripted.asked.filter((entry) => entry.title === prompts.scope).length;
+  assert.ok(scopeAsks <= 3, `the scope prompt was asked ${scopeAsks} times — a dead-end re-ask is bounded, never infinite`);
+  assert.match(scripted.notify.map((entry) => entry.message).join("\n"), /stopped/iu, "the refusal is named");
+  assert.equal(outcome.status, "cancelled");
+});
+
 test("AC10: a typed model that is not provider/modelId is rejected before anything is written", async () => {
   const { outcome, written, scripted } = await run(
     {},
