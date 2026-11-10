@@ -501,16 +501,21 @@ by the runtime, so the CLI and the extension cannot disagree about "absent".
 
 ## Worktree creation
 
-This repo uses git worktrees under `.git/worktrees/<path>` (not under
-`.worktrees/` or `/tmp` — Serena and other MCPs detect worktrees as separate
-project paths and break when worktrees live outside the repo tree).
+This repo uses git worktrees under `.worktrees/<flat-name>` at the repository
+root (gitignored). The path must stay **inside the repository tree** — Serena
+and other MCPs detect worktrees as separate project paths and break when
+worktrees live outside the repo tree — but **never inside `.git/worktrees/`**.
 
-⚠️ **CRITICAL: Worktrees inside `.git/worktrees/` get corrupted by `git worktree
-add`** — git writes `HEAD`, `gitdir`, `commondir`, `index`, `logs/`, `ORIG_HEAD`
-files inside the worktree that it then reports as "untracked files", making
-`git worktree remove` fail until `--force` is used (and even then the files
-persist). **Always use the two-step pattern below** — create in a temporary
-path on the same filesystem, then `git worktree move` to the final location.
+⚠️ **CRITICAL: `.git/worktrees/` is git's private worktree-administration
+namespace, not a place for working trees.** `git worktree prune` deletes any
+container directory under it **recursively — with the working tree and its
+uncommitted work inside it** — exit 0, no warning. A path like
+`.git/worktrees/fix/493-x` also collides with git's basename-named admin dirs
+(`feat/493-x` and `fix/493-x` become `493-x` and `493-x1`), leaving an
+admin-to-tree mapping no tool can follow. The guard
+(`scripts/worktree-guard.mjs`) flags any worktree under `.git/worktrees/` as
+`ADMIN_NAMESPACE`. **Never create, move or restore a worktree into
+`.git/worktrees/`.**
 
 When asked to create a worktree for an issue or branch, always follow the
 steps below **in order** — they are not optional and have no shortcuts.
@@ -531,15 +536,18 @@ If a remote branch already exists on the correct name (`origin/feat/…`), use i
 as the source and preserve its full history (do not create a new branch from
 `main` unless the issue is brand new with no commits yet).
 
-### Step 2 — Clean up stale state
+### Step 2 — Derive the flat worktree name
 
-```bash
-# Remove any orphan worktree dirs (from prior failed attempts)
-rm -rf .git/worktrees/<worktree-dir>
-```
+The worktree directory is the branch name with `/` replaced by `-` — one flat
+leaf, no nested slash:
 
-If a previous branch was deleted but its worktree metadata remains under
-`.git/worktrees/`, remove the directory first so git stops complaining.
+| Branch | Worktree path |
+|---|---|
+| `feat/432-model-memory` | `.worktrees/feat-432-model-memory` |
+| `fix/429-log-session-extension` | `.worktrees/fix-429-log-session-extension` |
+
+The flat leaf keeps git's admin dir (named after the basename) 1:1 with the
+working tree — no basename collisions, ever.
 
 ### Step 3 — Remove the local branch if it exists
 
@@ -550,43 +558,26 @@ git will refuse to create it again:
 git branch -D <branch-name> 2>/dev/null
 ```
 
-### Step 4 — Create the worktree (two-step pattern)
-
-**Never** call `git worktree add` directly on a path under `.git/worktrees/` —
-it corrupts the worktree with control files (`HEAD`, `gitdir`, `index`, etc.)
-that make `git worktree remove` fail.
-
-Use this two-step pattern:
+### Step 4 — Create the worktree (one step)
 
 ```bash
-# 1. Create in a temporary path on the same filesystem (must be on the same
-#    filesystem as the repo for git worktree move to work)
-git worktree add -b <branch-name> /home/agent/projects/temp-worktrees/<worktree-dir> <branch-name-or-sha>
-
-# 2. Move the worktree to the final location (git worktree move renames the
-#    metadata entry automatically and keeps the working tree clean)
-git worktree move /home/agent/projects/temp-worktrees/<worktree-dir> .git/worktrees/<worktree-dir>
+git worktree add -b <branch-name> .worktrees/<flat-name> <branch-name-or-sha>
 ```
 
-`<worktree-dir>` should be a short name matching the branch purpose (e.g.
-`feat/432-model-memory`). The worktree must live **inside** `.git/worktrees/`.
-**Never** use `/tmp` or any path outside the repo.
-
-For a **new issue with no remote branch yet**, create from `main` first:
+Or, when the branch already exists (e.g. a remote branch checked out in
+Step 1):
 
 ```bash
-# Create local branch from main
-git branch <branch-name> main
-
-# Then use the two-step pattern above, using the local branch name
+git worktree add .worktrees/<flat-name> <branch-name>
 ```
 
-**Never** use `git worktree add -b <branch-name> .git/worktrees/<worktree-dir> <branch-name>`
-— it corrupts the worktree.
+`.worktrees/` is gitignored, so the checkout never shows up in `git status`.
+**Never** use `/tmp` or any path outside the repo, and **never** a path under
+`.git/` — see the warning above.
 
-`<worktree-dir>` should be a short name matching the branch purpose (e.g.
-`feat/432-model-memory`). The worktree must live **inside** `.git/worktrees/`.
-**Never** use `/tmp` or any path outside the repo.
+For a **new issue with no remote branch yet**, `-b <branch-name>` creates the
+branch from the current HEAD (run it from `main` when the unit must start
+there).
 
 ### Step 5 — Copy Serena configuration
 
@@ -595,8 +586,8 @@ readability gate in `packages/pi-agentic-workflow/src/routing/serena-readiness.t
 parses to announce `language_servers`). Copy from the repo root:
 
 ```bash
-cp -n .serena/project.yml .git/worktrees/<worktree-dir>/.serena/project.yml
-cp -n .serena/project.local.yml .git/worktrees/<worktree-dir>/.serena/project.local.yml
+cp -n .serena/project.yml .worktrees/<flat-name>/.serena/project.yml
+cp -n .serena/project.local.yml .worktrees/<flat-name>/.serena/project.local.yml
 ```
 
 The `.project.yml` file is gitignored and gets regenerated by `init-workspace`,
@@ -606,23 +597,30 @@ second.
 ### Step 6 — Verify
 
 ```bash
-git worktree list  # should show the new entry under .git/worktrees/
+git worktree list  # should show the new entry under .worktrees/
 git log -1           # should show the correct branch head
 ```
 
 **Common failure modes (always check these):**
 - Worktree created at `/tmp/...` → Serena fails to detect it.
+- Worktree created under `.git/worktrees/` → `git worktree prune` destroys it
+  (and every sibling tree in the same container) silently; move it out with
+  `git worktree move <path> .worktrees/<flat-name>` — never prune it.
 - Branch deleted then re-created from `main` → loses all remote history.
 - Missing `.serena/project.yml` copy → Serena reports "no language_servers".
-- `.git/worktrees/<dir>/` remaining from a deleted branch → `git worktree add`
-  complains about stale metadata; always `rm -rf` before re-creating.
+- `fatal: '<path>' is a missing but already registered worktree` → the
+  worktree's directory is gone; recover with `git worktree repair` or remove
+  the stale entry with `git worktree remove <path>` / `git worktree prune`.
+  **Prune only removes registrations whose directories are already gone** —
+  never run it to "fix" a worktree that still exists on disk, and never point
+  a recovery at a path under `.git/worktrees/`.
 
 ### Worktree removal
 
 When a worktree is no longer needed, remove it **before** deleting the branch:
 
 ```bash
-git worktree remove .git/worktrees/<worktree-dir>
+git worktree remove .worktrees/<flat-name>
 git branch -D <branch-name>
 ```
 

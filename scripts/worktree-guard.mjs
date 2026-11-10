@@ -17,7 +17,15 @@
  *              (non-destructive: working files and commits are never touched)
  *   PRUNABLE   the worktree's directory vanished (stale admin metadata)
  *   OUTSIDE    a non-primary worktree outside the legal home
- *              (`--home`, default `<repo>/.git/worktrees`)
+ *              (`--home`, default `<repo>/.worktrees`)
+ *   ADMIN_NAMESPACE
+ *              a worktree whose path starts with `<repo>/.git/worktrees/` —
+ *              git's private worktree-administration namespace, where any
+ *              `git worktree prune` deletes the container recursively with
+ *              the working tree and its uncommitted work inside it (exit 0,
+ *              no warning). `--prune` never removes or moves one: relocating
+ *              a live checkout underneath a running session is the
+ *              collateral-damage class this finding closes
  *   DETACHED   a non-primary worktree with a detached HEAD (skipped while a
  *              rebase/merge/cherry-pick is in progress — the primary checkout
  *              is legitimately detached mid-operation)
@@ -50,7 +58,7 @@ const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 const USAGE = `usage: worktree-guard [--repo <dir>] [--home <dir>] [--prune] [--json]
 
   --repo <dir>  the repository to audit (default: this one)
-  --home <dir>  the legal worktree home (default: <repo>/.git/worktrees)
+  --home <dir>  the legal worktree home (default: <repo>/.worktrees)
   --prune       fix what the audit flagged: repair corrupted links, prune
                 vanished entries, remove clean leftovers; dirty worktrees are
                 skipped, never forced
@@ -197,7 +205,8 @@ export function audit(repo, home) {
   const root = mainRepoRoot(repo);
   const entries = listWorktrees(root);
   const primary = entries[0];
-  const legalHome = home ?? path.join(root, ".git", "worktrees");
+  const legalHome = home ?? path.join(root, ".worktrees");
+  const adminNamespace = path.join(root, ".git", "worktrees");
   const base = baseRef(root);
   const gitDir = (git(["rev-parse", "--absolute-git-dir"], root).stdout ?? "").trim();
   const inProgress = gitDir ? operationInProgress(root, gitDir) : false;
@@ -229,6 +238,19 @@ export function audit(repo, home) {
         path: rel,
         code: "CORRUPTED",
         detail: "the .git link file is gone — git administration bleeds into the working tree",
+      });
+      continue;
+    }
+    // The lethal layout (issue #505): a working tree inside git's private
+    // worktree-administration namespace. `git worktree prune` deletes the
+    // container recursively — exit 0, no warning — so this blocks before the
+    // OUTSIDE report-only branch can certify the path as a location the
+    // owner chose.
+    if (entry.path === adminNamespace || entry.path.startsWith(adminNamespace + path.sep)) {
+      findings.push({
+        path: rel,
+        code: "ADMIN_NAMESPACE",
+        detail: "inside .git/worktrees — a `git worktree prune` deletes the container recursively, destroying the tree and its uncommitted work",
       });
       continue;
     }
@@ -271,6 +293,16 @@ function main(argv) {
   if (prune) {
     for (const finding of first.findings) {
       if (finding.code === "PRUNABLE") continue; // handled by the one `git worktree prune` below
+      if (finding.code === "ADMIN_NAMESPACE") {
+        // Never removed, never moved: relocating a live checkout underneath
+        // a running session is the collateral-damage class the finding
+        // exists to stop. The relocation is the owner's manual call.
+        skipped.push({
+          ...finding,
+          detail: "relocate manually with `git worktree move <path> <repo>/.worktrees/<flat-name>`; a live checkout is never moved or removed automatically",
+        });
+        continue;
+      }
       if (finding.code === "CORRUPTED") {
         const full = path.join(root, finding.path);
         git(["worktree", "repair", full], root);
