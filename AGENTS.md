@@ -297,9 +297,12 @@ rule extends to the gate.** Per file, tests are bun-first —
 `bun test scripts/<file>.test.mjs`, with `node --test scripts/<file>.test.mjs` as the
 guaranteed fallback — and the whole gate runs under either runtime:
 `scripts/run-root-suite.mjs` adapts the invocation per runtime (`bun test`
-subcommand vs `node --test` flag) and budgets a 60s per-test timeout on the bun leg
-(bun→bun spawn overhead plus the full-history git walks; node keeps its no-default
-timeout model). CI still runs `node scripts/run-root-suite.mjs`; the node-only
+subcommand vs `node --test` flag), wraps every suite process in two external bounds
+— a 120s suite wall-clock killer and a sampled 1.5 GB memory cap, both
+signal-based because a microtask-starved loop never fires a runner's own timer
+(issue #493) — and the per-test budget defaults to 10s per test; a suite that
+measured above it is named, with its reason and cost, in
+`scripts/test-timeout-allowlist.json`. CI still runs `node scripts/run-root-suite.mjs`; the node-only
 carve-out issue #329 pinned is gone (`bun scripts/run-root-suite.mjs` died with
 `Cannot use test outside of the test runner`), and `scripts/invocation-drift.mjs`
 pins this paragraph's facts.
