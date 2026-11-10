@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: dfc54f073221d635a4979039a48f3aeb9c6f8d4428f02beed5c8b6d5ec97c45a
+ac-hash: cacc3cb433aed6be2aee22f74bfb30664946c6d7e3462f6c2de4a5f52c0d71c6
 ---
 
 # fix/505-worktree-prune
@@ -174,9 +174,15 @@ it.
   and `--prune` never removes or moves one. Check: the red runs at base are
   recorded in this Log before the green commit; the nested-container and
   basename-collision cases in `scripts/worktree-guard.test.mjs` pass.
-- **AC-S5** — The gate is green with the new default home. Check: `node
-  scripts/worktree-guard.mjs` exits 0 with `0 finding(s)` on this tree;
-  `bun scripts/local-gate.mjs --skip-network` exits 0.
+- **AC-S5** — The gate's offline steps stay green with the new default home, and its
+  only `root-suite` reds are the L3-disclosed pre-existing ones — never a red on this
+  unit's surfaces. Check: `node scripts/worktree-guard.mjs` exits 0 with
+  `0 finding(s)` on this tree; `bun scripts/local-gate.mjs --skip-network` exits 0
+  on every step except `root-suite`, whose reds are only the base-reproduced
+  pre-existing classes (`scripts/roadmap-settle.test.mjs` 494 `row-missing`;
+  `scripts/prose-gate-inventory.test.mjs` `multiple-homes` while a live
+  full-checkout worktree sits in `.worktrees/`; load-flaky suites pass standalone)
+  — the evidenced n/a recorded in L3/G1, re-run 2026-11-10.
 - **AC-S6** — The issue's reproducer, run in scratch against a repo prepared by
   the *new* documented recipe, leaves `precious.txt` on disk after `git
   worktree prune` (exit 0). Check: the P3 scratch run recorded in this Log.
@@ -197,12 +203,12 @@ it.
   (Implements: S3, S4)
   Relevant files: scripts/worktree-guard.mjs
 - P3 — scratch proofs: differential base-vs-head guard output on a fixture repo (only the declared differences), and the issue's reproducer re-run against the new recipe (validator: `diff` in `mktemp -d` shows only the declared differences; the scratch reproducer leaves `precious.txt` on disk, exit 0)
-  (Implements: S1, S6)
-- P4 — guide rewrite: AGENTS.md Worktree creation/removal sections prescribe `<repo>/.worktrees/<flat-unit-name>`, forbid `.git/worktrees/`, keep the Serena/MCP rationale, state the prune mechanism, drop the temp+`move` recipe; GATE_INVENTORY `worktree-audit` row description gains the new finding class (validator: `rg -c 'worktree move' AGENTS.md` exits 1 (0 matches), `rg -n '\.git/worktrees' AGENTS.md` matches only the forbidden-location rule and the mechanism explanation)
+  (Implements: S1, S6, S7)
+- P4 — guide rewrite: AGENTS.md Worktree creation/removal sections prescribe `<repo>/.worktrees/<flat-unit-name>`, forbid `.git/worktrees/`, keep the Serena/MCP rationale, state the prune mechanism, drop the temp+`move` recipe; GATE_INVENTORY `worktree-audit` row description gains the new finding class (validator: `rg -c 'temp-worktrees' AGENTS.md` exits 1 (0 matches), `rg -n '\.git/worktrees' AGENTS.md` matches only the forbidden-location rule, the mechanism explanation and the recovery path)
   (Implements: S2, S3)
   Relevant files: AGENTS.md, docs/workflow/GATE_INVENTORY.md
-- P5 — indexes, projection and verification: ROADMAP `## Fixes` row, `docs/generated` projection re-rendered by its emitter, session log entry, obligations closed with foreground evidence, local gate (validator: `bun scripts/docs-generate.mjs --check` exits 0; `bun scripts/local-gate.mjs --skip-network` exits 0)
-  (Implements: S1, S5)
+- P5 — indexes, projection and verification: ROADMAP `## Fixes` row, `docs/generated` projection re-rendered by its emitter, session log entry, obligations closed with foreground evidence, local gate (validator: `bun scripts/docs-generate.mjs --check` exits 0; `node scripts/worktree-guard.mjs` exits 0 with `0 finding(s)`; `bun scripts/local-gate.mjs --skip-network` exits 0 on every step except `root-suite`'s L3-named pre-existing reds — no red on this unit's surfaces, evidenced n/a per L3, re-run 2026-11-10)
+  (Implements: S1, S5, S8)
   Relevant files: docs/ROADMAP.md, docs/generated/units.md, docs/LOGS.md
 
 ### Planning evidence
