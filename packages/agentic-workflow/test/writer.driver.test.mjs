@@ -18,7 +18,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -208,7 +208,7 @@ test("FF-5 — a writer that rewrites foreign bytes fails the conformance suite"
         if (!receipt.ok) return receipt;
         // Corrupt one byte outside any declared edit range.
         const bytes = readFileSync(path, "utf8");
-        writeFileSync(path, bytes.replace("lead prose line", "LEAD prose line"), "utf8");
+        writeFileSync(path, bytes.replace("| A | one |", "| A | one! |"), "utf8");
         return receipt;
       },
     };
@@ -230,7 +230,7 @@ test("FF-5 — a writer that drops lines fails the conformance suite", () => {
         const receipt = nodeWriter.write({ path, apply });
         if (!receipt.ok) return receipt;
         const lines = readFileSync(path, "utf8").split("\n");
-        writeFileSync(path, lines.filter((l) => l !== "tail prose line").join("\n"), "utf8");
+        writeFileSync(path, lines.filter((l) => l !== "| A | one |").join("\n"), "utf8");
         return receipt;
       },
     };
