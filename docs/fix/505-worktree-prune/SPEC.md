@@ -299,10 +299,24 @@ not-created | scripts/worktree-guard.test.mjs | the guard's own sibling suite: P
 - **F1** — 2026-11-10, external-verify B1 folded · `2418c5f608766f084adbbc1252fff25da47e450a` · P3 links S7 and P5 links S8 · verified by `node scripts/phase-lint.mjs docs/fix/505-worktree-prune/SPEC.md` exit 0, verdict PASS (RED was exit 1, spec-unlinked ×2).
 - **F2** — 2026-11-10, external-verify B2 folded · `2418c5f608766f084adbbc1252fff25da47e450a` · P4's validator carries L2's amended demand and the three-category match · verified by `rg -c 'temp-worktrees' AGENTS.md` exit 1 (0 matches).
 - **F3** — 2026-11-10, external-verify B3 folded · `2418c5f608766f084adbbc1252fff25da47e450a` · AC-S5's Check and P5's validator now state the gate as it reproduces (every step green except root-suite's L3-named, base-reproduced reds — evidenced n/a), ac-hash re-stamped with the sectionText recipe · verified by G3 and E10.
+- **L5** — 2026-11-10, the owner's second-pass order, verbatim:
+  ```
+  fold the new findings
+  ```
+  Scope: the four findings disclosed after batch 1 (the ac-hash staleness, the
+  two `receipt-malformed-head` violations on G1/G2, the O5/E5 scratch-path
+  citation, E6's match count); the owner authorized this cycle, everything else
+  stays out of the batch.
+- **E11** — 2026-11-10, the four reproducers before the repair (RED): `node packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/505-worktree-prune/SPEC.md` · exit 2 · 3 violations (`receipt-malformed-head` ×2 on G1/G2, `cited-path-missing` on E5's bare path span — reproduced in a mktemp clone too with a .worktrees directory present so the cited-paths check arms); `rg -c '\.worktrees/<flat-name>' AGENTS.md` · exit 0 · count 7 against E6's recorded 5; ac-hash recipe · reproduces `cacc3cb433aed6be2aee22f74bfb30664946c6d7e3462f6c2de4a5f52c0d71c6` (already green from batch 1's re-stamp).
+- **E12** — 2026-11-10, re-runs after the repair: `verify` · exit 0 · `VERIFY PASS`, violations `[]`, checks include `cited-paths` (live tree, .worktrees present); `rg -c '\.worktrees/<flat-name>' AGENTS.md` · 7 — correcting E6's "5 matches": the recipe, add and Serena-copy lines are 5, the move-recovery and remove lines of the same rewrite make 7, and no validator depends on the count; phase-lint · exit 0 · PASS; `bun scripts/docs-generate.mjs --check` · exit 0 · PASS (clean-head scratch — the live tree still carries #507's uncommitted DRIFT, disclosed); ac-hash · unchanged (the repaired lines sit outside the AC section).
+- **F4** — 2026-11-10, ac-hash staleness folded · `2418c5f608766f084adbbc1252fff25da47e450a` (batch 1's plan-repair re-stamp) · re-verified here: the sectionText recipe reproduces the frontmatter value on the current bytes.
+- **F5** — 2026-11-10, G1/G2 `receipt-malformed-head` folded · `88d26cfaf657ed31f6801bcfa84743416212fdb6` · both lines completed in place with `HEAD 49d7dcb119e4bf01d25f1e1a3154b10af465937b`, the head under which the close-session runs happened (d257a867's parent) — commands, exits and outputs untouched, the in-place pin precedent being fix/460's `c7ecce2d` · verified by `verify` exit 0.
+- **F6** — 2026-11-10, the O5/E5 scratch-path citation folded · `88d26cfaf657ed31f6801bcfa84743416212fdb6` · E5's span is now the `ls` command that produced the evidence (commands are never claims under the verify contract), the claim itself unchanged · verified by `verify` exit 0 with a .worktrees directory present — the condition that armed the violation.
+- **F7** — 2026-11-10, E6's match count folded · `88d26cfaf657ed31f6801bcfa84743416212fdb6` · corrected by append (E12), never by editing E6: 7 matches, the five named categories plus the rewrite's move/remove lines · verified by `rg -c '\.worktrees/<flat-name>' AGENTS.md` → 7.
 
 ## Next
 
-Correction batch landed (`c4e9f19e` receipt, `2418c5f6` fold): the owner's delta external verify re-checks B1–B3 only — phase-lint exit 0, P4's declared validator exit 1, AC-S5/P5's gate claim against G3 — then rules on the disclosed non-batch items: the stale-since-cut ac-hash (re-stamped here), the 2 pre-existing `receipt-malformed-head` violations (G1/G2 lack a HEAD sha), the O5/E5 scratch-path citation (fires on base bytes whenever a .worktrees directory exists), advisory A5, and the three open decisions: PR #508 review (the owner pushed at `d257a867`; this batch is local-only), the `fix/437-review-loop-followup` branch deletion, and the `feat-269` / multiple-homes remedy.
+Both correction batches landed (`c4e9f19e` … `88d26cfa`): the owner's delta external verify re-checks the original B1–B3 — phase-lint exit 0, P4's declared validator exit 1, AC-S5/P5 against G3 — and batch 2's `verify` exit 0 (0 violations, `.worktrees` present) with the E6 count correction (7), then rules on what remains: advisory A5 (PE-001 freshness) and the three open decisions — PR #508 review (push still pending; both batches are local), the `fix/437-review-loop-followup` branch deletion, and the `feat-269` / multiple-homes remedy.
 
 ## References
 
