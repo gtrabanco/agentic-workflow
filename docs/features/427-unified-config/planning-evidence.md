@@ -1,7 +1,7 @@
 # Planning evidence — 427-unified-config
 
 One row per Engineering claim (ledger contract:
-`pre-execution-review/references/LEDGERS.md` §1). Artifact revision: `427-plan-1`.
+`pre-execution-review/references/LEDGERS.md` §1). Artifact revision: `427-plan-2`.
 
 | id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
 |---|---|---|---|---|---|---|---|---|
@@ -17,3 +17,4 @@ One row per Engineering claim (ledger contract:
 | PE-010 | The pi package already ships a committed descriptor pattern for its other machine surfaces (`envelope.schema.json` etc. in the schema package); a committed `agentic-workflow.config.json` pinned by a test follows the same rule | repository | `packages/agentic-workflow-schema/package.json` exports; `packages/pi-agentic-workflow/test/config-extension.test.mjs` | working tree @ `c1fc0b85` | S1a / O8 | current | proven | — |
 | PE-011 | The full pi suite is slow in this environment (git-heavy fixtures); the config suites are run individually and the full suite is recorded as a known limitation, never claimed green | repository + observed run | `test/settings-console.test.mjs` timing; `## Log` E3 | working tree 2026-11-09 | O9 / the verification block | current | proven | — |
 | PE-012 | The repository's no-backward-compatibility rule wins over the issue's "deprecate old files" note, so the old feature keys are deleted and the migration table replaces them | repository | `AGENTS.md` §Working rules ("No backward-compatibility support") | main @ `2a28f038` | S10 / O13 | current | proven | — |
+| PE-013 | `docs/LOGS.md` is byte-append-only for any non-aggregator commit, so a stale header line cannot be repaired in place — the guard refuses both the shape (`log-rewritten`: not a byte-prefix extension) and the identity (`log-hand-appended`: touched by a non-aggregator commit), and the sanctioned correction is a narrative fragment the aggregator appends | repository + scratch run | `scripts/log-immutability.mjs:149-181` (`logShapeViolations`), `:240-247` (the non-aggregator refusal); scratch reproduction in a `mktemp -d` git repository: one header edit committed → `checkRange` answers `log-rewritten` + `log-hand-appended`, removed after the run | main @ `2a28f038`; scratch run 2026-11-09 | O18 / the blocker-2 disposition | current | proven | — |

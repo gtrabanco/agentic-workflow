@@ -2,7 +2,7 @@
 
 One row per normative behaviour, applicable compatibility invariant, affected use
 case, and required failure state (ledger contract:
-`pre-execution-review/references/LEDGERS.md` §2). Artifact revision: `427-plan-1`.
+`pre-execution-review/references/LEDGERS.md` §2). Artifact revision: `427-plan-2`.
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
@@ -21,3 +21,7 @@ case, and required failure state (ledger contract:
 | O13 | Repo rule (no backward compatibility); PE-012 | The retired `autoLogSession` name and its file types are deleted, not aliased | P3 | P3 | execute-phase | `rg -c 'autoLogSession' packages/pi-agentic-workflow/src` → exit 1 (no matches) | rg output in SPEC `## Log` E4 | verified |
 | O14 | S6; PE-008 | Every existing CLI command keeps its previous behaviour (differential) | P2 | P2 | execute-phase | `bun test packages/agentic-workflow` → exit 0 (595 pass) | suite output in SPEC `## Log` E2 | verified |
 | O15 | S12; AC1–AC12 | The repository's deterministic gate is green before handoff | P5 | P5 | execute-phase | `bun scripts/run-root-suite.mjs --jobs 2` → exit 0 | SPEC `## Log` G1 (97/97 PASS) | verified |
+| O16 | S10, O13; AGENTS.md §Working rules (documentation currency) | No live surface outside a frozen record teaches the retired `autoLogSession` key: the template carrier doc, this repository's carrier doc, the crate's publish prose and the pi merge note | P6 | P6 | execute-phase | `rg -c 'autoLogSession' template/.agentic-workflow/journal.md` exits 1 and `rg -c 'autoLogSession' .agentic-workflow/journal.md` exits 1 and `rg -c 'autoLogSession' packages/agentic-workflow/src/log` exits 1 and `rg -c 'autoLogSession' packages/pi-agentic-workflow/test/config-merge-stateflow.test.mjs` exits 1 | SPEC `## Log` E7 | planned |
+| O17 | S10; AC11; O13 | The template carrier doc's writer-table pin names the shipped switch, so the retired key cannot return to the template unseen | P6 | P6 | execute-phase | `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` exits 0 | SPEC `## Log` E8 (the red run) and E9 (the green run) | planned |
+| O18 | AGENTS.md §Working rules; `journal-fragment-grammar@1`; PE-013 | `docs/LOGS.md` is byte-append-only for a non-aggregator commit, so its stale header line is corrected by the sanctioned route — a narrative fragment the aggregator appends — and never by an edit | P6 | P6 | execute-phase | `node scripts/log-immutability.mjs --base e7885557` exits 0 | SPEC `## Log` E10 plus L3, which names the fragment; PE-013 records the scratch proof that an edit is refused | planned |
+| O19 | S12 (M10) | The issue carries the two M10 proposal notes — `.agentic-workflow/` internal structure and the `pi-agentic-workflow-state.json` location evaluation — as proposals, never implementation | P6 | P6 | execute-phase | `gh issue view 427 --json comments` matches 1 comment naming `pi-agentic-workflow-state.json` | SPEC `## Log` E11 and L4 carry the comment URL; `gh` is outside the gate's executed readers, so this row is a disclosed foreground run, never a gate claim | planned |
