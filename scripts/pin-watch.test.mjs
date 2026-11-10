@@ -758,7 +758,7 @@ test("pypi json payload: the API's info.version parses; junk and empty degrade t
 const PR_FINDINGS = [
   // Exact pin behind the registry: the bumpable case.
   { package: PI, dir: "packages/pi-agentic-workflow", dependency: "left-pad", pin: "1.3.0", latest: "1.3.1" },
-  // Pin behind its local sibling: the bump target is the local version.
+  // Pin ahead of its local sibling (#489): the bump target is the local version — the only one that exists.
   { package: RUNNER, dir: "packages/agentic-workflow", dependency: "chalk", pin: "5.0.0", localVersion: "5.1.0" },
   // Partial pin: the fix is a lock refresh (`bun install`), not a spec edit.
   { package: PI, dir: "packages/pi-agentic-workflow", dependency: "zod", pin: "7", resolved: "7.0.0", latest: "7.1.0", kind: "partial" },
