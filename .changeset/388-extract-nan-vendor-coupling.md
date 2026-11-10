@@ -31,3 +31,18 @@ BREAKING: the built-in `nan` profile no longer ships in
 NaN routing; `RECOMMENDED_PROVIDERS`/`RECOMMENDED_PROFILES` and
 `config/recommended.ts` are retired (the `RecommendedProfile` shape moved to
 `config/types.ts`).
+
+Amendment 2 (2026-11-10): multi-profile presets and the `presetProfile` config.
+A preset may now contribute a named profile catalog (each entry travels as
+`<provider>.<profile>`; the bare `<provider>` name resolves the preset's
+default profile; legacy presets keep today's bare-name behavior). The generic
+`presetProfile` key — one profile name or an ordered array, project-over-global
+— selects the posture and lets the chain demote between entries as routes fail.
+The NaN preset ships four postures (`quality`, `balanced`, `economy`,
+`no-credits-continue-working`; default `economy`), re-cut against the November
+2026 fleet and tariffs: the four new paid larger models (`kimi-k3.1-pro`,
+`qwen3.8-max`, `deepseek-v4-pro`, `hy4`) enter the billing-tier map,
+per-model monthly free allowances replace the single-counter model, tier
+routing demotes only the mechanical one-way passes to the zero-credit chain
+(`qwen3.6`/`gemma4`), and the companion README carries the plans/credits
+guidance plus the corrected reasoning-control matrix.
