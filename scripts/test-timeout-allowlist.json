@@ -1,0 +1,14 @@
+[
+  {
+    "path": "scripts/workflow-status-sensor.test.mjs",
+    "timeoutMs": 30000,
+    "reason": "two tests drive the sensor's real forge-timeout path — a forge that never answers must actually time out (A:21) and a slow-but-alive forge must cost one shared bound (F19); the ~10.6s per test is the behavior under test, not waste. Splitting or mocking would untest the timeout itself.",
+    "measured": "10572ms (P2 forge-never-answers) and 10568ms (F19 slow-but-alive) under the bun leg, 2026-11-10, full run at 55ea4140..f349d7b5 lineage"
+  },
+  {
+    "path": "scripts/red-first.test.mjs",
+    "timeoutMs": 30000,
+    "reason": "the shipped-history case walks the repository's full git history through the red-first gate — the cost is the walk itself, not waste; bun's own 5s default already failed this suite standalone before this unit (pre-existing, measured at f349d7b5)",
+    "measured": "~12s the shipped-history walk under the bun leg (12.4s suite), 2026-11-10"
+  }
+]

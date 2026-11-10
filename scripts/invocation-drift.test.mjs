@@ -40,8 +40,10 @@ const write = (root, rel, text) => {
   fs.writeFileSync(abs, text);
 };
 
+// Superseded by issue #493 (S4): the suite facts name the two external bounds
+// and the 10s per-test budget with the annotated allowlist.
 const CARVE_OUT =
-  "The suite's rule extends to the gate: `bun test scripts/<file>.test.mjs` is the per-file runner, `node --test scripts/<file>.test.mjs` is its fallback, the whole gate runs under either runtime, and the CI leg `node scripts/run-root-suite.mjs` budgets a 60s per-test timeout on the bun leg.";
+  "The suite's rule extends to the gate: `bun test scripts/<file>.test.mjs` is the per-file runner, `node --test scripts/<file>.test.mjs` is its fallback, the whole gate runs under either runtime, the CI leg `node scripts/run-root-suite.mjs` wraps every suite process in two external bounds, and the per-test budget defaults to 10s per test with `scripts/test-timeout-allowlist.json` naming the measured exceptions.";
 
 /** A tree every rule accepts, so each case below plants exactly one defect. */
 function compliantTree(name) {

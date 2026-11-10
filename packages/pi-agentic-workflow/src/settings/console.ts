@@ -391,11 +391,18 @@ async function pickProfile(deps: SettingsDeps, draft: ConfigFile, { allowNew }: 
   return picked;
 }
 
+/** A validation dead-end refuses instead of looping (issue #493 S6): after
+ *  this many consecutive refused opens the console surfaces a refusal and
+ *  cancels — an operator can always close the dialog, but a scripted or stuck
+ *  loop must end in a named refusal, never in unbounded allocation. */
+const MAX_OPEN_REASKS = 3;
+
 async function openAScope(
   deps: SettingsDeps,
   globalPath: string,
   projectPath: string,
 ): Promise<{ scope: "global" | "project"; path: string; original: ConfigFile } | undefined> {
+  let refused = 0;
   for (;;) {
     const label = await deps.ui.select(prompts.scope, [GLOBAL_LABEL, PROJECT_LABEL]);
     if (!label) return undefined;
@@ -407,19 +414,24 @@ async function openAScope(
         `${path} is not editable while this project is untrusted — trust the project, or edit the global file instead.`,
         "warning",
       );
-      continue;
-    }
-    const text = deps.readFile(path);
-    if (text === null) return { scope, path, original: {} };
-    const parsed = parseFile(text, scope);
-    if (parsed.problems.length > 0) {
+    } else {
+      const text = deps.readFile(path);
+      if (text === null) return { scope, path, original: {} };
+      const parsed = parseFile(text, scope);
+      if (parsed.problems.length === 0) return { scope, path, original: parsed.file };
       deps.ui.notify(
         [`Nothing can be saved over an invalid ${scope} file (${path}):`, ...describe(parsed.problems)].join("\n"),
         "error",
       );
-      continue;
     }
-    return { scope, path, original: parsed.file };
+    refused += 1;
+    if (refused >= MAX_OPEN_REASKS) {
+      deps.ui.notify(
+        `Stopped: opening ${path} was refused ${refused} times — fix the file (or pick the other scope) and run the console again.`,
+        "error",
+      );
+      return undefined;
+    }
   }
 }
 

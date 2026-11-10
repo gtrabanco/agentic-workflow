@@ -92,6 +92,31 @@ function scriptedUi(answers) {
 
 const readFrom = (map) => (path) => (path in map ? map[path] : null);
 
+// Issue #493 (S5): the harness converts the whole hang class into a red
+// failure. The trap shipped on main via 68330216 (the #427 lane): a scalar
+// answer is consumed once and a re-ask throws; a legitimately re-asked prompt
+// opts in with repeat(value); a dry array returns undefined — the dialog
+// escape an operator's closed dialog maps to, never an infinite loop.
+test("scriptedUi trap: a scalar answer consumed a second time throws, and a dry array escapes with undefined", async () => {
+  const harness = scriptedUi({ "Pick one": "first", "List": ["a", "b"] });
+  assert.equal(await harness.ui.select("Pick one"), "first");
+  await assert.rejects(() => harness.ui.select("Pick one"), /already consumed/);
+  assert.equal(await harness.ui.select("List"), "a");
+  assert.equal(await harness.ui.select("List"), "b");
+  assert.equal(await harness.ui.select("List"), undefined, "a dry array is the escape, not a loop");
+});
+
+test("scriptedUi trap: a re-asked opt-in repeat() re-serves forever, and a dead-end re-ask fails red in under 100 ms, never hangs", async () => {
+  const harness = scriptedUi({ "Dead end": "only", "Loop": repeat("same") });
+  assert.equal(await harness.ui.confirm("Loop"), "same");
+  assert.equal(await harness.ui.confirm("Loop"), "same", "the declared repeat re-serves");
+  const started = performance.now();
+  assert.equal(await harness.ui.confirm("Dead end"), "only");
+  await assert.rejects(() => harness.ui.confirm("Dead end"), /already consumed/);
+  const elapsed = performance.now() - started;
+  assert.ok(elapsed < 100, `the trap fired in ${elapsed.toFixed(1)} ms, never hangs`);
+});
+
 function writeCollector() {
   const written = new Map();
   return { written, writeFile: (path, text) => written.set(path, text) };
@@ -646,6 +671,19 @@ test("AC10: a project edit is refused while the project is untrusted", async () 
   assert.equal(written.has(paths.project), false, "nothing was written into the untrusted project");
   assert.equal(scripted.asked.filter((entry) => entry.title === prompts.scope).length, 2, "the scope was offered again after the refusal");
   assert.match(scripted.notify.map((entry) => entry.message).join("\n"), /untrusted|not trusted/iu);
+});
+
+// Issue #493 (S6): a validation dead-end must surface a refusal instead of
+// looping — the incident's exact loop (invalid file → re-ask scope → forever).
+test("the console refuses a validation dead-end instead of re-asking forever", async () => {
+  const { outcome, scripted } = await run(
+    { [paths.global]: "{ not json" },
+    { answers: { [prompts.scope]: repeat("Global") } },
+  );
+  const scopeAsks = scripted.asked.filter((entry) => entry.title === prompts.scope).length;
+  assert.ok(scopeAsks <= 3, `the scope prompt was asked ${scopeAsks} times — a dead-end re-ask is bounded, never infinite`);
+  assert.match(scripted.notify.map((entry) => entry.message).join("\n"), /stopped/iu, "the refusal is named");
+  assert.equal(outcome.status, "cancelled");
 });
 
 test("AC10: a typed model that is not provider/modelId is rejected before anything is written", async () => {

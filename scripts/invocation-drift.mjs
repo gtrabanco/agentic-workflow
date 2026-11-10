@@ -68,7 +68,9 @@ const SUITE_CARVE_OUT = [
   "node --test scripts/<file>.test.mjs",
   "node scripts/run-root-suite.mjs",
   "under either runtime",
-  "budgets a 60s per-test timeout on the bun leg",
+  "wraps every suite process in two external bounds",
+  "the per-test budget defaults to 10s per test",
+  "scripts/test-timeout-allowlist.json",
 ];
 
 const GUIDE_FILES = ["AGENTS.md", "template/AGENTS.md"];
