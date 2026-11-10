@@ -16,8 +16,11 @@
  *   - `--install` arms a checkout, is idempotent, and is relocatable;
  *   - a real `git merge` in a scratch repository loses its conflict with the
  *     driver armed and keeps it unarmed — the arming is what does the work;
- *   - `.gitattributes` covers exactly the directory the generator writes, so
- *     the two can never drift apart.
+ *   - the same holds for `docs/ROADMAP.md` (fix #507): two branches that each
+ *     append a roadmap row merge clean once armed, and the regeneration the
+ *     driver's note names restores the local side's derived row;
+ *   - `.gitattributes` covers exactly the directory the generator writes plus
+ *     the roadmap index, so the two can never drift apart.
  */
 
 import assert from "node:assert/strict";
@@ -158,15 +161,30 @@ test("the path git quotes is still recognized as the projection", () => {
   }
 });
 
-test("a path outside the projection fails closed and keeps the local bytes", () => {
+test("the roadmap index is a covered surface (fix #507)", () => {
+  const repo = scratch("roadmap");
+  try {
+    const base = repo.write("base.md", "generated\n");
+    const ours = repo.write("docs/ROADMAP.md", "| 100 | local | done | — | local row |\n");
+    const theirs = repo.write("theirs.md", "| 101 | incoming | done | — | incoming row |\n");
+    const result = driver([base, ours, theirs, "7", "docs/ROADMAP.md"], repo.dir);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(fs.readFileSync(ours, "utf8"), "| 101 | incoming | done | — | incoming row |\n");
+    assert.match(result.stderr, /docs\/ROADMAP\.md/);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test("a path outside the covered surfaces fails closed and keeps the local bytes", () => {
   const repo = scratch("outside");
   try {
     const base = repo.write("base.md", "a\n");
-    const ours = repo.write("docs/ROADMAP.md", "hand-written\n");
+    const ours = repo.write("README.md", "hand-written\n");
     const theirs = repo.write("theirs.md", "generated\n");
-    const result = driver([base, ours, theirs, "7", "docs/ROADMAP.md"], repo.dir);
+    const result = driver([base, ours, theirs, "7", "README.md"], repo.dir);
     assert.equal(result.status, 1, "a hand-written file is never resolved mechanically");
-    assert.match(result.stderr, /outside docs\/generated\//);
+    assert.match(result.stderr, /outside/);
     assert.equal(fs.readFileSync(ours, "utf8"), "hand-written\n");
   } finally {
     repo.cleanup();
@@ -263,9 +281,83 @@ test("without the install the same merge keeps its conflict", () => {
   }
 });
 
+/**
+ * The #269×#505 collision, reproduced small: two branches each register a unit
+ * (folder + roadmap row) on the same base. This is the frozen-failure corpus
+ * fix #507 answers — before the driver covered the roadmap index the merge
+ * conflicted on rows nobody author wrote against each other.
+ */
+function divergentRoadmap(repo) {
+  const spec = (oneLine) => `# Unit\n\n> One-line: ${oneLine}\n\n## Specs\n\n**S1 — something.**\n> the words\n\n## Tasks\n\n- P1 — do it (validator: \`bun test x\` exits 0)\n  (Implements: S1)\n`;
+  const roadmap = (rows) =>
+    [
+      "# Roadmap",
+      "",
+      "## Features",
+      "",
+      "| NN | Slug | Status | Depends on | Summary |",
+      "|----|------|--------|------------|---------|",
+      ...rows,
+      "",
+    ].join("\n");
+  repo.write("AGENTS.md", "# Fixture project\n");
+  repo.write(".gitattributes", `${PREFIX}/** merge=${DRIVER}\ndocs/ROADMAP.md merge=${DRIVER}\n`);
+  repo.write("docs/features/100-base/SPEC.md", spec("the base unit"));
+  repo.write("docs/ROADMAP.md", roadmap(["| 100 | `base` | defined | — | the base unit |"]));
+  repo.commit("base");
+  repo.run(["checkout", "-qb", "incoming"]);
+  repo.write("docs/features/101-incoming/SPEC.md", spec("the incoming unit"));
+  repo.write("docs/ROADMAP.md", roadmap(["| 100 | `base` | defined | — | the base unit |", "| 101 | `incoming` | defined | — | the incoming unit |"]));
+  repo.commit("incoming");
+  repo.run(["checkout", "-q", "main"]);
+  repo.write("docs/features/102-local/SPEC.md", spec("the local unit"));
+  repo.write("docs/ROADMAP.md", roadmap(["| 100 | `base` | defined | — | the base unit |", "| 102 | `local` | defined | — | the local unit |"]));
+  repo.commit("local");
+  return repo.run(["merge", "--no-edit", "incoming"]);
+}
+
+test("a real merge loses its roadmap conflict once the driver is armed, and the regeneration restores the local row (fix #507)", () => {
+  const repo = scratch("roadmap-merge-armed");
+  try {
+    const armed = driver(["--install", "--repo", repo.dir], REPO);
+    assert.equal(armed.status, 0, armed.stderr);
+    const merge = divergentRoadmap(repo);
+    assert.equal(merge.status, 0, `the driver resolves the roadmap conflict: ${merge.stderr}`);
+    const merged = repo.read("docs/ROADMAP.md");
+    assert.doesNotMatch(merged, /^<<<<<<<|^=======/m, "no marker survives the merge");
+    assert.match(merged, /\| 101 \| `incoming` /, "the incoming side's row is the resolution");
+    // The driver's note names the regeneration: it re-derives the local branch's
+    // row from the unit folder the merge already carried.
+    const generate = spawnSync(process.execPath, [path.join(REPO, "scripts", "docs-generate.mjs"), "--root", repo.dir], {
+      encoding: "utf8",
+    });
+    assert.equal(generate.status, 0, generate.stderr + generate.stdout);
+    const regenerated = repo.read("docs/ROADMAP.md");
+    assert.match(regenerated, /\| 101 \| `incoming` /);
+    assert.match(regenerated, /\| 102 \| `local` /, "the local unit's row comes back from its folder");
+    const check = spawnSync(process.execPath, [path.join(REPO, "scripts", "docs-generate.mjs"), "--check", "--root", repo.dir], {
+      encoding: "utf8",
+    });
+    assert.equal(check.status, 0, "the merged tree is in sync — the gate's docs-generated-projection step passes");
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test("without the driver armed the same roadmap merge keeps its conflict", () => {
+  const repo = scratch("roadmap-merge-unarmed");
+  try {
+    const merge = divergentRoadmap(repo);
+    assert.equal(merge.status, 1, "the #269×#505 collision is the defect fix #507 removes");
+    assert.match(repo.read("docs/ROADMAP.md"), /^<<<<<<<|^=======/m);
+  } finally {
+    repo.cleanup();
+  }
+});
+
 /* ------------------------------------------------------------- one home */
 
-test(".gitattributes covers exactly the declared merge surfaces", () => {
+test(".gitattributes covers exactly the surfaces the generator writes", () => {
   const prefix = projectionDir(parseDocsSiteBlock(fs.readFileSync(path.join(REPO, "AGENTS.md"), "utf8")));
   assert.equal(coveredPrefix(REPO), prefix, "the driver reads the directory from the generator instead of restating it");
   const entries = fs
@@ -276,6 +368,9 @@ test(".gitattributes covers exactly the declared merge surfaces", () => {
   // Issue #498 generalizes the pattern by file class: the projection entry keeps
   // its exact pin and the shared-document classes are the closed set the shared
   // driver's own suite pins — a foreign entry in either direction is a defect.
+  // The #507 driver's roadmap coverage stays a scratch-fixture capability (see
+  // the divergentRoadmap cases above); the ROADMAP attribute itself belongs to
+  // the agentic-shared-roadmap class per the 2026-11-11 coordination note.
   assert.deepEqual(
     entries,
     [
