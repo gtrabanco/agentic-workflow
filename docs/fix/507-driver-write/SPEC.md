@@ -81,6 +81,19 @@ Callers of the changed surfaces:
 - Migrar el texto "manual" de las rows de ROADMAP.md a las unit docs: solo se hace si no hay `roadmap_summary:` disponible; el owner puede completar post-merge.
 - Cambiar el formato de la tabla ROADMAP.md (se mantiene pipe-delimited, misma columnas).
 - Hacer el merge driver configurable por el usuario: la decisión es "always on", no opt-in.
+- **Regenerar (reordenar o reescribir) las hand rows existentes.** Las celdas que el owner mantiene
+  (Status, Depends on, Summary/Notes) son la state machine del roadmap (feature 07): una row existente
+  pasa verbatim; la generación solo **añade** rows de features sin row (la invariant que el propio
+  `docs/ROADMAP.md` ordena: "every feature folder must have a row") y aplica overrides de celda
+  cuando la unit doc declara `roadmap_summary:`. Sin esto, la primera regeneración destruiría ~100
+  summaries curados y los links de PR que solo viven en la tabla.
+- **Añadir automáticamente rows de fixes.** El ciclo de vida documentado en `## Fixes` es: la row se
+  registra al abrir el trabajo y se **elimina tras el merge** ("history lives in git log"). 96 de 104
+  fix docs conservan `## Branch` incluso fusionadas, así que la presencia del folder no distingue un
+  fix fusionado de uno no registrado: añadir rows por folder resucitaría ~80 fixes fusionados. Las
+  rows de fixes siguen siendo owner-managed (preservación verbatim + override `roadmap_summary:`).
+- **Reordenar rows existentes** (la tabla no está ordenada por NN hoy; el orden de inserción es
+  append-at-end, determinista e idempotente).
 
 ## Risk tier
 
@@ -123,7 +136,7 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - **AC-S4** — `template/.gitattributes` existe y tiene las líneas del merge driver. Check: `cat template/.gitattributes` contiene `docs/ROADMAP.md merge=docs-generated` y `docs/generated/** merge=docs-generated`
 - **AC-S5** — El campo `roadmap_summary:` es opcional en el SPEC template: si no se provee, se deriva del `One-line:`. Check: `cat template/docs/fix/_TEMPLATE/SPEC.md` | `cat template/docs/features/_TEMPLATE/SPEC.md` contienen el campo `roadmap_summary:`; `bun scripts/docs-generate.mjs` no falla si falta
 - **AC-S6** — `bun scripts/docs-generated-merge.mjs --install` funciona en un repositorio limpio. Check: `bun scripts/docs-generated-merge.mjs --install` → exit 0; `git config --get merge.docs-generated.driver` → no vacío; `git config --get merge.docs-generated.name` → contiene "docs-generated"
-- **AC-S7** — `bun scripts/local-gate.mjs --skip-network` pasa con ambos paths cubiertos. Check: `bun scripts/local-gate.mjs --skip-network --json` → `docs-generated-projection` → PASS
+- **AC-S7** — (authority **S3 item 3** — the request's S-list is S1–S6; the gate-coverage clause lives in S3's third step, and P5's earlier `S7` citation was a cut defect) — `bun scripts/local-gate.mjs --skip-network` passes with both paths covered. Check: `bun scripts/local-gate.mjs --skip-network --json` → `docs-generated-projection` → PASS
 
 ## Tasks
 
@@ -163,16 +176,26 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 
 ## Triaged steps
 
-> TODO: triage este fix para decidir si se corta en una sola unidad o se divide en fases (P1, P2, P3 como unidades separadas).
+Triage 2026-11-10 (branch `fix/507-driver-write`, árbol limpio en `27275c94`): se corta como **una
+sola unidad**, fases secuenciales — P1 (emitter) precede a P2 (driver, consume la misma superficie
+de paths), P3+P4 comparten slice (template + skill prose), P5 es verificación del gate (el paso
+`docs-generated-projection` ya corre `docs-generate --check`, que tras P1 cubre ambos paths sin
+cambio de código). Diferencial con el corpus §2: el reproducer del choque #269×#505 (merge real en
+fixture con dos branches que añaden rows al roadmap) va en RED antes de la implementación.
 
 ## Findings
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | S1 (S-list cut) | spec | medium | P5 citaba `S7`, inexistente; AC-S7 re-anclada a S3 item 3 | fixed in-doc | folded: yes |
+| F2 | S1 (diseño) | design | medium | La regeneración literal de las tablas destruiría hand rows (idea/declined/folded sin folder, summaries, links de PR); el diseño congela preserve-verbatim + append-only | decision recorded (Non-goals) | owner-verdict pending |
+| F3 | S2 (diseño) | design | medium | El append automático de rows de fixes contradice el ciclo de vida de `## Fixes` (rows eliminadas tras merge; 96/104 docs conservan `## Branch` fusionados) | decision recorded (Non-goals) | owner-verdict pending |
 
 ## Log
 
-- **L1** — (pending, se llena en triage)
+- **L1** — 2026-11-10 (I) — triage: unidad única, fases P1→P2→(P3+P4)→P5; corpus §2 fijado (merge
+  real #269×#505 en fixture); hallazgos F1–F3 registrados con su decisión de diseño en Non-goals.
+  E: n/a (docs-only).
 
 ## Next
 
