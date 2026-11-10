@@ -410,6 +410,51 @@ Example `tierRouting` in `agentic-workflow.json`:
 { "tierRouting": { "enabled": true, "skills": { "audit-docs": false } } }
 ```
 
+## Sources — where these numbers come from
+
+Every claim on this page traces to one of the surfaces below. Consult the
+source, not this README, when a decision matters; the snapshot file
+([`catalog/nan-catalog-2026-11.jsonc`](catalog/nan-catalog-2026-11.jsonc))
+records what this page was built from and when.
+
+### First-party (the provider)
+
+| Source | Where it lives | What goes here |
+|---|---|---|
+| Model catalog, capabilities, reasoning matrix, rate limits | [nan.builders/docs/models](https://nan.builders/docs/models) | sizes, contexts, tool-calling format, the reasoning-control table, per-model concurrency/tpm, the rolling-4h window |
+| Current per-model prices | [cloud.nan.builders/tokens](https://cloud.nan.builders/tokens) | the live credits-per-1M table the snapshot's November 2026 numbers came from |
+| Free allowances, plans, packs | [cloud.nan.builders](https://cloud.nan.builders/r/7GK06FX8) (member panel) | monthly quotas per model, subscription pricing, pack pricing, billing-period resets |
+| Community cost guide (cost-only, by @ntizar) | [nan.builders/es/model-guide](https://nan.builders/es/model-guide) | the blended `typical credits per 1M` figures and the cached/equilibrated/output scenario math |
+| Operator identity & privacy | [nan.builders/privacy](https://nan.builders/privacy) | Helmcode S.L. (Spain), the AEPD-supervised policy behind the residency note |
+
+### Independent evaluators (the evidence the picks are grounded on)
+
+| Evaluator | Where it lives | What goes here |
+|---|---|---|
+| Artificial Analysis | [artificialanalysis.ai](https://artificialanalysis.ai) (per-model pages, e.g. [glm5.3-flash vs glm5.3](https://artificialanalysis.ai/models/comparisons/glm-5-3-flash-vs-glm-5-3), [mimo-v2.6-flash](https://artificialanalysis.ai/models/mimo-v2-6-flash)) | Intelligence Index, Terminal-Bench runs, GDPval-AA Elo, verbosity/speed, per-provider price tables |
+| OpenRouter model pages | [openrouter.ai/z-ai/glm-5.3-flash](https://openrouter.ai/z-ai/glm-5.3-flash) | aggregated per-benchmark score tables (AA, Design Arena, Vals AI rows) in one place |
+| Vals AI | [vals.ai](https://vals.ai) | the independent Terminal-Bench 2.1 run that put deepseek-v4-pro-0813 at 54.68 against the vendor's 87.9 |
+| NIST CAISI replication | [danilchenko.dev/deepseek-v4-pro-review](https://www.danilchenko.dev/posts/deepseek-v4-pro-review) (collects the NIST CAISI evaluation) | the 74.0 vs 80.6 SWE-bench Verified gap behind keeping deepseek-v4-pro out of leading rungs |
+| Provider-neutral trackers | [benchlm.ai](https://benchlm.ai), [benchable.ai](https://benchable.ai) | cross-model category tables with evidence-status labels; empty third-party sections are themselves signal |
+
+### Vendor-run surfaces (cited only with that label)
+
+| Vendor | Where it lives | What goes here |
+|---|---|---|
+| DeepSeek | [github.com/deepseek-ai/DeepSeek-V4-Flash-0731](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731) (model card), [morphllm.com/deepseek-v4](https://www.morphllm.com/deepseek-v4) (annotated) | agentic benchmark tables; the unreplicated harness behind the Pro claims |
+| Z.ai | [z.ai/blog/glm-5.3](https://z.ai/blog/glm-5.3) | Terminal-Bench 3.0 / DeepSWE / CyberGym tables for the GLM family |
+| Xiaomi | [mimo.mi.com/docs/en-US/news](https://mimo.mi.com/docs/en-US/news), [huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL](https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL) | MiMo V2.6 launch tables |
+| Tencent | [github.com/Tencent-Hunyuan/Hy4-preview](https://github.com/Tencent-Hunyuan/Hy4-preview) | the Hy4 benchmark appendix (vendor-run; the `hy4` caveat on this page) |
+| Qwen | [evolink.ai/blog/qwen3-8-benchmark](https://evolink.ai/blog/qwen3-8-benchmark), [zenmux.ai/blog/qwen38-max-benchmarks-specs-pricing-api](https://zenmux.ai/blog/qwen38-max-benchmarks-specs-pricing-api) | qwen3.8-max official results and the vendor-vs-independent caveats |
+
+### The reading rule
+
+Independently verified beats vendor-reported; vendor-reported beats vibes —
+and an empty third-party section is a finding, not a zero. Before pinning any
+rung, re-check the current leaderboard: this landscape moves monthly, and the
+community-voted cluster changes quarterly (`qwen3.6` unlimited is "for now",
+the same as ever).
+
 ## Verify your catalog first
 
 Run `GET /v1/models` with your own key and route only to models it actually

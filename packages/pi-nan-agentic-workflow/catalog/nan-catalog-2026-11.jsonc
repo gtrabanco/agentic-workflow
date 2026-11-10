@@ -19,6 +19,11 @@
 //   License:     factual tariff/catalog data published by the provider's own
 //                surfaces; the guide text is © Helmcode — this file quotes
 //                facts, not creative prose.
+//   Evidence:    the benchmark half lives outside this file — the independent
+//                evaluators (Artificial Analysis, Vals AI, NIST CAISI) and the
+//                vendor-run tables this README cites are listed with URLs in
+//                the README's "Sources — where these numbers come from"
+//                section.
 //   Winner rule: where this snapshot and the provider's docs/models page
 //                disagree, docs/models wins unless the owner directs
 //                otherwise (known example: this quote's per-model
