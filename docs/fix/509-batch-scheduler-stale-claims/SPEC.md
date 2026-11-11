@@ -727,6 +727,11 @@ surgery.
   fragment, `docs/generated/units.md` through the renderer, and the
   `batch-plan@2` sweep extension · commit <this commit>.
 
+- **G2** — 2026-11-11, the close head's own gate: `HEAD 371b5a0b`, `bun
+  scripts/local-gate.mjs --jobs 2` · exit 0 · `PASS — 17 step(s) in 374s`, 0
+  skipped (the same receipt as G1, re-run on the committed tree after the docs,
+  the ledgers and the journal fragment landed).
+
 ## Next
 
 The extended scope (S8–S12) is implemented in the same unit: the remaining work
