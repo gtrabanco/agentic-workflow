@@ -140,9 +140,38 @@ test("review-passes: none discards every surface; an empty value is refused", ()
   if (!empty.ok) assert.deepEqual(empty.refusals.map((r) => r.reason), ["empty-review-passes"]);
 });
 
-test("an empty block body with stray lines only is a typed refusal, not silence", () => {
+test("blank and comment lines among valid declarations are ignored, not refusals", () => {
   const result = readCeremonyProfile(fence("ceremony-profile@1\ndocs-step: paid\n\n# a comment\ncaptures: paid"));
   assert.equal(result.ok, true);
+});
+
+test("every published refusal is reachable — the vocabulary carries no phantom value", () => {
+  const corpus = {
+    "bad-contract-id": "ceremony-profile@2\ndocs-step: paid",
+    "malformed-line": "ceremony-profile@1\ndocs-step paid",
+    "unknown-piece": "ceremony-profile@1\ntool-pass: paid",
+    "duplicate-piece": "ceremony-profile@1\ndocs-step: paid\ndocs-step: discarded",
+    "unknown-adoption": "ceremony-profile@1\ndocs-step: always",
+    "unknown-review-surface": "ceremony-profile@1\nreview-passes: a11y, smell",
+    "empty-review-passes": "ceremony-profile@1\nreview-passes:",
+  };
+  const produced = new Set();
+  for (const [reason, body] of Object.entries(corpus)) {
+    const result = readCeremonyProfile(fence(body));
+    assert.ok(result !== null && !result.ok, `${reason}: the corpus input must be refused`);
+    if (result === null || result.ok) continue;
+    assert.ok(
+      result.refusals.some((refusal) => refusal.reason === reason),
+      `${reason}: its corpus input produced ${result.refusals.map((refusal) => refusal.reason).join(",")}`,
+    );
+    for (const refusal of result.refusals) produced.add(refusal.reason);
+  }
+  for (const reason of CEREMONY_PROFILE_REFUSALS) {
+    assert.ok(produced.has(reason), `published refusal ${reason} is unreachable — no input produces it`);
+  }
+  for (const reason of produced) {
+    assert.ok(CEREMONY_PROFILE_REFUSALS.includes(reason), `emitted refusal ${reason} is not published`);
+  }
 });
 
 test("the parser reads the FIRST profile block only and skips foreign fences", () => {

@@ -246,6 +246,18 @@ test("a malformed profile fails closed with a named diagnostic, exit 2", () => {
   }
 });
 
+test("the consuming skill prose records a profile discard as a valid n/a route (AC5 pin)", () => {
+  // The acceptance promises this prose is pinned by a test: the receipt string
+  // the router emits and the `n/a` route the lane/executor record must stay in
+  // both consuming skill files. Whitespace-normalized because the prose wraps.
+  const normalize = (text) => text.replace(/\s+/g, " ");
+  for (const rel of ["skills/execute-phase/SKILL.md", "skills/unit-lane/references/STEPS.md"]) {
+    const text = normalize(fs.readFileSync(path.join(REPO_ROOT, rel), "utf8"));
+    assert.match(text, /ceremony-profile@1: <piece> discarded by project charter/, rel);
+    assert.match(text, /n\/a — <the receipt verbatim>/, rel);
+  }
+});
+
 test("the catalog declares no piece for the steps no profile may discard", () => {
   const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
   const declaration = catalog.ceremonyProfile;
