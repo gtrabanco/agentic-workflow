@@ -325,7 +325,7 @@ test("FF-5 — two branches each appending a different LOGS entry merge into the
   }
 });
 
-test("FF-5 — the same LOGS stamp appended with different bodies exits nonzero and leaves a real conflict", () => {
+test("FF-5 — the same LOGS entry appended with different bodies exits nonzero and leaves a real conflict", () => {
   const repo = fixtureRepo();
   try {
     run(["--install", "--repo", repo.dir], repo.dir);

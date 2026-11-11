@@ -18,13 +18,16 @@
  *               union.
  *   logs        docs/LOGS.md                                 — entry union by
  *               identity (issue #498's scope reinforcement, owner comment
- *               2026-11-10T00:22): the `## <stamp> — <branch> — <label>`
- *               heading's UTC second-precision stamp keys the entry. Distinct
- *               entries both kept, ordered by stamp; the same entry on both
- *               sides deduplicated; the same stamp with different bodies — and
- *               a one-sided deletion of a committed entry, which the
- *               append-only contract forbids — surface as real conflicts; a
- *               malformed entry boundary refuses closed.
+ *               2026-11-10T00:22): the exact `## …` heading line keys the
+ *               entry — the real journal carries heterogeneous stamps
+ *               (second-precision, minute, date-only), so no grammar is
+ *               imposed on it. The journal is append-only
+ *               (`scripts/log-immutability.mjs`), and the union holds each
+ *               side to that contract: a side that is not an append-only
+ *               extension of the base (an entry edited, reordered or dropped)
+ *               refuses closed; distinct new entries are all kept, ordered by
+ *               their normalized stamp; the same heading appended with
+ *               different bodies is a real conflict, never silently resolved.
  *
  * `docs/generated/**` stays with the #420 projection driver — this script
  * refuses it with a pointer rather than answering for a surface it does not

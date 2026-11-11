@@ -277,9 +277,9 @@ because the arming is the same per-checkout limitation: `.gitattributes` names
 never inherits; arming is optional — an unarmed clone degrades to git's textual
 merge, and the armed drivers add the semantic layer (row union by key; a
 same-row status flip or a differing ceiling leaf surfaces as a real conflict;
-`REPOSITORY_STATE.md` never unions; `LOGS.md` unions by entry stamp — the same
-stamp with different bodies, or a one-sided entry deletion, is a real
-conflict). The write-path half of the contract lives
+`REPOSITORY_STATE.md` never unions; `LOGS.md` unions journal entries by their
+heading identity — the same heading appended with different bodies, or a side
+that is not an append-only extension of the base, surfaces as a real conflict). The write-path half of the contract lives
 in the crate: `writer-driver-contract@1` in
 [`packages/agentic-workflow/README.md`](packages/agentic-workflow/README.md) is
 the contract's one home.
