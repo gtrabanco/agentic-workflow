@@ -19,6 +19,13 @@ import { fileURLToPath } from "node:url";
 import { schemaRuntimePath } from "./schema-runtime.mjs";
 import { CLAIM_KINDS, REASON_CODES } from "./promise-coherence.mjs";
 import { LOG_KINDS } from "./unit-doc-phases.mjs";
+import {
+  CEREMONY_PROFILE_CONTRACT_ID as CEREMONY_PROFILE_CONTRACT_ID_MJS,
+  CEREMONY_PROFILE_PIECES as CEREMONY_PROFILE_PIECES_MJS,
+  CEREMONY_PROFILE_ADOPTIONS as CEREMONY_PROFILE_ADOPTIONS_MJS,
+  CEREMONY_REVIEW_SURFACES as CEREMONY_REVIEW_SURFACES_MJS,
+  CEREMONY_PROFILE_REFUSALS as CEREMONY_PROFILE_REFUSALS_MJS,
+} from "./ceremony-profile.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -28,6 +35,11 @@ const {
   FINDINGS_TABLE_SEVERITIES,
   FINDINGS_TABLE_IMPACTS,
   LOG_KIND_TOKENS,
+  CEREMONY_PROFILE_CONTRACT_ID,
+  CEREMONY_PROFILE_PIECES,
+  CEREMONY_PROFILE_ADOPTIONS,
+  CEREMONY_REVIEW_SURFACES,
+  CEREMONY_PROFILE_REFUSALS,
   SWEEP_CLAIM_KINDS,
   SWEEP_MISMATCH_REASONS,
   PRE_EXECUTION_FINDING_CLASSES,
@@ -94,6 +106,14 @@ test("the schema package publishes every canonical set, non-empty", () => {
 
 test("the reader's LOG_KINDS equals the canonical declaration (F22 pattern)", () => {
   assert.deepEqual([...LOG_KINDS], [...LOG_KIND_TOKENS]);
+});
+
+test("the ceremony-profile runtime copies equal the canonical declarations (F22 pattern, issue #436)", () => {
+  assert.equal(CEREMONY_PROFILE_CONTRACT_ID_MJS, CEREMONY_PROFILE_CONTRACT_ID);
+  assert.deepEqual([...CEREMONY_PROFILE_PIECES_MJS], [...CEREMONY_PROFILE_PIECES]);
+  assert.deepEqual([...CEREMONY_PROFILE_ADOPTIONS_MJS], [...CEREMONY_PROFILE_ADOPTIONS]);
+  assert.deepEqual([...CEREMONY_REVIEW_SURFACES_MJS], [...CEREMONY_REVIEW_SURFACES]);
+  assert.deepEqual([...CEREMONY_PROFILE_REFUSALS_MJS], [...CEREMONY_PROFILE_REFUSALS]);
 });
 
 test("the findings-table class vocabulary is the published PRE_EXECUTION_FINDING_CLASSES set", () => {
