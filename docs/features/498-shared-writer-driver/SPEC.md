@@ -55,6 +55,9 @@ issue states them. **A later correction is appended under its own id**
 **S6 — Dependencies (issue, verbatim).**
 > None — nothing must merge first. Related (soft order, no blocker): #420 (`docs-generated` merge driver — this generalizes its pattern to file classes), and the journal driver contract in `packages/agentic-workflow/README.md` (the contract shape this driver mirrors).
 
+**S8 — owner direction 2026-11-11 (correction, verbatim).**
+> Arregla #2 y #3 en esta unidad, no crees ramas nuevas ni PRs nuevas. Y: anota en 507 y en la PR 513, añade la 513 como bloqueada por 512.
+
 **S7 — Open questions / risks (issue, verbatim).**
 > - Merge-driver config is per-checkout (`--install`), a git limitation already documented in #420 — the arming step must be documented beside `--install-hook`.
 > - `REPOSITORY_STATE.md` is resolver-only: should the merge driver refuse non-resolver sides, or only union? (decide at plan)
@@ -149,6 +152,10 @@ Computed, never chosen — `node scripts/ceremony.mjs tier classify` over the ch
   (Implements: S5, S6)
   Relevant files: docs/ROADMAP.md, docs/LOGS.md, docs/generated/
 
+- P8 — resident findings, owner-directed (S8): finding 2 — budgets route-ceiling rebase targets the checker-read keys (`routeEstimateMax`/`routeLinesMax` honored, shrink-guarded, growth source recorded); the dead scalar pair against a route-key route refuses before mutation; finding 3 — O6/O11 wording swept to the reproducing state (validator: `bun test packages/agentic-workflow/test/budgets.route-ceilings.test.mjs` exits 0)
+  (Implements: S8)
+  Relevant files: packages/agentic-workflow/src/edit/Budgets.mjs, packages/agentic-workflow/test/budgets.route-ceilings.test.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, docs/features/498-shared-writer-driver/planning-obligations.md
+
 ## Triaged steps
 
 > Not pasted: this unit is applied inline under the owner's local workflow (§4), which substitutes the ledger freeze for the lane's plan step and forbids running the repo's review machinery on its own surgery. `unit-route.mjs --triage` output is not available offline here; the Tasks section above is the phase cut.
@@ -210,8 +217,8 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **D1** — 2026-11-10, computed risk tier (recorded in `## Risk tier`): `node scripts/ceremony.mjs tier classify` → tier `high`, `signals[0]` destructive (`bin/agentic-workflow.mjs`), `signals[1]` publish (`RELEASE.md`); the SPEC's planned `standard` was the planner's guess and is superseded by the computed verdict. The high-tier review pass is paid as the owner's external verification per the apply workflow.
 - **D2** — 2026-11-10, plan defect owned: O12's validator (`git diff --name-only main -- skills/` → empty) contradicts the SPEC's own Retirements row (the RELEASE.md wording repair is planned work). The row is closed as an evidenced `n/a` with the narrower enforceable form (O4's scoped rg + the E4 output); the ledger freezes at cut except status, so the validator cell is not rewritten — the defect is recorded here instead.
 - **E5** — 2026-11-10, roadmap row 498 settled through the new writer with CAS (`roadmap read` → `rowUpsert --expected`, before `4f0db3c4` / after `bba5f1bc`), then `bun scripts/docs-generate.mjs --check` · exit 0 · 3 checked, 0 stale.
-- **G1** — 2026-11-10, `bun scripts/check-skill-context.mjs` · exit 0 · PASS 29 skills; `--documents` · exit 0 · PASS 4 budgeted documents after the manifest's own re-base arithmetic (AGENTS.md machineLines 124 → 128 exact re-pin; GATE_INVENTORY machineLines 62 → 63 and estimateMax 5,542 → 6,182 = ceil(5620 × 1.10), declared in the manifest's `sources`). The budgets CLI rebases only `routes.*` — the `documents` section has no emitter, so the re-pin follows the manifest's own precedent and is disclosed here.
-- **G2** — 2026-11-10, `bun run test` in `packages/agentic-workflow` · exit 0 · 634 pass / 0 fail across 32 files.
+- **G1** — 2026-11-10, `bun scripts/check-skill-context.mjs` · exit 0 · PASS 29 skills · HEAD `45d2506e`; `--documents` · exit 0 · PASS 4 budgeted documents after the manifest's own re-base arithmetic (AGENTS.md machineLines 124 → 128 exact re-pin; GATE_INVENTORY machineLines 62 → 63 and estimateMax 5,542 → 6,182 = ceil(5620 × 1.10), declared in the manifest's `sources`). The budgets CLI rebases only `routes.*` — the `documents` section has no emitter, so the re-pin follows the manifest's own precedent and is disclosed here.
+- **G2** — 2026-11-10, `bun run test` in `packages/agentic-workflow` · exit 0 · 634 pass / 0 fail across 32 files · HEAD `45d2506e` (superseded by E7/E10's 640/0).
 - **G3** — 2026-11-10, `node scripts/run-root-suite.mjs` · exit 1 · **101 PASS / 1 FAIL** (final head `f0b1887b`) — the one red is `scripts/roadmap-settle.test.mjs` on the **pre-existing** `494-telemetry-by-turn` row-missing drift (verified present at the base commit; recorded under Known pre-existing issues; routes to the owner, never folded into this unit).
 - **E6** — 2026-11-10, `git merge` fixtures (armed driver): two branches inserting different roadmap rows → union exit 0; same-row status flips → exit 1 with `<<<<<<<` markers and `UU` status; budgets different keys → union exit 0; REPOSITORY_STATE → exit 1 conflict (resolver-only); unknown path / unreadable side / malformed side / non-checkout install → fail closed (exit 1/2). 10/10 in `bun test scripts/shared-doc-merge.test.mjs` · green `a16553e1`.
 - **L2** — 2026-11-11, the correction request, verbatim:
@@ -224,9 +231,20 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **F3** — 2026-11-11, external-verify **B2 + advisories A3–A6** folded · `c9182692`: P7's validator restates the gate as it reproduces (exit 1 carrying only the base-attributed 494 red — base-archive proof in the external-verify receipt; every other suite green); O6/O11/O12 status cells record their verified halves and their evidenced gate n/a (validator cells frozen per D2); O2/O5/O7/O14 rows normalized to the 9-column contract (all 15 rows parse to 9 cells, backtick-aware); FF-1's test comment base-attributed (A3); the Retirements evidence command scoped with its live-match count (A4); RELEASE's fixrow example regained its missing `)` (A6). Re-runs: writer.driver 13/0 · unit-doc-contract 21/0 · phase-lint P1–P7 fingerprints unchanged (6/6 each).
 - **D3** — 2026-11-11 (authority: L2's "triage and fix those that deserve to fix"), dispositions of the triaged advisories — **A1** not fixed: the `roadmap-settle` 494 red is another unit's roadmap state, base-proven, routes to its lane; **A2** not fixed: `unit-route #291 F7` is pool-timing environmental (green standalone); **A7** not fixed: `roadmap <path> read` path-first is loudly refused as usage — wiring a second argument order is unrequested surface; **A8** not fixed: `docs/fix/452`'s O26 "has no emitter" is a frozen record of another shipped unit. **Reported, not folded (§9 — goes to the owner):** `node scripts/phase-lint.mjs docs/features/498-shared-writer-driver/SPEC.md` → `spec-unlinked: S4 is implemented by no phase`, verdict BLOCKED — pre-existing at `f49149c1` and the repo-wide shape of feature docs (388 BLOCKED on S6/S7, 494 on no-phases, 495 on missing-plan); no gate consumes phase-lint for feature units, so S4 stays dispositioned via O12's evidenced n/a + D2.
 
+- **L3** — 2026-11-11, owner direction, verbatim (correction to the delivered unit):
+  ```
+  Arregla #2 y #3 en esta unidad, no crees ramas nuevas ni PRs nuevas.
+  Anota en 507 y en la PR 513, añade la PR 513 como bloqueada por 512.
+  ```
+- **D4** — 2026-11-11 (authority: L3), owner decision: the triage-routed resident findings land inside this unit (no new branches/PRs); #507 `blocked-by` #498 set natively (GraphQL `addBlockedBy`) + coordination comments on #507 and PR #513 — PR #513 rebases on this branch after merge and owns the arming/template residual. The triage homed the phase-lint x feature-docs finding on **#352** (the crate migration deletes `scripts/phase-lint.mjs`; the rule-semantics decision belongs there) — recorded, not implemented.
+- **E8** — 2026-11-11, `node scripts/run-root-suite.mjs` at the integration head: exit 0, **103 PASS / 0 FAIL** — the base-attributed 494 red is cleared (main's registration survived the merge). Supersedes the previous exit-1 wording pinned by find F3 (stale in the good direction; O6/O11 cells swept, see O17).
+- **E9** — 2026-11-11, route floors: the residue fix's +estimate re-red the eight `execute-phase:*` routes (the B3 batch pinned exact floors = zero headroom); each re-based to the checker's demanded floor with a declared growth source (commit `aa9b8af6`), then `bun scripts/check-skill-context.mjs --routes`: exit 0, PASS 14 routes.
+- **E10** — 2026-11-11, finding 2 fixtures (`test/budgets.route-ceilings.test.mjs`, RED observed 4-fail before green): route-key rebase answers `ok: true` with `routeEstimateMax` moved and no dead key; the dead scalar pair against a route-key route refuses with exit 2 naming the route and the live keys; shrink-without-source refused before mutation; the legacy scalar shape unchanged.
+- **P8** — 2026-11-11, findings 2+3 landed and verified (O16/O17 `verified`): `ceilingRebase` targets the keys its reader consumes and the dead-pair write refuses before mutation; `budgets --json` prints either JSON or the receipt block (the double print is gone); README budgets row + changeset state the contract.
+
 ## Next
 
-Owner's delta recheck of external-verify **B1 · B2 · B3** (the correction batch landed at `9334551d`, recorded in `external-verify.md` §Correction batch); one red gate remains — the pre-existing unit-494 drift, base-proven (A1, D3); the arming step (`bun scripts/shared-doc-merge.mjs --install` beside the committed `.gitattributes` lines) is documented in AGENTS.md.
+Delivered and green: the B1–B3 delta recheck (E8–E10) and the owner-directed resident findings folded in-unit (S8, P8). Next: the owner flips `NEEDS-DECISION → PASS` on `external-verify.md` and merges PR #512 (CI aggregates the two pending journal fragments); PR #513 (#507) rebases on this branch after merge — blocked-by is set natively; the phase-lint × feature-docs finding rides #352; the `routes.*` checker-side emitter unit stays reported (units 201/260).
 
 ## References
 

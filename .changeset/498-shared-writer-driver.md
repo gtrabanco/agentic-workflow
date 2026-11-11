@@ -27,6 +27,11 @@ staging writes, and the closed `WRITER_REFUSAL_REASONS` vocabulary.
   works on `rowUpsert`/`fixrow`) — a table that
   moved since the read refuses with `EDIT REFUSAL — stale-read …` naming both
   revisions.
+- `budgets` rebases the route keys its checker actually reads: a route carrying
+  `routeEstimateMax`/`routeLinesMax` rebases with those keys, and a write of
+  the dead scalar pair against such a route refuses loudly instead of
+  answering `ok` with a silent no-op (triage finding 2); the legacy scalar
+  shape still works.
 
 The pi package's half: `skills/unit-lane/references/RELEASE.md` stops telling
 the release step that a `## Fixes` row cannot be written ("no `NN` column, so

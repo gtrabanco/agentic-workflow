@@ -1295,9 +1295,10 @@ switch (command) {
     const { version, date, type, what, section, skill } = {};
 
     try {
-      const receipt = ceilingRebase(filePath, data.route, data.estimateMax, data.linesMax, data.growthSource);
+      const receipt = ceilingRebase(filePath, data.route, data.estimateMax, data.linesMax, data.growthSource,
+        { routeEstimateMax: data.routeEstimateMax, routeLinesMax: data.routeLinesMax });
       if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
-      printReceipt(receipt);
+      else printReceipt(receipt);
       if (!receipt.ok) refuse("Ceiling shrinkage without growth source");
     } catch (e) {
       refuse(e.message);
