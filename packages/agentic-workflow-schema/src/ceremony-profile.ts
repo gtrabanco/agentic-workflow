@@ -77,7 +77,6 @@ export const CEREMONY_PROFILE_REFUSALS = Object.freeze([
   "unknown-adoption",
   "unknown-review-surface",
   "empty-review-passes",
-  "empty-block",
 ]);
 export type CeremonyProfileRefusal = (typeof CEREMONY_PROFILE_REFUSALS)[number];
 
@@ -200,12 +199,10 @@ export function readCeremonyProfile(doc: string): CeremonyProfileResult | null {
   const refusals: CeremonyProfileRefusalDetail[] = [];
   const adoption: Partial<Record<CeremonyProfilePiece, CeremonyProfileAdoption>> = {};
   let reviewPasses: CeremonyReviewSurface[] | null = null;
-  let sawLine = false;
 
   for (const raw of extracted.body) {
     const line = raw.trim();
     if (line === "" || line.startsWith("#")) continue;
-    sawLine = true;
     const match = LINE.exec(line);
     if (!match) {
       refusals.push(refusal("malformed-line", line));
@@ -252,12 +249,10 @@ export function readCeremonyProfile(doc: string): CeremonyProfileResult | null {
   }
 
   if (refusals.length > 0) return { ok: false, refusals };
-  if (!sawLine) {
-    // A bare `ceremony-profile@1` marker is a valid empty profile: every piece
-    // keeps the catalog default. `empty-block` fires only when the grammar
-    // could not produce a profile at all — reserved for future block shapes.
-    return { ok: true, profile: { contract: CEREMONY_PROFILE_CONTRACT_ID, adoption, reviewPasses } };
-  }
+  // A bare `ceremony-profile@1` marker (or a comment-only body) is a valid
+  // empty profile: every piece keeps the catalog default — pinned by the
+  // corpus's "a block with no declarations is valid" case (external-verify B1:
+  // no phantom refusal is published for a shape the parser accepts).
   return { ok: true, profile: { contract: CEREMONY_PROFILE_CONTRACT_ID, adoption, reviewPasses } };
 }
 

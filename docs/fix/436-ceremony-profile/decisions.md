@@ -9,6 +9,7 @@ justification | packages/agentic-workflow-schema/test/ceremony-profile.test.mjs 
 justification | scripts/ceremony-profile.test.mjs | P3 | 2026-11-11 | execute-phase | Red-corpus completion before the green commit: the fixture units were written with `scope: standard`, which keeps `release` out of a feature unit's default step list, so the full-paid scenario could not exercise the true no-change case it was written for. The correction raises the feature fixtures' scope to `medium`; no assertion is relaxed, weakened or removed, and the suite was still red at the red commit (f9d09b86) exactly as recorded.
 justification | scripts/ceremony-profile.test.mjs | P3 | 2026-11-11 | execute-phase | Red-corpus completion before the green commit: the `NO_PROFILE_STEPS` pin constant omitted the `research` step from the closed 9-step list the router actually emits, so the differential assertions compared against a wrong literal. The correction fixes the constant to the true list; no assertion is relaxed, weakened or removed.
 justification | packages/agentic-workflow-schema/test/ceremony-profile.test.mjs | P5 | 2026-11-11 | execute-phase | The PASS_NAMES derivation in the corpus mirrored the duplicate the source derivation produced (`review-verify` and `verify` both present), so the derivation pin expected a duplicated token. The correction dedupes the corpus expectation to the closed set the module now publishes; the pin stays exactly as strong.
+justification | packages/agentic-workflow-schema/test/ceremony-profile.test.mjs | P1 | 2026-11-11 | external-verify correction batch | External-verify B1: the corpus test title "an empty block body with stray lines only is a typed refusal, not silence" misdescribed its own body (valid declarations → ok:true) and asserted the frozen O2 claim the implementation never made. The title is renamed to what the assertion states; no assertion is relaxed, weakened or removed — and the batch's new reachability case was observed red first (7d7fa096: "published refusal empty-block is unreachable").
 ```
 
 - **D1 — 2026-11-11** — Unit home `docs/fix/436-ceremony-profile/` for a feature
@@ -48,3 +49,14 @@ justification | packages/agentic-workflow-schema/test/ceremony-profile.test.mjs 
   fenced-text grammar validated by the parser; the published consts are the
   machine surface. `doc-provenance` carries an artifact because it is an
   orchestration payload; the profile is charter prose read at dispatch.
+- **D10 — 2026-11-11** — Correction-batch triage of external-verify B1 (owner
+  apply request: "triage and fix those that deserve to fix"): the O2/empty-block
+  contradiction resolves toward the corpus, not the ledger text. Route (a) —
+  make the parser refuse empty bodies — would require flipping the passing
+  corpus case "a block with no declarations is valid" (AGENTS.md: never change
+  a test to pass it), and S2's verbatim text never demands an empty-body
+  refusal: an empty block narrows nothing, so S5's anti-gaming direction is
+  untouched. The phantom `empty-block` value is retired from both published
+  copies (with its dead `sawLine` branch), O2 carries a dated amendment (the
+  unit-70 O16 precedent), and the reachability case now pins the invariant
+  "every published refusal is reachable" so no phantom value can return.
