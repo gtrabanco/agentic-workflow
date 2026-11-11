@@ -265,7 +265,7 @@ test("without the install the same merge keeps its conflict", () => {
 
 /* ------------------------------------------------------------- one home */
 
-test(".gitattributes covers exactly the directory the generator writes", () => {
+test(".gitattributes covers exactly the declared merge surfaces", () => {
   const prefix = projectionDir(parseDocsSiteBlock(fs.readFileSync(path.join(REPO, "AGENTS.md"), "utf8")));
   assert.equal(coveredPrefix(REPO), prefix, "the driver reads the directory from the generator instead of restating it");
   const entries = fs
@@ -273,5 +273,17 @@ test(".gitattributes covers exactly the directory the generator writes", () => {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line !== "" && !line.startsWith("#"));
-  assert.deepEqual(entries, [`${prefix}/** merge=${DRIVER}`], "one entry, and it names the declared projection directory");
+  // Issue #498 generalizes the pattern by file class: the projection entry keeps
+  // its exact pin and the shared-document classes are the closed set the shared
+  // driver's own suite pins — a foreign entry in either direction is a defect.
+  assert.deepEqual(
+    entries,
+    [
+      `${prefix}/** merge=${DRIVER}`,
+      "docs/ROADMAP.md merge=agentic-shared-roadmap",
+      "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
+      "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
+    ],
+    "the projection entry plus the three shared-document classes, exactly",
+  );
 });
