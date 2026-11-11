@@ -413,6 +413,15 @@ cut, and no `unit-route` triage block is fabricated for the inline route.
   real 103/2419 red at committed `8f2a8c7b`, fixed by this head's compression).
   `node scripts/red-first.mjs` · exit 0 · 0 findings — the shipped history
   passes the gate.
+- **E13** — 2026-11-11, PR [#510](https://github.com/gtrabanco/agentic-workflow/pull/510)
+  open at `0232e6d7`; roadmap row 502 settled through the crate's
+  deterministic writer (`agentic-workflow roadmap docs/ROADMAP.md rowUpsert`
+  · receipt `pass`, status cell the only line moved; `unit-cycle`'s
+  `settleRoadmapRow` wrapper predates the #319 location-index consolidation
+  and points at a retired table path, so the bin is the live route); SPEC
+  References carry `- PR:` so the inverse invariant pairs them · `bun
+  scripts/roadmap-settle.mjs` · exit 1 · violations: 1 = the disclosed base
+  red (494 row-missing) only.
 - **F2** — 2026-11-11, folded finding from the 2026-11-11 EXTERNAL VERIFY
   addendum (the finding routed to the owner under the correction bounds):
   `G1`/`G2`/`E11` are pinned to `HEAD 8f2a8c7b` but do not reproduce from that
@@ -445,15 +454,17 @@ cut, and no `unit-route` triage block is fabricated for the inline route.
 
 ## Next
 
-The owner's external verdict on this diff (§8: "I am the external verifier").
-Two operator actions ride with it: register the fourth npm Trusted Publisher
-record (`@gtrabanco/pi-nan-agentic-workflow`, bound to `publish.yml`) before
-the first publish, and decide the pre-existing roadmap-settle red (unit 494
-has no ROADMAP row — disclosed, not repaired here).
+PR [#510](https://github.com/gtrabanco/agentic-workflow/pull/510) open,
+awaiting review and merge (Closes #502). Operator actions ride the merge:
+register the fourth npm Trusted Publisher record
+(`@gtrabanco/pi-nan-agentic-workflow`, bound to `publish.yml`) before the
+companion's first publish, and decide the pre-existing roadmap-settle red
+(unit 494 has no ROADMAP row — disclosed, not repaired here).
 
 ## References
 
 - Issue [#502](https://github.com/gtrabanco/agentic-workflow/issues/502) — the PR closes it via `Closes #502`.
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/510
 - #388 / PR #499 — the companion package this unit publishes (merged).
 - #481 — soft dep; its availability-wait hook covers four jobs after this lands.
 - Roadmap row 502 (`nan-publish-stable`), `docs/workflow/PACKAGES.md`, `docs/workflow/FEATURE_WORKFLOW.md`.
