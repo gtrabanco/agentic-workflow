@@ -389,6 +389,7 @@ test("V2: an unmerged branch marks the issue in flight, naming the branch", () =
     const issues = [
       issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"])),
       issue(11, "Beta change", whereSection(["skills/beta/SKILL.md"])),
+      issue(12, "Alpha follow-up", whereSection(["skills/alpha/SKILL.md"])),
     ];
     const launchEvidence = evidenceFor({ 10: { branches: [{ name: "fix/10-alpha-skill-change", merged: false }] } });
     const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
@@ -396,7 +397,9 @@ test("V2: an unmerged branch marks the issue in flight, naming the branch", () =
       { number: 10, evidence: "branch fix/10-alpha-skill-change + unit-doc docs/fix/10-alpha-skill-change" },
     ]);
     assert.ok(!plan.batches.some((b) => b.lanes.some((l) => l.issues.some((i) => i.number === 10))), "in flight, never batched");
-    assert.equal(plan.batches[0].lanes[0].occupied_by, "branch fix/10-alpha-skill-change + unit-doc docs/fix/10-alpha-skill-change");
+    const alpha = plan.batches[0].lanes.find((lane) => lane.surface === "skills/alpha");
+    assert.equal(alpha.occupied_by, "branch fix/10-alpha-skill-change + unit-doc docs/fix/10-alpha-skill-change");
+    assert.equal(plan.batches[0].lanes.find((lane) => lane.surface === "skills/beta").occupied_by, null);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -504,7 +507,8 @@ test("W1: two issues of one batch on different lanes that touch one file are a f
     assert.deepEqual(overlap[0].numbers, [269, 507], "both numbers, in issue order");
     assert.match(overlap[0].detail, /scripts\/docs-generate\.mjs/u);
     assert.doesNotMatch(overlap[0].detail, /local-gate/u, "only the shared files are named");
-    assert.equal(plan.summary.batches, 1, "the overlap is a finding, never a re-batch");
+    assert.equal(plan.summary.launched, 2, "the overlap is a finding, never a re-batch");
+    assert.equal(plan.summary.batches, 0, "both units are in flight, so nothing is batched behind them");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -1377,6 +1381,237 @@ test("envelope: no owned surface keeps the superseded batch-plan@1 token", () =>
   assert.deepEqual(stale, [], "every owned surface names batch-plan@2");
 });
 
+// ── A — a launched claim whose worktree is gone expires (issue #509, S8) ──
+// Reproducer of extended scope A: claims survived a deleted worktree and the
+// operator had to diff `git worktree list` against `batches.json` by hand.
+
+const LAUNCHED = "2026-11-10T22:00:00.000Z";
+
+function launchedClaim(lane) {
+  return { ...claimOf(lane, "2026-11-10T22:30:00.000Z"), launched_at: LAUNCHED };
+}
+
+test("A1: a launched claim with no worktree, branch or open PR left is evicted", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"]))];
+    const previous = previousState({ "10|skills/alpha": launchedClaim("skills/alpha") });
+    const plan = buildBatchPlan(baseInput(issues, root, { previous, now: "2026-11-11T00:00:00.000Z" }));
+    const stale = plan.findings.filter((f) => f.code === "stale-claim");
+    assert.equal(stale.length, 1);
+    assert.match(stale[0].detail, /worktree|branch|PR/u, "the report names what disappeared");
+    assert.equal(plan.batches[0].lanes[0].issues[0].claimed, undefined);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("A2: a launched claim backed by a worktree or a branch is not evicted", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"]))];
+    const previous = previousState({ "10|skills/alpha": launchedClaim("skills/alpha") });
+    const launchEvidence = evidenceFor({
+      10: { branches: [{ name: "fix/10-alpha", merged: false }], worktree: "/repo/.worktrees/fix-10-alpha" },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { previous, launchEvidence, now: "2026-11-11T00:00:00.000Z" }));
+    assert.deepEqual(plan.findings.filter((f) => f.code === "stale-claim"), []);
+    // The issue is in flight, so its claim is not read in a lane; a sibling lane
+    // pair proves the claim itself still stands in the state.
+    const state = updateState(plan, previous, { now: "2026-11-11T00:00:00.000Z", head: HEAD, openIssues: issues, evidence: launchEvidence });
+    assert.deepEqual(Object.keys(state.claimed), ["10|skills/alpha"], "the launched claim is preserved");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── B — soft-dep resolution is a forge read (issue #509, S9) ───────────────
+// Reproducer of extended scope B: the operator had to call `gh issue view` per
+// soft-dep target because the plan only detected presence.
+
+test("B1: a closed soft-dep target resolves and an open undelivered one is caveated", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const deps = depsTable([
+      ["#10", "soft", "an issue that is still open"],
+      ["#99", "soft", "an issue that closed weeks ago"],
+    ]);
+    const issues = [
+      issue(11, "Beta", `${whereSection(["skills/beta/SKILL.md"])}\n\n${deps}`),
+      issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"])),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(plan.findings.filter((f) => f.code === "orphaned-soft-dep"), [], "a closed target is resolved, not an orphan");
+    const row = plan.batches.flatMap((b) => b.lanes).flatMap((l) => l.issues).find((r) => r.number === 11);
+    assert.match(row.reason.detail, /#10/u, "the open target is named");
+    assert.doesNotMatch(row.reason.detail, /#99/u, "the resolved target is not caveated");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("B2: an unreadable open set is declared unknown, never resolved", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const deps = depsTable([["#99", "soft", "state unknown without the forge"]]);
+    const issues = [issue(11, "Beta", `${whereSection(["skills/beta/SKILL.md"])}\n\n${deps}`)];
+    const plan = buildBatchPlan(
+      baseInput(issues, root, { degraded: ["unavailable-forge-issue-list-no-binary"], openSetKnown: false }),
+    );
+    assert.deepEqual(
+      plan.findings.filter((f) => f.code === "orphaned-soft-dep"),
+      [],
+      "an unreadable open set cannot distinguish an orphan from a closed target",
+    );
+    const row = plan.batches[0].lanes[0].issues[0];
+    assert.match(row.reason.detail, /unknown/u, "the target's state is declared unknown");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── C — partial dependency extraction (issue #509, S10) ───────────────────
+
+test("C1: a non-declared table is partially parsed when a row names its kind", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const table = ["## Dependencies", "", "| Depends on | Kind |", "|---|---|", "| #10 | soft |", "| #12 | hard |"].join("\n");
+    const issues = [
+      issue(11, "Beta", `${whereSection(["skills/beta/SKILL.md"])}\n\n${table}`),
+      issue(12, "Gamma", whereSection(["skills/gamma/SKILL.md"])),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    const degraded = plan.degraded.find((d) => d.includes("prose-dependencies-issue-11"));
+    assert.ok(degraded, "the shortfall is declared");
+    assert.match(degraded, /2-of-2|2-of-2-rows/u, "what was parsed of what the table holds");
+    const gamma = plan.findings.find((f) => f.code === "prose-native-mismatch" && f.numbers[0] === 11);
+    assert.ok(gamma, "the hard row that was recovered feeds the #442 agreement check");
+    const row = plan.batches.flatMap((b) => b.lanes).flatMap((l) => l.issues).find((r) => r.number === 11);
+    assert.match(row.reason.detail, /#10/u, "the soft row that was recovered orders the issue after #10");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("C2: the #460 two-column corpus still yields nothing — recovery is not harvesting", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const table = ["## Dependencies", "", "| Feature | Issue |", "|---|---|", "| 28 | #307 |", "| 29 | #308 |"].join("\n");
+    const issues = [issue(11, "Beta", `${whereSection(["skills/beta/SKILL.md"])}\n\n${table}`)];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.ok(
+      plan.degraded.some((d) => d.includes("prose-dependencies-issue-11-0-of-2") || d.includes("prose-dependencies-issue-11")),
+      "the shortfall is still declared",
+    );
+    assert.deepEqual(plan.findings, [], "no orphaned-soft-dep and no prose-native-mismatch from a Feature/Issue table");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── D — labelled issues are never launchable (issue #509, S11) ────────────
+
+test("D1: postponed, backlog and human-revision-needed issues leave the launchable set", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"])),
+      issue(11, "Beta", whereSection(["skills/beta/SKILL.md"]), [], ["postponed"]),
+      issue(12, "Gamma", whereSection(["skills/gamma/SKILL.md"]), [], ["backlog"]),
+      issue(13, "Delta", whereSection(["skills/delta/SKILL.md"]), [], ["human-revision-needed"]),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(plan.label_blocked, [
+      { number: 11, labels: ["postponed"] },
+      { number: 12, labels: ["backlog"] },
+      { number: 13, labels: ["human-revision-needed"] },
+    ]);
+    assert.deepEqual(plan.batches.flatMap((b) => b.lanes).flatMap((l) => l.issues.map((r) => r.number)), [10]);
+    assert.deepEqual(plan.blocked, [], "a label block is a category of its own, not a blocked-by row");
+    assert.equal(plan.summary.label_blocked, 3);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("D2: a soft dep on a label-blocked issue is not an orphan", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const deps = depsTable([["#11", "soft", "the postponed target"]]);
+    const issues = [
+      issue(10, "Alpha", `${whereSection(["skills/alpha/SKILL.md"])}\n\n${deps}`),
+      issue(11, "Beta", whereSection(["skills/beta/SKILL.md"]), [], ["postponed"]),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(plan.findings.filter((f) => f.code === "orphaned-soft-dep"), []);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("D3: the human summary names the label-blocked issues", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issuesFile = path.join(root, "issues.json");
+    fs.writeFileSync(issuesFile, JSON.stringify([issue(11, "Beta", whereSection(["skills/beta/SKILL.md"]), [], ["postponed"])]));
+    const run = spawnSync(process.execPath, [scriptPath, "--root", root, "--issues-file", issuesFile, "--no-state"], { encoding: "utf8" });
+    assert.equal(run.status, 0, run.stderr);
+    assert.match(run.stdout, /label-blocked: #11/u);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── E — a body triage verdict outranks a stale roadmap row (S12) ──────────
+
+test("E1: a body carrying an explicit triage verdict marks the issue triaged", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDocWithFixes([[487, "secret-scan-gate", "pending", "—"]]));
+    const body = `${whereSection(["scripts/secret-scan.mjs"])}\n\nDeterministic secret-scanning gate — **fix-now (high)** per the 2026-11-09 triage.`;
+    const plan = buildBatchPlan(baseInput([issue(487, "Secret scan gate", body)], root));
+    const row = plan.batches[0].lanes[0].issues[0];
+    assert.equal(row.reason.kind, "satisfied-inputs", "the body verdict is the more specific signal");
+    assert.equal(row.triaged, undefined);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("E2: a body that only asks for triage stays untriaged", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDocWithFixes([[488, "needs-triage", "idea", "—"]]));
+    const body = `${whereSection(["scripts/needs-triage.mjs"])}\n\nNeeds triage from triage-issue. No triage yet.`;
+    const plan = buildBatchPlan(baseInput([issue(488, "Needs triage", body)], root));
+    const row = plan.batches[0].lanes[0].issues[0];
+    assert.equal(row.reason.kind, "untriaged");
+    assert.equal(row.triaged, false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("docs: PLAN.md and SKILL.md state the landed claim, launch and overlap contract", () => {
   // The surfaces the planner's consumer reads must narrate what the script now
   // does — the claim key shape (S2), the evidence-based launch rule (S3), the
@@ -1394,7 +1629,7 @@ test("docs: PLAN.md and SKILL.md state the landed claim, launch and overlap cont
 
 test("S9: the script contains no session spawn, worktree creation or unit launch", async () => {
   const src = fs.readFileSync(scriptPath, "utf8");
-  for (const banned of ["spawn(", "execFile(", "worktree add", "gh pr", "gh run"]) {
+  for (const banned of ["spawn(", "execFile(", "worktree add", "gh pr create", "gh pr merge", "gh pr edit", "gh pr close", "gh run"]) {
     const lines = src.split("\n").map((l, i) => [i + 1, l]).filter(([, l]) => l.includes(banned) && !l.trim().startsWith("//") && !l.trim().startsWith("*"));
     assert.deepEqual(lines, [], `no executable use of ${banned}`);
   }

@@ -169,6 +169,26 @@ that checks PR state, not just unit-doc existence."
 **S7 — Regression bound.**
 > **Differential check**: run each touched command against a copy of the base commit (in `mktemp -d`, never committed) and against the change; any stdout/stderr/exit difference nobody asked for is a regression — fix and pin it.
 
+**S8 — (extended scope A) Claims whose worktree no longer exists expire.**
+> ### A. Stale claim detection from deleted worktrees
+> The scheduler's claim system persists claims even after worktrees are deleted. Manual verification required checking `git worktree list` against `batches.json` to identify which claimed worktrees no longer exist on disk. **Fix**: claims that reference non-existent worktrees should be treated as expired/explicitly evicted, not preserved across runs.
+
+**S9 — (extended scope B) Soft-dependency targets are verified against the forge.**
+> ### B. Soft-dependency resolution verification
+> Soft-deps declared in issue bodies (e.g., `#435`, `#359`, `#433`, `#358`) must be verified as **closed** before an issue is considered launchable. The scheduler currently assumes soft-deps are open when they appear in the `## Dependencies` table. Manual steps required calling `gh issue view N` for each soft-dep target to confirm closed state. **Fix**: the scheduler should verify the forge state of soft-dependency targets (closed → resolved, open → unresolved) instead of just detecting their presence.
+
+**S10 — (extended scope C) A non-standard `## Dependencies` table is partially parsed.**
+> ### C. `## Dependencies` table parsing fragility
+> The scheduler's prose parser fails closed (correctly) on non-standard table shapes, but this produces a degradation that silently removes ALL declared dependencies for that issue instead of extracting what can be parsed. The parser should attempt partial extraction even when the table shape is non-standard, reporting what it could parse and what it couldn't, rather than zeroing out the entire dependency set.
+
+**S11 — (extended scope D) Labelled issues are never launchable.**
+> ### D. Label-based launch blocking
+> Issues labeled `postponed` or `backlog` should not appear as launchable in any batch, regardless of their other status. The scheduler does not check issue labels. **Fix**: filter out issues with `postponed` or `backlog` labels from the launchable set, reporting them as a separate category (e.g., `label-blocked`).
+
+**S12 — (extended scope E) A body triage decision outranks a stale roadmap row.**
+> ### E. Roadmap row status → triage readiness
+> The scheduler reads the roadmap fix-row status (`planned`/`in-progress`/`done`) for triage readiness, but issues that have been manually triaged (e.g., `#487` with `fix-now (high)` in the body) still show `pending` in the roadmap. **Fix**: the scheduler should check both the roadmap status AND the issue body for explicit triage decisions, preferring the more specific one.
+
 ## Decisions
 
 **D1 — S3's mechanism (authority: S3's "What needs to change" — "a
@@ -237,6 +257,58 @@ not readable as claims: they are reported once as `stale-claim`
 No migration shim ships — the repo's no-backward-compatibility rule, and a
 guessed lane assignment is exactly the bug S2 names.
 
+**D8 — S8's "non-existent worktree" is read as "a launched claim with nothing
+left on disk"** (authority: S8's own manual procedure — `git worktree list`
+against `batches.json`). Every claim carries a derived `worktree` *name*, so
+"the name has no directory" would evict every planner-made claim and empty the
+`claimed` flag of its meaning. The launch marker is `launched_at` (written only
+by `--mark-launched`), so the arm is: a claim that carries `launched_at` and
+whose evidence shows no worktree, no branch and no open PR is expired (reported
+as `stale-claim`, then pruned). A launched lane that still has a worktree, an
+unmerged branch or an open PR stands. Residual: a deleted worktree whose branch
+survives is not expired — the branch still is the work, and S3's evidence arm
+reports it as in flight.
+
+**D9 — S9's resolution state has three values, not two** (authority: S9's
+"verify the forge state … instead of just detecting their presence"). The
+healthy path already reads the forge open set: a closed target is absent from
+it and therefore resolved, an open undelivered one is `unresolved`. The defect
+is the unreadable path: with the issue list degraded the open set is empty, so
+*every* target silently reads as "resolved" and every unindexed one as an
+orphan. The plan therefore carries `openSetKnown`; when it is false, no
+`orphaned-soft-dep` is claimed (orphan and closed are indistinguishable) and
+the `soft-deps-open` caveat names the target's state as `unknown` instead of
+assuming delivery.
+
+**D10 — S10's partial extraction is a second, conservative pass, never a
+loosening of the declared-form parser** (authority: S10 + the #460 S5 result it
+says not to lose). `extractProseDependencies` keeps its exact contract (the
+declared header, `malformed: true` otherwise) because #460's twelve false
+findings came from harvesting `#\d+` out of arbitrary columns. On a
+non-declared table a recovery pass now runs: a row contributes only when one of
+its cells is *exactly* a kind token (`soft|hard|blocked|block|blocked-by|depends
+on`), the dependencies are the `#\d+` in the other cells, and the degradation
+names both counts (`parsed-<p>-of-<t>`). A `| Feature | Issue |` row has no
+kind cell and still yields nothing — the #460 corpus stays silent.
+
+**D11 — S11's label set is `postponed`, `backlog` and
+`human-revision-needed`; the category is a new envelope field, so the document
+bumps to `batch-plan@3`** (authority: S11's two labels + this repository's
+guide, which holds `human-revision-needed` as "nothing is planned, implemented,
+committed or merged" — a scheduler that recommends launching it violates that
+hold; the guide outranks the issue's silence). The category is `label_blocked[]`
+(`{number, labels}`) plus `summary.label_blocked`; a field addition is exactly
+what the schema package's core-closed rule bumps the version for (D6).
+`wontfix` is deliberately excluded: its lifecycle is closure, not a hold.
+
+**D12 — S12's "explicit triage decision" is the published verdict vocabulary**
+(authority: S12's `fix-now (high)` example + `triage-issue`'s own verdicts). A
+body carrying `fix-now`, `postponed`, `promoted` or `wontfix` as a word marks
+the issue triaged even when its roadmap row is stale (`pending`/`idea`); the
+roadmap row stays the fallback, and a row at `planned`+ still counts. A body
+saying "needs triage" or "no triage yet" matches no verdict token and stays
+untriaged.
+
 ## Impact
 
 - **`scripts/batch-scheduler.mjs`** (the whole producer): claim read/write
@@ -245,15 +317,21 @@ guessed lane assignment is exactly the bug S2 names.
   `collectLaunchEvidence`, `extractFileClaims`) and no CLI flag changes — the
   evidence sources are the local git plumbing and the same `gh` the issue and
   relation reads already use.
+- **`scripts/batch-scheduler.mjs`** (extended scope, second pass): the launched-
+  claim eviction (S8), the three-state soft-dep resolution (S9), the recovery
+  pass beside the fail-closed parser (S10), the label block (S11) and the body
+  triage signal (S12).
 - **`packages/agentic-workflow-schema`**: `BATCH_FINDING_CODES` gains
-  `file-overlap` and `stale-claim`; the validator's refusal message, the
-  `batch-plan.schema.json` enum and the package suite move with it (D6).
-  `BATCH_PLAN_FIELDS` is untouched (no field is added).
+  `file-overlap` and `stale-claim` (D6); `label_blocked[]` and
+  `summary.label_blocked` are new fields, so `BATCH_PLAN_VERSION` moves to 3 and
+  the document token to `batch-plan@3` (D11) — types, validator,
+  `batch-plan.schema.json` and the package corpus in the same change.
 - **Consumers of the envelope**: `skills/batch-scheduler/SKILL.md` +
-  `references/PLAN.md` (the grammar's `findings[]` row, the state-file shape,
-  the launch-evidence rule), `README.md` and `docs/workflow/SKILLS.md` (the two
-  skill tables that describe the planner). The #295 panel reads the envelope as
-  data — additive finding codes only.
+  `references/PLAN.md` (the grammar's field inventory, `findings[]`,
+  `label_blocked[]`, the state-file shape, the launch-evidence rule and the
+  claim TTL), `README.md` and `docs/workflow/SKILLS.md` (the two skill tables
+  that describe the planner). The #295 panel reads the envelope as data — a
+  field and two finding codes are added, and the version token moves.
 - **State file**: `.agentic-workflow/batches.json` v3, untracked. A v2 file is
   read, reported and dropped per D7.
 - **Nothing live is touched**: the planner is never run against this
@@ -272,6 +350,15 @@ guessed lane assignment is exactly the bug S2 names.
   numeric key survives a write.
 - **The unit-doc-only `occupied_by`** follows the same evidence change — the
   field stays, its source becomes the in-flight set.
+- **The whole-dependency-set discard on a non-standard table** (S10): the
+  fail-closed parser stays, but dropping every declared dependency for the
+  issue is retired — the recovery pass keeps what it can attribute. Its
+  no-consumer evidence is the #460 corpus: the `| Feature | Issue |` table still
+  parses zero dependencies and still reports the shortfall.
+- **The plain two-state soft-dep reading** (S9): "absent from the open set" no
+  longer means "resolved" unconditionally; with an unreadable open set the
+  state is `unknown`, and the `orphaned-soft-dep` finding is suppressed rather
+  than guessed.
 - Nothing else is removed: the hard-blocker gate, soft ordering, the triage
   signal, the lifecycle delta, the fail-closed parser and the planner-only pins
   are untouched (S7).
@@ -284,8 +371,15 @@ guessed lane assignment is exactly the bug S2 names.
   degrades.
 - No fix to the work graph itself: an overlap finding is reported, never
   auto-resolved by reordering or by editing the issues' prose.
-- No version bump of the envelope (D6) and no state migration shim (D7).
+- No version bump of the envelope beyond the one D11 requires, and no state
+  migration shim (D7).
 - No directory→file expansion for overlap detection (D5).
+- No `gh issue view` per soft-dep target (S9): the resolution state is read from
+  the one issue list the plan already holds, so the cost stays one forge call
+  per dimension, never one per dependency.
+- No label vocabulary beyond the three D11 publishes, and no reordering of the
+  work graph: a label-blocked or overlapping issue is reported, never moved or
+  edited into place.
 
 ## Risk tier
 
@@ -379,6 +473,24 @@ root gate (`bun scripts/local-gate.mjs`) before handoff.
   only in the declared deltas. Check: `bun test scripts/batch-scheduler.test.mjs`
   and `cd packages/agentic-workflow-schema && bun run test` exit 0; the
   differential run's diff is recorded in `## Log`.
+- **AC-S8** — A claim carrying `launched_at` whose lane has no worktree, branch
+  or open PR left expires and is reported; a launched claim backed by any of the
+  three stands. Check: the `A1`/`A2` tests exit 0.
+- **AC-S9** — A soft-dep target's state is read from the forge: closed is
+  resolved, open-undelivered is caveated, and an unreadable open set is
+  `unknown` — never silently resolved and never an invented orphan. Check: the
+  `B1`/`B2` tests exit 0.
+- **AC-S10** — A non-declared `## Dependencies` table is partially parsed when a
+  row names its kind, the degradation reports what was parsed of what was
+  skipped, and the #460 `| Feature | Issue |` corpus still yields nothing.
+  Check: the `C1`/`C2` tests exit 0.
+- **AC-S11** — An issue labelled `postponed`, `backlog` or
+  `human-revision-needed` appears in `label_blocked[]`, never in a batch or in
+  `blocked[]`, and a soft dep on it is not an orphan. Check: the `D1`/`D2`
+  tests exit 0 and the schema package validates `batch-plan@3`.
+- **AC-S12** — A body carrying a triage verdict token marks the issue triaged
+  even when its roadmap row is stale, and a body that only asks for triage does
+  not. Check: the `E1`/`E2` tests exit 0.
 
 ## Tasks
 
@@ -395,10 +507,11 @@ root gate (`bun scripts/local-gate.mjs`) before handoff.
   - Relevant files: scripts/batch-scheduler.test.mjs,
     packages/agentic-workflow-schema/test/batch-plan.test.mjs
 - P3 — Schema package: `BATCH_FINDING_CODES` += `file-overlap`, `stale-claim`;
-  the validator's refusal message, the `batch-plan.schema.json` enum and the
-  package corpus move with it (no field added, version stays `2` per D6)
+  `BATCH_PLAN_VERSION` 3 / `batch-plan@3` with the `label_blocked[]` field and
+  `summary.label_blocked`; the validator's refusal messages, the
+  `batch-plan.schema.json` projection and the package corpus move with them
   (validator: `cd packages/agentic-workflow-schema && bun run test` exits 0)
-  (Implements: S4, S5)
+  (Implements: S4, S5, S11)
   - Relevant files: packages/agentic-workflow-schema/src/batch-plan.ts,
     packages/agentic-workflow-schema/batch-plan.schema.json,
     packages/agentic-workflow-schema/test/batch-plan.test.mjs
@@ -435,6 +548,20 @@ root gate (`bun scripts/local-gate.mjs`) before handoff.
 - P9 — Verification: the declared gates in the foreground, the differential run
   base-vs-change, every obligation closed (validator: `bun
   scripts/local-gate.mjs` exits 0) (Implements: S1, S7)
+- P10 — Extended scope, RED first: one failing test per item A–E (launched-claim
+  eviction, three-state soft-dep resolution, partial dependency parsing, label
+  blocking, body triage), observed failing before the implementation (validator:
+  `bun test scripts/batch-scheduler.test.mjs` exits non-zero on the new tests)
+  (Implements: S8, S9, S10, S11, S12)
+  - Relevant files: scripts/batch-scheduler.test.mjs
+- P11 — Extended scope, script: `staleClaimReason`'s `launched_at` arm (S8), the
+  `openSetKnown` thread that turns an unreadable open set into `unknown`
+  instead of `resolved` (S9), `extractPartialDependencies` as a recovery pass
+  beside the untouched fail-closed parser (S10), `BATCH_BLOCKING_LABELS` +
+  `label_blocked[]` (S11) and the body triage verdict token (S12) (validator:
+  `bun test scripts/batch-scheduler.test.mjs` exits 0 — the `A`/`B`/`C`/`D`/`E`
+  tests) (Implements: S8, S9, S10, S11, S12)
+  - Relevant files: scripts/batch-scheduler.mjs
 
 ### Planning evidence
 
@@ -495,12 +622,45 @@ surgery.
 - **D7** — 2026-11-11, owner-workflow interpretation (authority: S2's key shape
   + the no-backward-compatibility rule): state version 3, v2 keys reported and
   dropped, no migration shim. See Decision D7.
+- **L3** — 2026-11-11, the amendment request, verbatim:
+  ```
+  La issue #509 se acaba de actualizar, hay nuevos requisitos que afectan al alcance de esta feature
+  ```
+- **L4** — 2026-11-11, the issue's appended section, verbatim (`## Extended scope:
+  Manual batch discovery (2026-11-11)` items A–E, quoted as S8–S12 above) and the
+  replaced closing ask: "The batch scheduler needs a **file-overlap audit** step
+  before printing the plan, a **pruned claim system** (per-lane claims with TTL +
+  worktree existence check), a **forge-aware launch detection** that checks PR
+  state and soft-dep resolution, a **robust `## Dependencies` parser** that
+  attempts partial extraction, and **label-based launch blocking** for
+  postponed/backlog issues."
+- **L5** — 2026-11-11, scope state at the amendment: P1–P2 and the P3–P7
+  implementation of S2–S5 were already committed (`522d63a6` the ledgers,
+  `9ebfc6ae` the red corpus, `be01c842` the schema vocabulary, `133e261d`
+  the producer). The amendment appends S8–S12 and O22–O33; neither S1–S7 nor
+  O1–O21 is rewritten.
+- **D8** — 2026-11-11, owner-workflow interpretation (authority: S8's manual
+  `git worktree list` procedure): the arm keys off `launched_at`, so a planner
+  claim is never evicted for the worktree it has not created yet. See D8.
+- **D9** — 2026-11-11, owner-workflow interpretation (authority: S9): resolution
+  has three states; an unreadable open set is `unknown`, never `resolved`.
+  See D9.
+- **D10** — 2026-11-11, owner-workflow interpretation (authority: S10 + #460's
+  S5 result): a second, conservative recovery pass; the declared-form parser is
+  untouched. See D10.
+- **D11** — 2026-11-11, owner-workflow interpretation (authority: S11 + the
+  guide's `human-revision-needed` hold): three blocking labels, a new
+  `label_blocked[]` field and thus `batch-plan@3`. See D11.
+- **D12** — 2026-11-11, owner-workflow interpretation (authority: S12 + the
+  published triage verdicts): a body verdict token outranks a stale roadmap
+  row. See D12.
 
 ## Next
 
-Close the obligations ledger and hand the diff to the owner (the external
-verifier): the delivered commits, the obligations ledger state, the foreground
-verification block, and every failed/skipped/pending check.
+The extended scope (S8–S12) is implemented in the same unit: the remaining work
+is the docs commit (P8) and the foreground verification (P9), then the handoff.
+The diff, the obligations ledger state, the verification block and every
+failed/skipped/pending check go to the owner, who is the external verifier.
 
 ## References
 
@@ -533,6 +693,11 @@ none
   disk marks the issue launched", which is the behaviour S3 declares buggy. Its
   replacement asserts the new rule (unit doc alone does **not** launch; a live
   branch does) over the same fixture shape.
+- The planner-only source pin narrows from `gh pr` to the mutating PR verbs
+  (`gh pr create|merge|edit|close`): S3 requires one `gh pr list` read, and the
+  pin exists to keep the planner from writing to the forge, which no read does.
+- The B4/B5 fixtures gain the branch evidence their "in flight" blocker now
+  needs (a unit doc alone is no longer evidence) — the assertions are unchanged.
 - The schema package's other contracts (envelope, journal, projections,
   gate-receipt) — verified by `cd packages/agentic-workflow-schema && bun run
   test`.
