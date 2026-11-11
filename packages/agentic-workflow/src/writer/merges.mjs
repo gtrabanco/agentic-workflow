@@ -283,3 +283,144 @@ export function structuralJsonMerge(base, ours, theirs) {
   }
   return { ok: true, content: `${JSON.stringify(merged, null, 2)}\n` };
 }
+
+/**
+ * unionLogEntries(base, ours, theirs) — the journal-entry union merge for
+ * `docs/LOGS.md` (the `logs` file class): issue #498's scope reinforcement
+ * (owner comment 2026-11-10T00:22), delivered with the shared-writer driver
+ * layer.
+ *
+ * An entry is one `## <iso-second stamp> — <branch> — <label>` heading plus
+ * its body — the exact bytes `src/journal/block.mjs` renders — and the stamp
+ * is the entry identity. The stamp is UTC second-precision and already
+ * monotonic (`docs/LOGS.md` only ever grows by appends), so the union of two
+ * journals is deterministic without any temporal reasoning: distinct entries
+ * are both kept, ordered by stamp; the same entry on both sides (same stamp,
+ * same bytes) is deduplicated; the same stamp with different bodies — two
+ * writers claiming the same second with different facts — is a real conflict,
+ * never silently resolved; and a malformed entry boundary (a `##` heading that
+ * does not match the entry grammar, or the same stamp twice on one side)
+ * refuses closed as `invalid-document`. Entries are append-only by contract
+ * (`scripts/log-immutability.mjs`), so a base entry missing from exactly one
+ * side is a one-sided deletion — also refused closed, never a silent drop.
+ * The prose before the first entry follows the standard three-way rule.
+ *
+ * Answers `{ ok: true, content }`, or `{ ok: false, reason: "conflict",
+ * conflicts, content }` with real conflict markers written into the content,
+ * or `{ ok: false, reason: "invalid-document", detail }`.
+ */
+export function unionLogEntries(base, ours, theirs) {
+  const parsed = {};
+  for (const [name, text] of [["base", base], ["ours", ours], ["theirs", theirs]]) {
+    const side = parseLogDocument(text);
+    if (!side.ok) return side;
+    parsed[name] = side;
+  }
+
+  const conflicts = [];
+
+  // The preamble (everything before the first entry) follows the standard
+  // three-way rule; an ambiguous preamble is a conflict like any other.
+  let preamble;
+  let preambleConflict = false;
+  if (parsed.ours.preamble === parsed.theirs.preamble) preamble = parsed.ours.preamble;
+  else if (parsed.ours.preamble === parsed.base.preamble) preamble = parsed.theirs.preamble;
+  else if (parsed.theirs.preamble === parsed.base.preamble) preamble = parsed.ours.preamble;
+  else {
+    preamble = `<<<<<<< ours (log preamble)\n${parsed.ours.preamble}\n=======\n${parsed.theirs.preamble}\n>>>>>>> theirs`;
+    preambleConflict = true;
+    conflicts.push({ key: "preamble", ours: parsed.ours.preamble, theirs: parsed.theirs.preamble });
+  }
+
+  const stamps = new Set([
+    ...parsed.base.entries.keys(),
+    ...parsed.ours.entries.keys(),
+    ...parsed.theirs.entries.keys(),
+  ]);
+  const blocks = [];
+  for (const stamp of [...stamps].sort()) {
+    const inBase = parsed.base.entries.get(stamp) ?? null;
+    const inOurs = parsed.ours.entries.get(stamp) ?? null;
+    const inTheirs = parsed.theirs.entries.get(stamp) ?? null;
+    if (inOurs === null && inTheirs === null) continue; // dropped on both sides
+    if ((inOurs === null) !== (inTheirs === null) && inBase !== null) {
+      // Append-only contract: a one-sided deletion of a committed entry is
+      // an anomaly the human resolves, never a silent drop.
+      conflicts.push({ key: stamp, ours: inOurs ?? "(absent)", theirs: inTheirs ?? "(absent)" });
+      blocks.push([
+        `<<<<<<< ours (log entry ${stamp} — deleted on one side)`,
+        inOurs ?? "(absent)",
+        "=======",
+        inTheirs ?? "(absent)",
+        ">>>>>>> theirs",
+      ].join("\n"));
+      continue;
+    }
+    if (sameBytes(inOurs, inTheirs) || sameBytes(inOurs, inBase)) {
+      blocks.push(inTheirs !== null && sameBytes(inOurs, inBase) ? inTheirs : inOurs ?? inTheirs);
+      continue;
+    }
+    if (sameBytes(inTheirs, inBase)) {
+      blocks.push(inOurs);
+      continue;
+    }
+    conflicts.push({ key: stamp, ours: inOurs, theirs: inTheirs });
+    blocks.push([
+      `<<<<<<< ours (log entry ${stamp})`,
+      inOurs ?? "",
+      "=======",
+      inTheirs ?? "",
+      `>>>>>>> theirs`,
+    ].join("\n"));
+  }
+
+  const content = [preamble, ...blocks].filter((part) => part !== "").join("\n") + (blocks.length > 0 || conflicts.length > 0 ? "\n" : "");
+  if (conflicts.length > 0) {
+    void preambleConflict;
+    return { ok: false, reason: "conflict", conflicts, content };
+  }
+  return { ok: true, content };
+}
+
+/** `a` and `b` count as the same entry when both are absent or byte-identical. */
+function sameBytes(a, b) {
+  return a === null ? b === null : a === b;
+}
+
+/**
+ * One parsed side: `{ ok, preamble, entries: Map<stamp, block> }`. The block
+ * spans its `##` heading through the last line before the next entry heading;
+ * prose before the first heading is the preamble. Any `##` heading that does
+ * not match the entry grammar, or the same stamp twice on one side, refuses
+ * closed.
+ */
+function parseLogDocument(text) {
+  const lines = text.split("\n");
+  const firstHeading = lines.findIndex((line) => line.startsWith("## "));
+  if (firstHeading === -1) return { ok: true, preamble: text, entries: new Map() };
+  const entries = new Map();
+  let current = null;
+  let currentStamp = null;
+  for (let index = firstHeading; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.startsWith("## ")) {
+      const match = /^## (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z) — .+$/.exec(line);
+      if (!match) {
+        return { ok: false, reason: "invalid-document", detail: `malformed entry heading at line ${index + 1} — "${line}" is not a journal entry boundary` };
+      }
+      const stamp = match[1];
+      if (entries.has(stamp)) {
+        return { ok: false, reason: "invalid-document", detail: `duplicate entry stamp on one side — ${stamp}` };
+      }
+      currentStamp = stamp;
+      current = [line];
+      entries.set(stamp, current);
+      continue;
+    }
+    if (currentStamp !== null) current.push(line);
+  }
+  const preamble = lines.slice(0, firstHeading).join("\n");
+  const blocks = new Map();
+  for (const [stamp, blockLines] of entries) blocks.set(stamp, blockLines.join("\n").replace(/\n*$/u, ""));
+  return { ok: true, preamble, entries: blocks };
+}

@@ -9,8 +9,9 @@
 docs/generated/** merge=docs-generated
 
 # Shared-document classes (issue #498): the collision-safe merge layer over the
-# documents several concurrent sessions and PRs write. The ROADMAP attribute is
-# stated here once — no second driver claims it.
+# documents several concurrent sessions and PRs write. Each path is stated
+# here once — no second driver claims it.
 docs/ROADMAP.md merge=agentic-shared-roadmap
 docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets
 docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state
+docs/LOGS.md merge=agentic-shared-logs

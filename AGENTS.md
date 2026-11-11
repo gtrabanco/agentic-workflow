@@ -270,13 +270,16 @@ A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs 
 The shared-document classes (issue #498) arm the same way and are documented here
 because the arming is the same per-checkout limitation: `.gitattributes` names
 `docs/ROADMAP.md merge=agentic-shared-roadmap`,
-`docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets` and
-`docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state`, and
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets`,
+`docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state` and
+`docs/LOGS.md merge=agentic-shared-logs`, and
 `bun scripts/shared-doc-merge.mjs --install` writes the driver config a clone
 never inherits; arming is optional — an unarmed clone degrades to git's textual
 merge, and the armed drivers add the semantic layer (row union by key; a
 same-row status flip or a differing ceiling leaf surfaces as a real conflict;
-`REPOSITORY_STATE.md` never unions). The write-path half of the contract lives
+`REPOSITORY_STATE.md` never unions; `LOGS.md` unions by entry stamp — the same
+stamp with different bodies, or a one-sided entry deletion, is a real
+conflict). The write-path half of the contract lives
 in the crate: `writer-driver-contract@1` in
 [`packages/agentic-workflow/README.md`](packages/agentic-workflow/README.md) is
 the contract's one home.
