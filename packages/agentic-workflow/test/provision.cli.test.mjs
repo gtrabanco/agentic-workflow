@@ -20,8 +20,30 @@ function freshRoot() {
   return root;
 }
 
+/** Build a real gzipped ustar archive holding one 8-byte `/rg` member —
+ * the tar reader is under test against the real container format. */
+async function buildGzipFixture(memberName) {
+  const zlib = await import("node:zlib");
+  return zlib.gzipSync(buildTarFixture(memberName));
+}
+
+function buildTarFixture(memberName) {
+  const blocks = [];
+  const header = Buffer.alloc(512, 0);
+  header.write(memberName, 0, "utf8");
+  header.write("00000000010", 124, "utf8"); // size = 8 octal
+  header.write("0", 156, "utf8"); // regular file
+  header.write("ustar\0", 257, "utf8");
+  blocks.push(header);
+  const content = Buffer.alloc(512, 0);
+  content.write("x".repeat(8), 0, "utf8");
+  blocks.push(content);
+  blocks.push(Buffer.alloc(1024, 0)); // the two end blocks
+  return Buffer.concat(blocks);
+}
+
 /** Recording fake ops. `managers` maps manager name -> true (available). */
-function fakeOps(root, { managers = {}, installed = false, isRoot = false, interactive = false, yes = false, answers = [], platform = { platform: "linux", arch: "x64" }, homeWritable = true, homeOnPath = true, download = null, home } = {}) {
+function fakeOps(root, { managers = {}, installed = false, isRoot = false, interactive = false, yes = false, answers = [], platform = { platform: "linux", arch: "x64" }, homeWritable = true, homeOnPath = true, download = null, home, pinOverride = null } = {}) {
   const calls = { managers: [], consent: [], writes: [], gitignore: [] };
   return {
     calls,
@@ -31,11 +53,13 @@ function fakeOps(root, { managers = {}, installed = false, isRoot = false, inter
       interactive,
       isRoot: () => isRoot,
       now: () => "2026-11-10T00:00:00.000Z",
+      pinOverride,
+      pinOverride,
       rgInstalled: () => installed,
       managerAvailable: (name) => Boolean(managers[name]),
       installWith: (name, args) => {
-        calls.managers.push([name, ...args]);
-        calls.managers.sudo = calls.managers.sudo || args.some((a) => /sudo/.test(a));
+        calls.managers.push([...args]);
+        calls.sudo = calls.sudo || args.some((a) => /sudo/.test(a));
         return { ok: true };
       },
       ask: () => answers.shift() ?? "n",
@@ -112,7 +136,7 @@ test("--yes is recorded consent: manager installs, the ledger gets the record, s
   assert.equal(out.exitCode, 0);
   assert.equal(out.method, "brew");
   assert.deepEqual(calls.managers, [["brew", "install", "ripgrep"]]);
-  assert.ok(!calls.managers.sudo, "sudo never appears in a manager invocation");
+  assert.ok(!calls.sudo, "sudo never appears in a manager invocation");
   assert.equal(calls.consent.length, 1);
   assert.equal(calls.consent[0].tool, "rg");
   assert.equal(calls.consent[0].source, "flag");
@@ -168,11 +192,11 @@ test("a downloaded artifact whose digest does not match the pin is refused befor
 
 test("the pinned binary lands in ~/.local/bin when writable and on $PATH", async () => {
   const root = freshRoot();
-  // The real 15.2.0 linux-musl tarball is not fetched here: the fake fetch
-  // returns a byte stream and the module's digest check is what is under test;
-  // the digest passed in is the digest OF THESE EXACT BYTES.
-  const bytes = Buffer.from("x".repeat(8));
+  // A real (fixture-built) ustar member named .../rg holding 8 bytes, gzipped:
+  // the digest-of-bytes contract AND the tar reader are both under test.
+  const { gzipSync } = await import("node:zlib");
   const { createHash } = await import("node:crypto");
+  const bytes = await buildGzipFixture("ripgrep-15.2.0-x86_64-unknown-linux-musl/rg");
   const digest = createHash("sha256").update(bytes).digest("hex");
   const { ops, calls } = fakeOps(root, {
     yes: true,
@@ -188,8 +212,9 @@ test("the pinned binary lands in ~/.local/bin when writable and on $PATH", async
 
 test("~/.local/bin unavailable falls back to .agentic-workflow/bin plus the gitignore entry", async () => {
   const root = freshRoot();
-  const bytes = Buffer.from("y".repeat(8));
+  const { gzipSync } = await import("node:zlib");
   const { createHash } = await import("node:crypto");
+  const bytes = await buildGzipFixture("ripgrep-15.2.0-x86_64-unknown-linux-musl/rg");
   const digest = createHash("sha256").update(bytes).digest("hex");
   const { ops, calls } = fakeOps(root, {
     yes: true,

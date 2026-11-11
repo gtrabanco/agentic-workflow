@@ -1,17 +1,19 @@
 ---
 type: feature
 scope: medium
-ac-hash: 59428a71a28273f91065f707908115fee6c9364f365d99a48c1b4dbb35e84da4
-roadmap_summary: remaining P2 of #269 — read-set tool + consumption + forward propagation + rg bootstrap installer
+ac-hash: 549d0f3644504536043b703db492cdee5a6689bd26cd81cb4cc19ca817e13455
+roadmap_summary: Issue [#269](https://github.com/gtrabanco/agentic-workflow/issues/269) (M): the two JEV-free quick wins of the system-one evaluation's Idea 2 — P1 ripgrep-first search as the default wherever "grep" is meant, under an explicit gitignore contract plus an ask-first bootstrap installer; P2 a per-phase `Relevant files:` line in the unit doc's `## Tasks`, written at plan time and consumed by the executor. Owner decision 2026-09-29: ships ahead of #192. The stale branch `feat/69-efficient-context-targeting` carries this issue's number but not this row's — re-open it as `feat/80-efficient-context-targeting` — Owner decision 2026-11-10: the row's re-open-as-feat/80 instruction is withdrawn (work parks on feat/269-efficient-context-targeting); the remaining P2 consumption scope lands entirely AFTER #434 (its fused design/plan authors the Relevant-files lines) — #269 is now natively blocked-by #434. Missing scope, complete list for the future implementer: (1) forward-propagation — a phase that discovers files relevant to later phases appends them to those phases Relevant-files sub-sections at phase close; (2) review-change consumes the unit's per-phase lists as its read set around the diff (git keeps review scope); (3) triage-issue/replan start from the affected-file set, not from scratch; (4) the never-authority discipline test — an unlisted file is never out of scope, executors may always add a file, logged in the Progress log; (5) the ask-first, never-root rg bootstrap installer in the runner crate (row 61 vehicle, done); (6) the measured delta evidence row (files-read/tokens for one plan-execute-review cycle with vs without the sub-section). Already delivered, do not duplicate: P1 rg-first (guide convention + fix/329 invocation-drift gate) and the Relevant-files grammar (phase-contract + phase-lint, #272/#276, wired into unit-lane PLAN.md and execute-phase) — 2026-11-10 update: origin/feat/69-efficient-context-targeting was deleted on owner order (tip da76ab97, backup refs/backup/feat-69-efficient-context-targeting) — the stale-branch clause above is history; the depends-on cell now carries the native blocker #434.
 ---
 
-# 269 — efficient-context-targeting (remaining P2)
+# 80 — efficient-context-targeting (remaining P2)
 
 > One-line: the remaining half of issue #269 — a per-phase read-set tool with the
 > never-authority discipline, executor/review/triage consumption of the unit's
 > `Relevant files:` lists, forward propagation at phase close, and the ask-first
 > `rg` bootstrap installer — after #434 landed the authoring half. Issue #269,
-> no JEV, ships ahead of #192.
+> no JEV, ships ahead of #192. (Unit dir keyed to roadmap row 80, the issue's
+> row; the `[#269]` fix-index row belongs to the parallel
+> `docs/fix/269-external-verify-findings` correction unit.)
 
 ```text
 doc-provenance@1
@@ -147,7 +149,7 @@ One observable, testable criterion per `S#`, each naming the check that proves i
   and the work lands as work-unit conventional commits with the RED commits
   observed failing. Check: `git log --oneline origin/main..HEAD` shows the
   unit's conventional commits and
-  `ls docs/fix/269-efficient-context-targeting/` lists `planning-evidence.md`
+  `ls docs/features/80-efficient-context-targeting/` lists `planning-evidence.md`
   and `planning-obligations.md`.
 - **AC-S2** — The park state is machine-declared twice: roadmap row 80 carries
   the 2026-11-10 annotation written by `roadmap annotate`, and #269 is natively
@@ -181,7 +183,7 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 
 ## Tasks
 
-- P1 — Freeze the planning ledgers: this SPEC with verbatim S1–S3, `planning-evidence.md`, `planning-obligations.md`, and register the triage block (validator: `bun scripts/phase-lint.mjs docs/fix/269-efficient-context-targeting/SPEC.md` prints `verdict PASS`)
+- P1 — Freeze the planning ledgers: this SPEC with verbatim S1–S3, `planning-evidence.md`, `planning-obligations.md`, and register the triage block (validator: `bun scripts/phase-lint.mjs docs/features/80-efficient-context-targeting/SPEC.md` prints `verdict PASS`)
   (Implements: S1)
   - Relevant files: docs/fix/_TEMPLATE/SPEC.md, docs/fix/443-doc-index-auto-hybrid/SPEC.md
 - P2 — RED commit: `scripts/relevant-files.test.mjs` (read-set tool contract, prose pins for the three skills, never-authority discipline cases) observed failing on the missing module (validator: `bun test scripts/relevant-files.test.mjs` exits 1 with ERR_MODULE_NOT_FOUND)
@@ -199,7 +201,7 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - P6 — Shipping gates: `.changeset/` intent for the two touched packages, `.gitignore` gains `.agentic-workflow/bin/`, `skill-lint` over the three touched skills, context budgets and golden-fixture smoke green (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S3)
   - Relevant files: skills/execute-phase/SKILL.md, skills/review-change/SKILL.md, skills/triage-issue/SKILL.md
-- P7 — Close-out: measured delta evidence row computed on the golden fixture, roadmap row 80 settled via the crate's writer with the PR link, PR title/body rewritten to the implementation PR closing #269, and the document verifier's receipt green with every obligation closed (validator: `bun scripts/roadmap-settle.mjs` exits 0 and `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/269-efficient-context-targeting/SPEC.md` exits 0)
+- P7 — Close-out: measured delta evidence row computed on the golden fixture, roadmap row 80 settled via the crate's writer with the PR link, PR title/body rewritten to the implementation PR closing #269, and the document verifier's receipt green with every obligation closed (validator: `bun scripts/roadmap-settle.mjs` exits 0 and `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/80-efficient-context-targeting/SPEC.md` exits 0)
   (Implements: S1, S2)
   - Relevant files: docs/ROADMAP.md, scripts/fixtures/spec-by-reference/golden-fixture/SPEC.md
 
@@ -221,7 +223,7 @@ normative behaviour and required failure state, every row `planned` at cut and
 > the lane never re-derives or reorders it.
 
 ```text
-TRIAGE — 269-efficient-context-targeting (feature)
+TRIAGE — 80-efficient-context-targeting (feature)
 Steps: research, design, plan, implement, tests, evidence, review, docs, release
 Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
 Skipped: none
