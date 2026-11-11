@@ -160,12 +160,13 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    before committing — apply reminds you; one workspace lock, and a member
    resolves its siblings from the folder, so the pins install before they are
    published), and the publish workflow runs in
-   dependency order: schema → runner crate → pi, chained with `needs:`
-   (`pi-publish` waits for both upstream publish jobs) so a pin never
+   dependency order: schema → runner crate → pi → the nan companion, chained
+   with `needs:` (`pi-publish` waits for both upstream publish jobs; the
+   companion waits for its peer) so a pin never
    resolves to an unpublished version. A canary rewrites a pin only when the
    sibling is declared in the same cut; an undeclared sibling keeps the stable
    version it was published with. Nothing publishes
-   "alone": every train release moves the three packages together.
+   "alone": every train release moves the four packages together.
 6. **Single entry point (D-40-13)** — one workflow, `publish.yml`, owns the
    whole pipeline: `mode: suggest` (read-only), `mode: cut` + `channel`
    (stable = train cut; canary = prerelease cut for the declared packages),

@@ -1,0 +1,6 @@
+## 2026-11-11T00:32:04Z — fix/434-tier-fused-design-plan — tier-fused design/plan fix 434 — inline application, ledgers closed
+- **Commits:** 7 (`48dc6d82…47aad02f`)
+- **Files:** 18 files
+- **Summary:** Applied issue #434 inline per the owner's local protocol: cut the fix unit doc with embedded ledgers (planned 12/O rows, 11 PE rows) at base 27275c94, then red-first landed the machine fusion catalog+unit-route (sandboxed Fused/: line, recorded-tier single reader), the activity-fusion@1 block + delta provenance in PLAN.md with conveyor and pointers in SKILL.md/DESIGN.md, and the repos state (ATTRIBUTION rows, roadmap row in-progress, changeset, projection, golden-fixture no-run row).
+- **Decisions:** Fused means session composition, never a new gate: high stays separated per S8/feature-61 history (assumption recorded in Impact); measured acceptance per S5 kept as standing obligation + open Future row per the 360 O17 precedent; two context re-bases (unit-lane 5246 main estimate; AGENTS machineLines 125) and two harness mirrors extended (lane-era-lineage, workflow-status-sensor) to follow the router's new import graph.
+- **Next:** Owner verifies the change: diff = 6 code/doc commits on fix/434-tier-fused-design-plan; open finding: unit 494 lacks its roadmap row (base-identical root-gate red). PR is not opened yet — handoff before self-approval.
