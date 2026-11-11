@@ -112,6 +112,14 @@ If a step argument is given (e.g. `P2`), use that step. Otherwise, the **first
 unfinished step** — the first P<k> in `Tasks` whose checkbox is unticked.
 Never execute a step the triage skipped.
 
+**A ceremony-profile receipt is a recorded skip, not an error** (issue #436):
+when the triage block's `Skipped:` carries `ceremony-profile@1: <piece>
+discarded by project charter`, record the step in Evidence as
+`n/a — <the receipt verbatim>` and move on — never emit the step as a
+hand-off, never fail on its absence, and never read the profile to add
+anything back (the profile can only narrow ceremony; the catalog plus the
+computed risk tier remain the only expansion paths).
+
 **The ceremony belongs to the risk tier** ([risk-tiers.md](references/risk-tiers.md)
 owns that table). A phase never lowers its own tier.
 
