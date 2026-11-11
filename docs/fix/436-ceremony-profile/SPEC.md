@@ -253,10 +253,23 @@ relay-next: create .pi-web/relays/436-ceremony-profile/ (charter → docs/fix/43
 - **E2** — 2026-11-11, frozen-failure corpus search (`rg` across docs/*/planning-*.md, review-findings, external-verify for profile/ceremony failures) · exit 0 · no reproducer found — the corpus is empty; the regression corpus is the differential (no-profile behavior byte-identical).
 - **E3** — 2026-11-11, `bun scripts/unit-route.mjs --triage 436-ceremony-profile` · exit 0 · 9 steps, `Skipped: none`, budget strong, fused design+plan (pasted under `## Triaged steps`).
 - **E4** — 2026-11-11, `bun scripts/docs-generate.mjs --check` baseline · exit 1 (`docs/generated/units.md: stale`) with the unit folder removed → exit 0 (PASS) — the projection is at its fixed point at base; the drift is caused solely by this unit's own new folder and closes with the P5 regeneration.
+- **E5** — 2026-11-11, `bun test scripts/ceremony-profile.test.mjs` · exit 1 on the unmodified router (red corpus observed) · commit `f9d09b86`; green after the router check: 8 pass / 0 fail.
+- **E6** — 2026-11-11, differential (§6): `bun scripts/unit-route.mjs --triage 436-ceremony-profile` and route mode on a git-archive base copy (`768aaab6`) vs the change · stdout and stderr byte-identical both modes; `scripts/catalog.test.mjs` 16 pass / 0 fail.
+- **E7** — 2026-11-11, `cd packages/agentic-workflow-schema && bun test test/*.test.mjs` · 849 pass / 0 fail (final run, includes the 13-case ceremony-profile corpus and the derivation pin).
+- **E8** — 2026-11-11, `bun scripts/skill-lint.mjs` · 0 findings · verdict PASS; `bun scripts/check-skill-context.mjs` · PASS 29 skills; `--routes` · PASS 14 routes (after the declared execute-phase re-basis); `--documents` · PASS 4 documents (after the AGENTS.md machineLines re-pin to 133).
+- **E9** — 2026-11-11, `bun test scripts/product-audit-rescope.test.mjs` · 16 pass / 0 fail — the #440 consumer contract preserved (O11).
+- **E10** — 2026-11-11, `bun test scripts/normative-drift.test.mjs` · 21 pass / 0 fail (four new inventory rows resolve); `bun scripts/prose-gate-inventory.mjs` · verdict PASS (the gate-inventory row claims the new surfaces).
+- **G1** — 2026-11-11, `bun scripts/local-gate.mjs --jobs 4` · exit 0 · **PASS — 17/17 steps** (after four gate-found repairs, all committed: the unfenced changeset frontmatter `445b099d`, the AGENTS.md machineLines re-pin `c81c6864`, the gate-inventory claims + literal export order `53da6b07`, the lineage/sensor sandbox import graphs `d333cda1`).
+- **P1** — 2026-11-11, ledgers frozen (SPEC + planning-evidence + planning-obligations + decisions) · `827670be`.
+- **P2** — 2026-11-11, schema contract red `f1dd440f` → green `768aaab6` (+ corpus completion `13cf2528`).
+- **P3** — 2026-11-11, dispatcher/catalog check red `f9d09b86` → green `91b9614b` (runtime module, catalog declaration, router receipts, no-expansion refusals, fail-closed block).
+- **P4** — 2026-11-11, skill prose: charter authoring, receipt routes, audit tie-in, execute-phase route re-basis · `a53fa7e5`.
+- **P5** — 2026-11-11, registration + docs: normative-surface rows, README grammar block, parity pins, gate-inventory claims, changeset, roadmap row via `rowUpsert`/`annotate`, projection regenerated · `465d5e00`.
+- **P6** — 2026-11-11, gate-found repairs: fenced changeset `445b099d`, machineLines re-pin `c81c6864`, registration gate-resolvability `53da6b07`, sandbox import graphs `d333cda1`.
 
 ## Next
 
-Run the triage paste, then P1 (RED).
+Owner external verification (no self-approval): the diff head, the obligations ledger (13/13 `verified`), and the §8 verification block. The journal fragment for LOGS.md is committed; the aggregator consumes it at merge.
 
 ## References
 
