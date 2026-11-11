@@ -38,9 +38,10 @@ test.after(() => {
   if (tempRoot) rmSync(tempRoot, { recursive: true, force: true });
 });
 
-/** A fixture unit doc written into a fresh temp dir per case. */
+/** A fixture unit doc written into a fresh temp dir per case, all under the
+ * run's shared root so `test.after` removes every case at once. */
 function writeUnitDoc(text) {
-  const doc = join(mkdtempSync(join(tmpdir(), "relevant-files-")), "SPEC.md");
+  const doc = join(freshDir(), "SPEC.md");
   writeFileSync(doc, text);
   return doc;
 }
