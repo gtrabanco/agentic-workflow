@@ -37,3 +37,7 @@ test("every dispatched subcommand has a Commands row in the crate README", () =>
     assert.ok(documented.has(token), `the Commands table documents \`${token}\``);
   }
 });
+
+test("the bin dispatches `provision` (issue #269's ask-first rg bootstrap)", () => {
+  assert.ok(BIN.includes("provision"), "the usage line dispatches provision");
+});

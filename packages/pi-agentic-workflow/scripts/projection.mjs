@@ -77,6 +77,7 @@ export const CRATE_COMMANDS = Object.freeze([
   "log",
   "manifest",
   "memory",
+  "provision",
   "relay",
   "resolve-passes",
   "resources",

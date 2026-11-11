@@ -39,6 +39,10 @@ packages/*/.serena/
 # the checkout like the pre-execution gates below — never a committed artifact.
 .agentic-workflow/gate/
 
+# The rg bootstrap's fallback install dir (issue #269): a downloaded pinned
+# binary is machine-local, never a committed artifact.
+.agentic-workflow/bin/
+
 # Local state the pre-execution sensor writes inside the worktree.
 # Keep narrow: this ignores only the gates directory, not the full .claude/ tree.
 .claude/pre-execution-gates/
