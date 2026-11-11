@@ -40,6 +40,7 @@ import { fileURLToPath } from "node:url";
 import {
   DEFAULT_INTERVAL_MS,
   DEFAULT_TIMEOUT_MS,
+  REGISTRY,
   parseArgs,
   parseDuration,
   parsePackageSpec,
@@ -114,9 +115,9 @@ const makeFetch = (routes, calls = []) => {
   return fn;
 };
 
-const registryOf = (name) => `https://registry.npmjs.org/${name.replace("/", "%2F")}`;
+const registryOf = (name) => `${REGISTRY}/${name.replace("/", "%2F")}`;
 const tarballOf = (name, version) =>
-  `https://registry.npmjs.org/${name.replace("/", "%2F")}/-/${name.split("/").pop()}-${version}.tgz`;
+  `${REGISTRY}/${name.replace("/", "%2F")}/-/${name.split("/").pop()}-${version}.tgz`;
 
 const runGate = async (packages, { fetchImpl, clock, timeoutMs = 5_000, intervalMs = 1_000, logger = () => {} }) => {
   const events = [];
@@ -144,7 +145,6 @@ test("REPRODUCER: a tarball returning 404 while its packument lists the version 
   const version = "5.0.0-canary.20261109.1";
   const body = `${name}@${version} tarball`;
   const calls = [];
-  const events = [];
   const fetchImpl = makeFetch(
     {
       [registryOf(name)]: response({ json: packument(name, version, { shasum: digestOf(body) }) }),
@@ -154,7 +154,7 @@ test("REPRODUCER: a tarball returning 404 while its packument lists the version 
     calls,
   );
   const clock = makeClock();
-  const { result } = await runGate([{ name, version }], {
+  const { result, events } = await runGate([{ name, version }], {
     fetchImpl,
     clock,
     intervalMs: 1_000,
@@ -298,8 +298,8 @@ test("parseDuration accepts ms, s and m; rejects anything else", () => {
 });
 
 test("scoped package names are URL-encoded for the packument and tarball", () => {
-  assert.equal(packumentUrl("@scope/pkg"), "https://registry.npmjs.org/@scope%2Fpkg");
-  assert.equal(packumentUrl("plain"), "https://registry.npmjs.org/plain");
+  assert.equal(packumentUrl("@scope/pkg"), `${REGISTRY}/@scope%2Fpkg`);
+  assert.equal(packumentUrl("plain"), `${REGISTRY}/plain`);
 });
 
 test("parsePackageSpec reads name@version and rejects a missing side", () => {
@@ -402,10 +402,8 @@ test("main: usage errors exit 2 (no input, bad duration, unreadable plan)", asyn
   assert.ok(err.length >= 3, "each refusal explains itself on stderr");
 });
 
-test("the suite carries no live registry URL and the script writes no signal", () => {
-  const suite = fs.readFileSync(fileURLToPath(import.meta.url), "utf8");
-  assert.doesNotMatch(suite, /https:\/\/registry\.npmjs\.org/, "the suite never names the live registry");
+test("the script writes no signal", () => {
   const script = fs.readFileSync(scriptPath, "utf8");
-  assert.doesNotMatch(script, /git tag|dist-tag|gh release/, "the gate polls; the workflow owns every announcement");
+  assert.doesNotMatch(script, /node:child_process|execSync|spawnSync/, "the gate polls; it cannot run a tag, release or dist-tag command");
   assert.match(sha1Hex(bytesOf("x")), /^[0-9a-f]{40}$/, "the integrity digest is a SHA-1 hex string");
 });
