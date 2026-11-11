@@ -138,7 +138,7 @@ nested `Relevant files: <path, path…>` line: **metadata, never a task** (owner
 
 - P1 — <task> (validator: `<command>` exits 0)
   (Implements: S1, S2)
-  Relevant files: <path>
+  - Relevant files: <path>
 
 The link grammar (`task-spec-link@1`): every task bullet names the requirements
 it delivers on its own `(Implements: …)` line, and `phase-lint` refuses a bullet

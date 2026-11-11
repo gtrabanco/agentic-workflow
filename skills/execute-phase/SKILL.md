@@ -44,6 +44,9 @@ if bun is not installed) and the
   `bun scripts/unit-route.mjs --triage <slug>` output block (PREFLIGHT.md)
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
 ✓ Step executed and committed (one commit per step, conventional format)
+✓ Phase read set consumed — the phase read its `Relevant files:` targets
+  (`bun scripts/relevant-files.mjs <unit-doc> --phase P<k>`) instead of
+  surveying the repo, and discovered-file appends landed at phase close
 ✓ Test impact derived — the phase's test set came from the hint's block
   (TEST_IMPACT.md), and a prose-only phase recorded its `empty` verdict
 ✓ Evidence rows updated (command → exit/digest → output → verified-by)
@@ -146,6 +149,16 @@ owns the block and the RED-evidence shape) and write tests-first where they pay
 commits red (observed failing, naming the targeted suite), implementation green;
 UI/adapter glue may test after.
 
+**Context targeting (issue #269).** The phase's read set is the unit doc's
+nested `Relevant files:` metadata — resolve it with `bun
+scripts/relevant-files.mjs <unit-doc> --phase P<k>` and read those files plus
+the step's one-hop references before the first edit, instead of surveying the
+repository. A missing or empty list degrades to a scoped survey, recorded in
+the Progress entry — never a silent repo-wide read. The sub-section is metadata
+owned by `phase-contract`, so a file missing from it is never out of scope
+(never-authority); the discovers-more path is the post-step's forward
+propagation.
+
 **Orchestrate path** (only when the unit or the operator declares it, issue
 #260): the step dispatches instead of executing in-orchestrator — freeze the
 delegate brief (exact files, exact gate command, exact expected values,
@@ -197,20 +210,29 @@ and the full gate stays what the merge gate and CI run.
    <last-step-commit> --unit <unit>` — paste the block verbatim. **BREACH → STOP**
    (re-triage or record exception). Anti-gaming: **NEVER shrink a diff by deleting
    comments, blank lines, docs or tests.**
-2. **Evidence rows**: one row per AC satisfied — `| AC | command | exit/digest |
+2. **Relevant-files discipline** (issue #269): run `bun
+   scripts/relevant-files.mjs <unit-doc> --base <last-step-commit>` and require
+   exit 0 — the one failure it reports is a changed file neither listed in any
+   phase's `Relevant files:` nor logged in the unit doc (exit 1 names it: add
+   the file to a phase's list, or log the discovery on the spot — an unlisted
+   file is never out of scope, `phase-contract` owns that rule). **Forward-propagation:**
+   when this phase discovered files later phases will touch,
+   append them to those phases' `Relevant files:` lines in `## Tasks` now — at
+   phase close — and note the append in the Progress entry.
+3. **Evidence rows**: one row per AC satisfied — `| AC | command | exit/digest |
    output (≤2 lines, reproduced via command, not typed by hand) | verified-by |`
    — append to the Evidence section. The evidence row is a *reproduced receipt*,
    not an assertion (S5: mandatory reproduction extends to doc artifacts).
-3. **Progress log**: append a dated entry —
+4. **Progress log**: append a dated entry —
    `YYYY-MM-DD HH:MM — <what was done> → <commit sha> — next: <what is next>`.
-4. **Memory boundary** — this step is a phase transition. Follow
+5. **Memory boundary** — this step is a phase transition. Follow
    [the memory protocol](../unit-lane/references/MEMORY.md): before the first
    memory read run `agentic-workflow memory probe` once and record its verdict
    in Evidence; after the step, save the phase id, what it changed, its Evidence
    outcome and any discovery under `topic_key: "unit/<NN-slug>/doc"`, an explicit
    `project` and explicit session attribution (§5). A `degraded` verdict is
    recorded and the mirror marked pending — it never blocks the step.
-5. **Commit**: `git add <changed files>` then `git commit -m "<type>(<scope>):
+6. **Commit**: `git add <changed files>` then `git commit -m "<type>(<scope>):
    <step-summary>"` — run it, paste the SHA.
 
 ### 7. Red gate (repair loop)

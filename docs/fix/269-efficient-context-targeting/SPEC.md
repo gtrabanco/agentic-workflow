@@ -183,25 +183,25 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 
 - P1 — Freeze the planning ledgers: this SPEC with verbatim S1–S3, `planning-evidence.md`, `planning-obligations.md`, and register the triage block (validator: `bun scripts/phase-lint.mjs docs/fix/269-efficient-context-targeting/SPEC.md` prints `verdict PASS`)
   (Implements: S1)
-  Relevant files: docs/fix/_TEMPLATE/SPEC.md, docs/fix/443-doc-index-auto-hybrid/SPEC.md
+  - Relevant files: docs/fix/_TEMPLATE/SPEC.md, docs/fix/443-doc-index-auto-hybrid/SPEC.md
 - P2 — RED commit: `scripts/relevant-files.test.mjs` (read-set tool contract, prose pins for the three skills, never-authority discipline cases) observed failing on the missing module (validator: `bun test scripts/relevant-files.test.mjs` exits 1 with ERR_MODULE_NOT_FOUND)
   (Implements: S3)
-  Relevant files: scripts/unit-doc-phases.mjs, scripts/phase-lint.mjs
+  - Relevant files: scripts/unit-doc-phases.mjs, scripts/phase-lint.mjs
 - P3 — Implement `scripts/relevant-files.mjs` (parse via `unit-doc-phases`, `--phase P<k>` read-set mode, discipline check over `--changed`/git diff) and land the consumption prose: execute-phase read-set + forward-propagation + turn-contract box, review-change read-set rule, triage-issue affected-set start (validator: `bun test scripts/relevant-files.test.mjs` exits 0)
   (Implements: S3)
-  Relevant files: skills/execute-phase/SKILL.md, skills/review-change/SKILL.md, skills/triage-issue/SKILL.md
+  - Relevant files: skills/execute-phase/SKILL.md, skills/review-change/SKILL.md, skills/triage-issue/SKILL.md
 - P4 — RED commit: `packages/agentic-workflow/test/provision.cli.test.mjs` + the extended CLI-surface expectation (usage token `provision`) observed failing (validator: `cd packages/agentic-workflow && bun test test/provision.cli.test.mjs test/cli.surface.test.mjs` exits 1 on the red commit)
   (Implements: S3)
-  Relevant files: packages/agentic-workflow/test/cli.surface.test.mjs
+  - Relevant files: packages/agentic-workflow/test/cli.surface.test.mjs
 - P5 — Implement `agentic-workflow provision rg`: `src/provision/rg.mjs` behind the `provision-rg@1` receipt (root refusal, already-installed skip, ask-first consent + recorded consent ledger, user-scoped managers in the issue's order, pinned 15.2.0 binary download with digest verification, `~/.local/bin` else `.agentic-workflow/bin/` + gitignore entry) plus bin wiring and the crate README usage/Commands rows (validator: `cd packages/agentic-workflow && bun test test/provision.cli.test.mjs test/cli.surface.test.mjs` exits 0)
   (Implements: S3)
-  Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs
+  - Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs
 - P6 — Shipping gates: `.changeset/` intent for the two touched packages, `.gitignore` gains `.agentic-workflow/bin/`, `skill-lint` over the three touched skills, context budgets and golden-fixture smoke green (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S3)
-  Relevant files: skills/execute-phase/SKILL.md, skills/review-change/SKILL.md, skills/triage-issue/SKILL.md
+  - Relevant files: skills/execute-phase/SKILL.md, skills/review-change/SKILL.md, skills/triage-issue/SKILL.md
 - P7 — Close-out: measured delta evidence row computed on the golden fixture, roadmap row 80 settled via the crate's writer with the PR link, PR title/body rewritten to the implementation PR closing #269, and the document verifier's receipt green with every obligation closed (validator: `bun scripts/roadmap-settle.mjs` exits 0 and `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/269-efficient-context-targeting/SPEC.md` exits 0)
   (Implements: S1, S2)
-  Relevant files: docs/ROADMAP.md, scripts/fixtures/spec-by-reference/golden-fixture/SPEC.md
+  - Relevant files: docs/ROADMAP.md, scripts/fixtures/spec-by-reference/golden-fixture/SPEC.md
 
 ### Planning evidence
 
@@ -401,6 +401,15 @@ OPEN rows only; appended by `review-change` and `triage-issue`.
   x86_64, linux-gnu aarch64, darwin arm64/x64, windows-msvc x86_64) are embedded;
   unsupported platforms refuse with a manual hint instead of downloading
   unpinned bytes.
+- **D6** — 2026-11-10, planning decision (this unit): the declared unit-doc
+  grammar keeps the nested `- Relevant files:` **dash marker** (owner:
+  `phase-contract`/`unit-doc-phases.mjs`); the parser only attaches lines
+  carrying it, so this unit doc's Tasks lines and the two SPEC templates'
+  example line adopt the marker. The dashless occurrences already in the tree
+  (the golden-fixture SPEC among them) are pre-existing and left untouched —
+  their lists are inert bullet text today and stay so; changing the parser to
+  accept the markerless form would widen what phase-lint reports and was not
+  asked for.
 
 ## Next
 

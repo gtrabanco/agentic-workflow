@@ -193,10 +193,12 @@
       "referenceLinesMax": 311
     },
     "review-change": {
-      "mainEstimateMax": 3457,
+      "mainEstimateMax": 3795,
+      "mainLinesMax": 273,
       "mainSources": {
         "unit 65 P8 (AC20/AC21)": "the Step 0 retrieval-aid discovery bullet grew SKILL.md to measured 2848; ceiling re-based to ceil(2848 x 1.10) = 3133, reason declared (allowlisted discovery wording)",
-        "fix 318 (reviewer anti-invention rule)": "review-change gains: reviewer anti-invention rule — new findings must be grounded in provably-changed bytes or mis-run cited check. Measured by `scripts/check-skill-context.mjs` at this re-basis: 3142 est; ceiling re-based to exact ceil(3142 × 1.10) = 3457"
+        "fix 318 (reviewer anti-invention rule)": "review-change gains: reviewer anti-invention rule — new findings must be grounded in provably-changed bytes or mis-run cited check. Measured by `scripts/check-skill-context.mjs` at this re-basis: 3142 est; ceiling re-based to exact ceil(3142 × 1.10) = 3457",
+        "issue #269 (per-phase Relevant-files read-set consumption)": "the Scope section gains the read-set-around-the-diff rule (the unit's lists resolved by scripts/relevant-files.mjs --phase all; git still owns review scope); measured by the checker at this re-basis: 3450 est / 248 lines; ceilings re-based to ceil(3450 × 1.10) = 3795 / ceil(248 × 1.10) = 273"
       },
       "referenceEstimateMax": 3079,
       "referenceSources": {
@@ -205,15 +207,16 @@
       }
     },
     "execute-phase": {
-      "mainEstimateMax": 5225,
-      "mainLinesMax": 402,
+      "mainEstimateMax": 5868,
+      "mainLinesMax": 436,
       "mainSources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the lane's per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew SKILL.md to 2929 est; ceiling re-based to ceil(2929 x 1.10) = 3222; the golden-fixture-driven two-block closing contract (weak-model smoke caught a last-phase P<k+1> naming a nonexistent phase) then measured 253 lines / 2953 est — line ceiling ceil(253 x 1.10) = 279",
         "fix 258 / #258 harden-needs-input": "the needs-input contract moved to code: the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and `re-ask once`/`Confirmed phase`/`Confirmed file targets` are gone (F33-D/F34-D) — measured 3379 est / 275 lines; ceiling re-based to ceil(3379 x 1.10) = 3717 / ceil(275 x 1.10) = 303 (down from 3807/315, the body shrank)",
         "feature 66 P2 (memory boundary)": "the executor's phase-transition memory boundary: one turn-contract box plus a Post-step item pointing at skills/unit-lane/references/MEMORY.md (never restated); measured 3548 est / 285 lines against the existing 3717 / 303 ceilings, so no re-base was needed",
         "issue #316 (roadmap settle in the close-out)": "the whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs` (issue #316); measured 3744 est / 294 lines, so the ceiling re-bases to ceil(3744 x 1.10) = 4119 and the line ceiling to ceil(294 x 1.10) = 324",
         "fix 318 (claim-evidence loop + self-audit + LOGS.md)": "execute-phase gains: claim-evidence loop step (mandatory reproduction before post-step, loop-until-green), Evidence rows require command + observed output (reproduced receipt), LOGS.md append-only rule (S9 4b), persist self-audit box. Measured by `scripts/check-skill-context.mjs` at this re-basis: 4266 est / 335 lines; ceiling re-based to exact ceil(4266 × 1.10) = 4693 / ceil(335 × 1.10) = 369",
-        "issue #294 (unit 82 relay-lane-execution)": "the executor parity sentence grew this entry; measured 4750 est / 365 lines at this cut, so the ceilings are ceil(4750 x 1.10) = 5225 and ceil(365 x 1.10) = 402"
+        "issue #294 (unit 82 relay-lane-execution)": "the executor parity sentence grew this entry; measured 4750 est / 365 lines at this cut, so the ceilings are ceil(4750 x 1.10) = 5225 and ceil(365 x 1.10) = 402",
+        "issue #269 (per-phase Relevant-files consumption + forward propagation)": "the executor gains the context-targeting paragraph (read the phase's Relevant files: targets resolved by scripts/relevant-files.mjs --phase P<k>, scoped-survey fallback), one turn-contract box, and the Relevant-files discipline + forward-propagation post-step item; measured by the checker at this re-basis: 5334 est / 396 lines; ceilings re-based to ceil(5334 × 1.10) = 5868 / ceil(396 × 1.10) = 436"
       },
       "referenceEstimateMax": 3232,
       "referenceSources": {

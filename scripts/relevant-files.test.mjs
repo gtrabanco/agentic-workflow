@@ -55,9 +55,9 @@ scope: medium
 ## Tasks
 
 - P1 — freeze the planning ledgers (validator: \`bun scripts/phase-lint.mjs docs/fix/269-efficient-context-targeting/SPEC.md\` prints PASS)
-  Relevant files: docs/fix/_TEMPLATE/SPEC.md
+  - Relevant files: docs/fix/_TEMPLATE/SPEC.md
 - P2 — implement the read-set tool (validator: \`bun test scripts/relevant-files.test.mjs\` exits 0)
-  Relevant files: scripts/unit-doc-phases.mjs, scripts/phase-lint.mjs,
+  - Relevant files: scripts/unit-doc-phases.mjs, scripts/phase-lint.mjs,
     scripts/red-first.mjs
 - P3 — no list on this phase (validator: \`bun test scripts/x.test.mjs\` exits 0)
 
@@ -127,8 +127,8 @@ test("the unit doc itself never counts against the discipline", () => {
 test("a unit doc with no Relevant files at all degrades to read-set: absent and passes", () => {
   const doc = writeUnitDoc(
     UNIT
-      .replace(/\n  Relevant files: docs\/fix\/_TEMPLATE\/SPEC\.md/, "")
-      .replace(/\n  Relevant files: scripts\/unit-doc-phases\.mjs, scripts\/phase-lint\.mjs,\n    scripts\/red-first\.mjs/, ""),
+      .replace(/\n  - Relevant files: docs\/fix\/_TEMPLATE\/SPEC\.md/, "")
+      .replace(/\n  - Relevant files: scripts\/unit-doc-phases\.mjs, scripts\/phase-lint\.mjs,\n    scripts\/red-first\.mjs/, ""),
   );
   const r = run([doc, "--changed", "scripts/something-new.mjs"]);
   assert.equal(r.status, 0, r.stderr);
@@ -137,8 +137,8 @@ test("a unit doc with no Relevant files at all degrades to read-set: absent and 
 
 test("empty Relevant files entries are refused, not silently dropped", () => {
   const doc = writeUnitDoc(UNIT.replace(
-    "Relevant files: scripts/unit-doc-phases.mjs, scripts/phase-lint.mjs,",
-    "Relevant files: scripts/unit-doc-phases.mjs,, scripts/phase-lint.mjs,",
+    "- Relevant files: scripts/unit-doc-phases.mjs, scripts/phase-lint.mjs,",
+    "- Relevant files: scripts/unit-doc-phases.mjs,, scripts/phase-lint.mjs,",
   ));
   const r = run([doc, "--changed", "scripts/unit-doc-phases.mjs"]);
   assert.equal(r.status, 1, "an empty entry is a malformed read set");
