@@ -15,12 +15,15 @@ the **non-mechanizable remainder** of the dimension is model-swept.
 
 ### Profile-aware scope (#436 — consumption-side)
 
-When the project declares a **ceremony profile**, a dimension (or a
-profile-declared producer, such as the per-language dead-code linters) the
-profile does not declare is recorded `n/a — not declared by the project's
+When the project declares a **ceremony profile** (the machine-readable
+`ceremony-profile@1` block in the guide's `## Project charter`), a dimension
+(or a profile-declared producer, such as the per-language dead-code linters)
+the profile does not declare is recorded `n/a — not declared by the project's
 ceremony profile` instead of swept — one-shot/organic repos do not pay
 full-audit ceremony. No profile is declared → every applicable dimension runs.
-The profile grammar itself is #436's; this skill only consumes it and never
+The `review-passes` surfaces the profile names are the same closed set this
+skill's review-axes vocabulary publishes (`PASS_NAMES` minus `classify`); the
+profile grammar itself is #436's; this skill only consumes it and never
 invents profile slots or waives a verification contract.
 
 | Dimension | What it sweeps product-wide | Producer (pre-pass) | Applies to |
