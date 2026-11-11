@@ -277,7 +277,7 @@ both (the #498 train changed the unit docs the emitter reads).
 |---|---|---|---|---|---|---|---|---|
 | O1 | S1 | El emitter genera ROADMAP.md desde las unit docs sin texto manual que choque | P1 | P1 | scripts/docs-generate.mjs | `bun scripts/docs-generate.mjs --check` → PASS; `docs/ROADMAP.md` existe y es válido | the E line with the check exit and the file existence | verified |
 | O2 | S2 | El merge driver resuelve conflictos en ROADMAP.md regenerando desde las unit docs — re-scoped 2026-11-11: the repository wiring keeps ROADMAP's merge attribute on `agentic-shared-roadmap`; this unit's driver case is the scratch-fixture capability (the reproducer routes ROADMAP to the #507 driver via the fixture's own `.gitattributes`), and the closed-set pin refuses a second attribute claim | P2 | P2 | scripts/docs-generated-merge.mjs | `bun test scripts/docs-generated-merge.test.mjs` exits 0 — the armed #269×#505 reproducer plus the closed-set pin | the E line with the fixture test exit and the comparison (E2, re-run at the rebased head in E8) | verified |
-| O3 | S3 | init-workspace instala `.gitattributes` y el merge driver en bootstrap y upgrade — re-scoped 2026-11-11 (S15): the arming step covers both driver families of the registry | P3 | P3 | init-workspace | repo limpio → `.gitattributes` existe; `git config --get merge.docs-generated.driver` → no vacío; `git config --get merge.agentic-shared-roadmap.driver` → no vacío | the E line with the config checks (E5, re-run at the rebased head in E9) | in-progress |
+| O3 | S3 | init-workspace instala `.gitattributes` y el merge driver en bootstrap y upgrade — re-scoped 2026-11-11 (S15): the arming step covers both driver families of the registry | P3 | P3 | init-workspace | repo limpio → `.gitattributes` existe; `git config --get merge.docs-generated.driver` → no vacío; `git config --get merge.agentic-shared-roadmap.driver` → no vacío | the E line with the config checks (E5, re-verified at the rebased head on scratch in E9 and on the live checkout in O3's rerun) | verified |
 | O4 | S5 | El campo `roadmap_summary:` es opcional y se deriva del `One-line:` si falta | P4 | P4 | SPEC template | template contiene el campo; `bun scripts/docs-generate.mjs` no falla si falta | the E line with the generate check | verified |
 | O5 | S8 | The fix-kind sync applies a declared `roadmap_summary:` to a cell-matched Fixes row — the override the Non-goals promise for fix rows | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the fix-override case | the E line naming the RED run at the pre-fix commit and the GREEN run (E6) | verified |
 | O6 | S9 | `--check` reports roadmap drift without claiming a write it did not perform (read-only contract) | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the check-wording case | the E line naming the RED run and the GREEN run (E6) | verified |
@@ -285,9 +285,9 @@ both (the #498 train changed the unit docs the emitter reads).
 | O8 | S11 | the task list cites only specs that exist — P5 no longer names the nonexistent S7 | P7 | P7 | docs/fix/507-driver-write/SPEC.md | `rg -c "Implements: S3 item 3" docs/fix/507-driver-write/SPEC.md` exits 0 | the E line with the command output (E7) | verified |
 | O9 | S12 | the scaffold guide states the roadmap sync every scaffolded project inherits | P7 | P7 | template/AGENTS.md | `rg -n "roadmap_summary" template/AGENTS.md` exits 0 | the E line with the command output (E7) | verified |
 | O10 | S13 | the Serena provisioning pointer names the bootstrap step that now holds it | P7 | P7 | docs/features/67-serena-provisioning/SPEC.md | `rg -n "BOOTSTRAP_WRITE.md. step 10" docs/features/67-serena-provisioning/SPEC.md` exits 0 | the E line with the command output (E7) | verified |
-| O11 | S14 | the scaffold's `.gitattributes` ships the integrated registry — the class lines stated once, `docs/ROADMAP.md` claimed by exactly one driver | P8 | P8 | template/.gitattributes | the template-registry case in `bun test scripts/docs-generated-merge.test.mjs` exits 0; `git check-attr merge docs/ROADMAP.md` → `merge: agentic-shared-roadmap` at the rebased head | the E line naming both runs (E8) | in-progress |
-| O12 | S15 | init-workspace arms the docs-generated driver and the shared-document classes in bootstrap and upgrade, verifying both config keys | P8 | P8 | skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md | the bootstrap-arming case in `bun test scripts/docs-generated-merge.test.mjs` exits 0; the scratch install run leaves both config keys non-empty | the E line naming the RED and GREEN runs and the scratch run (E8/E9) | in-progress |
-| O13 | S16 | the root guide's residual-case prose names the registry as the ROADMAP attribute's home and keeps the table-sync sentence | P9 | P9 | AGENTS.md | `rg -c "merge=docs-generated" AGENTS.md` → 1 — the `docs/generated/**` attribute only | the E line with the command output (E9) | in-progress |
+| O11 | S14 | the scaffold's `.gitattributes` ships the integrated registry — the class lines stated once, `docs/ROADMAP.md` claimed by exactly one driver | P8 | P8 | template/.gitattributes | the template-registry case in `bun test scripts/docs-generated-merge.test.mjs` exits 0; `git check-attr merge docs/ROADMAP.md` → `merge: agentic-shared-roadmap` at the rebased head | the E line naming both runs (E8) | verified |
+| O12 | S15 | init-workspace arms the docs-generated driver and the shared-document classes in bootstrap and upgrade, verifying both config keys | P8 | P8 | skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md | the bootstrap-arming case in `bun test scripts/docs-generated-merge.test.mjs` exits 0; the scratch install run leaves both config keys non-empty | the E line naming the RED and GREEN runs and the scratch run (E8/E9) | verified |
+| O13 | S16 | the root guide's residual-case prose names the registry as the ROADMAP attribute's home and keeps the table-sync sentence | P9 | P9 | AGENTS.md | `rg -c "merge=docs-generated" AGENTS.md` → 1 — the `docs/generated/**` attribute only | the E line with the command output (E9) | verified |
 
 ## Triaged steps
 
@@ -318,6 +318,12 @@ probe) once `slugColumn` alone is repaired — the change is done when all three
 - **L1** — Request verbatim: "Apply to this repository: issue #507", under the owner's standing
   local-workflow procedure (inline application, ledger freeze as the plan, owner as the external
   verifier).
+- **L2** — Rebase request verbatim: "Apply to this repository: en fix/507-driver-write (PR #513
+  rebase here without loosing git timeline and not delete any feature that we must prevail).
+  There are new annotations/features/requirements in issue #507 and PR #513 you need to re-read
+  and maybe redo of the plan could be necessary", under the owner's standing local-workflow
+  procedure (§0 resolution: `proceed` — rebase + integration continuation; the coordination
+  annotations are re-read in Correction batch 2).
 - **E1** — 2026-11-10, RED at `32b0d053`: `bun test scripts/docs-generate.test.mjs` exit 1 — 4 fail
   (row append, derivation chain, `roadmap_summary:` override, stale-check), 23 pass; `bun test
   scripts/docs-generated-merge.test.mjs` exit 1 — 3 fail (driver coverage of `docs/ROADMAP.md`,
@@ -369,11 +375,35 @@ probe) once `slugColumn` alone is repaired — the change is done when all three
   review-loop-discipline PASS, skill-lint PASS, context budgets PASS 29,
   route budgets PASS 14. Live read-only `bun scripts/docs-generate.mjs --check`
   → PASS, `Roadmap: docs/ROADMAP.md — unchanged`, tree clean.
+- **E8** — 2026-11-11, rebase integration (S14–S15): the 17-commit timeline replayed onto the
+  merged #498 train merge-base-clean (`main` = `b2864d03`; conflicts resolved at the attribute
+  level — the registry lines kept verbatim, the hand rows 498/502 and the 494 position restored,
+  the branch's `docs/ROADMAP.md merge=docs-generated` claim suppressed). RED at `d93ed9a8`:
+  `bun test scripts/docs-generated-merge.test.mjs` exit 1 — 16 pass / 2 fail, each on its new
+  S14/S15 cause (the template shipped the old two-line set; bootstrap/upgrade armed one driver
+  family). GREEN at `ef263b2b`: same suite 18 pass / 0 fail; `docs-generate` 31/0;
+  `git check-attr merge docs/ROADMAP.md` → `merge: agentic-shared-roadmap`. Scratch differential
+  (`mktemp -d`, `git archive` of head onto a clean checkout): both installs arm and report
+  `written` then `unchanged` on the second run; all four config keys non-empty;
+  `git check-attr` in the scratch routes each path to exactly one driver.
+- **E9** — 2026-11-11, prose and gates at the integration head: `rg -c "merge=docs-generated"
+  AGENTS.md` → 1 (O13); `rg -n "BOOTSTRAP_WRITE.md. step 10"
+  docs/features/67-serena-provisioning/SPEC.md` → 1 with `BOOTSTRAP_WRITE.md` step 10 still
+  Serena (O10 survives the step-5 rewrite; O8/O9 names unchanged). skill-lint PASS (0
+  findings); `check-skill-context --routes` PASS 14 routes; scaffold-guide 8/0,
+  unit-doc-contract 21/0, guide-split 15/0, invocation-drift 13/0, residue-dimensions 29/0;
+  `bun scripts/lint-changeset.mjs` → `ok 507-driver-write.md`; live read-only
+  `bun scripts/docs-generate.mjs --check` → PASS, `Roadmap: docs/ROADMAP.md — unchanged`,
+  `docs/generated/units.md` clean.
 
 ## Next
 
-Correction batch green — awaiting the external verifier's blockers-only recheck (§9);
-F2/F3 still await the owner's design verdict.
+Rebase integration green (Correction batch 2) — the branch carries the same 17-commit timeline
+replayed onto the #498 train plus the integration commits; awaiting the external verifier's
+verdict (§9) and the push-authorization for the rewritten published branch. Open decisions:
+F2/F3 (design verdicts from the first batch) and F4 (the `docs/generated/**` residual — union
+the #420 shortcut into the class driver, or keep the current refusal-with-gate split); D1
+still none.
 
 ## References
 
