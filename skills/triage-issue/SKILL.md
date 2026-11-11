@@ -76,7 +76,9 @@ over the same corpus grep covers: a missing index, an absent entry point, or an
 empty answer changes nothing (grep stays the exhaustive fallback — AC21), and
 the index is never a decision authority. In review-finding mode, read the target unit's SPEC,
 acceptance, `review-findings.md`, current diff, and PR instead of looking for an
-issue comment. Otherwise read the issue in full, including comments and labels
+issue comment. Verification starts from the affected-file set — the finding's
+`file:line` citations plus the unit doc's per-phase `Relevant files:` lists —
+and widens only on a cited lead; never a repo-wide survey from scratch. Otherwise read the issue in full, including comments and labels
 (forge CLI per the project's Workflow conventions — examples use `gh`):
 
 ```sh
