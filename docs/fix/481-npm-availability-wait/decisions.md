@@ -1,4 +1,4 @@
-# Decisions — fix/481-post-publish-availability-gate
+# Decisions — fix/481-npm-availability-wait
 
 ## Path-protection records
 
