@@ -180,7 +180,13 @@ copy of it — and cannot read a stale copy.
 
 ### 4. Execute triaged steps in order
 
-For each step the triage returned, follow its reference file. Judgment steps
+For each step the triage returned, follow its reference file. **Fused
+design/plan pass** — when the triage block carries the `Fused:` line (the
+unit's recorded risk tier is `standard`), the `design` and `plan` steps are one
+investigate→orient→ask→decide pass in one conductor session: both reference
+files loaded, decision points tagged design/plan, carriers and gates separated
+(owner: [references/PLAN.md](references/PLAN.md), block `activity-fusion@1`).
+Without the line the steps run separated, one turn-commit each. Judgment steps
 (research, design, plan, evidence, docs, review) run inline, **one step per
 turn-commit**:
 
