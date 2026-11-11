@@ -247,6 +247,15 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - P7 — close the receipt's documentation dispositions (validator: O8, O9 and O10 each name a reader command that exits 0)
   (Implements: S11, S12, S13)
   Relevant files: docs/fix/507-driver-write/SPEC.md, template/AGENTS.md, docs/features/67-serena-provisioning/SPEC.md
+- P8 — integrate the merge-driver registry into the scaffold and arm both driver families (validator: the template-registry and bootstrap-arming cases in `bun test scripts/docs-generated-merge.test.mjs` exit 0; the scratch install run leaves both config keys non-empty)
+  (Implements: S14, S15)
+  Relevant files: template/.gitattributes, skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md
+- P9 — re-anchor the guide's residual-case prose to the integrated wiring (validator: `rg -c "merge=docs-generated" AGENTS.md` → 1)
+  (Implements: S16)
+  Relevant files: AGENTS.md
+- P10 — the `logs` union merge-driver class: `unionLogEntries` in the crate's merge library, the class registered in `shared-doc-merge.mjs`, the attribute in both `.gitattributes` files, the arming prose extended (validator: the logs-union cases in `bun test packages/agentic-workflow/test/writer.merge.test.mjs` and the armed-merge case in `bun test scripts/shared-doc-merge.test.mjs` exit 0; `git check-attr merge docs/LOGS.md` → `agentic-shared-logs`)
+  (Implements: S17)
+  Relevant files: packages/agentic-workflow/src/writer/merges.mjs, scripts/shared-doc-merge.mjs, .gitattributes, template/.gitattributes, skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md, AGENTS.md
 
 ### Planning evidence
 
