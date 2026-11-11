@@ -1,3 +1,4 @@
+---
 "@gtrabanco/agentic-workflow-schema": minor
 "@gtrabanco/agentic-workflow": minor
 "unit-lane": minor
