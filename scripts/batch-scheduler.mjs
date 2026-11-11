@@ -3,7 +3,7 @@
 /**
  * batch-scheduler — the deterministic batch planner (issue #449).
  *
- * One pass over the live work graph that emits the fixed `batch-plan@2`
+ * One pass over the live work graph that emits the fixed `batch-plan@3`
  * document (schema package: `agentic-workflow/batch-plan`): which open issues
  * can run together now (batch 1), which come next (batch N+1…), which surface
  * each lane occupies, and which spots are unresolvable — always findings,
