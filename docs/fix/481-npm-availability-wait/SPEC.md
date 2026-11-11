@@ -273,6 +273,17 @@ gate exception. The `## Tasks` list above is the frozen step list for this unit.
 - **P4** — 2026-11-12, the five publish.yml wait steps · `aba57994` (E4).
 - **P5** — 2026-11-12, gate inventory row, test route, changeset, roadmap row,
   regenerated projection · `5926bc5c` (E6, E7).
+- **E12** — 2026-11-12, two full-gate attempts failed at `root-suite` under
+  concurrent load (default workers, then `--jobs 2`), each time on a different
+  set of git-heavy suites; every named suite is green alone and the serial gate
+  below is green. Recorded as the load-sensitivity in Known pre-existing issues,
+  never as a pass by assumption.
+- **G1** — 2026-11-12, `bun scripts/local-gate.mjs --jobs 1` · HEAD `3ef8e2e7` ·
+  exit 0 · `local-gate: PASS — 17 step(s) in 657s`.
+- **G2** — 2026-11-12, HEAD `3ef8e2e7` · `bun scripts/run-root-suite.mjs`
+  (default workers) · exit 0 · the full root suite PASS.
+- **P6** — 2026-11-12, obligations closed, gate declared, guide budget re-pinned
+  and the evidence recorded · `3ef8e2e7` (G1, G2).
 
 ## Next
 
