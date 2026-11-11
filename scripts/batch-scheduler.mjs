@@ -16,6 +16,15 @@
  *     and across batches without ever gating batch membership;
  *   - one lane per touched surface — issues sharing a surface serialize in
  *     that lane (surface-conflict), disjoint surfaces run in disjoint lanes;
+ *   - an issue is in flight only on evidence (an open PR or an unmerged
+ *     `fix|feat/<n>-*` branch): a unit doc on disk corroborates, it never
+ *     decides (issue #509, S3);
+ *   - two issues of one batch on different lanes whose branches rewrite the
+ *     same file are a `file-overlap` finding, never a silent parallel pick
+ *     (issue #509, S4);
+ *   - a persisted claim is keyed `(issue, lane)` and expires on its evidence
+ *     or its age, reported as `stale-claim` instead of honored (issue #509,
+ *     S2/S5);
  *   - measured-size hints are reported per issue and per lane; the lane-count
  *     decision is the consumer's.
  *
@@ -28,8 +37,10 @@
  * Relations and surfaces are read from where they live — forge (native
  * `blocked-by` + issue bodies), `docs/ROADMAP.md`, unit docs on disk — through
  * the same shared parsers `workflow-status.mjs` uses. Nothing is re-declared
- * here. No decision model exists anywhere in the path (#444 adds the optional
- * signal layer over this deterministic half).
+ * here. The launch evidence is read from the same two places it really lives:
+ * the local git plumbing (branches, worktrees, the diff against the trunk) and
+ * one `gh pr list` (issue #509). No decision model exists anywhere in the path
+ * (#444 adds the optional signal layer over this deterministic half).
  */
 
 import fs from "node:fs";
@@ -41,7 +52,24 @@ import { readRoadmapIndex, roadmapTableRows } from "../packages/agentic-workflow
 /** The state file's name, under `<root>/.agentic-workflow/` (untracked, durable). */
 export const STATE_FILE_NAME = "batches.json";
 
-const STATE_VERSION = 2;
+/**
+ * How long a persisted claim stays live without being re-planned (issue #509,
+ * S5). Wall-clock against the run instant the CLI supplies — never a timestamp
+ * inside the envelope, which must stay byte-identical for identical inputs.
+ */
+export const CLAIM_TTL_MS = 48 * 60 * 60 * 1000;
+
+/** The state file's version: 3 keys claims by `(number, lane)` (issue #509, S2). */
+const STATE_VERSION = 3;
+/** The claim-key separator: `<number>|<lane>`, the issue's own example. */
+const CLAIM_SEPARATOR = "|";
+/** A v3 claim key; anything else is a pre-v3 bare-number key or foreign data. */
+const CLAIM_KEY_RE = /^(\d+)\|(.+)$/u;
+
+/** The persisted claim key for one issue in one lane (issue #509, S2). */
+export function claimedKey(number, lane) {
+  return `${number}${CLAIM_SEPARATOR}${lane}`;
+}
 const SIZE_ORDER = { light: 0, mixed: 1, heavy: 2 };
 const SIZE_FROM_TOKEN = { S: "light", M: "light", L: "heavy", XL: "heavy" };
 const REVISION_RE = /^[0-9a-f]{7,40}$/u;
@@ -141,8 +169,8 @@ async function fetchRelations({ ghBin, remote, degradations }) {
   return relations;
 }
 
-function gitOriginUrl() {
-  const run = spawnSync("git", ["remote", "get-url", "origin"], { encoding: "utf8", timeout: 10000 });
+function gitOriginUrl(root = process.cwd()) {
+  const run = spawnSync("git", ["-C", root, "remote", "get-url", "origin"], { encoding: "utf8", timeout: 10000 });
   if (run.status !== 0) return null;
   return run.stdout.trim() || null;
 }
@@ -176,10 +204,155 @@ function sanitizeCause(cause) {
   return text.slice(0, 40) || "error";
 }
 
+// ── launch evidence (issue #509, S3) ──────────────────────────────────────
+
+/** A unit branch: `fix/<issue>-<slug>` / `feat/<issue>-<slug>`. */
+const BRANCH_RE = /^(?:fix|feat)\/(\d+)-/u;
+
+/** The evidence slot of one issue: the sources that describe its lifecycle. */
+function evidenceSlot(evidence, number) {
+  if (!evidence.has(number)) evidence.set(number, { branches: [], pr: null, worktree: null, files: [] });
+  return evidence.get(number);
+}
+
+/**
+ * Gather what actually says an issue is in flight (issue #509, S3): the local
+ * git plumbing (branches, the worktrees that hold them, the diff against the
+ * trunk) and one `gh pr list` mapped from the PR head branch back to its issue.
+ *
+ * A unit doc is **not** evidence — it survives a merge and a park, which is the
+ * defect the issue reports. Every unreadable source degrades declared
+ * (`unavailable-<source>-<cause>`) and leaves the rest of the plan standing;
+ * the caller never falls back to unit-doc existence.
+ *
+ * @returns {Promise<{evidence: Map<number, {branches: Array<{name:string,merged:boolean}>, pr: {number:number,state:string}|null, worktree: string|null, files: string[]}>, degradations: string[]}>}
+ */
+export async function collectLaunchEvidence({ root, ghBin = "gh", remote = null, gitBin = "git" } = {}) {
+  const degradations = [];
+  const evidence = new Map();
+  const git = (args) => spawnSync(gitBin, ["-C", root, ...args], { encoding: "utf8", timeout: 30000 });
+  if (git(["rev-parse", "--git-dir"]).status !== 0) {
+    // A scratch directory with no repository carries no lifecycle evidence at
+    // all — declared, never invented.
+    degradations.push("unavailable-launch-evidence-no-repository");
+    return { evidence, degradations };
+  }
+
+  const worktreeOfBranch = new Map();
+  const worktrees = git(["worktree", "list", "--porcelain"]);
+  if (worktrees.status === 0) {
+    let path = null;
+    for (const line of worktrees.stdout.split("\n")) {
+      if (line.startsWith("worktree ")) path = line.slice("worktree ".length).trim();
+      else if (line.startsWith("branch ") && path !== null) {
+        worktreeOfBranch.set(line.slice("branch ".length).trim().replace(/^refs\/heads\//u, ""), path);
+        path = null;
+      }
+    }
+  } else {
+    degradations.push(`unavailable-launch-evidence-worktree-list-${sanitizeCause(worktrees.stderr)}`);
+  }
+
+  const refs = git(["for-each-ref", "--format=%(refname:short)", "refs/heads"]);
+  if (refs.status !== 0) {
+    degradations.push(`unavailable-launch-evidence-branch-list-${sanitizeCause(refs.stderr)}`);
+    return { evidence, degradations };
+  }
+  const branches = refs.stdout
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((name) => BRANCH_RE.test(name))
+    .sort();
+
+  // The trunk is only needed to tell a landed branch from a live one, so it is
+  // resolved lazily and its absence only degrades when it is actually needed.
+  const trunk = branches.length === 0 ? null : resolveTrunk(git);
+  if (branches.length > 0 && trunk === null) degradations.push("unavailable-launch-evidence-no-trunk");
+
+  for (const name of branches) {
+    const slot = evidenceSlot(evidence, Number(BRANCH_RE.exec(name)[1]));
+    slot.branches.push({ name, merged: trunk !== null && git(["merge-base", "--is-ancestor", name, trunk]).status === 0 });
+    if (worktreeOfBranch.has(name)) slot.worktree = worktreeOfBranch.get(name);
+    if (trunk === null) continue;
+    // What the branch actually rewrites: the only overlap evidence the lane
+    // derivation cannot see (a declared file token already names its lane).
+    const diff = git(["diff", "--name-only", `${trunk}...${name}`]);
+    if (diff.status !== 0) continue;
+    for (const file of diff.stdout.split("\n").map((line) => line.trim())) {
+      if (file !== "" && !slot.files.includes(file)) slot.files.push(file);
+    }
+  }
+
+  for (const [branch, pr] of await collectPrStates({ root, ghBin, remote, degradations })) {
+    const match = BRANCH_RE.exec(branch);
+    if (match === null) continue;
+    evidenceSlot(evidence, Number(match[1])).pr = pr;
+  }
+  for (const slot of evidence.values()) slot.files.sort((a, b) => a.localeCompare(b));
+  return { evidence, degradations };
+}
+
+/** `origin/main` when the clone has it, else `main` — the merge baseline. */
+function resolveTrunk(git) {
+  for (const candidate of ["origin/main", "main"]) {
+    if (git(["rev-parse", "--verify", "--quiet", `${candidate}^{commit}`]).status === 0) return candidate;
+  }
+  return null;
+}
+
+/** One forge call: the PR state per head branch, `OPEN` beating the rest. */
+async function collectPrStates({ root, ghBin, remote, degradations }) {
+  const byBranch = new Map();
+  const origin = remote ?? gitOriginUrl(root);
+  const parsed = origin !== null ? parseOrigin(origin) : null;
+  if (parsed === null) {
+    degradations.push("unavailable-forge-pr-list-no-origin");
+    return byBranch;
+  }
+  try {
+    const run = spawnSync(
+      ghBin,
+      ["pr", "list", "-R", `${parsed.owner}/${parsed.name}`, "--state", "all", "--limit", "200", "--json", "number,headRefName,state"],
+      { encoding: "utf8", timeout: 30000 },
+    );
+    if (run.error) throw run.error;
+    if (run.status !== 0) throw new Error((run.stderr || "gh pr list failed").trim().split("\n")[0]);
+    for (const row of JSON.parse(run.stdout)) {
+      if (typeof row?.headRefName !== "string" || typeof row?.number !== "number") continue;
+      const state = String(row.state ?? "").toUpperCase();
+      if (!["OPEN", "MERGED", "CLOSED"].includes(state)) continue;
+      const prior = byBranch.get(row.headRefName);
+      if (prior === undefined || (prior.state !== "OPEN" && state === "OPEN")) {
+        byBranch.set(row.headRefName, { number: row.number, state });
+      }
+    }
+  } catch (cause) {
+    degradations.push(`unavailable-forge-pr-list-${sanitizeCause(cause)}`);
+  }
+  return byBranch;
+}
+
+/**
+ * The evidence string that marks an issue in flight, or null when nothing
+ * establishes it. The forge is authoritative: an `OPEN` PR is in flight and a
+ * `MERGED`/`CLOSED` one is terminal, whatever the local branch says. Without a
+ * PR, an unmerged branch is the evidence; a unit doc only corroborates it.
+ */
+function inFlightEvidence(slot, unitDir) {
+  const pr = slot?.pr ?? null;
+  if (pr !== null && pr.state !== "OPEN") return null;
+  const live = (slot?.branches ?? []).filter((branch) => !branch.merged);
+  if (pr === null && live.length === 0) return null;
+  const parts = pr !== null ? [`PR #${pr.number} open`] : [];
+  for (const branch of live) parts.push(`branch ${branch.name}`);
+  if (unitDir !== undefined) parts.push(`unit-doc ${unitDir}`);
+  return parts.join(" + ");
+}
+
 // ── surfaces, dependencies, sizes (all read from where they live) ─────────
 
-/** Normalize one path token to its lane key (see `surfaceKey`). */
-export function extractSurfaces(body) {
+/** The `## Where` and `## In scope` sections an issue declares its surface in. */
+function scopeSections(body) {
   const sections = [];
   for (const heading of ["## Where", "## In scope"]) {
     const idx = body.indexOf(heading);
@@ -188,11 +361,46 @@ export function extractSurfaces(body) {
     const end = rest.indexOf("\n## ");
     sections.push(end === -1 ? rest : rest.slice(0, end));
   }
-  const scope = sections.length > 0 ? sections.join("\n") : body;
+  return sections.length > 0 ? sections : [body];
+}
+
+/** The concrete files an issue's body claims, from the same `## Where` /
+ * `## In scope` sections the surfaces come from (issue #509, S4).
+ *
+ * A token qualifies only when it names a file — an extension, no wildcard — so
+ * a directory or a glob claims nothing: expanding a directory into its children
+ * would make one issue match every sibling's files, the false findings the
+ * #460 prose parser already refused once (decision D5).
+ *
+ * @returns {string[]} the sorted, unique file paths
+ */
+export function extractFileClaims(body) {
+  const files = new Set();
+  for (const section of scopeSections(body)) {
+    for (const match of section.matchAll(/`([^`]+)`/g)) {
+      const file = fileToken(match[1]);
+      if (file !== null) files.add(file);
+    }
+  }
+  return [...files].sort((a, b) => a.localeCompare(b));
+}
+
+/** One declared token as a file path, or null when it names a directory/glob. */
+function fileToken(token) {
+  const clean = String(token).trim().replace(/^\.\//u, "").replace(/(?:\/)+$/u, "");
+  if (clean === "" || /[*?]/u.test(clean)) return null;
+  const last = clean.slice(clean.lastIndexOf("/") + 1);
+  return /^[^/]+\.[A-Za-z][A-Za-z0-9]{0,9}$/u.test(last) && !last.startsWith(".") ? clean : null;
+}
+
+/** Normalize one path token to its lane key (see `surfaceKey`). */
+export function extractSurfaces(body) {
   const surfaces = new Set();
-  for (const match of scope.matchAll(/`([^`]+)`/g)) {
-    const key = surfaceKey(match[1]);
-    if (key !== null) surfaces.add(key);
+  for (const scope of scopeSections(body)) {
+    for (const match of scope.matchAll(/`([^`]+)`/g)) {
+      const key = surfaceKey(match[1]);
+      if (key !== null) surfaces.add(key);
+    }
   }
   return surfaces;
 }
@@ -298,11 +506,59 @@ function worktreeFor(issue) {
   return `${prefix}/${issue.number}-${slugify(issue.title)}`;
 }
 
+// ── claims (issue #509, S2/S5) ─────────────────────────────────────────
+
+/**
+ * Why a persisted claim no longer stands, or null while it does.
+ *
+ * The same predicate decides the plan's `claimed` flag and the state's prune,
+ * so a reported claim is exactly a dropped one. Every arm is a fact of the
+ * inputs: a pre-v3 key names no lane (S2), terminal PR/branch evidence says the
+ * unit landed (S3), a closed issue cannot be claimed, and an entry older than
+ * `CLAIM_TTL_MS` against the run instant the caller supplies expired (S5).
+ *
+ * @param {string} key the persisted claim key
+ * @param {object} entry the persisted claim
+ * @param {{now?: string|number|null, openNumbers?: Set<number>|null, evidence?: Map<number, object>|null}} context
+ *   `now` null disables the age arm (a call with no run instant stays
+ *   clock-free and byte-identical); `openNumbers` null disables the closure arm.
+ * @returns {string|null}
+ */
+function staleClaimReason(key, entry, { now = null, openNumbers = null, evidence = null } = {}) {
+  const match = CLAIM_KEY_RE.exec(key);
+  if (match === null) return `claim key ${key} is not a v3 (number|lane) key — pre-v3 per-issue claims name no lane`;
+  const number = Number(match[1]);
+  const slot = evidence?.get(number) ?? null;
+  const pr = slot?.pr ?? null;
+  if (pr !== null && pr.state !== "OPEN") return `unit landed (PR #${pr.number} ${pr.state})`;
+  const branches = slot?.branches ?? [];
+  if (pr === null && branches.length > 0 && branches.every((branch) => branch.merged)) {
+    return `unit landed (branch ${branches[0].name} merged)`;
+  }
+  if (openNumbers !== null && !openNumbers.has(number)) return "issue closed since the claim";
+  if (now !== null) {
+    const nowMs = typeof now === "number" ? now : Date.parse(now);
+    const lastSeen = Date.parse(typeof entry?.last_seen === "string" ? entry.last_seen : "");
+    if (Number.isFinite(nowMs) && Number.isFinite(lastSeen) && nowMs - lastSeen > CLAIM_TTL_MS) {
+      return `last seen ${entry.last_seen} is older than the ${CLAIM_TTL_MS / 3600000}h claim TTL`;
+    }
+  }
+  return null;
+}
+
+/** The issue number a claim key names, or null for foreign data. */
+function claimKeyNumber(key) {
+  const match = CLAIM_KEY_RE.exec(key);
+  if (match !== null) return Number(match[1]);
+  return /^\d+$/u.test(key) ? Number(key) : null;
+}
+
 // ── the plan (pure) ────────────────────────────────────────────────────────
 
 /**
  * Build the batch plan. Pure given its inputs; deterministic for identical
- * inputs (no wall clock anywhere in the document).
+ * inputs (no wall clock anywhere in the document — a run instant, when one is
+ * supplied, is an input like any other).
  *
  * @param {{
  *   issues: Array<object>,
@@ -310,9 +566,11 @@ function worktreeFor(issue) {
  *   head: string,
  *   previous?: object | null,
  *   degraded?: string[],
+ *   launchEvidence?: Map<number, object> | null,
+ *   now?: string | number | null,
  * }} input
  */
-export function buildBatchPlan({ issues, root, head, previous = null, degraded = [], relationsKnown = true }) {
+export function buildBatchPlan({ issues, root, head, previous = null, degraded = [], relationsKnown = true, launchEvidence = null, now = null }) {
   const degradations = [...degraded];
   const openNumbers = new Set(issues.map((i) => i.number));
   const byNumber = new Map(issues.map((i) => [i.number, i]));
@@ -347,8 +605,11 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   const launchable = [];
   for (const issue of issues) {
     const unitDir = unitDirByIssue.get(issue.number);
-    if (unitDir) {
-      launched.push({ number: issue.number, evidence: `unit-doc ${unitDir}` });
+    // Evidence decides, the unit doc corroborates (issue #509, S3): a merged or
+    // parked unit doc on disk is not an in-flight unit.
+    const evidenceText = inFlightEvidence(launchEvidence?.get(issue.number) ?? null, unitDir);
+    if (evidenceText !== null) {
+      launched.push({ number: issue.number, evidence: evidenceText });
       launchedSurfaces.set(issue.number, extractSurfaces(issue.body));
     } else {
       launchable.push(issue);
@@ -356,6 +617,17 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   }
   launched.sort((a, b) => a.number - b.number);
   const launchedNumbers = new Set(launched.map((entry) => entry.number));
+
+  // The file claim of every issue: what its body declares, plus what its own
+  // branch actually rewrites (issue #509, S4). A directory or a glob claims
+  // nothing — expansion is refused (decision D5).
+  const fileClaims = new Map();
+  for (const issue of issues) {
+    const claims = [
+      ...new Set([...extractFileClaims(issue.body), ...(launchEvidence?.get(issue.number)?.files ?? [])]),
+    ].sort((a, b) => a.localeCompare(b));
+    if (claims.length > 0) fileClaims.set(issue.number, claims);
+  }
 
   const model = new Map();
   for (const issue of launchable) {
@@ -545,9 +817,47 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
 
   findings.sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : a.numbers[0] - b.numbers[0]));
 
-  // Claimed lanes from the previous run's persisted state (S6).
+  // Claimed lanes from the previous run's persisted state, keyed `(issue, lane)`
+  // and honored only while the claim still stands (issue #509, S2/S5). Every
+  // claim that does not stand is reported, so a stale entry is visible once
+  // instead of silently coloring the plan.
   const previousClaims = previous?.claimed ?? {};
-  const claimedNumbers = new Set(Object.keys(previousClaims).map(Number));
+  const liveClaims = new Set();
+  for (const [key, entry] of Object.entries(previousClaims)) {
+    const reason = staleClaimReason(key, entry, { now, openNumbers, evidence: launchEvidence });
+    if (reason !== null) {
+      const number = claimKeyNumber(key);
+      if (number !== null) findings.push({ code: "stale-claim", numbers: [number], detail: `claim ${key}: ${reason}; the claim is dropped` });
+      continue;
+    }
+    liveClaims.add(key);
+  }
+  // File-level overlap across the pairs the plan presents as running in
+  // parallel (issue #509, S4): two rows of one batch on different lanes, two
+  // in-flight units on disjoint surfaces, and an in-flight unit beside a
+  // batch-1 lane. A same-lane pair already serializes, so it is never a
+  // finding; a batched issue contributes what its body declares, an in-flight
+  // unit what its branch actually rewrites.
+  for (const [left, right, where] of parallelPairs(batches, launched, launchedSurfaces)) {
+    const leftFiles = fileClaims.get(left) ?? [];
+    const rightFiles = fileClaims.get(right) ?? [];
+    const shared = leftFiles.filter((file) => rightFiles.includes(file));
+    if (shared.length === 0) continue;
+    const named = shared.slice(0, 5).join(", ");
+    const rest = shared.length > 5 ? ` (+${shared.length - 5} more)` : "";
+    findings.push({
+      code: "file-overlap",
+      numbers: [left, right].sort((x, y) => x - y),
+      detail: `both modify: ${named}${rest} — ${where}`,
+    });
+  }
+  findings.sort(
+    (a, b) =>
+      (a.code < b.code ? -1 : a.code > b.code ? 1 : 0)
+      || a.numbers[0] - b.numbers[0]
+      || (a.numbers[1] ?? 0) - (b.numbers[1] ?? 0)
+      || (a.detail < b.detail ? -1 : a.detail > b.detail ? 1 : 0),
+  );
 
   const plan = {
     contract: "agentic-workflow/batch-plan",
@@ -572,7 +882,7 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   };
   for (const lane of plan.batches.flatMap((batch) => batch.lanes)) {
     for (const row of lane.issues) {
-      if (claimedNumbers.has(row.number)) row.claimed = true;
+      if (liveClaims.has(claimedKey(row.number, row.lane))) row.claimed = true;
     }
   }
   return plan;
@@ -682,6 +992,70 @@ function laneOccupiedBy(surface, launched, launchedSurfaces) {
   return null;
 }
 
+/**
+ * The pairs the plan presents as running in parallel (issue #509, S4): two rows
+ * of one batch on different lanes, two in-flight units, and an in-flight unit
+ * beside batch 1's lanes. A pair sharing a surface is excluded — one lane
+ * already serializes it, and `occupied_by` names the occupant.
+ *
+ * @returns {Array<[number, number, string]>} `[left, right, where]`, deduped
+ */
+function parallelPairs(batches, launched, launchedSurfaces) {
+  const surfacesOf = new Map();
+  const add = (number, surface) => {
+    if (!surfacesOf.has(number)) surfacesOf.set(number, new Set());
+    surfacesOf.get(number).add(surface);
+  };
+  for (const batch of batches) {
+    for (const lane of batch.lanes) for (const row of lane.issues) add(row.number, lane.surface);
+  }
+  for (const entry of launched) {
+    const surfaces = launchedSurfaces.get(entry.number) ?? new Set();
+    if (surfaces.size === 0) add(entry.number, "general");
+    else for (const surface of surfaces) add(entry.number, surface);
+  }
+  const sharesSurface = (a, b) => {
+    const right = surfacesOf.get(b) ?? new Set(["general"]);
+    return [...(surfacesOf.get(a) ?? new Set(["general"]))].some((surface) => right.has(surface));
+  };
+
+  const pairs = [];
+  const seen = new Set();
+  const push = (a, b, where) => {
+    const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+    if (seen.has(key) || sharesSurface(a, b)) return;
+    seen.add(key);
+    pairs.push([a, b, where]);
+  };
+  for (const batch of batches) {
+    for (let i = 0; i < batch.lanes.length; i += 1) {
+      for (let j = i + 1; j < batch.lanes.length; j += 1) {
+        for (const left of batch.lanes[i].issues) {
+          for (const right of batch.lanes[j].issues) {
+            push(left.number, right.number, `lanes ${batch.lanes[i].surface} and ${batch.lanes[j].surface} run in parallel in batch ${batch.n}`);
+          }
+        }
+      }
+    }
+  }
+  for (let i = 0; i < launched.length; i += 1) {
+    for (let j = i + 1; j < launched.length; j += 1) {
+      push(launched[i].number, launched[j].number, "both units are in flight on disjoint surfaces");
+    }
+  }
+  const first = batches[0];
+  if (first !== undefined) {
+    for (const entry of launched) {
+      for (const lane of first.lanes) {
+        for (const row of lane.issues) {
+          push(entry.number, row.number, `the unit in flight and batch 1's ${lane.surface} lane run in parallel`);
+        }
+      }
+    }
+  }
+  return pairs;
+}
+
 // ── state (the single write path) ────────────────────────────────────────
 
 /** Open unit dirs under docs/fix/ and docs/features/ (relative paths). */
@@ -704,24 +1078,47 @@ function listUnitDirs(root) {
 // ── state (the single write path) ──────────────────────────────────────────
 
 /**
- * Merge this run's lanes into the persisted state: claimed numbers keep their
- * first_seen; new claims enter with this run's batch and lane. The state also
- * carries the last-seen open-issue set (`seen`, issue #460) — every open
- * issue of this run, batched or not, so the next run can diff the work
- * graph's lifecycle. `openIssues` (the collected issue list) supplies the
- * titles for issues outside the batches; without it the plan's own rows are
- * the source.
+ * Merge this run's lanes into the persisted state (issue #509, S2/S5).
+ *
+ * Claims are keyed `<issue>|<lane>`, so a lane is claimed on its own. A claim
+ * that no longer stands — pre-v3 key, terminal evidence, closed issue, aged past
+ * the TTL — is **pruned**, not carried: the plan reported it as `stale-claim`
+ * this run, and reporting it once is the point. A claim that merely lies dormant
+ * (its lane absent this run, no expiry evidence yet) is carried with its old
+ * `last_seen`, so it keeps ageing and still cannot resurrect without a live pair.
+ *
+ * The state also carries the last-seen open-issue set (`seen`, issue #460) —
+ * every open issue of this run, batched or not, so the next run can diff the
+ * work graph's lifecycle. `openIssues` (the collected issue list) supplies the
+ * titles for issues outside the batches; without it the plan's own rows are the
+ * source and the closure arm of the expiry rule stays off (it cannot be judged).
  */
-export function updateState(plan, previous, { now, head, openIssues = null } = {}) {
-  const claimed = {};
+export function updateState(plan, previous, { now, head, openIssues = null, evidence = null } = {}) {
   const previousClaims = previous?.claimed ?? {};
+  const openNumbers = openIssues === null ? null : new Set(openIssues.map((issue) => issue.number));
+  const liveKeys = new Set();
+  for (const batch of plan.batches) {
+    for (const lane of batch.lanes) {
+      for (const row of lane.issues) liveKeys.add(claimedKey(row.number, row.lane));
+    }
+  }
+
+  const claimed = {};
+  for (const [key, entry] of Object.entries(previousClaims)) {
+    if (liveKeys.has(key)) continue; // rewritten below with this run's stamps
+    if (staleClaimReason(key, entry, { now, openNumbers, evidence }) !== null) continue; // pruned
+    claimed[key] = { ...entry };
+  }
   for (const batch of plan.batches) {
     for (const lane of batch.lanes) {
       for (const row of lane.issues) {
-        const prior = previousClaims[String(row.number)];
-        claimed[String(row.number)] = {
+        const key = claimedKey(row.number, row.lane);
+        // Only a claim that still stands keeps its first sighting; a resurrected
+        // pair (its old claim expired) starts its own history.
+        const prior = liveKeys.has(key) ? previousClaims[key] : undefined;
+        claimed[key] = {
           batch: prior?.batch ?? batch.n,
-          lane: prior?.lane ?? row.lane,
+          lane: row.lane,
           first_seen: prior?.first_seen ?? now,
           last_seen: now,
           worktree: row.worktree,
@@ -825,29 +1222,44 @@ async function main(argv) {
     // Manual operator mark after launching a lane outside the sensor. The only
     // other write this tool performs is the plan's own state save below.
     const state = loadState(statePath) ?? { version: STATE_VERSION, written_at: null, source_revision: head, claimed: {} };
-    const prior = state.claimed[String(args.markLaunched)];
+    // The mark is a claim, so it carries a lane (issue #509, S2): the lane this
+    // issue was already claimed in, when exactly one exists, else `general`.
+    const priorKeys = Object.keys(state.claimed ?? {}).filter(
+      (key) => claimKeyNumber(key) === args.markLaunched && CLAIM_KEY_RE.test(key),
+    );
+    const lane = priorKeys.length === 1 ? CLAIM_KEY_RE.exec(priorKeys[0])[2] : "general";
     const now = new Date().toISOString();
-    state.claimed[String(args.markLaunched)] = {
+    const key = claimedKey(args.markLaunched, lane);
+    const prior = state.claimed[key];
+    state.claimed[key] = {
       batch: prior?.batch ?? 0,
-      lane: prior?.lane ?? "general",
+      lane,
       first_seen: prior?.first_seen ?? now,
-      last_seen: prior?.last_seen ?? now,
+      last_seen: now,
       launched_at: now,
     };
+    state.version = STATE_VERSION;
     saveState(statePath, state);
-    console.log(JSON.stringify({ marked: args.markLaunched, state: statePath }));
+    console.log(JSON.stringify({ marked: args.markLaunched, lane, state: statePath }));
     return;
   }
 
-  const [collected, schema] = await Promise.all([collectIssues({ issuesFile: args.issuesFile, remote: args.remote }), loadSchemaRuntime()]);
+  const runInstant = new Date().toISOString();
+  const [collected, launch, schema] = await Promise.all([
+    collectIssues({ issuesFile: args.issuesFile, remote: args.remote }),
+    collectLaunchEvidence({ root: args.root, remote: args.remote }),
+    loadSchemaRuntime(),
+  ]);
   const previous = args.noState ? null : loadState(statePath);
   const plan = buildBatchPlan({
     issues: collected.issues,
     root: args.root,
     head,
     previous,
-    degraded: collected.degradations,
+    degraded: [...collected.degradations, ...launch.degradations],
     relationsKnown: collected.relationsKnown,
+    launchEvidence: launch.evidence,
+    now: runInstant,
   });
 
   const check = schema.validateBatchPlan(plan);
@@ -857,7 +1269,7 @@ async function main(argv) {
   }
 
   if (!args.noState) {
-    const state = updateState(plan, previous, { now: new Date().toISOString(), head, openIssues: collected.issues });
+    const state = updateState(plan, previous, { now: runInstant, head, openIssues: collected.issues, evidence: launch.evidence });
     saveState(statePath, state);
   }
 
