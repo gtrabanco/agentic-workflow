@@ -299,6 +299,10 @@ yet.
   `budgets ceilingRebase` was tried on a scratch copy first and rejected: it
   overwrites the route's existing `ceilingRebase` growth-source key with the new
   one, so the rebase is written in the file's own curated `sources` shape.
+- **G3** — 2026-11-11, HEAD `40b7f54d`, `bun scripts/local-gate.mjs` · exit 0 ·
+  `local-gate: PASS — 17 step(s) in 205s` (the crate suite at `659 pass, 0 fail`).
+  The batch's first gate run, at `be4f6193`, failed at `root-suite` on the four
+  `review-change:*` route ceilings that `E13` re-bases.
 
 ## Next
 
