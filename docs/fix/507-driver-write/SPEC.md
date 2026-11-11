@@ -380,12 +380,12 @@ both (the #498 train changed the unit docs the emitter reads).
 | O12 | S15 | init-workspace arms the docs-generated driver and the shared-document classes in bootstrap and upgrade, verifying both config keys | P8 | P8 | skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md | the bootstrap-arming case in `bun test scripts/docs-generated-merge.test.mjs` exits 0; the scratch install run leaves both config keys non-empty | the E line naming the RED and GREEN runs and the scratch run (E8/E9) | verified |
 | O13 | S16 | the root guide's residual-case prose names the registry as the ROADMAP attribute's home and keeps the table-sync sentence | P9 | P9 | AGENTS.md | `rg -c "merge=docs-generated" AGENTS.md` → 1 — the `docs/generated/**` attribute only | the E line with the command output (E9) | verified |
 | O14 | S17 | the registry's fifth path: `docs/LOGS.md` merges by entry identity — distinct new entries both kept, ordered by stamp; the same heading deduplicated; the same heading with different bodies is a conflict; a side that is not an append-only extension refuses closed; `.gitattributes` (root + template) and the arming carry it | P10 | P10 | packages/agentic-workflow/src/writer/merges.mjs (union), scripts/shared-doc-merge.mjs (class), .gitattributes, template/.gitattributes | `bun test packages/agentic-workflow/test/writer.merge.test.mjs` exits 0 with the logs-union cases; `bun test scripts/shared-doc-merge.test.mjs` exits 0 with the armed-merge cases; `git check-attr merge docs/LOGS.md` → `merge: agentic-shared-logs` | the E line naming the RED and GREEN runs and the scratch merge (E10) | verified |
-| O15 | S18 | receipt advisory 1 — the Risk tier section's re-run claim carries its evidence line, so `(E-line below)` resolves | P1 | P11 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\- \*\*E11\*\*" docs/fix/507-driver-write/SPEC.md` → matches 1 | the E11 line with its command, exit and output, plus the green corpus re-run (E11, E13) | planned |
-| O16 | S18 | receipt advisory 2 — every `D3` citation in this doc names the journal entry that carries the record | P1 | P12 | docs/fix/507-driver-write/SPEC.md | `rg -c "D3 \(2026-11-11T00:32:24Z" docs/fix/507-driver-write/SPEC.md` → matches 3 | the green corpus re-run over the three repaired sites (E13) | planned |
-| O17 | S18 | receipt advisory 4 — E10's count narration is superseded by an appended re-measurement, per `log-kind@1` (corrections append, never edit) | P1 | P13 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\- \*\*E12\*\*" docs/fix/507-driver-write/SPEC.md` → matches 1 | the E12 line with the three re-measured runs (E12) | planned |
-| O18 | S19 | the batch's context claims are sampled rows (PE-011–PE-014), never carried from memory | P1 | P14 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\| PE-01[1-4] \| " docs/fix/507-driver-write/SPEC.md` → matches 4 | the PE-011–PE-014 rows, re-run in the verification block (E14) | planned |
-| O19 | S20 | nothing else broke — the deterministic gate, the docs differential and the unit-doc contract re-run green after the batch | P2 | P15 | scripts/local-gate.mjs + the unit doc | `bun scripts/local-gate.mjs --skip-network` → `local-gate: PASS — 13 step(s)`; `bun scripts/docs-generate.mjs --check` → `verdict: PASS`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/507-driver-write/SPEC.md` → exit 0 | the gate line and the verification block with their exits (G3, E14) | planned |
-| O20 | S21 | the sibling sweep over every fixed surface closes — no surviving stale class count outside the dated narrative, and the split Planning evidence table is one table again | P2 | P16 | docs/fix/507-driver-write/SPEC.md | `rg -c "the three .agentic-shared-.+ class lines" docs/fix/507-driver-write/SPEC.md` → matches 1; `rg -U -c "PE-006 \| repository[^\n]*\n\| PE-007" docs/fix/507-driver-write/SPEC.md` → matches 1 | the green sweep outputs (E13) | planned |
+| O15 | S18 | receipt advisory 1 — the Risk tier section's re-run claim carries its evidence line, so `(E-line below)` resolves | P1 | P11 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\- \*\*E11\*\*" docs/fix/507-driver-write/SPEC.md` → matches 1 | the E11 line with its command, exit and output, plus the green corpus re-run (E11, E13) | verified |
+| O16 | S18 | receipt advisory 2 — every `D3` citation in this doc names the journal entry that carries the record | P1 | P12 | docs/fix/507-driver-write/SPEC.md | `rg -c "D3 \(2026-11-11T00:32:24Z" docs/fix/507-driver-write/SPEC.md` → matches 3 | the green corpus re-run over the three repaired sites (E13) | verified |
+| O17 | S18 | receipt advisory 4 — E10's count narration is superseded by an appended re-measurement, per `log-kind@1` (corrections append, never edit) | P1 | P13 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\- \*\*E12\*\*" docs/fix/507-driver-write/SPEC.md` → matches 1 | the E12 line with the three re-measured runs (E12) | verified |
+| O18 | S19 | the batch's context claims are sampled rows (PE-011–PE-014), never carried from memory | P1 | P14 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\| PE-01[1-4] \| " docs/fix/507-driver-write/SPEC.md` → matches 4 | the PE-011–PE-014 rows, re-run in the verification block (E14) | verified |
+| O19 | S20 | nothing else broke — the deterministic gate, the docs differential and the unit-doc contract re-run green after the batch | P2 | P15 | scripts/local-gate.mjs + the unit doc | `bun scripts/local-gate.mjs --skip-network` → `local-gate: PASS — 13 step(s)`; `bun scripts/docs-generate.mjs --check` → `verdict: PASS`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/507-driver-write/SPEC.md` → exit 0 | the gate line and the verification block with their exits (G3, E14) | verified |
+| O20 | S21 | the sibling sweep over every fixed surface closes — no surviving stale class count outside the dated narrative, and the split Planning evidence table is one table again | P2 | P16 | docs/fix/507-driver-write/SPEC.md | `rg -c "the three .agentic-shared-.+ class lines" docs/fix/507-driver-write/SPEC.md` → matches 1; `rg -U -c "PE-006 \| repository[^\n]*\n\| PE-007" docs/fix/507-driver-write/SPEC.md` → matches 1 | the green sweep outputs (E13) | verified |
 
 ## Triaged steps
 
@@ -411,6 +411,13 @@ frozen-ledger head before any fix — the E11 check → 0 matches (exit 1), the 
 matches 2 (the same-line stale site plus the frozen cell; S14's stale tail is line-wrapped right
 beside it), the table-adjacency check → 0 matches (exit 1). The batch is done when all five
 turn to their stated outcomes together (P11–P14), then the gates and the sweep run (P15–P16).
+S3 also surfaced one unstable gate red, recorded here as a new finding for the owner — outside
+this batch's advisory set, so nobody fixes it in this unit: `pi-node-compat` declares only
+`workspace-install` in `scripts/local-gate.mjs`'s step graph, so it can start while
+`schema-build` is still writing the schema `dist/` (observed once at `205ca4fd`:
+`bundle:skills` → `export 'GATE_CHECK_STATUSES' not found in './gate-receipt.js'`; green
+isolated, green on the full re-run; every gate step byte-identical to the `468d9bf9` head the
+external verify passed on, so not batch-caused).
 
 ## Findings
 
@@ -546,12 +553,26 @@ turn to their stated outcomes together (P11–P14), then the gates and the sweep
   class-count sites reworded to four, the Planning evidence table is one table again);
   `bun scripts/promise-coherence.mjs docs/fix/507-driver-write/SPEC.md` · exit 0 · PASS (12
   checked · 20 skipped) (S18/S21, O15–O17, O20).
+- **G3** — 2026-11-11 · HEAD 205ca4fd · `bun scripts/local-gate.mjs --skip-network` · exit 0 ·
+  PASS — 13 step(s) in 166s (root-suite exit 0 · 103 suites, docs-generated-projection exit 0,
+  crate 645/0). The first attempt at this head failed at `pi-node-compat` — the unstable build
+  race recorded in the Correction triage 3 paragraph, green isolated and on this full re-run,
+  not batch-caused; handed to the owner as a new finding (S3).
+- **E14** — 2026-11-11, batch-3 close — O15–O20 flipped only after their foreground validators:
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/507-driver-write/SPEC.md`
+  · exit 0 · `verify@1, all checks pass` (`ok: true`, no violations);
+  `bun scripts/promise-coherence.mjs docs/fix/507-driver-write/SPEC.md` · exit 0 · PASS (12
+  checked · 20 skipped); `bun scripts/docs-generate.mjs --check` · exit 0 · PASS — Roadmap
+  unchanged (the batch's SPEC edits project nothing); the frozen `rg` checks re-run after the
+  flips · exit 0 · matches 1 / 3 / 1, then 4, then 1 / 1 (O15–O18, O20). Gate: G3.
 
 ## Next
 
-The logs class (S17) delivered on the same branch — Correction batch 2 now covers the rebase
-integration and the #498 scope reinforcement. Awaiting: the external verifier's verdict (§9)
-and the owner's design calls (F2/F3/F4). D1 still none.
+Correction batch 3 applied (L4 advisory triage on the 16:10Z receipt: three repairs — the tier
+E-line, the count re-measurement, the journal-anchored `D3` pointers — two dispositions, two
+related surfaces; blockers stayed 0; the new gate-graph finding sits in the Correction triage 3
+paragraph for the owner). Awaiting: the external verifier's delta re-verify of this batch and
+the owner's design calls (F2/F3/F4). D1 still none.
 
 ## References
 
