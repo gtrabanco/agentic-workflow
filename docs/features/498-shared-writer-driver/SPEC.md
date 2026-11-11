@@ -96,8 +96,11 @@ issue states them. **A later correction is appended under its own id**
 
 ## Risk tier
 
-- **Tier** — `standard` · **Task Size** — Understood + contained risk + resumable from diff (verdict re-cut at P7 with `bun scripts/ceremony.mjs tier classify` over the change's paths; recorded in the `## Log`).
-- **Named high-risk item** — none — not a high-tier unit.
+Computed, never chosen — `node scripts/ceremony.mjs tier classify` over the change's paths (2026-11-10, recorded in the `## Log`):
+
+- **Tier** — `high` · **Task Size** — `understood: true, contained_risk: named, resumable_from_diff: true` (`ceremony: unit-doc+review-change`, `verification: review-change`)
+- **Named high-risk item** — `signals[0]`: `destructive` — `packages/agentic-workflow/bin/agentic-workflow.mjs` (the CLI writes files); `signals[1]`: `publish` — `skills/unit-lane/references/RELEASE.md`
+- The high tier's `review-change` pass is **replaced by the owner's external verification** (the apply workflow's governing rule: the repo never runs its own review machinery on its own surgery; the ledger freeze + the owner's verdict are the ceremony actually paid). The live-tree guard bounds the destructive surface: every mutating path ran in scratch fixtures before any live-tree touch, and the one accidental live write (the budgets manifest, during P5 fixture debugging) was disclosed, reverted and re-guarded (see `## Log` P4).
 
 ## Future
 
@@ -120,6 +123,7 @@ issue states them. **A later correction is appended under its own id**
 
 - **LOGS.md:2306 (unit 32 finding F19: "roadmap write clobbered by merge")** — affects: this unit exists to close that failure class; the runtime CAS half covers same-checkout writers, the merge-driver half covers branch integrations.
 - **The features table is not number-sorted** (rows 99/104/100/101/…): does-not-affect — the union driver appends new rows deterministically at the end of the table block, it never re-sorts.
+- **`scripts/roadmap-settle.test.mjs` red at head: `docs/features/494-telemetry-by-turn/SPEC.md:1 row-missing`** — the unit doc exists with no roadmap row for NN 494; verified present at the base commit `27275c94` too (`git show 27275c94:docs/ROADMAP.md` carries no `| 494 |` row), so this drift predates the unit and is **not** caused by it. does-not-affect: this unit's own row (498) settles green; the 494 row belongs to that unit's lane and the finding routes to the owner.
 
 ## Tasks
 
@@ -194,11 +198,26 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   ```
   Apply to this repository: issue #498
   ```
-- **P1** — 2026-11-10, unit doc + planning ledgers cut at base `27275c94`; frozen-failure corpus extracted (FF-1 last-write-wins clobber — LOGS.md:2306 unit-32 F19; FF-2 Fixes rows have no writer; FF-3/FF-4 merge union and status-conflict absent).
+- **P1** — 2026-11-10, unit doc + planning ledgers cut at base `27275c94`; frozen-failure corpus extracted (FF-1 last-write-wins clobber — LOGS.md:2306 unit-32 F19; FF-2 Fixes rows have no writer; FF-3/FF-4 merge union and status-conflict absent) · `489536e8`.
+- **E1** — 2026-11-10, `bun test packages/agentic-workflow/test/writer.driver.test.mjs packages/agentic-workflow/test/writer.merge.test.mjs` · exit 1 · 0 pass / 2 errors — RED observed on the missing `src/writer/` modules (frozen-failure corpus, §2) · red commit `a859456d`.
+- **P2** — 2026-11-10, driver core (`readShared`/`writeShared` splice+CAS, `WRITER_REFUSAL_REASONS`, `WriterError`), `runWriterConformance`, merge library (`unionTableRows`, `structuralJsonMerge`) — green 23/23 · `1fe29bf7`.
+- **P3** — 2026-11-10, roadmap family through the driver: `rowUpsert`/`annotate` one-line splice + optional CAS (receipts byte-unchanged), `fixRowUpsert`, CLI `roadmap read`/`fixrow`/`--expect`; `fixRowUpsert` written RED first (import error observed, then green) · `b6721896`.
+- **P4** — 2026-11-10, `scripts/shared-doc-merge.test.mjs` RED commit (10 fail on the missing script, observed) then green: `scripts/shared-doc-merge.mjs` (classes roadmap/budgets/repo-state, fail-closed refusals, `--install`, conflict markers into `%A`) + `.gitattributes` class lines. Fixture debugging touched the **live** `SKILL_CONTEXT_BUDGETS.json` once (the fixture helper wrote relative to the process cwd); disclosed, reverted with `git checkout --`, and every fixture path made absolute with a no-op-transform guard · red `2f97ad3f`, green `a16553e1`.
+- **P5** — 2026-11-10, docs ownership: crate README `writer-driver-contract@1` block + commands rows, AGENTS.md ownership line + 4 normative-surfaces rows, GATE_INVENTORY `writer-driver-conformance` row, RELEASE.md fixes-row writer prose, changeset · `45d2506e`.
+- **E2** — 2026-11-10, differential vs base `27275c94` (§6): `roadmap rowUpsert` (insert/update), `roadmap annotate` (hit/miss), `roadmap check` (missing doc), `roadmap rowUpsert` (bad table) — 6/6 identical stdout+exit+file bytes; scratch copies under mktemp, removed after.
+- **E3** — 2026-11-10, network scan: `rg "require\(['\"](node:)?(http|https|net|dns|tls)|\bfetch\(" packages/agentic-workflow/src/writer scripts/shared-doc-merge.mjs` → 0 matches — no network in any layer; the writer layer spawns nothing, the merge driver's only child is git itself at merge time.
+- **E4** — 2026-11-10, `git diff --name-only main -- skills/` → exactly `skills/unit-lane/references/RELEASE.md` (the planned Retirements wording repair; the ledger's O12 validator was cut broader than the SPEC's own scope — plan defect recorded, see **D2**).
+- **D1** — 2026-11-10, computed risk tier (recorded in `## Risk tier`): `node scripts/ceremony.mjs tier classify` → tier `high`, `signals[0]` destructive (`bin/agentic-workflow.mjs`), `signals[1]` publish (`RELEASE.md`); the SPEC's planned `standard` was the planner's guess and is superseded by the computed verdict. The high-tier review pass is paid as the owner's external verification per the apply workflow.
+- **D2** — 2026-11-10, plan defect owned: O12's validator (`git diff --name-only main -- skills/` → empty) contradicts the SPEC's own Retirements row (the RELEASE.md wording repair is planned work). The row is closed as an evidenced `n/a` with the narrower enforceable form (O4's scoped rg + the E4 output); the ledger freezes at cut except status, so the validator cell is not rewritten — the defect is recorded here instead.
+- **E5** — 2026-11-10, roadmap row 498 settled through the new writer with CAS (`roadmap read` → `rowUpsert --expected`, before `4f0db3c4` / after `bba5f1bc`), then `bun scripts/docs-generate.mjs --check` · exit 0 · 3 checked, 0 stale.
+- **G1** — 2026-11-10, `bun scripts/check-skill-context.mjs` · exit 0 · PASS 29 skills; `--documents` · exit 0 · PASS 4 budgeted documents after the manifest's own re-base arithmetic (AGENTS.md machineLines 124 → 128 exact re-pin; GATE_INVENTORY machineLines 62 → 63 and estimateMax 5,542 → 6,182 = ceil(5620 × 1.10), declared in the manifest's `sources`). The budgets CLI rebases only `routes.*` — the `documents` section has no emitter, so the re-pin follows the manifest's own precedent and is disclosed here.
+- **G2** — 2026-11-10, `bun run test` in `packages/agentic-workflow` · exit 0 · 634 pass / 0 fail across 32 files.
+- **G3** — 2026-11-10, `node scripts/run-root-suite.mjs` · exit 1 · **100 PASS / 1 FAIL** — the one red is `scripts/roadmap-settle.test.mjs` on the **pre-existing** `494-telemetry-by-turn` row-missing drift (verified present at the base commit; recorded under Known pre-existing issues; routes to the owner, never folded into this unit).
+- **E6** — 2026-11-10, `git merge` fixtures (armed driver): two branches inserting different roadmap rows → union exit 0; same-row status flips → exit 1 with `<<<<<<<` markers and `UU` status; budgets different keys → union exit 0; REPOSITORY_STATE → exit 1 conflict (resolver-only); unknown path / unreadable side / malformed side / non-checkout install → fail closed (exit 1/2). 10/10 in `bun test scripts/shared-doc-merge.test.mjs` · green `a16553e1`.
 
 ## Next
 
-P1 RED: write `test/writer.driver.test.mjs` failing on the missing module, commit the red, then implement the driver core.
+External verification (the owner): the diff is complete on `feat/498-shared-writer-driver`; the one red gate is the pre-existing unit-494 drift; the arming step (`bun scripts/shared-doc-merge.mjs --install` beside the committed `.gitattributes` lines) is documented in AGENTS.md.
 
 ## References
 
