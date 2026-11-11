@@ -169,10 +169,10 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S1 | El emitter genera ROADMAP.md desde las unit docs sin texto manual que choque | P1 | P1 | scripts/docs-generate.mjs | `bun scripts/docs-generate.mjs --check` → PASS; `docs/ROADMAP.md` existe y es válido | the E line with the check exit and the file existence | planned |
-| O2 | S2 | El merge driver resuelve conflictos en ROADMAP.md regenerando desde las unit docs | P2 | P2 | scripts/docs-generated-merge.mjs | fixture con conflicto → driver resuelve → resultado coincide con regeneración | the E line with the fixture test exit and the comparison | planned |
-| O3 | S3 | init-workspace instala `.gitattributes` y el merge driver en bootstrap y upgrade | P3 | P3 | init-workspace | repo limpio → `.gitattributes` existe; `git config --get merge.docs-generated.driver` → no vacío | the E line with the config check | planned |
-| O4 | S5 | El campo `roadmap_summary:` es opcional y se deriva del `One-line:` si falta | P4 | P4 | SPEC template | template contiene el campo; `bun scripts/docs-generate.mjs` no falla si falta | the E line with the generate check | planned |
+| O1 | S1 | El emitter genera ROADMAP.md desde las unit docs sin texto manual que choque | P1 | P1 | scripts/docs-generate.mjs | `bun scripts/docs-generate.mjs --check` → PASS; `docs/ROADMAP.md` existe y es válido | the E line with the check exit and the file existence | verified |
+| O2 | S2 | El merge driver resuelve conflictos en ROADMAP.md regenerando desde las unit docs | P2 | P2 | scripts/docs-generated-merge.mjs | fixture con conflicto → driver resuelve → resultado coincide con regeneración | the E line with the fixture test exit and the comparison | verified |
+| O3 | S3 | init-workspace instala `.gitattributes` y el merge driver en bootstrap y upgrade | P3 | P3 | init-workspace | repo limpio → `.gitattributes` existe; `git config --get merge.docs-generated.driver` → no vacío | the E line with the config check | verified |
+| O4 | S5 | El campo `roadmap_summary:` es opcional y se deriva del `One-line:` si falta | P4 | P4 | SPEC template | template contiene el campo; `bun scripts/docs-generate.mjs` no falla si falta | the E line with the generate check | verified |
 
 ## Triaged steps
 
@@ -187,15 +187,40 @@ fixture con dos branches que añaden rows al roadmap) va en RED antes de la impl
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | S1 (S-list cut) | spec | medium | P5 citaba `S7`, inexistente; AC-S7 re-anclada a S3 item 3 | fixed in-doc | folded: yes |
-| F2 | S1 (diseño) | design | medium | La regeneración literal de las tablas destruiría hand rows (idea/declined/folded sin folder, summaries, links de PR); el diseño congela preserve-verbatim + append-only | decision recorded (Non-goals) | owner-verdict pending |
-| F3 | S2 (diseño) | design | medium | El append automático de rows de fixes contradice el ciclo de vida de `## Fixes` (rows eliminadas tras merge; 96/104 docs conservan `## Branch` fusionados) | decision recorded (Non-goals) | owner-verdict pending |
+| F2 | S1 (design) | design | WARNING | docs-only | product | decision-required — preserve-verbatim + append-only sync (Non-goals) awaits the owner's verdict |
+| F3 | S2 (design) | design | WARNING | docs-only | product | decision-required — no auto-append of fix rows, the Fixes lifecycle removes rows post-merge (Non-goals) |
 
 ## Log
 
-- **L1** — 2026-11-10 (I) — triage: unidad única, fases P1→P2→(P3+P4)→P5; corpus §2 fijado (merge
-  real #269×#505 en fixture); hallazgos F1–F3 registrados con su decisión de diseño en Non-goals.
-  E: n/a (docs-only).
+- **L1** — Request verbatim: "Apply to this repository: issue #507", under the owner's standing
+  local-workflow procedure (inline application, ledger freeze as the plan, owner as the external
+  verifier).
+- **E1** — 2026-11-10, RED at `32b0d053`: `bun test scripts/docs-generate.test.mjs` exit 1 — 4 fail
+  (row append, derivation chain, `roadmap_summary:` override, stale-check), 23 pass; `bun test
+  scripts/docs-generated-merge.test.mjs` exit 1 — 3 fail (driver coverage of `docs/ROADMAP.md`,
+  the armed #269×#505 merge reproducer, the two-entry `.gitattributes` contract), 13 pass. The two
+  negative guards (unarmed merge keeps its conflict; fix rows never auto-appended) pass as designed.
+- **E2** — 2026-11-10, GREEN at `45bb01d7`: `bun test scripts/docs-generate.test.mjs` exit 0 (28
+  pass / 0 fail); `bun test scripts/docs-generated-merge.test.mjs` exit 0 (16 pass / 0 fail) — the
+  armed roadmap merge resolves and the named regeneration restores the local side's derived row.
+  First regeneration attempt appended 6 rows instead of 1 — hand rows whose summary carries
+  unescaped pipes fell out of `seen` by cell count — fixed (slug cell matched positionally) and
+  pinned with a regression test in the same commit.
+- **E3** — 2026-11-10, `bun scripts/docs-generate.mjs` exit 0 on the live tree — `Roadmap:
+  docs/ROADMAP.md — updated`, exactly one row appended (`494`, the only feature folder without a
+  row); `bun scripts/docs-generate.mjs --check` exit 0, `verdict: PASS`.
+- **E4** — 2026-11-10, differential (§6) base `27275c94` vs change over an identical minimal
+  fixture: `docs-generate` stdout differs only by the `Roadmap:` line and the roadmap-row count
+  (S1); `units.md` differs only in the derived status cell; `index`/`code` pages byte-identical;
+  driver on `docs/ROADMAP.md`: base exit 1 (refusal), change exit 0 (resolution) (S2). No
+  unrequested delta.
+- **E5** — 2026-11-10, at `d5105b9d`: `bun scripts/skill-lint.mjs` exit 0 (0 findings); `bun
+  scripts/check-skill-context.mjs --routes` exit 0 (14 routes PASS); `bun scripts/lint-changeset.mjs`
+  exit 0 (`ok 507-driver-write.md`); the four unit-doc templates carry `roadmap_summary:`
+  (AC-S4/S5).
+- **G1** — 2026-11-10 · HEAD 0b80fcbc · `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/507-driver-write/SPEC.md` · exit 0 · receipt `verify@1`, all checks pass.
+- **G2** — 2026-11-10 · HEAD 0b80fcbc · `bun scripts/local-gate.mjs --skip-network` · exit 0 · PASS — 13 step(s) in 167s, including `docs-generated-projection` and the 604-test root suite (an earlier pass at the same tree reported one parallel-pool root-suite flake; two subsequent full runs, `--jobs 1` and default, are both green).
+- **D1** — (none yet — F2/F3 await the owner's verdict)
 
 ## Next
 
