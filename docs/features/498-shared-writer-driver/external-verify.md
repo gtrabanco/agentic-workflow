@@ -126,3 +126,48 @@ the test suites ran against their own temp fixtures; `scripts/shared-doc-merge.m
 only by the suite's fixture git repositories); no commit, branch, push, forge call
 or live-tree edit was made — `git status --porcelain` was empty before and after
 every run (the receipt file is the one sanctioned write).
+
+## Correction batch — 2026-11-11 (S1: "Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff")
+
+Scope (triage under S1): all three blockers plus the unit-authored advisories
+A3–A6; A1/A2/A7/A8 dispositioned (recorded as `## Log` D3), the new
+`phase-lint spec-unlinked: S4` observation reported, not folded (§9).
+
+- **B1 folded** · `fd47e89a` (RED: edit.test 26 pass / 1 fail — stale `--expect`
+  answered exit 0) → `f4b4a3f7` (green 27/0). One `expectFlag()` parses
+  `--expect` for `rowUpsert`/`annotate`/`fixrow`; a bare `--expect` is usage
+  (exit 2). Scratch probes: stale flag → `EDIT REFUSAL — stale-read` exit 2,
+  file byte-identical; fresh flag → exit 0; positive controls unchanged. README
+  + changeset state the uniform contract (they never denied the flag elsewhere,
+  so no claim surface was weakened). E5's `--expected` spelling was never parsed
+  by any branch — `--expect` is canonical and now honored; recorded in `## Log`
+  F1, E6 not edited.
+- **B2 folded** · `c9182692` — P7's validator states the gate as it reproduces
+  (exit 1 carrying only the base-attributed 494 red, proven in a base archive;
+  every other suite green); O6/O11/O12 status cells carry the split/evidenced
+  n/a (validator cells frozen per D2, as the ledger's own doctrine orders);
+  O2/O5/O7/O14 rows normalized to the 9-column contract (all 15 rows parse to
+  9 cells backtick-aware). A3 (FF-1 comment base-attributed), A4 (Retirements
+  evidence scoped → 0 live matches), A6 (RELEASE example `)` restored) folded
+  in the same commit.
+- **B3 folded** · `43773139` + loop iteration `9334551d` — `execute-phase`
+  SKILL.md's close-out and `unit-lane` PLAN.md's settle template now name
+  `roadmap fixrow`; both lane surfaces agree with RELEASE.md. The +14 est growth
+  then tripped eight `execute-phase:*` route headroom floors (`--routes` exit 1,
+  green pre-batch) — the batch's own break, caught by the recheck loop: each
+  `routeEstimateMax` raised to its exact `ceil(measured × 1.10)` floor with a
+  named growth source, fixture-first (scratch manifest PASS 14 routes) before
+  the live write; disclosed hand edit because no emitter owns `route*` keys
+  (pre-existing drift reported by units 201/260).
+
+Post-batch rechecks (foreground): root gate exit 1 · **101 PASS / 1 FAIL**
+(only `roadmap-settle` 494, base-proven; an intermediate run additionally
+flaked `unit-route #291 F7` — green standalone 64/64); crate 635/0; pi package
+805/0; flagless differential 6/6 byte-identical vs base; `--routes` PASS 14 ·
+skills PASS 29 · documents PASS 4; docs-generate PASS; skill-lint PASS;
+normative-drift 21/0; prose-gate-inventory 21/0; shared-doc-merge 10/0;
+index-document 9/0; scoped retirement rg → 0 live matches; tree clean after
+every run (all probes in mktemp scratch, removed).
+
+Verdict unchanged: **NEEDS-DECISION (B1 · B2 · B3)** until the owner's delta
+recheck of the three folds above.
