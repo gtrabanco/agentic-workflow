@@ -293,6 +293,7 @@ missing workflow steps.
 ## References
 
 - Issue [#481](https://github.com/gtrabanco/agentic-workflow/issues/481) — the source issue
+- PR [#516](https://github.com/gtrabanco/agentic-workflow/pull/516) — this unit
 - Issue [#502](https://github.com/gtrabanco/agentic-workflow/pull/510) — added the `nan-publish` job this unit also gates
 - `docs/workflow/GATE_INVENTORY.md` — the gate's declared carrier
 - `scripts/npm-version-gate.mjs` — the style and the pure-CLI precedent
