@@ -1,5 +1,6 @@
 ---
 "init-workspace": patch
+"@gtrabanco/agentic-workflow": minor
 ---
 
 fix(skills): install the generated-surfaces merge driver in bootstrap and upgrade (issue #507)
@@ -16,7 +17,7 @@ existing file, then arm the driver with
 is a residual, never a failed scaffold); upgrade mode proposes the same
 registry lines and both arming commands under the never-clobber contract.
 `template/.gitattributes` ships the integrated registry — the projection entry
-plus #498's three `agentic-shared-*` file-class lines (the rebase integration,
+plus #498's four `agentic-shared-*` file-class lines (the rebase integration,
 2026-11-11: the shared-document classes own `docs/ROADMAP.md` and are armed by
 `bun scripts/shared-doc-merge.mjs --install` in the same step; each path is
 claimed once) — so every new repository inherits the protection, and the unit
