@@ -4223,6 +4223,31 @@ export type {
   DocProvenanceViolation,
 } from "./doc-provenance.js";
 
+// ── The ceremony profile (issue #436) ──────────────────────────────────────
+// One versioned grammar the project charter owns: which ceremony pieces the
+// project pays. Closed piece/adoption/surface vocabularies; a deterministic
+// reader whose absent block is a degradation, never an error. The grammar
+// block is published in this package's README; the carried text form is
+// documented in `src/ceremony-profile.ts`.
+export {
+  CEREMONY_PROFILE_ADOPTIONS,
+  CEREMONY_PROFILE_CONTRACT_ID,
+  CEREMONY_PROFILE_PIECES,
+  CEREMONY_PROFILE_REFUSALS,
+  CEREMONY_REVIEW_SURFACES,
+  readCeremonyProfile,
+  serializeCeremonyProfile,
+} from "./ceremony-profile.js";
+export type {
+  CeremonyProfile,
+  CeremonyProfileAdoption,
+  CeremonyProfilePiece,
+  CeremonyProfileRefusal,
+  CeremonyProfileRefusalDetail,
+  CeremonyProfileResult,
+  CeremonyReviewSurface,
+} from "./ceremony-profile.js";
+
 // ---------------------------------------------------------------------------
 // Unified config contract (issue #427)
 // ---------------------------------------------------------------------------

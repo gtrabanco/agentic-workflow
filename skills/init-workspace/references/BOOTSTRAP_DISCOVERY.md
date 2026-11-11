@@ -16,9 +16,12 @@
      - **Identity layer — blocking; the workflow may not guess these:** what
        the project is (web app / desktop / library / CLI / docs / infra repo);
        who uses it and why; where it is deployed and how it is served; the
-       project's license; the ceremony-profile seed (recorded conceptually —
-       the profile's machine grammar is the piecewise-ceremony contract's, not
-       invented here). Expensive to undo ⇒ unanswered is **not** a default: an
+       project's license; the ceremony-profile seed — the charter round asks
+       which ceremony pieces the project pays and the write step lands the
+       answer as the machine-readable `ceremony-profile@1` block (the
+       piecewise-ceremony contract: `docs-step`, `captures`, `review-passes`,
+       `publish-gate`, `test-policy`; authored inside `## Project charter`,
+       checked in code by the dispatcher). Expensive to undo ⇒ unanswered is **not** a default: an
        identity question without a concrete answer halts the run through the
        same fail-closed flow §Consent uses (scratch unit folder +
        `bun scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1`

@@ -21,3 +21,13 @@ review → docs → release. The catalog returns a filtered, ordered subset.
 **When a step is skippable:** a step is skipped when its `skipped_when` rule is
 true per the catalog. A skipped step is recorded in the Evidence section as
 `n/a: <reason>`, not omitted entirely.
+
+**When the project declares a ceremony profile** (`ceremony-profile@1`, owned
+by the guide's `## Project charter` — issue #436): the triage block itself
+applies it — a step whose piece the profile discards arrives in `Skipped`
+carrying the receipt (`<step>: ceremony-profile@1: <piece> discarded by project
+charter`). The receipt is a valid, recorded route: record it in Evidence as
+`n/a — <the receipt verbatim>`, never re-emit the step as a hand-off and never
+treat its absence as an error. A minimal adopter (prose-only, one-shot) pays
+its chosen slice and nothing else; a full-ceremony adopter's block changes
+nothing.
