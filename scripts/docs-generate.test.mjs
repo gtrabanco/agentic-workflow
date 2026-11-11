@@ -18,6 +18,10 @@
  *   without a row is appended, hand rows pass through verbatim, `roadmap_summary:`
  *   overrides the summary cell, fix rows are never appended (the Fixes lifecycle
  *   removes rows after merge), and a stale table is named and exits 1
+ *   the correction batch pins the receipt's reproducers: a fix row's
+ *   `roadmap_summary:` reaches its Notes cell (fix-kind slug column), the check
+ *   line reports drift as `stale` and never as a write, and fix overrides
+ *   survive a run appending six feature rows (per-kind scan offsets)
  *   a page whose source unit is gone is deleted, and nothing authored is touched
  *   the tree covers both halves: the delivered features and the code surface
  *   the live repository is drift-free, so the root gate can call the check
@@ -549,6 +553,122 @@ test("roadmap: a hand row whose summary carries unescaped pipes is seen, never d
     const roadmap = fs.readFileSync(path.join(root, "docs", "ROADMAP.md"), "utf8");
     assert.equal((roadmap.match(/\| 01 \|/g) ?? []).length, 1, "the irregular row is matched by its slug cell, not its cell count");
     assert.match(roadmap, /\| 01 \| shipped \| done \| — \| a \| b \| c \|/, "the irregular row passes through verbatim");
+  } finally {
+    cleanup(root);
+  }
+});
+
+// ── correction batch 2026-11-11 — the external-verify reproducers ───────
+
+test("roadmap: a fix row takes its unit doc's roadmap_summary: into the Notes cell", () => {
+  const root = fixture({ guide: DOCS_SITE(["format: markdown"]) });
+  fs.mkdirSync(path.join(root, "docs", "fix", "443-doc-index-auto-hybrid"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "docs", "fix", "443-doc-index-auto-hybrid", "SPEC.md"),
+    "---\nroadmap_summary: the owner's fix line\n---\n\n# fix/443 — doc-index-auto-hybrid\n\n> One-line: fallback line\n",
+  );
+  fs.writeFileSync(
+    path.join(root, "docs", "ROADMAP.md"),
+    [
+      "# Roadmap",
+      "",
+      "## Fixes",
+      "",
+      "### Active",
+      "",
+      "| Issue | Topic | Status | Notes |",
+      "|---|---|---|---|",
+      "| [#443](https://example.test/issues/443) | doc-index-auto-hybrid | done | hand notes |",
+      "",
+    ].join("\n"),
+  );
+  try {
+    assert.equal(run(root).status, 0);
+    const roadmap = fs.readFileSync(path.join(root, "docs", "ROADMAP.md"), "utf8");
+    assert.match(
+      roadmap,
+      /\| \[#443\]\(https:\/\/example\.test\/issues\/443\) \| doc-index-auto-hybrid \| done \| the owner's fix line \|/,
+      "the declared roadmap_summary: wins over the hand cell on a fix row too",
+    );
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("check: the roadmap line reports drift as stale and never claims a write", () => {
+  const root = declared("markdown", { contentDir: false });
+  try {
+    assert.equal(run(root).status, 0);
+    const roadmapPath = path.join(root, "docs", "ROADMAP.md");
+    const stale = fs.readFileSync(roadmapPath, "utf8").replace(/^\| 1 \| `shipped` .*$/m, "");
+    fs.writeFileSync(roadmapPath, stale);
+    const check = run(root, "--check");
+    assert.equal(check.status, 1, check.stdout);
+    assert.match(check.stdout, /^Roadmap: docs\/ROADMAP\.md — stale$/m, "check names the drift, not a write");
+    assert.doesNotMatch(check.stdout, /— updated/, "--check is read-only: it never reports an update it did not perform");
+    assert.equal(fs.readFileSync(roadmapPath, "utf8"), stale, "--check wrote nothing");
+    assert.equal(run(root).status, 0, "regenerating repairs the table");
+    const clean = run(root, "--check");
+    assert.equal(clean.status, 0, clean.stdout);
+    assert.match(clean.stdout, /^Roadmap: docs\/ROADMAP\.md — unchanged$/m, "the in-sync arm keeps its wording");
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("roadmap: fix overrides survive a run that appends six feature rows", () => {
+  const root = fixture({ guide: DOCS_SITE(["format: markdown"]) });
+  const featureUnits = ["101-alpha", "102-bravo", "103-charlie", "104-delta", "105-echo", "106-foxtrot"];
+  for (const dir of featureUnits) {
+    fs.mkdirSync(path.join(root, "docs", "features", dir), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "features", dir, "SPEC.md"), FEATURE_SPEC(dir, `summary for ${dir}`));
+  }
+  fs.mkdirSync(path.join(root, "docs", "fix", "460-batch-scheduler-verification"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "docs", "fix", "460-batch-scheduler-verification", "SPEC.md"),
+    "---\nroadmap_summary: the owner's fix line\n---\n\n# fix/460 — batch-scheduler-verification\n\n> One-line: fallback line\n",
+  );
+  fs.writeFileSync(
+    path.join(root, "docs", "ROADMAP.md"),
+    [
+      "# Roadmap",
+      "",
+      "## Features",
+      "",
+      "| NN | Slug | Status | Depends on | Summary |",
+      "|----|------|--------|------------|---------|",
+      "",
+      "## Fixes",
+      "",
+      "### Active",
+      "",
+      "| Issue | Topic | Status | Notes |",
+      "|---|---|---|---|",
+      "| [#460](https://example.test/issues/460) | batch-scheduler-verification | in-progress | hand notes |",
+      "",
+    ].join("\n"),
+  );
+  try {
+    assert.equal(run(root).status, 0);
+    const roadmap = fs.readFileSync(path.join(root, "docs", "ROADMAP.md"), "utf8");
+    for (const dir of featureUnits) {
+      const slug = dir.slice(4);
+      assert.ok(
+        roadmap.includes(`| ${dir.slice(0, 3)} | \`${slug}\` `),
+        `${dir} gained its row`,
+      );
+    }
+    assert.match(
+      roadmap,
+      /\[#460\]\(https:\/\/example\.test\/issues\/460\) \| batch-scheduler-verification \| in-progress \| the owner's fix line \|/,
+      "six appends in one run do not slide the fix scan off the table",
+    );
+    assert.equal(run(root).status, 0);
+    assert.equal(
+      fs.readFileSync(path.join(root, "docs", "ROADMAP.md"), "utf8"),
+      roadmap,
+      "the sync stays idempotent under the multi-append shape",
+    );
   } finally {
     cleanup(root);
   }
