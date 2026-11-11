@@ -382,3 +382,45 @@ test(".gitattributes covers exactly the surfaces the generator writes", () => {
     "the projection entry plus the three shared-document classes, exactly",
   );
 });
+
+/* ------------------------------------------- rebase integration (issue #507) */
+
+/**
+ * The #498 rebase (2026-11-11): the file-class registry (`agentic-shared-*`)
+ * landed on main and owns the `docs/ROADMAP.md` merge attribute. The scaffold
+ * must ship the integrated registry verbatim — one claim per path, never a
+ * second `docs/ROADMAP.md merge=docs-generated` line.
+ */
+test("template/.gitattributes carries the integrated registry, exactly once per path", () => {
+  const text = fs.readFileSync(path.join(REPO, "template", ".gitattributes"), "utf8");
+  const entries = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && !line.startsWith("#"));
+  assert.deepEqual(
+    entries,
+    [
+      "docs/generated/** merge=docs-generated",
+      "docs/ROADMAP.md merge=agentic-shared-roadmap",
+      "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
+      "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
+    ],
+    "the projection entry plus the three shared-document classes, exactly",
+  );
+});
+
+/**
+ * The scaffold's arming step (init-workspace bootstrap + upgrade) drives both
+ * driver families of the registry and verifies both config keys — one driver
+ * left unarmed is a silent textual merge on a collision-prone surface.
+ */
+test("init-workspace arms both driver families and verifies both config keys", () => {
+  const bootstrap = fs.readFileSync(path.join(REPO, "skills", "init-workspace", "references", "BOOTSTRAP_WRITE.md"), "utf8");
+  const upgrade = fs.readFileSync(path.join(REPO, "skills", "init-workspace", "references", "UPGRADE.md"), "utf8");
+  for (const [name, text] of [["BOOTSTRAP_WRITE.md", bootstrap], ["UPGRADE.md", upgrade]]) {
+    assert.match(text, /docs-generated-merge\.mjs --install/, `${name} arms the projection driver`);
+    assert.match(text, /shared-doc-merge\.mjs --install/, `${name} arms the shared-document classes`);
+    assert.match(text, /merge\.agentic-shared-roadmap\.driver/, `${name} verifies the class driver's config key`);
+    assert.doesNotMatch(text, /docs\/ROADMAP\.md merge=docs-generated/, `${name} never re-claims the roadmap attribute for the projection driver`);
+  }
+});
