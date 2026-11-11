@@ -167,11 +167,11 @@ Frozen at cut (XS/S embeds the ledgers; no sibling files).
 
 | id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
 |---|---|---|---|---|---|
-| PE-001 | repository | the packument lists each version under `versions[<v>].dist` with `tarball` (absolute URL) and `shasum` (SHA-1 hex) | live registry sample `curl https://registry.npmjs.org/@gtrabanco%2Fagentic-workflow-schema` (2026-11-12) plus `npm view … dist.tarball dist.shasum` → same pair | sampled 2026-11-12 | O2, O3, O5 |
+| PE-001 | repository | the packument lists each version under `versions[<v>].dist` with `tarball` (absolute URL) and `shasum` (SHA-1 hex) | live registry sample `curl https://registry.npmjs.org/@gtrabanco%2Fagentic-workflow-schema` (2026-11-11) plus `npm view … dist.tarball dist.shasum` → same pair | sampled 2026-11-11 | O2, O3, O5 |
 | PE-002 | issue | a packument can list a version, its dist-tag and its shasum while the tarball URL still returns 404 for minutes | issue #481 S2 (run 42638128017) | 2026-11-09 incident record | O1, O2, O6 |
 | PE-003 | repository | `scripts/release.mjs publish-plan` writes `name<TAB>dir<TAB>version<TAB>tag` rows to `publish-plan.tsv` and the cut job reads them in that order | `.github/workflows/publish.yml` publish loop + `scripts/release.mjs` publish-plan | tree at cut | O4, O7 |
 | PE-004 | repository | the npm-publishing jobs are `cut-prerelease`, `schema-publish`, `crate-publish`, `pi-publish`, `nan-publish`; each names its own package version | `.github/workflows/publish.yml` job blocks | tree at cut | O7, O8 |
-| PE-005 | repository | the runtime exposes global `fetch` returning a `Response` with `arrayBuffer()`, and `node:crypto` `createHash("sha1")` yields the packument shasum encoding | `node -e "typeof fetch"` → `function`, `node -e "require('node:crypto').createHash('sha1').update('x').digest('hex')"`; Node 26.13.0 (`.node-version`) | sampled 2026-11-12 | O2, O5 |
+| PE-005 | repository | the runtime exposes global `fetch` returning a `Response` with `arrayBuffer()`, and `node:crypto` `createHash("sha1")` yields the packument shasum encoding | `node -e "typeof fetch"` → `function`, `node -e "require('node:crypto').createHash('sha1').update('x').digest('hex')"`; Node 26.13.0 (`.node-version`) | sampled 2026-11-11 | O2, O5 |
 | PE-006 | repository | the root suite must not touch the live network; injecting `fetchImpl`, `sleepImpl` and `now` into the core lets every case run deterministically | design of `scripts/npm-version-gate.mjs` (registry read injected via `--published`) and this suite's dependency list | tree at cut | O5, O9 |
 | PE-007 | repository | `scripts/release-workflows.test.mjs` owns the publish.yml shape (job blocks, step order, gate call sites, dist-tag count) | suite source and its `jobBlock` helper | tree at cut | O8, O10 |
 
@@ -206,83 +206,83 @@ gate exception. The `## Tasks` list above is the frozen step list for this unit.
 
 ## Log
 
-- **L1** — 2026-11-12, the request, verbatim:
+- **L1** — 2026-11-11, the request, verbatim:
   ```
   Apply to this repository: issue #481
   ```
   (the request's full content is issue #481 verbatim, recorded in the forge;
   its broken behaviour, required ordering, script contract, workflow placement,
   acceptance criteria and rollback are quoted unedited in S2–S7 above)
-- **L2** — 2026-11-12, environment action disclosed: `bun scripts/local-gate.mjs`
+- **L2** — 2026-11-11, environment action disclosed: `bun scripts/local-gate.mjs`
   first failed at `worktree-guard` on a stale registration
   `.worktrees/fix-437-review-loop-mechanics` whose directory was already gone
   (prune reported nothing; `git worktree remove --force` on the missing path
   succeeded). No work existed on disk and no other checkout was touched; the
   gate then ran.
-- **D1** — 2026-11-12, `nan-publish` postdates the issue (#502) but publishes
+- **D1** — 2026-11-11, `nan-publish` postdates the issue (#502) but publishes
   npm, so S5's "every job that publishes npm" includes it. The declared reading
   is recorded here instead of silently shipping four call sites.
-- **D2** — 2026-11-12, the wait uses a shared deadline (one `--timeout` for the
+- **D2** — 2026-11-11, the wait uses a shared deadline (one `--timeout` for the
   whole invocation), not one budget per package: a canary cut publishes all
   declared packages near-simultaneously, and a per-package budget could multiply
   the runner cost by the member count. A timed-out package is named in the error.
-- **E1** — 2026-11-12, `bun test scripts/npm-availability-wait.test.mjs` at the
+- **E1** — 2026-11-11, `bun test scripts/npm-availability-wait.test.mjs` at the
   red commit `92c55aa6` · exit 1 · `Cannot find module
   './npm-availability-wait.mjs'` — 0 pass / 1 fail / 1 error (module-absent red).
-- **E2** — 2026-11-12, `bun test scripts/release-workflows.test.mjs` at
+- **E2** — 2026-11-11, `bun test scripts/release-workflows.test.mjs` at
   `92c55aa6` · exit 1 · 25 pass / 1 fail — the only failure is the new
   "every npm-publishing job waits…" case; every pre-existing assertion passed.
-- **E3** — 2026-11-12, `bun test scripts/npm-availability-wait.test.mjs` at the
+- **E3** — 2026-11-11, `bun test scripts/npm-availability-wait.test.mjs` at the
   green head · exit 0 · 17 pass / 0 fail; `node --test
   scripts/npm-availability-wait.test.mjs` · fail 0. The reproducer case asserts
   the availability signal follows the tarball 200 + shasum match, with three
   404 polls before it.
-- **E4** — 2026-11-12, `bun test scripts/release-workflows.test.mjs` · exit 0 ·
+- **E4** — 2026-11-11, `bun test scripts/release-workflows.test.mjs` · exit 0 ·
   26 pass / 0 fail (the pre-existing 25 plus the placement case).
-- **E5** — 2026-11-12, `bun scripts/red-first.mjs` · exit 0 · `0 finding(s)`,
+- **E5** — 2026-11-11, `bun scripts/red-first.mjs` · exit 0 · `0 finding(s)`,
   `verdict: PASS` (the suite commit `92c55aa6` precedes the implementation
   `fec35709`).
-- **E6** — 2026-11-12, `bun scripts/prose-gate-inventory.mjs` · exit 0 ·
+- **E6** — 2026-11-11, `bun scripts/prose-gate-inventory.mjs` · exit 0 ·
   `verdict: PASS` with the `npm-availability-gate` row resolved.
-- **E7** — 2026-11-12, `bun scripts/docs-generate.mjs --check` · exit 0 ·
+- **E7** — 2026-11-11, `bun scripts/docs-generate.mjs --check` · exit 0 ·
   `verdict: PASS`; the emitter wrote `docs/generated/{units,code}.md`.
-- **E8** — 2026-11-12, probes: `rg -c "https://registry"
+- **E8** — 2026-11-11, probes: `rg -c "https://registry"
   scripts/npm-availability-wait.test.mjs` · exit 1 (0 matches — no live registry
   URL); `rg -c "node:child_process|execSync|spawnSync"
   scripts/npm-availability-wait.mjs` · exit 1 (0 matches — the gate cannot run a
   signal command); `rg -c "npm-availability-wait"
   .github/workflows/publish.yml` · 5 matches; YAML parse → 7 jobs, 5
   `Wait for npm tarball availability` steps.
-- **E9** — 2026-11-12, `bun scripts/roadmap-settle.mjs` · exit 0 · 186 unit docs
+- **E9** — 2026-11-11, `bun scripts/roadmap-settle.mjs` · exit 0 · 186 unit docs
   checked, `verdict: PASS` (the folder slug matches the roadmap row
   `npm-availability-wait`).
-- **E10** — 2026-11-12, differential: no pre-existing executable command changed
+- **E10** — 2026-11-11, differential: no pre-existing executable command changed
   (the new script has no base counterpart); the one shared contract is
   `scripts/release-workflows.test.mjs`, whose 25 pre-existing assertions pass
   identically at base and at head (E2/E4), and the workflow diff is the five
   inserted wait steps only — an evidenced `n/a` for a behavioural differential.
-- **E11** — 2026-11-12, `bun scripts/check-skill-context.mjs --documents` · exit
+- **E11** — 2026-11-11, `bun scripts/check-skill-context.mjs --documents` · exit
   0 · `PASS context documents: 4 budgeted documents`; the inventory's
   `machineLines` moves 64 → 65 with its source row.
-- **P1** — 2026-11-12, unit doc + embedded ledgers + acceptance criteria + the
+- **P1** — 2026-11-11, unit doc + embedded ledgers + acceptance criteria + the
   `## Fixes` row · `e0b2aa87` (`unit-route --triage` exits 0).
-- **P2** — 2026-11-12, red corpus committed observed red · `92c55aa6`
+- **P2** — 2026-11-11, red corpus committed observed red · `92c55aa6`
   (E1, E2).
-- **P3** — 2026-11-12, `scripts/npm-availability-wait.mjs` green · `fec35709`
+- **P3** — 2026-11-11, `scripts/npm-availability-wait.mjs` green · `fec35709`
   (E3).
-- **P4** — 2026-11-12, the five publish.yml wait steps · `aba57994` (E4).
-- **P5** — 2026-11-12, gate inventory row, test route, changeset, roadmap row,
+- **P4** — 2026-11-11, the five publish.yml wait steps · `aba57994` (E4).
+- **P5** — 2026-11-11, gate inventory row, test route, changeset, roadmap row,
   regenerated projection · `5926bc5c` (E6, E7).
-- **E12** — 2026-11-12, two full-gate attempts failed at `root-suite` under
+- **E12** — 2026-11-11, two full-gate attempts failed at `root-suite` under
   concurrent load (default workers, then `--jobs 2`), each time on a different
   set of git-heavy suites; every named suite is green alone and the serial gate
   below is green. Recorded as the load-sensitivity in Known pre-existing issues,
   never as a pass by assumption.
-- **G1** — 2026-11-12, `bun scripts/local-gate.mjs --jobs 1` · HEAD `3ef8e2e7` ·
+- **G1** — 2026-11-11, `bun scripts/local-gate.mjs --jobs 1` · HEAD `3ef8e2e7` ·
   exit 0 · `local-gate: PASS — 17 step(s) in 657s`.
-- **G2** — 2026-11-12, HEAD `3ef8e2e7` · `bun scripts/run-root-suite.mjs`
+- **G2** — 2026-11-11, HEAD `3ef8e2e7` · `bun scripts/run-root-suite.mjs`
   (default workers) · exit 0 · the full root suite PASS.
-- **P6** — 2026-11-12, obligations closed, gate declared, guide budget re-pinned
+- **P6** — 2026-11-11, obligations closed, gate declared, guide budget re-pinned
   and the evidence recorded · `3ef8e2e7` (G1, G2).
 
 ## Next

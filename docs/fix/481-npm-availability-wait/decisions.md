@@ -10,6 +10,6 @@ skipped.
 ```text
 path-protection-records@1
 kind | paths | phase | date | authority | justification
-justification | scripts/npm-availability-wait.test.mjs | P2 | 2026-11-12 | execute-phase | New red-first sibling suite for scripts/npm-availability-wait.mjs (issue #481): the frozen-failure corpus for the 2026-11-09 tarball-404 window plus the script contract; created before its implementation, never edited to pass
-justification | scripts/release-workflows.test.mjs | P2 | 2026-11-12 | execute-phase | Extends the existing publish.yml contract with the new wait-step placement assertions (cut-prerelease and each *-publish job); the existing assertions stay verbatim
+justification | scripts/npm-availability-wait.test.mjs | P2 | 2026-11-11 | execute-phase | New red-first sibling suite for scripts/npm-availability-wait.mjs (issue #481): the frozen-failure corpus for the 2026-11-09 tarball-404 window plus the script contract; created before its implementation, never edited to pass
+justification | scripts/release-workflows.test.mjs | P2 | 2026-11-11 | execute-phase | Extends the existing publish.yml contract with the new wait-step placement assertions (cut-prerelease and each *-publish job); the existing assertions stay verbatim
 ```
