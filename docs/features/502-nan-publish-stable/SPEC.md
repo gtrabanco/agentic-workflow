@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-ac-hash: ed93693c790f16ec05da097ef51666f6afdc993bdc01708e09cd90e2745d70ab
+ac-hash: d2f2b3eca07d61eaf94d35a05bd3810ce8ce28ca41dd2004581f8a40a400e84b
 ---
 
 # feat/502-nan-publish-stable
@@ -90,11 +90,14 @@ Every current-state narration claiming three packages or three publish jobs:
   workflows") → the workflow/job wording that matches the four-job shape.
 
 Historical records deliberately **kept** (they state a past count, not a
-current claim): `docs/workflow/PACKAGES.md` "re-registering the then-three
-packages' records" (the 2026-10-28 consolidation fact), `docs/audits/
-1-2026-11-08.md` ("never shipped in the three packages" — a frozen audit
-record), CHANGELOG history rows, and `docs/ROADMAP.md` row 40's historical
-narration. The count they carry was true when written; rewriting frozen
+current claim): `publish.yml`'s dist-tag-incident comment ("on all three
+packages" — true on 2026-11-02), `docs/audits/1-2026-11-08.md` ("never
+shipped in the three packages" — a frozen audit record), CHANGELOG history
+rows, and `docs/ROADMAP.md` row 40's historical narration. PACKAGES.md's
+"re-registering the then-three packages' records" sentence was removed by
+this unit — the guide-layer context ceiling allows no line growth and the
+consolidation's re-registration history stays in the `publish.yml` header.
+The count the kept records carry was true when written; rewriting frozen
 history is not currency.
 
 ## Non-goals
@@ -160,6 +163,12 @@ untouched — regression guard), plus the local gate's root suite.
   edits for the count; the stale trigger wording is pre-existing drift this
   unit does not own (recorded, not repaired, to keep the diff on the declared
   surface).
+- roadmap-settle's live-tree check is red at base: unit 494
+  (`docs/features/494-telemetry-by-turn/SPEC.md`, added in `15c152a1` on
+  `main`) has no ROADMAP row (`git show 27275c94:docs/ROADMAP.md` names no
+  494 row). **Does-not-affect** this unit's row (502); it fails the root
+  gate's `roadmap-settle` step independent of this change — disclosed, the
+  owner's call, never repaired silently here.
 - undici advisories (docs/audits/1-2026-11-08.md F2, owner decision: not
   reported). **Does-not-affect**: dev toolchain only.
 
@@ -251,8 +260,8 @@ it.
   .github/workflows/publish.yml docs/workflow/PACKAGES.md
   docs/workflow/FEATURE_WORKFLOW.md scripts/npm-version-gate.test.mjs`
   exits 1 (0 matches); historical narration (the dist-tag-incident comment's
-  "all three packages" — true on 2026-11-02, PACKAGES.md "then-three", the
-  frozen audit record) is the enumerated exception in `## Retirements`.
+  "all three packages" — true on 2026-11-02, the frozen audit record) is the
+  enumerated exception in `## Retirements`.
 - **AC-S7** — The npm Trusted Publisher record for the companion is
   documented (unit doc + workflow header; live registration verified on the
   first publish or noted here). Check: `rg -c "Trusted Publisher"
@@ -299,11 +308,81 @@ cut, and no `unit-route` triage block is fabricated for the inline route.
   alongside `pi-publish` would make the first-ever companion publish race its
   peer's tarball for no time saved (the job is minutes, not hours). Direct
   dependency named, not transitivity.
+- **D2** — 2026-11-11, plan repairs at cut, ac-hash re-stamped twice:
+  `ed9369…` (AC-S6's rg pattern made pipe-safe for table parsing — `rg -n -e
+  "the three packages" -e "three publish"`) and `d2f2b3…` (its exception list
+  updated when PACKAGES.md's historical "then-three" sentence was dropped —
+  the guide-layer context ceiling allowed no line growth; see E11). Both
+  repairs predate the first code commit; the ledger freeze is intact.
+- **E3** — 2026-11-11, RED at `b6cdc271` (workflow untouched):
+  `bun test scripts/release-workflows.test.mjs` · exit 1 · 18 pass / 7 fail —
+  every failure a new/extended assertion; the reproducer names the frozen
+  failure verbatim: "packages/pi-nan-agentic-workflow has no stable publish
+  job — a stable cut would bump its version and never publish it".
+- **E4** — 2026-11-11, GREEN at `8c0388e1`: `bun test
+  scripts/release-workflows.test.mjs` · exit 0 · 25 pass; `bun test
+  scripts/npm-version-gate.test.mjs` · exit 0 · 14 pass.
+- **E5** — 2026-11-11, YAML parse of a scratch copy (`mktemp -d
+  /tmp/aw502-…`, removed after): `yaml.parse` · exit 0 · 7 jobs
+  (`suggest, cut, cut-prerelease, schema-publish, crate-publish,
+  pi-publish, nan-publish`); `nan-publish` needs `["pi-publish"]`, mode-gated
+  `if`, working-directory `packages/pi-nan-agentic-workflow`.
+- **E6** — 2026-11-11, `(cd packages/pi-nan-agentic-workflow && bun run test)`
+  · exit 0 · 29 pass / 0 fail (O2's second half — the gate the job runs is
+  green on the committed tree).
+- **E7** — 2026-11-11, differential (§6): base export `27275c94` into
+  `mktemp -d /tmp/aw502-diff-…` (removed after) + the new test files →
+  release-workflows 18 pass / 7 fail (exactly E3's intended reds — no
+  unrequested difference), npm-version-gate 14 pass / 0 fail (comment-only
+  changes).
+- **E8** — 2026-11-11, `node scripts/release.mjs plan --channel stable` ·
+  exit 0 · four train lines, companion included:
+  `@gtrabanco/pi-nan-agentic-workflow: 4.10.0 → 5.0.0 (packages/pi-nan-agentic-workflow/)`.
+- **E9** — 2026-11-11, `rg -n -e "the three packages" -e "three publish"
+  .github/workflows/publish.yml docs/workflow/PACKAGES.md
+  docs/workflow/FEATURE_WORKFLOW.md scripts/npm-version-gate.test.mjs` ·
+  exit 1 (0 matches) (O5).
+- **E10** — 2026-11-11, `bun scripts/version-parity-gate.mjs --content` ·
+  exit 0 · "no change under packages/pi-nan-agentic-workflow/ — nothing to
+  enforce" · VERDICT: PASS (O8 — no changeset owed).
+- **E11** — 2026-11-11, `bun scripts/check-skill-context.mjs --documents` ·
+  exit 0 · `docs/workflow/PACKAGES.md 101 lines / estimate 2381` — exactly
+  at its ceiling (the first currency draft measured 103 / 2419 and was
+  compressed; that red never reached a commit).
+- **E12** — 2026-11-11, `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  "3 checked · 0 missing · 0 stale · 0 orphaned · verdict: PASS".
+- **G1** — 2026-11-11, HEAD `8f2a8c7b`, `bun scripts/local-gate.mjs` ·
+  exit 1 · FAILED at
+  root-suite — the run's only red is `scripts/roadmap-settle.test.mjs`
+  ("docs/features/494-telemetry-by-turn/SPEC.md:1 row-missing — no roadmap
+  row for NN 494"); base-reproduced (the row is absent and the SPEC present
+  at `27275c94`; the SPEC landed in `15c152a1` on `main`) — a pre-existing
+  failure disclosed in Known pre-existing issues, never repaired here. Every
+  other suite green (604 pass / 0 fail across the gate's per-file runs).
+- **G2** — 2026-11-11, HEAD `8f2a8c7b`, `node scripts/run-root-suite.mjs` ·
+  exit 1 · fail 1 =
+  `scripts/roadmap-settle.test.mjs` only (G1's same pre-existing red).
+- **P1** — 2026-11-11, unit doc + ledgers cut, roadmap row 502 registered
+  `in-progress`, projection regenerated · `193704c3`.
+- **P2** — 2026-11-11, RED commit: the four-package reproducer + moved
+  counts/loops, observed failing (E3) before any workflow byte moved ·
+  `b6cdc271`.
+- **P3** — 2026-11-11, `nan-publish` job + header (four records, operator
+  note, chain comment), observed green (E4, E5) · `8c0388e1`.
+- **P4** — 2026-11-11, docs currency: PACKAGES.md chain line,
+  FEATURE_WORKFLOW.md count line, gate-test comment narration · `8f2a8c7b`.
+- **P5** — 2026-11-11, verification runs (E6–E12, G1–G2), obligations closed,
+  session entry written through the journal writer as a pending fragment (the
+  carrier's appends belong to the merge-to-main aggregator, issue #468) · this
+  commit.
 
 ## Next
 
-P2 — the RED commit (reproducer + four-package pins), observed failing before
-any workflow byte changes.
+The owner's external verdict on this diff (§8: "I am the external verifier").
+Two operator actions ride with it: register the fourth npm Trusted Publisher
+record (`@gtrabanco/pi-nan-agentic-workflow`, bound to `publish.yml`) before
+the first publish, and decide the pre-existing roadmap-settle red (unit 494
+has no ROADMAP row — disclosed, not repaired here).
 
 ## References
 
