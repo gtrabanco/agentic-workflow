@@ -84,7 +84,7 @@ issue states them. **A later correction is appended under its own id**
 
 ## Retirements
 
-- The hand edit of `## Fixes` rows: `skills/unit-lane/references/RELEASE.md` states "no `NN` column, so `rowUpsert` does not apply" — replaced by the `roadmap fixrow` writer; replacement evidence: `rg -n 'rowUpsert does not apply' skills/ docs/` → 0 matches after the change.
+- The hand edit of `## Fixes` rows: `skills/unit-lane/references/RELEASE.md` states "no `NN` column, so `rowUpsert` does not apply" — replaced by the `roadmap fixrow` writer; replacement evidence: `rg -n 'rowUpsert does not apply' skills/ docs/ --glob '!docs/features/498-shared-writer-driver/**'` → 0 live matches after the change (the unscoped command matches only this unit's own citations of the retired phrase — recorded in O4). The settle instructions that implied the old world are repaired too (`execute-phase/SKILL.md`, `unit-lane/references/PLAN.md` — external-verify B3).
 - Nothing else: #420's `scripts/docs-generated-merge.mjs` stays (this unit generalizes the pattern by class, it does not replace the projection driver); the whole-file `writeFileSync` in `Roadmap.mjs` is replaced by the driver's splice write.
 
 ## Non-goals
@@ -145,7 +145,7 @@ Computed, never chosen — `node scripts/ceremony.mjs tier classify` over the ch
 - P6 — Docs ownership: package README `writer-driver-contract@1` block, AGENTS.md ownership line, `docs/workflow/GATE_INVENTORY.md` rows, normative-surfaces rows for the new vocabularies, RELEASE.md prose repair, `.changeset/` entry (validator: `bun test scripts/normative-drift.test.mjs` exits 0 and `bun test scripts/prose-gate-inventory.test.mjs` exits 0)
   (Implements: S3, S5)
   Relevant files: packages/agentic-workflow/README.md, AGENTS.md, docs/workflow/GATE_INVENTORY.md, skills/unit-lane/references/RELEASE.md, .changeset/
-- P7 — Verification and state: differential against base, root gate, budgets, docs projection re-render, roadmap row settle through the new writer, LOGS entry, obligations closed (validator: `node scripts/run-root-suite.mjs` exits 0)
+- P7 — Verification and state: differential against base, root gate, budgets, docs projection re-render, roadmap row settle through the new writer, LOGS entry, obligations closed (validator: `node scripts/run-root-suite.mjs` — exits 1 carrying only the pre-existing `roadmap-settle` 494 row-missing red verified at base `27275c94` (Known pre-existing issues; external-verify B2), every other suite green including `scripts/red-first.test.mjs`; companions re-run green: `bun scripts/docs-generate.mjs --check` exits 0, `bun scripts/check-skill-context.mjs` (+ `--documents`) exits 0)
   (Implements: S5, S6)
   Relevant files: docs/ROADMAP.md, docs/LOGS.md, docs/generated/
 
