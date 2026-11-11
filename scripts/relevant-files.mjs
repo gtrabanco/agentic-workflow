@@ -22,7 +22,7 @@
 
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
+import { parseUnitDocPhases, locateTasksSection } from "./unit-doc-phases.mjs";
 
 const usage = `usage: relevant-files.mjs <unit-doc> [--phase P<k>|all] | [--changed <path,path…> | --base <ref>]`;
 
@@ -128,7 +128,11 @@ function readSetMode(parsed, phaseArg) {
 
 function disciplineMode(parsed, args, text, docAliases) {
   const changed = changedFiles(args);
-  const outsideTasks = text.replace(/^## Tasks[\s\S]*?(?=^## )/m, "");
+  // The Tasks section is located by the shared fence-aware reader (pin A): its
+  // body is the only place Relevant files may live, so the citations that count
+  // as "logged" are read from everything outside that body.
+  const tasks = locateTasksSection(text);
+  const outsideTasks = tasks ? text.slice(0, tasks.start) + text.slice(tasks.end) : text;
   const lists = parsed.phases
     .filter((phase) => typeof phase.relevantFiles === "string")
     .map((phase) => ({ number: phase.number, list: entries(phase.relevantFiles) }));
