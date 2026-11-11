@@ -190,8 +190,8 @@ untouched — regression guard), plus the local gate's root suite.
   (Implements: S2, S4, S8)
   Relevant files: scripts/release-workflows.test.mjs
 - P3 — Implement the `nan-publish` job in `publish.yml` (mirror of the three
-  existing publish jobs: gate → exact-version gate → publish `--provenance
-  --tag latest` → canary dist-tag gated on the publish decision) chained
+  existing publish jobs: gate, exact-version gate, publish `--provenance
+  --tag latest`, canary dist-tag gated on the publish decision) chained
   `needs: [pi-publish]`, and update the workflow header to four packages +
   the Trusted Publisher note (validator: `bun test scripts/release-workflows.test.mjs`
   exits 0)
@@ -209,8 +209,8 @@ untouched — regression guard), plus the local gate's root suite.
 - P5 — Verify like a writer: run the touched suites, the differential against
   the base commit in scratch, the plan-output evidence, and the local gate;
   close the obligations ledger; append the session log; hand off (validator:
-  `bun scripts/local-gate.mjs` exits 0 — every step green or an evidenced
-  base-reproduced red disclosed)
+  `bun scripts/local-gate.mjs` exits 0 with every step green; failing that,
+  an evidenced base-reproduced red is disclosed)
   (Implements: S2, S3, S4, S5, S6, S7)
 
 ### Planning evidence
@@ -413,6 +413,35 @@ cut, and no `unit-route` triage block is fabricated for the inline route.
   real 103/2419 red at committed `8f2a8c7b`, fixed by this head's compression).
   `node scripts/red-first.mjs` · exit 0 · 0 findings — the shipped history
   passes the gate.
+- **F2** — 2026-11-11, folded finding from the 2026-11-11 EXTERNAL VERIFY
+  addendum (the finding routed to the owner under the correction bounds):
+  `G1`/`G2`/`E11` are pinned to `HEAD 8f2a8c7b` but do not reproduce from that
+  sha — E11's own recorded output (`101 lines / estimate 2381`) differs from
+  what the sha carries (`docs/workflow/PACKAGES.md` at `8f2a8c7b` measures
+  103 / 2419, observed in a scratch clone: `bun test
+  scripts/check-skill-context.test.mjs` · exit 1 · 0 pass / 1 fail, and `bun
+  scripts/check-skill-context.mjs --documents` · exit 1 · both ceilings
+  exceeded), so the runs happened on the working tree with the close commit's
+  edits staged — the state G1's/G2's "only red is roadmap-settle" is true
+  for, and the state E11's exit 0 measured. Consequently E11's "that red
+  never reached a commit" is false as written: the over-ceiling draft **is**
+  committed at `8f2a8c7b` (P4) and is compressed only in the re-cut close
+  commit `30adaf36` (head check: `bun scripts/check-skill-context.mjs
+  --documents` · exit 0 · `101 lines / estimate 2381`). Append-only per the
+  log-kind contract: `G1`/`G2`/`E11` stand as recorded, corrected here ·
+  this commit.
+- **F3** — 2026-11-11, folded finding surfaced by the owner-directed loop
+  check — pre-existing since the cut, not batch-caused (identical
+  `lint-blocked` fingerprint `af9b9862876e…` at `193704c3`, `7080989e` and
+  the working tree): `node scripts/phase-lint.mjs <SPEC>` · exit 1 · BLOCKED
+  at box 4 (P3's task text carried a three-arrow `→` chain in the job-mirror
+  description) and box 5 (P5's validator clause carried a standalone `or`) —
+  the inline route (D1) substituted the ledger freeze for the lane's plan
+  step, and the plan step is phase-lint's consumer, so the grammar was never
+  linted at cut. Reworded with the meaning preserved (arrows → enumeration;
+  `or` → "failing that"; validator commands and outcomes byte-identical):
+  `node scripts/phase-lint.mjs <SPEC>` · exit 0 · P1–P5 PASS 6/6 · verdict
+  PASS, overall fingerprint `af9b9862876e…` unchanged · this commit.
 
 ## Next
 
