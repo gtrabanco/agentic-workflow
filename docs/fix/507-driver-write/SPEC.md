@@ -62,6 +62,45 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 > 3. Armar `merge.docs-generated.driver` en git config --local
 > 4. Reportar qué se escribió y qué estaba ya configurado
 
+### Correction batch — 2026-11-11 (external verify, first receipt)
+
+Frozen from `docs/fix/507-driver-write/external-verify.md` verbatim; the disposition
+of every receipt row lives in the batch's Log lines. S7 stays unused on purpose —
+D3 already records that id as a cut defect.
+
+**S8 — the fix-row `roadmap_summary:` override applies (receipt blocker 1).**
+> "the fix-row `roadmap_summary:` override never applies" … "`slugColumn = 2` reads
+> the Status column … which never equals a unit slug; Topic is index 1" — smallest
+> action: "slug column 1 for both kinds + red-first fix-override test".
+
+**S9 — `--check` never claims a write it does not perform (receipt blocker 2).**
+> "`--check` prints `Roadmap: docs/ROADMAP.md — updated` for a write it never
+> performs" — smallest action: "check-mode arm `roadmapChanged ? \"stale\" : \"unchanged\"`".
+
+**S10 — fix overrides survive multi-append runs (receipt advisory 1, the related symbol).**
+> "Fixing `scripts/docs-generate.mjs:463` without per-kind offset recompute ships
+> that hole" — the Fixes-scan line offsets are built once from the pre-sync text
+> while the Features sync inserts rows earlier in the file.
+
+**S11 — P5 cites only specs that exist (receipt advisory 3).**
+> "P5 still cites `(Implements: S7)`; no S7 exists" — re-anchor P5 to S3's third
+> step (its own D3 record) and to verification, never a gate code change.
+
+**S12 — the scaffold guide states the roadmap sync its projects inherit (receipt advisory 2).**
+> "template/AGENTS.md:117 … never states the roadmap machine-sync/`roadmap_summary:`
+> behavior that now runs in those projects" — dated ids stay out of the scaffold
+> (`scripts/scaffold-guide.test.mjs` refuses them there).
+
+**S13 — the Serena wiring pointer names the current bootstrap step (receipt advisory 4).**
+> "`BOOTSTRAP_WRITE.md` step 8 now names different content after the step
+> insertion" — Serena provisioning now lives at bootstrap step 10.
+
+**Not in the batch (recorded dispositions):** receipt advisory 5 —
+`docs/LOGS.md:4055`'s dated step-5 mention — `wontfix`: `docs/LOGS.md` is the
+append-only journal carrier and `scripts/log-immutability.mjs` refuses a hand
+edit there. Receipt advisory 5's gate flakes (untouched steps, isolated re-runs
+green) — `n/a` to this change: not reproducible on the unit's own surfaces.
+
 ## Impact
 
 Callers of the changed surfaces:
@@ -137,6 +176,12 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - **AC-S5** — El campo `roadmap_summary:` es opcional en el SPEC template: si no se provee, se deriva del `One-line:`. Check: `cat template/docs/fix/_TEMPLATE/SPEC.md` | `cat template/docs/features/_TEMPLATE/SPEC.md` contienen el campo `roadmap_summary:`; `bun scripts/docs-generate.mjs` no falla si falta
 - **AC-S6** — `bun scripts/docs-generated-merge.mjs --install` funciona en un repositorio limpio. Check: `bun scripts/docs-generated-merge.mjs --install` → exit 0; `git config --get merge.docs-generated.driver` → no vacío; `git config --get merge.docs-generated.name` → contiene "docs-generated"
 - **AC-S7** — (authority **S3 item 3** — the request's S-list is S1–S6; the gate-coverage clause lives in S3's third step, and P5's earlier `S7` citation was a cut defect) — `bun scripts/local-gate.mjs --skip-network` passes with both paths covered. Check: `bun scripts/local-gate.mjs --skip-network --json` → `docs-generated-projection` → PASS
+- **AC-S8** — a fix row whose cell count matches the Fixes header takes its unit doc's `roadmap_summary:` into the Notes cell. Check: the fix-override case in `bun test scripts/docs-generate.test.mjs` → exits 0 (RED observed at the pre-fix commit, GREEN after)
+- **AC-S9** — `--check` reports roadmap drift as `stale` and never as a write it did not perform, while writing nothing. Check: the check-wording case in `bun test scripts/docs-generate.test.mjs` → exits 0
+- **AC-S10** — a run that appends six or more feature rows still applies fix-row overrides (the scan offsets are recomputed per kind). Check: the multi-append case in `bun test scripts/docs-generate.test.mjs` → exits 0
+- **AC-S11** — the task list cites only specs that exist (P5 no longer names the nonexistent `S7`). Check: `rg -c "Implements: S3 item 3" docs/fix/507-driver-write/SPEC.md` → exits 0
+- **AC-S12** — the scaffold guide states the roadmap sync every scaffolded project inherits. Check: `rg -n "roadmap_summary" template/AGENTS.md` → exits 0
+- **AC-S13** — the Serena provisioning pointer names the bootstrap step that now holds it. Check: `rg -n "BOOTSTRAP_WRITE.md. step 10" docs/features/67-serena-provisioning/SPEC.md` → exits 0
 
 ## Tasks
 
@@ -152,9 +197,15 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - P4 — añadir `roadmap_summary:` al SPEC template (validator: template contiene el campo; `bun scripts/docs-generate.mjs` no falla si falta)
   (Implements: S5)
   Relevant files: template/docs/fix/_TEMPLATE/SPEC.md, template/docs/features/_TEMPLATE/SPEC.md
-- P5 — actualizar el gate (`scripts/local-gate.mjs`) para que `docs-generated-projection` cubra ambos paths (validator: `bun scripts/local-gate.mjs --skip-network` → PASS)
-  (Implements: S7)
+- P5 — verify the gate's `docs-generated-projection` step covers both paths (validator: `bun scripts/local-gate.mjs --skip-network` → PASS)
+  (Implements: S3 item 3 — the gate-coverage clause; no S7 exists, D3 records the cut defect)
   Relevant files: scripts/local-gate.mjs
+- P6 — repair the roadmap sync's fix-kind path and the check-mode roadmap line (validator: `bun test scripts/docs-generate.test.mjs` exits 0 with the three correction cases)
+  (Implements: S8, S9, S10)
+  Relevant files: scripts/docs-generate.mjs, scripts/docs-generate.test.mjs
+- P7 — close the receipt's documentation dispositions (validator: the three `rg` readers of AC-S11 through AC-S13 each exits 0)
+  (Implements: S11, S12, S13)
+  Relevant files: docs/fix/507-driver-write/SPEC.md, template/AGENTS.md, docs/features/67-serena-provisioning/SPEC.md
 
 ### Planning evidence
 
@@ -164,6 +215,8 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 | PE-002 | repository | `docs/ROADMAP.md` es el único archivo que genera conflictos de merge frecuentes (aparte de `docs/generated/`) | git history: #269 vs #505 chocaron en ROADMAP.md y docs/generated/ | current | O2 |
 | PE-003 | repository | Las columnas NN, Slug, Status, Depends on se pueden derivar de las unit docs; Summary necesita un campo adicional | `scripts/docs-generate.mjs` ya lee NN, Slug de los directorios; Status de `## Status`; Depends on de `## Depends on` | current | O3 |
 | PE-004 | repository | El campo `roadmap_summary:` es opcional: si no existe, se puede derivar del `One-line:` o dejar vacío | El SPEC template ya tiene `> One-line:` en ambos templates (features y fixes) | current | O4 |
+| PE-005 | repository | `tableCells` drops both boundary cells, so the Fixes table's Topic slug sits at `cells[1]` exactly like the Features table's Slug — the fix-kind `slugColumn = 2` reads Status instead | `packages/agentic-workflow/src/index-document.mjs` `tableCells` + a head probe: row 443 parses to link, topic, status, notes (4 cells) | sampled 2026-11-11 | O5 |
+| PE-006 | repository | The Fixes-scan line offsets come from the pre-sync text, so feature appends slide the window: with only `slugColumn` repaired in scratch, a fresh fix override applied at up to 3 appended rows and was skipped at 6 (header misdetect inside the appended feature rows) | scratch probe on a clone of head, `mktemp -d` | sampled 2026-11-11 | O7 |
 
 ### Obligations
 
@@ -173,6 +226,12 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 | O2 | S2 | El merge driver resuelve conflictos en ROADMAP.md regenerando desde las unit docs | P2 | P2 | scripts/docs-generated-merge.mjs | fixture con conflicto → driver resuelve → resultado coincide con regeneración | the E line with the fixture test exit and the comparison | verified |
 | O3 | S3 | init-workspace instala `.gitattributes` y el merge driver en bootstrap y upgrade | P3 | P3 | init-workspace | repo limpio → `.gitattributes` existe; `git config --get merge.docs-generated.driver` → no vacío | the E line with the config check | verified |
 | O4 | S5 | El campo `roadmap_summary:` es opcional y se deriva del `One-line:` si falta | P4 | P4 | SPEC template | template contiene el campo; `bun scripts/docs-generate.mjs` no falla si falta | the E line with the generate check | verified |
+| O5 | S8 | The fix-kind sync applies a declared `roadmap_summary:` to a cell-matched Fixes row — the override the Non-goals promise for fix rows | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the fix-override case | the E line naming the RED run at the pre-fix commit and the GREEN run | planned |
+| O6 | S9 | `--check` reports roadmap drift without claiming a write it did not perform (read-only contract) | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the check-wording case | the E line naming the RED run and the GREEN run | planned |
+| O7 | S10 | fix-row overrides survive a run that appends six or more feature rows (scan offsets recomputed per kind) | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the multi-append case | the E line naming the RED run and the GREEN run | planned |
+| O8 | S11 | the task list cites only specs that exist — P5 no longer names the nonexistent S7 | P7 | P7 | docs/fix/507-driver-write/SPEC.md | `rg -c "Implements: S3 item 3" docs/fix/507-driver-write/SPEC.md` exits 0 | the E line with the command output | planned |
+| O9 | S12 | the scaffold guide states the roadmap sync every scaffolded project inherits | P7 | P7 | template/AGENTS.md | `rg -n "roadmap_summary" template/AGENTS.md` exits 0 | the E line with the command output | planned |
+| O10 | S13 | the Serena provisioning pointer names the bootstrap step that now holds it | P7 | P7 | docs/features/67-serena-provisioning/SPEC.md | `rg -n "BOOTSTRAP_WRITE.md. step 10" docs/features/67-serena-provisioning/SPEC.md` exits 0 | the E line with the command output | planned |
 
 ## Triaged steps
 
@@ -182,6 +241,13 @@ de paths), P3+P4 comparten slice (template + skill prose), P5 es verificación d
 `docs-generated-projection` ya corre `docs-generate --check`, que tras P1 cubre ambos paths sin
 cambio de código). Diferencial con el corpus §2: el reproducer del choque #269×#505 (merge real en
 fixture con dos branches que añaden rows al roadmap) va en RED antes de la implementación.
+
+Correction triage 2026-11-11 (branch `fix/507-driver-write`, head `76ac4b0e`, per the first
+`EXTERNAL VERIFY` receipt): P6 (the sync's fix-kind path + the check-mode line) precedes P7
+(the documentation dispositions) — P7's `rg` readers only become green once P6's sibling prose
+is consistent. The §2 frozen-failure corpus runs RED first: the fix-override reproducer and the
+check-wording reproducer at the pre-fix commit, then the multi-append reproducer (PE-006's k=6
+probe) once `slugColumn` alone is repaired — the change is done when all three pass together.
 
 ## Findings
 
