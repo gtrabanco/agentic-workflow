@@ -64,20 +64,11 @@ export type CeremonyProfilePiece = (typeof CEREMONY_PROFILE_PIECES)[number];
 export const CEREMONY_PROFILE_ADOPTIONS = Object.freeze(["paid", "discarded"]);
 export type CeremonyProfileAdoption = (typeof CEREMONY_PROFILE_ADOPTIONS)[number];
 
-/** The closed review-surface vocabulary (`ceremony-review-surface`): the
- *  review-pack surfaces `review-passes` can name. Derived from the published
- *  `PASS_NAMES` (minus `classify` — internal machinery, never a payable
- *  surface), at the type level and at runtime alike, so adding a review pass
- *  is a schema-const change in one PR, never a prose-only edit. */
-export type CeremonyReviewSurface = Exclude<(typeof PASS_NAMES)[number], "classify"> extends `review-${infer Surface}`
-  ? Surface
-  : Exclude<(typeof PASS_NAMES)[number], "classify">;
-export const CEREMONY_REVIEW_SURFACES: readonly CeremonyReviewSurface[] = Object.freeze(
-  [...new Set(PASS_NAMES.filter((name) => name !== "classify").map((name) => name.replace(/^review-/, "")))] as CeremonyReviewSurface[],
-);
-
 /** The closed refusal vocabulary (`ceremony-profile-refusal`): every way a
- *  present-but-wrong block can fail, typed. */
+ *  present-but-wrong block can fail, typed. Declared before the derived
+ *  review-surface const below: the normative-drift gate reads published const
+ *  literals from committed source, and a literal placed after a
+ *  derivation-expression const falls inside that const's regex match. */
 export const CEREMONY_PROFILE_REFUSALS = Object.freeze([
   "bad-contract-id",
   "malformed-line",
@@ -89,6 +80,18 @@ export const CEREMONY_PROFILE_REFUSALS = Object.freeze([
   "empty-block",
 ]);
 export type CeremonyProfileRefusal = (typeof CEREMONY_PROFILE_REFUSALS)[number];
+
+/** The closed review-surface vocabulary (`ceremony-review-surface`): the
+ *  review-pack surfaces `review-passes` can name. Derived from the published
+ *  `PASS_NAMES` (minus `classify` — internal machinery, never a payable
+ *  surface), at the type level and at runtime alike, so adding a review pass
+ *  is a schema-const change in one PR, never a prose-only edit. */
+export type CeremonyReviewSurface = Exclude<(typeof PASS_NAMES)[number], "classify"> extends `review-${infer Surface}`
+  ? Surface
+  : Exclude<(typeof PASS_NAMES)[number], "classify">;
+export const CEREMONY_REVIEW_SURFACES: readonly CeremonyReviewSurface[] = Object.freeze(
+  [...new Set(PASS_NAMES.filter((name) => name !== "classify").map((name) => name.replace(/^review-/, "")))] as CeremonyReviewSurface[],
+);
 
 /** The parsed profile: only declared scalar pieces appear in `adoption` (an
  *  undeclared piece keeps the catalog default); `reviewPasses` is `null` when

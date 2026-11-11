@@ -193,7 +193,9 @@ function makeRepo(t, { acceptance = false, obligations = null } = {}) {
   // ceremony/tier.mjs, ceremony/lib.mjs and risk-tiers.mjs join the graph with
   // issue #434: the router reads the unit's recorded tier from the tier
   // module's single reader, so the sandbox mirrors that import too.
-  for (const name of ["unit-lineage.mjs", "unit-route.mjs", "phase-lint.mjs", "unit-doc-phases.mjs", "relay-packet.mjs", "catalog.json", "ceremony/tier.mjs", "ceremony/lib.mjs", "risk-tiers.mjs", "capabilities.mjs"]) {
+  // ceremony-profile.mjs joins the graph with issue #436: the router reads the
+  // charter's ceremony profile through it before emitting a hand-off.
+  for (const name of ["unit-lineage.mjs", "unit-route.mjs", "phase-lint.mjs", "unit-doc-phases.mjs", "relay-packet.mjs", "catalog.json", "ceremony/tier.mjs", "ceremony/lib.mjs", "risk-tiers.mjs", "capabilities.mjs", "ceremony-profile.mjs"]) {
     const dest = path.join(root, "scripts", name);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(path.join(repoRoot, "scripts", name), dest);
