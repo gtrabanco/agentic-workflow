@@ -18,7 +18,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -26,6 +26,17 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT = fileURLToPath(new URL("./relevant-files.mjs", import.meta.url));
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
+
+/** One temp root per run; every case dir nests inside it and the suite removes
+ * the root when tests end. */
+let tempRoot = null;
+function freshDir() {
+  tempRoot ??= mkdtempSync(join(tmpdir(), "relevant-files-"));
+  return mkdtempSync(join(tempRoot, "case-"));
+}
+test.after(() => {
+  if (tempRoot) rmSync(tempRoot, { recursive: true, force: true });
+});
 
 /** A fixture unit doc written into a fresh temp dir per case. */
 function writeUnitDoc(text) {
