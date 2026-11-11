@@ -13,6 +13,13 @@ its carrier is then `docs/fix/<issue-number>-<topic>/`, never a feature
 folder). Every fix folder under `docs/fix/<issue-number>-<topic>/` is
 registered in `## Fixes` while its work is open.
 
+The two tables are **machine-synced** (fix #507): `bun scripts/docs-generate.mjs`
+appends a row for every feature folder missing one, applies a unit doc's
+`roadmap_summary:` over its row's summary cell, and never rewrites a hand row —
+status, depends-on, summaries and every `idea`/`declined`/`carried by` row stay
+owner-written, and fix rows stay owner-managed end to end (the lifecycle below
+removes them post-merge).
+
 ## Features
 
 | NN | Slug | Status | Depends on | Summary |
@@ -196,7 +203,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | [#495](https://github.com/gtrabanco/agentic-workflow/issues/495) | doc-store-sharing-and-chunk-limit | done · [#496](https://github.com/gtrabanco/agentic-workflow/pull/496) | Fix #495 (M, applied inline at the owner's request): three `doc`-index improvements — (1) `provider.chunk_limit` auto-**truncates** oversized chunk bodies (never skips) and declares the new `chunk-too-large` degradation, fixing the live 400 `context_length_exceeded` failure on 150k-char sections that degraded misleadingly as `unavailable-embeddings-provider-down`; (2) default exclusion prefixes (`.agentic-workflow/`, `node_modules/`) keep the journal fragments and vendored trees out of the corpus, overridable via `index.excludes`; (3) `store.share` resolves the store to a user-level `<base>/agentic-workflow/<repoId>/index.db` keyed by the commit-object SHA, so worktrees of the same repo share one index. SPEC: [SPEC](fix/495-doc-store-sharing-and-chunk-limit/SPEC.md) |
 | [#500](https://github.com/gtrabanco/agentic-workflow/issues/500) | declare-docs-site-block | done · [#501](https://github.com/gtrabanco/agentic-workflow/pull/501) | Issue [#500](https://github.com/gtrabanco/agentic-workflow/issues/500) (low): the repository's own `AGENTS.md` declared no `## Docs site` block, so `bun scripts/docs-generate.mjs --check` printed `Format: md — degraded (no `Docs site` block in AGENTS.md)` on every run — the substrate mechanism (feature 01) the guide never exercised. Declared `- format: md` (the actual projection format); the emitter now reports `Format: md (declared)` and the projection moved zero bytes with the block. Applied inline at the owner's request (prose-only; tier `passive`, readback in `docs/passive/2026-11-09-declare-docs-site.md`). SPEC: [SPEC](fix/500-declare-docs-site-block/SPEC.md) |
-| [#507](https://github.com/gtrabanco/agentic-workflow/issues/507) | driver-write | pending | Merge conflicts en `docs/ROADMAP.md` y `docs/generated/` por documentos que son funciones determinísticas del árbol: el merge driver para `docs/generated/` existe pero no se instala automáticamente; `docs/ROADMAP.md` no tiene protección alguna. Propuesta: extender `docs-generate.mjs` para generar ROADMAP.md desde las unit docs, ampliar el merge driver, y que `init-workspace` instale `.gitattributes` + el driver como setup default. Necesita triage | |
+| [#507](https://github.com/gtrabanco/agentic-workflow/issues/507) | driver-write | in-progress | Merge conflicts en `docs/ROADMAP.md` y `docs/generated/` por documentos que son funciones determinísticas del árbol: el merge driver para `docs/generated/` existe pero no se instala automáticamente; `docs/ROADMAP.md` no tiene protección alguna. Propuesta: extender `docs-generate.mjs` para generar ROADMAP.md desde las unit docs, ampliar el merge driver, y que `init-workspace` instale `.gitattributes` + el driver como setup default. Necesita triage | |
 
 ## Bureaucracy-reduction execution order (2026-09-15)
 

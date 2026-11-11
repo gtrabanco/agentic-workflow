@@ -15,7 +15,10 @@ docs/generated/** merge=docs-generated
 # An unarmed clone degrades to git's textual merge — verified behavior — and
 # the armed drivers add the semantic layer (row union by key; a same-row status
 # flip or a differing ceiling leaf surfaces as a real conflict; frozen facts in
-# REPOSITORY_STATE.md never union).
+# REPOSITORY_STATE.md never union; LOGS.md unions journal entries by their
+# heading identity — the same heading with different bodies, or a side that is
+# not an append-only extension of the base, surfaces as a real conflict).
 docs/ROADMAP.md merge=agentic-shared-roadmap
 docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets
 docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state
+docs/LOGS.md merge=agentic-shared-logs
