@@ -133,12 +133,36 @@ test("cut + canary accepts the version input as the canary base (a variable, nev
   assert.match(suggest, /plan --channel canary[\s\S]{0,80}"\$\{args\[@\]\}"/, "the canary suggestion receives the same base");
 });
 
+// The frozen-failure corpus for issue #502: the stable train bumped the
+// companion's version and wrote its CHANGELOG companion row on every cut, and
+// the package never reached npm — `mode: publish` covered only three of the
+// workspace members. Every packages/ member must have a stable publish job;
+// a member added to the workspace without one fails here, at the gate, not on
+// the release day.
+test("every workspace package member has a stable publish job (issue #502 reproducer)", () => {
+  const text = read(PUBLISH);
+  const members = fs
+    .readdirSync(path.join(repoRoot, "packages"), { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(repoRoot, "packages", e.name, "package.json")))
+    .map((e) => e.name);
+  assert.ok(members.length >= 4, `the workspace carries the members the train bumps (got ${members.join(", ")})`);
+  for (const dir of members) {
+    const job = [...text.matchAll(/^\s{2}(\S[-a-z]+-publish):$/gm)]
+      .map((m) => m[1])
+      .find((name) => jobBlock(text, name).includes(`working-directory: packages/${dir}`));
+    assert.ok(job, `packages/${dir} has no stable publish job — a stable cut would bump its version and never publish it`);
+  }
+  for (const job of ["schema-publish", "crate-publish", "pi-publish", "nan-publish"]) {
+    assert.match(text, new RegExp(`^\\s{2}${job}:$`, "m"), `${job} is one of the stable publish jobs`);
+  }
+});
+
 // A stable release is what `@canary` installs until the next canary cut: every
 // stable publish job moves the dist-tag to the version it just published.
 test("each stable publish job points the canary dist-tag at the stable release", () => {
   const text = read(PUBLISH);
-  assert.equal([...text.matchAll(/npm dist-tag add "\$NAME@\$VERSION" canary/g)].length, 3, "one per publishable package");
-  for (const job of ["schema-publish", "crate-publish", "pi-publish"]) {
+  assert.equal([...text.matchAll(/npm dist-tag add "\$NAME@\$VERSION" canary/g)].length, 4, "one per publishable package");
+  for (const job of ["schema-publish", "crate-publish", "pi-publish", "nan-publish"]) {
     assert.match(jobBlock(text, job), /npm dist-tag add/, `${job} promotes canary`);
   }
 });
@@ -150,7 +174,7 @@ test("each stable publish job points the canary dist-tag at the stable release",
 // 4.10.0 on all three packages, orphaning the canary build.
 test("the canary promotion is gated on the publish decision", () => {
   const text = read(PUBLISH);
-  for (const job of ["schema-publish", "crate-publish", "pi-publish"]) {
+  for (const job of ["schema-publish", "crate-publish", "pi-publish", "nan-publish"]) {
     const block = jobBlock(text, job);
     const step = block.slice(block.indexOf("- name: Point the canary dist-tag at the stable release"));
     assert.ok(step, `${job} must carry the promotion step`);
@@ -176,7 +200,7 @@ test("cut + canary opens the GitHub pre-release with the rendered notes", () => 
 test("the publish jobs run only on mode: publish (no push publishes anything)", () => {
   const text = read(PUBLISH);
   assert.doesNotMatch(text, /^\s{2}push:/m, "the workflow must not trigger on push");
-  for (const job of ["schema-publish", "crate-publish", "pi-publish"]) {
+  for (const job of ["schema-publish", "crate-publish", "pi-publish", "nan-publish"]) {
     const block = jobBlock(text, job);
     assert.match(
       block,
@@ -205,10 +229,12 @@ test("the stable cut requests the publish of the commit it pushed", () => {
   assert.ok(push !== -1 && request !== -1 && push < request, "the commit must be pushed before its publish is requested");
 });
 
-test("publish jobs chain in dependency order: pi waits for schema AND crate (D-40-10)", () => {
+test("publish jobs chain in dependency order: pi waits for schema AND crate (D-40-10); the companion waits for its peer (issue #502)", () => {
   const text = read(PUBLISH);
   const piBlock = jobBlock(text, "pi-publish");
   assert.match(piBlock, /needs:\s*\[schema-publish, crate-publish\]/);
+  const nanBlock = jobBlock(text, "nan-publish");
+  assert.match(nanBlock, /needs:\s*\[pi-publish\]/, "the companion peer-depends on the pi package — it publishes after pi-publish");
 });
 
 test("each package has its own node-compat leg and version gate (never publish red)", () => {
@@ -221,7 +247,7 @@ test("each package has its own node-compat leg and version gate (never publish r
     assert.match(localGate, new RegExp(`id: "${id}"`), `${id} belongs to the local gate`);
     assert.doesNotMatch(text, new RegExp(`^\\s{2}${id}:`, "m"), `${id} must not stay in the release workflow`);
   }
-  assert.equal([...text.matchAll(/npm-version-gate\.mjs/g)].length, 4, "3 publish jobs + the cut-prerelease loop");
+  assert.equal([...text.matchAll(/npm-version-gate\.mjs/g)].length, 5, "4 publish jobs + the cut-prerelease loop");
 });
 
 test("the release workflow's trigger names no package tree, because it has none", () => {
@@ -262,7 +288,7 @@ test("least privilege: each job elevates only the permissions it needs", () => {
   const pre = jobBlock(text, "cut-prerelease");
   assert.match(pre, /contents: write/, "the channel cut is recorded as a tag");
   assert.match(pre, /id-token: write/, "the channel publish needs npm OIDC");
-  for (const job of ["schema-publish", "crate-publish", "pi-publish"]) {
+  for (const job of ["schema-publish", "crate-publish", "pi-publish", "nan-publish"]) {
     const b = jobBlock(text, job);
     assert.match(b, /id-token: write/, `${job} publishes via Trusted Publishing`);
     assert.match(b, /contents: read/);

@@ -53,15 +53,22 @@ name: Publish packages
 #   promotion was gated, rewriting the `canary` dist-tag on the way out.
 #
 # npm publishing happens ONLY in this workflow's publish/cut-prerelease jobs:
-# the npm Trusted Publisher records for the three packages are bound to this
+# the npm Trusted Publisher records for the four packages are bound to this
 # filename (re-registered 2026-10-28 from the retired publish-schema.yml /
-# publish-agentic-workflow.yml / publish-pi-package.yml — see D-40-12). If a
-# publish fails with E403/OIDC, verify npmjs.com → package → Settings →
-# Trusted Publisher → Workflow filename: publish.yml.
+# publish-agentic-workflow.yml / publish-pi-package.yml — see D-40-12; the
+# fourth record, for @gtrabanco/pi-nan-agentic-workflow, must be registered
+# on npmjs.com bound to publish.yml BEFORE its first publish — until then
+# that publish fails E403/OIDC). If a publish fails with E403/OIDC, verify
+# npmjs.com → package → Settings → Trusted Publisher → Workflow filename:
+# publish.yml.
 #
 # Dependency order: pi-agentic-workflow pins the runner crate and the schema
-# exactly, so its install must run after both are on the registry —
-# `needs:` chains schema-publish / crate-publish → pi-publish.
+# exactly, so its install must run after both are on the registry, and the
+# companion peer-depends on pi-agentic-workflow — `needs:` chains
+# schema-publish / crate-publish → pi-publish → nan-publish. The workspace
+# would resolve the companion's peer from the folder at install time, but
+# registry-resolved ordering is the convention every publish job follows
+# (issue #502).
 
 on:
   # MANUAL ONLY (owner decision 2026-11-03). Nothing here fires on push: the
@@ -586,6 +593,78 @@ jobs:
             exit 1
           fi
           echo "the tarball carries every staged skill file ($EXPECTED_COUNT)"
+      - name: Skip when the version is already published
+        id: version
+        run: node "$GITHUB_WORKSPACE/scripts/npm-version-gate.mjs" >> "$GITHUB_OUTPUT"
+      - name: Surface the gate's notice
+        if: steps.version.outputs.notice != ''
+        env:
+          NOTICE: ${{ steps.version.outputs.notice }}
+        run: echo "::warning::$NOTICE"
+      - name: Publish to npm (Trusted Publishing — no token)
+        id: publish
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --access public --provenance --tag "latest"
+      # A stable release is also what `@canary` installs until the next canary:
+      # the tag never lags behind `latest`. npm's Trusted Publisher record for
+      # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
+      # dist-tag"), a permission separate from direct publishing.
+      # Only a run that PUBLISHED moves the tag. On 2026-11-02 a push-triggered
+      # run whose gate skipped (the committed version was already on the registry)
+      # still rewrote `canary` from 5.0.0-canary.20261102.1 back to 4.10.0 on all
+      # three packages, orphaning a published canary that nothing pointed at.
+      - name: Point the canary dist-tag at the stable release
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          npm dist-tag add "$NAME@$VERSION" canary || {
+            echo "::error::could not move the canary dist-tag — enable 'Allow npm dist-tag' for this workflow's Trusted Publisher on npmjs.com (npm >= 11.21)"
+            exit 1
+          }
+      - name: Troubleshooting pointer on failure
+        if: failure() && steps.publish.outcome == 'failure'
+        run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
+
+  # The NaN.builders companion preset (issue #388, published on canary
+  # dynamically since it landed): the same shape as the three jobs above —
+  # the package's own `bun run test` gate (tsc also emits the dist/ the
+  # tarball's `files` need), the exact-version skip, the provenance publish
+  # under `latest`, and the canary promotion gated on the publish decision.
+  nan-publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'
+    # The companion peer-depends on @gtrabanco/pi-agentic-workflow; the
+    # workspace would resolve the peer from the folder at install time, but
+    # registry-resolved ordering is the convention every publish job follows
+    # (issue #502) — publish after pi-publish instead of alongside it.
+    needs: [pi-publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm Trusted Publishing + --provenance
+    defaults:
+      run:
+        working-directory: packages/pi-nan-agentic-workflow
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+      # Publish and dist-tag writes both go through Trusted Publishing:
+      # OIDC needs npm >= 11.5.1 to publish and >= 11.21 to move a dist-tag.
+      - name: Ensure npm supports Trusted Publishing (>= 11.21 — publish + dist-tag)
+        run: npm install -g npm@latest
+      - name: Install (bun, frozen lockfile)
+        run: bun install --frozen-lockfile
+      - name: Build + test (the gate — never publish red)
+        run: bun run test
       - name: Skip when the version is already published
         id: version
         run: node "$GITHUB_WORKSPACE/scripts/npm-version-gate.mjs" >> "$GITHUB_OUTPUT"
