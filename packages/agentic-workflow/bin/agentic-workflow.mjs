@@ -7,8 +7,8 @@
  *   agentic-workflow roadmap <op> [args...]
  *   agentic-workflow roadmap read <table-path> [--nn <n>] [--json]   (issue #498: the read half of the CAS loop)
  *   agentic-workflow roadmap fixrow <table-path> <json> [--json]     (issue #498: the `## Fixes` row writer)
- *   rowUpsert/annotate carry the revision they read as `expected` (JSON field
- *   or `--expect <hash>`); a table moved since the read refuses with
+ *   rowUpsert/annotate/fixrow carry the revision they read as `expected` (JSON
+ *   field or `--expect <hash>`); a table moved since the read refuses with
  *   `EDIT REFUSAL — stale-read …` naming both revisions (issue #498).
  *   agentic-workflow changelog <op> [args...]
  *   agentic-workflow budgets <op> [args...]
@@ -1091,6 +1091,18 @@ switch (command) {
       process.exit(2);
     }
 
+    // `--expect <hash>` — the CAS flag of every roadmap write op (issue #498):
+    // the revision the caller read, refused stale-read when the table moved
+    // since. A bare `--expect` is a usage error — silently skipping CAS on an
+    // explicit flag is the last-write-wins defect the flag exists to close.
+    const expectFlag = () => {
+      const i = restArgs.indexOf("--expect");
+      if (i === -1) return undefined;
+      const value = restArgs[i + 1];
+      if (!value || value.startsWith("--")) refuse("usage: --expect <revision>");
+      return value;
+    };
+
     // `roadmap read <table-path> [--nn <n>]` (issue #498) — the read half of
     // the CAS loop: answers the revision the next write carries as `expected`.
     // Read-only: it writes nothing and never refuses a stale state (there is
@@ -1135,8 +1147,9 @@ switch (command) {
     if (rawArgs[0] === "fixrow" || (rawArgs[0] && rawArgs[1] === "fixrow")) {
       const filePath = rawArgs[0] === "fixrow" ? resolve(rawArgs[1] ?? join(process.cwd(), "ROADMAP.md")) : resolve(rawArgs[0]);
       const data = JSON.parse(rawArgs[2] || "{}");
+      const expected = expectFlag();
       try {
-        const receipt = fixRowUpsert(filePath, data);
+        const receipt = fixRowUpsert(filePath, expected !== undefined ? { ...data, expected } : data);
         if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
         else printReceipt(receipt);
       } catch (e) {
@@ -1150,8 +1163,11 @@ switch (command) {
     if (rawArgs[0] === "rowUpsert" || (rawArgs[0] && rawArgs[1] === "rowUpsert")) {
       // Skip file path if it's the first positional
       const data = rawArgs[1] === "rowUpsert" ? (rawArgs[2] ? JSON.parse(rawArgs[2]) : {}) : JSON.parse(rawArgs[1] || "{}");
+      // `--expect <hash>` (issue #498): the revision the caller read — a table
+      // that moved since refuses with stale-read instead of last-write-wins.
+      const expected = expectFlag();
       try {
-        const receipt = rowUpsert(filePath, data);
+        const receipt = rowUpsert(filePath, expected !== undefined ? { ...data, expected } : data);
         if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
         else printReceipt(receipt);
       } catch (e) {
@@ -1162,8 +1178,7 @@ switch (command) {
       const note = rawArgs[1] === "annotate" ? rawArgs[3] || "" : (rawArgs[2] || "");
       // `--expect <hash>` (issue #498): the revision the caller read — a table
       // that moved since refuses with stale-read instead of last-write-wins.
-      const expectIdx = restArgs.indexOf("--expect");
-      const expected = expectIdx !== -1 ? restArgs[expectIdx + 1] : undefined;
+      const expected = expectFlag();
       try {
         const receipt = roadmapAnnotate(filePath, nn, note, expected !== undefined ? { expected } : undefined);
         if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
