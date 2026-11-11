@@ -330,7 +330,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16001,
+      "routeEstimateMax": 16005,
       "routeLinesMax": 1202,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
@@ -359,7 +359,8 @@
         "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 14488 est / 1088 lines at the change, ceilings re-based to ceil(14488 x 1.10) = 15937 / ceil(1088 x 1.10) = 1197. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15778 -> 15816 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
-        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 14546 at this re-basis; ceiling = ceil(measured x 1.10) = 16001"
+        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 14546 at this re-basis; ceiling = ceil(measured x 1.10) = 16001",
+        "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding)."
       }
     },
     "execute-phase:feature": {
@@ -376,7 +377,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15286,
+      "routeEstimateMax": 15290,
       "routeLinesMax": 1148,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -404,7 +405,8 @@
         "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
-        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286"
+        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
+        "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding)."
       }
     },
     "execute-phase:final-pr": {
@@ -422,7 +424,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15850,
+      "routeEstimateMax": 15855,
       "routeLinesMax": 1179,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
@@ -451,7 +453,8 @@
         "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 14351 est / 1067 lines at the change, ceilings re-based to ceil(14351 x 1.10) = 15787 / ceil(1067 x 1.10) = 1174. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15627 -> 15666 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
-        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 14409 at this re-basis; ceiling = ceil(measured x 1.10) = 15850"
+        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 14409 at this re-basis; ceiling = ceil(measured x 1.10) = 15850",
+        "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding)."
       }
     },
     "execute-phase:finding": {
@@ -468,7 +471,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15286,
+      "routeEstimateMax": 15290,
       "routeLinesMax": 1148,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -495,7 +498,8 @@
         "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
-        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286"
+        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
+        "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding)."
       }
     },
     "execute-phase:fix": {
@@ -512,7 +516,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15286,
+      "routeEstimateMax": 15290,
       "routeLinesMax": 1148,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -539,7 +543,8 @@
         "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
-        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286"
+        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
+        "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding)."
       }
     },
     "execute-phase:legacy": {
@@ -556,7 +561,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15286,
+      "routeEstimateMax": 15290,
       "routeLinesMax": 1148,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
@@ -583,7 +588,8 @@
         "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
-        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286"
+        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
+        "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding)."
       }
     },
     "execute-phase:small": {
@@ -600,7 +606,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15286,
+      "routeEstimateMax": 15290,
       "routeLinesMax": 1148,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -628,7 +634,8 @@
         "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
-        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286"
+        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
+        "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding)."
       }
     },
     "execute-phase:unit-loop": {
@@ -645,7 +652,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15286,
+      "routeEstimateMax": 15290,
       "routeLinesMax": 1148,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -670,7 +677,8 @@
         "issue #260 (orchestrate path)": "issue #260: execute-phase SKILL.md gains the orchestrate path (the non-executing orchestrator contract pointer, only when declared) and unit-lane gains its hand-off paragraph; this route re-measured 13838 est / 1043 lines at the change, ceilings re-based to ceil(13838 x 1.10) = 15222 / ceil(1043 x 1.10) = 1148. Declared hand edit: the budgets emitter writes estimateMax/linesMax, which the route checker does not read (the 201 unit D3(b) pre-existing drift, still open).",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 15063 -> 15101 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
-        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286"
+        "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
+        "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding)."
       }
     },
     "review-change:adversarial": {
@@ -721,7 +729,6 @@
         "audit 1 (2026-11-08, product audit): the finders' shared `## Scope` + `## Materiality bar` moved to the single-owner finder contract (`skills/review-implementation/references/FINDER_CONTRACT.md`) and review-implementation's SKILL.md names the owner — the owner file rides every review-change route; re-based to ceil(measured x 1.10)": "re-based in this PR",
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences"
       },
-      "estimateMax": 26690,
       "linesMax": 1842
     },
     "review-change:default-backend": {
@@ -769,7 +776,6 @@
         "audit 1 (2026-11-08, product audit): the finders' shared `## Scope` + `## Materiality bar` moved to the single-owner finder contract (`skills/review-implementation/references/FINDER_CONTRACT.md`) and review-implementation's SKILL.md names the owner — the owner file rides every review-change route; re-based to ceil(measured x 1.10)": "re-based in this PR",
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences"
       },
-      "estimateMax": 23142,
       "linesMax": 1616
     },
     "review-change:default-web": {
@@ -817,7 +823,6 @@
         "audit 1 (2026-11-08, product audit): the finders' shared `## Scope` + `## Materiality bar` moved to the single-owner finder contract (`skills/review-implementation/references/FINDER_CONTRACT.md`) and review-implementation's SKILL.md names the owner — the owner file rides every review-change route; re-based to ceil(measured x 1.10)": "re-based in this PR",
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences"
       },
-      "estimateMax": 23142,
       "linesMax": 1616
     },
     "review-change:synthesize": {
@@ -867,7 +872,6 @@
         "audit 1 (2026-11-08, product audit): the finders' shared `## Scope` + `## Materiality bar` moved to the single-owner finder contract (`skills/review-implementation/references/FINDER_CONTRACT.md`) and review-implementation's SKILL.md names the owner — the owner file rides every review-change route; re-based to ceil(measured x 1.10)": "re-based in this PR",
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences"
       },
-      "estimateMax": 23899,
       "linesMax": 1655
     }
   },
