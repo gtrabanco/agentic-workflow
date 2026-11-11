@@ -403,6 +403,22 @@ OPEN rows only; appended by `review-change` and `triage-issue`.
   x86_64, linux-gnu aarch64, darwin arm64/x64, windows-msvc x86_64) are embedded;
   unsupported platforms refuse with a manual hint instead of downloading
   unpinned bytes.
+- **D7** — 2026-11-10, execution disclosure (this unit): the installer's
+  implementation bytes landed inside the shipping commit `b9721a59` (an
+  `git add -A` overreach), not in a dedicated P5 commit — the red-first
+  ordering still holds chronologically (`3afbd4ce` is the observed-red suite
+  commit, the implementation follows), no test was edited to pass (the two
+  fixture-corrections replaced a malformed fixture construction with a real
+  gzip/ustar container and fixed an `args`-record shape — assertions
+  unchanged), and the disclosure is recorded here rather than rewritten.
+- **D8** — 2026-11-10, unit-dir keying (this unit): the parallel correction
+  unit `docs/fix/269-external-verify-findings/` (folded in the 2026-11-10
+  pull, PR #506's external-verify batch) owns the `[#269]` fix-index key, so
+  this feature unit re-keys to its roadmap row —
+  `docs/features/80-efficient-context-targeting/`; the row's accumulated
+  description cell is preserved byte-for-byte via the SPEC's
+  `roadmap_summary` (the #507 emitter now renders that cell from the unit
+  doc).
 - **D6** — 2026-11-10, planning decision (this unit): the declared unit-doc
   grammar keeps the nested `- Relevant files:` **dash marker** (owner:
   `phase-contract`/`unit-doc-phases.mjs`); the parser only attaches lines
@@ -413,11 +429,29 @@ OPEN rows only; appended by `review-change` and `triage-issue`.
   accept the markerless form would widen what phase-lint reports and was not
   asked for.
 
+- **E1** — 2026-11-10, `bun test scripts/relevant-files.test.mjs` (RED commit 1638189e) · exit 1 · 0 pass / 10 fail on the missing module — the §2-style red corpus for the tool and prose contracts.
+- **E2** — 2026-11-10, `bun test scripts/relevant-files.test.mjs` (after `c9e0bd3e`) · exit 0 · 10 pass / 0 fail.
+- **E3** — 2026-11-10, `bun test scripts/relevant-files.test.mjs scripts/structural-sibling-pins.test.mjs` (after `3c4ec0f4`) · exit 0 · 18 pass / 0 fail.
+- **E4** — 2026-11-10, `bun test scripts/phase-lint.test.mjs` · exit 0 · 162 tests, the O7 grammar regression clean.
+- **E5** — 2026-11-10, `cd packages/agentic-workflow && bun test test/provision.cli.test.mjs test/cli.surface.test.mjs` (RED commit 3afbd4ce) · exit 1 · 2–10 fail on the missing module; after the implementation · exit 0 · 13 pass / 0 fail + surface green.
+- **E6** — 2026-11-10, `bun scripts/check-skill-context.mjs` and `--routes` · exit 0 each — the O13 budget half.
+- **E7** — 2026-11-10, O12's read-set delta (declared approximation: the read set of this unit's own plan→execute→review cycle, not an end-to-end token audit) — with the sub-section, the union of the lists resolves to **11 files / 386,111 bytes** (`bun scripts/relevant-files.mjs docs/features/80-efficient-context-targeting/SPEC.md --phase all | sort -u | xargs du -cb`); the without-sub-section alternative — the machinery survey a reviewer would otherwise make over `skills/ scripts/ packages/agentic-workflow/{src,test} packages/pi-agentic-workflow/src docs/fix docs/workflow` — is **930 files / 11,388,482 bytes** (`rg --files … | xargs du -cb`). Read-set surface: ~29.5× fewer files, ~29.5× fewer bytes on the same cycle.
+- **E8** — 2026-11-10, `node packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/80-efficient-context-targeting/SPEC.md` — pre-close state: only the `obligations-open` rows this close-out then flips; closes green at G6.
+- **P1** — 2026-11-10 17:4x, ledgers frozen (SPEC + planning-evidence + planning-obligations; phase-lint PASS) → `41e72230`.
+- **P2** — 2026-11-10, RED suite committed (10 fail / 0 pass observed) → `1638189e`.
+- **P3** — 2026-11-10, read-set tool + the three skills' consumption prose + budgets re-basis + template dash-grammar alignment → `c9e0bd3e`; differential repair → `a0407904`.
+- **P4** — 2026-11-10, RED provision/surface suite committed (observed failing) → `3afbd4ce`.
+- **P5** — 2026-11-10, `agentic-workflow provision rg` implemented (module + bin + README + companion projection token) → landed inside `b9721a59` (D7 disclosure).
+- **P6** — 2026-11-10, shipping gates (changeset, gitignore, route re-bases, unit-dir re-key to row 80) → `b9721a59`; sibling-pin refactor → `3c4ec0f4`.
+- **P7** — 2026-11-10, close-out: obligations flipped on the foreground validators above, this log block, roadmap settle + PR rewrite, journal fragment → this commit.
+
 ## Next
 
-Implement P2 (RED suite) on this branch; the ledgers are frozen and the tier is
-`high` (named destructive surface: the runner-crate bin — the CLI surface test
-moves with it).
+Owner verdict on the diff (the external verifier): the diff summary, the
+obligations ledger (13 rows × status), the verification block, the docs state
+and the disclosed items are in the closing hand-off. After the verdict: settle
+and merge PR #506 (`Closes #269`); the RH delta review of the parallel
+correction unit's receipt runs next if the owner orders it.
 
 ## References
 
@@ -425,6 +459,7 @@ moves with it).
 - Park PR: [#506](https://github.com/gtrabanco/agentic-workflow/pull/506) (carries the park commit + this implementation)
 - Author of the consumed lines: feature [#434](https://github.com/gtrabanco/agentic-workflow/issues/434) (PR #511)
 - Grammar owners: `skills/phase-contract/SKILL.md` (sub-section + never-authority), `skills/unit-lane/references/PLAN.md` (plan-time write)
+- Parallel unit: `docs/fix/269-external-verify-findings/` (PR #506's external-verify correction batch — same branch, separate unit doc)
 
 ## Branch
 
