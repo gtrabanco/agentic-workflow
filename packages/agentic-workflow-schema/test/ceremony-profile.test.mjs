@@ -163,7 +163,7 @@ test("the profile round-trips through the canonical serializer", () => {
   assert.equal(result.ok, true);
   if (!result.ok) return;
   const serialized = serializeCeremonyProfile(result.profile);
-  const reparsed = readCeremonyProfile(fence(serialized));
+  const reparsed = readCeremonyProfile(fence(`${CEREMONY_PROFILE_CONTRACT_ID}\n${serialized}`));
   assert.equal(reparsed.ok, true);
   if (!reparsed.ok) return;
   assert.deepEqual(reparsed.profile.adoption, result.profile.adoption);
