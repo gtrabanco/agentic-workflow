@@ -1,11 +1,6 @@
 ---
 type: feature
 scope: medium
-roadmap_summary: >-
-  `ceremony-profile@1` — a versioned machine-readable block owned by the project
-  charter declares which ceremony pieces the project pays; the dispatch/catalog
-  path checks it in code and skips undeclared pieces with recorded receipts;
-  anti-gaming is enforced in code (narrow-only, fail-closed).
 ---
 
 # fix/436-ceremony-profile
@@ -109,8 +104,11 @@ the check that proves it):
 - **Existing consumers:** `product-audit`'s profile-aware scope (#440) already
   consumes a *declared* profile conditionally and runs every dimension when
   none is declared — preserved byte-for-byte (obligation O11).
-- **Roadmap:** row 436's Summary cell updates through the unit doc's
-  `roadmap_summary:` override via the deterministic sync — never hand-edited;
+- **Roadmap:** row 436's status and summary note were written through the
+  crate's receipted writers (`rowUpsert`/`annotate`, commit `465d5e00`) —
+  never a raw hand edit; the deterministic sync keeps the row verbatim, so no
+  override applies (the unit is fix-kind while the row sits in the Features
+  table, and this unit declares no `roadmap_summary:` — external-verify B3);
   the status cell is hand-owned (the status machine) and stays with the owner.
 
 ## Retirements
@@ -203,10 +201,10 @@ reason: the change is purely additive substrate.
   (Implements: S2, S4, S6)
   Relevant files: skills/init-workspace/SKILL.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/unit-lane/references/STEPS.md, skills/execute-phase/SKILL.md, skills/product-audit/references/AUDIT_DIMENSIONS.md
 - P5 — Registration + docs: `normative-surfaces@1` rows, vocabulary-parity
-  pins, schema README grammar block, changeset, `roadmap_summary` sync via the
-  emitter, `docs/LOGS.md` entry (validator: `bun test scripts/normative-drift.test.mjs`
+  pins, schema README grammar block, changeset, roadmap row via the crate's
+  writers, projection via the emitter, `docs/LOGS.md` entry (validator: `bun test scripts/normative-drift.test.mjs`
   exits 0; `bun scripts/docs-generate.mjs --check` exits 0)
-  (Implements: S2, S3, S4, S5, S6, S7)
+  (Implements: S1, S2, S3, S4, S5, S6, S7)
   Relevant files: AGENTS.md, scripts/vocabulary-parity.test.mjs, packages/agentic-workflow-schema/README.md, .changeset/, docs/LOGS.md
 
 ### Planning evidence
