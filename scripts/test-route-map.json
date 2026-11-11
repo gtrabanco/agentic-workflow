@@ -235,6 +235,16 @@
       "suites": [
         "scripts/test-impact.test.mjs"
       ]
+    },
+    {
+      "name": "npm-availability-wait",
+      "globs": [
+        "scripts/npm-availability-wait.mjs",
+        "scripts/npm-availability-wait.test.mjs"
+      ],
+      "suites": [
+        "scripts/npm-availability-wait.test.mjs"
+      ]
     }
   ]
 }
