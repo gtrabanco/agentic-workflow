@@ -1,5 +1,6 @@
 ---
 "@gtrabanco/agentic-workflow": minor
+"@gtrabanco/pi-agentic-workflow": patch
 ---
 
 feat(writer): shared writer driver — collision-safe writes for shared documents
@@ -25,3 +26,8 @@ staging writes, and the closed `WRITER_REFUSAL_REASONS` vocabulary.
   `--expect` on `annotate` / `expected` on `rowUpsert`/`fixrow` — a table that
   moved since the read refuses with `EDIT REFUSAL — stale-read …` naming both
   revisions.
+
+The pi package's half: `skills/unit-lane/references/RELEASE.md` stops telling
+the release step that a `## Fixes` row cannot be written ("no `NN` column, so
+`rowUpsert` does not apply") — the settle checklist names `roadmap fixrow` as
+the writer instead; a Fixes row is never a hand edit.
