@@ -29,6 +29,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { parseUnitDocPhases, loggedPhases, parseLog, parseSpecs, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
+import { readCeremonyProfile, charterSectionOf, CEREMONY_PROFILE_CONTRACT_ID, CEREMONY_REVIEW_SURFACES } from "./ceremony-profile.mjs";
 import { recordedTier } from "./ceremony/tier.mjs";
 import { batonOf } from "../packages/agentic-workflow/src/relay/Packet.mjs";
 import {
@@ -666,6 +667,77 @@ function triageFail(code, message) {
   process.exit(code);
 }
 
+/** The guide file the ceremony profile is read from (issue #436): the project
+ *  guide's `## Project charter` section — the tier-0 home the #435 charter
+ *  writer fills. `UNIT_ROUTE_GUIDE` re-points it at a copy, so a validation
+ *  test mutates its own bytes instead of the tracked guide. */
+function loadCeremonyProfile() {
+  const guidePath = process.env.UNIT_ROUTE_GUIDE
+    ? path.resolve(process.env.UNIT_ROUTE_GUIDE)
+    : path.join(PROJECT, "AGENTS.md");
+  let guide;
+  try {
+    guide = fs.readFileSync(guidePath, "utf8");
+  } catch {
+    return null;
+  }
+  const section = charterSectionOf(guide);
+  if (section === "") return null;
+  const result = readCeremonyProfile(section);
+  if (result === null) return null;
+  const source = "AGENTS.md ## Project charter";
+  if (!result.ok) {
+    const named = result.refusals.map((entry) => `${entry.reason}: ${entry.detail}`).join("; ");
+    triageFail(2, `CEREMONY PROFILE ERROR — the ${source} block is malformed: ${named}`);
+  }
+  return { profile: result.profile, source };
+}
+
+/**
+ * The dispatcher/catalog check (issue #436 S3/S5): narrow the emitted step
+ * list by the declared profile. A discarded piece moves its step to `Skipped`
+ * with a recorded receipt; a `paid` declaration on a step the catalog already
+ * skips earns a no-expansion refusal; `review-passes` narrows the review
+ * pack's surfaces (the `review` step itself is never discardable — it carries
+ * no piece). With `profile === null` nothing changes: the unprofiled default.
+ */
+function applyCeremonyProfile(catalog, result, profile) {
+  if (profile === null) return { result, applied: [], refused: [] };
+  const declared = catalog.ceremonyProfile;
+  const stepPieces = declared && declared.schemaVersion === 1 ? declared.stepPieces ?? {} : {};
+  const applied = [];
+  const refused = [];
+  const steps = result.steps.filter((step) => {
+    const piece = stepPieces[step];
+    if (piece === undefined) return true;
+    if (profile.profile.adoption[piece] !== "discarded") return true;
+    applied.push({ piece, step, receipt: `${CEREMONY_PROFILE_CONTRACT_ID}: ${piece} discarded by project charter` });
+    result.skipped.push({ step, reason: `${CEREMONY_PROFILE_CONTRACT_ID}: ${piece} discarded by project charter` });
+    return false;
+  });
+  const pieceToStep = Object.fromEntries(Object.entries(stepPieces).map(([step, piece]) => [piece, step]));
+  for (const [piece, adoption] of Object.entries(profile.profile.adoption)) {
+    if (adoption !== "paid") continue;
+    const step = pieceToStep[piece];
+    if (step === undefined || steps.includes(step)) continue;
+    const reason = result.skipped.find((entry) => entry.step === step)?.reason ?? "skipped by the catalog";
+    refused.push({ piece, receipt: `no-expansion: ${step} is already skipped by the catalog (${reason})` });
+  }
+  if (profile.profile.reviewPasses !== null) {
+    const surfaces = profile.profile.reviewPasses;
+    const all = surfaces.length === CEREMONY_REVIEW_SURFACES.length;
+    if (!all) {
+      const named = surfaces.length === 0 ? "none" : surfaces.join(", ");
+      applied.push({ piece: "review-passes", step: null, receipt: `${CEREMONY_PROFILE_CONTRACT_ID}: review-passes narrowed to ${named}` });
+    }
+  }
+  const tiers = { ...result.tiers };
+  for (const { step } of applied) if (step !== null) delete tiers[step];
+  const remaining = steps.filter((step) => tiers[step] !== undefined);
+  const budget = remaining.some((step) => tiers[step] === "strong") ? "strong" : "cheap";
+  return { result: { ...result, steps, tiers, budget }, applied, refused };
+}
+
 function loadCatalog() {
   // `UNIT_ROUTE_CATALOG` re-points the catalog at a copy, so a validation test
   // mutates its own bytes instead of the tracked `scripts/catalog.json` — the
@@ -962,6 +1034,7 @@ function firstUnfinishedPhase(unit) {
 
 function runTriage(token, { json = false } = {}) {
   const catalog = loadCatalog();
+  const profile = loadCeremonyProfile();
   const { matches, clean } = resolveUnit(token);
   if (matches.length > 1) {
     triageFail(2, `ambiguous unit: ${sanitize(clean)} matches ${matches.map((entry) => sanitize(entry.dir)).join(", ")}`);
@@ -986,7 +1059,15 @@ function runTriage(token, { json = false } = {}) {
     triageFail(2, `missing mandatory sections: ${missing.join(", ")}`);
   }
   const facts = unitFacts(doc, unitDir);
-  const result = triageSteps(catalog, facts);
+  let result = triageSteps(catalog, facts);
+  // Issue #436: the ceremony profile narrows the emitted step list before any
+  // hand-off. A discarded piece moves its step to `Skipped` with a recorded
+  // receipt — never emitted, never an error; a `paid` declaration on a step
+  // the catalog already skips is a no-expansion refusal (the profile can only
+  // narrow ceremony, never expand it). `profile` is `null` when no block is
+  // declared: the behavior below is today's, byte for byte.
+  const profileAnswer = applyCeremonyProfile(catalog, result, profile);
+  result = profileAnswer.result;
   const unitLabel = clean;
   // #294: the Relay answer is an addendum to the triage block. It is computed
   // from the packet's own state and the catalog's tiers, never inferred.
@@ -1002,6 +1083,10 @@ function runTriage(token, { json = false } = {}) {
       `Steps: ${result.steps.join(", ")}\n` +
       `Tiers: ${result.steps.map((step) => `${step}: ${result.tiers[step]}`).join(", ")}\n` +
       `Skipped: ${skippedText}\n` +
+      // Issue #436: an additive annotation — the fixed line-prefix parsers
+      // read named lines only, so this line is invisible to them (the same
+      // pattern as the `Fused:` line below).
+      (profile === null ? "" : `Profile: ${profileAnswer.applied.length} applied, ${profileAnswer.refused.length} refused (${CEREMONY_PROFILE_CONTRACT_ID} — ${profile.source})\n`) +
       `Budget: ${result.budget}\n` +
       // Issue #434: an additive annotation — the fixed line-prefix parsers
       // (unit-cycle, unit-lineage) read named lines only, so the extra line is
@@ -1011,6 +1096,9 @@ function runTriage(token, { json = false } = {}) {
     );
   }
   const answer = { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, tiers: result.tiers, budget: result.budget };
+  // The `profile` key exists only when a profile is declared, so a consumer
+  // distinguishes a profiled run from the unprofiled default by key presence.
+  if (profile !== null) answer.profile = { contract: CEREMONY_PROFILE_CONTRACT_ID, source: profile.source, applied: profileAnswer.applied, refused: profileAnswer.refused };
   // The `fused` key exists only when the pass actually fuses, so a consumer
   // distinguishes the fused run from the separated one by key presence.
   if (result.fused !== null) answer.fused = { steps: result.fused };

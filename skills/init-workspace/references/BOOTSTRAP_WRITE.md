@@ -21,7 +21,14 @@
    the identity layer fills the guide's `## Project charter` section verbatim —
    decisions, policies and commands, never derivable-from-code description —
    and the domain layer lands as dated assumptions there and in their natural
-   registered docs. The verification-criteria answers fill
+   registered docs. The ceremony-profile seed lands there too as the
+   machine-readable block the dispatcher checks in code (issue #436): one
+   fenced `ceremony-profile@1` block inside `## Project charter`, one
+   `piece: paid|discarded` line per declared piece (`docs-step`, `captures`,
+   `review-passes: <surfaces|none>`, `publish-gate`, `test-policy`), undeclared
+   pieces keeping the catalog default; a full-ceremony adopter may omit the
+   block entirely. Never invent piece names — the closed vocabulary is the
+   profile contract's. The verification-criteria answers fill
    `docs/workflow/VERIFICATION_CRITERIA.md` (copied from the template) with one
    provenance value per criterion from the closed set `workflow-generic` /
    `project-declared` / `stamped assumption (dated)` — a row without one is

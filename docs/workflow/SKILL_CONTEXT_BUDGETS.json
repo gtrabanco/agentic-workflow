@@ -34,7 +34,7 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 129,
+        "machineLines": 133,
         "sources": {
           "feature 108 / issue #409 (machine gate receipts)": "feature 108 / issue #409 (machine gate receipts): normative-surfaces@1 gains four rows — the three schema-export vocabulary rows for the gate-receipt contract (GATE_RECEIPT_VERDICTS, GATE_CHECK_STATUSES, GATE_RECEIPT_FRESHNESS_CODES) plus the `gate-receipt-grammar` row binding the grammar block the schema package README publishes (`block:gate-receipt@1`). The machine region moves 120 -> 124 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 588 lines / 464 prose / 10,052 est, inside the unchanged ceilings 632 / 504 / 10,631, so only `machineLines` is re-pinned and no ceiling this unit did not spend is re-based.",
           "issue #462 (unit 462-doc-provenance-stamp)": "issue #462 (unit 462-doc-provenance-stamp): normative-surfaces@1 gains three rows — the two schema-export vocabulary rows for the stamp contract (DOC_PROVENANCE_FORMATS, DOC_GRAMMAR_FAMILIES, each with its machine family) plus the `doc-provenance-stamp` row binding the grammar block the schema package README publishes (`block:doc-provenance@1`). The machine region moves 117 -> 120 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 584 lines / 464 prose / 9,917 est, inside the unchanged ceilings 632 / 504 / 10631, so only `machineLines` is re-pinned and no ceiling this unit did not spend is re-based.",
@@ -60,7 +60,8 @@
           "issue #493 (bounded test execution, 2026-11-10)": "the runtime-convention paragraph's 60s sentence is superseded by the bounded-execution contract: two external signal-based suite bounds (the 120s wall-clock killer and the sampled 1.5 GB memory cap, issue #493 S2/S3) and the 10s per-test default with the annotated allowlist (`scripts/test-timeout-allowlist.json`), pinned by `scripts/invocation-drift.mjs`'s re-pinned SUITE_CARVE_OUT tokens. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 643 lines / 519 prose / 10,876 est against the previous ceilings 632 / 504 / 10,631. Re-based by the manifest's own arithmetic, ceil(measured x 1.10): linesMax 632 -> 708, proseLinesMax 504 -> 571, estimateMax 10,631 -> 11,964; `machineLines` stays 124 (no machine block moved). Re-based again at the #493 branch's integration of main: the integrated guide (this contract plus #427's Config policy section) measures 655 lines / 531 prose / 10,983 est with `bun scripts/check-skill-context.mjs --documents`, inside the union of both re-bases (708 / 571 / 11,964), so both sources stand and the larger numbers are the binding ceilings.",
           "feature #427 (unified config, AGENTS.md addition)": "The guide gains the \"Config policy for new features\" section (25 lines: a new h2, intro paragraph, four numbered rules, and a closing paragraph). Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 640 lines / 516 prose / 10,819 est. Ceilings re-based to ceil(640 x 1.10) = 704, ceil(516 x 1.10) = 568, ceil(10,819 x 1.10) = 11,901. `machineLines` stays 124 (unchanged region).",
           "issue #498 (unit 498-shared-writer-driver)": "normative-surfaces@1 gains four rows — the writer-driver-contract block row (packages/agentic-workflow/README.md), the two schema-export vocabulary rows for the writer driver (WRITER_REFUSAL_REASONS) and the merge layer (SHARED_MERGE_CLASSES, SHARED_MERGE_REFUSAL_REASONS), plus the shared-document arming paragraph beside --install-hook. The machine region moves 124 -> 128 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 670 lines / 542 prose / 11,345 est, inside the unchanged ceilings 708 / 571 / 11,964, so only `machineLines` is re-pinned and no ceiling this unit did not spend is re-based.",
-          "merge of feat/498 with origin/main (2026-11-11, issue #498 integration)": "integration of main #434/#502/#510: the merged normative-surfaces@1 carries both sides' rows (this unit's four writer/merge rows plus main's additions), so machineLines is re-pinned to the merged measurement 128 -> 129; measured at the merge with `bun scripts/check-skill-context.mjs --documents`: 671 lines / 542 prose / 11,368 est, inside the unchanged ceilings 708 / 571 / 11,964."
+          "merge of feat/498 with origin/main (2026-11-11, issue #498 integration)": "integration of main #434/#502/#510: the merged normative-surfaces@1 carries both sides' rows (this unit's four writer/merge rows plus main's additions), so machineLines is re-pinned to the merged measurement 128 -> 129; measured at the merge with `bun scripts/check-skill-context.mjs --documents`: 671 lines / 542 prose / 11,368 est, inside the unchanged ceilings 708 / 571 / 11,964.",
+          "issue #436 (ceremony-profile registration)": "issue #436 (ceremony-profile registration): normative-surfaces@1 gains four rows — the three schema-export vocabulary rows (CEREMONY_PROFILE_PIECES / CEREMONY_PROFILE_ADOPTIONS / CEREMONY_PROFILE_REFUSALS; the CEREMONY_REVIEW_SURFACES derivation is not row-declared — a derived const pinned by the package suite) and the ceremony-profile@1 README block row; measured machine lines 133 at this re-basis, machineLines re-pinned to the exact count the checker computes (the pin is exact, never ceil x 1.10). Growth source = #436's registration rows"
         }
       },
       "docs/workflow/GATE_INVENTORY.md": {
@@ -333,9 +334,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16417,
-      "routeLinesMax": 1220,
+      "routeEstimateMax": 16550,
+      "routeLinesMax": 1229,
       "sources": {
+        "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -364,6 +366,7 @@
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
         "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 14546 at this re-basis; ceiling = ceil(measured x 1.10) = 16001",
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
+        "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
       }
     },
@@ -381,9 +384,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15702,
-      "routeLinesMax": 1171,
+      "routeEstimateMax": 15835,
+      "routeLinesMax": 1180,
       "sources": {
+        "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -411,6 +415,7 @@
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
         "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
+        "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
       }
     },
@@ -429,9 +434,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16266,
-      "routeLinesMax": 1197,
+      "routeEstimateMax": 16399,
+      "routeLinesMax": 1206,
       "sources": {
+        "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -460,6 +466,7 @@
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
         "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 14409 at this re-basis; ceiling = ceil(measured x 1.10) = 15850",
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
+        "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
       }
     },
@@ -477,9 +484,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15702,
-      "routeLinesMax": 1171,
+      "routeEstimateMax": 15835,
+      "routeLinesMax": 1180,
       "sources": {
+        "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption: skills/verification-contract/SKILL.md grew to 1459 est / 116 lines; pre-re-basis route measured 10456 est / 823 lines; ceiling re-based to ceil(10456 x 1.10) = 11502 est, growth source skills/verification-contract/SKILL.md",
@@ -506,6 +514,7 @@
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
         "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
+        "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
       }
     },
@@ -523,9 +532,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15702,
-      "routeLinesMax": 1171,
+      "routeEstimateMax": 15835,
+      "routeLinesMax": 1180,
       "sources": {
+        "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -552,6 +562,7 @@
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
         "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
+        "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
       }
     },
@@ -569,9 +580,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15702,
-      "routeLinesMax": 1171,
+      "routeEstimateMax": 15835,
+      "routeLinesMax": 1180,
       "sources": {
+        "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption: skills/verification-contract/SKILL.md grew to 1459 est / 116 lines; pre-re-basis route measured 10456 est / 823 lines; ceiling re-based to ceil(10456 x 1.10) = 11502 est, growth source skills/verification-contract/SKILL.md",
@@ -598,6 +610,7 @@
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
         "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
+        "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
       }
     },
@@ -615,9 +628,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15702,
-      "routeLinesMax": 1171,
+      "routeEstimateMax": 15835,
+      "routeLinesMax": 1180,
       "sources": {
+        "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -645,6 +659,7 @@
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
         "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
+        "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
       }
     },
@@ -662,9 +677,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15702,
-      "routeLinesMax": 1171,
+      "routeEstimateMax": 15835,
+      "routeLinesMax": 1180,
       "sources": {
+        "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption: skills/verification-contract/SKILL.md grew to 1459 est / 116 lines; pre-re-basis route measured 10456 est / 823 lines; ceiling re-based to ceil(10456 x 1.10) = 11502 est, growth source skills/verification-contract/SKILL.md",
@@ -689,6 +705,7 @@
         "feat/260 x main merge re-basis (PR #464 + #467)": "main-into-branch integration (PR #464 merged, then #467): both growth sources met in the same SKILL.md files — main's #173 single-owner turn-contract loader lines and #260's orchestrate-path pointer — plus #464's own re-bases; every execute-phase:* route re-measured on the merged tree, ceilings re-set to ceil(measured x 1.10). Same precedent as the PR #304 merge re-basis.",
         "issue #498 correction batch (B3 settle prose)": "execute-phase SKILL.md close-out now names roadmap fixrow for a fix unit's Fixes row (external-verify B3 fold); route measured estimate 13896 at this re-basis; ceiling = ceil(measured x 1.10) = 15286",
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
+        "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
       }
     },
