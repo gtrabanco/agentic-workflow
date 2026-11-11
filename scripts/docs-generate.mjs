@@ -47,13 +47,12 @@ import { fileURLToPath } from "node:url";
 
 import {
   fenceRun,
-  isLiveTableRow,
   readRoadmapIndex,
   ROADMAP_DOCUMENT,
   roadmapTableRows,
   tableCells,
 } from "../packages/agentic-workflow/src/index-document.mjs";
-import { sectionText } from "./unit-doc-phases.mjs";
+import { sectionBounds, sectionText } from "./unit-doc-phases.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.dirname(SCRIPTS_DIR);
@@ -422,27 +421,8 @@ function outsideFences(lines, from, to, visit) {
 }
 
 /**
- * The bounds of one `## <heading>` section: `[start, end)` line indexes,
- * fence-aware — a fenced example section inside a doc is never a live section.
+ * The `[first, last]` line indexes of the table inside a section, or null.
  */
-function h2SectionBounds(lines, heading) {
-  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const opens = new RegExp(`^## ${escaped}[ \\t]*$`);
-  let start = null;
-  let end = null;
-  outsideFences(lines, 0, lines.length, (index, line) => {
-    const trimmed = line.trim();
-    if (start === null) {
-      if (opens.test(trimmed)) start = index + 1;
-      return;
-    }
-    if (end === null && /^## /.test(trimmed)) end = index;
-  });
-  if (start === null) return null;
-  return [start, end ?? lines.length];
-}
-
-/** The `[first, last]` line indexes of the table inside a section, or null. */
 function tableRegion(lines, from, to) {
   let first = null;
   let last = null;
@@ -518,10 +498,30 @@ function syncTable(lines, bounds, units, kind) {
  */
 export function syncRoadmapDocument(roadmapText, units) {
   let lines = roadmapText.split("\n");
+  // The heading scan is the shared fence-aware reader's, never a second `## `
+  // literal — sectionBounds owns the grammar (#308 F28, the unit-84 pin).
+  const lineStarts = [];
+  let offset = 0;
+  for (const line of lines) {
+    lineStarts.push(offset);
+    offset += line.length + 1;
+  }
+  const lineAt = (charOffset) => {
+    let low = 0;
+    let high = lineStarts.length - 1;
+    while (low < high) {
+      const mid = (low + high + 1) >> 1;
+      if (lineStarts[mid] <= charOffset) low = mid;
+      else high = mid - 1;
+    }
+    return low;
+  };
   for (const [kind, heading] of [["feature", "Features"], ["fix", "Fixes"]]) {
-    const bounds = h2SectionBounds(lines, heading);
+    const bounds = sectionBounds(roadmapText, heading);
     if (bounds === null) continue;
-    lines = syncTable(lines, bounds, units, kind);
+    const from = lineAt(bounds[0]) + 1;
+    const to = bounds[1] >= roadmapText.length ? lines.length : lineAt(bounds[1]);
+    lines = syncTable(lines, [from, to], units, kind);
   }
   return { text: lines.join("\n"), changed: lines.join("\n") !== roadmapText };
 }
