@@ -378,10 +378,10 @@ probe) once `slugColumn` alone is repaired — the change is done when all three
 - **E8** — 2026-11-11, rebase integration (S14–S15): the 17-commit timeline replayed onto the
   merged #498 train merge-base-clean (`main` = `b2864d03`; conflicts resolved at the attribute
   level — the registry lines kept verbatim, the hand rows 498/502 and the 494 position restored,
-  the branch's `docs/ROADMAP.md merge=docs-generated` claim suppressed). RED at `d93ed9a8`:
+  the branch's `docs/ROADMAP.md merge=docs-generated` claim suppressed). RED at `1d6dd865`:
   `bun test scripts/docs-generated-merge.test.mjs` exit 1 — 16 pass / 2 fail, each on its new
   S14/S15 cause (the template shipped the old two-line set; bootstrap/upgrade armed one driver
-  family). GREEN at `ef263b2b`: same suite 18 pass / 0 fail; `docs-generate` 31/0;
+  family). GREEN at `a08b2f16`: same suite 18 pass / 0 fail; `docs-generate` 31/0;
   `git check-attr merge docs/ROADMAP.md` → `merge: agentic-shared-roadmap`. Scratch differential
   (`mktemp -d`, `git archive` of head onto a clean checkout): both installs arm and report
   `written` then `unchanged` on the second run; all four config keys non-empty;
