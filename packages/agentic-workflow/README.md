@@ -34,9 +34,9 @@ writing anything**.
 | Command | What it does |
 |---|---|
 | `unit-doc <NN-slug> <op>` | Typed unit-document service: `create`, `setSection`, `evidence`, `progress`, `validate`, `provenance` — schema-checked, unknown sections refused. `provenance` is the stamp's write point (issue #462): it writes the document's `doc-provenance@1` block (or refreshes it in place, byte-identically, at a re-cut) with the writer's own manifest versions and the carrier format derived from the document's section set; creation emits the same stamp, no other operation touches it, and a document whose sections satisfy neither accepted carrier is refused before anything is written |
-| `roadmap <op>` | Roadmap writer: `rowUpsert` and `annotate` take a table path — `annotate` appends its note inside the row's description cell on the same physical line, never across a line break, because a newline ends the row and a renderer turns the tail into a malformed extra row — and `roadmap check <unit-doc> [--roadmap <f>] [--index <f>] [--json]` returns named violation codes (0 clean · 1 violations · 2 usage) |
+| `roadmap <op>` | Roadmap writer over the shared-document driver (below): `rowUpsert` and `annotate` take a table path — `annotate` appends its note inside the row's description cell on the same physical line, never across a line break, because a newline ends the row and a renderer turns the tail into a malformed extra row — `roadmap read <table> [--nn <n>]` answers the revision the CAS loop carries back as `expected`, `roadmap fixrow <table> <json>` writes a `## Fixes` row keyed by the issue number in its `[#N](url)` cell (the link passed in explicitly — the writer never invents one), and `roadmap check <unit-doc> [--roadmap <f>] [--index <f>] [--json]` returns named violation codes (0 clean · 1 violations · 2 usage). A write carrying the revision it read (`--expect <hash>` on `rowUpsert`/`annotate`/`fixrow`, or the `expected` JSON field on `rowUpsert`/`fixrow`) refuses with `stale-read` naming both revisions when the table moved since the read |
 | `changelog [file] <json>` | Appends a changelog row through the writer (defaults to `./CHANGELOG.md`) |
-| `budgets [file] <json>` | Re-bases one context-budget ceiling with its growth source; a ceiling shrinkage without a growth source is refused |
+| `budgets [file] <json>` | Re-bases one context-budget ceiling with its growth source; a ceiling shrinkage without a growth source is refused. The route's own shape decides the live keys: a route carrying `routeEstimateMax`/`routeLinesMax` (the shape the `--routes` checker reads) rebases with those keys — passing `estimateMax`/`linesMax` against it refuses loudly (issue #498 finding 2: a rebase that answers `ok` while writing a key no reader consumes); the legacy scalar shape keeps working |
 | `manifest [plugin.json] <op>` | `skillAdd` / `skillRemove` on the plugin manifest — the alphabetical machine-surface registration |
 | `config <get\|set\|list\|show\|validate\|init\|reset\|schema> [path] [value] [--scope global\|project\|resolved\|both] [--project <dir>] [--global-dir <dir>] [--category feature\|pi] [--sanitize] [--no-warn-unknown] [--json]` | The **unified config CLI** (issue #427): reads and writes the base `agentic-workflow.json` and every discovered extension file (`pi-agentic-workflow.json` for the pi package), validates against the registered schema before every write and never coerces. `get` reads the effective value (default scope: project), `list` prints every node with its type/category/default, `show` prints the resolved config, `validate` reports unknown keys by path (`--sanitize` removes them, `--no-warn-unknown` silences only that class), `init` writes a commented JSONC file and refuses to overwrite, `reset` removes a section or a leaf, `schema` prints the composed JSON Schema. A refusal exits 2 with `CONFIG REFUSAL — <reason>` before any byte moves. Extension discovery reads `config-extension@1` descriptors named from a package's `package.json` (`agenticWorkflow.config`) or dropped into `config-extensions/`; it never executes extension code. The human guide is `docs/workflow/CONFIG.md` |
 | `doc (--sync \| --query <term> \| --status \| --rebuild) [--json-only]` | The **retrieval index** (feature 65, hardened by issue #443): one gitignored SQLite store under `.agentic-workflow/index/`, freshness checked on every query. `--query` resolves its mode **at query time** (see the `doc` section below): hybrid when a provider is configured and the store holds chunks embedded under the pinned model, keyword with the declared cause otherwise; an explicit `--mode keyword\|hybrid` always wins. `--sync` chunks incrementally and then embeds the pending chunks with pacing and retry. Degradations are declared, never silent: `unavailable-embeddings-not-configured`, `unavailable-embeddings-not-indexed`, `embeddings-model-mismatch`, `unavailable-embeddings-provider-down`. Discovery only: no gate reads it. The pi package's native `/aw-index` command runs the same sync and prints its report. **Experimental.** |
@@ -180,6 +180,42 @@ and a stored-entry rewriter). Register nothing: the driver is a factory your
 code calls. The shipped drivers (`src/journal/drivers/markdown.mjs`,
 `src/journal/drivers/sqlite.mjs`) are the reference implementations; an
 enterprise's Postgres+pgvector driver is the consumer's, not this package's.
+
+## Shared documents — the writer driver (issue #498)
+
+One write path for the documents several concurrent sessions and PRs write and
+overwrite (`docs/ROADMAP.md`, the budgets manifest, `REPOSITORY_STATE.md`): a
+**key-based splice** — the caller declares the byte ranges it changes and every
+other byte is carried through untouched, so a foreign-byte rewrite or a dropped
+line is unrepresentable — with optional **CAS**: a write carrying the revision
+it read refuses with a named `stale-read` rejection instead of last-write-wins
+(the unit-32 F19 failure class). The roadmap writers (`rowUpsert`, `annotate`,
+`fixRowUpsert`) are built on it; `runWriterConformance(writer, { root })` is the
+shared suite every writer-driver instance passes before it ships, and that a
+driver rewriting foreign bytes, dropping lines, or accepting a stale read fails.
+
+```text
+writer-driver-contract@1
+kind | shape | what it orders
+read | read(path) -> { ok, op, path, revision, bytes } | the read half of the CAS loop; revision is the full SHA-256 the caller passes back as expected
+write | write({ path, expected?, apply }) -> receipt | the write half; apply(content) returns { ok, edits: [{ start, end, replacement }] } declaring its ranges — never the whole content — or its own { ok: false, reason, detail }
+refusal | { ok: false, reason, ... } | a value, never a throw (predictable failure); answered BEFORE the first byte moves, the document byte-identical after, no staging file left
+vocabulary | WRITER_REFUSAL_REASONS | the closed refusal set: stale-read, missing-file, unreadable, invalid-document
+CAS | expected !== undefined | the write refuses stale-read naming BOTH revisions (expected, actual) when the file moved since the read; without expected the write is a splice, byte-behavior unchanged from the pre-driver writers
+receipt | { ok, op, path, before, after, expected?, edits, changed } | typed; before/after are full SHA-256, after is always the read-back digest
+atomicity | staging file + rename | the write lands atomically in the document's own directory; a refused write leaves no staging file behind
+conformance | runWriterConformance(writer, { root }) | the single shared suite: typed receipts, lossless splice (read-back equals the independently computed splice of the declared edits), stale-read refusal before mutation, missing-file refusal, applier-refusal passthrough — a violating writer fails it
+guarantee | no foreign bytes · no dropped lines · no silent loss · no network, no git | pure Node; the applier never supplies whole content, the driver never touches bytes outside the declared ranges
+```
+
+**Authoring a writer** (the documented path): build over `readShared` /
+`writeShared` (`src/writer/driver.mjs`), keep your applier's refusals as
+values, and run your instance through `runWriterConformance` in your suite (a
+violating writer must fail it — the shipped fixtures prove the harness catches
+a foreign-byte rewriter, a line dropper and a stale-read acceptor). The merge
+semantics the file-class git drivers run (`unionTableRows`,
+`structuralJsonMerge`, `src/writer/merges.mjs`) are pure functions over strings
+— the driver script owns the git mechanics, never a second grammar.
 
 ## `section` — locate a Markdown range and splice it losslessly (issue #407)
 
