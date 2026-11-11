@@ -22,3 +22,15 @@ plus #498's three `agentic-shared-*` file-class lines (the rebase integration,
 claimed once) — so every new repository inherits the protection, and the unit
 doc templates gain the optional `roadmap_summary:` frontmatter key the synced
 roadmap table reads.
+
+**The journal joins the class registry.** Issue #498's scope reinforcement
+(owner comment 2026-11-10T00:22) adds a union merge driver for `docs/LOGS.md`:
+the `logs` file class unions entries by their `## <stamp> — <branch> —
+<label>` heading's UTC second-precision stamp — distinct entries both kept,
+ordered by stamp; the same entry on both sides deduplicated; the same stamp
+with different bodies, or a one-sided deletion of a committed entry (the
+journal is append-only), surfaces as a real conflict; a malformed entry
+boundary refuses closed. `docs/LOGS.md merge=agentic-shared-logs` rides the
+same `.gitattributes` registry and is armed by the same
+`bun scripts/shared-doc-merge.mjs --install` — a fifth attribute, never a
+duplicate claim — and the journal-aggregate workflow itself is unchanged.

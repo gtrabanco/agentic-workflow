@@ -104,12 +104,14 @@ lacks**. Ten ordered steps:
    #498 base)** ride the same additive contract: a `.gitattributes` missing
    registry lines is proposed from `template/.gitattributes` (append-only,
    unrelated entries untouched — `docs/generated/** merge=docs-generated` and
-   the three `agentic-shared-*` class lines, each path claimed once), and both
+   the four `agentic-shared-*` class lines — roadmap, budgets, repo-state and
+   `docs/LOGS.md` — each path claimed once), and both
    driver families are armed — `bun scripts/docs-generated-merge.mjs --install`
    and `bun scripts/shared-doc-merge.mjs --install` — with
    `git config --get merge.docs-generated.driver` and
-   `git config --get merge.agentic-shared-roadmap.driver` verifying non-empty —
-   an already-armed checkout reports `unchanged` and is never rewritten.
+   `git config --get merge.agentic-shared-roadmap.driver` verifying non-empty (the
+   other class keys arm in the same loop; the shared-driver suite pins them
+   all) — an already-armed checkout reports `unchanged` and is never rewritten.
    Leave honest placeholders where the user skipped.
 7. **Retire the legacy `CLAUDE.md` — only with an explicit yes, never as a side
    effect.** Older releases of this workflow wrote the guide as `CLAUDE.md`;

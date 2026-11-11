@@ -38,16 +38,19 @@
    as the project's `.gitattributes` — additively on an existing file, appending
    the registry lines it is missing (`docs/generated/** merge=docs-generated`,
    adjusted to the declared projection directory when `content-dir` moves it;
-   plus the three class-registry lines
+   plus the four class-registry lines
    `docs/ROADMAP.md merge=agentic-shared-roadmap`,
-   `docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets` and
-   `docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state`) and never
-   touching unrelated entries — the ROADMAP attribute is stated here once, so a
+   `docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets`,
+   `docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state` and
+   `docs/LOGS.md merge=agentic-shared-logs`) and never
+   touching unrelated entries — each path is claimed once, so a
    project never carries two `merge=` claims on one path; (b) arm the drivers in
    the checkout's git config: `bun scripts/docs-generated-merge.mjs --install`
    and `bun scripts/shared-doc-merge.mjs --install` (node fallback, same argv),
    and verify `git config --get merge.docs-generated.driver` and
-   `git config --get merge.agentic-shared-roadmap.driver` are non-empty; a
+   `git config --get merge.agentic-shared-roadmap.driver` are non-empty (the
+   other class keys arm in the same loop; the shared-driver suite pins them
+   all); a
    missing `scripts/` tree (an install without the scripts directory) is
    recorded as a residual with the manual commands as the route, never a failed
    scaffold. The `.gitattributes` lines are committed; the config arming is
