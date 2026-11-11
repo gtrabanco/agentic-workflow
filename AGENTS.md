@@ -390,6 +390,7 @@ gate-receipt-check-statuses | packages/agentic-workflow-schema/src/gate-receipt.
 gate-receipt-freshness | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_RECEIPT_FRESHNESS_CODES | gate-receipt-freshness | no
 gate-receipt-grammar | packages/agentic-workflow-schema/README.md | block:gate-receipt@1 | n/a | no
 ask-dont-infer-rule | skills/unit-lane/references/DESIGN.md | block:ask-dont-infer@1 | n/a | no
+activity-fusion | skills/unit-lane/references/PLAN.md | block:activity-fusion@1 | n/a | no
 relay-status-grammar | skills/unit-lane/references/RELAY.md | block:relay-status@1 | n/a | no
 journal-fragment-grammar | packages/agentic-workflow/README.md | block:journal-fragment-grammar@1 | n/a | no
 journal-write-grammar | packages/agentic-workflow/README.md | block:journal-write-grammar@1 | n/a | no
