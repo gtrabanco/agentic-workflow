@@ -66,7 +66,7 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 
 Frozen from `docs/fix/507-driver-write/external-verify.md` verbatim; the disposition
 of every receipt row lives in the batch's Log lines. S7 stays unused on purpose —
-D3 already records that id as a cut defect.
+D3 (2026-11-11T00:32:24Z journal entry in `docs/LOGS.md`) already records that id as a cut defect.
 
 **S8 — the fix-row `roadmap_summary:` override applies (receipt blocker 1).**
 > "the fix-row `roadmap_summary:` override never applies" … "`slugColumn = 2` reads
@@ -84,7 +84,7 @@ D3 already records that id as a cut defect.
 
 **S11 — P5 cites only specs that exist (receipt advisory 3).**
 > "P5 still cites `(Implements: S7)`; no S7 exists" — re-anchor P5 to S3's third
-> step (its own D3 record) and to verification, never a gate code change.
+> step (its own D3 (2026-11-11T00:32:24Z journal entry) record) and to verification, never a gate code change.
 
 **S12 — the scaffold guide states the roadmap sync its projects inherit (receipt advisory 2).**
 > "template/AGENTS.md:117 … never states the roadmap machine-sync/`roadmap_summary:`
@@ -117,7 +117,7 @@ it. #507's native `blocked-by` #498 is satisfied (PR #512 merged).
 **S14 — the merge-driver registry is integrated, never duplicated.**
 > "el armado del template/init-workspace de esta unidad debe integrar el `class
 > registry`, no duplicarlo" — `template/.gitattributes` carries the registry
-> lines verbatim (`docs/generated/** merge=docs-generated` plus the three
+> lines verbatim (`docs/generated/** merge=docs-generated` plus the four
 > `agentic-shared-*` class lines) and stops claiming
 > `docs/ROADMAP.md merge=docs-generated`; the root `.gitattributes` already
 > carries the integrated set from #498.
@@ -261,7 +261,7 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - **AC-S1** — `bun scripts/docs-generate.mjs` genera `docs/ROADMAP.md` con las columnas NN, Slug, Status, Depends on, Summary desde las unit docs. Check: `bun scripts/docs-generate.mjs` → `docs/ROADMAP.md` existe y la tabla es válida; `bun scripts/docs-generate.mjs --check` → PASS
 - **AC-S2** — `scripts/docs-generated-merge.mjs` resuelve conflictos en `docs/ROADMAP.md` regenerando desde las unit docs. Check: crear un fixture con conflicto en ROADMAP.md, correr el driver, verificar que el resultado es la regeneración correcta (re-scoped 2026-11-11: the repository wiring keeps ROADMAP's merge attribute on `agentic-shared-roadmap`; this case is the scratch-fixture capability — the fixture repo routes ROADMAP to the #507 driver for the reproducer — and the closed-set pin guards against a second attribute claim)
 - **AC-S3** — `init-workspace` creates `.gitattributes` and arms the merge driver(s) on bootstrap and upgrade. Check: a clean repo → `init-workspace` → `.gitattributes` exists with the registry lines; `git config --get merge.docs-generated.driver` → non-empty **and** `git config --get merge.agentic-shared-roadmap.driver` → non-empty (re-scoped 2026-11-11, S15 — both drivers of the registry)
-- **AC-S4** — `template/.gitattributes` existe y tiene las líneas del merge driver. Check: `cat template/.gitattributes` contains the integrated registry — `docs/generated/** merge=docs-generated` and the three `agentic-shared-*` class lines, no `docs/ROADMAP.md merge=docs-generated` (re-scoped 2026-11-11, S14); the template-registry case in `bun test scripts/docs-generated-merge.test.mjs` → exits 0
+- **AC-S4** — `template/.gitattributes` existe y tiene las líneas del merge driver. Check: `cat template/.gitattributes` contains the integrated registry — `docs/generated/** merge=docs-generated` and the four `agentic-shared-*` class lines, no `docs/ROADMAP.md merge=docs-generated` (re-scoped 2026-11-11, S14); the template-registry case in `bun test scripts/docs-generated-merge.test.mjs` → exits 0
 - **AC-S5** — El campo `roadmap_summary:` es opcional en el SPEC template: si no se provee, se deriva del `One-line:`. Check: `cat template/docs/fix/_TEMPLATE/SPEC.md` | `cat template/docs/features/_TEMPLATE/SPEC.md` contienen el campo `roadmap_summary:`; `bun scripts/docs-generate.mjs` no falla si falta
 - **AC-S6** — `bun scripts/docs-generated-merge.mjs --install` funciona en un repositorio limpio. Check: `bun scripts/docs-generated-merge.mjs --install` → exit 0; `git config --get merge.docs-generated.driver` → no vacío; `git config --get merge.docs-generated.name` → contiene "docs-generated"
 - **AC-S7** — (authority **S3 item 3** — the request's S-list is S1–S6; the gate-coverage clause lives in S3's third step, and P5's earlier `S7` citation was a cut defect) — `bun scripts/local-gate.mjs --skip-network` passes with both paths covered. Check: `bun scripts/local-gate.mjs --skip-network --json` → `docs-generated-projection` → PASS
@@ -295,7 +295,7 @@ One observable, testable criterion per `S#`, each naming the check that proves i
   (Implements: S5)
   Relevant files: template/docs/fix/_TEMPLATE/SPEC.md, template/docs/features/_TEMPLATE/SPEC.md
 - P5 — verify the gate's `docs-generated-projection` step covers both paths (validator: `bun scripts/local-gate.mjs --skip-network` → PASS)
-  (Implements: S3 item 3 — the gate-coverage clause; no S7 exists, D3 records the cut defect)
+  (Implements: S3 item 3 — the gate-coverage clause; no S7 exists, D3 (2026-11-11T00:32:24Z journal entry) records the cut defect)
   Relevant files: scripts/local-gate.mjs
 - P6 — repair the roadmap sync's fix-kind path and the check-mode roadmap line (validator: `bun test scripts/docs-generate.test.mjs` exits 0 with the three correction cases)
   (Implements: S8, S9, S10)
@@ -343,7 +343,6 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 | PE-004 | repository | El campo `roadmap_summary:` es opcional: si no existe, se puede derivar del `One-line:` o dejar vacío | El SPEC template ya tiene `> One-line:` en ambos templates (features y fixes) | current | O4 |
 | PE-005 | repository | `tableCells` drops both boundary cells, so the Fixes table's Topic slug sits at `cells[1]` exactly like the Features table's Slug — the fix-kind `slugColumn = 2` reads Status instead | `packages/agentic-workflow/src/index-document.mjs` `tableCells` + a head probe: row 443 parses to link, topic, status, notes (4 cells) | sampled 2026-11-11 | O5 |
 | PE-006 | repository | The Fixes-scan line offsets come from the pre-sync text, so feature appends slide the window: with only `slugColumn` repaired in scratch, a fresh fix override applied at up to 3 appended rows and was skipped at 6 (header misdetect inside the appended feature rows) | scratch probe on a clone of head, `mktemp -d` | sampled 2026-11-11 | O7 |
-
 | PE-007 | repository | PR #512 (unit #498) landed the file-class merge driver layer — `.gitattributes` names `merge=agentic-shared-roadmap`/`-budgets`/`-repo-state` and `scripts/shared-doc-merge.mjs` arms them — so the pre-rebase plan's `docs/ROADMAP.md merge=docs-generated` claim is a duplicate claim on the same path | rebase read: root `.gitattributes` and `scripts/shared-doc-merge.mjs` at `b2864d03`; both coordination comments 2026-11-11T12:02Z | current | O11, O13 |
 | PE-008 | repository | `scripts/shared-doc-merge.mjs --install` arms the three `merge.agentic-shared-*` config keys on a clean checkout and reports an already-armed one as unchanged | `scripts/shared-doc-merge.test.mjs` (main, 2026-11-10) — the class keys are asserted non-empty after install | current | O12 |
 | PE-009 | repository | the landed class registry has no `logs` class and `docs/LOGS.md`'s entries are byte-shaped by `journal-entry` (`packages/agentic-workflow/src/journal/block.mjs` renders the `## <stamp> — <branch> — <label>` heading) — the writer half's shape exists even though a strict stamp grammar would not hold | `scripts/shared-doc-merge.mjs` (`SHARED_MERGE_CLASSES`), `src/journal/block.mjs`; issue #498 comment 2026-11-10T00:22 | current | O14 |
@@ -531,6 +530,22 @@ turn to their stated outcomes together (P11–P14), then the gates and the sweep
   the changeset declared `@gtrabanco/agentic-workflow` minor at `95a83020`),
   `check-skill-context --documents` PASS 4, changeset lint `ok`. verify@1 re-run at the ledger
   head → PASS.
+- **E11** — 2026-11-11, `bun scripts/ceremony.mjs tier classify --base origin/main` · exit 0 ·
+  `contract risk-tier-verdict@1 · tier: standard · reason_kind: executable-content (11 paths)` —
+  the Risk tier section's `(E-line below)` resolves here; agrees with the cut run (S18/P11, O15).
+- **E12** — 2026-11-11, count re-measurement superseding E10's narration (`log-kind@1`:
+  corrections append, never edit — PE-014): `cd packages/agentic-workflow && bun run test` ·
+  exit 0 · `645 pass / 0 fail` in three configurations — the live worktree at `468d9bf9`, and
+  scratch clones at `95a83020` (E10's recorded head) and `468d9bf9` — with byte-identical test
+  trees (`git diff --stat 95a83020..HEAD -- packages/agentic-workflow/test scripts` → empty), so
+  E10's "644" does not reproduce at its recorded head while its PASS verdict and 13-step gate
+  count do (S18/P13, O17).
+- **E13** — 2026-11-11, the batch-3 frozen corpus re-run together at the fixed head (RED recorded
+  at `3d5bb738` in the Correction triage 3 paragraph): the checks as frozen in O15, O16, O17 ·
+  exit 0 · matches 1 / 3 / 1; O20's two sweep checks · exit 0 · matches 1 / 1 (the stale
+  class-count sites reworded to four, the Planning evidence table is one table again);
+  `bun scripts/promise-coherence.mjs docs/fix/507-driver-write/SPEC.md` · exit 0 · PASS (12
+  checked · 20 skipped) (S18/S21, O15–O17, O20).
 
 ## Next
 
