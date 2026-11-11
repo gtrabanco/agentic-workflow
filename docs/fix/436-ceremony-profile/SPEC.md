@@ -178,7 +178,8 @@ reason: the change is purely additive substrate.
   `ceremony-profile@1` contract (closed vocabularies, parser refusals,
   narrow-only resolution, `PASS_NAMES` derivation) and observe it fail on the
   missing module (validator: `cd packages/agentic-workflow-schema && bun run test` exits 1
-  at the red commit) (Implements: S2, S5, S6, S7)
+  at the red commit)
+  (Implements: S2, S5, S6, S7)
   Relevant files: packages/agentic-workflow-schema/test/ceremony-profile.test.mjs
 - P2 — GREEN: implement `src/ceremony-profile.ts` (contract id, vocabularies,
   block parser, resolver) and export it from `src/index.ts`; suite green
@@ -191,7 +192,8 @@ reason: the change is purely additive substrate.
   malformed, additive `Profile:` line + `--json` `profile` key), corpus
   `scripts/ceremony-profile.test.mjs` observed red first
   (validator: `bun test scripts/ceremony-profile.test.mjs` exits 0; differential:
-  no-profile output byte-identical) (Implements: S3, S5, S6)
+  no-profile output byte-identical)
+  (Implements: S3, S5, S6)
   Relevant files: scripts/catalog.json, scripts/unit-route.mjs, scripts/ceremony-profile.test.mjs
 - P4 — Skill prose: `init-workspace` authors the block at charter time;
   `unit-lane` steps + `execute-phase` preflight record the profile receipt as
@@ -265,10 +267,19 @@ relay-next: create .pi-web/relays/436-ceremony-profile/ (charter → docs/fix/43
 - **P5** — 2026-11-11, registration + docs: normative-surface rows, README grammar block, parity pins, gate-inventory claims, changeset, roadmap row via `rowUpsert`/`annotate`, projection regenerated · `465d5e00`.
 - **P6** — 2026-11-11, gate-found repairs: fenced changeset `445b099d`, machineLines re-pin `c81c6864`, registration gate-resolvability `53da6b07`, sandbox import graphs `d333cda1`.
 - **P7** — 2026-11-11, owner directed the PR: branch pushed (`origin/feat/436-ceremony-profile-1` at `679e4e4c`), [PR #515](https://github.com/gtrabanco/agentic-workflow/pull/515) opened against `main` (`Closes #436`).
+- **E11** — 2026-11-11, correction batch #1 red corpus (external-verify B1/B4): `cd packages/agentic-workflow-schema && bun run test` at `7d7fa096` · exit 1 · **849 pass / 1 fail** — `AssertionError: published refusal empty-block is unreachable — no input produces it`; the AC5 prose pin's failure mode proven on a stripped `mktemp` copy of the two skill files (receipt sentence removed → both assertions fail, exit 1); green after `bf7fe5c9`: 850 pass / 0 fail.
+- **E12** — 2026-11-11, green after `bf7fe5c9`: `bun run test` (schema) 850/0 · `bun test scripts/ceremony-profile.test.mjs` 9/0 · `scripts/vocabulary-parity.test.mjs` 21/0 · `scripts/normative-drift.test.mjs` 21/0 · `scripts/catalog.test.mjs` 16/0 · `rg '"empty-block"' packages/agentic-workflow-schema/src scripts/ceremony-profile.mjs` → 0 (full symbol: both published copies + dead `sawLine` branch).
+- **E13** — 2026-11-11, O7's required-evidence quote (advisory A2 closed): `skills/init-workspace/references/BOOTSTRAP_WRITE.md:24-31` reads verbatim “The ceremony-profile seed lands there too as the machine-readable block the dispatcher checks in code (issue #436)”; `skills/execute-phase/SKILL.md` reads “record the step in Evidence as `n/a — <the receipt verbatim>`”.
+- **E14** — 2026-11-11, §6 differential vs pre-batch head `1830d326` (git-archive + built dist in `mktemp -d`, removed after): no-profile `--triage`/`--json` on 440 → stdout/stderr/JSON **byte-identical**; profiled probes per guide — bare marker exit 0 “Profile: 0 applied, 0 refused”, malformed exit 2 `CEREMONY PROFILE ERROR`, docs-discard exit 0 with the skip receipt — identical exit and output at both trees; the `empty-block` retirement is observationally silent.
+- **E15** — 2026-11-11, O2's refusal case names, each produced by its corpus input in the new reachability case: `bad-contract-id`, `malformed-line`, `unknown-piece`, `duplicate-piece`, `unknown-adoption`, `unknown-review-surface`, `empty-review-passes` — 7/7 published values reachable, `empty-block` retired (`rg` → 0), README's named refusal set == the export (7, `rg -c 'empty-block' README` → 0).
+- **E16** — 2026-11-11, B2/B3 reproducers closed: `rg 'Implements: S1\b' SPEC.md` → 1; `rg 'roadmap_summary' SPEC.md` → only the amended Impact sentence (no frontmatter, no task claim); the old Impact phrase → 0; O2/O12 rows 9 cells each; `normative-drift` 21/0 and `docs-generate --check` PASS after the frontmatter drop. **Retraction:** B3's receipt sub-claim “`rowUpsert` … exists nowhere in the tree” was wrong — the evidence line was corrupted by an accidental `rg -r` (replace) flag; `rowUpsert` exists (`packages/agentic-workflow/src/edit/Roadmap.mjs:133`) and P5's log line stands unchanged (recorded in the receipt's addendum).
+- **E17** — 2026-11-11, advisory dispositions (correction batch #1): **A1** not fixed — pre-existing at base, allowlisted at 30s in `scripts/test-timeout-allowlist.json`, gate-green; **A2** closed (E13); **A3** not fixed — the roadmap cell is curated/hand-owned and the only writers append (`annotate`) or re-emit whole rows (`rowUpsert`); rewriting quoted issue prose is the owner's call — reported, not done.
+- **G2** — 2026-11-11, `bun scripts/local-gate.mjs --jobs 4` · exit 0 · **PASS — 17/17 steps** at the correction head (`d12938bc`), working tree clean before and after; O6/O7 validators re-run: `skill-lint` PASS, `check-skill-context` PASS 29 skills / 14 routes / 4 documents, `red-first` PASS.
+- **E18** — 2026-11-11, in-batch loop #2 (same symbol as B2): `bun scripts/phase-lint.mjs docs/fix/436-ceremony-profile/SPEC.md` was BLOCKED **at the pre-batch head too** (`task-link-missing: P1/P3` + `spec-unlinked: S1`) — `IMPLEMENTS_LINK` (`scripts/unit-doc-phases.mjs:33`) anchors a whole trimmed line, so P1/P3's inline links never registered (B2's grep read text, not the parser). The two links are reflowed onto their own lines — words unchanged, P2/P4/P5 already conformed; `spec-unlinked: S1` cleared by B2's P5 annotation; phase-lint now `verdict PASS` (exit 0), fingerprint unchanged `b7bbd57b…`.
 
 ## Next
 
-Owner external verification (no self-approval): the diff head, the obligations ledger (13/13 `verified`), and the §8 verification block. The journal fragment for LOGS.md is committed; the aggregator consumes it at merge.
+Correction batch #1 applied against `external-verify.md` (4/4 blockers fixed; A2 closed opportunistically; A1/A3 triaged not-fixed with reasons in E17). Owner **delta** external verification: re-check the four blockers' reproducers at the correction head — the receipt's dated addendum retracts one B3 sub-claim — plus the §9 recheck evidence (E11–E17, G2). No self-approval. Then push/PR #515 update as the owner directs.
 
 ## References
 
