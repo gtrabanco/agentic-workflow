@@ -127,7 +127,7 @@ absent from the list is never out of scope for the executor.
 
 - P1 — <task> (validator: `<command>` exits 0)
   (Implements: S1, S2)
-  Relevant files: <path>
+  - Relevant files: <path/to/file>
 
 The link grammar (`task-spec-link@1`): every task bullet names the requirements
 it delivers on its own `(Implements: …)` line, and `phase-lint` refuses a bullet
