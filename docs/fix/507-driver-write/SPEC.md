@@ -226,12 +226,12 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 | O2 | S2 | El merge driver resuelve conflictos en ROADMAP.md regenerando desde las unit docs | P2 | P2 | scripts/docs-generated-merge.mjs | fixture con conflicto → driver resuelve → resultado coincide con regeneración | the E line with the fixture test exit and the comparison | verified |
 | O3 | S3 | init-workspace instala `.gitattributes` y el merge driver en bootstrap y upgrade | P3 | P3 | init-workspace | repo limpio → `.gitattributes` existe; `git config --get merge.docs-generated.driver` → no vacío | the E line with the config check | verified |
 | O4 | S5 | El campo `roadmap_summary:` es opcional y se deriva del `One-line:` si falta | P4 | P4 | SPEC template | template contiene el campo; `bun scripts/docs-generate.mjs` no falla si falta | the E line with the generate check | verified |
-| O5 | S8 | The fix-kind sync applies a declared `roadmap_summary:` to a cell-matched Fixes row — the override the Non-goals promise for fix rows | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the fix-override case | the E line naming the RED run at the pre-fix commit and the GREEN run | planned |
-| O6 | S9 | `--check` reports roadmap drift without claiming a write it did not perform (read-only contract) | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the check-wording case | the E line naming the RED run and the GREEN run | planned |
-| O7 | S10 | fix-row overrides survive a run that appends six or more feature rows (scan offsets recomputed per kind) | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the multi-append case | the E line naming the RED run and the GREEN run | planned |
-| O8 | S11 | the task list cites only specs that exist — P5 no longer names the nonexistent S7 | P7 | P7 | docs/fix/507-driver-write/SPEC.md | `rg -c "Implements: S3 item 3" docs/fix/507-driver-write/SPEC.md` exits 0 | the E line with the command output | planned |
-| O9 | S12 | the scaffold guide states the roadmap sync every scaffolded project inherits | P7 | P7 | template/AGENTS.md | `rg -n "roadmap_summary" template/AGENTS.md` exits 0 | the E line with the command output | planned |
-| O10 | S13 | the Serena provisioning pointer names the bootstrap step that now holds it | P7 | P7 | docs/features/67-serena-provisioning/SPEC.md | `rg -n "BOOTSTRAP_WRITE.md. step 10" docs/features/67-serena-provisioning/SPEC.md` exits 0 | the E line with the command output | planned |
+| O5 | S8 | The fix-kind sync applies a declared `roadmap_summary:` to a cell-matched Fixes row — the override the Non-goals promise for fix rows | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the fix-override case | the E line naming the RED run at the pre-fix commit and the GREEN run (E6) | verified |
+| O6 | S9 | `--check` reports roadmap drift without claiming a write it did not perform (read-only contract) | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the check-wording case | the E line naming the RED run and the GREEN run (E6) | verified |
+| O7 | S10 | fix-row overrides survive a run that appends six or more feature rows (scan offsets recomputed per kind) | P6 | P6 | scripts/docs-generate.mjs | `bun test scripts/docs-generate.test.mjs` exits 0 with the multi-append case | the E line naming the RED run and the GREEN run (E6) | verified |
+| O8 | S11 | the task list cites only specs that exist — P5 no longer names the nonexistent S7 | P7 | P7 | docs/fix/507-driver-write/SPEC.md | `rg -c "Implements: S3 item 3" docs/fix/507-driver-write/SPEC.md` exits 0 | the E line with the command output (E7) | verified |
+| O9 | S12 | the scaffold guide states the roadmap sync every scaffolded project inherits | P7 | P7 | template/AGENTS.md | `rg -n "roadmap_summary" template/AGENTS.md` exits 0 | the E line with the command output (E7) | verified |
+| O10 | S13 | the Serena provisioning pointer names the bootstrap step that now holds it | P7 | P7 | docs/features/67-serena-provisioning/SPEC.md | `rg -n "BOOTSTRAP_WRITE.md. step 10" docs/features/67-serena-provisioning/SPEC.md` exits 0 | the E line with the command output (E7) | verified |
 
 ## Triaged steps
 
@@ -287,10 +287,36 @@ probe) once `slugColumn` alone is repaired — the change is done when all three
 - **G1** — 2026-11-10 · HEAD 0b80fcbc · `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/507-driver-write/SPEC.md` · exit 0 · receipt `verify@1`, all checks pass.
 - **G2** — 2026-11-10 · HEAD 0b80fcbc · `bun scripts/local-gate.mjs --skip-network` · exit 0 · PASS — 13 step(s) in 167s, including `docs-generated-projection` and the 604-test root suite (an earlier pass at the same tree reported one parallel-pool root-suite flake; two subsequent full runs, `--jobs 1` and default, are both green).
 - **D1** — (none yet — F2/F3 await the owner's verdict)
+- **E6** — 2026-11-11, correction corpus (S8–S10): RED at `732f5a24` —
+  `bun test scripts/docs-generate.test.mjs` exit 1, 28 pass / 3 fail, each on its
+  receipt cause (the fix row kept `hand notes`; `--check` printed
+  `Roadmap: docs/ROADMAP.md — updated`; the six appends landed but the fix Notes
+  cell stayed untouched). GREEN at `695948a8` — same suite exit 0, 31 pass / 0
+  fail; `docs-generated-merge` 16/0, `index-document` 9/0, `findings-corpus`
+  14/0. Differential vs base `76ac4b0e` over identical `mktemp -d` fixtures:
+  clean generate/check/dry-run byte-identical (stdout, exit, written files);
+  stale `--check` differs only in the S9 wording (`— updated` → `— stale`, exit 1
+  on both sides); stale generate plus the written ROADMAP and pages
+  byte-identical; dry-run keeps `would update`; the override fixture differs
+  only by the S8 Notes cell (`hand notes` → `the owner fix line`) and its
+  `Roadmap:` line. No unrequested delta.
+- **E7** — 2026-11-11, doc dispositions at `e87bed98`:
+  `rg -c "Implements: S3 item 3" docs/fix/507-driver-write/SPEC.md` → 3, exit 0
+  (O8); `rg -c "roadmap_summary" template/AGENTS.md` → 1, exit 0 (O9);
+  `rg -c "BOOTSTRAP_WRITE.md. step 10" docs/features/67-serena-provisioning/SPEC.md`
+  → 1, exit 0 (O10 — the same line also carries the corrected
+  `UPGRADE.md` step 9). `bun scripts/promise-coherence.mjs
+  docs/fix/507-driver-write/SPEC.md` → PASS (3 checked · 11 skipped, every skip
+  named). Scaffold surfaces: scaffold-guide 8/0, unit-doc-contract 21/0,
+  invocation-drift 13/0, residue-dimensions 29/0, guide-split 15/0,
+  review-loop-discipline PASS, skill-lint PASS, context budgets PASS 29,
+  route budgets PASS 14. Live read-only `bun scripts/docs-generate.mjs --check`
+  → PASS, `Roadmap: docs/ROADMAP.md — unchanged`, tree clean.
 
 ## Next
 
-P1 — extend `docs-generate.mjs` para generar la página `roadmap`.
+Correction batch green — awaiting the external verifier's blockers-only recheck (§9);
+F2/F3 still await the owner's design verdict.
 
 ## References
 
