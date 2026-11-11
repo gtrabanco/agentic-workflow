@@ -60,31 +60,44 @@ function fixtureRepo() {
     "utf8",
   );
   writeFileSync(join(dir, "docs", "workflow", "REPOSITORY_STATE.md"), "# Frozen facts\n\n- fact: one\n", "utf8");
+  // The attribute mapping is committed in the real tree; a fixture carries the
+  // same lines so `git merge` dispatches to the armed drivers.
+  writeFileSync(
+    join(dir, ".gitattributes"),
+    [
+      "docs/ROADMAP.md merge=agentic-shared-roadmap",
+      "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
+      "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
+      "",
+    ].join("\n"),
+    "utf8",
+  );
   git(["add", "."]);
   git(["commit", "-q", "-m", "base"]);
   return { dir, git, release: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
-/** Branch off main, change the roadmap, commit, and return the branch name. */
-function branchWith(git, name, transform) {
+/** Branch off the CURRENT main, change the roadmap, commit, return to main.
+ * Called before main advances, so both branches sit on the base commit and
+ * merging them in order gives git a true three-way merge with the driver in
+ * the middle. All paths are absolute under the repo dir — never relative to
+ * this process's cwd, which is the live checkout (the live-tree guard, §4). */
+function diverge(repo, name, relPath, transform) {
+  const { git, dir } = repo;
   git(["checkout", "-q", "-b", name]);
-  const path = join(git.cwd ?? "", "docs", "ROADMAP.md");
-  const current = readFileSync(path, "utf8");
-  writeFileSync(path, transform(current), "utf8");
+  const path = join(dir, relPath);
+  const before = readFileSync(path, "utf8");
+  const current = transform(before);
+  if (current === before) throw new Error(`fixture bug: ${name}'s transform is a no-op on ${relPath} — the branch would fast-forward and never reach the driver`);
+  writeFileSync(path, current, "utf8");
   git(["add", "."]);
   git(["commit", "-q", "-m", name]);
   git(["checkout", "-q", "main"]);
   return name;
 }
 
-function branchWithJson(git, name, transform) {
-  git(["checkout", "-q", "-b", name]);
-  const path = join(git.cwd ?? "", "docs", "workflow", "SKILL_CONTEXT_BUDGETS.json");
-  writeFileSync(path, transform(readFileSync(path, "utf8")), "utf8");
-  git(["add", "."]);
-  git(["commit", "-q", "-m", name]);
-  git(["checkout", "-q", "main"]);
-  return name;
+function divergeJson(repo, name, transform) {
+  return diverge(repo, name, "docs/workflow/SKILL_CONTEXT_BUDGETS.json", transform);
 }
 
 // ── arming ───────────────────────────────────────────────────────────────
@@ -126,12 +139,14 @@ test("FF-3 — two branches each inserting a different roadmap row merge into th
   const repo = fixtureRepo();
   try {
     run(["--install", "--repo", repo.dir], repo.dir);
-    const ours = branchWith(repo.git, "ours", (text) =>
+    const ours = diverge(repo, "ours", "docs/ROADMAP.md", (text) =>
       text.replace("| 2 | second | idea | — | second row |", "| 2 | second | idea | — | second row |\n| 7 | gamma | idea | — | ours row |"),
     );
-    const theirs = branchWith(repo.git, "theirs", (text) =>
+    const theirs = diverge(repo, "theirs", "docs/ROADMAP.md", (text) =>
       text.replace("| 2 | second | idea | — | second row |", "| 2 | second | idea | — | second row |\n| 8 | delta | idea | — | theirs row |"),
     );
+    const advance = repo.git(["merge", "--no-edit", ours]);
+    assert.equal(advance.status, 0, advance.stdout + advance.stderr);
     const merge = repo.git(["merge", "--no-edit", theirs]);
     assert.equal(merge.status, 0, merge.stdout + merge.stderr);
     const merged = readFileSync(join(repo.dir, "docs", "ROADMAP.md"), "utf8");
@@ -148,8 +163,10 @@ test("FF-4 — two branches flipping the same row's status exit nonzero and leav
   const repo = fixtureRepo();
   try {
     run(["--install", "--repo", repo.dir], repo.dir);
-    branchWith(repo.git, "ours", (text) => text.replace("| 1 | first | idea |", "| 1 | first | done |"));
-    const theirs = branchWith(repo.git, "theirs", (text) => text.replace("| 1 | first | idea |", "| 1 | first | in-progress |"));
+    diverge(repo, "ours", "docs/ROADMAP.md", (text) => text.replace("| 1 | first | idea |", "| 1 | first | done |"));
+    const theirs = diverge(repo, "theirs", "docs/ROADMAP.md", (text) => text.replace("| 1 | first | idea |", "| 1 | first | in-progress |"));
+    const advance = repo.git(["merge", "--no-edit", "ours"]);
+    assert.equal(advance.status, 0, advance.stdout + advance.stderr);
     const merge = repo.git(["merge", "--no-edit", theirs]);
     assert.notEqual(merge.status, 0, "the semantic conflict must exit nonzero");
     const merged = readFileSync(join(repo.dir, "docs", "ROADMAP.md"), "utf8");
@@ -170,16 +187,18 @@ test("the budgets class merges structurally: different keys union, same leaf dif
   const repo = fixtureRepo();
   try {
     run(["--install", "--repo", repo.dir], repo.dir);
-    const ours = branchWithJson(repo.git, "ours", (text) => {
+    const ours = divergeJson(repo, "ours", (text) => {
       const data = JSON.parse(text);
       data.routes["b:y"] = { estimateMax: 200 };
       return JSON.stringify(data, null, 2) + "\n";
     });
-    const theirs = branchWithJson(repo.git, "theirs", (text) => {
+    const theirs = divergeJson(repo, "theirs", (text) => {
       const data = JSON.parse(text);
       data.routes["c:z"] = { estimateMax: 300 };
       return JSON.stringify(data, null, 2) + "\n";
     });
+    const advance = repo.git(["merge", "--no-edit", ours]);
+    assert.equal(advance.status, 0, advance.stdout + advance.stderr);
     const merge = repo.git(["merge", "--no-edit", theirs]);
     assert.equal(merge.status, 0, merge.stdout + merge.stderr);
     const merged = JSON.parse(readFileSync(join(repo.dir, "docs", "workflow", "SKILL_CONTEXT_BUDGETS.json"), "utf8"));
@@ -195,8 +214,10 @@ test("the repo-state class fails closed: any concurrent change to frozen facts i
   const repo = fixtureRepo();
   try {
     run(["--install", "--repo", repo.dir], repo.dir);
-    branchWith(repo.git, "ours", (text) => text.replace("- fact: one", "- fact: ours"));
-    const theirs = branchWith(repo.git, "theirs", (text) => text.replace("- fact: one", "- fact: theirs"));
+    diverge(repo, "ours", "docs/workflow/REPOSITORY_STATE.md", (text) => text.replace("- fact: one", "- fact: ours"));
+    const theirs = diverge(repo, "theirs", "docs/workflow/REPOSITORY_STATE.md", (text) => text.replace("- fact: one", "- fact: theirs"));
+    const advance = repo.git(["merge", "--no-edit", "ours"]);
+    assert.equal(advance.status, 0, advance.stdout + advance.stderr);
     const merge = repo.git(["merge", "--no-edit", theirs]);
     assert.notEqual(merge.status, 0, "frozen facts never union silently");
     const merged = readFileSync(join(repo.dir, "docs", "workflow", "REPOSITORY_STATE.md"), "utf8");
