@@ -266,6 +266,7 @@ relay-next: create .pi-web/relays/436-ceremony-profile/ (charter → docs/fix/43
 - **P4** — 2026-11-11, skill prose: charter authoring, receipt routes, audit tie-in, execute-phase route re-basis · `a53fa7e5`.
 - **P5** — 2026-11-11, registration + docs: normative-surface rows, README grammar block, parity pins, gate-inventory claims, changeset, roadmap row via `rowUpsert`/`annotate`, projection regenerated · `465d5e00`.
 - **P6** — 2026-11-11, gate-found repairs: fenced changeset `445b099d`, machineLines re-pin `c81c6864`, registration gate-resolvability `53da6b07`, sandbox import graphs `d333cda1`.
+- **P7** — 2026-11-11, owner directed the PR: branch pushed (`origin/feat/436-ceremony-profile-1` at `679e4e4c`), [PR #515](https://github.com/gtrabanco/agentic-workflow/pull/515) opened against `main` (`Closes #436`).
 
 ## Next
 
@@ -273,7 +274,7 @@ Owner external verification (no self-approval): the diff head, the obligations l
 
 ## References
 
-- Issue [#436](https://github.com/gtrabanco/agentic-workflow/issues/436) (roadmap row 436, status `idea`)
+- Issue [#436](https://github.com/gtrabanco/agentic-workflow/issues/436) (roadmap row 436) — closed by [PR #515](https://github.com/gtrabanco/agentic-workflow/pull/515)
 - #435 (charter — CLOSED, the profile's author; the hard blocker is resolved)
 - #440 (consumer precedent: profile-aware scope, consumption-side)
 - #441 (router-side ceremony-profile integration — explicitly out of scope here)
