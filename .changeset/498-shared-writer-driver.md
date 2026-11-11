@@ -23,7 +23,8 @@ staging writes, and the closed `WRITER_REFUSAL_REASONS` vocabulary.
   `expected`, and `fixRowUpsert` adds the missing `## Fixes` row writer keyed by
   the issue number in its `[#N](url)` cell.
 - The CLI gains `roadmap read` (the CAS loop's read half), `roadmap fixrow`, and
-  `--expect` on `annotate` / `expected` on `rowUpsert`/`fixrow` — a table that
+  `--expect` on `rowUpsert`/`annotate`/`fixrow` (the `expected` JSON field also
+  works on `rowUpsert`/`fixrow`) — a table that
   moved since the read refuses with `EDIT REFUSAL — stale-read …` naming both
   revisions.
 
