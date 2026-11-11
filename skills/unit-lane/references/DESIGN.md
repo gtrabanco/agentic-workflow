@@ -18,6 +18,13 @@ entered in a ledger that cites its source, and entity, role, and expectation
 boundaries close. The unit of progress is a **claim with a source** — a claim no
 source or owner answer supports is a defect, not a judgment call.
 
+When the triage block carries the `Fused:` line (block `activity-fusion@1`,
+owner: [PLAN.md](PLAN.md) — the single normative owner of the fused pass), this
+stage's loop is that fused pass's design half: the same conductor session
+continues into the plan's tasks and validators, the carriers below stay the
+fused pass's design panes, and running the loop again at `standard` is the
+defect the block owns.
+
 ## Inputs
 
 - The unit's objective, why, and user outcome from the SPEC
