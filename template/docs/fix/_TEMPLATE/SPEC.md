@@ -4,6 +4,7 @@
 # type: feature | fix | docs | chore
 # scope: trivial | xs | small | standard | medium | large | xlarge
 # ac-hash: <sha256 of the ## Acceptance criteria section — the design step writes it>
+# roadmap_summary: <one line shown in the roadmap's Summary/Notes cell; unset falls back to the One-line>
 ---
 
 # fix/<issue-number>-<topic>

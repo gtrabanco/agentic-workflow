@@ -614,7 +614,7 @@ or the unit's own record (N1 is the one omission, routed above).
   this root, no other line ever rewritten). Adds the fixed `SERENA PROVISIONING`
   report and the rule that an absent health check is a residual, never a silent
   pass. Wired through `BOOTSTRAP_DISCOVERY.md` (the three detection facts the
-  question is built from), `BOOTSTRAP_WRITE.md` step 8, `UPGRADE.md` step 8
+  question is built from), `BOOTSTRAP_WRITE.md` step 10, `UPGRADE.md` step 9
   (additive-only preserved), `SKILL.md` (guardrail, turn-contract box, `Done
   when`) and the root `README.md` blurb. `SKILL_CONTEXT_BUDGETS.json` re-bases
   `init-workspace`'s `referenceEstimateMax` to 2759 with the reason declared in

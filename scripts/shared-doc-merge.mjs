@@ -16,6 +16,18 @@
  *               always (decision D4): frozen facts are resolver-only, so any
  *               concurrent change is a conflict for the resolver, never a
  *               union.
+ *   logs        docs/LOGS.md                                 — entry union by
+ *               identity (issue #498's scope reinforcement, owner comment
+ *               2026-11-10T00:22): the exact `## …` heading line keys the
+ *               entry — the real journal carries heterogeneous stamps
+ *               (second-precision, minute, date-only), so no grammar is
+ *               imposed on it. The journal is append-only
+ *               (`scripts/log-immutability.mjs`), and the union holds each
+ *               side to that contract: a side that is not an append-only
+ *               extension of the base (an entry edited, reordered or dropped)
+ *               refuses closed; distinct new entries are all kept, ordered by
+ *               their normalized stamp; the same heading appended with
+ *               different bodies is a real conflict, never silently resolved.
  *
  * `docs/generated/**` stays with the #420 projection driver — this script
  * refuses it with a pointer rather than answering for a surface it does not
@@ -50,13 +62,13 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { structuralJsonMerge, unionTableRows } from "../packages/agentic-workflow/src/writer/merges.mjs";
+import { structuralJsonMerge, unionLogEntries, unionTableRows } from "../packages/agentic-workflow/src/writer/merges.mjs";
 
 const SCRIPT = fileURLToPath(import.meta.url);
 const REFUSAL = "SHARED MERGE REFUSAL —";
 
 /** The closed class vocabulary. Adding a class is a contract change, by design. */
-export const SHARED_MERGE_CLASSES = Object.freeze(["roadmap", "budgets", "repo-state"]);
+export const SHARED_MERGE_CLASSES = Object.freeze(["roadmap", "budgets", "repo-state", "logs"]);
 
 /** The closed refusal vocabulary (what stderr names, why it exited nonzero). */
 export const SHARED_MERGE_REFUSAL_REASONS = Object.freeze([
@@ -83,6 +95,7 @@ export function classForPath(relPath) {
   if (p === "docs/ROADMAP.md") return "roadmap";
   if (p === "docs/workflow/SKILL_CONTEXT_BUDGETS.json") return "budgets";
   if (p === "docs/workflow/REPOSITORY_STATE.md") return "repo-state";
+  if (p === "docs/LOGS.md") return "logs";
   if (p === "docs/generated" || p.startsWith("docs/generated/")) return "generated";
   return null;
 }
@@ -226,7 +239,9 @@ function resolveMerge(argv) {
   const result =
     cls === "roadmap"
       ? unionTableRows(baseText, oursText, theirsText, roadmapRowKey)
-      : structuralJsonMerge(baseText, oursText, theirsText);
+      : cls === "logs"
+        ? unionLogEntries(baseText, oursText, theirsText)
+        : structuralJsonMerge(baseText, oursText, theirsText);
 
   if (!result.ok && result.reason === "invalid-document") {
     refuse(`invalid-document — ${result.detail ?? "a side does not parse"} — a human resolves it`, 1);

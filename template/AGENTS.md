@@ -120,6 +120,12 @@ documentation generator renders — never a hand-written page:
 gate can call. A project that declares no format gets markdown **and a
 reported degradation**; the generator never guesses a format silently.
 
+The same command also syncs `docs/ROADMAP.md`'s two tables: a feature folder
+without a row gains one, a unit doc's optional `roadmap_summary:` key overrides
+its row's summary cell, and every other hand-written cell passes through byte
+for byte — the table's status and summary cells stay owner-written, so the unit
+doc is where a summary gets corrected, never the row.
+
 ---
 
 ## Workflow conventions (the skills read this)
