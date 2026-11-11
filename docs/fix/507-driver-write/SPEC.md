@@ -423,9 +423,9 @@ external verify passed on, so not batch-caused).
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F2 | S1 (design) | design | WARNING | docs-only | product | decision-required — preserve-verbatim + append-only sync (Non-goals) awaits the owner's verdict |
-| F3 | S2 (design) | design | WARNING | docs-only | product | decision-required — no auto-append of fix rows, the Fixes lifecycle removes rows post-merge (Non-goals) |
-| F4 | S14 (rebase re-scope) | design | GUIDANCE | docs-only | product | decision-required — the `docs/generated/**` residual: union the #420 shortcut into the class driver, or keep the current refusal-with-gate split (the rebase keeps the current split, per the coordination note's two offered routes) |
+| F2 | S1 (design) | design | WARNING | docs-only | product | decided — ratified by the owner 2026-11-11 (D6): preserve-verbatim + append-only sync stands (Non-goals) |
+| F3 | S2 (design) | design | WARNING | docs-only | product | decided — ratified by the owner 2026-11-11 (D7): no auto-append of fix rows; the Fixes lifecycle removes rows post-merge (Non-goals) |
+| F4 | S14 (rebase re-scope) | design | GUIDANCE | docs-only | product | decided — owner chose the refusal-with-gate split 2026-11-11 (D8); the union route would be its own unit |
 
 ## Log
 
@@ -565,14 +565,31 @@ external verify passed on, so not batch-caused).
   checked · 20 skipped); `bun scripts/docs-generate.mjs --check` · exit 0 · PASS — Roadmap
   unchanged (the batch's SPEC edits project nothing); the frozen `rg` checks re-run after the
   flips · exit 0 · matches 1 / 3 / 1, then 4, then 1 / 1 (O15–O18, O20). Gate: G3.
+- **D6** — 2026-11-11, owner ratification of F2 (authority: owner verbatim, "Vale, seguimos tus
+  recomendaciones"): the roadmap sync keeps preserve-verbatim + append-only — hand rows pass
+  through byte for byte, generation appends only feature rows missing one, and a declared
+  `roadmap_summary:` overrides its cell; whole-table regeneration stays rejected. Supersedes F2's
+  "awaits the owner's verdict" and the note on D1; this unit's session decisions D2–D5 live in
+  the 2026-11-11 journal entry (`docs/LOGS.md`).
+- **D7** — 2026-11-11, owner ratification of F3 (same authority): fix rows stay owner-managed and
+  are never auto-appended — the Fixes lifecycle registers at open and removes post-merge, and
+  folder presence never resurrects a row; the Notes-cell `roadmap_summary:` override (S8) still
+  applies. Supersedes F3's "awaits the owner's verdict".
+- **D8** — 2026-11-11, owner decision on F4 (same authority): keep the refusal-with-gate split —
+  `docs/generated/**` stays with the #420 projection driver, the class driver refuses it by name
+  (`generated-projection`), and the gate's `docs-generated-projection` step stays the safety net;
+  the union route is deferred and would be its own unit. Supersedes F4's decision-required route
+  and batch 2's recorded residual.
 
 ## Next
 
 Correction batch 3 applied (L4 advisory triage on the 16:10Z receipt: three repairs — the tier
 E-line, the count re-measurement, the journal-anchored `D3` pointers — two dispositions, two
 related surfaces; blockers stayed 0; the new gate-graph finding sits in the Correction triage 3
-paragraph for the owner). Awaiting: the external verifier's delta re-verify of this batch and
-the owner's design calls (F2/F3/F4). D1 still none.
+paragraph for the owner). The design calls are decided (D6–D8): the two ratified behaviors stand
+and the `docs/generated/**` residual keeps the split. Awaiting: the external verifier's delta
+re-verify of batch 3, the owner's push of `3d5bb738…9e382493`, and the owner's separate issue
+for the gate-graph finding.
 
 ## References
 
