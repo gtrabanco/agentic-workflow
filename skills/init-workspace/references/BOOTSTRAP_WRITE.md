@@ -29,7 +29,33 @@
    guessed. Both documentation-map rows (charter, criteria catalogue) are
    registered so design/plan provenance searches reach the answers without new
    machinery; `audit-docs`' charter check (16) recomputes the coverage.
-5. **Verify the capability inventory before calling it seeded.** `docs/CAPABILITIES.md`
+5. **Install the generated-surfaces and shared-document merge drivers (fix #507 on the #498 base).** The generated
+   projection and the roadmap tables are functions of the tree
+   (`scripts/docs-generate.mjs`), and the shared documents the concurrent
+   sessions write are covered by #498's file-class registry, so two branches
+   that regenerate or append must never conflict by hand. In bootstrap and
+   upgrade alike, after the template write: (a) keep `template/.gitattributes`
+   as the project's `.gitattributes` — additively on an existing file, appending
+   the registry lines it is missing (`docs/generated/** merge=docs-generated`,
+   adjusted to the declared projection directory when `content-dir` moves it;
+   plus the four class-registry lines
+   `docs/ROADMAP.md merge=agentic-shared-roadmap`,
+   `docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets`,
+   `docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state` and
+   `docs/LOGS.md merge=agentic-shared-logs`) and never
+   touching unrelated entries — each path is claimed once, so a
+   project never carries two `merge=` claims on one path; (b) arm the drivers in
+   the checkout's git config: `bun scripts/docs-generated-merge.mjs --install`
+   and `bun scripts/shared-doc-merge.mjs --install` (node fallback, same argv),
+   and verify `git config --get merge.docs-generated.driver` and
+   `git config --get merge.agentic-shared-roadmap.driver` are non-empty (the
+   other class keys arm in the same loop; the shared-driver suite pins them
+   all); a
+   missing `scripts/` tree (an install without the scripts directory) is
+   recorded as a residual with the manual commands as the route, never a failed
+   scaffold. The `.gitattributes` lines are committed; the config arming is
+   per-checkout and is never pushed.
+6. **Verify the capability inventory before calling it seeded.** `docs/CAPABILITIES.md`
    is the one written file whose raw form is wrong in both directions — a
    placeholder claims a subsystem the project does not have, and a missing row
    hides one it does — so the seed is checked after the write, never assumed:
@@ -49,19 +75,19 @@
    the user declines to answer is written `unresolved — <question>` and listed
    with the other residuals. Copying the template and reporting it as seeded is
    the one failure this step exists to catch.
-6. **Seed Normalized Repository State.** Copy
+7. **Seed Normalized Repository State.** Copy
    `template/docs/workflow/REPOSITORY_STATE.md` to
    `docs/workflow/REPOSITORY_STATE.md` when it is absent. If the target already
    has one, leave it unchanged and report that discovery should refresh it.
    Explain that discovery freezes evidence before planning and only
    `resolve-repository-state` updates frozen facts.
-7. **Offer architectural invariants.** Keep
+8. **Offer architectural invariants.** Keep
    `docs/architecture/ARCHITECTURAL_INVARIANTS.md` from the template only when
    the project has long-lived architectural constraints. Explain that it is
    optional: an absent document means no project invariants are declared, not
    that the scaffold failed. If retained, add its documentation-map row and
    name the project's explicit architectural-decision authority.
-8. **Propagate the unit doc templates.** Ensure both template folders exist and
+9. **Propagate the unit doc templates.** Ensure both template folders exist and
    are cut in the `spec-by-reference` shape the scaffold ships —
    `docs/features/_TEMPLATE/SPEC.md` and `docs/fix/_TEMPLATE/SPEC.md` (`Specs`
    with `S#` requirements, Impact, Non-goals, Future cost, Applicable tests,
@@ -69,7 +95,7 @@
    These are the templates used when creating new unit documents; a unit opened
    before this shape keeps the legacy 14-section shape and is never rewritten to
    migrate.
-9. **Provision Serena — one consented question, then write.** Load
+10. **Provision Serena — one consented question, then write.** Load
    [SERENA](SERENA.md) and ask its single consent question; one yes covers the
    tool install, the detected platform's MCP registration and the global trust
    append, and a refusal installs, registers and writes **nothing**. On yes:
@@ -80,13 +106,13 @@
    project index` to pre-cache symbols (avoids first-call delay). When no
    installer is available, offer only what the machine can perform and record
    the residual with its reason — the run completes either way.
-10. **Offer Engram provisioning.** Load [ENGRAM](ENGRAM.md), detect the binary
+11. **Offer Engram provisioning.** Load [ENGRAM](ENGRAM.md), detect the binary
    and ask consent: register the `engram` MCP server (absolute path, exact
    `mcp --tools=agent` argv) when the host has one, leave an existing
    declaration untouched, and report exactly what was written. An absent binary
    becomes a residual with the documented install route — never a failed run.
    Skip this step when the pi package provisions the host itself.
-11. **Offer the subagent routing and resource config (issue #260, S11 edge 4; #201's Mechanics-4 shape, ask-first).** If the project installs `@gtrabanco/pi-agentic-workflow`, offer to seed `pi-agentic-workflow.json` with the subagent layer's two operator surfaces — **never written without a yes**:
+12. **Offer the subagent routing and resource config (issue #260, S11 edge 4; #201's Mechanics-4 shape, ask-first).** If the project installs `@gtrabanco/pi-agentic-workflow`, offer to seed `pi-agentic-workflow.json` with the subagent layer's two operator surfaces — **never written without a yes**:
     - the `passes` recommended entries for the review family (one cheap tier for the finders, `"auto"` left out unless the operator wants delegated choice);
     - the optional `subagents` key (`"parallelism": "auto"` plus caps shaped `"<n> of <m> <unit>"`, or the key omitted entirely — absent means the self-detected envelope with conservative defaults).
     An existing owner-written file is never rewritten: propose the additive keys, show the exact JSON, and record a declined offer as a residual. When the pi package is absent, this step is a residual with the package README's `Spawned passes` + `Subagent layer` sections as the documented route.** Keep the canonical policy and
@@ -102,7 +128,7 @@
    an unknown payload, or an existing customized hook file becomes a residual,
    never a silent overwrite. Direct merges remain blocked; do not create a
    `.automerge` exception.
-12. **Install accepted agent safety hooks.** Keep the canonical policy and
+13. **Install accepted agent safety hooks.** Keep the canonical policy and
     fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
     path-protection policy at `.agentic-workflow/path-policy.json` and its doc
     page at `.agentic-workflow/path-protection.md`, beside the hooks — the
@@ -115,10 +141,10 @@
     an unknown payload, or an existing customized hook file becomes a residual,
     never a silent overwrite. Direct merges remain blocked; do not create a
     `.automerge` exception.
-13. **Offer the workflow skills.** Propose installing them:
+14. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-14. **State that reviews are self-contained; offer optional extras.** The
+15. **State that reviews are self-contained; offer optional extras.** The
    workflow ships its **own internal review pack** (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
@@ -128,7 +154,7 @@
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
-15. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
+16. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
    two capability-gated GitHub labels `triage-issue` owns and applies
    (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
    vocabulary — this step only seeds it, never redefines it):
@@ -141,7 +167,7 @@
    forge is unavailable or the user declines forge setup, skip this step and
    list the two labels as a residual for the user to create manually later
    (never fail the whole scaffold on it).
-16. **Report.** List what was created, which placeholders still need human input,
+17. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
    skipped, with reason), and the next step:
    `discover-repository-state` → `/unit-lane` (or `workflow-status`) → catalog

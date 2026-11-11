@@ -270,21 +270,29 @@ A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs 
 The shared-document classes (issue #498) arm the same way and are documented here
 because the arming is the same per-checkout limitation: `.gitattributes` names
 `docs/ROADMAP.md merge=agentic-shared-roadmap`,
-`docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets` and
-`docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state`, and
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets`,
+`docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state` and
+`docs/LOGS.md merge=agentic-shared-logs`, and
 `bun scripts/shared-doc-merge.mjs --install` writes the driver config a clone
 never inherits; arming is optional — an unarmed clone degrades to git's textual
 merge, and the armed drivers add the semantic layer (row union by key; a
 same-row status flip or a differing ceiling leaf surfaces as a real conflict;
-`REPOSITORY_STATE.md` never unions). The write-path half of the contract lives
+`REPOSITORY_STATE.md` never unions; `LOGS.md` unions journal entries by their
+heading identity — the same heading appended with different bodies, or a side
+that is not an append-only extension of the base, surfaces as a real conflict). The write-path half of the contract lives
 in the crate: `writer-driver-contract@1` in
 [`packages/agentic-workflow/README.md`](packages/agentic-workflow/README.md) is
 the contract's one home.
 **The generated projection carries no per-regeneration line**, so two concurrent
 regenerations merge as plain text and no checkout has to be armed for that. For
 the residual case — two branches inserting a row at the same position in one
-sorted table — `.gitattributes` names `docs/generated/** merge=docs-generated`
-and `bun scripts/docs-generated-merge.mjs --install` writes the driver config a
+sorted table (the projection's tables, and `docs/ROADMAP.md`'s since fix #507,
+whose generated half appends a row per unit folder while every hand-owned cell
+passes through untouched) — `.gitattributes` names `docs/generated/**`
+(`merge=docs-generated`, armed by `bun scripts/docs-generated-merge.mjs --install`)
+while the `docs/ROADMAP.md` attribute stays with the shared-document class
+registry above — one claim per path, the registry stated once — and
+`bun scripts/docs-generated-merge.mjs --install` writes the driver config a
 clone never inherits; arming it is optional. Either way the gate's
 `docs-generated-projection` step runs `docs-generate --check` on every push —
 offline and not test-gated, because a prose-only push is exactly the push that
@@ -475,6 +483,10 @@ skill may keep a second copy of this list.
 The generated documentation projection (`docs/generated/**` — the reverse edge
 of "docs drive the work", issue #396) is plain markdown, rendered only by the
 repository's own emitter (`bun scripts/docs-generate.mjs`), never hand-written.
+The same emitter syncs the two roadmap tables (fix #507): a feature folder
+without a row gains one, every hand-owned cell passes through untouched, and a
+unit doc's `roadmap_summary:` overrides its row's summary cell — edit the unit
+doc, never the table.
 The declaration the emitter reads; omitting `content-dir`, `build` and `map`
 keeps the emitter's defaults (`docs/generated`, no build step, no map script):
 

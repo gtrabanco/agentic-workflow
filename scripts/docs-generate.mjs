@@ -45,8 +45,14 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import { readRoadmapIndex, roadmapTableRows } from "../packages/agentic-workflow/src/index-document.mjs";
-import { sectionText } from "./unit-doc-phases.mjs";
+import {
+  fenceRun,
+  readRoadmapIndex,
+  ROADMAP_DOCUMENT,
+  roadmapTableRows,
+  tableCells,
+} from "../packages/agentic-workflow/src/index-document.mjs";
+import { sectionBounds, sectionText } from "./unit-doc-phases.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.dirname(SCRIPTS_DIR);
@@ -203,12 +209,33 @@ function unitFacts(specText) {
   const lines = specText.split("\n");
   const frontmatterEnd = lines[0]?.trim() === "---" ? lines.findIndex((line, index) => index > 0 && line.trim() === "---") : -1;
   const body = lines.slice(frontmatterEnd + 1);
+  const bodyText = body.join("\n");
   const title = body.find((line) => /^# /.test(line))?.slice(2).trim() ?? "";
   const oneLine =
     body
       .map((line) => /^> One-line:\s*(.+)$/.exec(line)?.[1]?.trim() ?? "")
       .find((value) => value !== "") ?? "";
-  return { title, oneLine };
+  return {
+    title,
+    oneLine,
+    /** The optional roadmap cell the owner may pin (fix #507); unset falls through the chain. */
+    roadmapSummary: lines
+      .slice(1, frontmatterEnd === -1 ? 0 : frontmatterEnd)
+      .map((line) => /^roadmap_summary:\s*(.+)$/.exec(line)?.[1]?.trim() ?? "")
+      .find((value) => value !== "") ?? "",
+    /** A `## Tasks` section carrying a `P<n>` task line — the plan step's own mark. */
+    hasTasks: /(^|\n)\s*[-*]\s+P\d+\b/.test(sectionText(bodyText, "Tasks") ?? ""),
+    /** The goal's first paragraph line — the summary chain's last doc-derived rung. */
+    goalFirst: (sectionText(bodyText, "Goal") ?? "")
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line !== "") ?? "",
+    /** The `## Depends on` first line; `Independent.` renders as the table's `—`. */
+    dependsOn: (sectionText(bodyText, "Depends on") ?? "")
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line !== "") ?? "",
+  };
 }
 
 /** The slug a unit directory names: the part after its number. */
@@ -249,6 +276,10 @@ export function collectSources(root) {
         kind,
         title: facts.title,
         oneLine: facts.oneLine,
+        roadmapSummary: facts.roadmapSummary,
+        hasTasks: facts.hasTasks,
+        goalFirst: facts.goalFirst,
+        dependsOn: facts.dependsOn,
         status: (kind === "feature" ? featureStatus : fixStatus).get(slug) ?? "—",
       });
     }
@@ -299,6 +330,8 @@ export function collectSources(root) {
     site,
     units,
     roadmapRows: roadmapRowCount(indexText),
+    /** The canonical index's bytes; the roadmap sync never touches a legacy path. */
+    roadmapText: index !== null && index.path === ROADMAP_DOCUMENT ? indexText : null,
     packages,
     skills,
     scripts,
@@ -341,7 +374,164 @@ function roadmapRowCount(indexText) {
   return count;
 }
 
-// ── page model ───────────────────────────────────────────────────────────
+// ── roadmap table sync (fix #507) ──────────────────────────────────────
+//
+// `docs/ROADMAP.md`'s two tables are the collision zone the merge driver
+// answers, so they are a function of the tree too — with one honest boundary:
+// the tables carry cells only the owner can write (the status machine, curated
+// summaries, PR links, and every `idea`/`declined` row whose unit has no
+// folder). The sync therefore appends what the tree derives and never rewrites
+// a hand row: an existing row passes through byte for byte; a feature folder
+// without a row gains one (the invariant `docs/ROADMAP.md` itself orders);
+// `roadmap_summary:` in a unit doc overrides that unit's summary cell. Fix rows
+// are never appended — the Fixes lifecycle removes a row after its merge, and a
+// folder cannot distinguish a merged fix from an unregistered one.
+
+/** The summary chain S1 orders: explicit field → One-line → Goal → title. */
+function roadmapSummaryFor(unit) {
+  return mdCell(unit.roadmapSummary || unit.oneLine || unit.goalFirst || unit.title || "—");
+}
+
+/** The status a rowless feature folder derives: planned once Tasks carry a P-line. */
+function derivedFeatureStatus(unit) {
+  return unit.hasTasks ? "planned" : "defined";
+}
+
+function dependsCellFor(unit) {
+  const value = unit.dependsOn;
+  if (value === "" || /^independent\.?$/i.test(value)) return "—";
+  return mdCell(value);
+}
+
+/** The derived row for a feature folder missing from the table. */
+function featureRow(unit) {
+  const nn = /^\d+/.exec(unit.id)?.[0] ?? unit.id;
+  return `| ${nn} | \`${unit.slug}\` | ${derivedFeatureStatus(unit)} | ${dependsCellFor(unit)} | ${roadmapSummaryFor(unit)} |`;
+}
+
+/** Visit each line of `[from, to)` that is document text (never inside a fence). */
+function outsideFences(lines, from, to, visit) {
+  let fence = null;
+  for (let index = from; index < to; index += 1) {
+    const wasOpen = fence !== null;
+    fence = fenceRun(lines[index], fence);
+    if (wasOpen || fence !== null) continue;
+    visit(index, lines[index]);
+  }
+}
+
+/**
+ * The `[first, last]` line indexes of the table inside a section, or null.
+ */
+function tableRegion(lines, from, to) {
+  let first = null;
+  let last = null;
+  outsideFences(lines, from, to, (index, line) => {
+    if (/^\s*\|/.test(line)) {
+      if (first === null) first = index;
+      last = index;
+    }
+  });
+  return first === null ? null : [first, last];
+}
+
+const SEPARATOR_ROW = /^\|?[\s:|-]+\|?$/;
+
+/**
+ * Sync one kind's table in place: hand rows verbatim (with the optional
+ * `roadmap_summary:` override on the summary cell), derived rows appended.
+ * @returns {string[]} the rebuilt section lines
+ */
+function syncTable(lines, bounds, units, kind) {
+  const region = tableRegion(lines, bounds[0], bounds[1]);
+  if (region === null) return lines;
+  const [first, last] = region;
+  const regionLines = lines.slice(first, last + 1);
+
+  const pipeIndexes = [];
+  for (let index = 0; index < regionLines.length; index += 1) {
+    if (/^\s*\|/.test(regionLines[index])) pipeIndexes.push(index);
+  }
+  const headerCells = tableCells(regionLines[pipeIndexes[0]]);
+  const columns = headerCells.length;
+  const separatorAt = pipeIndexes.length > 1 && SEPARATOR_ROW.test(regionLines[pipeIndexes[1]].trim()) ? pipeIndexes[1] : null;
+
+  // The slug column is positional per table shape (features: NN | Slug | …,
+  // fixes: Issue | Topic | …) and always the second cell, so it survives even the
+  // hand rows whose summary carries unescaped pipes (a cell count the sync
+  // never tries to normalize — those rows pass through verbatim).
+  const slugColumn = 1;
+  const slugOfRow = (line) => {
+    const cells = tableCells(line);
+    const slug = (cells[slugColumn] ?? "").replace(/`/g, "").trim();
+    return slug === "" ? null : slug;
+  };
+
+  const bySlug = new Map(units.filter((unit) => unit.kind === kind).map((unit) => [unit.slug, unit]));
+  const seen = new Set();
+  const rebuilt = regionLines.map((line, index) => {
+    if (index === pipeIndexes[0] || index === separatorAt) return line;
+    if (!/^\s*\|/.test(line)) return line;
+    const slug = slugOfRow(line);
+    if (slug === null || slug === "") return line;
+    seen.add(slug);
+    const unit = bySlug.get(slug);
+    const cells = tableCells(line);
+    if (unit === undefined || unit.roadmapSummary === "" || cells.length !== columns) return line;
+    cells[columns - 1] = mdCell(unit.roadmapSummary);
+    return `| ${cells.join(" | ")} |`;
+  });
+
+  if (kind === "feature") {
+    const missing = units
+      .filter((unit) => unit.kind === "feature" && !seen.has(unit.slug))
+      .sort((a, b) => (parseInt(a.id, 10) || 0) - (parseInt(b.id, 10) || 0) || (a.id < b.id ? -1 : 1));
+    rebuilt.push(...missing.map(featureRow));
+  }
+
+  return [...lines.slice(0, first), ...rebuilt, ...lines.slice(last + 1)];
+}
+
+/**
+ * The synced roadmap document, or `{ text, changed }` — `changed` false means
+ * the file already is the fixed point, so generate writes nothing.
+ */
+export function syncRoadmapDocument(roadmapText, units) {
+  let lines = roadmapText.split("\n");
+  // The heading scan is the shared fence-aware reader's, never a second `## `
+  // literal — sectionBounds owns the grammar (#308 F28, the unit-84 pin).
+  // Both readers are rebuilt per kind: the Features sync inserts rows, so the
+  // Fixes window must come from the text the file actually holds by then —
+  // offsets read off the pre-sync text slide with every appended row (S10: at
+  // six appends in one run the fix window starts inside the Features table).
+  for (const [kind, heading] of [["feature", "Features"], ["fix", "Fixes"]]) {
+    const current = lines.join("\n");
+    const bounds = sectionBounds(current, heading);
+    if (bounds === null) continue;
+    const lineStarts = [];
+    let offset = 0;
+    for (const line of lines) {
+      lineStarts.push(offset);
+      offset += line.length + 1;
+    }
+    const lineAt = (charOffset) => {
+      let low = 0;
+      let high = lineStarts.length - 1;
+      while (low < high) {
+        const mid = (low + high + 1) >> 1;
+        if (lineStarts[mid] <= charOffset) low = mid;
+        else high = mid - 1;
+      }
+      return low;
+    };
+    const from = lineAt(bounds[0]) + 1;
+    const to = bounds[1] >= current.length ? lines.length : lineAt(bounds[1]);
+    lines = syncTable(lines, [from, to], units, kind);
+  }
+  return { text: lines.join("\n"), changed: lines.join("\n") !== roadmapText };
+}
+
+// ── page model ──
 
 /**
  * The provenance line, deliberately **number-free** (fix #420, S7).
@@ -637,12 +827,30 @@ function parseArgs(argv) {
 }
 
 export function run({ root, mode }) {
-  const model = collectSources(root);
+  let model = collectSources(root);
   const format = resolveFormat(model.site);
   if (!format.ok) return { refusal: format.reason };
   const projection = projectionDir(model.site);
+  let roadmap =
+    model.roadmapText !== null ? syncRoadmapDocument(model.roadmapText, model.units) : { text: null, changed: false };
+  const roadmapChanged = roadmap.changed;
+  if (mode === "generate" && roadmapChanged) {
+    fs.writeFileSync(path.join(root, ROADMAP_DOCUMENT), roadmap.text);
+    // The pages carry the table's status cells, so the model is re-read from
+    // the tree the sync just fixed — never rendered from the pre-sync table.
+    model = collectSources(root);
+    roadmap = { text: model.roadmapText, changed: false };
+  }
   const pages = planProjection(model, format);
   const files = { dir: projection, pages };
+  const roadmapLine = () =>
+    model.roadmapText === null && !roadmapChanged
+      ? null
+      : mode === "dry-run"
+        ? `Roadmap: ${ROADMAP_DOCUMENT} — ${roadmapChanged ? "would update" : "in sync"}`
+        : mode === "check"
+          ? `Roadmap: ${ROADMAP_DOCUMENT} — ${roadmapChanged ? "stale" : "unchanged"}`
+          : `Roadmap: ${ROADMAP_DOCUMENT} — ${roadmapChanged ? "updated" : "unchanged"}`;
 
   if (mode === "dry-run") {
     return {
@@ -650,8 +858,9 @@ export function run({ root, mode }) {
         `DOCS DRY-RUN — ${projection}`,
         formatLine(format),
         `Would write: ${[...pages.keys()].sort().join(", ")}`,
+        roadmapLine(),
         "verdict: PASS",
-      ],
+      ].filter((line) => line !== null),
       status: 0,
     };
   }
@@ -664,6 +873,7 @@ export function run({ root, mode }) {
       ...result.missing.map((name) => `${rel(name)}: missing`),
       ...result.stale.map((name) => `${rel(name)}: stale`),
       ...result.orphaned.map((name) => `${rel(name)}: orphaned`),
+      ...(roadmapChanged ? [`${ROADMAP_DOCUMENT}: stale`] : []),
     ].sort();
     const drift = issues.length > 0;
     return {
@@ -672,9 +882,10 @@ export function run({ root, mode }) {
         formatLine(format),
         `Files: ${count(pages.size, "checked", "checked")} · ${count(result.missing.length, "missing", "missing")} · ` +
           `${count(result.stale.length, "stale", "stale")} · ${count(result.orphaned.length, "orphaned", "orphaned")}`,
+        roadmapLine(),
         ...issues,
         `verdict: ${drift ? "DRIFT" : "PASS"}`,
-      ],
+      ].filter((line) => line !== null),
       status: drift ? 1 : 0,
     };
   }
@@ -686,8 +897,9 @@ export function run({ root, mode }) {
       sourcesLine(model),
       `Files: ${count(result.written.length, "written", "written")} · ${count(result.deleted.length, "deleted", "deleted")} · ` +
         `${count(result.unchanged.length, "unchanged", "unchanged")}`,
+      roadmapLine(),
       "verdict: PASS",
-    ],
+    ].filter((line) => line !== null),
     status: 0,
   };
 }

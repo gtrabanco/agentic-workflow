@@ -5,8 +5,9 @@
  * #420).
  *
  * Why a driver: `docs/generated/**` is a pure function of the tree
- * (`scripts/docs-generate.mjs`, feature 396), so a line-level merge of two
- * regenerations is never a real conflict — each side is *some* tree's
+ * (`scripts/docs-generate.mjs`, feature 396), and since fix #507 the roadmap
+ * index's tables are too, so a line-level merge of two regenerations is never a
+ * real conflict — each side is *some* tree's
  * rendering, and neither is the merged tree's.
  *
  * The **100 % surface is gone at the source**: the pages no longer carry a count
@@ -22,7 +23,7 @@
  * `git checkout --theirs` gives for a generated file, said once instead of in
  * every contributor's muscle memory. The branch's own rows come back on the
  * next regeneration, because they are derived from sources that merged on
- * their own.
+ * their own — for the roadmap index, the unit folders the merge already carried.
  *
  * Why that cannot lie: the merge is not where the projection's truth is
  * decided. The local gate's `docs-generated-projection` step runs
@@ -53,6 +54,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { parseDocsSiteBlock, projectionDir } from "./docs-generate.mjs";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const SCRIPT = fileURLToPath(import.meta.url);
 const GUIDE = "AGENTS.md";
@@ -60,6 +62,11 @@ const REFUSAL = "DOCS GENERATED MERGE REFUSAL —";
 
 /** The driver's key in `.gitattributes` and in the checkout's git config. */
 export const DRIVER = "docs-generated";
+
+/** The surfaces the driver answers for: the declared projection plus the roadmap index. */
+export function coveredSurfaces(root) {
+  return [coveredPrefix(root), ROADMAP_DOCUMENT];
+}
 
 const USAGE = [
   "usage: docs-generated-merge.mjs --install [--repo <dir>]",
@@ -105,7 +112,7 @@ function install(root) {
     ["name", `the ${prefix} projection (regenerate with scripts/docs-generate.mjs)`],
     ["driver", driverCommand(root)],
   ];
-  const lines = [`docs-generated-merge — ${prefix}/**`];
+  const lines = [`docs-generated-merge — ${prefix}/** + ${ROADMAP_DOCUMENT}`];
   for (const [key, value] of wanted) {
     const setting = `merge.${DRIVER}.${key}`;
     const current = git(root, ["config", "--local", "--get", setting]);
@@ -144,8 +151,12 @@ function resolve([base, ours, theirs, marker, relPath]) {
   const prefix = coveredPrefix(root);
   if (relPath !== undefined) {
     const named = namedPath(relPath);
-    if (named !== prefix && !named.startsWith(`${prefix}/`)) {
-      refuse(`${named} is outside ${prefix}/ — this driver never resolves a hand-written file`, 1);
+    const covered = named === ROADMAP_DOCUMENT || named === prefix || named.startsWith(`${prefix}/`);
+    if (!covered) {
+      refuse(
+        `${named} is outside the generated surfaces (${prefix}/**, ${ROADMAP_DOCUMENT}) — this driver never resolves a hand-written file`,
+        1,
+      );
     }
   }
   let incoming;

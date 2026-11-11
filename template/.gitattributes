@@ -1,0 +1,17 @@
+# The generated projection and the shared documents are functions of the tree,
+# never hand-merged surfaces (scripts/docs-generate.mjs, issue #498's
+# shared-document classes). Two branches that insert rows at the same position
+# in one of these tables collide on bytes neither author wrote; the file-class
+# drivers answer the incoming side and the local gate (or the writers) keeps a
+# mechanically-resolved file honest. Arm the drivers once per checkout:
+#   bun scripts/docs-generated-merge.mjs --install
+#   bun scripts/shared-doc-merge.mjs --install
+docs/generated/** merge=docs-generated
+
+# Shared-document classes (issue #498): the collision-safe merge layer over the
+# documents several concurrent sessions and PRs write. Each path is stated
+# here once — no second driver claims it.
+docs/ROADMAP.md merge=agentic-shared-roadmap
+docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets
+docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state
+docs/LOGS.md merge=agentic-shared-logs

@@ -1,6 +1,0 @@
-## 2026-11-09T21:06:38Z — feat/484-chore-deps-pin-drift — fix/484 — re-verified under the real node runtime
-- **Commits:** 3 (`67a3dfb3…113b8335`)
-- **Files:** 7 files
-- **Summary:** The owner corrected the environment claim: node 26.13.0 is installed via fnm and was only absent from the non-interactive PATH. Every leg re-ran with it: crate suite 586/586 on bun and on node, root suite 97/97 on bun and on node, pin-watch and both parity-gate halves green with the real npm, and the local gate's own harness now runs (7/7 offline steps; 15 of 17 before the session cap, one red = worktree-guard reporting a different stale dirty worktree, reproduced from the primary checkout).
-- **Decisions:** PE-008 superseded by PE-009: 'which node' answers the shell PATH, not the machine. The earlier env-failure narration stays in the Log as history; nothing in the pin/lock/changeset/differential moved. Still open and out of this unit: F1 (--pins flagless never checks the crate) and the owner's question whether the local-sibling pin rule still earns its keep now every package moves to one version.
-- **Next:** Owner external verdict on 2a28f038..HEAD; then the PR (Closes #484). F1 and the local-sibling-pin question need their own units.
