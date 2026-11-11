@@ -1,5 +1,6 @@
 ---
 "fold-findings": minor
+"review-implementation": patch
 ---
 
 feat(437): harvest the review findings into a measured corpus, a computed budget, a differential baseline and a `nimio` disposition
@@ -27,3 +28,7 @@ economics that reader makes computable:
 - `fold-findings` gains the `NIMIO` per-finding output and
   `references/NIMIO.md`: a below-floor finding records a dated note with a
   re-trigger condition and never spends the budget.
+- `review-implementation/references/CLASSIFY.md` now cites the run that proves
+  cause (`scripts/differential-baseline.mjs`, its four verdicts and its
+  `--reviewed` staleness answer) instead of describing the check as pending,
+  pinned by `scripts/differential-baseline.test.mjs`.

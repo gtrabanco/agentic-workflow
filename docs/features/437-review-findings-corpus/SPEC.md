@@ -254,6 +254,51 @@ yet.
   (`scripts/scope-manifest.mjs`, fix/286) and the **policy** is a declared
   trivial-path list owned by `scripts/differential-baseline.mjs`. Commit-message
   prefixes are not trusted. See `decisions.md` §D1.
+- **P9** — 2026-11-11, correction batch at the owner's direction, PR
+  [#492](https://github.com/gtrabanco/agentic-workflow/pull/492) (merge
+  `17d061fe`): the unit is merged and its obligations are closed, but two
+  declared cells were still unshipped — `## Impact`'s "`scripts/differential-baseline.mjs`
+  becomes the run that rule cites" and the merged row's settle. Both are closed
+  in this batch; the citation is pinned by
+  `bun test scripts/differential-baseline.test.mjs` (the new case
+  `the rule this run implements cites the run, never a pending check`, red at
+  `f8ddfb7b` where `CLASSIFY.md` still read "until it exists"). Environment
+  disclosure: mid-batch this worktree was destroyed by an external prune (the
+  registration vanished and the branch stayed at `f8ddfb7b`); the two
+  uncommitted edits were re-applied on the restored checkout and the runs below
+  were repeated there.
+- **E8** — 2026-11-11,
+  `bun test scripts/differential-baseline.test.mjs` · exit 1 at the base bytes
+  (`9 pass, 1 fail` — the new citation case on `CLASSIFY.md`'s pre-437 wording),
+  then exit 0 · `10 pass, 0 fail` after the citation (re-observed after the
+  restore).
+- **E9** — 2026-11-11, `bun scripts/roadmap-settle.mjs` · exit 1 ·
+  `verdict: FAIL`, `2 violations` (`pr-url-unsettled` on the PR URL the unit doc
+  now carries), then exit 0 · `186 unit docs checked · 0 fix docs skipped ·
+  verdict: PASS · violations: 0` after the writer.
+- **E10** — 2026-11-11, `agentic-workflow roadmap docs/ROADMAP.md rowUpsert
+  <json> --expect ea687fc4…` · exit 0 · `Schema: roadmap-table@1 · Receipt: pass
+  · Before: ea687fc4 · After: 9b2fb28d` (the row's status cell and its stale
+  closing sentence, one splice).
+- **E11** — 2026-11-11, `bun scripts/docs-generate.mjs` · exit 0 ·
+  `1 written · 0 deleted · 2 unchanged`, then `bun scripts/docs-generate.mjs
+  --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned · verdict:
+  PASS`.
+- **E12** — 2026-11-11, `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 29 skills`; `bun test scripts/vocabulary-parity.test.mjs`
+  · exit 0 · 21 pass, 0 fail; `bun scripts/lint-changeset.mjs
+  .changeset/437-review-findings-corpus.md` · exit 0 · `ok`.
+- **E13** — 2026-11-11, the citation's budget consequence: naming the run in
+  `CLASSIFY.md` pushed the four `review-change:*` routes over their ceilings by
+  47–52 est and 2 lines (those routes carried zero headroom), so the four route
+  ceilings are re-based to the checker's `ceil(measured × 1.10)` with the growth
+  source declared in each route's `sources` map ·
+  `bun scripts/check-skill-context.mjs --routes` · exit 0 ·
+  `PASS route budgets: 14 routes`, and
+  `bun test scripts/check-skill-context.test.mjs` · exit 0 · 1 pass. The crate's
+  `budgets ceilingRebase` was tried on a scratch copy first and rejected: it
+  overwrites the route's existing `ceilingRebase` growth-source key with the new
+  one, so the rebase is written in the file's own curated `sources` shape.
 
 ## Next
 
@@ -262,6 +307,13 @@ readings, the closed obligations ledger and the verification block in
 `## Log`. Any finding the owner reports is repaired in one bounded correction
 batch limited to the blockers named, then those obligation rows' validators are
 re-run before their statuses move again.
+
+- **2026-11-11 — merged and corrected.** PR
+  [#492](https://github.com/gtrabanco/agentic-workflow/pull/492) merged the unit
+  into `main` (merge `17d061fe`, 2026-11-10). The batch recorded as `P9` below
+  closes the two residuals the merge left: the rule now cites the run, and the
+  roadmap row is settled. Left to the owner: closing issue #437 and deleting the
+  `fix/437-review-loop-mechanics` branch.
 
 ## References
 
