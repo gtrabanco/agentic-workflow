@@ -104,7 +104,7 @@ const baseInput = (issues, root, overrides = {}) => ({
 
 // ── S2/O1 — the envelope exists, is shaped, and is deterministic ───────────
 
-test("S2: emits a batch-plan@2 envelope with batches, blocked and findings arrays", () => {
+test("S2: emits a batch-plan@3 envelope with batches, blocked and findings arrays", () => {
   const root = scratchRoot();
   try {
     fs.mkdirSync(path.join(root, "docs"), { recursive: true });
@@ -1355,11 +1355,12 @@ test("parity: the plan grammar inventory matches the emitted envelope and the sc
   }
 });
 
-test("envelope: no owned surface keeps the superseded batch-plan@1 token", () => {
-  // The v2 bump rewrote the token; a sibling that keeps narrating the old one
-  // asserts a contract the document no longer carries (issue #460's own
-  // external-verify sibling sweep). Only the validator's wrong-value vector
-  // may name it, and it is recognised by its mutation, not by its line.
+test("envelope: no owned surface keeps a superseded batch-plan token", () => {
+  // Every version bump rewrote the token; a sibling that keeps narrating an old
+  // one asserts a contract the document no longer carries (issue #460's own
+  // external-verify sibling sweep, extended to @2 by issue #509's bump). Only
+  // the validator's wrong-value vectors may name one, and they are recognised by
+  // their mutation, not by their line.
   const owned = [
     "scripts/batch-scheduler.mjs",
     "packages/agentic-workflow-schema/src/batch-plan.ts",
@@ -1373,12 +1374,12 @@ test("envelope: no owned surface keeps the superseded batch-plan@1 token", () =>
   for (const rel of owned) {
     const lines = fs.readFileSync(new URL(`../${rel}`, import.meta.url), "utf8").split("\n");
     lines.forEach((line, index) => {
-      if (!line.includes("batch-plan@1")) return;
-      if (line.includes('m.schema = "batch-plan@1"')) return;
+      if (!line.includes("batch-plan@1") && !line.includes("batch-plan@2")) return;
+      if (line.includes('m.schema = "batch-plan@1"') || line.includes('"batch-plan@2"')) return;
       stale.push(`${rel}:${index + 1}`);
     });
   }
-  assert.deepEqual(stale, [], "every owned surface names batch-plan@2");
+  assert.deepEqual(stale, [], "every owned surface names batch-plan@3");
 });
 
 // ── A — a launched claim whose worktree is gone expires (issue #509, S8) ──

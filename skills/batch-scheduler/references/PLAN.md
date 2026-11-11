@@ -1,13 +1,13 @@
-# The plan grammar — `batch-plan@2`
+# The plan grammar — `batch-plan@3`
 
 The batch scheduler's machine envelope: one fixed JSON document, produced only
 by `scripts/batch-scheduler.mjs` and validated against the schema package's
 `agentic-workflow/batch-plan` contract before printing. The inventory below is
 the document's closed field set (grammar `table:batch-fields@1`, pinned in the
 guide's normative-surfaces inventory); the schema package owns the closed
-vocabularies and the validator. v2 (issue #460) adds the lifecycle delta
-(`new_issues[]`, `closed_since[]`), the `triaged` flag and the
-`untriaged`/`soft-deps-open` reason kinds.
+vocabularies and the validator. v2 (issue #460) added the lifecycle delta and the triage/soft-dep signals; v3
+(issue #509) adds `label_blocked[]` with its summary count and the
+`file-overlap`/`stale-claim` findings.
 
 ## The field inventory — batch-fields@1
 
@@ -21,6 +21,7 @@ vocabularies and the validator. v2 (issue #460) adds the lifecycle delta
 | batch-plan | batches |
 | batch-plan | blocked |
 | batch-plan | launched |
+| batch-plan | label_blocked |
 | batch-plan | findings |
 | batch-plan | new_issues |
 | batch-plan | closed_since |
@@ -47,6 +48,8 @@ vocabularies and the validator. v2 (issue #460) adds the lifecycle delta
 | blocked | reason |
 | launched | number |
 | launched | evidence |
+| label_blocked | number |
+| label_blocked | labels |
 | finding | code |
 | finding | numbers |
 | finding | detail |
@@ -56,73 +59,78 @@ vocabularies and the validator. v2 (issue #460) adds the lifecycle delta
 | summary | launched |
 | summary | findings |
 | summary | batches |
+| summary | label_blocked |
 
 ## The fields
 
 | field | meaning |
 |---|---|
-| `contract` / `version` / `schema` | `agentic-workflow/batch-plan` · `2` · `batch-plan@2` |
+| `contract` / `version` / `schema` | `agentic-workflow/batch-plan` · `3` · `batch-plan@3` |
 | `source_revision` | the git revision the plan was computed at |
-| `degraded[]` | what could not be read, `unavailable-<source>-<cause>` — never silent |
-| `batches[].n` | 1 = the runnable-now set; N+1 becomes runnable when batch N completes (strictly ascending) |
-| `batches[].lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts/`, `docs/`, `template/`, `.github/`, or `general` when no path is named. A whole-tree token (`skills`, `skills/`, `skills/**`) is not a lane of its own: it joins every declared child lane and keeps the tree-root key only when no child is declared |
-| `batches[].lanes[].occupied_by` | the in-flight unit doc on the surface, or `null` |
-| `batches[].lanes[].issues[]` | the issues serialized in the lane, in run order |
-| `issue.worktree` | the derived worktree name `<feat\|fix>/<issue>-<slug>` — reported, never created |
+| `degraded[]` | what could not be read, `unavailable-<source>-<cause>` (launch reads: `unavailable-launch-evidence-*`, `unavailable-forge-pr-list-*`); the plan still prints |
+| `batches[].n` | 1 = runnable now; N+1 when batch N completes |
+| `lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts`, `docs`, `template`, `.github`, or `general` when no path is named |
+| `lanes[].occupied_by` | the **evidence** of the in-flight unit on the surface (`branch fix/1-x + unit-doc docs/fix/1-x`), or `null` |
+| `lanes[].issues[]` | the issues serialized in the lane, in run order |
+| `issue.worktree` | `<feat\|fix>/<issue>-<slug>` — reported, never created |
 | `issue.command` | `/unit-lane --from-issue <N>` — the published form |
-| `issue.reason` | why the issue sits here: `satisfied-inputs` (no open blockers, surface free) · `surface-conflict` (shares the lane; serializes after the previous occupant) · `soft-ordered` (a prose soft dep orders it after its target in the same lane) · `untriaged` (roadmap row below `planned` — no triage yet; co-scheduling provisional) · `soft-deps-open` (a caveat: open soft deps not delivered strictly before this issue — same-batch other-lane, later in the same lane, or unbatched — named with their batch in the detail) |
-| `issue.triaged` | `false` when the issue's roadmap fix-row status is below `planned` (no triage yet); absent when triaged |
-| `issue.size_hint` | `light` / `mixed` / `heavy` — from the issue's declared `(S)/(M)/(L)` token, else its distinct-surface count (1 → light, 2 → mixed, ≥3 → heavy) |
+| `issue.reason.kind` | `satisfied-inputs` · `surface-conflict` (after the previous occupant) · `soft-ordered` · `untriaged` (no triage anywhere; provisional) · `soft-deps-open` (soft deps not delivered strictly first: other lane, later in the lane, unbatched, or `state unknown`) |
+| `issue.triaged` | `false` when the roadmap row is below `planned` **and** the body carries no verdict (`fix-now`, `postponed`, `promoted`, `wontfix`) |
+| `issue.size_hint` | `light` / `mixed` / `heavy` — the declared `(S)/(M)/(L)` token, else the distinct-surface count (1, 2, ≥3) |
 | `lane.size_hint` | the max of its issues' hints — a fact, never a lane-count policy |
-| `issue.claimed` | `true` when the persisted state file recognizes the lane from a previous run |
-| `blocked[]` | issues gated by open native `blocked-by` relations, with the blocker numbers and the reason string. A blocker whose unit doc is on disk is **in flight**: it gates, the reason says so (`blocked-by 20 (open, unit in flight)`), and the issue is never batched while that unit runs |
-| `launched[]` | issues already running (an open unit dir under `docs/fix/` or `docs/features/` carries the number), excluded from every batch |
-| `new_issues[]` | issues first seen in this run ({`number`, `title`}) — a fresh issue is reported, never silent (issue #460). A pre-v2 state file has no seen set: the first v2 run reports all open issues as new |
-| `closed_since[]` | issues in the previous plan, closed now, each with its last known row ({`number`, `title`, `batch`, `lane`, `last_seen`}; `batch`/`lane` null when never batched) — a closed blocker is reported, never silent (issue #460) |
-| `findings[]` | the unresolvable spots, never silent omissions: `cycle` (a cyclic — or cycle-downstream — `blocked-by` wait **no batch can ever satisfy**; an in-flight target is a state, never a cycle), `orphaned-soft-dep` (a soft row whose target is neither open nor in the location index — an open in-flight target is not an orphan), `prose-native-mismatch` (a prose row declared `hard` with no native `blocked-by` — the #442 agreement check; skipped without native relations) |
-| `summary` | the totals: `open_issues`, `batched`, `blocked`, `launched`, `findings`, `batches` |
+| `issue.claimed` | `true` only for a **live** claim on this exact `(issue, lane)` pair: another lane's claim never marks it, an expired one never does |
+| `blocked[]` | issues gated by open native `blocked-by` relations, with the blockers and the reason |
+| `launched[]` | issues running now, on evidence: an `OPEN` PR or an unmerged `fix\|feat/<n>-*` branch, named in `evidence`. A unit doc corroborates, never decides. Excluded from every batch |
+| `label_blocked[]` | issues a hold label keeps unlaunchable (`postponed`, `backlog`, `human-revision-needed`) with those labels — never batched |
+| `new_issues[]` / `closed_since[]` | the lifecycle delta — first seen; closed since with the last known row |
+| `findings[]` | `cycle` (a wait no batch can satisfy; in flight is a state) · `orphaned-soft-dep` (a target neither open, in flight, label-blocked, closed-since nor indexed) · `prose-native-mismatch` (a `hard` row without a native `blocked-by`) · `file-overlap` (parallel issues whose files intersect) · `stale-claim` (a claim that no longer stands, keyed) |
+| `summary` | the totals: `open_issues`, `batched`, `blocked`, `launched`, `findings`, `batches`, `label_blocked` |
 
-## The standing constraints, mechanically
+## The standing constraints
 
-1. **Hard blockers gate.** An issue with an unmet native `blocked-by` is not
-   in batch 1; it lands in the first batch after its last blocker's batch.
-   Closed blockers never gate. A blocker with a unit doc on disk is in flight:
-   it gates, is named as in flight, and its dependants wait outside every
-   batch until it lands — never reported as a cycle.
-2. **Soft dependencies order.** A prose `soft` row never gates: a dependent
-   runs at or after its target's batch, and after it inside a shared lane.
-   Open soft deps not delivered strictly before the dependent are caveated
-   (`soft-deps-open`).
-3. **Single-occupant-per-surface.** Issues sharing a surface share one lane
-   and serialize; disjoint surfaces get disjoint lanes. An issue spanning
-   several surfaces serializes in each of them, and a tree-root declaration
-   joins every declared child lane, so a broad issue never runs beside the
-   concrete lane it covers.
-4. **Size hints are reported.** The consumer decides how many lanes to launch;
-   the planner never caps anything.
+1. **Hard blockers gate**, batch N+1 after the last blocker's; closed blockers
+   never gate, an in-flight one gates and is named as in flight.
+2. **Soft deps order, never gate.** Resolution is the forge's: a target the
+   previous plan saw open and the forge no longer lists is closed and resolved;
+   an open undelivered one is named; with an unreadable open set the state is
+   `unknown` — never assumed resolved, never invented as an orphan.
+3. **One lane per surface**, soft-ordered inside the lane; a tree-root token
+   joins every declared child lane so a broad issue never runs beside it.
+4. **In flight is evidence** (rule 5's `launched[]`): a merged or parked unit
+   doc is not an in-flight unit, and the unit occupies every surface it declares.
+5. **A hold label wins** over every other status (`label_blocked[]`).
+6. **Parallel means no shared file.** Two issues the plan presents as running
+   together that rewrite one file are a `file-overlap` finding. Claims are the
+   paths the body declares plus the ones the branch rewrites; a directory or a
+   glob claims nothing. A batched issue with no branch contributes only what it
+   declares — an overlap on a file nobody declared is invisible, a declared
+   limit, not a guess.
+7. **Size hints are facts**; the lane count is the consumer's.
 
-## The prose-dependency parser (fail-closed)
+## The dependency parser (fail-closed, with a recovery pass)
 
-`extractProseDependencies` parses **only** the declared `## Dependencies`
-table form — the header row `| Depends on | Kind | Why |`. Any other table
-shape is refused: no prose dependencies, and a declared degradation naming
-the issue (`unavailable-prose-dependencies-issue-<n>-undeclared-table-shape`)
-— never false findings, never a guess (issue #460: #307's `| Feature | Issue |`
-tables once emitted twelve false `orphaned-soft-dep` rows). A section with no
-table parses as no dependencies.
+`extractProseDependencies` parses **only** the declared table
+(`| Depends on | Kind | Why |`); any other shape is refused and declared
+(`unavailable-prose-dependencies-issue-<n>-<parsed>-of-<total>-rows-…`).
+Beside it `extractPartialDependencies` recovers what the table still
+attributes: a row contributes only when a cell is *exactly* a kind token
+(`soft`, `hard`, `blocked`, `block`, `blocked-by`, `blocks`, `depends on`) and
+the deps are the `#\d+` in its other cells. A row naming no kind contributes
+nothing, so #307's `| Feature | Issue |` tables — the twelve false findings of
+issue #460 — still parse to zero.
 
 ## The state file (the single write path)
 
-`.agentic-workflow/batches.json` (under `--root`; untracked, durable, never a
-commit churn):
+`.agentic-workflow/batches.json` (under `--root`; untracked, durable).
+**Version 3** keys every claim by `(issue, lane)`:
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "written_at": "<ISO instant>",
   "source_revision": "<sha>",
   "claimed": {
-    "<issue-number>": { "batch": 1, "lane": "skills/x", "first_seen": "…", "last_seen": "…", "worktree": "feat/1-x" }
+    "487|scripts": { "batch": 1, "lane": "scripts", "first_seen": "…", "last_seen": "…", "worktree": "fix/487-secret-scan-gate" }
   },
   "seen": {
     "<issue-number>": { "title": "…", "batch": 1, "lane": "skills/x", "first_seen": "…", "last_seen": "…" }
@@ -130,14 +138,21 @@ commit churn):
 }
 ```
 
-`seen` (v2, issue #460) is the last-seen open-issue set — every open issue of
-the run, batched or not — and `new_issues[]`/`closed_since[]` are diffed
-against it: an absent set (a v1 file, or `--no-state`, which writes nothing and
-remembers nothing) reports every open issue as new. A re-run marks every
-still-planned issue present in `claimed` with `claimed: true`. `--mark-launched <n>`
-records that the operator launched issue N's lane outside the sensor. The two
-are mutually exclusive (the pair is a usage error, exit 2) — a pure read never
-writes. Nothing else on disk is ever touched.
+A claim is live only for the pair it was made in: an issue in four lanes and
+claimed in `scripts` reads unclaimed in the other three. A claim that no longer
+stands is reported once as `stale-claim` and pruned in the same run on any of: a
+pre-v3 bare-number key (no migration — a guessed lane is the bug); a
+`MERGED`/`CLOSED` PR or merged branch; an issue closed since; a `launched_at`
+claim whose lane has no worktree, branch or PR left; or a `last_seen` older than
+**48 hours** against the run instant. A dormant claim keeps its old `last_seen`,
+so it ages out and never resurrects a stale pair.
+
+`seen` is the last-seen open-issue set, and it is what makes a soft-dep target
+*closed* rather than merely absent. `--mark-launched <n>` records an out-of-band
+launch under the lane the issue was already claimed in (else `general`); it is
+mutually exclusive with `--no-state` (exit 2). The document carries **no
+timestamp**: the 48-hour rule is decided against the run instant the CLI
+supplies, so the same inputs produce a byte-identical envelope.
 
 ## CLI
 
@@ -147,10 +162,7 @@ bun scripts/batch-scheduler.mjs [--root <dir>] [--issues-file <json>]
                                 [--remote <url>] [--mark-launched <n>] [--json-only]
 ```
 
-`node` is the fallback when bun is absent. `--remote <url>` names the forge for
-**both** collection sources, so a scratch clone whose `origin` is a local path
-still reads the live issues. Exit codes: `0` a plan was printed (degradations
-inside are reported, not fatal); `1` the produced document failed its own
-`batch-plan@2` validation (a producer bug — never ship around it); `2` usage
-error, including a missing flag value and the `--no-state`/`--mark-launched`
-pair.
+`node` is the fallback. `--remote <url>` names the forge for the three reads
+(issues, relations, PRs). Exit codes: `0` plan printed (degradations are
+reported, not fatal); `1` the document failed its own `batch-plan@3` validation
+(a producer bug); `2` usage error. One call per dimension, never per issue.

@@ -301,6 +301,11 @@ hold; the guide outranks the issue's silence). The category is `label_blocked[]`
 what the schema package's core-closed rule bumps the version for (D6).
 `wontfix` is deliberately excluded: its lifecycle is closure, not a hold.
 
+**D11 supersedes D6's version conclusion** (not D6's rule): D6 read S4/S5 as a
+vocabulary-only change, which was true of S1–S7. S11 adds a field, so the
+document moves to `batch-plan@3` under the very rule D6 cites, and every owned
+surface that narrated `@2` moves with it.
+
 **D12 — S12's "explicit triage decision" is the published verdict vocabulary**
 (authority: S12's `fix-now (high)` example + `triage-issue`'s own verdicts). A
 body carrying `fix-now`, `postponed`, `promoted` or `wontfix` as a word marks
@@ -654,6 +659,73 @@ surgery.
 - **D12** — 2026-11-11, owner-workflow interpretation (authority: S12 + the
   published triage verdicts): a body verdict token outranks a stale roadmap
   row. See D12.
+
+- **E1** — 2026-11-11, baseline at the cut head `675f06c4` (after `bun install
+  --frozen-lockfile` and the schema package's `bun run build` in this worktree):
+  `bun test scripts/batch-scheduler.test.mjs` · exit 0 · 43 pass, 0 fail;
+  `cd packages/agentic-workflow-schema && bun run test` · exit 0 · 836 pass, 0 fail.
+- **E2** — 2026-11-11, RED corpus observed at `9ebfc6ae`: `bun test
+  scripts/batch-scheduler.test.mjs` · exit 1 · 16 fail, 43 pass (C1-C3, V1-V5,
+  W1/W3, X1-X5, the docs pin); `cd packages/agentic-workflow-schema && bun run
+  test` · exit 1 · 3 fail, 833 pass (the finding vocabulary and its vectors).
+- **E3** — 2026-11-11, extended-scope RED corpus observed at `3601997e`: `bun
+  test scripts/batch-scheduler.test.mjs` · exit 1 · 7 new fail, 62 pass (A1, B1,
+  B2, C1, D1, D3, E1; A2/C2/D2/E2 are the no-false-positive guards and passed
+  trivially on the unfixed code).
+- **E4** — 2026-11-11, `bun test scripts/batch-scheduler.test.mjs` · exit 0 · 70
+  pass, 0 fail (every rule of S2-S5 and S8-S12, plus the 43 pre-existing tests).
+- **E5** — 2026-11-11, `cd packages/agentic-workflow-schema && bun run test` ·
+  exit 0 · 837 pass, 0 fail (`batch-plan@3`, `label_blocked[]`, the five finding
+  codes, the strict-Ajv vectors).
+- **E6** — 2026-11-11, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21
+  pass; `bun scripts/check-skill-context.mjs` · exit 0 · PASS context budgets, 29
+  skills (PLAN.md 2783 estimate, `batch-scheduler` description 195 vs the 120
+  ceiling repaired by dropping the "what changed since the previous plan" tail).
+- **E7** — 2026-11-11, `bun scripts/docs-generate.mjs --check` · exit 0 · 3
+  checked, 0 missing, 0 stale, 0 orphaned; `bun scripts/roadmap-settle.mjs` ·
+  exit 0 · 186 unit docs, 0 violations; `bun scripts/lint-changeset.mjs` · exit 0
+  · the `509-` entry ok.
+- **E8** — 2026-11-11, differential check (O17) in `mktemp -d /tmp/aw509-diff-*`
+  (removed after): `git archive 675f06c4` vs `git archive HEAD`, one identical
+  fixture (a unit doc for #10, a `postponed` #11 with a soft dep on #10, a closed
+  #12 in the previous `seen`, a v2 claim map) through `buildBatchPlan` +
+  `updateState`. 94 diff lines, every one declared: the version/schema token, the
+  `label_blocked[]` category and its summary count, #10 leaving `launched[]` (a
+  unit doc is no longer evidence), the pre-v3 claim reported as `stale-claim`, the
+  state `version` and pair keys, and the `seen` batch/lane following the new plan.
+  No undeclared difference; the untouched behaviours are pinned by the 43
+  pre-existing tests (E4).
+- **E9** — 2026-11-11, `node scripts/run-root-suite.mjs --jobs 4` · exit 0 · 104
+  suites PASS, 0 fail.
+- **G1** — 2026-11-11, `bun scripts/local-gate.mjs --jobs 2` · exit 0 · `PASS —
+  17 step(s) in 409s`, no skipped step.
+- **E10** — 2026-11-11, the `--jobs 4` gate default is **load-flaky on this
+  machine**, disclosed rather than hidden: four runs at `--jobs 4` produced one
+  PASS and three root-suite reds whose failing suites are untouched by this change
+  and pass standalone (`setup-env` 76/0, `test-impact` 21/0, `tier-cost` 10/0,
+  `tmp-gc` 11/0). The mechanism is the published 10s per-test budget: the
+  `setup-env` `--check` subprocess timed out under the concurrent crate suites
+  (`this test timed out after 10000ms`, `killed 1 dangling process`). At `--jobs 2`
+  the gate is green (G1) and so is the root suite alone (E9). No suite was edited
+  to pass, and none is claimed as checked that did not run.
+- **P1** — 2026-11-11, planning ledgers frozen (this document + the two M-size
+  ledger files) · commit `522d63a6`.
+- **P2** — 2026-11-11, the S2-S5 red corpus committed alone, observed failing
+  (E2) · commit `9ebfc6ae`.
+- **P3** — 2026-11-11, the finding vocabulary published in the schema package ·
+  commit `be01c842`.
+- **P4** — 2026-11-11, per-lane claims, evidence-based launch, the overlap audit
+  and claim expiry · commit `133e261d`.
+- **P5** — 2026-11-11, the extended scope's red corpus committed alone, observed
+  failing (E3) · commit `3601997e`.
+- **P6** — 2026-11-11, the extended scope implemented (S8-S12) plus
+  `batch-plan@3` · commit `e8c8bc03`.
+- **P7** — 2026-11-11, docs and repository state: `PLAN.md` and `SKILL.md`
+  (contract, guardrails, the S6 known-limits section), `README.md` +
+  `docs/workflow/SKILLS.md` currency, the roadmap `## Fixes` row (**hand edit** —
+  PE-009: no emitter appends fix rows), the changeset intent, the journal
+  fragment, `docs/generated/units.md` through the renderer, and the
+  `batch-plan@2` sweep extension · commit <this commit>.
 
 ## Next
 

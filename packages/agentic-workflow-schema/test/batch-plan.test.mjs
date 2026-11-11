@@ -6,7 +6,7 @@
  * application workflow: one test per requested rule, red first). The contract
  * it pins:
  *
- *  - **One versioned document.** `batch-plan@2` — contract id + version + the
+ *  - **One versioned document.** `batch-plan@3` — contract id + version + the
  *    convenience `schema` token, the journal-entry precedent.
  *  - **Core is closed, wholly.** Unlike the journal entry there is no
  *    `metadata` escape: the plan is a computed projection of the live work
@@ -32,6 +32,7 @@ import {
   BATCH_PLAN_CONTRACT_ID,
   BATCH_PLAN_VERSION,
   BATCH_PLAN_SCHEMA,
+  BATCH_BLOCKING_LABELS,
   BATCH_REASON_KINDS,
   BATCH_FINDING_CODES,
   BATCH_SIZE_HINTS,
@@ -97,7 +98,11 @@ const CANONICAL = {
     },
   ],
   blocked: [{ number: 445, blockers: [444], reason: "blocked-by 444 (open)" }],
-  launched: [{ number: 443, evidence: "unit-doc docs/fix/443-doc-index" }],
+  launched: [{ number: 443, evidence: "branch fix/443-doc-index + unit-doc docs/fix/443-doc-index" }],
+  label_blocked: [
+    { number: 444, labels: ["postponed"] },
+    { number: 410, labels: ["backlog", "human-revision-needed"] },
+  ],
   new_issues: [{ number: 446, title: "Freshly filed" }],
   closed_since: [{ number: 442, title: "Closed since the last plan", batch: 1, lane: "skills/gamma", last_seen: "2026-11-08T00:00:00Z" }],
   findings: [
@@ -107,12 +112,23 @@ const CANONICAL = {
     { code: "file-overlap", numbers: [405, 408], detail: "both modify: scripts/docs-generate.mjs" },
     { code: "stale-claim", numbers: [409], detail: "claim 409|scripts expired: last seen 2026-11-08 is older than the 48h claim TTL" },
   ],
-  summary: { open_issues: 8, batched: 2, blocked: 1, launched: 1, findings: 5, batches: 2 },
+  summary: { open_issues: 8, batched: 2, blocked: 1, launched: 1, findings: 5, batches: 2, label_blocked: 2 },
 };
 
 test("batch-plan: the canonical vector validates", () => {
   const result = validateBatchPlan(CANONICAL);
   assert.deepEqual(result, { ok: true, errors: [] });
+});
+
+test("batch-plan: a label_blocked row outside the published labels is refused", () => {
+  const mutated = structuredClone(CANONICAL);
+  mutated.label_blocked[0].labels = ["wontfix"];
+  assert.equal(validateBatchPlan(mutated).ok, false);
+  assert.equal(schemaValidates(mutated), false);
+  const extra = structuredClone(CANONICAL);
+  extra.label_blocked[0].title = "not a field";
+  assert.equal(validateBatchPlan(extra).ok, false);
+  assert.equal(schemaValidates(extra), false);
 });
 
 test("batch-plan: the canonical vector validates under strict Ajv", () => {
@@ -121,8 +137,8 @@ test("batch-plan: the canonical vector validates under strict Ajv", () => {
 
 test("batch-plan: contract id, version and schema token agree", () => {
   assert.equal(BATCH_PLAN_CONTRACT_ID, "agentic-workflow/batch-plan");
-  assert.equal(BATCH_PLAN_VERSION, 2);
-  assert.equal(BATCH_PLAN_SCHEMA, "batch-plan@2");
+  assert.equal(BATCH_PLAN_VERSION, 3);
+  assert.equal(BATCH_PLAN_SCHEMA, "batch-plan@3");
   assert.equal(`${BATCH_PLAN_CONTRACT_ID.split("/")[1]}@${BATCH_PLAN_VERSION}`, BATCH_PLAN_SCHEMA);
 });
 
@@ -130,6 +146,7 @@ test("batch-plan: the closed vocabularies are exactly the published sets", () =>
   assert.deepEqual([...BATCH_REASON_KINDS], ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"]);
   assert.deepEqual([...BATCH_FINDING_CODES], ["cycle", "orphaned-soft-dep", "prose-native-mismatch", "file-overlap", "stale-claim"]);
   assert.deepEqual([...BATCH_SIZE_HINTS], ["light", "mixed", "heavy"]);
+  assert.deepEqual([...BATCH_BLOCKING_LABELS], ["postponed", "backlog", "human-revision-needed"]);
 });
 
 test("batch-plan: an unknown top-level key is refused (core closed, no metadata escape)", () => {

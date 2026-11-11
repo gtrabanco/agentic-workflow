@@ -4160,6 +4160,7 @@ export {
   BATCH_PLAN_CONTRACT_ID,
   BATCH_PLAN_SCHEMA,
   BATCH_PLAN_VERSION,
+  BATCH_BLOCKING_LABELS,
   BATCH_REASON_KINDS,
   BATCH_FINDING_CODES,
   BATCH_SIZE_HINTS,
@@ -4167,6 +4168,8 @@ export {
   validateBatchPlan,
 } from "./batch-plan.js";
 export type {
+  BatchBlockingLabel,
+  BatchLabelBlocked,
   BatchReasonKind,
   BatchFindingCode,
   BatchSizeHint,
