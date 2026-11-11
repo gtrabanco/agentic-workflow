@@ -430,7 +430,8 @@ test("#462 every unit-doc template stamps its own carrier and the train version"
   const train = packageVersion("packages/agentic-workflow");
   assert.equal(packageVersion("packages/agentic-workflow-schema"), train,
     "D-40-14: one train version — the forensic pair is only deterministic while this holds");
-  assert.equal(packageVersion("packages/pi-agentic-workflow"), train, "D-40-14: one train version across the three packages");
+  assert.equal(packageVersion("packages/pi-agentic-workflow"), train, "D-40-14: one train version across the four packages");
+  assert.equal(packageVersion("packages/pi-nan-agentic-workflow"), train, "D-40-14: the companion rides the same train");
   for (const template of TEMPLATES_462) {
     const text = read(template);
     const markers = [...text.matchAll(/^doc-provenance@1$/gm)];

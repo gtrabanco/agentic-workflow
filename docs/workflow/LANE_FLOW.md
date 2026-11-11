@@ -20,7 +20,12 @@ idea → unit doc → triage → catalog steps → evidence → review → merge
 4. **catalog steps** — the triaged steps run in order (research → design →
    plan → implement → tests → evidence → review → docs → release).
    Judgment steps (research, design, plan, evidence, docs, review) run inline,
-   one atomic gate/commit each; execution steps (implement, tests) hand off to
+   one atomic gate/commit each; at `standard` risk tier the `design` and `plan`
+   steps are **one** investigate→orient→ask→decide pass in one conductor session
+   with carriers separated (block `activity-fusion@1`, owner:
+   `skills/unit-lane/references/PLAN.md`) — the triage block records the fusion
+   as its additive `Fused:` line, and at `high` the two steps stay separated;
+   execution steps (implement, tests) hand off to
    `/execute-phase <NN> P<k> (tier: <tier>)` — one phase per turn, tier from
    the triage block's `Tiers:` line — and the lane resumes after the last
    phase.
@@ -71,6 +76,17 @@ Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: st
 Skipped: none
 Budget: strong
 ```
+
+A unit whose doc records the `standard` risk tier adds one line exactly when
+both `design` and `plan` are triaged (issue #434):
+
+```
+Fused: design + plan — one investigate→orient→ask→decide pass, carriers separated (activity-fusion@1)
+```
+
+The line is additive and the JSON answer carries `fused: { steps: ["design", "plan"] }` only
+when it prints; at `high`, or with no recorded tier, the output is the block
+above with nothing added.
 
 The `Tiers:` line carries each selected step's `budget_tier` from
 `scripts/catalog.json` (one source of truth) and `Budget:` derives from it

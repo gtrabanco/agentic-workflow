@@ -80,6 +80,21 @@ function guard(root, args = []) {
   return result;
 }
 
+/** Run the guard with no `--home`: the default-home cases read the shipped
+ *  default (`<repo>/.worktrees` since issue #505), never a test override. */
+function guardDefault(root, args = []) {
+  const result = spawnSync(process.execPath, [GUARD, "--repo", root, ...args], {
+    encoding: "utf8",
+  });
+  assert.equal(result.status !== null, true, `the guard spawned (stderr: ${result.stderr})`);
+  return result;
+}
+
+/** Escape a path for a `new RegExp` match against a guard output line. */
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 test("a clean worktree on an unmerged branch inside the legal home is healthy", () => {
   withRepo(({ root, git }) => {
     const live = addWorktree(git, root, "live", ["-b", "feat/live"]);
@@ -206,6 +221,60 @@ test("--json emits one JSON object with the findings", () => {
     assert.equal(parsed.verdict, "FAIL");
     assert.equal(parsed.findings.length, 1);
     assert.equal(parsed.findings[0].code, "DETACHED");
+  });
+});
+
+test("a worktree inside .git/worktrees is an ADMIN_NAMESPACE finding --prune never removes or moves it", () => {
+  withRepo(({ root, git }) => {
+    // The lethal layout: the working tree sits in git's private worktree-admin
+    // namespace, so any `git worktree prune` deletes the container recursively
+    // (exit 0, silent) — the guard must flag it, never certify it as legal.
+    fs.mkdirSync(path.join(root, ".git", "worktrees", "fix"), { recursive: true });
+    const nested = path.join(root, ".git", "worktrees", "fix", "493-x");
+    git(["worktree", "add", "-b", "fix/493-x", nested]);
+    fs.writeFileSync(path.join(nested, "precious.txt"), "uncommitted work\n");
+    const result = guardDefault(root);
+    assert.equal(result.status, 1, `the lethal layout blocks (stdout: ${result.stdout})`);
+    assert.match(result.stdout, /FINDING \.git\/worktrees\/fix\/493-x — ADMIN_NAMESPACE/);
+
+    const pruned = guardDefault(root, ["--prune"]);
+    assert.equal(pruned.status, 1, `relocating a live checkout is the owner's call, never --prune's (stdout: ${pruned.stdout})`);
+    assert.match(pruned.stdout, /SKIP .* — relocate/);
+    assert.equal(fs.existsSync(path.join(nested, "precious.txt")), true, "the uncommitted work survives --prune");
+  });
+});
+
+test("two worktrees under .git/worktrees whose basenames collide are both ADMIN_NAMESPACE findings", () => {
+  withRepo(({ root, git }) => {
+    // git names the admin dir after the path's basename, so feat/493-x and
+    // fix/493-x become 493-x and 493-x1 — an admin-to-tree mapping no tool
+    // can follow. Both trees are findings regardless of the collision.
+    fs.mkdirSync(path.join(root, ".git", "worktrees", "feat"), { recursive: true });
+    fs.mkdirSync(path.join(root, ".git", "worktrees", "fix"), { recursive: true });
+    const feat = path.join(root, ".git", "worktrees", "feat", "493-x");
+    const fix = path.join(root, ".git", "worktrees", "fix", "493-x");
+    git(["worktree", "add", "-b", "feat/493-x", feat]);
+    git(["worktree", "add", "-b", "fix/493-x", fix]);
+    const result = guardDefault(root);
+    assert.equal(result.status, 1);
+    const adminFindings = result.stdout.split("\n").filter((line) => line.includes("— ADMIN_NAMESPACE"));
+    assert.equal(adminFindings.length, 2, `both nested trees flag (stdout: ${result.stdout})`);
+    assert.ok(adminFindings.some((line) => line.includes(".git/worktrees/feat/493-x")), "the feat tree flags");
+    assert.ok(adminFindings.some((line) => line.includes(".git/worktrees/fix/493-x")), "the fix tree flags");
+  });
+});
+
+test("the default legal home is <repo>/.worktrees and other locations stay report-only", () => {
+  withRepo(({ root, git }) => {
+    const home = path.join(root, ".worktrees", "fix-493-x");
+    git(["worktree", "add", "-b", "fix/493-x", home]);
+    git(["-C", home, "commit", "--allow-empty", "-m", "wip"]);
+    const elsewhere = path.join(root, "elsewhere-wt");
+    git(["worktree", "add", "-b", "feat/elsewhere", elsewhere]);
+    const result = guardDefault(root);
+    assert.equal(result.status, 0, `the shipped home never blocks (stdout: ${result.stdout})`);
+    assert.doesNotMatch(result.stdout, /REPORT \.worktrees\/fix-493-x/, "the .worktrees tree is inside the legal home");
+    assert.match(result.stdout, /REPORT elsewhere-wt — OUTSIDE/, "a location the owner chose is still report-only");
   });
 });
 
