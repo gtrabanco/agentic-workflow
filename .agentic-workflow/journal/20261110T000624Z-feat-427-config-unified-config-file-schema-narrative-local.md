@@ -1,6 +1,0 @@
-## 2026-11-10T00:06:24Z — feat/427-config-unified-config-file-schema — External-verify correction batch
-- **Commits:** 13 (`2ee0b07e…e7885557`)
-- **Files:** 55 files
-- **Summary:** First external verification of #427 returned four blockers. This batch repairs the surviving mentions of the retired autoLogSession key on live surfaces: the template carrier doc's writer table, this repository's carrier doc, the crate's publish API prose (mjs and d.mts) and the pi merge note; it updates the writer-table pin to the shipped logSession, and it posts the M10 proposals (the .agentic-workflow/ structure and the pi-agentic-workflow-state.json location) to issue #427 as proposals. The stale key in this journal's own header cannot be edited: docs/LOGS.md is byte-append-only for a non-aggregator commit, so this entry is the correcting line the rule asks for.
-- **Decisions:** logSession replaces autoLogSession on every live surface; frozen records (features 394, 405, docs/fix/**, roadmap row 39) stay as they were cut. The journal header repair takes the sanctioned route (a fragment the aggregator appends), proven in a scratch repository: an in-place header edit answers log-rewritten and log-hand-appended. M10's two notes are posted as proposals, never as implementation.
-- **Next:** Owner review of the correction batch, then PR #494.
