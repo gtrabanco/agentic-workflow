@@ -246,8 +246,8 @@ the full accumulated diff. On gate red at any step: repair that step (up to
 step's completion: open the PR on `main` with `Closes #N`, write `- PR: <url>`
 into References, and settle the index row with `agentic-workflow roadmap
 <index> rowUpsert '<json>'` (`docs/ROADMAP.md`; a fix unit writes its `## Fixes`
-row with `agentic-workflow roadmap <index> fixrow '<json>'` — no `NN` column, so
-the features writer does not apply).
+row with `agentic-workflow roadmap <index> fixrow '<json>'` — keyed by the issue
+number in its `[#N](url)` cell, never a hand edit).
 `bun scripts/roadmap-settle.mjs` exits 0 (#316).
 Terminal:
 
