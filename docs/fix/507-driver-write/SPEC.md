@@ -133,6 +133,21 @@ it. #507's native `blocked-by` #498 is satisfied (PR #512 merged).
 > to `merge=docs-generated` and points the attribute at the shared-document
 > class registry named above it, keeping the #507 table-sync sentence.
 
+**S17 — the `logs` union merge-driver class (the #498 scope reinforcement, delivered here by owner order).**
+> Issue #498, owner comment 2026-11-10T00:22 verbatim: "add a union merge driver for
+> `docs/LOGS.md`. Not a replacement for the `journal-aggregate` workflow — the driver is a
+> pure, stateless function git invokes inside a `git merge` … Driver behavior: union by entry
+> identity (fragment-derived entry id/timestamp, already monotonic) — distinct entries both
+> kept, ordered by timestamp; the same entry on both sides deduplicated; anything ambiguous
+> (malformed entry boundary) exits nonzero and leaves a real conflict for the human/agent.
+> Never silently resolved." The landed `SHARED_MERGE_CLASSES` shipped no `logs` class (the
+> #498 SPEC's Non-goals S4 kept `docs/LOGS.md` out as "already collision-safe"), so the
+> comment's absorption never shipped; the owner ordered it implemented here ("Pues
+> implementalo", 2026-11-11) and re-verified issue #507 + PR #513 for anything else requested
+> (session S2: the issue's seven body ACs are all covered by S1–S6, its one comment is the
+> coordination note batch 2 applied, and PR #513 carries one comment and zero reviews —
+> nothing further was requested).
+
 **Recorded residual (decision-required, owner's call):** the
 `docs/generated/**` carrier question — union the #420 shortcut into the class
 driver, or keep the current refusal-with-gate split. The rebase keeps the
@@ -223,6 +238,7 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - **AC-S14** — the scaffold ships the integrated merge-driver registry and `docs/ROADMAP.md` is claimed by exactly one driver. Check: the template-registry case in `bun test scripts/docs-generated-merge.test.mjs` → exits 0; `git check-attr merge docs/ROADMAP.md` → `agentic-shared-roadmap`
 - **AC-S15** — init-workspace arms both driver families on bootstrap and upgrade and verifies both config keys. Check: the bootstrap-arming case in `bun test scripts/docs-generated-merge.test.mjs` → exits 0; a scratch clean checkout after both installs has `git config --get merge.docs-generated.driver` and `git config --get merge.agentic-shared-roadmap.driver` non-empty
 - **AC-S16** — the root guide's residual-case sentence names the class registry as ROADMAP's merge home and keeps the table-sync wording. Check: `rg -c "merge=docs-generated" AGENTS.md` → 1 (the `docs/generated/**` attribute only)
+- **AC-S17** — the `logs` class unions LOGS entries keyed by the exact heading line: distinct new entries both kept, ordered by normalized stamp; the same heading on both sides with the same bytes deduplicated; the same heading with different bodies surfaces a real conflict; a side that is not an append-only extension of the base refuses closed. Check: the logs-class cases in `bun test packages/agentic-workflow/test/writer.merge.test.mjs` and `bun test scripts/shared-doc-merge.test.mjs` → exit 0; the armed merge of two heterogeneous appends (date-only + full-ISO) resolves clean, exit 0
 
 ## Tasks
 
@@ -268,6 +284,10 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 | PE-005 | repository | `tableCells` drops both boundary cells, so the Fixes table's Topic slug sits at `cells[1]` exactly like the Features table's Slug — the fix-kind `slugColumn = 2` reads Status instead | `packages/agentic-workflow/src/index-document.mjs` `tableCells` + a head probe: row 443 parses to link, topic, status, notes (4 cells) | sampled 2026-11-11 | O5 |
 | PE-006 | repository | The Fixes-scan line offsets come from the pre-sync text, so feature appends slide the window: with only `slugColumn` repaired in scratch, a fresh fix override applied at up to 3 appended rows and was skipped at 6 (header misdetect inside the appended feature rows) | scratch probe on a clone of head, `mktemp -d` | sampled 2026-11-11 | O7 |
 
+| PE-007 | repository | PR #512 (unit #498) landed the file-class merge driver layer — `.gitattributes` names `merge=agentic-shared-roadmap`/`-budgets`/`-repo-state` and `scripts/shared-doc-merge.mjs` arms them — so the pre-rebase plan's `docs/ROADMAP.md merge=docs-generated` claim is a duplicate claim on the same path | rebase read: root `.gitattributes` and `scripts/shared-doc-merge.mjs` at `b2864d03`; both coordination comments 2026-11-11T12:02Z | current | O11, O13 |
+| PE-008 | repository | `scripts/shared-doc-merge.mjs --install` arms the three `merge.agentic-shared-*` config keys on a clean checkout and reports an already-armed one as unchanged | `scripts/shared-doc-merge.test.mjs` (main, 2026-11-10) — the class keys are asserted non-empty after install | current | O12 |
+| PE-009 | repository | the landed class registry has no `logs` class and `docs/LOGS.md`'s entries are byte-shaped by `journal-entry` (`packages/agentic-workflow/src/journal/block.mjs` renders the `## <stamp> — <branch> — <label>` heading) — the writer half's shape exists even though a strict stamp grammar would not hold | `scripts/shared-doc-merge.mjs` (`SHARED_MERGE_CLASSES`), `src/journal/block.mjs`; issue #498 comment 2026-11-10T00:22 | current | O14 |
+| PE-010 | repository | the real journal is heterogeneous: 850 headings, only 610 full ISO-second stamps; date-only and minute-precision shapes and 14 legitimately repeated exact headings exist — so the entry identity is the exact heading line, the merge holds both sides to the append-only prefix contract, and a strict stamp grammar would refuse the file the driver exists to protect | head probe on `docs/LOGS.md` (`rg "^## "` counts, 2026-11-11) + the scratch reproduction of the refusal | current | O14 |
 Rebase re-triage 2026-11-11 (branch rebased onto `b2864d03`, the merged #498/#512 train;
 merge-base `505c2244` -> main): the timeline replays as the same 17 commits — no squash, no
 feature deletion — and the merge-wiring overlap is resolved at the attribute level:
@@ -277,8 +297,7 @@ capability as the scratch-fixture reproducer route while the wired attribute cha
 ownership. The remaining tasks are P8 (registry integration in the scaffold + both-driver
 arming, S14/S15) and P9 (guide prose, S16); the regeneration of the drifted projection rides
 both (the #498 train changed the unit docs the emitter reads).
-| PE-007 | repository | PR #512 (unit #498) landed the file-class merge driver layer — `.gitattributes` names `merge=agentic-shared-roadmap`/`-budgets`/`-repo-state` and `scripts/shared-doc-merge.mjs` arms them — so the pre-rebase plan's `docs/ROADMAP.md merge=docs-generated` claim is a duplicate claim on the same path | rebase read: root `.gitattributes` and `scripts/shared-doc-merge.mjs` at `b2864d03`; both coordination comments 2026-11-11T12:02Z | current | O11, O13 |
-| PE-008 | repository | `scripts/shared-doc-merge.mjs --install` arms the three `merge.agentic-shared-*` config keys on a clean checkout and reports an already-armed one as unchanged | `scripts/shared-doc-merge.test.mjs` (main, 2026-11-10) — the class keys are asserted non-empty after install | current | O12 |
+
 
 ### Obligations
 
@@ -297,6 +316,7 @@ both (the #498 train changed the unit docs the emitter reads).
 | O11 | S14 | the scaffold's `.gitattributes` ships the integrated registry — the class lines stated once, `docs/ROADMAP.md` claimed by exactly one driver | P8 | P8 | template/.gitattributes | the template-registry case in `bun test scripts/docs-generated-merge.test.mjs` exits 0; `git check-attr merge docs/ROADMAP.md` → `merge: agentic-shared-roadmap` at the rebased head | the E line naming both runs (E8) | verified |
 | O12 | S15 | init-workspace arms the docs-generated driver and the shared-document classes in bootstrap and upgrade, verifying both config keys | P8 | P8 | skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md | the bootstrap-arming case in `bun test scripts/docs-generated-merge.test.mjs` exits 0; the scratch install run leaves both config keys non-empty | the E line naming the RED and GREEN runs and the scratch run (E8/E9) | verified |
 | O13 | S16 | the root guide's residual-case prose names the registry as the ROADMAP attribute's home and keeps the table-sync sentence | P9 | P9 | AGENTS.md | `rg -c "merge=docs-generated" AGENTS.md` → 1 — the `docs/generated/**` attribute only | the E line with the command output (E9) | verified |
+| O14 | S17 | the registry's fifth path: `docs/LOGS.md` merges by entry identity — distinct new entries both kept, ordered by stamp; the same heading deduplicated; the same heading with different bodies is a conflict; a side that is not an append-only extension refuses closed; `.gitattributes` (root + template) and the arming carry it | P10 | P10 | packages/agentic-workflow/src/writer/merges.mjs (union), scripts/shared-doc-merge.mjs (class), .gitattributes, template/.gitattributes | `bun test packages/agentic-workflow/test/writer.merge.test.mjs` exits 0 with the logs-union cases; `bun test scripts/shared-doc-merge.test.mjs` exits 0 with the armed-merge cases; `git check-attr merge docs/LOGS.md` → `merge: agentic-shared-logs` | the E line naming the RED and GREEN runs and the scratch merge (E10) | verified |
 
 ## Triaged steps
 
@@ -333,6 +353,11 @@ probe) once `slugColumn` alone is repaired — the change is done when all three
   and maybe redo of the plan could be necessary", under the owner's standing local-workflow
   procedure (§0 resolution: `proceed` — rebase + integration continuation; the coordination
   annotations are re-read in Correction batch 2).
+- **L3** — Delivery extension verbatim: "Pues implementarlo. Verifica también la issue #507
+  porque igual está ahí el pedido también o en la propia PR #513 (por si hubiese algo más) y lo
+  que sea que haya implementalo" and "La implementación hazla usando aw-local-apply" — the
+  #498 scope-reinforcement LOGS class implemented under the standing local-apply procedure
+  (S17/P10).
 - **E1** — 2026-11-10, RED at `32b0d053`: `bun test scripts/docs-generate.test.mjs` exit 1 — 4 fail
   (row append, derivation chain, `roadmap_summary:` override, stale-check), 23 pass; `bun test
   scripts/docs-generated-merge.test.mjs` exit 1 — 3 fail (driver coverage of `docs/ROADMAP.md`,
@@ -404,15 +429,29 @@ probe) once `slugColumn` alone is repaired — the change is done when all three
   `bun scripts/lint-changeset.mjs` → `ok 507-driver-write.md`; live read-only
   `bun scripts/docs-generate.mjs --check` → PASS, `Roadmap: docs/ROADMAP.md — unchanged`,
   `docs/generated/units.md` clean.
+- **E10** — 2026-11-11, the logs class (S17): RED at `13c80736` —
+  `bun test packages/agentic-workflow/test/writer.merge.test.mjs` exit 1 (import error: the
+  union does not exist), `bun test scripts/shared-doc-merge.test.mjs` exit 1 — 10 pass / 2 fail
+  on the arming loop and the armed FF-5 merge, `bun test scripts/docs-generated-merge.test.mjs`
+  exit 1 — 16 pass / 2 fail on the two closed-set pins. GREEN at `4805c27c`, re-cut at
+  `33b3019f` (PE-010 surfaced the real journal's heterogeneous stamps in scratch: the first
+  armed merge refused a real `## 2026-11-09 — … — manual` heading — 850 headings, 610 full
+  ISO-second, date-only/minute shapes and 14 repeated exact headings — so the identity became
+  the exact heading line and the contract the append-only prefix): crate merge suite 15/0,
+  shared-doc-merge 12/0, docs-generated-merge 18/0, crate suite 644/0. Scratch differential at
+  the delivered head (`mktemp -d` + `git archive`): `shared-doc-merge --install` arms four keys
+  (`agentic-shared-logs — written`); a real merge of two branches appending a date-only and a
+  full-ISO entry resolves clean (exit 0, both entries present). Deterministic gates at the
+  delivered tree: `local-gate --skip-network` PASS 13 steps / 644 tests (version-parity green after
+  the changeset declared `@gtrabanco/agentic-workflow` minor at `95a83020`),
+  `check-skill-context --documents` PASS 4, changeset lint `ok`. verify@1 re-run at the ledger
+  head → PASS.
 
 ## Next
 
-Rebase integration green (Correction batch 2) — the branch carries the same 17-commit timeline
-replayed onto the #498 train plus the integration commits; awaiting the external verifier's
-verdict (§9) and the push-authorization for the rewritten published branch. Open decisions:
-F2/F3 (design verdicts from the first batch) and F4 (the `docs/generated/**` residual — union
-the #420 shortcut into the class driver, or keep the current refusal-with-gate split); D1
-still none.
+The logs class (S17) delivered on the same branch — Correction batch 2 now covers the rebase
+integration and the #498 scope reinforcement. Awaiting: the external verifier's verdict (§9)
+and the owner's design calls (F2/F3/F4). D1 still none.
 
 ## References
 
