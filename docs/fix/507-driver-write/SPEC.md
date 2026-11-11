@@ -154,6 +154,42 @@ driver, or keep the current refusal-with-gate split. The rebase keeps the
 current split (the owner offered it as one of the two routes); nothing is
 removed, so flipping later is a content change, not a recovery.
 
+### Correction batch 3 — 2026-11-11 (external verify 16:10Z, owner-directed advisory triage)
+
+The second `EXTERNAL VERIFY` receipt (`docs/fix/507-driver-write/external-verify.md`, base
+`b2864d03` · head `468d9bf9`) closed **Blockers: 0 · Verdict: VERIFIED** with five advisories,
+so the blocker batch is empty by state (§0: `proceed` — the triage targets are the five
+advisories). Docs-only batch: no code, script or template bytes move. Frozen triage of the
+receipt, each disposition this batch's scope:
+
+| receipt advisory | disposition |
+|---|---|
+| 1 — the Risk tier section's `(E-line below)` names no tier evidence line | fix — P11 appends the tier evidence line |
+| 2 — `D3` is cited from this doc but its record lives only in the journal | fix — P12 names the journal entry at every `D3` site in this doc |
+| 3 — `docs/LOGS.md:4055`'s dated step-5 mention | wontfix — already dispositioned; the append-only carrier refuses the edit (`scripts/log-immutability.mjs`) |
+| 4 — E10's "644" counts do not reproduce | fix by append — P13 appends the re-measurement (`log-kind@1`: corrections append, never edit); its queued-fragment half is n/a (tracked-fragment edits are aggregator-only, PE-013) |
+| 5 — bare-clone `--skip-network` schema-build red + one pool flake | n/a — environment by design (`--skip-network` skips `workspace-install`); no repo surface deserves a change |
+
+Out of triage scope: F2/F3/F4 stay `decision-required` (owner), and the receipt's disclosed
+verification incident (live generate-mode execute, 0 bytes written) is a process note with
+nothing to repair. The context reads (S2, rows PE-011–PE-014) additionally exposed two related
+surfaces this batch owns (P14): AC-S4 and S14's prose tail still count the class registry as
+three after S17 shipped the fourth, and the Planning evidence table carries a blank line that
+splits it (introduced by this branch's batch-2 re-freeze, `aa8f888f`).
+
+**S18 — the advisories that deserve a fix are fixed; the rest are dispositioned with reasons.**
+> "triage and fix those that deserve to fix"
+
+**S19 — every fix rests on sampled context, recorded as planning-evidence rows.**
+> "understand the context before fix"
+
+**S20 — the batch breaks nothing else; the deterministic gates and the docs differential
+re-run green afterwards.**
+> "check you haven't broke another different thing"
+
+**S21 — the loop repeats until every surface mentioning what a fix changed is fixed too.**
+> "if you have done, start the loop again until you fixed full symbol/related stuff"
+
 ## Impact
 
 Callers of the changed surfaces:
@@ -239,6 +275,10 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - **AC-S15** — init-workspace arms both driver families on bootstrap and upgrade and verifies both config keys. Check: the bootstrap-arming case in `bun test scripts/docs-generated-merge.test.mjs` → exits 0; a scratch clean checkout after both installs has `git config --get merge.docs-generated.driver` and `git config --get merge.agentic-shared-roadmap.driver` non-empty
 - **AC-S16** — the root guide's residual-case sentence names the class registry as ROADMAP's merge home and keeps the table-sync wording. Check: `rg -c "merge=docs-generated" AGENTS.md` → 1 (the `docs/generated/**` attribute only)
 - **AC-S17** — the `logs` class unions LOGS entries keyed by the exact heading line: distinct new entries both kept, ordered by normalized stamp; the same heading on both sides with the same bytes deduplicated; the same heading with different bodies surfaces a real conflict; a side that is not an append-only extension of the base refuses closed. Check: the logs-class cases in `bun test packages/agentic-workflow/test/writer.merge.test.mjs` and `bun test scripts/shared-doc-merge.test.mjs` → exit 0; the armed merge of two heterogeneous appends (date-only + full-ISO) resolves clean, exit 0
+- **AC-S18** — the receipt advisories 1, 2 and 4 are repaired and their frozen-failure reproducers pass. Check: O15, O16 and O17's validators each reach their stated outcome (RED observed at the frozen-ledger head, recorded in the Triaged steps paragraph)
+- **AC-S19** — every context claim this batch rests on is a sampled planning-evidence row. Check: `rg -c "^\| PE-01[1-4] \| " docs/fix/507-driver-write/SPEC.md` → matches 4
+- **AC-S20** — nothing else broke. Check: `bun scripts/local-gate.mjs --skip-network` → `local-gate: PASS — 13 step(s)`; `bun scripts/docs-generate.mjs --check` → `verdict: PASS`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/507-driver-write/SPEC.md` → exit 0 (E14, G3)
+- **AC-S21** — the sibling sweep over every fixed surface closes. Check: O20's two sweep checks at their stated post-repair outcomes (E13)
 
 ## Tasks
 
@@ -272,6 +312,26 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - P10 — the `logs` union merge-driver class: `unionLogEntries` in the crate's merge library, the class registered in `shared-doc-merge.mjs`, the attribute in both `.gitattributes` files, the arming prose extended (validator: the logs-union cases in `bun test packages/agentic-workflow/test/writer.merge.test.mjs` and the armed-merge case in `bun test scripts/shared-doc-merge.test.mjs` exit 0; `git check-attr merge docs/LOGS.md` → `agentic-shared-logs`)
   (Implements: S17)
   Relevant files: packages/agentic-workflow/src/writer/merges.mjs, scripts/shared-doc-merge.mjs, .gitattributes, template/.gitattributes, skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md, AGENTS.md
+- P11 — append the tier evidence line the Risk tier section's pointer names (validator: `rg -c "^\- \*\*E11\*\*" docs/fix/507-driver-write/SPEC.md` → matches 1)
+  (Implements: S18)
+  Relevant files: docs/fix/507-driver-write/SPEC.md
+- P12 — name the journal entry at every `D3` site in this doc (validator: `rg -c "D3 \(2026-11-11T00:32:24Z" docs/fix/507-driver-write/SPEC.md` → matches 3)
+  (Implements: S18)
+  Relevant files: docs/fix/507-driver-write/SPEC.md
+- P13 — append the count re-measurement that supersedes E10's narration (validator: `rg -c "^\- \*\*E12\*\*" docs/fix/507-driver-write/SPEC.md` → matches 1)
+  (Implements: S18)
+  Relevant files: docs/fix/507-driver-write/SPEC.md
+- P14 — freeze the context rows and repair the two related surfaces they exposed: the stale
+  three-count in AC-S4 and S14's prose tail, and the blank line splitting the Planning
+  evidence table (validator: `rg -c "^\| PE-01[1-4] \| " docs/fix/507-driver-write/SPEC.md` → matches 4)
+  (Implements: S18, S19)
+  Relevant files: docs/fix/507-driver-write/SPEC.md
+- P15 — run the verification set and the deterministic gate at the fixed head (validator: O19 — gate PASS 13 steps, docs-generate --check PASS, verify@1 exit 0)
+  (Implements: S20)
+  Relevant files: scripts/local-gate.mjs, docs/fix/507-driver-write/SPEC.md
+- P16 — run the sibling sweep over every fixed surface and close it (validator: O20's two sweep checks at their stated outcomes)
+  (Implements: S21)
+  Relevant files: docs/fix/507-driver-write/SPEC.md
 
 ### Planning evidence
 
@@ -288,6 +348,10 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 | PE-008 | repository | `scripts/shared-doc-merge.mjs --install` arms the three `merge.agentic-shared-*` config keys on a clean checkout and reports an already-armed one as unchanged | `scripts/shared-doc-merge.test.mjs` (main, 2026-11-10) — the class keys are asserted non-empty after install | current | O12 |
 | PE-009 | repository | the landed class registry has no `logs` class and `docs/LOGS.md`'s entries are byte-shaped by `journal-entry` (`packages/agentic-workflow/src/journal/block.mjs` renders the `## <stamp> — <branch> — <label>` heading) — the writer half's shape exists even though a strict stamp grammar would not hold | `scripts/shared-doc-merge.mjs` (`SHARED_MERGE_CLASSES`), `src/journal/block.mjs`; issue #498 comment 2026-11-10T00:22 | current | O14 |
 | PE-010 | repository | the real journal is heterogeneous: 850 headings, only 610 full ISO-second stamps; date-only and minute-precision shapes and 14 legitimately repeated exact headings exist — so the entry identity is the exact heading line, the merge holds both sides to the append-only prefix contract, and a strict stamp grammar would refuse the file the driver exists to protect | head probe on `docs/LOGS.md` (`rg "^## "` counts, 2026-11-11) + the scratch reproduction of the refusal | current | O14 |
+| PE-011 | repository | the Risk-tier re-run claim reproduces on the implemented diff: `bun scripts/ceremony.mjs tier classify --base origin/main` returns `tier: standard`, and unit 505's identical claim carries its evidence line (`docs/fix/505-worktree-prune/SPEC.md` E8) — the correct shape for the dangling pointer | foreground run at the batch head + `git show` of 505's SPEC E8 | sampled 2026-11-11 | O15 |
+| PE-012 | repository | the crate suite runs 645 pass / 0 fail in three configurations (live worktree at `468d9bf9`; scratch clones at `95a83020`, E10's recorded head, and `468d9bf9`) with byte-identical test trees (`git diff --stat 95a83020..HEAD -- packages/agentic-workflow/test scripts` → empty), so E10's "644" does not reproduce at its recorded head while its PASS verdict does | three foreground runs 2026-11-11 | sampled 2026-11-11 | O17 |
+| PE-013 | repository | `scripts/log-immutability.mjs` refuses any non-aggregator commit that deletes or edits a tracked fragment, so the queued journal fragment's count narration cannot be repaired by this batch — journal narration corrections land as carrier additions or Log appends only | `scripts/log-immutability.mjs` header contract (fragment edit = aggregator identity) | sampled 2026-11-11 | O17, O18 |
+| PE-014 | repository | `log-kind@1` makes the unit Log append-only — "a correction never edits an earlier line: it appends" — so advisory 4's fix must be an appended evidence line, never an E10 rewrite | `docs/fix/_TEMPLATE/SPEC.md` Log contract block | current | O17 |
 Rebase re-triage 2026-11-11 (branch rebased onto `b2864d03`, the merged #498/#512 train;
 merge-base `505c2244` -> main): the timeline replays as the same 17 commits — no squash, no
 feature deletion — and the merge-wiring overlap is resolved at the attribute level:
@@ -317,6 +381,12 @@ both (the #498 train changed the unit docs the emitter reads).
 | O12 | S15 | init-workspace arms the docs-generated driver and the shared-document classes in bootstrap and upgrade, verifying both config keys | P8 | P8 | skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md | the bootstrap-arming case in `bun test scripts/docs-generated-merge.test.mjs` exits 0; the scratch install run leaves both config keys non-empty | the E line naming the RED and GREEN runs and the scratch run (E8/E9) | verified |
 | O13 | S16 | the root guide's residual-case prose names the registry as the ROADMAP attribute's home and keeps the table-sync sentence | P9 | P9 | AGENTS.md | `rg -c "merge=docs-generated" AGENTS.md` → 1 — the `docs/generated/**` attribute only | the E line with the command output (E9) | verified |
 | O14 | S17 | the registry's fifth path: `docs/LOGS.md` merges by entry identity — distinct new entries both kept, ordered by stamp; the same heading deduplicated; the same heading with different bodies is a conflict; a side that is not an append-only extension refuses closed; `.gitattributes` (root + template) and the arming carry it | P10 | P10 | packages/agentic-workflow/src/writer/merges.mjs (union), scripts/shared-doc-merge.mjs (class), .gitattributes, template/.gitattributes | `bun test packages/agentic-workflow/test/writer.merge.test.mjs` exits 0 with the logs-union cases; `bun test scripts/shared-doc-merge.test.mjs` exits 0 with the armed-merge cases; `git check-attr merge docs/LOGS.md` → `merge: agentic-shared-logs` | the E line naming the RED and GREEN runs and the scratch merge (E10) | verified |
+| O15 | S18 | receipt advisory 1 — the Risk tier section's re-run claim carries its evidence line, so `(E-line below)` resolves | P1 | P11 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\- \*\*E11\*\*" docs/fix/507-driver-write/SPEC.md` → matches 1 | the E11 line with its command, exit and output, plus the green corpus re-run (E11, E13) | planned |
+| O16 | S18 | receipt advisory 2 — every `D3` citation in this doc names the journal entry that carries the record | P1 | P12 | docs/fix/507-driver-write/SPEC.md | `rg -c "D3 \(2026-11-11T00:32:24Z" docs/fix/507-driver-write/SPEC.md` → matches 3 | the green corpus re-run over the three repaired sites (E13) | planned |
+| O17 | S18 | receipt advisory 4 — E10's count narration is superseded by an appended re-measurement, per `log-kind@1` (corrections append, never edit) | P1 | P13 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\- \*\*E12\*\*" docs/fix/507-driver-write/SPEC.md` → matches 1 | the E12 line with the three re-measured runs (E12) | planned |
+| O18 | S19 | the batch's context claims are sampled rows (PE-011–PE-014), never carried from memory | P1 | P14 | docs/fix/507-driver-write/SPEC.md | `rg -c "^\| PE-01[1-4] \| " docs/fix/507-driver-write/SPEC.md` → matches 4 | the PE-011–PE-014 rows, re-run in the verification block (E14) | planned |
+| O19 | S20 | nothing else broke — the deterministic gate, the docs differential and the unit-doc contract re-run green after the batch | P2 | P15 | scripts/local-gate.mjs + the unit doc | `bun scripts/local-gate.mjs --skip-network` → `local-gate: PASS — 13 step(s)`; `bun scripts/docs-generate.mjs --check` → `verdict: PASS`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/507-driver-write/SPEC.md` → exit 0 | the gate line and the verification block with their exits (G3, E14) | planned |
+| O20 | S21 | the sibling sweep over every fixed surface closes — no surviving stale class count outside the dated narrative, and the split Planning evidence table is one table again | P2 | P16 | docs/fix/507-driver-write/SPEC.md | `rg -c "the three .agentic-shared-.+ class lines" docs/fix/507-driver-write/SPEC.md` → matches 1; `rg -U -c "PE-006 \| repository[^\n]*\n\| PE-007" docs/fix/507-driver-write/SPEC.md` → matches 1 | the green sweep outputs (E13) | planned |
 
 ## Triaged steps
 
@@ -333,6 +403,15 @@ Correction triage 2026-11-11 (branch `fix/507-driver-write`, head `76ac4b0e`, pe
 is consistent. The §2 frozen-failure corpus runs RED first: the fix-override reproducer and the
 check-wording reproducer at the pre-fix commit, then the multi-append reproducer (PE-006's k=6
 probe) once `slugColumn` alone is repaired — the change is done when all three pass together.
+
+Correction triage 3 — 2026-11-11 (branch `fix/507-driver-write`, head `468d9bf9`, per the
+16:10Z receipt and L4): docs-only batch, no script bytes move. The §2 frozen-failure corpus is
+O15's, O16's and O17's frozen checks plus P14's two related-surface states; observed at the
+frozen-ledger head before any fix — the E11 check → 0 matches (exit 1), the journal-anchored
+`D3` check → 0 matches (exit 1), the E12 check → 0 matches (exit 1), the class-count check →
+matches 2 (the same-line stale site plus the frozen cell; S14's stale tail is line-wrapped right
+beside it), the table-adjacency check → 0 matches (exit 1). The batch is done when all five
+turn to their stated outcomes together (P11–P14), then the gates and the sweep run (P15–P16).
 
 ## Findings
 
@@ -358,6 +437,12 @@ probe) once `slugColumn` alone is repaired — the change is done when all three
   que sea que haya implementalo" and "La implementación hazla usando aw-local-apply" — the
   #498 scope-reinforcement LOGS class implemented under the standing local-apply procedure
   (S17/P10).
+- **L4** — 2026-11-11, request verbatim: "Apply to this repository: triage and fix those that
+  deserve to fix but understand the context before fix and check you haven't broke another
+  different thing, if you have done, start the loop again until you fixed full symbol/related
+  stuff", under the owner's standing local-workflow procedure (§0 resolution: `proceed` — the
+  blocker batch on the 16:10Z receipt is empty by state; the five advisories are the triage
+  targets; F2/F3/F4 remain the owner's decision-required rows).
 - **E1** — 2026-11-10, RED at `32b0d053`: `bun test scripts/docs-generate.test.mjs` exit 1 — 4 fail
   (row append, derivation chain, `roadmap_summary:` override, stale-check), 23 pass; `bun test
   scripts/docs-generated-merge.test.mjs` exit 1 — 3 fail (driver coverage of `docs/ROADMAP.md`,
