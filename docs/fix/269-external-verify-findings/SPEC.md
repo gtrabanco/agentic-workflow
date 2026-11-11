@@ -21,8 +21,10 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 ## Issue
 
 `#269` — the target issue of every finding. The batch rides PR #506 and does
-**not** close #269 (D3): the issue stays OPEN and parked behind its native
-blocked-by #434; the PR keeps `Refs #269, #434`.
+**not** itself close #269 (D3, dated; superseded in part at the feature close,
+D9): the issue stays OPEN until the PR merges, its native blocked-by #434 now
+CLOSED (merged `413aa8c5`), and the PR body — rewritten by the feature's
+close-out — carries `Closes #269`, not `Refs #269, #434`.
 
 ## Specs
 
@@ -147,8 +149,9 @@ One observable, testable criterion per `S#`, each naming the check that proves i
   exiting 1 (zero remaining) (E1 RED → E6 GREEN).
 - **AC-S3 (S3)** — the row-80 cell carries the hard blocker without losing the
   soft fact — proved by
-  `rg -c '434 \(hard, open\) · 65 \(soft, merged\)' docs/ROADMAP.md` matching 1
-  (E3 RED → E7 GREEN) and `bun scripts/roadmap-settle.mjs` exiting 0.
+  `rg -c '434 \(hard, merged\) · 65 \(soft, merged\)' docs/ROADMAP.md` matching 1
+  (E3 RED → E7 GREEN at `(hard, open)`; cell state re-verified E14 after #434
+  merged) and `bun scripts/roadmap-settle.mjs` exiting 0.
 - **AC-S4 (S4)** — the primary `## Dependencies` section lists #434 — proved by
   `gh issue view 269 --json body --jq .body | rg -c '^- #434 — native blocked-by'`
   matching 1 (E2 RED → E6 GREEN).
@@ -170,8 +173,10 @@ One observable, testable criterion per `S#`, each naming the check that proves i
   `rg -c 'issues/269\) \| external-verify-findings' docs/ROADMAP.md` matching 1,
   `bun scripts/docs-generate.mjs --check` exiting 0 after the emitter's own
   re-render, the session fragment under `.agentic-workflow/journal/`, and
-  `git diff e5933aef...HEAD -- docs/LOGS.md` producing no output (the
-  aggregator's file untouched, D4).
+  `git diff origin/main...HEAD -- docs/LOGS.md` producing no output (the
+  aggregator's file untouched by this change, D4; anchor re-based from
+  `e5933aef` at the 2026-11-11 delta — main's own aggregator commits flow
+  through the owner's merges, D9).
 
 ## Future
 
@@ -216,7 +221,7 @@ none
   (Implements: S2, S3, S4, S5)
 - P3 — GREEN: the issue body's two dependency edits through `gh issue edit --body-file` (scratch-diffed first) (validator: `gh issue view 269 --json body --jq .body | rg -c '\*\*Blocked-by \(native, hard\) — #434, after it\*\*'` matches 1 and `gh issue view 269 --json body --jq .body | rg -c '^- #434 — native blocked-by'` matches 1)
   (Implements: S2, S4)
-- P4 — GREEN: row 80's cell via `roadmap rowUpsert` (all cells re-emitted byte-identical) plus the dated `annotate` note — both rehearsed on a `mktemp -d` copy first (validator: `rg -c '434 \(hard, open\) · 65 \(soft, merged\)' docs/ROADMAP.md` matches 1 and `rg -c 'deleted on owner order \(tip da76ab97' docs/ROADMAP.md` matches 1)
+- P4 — GREEN: row 80's cell via `roadmap rowUpsert` (all cells re-emitted byte-identical) plus the dated `annotate` note — both rehearsed on a `mktemp -d` copy first (validator: `rg -c '434 \(hard, merged\) · 65 \(soft, merged\)' docs/ROADMAP.md` matches 1 and `rg -c 'deleted on owner order \(tip da76ab97' docs/ROADMAP.md` matches 1)
   (Implements: S3, S5)
   Relevant files: docs/ROADMAP.md
 - P5 — The forge halves of A3 — PR #506's superseding sentence + dated corrections paragraph, and the dated correcting comment on #269 — then the verification sweep and close: RED→GREEN re-runs (E6–E8), final tier classify + passive record, projection re-render, the unit-doc readers, the offline gate, the session fragment, and the ledger flip on every foreground-run validator (validator: `gh pr view 506 --json body --jq .body | rg -c 'deleted on owner order on 2026-11-10'` matches 1 and `gh issue view 269 --json comments --jq '[.comments[] | select(.body | contains("Branch note superseded"))] | length'` matches 1 and `bun scripts/local-gate.mjs` exits 0)
@@ -243,11 +248,11 @@ none
 |---|---|---|---|---|---|---|---|---|
 | O1 | S2 | issue #269's dependency prose agrees with the machine: bullet 1 of `## Dependencies — triage update 2026-11-07` declares `Blocked-by (native, hard) — #434` with dated provenance, and the retired `Related (soft) — #434` spelling is gone from the body | P3 | the issue body's dependency edits | local-apply (this session) | `gh issue view 269 --json body --jq .body \| rg -c '\*\*Blocked-by \(native, hard\) — #434, after it\*\*'` matches 1 and `gh issue view 269 --json body --jq .body \| rg -c 'Related \(soft\) — #434'` exits 1 | Log `E` lines: E1 (RED: 0/exit 1, old spelling 1) and E6 (GREEN: 1, old spelling 0) | verified |
 | O2 | S4 | the primary `## Dependencies` section names #434 as a native blocked-by, so the section a triage reads first is complete | P3 | the issue body's dependency edits | local-apply (this session) | `gh issue view 269 --json body --jq .body \| rg -c '^- #434 — native blocked-by'` matches 1 | Log `E` lines: E2 (RED: 0/exit 1), E6 (GREEN: 1) | verified |
-| O3 | S3 | row 80's depends-on cell carries the hard blocker without losing the soft fact — exactly `434 (hard, open) · 65 (soft, merged)` — and the description cell's original bytes are preserved apart from the appended note | P4 | the rowUpsert + annotate pair | local-apply (this session) | `rg -c '434 \(hard, open\) · 65 \(soft, merged\)' docs/ROADMAP.md` matches 1 and `bun scripts/roadmap-settle.mjs` exits 0 | Log `E` lines: E3 (RED: 0/exit 1), E7 (GREEN: 1 + settle exit 0); the annotate receipt line (`EDIT roadmap.annotate … pass`) | verified |
+| O3 | S3 | row 80's depends-on cell carries the hard blocker without losing the soft fact — exactly `434 (hard, merged) · 65 (soft, merged)` — and the description cell's original bytes are preserved apart from the appended note | P4 | the rowUpsert + annotate pair | local-apply (this session) | `rg -c '434 \(hard, merged\) · 65 \(soft, merged\)' docs/ROADMAP.md` matches 1 and `bun scripts/roadmap-settle.mjs` exits 0 | Log `E` lines: E3 (RED: 0/exit 1), E7 (GREEN: 1 + settle exit 0), E14 (2026-11-11: state token re-verified `merged` after #434 merged — rowUpsert receipt `Before: ba1c58c2 · After: 76258c56`, settle exit 0; string amendment D8); the annotate receipt line (`EDIT roadmap.annotate … pass`) | verified |
 | O4 | S5 | the row's withdrawn stale-branch clause gets its dated note — one `annotate` append naming the deletion, the backup ref, and the historical standing of the clause | P4 | the rowUpsert + annotate pair | local-apply (this session) | `rg -c 'deleted on owner order \(tip da76ab97' docs/ROADMAP.md` matches 1 | Log `E` lines: E4 (RED: 0/exit 1), E7 (GREEN: 1) | verified |
-| O5 | S5 | the forge halves are corrected and dated: PR #506's body supersedes the untouched-branch sentence and carries the corrections paragraph; #269 carries one dated correcting comment | P5 | the PR body edit and the correcting comment | local-apply (this session) | `gh pr view 506 --json body --jq .body \| rg -c 'deleted on owner order on 2026-11-10'` matches 1 and `gh issue view 269 --json comments --jq '[.comments[] \| select(.body \| contains("Branch note superseded"))] \| length'` matches 1 | Log `E` lines: E4 (RED: PR post-count 0, comment 0), E8 (GREEN: 1 and 1) | verified |
+| O5 | S5 | the forge halves are corrected and dated: PR #506's body supersedes the untouched-branch sentence and carries the corrections paragraph; #269 carries one dated correcting comment | P5 | the PR body edit and the correcting comment | local-apply (this session) | `gh pr view 506 --json body --jq .body \| rg -c 'deleted on owner order on 2026-11-10'` matches 1 and `gh issue view 269 --json comments --jq '[.comments[] \| select(.body \| contains("Branch note superseded"))] \| length'` matches 1 | Log `E` lines: E4 (RED: PR post-count 0, comment 0), E8 (GREEN: 1 and 1), E12 (2026-11-11 re-green after the feature's body rewrite) | verified |
 | O6 | S6 | A4 is recorded, never repaired: an evidenced `n/a` — the `/tmp` sweep removals are environment paths outside the repo (recreated as live scratch by concurrent sessions) and the worktree location is the pre-existing layout | P1 | the A4 n/a row | local-apply (this session) | `rg -c '^\| O6 \|.*\| n/a:' docs/fix/269-external-verify-findings/SPEC.md` matches 1 | the row's own citation of the receipt's A4 line plus Log `E10`: `ls /tmp/differential-baseline-*` · exit 0 · present (concurrent sessions' live scratch, recreated after every sweep — not this change's bytes, nothing in repo bytes to repair (receipt A4 + Log E10) | n/a: environment paths outside the repo — concurrent sessions' live scratch, nothing in repo bytes to repair (receipt A4, Log E10) |
-| O7 | S8 | the indexes and declared surfaces ship through their writers: the Fixes row is present, the projection is re-rendered by the emitter and `--check` is green, `docs/LOGS.md` is untouched, and the session record is a carrier fragment | P5 | the sweep and close | local-apply (this session) | `rg -c 'issues/269\) \| external-verify-findings' docs/ROADMAP.md` matches 1 and `bun scripts/docs-generate.mjs --check` exits 0 | Log `E` lines: the row count, the post-render `--check` exit, and `git diff e5933aef...HEAD -- docs/LOGS.md` producing no output; the fragment's name | verified |
+| O7 | S8 | the indexes and declared surfaces ship through their writers: the Fixes row is present, the projection is re-rendered by the emitter and `--check` is green, `docs/LOGS.md` is untouched, and the session record is a carrier fragment | P5 | the sweep and close | local-apply (this session) | `rg -c 'issues/269\) \| external-verify-findings' docs/ROADMAP.md` matches 1 and `bun scripts/docs-generate.mjs --check` exits 0 | Log `E` lines: the row count, the post-render `--check` exit, and `git diff origin/main...HEAD -- docs/LOGS.md` producing no output (anchor re-based 2026-11-11, D9); the fragment's name | verified |
 | O8 | S1, S7 | inline discipline holds: no review machinery runs on this change (zero `R`/`F` lines in this doc), the mutating paths of the change run scratch-first, and the deterministic gates run green with their exit codes | P5 | the sweep and close | local-apply (this session) | `rg -c '^\- \*\*[RF][0-9]+\*\*' docs/fix/269-external-verify-findings/SPEC.md` exits 1 | Log `G` lines, one per gate run, each carrying its exit code; the scratch-receipt `cmp` line for the roadmap ops | verified |
 
 ## Triaged steps
@@ -296,7 +301,10 @@ block never reorders the frozen task list.
 - **D3** — 2026-11-10, no `Closes #269`: the issue is parked behind its native
   blocked-by #434 with six missing-scope items still open — closing it on this
   correction batch would ship a lie; PR #506 keeps `Refs #269, #434` and the
-  template's Closes convention yields to the park state.
+  template's Closes convention yields to the park state. — superseded 2026-11-11
+  (external-verify B2): the feature close-out rewrote the PR body to
+  `Closes #269` once #434 merged and the six items landed (D9); this line is
+  dated history, not the PR's current state.
 - **D4** — 2026-11-10, session record door: §7's "manual append" to
   `docs/LOGS.md` would fail the push gate for a non-aggregator identity
   (PE-006), so the record goes through `journal write` — the legal carrier
@@ -326,6 +334,66 @@ block never reorders the frozen task list.
 - **G6** — 2026-11-10, carrier close: `git diff e5933aef...HEAD -- docs/LOGS.md` · exit 0 · no output (the aggregator's file untouched, D4); `agentic-workflow journal aggregate --check --json` · exit 0 · `ok: true, checked: 56, refusals: []`; fragments present — the park record `20261110T173403Z-…`, the verify receipt `20261110T202600Z-…` (C2 `97683332`), this batch's record `20261110T220312Z-…` (O7). HEAD 97683332a3f3a166195348a9170e33a5638d402b.
 - **P1** — 2026-11-10 21:57–22:03, the batch: unit doc + frozen ledgers + Fixes row + re-rendered projection + passive record + the fixture-first roadmap/forge corrections · `10972b74`; verify receipt persisted · `97683332`.
 - **G7** — 2026-11-10, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/269-external-verify-findings/SPEC.md` · exit 0 · `VERIFY PASS` (verify@1: sections, obligations-closure, provenance-stamp, receipt-marks, log-kinds, cited-paths, cited-gates — 0 violations; every `G` line carries its `HEAD`, every row closed: 7 `verified` + O6's reasoned `n/a:`). HEAD 97683332a3f3a166195348a9170e33a5638d402b.
+- **L2** — 2026-11-11, the second correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Context: the "findings" are the 2026-11-11 delta `EXTERNAL VERIFY` block
+  (`docs/features/80-efficient-context-targeting/external-verify.md`, head
+  `91ba4876`, 2 blockers + 7 advisories) — folded in one batch per §9.
+- **D8** — 2026-11-11, recorded amendments to frozen cells (correction-batch
+  precedent fix/505's B2/AC-S5 rewrite): O3's invariant + validator + evidence,
+  AC-S3's check and P4's first validator conjunct move `434 (hard, open)` →
+  `434 (hard, merged)` (the cell follows the forge — #434 merged `413aa8c5`
+  before this batch), AC-S8's and O7's LOGS check re-anchor `e5933aef` →
+  `origin/main` (main's aggregator commits flow through the owner's merges),
+  O5's evidence gains E12, and O5 flips `verified` → `in-progress` before its
+  repair → `verified` again on E12's re-run. Every other cell keeps its cut
+  bytes; no obligation id, task, phase or acceptance criterion changed shape.
+- **D9** — 2026-11-11, triage of the 2026-11-11 receipt's advisories: A1 folded
+  (cell token + the coupled strings), A2 folded (the read-set suite's
+  `freshDir` wired; its accumulated leak swept), A3 folded (checks re-anchored),
+  A4 folded (discipline close logged as E9 in unit 80's Log), A5 folded (D3
+  annotated in place), **A6 not fixed** — E7's byte figure is a dated
+  measurement receipt (history; the re-run lives in the external-verify block),
+  **A7 not fixed** — the duplicate session fragments are a concurrent session's
+  carrier records (`journal aggregate --check` accepts them; another session's
+  bytes are never this batch's to edit). The Issue-section `Refs` claim and D3
+  are corrected per B2/B1's context.
+- **E12** — 2026-11-11, B1 fold (O5's PR half): the first PATCH attempt sent the
+  literal `@<file>` string — `gh api -f` does not read files — transient body
+  corruption, disclosed, cleaned the same minute with `-F body=@<fixture>`;
+  live body byte-identical to the fixture modulo GitHub's trailing newline.
+  Re-runs: `gh pr view 506 --json body --jq .body | rg -c 'deleted on owner
+  order on 2026-11-10'` · exit 0 · 1 (receipt-verdict RED was exit 1 · 0); the
+  retired sentence's pin · exit 1 · 0; `^Closes #269\.` · 1; comment
+  `contains("Branch note superseded")` · 1 → O5 verified (D8's flip).
+- **E13** — 2026-11-11, B2 fold: the Issue section now states `Closes #269` and
+  #434 CLOSED; `rg -c -F 'the PR keeps \`Refs #269, #434\`' docs/fix/269-external-verify-findings/SPEC.md`
+  · exit 1 · 0 (was 1 at :25); D3's quoted decision keeps its bytes with the
+  inline superseded marker (A5) — `rg -c 'superseded 2026-11-11'` · 1.
+- **E14** — 2026-11-11, A1 fold: row 80's cell via `roadmap rowUpsert`,
+  rehearsed on a `mktemp -d` copy first — live receipt hashes byte-identical to
+  the scratch run (`Before: ba1c58c2 · After: 76258c56`); pins: new token · 1,
+  old token · exit 1 · 0, O4 note · 1, slug/status/description byte-identical
+  (diff = the one cell), `bun scripts/roadmap-settle.mjs` · exit 0 · 0
+  violations. (Cited by O3.)
+- **E15** — 2026-11-11, A3 fold: AC-S8 + O7 re-anchored; the new check
+  `git diff origin/main...HEAD -- docs/LOGS.md` · 0 lines; branch-side LOGS
+  commits `git log --no-merges origin/main..HEAD -- docs/LOGS.md` · 0;
+  `git diff origin/main HEAD -- docs/LOGS.md` · 0 lines. The stale `e5933aef`
+  anchor survives only in dated G6 (history, never a standing check).
+- **E16** — 2026-11-11, A2 fold: `scripts/relevant-files.test.mjs`'s `freshDir()`
+  wired into `writeUnitDoc` (definition + call = 2 hits, was 1), assertions
+  untouched — `bun test scripts/relevant-files.test.mjs` · exit 0 · 10 pass /
+  0 fail; `bun test scripts/temp-hygiene.test.mjs` · 10 pass / 0 fail; live
+  `bun scripts/temp-hygiene.mjs` · PASS · 0 findings (410 files, 127 creating);
+  leak proof: one suite run with the `/tmp/relevant-files-*` count before =
+  after = 369 (zero growth); the 369 accumulated residue dirs swept and
+  disclosed (0 remaining).
+- **G8** — 2026-11-11, `node scripts/run-root-suite.mjs` @ HEAD 91ba487633f48d0f291751c41e820567060cc3db + working tree (this batch uncommitted at run; content final except G8–G10) · exit 0 · 104 suites · 4 workers · 0 FAIL; and its `--bail` form (local-gate's exact argv) · exit 0.
+- **G9** — 2026-11-11, `bun scripts/local-gate.mjs` @ the same HEAD + working tree: run 1 · exit 1 `FAILED at root-suite`; run 2 · exit 1 (same step) — both under load average 5.8–9.0 (3 users, concurrent sessions): `setup-env.test`'s real `--check` subprocess test breached the 10s per-test budget (`timed out after 10000ms`, `got null`) and `--bail` then killed the three in-flight suites (`test-impact`, `tmp-gc`, `turn-contract-grammar` — every test printed in their outputs had passed). Load-induced, not change-caused: standalone `bun test` of the four · 76/0, 21/0, 11/0, 52/0; the direct root suite green twice (G8). Run 3 at load 3.95 · exit 0 · `local-gate: PASS — 17 step(s) in 185s`.
+- **G10** — 2026-11-11, final readers over the complete batch bytes (after G8–G10) @ HEAD 91ba487633f48d0f291751c41e820567060cc3db + working tree: phase-lint ×2 · verdict PASS, fingerprints `462a3188e66b99af34ffd5683801c2da1b7a13730b2dad668bcd67fb2d2044cc` / `5f207a87cc4ef085932a190385d7f52b9653faa6475a45561d8aba4dc71e3f27` unchanged; verify ×2 · `ok: true`, violations []; promise-coherence · PASS (35 claims); `roadmap check` · PASS; `roadmap-settle` · PASS · 0 violations; `docs-generate --check` · PASS; discipline · pass (covered 7, logged 27, unlogged 0); `journal aggregate --check` · ok.
 
 ## Next
 
