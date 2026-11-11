@@ -19,8 +19,19 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const scriptPath = fileURLToPath(new URL("./batch-scheduler.mjs", import.meta.url));
-const { buildBatchPlan, collectIssues, updateState, loadState, saveState, extractSurfaces, extractProseDependencies, STATE_FILE_NAME } =
-  await import(scriptPath);
+const {
+  buildBatchPlan,
+  collectIssues,
+  collectLaunchEvidence,
+  updateState,
+  loadState,
+  saveState,
+  claimedKey,
+  CLAIM_TTL_MS,
+  extractSurfaces,
+  extractProseDependencies,
+  STATE_FILE_NAME,
+} = await import(scriptPath);
 
 const HEAD = "b8b1d8147b1ecb79ef92355a53309c2b82a3c3d2";
 
@@ -329,26 +340,407 @@ test("S5: issues carry a size hint from their declared evidence and lanes an agg
 });
 
 // ── S3 — surfaces read from where they live ────────────────────────────────
+// Issue #509 supersedes this file's original S3 assertion ("a unit doc on disk
+// marks the issue launched"): unit-doc existence is precisely the signal the
+// issue declares buggy, because a merged or parked unit doc persists on disk.
+// The rule now starts at V1 below, over the same fixture shape.
 
-test("S3: an in-flight unit doc for an issue marks that issue launched, not batched", () => {
+// ── V — launch detection is evidence-based (issue #509, S3) ────────────────
+// Reproducers of bug 2: a merged unit doc and a parked-but-open PR both read as
+// "launched", and a live lane with no unit doc read as launchable.
+
+/** The evidence map the CLI collects, built by hand for a pure-function test. */
+function evidenceFor(entries) {
+  const map = new Map();
+  for (const [number, entry] of Object.entries(entries)) {
+    map.set(Number(number), { branches: entry.branches ?? [], pr: entry.pr ?? null, worktree: entry.worktree ?? null, files: entry.files ?? [] });
+  }
+  return map;
+}
+
+test("V1: a unit doc on disk alone no longer marks an issue launched", () => {
   const root = scratchRoot();
   try {
     fs.mkdirSync(path.join(root, "docs"), { recursive: true });
     fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
-    fs.mkdirSync(path.join(root, "docs", "fix", "10-alpha-skill-change"), { recursive: true });
-    fs.writeFileSync(path.join(root, "docs", "fix", "10-alpha-skill-change", "SPEC.md"), "# unit\n");
+    withInFlightUnit(root, 10, "alpha-skill-change");
     const issues = [
       issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"])),
       issue(11, "Beta change", whereSection(["skills/beta/SKILL.md"])),
     ];
     const plan = buildBatchPlan(baseInput(issues, root));
-    assert.deepEqual(plan.launched, [{ number: 10, evidence: "unit-doc docs/fix/10-alpha-skill-change" }]);
-    assert.ok(!plan.batches.some((b) => b.lanes.some((l) => l.issues.some((i) => i.number === 10))));
-    assert.equal(plan.summary.launched, 1);
+    assert.deepEqual(plan.launched, [], "a unit doc is not evidence that the unit is still running");
+    assert.equal(plan.summary.launched, 0);
+    assert.ok(
+      plan.batches.some((b) => b.lanes.some((l) => l.issues.some((i) => i.number === 10))),
+      "a unit doc with no live branch or open PR is launchable",
+    );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("V2: an unmerged branch marks the issue in flight, naming the branch", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    withInFlightUnit(root, 10, "alpha-skill-change");
+    const issues = [
+      issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"])),
+      issue(11, "Beta change", whereSection(["skills/beta/SKILL.md"])),
+    ];
+    const launchEvidence = evidenceFor({ 10: { branches: [{ name: "fix/10-alpha-skill-change", merged: false }] } });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.deepEqual(plan.launched, [
+      { number: 10, evidence: "branch fix/10-alpha-skill-change + unit-doc docs/fix/10-alpha-skill-change" },
+    ]);
+    assert.ok(!plan.batches.some((b) => b.lanes.some((l) => l.issues.some((i) => i.number === 10))), "in flight, never batched");
+    assert.equal(plan.batches[0].lanes[0].occupied_by, "branch fix/10-alpha-skill-change + unit-doc docs/fix/10-alpha-skill-change");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("V3: a merged branch or a merged PR is terminal — the issue is launchable again", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    withInFlightUnit(root, 10, "alpha-skill-change");
+    withInFlightUnit(root, 11, "beta-change");
+    const issues = [
+      issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"])),
+      issue(11, "Beta change", whereSection(["skills/beta/SKILL.md"])),
+    ];
+    const launchEvidence = evidenceFor({
+      10: { branches: [{ name: "fix/10-alpha-skill-change", merged: true }] },
+      11: { branches: [{ name: "fix/11-beta-change", merged: false }], pr: { number: 99, state: "MERGED" } },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.deepEqual(plan.launched, [], "a merged unit doc is a finished unit, not an in-flight one");
+    assert.equal(plan.batches.flatMap((b) => b.lanes).flatMap((l) => l.issues).length, 2, "both are launchable");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("V4: an open forge PR marks the issue in flight; an unreadable forge degrades declared", async () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    assert.equal(spawnSync("git", ["init", "-q"], { cwd: root }).status, 0);
+    assert.equal(spawnSync("git", ["remote", "add", "origin", "git@github.com:owner/repo.git"], { cwd: root }).status, 0);
+    const shim = path.join(root, "gh");
+    fs.writeFileSync(
+      shim,
+      [
+        "#!/bin/sh",
+        'if [ "$1" = "pr" ] && [ "$2" = "list" ]; then',
+        '  printf %s \'[{"number":506,"headRefName":"feat/269-efficient-context-targeting","state":"OPEN"}]\'',
+        "else",
+        "  exit 5",
+        "fi",
+        "",
+      ].join("\n"),
+    );
+    fs.chmodSync(shim, 0o755);
+
+    const open = await collectLaunchEvidence({ root, ghBin: shim });
+    assert.deepEqual(open.degradations, [], "the documented forge read must not degrade");
+    assert.deepEqual(open.evidence.get(269).pr, { number: 506, state: "OPEN" }, "the PR is mapped back to its issue");
+    const plan = buildBatchPlan(
+      baseInput([issue(269, "Context targeting", whereSection(["skills/doc-index/SKILL.md"]))], root, {
+        launchEvidence: open.evidence,
+      }),
+    );
+    assert.deepEqual(plan.launched, [{ number: 269, evidence: "PR #506 open" }], "a parked open PR is in flight");
+
+    const broken = await collectLaunchEvidence({ root, ghBin: "definitely-not-a-binary" });
+    assert.ok(
+      broken.degradations.some((d) => /^unavailable-forge-pr-list-/u.test(d)),
+      "an unreadable forge is declared, never silent",
+    );
+    assert.equal(broken.evidence.size, 0, "no invented lifecycle evidence");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("V5: a directory that is not a git repository degrades declared instead of crashing", async () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const launch = await collectLaunchEvidence({ root });
+    assert.equal(launch.evidence.size, 0);
+    assert.ok(launch.degradations.includes("unavailable-launch-evidence-no-repository"));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── W — file-level overlap between lanes (issue #509, S4) ──────────────────
+// Reproducer of bug 3: #507 (lane scripts) and #269 (lane docs) both rewrite
+// scripts/docs-generate.mjs and the plan calls them parallel-runnable.
+
+test("W1: two issues of one batch on different lanes that touch one file are a file-overlap finding", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(507, "Driver write", whereSection(["scripts/local-gate.mjs"])),
+      issue(269, "Context targeting", whereSection(["docs/workflow/README.md"])),
+    ];
+    const launchEvidence = evidenceFor({
+      507: { branches: [{ name: "fix/507-driver-write", merged: false }], files: ["scripts/docs-generate.mjs", "scripts/local-gate.mjs"] },
+      269: { branches: [{ name: "feat/269-efficient-context-targeting", merged: false }], files: ["scripts/docs-generate.mjs", "docs/workflow/README.md"] },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    const overlap = plan.findings.filter((f) => f.code === "file-overlap");
+    assert.equal(overlap.length, 1, "exactly one finding for the pair");
+    assert.deepEqual(overlap[0].numbers, [269, 507], "both numbers, in issue order");
+    assert.match(overlap[0].detail, /scripts\/docs-generate\.mjs/u);
+    assert.doesNotMatch(overlap[0].detail, /local-gate/u, "only the shared files are named");
+    assert.equal(plan.summary.batches, 1, "the overlap is a finding, never a re-batch");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("W2: disjoint files and same-lane pairs emit no file-overlap", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(10, "A", whereSection(["skills/alpha/SKILL.md"])),
+      issue(11, "B", whereSection(["skills/beta/SKILL.md"])),
+    ];
+    const disjoint = evidenceFor({
+      10: { branches: [{ name: "feat/10-a", merged: false }], files: ["skills/alpha/SKILL.md"] },
+      11: { branches: [{ name: "feat/11-b", merged: false }], files: ["skills/beta/SKILL.md"] },
+    });
+    assert.deepEqual(buildBatchPlan(baseInput(issues, root, { launchEvidence: disjoint })).findings, []);
+
+    const sameLane = evidenceFor({
+      10: { branches: [{ name: "feat/10-a", merged: false }], files: ["scripts/local-gate.mjs"] },
+      11: { branches: [{ name: "feat/11-b", merged: false }], files: ["scripts/local-gate.mjs"] },
+    });
+    const shared = [
+      issue(10, "A", whereSection(["scripts/unit-route.mjs"])),
+      issue(11, "B", whereSection(["scripts/unit-route.mjs"])),
+    ];
+    assert.deepEqual(
+      buildBatchPlan(baseInput(shared, root, { launchEvidence: sameLane })).findings.filter((f) => f.code === "file-overlap"),
+      [],
+      "one lane already serializes the pair, so there is nothing to report",
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("W3: an issue with no branch evidence claims no files, and the detail is bounded", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(10, "A", whereSection(["scripts/local-gate.mjs"])),
+      issue(11, "B", whereSection(["docs/workflow/README.md"])),
+    ];
+    // A's declared scripts/* token puts it in the scripts lane; only its branch
+    // diff can name a file the lane derivation does not already cover.
+    const onlyDiff = evidenceFor({
+      10: { branches: [{ name: "feat/10-a", merged: false }], files: ["docs/workflow/README.md"] },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence: onlyDiff }));
+    const overlap = plan.findings.filter((f) => f.code === "file-overlap");
+    assert.equal(overlap.length, 1, "the branch diff alone establishes the overlap");
+    assert.deepEqual(overlap[0].numbers, [10, 11]);
+    assert.ok(overlap[0].detail.length <= 1024, "the detail stays inside the envelope's bound");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── C — claims are per (number, lane) (issue #509, S2) ─────────────────────
+// Reproducer of bug 1: #487 was claimed in lane `scripts` and reported claimed
+// in `.github` and `docs` too on the next run.
+
+test("C1: a claim made in one lane never marks the sibling lanes", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const first = [issue(487, "Secret scan gate", whereSection(["scripts/secret-scan.mjs"]))];
+    const state = updateState(buildBatchPlan(baseInput(first, root)), null, { now: "2026-11-09T00:00:00.000Z", head: HEAD });
+    const later = [
+      issue(487, "Secret scan gate", whereSection(["scripts/secret-scan.mjs", "docs/workflow/GATE_INVENTORY.md", ".github/workflows/ci.yml"])),
+    ];
+    const plan = buildBatchPlan(baseInput(later, root, { previous: state, now: "2026-11-09T01:00:00.000Z" }));
+    const rows = plan.batches.flatMap((b) => b.lanes).flatMap((l) => l.issues.map((row) => [row.lane, row.claimed]));
+    assert.deepEqual(rows.sort(), [[".github", undefined], ["docs", undefined], ["scripts", true]]);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("C2: the state keys claims by (number, lane), never by bare number", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md", "docs/ROADMAP.md"]))];
+    const state = updateState(buildBatchPlan(baseInput(issues, root)), null, { now: "2026-11-09T00:00:00.000Z", head: HEAD });
+    assert.deepEqual(Object.keys(state.claimed).sort(), ["10|docs", "10|skills/alpha"]);
+    for (const [key, entry] of Object.entries(state.claimed)) {
+      assert.match(key, /^\d+\|.+$/u, "every key names its lane");
+      assert.equal(key, claimedKey(entry.batch === undefined ? 0 : 10, entry.lane), "the key is derived from the pair");
+      assert.equal(state.claimed[key].lane, key.split("|")[1]);
+    }
+    const statePath = path.join(root, ".agentic-workflow", STATE_FILE_NAME);
+    saveState(statePath, state);
+    assert.deepEqual(loadState(statePath), state, "the pair keys round-trip");
+    assert.equal(CLAIM_TTL_MS, 48 * 60 * 60 * 1000, "the published TTL is 48 hours");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("C3: --mark-launched records the operator's launch under the pair key", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const statePath = path.join(root, ".agentic-workflow", STATE_FILE_NAME);
+    const run = spawnSync(process.execPath, [scriptPath, "--root", root, "--state", statePath, "--mark-launched", "5"], {
+      encoding: "utf8",
+    });
+    assert.equal(run.status, 0, run.stderr);
+    const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
+    assert.deepEqual(Object.keys(state.claimed), ["5|general"], "a manual mark names a lane too");
+    assert.equal(state.version, 3);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── X — stale claims expire and are reported (issue #509, S5) ─────────────
+// Reproducer of bug 4: claims from 2026-11-08 still active in the 2026-11-10
+// plan, with no TTL and nothing reported.
+
+const T0 = "2026-11-08T00:00:00.000Z";
+
+/** A v3 previous state carrying the given claim entries. */
+function previousState(claims, seen = {}) {
+  return { version: 3, written_at: T0, source_revision: HEAD, claimed: claims, seen };
+}
+
+function claimOf(lane, lastSeen = T0, firstSeen = T0) {
+  return { batch: 1, lane, first_seen: firstSeen, last_seen: lastSeen, worktree: `feat/10-${lane.replace(/[^a-z0-9]+/giu, "-")}` };
+}
+
+test("X1: a claim older than the 48h TTL expires and is reported as stale-claim", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"]))];
+    const previous = previousState({ "10|skills/alpha": claimOf("skills/alpha") });
+    const plan = buildBatchPlan(baseInput(issues, root, { previous, now: "2026-11-11T00:00:00.000Z" }));
+    assert.equal(plan.batches[0].lanes[0].issues[0].claimed, undefined, "an expired claim never reads claimed");
+    const stale = plan.findings.filter((f) => f.code === "stale-claim");
+    assert.equal(stale.length, 1);
+    assert.deepEqual(stale[0].numbers, [10]);
+    assert.match(stale[0].detail, /10\|skills\/alpha/u, "the report names the claim key");
+    assert.match(stale[0].detail, /48h/u);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("X2: a fresh claim stays claimed and reports nothing — no clock, no expiry", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"]))];
+    const previous = previousState({ "10|skills/alpha": claimOf("skills/alpha", "2026-11-10T23:00:00.000Z") });
+    const fresh = buildBatchPlan(baseInput(issues, root, { previous, now: "2026-11-11T00:00:00.000Z" }));
+    assert.equal(fresh.batches[0].lanes[0].issues[0].claimed, true);
+    assert.deepEqual(fresh.findings, []);
+    const stateless = buildBatchPlan(baseInput(issues, root, { previous }));
+    assert.equal(stateless.batches[0].lanes[0].issues[0].claimed, true, "with no run instant the age rule cannot fire");
+    assert.deepEqual(stateless.findings, []);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("X3: terminal evidence expires a claim without waiting for the TTL", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"]))];
+    const previous = previousState({ "10|skills/alpha": claimOf("skills/alpha", "2026-11-10T23:00:00.000Z") });
+    const launchEvidence = evidenceFor({ 10: { branches: [{ name: "feat/10-alpha", merged: false }], pr: { number: 99, state: "MERGED" } } });
+    const plan = buildBatchPlan(baseInput(issues, root, { previous, launchEvidence }));
+    assert.equal(plan.batches[0].lanes[0].issues[0].claimed, undefined);
+    const stale = plan.findings.filter((f) => f.code === "stale-claim");
+    assert.equal(stale.length, 1);
+    assert.match(stale[0].detail, /landed|MERGED/u);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("X4: the written state drops expired and closed claims and keeps a live claim's first_seen", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(11, "Beta", whereSection(["skills/beta/SKILL.md"]))];
+    const now = "2026-11-11T00:00:00.000Z";
+    const previous = previousState({
+      "10|docs": claimOf("docs"),
+      "11|skills/beta": claimOf("skills/beta", "2026-11-10T23:00:00.000Z", "2026-11-09T00:00:00.000Z"),
+      "12|scripts": claimOf("scripts", "2026-11-10T23:00:00.000Z"),
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { previous, now }));
+    const state = updateState(plan, previous, { now, head: HEAD, openIssues: [{ number: 10, title: "Alpha" }, { number: 11, title: "Beta" }] });
+    assert.deepEqual(Object.keys(state.claimed), ["11|skills/beta"], "the aged lane and the closed issue are pruned");
+    assert.equal(state.claimed["11|skills/beta"].first_seen, "2026-11-09T00:00:00.000Z", "a live claim keeps its first sighting");
+    assert.equal(state.claimed["11|skills/beta"].last_seen, now);
+    assert.equal(state.version, 3);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("X5: a pre-v3 bare-number claim is reported once and never honored", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"]))];
+    const previous = { version: 2, written_at: T0, source_revision: HEAD, claimed: { 10: claimOf("skills/alpha") }, seen: {} };
+    const plan = buildBatchPlan(baseInput(issues, root, { previous, now: "2026-11-11T00:00:00.000Z" }));
+    assert.equal(plan.batches[0].lanes[0].issues[0].claimed, undefined, "a bare number cannot name a lane");
+    const stale = plan.findings.filter((f) => f.code === "stale-claim");
+    assert.equal(stale.length, 1);
+    assert.match(stale[0].detail, /pre-v3|bare number/u);
+    const state = updateState(plan, previous, { now: "2026-11-11T00:00:00.000Z", head: HEAD, openIssues: issues });
+    assert.deepEqual(Object.keys(state.claimed).sort(), ["10|skills/alpha"], "only the fresh pair survives");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 
 // ── S6/O7 — persistence across runs ────────────────────────────────────────
 
@@ -448,7 +840,8 @@ test("B4: an in-flight blocker is blocked, never a cyclic wait", () => {
       issue(20, "In-flight blocker", whereSection(["skills/alpha/SKILL.md"])),
       issue(21, "Waits on the in-flight unit", whereSection(["skills/beta/SKILL.md"]), [20]),
     ];
-    const plan = buildBatchPlan(baseInput(issues, root));
+    const launchEvidence = evidenceFor({ 20: { branches: [{ name: "fix/20-in-flight", merged: false }] } });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
     assert.deepEqual(plan.findings, [], "an in-flight wait is a state, not an unresolvable spot");
     assert.deepEqual(plan.blocked, [{ number: 21, blockers: [20], reason: "blocked-by 20 (open, unit in flight)" }]);
     assert.ok(!plan.batches.some((b) => b.lanes.some((l) => l.issues.some((i) => i.number === 21))), "never batched while the blocker runs");
@@ -469,7 +862,8 @@ test("B5: a soft dep on an in-flight unit is neither orphaned nor gating", () =>
       issue(20, "In-flight unit", whereSection(["skills/alpha/SKILL.md"])),
       issue(21, "Dependent", `${whereSection(["skills/beta/SKILL.md"])}\n\n${deps}`),
     ];
-    const plan = buildBatchPlan(baseInput(issues, root));
+    const launchEvidence = evidenceFor({ 20: { branches: [{ name: "fix/20-in-flight", merged: false }] } });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
     assert.deepEqual(plan.findings, [], "a target that is open and in flight is not an orphan");
     assert.deepEqual(plan.batches[0].lanes[0].issues.map((i) => i.number), [21], "a soft dep never gates");
   } finally {
@@ -981,6 +1375,21 @@ test("envelope: no owned surface keeps the superseded batch-plan@1 token", () =>
     });
   }
   assert.deepEqual(stale, [], "every owned surface names batch-plan@2");
+});
+
+test("docs: PLAN.md and SKILL.md state the landed claim, launch and overlap contract", () => {
+  // The surfaces the planner's consumer reads must narrate what the script now
+  // does — the claim key shape (S2), the evidence-based launch rule (S3), the
+  // file-overlap finding (S4), the claim TTL (S5) and the S6 limitation note.
+  const planDoc = fs.readFileSync(new URL("../skills/batch-scheduler/references/PLAN.md", import.meta.url), "utf8");
+  const skillDoc = fs.readFileSync(new URL("../skills/batch-scheduler/SKILL.md", import.meta.url), "utf8");
+  assert.match(planDoc, /"\d+\|/u, "the state-file example carries the pair key");
+  for (const token of ["file-overlap", "stale-claim", "48"])
+    assert.ok(planDoc.includes(token), `PLAN.md states ${token}`);
+  for (const token of ["file-overlap", "stale-claim"])
+    assert.ok(skillDoc.includes(token), `SKILL.md names ${token}`);
+  assert.ok(/unit doc/i.test(skillDoc) && /evidence|branch|PR/u.test(skillDoc), "SKILL.md states the launch rule");
+  assert.ok(!/unit doc[^.\n]*is on disk[^.\n]*launched/iu.test(planDoc), "the superseded launch narration is gone");
 });
 
 test("S9: the script contains no session spawn, worktree creation or unit launch", async () => {

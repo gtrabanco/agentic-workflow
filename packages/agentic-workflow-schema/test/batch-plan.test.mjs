@@ -104,8 +104,10 @@ const CANONICAL = {
     { code: "cycle", numbers: [401, 402], detail: "cyclic blocked-by wait" },
     { code: "orphaned-soft-dep", numbers: [406], detail: "soft dep targets a missing issue" },
     { code: "prose-native-mismatch", numbers: [407], detail: "prose row declared hard with no native blocked-by" },
+    { code: "file-overlap", numbers: [405, 408], detail: "both modify: scripts/docs-generate.mjs" },
+    { code: "stale-claim", numbers: [409], detail: "claim 409|scripts expired: last seen 2026-11-08 is older than the 48h claim TTL" },
   ],
-  summary: { open_issues: 8, batched: 2, blocked: 1, launched: 1, findings: 3, batches: 2 },
+  summary: { open_issues: 8, batched: 2, blocked: 1, launched: 1, findings: 5, batches: 2 },
 };
 
 test("batch-plan: the canonical vector validates", () => {
@@ -126,7 +128,7 @@ test("batch-plan: contract id, version and schema token agree", () => {
 
 test("batch-plan: the closed vocabularies are exactly the published sets", () => {
   assert.deepEqual([...BATCH_REASON_KINDS], ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"]);
-  assert.deepEqual([...BATCH_FINDING_CODES], ["cycle", "orphaned-soft-dep", "prose-native-mismatch"]);
+  assert.deepEqual([...BATCH_FINDING_CODES], ["cycle", "orphaned-soft-dep", "prose-native-mismatch", "file-overlap", "stale-claim"]);
   assert.deepEqual([...BATCH_SIZE_HINTS], ["light", "mixed", "heavy"]);
 });
 
