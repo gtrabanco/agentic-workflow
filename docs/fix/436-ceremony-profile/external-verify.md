@@ -27,3 +27,9 @@ Completeness: S2–S7 resolved (P1–P5, validators re-run green here: schema su
 Spot check: bun scripts/local-gate.mjs --jobs 4 → match (reported G1 "PASS — 17/17 steps"; observed at head 1830d326: "local-gate: PASS — 17 step(s) in 173s", exit 0, working tree clean before and after).
 Verdict: NEEDS-DECISION (B1 O2/empty-block consistency, B2 S1 Implements annotation, B3 O12+Impact roadmap-summary mechanism claim, B4 AC5 prose pin)
 ```
+
+## 2026-11-11 — correction-batch addendum (applier, batch #1 — block above untouched)
+
+Batch at `aa9ed09e..d12938bc` (receipt `aa9ed09e`, red corpus `7d7fa096`, B1 fix `bf7fe5c9`, B2/B3 docs `d12938bc`): **B1** fixed route (b) per D10 (phantom `empty-block` retired from both copies + dead branch, corpus title renamed, O2 amended); **B2** fixed (`(Implements: S1)` on P5); **B3** fixed as claim correction (Impact bullet, O12 amendment, PE-006 caveat, inert `roadmap_summary:` frontmatter and the task's sync claim dropped); **B4** fixed (AC5 prose pin in `scripts/ceremony-profile.test.mjs`, red proven on a stripped scratch copy). Advisories: A2 closed (Log E13); A1/A3 not fixed — reasons in Log E17.
+
+**Retraction (one B3 sub-claim):** the block above says `rowUpsert` "exists nowhere in the tree (rg rowUpsert: that line only)" and orders "fix the rowUpsert name in P5". **That is wrong and is retracted** — the evidence line was produced by an accidental `rg -r` (replace) flag; `rowUpsert` is the crate's real writer (`packages/agentic-workflow/src/edit/Roadmap.mjs:133`, CLI `roadmap rowUpsert`), P5's log line was accurate and was left unchanged. B3's standing core (SPEC Impact + O12 claiming the `roadmap_summary:`/sync mechanism wrote the cell) is disproven as stated in the block and was corrected. Next run: **delta verdict** over B1–B4 at the correction head; recheck evidence in the unit doc `## Log` E11–E17, G2.
