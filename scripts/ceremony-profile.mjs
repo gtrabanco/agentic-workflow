@@ -56,7 +56,6 @@ export const CEREMONY_PROFILE_REFUSALS = Object.freeze([
   "unknown-adoption",
   "unknown-review-surface",
   "empty-review-passes",
-  "empty-block",
 ]);
 
 const MARKER_PREFIX = "ceremony-profile@";
@@ -144,12 +143,10 @@ export function readCeremonyProfile(doc) {
   const refusals = [];
   const adoption = {};
   let reviewPasses = null;
-  let sawLine = false;
 
   for (const raw of extracted.body) {
     const line = raw.trim();
     if (line === "" || line.startsWith("#")) continue;
-    sawLine = true;
     const match = LINE.exec(line);
     if (!match) {
       refusals.push(refusal("malformed-line", line));
