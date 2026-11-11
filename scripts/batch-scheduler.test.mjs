@@ -111,13 +111,13 @@ test("S2: emits a batch-plan@2 envelope with batches, blocked and findings array
     fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"]))];
     const plan = buildBatchPlan(baseInput(issues, root));
-    assert.equal(plan.schema, "batch-plan@2");
+    assert.equal(plan.schema, "batch-plan@3");
     assert.equal(plan.source_revision, HEAD);
     assert.deepEqual(plan.degraded, []);
     assert.ok(Array.isArray(plan.batches));
     assert.ok(Array.isArray(plan.blocked));
     assert.ok(Array.isArray(plan.findings));
-    assert.deepEqual(plan.summary, { open_issues: 1, batched: 1, blocked: 0, launched: 0, findings: 0, batches: 1 });
+    assert.deepEqual(plan.summary, { open_issues: 1, batched: 1, blocked: 0, launched: 0, findings: 0, batches: 1, label_blocked: 0 });
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -1219,7 +1219,7 @@ test("CLI: --issues-file --root --no-state --json-only prints the envelope and e
     });
     assert.equal(run.status, 0, run.stderr);
     const plan = JSON.parse(run.stdout);
-    assert.equal(plan.schema, "batch-plan@2");
+    assert.equal(plan.schema, "batch-plan@3");
     assert.ok(!fs.existsSync(path.join(root, ".agentic-workflow", STATE_FILE_NAME)), "--no-state writes nothing");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -1446,8 +1446,12 @@ test("B1: a closed soft-dep target resolves and an open undelivered one is cavea
       issue(11, "Beta", `${whereSection(["skills/beta/SKILL.md"])}\n\n${deps}`),
       issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"])),
     ];
-    const plan = buildBatchPlan(baseInput(issues, root));
+    // #99 was open in the previous plan and is gone from the forge now: closed,
+    // which is the resolution state S9 asks the plan to read.
+    const previous = previousState({}, { "99": { title: "Long gone", batch: 2, lane: "docs", last_seen: "2026-11-08T00:00:00.000Z" } });
+    const plan = buildBatchPlan(baseInput(issues, root, { previous }));
     assert.deepEqual(plan.findings.filter((f) => f.code === "orphaned-soft-dep"), [], "a closed target is resolved, not an orphan");
+    assert.deepEqual(plan.closed_since.map((row) => row.number), [99], "the resolution is the lifecycle delta's own evidence");
     const row = plan.batches.flatMap((b) => b.lanes).flatMap((l) => l.issues).find((r) => r.number === 11);
     assert.match(row.reason.detail, /#10/u, "the open target is named");
     assert.doesNotMatch(row.reason.detail, /#99/u, "the resolved target is not caveated");
@@ -1487,6 +1491,7 @@ test("C1: a non-declared table is partially parsed when a row names its kind", (
     fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const table = ["## Dependencies", "", "| Depends on | Kind |", "|---|---|", "| #10 | soft |", "| #12 | hard |"].join("\n");
     const issues = [
+      issue(10, "Alpha", whereSection(["skills/alpha/SKILL.md"])),
       issue(11, "Beta", `${whereSection(["skills/beta/SKILL.md"])}\n\n${table}`),
       issue(12, "Gamma", whereSection(["skills/gamma/SKILL.md"])),
     ];

@@ -61,6 +61,17 @@ export const CLAIM_TTL_MS = 48 * 60 * 60 * 1000;
 
 /** The state file's version: 3 keys claims by `(number, lane)` (issue #509, S2). */
 const STATE_VERSION = 3;
+
+/**
+ * The labels that make an issue unlaunchable (issue #509, S11): `postponed` and
+ * `backlog` as the issue names them, plus `human-revision-needed` because this
+ * workflow's guide holds it as "nothing is planned, implemented, committed or
+ * merged" — recommending a launch would violate that hold.
+ */
+export const BATCH_BLOCKING_LABELS = ["postponed", "backlog", "human-revision-needed"];
+
+/** The explicit triage verdicts a body may state (issue #509, S12, decision D12). */
+const BODY_TRIAGE_RE = /\b(fix-now|postponed|promoted|wontfix)\b/iu;
 /** The claim-key separator: `<number>|<lane>`, the issue's own example. */
 const CLAIM_SEPARATOR = "|";
 /** A v3 claim key; anything else is a pre-v3 bare-number key or foreign data. */
@@ -95,18 +106,19 @@ export async function collectIssues({ issuesFile, ghBin = "gh", remote = null } 
       if (!Array.isArray(raw)) throw new Error("issues fixture is not a JSON array");
     } catch (cause) {
       degradations.push(`unavailable-forge-issues-file-${sanitizeCause(cause)}`);
-      return { issues: [], degradations, relationsKnown: false };
+      return { issues: [], degradations, relationsKnown: false, openSetKnown: false };
     }
     // A cache that carries the native relations needs no forge call; one that
     // does not (a plain `gh issue list` export) fetches them live, best-effort.
     const hasRelations = raw.every((i) => i !== null && typeof i === "object" && Array.isArray(i.blockedBy));
     const issues = normalizeIssues(raw);
-    if (hasRelations) return { issues, degradations, relationsKnown: true };
+    if (hasRelations) return { issues, degradations, relationsKnown: true, openSetKnown: true };
     const relations = await fetchRelations({ ghBin, remote, degradations });
     return {
       issues: issues.map((issue) => ({ ...issue, blockedBy: relations.get(issue.number) ?? [] })),
       degradations,
       relationsKnown: relations.size > 0 || degradations.length === 0,
+      openSetKnown: true,
     };
   }
   return collectIssuesLive({ ghBin, remote });
@@ -132,12 +144,12 @@ async function collectIssuesLive({ ghBin, remote }) {
     listed = JSON.parse(run.stdout);
   } catch (cause) {
     degradations.push(`unavailable-forge-issue-list-${sanitizeCause(cause)}`);
-    return { issues: [], degradations, relationsKnown: false };
+    return { issues: [], degradations, relationsKnown: false, openSetKnown: false };
   }
 
   const relations = await fetchRelations({ ghBin, remote, degradations });
   const issues = normalizeIssues(listed).map((issue) => ({ ...issue, blockedBy: relations.get(issue.number) ?? [] }));
-  return { issues, degradations, relationsKnown: relations.size > 0 || issues.length === 0 };
+  return { issues, degradations, relationsKnown: relations.size > 0 || issues.length === 0, openSetKnown: true };
 }
 
 /**
@@ -471,6 +483,60 @@ export function extractProseDependencies(body) {
   return { soft, proseHard, malformed: false };
 }
 
+/** A cell that names a dependency's kind — the recovery pass's only anchor (S10). */
+const KIND_CELL_RE = /^(soft|hard|blocked|block|blocked-by|blocks|depends on)$/iu;
+
+/**
+ * Partial extraction from a `## Dependencies` table the declared-form parser
+ * refuses (issue #509, S10).
+ *
+ * The declared form (`| Depends on | Kind | Why |`) stays the only *strict*
+ * shape — #460's twelve false findings came from harvesting `#\d+` out of
+ * arbitrary columns. The recovery is narrower than a free scan: a row
+ * contributes only when one of its cells is exactly a kind token, so the
+ * `| Feature | Issue |` tables that caused those findings still contribute
+ * nothing. The counts are what a degradation can report honestly.
+ *
+ * @returns {{soft: number[], proseHard: number[], parsed: number, total: number}}
+ */
+export function extractPartialDependencies(body) {
+  const empty = { soft: [], proseHard: [], parsed: 0, total: 0 };
+  const idx = body.indexOf("## Dependencies");
+  if (idx === -1) return empty;
+  const rest = body.slice(idx + "## Dependencies".length);
+  const end = rest.indexOf("\n## ");
+  const section = end === -1 ? rest : rest.slice(0, end);
+  const lines = section.split("\n").filter((line) => line.trim().startsWith("|"));
+  if (lines.length < 2) return empty;
+  const soft = [];
+  const proseHard = [];
+  let parsed = 0;
+  let total = 0;
+  for (const line of lines.slice(1)) {
+    const cells = line.split("|").map((cell) => cell.trim());
+    if (cells.every((cell) => cell === "" || /^:?-{2,}:?$/u.test(cell))) continue; // the separator row
+    total += 1;
+    const kindAt = cells.findIndex((cell) => KIND_CELL_RE.test(cell));
+    if (kindAt === -1) continue; // no kind named: not a dependency row, never harvested
+    const deps = [];
+    for (let index = 0; index < cells.length; index += 1) {
+      if (index === kindAt) continue;
+      for (const match of cells[index].matchAll(/#(\d+)/gu)) deps.push(Number(match[1]));
+    }
+    if (deps.length === 0) continue; // a kind with no dependency is not a dependency
+    parsed += 1;
+    const hard = /^(hard|block)/iu.test(cells[kindAt]);
+    for (const dep of deps) {
+      if (hard) {
+        if (!proseHard.includes(dep)) proseHard.push(dep);
+      } else if (!soft.includes(dep)) {
+        soft.push(dep);
+      }
+    }
+  }
+  return { soft, proseHard, parsed, total };
+}
+
 /** Measured-size hint: declared `(S)/(M)/(L)/(XL)` token first, then surface count. */
 export function sizeHint(issue, surfaces) {
   const token = /\(([SMLXL])\)/.exec(issue.title) ?? /\(([SMLXL])\)/.exec(issue.body.slice(0, 400));
@@ -491,7 +557,11 @@ export function sizeHint(issue, surfaces) {
  * The cell often carries a PR annotation after the status (`done · [#475](…)`,
  * the fix index's own rendering), so the value read is the token before it.
  */
-function isTriaged(status) {
+function isTriaged(status, body = "") {
+  // An explicit triage decision in the body is the more specific signal (issue
+  // #509, S12): a manual `fix-now (high)` verdict outranks a roadmap row that
+  // still reads `pending`, and a row at `planned`+ still counts on its own.
+  if (BODY_TRIAGE_RE.test(body)) return true;
   if (status === undefined) return true;
   const token = status.split("·")[0].trim();
   return ["planned", "in-progress", "done"].includes(token);
@@ -536,6 +606,17 @@ function staleClaimReason(key, entry, { now = null, openNumbers = null, evidence
     return `unit landed (branch ${branches[0].name} merged)`;
   }
   if (openNumbers !== null && !openNumbers.has(number)) return "issue closed since the claim";
+  // A claim the operator marked launched whose lane has nothing left on disk is
+  // the deleted-worktree case (issue #509, S8): the worktree, its branch and its
+  // PR are all gone, so the claim cannot describe a running lane anymore.
+  if (entry?.launched_at !== undefined) {
+    const openPr = pr !== null && pr.state === "OPEN";
+    if (slot?.worktree === null || slot?.worktree === undefined) {
+      if (branches.length === 0 && !openPr) {
+        return `launched lane has no worktree, branch or open PR left (${entry.worktree ?? "unknown worktree"})`;
+      }
+    }
+  }
   if (now !== null) {
     const nowMs = typeof now === "number" ? now : Date.parse(now);
     const lastSeen = Date.parse(typeof entry?.last_seen === "string" ? entry.last_seen : "");
@@ -568,9 +649,20 @@ function claimKeyNumber(key) {
  *   degraded?: string[],
  *   launchEvidence?: Map<number, object> | null,
  *   now?: string | number | null,
+ *   openSetKnown?: boolean,
  * }} input
  */
-export function buildBatchPlan({ issues, root, head, previous = null, degraded = [], relationsKnown = true, launchEvidence = null, now = null }) {
+export function buildBatchPlan({
+  issues,
+  root,
+  head,
+  previous = null,
+  degraded = [],
+  relationsKnown = true,
+  launchEvidence = null,
+  now = null,
+  openSetKnown = true,
+}) {
   const degradations = [...degraded];
   const openNumbers = new Set(issues.map((i) => i.number));
   const byNumber = new Map(issues.map((i) => [i.number, i]));
@@ -600,10 +692,27 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
     if (match) unitDirByIssue.set(Number(match[1]), dir);
   }
 
+  // A target the previous plan saw open and the forge no longer lists is closed
+  // — resolved, not an orphan (issue #509, S9). The persisted seen set is the
+  // only forge-state evidence available without a call per dependency.
+  const closedNumbers = new Set(
+    Object.keys(previous?.seen ?? {})
+      .map(Number)
+      .filter((number) => Number.isInteger(number) && !openNumbers.has(number)),
+  );
+
   const launched = [];
   const launchedSurfaces = new Map();
   const launchable = [];
+  const labelBlocked = [];
   for (const issue of issues) {
+    // A hold label wins over every other status (issue #509, S11): the issue is
+    // reported as its own category, never batched, never presented as running.
+    const labels = BATCH_BLOCKING_LABELS.filter((label) => issue.labels.some((carried) => carried.toLowerCase() === label));
+    if (labels.length > 0) {
+      labelBlocked.push({ number: issue.number, labels });
+      continue;
+    }
     const unitDir = unitDirByIssue.get(issue.number);
     // Evidence decides, the unit doc corroborates (issue #509, S3): a merged or
     // parked unit doc on disk is not an in-flight unit.
@@ -615,8 +724,10 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
       launchable.push(issue);
     }
   }
+  labelBlocked.sort((a, b) => a.number - b.number);
   launched.sort((a, b) => a.number - b.number);
   const launchedNumbers = new Set(launched.map((entry) => entry.number));
+  const blockedNumbers = new Set(labelBlocked.map((entry) => entry.number));
 
   // The file claim of every issue: what its body declares, plus what its own
   // branch actually rewrites (issue #509, S4). A directory or a glob claims
@@ -633,12 +744,16 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   for (const issue of launchable) {
     const surfaces = extractSurfaces(issue.body);
     const surfaceSet = surfaces.size > 0 ? surfaces : new Set(["general"]);
-    const prose = extractProseDependencies(issue.body);
+    let prose = extractProseDependencies(issue.body);
     if (prose.malformed) {
-      // Fail closed (issue #460, S5): a non-declared table shape degrades
-      // declared, naming the issue, instead of harvesting `#\d+` from
-      // arbitrary columns.
-      degradations.push(`unavailable-prose-dependencies-issue-${issue.number}-undeclared-table-shape`);
+      // The declared shape is refused (issue #460, S5); what a row still
+      // attributes is recovered and the shortfall is declared with its counts
+      // (issue #509, S10). Nothing is harvested from a row that names no kind.
+      const partial = extractPartialDependencies(issue.body);
+      degradations.push(
+        `unavailable-prose-dependencies-issue-${issue.number}-${partial.parsed}-of-${partial.total}-rows-undeclared-table-shape`,
+      );
+      prose = { soft: partial.soft, proseHard: partial.proseHard, malformed: true };
     }
     model.set(issue.number, {
       issue,
@@ -646,7 +761,7 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
       softAll: prose.soft,
       proseHard: prose.proseHard,
       size: sizeHint(issue, surfaceSet),
-      triaged: isTriaged(fixStatusByNumber.get(issue.number)),
+      triaged: isTriaged(fixStatusByNumber.get(issue.number), issue.body),
     });
   }
   // A tree-root declaration (`skills`, `skills/**`, `packages/`) names every
@@ -677,7 +792,14 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
   }
   for (const row of model.values()) {
     row.soft = row.softAll.filter((n) => model.has(n));
-    row.softOrphans = row.softAll.filter((n) => !model.has(n) && !launchedNumbers.has(n) && !knownNumbers.has(n));
+    // Without a trustworthy open set an absent target is indistinguishable from a
+    // closed one, so no orphan is claimed — the shortfall is already degraded
+    // (issue #509, S9, decision D9).
+    row.softOrphans = openSetKnown
+      ? row.softAll.filter(
+        (n) => !model.has(n) && !launchedNumbers.has(n) && !blockedNumbers.has(n) && !closedNumbers.has(n) && !knownNumbers.has(n),
+      )
+      : [];
   }
 
   const findings = [];
@@ -802,6 +924,7 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
       documentBatch: index + 1,
       openNumbers,
       launchedNumbers,
+      openSetKnown,
     }),
   }));
 
@@ -861,13 +984,14 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
 
   const plan = {
     contract: "agentic-workflow/batch-plan",
-    version: 2,
-    schema: "batch-plan@2",
+    version: 3,
+    schema: "batch-plan@3",
     source_revision: head,
     degraded: degradations.sort((a, b) => a.localeCompare(b)),
     batches,
     blocked,
     launched,
+    label_blocked: labelBlocked,
     findings,
     new_issues,
     closed_since,
@@ -878,6 +1002,7 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
       launched: launched.length,
       findings: findings.length,
       batches: batches.length,
+      label_blocked: labelBlocked.length,
     },
   };
   for (const lane of plan.batches.flatMap((batch) => batch.lanes)) {
@@ -889,7 +1014,13 @@ export function buildBatchPlan({ issues, root, head, previous = null, degraded =
 }
 
 /** Group one batch's issues into lanes — one lane per surface, soft-ordered. */
-function buildLanes(numbers, model, launched, launchedSurfaces, { batchOf, documentBatchOf, documentBatch, openNumbers, launchedNumbers }) {
+function buildLanes(
+  numbers,
+  model,
+  launched,
+  launchedSurfaces,
+  { batchOf, documentBatchOf, documentBatch, openNumbers, launchedNumbers, openSetKnown },
+) {
   const bySurface = new Map();
   for (const number of numbers) {
     const row = model.get(number);
@@ -920,7 +1051,14 @@ function buildLanes(numbers, model, launched, launchedSurfaces, { batchOf, docum
       // is an input the issue starts without.
       const undelivered = [];
       for (const target of row.softAll) {
-        if (target === number || !openNumbers.has(target)) continue;
+        if (target === number) continue;
+        if (!openSetKnown) {
+          // The open set is unavailable, so no target can be called resolved: the
+          // issue's inputs are unverified, not satisfied (issue #509, S9).
+          undelivered.push(`#${target} (state unknown — the open set is unavailable)`);
+          continue;
+        }
+        if (!openNumbers.has(target)) continue;
         const targetDocumentBatch = batchOf.get(target) !== undefined ? documentBatchOf.get(batchOf.get(target)) : undefined;
         if (targetDocumentBatch !== undefined && targetDocumentBatch < documentBatch) continue;
         if (targetDocumentBatch === documentBatch) {
@@ -1258,6 +1396,7 @@ async function main(argv) {
     previous,
     degraded: [...collected.degradations, ...launch.degradations],
     relationsKnown: collected.relationsKnown,
+    openSetKnown: collected.openSetKnown !== false,
     launchEvidence: launch.evidence,
     now: runInstant,
   });
@@ -1291,7 +1430,7 @@ function readHead(root) {
 }
 
 function printHumanSummary(plan) {
-  console.log(`# Batch plan (${plan.source_revision.slice(0, 12)}) — ${plan.summary.batches} batch(es), ${plan.summary.batched} batched, ${plan.summary.blocked} blocked, ${plan.summary.launched} launched, ${plan.summary.findings} finding(s)`);
+  console.log(`# Batch plan (${plan.source_revision.slice(0, 12)}) — ${plan.summary.batches} batch(es), ${plan.summary.batched} batched, ${plan.summary.blocked} blocked, ${plan.summary.launched} launched, ${plan.summary.label_blocked} label-blocked, ${plan.summary.findings} finding(s)`);
   for (const batch of plan.batches) {
     console.log(`\n## Batch ${batch.n}`);
     for (const lane of batch.lanes) {
@@ -1303,6 +1442,9 @@ function printHumanSummary(plan) {
     }
   }
   for (const row of plan.blocked) console.log(`\nblocked #${row.number}: ${row.reason}`);
+  if (plan.label_blocked.length > 0) {
+    console.log(`\nlabel-blocked: ${plan.label_blocked.map((row) => `#${row.number} (${row.labels.join(", ")})`).join(", ")}`);
+  }
   const untriaged = plan.batches
     .flatMap((batch) => batch.lanes)
     .flatMap((lane) => lane.issues)
