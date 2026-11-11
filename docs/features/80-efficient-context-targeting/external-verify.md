@@ -91,3 +91,14 @@ Disclosed side effects: the local-gate run executed its declared `/tmp` tmp-gc s
 (`/tmp/differential-baseline-*` recreated by concurrent sessions — 135 present after);
 gate generators wrote gitignored build outputs only; the tracked tree was clean at every
 checkpoint.
+
+---
+
+**Correction status (2026-11-11, same day):** B1 and B2 folded by this branch's
+second correction batch of `docs/fix/269-external-verify-findings/`
+(commit `aadce3a4`); advisories A1–A5 folded in the same batch (A5 as B2's
+in-place annotation), A6/A7 triaged not-fixed with reasons (unit Log D9). The
+batch's evidence (E12–E16, G8–G10) lives in that unit doc; the batch session
+record is
+`.agentic-workflow/journal/20261111T205204Z-feat-269-efficient-context-targeting-narrative-local.md`.
+The next verify runs as a delta against the block above.
