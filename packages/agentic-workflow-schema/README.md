@@ -1036,3 +1036,52 @@ The runner crate ships without a dependency on this package (AC21 of unit 61), s
 it mirrors these sets with a provenance comment and `scripts/unit-doc-contract.test.mjs`
 pins the two — a drifting mirror is the defect, not the second copy.
 
+
+## The ceremony profile (issue #436)
+
+One versioned grammar the **project charter owns**: which ceremony pieces the
+project pays. The dispatch/catalog path reads it in code before emitting its
+next step — a step whose piece the profile discards is skipped with a recorded
+receipt, never emitted as a hand-off, never an error. Anti-gaming is code: the
+vocabularies are closed and the reader refuses instead of reading optimistically,
+so a profile can only *narrow* ceremony relative to the catalog default. An
+**absent block is a declared degradation** — no profile declared, every
+applicable piece keeps the catalog default; the full-ceremony adopter is exactly
+the no-profile behavior.
+
+The carried form is one fenced block in the guide's `## Project charter`
+section (the caller scopes the read; the parser itself is scope-free), first
+match winning, under the `ceremony-profile@1` marker (`src/ceremony-profile.ts`
+documents the spelling):
+
+```text
+ceremony-profile@1
+piece | value | what it orders
+docs-step | paid · discarded | the docs step (catalog step `docs`)
+captures | paid · discarded | execute-time capture prose; no catalog step
+review-passes | a comma list of published review surfaces, or `none` | the review-pack surfaces the project pays; unlisted surfaces are discarded; the `review` step itself is never discardable
+publish-gate | paid · discarded | the release/publish gate (catalog step `release`)
+test-policy | paid · discarded | the tests step (catalog step `tests`)
+```
+
+An undeclared piece keeps the catalog default, so a partial profile narrows
+only what it names. A present-but-wrong block is a typed refusal
+(`bad-contract-id`, `malformed-line`, `unknown-piece`, `duplicate-piece`,
+`unknown-adoption`, `unknown-review-surface`, `empty-review-passes`) — never a
+silent misparse.
+
+### Public entries
+
+| Entry | Contract |
+| --- | --- |
+| `readCeremonyProfile(text)` | `null` (absent) · `{ ok, profile }` · `{ ok: false, refusals }` — the sole reading authority for `ceremony-profile@1` |
+| `serializeCeremonyProfile(profile)` | the canonical body lines (closed piece order; surfaces in the closed surface order; `none` for empty passes) — round-trips through `readCeremonyProfile` |
+
+### Closed vocabularies
+
+| Export | Values | Meaning |
+| --- | --- | --- |
+| `CEREMONY_PROFILE_PIECES` | `docs-step` · `captures` · `review-passes` · `publish-gate` · `test-policy` | The ceremony elements a charter may pay or discard |
+| `CEREMONY_PROFILE_ADOPTIONS` | `paid` · `discarded` | What the charter declares per scalar piece |
+| `CEREMONY_REVIEW_SURFACES` | derived from `PASS_NAMES` (minus `classify`) | The surfaces `review-passes` may name; the derivation is pinned, so adding a review pass is a schema-const change in one PR |
+| `CEREMONY_PROFILE_REFUSALS` | the refusal set above | Every way a present-but-wrong block can fail, typed |

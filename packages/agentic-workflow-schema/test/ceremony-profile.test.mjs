@@ -67,7 +67,7 @@ test("the contract publishes one versioned id and closed, frozen vocabularies", 
 test("the review-passes surface set derives from PASS_NAMES (classify is internal machinery)", () => {
   assert.deepEqual(
     [...CEREMONY_REVIEW_SURFACES],
-    PASS_NAMES.filter((name) => name !== "classify").map((name) => name.replace(/^review-/, "")),
+    [...new Set(PASS_NAMES.filter((name) => name !== "classify").map((name) => name.replace(/^review-/, "")))],
   );
 });
 

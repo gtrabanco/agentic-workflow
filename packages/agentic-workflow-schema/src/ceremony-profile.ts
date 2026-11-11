@@ -73,7 +73,7 @@ export type CeremonyReviewSurface = Exclude<(typeof PASS_NAMES)[number], "classi
   ? Surface
   : Exclude<(typeof PASS_NAMES)[number], "classify">;
 export const CEREMONY_REVIEW_SURFACES: readonly CeremonyReviewSurface[] = Object.freeze(
-  PASS_NAMES.filter((name) => name !== "classify").map((name) => name.replace(/^review-/, "")) as CeremonyReviewSurface[],
+  [...new Set(PASS_NAMES.filter((name) => name !== "classify").map((name) => name.replace(/^review-/, "")))] as CeremonyReviewSurface[],
 );
 
 /** The closed refusal vocabulary (`ceremony-profile-refusal`): every way a
