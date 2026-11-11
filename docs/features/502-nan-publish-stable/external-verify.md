@@ -66,3 +66,22 @@ Batch head: `30adaf36` (re-cut close commit, supersedes the local-only
 
 Blockers after batch: 0 (B1 recheck green). Verdict stands for the owner's
 delta re-verify on `d509ca1f`.
+
+### Disposition — 2026-11-11 (second owner-directed batch)
+
+The addendum's new finding is folded: SPEC `## Log` **F2** (append-only per
+the log-kind contract — `G1`/`G2`/`E11` stand as recorded) records the
+observed reproduction (scratch at `8f2a8c7b`: context test exit 1, PACKAGES
+103/2419; head: exit 0, 101/2381) and the proof that the runs were made on
+the staged working tree (E11's own recorded output differs from the sha's
+bytes). Standing dispositions unchanged after re-triage: A4 (roadmap-494 —
+another unit's defect, row shape unknown, §7 forbids hand-inventing), the
+load-class gate advisory (bail-kills-in-flight is documented behaviour behind
+the disclosed 494 red), operator actions (owner-side). Also folded in this
+batch (**F3**, surfaced by the owner-directed loop check): `phase-lint` had
+been BLOCKED on this unit doc since the cut — same fingerprint
+`af9b9862876e…` at `193704c3`, `7080989e` and the working tree (box 4: P3's
+arrow chain; box 5: P5's standalone `or`; the inline route D1 skipped the
+plan-step lint) — reworded with meaning preserved (validator commands and
+outcomes byte-identical); post-fix `node scripts/phase-lint.mjs <SPEC>` ·
+exit 0 · P1–P5 PASS 6/6, overall fingerprint unchanged. Blockers open: 0.
