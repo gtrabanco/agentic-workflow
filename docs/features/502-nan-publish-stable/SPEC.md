@@ -399,6 +399,20 @@ cut, and no `unit-route` triage block is fabricated for the inline route.
   of this unit's declared surface. Differential: unit-doc-contract 21, release
   70, capabilities 16, capability-inventory 15 — case lists identical base vs
   head.
+- **G3** — 2026-11-11, HEAD (re-cut `30adaf36` + `d509ca1f`), `bun
+  scripts/local-gate.mjs --no-bail` · exit 1 · every step green except
+  root-suite: `log-immutability` PASS (0 violations — 63 at the superseded
+  head, 0 at base), carrier/parity/docs/context/tmp-gc/worktree/install/
+  schema/pin/advisories/compat/crate legs green; `node
+  scripts/run-root-suite.mjs` standalone · exit 1 · 100 pass / 1 fail =
+  roadmap-settle 494 (G1's base-reproduced, disclosed red — unchanged). The
+  in-gate FAILs of red-first/run-root-suite/scope-manifest carry no test-level
+  failure: root-suite runs fail-fast on inside the gate and the bail kills the
+  suites still in flight behind that disclosed red (the base reproduces the
+  cascade with other victims — ceremony-*, tmp-gc — plus check-skill-context's
+  real 103/2419 red at committed `8f2a8c7b`, fixed by this head's compression).
+  `node scripts/red-first.mjs` · exit 0 · 0 findings — the shipped history
+  passes the gate.
 
 ## Next
 
