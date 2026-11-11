@@ -1,0 +1,23 @@
+# Planning obligations — fix/436-ceremony-profile
+
+One row per normative behaviour, compatibility invariant, affected use case and
+required failure state (9-column shape owned by
+`skills/pre-execution-review/references/LEDGERS.md`). Frozen at cut except
+`status`; every row is `planned` at cut time and flips only on a
+foreground-run validator (§8).
+
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+| O1 | S2 | the `ceremony-profile@1` contract exists as a versioned machine contract: contract id, closed piece/adoption/surface vocabularies, deterministic block parser | P2 | P1, P2 | schema package | `cd packages/agentic-workflow-schema && bun run test` exits 0 | suite output recorded in the unit doc's `## Log` | planned |
+| O2 | S2 | an unknown piece, adoption value or review surface is refused, never read optimistically; a malformed or empty block is a typed refusal | P2 | P1, P2 | schema package | same suite as O1 (refusal cases) | refusal case names in the recorded suite output | planned |
+| O3 | S3 | `scripts/catalog.json` declares the `ceremonyProfile` step↔piece map (`docs`→`docs-step`, `tests`→`test-policy`, `release`→`publish-gate`); the map is pinned against the piece vocabulary | P3 | P3 | router + catalog | `bun test scripts/ceremony-profile.test.mjs` exits 0 | recorded suite output | planned |
+| O4 | S3 | a profile-discarded step is skipped with a recorded receipt in `Skipped` (and the additive `Profile:` line + `--json` `profile` key), never emitted as a hand-off, never an error; receipts ride the #434 additive-annotation pattern | P3 | P3 | router | same suite as O3 (skip/receipt cases) | recorded suite output | planned |
+| O5 | S3 (regression) | no profile declared anywhere → `--triage` stdout block and `--json` answer byte-identical to the pre-change behavior (the §2 differential) | P3 | P3 | router | same suite as O3 (differential cases, base-copy comparison) | recorded differential output | planned |
+| O6 | S4 | consuming skill prose records a profile discard as `n/a — ceremony-profile@1: <piece> discarded by project charter` — a valid, recorded route, not a hard failure | P4 | P4 | skill prose | `bun scripts/skill-lint.mjs` exits 0; `bun scripts/check-skill-context.mjs --routes` exits 0 | both commands' exit codes recorded | planned |
+| O7 | S2 | `init-workspace` authors the `ceremony-profile@1` block inside `## Project charter` at charter time (the #435 writer) | P4 | P4 | skill prose | `bun scripts/skill-lint.mjs` exits 0; prose read-back in the unit doc's `## Log` | lint exit code + quoted prose line | planned |
+| O8 | S5 | anti-gaming in code: a profile can only narrow (a `paid` declaration on a catalog-skipped step yields a no-expansion refusal receipt); `evidence`, `plan`, `implement`, `review` are never profile-discardable; a malformed charter block fails closed exit 2 | P3 | P3 | router | same suite as O3 (no-expansion + core-step + fail-closed cases) | recorded suite output | planned |
+| O9 | S6 | a minimal adopter (prose-only fixture: every discardable piece discarded) triages without any error from a discarded piece — every omission is a receipt, exit 0 | P3 | P3 | router | same suite as O3 (minimal-adopter case) | recorded suite output | planned |
+| O10 | S7 | the declared profile is machine-readable by deterministic code — the substrate the next audit's prune sweep reads; `review-passes` surfaces derive from the published `PASS_NAMES` set | P2 | P1, P2 | schema package | same suite as O1 (derivation case) | recorded suite output | planned |
+| O11 | S3 (compat) | the #440 consumer contract is preserved: no declared profile → every applicable audit dimension runs | P4 | P3, P4 | router + skill prose | `bun test scripts/product-audit-rescope.test.mjs` exits 0 | recorded suite output | planned |
+| O12 | S2 | the grammar is a registered normative surface (`normative-surfaces@1` row) and the roadmap row 436 summary updates through the deterministic sync, never a hand edit | P5 | P5 | registration | `bun test scripts/normative-drift.test.mjs` exits 0; `bun scripts/docs-generate.mjs --check` exits 0 | both exit codes recorded | planned |
+| O13 | n/a — no frozen-failure reproducer exists for this change (§2 corpus search, unit doc `## Log` E2): the change is purely additive substrate; the regression corpus is the differential, owned by O5 | — | — | — | — | the E2 search receipt in the unit doc's `## Log` | planned |
