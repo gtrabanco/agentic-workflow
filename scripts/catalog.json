@@ -80,5 +80,18 @@
       "requires_gate": true,
       "budget_tier": "strong"
     }
+  },
+  "ceremonyProfile": {
+    "schemaVersion": 1,
+    "contract": "ceremony-profile@1",
+    "stepPieces": {
+      "docs": "docs-step",
+      "tests": "test-policy",
+      "release": "publish-gate"
+    },
+    "prosePieces": {
+      "captures": "execute-time capture prose; no catalog step",
+      "review-passes": "review-pack surface narrowing; the review step itself is never discardable"
+    }
   }
 }

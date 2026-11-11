@@ -6,6 +6,8 @@ Owner decisions and path-protection records for this unit. Appended-only.
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | packages/agentic-workflow-schema/test/ceremony-profile.test.mjs | P1 | 2026-11-11 | execute-phase | Red-corpus completion before the green commit: the round-trip case re-serialized the profile without the contract-id marker line, so the reparse correctly returned null (absent block). The fix restores the marker the case always intended to carry; no assertion is relaxed, weakened or removed, and the suite was still red at the red commit (f1dd440f) exactly as recorded.
+justification | scripts/ceremony-profile.test.mjs | P3 | 2026-11-11 | execute-phase | Red-corpus completion before the green commit: the fixture units were written with `scope: standard`, which keeps `release` out of a feature unit's default step list, so the full-paid scenario could not exercise the true no-change case it was written for. The correction raises the feature fixtures' scope to `medium`; no assertion is relaxed, weakened or removed, and the suite was still red at the red commit (f9d09b86) exactly as recorded.
+justification | scripts/ceremony-profile.test.mjs | P3 | 2026-11-11 | execute-phase | Red-corpus completion before the green commit: the `NO_PROFILE_STEPS` pin constant omitted the `research` step from the closed 9-step list the router actually emits, so the differential assertions compared against a wrong literal. The correction fixes the constant to the true list; no assertion is relaxed, weakened or removed.
 ```
 
 - **D1 — 2026-11-11** — Unit home `docs/fix/436-ceremony-profile/` for a feature
