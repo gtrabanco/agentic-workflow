@@ -3,9 +3,10 @@
  * runtime writer driver over the repository's shared documents.
  *
  * Frozen-failure corpus:
- *   FF-1 — last-write-wins: `src/edit/Roadmap.mjs` rewrites the whole file with
- *          no concurrency guard; two writers in one checkout clobber each
- *          other (unit-32 finding F19, `docs/LOGS.md` line 2306). The corpus
+ *   FF-1 — last-write-wins: the pre-driver `src/edit/Roadmap.mjs` (frozen at
+ *          base 27275c94) rewrote the whole file with no concurrency guard; two
+ *          writers in one checkout clobbered each other (unit-32 finding F19,
+ *          `docs/LOGS.md` line 2306). The corpus
  *          reproducer is the stale-read case: a writer whose read is stale
  *          must be refused with a named rejection, never applied.
  *   FF-5 — a writer that rewrites foreign bytes, drops lines, or accepts a
