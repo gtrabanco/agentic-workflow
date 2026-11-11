@@ -649,6 +649,51 @@ describe("Roadmap on the writer driver (issue #498)", () => {
       }
     });
   });
+
+  // External-verify B1: the bin usage header, SPEC P3 and D5 promise
+  // `--expect <hash>` on rowUpsert/fixrow; the flag must refuse a stale read
+  // with exit 2 before mutation — never be silently ignored with success.
+  it("CLI: --expect is honored on rowUpsert and fixrow — a stale flag refuses exit 2 before mutation (B1)", async () => {
+    const cliDir = mkdtempSync(join(tmpdir(), "aw-expect-cli-"));
+    try {
+      const cliPath = join(cliDir, "ROADMAP.md");
+      writeFileSync(cliPath, `${FIXTURE}\n## Fixes\n\n| Issue | Topic | Status | Notes |\n|---|---|---|---|\n`, "utf8");
+      const before = readFileSync(cliPath, "utf8");
+      const agwoPath = join(fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url)));
+      const stale = "0".repeat(64);
+      const run = (args) =>
+        new Promise((resolve) => {
+          const p = spawn("node", [agwoPath, ...args], { cwd: cliDir, timeout: 10000 });
+          let stdout = "";
+          let stderr = "";
+          p.stdout.on("data", (d) => { stdout += d.toString(); });
+          p.stderr.on("data", (d) => { stderr += d.toString(); });
+          p.on("close", (code) => resolve({ code, stdout, stderr }));
+        });
+
+      const upPayload = JSON.stringify({ nn: "13", slug: "expect-flag", status: "planned", dependsOn: "—", description: "flag CAS" });
+      const upStale = await run(["roadmap", cliPath, "rowUpsert", upPayload, "--expect", stale, "--json"]);
+      strictEqual(upStale.code, 2);
+      ok(upStale.stderr.includes("stale-read"), upStale.stderr);
+      strictEqual(readFileSync(cliPath, "utf8"), before);
+
+      const fixPayload = JSON.stringify({ issue: 497, url: "https://github.com/x/y/issues/497", topic: "flag-cas", status: "open", notes: "n" });
+      const fixStale = await run(["roadmap", cliPath, "fixrow", fixPayload, "--expect", stale, "--json"]);
+      strictEqual(fixStale.code, 2);
+      ok(fixStale.stderr.includes("stale-read"), fixStale.stderr);
+      strictEqual(readFileSync(cliPath, "utf8"), before);
+
+      const upFresh = await run(["roadmap", cliPath, "rowUpsert", upPayload, "--expect", readShared(cliPath).revision, "--json"]);
+      strictEqual(upFresh.code, 0);
+      strictEqual(JSON.parse(upFresh.stdout).ok, true);
+
+      const fixFresh = await run(["roadmap", cliPath, "fixrow", fixPayload, "--expect", readShared(cliPath).revision, "--json"]);
+      strictEqual(fixFresh.code, 0);
+      ok(readFileSync(cliPath, "utf8").includes("| [#497](https://github.com/x/y/issues/497) | flag-cas |"));
+    } finally {
+      rmSync(cliDir, { recursive: true, force: true });
+    }
+  });
 });
 
 function strictNotEqual(a, b) {
