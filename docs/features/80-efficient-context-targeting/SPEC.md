@@ -444,12 +444,12 @@ OPEN rows only; appended by `review-change` and `triage-issue`.
 - **P5** — 2026-11-10, `agentic-workflow provision rg` implemented (module + bin + README + companion projection token) → landed inside `b9721a59` (D7 disclosure).
 - **P6** — 2026-11-10, shipping gates (changeset, gitignore, route re-bases, unit-dir re-key to row 80) → `b9721a59`; sibling-pin refactor → `3c4ec0f4`.
 - **P7** — 2026-11-10, close-out: obligations flipped on the foreground validators above, this log block, roadmap settle + PR rewrite, journal fragment → `fdd83c94`.
-- **G1** — 2026-11-10, `node scripts/run-root-suite.mjs` @ HEAD 15adee6c6f840ffab46e3d384768d17996deba8e · exit 0 · 104 suites, 4 workers (carries the golden-fixture, invocation-drift, normative-drift, roadmap-settle, structural-sibling-pins and check-skill-context suites).
-- **G2** — 2026-11-10, `bun scripts/skill-lint.mjs` @ HEAD 15adee6c6f840ffab46e3d384768d17996deba8e · exit 0 · 0 findings in 99 files.
-- **G3** — 2026-11-10, `bun scripts/version-parity-gate.mjs --content --base 41e72230` @ HEAD 15adee6c6f840ffab46e3d384768d17996deba8e · exit 0 · VERDICT PASS.
-- **G4** — 2026-11-10, `bun scripts/docs-generate.mjs --check` @ HEAD 15adee6c6f840ffab46e3d384768d17996deba8e · exit 0 · verdict PASS.
-- **G5** — 2026-11-10, `bun scripts/roadmap-settle.mjs` @ HEAD 15adee6c6f840ffab46e3d384768d17996deba8e · exit 0 · 185 unit docs, 0 violations (the unit-dir re-key to row 80 resolved the `[#269]` key collision with the parallel correction unit).
-- **G6** — 2026-11-10, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/80-efficient-context-targeting/SPEC.md` @ HEAD 15adee6c6f840ffab46e3d384768d17996deba8e · exit 0 · `ok: true`, violations [].
+- **G1** — 2026-11-10, `node scripts/run-root-suite.mjs` @ HEAD caf6395a108e3b780d320d6e06f1d0eed77ad461 · exit 0 · 104 suites, 4 workers (carries the golden-fixture, invocation-drift, normative-drift, roadmap-settle, structural-sibling-pins and check-skill-context suites).
+- **G2** — 2026-11-10, `bun scripts/skill-lint.mjs` @ HEAD caf6395a108e3b780d320d6e06f1d0eed77ad461 · exit 0 · 0 findings in 99 files.
+- **G3** — 2026-11-10, `bun scripts/version-parity-gate.mjs --content --base 41e72230` @ HEAD caf6395a108e3b780d320d6e06f1d0eed77ad461 · exit 0 · VERDICT PASS.
+- **G4** — 2026-11-10, `bun scripts/docs-generate.mjs --check` @ HEAD caf6395a108e3b780d320d6e06f1d0eed77ad461 · exit 0 · verdict PASS.
+- **G5** — 2026-11-10, `bun scripts/roadmap-settle.mjs` @ HEAD caf6395a108e3b780d320d6e06f1d0eed77ad461 · exit 0 · 185 unit docs, 0 violations (the unit-dir re-key to row 80 resolved the `[#269]` key collision with the parallel correction unit).
+- **G6** — 2026-11-10, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/80-efficient-context-targeting/SPEC.md` @ HEAD caf6395a108e3b780d320d6e06f1d0eed77ad461 · exit 0 · `ok: true`, violations [].
 
 ## Next
 
