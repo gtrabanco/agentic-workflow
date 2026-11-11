@@ -31,8 +31,23 @@ export const BATCH_PLAN_VERSION = 2;
 export const BATCH_REASON_KINDS = ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"] as const;
 export type BatchReasonKind = (typeof BATCH_REASON_KINDS)[number];
 
-/** The closed finding-code set — unresolvable spots are findings, never silent (S7). */
-export const BATCH_FINDING_CODES = ["cycle", "orphaned-soft-dep", "prose-native-mismatch"] as const;
+/**
+ * The closed finding-code set — unresolvable spots are findings, never silent (S7).
+ *
+ * `file-overlap` and `stale-claim` were added by issue #509: two issues of one
+ * batch on different lanes whose branches rewrite the same file cannot be
+ * merged without conflict, and a persisted claim whose evidence lapsed (or that
+ * carries a pre-v3 bare-number key) is a work-graph fact the plan reports
+ * instead of honoring. Both extend the vocabulary only — no field is added, so
+ * the version stays put (the core-closed rule above bumps it for a field).
+ */
+export const BATCH_FINDING_CODES = [
+  "cycle",
+  "orphaned-soft-dep",
+  "prose-native-mismatch",
+  "file-overlap",
+  "stale-claim",
+] as const;
 export type BatchFindingCode = (typeof BATCH_FINDING_CODES)[number];
 
 /** The closed size-hint vocabulary — measured from each issue's declared evidence (S5). */
@@ -157,7 +172,7 @@ export interface BatchPlan {
   blocked: BatchBlocked[];
   /** Issues already running (unit doc in flight), excluded from batches (S3). */
   launched: { number: number; evidence: string }[];
-  /** Unresolvable spots: cyclic waits, orphaned soft deps, prose/native disagreements (S7). */
+  /** Unresolvable spots: cyclic waits, orphaned soft deps, prose/native disagreements, cross-lane file overlaps and expired claims (S7). */
   findings: BatchFinding[];
   /** Issues first seen in this run (issue #460) — a fresh issue is reported, never silent. */
   new_issues: BatchNewIssue[];
@@ -324,7 +339,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
       if (!isObj(row)) return errors.push(`${label} must be an object`);
       rejectUnexpectedKeys(row, label, ["code", "numbers", "detail"], errors);
       if (!(BATCH_FINDING_CODES as readonly string[]).includes(row.code as BatchFindingCode)) {
-        errors.push(`${label}.code must be cycle|orphaned-soft-dep|prose-native-mismatch`);
+        errors.push(`${label}.code must be cycle|orphaned-soft-dep|prose-native-mismatch|file-overlap|stale-claim`);
       }
       if (!Array.isArray(row.numbers) || row.numbers.length === 0) errors.push(`${label}.numbers must be a non-empty array`);
       else for (const n of row.numbers) issueNumber(n, `${label}.numbers[]`, errors);
