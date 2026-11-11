@@ -125,6 +125,7 @@ import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from 
 import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
+import { provisionRg, realOps } from "../src/provision/rg.mjs";
 import { ConfigError, createConfigApi, renderInitTemplate } from "../src/config/api.mjs";
 import { discoverConfigExtensions } from "../src/config/discovery.mjs";
 import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
@@ -170,6 +171,12 @@ function parseArgs(args) {
 function refuse(reason) {
   process.stderr.write(`EDIT REFUSAL — ${reason}\n`);
   process.exit(2);
+}
+
+/** The first occurrence's value (`--flag <value>`) or undefined. */
+function flagValue(args, flag) {
+  const index = args.indexOf(flag);
+  return index === -1 ? undefined : args[index + 1];
 }
 
 /** A refusal with a non-EDIT prefix (the read-only sensors refuse with their
@@ -534,7 +541,7 @@ function configRefusal(message, issues, json) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision> ...");
   process.exit(1);
 }
 
@@ -832,9 +839,33 @@ switch (command) {
     break;
   }
 
+  // ── provision — the ask-first tool bootstrap (issue #269, remaining P1 scope) ──
+  case "provision": {
+    const tool = rawArgs[0];
+    if (!tool || tool.startsWith("--")) {
+      process.stderr.write("usage: agentic-workflow provision rg [--yes] [--dir <root>] [--json]\n");
+      process.exit(2);
+    }
+    if (tool !== "rg") {
+      process.stderr.write(`PROVISION REFUSAL — unknown tool "${tool}": this command ships the rg bootstrap only\n`);
+      process.exit(2);
+    }
+    const root = flagValue(restArgs, "--dir") ? resolve(flagValue(restArgs, "--dir")) : process.cwd();
+    const ops = realOps(root);
+    ops.yes = restArgs.includes("--yes");
+    const out = await provisionRg(ops);
+    if (parsed.json) {
+      process.stdout.write(`${JSON.stringify(out)}\n`);
+    } else {
+      console.log(`PROVISION provision-rg@1 — verdict: ${out.verdict} · method: ${out.method ?? "-"} · target: ${out.target ?? "-"}`);
+      if (out.note) console.log(`  ${out.note}`);
+    }
+    process.exit(out.exitCode);
+    break;
+  }
+
   // ── memory — bounded memory-substrate health probe (unit 66, P1) ────
-  case "memory": {
-    const op = rawArgs[0];
+  case "memory": {    const op = rawArgs[0];
     if (op !== "probe") refuse(`memory requires the \`probe\` operation, got "${op ?? ""}"`);
     const report = await runProbe();
     if (parsed.json) {

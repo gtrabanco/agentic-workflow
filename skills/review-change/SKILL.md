@@ -76,6 +76,14 @@ mapping candidate evidence.
 Default target is the **current change** (branch diff vs the default branch);
 accept a path/glob to widen or narrow. State the scope at the top of the report.
 
+When the reviewed change belongs to a unit document, its per-phase
+`Relevant files:` lists are the review's read set **around the diff**: resolve
+the union with `bun scripts/relevant-files.mjs <unit-doc> --phase all` and read
+those files, bounded, instead of surveying the repository. Git still owns the
+review scope — the diff decides what is in it, the lists decide what is read to
+judge it, and the sub-section is metadata owned by `phase-contract` (a file
+missing from the lists is never out of scope).
+
 ## Review charter — dismantle the claim
 
 The workflow's job is to demonstrate that what works, works — **and works
