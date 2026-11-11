@@ -199,8 +199,10 @@ untouched — regression guard), plus the local gate's root suite.
   Relevant files: .github/workflows/publish.yml
 - P4 — Docs currency in the same change: `docs/workflow/PACKAGES.md` chain
   line, `docs/workflow/FEATURE_WORKFLOW.md` count line, the
-  `npm-version-gate.test.mjs` comment narration, the roadmap row's status
-  move to `done`, and the docs projection regeneration (validator:
+  `npm-version-gate.test.mjs` comment narration, the roadmap row registered
+  `in-progress` (settled to `done` at closeout, when the PR opens — the
+  settle rule pairs `done` with its PR link), and the docs projection
+  regeneration (validator:
   `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S6, S7)
   Relevant files: docs/workflow/PACKAGES.md, docs/workflow/FEATURE_WORKFLOW.md, scripts/npm-version-gate.test.mjs, docs/ROADMAP.md, docs/generated/units.md
@@ -375,6 +377,28 @@ cut, and no `unit-route` triage block is fabricated for the inline route.
   session entry written through the journal writer as a pending fragment (the
   carrier's appends belong to the merge-to-main aggregator, issue #468) · this
   commit.
+- **F1** — 2026-11-11, correction batch on the 2026-11-11 EXTERNAL VERIFY
+  (NEEDS-DECISION, 1 blocker + 4 advisories). **B1 folded:** the close commit
+  had hand-appended `docs/LOGS.md` and hand-deleted 62 pending fragments as a
+  non-aggregator commit (63 `log-immutability` violations); the branch is
+  local-only, so the close commit was re-cut — `d9463a0c` superseded by
+  `30adaf36`, carrier bytes back at base, session entry re-landed as a pending
+  fragment byte-identical to the appended block (`node
+  scripts/log-immutability.mjs` · exit 0 · 0 violations · 63 before · 0 at
+  base `27275c94`; `journal aggregate --check` · exit 0 · 63 fragments). **A1
+  folded:** `scripts/unit-doc-contract.test.mjs`'s D-40-14 narration moved to
+  the four-package truth with the companion's assertion added (21 pass / 0
+  fail); `scripts/release.test.mjs`'s "all three packages" withdrawn as
+  fixture-true (its fixture carries three packages — renaming would falsify
+  the name). **A2 folded:** `docs/CAPABILITIES.md`'s public-API row now reads
+  Four published npm packages and enumerates the companion (`npm view
+  @gtrabanco/pi-nan-agentic-workflow dist-tags` → `latest: 4.10.0`; capabilities
+  suites 31 pass / 0 fail). **A3 folded:** P4's roadmap step now states the
+  the `in-progress` registration plus the closeout settlement. **A4 dispositioned:**
+  unit 494's missing ROADMAP row stays main's disclosed pre-existing red, out
+  of this unit's declared surface. Differential: unit-doc-contract 21, release
+  70, capabilities 16, capability-inventory 15 — case lists identical base vs
+  head.
 
 ## Next
 
