@@ -197,6 +197,44 @@ test("cut + canary opens the GitHub pre-release with the rendered notes", () => 
   assert.ok(create !== -1, "opens the pre-release");
 });
 
+// The 2026-11-09 canary (run 42638128017): `npm publish` succeeded, but the
+// schema tarball 404'd for ~10 minutes while the tag, the pre-release and the
+// canary dist-tag were already visible — so an install during the window failed.
+// The invariant (issue #481): a publish signal is emitted only after every
+// published tarball is downloadable AND matches its packument shasum. Every npm-
+// publishing job therefore carries the availability wait between its publish and
+// its signal.
+test("every npm-publishing job waits for tarball availability before it signals the release", () => {
+  const text = read(PUBLISH);
+  assert.equal(
+    [...text.matchAll(/npm-availability-wait\.mjs/g)].length,
+    5,
+    "one wait call per npm-publishing job: cut-prerelease + the four *-publish jobs",
+  );
+
+  const cut = jobBlock(text, "cut-prerelease");
+  const publishChannel = cut.indexOf("- name: Publish the channel");
+  const cutWait = cut.indexOf("- name: Wait for npm tarball availability");
+  const record = cut.indexOf("- name: Record the cut as a tag and a GitHub pre-release");
+  assert.ok(publishChannel !== -1 && cutWait !== -1 && record !== -1, "the three cut steps exist");
+  assert.ok(publishChannel < cutWait && cutWait < record, "release visible = installable: wait between publish and the tag/pre-release");
+  assert.match(
+    cut.slice(cutWait, record),
+    /npm-availability-wait\.mjs[\s\S]*--plan publish-plan\.tsv/,
+    "the cut waits for every row of publish-plan.tsv",
+  );
+
+  for (const job of ["schema-publish", "crate-publish", "pi-publish", "nan-publish"]) {
+    const block = jobBlock(text, job);
+    const publish = block.indexOf("- name: Publish to npm (Trusted Publishing — no token)");
+    const wait = block.indexOf("- name: Wait for npm tarball availability");
+    const tag = block.indexOf("- name: Point the canary dist-tag at the stable release");
+    assert.ok(publish !== -1 && wait !== -1 && tag !== -1, `${job}: publish, wait and dist-tag steps exist`);
+    assert.ok(publish < wait && wait < tag, `${job}: the dist-tag never moves to a version the CDN cannot serve`);
+    assert.match(block.slice(wait, tag), /"\$NAME@\$VERSION"/, `${job} names the exact pair it published`);
+  }
+});
+
 test("the publish jobs run only on mode: publish (no push publishes anything)", () => {
   const text = read(PUBLISH);
   assert.doesNotMatch(text, /^\s{2}push:/m, "the workflow must not trigger on push");
