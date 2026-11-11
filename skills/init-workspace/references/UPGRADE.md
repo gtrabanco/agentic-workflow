@@ -100,12 +100,16 @@ lacks**. Ten ordered steps:
    `subagents` key (caps shaped `"<n> of <m> <unit>"`, or the key omitted —
    absent means the self-detected envelope) only on an explicit yes; an existing
    owner-written file is never rewritten, and a declined offer is a residual.
-   The **generated-surfaces merge driver (fix #507)** rides the same additive
-   contract: a `.gitattributes` missing the two `merge=docs-generated` lines is
-   proposed from `template/.gitattributes` (append-only, unrelated entries
-   untouched), and the driver is armed with
-   `bun scripts/docs-generated-merge.mjs --install` — an already-armed checkout
-   reports `unchanged` and is never rewritten.
+   The **generated-surfaces and shared-document merge drivers (fix #507 on the
+   #498 base)** ride the same additive contract: a `.gitattributes` missing
+   registry lines is proposed from `template/.gitattributes` (append-only,
+   unrelated entries untouched — `docs/generated/** merge=docs-generated` and
+   the three `agentic-shared-*` class lines, each path claimed once), and both
+   driver families are armed — `bun scripts/docs-generated-merge.mjs --install`
+   and `bun scripts/shared-doc-merge.mjs --install` — with
+   `git config --get merge.docs-generated.driver` and
+   `git config --get merge.agentic-shared-roadmap.driver` verifying non-empty —
+   an already-armed checkout reports `unchanged` and is never rewritten.
    Leave honest placeholders where the user skipped.
 7. **Retire the legacy `CLAUDE.md` — only with an explicit yes, never as a side
    effect.** Older releases of this workflow wrote the guide as `CLAUDE.md`;

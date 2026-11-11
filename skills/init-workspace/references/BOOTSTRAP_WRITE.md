@@ -29,21 +29,29 @@
    guessed. Both documentation-map rows (charter, criteria catalogue) are
    registered so design/plan provenance searches reach the answers without new
    machinery; `audit-docs`' charter check (16) recomputes the coverage.
-5. **Install the generated-surfaces merge driver (fix #507).** The generated
+5. **Install the generated-surfaces and shared-document merge drivers (fix #507 on the #498 base).** The generated
    projection and the roadmap tables are functions of the tree
-   (`scripts/docs-generate.mjs`), so two branches that regenerate them must
-   never conflict by hand. In bootstrap and upgrade alike, after the template
-   write: (a) keep `template/.gitattributes` as the project's `.gitattributes`
-   — additively on an existing file, appending the two `merge=docs-generated`
-   lines (`docs/generated/**` adjusted to the declared projection directory
-   when `content-dir` moves it, and `docs/ROADMAP.md`) and never touching
-   unrelated entries; (b) arm the driver in the checkout's git config:
-   `bun scripts/docs-generated-merge.mjs --install` (node fallback, same argv),
-   and verify `git config --get merge.docs-generated.driver` is non-empty; a
-   missing `scripts/docs-generated-merge.mjs` (an install without the scripts
-   tree) is recorded as a residual with the manual command as the route, never
-   a failed scaffold. The `.gitattributes` lines are committed; the config
-   arming is per-checkout and is never pushed.
+   (`scripts/docs-generate.mjs`), and the shared documents the concurrent
+   sessions write are covered by #498's file-class registry, so two branches
+   that regenerate or append must never conflict by hand. In bootstrap and
+   upgrade alike, after the template write: (a) keep `template/.gitattributes`
+   as the project's `.gitattributes` — additively on an existing file, appending
+   the registry lines it is missing (`docs/generated/** merge=docs-generated`,
+   adjusted to the declared projection directory when `content-dir` moves it;
+   plus the three class-registry lines
+   `docs/ROADMAP.md merge=agentic-shared-roadmap`,
+   `docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets` and
+   `docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state`) and never
+   touching unrelated entries — the ROADMAP attribute is stated here once, so a
+   project never carries two `merge=` claims on one path; (b) arm the drivers in
+   the checkout's git config: `bun scripts/docs-generated-merge.mjs --install`
+   and `bun scripts/shared-doc-merge.mjs --install` (node fallback, same argv),
+   and verify `git config --get merge.docs-generated.driver` and
+   `git config --get merge.agentic-shared-roadmap.driver` are non-empty; a
+   missing `scripts/` tree (an install without the scripts directory) is
+   recorded as a residual with the manual commands as the route, never a failed
+   scaffold. The `.gitattributes` lines are committed; the config arming is
+   per-checkout and is never pushed.
 6. **Verify the capability inventory before calling it seeded.** `docs/CAPABILITIES.md`
    is the one written file whose raw form is wrong in both directions — a
    placeholder claims a subsystem the project does not have, and a missing row
