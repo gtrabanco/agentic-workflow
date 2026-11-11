@@ -33,9 +33,11 @@ Write into the unit doc's **References** section:
 - [ ] Index row settled via the crate's writer — feature: re-emit the row with
       `agentic-workflow roadmap docs/ROADMAP.md rowUpsert
       '{"nn":"<NN>","slug":"<slug>","status":"done · [#<pr>](<pr-url>)"}'`,
-      every other cell as it is; fix: the row's status cell in that document's
-      `## Fixes` table — no `NN` column, so `rowUpsert` (the features writer)
-      does not apply to it. `bun scripts/roadmap-settle.mjs` exits 0 afterwards (issue
+      every other cell as it is; fix: write the row with
+      `agentic-workflow roadmap docs/ROADMAP.md fixrow
+      '{"issue":"<N>","url":"<issue-url>","topic":"<slug>","status":"done · [#<pr>](<pr-url>)"}'`
+      — the `## Fixes` writer keys the row by the issue number in its
+      `[#N](url)` cell (issue #498: a Fixes row is never a hand edit). `bun scripts/roadmap-settle.mjs` exits 0 afterwards (issue
       #316: the settle is code, never prose)
 - [ ] `git status --porcelain` is empty
 

@@ -267,6 +267,19 @@ gate as `--push-base`, and a `test-impact` verdict of `empty` (no executable
 path changed — prose and assets only) skips the test-bearing steps; a `targeted`
 verdict, a refusal or an absent script runs the full gate, never a silent skip.
 A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook`.
+The shared-document classes (issue #498) arm the same way and are documented here
+because the arming is the same per-checkout limitation: `.gitattributes` names
+`docs/ROADMAP.md merge=agentic-shared-roadmap`,
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets` and
+`docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state`, and
+`bun scripts/shared-doc-merge.mjs --install` writes the driver config a clone
+never inherits; arming is optional — an unarmed clone degrades to git's textual
+merge, and the armed drivers add the semantic layer (row union by key; a
+same-row status flip or a differing ceiling leaf surfaces as a real conflict;
+`REPOSITORY_STATE.md` never unions). The write-path half of the contract lives
+in the crate: `writer-driver-contract@1` in
+[`packages/agentic-workflow/README.md`](packages/agentic-workflow/README.md) is
+the contract's one home.
 **The generated projection carries no per-regeneration line**, so two concurrent
 regenerations merge as plain text and no checkout has to be armed for that. For
 the residual case — two branches inserting a row at the same position in one
@@ -428,6 +441,10 @@ guard-rejection-reason-vocabulary | packages/agentic-workflow-schema/src/vocabul
 projection-manifest-grammar | packages/agentic-workflow-schema/README.md | block:projection-manifest@1 | n/a | no
 guard-verdict-grammar | packages/agentic-workflow-schema/README.md | block:guard-verdict@1 | n/a | no
 test-impact-verdict | skills/execute-phase/references/TEST_IMPACT.md | fenced:TEST IMPACT — | n/a | no
+writer-driver-contract | packages/agentic-workflow/README.md | block:writer-driver-contract@1 | n/a | no
+writer-refusal-vocabulary | packages/agentic-workflow/src/writer/driver.mjs | schema-export:WRITER_REFUSAL_REASONS | writer-refusal-reason | no
+shared-merge-class-vocabulary | scripts/shared-doc-merge.mjs | schema-export:SHARED_MERGE_CLASSES | shared-merge-class | no
+shared-merge-refusal-vocabulary | scripts/shared-doc-merge.mjs | schema-export:SHARED_MERGE_REFUSAL_REASONS | shared-merge-refusal-reason | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
