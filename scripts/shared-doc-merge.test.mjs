@@ -44,6 +44,25 @@ const ROADMAP_BASE = [
   "",
 ].join("\n");
 
+
+/** `docs/LOGS.md`'s fixture: the header, intro prose, and two entries — the
+ * exact block shape `renderEntryBlock` renders. */
+const LOGS_BASE = [
+  "# Logs",
+  "",
+  "Session journal intro.",
+  "",
+  "## 2026-11-09T15:04:20Z — main — narrative",
+  "- **Commits:** 0",
+  "- **Files:** —",
+  "- **Summary:** the base entry",
+  "",
+  "## 2026-11-10T10:00:00Z — feat/x — narrative",
+  "- **Commits:** 1 (`aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`)",
+  "- **Summary:** another base entry",
+  "",
+].join("\n");
+
 /** One fixture git repository with the shared docs on `main`. */
 function fixtureRepo() {
   const dir = mkdtempSync(join(tmpdir(), "aw-shared-merge-"));
@@ -60,6 +79,7 @@ function fixtureRepo() {
     "utf8",
   );
   writeFileSync(join(dir, "docs", "workflow", "REPOSITORY_STATE.md"), "# Frozen facts\n\n- fact: one\n", "utf8");
+  writeFileSync(join(dir, "docs", "LOGS.md"), LOGS_BASE, "utf8");
   // The attribute mapping is committed in the real tree; a fixture carries the
   // same lines so `git merge` dispatches to the armed drivers.
   writeFileSync(
@@ -68,6 +88,7 @@ function fixtureRepo() {
       "docs/ROADMAP.md merge=agentic-shared-roadmap",
       "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
       "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
+      "docs/LOGS.md merge=agentic-shared-logs",
       "",
     ].join("\n"),
     "utf8",
@@ -102,13 +123,13 @@ function divergeJson(repo, name, transform) {
 
 // ── arming ───────────────────────────────────────────────────────────────
 
-test("--install arms the three file classes in a fixture checkout, idempotently", () => {
+test("--install arms the four file classes in a fixture checkout, idempotently", () => {
   const repo = fixtureRepo();
   try {
     const first = run(["--install", "--repo", repo.dir], repo.dir);
     assert.equal(first.status, 0, first.stderr);
     assert.ok(first.stdout.includes("verdict: PASS"));
-    for (const cls of ["roadmap", "budgets", "repo-state"]) {
+    for (const cls of ["roadmap", "budgets", "repo-state", "logs"]) {
       const driver = spawnSync("git", ["config", "--local", "--get", `merge.agentic-shared-${cls}.driver`], { cwd: repo.dir, encoding: "utf8" });
       assert.equal(driver.status, 0, `merge.agentic-shared-${cls}.driver armed`);
       assert.ok(driver.stdout.includes(`shared-doc-merge.mjs ${cls}`));
@@ -275,5 +296,55 @@ test("usage errors exit 2", () => {
     assert.equal(run(["only-one"], dir).status, 2);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── the logs class, through real git merges (S17) ─────────────────────────
+
+test("FF-5 — two branches each appending a different LOGS entry merge into the union (exit 0)", () => {
+  const repo = fixtureRepo();
+  try {
+    run(["--install", "--repo", repo.dir], repo.dir);
+    const appendEntry = (stamp, summary) => (text) => `${text}\n## ${stamp} — fix/y — narrative\n- **Commits:** 2\n- **Summary:** ${summary}\n`;
+    const ours = diverge(repo, "ours", "docs/LOGS.md", appendEntry("2026-11-11T08:00:00Z", "ours entry"));
+    const theirs = diverge(repo, "theirs", "docs/LOGS.md", appendEntry("2026-11-11T09:00:00Z", "theirs entry"));
+    const advance = repo.git(["merge", "--no-edit", ours]);
+    assert.equal(advance.status, 0, advance.stdout + advance.stderr);
+    const merge = repo.git(["merge", "--no-edit", theirs]);
+    assert.equal(merge.status, 0, merge.stdout + merge.stderr);
+    const merged = readFileSync(join(repo.dir, "docs", "LOGS.md"), "utf8");
+    assert.ok(merged.includes("ours entry"), "ours' entry is in the union");
+    assert.ok(merged.includes("theirs entry"), "theirs' entry is in the union");
+    assert.ok(
+      merged.indexOf("2026-11-11T08:00:00Z") < merged.indexOf("2026-11-11T09:00:00Z"),
+      "the union is ordered by stamp",
+    );
+    assert.ok(merged.includes("the base entry"), "base entries carried through");
+  } finally {
+    repo.release();
+  }
+});
+
+test("FF-5 — the same LOGS stamp appended with different bodies exits nonzero and leaves a real conflict", () => {
+  const repo = fixtureRepo();
+  try {
+    run(["--install", "--repo", repo.dir], repo.dir);
+    const appendEntry = (stamp, summary) => (text) => `${text}\n## ${stamp} — fix/y — narrative\n- **Commits:** 2\n- **Summary:** ${summary}\n`;
+    diverge(repo, "ours", "docs/LOGS.md", appendEntry("2026-11-11T08:00:00Z", "ours body"));
+    const theirs = diverge(repo, "theirs", "docs/LOGS.md", appendEntry("2026-11-11T08:00:00Z", "theirs body"));
+    const advance = repo.git(["merge", "--no-edit", "ours"]);
+    assert.equal(advance.status, 0, advance.stdout + advance.stderr);
+    const merge = repo.git(["merge", "--no-edit", theirs]);
+    assert.notEqual(merge.status, 0, "the semantic conflict must exit nonzero");
+    const merged = readFileSync(join(repo.dir, "docs", "LOGS.md"), "utf8");
+    assert.ok(merged.includes("<<<<<<<"), "ours marker present");
+    assert.ok(merged.includes("======="), "separator present");
+    assert.ok(merged.includes(">>>>>>>"), "theirs marker present");
+    assert.ok(merged.includes("ours body"), "ours side of the conflict");
+    assert.ok(merged.includes("theirs body"), "theirs side of the conflict");
+    const status = repo.git(["status", "--porcelain"]);
+    assert.ok(status.stdout.includes("UU docs/LOGS.md"), status.stdout);
+  } finally {
+    repo.release();
   }
 });

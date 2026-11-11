@@ -368,9 +368,10 @@ test(".gitattributes covers exactly the surfaces the generator writes", () => {
   // Issue #498 generalizes the pattern by file class: the projection entry keeps
   // its exact pin and the shared-document classes are the closed set the shared
   // driver's own suite pins — a foreign entry in either direction is a defect.
-  // The #507 driver's roadmap coverage stays a scratch-fixture capability (see
-  // the divergentRoadmap cases above); the ROADMAP attribute itself belongs to
-  // the agentic-shared-roadmap class per the 2026-11-11 coordination note.
+  // The #507 driver's roadmap and logs capabilities stay scratch-fixture
+  // capabilities (see the divergentRoadmap cases above); the ROADMAP and LOGS
+  // attributes belong to the shared-document classes per the 2026-11-11
+  // coordination note and the #498 LOGS reinforcement.
   assert.deepEqual(
     entries,
     [
@@ -378,8 +379,9 @@ test(".gitattributes covers exactly the surfaces the generator writes", () => {
       "docs/ROADMAP.md merge=agentic-shared-roadmap",
       "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
       "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
+      "docs/LOGS.md merge=agentic-shared-logs",
     ],
-    "the projection entry plus the three shared-document classes, exactly",
+    "the projection entry plus the four shared-document classes, exactly",
   );
 });
 
@@ -404,8 +406,9 @@ test("template/.gitattributes carries the integrated registry, exactly once per 
       "docs/ROADMAP.md merge=agentic-shared-roadmap",
       "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
       "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
+      "docs/LOGS.md merge=agentic-shared-logs",
     ],
-    "the projection entry plus the three shared-document classes, exactly",
+    "the projection entry plus the four shared-document classes, exactly",
   );
 });
 

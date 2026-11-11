@@ -17,6 +17,7 @@ import {
   numericRowKey,
   issueRowKey,
   structuralJsonMerge,
+  unionLogEntries,
 } from "../src/writer/merges.mjs";
 
 const BASE = [
@@ -142,4 +143,73 @@ test("structural JSON merge conflicts on the same leaf set differently on both s
   assert.equal(result.ok, false);
   assert.equal(result.reason, "conflict");
   assert.ok(result.conflicts.includes("schemaVersion"));
+});
+
+/* -------------------------------------------------- the logs class (S17) */
+
+/** The entry shape `renderEntryBlock` renders: `## <iso-second stamp> — <branch> — <label>`. */
+const LOGS_BASE = [
+  "# Logs",
+  "",
+  "Session journal intro.",
+  "",
+  "## 2026-11-09T15:04:20Z — main — narrative",
+  "- **Commits:** 0",
+  "- **Files:** —",
+  "- **Summary:** the base entry",
+  "",
+  "## 2026-11-10T10:00:00Z — feat/x — narrative",
+  "- **Commits:** 1 (`aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`)",
+  "- **Summary:** another base entry",
+  "",
+].join("\n");
+
+const logsEntry = (stamp, summary) =>
+  LOGS_BASE.replace(
+    "- **Summary:** another base entry\n",
+    `- **Summary:** another base entry\n\n## ${stamp} — fix/y — narrative\n- **Commits:** 2\n- **Summary:** ${summary}\n`,
+  );
+
+test("FF-5 — two sides each appending a different journal entry union ordered by stamp", () => {
+  const ours = logsEntry("2026-11-11T08:00:00Z", "ours entry");
+  const theirs = logsEntry("2026-11-11T09:00:00Z", "theirs entry");
+  const result = unionLogEntries(LOGS_BASE, ours, theirs);
+  assert.equal(result.ok, true, JSON.stringify(result.conflicts ?? result));
+  assert.ok(result.content.includes("ours entry"));
+  assert.ok(result.content.includes("theirs entry"));
+  // Fresh stamps are later than the base's, so the union keeps append order.
+  assert.ok(
+    result.content.indexOf("2026-11-11T08:00:00Z") < result.content.indexOf("2026-11-11T09:00:00Z"),
+    "the union is ordered by stamp",
+  );
+  assert.ok(result.content.includes("the base entry"), "base entries are carried through");
+});
+
+test("FF-5 — the same entry on both sides deduplicates once", () => {
+  const shared = logsEntry("2026-11-11T08:00:00Z", "one shared entry");
+  const result = unionLogEntries(LOGS_BASE, shared, shared);
+  assert.equal(result.ok, true);
+  const heads = result.content.split("\n").filter((line) => line.startsWith("## 2026-11-11T08:00:00Z"));
+  assert.equal(heads.length, 1, "one copy, not two");
+});
+
+test("FF-5 — the same stamp appended with different bodies is a real conflict", () => {
+  const ours = logsEntry("2026-11-11T08:00:00Z", "ours body");
+  const theirs = logsEntry("2026-11-11T08:00:00Z", "theirs body");
+  const result = unionLogEntries(LOGS_BASE, ours, theirs);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "conflict");
+  assert.equal(result.conflicts.length, 1);
+  assert.equal(result.conflicts[0].key, "2026-11-11T08:00:00Z");
+  assert.ok(result.content.includes("<<<<<<<"), "ours marker present");
+  assert.ok(result.content.includes(">>>>>>>"), "theirs marker present");
+  assert.ok(result.content.includes("ours body"), "ours side is in the file for the human");
+  assert.ok(result.content.includes("theirs body"), "theirs side is in the file for the human");
+});
+
+test("FF-5 — a malformed entry boundary refuses closed instead of guessing", () => {
+  const malformed = LOGS_BASE + "\n## Nov 11 — something happened\n- not an entry heading\n";
+  const result = unionLogEntries(LOGS_BASE, LOGS_BASE, malformed);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "invalid-document");
 });
