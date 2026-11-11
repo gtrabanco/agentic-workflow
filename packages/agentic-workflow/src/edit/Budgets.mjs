@@ -46,7 +46,7 @@ function makeReceipt(service, op, path, schema, before, after, ok) {
  *
  * For SDK callers that want throw semantics on shrink: check receipt.ok === false.
  */
-export function ceilingRebase(budgetFile, route, estimateMax, linesMax, growthSource) {
+export function ceilingRebase(budgetFile, route, estimateMax, linesMax, growthSource, { routeEstimateMax, routeLinesMax } = {}) {
   const content = readFileSync(budgetFile, "utf8");
   const beforeHash = sha256(content);
 
@@ -57,14 +57,29 @@ export function ceilingRebase(budgetFile, route, estimateMax, linesMax, growthSo
     throw new Error(`Budget route "${route}" not found`);
   }
 
+  // The route's own shape decides which keys are live: a route carrying the
+  // checker-consumed `routeEstimateMax`/`routeLinesMax` pair refuses the
+  // scalar pair — writing `estimateMax` there was the triage's silent no-op
+  // (issue #498 finding 2: `ok: true` with nothing the reader consumes).
+  const routeKeyShape = routeData.routeEstimateMax !== undefined || routeData.routeLinesMax !== undefined;
+  if (routeKeyShape && (estimateMax !== undefined || linesMax !== undefined)) {
+    throw new Error(
+      `Budget route "${route}" carries routeEstimateMax/routeLinesMax — rebase with routeEstimateMax/routeLinesMax (the route checker reads them); estimateMax/linesMax are dead keys here`,
+    );
+  }
+
   const estimateRef = routeData.estimateMax ?? Infinity;
   const linesRef = routeData.linesMax ?? Infinity;
+  const routeEstimateRef = routeData.routeEstimateMax ?? Infinity;
+  const routeLinesRef = routeData.routeLinesMax ?? Infinity;
 
-  // Check for shrinkage
+  // Check for shrinkage — both shapes, same rule
   const estimateShrinks = estimateMax !== undefined && estimateMax < estimateRef;
   const linesShrinks = linesMax !== undefined && linesMax < linesRef;
+  const routeEstimateShrinks = routeEstimateMax !== undefined && routeEstimateMax < routeEstimateRef;
+  const routeLinesShrinks = routeLinesMax !== undefined && routeLinesMax < routeLinesRef;
 
-  if ((estimateShrinks || linesShrinks) && (!growthSource || growthSource.trim() === "")) {
+  if ((estimateShrinks || linesShrinks || routeEstimateShrinks || routeLinesShrinks) && (!growthSource || growthSource.trim() === "")) {
     // Refuse shrinkage without a growth source — return fail receipt
     return makeReceipt(
       "budgets",
@@ -80,6 +95,8 @@ export function ceilingRebase(budgetFile, route, estimateMax, linesMax, growthSo
   // Apply the rebase
   if (estimateMax !== undefined) routeData.estimateMax = estimateMax;
   if (linesMax !== undefined) routeData.linesMax = linesMax;
+  if (routeEstimateMax !== undefined) routeData.routeEstimateMax = routeEstimateMax;
+  if (routeLinesMax !== undefined) routeData.routeLinesMax = routeLinesMax;
 
   // Record the growth source if provided
   if (growthSource) {

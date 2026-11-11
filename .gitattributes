@@ -8,3 +8,14 @@
 #
 # Arm the driver once per checkout (optional): bun scripts/docs-generated-merge.mjs --install
 docs/generated/** merge=docs-generated
+
+# Shared-document classes (issue #498): the collision-safe merge layer over the
+# documents several concurrent sessions and PRs write. Arm once per checkout
+# (optional, same per-checkout git limitation): bun scripts/shared-doc-merge.mjs --install
+# An unarmed clone degrades to git's textual merge — verified behavior — and
+# the armed drivers add the semantic layer (row union by key; a same-row status
+# flip or a differing ceiling leaf surfaces as a real conflict; frozen facts in
+# REPOSITORY_STATE.md never union).
+docs/ROADMAP.md merge=agentic-shared-roadmap
+docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets
+docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state
