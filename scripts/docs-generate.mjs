@@ -456,11 +456,11 @@ function syncTable(lines, bounds, units, kind) {
   const columns = headerCells.length;
   const separatorAt = pipeIndexes.length > 1 && SEPARATOR_ROW.test(regionLines[pipeIndexes[1]].trim()) ? pipeIndexes[1] : null;
 
-  // The slug column is positional per table shape (features: NN|Slug|…, fixes:
-  // Issue|Topic|…) and always precedes the summary, so it survives even the
+  // The slug column is positional per table shape (features: NN | Slug | …,
+  // fixes: Issue | Topic | …) and always the second cell, so it survives even the
   // hand rows whose summary carries unescaped pipes (a cell count the sync
   // never tries to normalize — those rows pass through verbatim).
-  const slugColumn = kind === "feature" ? 1 : 2;
+  const slugColumn = 1;
   const slugOfRow = (line) => {
     const cells = tableCells(line);
     const slug = (cells[slugColumn] ?? "").replace(/`/g, "").trim();
@@ -500,27 +500,32 @@ export function syncRoadmapDocument(roadmapText, units) {
   let lines = roadmapText.split("\n");
   // The heading scan is the shared fence-aware reader's, never a second `## `
   // literal — sectionBounds owns the grammar (#308 F28, the unit-84 pin).
-  const lineStarts = [];
-  let offset = 0;
-  for (const line of lines) {
-    lineStarts.push(offset);
-    offset += line.length + 1;
-  }
-  const lineAt = (charOffset) => {
-    let low = 0;
-    let high = lineStarts.length - 1;
-    while (low < high) {
-      const mid = (low + high + 1) >> 1;
-      if (lineStarts[mid] <= charOffset) low = mid;
-      else high = mid - 1;
-    }
-    return low;
-  };
+  // Both readers are rebuilt per kind: the Features sync inserts rows, so the
+  // Fixes window must come from the text the file actually holds by then —
+  // offsets read off the pre-sync text slide with every appended row (S10: at
+  // six appends in one run the fix window starts inside the Features table).
   for (const [kind, heading] of [["feature", "Features"], ["fix", "Fixes"]]) {
-    const bounds = sectionBounds(roadmapText, heading);
+    const current = lines.join("\n");
+    const bounds = sectionBounds(current, heading);
     if (bounds === null) continue;
+    const lineStarts = [];
+    let offset = 0;
+    for (const line of lines) {
+      lineStarts.push(offset);
+      offset += line.length + 1;
+    }
+    const lineAt = (charOffset) => {
+      let low = 0;
+      let high = lineStarts.length - 1;
+      while (low < high) {
+        const mid = (low + high + 1) >> 1;
+        if (lineStarts[mid] <= charOffset) low = mid;
+        else high = mid - 1;
+      }
+      return low;
+    };
     const from = lineAt(bounds[0]) + 1;
-    const to = bounds[1] >= roadmapText.length ? lines.length : lineAt(bounds[1]);
+    const to = bounds[1] >= current.length ? lines.length : lineAt(bounds[1]);
     lines = syncTable(lines, [from, to], units, kind);
   }
   return { text: lines.join("\n"), changed: lines.join("\n") !== roadmapText };
@@ -843,7 +848,9 @@ export function run({ root, mode }) {
       ? null
       : mode === "dry-run"
         ? `Roadmap: ${ROADMAP_DOCUMENT} — ${roadmapChanged ? "would update" : "in sync"}`
-        : `Roadmap: ${ROADMAP_DOCUMENT} — ${roadmapChanged ? "updated" : "unchanged"}`;
+        : mode === "check"
+          ? `Roadmap: ${ROADMAP_DOCUMENT} — ${roadmapChanged ? "stale" : "unchanged"}`
+          : `Roadmap: ${ROADMAP_DOCUMENT} — ${roadmapChanged ? "updated" : "unchanged"}`;
 
   if (mode === "dry-run") {
     return {
