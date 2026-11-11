@@ -129,10 +129,14 @@ const SCENARIOS = [
 ];
 
 for (const [name, profileLines] of SCENARIOS) {
+  // `scope: medium` keeps `release` in a feature unit's default step list, so
+  // the full-paid scenario exercises the true "no change" case; the docs units
+  // stay `standard` (release is never a docs unit's step).
   const unitType = name === "no-expansion" || name === "minimal" ? "docs" : "feature";
+  const scope = unitType === "feature" ? "medium" : "standard";
   const dir = scenario(name);
   fs.mkdirSync(path.join(dir, "docs", "fix", "900-check-unit"), { recursive: true });
-  fs.writeFileSync(path.join(dir, "docs", "fix", "900-check-unit", "SPEC.md"), readFixtureUnit(unitType, "standard"));
+  fs.writeFileSync(path.join(dir, "docs", "fix", "900-check-unit", "SPEC.md"), readFixtureUnit(unitType, scope));
   if (profileLines !== null) {
     const version = name === "malformed-bad-version" ? "ceremony-profile@2" : "ceremony-profile@1";
     const block = [version, ...profileLines].join("\n");
@@ -156,7 +160,7 @@ test.after(() => {
   fs.rmSync(FIXTURES, { recursive: true, force: true });
 });
 
-const NO_PROFILE_STEPS = "Steps: design, implement, tests, evidence, review, docs, release";
+const NO_PROFILE_STEPS = "Steps: research, design, plan, implement, tests, evidence, review, docs, release";
 
 test("no profile declared: the triage block is today's block, byte for byte (no Profile line, no json key)", () => {
   const plain = runTriage("no-profile");
@@ -179,7 +183,7 @@ test("a fully-paid profile cannot expand ceremony: the step list is the no-profi
 test("a discarded step is skipped with a recorded receipt, never emitted, never an error", () => {
   const plain = runTriage("docs-discarded");
   assert.equal(plain.code, 0, plain.stderr);
-  assert.ok(!plain.stdout.includes("Steps: design, implement, tests, evidence, review, docs, release"), plain.stdout);
+  assert.ok(!plain.stdout.includes("Steps: research, design, plan, implement, tests, evidence, review, docs, release"), plain.stdout);
   assert.ok(
     plain.stdout.includes("docs: ceremony-profile@1: docs-step discarded by project charter"),
     plain.stdout,
