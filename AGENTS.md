@@ -285,8 +285,10 @@ regenerations merge as plain text and no checkout has to be armed for that. For
 the residual case — two branches inserting a row at the same position in one
 sorted table (the projection's tables, and `docs/ROADMAP.md`'s since fix #507,
 whose generated half appends a row per unit folder while every hand-owned cell
-passes through untouched) — `.gitattributes` names `docs/generated/**` and
-`docs/ROADMAP.md` `merge=docs-generated`, and
+passes through untouched) — `.gitattributes` names `docs/generated/**`
+(`merge=docs-generated`, armed by `bun scripts/docs-generated-merge.mjs --install`)
+while the `docs/ROADMAP.md` attribute stays with the shared-document class
+registry above — one claim per path, the registry stated once — and
 `bun scripts/docs-generated-merge.mjs --install` writes the driver config a
 clone never inherits; arming it is optional. Either way the gate's
 `docs-generated-projection` step runs `docs-generate --check` on every push —
