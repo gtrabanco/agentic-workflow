@@ -17,6 +17,14 @@
       "coherence-review": { "step": "review" }
     }
   },
+  "activityFusion": {
+    "schemaVersion": 1,
+    "steps": ["design", "plan"],
+    "applies_when": "risk_tier == 'standard'",
+    "skipped_when": "risk_tier != 'standard'",
+    "carriers": "separated",
+    "gates": "separated"
+  },
   "catalog": {
     "research": {
       "applies_when": "unit_type == 'feature' && scope != 'trivial'",

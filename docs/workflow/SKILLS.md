@@ -63,7 +63,10 @@ One document, adaptive steps. `unit-lane` is the single conductor for a
 feature or a fix: `scripts/unit-route.mjs --triage <unit>` reads the unit doc
 against the closed catalog (`scripts/catalog.json` — `research, design, plan,
 implement, tests, evidence, review, docs, release`) and returns the ordered
-subset the unit needs; the model executes only that subset. `unit-lane` absorbs
+subset the unit needs; the model executes only that subset. At `standard` risk
+tier the `design` and `plan` steps run as one investigate→orient→ask→decide
+pass in one conductor session with carriers separated (issue #434; owner block
+`activity-fusion@1` in `references/PLAN.md`). `unit-lane` absorbs
 the retired fixed pipeline (`design-feature` → `review-spec` → `plan-feature`
 → `review-plan`) into catalog steps, and it creates the unit doc:
 `docs/features/<NN>-<slug>/` for a feature (`/unit-lane <slug>`,

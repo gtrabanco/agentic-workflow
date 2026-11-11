@@ -190,8 +190,13 @@ function makeRepo(t, { acceptance = false, obligations = null } = {}) {
   // phase-lint.mjs, unit-doc-phases.mjs and relay-packet.mjs are the router's
   // import graph (#291 AC3: the shared parser serves both the linter and the
   // router; #294 adds the baton reader the relay hint shares with the checker).
-  for (const name of ["unit-lineage.mjs", "unit-route.mjs", "phase-lint.mjs", "unit-doc-phases.mjs", "relay-packet.mjs", "catalog.json"]) {
-    fs.copyFileSync(path.join(repoRoot, "scripts", name), path.join(root, "scripts", name));
+  // ceremony/tier.mjs, ceremony/lib.mjs and risk-tiers.mjs join the graph with
+  // issue #434: the router reads the unit's recorded tier from the tier
+  // module's single reader, so the sandbox mirrors that import too.
+  for (const name of ["unit-lineage.mjs", "unit-route.mjs", "phase-lint.mjs", "unit-doc-phases.mjs", "relay-packet.mjs", "catalog.json", "ceremony/tier.mjs", "ceremony/lib.mjs", "risk-tiers.mjs", "capabilities.mjs"]) {
+    const dest = path.join(root, "scripts", name);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(path.join(repoRoot, "scripts", name), dest);
   }
   git(root, "init", "-q", "-b", "main");
   git(root, "config", "user.email", "fixture@example.invalid");
