@@ -203,7 +203,7 @@ One observable, testable criterion per `S#`, each naming the check that proves i
 - P6 — repair the roadmap sync's fix-kind path and the check-mode roadmap line (validator: `bun test scripts/docs-generate.test.mjs` exits 0 with the three correction cases)
   (Implements: S8, S9, S10)
   Relevant files: scripts/docs-generate.mjs, scripts/docs-generate.test.mjs
-- P7 — close the receipt's documentation dispositions (validator: the three `rg` readers of AC-S11 through AC-S13 each exits 0)
+- P7 — close the receipt's documentation dispositions (validator: O8, O9 and O10 each name a reader command that exits 0)
   (Implements: S11, S12, S13)
   Relevant files: docs/fix/507-driver-write/SPEC.md, template/AGENTS.md, docs/features/67-serena-provisioning/SPEC.md
 
