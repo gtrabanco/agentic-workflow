@@ -17,6 +17,7 @@ import {
   numericRowKey,
   issueRowKey,
   structuralJsonMerge,
+  unionLogEntries,
 } from "../src/writer/merges.mjs";
 
 const BASE = [
@@ -142,4 +143,103 @@ test("structural JSON merge conflicts on the same leaf set differently on both s
   assert.equal(result.ok, false);
   assert.equal(result.reason, "conflict");
   assert.ok(result.conflicts.includes("schemaVersion"));
+});
+
+/* -------------------------------------------------- the logs class (S17) */
+
+/** The entry shape `renderEntryBlock` renders: `## <iso-second stamp> — <branch> — <label>`. */
+const LOGS_BASE = [
+  "# Logs",
+  "",
+  "Session journal intro.",
+  "",
+  "## 2026-11-09T15:04:20Z — main — narrative",
+  "- **Commits:** 0",
+  "- **Files:** —",
+  "- **Summary:** the base entry",
+  "",
+  "## 2026-11-10T10:00:00Z — feat/x — narrative",
+  "- **Commits:** 1 (`aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`)",
+  "- **Summary:** another base entry",
+  "",
+].join("\n");
+
+const logsEntry = (stamp, summary) =>
+  LOGS_BASE.replace(
+    "- **Summary:** another base entry\n",
+    `- **Summary:** another base entry\n\n## ${stamp} — fix/y — narrative\n- **Commits:** 2\n- **Summary:** ${summary}\n`,
+  );
+
+test("FF-5 — two sides each appending a different journal entry union ordered by stamp", () => {
+  const ours = logsEntry("2026-11-11T08:00:00Z", "ours entry");
+  const theirs = logsEntry("2026-11-11T09:00:00Z", "theirs entry");
+  const result = unionLogEntries(LOGS_BASE, ours, theirs);
+  assert.equal(result.ok, true, JSON.stringify(result.conflicts ?? result));
+  assert.ok(result.content.includes("ours entry"));
+  assert.ok(result.content.includes("theirs entry"));
+  // Fresh stamps are later than the base's, so the union keeps append order.
+  assert.ok(
+    result.content.indexOf("2026-11-11T08:00:00Z") < result.content.indexOf("2026-11-11T09:00:00Z"),
+    "the union is ordered by stamp",
+  );
+  assert.ok(result.content.includes("the base entry"), "base entries are carried through");
+});
+
+test("FF-5 — the same entry on both sides deduplicates once", () => {
+  const shared = logsEntry("2026-11-11T08:00:00Z", "one shared entry");
+  const result = unionLogEntries(LOGS_BASE, shared, shared);
+  assert.equal(result.ok, true);
+  const heads = result.content.split("\n").filter((line) => line.startsWith("## 2026-11-11T08:00:00Z"));
+  assert.equal(heads.length, 1, "one copy, not two");
+});
+
+test("FF-5 — the same entry appended with different bodies is a real conflict", () => {
+  const ours = logsEntry("2026-11-11T08:00:00Z", "ours body");
+  const theirs = logsEntry("2026-11-11T08:00:00Z", "theirs body");
+  const result = unionLogEntries(LOGS_BASE, ours, theirs);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "conflict");
+  assert.equal(result.conflicts.length, 1);
+  assert.equal(result.conflicts[0].key, "## 2026-11-11T08:00:00Z — fix/y — narrative");
+  assert.ok(result.content.includes("<<<<<<<"), "ours marker present");
+  assert.ok(result.content.includes(">>>>>>>"), "theirs marker present");
+  assert.ok(result.content.includes("ours body"), "ours side is in the file for the human");
+  assert.ok(result.content.includes("theirs body"), "theirs side is in the file for the human");
+});
+
+test("FF-5 — a side that edits a committed entry's body is no longer an append and refuses closed", () => {
+  const edited = LOGS_BASE.replace("- **Summary:** the base entry", "- **Summary:** a rewritten base entry");
+  const result = unionLogEntries(LOGS_BASE, LOGS_BASE, edited);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "invalid-document");
+  assert.ok(result.detail.includes("append-only"));
+});
+
+test("FF-5 — the real journal's heading shapes union clean: date-only, minute precision, exact duplicates", () => {
+  const realBase = [
+    "# Logs",
+    "",
+    "## 2026-09-16T08:00Z — feat/52-machine-checked-turn-contract — manual (review-spec pass)",
+    "- **Summary:** minute precision",
+    "",
+    "## 2026-09-22 — feature 61: adaptive unit lane (executed end-to-end)",
+    "- **Summary:** date only, no label segment",
+    "",
+    "## 2026-09-07T13:00:00Z — fix/179-declared-ledger-delta-receipts — manual",
+    "- **Summary:** first of two identical headings",
+    "",
+    "## 2026-09-07T13:00:00Z — fix/179-declared-ledger-delta-receipts — manual",
+    "- **Summary:** second of two identical headings",
+    "",
+  ].join("\n");
+  // Two sides append differently-shaped new entries; base is untouched.
+  const ours = `${realBase}\n## 2026-11-11 — local — narrative\n- **Summary:** ours day entry\n`;
+  const theirs = `${realBase}\n## 2026-11-11T09:00:00Z — ci/aggregator — weekly\n- **Commits:** 3\n- **Summary:** theirs stamped entry\n`;
+  const result = unionLogEntries(realBase, ours, theirs);
+  assert.equal(result.ok, true, JSON.stringify(result.conflicts ?? result.detail ?? ""));
+  assert.ok(result.content.includes("ours day entry"));
+  assert.ok(result.content.includes("theirs stamped entry"));
+  // Both duplicate heading occurrences survive untouched.
+  assert.equal(result.content.split("## 2026-09-07T13:00:00Z — fix/179-declared-ledger-delta-receipts — manual").length - 1, 2);
+  assert.ok(result.content.includes("minute precision"), "base blocks carried through byte for byte");
 });
