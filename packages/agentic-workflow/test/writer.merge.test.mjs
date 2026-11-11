@@ -193,23 +193,53 @@ test("FF-5 — the same entry on both sides deduplicates once", () => {
   assert.equal(heads.length, 1, "one copy, not two");
 });
 
-test("FF-5 — the same stamp appended with different bodies is a real conflict", () => {
+test("FF-5 — the same entry appended with different bodies is a real conflict", () => {
   const ours = logsEntry("2026-11-11T08:00:00Z", "ours body");
   const theirs = logsEntry("2026-11-11T08:00:00Z", "theirs body");
   const result = unionLogEntries(LOGS_BASE, ours, theirs);
   assert.equal(result.ok, false);
   assert.equal(result.reason, "conflict");
   assert.equal(result.conflicts.length, 1);
-  assert.equal(result.conflicts[0].key, "2026-11-11T08:00:00Z");
+  assert.equal(result.conflicts[0].key, "## 2026-11-11T08:00:00Z — fix/y — narrative");
   assert.ok(result.content.includes("<<<<<<<"), "ours marker present");
   assert.ok(result.content.includes(">>>>>>>"), "theirs marker present");
   assert.ok(result.content.includes("ours body"), "ours side is in the file for the human");
   assert.ok(result.content.includes("theirs body"), "theirs side is in the file for the human");
 });
 
-test("FF-5 — a malformed entry boundary refuses closed instead of guessing", () => {
-  const malformed = LOGS_BASE + "\n## Nov 11 — something happened\n- not an entry heading\n";
-  const result = unionLogEntries(LOGS_BASE, LOGS_BASE, malformed);
+test("FF-5 — a side that edits a committed entry's body is no longer an append and refuses closed", () => {
+  const edited = LOGS_BASE.replace("- **Summary:** the base entry", "- **Summary:** a rewritten base entry");
+  const result = unionLogEntries(LOGS_BASE, LOGS_BASE, edited);
   assert.equal(result.ok, false);
   assert.equal(result.reason, "invalid-document");
+  assert.ok(result.detail.includes("append-only"));
+});
+
+test("FF-5 — the real journal's heading shapes union clean: date-only, minute precision, exact duplicates", () => {
+  const realBase = [
+    "# Logs",
+    "",
+    "## 2026-09-16T08:00Z — feat/52-machine-checked-turn-contract — manual (review-spec pass)",
+    "- **Summary:** minute precision",
+    "",
+    "## 2026-09-22 — feature 61: adaptive unit lane (executed end-to-end)",
+    "- **Summary:** date only, no label segment",
+    "",
+    "## 2026-09-07T13:00:00Z — fix/179-declared-ledger-delta-receipts — manual",
+    "- **Summary:** first of two identical headings",
+    "",
+    "## 2026-09-07T13:00:00Z — fix/179-declared-ledger-delta-receipts — manual",
+    "- **Summary:** second of two identical headings",
+    "",
+  ].join("\n");
+  // Two sides append differently-shaped new entries; base is untouched.
+  const ours = `${realBase}\n## 2026-11-11 — local — narrative\n- **Summary:** ours day entry\n`;
+  const theirs = `${realBase}\n## 2026-11-11T09:00:00Z — ci/aggregator — weekly\n- **Commits:** 3\n- **Summary:** theirs stamped entry\n`;
+  const result = unionLogEntries(realBase, ours, theirs);
+  assert.equal(result.ok, true, JSON.stringify(result.conflicts ?? result.detail ?? ""));
+  assert.ok(result.content.includes("ours day entry"));
+  assert.ok(result.content.includes("theirs stamped entry"));
+  // Both duplicate heading occurrences survive untouched.
+  assert.equal(result.content.split("## 2026-09-07T13:00:00Z — fix/179-declared-ledger-delta-receipts — manual").length - 1, 2);
+  assert.ok(result.content.includes("minute precision"), "base blocks carried through byte for byte");
 });

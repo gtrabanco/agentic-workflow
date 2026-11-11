@@ -25,12 +25,13 @@ roadmap table reads.
 
 **The journal joins the class registry.** Issue #498's scope reinforcement
 (owner comment 2026-11-10T00:22) adds a union merge driver for `docs/LOGS.md`:
-the `logs` file class unions entries by their `## <stamp> — <branch> —
-<label>` heading's UTC second-precision stamp — distinct entries both kept,
-ordered by stamp; the same entry on both sides deduplicated; the same stamp
-with different bodies, or a one-sided deletion of a committed entry (the
-journal is append-only), surfaces as a real conflict; a malformed entry
-boundary refuses closed. `docs/LOGS.md merge=agentic-shared-logs` rides the
+the `logs` file class unions entries by their exact `## …` heading line —
+the real journal carries heterogeneous stamps (second-precision, minute,
+date-only), so no grammar is imposed. The journal is append-only and each side
+must remain an append-only extension of the base (an entry edited, reordered
+or dropped refuses closed); distinct new entries are all kept, ordered by
+their normalized stamp; the same heading appended with different bodies
+surfaces as a real conflict. `docs/LOGS.md merge=agentic-shared-logs` rides the
 same `.gitattributes` registry and is armed by the same
 `bun scripts/shared-doc-merge.mjs --install` — a fifth attribute, never a
 duplicate claim — and the journal-aggregate workflow itself is unchanged.
