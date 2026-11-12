@@ -609,12 +609,12 @@ surgery.
   journal fragment, PE-006's cut-head sample) are history and stay untouched; no
   source file changes, so no differential applies.
 - **E15** — 2026-11-12, the batch's recheck (blockers only, §9): every
-  reproducer flipped green — the five stale-claim sweeps (`No comment-preserving
-  writer|comments are not preserved by a save|rewrites plain JSON|No new
-  dependency|No \`Bun.JSONC.parse\` fast path` over this SPEC; `plain JSON` over
-  CONFIG.md+README; `does not preserve comments|comments do not survive a
-  save|save rewrites plain JSON` over docs/+packages/, excluding the dated
-  receipt) all exit 1 · 0 matches; O10's re-pinned validators run in the
+  reproducer flipped green — three stale-claim sweeps (the five replaced
+  Non-goals/Impact/Future-cost phrases over this SPEC; the old
+  does-not-preserve-docs pin over CONFIG.md+README; the old save-contract
+  phrases over docs/+packages/, excluding the dated receipt) all exit 1 · 0
+  matches — the exact patterns live in the verify receipt, not restated here so
+  no future sweep trips over this log; O10's re-pinned validators run in the
   foreground · `JSONC` matches 3, `acceptance boundary` matches 2, `save keeps`
   matches 2; `bun scripts/phase-lint.mjs docs/fix/521-fix-config/SPEC.md` · exit
   0 · verdict PASS (fingerprints unchanged); `bun scripts/lint-changeset.mjs` ·
