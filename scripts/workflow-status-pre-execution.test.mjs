@@ -173,7 +173,7 @@ function boundInputsFor(unit, snapshotSource) {
   return files.map((file) => `${unitDir(unit)}/${file}`);
 }
 
-const SNAPSHOT_BUILDER_REL = "scripts/pre-execution-contract.mjs";
+const SNAPSHOT_BUILDER_REL = "packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs";
 const boundTable = () => read(SNAPSHOT_BUILDER_REL);
 
 /**

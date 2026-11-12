@@ -341,7 +341,7 @@ describe("AC24: the entry point runs in a target-project-shaped temp dir", () =>
  */
 
 /** The ceremony module owns the rule; this suite runs it, never copies it. */
-const { checkDocsLanguage } = await import("./ceremony/docs.mjs");
+const { checkDocsLanguage } = await import("../packages/agentic-workflow/src/runner/ceremony/docs.mjs");
 
 /**
  * Paths the working-copy activation surface may never occupy in the index.

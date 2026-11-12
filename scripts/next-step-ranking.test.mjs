@@ -22,7 +22,8 @@ import { fileURLToPath } from "node:url";
 import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(repoRoot, "scripts", "workflow-status.mjs");
+/** The runner's bin: the sensor answers as its `workflow-status` subcommand. */
+const SCRIPT = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 // ---------------------------------------------------------------------------
 // Fixture builders — reuse the pattern from workflow-status-sensor.test.mjs
@@ -134,7 +135,7 @@ process.exit(1);`;
 
   const pathBase = pathWithoutGit ? path.dirname(process.execPath) : process.env.PATH;
   const run = (args = [], opts = {}) => {
-    return spawnSync(process.execPath, [opts.script ?? SCRIPT, ...args], {
+    return spawnSync(process.execPath, [opts.script ?? SCRIPT, "workflow-status", ...args], {
       cwd: dir,
       encoding: "utf8",
       env: { ...process.env, PATH: `${binDir}:${pathBase}`, ...opts.env },

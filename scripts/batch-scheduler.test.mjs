@@ -534,8 +534,8 @@ test("W2: disjoint files and same-lane pairs emit no file-overlap", () => {
       11: { branches: [{ name: "feat/11-b", merged: false }], files: ["scripts/local-gate.mjs"] },
     });
     const shared = [
-      issue(10, "A", whereSection(["scripts/unit-route.mjs"])),
-      issue(11, "B", whereSection(["scripts/unit-route.mjs"])),
+      issue(10, "A", whereSection(["packages/agentic-workflow/src/runner/unit-route.mjs"])),
+      issue(11, "B", whereSection(["packages/agentic-workflow/src/runner/unit-route.mjs"])),
     ];
     assert.deepEqual(
       buildBatchPlan(baseInput(shared, root, { launchEvidence: sameLane })).findings.filter((f) => f.code === "file-overlap"),

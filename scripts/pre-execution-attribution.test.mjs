@@ -31,7 +31,7 @@ const {
 const { PARENT, SHA1, planInput, specInput, toySpec } = await import(
   "../packages/agentic-workflow-schema/test/fixtures/pre-execution-documents.mjs"
 );
-import { attributeFreshness } from "./pre-execution-snapshot.mjs";
+import { attributeFreshness } from "../packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs";
 
 const POLICY = "v1";
 const SPEC_PATH = "docs/toy/SPEC.md";

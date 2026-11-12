@@ -104,12 +104,12 @@ function assertRefused(result, label, { stdoutEmpty = true } = {}) {
 }
 
 test("the router refuses a pre-move repository", () => {
-  const result = run([path.join(REPO, "scripts", "unit-route.mjs"), "90"], { cwd: tree, env: { UNIT_ROUTE_REPO: tree } });
+  const result = run([path.join(REPO, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "unit-route", "90"], { cwd: tree, env: { UNIT_ROUTE_REPO: tree } });
   assertRefused(result, "unit-route");
 });
 
 test("the sensor refuses and prints no envelope", () => {
-  const result = run([path.join(REPO, "scripts", "workflow-status.mjs"), "--json-only"], { cwd: tree });
+  const result = run([path.join(REPO, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "workflow-status", "--json-only"], { cwd: tree });
   assertRefused(result, "workflow-status");
 });
 
@@ -130,7 +130,7 @@ test("the settle validator refuses as a usage error", () => {
 });
 
 test("the ceremony CLI blocks instead of deriving unit statuses", () => {
-  const result = run([path.join(REPO, "scripts", "ceremony.mjs"), "unit", "list"], { cwd: tree });
+  const result = run([path.join(REPO, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "unit", "list"], { cwd: tree });
   assert.equal(result.status, 2, "a moved index is the ceremony's blocked class");
   assert.match(result.stdout, /"roadmap-moved"/, "the block names the closed code");
   assert.match(result.stdout, /docs\/ROADMAP\.md/, "the block points at the new path");

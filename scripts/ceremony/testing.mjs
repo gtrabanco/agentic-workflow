@@ -14,7 +14,8 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-export const ENTRY = fileURLToPath(new URL("../ceremony.mjs", import.meta.url));
+/** The runner's bin: the ceremony CLI answers as its `ceremony` subcommand. */
+export const ENTRY = fileURLToPath(new URL("../../packages/agentic-workflow/bin/agentic-workflow.mjs", import.meta.url));
 
 /** Fixture repos created by makeRepo() — removed at process exit so suite
  *  runs never leak `ceremony-*` dirs into the temp directory. */
@@ -31,7 +32,7 @@ export function cer(args, cwd) {
   let stderr = "";
   let code = 0;
   try {
-    stdout = execFileSync("node", [ENTRY, ...args], { cwd, encoding: "utf8" });
+    stdout = execFileSync("node", [ENTRY, "ceremony", ...args], { cwd, encoding: "utf8" });
   } catch (err) {
     code = err.status ?? 1;
     stdout = err.stdout ?? "";

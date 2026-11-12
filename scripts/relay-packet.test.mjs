@@ -10,7 +10,7 @@
  *   - the baton is a state + a leg cursor + a phase cursor + evidence pointers,
  *     never a second copy of the unit doc's evidence table;
  *   - `decisions.md` is optional, never required;
- *   - the leg tier comes from `scripts/catalog.json` only;
+ *   - the leg tier comes from the runner's bundled catalog only;
  *   - the coherence verdict matches the `REVIEW-VERDICT` grammar owned by
  *     `skills/unit-lane/references/REVIEW.md`;
  *   - the handover (charter + baton) measures under the declared ceiling.
@@ -32,7 +32,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(ROOT, "scripts", "relay-packet.mjs");
 const CORPUS = path.join(ROOT, "scripts", "fixtures", "relay-packet");
-const CATALOG = path.join(ROOT, "scripts", "catalog.json");
+const CATALOG = path.join(ROOT, "packages", "agentic-workflow", "src", "runner", "catalog.json");
 const BUDGETS = path.join(ROOT, "docs", "workflow", "SKILL_CONTEXT_BUDGETS.json");
 
 const UNIT = "20-relay-unit";
@@ -273,7 +273,7 @@ test("tiers: the leg tiers come from the catalog's budget_tier rows", () => {
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(line(result.stdout, "execute"), "cheap");
   assert.equal(line(result.stdout, "coherence-review"), "strong");
-  assert.equal(line(result.stdout, "source"), "scripts/catalog.json");
+  assert.equal(line(result.stdout, "source"), "packages/agentic-workflow/src/runner/catalog.json");
   assert.equal(line(result.stdout, "verdict"), "PASS");
 });
 

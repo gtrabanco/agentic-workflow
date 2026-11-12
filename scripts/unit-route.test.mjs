@@ -24,12 +24,13 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(repoRoot, "scripts", "unit-route.mjs");
+/** The runner's bin: the router answers as its `unit-route` subcommand. */
+const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 const FIXTURE = path.join(repoRoot, "scripts", "fixtures", "unit-route");
 
 const run = (args, { root = FIXTURE, cwd = repoRoot } = {}) => spawnSync(
   process.execPath,
-  [SCRIPT, ...args],
+  [BIN, "unit-route", ...args],
   { cwd, encoding: "utf8", env: root ? { ...process.env, UNIT_ROUTE_REPO: root } : process.env },
 );
 
@@ -232,7 +233,7 @@ test("F6: --help and -h print the usage contract on stdout and exit 0", () => {
   for (const flag of ["--help", "-h"]) {
     const result = run([flag]);
     assert.equal(result.status, 0, `${flag}: ${result.stderr}`);
-    assert.match(result.stdout, /^usage: bun scripts\/unit-route\.mjs/m, flag);
+    assert.match(result.stdout, /^usage: agentic-workflow unit-route/m, flag);
     assert.match(result.stdout, /Exit codes/i, `${flag}: the exit-code contract is named`);
     assert.match(result.stdout, /replan/, `${flag}: the closed route table is named`);
     assert.equal(result.stderr, "", `${flag}: help is not an error`);
@@ -385,7 +386,7 @@ test("F31/P6: a `defined` unit with all phases recorded refuses with exit 1 — 
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 1, "exit 1 — not close-out");
@@ -412,7 +413,7 @@ test("F40/P6: a unit doc with no `## Tasks` section routes to P1 (untouched work
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, "exit 0 — untouched work routes to P1");
@@ -451,7 +452,7 @@ test("F31/P6: a `done` unit with all phases recorded still routes to close-out",
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, result.stderr);
@@ -504,7 +505,7 @@ test("#291 F1: Progress log `next: P<k>` tail never marks k done — only entry 
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, result.stderr);
@@ -534,7 +535,7 @@ test("#291 F4: Progress log entry head with mid-prose P<n> mention does NOT mark
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, result.stderr);
@@ -566,7 +567,7 @@ test("#291 F4b: indented list-marker continuation line does NOT re-open an entry
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, result.stderr);
@@ -603,7 +604,7 @@ test("#291 F7: long Progress-log line uses linear scan (not quadratic split)", (
     const t0 = Date.now();
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     const elapsed = Date.now() - t0;
@@ -644,7 +645,7 @@ test("#291 F8: `— P<n> — implemented` records the phase (formal shape)", () 
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, "every phase is recorded — routes to close-out");
@@ -676,7 +677,7 @@ test("#291 F8: `— P<n> implemented` (no second dash) records the phase", () =>
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, "every phase is recorded — routes to close-out");
@@ -708,7 +709,7 @@ test("#291 F8: `— implement P2: ...` (action word before P) records the phase"
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, "every phase is recorded — routes to close-out");
@@ -734,7 +735,7 @@ test("#291 F8: `— revert P2 spike` does NOT record P2 (not a known action)", (
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, result.stderr);
@@ -761,7 +762,7 @@ test("#291 F8: `— diff guard after P1: ...` records P1 via action keyword", ()
   try {
     const result = spawnSync(
       process.execPath,
-      [SCRIPT, "13-execute-unit"],
+      [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
     assert.equal(result.status, 0, result.stderr);
@@ -805,7 +806,7 @@ test("F32/OB-17: an archived unit (no status source, no open row) answers `histo
 // above are the proof the second shape changed nothing.
 // ---------------------------------------------------------------------------
 const SPEC_REF_FIXTURE = path.join(repoRoot, "scripts", "fixtures", "spec-by-reference", "tree");
-const routeSpecRef = (args) => spawnSync(process.execPath, [SCRIPT, ...args], {
+const routeSpecRef = (args) => spawnSync(process.execPath, [BIN, "unit-route", ...args], {
   cwd: repoRoot,
   encoding: "utf8",
   env: { ...process.env, UNIT_ROUTE_REPO: SPEC_REF_FIXTURE },
@@ -990,7 +991,7 @@ test("#319 F8: one status lookup reads the index once, not once per probe", () =
       ].join("\n"),
       "utf8",
     );
-    const result = spawnSync(process.execPath, ["--require", counter, SCRIPT, "37-phase-lint-script"], {
+    const result = spawnSync(process.execPath, ["--require", counter, BIN, "unit-route", "37-phase-lint-script"], {
       cwd: repoRoot,
       encoding: "utf8",
       env: { ...process.env, UNIT_ROUTE_REPO: root },

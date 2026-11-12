@@ -161,9 +161,9 @@ assert.match(claudeGuide, /block:finding-mark@1/);
 // O7: the annotator never parses VF- rows as findings — proven against the
 // seeded fixture by running the annotator itself, not asserted from prose.
 const fixtureAbs = path.join(root, "scripts/fixtures/finding-mark-ledger.md");
-const provScript = path.join(root, "scripts/ledger-provenance.mjs");
+const RUNNER_BIN = path.join(root, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 const entries = JSON.parse(
-  execFileSync("node", [provScript, fixtureAbs, "--json"], { encoding: "utf8" }),
+  execFileSync("node", [RUNNER_BIN, "ledger-provenance", fixtureAbs, "--json"], { encoding: "utf8" }),
 );
 assert.ok(
   entries.some((e) => e.id === "F901" && e.status === "open") &&
@@ -175,7 +175,7 @@ assert.ok(
   "a finding-mark@1 (VF-) row was parsed as a finding",
 );
 try {
-  const checkOut = execFileSync("node", [provScript, fixtureAbs, "--check"], { encoding: "utf8" });
+  const checkOut = execFileSync("node", [RUNNER_BIN, "ledger-provenance", fixtureAbs, "--check"], { encoding: "utf8" });
   assert.match(checkOut, /CHECK PASS/);
 } catch (error) {
   throw new Error(`ledger-provenance --check failed on the seeded fixture: ${error.stdout ?? error.message}`);
@@ -282,7 +282,7 @@ assert.match(foldProcess, /retained/);
 // 10k/#293 F15. The freeze-batch predicate's vocabulary is tied to the shipped
 // regex: the three accepted spellings route `product`, the other three don't.
 // The pin tests both sides of the cell head anchor (matches → freeze, mentions → fold).
-const PRODUCT_ROUTE_SOURCE = read("scripts/unit-route.mjs");
+const PRODUCT_ROUTE_SOURCE = read("packages/agentic-workflow/src/runner/unit-route.mjs");
 // The line in the file is literally: const PRODUCT_ROUTE = /^(?:product[- ]owner|product[- ]owned|owned by product)\b/i;
 // In the file, \b is two chars: backslash-b. In a string regex, match a literal backslash with \\.
 assert.match(PRODUCT_ROUTE_SOURCE, /const PRODUCT_ROUTE = \/\^\(\?:product\[- \]owner\|product\[- \]owned\|owned by product\)\\b\/i;/);
@@ -676,14 +676,14 @@ assert.match(persist, /GATE-RAN/);
 assert.match(persist, /LEDGERS\.md.*gate-ran|gate-ran.*LEDGERS\.md/s);
 
 // P4 Task 5: isMarkRow recognizes GATE-RAN (triage F24, triage F14 pin).
-const unitRouteSource = read("scripts/unit-route.mjs");
+const unitRouteSource = read("packages/agentic-workflow/src/runner/unit-route.mjs");
 // isMarkRow must contain the GATE-RAN pattern
 assert.match(unitRouteSource, /export const isMarkRow[\s\S]*?GATE-RAN/);
 
 // Triage 32 F31: the four mark-id enumerations name GATE-RAN alongside VF-/REVIEW-RAN,
 // so the documented contract agrees with the guard widened above.
 assert.match(unitRouteSource, /`VF-<n>` carries a finding's verification signature[\s\S]*?`GATE-RAN` a gate run's/);
-assert.match(read("scripts/workflow-status.mjs"), /Mark rows \(`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`\)/);
+assert.match(read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs"), /Mark rows \(`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`\)/);
 assert.match(read("skills/workflow-status/references/SENSOR_SIGNALS.md"), /`GATE-RAN` \(a gate-run mark\)/);
 // P8b: replan-findings deleted; skip its mark assertions.
 const replanFindings = safeRead("skills/replan-findings/SKILL.md");
@@ -701,8 +701,8 @@ if (replanFindings) {
 const preExecutionSource = read("packages/agentic-workflow-schema/src/pre-execution.ts");
 const preExecutionContract = read("packages/agentic-workflow-schema/src/pre-execution-contract.ts");
 const workflowIndex = read("packages/agentic-workflow-schema/src/index.ts");
-const snapshotScript = read("scripts/pre-execution-snapshot.mjs");
-const statusScript = read("scripts/workflow-status.mjs");
+const snapshotScript = read("packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs");
+const statusScript = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
 
 // 13a. The materiality predicate is a closed `medium`+ membership test, and the
 // negated `info` comparison is gone.

@@ -1134,7 +1134,7 @@ test("F37 has one cited owner: both boxes name POLICY.md §7 and no third copy e
 // but that's an internal reference, not a normative surface.
 
 test("#224 canonical destination vocabulary: the router publishes one closed route set and the sensor projects it", (t) => {
-  const routerRel = "scripts/unit-route.mjs";
+  const routerRel = "packages/agentic-workflow/src/runner/unit-route.mjs";
   if (!exists(routerRel)) return t.skip("unit-route.mjs is absent in this injected tree");
   const router = read(routerRel);
   const routes = /const ROUTES = Object\.freeze\(\[([^\]]+)\]\)/.exec(router);
@@ -1146,7 +1146,7 @@ test("#224 canonical destination vocabulary: the router publishes one closed rou
   // The sensor projects the router's class→destination mapping; neither may invent a
   // fourth destination for the same class (#224's three-contradictory-sentences defect).
   // Note: /plan-feature, /plan-fix are retired (feature 61 P8); the lane's command is /unit-lane.
-  const sensor = read("scripts/workflow-status.mjs");
+  const sensor = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   for (const token of ["replan-in-unit", "/fold-findings"]) {
     assert.ok(sensor.includes(token), `the sensor names the canonical token ${token}`);
   }
@@ -1378,6 +1378,6 @@ test("#308 the closed log-kind vocabulary is published by the block, never resta
   assert.deepEqual(kinds, ["L", "E", "G", "F", "D", "P", "R", "V"], `the log kind vocabulary is closed: ${kinds.join(", ")}`);
   // The linter and the corpus suite read the same list; a second copy in code
   // would let one drift from the other (the #305 defect class).
-  const order = read("scripts/unit-doc-phases.mjs");
+  const order = read("packages/agentic-workflow/src/runner/unit-doc-phases.mjs");
   assert.match(order, /LOG_KINDS|logKinds/, "the log grammar is read from one owner, named in code");
 });
