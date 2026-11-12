@@ -423,6 +423,17 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
 - **G8** — 2026-11-12, HEAD `P7SHA` · `node scripts/run-root-suite.mjs` exit 0 · 106/106 PASS;
   `bun test --timeout=30000 test/` in the crate exit 0 · 668 pass; `node scripts/docs-generate.mjs --check`
   exit 0; `bun scripts/check-skill-context.mjs` (+ `--routes`) exit 0 · 30 skills / 14 routes.
+- **P4 (six of ten)** — `progress`, `evidence`, `acceptance`, `delta`, `refutation` and
+  `fusion` answer from the crate with the map's operations, over the unit doc's own
+  carriers (the `## Log` `P`/`E` lines, the `## Evidence` table, `## Acceptance criteria`)
+  and git — no new artifact, no second grammar; every section read goes through the shared
+  fence-aware reader. The four the map still owes (`review`, `commit`, `roadmap`, `pr`)
+  answer `deferred-module` naming their own gap: a review state carrier, a commit revert
+  policy, a forge-backed settle and `gh`'s degradation contract are decisions the frozen
+  map does not take, and inventing them would be a guess. Commit `P4SHA`.
+- **G9** — 2026-11-12, HEAD `P4SHA` · `node --test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs`
+  exit 0 · 8 pass; crate suite exit 0 · 677 pass (bun) / 677 (node); `node scripts/run-root-suite.mjs`
+  exit 0 · 106/106; `node scripts/docs-generate.mjs --check` and `bun scripts/check-skill-context.mjs` exit 0.
 
 ## Next
 

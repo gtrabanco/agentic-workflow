@@ -24,6 +24,12 @@ import { unit } from "./unit.mjs";
 import { plan } from "./plan.mjs";
 import { tier } from "./tier.mjs";
 import { passive } from "./passive.mjs";
+import { progress } from "./progress.mjs";
+import { evidence } from "./evidence.mjs";
+import { acceptance } from "./acceptance.mjs";
+import { delta } from "./delta.mjs";
+import { refutation } from "./refutation.mjs";
+import { fusion } from "./fusion.mjs";
 import { fail, DEFERRED_MODULES } from "../lib.mjs";
 
 /** The closed object set: one handler per object. */
@@ -36,6 +42,12 @@ export const REGISTRY = Object.freeze({
   plan,
   tier,
   passive,
+  progress,
+  evidence,
+  acceptance,
+  delta,
+  refutation,
+  fusion,
 });
 
 /** The objects a caller may name, in registry order. */

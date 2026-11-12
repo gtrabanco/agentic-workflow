@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import process from "node:process";
-import { openFence, closesFence } from "./unit-doc-phases.mjs";
+import { openFence, closesFence, sectionBounds } from "./unit-doc-phases.mjs";
 
 /** Run git in the repo (cwd), args array → trimmed stdout. Throws on failure (stderr captured, never echoed). */
 export function git(args, cwd = process.cwd()) {
@@ -95,11 +95,65 @@ export function onlyFlags(flags, allowed) {
   if (extra.length) fail("unknown-flag", { flag: `--${extra[0]}`, allowed: ["slug", ...allowed] });
 }
 
-/** Known P1/P2 modules — outside the closed set until their follow-up PRs (issue #338 priority). */
-export const DEFERRED_MODULES = [
-  "review", "acceptance", "refutation", "fusion", "delta",
-  "pr", "progress", "evidence", "commit", "roadmap",
-];
+/** Read a unit's SPEC.md and hand back its path and bytes. */
+export function unitDoc(unit) {
+  const docPath = path.join(unit.dir, "SPEC.md");
+  return { path: docPath, text: fs.readFileSync(docPath, "utf8") };
+}
+
+/**
+ * The byte range of one `## <name>` section, found through the shared
+ * fence-aware reader — this module never searches a heading on its own.
+ *
+ * @returns {{start: number, end: number} | null}
+ */
+function boundsOf(text, name) {
+  const bounds = sectionBounds(text, name);
+  return bounds === null ? null : { start: bounds[0], end: bounds[1] };
+}
+
+/**
+ * Replace one section's body in place, keeping every other byte. The section
+ * must exist — an append into a missing heading is the defect the unit-doc
+ * grammar exists to refuse.
+ */
+export function writeSection(file, name, body) {
+  const text = fs.readFileSync(file, "utf8");
+  const bounds = boundsOf(text, name);
+  if (bounds === null) fail("missing-section", { file, section: name });
+  const next = `${text.slice(0, bounds.start)}## ${name}\n\n${body.trimEnd()}\n\n${text.slice(bounds.end).replace(/^\n+/u, "")}`;
+  fs.writeFileSync(file, next);
+  return next;
+}
+
+/** Append one line to the end of a section, preserving the rest. */
+export function appendSectionLine(file, name, line) {
+  const text = fs.readFileSync(file, "utf8");
+  const bounds = boundsOf(text, name);
+  if (bounds === null) fail("missing-section", { file, section: name });
+  const section = text.slice(bounds.start, bounds.end).replace(/\s*$/, "");
+  const next = `${text.slice(0, bounds.start)}${section}\n${line}\n\n${text.slice(bounds.end).replace(/^\n+/u, "")}`;
+  fs.writeFileSync(file, next);
+  return next;
+}
+
+/** The table rows of a section, without the heading. */
+export function sectionRows(file, name) {
+  const text = fs.readFileSync(file, "utf8");
+  const bounds = boundsOf(text, name);
+  if (bounds === null) return [];
+  return text.slice(bounds.start, bounds.end).split("\n").filter((line) => line.trim().startsWith("|"));
+}
+
+/**
+ * Modules the closed set does not answer yet. Feature 91 shipped six of the ten
+ * the map declares (`progress`, `evidence`, `acceptance`, `delta`, `refutation`,
+ * `fusion`); these four need a carrier decision the map does not settle — the
+ * review record's state, the commit revert policy, the forge-backed roadmap
+ * settle, and `gh`'s degradation contract — so they name their own gap instead
+ * of answering with a guess.
+ */
+export const DEFERRED_MODULES = ["review", "commit", "roadmap", "pr"];
 
 const UNIT_ROOTS = [
   { root: "docs/fix", type: "fix" },
