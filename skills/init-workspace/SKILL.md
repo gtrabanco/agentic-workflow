@@ -14,6 +14,11 @@ description: >
 
 # Init Workspace
 
+> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
+> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
+> release and never guessed: a hard-coded version re-opens the per-release sweep the
+> contract removes, and `latest` is not a legal pin.
+
 Turn an empty or existing repo into one that works with the agentic workflow:
 copy the generic scaffold, then **tailor it to this project** instead of leaving
 raw placeholders.
@@ -53,7 +58,7 @@ explicit yes; context never supplies one, and an ambiguous repository state
 (partially scaffolding) is not a route to guess. A consent gap is an open
 question: **(0) provenance** (search the repo's own docs and record where) →
 **(1) research** (concrete options) → **(2) halt**: run `bun
-scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
+`agentic-workflow needs-input` <unit-dir>`, paste the `open-questions@1` block verbatim,
 stop with the questions carried in it. The dispatcher needs a unit folder, and
 consent gaps usually precede any unit — so the run first writes a scratch one
 (`SPEC.md` + `decisions.md` in a `mktemp` directory, deleted after the paste)
@@ -249,7 +254,7 @@ Conventions written into the project's AGENTS.md:
 - **Triage**: the lane conductor (`/unit-lane` / `workflow-status`) returns a
   deterministic ordered list of steps (research, design, plan, implement,
   tests, evidence, review, docs, release).
-- **Guards**: `scripts/diff-guard.mjs` measures `git diff --stat` at boundaries;
+- **Guards**: `agentic-workflow diff-guard` measures `git diff --stat` at boundaries;
   overflow → mandatory re-triage. Anti-gaming: "NEVER shrink a diff by deleting
   comments, blank lines, docs or tests."
 - **Evidence rows**: one per AC — what was run, exit/digest, output (≤2 lines),

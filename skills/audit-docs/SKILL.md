@@ -20,6 +20,11 @@ description: >
 
 # Audit Docs
 
+> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
+> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
+> release and never guessed: a hard-coded version re-opens the per-release sweep the
+> contract removes, and `latest` is not a legal pin.
+
 A read-first audit answering "do the docs still match reality?" Produces a
 findings report; it does not silently rewrite docs.
 
@@ -81,9 +86,9 @@ write time; this audit verifies they actually held. Each check is mechanical:
 run the command shown, don't infer.
 
 10. **Phase naming — keyed on the carrier, like check 11.**
-    - **lane-era** — `bun scripts/phase-lint.mjs <unit-doc>` (owner
+    - **lane-era** — `bunx @gtrabanco/agentic-workflow@<pin> phase-lint <unit-doc>` (owner
       `skills/phase-contract/SKILL.md`) must print `verdict PASS`, and
-      `bun scripts/ceremony.mjs docs check-phase-labels --slug <slug>` must
+      `bunx @gtrabanco/agentic-workflow@<pin> ceremony docs check-phase-labels --slug <slug>` must
       answer `valid: true`. A `S#` hit in a lane-era doc is not a phase label:
       since #308 `S#` is the requirement id.
     - **legacy carriers only** — `grep -rnE '\bS[0-9]+\b|\bStep [0-9]' docs/features/*/{PLAN,TASKS,progress}.md`
@@ -94,8 +99,8 @@ run the command shown, don't infer.
 11. **Per-phase doc discipline — keyed on the unit's own carrier.** Pick the
     carrier mechanically, never by guess: `TASKS.md` in the unit folder means
     legacy carriage; its absence means the unit doc's `## Tasks`/`## Log`.
-    - **lane-era** — `bun scripts/ceremony.mjs docs check-tasks-ticks --slug <slug>`
-      and `bun scripts/ceremony.mjs docs check-progress-entry --slug <slug>` must
+    - **lane-era** — `bunx @gtrabanco/agentic-workflow@<pin> ceremony docs check-tasks-ticks --slug <slug>`
+      and `bunx @gtrabanco/agentic-workflow@<pin> ceremony docs check-progress-entry --slug <slug>` must
       both report `valid: true`: every `- [x] P<n>` has its `P<n>` line in
       `## Log`, and no task lacks one. Cite those two fields, never `check-all`
       (its `commit-format`/`docs-language` fields are checks 14 and 7). A doc with

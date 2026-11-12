@@ -15,6 +15,11 @@ description: >
 
 # Audit PR
 
+> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
+> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
+> release and never guessed: a hard-coded version re-opens the per-release sweep the
+> contract removes, and `latest` is not a legal pin.
+
 The manager's **"can this ship?"** gate. A read-first audit over the *entire* PR —
 its SPEC, all phases, docs, CI status, and review receipt — that returns a single
 verdict: **merge-ready** or a ranked list of **blockers**. **Never edits,

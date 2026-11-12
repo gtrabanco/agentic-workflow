@@ -145,7 +145,7 @@ The one-owner rule, stated once so every skill and template can cite it here:
 declared mechanical annotator, which may append only the token its own row
 names.** Nobody else writes a row — not a reviewer, not a later phase, not a
 script. So `fold-findings` flips only the `folded:` flag per the map's `fold-findings:folded-flag` owner entry,
-and `scripts/ledger-provenance.mjs` appends only the marker it really emits:
+and `agentic-workflow ledger-provenance` appends only the marker it really emits:
 its `· fold <sha>` (or `· ticked <sha>` on a row that scores 1) plus the
 `· REOPENED — provenance unproven` note when a tick has no matching
 annotation — never a `yes` of its own.
@@ -168,7 +168,7 @@ both runtimes must pass; the CI node-compat job enforces the fallback.
 ```text
 ledger-ownership@1
 truth-class | ledger | owner | annotator | annotator-token | validator
-review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:finding-mark + review-change:review-mark + review-change:review-gate-ran-marks + audit-pr:audit-rows + triage-issue:triage-rows + execute-phase:gate-ran-marks + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED | bun test scripts/ledger-provenance.test.mjs
+review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:finding-mark + review-change:review-mark + review-change:review-gate-ran-marks + audit-pr:audit-rows + triage-issue:triage-rows + execute-phase:gate-ran-marks + fold-findings:folded-flag | `agentic-workflow ledger-provenance` | · fold <sha> + · ticked <sha> + · REOPENED | bun test scripts/ledger-provenance.test.mjs
 planning-findings | docs/features/<NN>-<slug>/planning-findings.md · docs/fix/<issue>-<topic>/planning-findings.md | unit-lane:planning-findings + fold-findings:source-class-resolutions | none | none | bun test scripts/pre-execution-quality.test.mjs
 progress | docs/features/<NN>-<slug>/SPEC.md · docs/fix/<issue>-<topic>/SPEC.md | unit-lane:progress-entries + execute-phase:phase-entries + execute-phase:gate-rejection-traces | none | none | bun test scripts/pre-execution-sensor.test.mjs
 known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | unit-lane:known-entries + execute-phase:blocker-entries-and-status | none | none | bun test scripts/ledger-ownership.test.mjs
@@ -195,7 +195,7 @@ it a row of its own in the unit's `review-findings.md` ledger, under
 `review-change:review-mark`. [POLICY.md](POLICY.md) §8 owns *when* an act marks;
 this owns the shape. A **migrated** unit writes the same mark as a `## Log` `R` line —
 `- **R<n>** — <date>, review at HEAD <40-hex> · verdict <verdict> · cycle <n> · gate
-exit <code>` — and `scripts/workflow-status.mjs` reads either carrier, never both:
+exit <code>` — and `agentic-workflow workflow-status` reads either carrier, never both:
 
 ```text
 review-mark@1

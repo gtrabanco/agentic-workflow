@@ -12,7 +12,7 @@ off `idea`/`defined`). The recommendation itself is unaffected — this only add
 **Shape vs. current output — read this before trusting the example below.** The
 example is the envelope's **intended shape**, not everything the deterministic
 producer emits today: per-unit `review`, `closure`, and `issues_born` (steps
-10–12) are **not yet mechanized** by `scripts/workflow-status.mjs` and do not
+10–12) are **not yet mechanized** by `agentic-workflow workflow-status` and do not
 appear in its output (`next.suggested[]`, step 13, is emitted — as an empty
 array when nothing fired). A consumer
 must read their absence as "not computed", never as `closure:
