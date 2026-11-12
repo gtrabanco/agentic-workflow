@@ -542,7 +542,7 @@ function configRefusal(message, issues, json) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance> ...");
   process.exit(1);
 }
 
@@ -1530,6 +1530,11 @@ switch (command) {
     if (isRunnerCommand(command)) {
       const runnerCode = runRunnerCommand(command, restArgs);
       if (typeof runnerCode === "number") process.exitCode = runnerCode;
+      else if (runnerCode && typeof runnerCode.then === "function") {
+        runnerCode.then((code) => {
+          if (typeof code === "number") process.exitCode = code;
+        });
+      }
       break;
     }
     refuse(`Unknown service: ${command}`);

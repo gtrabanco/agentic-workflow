@@ -13,6 +13,12 @@
  */
 
 import { run as runUnitRoute } from "./unit-route.mjs";
+import { run as runPhaseLint } from "./sensors/phase-lint.mjs";
+import { run as runDiffGuard } from "./sensors/diff-guard.mjs";
+import { run as runWorkflowStatus } from "./sensors/workflow-status.mjs";
+import { run as runPreExecutionSnapshot } from "./sensors/pre-execution-snapshot.mjs";
+import { run as runNeedsInput } from "./sensors/needs-input.mjs";
+import { run as runLedgerProvenance } from "./sensors/ledger-provenance.mjs";
 
 /**
  * @typedef {(args: string[]) => void | number} RunnerCommand
@@ -20,6 +26,12 @@ import { run as runUnitRoute } from "./unit-route.mjs";
  */
 export const RUNNER_COMMANDS = Object.freeze({
   "unit-route": runUnitRoute,
+  "phase-lint": runPhaseLint,
+  "diff-guard": runDiffGuard,
+  "workflow-status": runWorkflowStatus,
+  "pre-execution-snapshot": runPreExecutionSnapshot,
+  "needs-input": runNeedsInput,
+  "ledger-provenance": runLedgerProvenance,
 });
 
 /**
@@ -36,11 +48,10 @@ export const isRunnerCommand = (name) => Object.hasOwn(RUNNER_COMMANDS, name);
  *
  * @param {string} name
  * @param {string[]} args
- * @returns {number | undefined}
+ * @returns {number | void | Promise<number | void>}
  */
 export function runRunnerCommand(name, args) {
   const handler = RUNNER_COMMANDS[name];
   if (!handler) return undefined;
-  const code = handler(args);
-  return typeof code === "number" ? code : undefined;
+  return handler(args);
 }
