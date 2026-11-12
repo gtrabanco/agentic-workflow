@@ -17,7 +17,7 @@ PR (`packages/agentic-workflow-schema/src/vocabularies.ts`,
 ```text
 finding-severity-ladder@1
 token | meaning | what assigning it requires
-BLOCKER | caused by the change and reproducible with realistic input — the merge stops until it is repaired | a reproducer that fails at the head (the differential baseline run, `#363`)
+BLOCKER | caused by the change and reproducible with realistic input — the merge stops until it is repaired | a reproducer that fails at the head (the differential baseline run, `scripts/differential-baseline.mjs`)
 CRITICAL | a severe defect the current unit must repair: correctness, security or data loss | the single-owner citation that fails
 WARNING | degraded behaviour, a real untested path, or notable debt | the citation that fails
 SUGGESTION | taste, cosmetics, or a micro-optimisation without a measured need | never persisted and never blocking
@@ -35,10 +35,12 @@ report-only | recorded, never blocks: the pre-existing advisory, a proposal, or 
 by the change and reproducible with realistic input**. A failure already present
 at the base commit is a **pre-existing advisory**: its impact is `report-only`
 and it **never requires a correction round** — it is reported with its evidence
-and routed to the user, never folded. The run that proves cause is the
-differential baseline check (`#363`); until it exists the rule is cited from
-here, and `scripts/vocabulary-probe.mjs` refuses the one contradiction a static
-gate can see — a `BLOCKER` row whose impact is `report-only`.
+and routed to the user, never folded. The run that proves cause is
+`bun scripts/differential-baseline.mjs --base <rev> --head <rev> --validators
+<file>`: a base failure is the advisory above, and a base-pass/head-fail is a
+`regression` — the only verdict that exits non-zero — so an advisory never
+spends a round. `scripts/vocabulary-probe.mjs` refuses the one contradiction a
+static gate can see — a `BLOCKER` row whose impact is `report-only`.
 
 **Escalation stays `decision-required`.** When a reviewer believes the ladder
 under-certified a failure — a false negative it could not reproduce, or a real

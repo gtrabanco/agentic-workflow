@@ -727,8 +727,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 26829,
-      "routeLinesMax": 1851,
+      "routeEstimateMax": 26881,
+      "routeLinesMax": 1853,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -757,7 +757,8 @@
         "PR #402 merge re-basis #12": "merge of fix/356-test-targeting with main (issue #358) — re-basis #12: both branches re-based this route's ceilings independently (#358 at 25,724/1,773, #356 at 24,489/1,701) and the merged tree — carrying #358's adversarial-verdict@1 grammar and #356's test-impact contract together — measures 23,679 est / 1,633 lines, above either side, so both ceilings are re-set to ceil(measured x 1.10) = 26,047 est / 1,797 lines. Growth source = the union of #358's adversarial verdict layer and #356's test-impact contract.",
         "audit 1 (2026-11-08, product audit): the finders' shared `## Scope` + `## Materiality bar` moved to the single-owner finder contract (`skills/review-implementation/references/FINDER_CONTRACT.md`) and review-implementation's SKILL.md names the owner — the owner file rides every review-change route; re-based to ceil(measured x 1.10)": "re-based in this PR",
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences",
-        "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
+        "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
+        "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair."
       },
       "linesMax": 1842
     },
@@ -777,8 +778,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 23282,
-      "routeLinesMax": 1625,
+      "routeEstimateMax": 23334,
+      "routeLinesMax": 1627,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -805,7 +806,8 @@
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "audit 1 (2026-11-08, product audit): the finders' shared `## Scope` + `## Materiality bar` moved to the single-owner finder contract (`skills/review-implementation/references/FINDER_CONTRACT.md`) and review-implementation's SKILL.md names the owner — the owner file rides every review-change route; re-based to ceil(measured x 1.10)": "re-based in this PR",
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences",
-        "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
+        "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
+        "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair."
       },
       "linesMax": 1616
     },
@@ -825,8 +827,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 23282,
-      "routeLinesMax": 1625,
+      "routeEstimateMax": 23334,
+      "routeLinesMax": 1627,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -853,7 +855,8 @@
         "issue #356 (unit 356-test-targeting)": "issue #356 (unit 356-test-targeting): the executor's turn contract gains the derived-set box, its implement step and required-references list cite `references/TEST_IMPACT.md` (cited, not route-loaded), and `verification-contract` gains the which-tests/which-layer section the review routes load. Re-based to the exact ceil(measured x 1.10) at this cut; growth source = issue #356's test-impact contract.",
         "audit 1 (2026-11-08, product audit): the finders' shared `## Scope` + `## Materiality bar` moved to the single-owner finder contract (`skills/review-implementation/references/FINDER_CONTRACT.md`) and review-implementation's SKILL.md names the owner — the owner file rides every review-change route; re-based to ceil(measured x 1.10)": "re-based in this PR",
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences",
-        "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
+        "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
+        "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair."
       },
       "linesMax": 1616
     },
@@ -873,8 +876,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 24039,
-      "routeLinesMax": 1664,
+      "routeEstimateMax": 24090,
+      "routeLinesMax": 1666,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -903,7 +906,8 @@
         "PR #402 merge re-basis #12": "merge of fix/356-test-targeting with main (issue #358) — re-basis #12: both branches re-based this route's ceilings independently (#356 at 23,186/1,606, #358's side at 23,089/1,595) and the merged tree measures 21,297 est / 1,473 lines, above either side, so both ceilings are re-set to ceil(measured x 1.10) = 23,427 est / 1,621 lines. Growth source = the union of #358's adversarial verdict layer and #356's test-impact contract.",
         "audit 1 (2026-11-08, product audit): the finders' shared `## Scope` + `## Materiality bar` moved to the single-owner finder contract (`skills/review-implementation/references/FINDER_CONTRACT.md`) and review-implementation's SKILL.md names the owner — the owner file rides every review-change route; re-based to ceil(measured x 1.10)": "re-based in this PR",
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences",
-        "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)"
+        "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
+        "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair."
       },
       "linesMax": 1655
     }
