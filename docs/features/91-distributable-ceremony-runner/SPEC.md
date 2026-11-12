@@ -289,6 +289,26 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   (`bun scripts/local-gate.mjs`, the crate and root suites) is the only
   verification that runs (S12).
 
+- **D4** — 2026-11-12, data decision: the router's `catalog.json` travels with the
+  runner (`src/runner/catalog.json`) because a published package cannot read the
+  repository's `scripts/`; the repository copy and its four remaining readers are
+  re-pointed in the retirement commit, so the catalog keeps one home (the
+  invariant O4 already states — no new obligation).
+- **E1** — 2026-11-12, differential run of the router: for `--triage <unit> --json`,
+  `--triage <unit>`, `<unit>` and `--help`, `node scripts/unit-route.mjs <args>` and
+  `node packages/agentic-workflow/bin/agentic-workflow.mjs unit-route <args>` produced
+  byte-identical stdout, stderr and exit code · exit 0 · the only difference is the
+  `--help` usage line, whose script name is the retired one (`bun scripts/unit-route.mjs`
+  → `agentic-workflow unit-route`), as intended.- **P1** — 2026-11-12, the runner's module tree lands in the crate: the support closure
+  (`unit-doc-phases`, `unit-route`, `risk-tiers`, `capabilities`, `ceremony-profile`,
+  `lib`, `ceremony/tier`) moved into `src/runner/`, its imports re-pointed at the
+  pinned schema package and the crate's own `index-document`/`relay`, the project root
+  now resolved from the caller's working directory (`src/runner/root.mjs`), the
+  bundled catalog added, and the closed dispatch table (`src/runner/cli.mjs`) wired
+  into the bin with the crate README surface · commit `d1009167`.
+- **G1** — 2026-11-12, `bun test --timeout=30000 test/` in `packages/agentic-workflow` ·
+  exit 0 · 664 pass, 0 fail, 35 files.
+
 ## Next
 
 P1 — cut the crate runner scaffold and move the support closure.

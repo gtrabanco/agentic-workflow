@@ -118,6 +118,7 @@ import {
   replace as replaceSection,
 } from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
+import { isRunnerCommand, runRunnerCommand } from "../src/runner/cli.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
 import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
 import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragment.mjs";
@@ -541,7 +542,7 @@ function configRefusal(message, issues, json) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route> ...");
   process.exit(1);
 }
 
@@ -1522,5 +1523,14 @@ switch (command) {
   }
 
   default:
+    // The runner family (issue #352): the sensors and the ceremony CLI answer
+    // from their own table, so the editor services and the runtime commands
+    // share one bin without one growing switch. A name outside both tables is
+    // still the closed-world refusal below — never a shell fallback.
+    if (isRunnerCommand(command)) {
+      const runnerCode = runRunnerCommand(command, restArgs);
+      if (typeof runnerCode === "number") process.exitCode = runnerCode;
+      break;
+    }
     refuse(`Unknown service: ${command}`);
 }
