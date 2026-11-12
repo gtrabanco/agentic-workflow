@@ -94,7 +94,7 @@ const TIER_MAP = new Map([
   ["/execute-phase", "cheap"],
 ]);
 
-const USAGE = `Usage: bun scripts/workflow-status.mjs [OPTIONS]
+const USAGE = `Usage: agentic-workflow workflow-status [OPTIONS]
 
 Read-only workflow sensor: compute repository, roadmap, dependency, PR, finding,
 and recovery state, then print the fixed Envelope v2 JSON on stdout.

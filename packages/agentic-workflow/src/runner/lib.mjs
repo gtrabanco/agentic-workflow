@@ -146,14 +146,11 @@ export function sectionRows(file, name) {
 }
 
 /**
- * Modules the closed set does not answer yet. Feature 91 shipped six of the ten
- * the map declares (`progress`, `evidence`, `acceptance`, `delta`, `refutation`,
- * `fusion`); these four need a carrier decision the map does not settle — the
- * review record's state, the commit revert policy, the forge-backed roadmap
- * settle, and `gh`'s degradation contract — so they name their own gap instead
- * of answering with a guess.
+ * Modules the closed set does not answer. Empty since feature 91 closed the map:
+ * the registry answers every object fix/338 declared, and a name outside it is
+ * the closed-world usage error, not a promise of a later PR.
  */
-export const DEFERRED_MODULES = ["review", "commit", "roadmap", "pr"];
+export const DEFERRED_MODULES = [];
 
 const UNIT_ROOTS = [
   { root: "docs/fix", type: "fix" },
@@ -378,8 +375,14 @@ export function setTaskTick(md, n, ticked) {
 
 /** Workspace cleanliness → {clean, dirty-files}. */
 export function cleanCheck(cwd = process.cwd()) {
-  const raw = gitOrFail(["status", "--porcelain=v1"], cwd);
-  const dirty = raw.split("\n").filter(Boolean).map((l) => ({ index: l[0], working: l[1], file: l.slice(3) }));
+  // `-b` first (the repair `tier` already carries, issue #384 F1): `git()` trims
+  // the whole output, so without a header line the FIRST changed path loses its
+  // leading status column and one character of the path itself.
+  const raw = gitOrFail(["status", "--porcelain=v1", "-b"], cwd);
+  const dirty = raw
+    .split("\n")
+    .filter((line) => line !== "" && !line.startsWith("## "))
+    .map((l) => ({ index: l[0], working: l[1], file: l.slice(3) }));
   return { clean: dirty.length === 0, "dirty-files": dirty.map((d) => d.file) };
 }
 
