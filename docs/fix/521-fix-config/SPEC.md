@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: 30331099a9de5024e9037f4dae9b3aa8d31f5de181896135baed33fa14905413
+ac-hash: 478d883851678ca14ac1ecd9994853b89c34aae2ecf849c89ceccba9d887f1d7
 ---
 
 # fix/521-fix-config
@@ -215,11 +215,13 @@ root gate `bun scripts/local-gate.mjs` before handoff.
   `bun scripts/lint-changeset.mjs` exits 0, `bun scripts/docs-generate.mjs
   --check` exits 0, `rg -n '#521' docs/ROADMAP.md` matches 1, and
   `bun scripts/local-gate.mjs` exits 0.
-- **AC-S7** — A settings-console save preserves the comments in
-  `pi-agentic-workflow.json` and leaves an untouched key's layout alone, through
-  the JSONC AST editor the owner picks. Check: the console round-trip test (a
-  commented file saved through the console keeps its comments) exits 0. **Not
-  met yet** — blocked on the owner's editor pick (S7, O14).
+- **AC-S7** — A settings-console save keeps the comments in
+  `pi-agentic-workflow.json`: a change rewrites only its own value, a no-change
+  save writes the original bytes back, adding or removing a member re-renders
+  only the object that holds it (its comments kept, the file's indentation and
+  line endings preserved), and a removed member takes its own comment with it.
+  Check: tests `K1`–`K7` in `test/settings-console-jsonc.test.mjs` exit 0 under
+  bun and under node.
 
 ## Tasks
 
@@ -267,11 +269,12 @@ root gate `bun scripts/local-gate.mjs` before handoff.
   (Implements: S5a)
   - Relevant files: packages/pi-agentic-workflow/src/config/schema.ts,
     packages/pi-agentic-workflow/test/config-jsonc.test.mjs
-- P7 — Comment-preserving save (S7): the settings console writes the file
-  through the JSONC AST editor the owner picks, so a save keeps the comments and
-  the untouched layout (validator: `bun test test/settings-console-jsonc.test.mjs`
-  exits 0 over a commented fixture; **not started — blocked on the owner's
-  pick**)
+- P7 — Comment-preserving save (S7, owner pick `jsonc-parser` 3.3.1): the
+  settings console edits the bytes it read instead of re-serializing, so a save
+  keeps the comments, a change rewrites only its own span, a no-change save is
+  byte-identical, and the file's own indentation and line endings survive a
+  re-render (validator: `bun test test/settings-console-jsonc.test.mjs` exits 0 —
+  `K1`–`K7`, on both runtimes)
   (Implements: S7)
   - Relevant files: packages/pi-agentic-workflow/src/settings/console.ts,
     packages/pi-agentic-workflow/package.json
@@ -318,7 +321,7 @@ validator with the outcome it must produce, and is `planned` at cut time.
 | O11 | S1 | repository state ships in the same change: the roadmap `## Fixes` row (hand edit — no emitter writes fix rows), the changeset intent, the journal fragment, and the generated projection through the renderer | P4 | P4 | direct application (this session) | `bun scripts/lint-changeset.mjs` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `rg -n '#521' docs/ROADMAP.md` matches 1 | E line in SPEC `## Log` | verified — E5 line in SPEC `## Log` (changeset ok, projection PASS, roadmap row present) |
 | O12 | S1, S5 | the declared deterministic gates are green before handoff | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 line in SPEC `## Log` (`PASS — 17 step(s) in 173s`, HEAD `1e7d02f2` in the clean worktree; the primary checkout's one red is E7's environment finding, reproduced at the base commit) |
 | O13 | S5a | the same bytes accept and refuse identically on bun and node: the native parser never widens what a config may contain — single quotes, hex numbers, a concatenated root and a truncated tail are refused on both, with the same message | P6 | P6 | direct application (this session) | differential run under both runtimes (same corpus, base copy vs change): the change's bun and node outputs differ on 0 lines | E line in SPEC `## Log` | verified — E11 line in SPEC `## Log` (0 differing lines between runtimes; the base differed on 26) |
-| O14 | S7 | a settings-console save preserves the file's comments and its untouched layout through a JSONC AST editor instead of rewriting plain JSON | P7 | P7 | direct application (this session), after the owner picks the editor | the console round-trip test exits 0 | E line in SPEC `## Log` | planned — blocked on the owner's editor pick (D3/S7); the console still rewrites plain JSON |
+| O14 | S7 | a settings-console save preserves the file's comments and its untouched layout through a JSONC AST editor instead of rewriting plain JSON | P7 | P7 | direct application (this session), after the owner picks the editor | the console round-trip test exits 0 | E line in SPEC `## Log` | verified — E13 line in SPEC `## Log` (`K1`–`K7` on both runtimes; package suite 820 pass on bun, 819 + 1 declared skip on node) |
 
 ## Triaged steps
 
@@ -522,9 +525,32 @@ surgery.
   same.
 - **P6** — 2026-11-12, native first reader (S5a) · test corpus `dc8cc506` (red
   observed, E9) and implementation `b444c38c` (green, E10/E11).
-- **P7** — 2026-11-12, not started: the comment-preserving save waits for the
-  owner's editor pick (S7), researched in the handoff (option table + the
-  measured, tested candidates).
+- **P7** — 2026-11-12, the comment-preserving save landed on the owner's pick
+  (L4/D9): `src/settings/jsonc-write.ts` + the console's save path · commit
+  `90c066a9` (corpus `3826d326`, red at E12).
+- **L4** — 2026-11-12, the owner's answers to the two asked questions, verbatim:
+  ```
+  d3-editor: selected jsonc-parser
+  d1-guard: selected keep-guard
+  ```
+- **D9** — 2026-11-12, the editor pick (authority: L4 + S7): `jsonc-parser`
+  3.3.1, pinned exact, zero dependencies, MIT (Microsoft/VS Code). The writer
+  diffs the draft against the file it opened and applies one `modify`/`applyEdits`
+  per changed leaf. The declared cost, pinned by `K3`/`K4`: the object that
+  receives an added or removed member is re-rendered (comments kept, the file's
+  own indentation and line endings used), and a removed member takes its own
+  comment with it. D1 stays as answered — the native reader in front of the
+  strict boundary.
+- **E12** — 2026-11-12, RED for S7 observed before the writer existed: `bun test
+  test/settings-console-jsonc.test.mjs` · exit 1 · `Cannot find module
+  '../dist/settings/jsonc-write.js'`, 0 pass, 1 error.
+- **E13** — 2026-11-12, green after the writer: `bun test
+  test/settings-console-jsonc.test.mjs` · exit 0 · 7 pass, 0 fail (`K1`–`K7`);
+  whole package `bun run test` · exit 0 · 820 pass, 0 fail (76 files, the `J` and
+  `K` corpora included); `bun run test:node` · exit 0 · 819 pass, 0 fail, 1
+  skipped (the declared `J8`); `bun scripts/lint-changeset.mjs` · exit 0 · the
+  `521` entry at `minor` (`@gtrabanco/pi-agentic-workflow` only — the schema
+  package is untouched).
 
 - **G3** — 2026-11-12, `HEAD 5de52ac7` (the correction batch's last content commit),
   clean worktree `.worktrees/fix-521-gate` of this commit (removed after): `bun
@@ -533,11 +559,9 @@ surgery.
 
 ## Next
 
-**Needs your decision:** which JSONC AST editor the settings console's
-comment-preserving save uses (S7/D3) — options and measurements are in the
-handoff. O14 and P7 are the open rows; O1–O13 are `verified`. The branch
-`fix/521-fix-config` is local-only — no push, no PR — and the owner is the
-external verifier.
+Owner verdict on the diff. Every obligation (`O1`–`O14`) is `verified` and the
+editor picked in D9 is landed; the branch `fix/521-fix-config` is local-only — no
+push, no PR — and the owner is the external verifier.
 
 ## References
 
