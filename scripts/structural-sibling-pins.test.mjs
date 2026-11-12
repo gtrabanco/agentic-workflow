@@ -90,7 +90,7 @@ test("pin B — every echo path of carrier cells routes through the one flatten 
 });
 
 test("pin B — the pin covers the surfaces the issue names", () => {
-  assert.ok(FLATTEN_COVERAGE_FILES.includes("scripts/workflow-status.mjs"), "the sensor's echo paths are the corpus the issue names");
+  assert.ok(FLATTEN_COVERAGE_FILES.includes("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs"), "the sensor's echo paths are the corpus the issue names");
   for (const file of FLATTEN_COVERAGE_FILES) {
     assert.ok(readFileSync(path.join(ROOT, file), "utf8").includes("flattenCell"), `${file} declares the flatten class the pin checks`);
   }

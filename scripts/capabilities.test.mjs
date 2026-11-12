@@ -163,7 +163,7 @@ test("F1 the analyser exists and loads (base commit: absent; the base classifier
   const base = process.env.CAPABILITY_BASE ? path.resolve(process.env.CAPABILITY_BASE) : null;
   if (base === null) return;
 
-  const probe = spawnSync(process.execPath, ["-e", "import('./scripts/capabilities.mjs').then(() => console.log('present'))"], {
+  const probe = spawnSync(process.execPath, ["-e", "import('./packages/agentic-workflow/src/runner/capabilities.mjs').then(() => console.log('present'))"], {
     cwd: base,
     encoding: "utf8",
   });
