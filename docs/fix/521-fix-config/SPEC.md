@@ -630,12 +630,29 @@ surgery.
   every step exit 0, the only `skipped 1` the declared `J8` node skip inside
   `pi-node-compat` — the batch's recheck for "haven't broke another thing"
   (S2), green at the batch head, not carried over from G4.
+- **D11** — 2026-11-12, second correction batch (owner's fix-both): (1) the
+  `## Next` section still said "local-only — no push, no PR" — true when
+  written, invalidated by the owner's push and PR
+  [#523](https://github.com/gtrabanco/agentic-workflow/pull/523) (opened in the
+  owner's Qwen3.6 session `01a1d0da…` at 18:06Z, while the external verify was
+  running — that pass bound local state only and missed it, disclosed); the
+  section now names the pushed branch and the open PR. The P5 line at
+  `2ec67fb6` and the first journal fragment keep their dated "local-only"
+  wording as history. (2) The PR body was rebuilt on the repo's
+  `PULL_REQUEST_TEMPLATE.md` through the REST API (`gh pr edit` fails on the
+  deprecated Projects-Classic GraphQL field): adds `Closes #521` (the SPEC
+  requires it; it was missing), drops the nonexistent `test/jsonc-corpus.jsonc`,
+  fixes the "Node writes clean JSON" falsehood (`K1`–`K7` pass under node), the
+  retired "Node fallback" framing (PE-003/D5), and "two commits" (the PR
+  carries 20), and renders the evidence pack from AC-S1–AC-S7. Dated carriers
+  untouched; no obligation reopens — no ledger row and no code file changed.
 
 ## Next
 
 Owner verdict on the diff. Every obligation (`O1`–`O14`) is `verified` and the
-editor picked in D9 is landed; the branch `fix/521-fix-config` is local-only — no
-push, no PR — and the owner is the external verifier.
+editor picked in D9 is landed; the branch is pushed and PR
+[#523](https://github.com/gtrabanco/agentic-workflow/pull/523) is open against
+`main`, and the owner is the external verifier.
 
 ## References
 
