@@ -732,17 +732,25 @@ surgery.
   skipped (the same receipt as G1, re-run on the committed tree after the docs,
   the ledgers and the journal fragment landed).
 
+- **P8** — 2026-11-11, PR-open step:
+  [PR #518](https://github.com/gtrabanco/agentic-workflow/pull/518) opened against
+  `main` (body carries `Closes #509`, the per-defect table, the verification
+  block and the `--jobs 4` disclosure), the roadmap row settled
+  `done · [#518]`, `## References`/`## Next` re-pointed at the PR, the generated
+  projection re-rendered · commit <this commit>.
+
 ## Next
 
-The extended scope (S8–S12) is implemented in the same unit: the remaining work
-is the docs commit (P8) and the foreground verification (P9), then the handoff.
-The diff, the obligations ledger state, the verification block and every
-failed/skipped/pending check go to the owner, who is the external verifier.
+[PR #518](https://github.com/gtrabanco/agentic-workflow/pull/518) is open against
+`main` with `Closes #509`. Every obligation is `verified` and the gate is green
+at `--jobs 2` (G2); the merge belongs to the owner, who is the external verifier
+— no review pass ran inside this unit by design (the local workflow's §4).
 
 ## References
 
 - Issue [#509](https://github.com/gtrabanco/agentic-workflow/issues/509) —
-  closed by this unit's PR (`Closes #509` in the body).
+  closed by [PR #518](https://github.com/gtrabanco/agentic-workflow/pull/518)
+  (`Closes #509` in the body).
 - Unit #449 (`docs/fix/449-batch-scheduler-sensor/`) — the sensor this fixes;
   context only, no blocker.
 - Unit #460 (`docs/fix/460-batch-scheduler-verification/`) — the previous
