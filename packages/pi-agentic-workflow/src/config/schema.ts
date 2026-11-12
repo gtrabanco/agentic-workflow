@@ -723,18 +723,50 @@ function checkStateFlow(value: unknown, path: string, issues: ConfigIssue[]): St
 }
 
 /**
- * Parse and validate one config file (issue #521).
+ * The runtime's own JSONC parser, when it has one (owner decision D1, issue
+ * #521): Bun ships `Bun.JSONC.parse`, Node ships nothing. The shape is declared
+ * here instead of importing a Bun global so this module stays a plain ES module
+ * that both runtimes load.
+ */
+interface NativeJsonc {
+  parse(text: string): unknown;
+}
+
+function nativeJsonc(): NativeJsonc | null {
+  const candidate = (globalThis as { Bun?: { JSONC?: Partial<NativeJsonc> } }).Bun?.JSONC;
+  return typeof candidate?.parse === "function" ? (candidate as NativeJsonc) : null;
+}
+
+/**
+ * Parse and validate one config file (issue #521, owner decisions D1).
  *
- * The file is JSONC — comments and trailing commas are accepted — and it is
- * read by the schema package's `parseJsonc`, the same parser the base
- * `agentic-workflow.json` goes through. One parser is the contract: the two
- * config files cannot disagree about their own format, and a file cannot be
- * valid on one runtime and invalid on the other. The parser reports the line
- * and column of a syntax error, so the failure names where the operator's file
- * broke instead of a generic `Unexpected token`.
+ * The file is JSONC — comments and trailing commas are accepted. The runtime's
+ * own parser reads it first when the runtime has one (Bun); the schema
+ * package's `parseJsonc` stays the **acceptance boundary**: it decides what
+ * counts as JSONC, reports the refusal's line and column, and supplies the
+ * value the strict validator then checks.
+ *
+ * The native parser cannot be the boundary. Measured on bun 1.4.4:
+ * `Bun.JSONC.parse('{"a":1},{"b":2}')` answers `{"a":1}` — it stops at the
+ * first root value and ignores everything after it, so a truncated or
+ * concatenated file would be read as a valid one. One strict parse is the only
+ * EOF check a JSONC reader has, and it is what keeps a malformed file from
+ * failing open.
  */
 export function parseConfigFile(text: string): ParseResult {
   if (text.trim() === "") return { ok: true, config: {} };
+
+  const native = nativeJsonc();
+  if (native !== null) {
+    // The first reader, and its failure is never fatal on its own: the strict
+    // parse below states the same refusal with a position. Its result is never
+    // used as the config — the schema parse is authoritative.
+    try {
+      native.parse(text);
+    } catch {
+      // reported below
+    }
+  }
 
   const parsed = parseJsonc(text);
   if (!parsed.ok) {
