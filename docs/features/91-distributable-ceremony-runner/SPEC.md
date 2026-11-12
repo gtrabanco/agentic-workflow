@@ -431,7 +431,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   answer `deferred-module` naming their own gap: a review state carrier, a commit revert
   policy, a forge-backed settle and `gh`'s degradation contract are decisions the frozen
   map does not take, and inventing them would be a guess. Commit `P4SHA`.
-- **G9** — 2026-11-12, HEAD `P4SHA` · `node --test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs`
+- **G9** — 2026-11-12, HEAD `d094440a` · `node --test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs`
   exit 0 · 8 pass; crate suite exit 0 · 677 pass (bun) / 677 (node); `node scripts/run-root-suite.mjs`
   exit 0 · 106/106; `node scripts/docs-generate.mjs --check` and `bun scripts/check-skill-context.mjs` exit 0.
 - **P7 (completion)** — 2026-11-12, the downstream readers follow the move: the pi package's
@@ -459,14 +459,14 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   choice and a settle that promotes only a row already carrying its merged PR link), and `pr`
   (`gh`-backed with the declared degradation: `gh-missing` and `gh-unauthenticated` are ceremonial
   blocks, any other failure is `gh-error`). `DEFERRED_MODULES` is empty and the `deferred-module`
-  answer is gone · commit `P4B`.
+  answer is gone · commit `d094440a`.
 - **E7** — 2026-11-12, one defect the new contract tests found and this unit repaired (a declared
   deviation from S4's "preserve the fixed outputs", because a corrupted path is not a contract):
   `ceremony workspace status`/`clean-check` lost the first character of the first changed path —
   `git status --porcelain=v1` without `-b`, whose header line the repository's git helper needs
   before trimming. Both now pass `-b` and skip the header, the repair `ceremony tier` already
   carried (issue #384 F1); the case is pinned in `runner.ceremony-p0.test.mjs`.
-- **G10** — 2026-11-12, HEAD `P4SHA` · `node --test` on the four crate contract suites · exit 0 · 8 + 9 + 8 + 6
+- **G10** — 2026-11-12, HEAD `d094440a` · `node --test` on the four crate contract suites · exit 0 · 8 + 9 + 8 + 6
   pass; crate suite 697 pass; `node scripts/run-root-suite.mjs` exit 0 · 106/106.
 
 ## Next
