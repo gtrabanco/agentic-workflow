@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: 6a97b6c53408ba407f4bb2a035a1e9ee0dd204b3ea630a6e3aae27763c47eed3
+ac-hash: c216731ccd2c7977a9c86dc09ce90b8052bd2795158504a21581a3ec3dd2ed0e
 ---
 
 # fix/521-fix-config
@@ -185,8 +185,8 @@ root gate `bun scripts/local-gate.mjs` before handoff.
   uses, with no runtime split: `parseConfigFile` carries no `JSON.parse` and
   imports `parseJsonc` from `@gtrabanco/agentic-workflow-schema`. Check:
   `rg -n 'JSON.parse' packages/pi-agentic-workflow/src/config/schema.ts` exits 1
-  (0 matches); `rg -n 'parseJsonc' packages/pi-agentic-workflow/src/config/schema.ts`
-  matches 2 (the import and the call).
+  (0 matches); `rg -n 'parseJsonc\(text\)' packages/pi-agentic-workflow/src/config/schema.ts`
+  matches 1 (the single call site).
 - **AC-S3** — The issue's reproduction now works: a `pi-agentic-workflow.json`
   with a `//` comment parses, `loadConfig` answers `ok: true` with no problems,
   and the Engram consent in the base file is read instead of refused. Check:
@@ -275,17 +275,17 @@ validator with the outcome it must produce, and is `planned` at cut time.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S3 | a `pi-agentic-workflow.json` carrying a `//` line comment parses: `parseConfigFile` answers `ok: true` with the declared keys, never `{ ok: false }` | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J1`) | E line in SPEC `## Log` | planned |
-| O2 | S5 | block comments and trailing commas in objects and arrays are accepted in the extension file | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J2`) | E line in SPEC `## Log` | planned |
-| O3 | S3, S6 | the loader reads a commented extension file end to end — `loadConfig.ok` is true, `problems` empty, the extension value is applied, and the base file's `memory.engram` consent is read (the issue's steps 3–5 no longer reach `config-invalid`) | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J3`) | E line in SPEC `## Log` | planned |
-| O4 | S2, S5 | the extension file and the base file are parsed by the same JSONC parser, with no runtime split: `parseConfigFile` carries no `JSON.parse` and reads `parseJsonc` from the schema package | P2 | P2 | direct application (this session) | `rg -n 'JSON.parse' packages/pi-agentic-workflow/src/config/schema.ts` matches 0 and `rg -n 'parseJsonc' packages/pi-agentic-workflow/src/config/schema.ts` matches 2 | E line in SPEC `## Log` | planned |
-| O5 | S5 | plain JSON is untouched: a comment-free file parses to exactly the config it produced before | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J4`) and `bun test test/config-merge.test.mjs test/config-schema-stateflow.test.mjs test/model-profiles.test.mjs` exits 0 (69 pass) | E line in SPEC `## Log` | planned |
-| O6 | S4 | a syntax error still fails at `$` with no `config` property, and the message carries the parser's error with its line and column (`invalid JSON: line <n>:<col>: …`) | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J5`) | E line in SPEC `## Log` | planned |
-| O7 | S4 | a broken file still fails the load closed: `ok:false`, exactly one problem at `$` carrying `invalid JSON`, and the caller gets the shipped default rather than a half-read file | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J6`) and `bun test test/config-merge.test.mjs` exits 0 (the `AC12` cases) | E line in SPEC `## Log` | planned |
-| O8 | S5 | the pre-existing config behaviour is unchanged: every `parseConfigFile` consumer (loader, settings console open/save, profiles, passes, subagents, state flow) still reads its fixture and the package suite stays green | P4 | P2 | direct application (this session) | `cd packages/pi-agentic-workflow && bun run test` exits 0 | E line in SPEC `## Log` | planned |
-| O9 | S5 | the differential run against the base commit differs only in the declared deltas: comments/trailing commas now parse, the failure message gains `line <n>:<col>`, and a non-object root gains the `invalid JSON: ` prefix | P3 | P3 | direct application (this session) | differential run in `mktemp -d` (base copy vs change, identical corpus): every diff line is one of the three declared deltas | E line in SPEC `## Log` with the diff summary | planned |
-| O10 | S6 | the documentation states the landed contract: both files are JSONC through one parser, and the settings console rewrites the extension file as plain JSON, so a save does not preserve comments | P4 | P4 | direct application (this session) | `rg -n 'JSONC' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md` matches ≥2 and `rg -n 'plain JSON' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md` matches 2 | E line in SPEC `## Log` | planned |
-| O11 | S1 | repository state ships in the same change: the roadmap `## Fixes` row (hand edit — no emitter writes fix rows), the changeset intent, the journal fragment, and the generated projection through the renderer | P4 | P4 | direct application (this session) | `bun scripts/lint-changeset.mjs` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `rg -n '#521' docs/ROADMAP.md` matches 1 | E line in SPEC `## Log` | planned |
+| O1 | S3 | a `pi-agentic-workflow.json` carrying a `//` line comment parses: `parseConfigFile` answers `ok: true` with the declared keys, never `{ ok: false }` | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J1`) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (811 pass, 0 fail; `J1` among them) |
+| O2 | S5 | block comments and trailing commas in objects and arrays are accepted in the extension file | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J2`) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (`J2` passes; E3 shows the base parser rejecting the same bytes) |
+| O3 | S3, S6 | the loader reads a commented extension file end to end — `loadConfig.ok` is true, `problems` empty, the extension value is applied, and the base file's `memory.engram` consent is read (the issue's steps 3–5 no longer reach `config-invalid`) | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J3`) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (`J3`: `ok`, no problems, `memory.engram` true, `onSettle` restore) |
+| O4 | S2, S5 | the extension file and the base file are parsed by the same JSONC parser, with no runtime split: `parseConfigFile` carries no `JSON.parse` and reads `parseJsonc` from the schema package | P2 | P2 | direct application (this session) | `rg -n 'JSON.parse' packages/pi-agentic-workflow/src/config/schema.ts` matches 0 and `rg -n 'parseJsonc\(text\)' packages/pi-agentic-workflow/src/config/schema.ts` matches 1 | E line in SPEC `## Log` | verified — E6 line in SPEC `## Log` (0 and 1 matches) |
+| O5 | S5 | plain JSON is untouched: a comment-free file parses to exactly the config it produced before | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J4`) and `bun test test/config-merge.test.mjs test/config-schema-stateflow.test.mjs test/model-profiles.test.mjs` exits 0 (69 pass) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (the 69-pass targeted run and the 811-pass package suite; E3's `J4` row is byte-identical base-vs-change) |
+| O6 | S4 | a syntax error still fails at `$` with no `config` property, and the message carries the parser's error with its line and column (`invalid JSON: line <n>:<col>: …`) | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J5`) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (`J5`: `line 3:13`); E3 shows the base parser carrying no location |
+| O7 | S4 | a broken file still fails the load closed: `ok:false`, exactly one problem at `$` carrying `invalid JSON`, and the caller gets the shipped default rather than a half-read file | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J6`) and `bun test test/config-merge.test.mjs` exits 0 (the `AC12` cases) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (`J6`; the `AC12` cases in the same 811-pass suite) |
+| O8 | S5 | the pre-existing config behaviour is unchanged: every `parseConfigFile` consumer (loader, settings console open/save, profiles, passes, subagents, state flow) still reads its fixture and the package suite stays green | P4 | P2 | direct application (this session) | `cd packages/pi-agentic-workflow && bun run test` exits 0 | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (811 pass, 0 fail, 75 files) |
+| O9 | S5 | the differential run against the base commit differs only in the declared deltas: comments/trailing commas now parse, the failure message gains `line <n>:<col>`, and a non-object root gains the `invalid JSON: ` prefix | P3 | P3 | direct application (this session) | differential run in `mktemp -d` (base copy vs change, identical corpus): every diff line is one of the three declared deltas | E line in SPEC `## Log` with the diff summary | verified — E3 line in SPEC `## Log` (12 changed cases, 5 unchanged, no undeclared delta) |
+| O10 | S6 | the documentation states the landed contract: both files are JSONC through one parser, and the settings console rewrites the extension file as plain JSON, so a save does not preserve comments | P4 | P4 | direct application (this session) | `rg -n 'JSONC' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md` matches 3 and `rg -n 'plain JSON' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md` matches 2 | E line in SPEC `## Log` | verified — E6 line in SPEC `## Log` (3 and 2 matches) |
+| O11 | S1 | repository state ships in the same change: the roadmap `## Fixes` row (hand edit — no emitter writes fix rows), the changeset intent, the journal fragment, and the generated projection through the renderer | P4 | P4 | direct application (this session) | `bun scripts/lint-changeset.mjs` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `rg -n '#521' docs/ROADMAP.md` matches 1 | E line in SPEC `## Log` | verified — E5 line in SPEC `## Log` (changeset ok, projection PASS, roadmap row present) |
 | O12 | S1, S5 | the declared deterministic gates are green before handoff | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | planned |
 
 ## Triaged steps
@@ -340,11 +340,69 @@ surgery.
   fail on the comment/trailing comma, `J5`–`J6` on the missing location; `J4`
   is the no-change guard and passed trivially).
 - **P1** — 2026-11-12, this document frozen with its embedded planning ledgers,
-  acceptance criteria and task list · commit <this commit>.
+  acceptance criteria and task list, plus the roadmap `## Fixes` row (hand
+  edit — PE-009) · commit `b5e4c5eb`.
+- **P2a** — 2026-11-12, the RED corpus committed alone, observed failing before
+  any implementation (E2) · commit `4b9dc40c`.
+- **D4** — 2026-11-12, plan repair during close-out (authority: LEDGERS.md's "a
+  validator with no stated outcome is a claim nobody can check"): AC-S2 and O4
+  expected `rg -n 'parseJsonc'` to match 2 and it matches 3 (the call, the import
+  and the doc comment), so both cells now pin `rg -n 'parseJsonc\(text\)'` at 1 —
+  the single call site, stable against comment edits. Disclosed: the AC section
+  was frozen at cut under `ac-hash 6a97b6c5…7eed3` and the implementation
+  commit `58b46fd7` landed under that stamp; this wording change re-stamps it
+  to `c216731c…ed0e` in the same commit that records it. The change tightens a
+  validator and moves no assertion; no test was edited.
+- **E3** — 2026-11-12, differential check (O9) in `mktemp -d /tmp/aw521-diff-*`
+  (removed after): the base commit's `src/config/schema.ts`
+  (`git show main:…`) compiled with the package's own `tsc`, and the change,
+  driven over one 17-case corpus (the six `J` cases plus empty, comment-only,
+  BOM, both non-object roots, duplicate keys, a trailing comment, an
+  unterminated block, an unknown key and an invalid value). 12 cases differ in
+  24 diff lines, every one declared: six now parse (the comments, the trailing
+  comma, the comment-only file, the BOM, the trailing `//`), three failure
+  messages gain `line <n>:<col>`, two non-object roots gain the `invalid JSON: `
+  prefix, and one already-invalid extension file changes its first message from
+  "Unrecognized token '/'" to the unknown-key issue it always reported after a
+  successful parse. The other 5 cases are byte-identical (`J4`, empty,
+  duplicate keys, unknown key, invalid value). This run is also the corrected
+  RED receipt: through the base parser `J1`/`J2`/`J3a` reject and `J5`/`J6`
+  carry no location.
+- **E4** — 2026-11-12, `cd packages/pi-agentic-workflow && bun run test` · exit 0
+  · 811 pass, 0 fail (75 files; `bundle:skills` + `tsc` + the whole suite,
+  `J1`–`J6` included). The targeted pre-change floor was 69 pass (E1); the
+  corpus adds six.
+- **E5** — 2026-11-12, `bun scripts/lint-changeset.mjs` · exit 0 ·
+  `ok fix-521-fix-config-…-521.md`; `bun scripts/docs-generate.mjs` · exit 0 ·
+  `1 written, 0 deleted, 2 unchanged`, roadmap unchanged;
+  `bun scripts/docs-generate.mjs --check` · exit 0 · 3 checked, 0 missing,
+  0 stale, 0 orphaned; `bun scripts/roadmap-settle.mjs` · exit 0 · 189 unit
+  docs, 0 violations; `bun scripts/phase-lint.mjs
+  docs/fix/521-fix-config/SPEC.md` · exit 0 · verdict PASS (5 phases, 6/6).
+- **E6** — 2026-11-12, the surface pins: `rg -n 'JSON.parse'
+  packages/pi-agentic-workflow/src/config/schema.ts` · exit 1 · 0 matches;
+  `rg -n 'parseJsonc\(text\)' packages/pi-agentic-workflow/src/config/schema.ts`
+  · exit 0 · 1 match; `rg -n 'JSONC' docs/workflow/CONFIG.md
+  packages/pi-agentic-workflow/README.md` · exit 0 · 3 matches;
+  `rg -n 'plain JSON' docs/workflow/CONFIG.md
+  packages/pi-agentic-workflow/README.md` · exit 0 · 2 matches.
+- **P2b** — 2026-11-12, `parseConfigFile` reads the schema package's `parseJsonc`
+  and reports `line <n>:<col>`; the corpus's `J3` fixture path was corrected
+  while implementing (it wrote the base file's bytes at the extension path; the
+  assertion set is unchanged and it now reads `paths.globalBase`) · commit
+  `58b46fd7`.
+- **P3** — 2026-11-12, differential recorded (E3); no undeclared difference ·
+  same commit `58b46fd7`.
+- **P4** — 2026-11-12, docs and repository state: `CONFIG.md` and the package
+  README state the one-parser rule and the save consequence, the changeset
+  intent through the deterministic emitter, the projection through the renderer
+  (E5) · commit `dcf12f54`.
 
 ## Next
 
-P2: commit the RED corpus alone, then land the parser swap and close O1–O8.
+P5: write the journal fragment, run the declared root gate in the foreground
+and close O12 with its receipt; then hand the branch to the owner, who is the
+external verifier (no review/fold pass runs inside this unit by design).
 
 ## References
 
