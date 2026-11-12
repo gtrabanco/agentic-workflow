@@ -360,6 +360,14 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   exit 0 · `PASS context budgets: 29 skills` / `PASS context documents`.
 - **G5** — 2026-11-12, `bun scripts/skill-lint.mjs` · exit 0 ·
   `99 file(s) · 7 check(s) · 0 finding(s)` / `verdict: PASS`.
+- **D7** — 2026-11-12, this repository declares its own profile:
+  `.pi/agentic-workflow.json` with `enforce: "push"` and the identity its commits
+  already carry. The commit half stays uninstalled (a pre-commit hook is a live
+  checkout change nobody asked for here); the push half is the dogfood the issue's
+  premise asks for.
+- **E15** — 2026-11-12, `node scripts/local-gate.mjs --only push-identity --push-base 43e8c1f9` ·
+  exit 0 · `PUSH IDENTITY — ok: 11 commit(s) verified against Gabriel Trabanco
+  Llano <1969593+gtrabanco@users.noreply.github.com> (.pi/agentic-workflow.json)`.
 
 ## Next
 
