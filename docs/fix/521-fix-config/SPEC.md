@@ -420,7 +420,23 @@ surgery.
   same commit, the same tree bytes, and the clean-worktree run is how CI sees
   it.
 - **P5** — 2026-11-12, verification closed: O1–O12 `verified` (G1 for O12); the
-  branch is local-only, no push and no PR · commit <this commit>.
+  branch is local-only, no push and no PR · commit `2ec67fb6`.
+- **E8** — 2026-11-12, one gate run in three failed at `pi-node-compat` with
+  `SyntaxError: Export named 'validateProjectionManifestV1' not found in module
+  …/packages/agentic-workflow-schema/dist/index.js` while `schema-build` was
+  rewriting that `dist/` in the same pool: a read/write race on the schema
+  package's build output, not a red in this change — the export is present in
+  the committed source and in `dist/` after the run, and `bun run --cwd
+  packages/pi-agentic-workflow test:node` passes standalone (exit 0, 12.8s).
+  Disclosed, not worked around: no suite was edited and no step was skipped by
+  this unit. The gate owns the step graph; a missing `schema-build` →
+  `pi-node-compat` edge is a gate finding for its own unit.
+- **G2** — 2026-11-12, `HEAD 2ec67fb6` (the receipt commit, so the run is on the
+  tree the ledger describes), same clean worktree: `bun
+  scripts/local-gate.mjs --jobs 2` · exit 0 · `PASS — 17 step(s) in 173s`, root
+  suite 106 suites PASS, no skipped step. Every later commit on this branch is
+  documentation under `docs/fix/521-fix-config/`, so `test-impact` answers
+  `empty` for it and no test-bearing step is affected.
 
 ## Next
 
