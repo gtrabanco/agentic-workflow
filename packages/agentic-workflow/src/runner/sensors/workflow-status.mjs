@@ -20,7 +20,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import * as schemaRuntime from "@gtrabanco/agentic-workflow-schema";
 import {
   FIX_INDEX_DOCUMENT,
@@ -211,7 +211,10 @@ let schemaManifest = null;
 function schemaPackageManifest() {
   if (schemaManifest !== null) return schemaManifest;
   try {
-    const entry = createRequire(import.meta.url).resolve("@gtrabanco/agentic-workflow-schema");
+    // `import.meta.resolve` answers the specifier this module actually loads
+    // (the ESM condition); `createRequire` would walk the CJS one, which a
+    // types+import-only package map does not define.
+    const entry = fileURLToPath(import.meta.resolve("@gtrabanco/agentic-workflow-schema"));
     schemaManifest = JSON.parse(fs.readFileSync(path.join(path.dirname(path.dirname(entry)), "package.json"), "utf8"));
   } catch {
     schemaManifest = {};

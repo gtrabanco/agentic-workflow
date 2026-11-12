@@ -19,6 +19,8 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+/** The runner's bin: the snapshot this corpus spawns lives in the crate. */
+const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 /** Re-pointable so the suite runs red against a pre-phase tree (P9's gotcha 3). */
 const root = process.env.PRE_EXECUTION_QUALITY_REPO ? path.resolve(process.env.PRE_EXECUTION_QUALITY_REPO) : repoRoot;
 // P8b: safeRead returns null for deleted skills.
@@ -1106,7 +1108,7 @@ test("the snapshot sensor refuses escapes, never follows symlinks, and compares 
   // F14+F15+F17 fold regression: the sensor CLI must contain agent-supplied paths,
   // read artifacts through lstat only, and make the structural check meaningful by
   // comparing the receipt's recorded Policy against the current one.
-  const run = (args) => spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], { encoding: "utf8", cwd: root, timeout: 120000 });
+  const run = (args) => spawnSync(process.execPath, [BIN, "pre-execution-snapshot", ...args], { encoding: "utf8", cwd: root, timeout: 120000 });
   const unit = "28-evidence-grounded-spec-plan-review";
   for (const escape of ["../outside", "/etc", "docs/../../"]) {
     const r = run(["build", "--stage", "spec", "--unit", unit, "--dir", escape]);

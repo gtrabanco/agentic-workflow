@@ -43,7 +43,7 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => fs.readFileSync(path.join(repoRoot, rel), "utf8");
-const sensorScript = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs");
+const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 
@@ -176,12 +176,11 @@ function makeRepo(t, { acceptance = false, obligations = null } = {}) {
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, text);
   };
+  // The runner is installed, not copied: the sensor and the router run from the
+  // crate's bin against this sandbox, and `packages/` is linked only so the one
+  // repository script the sandbox still runs (the lineage gate) resolves the
+  // crate's parsers it imports.
   fs.symlinkSync(path.join(repoRoot, "packages"), path.join(root, "packages"));
-  fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
-  fs.copyFileSync(sensorScript, path.join(root, "scripts", "pre-execution-snapshot.mjs"));
-  // The verifier's contract-shape module (F24/F25): the sandbox mirrors its real
-  // import graph, so the assertions below stay untouched.
-  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(root, "scripts", "pre-execution-contract.mjs"));
   write(`${UNIT_DIR}/SPEC.md`, fixSpecText({ obligations }));
   if (acceptance) write(`${UNIT_DIR}/ACCEPTANCE.md`, "# Acceptance\n\n- A1 the toy works.\n");
   write("AGENTS.md", GUIDE);
@@ -195,11 +194,11 @@ function makeRepo(t, { acceptance = false, obligations = null } = {}) {
   // module's single reader, so the sandbox mirrors that import too.
   // ceremony-profile.mjs joins the graph with issue #436: the router reads the
   // charter's ceremony profile through it before emitting a hand-off.
-  for (const name of ["unit-lineage.mjs", "unit-route.mjs", "phase-lint.mjs", "unit-doc-phases.mjs", "relay-packet.mjs", "catalog.json", "ceremony/tier.mjs", "ceremony/lib.mjs", "risk-tiers.mjs", "capabilities.mjs", "ceremony-profile.mjs"]) {
-    const dest = path.join(root, "scripts", name);
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.copyFileSync(path.join(repoRoot, "scripts", name), dest);
-  }
+  // Only the lineage gate is still a repository script; it spawns the router
+  // through the crate's bin, so the sandbox needs no other copy.
+  const lineageDest = path.join(root, "scripts", "unit-lineage.mjs");
+  fs.mkdirSync(path.dirname(lineageDest), { recursive: true });
+  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-lineage.mjs"), lineageDest);
   git(root, "init", "-q", "-b", "main");
   git(root, "config", "user.email", "fixture@example.invalid");
   git(root, "config", "user.name", "Fixture");
@@ -209,7 +208,7 @@ function makeRepo(t, { acceptance = false, obligations = null } = {}) {
   const datedEnv = { ...process.env, GIT_COMMITTER_DATE: "2026-08-30T00:00:00Z", GIT_AUTHOR_DATE: "2026-08-30T00:00:00Z" };
   execFileSync("git", ["add", "-A", "--", "."], { cwd: root, env: datedEnv });
   execFileSync("git", ["commit", "-qm", "fixture: lane-era fix unit"], { cwd: root, env: datedEnv });
-  const run = (...args) => spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], {
+  const run = (...args) => spawnSync(process.execPath, [BIN, "pre-execution-snapshot", ...args], {
     cwd: root, encoding: "utf8", timeout: 120000,
   });
   return { root, run };
@@ -336,7 +335,7 @@ const planReceiptBlock = ({ digest, sourceRevision, artifactRevision, policy = "
 
 /** Build the plan snapshot and record its PASS receipt in `progress.md`, committed. */
 const recordPlanReceipt = (root) => {
-  const build = spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", "build", "--stage", "plan", "--unit", "fix-2999-lane-era", "--root", root], { cwd: root, encoding: "utf8", timeout: 120000 });
+  const build = spawnSync(process.execPath, [BIN, "pre-execution-snapshot", "build", "--stage", "plan", "--unit", "fix-2999-lane-era", "--root", root], { cwd: root, encoding: "utf8", timeout: 120000 });
   assert.equal(build.status, 0, `receipt build failed: ${build.stderr}`);
   const digest = build.stdout.split("\n")[0].trim();
   const snapshot = JSON.parse(build.stdout.split("\n").slice(1).join("\n"));

@@ -23,7 +23,10 @@ import { after, test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(repoRoot, "scripts", "workflow-status.mjs");
+/** The runner's bin: the sensor answers as its subcommand. */
+const SCRIPT = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
+/** The sensor module itself, for the cases that import or read its own source. */
+const MODULE = path.join(repoRoot, "packages", "agentic-workflow", "src", "runner", "sensors", "workflow-status.mjs");
 const read = (rel) => fs.readFileSync(path.join(repoRoot, rel), "utf8");
 
 /** The built schema runtime — the same loader the script must consume (A:8). */
@@ -126,7 +129,7 @@ process.exit(1);`;
   if (dirty) write(dirty, "uncommitted work\n");
 
   const pathBase = pathWithoutGit ? path.dirname(process.execPath) : process.env.PATH;
-  const run = (args = [], opts = {}) => spawnSync(process.execPath, [opts.script ?? SCRIPT, ...args], {
+  const run = (args = [], opts = {}) => spawnSync(process.execPath, [opts.script ?? SCRIPT, "workflow-status", ...args], {
     cwd: dir,
     encoding: "utf8",
     env: { ...process.env, PATH: `${binDir}:${pathBase}`, ...opts.env },
@@ -272,11 +275,11 @@ test("P1: decideWorkflowAction() stays consumer-side — absent from the script 
 });
 
 test("P1: --help exits 0 and prints usage; --version prints the schema package version (A:10)", () => {
-  const help = spawnSync(process.execPath, [SCRIPT, "--help"], { cwd: repoRoot, encoding: "utf8" });
+  const help = spawnSync(process.execPath, [SCRIPT, "workflow-status", "--help"], { cwd: repoRoot, encoding: "utf8" });
   assert.equal(help.status, 0, help.stderr);
   assert.match(help.stdout, /[Uu]sage/);
 
-  const version = spawnSync(process.execPath, [SCRIPT, "--version"], { cwd: repoRoot, encoding: "utf8" });
+  const version = spawnSync(process.execPath, [SCRIPT, "workflow-status", "--version"], { cwd: repoRoot, encoding: "utf8" });
   assert.equal(version.status, 0, version.stderr);
   const pkg = JSON.parse(read("packages/agentic-workflow-schema/package.json"));
   assert.ok(version.stdout.includes(pkg.version), `expected ${pkg.version} in: ${version.stdout}`);
@@ -305,7 +308,7 @@ test("P1: stdout alone is one valid JSON document (A:23, stream separation)", ()
 });
 
 test("P1: importing the module with the built runtime present exits 0 (A:11 case a)", () => {
-  const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(SCRIPT).href)})`], {
+  const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(MODULE).href)})`], {
     cwd: repoRoot,
     encoding: "utf8",
   });
@@ -537,7 +540,7 @@ test("P2: two concurrent runs are safe and byte-identical (sensor:concurrent-act
   // sequence and never exercised the property it claimed (F31).
   const { dir, binDir } = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
   const spawnOnce = () => new Promise((resolve) => {
-    const child = spawn(process.execPath, [SCRIPT], {
+    const child = spawn(process.execPath, [SCRIPT, "workflow-status"], {
       cwd: dir,
       env: { ...process.env, PATH: `${binDir}:${process.env.PATH}` },
     });
@@ -903,7 +906,7 @@ test("F23: a merged PR is never reported open, and an open PR is never reported 
 // ===========================================================================
 
 test("F24/F25: the sensor imports the contract's tables and parser, never re-declares them", () => {
-  const source = fs.readFileSync(SCRIPT, "utf8");
+  const source = fs.readFileSync(MODULE, "utf8");
   assert.match(
     source,
     /import \{ STAGE_ARTIFACTS, CONTEXT_SOURCES, parseReceipts \} from "\.\/pre-execution-contract\.mjs"/,
@@ -917,7 +920,7 @@ test("F24/F25: the sensor imports the contract's tables and parser, never re-dec
 test("F24/F25: the sensor's bound set is exactly the verifier's stage tables", () => {
   // The bound set is derived from the shared module at import time, so a table that
   // grows in the contract must grow in the sensor's currency check in the same edit.
-  const sensorSource = fs.readFileSync(SCRIPT, "utf8");
+  const sensorSource = fs.readFileSync(MODULE, "utf8");
   assert.match(sensorSource, /Object\.entries\(STAGE_ARTIFACTS\)\.map/, "the artifact table is read, not copied");
   assert.match(sensorSource, /CONTEXT_SOURCES\.map\(\(source\) => source\.file\)/, "the context sources are read, not copied");
 });
