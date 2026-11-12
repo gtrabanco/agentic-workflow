@@ -24,6 +24,34 @@ Do not activate or overwrite a customized platform hook without explicit
 maintainer consent. `init-workspace` discovers the platform, asks, installs
 additively, and reports residuals.
 
+## Git identity & signing
+
+`git-identity-check.sh` is the opt-in pre-commit half of the identity guard
+(issue #514). It refuses a commit whose resolved author or committer is not the
+project's approved identity in `.pi/agentic-workflow.json` → `gitIdentity`, and —
+while `commit.gpgsign` is true — whose signing key is absent, of the wrong format,
+or not the approved one. It reads and prints; it never repairs, rewrites or
+retries, and it suggests the correct `--unset` form rather than the inverted one
+that once set the literal value `--unset`.
+
+It is **inert without a declared profile** (`enforce` defaults to `off`), so
+installing the scaffold never blocks a project that never configures identity.
+Install it by consent, chained from an existing hook when there is one:
+
+```sh
+cat > .git/hooks/pre-commit <<'SH'
+#!/usr/bin/env bash
+set -u
+.agentic-workflow/hooks/git-identity-check.sh || exit 1
+SH
+chmod +x .git/hooks/pre-commit
+bash .agentic-workflow/hooks/tests/test-git-identity-check.sh
+```
+
+The full annex — the two layers, the corporate profile, the environment layout,
+and what is deliberately not recommended — is
+[`../../docs/workflow/GIT_IDENTITY_HARDENING.md`](../../docs/workflow/GIT_IDENTITY_HARDENING.md).
+
 ## Automated merge
 
 Direct merge commands are always blocked. The former `ship-roadmap --fullauto`

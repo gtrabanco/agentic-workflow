@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: large
-roadmap_summary: "Issue #514 (L): two-layer git identity & signing guard — a pi agent config-write guard over both `git config` syntaxes, an opt-in pre-commit hook and a push-range local-gate step that verify the resolved author/committer against a per-project approved profile, the `-c`-only convention for test suites pinned by a repo-wide gate, and a hardening annex applied by no default."
+roadmap_summary: Issue [#514](https://github.com/gtrabanco/agentic-workflow/issues/514) (L): two-layer git identity & signing guard — a pi agent config-write guard over both `git config` syntaxes, an opt-in pre-commit hook and a push-range local-gate step that verify the resolved author/committer against a per-project approved profile, the `-c`-only convention for test suites pinned by a repo-wide gate, and a hardening annex applied by no default.
 ---
 
 # 514 — git-identity-signing-guard
