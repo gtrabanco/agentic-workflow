@@ -286,7 +286,7 @@ validator with the outcome it must produce, and is `planned` at cut time.
 | O9 | S5 | the differential run against the base commit differs only in the declared deltas: comments/trailing commas now parse, the failure message gains `line <n>:<col>`, and a non-object root gains the `invalid JSON: ` prefix | P3 | P3 | direct application (this session) | differential run in `mktemp -d` (base copy vs change, identical corpus): every diff line is one of the three declared deltas | E line in SPEC `## Log` with the diff summary | verified — E3 line in SPEC `## Log` (12 changed cases, 5 unchanged, no undeclared delta) |
 | O10 | S6 | the documentation states the landed contract: both files are JSONC through one parser, and the settings console rewrites the extension file as plain JSON, so a save does not preserve comments | P4 | P4 | direct application (this session) | `rg -n 'JSONC' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md` matches 3 and `rg -n 'plain JSON' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md` matches 2 | E line in SPEC `## Log` | verified — E6 line in SPEC `## Log` (3 and 2 matches) |
 | O11 | S1 | repository state ships in the same change: the roadmap `## Fixes` row (hand edit — no emitter writes fix rows), the changeset intent, the journal fragment, and the generated projection through the renderer | P4 | P4 | direct application (this session) | `bun scripts/lint-changeset.mjs` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `rg -n '#521' docs/ROADMAP.md` matches 1 | E line in SPEC `## Log` | verified — E5 line in SPEC `## Log` (changeset ok, projection PASS, roadmap row present) |
-| O12 | S1, S5 | the declared deterministic gates are green before handoff | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | planned |
+| O12 | S1, S5 | the declared deterministic gates are green before handoff | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 line in SPEC `## Log` (`PASS — 17 step(s) in 173s`, HEAD `1e7d02f2` in the clean worktree; the primary checkout's one red is E7's environment finding, reproduced at the base commit) |
 
 ## Triaged steps
 
@@ -396,13 +396,37 @@ surgery.
 - **P4** — 2026-11-12, docs and repository state: `CONFIG.md` and the package
   README state the one-parser rule and the save consequence, the changeset
   intent through the deterministic emitter, the projection through the renderer
-  (E5) · commit `dcf12f54`.
+  (E5) · commit `dcf12f54`. The journal fragment was written through
+  `agentic-workflow journal write --kind narrative` (the carrier's only writer)
+  · commit `1e7d02f2`.
+- **E7** — 2026-11-12, disclosure before the gate receipt: the primary checkout's
+  root suite fails `scripts/prose-gate-inventory.test.mjs` with
+  `multiple-homes` because this machine carries three untracked sibling
+  worktrees whose checkouts hold a second copy of
+  `docs/workflow/GATE_INVENTORY.md`. Reproduced at the **base** commit in
+  `mktemp -d` (removed after): `git archive main` + `bun test
+  scripts/prose-gate-inventory.test.mjs` · exit 0 · 21 pass, 0 fail; the same
+  tree with the three `.worktrees/<name>/docs/workflow/GATE_INVENTORY.md`
+  copies at their real paths · exit 1 · 18 pass, 3 fail, every finding naming
+  those three paths. Caused by this checkout's untracked worktrees, not by this
+  change (the diff adds no `GATE_INVENTORY.md`), and fixed by nothing inside
+  this unit — the worktrees belong to other units.
+- **G1** — 2026-11-12, `HEAD 1e7d02f2` in a clean worktree of this commit
+  (`.worktrees/fix-521-gate`, branch `fix/521-fix-config-gate`, `bun install
+  --frozen-lockfile` + the schema build, removed after): `bun
+  scripts/local-gate.mjs --jobs 2` · exit 0 · `PASS — 17 step(s) in 173s`, no
+  skipped step; root suite 106 suites, 0 fail. The run happens in a worktree
+  because the primary checkout's only red is E7's environment finding — the
+  same commit, the same tree bytes, and the clean-worktree run is how CI sees
+  it.
+- **P5** — 2026-11-12, verification closed: O1–O12 `verified` (G1 for O12); the
+  branch is local-only, no push and no PR · commit <this commit>.
 
 ## Next
 
-P5: write the journal fragment, run the declared root gate in the foreground
-and close O12 with its receipt; then hand the branch to the owner, who is the
-external verifier (no review/fold pass runs inside this unit by design).
+Owner verdict on the diff. The branch `fix/521-fix-config` is local-only — no
+push, no PR — and every obligation is `verified` (O12 on G1). The owner is the
+external verifier; no review or fold pass ran inside this unit by design.
 
 ## References
 
