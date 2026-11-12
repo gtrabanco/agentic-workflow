@@ -146,7 +146,7 @@ pre-existing issues, Tasks, Evidence, Progress log, Next, References), and the
 re-cut **spec-by-reference** shape, whose `## Specs` numbers the owner's
 requirements `S#` verbatim (replacing Objective / Why / User outcome / Acceptance
 criteria), whose `## Tasks` links each phase to its `S#`, and whose `## Findings` +
-append-only `## Log` replace Evidence + Progress log. `scripts/unit-route.mjs`
+append-only `## Log` replace Evidence + Progress log. `bunx @gtrabanco/agentic-workflow@<pin> unit-route`
 resolves which shape a document carries; both route, lint and execute. Closed units
 keep the shape they were written in and are never rewritten.
 
@@ -252,13 +252,13 @@ release still enrols in upgrade mode instead of being treated as foreign.
 
 **Tooling on this change.** The root suite resolves the guide by name, as do the
 golden-fixture and pre-execution suites — their temporary projects declare it as
-the `project-guide` context row — so `scripts/pre-execution-contract.mjs` and the
+the `project-guide` context row — so `packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs` and the
 four fixture-building suites moved with it in the same change.
 
 ## 2026-09-11 — the workflow-status envelope has a deterministic script producer (`workflow-status` 3.3.0, additive)
 
 **Additive minor bump, no migration required.** `workflow-status` 3.2.1 → 3.3.0
-ships `scripts/workflow-status.mjs`, the deterministic producer of the Envelope
+ships `bunx @gtrabanco/agentic-workflow@<pin> workflow-status`, the deterministic producer of the Envelope
 v2 the skill used to assemble from prose. The script executes the published
 `SENSOR_CORE` sequence (steps 1–9 incl. 6a), self-validates with the schema
 package's `validateEnvelope` (diagnostic only — a mismatch is printed to stderr as
@@ -274,7 +274,7 @@ The skill slims to "run the script, read the JSON, interpret `next.recommended`"
 The **external argv and the envelope contract are unchanged** — same flags
 (`--json-only`, `--last-envelope <json|path>`), same Envelope v2 shape, same
 state mapping — so existing drivers and skills keep working. One operational
-note: the script lives at `scripts/workflow-status.mjs` in the repository, not in
+note: the script lives at `bunx @gtrabanco/agentic-workflow@<pin> workflow-status` in the repository, not in
 the bundled skill (the `scripts/` distribution gap, known-issues `B-01` →
 feature 44 / #198).
 
@@ -1013,3 +1013,40 @@ line with the v2 set.
   `scripts/release.mjs apply` at cut time from the accumulated changesets.
 - The per-skill tables in `CHANGELOG.md` are a frozen archive; nothing is
   appended. A skill change ships via a `.changeset/*.md` intent file.
+
+## 4.11 — the runtime commands move into the published crate (issue #352)
+
+Every runtime command a skill cites now ships **inside** the npm package
+`@gtrabanco/agentic-workflow`, so a project that installs the skills runs them
+without a clone of this repository. The invocation is the same for all of them:
+
+```sh
+bunx @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+```
+
+`<pin>` is read from `skills/runner-contract/references/RUNNER.md` — the one file
+`scripts/release.mjs` stamps at cut time. Never pass `latest`: the skills were
+written against one train, and the pin is what keeps an old install coherent.
+
+| Was (this repository only) | Now (any project) |
+|---|---|
+| `bun scripts/phase-lint.mjs <plan>` | `… <pin> phase-lint <plan>` |
+| `bun scripts/diff-guard.mjs --base <ref>` | `… <pin> diff-guard --base <ref>` |
+| `bun scripts/workflow-status.mjs` | `… <pin> workflow-status` |
+| `bun scripts/pre-execution-snapshot.mjs <op>` | `… <pin> pre-execution-snapshot <op>` |
+| `bun scripts/needs-input.mjs <unit-dir>` | `… <pin> needs-input <unit-dir>` |
+| `bun scripts/ledger-provenance.mjs <ledger>` | `… <pin> ledger-provenance <ledger>` |
+| `bun scripts/unit-route.mjs <unit\|issue>` | `… <pin> unit-route <unit\|issue>` |
+| `bun scripts/ceremony.mjs <object> <op>` | `… <pin> ceremony <object> <op>` |
+
+The repository's own gates (`check-skill-context`, `local-gate`, `release`,
+`test-impact`, …) stay in `scripts/` — they gate this repository and never ship.
+
+Testing a local build never touches the pin: set
+`AGENTIC_WORKFLOW_RUNNER="bun /path/to/packages/agentic-workflow/bin/agentic-workflow.mjs"`
+and every skill and suite runs that instead.
+
+The ceremony registry answers `workspace`, `docs`, `findings`, `ledger`, `unit`,
+`plan`, `tier`, `passive`, `progress`, `evidence`, `acceptance`, `delta`,
+`refutation` and `fusion`; `review`, `commit`, `roadmap` and `pr` still answer
+`deferred-module`, naming the decision each one needs.

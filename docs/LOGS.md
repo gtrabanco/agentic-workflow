@@ -6404,3 +6404,10 @@ Declared commands run by the verifier (command: observed result):
 - **Summary:** Cut the feature-91 unit doc with its ledgers, then moved the runner's shell-visible half into packages/agentic-workflow: the router and its support closure, the six decision-4 sensors, the eight P0 ceremony modules behind one closed registry, plus the runner-contract carrier skill whose RUNNER.md holds the train-stamped pin that release stamps and normative-drift recomputes. Prose re-point and the ten later ceremony modules remain open.
 - **Decisions:** The sensors' import closure travels with them (D2); the router's catalog ships as package data (D4); the prose re-point was reverted because it tripped four coupled marker tables (check-skill-context, promise-coherence, ledger-ownership, budget narration) that each need their own slice.
 - **Next:** P4 (ten ceremony modules), P7 (retirement sweep + re-aimed suites), P8 (migration note), P9 (full local-gate).
+
+## 2026-11-12T16:55:22Z — feat/352-new-feature-distributable-ceremony-runner — issue #352 — the migration completes: scripts retired, prose re-pointed, six ceremony modules
+- **Commits:** 15 (`4585b6ae…17a4a94a`)
+- **Files:** 151 files
+- **Summary:** Retired the twelve migrated runtimes, the ceremony CLI and the repo catalog after re-aiming every importer, suite and pin at the crate; re-pointed 33 skill files and the workflow docs onto the runner invocation with RUNNER.md as the pin's one home (three gate contracts moved with them); shipped progress, evidence, acceptance, delta, refutation and fusion over the unit doc's own carriers.
+- **Decisions:** The retirement shipped in four green steps (imports, spawns, sandboxes, deletion) so no commit ever ran a missing file. Six of the ten later ceremony modules landed; the four the frozen map leaves undecided (review state carrier, commit revert policy, forge-backed roadmap settle, gh degradation) answer deferred-module naming the gap.
+- **Next:** P8/P9 remainder: full local-gate run, then the four remaining ceremony modules once their carrier decisions are taken.
