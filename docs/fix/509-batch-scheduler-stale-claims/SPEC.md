@@ -736,7 +736,11 @@ surgery.
   [PR #518](https://github.com/gtrabanco/agentic-workflow/pull/518) opened against
   `main` (body carries `Closes #509`, the per-defect table, the verification
   block and the `--jobs 4` disclosure), the roadmap row settled
-  `done · [#518]`, `## References`/`## Next` re-pointed at the PR, the generated
+  `done · [#518]`, `## References`/`- **G3** — 2026-11-12, `HEAD beffc826` (the PR-open settle), `bun
+  scripts/local-gate.mjs --jobs 2` · exit 0 · `PASS — 17 step(s) in 171s`, 0
+  skipped.
+
+## Next` re-pointed at the PR, the generated
   projection re-rendered · commit <this commit>.
 
 ## Next
