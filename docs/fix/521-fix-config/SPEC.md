@@ -526,6 +526,11 @@ surgery.
   owner's editor pick (S7), researched in the handoff (option table + the
   measured, tested candidates).
 
+- **G3** — 2026-11-12, `HEAD 5de52ac7` (the correction batch's last content commit),
+  clean worktree `.worktrees/fix-521-gate` of this commit (removed after): `bun
+  scripts/local-gate.mjs --jobs 2` · exit 0 · `PASS — 17 step(s) in 265s`, root
+  suite 106 suites PASS, no skipped step.
+
 ## Next
 
 **Needs your decision:** which JSONC AST editor the settings console's
