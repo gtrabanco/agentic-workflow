@@ -26,8 +26,9 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
   both runtimes and reports every refusal with its line and column, so a file
   means the same thing under Bun and Node — including the spellings only Bun's
   parser would take (`'single quotes'`, `0x` numbers), which are refused on
-  both. The settings console rewrites `pi-agentic-workflow.json` as plain JSON
-  on save, so comments do not survive a save.
+  both. The settings console edits the file it read, so a save keeps your
+  comments and rewrites only what changed; adding or removing a key re-renders
+  the object that holds it, and a removed key takes its own comment with it.
 - The project config is not read while the project is untrusted.
 
 ## Resolution

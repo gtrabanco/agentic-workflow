@@ -271,8 +271,10 @@ same scope (guide: `docs/workflow/CONFIG.md`, machine contract:
 `@gtrabanco/agentic-workflow-schema`). Bun's native parser reads the file first
 and the schema package's `parseJsonc` stays the acceptance boundary, so `//` and
 `/* */` comments and trailing commas mean the same thing — and are refused with
-the same line and column — under bun and node. The `/settings` console rewrites
-this package's file as plain JSON on save: comments do not survive a save.
+the same line and column — under bun and node. The `/settings` console edits the
+file in place, so a save keeps your comments and only what changed is rewritten:
+adding or removing a key re-renders the object that holds it, and a removed key
+takes its own comment with it.
 
 | Scope | Path | Read when |
 | --- | --- | --- |
