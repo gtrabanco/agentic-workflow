@@ -438,13 +438,11 @@ test("F14 — judgeReceipt rejects a forged scope when the CLI re-derives at jud
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   // Build a repo with a non-affecting surface and an affecting surface
   execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
-  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
-  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};");
   // Make one affecting commit on main so that a delta is measurable
   execFileSync("git", ["add", "-A"], { cwd: root });
-  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "base"], { cwd: root });
   const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
 
   // Step 1 — emit a receipt with the real scope (via --scope-base main)
@@ -455,7 +453,7 @@ test("F14 — judgeReceipt rejects a forged scope when the CLI re-derives at jud
   // Step 2 — advance the repo with an affecting change (touched src/)
   fs.writeFileSync(path.join(root, "src/extra.ts"), "export const x = 1;");
   execFileSync("git", ["add", "-A"], { cwd: root });
-  execFileSync("git", ["commit", "-qm", "feat: added src/extra"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "feat: added src/extra"], { cwd: root });
   const movedHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
 
   // Step 3 — verify with a forged scope: inject a forged scope= in the marker
@@ -480,12 +478,10 @@ test("CLI verify in a git checkout: a foreign commit between review and audit le
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-scope-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
-  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
-  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};\n");
   execFileSync("git", ["add", "-A"], { cwd: root });
-  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "base"], { cwd: root });
   const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   // Derive the real scope from the repo so the re-derived manifest matches
   const render = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
@@ -494,7 +490,7 @@ test("CLI verify in a git checkout: a foreign commit between review and audit le
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   fs.writeFileSync(path.join(root, "docs/LOGS.md"), "foreign entry\n");
   execFileSync("git", ["add", "docs/LOGS.md"], { cwd: root });
-  execFileSync("git", ["commit", "-qm", "docs(log): foreign"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "docs(log): foreign"], { cwd: root });
   const newHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   assert.notEqual(newHead, head);
 
@@ -505,7 +501,7 @@ test("CLI verify in a git checkout: a foreign commit between review and audit le
   // an affecting commit still voids
   fs.writeFileSync(path.join(root, "src/unit.ts"), "export const x = 1;\n");
   execFileSync("git", ["add", "-A"], { cwd: root });
-  execFileSync("git", ["commit", "-qm", "feat: touch the reviewed surface"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "feat: touch the reviewed surface"], { cwd: root });
   const movedHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   const voided = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "--head", movedHead, "--root", root], { input: JSON.stringify([receipt]), encoding: "utf8" });
   assert.equal(voided.status, 4);
@@ -516,12 +512,10 @@ test("emit/render derives the scope manifest from --scope-base (the skill never 
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-scope-base-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
-  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
-  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};\n");
   execFileSync("git", ["add", "-A"], { cwd: root });
-  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "base"], { cwd: root });
   const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   const derived = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
   assert.equal(derived.status, 0, derived.stderr);
