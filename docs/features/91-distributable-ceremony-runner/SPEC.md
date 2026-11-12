@@ -186,6 +186,14 @@ evidence.
   them — **affects** this unit: the ceremony suite case that pins
   `deferred-module` is re-pointed to the module that now answers, never deleted
   (S2).
+- `ceremony workspace status` loses the first character of the **first** changed file's
+  path (`docs/…` → `ocs/…`): the module runs `git status --porcelain=v1` without `-b`
+  and the repository's git helper trims the whole output, so the leading space of the
+  first row is eaten before `slice(3)`. `ceremony tier` already carries the `-b` repair
+  for the same class of defect (issue #384 F1) — **does not affect** this unit (the
+  migration preserves the bytes), and it is **not repaired here**: S4 orders the fixed
+  JSON outputs preserved, so a repair is its own unit with its own test. Reported in the
+  handoff.
 - `ledger-provenance` throws a raw `ENOENT` (stack trace, exit 1) when the path
   it is given does not exist instead of refusing with a usage line —
   **does not affect** this unit's contract (the migration preserves the exit
@@ -311,7 +319,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   pinned schema package and the crate's own `index-document`/`relay`, the project root
   now resolved from the caller's working directory (`src/runner/root.mjs`), the
   bundled catalog added, and the closed dispatch table (`src/runner/cli.mjs`) wired
-  into the bin with the crate README surface · commit `d1009167`.
+  into the bin with the crate README surface · commit `8bf10497`.
 - **G1** — 2026-11-12, `bun test --timeout=30000 test/` in `packages/agentic-workflow` ·
   exit 0 · 664 pass, 0 fail, 35 files.
 - **E2** — 2026-11-12, the six sensors' differential run, script vs bin, same args and
@@ -328,10 +336,22 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   exported entries, `workflow-status` now reads its schema version from the pinned
   package instead of the sensor's checkout, `pre-execution-snapshot` imports the pinned
   schema instead of falling back through a repository `dist/`, and
-  `src/runner/cli.mjs` wires all seven plus the router · commit `P2SHA`.
+  `src/runner/cli.mjs` wires all seven plus the router · commit `b5ed1ef4`.
 - **G2** — 2026-11-12, `node --test packages/agentic-workflow/test/runner.dispatch.test.mjs`
   · exit 0 · 6 pass; `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
   · exit 0 · 3 pass (the README restates the seven new commands).
+- **E3** — 2026-11-12, the ceremony modules through both entry points: `workspace status`,
+  `unit route --slug …` (which delegates to the router through the shipped bin) and
+  `plan lint --slug …` (which delegates to the linter the same way) — same exit code and,
+  for the delegating operations, the same JSON; `ceremony` with no object, an unknown
+  object and a deferred object answers the same closed-world JSON with exit 1.
+- **P3** — 2026-11-12, the eight P0 ceremony modules answer from the crate with one receipt
+  grammar and one refusal contract; `unit` and `plan` reach the router and the linter
+  through the shipped bin instead of a script path, and `findings` reads its severity
+  vocabulary from the pinned schema package · commit `P3SHA`.
+- **G3** — 2026-11-12, `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
+  · exit 0 · 3 pass (the README restates `ceremony`); the closed-world and deferred answers
+  reproduced by hand, recorded in E3.
 
 ## Next
 

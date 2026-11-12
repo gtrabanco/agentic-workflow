@@ -542,7 +542,7 @@ function configRefusal(message, issues, json) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> ...");
   process.exit(1);
 }
 

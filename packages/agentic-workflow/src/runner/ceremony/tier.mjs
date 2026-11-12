@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * tier.mjs — ceremony `tier` module (issue #360 S7): the risk tier as versioned
  * grammar, emitted by the closed ceremony CLI and never by the model.
