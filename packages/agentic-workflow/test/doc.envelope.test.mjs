@@ -212,11 +212,9 @@ describe("doc CLI", () => {
     tmp = mkdtempSync(join(tmpdir(), "agentic-workflow-doc-"));
     // --sync now runs the real engine (P4): the fixture must be a git repo.
     execFileSync("git", ["init", "-q"], { cwd: tmp });
-    execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: tmp });
-    execFileSync("git", ["config", "user.name", "t"], { cwd: tmp });
     writeFileSync(join(tmp, "readme.md"), "# Fixture\nbody\n");
     execFileSync("git", ["add", "-A"], { cwd: tmp });
-    execFileSync("git", ["commit", "-qm", "fixture"], { cwd: tmp });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: tmp });
     ok(existsSync(tmp));
   });
 
@@ -279,11 +277,9 @@ describe("doc CLI — runtime dual (AC27)", () => {
     const proj = mkdtempSync(join(tmpdir(), "agentic-workflow-dual-"));
     try {
       execFileSync("git", ["init", "-q"], { cwd: proj });
-      execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: proj });
-      execFileSync("git", ["config", "user.name", "t"], { cwd: proj });
       writeFileSync(join(proj, "doc.md"), "# Dual\nthe runtimedual term\n");
       execFileSync("git", ["add", "-A"], { cwd: proj });
-      execFileSync("git", ["commit", "-qm", "fixture"], { cwd: proj });
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: proj });
       const args = [BIN, "doc", "--query", "runtimedual", "--json-only"];
       const bunRun = spawnSync("bun", args, { cwd: proj, encoding: "utf8" });
       const nodeRun = spawnSync(process.execPath, args, { cwd: proj, encoding: "utf8" });
