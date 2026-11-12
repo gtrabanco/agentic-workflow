@@ -62,7 +62,7 @@ export const HEADING_READER_ALLOWLIST = new Map([
  * class (`flattenCell` / `bounded`): the sensor surfaces the carrier cells an
  * envelope emits (F38's class).
  */
-export const FLATTEN_COVERAGE_FILES = Object.freeze(["scripts/workflow-status.mjs"]);
+export const FLATTEN_COVERAGE_FILES = Object.freeze(["packages/agentic-workflow/src/runner/sensors/workflow-status.mjs"]);
 
 /** The carrier-cell identifiers an echo path must not emit raw. */
 const CARRIER_CELL = /\$\{\s*(?<![.\w])(id|file|axis|severity|klass|route|body)\b/;

@@ -66,7 +66,7 @@ const prose = (n = 20) => Array.from({ length: n }, (_, i) => `Line ${i + 1} of 
 test("F1 frozen corpus: the classifier module exists and loads (base commit: ERR_MODULE_NOT_FOUND)", () => {
   const base = process.env.RISK_TIER_BASE ? path.resolve(process.env.RISK_TIER_BASE) : null;
   if (base) {
-    const probe = spawnSync(process.execPath, ["-e", "import('./scripts/risk-tiers.mjs').then(() => console.log('present'))"], {
+    const probe = spawnSync(process.execPath, ["-e", "import('./packages/agentic-workflow/src/runner/risk-tiers.mjs').then(() => console.log('present'))"], {
       cwd: base,
       encoding: "utf8",
     });
