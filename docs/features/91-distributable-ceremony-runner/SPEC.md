@@ -362,7 +362,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   the pin on a stable apply and stages it in-cut for a canary (restored by the printed
   checkout); `normative-drift` gained the `package:version` machine and AGENTS.md the
   rendered-fact row; the distribution test proves the declared publish surface runs the
-  runner with no repository file behind it · commit `P5SHA`.
+  runner with no repository file behind it · commit `0533c39b`.
 - **P6** — 2026-11-12, the prose re-point: 33 skill files moved off `bun scripts/<runtime>.mjs`
   onto `bunx @gtrabanco/agentic-workflow@<pin> <subcommand>`, with the `npx` fallback named
   and one pointer block per citing skill naming RUNNER.md as the pin's home; five touched

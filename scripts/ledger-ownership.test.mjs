@@ -400,7 +400,14 @@ function resolvedLiterals(expression, bindings, depth = 0) {
 // version, and its only writer is the release stamp (D-40-8 recorded the
 // approval for a widened extraction). The exemption is narrow: any OTHER
 // script writing SKILL.md still fails, and the pair is pinned by name.
-const DECISION_BACKED_WRITERS = new Map([["SKILL.md", "scripts/release.mjs"]]);
+// Feature 91 / issue #352 adds the second rendered mirror: the runner pin in
+// `references/RUNNER.md` is a stamped value, not a history ledger, and the
+// release is its only writer — same shape as the SKILL.md version line, same
+// narrow exemption (the map's annotator still owns every entry-shaped ledger).
+const DECISION_BACKED_WRITERS = new Map([
+  ["SKILL.md", "scripts/release.mjs"],
+  ["skills/runner-contract/references/RUNNER.md", "scripts/release.mjs"],
+]);
 
 function writePathScan({ patterns, blocked, sources, label }) {
   const failures = [];
@@ -698,8 +705,8 @@ test("scan 2 passes the real tree and still recognises its declared annotator", 
   assert.deepEqual(written.failures, [], written.failures.join(" | "));
   assert.deepEqual(
     written.writers,
-    [`${PROVENANCE_REL} → review-findings.md`, "scripts/release.mjs → SKILL.md"],
-    "two non-test script writes are sanctioned today: the map's annotator and the D-40-14 train stamp",
+    [`${PROVENANCE_REL} → review-findings.md`, "scripts/release.mjs → RUNNER.md", "scripts/release.mjs → SKILL.md"],
+    "three non-test script writes are sanctioned today: the map's annotator, the D-40-14 train stamp and the runner pin stamp",
   );
 });
 
