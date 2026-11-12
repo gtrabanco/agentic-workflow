@@ -257,6 +257,19 @@ export const STEPS = [
     mirrors: "no former remote job — the journal write-path gate rides the pre-push offline subset and CI (issue #468)",
   },
   {
+    id: "push-identity",
+    title: "Push-range authorship: every author and committer is the approved identity (offline)",
+    cwd: ".",
+    argv: [NODE, "scripts/push-identity-check.mjs"],
+    // Only meaningful with a range: the hook passes `--push-base`, and a full
+    // local run (no range) drops the step instead of failing on an absent base.
+    pushBase: true,
+    // Not `tests:` on purpose: a docs-only push is exactly the push that can
+    // carry a fixture identity into published history (issue #514 S4).
+    tests: false,
+    mirrors: "no former remote job — the push-range identity check is local-first by definition (issue #514)",
+  },
+  {
     id: "temp-hygiene",
     title: "Temp-dir hygiene floor (offline)",
     cwd: ".",
@@ -346,6 +359,7 @@ export const DEPS = {
   "docs-generated-projection": [],
   "journal-carrier-check": ["workspace-install"],
   "log-immutability": [],
+  "push-identity": [],
   "temp-hygiene": [],
   "tmp-gc": [],
   "worktree-guard": [],
@@ -506,10 +520,14 @@ export async function scheduleSteps(runnable, runStep, { jobs = defaultJobs(), b
  * output prints atomically after its completion line. `run:` steps execute in
  * process and stream directly (they manage their own output).
  */
-async function runStepAsync(step, root, onSpawnOutput) {
+async function runStepAsync(step, root, onSpawnOutput, { pushBase = null } = {}) {
   if (step.run) return step.run({ root });
+  const argv = step.argv.slice(1);
+  // A range-bound step reads the same base the impact gate read, so the push
+  // hook verifies exactly the commits it is about to publish.
+  if (step.pushBase === true && pushBase) argv.push("--root", root, "--base", pushBase);
   return await new Promise((resolve) => {
-    const child = spawn(step.argv[0], step.argv.slice(1), {
+    const child = spawn(step.argv[0], argv, {
       cwd: path.join(root, step.cwd ?? "."),
       stdio: ["ignore", "pipe", "pipe"],
       env: stepEnv(),
@@ -793,7 +811,7 @@ async function main(argv) {
   }
   if (options.installHook) return installHook(options);
 
-  const selected = selectSteps(options);
+  const selected = selectSteps(options).filter((step) => !(step.pushBase === true && !options.pushBase));
 
   // The impact gate (unit 100): a proven-empty push range skips the test
   // steps; every other answer — targeted, a refusal, an absent script — runs
@@ -858,7 +876,7 @@ async function main(argv) {
       dispatched += 1;
       const stepStarted = Date.now();
       process.stdout.write(`\n[${total - runnable.length + dispatched}/${total}] ${step.id} — ${step.title}\n`);
-      const exit = await runStepAsync(step, options.root, onSpawnOutput);
+      const exit = await runStepAsync(step, options.root, onSpawnOutput, { pushBase: options.pushBase ?? null });
       exits.set(step.id, exit);
       durations.set(step.id, Date.now() - stepStarted);
       const verdict = exit === 0 ? "exit 0" : `exit ${exit}`;
