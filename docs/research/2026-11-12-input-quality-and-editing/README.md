@@ -108,6 +108,26 @@ Every step already has a home in this workflow (Serena feature 67, the per-phase
 - Roadmap rows for all other open issues verified present (#521, #487, #470, #424,
   #352, #295, #444, #441, #438, #436, #437, #434, #307/row 83, #504/row 494).
 
+## Known pre-existing reds at push time (not caused by this batch)
+
+The pre-push gate failed at push time on two suites; both reproduce on `main`
+before this batch and neither references a file it touched:
+
+1. `roadmap-settle` — the fix/521 doc carries PR #523's URL but roadmap row #521
+   still reads `in-progress` (the `done · #523` settlement is the close-out of that
+   unit, still open on the forge). Owned by #521's close-out.
+2. `prose-gate-inventory` — `multiple-homes` on `GATE_INVENTORY.md` caused by the
+   three active in-progress worktrees (`.worktrees/feat-352-*`, `.worktrees/feat-438-*`,
+   `.worktrees/feat-514-*`) each carrying their own copy. Environmental: resolves
+   when those units merge and their worktrees are removed. Not a committed-surface
+   defect.
+
+The push therefore used the hook's documented escape
+(`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`) with this note as the recorded why, per the
+unit-420 precedent. The gate's docs-bearing steps that this batch *can* affect were
+run and passed: `docs-generate --check` (projection current, verdict PASS),
+`residue-dimensions` (29 pass), and the crate suite (659 pass).
+
 ## Attribution note
 
 Per `ATTRIBUTION.md` policy, the `evidence only` rows for every paper in
