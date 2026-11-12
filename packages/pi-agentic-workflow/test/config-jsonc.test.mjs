@@ -102,3 +102,52 @@ test("J6: a broken file still fails the load closed (S4 — invalid is never a s
   assert.deepEqual(loaded.problems.map((problem) => problem.path), ["$"]);
   assert.match(loaded.problems[0].message, /invalid JSON: line 1:\d+: /u);
 });
+
+test("J7: the native parser never widens what a config may contain (S5a)", () => {
+  // Owner decision D1: Bun's parser reads first. It is not the acceptance
+  // boundary — it also takes JavaScript spellings and silently ignores whatever
+  // follows the first root value — so the schema package's parser still decides,
+  // and both runtimes refuse the same bytes for the same stated reason.
+  for (const [label, text] of [
+    ["single-quoted string", "{'onSettle': 'restore'}"],
+    ["hex number", '{"profileFallback":{"retryAfterSeconds":0xA}}'],
+    ["a concatenated root", '{"onSettle":"keep"},{"onSettle":"restore"}'],
+    ["a truncated tail", '{"onSettle":"keep"} garbage'],
+  ]) {
+    const result = parseConfigFile(text);
+    assert.equal(result.ok, false, `${label} must be refused`);
+    assert.equal("config" in result, false, `${label}: a refused file hands merge no config`);
+    assert.deepEqual(result.issues.map((issue) => issue.path), ["$"], label);
+    assert.match(result.issues[0].message, /invalid JSON: line \d+:\d+: /u, label);
+  }
+});
+
+test("J8: the native parser is the first reader, never the authority (S5a)", (t) => {
+  if (typeof globalThis.Bun?.JSONC?.parse !== "function") {
+    return t.skip("this runtime has no native JSONC parser");
+  }
+  const original = globalThis.Bun.JSONC.parse;
+  let calls = 0;
+  try {
+    globalThis.Bun.JSONC.parse = (text) => {
+      calls += 1;
+      return original(text);
+    };
+    assert.equal(parseConfigFile('{"onSettle":"restore"}').config.onSettle, "restore");
+    assert.equal(calls, 1, "the native parser is consulted once per file");
+
+    // A native result can never become the config: the schema parse decides.
+    globalThis.Bun.JSONC.parse = () => ({ injected: true });
+    const replaced = parseConfigFile('{"onSettle":"restore"}');
+    assert.equal(replaced.ok, true);
+    assert.deepEqual(replaced.config, { onSettle: "restore" }, "the schema parse supplies the value");
+
+    // A native failure is not a refusal on its own: the strict parse answers.
+    globalThis.Bun.JSONC.parse = () => {
+      throw new Error("native failure");
+    };
+    assert.equal(parseConfigFile('{"onSettle":"restore"}').ok, true);
+  } finally {
+    globalThis.Bun.JSONC.parse = original;
+  }
+});
