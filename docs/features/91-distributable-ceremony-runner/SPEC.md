@@ -352,6 +352,25 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
 - **G3** — 2026-11-12, `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
   · exit 0 · 3 pass (the README restates `ceremony`); the closed-world and deferred answers
   reproduced by hand, recorded in E3.
+- **E4** — 2026-11-12, the pin's red-then-green: with RUNNER.md restating `9.9.9` while the
+  crate says `4.10.0`, `node --test scripts/normative-drift.test.mjs` exited 1 with
+  `[unrendered-value] … no longer states "bunx @gtrabanco/agentic-workflow@4.10.0" while
+  package:version says 4.10.0`; restored, the same suite exits 0 (21 pass).
+- **P5** — 2026-11-12, the runner carrier ships: `skills/runner-contract/SKILL.md` +
+  `references/RUNNER.md` hold the canonical invocation, the pin, the subcommand map, the
+  exit contracts and the `AGENTIC_WORKFLOW_RUNNER` override; `scripts/release.mjs` stamps
+  the pin on a stable apply and stages it in-cut for a canary (restored by the printed
+  checkout); `normative-drift` gained the `package:version` machine and AGENTS.md the
+  rendered-fact row; the distribution test proves the declared publish surface runs the
+  runner with no repository file behind it · commit `P5SHA`.
+- **P6** — 2026-11-12, the prose re-point: 33 skill files moved off `bun scripts/<runtime>.mjs`
+  onto `bunx @gtrabanco/agentic-workflow@<pin> <subcommand>`, with the `npx` fallback named
+  and one pointer block per citing skill naming RUNNER.md as the pin's home; five touched
+  ceilings re-measured and re-based · commit `P6SHA`.
+- **G4** — 2026-11-12, `node --test packages/agentic-workflow/test/runner.distribution.test.mjs`
+  · exit 0 · 3 pass; `node --test scripts/release.test.mjs` · exit 0 · 73 pass (three of
+  them this unit's); `node scripts/check-skill-context.mjs` · exit 0 · 30 skills;
+  `bun scripts/check-skill-context.mjs --documents` · exit 0 · 4 documents.
 
 ## Next
 

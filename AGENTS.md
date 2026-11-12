@@ -474,6 +474,7 @@ condition, never a silent gap.
 rendered-facts@1
 surface | claim | machine | rule
 docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
+skills/runner-contract/references/RUNNER.md | literal:bunx @gtrabanco/agentic-workflow@4.10.0 | package:version | equals
 CHANGELOG.md | package-versions | package:version | equals-each
 
 ```

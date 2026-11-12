@@ -676,6 +676,10 @@ function runDriftChecks(model) {
   } else {
     const counts = {
       "count:user-facing": () => [...model.hints.values()].filter((h) => h.userInvocable).length,
+      // The runner's train version (feature 91): the crate that carries the bin
+      // is the machine, and the skill that cites it restates the same literal.
+      // A cut that stamps one side alone is exactly the drift this recomputes.
+      "package:version": () => JSON.parse(read("packages/agentic-workflow/package.json")).version,
     };
     for (const row of facts.rows) {
       for (const surface of row.surface.split("+").map((s) => s.trim())) {
