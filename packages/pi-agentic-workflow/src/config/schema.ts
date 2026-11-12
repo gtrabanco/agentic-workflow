@@ -9,7 +9,7 @@ import {
   STATE_FLOW_MISSING_POLICIES,
   STATE_FLOW_STOP_POLICIES,
 } from "./types.js";
-import { PASS_NAMES } from "@gtrabanco/agentic-workflow-schema";
+import { PASS_NAMES, parseJsonc } from "@gtrabanco/agentic-workflow-schema";
 import type {
   ConfigFile,
   ConfigIssue,
@@ -722,16 +722,32 @@ function checkStateFlow(value: unknown, path: string, issues: ConfigIssue[]): St
   return unknown ? undefined : out;
 }
 
+/**
+ * Parse and validate one config file (issue #521).
+ *
+ * The file is JSONC — comments and trailing commas are accepted — and it is
+ * read by the schema package's `parseJsonc`, the same parser the base
+ * `agentic-workflow.json` goes through. One parser is the contract: the two
+ * config files cannot disagree about their own format, and a file cannot be
+ * valid on one runtime and invalid on the other. The parser reports the line
+ * and column of a syntax error, so the failure names where the operator's file
+ * broke instead of a generic `Unexpected token`.
+ */
 export function parseConfigFile(text: string): ParseResult {
   if (text.trim() === "") return { ok: true, config: {} };
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    return { ok: false, issues: [{ path: "$", message: `invalid JSON: ${reason}` }] };
+  const parsed = parseJsonc(text);
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      issues: [
+        {
+          path: "$",
+          message: `invalid JSON: line ${parsed.error.line}:${parsed.error.column}: ${parsed.error.message}`,
+        },
+      ],
+    };
   }
 
-  return validateConfig(parsed);
+  return validateConfig(parsed.value);
 }

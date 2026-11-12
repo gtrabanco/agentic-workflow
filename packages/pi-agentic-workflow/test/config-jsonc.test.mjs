@@ -49,7 +49,7 @@ test("J2: block comments and trailing commas parse (S5 — the declared JSONC su
 test("J3: a commented file loads end to end, consent included (S3 steps 3-5)", () => {
   const paths = pathsFor("/agent", "/repo");
   const files = new Map([
-    [paths.global, '{ /* opt in */ "memory": { "engram": true },\n}'],
+    [paths.globalBase, '{ /* opt in */ "memory": { "engram": true },\n}'],
     [paths.project, '{\n  // keep the session model\n  "onSettle": "restore",\n}'],
   ]);
   const loaded = loadConfig({
