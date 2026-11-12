@@ -1,0 +1,1860 @@
+#!/usr/bin/env node
+
+/**
+ * workflow-status — the deterministic sensor.
+ *
+ * One read-only pass over the current repository that emits the fixed
+ * Envelope v2 document on stdout (feature 38). The script is the single
+ * producer of the envelope; consumers (drivers, former `ship-roadmap` conductor, lane router, humans) read
+ * the JSON and never assemble it.
+ *
+ * Collection follows the published `SENSOR_CORE` sequence (steps 1-9 including
+ * 6a). The script performs no write of any kind: every forge/git call is a read,
+ * output goes to stdout only, and diagnostics go to stderr.
+ *
+ * The envelope vocabulary is consumed through the repository's established
+ * loader (`./schema-runtime.mjs`), which imports the built local package by
+ * explicit path and fails with a named precondition when `dist/` is missing.
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
+import * as schemaRuntime from "@gtrabanco/agentic-workflow-schema";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+  resolveRoadmapSource,
+  roadmapSection,
+} from "../../index-document.mjs";
+// The contract's *shape* — the stage artifact tables, the context sources and the
+// receipt grammar — is owned by one dependency-free module this sensor and the
+// verifier both import: the sensor used to hand-mirror the tables and re-implement
+// the parser, so a change to the bound set silently checked the wrong paths (F24)
+// and the two parsers could drift (F25).
+import { STAGE_ARTIFACTS, CONTEXT_SOURCES, parseReceipts } from "./pre-execution-contract.mjs";
+// Feature 31 — the derived review-loop count, one shared pure helper with the CLI.
+import { deriveReviewLoopCycles } from "./pre-execution-contract.mjs";
+// The router owns the ledger's row semantics — the open/closed `folded` vocabulary,
+// which id shapes are marks rather than findings, the class→route table, and the
+// echoed-cell bound. The sensor imports them instead of re-deriving them: two
+// vocabularies let the same ledger row answer `route: execute` from the router and
+// `/fold-findings` from the sensor (#224 fold F13/F2/F15).
+import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows, flattenCell } from "../unit-route.mjs";
+// Shared section parser (fence-aware, issue #308 F28) — avoids re-defining
+// sectionBounds (fence-blind) in workflow-status and ledger-provenance. The
+// sensor reads `## Log` through `parseLog`, never through its own line grammar
+// (#308 cycle-3 F37/F39: the inline copies had drifted — one unanchored, one
+// fence-blind — while the shared reader was already both).
+import { openFence, closesFence, sectionBounds, parseLog } from "../unit-doc-phases.mjs";
+// Issue #360 — the risk tier of the change in scope. The classifier decides it
+// (one home, `scripts/risk-tiers.mjs`); this sensor only projects the verdict.
+import { classifyTier, taskSizeOf, sizeTierOf } from "../risk-tiers.mjs";
+
+/** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
+/** The repository being sensed. Defaults to the process working directory. */
+const PROJECT = process.cwd();
+
+/** Bound for git/forge subprocesses, in milliseconds (E-38-5, suite-pinned). */
+export const COMMAND_TIMEOUT_MS = 15_000;
+/** Bound for forge (`gh`) calls, in milliseconds (E-38-5, suite-pinned). */
+export const FORGE_TIMEOUT_MS = 10_000;
+/**
+ * Total wall-clock budget for the whole forge dimension, in milliseconds (F19).
+ * `FORGE_TIMEOUT_MS` bounds ONE read; the dimension runs three reads eagerly and
+ * a fourth lazily, so four sequential reads each paying their own bound priced a
+ * poll at ~40s on a slow-but-alive forge. Every forge read draws from this one
+ * shared budget instead, and the reads left over when it is spent answer the
+ * declared timeout degradation without spawning — so a hanging forge costs one
+ * bound, which is what the failure contract already promises.
+ */
+export const FORGE_DIMENSION_MS = 10_000;
+/** The single fatal-invocation exit code (A:20; repo convention 1-2). */
+export const FATAL_EXIT_CODE = 1;
+/**
+ * Cap on pre-execution verifier subprocess spawns per run (F20). Each sense is a
+ * full `node` process against a unit's receipts; a pathological repository with
+ * dozens of in-flight units priced one spawn per unit/stage with no bound. Past
+ * the cap the row degrades by name instead of spawning, so the run stays bounded.
+ */
+
+const FIVE_STATES = ["idea", "defined", "planned", "in-progress", "done"];
+const OPEN_STATES = new Set(["defined", "planned", "in-progress"]);
+
+const TIER_MAP = new Map([
+  ["/discover-repository-state", "strong"],
+  ["/resolve-repository-state", "strong"],
+  ["/unit-lane", "strong"],
+  ["/review-change", "strong"],
+  ["/audit-pr", "strong"],
+  ["/triage-issue", "strong"],
+  ["/product-audit", "strong"],
+  ["/execute-phase", "cheap"],
+]);
+
+const USAGE = `Usage: bun scripts/workflow-status.mjs [OPTIONS]
+
+Read-only workflow sensor: compute repository, roadmap, dependency, PR, finding,
+and recovery state, then print the fixed Envelope v2 JSON on stdout.
+
+Options:
+  --json-only                  accepted no-op (output is already envelope-only)
+  --last-envelope <json|path>  persisted hint envelope (inline JSON or a file path)
+  --compact                    reduced envelope: a "done" row leaves
+                               detail.features/detail.fixes only once its PR is
+                               proven merged, and a finding's evidence memo is
+                               reduced to a fingerprint. Every decision field
+                               (next, startable_now, design_candidates,
+                               workflow_observations, ...) is unchanged
+  --help                       print this usage and exit 0
+  --version                    print the schema package version and exit 0
+`;
+
+// ---------------------------------------------------------------------------
+// Process helpers — never throw, always bounded.
+// ---------------------------------------------------------------------------
+
+/** Run a command, bounded, and return a structured result. Never throws. */
+function shell(command, args, { cwd = PROJECT, timeout = COMMAND_TIMEOUT_MS } = {}) {
+  const result = spawnSync(command, args, {
+    cwd,
+    encoding: "utf8",
+    timeout,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  const timedOut = result.error?.code === "ETIMEDOUT" || result.signal === "SIGTERM";
+  return {
+    ok: result.status === 0,
+    status: result.status,
+    stdout: (result.stdout ?? "").trim(),
+    stderr: (result.stderr ?? "").trim(),
+    missing: result.error?.code === "ENOENT",
+    timedOut,
+  };
+}
+
+/** `git` in the sensed repository. Returns the trimmed stdout, or null. */
+const git = (...args) => {
+  const result = shell("git", args);
+  return result.ok ? result.stdout : null;
+};
+
+/** One forge dimension's shared wall-clock budget (F19) — see `FORGE_DIMENSION_MS`. */
+function forgeBudget() {
+  return { remaining: FORGE_DIMENSION_MS, exhausted: false };
+}
+
+/**
+ * `gh` in the sensed repository, bounded by both the per-call timeout and the
+ * dimension's remaining budget. A read attempted after the budget is spent
+ * answers a synthetic timeout (`timedOut: true`, no spawn), so the caller's
+ * existing degradation path names it `unavailable-forge-timeout`.
+ */
+function ghBounded(budget, ...args) {
+  if (budget.remaining <= 0) {
+    budget.exhausted = true;
+    return { ok: false, status: null, stdout: "", stderr: "", missing: false, timedOut: true };
+  }
+  const started = Date.now();
+  const result = shell("gh", args, { timeout: Math.min(FORGE_TIMEOUT_MS, budget.remaining) });
+  budget.remaining -= Date.now() - started;
+  if (result.timedOut) budget.exhausted = true;
+  return result;
+}
+
+/**
+ * Resolve a path under the sensed repository, or null when it escapes it. Every
+ * filesystem read goes through this: a roadmap/fix-index cell becomes a path
+ * segment, and repo content must never direct the sensor outside the project.
+ *
+ * The lexical prefix check alone is not confinement: an ancestor *directory*
+ * symlink inside the project (`docs/features/<unit>` → elsewhere) keeps the
+ * unresolved path under the root while the bytes come from outside it — the leaf
+ * `lstat` in `readProject` only refuses a symlinked leaf (F21). The resolved
+ * path is therefore re-checked against the resolved root; a path that cannot be
+ * resolved (absent) reads as absent, never as an escape hatch.
+ */
+function projectPath(rel) {
+  if (typeof rel !== "string") return null;
+  const abs = path.resolve(PROJECT, rel);
+  const prefix = PROJECT.endsWith(path.sep) ? PROJECT : `${PROJECT}${path.sep}`;
+  if (!abs.startsWith(prefix)) return null;
+  try {
+    const realRoot = fs.realpathSync(PROJECT);
+    const realPrefix = realRoot.endsWith(path.sep) ? realRoot : `${realRoot}${path.sep}`;
+    return fs.realpathSync(abs).startsWith(realPrefix) ? abs : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Read a file under the sensed repository, or null when absent (or outside it). */
+function readProject(rel) {
+  const abs = projectPath(rel);
+  if (abs === null) return null;
+  try {
+    return fs.lstatSync(abs).isFile() ? fs.readFileSync(abs, "utf8") : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The schema package this runner actually loads — its manifest, read from the
+ * installed dependency and never from a repository path. The sensor publishes
+ * the version of the contract its own runtime holds, which is the only value a
+ * caller can act on: a checkout's `src/` may be ahead of the module in memory.
+ */
+let schemaManifest = null;
+function schemaPackageManifest() {
+  if (schemaManifest !== null) return schemaManifest;
+  try {
+    const entry = createRequire(import.meta.url).resolve("@gtrabanco/agentic-workflow-schema");
+    schemaManifest = JSON.parse(fs.readFileSync(path.join(path.dirname(path.dirname(entry)), "package.json"), "utf8"));
+  } catch {
+    schemaManifest = {};
+  }
+  return schemaManifest;
+}
+
+// ---------------------------------------------------------------------------
+// Step 0 — Normalized Repository State
+// ---------------------------------------------------------------------------
+
+function readRepositoryState() {
+  const text = readProject("docs/workflow/REPOSITORY_STATE.md");
+  if (text === null) {
+    return { status: "missing", snapshot_id: null, source_revision: null };
+  }
+  // The ledger ships two canonical shapes and both are read: the snapshot table
+  // (`| Status | \`frozen\` |`) and colon lines (`Status: frozen`, optionally bold).
+  // Reading only the colon shape parsed every table-form ledger — this repository's
+  // own frozen ledger and the shipped template — as `draft`, which blocked the whole
+  // run on the substrate the sensor was shipped with.
+  const field = (label) => {
+    const colon = new RegExp(`^\\s*\\*{0,2}${label}\\*{0,2}\\s*:\\s*(.+)$`, "m").exec(text)?.[1];
+    if (colon) return colon;
+    return new RegExp(`^\\s*\\|\\s*\\*{0,2}${label}\\*{0,2}\\s*\\|\\s*(.*?)\\s*\\|\\s*$`, "m").exec(text)?.[1] ?? null;
+  };
+  const clean = (value) => value?.replace(/[`*]/g, "").replace(/\s*\([^)]*\)\s*$/, "").trim() || null;
+  const declared = (clean(field("Status")) ?? "draft").toLowerCase();
+  return {
+    status: declared,
+    snapshot_id: clean(field("Snapshot ID")) ?? clean(field("Snapshot id")) ?? clean(field("Snapshot")),
+    source_revision: clean(field("Source revision")) ?? clean(field("Source")),
+  };
+}
+
+// Feature 32 (P1) — only draft / contradicted / resolved block; missing is a
+// non-blocking substrate notice, never a blocker.
+const NRS_BLOCKING = new Set(["draft", "contradicted", "resolved"]);
+
+// ---------------------------------------------------------------------------
+// Step 1 — Git state
+// ---------------------------------------------------------------------------
+
+function readGitState() {
+  const degradations = [];
+  const branchProbe = shell("git", ["branch", "--show-current"]);
+  if (branchProbe.missing) {
+    degradations.push({ source: "git", code: "unavailable-git-missing", detail: "the git binary was not found on PATH" });
+    return { branch: "", dirty: false, dirtyFiles: [], ahead: 0, observations: ["git is unavailable — git-derived facts are omitted"], porcelain: "", degradations };
+  }
+  const branch = branchProbe.ok ? branchProbe.stdout : "";
+  // One scan (F32): `-b` prefixes the porcelain body with the `##` branch header,
+  // which carries the upstream's ahead/behind counts the separate `status -sb`
+  // scan was paying a second spawn for. No `git fetch`: it writes remote-tracking
+  // refs and FETCH_HEAD, and this sensor's contract is "performs no write of any
+  // kind". `ahead` is advisory and reads the local upstream ref; a stale count is a
+  // smaller cost than mutating a user's repo mid-rebase/mid-checkout.
+  const status = git("status", "--porcelain=v1", "-b") ?? "";
+  const lines = status === "" ? [] : status.split("\n");
+  const header = lines[0]?.startsWith("## ") ? lines[0] : "";
+  const dirtyFiles = lines.filter((line) => line && !line.startsWith("## "));
+  const ahead = /\[ahead (\d+)/.exec(header)?.[1];
+  const observations = [];
+  if (dirtyFiles.length > 0) {
+    observations.push(`${dirtyFiles.length} uncommitted change(s) on ${branch || "(detached)"}`);
+  }
+  if (ahead && Number(ahead) > 0) {
+    observations.push(`branch ${branch} is ${ahead} commit(s) ahead of its upstream`);
+  }
+  return { branch, dirty: dirtyFiles.length > 0, dirtyFiles, ahead: ahead ? Number(ahead) : 0, observations, porcelain: dirtyFiles.join("\n"), degradations };
+}
+
+// ---------------------------------------------------------------------------
+// Step 2 — Forge state
+// ---------------------------------------------------------------------------
+
+const FORGE_READS = {
+  // Every list read carries its own `--limit`: `gh`'s default page is 30, and a
+  // truncated page silently falsified the counts the envelope publishes (F35).
+  openPrs: ["pr", "list", "--state", "open", "--json", "number,title,headRefName,url,statusCheckRollup", "--limit", "1000"],
+  mergedPrs: ["pr", "list", "--state", "merged", "--limit", "20", "--json", "number,headRefName"],
+  // The authoritative merge state for a PR outside the recent-merge window. The
+  // `--limit 20` window above is a fast path, never evidence: reading its absence
+  // as "unmerged" falsified every long-shipped unit's dependencies and produced
+  // spurious substrate blockers. Read lazily — only a `done` row whose PR is
+  // neither open nor recently merged needs it.
+  allPrStates: ["pr", "list", "--state", "all", "--limit", "1000", "--json", "number,state"],
+  openIssues: ["issue", "list", "--state", "open", "--json", "number,title,labels", "--limit", "1000"],
+};
+
+/**
+ * A forge read failure degrades the whole dimension with one declared code. A
+ * command that answered cleanly but whose stdout is not the expected JSON list is
+ * a `malformed-answer`, never `no-network` — the real cause stays visible (F29).
+ */
+const degradationFor = (failure = {}, malformed = false) => {
+  if (malformed) return "unavailable-forge-malformed-answer";
+  if (failure.missing) return "unavailable-forge-missing-cli";
+  if (failure.timedOut) return "unavailable-forge-timeout";
+  if (/authenticat|401|credential|bad credentials/i.test(failure.stderr ?? "")) return "unavailable-forge-auth";
+  return "unavailable-forge-no-network";
+};
+
+function readForgeState(budget = forgeBudget()) {
+  const observations = [];
+  const degradations = [];
+
+  const readList = (key) => {
+    const result = ghBounded(budget, ...FORGE_READS[key]);
+    if (!result.ok) return { data: [], available: false, failure: result };
+    // A clean exit with unparsable stdout is its own cause; a well-formed
+    // non-array is not a usable list at all. Both degrade by name rather than
+    // throwing a later `.map` into a fatal exit (F29/F30).
+    let parsed;
+    try {
+      parsed = JSON.parse(result.stdout);
+    } catch {
+      return { data: [], available: false, malformed: true };
+    }
+    if (!Array.isArray(parsed)) return { data: [], available: false, malformed: true };
+    return { data: parsed, available: true };
+  };
+
+  // Step 2 — forge state. The three reads run sequentially: measured on this
+  // repository, spawnSync beats three `exec` calls in parallel (each spawns a
+  // full node process, and the three `gh` calls answer in ~200-300 ms), so the
+  // parallelism a reader might expect here was tried and is not free. The shared
+  // FORGE_DIMENSION_MS budget bounds the whole dimension either way (F19).
+  const first = readList("openPrs");
+  if (!first.available) {
+    const code = degradationFor(first.failure ?? {}, first.malformed);
+    degradations.push({ source: "forge", code, detail: "forge reads are unavailable; forge-derived sections are omitted" });
+    observations.push(`forge unavailable (${code})`);
+    return { openPrs: [], mergedPrs: [], openIssues: [], observations, available: false, degradations };
+  }
+
+  const mergedPrs = readList("mergedPrs");
+  const openIssues = readList("openIssues");
+  if (!mergedPrs.available || !openIssues.available) {
+    const failed = !mergedPrs.available ? mergedPrs : openIssues;
+    const code = degradationFor(failed.failure ?? {}, failed.malformed);
+    degradations.push({ source: "forge", code, detail: "a partial forge read failed; affected sections are omitted" });
+    observations.push(`forge partially unavailable (${code})`);
+  }
+  return {
+    openPrs: first.data,
+    mergedPrs: mergedPrs.data,
+    openIssues: openIssues.data,
+    observations,
+    available: true,
+    degradations,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Step 3 — Urgency (labels-only) + the in-flight unit's interruptibility facts
+// ---------------------------------------------------------------------------
+
+function readUrgency(issues) {
+  const issues_ = [];
+  for (const issue of issues) {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    const label = names.includes("urgent") ? "urgent" : names.includes("fix-next") ? "fix-next" : null;
+    if (label) issues_.push({ number: issue.number, title: issue.title, label });
+  }
+  issues_.sort((a, b) => a.number - b.number);
+  return issues_;
+}
+
+// ---------------------------------------------------------------------------
+// Step 4/5 — Roadmap + fix index parsing and the dependency closure
+// ---------------------------------------------------------------------------
+
+/**
+ * Split a markdown table row into cells, honoring `\|` escapes: a cell may carry a
+ * literal pipe (prose, a code fragment), and splitting on it misaligned every column
+ * after it — the fix-now projection then read prose fragments as its severity/axis.
+ */
+const cellsOf = (line) => line
+  .replace(/\\\|/g, "\u0000")
+  .split("|")
+  .map((cell) => cell.replace(/\u0000/g, "|").trim());
+
+/** Parse one status cell into `{status, raw, unknown, pr}`. */
+function parseStatus(cell) {
+  const raw = cell.replace(/`/g, "").trim();
+  const prMatch = raw.match(/\[(?:PR )?#(\d+)(?: open)?\]\((https?:\/\/[^)]+)\)/) ?? raw.match(/\[PR #(\d+) open\]/);
+  const token = raw.match(/^([a-z][a-z-]*)/i)?.[1]?.toLowerCase() ?? raw.toLowerCase();
+  const pr = prMatch ? { number: Number(prMatch[1]), url: prMatch[2] ?? null } : null;
+  if (FIVE_STATES.includes(token)) return { status: token, raw, unknown: false, pr };
+  return { status: "idea", raw, unknown: true, pr };
+}
+
+function parseRoadmap(text) {
+  const units = [];
+  if (!text) return units;
+  for (const line of text.split("\n")) {
+    if (!line.trimStart().startsWith("|")) continue;
+    const cells = cellsOf(line).slice(1, -1);
+    if (cells.length < 4) continue;
+    const [nn, slugCell, statusCell, depsCell] = cells;
+    if (!/^\d+$/.test(nn)) continue;
+    const slug = slugCell.replace(/`/g, "").trim();
+    if (!slug || slug === "Slug") continue;
+    const parsed = parseStatus(statusCell);
+    units.push({
+      kind: "feature",
+      nn,
+      slug,
+      id: `${nn}-${slug}`,
+      status: parsed.status,
+      rawStatus: parsed.raw,
+      statusUnknown: parsed.unknown,
+      pr: parsed.pr,
+      deps: (depsCell === "—" || depsCell === "-" || depsCell === "") ? [] : depsCell.split(/[\s,]+/).filter(Boolean),
+    });
+  }
+  return units;
+}
+
+function parseFixIndex(text) {
+  const units = [];
+  if (!text) return units;
+  for (const line of text.split("\n")) {
+    if (!line.trimStart().startsWith("|")) continue;
+    const cells = cellsOf(line).slice(1, -1);
+    if (cells.length < 3) continue;
+    const [issueCell, topicCell, statusCell] = cells;
+    const issueNumber = /(\d+)/.exec(issueCell)?.[1];
+    if (!issueNumber) continue;
+    const topic = topicCell.replace(/`/g, "").trim();
+    if (!topic || /^topic$/i.test(topic)) continue;
+    const parsed = parseStatus(statusCell);
+    units.push({
+      kind: "fix",
+      issue: Number(issueNumber),
+      id: `fix-${issueNumber}`,
+      slug: topic,
+      status: parsed.status,
+      rawStatus: parsed.raw,
+      statusUnknown: parsed.unknown,
+      pr: parsed.pr,
+      deps: [],
+    });
+  }
+  return units;
+}
+
+/**
+ * Merge detection. A `done` row asserts its linked PR closed; the one negative the
+ * forge can prove is that the PR is still OPEN — and an open PR is NOT met.
+ *
+ * The recently-merged window (`--limit 20`) confirms a recent merge early, but its
+ * ABSENCE is never evidence of non-merge: the window is bounded, and reading a
+ * long-shipped unit's PR as unmerged there falsified its dependencies and every
+ * dependent, and produced "done but dependencies are unmerged" substrate blockers
+ * across the roadmap. A PR outside the window is resolved from the forge's own
+ * per-PR state, and when the forge cannot answer at all the `done` row stands —
+ * optimistic, because a false "unmerged" blocks startable work repo-wide.
+ */
+function makeMergeResolver(forge, budget = forgeBudget()) {
+  const openNumbers = new Set((forge.openPrs ?? []).map((pr) => pr.number));
+  const recentMerged = new Set((forge.mergedPrs ?? []).map((pr) => pr.number));
+  let resolvable = Boolean(forge.available);
+  let states = null;
+  const allStates = () => {
+    if (states) return states;
+    states = new Map();
+    // The lazy fourth read draws from the same dimension budget as the eager
+    // three: an already-spent budget answers a timeout here instead of paying a
+    // fresh per-call bound (F19).
+    const result = ghBounded(budget, ...FORGE_READS.allPrStates);
+    let parsed = null;
+    if (result.ok) {
+      try { parsed = JSON.parse(result.stdout); } catch { parsed = null; }
+    }
+    // A successful read of `[]` is a real answer — a forge with no PRs is not a
+    // forge failure (F28). Only an unreadable or non-array answer degrades.
+    if (Array.isArray(parsed)) {
+      for (const pr of parsed) states.set(pr.number, String(pr.state ?? "").toUpperCase());
+    } else {
+      const code = degradationFor(result, result.ok);
+      (forge.degradations ?? []).push({
+        source: "forge",
+        code,
+        detail: "the all-states PR read failed; a closed-unmerged PR cannot be told from a merged one",
+      });
+      (forge.observations ?? []).push(`merge state unverified outside the recent-merge window (${code})`);
+      resolvable = false;
+    }
+    return states;
+  };
+  return (unit) => {
+    if (unit.status !== "done") return false;
+    if (!unit.pr) return true;
+    if (openNumbers.has(unit.pr.number)) return false;
+    if (recentMerged.has(unit.pr.number)) return true;
+    if (!resolvable) return true;
+    const state = allStates().get(unit.pr.number);
+    return state ? state === "MERGED" : true;
+  };
+}
+
+const byNumber = (units) => {
+  const map = new Map();
+  for (const unit of units) {
+    if (unit.kind === "feature") map.set(String(Number(unit.nn)), unit);
+  }
+  return map;
+};
+
+/** Step 5 — transitive dependency closure + substrate inconsistencies. */
+function computeDependencies(units, mergeResolver) {
+  const featureByNumber = byNumber(units);
+  const byId = new Map(units.map((unit) => [unit.id, unit]));
+  const merged = new Set(units.filter((unit) => mergeResolver(unit)).map((unit) => unit.id));
+  const blockers = [];
+  const observations = [];
+
+  const directDeps = (unit) => unit.deps
+    .map((dep) => featureByNumber.get(String(Number(dep)))?.id)
+    .filter(Boolean);
+
+  const unmetFor = (unit) => directDeps(unit).filter((depId) => !merged.has(depId));
+
+  // Cycle detection over the direct edges.
+  const visiting = new Set();
+  const visited = new Set();
+  const cycleNodes = new Set();
+  const visit = (unit) => {
+    if (visiting.has(unit.id)) { cycleNodes.add(unit.id); return; }
+    if (visited.has(unit.id)) return;
+    visiting.add(unit.id);
+    for (const depId of directDeps(unit)) {
+      const dep = byId.get(depId);
+      if (dep) visit(dep);
+    }
+    visiting.delete(unit.id);
+    visited.add(unit.id);
+  };
+  for (const unit of units) visit(unit);
+  for (const id of cycleNodes) {
+    blockers.push({ kind: "substrate", id, scope: "unit", detail: `dependency cycle involving ${id}` });
+  }
+
+  // A `done` row whose own deps are not merged is an inconsistency.
+  for (const unit of units) {
+    if (unit.status !== "done") continue;
+    const unmet = unmetFor(unit);
+    if (unmet.length > 0) {
+      blockers.push({
+        kind: "substrate",
+        id: unit.id,
+        scope: "unit",
+        detail: `${unit.id} is done but its dependencies are unmerged: ${unmet.join(", ")}`,
+      });
+    }
+  }
+
+  const unmet = [];
+  const buildOrder = [];
+  // One derivation (F27): the per-unit chain helper is the single source for both
+  // `dependencies.build_order` (the deduped union) and `blocked_units[id].build_order`
+  // (the same chain), so the two projections can never diverge again.
+  const dependencyApi = { merged, byId, directDeps, unmetFor };
+  for (const unit of units) {
+    const unmetDeps = unmetFor(unit);
+    if (unmetDeps.length > 0) {
+      unmet.push(unit.id, ...unmetDeps);
+      buildOrder.push(...dependencyBuildOrder(unit, dependencyApi));
+    }
+  }
+  return {
+    blockers,
+    observations,
+    merged,
+    unmet: [...new Set(unmet)],
+    buildOrder: [...new Set(buildOrder)],
+    directDeps,
+    unmetFor,
+    byId,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Step 6a — pre-execution receipt sensing (subprocess to the snapshot verifier)
+// ---------------------------------------------------------------------------
+
+/**
+ * The newest receipt block for a stage, or null — the contract module's parser, so
+ * the sensor and the verifier can never disagree about the grammar (F25).
+ */
+function newestReceipt(progressText, stage) {
+  return parseReceipts(progressText).filter((receipt) => receipt.stage === stage).pop() ?? null;
+}
+
+function unitDirFor(unit) {
+  const slug = String(unit.slug ?? "");
+  if (!SAFE_SEGMENT.test(slug)) return null;
+  return unit.kind === "fix" ? `docs/fix/${unit.issue}-${slug}` : `docs/features/${unit.id}`;
+}
+
+/** A roadmap/fix-index slug becomes a path segment: anything that could leave the
+ *  repository is refused, and the unit is reported instead of read.
+ *  (retired pre-execution receipt sensing — SAFE_SEGMENT kept for unitDirFor) */
+const SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+function recommendedFor(label, unit) {
+  return `/unit-lane ${unit.id}`;
+}
+
+// ---------------------------------------------------------------------------
+// Step 7-9 — phase progress, review marks, fix-now fold ledger
+// ---------------------------------------------------------------------------
+
+function readPhaseProgress(unitDir) {
+  const tasks = readProject(path.join(unitDir, "TASKS.md")) ?? readProject(path.join(unitDir, "SPEC.md"));
+  if (!tasks) return null;
+  // Fence-aware phase reader (unit 84, issue #315 S3 pin): a fenced block
+  // inside a phase body never truncates it and never counts a checkbox — the
+  // fence-blind level-2 splits this replaces are the F37/F38/F39 class.
+  const lines = tasks.split(/\r?\n/);
+  const fenced = new Array(lines.length).fill(false);
+  const boundaries = [];
+  const phaseStarts = [];
+  let fence = null;
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+    const opened = openFence(trimmed);
+    if (fence !== null) {
+      if (closesFence(trimmed, fence)) fence = null;
+      fenced[index] = true;
+      return;
+    }
+    if (opened !== null) {
+      fence = opened;
+      fenced[index] = true;
+      return;
+    }
+    if (/^##\s+/.test(line)) boundaries.push(index);
+    const heading = /^##\s+(P\d+)\s+—/.exec(line);
+    if (heading !== null) phaseStarts.push({ phase: heading[1], index });
+  });
+  if (phaseStarts.length === 0) return null;
+  const boxes = [];
+  lines.forEach((line, index) => {
+    if (fenced[index]) return;
+    const box = /^\s*-\s*\[( |x|X)\]/.exec(line);
+    if (box !== null) boxes.push(box[1].toLowerCase() === "x");
+  });
+  const done = boxes.filter(Boolean).length;
+  const sectionOf = (phase) => {
+    const start = phaseStarts.find((entry) => entry.phase === phase);
+    if (start === undefined) return "";
+    const next = boundaries.find((index) => index > start.index);
+    const end = next === undefined ? lines.length : next;
+    const body = [];
+    for (let index = start.index + 1; index < end; index += 1) {
+      if (!fenced[index]) body.push(lines[index]);
+    }
+    return body.join("\n");
+  };
+  const current = phaseStarts.map((entry) => entry.phase).find((phase) => /^\s*-\s*\[ \]/m.test(sectionOf(phase))) ?? phaseStarts.at(-1).phase;
+  // `tasks_from_boundary`: the unticked boxes left in the current phase — the fact
+  // `detail.urgent.interruptibility` publishes as a count, never as `null`.
+  const remaining = [...sectionOf(current).matchAll(/^\s*-\s*\[ \]/gm)].length;
+  return { current, total: phaseStarts.length, completed: done, remaining };
+}
+
+/**
+ * The paths a pre-execution review binds: the stage's artifact files plus the
+ * governing authorities. Derived from the contract module the verifier also reads
+ * — `pre-execution-review`'s `SNAPSHOT.md` is the owner of record for the set, and
+ * step 8 orders currency over exactly these paths — so the sensor can never bind a
+ * different set than the verifier (F24).
+ */
+const REVIEW_STAGE_ARTIFACTS = Object.fromEntries(
+  Object.entries(STAGE_ARTIFACTS).map(([stage, rows]) => [stage, rows.map((row) => row.file)]),
+);
+const REVIEW_CONTEXT_PATHS = CONTEXT_SOURCES.map((source) => source.file);
+const boundPathsFor = (unitDir, stage) => [
+  ...(REVIEW_STAGE_ARTIFACTS[stage] ?? REVIEW_STAGE_ARTIFACTS.plan).map((file) => `${unitDir}/${file}`),
+  ...REVIEW_CONTEXT_PATHS,
+];
+
+/**
+ * The head a review mark names, from whichever carrier owns it (#308 §Scope 3).
+ * A migrated unit writes the `review-mark@1` row into its own `## Log` as an `R`
+ * line; a legacy unit keeps it in `review-findings.md`. The doc is probed first and
+ * the side file is the fallback — never both, which is what makes the collapse real.
+ * The mark's row shape stays owned by `LEDGERS.md` §review-mark@1; this reads it.
+ */
+function reviewMark(unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  // The migrated marker is `## Findings`, the same predicate `findingsCarrier` uses:
+  // a unit with the section never reads the side file, so one carrier answers for
+  // the rows, the marks and the fold history alike. The predicate is the shared
+  // fence-aware section reader, not a `/m` regex — a legacy unit that quotes the
+  // re-cut shape inside a fenced sample is not a migrated unit (F45).
+  if (doc !== null && sectionBounds(doc, "Findings") !== null) {
+    // One grammar for the whole carrier: `parseLog` is anchored on the published
+    // `- **R<n>** — …` line shape and fence-aware, so a prose mention of an `R`
+    // token and a forged line inside a fenced block are text, never marks (F37).
+    const marks = parseLog(doc).lines.filter((line) => line.kind === "R");
+    if (marks.length === 0) return { sha: null, carrier: "doc" };
+    const sha = /HEAD ([0-9a-f]{40})/.exec(marks[marks.length - 1].body)?.[1] ?? null;
+    return { sha, carrier: "doc" };
+  }
+  const ledger = readProject(path.join(unitDir, "review-findings.md"));
+  if (!ledger) return null;
+  const mark = ledger.split("\n").find((line) => line.startsWith("| REVIEW-RAN"));
+  if (!mark) return null;
+  return { sha: /HEAD ([0-9a-f]{40})/.exec(mark)?.[1] ?? null, carrier: "ledger" };
+}
+
+/** One level-2 section's body (after its heading line), or null when it is absent. */
+function sectionRange(text, name) {
+  const bounds = sectionBounds(text, name);
+  if (bounds === null) return null;
+  const after = text.indexOf("\n", bounds[0]) + 1;
+  return [bounds[0], text.slice(after, bounds[1])];
+}
+
+
+/**
+ * The unit doc with the two collapsed-carrier sections (`## Findings`, `## Log`)
+ * cut out — the bytes a review mark is NOT allowed to have changed. A migrated
+ * unit writes its marks and its OPEN rows into the bound `SPEC.md` itself, so a
+ * check over the whole document aged every mark the moment it was committed (F38's
+ * class, in the new carrier): the mark's own write must not void the mark.
+ */
+function docOutsideCarrierSections(text) {
+  let body = text;
+  for (const name of ["Log", "Findings"]) {
+    const bounds = sectionBounds(body, name);
+    if (bounds === null) continue;
+    body = `${body.slice(0, bounds[0])}${body.slice(bounds[1])}`;
+  }
+  // `git show` output arrives trimmed, the working-tree read does not: the final
+  // newline is a transport artifact, never a bound-input edit, so both sides are
+  // compared with their trailing whitespace normalized.
+  return body.replace(/\s+$/, "");
+}
+
+/** Step 8 — the durable review mark's currency (ancestor + no later bound-input edit). */
+function readReviewMark(unitDir, stage) {
+  const found = reviewMark(unitDir);
+  if (found === null) return null;
+  const { sha, carrier } = found;
+  if (!sha) return { sha: null, current: false };
+  const ancestor = shell("git", ["merge-base", "--is-ancestor", sha, "HEAD"]).ok;
+  // Currency is over the BOUND inputs, never the unit directory: the ledger the mark
+  // lives in is not bound, and the commit that carries the mark touches it — scoping
+  // the check to the unit dir aged every mark on arrival, so no unit could ever
+  // report a current review.
+  const bound = boundPathsFor(unitDir, stage);
+  if (carrier === "doc") {
+    // The doc is bound, and the mark write lands in it: the mark stays current only
+    // while every other bound input is untouched AND the document changed outside
+    // its own carrier sections in no way.
+    const others = bound.filter((file) => file !== `${unitDir}/SPEC.md`);
+    const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...others);
+    if (later === null) return { sha, current: false };
+    if (later !== "") return { sha, current: false };
+    const before = git("show", `${sha}:${unitDir}/SPEC.md`);
+    const head = readProject(path.join(unitDir, "SPEC.md"));
+    if (before === null || head === null) return { sha, current: false };
+    return { sha, current: ancestor && docOutsideCarrierSections(before) === docOutsideCarrierSections(head) };
+  }
+  const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...bound);
+  return { sha, current: ancestor && (later ?? "") === "" };
+}
+
+/** Step 9 — unfold ledger projection. */
+const STRONG_AXES = new Set(["security", "correctness", "logic", "architecture", "design", "concurrency"]);
+
+/**
+ * The envelope schema's severity enum is `high|med|low`; a ledger may carry the
+ * finder scale (`critical`/`major`/`minor`) or prose. Passing a row through unmapped
+ * emitted a schema-invalid envelope (the self-check named every one) while still
+ * exiting 0, so the sensor published a document its own validator rejected.
+ *
+ * The carrier's own scale is the published ladder (`findings-table@1`, issue #361)
+ * and the entries below it are the read-side aliases: a pre-#308 legacy ledger
+ * carries `high|med|low`, an older migrated doc may still carry the finder scale.
+ * The envelope is not re-cut for a ledger vocabulary — this map is the projection,
+ * and `scripts/vocabulary-parity.test.mjs` pins it to the canonical sets.
+ */
+export const SEVERITY_VOCABULARY = new Map([
+  ["BLOCKER", "high"], ["CRITICAL", "high"], ["WARNING", "med"], ["SUGGESTION", "low"],
+  ["critical", "high"], ["major", "med"], ["medium", "med"], ["minor", "low"],
+  ["high", "high"], ["med", "med"], ["low", "low"],
+]);
+
+/**
+ * The unit's findings *carrier* — issue #308. A migrated unit doc holds its OPEN
+ * rows in `## Findings` and its marks as `## Log` lines, so the doc is probed
+ * first and the side ledger is the legacy carrier. A unit never reads both: the
+ * doc wins when it has the section, which is what makes the collapse real rather
+ * than a second place to look.
+ *
+ * @returns {{ rows: Array<object>, carrier: "doc" | "ledger" | "none", text: string }}
+ */
+function findingsCarrier(unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  // The same fence-aware predicate as `reviewMark`: one section, read once, decides
+  // the carrier for the rows and the marks alike (F45).
+  if (doc !== null && sectionBounds(doc, "Findings") !== null) {
+    return { rows: findingsRows(doc), carrier: "doc", text: doc };
+  }
+  const ledger = readProject(path.join(unitDir, "review-findings.md"));
+  if (!ledger) return { rows: [], carrier: "none", text: "" };
+  return { rows: rowsFromLedger(ledger), carrier: "ledger", text: ledger };
+}
+
+/** The open rows of a legacy `review-findings.md`, in file order — the router's own
+ *  predicate and mark-row guard, so the two surfaces cannot disagree on a row. */
+function rowsFromLedger(ledger) {
+  const rows = [];
+  for (const line of ledger.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    const cells = cellsOf(line).slice(1, -1);
+    if (cells.length < 7) continue;
+    const [id, file, axis, severity, klass, route, folded] = cells;
+    if (/^id$/i.test(id) || !isOpen(folded)) continue;
+    // A separator row in any dash spelling (`|---|`, `| --- |`, `|-----|`) projects a
+    // bogus finding whose id is the dash run: the guard is the id's shape, not one
+    // separator's spelling.
+    if (/^[-:\s]*$/.test(id)) continue;
+    // Mark rows (`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`) carry no destination of their own.
+    if (isMarkRow(id)) continue;
+    rows.push({ id, file, axis, severity, klass, route });
+  }
+  return rows;
+}
+
+/**
+ * The `## Log` lines a migrated unit doc carries that a reviewer reads as marks —
+ * gate runs (`G`), folds (`F`) and owner decisions (`D`). A legacy unit has no
+ * `## Log`, so this is empty for it; a migrated one reports each line's own words,
+ * never a restatement (the ledger's closed kind vocabulary is the owner of what a
+ * kind means, `log-kind@1`).
+ */
+function readLogMarks(unit, unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  if (doc === null) return [];
+  // The shared reader, not an inline copy: `parseLog` bounds `## Log` with the
+  // fence-aware section reader and anchors every line on the published grammar,
+  // so a fenced `## ` heading truncates nothing and prose is never a mark (F39).
+  const labels = { G: "gate run", F: "folded finding", D: "owner decision", R: "review run", V: "finding verification" };
+  const marks = [];
+  for (const { kind, number, body } of parseLog(doc).lines) {
+    const label = labels[kind];
+    if (!label) continue;
+    marks.push(`${unitDir}: ${label} ${kind}${number} — ${bounded(body)}`);
+  }
+  return marks;
+}
+
+/** A log line's words, bounded for the envelope: the router's own flatten class
+ *  first (#308 cycle-3 F38 — a second, weaker copy here let control and format
+ *  characters through), then this surface's 120-char observation cap. */
+function bounded(text) {
+  const flat = flattenCell(text);
+  return flat.length <= 120 ? flat : `${flat.slice(0, 119)}…`;
+}
+
+/** The open rows a unit carries, from whichever carrier owns them (#308). */
+function readOpenRows(unitDir) {
+  return findingsCarrier(unitDir).rows;
+}
+
+function readFixNow(unitDir, observations = []) {
+  const items = [];
+  const carrier = findingsCarrier(unitDir);
+  for (const { id, file, axis, severity, klass, route } of carrier.rows) {
+    // The ladder's tokens are case-sensitive (a mixed carrier is a defect, never a
+    // silent accept); the legacy aliases below it are matched case-insensitively,
+    // which is how a pre-#308 ledger's `High` still projects.
+    const cell = String(severity).trim();
+    const normalized = SEVERITY_VOCABULARY.get(cell) ?? SEVERITY_VOCABULARY.get(cell.toLowerCase()) ?? null;
+    if (!normalized) {
+      // Named, never silent: the row is dropped from the envelope, and the ledger's
+      // own vocabulary drift is reported (the AC-19 degradation pattern).
+      observations.push(`${unitDir}: dropped review-findings row '${flattenCell(id)}' — severity '${flattenCell(severity)}' is outside the published ladder and its read aliases`);
+      continue;
+    }
+    const tier = normalized === "high" || STRONG_AXES.has(axis) ? "strong" : "cheap";
+    // `carrier` is read here only to label the compact memo, and `buildProjections`
+    // drops it before the envelope is emitted: the schema's finding item names no
+    // such key, so a new field would fail the sensor's own self-check.
+    // Every echoed cell goes through the router's one flatten class (F38): clean
+    // cells are byte-identical under it, so the compact memo's length and the
+    // full-envelope identity pins hold, and no invisible character reaches a
+    // consumer.
+    items.push({
+      id: flattenCell(id),
+      file: flattenCell(file),
+      axis: flattenCell(axis),
+      severity: normalized,
+      class: flattenCell(klass),
+      route: flattenCell(route),
+      suggested_tier: tier,
+      carrier: carrier.carrier,
+    });
+  }
+  return items;
+}
+
+/**
+ * Step 13 — the class-routed `next.suggested` entries a unit contributes.
+ * The router (`scripts/unit-route.mjs`) owns the class→route decision; this
+ * surface projects the router's own classifier for an envelope consumer: a
+ * plan-owned open row points at the unit's planner, a decision row stops the unit
+ * (its route outranks the fold in the route table, and decision work is not a
+ * driver command), a plain fix-now row at the fold, no open row at nothing.
+ */
+function readSuggestions(unit, unitDir) {
+  const rows = readOpenRows(unitDir);
+  const plan = rows.filter((row) => routeOfRow(row) === "replan");
+  if (plan.length > 0) {
+    const command = unit.kind === "fix"
+      ? `/unit-lane --fix ${unit.issue}`
+      : `/unit-lane ${unit.id}`;
+    return [{
+      command,
+      trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${plan.map((row) => sanitize(row.id)).join(", ")})`,
+      source_skill: "unit-lane",
+    }];
+  }
+  if (rows.some((row) => routeOfRow(row) === "decision")) return [];
+  const product = rows.filter((row) => routeOfRow(row) === "product");
+  if (product.length > 0) {
+    // #293: the sensor projects the router's classifier — a product-owned row
+    // is lane repair, never fold work (the fold loop repairs source, not
+    // authority).
+    return [{
+      command: unit.kind === "fix"
+        ? `/unit-lane --fix ${unit.issue}`
+        : `/unit-lane ${unit.id}`,
+      trigger: `an open finding's frozen route is the product owner — product repair (${product.map((row) => sanitize(row.id)).join(", ")})`,
+      source_skill: "unit-lane",
+    }];
+  }
+  if (rows.length > 0) {
+    return [{ command: "/fold-findings", trigger: "unfolded fix-now finding(s) on the ledger", source_skill: "fold-findings" }];
+  }
+  return [];
+}
+
+// ---------------------------------------------------------------------------
+// Crash recovery (step 17) + hint guard
+// ---------------------------------------------------------------------------
+
+/** Worst verdict wins across the branches classified (CRASH_RECOVERY.md precedence). */
+const CRASH_RANK = { CLEAN: 0, RESUMABLE: 1, AMBIGUOUS: 2 };
+
+/**
+ * Per-run upstream facts for every unit branch, in one `for-each-ref` spawn (F33):
+ * `%(upstream:track)` reports the ahead count and `[gone]`, so no per-branch
+ * `rev-parse @{u}` + `rev-list --count` pair is needed.
+ */
+function branchUpstreamFacts() {
+  const facts = new Map();
+  const out = git("for-each-ref", "--format=%(refname:short)%09%(upstream:short)%09%(upstream:track)", "refs/heads/feat", "refs/heads/fix") ?? "";
+  for (const line of out.split("\n")) {
+    if (!line.trim()) continue;
+    const [name, upstream = "", track = ""] = line.split("\t");
+    facts.set(name, {
+      upstream: upstream || null,
+      ahead: Number(/ahead (\d+)/.exec(track)?.[1] ?? 0),
+      gone: /gone/.test(track),
+    });
+  }
+  return facts;
+}
+
+function readCrashRecovery({ gitState, units, phases }) {
+  const branch = gitState.branch;
+  const facts = branchUpstreamFacts();
+  const unpushedCache = new Map();
+  /** One branch's upstream read, memoized per run and served by the batch (F33). */
+  const isUnpushed = (name) => {
+    if (unpushedCache.has(name)) return unpushedCache.get(name);
+    let unpushed;
+    const batched = facts.get(name);
+    if (batched) {
+      unpushed = !batched.upstream || batched.gone || batched.ahead > 0;
+    } else {
+      const upstream = git("rev-parse", "--abbrev-ref", `${name}@{u}`);
+      if (upstream === null) unpushed = true;
+      else {
+        const count = git("rev-list", "--count", `${upstream}..${name}`);
+        unpushed = count === null ? true : Number(count) > 0;
+      }
+    }
+    unpushedCache.set(name, unpushed);
+    return unpushed;
+  };
+  const unitFor = (name) => name && units.find((candidate) => name.endsWith(candidate.id)
+    || name.includes(candidate.id)
+    || (candidate.issue != null && name.includes(`/${candidate.issue}-`))
+    || (candidate.slug && name.includes(candidate.slug)));
+
+  /** One branch's row: the dirty/unpushed facts plus its ledger's unique next phase. */
+  const classify = (name, unit, { dirty, dirtyFiles, unpushed }) => {
+    if (!dirty && !unpushed) return { branch: name, evidence: "clean tree; branch pushed", verdict: "CLEAN", resume_command: null };
+    const phase = unit ? phases.get(unit.id) : null;
+    if (unit && phase?.current) {
+      return {
+        branch: name,
+        evidence: `${dirty ? `${dirtyFiles} dirty file(s)` : "clean tree"}; ledger points at ${phase.current}/${phase.total}`,
+        verdict: "RESUMABLE",
+        resume_command: `/execute-phase ${unit.nn ?? unit.issue} ${phase.current}`,
+      };
+    }
+    return {
+      branch: name,
+      evidence: `${dirty ? `${dirtyFiles} dirty file(s)` : "clean tree"}; no unique next phase (unknown or contradictory ledger)`,
+      verdict: "AMBIGUOUS",
+      resume_command: null,
+    };
+  };
+
+  const current = branch || "—";
+  const currentUnit = unitFor(branch);
+  const rows = [classify(current, currentUnit, {
+    dirty: gitState.dirty,
+    dirtyFiles: gitState.dirtyFiles.length,
+    // Untracked/no-upstream state is only recoverable state on a unit branch: a
+    // non-unit branch (main, a scratch branch) has no interrupted execution to
+    // resume, so its own cleanliness is the whole fact.
+    unpushed: branch === "" || !currentUnit ? false : isUnpushed(branch),
+  })];
+
+  // Every *unit* branch is classified too, and worst wins: a driver that died on
+  // another checkout left state the single reduced verdict must see. A branch that
+  // resolves to no roadmap unit is not a unit branch — it is not a recovery
+  // candidate, and letting one hijack `state` would stall every driver on a
+  // leftover scratch branch. The batch's branch list is reused here, so the run
+  // pays one `for-each-ref` for both the upstream facts and the branch set (F33).
+  const locals = [...facts.keys()].filter((name) => name && name !== branch);
+  for (const name of locals) {
+    const unit = unitFor(name);
+    if (!unit) continue;
+    rows.push(classify(name, unit, { dirty: false, dirtyFiles: 0, unpushed: isUnpushed(name) }));
+  }
+  rows.sort((a, b) => CRASH_RANK[b.verdict] - CRASH_RANK[a.verdict]);
+  return { verdict: rows[0].verdict, branches: rows };
+}
+
+const HINT_MAX_BYTES = 1024 * 1024;
+
+function loadHint(value) {
+  if (value === null || value === undefined) return { provided: false };
+  const trimmed = String(value).trim();
+  let text = trimmed;
+  if (!trimmed.startsWith("{")) {
+    const abs = path.isAbsolute(trimmed) ? trimmed : path.join(PROJECT, trimmed);
+    try {
+      if (!fs.existsSync(abs)) return { provided: true, code: "unavailable-hint-missing-path" };
+      // A hint is one JSON envelope: the read is bounded and must be a regular file,
+      // so an operator-supplied path cannot make the sensor allocate without limit.
+      const stats = fs.statSync(abs);
+      if (!stats.isFile()) return { provided: true, code: "unavailable-hint-unreadable" };
+      if (stats.size > HINT_MAX_BYTES) return { provided: true, code: "unavailable-hint-too-large" };
+      text = fs.readFileSync(abs, "utf8");
+    } catch {
+      return { provided: true, code: "unavailable-hint-unreadable" };
+    }
+  }
+  try {
+    return { provided: true, hint: JSON.parse(text) };
+  } catch {
+    return { provided: true, code: "unavailable-hint-invalid-json" };
+  }
+}
+
+function hintGuard(hintInfo, units, envelopeState, recomputedNext) {
+  const degradations = [];
+  const observations = [];
+  if (!hintInfo.provided) return { degradations, observations };
+  if (hintInfo.code) {
+    degradations.push({ source: "hint", code: hintInfo.code, detail: "the hint envelope could not be read" });
+    observations.push(`hint unavailable (${hintInfo.code})`);
+    return { degradations, observations };
+  }
+  const hint = hintInfo.hint ?? {};
+  const recommended = typeof hint?.next?.recommended === "string" ? hint.next.recommended : "";
+  const bySlug = (slug) => units.find((unit) => unit.id === slug || unit.slug === slug || unit.id.endsWith(slug));
+  // The unit lane's next-command is /unit-lane <slug> or /execute-phase <unit> P<N>.
+  // We only track the defined→planned transition hint divergence (see #51).
+  const planMatch = /^\/unit-lane\s+(\S+)/.exec(recommended);
+  if (planMatch) {
+    const unit = bySlug(planMatch[1]);
+    if (unit && unit.status === "defined") {
+      observations.push(`${unit.id} still 'defined' after the hint's /unit-lane ${unit.id} recommendation — triage not yet applied`);
+    }
+  }
+  if (hint.state && hint.state !== envelopeState) {
+    observations.push(`hint envelope diverges from recomputed state (hint ${hint.state}, recomputed ${envelopeState})`);
+  } else if (recommended && recomputedNext && recommended !== recomputedNext) {
+    observations.push(`hint envelope diverges from recomputed next (hint ${recommended}, recomputed ${recomputedNext})`);
+  }
+  return { degradations, observations };
+}
+
+// ---------------------------------------------------------------------------
+// Envelope assembly
+// ---------------------------------------------------------------------------
+
+const tierFor = (command) => TIER_MAP.get(command.split(/\s+/)[0]) ?? "cheap";
+
+function summarize(units, startable, designCandidates, openPrs) {
+  const parts = [
+    `${units.length} unit(s)`,
+    `${startable.length} startable`,
+    `${designCandidates.length} design candidate(s)`,
+    `${openPrs.length} open PR(s)`,
+  ];
+  return parts.join(", ");
+}
+
+/**
+ * Feature 61 (P7) — deterministic next-step ranking.
+ *
+ * Priority queue (first non-empty wins):
+ *   1. Blocking (NRS draft/contradicted, substrate blockers)     → keep existing recommended
+ *   2. Crash-resume RESUMABLE                                     → /execute-phase <unit> P<N>
+ *   3. Crash-ambiguous                                            → /workflow-status
+ *   4. In-flight unit on the current branch (planned/in-progress) → /execute-phase <unit> P<N>
+ *   5. Urgent issues (label `urgent` or `fix-next`)              → /triage-issue <n>
+ *   6. Triaged issues (disposition labels)                       → /triage-issue <n> or plan route
+ *   7. Defined features (deps met)                               → /unit-lane
+ *   8. Idea status rows                                          → /unit-lane
+ *   9. Nothing to do                                             → /workflow-status
+ *
+ * Emits `reason` (closed code from the queue level) and
+ * `candidate_count` (candidates at that level). Additive — no removed fields.
+ */
+function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriaged, receiptRows, crash, units, forge, phases, currentBranch }) {
+  const alternatives = [];
+
+  // Level 1 — Blocking conditions (NRS draft / contradicted / substrate blockers)
+  // Keep existing behavior verbatim.
+  if (nrs && NRS_BLOCKING.has(nrs.status)) {
+    alternatives.push("/discover-repository-state");
+    const command = nrs.status === "contradicted"
+      ? `/resolve-repository-state ${nrs.snapshot_id ?? "<id>"}`
+      : "/discover-repository-state";
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "nrs", reason: "blocking", candidate_count: 1 };
+  }
+
+  // Feature 32 (P1) — missing ledger is a notice (non-blocking); add it to
+  // alternatives and continue so startable/gate rows can still be recommended.
+  if (nrs && nrs.status === "missing") {
+    alternatives.push("/discover-repository-state");
+  }
+
+  // Level 2 — Crash-resume (existing behavior)
+  if (crash?.verdict === "RESUMABLE" && crash.branches[0]?.resume_command) {
+    const command = crash.branches[0].resume_command;
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "crash-resume", reason: "in-flight", candidate_count: 1 };
+  }
+
+  // Level 3 — Crash-ambiguous (existing behavior)
+  if (crash?.verdict === "AMBIGUOUS") {
+    return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status"), kind: "crash-ambiguous", reason: "blocking", candidate_count: 1 };
+  }
+
+  // Feature 61 (P7) — Level 4: in-flight unit on the current branch.
+  // A unit that is planned/in-progress on the current branch has execution
+  // priority over queued work.
+  const inFlightUnit = currentBranch && units.find((unit) => {
+    const branch = currentBranch;
+    return branch.endsWith(unit.id)
+      || branch.includes(unit.id)
+      || (unit.issue != null && branch.includes(`/${unit.issue}-`))
+      || (unit.slug && branch.includes(unit.slug));
+  });
+  if (inFlightUnit) {
+    const phases_ = phases.get(inFlightUnit.id);
+    let command;
+    if (crash?.verdict === "RESUMABLE" && crash.branches[0]?.resume_command) {
+      command = crash.branches[0].resume_command;
+    } else if (phases_?.current) {
+      command = `/execute-phase ${inFlightUnit.nn ?? inFlightUnit.issue} ${phases_.current}`;
+    } else {
+      // No coherent phase — fall through to lower-priority levels.
+    }
+    if (command) {
+      return { recommended: command, alternatives, tier: tierFor(command), kind: "in-flight", reason: "in-flight", candidate_count: 1 };
+    }
+  }
+
+  // Feature 61 (P7) — Level 5: urgent issues (label `urgent` or `fix-next`),
+  // oldest first. /triage-issue <n> for untriaged.
+  const urgentIssues_ = readUrgencyForResolve(forge.openIssues);
+  if (urgentIssues_.length > 0) {
+    const command = `/triage-issue ${urgentIssues_[0].number}`;
+    for (const issue of urgentIssues_.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "urgent", reason: "urgent-issue", candidate_count: urgentIssues_.length };
+  }
+
+  // Feature 61 (P7) — Level 6: triaged issues (have disposition labels),
+  // oldest first. Follow up per its disposition label.
+  const triagedIssues = forge.openIssues?.filter((issue) => {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    // Triaged = has disposition label (wontfix, postponed, promoted)
+    // and is NOT urgent/fix-next (those go to level 5)
+    return names.some((n) => ["wontfix", "postponed", "promoted"].includes(n))
+      && !names.includes("urgent")
+      && !names.includes("fix-next");
+  }) ?? [];
+  if (triagedIssues.length > 0) {
+    const command = `/triage-issue ${triagedIssues[0].number}`;
+    for (const issue of triagedIssues.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "triaged", reason: "triaged-issue", candidate_count: triagedIssues.length };
+  }
+
+  // Feature 61 (P7) — Level 7: defined features with deps met, oldest first.
+  // /unit-lane to run triage or continue through the adaptive lane.
+  // Planned/in-progress units route to /execute-phase directly (no plan-receipt
+  // currency check required — the unit doc's triage block is the authority).
+  const definedFeatures = startable.filter((s) => {
+    const unit = units.find((u) => u.id === s.id);
+    return unit && unit.status === "defined";
+  });
+  if (definedFeatures.length > 0) {
+    const command = definedFeatures[0].next;
+    for (const unit of definedFeatures.slice(1)) alternatives.push(unit.next);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "defined", reason: "defined-feature", candidate_count: definedFeatures.length };
+  }
+
+  // Feature 61 (P7) — Level 8: idea status rows, oldest first.
+  // /unit-lane <slug> to create and triage
+  if (designCandidates.length > 0) {
+    const command = designCandidates[0].next;
+    for (const candidate of designCandidates.slice(1)) alternatives.push(candidate.next);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "design", reason: "idea", candidate_count: designCandidates.length };
+  }
+
+  // Feature 61 (P7) — Level 9: untriaged issues (no disposition label,
+  // no urgent/fix-next), oldest first. /triage-issue <n>
+  const untriagedIssues = forge.openIssues?.filter((issue) => {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    // Untriaged = no disposition label AND not urgent/fix-next
+    const hasDisposition = names.some((n) => ["wontfix", "postponed", "promoted"].includes(n));
+    return !hasDisposition && !names.includes("urgent") && !names.includes("fix-next");
+  }) ?? [];
+  if (untriagedIssues.length > 0) {
+    const command = `/triage-issue ${untriagedIssues[0].number}`;
+    for (const issue of untriagedIssues.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "untriaged", reason: "urgent-issue", candidate_count: untriagedIssues.length };
+  }
+
+  // Feature 61 (P7) — Level 10: nothing to do — idle fallback.
+  const command = "/workflow-status";
+  return { recommended: command, alternatives, tier: tierFor(command), kind: "fallback", reason: "idle", candidate_count: 1 };
+}
+
+/**
+ * Feature 61 (P7) — extract urgency labels only (deduplicated from readUrgency
+ * so resolveNext has its own isolated call). Returns issues with `urgent` or
+ * `fix-next` labels sorted oldest first.
+ */
+function readUrgencyForResolve(issues) {
+  const result = [];
+  for (const issue of issues ?? []) {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    const label = names.includes("urgent") ? "urgent" : names.includes("fix-next") ? "fix-next" : null;
+    if (label) result.push({ number: issue.number, title: issue.title, label });
+  }
+  result.sort((a, b) => a.number - b.number);
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Feature 59 — `next.continuation` emission (closed v1 class set, D-59-5)
+// ---------------------------------------------------------------------------
+
+/** The three v1 continuation classes (closed; extension is a SPEC change). */
+export const CONTINUATION_CLASSES = Object.freeze([
+  "status-refresh",
+  "planning-gate-rerun",
+  "review-receipt-refresh",
+]);
+
+/**
+ * The class of a resolved command, or `null` when no v1 class owns it. Only the
+ * status-refresh echo and the two receipt-refresh shapes are classes; every other
+ * verb refuses rather than emitting a guessed continuation (Expectation-sweep 4).
+ */
+function continuationClassFor(verb, label) {
+  if (verb === "/workflow-status") return "status-refresh";
+  // Feature 61 P8b: the review-spec/review-plan verbs are retired — the lane
+  // conductor is the single execution verb, re-run through status-refresh.
+  if (verb === "/unit-lane") return "status-refresh";
+  return null;
+}
+
+/** The convergence field each class must advance (E-59-6 / D-59-8). */
+function convergenceForClass(kind, stage) {
+  return kind === "status-refresh" ? "next.recommended" : `detail.pre_execution.${stage}.label`;
+}
+
+/**
+ * Project the already-resolved decision into a `next.continuation` object (or a
+ * typed refusal). The emitter is the schema package's pure function; this call
+ * site only gathers the unit context and never re-decides (E-59-2/E-59-3).
+ */
+function buildContinuation({ schema, next, receiptRows, forge, decisionAvailable }) {
+  if (!decisionAvailable) return { ok: false, refusal: "no-decision-available" };
+  if (forge && forge.available === false) return { ok: false, refusal: "sensor-degraded" };
+  if (!schema || typeof schema.emitContinuation !== "function") return { ok: false, refusal: "sensor-degraded" };
+
+  const command = next.recommended;
+  const tokens = command.trim().split(/\s+/);
+  const verb = tokens[0] ?? "";
+  let row = null;
+  let stage = "plan";
+  if (verb === "/unit-lane") {
+    row = receiptRows.find((entry) => entry.recommended === command) ?? null;
+    stage = row?.stage ?? "spec";
+  }
+  const kind = continuationClassFor(verb, row?.label ?? null);
+  if (kind === null) return { ok: false, refusal: "no-decision-available" };
+
+  const preconditions = [];
+  let evidence;
+  if (kind === "status-refresh") {
+    preconditions.push({
+      id: "refresh-actionable",
+      check: "the resolved decision is a recovery action, not the nothing-to-do fallback",
+      satisfied: true,
+    });
+  } else {
+    const artifact = row?.unitDir ? `${row.unitDir}/progress.md` : null;
+    const progressText = artifact ? readProject(artifact) : null;
+    preconditions.push({
+      id: "receipt-row-sensed",
+      check: `detail.pre_execution has a ${stage}-stage row for the target unit`,
+      satisfied: Boolean(row),
+    });
+    preconditions.push({
+      id: "evidence-bindable",
+      check: `${artifact ?? "the unit progress.md"} is readable at emit time`,
+      satisfied: progressText !== null,
+    });
+    // A precondition the emitter cannot evaluate is the refusal, never a guess.
+    if (progressText === null || artifact === null) return { ok: false, refusal: "precondition-uncheckable" };
+    evidence = { artifact, digest: schema.sha256HexSync(progressText) };
+  }
+
+  return schema.emitContinuation({
+    command,
+    convergence: convergenceForClass(kind, stage),
+    preconditions,
+    evidence,
+  });
+}
+
+/**
+ * In compact mode a finding's `route` is the multi-paragraph evidence memo the
+ * reviewer wrote, and it is what makes the envelope tens of kilobytes: the
+ * finding's identity (`id`, `file`, `axis`, `severity`, `class`, `suggested_tier`)
+ * is the actionable half, and the memo points at the unit's findings carrier —
+ * the unit doc's `## Findings` for a migrated unit, `review-findings.md` for a
+ * legacy one — which is re-read when the fold actually runs. The fingerprint keeps
+ * the original length visible so a consumer can tell a stub from a real row and
+ * knows where the bytes live. Never applied to the full envelope, whose route
+ * text stays byte-identical.
+ */
+function compactRoute(route, carrier = "ledger") {
+  if (typeof route !== "string" || route.length < 80) return route;
+  // The memo names the carrier the row was actually read from: `## Findings` in the
+  // unit doc for a migrated unit, `review-findings.md` for a legacy one. The legacy
+  // wording is byte-identical to the one the compact suite pins, so a migrated row
+  // is the only case whose memo changes (#308 review, F13).
+  const where = carrier === "doc" ? "the unit SPEC.md ## Findings" : "the unit review-findings.md";
+  return `...(${route.length} char evidence, see ${where})`;
+}
+
+function buildProjections({ units, forge, readiness, phases, marks, fixNow, observations, urgent, merged, compact }) {
+  const features = [];
+  const fixes = [];
+  // `merged` is the resolver's own proof that a `done` row's PR shipped. In compact
+  // mode those rows are the historical tail — 40 of this repository's 65 units — and
+  // they are exactly what no consumer of "what can I do now" needs. A row is dropped
+  // only on positive proof of merge, so an unmerged `done` row (still at the merge
+  // gate) survives in both modes.
+  const hidden = (unit) => Boolean(compact && merged?.has(unit.id));
+  for (const unit of units) {
+    const phase = phases.get(unit.id) ?? null;
+    const mark = marks.get(unit.id) ?? null;
+    const entry = {
+      id: unit.id,
+      status: unit.status,
+      deps: unit.deps ?? [],
+      deps_unmet: readiness.unmetFor(unit),
+      phase: { current: phase?.current ?? null, total: phase?.total ?? null },
+      pr: unit.pr ?? null,
+      review_pending: mark ? !mark.current : ((unit.pr?.number ?? null) ? true : null),
+      audit_pending: null,
+      merge_ready: null,
+    };
+    if (entry.review_pending === null) entry.review_pending = false;
+    if (hidden(unit)) continue;
+    if (unit.kind === "fix") fixes.push({ ...entry, issue: unit.issue });
+    else features.push(entry);
+  }
+  // Observations are NEVER reduced, in either mode. Every note the sensor writes is
+  // a signal — an unmapped roadmap status, a slug that refused its files, a ledger
+  // severity outside the published enum, git and forge state, or the `--last-envelope`
+  // guard's divergence note — and they total about a kilobyte, so "trimming" them
+  // would trade a real signal for no size win. The compact win is `features` and the
+  // findings' route memos, which are ten times larger and pure history.
+  const visibleFixNow = fixNow.map(({ carrier, ...finding }) =>
+    (compact ? { ...finding, route: compactRoute(finding.route, carrier) } : finding));
+  return { features, fixes, fixNow: visibleFixNow, observations, urgent };
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+export async function buildEnvelope({ lastEnvelope = null, compact = false } = {}) {
+  const schema = schemaRuntime;
+  const nrs = readRepositoryState();
+  const gitState = readGitState();
+  const forgeBudget_ = forgeBudget();
+  const forge = readForgeState(forgeBudget_);
+  // One index (issue #319): the features and the fixes are two tables of the
+  // same document. The pre-move roadmap and the standalone fix index stay
+  // readable while the alias window is open, and each parser is handed its own
+  // table so a feature row is never read as a fix. A closed window refuses the
+  // pre-move path rather than emitting an empty index.
+  const indexSource = resolveRoadmapSource({ exists: (relative) => readProject(relative) !== null });
+  const indexText = indexSource === null ? null : readProject(indexSource.path);
+  const featuresText = indexText === null ? null : roadmapSection(indexText, ROADMAP_FEATURES_HEADING) ?? indexText;
+  // The fixes table lives in the consolidated index; a pre-319 tree keeps it in
+  // its own file, which the alias still reads until the window closes.
+  const fixesText = (indexText === null ? null : roadmapSection(indexText, ROADMAP_FIXES_HEADING)) ?? readProject(FIX_INDEX_DOCUMENT);
+  const roadmap = parseRoadmap(featuresText);
+  const fixes = parseFixIndex(fixesText);
+  const units = [...roadmap, ...fixes];
+  const mergeResolver = makeMergeResolver(forge, forgeBudget_);
+  const dependencies = computeDependencies(units, mergeResolver);
+
+  const observations = [...gitState.observations, ...forge.observations, ...dependencies.observations];
+  for (const unit of units) {
+    if (unit.statusUnknown) {
+      observations.push(`${unit.id}: roadmap status '${unit.rawStatus}' mapped to '${unit.status}' (nearest five-state value)`);
+    }
+  }
+
+  // Step 6 + 6a — readiness, receipt sensing, gate demotion.
+  const receiptRows = [];
+  const startable = [];
+  const designCandidates = [];
+  const blocked = {};
+  const gateBlockers = [];
+  /** A `done` row whose linked PR is still open: a unit at the merge gate. */
+  const isOpenPr = (unit) => Boolean(unit.pr && (forge.openPrs ?? []).some((pr) => pr.number === unit.pr.number));
+  for (const unit of units) {
+    const unmetDeps = dependencies.unmetFor(unit);
+    if (unit.status === "idea") {
+      designCandidates.push({ id: unit.id, status: "idea", next: `/unit-lane ${unit.id}` });
+      continue;
+    }
+    if (unmetDeps.length > 0) {
+      blocked[unit.id] = { unmet: unmetDeps, build_order: dependencyBuildOrder(unit, dependencies) };
+      continue;
+    }
+    // Step 6a senses `defined`/`planned`/`in-progress` AND `done` rows whose linked PR
+    // is still open: a done-but-unmerged row is a lifecycle label, never merge-ready,
+    // so skipping it left the receipts of every open PR unsensed — the blind spot sat
+    // exactly at PR-review time.
+    if (!OPEN_STATES.has(unit.status) && !(unit.status === "done" && isOpenPr(unit))) continue;
+    const dir = unitDirFor(unit);
+    if (!dir) {
+      observations.push(`${unit.id}: slug '${unit.slug}' is not a safe path segment — its files are not read`);
+      continue;
+    }
+    // Feature 61 P8b — the spec/plan receipt stages are retired: no per-unit
+    // receipt rows are sensed or emitted (detail.pre_execution is empty), the
+    // verifier spawn cap never engages, and receipt currency is the unit doc's
+    // triage block checked per step by unit-lane/execute-phase. Status routes:
+    // defined/planned → the lane conductor; in-progress → the step executor;
+    // done-but-unmerged → the merge gate.
+    receiptRows.push({
+      unit: unit.id,
+      unitDir: dir,
+      stage: "lane",
+      label: "current",
+      verdict: "READY",
+      boundDigest: null,
+      observedDigest: null,
+      recommended: `/unit-lane ${unit.id}`,
+      reason: "unit-doc currency is checked per step by unit-lane/execute-phase",
+    });
+    // Startable next-command: defined/planned → /unit-lane; in-progress → /execute-phase
+    // done-but-unmerged → /audit-pr (gate).
+    let startableCommand;
+    if (unit.status === "in-progress") {
+      startableCommand = `/execute-phase ${unit.nn ?? unit.issue} P1`;
+    } else if (unit.status === "done" && isOpenPr(unit)) {
+      startableCommand = `/audit-pr`; // unit's PR number from unit.pr
+    } else {
+      startableCommand = `/unit-lane ${unit.id}`;
+    }
+    {
+      startable.push({ id: unit.id, next: startableCommand });
+    }
+  }
+
+
+  // Steps 7-9 per unit.
+  const phases = new Map();
+  const marks = new Map();
+  const fixNow = [];
+  const nextSuggested = [];
+  for (const unit of units) {
+    const dir = unitDirFor(unit);
+    if (!dir) continue; // an unsafe slug was already reported by the readiness pass
+    const phase = readPhaseProgress(dir);
+    if (phase) phases.set(unit.id, phase);
+    // A closed unit is not under review: only a unit about to enter (or sitting at)
+    // the review gate pays the mark's git spawns (F34).
+    const markEligible = OPEN_STATES.has(unit.status) || (unit.status === "done" && isOpenPr(unit));
+    const mark = markEligible ? readReviewMark(dir, "lane") : null;
+    if (mark) marks.set(unit.id, mark);
+    // #308: a migrated unit records its gate runs, folds and review marks as
+    // `## Log` lines. They are reported the same way a legacy ledger's marks are,
+    // so the carrier change is visible in the envelope instead of silent.
+    observations.push(...readLogMarks(unit, dir));
+    fixNow.push(...readFixNow(dir, observations));
+    nextSuggested.push(...readSuggestions(unit, dir));
+  }
+
+  const urgentIssues = readUrgency(forge.openIssues);
+  const untriagedNumbers = (forge.openIssues ?? [])
+    .filter((issue) => {
+      const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+      return !names.some((name) => ["wontfix", "postponed", "promoted"].includes(name));
+    })
+    .map((issue) => issue.number)
+    .sort((a, b) => a - b);
+
+  const openPrs = (forge.openPrs ?? []).map((pr) => ({
+    number: pr.number,
+    unit: pr.headRefName ?? null,
+    ci: ciOf(pr),
+    merge_ready: false,
+  }));
+
+  const projections = buildProjections({
+    units,
+    forge,
+    readiness: { unmetFor: dependencies.unmetFor },
+    phases,
+    marks,
+    fixNow,
+    observations,
+    urgent: urgentIssues,
+    merged: dependencies.merged,
+    compact,
+  });
+
+  const runScopedBlockers = [];
+  if (nrs && NRS_BLOCKING.has(nrs.status)) {
+    runScopedBlockers.push({
+      kind: "substrate",
+      id: "repository-state",
+      scope: "run",
+      detail: `repository-state ledger is ${nrs.status}`,
+    });
+  }
+  // Feature 32 (P1) — missing ledger is a notice, not a blocker.
+  const substrateNotice = (nrs && nrs.status === "missing")
+    ? { id: "repository-state", state: "missing", blocking: false }
+    : null;
+  if (substrateNotice) {
+    observations.push("repository-state ledger is absent — reported as non-blocking notice");
+  }
+  runScopedBlockers.push(...dependencies.blockers);
+  const blockers = [...runScopedBlockers, ...gateBlockers];
+
+  // Crash recovery (step 17) — classified before the envelope state is reduced.
+  const crash = readCrashRecovery({ gitState, units, phases });
+
+  // Top-level state: the NRS/substrate gate overrides the crash-recovery mapping.
+  // Feature 32 (P1) — missing ledger no longer blocks.
+  let state;
+  if (nrs && NRS_BLOCKING.has(nrs.status)) state = "BLOCKED";
+  else if (dependencies.blockers.some((blocker) => blocker.scope === "run")) state = "BLOCKED";
+  else if (crash.verdict === "AMBIGUOUS") state = "NEEDS_INPUT";
+  else if (crash.verdict === "RESUMABLE") state = "CONTINUE";
+  else state = "OK";
+
+  const needsInput = state === "NEEDS_INPUT"
+    ? {
+        question: `Interrupted state on ${crash.branches[0]?.branch ?? gitState.branch} is ambiguous — the ledger does not name a unique next phase`,
+        options: ["resume the phase from the dirty work", "redo the phase from a clean tree", "discard the dirty work"],
+      }
+    : null;
+
+  const designCandidates_ = designCandidates;
+  const nextResolution = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash, units, forge, phases, currentBranch: gitState.branch });
+  // The resolver's internal branch tag never ships in the envelope.
+  const next = { recommended: nextResolution.recommended, alternatives: nextResolution.alternatives, tier: nextResolution.tier, reason: nextResolution.reason, candidate_count: nextResolution.candidate_count };
+  // Step 13 — additive advisory: the class-routed triggers the driver can act on
+  // now, never reordering `recommended`/`alternatives`/`tier`.
+  next.suggested = nextSuggested;
+  // Feature 59 — project the resolved decision into `next.continuation`. The
+  // fallback branch is "nothing to do": no continuation, only the refusal.
+  const continuation = buildContinuation({
+    schema,
+    next,
+    receiptRows,
+    forge,
+    decisionAvailable: nextResolution.kind !== "fallback",
+  });
+  if (continuation.ok) next.continuation = continuation.continuation;
+
+  const hintInfo = loadHint(lastEnvelope);
+  const hint = hintGuard(hintInfo, units, state, next.recommended);
+  observations.push(...hint.observations);
+  const degradations = [...(gitState.degradations ?? []), ...(forge.degradations ?? []), ...hint.degradations];
+
+  const currentUnit = units.find((unit) => {
+    const branch = gitState.branch;
+    return branch && (branch.endsWith(unit.id) || branch.includes(unit.id) || branch.includes(`/${unit.issue}-`));
+  }) ?? null;
+
+  /**
+   * The current unit's PR state, from the forge evidence already in hand: `open`
+   * when the forge lists the PR open, `merged` when the merge resolver proves the
+   * `done` row shipped, else `none`. A hardcoded `open` told every consumer that a
+   * merged PR was still open (F23).
+   */
+  const prStateFor = (unit) => {
+    if (!unit?.pr) return "none";
+    if (isOpenPr(unit)) return "open";
+    return mergeResolver(unit) ? "merged" : "none";
+  };
+
+  // Feature 31 — the same derived count the decider consumes, recomputed every
+  // run from the current unit's persisted receipts (no counter is written here).
+  // A:12 — the sensor projects the number and stays consumer-side.
+  const currentUnitDir = currentUnit ? unitDirFor(currentUnit) : null;
+  const reviewLoopCycles = currentUnitDir
+    ? deriveReviewLoopCycles(parseReceipts(readProject(path.join(currentUnitDir, "progress.md"))))
+    : { spec: 0, plan: 0 };
+
+  // Issue #360 — the risk tier of the branch's own change. The classifier reads
+  // the changed paths and their contents (repo evidence only) and this sensor
+  // projects its verdict; the tier is never derived here and never taken from a
+  // model. `next.tier` stays the model-budget tier and is untouched.
+  const riskTier = (() => {
+    const base = (() => {
+      const mergeBase = git("merge-base", "origin/main", "HEAD") ?? git("merge-base", "main", "HEAD");
+      if (mergeBase) return mergeBase;
+      const roots = git("rev-list", "--max-parents=0", "HEAD");
+      return roots ? roots.split("\n").pop() : null;
+    })();
+    const scoped = base === null ? gitState.dirtyFiles.map((line) => line.slice(3).trim()) : (() => {
+      const committed = (git("diff", "--name-only", "--no-renames", base, "HEAD") ?? "").split("\n").filter(Boolean);
+      const dirty = gitState.dirtyFiles.map((line) => line.slice(3).trim());
+      return [...new Set([...committed, ...dirty])].sort();
+    })();
+    const files = new Map(scoped.map((rel) => [rel, readProject(rel) ?? ""]));
+    // The same repo-rooted resolver `ceremony tier classify` passes, so both
+    // callers answer identically for the same scope (issue #384 S3).
+    const verdict = classifyTier(files, { resolve: (rel) => readProject(rel) });
+    return {
+      tier: verdict.tier,
+      reason: verdict.reason,
+      reason_kind: verdict.reason_kind,
+      signals: verdict.signals,
+      task_size: taskSizeOf(verdict.tier),
+      paths_changed: verdict.paths.changed.length,
+    };
+  })();
+
+  const detail = {
+    repository_state: nrs,
+    risk_tier: riskTier,
+    size_tier: sizeTierOf(riskTier),
+    design_candidates: designCandidates_,
+    pre_execution: receiptRows,
+    review_loop_cycles: reviewLoopCycles,
+    features: projections.features,
+    fixes: projections.fixes,
+    startable_now: startable.map((entry) => entry.id),
+    blocked_units: blocked,
+    open_prs: openPrs,
+    pending_triage: [],
+    untriaged_issues: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) },
+    workflow_observations: observations,
+    degradations,
+    ...(continuation.ok ? {} : { continuation_refusal: continuation.refusal }),
+    crash_recovery: { verdict: crash.verdict, branches: crash.branches },
+    urgent: {
+      issues: urgentIssues,
+      interruptibility: {
+        unit: currentUnit?.id ?? null,
+        phase: currentUnit ? (phases.get(currentUnit.id)?.current ?? null) : null,
+        dirty: gitState.dirty,
+        tasks_from_boundary: currentUnit ? (phases.get(currentUnit.id)?.remaining ?? null) : null,
+      },
+    },
+    ...(substrateNotice ? { substrate_notice: substrateNotice } : {}),
+  };
+
+  const envelope = {
+    skill: "workflow-status",
+    state,
+    summary: summarize(units, startable, designCandidates_, openPrs),
+    unit: currentUnit
+      ? { type: currentUnit.kind, id: currentUnit.id, issue: currentUnit.issue ?? null, branch: gitState.branch }
+      : { type: "none", id: null, issue: null, branch: gitState.branch || null },
+    phase: currentUnit
+      ? { current: phases.get(currentUnit.id)?.current ?? null, total: phases.get(currentUnit.id)?.total ?? null, completed: phases.get(currentUnit.id)?.completed ?? null }
+      : { current: null, total: null, completed: null },
+    pr: currentUnit?.pr
+      ? { number: currentUnit.pr.number, url: currentUnit.pr.url, state: prStateFor(currentUnit), head_sha: null, merge_ready: null, ci: null }
+      : { number: null, url: null, state: "none", head_sha: null, merge_ready: null, ci: null },
+    gates: {
+      verification: null,
+      review_pending: currentUnit ? (marks.get(currentUnit.id) ? !marks.get(currentUnit.id).current : null) : null,
+      audit_pending: null,
+    },
+    findings: {
+      fix_now: projections.fixNow,
+      issues_filed: [],
+      untriaged: untriagedNumbers.length,
+      decisions_recorded: 0,
+    },
+    blockers,
+    dependencies: { unmet: dependencies.unmet, build_order: dependencies.buildOrder },
+    recommendations: { product_audit: false, reason: null },
+    needs_input: needsInput,
+    next,
+    detail,
+  };
+
+  return { envelope, schema, lastEnvelope };
+}
+
+function dependencyBuildOrder(unit, dependencies) {
+  const order = [];
+  // The unit itself is marked before the walk starts, and each dependency is
+  // marked before the recursion: `seen` is the cycle guard. Marking after the
+  // recursive call (the pre-#396 shape) let a declared cycle A -> B -> A re-enter
+  // A and overflow the stack, so the sensor died instead of reporting the
+  // planning defect `computeDependencies` already detects.
+  const seen = new Set([unit.id]);
+  const walk = (current) => {
+    for (const depId of dependencies.directDeps(current)) {
+      if (seen.has(depId)) continue;
+      seen.add(depId);
+      const dep = dependencies.byId?.get(depId);
+      if (dep && dependencies.unmetFor(dep).length > 0) walk(dep);
+      order.push(depId);
+    }
+  };
+  walk(unit);
+  order.push(unit.id);
+  return order;
+}
+
+function ciOf(pr) {
+  const rollup = pr.statusCheckRollup ?? [];
+  if (!Array.isArray(rollup) || rollup.length === 0) return "none";
+  if (rollup.some((check) => ["FAILURE", "ERROR", "CANCELLED"].includes(check.conclusion) || check.state === "FAILURE")) return "red";
+  if (rollup.some((check) => ["PENDING", "IN_PROGRESS", "QUEUED"].includes(check.status) || check.state === "PENDING")) return "pending";
+  return "green";
+}
+
+// ---------------------------------------------------------------------------
+// CLI
+// ---------------------------------------------------------------------------
+
+function parseArgs(argv) {
+  const opts = { jsonOnly: false, lastEnvelope: null, compact: false };
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = argv[i];
+    if (token === "--help") return { help: true };
+    if (token === "--version") return { version: true };
+    if (token === "--json-only") { opts.jsonOnly = true; continue; }
+    if (token === "--compact") { opts.compact = true; continue; }
+    if (token === "--last-envelope") {
+      const value = argv[i + 1];
+      if (value === undefined) return { error: "--last-envelope requires a value" };
+      opts.lastEnvelope = value;
+      i += 1;
+      continue;
+    }
+    return { error: `unknown flag: ${token}` };
+  }
+  return { opts };
+}
+
+async function main(argv = process.argv.slice(2)) {
+  const parsed = parseArgs(argv);
+  if (parsed.help) {
+    process.stdout.write(USAGE);
+    return 0;
+  }
+  if (parsed.version) {
+    const pkg = schemaPackageManifest();
+    process.stdout.write(`${pkg.version ?? "unknown"}\n`);
+    return 0;
+  }
+  if (parsed.error) {
+    process.stderr.write(`${parsed.error}\n\n${USAGE}`);
+    return FATAL_EXIT_CODE;
+  }
+
+  const { envelope, schema } = await buildEnvelope({
+    lastEnvelope: parsed.opts.lastEnvelope,
+    compact: parsed.opts.compact,
+  });
+  const validation = schema.validateEnvelope(envelope);
+  if (!validation.ok) {
+    process.stderr.write(`envelope self-check failed: ${(validation.errors ?? []).join("; ")}\n`);
+  }
+  process.stdout.write(`${JSON.stringify(envelope, null, 2)}\n`);
+  return 0;
+}
+
+/**
+ * CLI entry: the arguments after `agentic-workflow workflow-status`.
+ * Returns a promise of the exit code; a thrown error becomes the sensor's
+ * fatal code with one stderr line, never a stack trace in the envelope.
+ *
+ * @param {string[]} argv
+ * @returns {Promise<number>}
+ */
+export function run(argv) {
+  return main(argv).catch((error) => {
+    process.stderr.write(`workflow-status failed: ${error?.message ?? error}\n`);
+    return FATAL_EXIT_CODE;
+  });
+}

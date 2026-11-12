@@ -65,9 +65,33 @@ test("the router's catalog ships with the package and keeps its closed step list
 
 test("the dispatch table is the whole surface and a foreign name is refused", async () => {
   const { isRunnerCommand, RUNNER_COMMANDS } = await import(src("cli.mjs"));
-  assert.ok(isRunnerCommand("unit-route"), "the router's CLI is wired");
   assert.equal(isRunnerCommand("invented-command"), false, "a name outside the table is not a runner command");
-  assert.deepEqual(Object.keys(RUNNER_COMMANDS), ["unit-route"], "the table is explicit, never a glob");
+  assert.deepEqual(
+    Object.keys(RUNNER_COMMANDS),
+    ["unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input", "ledger-provenance"],
+    "the shell-visible half of the runner is exactly these seven commands, in the order the issue names them",
+  );
+  for (const [name, handler] of Object.entries(RUNNER_COMMANDS)) {
+    assert.equal(typeof handler, "function", `${name} is a function`);
+  }
+});
+
+test("every sensor exposes its entry and none of them executes on import", async () => {
+  const sensors = [
+    ["phase-lint", "phase-lint.mjs"],
+    ["diff-guard", "diff-guard.mjs"],
+    ["workflow-status", "workflow-status.mjs"],
+    ["pre-execution-snapshot", "pre-execution-snapshot.mjs"],
+    ["needs-input", "needs-input.mjs"],
+    ["ledger-provenance", "ledger-provenance.mjs"],
+  ];
+  for (const [name, file] of sensors) {
+    // Importing is the whole assertion: a module that ran itself at import time
+    // would answer a usage block into this test's own stdout, which is exactly
+    // the defect the split from a script into a library removes.
+    const module = await import(src(`sensors/${file}`));
+    assert.equal(typeof module.run, "function", `${name} exposes its CLI entry`);
+  }
 });
 
 test("the bin answers the router and refuses an unknown service in the closed world", () => {

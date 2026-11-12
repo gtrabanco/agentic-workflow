@@ -186,6 +186,12 @@ evidence.
   them — **affects** this unit: the ceremony suite case that pins
   `deferred-module` is re-pointed to the module that now answers, never deleted
   (S2).
+- `ledger-provenance` throws a raw `ENOENT` (stack trace, exit 1) when the path
+  it is given does not exist instead of refusing with a usage line —
+  **does not affect** this unit's contract (the migration preserves the exit
+  code and the message; the frame paths are the only difference), and it is
+  **not repaired here** because it is pre-existing behaviour of the sensor's own
+  file read, outside S4's "preserve the contract" scope.
 - `packages/pi-agentic-workflow` spawns `scripts/workflow-status.mjs` by path —
   **affects** this unit only where a test asserts that path; the conductor's
   spawn is re-pointed in the same change or the crate bin keeps answering the
@@ -308,6 +314,24 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   into the bin with the crate README surface · commit `d1009167`.
 - **G1** — 2026-11-12, `bun test --timeout=30000 test/` in `packages/agentic-workflow` ·
   exit 0 · 664 pass, 0 fail, 35 files.
+- **E2** — 2026-11-12, the six sensors' differential run, script vs bin, same args and
+  cwd: `phase-lint <unit doc>`, `phase-lint <two paths>`, `phase-lint` (usage),
+  `needs-input <unit-dir>`/`--json`/usage, `diff-guard --base HEAD~2`/`--json`/bad flag,
+  `workflow-status`/`--compact`, `pre-execution-snapshot`/`contract`,
+  `ledger-provenance <unit doc> --check` → byte-identical stdout, stderr and exit code
+  in every case except two intended differences: the `needs-input` usage line names
+  `agentic-workflow needs-input`, and `ledger-provenance` on a **missing** file prints
+  the same `ENOENT` with the new frame paths (the pre-existing crash recorded under
+  `## Known pre-existing issues`).
+- **P2** — 2026-11-12, the seven decision-4 sensor runtimes answer from the crate: the
+  four that were scripts with a self-invocation guard became importable modules with
+  exported entries, `workflow-status` now reads its schema version from the pinned
+  package instead of the sensor's checkout, `pre-execution-snapshot` imports the pinned
+  schema instead of falling back through a repository `dist/`, and
+  `src/runner/cli.mjs` wires all seven plus the router · commit `P2SHA`.
+- **G2** — 2026-11-12, `node --test packages/agentic-workflow/test/runner.dispatch.test.mjs`
+  · exit 0 · 6 pass; `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
+  · exit 0 · 3 pass (the README restates the seven new commands).
 
 ## Next
 
