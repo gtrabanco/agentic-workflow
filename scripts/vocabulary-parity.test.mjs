@@ -18,14 +18,14 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { schemaRuntimePath } from "./schema-runtime.mjs";
 import { CLAIM_KINDS, REASON_CODES } from "./promise-coherence.mjs";
-import { LOG_KINDS } from "./unit-doc-phases.mjs";
+import { LOG_KINDS } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 import {
   CEREMONY_PROFILE_CONTRACT_ID as CEREMONY_PROFILE_CONTRACT_ID_MJS,
   CEREMONY_PROFILE_PIECES as CEREMONY_PROFILE_PIECES_MJS,
   CEREMONY_PROFILE_ADOPTIONS as CEREMONY_PROFILE_ADOPTIONS_MJS,
   CEREMONY_REVIEW_SURFACES as CEREMONY_REVIEW_SURFACES_MJS,
   CEREMONY_PROFILE_REFUSALS as CEREMONY_PROFILE_REFUSALS_MJS,
-} from "./ceremony-profile.mjs";
+} from "../packages/agentic-workflow/src/runner/ceremony-profile.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

@@ -45,7 +45,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { sectionBounds } from "./unit-doc-phases.mjs";
+import { sectionBounds } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 /** Unescaped-pipe cell split — a markdown table escapes a literal `\|`. */
 const CELL_RE = /(?<!\\)\|/;

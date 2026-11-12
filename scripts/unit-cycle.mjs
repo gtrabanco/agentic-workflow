@@ -33,8 +33,8 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
-import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
-import { compute as needsInputCompute } from "./needs-input.mjs";
+import { parseUnitDocPhases } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+import { compute as needsInputCompute } from "../packages/agentic-workflow/src/runner/sensors/needs-input.mjs";
 import { checkUnitDoc, findRow, rowUpsert } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
 import { ROADMAP_DOCUMENT, readRoadmapIndex } from "../packages/agentic-workflow/src/index-document.mjs";
 import {
@@ -43,7 +43,7 @@ import {
   sectionBody,
   recordedPhases,
   resolveUnit,
-} from "./unit-route.mjs";
+} from "../packages/agentic-workflow/src/runner/unit-route.mjs";
 import { fileURLToPath } from "node:url";
 import { AUDIT_MARKER_RE } from "./audit-pr-gate.mjs";
 

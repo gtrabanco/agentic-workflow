@@ -41,7 +41,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { schemaRuntimePath } from "./schema-runtime.mjs";
-import { sectionBounds, openFence, closesFence, inFlightUnitDocs } from "./unit-doc-phases.mjs";
+import { sectionBounds, openFence, closesFence, inFlightUnitDocs } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

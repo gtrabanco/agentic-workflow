@@ -43,7 +43,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { deriveReviewLoopCycles, parseReceipts } from "./pre-execution-contract.mjs";
+import { deriveReviewLoopCycles, parseReceipts } from "../packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs";
 
 const repoRoot = process.env.WORKFLOW_STATUS_PRE_EXECUTION_REPO
   ? path.resolve(process.env.WORKFLOW_STATUS_PRE_EXECUTION_REPO)

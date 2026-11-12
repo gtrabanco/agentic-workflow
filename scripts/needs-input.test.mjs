@@ -16,7 +16,7 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { parseLedger } from "./needs-input.mjs";
+import { parseLedger } from "../packages/agentic-workflow/src/runner/sensors/needs-input.mjs";
 
 const DISPATCHER = fileURLToPath(new URL("./needs-input.mjs", import.meta.url));
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "needs-input-corpus-"));
