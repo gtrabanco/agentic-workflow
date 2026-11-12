@@ -100,8 +100,8 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parseUnitDocPhases, sectionBounds, inFlightUnitDocs as sharedInFlightUnitDocs } from "./unit-doc-phases.mjs";
-import { PREREQUISITES } from "./needs-input.mjs";
+import { parseUnitDocPhases, sectionBounds, inFlightUnitDocs as sharedInFlightUnitDocs } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+import { PREREQUISITES } from "../packages/agentic-workflow/src/runner/sensors/needs-input.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

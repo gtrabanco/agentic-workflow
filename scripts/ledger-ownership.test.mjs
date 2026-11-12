@@ -41,7 +41,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { sectionText } from "./unit-doc-phases.mjs";
+import { sectionText } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 /** Re-pointable so the suite can be run red against an injected tree. */

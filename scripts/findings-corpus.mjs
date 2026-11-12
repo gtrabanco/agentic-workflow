@@ -44,7 +44,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import { sectionBounds } from "./unit-doc-phases.mjs";
+import { sectionBounds } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 export const CORPUS_CONTRACT = "findings-corpus@1";
 export const DEFAULT_MIN_RECURRENCE = 2;

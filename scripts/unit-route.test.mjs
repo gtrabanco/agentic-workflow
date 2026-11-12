@@ -16,7 +16,7 @@ import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-documen
 import { execFileSync, spawnSync } from "node:child_process";
 // The router's own classifiers, imported so the collapsed carrier's column vocabularies are
 // pinned against the code the CLI runs, not against a paraphrase of it.
-import { findingsRows, routeOfRow } from "./unit-route.mjs";
+import { findingsRows, routeOfRow } from "../packages/agentic-workflow/src/runner/unit-route.mjs";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";

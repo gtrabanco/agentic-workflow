@@ -22,7 +22,7 @@
 
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { parseUnitDocPhases, locateTasksSection } from "./unit-doc-phases.mjs";
+import { parseUnitDocPhases, locateTasksSection } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 const usage = `usage: relevant-files.mjs <unit-doc> [--phase P<k>|all] | [--changed <path,path…> | --base <ref>]`;
 

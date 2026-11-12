@@ -31,7 +31,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { CEREMONY_PROFILE_PIECES } from "./ceremony-profile.mjs";
+import { CEREMONY_PROFILE_PIECES } from "../packages/agentic-workflow/src/runner/ceremony-profile.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(REPO_ROOT, "scripts", "unit-route.mjs");
