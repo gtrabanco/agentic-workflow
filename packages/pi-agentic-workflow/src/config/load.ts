@@ -10,6 +10,7 @@ import {
   validateSectionValue,
 } from "@gtrabanco/agentic-workflow-schema";
 
+import { normalizeGitIdentity } from "../guards/git-identity.js";
 import { DEFAULT_CONFIG } from "./defaults.js";
 import { mergeConfigs } from "./merge.js";
 import { parseConfigFile } from "./schema.js";
@@ -159,7 +160,8 @@ export function loadConfig({ agentDir, cwd, projectTrusted, readFile = readIfExi
     guards: baseResolved.config.guards,
     advance: baseResolved.config.advance,
     pathProtection: intersectPathPolicy(SHIPPED_PATH_POLICY, baseResolved.config.pathProtection as PathProtectionOverride),
-  } as Pick<EffectiveConfig, "logSession" | "memory" | "telemetry" | "guards" | "advance" | "pathProtection">;
+    gitIdentity: normalizeGitIdentity(baseResolved.config.gitIdentity),
+  } as Pick<EffectiveConfig, "logSession" | "memory" | "telemetry" | "guards" | "advance" | "pathProtection" | "gitIdentity">;
 
   const config = problems.length === 0 ? mergeConfigs(globalFile, projectFile, base) : DEFAULT_CONFIG;
   return {

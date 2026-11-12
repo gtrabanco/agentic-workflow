@@ -8,6 +8,8 @@ import type { SelectListTheme } from "@earendil-works/pi-tui";
 
 import { loadConfig } from "../config/load.js";
 import { evaluateToolCall, isProtectedPath, normalizeTarget } from "../config/path-policy.js";
+import { applyGitIdentityGuard, findGitConfigWrites, guardOptions, scratchDirs } from "../guards/git-identity.js";
+import { createGitIdentityConsentStore, gitIdentityConsentPath } from "../guards/git-identity-consent.js";
 import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
@@ -343,6 +345,10 @@ export default function extension(pi: ExtensionAPI): void {
   // a declared `enabled` group both exist. The narrow context is built per
   // call: the dispatcher never holds a session-bound object.
   const hooksWiring = createHooksWiring({ agentDir });
+  // Issue #514 — the git identity guard's persisted approvals: one file of its
+  // own beside the config, never inside it (writing state must not rewrite
+  // configuration).
+  const gitIdentityConsent = createGitIdentityConsentStore({ path: gitIdentityConsentPath(agentDir) });
   const toHooksContext = (ctx: ExtensionContext): HooksContext => ({
     cwd: ctx.cwd,
     isProjectTrusted: () => ctx.isProjectTrusted(),
@@ -456,10 +462,30 @@ export default function extension(pi: ExtensionAPI): void {
   // names the script that proves the receipt landed (issue #182). The guard
   // itself filters to `bash`, so every tool call is checked — nesting it under
   // one tool name would make the block unreachable for the calls it exists for.
-  pi.on("tool_call", (event, ctx) => {
+  pi.on("tool_call", async (event, ctx) => {
     const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
     const receipt = guards.receiptGuard({ toolName: event.toolName, command });
     if (receipt.block) return receipt;
+    // Issue #514 — the agent-side git identity guard (Layer 1). Only a command
+    // that actually performs a `git config` write pays for the config read; a
+    // read-only or `-c` invocation is allowed by the parse alone.
+    if (event.toolName === "bash" && typeof command === "string" && findGitConfigWrites(command).length > 0) {
+      const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() });
+      const identity = await applyGitIdentityGuard(
+        command,
+        guardOptions(loaded.config.gitIdentity, ctx.cwd, scratchDirs()),
+        {
+          // A session with no UI cannot ask, so it blocks: an unanswered prompt
+          // is not consent, and guessing one is how attribution was lost before.
+          interactive: ctx.hasUI === true,
+          approved: (key) => gitIdentityConsent.approved(ctx.cwd, key),
+          remember: (key) => gitIdentityConsent.remember(ctx.cwd, key),
+          confirm: (question) => ctx.ui.confirm("git identity guard", question),
+          notify: (message, kind) => ctx.ui.notify(message, kind),
+        },
+      );
+      if (identity.block) return identity;
+    }
     // Issue #413 — the pre:commit / pre:push seams: a bash `git commit` or
     // `git push` first runs the project's declared, consented, enabled checks,
     // and a failing check blocks the tool call with the requirement quoted.
