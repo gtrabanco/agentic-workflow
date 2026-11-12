@@ -201,7 +201,7 @@ F=2 (per work session) · S=3 (10 commits/18 mo) · sections accounted for: 8 `#
 | id | section | step | class | duplicate-of-code | carrier | F | S | E | reason |
 |---|---|---|---|---|---|---|---|---|---|
 | BS01 | Process 1 | Run the planner script with its flags and persist the plan state | mechanizable | yes | `scripts/batch-scheduler.mjs` | 2 | 3 | 3 | the script is the producer; the prose names it |
-| BS02 | Process 2 | Read every envelope field (`batches`, `blocked`, `launched`, deltas, findings, degraded) | mechanizable | yes | `scripts/batch-scheduler.mjs` + `references/PLAN.md` | 2 | 3 | 2 | the field set is published (`batch-plan@2`) |
+| BS02 | Process 2 | Read every envelope field (`batches`, `blocked`, `launched`, deltas, findings, degraded) | mechanizable | yes | `scripts/batch-scheduler.mjs` + `references/PLAN.md` | 2 | 3 | 2 | the field set is published (`batch-plan@3`) |
 | BS03 | Process 3 | Print lanes, blocked, untriaged, findings, degradations; launch nothing | mechanizable | no | none | 2 | 3 | 1 | a fixed render order over the envelope |
 | BS04 | Guardrails | Report `cycle`/`orphaned-soft-dep`/`prose-native-mismatch`, never fix | mixed | no | none | 2 | 3 | 2 | branch: the prose rows belong to triage, which is a routing decision |
 | BS05 | Guardrails | An open in-flight target is a state, not a defect | mechanizable | partial | the script's `blocked[]` | 2 | 3 | 2 | the script already distinguishes it |

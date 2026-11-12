@@ -1,5 +1,5 @@
 /**
- * The canonical batch plan (`batch-plan@2`) — issue #449's machine envelope:
+ * The canonical batch plan (`batch-plan@3`) — issue #449's machine envelope:
  * the deterministic batch scheduler's document, read as data by the owner and
  * by the #295 panel.
  *
@@ -22,18 +22,43 @@
 export const BATCH_PLAN_CONTRACT_ID = "agentic-workflow/batch-plan";
 
 /** The schema token printed in the document's `schema` field. */
-export const BATCH_PLAN_SCHEMA = "batch-plan@2";
+export const BATCH_PLAN_SCHEMA = "batch-plan@3";
 
 /** The version constant: adding or changing a core field bumps this. */
-export const BATCH_PLAN_VERSION = 2;
+export const BATCH_PLAN_VERSION = 3;
 
 /** The closed reason-kind set — why an issue sits where it sits (S4). */
 export const BATCH_REASON_KINDS = ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"] as const;
 export type BatchReasonKind = (typeof BATCH_REASON_KINDS)[number];
 
-/** The closed finding-code set — unresolvable spots are findings, never silent (S7). */
-export const BATCH_FINDING_CODES = ["cycle", "orphaned-soft-dep", "prose-native-mismatch"] as const;
+/**
+ * The closed finding-code set — unresolvable spots are findings, never silent (S7).
+ *
+ * `file-overlap` and `stale-claim` were added by issue #509: two issues of one
+ * batch on different lanes whose branches rewrite the same file cannot be
+ * merged without conflict, and a persisted claim whose evidence lapsed (or that
+ * carries a pre-v3 bare-number key) is a work-graph fact the plan reports
+ * instead of honoring. Both extend the vocabulary only — no field is added, so
+ * the version stays put (the core-closed rule above bumps it for a field).
+ */
+export const BATCH_FINDING_CODES = [
+  "cycle",
+  "orphaned-soft-dep",
+  "prose-native-mismatch",
+  "file-overlap",
+  "stale-claim",
+] as const;
 export type BatchFindingCode = (typeof BATCH_FINDING_CODES)[number];
+
+/**
+ * The labels that make an issue unlaunchable (issue #509, S11): `postponed` and
+ * `backlog` as the issue names them, and `human-revision-needed` because the
+ * workflow's own guide holds it as "nothing is planned, implemented, committed
+ * or merged" — a scheduler that recommends launching it violates that hold.
+ * `wontfix` is deliberately absent: its lifecycle is closure, not a hold.
+ */
+export const BATCH_BLOCKING_LABELS = ["postponed", "backlog", "human-revision-needed"] as const;
+export type BatchBlockingLabel = (typeof BATCH_BLOCKING_LABELS)[number];
 
 /** The closed size-hint vocabulary — measured from each issue's declared evidence (S5). */
 export const BATCH_SIZE_HINTS = ["light", "mixed", "heavy"] as const;
@@ -42,9 +67,10 @@ export type BatchSizeHint = (typeof BATCH_SIZE_HINTS)[number];
 /** The closed field-name set the plan grammar block orders (`batch-fields@1`). */
 export const BATCH_PLAN_FIELDS = [
   "contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary",
-  "new_issues", "closed_since",
+  "new_issues", "closed_since", "label_blocked",
   "n", "lanes", "surface", "occupied_by", "issues", "number", "title", "lane", "worktree", "command", "reason", "kind",
   "size_hint", "claimed", "triaged", "blockers", "evidence", "code", "numbers", "detail", "open_issues", "batched",
+  "labels",
 ] as const;
 
 /**
@@ -121,6 +147,13 @@ export interface Batch {
   lanes: BatchLane[];
 }
 
+/** A row of `label_blocked[]`: an issue a hold label keeps out of every batch (issue #509, S11). */
+export interface BatchLabelBlocked {
+  number: number;
+  /** The blocking labels the issue carries, in the published vocabulary's order. */
+  labels: string[];
+}
+
 export interface BatchBlocked {
   number: number;
   blockers: number[];
@@ -140,6 +173,7 @@ export interface BatchPlanSummary {
   launched: number;
   findings: number;
   batches: number;
+  label_blocked: number;
 }
 
 export interface BatchPlan {
@@ -157,7 +191,9 @@ export interface BatchPlan {
   blocked: BatchBlocked[];
   /** Issues already running (unit doc in flight), excluded from batches (S3). */
   launched: { number: number; evidence: string }[];
-  /** Unresolvable spots: cyclic waits, orphaned soft deps, prose/native disagreements (S7). */
+  /** Issues a hold label keeps unlaunchable, reported as their own category (issue #509, S11). */
+  label_blocked: BatchLabelBlocked[];
+  /** Unresolvable spots: cyclic waits, orphaned soft deps, prose/native disagreements, cross-lane file overlaps and expired claims (S7). */
   findings: BatchFinding[];
   /** Issues first seen in this run (issue #460) — a fresh issue is reported, never silent. */
   new_issues: BatchNewIssue[];
@@ -209,7 +245,7 @@ function issueNumber(value: unknown, label: string, errors: string[]): boolean {
 }
 
 /**
- * Validate one document against `batch-plan@2`. Structural and
+ * Validate one document against `batch-plan@3`. Structural and
  * vocabulary-closed; ordering/semantics stay the producer's tests.
  */
 export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
@@ -218,7 +254,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
   rejectUnexpectedKeys(
     value,
     "batch plan",
-    ["contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary", "new_issues", "closed_since"],
+    ["contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary", "new_issues", "closed_since", "label_blocked"],
     errors,
   );
   if (value.contract !== BATCH_PLAN_CONTRACT_ID) errors.push(`contract must be ${BATCH_PLAN_CONTRACT_ID}`);
@@ -316,6 +352,26 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
     });
   }
 
+  if (!Array.isArray(value.label_blocked)) errors.push("label_blocked must be an array");
+  else {
+    if (value.label_blocked.length > MAX_ITEMS) errors.push(`label_blocked exceeds ${MAX_ITEMS} entries`);
+    value.label_blocked.forEach((row, li) => {
+      const label = `label_blocked[${li}]`;
+      if (!isObj(row)) return errors.push(`${label} must be an object`);
+      rejectUnexpectedKeys(row, label, ["number", "labels"], errors);
+      issueNumber(row.number, `${label}.number`, errors);
+      if (!Array.isArray(row.labels) || row.labels.length === 0) errors.push(`${label}.labels must be a non-empty array`);
+      else {
+        for (const name of row.labels) {
+          if (typeof name !== "string" || name === "") errors.push(`${label}.labels[] must be a non-empty string`);
+          else if (!(BATCH_BLOCKING_LABELS as readonly string[]).includes(name)) {
+            errors.push(`${label}.labels[] must be one of ${BATCH_BLOCKING_LABELS.join("|")}`);
+          }
+        }
+      }
+    });
+  }
+
   if (!Array.isArray(value.findings)) errors.push("findings must be an array");
   else {
     if (value.findings.length > MAX_ITEMS) errors.push(`findings exceeds ${MAX_ITEMS} entries`);
@@ -324,7 +380,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
       if (!isObj(row)) return errors.push(`${label} must be an object`);
       rejectUnexpectedKeys(row, label, ["code", "numbers", "detail"], errors);
       if (!(BATCH_FINDING_CODES as readonly string[]).includes(row.code as BatchFindingCode)) {
-        errors.push(`${label}.code must be cycle|orphaned-soft-dep|prose-native-mismatch`);
+        errors.push(`${label}.code must be cycle|orphaned-soft-dep|prose-native-mismatch|file-overlap|stale-claim`);
       }
       if (!Array.isArray(row.numbers) || row.numbers.length === 0) errors.push(`${label}.numbers must be a non-empty array`);
       else for (const n of row.numbers) issueNumber(n, `${label}.numbers[]`, errors);
@@ -365,8 +421,8 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
 
   if (!isObj(value.summary)) errors.push("summary must be an object");
   else {
-    rejectUnexpectedKeys(value.summary, "summary", ["open_issues", "batched", "blocked", "launched", "findings", "batches"], errors);
-    for (const key of ["open_issues", "batched", "blocked", "launched", "findings", "batches"] as const) {
+    rejectUnexpectedKeys(value.summary, "summary", ["open_issues", "batched", "blocked", "launched", "findings", "batches", "label_blocked"], errors);
+    for (const key of ["open_issues", "batched", "blocked", "launched", "findings", "batches", "label_blocked"] as const) {
       positiveInt(value.summary[key], `summary.${key}`, errors);
     }
   }
