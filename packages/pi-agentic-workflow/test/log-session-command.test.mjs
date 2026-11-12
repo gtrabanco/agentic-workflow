@@ -117,11 +117,8 @@ function skillsTree(names = ["log-session", "review-code"]) {
 /** A throwaway git project; `writer` copies this repository's own script in. */
 function project({ journal = false, carrier = false, writer = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), "log-session-command-"));
-  const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
+  const git = (args) => execFileSync("git", ["-c", "user.name=suite", "-c", "user.email=suite@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
   git(["init", "-q", "-b", "test-branch"]);
-  git(["config", "user.email", "suite@example.test"]);
-  git(["config", "user.name", "suite"]);
-  git(["config", "commit.gpgsign", "false"]);
   mkdirSync(join(root, "docs"), { recursive: true });
   if (journal) writeFileSync(join(root, "docs/LOGS.md"), "# Session log\n\nentry bytes\n");
   if (carrier) mkdirSync(join(root, JOURNAL_DIR), { recursive: true });

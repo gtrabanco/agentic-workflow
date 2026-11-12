@@ -28,7 +28,7 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BIN = join(REPO_ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 function repoFiles() {
-  const out = execFileSync("git", ["ls-files", "-co", "--exclude-standard"], {
+  const out = execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "ls-files", "-co", "--exclude-standard"], {
     cwd: REPO_ROOT,
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
@@ -144,7 +144,7 @@ describe("AC25: store paths are referenced only from the entry point's surfaces"
     // Plain form (no -v): exit 0 = ignored, 1 = not ignored. The -v form exits 0
     // even when the last matching pattern is a negation, so it cannot answer.
     const probe = (path) =>
-      spawnSync("git", ["check-ignore", "--no-index", path], { cwd: REPO_ROOT, encoding: "utf8" }).status;
+      spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "check-ignore", "--no-index", path], { cwd: REPO_ROOT, encoding: "utf8" }).status;
     // The committed config is public by design (D4): never gitignored.
     strictEqual(probe(".agentic-workflow/index.json"), 1, "index.json is gitignored — the whitelist is broken");
     // The tracked rule file itself: never gitignored either.
@@ -237,10 +237,8 @@ describe("AC24: the entry point runs in a target-project-shaped temp dir", () =>
 
   before(() => {
     proj = mkdtempSync(join(tmpdir(), "doc-target-"));
-    const git = (args) => execFileSync("git", args, { cwd: proj, encoding: "utf8" });
+    const git = (args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: proj, encoding: "utf8" });
     git(["init", "-q"]);
-    git(["config", "user.email", "t@example.test"]);
-    git(["config", "user.name", "t"]);
     // the target-project scaffold, as init-workspace's consented install lays it out
     mkdirSync(join(proj, "template"), { recursive: true });
     writeFileSync(
@@ -283,7 +281,7 @@ describe("AC24: the entry point runs in a target-project-shaped temp dir", () =>
     });
     strictEqual(r.status, 0, `stderr: ${r.stderr}`);
     ok(existsSync(join(proj, ".agentic-workflow", "index", "index.db")), "hook did not create the store");
-    const status = execFileSync("git", ["status", "--porcelain"], { cwd: proj, encoding: "utf8" });
+    const status = execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "status", "--porcelain"], { cwd: proj, encoding: "utf8" });
     strictEqual(status.trim(), "", "sync dirtied the working tree (the store must stay gitignored)");
   });
 
@@ -302,11 +300,9 @@ describe("AC24: the entry point runs in a target-project-shaped temp dir", () =>
     // target-project-shaped run proves the AC7 porcelain half — a configured
     // nested store syncs and dirties nothing.
     const cfgDir = mkdtempSync(join(tmpdir(), "doc-target-cfg-"));
-    const git = (args) => execFileSync("git", args, { cwd: cfgDir, encoding: "utf8" });
+    const git = (args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: cfgDir, encoding: "utf8" });
     try {
       git(["init", "-q"]);
-      git(["config", "user.email", "t@example.test"]);
-      git(["config", "user.name", "t"]);
       writeFileSync(join(cfgDir, "note.md"), "# Note\n\nconfigured store path content wombatcfg\n");
       mkdirSync(join(cfgDir, ".agentic-workflow"), { recursive: true });
       writeFileSync(
@@ -322,7 +318,7 @@ describe("AC24: the entry point runs in a target-project-shaped temp dir", () =>
       });
       strictEqual(r.status, 0, `stderr: ${r.stderr}`);
       ok(existsSync(join(cfgDir, ".agentic-workflow", "custom", "custom.db")), "configured store created");
-      const status = execFileSync("git", ["status", "--porcelain"], { cwd: cfgDir, encoding: "utf8" });
+      const status = execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "status", "--porcelain"], { cwd: cfgDir, encoding: "utf8" });
       strictEqual(status.trim(), "", "a configured store dirtied the working tree");
     } finally {
       rmSync(cfgDir, { recursive: true, force: true });
@@ -355,7 +351,7 @@ function committedActivationMounts(files) {
 
 /** The scan the live assertion runs, over any git work tree's index. */
 function committedActivationMountsIn(cwd) {
-  const tracked = execFileSync("git", ["ls-files"], { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+  const tracked = execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "ls-files"], { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
     .split("\n").map((entry) => entry.trim()).filter(Boolean);
   return committedActivationMounts(tracked);
 }
@@ -394,7 +390,7 @@ describe("#359 the activation mount is a local mount, never a committed surface"
 
   it("the scan bites on a real index that carries one", () => {
     const dir = mkdtempSync(join(tmpdir(), "activation-mount-"));
-    const run = (args) => spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+    const run = (args) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: dir, encoding: "utf8" });
     try {
       mkdirSync(join(dir, ".claude", "skills", "execute-phase"), { recursive: true });
       writeFileSync(join(dir, ".claude", "skills", "execute-phase", "SKILL.md"), "x\n");

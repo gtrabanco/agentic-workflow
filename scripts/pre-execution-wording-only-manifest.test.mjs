@@ -40,7 +40,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const sensorScript = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs");
 const contractScript = path.join(repoRoot, "scripts", "pre-execution-contract.mjs");
 
-const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+const git = (cwd, ...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" }).trim();
 
 /** A unit doc the `spec-product-v1` selector accepts (14-section, feature 61 + #305). */
 const specText = (objective = "Ship the thing.") => `# Toy unit
@@ -132,13 +132,10 @@ function makeRepo(t) {
   write("AGENTS.md", GUIDE);
   write("src/code.ts", "export const a = 1;\n");
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   // Every commit is dated BEFORE the receipts' recorded finish (2026-08-31) so the
   // impossible-timeline guard never mis-flags the fixture as back-dated.
   const FIXTURE_DATE = "2026-08-30T00:00:00Z";
-  const gitDate = (...args) => execFileSync("git", args, {
+  const gitDate = (...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], {
     cwd: root, encoding: "utf8",
     env: { ...process.env, GIT_COMMITTER_DATE: FIXTURE_DATE, GIT_AUTHOR_DATE: FIXTURE_DATE },
   }).trim();
