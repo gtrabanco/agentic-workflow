@@ -76,6 +76,7 @@ const LOG_SESSION_MAX_ARGV = 32;
 const LOG_SESSION_MAX_TIMEOUT_MS = 60_000;
 const PATH_GLOB_MAX_LENGTH = 512;
 const PATH_REQUIREMENTS = ["none", "justification", "approval"] as const;
+const GIT_IDENTITY_ALLOW_MAX = 64;
 const PATH_OPERATIONS = ["create", "modify", "delete", "rename"] as const;
 const PATH_PHASE_STATES = ["pre-freeze", "post-freeze", "always"] as const;
 
@@ -129,6 +130,50 @@ const PATH_PROTECTION_SCHEMA: JsonSchema = publish({
           } satisfies JsonSchema,
         ]),
       ),
+    },
+  },
+});
+
+/**
+ * The approved identity a project publishes for its commits (issue #514).
+ *
+ * `enforce` is what the carriers act on: `off` is inert (the shipped default, so
+ * an unconfigured project is never blocked), `commit` enables the pre-commit
+ * hook, `push` enables the push-range check, `commit-and-push` both. `approved`
+ * declares only the facts a project wants verified; an absent field is not
+ * checked. `agentGuard` is the model-facing half: `mode: "block"` never asks,
+ * and `allow` names the writes a project permits without disabling the guard.
+ */
+const GIT_IDENTITY_SCHEMA: JsonSchema = publish({
+  type: "object",
+  additionalProperties: false,
+  description: "The approved commit identity and the agent-side config-write guard.",
+  properties: {
+    enforce: { type: "string", enum: ["off", "commit", "push", "commit-and-push"] },
+    approved: {
+      type: "object",
+      additionalProperties: false,
+      description: "Only the declared facts are verified; an absent field is not checked.",
+      properties: {
+        name: { type: "string", minLength: 1, description: "git user.name, matched case-insensitively." },
+        email: { type: "string", minLength: 3, description: "git user.email, matched case-insensitively." },
+        fullName: { type: "string", minLength: 1, description: "The legal name a signing key's UID must carry." },
+        format: { type: "string", enum: ["openpgp", "ssh"] },
+        signingKey: { type: "string", minLength: 1, description: "The resolved signing key: key id, fingerprint or path." },
+      },
+    },
+    agentGuard: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        mode: { type: "string", enum: ["ask", "block"] },
+        allow: {
+          type: "array",
+          items: { type: "string", minLength: 1 },
+          maxItems: GIT_IDENTITY_ALLOW_MAX,
+          description: "Config keys the agent may write without asking (e.g. user.name).",
+        },
+      },
     },
   },
 });
@@ -231,6 +276,15 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
       },
     },
     defaults: { merge: false, history: false, ci: false, cost: { maxTokens: 500_000 } },
+  },
+  {
+    key: "gitIdentity",
+    category: "feature",
+    file: BASE_CONFIG_FILE,
+    path: ["gitIdentity"],
+    description: "Approved commit identity (name, email, legal name, signing key) and the agent config-write guard.",
+    schema: GIT_IDENTITY_SCHEMA,
+    defaults: { enforce: "off", approved: {}, agentGuard: { mode: "ask", allow: [] } },
   },
   {
     key: "advance",

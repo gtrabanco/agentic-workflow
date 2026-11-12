@@ -13,7 +13,8 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
 | project | `.pi/` | `agentic-workflow.json` | `pi-agentic-workflow.json` |
 
 - **Base file** — feature config every agentic-workflow install shares:
-  `logSession`, `memory`, `telemetry`, `guards`, `advance`, `pathProtection`.
+  `logSession`, `memory`, `telemetry`, `guards`, `gitIdentity`, `advance`,
+  `pathProtection`.
   It is cross-tool: the value means the same on Claude Code, Codex, OpenCode2
   and π; only the implementation of each feature differs.
 - **Extension file** — package-specific config. The `pi-agentic-workflow`
@@ -51,6 +52,7 @@ project can never silently drop a global glob or lower a requirement.
 | `telemetry` | base | `{ "enabled": false }` | `{ "enabled": true }` measures the per-unit cost sample |
 | `guards` | base | `{ "merge": false, "history": false, "ci": false, "cost": { "maxTokens": 500000 } }` | booleans plus a positive `cost.maxTokens` |
 | `advance` | base | `{ "iterationsCap": 12, "sensitivePaths": [], "securityPaths": [], "runLogPath": ".agentic-workflow/advance-run.log" }` | conductor knobs |
+| `gitIdentity` | base | `{ "enforce": "off", "approved": {}, "agentGuard": { "mode": "ask", "allow": [] } }` | `enforce` = `off`/`commit`/`push`/`commit-and-push`; `approved` = `name`, `email`, `fullName`, `format` (`openpgp`/`ssh`), `signingKey` — only the declared facts are verified; `agentGuard.mode` = `ask`/`block`, `agentGuard.allow` = config keys the agent may write without asking |
 | `pathProtection` | base | `{}` | `protectedGlobs` plus `requirements.<pre-freeze\|post-freeze\|always>.<create\|modify\|delete\|rename>` = `none`/`justification`/`approval` |
 | `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow` |
 
