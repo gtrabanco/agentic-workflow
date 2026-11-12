@@ -1,6 +1,0 @@
-## 2026-11-11T23:31:36Z — fix/481-post-publish-availability-gate — fix/481 npm availability gate
-- **Commits:** 8 (`76496c0c…f5649e99`)
-- **Files:** 14 files
-- **Summary:** Applied issue #481: a post-publish availability gate that waits for each published tarball to return 200 AND hash to the packument's dist.shasum before the release pipeline emits any signal. New scripts/npm-availability-wait.mjs (+ red-first suite, 17 cases), wired into all five npm-publishing jobs in publish.yml (cut-prerelease before the tag/pre-release; schema/crate/pi/nan before the canary dist-tag). GATE_INVENTORY row, test route, changeset, roadmap row and regenerated projection landed; obligations O1-O13 verified and the serial local gate passed at 3ef8e2e7.
-- **Decisions:** nan-publish (added by #502 after the issue was written) is included because S5 says every job that publishes npm. The wait uses one shared deadline, not a per-package budget, so a canary cut does not multiply runner time. The unit folder was renamed to 481-npm-availability-wait so the doc slug matches the roadmap row (roadmap-settle). A stale, already-missing fix-437 worktree registration was removed with git worktree remove --force so worktree-guard could pass; no work existed on disk.
-- **Next:** External verification of the diff and the ledger; the PR closes #481. No self-approval.
