@@ -170,7 +170,8 @@ none
   Relevant files: scripts/findings-corpus.test.mjs
 - P3 — Implement the harvester, admission filter, attribution, health metric and
   ARW code-net reader (validator: `bun test scripts/findings-corpus.test.mjs`
-  exits 0) (Implements: S2, S3, S4, S6, S7, S10)
+  exits 0)
+  (Implements: S2, S3, S4, S6, S7, S10)
   Relevant files: scripts/findings-corpus.mjs
 - P4 — Land the budget suite alone (red) then implement the computed budget
   (validator: `bun test scripts/correction-budget.test.mjs` exits 0, after the
@@ -192,11 +193,11 @@ none
   claims, changeset, session log, evidence rows (validator:
   `bun scripts/prose-gate-inventory.mjs` exits 0 with `verdict: PASS` and
   `bun scripts/docs-generate.mjs --check` exits 0)
-  (Implements: S4, S16, S17)
+  (Implements: S4, S15, S16, S17)
   Relevant files: docs/ROADMAP.md, docs/research/ATTRIBUTION.md, AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/LOGS.md, .changeset/
 - P8 — Run the full gate and close every obligation row (validator:
   `bun scripts/run-root-suite.mjs` exits 0)
-  (Implements: S14, S16, S17)
+  (Implements: S11, S12, S14, S16, S17)
   Relevant files: scripts/
 
 ## Findings
@@ -303,6 +304,28 @@ yet.
   `local-gate: PASS — 17 step(s) in 205s` (the crate suite at `659 pass, 0 fail`).
   The batch's first gate run, at `be4f6193`, failed at `root-suite` on the four
   `review-change:*` route ceilings that `E13` re-bases.
+- **D4** — 2026-11-12, triage of the 2026-11-11 delta EXTERNAL VERIFY's three
+  advisories, at the owner's direction. Advisory 1 (phase-lint BLOCKED on this
+  doc's Tasks ledger: P3's `(Implements:)` clause glued after the validator's
+  closing paren so S10 reads unlinked; S11/S12/S15 cited by no task) is fixed in
+  this batch — the clause moves onto its own line, S15 links to P7 (where
+  obligation O22 already binds it) and S11/S12 link to P8, the close-out gate
+  phase where both process constraints are observable (the precedent shape:
+  fix 355 links its non-goals to the enforcement phase, fix 407 links its
+  gates-green claim to the verification phase). Advisories 2–3
+  (`docs/fix/361-finding-severity-ladder/SPEC.md:402` + `decisions.md:34`, and
+  `docs/features/96-prose-gate-inventory/planning-evidence.md:31`) are
+  wontfix: dated 2026-11-04 records in closed unit docs are frozen history,
+  not live narration — the rule's one owner (`CLASSIFY.md`) is fixed and pinned
+  by `scripts/differential-baseline.test.mjs`.
+- **P10** — 2026-11-12, the phase-lint linkage batch: the Tasks-ledger repair
+  above, validated on a scratch copy first, then applied.
+- **E14** — 2026-11-12, `bun scripts/phase-lint.mjs
+  docs/features/437-review-findings-corpus/SPEC.md` · exit 1 · `verdict
+  BLOCKED` at the pre-batch bytes (`task-link-missing: P3 links no requirement`
+  + `spec-unlinked: S10/S11/S12/S15`), then exit 0 · `verdict PASS`, P1–P8 all
+  `PASS (6/6)` after the repair (fixture run first on a scratch copy,
+  same result).
 
 ## Next
 
