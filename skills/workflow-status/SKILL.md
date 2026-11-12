@@ -13,10 +13,15 @@ description: >
 
 # Workflow Status (the orchestrator's sensor)
 
+> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
+> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
+> release and never guessed: a hard-coded version re-opens the per-release sweep the
+> contract removes, and `latest` is not a legal pin.
+
 One read-only pass that answers, in a single fixed JSON envelope: **what exists,
 what is blocked on what, what is startable right now, and what the recommended
 next command is.** The **script is the deterministic producer**:
-`scripts/workflow-status.mjs` executes the published `SENSOR_CORE` sequence
+`agentic-workflow workflow-status` executes the published `SENSOR_CORE` sequence
 (steps 1–9 including 6a) and prints the envelope. This skill runs the script,
 reads the JSON, interprets it against the references below, and prints the human
 report — it never assembles the envelope by hand.
@@ -26,7 +31,7 @@ report — it never assembles the envelope by hand.
 Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) before ending every turn; the **read-only profile** substitutes boxes 1–5 (nothing was edited, committed, pushed, or created — read-only, always). Skill-specific additions:
 
 ```
-✓ The script was RUN — `bun scripts/workflow-status.mjs [--json-only]
+✓ The script was RUN — `bunx @gtrabanco/agentic-workflow@<pin> workflow-status [--json-only]
   [--last-envelope <json|path>] [--compact]` (node is the fallback when bun is
   absent, per the repository's runtime convention); the envelope is the script's
   stdout, never assembled by the model

@@ -53,7 +53,7 @@
    touching unrelated entries — each path is claimed once, so a
    project never carries two `merge=` claims on one path; (b) arm the drivers in
    the checkout's git config: `bun scripts/docs-generated-merge.mjs --install`
-   and `bun scripts/shared-doc-merge.mjs --install` (node fallback, same argv),
+   and `bun scripts/shared-doc-merge.mjs --install` (npx fallback, same argv),
    and verify `git config --get merge.docs-generated.driver` and
    `git config --get merge.agentic-shared-roadmap.driver` are non-empty (the
    other class keys arm in the same loop; the shared-driver suite pins them
