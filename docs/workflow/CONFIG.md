@@ -21,11 +21,13 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
   subagent limits, State Flow). A package that is not installed contributes
   neither a section nor a file, so the base config never breaks.
 - Both files are **JSONC**: `//` and `/* */` comments and trailing commas are
-  accepted. One parser reads both — the schema package's `parseJsonc` — so a
-  file means the same thing under Bun and Node, and no file is valid on one
-  runtime and invalid on the other. The settings console rewrites
-  `pi-agentic-workflow.json` as plain JSON on save, so comments do not survive a
-  save.
+  accepted. On Bun the runtime's own parser (`Bun.JSONC.parse`) reads the file
+  first; the schema package's `parseJsonc` remains the acceptance boundary on
+  both runtimes and reports every refusal with its line and column, so a file
+  means the same thing under Bun and Node — including the spellings only Bun's
+  parser would take (`'single quotes'`, `0x` numbers), which are refused on
+  both. The settings console rewrites `pi-agentic-workflow.json` as plain JSON
+  on save, so comments do not survive a save.
 - The project config is not read while the project is untrusted.
 
 ## Resolution

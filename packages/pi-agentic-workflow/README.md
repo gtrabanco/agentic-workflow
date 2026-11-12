@@ -268,10 +268,11 @@ Two JSONC files, both optional. Model routing lives in this package's extension
 file; cross-tool feature config (`logSession`, `memory`, `telemetry`, `guards`,
 `advance`, `pathProtection`) lives in the base `agentic-workflow.json` at the
 same scope (guide: `docs/workflow/CONFIG.md`, machine contract:
-`@gtrabanco/agentic-workflow-schema`). Both are read by the same JSONC parser,
-so `//` and `/* */` comments and trailing commas mean the same thing under bun
-and node. The `/settings` console rewrites this package's file as plain JSON on
-save: comments do not survive a save.
+`@gtrabanco/agentic-workflow-schema`). Bun's native parser reads the file first
+and the schema package's `parseJsonc` stays the acceptance boundary, so `//` and
+`/* */` comments and trailing commas mean the same thing — and are refused with
+the same line and column — under bun and node. The `/settings` console rewrites
+this package's file as plain JSON on save: comments do not survive a save.
 
 | Scope | Path | Read when |
 | --- | --- | --- |
