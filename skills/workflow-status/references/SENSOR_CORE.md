@@ -1,6 +1,6 @@
 ## Process (fixed sequence — executed by the script)
 
-`bunx @gtrabanco/agentic-workflow@<pin> workflow-status` (node when bun is absent — the repository's
+`bun scripts/workflow-status.mjs` (node when bun is absent — the repository's
 runtime convention) executes this whole sequence (git/forge
 collection, urgency labels-only scan, roadmap + fix-index parse, dependency
 closure, readiness + step-6a receipt sensing, phase progress, review-mark
@@ -96,7 +96,7 @@ live evidence against a frozen ledger remains a contradiction candidate.
    MERGE-READY bound to the PR's current head SHA (look for the audit
    comment marker on the PR)? Derive `review_pending` (no current mark) /
    `audit_pending` / `merge_ready` per unit.
-8a. **Risk tier → `detail.risk_tier`.** The classifier (`packages/agentic-workflow/src/runner/risk-tiers.mjs`)
+8a. **Risk tier → `detail.risk_tier`.** The classifier (`scripts/risk-tiers.mjs`)
    reads the branch's own change — the diff against its merge base plus any
    uncommitted path, and those files' contents — and emits the tier as
    `{tier, reason, reason_kind, signals[], task_size{…}}`. This sensor projects

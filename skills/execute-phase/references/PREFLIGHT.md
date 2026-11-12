@@ -129,7 +129,7 @@ manifest is `## Specs`, and each criterion's receipt is a `## Log` `E` line; the
 gate below reads that carrier instead, and never stops a migrated unit for lacking
 a section its own template retired. No sibling file; the unit doc's Evidence section header carries the
 last-reviewed sha. The unit doc's triage block (pasted verbatim from
-`agentic-workflow unit-route` --triage`) is the step authority: `execute-phase` runs
+`scripts/unit-route.mjs --triage`) is the step authority: `execute-phase` runs
 only what the triage block demands.
 
 - No Evidence rows → start with the unit doc's Acceptance criteria (the
@@ -153,8 +153,8 @@ section):** if the unit doc has **no `## Tasks` section**, skip this
 guard entirely — no lint run, no STOP — and fall straight through. The guard
 applies only to a unit doc that carries a `## Tasks` P1…Pn section.
 
-Before touching any code, run `bunx @gtrabanco/agentic-workflow@<pin> phase-lint <unit-doc>` (npx fallback
-`npx @gtrabanco/agentic-workflow@<pin> phase-lint <unit-doc>`) on the unit doc — the deterministic
+Before touching any code, run `bun scripts/phase-lint.mjs <unit-doc>` (node fallback
+`node scripts/phase-lint.mjs <unit-doc>`) on the unit doc — the deterministic
 linter that consumes the eight rules owned by
 `skills/phase-contract/SKILL.md` — and paste its stdout. Never re-derive a
 verdict by reading the rules: if the script exists but cannot run, STOP; if it

@@ -79,7 +79,7 @@ mechanized.*
       `{command: "/fold-findings", trigger: "unfolded fix-now finding(s) on
       the ledger", source_skill: "fold-findings"}` (`#65`).
 
-    A row is **open** under the router's own predicate (`agentic-workflow unit-route`
+    A row is **open** under the router's own predicate (`scripts/unit-route.mjs`
     `isOpen`), never a re-derived one: `folded: yes`, `—`, `-`, `n/a` and an empty
     cell all close it. The id shapes `VF-<n>` (a finding's verification mark),
     `REVIEW-RAN` (a review mark) and `GATE-RAN` (a gate-run mark) are **never**

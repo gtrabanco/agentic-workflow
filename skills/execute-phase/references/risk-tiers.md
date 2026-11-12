@@ -4,7 +4,7 @@
 > Unit #360, direction #307; the roadmap row is the issue's canonical link.
 > Every other file cites this one; nothing restates the table.
 
-The tier is **computed, never chosen**. `packages/agentic-workflow/src/runner/risk-tiers.mjs` (and the closed
+The tier is **computed, never chosen**. `scripts/risk-tiers.mjs` (and the closed
 ceremony CLI's `tier classify`, which wraps it) reads repo evidence — the changed
 paths, their contents, and nothing else — and emits one of the published tiers.
 No skill, phase or model may decide a tier, and no input accepts one: the tier
@@ -84,7 +84,7 @@ a tier.
 
 `destructive` is the one signal that is not path-shaped, and it is decided by
 what a file **can do**, never by a list of operation names:
-`packages/agentic-workflow/src/runner/capabilities.mjs` reads the imports a file declares and the effects they
+`scripts/capabilities.mjs` reads the imports a file declares and the effects they
 enable — per language family (`js`, `py`, `sh`), resolved through a catalogue
 keyed by provider (`node:fs/promises` *can* remove entries), with a relative
 import followed one module deep — and the classifier asks it. A removal is caught
@@ -115,7 +115,7 @@ the classifier's own table, and the sentence says what it showed. A passive unit
 that turns out to touch executable content is not passive — it is routed to the
 standard ceremony, never patched into passivity.
 
-The record's **only writer** is `ceremony passive add` (`packages/agentic-workflow/src/runner/ceremony/passive.mjs`):
+The record's **only writer** is `ceremony passive add` (`scripts/ceremony/passive.mjs`):
 never `echo`, `sed -i` or a hand edit. The id is the file name, so a second `add`
 on a taken id is a ceremonial block (exit 2) and two passive units cannot collide;
 `add` records the tier the classifier computed for the record's own `--paths`, and

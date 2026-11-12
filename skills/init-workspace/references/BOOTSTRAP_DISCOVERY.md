@@ -24,7 +24,7 @@
        checked in code by the dispatcher). Expensive to undo ⇒ unanswered is **not** a default: an
        identity question without a concrete answer halts the run through the
        same fail-closed flow §Consent uses (scratch unit folder +
-       `bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>`, paste the `open-questions@1`
+       `bun scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1`
        block verbatim, stop).
      - **Domain layer — open-with-defaults, cheap to undo as dated
        assumptions:** tests policy and the project's gate commands; dependency
