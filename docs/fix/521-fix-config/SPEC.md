@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: c216731ccd2c7977a9c86dc09ce90b8052bd2795158504a21581a3ec3dd2ed0e
+ac-hash: 30331099a9de5024e9037f4dae9b3aa8d31f5de181896135baed33fa14905413
 ---
 
 # fix/521-fix-config
@@ -65,6 +65,12 @@ support". The PR closes it via `Closes #521`.
 > - Bun: works by luck (no comments in user files → no failure)
 > - Node: fails immediately on any comment, which is probably most users
 > - The error message is misleading: blames the Engram registration instead of showing the actual JSON parse error
+
+**S5a — Correction: use Bun's native parser when the runtime has one, validated by the schema.**
+> D1, use Bun native path if avalable, you can validate that with schema
+
+**S7 — The settings console's save must preserve comments (a JSONC AST editor, editor choice reserved to the owner).**
+> D3, use JSONC AST editor but ask which one to me, find best options and good balance between performance, compatibility (node/Bun) & well mantained
 
 ## Impact
 
@@ -181,12 +187,14 @@ root gate `bun scripts/local-gate.mjs` before handoff.
   and the work arrives as conventional commits. Check: `ls
   docs/fix/521-fix-config/` lists `SPEC.md` only (XS/S embeds the ledgers);
   `git log --oneline main..HEAD` shows the unit's own conventional commits.
-- **AC-S2** — The extension file is read by the same JSONC parser the base file
-  uses, with no runtime split: `parseConfigFile` carries no `JSON.parse` and
-  imports `parseJsonc` from `@gtrabanco/agentic-workflow-schema`. Check:
-  `rg -n 'JSON.parse' packages/pi-agentic-workflow/src/config/schema.ts` exits 1
-  (0 matches); `rg -n 'parseJsonc\(text\)' packages/pi-agentic-workflow/src/config/schema.ts`
-  matches 1 (the single call site).
+- **AC-S2** — The extension file is read by the runtime's native JSONC parser
+  first when the runtime has one (Bun) and by the schema package's `parseJsonc`
+  otherwise, which stays the acceptance boundary; `parseConfigFile` carries no
+  `JSON.parse`. Check: tests `J7` (the boundary refuses Bun's extra spellings and
+  a malformed tail on both runtimes) and `J8` (the native parser is consulted and
+  its result never becomes the config) exit 0 under bun, and the same file exits
+  0 under node with `J8` declared skipped; `rg -n 'JSON.parse'
+  packages/pi-agentic-workflow/src/config/schema.ts` exits 1 (0 matches).
 - **AC-S3** — The issue's reproduction now works: a `pi-agentic-workflow.json`
   with a `//` comment parses, `loadConfig` answers `ok: true` with no problems,
   and the Engram consent in the base file is read instead of refused. Check:
@@ -207,6 +215,11 @@ root gate `bun scripts/local-gate.mjs` before handoff.
   `bun scripts/lint-changeset.mjs` exits 0, `bun scripts/docs-generate.mjs
   --check` exits 0, `rg -n '#521' docs/ROADMAP.md` matches 1, and
   `bun scripts/local-gate.mjs` exits 0.
+- **AC-S7** — A settings-console save preserves the comments in
+  `pi-agentic-workflow.json` and leaves an untouched key's layout alone, through
+  the JSONC AST editor the owner picks. Check: the console round-trip test (a
+  commented file saved through the console keeps its comments) exits 0. **Not
+  met yet** — blocked on the owner's editor pick (S7, O14).
 
 ## Tasks
 
@@ -245,6 +258,23 @@ root gate `bun scripts/local-gate.mjs` before handoff.
   foreground, every obligation closed (validator: `bun scripts/local-gate.mjs`
   exits 0)
   (Implements: S1, S5)
+- P6 — Native first reader (S5a, owner D1): `Bun.JSONC.parse` reads the file
+  first when the runtime has one, while the schema parser stays the acceptance
+  boundary — it defines what counts as JSONC, reports `line:<col>`, and supplies
+  the validated value (validator: `bun test test/config-jsonc.test.mjs` exits 0
+  on bun (`J7`, `J8`) and `node --test test/config-jsonc.test.mjs` exits 0 with
+  `J8` declared skipped)
+  (Implements: S5a)
+  - Relevant files: packages/pi-agentic-workflow/src/config/schema.ts,
+    packages/pi-agentic-workflow/test/config-jsonc.test.mjs
+- P7 — Comment-preserving save (S7): the settings console writes the file
+  through the JSONC AST editor the owner picks, so a save keeps the comments and
+  the untouched layout (validator: `bun test test/settings-console-jsonc.test.mjs`
+  exits 0 over a commented fixture; **not started — blocked on the owner's
+  pick**)
+  (Implements: S7)
+  - Relevant files: packages/pi-agentic-workflow/src/settings/console.ts,
+    packages/pi-agentic-workflow/package.json
 
 ### Planning evidence
 
@@ -278,15 +308,17 @@ validator with the outcome it must produce, and is `planned` at cut time.
 | O1 | S3 | a `pi-agentic-workflow.json` carrying a `//` line comment parses: `parseConfigFile` answers `ok: true` with the declared keys, never `{ ok: false }` | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J1`) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (811 pass, 0 fail; `J1` among them) |
 | O2 | S5 | block comments and trailing commas in objects and arrays are accepted in the extension file | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J2`) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (`J2` passes; E3 shows the base parser rejecting the same bytes) |
 | O3 | S3, S6 | the loader reads a commented extension file end to end — `loadConfig.ok` is true, `problems` empty, the extension value is applied, and the base file's `memory.engram` consent is read (the issue's steps 3–5 no longer reach `config-invalid`) | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J3`) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (`J3`: `ok`, no problems, `memory.engram` true, `onSettle` restore) |
-| O4 | S2, S5 | the extension file and the base file are parsed by the same JSONC parser, with no runtime split: `parseConfigFile` carries no `JSON.parse` and reads `parseJsonc` from the schema package | P2 | P2 | direct application (this session) | `rg -n 'JSON.parse' packages/pi-agentic-workflow/src/config/schema.ts` matches 0 and `rg -n 'parseJsonc\(text\)' packages/pi-agentic-workflow/src/config/schema.ts` matches 1 | E line in SPEC `## Log` | verified — E6 line in SPEC `## Log` (0 and 1 matches) |
+| O4 | S2, S5, S5a | the extension file is read by the runtime's native JSONC parser first when the runtime has one (Bun), and by the schema package's `parseJsonc` otherwise — which stays the acceptance boundary on both runtimes and is the only refusal reporter | P6 | P6 | direct application (this session) | `rg -n 'JSON.parse' packages/pi-agentic-workflow/src/config/schema.ts` matches 0 and `bun test test/config-jsonc.test.mjs` exits 0 (`J7`, `J8`) | E line in SPEC `## Log` | verified — E10 line in SPEC `## Log` (0 matches; 8 pass on bun, `J7` green and `J8` declared skipped on node) |
 | O5 | S5 | plain JSON is untouched: a comment-free file parses to exactly the config it produced before | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J4`) and `bun test test/config-merge.test.mjs test/config-schema-stateflow.test.mjs test/model-profiles.test.mjs` exits 0 (69 pass) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (the 69-pass targeted run and the 811-pass package suite; E3's `J4` row is byte-identical base-vs-change) |
-| O6 | S4 | a syntax error still fails at `$` with no `config` property, and the message carries the parser's error with its line and column (`invalid JSON: line <n>:<col>: …`) | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J5`) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (`J5`: `line 3:13`); E3 shows the base parser carrying no location |
+| O6 | S4 | a syntax error still fails at `$` with no `config` property, and the message carries the parser's error with its line and column (`invalid JSON: line <n>:<col>: …`) on both runtimes | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J5`, `J6`) | E line in SPEC `## Log` | verified — E10 line in SPEC `## Log` (`J5`/`J6` on both runtimes; E11 shows the messages identical between bun and node) |
 | O7 | S4 | a broken file still fails the load closed: `ok:false`, exactly one problem at `$` carrying `invalid JSON`, and the caller gets the shipped default rather than a half-read file | P2 | P2 | direct application (this session) | `bun test test/config-jsonc.test.mjs` exits 0 (`J6`) and `bun test test/config-merge.test.mjs` exits 0 (the `AC12` cases) | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (`J6`; the `AC12` cases in the same 811-pass suite) |
 | O8 | S5 | the pre-existing config behaviour is unchanged: every `parseConfigFile` consumer (loader, settings console open/save, profiles, passes, subagents, state flow) still reads its fixture and the package suite stays green | P4 | P2 | direct application (this session) | `cd packages/pi-agentic-workflow && bun run test` exits 0 | E line in SPEC `## Log` | verified — E4 line in SPEC `## Log` (811 pass, 0 fail, 75 files) |
-| O9 | S5 | the differential run against the base commit differs only in the declared deltas: comments/trailing commas now parse, the failure message gains `line <n>:<col>`, and a non-object root gains the `invalid JSON: ` prefix | P3 | P3 | direct application (this session) | differential run in `mktemp -d` (base copy vs change, identical corpus): every diff line is one of the three declared deltas | E line in SPEC `## Log` with the diff summary | verified — E3 line in SPEC `## Log` (12 changed cases, 5 unchanged, no undeclared delta) |
+| O9 | S5, S5a | the differential run against the base commit differs only in the declared deltas: comments/trailing commas now parse, the failure message gains `line <n>:<col>`, and a non-object root gains the `invalid JSON: ` prefix | P3 | P3 | direct application (this session) | differential run in `mktemp -d` (base copy vs change, identical corpus, both runtimes): every diff line is one of the three declared deltas | E line in SPEC `## Log` with the diff summary | verified — E3 (strict-only pass) and E11 (native-first pass): 15 changed cases, 5 unchanged, no undeclared delta under either runtime |
 | O10 | S6 | the documentation states the landed contract: both files are JSONC through one parser, and the settings console rewrites the extension file as plain JSON, so a save does not preserve comments | P4 | P4 | direct application (this session) | `rg -n 'JSONC' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md` matches 3 and `rg -n 'plain JSON' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md` matches 2 | E line in SPEC `## Log` | verified — E6 line in SPEC `## Log` (3 and 2 matches) |
 | O11 | S1 | repository state ships in the same change: the roadmap `## Fixes` row (hand edit — no emitter writes fix rows), the changeset intent, the journal fragment, and the generated projection through the renderer | P4 | P4 | direct application (this session) | `bun scripts/lint-changeset.mjs` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `rg -n '#521' docs/ROADMAP.md` matches 1 | E line in SPEC `## Log` | verified — E5 line in SPEC `## Log` (changeset ok, projection PASS, roadmap row present) |
 | O12 | S1, S5 | the declared deterministic gates are green before handoff | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 line in SPEC `## Log` (`PASS — 17 step(s) in 173s`, HEAD `1e7d02f2` in the clean worktree; the primary checkout's one red is E7's environment finding, reproduced at the base commit) |
+| O13 | S5a | the same bytes accept and refuse identically on bun and node: the native parser never widens what a config may contain — single quotes, hex numbers, a concatenated root and a truncated tail are refused on both, with the same message | P6 | P6 | direct application (this session) | differential run under both runtimes (same corpus, base copy vs change): the change's bun and node outputs differ on 0 lines | E line in SPEC `## Log` | verified — E11 line in SPEC `## Log` (0 differing lines between runtimes; the base differed on 26) |
+| O14 | S7 | a settings-console save preserves the file's comments and its untouched layout through a JSONC AST editor instead of rewriting plain JSON | P7 | P7 | direct application (this session), after the owner picks the editor | the console round-trip test exits 0 | E line in SPEC `## Log` | planned — blocked on the owner's editor pick (D3/S7); the console still rewrites plain JSON |
 
 ## Triaged steps
 
@@ -437,12 +469,70 @@ surgery.
   suite 106 suites PASS, no skipped step. Every later commit on this branch is
   documentation under `docs/fix/521-fix-config/`, so `test-impact` answers
   `empty` for it and no test-bearing step is affected.
+- **L3** — 2026-11-12, the owner's review of the handoff, verbatim:
+  ```
+  D1, use Bun native path if avalable, you can validate that with schema
+  D2, ok
+  D3, use JSONC AST editor but ask which one to me, find best options and good balance between performance, compatibility (node/Bun) & well mantained
+  D4 I don't understand which is the question and possible decisions here, seems like an observation (ledger/honest points)
+  ```
+- **D5** — 2026-11-12, correction batch on D1 (authority: S5a): `Bun.JSONC.parse`
+  is the first reader when the runtime has one; the schema package's parser
+  stays the acceptance boundary. The boundary is not negotiable: measured on bun
+  1.4.4, `Bun.JSONC.parse('{"a":1},{"b":2}')` answers `{"a":1}` — it stops at
+  the first root value and ignores the rest, so a native-only reader would read
+  a truncated or concatenated file as valid (fail-open), and its errors carry no
+  position. The strict parse is the only EOF check a JSONC reader has; the native
+  result therefore never becomes the config, the schema parse supplies it. Cost
+  measured on a 3.5 KB config: `Bun.JSONC.parse` 49.6 µs, `parseJsonc` 117.4 µs —
+  the guard means both run, so this is ~0.17 ms per session start, not a saving;
+  the owner gets the native reader he asked for without the fail-open.
+- **D6** — 2026-11-12, D2 ratified by the owner (authority: L3 line 2): the
+  engram notification keeps its text; no change to `src/extension/engram.ts`.
+- **D7** — 2026-11-12, D4 answered (authority: L3 line 4): D4 was a disclosure,
+  not a question — the AC section was changed after its first freeze at cut, so
+  the `ac-hash` was recomputed and the fact recorded. No decision is needed from
+  the owner unless he wants the first-cut wording restored.
+- **D8** — 2026-11-12, second AC re-stamp (authority: S5a + S7): AC-S2 was
+  re-worded for the native-first reader and AC-S7 was added for the
+  comment-preserving save, so `ac-hash` moved `c216731c…` → `30331099…`. No
+  existing assertion was relaxed; AC-S7 is marked not met, and its task P7
+  carries the blocking reason.
+- **E9** — 2026-11-12, RED for S5a observed on the pre-correction tree (strict
+  reader only) with the new corpus: `bun test test/config-jsonc.test.mjs` · exit
+  1 · 7 pass, 1 fail (`J8`: the native parser is never consulted). `J7` (the
+  acceptance boundary) already passed there, which is the proof the guard is the
+  strict parser and not the native one.
+- **E10** — 2026-11-12, green after the correction: `bun test
+  test/config-jsonc.test.mjs` · exit 0 · 8 pass, 0 fail; `node --test
+  test/config-jsonc.test.mjs` · exit 0 · 7 pass, 0 fail, 1 skipped (`J8`, this
+  runtime has no native parser). Whole package: `bun run test` · exit 0 · 813
+  pass, 0 fail (75 files); `bun run test:node` · exit 0 · 812 pass, 0 fail, 1
+  skipped (the declared `J8`).
+- **E11** — 2026-11-12, differential re-run with the native-first reader, in
+  `mktemp -d` (removed): the base commit's `schema.ts` compiled beside the
+  change, one 20-case corpus, run under **both** runtimes. Against the base: 15
+  changed cases (30 diff lines) under bun and the same 15 under node, 5
+  unchanged — every change a declared delta (the six JSONC acceptances, four
+  S5a refusals whose message gains `line:<col>`, three failures that gain a
+  location, two non-object roots that gain the prefix). Between runtimes: the
+  change's bun and node outputs differ on **0 lines**; the base tree differed on
+  **26** (its `JSON.parse` error text is runtime-specific). That is S5a's whole
+  point: the native reader is faster, the schema boundary makes the answer the
+  same.
+- **P6** — 2026-11-12, native first reader (S5a) · test corpus `dc8cc506` (red
+  observed, E9) and implementation `b444c38c` (green, E10/E11).
+- **P7** — 2026-11-12, not started: the comment-preserving save waits for the
+  owner's editor pick (S7), researched in the handoff (option table + the
+  measured, tested candidates).
 
 ## Next
 
-Owner verdict on the diff. The branch `fix/521-fix-config` is local-only — no
-push, no PR — and every obligation is `verified` (O12 on G1). The owner is the
-external verifier; no review or fold pass ran inside this unit by design.
+**Needs your decision:** which JSONC AST editor the settings console's
+comment-preserving save uses (S7/D3) — options and measurements are in the
+handoff. O14 and P7 are the open rows; O1–O13 are `verified`. The branch
+`fix/521-fix-config` is local-only — no push, no PR — and the owner is the
+external verifier.
 
 ## References
 
