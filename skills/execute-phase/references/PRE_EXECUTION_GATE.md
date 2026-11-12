@@ -5,7 +5,7 @@ never that an independent reviewer accepted them. Before any edit, require the
 unit doc's Evidence rows to be current (one Evidence row per acceptance criterion,
 each with a verified command/digest/output) and the triage block to be present
 and current in the unit doc. The triage block was produced by
-`scripts/unit-route.mjs --triage <slug>` and pasted verbatim; if the unit doc
+`bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <slug>` and pasted verbatim; if the unit doc
 has been edited since the triage block was written, the Evidence rows are stale.
 
 **Fail closed on both states** — missing Evidence or stale unit doc:

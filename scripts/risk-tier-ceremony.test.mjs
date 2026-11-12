@@ -220,7 +220,7 @@ test("C3 unit-lane states the Task Size signals and never lets file counts decid
   assert.match(skill, /Contained risk/, "the contained-risk signal");
   assert.match(skill, /Resumable-from-diff/, "the resume test");
   assert.match(skill, /never decide|never read|never basis/i, "file counts never decide");
-  assert.match(skill, /ceremony\.mjs tier classify/, "the lane reads the tier from the ceremony CLI, never derives it");
+  assert.match(skill, /ceremony tier classify/, "the lane reads the tier from the ceremony CLI, never derives it");
 });
 
 test("C3a a passive verdict routes a docs-only request to the zero-ceremony path", () => {

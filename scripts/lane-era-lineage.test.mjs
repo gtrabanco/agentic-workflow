@@ -240,12 +240,12 @@ test("legacy acceptance manifest still binds when present (AC2)", (t) => {
 test("audit-pr's closure gate reads the lane-era surfaces (AC3)", () => {
   const gates = read("skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md");
   // lane-era lineage: triage-block currency re-derived from the doc's own facts
-  assert.match(gates, /unit-route\.mjs --triage/, "the lane-era currency check must name the triage re-derivation");
+  assert.match(gates, /unit-route --triage/, "the lane-era currency check must name the triage re-derivation");
   // obligations are read from the unit doc (embedded shape) or the separate ledger file
   assert.match(gates, /`### Obligations`/, "the unit-doc embedded obligations ledger must be named");
   assert.match(gates, /planning-obligations\.md/, "the separate-file obligations ledger must be named");
   // the legacy verify path stays for units that carry progress.md receipts
-  assert.match(gates, /pre-execution-snapshot\.mjs verify --stage/, "the legacy verify recipe must remain named");
+  assert.match(gates, /pre-execution-snapshot verify --stage/, "the legacy verify recipe must remain named");
   // never a git blob id where a snapshot digest is meant (F1 fold regression)
   assert.ok(!/git hash-object/.test(gates), "the gate must not instruct git hash-object for snapshot digests");
 });
@@ -512,5 +512,5 @@ test("audit-pr gate 1 routes through the machine surface and retracts the phanto
   assert.match(gates, /unit-lineage\.mjs/, "gate 1 must name its machine surface");
   assert.match(gates, /LINEAGE OK/, "the fixed verdict vocabulary the gate reads must be named");
   assert.ok(!/digest of the triage block/.test(gates), "F9: the paragraph claiming a triage digest is retracted");
-  assert.match(gates, /pre-execution-snapshot\.mjs verify --stage/, "the legacy verify recipe stays named (F1-fold regression pin)");
+  assert.match(gates, /pre-execution-snapshot verify --stage/, "the legacy verify recipe stays named (F1-fold regression pin)");
 });
