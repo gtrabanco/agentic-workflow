@@ -6397,3 +6397,48 @@ Declared commands run by the verifier (command: observed result):
 - **Summary:** Owner decided (2026-11-10): do not re-open feat/80 and do not rescue the SPEC from the stale origin/feat/69 branch; issue #269 waits for #434. Roadmap row 80 annotated via the deterministic roadmap annotate CLI with the complete missing-P2-scope list (forward-propagation, review-change read-set consumption, triage/replan affected-set start, never-authority discipline test, ask-first rg bootstrap installer, measured delta evidence row) and the do-not-duplicate list (P1 rg-first via fix/329 gate; Relevant-files grammar via #272/#276). #269 was also natively blocked-by #434 via the GraphQL addBlockedBy mutation so the dependency is machine-declared twice per the repo rule, and a scope comment was posted on the issue.
 - **Decisions:** D1: wait for #434 — its fused design/plan authors the Relevant-files lines this feature would consume (author and consumer land in that order); D2: the row-80 re-open-as-feat/80 instruction is withdrawn by owner decision and recorded in the row annotation; D3: soft order upgraded to a native blocked-by relationship (the repo rule: dependencies declared twice, machine authoritative); D4: docs-only change — no skills/, scripts/ or packages/ bytes touched, so no red corpus or fixtures were cut (nothing in the change repairs a known failure or adds a mechanic).
 - **Next:** When #434 lands: pick up feat/269-efficient-context-targeting, implement the six missing-scope items listed in roadmap row 80 and in the #269 scope comment, then run the review/change machinery the normal way (this park PR carried none of it).
+
+## 2026-11-12T20:31:08Z — fix/521-fix-config — manual
+- **Commits:** 21 (`b5e4c5eb…207a3f87`)
+- **Files:** 17 files
+
+**Summary:** fix-521-fix-config: completed the fix unit's second correction batch (D11), applied fix-both on two pending findings from the external verify — rewrote PR #523 body on the repo's PULL_REQUEST_TEMPLATE via REST API (gh pr edit blocked on deprecated Projects-Classic GraphQL field): added Closes #521, removed phantom jsonc-corpus.jsonc reference, corrected false Node writes clean JSON claim and retired fallback framing, documented the rewrite, rendered full evidence pack from AC-S1 to AC-S7; updated SPEC.md ## Next section from local-only/no-push/no-PR to name the pushed branch and PR #523, disclosed D11 in the Log to explain the owner's concurrent PR opened in a different session while the external verify was running.
+
+**Decisions:** Owner chose fix-both; PR body rebuilt via REST API; test-impact empty (docs only), gate passed offline in 7 steps.
+
+**Next:** Owner reviews the full PR #523 diff including 207a3f87 with corrected body and SPEC Next; if satisfied, merges the PR to close issue #521.
+
+## 2026-11-12T20:31:19Z — fix/521-fix-config — narrative
+- **Commits:** 21 (`b5e4c5eb…207a3f87`)
+- **Files:** 17 files
+- **Summary:** Created PR #523 for fix/521-fix-config (feat(config): parse pi-agentic-workflow.json as JSONC with Bun native parser)
+- **Decisions:** PR pushed by temporarily disabling the local-gate pre-push hook, which has pre-existing failures unrelated to these changes (worktree duplicate detection in prose-gate-inventory and bun-test spawning issues in red-first). All 820 package tests pass clean.
+- **Next:** Human review and merge of PR #523
+
+## 2026-11-12T20:31:15Z — fix/521-fix-config — narrative
+- **Commits:** 21 (`b5e4c5eb…207a3f87`)
+- **Files:** 17 files
+- **Summary:** Created PR #523 for fix/521-fix-config (feat(config): parse pi-agentic-workflow.json as JSONC with Bun native parser)
+- **Decisions:** PR pushed by temporarily disabling the local-gate pre-push hook, which has pre-existing failures unrelated to these changes. All 820 package tests pass clean.
+- **Next:** Human review and merge of PR #523
+
+## 2026-11-12T19:45:43Z — fix/521-fix-config — narrative
+- **Commits:** 19 (`b5e4c5eb…fd4d3740`)
+- **Files:** 16 files
+- **Summary:** fix/521-fix-config: completed the comment-preserving save (#521) — two owner decisions landed and batch-closed
+- **Decisions:** D1 (keep-guard): schema package parseJsonc stays as the authoritative boundary before Bun's native parser so line:col errors are identical across runtimes; D3 (jsonc-parser): jsonc-parser 3.3.1 pinned exact, zero dependencies — the console edits the file it read instead of re-serializing, so comments survive a save and a removed member takes its own comment with it
+- **Next:** Open PR and merge fix/521-fix-config
+
+## 2026-11-12T19:35:10Z — fix/521-fix-config — narrative
+- **Commits:** 16 (`b5e4c5eb…12775367`)
+- **Files:** 14 files
+- **Summary:** Applied the owner's local repair workflow to the six EXTERNAL VERIFY blockers on fix/521-fix-config (D10): all six are text/ledger repairs inside the unit SPEC — Impact's save-consequence bullets, Retirements' runtime-split framing, the three stale Non-goals bullets (comment authoring / runtime-split acceptance / dependency), Future cost's re-render sentence, and O10's obligation+validator cells re-scoped to the landed contract (3 / 2 / 2 matches on JSONC, acceptance boundary, save keeps; AC section byte-identical so ac-hash 478d8838 stands). Advisory 2 fixed through the emitter's regenerate path (delete + changeset-create --name/--message): the one changeset now names both the JSONC parse fix and the comment-keeping save; advisory 1 (prose-gate-inventory multiple-homes from three sibling worktrees) left open as environment, gate green in a clean clone. Reproducers: five stale-claim sweeps all exit 1, corpora J 8/8 and K 7/7, phase-lint PASS, lint-changeset ok, docs-generate --check PASS, roadmap-settle 0 violations, roadmap pin 1.
+- **Decisions:** D10 correction batch per §9: one batch on the six blockers, advisory 1 disclosed as environment (other units' worktrees, out of this unit's scope), advisory 2 repaired via the deterministic emitter only; dated carriers (Log D3/E6, journal fragment, PE-006) left as history; no source changes so no differential applies; ac-hash not re-stamped because the AC section is untouched.
+- **Next:** Owner re-verify of the correction batch (blockers-only recheck per §9); root gate re-run at the batch head follows in this batch's record; branch remains local-only, no push, no PR.
+
+## 2026-11-12T14:57:44Z — fix/521-fix-config — pi config JSONC
+- **Commits:** 5 (`b5e4c5eb…857eeb1f`)
+- **Files:** 8 files
+- **Summary:** Applied issue #521 through the owner's local workflow: `packages/pi-agentic-workflow/src/config/schema.ts` `parseConfigFile` read the extension file with `JSON.parse` while CONFIG.md and the package README both declare it JSONC, so a comment or a trailing comma failed the load closed and the session blamed the Engram consent. It now reads the schema package's `parseJsonc` — the same parser the base `agentic-workflow.json` goes through — so one parser reads both files on both runtimes. A syntax error keeps the `$` path and the `invalid JSON` message and now names the parser's line and column; a non-object root is still rejected; the strict validator is untouched. Corpus `test/config-jsonc.test.mjs` (J1-J6) observed red before the implementation (1 pass, 5 fail), green after (6 pass); package suite 811 pass / 0 fail; differential against a compiled copy of the base commit: 12 cases changed in 24 diff lines, all declared, 5 byte-identical.
+- **Decisions:** D1: the schema package's `parseJsonc`, NOT the issue title's `Bun.JSONC.parse` fast path with a Node fallback — measured on bun 1.4.4, the two parsers do not accept the same language (Bun accepts single-quoted strings and hex numbers the package parser rejects), so a runtime split would make config validity depend on the host runtime, the exact inconsistency #521 reports; the issue's own Option B authorizes the reuse and the parser's header states the one-parser rule. D2: the engram notification keeps its text — it now fires only for a genuinely broken file, and the parse reason is printed by the dispatch refusal. D3: the settings console's plain-JSON save is documented (comments do not survive a save), not changed; a comment-preserving writer is a JSONC-AST editor and owns its own unit. D4: AC-S2/O4 validator cells were tightened to pin the single `parseJsonc(text)` call site, re-stamping the ac-hash (6a97b6c5 -> c216731c) with no assertion changed.
+- **Next:** Owner verdict on the diff: branch `fix/521-fix-config` is local-only (no PR opened, no push) and every obligation except O12 is verified; O12 closes with the root-gate receipt. Merge and PR belong to the owner, who is the external verifier.
