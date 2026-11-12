@@ -37,8 +37,7 @@ import { fileURLToPath } from "node:url";
 import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sensorScript = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs");
-const contractScript = path.join(repoRoot, "scripts", "pre-execution-contract.mjs");
+const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 
@@ -117,12 +116,9 @@ function makeRepo(t) {
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, text);
   };
-  // The sensor resolves the schema through <repoRoot>/packages/.../dist: link the
-  // real build output, never a copy, so the CLI exercises the shipped contract.
-  fs.symlinkSync(path.join(repoRoot, "packages"), path.join(root, "packages"));
-  fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
-  fs.copyFileSync(sensorScript, path.join(root, "scripts", "pre-execution-snapshot.mjs"));
-  fs.copyFileSync(contractScript, path.join(root, "scripts", "pre-execution-contract.mjs"));
+  // The sandbox is a consumer project: the sensor runs from the installed crate
+  // and senses this repository through its working directory, so the fixture
+  // copies no runner source in.
   write(`${UNIT_DIR}/SPEC.md`, specText());
   write(`${UNIT_DIR}/ACCEPTANCE.md`, ACCEPTANCE);
   write(`${UNIT_DIR}/PLAN.md`, "# Plan\n\nP1 ships it.\n");
@@ -149,7 +145,7 @@ function makeRepo(t) {
   };
   commit("planning artifacts frozen");
   const run = (...args) =>
-    spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], {
+    spawnSync(process.execPath, [BIN, "pre-execution-snapshot", ...args], {
       cwd: root, encoding: "utf8", timeout: 120000,
     });
   const build = (...args) => {

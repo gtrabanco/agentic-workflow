@@ -33,7 +33,9 @@ import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-documen
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sensorScript = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs");
+const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
+/** The module whose own source one case reads, installed from the crate. */
+const SENSOR_MODULE = path.join(repoRoot, "packages", "agentic-workflow", "src", "runner", "sensors", "pre-execution-snapshot.mjs");
 // Built runtime, with an actionable error instead of ERR_MODULE_NOT_FOUND when
 // the gitignored dist/ has not been produced yet (see scripts/schema-runtime.mjs).
 const schema = await loadSchemaRuntime();
@@ -118,14 +120,9 @@ function makeRepo(t, { unitKind = "feature", dir = UNIT_DIR, unit = "99-toy" } =
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, text);
   };
-  // The sensor resolves the schema through <repoRoot>/packages/.../dist: link the
-  // real build output, never a copy, so the CLI exercises the shipped contract.
-  fs.symlinkSync(path.join(repoRoot, "packages"), path.join(root, "packages"));
-  fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
-  fs.copyFileSync(sensorScript, path.join(root, "scripts", "pre-execution-snapshot.mjs"));
-  // The verifier's contract-shape module (F24/F25): the sandbox mirrors its real
-  // import graph, so the assertions below stay untouched.
-  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(root, "scripts", "pre-execution-contract.mjs"));
+  // The sandbox is a consumer project: the sensor runs from the installed crate
+  // and senses this repository through its working directory, so the fixture
+  // copies no runner source in.
   write(`${dir}/SPEC.md`, specText());
   write(`${dir}/ACCEPTANCE.md`, ACCEPTANCE);
   write(`${dir}/PLAN.md`, "# Plan\n\nP1 ships it.\n");
@@ -155,7 +152,7 @@ function makeRepo(t, { unitKind = "feature", dir = UNIT_DIR, unit = "99-toy" } =
   };
   commit("planning artifacts frozen");
   const run = (...args) =>
-    spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], {
+    spawnSync(process.execPath, [BIN, "pre-execution-snapshot", ...args], {
       cwd: root, encoding: "utf8", timeout: 120000,
     });
   /** `build` and parse the JSON snapshot the CLI printed (digest on line 1). */
@@ -625,7 +622,7 @@ test("the sensor prints only published codes and refuses to invent a snapshot", 
   // A guard on the framing of RS13: the CLI may not synthesize a fake "reviewed"
   // snapshot object to feed the comparator, because that is what produced the
   // always-firing precedence-1 answer.
-  const source = fs.readFileSync(sensorScript, "utf8");
+  const source = fs.readFileSync(SENSOR_MODULE, "utf8");
   assert.doesNotMatch(source, /comparePreExecutionReceiptToSnapshot\([\s\S]{0,400}?snapshot,\s*snapshot,\s*opts\.policy/,
     "the CLI may only compare a receipt to the snapshot it genuinely reviewed (the digest-matched case)");
   assert.ok(/PRE_EXECUTION_FRESHNESS_CODES/.test(source), "the CLI must keep importing the published vocabulary");

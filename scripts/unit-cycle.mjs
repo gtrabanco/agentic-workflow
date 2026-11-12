@@ -48,6 +48,8 @@ import { fileURLToPath } from "node:url";
 import { AUDIT_MARKER_RE } from "./audit-pr-gate.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
+/** The runner's bin: the runtime commands this lane script checks live there. */
+const BIN = path.join(SCRIPTS_DIR, "..", "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 const REPO = path.dirname(SCRIPTS_DIR);
 /** The checkout the loop drives (`--repo`); defaults to this script's repo. */
 let TARGET = REPO;
@@ -405,7 +407,7 @@ export function sense(token) {
   const noneDemanded = /\bn\/a\b/u.test(triagedBody) && declaredSteps === null;
   if (noneDemanded) triageSteps = [];
   else if (docExists) {
-    const r = sh(process.execPath, ["scripts/unit-route.mjs", "--triage", unitDir, "--json"]);
+    const r = sh(process.execPath, [BIN, "unit-route", "--triage", unitDir, "--json"]);
     if (r.status === 0) {
       try {
         const parsed = JSON.parse(r.stdout);
@@ -767,7 +769,7 @@ function main(argv) {
         // The block is the operator's input request. A unit whose ledger simply
         // never existed has nothing to ask, so a non-zero needs-input run is
         // reported as "no open questions recorded" — not as a failure.
-        const block = spawnSync(process.execPath, ["scripts/needs-input.mjs", unitDir], {
+        const block = spawnSync(process.execPath, [BIN, "needs-input", unitDir], {
           cwd: TARGET,
           stdio: "inherit",
           timeout: 30_000,

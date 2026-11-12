@@ -25,7 +25,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sensorScript = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs");
+const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 const git = (cwd, env, ...args) => execFileSync("git", args, { cwd, encoding: "utf8", env }).trim();
 
@@ -101,12 +101,9 @@ function makeRepo(t) {
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, text);
   };
-  fs.symlinkSync(path.join(repoRoot, "packages"), path.join(root, "packages"));
-  fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
-  fs.copyFileSync(sensorScript, path.join(root, "scripts", "pre-execution-snapshot.mjs"));
-  // The verifier's contract-shape module (F24/F25): the sandbox mirrors its real
-  // import graph, so the assertions below stay untouched.
-  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(root, "scripts", "pre-execution-contract.mjs"));
+  // The sandbox is a consumer project, not a copy of the runner: the sensor is
+  // installed (the crate's bin) and senses this repository through its working
+  // directory, so nothing has to be copied in for its imports to resolve.
   write(`${UNIT_DIR}/SPEC.md`, specText());
   write(`${UNIT_DIR}/ACCEPTANCE.md`, ACCEPTANCE);
   write("AGENTS.md", GUIDE);
@@ -121,7 +118,7 @@ function makeRepo(t) {
     return git(root, env, "rev-parse", "HEAD");
   };
   const commitAt = (message, dateIso) => commit(message, dateIso);
-  const run = (...args) => spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], {
+  const run = (...args) => spawnSync(process.execPath, [BIN, "pre-execution-snapshot", ...args], {
     cwd: root, encoding: "utf8", timeout: 120000,
   });
   const build = (...args) => {
