@@ -369,6 +369,14 @@ jobs:
         if: always()
         run: git checkout -- packages/*/package.json
 
+      # Release visible = installable (issue #481): the tag and the pre-release
+      # must not appear while the CDN still 404s a tarball the run just published.
+      # `publish-plan.tsv` is the plan the publish loop read, so already-published
+      # rows (the version gate skipped them) are available and pass immediately.
+      - name: Wait for npm tarball availability
+        if: hashFiles('publish-plan.tsv') != ''
+        run: node "$GITHUB_WORKSPACE/scripts/npm-availability-wait.mjs" --plan publish-plan.tsv
+
       - name: Generate release notes
         if: hashFiles('publish-plan.tsv') != ''
         run: node scripts/release.mjs release-notes > release-notes.txt
@@ -447,6 +455,14 @@ jobs:
         id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance --tag "latest"
+      # The dist-tag never moves to a version the CDN cannot serve (issue #481):
+      # `npm publish` proves acceptance, not that the tarball is downloadable yet.
+      - name: Wait for npm tarball availability
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          node "$GITHUB_WORKSPACE/scripts/npm-availability-wait.mjs" "$NAME@$VERSION"
       # A stable release is also what `@canary` installs until the next canary:
       # the tag never lags behind `latest`. npm's Trusted Publisher record for
       # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
@@ -512,6 +528,14 @@ jobs:
         id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance --tag "latest"
+      # The dist-tag never moves to a version the CDN cannot serve (issue #481):
+      # `npm publish` proves acceptance, not that the tarball is downloadable yet.
+      - name: Wait for npm tarball availability
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          node "$GITHUB_WORKSPACE/scripts/npm-availability-wait.mjs" "$NAME@$VERSION"
       # A stable release is also what `@canary` installs until the next canary:
       # the tag never lags behind `latest`. npm's Trusted Publisher record for
       # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
@@ -605,6 +629,14 @@ jobs:
         id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance --tag "latest"
+      # The dist-tag never moves to a version the CDN cannot serve (issue #481):
+      # `npm publish` proves acceptance, not that the tarball is downloadable yet.
+      - name: Wait for npm tarball availability
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          node "$GITHUB_WORKSPACE/scripts/npm-availability-wait.mjs" "$NAME@$VERSION"
       # A stable release is also what `@canary` installs until the next canary:
       # the tag never lags behind `latest`. npm's Trusted Publisher record for
       # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
@@ -677,6 +709,14 @@ jobs:
         id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance --tag "latest"
+      # The dist-tag never moves to a version the CDN cannot serve (issue #481):
+      # `npm publish` proves acceptance, not that the tarball is downloadable yet.
+      - name: Wait for npm tarball availability
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          node "$GITHUB_WORKSPACE/scripts/npm-availability-wait.mjs" "$NAME@$VERSION"
       # A stable release is also what `@canary` installs until the next canary:
       # the tag never lags behind `latest`. npm's Trusted Publisher record for
       # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
