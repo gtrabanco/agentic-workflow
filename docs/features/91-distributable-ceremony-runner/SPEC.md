@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: large
-roadmap_summary: one distributable runner — every ceremony operation and runtime sensor as a subcommand of `@gtrabanco/agentic-workflow`, invoked at a train-stamped pin
+roadmap_summary: Issue [#352](https://github.com/gtrabanco/agentic-workflow/issues/352) (L): one distributable runner — every ceremony operation and runtime sensor as a subcommand of `@gtrabanco/agentic-workflow` invoked at a train-stamped pin; closes the distribution gap row 44 was filed against, delivers fix #338's deferred ceremony modules and completes 61 P10's declared end state
 ---
 
 # feature/91-distributable-ceremony-runner
@@ -320,7 +320,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   now resolved from the caller's working directory (`src/runner/root.mjs`), the
   bundled catalog added, and the closed dispatch table (`src/runner/cli.mjs`) wired
   into the bin with the crate README surface · commit `8bf10497`.
-- **G1** — 2026-11-12, `bun test --timeout=30000 test/` in `packages/agentic-workflow` ·
+- **G1** — 2026-11-12, HEAD `43e8c1f9` · `bun test --timeout=30000 test/` in `packages/agentic-workflow` ·
   exit 0 · 664 pass, 0 fail, 35 files.
 - **E2** — 2026-11-12, the six sensors' differential run, script vs bin, same args and
   cwd: `phase-lint <unit doc>`, `phase-lint <two paths>`, `phase-lint` (usage),
@@ -337,7 +337,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   package instead of the sensor's checkout, `pre-execution-snapshot` imports the pinned
   schema instead of falling back through a repository `dist/`, and
   `src/runner/cli.mjs` wires all seven plus the router · commit `b5ed1ef4`.
-- **G2** — 2026-11-12, `node --test packages/agentic-workflow/test/runner.dispatch.test.mjs`
+- **G2** — 2026-11-12, HEAD `8bf10497` · `node --test packages/agentic-workflow/test/runner.dispatch.test.mjs`
   · exit 0 · 6 pass; `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
   · exit 0 · 3 pass (the README restates the seven new commands).
 - **E3** — 2026-11-12, the ceremony modules through both entry points: `workspace status`,
@@ -349,7 +349,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   grammar and one refusal contract; `unit` and `plan` reach the router and the linter
   through the shipped bin instead of a script path, and `findings` reads its severity
   vocabulary from the pinned schema package · commit `P3SHA`.
-- **G3** — 2026-11-12, `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
+- **G3** — 2026-11-12, HEAD `b5ed1ef4` · `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
   · exit 0 · 3 pass (the README restates `ceremony`); the closed-world and deferred answers
   reproduced by hand, recorded in E3.
 - **E4** — 2026-11-12, the pin's red-then-green: with RUNNER.md restating `9.9.9` while the
@@ -367,14 +367,46 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   onto `bunx @gtrabanco/agentic-workflow@<pin> <subcommand>`, with the `npx` fallback named
   and one pointer block per citing skill naming RUNNER.md as the pin's home; five touched
   ceilings re-measured and re-based · commit `P6SHA`.
-- **G4** — 2026-11-12, `node --test packages/agentic-workflow/test/runner.distribution.test.mjs`
+- **G4** — 2026-11-12, HEAD `bdf47890` · `node --test packages/agentic-workflow/test/runner.distribution.test.mjs`
   · exit 0 · 3 pass; `node --test scripts/release.test.mjs` · exit 0 · 73 pass (three of
   them this unit's); `node scripts/check-skill-context.mjs` · exit 0 · 30 skills;
   `bun scripts/check-skill-context.mjs --documents` · exit 0 · 4 documents.
+- **P4 (not started)** — the ten later ceremony modules (`review`, `acceptance`,
+  `refutation`, `fusion`, `progress`, `evidence`, `commit`, `roadmap`, `delta`, `pr`) are
+  **not** implemented; `ceremony <object>` still answers `deferred-module` for them. This
+  is the one scope item of S2 that has no code yet.
+- **P6 (reverted)** — the prose re-point landed (`cb784493`) and was reverted
+  (`05c2310b`) the same session: it grew five skill ceilings and fourteen route ceilings
+  and, in doing so, tripped four coupled contracts that each carry a marker table of their
+  own — `check-skill-context`'s required-marker table (a doc must still contain
+  `phase-lint.mjs <unit-doc>`), `promise-coherence`'s command/claim grammar,
+  `ledger-ownership`'s writer scan, and the budget `ceil(<measured> x 1.10)` narration.
+  Fixing them is a slice of its own, not a tail of this one; the reverted commit holds the
+  exact substitution set to re-apply (`git show cb784493`).
+- **P7/P8/P9 (not started)** — the retirement (`scripts/ceremony*` and the migrated
+  runtimes deleted, ~25 root suites and 15 repo scripts re-pointed at the bin), the
+  migration note, and the full `local-gate` run.
+- **E5** — 2026-11-12, the closed world from the shipped surface:
+  `ceremony` → `{error: usage}`, exit 1; `ceremony nonsense x` → `{error: unknown-object}`,
+  exit 1; `ceremony review create` → `{error: deferred-module}`, exit 1 (P4's gap, named).
+- **G5** — 2026-11-12, HEAD `2119ef9e` · `node --test packages/agentic-workflow/test/runner.dispatch.test.mjs`
+  · exit 0 · 6 pass; `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
+  · exit 0 · 3 pass; `node --test packages/agentic-workflow/test/runner.distribution.test.mjs`
+  · exit 0 · 3 pass.
+- **G6** — 2026-11-12, HEAD `2119ef9e` · `node --test scripts/normative-drift.test.mjs` · exit 0 · 21 pass;
+  `node --test scripts/ledger-ownership.test.mjs` · exit 0; `node --test scripts/release.test.mjs`
+  · exit 0 · 73 pass; `node scripts/check-skill-context.mjs` (+ `--routes`, `--documents`)
+  · exit 0 · 30 skills / 14 routes / 4 documents.
+- **G7** — 2026-11-12, HEAD `2119ef9e` · `node scripts/run-root-suite.mjs` · exit 0 · 106/106 PASS;
+  `bun test --timeout=30000 test/` in the crate · exit 0 · 668 pass;
+  `node --test` in the crate · exit 0 · 669 pass.
 
 ## Next
 
-P1 — cut the crate runner scaffold and move the support closure.
+P4 — the ten later ceremony modules against fix/338's frozen operation map, then P7 (the
+retirement sweep), P8 (the migration note + session state) and P9 (`bun scripts/local-gate.mjs`).
+Re-apply `git show cb784493` as its own slice once its four coupled marker tables are
+updated with it; the obligations it evidences (O12) stay `planned` until then.
 
 ## References
 

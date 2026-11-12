@@ -68,8 +68,8 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
   assert.equal(isRunnerCommand("invented-command"), false, "a name outside the table is not a runner command");
   assert.deepEqual(
     Object.keys(RUNNER_COMMANDS),
-    ["unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input", "ledger-provenance"],
-    "the shell-visible half of the runner is exactly these seven commands, in the order the issue names them",
+    ["unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input", "ledger-provenance", "ceremony"],
+    "the shell-visible half of the runner is exactly these commands: the router, the six sensors, and the ceremony registry",
   );
   for (const [name, handler] of Object.entries(RUNNER_COMMANDS)) {
     assert.equal(typeof handler, "function", `${name} is a function`);
