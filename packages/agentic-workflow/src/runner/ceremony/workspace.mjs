@@ -52,7 +52,10 @@ export function workspace(op, argv, cwd = process.cwd()) {
   switch (op) {
     case "status": {
       parseFlags(argv, []);
-      const rows = gitOrFail(["status", "--porcelain=v1"], cwd).split("\n").filter(Boolean).map((l) => ({
+      // `-b` first (the repair `tier` already carries, issue #384 F1): the git
+      // helper trims the whole output, so without a header line the FIRST row
+      // loses its leading status column and its path loses a character.
+      const rows = gitOrFail(["status", "--porcelain=v1", "-b"], cwd).split("\n").filter((line) => line !== "" && !line.startsWith("## ")).map((l) => ({
         file: l.slice(3),
         index: l[0],
         working: l[1],

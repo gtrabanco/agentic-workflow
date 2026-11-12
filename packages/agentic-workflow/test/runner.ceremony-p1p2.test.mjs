@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,6 +29,22 @@ function makeRepo(t) {
     mkdirSync(join(abs, ".."), { recursive: true });
     writeFileSync(abs, text);
   };
+  write("docs/ROADMAP.md", [
+    "# Roadmap",
+    "",
+    "## Features",
+    "",
+    "| # | Slug | Status | Depends on | Summary |",
+    "| --- | --- | --- | --- | --- |",
+    "| 91 | `toy` | in-progress | — | a toy feature |",
+    "",
+    "## Fixes",
+    "",
+    "| # | Slug | Status | Depends on | Summary |",
+    "| --- | --- | --- | --- | --- |",
+    "| 77 | `toy` | in-progress | — | a toy fix |",
+    "",
+  ].join("\n"));
   write("docs/fix/77-toy/SPEC.md", [
     "# fix/77-toy",
     "",
@@ -69,6 +85,16 @@ function ceremony(root, ...args) {
 }
 
 const safe = (text) => { try { return JSON.parse(text); } catch { return null; } };
+
+/** Run one ceremony operation with a patched environment (the degradation cases). */
+function ceremonyWith(root, env, ...args) {
+  try {
+    const stdout = execFileSync(process.execPath, [BIN, "ceremony", ...args], { cwd: root, encoding: "utf8", env: { ...process.env, ...env } });
+    return { code: 0, stdout, json: safe(stdout), stderr: "" };
+  } catch (error) {
+    return { code: error.status ?? 1, stdout: error.stdout ?? "", json: safe(error.stdout ?? ""), stderr: error.stderr ?? "" };
+  }
+}
 
 test("progress: append writes the log-kind token, read lists it, delete and clear remove it", (t) => {
   const { root } = makeRepo(t);
@@ -189,15 +215,17 @@ test("fusion: identical targets and claims fuse into one row carrying both axes"
   assert.equal(delta.json.unchanged, 1);
 });
 
-test("the closed world names the four modules the map still owes", (t) => {
+test("the registry answers the whole map, and a name outside it is still refused", (t) => {
   const { root } = makeRepo(t);
-  for (const object of ["review", "commit", "roadmap", "pr"]) {
-    const answer = ceremony(root, object, "read");
-    assert.equal(answer.code, 1, `${object} is not answered yet`);
-    assert.equal(answer.json.error, "deferred-module");
-    assert.match(answer.json.note, /follow-up phase of issue #352/u);
-  }
+  const usage = ceremony(root);
+  const objects = usage.json.objects;
+  assert.deepEqual(
+    objects,
+    ["workspace", "docs", "findings", "ledger", "unit", "plan", "tier", "passive", "progress", "evidence", "acceptance", "delta", "refutation", "fusion", "review", "commit", "roadmap", "pr"],
+    "every object fix/338 declared answers from the crate",
+  );
   const unknown = ceremony(root, "teleport", "now");
+  assert.equal(unknown.code, 1);
   assert.equal(unknown.json.error, "unknown-object");
 });
 
@@ -208,4 +236,112 @@ test("a read operation is byte-stable across runs", (t) => {
   const second = ceremony(root, "acceptance", "build-manifest", "--slug", "77-toy").stdout;
   assert.equal(first, second, "same input, same stdout");
   assert.doesNotMatch(first, /"timestamp"|"generated/u, "no clock in a receipt");
+});
+
+// ── the four modules that close the map (issue #352 P4) ────────────────────
+
+test("review: create records the cycle and head, append-axis adds rows, set-verdict decides, read reports", (t) => {
+  const { root, write } = makeRepo(t);
+  write("docs/fix/77-toy/SPEC.md", [
+    "# fix/77-toy",
+    "",
+    "## Findings",
+    "",
+    "| id | S# / file:line | axis | severity | impact | class | route |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    "",
+    "## Log",
+    "",
+  ].join("\n"));
+
+  const created = ceremony(root, "review", "create", "--slug", "77-toy", "--head", "abc1234def");
+  assert.equal(created.code, 0, created.stdout + created.stderr);
+  assert.equal(created.json.cycle, 1);
+
+  const axis = ceremony(root, "review", "append-axis", "--slug", "77-toy", "--axis", "code", "--findings", JSON.stringify([
+    { target: "src/a.mjs:3", finding: "unchecked return", severity: "WARNING", evidence: "the call ignores the value" },
+  ]));
+  assert.equal(axis.code, 0, axis.stdout + axis.stderr);
+  assert.equal(axis.json["first-id"], "F1");
+
+  const read = ceremony(root, "review", "read", "--slug", "77-toy");
+  assert.equal(read.json.state, "open", "a review with no verdict is open");
+  assert.equal(read.json["head-sha"], "abc1234def");
+  assert.equal(read.json.findings.length, 1);
+
+  const decided = ceremony(root, "review", "set-verdict", "--slug", "77-toy", "--verdict", "PASS");
+  assert.equal(decided.code, 0, decided.stdout + decided.stderr);
+  assert.equal(ceremony(root, "review", "read", "--slug", "77-toy").json.verdict, "PASS");
+
+  const summary = ceremony(root, "review", "read-summary", "--slug", "77-toy");
+  assert.equal(summary.json.verdict, "PASS");
+  assert.equal(summary.json["finding-count"], 1);
+});
+
+test("commit: verify-format judges the subject, create refuses a bad one, list answers the unit's history", (t) => {
+  const { root, write, git } = makeRepo(t);
+  write("src/one.mjs", "export const a = 1;\n");
+
+  const good = ceremony(root, "commit", "verify-format", "feat(77): add one");
+  assert.equal(good.json.valid, true);
+  assert.equal(good.json.type, "feat");
+  assert.equal(good.json.scope, "77");
+
+  const bad = ceremony(root, "commit", "verify-format", "added a thing");
+  assert.equal(bad.code, 1, "a non-conventional subject is the usage class");
+  assert.equal(bad.json.valid, false);
+
+  const refused = ceremony(root, "commit", "create", "--slug", "77-toy", "--message", "oops", "--files", "src/one.mjs");
+  assert.equal(refused.code, 2, "create blocks on a subject the rule would reject");
+
+  const created = ceremony(root, "commit", "create", "--slug", "77-toy", "--message", "feat(77): add one", "--files", "src/one.mjs");
+  assert.equal(created.code, 0, created.stdout + created.stderr);
+  assert.equal(created.json["message-verified"], true);
+
+  const listed = ceremony(root, "commit", "list", "--slug", "77-toy");
+  assert.ok(listed.json.commits.length >= 1);
+  assert.equal(git("log", "-1", "--format=%s"), "feat(77): add one");
+});
+
+test("roadmap: read answers both tables, list groups by status, row-upsert answers the writer", (t) => {
+  const { root, write } = makeRepo(t);
+  write("docs/features/91-toy/SPEC.md", "# feature/91-toy\n\n## Log\n\n");
+  const read = ceremony(root, "roadmap", "read");
+  assert.equal(read.code, 0, read.stdout + read.stderr);
+  assert.ok(Array.isArray(read.json.features) && Array.isArray(read.json.fixes));
+
+  const list = ceremony(root, "roadmap", "list");
+  assert.ok(list.json["by-status"], "the answer groups the work list by status");
+
+  const upsert = ceremony(root, "roadmap", "row-upsert", "--slug", "91-toy", "--status", "planned", "--summary", "the toy row");
+  assert.ok(upsert.code === 0 || upsert.code === 1, "row-upsert answers a receipt or a refusal, never a stack trace");
+});
+
+test("pr: the degradation contract — a missing gh and an unauthenticated gh are blocks, never stack traces", (t) => {
+  const { root } = makeRepo(t);
+  const bin = process.execPath;
+  // A PATH with no gh at all: the binary is missing, not failing. The runner is
+  // spawned by absolute path, so only `gh` needs to be out of reach.
+  const withoutGh = (process.env.PATH ?? "")
+    .split(":")
+    .filter((dir) => dir !== "" && !existsSync(join(dir, "gh")))
+    .join(":");
+  const bare = ceremonyWith(root, { PATH: withoutGh }, "pr", "read-diff", "1");
+  assert.equal(bare.code, 2, "a missing gh is the ceremonial block");
+  assert.equal(bare.json.degraded, "gh-missing");
+
+  // A gh that answers "not logged in": the degradation names authentication.
+  const shims = mkdtempSync(join(tmpdir(), "gh-shim-"));
+  t.after(() => rmSync(shims, { recursive: true, force: true }));
+  writeFileSync(join(shims, "gh"), "#!/bin/sh\necho 'gh: not logged in to any GitHub hosts' >&2\nexit 1\n");
+  chmodSync(join(shims, "gh"), 0o755);
+  const unauthenticated = ceremonyWith(root, { PATH: `${shims}:${withoutGh}` }, "pr", "read-diff", "1");
+  assert.equal(unauthenticated.code, 2);
+  assert.equal(unauthenticated.json.degraded, "gh-unauthenticated");
+
+  // A gh that fails for any other reason is the usage class, naming the subcommand.
+  writeFileSync(join(shims, "gh"), "#!/bin/sh\necho 'boom' >&2\nexit 4\n");
+  const broken = ceremonyWith(root, { PATH: `${shims}:${withoutGh}` }, "pr", "read-diff", "1");
+  assert.equal(broken.code, 1);
+  assert.equal(broken.json.error, "gh-error");
 });

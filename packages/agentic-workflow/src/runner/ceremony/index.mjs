@@ -30,7 +30,11 @@ import { acceptance } from "./acceptance.mjs";
 import { delta } from "./delta.mjs";
 import { refutation } from "./refutation.mjs";
 import { fusion } from "./fusion.mjs";
-import { fail, DEFERRED_MODULES } from "../lib.mjs";
+import { review } from "./review.mjs";
+import { commit } from "./commit.mjs";
+import { roadmap } from "./roadmap.mjs";
+import { pr } from "./pr.mjs";
+import { fail } from "../lib.mjs";
 
 /** The closed object set: one handler per object. */
 export const REGISTRY = Object.freeze({
@@ -48,6 +52,10 @@ export const REGISTRY = Object.freeze({
   delta,
   refutation,
   fusion,
+  review,
+  commit,
+  roadmap,
+  pr,
 });
 
 /** The objects a caller may name, in registry order. */
@@ -68,15 +76,7 @@ export function run(args) {
     fail("usage", {
       usage: "agentic-workflow ceremony <object> <subcommand> [flags...]",
       objects: CEREMONY_OBJECTS,
-      "deferred-modules": DEFERRED_MODULES,
       "exit-codes": EXIT_CODES,
-    });
-  }
-
-  if (DEFERRED_MODULES.includes(object)) {
-    fail("deferred-module", {
-      object,
-      note: "P1/P2 module — lands in the follow-up phase of issue #352 that extends the registry",
     });
   }
 

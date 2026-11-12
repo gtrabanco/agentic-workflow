@@ -28,13 +28,14 @@ test("unknown object → closed-world JSON error, exit 1 (S8, O1)", () => {
   assert.equal(r.json.object, "nonsense");
 });
 
-test("P1/P2 module (review) → deferred-module, exit 1 (O13)", () => {
+test("a P1/P2 module answers for real — `deferred-module` is gone (feature 91, S2)", () => {
   const dir = makeRepo();
-  const r = cer(["review", "create", "--slug", "x"], dir);
+  const r = cer(["review", "create", "--slug", "x", "--head", "abc1234"], dir);
+  // The module is wired: a slug with no unit is the ordinary usage error, not the
+  // placeholder answer this registry used to give every later module.
   assert.equal(r.code, 1);
-  assert.equal(r.json.error, "deferred-module");
-  assert.equal(r.json.object, "review");
-  assert.match(r.json.note, /follow-up phase of issue #352/u, "the refusal names what closes the gap");
+  assert.equal(r.json.error, "unknown-slug");
+  assert.equal(r.json["deferred-module"], undefined);
 });
 
 test("unknown subcommand of a known object → exit 1 (S8)", () => {
