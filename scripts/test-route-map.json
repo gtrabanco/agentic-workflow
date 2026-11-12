@@ -15,7 +15,7 @@
     {
       "name": "unit-route",
       "globs": [
-        "scripts/unit-route.mjs",
+        "packages/agentic-workflow/src/runner/unit-route.mjs",
         "scripts/unit-route.test.mjs"
       ],
       "suites": [
@@ -70,9 +70,9 @@
     {
       "name": "phase-contract",
       "globs": [
-        "scripts/phase-lint.mjs",
+        "packages/agentic-workflow/src/runner/sensors/phase-lint.mjs",
         "scripts/phase-lint.test.mjs",
-        "scripts/unit-doc-phases.mjs"
+        "packages/agentic-workflow/src/runner/unit-doc-phases.mjs"
       ],
       "suites": [
         "scripts/phase-lint.test.mjs",
@@ -142,7 +142,7 @@
     {
       "name": "workflow-sensor",
       "globs": [
-        "scripts/workflow-status*.mjs",
+        "packages/agentic-workflow/src/runner/sensors/workflow-status*.mjs",
         "skills/workflow-status/**"
       ],
       "suites": [
