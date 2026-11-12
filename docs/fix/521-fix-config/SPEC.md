@@ -557,6 +557,23 @@ surgery.
   scripts/local-gate.mjs --jobs 2` · exit 0 · `PASS — 17 step(s) in 265s`, root
   suite 106 suites PASS, no skipped step.
 
+- **E14** — 2026-11-12, disclosure before G4: one gate run at `--jobs 2` failed at
+  `root-suite` with `scripts/red-first.test.mjs`'s whole-repository scan timing
+  out (`killed 1 dangling process`; the runner's per-test budget). Not this
+  change: `node scripts/red-first.mjs` answers `red-first — 56 pair(s) · 25 after
+  the cutoff · cutoff 1374ea9` and `verdict: PASS` with **0 findings** (21.8 s
+  wall, 4.99 s user), and the machine was at load average **11.7 on 6 CPUs** from
+  other sessions (`npm install`, three `bun` processes and a `tsc`) at the time —
+  the same suite passed inside G1–G3. The three suites the log then marks FAIL
+  (`session-close`, `setup-env`, `shared-doc-merge`) printed every test as
+  passing: that is the runner's bail accounting after the killed process, not a
+  red of their own.
+- **G4** — 2026-11-12, `HEAD 39317033` (the ledger commit that lands the editor),
+  same clean worktree: `bun scripts/local-gate.mjs --jobs 1` · exit 0 · `PASS —
+  17 step(s) in 495s`, root suite 106 suites, 0 fail, no skipped step — re-run at
+  `--jobs 1` after the load dropped to 0.76 (E14), so the run measures the tree,
+  not the neighbours.
+
 ## Next
 
 Owner verdict on the diff. Every obligation (`O1`–`O14`) is `verified` and the
