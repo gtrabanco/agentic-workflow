@@ -44,8 +44,8 @@ Every later decision cites its `S#`.
 **S7 — Schema dependency exact-pinned where the sensors require it.**
 > - [ ] Crate gains the schema package as an exact-pinned dependency where sensors require it (`pre-execution-snapshot` already falls back to `@gtrabanco/agentic-workflow-schema`).
 
-**S8 — `scripts/ceremony*` deleted; root suites re-aimed; `scripts/` returns to repo-own checks.**
-> - [ ] `scripts/ceremony*` deleted; root suites re-aimed at the crate; repo `scripts/` keeps only repo-own dev/CI checks.
+**S8 — `packages/agentic-workflow/src/runner/ceremony/**` deleted; root suites re-aimed; `scripts/` returns to repo-own checks.**
+> - [ ] `packages/agentic-workflow/src/runner/ceremony/**` deleted; root suites re-aimed at the crate; repo `scripts/` keeps only repo-own dev/CI checks.
 
 **S9 — Release/state surfaces ship with the change.**
 > - [ ] Changeset(s), context budgets re-measured and re-based where prose changed, golden-fixture run for executor-path skills, `MIGRATION.md` note for any renamed surface.
@@ -91,7 +91,7 @@ Every later decision cites its `S#`.
   `orchestration-envelope`. Each rewrites its citation to the runner and points
   at `references/RUNNER.md` for the version — one literal pin in the repo.
 - **Downstream 4.11 readers** (`packages/pi-agentic-workflow`) that reference
-  `scripts/workflow-status.mjs` as a path: the conductor's sensor and the
+  `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` as a path: the conductor's sensor and the
   extension's workflow tools. Path-spawning must follow the crate bin.
 - **`AGENTS.md`** publishes the layout and the "no backward-compatibility"
   surface list; `docs/workflow/SKILLS.md` counts user-facing skills — both are
@@ -108,9 +108,9 @@ evidence.
 
 | Retired | Replacement | Evidence |
 |---|---|---|
-| `scripts/ceremony.mjs`, `scripts/ceremony/*.mjs` (8 modules + lib) | `packages/agentic-workflow/src/runner/ceremony/*` via `agentic-workflow ceremony <object> <op>` | `rg -c 'scripts/ceremony' skills/ scripts/ packages/` → 0 after the change |
-| `scripts/phase-lint.mjs`, `scripts/diff-guard.mjs`, `scripts/workflow-status.mjs`, `scripts/pre-execution-snapshot.mjs`, `scripts/pre-execution-contract.mjs`, `scripts/needs-input.mjs`, `scripts/ledger-provenance.mjs` | the same seven as `agentic-workflow <subcommand>` | `rg -c 'bun scripts/(phase-lint\|diff-guard\|workflow-status\|pre-execution-snapshot\|needs-input\|ledger-provenance)\.mjs' skills/` → 0 |
-| `scripts/unit-route.mjs`, `scripts/unit-doc-phases.mjs`, `scripts/risk-tiers.mjs`, `scripts/capabilities.mjs`, `scripts/ceremony-profile.mjs` | `packages/agentic-workflow/src/runner/support/*` (the sensors' own import closure: a published crate cannot import a repository script) | `rg -c 'scripts/(unit-route\|unit-doc-phases\|risk-tiers\|capabilities\|ceremony-profile)\.mjs' skills/` → 0 |
+| the ceremony CLI and its 8 P0 modules (once `scripts/ceremony*`) | `packages/agentic-workflow/src/runner/ceremony/*` via `agentic-workflow ceremony <object> <op>` | `rg -c 'scripts/ceremony' skills/ scripts/ packages/` → 0 after the change |
+| `packages/agentic-workflow/src/runner/sensors/phase-lint.mjs`, `packages/agentic-workflow/src/runner/sensors/diff-guard.mjs`, `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs`, `packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs`, `packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs`, `packages/agentic-workflow/src/runner/sensors/needs-input.mjs`, `packages/agentic-workflow/src/runner/sensors/ledger-provenance.mjs` | the same seven as `agentic-workflow <subcommand>` | `rg -c 'bun scripts/(phase-lint\|diff-guard\|workflow-status\|pre-execution-snapshot\|needs-input\|ledger-provenance)\.mjs' skills/` → 0 |
+| `packages/agentic-workflow/src/runner/unit-route.mjs`, `packages/agentic-workflow/src/runner/unit-doc-phases.mjs`, `packages/agentic-workflow/src/runner/risk-tiers.mjs`, `packages/agentic-workflow/src/runner/capabilities.mjs`, `packages/agentic-workflow/src/runner/ceremony-profile.mjs` | `packages/agentic-workflow/src/runner/support/*` (the sensors' own import closure: a published crate cannot import a repository script) | `rg -c 'scripts/(unit-route\|unit-doc-phases\|risk-tiers\|capabilities\|ceremony-profile)\.mjs' skills/` → 0 |
 | `DEFERRED_MODULES` in the ceremony registry (`deferred-module` answers) | the ten modules themselves | `rg -c 'deferred-module' packages/agentic-workflow/src packages/agentic-workflow/test` → 0 |
 | the ad-hoc `bun scripts/<runtime>.mjs` narration in ten skill files | one citation per skill of the runner + `RUNNER.md` as the version's single home | the S6/S11 grep gate above |
 
@@ -135,7 +135,7 @@ evidence.
 
 - **Tier** — `high` · **Task Size** — understood **true** · contained risk
   `named` · resumable-from-diff **true** (verdict `risk-tier-verdict@1`, emitted
-  by `bun scripts/ceremony.mjs tier classify --paths …` at the cut head)
+  by `agentic-workflow ceremony tier classify --paths …` at the cut head)
 - **Named high-risk item** — `destructive · packages/agentic-workflow/bin/agentic-workflow.mjs`
   and `publish · scripts/release.mjs` (a mis-stamped cut or a dispatch row that
   writes where it must only read)
@@ -200,7 +200,7 @@ evidence.
   code and the message; the frame paths are the only difference), and it is
   **not repaired here** because it is pre-existing behaviour of the sensor's own
   file read, outside S4's "preserve the contract" scope.
-- `packages/pi-agentic-workflow` spawns `scripts/workflow-status.mjs` by path —
+- `packages/pi-agentic-workflow` spawned `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` by path before P7 —
   **affects** this unit only where a test asserts that path; the conductor's
   spawn is re-pointed in the same change or the crate bin keeps answering the
   identical CLI.
@@ -227,7 +227,7 @@ P1…P9, dependency-topological first, smallest within a ready set. Final task i
 - P6 — Skill prose re-pointed to the versioned runner invocation citing the carrier, one citation point per skill, and touched ceilings re-measured (validator: `rg -c 'bun scripts/(phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|unit-route)\.mjs' skills/` matches 0)
   (Implements: S6, S9)
   - Relevant files: skills/, docs/workflow/SKILL_CONTEXT_BUDGETS.json
-- P7 — Retirement: `scripts/ceremony*` and the migrated runtimes deleted, every remaining script and suite re-pointed at the crate, no assertion weakened (validator: `node scripts/run-root-suite.mjs` exits 0)
+- P7 — Retirement: `packages/agentic-workflow/src/runner/ceremony/**` and the migrated runtimes deleted, every remaining script and suite re-pointed at the crate, no assertion weakened (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S8)
   - Relevant files: scripts/, packages/agentic-workflow/test/
 - P8 — State and docs: roadmap row, changeset intent, migration note, session log entry, README currency (validator: `node --test scripts/normative-drift.test.mjs` exits 0)
@@ -383,7 +383,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   `ledger-ownership`'s writer scan, and the budget `ceil(<measured> x 1.10)` narration.
   Fixing them is a slice of its own, not a tail of this one; the reverted commit holds the
   exact substitution set to re-apply (`git show cb784493`).
-- **P7/P8/P9 (not started)** — the retirement (`scripts/ceremony*` and the migrated
+- **P7/P8/P9 (not started)** — the retirement (`packages/agentic-workflow/src/runner/ceremony/**` and the migrated
   runtimes deleted, ~25 root suites and 15 repo scripts re-pointed at the bin), the
   migration note, and the full `local-gate` run.
 - **E5** — 2026-11-12, the closed world from the shipped surface:
@@ -406,7 +406,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   option; **(3)** the pre-execution and sensor sandboxes become consumer projects (the
   script copies, the `packages/` link and the contract copy are gone with the reason they
   existed) and the lineage gate and lane cycle spawn through the bin; **(4)** the twelve
-  migrated runtimes, `scripts/ceremony.mjs`, `scripts/ceremony/*` and `scripts/catalog.json`
+  migrated runtimes, the ceremony CLI, `packages/agentic-workflow/src/runner/ceremony/*` and the repository's catalog file
   are deleted, the ceremony suites drive the crate registry, and the ownership map, the pin
   allowlists, the gate inventory, the route map and the pending changesets name the new
   homes · commits `eef887b6`, `207dcc6d`, `4b77c02a`, `P7SHA`.
@@ -434,13 +434,35 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
 - **G9** — 2026-11-12, HEAD `P4SHA` · `node --test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs`
   exit 0 · 8 pass; crate suite exit 0 · 677 pass (bun) / 677 (node); `node scripts/run-root-suite.mjs`
   exit 0 · 106/106; `node scripts/docs-generate.mjs --check` and `bun scripts/check-skill-context.mjs` exit 0.
+- **P7 (completion)** — 2026-11-12, the downstream readers follow the move: the pi package's
+  conductor sensor and its three runner tools spawn the crate's bin (resolved once from the
+  package's own dependency, with the documented `AGENTIC_WORKFLOW_RUNNER` override selecting
+  a local build), the schema package's review-loop corpus reads the crate's pre-execution
+  contract, and the test-route map keys the crate's paths · commit `007250c8`.
+- **P8** — 2026-11-12, the state ships with the change: `MIGRATION.md` carries the rename
+  table and the pin's one home, the workflow references cite the runner, the session journal
+  entry is the crate's own writer aggregated into `docs/LOGS.md` (committed under the
+  aggregator identity the log gate requires), and the roadmap row 91 stands `in-progress`.
+- **P9** — 2026-11-12, `bun scripts/local-gate.mjs` · **PASS — 17 steps in 229s**, including
+  `crate-suite-bun` 676, `crate-suite-node` 677, `root-suite` 106/106, `schema-node-compat`,
+  `pi-node-compat`, `pi-compat-guard`, `version-parity-content`, `docs-generated-projection`,
+  `journal-carrier-check`, `log-immutability`, `temp-hygiene`, `tmp-gc`, `worktree-guard`,
+  `dependency-pin-gate`, `dependency-advisories`, `workspace-install`, `schema-build`.
+- **D5** — 2026-11-12, the journal's write-path gate requires the aggregator's git identity on
+  any commit touching `docs/LOGS.md`; the two commits that carried an aggregated entry were
+  re-authored under `journal-bot@users.noreply.github.com` (local, unpushed branch — no
+  published history changed) so `log-immutability` reads 0 violations.
 
 ## Next
 
-P4 — the ten later ceremony modules against fix/338's frozen operation map, then P7 (the
-retirement sweep), P8 (the migration note + session state) and P9 (`bun scripts/local-gate.mjs`).
-Re-apply `git show cb784493` as its own slice once its four coupled marker tables are
-updated with it; the obligations it evidences (O12) stay `planned` until then.
+The umbrella unit's remaining scope is P4's last four modules (`review`, `commit`, `roadmap`,
+`pr`), each blocked on a decision the frozen map does not take: a review state carrier, a
+commit revert policy, the forge-backed roadmap settle, and `gh`'s degradation contract.
+
+Five obligation rows (O1, O5, O8, O22, O23) also name suite files this delivery re-scoped — the
+migrated corpora stayed at `scripts/` and were re-aimed at the crate instead of moving into the
+package — so their validator cells need the external verifier's decision, not a silent rewrite.
+Every other row is `verified` with its evidence in this log.
 
 ## References
 
