@@ -284,6 +284,13 @@ gate exception. The `## Tasks` list above is the frozen step list for this unit.
   (default workers) · exit 0 · the full root suite PASS.
 - **P6** — 2026-11-11, obligations closed, gate declared, guide budget re-pinned
   and the evidence recorded · `3ef8e2e7` (G1, G2).
+- **F1** — 2026-11-12, correction batch on the 2026-11-12 EXTERNAL VERIFY
+  (VERIFIED, 0 blockers + 1 advisory). **A1 folded into 502's currency:** the
+  three #481 coverage mentions in
+  `docs/features/502-nan-publish-stable/SPEC.md` (the Soft dep bullet, the
+  Future cost bind, the References line) still read "four jobs" — folded to
+  the landed five-job truth (D1) with an F4 row in 502's Log; the verify
+  receipt stays append-only with a dated addendum · this commit.
 
 ## Next
 
