@@ -17,11 +17,6 @@ description: >
 
 # Execute Phase
 
-> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
-> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
-> release and never guessed: a hard-coded version re-opens the per-release sweep the
-> contract removes, and `latest` is not a legal pin.
-
 Step executor for units. The unit doc (created by `unit-lane`) owns `Tasks` P1…Pn,
 `Evidence` rows, and a `Progress` log — these replace PLAN.md, TASKS.md,
 progress.md, and ACCEPTANCE.md. Each step runs as an atomic gate/commit.
@@ -39,14 +34,14 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Nothing here
-  is inferred: a gap runs `bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>` (npx fallback
+  is inferred: a gap runs `bun scripts/needs-input.mjs <unit-dir>` (node fallback
 if bun is not installed) and the
   `open-questions@1` block is pasted, then the run stops.
 ✓ Tool choice re-made this turn — `bun` before `node` on manual invocation,
   `rg` before `grep` on search; availability checked once with
   `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)
 ✓ Triage verified — unit doc Evidence section header matches
-  `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <slug>` output block (PREFLIGHT.md)
+  `bun scripts/unit-route.mjs --triage <slug>` output block (PREFLIGHT.md)
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
 ✓ Step executed and committed (one commit per step, conventional format)
 ✓ Phase read set consumed — the phase read its `Relevant files:` targets
@@ -83,8 +78,8 @@ This skill **never interviews**. It reads its inputs — the unit doc's `Tasks`,
 one is a **gap**, resolved in one fixed order and never by inference:
 **(0) provenance** (search the repo's own docs and record where) →
 **(1) research** (2–3 concrete options with trade-offs; asking for more research
-is a legitimate answer) → **(2) halt**: run `bunx @gtrabanco/agentic-workflow@<pin> needs-input
-<unit-dir>` (npx fallback if bun is not installed), paste the `open-questions@1` block verbatim, stop. Interactive the
+is a legitimate answer) → **(2) halt**: run `bun scripts/needs-input.mjs
+<unit-dir>` (node fallback if bun is not installed), paste the `open-questions@1` block verbatim, stop. Interactive the
 block is the pause point, unattended it is a hard fail. Grammar and exit codes:
 `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open questions.
 
@@ -103,14 +98,14 @@ unit doc at `docs/features/<NN-slug>/SPEC.md`. Verify it carries `## Tasks` (P1�
 the legacy shape carries `## Evidence` + `## Progress log`, a re-cut unit doc carries
 `## Specs`, `## Findings` + `## Log` (its evidence and gate runs are `E`/`G` log
 lines, its progress is `P` lines). If neither pair is present, the unit is not ready —
-stop and suggest `unit-lane` triage first. `agentic-workflow unit-route` resolves the
+stop and suggest `unit-lane` triage first. `scripts/unit-route.mjs` resolves the
 shape; never judge a re-cut unit by the legacy headings and stop it.
 
 ## Process
 
 ### 1. Verify triage currency
 
-Run `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <slug>` and compare its block to the
+Run `bun scripts/unit-route.mjs --triage <slug>` and compare its block to the
 Evidence section header in the unit doc. **Mismatch → STOP and re-triage first.**
 This is the gate that ensures the executor and unit-lane agree on steps.
 
@@ -138,7 +133,7 @@ Run gates in order; any fails → STOP (see [PREFLIGHT.md](references/PREFLIGHT.
 1. **Path-protection checkpoint** — read the committed range against protected
    paths (e.g. `tests/`, `fixtures/`). Exit 1 → STOP with the gate rejection
    block. No `--force` bypass (no flag can override).
-2. **Phase-lint** — run `bunx @gtrabanco/agentic-workflow@<pin> phase-lint <unit-doc>` **only** when the
+2. **Phase-lint** — run `bun scripts/phase-lint.mjs <unit-doc>` **only** when the
    step is `implement` and the unit has `Tasks` P1…Pn. Parse the `Tasks` section
    (not PLAN.md/TASKS.md). Exit 1 → STOP. If the script is absent, apply the
    eight `phase-contract` rules by hand, label weaker, and disclose.
@@ -219,7 +214,7 @@ and the full gate stays what the merge gate and CI run.
 
 ### 6. Post-step
 
-1. **Diff guard** (implement steps only): run `bunx @gtrabanco/agentic-workflow@<pin> diff-guard --base
+1. **Diff guard** (implement steps only): run `bun scripts/diff-guard.mjs --base
    <last-step-commit> --unit <unit>` — paste the block verbatim. **BREACH → STOP**
    (re-triage or record exception). Anti-gaming: **NEVER shrink a diff by deleting
    comments, blank lines, docs or tests.**

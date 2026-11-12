@@ -156,12 +156,12 @@ exact command tokens.
      third cycle never starts without an explicit user instruction)
      · /audit-pr → only after the table is clean (not yet — findings open)
       · any finding routed replan-in-unit or owned by plan? → `bun
-        `agentic-workflow unit-route` <unit>` prints `route: replan` and the planner
+        scripts/unit-route.mjs <unit>` prints `route: replan` and the planner
         command (`/unit-lane <unit>` for a feature, `/unit-lane --fix <n>` for a
         fix); the lane re-runs its plan step on this branch, its review step
         gates, then `/execute-phase <unit>` (yes: list the finding ids; no: omit
         this line)
-      · any finding owned by product? → `bunx @gtrabanco/agentic-workflow@<pin> unit-route <unit>` (npx fallback
+      · any finding owned by product? → `bun scripts/unit-route.mjs <unit>` (node fallback
         if bun is not installed) prints
         `route: product` + the lane hand-off — `/unit-lane <unit>` for a feature,
         `/unit-lane --fix <n>` for a fix: the lane repairs the half, its review

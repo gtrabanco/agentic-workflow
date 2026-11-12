@@ -1,6 +1,6 @@
 ## Machine envelope
 
-`agentic-workflow workflow-status` is the **deterministic producer** of this
+`scripts/workflow-status.mjs` is the **deterministic producer** of this
 envelope: it performs the assembly, runs the `validateEnvelope` self-check
 (diagnostic only, exit 0), and prints the one JSON document. The skill runs the
 script and interprets the JSON — it never assembles the envelope. Schema and
@@ -74,7 +74,7 @@ these need **no package change**:
   linked from an `## Amendments` row).
 
 **Not yet mechanized (read this before consuming the three fields above).** The
-`agentic-workflow workflow-status` sensor does **not** emit `review`, `closure`, or
+`scripts/workflow-status.mjs` sensor does **not** emit `review`, `closure`, or
 `issues_born` today: they are steps 10–12 of the published sequence and remain
 skill-side work, so no `detail.features[]`/`detail.fixes[]` entry carries them
 until a sensor phase owns them. A consumer must treat their absence as "not

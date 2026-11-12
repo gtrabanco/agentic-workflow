@@ -14,11 +14,6 @@ description: >
 
 # Fold Findings
 
-> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
-> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
-> release and never guessed: a hard-coded version re-opens the per-release sweep the
-> contract removes, and `latest` is not a legal pin.
-
 Repair persisted fix-now findings. `review-change` and `audit-pr` classify; this
 skill fixes each root cause, never relabeling, deferring, or weakening its check.
 
@@ -222,12 +217,12 @@ conclusion the already-run router printed, never the invocation itself: on
 `route: replan` the planner command it printed — `/unit-lane <slug>` for a
 feature unit or `/unit-lane --fix <n>` for a fix unit; on `route: decision` stop
 and surface the decision to the user, never a planner. `<unit>` is the bare folder number or the full slug (both resolve). The invocation
-`bunx @gtrabanco/agentic-workflow@<pin> unit-route <unit>` (npx fallback if bun is not installed) is the discovery step the fold already
+`bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) is the discovery step the fold already
 ran; it is never the recommendation.
 
 **Freeze-batch (product owner present).** Any taken `fix-now` row whose `Route`
 cell begins `product owner`, `product-owned` or `owned by product` (head-anchored,
-identical to `agentic-workflow unit-route`'s `PRODUCT_ROUTE` regex,
+identical to `scripts/unit-route.mjs`'s `PRODUCT_ROUTE` regex,
 per `#293`) freezes the batch too —
 nothing folds, no `folded: yes` flips, no commits: the fold loop repairs source,
 never authority (`pre-execution-review` POLICY §4, `#293`). The receipt records
@@ -379,8 +374,8 @@ decision to skip.
 
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
-| freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `bunx @gtrabanco/agentic-workflow@<pin> unit-route <unit>` (npx fallback if bun is not installed; discovery step the fold already ran) |
-| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `bunx @gtrabanco/agentic-workflow@<pin> unit-route <unit>` (npx fallback if bun is not installed; discovery step the fold already ran) |
+| freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
+| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
 | `all-repair-in-place` + docs-only + green sweep declaration + no folded row severity `BLOCKER` or `CRITICAL` | `RE-REVIEW-SKIPPED` | skip — green sweep (#315) + docs-only ⇒ skip is default (S9); re-review requires recorded justification |
 | `all-repair-in-place` + docs-only + no sweep declaration + no folded row severity `BLOCKER` or `CRITICAL` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no sweep declaration + no folded row severity `BLOCKER` or `CRITICAL` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |

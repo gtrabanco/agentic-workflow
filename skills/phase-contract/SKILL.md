@@ -66,7 +66,7 @@ a phase to dodge a check is a defect, never a pass.
 
 ## The two grammars (fix #272)
 
-One contract, two shapes. `agentic-workflow phase-lint` mechanizes exactly this
+One contract, two shapes. `scripts/phase-lint.mjs` mechanizes exactly this
 split and never carries a second copy of the semantics:
 
 | grammar | where | shape |

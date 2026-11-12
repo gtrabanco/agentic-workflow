@@ -14,11 +14,6 @@ description: >
 
 # Review Verify (internal)
 
-> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
-> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
-> release and never guessed: a hard-coded version re-opens the per-release sweep the
-> contract removes, and `latest` is not a legal pin.
-
 Composed by `review-change` / `product-audit` within their conversation — on any
 agent, follow this file inline as the routed step. **Findings only; never edits,
 never refactors.**
@@ -43,7 +38,7 @@ returned table.
 ✓ **Claim-evidence loop verification.** Check the fold's claim table (if
   present): every row has `status: ✓`. Any `✗` row means the implementer's
   turn did not complete its claim-evidence loop.
-✓ **Unit-route triage currency.** Re-run `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage
+✓ **Unit-route triage currency.** Re-run `bun scripts/unit-route.mjs --triage
   <slug>` and compare the `Steps:` line against the unit doc's Evidence section.
   Mismatch → stale triage.
 ✓ **Gate evidence is consumed, not re-run.** Run `bun scripts/gate-receipt.mjs verify`; it answers the receipt's state: `current` + `pass` (exit 0) means the

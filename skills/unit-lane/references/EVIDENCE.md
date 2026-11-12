@@ -8,7 +8,7 @@ output (≤2 lines), verified-by. A reviewer re-runs it.
 ## Inputs
 
 - The unit's Acceptance criteria (`## Acceptance criteria`, or `## Specs` for a
-  re-cut unit — `agentic-workflow unit-route` resolves the shape)
+  re-cut unit — `scripts/unit-route.mjs` resolves the shape)
 - The unit's evidence carrier: the `## Evidence` section (legacy shape) or the
   `## Log` section (re-cut shape, where each run is one `E` line)
 
