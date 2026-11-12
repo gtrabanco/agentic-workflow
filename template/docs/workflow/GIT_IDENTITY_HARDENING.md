@@ -108,7 +108,7 @@ range it is about to publish and fails the push on a non-zero exit. The command
 verifies every author **and** committer of `<base>..HEAD`:
 
 ```sh
-node scripts/push-identity-check.mjs --base origin/main   # by hand
+bun scripts/push-identity-check.mjs --base origin/main   # by hand (node runs it too)
 git push --no-verify                                     # the escape hatch; record why
 ```
 
