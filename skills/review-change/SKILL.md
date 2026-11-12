@@ -13,6 +13,10 @@ description: >
 ---
 
 # Review Change
+> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
+> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
+> release and never guessed: a hard-coded version re-opens the per-release sweep the
+> contract removes, and `latest` is not a legal pin.
 
 Quality gate: run every applicable review and skip the rest, then synthesize and
 classify one report. **Findings only; never edit or refactor.**

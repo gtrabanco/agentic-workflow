@@ -20,7 +20,7 @@
 invokes a script with a placeholder (`bun scripts/x.mjs <unit-dir>`; node fallback
 if bun is not installed), the same
 skill's text must name the artifact that placeholder requires — the script
-declares it (`PREREQUISITES` in `scripts/needs-input.mjs`) and
+declares it (`PREREQUISITES` in `agentic-workflow needs-input`) and
 `scripts/promise-coherence.mjs` checks the disclosure. A box that instructs a
 run the skill never equips reproduces the failure it was written to prevent
 (fix #258 F45/F53: `missing-unit-doc`).
@@ -119,14 +119,14 @@ next | continuation
 
 An input a step cannot resolve is never inferred: the step stops and hands the
 questions back. The block below is that hand-off — printed by
-`scripts/needs-input.mjs`, never hand-authored — so a weaker model copies it
+`agentic-workflow needs-input`, never hand-authored — so a weaker model copies it
 instead of paraphrasing the questions away. Interactive, the block is the pause
 point and the run waits for a user decision; unattended, it is a hard fail
 carrying the same block.
 
 ```text
 open-questions@1
-# produced-by: scripts/needs-input.mjs <unit-dir> [--json]
+# produced-by: `agentic-workflow needs-input` <unit-dir> [--json]
 # input:       <unit-dir>/SPEC.md + <unit-dir>/decisions.md (the ledger's own grammar is
 #              published by the template agent guide, template/AGENTS.md)
 # machine:     continuation-refusal-type (schema-export:CONTINUATION_REFUSALS)
