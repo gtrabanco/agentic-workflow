@@ -1,6 +1,8 @@
 ---
+"@gtrabanco/agentic-workflow": patch
 "@gtrabanco/agentic-workflow-schema": minor
 "@gtrabanco/pi-agentic-workflow": minor
+"@gtrabanco/pi-nan-agentic-workflow": patch
 "init-workspace": minor
 ---
 
