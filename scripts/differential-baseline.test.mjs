@@ -105,6 +105,16 @@ test("--policy prints the declared classes and the recorded exclusion", () => {
   assert.match(result.stdout, /^mechanism — scope-digest · scripts\/scope-manifest\.mjs$/m);
 });
 
+test("the rule this run implements cites the run, never a pending check", () => {
+  // S9's impact claim: CLASSIFY.md owns the baseline-advisory rule and cites the
+  // run that proves cause. The pre-437 wording — "until it exists the rule is
+  // cited from here" — is the superseded text this case freezes out.
+  const rule = fs.readFileSync(path.join(ROOT, "skills/review-implementation/references/CLASSIFY.md"), "utf8");
+  assert.ok(fs.existsSync(CLI), "the cited run exists at scripts/differential-baseline.mjs");
+  assert.match(rule, /scripts\/differential-baseline\.mjs/, "the rule cites the baseline run");
+  assert.doesNotMatch(rule, /until it exists/, "the rule no longer calls the baseline check pending");
+});
+
 test("the run classifies every validator and exits 1 only on a regression", () => {
   const repo = fixtureRepo();
   const validators = path.join(repo, "validators.txt");
