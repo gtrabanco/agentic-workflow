@@ -107,7 +107,7 @@ The local gate's `push-identity` step runs on a real push (the installed
 committer of `<base>..HEAD`:
 
 ```sh
-bun scripts/push-identity-check.mjs --base origin/main   # the same command, by hand
+bun scripts/push-identity-check.mjs --base origin/main   # the same command, by hand (node runs it too)
 git push --no-verify                                     # the escape hatch; record why
 ```
 
