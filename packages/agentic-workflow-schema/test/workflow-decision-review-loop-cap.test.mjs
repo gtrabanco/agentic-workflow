@@ -17,7 +17,7 @@ import {
 import {
   deriveReviewLoopCycles,
   parseReceipts,
-} from "../../../scripts/pre-execution-contract.mjs";
+} from "../../agentic-workflow/src/runner/sensors/pre-execution-contract.mjs";
 
 function frozenSnapshot() {
   return {

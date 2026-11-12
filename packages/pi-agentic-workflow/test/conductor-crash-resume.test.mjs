@@ -6,7 +6,7 @@
 // no phase runs twice.
 //
 // The conductor under the kill is the package's real loop: real `runSensor`
-// spawn (the fixture's stub `scripts/workflow-status.mjs`), real journal file,
+// spawn (the fixture's stub, selected through the runner override), real journal file,
 // real reconcile gate. Only the stage executor and the sensor data are scripted.
 
 import { test } from "node:test";
@@ -67,6 +67,8 @@ process.stdout.write(JSON.stringify(envelope));
 function fixture(name, verdict = null) {
   const dir = mkdtempSync(join(scratch, `${name}-`));
   mkdirSync(join(dir, "scripts"), { recursive: true });
+  // The sensor spawns the runner; `AGENTIC_WORKFLOW_RUNNER` points it at the stub,
+  // which is the documented local override and needs no repository copy.
   writeFileSync(join(dir, "scripts", "workflow-status.mjs"), SENSOR_STUB, "utf8");
   mkdirSync(join(dir, "receipts"), { recursive: true });
   if (verdict) writeFileSync(join(dir, "verdict.json"), JSON.stringify(verdict), "utf8");
@@ -96,7 +98,7 @@ exec bun "$RUNNER" "$@"
 function runSupervisor({ dir, supervisorPath }, env = {}) {
   const out = spawnSync("sh", [supervisorPath], {
     encoding: "utf8",
-    env: { ...process.env, ADVANCE_DIR: dir, RUNNER, ...env },
+    env: { ...process.env, ADVANCE_DIR: dir, RUNNER, AGENTIC_WORKFLOW_RUNNER: join(dir, "scripts", "workflow-status.mjs"), ...env },
     timeout: 120_000,
   });
   return out;

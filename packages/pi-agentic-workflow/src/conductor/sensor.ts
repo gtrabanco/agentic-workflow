@@ -1,7 +1,7 @@
 /**
  * runSensor — spawn the workflow-status sensor, validate its output.
  *
- * Spawns `<bin> scripts/workflow-status.mjs --json-only` in `cwd`,
+ * Spawns `<bin> <runner bin> workflow-status --json-only` in `cwd`,
  * collects stdout, parses JSON, validates against the envelope v2 strict
  * schema, and checks for degradations.
  *
@@ -19,6 +19,7 @@ import { validateEnvelope } from "@gtrabanco/agentic-workflow-schema";
 import type { Envelope } from "@gtrabanco/agentic-workflow-schema";
 
 import type { EnvelopeLike, SensorResult } from "./types.js";
+import { runnerBin } from "../runner-bin.js";
 
 const TIMEOUT_MS = 30_000;
 
@@ -53,7 +54,7 @@ export function runSensor(cwd: string, bin: "bun" | "node"): Promise<SensorResul
     const resolvedCwd = resolveCwd(cwd);
     const child = spawn(
       bin,
-      ["scripts/workflow-status.mjs", "--json-only"],
+      [runnerBin(), "workflow-status", "--json-only"],
       {
         cwd: resolvedCwd,
         stdio: ["ignore", "pipe", "pipe"],

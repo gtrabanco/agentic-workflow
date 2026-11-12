@@ -212,11 +212,13 @@ test("status: outputSchema reuses the published envelope schema verbatim (no sec
 // Live gate scripts (AC4, AC5, O9, O10)
 // ---------------------------------------------------------------------------
 
-/** Local siblings each live script imports — the copy must carry its closure. */
+/**
+ * Local siblings each live *repository* script imports — the copy must carry its
+ * closure. The runner tools need no copy at all: since feature 91 they spawn the
+ * crate's bin, which a project gets from its installed package.
+ */
 const SCRIPT_CLOSURE = {
-  "diff-guard.mjs": [],
   "audit-pr-gate.mjs": ["review-receipt.mjs", "scope-manifest.mjs"],
-  "pre-execution-snapshot.mjs": ["pre-execution-contract.mjs"],
 };
 
 /** A throwaway git repo with the script and its import closure copied into scripts/. */
@@ -224,7 +226,11 @@ function makeLiveSandbox(script) {
   const root = scratchDir("paw-tool-live-");
   fs.mkdirSync(path.join(root, "scripts"));
   for (const name of [script, ...(SCRIPT_CLOSURE[script] ?? [])]) {
-    fs.copyFileSync(path.join(REPO_ROOT, "scripts", name), path.join(root, "scripts", name));
+    const source = path.join(REPO_ROOT, "scripts", name);
+    // A migrated runtime has no repository copy any more: its tool spawns the
+    // crate's bin, so the sandbox is the project, not a copy of the runner.
+    if (!fs.existsSync(source)) continue;
+    fs.copyFileSync(source, path.join(root, "scripts", name));
   }
   const git = (args, opts = {}) =>
     execFileSync("git", args, { cwd: root, env: sandboxGitEnv(), encoding: "utf8", ...opts });
