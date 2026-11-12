@@ -61,6 +61,15 @@ and runs the dispatcher against that. Grammar and exit codes:
 `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open questions.
 `[target-dir]` is optional — absent means the current directory, recorded.
 
+Identity hardening (issue #514) is one more consented install: the pre-commit
+`git-identity-check.sh` hook and an empty `gitIdentity` block in
+`.pi/agentic-workflow.json` (`enforce: "off"`, no approved facts). Offer it
+**once**, as one question, after the substrate is installed; a no installs
+nothing and is not asked again in the session. Never write a profile value — the
+operator's identity is the operator's. The annex is
+`docs/workflow/GIT_IDENTITY_HARDENING.md`; applying any of it without the answer
+is the defect this offer exists to avoid.
+
 ## Step 0 — Discover the project (always first)
 
 Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
