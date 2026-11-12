@@ -8,7 +8,7 @@
 feat(risk-tiers): a computed risk tier decides the ceremony a change owes
 
 Ceremony is proportional to risk, and the tier is computed by a script, never
-chosen by the model: `scripts/risk-tiers.mjs` classifies a change from its paths
+chosen by the model: `packages/agentic-workflow/src/runner/risk-tiers.mjs` classifies a change from its paths
 and contents — never from a file count — into `passive` (documentation, images,
 comments, prose with no executable effect: no unit doc, a structural readback in
 `docs/passive/<id>.md`), `standard` (the current unit-doc ceremony) or `high`

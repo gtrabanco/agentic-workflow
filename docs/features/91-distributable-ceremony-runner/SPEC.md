@@ -400,6 +400,29 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
 - **G7** — 2026-11-12, HEAD `2119ef9e` · `node scripts/run-root-suite.mjs` · exit 0 · 106/106 PASS;
   `bun test --timeout=30000 test/` in the crate · exit 0 · 668 pass;
   `node --test` in the crate · exit 0 · 669 pass.
+- **P7** — 2026-11-12, the retirement lands in four verified steps, each one green:
+  **(1)** every surviving importer reads the moved parsers from the crate; **(2)** the
+  corpora spawn the crate's bin instead of `node scripts/<x>.mjs`, keeping every case and
+  option; **(3)** the pre-execution and sensor sandboxes become consumer projects (the
+  script copies, the `packages/` link and the contract copy are gone with the reason they
+  existed) and the lineage gate and lane cycle spawn through the bin; **(4)** the twelve
+  migrated runtimes, `scripts/ceremony.mjs`, `scripts/ceremony/*` and `scripts/catalog.json`
+  are deleted, the ceremony suites drive the crate registry, and the ownership map, the pin
+  allowlists, the gate inventory, the route map and the pending changesets name the new
+  homes · commits `eef887b6`, `207dcc6d`, `4b77c02a`, `P7SHA`.
+- **E6** — 2026-11-12, the assertion changes the re-aim required, each tracking a surface this
+  unit changed (nothing was relaxed and no case was deleted): the `needs-input` usage line;
+  the ceremony `deferred-module` note; the ceremony unknown-object invocation; the router's
+  `--help` usage line; the sensor's loader-form case (the crate imports the pinned package);
+  the sensor stub sandbox shape (its schema stub now shadows one function over the real
+  package); the classifier's foreign-specifier set (the workspace scope is declared); the
+  relay catalog's source label; the ownership map's annotator path shape, its scan roots and
+  its release-stamp exemption; the promise-coherence fixture's validator path; the
+  lint-changeset fixture's sample path; and the module constants in the capability, tier,
+  spec-by-reference and catalog corpora.
+- **G8** — 2026-11-12, HEAD `P7SHA` · `node scripts/run-root-suite.mjs` exit 0 · 106/106 PASS;
+  `bun test --timeout=30000 test/` in the crate exit 0 · 668 pass; `node scripts/docs-generate.mjs --check`
+  exit 0; `bun scripts/check-skill-context.mjs` (+ `--routes`) exit 0 · 30 skills / 14 routes.
 
 ## Next
 

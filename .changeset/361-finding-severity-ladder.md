@@ -41,10 +41,10 @@ conversion table that maps every older scale onto the ladder without ever
 reaching `BLOCKER`. `decision-required` stays the human override and the
 disposition table is unchanged.
 
-Readers and writers moved with the grammar: `scripts/unit-route.mjs` steps over
-the impact cell, `scripts/ceremony/lib.mjs` parses and renders it,
+Readers and writers moved with the grammar: `packages/agentic-workflow/src/runner/unit-route.mjs` steps over
+the impact cell, `packages/agentic-workflow/src/runner/lib.mjs` parses and renders it,
 `ceremony findings append` requires and validates both cells, and
-`scripts/workflow-status.mjs` projects the ladder onto the envelope's unchanged
+`packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` projects the ladder onto the envelope's unchanged
 `high | med | low` enum. `scripts/vocabulary-probe.mjs` gains the `finding-impact`
 dimension and refuses a `BLOCKER` whose impact is `report-only`.
 `normative-surfaces@1` declares both grammar cells and the drift gate resolves

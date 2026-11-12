@@ -9,7 +9,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { cer, makeRepo } from "./ceremony/testing.mjs";
-import { readSection, parseLog, splitSections } from "./ceremony/lib.mjs";
+import { readSection, parseLog, splitSections } from "../packages/agentic-workflow/src/runner/lib.mjs";
 
 test("no args → usage JSON, exit 1 (S6)", () => {
   const dir = makeRepo();
@@ -34,7 +34,7 @@ test("P1/P2 module (review) → deferred-module, exit 1 (O13)", () => {
   assert.equal(r.code, 1);
   assert.equal(r.json.error, "deferred-module");
   assert.equal(r.json.object, "review");
-  assert.match(r.json.note, /follow-up PR/);
+  assert.match(r.json.note, /follow-up phase of issue #352/u, "the refusal names what closes the gap");
 });
 
 test("unknown subcommand of a known object → exit 1 (S8)", () => {

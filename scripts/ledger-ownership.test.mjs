@@ -60,7 +60,7 @@ const MAP_REL = "skills/pre-execution-review/references/LEDGERS.md";
 // Feature 61 P8b: the fix-template LEDGERS.md is retired; the unit doc carries
 // its evidence sections. The map still declares the ledger rows, but there is
 // no separate template file to validate — the ownership map is the sole source.
-const PROVENANCE_REL = "scripts/ledger-provenance.mjs";
+const PROVENANCE_REL = "packages/agentic-workflow/src/runner/sensors/ledger-provenance.mjs";
 
 const MARKER = "ledger-ownership@1";
 const MAP_COLUMNS = ["truth-class", "ledger", "owner", "annotator", "annotator-token", "validator"];
@@ -303,7 +303,12 @@ function annotatorEmissionSet(sources, annotator, failures, who) {
 
 function annotatorFailures(who, annotator, tokens, sources) {
   const failures = [];
-  if (!/^scripts\/[\w./-]+\.mjs$/.test(annotator)) failures.push(`${who}: annotator "${annotator}" is not a scripts/*.mjs path`);
+  // The annotator is a module that writes the ledger. It is a repository script
+  // or, since feature 91, a module of the runner tree the crate publishes — the
+  // two homes a writer can have; anything else is a declaration defect.
+  if (!/^(scripts\/[\w./-]+\.mjs|packages\/[\w-]+\/src\/runner\/[\w./-]+\.mjs)$/.test(annotator)) {
+    failures.push(`${who}: annotator "${annotator}" is neither a scripts/*.mjs nor a runner module path`);
+  }
   if (!tokens.length) failures.push(`${who}: a declared annotator must name every token it may append`);
   const emitted = annotatorEmissionSet(sources, annotator, failures, who);
   for (const token of tokens) {
@@ -482,6 +487,12 @@ function knownSkills(base = root) {
 }
 
 /** Every non-test `.mjs` under `scripts/` and `packages/<name>/scripts/`. */
+/**
+ * Every non-test `.mjs` under `scripts/` and `packages/<name>/scripts/`, plus
+ * the runner tree (`packages/<name>/src/runner/`) where the runtime ledger
+ * writers live since feature 91. The typed edit services are not scripts: their
+ * writers are declared as `package:module` owners and resolved on that path.
+ */
 function scannedScripts(base) {
   const dirs = [path.join(base, "scripts")];
   const packages = path.join(base, "packages");
@@ -489,6 +500,16 @@ function scannedScripts(base) {
     for (const entry of fs.readdirSync(packages, { withFileTypes: true })) {
       const scripts = path.join(packages, entry.name, "scripts");
       if (entry.isDirectory() && fs.existsSync(scripts)) dirs.push(scripts);
+      // The runner's autonomous writers (the sensors and the shared parsers) are
+      // scripts in the map's sense. Its ceremony modules are the operator's own
+      // editing front-end — the same bytes the operator edits by hand — so their
+      // writes stay declared by the map's skill owners, not by this scan.
+      const runner = path.join(packages, entry.name, "src", "runner");
+      if (entry.isDirectory() && fs.existsSync(runner)) {
+        dirs.push(runner);
+        const sensors = path.join(runner, "sensors");
+        if (fs.existsSync(sensors)) dirs.push(sensors);
+      }
     }
   }
   const found = {};

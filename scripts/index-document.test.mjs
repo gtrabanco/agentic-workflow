@@ -238,12 +238,12 @@ test("F15: a row without a trailing pipe keeps its last cell, on both published 
 
 test("O8: every live reader and writer goes through the published constant", () => {
   const consumers = [
-    "scripts/unit-route.mjs",
-    "scripts/workflow-status.mjs",
+    "packages/agentic-workflow/src/runner/unit-route.mjs",
+    "packages/agentic-workflow/src/runner/sensors/workflow-status.mjs",
     "scripts/unit-cycle.mjs",
-    "scripts/unit-doc-phases.mjs",
+    "packages/agentic-workflow/src/runner/unit-doc-phases.mjs",
     "scripts/roadmap-settle.mjs",
-    "scripts/ceremony/unit.mjs",
+    "packages/agentic-workflow/src/runner/ceremony/unit.mjs",
     "packages/agentic-workflow/bin/agentic-workflow.mjs",
     "packages/agentic-workflow/src/edit/Roadmap.mjs",
   ];

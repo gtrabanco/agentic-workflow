@@ -313,7 +313,7 @@ function logRefuse(reason, receipt) {
 const RELAY_USAGE = `usage: agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
   check        validate the packet: documents, charter pointer, baton grammar, verdict grammar
   budget       measure the leg handover (charter + baton) against the declared ceiling
-  tiers        print each leg's tier from scripts/catalog.json
+  tiers        print each leg's tier from the bundled catalog (src/runner/catalog.json)
   obligations  verify the unit's obligations ledger is closed
   <unit>       an NN-slug unit token, or a unit directory path
   --repo       read the workspace from this directory (default: this project)
@@ -567,8 +567,11 @@ switch (command) {
     try {
       result = runRelayMode({
         ...argv,
-        catalogPath: join(rootDir, "scripts", "catalog.json"),
-        catalogLabel: "scripts/catalog.json",
+        // The catalog ships with the runner (feature 91): a project that installed
+        // the package has no `scripts/` tree, and the tiers the relay names are the
+        // ones this bin reads.
+        catalogPath: new URL("../src/runner/catalog.json", import.meta.url),
+        catalogLabel: "packages/agentic-workflow/src/runner/catalog.json",
         budgetsPath: join(rootDir, "docs", "workflow", "SKILL_CONTEXT_BUDGETS.json"),
         budgetsLabel: "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
       });

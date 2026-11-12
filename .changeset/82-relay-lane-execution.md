@@ -15,9 +15,9 @@ contract, and the four-item positive-verification coherence review whose output
 is the existing `REVIEW-VERDICT` block — evidence, never a receipt.
 
 `scripts/relay-packet.mjs` checks a packet offline in four read-only modes
-(`check`, `budget`, `tiers`, `obligations`), `scripts/unit-route.mjs` prints the
+(`check`, `budget`, `tiers`, `obligations`), `packages/agentic-workflow/src/runner/unit-route.mjs` prints the
 relay bootstrap hint when a pi-web session is present and the per-phase
-`/execute-phase` fallback when it is not, and `scripts/catalog.json` gains the
+`/execute-phase` fallback when it is not, and `packages/agentic-workflow/src/runner/catalog.json` gains the
 leg-to-step mapping so each leg's tier comes from the one `budget_tier` source.
 `execute-phase` gains its one-phase parity sentence: a leg is that phase
 contract, with the baton handed to the next leg instead of resuming the lane.

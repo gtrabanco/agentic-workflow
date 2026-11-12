@@ -46,7 +46,7 @@ import { test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const MODULE = path.join(ROOT, "scripts", "capabilities.mjs");
+const MODULE = path.join(ROOT, "packages/agentic-workflow/src/runner", "capabilities.mjs");
 
 /** The analyser under test, loaded once; F1 owns the case where it is absent. */
 const load = async () => import(pathToFileURL(MODULE).href);
@@ -61,13 +61,13 @@ const {
 } = await load().catch(() => ({}));
 
 /**
- * The tier the classifier derives for a change. `scripts/risk-tiers.mjs` is the
+ * The tier the classifier derives for a change. The runner's classifier is the
  * one consumer of the analysis inside the verdict, and the frozen 360 suite is
  * the one that pins its shape, so the integration cases live here — beside the
  * fixtures they are about — and never edit that frozen corpus.
  */
 const { classifyTier = () => null } = await import(
-  pathToFileURL(path.join(ROOT, "scripts", "risk-tiers.mjs")).href,
+  pathToFileURL(path.join(ROOT, "packages/agentic-workflow/src/runner/risk-tiers.mjs")).href,
 ).catch(() => ({}));
 
 const analyze = (file, text, options) => analyseSource(file, text, options);
@@ -334,7 +334,7 @@ test("F13 the catalogue is keyed by provider; the classifier carries no operatio
   assert.ok(Object.keys(PROVIDERS).includes("shutil"), "and so does a python module");
   assert.ok(Object.keys(CAPABILITY_MEMBERS).includes("filesystem-remove"),
     "the effect names live under the capability they implement — one home, not a regex per call site");
-  const classifier = fs.readFileSync(path.join(ROOT, "scripts", "risk-tiers.mjs"), "utf8");
+  const classifier = fs.readFileSync(path.join(ROOT, "packages/agentic-workflow/src/runner", "risk-tiers.mjs"), "utf8");
   assert.doesNotMatch(classifier, /rmSync\|rmdirSync|unlinkSync/,
     "the operation-name spellings leave the classifier once the catalogue owns them");
 });

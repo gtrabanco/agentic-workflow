@@ -196,14 +196,14 @@ test("P1: the envelope carries every required Envelope v2 key in shape (A:2)", (
 });
 
 test("P1: the source is read-only — no mutation calls (A:3)", () => {
-  const source = read("scripts/workflow-status.mjs");
+  const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   const mutation = /(createBranch|git push|gh pr (edit|merge|close|create)|gh issue (edit|close|label|create)|writeFile|fs\.write|unlink)/;
   const hits = source.split("\n").filter((line) => mutation.test(line));
   assert.deepEqual(hits, [], `mutation calls found: ${hits.join(" | ")}`);
 });
 
 test("P1: the source is headless — no interactive-prompt calls (A:22)", () => {
-  const source = read("scripts/workflow-status.mjs");
+  const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   const prompt = /(readline|createInterface|process\.stdin\.(read|setRawMode)|@clack|inquirer|prompts?\(|confirm\()/;
   const hits = source.split("\n").filter((line) => prompt.test(line));
   assert.deepEqual(hits, [], `prompt calls found: ${hits.join(" | ")}`);
@@ -238,7 +238,7 @@ test("P1: an ambiguous roadmap row maps to the nearest five-state value and is n
 });
 
 test("P1: urgency comes from the labels object only — labels-only scan (A:7)", () => {
-  const source = read("scripts/workflow-status.mjs");
+  const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   const forbidden = source.split("\n").filter((line) => /--json[^|]*(body|comment)/.test(line));
   assert.deepEqual(forbidden, [], `a forge --json field list requests body/comment: ${forbidden.join(" | ")}`);
   assert.ok((source.match(/labels/g) ?? []).length >= 1, "the labels-only scan path must exist");
@@ -254,7 +254,7 @@ test("P1: urgency comes from the labels object only — labels-only scan (A:7)",
 });
 
 test("P1: forge reads stay on explicit --json field lists (A:7/A-RV invariant)", () => {
-  const source = read("scripts/workflow-status.mjs");
+  const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   const jsonLists = source.split("\n").filter((line) => line.includes("--json"));
   assert.ok(jsonLists.length >= 1, "the script must read the forge on explicit --json field lists");
   for (const line of jsonLists) {
@@ -264,14 +264,17 @@ test("P1: forge reads stay on explicit --json field lists (A:7/A-RV invariant)",
   assert.match(source, /"issue", "list", "--state", "open", "--json"/);
 });
 
-test("P1: the loader import form is the repo's established relative path (A:8)", () => {
-  const source = read("scripts/workflow-status.mjs");
-  assert.match(source, /from ['"]\.\/schema-runtime\.mjs['"]/);
-  assert.doesNotMatch(source, /^import .*['"]@gtrabanco\/agentic-workflow-schema['"]/m);
+test("P1: the schema the sensor validates with is the pinned package it loads (A:8)", () => {
+  const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
+  // Feature 91: the sensor lives in the published crate, so it imports the
+  // package by name instead of a repository loader guard — the version it prints
+  // is the contract its own runtime holds, not a checkout's.
+  assert.match(source, /from ['"]@gtrabanco\/agentic-workflow-schema['"]/);
+  assert.doesNotMatch(source, /from ['"]\.\/schema-runtime\.mjs['"]/);
 });
 
 test("P1: decideWorkflowAction() stays consumer-side — absent from the script (A:12)", () => {
-  assert.equal((read("scripts/workflow-status.mjs").match(/decideWorkflowAction/g) ?? []).length, 0);
+  assert.equal((read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs").match(/decideWorkflowAction/g) ?? []).length, 0);
 });
 
 test("P1: --help exits 0 and prints usage; --version prints the schema package version (A:10)", () => {
@@ -315,49 +318,52 @@ test("P1: importing the module with the built runtime present exits 0 (A:11 case
   assert.equal(result.status, 0, result.stderr);
 });
 
-test("P1: importing with dist/ absent fails with the named precondition (A:11 case b)", () => {
+test("P1: the sensor loads with no repository dist/ in sight (A:11 case b)", () => {
+  // Feature 91 moved the sensor into the published crate: the schema it
+  // validates with is the installed package, so a checkout without a built
+  // `dist/` is not the sensor's precondition any more — the repository guard that
+  // named it (`scripts/schema-runtime.mjs`) serves the root suites only.
   const tmp = mkTmp("workflow-status-nodist-");
   mirrorSensorGraph(tmp);
-  const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(path.join(tmp, "scripts", "workflow-status.mjs")).href)})`], {
+  // A consumer has the schema installed; what it does not have is this
+  // repository's `packages/*/dist`, and that is the point of the case.
+  fs.symlinkSync(
+    path.join(repoRoot, "packages", "agentic-workflow", "node_modules", "@gtrabanco", "agentic-workflow-schema"),
+    path.join(tmp, "node_modules", "@gtrabanco", "agentic-workflow-schema"),
+    "dir",
+  );
+  const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(path.join(tmp, "src", "runner", "sensors", "workflow-status.mjs")).href)})`], {
     cwd: tmp,
     encoding: "utf8",
   });
-  assert.notEqual(result.status, 0);
-  assert.match(`${result.stderr}`, /schema runtime is not built/);
-  assert.doesNotMatch(`${result.stderr}`, /ERR_MODULE_NOT_FOUND/);
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(`${result.stderr}`, /schema runtime is not built/);
 });
 
 
 /**
- * Mirror the sensor's real import graph into a sandbox tree: the stub tests below
- * run a *copy* of `workflow-status.mjs`, so every module it imports must be there
- * or the sandbox fails with `ERR_MODULE_NOT_FOUND` instead of the behaviour the
- * test asserts. #291 added the phase parser on the router's graph; #319 the
- * published index paths; #360 the risk classifier; #294 the baton reader the
- * router shares with the packet checker — which now lives in the crate module
- * `packages/agentic-workflow/src/relay/Packet.mjs`, not in a script. #384 added
- * the capability analyser the classifier delegates its `destructive` signal to.
+ * Mirror the sensor into a sandbox: the stub cases below run a *copy* of the
+ * runner's tree, so the one dependency they replace (the schema package) is the
+ * one under test. The sandbox carries the crate's `bin/` and `src/`, links every
+ * other installed dependency, and writes its own
+ * `node_modules/@gtrabanco/agentic-workflow-schema` — resolution order does the
+ * rest, so no module patching and no second source of the sensor.
  */
 function mirrorSensorGraph(tmp) {
-  fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
-  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "src"), { recursive: true });
-  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src", "relay"), { recursive: true });
-  for (const file of ["workflow-status.mjs", "schema-runtime.mjs", "pre-execution-contract.mjs", "unit-route.mjs",
-    "phase-lint.mjs", "unit-doc-phases.mjs", "risk-tiers.mjs", "capabilities.mjs", "ceremony-profile.mjs",
-    "ceremony/tier.mjs", "ceremony/lib.mjs"]) {
-    const dest = path.join(tmp, "scripts", file);
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.copyFileSync(path.join(repoRoot, "scripts", file), dest);
+  const pkg = path.join(repoRoot, "packages", "agentic-workflow");
+  for (const entry of ["bin", "src"]) {
+    fs.cpSync(path.join(pkg, entry), path.join(tmp, entry), { recursive: true });
   }
-  fs.copyFileSync(
-    path.join(repoRoot, "packages", "agentic-workflow-schema", "src", "vocabularies.ts"),
-    path.join(tmp, "packages", "agentic-workflow-schema", "src", "vocabularies.ts"),
-  );
-  for (const file of ["index-document.mjs", "relay/Packet.mjs"]) {
-    fs.copyFileSync(
-      path.join(repoRoot, "packages", "agentic-workflow", "src", file),
-      path.join(tmp, "packages", "agentic-workflow", "src", file),
-    );
+  // Every real dependency, except the schema package the caller stubs.
+  const modules = path.join(tmp, "node_modules");
+  fs.mkdirSync(path.join(modules, "@gtrabanco"), { recursive: true });
+  for (const name of fs.readdirSync(path.join(pkg, "node_modules"))) {
+    if (name === "@gtrabanco") continue;
+    fs.symlinkSync(path.join(pkg, "node_modules", name), path.join(modules, name), "dir");
+  }
+  for (const name of fs.readdirSync(path.join(pkg, "node_modules", "@gtrabanco"))) {
+    if (name === "agentic-workflow-schema") continue;
+    fs.symlinkSync(path.join(pkg, "node_modules", "@gtrabanco", name), path.join(modules, "@gtrabanco", name), "dir");
   }
 }
 
@@ -365,16 +371,21 @@ test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope 
   const { dir } = makeFixture();
   const tmp = mkTmp("workflow-status-stub-");
   mirrorSensorGraph(tmp);
-  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "dist"), { recursive: true });
+  const schemaStub = path.join(tmp, "node_modules", "@gtrabanco", "agentic-workflow-schema");
+  fs.mkdirSync(path.join(schemaStub, "dist"), { recursive: true });
+  // The stub re-exports the real contract and shadows only the one function under
+  // test (an explicit export wins over `export *`), so the classifier's vocabulary
+  // and the envelope types still come from the published package.
+  const realIndex = pathToFileURL(path.join(repoRoot, "packages", "agentic-workflow-schema", "dist", "index.js")).href;
   fs.writeFileSync(
-    path.join(tmp, "packages", "agentic-workflow-schema", "dist", "index.js"),
-    "export function validateEnvelope() { return { ok: false, errors: ['forced mismatch'] }; }\n",
+    path.join(schemaStub, "dist", "index.js"),
+    `export * from ${JSON.stringify(realIndex)};\nexport function validateEnvelope() { return { ok: false, errors: ['forced mismatch'] }; }\n`,
   );
   fs.writeFileSync(
-    path.join(tmp, "packages", "agentic-workflow-schema", "package.json"),
-    JSON.stringify({ name: "@gtrabanco/agentic-workflow-schema", version: "0.0.0-stub" }),
+    path.join(schemaStub, "package.json"),
+    JSON.stringify({ name: "@gtrabanco/agentic-workflow-schema", version: "0.0.0-stub", type: "module", main: "./dist/index.js", exports: { ".": "./dist/index.js" } }),
   );
-  const result = spawnSync(process.execPath, [path.join(tmp, "scripts", "workflow-status.mjs")], {
+  const result = spawnSync(process.execPath, [path.join(tmp, "bin", "agentic-workflow.mjs"), "workflow-status"], {
     cwd: dir,
     encoding: "utf8",
     env: { ...process.env, PATH: `${path.join(dir, "bin")}:${process.env.PATH}` },
@@ -531,7 +542,7 @@ test("P2: the untriaged backlog is capped at 5 oldest and the merged list at 20 
   const envelope = parseEnvelope(run().stdout);
   assert.equal(envelope.detail.untriaged_issues.count, 9);
   assert.deepEqual(envelope.detail.untriaged_issues.oldest_open, [1, 2, 3, 4, 5]);
-  assert.match(read("scripts/workflow-status.mjs"), /--limit", "20"/);
+  assert.match(read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs"), /--limit", "20"/);
 });
 
 test("P2: two concurrent runs are safe and byte-identical (sensor:concurrent-action, F31)", async () => {
@@ -1026,7 +1037,7 @@ test("F30: a non-array forge answer degrades per the contract, never exits 1", (
 });
 
 test("F35: forge list reads carry --limit so the default page cannot truncate counts", () => {
-  const source = read("scripts/workflow-status.mjs");
+  const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   const openPrLine = source.split("\n").find((line) => line.includes('"pr", "list", "--state", "open"'));
   const openIssueLine = source.split("\n").find((line) => line.includes('"issue", "list", "--state", "open"'));
   assert.match(openPrLine, /"--limit"/, "the open-PR read bounds its own page");
@@ -1078,7 +1089,7 @@ test("declared dependency cycle: the sensor reports it and terminates", () => {
 // and the cap logic are deleted. Lane rows always carry boundDigest: null.
 test("F20: [retired] verifier spawn cap deleted by P8b (F20)", () => {
   // The cap constant was removed by P8b; no verifier is spawned.
-  const source = read("scripts/workflow-status.mjs");
+  const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   assert.doesNotMatch(source, /PRE_EXECUTION_MAX_SENSES/, "PRE_EXECUTION_MAX_SENSES is retired");
 });
 
@@ -1252,7 +1263,7 @@ test("59: two consecutive runs emit byte-identical envelopes with no continuatio
   const porcelain = execFileSync("git", ["status", "--porcelain"], { cwd: dir, encoding: "utf8" });
   assert.equal(porcelain.trim(), "", `the sensor wrote to the sensed tree: ${porcelain}`);
 
-  const source = read("scripts/workflow-status.mjs");
+  const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   const mutation = /(createBranch|git push|gh pr (edit|merge|close|create)|gh issue (edit|close|label|create)|writeFile|fs\.write|unlink)/;
   const hits = source.split("\n").filter((line) => mutation.test(line));
   assert.deepEqual(hits, [], `emission must stay read-only: ${hits.join(" | ")}`);

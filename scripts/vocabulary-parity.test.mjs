@@ -146,9 +146,9 @@ test("every prose copy of the Future-status set carries exactly the canonical to
 
 test("the risk tiers are the published set, and the classifier re-exports rather than restates them", () => {
   assert.deepEqual([...RISK_TIER_KINDS], ["passive", "standard", "high"]);
-  const classifier = read("scripts/risk-tiers.mjs");
+  const classifier = read("packages/agentic-workflow/src/runner/risk-tiers.mjs");
   // The classifier may re-export the sets; it may not spell a tier literal of its own.
-  assert.match(classifier, /from "\.\.\/packages\/agentic-workflow-schema\/src\/vocabularies\.ts"/,
+  assert.match(classifier, /from "@gtrabanco\/agentic-workflow-schema"/,
     "one home: the classifier imports the published consts");
   assert.doesNotMatch(classifier, /\["passive",\s*"standard"/, "no second copy of the tier set");
 });
@@ -267,7 +267,7 @@ test("#361 decision-required survives as the false-negative escalation and the f
 });
 
 test("#361 the sensor projects every ladder token onto the envelope's unchanged enum", async () => {
-  const { SEVERITY_VOCABULARY } = await import("./workflow-status.mjs");
+  const { SEVERITY_VOCABULARY } = await import("../packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   const projection = new Map([["BLOCKER", "high"], ["CRITICAL", "high"], ["WARNING", "med"], ["SUGGESTION", "low"]]);
   for (const [token, envelope] of projection) {
     assert.equal(SEVERITY_VOCABULARY.get(token), envelope, `the ladder token '${token}' projects to '${envelope}'`);

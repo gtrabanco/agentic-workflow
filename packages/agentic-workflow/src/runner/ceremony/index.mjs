@@ -64,7 +64,7 @@ export function run(args) {
   if (DEFERRED_MODULES.includes(object)) {
     fail("deferred-module", {
       object,
-      note: "P1/P2 module — the follow-up phase of issue #352 that extends the registry",
+      note: "P1/P2 module — lands in the follow-up phase of issue #352 that extends the registry",
     });
   }
 

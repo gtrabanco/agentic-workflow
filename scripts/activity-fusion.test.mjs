@@ -28,8 +28,9 @@ import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(REPO_ROOT, "scripts", "unit-route.mjs");
-const CATALOG_PATH = path.join(REPO_ROOT, "scripts", "catalog.json");
+/** The runner's bin: the router answers as its `unit-route` subcommand. */
+const SCRIPT = path.join(REPO_ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
+const CATALOG_PATH = path.join(REPO_ROOT, "packages/agentic-workflow/src/runner", "catalog.json");
 const FIXTURE_ROOT = path.join(REPO_ROOT, "scripts", "fixtures", "catalog");
 
 /** The sandbox: a full copy of the fixture tree, with tier docs written in. */
@@ -38,7 +39,7 @@ let copies = 0;
 
 const run = (args, { root = sandbox, catalog = CATALOG_PATH } = {}) => spawnSync(
   process.execPath,
-  [SCRIPT, ...args],
+  [SCRIPT, "unit-route", ...args],
   { encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: root, ...(catalog ? { UNIT_ROUTE_CATALOG: catalog } : {}) } },
 );
 

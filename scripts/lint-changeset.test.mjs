@@ -229,9 +229,9 @@ test("accepts cited paths that exist and skips placeholders and package-relative
       '"unit-lane": patch',
       "---",
       "",
-      // `scripts/risk-tiers.mjs` exists; `docs/passive/<id>.md` is a placeholder
+      // `scripts/docs-generate.mjs` exists; `docs/passive/<id>.md` is a placeholder
       // shape and `src/index.ts` is package-relative — neither is this gate's to judge.
-      "fix(unit-lane): cites `scripts/risk-tiers.mjs`, `docs/passive/<id>.md` and `src/index.ts`.",
+      "fix(unit-lane): cites `scripts/docs-generate.mjs`, `docs/passive/<id>.md` and `src/index.ts`.",
       "",
     ].join("\n"),
   });
