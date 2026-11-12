@@ -1,0 +1,53 @@
+# git-config-writes corpus — `<expectation> | <source fragment>`
+#
+# `expectation` is `write` when the fragment invokes a git-config *write* and
+# `read` when it invokes nothing (or a read-only form). The gate reads this file
+# rather than carrying the fragments as literals, so its own suite contains no
+# invoking form for the gate to flag.
+#
+# `#` starts a comment line; blank lines are ignored.
+
+# ── legacy syntax, writes ────────────────────────────────────────────────
+write | git config user.email t@example.test
+write | git config user.name Fixture
+write | git config commit.gpgsign false
+write | git config --global user.name Example
+write | git config --unset user.name
+write | git config --unset-all user.email
+write | git config --replace-all user.signingkey ABCDEF
+write | git config --add user.email second@example.test
+write | git config --file /tmp/throwaway.gitconfig user.email t@example.test
+write | git config -f ~/.gitconfig user.name Example
+
+# ── modern syntax, writes ────────────────────────────────────────────────
+write | git config set user.name Fixture
+write | git config unset user.email
+write | git config remove-section user
+write | git config rename-section user account
+write | git config edit
+
+# ── argv-array form as a suite writes it ─────────────────────────────────
+write | execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: root });
+write | git(["config", "user.name", "t"]);
+write | run(["config", "--local", "--replace-all", "user.signingkey", "ABC"]);
+write | repo.run(["config", "commit.gpgsign", "true"]);
+
+# ── a write stays a write whatever `-c` precedes it ──────────────────────
+write | git -c user.name=Fixture config user.email t@example.test
+
+# ── read-only forms, allowed ─────────────────────────────────────────────
+read | git config --get user.name
+read | git config --get-all user.email
+read | git config --get-regexp ^user
+read | git config --list
+read | git config -l --show-origin
+read | git config --show-origin --get-all user.name
+read | git config get user.email
+read | git config list --show-origin
+read | git(["config", "--local", "--get", "merge.docs-generated.driver"]);
+
+# ── not a config invocation at all ───────────────────────────────────────
+read | git -c user.name=Fixture commit -m "message"
+read | git status --porcelain
+read | const config = { enabled: true };
+read | git config
