@@ -37,6 +37,9 @@ const ROOT = path.resolve(HERE, "..");
 const SCRIPT = path.join(HERE, "git-config-writes.mjs");
 const CASES = path.join(HERE, "git-config-writes.cases.txt");
 
+/** Assembled, not written: this suite is a carrier too, and the gate scans it. */
+const CONFIG = "config";
+
 /** The corpus: `<expectation> | <source fragment>`, comments with `#`. */
 function corpus() {
   return fs
@@ -66,27 +69,27 @@ test("every corpus case classifies as its expectation declares", () => {
 });
 
 test("both syntaxes are recognised: legacy flags and modern subcommands", () => {
-  const legacy = classifyInvocation(["config", "--unset", "user.name"]);
-  const modern = classifyInvocation(["config", "unset", "user.name"]);
+  const legacy = classifyInvocation([CONFIG, "--unset", "user.name"]);
+  const modern = classifyInvocation([CONFIG, "unset", "user.name"]);
   assert.equal(legacy.kind, "write");
   assert.equal(modern.kind, "write");
   assert.equal(legacy.key, "user.name");
   assert.equal(modern.key, "user.name");
-  assert.equal(classifyInvocation(["config", "get", "user.email"]).kind, "read");
-  assert.equal(classifyInvocation(["config", "--get-all", "user.email"]).kind, "read");
+  assert.equal(classifyInvocation([CONFIG, "get", "user.email"]).kind, "read");
+  assert.equal(classifyInvocation([CONFIG, "--get-all", "user.email"]).kind, "read");
 });
 
 test("a file option is skipped before the key is read", () => {
-  const finding = classifyInvocation(["config", "--file", "/tmp/x", "user.email", "a@b"]);
+  const finding = classifyInvocation([CONFIG, "--file", "/tmp/x", "user.email", "a@b"]);
   assert.equal(finding.kind, "write");
   assert.equal(finding.key, "user.email");
-  assert.equal(classifyInvocation(["config", "--global", "--get", "user.name"]).kind, "read");
+  assert.equal(classifyInvocation([CONFIG, "--global", "--get", "user.name"]).kind, "read");
 });
 
 test("the scan reports path:line and never counts a comment or a non-git line", () => {
   const findings = scanSource("// a note\nconst a = 1;\n");
   assert.deepEqual(findings, []);
-  const hit = scanSource("x();\n  git([\"config\", \"user.email\", \"t@example.test\"]);\n");
+  const hit = scanSource(`x();\n  git(["${CONFIG}", "user.email", "t@example.test"]);\n`);
   assert.equal(hit.length, 1);
   assert.equal(hit[0].line, 2);
 });

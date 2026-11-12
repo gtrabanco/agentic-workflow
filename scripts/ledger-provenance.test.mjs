@@ -24,7 +24,7 @@ const HEADER = "| id | file:line | axis | severity | class | route | folded |\n|
 const CELL_RE = /(?<!\\)\|/;
 const row = (id, file, route, folded) => `| ${id} | ${file} | code | high | fix-now | ${route} | ${folded} |\n`;
 
-const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+const git = (cwd, ...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" }).trim();
 
 /**
  * A throwaway repo: C0 records the rows open, then five commits fold them in the
@@ -51,9 +51,6 @@ function makeFixture(t) {
   };
 
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   fs.mkdirSync(abs("src"), { recursive: true });
   fs.mkdirSync(abs("docs"), { recursive: true });
   write("src/index.ts", "export const a = 1;\n");
@@ -245,14 +242,11 @@ test("a row whose cell escapes a pipe is counted, checked and annotated like any
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-escaped-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const write = (rel, text) => fs.writeFileSync(path.join(root, rel), text);
-  const gitRun = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const gitRun = (...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" }).trim();
   gitRun("init", "-q", "-b", "main");
-  gitRun("config", "user.email", "fixture@example.invalid");
-  gitRun("config", "user.name", "Fixture");
   // A fixture repository never signs: the host's `commit.gpgsign=true` would send
   // every fixture commit to a pinentry that has no tty, so the suite failed under
   // load instead of on its assertion.
-  gitRun("config", "commit.gpgsign", "false");
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   const escaped = "src/index.ts:1 (the `REVIEW-RAN \\| HEAD <40-hex sha>` row)";
@@ -293,11 +287,8 @@ test("a row the 7-column schema refuses is counted, reported and refused — nev
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-arity-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const write = (rel, text) => fs.writeFileSync(path.join(root, rel), text);
-  const gitRun = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const gitRun = (...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" }).trim();
   gitRun("init", "-q", "-b", "main");
-  gitRun("config", "user.email", "fixture@example.invalid");
-  gitRun("config", "user.name", "Fixture");
-  gitRun("config", "commit.gpgsign", "false");
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   const malformed = "| F2 | src/index.ts:1 | code | high | fix-now | fold into current unit | yes | shifted ninth cell |";
@@ -409,9 +400,6 @@ function makeMarkerHistory(t) {
   };
 
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   fs.mkdirSync(abs("src"), { recursive: true });
   fs.mkdirSync(path.dirname(abs(LEDGER)), { recursive: true });
   write("src/a.ts", "export const a = 1;\n");
@@ -526,9 +514,6 @@ test("a marker that folded something else is reported, never trusted (F63's shap
     return git(root, "rev-parse", "HEAD");
   };
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.mkdirSync(path.dirname(path.join(root, LEDGER)), { recursive: true });
   write("src/index.ts", "export const a = 1;\n");
@@ -570,9 +555,6 @@ test("--annotate never writes a token the contract does not declare (A1)", (t) =
   };
 
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   fs.mkdirSync(abs("src"), { recursive: true });
   fs.mkdirSync(path.dirname(ledger), { recursive: true });
   fs.writeFileSync(abs("src/index.ts"), "export const a = 1;\n");
@@ -685,9 +667,6 @@ test("an annotated ledger's citations are read and validated, not silently passe
   };
 
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   fs.mkdirSync(abs("src"), { recursive: true });
   fs.mkdirSync(path.dirname(ledger), { recursive: true });
   fs.writeFileSync(abs("src/index.ts"), "export const a = 1;\n");
@@ -758,8 +737,6 @@ function makeDocFixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-doc-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
   fs.mkdirSync(path.join(root, "docs/features/9-x"), { recursive: true });
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.writeFileSync(path.join(root, "src/index.ts"), "export const a = 1;\n");
@@ -840,16 +817,13 @@ test("#308 F36: prose context citations demote a proven fold; the fold marker ou
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const abs = (rel) => path.join(root, rel);
   const write = (rel, text) => fs.writeFileSync(abs(rel), text);
-  const g = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const g = (...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" }).trim();
   const gitRun = (...args) => g(...args);
   const short7 = (sha) => sha.slice(0, 7);
   fs.mkdirSync(abs("src"), { recursive: true });
   fs.mkdirSync(path.dirname(abs(LEDGER)), { recursive: true });
 
   g("init", "-q", "-b", "main");
-  g("config", "user.email", "fixture@example.invalid");
-  g("config", "user.name", "Fixture");
-  g("config", "commit.gpgsign", "false");
   write("src/index.ts", 'export const version = "0.31.0";\n');
   write(LEDGER, HEADER + row("F1", "src/index.ts:1", "fold into current unit", "no"));
   gitRun("add", "-A");

@@ -47,11 +47,8 @@ function fakePi() {
 /** A throwaway git project with a journal, a seeded commit and a ledger. */
 function project({ journal = true, ledger = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "auto-log-wiring-"));
-  const run = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
+  const run = (args) => execFileSync("git", ["-c", "user.name=suite", "-c", "user.email=suite@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
   run(["init", "-q", "-b", "main"]);
-  run(["config", "user.email", "suite@example.test"]);
-  run(["config", "user.name", "suite"]);
-  run(["config", "commit.gpgsign", "false"]);
   fs.mkdirSync(path.join(root, "docs/fix/394-auto-log-session"), { recursive: true });
   fs.writeFileSync(path.join(root, "docs/fix/394-auto-log-session/SPEC.md"), "# 394\n\n## Risk tier\n\n- **Tier** — `standard` · **Task Size** — `small`\n");
   if (journal) fs.writeFileSync(path.join(root, "docs/LOGS.md"), "# Session log\n\n");

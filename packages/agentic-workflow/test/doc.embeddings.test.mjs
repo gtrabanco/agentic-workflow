@@ -27,7 +27,7 @@ import { openDatabase } from "../src/doc/sqlite.mjs";
 let root;
 
 function git(args) {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" });
+  return execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" });
 }
 
 function mockEmbedder(model, dim = 3) {
@@ -46,8 +46,6 @@ function mockEmbedder(model, dim = 3) {
 before(() => {
   root = mkdtempSync(join(tmpdir(), "doc-embed-"));
   git(["init", "-q"]);
-  git(["config", "user.email", "t@example.test"]);
-  git(["config", "user.name", "t"]);
   writeFileSync(join(root, "a.md"), "# Alpha\nalpha body\n\n## Alpha two\nmore\n");
   writeFileSync(join(root, "b.md"), "# Beta\nbeta body\n");
   git(["add", "-A"]);
@@ -234,12 +232,10 @@ describe("openai-compatible provider", () => {
 /** A throwaway git repo carrying `files` (path → markdown). */
 function resilienceFixture(files) {
   const dir = mkdtempSync(join(tmpdir(), "doc-pace-"));
-  execFileSync("git", ["init", "-q"], { cwd: dir });
-  execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: dir });
-  execFileSync("git", ["config", "user.name", "t"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "init", "-q"], { cwd: dir });
   for (const [rel, body] of Object.entries(files)) writeFileSync(join(dir, rel), body);
-  execFileSync("git", ["add", "-A"], { cwd: dir });
-  execFileSync("git", ["commit", "-qm", "fixture"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: dir });
   return dir;
 }
 

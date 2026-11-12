@@ -56,11 +56,8 @@ const NOW = () => Date.parse("2026-11-07T09:00:00Z");
  */
 function project({ journal = false, carrier = false, commit = true } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "log-session-invocation-"));
-  const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
+  const git = (args) => execFileSync("git", ["-c", "user.name=suite", "-c", "user.email=suite@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
   git(["init", "-q", "-b", "test-branch"]);
-  git(["config", "user.email", "suite@example.test"]);
-  git(["config", "user.name", "suite"]);
-  git(["config", "commit.gpgsign", "false"]);
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   if (journal) fs.writeFileSync(path.join(root, "docs/LOGS.md"), "# Session log\n\nentry bytes\n");
   if (carrier) fs.mkdirSync(path.join(root, JOURNAL_DIR), { recursive: true });
