@@ -368,11 +368,74 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **E15** — 2026-11-12, `node scripts/local-gate.mjs --only push-identity --push-base 43e8c1f9` ·
   exit 0 · `PUSH IDENTITY — ok: 11 commit(s) verified against Gabriel Trabanco
   Llano <1969593+gtrabanco@users.noreply.github.com> (.pi/agentic-workflow.json)`.
+- **L3** — 2026-11-12, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **D8** — 2026-11-12, `P11` is the external-verify correction batch phase:
+  triage of the 2026-11-12 `EXTERNAL VERIFY` receipt's three blockers, the red
+  corpus, the gate fix, the migration and the re-verify — declared here for the
+  `path-protection-records@1` rows in [`decisions.md`](decisions.md) (the
+  authority column of those rows is `execute-phase`; the phase is this line's).
+- **E16** — 2026-11-12, red corpus at `a855a62a`, `bun test
+  scripts/git-config-writes.test.mjs` · exit 1 · 8 pass / 1 fail —
+  `AssertionError: write hidden after: assert.doesNotMatch(forge, /--body "/);`
+  (the frozen-failure reproducer for external-verify blocker 1, observed
+  before the fix).
+- **E17** — 2026-11-12, gate fix at `8d4360b9`, `node scripts/git-config-writes.mjs` ·
+  exit 1 · `278 carriers scanned, 12 findings` — `verdict: FAIL`, every
+  finding a known un-migrated write (`doc.envelope`:215/216/282/283,
+  `review-receipt`:441/442/483/484/519/520, `audit-pr-receipt`:283/284); the
+  regression test green (8 pass) at the same commit — blocker 1 fixed, blocker
+  2 exposed by the gate itself.
+- **E18** — 2026-11-12, migration at `7c94e087`: `node scripts/git-config-writes.mjs` ·
+  exit 0 · `278 carriers scanned, 0 findings / verdict: PASS`; `bun test
+  scripts/git-config-writes.test.mjs` · 9 pass / 0; `bun test
+  scripts/review-receipt.test.mjs scripts/audit-pr-receipt.test.mjs` · 58 pass /
+  0; `bun test packages/agentic-workflow/test/doc.envelope.test.mjs` · 41 pass /
+  0; the Retirements search `rg -n '"config", "user\.|"config",
+  "commit\.gpgsign"' scripts packages --glob '*.test.mjs'` · 0 matches (was 12);
+  differential against base bytes (`git archive 8d4360b9` in `mktemp` scratch,
+  suites identical to `43e8c1f9`): pre 99 pass / exit 0, post 99 pass / exit 0,
+  identical normalized test-name multisets — no output changed that nobody
+  asked to change.
+- **E19** — 2026-11-12, the correction batch's foreground re-verify, every
+  command exit 0: `bun test scripts/git-config-writes.test.mjs` · 9 pass / 0 ·
+  `node scripts/git-config-writes.mjs` · `278 carriers scanned, 0 findings /
+  verdict: PASS` · retirement rg · 0 matches · `node scripts/skill-lint.mjs` ·
+  `99 file(s) · 7 check(s) · 0 finding(s) / verdict: PASS` · O11's corrected
+  cell rg · matches 2 · `bun test scripts/git-env.test.mjs` · 6 pass / 0 ·
+  `bun test scripts/push-identity-check.test.mjs` · 8/0 · `bun test
+  scripts/identity-hook-parity.test.mjs` · 12/0 · `bun test
+  packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` · 22/0 ·
+  `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` ·
+  18 cases / 0 failures · `bun scripts/docs-generate.mjs --check` · `3 checked ·
+  0 missing · 0 stale · 0 orphaned / verdict: PASS` · `bun
+  scripts/check-skill-context.mjs` (+ `--documents`, `--routes`) · PASS all
+  three · `node scripts/red-first.mjs` · `58 pair(s) · 0 finding(s) / verdict:
+  PASS` · `bun run test` in `packages/agentic-workflow` (the touched package) ·
+  659 pass / 0 fail.
+- **G6** — 2026-11-12, `node scripts/run-root-suite.mjs` · exit 0 · 109 suites
+  PASS / 0 FAIL (post-migration whole tree — O14's validator, the same run
+  that pins every migrated suite in the repo).
+- **G7** — 2026-11-12, structure recheck after the status flips and the journal
+  fragment, every command exit 0: `bun test scripts/unit-doc-contract.test.mjs`
+  · 21/0 · `bun test scripts/ledger-provenance.test.mjs` · 27/0 · `bun test
+  scripts/spec-by-reference.test.mjs` · 17/0 · `bun test
+  scripts/prose-gate-inventory.test.mjs` · 21/0 · `bun test
+  scripts/promise-coherence.test.mjs` · 37/0 · `bun test
+  scripts/unit-route.test.mjs` · 64/0 · `bun scripts/docs-generate.mjs --check`
+  · PASS · `node packages/agentic-workflow/bin/agentic-workflow.mjs journal
+  aggregate --check` · `ok:true, checked:2, refusals:[]` · `node
+  scripts/log-immutability.mjs` · PASS (range 15 commits) · `node
+  scripts/temp-hygiene.mjs` · PASS (0 findings).
 
 ## Next
 
-External verification of the delivered diff (`feat/514-new-feature-git-identity-signing-guard`,
-head `649287ee`). No phase is open; the corrections bound is one batch.
+Owner's external verification of the correction batch (the head carrying the
+red corpus, the gate fix and the migration). One correction batch has been
+applied per the bound: recheck limited to the three reported blockers; a
+second batch only if the same blocker persists, then `Needs your decision`.
 
 ## References
 
