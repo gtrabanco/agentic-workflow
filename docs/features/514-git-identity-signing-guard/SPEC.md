@@ -187,7 +187,7 @@ none
 - P8 — the GIT_DIR scrub reaches the per-file and package-suite entry points
   (validator: `bun test scripts/git-env.test.mjs` exits 0)
   (Implements: S9)
-  - Relevant files: scripts/test-preload.mjs, bunfig.toml, packages/*/bunfig.toml, scripts/git-env.test.mjs
+  - Relevant files: scripts/test-preload.mjs, ./bunfig.toml, packages/*/bunfig.toml, scripts/git-env.test.mjs
 - P9 — the hardening annex ships as docs and `init-workspace` applies none of it
   by default
   (validator: `rg -n 'GIT_IDENTITY' docs/workflow/README.md` matches 1 and `rg -n 'gitIdentity' skills/init-workspace/` matches ≥1)
@@ -294,9 +294,77 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   out to a node CLI) would make a git hook depend on node and on a network
   install.
 
+- **D6** — 2026-11-12, O11's validator cell named `template/docs/workflow/README.md`,
+  which does not exist (the template's `docs/workflow/` carries two pages and no
+  index). The validator now names the second surface that really exists — the
+  template hooks README's link — instead of an unverifiable path. Plan repair,
+  recorded here, same practice as unit 498's D2.
+- **P1** — 2026-11-12, the `gitIdentity` base section, the regenerated
+  `config.schema.json` and the CONFIG.md row · `3c6513f7`.
+- **P2 P3** — 2026-11-12, the repo-wide `-c` gate and the 35-carrier migration
+  (129 writes removed) · `106f77f5`.
+- **P4** — 2026-11-12, `scripts/push-identity-check.mjs` + the local-gate
+  `push-identity` step · `83087dc3`.
+- **P5 P6** — 2026-11-12, the pre-commit hook, its shell suite and the parity
+  corpus · `8d78f13f`.
+- **P7** — 2026-11-12, the pi agent guard, the consent store and the `tool_call`
+  wiring · `99963d20`.
+- **P8** — 2026-11-12, the per-file/package-suite scrub (one preload, five
+  bunfigs) · `4f0c5eca`.
+- **P9** — 2026-11-12, the annex (repo + template), the gate inventory rows, the
+  docs index row, the pi README section, the changeset, the roadmap row and the
+  projection · `d449f9aa`, `649287ee`.
+- **E1** — 2026-11-12, `node --test scripts/git-config-writes.test.mjs` and
+  `node --test scripts/push-identity-check.test.mjs` at commit `fcfd70cb` ·
+  exit 1 · both suites failed on the missing module (the red commit).
+- **E2** — 2026-11-12, `bun test scripts/git-config-writes.test.mjs` · exit 0 ·
+  8 pass / 0 fail; two gate runs byte-identical.
+- **E3** — 2026-11-12, `node scripts/git-config-writes.mjs` · exit 0 ·
+  `278 carriers scanned, 0 findings` / `verdict: PASS`.
+- **E4** — 2026-11-12, `bun test scripts/push-identity-check.test.mjs` · exit 0 ·
+  8 pass / 0 fail (ok, failed author, failed committer, three skip shapes,
+  project-over-global, read-only twice, JSONC, usage).
+- **E5** — 2026-11-12, `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` ·
+  exit 0 · 18 cases, 0 failures (inert, match, author, committer, enforce=push,
+  config error, JSONC, three signing cases, key mismatch, read-only).
+- **E6** — 2026-11-12, `bun test scripts/identity-hook-parity.test.mjs` · exit 0 ·
+  12 pass / 0 fail (both halves agree on five shapes, two declared asymmetries,
+  JSONC, unparseable profile, no writes).
+- **E7** — 2026-11-12, `bun test scripts/git-env.test.mjs` · exit 0 · 6 pass /
+  0 fail, including a real `bun test` run over a temporary proof suite started
+  with `GIT_DIR` set (the suite body saw no locator).
+- **E8** — 2026-11-12, `node scripts/red-first.mjs` · exit 0 ·
+  `58 pair(s) · 27 after the cutoff · 0 finding(s)` / `verdict: PASS`.
+- **E9** — 2026-11-12, `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` ·
+  exit 0 · 22 pass / 0 fail (18 module cases + 4 `tool_call` wiring cases).
+- **E10** — 2026-11-12, `bun run check:config-schema` (schema package) · exit 0 ·
+  `config.schema.json: current`; the package suite 851/0.
+- **E11** — 2026-11-12, `agentic-workflow config list --json` · exit 0 · the
+  section and its eleven nodes are discoverable (`gitIdentity`,
+  `gitIdentity.enforce`, `.approved.*`, `.agentGuard.*`).
+- **E12** — 2026-11-12, differential against base `43e8c1f9`:
+  `local-gate --list` differs by exactly `push-identity`; `local-gate --dry-run`
+  is byte-identical (the step is dropped without a range). Nothing else moved.
+- **G1** — 2026-11-12, `node scripts/local-gate.mjs --skip-network --jobs 2` ·
+  root-suite exit 0 (166s), crate suites exit 0, `docs-generated-projection`,
+  `version-parity-content`, `journal-carrier-check`, `log-immutability`,
+  `temp-hygiene`, `tmp-gc` exit 0; the run stops at `worktree-guard` exit 1 for a
+  **pre-existing** finding (`feat-437-issue-review-loop-mechanics-and-economics`
+  is merged into `origin/main` and still checked out) — it reproduces on the base
+  archive and names nothing this branch touched.
+- **G2** — 2026-11-12, `node scripts/local-gate.mjs --only schema-node-compat,pi-node-compat --skip-network` ·
+  exit 0 · PASS 2 steps.
+- **G3** — 2026-11-12, `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  `3 checked · 0 missing · 0 stale · 0 orphaned` / `verdict: PASS`.
+- **G4** — 2026-11-12, `bun scripts/check-skill-context.mjs` and `--documents` ·
+  exit 0 · `PASS context budgets: 29 skills` / `PASS context documents`.
+- **G5** — 2026-11-12, `bun scripts/skill-lint.mjs` · exit 0 ·
+  `99 file(s) · 7 check(s) · 0 finding(s)` / `verdict: PASS`.
+
 ## Next
 
-P1 — freeze the `gitIdentity` config section, then the gate's red commit.
+External verification of the delivered diff (`feat/514-new-feature-git-identity-signing-guard`,
+head `649287ee`). No phase is open; the corrections bound is one batch.
 
 ## References
 
