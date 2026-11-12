@@ -116,6 +116,12 @@ export function tokenize(text) {
 
     if (char === "\n") {
       flush();
+      // `"` and `'` string literals cannot span a line (ECMAScript StringLiteral
+      // grammar — verified against the pinned runtime: node rejects both forms
+      // across a newline); only a backtick template may. Line-bounding the two
+      // here keeps one unbalanced quote — a `"` inside a regex literal, say —
+      // from swallowing every later line of the carrier.
+      if (quote !== null && quote !== "`") quote = null;
       tokens.push({ value: "\n", line });
       line += 1;
       // A line comment never survives its newline; a block comment does.
@@ -151,6 +157,34 @@ export function tokenize(text) {
       index -= 1;
       continue;
     }
+    // A regex literal starts where a fresh word starts and the previous
+    // significant token opens an expression (`(`, `[`, `,`, `=`, `;`, `:` …);
+    // its body is code-shaped and may carry any quote — a `"` or a backtick
+    // inside it must not toggle quote state. Skipped to the closing unescaped
+    // `/` on the same line; an unterminated form is left to the word rules.
+    if (char === "/" && word === "" && regexAllowed(tokens)) {
+      let end = index + 1;
+      let inClass = false;
+      let closed = false;
+      while (end < text.length && text[end] !== "\n") {
+        const c = text[end];
+        if (c === "\\") {
+          end += 1;
+        } else if (inClass) {
+          if (c === "]") inClass = false;
+        } else if (c === "[") {
+          inClass = true;
+        } else if (c === "/") {
+          closed = true;
+          break;
+        }
+        end += 1;
+      }
+      if (closed) {
+        index = end;
+        continue;
+      }
+    }
     if (char === "#" && word === "") {
       flush();
       while (index < text.length && text[index] !== "\n") index += 1;
@@ -181,6 +215,23 @@ export function tokenize(text) {
   }
   flush();
   return tokens;
+}
+
+/** Tokens after which a fresh `/` opens a regex literal, not a division. */
+const REGEX_PRECEDERS = new Set([
+  "(", "[", "{", ",", ";", ":", "=", "!", "&", "|", "?", "%", "+", "*", "-", "~", "^", "<", ">", "=>", "\n",
+]);
+
+/** Whether a fresh `/` at this token boundary starts a regex literal. */
+function regexAllowed(tokens) {
+  for (let i = tokens.length - 1; i >= 0; i -= 1) {
+    const value = tokens[i].value;
+    if (value === "\n") return true;
+    if (tokens[i].soft) return REGEX_PRECEDERS.has(value);
+    if (/\s/.test(value)) continue;
+    return REGEX_PRECEDERS.has(value);
+  }
+  return true;
 }
 
 /** A dotted config key (`user.email`, `commit.gpgsign`, `merge.x.driver`). */
