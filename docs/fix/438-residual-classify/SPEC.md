@@ -259,6 +259,14 @@ scripts/local-gate.mjs`) before handoff.
 - `scripts/precondition-closure.test.mjs` exists with no
   `scripts/precondition-closure.mjs` (a test-only pilot of #433's closure
   prose). Does-not-affect: nothing here pairs with it.
+- The local gate's `worktree-guard` step reports one pre-existing finding in this
+  checkout: `.worktrees/feat-437-issue-review-loop-mechanics-and-economics`
+  holds branch `feat/437-…`, which **is merged into `origin/main`** (its tip is
+  `43e8c1f9`, main's tip). The tree existed before this session (`git worktree
+  list` at step 0) and no commit here touches it. **Affects** O23: the gate's
+  step exits 1 on the shared checkout while every other step is green; removing
+  a sibling session's worktree is not this unit's call, and the guide forbids
+  pruning a worktree that still exists on disk.
 
 ## Acceptance criteria
 
@@ -379,3 +387,99 @@ surgery.
   the branch carried no commits of its own (`HEAD 43e8c1f9` = `origin/main`),
   no unit folder existed, the roadmap row read `idea`, so the next incomplete
   phase was P1.
+- **E1** — 2026-11-11, RED corpus at `2ce333f5`: `bun test
+  scripts/residual-classify.test.mjs` → 1 pass / 19 fail, exit 1, every case
+  failing on the missing module (the single pass is the ambiguous-exit
+  expectation a missing CLI satisfies by accident).
+- **E2** — 2026-11-11, implementation at `4127e370`: `bun test
+  scripts/residual-classify.test.mjs` → 18 pass / 2 fail (the two
+  documentation pins `T1`/`T2` were still red — the docs slice had not landed).
+- **E3** — 2026-11-11, documentation at `cd53c4fd`: `bun test
+  scripts/residual-classify.test.mjs` → 20 pass / 0 fail.
+- **E4** — 2026-11-11, the pre-existing suites this change touches:
+  `bun test scripts/unit-doc-contract.test.mjs` → 21 pass / 0 fail;
+  `bun test scripts/scaffold-parity.test.mjs` → 17 pass / 0 fail;
+  `bun test scripts/normative-drift.test.mjs` → 21 pass / 0 fail;
+  `bun test scripts/structural-sibling-pins.test.mjs` → 8 pass / 0 fail;
+  `bun scripts/check-skill-context.mjs` → PASS 29 skills and PASS 4 budgeted
+  documents.
+- **E5** — 2026-11-11, `bun scripts/red-first.mjs` → PASS, 57 pairs (26 after
+  the cutoff `1374ea9`), 0 findings: the suite's commit precedes the module's.
+- **E6** — 2026-11-11, `bun scripts/docs-generate.mjs --check` → PASS (3 files
+  checked, 0 stale, roadmap unchanged); `bun scripts/roadmap-settle.mjs` → PASS
+  (189 unit docs, 0 violations); `bun scripts/lint-changeset.mjs` → ok.
+- **E7** — 2026-11-11, `bun scripts/log-immutability.mjs` → PASS, 0 violations
+  over `43e8c1f9..HEAD`; `journal aggregate --check` → ok, 1 conforming
+  fragment. The session entry is the journal fragment, not a `docs/LOGS.md`
+  append: that file is aggregator-only (the repo's write-path gate), which
+  supersedes O22's `docs/LOGS.md` clause — see `## Next`.
+- **E8** — 2026-11-11, differential in `mktemp -d` (`git archive 43e8c1f9` vs
+  `git archive HEAD`, same commands on both trees): unit-doc-contract 21/0 both,
+  scaffold-parity 17/0 both, normative-drift 21/0 both, check-skill-context PASS
+  both, docs-generate `--check` PASS both, roadmap-settle PASS both. The only
+  delta is the new command: `scripts/residual-classify.mjs` is absent at base
+  (`Module not found`) and present at head.
+- **E9** — 2026-11-11, `node scripts/run-root-suite.mjs --bail` → exit 0 (the
+  whole root suite).
+- **E10** — 2026-11-11, `bun scripts/local-gate.mjs --jobs 2 --no-bail` →
+  16 of 17 steps exit 0 (workspace install, version parity, docs projection,
+  log immutability, temp hygiene, tmp-gc, journal carrier, schema build, crate
+  bun 659/0, crate node, root suite, pi node-compat, schema node-compat,
+  pi-compat-guard, dependency pins, dependency advisories);
+  `worktree-guard` exits 1 on the pre-existing merged `feat/437-…` worktree
+  recorded above.
+- **E11** — 2026-11-11, the two budget re-pins this change needed, both with
+  their growth source: `AGENTS.md` machine region 133 → 134 (688 lines / 554
+  prose / 11,766 est against 708 / 571 / 11,964) and
+  `docs/workflow/GATE_INVENTORY.md` 65 → 66 (161 lines / 5,822 est against
+  161 / 6,182); `bun scripts/check-skill-context.mjs --documents` → PASS.
+
+## Next
+
+- **Handed to the owner as the external verifier.** The branch's diff is the
+  deliverable; nothing here self-approves.
+- **Two obligations stay open, named rather than deferred:**
+  - **O22** — the roadmap rows, the attribution row and the changeset landed and
+    `docs-generate --check` / `roadmap-settle` / `lint-changeset` all pass, but
+    the session entry is a `.agentic-workflow/journal/` fragment: `docs/LOGS.md`
+    is aggregator-only (issue #468's gate), so the aggregator's merge-to-main
+    run is what appends it. Closing O22 is that run, not a hand append.
+  - **O23** — the declared gate exits 1 on the checkout because of the
+    pre-existing `feat/437-…` worktree (see `## Known pre-existing issues`);
+    every other step is green, and removing a sibling session's tree is not this
+    unit's action.
+- **After the owner's verdict:** one correction batch limited to the reported
+  blockers, then one recheck of the touched obligations.
+
+## References
+
+- Issue [#438](https://github.com/gtrabanco/agentic-workflow/issues/438) and its
+  2026-11-06 binding triage note.
+- `skills/unit-lane/references/DESIGN.md` §Three-direction closure (the
+  Retirements bullet and the `residual-promise@1` block).
+- `docs/workflow/GATE_INVENTORY.md` (`prose-gate-inventory@1`).
+- `skills/pre-execution-review/references/LEDGERS.md` (the two ledgers' shapes).
+- Fowler, *Refactoring*; Cockburn, *Crystal*; Hunt & Thomas, *The Pragmatic
+  Programmer*; Feathers, *Working Effectively with Legacy Code* — the adopted
+  ideas, `docs/research/ATTRIBUTION.md`.
+
+## Branch
+
+`feat/438-new-feature-residual-classify`, worktree
+`.worktrees/feat-438-new-feature-residual-classify`.
+
+## Depends on
+
+No hard blocker. Soft, as the issue declares them: #435 (charter planned-work
+rows sharpen `andamio` at project level), #433 (confirmed-absent prerequisites
+sharpen `half-built`), #436 (whether a project still carries the prose
+Retirements section is a profile decision).
+
+## Regression scope
+
+The classifier is read-only and touches no existing command, so the regression
+boundary is the suites that judge the files it edits: `unit-doc-contract`,
+`scaffold-parity`, `normative-drift`, `check-skill-context`, `residue-dimensions`,
+`prose-gate-inventory`, `guide-split`, `docs-generate --check`,
+`roadmap-settle` and `log-immutability` — plus the differential run recorded as
+E8. Findings discovered during implementation never expand beyond this boundary.
