@@ -624,6 +624,12 @@ surgery.
   '#521' docs/ROADMAP.md` · 1; both corpora re-run · `J` 8/8, `K` 7/7; O10's row
   keeps its 9-column shape; the `## Acceptance criteria` section is
   byte-identical (no AC hunk in the batch diff → `ac-hash` not re-stamped).
+- **G5** — 2026-11-12, `HEAD eddaec41` (the correction batch's own commit),
+  clean clone of this branch in `mktemp -d` (removed after): `bun
+  scripts/local-gate.mjs --jobs 2` · exit 0 · `PASS — 17 step(s) in 165s`,
+  every step exit 0, the only `skipped 1` the declared `J8` node skip inside
+  `pi-node-compat` — the batch's recheck for "haven't broke another thing"
+  (S2), green at the batch head, not carried over from G4.
 
 ## Next
 
