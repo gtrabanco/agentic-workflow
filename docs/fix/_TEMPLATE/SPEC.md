@@ -68,12 +68,20 @@ this surface, it is not rediscovered at review.
 
 ## Retirements
 
-What this fix makes obsolete: every surface, token, pane, helper, contract or
-narrative this unit **retires**, each with its replacement or its no-consumer
-evidence (`rg -c '<the removed name>' <scope>` → 0; `grep -c` is the fallback when rg is absent). A fix that only adds is
-the exceptional case: an empty answer states *why nothing can be removed*, so
-the omission is a reason rather than a gap. Cut at plan time — a retirement is a
-planned task with its negative-capability pin, never a review-time discovery.
+What this unit makes obsolete: every surface, token, pane, helper, contract or
+narrative it **retires**, each with its replacement or its no-consumer evidence
+(`rg -c '<the removed name>' <scope>` → 0; `grep -c` is the fallback when rg is
+absent). A **strictly additive** unit answers with its computed surface
+inventory instead — `bun scripts/residual-classify.mjs --inventory --base <rev>`
+prints one row per added surface (manifest, diff-derived) with the state the
+plan decides for it, and that table is the anti-divergence receipt. A
+retirement is legitimate only in the `orphan` state: `andamio` binds it behind
+the recorded planned-consumer promise and `half-built` routes to resume, so a
+retire records the classifier's receipt plus the dated decision row and a later
+unit reclaims the name with that evidence. An empty answer states *why nothing can be removed*,
+so the omission is a reason rather than a gap. Cut at plan
+time — a retirement is a planned task with its negative-capability pin, never a
+review-time discovery.
 
 ## Non-goals
 
