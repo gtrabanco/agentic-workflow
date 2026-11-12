@@ -71,9 +71,10 @@ between the quote markers. A later correction is appended under its own id
   already iterates every `packages/*` member, so the stable plan, the train
   bump, the CHANGELOG companion row and the canary `publish-plan` already
   cover the fourth package (PE-004). This unit is the publish-job gap only.
-- Soft dep #481: its availability-wait hook will cover four jobs — out of
-  scope here (the issue's own scoping); landing the fourth job first means
-  #481 designs against the final shape once.
+- Soft dep #481: its availability-wait hook covers the npm-publishing jobs —
+  out of scope here (the issue's own scoping); landing the fourth job first
+  meant #481 designed against the final shape once (landed 2026-11-12 waiting
+  on all five npm-publishing jobs — F4).
 
 ## Retirements
 
@@ -145,8 +146,9 @@ unit.
 - The fourth npm Trusted Publisher record must exist on npmjs.com **before
   the first stable/canary publish of the companion** — until then that
   publish fails E403/OIDC. Binds: the owner (one-time operator action).
-- #481's availability-wait hook must cover four jobs, not three. Binds: the
-  #481 unit.
+- #481's availability-wait hook must cover every npm-publishing job — landed
+  covering all five, the `nan-publish` job this unit added included (481
+  decision D1). Binds: the #481 unit.
 
 ## Applicable tests
 
@@ -451,6 +453,18 @@ cut, and no `unit-route` triage block is fabricated for the inline route.
   `or` → "failing that"; validator commands and outcomes byte-identical):
   `node scripts/phase-lint.mjs <SPEC>` · exit 0 · P1–P5 PASS 6/6 · verdict
   PASS, overall fingerprint `af9b9862876e…` unchanged · this commit.
+- **F4** — 2026-11-12, folded advisory from the fix/481 EXTERNAL VERIFY
+  (VERIFIED, 0 blockers + 1 advisory, receipt
+  `docs/fix/481-npm-availability-wait/external-verify.md`): the three #481
+  mentions in this doc (the Soft dep bullet, the Future cost bind, the
+  References line) still claimed the availability-wait hook covers "four
+  jobs" — the hook landed waiting on all five npm-publishing jobs (481
+  decision D1 includes `nan-publish`). Folded into five-job currency · this
+  commit. The surrounding "four"-family mentions were read and left as-is:
+  481's S7 quotes the issue verbatim; `npm-version-gate`'s "all four publish
+  jobs" names the four stable-publish jobs and all four do call the gate
+  (fixture-true, 502's own A1b precedent); the CAPABILITIES row counts
+  packages, not jobs.
 
 ## Next
 
@@ -466,5 +480,6 @@ companion's first publish, and decide the pre-existing roadmap-settle red
 - Issue [#502](https://github.com/gtrabanco/agentic-workflow/issues/502) — the PR closes it via `Closes #502`.
 - PR: https://github.com/gtrabanco/agentic-workflow/pull/510
 - #388 / PR #499 — the companion package this unit publishes (merged).
-- #481 — soft dep; its availability-wait hook covers four jobs after this lands.
+- #481 — soft dep; its availability-wait hook covers all five npm-publishing
+  jobs (landed 2026-11-12, PR #516).
 - Roadmap row 502 (`nan-publish-stable`), `docs/workflow/PACKAGES.md`, `docs/workflow/FEATURE_WORKFLOW.md`.
