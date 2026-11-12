@@ -106,32 +106,28 @@
   "skills": {
     "audit-docs": {
       "descriptionEstimateMax": 240,
-      "mainEstimateMax": 3833,
+      "mainEstimateMax": 3428,
       "mainSources": {
-        "issue #435 (project charter, unit 435-project-charter)": "check 16 lands: project-charter coverage audited mechanically (the CAPABILITIES pattern) — declared map row's file exists, charter section present, no unfilled identity slot, no raw catalogue placeholder, closed provenance set per criterion — plus the description gains the charter-coverage trigger and the report template counts 16 checks. Measured at the change by `bun scripts/check-skill-context.mjs`: 3116 est / 228 lines; ceiling re-based to ceil(3116 x 1.10) = 3428 (lines stay under the flat default), reason declared (issue #435 charter check). The 2026-11-07 external-verify repair batch re-measured the same skill at 3246 est / 238 lines — the check-16 slot scan is now bounded to the `## Project charter` section and declares one `awk` line instead of an inline escaped regex; still under this ceiling, so no re-base",
-        "feature 91 / issue #352 (runner prose)": "feature 91 / issue #352 (runner prose): every migrated-runtime citation was re-pointed to the distributable runner and the skill gained its three-line pin pointer — measured 3484 est / 245 lines; ceiling re-based to ceil(3484 x 1.10) = 3833; lines re-based to ceil(245 x 1.10) = 270"
-      },
-      "mainLinesMax": 270
+        "issue #435 (project charter, unit 435-project-charter)": "check 16 lands: project-charter coverage audited mechanically (the CAPABILITIES pattern) — declared map row's file exists, charter section present, no unfilled identity slot, no raw catalogue placeholder, closed provenance set per criterion — plus the description gains the charter-coverage trigger and the report template counts 16 checks. Measured at the change by `bun scripts/check-skill-context.mjs`: 3116 est / 228 lines; ceiling re-based to ceil(3116 x 1.10) = 3428 (lines stay under the flat default), reason declared (issue #435 charter check). The 2026-11-07 external-verify repair batch re-measured the same skill at 3246 est / 238 lines — the check-16 slot scan is now bounded to the `## Project charter` section and declares one `awk` line instead of an inline escaped regex; still under this ceiling, so no re-base"
+      }
     },
     "fold-findings": {
-      "mainEstimateMax": 6621,
+      "mainEstimateMax": 5944,
       "mainSources": {
         "issue #293 (unit 76)": "the freeze-batch contract gains the product-owner class — the Batch-class and Branch receipt lines carry the new vocabulary and the SKILL.md states the freeze-batch (product owner present) rule beside the FOLD_PROCESS.md table; unit 76's review folds then grew SKILL.md from 221 to 225 lines (87decb95), re-measured at 3105; ceiling re-based to ceil(3105 x 1.10) = 3416, reason declared (issue #293 + unit 76 review folds)",
         "issue #308 (unit 79 review fold)": "Step 0 now states both findings carriers' own row schemas — the legacy 7-column row with the folded flip, and the migrated 6-column `findings-table@1` row whose rows are open by definition and close by leaving for a `## Log` F line (F2's fold: one block for two grammars sent the fold queue to flip a column a migrated unit does not have). Grew SKILL.md from 225 lines / 3105 to 245 lines / 3499; ceilings re-based to ceil(3499 × 1.10) = 3849 and ceil(245 × 1.10) = 270, reason declared.",
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): the `swept:` guardrail states the bounds the gate enforces on a sweep declaration and the report-validator class it re-runs. Measured 3898 est / 270 lines at this re-basis; ceiling = ceil(3898 x 1.10) = 4288 / ceil(270 x 1.10) = 297",
-        "fix 318 (class escalation + claim-evidence + evidence-bound + re-review skip)": "fold-findings gains: class escalation (≥2 rows → class-level finding), claim-evidence loop (mandatory reproduction, loop-until-green), evidence-bound check (citation verification), reviewer anti-invention (provably-changed bytes), re-review skip default (docs-only + sweep green), defect identity (mechanism not file:line), per-file review state, net narration diff ≤ 0, closure status output. Measured by `scripts/check-skill-context.mjs` at this re-basis: 5403 est / 373 lines; ceiling re-based to exact ceil(5403 × 1.10) = 5944 / ceil(373 × 1.10) = 411",
-        "feature 91 / issue #352 (runner prose)": "feature 91 / issue #352 (runner prose): every migrated-runtime citation was re-pointed to the distributable runner and the skill gained its three-line pin pointer — measured 6019 est; ceiling re-based to ceil(6019 x 1.10) = 6621"
+        "fix 318 (class escalation + claim-evidence + evidence-bound + re-review skip)": "fold-findings gains: class escalation (≥2 rows → class-level finding), claim-evidence loop (mandatory reproduction, loop-until-green), evidence-bound check (citation verification), reviewer anti-invention (provably-changed bytes), re-review skip default (docs-only + sweep green), defect identity (mechanism not file:line), per-file review state, net narration diff ≤ 0, closure status output. Measured by `scripts/check-skill-context.mjs` at this re-basis: 5403 est / 373 lines; ceiling re-based to exact ceil(5403 × 1.10) = 5944 / ceil(373 × 1.10) = 411"
       },
       "mainLinesMax": 411
     },
     "init-workspace": {
-      "mainEstimateMax": 5332,
+      "mainEstimateMax": 4794,
       "mainSources": {
         "issue #435 (project charter, unit 435-project-charter)": "the charter interrogation lands in SKILL.md: one turn-contract box (identity layer answered before substrate bytes), the bootstrap route bullet naming the charter round first, and the compact §Charter section (identity blocking / domain open-with-defaults / content rule + landing). Measured at the change by `bun scripts/check-skill-context.mjs`: 4358 est / 297 lines; ceilings re-based to ceil(4358 x 1.10) = 4794 / ceil(297 x 1.10) = 327, reason declared (issue #435 charter step)",
         "issue #332 (unit 332-agents-md-split, T5)": "the unit-document conventions paragraph now teaches the spec-by-reference shape the template ships, and the retired \"with 14 sections\" sentence is gone (the legacy shape stays named for the units already cut in it). Measured at the change by `bun scripts/check-skill-context.mjs`: 3696 est / 255 lines; ceilings re-based to ceil(3696 x 1.10) = 4066 / ceil(255 x 1.10) = 281, reason declared",
         "unit 65 P8 (AC22)": "the consent-gated retrieval-index scaffold + hooks block grew SKILL.md from the 2800 flat ceiling to measured 2904; ceiling re-based to ceil(2904 x 1.10) = 3195, reason declared (retrieval-index consent contract)",
-        "fix 258 / #258 harden-needs-input": "the hand-written guard is replaced by the mandatory-consent three-tier dispatch and a pointer to scripts/needs-input.mjs; [target-dir] is restated as optional-with-recorded-default (F7) and the Turn-contract box names the scratch unit §Consent requires (F53) — measured 3330 est / 229 lines at the cycle-12 fold head; ceiling re-based to ceil(3330 x 1.10) = 3663 / ceil(229 x 1.10) = 252 (down from 3463/249, the body is bounded, not grown)",
-        "feature 91 / issue #352 (runner prose)": "feature 91 / issue #352 (runner prose): every migrated-runtime citation was re-pointed to the distributable runner and the skill gained its three-line pin pointer — measured 4847 est; ceiling re-based to ceil(4847 x 1.10) = 5332"
+        "fix 258 / #258 harden-needs-input": "the hand-written guard is replaced by the mandatory-consent three-tier dispatch and a pointer to scripts/needs-input.mjs; [target-dir] is restated as optional-with-recorded-default (F7) and the Turn-contract box names the scratch unit §Consent requires (F53) — measured 3330 est / 229 lines at the cycle-12 fold head; ceiling re-based to ceil(3330 x 1.10) = 3663 / ceil(229 x 1.10) = 252 (down from 3463/249, the body is bounded, not grown)"
       },
       "mainLinesMax": 327,
       "referenceEstimateMax": 3758,
@@ -149,18 +145,16 @@
       }
     },
     "audit-pr": {
-      "mainEstimateMax": 3695,
+      "mainEstimateMax": 3294,
       "referenceEstimateMax": 2889,
       "mainSources": {
-        "fix 286 (scope-aware judge)": "Step 1's stale branch now applies the scope-aware judge (scoped receipt + non-affecting head delta stays current; closed non-affecting classes owned by scripts/scope-manifest.mjs) — grew SKILL.md from the measured 2800 (the flat default) to 2994; ceiling re-based to ceil(2994 x 1.10) = 3294, reason declared (fix/286)",
-        "feature 91 / issue #352 (runner prose)": "feature 91 / issue #352 (runner prose): every migrated-runtime citation was re-pointed to the distributable runner and the skill gained its three-line pin pointer — measured 3359 est / 234 lines; ceiling re-based to ceil(3359 x 1.10) = 3695; lines re-based to ceil(234 x 1.10) = 258"
+        "fix 286 (scope-aware judge)": "Step 1's stale branch now applies the scope-aware judge (scoped receipt + non-affecting head delta stays current; closed non-affecting classes owned by scripts/scope-manifest.mjs) — grew SKILL.md from the measured 2800 (the flat default) to 2994; ceiling re-based to ceil(2994 x 1.10) = 3294, reason declared (fix/286)"
       },
       "referenceSources": {
         "fix 285 (AC3)": "the lane-era lineage gate rewrite (triage-block currency for lane-era units, embedded/separate obligations homes, legacy verify path retained) grew 02_CLOSURE_AND_SCOPE_GATES.md from the measured 2200 (the default reference ceiling) to 2244; ceiling re-based to ceil(2244 x 1.10) = 2469, reason declared (fix/285)",
         "fix 285 (F4-F7)": "F4-F7 fold: added non-author-controlled discriminator note, empty obligations BLOCKED verdict, and frozen digest anchor text to 02_CLOSURE_AND_SCOPE_GATES.md; estimate grew 2626 → ceiling re-based to ceil(2626 x 1.10) = 2889",
         "fix 285 + fix 286 (combined integration)": "the main-into-branch merge folds #286's scope-aware judge into the rewritten 02_CLOSURE_AND_SCOPE_GATES.md — combined reference measures 2589 est / 158 lines, so the declared 2889 ceiling still bounds it"
-      },
-      "mainLinesMax": 258
+      }
     },
     "orchestration-envelope": {
       "descriptionEstimateMax": 170,
@@ -233,14 +227,13 @@
       }
     },
     "workflow-status": {
-      "mainEstimateMax": 2007,
-      "mainLinesMax": 156,
+      "mainEstimateMax": 1767,
+      "mainLinesMax": 140,
       "referenceEstimateMax": 2774,
       "referenceLinesMax": 280,
       "mainSources": {
         "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)",
-        "triage 32 F25/F27": "the P4 budget re-basis at ceil(1606 x 1.10) = 1767 (review finding F19); SKILL.md is 1606 est / 127 lines — this ceiling was set on a per-skill re-basis; versus main only the version line changed (3.7.0 → 3.8.0), so the size is inherited from the merged tree baseline",
-        "feature 91 / issue #352 (runner prose)": "feature 91 / issue #352 (runner prose): every migrated-runtime citation was re-pointed to the distributable runner and the skill gained its three-line pin pointer — measured 1824 est / 141 lines; ceiling re-based to ceil(1824 x 1.10) = 2007; lines re-based to ceil(141 x 1.10) = 156"
+        "triage 32 F25/F27": "the P4 budget re-basis at ceil(1606 x 1.10) = 1767 (review finding F19); SKILL.md is 1606 est / 127 lines — this ceiling was set on a per-skill re-basis; versus main only the version line changed (3.7.0 → 3.8.0), so the size is inherited from the merged tree baseline"
       },
       "referenceSources": {
         "triage 32 F31 fold": "the GATE-RAN mark enumeration added to SENSOR_SIGNALS.md grew the reference from the measured 2512 to 2521 est / 151 lines; ceiling re-based to ceil(2521 x 1.10) = 2774 (also supersedes the F25 byte-identity claim for this file, which no longer holds)",
