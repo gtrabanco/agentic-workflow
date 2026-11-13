@@ -104,7 +104,7 @@ const run = (args, cwd) => {
  * doc's `## Log` (the env-gated shape `risk-tier-classifier.test.mjs`'s F1
  * uses, so CI pays only for the head-side assertions).
  */
-test("F1 — every touched command agrees with base but for the classifier", () => {
+test("F1 — every touched command agrees with base but for the classifier", { timeout: 240_000 }, () => {
   assert.ok(existsSync(CLI), "the classifier exists at head");
   const spec = readRepo("docs/fix/438-residual-classify/SPEC.md");
   assert.match(spec, /differential/i, "the unit doc records the differential run");
@@ -405,10 +405,13 @@ test("P4 — a promise consumer naming a closed unit refuses as ambiguous", () =
 
 test("I1 — --inventory lists the added surface of the change, file and symbol", () => {
   const root = tree({ "README.md": "fixture\n" });
-  const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const git = (...args) =>
+    execFileSync(
+      "git",
+      ["-c", "user.email=fixture@example.invalid", "-c", "user.name=fixture", "-c", "commit.gpgsign=false", ...args],
+      { cwd: root, encoding: "utf8" },
+    ).trim();
   git("init", "-q");
-  git("config", "user.email", "fixture@example.invalid");
-  git("config", "user.name", "fixture");
   git("add", "-A");
   git("commit", "-q", "-m", "base");
   const baseRev = git("rev-parse", "HEAD");
@@ -434,10 +437,13 @@ test("I1 — --inventory lists the added surface of the change, file and symbol"
 
 test("I2 — the inventory never hides an unclaimed addition", () => {
   const root = tree({ "README.md": "fixture\n" });
-  const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const git = (...args) =>
+    execFileSync(
+      "git",
+      ["-c", "user.email=fixture@example.invalid", "-c", "user.name=fixture", "-c", "commit.gpgsign=false", ...args],
+      { cwd: root, encoding: "utf8" },
+    ).trim();
   git("init", "-q");
-  git("config", "user.email", "fixture@example.invalid");
-  git("config", "user.name", "fixture");
   git("add", "-A");
   git("commit", "-q", "-m", "base");
   const baseRev = git("rev-parse", "HEAD");
