@@ -6530,3 +6530,32 @@ Declared commands run by the verifier (command: observed result):
 - **Files:** —
 - **Summary:** Diagnosed y arregló el CI de publicación que fallaba por la fusión del fixture de journal sin identidad git — exportó GIT_CONFIG y el merge lo usa, 659/659 verde sin identidad. Además creó y fusionó PR #531 y #532 para el Engram MCP path skip, y cerró el issue #529 reportado.
 - **Next:** Revisar PR #532 (Engram MCP path skip, merged), verificar que el publish gate corra verde de nuevo al fusionar fix/529 (ya merged), y limpiar el worktree fix-529-journal-merge-identity
+
+## 2026-11-13T20:20:59Z — fix/534-prose-gate-worktree-scan — the external verify's two blockers corrected
+
+Correction batch on the 2026-11-13 `EXTERNAL VERIFY` receipt (`docs/fix/534-prose-gate-worktree-scan/external-verify.md`), applied inline under the owner's local workflow — triage first, then one batch. **B1:** PE-002 no longer claims a parked worktree fails `test-impact.mjs` — the command exits 0 in every worktree-present checkout (hosting checkout at `main` → `empty`/2, `.worktrees/feat-352-…` → `targeted`/272, `.worktrees/feat-438-…` → `targeted`/134), and the refusal the issue reported is an empty-diff refusal, never a worktree effect; its source cell now cites issue #534's reproducer block instead of E1, which is the tier-classify line. **B2:** G1 records the verdict the branch command actually answers — `targeted`, executable 2, one suite — instead of `empty`, which reproduces only on the hosting checkout at `main`. Advisories folded into the same batch: PE-001's freshness set to `stale` (its cited skip set is superseded by P2), the cut-run prose aligned with E1 (a bare directory path fails closed to executable content; a clean tree answers `empty-change`, same `standard` tier), and the Retirements count corrected to 2 matches before and after. A4 has no fix: the two pre-existing local-`main` log commits riding the range are the owner's push to make. Recheck recorded as L3/E7/E8/G2: local-gate PASS 17 steps, sibling suite 22/0, docs-generate PASS, phase-lint fingerprint unchanged from the pre-batch baseline.
+
+## Key Learnings
+- An evidence line's recorded value has to be re-run in the checkout the line names: `test-impact` answered `empty` on `main` and `targeted` on the branch, and the receipt had mixed the two — the gate half of G1 was green either way, which is why the slip survived the original run.
+- A tracked journal fragment is a gated write-once surface (`log-immutability` refuses an edit outside the aggregator identity), so a false sentence in a session narrative is corrected in the unit doc and the verify receipt, never in the fragment itself.
+
+## 2026-11-13T11:30:00Z — fix/534-prose-gate-worktree-scan — the inventory walk learns the worktree location
+
+The prose-gate inventory's `findHomes()` skipped only `.git` and `node_modules`, so any unit worktree parked at the repository's designated `.worktrees/` location carried a full guide-layer checkout whose `docs/workflow/GATE_INVENTORY.md` copy was reported as a second home (`multiple-homes`), failing `prose-gate-inventory` and `test-impact` on every push from `main` while a unit waited on a fix (issue #534; the remedy #505 had already scoped). The walk now skips `.worktrees` the same way it skips `.git`, the suite pins the rule red-first with a fixture (a checkout is a copy of the tree, not a second declaration), and the local gate is green on the branch with both parked worktrees in place. Two pre-existing reds were repaired on the way: ROADMAP row 521 settled to `done · [#523]` (the settlement gate's own demand, written through the writer with CAS) and the projection re-rendered by its emitter.
+
+## Key Learnings
+- `path-protection` records are discovered from the *hosting* checkout's `docs/{features,fix}/*/decisions.md` — a session working from a parked worktree must temporarily mirror its ledger there (or the guard refuses the protected edit); recorded as a Future candidate in the unit doc.
+- A parked, clean, pushed worktree is waiting work, not stale work — diagnose before removing.
+
+## 2026-11-13T11:19:37Z — main — manual
+- **Commits:** 1 (`616443d7…616443d7`)
+- **Files:** .agentic-workflow/journal/20261113T111913Z-main-narrative-local.md
+- **Summary:** Debugged Engram 'binary-missing' error in pi-agentic-workflow. Root cause: feature 66 engram MCP registration is redundant with native gentle-engram package, and the 'binary-missing' message printed a self-referential install route that can't fix the problem. Verified against live system (engram v3.7.1 running, PATH missing /home/agent/go/bin). Opened issue #531 with AC1-AC6 covering: native-active skip, external-server skip, improved error messages naming all three resolution surfaces (PATH/ENGRAM_BIN, ENGRAM_URL, companion), and remote-memory configuration. Implemented tests+code+docs+changeset in worktree fix/531-engram-native-skip-remote-surfaces (851 tests green, 0 fail).
+- **Next:** Review worktree fix/531-engram-native-skip-remote-surfaces; push+PR if approved, or remove worktree.
+
+## 2026-11-13T11:19:13Z — main — narrative
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Diagnosed y arreglé el publish.yml gate que fallaba por la fusión del race fixture sin identidad git — exporté GIT_CONFIG y el merge lo usa, 659/659 tests verdes con y sin identidad. Creé y fusioné PR #530 (fix/529), PR #531 y #532 (Engram MCP path skip, merged). Issue #529 cerrado.
+- **Decisions:** El merge del race fixture era el único spawn de git sin identidad en el suite del crate. La solución es exportar GIT_CONFIG desde fixtures.mjs y usarla en el merge — no añadir git config --global al workflow, que ocultaría la siguiente fuga de identidad (convención -c por invocación de #514 S7).
+- **Next:** Verificar que publish gate corra verde en CI tras fusionar PR #530. Limpiar worktree fix-529-journal-merge-identity.
