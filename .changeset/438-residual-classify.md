@@ -12,7 +12,8 @@ printing the path it consulted for every conditional.
 
 A strictly additive unit now answers `## Retirements` with the classifier's
 `--inventory --base <rev>` manifest (one row per added file and added `export`
-symbol, with its state) instead of prose, and a real retirement leaves the
+symbol, with its state and the consumer evidence sites behind it) instead of
+prose, and a real retirement leaves the
 `--receipt` record plus the dated decision row — `orphan` is the only
 retire-legitimate state. The four unit-doc templates teach the answer, the
 design step publishes the `residual-promise@1` block, and

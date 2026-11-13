@@ -40,8 +40,9 @@
  * `--inventory --base <rev>` is the strictly-additive unit's answer to
  * `## Retirements` (issue #438's third expected behaviour): one row per
  * surface the change adds — added non-documentation files and added `export`
- * symbols — each with the state above, so an unclaimed addition is visible at
- * plan time instead of passing as an empty prose section.
+ * symbols — each with the state above and the consumer evidence sites the scan
+ * counted, so an unclaimed addition is visible at plan time instead of passing
+ * as an empty prose section.
  *
  * `--receipt <orphan> --date <YYYY-MM-DD>` prints the recorded receipt plus
  * the dated decision row a retirement leaves behind, and refuses every other
@@ -295,7 +296,7 @@ export function unitFolders(root = process.cwd()) {
  * longer a plan claim.
  */
 function unitIsOpen(unit, index) {
-  const rows = unit.kind === "feature" ? index.features : index.fixes;
+  const rows = unit.kind === "features" ? index.features : index.fixes;
   const row = rows.find((cells) => stripTicks(cells[1]) === unit.slug);
   if (row === undefined) return true;
   return rowIsOpen(row);
@@ -543,7 +544,9 @@ const EXPORTED_SYMBOL = /^\s*export\s+(?:async\s+)?(?:function|const|let|class|i
  * The computed surface inventory of a change (issue #438's third expected
  * behaviour): the added code files and the added `export` symbols against
  * `base`, each classified — the receipt a strictly additive unit's
- * `## Retirements` section carries instead of prose.
+ * `## Retirements` section carries instead of prose — with the live-tree
+ * evidence sites behind that state, so a reader judges a `used`/`orphan`
+ * verdict instead of trusting it.
  */
 export function inventory(root, base, options = {}) {
   const git = (args) => {
@@ -568,7 +571,8 @@ export function inventory(root, base, options = {}) {
     .sort((a, b) => (a.surface < b.surface ? -1 : a.surface > b.surface ? 1 : 0))
     .map((row) => {
       const verdict = classify(row.surface, { root, ...options });
-      return { ...row, state: verdict.state, reason: verdict.reason };
+      const consumers = verdict.consulted.find((site) => site.surface === "live-tree");
+      return { ...row, state: verdict.state, reason: verdict.reason, evidence: [...consumers.evidence] };
     });
   return { contract: INVENTORY_CONTRACT_ID, base, rows };
 }
