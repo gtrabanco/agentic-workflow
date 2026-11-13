@@ -550,6 +550,13 @@ surgery.
   entry. That entry's counts describe the session at the moment it was written
   (58 pass on the targeted corpus, 863 on the package suite); the correction
   batch's receipts are E12, E13 and G4 here, which supersede them.
+- **P9** — 2026-11-13, the branch pushed and PR
+  [#532](https://github.com/gtrabanco/agentic-workflow/pull/532) opened against
+  `main`; the roadmap row settles to `done` with the PR link (the row is removed
+  after the merge, never before). The pre-push hook's offline subset runs the
+  same root suite that fails on the pre-existing `#521` row, so the push used the
+  repo's documented escape hatch (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`) with the
+  reason recorded in the PR body.
 ## Next
 
 Hand the diff to the owner as the external verifier. Every obligation is
@@ -565,6 +572,9 @@ be the only remaining step to a full green.
 
 - Issue [#531](https://github.com/gtrabanco/agentic-workflow/issues/531) — the
   request (closes via `Closes #531`).
+- Pull request [#532](https://github.com/gtrabanco/agentic-workflow/pull/532) —
+  the delivery, opened against `main` with the evidence pack the template asks
+  for.
 - Feature 66 (`docs/features/66-engram-memory-substrate/`) — the provisioning
   contract this unit revisits (D3 there).
 - `docs/fix/521-fix-config/` — the precedent for this unit's own shape (the
