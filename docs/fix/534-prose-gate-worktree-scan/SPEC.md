@@ -94,6 +94,13 @@ implemented diff at verification (E-line below) and both runs agree on
   generally (the #505 remedy's broader half): a real candidate, but it needs a
   gitignore reader and a non-git fixture strategy — owner decision, never a
   default of this unit.
+- **2026-11-13, open** — the path-protection guard's records discovery reads
+  only the *hosting* checkout's `docs/{features,fix}/*/decisions.md`
+  (`packages/pi-agentic-workflow/src/extension/index.ts`), so a session working
+  from a parked worktree cannot have its own unit's records discovered (L3's
+  temporary copy was the workaround). A real product gap for the worktree
+  workflow #505 shipped — owner decision; touches the extension, not this
+  unit's scripts.
 
 ## Future cost
 
@@ -169,10 +176,10 @@ it.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S1, S2 | the walk skips `.worktrees/` (PE-001, PE-004) and the suite pins the rule with a fixture (PE-002): a `.worktrees/` copy inside a throwaway tree is one home and zero errors, while every other second copy stays `multiple-homes` | P1, P2 | P1, P2 | scripts/prose-gate-inventory.mjs, scripts/prose-gate-inventory.test.mjs | `bun test scripts/prose-gate-inventory.test.mjs` exits 0 with the new fixture case green and every pre-existing case unchanged; the red run at base is recorded before the green commit | the E lines naming the red run and the green run | pending |
-| O2 | S2 | on the live tree with the two parked worktrees present, `findHomes(root)` returns exactly `docs/workflow/GATE_INVENTORY.md` — the one-home invariant holds at the real head, not only in fixtures | P2 | P2 | scripts/prose-gate-inventory.mjs | the live-head `the block has exactly one home in the tree` case passes on this tree | the E line with the suite exit | pending |
-| O3 | S3 | the gate is usable while a unit worktree waits: the local gate is green with the parked worktrees in place, and `test-impact.mjs --base origin/main` answers instead of erroring | P3 | P3 | scripts/prose-gate-inventory.mjs | `bun scripts/local-gate.mjs` exits 0; `bun scripts/test-impact.mjs --base origin/main` exits 0 | the G line with the gate exit and the E line with the test-impact verdict | pending |
-| O4 | S1 | documentation and state ship in the same change: ROADMAP `## Fixes` row through the writer, `docs/generated` projection re-rendered by its emitter (never hand-written), session log entry, and the completed obligations ledger | P3 | P3 | docs/ROADMAP.md, docs/generated/*, docs/LOGS.md | `bun scripts/docs-generate.mjs --check` exits 0 after the emitter run | the E line with the check exit | pending |
+| O1 | S1, S2 | the walk skips `.worktrees/` (PE-001, PE-004) and the suite pins the rule with a fixture (PE-002): a `.worktrees/` copy inside a throwaway tree is one home and zero errors, while every other second copy stays `multiple-homes` | P1, P2 | P1, P2 | scripts/prose-gate-inventory.mjs, scripts/prose-gate-inventory.test.mjs | `bun test scripts/prose-gate-inventory.test.mjs` exits 0 with the new fixture case green and every pre-existing case unchanged; the red run at base is recorded before the green commit | the E lines naming the red run and the green run | verified (E3, E4) |
+| O2 | S2 | on the live tree with the two parked worktrees present, `findHomes(root)` returns exactly `docs/workflow/GATE_INVENTORY.md` — the one-home invariant holds at the real head, not only in fixtures | P2 | P2 | scripts/prose-gate-inventory.mjs | the live-head `the block has exactly one home in the tree` case passes on this tree | the E line with the suite exit | verified (E4, E6) |
+| O3 | S3 | the gate is usable while a unit worktree waits: the local gate is green with the parked worktrees in place, and `test-impact.mjs --base origin/main` answers instead of erroring | P3 | P3 | scripts/prose-gate-inventory.mjs | `bun scripts/local-gate.mjs` exits 0; `bun scripts/test-impact.mjs --base origin/main` exits 0 | the G line with the gate exit and the E line with the test-impact verdict | verified (G1) |
+| O4 | S1 | documentation and state ship in the same change: ROADMAP `## Fixes` row through the writer, `docs/generated` projection re-rendered by its emitter (never hand-written), session log entry, and the completed obligations ledger | P3 | P3 | docs/ROADMAP.md, docs/generated/*, docs/LOGS.md | `bun scripts/docs-generate.mjs --check` exits 0 after the emitter run | the E line with the check exit | verified (E2, P3) |
 
 ## Path protection
 
@@ -210,10 +217,18 @@ not-created | scripts/prose-gate-inventory.mjs | the walk's skip set is the unit
 - **P1** — 2026-11-13, ledger freeze (this document + decisions.md + ROADMAP row) before the first line of code.
 - **E1** — 2026-11-13, `bun scripts/ceremony.mjs tier classify --base main` · exit 0 · `tier: standard` · `reason_kind: executable-content` (paths: `docs/fix/534-prose-gate-worktree-scan/` only — the doc itself; re-run on the implemented diff at verification).
 - **E2** — 2026-11-13, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap fixrow docs/ROADMAP.md … --expect 7e776990` · exit 0 · `before: 7e776990` → `after: 862e0198`, `ok: true`; `bun scripts/docs-generate.mjs --check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale · 0 orphaned — verdict: PASS`.
+- **L3** — 2026-11-13, ledger amendment before the first code commit (self, pre-implementation): the path-protection guard reads the records corpus from the *hosting* checkout's `docs/{features,fix}/*/decisions.md` (`packages/pi-agentic-workflow/src/extension/index.ts` `collectRecordTexts(ctx.cwd)`), so while this branch is checked out at `.worktrees/fix-534-prose-gate-worktree-scan` the records were temporarily copied there, untracked, for the guard to discover; the copy was removed after the protected edits and never committed anywhere. The gap (a worktree session's records are undiscoverable from the session root) is recorded as the unit's Future candidate; the prefixed-spelling escape records in `decisions.md` are the durable half of this note.
+- **E3** — 2026-11-13, RED at base, `bun test scripts/prose-gate-inventory.test.mjs` · exit 1 · `(fail) a worktree checkout parked in .worktrees/ is not a second home` — the new fixture case fails exactly as the issue's frozen failure predicts; every pre-existing case still passes at base.
+- **E4** — 2026-11-13, GREEN, `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · `22 pass · 0 fail` (the new case green, every pre-existing case unchanged, including `a second copy … fails as multiple-homes`).
+- **E5** — 2026-11-13, `bun scripts/ceremony.mjs tier classify --base main` re-run on the implemented diff · exit 0 · `tier: standard`, unchanged from E1.
+- **E6** — 2026-11-13, the branch code against the real head: `PROSE_GATE_REPO=/home/agent/projects/agentic-workflow bun test scripts/prose-gate-inventory.test.mjs` (run from the branch checkout) · exit 0 · `22 pass · 0 fail` — `findHomes()` returns exactly one home on the hosting checkout with 4 worktrees registered (`feat/352-…`, `feat/438-…`, `fix/534-…` parked under `.worktrees/`). O2's live-tree half.
+- **G1** — 2026-11-13, `bun scripts/local-gate.mjs` (branch checkout, both parked worktrees in place) · exit 0 · `local-gate: PASS — 17 step(s) in 168s`; `bun scripts/test-impact.mjs --base origin/main` · exit 0 · `verdict: empty`.
+- **P3** — 2026-11-13, ROADMAP row 521 settled to `done · [`#523`](https://github.com/gtrabanco/agentic-workflow/pull/523)` through the writer (CAS `862e0198` → `e0c8cca6`) — the settlement gate's own demand, pre-existing red on main (193 unit docs checked · verdict: PASS after); projection re-rendered by its emitter; journal fragment written.
+- **P4** — 2026-11-13, branch pushed and PR opened against `main`.
 
 ## Next
 
-P1 — the RED corpus commit, observed failing at base.
+The PR review and merge — the owner settles the two parked worktrees' merge order afterwards.
 
 ## References
 
