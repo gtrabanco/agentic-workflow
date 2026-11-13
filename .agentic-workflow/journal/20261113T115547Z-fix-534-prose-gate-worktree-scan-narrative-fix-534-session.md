@@ -1,0 +1,7 @@
+## 2026-11-13T11:30:00Z — fix/534-prose-gate-worktree-scan — the inventory walk learns the worktree location
+
+The prose-gate inventory's `findHomes()` skipped only `.git` and `node_modules`, so any unit worktree parked at the repository's designated `.worktrees/` location carried a full guide-layer checkout whose `docs/workflow/GATE_INVENTORY.md` copy was reported as a second home (`multiple-homes`), failing `prose-gate-inventory` and `test-impact` on every push from `main` while a unit waited on a fix (issue #534; the remedy #505 had already scoped). The walk now skips `.worktrees` the same way it skips `.git`, the suite pins the rule red-first with a fixture (a checkout is a copy of the tree, not a second declaration), and the local gate is green on the branch with both parked worktrees in place. Two pre-existing reds were repaired on the way: ROADMAP row 521 settled to `done · [#523]` (the settlement gate's own demand, written through the writer with CAS) and the projection re-rendered by its emitter.
+
+## Key Learnings
+- `path-protection` records are discovered from the *hosting* checkout's `docs/{features,fix}/*/decisions.md` — a session working from a parked worktree must temporarily mirror its ledger there (or the guard refuses the protected edit); recorded as a Future candidate in the unit doc.
+- A parked, clean, pushed worktree is waiting work, not stale work — diagnose before removing.
