@@ -33,10 +33,12 @@ import {
   ENGRAM_SERVER_NAME,
   declaredMcpServerPaths,
   isNativeEngramPackage,
+  piSettingsPaths,
   provisionEngram,
   readDeclaredServerNames,
   readDeclaredServerNamesFrom,
   readInstalledPackageSources,
+  readInstalledPackageSourcesFrom,
   resolveEngramBinary,
 } from "../dist/extension/engram.js";
 
@@ -120,6 +122,11 @@ describe("engram provisioning — the native gentle-engram package wins (issue #
       register: () => {},
     });
     strictEqual(report.status, "native-active");
+    // The leftover declaration is the one thing that still breaks native-only
+    // writes, and this branch is the only one that can say so: `already-declared`
+    // never runs once the native package answers first.
+    ok(/mcp\.json Pi reads still declares/u.test(report.message), report.message);
+    ok(/remove that entry/u.test(report.message), report.message);
   });
 
   it("consent still comes first: no opt-in stays silent even with the native package present", () => {
@@ -173,6 +180,9 @@ describe("engram provisioning — an external server is a deliberate choice (iss
       register: () => {},
     });
     strictEqual(report.status, "native-active");
+    // …and the deliberate configuration is still stated, never hidden by the
+    // native branch: AC2 asks for it to be reported, AC1 for the native fact.
+    ok(/served by the external Engram server/u.test(report.message), report.message);
   });
 });
 
@@ -223,6 +233,121 @@ describe("engram provisioning — native package detection reads Pi's settings.j
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("engram provisioning — the package list is read from every scope Pi reads (issue #531, AC4)", () => {
+  it("names Pi's two settings files, and the project one only while the project is trusted", () => {
+    deepStrictEqual(piSettingsPaths({ agentDir: "/fixture/agent", cwd: "/fixture/repo", projectTrusted: true }), [
+      join("/fixture/agent", "settings.json"),
+      join("/fixture/repo", ".pi", "settings.json"),
+    ]);
+    deepStrictEqual(piSettingsPaths({ agentDir: "/fixture/agent", cwd: "/fixture/repo", projectTrusted: false }), [
+      join("/fixture/agent", "settings.json"),
+    ]);
+  });
+
+  it("unions the sources across the files Pi reads, without duplicates", () => {
+    const dir = mkdtempSync(join(tmpdir(), "engram-settings-scopes-"));
+    try {
+      const agentDir = join(dir, "agent");
+      const cwd = join(dir, "repo");
+      mkdirSync(join(cwd, ".pi"), { recursive: true });
+      mkdirSync(agentDir, { recursive: true });
+      // Pi dedupes a package configured in both scopes, so the reader must not
+      // report the same source twice.
+      writeFileSync(
+        join(agentDir, "settings.json"),
+        JSON.stringify({ packages: ["npm:pi-clear", "npm:gentle-engram@latest"] }),
+      );
+      writeFileSync(
+        join(cwd, ".pi", "settings.json"),
+        JSON.stringify({ packages: [{ source: "npm:gentle-engram@latest" }, "npm:pi-effort"] }),
+      );
+
+      const trusted = readInstalledPackageSourcesFrom(piSettingsPaths({ agentDir, cwd, projectTrusted: true }));
+      deepStrictEqual(trusted, ["npm:pi-clear", "npm:gentle-engram@latest", "npm:pi-effort"]);
+      strictEqual(isNativeEngramPackage(trusted), true);
+
+      // Untrusted: Pi does not read the project settings file at all, so a
+      // project-scope declaration cannot be evidence of an installed package.
+      const untrusted = readInstalledPackageSourcesFrom(piSettingsPaths({ agentDir, cwd, projectTrusted: false }));
+      deepStrictEqual(untrusted, ["npm:pi-clear", "npm:gentle-engram@latest"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("a project-scope-only declaration is honoured when trusted and invisible when not", () => {
+    const dir = mkdtempSync(join(tmpdir(), "engram-settings-project-"));
+    try {
+      const agentDir = join(dir, "agent");
+      const cwd = join(dir, "repo");
+      mkdirSync(join(cwd, ".pi"), { recursive: true });
+      mkdirSync(agentDir, { recursive: true });
+      writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ packages: ["npm:pi-clear"] }));
+      writeFileSync(join(cwd, ".pi", "settings.json"), JSON.stringify({ packages: ["npm:gentle-engram@latest"] }));
+
+      const trusted = readInstalledPackageSourcesFrom(piSettingsPaths({ agentDir, cwd, projectTrusted: true }));
+      strictEqual(isNativeEngramPackage(trusted), true, "a trusted project's install is one Pi loads");
+
+      const untrusted = readInstalledPackageSourcesFrom(piSettingsPaths({ agentDir, cwd, projectTrusted: false }));
+      strictEqual(isNativeEngramPackage(untrusted), false, "an untrusted project loads no package");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("engram provisioning — ENGRAM_BIN is a resolution surface, not only a name (issue #531, AC3)", () => {
+  it("resolves the override before scanning PATH, and reports it as the resolved binary", () => {
+    const present = resolveEngramBinary({
+      env: { PATH: "/usr/local/bin", ENGRAM_BIN: "/opt/engram/bin/engram" },
+      platform: "linux",
+      exists: (path) => path === "/opt/engram/bin/engram",
+    });
+    strictEqual(present, "/opt/engram/bin/engram", "the route the refusal names has to work");
+  });
+
+  it("resolves a bare ENGRAM_BIN name on PATH, as Engram's own extension does", () => {
+    const resolved = resolveEngramBinary({
+      env: { PATH: "/opt/tools:/usr/local/bin", ENGRAM_BIN: "engram-custom" },
+      platform: "linux",
+      exists: (path) => path === "/opt/tools/engram-custom",
+    });
+    strictEqual(resolved, "/opt/tools/engram-custom");
+  });
+
+  it("an override that resolves nothing fails closed instead of falling back to PATH", () => {
+    // Falling back would contradict the operator's explicit choice and register
+    // a binary they did not name — the report has to be true about what runs.
+    const resolved = resolveEngramBinary({
+      env: { PATH: "/usr/local/bin", ENGRAM_BIN: "/nope/engram" },
+      platform: "linux",
+      exists: (path) => path === "/usr/local/bin/engram",
+    });
+    strictEqual(resolved, null);
+  });
+
+  it("a blank ENGRAM_BIN is unset, exactly as Engram's extension treats it", () => {
+    const resolved = resolveEngramBinary({
+      env: { PATH: "/usr/local/bin", ENGRAM_BIN: "   " },
+      platform: "linux",
+      exists: (path) => path === "/usr/local/bin/engram",
+    });
+    strictEqual(resolved, "/usr/local/bin/engram");
+  });
+
+  it("the resolved override is what gets registered, so the report names the binary that will run", () => {
+    const { calls, register } = recorder();
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: "/opt/engram/bin/engram",
+      declaredNames: [],
+      register,
+    });
+    strictEqual(report.status, "registered");
+    strictEqual(calls[0].config.command, "/opt/engram/bin/engram");
   });
 });
 

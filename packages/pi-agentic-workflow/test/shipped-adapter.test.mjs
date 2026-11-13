@@ -518,19 +518,33 @@ test("AC7 through the adapter: dirty-worktree warning still fires on abort", asy
  * The Engram provisioning the `session_start` listener performs, driven through
  * the shipped entry: the two silences the end review found (F5, F6) live in the
  * adapter's inputs, not in the pure module, so only this harness can see them.
+ *
+ * Issue #531 added a second environment input — `ENGRAM_URL` decides whether
+ * memory is served externally — so both Engram-relevant variables are pinned
+ * per case. A green that depends on the operator's shell is the defect #529
+ * repaired for a git identity; this is the same class of leak.
  */
-function withFakeEngramOnPath(body) {
-  const bin = mkdtempSync(join(tmpdir(), "paw-engram-bin-"));
-  const stub = join(bin, "engram");
-  writeFileSync(stub, "#!/bin/sh\necho 'engram 0.0.0'\n");
-  chmodSync(stub, 0o755);
-  const previous = process.env.PATH;
-  process.env.PATH = `${bin}:${previous}`;
+function withEngramEnv({ path: withStubBinary = true, url = null, engramBin = null } = {}, body) {
+  const bin = withStubBinary ? mkdtempSync(join(tmpdir(), "paw-engram-bin-")) : null;
+  const saved = { PATH: process.env.PATH, ENGRAM_URL: process.env.ENGRAM_URL, ENGRAM_BIN: process.env.ENGRAM_BIN };
   try {
+    if (bin !== null) {
+      const stub = join(bin, withStubBinary === true ? "engram" : withStubBinary);
+      writeFileSync(stub, "#!/bin/sh\necho 'engram 0.0.0'\n");
+      chmodSync(stub, 0o755);
+      process.env.PATH = `${bin}:${saved.PATH}`;
+    }
+    if (url === null) delete process.env.ENGRAM_URL;
+    else process.env.ENGRAM_URL = url;
+    if (engramBin === null) delete process.env.ENGRAM_BIN;
+    else process.env.ENGRAM_BIN = engramBin;
     return body();
   } finally {
-    process.env.PATH = previous;
-    rmSync(bin, { recursive: true, force: true });
+    for (const [key, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+    if (bin !== null) rmSync(bin, { recursive: true, force: true });
   }
 }
 
@@ -543,7 +557,7 @@ test("F6 through the adapter: a project-scope mcp.json declaration is never shad
   try {
     mkdirSync(join(entry.cwd, ".pi"), { recursive: true });
     writeFileSync(join(entry.cwd, ".pi", "mcp.json"), JSON.stringify({ mcpServers: { engram: { command: "/elsewhere/engram" } } }));
-    withFakeEngramOnPath(() => entry.handlers.get("session_start")({}, entry.context()));
+    withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context()));
     assert.deepEqual(entry.calls.registerMcpServer, [], "the operator's own declaration wins");
     assert.ok(
       entry.calls.notify.some(([message]) => /already declared/i.test(message)),
@@ -562,7 +576,7 @@ test("F5 through the adapter: an invalid config is a stated problem, never a sil
   const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
   try {
     writeFileSync(join(entry.agentDir, "pi-agentic-workflow.json"), '{"memory":{"engram":"yes"},"default":{"thinking":"nope"}}');
-    withFakeEngramOnPath(() => entry.handlers.get("session_start")({}, entry.context()));
+    withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context()));
     assert.deepEqual(entry.calls.registerMcpServer, [], "consent that cannot be read registers nothing");
     assert.ok(
       entry.calls.notify.some(([message]) => /config file is invalid/i.test(message)),
@@ -583,7 +597,7 @@ test("F6 through the adapter: an opted-in session with nothing declared does reg
   // reported exactly.
   const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
   try {
-    withFakeEngramOnPath(() => entry.handlers.get("session_start")({}, entry.context()));
+    withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context()));
     assert.equal(entry.calls.registerMcpServer.length, 1, "consent is honoured");
     const [name, config] = entry.calls.registerMcpServer[0];
     assert.equal(name, "engram");
@@ -592,6 +606,108 @@ test("F6 through the adapter: an opted-in session with nothing declared does reg
       entry.calls.notify.some(([message]) => message.includes("registered MCP server")),
       JSON.stringify(entry.calls.notify),
     );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("issue #531 through the adapter: the native package is reported informatively and nothing is registered", async () => {
+  // The operator's own install is the normal case — gentle-engram provides the
+  // mem_* tools — and a second MCP path both duplicates them and weakens the
+  // native-only write guarantee. Pi's packages list is where that install is
+  // declared, so the user settings.json is what the listener has to read.
+  const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
+  try {
+    writeFileSync(
+      join(entry.agentDir, "settings.json"),
+      JSON.stringify({ packages: ["npm:pi-clear", "npm:gentle-engram@latest"] }),
+    );
+    withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context()));
+    assert.deepEqual(entry.calls.registerMcpServer, [], "the native tools already exist; nothing is registered beside them");
+    const reported = entry.calls.notify.filter(([, kind]) => kind === "info");
+    assert.equal(reported.length, 1, `exactly one informative line: ${JSON.stringify(entry.calls.notify)}`);
+    assert.match(reported[0][0], /gentle-engram/u, reported[0][0]);
+    assert.match(reported[0][0], /nothing was written/u, reported[0][0]);
+    assert.deepEqual(
+      entry.calls.notify.filter(([message, kind]) => kind === "warning" && /Engram/u.test(message)),
+      [],
+      "a correct install is not an Engram warning (the unrelated readiness nudge is out of scope)",
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("issue #531 through the adapter: a project-scope packages declaration is read only while trusted", async () => {
+  // `pi install -l` writes `.pi/settings.json`, which Pi reads only after project
+  // trust. Reading only the user file left the AC1 defect in place for exactly
+  // that install, so the trust value has to move the outcome.
+  const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
+  try {
+    mkdirSync(join(entry.cwd, ".pi"), { recursive: true });
+    writeFileSync(
+      join(entry.cwd, ".pi", "settings.json"),
+      JSON.stringify({ packages: ["npm:gentle-engram@latest"] }),
+    );
+    withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context({ trusted: true })));
+    assert.deepEqual(entry.calls.registerMcpServer, [], "a trusted project's native install suppresses the MCP path");
+    assert.ok(
+      entry.calls.notify.some(([message, kind]) => kind === "info" && /gentle-engram/u.test(message)),
+      JSON.stringify(entry.calls.notify),
+    );
+
+    entry.calls.notify.length = 0;
+    entry.calls.registerMcpServer.length = 0;
+    withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context({ trusted: false })));
+    assert.equal(
+      entry.calls.registerMcpServer.length,
+      1,
+      "an untrusted project loads no package, so the MCP path stays the only one available",
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("issue #531 through the adapter: ENGRAM_URL is reported as a deliberate choice, not a missing binary", async () => {
+  // The remote/external route is Engram's own documented configuration; the
+  // package used to call it `binary-missing` and warn about it every session.
+  const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
+  try {
+    withEngramEnv({ path: false, url: "http://127.0.0.1:7437" }, () =>
+      entry.handlers.get("session_start")({}, entry.context()),
+    );
+    assert.deepEqual(entry.calls.registerMcpServer, [], "stdio MCP cannot target a URL");
+    const reported = entry.calls.notify.filter(([, kind]) => kind === "info");
+    assert.equal(reported.length, 1, JSON.stringify(entry.calls.notify));
+    assert.match(reported[0][0], /ENGRAM_URL/u, reported[0][0]);
+    assert.ok(
+      !entry.calls.notify.some(([message]) => /binary-missing|no "engram" core binary/u.test(message)),
+      `a deliberate remote choice never surfaces as a missing binary: ${JSON.stringify(entry.calls.notify)}`,
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("issue #531 through the adapter: ENGRAM_BIN is the binary that gets registered", async () => {
+  // The refusal names `ENGRAM_BIN`, so following it has to work end to end:
+  // a binary reachable only through the override is registered by that path.
+  const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
+  try {
+    const bin = mkdtempSync(join(tmpdir(), "paw-engram-override-"));
+    try {
+      const stub = join(bin, "engram-custom");
+      writeFileSync(stub, "#!/bin/sh\necho 'engram 0.0.0'\n");
+      chmodSync(stub, 0o755);
+      withEngramEnv({ path: false, engramBin: stub }, () =>
+        entry.handlers.get("session_start")({}, entry.context()),
+      );
+      assert.equal(entry.calls.registerMcpServer.length, 1, JSON.stringify(entry.calls.notify));
+      assert.equal(entry.calls.registerMcpServer[0][1].command, stub);
+    } finally {
+      rmSync(bin, { recursive: true, force: true });
+    }
   } finally {
     entry.cleanup();
   }
