@@ -10,17 +10,16 @@ trap 'rm -rf "$fixture"' EXIT HUP INT TERM
 mkdir -p "$fixture/bin" "$fixture/repo/docs/features" "$fixture/state"
 git -C "$fixture" init -q --bare remote.git
 git -C "$fixture/repo" init -q -b main
-git -C "$fixture/repo" config user.name fixture
-git -C "$fixture/repo" config user.email fixture@example.invalid
+identity=(-c user.name=fixture -c user.email=fixture@example.invalid -c commit.gpgsign=false)
 printf 'fixture\n' > "$fixture/repo/README.md"
 printf 'merge: fullauto\n' > "$fixture/repo/docs/features/SHIP_DECISIONS.md"
 git -C "$fixture/repo" add README.md docs/features/SHIP_DECISIONS.md
-git -C "$fixture/repo" commit -qm fixture
+git -C "$fixture/repo" "${identity[@]}" commit -qm fixture
 git -C "$fixture/repo" remote add origin "$fixture/remote.git"
 git -C "$fixture/repo" push -qu origin main
 git -C "$fixture/repo" switch -qc feat/fixture
 printf 'feature\n' >> "$fixture/repo/README.md"
-git -C "$fixture/repo" commit -qam feature
+git -C "$fixture/repo" "${identity[@]}" commit -qam feature
 git -C "$fixture/repo" push -qu origin feat/fixture
 head_sha=$(git -C "$fixture/repo" rev-parse HEAD)
 printf 'OPEN\n' > "$fixture/state/pr-state"

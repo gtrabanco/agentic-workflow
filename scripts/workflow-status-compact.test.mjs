@@ -108,11 +108,9 @@ process.stderr.write("unexpected gh call: " + args + "\\n");
 process.exit(1);
 `, { mode: 0o755 });
 
-  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: dir });
-  execFileSync("git", ["config", "user.email", "fixture@example.com"], { cwd: dir });
-  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: dir });
-  execFileSync("git", ["add", "-A"], { cwd: dir });
-  execFileSync("git", ["commit", "-q", "-m", "fixture"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "init", "-q", "-b", "main"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "fixture"], { cwd: dir });
   if (dirty) write(dirty, "uncommitted work\n");
 
   const run = (args = []) => spawnSync(process.execPath, [SCRIPT, "workflow-status", ...args], {

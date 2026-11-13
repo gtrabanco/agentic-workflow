@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
-const git = (cwd, env, ...args) => execFileSync("git", args, { cwd, encoding: "utf8", env }).trim();
+const git = (cwd, env, ...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8", env }).trim();
 
 /** A unit doc the `spec-product-v1` selector accepts (14-section, feature 61 + #305). */
 const specText = (objective = "Ship the thing.") => `# Toy unit
@@ -108,9 +108,6 @@ function makeRepo(t) {
   write(`${UNIT_DIR}/ACCEPTANCE.md`, ACCEPTANCE);
   write("AGENTS.md", GUIDE);
   git(root, process.env, "init", "-q", "-b", "main");
-  git(root, process.env, "config", "user.email", "fixture@example.invalid");
-  git(root, process.env, "config", "user.name", "Fixture");
-  git(root, process.env, "config", "commit.gpgsign", "false");
   const commit = (message, dateIso) => {
     const env = { ...process.env, GIT_COMMITTER_DATE: dateIso, GIT_AUTHOR_DATE: dateIso };
     git(root, env, "add", "-A", "--", ".");

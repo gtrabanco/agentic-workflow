@@ -65,6 +65,9 @@ and runs the dispatcher against that. Grammar and exit codes:
 `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open questions.
 `[target-dir]` is optional — absent means the current directory, recorded.
 
+Identity hardening (#514) — the pre-commit `git-identity-check.sh` hook and an
+empty `gitIdentity` block — is offered once; a no installs nothing.
+
 ## Step 0 — Discover the project (always first)
 
 Inspect the target dir (`[target-dir]`, default cwd) before touching anything:

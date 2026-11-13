@@ -260,6 +260,11 @@ export interface GuardsConfig {
   cost: { maxTokens: number };
 }
 
+/** What the extension READS: the approved identity profile and the agent-side
+ *  guard (issue #514). Owned by the guard module, which is the section's only
+ *  consumer with rules attached to it. */
+export type { GitIdentityConfig, GitIdentityApproved, GitIdentityAgentGuard } from "../guards/git-identity.js";
+
 /** What the extension READS: the telemetry switch, resolved (issue #383). */
 export interface TelemetryConfig {
   enabled: boolean;
@@ -281,6 +286,8 @@ export interface EffectiveConfig {
   onSettle: SettlePolicy;
   /** The effective path-protection policy: the shipped floor tightened by any override. */
   pathProtection: ResolvedPathPolicy;
+  /** The approved identity profile and the agent config-write guard (issue #514). */
+  gitIdentity: import("../guards/git-identity.js").GitIdentityConfig;
   /** The effective advance (conductor) knobs (feature 62). */
   advance: AdvanceConfig;
   /** Whether the provider profiles contributed by installed companion preset

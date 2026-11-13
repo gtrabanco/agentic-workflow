@@ -25,7 +25,7 @@ const section = (key) => BASE_CONFIG_SECTIONS.find((entry) => entry.key === key)
 
 test("the base registry carries the feature sections the issue names", () => {
   const keys = BASE_CONFIG_SECTIONS.map((entry) => entry.key);
-  assert.deepEqual(keys, ["logSession", "memory", "telemetry", "guards", "advance", "pathProtection"]);
+  assert.deepEqual(keys, ["logSession", "memory", "telemetry", "guards", "gitIdentity", "advance", "pathProtection"]);
   for (const entry of BASE_CONFIG_SECTIONS) {
     assert.equal(entry.category, "feature");
     assert.equal(entry.file, "agentic-workflow.json");

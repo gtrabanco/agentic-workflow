@@ -118,10 +118,8 @@ test("the session id comes from the start context when the caller injected none"
 
 test("the path count is the session's own work, measured when the sample is written", () => {
   const root = tempRoot("telemetry-paths-");
-  const run = (...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8" });
+  const run = (...args) => execFileSync("git", ["-C", root, "-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", ...args], { encoding: "utf8" });
   run("init", "-q");
-  run("config", "user.email", "t@example.com");
-  run("config", "user.name", "t");
   fs.mkdirSync(path.join(root, "docs/fix/383-measured-acceptance"), { recursive: true });
   fs.writeFileSync(path.join(root, "docs/fix/383-measured-acceptance/SPEC.md"), "# fix/383-measured-acceptance\n");
   run("add", ".");
@@ -197,10 +195,8 @@ test("the switch is one boolean, off by default, and a stray key is refused", ()
 
 test("a session's own scope is counted from git: its commits plus what is still uncommitted", () => {
   const root = tempRoot("telemetry-scope-");
-  const run = (...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8" });
+  const run = (...args) => execFileSync("git", ["-C", root, "-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", ...args], { encoding: "utf8" });
   run("init", "-q");
-  run("config", "user.email", "t@example.com");
-  run("config", "user.name", "t");
   fs.writeFileSync(path.join(root, "a.txt"), "a\n");
   run("add", ".");
   run("commit", "-qm", "one");

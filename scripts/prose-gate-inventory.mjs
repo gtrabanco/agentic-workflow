@@ -273,12 +273,15 @@ export function listGlob(root, pattern) {
 
 /** Every document in the tree whose bytes carry the marker as a block-header
  *  line, repository-relative and sorted. The walk covers the whole tree (skipping
- *  `.git` and `node_modules`), so a second fenced copy anywhere — a unit doc, the
- *  template scaffold — is refused like a copy inside the guide layer; an inline
- *  mention in prose or backticks is a citation, not a home, and never matches.
- *  Symlinks are not followed. */
+ *  `.git`, `node_modules` and `.worktrees`), so a second fenced copy anywhere — a
+ *  unit doc, the template scaffold — is refused like a copy inside the guide layer;
+ *  an inline mention in prose or backticks is a citation, not a home, and never
+ *  matches. `.worktrees` is skipped because it is the repository's designated
+ *  worktree location (AGENTS.md → Worktree creation): every parked unit worktree
+ *  checks the guide layer out whole, and a checkout is a copy of the tree, not a
+ *  second declaration of the inventory. Symlinks are not followed. */
 export function findHomes(root) {
-  const skip = new Set([".git", "node_modules"]);
+  const skip = new Set([".git", "node_modules", ".worktrees"]);
   const marker = /^prose-gate-inventory@1[ \t]*$/m;
   const homes = [];
   const walk = (absolute, relative) => {
