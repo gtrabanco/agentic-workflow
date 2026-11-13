@@ -587,18 +587,28 @@ recognises all three before it registers anything:
 With consent (`memory.engram: true` in `agentic-workflow.json`), the package may
 register Engram's MCP server for the session through Pi's own
 `registerMcpServer` — **session-scoped and not persisted**, so nothing outlives
-the session and nothing is written to your `mcp.json` behind your back. The
-decision order, reported verbatim:
+the session and nothing is written to your `mcp.json` behind your back. What
+counts as "installed" is read from the files Pi itself reads: your
+`~/.pi/agent/settings.json` `packages` list always, and `<cwd>/.pi/settings.json`
+— where `pi install --local` writes — only for a trusted project, exactly as Pi
+gates that file. `ENGRAM_BIN` is honoured by the binary lookup too, so a binary
+reachable only through it is the one that gets registered. The decision order,
+reported verbatim:
 
 | Situation | What happens |
 |---|---|
 | no `memory.engram` opt-in (the shipped default is `false`) | nothing is registered and nothing is said (the opt-out stays quiet) |
 | no readable opt-in — the file exists but does not validate | nothing is registered; you are told the config is invalid, because unreadable consent is never read as a refusal you made |
-| the native `gentle-engram` package is installed | nothing is registered — its `mem_*` tools already exist and agent writes stay native-only; if memory is not working, the same report names the binary and server surfaces |
-| `ENGRAM_URL` is set | nothing is registered — the external server (local or remote) is your deliberate choice; stdio MCP cannot target a URL |
-| no `engram` core binary on `PATH` (and no `ENGRAM_BIN`, no `ENGRAM_URL`) | nothing is registered; the report names all three surfaces — `PATH`/`ENGRAM_BIN` for the binary, `ENGRAM_URL` for a server, the companion route below |
+| the native `gentle-engram` package is installed — `native-active` | nothing is registered — its `mem_*` tools already exist and agent writes stay native-only; a leftover `mcpServers.engram` entry is called out so you can remove it, and if memory is not working the same report names the binary and server surfaces |
+| `ENGRAM_URL` is set — `external-server` | nothing is registered — the external server (local or remote) is your deliberate choice; stdio MCP cannot target a URL |
+| no `engram` core binary on `PATH` or through `ENGRAM_BIN`, and no `ENGRAM_URL` | nothing is registered; the report names all three surfaces — `PATH`/`ENGRAM_BIN` for the binary, `ENGRAM_URL` for a server, the companion route below |
 | you already declared `engram` in a `mcp.json` Pi reads — your user file, or `<cwd>/.pi/mcp.json` in a trusted project | nothing is registered — your declaration takes precedence |
 | binary present, opted in, nothing native or external in the way | the server is registered and the notification states exactly what was written |
+
+The rows that describe a working or deliberately configured install — the native
+extension, an external server, a completed registration — are reported as
+information; the ones that describe a defect (an unreadable config, a missing
+binary, an older host) are warnings. The opt-out stays silent.
 
 Install the Pi companion (the native extension) with:
 
