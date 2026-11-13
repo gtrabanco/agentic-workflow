@@ -44,6 +44,8 @@
 import { accessSync, constants, readFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 
+import { BASE_CONFIG_FILE } from "@gtrabanco/agentic-workflow-schema";
+
 /** The directory a project keeps its own agent config in — Pi's `.pi/`. */
 const PROJECT_DIR = ".pi";
 
@@ -357,7 +359,11 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
       status: "not-consented",
       message:
         `pi-agentic-workflow: Engram not registered — set "memory": { "engram": true } in ` +
-        `pi-agentic-workflow.json to opt in (nothing was written).`,
+        // The switch is a BASE-config section: `loadConfig` merges it from this
+        // file, and the extension file refuses `memory` as an unknown key. Naming
+        // the extension file sent an operator to a file that cannot carry the
+        // key, and the read-back named the wrong route (issue #531 S3a).
+        `${BASE_CONFIG_FILE} to opt in (nothing was written).`,
     };
   }
 

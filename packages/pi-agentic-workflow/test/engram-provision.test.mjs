@@ -27,6 +27,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { BASE_CONFIG_FILE } from "@gtrabanco/agentic-workflow-schema";
+
 import {
   ENGRAM_ARGS,
   ENGRAM_INSTALL_ROUTE,
@@ -66,6 +68,20 @@ describe("engram provisioning — consent is first", () => {
     const report = provisionEngram({ consented: true, binaryPath: null, declaredNames: [], register });
     strictEqual(report.status, "binary-missing");
     strictEqual(calls.length, 0);
+  });
+
+  it("names the file the switch is read from, never the extension file that refuses it (S3a)", () => {
+    // `memory` is a base-config section: `loadConfig` merges it from
+    // `agentic-workflow.json`, and the extension file's own ROOT_KEYS list has no
+    // `memory` key, so an operator who follows the extension-file instruction
+    // makes the file invalid and lands on `config-invalid` instead.
+    const report = provisionEngram({ consented: false, binaryPath: BINARY, declaredNames: [], register: () => {} });
+    strictEqual(report.status, "not-consented");
+    ok(report.message.includes(BASE_CONFIG_FILE), `the opt-in names ${BASE_CONFIG_FILE}: ${report.message}`);
+    ok(
+      !report.message.includes(`pi-${BASE_CONFIG_FILE}`),
+      `the extension file refuses \`memory\` as an unknown key, so it is never named: ${report.message}`,
+    );
   });
 });
 

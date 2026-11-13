@@ -22,4 +22,6 @@ core binary (`PATH` / `ENGRAM_BIN`), a running server (`ENGRAM_URL`) and the Pi
 companion route — because installing the companion cannot fix a missing core
 binary. The deliberate outcomes report as information rather than as warnings,
 and the package README documents the surfaces and the remote-memory
-configuration.
+configuration. The `not-consented` instruction now names `agentic-workflow.json`,
+the file the switch is read from — the extension file refuses `memory` as an
+unknown key, so the old text sent operators to a file that could not carry it.

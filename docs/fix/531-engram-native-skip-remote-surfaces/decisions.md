@@ -63,3 +63,21 @@ copy existed for the duration of the test-file edits and was removed afterwards;
 it carried this file's block verbatim and no other content. It is recorded here
 because an unrecorded write to the primary checkout is what this unit's own live-tree
 rule forbids hiding.
+
+It was created a second time for the correction batch (L3), for the one test-file
+edit that batch needed, and removed again the same way. Both copies carried this
+file's block verbatim and nothing else; the primary checkout ends clean
+(`git status --porcelain` → 0 entries).
+
+## D5 — the consent instruction names the file the switch is read from (2026-11-13)
+
+`memory` is a base-config section: `loadConfig` merges it from
+`agentic-workflow.json` (`src/config/load.ts:158`), whose section owner declares
+it (`packages/agentic-workflow-schema/src/config.ts:241`). The extension file's
+`ROOT_KEYS` (`src/config/schema.ts:39-53`) has no `memory` key, so the old
+instruction — "set `memory: { engram: true }` in `pi-agentic-workflow.json`" —
+sent the operator to a file that refuses the key and lands them on
+`config-invalid`: a route that cannot work, the defect class issue #531 S3
+repairs one message over. The name now comes from the schema's published
+`BASE_CONFIG_FILE`, so one owner names the file and a future rename cannot make
+the message lie again.
