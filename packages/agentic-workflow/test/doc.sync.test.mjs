@@ -26,7 +26,7 @@ const B_MD = ["# Beta", "beta body with the zanzibar term"].join("\n");
 const C_MD = ["# Gamma", "gamma body"].join("\n");
 
 function git(args, cwd = root) {
-  return execFileSync("git", args, { cwd, encoding: "utf8" });
+  return execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" });
 }
 
 function ftsSearch(db, term) {
@@ -40,8 +40,6 @@ function ftsSearch(db, term) {
 before(() => {
   root = mkdtempSync(join(tmpdir(), "doc-sync-"));
   git(["init", "-q"]);
-  git(["config", "user.email", "t@example.test"]);
-  git(["config", "user.name", "t"]);
   for (const [name, body] of [["a.md", A_MD], ["b.md", B_MD], ["c.md", C_MD]]) {
     writeFileSync(join(root, name), body);
   }
@@ -156,17 +154,15 @@ describe("doc sync — configured store.path", () => {
   it("syncs, answers status, and keeps the manifest sidecar beside the configured store", async () => {
     const cfgRoot = mkdtempSync(join(tmpdir(), "doc-storepath-"));
     try {
-      execFileSync("git", ["init", "-q"], { cwd: cfgRoot });
-      execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: cfgRoot });
-      execFileSync("git", ["config", "user.name", "t"], { cwd: cfgRoot });
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "init", "-q"], { cwd: cfgRoot });
       writeFileSync(join(cfgRoot, "a.md"), "# Alpha\nalpha body\n");
       mkdirSync(join(cfgRoot, ".agentic-workflow"));
       writeFileSync(
         join(cfgRoot, ".agentic-workflow", "index.json"),
         JSON.stringify({ version: 1, store: { path: ".agentic-workflow/custom/store.db" }, provider: null }),
       );
-      execFileSync("git", ["add", "-A"], { cwd: cfgRoot });
-      execFileSync("git", ["commit", "-qm", "fixture"], { cwd: cfgRoot });
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: cfgRoot });
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: cfgRoot });
 
       const r = await syncIndex(cfgRoot); // red: ENOENT on the hardcoded manifest dir
       strictEqual(r.filesScanned, 1);

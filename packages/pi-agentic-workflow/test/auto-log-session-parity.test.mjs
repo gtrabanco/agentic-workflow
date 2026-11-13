@@ -36,11 +36,8 @@ const INITIAL = "# Session log\n\n";
 /** A throwaway repository with the journal the hooks append to. */
 function repo() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "auto-log-parity-"));
-  const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
+  const git = (args) => execFileSync("git", ["-c", "user.name=suite", "-c", "user.email=suite@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
   git(["init", "-q", "-b", "main"]);
-  git(["config", "user.email", "suite@example.test"]);
-  git(["config", "user.name", "suite"]);
-  git(["config", "commit.gpgsign", "false"]);
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   fs.writeFileSync(path.join(root, JOURNAL), INITIAL);
   fs.writeFileSync(path.join(root, "seed.txt"), "seed\n");

@@ -26,7 +26,7 @@ import { createHash } from "node:crypto";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const script = path.join(repoRoot, "scripts", "scope-manifest.mjs");
 
-const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+const git = (cwd, ...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" }).trim();
 const commit = (root, files, message) => {
   for (const [rel, text] of Object.entries(files)) {
     const abs = path.join(root, rel);
@@ -43,9 +43,6 @@ function makeRepo(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "scope-manifest-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   const base = commit(root, { "src/keep.md": "base\n", "docs/LOGS.md": "base log\n" }, "base");
   git(root, "checkout", "-qb", "feat/unit");
   const foreign = commit(root, {
@@ -79,7 +76,7 @@ test("sign emits the affecting-path manifest: sorted bound paths, blob digests, 
   assert.deepEqual(paths, ["src/feature.ts"], "exactly the affecting delta binds — session log and toolstate/memory dirs are excluded");
   for (const row of manifest.paths) {
     assert.match(row.digest, /^[a-f0-9]{64}$/, "per-path digest is 64-hex");
-    const blob = execFileSync("git", ["show", `${f.unit}:${row.path}`], { cwd: f.root });
+    const blob = execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "show", `${f.unit}:${row.path}`], { cwd: f.root });
     assert.equal(row.digest, createHash("sha256").update(blob).digest("hex"), "the digest is over the git blob at the head");
   }
   assert.match(manifest.scope, /^[a-f0-9]{64}$/, "the scope digest is 64-hex");
@@ -136,9 +133,6 @@ test("batch cat-file --batch: exercises the single-invocation path with multiple
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "scope-manifest-batch-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   // Base commit with one file
   const base = commit(root, { "src/main.ts": "base\n" }, "base");
   // Branch with 8 affected paths (batches exercise the cat-file path)
@@ -164,7 +158,7 @@ test("batch cat-file --batch: exercises the single-invocation path with multiple
   assert.equal(paths.length, 8, "exactly 8 affected paths (batch exercise)");
   // Verify each digest is correct
   for (const row of manifest.paths) {
-    const blob = execFileSync("git", ["show", `${head}:${row.path}`], { cwd: root });
+    const blob = execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "show", `${head}:${row.path}`], { cwd: root });
     assert.equal(row.digest, createHash("sha256").update(blob).digest("hex"),
       `${row.path}: digest matches git blob`);
   }
@@ -178,9 +172,6 @@ test("batch path: mixed affected + non-affecting paths", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "scope-manifest-mixed-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   const base = commit(root, { "docs/LOGS.md": "base\n" }, "base");
   git(root, "checkout", "-qb", "feat/mixed");
   const head = commit(root, {

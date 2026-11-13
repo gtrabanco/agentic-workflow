@@ -47,14 +47,11 @@ function withRepo(run) {
   const root = fs.mkdtempSync(path.join(tmpBase, "worktree-guard-"));
   try {
     const git = (args, opts = {}) => {
-      const result = spawnSync("git", args, { cwd: root, encoding: "utf8", ...opts });
+      const result = spawnSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8", ...opts });
       assert.equal(result.status, 0, `git ${args.join(" ")} failed:\n${result.stderr}`);
       return result.stdout;
     };
     git(["init", "-b", "main"]);
-    git(["config", "user.email", "fixture@example.invalid"]);
-    git(["config", "user.name", "fixture"]);
-    git(["config", "commit.gpgsign", "false"]);
     fs.writeFileSync(path.join(root, "README.md"), "# fixture\n");
     git(["add", "."]);
     git(["commit", "-m", "chore: fixture seed"]);

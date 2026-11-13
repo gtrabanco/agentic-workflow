@@ -68,13 +68,11 @@ function tmp(label) {
 
 function newRepo(label) {
   const dir = tmp(label);
-  const r = spawnSync("git", ["init", "-q", "-b", "main", dir], { encoding: "utf8", env: sandboxGitEnv() });
+  const r = spawnSync("git", ["-c", "user.name=test", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", "init", "-q", "-b", "main", dir], { encoding: "utf8", env: sandboxGitEnv() });
   assert.equal(r.status, 0, r.stderr);
   fs.mkdirSync(path.join(dir, "docs"), { recursive: true });
   fs.writeFileSync(path.join(dir, "docs/LOGS.md"), "# Session log\n\nheader\n");
   git(dir, "add", "-A");
-  git(dir, "config", "user.email", "t@example.com");
-  git(dir, "config", "user.name", "test");
   git(dir, "commit", "-qm", "base");
   return dir;
 }
