@@ -24,7 +24,7 @@ import { createStateFlowLifecycle, type StateFlowBackend, type StateFlowLifecycl
 import { createHooksWiring } from "./hooks-wiring.js";
 import type { HooksContext } from "./hooks-wiring.js";
 import { createInvocationWatch } from "./log-session-command.js";
-import { provisionEngram, readDeclaredServerNamesFrom, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
+import { provisionEngram, readDeclaredServerNamesFrom, readInstalledPackageSources, isNativeEngramPackage, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
 import type { EngramServerConfig } from "./engram.js";
 import { runSettingsConsole } from "../settings/console.js";
 import { readConfigFile, writeConfigFile } from "../settings/store.js";
@@ -440,6 +440,12 @@ export default function extension(pi: ExtensionAPI): void {
       consented: loaded.config.memory?.engram === true,
       configInvalid: !loaded.ok,
       binaryPath: resolveEngramBinary(),
+      // Issue #531 — the native gentle-engram package already provides the
+      // mem_* tools, so the MCP path registers nothing beside it; a set
+      // ENGRAM_URL names an externally managed server and is reported as a
+      // deliberate choice, not a missing binary.
+      nativePackagePresent: isNativeEngramPackage(readInstalledPackageSources(join(agentDir, "settings.json"))),
+      engramUrl: process.env.ENGRAM_URL ?? null,
       declaredNames: declaredServerNames(pi, agentDir, ctx),
       register: mcpRegistrar(pi),
     });
