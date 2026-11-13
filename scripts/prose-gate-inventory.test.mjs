@@ -143,6 +143,21 @@ test("a second copy of the block anywhere in the tree fails as multiple-homes", 
     "a copy outside the guide layer is refused like any other");
 });
 
+test("a worktree checkout parked in .worktrees/ is not a second home", () => {
+  // The repository's designated worktree location (AGENTS.md → Worktree
+  // creation) checks the guide layer out whole, so every parked unit worktree
+  // carries an inventory copy. A checkout is not a home: the walk skips the
+  // location the same way it skips .git and node_modules. A copy parked
+  // anywhere else (a unit doc, the template scaffold) stays a second home —
+  // the case above keeps refusing it.
+  const dir = fixture({
+    ...baseFiles([row()], { "gate-suites": "-" }),
+    ".worktrees/feat-96-x/docs/workflow/GATE_INVENTORY.md": `# Inventory\n\n${block([row()], { "gate-suites": "-" })}\n`,
+  });
+  assert.deepEqual(findHomes(dir), [INVENTORY_REL]);
+  assert.deepEqual(reasons(inspect(dir)), []);
+});
+
 // --- The frozen failure: no inventory at all ---------------------------------
 
 test("a tree with no inventory block is refused by name", () => {
