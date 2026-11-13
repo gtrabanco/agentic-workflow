@@ -45,6 +45,9 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // Feature 60 added the resolved path-protection policy to the effective
     // config; the shipped floor with no override and no degradation.
     pathProtection: { ...SHIPPED_PATH_POLICY, degradations: [] },
+    // Issue #514 — the approved identity ships undeclared and unenforced, so an
+    // install that never configures one is never blocked; the agent guard asks.
+    gitIdentity: { enforce: "off", approved: {}, agentGuard: { mode: "ask", allow: [] } },
     // Feature 63 — model profiles: recommended built-in profiles, empty
     // named profiles, empty order, and default demotion policy.
     recommendedModels: true,

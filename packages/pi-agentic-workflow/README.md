@@ -511,6 +511,41 @@ the off switch: `pi mcp remove serena` unregisters it, `/mcp` inside a session
 disables or re-enables it, or set `"enabled": false` on the entry in
 `~/.pi/agent/mcp.json` to keep it listed but disconnected.
 
+## Git identity guard (issue #514)
+
+A signed commit proves *a key signed bytes*, not who the commit is attributed to.
+Three leaks in nine days on the repository this package ships from produced 139
+commits with the wrong author, every one of them signed and every one of them
+accepted by the forge as verified. The guard closes the agent-side half.
+
+On every `bash` call the extension reads the command, finds the `git config`
+writes in it (legacy flags such as `--unset` and modern subcommands such as
+`git config unset`), and answers:
+
+| Invocation | Verdict |
+|---|---|
+| read-only (`--get`, `--list`, `--show-origin`, `get`, `list`) | passes |
+| per-invocation `-c user.name=…` | passes — it writes nothing |
+| identity or signing write (`user.*`, `commit.gpgsign`, `gpg.*`, `tag.gpgsign`) | asks (headless: blocks) |
+| `--unset`, `--unset-all`, `--replace-all`, `remove-section`, `rename-section`, `edit` | asks |
+| `--global`, `--system`, `--worktree`, `--file` outside a scratch directory | asks |
+| a local, non-identity write (`core.autocrlf`, `merge.<driver>.driver`) | passes |
+
+An approval is remembered **per project and per scope+key** in
+`git-identity-consent.json` beside the config, so the same question is never
+asked twice and a different project is never covered. `gitIdentity.agentGuard`
+controls it: `mode: "ask" | "block"` and `allow: ["user.name"]` for the writes a
+project permits without asking (the allow list covers local, non-destructive
+writes only — a removal or a shared file still asks).
+
+The profile is the base config section, so the hook and the push check read the
+same one: `gitIdentity.enforce` (`off` by default — an unconfigured install is
+never blocked), `approved` (`name`, `email`, `fullName`, `format`, `signingKey`)
+and `agentGuard`. The boundary is honest: this sees what a model asks the bash
+tool to run — not a script it launches, not a `!` command, not another host.
+That is what the pre-commit hook and the push-range check exist for; see
+[`docs/workflow/GIT_IDENTITY_HARDENING.md`](../../docs/workflow/GIT_IDENTITY_HARDENING.md).
+
 ## Path protection (optional)
 
 The Tier 2 preventive guard blocks a `write` / `edit` tool call to an existing

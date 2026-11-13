@@ -73,3 +73,67 @@ test("an env with no git locator is returned intact", () => {
   const env = { PATH: "/usr/bin", HOME: "/home/someone" };
   assert.deepEqual(scrubGitLocator(env), env);
 });
+
+/* ── the per-file and per-suite entry points (issue #514 S9) ───────────── */
+
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const PRELOAD = path.join(REPO_ROOT, "scripts", "test-preload.mjs");
+
+/** Every bunfig the repository ships must preload the one scrub module. */
+test("each bunfig preloads the repository-locator scrub", () => {
+  const configs = ["bunfig.toml", ...fs.readdirSync(path.join(REPO_ROOT, "packages")).map((name) => path.join("packages", name, "bunfig.toml"))];
+  let found = 0;
+  for (const relative of configs) {
+    const absolute = path.join(REPO_ROOT, relative);
+    if (!fs.existsSync(absolute)) continue;
+    found += 1;
+    const text = fs.readFileSync(absolute, "utf8");
+    assert.match(text, /^\[test\]$/m, `${relative} declares a [test] table`);
+    assert.match(text, /preload\s*=\s*\[[^\]]*test-preload\.mjs/, `${relative} preloads scripts/test-preload.mjs`);
+  }
+  assert.ok(found >= 5, `every suite entry point is covered — found ${found}`);
+});
+
+/** The claim the whole entry-point fix rests on: bun runs the preload in the
+ *  test process, before the suite body, so a fixture never sees GIT_DIR. */
+test("a real `bun test` run reaches the suite with the locators already gone", (t) => {
+  const bun = ["bun", "bunx"].find((candidate) => spawnSync(candidate, ["--version"], { encoding: "utf8" }).status === 0);
+  if (!bun) {
+    t.skip("bun is not installed; the node fallback documents its own --import form");
+    return;
+  }
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "preload-proof-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.writeFileSync(
+    path.join(dir, "bunfig.toml"),
+    `[test]\npreload = [${JSON.stringify(PRELOAD)}]\n`,
+  );
+  fs.writeFileSync(
+    path.join(dir, "proof.test.mjs"),
+    [
+      'import assert from "node:assert/strict";',
+      'import { test } from "node:test";',
+      'test("the suite body sees no repository locator", () => {',
+      '  assert.equal(process.env.GIT_DIR, undefined, "GIT_DIR");',
+      '  assert.equal(process.env.GIT_WORK_TREE, undefined, "GIT_WORK_TREE");',
+      '  assert.equal(process.env.GIT_INDEX_FILE, undefined, "GIT_INDEX_FILE");',
+      "});",
+      "",
+    ].join("\n"),
+  );
+  // A suite is never handed its parent's test-runner context: with
+  // NODE_TEST_CONTEXT set, node's runner skips the file and exits 0.
+  const env = { ...process.env, GIT_DIR: "/real/.git", GIT_WORK_TREE: "/real", GIT_INDEX_FILE: "/real/.git/index" };
+  delete env.NODE_TEST_CONTEXT;
+  const result = spawnSync(bun, ["test", "proof.test.mjs"], { cwd: dir, encoding: "utf8", env });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  // bun writes the per-file report to stderr when it is not attached to a tty.
+  assert.match(output, /the suite body sees no repository locator/, "the proof suite actually ran");
+});

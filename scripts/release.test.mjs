@@ -92,11 +92,9 @@ function fixture({ changesets = { "the-change.md": ["pi:patch"] }, bodies = {}, 
     "# Changelog\n\n## Per-skill version history\n\n### Companion npm packages\n\n" + tables,
   );
   if (git) {
-    execFileSync("git", ["init", "-q"], { cwd: root });
-    execFileSync("git", ["config", "user.email", "t@t"], { cwd: root });
-    execFileSync("git", ["config", "user.name", "t"], { cwd: root });
-    execFileSync("git", ["add", "-A"], { cwd: root });
-    execFileSync("git", ["commit", "-qm", "fixture"], { cwd: root });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "init", "-q"], { cwd: root });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: root });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: root });
   }
   return root;
 }
@@ -223,8 +221,8 @@ test("canary is deterministic at the same state (AC-12)", () => {
 
 test("canary counter increments from existing canary tags for the same day", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"] }, git: true });
-  execFileSync("git", ["tag", "v1.0.0-canary.20260916.1"], { cwd: root });
-  execFileSync("git", ["tag", "v1.0.0-canary.20260916.7"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v1.0.0-canary.20260916.1"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v1.0.0-canary.20260916.7"], { cwd: root });
   const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-09-16"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /1\.0\.0-canary\.20260916\.8\b/);
@@ -332,7 +330,7 @@ test("no changesets and no override is an error, not a silent no-op", () => {
 
 test("--version override must not collide with an existing tag (D-40-4)", () => {
   const root = fixture({ git: true });
-  execFileSync("git", ["tag", "v5.0.0"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v5.0.0"], { cwd: root });
   const result = run(["plan", "--root", root, "--version", "5.0.0"]);
   assert.equal(result.status, 1);
   assert.match(result.stderr || result.stdout, /already exists|collide/);
@@ -379,7 +377,7 @@ test("without v-tags the base falls back to the highest package version (the fir
 
 test("the base never sits below an already-published package version (a stale v-tag cannot downgrade the train)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:minor"] }, git: true, version: "4.9.0" });
-  execFileSync("git", ["tag", "v1.0.0"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v1.0.0"], { cwd: root });
   const result = run(["plan", "--root", root]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /base: 4\.9\.0/);
@@ -482,13 +480,13 @@ test("a canary body separates what is new since the previous canary from what it
     bodies: { "carried.md": ["feat(pi): the change already handed out", "", "Old news."] },
     git: true,
   });
-  execFileSync("git", ["tag", "v1.0.1-canary.20261101.1"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v1.0.1-canary.20261101.1"], { cwd: root });
   fs.writeFileSync(
     path.join(root, ".changeset", "fresh.md"),
     ["---", '"@gtrabanco/pi-agentic-workflow": patch', "---", "", "fix(pi): the change this cut adds", "", "New news.", ""].join("\n"),
   );
-  execFileSync("git", ["add", "-A"], { cwd: root });
-  execFileSync("git", ["commit", "-qm", "fresh"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "commit", "-qm", "fresh"], { cwd: root });
 
   const result = run(["release-notes", "--root", root, "--channel", "canary", "--date", "2026-11-02"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
@@ -507,13 +505,13 @@ test("a canary body separates what is new since the previous canary from what it
 
 test("a change is not reported as carried when the previous canary predates it", () => {
   const root = fixture({ changesets: {}, git: true });
-  execFileSync("git", ["tag", "v1.0.1-canary.20261001.1"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v1.0.1-canary.20261001.1"], { cwd: root });
   fs.writeFileSync(
     path.join(root, ".changeset", "a.md"),
     ["---", '"@gtrabanco/pi-agentic-workflow": patch', "---", "", "feat(pi): the only change", "", "Detail.", ""].join("\n"),
   );
-  execFileSync("git", ["add", "-A"], { cwd: root });
-  execFileSync("git", ["commit", "-qm", "the change"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "commit", "-qm", "the change"], { cwd: root });
   const result = run(["release-notes", "--root", root, "--channel", "canary", "--date", "2026-11-02"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /^### feat\(pi\): the only change$/m, "it is in the news, not in the carried half");
@@ -702,7 +700,7 @@ test("apply consumes the changesets it applied (the next cut carries only new in
     false,
     "the applied changeset is consumed — it must not ride into the next cut",
   );
-  execFileSync("git", ["tag", "v1.1.0"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v1.1.0"], { cwd: root });
   fs.writeFileSync(
     path.join(root, ".changeset", "b.md"),
     '---\n"@gtrabanco/pi-agentic-workflow": patch\n---\n\nA later patch body line.\n',
@@ -893,8 +891,8 @@ test("each change lands in its own package's section, skills ride pi, undeclared
 /** Last stable 4.9.0 + a canary of the next train already cut at base 5.0.0. */
 function canaryFixture() {
   const root = fixture({ changesets: {}, version: "4.9.0", git: true });
-  execFileSync("git", ["tag", "v4.9.0"], { cwd: root });
-  execFileSync("git", ["tag", "v5.0.0-canary.20260101.1"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v4.9.0"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v5.0.0-canary.20260101.1"], { cwd: root });
   return root;
 }
 
@@ -927,7 +925,7 @@ test("the canary suggestion continues from the canary base, not the last stable"
 
 test("a recut of the same canary base on the same day increments the counter (.2 because .1 exists)", () => {
   const root = canaryFixture();
-  execFileSync("git", ["tag", "v5.0.0-canary.20260916.1"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v5.0.0-canary.20260916.1"], { cwd: root });
   const result = run(["plan", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /5\.0\.0-canary\.20260916\.2\b/);
@@ -944,7 +942,7 @@ test("promotion apply cuts the stable train from the canary base without changes
 
 test("a canary base already cut as stable refuses to re-promote", () => {
   const root = canaryFixture();
-  execFileSync("git", ["tag", "v5.0.0"], { cwd: root });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "tag", "v5.0.0"], { cwd: root });
   const result = run(["plan", "--root", root, "--channel", "stable"]);
   assert.equal(result.status, 1, "v5.0.0 already exists as a stable tag — the suggestion would collide");
   assert.match(result.stderr || result.stdout, /5\.0\.0/);

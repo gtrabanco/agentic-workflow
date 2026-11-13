@@ -1,0 +1,5 @@
+# The root suite entry point: every per-file `bun test` run inherits the same
+# repository-locator scrub the gate applies (issue #514 S9; owner:
+# scripts/git-env.mjs).
+[test]
+preload = ["./scripts/test-preload.mjs"]
