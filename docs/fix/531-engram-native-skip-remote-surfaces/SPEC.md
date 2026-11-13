@@ -534,6 +534,22 @@ surgery.
 - **D5** — 2026-11-13, the consent instruction's file name comes from the
   schema's published `BASE_CONFIG_FILE`, not a literal: one owner for the file
   name, so a future rename cannot make the message lie again the way it did.
+- **G4** — 2026-11-13, `bun scripts/local-gate.mjs --no-bail` at `0cb7a9fc` · exit 1
+  · 16 steps pass (`log-immutability` 0 violations over 8 commits), `root-suite`
+  red on E11's pre-existing `roadmap-settle` violation alone, the three in-flight
+  siblings killed by the bail again.
+
+- **G5** — 2026-11-13, `journal write --kind narrative` after the correction: the
+  carrier's writer names each write from its own UTC second, and omitting
+  `--session` leaves the identity `local`, which the contract declares "not a
+  conversation" — so the one-entry-per-conversation rewrite never fired and the
+  second write produced a duplicate rather than an update. Deleting the
+  superseded fragment by hand is refused by this same gate
+  (`fragment-hand-deleted — a deletion is a lost entry`), so the duplicate was
+  discarded while still uncommitted and the carrier keeps the single committed
+  entry. That entry's counts describe the session at the moment it was written
+  (58 pass on the targeted corpus, 863 on the package suite); the correction
+  batch's receipts are E12, E13 and G4 here, which supersede them.
 ## Next
 
 Hand the diff to the owner as the external verifier. Every obligation is
