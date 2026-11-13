@@ -156,7 +156,8 @@ n/a — applied inline at the owner's request (the reported failure is the ask).
 
 ## Next
 
-Open the PR against `main` and let the publish gate re-run.
+[PR #530](https://github.com/gtrabanco/agentic-workflow/pull/530) awaits review and
+merge; the publish gate re-runs afterwards.
 
 ## References
 
