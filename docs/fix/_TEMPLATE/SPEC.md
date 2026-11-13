@@ -78,7 +78,12 @@ plan decides for it, and that table is the anti-divergence receipt. A
 retirement is legitimate only in the `orphan` state: `andamio` binds it behind
 the recorded planned-consumer promise and `half-built` routes to resume, so a
 retire records the classifier's receipt plus the dated decision row and a later
-unit reclaims the name with that evidence. An empty answer states *why nothing can be removed*,
+unit reclaims the name with that evidence. A surface that lands with no
+consumer yet records its **named planned consumer** — the only thing that
+turns `orphan` into `andamio` at the next sweep — in the unit folder's
+`decisions.md`, in the declared block `residual-promise@1` (`surface |
+consumer | date | owner`); a promise the classifier cannot resolve refuses as
+`ambiguous` instead of guessing. An empty answer states *why nothing can be removed*,
 so the omission is a reason rather than a gap. Cut at plan
 time — a retirement is a planned task with its negative-capability pin, never a
 review-time discovery.

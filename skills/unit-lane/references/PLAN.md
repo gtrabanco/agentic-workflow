@@ -171,7 +171,10 @@ pieces per retirement task:
 - **the surviving-reference count** — before and after, so the deletion is
   measured rather than asserted.
 
-No declared retirements → write exactly
+No declared retirements → a **strictly additive** unit answers with its
+computed surface inventory — `bun scripts/residual-classify.mjs --inventory
+--base <rev>`, the anti-divergence receipt its `## Retirements` section
+carries — and any other empty answer writes exactly
 ``none — the design states why nothing can be removed``. The anti-gaming rule
 (“never shrink a diff by deleting comments, blank lines, docs or tests”) gains
 its complement: verified shrinkage is legitimate work, only unverified
