@@ -17,6 +17,8 @@ path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/prose-gate-inventory.test.mjs | P1 | 2026-11-13 | execute-phase | the inventory's sibling suite gains the .worktrees-checkout fixture case (a parked full-checkout worktree carrying a GATE_INVENTORY.md copy is one home and zero errors) — every pre-existing case keeps its exact expectations, including the multiple-homes fixture for a docs/features/ copy and the live-head one-home check
 justification | scripts/prose-gate-inventory.mjs | P2 | 2026-11-13 | execute-phase | the walk's skip set gains the literal `.worktrees` entry and its doc comment states the checkout exemption — the marker grammar, the row grammar, inspect()'s error vocabulary and every other export are byte-identical
+justification | .worktrees/fix-534-prose-gate-worktree-scan/scripts/prose-gate-inventory.test.mjs | P1 | 2026-11-13 | execute-phase | the same P1 edit as the `scripts/prose-gate-inventory.test.mjs` row, spelled as the session's project root normalizes it while the branch is checked out at `.worktrees/fix-534-prose-gate-worktree-scan` (the path-protection guard resolves targets against the hosting checkout, not the worktree); the committed change is the branch-internal spelling above
+justification | .worktrees/fix-534-prose-gate-worktree-scan/scripts/prose-gate-inventory.mjs | P2 | 2026-11-13 | execute-phase | the same P2 edit as the `scripts/prose-gate-inventory.mjs` row, spelled as the session's project root normalizes it while the branch is checked out at `.worktrees/fix-534-prose-gate-worktree-scan`; the committed change is the branch-internal spelling above
 ```
 
 ## Decisions
