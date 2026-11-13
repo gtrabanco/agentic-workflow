@@ -1,6 +1,0 @@
-## 2026-11-12T02:25:09Z — feat/514-new-feature-git-identity-signing-guard — Git identity & signing guard applied inline (issue #514)
-- **Commits:** 7 (`fcfd70cb…857384c4`)
-- **Files:** 68 files
-- **Summary:** Applied issue #514 inline on feat/514-new-feature-git-identity-signing-guard: the base config section gitIdentity (approved profile + agent guard), the pi extension's agent-side config-write guard with persisted per-project consent, the opt-in pre-commit identity hook and its parity corpus with the push-range checker, the local-gate push-identity step, the -c-only fixture convention pinned repo-wide (35 files migrated, 129 writes removed), the repository-locator scrub at the per-file and package-suite entry points, and the hardening annex. Red-first commits fcfd70cb (suites) precede their implementations. Not yet externally verified.
-- **Decisions:** D1 the unit lives in docs/features/ like unit 498 (feature kind); D2 gitIdentity is a base section read by three carriers; D3 headless sessions block, interactive asks once and persists; D4 the hook is inert without a declared profile; D5 the bash hook and the node checker are pinned by one parity corpus
-- **Next:** External verification of the diff, then the owner's PR.
