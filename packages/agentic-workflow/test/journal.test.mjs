@@ -48,7 +48,7 @@ import {
   writeFragment,
 } from "../src/journal/fragment.mjs";
 import { JournalAggregateError, aggregateJournal } from "../src/journal/aggregate.mjs";
-import { git, sandboxGitEnv } from "./fixtures.mjs";
+import { GIT_CONFIG, git, sandboxGitEnv } from "./fixtures.mjs";
 
 /** A complete, valid payload: the one every other case varies from. */
 const FACTS = {
@@ -223,8 +223,13 @@ test("two branches carrying fragments merge with zero conflicts and zero lost or
   }
 
   // Back-to-back merges: the case that was manual resolution until now.
+  // The merge runs under the fixture identity, like every other fixture
+  // invocation: an operator's — or a CI runner's — git config never decides
+  // whether this merge succeeds. A runner has no global `user.*`, so an
+  // identity-less spawn dies with "empty ident name" instead of exercising
+  // the merge under test.
   for (const branch of ["feat/a", "feat/b"]) {
-    const merge = spawnSync("git", ["-c", "commit.gpgsign=false", "-C", repo, "merge", "--no-ff", "-m", `merge ${branch}`, branch], {
+    const merge = spawnSync("git", [...GIT_CONFIG, "-C", repo, "merge", "--no-ff", "-m", `merge ${branch}`, branch], {
       encoding: "utf8",
       env: sandboxGitEnv(),
     });
