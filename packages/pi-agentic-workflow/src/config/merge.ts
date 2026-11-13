@@ -132,7 +132,7 @@ function resolveRoute(
 export function mergeConfigs(
   globalFile: ConfigFile = {},
   projectFile: ConfigFile = {},
-  base: Pick<EffectiveConfig, "logSession" | "memory" | "telemetry" | "guards" | "advance" | "pathProtection"> = BASE_EFFECTIVE_DEFAULTS,
+  base: Pick<EffectiveConfig, "logSession" | "memory" | "telemetry" | "guards" | "advance" | "pathProtection" | "gitIdentity"> = BASE_EFFECTIVE_DEFAULTS,
 ): EffectiveConfig {
   const effectiveDefault = resolveRoute(DEFAULT_ROUTE, globalFile.default, projectFile.default);
 

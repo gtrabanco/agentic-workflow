@@ -17,7 +17,12 @@ export const REPO_ROOT = path.resolve(here, "..", "..", "..");
 export const ENGINE = path.join(REPO_ROOT, "packages/agentic-workflow/bin/turn-contract.mjs");
 export const SHIM = path.join(REPO_ROOT, "template/.agentic-workflow/hooks/turn-contract.sh");
 
-const GIT_CONFIG = ["-c", "user.email=t@example.com", "-c", "user.name=test", "-c", "commit.gpgsign=false"];
+// The fixture identity, carried `-c` per invocation (issue #514 S7): no test
+// writes git config, and no test reads the operator's. A CI runner has no
+// global identity, so a spawn that omits these flags fails with "empty ident
+// name" instead of exercising what it tests — export the list to any suite that
+// spawns `git` directly (the merge of the journal race fixture is one).
+export const GIT_CONFIG = ["-c", "user.email=t@example.com", "-c", "user.name=test", "-c", "commit.gpgsign=false"];
 
 // The git location variables a fixture's child `git` must never inherit: the
 // host process may sit inside a tooling checkout whose harness exports

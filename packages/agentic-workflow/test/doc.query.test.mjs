@@ -29,7 +29,7 @@ const BIN = join(dirname(fileURLToPath(import.meta.url)), "..", "bin", "agentic-
 let root;
 
 function git(args) {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" });
+  return execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" });
 }
 
 const LOG_MD = [
@@ -50,8 +50,6 @@ const LOG_MD = [
 before(() => {
   root = mkdtempSync(join(tmpdir(), "doc-query-"));
   git(["init", "-q"]);
-  git(["config", "user.email", "t@example.test"]);
-  git(["config", "user.name", "t"]);
   mkdirSync(join(root, "docs"), { recursive: true });
   writeFileSync(join(root, "docs", "LOGS.md"), LOG_MD);
   writeFileSync(join(root, "two.md"), "# Top\nnothing here\n\n## Needle section\nthe zanzibar needle lives here\n");

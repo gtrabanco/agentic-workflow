@@ -36,7 +36,7 @@ const run = (args, options = {}) =>
   spawnSync(process.execPath, args, { cwd: ROOT, encoding: "utf8", ...options });
 
 const git = (cwd, args) => {
-  const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+  const result = spawnSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" });
   assert.equal(result.status, 0, `git ${args.join(" ")} failed: ${result.stderr}`);
   return result.stdout;
 };
@@ -45,8 +45,6 @@ const git = (cwd, args) => {
 function fixtureRepo() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "risk-tier-repo-"));
   git(dir, ["init", "-q", "-b", "main"]);
-  git(dir, ["config", "user.email", "fixture@example.invalid"]);
-  git(dir, ["config", "user.name", "Fixture"]);
   fs.writeFileSync(path.join(dir, "README.md"), "# Fixture\n\nProse only.\n");
   git(dir, ["add", "."]);
   git(dir, ["commit", "-q", "-m", "chore: fixture"]);

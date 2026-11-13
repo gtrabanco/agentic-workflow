@@ -24,6 +24,7 @@ import type { RoutingControls, SettingsUi } from "../routing/types.js";
 import type { ConfigFile, ModelRef, ModelSetting, ProfileFile, Route, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
+import { applyConfigEdits } from "./jsonc-write.js";
 import { SELECT_OPTION_LIMIT, pagedSelect, providerOf } from "./picker.js";
 import { getProviderPresets, resolvePresetEntry } from "../config/presets.js";
 
@@ -127,7 +128,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
   const opened = await openAScope(deps, paths.global, paths.project);
   if (!opened) return { status: "cancelled", edited: false };
 
-  const { scope, path, original } = opened;
+  const { scope, path, original, text } = opened;
   let draft: ConfigFile = original;
   let active = "default";
 
@@ -336,7 +337,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       continue;
     }
     if (choice === prompts.save) {
-      const saved = await saveScope(deps, scope, path, draft, merged);
+      const saved = await saveScope(deps, scope, path, draft, merged, text);
       if (saved) return { status: "saved", scope, path, file: clean(draft) };
       continue;
     }
@@ -401,7 +402,7 @@ async function openAScope(
   deps: SettingsDeps,
   globalPath: string,
   projectPath: string,
-): Promise<{ scope: "global" | "project"; path: string; original: ConfigFile } | undefined> {
+): Promise<{ scope: "global" | "project"; path: string; original: ConfigFile; text: string | null } | undefined> {
   let refused = 0;
   for (;;) {
     const label = await deps.ui.select(prompts.scope, [GLOBAL_LABEL, PROJECT_LABEL]);
@@ -416,9 +417,9 @@ async function openAScope(
       );
     } else {
       const text = deps.readFile(path);
-      if (text === null) return { scope, path, original: {} };
+      if (text === null) return { scope, path, original: {}, text: null };
       const parsed = parseFile(text, scope);
-      if (parsed.problems.length === 0) return { scope, path, original: parsed.file };
+      if (parsed.problems.length === 0) return { scope, path, original: parsed.file, text };
       deps.ui.notify(
         [`Nothing can be saved over an invalid ${scope} file (${path}):`, ...describe(parsed.problems)].join("\n"),
         "error",
@@ -710,6 +711,8 @@ async function saveScope(
   path: string,
   draft: ConfigFile,
   merged: { config: { recommendedModels: boolean } },
+  /** The bytes the console opened: the save edits them instead of re-serializing (issue #521 S7). */
+  original: string | null,
 ): Promise<boolean> {
   const file = clean(draft);
   // P5: materialize recommendedModels when a registered preset's provider is
@@ -720,7 +723,7 @@ async function saveScope(
   if (file.recommendedModels === undefined && presetAvailable) {
     file.recommendedModels = merged.config.recommendedModels;
   }
-  const text = `${JSON.stringify(file, null, 2)}\n`;
+  const text = applyConfigEdits(original, file);
   const problems = problemsFor(file, scope);
   if (problems.length > 0) {
     deps.ui.notify(["Nothing saved — the draft is invalid:", ...describe(problems)].join("\n"), "error");

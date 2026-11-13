@@ -62,6 +62,7 @@
   "dependencies": {
     "@gtrabanco/agentic-workflow": "4.10.0",
     "@gtrabanco/agentic-workflow-schema": "4.10.0",
+    "jsonc-parser": "3.3.1",
     "pi-extensible-workflows": "6.3.0"
   },
   "devDependencies": {
