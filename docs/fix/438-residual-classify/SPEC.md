@@ -259,14 +259,16 @@ scripts/local-gate.mjs`) before handoff.
 - `scripts/precondition-closure.test.mjs` exists with no
   `scripts/precondition-closure.mjs` (a test-only pilot of #433's closure
   prose). Does-not-affect: nothing here pairs with it.
-- The local gate's `worktree-guard` step reports one pre-existing finding in this
-  checkout: `.worktrees/feat-437-issue-review-loop-mechanics-and-economics`
-  holds branch `feat/437-…`, which **is merged into `origin/main`** (its tip is
-  `43e8c1f9`, main's tip). The tree existed before this session (`git worktree
-  list` at step 0) and no commit here touches it. **Affects** O23: the gate's
-  step exits 1 on the shared checkout while every other step is green; removing
-  a sibling session's worktree is not this unit's call, and the guide forbids
-  pruning a worktree that still exists on disk.
+- **No longer reproduces, 2026-11-13 (advisory A3 of the verify receipt):**
+  the `worktree-guard` finding recorded at cut (the merged `feat/437-…` tree)
+  is gone — `git worktree list` shows three entries, `worktree-guard` exits 0
+  and every gate step except `log-immutability` is green (E17); removing a
+  sibling session's tree was never this unit's call.
+- **New 2026-11-13 (E17):** `log-immutability` over the branch's
+  upstream-based range reads two main-side commits that hand-appended
+  `docs/LOGS.md` (`b012b31d`, `3cbc1237`) — the gate's only red, with
+  `--base origin/main` clean. Not this branch's bytes; settled by a push of
+  this branch or by the owner on main, never by a `--no-verify` bypass.
 
 ## Acceptance criteria
 
@@ -433,23 +435,78 @@ surgery.
   prose / 11,766 est against 708 / 571 / 11,964) and
   `docs/workflow/GATE_INVENTORY.md` 65 → 66 (161 lines / 5,822 est against
   161 / 6,182); `bun scripts/check-skill-context.mjs --documents` → PASS.
+- **E12** — 2026-11-13, RED corpus for the correction batch at `4e9df6a2`:
+  `bun test scripts/residual-classify.test.mjs` → 21 pass / 4 fail (H3, P4, I1,
+  T3) and `bun test scripts/residue-dimensions.test.mjs` → 29 pass / 1 fail
+  (the plan-step pin), both exit 1; H4 (the fix lane's control) and X2's two
+  added refusals already green. The post-freeze protected writes carry the
+  owner's recorded approval in `decisions.md` (2026-11-13, "Approve both
+  suites").
+- **E13** — 2026-11-13, the fixes: `620c9cad` (B1 — `unitIsOpen` reads the
+  unit's own kind table; A4 — `--inventory` rows carry their consumer evidence
+  sites) and `ff2deb0f` (B3 — PLAN.md names the strictly-additive inventory
+  answer, empty-answer reason and pin intact; B4 — the four templates teach
+  `residual-promise@1` and `decisions.md`) → 25 pass / 0 fail and 30 pass /
+  0 fail; unit-doc-contract 21/0, scaffold-parity 17/0, normative-drift 21/0,
+  check-skill-context PASS (29 skills, 4 documents).
+- **E14** — 2026-11-13, the PR integration (S2): `0fbf30f2` merges
+  `origin/main` `8079f11a` with both conflicts resolved keeping every feature
+  — `docs/ROADMAP.md` carries main's #534/#531/#529/#521 active rows **and**
+  this unit's #438 row; `docs/workflow/SKILL_CONTEXT_BUDGETS.json` keeps this
+  unit's growth source **and** main's, with GATE_INVENTORY `machineLines`
+  re-pinned to the merged measurement 69 (base 65 + this unit's carrier row +
+  main's three #514 rows) under its own merge source; `docs/generated/**`
+  re-rendered by the emitter. `66fa8509` then integrates main's `fbbf336e`
+  research spike (no conflict). After each merge: budgets PASS,
+  `docs-generate --check` PASS, `roadmap-settle` PASS (194 docs, 0
+  violations), normative-drift 21/0, unit-doc-contract 21/0, scaffold-parity
+  17/0, residue-dimensions 29/0, prose-gate-inventory 22/0.
+- **E15** — 2026-11-13, the integration loop (S1): main's #514 gate
+  `scripts/git-config-writes.test.mjs` reported 4 findings against this unit's
+  own suite (I1/I2 wrote `git config user.email|user.name` into the fixture
+  repo; green at base only because the file does not exist at
+  `origin/main`). Repaired at `fb951e61` with the per-invocation `-c` identity
+  convention `identity-hook-parity` already uses, plus `{ timeout: 240_000 }`
+  on F1 — its env-gated differential measured 5.01s against bun's 5s per-test
+  default and failed on the clock, not on a verdict. Re-run:
+  `git-config-writes` 9/0, `identity-hook-parity` 12/0,
+  `node scripts/run-root-suite.mjs` → exit 0 (110 suites).
+- **E16** — 2026-11-13, the differential (S10 / AC-S10) run in the
+  foreground: `RESIDUAL_DIFF_BASE=<scratch copy of git archive origin/main
+  fbbf336e> bun test scripts/residual-classify.test.mjs` → 25 pass / 0 fail —
+  seven touched commands agree base↔head and are green at head, and the base
+  copy fails the sibling suite while the module does not resolve (the declared
+  delta); the negative control (an empty base) fails 1, so the gate is live.
+- **E17** — 2026-11-13, the declared gates: `bun scripts/local-gate.mjs
+  --jobs 2 --no-bail` → 16 of 17 steps exit 0 (workspace install, version
+  parity, docs projection, **log-immutability exit 1**, schema build, crate bun
+  659/0, crate node, root suite exit 0, journal carrier, temp hygiene, tmp-gc,
+  worktree-guard 0, pi node-compat, pi compat-guard, dependency pins,
+  dependency advisories, schema node-compat); `bun scripts/log-immutability.mjs
+  --base origin/main` → PASS (0 violations, 12 commits). The red step reads
+  two **main-side** commits in the upstream-based range (`b012b31d`
+  "docs(logs): unknown changes", `3cbc1237`, both 2026-11-13 11:13/11:15 UTC),
+  not this branch's bytes — carried in `## Next` and O23's status cell.
 
 ## Next
 
 - **Handed to the owner as the external verifier.** The branch's diff is the
   deliverable; nothing here self-approves.
-- **Two obligations stay open, named rather than deferred:**
-  - **O22** — the roadmap rows, the attribution row and the changeset landed and
-    `docs-generate --check` / `roadmap-settle` / `lint-changeset` all pass, but
-    the session entry is a `.agentic-workflow/journal/` fragment: `docs/LOGS.md`
-    is aggregator-only (issue #468's gate), so the aggregator's merge-to-main
-    run is what appends it. Closing O22 is that run, not a hand append.
-  - **O23** — the declared gate exits 1 on the checkout because of the
-    pre-existing `feat/437-…` worktree (see `## Known pre-existing issues`);
-    every other step is green, and removing a sibling session's tree is not this
-    unit's action.
-- **After the owner's verdict:** one correction batch limited to the reported
-  blockers, then one recheck of the touched obligations.
+- **Correction batch applied 2026-11-13** to the receipt's blockers B1–B4 and
+  the fixable advisories A1–A4 (E12–E16); the recheck limited to those
+  blockers, and the two loop repairs main's own gates asked of this branch, are
+  recorded in `external-verify.md`'s dated addendum and the journal fragment.
+- **One obligation stays open, named rather than deferred:**
+  - **O23** — its validator (`bun scripts/local-gate.mjs`) is 16/17 here:
+    only `log-immutability` is red, and it reads two main-side commits inside
+    the branch's upstream-based range (`b012b31d`, `3cbc1237`); with
+    `--base origin/main` the same command is PASS (0 violations / 12 commits).
+    The row flips to `verified` when that range is clean — a push of this
+    branch (the upstream then moves past the red) or the owner's own
+    settlement of main's two appends. The owner asked why a `--no-verify` push
+    would be wanted (2026-11-13), so no bypass was taken and the push waits.
+- **After the owner's verdict:** one recheck limited to the reported blockers,
+  then his call on the open id above; a new finding never earns another cycle.
 
 ## References
 
