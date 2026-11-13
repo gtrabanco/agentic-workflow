@@ -477,10 +477,32 @@ surgery.
   flake of `run-root-suite.test.mjs` under parallel load is recorded under
   `## Known pre-existing issues`.
 
+- **G2** — 2026-11-13, `bun scripts/local-gate.mjs --no-bail` at `444040d5` · exit 1 ·
+  `log-immutability` refused the session entry: this repository consumes a
+  fragment carrier (`.agentic-workflow/journal/`), so a direct append to
+  `docs/LOGS.md` is a `log-hand-appended` violation. Disclosed side effect: the
+  append was written, then reverted byte-for-byte (`git restore`), and the entry
+  was re-landed as a carrier fragment through the declared writer
+  (`journal write --kind narrative`, `.agentic-workflow/journal/20261113T101826Z-…-narrative-local.md`).
+  `docs/LOGS.md` is untouched by this unit's commits.
+- **G3** — 2026-11-13, `bun scripts/local-gate.mjs --no-bail` at `907d6617` · exit 1
+  · 16 steps pass, `schema-node-compat` skipped as `root-suite`'s dependent,
+  `log-immutability` reads 0 violations over the 6-commit range. `root-suite`
+  fails on E11's pre-existing `roadmap-settle` red; the three siblings the report
+  also names (`red-first`, `run-root-suite`, `scope-manifest`) were killed
+  in-flight by the runner's bail (`Bailed out after 1 failure`) and pass
+  standalone (`bun test --timeout=10000 scripts/red-first.test.mjs` → 9 pass).
+
 ## Next
 
-Hand the diff to the owner as the external verifier: every obligation is
-`verified`, the root gate is green, and the one ordered ambiguity is D1.
+Hand the diff to the owner as the external verifier. Every obligation is
+`verified` on a foreground run, the package suite is green (E4), and the one
+ordered ambiguity is D1. **The root gate is not green, and cannot be on this
+branch**: its only deterministic red is E11's `roadmap-settle` violation in
+`docs/fix/521-fix-config/` — another unit's stale row, reproduced at the base
+commit `72bf608d`. Settling that row (`done · [#523](…)`, or deleting it) is the
+owner's one-cell repair; re-running `bun scripts/local-gate.mjs` after it should
+be the only remaining step to a full green.
 
 ## References
 
