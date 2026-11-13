@@ -64,12 +64,10 @@ function makeRepo(t) {
     "- **P2** — 2026-11-13 03:00, a second phase · def5678.",
     "",
   ].join("\n"));
-  const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const GIT_ID = ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false"];
+  const git = (...args) => execFileSync("git", [...GIT_ID, ...args], { cwd: root, encoding: "utf8" }).trim();
   git("init", "-q", "-b", "main");
-  git("config", "user.email", "fixture@example.invalid");
-  git("config", "user.name", "Fixture");
-  git("config", "commit.gpgsign", "false");
-  git("add", "-A");
+    git("add", "-A");
   git("commit", "-qm", "fix(77): open the toy unit");
   return { root, write, git };
 }
