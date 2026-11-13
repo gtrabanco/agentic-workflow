@@ -86,6 +86,23 @@ test("a file option is skipped before the key is read", () => {
   assert.equal(classifyInvocation([CONFIG, "--global", "--get", "user.name"]).kind, "read");
 });
 
+test("an unbalanced quote on an earlier line never hides a later write (issue #514 correction)", () => {
+  // Frozen-failure corpus from the 2026-11-12 external verify: each poison is a
+  // quote the tokenizer used to toggle state on — inside a regex literal — and
+  // the write must still be found on the following line.
+  const poisons = [
+    `assert.doesNotMatch(forge, /--body "/);`,
+    `assert.doesNotMatch(body, /don't/);`,
+    "assert.doesNotMatch(body, /\\\\`/);",
+  ];
+  const write = `execFileSync("git", ["${CONFIG}", "user.email", "t@example.test"], { cwd: root });`;
+  for (const poison of poisons) {
+    const findings = scanSource(`${poison}\n${write}`);
+    assert.equal(findings.length, 1, `write hidden after: ${poison}`);
+    assert.equal(findings[0].line, 2);
+  }
+});
+
 test("the scan reports path:line and never counts a comment or a non-git line", () => {
   const findings = scanSource("// a note\nconst a = 1;\n");
   assert.deepEqual(findings, []);
