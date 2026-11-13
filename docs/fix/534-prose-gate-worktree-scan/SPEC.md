@@ -228,7 +228,7 @@ not-created | scripts/prose-gate-inventory.mjs | the walk's skip set is the unit
 
 ## Next
 
-The PR review and merge — the owner settles the two parked worktrees' merge order afterwards.
+The PR review and merge — https://github.com/gtrabanco/agentic-workflow/pull/535 — then the owner settles the two parked worktrees' merge order afterwards.
 
 ## References
 
