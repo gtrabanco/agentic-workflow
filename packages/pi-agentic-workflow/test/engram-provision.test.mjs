@@ -1,10 +1,13 @@
 /**
  * Tests for the Engram MCP provisioning (feature 66, P4 — AC3, O10/O11).
  *
- * The contract these pin, in the order the module decides it:
+ * The contract these pin, in the order the module decides it (issue #531 adds
+ * the two skip statuses the native-only Engram model demands):
  *
  *   not-consented      no `memory.engram` opt-in ⇒ nothing registered
- *   binary-missing     no `engram` on PATH ⇒ nothing registered, install route named
+ *   native-active      the native gentle-engram package provides mem_* ⇒ nothing registered
+ *   external-server    `ENGRAM_URL` names a running server ⇒ nothing registered
+ *   binary-missing     no `engram` core binary on PATH ⇒ nothing registered, surfaces named
  *   unsupported-host   a Pi host without `registerMcpServer` ⇒ nothing written
  *   already-declared   the operator's `mcp.json` name wins ⇒ nothing shadowed
  *   registered         the exact command + args, read back verbatim
@@ -29,9 +32,11 @@ import {
   ENGRAM_INSTALL_ROUTE,
   ENGRAM_SERVER_NAME,
   declaredMcpServerPaths,
+  isNativeEngramPackage,
   provisionEngram,
   readDeclaredServerNames,
   readDeclaredServerNamesFrom,
+  readInstalledPackageSources,
   resolveEngramBinary,
 } from "../dist/extension/engram.js";
 
@@ -85,6 +90,139 @@ describe("engram provisioning — the binary must resolve (AC3)", () => {
 
   it("an empty PATH resolves nothing instead of scanning the cwd", () => {
     strictEqual(resolveEngramBinary({ env: { PATH: "" }, platform: "linux", exists: () => true }), null);
+  });
+});
+
+describe("engram provisioning — the native gentle-engram package wins (issue #531, AC1)", () => {
+  it("registers nothing and reports native-active when the native extension is installed", () => {
+    const { calls, register } = recorder();
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: BINARY,
+      nativePackagePresent: true,
+      declaredNames: [],
+      register,
+    });
+    strictEqual(report.status, "native-active");
+    strictEqual(calls.length, 0, "the native mem_* tools already exist; a second MCP path would duplicate them");
+    ok(!report.server);
+    ok(report.message.includes("gentle-engram"), report.message);
+    ok(/native-only/u.test(report.message), "the report names the native-only agent-write guarantee");
+    ok(/nothing was written/u.test(report.message), report.message);
+  });
+
+  it("native-active outranks the MCP path even when the binary resolves and nothing is declared", () => {
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: BINARY,
+      nativePackagePresent: true,
+      declaredNames: [ENGRAM_SERVER_NAME],
+      register: () => {},
+    });
+    strictEqual(report.status, "native-active");
+  });
+
+  it("consent still comes first: no opt-in stays silent even with the native package present", () => {
+    const { calls, register } = recorder();
+    const report = provisionEngram({
+      consented: false,
+      binaryPath: null,
+      nativePackagePresent: true,
+      declaredNames: [],
+      register,
+    });
+    strictEqual(report.status, "not-consented");
+    strictEqual(calls.length, 0);
+  });
+});
+
+describe("engram provisioning — an external server is a deliberate choice (issue #531, AC2)", () => {
+  it("reports external-server and registers nothing when ENGRAM_URL names a server", () => {
+    const { calls, register } = recorder();
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: null,
+      engramUrl: "http://127.0.0.1:7437",
+      declaredNames: [],
+      register,
+    });
+    strictEqual(report.status, "external-server");
+    strictEqual(calls.length, 0, "stdio MCP cannot target a URL; the native tools serve memory there");
+    ok(report.message.includes("ENGRAM_URL"), report.message);
+    ok(/nothing was written/u.test(report.message), report.message);
+  });
+
+  it("blank ENGRAM_URL is unset — the binary refusal still applies", () => {
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: null,
+      engramUrl: "   ",
+      declaredNames: [],
+      register: () => {},
+    });
+    strictEqual(report.status, "binary-missing");
+  });
+
+  it("the native package outranks the external server: both present reports native-active", () => {
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: null,
+      engramUrl: "http://127.0.0.1:7437",
+      nativePackagePresent: true,
+      declaredNames: [],
+      register: () => {},
+    });
+    strictEqual(report.status, "native-active");
+  });
+});
+
+describe("engram provisioning — the binary-missing message names the core binary (issue #531, AC3)", () => {
+  it("names PATH and ENGRAM_BIN for the core binary, ENGRAM_URL for a server, and the companion route separately", () => {
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: null,
+      declaredNames: [],
+      register: () => {},
+    });
+    strictEqual(report.status, "binary-missing");
+    ok(/core binary/u.test(report.message), report.message);
+    ok(report.message.includes("ENGRAM_BIN"), report.message);
+    ok(report.message.includes("ENGRAM_URL"), report.message);
+    ok(report.message.includes(ENGRAM_INSTALL_ROUTE), "the companion route stays named, as one surface among three");
+  });
+});
+
+describe("engram provisioning — native package detection reads Pi's settings.json (issue #531, AC4)", () => {
+  it("collects string and object package entries and matches gentle-engram", () => {
+    const dir = mkdtempSync(join(tmpdir(), "engram-native-"));
+    try {
+      const file = join(dir, "settings.json");
+      writeFileSync(
+        file,
+        JSON.stringify({
+          packages: ["npm:pi-clear", "npm:gentle-engram@latest", { source: "npm:pi-effort" }],
+        }),
+      );
+      const sources = readInstalledPackageSources(file);
+      deepStrictEqual(sources, ["npm:pi-clear", "npm:gentle-engram@latest", "npm:pi-effort"]);
+      strictEqual(isNativeEngramPackage(sources), true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("an install without gentle-engram, a missing file or malformed JSON resolves no native package", () => {
+    const dir = mkdtempSync(join(tmpdir(), "engram-native-absent-"));
+    try {
+      const file = join(dir, "settings.json");
+      writeFileSync(file, JSON.stringify({ packages: ["npm:pi-clear", { source: "npm:pi-effort" }] }));
+      strictEqual(isNativeEngramPackage(readInstalledPackageSources(file)), false);
+      deepStrictEqual(readInstalledPackageSources(join(dir, "missing.json")), []);
+      writeFileSync(file, "{not json");
+      deepStrictEqual(readInstalledPackageSources(file), []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 
