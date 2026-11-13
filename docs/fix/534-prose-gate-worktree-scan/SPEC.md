@@ -223,7 +223,7 @@ not-created | scripts/prose-gate-inventory.mjs | the walk's skip set is the unit
 - **E5** — 2026-11-13, `bun scripts/ceremony.mjs tier classify --base main` re-run on the implemented diff · exit 0 · `tier: standard`, unchanged from E1.
 - **E6** — 2026-11-13, the branch code against the real head: `PROSE_GATE_REPO=/home/agent/projects/agentic-workflow bun test scripts/prose-gate-inventory.test.mjs` (run from the branch checkout) · exit 0 · `22 pass · 0 fail` — `findHomes()` returns exactly one home on the hosting checkout with 4 worktrees registered (`feat/352-…`, `feat/438-…`, `fix/534-…` parked under `.worktrees/`). O2's live-tree half.
 - **G1** — 2026-11-13, `bun scripts/local-gate.mjs` (branch checkout, both parked worktrees in place) · exit 0 · `local-gate: PASS — 17 step(s) in 168s`; `bun scripts/test-impact.mjs --base origin/main` · exit 0 · `verdict: empty`.
-- **P3** — 2026-11-13, ROADMAP row 521 settled to `done · [`#523`](https://github.com/gtrabanco/agentic-workflow/pull/523)` through the writer (CAS `862e0198` → `e0c8cca6`) — the settlement gate's own demand, pre-existing red on main (193 unit docs checked · verdict: PASS after); projection re-rendered by its emitter; journal fragment written.
+- **P3** — 2026-11-13, ROADMAP row 521 settled to `done · #523` through the writer (CAS `862e0198` → `e0c8cca6`) — the settlement gate's own demand, pre-existing red on main (193 unit docs checked · verdict: PASS after); projection re-rendered by its emitter; journal fragment written.
 - **P4** — 2026-11-13, branch pushed and PR opened against `main`.
 
 ## Next
