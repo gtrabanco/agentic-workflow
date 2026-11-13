@@ -21,7 +21,7 @@ const MODULE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 /**
  * An inline `## `-heading search: the F37/F38/F39 pattern. A regex literal
  * whose source anchors on `## ` is how a fence-blind section reader starts;
- * the shared reader is `scripts/unit-doc-phases.mjs` (`sectionText`,
+ * the shared reader is the crate's `unit-doc-phases.mjs` (`sectionText`,
  * `sectionBounds`, `H2_HEADING`) and everything else cites it.
  */
 const HEADING_SEARCH = /\/\^##\s?/;

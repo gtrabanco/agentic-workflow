@@ -34,12 +34,13 @@ import { runtimeBin } from "../runtime.js";
 export const WORKFLOW_TOOLS_NAMESPACE = {
   name: "agentic-workflow",
   description:
-    "Deterministic workflow sensors and gates, run as thin wrappers over the " +
-    "project's own scripts. Results arrive as structured data; red gates as errors with data.",
+    "Deterministic workflow sensors and gates, run through the pinned " +
+    "@gtrabanco/agentic-workflow runner (one subcommand each). Results arrive as structured data; red gates as errors with data.",
   instructions:
-    "Each tool spawns the project's own script (scripts/<name>.mjs) in the " +
-    "session's cwd — the project's checkout copy, never the package's pinned " +
-    "one. Successful runs resolve to the tool's output schema; gate failures " +
+    "Each tool spawns the pinned package's runner bin (agentic-workflow " +
+    "<subcommand>) with the session's cwd as the project root — the pin " +
+    "decides the behaviour, never the project's checkout; audit-pr-gate " +
+    "still runs the project's own scripts/audit-pr-gate.mjs. Successful runs resolve to the tool's output schema; gate failures " +
     "(breach, BLOCKED, stale receipt, BLOCKED verdict) reject or carry " +
     "isError with the structured result attached. The tools are deferred: " +
     "find them with tool_search or call them by name from a codemode script.",

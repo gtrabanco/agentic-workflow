@@ -3,7 +3,7 @@
  * section.
  *
  * This module owns the shared grammar that both `phase-lint.mjs` (the linter)
- * and `scripts/unit-route.mjs` (the router) need.  Keeping it separate prevents
+ * and `unit-route.mjs` (the router) need.  Keeping it separate prevents
  * the 1 000+ line linter from being pulled into every router invocation
  * (issue #291 / unit 73 F3). It also owns the one in-flight unit-doc corpus
  * rule (cycle-2 review F20): the roadmap + fix-index row grammar and the

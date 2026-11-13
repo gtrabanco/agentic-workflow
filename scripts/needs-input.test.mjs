@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Corpus for `scripts/needs-input.mjs` — the behavioural contract of the
+ * Corpus for the `needs-input` runner subcommand — the behavioural contract of the
  * needs-input dispatcher. Fixtures are embedded strings written to a temporary
  * directory at run time: no network, no committed fixtures directory.
  *

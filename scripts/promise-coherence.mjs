@@ -161,7 +161,6 @@ const READERS = new Set(["grep", "rg", "wc", "ls", "cat", "head", "tail", "test"
  * runs the suite.
  */
 const REPORT_VALIDATORS = new Set([
-  "scripts/phase-lint.mjs",
   "scripts/check-skill-context.mjs",
   "scripts/roadmap-settle.mjs",
   "scripts/vocabulary-probe.mjs",

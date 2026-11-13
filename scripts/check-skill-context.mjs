@@ -353,7 +353,7 @@ if (routeMode) {
 
   // C3 (P16 fold): the guard below binds only on a recognised policy, so a typo'd
   // `policy.name` or a non-positive `headroom` used to disable it silently — the same
-  // silent-skip class `scripts/ledger-provenance.mjs` reports for its rows. An
+  // silent-skip class `ledger-provenance` reports for its rows. An
   // unrecognised declaration is a manifest error, never an opt-out, and the
   // decimal width is part of that contract: the exact-ratio reader below takes the
   // declared headroom from its shortest decimal form, so a ratio that needs more

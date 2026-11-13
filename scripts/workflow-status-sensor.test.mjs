@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Feature 38 — `scripts/workflow-status.mjs`, the deterministic sensor.
+ * Feature 38 — the `workflow-status` runner subcommand, the deterministic sensor.
  *
  * One fixture-repo suite grown phase by phase. P1 writes the core-emission pins
  * (schema validity, field presence, read-only, idempotence, roadmap mapping,

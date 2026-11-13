@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Fix 224 / P1 — `scripts/unit-route.mjs`, the deterministic unit router.
+ * Fix 224 / P1 — the `unit-route` runner subcommand, the deterministic unit router.
  *
  * Red-first pins for the closed route table, the bounded read set, the
  * fail-closed exit contract, determinism/read-only behaviour, the committed

@@ -16,15 +16,15 @@
  * blob id (git blob ids stay the acceptance-manifest convention).
  *
  * Usage
- *   bun scripts/pre-execution-snapshot.mjs build --stage spec|plan --unit <id>
+ *   agentic-workflow pre-execution-snapshot build --stage spec|plan --unit <id>
  *        [--dir <artifact-dir>] [--unit-kind feature|fix]
  *        [--artifact-revision <id>] [--source-revision <sha>]
  *        [--parent <64-hex>] [--json <out-file>]
- *   bun scripts/pre-execution-snapshot.mjs verify --stage spec|plan --unit <id>
+ *   agentic-workflow pre-execution-snapshot verify --stage spec|plan --unit <id>
  *        [--dir <artifact-dir>] [--unit-kind feature|fix] [--receipt <id|64-hex>]
  *        [--parent <64-hex>] [--policy <version>] [--artifact-revision <id>]
  *        [--source-revision <sha>] [--root <repo-root>]
- *   bun scripts/pre-execution-snapshot.mjs contract
+ *   agentic-workflow pre-execution-snapshot contract
  *
  * `--root` re-points the repository the two git-backed facts are read from (the
  * default is this script's own checkout). A consumer that senses another repository

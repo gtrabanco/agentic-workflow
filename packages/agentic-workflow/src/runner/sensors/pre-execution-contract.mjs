@@ -7,9 +7,9 @@
  *
  * Two consumers read it:
  *
- * - `scripts/pre-execution-snapshot.mjs` — the verifier that owns the machine
+ * - `pre-execution-snapshot.mjs` — the verifier that owns the machine
  *   semantics (snapshot building, freshness attribution, receipts).
- * - `scripts/workflow-status.mjs` — the sensor, which re-derives the same bound
+ * - `workflow-status.mjs` — the sensor, which re-derives the same bound
  *   set for review-mark currency and reads the same receipts.
  *
  * Both used to carry their own copy: the sensor re-declared the tables under a

@@ -62,7 +62,7 @@ const HIGH_RISK_PATHS = Object.freeze([
 
 /**
  * The `destructive` signal — **capability, not spelling** (issue #384, unit
- * `360c`). What a change can do is decided by `scripts/capabilities.mjs`, which
+ * `360c`). What a change can do is decided by `capabilities.mjs`, which
  * resolves a file's imports and its effects per language family and follows a
  * relative import into the declaring module. This module carries no operation
  * name: the removal spellings live in the analyser's capability catalogue, so a

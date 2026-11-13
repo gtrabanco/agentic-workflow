@@ -12,7 +12,7 @@
 > Fix specification — one single unit document. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
 > entry in the `## Fixes` table of `docs/ROADMAP.md`. This is the same closed unit doc
-> `scripts/unit-route.mjs --triage` reads for a feature, in the re-cut
+> `agentic-workflow unit-route --triage` reads for a feature, in the re-cut
 > `spec-by-reference` shape; the fix template keeps four extra sections
 > (`Issue`, `Branch`, `Depends on`, `Regression scope`) on top. A unit opened
 > before the re-cut keeps the legacy 14-section shape — both are accepted, and a
@@ -83,7 +83,7 @@ during implementation never expand scope beyond the declared regression boundary
 ## Risk tier
 
 The unit's ceremony is proportional to risk, and the tier is **computed, never
-chosen**: `bun scripts/ceremony.mjs tier classify` reads the change's paths and
+chosen**: `bunx @gtrabanco/agentic-workflow@<pin> ceremony tier classify` reads the change's paths and
 contents and emits `passive | standard | high` (owner:
 `skills/execute-phase/references/risk-tiers.md`, block `risk-tier-verdict@1`).
 Copy the verdict below verbatim; a tier written from memory is not a tier.
@@ -170,7 +170,7 @@ and this section names it — never both. Before the unit ships, every row is
 
 ## Triaged steps
 
-> Paste the `## Triaged steps` block from `bun scripts/unit-route.mjs --triage <slug>`
+> Paste the `## Triaged steps` block from `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <slug>`
 > here verbatim. This block is the machine's authoritative step list; the lane
 > never re-derives or reorders it (owner: `skills/unit-lane/SKILL.md` §Turn contract).
 
@@ -196,7 +196,7 @@ axis | <axis> | the review axis that found it
 severity | BLOCKER \| CRITICAL \| WARNING \| SUGGESTION | the published ladder (meanings owned by `skills/review-implementation/references/CLASSIFY.md` §Severity ladder): `BLOCKER` requires a reproducer and is never a conversion target
 impact | blocking \| docs-only \| report-only | whether the finding affects behaviour, only documents, or nothing that blocks: `blocking`/`docs-only` for a `BLOCKER`, and `report-only` for a pre-existing advisory, which never earns a correction round
 class | product \| plan \| source \| environment \| runtime | the owner that repairs it
-route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`scripts/unit-route.mjs`), and `class` names the owner that repairs it
+route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`agentic-workflow unit-route`), and `class` names the owner that repairs it
 ```
 
 | id | S# / file:line | axis | severity | impact | class | route |

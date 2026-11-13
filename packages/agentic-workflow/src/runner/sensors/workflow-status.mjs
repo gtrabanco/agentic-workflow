@@ -50,7 +50,7 @@ import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows, flattenCell } fr
 // fence-blind — while the shared reader was already both).
 import { openFence, closesFence, sectionBounds, parseLog } from "../unit-doc-phases.mjs";
 // Issue #360 — the risk tier of the change in scope. The classifier decides it
-// (one home, `scripts/risk-tiers.mjs`); this sensor only projects the verdict.
+// (one home, `../risk-tiers.mjs`); this sensor only projects the verdict.
 import { classifyTier, taskSizeOf, sizeTierOf } from "../risk-tiers.mjs";
 
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -926,7 +926,7 @@ function readFixNow(unitDir, observations = []) {
 
 /**
  * Step 13 — the class-routed `next.suggested` entries a unit contributes.
- * The router (`scripts/unit-route.mjs`) owns the class→route decision; this
+ * The router (`../unit-route.mjs`) owns the class→route decision; this
  * surface projects the router's own classifier for an envelope consumer: a
  * plan-owned open row points at the unit's planner, a decision row stops the unit
  * (its route outranks the fold in the route table, and decision work is not a

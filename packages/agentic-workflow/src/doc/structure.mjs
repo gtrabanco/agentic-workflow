@@ -72,7 +72,7 @@ function sectionText(markdown, sections, title) {
 }
 
 /** Phase rows from a `## Tasks` section's bullets. The grammar is the
- *  phase-contract's unit-doc shape — `scripts/unit-doc-phases.mjs`'
+ *  phase-contract's unit-doc shape — `src/runner/unit-doc-phases.mjs`'
  *  `UNIT_DOC_BULLET`: one `P<n> —` bullet, the executed-phase `[x]` tick
  *  OPTIONAL because the tick is state, never a second shape. A fenced example
  *  is quoted text and never a phase. The copy exists because this crate cannot

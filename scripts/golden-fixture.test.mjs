@@ -3,7 +3,7 @@
  * Corpus for the golden fixture — the executable half of
  * `docs/workflow/GOLDEN_FIXTURE.md`. It asserts the committed toy trees under
  * `scripts/fixtures/golden-fixture/` by running the real tools at their CLI
- * boundary: `scripts/phase-lint.mjs` (both verdicts) and
+ * boundary: the `phase-lint` runner subcommand (both verdicts) and
  * `scripts/schema-runtime.mjs` (the envelope contract), plus the run-log Result
  * grammar, the doc's cross-references, and the audit-target trap invariants.
  *
