@@ -92,7 +92,7 @@ on:
         description: "cut: stable applies the train; canary publishes the declared packages under the canary dist-tag"
         type: choice
         required: true
-        default: stable
+        default: canary
         options:
           - stable
           - canary
