@@ -101,9 +101,12 @@ ambient git identity and with it removed
 
 ## Known pre-existing issues
 
-- none affecting this fix. The suite's other git spawns already carry `-c`
-  identity; the crate's `journal.write.test.mjs` and the package fixtures were
-  verified in the same pass.
+- `node --test scripts/roadmap-settle.test.mjs` fails on `main` before this
+  branch with two `pr-url-unsettled` violations for
+  `docs/fix/521-fix-config/SPEC.md` (its row still says `in-progress` while the
+  doc carries PR #523). Unrelated to this fix — the same two violations answer
+  from the unmodified checkout — and left alone rather than smuggled into a
+  test-only unit.
 
 ## Tasks
 
@@ -137,6 +140,8 @@ n/a — applied inline at the owner's request (the reported failure is the ask).
   HOME=$(mktemp -d)` answers `25 pass / 1 fail` with the identical `empty ident
   name` message, and `26 pass / 0 fail` with the ambient identity — the exact
   split CI hit.
+- **P1** — `c079af93` (this unit's documents, the roadmap row, the regenerated
+  projection), `039dbebf` (the exported `GIT_CONFIG` and the race merge's spawn).
 - **E1** — 2026-11-13, `cd packages/agentic-workflow && bun test test/journal.test.mjs`
   with the ambient identity present · exit 0 · 26 pass / 0 fail.
 - **E2** — 2026-11-13, the same command with the ambient identity removed
