@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: 42f73b77be66130f5f3eeb18ca4cfd5546419fdb5eab0f532b31a01af96c71a0
+ac-hash: e71d2943a2e2465886f948da16c3a92fd6962d239f6ed009d498909a3af620bd
 roadmap_summary: Issue [#531](https://github.com/gtrabanco/agentic-workflow/issues/531): the Engram provisioning registered an MCP server beside the native `gentle-engram` package (duplicating `mem_*` and undermining native-only writes) and its `binary-missing` refusal named a companion install that cannot supply the core binary — the module now reads Pi's two `settings.json` scopes, skips with `native-active`/`external-server`, honours `ENGRAM_BIN`, and names all three resolution surfaces.
 ---
 
@@ -28,6 +28,17 @@ extension and reports a misleading install route". The PR closes it via
 
 **S3 — The refusals separate the core binary from the Pi companion.**
 > - The refusal messages distinguish the two install surfaces: the **core binary** (must be on `PATH` or named by `ENGRAM_BIN`) from the **Pi companion** (`pi install npm:gentle-engram@latest`).
+
+**S3a — The consent instruction names the file the switch is read from.**
+> fix the new finding
+
+`memory` is a base-config section (`packages/agentic-workflow-schema/src/config.ts:241`,
+merged by `src/config/load.ts:158` from `agentic-workflow.json`) and the
+extension file's `ROOT_KEYS` (`src/config/schema.ts:39-53`) has no `memory` key,
+so the previous instruction — `set "memory": { "engram": true } in
+pi-agentic-workflow.json` — sent an operator to a file that refuses the key and
+lands them on `config-invalid`. Same class as S3: every route a message names has
+to work.
 
 **S4 — A set `ENGRAM_URL` is a deliberate configuration, not a defect.**
 > - A set `ENGRAM_URL` (externally managed or remote server) is reported as a deliberate configuration — no MCP registration (stdio MCP cannot use it), no `binary-missing` warning.
@@ -214,6 +225,11 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   Check: `bun test test/engram-provision.test.mjs` exits 0 (`core binary`,
   `ENGRAM_BIN`, `ENGRAM_URL` and `ENGRAM_INSTALL_ROUTE` assertions, plus the
   override-resolution cases).
+- **AC-S3a** — The `not-consented` instruction names the file the switch is
+  actually read from (`agentic-workflow.json`, taken from the schema's published
+  constant) and never the extension file, which refuses `memory` as an unknown
+  key. Check: `bun test test/engram-provision.test.mjs` exits 0 (the `S3a` case
+  asserts the base file name is present and `pi-agentic-workflow.json` absent).
 - **AC-S4** — With `ENGRAM_URL` set to a non-blank value the package registers
   no MCP server and reports the external-server configuration instead of
   `binary-missing`; blank or whitespace-only values are unset, exactly as
@@ -290,6 +306,16 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   exits 0)
   (Implements: S1, S7)
 
+- P8 — Correction batch (the owner's review, L3): the consent refusal names
+  the base config file the switch is read from, from the schema's published
+  constant rather than a literal (validator: `bun test
+  test/engram-provision.test.mjs` exits 0 with the `S3a` case, and
+  `rg -n 'pi-agentic-workflow\.json' packages/pi-agentic-workflow/src/extension/engram.ts`
+  matches 0)
+  (Implements: S3a)
+  - Relevant files: packages/pi-agentic-workflow/src/extension/engram.ts,
+    packages/pi-agentic-workflow/test/engram-provision.test.mjs
+
 ### Planning evidence
 
 One row per Engineering claim the change rests on, in the ledger's closed column
@@ -336,6 +362,7 @@ validator with the outcome it must produce, and is `planned` at cut time.
 | O14 | S7 | no suite depends on the operator's environment: the Engram adapter cases pin `ENGRAM_URL` and `PATH`, so a shell that exports either cannot flip the result | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 with `ENGRAM_URL=http://127.0.0.1:7437` exported | E line in SPEC `## Log` | verified — E3 line in SPEC `## Log` (58 pass with ENGRAM_URL and ENGRAM_BIN exported) |
 | O15 | S3, S4, S7 | the change differs from the base commit only in the declared deltas: two new statuses and their messages, the three-surface refusal, `ENGRAM_BIN` honoured — every other input produces the base's exact status and message | P5 | P5 | direct application (this session) | differential harness in `mktemp -d` (base module copy vs this change, identical corpus): the diff lists only declared deltas | E line in SPEC `## Log` with the diff summary | verified — E6 line in SPEC `## Log` (11 of 22 rows changed, all in the declared deltas; 11 identical) |
 | O16 | S1, S7 | the declared deterministic gates are green before handoff | P7 | P7 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 line in SPEC `## Log` (15 steps pass; root-suite's single red is E11, reproduced at the base commit) |
+| O17 | S3a | the consent refusal names `agentic-workflow.json` — the base config the switch is read from — and never `pi-agentic-workflow.json`, which refuses `memory` as an unknown key | P8 | P8 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the `S3a` case) and `rg -n 'pi-agentic-workflow\\.json' packages/pi-agentic-workflow/src/extension/engram.ts` matches 0 | E line in SPEC `## Log` | verified — E12 (red) and E13 (green: 59 pass, 0 matches) lines in SPEC `## Log` |
 
 ## Triaged steps
 
@@ -411,6 +438,10 @@ surgery.
   ## Depends on
 
   (none)
+  ```
+- **L3** — 2026-11-13, the owner's correction, verbatim:
+  ```
+  fix the new finding
   ```
 - **D1** — 2026-11-13, the AC1/AC2 overlap is ordered, not guessed: the ACs are
   each unconditional, so with both the native package and `ENGRAM_URL` present
@@ -493,6 +524,16 @@ surgery.
   in-flight by the runner's bail (`Bailed out after 1 failure`) and pass
   standalone (`bun test --timeout=10000 scripts/red-first.test.mjs` → 9 pass).
 
+- **E12** — 2026-11-13, the correction's RED: `cd packages/pi-agentic-workflow &&
+  bun test test/engram-provision.test.mjs` · exit 1 · 32 pass, 1 fail — the
+  `S3a` case rejects the old instruction's `pi-agentic-workflow.json`.
+- **E13** — 2026-11-13, after the fix: `bun test test/engram-provision.test.mjs
+  test/shipped-adapter.test.mjs` · exit 0 · 59 pass, 0 fail; and
+  `rg -n 'pi-agentic-workflow\.json' packages/pi-agentic-workflow/src/extension/engram.ts`
+  · exit 1 · 0 matches (the wrong file name is gone from the module).
+- **D5** — 2026-11-13, the consent instruction's file name comes from the
+  schema's published `BASE_CONFIG_FILE`, not a literal: one owner for the file
+  name, so a future rename cannot make the message lie again the way it did.
 ## Next
 
 Hand the diff to the owner as the external verifier. Every obligation is
