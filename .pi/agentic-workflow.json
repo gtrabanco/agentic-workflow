@@ -1,0 +1,13 @@
+{
+  // The approved commit identity for this repository (issue #514).
+  // `enforce: "push"` makes the local gate's push-identity step verify every
+  // author and committer of a push range; the pre-commit hook is not installed
+  // in this checkout, so the commit half stays out of the way.
+  "gitIdentity": {
+    "enforce": "push",
+    "approved": {
+      "name": "Gabriel Trabanco Llano",
+      "email": "1969593+gtrabanco@users.noreply.github.com"
+    }
+  }
+}

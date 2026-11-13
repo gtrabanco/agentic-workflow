@@ -27,15 +27,12 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(repoRoot, "scripts", "review-state.mjs");
 
-const git = (root, ...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+const git = (root, ...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" }).trim();
 
 /** A throwaway repository with two commits, so a base..head diff exists. */
 function fixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-state-"));
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.writeFileSync(path.join(root, "src", "a.mjs"), "export const a = 1;\n");
   fs.writeFileSync(path.join(root, "src", "b.mjs"), "export const b = 1;\n");

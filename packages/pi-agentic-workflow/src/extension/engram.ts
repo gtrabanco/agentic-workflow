@@ -21,10 +21,20 @@
  * the sibling `init-workspace` consent flow already follows, and a
  * provisioning step the operator cannot read back is one they cannot trust.
  *
- * The install route is `pi install npm:gentle-engram@latest`. The CLI's own
- * setup subcommand is deliberately NOT the documented route: it pins whatever
- * version it ran with and keeps serving it until it is run again, so an updated
- * binary can sit unused behind a stale registration.
+ * The install route is `pi install npm:gentle-engram@latest` — the **Pi
+ * companion**, one of three resolution surfaces the reports name. The core
+ * `engram` binary (on `PATH` or named by `ENGRAM_BIN`) and a running server
+ * (`ENGRAM_URL`, local or remote) are the other two; issue #531: the earlier
+ * refusal printed the companion route as the fix for a missing core binary,
+ * which cannot work. When the native `gentle-engram` package is installed it
+ * already provides the `mem_*` tools over the HTTP server, so this module
+ * registers nothing (Engram's own setup is native-only: an Engram MCP path
+ * next to the native tools is what its docs warn against) and says so. A set
+ * `ENGRAM_URL` is an externally managed server and likewise skips the stdio
+ * MCP path — MCP-over-HTTP does not exist in core.
+ * The CLI's own setup subcommand is deliberately NOT the documented route: it
+ * pins whatever version it ran with and keeps serving it until it is run
+ * again, so an updated binary can sit unused behind a stale registration.
  *
  * Pi-free by construction — the binary lookup, the environment, the "already
  * declared" names and the register callback are all injected, so every branch
@@ -34,11 +44,22 @@
 import { accessSync, constants, readFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 
+import { BASE_CONFIG_FILE } from "@gtrabanco/agentic-workflow-schema";
+
 /** The directory a project keeps its own agent config in — Pi's `.pi/`. */
 const PROJECT_DIR = ".pi";
 
 /** The name the server is registered under, and what `mcp.json` would declare. */
 export const ENGRAM_SERVER_NAME = "engram";
+
+/** Pi's own settings file name; its `packages` list is where a Pi package is declared. */
+const PI_SETTINGS_FILE = "settings.json";
+
+/** The binary override Engram's own extension documents (`ENGRAM_BIN`). */
+const ENGRAM_BIN_VAR = "ENGRAM_BIN";
+
+/** The externally managed server Engram's own extension documents (`ENGRAM_URL`). */
+const ENGRAM_URL_VAR = "ENGRAM_URL";
 
 /** The argv the workflow's runners use (pi's own registration, measured). */
 export const ENGRAM_ARGS = ["mcp", "--tools=agent"] as const;
@@ -50,6 +71,8 @@ export type EngramStatus =
   | "registered"
   | "not-consented"
   | "config-invalid"
+  | "native-active"
+  | "external-server"
   | "binary-missing"
   | "already-declared"
   | "unsupported-host";
@@ -69,6 +92,16 @@ export interface EngramProvisionInput {
    *  file a problem, never a silent default, and `dispatch.ts` refuses on the
    *  same flag. Checked before consent. */
   configInvalid?: boolean;
+  /** True when the native `gentle-engram` package is installed — Pi's own
+   *  `settings.json` packages list names it (issue #531 AC1). The native
+   *  extension already provides the `mem_*` tools, so the MCP path registers
+   *  nothing; see `readInstalledPackageSources`/`isNativeEngramPackage`. */
+  nativePackagePresent?: boolean;
+  /** The session's `ENGRAM_URL` value, or null/blank when unset (issue #531
+   *  AC2). A set URL names an externally managed server; stdio MCP cannot
+   *  target one, so the MCP path registers nothing and the choice is reported
+   *  as deliberate rather than as a missing binary. */
+  engramUrl?: string | null;
   /** Absolute path of the resolved `engram` binary, or null when not found. */
   binaryPath: string | null;
   /** Server names the operator already declared (a `mcp.json` name wins), read
@@ -150,9 +183,37 @@ export function declaredMcpServerPaths({
 }
 
 /**
+ * The `settings.json` files Pi reads for one session, i.e. the files its
+ * `packages` list comes from: the user file always, and — for a trusted project
+ * only — `<cwd>/.pi/settings.json`, the file `pi install --local` writes and Pi
+ * reads after trust is granted. Same two scopes, same trust argument as
+ * `declaredMcpServerPaths`, because a package list read from a file the host
+ * does not load is not evidence of anything.
+ */
+export function piSettingsPaths({
+  agentDir,
+  cwd,
+  projectTrusted,
+}: {
+  agentDir: string;
+  cwd: string;
+  projectTrusted: boolean;
+}): string[] {
+  const paths = [join(agentDir, PI_SETTINGS_FILE)];
+  if (projectTrusted) paths.push(join(cwd, PROJECT_DIR, PI_SETTINGS_FILE));
+  return paths;
+}
+
+/**
  * Resolve `engram` on `PATH` without a shell, honouring `PATHEXT` on Windows.
  * Injected `exists`/`env` keep the lookup testable; the production caller takes
  * the defaults.
+ *
+ * `ENGRAM_BIN` is honoured first, because it is one of the routes the binary
+ * refusal names: a bare name is looked up on `PATH` like `engram` itself and an
+ * absolute path is taken as given (exactly as Engram's own extension resolves
+ * it). An override that resolves nothing yields `null` instead of falling back
+ * to `PATH` — falling back would register a binary the operator did not name.
  */
 export function resolveEngramBinary({
   env = process.env,
@@ -163,13 +224,33 @@ export function resolveEngramBinary({
   exists?: (path: string) => boolean;
   platform?: NodeJS.Platform;
 } = {}): string | null {
+  const extensions = platform === "win32" ? splitExtensions(env.PATHEXT) : [""];
+  const configured = env[ENGRAM_BIN_VAR];
+  const override = isNonBlank(configured) ? configured.trim() : null;
+  if (override !== null) {
+    if (/[\\/]/u.test(override)) return exists(override) ? override : null;
+    return lookupOnPath(override, env, extensions, exists);
+  }
+  return lookupOnPath(ENGRAM_SERVER_NAME, env, extensions, exists);
+}
+
+/**
+ * The `PATH` scan itself: one program name, every directory, every extension.
+ * An empty `PATH` resolves nothing rather than reading the current directory —
+ * `join("", name)` would silently do exactly that.
+ */
+function lookupOnPath(
+  name: string,
+  env: Record<string, string | undefined>,
+  extensions: readonly string[],
+  exists: (path: string) => boolean,
+): string | null {
   const pathValue = env.PATH ?? env.Path ?? "";
   if (pathValue === "") return null;
-  const extensions = platform === "win32" ? splitExtensions(env.PATHEXT) : [""];
   for (const dir of pathValue.split(delimiter)) {
     if (dir === "") continue;
     for (const extension of extensions) {
-      const candidate = join(dir, `${ENGRAM_SERVER_NAME}${extension}`);
+      const candidate = join(dir, `${name}${extension}`);
       if (exists(candidate)) return candidate;
     }
   }
@@ -191,6 +272,68 @@ function isExecutable(path: string): boolean {
 }
 
 /**
+ * The package sources Pi's user `settings.json` declares. `packages` entries
+ * are either plain strings (`npm:gentle-engram@latest`) or objects carrying a
+ * `source` (`{ "source": "npm:pi-effort" }`); anything else is skipped. A file
+ * that is missing or unreadable yields `[]`: absence of evidence about the
+ * packages list is never evidence that the native package is installed, and
+ * refusing the lookup would block the whole provisioning report (same rule as
+ * `readDeclaredServerNames`).
+ */
+export function readInstalledPackageSources(path: string): string[] {
+  let text: string;
+  try {
+    text = readFileSync(path, "utf8");
+  } catch {
+    return [];
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  if (typeof parsed !== "object" || parsed === null) return [];
+  const packages = (parsed as { packages?: unknown }).packages;
+  if (!Array.isArray(packages)) return [];
+  const sources: string[] = [];
+  for (const entry of packages) {
+    if (typeof entry === "string") sources.push(entry);
+    else if (typeof entry === "object" && entry !== null && typeof (entry as { source?: unknown }).source === "string") {
+      sources.push((entry as { source: string }).source);
+    }
+  }
+  return sources;
+}
+
+/**
+ * The union of the package sources declared across the `settings.json` files Pi
+ * reads, deduplicated: Pi dedupes a package configured in both scopes, so a
+ * source declared twice is one package, not two.
+ */
+export function readInstalledPackageSourcesFrom(paths: readonly string[]): string[] {
+  const sources = new Set<string>();
+  for (const path of paths) {
+    for (const source of readInstalledPackageSources(path)) sources.add(source);
+  }
+  return [...sources];
+}
+
+/**
+ * Whether the collected package sources name the native Engram Pi package.
+ * The match is a substring of the declared source so a version pin
+ * (`npm:gentle-engram@0.7.0`) and a local checkout path both count: the
+ * question is whether the native extension exists, not which release it is.
+ */
+export function isNativeEngramPackage(sources: readonly string[]): boolean {
+  return sources.some((source) => source.includes("gentle-engram"));
+}
+
+function isNonBlank(value: string | null | undefined): value is string {
+  return typeof value === "string" && value.trim() !== "";
+}
+
+/**
  * Decide and perform the registration, in the order that makes the outcome
  * truthful: a config that cannot be read first (its consent is unknown, never
  * refused), then consent (never provision unasked), then the binary (never
@@ -199,7 +342,7 @@ function isExecutable(path: string): boolean {
  * anything beyond the injected `register` call.
  */
 export function provisionEngram(input: EngramProvisionInput): EngramReport {
-  const { consented, configInvalid, binaryPath, declaredNames, register } = input;
+  const { consented, configInvalid, binaryPath, nativePackagePresent, engramUrl, declaredNames, register } = input;
 
   if (configInvalid === true) {
     return {
@@ -216,7 +359,52 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
       status: "not-consented",
       message:
         `pi-agentic-workflow: Engram not registered — set "memory": { "engram": true } in ` +
-        `pi-agentic-workflow.json to opt in (nothing was written).`,
+        // The switch is a BASE-config section: `loadConfig` merges it from this
+        // file, and the extension file refuses `memory` as an unknown key. Naming
+        // the extension file sent an operator to a file that cannot carry the
+        // key, and the read-back named the wrong route (issue #531 S3a).
+        `${BASE_CONFIG_FILE} to opt in (nothing was written).`,
+    };
+  }
+
+  // Issue #531 AC1 — the native package wins over every MCP path: it already
+  // exposes the mem_* tools, and Engram's own setup keeps agent writes
+  // native-only. The report stays truthful about the operator's configuration:
+  // when memory is served externally that is stated (AC2), otherwise the same
+  // resolution surfaces the refusal names are offered.
+  if (nativePackagePresent === true) {
+    const memory = isNonBlank(engramUrl)
+      ? ` Memory is served by the external Engram server ${ENGRAM_URL_VAR} names.`
+      : ` If memory is not working, put the "engram" core binary on PATH or set ` +
+        `${ENGRAM_BIN_VAR} to its absolute path, or set ${ENGRAM_URL_VAR} to a running Engram server.`;
+    // A leftover declaration is the one thing that keeps native-only writes from
+    // being guaranteed (Engram's own setup says so), and this path is where the
+    // operator can still be told: `already-declared` below never runs.
+    const leftover = declaredNames.includes(ENGRAM_SERVER_NAME)
+      ? ` An mcp.json Pi reads still declares "${ENGRAM_SERVER_NAME}": remove that entry and ` +
+        `reload, or native-only agent writes are not guaranteed.`
+      : "";
+    return {
+      status: "native-active",
+      message:
+        `pi-agentic-workflow: Engram MCP not registered — the native gentle-engram extension ` +
+        `already provides the mem_* tools, so nothing was written (native-only agent writes).` +
+        memory +
+        leftover,
+    };
+  }
+
+  // Issue #531 AC2 — a set ENGRAM_URL is an externally managed (possibly
+  // remote) server: a deliberate configuration, never a missing-binary defect.
+  // MCP is stdio-only in core, so nothing is registered and the native tools
+  // serve the memory.
+  if (isNonBlank(engramUrl)) {
+    return {
+      status: "external-server",
+      message:
+        `pi-agentic-workflow: Engram MCP not registered — ${ENGRAM_URL_VAR} is set, so memory ` +
+        `is served by the external Engram server and nothing was written (stdio MCP ` +
+        `cannot target a URL; the native mem_* tools handle memory).`,
     };
   }
 
@@ -224,8 +412,10 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
     return {
       status: "binary-missing",
       message:
-        `pi-agentic-workflow: Engram not registered — no "engram" binary on PATH, so ` +
-        `nothing was written. Install it with: ${ENGRAM_INSTALL_ROUTE}`,
+        `pi-agentic-workflow: Engram MCP not registered — no "engram" core binary on ` +
+        `PATH, so nothing was written. Put the binary on PATH or set ${ENGRAM_BIN_VAR} to its ` +
+        `absolute path, or set ${ENGRAM_URL_VAR} to a running Engram server for local or ` +
+        `remote memory. The Pi companion installs with: ${ENGRAM_INSTALL_ROUTE}`,
     };
   }
 

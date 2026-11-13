@@ -1,0 +1,4 @@
+# A package suite inherits the repository-locator scrub: one rule, one module
+# (issue #514 S9; owner: scripts/git-env.mjs).
+[test]
+preload = ["../../scripts/test-preload.mjs"]

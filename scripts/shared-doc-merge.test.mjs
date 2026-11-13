@@ -66,11 +66,8 @@ const LOGS_BASE = [
 /** One fixture git repository with the shared docs on `main`. */
 function fixtureRepo() {
   const dir = mkdtempSync(join(tmpdir(), "aw-shared-merge-"));
-  const git = (args) => spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+  const git = (args) => spawnSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: dir, encoding: "utf8" });
   git(["init", "-q", "-b", "main"]);
-  git(["config", "user.email", "fixture@example.invalid"]);
-  git(["config", "user.name", "Fixture"]);
-  git(["config", "commit.gpgsign", "false"]);
   mkdirSync(join(dir, "docs", "workflow"), { recursive: true });
   writeFileSync(join(dir, "docs", "ROADMAP.md"), ROADMAP_BASE, "utf8");
   writeFileSync(
@@ -130,7 +127,7 @@ test("--install arms the four file classes in a fixture checkout, idempotently",
     assert.equal(first.status, 0, first.stderr);
     assert.ok(first.stdout.includes("verdict: PASS"));
     for (const cls of ["roadmap", "budgets", "repo-state", "logs"]) {
-      const driver = spawnSync("git", ["config", "--local", "--get", `merge.agentic-shared-${cls}.driver`], { cwd: repo.dir, encoding: "utf8" });
+      const driver = spawnSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "config", "--local", "--get", `merge.agentic-shared-${cls}.driver`], { cwd: repo.dir, encoding: "utf8" });
       assert.equal(driver.status, 0, `merge.agentic-shared-${cls}.driver armed`);
       assert.ok(driver.stdout.includes(`shared-doc-merge.mjs ${cls}`));
     }

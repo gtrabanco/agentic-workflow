@@ -76,14 +76,12 @@ function run(args, { cwd = repoRoot, envPath } = {}) {
   return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
 }
 
-const git = (cwd, args) => spawnSync("git", args, { cwd, encoding: "utf8" });
+const git = (cwd, args) => spawnSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" });
 
 /** A repository the `--base` cases can commit into; the identity is fixture-local. */
 function repository(files) {
   const root = fixture(files);
   git(root, ["init", "-q"]);
-  git(root, ["config", "user.email", "fixture@example.invalid"]);
-  git(root, ["config", "user.name", "fixture"]);
   return root;
 }
 

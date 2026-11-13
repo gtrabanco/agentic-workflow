@@ -276,7 +276,7 @@ test("AC4 entry: the shipped handler blocks an inline `gh pr comment` receipt on
   const { root, cwd, agentDir } = tempRoot("receipt");
   try {
     const entry = await shippedEntry(cwd, agentDir);
-    const decision = entry.handlers.get("tool_call")(
+    const decision = await entry.handlers.get("tool_call")(
       { toolName: "bash", input: { command: 'gh pr comment 1 --body "review-change:pass"' } },
       context(cwd),
     );
@@ -291,7 +291,7 @@ test("AC4 entry: the shipped handler blocks a write to an existing protected fil
   const { root, cwd, agentDir } = tempRoot("write");
   try {
     const entry = await shippedEntry(cwd, agentDir);
-    const decision = entry.handlers.get("tool_call")({ toolName: "edit", input: { path: "tests/a.mjs" } }, context(cwd));
+    const decision = await entry.handlers.get("tool_call")({ toolName: "edit", input: { path: "tests/a.mjs" } }, context(cwd));
     assert.equal(decision.block, true);
     assert.match(decision.reason, /tests\/a\.mjs/);
   } finally {
@@ -308,7 +308,7 @@ test("AC4 entry: a matching justification row permits the same write", async () 
       recordsFence(["justification | tests/a.mjs | P1 | 2026-09-18 | execute-phase | authoring the test"]),
     );
     const entry = await shippedEntry(cwd, agentDir);
-    const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "tests/a.mjs" } }, context(cwd));
+    const decision = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "tests/a.mjs" } }, context(cwd));
     assert.equal(decision, undefined, "a matching justification must let the write pass");
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -339,7 +339,7 @@ test("AC4 entry: every unit's records block is consulted, not just the first", a
       true,
     );
     const entry = await shippedEntry(cwd, agentDir);
-    const decision = entry.handlers.get("tool_call")({ toolName: "edit", input: { path: "tests/a.mjs" } }, context(cwd));
+    const decision = await entry.handlers.get("tool_call")({ toolName: "edit", input: { path: "tests/a.mjs" } }, context(cwd));
     assert.equal(decision, undefined, "a justification in any ledger must permit the write");
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -351,7 +351,7 @@ test("AC4 entry: equivalent path spellings are normalised before matching", asyn
   try {
     const entry = await shippedEntry(cwd, agentDir);
     for (const spelling of ["./tests/a.mjs", "sub/../tests/a.mjs", "foo/../tests/a.mjs"]) {
-      const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: spelling } }, context(cwd));
+      const decision = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: spelling } }, context(cwd));
       assert.equal(decision?.block, true, `${spelling} must be recognised as the protected tests/a.mjs`);
     }
     assert.equal(normalizeTarget("./tests/a.mjs"), "tests/a.mjs");
@@ -366,7 +366,7 @@ test("AC4 entry: a target escaping the project root is blocked, never silently a
   const { root, cwd, agentDir } = tempRoot("outside");
   try {
     const entry = await shippedEntry(cwd, agentDir);
-    const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "../outside.mjs" } }, context(cwd));
+    const decision = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "../outside.mjs" } }, context(cwd));
     assert.equal(decision?.block, true);
     assert.match(decision.reason, /outside the project root/);
   } finally {
@@ -383,10 +383,10 @@ test("F19: a symlink alias to a protected file is blocked, and a symlink escape 
     writeFileSync(join(outside, "secret.mjs"), "secret\n");
     symlinkSync(outside, join(cwd, "escapeLink"));
     const entry = await shippedEntry(cwd, agentDir);
-    const aliased = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "alias.mjs" } }, context(cwd));
+    const aliased = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "alias.mjs" } }, context(cwd));
     assert.equal(aliased?.block, true, "a symlink alias must not defeat the protected-glob match");
     assert.match(aliased.reason, /tests\/a\.mjs/);
-    const escaped = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escapeLink/secret.mjs" } }, context(cwd));
+    const escaped = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escapeLink/secret.mjs" } }, context(cwd));
     assert.equal(escaped?.block, true, "a symlink escape must not defeat the out-of-root refusal");
     assert.match(escaped.reason, /outside the project root/);
   } finally {
@@ -400,7 +400,7 @@ test("F27: a create under a symlinked cwd is not misread as outside the project 
     const link = join(root, "repo-link");
     symlinkSync(cwd, link);
     const entry = await shippedEntry(link, agentDir);
-    const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "src/new.ts" } }, context(link));
+    const decision = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "src/new.ts" } }, context(link));
     assert.equal(decision, undefined, "a new-file create must pass even when cwd is reached through a symlink");
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -414,7 +414,7 @@ test("F28: a dangling symlink target cannot route a write outside the project ro
     mkdirSync(outside, { recursive: true });
     symlinkSync(join(outside, "created.ts"), join(cwd, "escape.ts"));
     const entry = await shippedEntry(cwd, agentDir);
-    const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escape.ts" } }, context(cwd));
+    const decision = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escape.ts" } }, context(cwd));
     assert.equal(decision?.block, true, "a dangling symlink escaping the root must be blocked");
     assert.match(decision.reason, /outside the project root/);
   } finally {

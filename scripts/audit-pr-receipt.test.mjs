@@ -278,10 +278,8 @@ const makeRepo = ({ withRemote = true } = {}) => {
   const dir = tempRoot("audit-pr-gate-hygiene-");
   const repo = path.join(dir, "repo");
   fs.mkdirSync(repo);
-  const git = (...args) => spawnSync("git", args, { cwd: repo, encoding: "utf8" });
+  const git = (...args) => spawnSync("git", ["-c", "user.name=Tester", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
   git("init", "-q", "-b", "main");
-  git("config", "user.email", "t@example.com");
-  git("config", "user.name", "Tester");
   fs.writeFileSync(path.join(repo, "README.md"), "fixture\n");
   git("add", "-A");
   git("commit", "-q", "-m", "chore: seed");

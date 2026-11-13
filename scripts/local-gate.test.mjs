@@ -69,6 +69,7 @@ test("every former remote check survives as a step, and the ids are unique", () 
     "docs-generated-projection",
     "journal-carrier-check",
     "log-immutability",
+    "push-identity",
     "temp-hygiene",
     "tmp-gc",
     "worktree-guard",
@@ -155,7 +156,9 @@ test("--dry-run plans every step when no filter is given", () => {
   const result = gate(["--dry-run"]);
   assert.equal(result.status, 0, result.stderr);
   const planned = [...result.stdout.matchAll(/^plan: (\S+)/gm)].map((match) => match[1]);
-  assert.deepEqual(planned, STEPS.map((step) => step.id));
+  // A range-bound step has nothing to verify without a push range: the full run
+  // drops it rather than failing on an absent base (issue #514 S4).
+  assert.deepEqual(planned, STEPS.filter((step) => !step.pushBase).map((step) => step.id));
 });
 
 test("an unknown step id is a usage error that names the flag", () => {
@@ -558,6 +561,7 @@ test("--push-base with an empty verdict plans the gate without the test steps", 
       "docs-generated-projection",
       "journal-carrier-check",
       "log-immutability",
+      "push-identity",
       "temp-hygiene",
       "tmp-gc",
       "worktree-guard",
@@ -621,8 +625,8 @@ test("without --push-base no impact check runs and every offline step is planned
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(
       plannedSteps(result.stdout),
-      STEPS.filter((step) => !step.network).map((step) => step.id),
-      "the optimization only exists when a base proves it",
+      STEPS.filter((step) => !step.network && !step.pushBase).map((step) => step.id),
+      "the optimization only exists when a base proves it; a range-bound step has no range here",
     );
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });

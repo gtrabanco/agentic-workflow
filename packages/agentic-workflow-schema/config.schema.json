@@ -102,6 +102,78 @@
         }
       }
     },
+    "gitIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The approved commit identity and the agent-side config-write guard.",
+      "properties": {
+        "enforce": {
+          "type": "string",
+          "enum": [
+            "off",
+            "commit",
+            "push",
+            "commit-and-push"
+          ]
+        },
+        "approved": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Only the declared facts are verified; an absent field is not checked.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "git user.name, matched case-insensitively."
+            },
+            "email": {
+              "type": "string",
+              "minLength": 3,
+              "description": "git user.email, matched case-insensitively."
+            },
+            "fullName": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The legal name a signing key's UID must carry."
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "openpgp",
+                "ssh"
+              ]
+            },
+            "signingKey": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The resolved signing key: key id, fingerprint or path."
+            }
+          }
+        },
+        "agentGuard": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "ask",
+                "block"
+              ]
+            },
+            "allow": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "maxItems": 64,
+              "description": "Config keys the agent may write without asking (e.g. user.name)."
+            }
+          }
+        }
+      }
+    },
     "advance": {
       "type": "object",
       "additionalProperties": false,

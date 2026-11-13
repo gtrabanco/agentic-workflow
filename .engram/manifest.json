@@ -120,6 +120,14 @@
       "sessions": 105,
       "memories": 39,
       "prompts": 378
+    },
+    {
+      "id": "368b09d4",
+      "created_by": "agent",
+      "created_at": "2026-11-13T00:12:21.289281196Z",
+      "sessions": 166,
+      "memories": 49,
+      "prompts": 469
     }
   ]
 }
