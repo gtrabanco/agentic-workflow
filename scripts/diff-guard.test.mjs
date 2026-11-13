@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Corpus for `scripts/diff-guard.mjs` — the behavioural contract of the
+ * Corpus for the `diff-guard` runner subcommand — the behavioural contract of the
  * diff-size guard. Fixtures are embedded temp git repos written at run time:
  * no network, no committed fixtures directory.
  */

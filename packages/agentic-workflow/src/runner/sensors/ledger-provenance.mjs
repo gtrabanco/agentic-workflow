@@ -17,7 +17,7 @@
  *  4. everything else is UNPROVEN and re-opens: asserted provenance is worse than
  *     none, because it silently passes the recount that F106 exists to satisfy.
  *
- * Usage: bun scripts/ledger-provenance.mjs docs/features/<unit>/review-findings.md
+ * Usage: agentic-workflow ledger-provenance docs/features/<unit>/review-findings.md
  *        [--json] [--check] [--annotate]
  *
  * The target is the LEGACY findings carrier, and this tool says so: it recounts

@@ -3,7 +3,7 @@
 /**
  * Feature 28 — the snapshot sensor as a BLACK BOX (findings RS3(b), RS13, RS14).
  *
- * `scripts/pre-execution-snapshot.mjs` resolves its repository from its own
+ * The `pre-execution-snapshot` runner subcommand resolves its repository from its own
  * location, so every test here copies the script into a throwaway git repository
  * under `os.tmpdir()` and runs it there. That is what makes the three behaviours
  * under test provable at all: RS3(b) is a statement about what a NEW COMMIT does

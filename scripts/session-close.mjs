@@ -17,7 +17,7 @@
  *
  * **Why it does not write the log itself.** `docs/LOGS.md` is a durable record,
  * and this repository's `ledger-ownership@1` map allows exactly one non-test
- * script to rewrite a durable ledger (`scripts/ledger-provenance.mjs`), and
+ * script to rewrite a durable ledger (`agentic-workflow ledger-provenance`), and
  * admits no ledger outside `docs/features/` and `docs/fix/`. A session log is
  * therefore written by its own sanctioned writers — `/log-session` for the rich
  * entry, the session hooks for the mechanical one. This script owns the other

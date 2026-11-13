@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Corpus for `scripts/phase-lint.mjs` — the behavioural contract of the
+ * Corpus for the `phase-lint` runner subcommand — the behavioural contract of the
  * phase-lint tool. Fixtures are embedded strings written to a temporary
  * directory at run time: no network, no committed fixtures directory.
  *

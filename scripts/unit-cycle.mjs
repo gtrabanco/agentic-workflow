@@ -214,7 +214,7 @@ export function renderPrompt(action, state) {
         prompt:
           `${head}\n\nStep: run \`/execute-phase ${unit} P${action.n} (tier: ${tier})\` — ` +
           `exactly one phase: implement it, run the phase validator and ` +
-          `\`bun scripts/diff-guard.mjs --unit ${action.n}\`, commit, and stop. ` +
+          `\`bunx @gtrabanco/agentic-workflow@<pin> diff-guard --unit ${action.n}\`, commit, and stop. ` +
           `Do not start another phase.`,
       };
     }

@@ -11,7 +11,7 @@
  * infers, and never writes.
  *
  * Usage
- *   node scripts/needs-input.mjs <unit-dir> [--json]
+ *   agentic-workflow needs-input <unit-dir> [--json]
  *
  * stdout: the fixed `open-questions@1` block (grammar owned by
  * `skills/orchestration-envelope/references/TURN_CONTRACT.md`), or — when the

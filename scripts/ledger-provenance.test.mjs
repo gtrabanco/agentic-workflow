@@ -3,7 +3,7 @@
 /**
  * F106 / P20 — the ledger recount must be mechanical, never asserted.
  *
- * `scripts/ledger-provenance.mjs` is the recount, so these tests pin the recount:
+ * The `ledger-provenance` runner subcommand is the recount, so these tests pin the recount:
  * fixture repositories covering every provenance shape the real ledgers carry —
  * including the legacy `· folded P<n> <sha>` route marker the historical units
  * wrote — each built with the history its own markers cite.

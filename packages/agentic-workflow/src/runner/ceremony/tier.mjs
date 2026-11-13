@@ -9,7 +9,7 @@
  *                                           the measured acceptance (S9)
  *
  * `classify` reads repo evidence only — the changed paths, their contents and,
- * for `--base`, `git diff` — and delegates the verdict to `scripts/risk-tiers.mjs`
+ * for `--base`, `git diff` — and delegates the verdict to `../risk-tiers.mjs`
  * so the rule has one home. A model-supplied tier is not an input anywhere here:
  * an unknown flag is a usage error, and the vocabulary is not accepted as a
  * parameter.
