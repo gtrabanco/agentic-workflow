@@ -40,12 +40,10 @@ function makeRepo(t) {
   // document the grammar produced rather than one this test invented.
   mkdirSync(join(root, "docs/fix/77-toy"), { recursive: true });
   createSpecByReference(join(root, "docs/fix/77-toy"), "77-toy");
-  const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const GIT_ID = ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false"];
+  const git = (...args) => execFileSync("git", [...GIT_ID, ...args], { cwd: root, encoding: "utf8" }).trim();
   git("init", "-q", "-b", "main");
-  git("config", "user.email", "fixture@example.invalid");
-  git("config", "user.name", "Fixture");
-  git("config", "commit.gpgsign", "false");
-  git("add", "-A");
+    git("add", "-A");
   git("commit", "-qm", "chore(77): fixture");
   write("NOTES.md", "the fixture's second commit gives the range cases a parent\n");
   git("add", "-A");
