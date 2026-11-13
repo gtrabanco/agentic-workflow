@@ -21,7 +21,7 @@
 
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -92,6 +92,61 @@ const run = (args, cwd) => {
   }
   return { code: result.status, stdout: result.stdout, stderr: result.stderr, json };
 };
+
+// ── F: the declared differential (AC-S10) ───────────────────────────────────
+
+/**
+ * The base-vs-change differential of the touched commands. With
+ * `RESIDUAL_DIFF_BASE` pointing at a scratch copy of the base commit every
+ * command must return the same verdict on both trees **except** the
+ * classifier's own presence — the change's one declared delta. Without the
+ * variable the case still pins the head side and the recorded run in the unit
+ * doc's `## Log` (the env-gated shape `risk-tier-classifier.test.mjs`'s F1
+ * uses, so CI pays only for the head-side assertions).
+ */
+test("F1 — every touched command agrees with base but for the classifier", () => {
+  assert.ok(existsSync(CLI), "the classifier exists at head");
+  const spec = readRepo("docs/fix/438-residual-classify/SPEC.md");
+  assert.match(spec, /differential/i, "the unit doc records the differential run");
+
+  const base = process.env.RESIDUAL_DIFF_BASE ? path.resolve(process.env.RESIDUAL_DIFF_BASE) : null;
+  if (base === null) return;
+
+  const runtime = /bun/.test(path.basename(process.execPath)) ? "bun" : "node";
+  const child = { ...process.env };
+  delete child.RESIDUAL_DIFF_BASE;
+  const script = (rel) => (runtime === "bun" ? ["bun", rel] : ["node", rel]);
+  const suite = (rel) => (runtime === "bun" ? ["bun", "test", rel] : ["node", "--test", rel]);
+  const runIn = (argv, cwd) => spawnSync(argv[0], argv.slice(1), { cwd, encoding: "utf8", env: child });
+
+  for (const rel of [
+    "scripts/unit-doc-contract.test.mjs",
+    "scripts/scaffold-parity.test.mjs",
+    "scripts/normative-drift.test.mjs",
+    "scripts/residue-dimensions.test.mjs",
+  ]) {
+    const onBase = runIn(suite(rel), base).status;
+    const onHead = runIn(suite(rel), ROOT).status;
+    assert.equal(onHead, onBase, `${rel}: the verdict is unchanged base vs head`);
+    assert.equal(onHead, 0, `${rel}: green at head`);
+  }
+  for (const args of [
+    ["scripts/check-skill-context.mjs"],
+    ["scripts/docs-generate.mjs", "--check"],
+    ["scripts/roadmap-settle.mjs"],
+  ]) {
+    const onBase = runIn(script(...args), base).status;
+    const onHead = runIn(script(...args), ROOT).status;
+    assert.equal(onHead, onBase, `${args.join(" ")}: the verdict is unchanged base vs head`);
+    assert.equal(onHead, 0, `${args.join(" ")}: green at head`);
+  }
+
+  const atBase = runIn(suite("scripts/residual-classify.test.mjs"), base);
+  assert.notEqual(atBase.status, 0, "at base the sibling suite must fail — the module is absent");
+  const probe = spawnSync(process.execPath, ["-e", "import('./scripts/residual-classify.mjs')"], { cwd: base, encoding: "utf8" });
+  assert.notEqual(probe.status, 0, "at base the module does not resolve");
+  assert.ok(existsSync(path.join(ROOT, "scripts", "residual-classify.mjs")), "at head it does");
+});
 
 // ── C: the four states come from the plan ───────────────────────────────────
 
@@ -173,6 +228,60 @@ test("C6 — precedence is used > half-built > andamio: the stronger signal wins
   assert.equal(run(["usedSurface"], root).json.state, "used", "a consumer outranks an unmet task");
   assert.equal(run(["andamioSurface"], root).json.state, "half-built", "an unmet task outranks a roadmap claim");
   assert.equal(run(["fixRowSurface"], root).json.state, "andamio", "a ## Fixes row claims like a feature row");
+});
+
+const CLOSED_ROADMAP = [
+  "# Roadmap",
+  "",
+  "## Features",
+  "",
+  "| NN | Slug | Status | Depends on | Summary |",
+  "|----|------|--------|------------|---------|",
+  "| 41 | `planned-unit` | planned | — | names `andamioSurface` |",
+  "| 42 | `done-unit` | done · [#1](https://example.invalid/1) | — | delivered, nothing consumes it |",
+  "",
+  "## Fixes",
+  "",
+  "| Issue | Topic | Status | Notes |",
+  "|---|---|---|---|",
+  "| [#7](https://example.invalid/7) | fixy-unit | done · merged | delivered |",
+  "",
+].join("\n");
+
+// ── H: a unit's own roadmap row decides whether it still claims ─────────────
+
+test("H3 — a terminal feature row closes its unit: the unit's unmet task claims nothing", () => {
+  const root = tree({
+    "AGENTS.md": GUIDE(),
+    "docs/ROADMAP.md": CLOSED_ROADMAP,
+    "src/closed.mjs": "export function closedFeatureSurface() { return 1; }\n",
+    "docs/features/42-done-unit/SPEC.md": UNIT({
+      slug: "42-done-unit",
+      tasks: "- P2 — wire `closedFeatureSurface` into the registry (validator: `true` exits 0)\n",
+    }),
+  });
+  const r = run(["closedFeatureSurface"], root);
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.json.state, "orphan", "D4: a terminal row means the unit no longer claims");
+  const units = r.json.consulted.find((sit) => sit.surface === "open-unit-tasks");
+  assert.equal(units.result, "none", `a closed unit is not consulted: ${JSON.stringify(units.evidence)}`);
+});
+
+test("H4 — the fix lane closes the same way: a terminal fix row claims nothing", () => {
+  const root = tree({
+    "AGENTS.md": GUIDE(),
+    "docs/ROADMAP.md": CLOSED_ROADMAP,
+    "src/closed.mjs": "export function closedFixSurface() { return 1; }\n",
+    "docs/fix/7-fixy-unit/SPEC.md": UNIT({
+      slug: "7-fixy-unit",
+      tasks: "- P2 — wire `closedFixSurface` into the registry (validator: `true` exits 0)\n",
+    }),
+  });
+  const r = run(["closedFixSurface"], root);
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.json.state, "orphan", "the fix lane's own row closes the unit too");
+  const units = r.json.consulted.find((sit) => sit.surface === "open-unit-tasks");
+  assert.equal(units.result, "none");
 });
 
 test("H2 — an open unit whose naming tasks are all ticked is andamio, not half-built", () => {
@@ -274,6 +383,24 @@ test("P3 — a prose sentence naming the target produces no claim", () => {
   assert.equal(run(["proseSurface"], root).json.state, "orphan");
 });
 
+test("P4 — a promise consumer naming a closed unit refuses as ambiguous", () => {
+  const root = base({
+    "docs/features/42-done-unit/SPEC.md": UNIT({ slug: "42-done-unit", tasks: "" }),
+    "docs/features/12-promising-unit/decisions.md": [
+      "```text",
+      "residual-promise@1",
+      "surface | consumer | date | owner",
+      "`promisedSurface` | unit:docs/features/42-done-unit | 2026-11-11 | owner",
+      "```",
+      "",
+    ].join("\n"),
+  });
+  const r = run(["promisedSurface"], root);
+  assert.equal(r.code, 1, "D3: a consumer that is not an open unit is not a claim");
+  assert.equal(r.json.state, "ambiguous");
+  assert.equal(r.json.reason, "unresolved-consumer");
+});
+
 // ── I: the computed, diff-derived inventory ────────────────────────────────
 
 test("I1 — --inventory lists the added surface of the change, file and symbol", () => {
@@ -300,6 +427,8 @@ test("I1 — --inventory lists the added surface of the change, file and symbol"
   assert.equal(rows.get("src/added.mjs").kind, "file");
   assert.equal(rows.get("inventedApi").kind, "symbol");
   assert.equal(rows.get("inventedApi").state, "used", "the same change consumes it");
+  assert.ok(Array.isArray(rows.get("inventedApi").evidence), "the row carries the consumer evidence sites");
+  assert.ok(rows.get("inventedApi").evidence.length > 0, `a used row names its sites: ${JSON.stringify(rows.get("inventedApi").evidence)}`);
   assert.ok(!rows.has("docsaddition.md"), "a documentation file is not a code surface");
 });
 
@@ -347,6 +476,16 @@ test("T1 — all four templates teach the additive inventory and the orphan-only
   }
 });
 
+test("T3 — the templates teach where a planned consumer is recorded", () => {
+  for (const rel of TEMPLATES) {
+    const text = readRepo(rel);
+    const start = text.indexOf("## Retirements");
+    const body = text.slice(start, text.indexOf("\n## ", start + 1));
+    assert.match(body, /residual-promise@1/, `${rel} names the promise block`);
+    assert.match(body, /decisions\.md/, `${rel} names the ledger that carries it`);
+  }
+});
+
 test("T2 — the design step names the classifier and the promise grammar is registered", () => {
   const design = readRepo("skills/unit-lane/references/DESIGN.md");
   assert.match(design, /residual-classify/, "the design step names the classifier as the receipt's producer");
@@ -373,8 +512,24 @@ test("X1 — --receipt prints the recorded receipt plus the dated decision for a
 
 test("X2 — --receipt refuses every non-orphan state", () => {
   const root = base();
-  for (const target of ["usedSurface", "andamioSurface"]) {
-    const r = run(["--receipt", target, "--date", "2026-11-11"], root);
+  const halfBuilt = tree({
+    "AGENTS.md": GUIDE(),
+    "docs/ROADMAP.md": ROADMAP,
+    "src/half.mjs": "export function halfBuiltSurface() { return 1; }\n",
+    "docs/features/11-planned-unit/SPEC.md": UNIT({
+      slug: "11-planned-unit",
+      tasks: "- P3 — wire `halfBuiltSurface` into the registry (validator: `true` exits 0)\n",
+    }),
+  });
+  const ambiguous = tree({ "AGENTS.md": GUIDE(), "docs/ROADMAP.md": "# Roadmap\n\nNo tables.\n" });
+  const cases = [
+    [root, "usedSurface"],
+    [root, "andamioSurface"],
+    [halfBuilt, "halfBuiltSurface"],
+    [ambiguous, "ambiguousSurface"],
+  ];
+  for (const [cwd, target] of cases) {
+    const r = run(["--receipt", target, "--date", "2026-11-11"], cwd);
     assert.equal(r.code, 1, `${target} is not retire-legitimate`);
     assert.equal(r.stdout, "", "a refusal prints nothing on stdout");
     assert.match(r.stderr, /retire refused/);
