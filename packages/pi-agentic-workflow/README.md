@@ -575,30 +575,32 @@ matching `path-protection-records@1` `justification` row in the unit's
 ## Memory substrate — Engram (optional, ask-first)
 
 The workflow's units save and recall their decisions through Engram, the memory
-layer its skills document. This package can register Engram's MCP server for the
-session, and it does so **only when you say so**:
+layer its skills document. Three surfaces connect Pi to it, and the package
+recognises all three before it registers anything:
 
-```json
-{
-  "memory": { "engram": true }
-}
-```
+| Surface | What it is |
+|---|---|
+| **Native extension** (recommended) | the `gentle-engram` Pi package: it provides the `mem_*` tools directly over Engram's HTTP server — no MCP registration exists or is wanted beside it |
+| **Core binary** | the `engram` executable, on `PATH` or named by `ENGRAM_BIN`: the substrate both the native extension and an MCP server need |
+| **Running server** | `ENGRAM_URL` names an externally managed Engram server — local or remote |
 
-Registration goes through Pi's own `registerMcpServer`, which is
-**session-scoped and not persisted** — the package registers on every session
-start, so nothing outlives the session and nothing is written to your `mcp.json`
-behind your back. Five rules decide the outcome, and the package reports it
-verbatim:
+With consent (`memory.engram: true` in `agentic-workflow.json`), the package may
+register Engram's MCP server for the session through Pi's own
+`registerMcpServer` — **session-scoped and not persisted**, so nothing outlives
+the session and nothing is written to your `mcp.json` behind your back. The
+decision order, reported verbatim:
 
 | Situation | What happens |
 |---|---|
 | no `memory.engram` opt-in (the shipped default is `false`) | nothing is registered and nothing is said (the opt-out stays quiet) |
 | no readable opt-in — the file exists but does not validate | nothing is registered; you are told the config is invalid, because unreadable consent is never read as a refusal you made |
-| no `engram` binary on `PATH` | nothing is registered; you are told the install route |
+| the native `gentle-engram` package is installed | nothing is registered — its `mem_*` tools already exist and agent writes stay native-only; if memory is not working, the same report names the binary and server surfaces |
+| `ENGRAM_URL` is set | nothing is registered — the external server (local or remote) is your deliberate choice; stdio MCP cannot target a URL |
+| no `engram` core binary on `PATH` (and no `ENGRAM_BIN`, no `ENGRAM_URL`) | nothing is registered; the report names all three surfaces — `PATH`/`ENGRAM_BIN` for the binary, `ENGRAM_URL` for a server, the companion route below |
 | you already declared `engram` in a `mcp.json` Pi reads — your user file, or `<cwd>/.pi/mcp.json` in a trusted project | nothing is registered — your declaration takes precedence |
-| binary present, opted in | the server is registered and the notification states exactly what was written |
+| binary present, opted in, nothing native or external in the way | the server is registered and the notification states exactly what was written |
 
-Install Engram with:
+Install the Pi companion (the native extension) with:
 
 ```sh
 pi install npm:gentle-engram@latest
@@ -606,7 +608,13 @@ pi install npm:gentle-engram@latest
 
 That is the only documented route on purpose: the CLI's own setup subcommand
 pins whatever version ran it and keeps serving that version until it is run
-again, so an updated binary can sit unused behind a stale registration.
+again, so an updated binary can sit unused behind a stale registration. The
+companion is one surface, not the fix for every failure: the core `engram`
+binary still has to reach the session (`PATH`, or `ENGRAM_BIN=/absolute/path/to/engram`),
+and a server you run yourself is joined with `ENGRAM_URL=http://host:7437` —
+the remote-memory configuration Engram documents. `pi-engram init` never
+creates an MCP entry; if you have a `mcpServers.engram` entry in an `mcp.json`
+Pi reads, remove it and reload so agent writes stay native-only.
 
 An older Pi host whose `ExtensionAPI` has no `registerMcpServer` is reported
 instead of failing the session. The workflow-side protocol — when units save,
