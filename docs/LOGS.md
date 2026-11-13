@@ -6442,3 +6442,40 @@ Declared commands run by the verifier (command: observed result):
 - **Summary:** Applied issue #521 through the owner's local workflow: `packages/pi-agentic-workflow/src/config/schema.ts` `parseConfigFile` read the extension file with `JSON.parse` while CONFIG.md and the package README both declare it JSONC, so a comment or a trailing comma failed the load closed and the session blamed the Engram consent. It now reads the schema package's `parseJsonc` — the same parser the base `agentic-workflow.json` goes through — so one parser reads both files on both runtimes. A syntax error keeps the `$` path and the `invalid JSON` message and now names the parser's line and column; a non-object root is still rejected; the strict validator is untouched. Corpus `test/config-jsonc.test.mjs` (J1-J6) observed red before the implementation (1 pass, 5 fail), green after (6 pass); package suite 811 pass / 0 fail; differential against a compiled copy of the base commit: 12 cases changed in 24 diff lines, all declared, 5 byte-identical.
 - **Decisions:** D1: the schema package's `parseJsonc`, NOT the issue title's `Bun.JSONC.parse` fast path with a Node fallback — measured on bun 1.4.4, the two parsers do not accept the same language (Bun accepts single-quoted strings and hex numbers the package parser rejects), so a runtime split would make config validity depend on the host runtime, the exact inconsistency #521 reports; the issue's own Option B authorizes the reuse and the parser's header states the one-parser rule. D2: the engram notification keeps its text — it now fires only for a genuinely broken file, and the parse reason is printed by the dispatch refusal. D3: the settings console's plain-JSON save is documented (comments do not survive a save), not changed; a comment-preserving writer is a JSONC-AST editor and owns its own unit. D4: AC-S2/O4 validator cells were tightened to pin the single `parseJsonc(text)` call site, re-stamping the ac-hash (6a97b6c5 -> c216731c) with no assertion changed.
 - **Next:** Owner verdict on the diff: branch `fix/521-fix-config` is local-only (no PR opened, no push) and every obligation except O12 is verified; O12 closes with the root-gate receipt. Merge and PR belong to the owner, who is the external verifier.
+
+## 2026-11-12T23:02:33Z — feat/514-new-feature-git-identity-signing-guard — Open PR #520
+- **Commits:** 18 (`fcfd70cb…8dccd442`)
+- **Files:** 89 files
+- **Summary:** Opened PR #520 on main for issue #514 (git identity signing guard) after integrating main, running the full gate (tests 659/0, local gate 14 steps), and force-pushing. Branch created, synced, and PR opened.
+- **Decisions:** D9: integrated main before push — a local-only branch needed force-push; tests (659/0) and local gate (14 steps) verified green before creating PR #520
+- **Next:** Owner review of PR #520
+
+## 2026-11-12T23:03:43Z — feat/514-new-feature-git-identity-signing-guard — narrative
+- **Commits:** 17 (`fcfd70cb…9f56e622`)
+- **Files:** 90 files
+- **Summary:** External verification correction batch: five fixes for reported blockers (invocation-drift, release-workflows step list, context budgets, phase-lint glob, obligations closure) plus dogfood profile and final projection
+- **Decisions:** O11 validator repaired (template index path that doesn't exist → real template hooks README link); pinned step list in release-workflows.test.mjs extended to push-identity; init-workspace SKILL_CONTEXT_BUDGET estimate re-based via manifest arithmetic; phase-lint relevant-files entry changed to glob ./bunfig.toml; dogfood: this repo's own profile (.pi/agentic-workflow.json) enforces push-range against its commits
+- **Next:** Owner second pass on the corrected diff (commit a855a62a) — verify the five reported blockers are now green
+
+## 2026-11-12T?? — feat/514-new-feature-git-identity-signing-guard — Debugging "Engram not registered — config file invalid" after issue #521
+
+- **Commits:** 0 (investigation only)
+- **Files:** none (debugging session)
+- **Summary:** Diagnosed why Engram still fails with "config file invalid" after #521 was applied. Root cause: the installed canary (`5.0.0-canary.20261112.2`) predates #514 and does not recognize the `gitIdentity` section, so any worktree's `.pi/agentic-workflow.json` that declares it causes `loadConfig.ok=false`. Confirmed `Bun.JSONC.parse()` is the correct JSONC parser for `pi-agentic-workflow.json` (schema.ts line 730 uses `JSON.parse` — bug #521 fix). The config parse passes but section validation fails. Two additional blockers: no `memory.engram: true` consent in any config file, and the user had deleted the old engram binary before installing the new one.
+- **Decisions:** (1) The config validation rejects unknown sections by design (D-E5 in AGENTS.md) — this is intentional, not a tolerance bug. (2) #521 (JSONC in schema.ts) is the real fix for the `JSON.parse` vs `parseJsonc` inconsistency. (3) The catch-22 (worktree config uses a section the installed canary doesn't know) is an order-of-publication problem: #514's config landed before #514's canary was published.
+- **Next:** Issue #521 created and labeled `fix-next`. User will close #514, publish the canary, update the package, and retest.
+
+
+## 2026-11-12T22:55:17Z — feat/514-new-feature-git-identity-signing-guard — External-verify correction batch applied (issue #514)
+- **Commits:** 3 (`a855a62a…7c94e087`) plus this docs commit
+- **Files:** scripts/git-config-writes.mjs + its suite, the three migrated carriers (`scripts/review-receipt.test.mjs`, `scripts/audit-pr-receipt.test.mjs`, `packages/agentic-workflow/test/doc.envelope.test.mjs`), the unit dir (SPEC, both ledgers, decisions.md, external-verify.md)
+- **Summary:** One correction batch against the 2026-11-12 EXTERNAL VERIFY receipt's three blockers: the config-write tokenizer now line-bounds `"`/`'` and skips regex literals (frozen-failure corpus landed red at `a855a62a`, green at `8d4360b9`); the last 12 `git config` writes migrated to `-c` identity (`7c94e087`), the retirement rg → 0; O11's validator cell now names the real second surface. Obligations O11/O12/O14 flipped back before the batch and re-verified after (17/17 rows verified). Differential vs base bytes: identical 99-test multisets. Root suite 109/109, package suite 659/0.
+- **Decisions:** D8 `P11` = the correction-batch phase declared for the decisions.md path-protection rows; advisories 1–2 declined (pre-existing/report-only never earns a correction round)
+- **Next:** The owner's external verification of the batch head — one recheck cycle per the bound; a second batch only if the same blocker persists.
+
+## 2026-11-12T02:25:09Z — feat/514-new-feature-git-identity-signing-guard — Git identity & signing guard applied inline (issue #514)
+- **Commits:** 7 (`fcfd70cb…857384c4`)
+- **Files:** 68 files
+- **Summary:** Applied issue #514 inline on feat/514-new-feature-git-identity-signing-guard: the base config section gitIdentity (approved profile + agent guard), the pi extension's agent-side config-write guard with persisted per-project consent, the opt-in pre-commit identity hook and its parity corpus with the push-range checker, the local-gate push-identity step, the -c-only fixture convention pinned repo-wide (35 files migrated, 129 writes removed), the repository-locator scrub at the per-file and package-suite entry points, and the hardening annex. Red-first commits fcfd70cb (suites) precede their implementations. Not yet externally verified.
+- **Decisions:** D1 the unit lives in docs/features/ like unit 498 (feature kind); D2 gitIdentity is a base section read by three carriers; D3 headless sessions block, interactive asks once and persists; D4 the hook is inert without a declared profile; D5 the bash hook and the node checker are pinned by one parity corpus
+- **Next:** External verification of the diff, then the owner's PR.
