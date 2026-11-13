@@ -108,7 +108,7 @@ evidence.
 
 | Retired | Replacement | Evidence |
 |---|---|---|
-| the ceremony CLI and its 8 P0 modules (once `scripts/ceremony*`) | `packages/agentic-workflow/src/runner/ceremony/*` via `agentic-workflow ceremony <object> <op>` | `rg -c 'scripts/ceremony' skills/ scripts/ packages/` → 0 after the change |
+| the ceremony CLI and its 8 P0 modules (once `scripts/ceremony*`) | `packages/agentic-workflow/src/runner/ceremony/*` via `agentic-workflow ceremony <object> <op>` | `rg -c 'scripts/ceremony' skills/` matches 0; every `scripts/` and `packages/` hit is a named survivor — the three suites that import the retained `scripts/ceremony/testing.mjs` harness, `scripts/ceremony-profile.test.mjs`'s self-reference, the two past-tense crate comments and the tier-cost fixture's historical log string (amended 2026-11-13: the original cell claimed 0 across all three trees and never held) |
 | `packages/agentic-workflow/src/runner/sensors/phase-lint.mjs`, `packages/agentic-workflow/src/runner/sensors/diff-guard.mjs`, `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs`, `packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs`, `packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs`, `packages/agentic-workflow/src/runner/sensors/needs-input.mjs`, `packages/agentic-workflow/src/runner/sensors/ledger-provenance.mjs` | the same seven as `agentic-workflow <subcommand>` | `rg -c 'bun scripts/(phase-lint\|diff-guard\|workflow-status\|pre-execution-snapshot\|needs-input\|ledger-provenance)\.mjs' skills/` → 0 |
 | `packages/agentic-workflow/src/runner/unit-route.mjs`, `packages/agentic-workflow/src/runner/unit-doc-phases.mjs`, `packages/agentic-workflow/src/runner/risk-tiers.mjs`, `packages/agentic-workflow/src/runner/capabilities.mjs`, `packages/agentic-workflow/src/runner/ceremony-profile.mjs` | `packages/agentic-workflow/src/runner/support/*` (the sensors' own import closure: a published crate cannot import a repository script) | `rg -c 'scripts/(unit-route\|unit-doc-phases\|risk-tiers\|capabilities\|ceremony-profile)\.mjs' skills/` → 0 |
 | `DEFERRED_MODULES` in the ceremony registry (`deferred-module` answers) | the ten modules themselves | `rg -c 'deferred-module' packages/agentic-workflow/src packages/agentic-workflow/test` → 0 |
@@ -348,7 +348,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
 - **P3** — 2026-11-12, the eight P0 ceremony modules answer from the crate with one receipt
   grammar and one refusal contract; `unit` and `plan` reach the router and the linter
   through the shipped bin instead of a script path, and `findings` reads its severity
-  vocabulary from the pinned schema package · commit `P3SHA`.
+  vocabulary from the pinned schema package · commit `bdf47890`.
 - **G3** — 2026-11-12, HEAD `b5ed1ef4` · `node --test packages/agentic-workflow/test/cli.surface.test.mjs`
   · exit 0 · 3 pass (the README restates `ceremony`); the closed-world and deferred answers
   reproduced by hand, recorded in E3.
@@ -366,7 +366,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
 - **P6** — 2026-11-12, the prose re-point: 33 skill files moved off `bun scripts/<runtime>.mjs`
   onto `bunx @gtrabanco/agentic-workflow@<pin> <subcommand>`, with the `npx` fallback named
   and one pointer block per citing skill naming RUNNER.md as the pin's home; five touched
-  ceilings re-measured and re-based · commit `P6SHA`.
+  ceilings re-measured and re-based · commit `7cb595a3`.
 - **G4** — 2026-11-12, HEAD `bdf47890` · `node --test packages/agentic-workflow/test/runner.distribution.test.mjs`
   · exit 0 · 3 pass; `node --test scripts/release.test.mjs` · exit 0 · 73 pass (three of
   them this unit's); `node scripts/check-skill-context.mjs` · exit 0 · 30 skills;
@@ -409,7 +409,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   migrated runtimes, the ceremony CLI, `packages/agentic-workflow/src/runner/ceremony/*` and the repository's catalog file
   are deleted, the ceremony suites drive the crate registry, and the ownership map, the pin
   allowlists, the gate inventory, the route map and the pending changesets name the new
-  homes · commits `eef887b6`, `207dcc6d`, `4b77c02a`, `P7SHA`.
+  homes · commits `6318f597`, `78175d9c`, `38e1d5b2`, `edde336c` (amended 2026-11-13: the pre-journal-re-author SHAs `eef887b6`/`207dcc6d`/`4b77c02a` are not in the branch history).
 - **E6** — 2026-11-12, the assertion changes the re-aim required, each tracking a surface this
   unit changed (nothing was relaxed and no case was deleted): the `needs-input` usage line;
   the ceremony `deferred-module` note; the ceremony unknown-object invocation; the router's
@@ -420,7 +420,7 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   its release-stamp exemption; the promise-coherence fixture's validator path; the
   lint-changeset fixture's sample path; and the module constants in the capability, tier,
   spec-by-reference and catalog corpora.
-- **G8** — 2026-11-12, HEAD `P7SHA` · `node scripts/run-root-suite.mjs` exit 0 · 106/106 PASS;
+- **G8** — 2026-11-12, HEAD `edde336c` · `node scripts/run-root-suite.mjs` exit 0 · 106/106 PASS;
   `bun test --timeout=30000 test/` in the crate exit 0 · 668 pass; `node scripts/docs-generate.mjs --check`
   exit 0; `bun scripts/check-skill-context.mjs` (+ `--routes`) exit 0 · 30 skills / 14 routes.
 - **P4 (six of ten)** — `progress`, `evidence`, `acceptance`, `delta`, `refutation` and
@@ -430,9 +430,9 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   fence-aware reader. The four the map still owes (`review`, `commit`, `roadmap`, `pr`)
   answer `deferred-module` naming their own gap: a review state carrier, a commit revert
   policy, a forge-backed settle and `gh`'s degradation contract are decisions the frozen
-  map does not take, and inventing them would be a guess. Commit `P4SHA`.
+  map does not take, and inventing them would be a guess. Commit `d094440a`.
 - **G9** — 2026-11-12, HEAD `d094440a` · `node --test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs`
-  exit 0 · 8 pass; crate suite exit 0 · 677 pass (bun) / 677 (node); `node scripts/run-root-suite.mjs`
+  exit 0 · 12 pass (amended 2026-11-13: the recorded 8 could not have come from this head — the file carries 12 top-level tests at `d094440a`); crate suite exit 0 · 677 pass (bun) / 677 (node); `node scripts/run-root-suite.mjs`
   exit 0 · 106/106; `node scripts/docs-generate.mjs --check` and `bun scripts/check-skill-context.mjs` exit 0.
 - **P7 (completion)** — 2026-11-12, the downstream readers follow the move: the pi package's
   conductor sensor and its three runner tools spawn the crate's bin (resolved once from the
@@ -466,8 +466,8 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   `git status --porcelain=v1` without `-b`, whose header line the repository's git helper needs
   before trimming. Both now pass `-b` and skip the header, the repair `ceremony tier` already
   carried (issue #384 F1); the case is pinned in `runner.ceremony-p0.test.mjs`.
-- **G10** — 2026-11-12, HEAD `d094440a` · `node --test` on the four crate contract suites · exit 0 · 8 + 9 + 8 + 6
-  pass; crate suite 697 pass; `node scripts/run-root-suite.mjs` exit 0 · 106/106.
+- **G10** — 2026-11-12, HEAD `d094440a` · `node --test` on the four crate contract suites · exit 0 · 8 + 9 + 12 + 6
+  pass (`runner.sensors`, `runner.ceremony-p0`, `runner.ceremony-p1p2`, `runner.dispatch`; the p1p2 count amended 2026-11-13 with G9), crate suite 697 pass; `node scripts/run-root-suite.mjs` exit 0 · 106/106.
 
 ## Next
 
