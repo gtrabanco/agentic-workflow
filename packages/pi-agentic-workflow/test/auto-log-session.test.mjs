@@ -39,11 +39,8 @@ import { normalizeFacts } from "@gtrabanco/agentic-workflow/src/log/render.mjs";
 /** A throwaway git repository; `root` is the project root. */
 function repo() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "auto-log-session-"));
-  const run = (args, cwd = root) => execFileSync("git", args, { cwd, encoding: "utf8", env: sandboxGitEnv() });
+  const run = (args, cwd = root) => execFileSync("git", ["-c", "user.name=suite", "-c", "user.email=suite@example.test", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8", env: sandboxGitEnv() });
   run(["init", "-q", "-b", "main"]);
-  run(["config", "user.email", "suite@example.test"]);
-  run(["config", "user.name", "suite"]);
-  run(["config", "commit.gpgsign", "false"]);
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   fs.writeFileSync(path.join(root, JOURNAL_PATH), "# Session log\n\n");
   fs.writeFileSync(path.join(root, "a.txt"), "a\n");

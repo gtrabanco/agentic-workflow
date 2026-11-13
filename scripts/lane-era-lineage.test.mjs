@@ -45,7 +45,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const read = (rel) => fs.readFileSync(path.join(repoRoot, rel), "utf8");
 const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
-const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+const git = (cwd, ...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" }).trim();
 
 /** A fix unit doc with the lane-era mandatory sections (triage-parseable shape).
  *
@@ -200,14 +200,11 @@ function makeRepo(t, { acceptance = false, obligations = null } = {}) {
   fs.mkdirSync(path.dirname(lineageDest), { recursive: true });
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-lineage.mjs"), lineageDest);
   git(root, "init", "-q", "-b", "main");
-  git(root, "config", "user.email", "fixture@example.invalid");
-  git(root, "config", "user.name", "Fixture");
-  git(root, "config", "commit.gpgsign", "false");
   // every fixture commit predates the receipt's recorded finish (2026-08-31), so
   // the verifier's impossible-timeline guard never mis-flags a legacy receipt
   const datedEnv = { ...process.env, GIT_COMMITTER_DATE: "2026-08-30T00:00:00Z", GIT_AUTHOR_DATE: "2026-08-30T00:00:00Z" };
-  execFileSync("git", ["add", "-A", "--", "."], { cwd: root, env: datedEnv });
-  execFileSync("git", ["commit", "-qm", "fixture: lane-era fix unit"], { cwd: root, env: datedEnv });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "add", "-A", "--", "."], { cwd: root, env: datedEnv });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture: lane-era fix unit"], { cwd: root, env: datedEnv });
   const run = (...args) => spawnSync(process.execPath, [BIN, "pre-execution-snapshot", ...args], {
     cwd: root, encoding: "utf8", timeout: 120000,
   });
@@ -316,9 +313,9 @@ const lineage = (root, ...args) => spawnSync(process.execPath, ["scripts/unit-li
 const FIXTURE_DATE = "2026-08-30T00:00:00Z";
 const datedCommit = (root, message) => {
   const env = { ...process.env, GIT_COMMITTER_DATE: FIXTURE_DATE, GIT_AUTHOR_DATE: FIXTURE_DATE };
-  execFileSync("git", ["add", "-A", "--", "."], { cwd: root, env });
-  execFileSync("git", ["commit", "-qm", message], { cwd: root, env });
-  return execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "add", "-A", "--", "."], { cwd: root, env });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", message], { cwd: root, env });
+  return execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
 };
 
 /** The receipt block format `review-plan` publishes (OUTPUT.md) for a fix unit. */

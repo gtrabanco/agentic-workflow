@@ -8,6 +8,8 @@ import type { SelectListTheme } from "@earendil-works/pi-tui";
 
 import { loadConfig } from "../config/load.js";
 import { evaluateToolCall, isProtectedPath, normalizeTarget } from "../config/path-policy.js";
+import { applyGitIdentityGuard, findGitConfigWrites, guardOptions, scratchDirs } from "../guards/git-identity.js";
+import { createGitIdentityConsentStore, gitIdentityConsentPath } from "../guards/git-identity-consent.js";
 import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
@@ -22,8 +24,8 @@ import { createStateFlowLifecycle, type StateFlowBackend, type StateFlowLifecycl
 import { createHooksWiring } from "./hooks-wiring.js";
 import type { HooksContext } from "./hooks-wiring.js";
 import { createInvocationWatch } from "./log-session-command.js";
-import { provisionEngram, readDeclaredServerNamesFrom, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
-import type { EngramServerConfig } from "./engram.js";
+import { provisionEngram, readDeclaredServerNamesFrom, readInstalledPackageSourcesFrom, isNativeEngramPackage, piSettingsPaths, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
+import type { EngramServerConfig, EngramStatus } from "./engram.js";
 import { runSettingsConsole } from "../settings/console.js";
 import { readConfigFile, writeConfigFile } from "../settings/store.js";
 import { SETTINGS_COMMAND } from "../routing/types.js";
@@ -270,6 +272,19 @@ function mcpRegistrar(pi: ExtensionAPI): ((name: string, config: EngramServerCon
 }
 
 /**
+ * The provisioning outcomes the operator reads as information rather than as a
+ * defect: a registration that happened, or a deliberate configuration that makes
+ * the MCP path unnecessary. Everything else is a warning, and the opt-out is
+ * silent. The level is decided here because it is what Pi's UI shows, and it is
+ * the half of "says so once, informatively" no pure module can own.
+ */
+const INFORMATIONAL_ENGRAM: ReadonlySet<EngramStatus> = new Set<EngramStatus>([
+  "registered",
+  "native-active",
+  "external-server",
+]);
+
+/**
  * The server names the operator already has declared — the set the anti-shadow
  * guard is judged against. Both surfaces are unioned: Pi's own `getMcpServers()`
  * (read structurally for the same peer-floor reason as the registrar; it is the
@@ -343,6 +358,10 @@ export default function extension(pi: ExtensionAPI): void {
   // a declared `enabled` group both exist. The narrow context is built per
   // call: the dispatcher never holds a session-bound object.
   const hooksWiring = createHooksWiring({ agentDir });
+  // Issue #514 — the git identity guard's persisted approvals: one file of its
+  // own beside the config, never inside it (writing state must not rewrite
+  // configuration).
+  const gitIdentityConsent = createGitIdentityConsentStore({ path: gitIdentityConsentPath(agentDir) });
   const toHooksContext = (ctx: ExtensionContext): HooksContext => ({
     cwd: ctx.cwd,
     isProjectTrusted: () => ctx.isProjectTrusted(),
@@ -434,13 +453,25 @@ export default function extension(pi: ExtensionAPI): void {
       consented: loaded.config.memory?.engram === true,
       configInvalid: !loaded.ok,
       binaryPath: resolveEngramBinary(),
+      // Issue #531 — the native gentle-engram package already provides the
+      // mem_* tools, so the MCP path registers nothing beside it; a set
+      // ENGRAM_URL names an externally managed server and is reported as a
+      // deliberate choice, not a missing binary. Pi reads the package list from
+      // the user settings file and, for a trusted project, `<cwd>/.pi`.
+      nativePackagePresent: isNativeEngramPackage(
+        readInstalledPackageSourcesFrom(piSettingsPaths({ agentDir, cwd: ctx.cwd, projectTrusted })),
+      ),
+      engramUrl: process.env.ENGRAM_URL ?? null,
       declaredNames: declaredServerNames(pi, agentDir, ctx),
       register: mcpRegistrar(pi),
     });
     // The opt-out stays silent; every other outcome is stated once, in the
-    // module's own words (it already says what was written, or why not).
+    // module's own words (it already says what was written, or why not), and at
+    // the level the operator should read it at: a deliberate configuration is
+    // information, a broken one is a warning (issue #531 — "says so once,
+    // informatively").
     if (report.status !== "not-consented") {
-      ctx.ui.notify(report.message, report.status === "registered" ? "info" : "warning");
+      ctx.ui.notify(report.message, INFORMATIONAL_ENGRAM.has(report.status) ? "info" : "warning");
     }
   });
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
@@ -456,10 +487,30 @@ export default function extension(pi: ExtensionAPI): void {
   // names the script that proves the receipt landed (issue #182). The guard
   // itself filters to `bash`, so every tool call is checked — nesting it under
   // one tool name would make the block unreachable for the calls it exists for.
-  pi.on("tool_call", (event, ctx) => {
+  pi.on("tool_call", async (event, ctx) => {
     const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
     const receipt = guards.receiptGuard({ toolName: event.toolName, command });
     if (receipt.block) return receipt;
+    // Issue #514 — the agent-side git identity guard (Layer 1). Only a command
+    // that actually performs a `git config` write pays for the config read; a
+    // read-only or `-c` invocation is allowed by the parse alone.
+    if (event.toolName === "bash" && typeof command === "string" && findGitConfigWrites(command).length > 0) {
+      const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() });
+      const identity = await applyGitIdentityGuard(
+        command,
+        guardOptions(loaded.config.gitIdentity, ctx.cwd, scratchDirs()),
+        {
+          // A session with no UI cannot ask, so it blocks: an unanswered prompt
+          // is not consent, and guessing one is how attribution was lost before.
+          interactive: ctx.hasUI === true,
+          approved: (key) => gitIdentityConsent.approved(ctx.cwd, key),
+          remember: (key) => gitIdentityConsent.remember(ctx.cwd, key),
+          confirm: (question) => ctx.ui.confirm("git identity guard", question),
+          notify: (message, kind) => ctx.ui.notify(message, kind),
+        },
+      );
+      if (identity.block) return identity;
+    }
     // Issue #413 — the pre:commit / pre:push seams: a bash `git commit` or
     // `git push` first runs the project's declared, consented, enabled checks,
     // and a failing check blocks the tool call with the requirement quoted.

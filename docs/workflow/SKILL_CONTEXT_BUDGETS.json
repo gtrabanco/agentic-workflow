@@ -66,12 +66,12 @@
         }
       },
       "docs/workflow/GATE_INVENTORY.md": {
-        "linesMax": 161,
-        "estimateMax": 6182,
+        "linesMax": 180,
+        "estimateMax": 6506,
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 65,
+        "machineLines": 68,
         "sources": {
           "merge of feat/476 with origin/main (issues #476 and #468, 2026-11-09)": "the integration carries both row sets: main's `log-immutability` row plus this branch's temp-hygiene-floor, tmp-gc-sweep and worktree-audit rows. The machine region moves 59 -> 62 lines; measured at the merge with `bun scripts/check-skill-context.mjs --documents`: 154 lines / 5,217 est, inside the unchanged ceilings 161 / 5,542, so only `machineLines` is re-pinned.",
           "issue #476 (runtime hygiene guards, 2026-11-09)": "the inventory gains three rows, temp-hygiene-floor, tmp-gc-sweep and worktree-audit (the offline gate steps of issue 476, no surface ids). The machine region moves 58 -> 61 lines and the estimate moves 4975 -> 5152, measured at the change with `bun scripts/check-skill-context.mjs --documents`; the ceiling follows the measurement.",
@@ -83,7 +83,8 @@
           "issue #432 (unit 432-model-memory-tier-0)": "the inventory gains one prose row, `model-memory-provenance`, the gate note the issue names — carrier prose with stay-reason judgment-needed (the scripted check is the deferred second slice) and a rederive pointer into DESIGN.md’s provenance section. The machine region moves 56 -> 57 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: inside the unchanged ceilings, so only `machineLines` is re-pinned.",
           "issue #498 (unit 498-shared-writer-driver)": "the inventory gains the writer-driver-conformance row (the shared conformance suite as the writer contract push gate, citing packages/agentic-workflow/test/writer.driver.test.mjs) and normative-surface-grammar claims the four new surface ids. The machine region moves 62 -> 63 lines and the measured estimate 5,542 -> 5,620; estimateMax is re-based to ceil(5620 x 1.10) = 6,182 and machineLines is re-pinned to 63 — lines stay inside 161. Measured at the change with `bun scripts/check-skill-context.mjs --documents`.",
           "merge of feat/498 with origin/main (2026-11-11, issue #498 integration)": "the merged inventory carries both sides' rows; machineLines re-pinned 63 -> 64 and the measured estimate 5,624 stays inside the re-based ceiling 6,182; measured at the merge with `bun scripts/check-skill-context.mjs --documents`.",
-          "issue #481 (npm availability gate, 2026-11-11)": "the inventory gains one row, `npm-availability-gate`, citing the red-first suite that proves the order (a publish signal only after the tarball is downloadable and matches its packument shasum). The machine region moves 64 -> 65 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`, inside the unchanged ceilings, so only `machineLines` is re-pinned."
+          "issue #481 (npm availability gate, 2026-11-11)": "the inventory gains one row, `npm-availability-gate`, citing the red-first suite that proves the order (a publish signal only after the tarball is downloadable and matches its packument shasum). The machine region moves 64 -> 65 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`, inside the unchanged ceilings, so only `machineLines` is re-pinned.",
+          "issue #514 (unit 514-git-identity-signing-guard)": "the inventory gains three rows: git-config-writes (the repo-wide -c-only convention over every test carrier), identity-hook-parity (the bash pre-commit hook and the node push check held to one corpus, with their two declared asymmetries) and push-identity (the local gate's push-range authorship step). The machine region moves 65 -> 68 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 163 lines / 5,914 est against the previous ceilings 161 and 6,182 — the lines ceiling follows the measurement to ceil(163 x 1.10) = 180, the machine pin is exact at 68, and the estimate stays inside 6,182."
         }
       },
       "docs/workflow/SKILL_AUTHORING.md": {
@@ -125,15 +126,17 @@
       "mainLinesMax": 448
     },
     "init-workspace": {
-      "mainEstimateMax": 5332,
+      "mainEstimateMax": 5379,
       "mainSources": {
         "issue #435 (project charter, unit 435-project-charter)": "the charter interrogation lands in SKILL.md: one turn-contract box (identity layer answered before substrate bytes), the bootstrap route bullet naming the charter round first, and the compact §Charter section (identity blocking / domain open-with-defaults / content rule + landing). Measured at the change by `bun scripts/check-skill-context.mjs`: 4358 est / 297 lines; ceilings re-based to ceil(4358 x 1.10) = 4794 / ceil(297 x 1.10) = 327, reason declared (issue #435 charter step)",
         "issue #332 (unit 332-agents-md-split, T5)": "the unit-document conventions paragraph now teaches the spec-by-reference shape the template ships, and the retired \"with 14 sections\" sentence is gone (the legacy shape stays named for the units already cut in it). Measured at the change by `bun scripts/check-skill-context.mjs`: 3696 est / 255 lines; ceilings re-based to ceil(3696 x 1.10) = 4066 / ceil(255 x 1.10) = 281, reason declared",
         "unit 65 P8 (AC22)": "the consent-gated retrieval-index scaffold + hooks block grew SKILL.md from the 2800 flat ceiling to measured 2904; ceiling re-based to ceil(2904 x 1.10) = 3195, reason declared (retrieval-index consent contract)",
         "fix 258 / #258 harden-needs-input": "the hand-written guard is replaced by the mandatory-consent three-tier dispatch and a pointer to scripts/needs-input.mjs; [target-dir] is restated as optional-with-recorded-default (F7) and the Turn-contract box names the scratch unit §Consent requires (F53) — measured 3330 est / 229 lines at the cycle-12 fold head; ceiling re-based to ceil(3330 x 1.10) = 3663 / ceil(229 x 1.10) = 252 (down from 3463/249, the body is bounded, not grown)",
-        "feature 91 / issue #352 (runner prose)": "measured 4847 est / 325 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(4847 x 1.10) = 5332 / ceil(325 x 1.10) = 358"
+        "feature 91 / issue #352 (runner prose)": "measured 4847 est / 325 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(4847 x 1.10) = 5332 / ceil(325 x 1.10) = 358",
+        "issue #514 (git identity & signing guard)": "the consent section gains the identity-hardening offer (two lines): the pre-commit git-identity-check.sh hook and an empty gitIdentity block, offered once and installed only on an explicit yes. Measured at the change with `bun scripts/check-skill-context.mjs`: 4801 est / 327 lines against the previous 4794 / 327 — the line ceiling stands, the estimate ceiling follows the measurement to ceil(4801 x 1.10) = 5282.",
+        "feature 91 x issue #514 (main-into-branch merge re-basis)": "the main-into-branch merge of PR #524 puts the runner prose re-point and the identity-hardening offer in the same consent section, so the merged init-workspace SKILL.md measures 4890 est / 328 lines on the shipped tree — past the 10% headroom of either parent's own re-basis; both ceilings are re-set to the exact ceil(measured x 1.10) = 5379 / 361, growth source = the union of feature 91's runner prose and issue #514's consent lines"
       },
-      "mainLinesMax": 358,
+      "mainLinesMax": 361,
       "referenceEstimateMax": 3758,
       "referenceSources": {
         "feature 67 (#219) serena provisioning": "SERENA.md owns the tool half as well as the project config now: the consented install routes (uv tool install -p 3.13 serena-agent + serena init, pipx on the MCP path only), the per-platform MCP registration table, the consent-gated global trusted_project_path_patterns append, the fixed provisioning report and the TS/JS-only evidence confinement (AC3/AC4/AC5/AC7/AC8) — measured 2508 est / 211 lines; ceiling re-based to ceil(2508 x 1.10) = 2759 (lines stay under the 280 default)",

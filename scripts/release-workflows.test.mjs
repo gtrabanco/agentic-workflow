@@ -406,6 +406,7 @@ test("every former remote check survives as a step of the local gate", () => {
     "docs-generated-projection",
     "journal-carrier-check",
     "log-immutability",
+    "push-identity",
     "temp-hygiene",
     "tmp-gc",
     "worktree-guard",

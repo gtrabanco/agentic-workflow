@@ -160,16 +160,13 @@ function makeFixture({ unit = "90-alpha", status = "defined", branch = "main", e
   // Every commit predates the receipt stamps below, so the impossible-timeline
   // guard never mis-flags the fixture (the same convention the verifier suite uses).
   const FIXTURE_DATE = "2026-08-30T00:00:00Z";
-  const git = (...args) => execFileSync("git", args, { cwd: dir, encoding: "utf8" }).trim();
-  const gitDated = (...args) => execFileSync("git", args, {
+  const git = (...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: dir, encoding: "utf8" }).trim();
+  const gitDated = (...args) => execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], {
     cwd: dir,
     encoding: "utf8",
     env: { ...process.env, GIT_COMMITTER_DATE: FIXTURE_DATE, GIT_AUTHOR_DATE: FIXTURE_DATE },
   }).trim();
   git("init", "-q", "-b", branch);
-  git("config", "user.email", "fixture@example.invalid");
-  git("config", "user.name", "Fixture");
-  git("config", "commit.gpgsign", "false");
   const commit = (message = "fixture") => {
     gitDated("add", "-A", "--", ".");
     gitDated("commit", "-qm", message);

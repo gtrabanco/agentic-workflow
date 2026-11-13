@@ -29,7 +29,7 @@ import { runDocOp } from "../src/doc/retrieval.mjs";
 let root;
 
 function git(args) {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" });
+  return execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" });
 }
 
 // Deterministic "semantic" embedder — F49: a STATIC concept table, written
@@ -76,8 +76,6 @@ function semanticEmbedder(model = "judge-1") {
 before(async () => {
   root = mkdtempSync(join(tmpdir(), "doc-hybrid-"));
   git(["init", "-q"]);
-  git(["config", "user.email", "t@example.test"]);
-  git(["config", "user.name", "t"]);
   writeFileSync(
     join(root, "retry.md"),
     "# Resilience\n\nThe backoff policy for retryable errors uses exponential delays with jitter.\n",
@@ -120,12 +118,10 @@ describe("hybrid grammar", () => {
 /** A throwaway git repo carrying `files` (path → markdown), synced but un-embedded. */
 function autoFixture(files) {
   const dir = mkdtempSync(join(tmpdir(), "doc-auto-"));
-  execFileSync("git", ["init", "-q"], { cwd: dir });
-  execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: dir });
-  execFileSync("git", ["config", "user.name", "t"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "init", "-q"], { cwd: dir });
   for (const [rel, body] of Object.entries(files)) writeFileSync(join(dir, rel), body);
-  execFileSync("git", ["add", "-A"], { cwd: dir });
-  execFileSync("git", ["commit", "-qm", "fixture"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: dir });
   return dir;
 }
 
@@ -202,7 +198,7 @@ describe("S4 read-only query path", () => {
       // New content lands (staged, so it is part of the tracked corpus) and the
       // query must refresh the chunks without paying for a vector.
       writeFileSync(join(dir, "fresh.md"), "# Fresh\n\ntransient failure handling notes\n");
-      execFileSync("git", ["add", "-A"], { cwd: dir });
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: dir });
       const e = semanticEmbedder();
       const env = await queryIndex(dir, "transient failure handling", {}, {}).catch(() => null);
       // auto with no injected provider: keyword + declared cause, and still 0 calls
@@ -323,9 +319,7 @@ describe("sync-side degradations (F45 — the AC17/AC18 sync half)", () => {
   const ENV_KEY = "DOC65_FOLD_TEST_KEY";
   function syncFixture() {
     const cfgRoot = mkdtempSync(join(tmpdir(), "doc-syncdegr-"));
-    execFileSync("git", ["init", "-q"], { cwd: cfgRoot });
-    execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: cfgRoot });
-    execFileSync("git", ["config", "user.name", "t"], { cwd: cfgRoot });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "init", "-q"], { cwd: cfgRoot });
     writeFileSync(join(cfgRoot, "a.md"), "# Alpha\nalpha body\n");
     mkdirSync(join(cfgRoot, ".agentic-workflow"), { recursive: true });
     writeFileSync(
@@ -336,8 +330,8 @@ describe("sync-side degradations (F45 — the AC17/AC18 sync half)", () => {
         provider: { baseUrl: "http://127.0.0.1:1", model: "m1", envVar: ENV_KEY },
       }),
     );
-    execFileSync("git", ["add", "-A"], { cwd: cfgRoot });
-    execFileSync("git", ["commit", "-qm", "fixture"], { cwd: cfgRoot });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: cfgRoot });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: cfgRoot });
     return cfgRoot;
   }
 

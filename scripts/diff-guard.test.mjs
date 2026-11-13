@@ -23,12 +23,10 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "diff-guard-corpus-"));
 function createRepo() {
   const repo = path.join(TMP, `repo-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   fs.mkdirSync(repo, { recursive: true });
-  spawnSync("git", ["init"], { cwd: repo, encoding: "utf8" });
-  spawnSync("git", ["config", "user.email", "test@test.com"], { cwd: repo, encoding: "utf8" });
-  spawnSync("git", ["config", "user.name", "Test"], { cwd: repo, encoding: "utf8" });
+  spawnSync("git", ["-c", "user.name=Test", "-c", "user.email=test@test.com", "-c", "commit.gpgsign=false", "init"], { cwd: repo, encoding: "utf8" });
   fs.writeFileSync(path.join(repo, "README.md"), "# Test\n");
-  spawnSync("git", ["add", "."], { cwd: repo, encoding: "utf8" });
-  spawnSync("git", ["commit", "-m", "initial"], { cwd: repo, encoding: "utf8" });
+  spawnSync("git", ["-c", "user.name=Test", "-c", "user.email=test@test.com", "-c", "commit.gpgsign=false", "add", "."], { cwd: repo, encoding: "utf8" });
+  spawnSync("git", ["-c", "user.name=Test", "-c", "user.email=test@test.com", "-c", "commit.gpgsign=false", "commit", "-m", "initial"], { cwd: repo, encoding: "utf8" });
   return repo;
 }
 
@@ -38,12 +36,12 @@ function appendFile(repo, name, content) {
 }
 
 function stageAll(repo) {
-  spawnSync("git", ["add", "-A"], { cwd: repo, encoding: "utf8" });
+  spawnSync("git", ["-c", "user.name=Test", "-c", "user.email=test@test.com", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: repo, encoding: "utf8" });
 }
 
 function makeCommit(repo, message) {
-  spawnSync("git", ["commit", "-m", message], { cwd: repo, encoding: "utf8" });
-  return spawnSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).stdout.trim();
+  spawnSync("git", ["-c", "user.name=Test", "-c", "user.email=test@test.com", "-c", "commit.gpgsign=false", "commit", "-m", message], { cwd: repo, encoding: "utf8" });
+  return spawnSync("git", ["-c", "user.name=Test", "-c", "user.email=test@test.com", "-c", "commit.gpgsign=false", "rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).stdout.trim();
 }
 
 function run(repo, runtime, ...args) {

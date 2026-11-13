@@ -268,7 +268,13 @@ Two JSONC files, both optional. Model routing lives in this package's extension
 file; cross-tool feature config (`logSession`, `memory`, `telemetry`, `guards`,
 `advance`, `pathProtection`) lives in the base `agentic-workflow.json` at the
 same scope (guide: `docs/workflow/CONFIG.md`, machine contract:
-`@gtrabanco/agentic-workflow-schema`).
+`@gtrabanco/agentic-workflow-schema`). Bun's native parser reads the file first
+and the schema package's `parseJsonc` stays the acceptance boundary, so `//` and
+`/* */` comments and trailing commas mean the same thing — and are refused with
+the same line and column — under bun and node. The `/settings` console edits the
+file in place, so a save keeps your comments and only what changed is rewritten:
+adding or removing a key re-renders the object that holds it, and a removed key
+takes its own comment with it.
 
 | Scope | Path | Read when |
 | --- | --- | --- |
@@ -505,6 +511,41 @@ the off switch: `pi mcp remove serena` unregisters it, `/mcp` inside a session
 disables or re-enables it, or set `"enabled": false` on the entry in
 `~/.pi/agent/mcp.json` to keep it listed but disconnected.
 
+## Git identity guard (issue #514)
+
+A signed commit proves *a key signed bytes*, not who the commit is attributed to.
+Three leaks in nine days on the repository this package ships from produced 139
+commits with the wrong author, every one of them signed and every one of them
+accepted by the forge as verified. The guard closes the agent-side half.
+
+On every `bash` call the extension reads the command, finds the `git config`
+writes in it (legacy flags such as `--unset` and modern subcommands such as
+`git config unset`), and answers:
+
+| Invocation | Verdict |
+|---|---|
+| read-only (`--get`, `--list`, `--show-origin`, `get`, `list`) | passes |
+| per-invocation `-c user.name=…` | passes — it writes nothing |
+| identity or signing write (`user.*`, `commit.gpgsign`, `gpg.*`, `tag.gpgsign`) | asks (headless: blocks) |
+| `--unset`, `--unset-all`, `--replace-all`, `remove-section`, `rename-section`, `edit` | asks |
+| `--global`, `--system`, `--worktree`, `--file` outside a scratch directory | asks |
+| a local, non-identity write (`core.autocrlf`, `merge.<driver>.driver`) | passes |
+
+An approval is remembered **per project and per scope+key** in
+`git-identity-consent.json` beside the config, so the same question is never
+asked twice and a different project is never covered. `gitIdentity.agentGuard`
+controls it: `mode: "ask" | "block"` and `allow: ["user.name"]` for the writes a
+project permits without asking (the allow list covers local, non-destructive
+writes only — a removal or a shared file still asks).
+
+The profile is the base config section, so the hook and the push check read the
+same one: `gitIdentity.enforce` (`off` by default — an unconfigured install is
+never blocked), `approved` (`name`, `email`, `fullName`, `format`, `signingKey`)
+and `agentGuard`. The boundary is honest: this sees what a model asks the bash
+tool to run — not a script it launches, not a `!` command, not another host.
+That is what the pre-commit hook and the push-range check exist for; see
+[`docs/workflow/GIT_IDENTITY_HARDENING.md`](../../docs/workflow/GIT_IDENTITY_HARDENING.md).
+
 ## Path protection (optional)
 
 The Tier 2 preventive guard blocks a `write` / `edit` tool call to an existing
@@ -534,30 +575,42 @@ matching `path-protection-records@1` `justification` row in the unit's
 ## Memory substrate — Engram (optional, ask-first)
 
 The workflow's units save and recall their decisions through Engram, the memory
-layer its skills document. This package can register Engram's MCP server for the
-session, and it does so **only when you say so**:
+layer its skills document. Three surfaces connect Pi to it, and the package
+recognises all three before it registers anything:
 
-```json
-{
-  "memory": { "engram": true }
-}
-```
+| Surface | What it is |
+|---|---|
+| **Native extension** (recommended) | the `gentle-engram` Pi package: it provides the `mem_*` tools directly over Engram's HTTP server — no MCP registration exists or is wanted beside it |
+| **Core binary** | the `engram` executable, on `PATH` or named by `ENGRAM_BIN`: the substrate both the native extension and an MCP server need |
+| **Running server** | `ENGRAM_URL` names an externally managed Engram server — local or remote |
 
-Registration goes through Pi's own `registerMcpServer`, which is
-**session-scoped and not persisted** — the package registers on every session
-start, so nothing outlives the session and nothing is written to your `mcp.json`
-behind your back. Five rules decide the outcome, and the package reports it
-verbatim:
+With consent (`memory.engram: true` in `agentic-workflow.json`), the package may
+register Engram's MCP server for the session through Pi's own
+`registerMcpServer` — **session-scoped and not persisted**, so nothing outlives
+the session and nothing is written to your `mcp.json` behind your back. What
+counts as "installed" is read from the files Pi itself reads: your
+`~/.pi/agent/settings.json` `packages` list always, and `<cwd>/.pi/settings.json`
+— where `pi install --local` writes — only for a trusted project, exactly as Pi
+gates that file. `ENGRAM_BIN` is honoured by the binary lookup too, so a binary
+reachable only through it is the one that gets registered. The decision order,
+reported verbatim:
 
 | Situation | What happens |
 |---|---|
 | no `memory.engram` opt-in (the shipped default is `false`) | nothing is registered and nothing is said (the opt-out stays quiet) |
 | no readable opt-in — the file exists but does not validate | nothing is registered; you are told the config is invalid, because unreadable consent is never read as a refusal you made |
-| no `engram` binary on `PATH` | nothing is registered; you are told the install route |
+| the native `gentle-engram` package is installed — `native-active` | nothing is registered — its `mem_*` tools already exist and agent writes stay native-only; a leftover `mcpServers.engram` entry is called out so you can remove it, and if memory is not working the same report names the binary and server surfaces |
+| `ENGRAM_URL` is set — `external-server` | nothing is registered — the external server (local or remote) is your deliberate choice; stdio MCP cannot target a URL |
+| no `engram` core binary on `PATH` or through `ENGRAM_BIN`, and no `ENGRAM_URL` | nothing is registered; the report names all three surfaces — `PATH`/`ENGRAM_BIN` for the binary, `ENGRAM_URL` for a server, the companion route below |
 | you already declared `engram` in a `mcp.json` Pi reads — your user file, or `<cwd>/.pi/mcp.json` in a trusted project | nothing is registered — your declaration takes precedence |
-| binary present, opted in | the server is registered and the notification states exactly what was written |
+| binary present, opted in, nothing native or external in the way | the server is registered and the notification states exactly what was written |
 
-Install Engram with:
+The rows that describe a working or deliberately configured install — the native
+extension, an external server, a completed registration — are reported as
+information; the ones that describe a defect (an unreadable config, a missing
+binary, an older host) are warnings. The opt-out stays silent.
+
+Install the Pi companion (the native extension) with:
 
 ```sh
 pi install npm:gentle-engram@latest
@@ -565,7 +618,13 @@ pi install npm:gentle-engram@latest
 
 That is the only documented route on purpose: the CLI's own setup subcommand
 pins whatever version ran it and keeps serving that version until it is run
-again, so an updated binary can sit unused behind a stale registration.
+again, so an updated binary can sit unused behind a stale registration. The
+companion is one surface, not the fix for every failure: the core `engram`
+binary still has to reach the session (`PATH`, or `ENGRAM_BIN=/absolute/path/to/engram`),
+and a server you run yourself is joined with `ENGRAM_URL=http://host:7437` —
+the remote-memory configuration Engram documents. `pi-engram init` never
+creates an MCP entry; if you have a `mcpServers.engram` entry in an `mcp.json`
+Pi reads, remove it and reload so agent writes stay native-only.
 
 An older Pi host whose `ExtensionAPI` has no `registerMcpServer` is reported
 instead of failing the session. The workflow-side protocol — when units save,

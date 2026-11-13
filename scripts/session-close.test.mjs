@@ -115,10 +115,8 @@ const HEADER = "# Session log\n\n<!-- entries below -->\n";
 
 const makeRepo = () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "session-close-"));
-  const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+  const git = (...args) => spawnSync("git", ["-c", "user.name=Tester", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", ...args], { cwd: dir, encoding: "utf8" });
   git("init", "-q", "-b", "main");
-  git("config", "user.email", "t@example.com");
-  git("config", "user.name", "Tester");
   fs.mkdirSync(path.join(dir, "docs"), { recursive: true });
   fs.writeFileSync(path.join(dir, "docs/LOGS.md"), HEADER);
   git("add", "-A");
@@ -233,10 +231,8 @@ test("end to end: an explicit --base that does not resolve is refused, never sil
 
 test("end to end: an unresolvable HEAD fails the baseline closed, never an empty baseline (F8)", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "session-close-nohead-"));
-  const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+  const git = (...args) => spawnSync("git", ["-c", "user.name=Tester", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", ...args], { cwd: dir, encoding: "utf8" });
   git("init", "-q", "-b", "main");
-  git("config", "user.email", "t@example.com");
-  git("config", "user.name", "Tester");
   fs.mkdirSync(path.join(dir, "docs"), { recursive: true });
   fs.writeFileSync(path.join(dir, "docs/LOGS.md"), "## an entry\n- **Summary:** hi\n");
   const result = run(dir, ["close"]);

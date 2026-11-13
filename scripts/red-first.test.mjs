@@ -42,13 +42,11 @@ function withRepo(commits, run) {
   const root = fs.mkdtempSync(path.join(tmpBase, "red-first-"));
   try {
     const git = (args) => {
-      const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+      const result = spawnSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" });
       assert.equal(result.status, 0, `git ${args.join(" ")} failed:\n${result.stderr}`);
       return result.stdout;
     };
     git(["init", "-b", "main"]);
-    git(["config", "user.email", "fixture@example.invalid"]);
-    git(["config", "user.name", "fixture"]);
     const shas = [];
     for (const commit of commits) {
       for (const [file, content] of Object.entries(commit.files ?? {})) {
@@ -175,11 +173,11 @@ test("the gate writes nothing and is byte-stable across runs (O5)", () => {
   withRepo(
     [gateCommit, { files: { "scripts/pair.mjs": IMPL_FILE, "scripts/pair.test.mjs": TEST_FILE }, message: "feat: pair in one commit" }],
     (root) => {
-      const before = spawnSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).stdout;
+      const before = spawnSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "status", "--porcelain"], { cwd: root, encoding: "utf8" }).stdout;
       const one = gate(root);
       const two = gate(root);
       assert.equal(one.stdout, two.stdout, "the report is byte-stable across runs");
-      const after = spawnSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).stdout;
+      const after = spawnSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "status", "--porcelain"], { cwd: root, encoding: "utf8" }).stdout;
       assert.equal(after, before, "the gate wrote nothing");
     },
   );

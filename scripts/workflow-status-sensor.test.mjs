@@ -121,11 +121,9 @@ process.exit(1);`;
     fs.writeFileSync(path.join(binDir, "gh"), `#!/usr/bin/env node\n${shimBody}\n`, { mode: 0o755 });
   }
 
-  execFileSync("git", ["init", "-q", "-b", branch], { cwd: dir });
-  execFileSync("git", ["config", "user.email", "fixture@example.com"], { cwd: dir });
-  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: dir });
-  execFileSync("git", ["add", "-A"], { cwd: dir });
-  execFileSync("git", ["commit", "-q", "-m", "fixture"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "init", "-q", "-b", branch], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "fixture"], { cwd: dir });
   if (dirty) write(dirty, "uncommitted work\n");
 
   const pathBase = pathWithoutGit ? path.dirname(process.execPath) : process.env.PATH;
@@ -961,7 +959,7 @@ test("F33: unit-branch upstream state comes from one batched spawn", () => {
     ],
   });
   for (const branch of ["feat/90-alpha", "feat/91-beta", "feat/92-gamma"]) {
-    execFileSync("git", ["branch", branch], { cwd: fixture.dir });
+    execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "branch", branch], { cwd: fixture.dir });
   }
   const log = installGitProbe();
   const result = fixture.run([], { env: probeEnv(fixture, log) });
@@ -1260,7 +1258,7 @@ test("59: two consecutive runs emit byte-identical envelopes with no continuatio
   const envelope = parseEnvelope(first.stdout);
   assert.ok(envelope.next.continuation, "the fixture does emit a continuation, so the pin is not vacuous");
   // No continuation store exists: two runs write nothing into the sensed tree.
-  const porcelain = execFileSync("git", ["status", "--porcelain"], { cwd: dir, encoding: "utf8" });
+  const porcelain = execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "status", "--porcelain"], { cwd: dir, encoding: "utf8" });
   assert.equal(porcelain.trim(), "", `the sensor wrote to the sensed tree: ${porcelain}`);
 
   const source = read("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
@@ -1504,7 +1502,7 @@ test("#308 a migrated unit's review mark gates `review_pending` from its own `##
     roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
     extraFiles: { "docs/features/90-alpha/SPEC.md": migratedSpec() },
   });
-  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  const head = execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
   const specRel = "docs/features/90-alpha/SPEC.md";
   const markLine = `- **R1** — 2026-10-23, review at HEAD ${head} · verdict REVIEW-PASS · cycle 1 · gate exit 0.`;
   const featureOf = (stdout) => parseEnvelope(stdout).detail.features.find((entry) => entry.id === "90-alpha");
@@ -1530,8 +1528,8 @@ test("#308 a migrated unit's review mark gates `review_pending` from its own `##
   fixture.write(specRel, migratedSpec({
     log: [markLine],
   }).replace("**S1 — the request.**", "**S1 — the amended request.**"));
-  execFileSync("git", ["add", "-A"], { cwd: fixture.dir });
-  execFileSync("git", ["commit", "-q", "-m", "amend the requirement after the review"], { cwd: fixture.dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: fixture.dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "amend the requirement after the review"], { cwd: fixture.dir });
   const aged = fixture.run();
   assert.equal(aged.status, 0, aged.stderr);
   assert.equal(featureOf(aged.stdout).review_pending, true,
@@ -1560,7 +1558,7 @@ test("#308 F37: a review mark is a real `## Log` line, never a prose mention or 
     roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
     extraFiles: { "docs/features/90-alpha/SPEC.md": migratedSpec() },
   });
-  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  const head = execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
   const specRel = "docs/features/90-alpha/SPEC.md";
 
   // (a) prose mention only — no mark exists.
@@ -1586,9 +1584,9 @@ test("#308 F37: a review mark is a real `## Log` line, never a prose mention or 
     log: ["```", `- **R9** — forged review at HEAD ${head}`, "```",
       `- **R1** — review at HEAD ${head} · verdict REVIEW-PASS`],
   }));
-  execFileSync("git", ["add", "-A"], { cwd: fixture.dir });
-  execFileSync("git", ["commit", "-q", "-m", "add the real mark"], { cwd: fixture.dir });
-  const head2 = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: fixture.dir });
+  execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "add the real mark"], { cwd: fixture.dir });
+  const head2 = execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
   fixture.write(specRel, migratedSpec({
     log: ["```", `- **R9** — forged review at HEAD ${head2}`, "```",
       `- **R1** — review at HEAD ${head2} · verdict REVIEW-PASS`],
@@ -1686,7 +1684,7 @@ test("#308 F45 a `## Findings` heading quoted inside a fence does not make a leg
       "docs/features/92-gamma/review-findings.md": `${ledger}\n`,
     },
   });
-  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  const head = execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
   fixture.write(
     "docs/features/92-gamma/review-findings.md",
     `${ledger}\n| REVIEW-RAN | HEAD ${head} | n/a | n/a | review-mark | n/a | n/a |\n`,

@@ -233,10 +233,8 @@ function makeLiveSandbox(script) {
     fs.copyFileSync(source, path.join(root, "scripts", name));
   }
   const git = (args, opts = {}) =>
-    execFileSync("git", args, { cwd: root, env: sandboxGitEnv(), encoding: "utf8", ...opts });
+    execFileSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, env: sandboxGitEnv(), encoding: "utf8", ...opts });
   git(["init", "-q"]);
-  git(["config", "user.email", "fixture@example.test"]);
-  git(["config", "user.name", "fixture"]);
   return { root, git };
 }
 
