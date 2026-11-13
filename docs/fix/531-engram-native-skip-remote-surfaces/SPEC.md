@@ -600,3 +600,13 @@ none
 | a host without `registerMcpServer` degrades to `unsupported-host` | `test/engram-provision.test.mjs` |
 | opted in, binary present, nothing native or external ⇒ `registered` with the exact argv | `test/engram-provision.test.mjs` + `test/shipped-adapter.test.mjs` |
 | the whole package (routing, config, hooks, conductor) is untouched | `bun run test` in `packages/pi-agentic-workflow` (851 pass at the cut head) |
+
+## External verify
+
+- **EXTERNAL VERIFY — base: 72bf608d · head: daced022**
+  Blockers: 0 — no change-caused defects found
+  Advisories: 1 — `scripts/roadmap-settle.test.mjs` pr-url-unsettled (pre-existing, reproduced at base commit 72bf608d; `docs/fix/521-fix-config/` row still `in-progress` after PR #523 merged — this unit's own row at 193 is `done · [#532](…)`, unaffected)
+  Sibling sweep: clean — the retired `Install it with:` / `Install Engram with:` prose is absent from README and module; the new statuses are present in README (native-active: 2 matches, external-server: 2 matches, ENGRAM_BIN/ENGRAM_URL: 7 matches, Five rules: 0); the consent refusal uses `BASE_CONFIG_FILE` from schema (4 imports, 0 `pi-agentic-workflow.json` in engram.ts); the companion route in `ENGRAM_INSTALL_ROUTE` is the new correct surface, not the old sole route.
+  Completeness: S1-S7, S3a all resolved — each S# has `(Implements: S#)` in at least one task with a foreground validator
+  Spot check: `bun test test/engram-provision.test.mjs test/shipped-adapter.test.mjs` → 59 pass / 0 fail (matches SPEC Log E2/E13)
+  Verdict: VERIFIED
