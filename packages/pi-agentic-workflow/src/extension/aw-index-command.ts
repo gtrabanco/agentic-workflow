@@ -9,8 +9,10 @@
  * crate's own entry point — the store's pending set is the resume point, so a
  * run killed part-way never re-embeds what already landed — and prints the
  * report the operator asked for: pending count, pinned model, the last sync's
- * four counts and the declared degradations. The report is rendered from the
- * sync envelope alone (S9): no second read, no model-side re-derivation.
+ * four counts, the declared degradations and, when the provider refused a
+ * request, what it said and which chunks it cost (fix #540). The report is
+ * rendered from the sync envelope alone (S9): no second read, no model-side
+ * re-derivation.
  *
  * Nothing here writes a byte of store state itself; the runner owns it.
  */
@@ -35,6 +37,14 @@ const RUN_TIMEOUT_MS = 600_000;
  * the report renders are named; anything else the envelope carries is ignored,
  * so an additive runner field never breaks the command.
  */
+/** The additive rejection detail a rejected sync carries (fix #540 S4). */
+export interface RejectedChunksLike {
+  readonly count?: number;
+  readonly failures?: readonly { readonly status?: number | null; readonly message?: string }[];
+  readonly chunks?: readonly string[];
+  readonly omitted?: number;
+}
+
 export interface SyncEnvelopeLike {
   readonly ok?: boolean;
   readonly command?: string;
@@ -45,6 +55,7 @@ export interface SyncEnvelopeLike {
     readonly chunks?: number;
     readonly pending?: number | null;
     readonly model?: string | null;
+    readonly rejected?: RejectedChunksLike | null;
     readonly lastSync?: {
       readonly files_scanned?: number;
       readonly files_changed?: number;
@@ -106,8 +117,15 @@ function defaultRun(request: IndexRunRequest): IndexRunResult {
 
 /**
  * Render the report from the sync envelope and nothing else (S9). A store that
- * predates the additive `pending`/`model` fields still renders — the count is
- * declared `unknown` rather than invented.
+ * predates the additive `pending`/`model`/`rejected` fields still renders — the
+ * count is declared `unknown` rather than invented, and an absent `rejected`
+ * reads `none` rather than being guessed from the degradation list.
+ *
+ * `rejected` is the rejection detail (fix #540 S4): the provider's status and
+ * body excerpt, and the chunks it cost. A non-zero pending count adds the one
+ * line that moves the operator forward — the sync is resumable, and a rejected
+ * set is repaired by re-chunking under the current limit and embedding in the
+ * same pass (`doc --rebuild`).
  */
 export function renderIndexReport(envelope: SyncEnvelopeLike | null): string {
   const store = envelope?.store ?? {};
@@ -118,15 +136,38 @@ export function renderIndexReport(envelope: SyncEnvelopeLike | null): string {
     Array.isArray(envelope?.degradations) && envelope.degradations.length > 0
       ? envelope.degradations.join(", ")
       : "none";
-  return [
+  const rejected = store?.rejected ?? null;
+  const rejectionLine = renderRejection(rejected);
+  const lines = [
     `aw-index — ${store?.path ?? "(unknown store)"}`,
     `files: ${store?.files ?? 0} · chunks: ${store?.chunks ?? 0}`,
     `pending: ${pending} · model: ${model}`,
     `last sync: scanned ${lastSync.files_scanned ?? 0} · changed ${lastSync.files_changed ?? 0} · deleted ${
       lastSync.files_deleted ?? 0
     } · embedded ${lastSync.embedded ?? 0}`,
+    `rejected: ${rejectionLine}`,
     `degradations: ${degradations}`,
-  ].join("\n");
+  ];
+  if (typeof store?.pending === "number" && store.pending > 0) {
+    lines.push(
+      `next: ${store.pending} chunk(s) remain unembedded — re-run /aw-index (the sync is resumable); if the ` +
+        `provider rejected them, \`doc --rebuild\` re-chunks under the current provider.chunk_limit and embeds in one pass`,
+    );
+  }
+  return lines.join("\n");
+}
+
+/** `none`, or the provider's own words with the chunks they cost. */
+function renderRejection(rejected: RejectedChunksLike | null | undefined): string {
+  if (!rejected) return "none";
+  const count = rejected.count ?? 0;
+  if (count === 0) return "none";
+  const failures = (rejected.failures ?? [])
+    .map((failure) => `${failure.status ?? "-"} ${failure.message ?? "(no diagnosis)"}`.trim())
+    .join(" | ");
+  const omitted = rejected.omitted ?? 0;
+  const more = omitted > 0 ? ` (+${omitted} more)` : "";
+  return `${count} chunk(s) · ${failures || "(no diagnosis)"}${more}`;
 }
 
 /** Register the native `/aw-index` command on the shared registrar. */

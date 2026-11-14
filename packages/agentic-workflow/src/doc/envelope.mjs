@@ -13,9 +13,18 @@
  *   unavailable-sqlite-<runtime>        (runtime ∈ {node, bun})
  *   unavailable-embeddings-not-configured
  *   unavailable-embeddings-<cause>      (kebab-case cause)
+ *   embeddings-request-rejected         (the provider refused the request: 4xx, not a rate limit)
  *   embeddings-model-mismatch           (AC18 fails closed)
  *   chunk-too-large                     (D20: a chunk body was truncated to fit the limit)
  * An unknown value is rejected at construction time — it fails, never ships.
+ *
+ * The enumerated set is published by the schema package
+ * (`DOC_DEGRADATIONS`, `src/doc-envelope.ts`) and pinned to this close by
+ * `test/doc.degradations.test.mjs`; the two families above stay open there on
+ * purpose. `embeddings-request-rejected` carries no `unavailable-` prefix
+ * because the layer is up and refused the *request* (fix #540 S3): the batch's
+ * chunks were skipped and the provider's status/body rides in the envelope's
+ * `store.rejected`.
  *
  * Exit codes (D3): 0 success including degraded · 1 usage/IO · 2 path
  * refusal (edit services only).
@@ -68,6 +77,7 @@ const DEGRADATION_PATTERNS = [
   /^unavailable-sqlite-(node|bun)$/,
   /^unavailable-embeddings-not-configured$/,
   /^unavailable-embeddings-[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  /^embeddings-request-rejected$/,
   /^embeddings-model-mismatch$/,
   /^chunk-too-large$/,
 ];
