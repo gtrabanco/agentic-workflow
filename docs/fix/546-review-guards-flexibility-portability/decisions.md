@@ -104,3 +104,17 @@ justification | template/.agentic-workflow/hooks/tests/test-forge-adapter.sh | P
   `git-identity-check.sh` already uses), so a scaffold install needs no `PATH`
   entry. A hook whose library is missing fails closed with a message naming the
   file, never silently skips the check.
+
+- **D11** (2026-11-14) — **AC25's scope excludes the journal carrier (owner
+  decision; path-protection record for a protected-path modification).** The
+  root suite's only red is AC25's store-path scan flagging the fix-489 journal
+  fragment, which *narrates* removing `index.db` literals elsewhere; a committed
+  fragment may never be edited (log-immutability, issue #468 — the aggregator is
+  its only writer), so the code the assertion judges cannot be repaired. On the
+  owner's order (stop failing every push on it), the `ALLOWED` list in
+  `scripts/doc-discipline.test.mjs` gains `/^\.agentic-workflow\/journal\//`:
+  the case's own name scopes the rule to skills, hooks, schemas and scripts, and
+  prose carriers — `docs/` already exempt on the same reasoning — now include
+  the immutable journal. The assertion (`offenders.length === 0`) is untouched;
+  only the declared scope changes, with the rationale in the allowlist comment
+  and issue #443's single-file exemption as precedent.
