@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: 5554d0420e1ccd2ee8ad95cf6c45fe28d2a8571509a9ee5e24401bd6708ec41e
+ac-hash: d3b2e94d96e4aeb16329e2d4cda9d0a637170fc82d6c5413859037c7dc86f2d1
 roadmap_summary: Issue [#538](https://github.com/gtrabanco/agentic-workflow/issues/538): the Engram startup report printed a remediation advisory on every session start, healthy installs included — the module now decides consent × runtime health: a healthy opted-in install is silent, a broken one reports one `error` naming the resolution that failed (`PATH` / `ENGRAM_BIN` / `ENGRAM_URL`) with its repair routes and the binary-vs-served version check, and the opt-out stays quiet.
 ---
 
@@ -284,10 +284,13 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   class. Check: both results recorded in `## Log`.
 - **AC-S12** — The related-symbol sweep closes: after the fixes, O18's command
   and the 23-file retirement sweep re-run report zero live hits outside the
-  declared carriers (`docs/workflow/MIGRATION.md`'s old-command column, the
-  budgets' dated `sources` entries, closed-unit docs, fixtures, and the D12
-  disposition's clause). Check: the sweep output recorded as an `E` line and
-  O18's command exits 1.
+  declared carriers — the dated set: `CHANGELOG.md` release rows,
+  `docs/workflow/MIGRATION.md`'s old-command column, the budgets' dated
+  `sources` entries, closed-unit docs, historical corpus narratives pinned to
+  their base commits, synthetic fixture strings inside suites (parser inputs
+  and in-memory trees that assert no path's existence), the package/schema
+  fixtures, and the D12 disposition's clause. Check: the sweep output recorded
+  as an `E` line and O18's command exits 1.
 
 ## Tasks
 
