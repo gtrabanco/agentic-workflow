@@ -46,7 +46,7 @@ function fakeOps({ bins = {}, versions = {}, files = {}, dirs = {}, git = {}, ht
     exists: (path) => path in files || path in dirs || Object.values(bins).includes(path),
     listDir: (path) => dirs[path] ?? [],
     git: (_root, args) => {
-      if (args[0] === "rev-parse") return { status: 0, stdout: `${ROOT}/.git` };
+      if (args[0] === "rev-parse") return { status: 0, stdout: args.includes("--git-path") ? `${ROOT}/.git/hooks` : `${ROOT}/.git` };
       const key = args[args.length - 1];
       return key in git ? { status: 0, stdout: git[key] } : { status: 1, stdout: "" };
     },
@@ -108,6 +108,20 @@ function healthyOps(overrides = {}) {
   });
 }
 
+/** The same fake with a different directory listing (the fake closes over its own). */
+function withDirs(ops, dirs) {
+  return { ...ops, listDir: (path) => dirs[path] ?? [] };
+}
+
+/** The same fake with one path gone: `readText` and `exists` agree it is absent. */
+function withoutPath(ops, gone) {
+  return {
+    ...ops,
+    readText: (path) => (path === gone ? null : ops.readText(path)),
+    exists: (path) => (path === gone ? false : ops.exists(path)),
+  };
+}
+
 const rowOf = (envelope, id) => envelope.rows.find((row) => row.id === id);const check = (envelope, id) => {
   const row = rowOf(envelope, id);
   assert.ok(row, `the envelope carries the \`${id}\` row`);
@@ -116,8 +130,8 @@ const rowOf = (envelope, id) => envelope.rows.find((row) => row.id === id);const
 
 /** Insert one line before the inventory block's closing fence (the drift case). */
 function insertInventoryRow(text, line) {
-  const start = text.indexOf("tool-inventory@1");
-  assert.ok(start > 0, "the crate README declares the inventory");
+  const start = text.indexOf("\ntool-inventory@1\n");
+  assert.ok(start > 0, "the crate README declares the inventory block");
   const end = text.indexOf("```", start);
   return `${text.slice(0, end)}${line}\n${text.slice(end)}`;
 }
@@ -202,7 +216,7 @@ test("a missing required surface fails the exit code; a missing optional one nev
   const withoutGitIdentity = {
     ...base,
     git: (_root, args) => {
-      if (args[0] === "rev-parse") return { status: 0, stdout: `${ROOT}/.git` };
+      if (args[0] === "rev-parse") return { status: 0, stdout: args.includes("--git-path") ? `${ROOT}/.git/hooks` : `${ROOT}/.git` };
       return { status: 1, stdout: "" };
     },
   };
@@ -226,7 +240,7 @@ test("a declared but un-armed merge driver is `unarmed` naming the driver (gap 3
   const ops = {
     ...base,
     git: (_root, args) => {
-      if (args[0] === "rev-parse") return { status: 0, stdout: `${ROOT}/.git` };
+      if (args[0] === "rev-parse") return { status: 0, stdout: args.includes("--git-path") ? `${ROOT}/.git/hooks` : `${ROOT}/.git` };
       const key = args[args.length - 1];
       if (key.startsWith("merge.")) return { status: 1, stdout: "" };
       return key === "user.name" || key === "user.email" ? { status: 0, stdout: "x" } : { status: 1, stdout: "" };
@@ -242,10 +256,8 @@ test("a declared but un-armed merge driver is `unarmed` naming the driver (gap 3
 });
 
 test("a project that declares no merge driver is `not-applicable` with no advisory", async () => {
-  const base = healthyOps();
-  const files = { ...base.files };
-  delete files[`${ROOT}/.gitattributes`];
-  const envelope = await runDoctor({ ops: { ...base, files, readText: (path) => (path in files ? files[path] : null) }, inventoryText: README });
+  const ops = withoutPath(healthyOps(), `${ROOT}/.gitattributes`);
+  const envelope = await runDoctor({ ops, inventoryText: README });
   const row = check(envelope, "merge-drivers");
   assert.equal(row.status, "not-applicable");
   assert.equal(row.advisory, null);
@@ -253,7 +265,7 @@ test("a project that declares no merge driver is `not-applicable` with no adviso
 });
 
 test("a missing pre-push hook is unarmed when the project ships the gate installer", async () => {
-  const envelope = await runDoctor({ ops: healthyOps({ dirs: { [`${ROOT}/.git/hooks`]: [] } }), inventoryText: README });
+  const envelope = await runDoctor({ ops: withDirs(healthyOps(), { [`${ROOT}/.git/hooks`]: [] }), inventoryText: README });
   const row = check(envelope, "git-hooks");
   assert.equal(row.status, "unarmed");
   assert.equal(row.move, "ask-consent-write");
@@ -261,10 +273,8 @@ test("a missing pre-push hook is unarmed when the project ships the gate install
 });
 
 test("a project with no gate installer has no hook contract: not-applicable, no advisory", async () => {
-  const base = healthyOps();
-  const files = { ...base.files };
-  delete files[`${ROOT}/scripts/local-gate.mjs`];
-  const envelope = await runDoctor({ ops: { ...base, files, readText: (path) => (path in files ? files[path] : null) }, inventoryText: README });
+  const ops = withoutPath(healthyOps(), `${ROOT}/scripts/local-gate.mjs`);
+  const envelope = await runDoctor({ ops, inventoryText: README });
   const row = check(envelope, "git-hooks");
   assert.equal(row.status, "not-applicable");
   assert.equal(row.advisory, null);
@@ -322,13 +332,7 @@ test("the adapter scan is report-only and never plans a write (S3, S4)", async (
   assert.equal(ok.move, "report-only");
   assert.ok(ok.evidence.adapters.some((adapter) => adapter.id === "claude" && adapter.present));
 
-  const base = healthyOps();
-  const files = { ...base.files };
-  delete files[`${ROOT}/.mcp.json`];
-  const none = check(
-    await runDoctor({ ops: { ...base, files, readText: (path) => (path in files ? files[path] : null) }, inventoryText: README }),
-    "agent-adapters",
-  );
+  const none = check(await runDoctor({ ops: withoutPath(healthyOps(), `${ROOT}/.mcp.json`), inventoryText: README }), "agent-adapters");
   assert.equal(none.status, "not-applicable");
   assert.equal(none.action, null);
 });
@@ -350,7 +354,20 @@ test("ENGRAM_BIN is honoured and the evidence names its source", async () => {
 
 test("install routes are instructions, never an action: the doctor runs no package manager (S3)", async () => {
   const base = healthyOps();
-  const ops = { ...base, binaryPath: (name) => (["serena", "engram", "pi", "gh", "bun"].includes(name) ? null : base.binaryPath(name)) };
+  const ops = {
+    ...base,
+    binaryPath: (name) => (["serena", "engram", "pi", "gh", "bun"].includes(name) ? null : base.binaryPath(name)),
+    // The two rows whose repair is the project's own installer are un-armed, so
+    // the assertion below has something to distinguish: an actionable row and an
+    // instruction-only one are never the same row.
+    listDir: (path) => ({ [`${ROOT}/.git/hooks`]: [] })[path] ?? [],
+    git: (_root, args) => {
+      if (args[0] === "rev-parse") return { status: 0, stdout: args.includes("--git-path") ? `${ROOT}/.git/hooks` : `${ROOT}/.git` };
+      const key = args[args.length - 1];
+      if (key.startsWith("merge.")) return { status: 1, stdout: "" };
+      return key === "user.name" || key === "user.email" ? { status: 0, stdout: "x" } : { status: 1, stdout: "" };
+    },
+  };
   const envelope = await runDoctor({ ops, inventoryText: README });
   for (const row of envelope.rows) {
     if (row.route === "instruct-only" && row.status !== "ok" && row.move === "instruct-only") {
@@ -369,7 +386,7 @@ test("the envelope is deterministic: two runs over the same ops are byte-identic
 });
 
 test("the documented inventory is the declaration: a drift refuses in both directions (S8)", async () => {
-  const dropped = README.replace(/^\| rg \|.*$/mu, "");
+  const dropped = README.replace(/^rg \|.*$/mu, "");
   await assert.rejects(
     () => runDoctor({ ops: healthyOps(), inventoryText: dropped }),
     (error) => error instanceof DoctorRefusal && error.code === "inventory-drift" && /rg/u.test(error.message),
