@@ -524,8 +524,9 @@ test("AC7 through the adapter: dirty-worktree warning still fires on abort", asy
  * per case. A green that depends on the operator's shell is the defect #529
  * repaired for a git identity; this is the same class of leak.
  */
-function withEngramEnv({ path: withStubBinary = true, url = null, engramBin = null } = {}, body) {
+function withEngramEnv({ path: withStubBinary = true, url = null, engramBin = null, emptyPath = false } = {}, body) {
   const bin = withStubBinary ? mkdtempSync(join(tmpdir(), "paw-engram-bin-")) : null;
+  const bare = emptyPath ? mkdtempSync(join(tmpdir(), "paw-engram-bare-path-")) : null;
   const saved = { PATH: process.env.PATH, ENGRAM_URL: process.env.ENGRAM_URL, ENGRAM_BIN: process.env.ENGRAM_BIN };
   try {
     if (bin !== null) {
@@ -533,6 +534,10 @@ function withEngramEnv({ path: withStubBinary = true, url = null, engramBin = nu
       writeFileSync(stub, "#!/bin/sh\necho 'engram 0.0.0'\n");
       chmodSync(stub, 0o755);
       process.env.PATH = `${bin}:${saved.PATH}`;
+    } else if (bare !== null) {
+      // `path: false` only skips the stub; a host that has engram installed would
+      // still resolve it, so the no-binary case needs a PATH of its own.
+      process.env.PATH = bare;
     }
     if (url === null) delete process.env.ENGRAM_URL;
     else process.env.ENGRAM_URL = url;
@@ -545,6 +550,7 @@ function withEngramEnv({ path: withStubBinary = true, url = null, engramBin = nu
       else process.env[key] = value;
     }
     if (bin !== null) rmSync(bin, { recursive: true, force: true });
+    if (bare !== null) rmSync(bare, { recursive: true, force: true });
   }
 }
 
@@ -611,11 +617,11 @@ test("F6 through the adapter: an opted-in session with nothing declared does reg
   }
 });
 
-test("issue #531 through the adapter: the native package is reported informatively and nothing is registered", async () => {
+test("issue #538 through the adapter: a healthy native install prints nothing at all", async () => {
   // The operator's own install is the normal case — gentle-engram provides the
-  // mem_* tools — and a second MCP path both duplicates them and weakens the
-  // native-only write guarantee. Pi's packages list is where that install is
-  // declared, so the user settings.json is what the listener has to read.
+  // mem_* tools over Engram's HTTP server, and the core binary resolves — so the
+  // session owes the operator no line. This is the issue's own reproduction: the
+  // advisory it printed here was read as "engram is not available" on every start.
   const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
   try {
     writeFileSync(
@@ -624,15 +630,47 @@ test("issue #531 through the adapter: the native package is reported informative
     );
     withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context()));
     assert.deepEqual(entry.calls.registerMcpServer, [], "the native tools already exist; nothing is registered beside them");
-    const reported = entry.calls.notify.filter(([, kind]) => kind === "info");
-    assert.equal(reported.length, 1, `exactly one informative line: ${JSON.stringify(entry.calls.notify)}`);
-    assert.match(reported[0][0], /gentle-engram/u, reported[0][0]);
-    assert.match(reported[0][0], /nothing was written/u, reported[0][0]);
     assert.deepEqual(
-      entry.calls.notify.filter(([message, kind]) => kind === "warning" && /Engram/u.test(message)),
+      entry.calls.notify.filter(([message]) => /Engram/u.test(message)),
       [],
-      "a correct install is not an Engram warning (the unrelated readiness nudge is out of scope)",
+      `a healthy opted-in install says nothing: ${JSON.stringify(entry.calls.notify)}`,
     );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("issue #538 through the adapter: a native install without its substrate is one error naming the failed resolution", async () => {
+  // The second incident the issue records: gentle-engram installed, the core
+  // binary off PATH and nobody pointing at another one — a genuinely broken
+  // install. It must say which resolution failed and how to repair it, once.
+  const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
+  try {
+    writeFileSync(join(entry.agentDir, "settings.json"), JSON.stringify({ packages: ["npm:gentle-engram@latest"] }));
+    withEngramEnv({ path: false, emptyPath: true }, () => entry.handlers.get("session_start")({}, entry.context()));
+    assert.deepEqual(entry.calls.registerMcpServer, [], "nothing is written beside the native tools");
+    const reported = entry.calls.notify.filter(([message]) => /Engram/u.test(message));
+    assert.equal(reported.length, 1, `exactly one line about the broken install: ${JSON.stringify(entry.calls.notify)}`);
+    assert.equal(reported[0][1], "error", `broken memory is an error: ${JSON.stringify(reported[0])}`);
+    assert.match(reported[0][0], /ENGRAM_BIN is unset/u, reported[0][0]);
+    assert.match(reported[0][0], /engram --version/u, reported[0][0]);
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("issue #538 through the adapter: a session without the opt-in prints nothing", async () => {
+  // The shipped default is `false`; an operator who does not want memory owes
+  // the report nothing, and the opt-in guidance row is not a startup line.
+  const entry = await shippedEntry({});
+  try {
+    withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context()));
+    assert.deepEqual(
+      entry.calls.notify.filter(([message]) => /Engram|opt in/u.test(message)),
+      [],
+      JSON.stringify(entry.calls.notify),
+    );
+    assert.deepEqual(entry.calls.registerMcpServer, []);
   } finally {
     entry.cleanup();
   }
@@ -651,9 +689,10 @@ test("issue #531 through the adapter: a project-scope packages declaration is re
     );
     withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context({ trusted: true })));
     assert.deepEqual(entry.calls.registerMcpServer, [], "a trusted project's native install suppresses the MCP path");
-    assert.ok(
-      entry.calls.notify.some(([message, kind]) => kind === "info" && /gentle-engram/u.test(message)),
-      JSON.stringify(entry.calls.notify),
+    assert.deepEqual(
+      entry.calls.notify.filter(([message]) => /Engram/u.test(message)),
+      [],
+      "issue #538: a healthy native install is silent",
     );
 
     entry.calls.notify.length = 0;
@@ -663,6 +702,10 @@ test("issue #531 through the adapter: a project-scope packages declaration is re
       entry.calls.registerMcpServer.length,
       1,
       "an untrusted project loads no package, so the MCP path stays the only one available",
+    );
+    assert.ok(
+      entry.calls.notify.some(([message, kind]) => kind === "info" && /registered MCP server/u.test(message)),
+      `the write it made is read back: ${JSON.stringify(entry.calls.notify)}`,
     );
   } finally {
     entry.cleanup();
