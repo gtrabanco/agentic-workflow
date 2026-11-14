@@ -83,10 +83,13 @@ mislabels the cause as provider-down". The PR closes it via `Closes #540`.
   touches (`doc.embeddings`, `doc.envelope`, `doc.hybrid`, `doc.sync`,
   `doc.store`) and `packages/pi-agentic-workflow/test/aw-index-command.test.mjs`.
 
-Consumers of the changed surface: `runDocOp` is the sole caller of
-`embedPendingChunks` and `resolveEmbedConfig` (`rg -n 'embedPendingChunks'
-packages --glob '!*.test.mjs'` reports `retrieval.mjs` only), the `doc` CLI case
-is the sole caller of `runDocOp`, and `/aw-index` reads the sync envelope. No
+Consumers of the changed surface: `embedPendingChunks` has one call site —
+`retrieval.mjs:91`, inside `runDocOp` (`rg -n 'embedPendingChunks' packages
+--glob '!*.test.mjs'` reports only its definition and `retrieval.mjs`'s import
+and call); `resolveEmbedConfig` has one more call site — `query.mjs:356`'s
+`realProviderOrNull`, reached only through `queryIndex` ← `runDocOp`
+(`retrieval.mjs:170`); the `doc` CLI case is the sole caller of `runDocOp`,
+and `/aw-index` reads the sync envelope. No
 config key is renamed; `provider.chunk_limit` keeps its meaning (a per-chunk
 truncation limit) and gains a safe default *only* when a provider is configured.
 
@@ -104,8 +107,9 @@ live store in `.agentic-workflow/` was never rebuilt, wiped or re-embedded.
   `embeddings-request-rejected`. The `unavailable-embeddings-provider-down`
   degradation stays, narrowed to its true cause (a retryable failure whose retry
   ladder is exhausted, or a non-HTTP error). `rg -c
-  'unavailable-embeddings-provider-down' packages/agentic-workflow/src` → 1
-  (`retrieval.mjs`'s narrowed comment + key), the query path's own use unchanged.
+  'unavailable-embeddings-provider-down' packages/agentic-workflow/src` →
+  `query.mjs: 1` (the query path's own use, unchanged) and `retrieval.mjs: 2`
+  (the narrowed comment + key).
 - The comment "Only add if not already present (the chunk-too-large degradation
   can coexist with provider-down)" retires with the catch it explains. Its
   replacement states the two independent causes.
@@ -195,7 +199,8 @@ repository's review machinery on its own surgery — the disclosure is in
 - `packages/pi-agentic-workflow/test/aw-index-command.test.mjs` — the report
   renders the rejected set and the hint.
 - The root gate: `bun scripts/run-root-suite.mjs` and
-  `bun scripts/local-gate.mjs --offline` (offline subset).
+  `bun scripts/local-gate.mjs --skip-network --jobs 1` (offline subset; `--jobs 1`
+  is the serial form this unit measured — G12 and the correction recheck).
 
 ## Known pre-existing issues
 
@@ -268,7 +273,8 @@ repository's review machinery on its own surgery — the disclosure is in
   `store.rejected.failures[]` carries `{status, message}` (message containing the
   body excerpt) in the `--json-only` envelope, and the human `doc` path prints a
   `doc: rejection:` line naming the status and the skipped chunks. Check:
-  `bun test test/doc/hybrid`-side cases in `test/doc.hybrid.test.mjs` exit 0 and
+  `cd packages/agentic-workflow && bun test test/doc.hybrid.test.mjs` exits 0 (the
+  rejection-cause, provider-down and `--rebuild` cases) and
   `bun packages/agentic-workflow/bin/agentic-workflow.mjs doc --rebuild` in a
   `/tmp` fixture prints the line to stderr.
 - **AC-S5** — With a provider configured and no explicit `chunk_limit`, the
@@ -298,7 +304,7 @@ repository's review machinery on its own surgery — the disclosure is in
 - P1 — Cut this unit doc and freeze the two planning ledgers in the repo's own
   shapes (9-column obligations, 6-column evidence), every row `planned` at cut.
   (validator: `rg -c '^\| O[0-9]+ \|' docs/fix/540-embedding-pass-batch-limit/planning-obligations.md` matches ≥8
-  and `rg -n '^\| O[0-9]+ \|.*\| (planned|in-progress) \|$' docs/fix/540-embedding-pass-batch-limit/planning-obligations.md` matches every row)
+  and `git show 4f90294c:docs/fix/540-embedding-pass-batch-limit/planning-obligations.md | rg -c '^\| O[0-9]+ \|.*\| planned \|$'` matches 12 — the cut-time state, every row `planned` in the freeze commit)
   (Implements: S1)
   - Relevant files: docs/fix/540-embedding-pass-batch-limit/SPEC.md, planning-evidence.md, planning-obligations.md
 - P2 — Land the frozen-failure reproducers as failing tests for slice A: the
@@ -336,7 +342,7 @@ repository's review machinery on its own surgery — the disclosure is in
   - Relevant files: packages/agentic-workflow/README.md, packages/pi-agentic-workflow/README.md, packages/pi-agentic-workflow/src/extension/aw-index-command.ts, docs/ROADMAP.md, docs/LOGS.md
 - P7 — Verify: both crate runtimes, the schema and pi suites, the root suite and
   the offline local gate in the foreground.
-  (validator: `bun scripts/local-gate.mjs --offline` exits 0 and `bun scripts/run-root-suite.mjs` exits 0)
+  (validator: `bun scripts/local-gate.mjs --skip-network --jobs 1` exits 0 and `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S7)
   - Relevant files: scripts/local-gate.mjs, scripts/run-root-suite.mjs
 
@@ -427,7 +433,7 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **G5** — 2026-11-14, `bun scripts/run-root-suite.mjs` · **exit 1** · `1 fail`: `scripts/residual-classify.test.mjs` (`Cannot find module './ceremony/lib.mjs'`), the pre-existing breakage recorded under `## Known pre-existing issues`. The same command at the base commit exits 1 with that suite **and seven more**; this change adds no failure and fixes six of them (`check-skill-context`, `correction-budget`, `doc-discipline`, `lint-changeset`, `local-gate`, `unit-route` — the base copy's own extract/git context, all green here).
 - **G6** — 2026-11-14, `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS` (projection and roadmap re-rendered by the emitter, never hand-written).
 - **G7** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network --no-bail` · **exit 1** · `FAILED root-suite` (the same `residual-classify` import error; `schema-node-compat` skipped as its dependent). Every other offline step passed: `docs-generated-projection`, `version-parity-content`, `journal-carrier-check`, `log-immutability`, `temp-hygiene`, `tmp-gc`, `worktree-guard`, `crate-suite-bun`, `crate-suite-node`.
-- **P1** — 2026-11-14, unit doc cut and both planning ledgers frozen (12 obligations, 19 evidence rows) before the first line of code · `4f90294c`'s parent.
+- **P1** — 2026-11-14, unit doc cut and both planning ledgers frozen (12 obligations, 19 evidence rows, every row `planned`) · `4f90294c` — the branch's first commit, ahead of the implementation in `1ea21304` (the original line's `4f90294c`'s parent pointer was repaired by the correction batch, P9).
 - **P2** — 2026-11-14, the frozen reproducers landed and were observed red (E1–E4) · `4f90294c`.
 - **P3, P5** — 2026-11-14, the write path, the vocabulary surface, the request budget, the safe chunk-limit default, the retro-applied re-chunk and `--rebuild` embedding landed; E6–E11 green · `1ea21304`.
 - **P6** — 2026-11-14, the docs/state surfaces: crate + pi READMEs, the `/aw-index` report, the gate-inventory claim, the budget re-pin, the emitter's roadmap/projection output, the changeset and this entry.
@@ -454,6 +460,14 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
   append-only, so the correction is a third fragment rather than an edit.
 - **D8** — 2026-11-14, the merge of `main` (which advanced to `1a52465d` mid-unit: the owner's triage registered #540 as `embedding-pass-fix · pending`, plus a `docs/LOGS.md` backfill narrative). The branch keeps **one** row for #540 — the one naming this unit's folder (`embedding-pass-batch-limit`), its status and its SPEC link — and drops the triage row, because two rows for one issue is the drift `roadmap-settle`/`audit-docs` exists to catch while the folder is what the projection keys on. The triage fact it carried (M, fix-now 2026-11-13) is recorded here rather than in a cell the emitter rewrites.
 - **D7** — 2026-11-14, owner decision (answer to the O12 question, `repair`): repair `main`'s stale imports inside this unit rather than accept the red root suite, so the unit ships with the gate it declares.
+- **L3** — 2026-11-14, the owner's correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **E14** — 2026-11-14, the correction batch's frozen-failure corpus, re-run red on the receipt's head before the batch · `bun scripts/local-gate.mjs --offline --dry-run` · exit 2 (`local-gate: unknown argument --offline`); `rg -n 'embeddings-request-rejected\|max_request_chars' packages/agentic-workflow/README.md` · exit 1 · 0 matches; `git ls-tree --name-only 4f90294c^ docs/fix/540-embedding-pass-batch-limit/` · empty; `rg -c '^\| O[0-9]+ \|.*\| (planned|in-progress) \|$' docs/fix/540-embedding-pass-batch-limit/planning-obligations.md` · 0 (external-verify blockers 1–3).
+- **E15** — 2026-11-14, O11's repaired validator · `rg -n 'embeddings-request-rejected|max_request_chars' packages/agentic-workflow/README.md` · 4 matches (≥2) · and its pi half `cd packages/pi-agentic-workflow && bun test test/aw-index-command.test.mjs` · exit 0 · `10 pass · 0 fail`.
+- **E16** — 2026-11-14, the repaired sibling checks · `cd packages/agentic-workflow && bun test test/doc.store.test.mjs` · exit 0 · `27 pass · 0 fail` (O7); `cd packages/agentic-workflow && bun test test/doc.hybrid.test.mjs` · exit 0 · `27 pass · 0 fail` (AC-S4); `git show 4f90294c:docs/fix/540-embedding-pass-batch-limit/planning-obligations.md | rg -c '^\| O[0-9]+ \|.*\| planned \|$'` · `12` (P1's cut-time validator); `rg -c 'unavailable-embeddings-provider-down' packages/agentic-workflow/src` · `query.mjs:1`, `retrieval.mjs:2` (the Retirements count).
+- **P9** — 2026-11-14, correction batch on the external-verify receipt (base `1a52465d` · head `4dfb8628`, 3 blockers + 4 advisories, verdict `NEEDS-DECISION`): every declared check the receipt named is repaired in this doc and `planning-obligations.md` — P7 and the Applicable-tests `--offline` → `--skip-network --jobs 1` (the serial form G12 measured; the parallel default is the recorded G10 host race), O11's `\|` → `|`, P1's freeze pointer re-pointed from `4f90294c`'s parent (the unit dir is absent there) to `4f90294c` itself with the row-condition made cut-time, O7's dead `test/doc.config` path dropped, AC-S4's `test/doc/hybrid` fragment named in full, the Retirements count corrected, and the Impact consumer sentence narrowed to the observed call sites. Docs only — no package code touched.
 ## Next
 
 Hand the diff to the owner as the external verifier. Every obligation is
