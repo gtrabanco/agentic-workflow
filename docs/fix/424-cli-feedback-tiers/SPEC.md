@@ -128,31 +128,53 @@ budget moves, and no `skills/` prose cites a feedback flag.
 ## Retirements
 
 Strictly additive: nothing is renamed, deleted or superseded. The computed
-surface inventory at the cut:
+surface inventory at the cut (`bun scripts/residual-classify.mjs --inventory
+--base f7e5dbba`, 9 rows):
 
 ```text
-$ bun scripts/residual-classify.mjs --inventory --base f7e5dbba
-added | packages/agentic-workflow/src/feedback/index.mjs | real
-added | packages/agentic-workflow/test/feedback.test.mjs | real
-added | docs/workflow/FEEDBACK.md | real
-added | docs/fix/424-cli-feedback-tiers/SPEC.md | real
-added | docs/fix/424-cli-feedback-tiers/planning-evidence.md | real
-added | docs/fix/424-cli-feedback-tiers/planning-obligations.md | real
-added | docs/fix/424-cli-feedback-tiers/decisions.md | real
-added | .changeset/424-cli-feedback-tiers.md | real
+used   | symbol | FEEDBACK_PROGRESS_EVERY_MS      | live-consumer
+used   | symbol | FEEDBACK_START_AFTER_MS         | live-consumer
+used   | symbol | FEEDBACK_TIERS                  | live-consumer
+used   | symbol | NO_FEEDBACK                     | live-consumer
+used   | symbol | createFeedback                  | live-consumer
+used   | symbol | formatDuration                  | live-consumer
+used   | symbol | parseFeedbackArgs               | live-consumer
+orphan | file   | packages/agentic-workflow/src/feedback/index.mjs | no-plan-claim
+orphan | file   | packages/agentic-workflow/test/feedback.test.mjs | no-plan-claim
 ```
 
-Every added surface answers with its consumer in this same change: the module is
-consumed by the bin and by `runDocOp`, the suite by `bun run test`, the page by
-`AGENTS.md`'s rule and by the pages index, the ledgers by the phase gate, the
-changeset by `scripts/release.mjs`. No `residual-promise@1` row is needed — no
-added surface lands without a consumer.
+The seven symbol rows are `used` on live-consumer evidence. The two `file` rows
+are the classifier's own probe gap, recorded here rather than papered over with a
+`residual-promise@1` row that would misdescribe a consumed surface: the file
+probe greps the **root-relative literal**, while every consumer imports the
+sibling path —
 
-The one *replacement* is internal to the change: the bin's own scattered
-diagnostics do not gain a second convention. Every line the new channel prints
-comes from `feedback: …`, and the pre-existing `doc:` / `EDIT REFUSAL` /
-`LOG REFUSAL` lines keep their own vocabulary because consumers match on them —
-they are the receipt, not progress.
+- `packages/agentic-workflow/bin/agentic-workflow.mjs:136` —
+  `import { createFeedback, parseFeedbackArgs } from "../src/feedback/index.mjs"`,
+- `packages/agentic-workflow/src/doc/retrieval.mjs:40` —
+  `import { NO_FEEDBACK } from "../feedback/index.mjs"`,
+- `packages/agentic-workflow/test/feedback.test.mjs:33` — the corpus imports the
+  same module, and `bun run test` is what runs it.
+
+So the two files are consumed, and the `orphan` verdict is the probe's known
+limitation (see `## Known pre-existing issues`). No `residual-promise@1` row is
+recorded: a promise declares "no consumer yet", which is not the truth here.
+
+The additions and their consumers in this same change, one line each:
+
+| Added surface | Its consumer in this change |
+|---|---|
+| `packages/agentic-workflow/src/feedback/index.mjs` | the bin's dispatcher, `runDocOp` and the crate suite |
+| `packages/agentic-workflow/test/feedback.test.mjs` | `bun run test` in the crate |
+| `docs/workflow/FEEDBACK.md` | `AGENTS.md`'s working rule and deep-reference row, and the pages index |
+| `docs/fix/424-cli-feedback-tiers/` (4 files) | the phase gate, `phase-lint` and `verify` |
+| `.changeset/424-cli-feedback-tiers.md` | `scripts/release.mjs` at cut time |
+
+The one *replacement* is internal to the change: the bin gains no second
+diagnostics convention. Every line the new channel prints comes from
+`feedback: …`, and the pre-existing `doc:` / `EDIT REFUSAL` / `LOG REFUSAL`
+lines keep their own vocabulary because consumers match on them — they are the
+receipt, not progress.
 
 ## Non-goals
 
@@ -232,6 +254,12 @@ none
   enumerated set is unchanged.
 - The repo has no formatter, so no normalizer can rewrite these bytes.
   **Does not affect** this unit.
+- `residual-classify --inventory`'s file probe greps the root-relative literal,
+  so a new file whose consumers import it by a sibling path answers
+  `orphan | no-plan-claim` even though it is consumed. **Affects this unit**: the
+  two added files trip it; the evidence that they are consumed is recorded in
+  `## Retirements` (three import sites) instead of being papered over with a
+  `residual-promise@1` row, because a promise declares "no consumer yet".
 
 ## Tasks
 
