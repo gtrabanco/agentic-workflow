@@ -40,7 +40,7 @@
 ```text
 path-protection-records@1
 kind | paths | phase | date | authority | justification
-justification | scripts/secret-scan.test.mjs | P2 | 2026-11-15 | execute-phase | the new gate step's own corpus: it lands as the red commit before the module exists (S4, S9) and carries one positive case per rule plus the benign, redaction, range, allowlist and exit-code cases (S1, S3, S10)
-justification | scripts/local-gate.test.mjs | P4 | 2026-11-15 | execute-phase | the shipped step's three pins: the id list grows by one, the impact-gated planned list names it, and the gate-level refusal case proves a secret in the range fails through the gate (S6, S7, S8). No pre-existing assertion is deleted, relaxed or narrowed
-justification | scripts/release-workflows.test.mjs | P4 | 2026-11-15 | execute-phase | the local gate's id array grows by the one shipped id, its former-remote-check coverage contract unchanged (S6, S12)
+justification | scripts/secret-scan.test.mjs | P2 | 2026-11-14 | execute-phase | the new gate step's own corpus: it lands as the red commit before the module exists (S4, S9) and carries one positive case per rule plus the benign, redaction, range, allowlist and exit-code cases (S1, S3, S10)
+justification | scripts/local-gate.test.mjs | P4 | 2026-11-14 | execute-phase | the shipped step's three pins: the id list grows by one, the impact-gated planned list names it, and the gate-level refusal case proves a secret in the range fails through the gate (S6, S7, S8). No pre-existing assertion is deleted, relaxed or narrowed
+justification | scripts/release-workflows.test.mjs | P4 | 2026-11-14 | execute-phase | the local gate's id array grows by the one shipped id, its former-remote-check coverage contract unchanged (S6, S12)
 ```

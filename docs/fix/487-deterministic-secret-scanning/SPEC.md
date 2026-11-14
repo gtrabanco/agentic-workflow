@@ -135,6 +135,8 @@ resolves) · `scripts/check-skill-context.test.mjs` (the guide budget re-pin).
 
 ## Known pre-existing issues
 
+- **The offline gate's `root-suite` step cannot go green under its own pool on this host.** The step runs its suites at one worker per CPU (4 by default) while the gate's three other heavy steps run beside it, and `scripts/phase-lint.test.mjs` — 23–35 s in isolation, 67 s beside four competing suites — crosses the runner's 120 s suite bound; `--bail` then kills the suites in flight, which are reported as failures too. Reproduced twice on this unit (2026-11-14) and independent of it: the diff touches no file under `packages/`, and the same root suite is green at 113/113 when it runs alone. **Affects** the handoff's gate receipt only: the per-step runs and the standalone root gate are green, and no bound was widened. The wall-clock and memory bounds are issue #493's contract, not this unit's.
+- **`scripts/unit-route.test.mjs`'s `#291 F7` case asserts a 500 ms wall-clock bound** on a linear scan; it measured 507 ms once in a 113-suite sequential run and 229–238 ms in isolation, on a code path this diff does not touch (zero files under `packages/`). **Does-not-affect** this unit beyond the gate receipt: the same suite is green in every other run recorded here.
 - The worktree checkout sits at a path git itself treats as a worktree admin
   directory, so `HEAD` as a bare revision argument is ambiguous in some git
   invocations — **does-not-affect** this unit: the scan's own range resolution
@@ -143,8 +145,7 @@ resolves) · `scripts/check-skill-context.test.mjs` (the guide budget re-pin).
 - `scripts/log-immutability.mjs` resolves its base from `@{upstream}`, so a
   branch that has integrated `main` locally can be refused for `main`'s own
   published commits — **does-not-affect** this unit: it touches neither the
-  journal nor that script, and the step runs before it in table order only by
-  coincidence of the offline block.
+  journal nor that script, and the step ran green over this branch's range.
 
 ## Tasks
 
@@ -241,7 +242,7 @@ unit; the review step is the owner's external verification.
 
 ## Log
 
-- **L1** — 2026-11-15, the issue, verbatim:
+- **L1** — 2026-11-14, the issue, verbatim:
   ```
   ## What's broken
 
@@ -278,12 +279,33 @@ unit; the review step is the owner's external verification.
 
   Remove the gate step entry and its suite in a single revert; the step is additive and guards nothing else.
   ```
-- **L2** — 2026-11-15, owner apply-request, verbatim: "Apply to this repository: issue #487" — plain prose; the state resolves it to **proceed** (no unit folder, no commits ahead of `main`, no prior receipt: the unit starts here).
-- **P1** — 2026-11-15, unit doc, both planning ledgers, `decisions.md` and the roadmap Fixes row cut.
+- **L2** — 2026-11-14, owner apply-request, verbatim: "Apply to this repository: issue #487" — plain prose; the state resolves it to **proceed** (no unit folder, no commits ahead of `main`, no prior receipt: the unit starts here).
+- **P1** — 2026-11-14, unit doc, both planning ledgers, `decisions.md` and the roadmap Fixes row cut · `1790651a`.
+- **P2** — 2026-11-14, the corpus landed alone, before any implementation existed · `60dfe5c0`.
+- **E1** — 2026-11-14, `node --test scripts/secret-scan.test.mjs` at `60dfe5c0` · exit 1 · `ERR_MODULE_NOT_FOUND: Cannot find module '…/scripts/secret-scan.mjs'` — the red commit, observed before the module existed.
+- **P3** — 2026-11-14, `scripts/secret-scan.mjs` and the shipped allowlist · `b6fc73e8`. One commit rather than a slice: the module's rules, range resolution, allowlist reader and report are one artefact — a half of it has no consumer and no test that could pass.
+- **E2** — 2026-11-14, `bun test scripts/secret-scan.test.mjs` at `b6fc73e8` · exit 0 · 25 pass 0 fail.
+- **P4** — 2026-11-14, the step row, the `DEPS` row and the two step-id pins · `cac1a1e1`.
+- **E3** — 2026-11-14, `bun test scripts/local-gate.test.mjs scripts/release-workflows.test.mjs` with the pins moved and the table unchanged · 70 pass 5 fail — the five pins for the missing step (`every former remote check survives…` in both suites, the marker case, the gate-level refusal case, the impact-gated planned list).
+- **E4** — 2026-11-14, the same command after `cac1a1e1` · exit 0 · 75 pass 0 fail.
+- **P5** — 2026-11-14, the inventory row and the guide-budget re-pin · `a42cee1c`.
+- **E5** — 2026-11-14, `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass 0 fail; `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS`, and the report resolves `secret-scan — script · scripts/secret-scan.test.mjs:421 · priority 9 · script`.
+- **E6** — 2026-11-14, `bun test scripts/check-skill-context.test.mjs scripts/guide-split.test.mjs` · exit 0 · 16 pass 0 fail; `bun scripts/check-skill-context.mjs --documents` · `PASS context documents: 4 budgeted documents` · the inventory measures 166 lines / 95 prose / 6,218 est against the unchanged ceilings, so only `machineLines` moved (70 → 71).
+- **P6** — 2026-11-14, the release intent and the regenerated projection · `143968cf`.
+- **E7** — 2026-11-14, `node scripts/secret-scan.mjs` over this branch's own range (`f7e5dbba..HEAD`, 1,624 added lines) · exit 0 · `verdict: PASS`, 1 allowlisted (`scripts/secret-scan.test.mjs:60 — github-token`).
+- **E8** — 2026-11-14, `node scripts/secret-scan.mjs --all` · exit 0 · 1,973 tracked files, 18 binary skipped, 0 findings, 1 allowlisted — the whole-tree fallback is green on the tree it ships in.
+- **E9** — 2026-11-14, `node scripts/red-first.mjs` · exit 0 · `red-first — 54 pair(s) · 29 after the cutoff · cutoff 1374ea9`, 0 findings, `verdict: PASS`.
+- **E10** — 2026-11-14, the differential against `f7e5dbba` (both trees rendered with `git archive` into scratch directories): `--list`, `--dry-run`, `--only does-not-exist`, `--nope`, `--jobs 0` and `--only root-suite --skip-network --dry-run` compared by stdout, stderr and exit — byte-identical apart from the two the unit asks for (`--list` gains `secret-scan`; `--dry-run` gains its plan line and the step count moves 18 → 19).
+- **E11** — 2026-11-14, `node scripts/run-root-suite.mjs` at `143968cf` · exit 0 · `root gate: 113 suite(s) · 4 worker(s)` and 113 PASS, including `scripts/secret-scan.test.mjs (3.3s)` (the base at `f7e5dbba` ran 112 of 112 the same way).
+- **E12** — 2026-11-14, the per-step gate runs in the foreground: `node scripts/local-gate.mjs --only version-parity-content,docs-generated-projection,journal-carrier-check,log-immutability,secret-scan,temp-hygiene,tmp-gc,worktree-guard,rigidity-review --skip-network --no-bail` · exit 0 · `PASS — 9 step(s)`; and `--only schema-build,crate-suite-node,schema-node-compat,pi-node-compat --skip-network --no-bail` · exit 0 · `PASS — 4 step(s)`.
+- **E13** — 2026-11-14, the full offline gate (`node scripts/local-gate.mjs --skip-network`) twice · exit 1 both times · `FAILED at root-suite`, where `scripts/phase-lint.test.mjs` measured 23 s on the base tree and 35 s on this one in isolation, 67 s beside four competing suites, and crossed the runner's 120 s suite bound under the full pool — the pre-existing contention recorded in `## Known pre-existing issues`, with every other step green in the same runs.
 
 ## Next
 
-P2 — land the suite alone as the red commit and record the failing run.
+P7 and P8 close the unit: the journal fragment and its close, then the handoff
+to the owner's external verification. The gate receipt's one red is the
+pre-existing pool contention recorded above; the per-step runs and the
+standalone root gate are green.
 
 ## References
 
