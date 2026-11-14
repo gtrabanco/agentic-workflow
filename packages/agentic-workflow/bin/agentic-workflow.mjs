@@ -830,6 +830,17 @@ switch (command) {
       // diagnostics stay on stderr. Exit code still reports failure.
       if (envelope.ok !== true) process.stderr.write(`doc ${envelope.command}: failed\n`);
     } else {
+      // A rejected request is diagnosable before the degradation line: the
+      // provider's own status and body excerpt, and which chunks it cost
+      // (fix #540 S4).
+      if (envelope.store?.rejected) {
+        const rejected = envelope.store.rejected;
+        for (const failure of rejected.failures) {
+          process.stderr.write(`doc: rejection: ${failure.status ?? "-"} ${failure.message}\n`);
+        }
+        for (const chunk of rejected.chunks) process.stderr.write(`doc: skipped: ${chunk}\n`);
+        if (rejected.omitted > 0) process.stderr.write(`doc: skipped: ${rejected.omitted} more chunk(s)\n`);
+      }
       for (const d of envelope.degradations) process.stderr.write(`doc: degradation: ${d}\n`);
       for (const r of envelope.results) {
         console.log(`${r.path} · ${r.section ?? "-"} · L${r.lines[0]}-${r.lines[1]} · ${r.score}`);

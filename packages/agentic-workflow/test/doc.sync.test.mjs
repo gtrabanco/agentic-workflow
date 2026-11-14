@@ -205,7 +205,7 @@ describe("doc sync — chunk limit retro-applies", () => {
     const dir = bigFixture(400);
     try {
       await syncIndex(dir); // unlimited
-      deepStrictEqual(await bodies(dir), [401]);
+      deepStrictEqual(await bodies(dir), [406]); // "# Big" + newline + 400 chars
       const r = await syncIndex(dir, { maxChunkChars: 100 }); // same file, same hash
       strictEqual(r.filesChanged, 1, "the limit change is a change the pass must see");
       strictEqual(r.truncated, 1);
