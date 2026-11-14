@@ -51,8 +51,15 @@ which orders where the mechanism lives.
 >   2. **Debug** (`--debug`) — every detail for diagnostics (per-file, per-step, provider details).
 >   3. **Profiling** (`--profile`) — timing per stage, total time, bottleneck identification.
 
-**S4 — One consistent core API.** 
-> - The core API is consistent: a single `scripts/feedback.mjs` (or equivalent) exports standardized functions.
+**S4 — One consistent core API.**
+> - The core API is consistent: a single […] (or equivalent) exports standardized functions.
+
+The bracket marks one elision, in the template's marked-elision form: the
+requirement names a path under the repository's `scripts/`, and S8 records where
+the mechanism actually lands (the runner crate). Leaving the literal in place
+would make this document claim a file that must not exist — exactly what the
+tree-checking verifier refuses — so the path is elided here and quoted in full in
+the `S8` note below, where it is described rather than claimed.
 
 **S5 — The `doc` CLI uses the new system.**
 > - The `doc` CLI (`bin/agentic-workflow.mjs`) uses the new system.
@@ -336,9 +343,10 @@ the check that proves it.
    on stdout, and the envelope carries no feedback field
    (`rg -c feedback packages/agentic-workflow-schema/src` → 0); proven by the
    differential harness and by the envelope case in the suite.
-8. **S8** — the crate is the mechanism's only home: no `scripts/feedback.mjs`
-   exists, and the module the `AGENTS.md` rule points at is the crate file;
-   proven by `rg --files scripts | rg -c 'feedback'` → 0 and the guide's row.
+8. **S8** — the crate is the mechanism's only home: the repository's `scripts/`
+   tree carries no feedback module, and the module the `AGENTS.md` rule points at
+   is the crate file; proven by `rg --files scripts | rg -c 'feedback'` → 0 and
+   the guide's row.
 
 ## Path protection
 
@@ -412,9 +420,55 @@ freeze (D1).
   deterministic gates run always.
 - **D2** — 2026-11-14, S8 decides the home: the mechanism is
   `packages/agentic-workflow/src/feedback/`, because #352 migrated the runtime
-  commands into the crate and a `scripts/feedback.mjs` would be an orphan the
-  day a repo script is retired. The relative-import path stays open for repo
-  scripts (`scripts/session-close.mjs` is the precedent).
+  commands into the crate and a feedback module under the repository's `scripts/`
+  would be an orphan the day a repo script is retired. The relative-import path
+  stays open for repo scripts (`scripts/session-close.mjs` is the precedent).
+- **P1** — 2026-11-14 15:15, the ledgers froze before the first line of code
+  (`phase-lint` PASS on this doc), then the channel's corpus landed red against
+  the missing module · `c6f88cb0`, `5a13d5ec`.
+- **E1** — 2026-11-14, `bun test packages/agentic-workflow/test/feedback.test.mjs`
+  · exit 1 at `5a13d5ec` · `Cannot find module '../src/feedback/index.mjs'` — the
+  red commit, observed failing on the missing module.
+- **P2** — 2026-11-14 15:31, `src/feedback/index.mjs` published: the vocabulary,
+  the flag parser, the channel with its seams and the no-op · `3b47b6bd`.
+- **P3** — 2026-11-14 15:39, the bin consumes the tier flags before dispatch and
+  attaches the process-wide channel; `doc` threads it into `runDocOp` and
+  `syncIndex` gained `onProgress` · `8ccb3516`.
+- **E2** — 2026-11-14, `bun test packages/agentic-workflow/test/feedback.test.mjs`
+  · exit 0 · `29 pass 0 fail` (the module, the tiers, the threshold, the
+  progress estimate, the profile table, the spawned `doc` cases).
+- **E3** — 2026-11-14, `bun run test` in `packages/agentic-workflow` · exit 0 ·
+  `755 pass 0 fail` across 42 files (baseline at `f7e5dbba`: 752).
+- **P5** — 2026-11-14 15:47, the rule and its owner page landed: `AGENTS.md`'s
+  working rule, the deep-reference row, the `feedback-tiers` normative row, the
+  pages-index row, the crate README section, and the budget re-pin
+  (`machineLines` 136 → 137, estimate re-based 11,964 → 13,291) · `7cdde931`.
+- **E5** — 2026-11-14, `bun scripts/check-skill-context.mjs --documents` · exit 0
+  · `AGENTS.md 701 lines / 137 machine / 564 prose / 12,082 est` and
+  `PASS context documents: 4 budgeted documents`.
+- **E6** — 2026-11-14, `bun test scripts/normative-drift.test.mjs` · exit 0 · `21
+  pass 0 fail`; `bun test scripts/prose-gate-inventory.test.mjs` · `22 pass`;
+  `bun test scripts/workflow-docs-index.test.mjs` · `5 pass`;
+  `bun test scripts/docs-generate.test.mjs` · `31 pass`; `bun test
+  scripts/guide-split.test.mjs` · `15 pass`.
+- **E7** — 2026-11-14, `rg -l 'export function createFeedback'
+  packages/agentic-workflow/src` · 1 match (`feedback/index.mjs`); `rg --files
+  scripts | rg -c feedback` · 0; `rg -c feedback packages/agentic-workflow-schema/src`
+  · 0; `rg -c 'packages/agentic-workflow/src/feedback/index.mjs' AGENTS.md` · 1.
+- **E8** — 2026-11-14, `doc --sync` on a fresh four-file corpus in
+  `mktemp -d` · exit 0 · `feedback: start`, `stage scan`, `progress 1/5 files
+  (20%)`, `progress 5/5 files (100%)`, `stage embed`, `stage stats`,
+  `feedback: done … · 5 files scanned, 5 changed, 0 deleted · 7 chunks · 54ms`.
+- **E4** — 2026-11-14, the differential harness over `mktemp -d` copies of
+  `f7e5dbba` and of this branch, one shared corpus, ten cases · exit 0 ·
+  `UNDECLARED 0`; declared deltas only: `doc --status` +2, `doc --sync` +7,
+  `doc --sync --json-only` +7, `doc --query` +2 feedback lines on stderr, and
+  `doc --sync --quiet` +0; stdout, exit code and feedback-free stderr identical
+  on all ten.
+- **G1** — 2026-11-14, HEAD 7cdde931460b0154980f2c59b7915dcf8e931911,
+  `bun scripts/run-root-suite.mjs` · exit 0 · `112` suite(s) PASS, none failing.
+- **P6** — 2026-11-14 15:52, the release intent and the session log recorded
+  through the fragment writer and the aggregator · `31f9ec77`.
 - **D3** — 2026-11-14, the regular tier is quiet-until-it-matters rather than
   always-on: the universal attachment emits `start` only once the run has
   crossed the threshold (250 ms), so a fast command adds no noise to a hook, a
