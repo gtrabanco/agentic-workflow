@@ -274,7 +274,13 @@ export const STEPS = [
     id: "secret-scan",
     title: "Push-range secret scan: no credential-shaped value in the added lines (offline)",
     cwd: ".",
-    argv: [NODE, "scripts/secret-scan.mjs"],
+    // Issue #552: the scan ships to target projects, so this repository's step
+    // calls the template's one implementation instead of keeping a copy. The
+    // range semantics, the id, the markers and the CI wiring are #487's and stay
+    // as shipped; the allowlist is handed over as configuration because this
+    // repository's file keeps the path it shipped with, while a project's
+    // default lives under `.agentic-workflow/hooks/`.
+    argv: [NODE, "template/.agentic-workflow/hooks/secret-scan.mjs", "--allowlist", "scripts/secret-scan-allowlist.json"],
     // Not a `tests:` step on purpose: a prose-only push is exactly the leak path
     // — a token pasted into a fixture, a documentation example or a journal
     // fragment — so an empty impact verdict must never skip the scan, and the

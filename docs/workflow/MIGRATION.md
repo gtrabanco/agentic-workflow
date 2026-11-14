@@ -1041,6 +1041,12 @@ written against one train, and the pin is what keeps an old install coherent.
 
 The repository's own gates (`check-skill-context`, `local-gate`, `release`,
 `test-impact`, …) stay in `scripts/` — they gate this repository and never ship.
+The one exception is the push-range secret scan (issue #552): its implementation
+ships at `template/.agentic-workflow/hooks/secret-scan.mjs` because a target
+project has no `scripts/local-gate.mjs`, and this repository's `local-gate` step
+calls that same file with its own allowlist instead of keeping a copy — the gate
+that *orchestrates* the steps still never ships, only the scanner a project can
+run itself.
 
 Testing a local build never touches the pin: set
 `AGENTIC_WORKFLOW_RUNNER="bun /path/to/packages/agentic-workflow/bin/agentic-workflow.mjs"`

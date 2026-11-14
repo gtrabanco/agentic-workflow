@@ -220,6 +220,15 @@ step 4:
   are only a freshness fast path), and never write `.git/hooks/` or the config
   on a later visit without a fresh yes. The hooks are best-effort by contract
   (`doc --sync --quiet`, always exit 0 — a fast path never breaks git).
+- **The push-range secret scan is consent-gated and never installs itself (issue
+  #552).** One question — "install the push-range secret scan as a `pre-push`
+  hook?" — joins the hook consents, and a yes chains
+  `.agentic-workflow/hooks/secret-scan.sh "$@"` into `.git/hooks/pre-push`
+  (additively, never over a customized hook) and runs
+  `bash .agentic-workflow/hooks/tests/test-secret-scan.sh`; a no installs
+  nothing and records the residual, with the hooks README's manual invocation as
+  the documented route. It needs only `bun` or `node` and refuses the push by
+  name without either — a scanner that cannot look never reports nothing to see.
 - **Unified config is offered, never hand-written (issue #427).** One consented
   question offers the project config; a yes runs
   `bunx @gtrabanco/agentic-workflow config init --scope project` (which refuses
