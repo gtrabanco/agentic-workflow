@@ -299,6 +299,11 @@ unit; the review step is the owner's external verification.
 - **E11** — 2026-11-14, `node scripts/run-root-suite.mjs` at `143968cf` · exit 0 · `root gate: 113 suite(s) · 4 worker(s)` and 113 PASS, including `scripts/secret-scan.test.mjs (3.3s)` (the base at `f7e5dbba` ran 112 of 112 the same way).
 - **E12** — 2026-11-14, the per-step gate runs in the foreground: `node scripts/local-gate.mjs --only version-parity-content,docs-generated-projection,journal-carrier-check,log-immutability,secret-scan,temp-hygiene,tmp-gc,worktree-guard,rigidity-review --skip-network --no-bail` · exit 0 · `PASS — 9 step(s)`; and `--only schema-build,crate-suite-node,schema-node-compat,pi-node-compat --skip-network --no-bail` · exit 0 · `PASS — 4 step(s)`.
 - **E13** — 2026-11-14, the full offline gate (`node scripts/local-gate.mjs --skip-network`) twice · exit 1 both times · `FAILED at root-suite`, where `scripts/phase-lint.test.mjs` measured 23 s on the base tree and 35 s on this one in isolation, 67 s beside four competing suites, and crossed the runner's 120 s suite bound under the full pool — the pre-existing contention recorded in `## Known pre-existing issues`, with every other step green in the same runs.
+- **P7** — 2026-11-14, verification closed: the standalone root gate, the per-step gate runs, the differential and the live-tree scans · `0d69b33c` (the receipt commit) with the final root gate re-run at the head named below.
+- **G1** — 2026-11-14, `node scripts/local-gate.mjs --only secret-scan,log-immutability,journal-carrier-check,docs-generated-projection,version-parity-content --skip-network` · exit 0 · `PASS — 5 step(s)` at the final head, with `Log-immutability: 0 violations · range 8 commits`.
+- **G2** — 2026-11-14, `node scripts/run-root-suite.mjs` at the final head · exit 0 · `root gate: 113 suite(s) · 4 worker(s)` and 113 PASS.
+- **P8** — 2026-11-14, the session entry written as a journal fragment through `agentic-workflow journal write` and committed by `node scripts/session-close.mjs close` (the journal is aggregator-only since issue #468, so no hand-append) · `c4b4ef08`.
+- **E14** — 2026-11-14, the last range scan of this branch (`f7e5dbba..HEAD`, 1,652 added lines including the fragment and this receipt) · exit 0 · `verdict: PASS`, 1 allowlisted; `node scripts/secret-scan.mjs --all` · exit 0 · `verdict: PASS`.
 
 ## Next
 
