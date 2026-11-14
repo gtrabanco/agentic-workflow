@@ -37,6 +37,7 @@ import { syncIndex, rebuildIndex } from "./sync.mjs";
 import { queryIndex, statusIndex } from "./query.mjs";
 import { loadConfig, effectiveChunkLimit } from "./config.mjs";
 import { resolveEmbedConfig, makeOpenAIProvider, embedPendingChunks, embeddingStats } from "./embeddings.mjs";
+import { NO_FEEDBACK } from "../feedback/index.mjs";
 
 /** How many failure shapes and chunk locators the envelope repeats before summarising. */
 const REJECTION_DETAIL_LIMIT = 10;
@@ -114,6 +115,9 @@ async function embedPass(root, { embedCfg, embedder, declareKeywordOnly }) {
  */
 export async function runDocOp(grammar, ctx = {}) {
   const root = ctx.rootDir ?? process.cwd();
+  // Issue #424: the channel a CLI hands in. Absent, every call is a no-op, so
+  // an embedded caller (the pi package's renderer, a suite) keeps its silence.
+  const feedback = ctx.feedback ?? NO_FEEDBACK;
 
   if (grammar.op === "sync" || grammar.op === "rebuild") {
     const cfg = loadConfig(root);
@@ -123,16 +127,32 @@ export async function runDocOp(grammar, ctx = {}) {
     const providerConfigured = ctx.embedder !== undefined || embedCfg.configured;
     const maxChunkChars = effectiveChunkLimit({ config: cfg, providerConfigured, env: process.env });
     const exclusions = cfg.index?.excludes;
-    const r =
+    // The three stages a reader waits on, timed by the channel: the chunk pass,
+    // the provider round-trips, and the store's own count.
+    const r = await feedback.stage("scan", () =>
       grammar.op === "rebuild"
-        ? await rebuildIndex(root, { maxChunkChars, exclusions })
-        : await syncIndex(root, { maxChunkChars, exclusions });
+        ? rebuildIndex(root, {
+            maxChunkChars,
+            exclusions,
+            onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
+          })
+        : syncIndex(root, {
+            maxChunkChars,
+            exclusions,
+            onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
+          }),
+    );
 
-    const pass = await embedPass(root, {
-      embedCfg,
-      embedder: ctx.embedder,
-      declareKeywordOnly: grammar.op === "rebuild",
-    });
+    const pass = await feedback.stage("embed", () =>
+      embedPass(root, {
+        embedCfg,
+        embedder: ctx.embedder,
+        declareKeywordOnly: grammar.op === "rebuild",
+      }),
+    );
+    feedback.detail(
+      `embed: provider=${providerConfigured ? "configured" : "none"} embedded=${pass.embedded} degradations=[${pass.degradations.join(",")}]`,
+    );
     const degradations = [];
     if (r.truncated > 0) degradations.push("chunk-too-large");
     for (const value of pass.degradations) if (!degradations.includes(value)) degradations.push(value);
@@ -141,7 +161,7 @@ export async function runDocOp(grammar, ctx = {}) {
     // envelope's open `store` record — the native /aw-index report renders
     // from these fields alone, and no top-level key or degradation value is
     // added to the frozen contract.
-    const stats = await embeddingStats(root);
+    const stats = await feedback.stage("stats", () => embeddingStats(root));
     const record = { path: storePath(root), present: true, files: r.filesScanned, chunks: r.chunks, pending: stats.pending, model: stats.model };
     const withRejection = (value) => (pass.rejected === null ? value : { ...value, rejected: pass.rejected });
     const store =
@@ -167,6 +187,7 @@ export async function runDocOp(grammar, ctx = {}) {
   }
 
   if (grammar.op === "query") {
+    feedback.start();
     return queryIndex(
       root,
       grammar.query,
@@ -178,6 +199,7 @@ export async function runDocOp(grammar, ctx = {}) {
   }
 
   if (grammar.op === "status") {
+    feedback.start();
     return statusIndex(root);
   }
 

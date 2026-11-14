@@ -80,6 +80,7 @@ while doing one kind of work is one hop away and read on demand:
 | [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) | landing a breaking surface, and needing the migration note beside it |
 | [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md) | provisioning this repo's own authoring toolchain |
 | [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) | running product-audit here (the domain-drift sweep's method), or when unsure which domain a decision belongs to |
+| [`docs/workflow/FEEDBACK.md`](docs/workflow/FEEDBACK.md) | writing or changing a CLI command, script or engine: the three feedback flags, the stderr-only invariant, and what a command must report |
 
 ## Instruction precedence
 
@@ -335,6 +336,14 @@ absent — check availability once per session with
 `node scripts/setup-env.mjs --check` (`docs/workflow/SETUP.md`), never assume it.
 The `rg`-first *search feature* stays #269's; this rule owns the tool choice only.
 
+**Every CLI reports through the feedback channel.** A command that can take
+noticeable time says so — start, what it is doing, and how long it took — through
+the runner crate's `src/feedback/index.mjs`, whose published `FEEDBACK_TIERS` are
+`--debug` and `--profile`. Every line goes to **stderr**: stdout and the envelope
+stay the machine receipt. A second progress convention, a private timer or a
+progress byte on stdout is the defect; the contract and its authoring rules are
+owned by [`docs/workflow/FEEDBACK.md`](docs/workflow/FEEDBACK.md).
+
 ### Normalizer inventory (this repository)
 
 The rule that orders these steps — and the fact that a post-freeze byte change voids
@@ -436,6 +445,7 @@ findings-severity-ladder | skills/review-implementation/references/CLASSIFY.md |
 findings-impact | skills/review-implementation/references/CLASSIFY.md | block:finding-impact@1 | finding-impact | no
 pass-name-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PASS_NAMES | pass-name | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
+feedback-tiers | packages/agentic-workflow/src/feedback/index.mjs | schema-export:FEEDBACK_TIERS | feedback-tier | no
 risk-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_KINDS | risk-tier | yes
 risk-tier-signals | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_SIGNAL_KINDS | risk-tier-signal | yes
 risk-tier-reasons | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_REASONS | risk-tier-reason | yes

@@ -32,6 +32,7 @@ Notion ("Agentic Workflow").
 | [PACKAGES.md](PACKAGES.md) | The three companion npm packages: the bun workspace and its single lockfile, the pin rules, the version-parity gate, changesets, and the publish channels |
 | [GIT_IDENTITY_HARDENING.md](GIT_IDENTITY_HARDENING.md) | Git identity & signing hardening: the two layers (agent config-write guard, fail-fast commit/push verification), the one `gitIdentity` profile with its corporate case, the opt-in pre-commit hook, the `-c`-only fixture convention, and the recommended environment layout applied by no default |
 | [GATE_INVENTORY.md](GATE_INVENTORY.md) | The carrier inventory: every gate the workflow runs, whether it is script-pinned, a per-run CLI check or prose-only, how the ranking derives its tier, and where a stay-prose gate re-derives after a compaction |
+| [FEEDBACK.md](FEEDBACK.md) | Every CLI's feedback contract: the three tiers (`--debug`, `--profile`), the `feedback:` line grammar, the stderr-only invariant, and what a command must report |
 | [DOMAIN_SEPARATION.md](DOMAIN_SEPARATION.md) | Project-only: the product-vs-dogfooding safeguard in detail — the two domains, the classification test, both drift directions, the legitimate exceptions, and the domain-drift sweep this repo's product-audit runs carry |
 
 ## Data

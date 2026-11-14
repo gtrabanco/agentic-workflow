@@ -117,9 +117,14 @@ export async function storeStats(root) {
  * automatically truncated (never skipped).
  * D21: `opts.exclusions` is the file exclusion-prefix list; the manifest
  * filters these paths before chunking.
+ *
+ * Issue #424: `opts.onProgress(done, total, path)` is called once per file the
+ * pass reaps or re-chunks, so a CLI can report where the scan is. It is a plain
+ * callback with no channel knowledge: a caller that passes none pays nothing.
  */
 export async function syncIndex(root, opts = {}) {
   const exclusions = opts.exclusions;
+  const onProgress = typeof opts.onProgress === "function" ? opts.onProgress : null;
   loadConfig(root); // config errors surface here too (usage/IO), even in sync
   const manifest = collectManifest(root, { exclusions });
   const { db } = await openDatabase(storePath(root));
@@ -151,9 +156,19 @@ export async function syncIndex(root, opts = {}) {
   // previous store state intact — is the fix, never a weakening of the
   // per-file error semantics (the ENOENT-as-deletion branch still throws
   // non-ENOENT errors out of the pass).
+  const total = changed.length + deleted.length;
+  let processed = 0;
+  const report = (path) => {
+    if (onProgress === null) return;
+    processed += 1;
+    onProgress(processed, total, path);
+  };
   db.exec("BEGIN");
   try {
-    for (const path of deleted) reap.run(path);
+    for (const path of deleted) {
+      reap.run(path);
+      report(path);
+    }
     let truncated = 0;
     for (const path of changed) {
       const src = join(root, path);
@@ -174,6 +189,7 @@ export async function syncIndex(root, opts = {}) {
           deleted.push(path);
         } else throw e;
       }
+      report(path);
     }
     db.exec("COMMIT");
 
