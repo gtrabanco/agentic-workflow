@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: ad82f8be6d4c7c7913cd4652bbc57919404872099c1bdcc650c83d56138db2ff
+ac-hash: 5554d0420e1ccd2ee8ad95cf6c45fe28d2a8571509a9ee5e24401bd6708ec41e
 roadmap_summary: Issue [#538](https://github.com/gtrabanco/agentic-workflow/issues/538): the Engram startup report printed a remediation advisory on every session start, healthy installs included — the module now decides consent × runtime health: a healthy opted-in install is silent, a broken one reports one `error` naming the resolution that failed (`PATH` / `ENGRAM_BIN` / `ENGRAM_URL`) with its repair routes and the binary-vs-served version check, and the opt-out stays quiet.
 ---
 
@@ -43,6 +43,23 @@ broken". The PR closes it via `Closes #538`.
 **S8 — Consent × runtime health replaces the folded advisory.**
 > The report semantics need the consent × runtime-health state machine decided in triage: **healthy + opted-in → silence; opted-in + broken → error with evidence (what failed, which route repairs it); not opted-in → silence** (an operator who does not want memory owes it nothing).
 
+**Amendment batch — 2026-11-14 (owner-directed; ledger home: this branch,
+PR #543 — the owner's verbatim answer, `## Log` L3).** The external verify of
+2026-11-14 returned 0 blockers / 5 advisories; the batch triages those findings
+and the related #524-retirement cluster:
+
+**S9 — Triage the external-verify findings and fix those that deserve fixing.**
+> Apply to this repository: triage and fix those that deserve to fix
+
+**S10 — Understand the context before the fix.**
+> but understand the context before fix
+
+**S11 — Prove nothing else broke.**
+> and check you haven't broke another different thing
+
+**S12 — Loop until the whole related cluster is fixed.**
+> if you have done, start the loop again until you fixed full symbol/related stuff
+
 ## Impact
 
 - `packages/pi-agentic-workflow/src/extension/engram.ts` — the module that owns
@@ -70,6 +87,17 @@ broken". The PR closes it via `Closes #538`.
   superseded (S3/S8).
 - Repository state: the roadmap `## Fixes` row, the changeset intent, the
   rendered projection and the session journal entry ship in the same change.
+
+**Amendment impact (2026-11-14, S9–S12):** `scripts/residual-classify.mjs`
+(both retired-runtime imports re-pointed),
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json` (`machineLines` 134 → 135 with its
+growth source), and four citation surfaces —
+`packages/agentic-workflow/src/runner/unit-route.mjs:743,907`,
+`packages/agentic-workflow/src/relay/Packet.mjs:16`,
+`scripts/schema-runtime.mjs:18`, `scripts/catalog.test.mjs:39,283` — comments
+and one assertion message re-pointed with no behaviour change — plus this unit
+doc (S9–S12, the ledgers, the dispositions, the resolved notes). No config key
+and no published behaviour moves.
 
 ## Retirements
 
@@ -184,6 +212,8 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   checkout at `0a47bca6` with the same single failure (E11); this unit edits
   neither `AGENTS.md` nor the budget cell. **Does not affect** this unit: a
   guide-layer budget discrepancy, not an executable path this change touches.
+  **Resolved 2026-11-14 by this unit's amendment batch** (S9, O16): the pin is
+  re-pinned to the measured region in the same PR.
 - `scripts/residual-classify.test.mjs` is **red on `main` before this branch**:
   `scripts/residual-classify.mjs` imports `./ceremony/lib.mjs`, which #524's
   ceremony migration removed, so 20 of its 25 cases fail with `Cannot find
@@ -191,7 +221,9 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   `0a47bca6`). **Does not affect** this unit: another unit's orphaned import,
   outside this change's regression boundary. Reported to the owner in the
   handoff rather than repaired here — repairing another unit's surface is scope
-  this unit does not own.
+  this unit does not own. **Resolved 2026-11-14 by this unit's amendment
+  batch** (S9, O15): both orphaned imports re-point at the crate homes and the
+  suite runs green.
 
 ## Acceptance criteria
 
@@ -234,6 +266,28 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   and the adapter's status-keyed set is gone. Check:
   `rg -n 'INFORMATIONAL_ENGRAM' packages/pi-agentic-workflow/src` matches 0 and
   `bun run test` in `packages/pi-agentic-workflow` exits 0.
+- **AC-S9** — The triage's fix set lands and every no-fix verdict carries a
+  dated disposition: `bun scripts/check-skill-context.mjs --documents` exits 0
+  (the A1 re-pin), `bun test scripts/residual-classify.test.mjs` exits 0 with
+  25 pass (the A2/A2b re-points), O18's command exits 1 with 0 matches (the C1
+  re-points), and O17's command matches 4 (D9–D12 exist, dated).
+- **AC-S10** — The context claims reproduce from git history: `git show
+  edde336c --name-only --diff-filter=D -- scripts/ceremony/lib.mjs
+  scripts/unit-doc-phases.mjs` lists both deleted paths (the two imports
+  `residual-classify.mjs` still carried), and `git show 0533c39b -- AGENTS.md`
+  contains the added `skills/runner-contract/references/RUNNER.md` row (the row
+  that moved the machine region after `c3c6b439`'s re-pin). Check: both commands
+  exit 0 with their output recorded as `E` lines.
+- **AC-S11** — Nothing else broke: `bun scripts/run-root-suite.mjs` exits 0
+  with 0 fail (any load-killed suite re-runs green standalone and is named) and
+  `bun scripts/local-gate.mjs --no-bail` records no red beyond that disclosed
+  class. Check: both results recorded in `## Log`.
+- **AC-S12** — The related-symbol sweep closes: after the fixes, O18's command
+  and the 23-file retirement sweep re-run report zero live hits outside the
+  declared carriers (`docs/workflow/MIGRATION.md`'s old-command column, the
+  budgets' dated `sources` entries, closed-unit docs, fixtures, and the D12
+  disposition's clause). Check: the sweep output recorded as an `E` line and
+  O18's command exits 1.
 
 ## Tasks
 
@@ -283,6 +337,48 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   foreground, every obligation closed (validator: `bun scripts/local-gate.mjs`
   exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
+- P9 — Freeze this amendment batch: the S9–S12 request, its criteria, the
+  O15–O22 / PE-011–PE-014 ledgers and the dispositions D9–D12 in this document,
+  before the first fix line, with `ac-hash` recomputed over the amended
+  criteria (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs
+  phase-lint docs/fix/538-engram-startup-report/SPEC.md` prints
+  `verdict: PASS` and exits 0)
+  (Implements: S9, S10)
+  - Relevant files: docs/fix/538-engram-startup-report/SPEC.md
+- P10 — The orphaned imports: `scripts/residual-classify.mjs` re-points
+  `parseTasks` at `packages/agentic-workflow/src/runner/lib.mjs` and
+  `sectionBounds` at `packages/agentic-workflow/src/runner/unit-doc-phases.mjs`,
+  the identical bodies PE-013 proves (validator:
+  `bun test scripts/residual-classify.test.mjs` exits 0 with 25 pass / 0 fail)
+  (Implements: S9)
+  - Relevant files: scripts/residual-classify.mjs
+- P11 — The machine-region re-pin: `machineLines` 134 → 135 with its growth
+  source named in `sources` (validator:
+  `bun scripts/check-skill-context.mjs --documents` exits 0)
+  (Implements: S9)
+  - Relevant files: docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- P12 — The citation re-points: the shipped comments and the one assertion
+  message naming the retired `scripts/catalog.json` /
+  `scripts/pre-execution-snapshot.mjs` point at their crate homes (validator:
+  `rg -n -e "scripts/catalog\.json" -e
+  "scripts/pre-execution-snapshot\.mjs" packages/agentic-workflow/src
+  scripts/catalog.test.mjs scripts/schema-runtime.mjs` exits 1 with 0 matches)
+  (Implements: S9, S12)
+  - Relevant files: packages/agentic-workflow/src/runner/unit-route.mjs,
+    packages/agentic-workflow/src/relay/Packet.mjs, scripts/schema-runtime.mjs,
+    scripts/catalog.test.mjs
+- P13 — The verification loop: the 23-file retirement sweep re-run, the full
+  root suite and the declared gate at the batch head (validator:
+  `bun scripts/run-root-suite.mjs` exits 0 and
+  `bun scripts/local-gate.mjs --no-bail` records no red beyond the D9 class)
+  (Implements: S11, S12)
+- P14 — Documentation and state: the resolution notes on the known-preexisting
+  bullets, the evidence and disposition lines, the closed amendment
+  obligations and the journal fragment through the carrier's writer (validator:
+  `bun scripts/docs-generate.mjs --check` exits 0)
+  (Implements: S9, S10, S11, S12)
+  - Relevant files: docs/fix/538-engram-startup-report/SPEC.md,
+    .agentic-workflow/journal/
 
 ### Planning evidence
 
@@ -298,6 +394,10 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
 | PE-008 | committed-tool | The tier authority is the crate CLI: the repo-local ceremony script #524 moved no longer exists: `ceremony tier classify --paths` emits `risk-tier-verdict@1`, `phase-lint` reads the unit-doc grammar, and `docs-generate` owns the roadmap summary cell | `packages/agentic-workflow/bin/agentic-workflow.mjs` usage block; this session's tier and phase-lint runs; `scripts/docs-generate.mjs` | run 2026-11-14 (this session) | `## Risk tier`; O11, O13 |
 | PE-009 | measured-baseline | The regression floor at the cut head `a83b9b38` (after `bun run test`, which builds): **864 pass / 0 fail / 77 files** | this session's run of `bun run --cwd packages/pi-agentic-workflow test` | run 2026-11-14 (this session) | O7, O13; AC-S8 |
 | PE-010 | unknown | No repository evidence says whether an operator's shell exports `ENGRAM_BIN` or `ENGRAM_URL` while Pi runs; the contract that stays true either way is Engram's own blankness rule plus a corpus that pins the variables | not sampled — no session env capture exists in this repository (`rg -n 'ENGRAM_BIN' packages/pi-agentic-workflow/src`) | unverified 2026-11-14 (this session) | O3, O7; the suites' env isolation |
+| PE-011 | committed-source | `edde336c` (step 4 of #524's retirement) deleted 23 `scripts/` files including `scripts/ceremony/lib.mjs` and `scripts/unit-doc-phases.mjs`, and the citation re-point (`7cb595a3`) never touched `residual-classify.mjs`'s imports, so its suite has been red on `main` since | `git show edde336c --stat`; `git log --oneline -1 -- scripts/residual-classify.mjs` | read 2026-11-14 (amendment session) | O15, O19; P10 |
+| PE-012 | committed-source | `0533c39b` (#352) added the `rendered-facts@1` `RUNNER.md` row to `AGENTS.md` after the last machine-region re-pin (`c3c6b439` → 134), moving the measured region to 135 without re-pinning — the whole of the E11 failure | `git show 0533c39b -- AGENTS.md`; `git log -L 30,45:docs/workflow/SKILL_CONTEXT_BUDGETS.json` | read 2026-11-14 (amendment session) | O16, O19; P11 |
+| PE-013 | committed-source | the deleted `parseTasks` body and `packages/agentic-workflow/src/runner/lib.mjs:341` are identical, `sectionBounds` ships at `runner/unit-doc-phases.mjs:407`, and `scripts/docs-generate.mjs:55` already imports both crate modules from `scripts/` — the re-points change no behaviour | byte comparison of `git show edde336c~1:scripts/ceremony/lib.mjs` against the crate source; `rg -n 'sectionBounds' packages/agentic-workflow/src/runner/unit-doc-phases.mjs` | read 2026-11-14 (amendment session) | O15; P10 |
+| PE-014 | committed-source | box2's phase-lint clause is presence-gated by contract ("presence-only box2", `TURN_CONTRACT.md`), exercised only by fixtures that synthesize `scripts/phase-lint.mjs`; no project ships that file after #524, so the clause is a production no-op whose retarget would change published engine behaviour | `skills/orchestration-envelope/references/TURN_CONTRACT.md:36`; `packages/agentic-workflow/test/fixtures.mjs:214-220` | read 2026-11-14 (amendment session) | D12; P12's scope decision |
 
 ### Obligations
 
@@ -317,6 +417,14 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
 | O12 | S6, S2, S3 | the change differs from the base commit only in the declared deltas: the silent healthy native state, the evidenced errors, the `ENGRAM_BIN` quote, the leftover warning and the `notice` axis; every other input keeps the base's status and message | P5 | P5 | direct application (this session) | differential harness in `mktemp -d` (base module copy vs this change, identical corpus): the diff lists only those deltas | E line in SPEC `## Log` with the diff summary | verified — E8 (11 declared deltas, 9 identical rows, 8 identical binary rows) |
 | O13 | S1 | the declared deterministic gates are green before handoff | P7 | P7 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 (15 of 17 steps pass; the only red is E11/E12, reproduced on `main` before this branch) |
 | O14 | S2, S3, S4 | no suite depends on the operator's environment: the Engram cases pin `PATH`, `ENGRAM_URL` and `ENGRAM_BIN`, so a shell exporting either variable cannot flip the result | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 with `ENGRAM_URL` and `ENGRAM_BIN` exported | E line in SPEC `## Log` | verified — E6 (66 pass with `ENGRAM_URL` and `ENGRAM_BIN` exported) |
+| O15 | S9 | `scripts/residual-classify.mjs` executes again: both retired-runtime imports resolve to the shipped crate homes and the classifier's whole suite is green | P10 | P10 | direct application (this session) | `bun test scripts/residual-classify.test.mjs` exits 0 (25 pass / 0 fail) | E line in SPEC `## Log` | planned |
+| O16 | S9 | the guide's machine-region pin equals the measured region again — the `--documents` gate red on `main` since `0533c39b` | P11 | P11 | direct application (this session) | `bun scripts/check-skill-context.mjs --documents` exits 0 | E line in SPEC `## Log` | planned |
+| O17 | S9 | every triage no-fix verdict carries a dated disposition, so no advisory is silently dropped | P9 | P9 | direct application (this session) | `rg -c -e "^\- \*\*D9\*\*" -e "^\- \*\*D10\*\*" -e "^\- \*\*D11\*\*" -e "^\- \*\*D12\*\*" docs/fix/538-engram-startup-report/SPEC.md` matches 4 | E line in SPEC `## Log` | planned |
+| O18 | S9, S12 | no live surface names a runtime `edde336c` retired: the shipped comments and the one assertion message re-point at their crate homes | P12 | P12 | direct application (this session) | `rg -n -e "scripts/catalog\.json" -e "scripts/pre-execution-snapshot\.mjs" packages/agentic-workflow/src scripts/catalog.test.mjs scripts/schema-runtime.mjs` exits 1 (0 matches) | E line in SPEC `## Log` | planned |
+| O19 | S10 | the root-cause claims the fixes rest on reproduce from git history | P9 | P9 | direct application (this session) | `git show edde336c --name-only --diff-filter=D -- scripts/ceremony/lib.mjs scripts/unit-doc-phases.mjs` lists both deleted paths, and `git show 0533c39b -- AGENTS.md` contains the added `skills/runner-contract/references/RUNNER.md` row | E line in SPEC `## Log` | planned |
+| O20 | S11 | no collateral red: the full root suite runs green at the batch head | P13 | P13 | direct application (this session) | `bun scripts/run-root-suite.mjs` exits 0 (0 fail; a load-killed suite re-runs green standalone and is named in `## Log`) | G line in SPEC `## Log` | planned |
+| O21 | S11, S12 | the declared deterministic gates stay green after the batch — the two original reds fixed, nothing else opened | P13 | P13 | direct application (this session) | `bun scripts/local-gate.mjs --no-bail` exits 0 (should only the disclosed D9 load class fire, the run and the standalone re-runs are both recorded) | G line in SPEC `## Log` | planned |
+| O22 | S9, S10, S11, S12 | the documentation and projection state is fresh after the amendment | P14 | P14 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0 | E line in SPEC `## Log` | planned |
 
 ## Triaged steps
 
@@ -517,15 +625,60 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   subset, whose `root-suite` step is red on `main` before this branch for E11/E12,
   so it used the repository's documented escape hatch
   (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`) with the reason recorded in the PR body.
+- **L3** — 2026-11-14, the owner's amendment request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Ledger home, the owner's answer verbatim: `branch fix/538-engram-startup-report PR #543 which is the implementation of issue #538`.
+- **D9** — 2026-11-14, disposition `wontfix` — the `ceremony-unit-plan` load red
+  (external-verify advisory 3): the suite passes standalone (18 pass / 0 fail)
+  and reddens only inside the root suite's four-worker pool at the 10 s case
+  budget; it is the disclosed flake class (G2), on a suite this batch never
+  touches. Smallest future action if ordered: a measured entry in
+  `scripts/test-timeout-allowlist.json` with its reason and cost — never a
+  silent skip.
+- **D10** — 2026-11-14, disposition `wontfix` — 531's dated rows
+  (`docs/fix/531-engram-native-skip-remote-surfaces/SPEC.md:157,356,358,446` and
+  `decisions.md:26`; external-verify advisory 4): historical receipts of a
+  merged unit, superseded by this unit's D3/D6 and Retirements; rewriting a
+  closed unit's ledger would falsify what was true when recorded (the 437
+  receipt's precedent for dated records).
+- **D11** — 2026-11-14, disposition `wontfix` — this SPEC's O13 validator-cell
+  wording (external-verify advisory 5): ledgers freeze at cut except `status`,
+  the status cell and G1/G2 already record the exit-1 honestly, PR #543 is open
+  on this branch, and the external receipt carries the nuance durably.
+- **D12** — 2026-11-14, disposition `wontfix` in this batch —
+  `packages/agentic-workflow/bin/turn-contract.mjs:114` spawns the retired
+  `scripts/phase-lint.mjs` behind an `existsSync` gate that is false in every
+  project after #524 (fixtures synthesize the file; `TURN_CONTRACT.md:36`
+  publishes the clause as presence-only), so nothing runs and nothing lies.
+  Retargeting it to the crate's `phase-lint` over `SPEC.md` changes published
+  engine behaviour (feature 52 × feature 61 × feature 91) and needs its own
+  unit with red-first engine cases. Smallest action if ordered: one unit
+  re-pointing the spawn at the bin and `SPEC.md`, updating the two fixtures and
+  the engine note.
+- **E13** — 2026-11-14, the amendment red corpus, re-run fresh before the first
+  fix line: `bun scripts/check-skill-context.mjs --documents` · exit 1 ·
+  `AGENTS.md: machine-table lines 135 != the declared 134` (byte-identical at
+  base `0a47bca6`); `bun test scripts/residual-classify.test.mjs` · exit 1 ·
+  5 pass / 20 fail · `Cannot find module './ceremony/lib.mjs'` (byte-identical
+  at base). Triage verdicts: fix A1/A2/A2b/C1, dispositions D9–D12.
+- **P9** — 2026-11-14, the amendment batch frozen with S9–S12, AC-S9–AC-S12,
+  O15–O22, PE-011–PE-014, D9–D12 and the recomputed `ac-hash` · phase-lint
+  `verdict PASS`, 13 phases `PASS (6/6)` (P1–P7, P9–P14), fingerprint
+  `19dcbf55…` — O17's command matches 4 and O19's two commands reproduce in
+  the same foreground run.
 
 ## Next
 
 The owner's external verdict on PR
-[#543](https://github.com/gtrabanco/agentic-workflow/pull/543). After it: the
-merge (the roadmap row settles to `done` with the PR link and is removed only
-after the merge), and the integration of `main` (`0a47bca6` moved while this
-branch was cut; no conflict, the owner runs the integration). Both root-suite
-reds (E11, E12) are another unit's surface.
+[#543](https://github.com/gtrabanco/agentic-workflow/pull/543), now carrying the
+2026-11-14 amendment batch (S9–S12). After it: the merge (the roadmap row
+settles to `done` with the PR link and is removed only after the merge), and the
+integration of `main` (`0a47bca6` moved while this branch was cut; no conflict,
+the owner runs the integration). The two root-suite reds the original verify
+recorded (E11, E12) are fixed by this batch (O15, O16); the disclosed
+`ceremony-unit-plan` load flake is the only red the batch does not claim (D9).
 
 ## References
 
