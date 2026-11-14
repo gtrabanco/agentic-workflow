@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: 0a57c80143734a6c55657ffe65cbeafa8bf09e6be63394b17df5c22685629612
+ac-hash: ad82f8be6d4c7c7913cd4652bbc57919404872099c1bdcc650c83d56138db2ff
 roadmap_summary: Issue [#538](https://github.com/gtrabanco/agentic-workflow/issues/538): the Engram startup report printed a remediation advisory on every session start, healthy installs included — the module now decides consent × runtime health: a healthy opted-in install is silent, a broken one reports one `error` naming the resolution that failed (`PATH` / `ENGRAM_BIN` / `ENGRAM_URL`) with its repair routes and the binary-vs-served version check, and the opt-out stays quiet.
 ---
 
@@ -201,9 +201,9 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   `memory` key → zero `notify`).
 - **AC-S5** — The opt-in guidance is printed in no state, and the README's
   situation table no longer offers an opt-in line as a startup message. Check:
-  `rg -n 'to opt in' packages/pi-agentic-workflow/src/extension/index.ts` matches
-  0, and the README's absent-opt-in row states the silence (read recorded in
-  `## Log`).
+  `bun test test/shipped-adapter.test.mjs` exits 0 (the no-opt-in case asserts
+  zero `notify` calls at all) and the README's absent-opt-in row states the
+  silence (read recorded in `## Log`).
 - **AC-S6** — `binaryPath` decides the native branch: byte-identical input with
   the binary present is silent, with it absent is an error. Check:
   `bun test test/engram-provision.test.mjs` exits 0 (the paired cases), plus the
@@ -291,7 +291,7 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
 | O5 | S3, S7 | the no-native `binary-missing` state is one `error` built by the same evidence builder, so both broken routes carry the same facts | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the binary-missing cases: `notice: "error"`, surfaces named, `ENGRAM_BIN` state quoted) | E line in SPEC `## Log` | planned |
 | O6 | S3, S8 | `config-invalid` and `unsupported-host` are errors, not warnings: an unreadable consent and a host without `registerMcpServer` are both broken states | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the `notice` assertions on those statuses) | E line in SPEC `## Log` | planned |
 | O7 | S2, S8 | the states the owner kept keep both their behaviour and their line: `registered` (one `info`, exact command), `external-server` (one `info`), `already-declared` (one `info`) | P4 | P4 | direct application (this session) | `bun test test/engram-provision.test.mjs test/shipped-adapter.test.mjs` exits 0 with those cases' assertions intact | E line in SPEC `## Log` | planned |
-| O8 | S4, S5 | a session without the opt-in prints nothing: the module's `not-consented` carries `notice: "silent"`, and no state prints the opt-in instruction | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 (no `memory` key → zero `notify`) and `rg -n 'to opt in' packages/pi-agentic-workflow/src/extension/index.ts` matches 0 | E line in SPEC `## Log` | planned |
+| O8 | S4, S5 | a session without the opt-in prints nothing: the module's `not-consented` carries `notice: "silent"`, and no state prints the opt-in instruction | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 (no `memory` key → zero `notify`) and `bun test test/engram-provision.test.mjs` exits 0 (`notice: "silent"` on `not-consented`) | E line in SPEC `## Log` | planned |
 | O9 | S2, S3 | a leftover `mcpServers.engram` declaration beside the native package keeps its callout and is reported as a `warning` (it breaks the native-only write guarantee even when memory resolves) | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the leftover case asserts `notice: "warning"`, `mcp.json Pi reads still declares`, `remove that entry`) | E line in SPEC `## Log` | planned |
 | O10 | S8 | the level is the module's `notice` on every status and the adapter's status-keyed set is gone, so no future status can be informational by accident | P4 | P4 | direct application (this session) | `rg -n 'INFORMATIONAL_ENGRAM' packages/pi-agentic-workflow/src` matches 0 and `bun test test/shipped-adapter.test.mjs` exits 0 | E line in SPEC `## Log` | planned |
 | O11 | S1, S5, S8 | documentation and repository state ship in the same change: the README's memory section states the silence, the roadmap `## Fixes` row exists with its summary cell rendered from `roadmap_summary:`, the changeset intent exists, and the projection is fresh | P6 | P6 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0, `bun scripts/lint-changeset.mjs` exits 0, `rg -c '#538' docs/ROADMAP.md` matches 1 | E line in SPEC `## Log` | planned |
@@ -386,6 +386,13 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   the module's `notice` axis (superseding 531 D4's placement, keeping its intent):
   the level is now a property of the outcome — "healthy silent, broken error" is
   the module's decision (S8) — and the adapter only renders it.
+- **D7** — 2026-11-14, plan repair to AC-S5: the criterion's check greps a
+  *comment* (`rg 'to opt in' src/extension/index.ts`) that legitimately says an
+  unreadable config must not tell an opted-in operator to opt in, so the check
+  could never pass. The criterion is unchanged; its check is now the case that
+  proves it (the shipped entry with no opt-in emits zero notifications).
+  `ac-hash` recomputed after the repair; no test was weakened and the comment was
+  not edited to satisfy a grep.
 - **E1** — 2026-11-14, `cd packages/pi-agentic-workflow && bun run test` at the
   cut head `a83b9b38` · exit 0 · 864 pass, 0 fail, 77 files (the regression floor,
   PE-009).
@@ -396,6 +403,57 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   phase-lint docs/fix/538-engram-startup-report/SPEC.md` · exit 0 · 7 phases
   `PASS (6/6)`, `verdict PASS`, fingerprint `c852bae1…` (P5's validator needed
   its outcome anchor; the freeze itself is unchanged).
+
+- **E4** — 2026-11-14, RED corpus before the implementation:
+  `cd packages/pi-agentic-workflow && bun test test/engram-provision.test.mjs
+  test/shipped-adapter.test.mjs` against the pre-change `dist/` · exit 1 ·
+  46 pass, **20 fail** — `report.notice` did not exist, the healthy native state
+  printed the advisory, the broken native state had no evidence, and the adapter
+  still printed both. The opt-out case already passed (531 silenced it).
+- **E5** — 2026-11-14, `cd packages/pi-agentic-workflow && bun test
+  test/engram-provision.test.mjs test/shipped-adapter.test.mjs` · exit 0 · 66
+  pass, 0 fail (58 cases before this unit; the 8 new ones are the silent native
+  state, its `ENGRAM_URL` variant, the present/absent pair, the evidenced error,
+  the `ENGRAM_BIN` quote, the leftover warning, and the adapter's silence + one
+  `error` + no-opt-in cases).
+- **E6** — 2026-11-14, `ENGRAM_URL=http://127.0.0.1:7437
+  ENGRAM_BIN=/nope/engram bun test test/engram-provision.test.mjs
+  test/shipped-adapter.test.mjs` · exit 0 · 66 pass, 0 fail — the operator's
+  shell cannot flip the result (O14).
+- **E7** — 2026-11-14, `cd packages/pi-agentic-workflow && bun run test` · exit 0
+  · 871 pass, 0 fail, 77 files (the floor of E1 plus the 7 new cases; `tsc`
+  built `dist/` first).
+- **E8** — 2026-11-14, differential in `mktemp -d` (the base commit's module
+  beside this change, one 28-row corpus) · exit 0 · 20 `provisionEngram` rows:
+  **11 changed, 9 identical**; 8 `resolveEngramBinary` rows: all identical. Every
+  changed row is a declared delta — the silent healthy native state (3 rows, two
+  of them the old "served by the external Engram server" sentence D3 retires),
+  the four evidenced errors (native-broken, the `ENGRAM_BIN` quote, the
+  leftover-and-broken pair), the leftover warning (same words as before, minus
+  the advisory clause), and `binary-missing` with its two `ENGRAM_BIN` variants.
+  No undeclared line: `not-consented`, `config-invalid`, `external-server`,
+  `unsupported-host`, `already-declared` and `registered` keep byte-identical
+  messages.
+- **E9** — 2026-11-14, `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  `3 checked · 0 missing · 0 stale · 0 orphaned`, roadmap unchanged, `verdict:
+  PASS`; `bun scripts/lint-changeset.mjs` · exit 0 · `ok
+  538-engram-startup-report.md`; `bun scripts/roadmap-settle.mjs` · exit 0 ·
+  `196 unit docs checked`, `violations: 0`; `rg -c '#538' docs/ROADMAP.md` → 1
+  (O11).
+- **E10** — 2026-11-14, `rg -n 'INFORMATIONAL_ENGRAM'
+  packages/pi-agentic-workflow/src` · exit 1 · 0 matches, and `rg -c 'notice'
+  packages/pi-agentic-workflow/src/extension/engram.ts` → 13 (O10). The README's
+  absent-opt-in row now reads "nothing is registered and nothing is said — an
+  operator who does not want memory owes the report nothing", and
+  `rg -n 'If memory is not working' packages skills docs` matches only this unit
+  doc's quotes of the retired string (AC-S5).
+- **P1** — 2026-11-14, the unit doc frozen with its ledgers, criteria, ac-hash
+  and tier verdict; phase-lint `PASS (6/6)` × 7 · `988c30e3`.
+- **P2** — 2026-11-14, the RED corpus landed alone and observed red (E4) ·
+  `0e4f4810`.
+- **P3/P4** — 2026-11-14, the module's `notice` axis + health branch + evidence
+  builder, and the adapter's `ENGRAM_BIN` input + `notice` rendering ·
+  `0d252d3b`.
 
 ## Next
 
