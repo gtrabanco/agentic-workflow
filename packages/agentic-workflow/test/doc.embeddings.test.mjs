@@ -389,18 +389,20 @@ describe("S3/S9 sync resilience (D5)", () => {
     try {
       await syncIndex(dir);
       const clock = virtualClock();
-      // Batch 3 fails with a non-retryable status: batches 1-2 landed and are
-      // committed, so the store's own pending predicate is the resume point.
+      // Batch 3 exhausts its ladder on a retryable 503 — the provider is down, so
+      // the pass stops (issue #540 narrowed this to retryable failures only).
+      // Batches 1-2 landed and are committed, so the store's own pending
+      // predicate is the resume point.
       const failing = {
         model: "mock-resume",
         calls: 0,
         async embed(texts) {
           this.calls += 1;
-          if (this.calls === 3) throw providerError(400, "400 bad request");
+          if (this.calls === 3) throw providerError(503, "503 service unavailable");
           return texts.map((_, i) => [i + 1, i + 2, i + 3]);
         },
       };
-      await rejects(() => embedPendingChunks(dir, failing, { sleep: clock.sleep, now: clock.now, random: () => 0 }), /400/);
+      await rejects(() => embedPendingChunks(dir, failing, { sleep: clock.sleep, now: clock.now, random: () => 0, pacing: { maxAttempts: 1 } }), /503/);
       const { db } = await openDatabase(storePath(dir));
       const landed = db.prepare("select chunk_id, body from chunks where embedding is not null order by chunk_id").all();
       const pending = db.prepare("select chunk_id, body from chunks where embedding is null order by path, rowid").all();
@@ -442,7 +444,7 @@ describe("S3/S9 sync resilience (D5)", () => {
     }
   });
 
-  it("S3: a non-retryable provider error fails fast instead of burning the attempt budget", async () => {
+  it("S3: a non-retryable provider error is not retried and never aborts the pass (issue #540 S2)", async () => {
     const dir = resilienceFixture(manyFiles(2));
     try {
       await syncIndex(dir);
@@ -455,8 +457,10 @@ describe("S3/S9 sync resilience (D5)", () => {
           throw providerError(401, "401 unauthorized");
         },
       };
-      await rejects(() => embedPendingChunks(dir, bad, { sleep: clock.sleep, now: clock.now, random: () => 0 }), /401/);
-      strictEqual(bad.calls, 1);
+      const result = await embedPendingChunks(dir, bad, { sleep: clock.sleep, now: clock.now, random: () => 0 });
+      strictEqual(result.embedded, 0);
+      strictEqual(result.rejected.length, 2, "one rejected batch per file");
+      strictEqual(bad.calls, 2, "one attempt per batch: a 401 is never retried");
       deepStrictEqual(clock.sleeps, []);
     } finally {
       rmSync(dir, { recursive: true, force: true });

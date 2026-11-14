@@ -462,3 +462,113 @@ describe("vector integrity fail-closed (F39/F40)", () => {
     }
   });
 });
+
+// ── Sync-side rejection containment and rebuild embedding (fix #540) ─────
+
+describe("sync rejection containment (S3/S4) and --rebuild embedding (S6)", () => {
+  const ENV_KEY = "DOC540_REJECT_KEY";
+
+  /** A repo with a configured provider and `count` single-chunk files. */
+  function rejectionFixture(count = 3) {
+    const dir = mkdtempSync(join(tmpdir(), "doc-540-"));
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "init", "-q"], { cwd: dir });
+    for (let i = 0; i < count; i += 1) writeFileSync(join(dir, `f${i}.md`), `# File ${i}\nbody ${i}\n`);
+    mkdirSync(join(dir, ".agentic-workflow"), { recursive: true });
+    writeFileSync(
+      join(dir, ".agentic-workflow", "index.json"),
+      JSON.stringify({
+        version: 1,
+        store: { path: ".agentic-workflow/index/index.db" },
+        provider: { baseUrl: "http://127.0.0.1:1", model: "m1", envVar: ENV_KEY },
+      }),
+    );
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: dir });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: dir });
+    return dir;
+  }
+
+  async function withKey(fn) {
+    const prev = process.env[ENV_KEY];
+    process.env[ENV_KEY] = "k";
+    try {
+      return await fn();
+    } finally {
+      if (prev === undefined) delete process.env[ENV_KEY];
+      else process.env[ENV_KEY] = prev;
+    }
+  }
+
+  it("S3/S4: a sync whose provider rejects a batch declares embeddings-request-rejected, keeps the survivors and exposes the status/body", async () => {
+    const dir = rejectionFixture(3);
+    try {
+      await withKey(async () => {
+        let calls = 0;
+        const rejecting = {
+          model: "m1",
+          async embed(texts) {
+            calls += 1;
+            if (calls === 2) {
+              const error = new Error("embeddings provider 400 Bad Request: Context length exceeded for model 'm1'");
+              error.status = 400;
+              throw error;
+            }
+            return texts.map((_, i) => [i + 1, i + 2, i + 3]);
+          },
+        };
+        const env = await runDocOp({ op: "sync" }, { rootDir: dir, embedder: rejecting });
+        strictEqual(env.ok, true);
+        deepStrictEqual(env.degradations, ["embeddings-request-rejected"]);
+        strictEqual(env.store.lastSync.embedded, 2, "the survivors are counted, never zeroed");
+        strictEqual(env.store.rejected.count, 1);
+        strictEqual(env.store.rejected.failures[0].status, 400);
+        ok(/Context length exceeded/.test(env.store.rejected.failures[0].message), env.store.rejected.failures[0].message);
+        strictEqual(env.store.rejected.chunks.length, 1);
+        ok(env.store.rejected.chunks[0].startsWith("f1.md#"), JSON.stringify(env.store.rejected.chunks));
+        strictEqual(env.store.pending, 1, "the rejected chunk stays pending");
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S6: --rebuild embeds the pending chunks in the same pass and reports pending/model/embedded", async () => {
+    const dir = rejectionFixture(2);
+    try {
+      await withKey(async () => {
+        const embedder = {
+          model: "m1",
+          state: { calls: 0 },
+          async embed(texts) {
+            this.state.calls += 1;
+            return texts.map((_, i) => [i + 1, i + 2, i + 3]);
+          },
+        };
+        const env = await runDocOp({ op: "rebuild" }, { rootDir: dir, embedder });
+        strictEqual(env.ok, true);
+        deepStrictEqual(env.degradations, []);
+        strictEqual(env.store.pending, 0, "a rebuild never leaves the store keyword-only silently");
+        strictEqual(env.store.model, "m1");
+        strictEqual(env.store.embedded, 2);
+        ok(embedder.state.calls >= 1);
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S6: a --rebuild with no provider configured says so instead of leaving it unsaid", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "doc-540-kw-"));
+    try {
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "init", "-q"], { cwd: dir });
+      writeFileSync(join(dir, "a.md"), "# Alpha\nalpha body\n");
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: dir });
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: dir });
+      const env = await runDocOp({ op: "rebuild" }, { rootDir: dir });
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-not-configured"]);
+      strictEqual(env.store.embedded, 0);
+      strictEqual(env.store.model, null);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

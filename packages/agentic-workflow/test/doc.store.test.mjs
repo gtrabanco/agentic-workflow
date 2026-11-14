@@ -29,7 +29,14 @@ import {
   manifestHash,
   collectManifest,
 } from "../src/doc/manifest.mjs";
-import { loadConfig, configPath, DEFAULT_CONFIG } from "../src/doc/config.mjs";
+import {
+  loadConfig,
+  configPath,
+  DEFAULT_CONFIG,
+  DEFAULT_MAX_REQUEST_CHARS,
+  effectiveChunkLimit,
+  resolveMaxRequestChars,
+} from "../src/doc/config.mjs";
 import { runtimeName, openDatabase } from "../src/doc/sqlite.mjs";
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -287,6 +294,94 @@ describe("doc config — store.path containment (F36/F37)", () => {
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       rmSync(outside, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── Embedding request budget (fix #540, S5) ──────────────────────────────
+
+describe("doc config — embedding request budget", () => {
+  /** A throwaway repo carrying one `index.json` provider block. */
+  function configWith(provider) {
+    const tmp = mkdtempSync(join(tmpdir(), "doc-budget-"));
+    mkdirSync(join(tmp, ".agentic-workflow"));
+    writeFileSync(join(tmp, ".agentic-workflow", "index.json"), JSON.stringify({ version: 1, provider }));
+    return tmp;
+  }
+
+  it("accepts provider.max_request_chars as a positive integer", () => {
+    const tmp = configWith({ baseUrl: "u", model: "m", envVar: "K", max_request_chars: 4096 });
+    try {
+      strictEqual(loadConfig(tmp).provider.max_request_chars, 4096);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a non-positive or unparseable max_request_chars by name", () => {
+    for (const value of [0, -1, "abc", 1.5]) {
+      const tmp = configWith({ baseUrl: "u", model: "m", envVar: "K", max_request_chars: value });
+      try {
+        throws(() => loadConfig(tmp), /max_request_chars/, `accepted ${JSON.stringify(value)}`);
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("refuses a chunk_limit above the request budget — a chunk the provider could never receive", () => {
+    const tmp = configWith({ baseUrl: "u", model: "m", envVar: "K", chunk_limit: 200000, max_request_chars: 90000 });
+    try {
+      throws(() => loadConfig(tmp), /chunk_limit.*max_request_chars/s);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts a chunk_limit at or below the budget", () => {
+    const tmp = configWith({ baseUrl: "u", model: "m", envVar: "K", chunk_limit: 4000, max_request_chars: 90000 });
+    try {
+      strictEqual(loadConfig(tmp).provider.chunk_limit, 4000);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("the effective chunk limit is the request budget when a provider is configured and no chunk_limit is set", () => {
+    const tmp = configWith({ baseUrl: "u", model: "m", envVar: "K" });
+    try {
+      const cfg = loadConfig(tmp);
+      strictEqual(effectiveChunkLimit({ config: cfg, providerConfigured: true }), DEFAULT_MAX_REQUEST_CHARS);
+      strictEqual(effectiveChunkLimit({ config: cfg, providerConfigured: false }), 0, "the keyword-only path keeps unlimited");
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("an explicit chunk_limit wins over the budget on the configured path", () => {
+    const tmp = configWith({ baseUrl: "u", model: "m", envVar: "K", chunk_limit: 4000 });
+    try {
+      strictEqual(effectiveChunkLimit({ config: loadConfig(tmp), providerConfigured: true }), 4000);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("the budget resolves from the config and an environment override, refusing a bad override by name", () => {
+    const tmp = configWith({ baseUrl: "u", model: "m", envVar: "K", max_request_chars: 4096 });
+    try {
+      const cfg = loadConfig(tmp);
+      strictEqual(resolveMaxRequestChars({ config: cfg, env: {} }), 4096);
+      strictEqual(
+        resolveMaxRequestChars({ config: cfg, env: { AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS: "2048" } }),
+        2048,
+      );
+      throws(
+        () => resolveMaxRequestChars({ config: cfg, env: { AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS: "0" } }),
+        /MAX_REQUEST_CHARS|maxRequestChars/,
+      );
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
     }
   });
 });
