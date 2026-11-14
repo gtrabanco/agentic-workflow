@@ -295,6 +295,14 @@ export const STEPS = [
     mirrors: "no former remote job — CI never carries worktrees (issue #476)",
   },
   {
+    id: "rigidity-review",
+    title: "Guard rigidity audit: no hardcoded forge, temp root or mainline ref (offline)",
+    cwd: ".",
+    argv: [NODE, "scripts/rigidity-review.mjs"],
+    tests: false,
+    mirrors: "no former remote job — the audit reads the guards this repository ships (issue #546)",
+  },
+  {
     id: "schema-node-compat",
     title: "Schema package (node runtime — the guaranteed fallback)",
     cwd: "packages/agentic-workflow-schema",
@@ -364,6 +372,7 @@ export const DEPS = {
   "temp-hygiene": [],
   "tmp-gc": [],
   "worktree-guard": [],
+  "rigidity-review": [],
   "schema-node-compat": ["workspace-install", "schema-build", "root-suite"],
   "pi-node-compat": ["workspace-install"],
   "pi-compat-guard": ["schema-build"],
@@ -757,7 +766,8 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
   fi
 done
 if [ -z "\$base" ]; then
-  default_branch="\$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)"
+  mainline_remote="\${remote:-origin}"
+  default_branch="\$(git symbolic-ref --short "refs/remotes/\$mainline_remote/HEAD" 2>/dev/null || echo "\$mainline_remote/main")"
   base="\$(git merge-base HEAD "\$default_branch" 2>/dev/null || true)"
 fi
 
