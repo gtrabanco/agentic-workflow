@@ -69,8 +69,12 @@ import {
   roadmapTableRows,
   tableCells,
 } from "../packages/agentic-workflow/src/index-document.mjs";
-import { parseTasks } from "./ceremony/lib.mjs";
-import { sectionBounds } from "./unit-doc-phases.mjs";
+// Both siblings moved to the runner crate when `edde336c refactor(352)` retired
+// the migrated runtimes from `scripts/`; `860437e8` re-pointed every other
+// surface and missed this one, which left the classifier (and its suite)
+// dying on the module resolution instead of classifying anything.
+import { parseTasks } from "../packages/agentic-workflow/src/runner/lib.mjs";
+import { sectionBounds } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 /** The document's contract id. */
 export const CONTRACT_ID = "residual-classify@1";

@@ -205,21 +205,24 @@ repository's review machinery on its own surgery — the disclosure is in
   is accepted). Does **not** affect this unit: the new key is a top-level token
   (`embeddings-request-rejected`), so the family's openness neither hides it nor
   is narrowed by it. The published surface enumerates the concrete values.
-- **`scripts/residual-classify.mjs` imports a module `main` no longer ships.**
-  `edde336c refactor(352): retire the migrated runtimes from scripts/` moved the
-  runner library to `packages/agentic-workflow/src/runner/lib.mjs` and deleted
-  `scripts/ceremony/lib.mjs`, but `scripts/residual-classify.mjs:72` still reads
-  `import { parseTasks } from "./ceremony/lib.mjs"`, so the whole suite dies on
-  the module resolution (`20 fail` at `a83b9b38`, identical at HEAD).
-  **Does not affect this unit** — nothing here imports the classifier; it blocks
-  the root suite's `exits 0`, which is why O12 is reported open.
+- **`scripts/residual-classify.mjs` imported two modules `main` no longer
+  ships — repaired here on the owner's decision (D7).** `edde336c
+  refactor(352): retire the migrated runtimes from scripts/` moved the runner
+  library and the phase grammar to `packages/agentic-workflow/src/runner/`, and
+  `860437e8 fix(352): re-point the sibling surfaces the re-aim missed` re-pointed
+  every surface but this one, so `scripts/residual-classify.mjs` still read
+  `./ceremony/lib.mjs` and `./unit-doc-phases.mjs` and the whole suite died on
+  the module resolution (`5 pass · 20 fail` at `a83b9b38`, identical at the
+  branch head before the repair). The two import specifiers now point at the
+  runner crate; the classifier's behaviours are unchanged and its 25 cases pass
+  under both runtimes (E12/E13).
 - **`AGENTS.md` machine-table lines were already off by one at the base commit.**
   `bun scripts/check-skill-context.mjs --documents` measured `135 != the declared
   134` at `a83b9b38`; the row this unit adds makes it 136. The exact re-pin
   absorbs both (+2 to `machineLines`, reason recorded in
   `docs/workflow/SKILL_CONTEXT_BUDGETS.json`), so the pre-existing drift does
   **not** leave a red gate behind.
-- **Timing-sensitive root suites on a slow host.** `scripts/red-first.mjs` takes
+- **Timing-sensitive suites under the gate wrapper on a slow host.** `scripts/red-first.mjs` takes
   ~7.8 s of git history here against the suite's 10 s per-test budget, and under
   the gate's parallel load `red-first`, `phase-lint` and `release` hit the
   budget. Each passes green when run alone; all three also fail in the base
@@ -426,13 +429,19 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **D5** — 2026-11-14, decision: the `AGENTS.md` machine-table re-pin lands here at 136 and absorbs the base commit's own `135 != 134` drift, with the reason in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; the alternative (re-pinning 135 and shipping a red budget check) would have hidden the drift behind a raised ceiling nobody measured.
 - **D6** — 2026-11-14, decision: O12 stays **open** rather than flipped. Its validator (`bun scripts/run-root-suite.mjs` exits 0) cannot reproduce because of a pre-existing import error on `main` that is not this unit's to repair; the evidence (G5, G7, base-vs-head FAIL-set diff) is recorded and the owner decides whether the one-line repair belongs here.
 
+- **E12** — 2026-11-14, before the repair: `cd <repo> && bun test scripts/residual-classify.test.mjs` · exit 1 · `5 pass · 20 fail` (`Cannot find module './ceremony/lib.mjs'`), the same state as `a83b9b38`.
+- **E13** — 2026-11-14, after the repair: `bun test scripts/residual-classify.test.mjs` · exit 0 · `25 pass · 0 fail`, and `node --test scripts/residual-classify.test.mjs` · exit 0 · `25 pass · 0 fail` (the classifier's contract is identical; only the two import specifiers moved).
+- **G8** — 2026-11-14, `bun scripts/run-root-suite.mjs` · **exit 0** · every `scripts/*.test.mjs` suite passes — the root suite is green for the first time on this branch.
+- **G9** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network --only schema-build,crate-suite-bun,crate-suite-node,version-parity-content,docs-generated-projection,journal-carrier-check,log-immutability,temp-hygiene,tmp-gc,worktree-guard,schema-node-compat,pi-node-compat` · **exit 0** · `PASS — 12 step(s) in 276s`.
+- **G10** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network` (the full offline gate, root-suite step included) · **exit 1** · the wrapper's root-suite step trips this host's per-test wall clock on a shifting set of subprocess-heavy suites (`audit-pr-receipt`/`activity-fusion`/`batch-scheduler`/`capabilities` in one run, `setup-env`/`phase-lint`/`test-impact`/`test-route` in the next; every one of them passes standalone and inside the green G8 run). Disclosed, not excused: G8 is the root suite's own contract and it exits 0.
+- **P8** — 2026-11-14, correction batch on the owner's decision (D7): the two moved import specifiers in `scripts/residual-classify.mjs` repaired; E12/E13 + G8/G9 green; O12 flipped.
+- **D7** — 2026-11-14, owner decision (answer to the O12 question, `repair`): repair `main`'s stale imports inside this unit rather than accept the red root suite, so the unit ships with the gate it declares.
 ## Next
 
-The owner's decision on O12: repair `main`'s one-line stale import
-(`scripts/residual-classify.mjs:72` → `import { parseTasks } from
-"../packages/agentic-workflow/src/runner/lib.mjs"`) inside this unit, or accept
-the pre-existing root-suite red and close O12 as `n/a` with that evidence. Every
-other obligation is `verified` on a foreground run.
+Hand the diff to the owner as the external verifier. Every obligation is
+`verified` on a foreground run (O12 last, on the repaired tree): crate 726/0 bun
+and 727/0 node, schema 851/0, pi 866/0, root suite exit 0, and the offline gate's
+12 non-root steps `PASS`.
 
 ## References
 
