@@ -105,7 +105,8 @@ one, and — when the profile declares `signingKey` — that it is *that* key.
 The same check exists as a standalone script (`scripts/push-identity-check.mjs`
 in this repository); a project that wires its own pre-push step calls it with the
 range it is about to publish and fails the push on a non-zero exit. The command
-verifies every author **and** committer of `<base>..HEAD`:
+verifies every author **and** committer of the never-published commits of
+`<base>..HEAD`:
 
 ```sh
 bun scripts/push-identity-check.mjs --base origin/main   # by hand (node runs it too)

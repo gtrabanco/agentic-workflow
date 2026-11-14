@@ -104,7 +104,7 @@ one, and — when the profile declares `signingKey` — that it is *that* key.
 
 The local gate's `push-identity` step runs on a real push (the installed
 `pre-push` hook passes the proven base) and verifies every author **and**
-committer of `<base>..HEAD`:
+committer of the never-published commits of `<base>..HEAD`:
 
 ```sh
 bun scripts/push-identity-check.mjs --base origin/main   # the same command, by hand (node runs it too)
