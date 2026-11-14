@@ -16,9 +16,11 @@
  * What it checks, over a push range (`--base`, default: the upstream or
  * `origin/main` merge-base) and always over the working tree:
  *
- *   - `docs/LOGS.md` must be a byte-prefix extension of its base version —
- *     appends at EOF only, so a rewritten line, a dropped block or a middle
- *     insertion fails no matter who committed it;
+ *   - `docs/LOGS.md` must be a byte-prefix extension of a legal baseline — the
+ *     published journal tip when the current blob extends it (a legitimate
+ *     integration merge), else its base version. Appends at EOF only, so a
+ *     rewritten line, a dropped block or a middle insertion fails no matter who
+ *     committed it;
  *   - every appended block must satisfy the crate's one entry-block predicate
  *     (`contentFault`, `src/journal/fragment.mjs`) — never a second copy of
  *     the grammar;
@@ -28,6 +30,10 @@
  *     by resolution: a fragment that vanishes relative to every parent is a
  *     resolution deletion, a fragment that survives every parent's edit is a
  *     resolution edit;
+ *   - a commit already reachable from a published ref (`origin/main`, and the
+ *     pushed branch's own remote tip) is walked but never *judged*: what it
+ *     wrote is already published, so no push from this checkout can change it
+ *     (issue #539 — judging it refused every push of a branch that merged main);
  *   - the working tree half mirrors `session-close close`: an uncommitted
  *     journal rewrite or pending-fragment deletion/edit is refused before any
  *     commit can carry it.
@@ -56,6 +62,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { contentFault } from "../packages/agentic-workflow/src/journal/fragment.mjs";
+import { publishedRefs, unpublishedCommits } from "./published-refs.mjs";
 
 const LOG = "docs/LOGS.md";
 const CARRIER = ".agentic-workflow/journal";
@@ -68,6 +75,10 @@ const USAGE = `usage: log-immutability [--base <rev>] [--json]
   --base <rev>  the push range's base (default: merge-base with the upstream,
                 then origin/main, then HEAD — working-tree checks always run)
   --json        one JSON object instead of the fixed text block
+
+Commits reachable from a published ref (origin/main, and the pushed branch's own
+remote tip) are walked but never judged, and the published journal tip is a legal
+byte-prefix baseline (issue #539).
 
 stdout: one "Log-immutability:" line per violation, the tally, the verdict.
 exit: 0 pass · 1 violations · 2 usage`;
@@ -199,17 +210,34 @@ function shortSha(root, sha) {
 }
 
 /**
+ * The revision the current journal blob is judged against: the published journal
+ * tip when the blob extends it (the integration-push case — main's own journal
+ * moved after this branch's baseline), else the range's own base.
+ */
+function shapeBaseline({ root, base, current, published }) {
+  for (const rev of [...published, base]) {
+    const candidate = blobAt(root, rev, LOG);
+    if (candidate !== null && current.startsWith(candidate)) return rev;
+  }
+  return base;
+}
+
+/**
  * The range half: the journal's shape over `base..HEAD`, plus the identity of
  * every commit that touched it or consumed a fragment. Read-only.
  */
 export function checkRange({ root, base, actor }) {
   const violations = [];
-  const baseline = blobAt(root, base, LOG);
+  // Issue #539: what this push cannot change is not judged. The published refs
+  // are the remote mainline plus the range's own base (the pushed branch's own
+  // remote tip, when the pre-push hook supplies it).
+  const published = publishedRefs({ root });
+  const unpublished = new Set(unpublishedCommits({ root, base, head: "HEAD", published: [...published, base] }));
   const current = blobAt(root, "HEAD", LOG);
   if (current === null) {
     violations.push({ code: "log-rewritten", detail: `${LOG}: deleted in the range` });
   } else {
-    violations.push(...logShapeViolations(baseline, current));
+    violations.push(...logShapeViolations(blobAt(root, shapeBaseline({ root, base, current, published }), LOG), current));
   }
 
   // Who touched what: non-merge commits carry their own name-status; merges are
@@ -217,7 +245,7 @@ export function checkRange({ root, base, actor }) {
   // parent's incoming appends to the merge — a clean integration must not red.
   const commits = gitOut(root, ["rev-list", "--reverse", `${base}..HEAD`]).split("\n").filter(Boolean);
   const merges = [];
-  const touchedLog = []; // non-merge commits touching the journal
+  const touchedLog = []; // non-merge, never-published commits touching the journal
   const consumed = new Map(); // fragment name → the non-merge commits that D/M'd it
   for (const sha of commits) {
     const parents = gitOut(root, ["rev-list", "--parents", "-n", "1", sha]).trim().split(" ").slice(1);
@@ -227,13 +255,17 @@ export function checkRange({ root, base, actor }) {
     }
     const identity = gitOut(root, ["show", "-s", "--format=%ce%x00%ae", sha]).trim().split("\0");
     const isBot = aggregatorCommit({ committerEmail: identity[0], authorEmail: identity[1], actor });
+    // A published commit's write is already in history: it is still recorded as
+    // the author of its own fragment change (so no merge is blamed for it), and
+    // never judged.
+    const isPublished = !unpublished.has(sha);
     for (const { status, file } of nameStatus(root, ["diff-tree", "--no-commit-id", "--name-status", "-r", sha])) {
       if (file === LOG) {
-        if (!isBot) touchedLog.push({ sha, subject: gitOut(root, ["show", "-s", "--format=%s", sha]).trim() });
+        if (!isBot && !isPublished) touchedLog.push({ sha, subject: gitOut(root, ["show", "-s", "--format=%s", sha]).trim() });
       } else if (file.startsWith(`${CARRIER}/`) && file.endsWith(".md") && (status.startsWith("D") || status.startsWith("M"))) {
         const name = path.basename(file);
         if (!consumed.has(name)) consumed.set(name, []);
-        consumed.get(name).push({ sha, status, isBot });
+        consumed.get(name).push({ sha, status, isBot, isPublished });
       }
     }
   }
@@ -244,7 +276,7 @@ export function checkRange({ root, base, actor }) {
     });
   }
   for (const [name, hits] of consumed) {
-    const byHuman = hits.filter((hit) => !hit.isBot);
+    const byHuman = hits.filter((hit) => !hit.isBot && !hit.isPublished);
     for (const hit of byHuman) {
       violations.push({
         code: hit.status.startsWith("D") ? "fragment-hand-deleted" : "fragment-hand-edited",
