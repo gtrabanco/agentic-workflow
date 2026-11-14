@@ -15,8 +15,10 @@
  * This names the precondition. It deliberately does NOT fall back to an installed
  * `@gtrabanco/agentic-workflow-schema`: a published build can be older than the
  * source under review, and a contract test that silently checks last release's
- * semantics is a false green. `scripts/pre-execution-snapshot.mjs` keeps its own
- * fallback because it must also run inside consumer repositories.
+ * semantics is a false green. The shipped sensor
+ * (`packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs`)
+ * imports the package directly instead: inside a consumer repository the host's
+ * own installed schema is what it senses with.
  */
 
 import fs from "node:fs";
