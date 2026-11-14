@@ -80,6 +80,10 @@ const AWS_KEY_FIXTURE = ["AKIA", "Q7W3E5R7T9Y1U3I5"].join("");
 /** A payload with enough classes and entropy to be a credential, composed here so
  *  no literal secret lives in this file. */
 const PAYLOAD = ["d4f1a2b3", "c4d5e6f7", "a8b9c0d1", "e2f3a4b5"].join("");
+
+/** The same, for the bare (unquoted) shapes — composed for the same reason, so
+ *  this file still carries exactly one literal secret-shaped value. */
+const BARE_PAYLOAD = ["xK9m", "Q2pL", "7wR4", "tY1z"].join("");
 const JWK = [
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
   "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkZpeHR1cmUifQ",
@@ -143,6 +147,28 @@ test("each rule detects a realistic shape of its own", () => {
   }
 });
 
+test("an unquoted credential assignment with a high-entropy payload is a finding", () => {
+  // The external-verify blocker (2026-11-14): the canonical dotenv, YAML, ini
+  // and docs-example forms carry no quotes, and a key name may be the tail of a
+  // longer identifier (`DB_PASSWORD=`). The rule refused all of them while the
+  // quoted twin of the same payload failed the scan.
+  const cases = [
+    `API_TOKEN=${PAYLOAD}`,
+    `password: ${BARE_PAYLOAD}`,
+    `secret_key=${PAYLOAD}`,
+    `GITHUB_TOKEN=${PAYLOAD}`,
+    `export DB_PASSWORD=${BARE_PAYLOAD}`,
+    `GITHUB_TOKEN="${PAYLOAD}"`,
+  ];
+  for (const line of cases) {
+    const hits = scanLine(line);
+    assert.ok(
+      hits.some((hit) => hit.rule === "credential-assignment"),
+      `${JSON.stringify(line)} must be a credential-assignment finding — got ${JSON.stringify(hits.map((hit) => hit.rule))}`,
+    );
+  }
+});
+
 test("a credential assignment is judged by its payload, never by its key name alone", () => {
   // A key name with nothing secret behind it is the shape that would turn every
   // config file red: the value must also carry a payload this rule accepts.
@@ -174,6 +200,20 @@ test("the benign shapes this repository actually carries are never findings", ()
     "if (password === \"\") return null;",
     "const matcher = /-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----/;",
     "npm_config_user_agent starting with bun/",
+  ];
+  for (const line of benign) {
+    assert.deepEqual(scanLine(line), [], `${JSON.stringify(line.slice(0, 48))} must not be a finding`);
+  }
+});
+
+test("a payload that begins with a slash is a path or a literal pattern, never a credential", () => {
+  // The regression the widened assignment boundary produced (observed red at
+  // 79264b34: the whole-tree pass flagged golden-fixture.test.mjs:203 and the
+  // gate's clean-tree case went with it): `const X_TOKEN = /re/` assigns a
+  // literal pattern, and a path-shaped value is not a credential either.
+  const benign = [
+    "const FIXTURE_TOKEN = /scripts\\/fixtures\\/golden-fixture\\/[A-Za-z0-9._\\-/]*/g;",
+    `API_TOKEN=/${BARE_PAYLOAD}/`,
   ];
   for (const line of benign) {
     assert.deepEqual(scanLine(line), [], `${JSON.stringify(line.slice(0, 48))} must not be a finding`);
@@ -309,6 +349,24 @@ test("the whole-tree pass skips a binary file and discloses the skip", () => {
   }
 });
 
+test("a tracked file that cannot be read is disclosed as unreadable, never as binary", () => {
+  // The external-verify advisory (2026-11-14): scanTree counted an unreadable
+  // file in `skipped` and the report labelled the whole bucket "binary skipped".
+  const t = fixtureRepo();
+  try {
+    fs.symlinkSync(path.join(t.root, "no-such-target"), path.join(t.root, "dangling.txt"));
+    t.commit("chore: a dangling symlink");
+    const tree = scanTree(t.root);
+    assert.equal(tree.unreadable, 1, `the unreadable file must be counted apart: ${JSON.stringify(tree)}`);
+    assert.equal(tree.binary, 0, "the dangling link is not a binary container");
+    assert.equal(tree.findings.length, 0);
+    const result = CLI(["--root", t.root, "--all"]);
+    assert.match(result.stdout, /1 unreadable/, `the report must name it: ${result.stdout}`);
+  } finally {
+    fs.rmSync(t.root, { recursive: true, force: true });
+  }
+});
+
 test("the whole-tree pass is read-only", () => {
   const t = fixtureRepo();
   try {
@@ -349,6 +407,31 @@ test("the range resolution prefers the flag, then the upstream, then origin/main
     ok: true, mode: "range", base: "b5b5b5", head: "HEAD", source: "origin/main",
   });
   assert.deepEqual(resolveRange({ root: "/x", gitQuery: gitQuery({}) }), {
+    ok: true, mode: "tree", base: null, head: "HEAD", source: "tree",
+  });
+});
+
+test("an upstream that is already in sync adds no range, so the scan falls through", () => {
+  // The external-verify advisory (2026-11-14): a checkout whose branch tracks a
+  // ref equal to HEAD resolved an empty range and passed while judging nothing.
+  const gitQuery = (steps) => (_root, args) => {
+    const key = args.join(" ");
+    return key in steps ? steps[key] : null;
+  };
+  const head = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  const main = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const inSync = {
+    "rev-parse --verify --quiet @{upstream}": "refs/remotes/origin/topic",
+    "rev-parse --verify --quiet HEAD": head,
+    "merge-base HEAD @{upstream}": head,
+    "rev-parse --verify --quiet origin/main": "refs/remotes/origin/main",
+    "merge-base HEAD origin/main": main,
+  };
+  assert.deepEqual(resolveRange({ root: "/x", gitQuery: gitQuery(inSync) }), {
+    ok: true, mode: "range", base: main, head: "HEAD", source: "origin/main",
+  });
+  const mergedAndSynced = { ...inSync, "merge-base HEAD origin/main": head };
+  assert.deepEqual(resolveRange({ root: "/x", gitQuery: gitQuery(mergedAndSynced) }), {
     ok: true, mode: "tree", base: null, head: "HEAD", source: "tree",
   });
 });
@@ -537,6 +620,19 @@ test("the CLI's exit codes are the gate's contract: 0 clean, 1 findings, 2 usage
     t.write("leak.md", `token: "${PAYLOAD}"\n`);
     t.commit("docs: a leak");
     assert.equal(CLI(["--root", t.root, "--base", t.base]).status, 1, "a finding fails the step");
+  } finally {
+    fs.rmSync(t.root, { recursive: true, force: true });
+  }
+});
+
+test("--all and --base are refused together instead of one being dropped", () => {
+  // The external-verify advisory (2026-11-14): `--all --base <rev>` exited 0/1
+  // with the explicit `--base` silently discarded.
+  const t = fixtureRepo();
+  try {
+    const result = CLI(["--root", t.root, "--all", "--base", t.base]);
+    assert.equal(result.status, 2, `contradictory flags must be a usage error: ${result.stdout}${result.stderr}`);
+    assert.match(result.stderr, /mutually exclusive/);
   } finally {
     fs.rmSync(t.root, { recursive: true, force: true });
   }

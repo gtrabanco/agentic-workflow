@@ -1,33 +1,35 @@
 #!/usr/bin/env node
 /**
- * secret-scan.mjs — the deterministic push-range secret scan (issue #487),
- * shipped to target projects by issue #552.
+ * secret-scan.mjs — the deterministic push-range secret scan (issue #487).
  *
- * The defect it exists for: the only barrier against a committed credential was
- * one line of the `review-security` checklist, conducted by a model inside a
- * review pass that can be skipped. The leak path is cheap — a real token pasted
- * into a fixture, a test, a log line or a session-fragment example under
- * `docs/`, riding a prose-only push that skips every test-bearing gate step.
+ * The defect it exists for: the repository's only barrier against a committed
+ * credential was one line of the `review-security` checklist, conducted by a
+ * model inside a review pass that can be skipped. The leak path the issue names
+ * is cheap — a real token pasted into a fixture, a test, a log line or a
+ * session-fragment example under `docs/`, riding a prose-only push that skips
+ * every test-bearing gate step.
  *
- * Why it lives here: #552's owner decision — "secret scan sin el local-gate debe
- * estar en el template de agentic workflow" — a target project has no
+ * Why it lives here: issue #552's owner decision — "secret scan sin el local-gate
+ * debe estar en el template de agentic workflow" — a target project has no
  * `scripts/local-gate.mjs`, so the scan cannot depend on it. This file is the
  * one implementation; `secret-scan.sh` beside it is the runner a project arms as
- * a `pre-push` hook, and this repository's `local-gate` step calls this same
- * file. A second copy anywhere is the defect.
- *
- * What it reads: the added lines of a push range (`--base`, default: the
- * upstream merge-base, then `origin/main`'s, then the whole tracked tree when
- * neither resolves — a shallow CI clone has no range and a range-less hook must
- * still be judged, so the fallback is *more* scanning, never a skip). Every
- * tracked text path is in scope; no directory is exempt.
+ * a `pre-push` hook, and the repository that ships it calls this same file from
+ * its own gate step. A second copy anywhere is the defect.
  *
  * Where: the scanned root — `--root <dir>`, default: the caller's git
- * working-tree top. The default is deliberately not the module's own directory
- * (a project carries the file at `.agentic-workflow/hooks/`) and not the raw
- * working directory either: `git ls-files` answers relative to the current
- * directory, so a run from a subdirectory would silently scan less. A `pre-push`
- * hook already runs at the working tree's top, so both doors agree.
+ * working-tree top. Deliberately not the module's own directory (a project
+ * carries this file at `.agentic-workflow/hooks/`) and not the raw working
+ * directory: `git ls-files` answers relative to it, so a run from a subdirectory
+ * would silently scan less. A `pre-push` hook already runs at the tree's top, so
+ * both doors agree.
+ *
+ * What it reads: the added lines of a push range (`--base`, default: the first
+ * candidate that adds lines — the upstream merge-base, then `origin/main`'s,
+ * skipping one already in sync with HEAD — then the whole tracked tree when
+ * none resolves: a shallow CI clone has no range, a range-less hook must still
+ * be judged, and a candidate that adds nothing must never read as an empty
+ * pass — the fallback is *more* scanning, never a skip). Every
+ * tracked text path is in scope; no directory is exempt.
  *
  * The rules are shapes, not guesses, and the closed set is `RULES`:
  *
@@ -41,9 +43,11 @@
  *   npm-token             `npm_` + 36
  *   sendgrid-key          `SG.` + 22 + `.` + 43
  *   jwt                   three base64url segments behind `eyJ`
- *   credential-assignment `<key name>: "<payload>"` where the payload passes the
- *                         entropy and placeholder floors (the issue's
- *                         "high-entropy payloads" half)
+ *   credential-assignment `<key name>[:=] <payload>` — quoted or bare (a dotenv,
+ *                         ini or YAML line carries no quotes), the key name may
+ *                         be the tail of a longer identifier (`DB_PASSWORD=`),
+ *                         and the payload passes the entropy and placeholder
+ *                         floors (the issue's "high-entropy payloads" half)
  *   connection-string     `scheme://user:<payload>@host`
  *
  * Fails closed, in the gate's own conventions: one `FINDING <file>:<line> —
@@ -69,8 +73,8 @@
  * largest tracked text file in this repository is the journal at 1.6 MB.
  *
  * Read-only: it writes nothing, calls no network, and holds no state between
- * runs. Its corpus is this repository's `scripts/secret-scan.test.mjs`; the
- * template's own entry-point suite is `tests/test-secret-scan.sh` beside it.
+ * runs. Its corpus is the shipping repository's `scripts/secret-scan.test.mjs`;
+ * the template's own entry-point suite is `tests/test-secret-scan.sh` beside it.
  */
 
 import fs from "node:fs";
@@ -142,8 +146,14 @@ const PROVIDER_PATTERNS = Object.freeze([
 
 const PRIVATE_KEY = /-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----/;
 
-/** `<key name>: "<payload>"` — the key name is the context, the payload decides. */
-const ASSIGNMENT = /(?:^|[^A-Za-z0-9_])(api[_-]?key|apikey|api[_-]?token|secret[_-]?key|secret|token|access[_-]?token|auth[_-]?token|password|passwd|pwd|client[_-]?secret|private[_-]?key|credential)["']?\s*[:=]\s*(['"`])([^'"`\s]{8,})\2/gi;
+/** `<key name>: "<payload>"` — the key name is the context, the payload decides.
+ *  The quote is optional: a dotenv, ini or YAML line carries none, and the key
+ *  name may be the tail of a longer identifier (`DB_PASSWORD=`), so the boundary
+ *  before it is any non-alphanumeric while the boundary after it stays strict
+ *  (`[:=]` must follow) — that is what keeps `tokenizer=` out. The bare branch
+ *  stops at whitespace, quotes and the statement punctuation a code line puts
+ *  after a value. */
+const ASSIGNMENT = /(?:^|[^A-Za-z0-9])(api[_-]?key|apikey|api[_-]?token|secret[_-]?key|secret|token|access[_-]?token|auth[_-]?token|password|passwd|pwd|client[_-]?secret|private[_-]?key|credential)["']?\s*[:=]\s*(?:(['"`])([^'"`\s]{8,})\2|([^\s'"`;,\)\]}]{8,}))/gi;
 
 /** `<scheme>://<user>:<payload>@<host>` — no key name, so the shape is the rule. */
 const CONNECTION = /\b[a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:([^/\s@]{8,})@/gi;
@@ -186,13 +196,16 @@ const BINARY_EXTENSIONS = new Set([
 const USAGE = `usage: secret-scan [--root <dir>] [--base <rev>] [--all] [--allowlist <path>] [--json]
 
   --root <dir>       the tree to scan (default: the caller's git working-tree top)
-  --base <rev>       the push range's base (default: merge-base with the upstream,
-                     then origin/main, then the whole tracked tree)
-  --all              scan every tracked file at the head, not a range
+  --base <rev>       the push range's base (default: the first candidate that adds
+                     lines — the upstream merge-base, then origin/main's — else
+                     the whole tracked tree)
   --allowlist <path> the allowlist file, relative to the root (default:
-                     ${DEFAULT_ALLOWLIST_REL}; an absent
-                     file allows nothing)
-  --json             one JSON object instead of the fixed text block
+                     ${DEFAULT_ALLOWLIST_REL}; an
+                     absent file allows nothing)
+                whole tracked tree)
+  --all         scan every tracked file at the head, not a range (exclusive
+                with --base)
+  --json        one JSON object instead of the fixed text block
 
 stdout: one "ALLOWLISTED <file>:<line> — <rule>" line per allowlisted hit, one
 "FINDING <file>:<line> — <rule>: <detail>" line per finding, the tally, the
@@ -260,6 +273,10 @@ export function placeholderFault(value) {
 export function payloadFault(value) {
   const text = String(value ?? "");
   if (text.length < PAYLOAD_MIN_LENGTH) return `too short: ${text.length} char(s)`;
+  // A value that begins with `/` is an absolute path or a literal pattern
+  // (`const X_TOKEN = /re/`), never a credential — the shape the widened
+  // assignment boundary started flagging (external-verify correction batch).
+  if (text.startsWith("/")) return "a path or a literal pattern, not a credential";
   const reference = referenceFault(text);
   if (reference) return reference;
   const placeholder = placeholderFault(text);
@@ -289,7 +306,7 @@ export function scanLine(line) {
     if (match) add(rule, `value "${redact(match[0])}"`);
   }
   for (const match of text.matchAll(ASSIGNMENT)) {
-    const payload = match[3];
+    const payload = match[3] ?? match[4];
     if (payloadFault(payload) === null) add("credential-assignment", `value "${redact(payload)}"`);
   }
   for (const match of text.matchAll(CONNECTION)) {
@@ -379,26 +396,27 @@ export function scanTree(root) {
   const files = trackedFiles(root);
   if (files === null) return { ok: false, reason: `${root} is not a git checkout, so no tracked file can be read` };
   const findings = [];
-  let skipped = 0;
+  let binary = 0;
+  let unreadable = 0;
   for (const file of files) {
     if (BINARY_EXTENSIONS.has(path.extname(file).toLowerCase())) {
-      skipped += 1;
+      binary += 1;
       continue;
     }
     let bytes;
     try {
       bytes = fs.readFileSync(path.join(root, file));
     } catch {
-      skipped += 1;
+      unreadable += 1;
       continue;
     }
     if (bytes.includes(0)) {
-      skipped += 1;
+      binary += 1;
       continue;
     }
     for (const hit of scanText(bytes.toString("utf8"))) findings.push({ file, ...hit });
   }
-  return { ok: true, scanned: files.length, skipped, findings };
+  return { ok: true, scanned: files.length, skipped: binary + unreadable, binary, unreadable, findings };
 }
 
 /** `git <args>` in `root`, trimmed, or `null` — injected so the preference order
@@ -410,19 +428,23 @@ function defaultGitQuery(root, args) {
 
 /**
  * Which range to judge: the explicit flag, then the upstream merge-base, then
- * `origin/main`'s, then the whole tracked tree. The last step is deliberate —
+ * `origin/main`'s, then the whole tracked tree. A candidate whose merge-base is
+ * HEAD adds no line — judging it would scan nothing and pass — so it falls
+ * through to the next candidate and, when none has anything to add, to the
+ * whole tree. The last step is deliberate —
  * a shallow CI clone and a hook that cannot prove its refs both land here, and
  * scanning everything is the fail-closed answer, not a skip.
  */
 export function resolveRange({ root = ".", explicit, gitQuery = defaultGitQuery } = {}) {
   if (explicit !== undefined) return { ok: true, mode: "range", base: explicit, head: "HEAD", source: "flag" };
+  const head = gitQuery(root, ["rev-parse", "--verify", "--quiet", "HEAD"]);
   for (const candidate of ["@{upstream}", "origin/main"]) {
     const revision = gitQuery(root, ["rev-parse", "--verify", "--quiet", candidate]);
     if (revision === null) continue;
     const base = gitQuery(root, ["merge-base", "HEAD", candidate]);
-    if (base !== null) {
-      return { ok: true, mode: "range", base, head: "HEAD", source: candidate === "@{upstream}" ? "upstream" : "origin/main" };
-    }
+    if (base === null) continue;
+    if (head !== null && base === head) continue;
+    return { ok: true, mode: "range", base, head: "HEAD", source: candidate === "@{upstream}" ? "upstream" : "origin/main" };
   }
   return { ok: true, mode: "tree", base: null, head: "HEAD", source: "tree" };
 }
@@ -467,7 +489,7 @@ export function loadAllowlist(root, allowlistRel = DEFAULT_ALLOWLIST_REL) {
   return { entries: parsed, errors: [], file };
 }
 
-/** A repository-relative path as the report spells it, on every platform. */
+/** A root-relative path as the report spells it, on every platform. */
 const reportPath = (relative) => String(relative).split(path.sep).join("/");
 
 /** `**` crosses a path separator, `*` alone does not, `?` is one character. */
@@ -529,14 +551,15 @@ const label = (finding) => (finding.line === null ? finding.file : `${finding.fi
 
 /** The fixed text block: allowlisted hits (visible, never silent), findings, the
  *  tally, the verdict. */
-export function report({ root, mode, base, head, scanned, skipped, allowlisted, findings, entries }) {
+export function report({ root, mode, base, head, scanned, skipped, binary, unreadable, allowlisted, findings, entries }) {
   const scope =
     mode === "range"
       ? `range ${String(base).slice(0, 7)}..${String(head).slice(0, 7)}`
       : `whole tree at ${String(head).slice(0, 7)}`;
-  const counted = mode === "range" ? `${scanned} added line(s) scanned` : `${scanned} tracked file(s) scanned`;
+  const counted = mode === "range" ? `${scanned} added line(s) scanned` : `${scanned} tracked file(s)`;
+  const skips = skipped > 0 ? ` · ${skipped} skipped (${binary} binary, ${unreadable} unreadable)` : "";
   const lines = [
-    `secret-scan — ${counted} · ${scope}${skipped > 0 ? ` · ${skipped} binary skipped` : ""} · allowlist ${entries.length} entry(ies) · root: ${root}`,
+    `secret-scan — ${counted} · ${scope}${skips} · allowlist ${entries.length} entry(ies) · root: ${root}`,
   ];
   for (const hit of allowlisted) lines.push(`ALLOWLISTED ${label(hit)} — ${hit.rule}`);
   for (const finding of findings) lines.push(`FINDING ${label(finding)} — ${finding.rule}: ${finding.detail}`);
@@ -568,6 +591,7 @@ function parseArgs(argv) {
     else if (arg === "--json") options.json = true;
     else usage(`unknown argument ${arg}`);
   }
+  if (options.all && options.base !== null) usage("--all and --base are mutually exclusive");
   return options;
 }
 
@@ -586,6 +610,8 @@ export function inspect({ root = resolveRoot(), base = null, all = false, allowl
   let raw = [];
   let scanned = 0;
   let skipped = 0;
+  let binary = 0;
+  let unreadable = 0;
   if (range.mode === "range") {
     const diff = collectDiff(root, range.base, range.head);
     if (diff === null) return { ok: false, reason: `--base ${range.base} does not resolve to a diff range in ${root}` };
@@ -597,6 +623,8 @@ export function inspect({ root = resolveRoot(), base = null, all = false, allowl
     if (!tree.ok) return { ok: false, reason: tree.reason };
     scanned = tree.scanned;
     skipped = tree.skipped;
+    binary = tree.binary;
+    unreadable = tree.unreadable;
     raw = tree.findings;
   }
 
@@ -609,6 +637,8 @@ export function inspect({ root = resolveRoot(), base = null, all = false, allowl
     head: range.head,
     scanned,
     skipped,
+    binary,
+    unreadable,
     entries: allowlistFile.entries,
     findings: [...narrowed.kept, ...added],
     allowlisted: narrowed.allowlisted,
