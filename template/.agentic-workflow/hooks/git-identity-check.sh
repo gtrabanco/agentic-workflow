@@ -15,6 +15,14 @@
 # (`scripts/push-identity-check.mjs`); this script and that one are two
 # implementations of one contract, pinned by a shared corpus.
 #
+# What the profile asks of a *commit* is a declared scope (issue #546): the
+# `commit*` values run this hook, the `push*` values leave it to the push-range
+# check. Signing is declared too — `signing: "required"` refuses an unsigned
+# commit, `"allowed"` (the default) lets a machine whose signing key does not
+# resolve commit (gpg selects by UID), and `"off"` is the sign-off workflow that
+# approves unsigned commits and refuses a signed one. `signingKeys` is the
+# per-machine form of `signingKey`.
+#
 # The rule is read-only by construction: it reads git config, reads the profile,
 # and prints. It never repairs, never rewrites, never retries — the repair text it
 # prints is the operator's to run.
@@ -29,7 +37,8 @@
 # approved — the commit is refused.
 #
 # Requirements: git, jq. `gpg` only when commit.gpgsign is true with the default
-# format. Keep this file portable POSIX-ish bash: a git hook runs with no
+# format. A missing requirement is named — the message says which tool is absent,
+# never that the profile is invalid. Keep this file portable POSIX-ish bash: a git hook runs with no
 # guarantee about PATH beyond the platform's shell.
 
 set -u
@@ -109,6 +118,10 @@ found_any=0
 for file in "$global_file" "$project_file"; do
   [ -f "$file" ] || continue
   found_any=1
+  if ! command -v jq >/dev/null 2>&1; then
+    fail "jq is not installed, so $file cannot be read and the commit is refused; install jq, or set enforce to off"
+    exit 1
+  fi
   parsed=$(jsonc "$file" | jq -c '.' 2>/dev/null) || {
     fail "$file is not valid JSON/JSONC; the approved identity cannot be read, so the commit is refused"
     exit 1
@@ -127,12 +140,12 @@ fi
 
 enforce=$(printf '%s' "$section" | jq -r '.enforce // "off"')
 case "$enforce" in
-  off | push)
+  off | push | push-upstream)
     exit 0
     ;;
-  commit | commit-and-push) ;;
+  commit | commit-and-push | commit-and-push-upstream) ;;
   *)
-    fail "gitIdentity.enforce is \"$enforce\", which is not off, commit, push or commit-and-push"
+    fail "gitIdentity.enforce is \"$enforce\", which is not off, commit, push, push-upstream, commit-and-push or commit-and-push-upstream"
     exit 1
     ;;
 esac
@@ -190,8 +203,36 @@ check_ident author "$author_ident"
 check_ident committer "$committer_ident"
 
 # A verified identity signed with a key that is not there is still a commit the
-# operator cannot reproduce: check the key while signing is on.
+# operator cannot reproduce: check the key while signing is on — as strictly as
+# the declared policy asks (issue #546).
+approved_signing=$(printf '%s' "$section" | jq -r '.approved.signing // "allowed"')
+case "$approved_signing" in
+  required | allowed | off) ;;
+  *)
+    fail "gitIdentity.approved.signing is \"$approved_signing\", which is not required, allowed or off"
+    exit 1
+    ;;
+esac
+
 gpgsign=$(git config --get commit.gpgsign 2>/dev/null || true)
+
+if [ "$approved_signing" = "off" ]; then
+  # The sign-off workflow: the project approves unsigned commits, so a signed one
+  # is the surprise this hook exists to name.
+  if [ "$gpgsign" = "true" ]; then
+    fail "gitIdentity.approved.signing is \"off\" but commit.gpgsign is true; this project approves unsigned commits — disable signing for this repository"
+    repair
+    exit 1
+  fi
+  exit 0
+fi
+
+if [ "$approved_signing" = "required" ] && [ "$gpgsign" != "true" ]; then
+  fail "gitIdentity.approved.signing is \"required\" but commit.gpgsign is not true; the commit would carry no signature"
+  repair
+  exit 1
+fi
+
 if [ "$gpgsign" = "true" ]; then
   format=$(git config --get gpg.format 2>/dev/null || true)
   format=${format:-openpgp}
@@ -203,9 +244,14 @@ if [ "$gpgsign" = "true" ]; then
   fi
 
   if [ -z "$resolved_key" ]; then
-    fail "commit.gpgsign is true but no user.signingKey is configured; the commit would fail or sign with an unapproved key"
-    repair
-    exit 1
+    # `allowed` is the second-machine case: git resolves the key from the keyring
+    # by UID, so an unset user.signingKey is not a broken configuration.
+    if [ "$approved_signing" = "required" ]; then
+      fail "commit.gpgsign is true but no user.signingKey is configured; the commit would fail or sign with an unapproved key"
+      repair
+      exit 1
+    fi
+    exit 0
   fi
 
   if [ "$format" = "ssh" ]; then
@@ -238,17 +284,25 @@ if [ "$gpgsign" = "true" ]; then
     fi
   fi
 
-  if [ -n "$approved_key" ]; then
+  # One key or many (one per machine): the resolved key must match any declared.
+  approved_keys=$(printf '%s' "$section" | jq -r '((.approved.signingKeys // []) + (if ((.approved.signingKey // "") | length) > 0 then [.approved.signingKey] else [] end))[]' 2>/dev/null || true)
+  if [ -n "$approved_keys" ]; then
     resolved_lower=${resolved_key,,}
-    approved_lower=${approved_key,,}
-    case "$resolved_lower" in
-      *"$approved_lower"*) ;;
-      *)
-        fail "the resolved signing key \"$resolved_key\" is not the approved key \"$approved_key\""
-        repair
-        exit 1
-        ;;
-    esac
+    key_ok=0
+    while IFS= read -r candidate; do
+      [ -n "$candidate" ] || continue
+      candidate_lower=${candidate,,}
+      case "$resolved_lower" in
+        *"$candidate_lower"*) key_ok=1 ;;
+      esac
+    done <<KEYLIST
+$approved_keys
+KEYLIST
+    if [ "$key_ok" -ne 1 ]; then
+      fail "the resolved signing key \"$resolved_key\" is not one of the approved keys: $(printf '%s' "$approved_keys" | tr '\n' ' ')"
+      repair
+      exit 1
+    fi
   fi
 fi
 
