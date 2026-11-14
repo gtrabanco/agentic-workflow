@@ -136,7 +136,23 @@ still uses it, asked before breaking (the sweep `fold-findings` runs on a defect
 **Retirements.** Every surface, token, pane, helper or contract this unit
 **retires**, with its replacement or no-consumer evidence; an empty answer says
 *why nothing can be removed*. Retirements are a design deliverable, not a
-review-time discovery — the plan step turns each into a planned task.
+review-time discovery — the plan step turns each into a planned task. A
+**strictly additive** unit answers with its computed surface inventory instead:
+`bun scripts/residual-classify.mjs --inventory --base <rev>` prints one row per
+added surface (manifest, diff-derived) with the state the plan decides for it,
+and that table is the anti-divergence receipt. A surface that lands with no
+consumer yet records its **named planned consumer** — the only thing that turns
+`orphan` into `andamio` at the next sweep — in this declared block, in the unit
+folder's `decisions.md`:
+
+```text
+residual-promise@1
+surface | consumer | date | owner
+```
+
+`consumer` is `unit:<unit-folder>` or `row:<NN>`, both resolvable offline; a
+promise the classifier cannot resolve refuses as `ambiguous` instead of
+guessing, and `orphan` is the only state in which a retirement is legitimate.
 
 ### Precondition closure (#433)
 

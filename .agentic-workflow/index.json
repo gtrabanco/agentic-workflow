@@ -4,6 +4,8 @@
   "provider": {
     "baseUrl": "https://api.nan.builders/v1",
     "model": "qwen3-embedding",
-    "envVar": "NAN_API_KEY"
+    "envVar": "NAN_API_KEY",
+    "chunk_limit": 6000,
+    "pacing": { "batchSize": 6 }
   }
 }
