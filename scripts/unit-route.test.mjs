@@ -1036,8 +1036,9 @@ test("#398 B1: an explicit scope: frontmatter wins over both shapes", () => {
 });
 
 test("#398 B1: a requirement title keeps counting when it carries emphasis", () => {
-  // The grammar reads the title to the bold close (scripts/unit-doc-phases.mjs
-  // SPEC_REQUIREMENT), so `**S1 — the *notes* command.**` is one requirement.
+  // The grammar reads the title to the bold close
+  // (packages/agentic-workflow/src/runner/unit-doc-phases.mjs SPEC_REQUIREMENT),
+  // so `**S1 — the *notes* command.**` is one requirement.
   assert.deepEqual(triageOf("54-specbyref-emphasis").steps, standardFeature);
 });
 

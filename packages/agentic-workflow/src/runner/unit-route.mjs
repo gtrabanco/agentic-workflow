@@ -740,7 +740,8 @@ function applyCeremonyProfile(catalog, result, profile) {
 
 function loadCatalog() {
   // `UNIT_ROUTE_CATALOG` re-points the catalog at a copy, so a validation test
-  // mutates its own bytes instead of the tracked `scripts/catalog.json` — the
+  // mutates its own bytes instead of the tracked
+  // `packages/agentic-workflow/src/runner/catalog.json` — the
   // file the parallel root gate reads. Absent, the shipped catalog is used.
   const catalogPath = process.env.UNIT_ROUTE_CATALOG
     ? path.resolve(process.env.UNIT_ROUTE_CATALOG)
@@ -904,7 +905,8 @@ function triageSteps(catalog, facts) {
 
 /**
  * The `implement` step's catalog tier — the execution tier named on per-phase
- * hand-offs (decision D1, issue #291 AC4). One source: `scripts/catalog.json`.
+ * hand-offs (decision D1, issue #291 AC4). One source:
+ * `packages/agentic-workflow/src/runner/catalog.json`.
  */
 function executionTier() {
   return loadCatalog().catalog.implement.budget_tier;
