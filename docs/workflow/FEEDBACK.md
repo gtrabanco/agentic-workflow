@@ -22,7 +22,10 @@ flag a grammar never saw is a usage error by design).
 | profile | `--profile` | where did the time go | the debug lines plus a per-stage table: milliseconds, share of the total, the total, and the named bottleneck |
 
 `--profile` outranks `--debug`: a run carrying both is profiled, because the
-profile tier is the strict superset. No fourth tier and no refusal vocabulary
+profile tier is the strict superset. Both are consumed wherever they appear in
+the argument vector, so a *value* that is literally `--debug` or `--profile`
+cannot be passed as one — pass it from a file or a `--flag=value` spelling if a
+surface ever needs it. No fourth tier and no refusal vocabulary
 exists — a tier value outside the three is not reachable, since the flag is the
 whole surface.
 
