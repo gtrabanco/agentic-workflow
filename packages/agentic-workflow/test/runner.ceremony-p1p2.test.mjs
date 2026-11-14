@@ -20,6 +20,24 @@ import { fileURLToPath } from "node:url";
 const BIN = fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url));
 const REPO = fileURLToPath(new URL("../../..", import.meta.url));
 
+// The ceremony spawns its own `git commit` / `git revert`, which inherits the
+// ambient environment — and CI carries no git identity, so `commit create`
+// fails with "Author identity unknown" instead of the behavior under test. The
+// fixture injects one through the config-count channel (which reaches every
+// git the ceremony spawns, unlike the helper's per-call `-c` flags) and turns
+// gpgsign off — the same neutralization the root suite applies
+// (scripts/run-root-suite.mjs): a suite commits nothing real.
+const GIT_CONFIG_INDEX = Number(process.env.GIT_CONFIG_COUNT ?? 0);
+const GIT_ENV = {
+  GIT_CONFIG_COUNT: String(GIT_CONFIG_INDEX + 3),
+  [`GIT_CONFIG_KEY_${GIT_CONFIG_INDEX}`]: "user.name",
+  [`GIT_CONFIG_VALUE_${GIT_CONFIG_INDEX}`]: "Fixture",
+  [`GIT_CONFIG_KEY_${GIT_CONFIG_INDEX + 1}`]: "user.email",
+  [`GIT_CONFIG_VALUE_${GIT_CONFIG_INDEX + 1}`]: "fixture@example.invalid",
+  [`GIT_CONFIG_KEY_${GIT_CONFIG_INDEX + 2}`]: "commit.gpgsign",
+  [`GIT_CONFIG_VALUE_${GIT_CONFIG_INDEX + 2}`]: "false",
+};
+
 /** A throwaway project carrying one fix unit. */
 function makeRepo(t) {
   const root = mkdtempSync(join(tmpdir(), "ceremony-p1p2-"));
@@ -75,7 +93,7 @@ function makeRepo(t) {
 /** Run one ceremony operation in `root`; returns { code, json, stdout, stderr }. */
 function ceremony(root, ...args) {
   try {
-    const stdout = execFileSync(process.execPath, [BIN, "ceremony", ...args], { cwd: root, encoding: "utf8" });
+    const stdout = execFileSync(process.execPath, [BIN, "ceremony", ...args], { cwd: root, encoding: "utf8", env: { ...process.env, ...GIT_ENV } });
     return { code: 0, stdout, json: safe(stdout), stderr: "" };
   } catch (error) {
     return { code: error.status ?? 1, stdout: error.stdout ?? "", json: safe(error.stdout ?? ""), stderr: error.stderr ?? "" };
@@ -87,7 +105,7 @@ const safe = (text) => { try { return JSON.parse(text); } catch { return null; }
 /** Run one ceremony operation with a patched environment (the degradation cases). */
 function ceremonyWith(root, env, ...args) {
   try {
-    const stdout = execFileSync(process.execPath, [BIN, "ceremony", ...args], { cwd: root, encoding: "utf8", env: { ...process.env, ...env } });
+    const stdout = execFileSync(process.execPath, [BIN, "ceremony", ...args], { cwd: root, encoding: "utf8", env: { ...process.env, ...GIT_ENV, ...env } });
     return { code: 0, stdout, json: safe(stdout), stderr: "" };
   } catch (error) {
     return { code: error.status ?? 1, stdout: error.stdout ?? "", json: safe(error.stdout ?? ""), stderr: error.stderr ?? "" };
