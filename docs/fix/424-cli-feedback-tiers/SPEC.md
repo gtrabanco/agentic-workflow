@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: medium
-roadmap_summary: Every CLI reports through one feedback channel with three tiers — regular (start / progress with an estimate / done with timing), `--debug` (per-file, per-step, provider detail) and `--profile` (per-stage ms, share, total, bottleneck) — on stderr, with stdout and the envelope untouched.
+roadmap_summary: Every CLI reports through one feedback channel with three tiers — regular (start / progress with an estimate / done with timing), `--debug` (per-file, per-step, provider detail) and `--profile` (per-stage ms, share, total, bottleneck) — on stderr, with stdout and the envelope untouched. Applied through the owner's local workflow (ledgers frozen at cut); the status stays `in-progress` until the owner's review. PR: [#550](https://github.com/gtrabanco/agentic-workflow/pull/550).
 ---
 
 # fix/424-cli-feedback-tiers
