@@ -33,8 +33,10 @@ run the skill never equips reproduces the failure it was written to prevent
 
 Boxes 1–5 are mechanical. Demonstrate them by running the verifier — the
 scaffold shim `template/.agentic-workflow/hooks/turn-contract.sh` (bash + git +
-gh; presence-only box2 — the conditional phase-lint clause is engine-only, so
-a shim receipt leaves that clause unverified, ED-52-3) or the producer-crate
+the remote's forge CLI, resolved by `hooks/lib/forge.sh` — `gh`, `glab` or `gt`,
+with `--remote`/`--forge` naming what detection cannot; presence-only box2 — the
+conditional phase-lint clause is engine-only, so a shim receipt leaves that clause
+unverified, ED-52-3) or the producer-crate
 engine `packages/agentic-workflow/bin/turn-contract.mjs` — and pasting its
 one-line receipt beside the git/gh evidence. When the receipt is pasted,
 reciting boxes 1–5 in prose is **not** required. Verifier unavailable (no bash,
