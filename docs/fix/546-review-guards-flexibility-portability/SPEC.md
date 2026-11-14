@@ -197,6 +197,16 @@ none
 - `git-identity-check.sh` reports a missing `jq` as "not valid JSON/JSONC".
   **Affects** this unit: O19 repairs the message (the guard already failed
   closed; only its diagnosis lied).
+- `scripts/doc-discipline.test.mjs` fails on `main` at `95af0547` — the committed
+  journal fragment
+  `.agentic-workflow/journal/20261110T002641Z-fix-489-narrow-local-pin-rule-narrative-….md`
+  names a store path, and the AC25 allowlist does not exempt the journal carrier.
+  **Does not affect** this unit's behaviour, but it makes
+  `node scripts/run-root-suite.mjs` (and therefore the gate's `root-suite` step)
+  exit 1: reproduced in a clean `main` checkout at `95af0547` with the identical
+  failure. It is not this unit's to repair — the fragment is another unit's
+  immutable journal entry and the rule is the AC25 one — so it is disclosed, not
+  excused, and every other root suite passes (111 PASS, 1 FAIL).
 
 ## Tasks
 
@@ -440,10 +450,85 @@ freeze (D1).
   - `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` · exit 1
     · 9 fail lines (7 forge-surface rows, the allowlist row)
 
+- **P2** — 2026-11-14, RED corpus committed (`63982046`); the failing run is E1.
+- **P3** — 2026-11-14, the vocabulary: `enforce` gains `push-upstream` and
+  `commit-and-push-upstream`, `approved` gains `signing` and `signingKeys`; the
+  generated `config.schema.json` and the pi package's mirror follow · `dc8a2d4c`.
+- **P4** — 2026-11-14, `push-identity-check.mjs --remote` and the tracked-upstream
+  resolution; the fork row and the fail-closed unnamed-remote row · `eb19fa2a`.
+- **P5** — 2026-11-14, the `pre-push` hook carries the pushed remote and refuses a
+  push when neither runtime exists; the base fallback follows the remote · `19051ad1`.
+- **P6** — 2026-11-14, the commit half: the scope matrix, the signing policy, the
+  per-machine keys and the `jq` diagnosis · `ae07834f`.
+- **P7** — 2026-11-14, `lib/temp.sh` and its single consumer · `dad7e6aa`.
+- **P8** — 2026-11-14, `lib/forge.sh`: detection, CLI resolution, the normalized
+  pull-request document, the notes carrier, the default base and the merge · `4dc1c8f5`.
+- **P9** — 2026-11-14, `turn-contract.sh` asks the remote's forge · `2dd6871c`.
+- **P10** — 2026-11-14, `fullauto-merge.sh` merges through the resolved forge and
+  reads the decision from the audited SHA (`git show`) · `eea9c870`.
+- **P11** — 2026-11-14, the command guard's forge surface and the literal
+  allowlist · `61c1377b`.
+- **P12** — 2026-11-14, the `rigidity-review` step, red-first, wired into the gate
+  and the inventory · `60564040`.
+- **E2** — 2026-11-14, the touched suites, all green after P12:
+  `bun test scripts/push-identity-check.test.mjs` · exit 0 · 20 pass
+  (baseline 12) · `bun test scripts/identity-hook-parity.test.mjs` · exit 0 · 15
+  pass (baseline 12) · `bun test scripts/local-gate.test.mjs` · exit 0 · 47 pass
+  (baseline 44) · `bun test scripts/rigidity-review.test.mjs` · exit 0 · 8 pass
+  (the pair's red-first order: `63982046` red, `60564040` green) ·
+  `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass ·
+  `bun test scripts/release-workflows.test.mjs` · exit 0 · 26 pass.
+- **E3** — 2026-11-14, the hook suites, all green after P12:
+  `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` · exit
+  0 · 31 case(s), 0 failure(s) (baseline 18) ·
+  `…/test-temp-lib.sh` · exit 0 · 9 case(s) · `…/test-forge-adapter.sh` · exit 0 ·
+  48 case(s) · `…/test-turn-contract.sh` · exit 0 · 46 cases (baseline 31) ·
+  `…/test-fullauto-merge.sh` · exit 0 · the pre-existing
+  `transient marker cleaned; PR comment idempotent` line still prints ·
+  `…/test-command-guard.sh` · exit 0 · `7 allowed, 37 blocked` (baseline 27
+  blocked) · `…/test-init-workspace-contract.sh` · exit 0.
+- **E4** — 2026-11-14, the package suites: `cd packages/agentic-workflow-schema &&
+  bun run test` · exit 0 · 853 pass · `bun run check:config-schema` · in sync ·
+  `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 873 pass.
+- **E5** — 2026-11-14, the differential (O20): every touched command over one
+  corpus at `95af0547` and at this branch. Declared deltas, exactly nine lines:
+  the new step in `local-gate --list`, the `--remote` usage line, and the two
+  merges (`gt pr merge`, `hub merge`) that are now blocked with their four
+  exit-code lines. `node -e` … harness output: `UNDECLARED 0`.
+- **G1** — 2026-11-14, `node scripts/run-root-suite.mjs` · exit 1 · 111 PASS ·
+  1 FAIL (`scripts/doc-discipline.test.mjs`, reproduced identically on `main` at
+  `95af0547` — the pre-existing issue recorded above).
+- **G2** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network --push-base main
+  --only <every offline step except root-suite>` · exit 0 · `PASS — 14 step(s) in
+  144s` (the `push-identity` step verified this unit's whole range).
+- **G3** — 2026-11-14, the network steps: `--only dependency-pin-gate,
+  dependency-advisories` · exit 0 · `PASS — 2 step(s)`; `--only pi-compat-guard` ·
+  exit 0 · `pi leg latest: tsc --noEmit clean`.
+- **G4** — 2026-11-14, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)` ·
+  `node scripts/docs-generate.mjs --check` · exit 0 · `PASS` ·
+  `bun scripts/check-skill-context.mjs` and `--documents` · exit 0 · `PASS`.
+- **E6** — 2026-11-14, the documentation anchors (O14): `rg -c 'push-upstream'`
+  · 5 in each annex · `rg -c 'bitbucket' template/.agentic-workflow/hooks/README.md`
+  · 2 · `rg -c 'signingKeys|signing policy|"signing"' docs/workflow/GIT_IDENTITY_HARDENING.md`
+  · 6 · `rg -c 'guard-allow.txt' template/.agentic-workflow/hooks/README.md` · 1 ·
+  `rg -c '^\| GitLab'` (the forge table) · 1.
+- **D3** — 2026-11-14, fixture specialization, disclosed: the signing case that
+  pinned "signing on with no signing key fails" now declares
+  `signing: "required"` so it pins the *strict* policy (it keeps its exact
+  assertion and exit code); the default-policy behaviour is its own new case.
+  The `--help` assertion and the two step-id lists grew by the flags and the step
+  this unit adds. No assertion was relaxed, deleted or narrowed (see
+  `decisions.md`, path-protection records).
+- **D4** — 2026-11-14, the merge wrapper now reads
+  `docs/features/SHIP_DECISIONS.md` with `git show <audited-sha>:…` instead of the
+  forge's contents API: the bytes that authorize the merge are then the bytes of
+  the commit being merged, and a forge without a contents API needs no case.
+
 ## Next
 
-P2 — land the RED corpus of the issue's scenario table in the nine suites and
-record the failing run.
+The owner's external verification of the diff. Nothing pending in this unit: the
+one red gate step (`root-suite` → `doc-discipline`) is a pre-existing defect
+reproduced on `main`, recorded under `## Known pre-existing issues`.
 
 ## References
 

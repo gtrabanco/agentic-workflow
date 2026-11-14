@@ -32,14 +32,18 @@ The approved identity lives in the unified config, base file, section
 // .pi/agentic-workflow.json (project scope; project wins over global)
 {
   "gitIdentity": {
-    // off | commit | push | commit-and-push — off is inert, and it is the default
-    "enforce": "commit-and-push",
+    // off | commit | push | push-upstream | commit-and-push | commit-and-push-upstream
+    // `off` is inert and the default; `push` judges a push to any remote,
+    // `push-upstream` only the branch's tracked upstream remote
+    "enforce": "commit-and-push-upstream",
     "approved": {
       "name": "Gabriel Trabanco Llano",              // git user.name
       "email": "1969593+gtrabanco@users.noreply.github.com",
       "fullName": "Gabriel Trabanco Llano",           // legal name, checked against the key's UID (openpgp)
       "format": "openpgp",                           // openpgp (default) or ssh
       "signingKey": "B8629F2451528D18",               // key id, fingerprint, or ssh key path
+      "signingKeys": ["B8629F2451528D18"],            // the same fact, one entry per machine
+      "signing": "allowed",                           // required | allowed (default) | off (sign-off)
     },
     "agentGuard": {
       "mode": "ask",                                  // ask | block (block never prompts)
@@ -52,6 +56,15 @@ The approved identity lives in the unified config, base file, section
 Only the declared facts are verified: a profile with `name` and `email` and no
 key checks exactly those two. `enforce: "off"`, or no profile at all, leaves every
 carrier inert — an install that never configures identity is never blocked.
+
+**The scope the project declares is a fact about its situation, not a preference
+for laxity.** `push` means "every commit I publish must carry my identity, to any
+remote"; `push-upstream` means "only what lands upstream is mine to vouch for", so
+a contributor whose `origin` is a personal fork pushes to the fork freely and the
+check applies when the same commits are pushed to the tracked upstream. An
+unenforced project and an enforced one differ by one word, and nothing between
+them is a hole: a caller that names no remote keeps the check (see
+[the push scope](#the-push-scope)).
 
 The corporate case is the same shape: `name`, a legal `fullName`, the
 organisation `email`, and the certificate or SSH key that must sign. `fullName`
@@ -98,7 +111,28 @@ this reason.
 
 When `commit.gpgsign` is true the hook also checks that the resolved signing key
 exists (secret keyring for OpenPGP, file for SSH), that its format is the approved
-one, and — when the profile declares `signingKey` — that it is *that* key.
+one, and — when the profile declares `signingKey`/`signingKeys` — that it is one
+of *those* keys.
+
+## The signing policy
+
+A second machine, a sign-off workflow and a corporate keyring are three
+legitimate shapes a single "which key is approved" rule cannot express, so the
+profile declares what a signature means (`approved.signing`):
+
+| `signing` | A signed commit | An unsigned commit |
+|---|---|---|
+| `required` | the resolved key must exist and match the approved key(s) | refused — the project wants signatures |
+| `allowed` (default) | the same checks, **except** that a machine whose `user.signingKey` does not resolve passes (gpg selects the key from the keyring by UID) | passes |
+| `off` | refused — a sign-off workflow approves unsigned commits | passes |
+
+`approved.signingKeys` is the per-machine form of `signingKey`: declare one entry
+per machine and each machine's key is approved, so revoking one does not break
+the others. The two declarations are a union — declare `signingKey` for the
+canonical key and `signingKeys` for the rest, or only one of them.
+
+The hook checks the *resolved* key, so a per-machine key needs no per-machine
+configuration: `user.signingKey` (or the keyring default) is what the check reads.
 
 ## The push-range check
 
@@ -114,6 +148,35 @@ git push --no-verify                                     # the escape hatch; rec
 A full local run without a push range drops the step: there is nothing to
 verify, and failing on an absent base would train operators to ignore it.
 
+## The push scope
+
+The check has two scopes, and the pushed remote decides which one applies:
+
+- `push` — judge every push. The approved identity must be behind everything the
+  project publishes, wherever it is published.
+- `push-upstream` — judge only a push to the branch's tracked upstream remote. A
+  contributor whose `origin` is a fork can push reviewed work to the fork under
+  their own identity and let the upstream maintainer take it from there.
+
+The tracked upstream is resolved in one order, and the resolution is printed when
+it decides a skip:
+
+1. the branch's own upstream ref (`@{upstream}` → `<remote>/<branch>`);
+2. `branch.<name>.remote` — a branch that has not been pushed yet still names the
+   remote git will track once it is;
+3. the remote that owns the mainline (`refs/remotes/<remote>/HEAD`);
+4. `origin`.
+
+`pre-push` passes the remote being pushed to (`--remote`); a name that is not a
+configured remote — a URL, an ad-hoc path — stays unnamed, and **an unnamed remote
+keeps the check**. The scope can only ever skip a push whose remote is explicitly
+named and differs from the upstream one, so a caller that forgets the flag loses
+convenience, never the guard.
+
+```sh
+bun scripts/push-identity-check.mjs --base origin/main --remote fork   # by hand (node runs it too)
+```
+
 What the range is respects reachability (issue #539): a commit already reachable
 from a published ref — the remote mainline, and the pushed branch's own remote
 tip the hook passes as the base — cannot be changed by this push, so it is
@@ -124,6 +187,19 @@ push could affect. The same rule governs the journal gate, which additionally
 accepts the published journal tip as a byte-prefix baseline for an integration
 push. A checkout with no remote-tracking ref keeps the strict reading — fetch,
 never loosen the matcher.
+
+## Portability of the whole guard surface
+
+The identity guard is one carrier of a set that used to assume one machine, one
+remote and one forge. The rest — the turn-contract verifier, the merge wrapper and
+the command guard — resolve their forge from the remote (`gh`, `glab`, `gt`; a
+Bitbucket remote is refused with the message naming its absent CLI) and their
+temporary directory through one shared helper. The matrix, the allowlist and the
+degradation contract are documented where those hooks live:
+[`template/.agentic-workflow/hooks/README.md`](../../template/.agentic-workflow/hooks/README.md).
+A `rigidity-review` gate step audits that surface, so a hardcoded forge binary, a
+`/tmp` fallback or an `origin/HEAD` coming back fails the gate instead of the next
+external contributor.
 
 ## Test suites: `-c`, never `git config`
 
