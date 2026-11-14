@@ -1,6 +1,0 @@
-## 2026-11-14T10:00:42Z — fix/539-push-identity-range — fix/539-push-identity-range — advisory-1 leads rewritten
-- **Commits:** 1 (`76e51560`)
-- **Files:** 4 files
-- **Summary:** Owner-directed scope beyond the blockers (L5): the three surviving old-shorthand leads — push-identity-check's header sentence and both hardening annexes' push-range lead — were rewritten in place to the never-published rule, and the unit doc's Retirements receipt was re-synced with them (wording no longer claims the leads keep the old phrasing; never-published count now 3 lines per annex copy, E10's 2 kept as historical). Blockers-only-style recheck in E11: annex sweep exit 1 / 0 matches, gate suites 41/0, doc suites 46/0, prose-pin suites (invocation-drift + residue) 43/0, docs-index 5/0, docs-generate PASS, red-first 0, check-skill-context with the base's exact known signature, root-suite 109 PASS / 2 FAIL (E9 base reds only), verify ok with L5/E11 log-kinds accepted, promise stable at 2/13 and 38/22.
-- **Decisions:** No test, budget or index pins any rewritten sentence (all three greps empty), so the edit risk was receipt coupling only — closed by the Retirements sync. The external-verify receipt's own pre-change quote stays as labeled history.
-- **Next:** External verifier delta re-run (blockers 1-2, advisory 1, spot check) on this head, then the owner merges PR #542.
