@@ -222,10 +222,15 @@ repository's review machinery on its own surgery — the disclosure is in
   absorbs both (+2 to `machineLines`, reason recorded in
   `docs/workflow/SKILL_CONTEXT_BUDGETS.json`), so the pre-existing drift does
   **not** leave a red gate behind.
-- **Timing-sensitive suites under the gate wrapper on a slow host.** `scripts/red-first.mjs` takes
-  ~7.8 s of git history here against the suite's 10 s per-test budget, and under
-  the gate's parallel load `red-first`, `phase-lint` and `release` hit the
-  budget. Each passes green when run alone; all three also fail in the base
+- **Two host-sensitive assertions in the root suites (pre-existing).**
+  `scripts/red-first.mjs` spends ~7.8 s in git history against the suite's 10 s
+  per-test budget, and `scripts/unit-route.test.mjs`'s `F7` benchmarks a linear
+  scan at `<500 ms`. On a loaded host the same command fails a *different*
+  suite each run (`red-first`, `phase-lint`, `release`,
+  `audit-pr-receipt`/`activity-fusion`/`batch-scheduler`/`capabilities` on a
+  torn `dist`, `setup-env`, `test-impact`, `test-route`, `unit-route` F7 at
+  609 ms); on an idle host it exits 0 with 110 suites (G8, G11). Every one of
+  them passes standalone, and the same wrapper fails eight suites in the base
   copy's run, so the flakiness is the host's, not this unit's.
 - The `doc` path has no stderr channel inside `runDocOp` (it returns the
   envelope; the CLI prints). Affects this unit's S4: the diagnostic is built in
@@ -434,6 +439,7 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **G8** — 2026-11-14, `bun scripts/run-root-suite.mjs` · **exit 0** · every `scripts/*.test.mjs` suite passes — the root suite is green for the first time on this branch.
 - **G9** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network --only schema-build,crate-suite-bun,crate-suite-node,version-parity-content,docs-generated-projection,journal-carrier-check,log-immutability,temp-hygiene,tmp-gc,worktree-guard,schema-node-compat,pi-node-compat` · **exit 0** · `PASS — 12 step(s) in 276s`.
 - **G10** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network` (the full offline gate, root-suite step included) · **exit 1** · the wrapper's root-suite step trips this host's per-test wall clock on a shifting set of subprocess-heavy suites (`audit-pr-receipt`/`activity-fusion`/`batch-scheduler`/`capabilities` in one run, `setup-env`/`phase-lint`/`test-impact`/`test-route` in the next; every one of them passes standalone and inside the green G8 run). Disclosed, not excused: G8 is the root suite's own contract and it exits 0.
+- **G11** — 2026-11-14, `bun scripts/run-root-suite.mjs` again on an idle host · **exit 0** · `110` suites pass, confirming G8. The two red runs in between failed a single suite each time, and not the same one (`unit-route`'s `F7` linear-scan benchmark at 609 ms against `<500 ms`; earlier a 10 s subprocess budget) — the host-sensitive assertions recorded under `## Known pre-existing issues`.
 - **P8** — 2026-11-14, correction batch on the owner's decision (D7): the two moved import specifiers in `scripts/residual-classify.mjs` repaired; E12/E13 + G8/G9 green; O12 flipped.
 - **D7** — 2026-11-14, owner decision (answer to the O12 question, `repair`): repair `main`'s stale imports inside this unit rather than accept the red root suite, so the unit ships with the gate it declares.
 ## Next
