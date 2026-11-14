@@ -147,7 +147,14 @@
     Run `bash .agentic-workflow/hooks/tests/test-command-guard.sh`; missing `jq`,
     an unknown payload, or an existing customized hook file becomes a residual,
     never a silent overwrite. Direct merges remain blocked; do not create a
-    `.automerge` exception.
+    `.automerge` exception. Then offer the **push-range secret scan** (issue
+    #552) as one consent question — "install the push-range secret scan as a
+    `pre-push` hook?" — and, on a yes, write a `pre-push` hook that execs
+    `.agentic-workflow/hooks/secret-scan.sh "$@"` (chained from an existing hook
+    when the project has one, never overwriting it) and run
+    `bash .agentic-workflow/hooks/tests/test-secret-scan.sh`. A no installs
+    nothing and records the residual, leaving the hooks README's manual
+    invocation as the documented route; the hook never installs itself.
 14. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
