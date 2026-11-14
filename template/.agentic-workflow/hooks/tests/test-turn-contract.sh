@@ -358,54 +358,59 @@ esac
 STUB
 chmod +x "$stub_dir/gt"
 
-# A pushed branch whose origin is a forge URL rather than a local path.
+# A pushed branch whose origin resolves to a forge URL rather than a local path:
+# the push establishes the upstream box4 requires, then the URL is swapped so the
+# adapter has a host to detect.
 forge_repo=$tmp/forge
 new_branch "$forge_repo" main
 gitc -C "$forge_repo" checkout -q -b feat/forge
 commit_file "$forge_repo" docs/features/forge/SPEC.md 'frozen'
-gitc -C "$forge_repo" remote add origin https://gitlab.com/acme/app.git
+gitc init -q --bare "$tmp/forge-remote.git"
+gitc -C "$forge_repo" remote add origin "$tmp/forge-remote.git"
+gitc -C "$forge_repo" push -qu origin feat/forge
+gitc -C "$forge_repo" remote set-url origin https://gitlab.com/acme/app.git
 forge_head=$(gitc -C "$forge_repo" rev-parse HEAD)
 
-GLAB_STUB_LINE="opened $forge_head"
+export GLAB_STUB_LINE="opened $forge_head"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab open PR at HEAD" 0 'TURN-CONTRACT ok'
 
-GLAB_STUB_LINE="merged $forge_head"
+export GLAB_STUB_LINE="merged $forge_head"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab merged PR is not an open PR" 1 'TURN-CONTRACT fail box4: pr-not-open'
 
-GLAB_STUB_LINE="closed $forge_head"
+export GLAB_STUB_LINE="closed $forge_head"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab closed PR is not an open PR" 1 'TURN-CONTRACT fail box4: pr-not-open'
 
-GLAB_STUB_LINE="opened 0000000000000000000000000000000000000000"
+export GLAB_STUB_LINE="opened 0000000000000000000000000000000000000000"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab head mismatch" 1 'TURN-CONTRACT fail box4: pr-head-mismatch'
 
-GLAB_STUB_LINE=""
-GLAB_STUB_EXIT=1
+export GLAB_STUB_LINE=""
+export GLAB_STUB_EXIT=1
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab unreachable" 1 'TURN-CONTRACT fail box4: pr-unreachable'
-GLAB_STUB_EXIT=0
+export GLAB_STUB_EXIT=0
 
-GLAB_STUB_LINE=""
+export GLAB_STUB_LINE=""
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab no MR for the branch" 1 'TURN-CONTRACT fail box4: pr-not-open'
 
 # Gitea: the same branch on a gitea host, answered by `gt`.
 gitc -C "$forge_repo" remote set-url origin https://gitea.com/acme/app.git
-GT_STUB_LINE="open $forge_head"
+export GT_STUB_LINE="open $forge_head"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitea open PR at HEAD" 0 'TURN-CONTRACT ok'
 
-GT_STUB_LINE=""
+export GT_STUB_LINE=""
 run_dir=$forge_repo
 run --finished
 assert "box4 gitea no PR for the branch" 1 'TURN-CONTRACT fail box4: pr-not-open'
@@ -422,12 +427,12 @@ gitc -C "$forge_repo" remote set-url origin https://git.example.com/acme/app.git
 run_dir=$forge_repo
 run --finished
 assert "box4 unknown forge host is refused" 1 'TURN-CONTRACT fail box4: pr-unreachable'
-assert_grep "the refusal names --forge" -- '--forge' "$tmp/stderr"
+assert_grep "the refusal names --forge" '--forge' "$tmp/stderr"
 assert_grep "the refusal names AGENTIC_WORKFLOW_FORGE" 'AGENTIC_WORKFLOW_FORGE' "$tmp/stderr"
 
 # The override wins over the host, and an absent CLI fails closed naming it.
 gitc -C "$forge_repo" remote set-url origin https://gitlab.com/acme/app.git
-GT_STUB_LINE="open $forge_head"
+export GT_STUB_LINE="open $forge_head"
 run_dir=$forge_repo
 run --finished --forge gitea
 assert "box4 --forge overrides the detected host" 0 'TURN-CONTRACT ok'
