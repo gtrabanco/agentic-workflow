@@ -304,17 +304,23 @@ unit; the review step is the owner's external verification.
 - **G2** — 2026-11-14, `node scripts/run-root-suite.mjs` at the final head · exit 0 · `root gate: 113 suite(s) · 4 worker(s)` and 113 PASS.
 - **P8** — 2026-11-14, the session entry written as a journal fragment through `agentic-workflow journal write` and committed by `node scripts/session-close.mjs close` (the journal is aggregator-only since issue #468, so no hand-append) · `c4b4ef08`.
 - **E14** — 2026-11-14, the last range scan of this branch (`f7e5dbba..HEAD`, 1,652 added lines including the fragment and this receipt) · exit 0 · `verdict: PASS`, 1 allowlisted; `node scripts/secret-scan.mjs --all` · exit 0 · `verdict: PASS`.
+- **L3** — 2026-11-14, owner instruction, verbatim: "Create the PR".
+- **G3** — 2026-11-14, the `pre-push` hook judged the branch's own range (`git push -u origin fix/487-deterministic-secret-scanning`) · exit 0 · `local-gate: PASS — 16 step(s)` in 217 s, with `secret-scan: exit 0` and `root-suite: exit 0` in 204 s.
+- **P9** — 2026-11-14, branch pushed and the PR opened: [#551](https://github.com/gtrabanco/agentic-workflow/pull/551), and the roadmap row settled `done · [#551]`. One row, rewritten in place: the index already carried a `pending` intake row for #487 (`secret-scan-gate`), which this unit replaced rather than duplicating — the duplicate the first cut appended at the table's tail was removed, and the intake row's stray fifth cell is gone with it.
+- **E15** — 2026-11-14, `node scripts/roadmap-settle.mjs` after the settle · exit 0 · `verdict: PASS`, 0 violations.
 
 ## Next
 
-P7 and P8 close the unit: the journal fragment and its close, then the handoff
-to the owner's external verification. The gate receipt's one red is the
-pre-existing pool contention recorded above; the per-step runs and the
-standalone root gate are green.
+The PR is open ([#551](https://github.com/gtrabanco/agentic-workflow/pull/551)) and the
+roadmap row is settled; the unit waits for the owner's external verification.
+The gate receipt's one red is the pre-existing pool contention recorded above;
+the per-step runs, the standalone root gate and the `pre-push` hook's own run
+(16 of 16 steps) are green.
 
 ## References
 
 Issue [#487](https://github.com/gtrabanco/agentic-workflow/issues/487) ·
+PR: [#551](https://github.com/gtrabanco/agentic-workflow/pull/551) ·
 Apiiro, ["The Secrets About Secrets in Code"](https://apiiro.com/blog/the-secrets-about-secrets-in-code)
 (the measurement the issue cites) · `skills/review-security/SKILL.md` (the
 checklist item this unit backs deterministically) · `scripts/temp-hygiene.mjs`
