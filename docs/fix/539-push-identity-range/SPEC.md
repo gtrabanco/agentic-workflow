@@ -187,10 +187,29 @@ what O2/O6 pin with a failing case.
 
 ## Known pre-existing issues
 
-- None observed at the cut: `bun test scripts/push-identity-check.test.mjs`
-  (8 pass) and `bun test scripts/log-immutability.test.mjs` (19 pass) are green
-  at `a83b9b38`, and the gate's own state on this branch is recorded in the
-  `## Log` `G` line. A red found later is recorded here rather than excused.
+Every row below is red at the base commit `a83b9b38` in a clean `git archive`
+copy (E9) and does **not affect** this unit: none of them is on a surface this
+change edits, and each is another unit's to repair.
+
+- `scripts/check-skill-context.test.mjs` — `FAIL context documents: AGENTS.md:
+  machine-table lines 135 != the declared 134`
+  (`docs/workflow/SKILL_CONTEXT_BUDGETS.json`). **Does not affect** this unit:
+  neither file is touched here (the base archive copy reproduces it), and this
+  change adds no `normative-surfaces@1` row.
+- `scripts/residual-classify.test.mjs` — every case fails with `Cannot find
+  module './ceremony/lib.mjs' from scripts/residual-classify.mjs`: the
+  `feat/352` merge retired `scripts/ceremony/*` and left that import behind
+  (`git ls-tree a83b9b38 scripts/ceremony/` → `testing.mjs` only). **Does not
+  affect** this unit: a different script, and the import is broken at base.
+- `worktree-guard` (a `local-gate` step, no remote twin) — 2 findings on the
+  shared checkout: `.worktrees/fix-538-engram-startup-report` and
+  `.worktrees/fix-540-embedding-pass-batch-limit` are merged into `origin/main`
+  (`STALE`). **Does not affect** this unit: another unit's parked worktrees, and
+  removing them is the owner's call (#505/#534 precedent) — this unit's own
+  worktree is clean and not among the findings.
+- `dependency-advisories` reports 4 blocking `undici` rows and exits 0 by its
+  own contract (report-only, scoped by the review to dependencies a change adds
+  or updates). **Does not affect** this unit: no dependency is added or changed.
 
 ## Acceptance criteria
 
@@ -317,14 +336,14 @@ validator with the outcome it must produce, and is `planned` at cut time.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2, S3 | the incident's use case: the pre-push range of a branch that merged `origin/main` judges only the branch's own commits, so the push is accepted when they carry the approved identity | P4 | P4 | direct application (this session) | `bun test scripts/push-identity-check.test.mjs` exits 0 (`PASS: a push that merges origin/main skips its published commits and judges its own (S3)` → `ok: 3 commit(s) verified`) | E line in `## Log` | planned |
-| O2 | S3, S4 | a published commit outside the approved profile is skipped, not judged, so a merge-push of main is not refused for main's own history | P4 | P4 | direct application (this session) | `bun test scripts/push-identity-check.test.mjs` exits 0 (`PASS: a commit already published on origin/main is not judged (S3)` → `ok: 1 commit(s) verified`) | E line in `## Log` | planned |
-| O3 | S4, S7 | the required failure state: a genuinely new misattributed commit is still refused while a published ref exists — the guard keeps all its teeth | P4 | P4 | direct application (this session) | `bun test scripts/push-identity-check.test.mjs` exits 0 (`FAIL: a new misattributed commit is still refused beside a published ref (S4)` → exit 1, `failed: 1 of 1`, the new sha named and the published sha absent) | E line in `## Log` | planned |
-| O4 | S4 | the third issue case: a published approved commit is skipped and the new commit is verified — `ok` with the judged count, not the range count | P4 | P4 | direct application (this session) | `bun test scripts/push-identity-check.test.mjs` exits 0 (`PASS: a published approved commit is skipped and the new one is verified (S4)`) | E line in `## Log` | planned |
-| O5 | S5 | the journal's identity half skips a published hand-append, and the byte-prefix baseline accepts the published journal tip, so an integration push passes when its own appends are conforming | P5 | P5 | direct application (this session) | `bun test scripts/log-immutability.test.mjs` exits 0 (`PASS: a published hand-append is not re-judged (S5)`, `PASS: a journal that extends the published tip passes (S5)`, `PASS: a fragment the published history deleted is not blamed on a merge (S5)`) | E line in `## Log` | planned |
-| O6 | S6, S7 | the required failure state: a genuinely new hand-appended commit still fails beside a published one, and the violation names the new commit only | P5 | P5 | direct application (this session) | `bun test scripts/log-immutability.test.mjs` exits 0 (`FAIL log-hand-appended: a new hand-append fails beside a published one (S6)` → exit 1, the new short sha named, the published sha absent) | E line in `## Log` | planned |
-| O7 | S3, S5, S7 | the compatibility invariant: with no published ref resolvable both gates behave exactly as before — same stdout, stderr and exit status for the same repository — and neither gains an identity-class allowlist, an escape hatch or a write | P6 | P6 | direct application (this session) | the differential harness over one corpus (the base commit's scripts vs this change) reports only the declared deltas, `bun test scripts/push-identity-check.test.mjs scripts/log-immutability.test.mjs` exits 0 with every pre-existing case unchanged, `rg -n 'journal-bot\|github-actions\[bot\]\|noreply@github.com' scripts/push-identity-check.mjs` matches 0, and `rg -n -- '--no-verify\|SKIP_LOCAL_GATE\|--force\|writeFile\|appendFile\|unlink\|rmSync' scripts/published-refs.mjs scripts/push-identity-check.mjs` matches 0 | E line in `## Log` with the diff summary and both rg receipts | planned |
-| O8 | S1 | repository state ships in the same change: the unit doc with its closed ledger, both hardening-annex copies, the two gate-inventory rows, the roadmap `## Fixes` row through the writer, the rendered projection and the journal fragment | P7 | P7 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/539-push-identity-range/SPEC.md` exits 0, and `rg -n '#539' docs/ROADMAP.md` matches 1 | E line in `## Log` | planned |
+| O1 | S2, S3 | the incident's use case: the pre-push range of a branch that merged `origin/main` judges only the branch's own commits, so the push is accepted when they carry the approved identity | P4 | P4 | direct application (this session) | `bun test scripts/push-identity-check.test.mjs` exits 0 (`PASS: a push that merges origin/main skips its published commits and judges its own (S3)` → `ok: 3 commit(s) verified`) | E line in `## Log` | verified — E3 (12 pass) and E4 (the live history: `ok: 4` where the base answers `failed: 72 of 316`) |
+| O2 | S3, S4 | a published commit outside the approved profile is skipped, not judged, so a merge-push of main is not refused for main's own history | P4 | P4 | direct application (this session) | `bun test scripts/push-identity-check.test.mjs` exits 0 (`PASS: a commit already published on origin/main is not judged (S3)` → `ok: 1 commit(s) verified`) | E line in `## Log` | verified — E2 (red: `failed: 1 of 2`) and E3 (green) |
+| O3 | S4, S7 | the required failure state: a genuinely new misattributed commit is still refused while a published ref exists — the guard keeps all its teeth | P4 | P4 | direct application (this session) | `bun test scripts/push-identity-check.test.mjs` exits 0 (`FAIL: a new misattributed commit is still refused beside a published ref (S4)` → exit 1, `failed: 1 of 1`, the new sha named and the published sha absent) | E line in `## Log` | verified — E3 (the case green) and E6 (differential c4/c5: the new offender still fails) |
+| O4 | S4 | the third issue case: a published approved commit is skipped and the new commit is verified — `ok` with the judged count, not the range count | P4 | P4 | direct application (this session) | `bun test scripts/push-identity-check.test.mjs` exits 0 (`PASS: a published approved commit is skipped and the new one is verified (S4)`) | E line in `## Log` | verified — E3 (the case green; `ok: 1` where the base answers `ok: 2`) |
+| O5 | S5 | the journal's identity half skips a published hand-append, and the byte-prefix baseline accepts the published journal tip, so an integration push passes when its own appends are conforming | P5 | P5 | direct application (this session) | `bun test scripts/log-immutability.test.mjs` exits 0 (`PASS: a published hand-append is not re-judged (S5)`, `PASS: a journal that extends the published tip passes (S5)`, `PASS: a fragment the published history deleted is not blamed on a merge (S5)`) | E line in `## Log` | verified — E2 (red: `log-rewritten … byte 102` + `log-hand-appended`) and E3 (23 pass) |
+| O6 | S6, S7 | the required failure state: a genuinely new hand-appended commit still fails beside a published one, and the violation names the new commit only | P5 | P5 | direct application (this session) | `bun test scripts/log-immutability.test.mjs` exits 0 (`FAIL log-hand-appended: a new hand-append fails beside a published one (S6)` → exit 1, one violation, the fresh subject named, the published one absent) | E line in `## Log` | verified — E3 (the case green) and E6 (differential c5: 1 violation, the fresh commit) |
+| O7 | S3, S5, S7 | the compatibility invariant: with no published ref resolvable both gates behave exactly as before — same stdout, stderr and exit status for the same repository — and neither gains an identity-class allowlist, an escape hatch or a write | P6 | P6 | direct application (this session) | the differential harness over one corpus (the base commit's scripts vs this change) reports only the declared deltas, `bun test scripts/push-identity-check.test.mjs scripts/log-immutability.test.mjs` exits 0 with every pre-existing case unchanged, `rg -n 'journal-bot\|github-actions\[bot\]\|noreply@github.com' scripts/push-identity-check.mjs` matches 0, and `rg -n -- '--no-verify\|SKIP_LOCAL_GATE\|--force\|writeFile\|appendFile\|unlink\|rmSync' scripts/published-refs.mjs scripts/push-identity-check.mjs` matches 0 | E line in `## Log` with the diff summary and both rg receipts | verified — E6 (`UNDECLARED 0`, the two no-remote repositories byte-identical) and E7 (both rg receipts: 0) |
+| O8 | S1 | repository state ships in the same change: the unit doc with its closed ledger, both hardening-annex copies, the two gate-inventory rows, the roadmap `## Fixes` row through the writer, the rendered projection and the journal fragment | P7 | P7 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/539-push-identity-range/SPEC.md` exits 0, and `rg -n '#539' docs/ROADMAP.md` matches 1 | E line in `## Log` | verified — E7 (fixrow receipt), E8 (`docs-generate` PASS) and the `verify` run recorded before this row closed |
 
 ## Path protection
 
@@ -399,11 +418,87 @@ authoritative step list.
   ## Dependencies
 
   - Relates to [#514](https://github.com/gtrabanco/agentic-workflow/issues/514) (the identity guard) and [#468](https://github.com/gtrabanco/agentic-workflow/issues/468) (the journal write-path gate).
-  - **PR [#524](https://github.com/gtrabanco/agentic-workflow/pull/524) is blocked by this issue**: its branch cannot be pushed until the range policy lands. Declared here in prose and as the native `blocked-by` relationship.
+  [… marked elision: the block's second bullet is preserved verbatim in `## References` below. Its `pull/` URL is another unit's PR, and `roadmap-settle` reads any `pull/` URL in `## Next`/`## Log`/`## Evidence` as this doc's own PR — a verbatim quote of a foreign PR link would make the doc claim a settle it does not have …]
 
   ---
   Automated writed using a AI
   ```
+- **P1** — 2026-11-14, this unit doc, `decisions.md` (the path-protection records
+  for the two frozen suites) and the embedded planning ledgers frozen before the
+  first line of code · `d7082de7`.
+- **E1** — 2026-11-14, baseline at the cut head: `bun test
+  scripts/push-identity-check.test.mjs` · exit 0 · 8 pass · 0 fail; `bun test
+  scripts/log-immutability.test.mjs` · exit 0 · 19 pass · 0 fail — the counts the
+  issue names.
+- **P2** — 2026-11-14, RED corpus: the new module's sibling suite plus four cases
+  in each frozen suite · `44173398`.
+- **E2** — 2026-11-14, RED at `44173398`: `bun test scripts/published-refs.test.mjs`
+  · exit 1 · `Cannot find module './published-refs.mjs'`; `bun test
+  scripts/push-identity-check.test.mjs` · exit 1 · 8 pass · 4 fail —
+  `failed: 1 of 2`, `1 of 4`, `1 of 1` where `1 of 2` was expected, and `ok: 2`
+  where `ok: 1` was; `bun test scripts/log-immutability.test.mjs` · exit 1 · 19
+  pass · 4 fail — `log-rewritten … first difference at byte 102` plus
+  `log-hand-appended` for the published commit, and `fragment-hand-deleted … by
+  non-aggregator commit` for the published deletion.
+- **P3** — 2026-11-14, the range-policy module · `cf2766fa`.
+- **E3** — 2026-11-14, GREEN: `bun test scripts/published-refs.test.mjs` · exit 0
+  · 6 pass · 0 fail; `bun test scripts/push-identity-check.test.mjs` · exit 0 ·
+  12 pass · 0 fail (the 8 pre-existing cases untouched); `bun test
+  scripts/log-immutability.test.mjs` · exit 0 · 23 pass · 0 fail (the 19
+  pre-existing cases untouched).
+- **P4** — 2026-11-14, both gates wired to the module · `5e3104b4`.
+- **E4** — 2026-11-14, the incident reproduced on this repository's own history
+  and fixed: `node scripts/push-identity-check.mjs --base a83b9b38~40` · exit 0 ·
+  `PUSH IDENTITY — ok: 4 commit(s) verified` (only this branch's commits), while
+  the same command through a `git archive` copy of `a83b9b38` answers `failed: 72
+  of 316 commit(s)` — its first offenders are published history
+  (`t <t@example.test>`, `--unset <--unset>`) no local push can change.
+- **E5** — 2026-11-14, the live gates on this branch: `node
+  scripts/log-immutability.mjs --base a83b9b38` · exit 0 · `0 violations · base
+  a83b9b38 · range 4 commits` · `verdict: PASS`; `journal aggregate --check` ·
+  exit 0 · `{"ok":true,"checked":9,"refusals":[]}`.
+- **E6** — 2026-11-14, the differential: one corpus of 6 throwaway repositories ×
+  2 gates, the base commit's scripts (`git archive a83b9b38`) against this
+  change, in `mktemp -d` · `UNDECLARED 0` — 6 rows `same` (both no-remote
+  repositories byte-identical, exit and both streams), 6 `DECLARED` (the three
+  published-ref skips, the journal baseline, and the published deletion).
+- **E7** — 2026-11-14, O7's static half: `rg -n 'journal-bot|github-actions\[bot\]|noreply@github.com'
+  scripts/push-identity-check.mjs` · 0 matches; `rg -n --
+  '--no-verify|SKIP_LOCAL_GATE|--force|writeFile|appendFile|unlink|rmSync'
+  scripts/published-refs.mjs scripts/push-identity-check.mjs` · 0 matches.
+- **E8** — 2026-11-14, repository state: `agentic-workflow roadmap fixrow
+  docs/ROADMAP.md … --expect d72f47f9` · exit 0 · `Before: d72f47f9 · After:
+  f00688c4`; `bun scripts/docs-generate.mjs` · exit 0 · `Files: 2 written · 0
+  deleted · 1 unchanged` · `verdict: PASS`; `bun scripts/docs-generate.mjs
+  --check` · exit 0 · PASS.
+- **E9** — 2026-11-14, the pre-existing reds reproduced at the base commit in a
+  clean `git archive a83b9b38` copy: `bun test scripts/check-skill-context.test.mjs`
+  · exit 1 · `FAIL context documents: AGENTS.md: machine-table lines 135 != the
+  declared 134`; `bun test scripts/residual-classify.test.mjs` · exit 1 · every
+  case `Cannot find module './ceremony/lib.mjs'`.
+- **L3** — 2026-11-14, this doc's own amendment before the handoff: the issue's
+  `## Dependencies` block is marked as elided from the `## Log` quote and
+  preserved verbatim in `## References`, because `roadmap-settle`'s
+  `ownPrUrls()` reads any `pull/` URL in `## Next`/`## Log`/`## Evidence` as this
+  doc's own PR (`scripts/roadmap-settle.test.mjs` reported
+  `pr-url-unsettled: expected 'done · [#524](…)'` against row `#539`). Nothing
+  normative is lost: every requirement is quoted verbatim in `## Specs`, and the
+  elided block's text is in this document.
+- **G1** — 2026-11-14, HEAD 5e3104b488f9223928f7679da467918e5d1def10 · `bun scripts/local-gate.mjs` · exit 1 · `FAILED at
+  worktree-guard` (the two other units' parked worktrees, a local-only step with
+  no remote twin); the steps this change moves are green —
+  `docs-generated-projection`, `log-immutability` (`0 violations · verdict: PASS`)
+  — and `push-identity` is dropped without a `--push-base`, by design. The
+  suite-bearing steps ran separately (G2).
+- **G2** — 2026-11-14, HEAD 5e3104b488f9223928f7679da467918e5d1def10 · `bun scripts/run-root-suite.mjs` · the three reds it
+  reports are `check-skill-context` and `residual-classify` (both reproduced at
+  the base commit, E9) and `roadmap-settle` (the quoted issue's foreign PR URL,
+  amended in L3 and green after it: `bun test scripts/roadmap-settle.test.mjs
+  scripts/unit-doc-contract.test.mjs scripts/spec-by-reference.test.mjs` · exit 0 ·
+  46 pass · 0 fail).
+- **P5** — 2026-11-14, documentation and repository state: both hardening-annex
+  copies, the two gate-inventory rows, the roadmap row through the writer, the
+  rendered projection and the journal fragment (this commit).
 
 ## Next
 
@@ -420,6 +515,10 @@ The owner's external verification of this branch's diff; then the PR against
 - Owner: `scripts/published-refs.mjs` (the range policy), `docs/workflow/GIT_IDENTITY_HARDENING.md`
   (§The push-range check), `docs/workflow/GATE_INVENTORY.md` (rows
   `push-identity` and `log-immutability`)
+- The issue's `## Dependencies` block, verbatim (elided from the `## Log` quote
+  above so its foreign `pull/` URL is never read as this doc's own PR):
+
+  > - **PR [#524](https://github.com/gtrabanco/agentic-workflow/pull/524) is blocked by this issue**: its branch cannot be pushed until the range policy lands. Declared here in prose and as the native `blocked-by` relationship.
 
 ## Branch
 

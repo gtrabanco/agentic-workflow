@@ -17,7 +17,7 @@ explicit yes.
 | Layer | Carrier | Sees | Does not see |
 |---|---|---|---|
 | 1 — agent config-write guard | the `pi-agentic-workflow` extension | every `bash` call a model asks the host to run | a script the model launches, a `!` command the human types, another agent host, variable indirection |
-| 2 — fail-fast verification | the pre-commit hook, and the push-range step of the local gate | every commit made in this checkout (hook) and every commit of the push range (gate) | a commit made elsewhere and pushed from a machine without the gate |
+| 2 — fail-fast verification | the pre-commit hook, and the push-range step of the local gate | every commit made in this checkout (hook) and every never-published commit of the push range (gate) | a commit made elsewhere and pushed from a machine without the gate |
 
 Layer 1 stops the *intent*; Layer 2 stops the *result*. Two of the three recorded
 leaks came from processes Layer 1 cannot see, which is why Layer 2 is not
@@ -113,6 +113,17 @@ git push --no-verify                                     # the escape hatch; rec
 
 A full local run without a push range drops the step: there is nothing to
 verify, and failing on an absent base would train operators to ignore it.
+
+What the range is respects reachability (issue #539): a commit already reachable
+from a published ref — the remote mainline, and the pushed branch's own remote
+tip the hook passes as the base — cannot be changed by this push, so it is
+skipped and only the never-published commits are judged. Merging `origin/main`
+into a branch used to put main's own history in the range and refuse the push
+over commits (forge web-merges, journal aggregations, CI runs) that no local
+push could affect. The same rule governs the journal gate, which additionally
+accepts the published journal tip as a byte-prefix baseline for an integration
+push. A checkout with no remote-tracking ref keeps the strict reading — fetch,
+never loosen the matcher.
 
 ## Test suites: `-c`, never `git config`
 

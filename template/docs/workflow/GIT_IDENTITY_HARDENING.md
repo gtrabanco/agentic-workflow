@@ -17,7 +17,7 @@ none of it without an explicit yes.
 | Layer | Carrier | Sees | Does not see |
 |---|---|---|---|
 | 1 — agent config-write guard | the `pi-agentic-workflow` extension | every `bash` call a model asks the host to run | a script the model launches, a `!` command the human types, another agent host, variable indirection |
-| 2 — fail-fast verification | the pre-commit hook, and a push-range check in the project's pre-push step | every commit made in this checkout (hook) and every commit of the push range (the check) | a commit made elsewhere and pushed from a machine without either |
+| 2 — fail-fast verification | the pre-commit hook, and a push-range check in the project's pre-push step | every commit made in this checkout (hook) and every never-published commit of the push range (the check) | a commit made elsewhere and pushed from a machine without either |
 
 Layer 1 stops the *intent*; Layer 2 stops the *result*. Two of the three recorded
 leaks came from processes Layer 1 cannot see, which is why Layer 2 is not
@@ -114,6 +114,13 @@ git push --no-verify                                     # the escape hatch; rec
 
 A run without a range is a usage error by design: a step with nothing to verify
 must not be dispatched, and an absent base must never be read as a pass.
+
+What the range is respects reachability (issue #539): a commit already reachable
+from a published ref — the remote mainline, and your pushed branch's own remote
+tip passed as the base — cannot be changed by the push, so it is skipped and
+only the never-published commits are judged. Without that rule, merging the
+remote mainline into a branch puts that branch's already-published history in
+the range and every merge-push fails over commits no local push could affect.
 
 ## Test suites: `-c`, never `git config`
 
