@@ -271,6 +271,19 @@ export const STEPS = [
     mirrors: "no former remote job — the push-range identity check is local-first by definition (issue #514)",
   },
   {
+    id: "secret-scan",
+    title: "Push-range secret scan: no credential-shaped value in the added lines (offline)",
+    cwd: ".",
+    argv: [NODE, "scripts/secret-scan.mjs"],
+    // Not a `tests:` step on purpose: a prose-only push is exactly the leak path
+    // — a token pasted into a fixture, a documentation example or a journal
+    // fragment — so an empty impact verdict must never skip the scan, and the
+    // script resolves its own range instead of declaring `pushBase` (a range-bound
+    // step is dropped when the hook can prove no base; issue #487 S2/S8).
+    tests: false,
+    mirrors: "no former remote job — the credential class never had a remote check (issue #487)",
+  },
+  {
     id: "temp-hygiene",
     title: "Temp-dir hygiene floor (offline)",
     cwd: ".",
@@ -369,6 +382,7 @@ export const DEPS = {
   "journal-carrier-check": ["workspace-install"],
   "log-immutability": [],
   "push-identity": [],
+  "secret-scan": [],
   "temp-hygiene": [],
   "tmp-gc": [],
   "worktree-guard": [],
