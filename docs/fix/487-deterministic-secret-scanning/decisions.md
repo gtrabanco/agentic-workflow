@@ -37,6 +37,29 @@
   journal immutability, push identity, secret scan, temp hygiene, worktree). See
   O7.
 
+- **D6** — the assignment boundary widens in one direction and the payload floor
+  closes the other (correction batch 2026-11-14, the receipt's blocker). The
+  matcher now accepts an optional quote pair and a non-alphanumeric prefix, so
+  `API_TOKEN=<payload>`, `GITHUB_TOKEN=<payload>` and `DB_PASSWORD=<payload>`
+  are judged like their quoted twins; the boundary *after* the key name stays
+  strict (`[:=]` must follow), which is what keeps `tokenizer=` out. The false
+  positive that widened prefix opened — `const FIXTURE_TOKEN = /re/` — is
+  answered **at the rule, never by an allowlist entry**: a payload beginning
+  with `/` is a path or a literal pattern, not a credential, and the allowlist
+  keeps its single shipped entry. The reason is structural: `scripts/local-gate.test.mjs`'s fixture sandbox copies the shipped allowlist but only the
+  scan's own files (its own comment says so), so an entry for any other path
+  reads stale in that tree and fails the gate's clean-tree case — observed
+  directly at `79264b34` (Log E17). See F1, E16–E19.
+
+- **D7** — an in-sync candidate is never a range (correction batch 2026-11-14,
+  advisory 1). `resolveRange` skips a candidate whose merge-base equals HEAD,
+  continues to `origin/main`, and falls to the whole tracked tree when no
+  candidate has anything to add — the empty pass a synced checkout produced
+  (`0 added line(s) scanned · verdict: PASS`) is gone, while the push path is
+  untouched because the remote-tracking ref is stale while a push runs. For the
+  same reason — no silent pass over explicit input — `--all` and `--base` are
+  mutually exclusive and refuse with exit 2 (advisory 2). See F2, F3, E19, E21.
+
 ```text
 path-protection-records@1
 kind | paths | phase | date | authority | justification
