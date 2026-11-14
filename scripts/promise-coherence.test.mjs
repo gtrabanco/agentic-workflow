@@ -510,7 +510,7 @@ test("F20: the in-flight corpus rule lives in one owner, not two copies", () => 
     const text = readFileSync(path.join(ROOT, file), "utf8");
     assert.ok(
       !text.includes(legacyPath),
-      `${file} must not re-implement the corpus rule — scripts/unit-doc-phases.mjs owns it`,
+      `${file} must not re-implement the corpus rule — packages/agentic-workflow/src/runner/unit-doc-phases.mjs owns it`,
     );
     assert.ok(
       !text.includes("docs/ROADMAP.md"),
