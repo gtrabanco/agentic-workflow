@@ -496,7 +496,19 @@ freeze (D1).
 - **G1** — 2026-11-14, HEAD 7cdde931460b0154980f2c59b7915dcf8e931911,
   `bun scripts/run-root-suite.mjs` · exit 0 · `112` suite(s) PASS, none failing.
 - **P6** — 2026-11-14 15:52, the release intent and the session log recorded
-  through the fragment writer and the aggregator · `31f9ec77`.
+  through the fragment writer and the aggregator · `31f9ec77` (superseded — see
+  `D7`).
+- **D7** — 2026-11-14 16:31, the branch was re-cut before its first push. The
+  pre-push `log-immutability` gate refused `31f9ec77`: `docs/LOGS.md` has exactly
+  one legal writer (the merge-to-main aggregator, carrying the bot identity), so a
+  local aggregation is an illegal touch even when it ran through the journal CLI.
+  The entry now ships as a pending fragment
+  (`.agentic-workflow/journal/20261114T163134Z-fix-424-universal-cli-feedback-narrative-local.md`),
+  which is legal for anyone, and the aggregator writes `docs/LOGS.md` at merge.
+  The four slices after the changeset were re-applied unchanged; their shas are
+  the ones this branch carries (`819574fd`, `3cc41e1c`, `be86e278`, `046e8b8e`,
+  `dba5465f`). Nothing had been published — `git ls-remote --heads origin` had no
+  such branch — so no published history moved.
 - **D3** — 2026-11-14, the regular tier is quiet-until-it-matters rather than
   always-on: the universal attachment emits `start` only once the run has
   crossed the threshold (250 ms), so a fast command adds no noise to a hook, a
