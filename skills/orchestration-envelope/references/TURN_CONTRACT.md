@@ -6,7 +6,7 @@
 ✓ 1. Branch verified FIRST (`git branch --show-current` RUN, output pasted; default branch → new branch created before edits). Never work on main/master.
 ✓ 2. All pre-edit gates (phase-lint, architectural invariants, dependency) RUN, plus frozen acceptance verified, with commands/exit codes pasted. Any FAIL without an allowed override → STOP.
 ✓ 3. `git add`, `git commit -m "<type>(<scope>): <summary>"` EXECUTED; SHA pasted. Commits you did not run do not count.
-✓ 4. Unit finished (single-pass/--fix/final phase)? `git push`, `gh pr create` EXECUTED; PR URL printed in chat (with --body-file, real Markdown, Closes #N). Roadmap/fix-index updated to `done · [#<pr>](<pr-url>)` in follow-up commit. For mid-phase push rules when a PR is already open, see per-consumer supplement (§ Push policy supplement).
+✓ 4. Unit finished (single-pass/--fix/final phase)? `git push`, the remote's forge PR create EXECUTED; PR URL printed in chat (Markdown body, Closes #N). Roadmap/fix-index updated to `done · [#<pr>](<pr-url>)` in follow-up commit. For mid-phase push rules when a PR is already open, see per-consumer supplement (§ Push policy supplement).
 ✓ 5. Clean-tree check LAST (`git status --porcelain` RUN, output pasted). No uncommitted changes (code or docs). PR branch not ahead of remote.
 ✓ 6. Artifact language: explicit user > project docs > English.
 ✓ 7. Descope guard applied to every issue created this turn (dated ## Amendments in SPEC before issue).
@@ -38,7 +38,7 @@ with `--remote`/`--forge` naming what detection cannot; presence-only box2 — t
 conditional phase-lint clause is engine-only, so a shim receipt leaves that clause
 unverified, ED-52-3) or the producer-crate
 engine `packages/agentic-workflow/bin/turn-contract.mjs` — and pasting its
-one-line receipt beside the git/gh evidence. When the receipt is pasted,
+one-line receipt beside the git/forge evidence. When the receipt is pasted,
 reciting boxes 1–5 in prose is **not** required. Verifier unavailable (no bash,
 or no shim/engine in the project)? Recite boxes 1–5 exactly as before — the
 profile never weakens a box, and a turn with neither receipt nor recitation is
@@ -58,7 +58,7 @@ codes:      branch-default | not-a-repo | no-commits | unit-doc-missing |
 exit:       0 ok | 1 contract fail | 2 usage error
 order:      boxes 1→5, first failure wins; within box5, dirty-tree precedes
             ahead-of-remote
-stdout:     exactly one line; diagnostics never (git/gh evidence stays in the
+stdout:     exactly one line; diagnostics never (git/forge evidence stays in the
             agent's transcript)
 ```
 
