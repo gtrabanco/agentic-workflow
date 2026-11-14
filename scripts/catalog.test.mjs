@@ -36,7 +36,7 @@ let copies = 0;
  * One triage run against a root. `UNIT_ROUTE_REPO` re-points the routing at the
  * fixture tree; `UNIT_ROUTE_CATALOG` re-points the catalog at the sandbox copy,
  * so a validation test mutates its own bytes and never the tracked
- * `scripts/catalog.json`.
+ * `packages/agentic-workflow/src/runner/catalog.json`.
  */
 const run = (args, { root = CATALOG_FIXTURE, catalog = CATALOG_PATH } = {}) => spawnSync(
   process.execPath,
@@ -280,7 +280,7 @@ test("the tracked catalog is byte-identical after the validation tests ran", () 
     () => {},
   );
   assert.equal(fs.readFileSync(CATALOG_PATH, "utf8"), before,
-    "a catalog validation test must not touch the tracked scripts/catalog.json");
+    "a catalog validation test must not touch the tracked packages/agentic-workflow/src/runner/catalog.json");
 });
 
 // ===========================================================================

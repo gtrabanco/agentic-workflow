@@ -21,6 +21,15 @@
  * the sibling `init-workspace` consent flow already follows, and a
  * provisioning step the operator cannot read back is one they cannot trust.
  *
+ * Issue #538: the report is a consent × runtime-health state machine, not one
+ * advisory for every state. A healthy opted-in install is **silent** (the
+ * advisory it used to print on every session start read as "engram is not
+ * available" on a machine where memory worked), a broken one is **one error
+ * naming the resolution that failed and every route that repairs it**, and a
+ * session without the opt-in says nothing at all. Each report therefore carries
+ * the `notice` Pi's UI should apply, and `message` is empty exactly when there
+ * is nothing to say.
+ *
  * The install route is `pi install npm:gentle-engram@latest` — the **Pi
  * companion**, one of three resolution surfaces the reports name. The core
  * `engram` binary (on `PATH` or named by `ENGRAM_BIN`) and a running server
@@ -77,6 +86,10 @@ export type EngramStatus =
   | "already-declared"
   | "unsupported-host";
 
+/** The notification level a report asks for; Pi's `ui.notify` kinds plus the
+ *  silence the state machine needs (issue #538 S2/S3/S4/S8). */
+export type EngramNotice = "silent" | "info" | "warning" | "error";
+
 export interface EngramServerConfig {
   command: string;
   args: string[];
@@ -102,6 +115,12 @@ export interface EngramProvisionInput {
    *  target one, so the MCP path registers nothing and the choice is reported
    *  as deliberate rather than as a missing binary. */
   engramUrl?: string | null;
+  /** The session's `ENGRAM_BIN` value, or null/blank when unset (issue #538 S7).
+   *  A broken report has to tell "absent" from "unresolvable", and the override
+   *  is the only evidence that separates them: `resolveEngramBinary` fails closed
+   *  on an override that resolves nothing, so a null `binaryPath` beside a set
+   *  `ENGRAM_BIN` is a broken route the operator can repair by fixing it. */
+  engramBin?: string | null;
   /** Absolute path of the resolved `engram` binary, or null when not found. */
   binaryPath: string | null;
   /** Server names the operator already declared (a `mcp.json` name wins), read
@@ -115,9 +134,15 @@ export interface EngramProvisionInput {
 
 export interface EngramReport {
   status: EngramStatus;
+  /** What Pi's UI should do with `message` (issue #538 S8). `silent` is the
+   *  healthy adopted-in and the not-opted-in state; `info` states a working or
+   *  deliberately configured setup; `warning` is a working setup whose guarantee
+   *  is broken; `error` is an opted-in session with no usable substrate. */
+  notice: EngramNotice;
   /** Present only when `status === "registered"`: exactly what was written. */
   server?: { name: string } & EngramServerConfig;
-  /** One line an operator can read back; states what was written or why not. */
+  /** One line an operator can read back; states what was written or why not,
+   *  and is empty when the state owes the operator nothing (issue #538 S2). */
   message: string;
 }
 
@@ -334,6 +359,62 @@ function isNonBlank(value: string | null | undefined): value is string {
 }
 
 /**
+ * The binary half of a broken report's evidence (issue #538 S7): the resolution
+ * that failed, and how it failed. `ENGRAM_BIN`'s state is the whole difference
+ * between "absent" and "unresolvable" — the two failures the old catch-all
+ * could not tell apart — so a set override is quoted, and an unset one is said
+ * to be unset instead of implying the operator never tried.
+ */
+function unresolvedBinaryClause(engramBin: string | null | undefined): string {
+  const override = isNonBlank(engramBin) ? engramBin.trim() : null;
+  if (override === null) {
+    return (
+      `no "engram" core binary was found: ${ENGRAM_BIN_VAR} is unset and no executable ` +
+      `"engram" is on PATH`
+    );
+  }
+  return (
+    `no "engram" core binary was found: ${ENGRAM_BIN_VAR} names "${override}", which ` +
+    `resolves to no executable file`
+  );
+}
+
+/**
+ * Every route that repairs an unresolved substrate (issue #538 S3). The
+ * binary-vs-served version pair is named with the command that checks it and
+ * never claimed as measured: this module probes nothing at session start (the
+ * bounded probe for the first memory read is `memory probe`, and the pairing
+ * table belongs to the doctor feature). The companion route is stated as what it
+ * is — the extension, not the core binary — because following it cannot repair
+ * a binary resolution.
+ */
+function unresolvedRepairRoutes(): string {
+  return (
+    `Repair it by one route: put the core binary on PATH, set ` +
+    `${ENGRAM_BIN_VAR}=/absolute/path/to/engram, or point ${ENGRAM_URL_VAR} at a running Engram ` +
+    `server (local or remote) — a set URL is joined instead of a local binary. If a server is ` +
+    `already running, confirm the binary and the served version agree: \`engram --version\` ` +
+    `against the version its /health endpoint reports — a server still running from a binary that ` +
+    `was replaced or deleted is the usual cause of a stale memory layer. The Pi companion installs ` +
+    `with: ${ENGRAM_INSTALL_ROUTE} — it is the extension, not the core binary, so installing it ` +
+    `cannot fix this resolution.`
+  );
+}
+
+/**
+ * The leftover declaration beside a working native install. It is the one thing
+ * that still breaks the native-only write guarantee Engram's own setup states, so
+ * it is reported even when memory resolves (issue #531's reasoning, issue #538
+ * D5's level: a working setup with a broken guarantee is a warning).
+ */
+function leftoverDeclaration(): string {
+  return (
+    ` An mcp.json Pi reads still declares "${ENGRAM_SERVER_NAME}": remove that entry and ` +
+    `reload, or native-only agent writes are not guaranteed.`
+  );
+}
+
+/**
  * Decide and perform the registration, in the order that makes the outcome
  * truthful: a config that cannot be read first (its consent is unknown, never
  * refused), then consent (never provision unasked), then the binary (never
@@ -342,11 +423,12 @@ function isNonBlank(value: string | null | undefined): value is string {
  * anything beyond the injected `register` call.
  */
 export function provisionEngram(input: EngramProvisionInput): EngramReport {
-  const { consented, configInvalid, binaryPath, nativePackagePresent, engramUrl, declaredNames, register } = input;
+  const { consented, configInvalid, binaryPath, nativePackagePresent, engramUrl, engramBin, declaredNames, register } = input;
 
   if (configInvalid === true) {
     return {
       status: "config-invalid",
+      notice: "error",
       message:
         `pi-agentic-workflow: Engram not registered — the package's config file is invalid, so ` +
         `its consent could not be read and nothing was written (fix the reported problems and ` +
@@ -355,8 +437,13 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
   }
 
   if (!consented) {
+    // Silent: an operator who does not want memory owes the report nothing (S4),
+    // and the opt-in guidance is not a per-session line (S5). The message stays
+    // as the contract a non-adapter caller reads back, and `notice` is what the
+    // UI applies.
     return {
       status: "not-consented",
+      notice: "silent",
       message:
         `pi-agentic-workflow: Engram not registered — set "memory": { "engram": true } in ` +
         // The switch is a BASE-config section: `loadConfig` merges it from this
@@ -369,29 +456,35 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
 
   // Issue #531 AC1 — the native package wins over every MCP path: it already
   // exposes the mem_* tools, and Engram's own setup keeps agent writes
-  // native-only. The report stays truthful about the operator's configuration:
-  // when memory is served externally that is stated (AC2), otherwise the same
-  // resolution surfaces the refusal names are offered.
+  // native-only. Issue #538 S2/S3/S6 — what the operator is owed depends on
+  // whether that native stack can resolve its substrate: silence when it can
+  // (the advisory this branch used to print read as "engram is not available" on
+  // a working machine), one error naming the failed resolution when it cannot.
   if (nativePackagePresent === true) {
-    const memory = isNonBlank(engramUrl)
-      ? ` Memory is served by the external Engram server ${ENGRAM_URL_VAR} names.`
-      : ` If memory is not working, put the "engram" core binary on PATH or set ` +
-        `${ENGRAM_BIN_VAR} to its absolute path, or set ${ENGRAM_URL_VAR} to a running Engram server.`;
-    // A leftover declaration is the one thing that keeps native-only writes from
-    // being guaranteed (Engram's own setup says so), and this path is where the
-    // operator can still be told: `already-declared` below never runs.
-    const leftover = declaredNames.includes(ENGRAM_SERVER_NAME)
-      ? ` An mcp.json Pi reads still declares "${ENGRAM_SERVER_NAME}": remove that entry and ` +
-        `reload, or native-only agent writes are not guaranteed.`
-      : "";
-    return {
-      status: "native-active",
-      message:
-        `pi-agentic-workflow: Engram MCP not registered — the native gentle-engram extension ` +
-        `already provides the mem_* tools, so nothing was written (native-only agent writes).` +
-        memory +
-        leftover,
-    };
+    const nativeInstalled =
+      `pi-agentic-workflow: Engram MCP not registered — the native gentle-engram extension ` +
+      `already provides the mem_* tools, so nothing was written (native-only agent writes).`;
+    const leftover = declaredNames.includes(ENGRAM_SERVER_NAME);
+    if (binaryPath === null && !isNonBlank(engramUrl)) {
+      return {
+        status: "native-active",
+        notice: "error",
+        message:
+          `pi-agentic-workflow: Engram memory is not resolvable — the native gentle-engram ` +
+          `extension is installed, but ${unresolvedBinaryClause(engramBin)}. ${ENGRAM_URL_VAR} ` +
+          `is unset, so no running server answers for the memory layer either; nothing was ` +
+          `written by this package. ${unresolvedRepairRoutes()}` +
+          (leftover ? leftoverDeclaration() : ""),
+      };
+    }
+    if (leftover) {
+      return {
+        status: "native-active",
+        notice: "warning",
+        message: nativeInstalled + leftoverDeclaration(),
+      };
+    }
+    return { status: "native-active", notice: "silent", message: "" };
   }
 
   // Issue #531 AC2 — a set ENGRAM_URL is an externally managed (possibly
@@ -401,6 +494,7 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
   if (isNonBlank(engramUrl)) {
     return {
       status: "external-server",
+      notice: "info",
       message:
         `pi-agentic-workflow: Engram MCP not registered — ${ENGRAM_URL_VAR} is set, so memory ` +
         `is served by the external Engram server and nothing was written (stdio MCP ` +
@@ -411,17 +505,18 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
   if (binaryPath === null) {
     return {
       status: "binary-missing",
+      notice: "error",
       message:
-        `pi-agentic-workflow: Engram MCP not registered — no "engram" core binary on ` +
-        `PATH, so nothing was written. Put the binary on PATH or set ${ENGRAM_BIN_VAR} to its ` +
-        `absolute path, or set ${ENGRAM_URL_VAR} to a running Engram server for local or ` +
-        `remote memory. The Pi companion installs with: ${ENGRAM_INSTALL_ROUTE}`,
+        `pi-agentic-workflow: Engram MCP not registered — ${unresolvedBinaryClause(engramBin)}. ` +
+        `${ENGRAM_URL_VAR} is unset, so no running server answers for the memory layer either; ` +
+        `nothing was written. ${unresolvedRepairRoutes()}`,
     };
   }
 
   if (register === null) {
     return {
       status: "unsupported-host",
+      notice: "error",
       message:
         `pi-agentic-workflow: Engram not registered — this Pi host exposes no ` +
         `registerMcpServer, so the server was not added (nothing was written).`,
@@ -431,6 +526,7 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
   if (declaredNames.includes(ENGRAM_SERVER_NAME)) {
     return {
       status: "already-declared",
+      notice: "info",
       message:
         `pi-agentic-workflow: Engram not registered — "${ENGRAM_SERVER_NAME}" is already ` +
         `declared in an mcp.json Pi reads, which takes precedence (nothing was written).`,
@@ -441,6 +537,7 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
   register(ENGRAM_SERVER_NAME, config);
   return {
     status: "registered",
+    notice: "info",
     server: { name: ENGRAM_SERVER_NAME, ...config },
     message:
       `pi-agentic-workflow: registered MCP server "${ENGRAM_SERVER_NAME}" → ` +
