@@ -112,10 +112,11 @@ Strictly additive apart from these three, each replaced in the same change:
 
 1. **`enforce` value set** — `off | commit | push | commit-and-push` gains
    `push-upstream` and `commit-and-push-upstream`; no value is removed
-   (`rg -c 'commit-and-push' packages/agentic-workflow-schema/src/config.ts` → 1).
+   (`rg -c 'commit-and-push' packages/agentic-workflow-schema/src/config.ts` → 2:
+   the vocabulary comment and the enum line, the same count the cut measured).
 2. **The bash hooks' private temp fallback** — `"${TMPDIR:-/tmp}"` in
    `fullauto-merge.sh` retires into `hooks/lib/temp.sh`; the literal survives
-   only in that helper (`rg -c 'TMPDIR' template/.agentic-workflow/hooks/*.sh` → 0).
+   only in that helper (`rg -c '\$\{TMPDIR:-/tmp\}' template/.agentic-workflow/hooks/*.sh` → 0).
 3. **The bare `gh` calls in `turn-contract.sh` / `fullauto-merge.sh`** — the
    forge CLI name moves behind `hooks/lib/forge.sh`; the two callers no longer
    name a forge binary (`rg -c '\bgh (pr|api|repo)' template/.agentic-workflow/hooks/*.sh` → 0).
@@ -524,13 +525,50 @@ freeze (D1).
   forge's contents API: the bytes that authorize the merge are then the bytes of
   the commit being merged, and a forge without a contents API needs no case.
 
-- **P13** — 2026-11-14, PR [#549](https://github.com/gtrabanco/agentic-workflow/pull/549)
+- **P13** — 2026-11-14, PR #549
   opened (base `main`, head `2eb5b70f`); the roadmap row carries the PR link and
   stays `in-progress` until the owner's verdict; journal fragment
   `20261114T135214Z-…-narrative-local.md`. `turn-contract.sh --finished` prints
   `TURN-CONTRACT ok`. The push used the documented `--no-verify` escape hatch:
   the hook's gate failed only at `root-suite`, on the pre-existing
   `doc-discipline` red reproduced on `main` (recorded above).
+
+- **D5** — 2026-11-14, correction-batch triage against `external-verify.md`
+  (owner's "triage and fix those that deserve to fix"). Fixed — both blockers
+  (P13's unsettled PR citation; the gh-only phrasing at
+  `TURN_CONTRACT.md:9/41/61`), advisory 2 (this unit's two retirement receipts,
+  whose declared `rg` outputs never reproduced), and the same-symbol sibling
+  `docs/workflow/ORCHESTRATION.md:62` (the identical receipt sentence).
+  Kept, each with its reason — advisory 1 (the `doc-discipline` AC25 red
+  reproduces at base; the store-path fragment is another unit's immutable
+  journal entry), advisory 3 (feature 52's frozen records; their validators
+  still pass), advisory 4 (the network gate steps are the owner's to re-run),
+  `FOLDING.md`'s `gh pr create` (the box-4 owner marker that
+  `check-skill-context.test.mjs:375` pins, under the line's existing deferral
+  to the project's Workflow conventions), `FORGE_BODY.md`/`template/AGENTS.md`
+  (they own the `gh`-example policy with an explicit translate-or-equivalent
+  clause), and every other `git/gh` hit (protected test comment, append-only
+  journal entries, historical unit docs). The batch is prose-only —
+  `bun scripts/test-impact.mjs --base 95af0547` derives the unit's suite set
+  from the branch, and no new test is invented for a prose change. Two
+  `docs(log)` fragments (`8e3b240b`, `77262434`) landed mid-batch from another
+  session; neither moved a blocker.
+
+- **E7** — 2026-11-14, correction recheck and regression (S2 loop, one pass,
+  no new red): `bun test scripts/roadmap-settle.test.mjs` · exit 0 · 8 pass
+  (blocker 1, red at `77262434` as 7 pass/1 fail); corpus
+  `rg -n 'git/gh|gh pr create' skills/orchestration-envelope/references/TURN_CONTRACT.md docs/workflow/ORCHESTRATION.md`
+  · 0 matches (blocker 2 + sibling); the corrected receipts re-run as written
+  (`commit-and-push` → 2, the `${TMPDIR:-/tmp}` literal in top-level hooks → 0)
+  and the settle scan finds no pull URL in the doc; `bun test
+  scripts/{turn-contract-grammar,turn-contract-single-owner,check-skill-context,normative-drift}.test.mjs`
+  · exit 0 (52/3/1/21 pass); `phase-lint` · verdict PASS (fingerprint
+  `1d93a8f3…` unchanged); `skill-lint` · 0 findings; `check-skill-context` and
+  `--documents` · PASS; `docs-generate --check` · PASS; P13's validator
+  `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` · exit 0 ·
+  46 cases; `node scripts/run-root-suite.mjs` · exit 1 · **111 PASS · 1 FAIL** —
+  only the disclosed pre-existing `doc-discipline` AC25 red, restoring the G1
+  count (the intermediate head's second red, `roadmap-settle`, was blocker 1).
 
 ## Next
 
