@@ -155,4 +155,4 @@ if command -v jq >/dev/null 2>&1; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS command guard: 9 allowed, 37 blocked, adapters normalized\n'
+printf 'PASS command guard: 7 allowed, 37 blocked, allowlist literal, adapters normalized\n'
