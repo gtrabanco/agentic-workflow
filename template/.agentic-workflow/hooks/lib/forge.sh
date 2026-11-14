@@ -169,6 +169,38 @@ forge_pr_notes() {
   esac
 }
 
+# forge_pr_line <forge> <branch> — `<STATE> <HEAD>` for the branch's open pull
+# request, empty when there is none, and exit 4 when the forge could not be
+# asked (no CLI, an auth failure, a network refusal). The caller must treat 4 as
+# "unverifiable", never as "no pull request". No `jq` binary is needed: each CLI
+# filters its own JSON with its own `--jq`.
+forge_pr_line() {
+  local forge=${1:-} branch=${2:-} cli json state head line
+  cli=$(forge_require "$forge") || return 4
+  case "$forge" in
+    github | default)
+      json=$("$cli" pr list --head "$branch" --state open --json state,headRefOid 2>/dev/null) || return 4
+      json=$(printf '%s' "$json" | tr -d '\n')
+      state=$(printf '%s' "$json" | sed -n 's/.*"state"[[:space:]]*:[[:space:]]*"\([A-Za-z]*\)".*/\1/p')
+      head=$(printf '%s' "$json" | sed -n 's/.*"headRefOid"[[:space:]]*:[[:space:]]*"\([0-9a-fA-F]*\)".*/\1/p')
+      [ -n "$state" ] || return 0
+      printf '%s %s\n' "$state" "$head"
+      ;;
+    gitlab)
+      line=$("$cli" mr list --source-branch "$branch" -F json --jq '.[] | "\(.state) \(.sha)"' 2>/dev/null) || return 4
+      printf '%s\n' "$line" | sed -n '1p'
+      ;;
+    gitea)
+      line=$("$cli" pr list --head "$branch" --json state,head_sha --jq '.[] | "\(.state) \(.head_sha)"' 2>/dev/null) || return 4
+      printf '%s\n' "$line" | sed -n '1p'
+      ;;
+    *)
+      printf 'agentic-workflow: forge "%s" has no pull-request reader\n' "$forge" >&2
+      return 4
+      ;;
+  esac
+}
+
 # forge_default_base <forge> — the branch a merge must target.
 forge_default_base() {
   local forge=${1:-} cli
