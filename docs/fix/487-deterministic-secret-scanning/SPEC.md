@@ -308,6 +308,7 @@ unit; the review step is the owner's external verification.
 - **G3** — 2026-11-14, the `pre-push` hook judged the branch's own range (`git push -u origin fix/487-deterministic-secret-scanning`) · exit 0 · `local-gate: PASS — 16 step(s)` in 217 s, with `secret-scan: exit 0` and `root-suite: exit 0` in 204 s.
 - **P9** — 2026-11-14, branch pushed and the PR opened: [#551](https://github.com/gtrabanco/agentic-workflow/pull/551), and the roadmap row settled `done · [#551]`. One row, rewritten in place: the index already carried a `pending` intake row for #487 (`secret-scan-gate`), which this unit replaced rather than duplicating — the duplicate the first cut appended at the table's tail was removed, and the intake row's stray fifth cell is gone with it.
 - **E15** — 2026-11-14, `node scripts/roadmap-settle.mjs` after the settle · exit 0 · `verdict: PASS`, 0 violations.
+- **G4** — 2026-11-14, the second push, a prose-only range: the hook's `test-impact` answered `empty` and skipped the six test steps, and `secret-scan` still ran — `local-gate: PASS — 10 step(s)` with `secret-scan: exit 0`. That is S8/AC3 proven in the real hook rather than in a fixture: the push class that leaks is the one the scan never skips.
 
 ## Next
 
