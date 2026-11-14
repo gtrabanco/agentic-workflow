@@ -51,32 +51,47 @@ fi
 head_sha=0123456789abcdef0123456789abcdef01234567
 
 # ── the PATH stubs: each one records its argv and answers one document ─────
+# Every stub prints one document. A default is assigned to a variable first:
+# `"${VAR:-{}}"` closes the expansion at the first `}`, which leaks a stray brace
+# into the JSON and is exactly the kind of quoting bug this suite must not have.
 cat > "$scratch/bin/gh" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$STUB_STATE/gh.argv"
+document=${GH_STUB_JSON:-}
+[ -n "$document" ] || document='{}'
 case "$1 $2" in
-  "pr view") printf '%s\n' "${GH_STUB_JSON:-{}}" ;;
+  "pr view") printf '%s\n' "$document" ;;
   *) exit 3 ;;
 esac
 STUB
 cat > "$scratch/bin/glab" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$STUB_STATE/glab.argv"
+document=${GLAB_STUB_JSON:-}
+[ -n "$document" ] || document='{}'
+repo=${GLAB_STUB_REPO:-}
+[ -n "$repo" ] || repo='{"default_branch":"main"}'
+notes=${GLAB_STUB_NOTES:-}
+[ -n "$notes" ] || notes='[]'
 case "$1 $2" in
-  "mr view") printf '%s\n' "${GLAB_STUB_JSON:-{}}" ;;
+  "mr view") printf '%s\n' "$document" ;;
   "mr merge") exit "${GLAB_STUB_MERGE_EXIT:-0}" ;;
-  "repo view") printf '%s\n' "${GLAB_STUB_REPO:-{\"default_branch\":\"main\"\}}" ;;
-  api) printf '%s\n' "${GLAB_STUB_NOTES:-[]}" ;;
+  "repo view") printf '%s\n' "$repo" ;;
+  api*) printf '%s\n' "$notes" ;;
   *) exit 3 ;;
 esac
 STUB
 cat > "$scratch/bin/gt" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$STUB_STATE/gt.argv"
+document=${GT_STUB_JSON:-}
+[ -n "$document" ] || document='{}'
+repo=${GT_STUB_REPO:-}
+[ -n "$repo" ] || repo='{"default_branch":"main"}'
 case "$1 $2" in
-  "pr view") printf '%s\n' "${GT_STUB_JSON:-{}}" ;;
+  "pr view") printf '%s\n' "$document" ;;
   "pr merge") exit "${GT_STUB_MERGE_EXIT:-0}" ;;
-  "repo view") printf '%s\n' "${GT_STUB_REPO:-{\"default_branch\":\"main\"\}}" ;;
+  "repo view") printf '%s\n' "$repo" ;;
   *) exit 3 ;;
 esac
 STUB
@@ -95,7 +110,8 @@ check "$(forge_detect 'https://bitbucket.org/acme/app.git')" "bitbucket" "a bitb
 check "$(forge_detect '/tmp/agentic-workflow-remote.git')" "default" "a filesystem remote has no forge and takes the default CLI"
 check "$(forge_detect 'https://git.example.com/acme/app.git')" "unknown" "a host that says nothing is unknown, never guessed"
 check "$(forge_detect 'https://git.example.com/acme/app.git' gitlab)" "gitlab" "an explicit override wins over the host"
-AGENTIC_WORKFLOW_FORGE=gitea check "$(forge_detect 'https://git.example.com/acme/app.git')" "gitea" "AGENTIC_WORKFLOW_FORGE wins over the host"
+AGENTIC_WORKFLOW_FORGE=gitea
+check "$(forge_detect 'https://git.example.com/acme/app.git')" "gitea" "AGENTIC_WORKFLOW_FORGE wins over the host"
 unset AGENTIC_WORKFLOW_FORGE
 
 # ── 2. CLI resolution ─────────────────────────────────────────────────────
