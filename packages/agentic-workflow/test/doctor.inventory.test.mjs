@@ -45,7 +45,7 @@ test("probed → documented: every probe is declared, with a published route and
     assert.ok(row, `${probe.id} is documented`);
     assert.ok(["required", "optional"].includes(row.requirement), `${probe.id}: requirement vocabulary`);
     assert.ok(INSTALL_ROUTES.includes(row.route), `${probe.id}: route vocabulary`);
-    assert.ok(row.what && row.why && row.detectedBy && row.alternative, `${probe.id}: every column is filled`);
+    assert.ok(row.what && row.why && row["detected-by"] && row.alternative, `${probe.id}: every column is filled`);
   }
 });
 
@@ -54,14 +54,14 @@ test("the node engine constant is the manifest's own engines.node (one home)", (
 });
 
 test("a malformed row is a parse error, never a silent skip", () => {
-  const broken = README.replace(/^\| rg \|.*$/mu, "| rg | only two cells |");
+  const broken = README.replace(/^rg \|.*$/mu, "rg | only two cells |");
   const parsed = parseInventory(broken);
   assert.ok(parsed.errors.length > 0, "a short row is refused");
   assert.ok(parsed.errors.some((error) => /rg/u.test(error.message)), "the refusal names the row");
 });
 
 test("a duplicate id is a parse error", () => {
-  const duplicated = README.replace(/^\| rg \|.*$/mu, (line) => `${line}\n${line}`);
+  const duplicated = README.replace(/^rg \|.*$/mu, (line) => `${line}\n${line}`);
   const parsed = parseInventory(duplicated);
   assert.ok(parsed.errors.some((error) => /duplicate/u.test(error.message)));
 });

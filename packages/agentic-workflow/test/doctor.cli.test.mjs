@@ -65,7 +65,7 @@ test("`doctor --json` prints the doctor@1 envelope with one row per documented s
     assert.deepEqual(envelope.rows.map((row) => row.id), CHECK_PROBES.map((probe) => probe.id));
     for (const row of envelope.rows) {
       assert.ok(DOCTOR_CHECK_STATUSES.includes(row.status), `${row.id}: ${row.status} is published`);
-      assert.ok(!("__proto__" in row));
+      assert.equal(Object.hasOwn(row, "__proto__"), false, "no row carries a prototype key of its own");
     }
     assert.equal(typeof envelope.exitCode, "number");
     assert.equal(result.status, envelope.exitCode, "the process exit code is the envelope's");
