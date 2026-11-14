@@ -275,6 +275,33 @@ describe("feedback — the profile tier (S3)", () => {
     match(table, /^\s+stats\s+100ms\s+10%$/m);
     match(table, /bottleneck: embed \(700ms, 70% of total\)/);
   });
+
+  it("charges an async stage to its settlement, and the printed total is the share denominator (external-verify B1)", async () => {
+    const { channel, lines, clock } = harness({ tier: "profile" });
+    clock.t += 1000; // work outside any stage: the printed total still owns the shares
+    await channel.stage("scan", async () => {
+      await Promise.resolve();
+      clock.t += 300;
+      return 1;
+    });
+    await channel.stage("embed", async () => {
+      await Promise.resolve();
+      clock.t += 700;
+      return 1;
+    });
+    channel.done("2 stages");
+    const block = lines.filter((l) => l.startsWith("FEEDBACK PROFILE"));
+    strictEqual(block.length, 1, `one profile block, got: ${block.join(" | ")}`);
+    const table = lines.slice(lines.indexOf(block[0])).join("\n");
+    match(table, /^FEEDBACK PROFILE — agentic-workflow doc · total 2\.00s$/m);
+    match(table, /^\s+scan\s+300ms\s+15%$/m, `scan must carry its whole async cost: ${table}`);
+    match(table, /^\s+embed\s+700ms\s+35%$/m, `embed must carry its whole async cost: ${table}`);
+    match(table, /bottleneck: embed \(700ms, 35% of total\)/, `the bottleneck must be the real one: ${table}`);
+    ok(
+      lines.some((l) => /^feedback: stage scan · 300ms$/.test(l)),
+      `the debug cost line must charge the settlement, not the suspension: ${lines.join(" | ")}`,
+    );
+  });
 });
 
 describe("feedback — quiet and the no-op (S7)", () => {
