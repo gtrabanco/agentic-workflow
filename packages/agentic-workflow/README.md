@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -67,6 +67,38 @@ Two sibling binaries ship in the same package and are invoked by the skills:
 |---|---|
 | `bin/path-guard.mjs` | Tier 1 path-protection gate (feature 60): `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`, read-only and offline, printing `PATH-GUARD <pass\|fail> — <code>` · exit 0 pass, 1 fail, 2 usage |
 | `bin/turn-contract.mjs` | Verifies the canonical turn contract's mechanical boxes: prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>`; `--finished` also requires the pushed branch with its open pull request |
+
+## CLI feedback — the three tiers (issue #424)
+
+One channel reports progress for every subcommand: `src/feedback/index.mjs`. The
+tiers are cumulative, the flags are consumed by the bin before any command's own
+grammar runs, and every line goes to **stderr** — stdout and the envelope stay the
+machine receipt, so a consumer that parses stdout is unaffected by any flag. The
+rule and its authoring contract are owned by
+[`docs/workflow/FEEDBACK.md`](../../docs/workflow/FEEDBACK.md); this section owns
+only the crate surface.
+
+```text
+feedback-tiers@1
+tier | flag | what it prints
+regular | none | `feedback: start` once the run passes the threshold (or at its first long-running stage), `feedback: stage`, `feedback: progress <done>/<total> (<pct>%)` with a remaining estimate, `feedback: done … · <duration>`
+debug | --debug | one `feedback: progress` line per unit of work (unthrottled, carrying the unit's own detail), each stage's own cost, and the command's provider/detail lines
+profile | --profile | the debug lines plus `FEEDBACK PROFILE — <subject> · total <duration>`, one row per stage with its milliseconds and share, and the named bottleneck (a single `run` row when the command declares no stages)
+```
+
+`--profile` outranks `--debug`. `--quiet` mutes the regular tier, which is what
+`doc --sync --quiet` owes its hook consumers; an explicitly requested diagnostic
+tier still speaks. The module exports `FEEDBACK_TIERS` (the published vocabulary
+the guide's normative row binds), `createFeedback`, `parseFeedbackArgs`,
+`formatDuration` and the `NO_FEEDBACK` no-op — an embedded caller and a suite pass
+no channel and see no change.
+
+The universal attachment costs a subcommand nothing: the bin registers one
+threshold timer and one exit hook, so a command that adds no stage still reports
+"started" (once it is still working at the threshold) and "took this long".
+A command that spends real time in stages wraps them in
+`feedback.stage(name, fn)` and reports per-unit progress through
+`onProgress`-style callbacks the engine exposes (`syncIndex` is the first).
 
 ## `doc` — the retrieval index (feature 65, hardened by issue #443)
 
