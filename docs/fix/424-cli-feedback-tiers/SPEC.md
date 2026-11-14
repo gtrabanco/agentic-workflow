@@ -587,6 +587,15 @@ freeze (D1).
   corrected tree (every edit except this line; the post-line re-run is
   reported in the handoff).
 
+- **E16** — 2026-11-14, the differential's two remaining declared commands,
+  same harness as E13 · `verify docs/fix/540-embedding-pass-batch-limit/SPEC.md`
+  stdout and exit identical (refusal exit 2 at both ends, no feedback lines),
+  `journal aggregate --check` exit 0 both · stdout differs only in the
+  pending-fragment count (`checked: 9` at base vs `checked: 12` at head) —
+  pure input drift, the branch adds three grammar-valid fragments (D7's, the
+  concurrent session's, this round's); `ok: true` / `refusals: []` on both
+  sides, no behavior delta.
+
 ## Next
 
 Hand the correction batch to the owner as the external verifier: both
