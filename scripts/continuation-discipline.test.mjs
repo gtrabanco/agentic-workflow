@@ -41,8 +41,9 @@ import { loadSchemaRuntime } from "./schema-runtime.mjs";
 import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SENSOR = path.join(repoRoot, "scripts", "workflow-status.mjs");
-const SNAPSHOT = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs");
+/** The runner's bin: the sensor and the snapshot answer as its subcommands. */
+const SENSOR = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
+const SNAPSHOT = SENSOR;
 
 const schema = await loadSchemaRuntime();
 const {
@@ -173,7 +174,7 @@ function makeFixture({ unit = "90-alpha", status = "defined", branch = "main", e
   };
   commit("planning artifacts frozen");
 
-  const runSensor = () => spawnSync(process.execPath, [SENSOR], {
+  const runSensor = () => spawnSync(process.execPath, [SENSOR, "workflow-status"], {
     cwd: dir,
     encoding: "utf8",
     env: { ...process.env, PATH: `${binDir}:${process.env.PATH}` },
@@ -183,7 +184,7 @@ function makeFixture({ unit = "90-alpha", status = "defined", branch = "main", e
   const buildStage = (stage, unitKind = "feature", parent = null) => {
     const args = ["build", "--stage", stage, "--dir", unitDir, "--unit", unit, "--unit-kind", unitKind, "--root", dir];
     if (parent) args.push("--parent", parent);
-    const result = spawnSync(process.execPath, [SNAPSHOT, ...args], { cwd: dir, encoding: "utf8", timeout: 120_000 });
+    const result = spawnSync(process.execPath, [SNAPSHOT, "pre-execution-snapshot", ...args], { cwd: dir, encoding: "utf8", timeout: 120_000 });
     assert.equal(result.status, 0, `snapshot build failed (${stage}): ${result.stderr}`);
     const [digest, ...rest] = result.stdout.split("\n");
     return { digest: digest.trim(), snapshot: JSON.parse(rest.join("\n")) };

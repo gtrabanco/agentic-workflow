@@ -41,7 +41,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { schemaRuntimePath } from "./schema-runtime.mjs";
-import { sectionBounds, openFence, closesFence, inFlightUnitDocs } from "./unit-doc-phases.mjs";
+import { sectionBounds, openFence, closesFence, inFlightUnitDocs } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -157,7 +157,7 @@ function documentViolations(doc) {
 
 /** The unit docs the roadmap and the fix index still call in flight, as
  *  `{ file, lines }` pairs read once (review F5). The rule itself belongs to
- *  the shared reader — `inFlightUnitDocs` in `scripts/unit-doc-phases.mjs` is
+ *  the shared reader — `inFlightUnitDocs` in the crate's `unit-doc-phases.mjs` is
  *  the one owner (cycle-2 review F20: two gates kept byte-similar copies here
  *  and could silently disagree about which docs are live). This stays
  *  exported so the suite can assert the corpus rule itself, not only the

@@ -10,6 +10,10 @@ description: >
 ---
 
 # Unit Lane — Adaptive Conductor
+> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
+> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
+> release and never guessed: a hard-coded version re-opens the per-release sweep the
+> contract removes, and `latest` is not a legal pin.
 
 One document, adaptive steps. The lane reads a closed catalog, triages which
 steps a unit needs, executes them in order, and commits at each gate. Replaces:
@@ -22,7 +26,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Nothing here
   is inferred: a gap re-enters provenance → research, and a gap surviving both
-  runs `bun scripts/needs-input.mjs <unit-dir>` (node fallback if bun is not
+  runs `bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>` (npx fallback if bun is not
   installed) and stops with the `open-questions@1` block routed back to the
   owning stage.
 ✓ Tool choice re-made this turn — `bun` before `node` on manual invocation,
@@ -34,11 +38,11 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ Every question asked is recorded with its resolution (owner answer, "Decide
   for me" + reason, or the explicit `none — no questions` line) in
   `decisions.md`; no question the user already answered is asked twice.
-✓ Triage ran (bun scripts/unit-route.mjs --triage <slug>) and its block pasted
+✓ Triage ran (bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <slug>) and its block pasted
   verbatim into the unit doc's Evidence section as the authoritative step list
 ✓ Unit doc exists at docs/features/<NN>-<slug>/SPEC.md (created from template
   if new, with all mandatory sections filled or n/a)
-✓ Guard ran (bun scripts/diff-guard.mjs --base <ref>) after each implement step;
+✓ Guard ran (bunx @gtrabanco/agentic-workflow@<pin> diff-guard --base <ref>) after each implement step;
   on BREACH: re-triage or record exception, never shrink the diff
 ✓ The unit's evidence carrier updated (Evidence rows, or `## Log` `E` lines for a
   re-cut unit — command → exit/digest → output → verified-by) and its progress
@@ -56,7 +60,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 - Force re-triage: `unit-lane <NN-slug> --retriage`
 
 Both `--fix <n>` and `--from-issue <n>` are the exact forms
-`scripts/unit-route.mjs` prints for a tracked issue with no unit folder
+`agentic-workflow unit-route` prints for a tracked issue with no unit folder
 (`route: plan-from-issue`) — never invent a different spelling.
 
 ## Inputs — never inferred, never defaulted
@@ -68,7 +72,7 @@ is resolved in one fixed order — **(0) provenance** (search the repo's own doc
 and append an `open-question` row to the unit's `decisions.md` recording where)
 → **(1) research** (2–3 concrete options with trade-offs; asking for more
 research is a legitimate answer) → **(2) halt**: run `bun
-scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
+`bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>`, paste the `open-questions@1` block verbatim,
 stop. The block routes each question back to the stage that owns the fact —
 `design` for scope/architecture, `unit-lane` for plan-owned facts. Grammar and
 exit codes: `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open
@@ -127,8 +131,8 @@ Before the unit doc is created, the change's **risk tier** decides whether it
 needs one at all. Read it; never compute it:
 
 ```
-bun scripts/ceremony.mjs tier classify            # the branch's own diff
-bun scripts/ceremony.mjs tier classify --paths a,b  # an explicit scope
+bunx @gtrabanco/agentic-workflow@<pin> ceremony tier classify            # the branch's own diff
+bunx @gtrabanco/agentic-workflow@<pin> ceremony tier classify --paths a,b  # an explicit scope
 ```
 
 The verdict is the owner's, not this skill's: the tiers, the named signals and
@@ -153,7 +157,7 @@ them as a reason.
 
 ### 2. Triage — read the catalog, never re-derive
 
-Run `bun scripts/unit-route.mjs --triage <slug>` (or `<NN>` for numeric). PASTE
+Run `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <slug>` (or `<NN>` for numeric). PASTE
 its stdout block **verbatim** into the unit doc's Evidence section header under
 a `## Triaged steps` heading. This block is authoritative. The model never
 re-derives, reorders, or invents steps — it executes only what the catalog says.
@@ -212,7 +216,7 @@ execution work hands off one phase per turn:
 ```
 
 `<k>` is the first unfinished phase (the unit doc's Progress log records the
-phases done so far; `bun scripts/unit-route.mjs <NN-slug>` prints it — when every
+phases done so far; `bunx @gtrabanco/agentic-workflow@<pin> unit-route <NN-slug>` prints it — when every
 phase is recorded but the index still reads `in-progress`, the router refuses with
 `UNIT ROUTE — error … settle the index or roadmap status` and exits 1: settle the
 status, then continue the ladder) and
@@ -225,7 +229,7 @@ closes, `execute-phase` resumes the lane and the remaining judgment steps
 When a pi-web session is present the same hand-off is a Relay leg: the router
 prints `relay: bootstrap-needed` (with the packet path and the leg count) and
 [relay legs](references/RELAY.md) owns the rest — the packet, one phase per leg,
-the leg tier from `scripts/catalog.json` and the fresh-context coherence review.
+the leg tier from `packages/agentic-workflow/src/runner/catalog.json` and the fresh-context coherence review.
 
 When the operator or the unit declares **orchestrate mode**, implementation
 phases dispatch instead of handing off: the lane becomes the non-executing
@@ -237,7 +241,7 @@ inputs are `resolve-passes` and `resources detect|admit`.
 
 ### 5. Diff-size guard (after each implement step)
 
-Run `bun scripts/diff-guard.mjs --base <last-reviewed-ref> --unit <NN>`. Paste
+Run `bunx @gtrabanco/agentic-workflow@<pin> diff-guard --base <last-reviewed-ref> --unit <NN>`. Paste
 the output verbatim. On **BREACH**: stop, re-triage the unit, or record an
 exception. **Anti-gaming: NEVER shrink a diff by deleting comments, blank lines,
 docs or tests.** If the unit cannot fit the budget, record the exception and stop.

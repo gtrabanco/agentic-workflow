@@ -100,8 +100,8 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parseUnitDocPhases, sectionBounds, inFlightUnitDocs as sharedInFlightUnitDocs } from "./unit-doc-phases.mjs";
-import { PREREQUISITES } from "./needs-input.mjs";
+import { parseUnitDocPhases, sectionBounds, inFlightUnitDocs as sharedInFlightUnitDocs } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+import { PREREQUISITES } from "../packages/agentic-workflow/src/runner/sensors/needs-input.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -161,7 +161,6 @@ const READERS = new Set(["grep", "rg", "wc", "ls", "cat", "head", "tail", "test"
  * runs the suite.
  */
 const REPORT_VALIDATORS = new Set([
-  "scripts/phase-lint.mjs",
   "scripts/check-skill-context.mjs",
   "scripts/roadmap-settle.mjs",
   "scripts/vocabulary-probe.mjs",
@@ -215,6 +214,12 @@ const DENIES_SCRIPTS = /\bno\s+(?:new\s+)?(?:runtime\s+)?(?:script|runtime)\b/i;
 const CREATED_SCRIPT = /\bscripts\/[A-Za-z0-9_.-]+\.mjs\b/;
 /** A Turn-contract box invoking a script. */
 const SCRIPT_INVOCATION = /\b(?:node|bun)\s+scripts\/([A-Za-z0-9_.-]+\.mjs)([^\n`]*)/g;
+/**
+ * The same claim in the shipped runner's spelling (feature 91): a box that runs
+ * `bunx @gtrabanco/agentic-workflow@<pin> <subcommand> …` names the subcommand,
+ * which is the module's own name without its extension.
+ */
+const RUNNER_INVOCATION = /\b(?:bunx|npx)\s+@gtrabanco\/agentic-workflow@[^\s`]*\s+([a-z][a-z0-9-]*)([^\n`]*)/g;
 
 /* ------------------------------------------------------------------ files */
 
@@ -1265,9 +1270,12 @@ function turnContractClaims(doc, claims) {
     }
     if (box.length === 0) continue;
     const boxText = box.map((row) => row.text).join("\n");
-    for (const match of boxText.matchAll(SCRIPT_INVOCATION)) {
-      const script = match[1];
-      const args = match[2].trim();
+    const invocations = [
+      ...[...boxText.matchAll(SCRIPT_INVOCATION)].map((match) => ({ script: match[1], args: match[2] })),
+      ...[...boxText.matchAll(RUNNER_INVOCATION)].map((match) => ({ script: `${match[1]}.mjs`, args: match[2] })),
+    ];
+    for (const { script, args: rawArgs } of invocations) {
+      const args = rawArgs.trim();
       const declared = PREREQUISITES.filter((entry) => entry.script === script);
       const placeholder = /<[A-Za-z0-9_-]+>/.exec(args);
       if (placeholder === null || declared.length === 0) continue;

@@ -118,6 +118,7 @@ import {
   replace as replaceSection,
 } from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
+import { isRunnerCommand, runRunnerCommand } from "../src/runner/cli.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
 import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
 import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragment.mjs";
@@ -312,7 +313,7 @@ function logRefuse(reason, receipt) {
 const RELAY_USAGE = `usage: agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
   check        validate the packet: documents, charter pointer, baton grammar, verdict grammar
   budget       measure the leg handover (charter + baton) against the declared ceiling
-  tiers        print each leg's tier from scripts/catalog.json
+  tiers        print each leg's tier from the bundled catalog (src/runner/catalog.json)
   obligations  verify the unit's obligations ledger is closed
   <unit>       an NN-slug unit token, or a unit directory path
   --repo       read the workspace from this directory (default: this project)
@@ -541,7 +542,7 @@ function configRefusal(message, issues, json) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> ...");
   process.exit(1);
 }
 
@@ -566,8 +567,11 @@ switch (command) {
     try {
       result = runRelayMode({
         ...argv,
-        catalogPath: join(rootDir, "scripts", "catalog.json"),
-        catalogLabel: "scripts/catalog.json",
+        // The catalog ships with the runner (feature 91): a project that installed
+        // the package has no `scripts/` tree, and the tiers the relay names are the
+        // ones this bin reads.
+        catalogPath: new URL("../src/runner/catalog.json", import.meta.url),
+        catalogLabel: "packages/agentic-workflow/src/runner/catalog.json",
         budgetsPath: join(rootDir, "docs", "workflow", "SKILL_CONTEXT_BUDGETS.json"),
         budgetsLabel: "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
       });
@@ -1522,5 +1526,19 @@ switch (command) {
   }
 
   default:
+    // The runner family (issue #352): the sensors and the ceremony CLI answer
+    // from their own table, so the editor services and the runtime commands
+    // share one bin without one growing switch. A name outside both tables is
+    // still the closed-world refusal below — never a shell fallback.
+    if (isRunnerCommand(command)) {
+      const runnerCode = runRunnerCommand(command, restArgs);
+      if (typeof runnerCode === "number") process.exitCode = runnerCode;
+      else if (runnerCode && typeof runnerCode.then === "function") {
+        runnerCode.then((code) => {
+          if (typeof code === "number") process.exitCode = code;
+        });
+      }
+      break;
+    }
     refuse(`Unknown service: ${command}`);
 }

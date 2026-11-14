@@ -23,7 +23,7 @@ import { validateDocIndex } from "../src/doc/structure-schema.mjs";
 import { canonicalJson, corpusFiles } from "../src/doc/manifest.mjs";
 import { scanChunks } from "../src/doc/chunks.mjs";
 import { sectionsWithIds } from "../src/doc/docops.mjs";
-import { parseUnitDocPhases } from "../../../scripts/unit-doc-phases.mjs";
+import { parseUnitDocPhases } from "../src/runner/unit-doc-phases.mjs";
 
 const CLI = new URL("../bin/agentic-workflow.mjs", import.meta.url).pathname;
 

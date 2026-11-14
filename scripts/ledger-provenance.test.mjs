@@ -3,7 +3,7 @@
 /**
  * F106 / P20 — the ledger recount must be mechanical, never asserted.
  *
- * `scripts/ledger-provenance.mjs` is the recount, so these tests pin the recount:
+ * The `ledger-provenance` runner subcommand is the recount, so these tests pin the recount:
  * fixture repositories covering every provenance shape the real ledgers carry —
  * including the legacy `· folded P<n> <sha>` route marker the historical units
  * wrote — each built with the history its own markers cite.
@@ -18,7 +18,11 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const script = path.join(repoRoot, "scripts/ledger-provenance.mjs");
+const BIN = fileURLToPath(new URL("../packages/agentic-workflow/bin/agentic-workflow.mjs", import.meta.url));
+/** The runner's subcommand this corpus exercises. */
+const SUB = "ledger-provenance";
+/** The module whose own source two cases read, installed from the crate. */
+const MODULE = fileURLToPath(new URL("../packages/agentic-workflow/src/runner/sensors/ledger-provenance.mjs", import.meta.url));
 const LEDGER = "docs/review-findings.md";
 const HEADER = "| id | file:line | axis | severity | class | route | folded |\n| --- | --- | --- | --- | --- | --- | --- |\n";
 const CELL_RE = /(?<!\\)\|/;
@@ -99,7 +103,7 @@ function makeFixture(t) {
   return { root, atomic, messageOnly, f2tick, forgeOnly, realRepair, ranged };
 }
 
-const run = (cwd, ...flags) => spawnSync(process.execPath, [script, LEDGER, ...flags], { cwd, encoding: "utf8" });
+const run = (cwd, ...flags) => spawnSync(process.execPath, [BIN, SUB, LEDGER, ...flags], { cwd, encoding: "utf8" });
 const reportOf = (cwd) => JSON.parse(run(cwd, "--json").stdout);
 const entry = (cwd, id) => reportOf(cwd).find((e) => e.id === id);
 
@@ -198,9 +202,9 @@ test("the re-entry guard matches the token shape the annotator writes (F59)", ()
   // The guard was built inside a template literal as `\s`, which JS collapses to the
   // bare character `s`: the pattern read `·s*folds[0-9a-f]{7}` and could never match
   // the `· fold <sha>` marker line 339 writes — a re-entry check that silently never
-  // re-enters. This case evaluates the guard expression read out of the script's own
+  // re-enters. This case evaluates the guard expression read out of the module's own
   // source, so an escape slip fails the suite instead of disabling the guard.
-  const source = fs.readFileSync(script, "utf8");
+  const source = fs.readFileSync(MODULE, "utf8");
   const expr = /if \((new RegExp\([\s\S]*?entry\.token[\s\S]*?\))\.test\(route\)\)/.exec(source)?.[1];
   assert.ok(expr, "the re-entry guard is gone from the --annotate branch");
   const build = new Function("entry", `return (${expr});`);
@@ -487,7 +491,7 @@ test("a copied ledger loses the proofs its history carried, and says so (the 24-
   fs.copyFileSync(path.join(root, LEDGER), path.join(root, copy));
   git(root, "add", "-A", "--", ".");
   git(root, "commit", "-qm", "docs(x): import a ledger copy");
-  const onCopy = (...flags) => spawnSync(process.execPath, [script, copy, ...flags], { cwd: root, encoding: "utf8" });
+  const onCopy = (...flags) => spawnSync(process.execPath, [BIN, SUB, copy, ...flags], { cwd: root, encoding: "utf8" });
 
   const json = JSON.parse(onCopy("--json").stdout);
   const status = Object.fromEntries(json.map((e) => [e.id, e.status]));
@@ -606,7 +610,7 @@ test("a target outside the checkout is refused before it is read (SEC)", (t) => 
   const outside = path.join(root, "notes.txt");
   const body = HEADER + row("F1", "src/index.ts:1", "fold into current unit", "yes");
   fs.writeFileSync(outside, body);
-  const result = spawnSync(process.execPath, [script, outside, "--annotate"], { cwd: repoRoot, encoding: "utf8" });
+  const result = spawnSync(process.execPath, [BIN, SUB, outside, "--annotate"], { cwd: repoRoot, encoding: "utf8" });
   assert.equal(result.status, 2, `${result.stdout}${result.stderr}`);
   assert.match(result.stderr, /REFUSED/);
   assert.equal(fs.readFileSync(outside, "utf8"), body, "the tool wrote outside the checkout");
@@ -731,7 +735,7 @@ test("an annotated ledger's citations are read and validated, not silently passe
 // ---------------------------------------------------------------------------
 
 const UNIT_DOC = "docs/features/9-x/SPEC.md";
-const docRun = (cwd, ...flags) => spawnSync(process.execPath, [script, UNIT_DOC, ...flags], { cwd, encoding: "utf8" });
+const docRun = (cwd, ...flags) => spawnSync(process.execPath, [BIN, SUB, UNIT_DOC, ...flags], { cwd, encoding: "utf8" });
 
 function makeDocFixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-doc-"));

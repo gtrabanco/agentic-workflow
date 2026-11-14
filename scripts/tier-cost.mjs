@@ -27,8 +27,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { recordedTier } from "./ceremony/tier.mjs";
-import { RISK_TIER_KINDS, sizeTierOf } from "./risk-tiers.mjs";
+import { recordedTier } from "../packages/agentic-workflow/src/runner/ceremony/tier.mjs";
+import { RISK_TIER_KINDS, sizeTierOf } from "../packages/agentic-workflow/src/runner/risk-tiers.mjs";
 
 /** The contract id the ledger publishes and this module reads. */
 export const TIER_COST_CONTRACT_ID = "tier-cost@1";

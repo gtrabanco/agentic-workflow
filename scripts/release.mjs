@@ -181,6 +181,11 @@ function channelTagCounter(root, base, stamp, channel) {
   return counters.length > 0 ? Math.max(...counters) : 0;
 }
 
+/** The runner contract's pin file and the only pattern that rewrites it. */
+const RUNNER_PIN_FILE = "skills/runner-contract/references/RUNNER.md";
+/** `@gtrabanco/agentic-workflow@<version>` — the scoped name, never the schema sibling. */
+const RUNNER_PIN_RE = /(@gtrabanco\/agentic-workflow@)[0-9A-Za-z][0-9A-Za-z.\-]*/u;
+
 /**
  * Skills carry the train version (D-40-14): every `skills/<name>/SKILL.md`
  * frontmatter is stamped with it at apply time — by code, from the
@@ -244,6 +249,27 @@ function stampTemplateProvenance(root, version) {
     }
   }
   return stamped;
+}
+
+/**
+ * The runner pin (feature 91, issue #352): `skills/runner-contract/references/RUNNER.md`
+ * carries the repository's ONLY runner version literal. Stamping it here is what
+ * makes a release a one-line diff instead of a sweep across every skill that
+ * cites a command, and `scripts/normative-drift.test.mjs` recomputes the pin
+ * against the crate's own manifest so a missed stamp fails the gate instead of
+ * shipping a mismatched pair.
+ *
+ * Returns 1 when the file was rewritten, 0 when it already carried the version
+ * (so a re-run is a no-op), and 0 when the repository has no such file.
+ */
+function stampRunnerPin(root, version) {
+  const file = path.join(root, RUNNER_PIN_FILE);
+  if (!fs.existsSync(file)) return 0;
+  const before = fs.readFileSync(file, "utf8");
+  const after = before.replace(RUNNER_PIN_RE, `$1${version}`);
+  if (after === before) return 0;
+  fs.writeFileSync(file, after);
+  return 1;
 }
 
 /** Highest stable v-tag, or null when the repo has none / is not a repo. */
@@ -973,6 +999,8 @@ function main() {
       console.log(`skills: ${stamped} SKILL.md frontmatter(s) stamped with the train version (D-40-14 — the skill version IS the ecosystem version)`);
       const stampedTemplates = stampTemplateProvenance(root, version);
       console.log(`templates: ${stampedTemplates} unit-doc provenance stamp(s) stamped with the train version`);
+      const stampedRunner = stampRunnerPin(root, version);
+      console.log(`runner: ${RUNNER_PIN_FILE} ${stampedRunner ? "stamped with the train version" : "already carried it (no diff)"}`);
       // Consume the intent that was just applied — the changesets-tool
       // behavior this format adopted. Without the deletion the files ride
       // into the next cut, whose bump level and notes then re-apply stale
@@ -1006,7 +1034,11 @@ function main() {
     if (args.mode === "publish-plan" || args.mode === "publish-stage") {
       if (args.mode === "publish-stage") {
         const staged = stageChannelVersions(root, packages, declared, prerelease);
-        console.error(`staged: ${staged} package.json version(s) + their in-cut pins at ${prerelease} — the publish job restores them, nothing is committed`);
+        // The runner pin is part of the staged tree for the same reason the
+        // manifests are: the published canary must cite its own version. Both
+        // are restored by the same checkout, so the committed pin stays stable.
+        const stagedRunner = stampRunnerPin(root, prerelease);
+        console.error(`staged: ${staged} package.json version(s) + ${stagedRunner} runner pin(s) at ${prerelease} — the publish job restores them, nothing is committed`);
       }
       for (const pkg of listed) {
         console.log(`${pkg.name}\t${pkg.dirName}\t${prerelease}\t${args.channel}`);
@@ -1023,7 +1055,7 @@ function main() {
     for (const pkg of listed) {
       console.log(`  cd packages/${pkg.dirName} && npm publish --tag ${args.channel} --ignore-scripts --provenance`);
     }
-    console.log("  git checkout -- packages/*/package.json");
+    console.log(`  git checkout -- packages/*/package.json ${RUNNER_PIN_FILE}`);
     console.log("note: canary never moves the latest dist-tag; --ignore-scripts is required because `publish-stage` writes the temp versions (the gate ran on the committed tree, and `prepublishOnly` would re-run it against the prerelease)");
   }
 

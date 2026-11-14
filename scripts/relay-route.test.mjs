@@ -27,7 +27,8 @@ import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(ROOT, "scripts", "unit-route.mjs");
+/** The runner's bin: the router answers as its `unit-route` subcommand. */
+const SCRIPT = path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 const FIXTURE = path.join(ROOT, "scripts", "fixtures", "relay-route");
 const BRIDGE = "dispatch_relay requires PI WEB's session dispatch bridge";
 
@@ -53,7 +54,7 @@ const run = (args, { root = FIXTURE, piWeb = true } = {}) => {
   const env = { ...process.env, UNIT_ROUTE_REPO: root };
   if (piWeb) env.PI_WEB_SESSION = "1";
   else delete env.PI_WEB_SESSION;
-  return spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8", env });
+  return spawnSync(process.execPath, [SCRIPT, "unit-route", ...args], { encoding: "utf8", env });
 };
 
 const lines = (stdout) => stdout.split("\n");

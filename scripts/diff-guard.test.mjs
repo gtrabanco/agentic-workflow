@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Corpus for `scripts/diff-guard.mjs` — the behavioural contract of the
+ * Corpus for the `diff-guard` runner subcommand — the behavioural contract of the
  * diff-size guard. Fixtures are embedded temp git repos written at run time:
  * no network, no committed fixtures directory.
  */
@@ -14,7 +14,9 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const GUARD = fileURLToPath(new URL("./diff-guard.mjs", import.meta.url));
+const BIN = fileURLToPath(new URL("../packages/agentic-workflow/bin/agentic-workflow.mjs", import.meta.url));
+/** The runner's subcommand this corpus exercises. */
+const SUB = "diff-guard";
 const SEP = "\u00b7";
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "diff-guard-corpus-"));
 
@@ -43,7 +45,7 @@ function makeCommit(repo, message) {
 }
 
 function run(repo, runtime, ...args) {
-  const result = spawnSync(runtime, [GUARD, "--repo", repo, ...args], {
+  const result = spawnSync(runtime, [BIN, SUB, "--repo", repo, ...args], {
     encoding: "utf8", cwd: repo, timeout: 10000,
   });
   if (result.error && result.error.code === "ENOENT") return null;

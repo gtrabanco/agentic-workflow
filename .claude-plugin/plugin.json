@@ -42,6 +42,7 @@
     "./skills/review-security",
     "./skills/review-seo",
     "./skills/review-verify",
+    "./skills/runner-contract",
     "./skills/triage-issue",
     "./skills/unit-lane",
     "./skills/verification-contract",

@@ -6,7 +6,7 @@ A blank or vague scope or acceptance-criteria input is a gap, not a licence to
 infer. The order is fixed: search the repository's own docs first and append an
 `open-question` row to the unit folder's `decisions.md` recording where; research
 an external gap into 2–3 concrete options. A gap surviving both runs
-`bun scripts/needs-input.mjs <unit-dir>` (node fallback if bun is not installed), pastes the `open-questions@1` block
+`bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>` (npx fallback if bun is not installed), pastes the `open-questions@1` block
 and stops — route `design` for scope/architecture questions. "Decide for me" is
 a legitimate answer: the lane chooses and records the choice with its reason.
 Cheap-to-change defaults are recorded as assumptions, never silent.
@@ -233,7 +233,7 @@ Mechanics — one batched form-turn, never one-question-per-turn:
   when no questions remain.
 
 The questions are the `open-questions@1` block of the unit folder's
-`decisions.md` — the grammar `scripts/needs-input.mjs` reads, published in the
+`decisions.md` — the grammar `agentic-workflow needs-input` reads, published in the
 template agent guide's question protocol. Append the block (never a table of
 your own invention) and carry a search receipt on every question:
 
@@ -300,7 +300,7 @@ Recompute it with the section parser's own semantics (`sectionText` — the
 heading excluded, the next `## ` heading excluded):
 
 ```sh
-bun -e 'const {sectionText} = await import("./scripts/unit-doc-phases.mjs"), {createHash} = await import("node:crypto"); console.log(createHash("sha256").update(sectionText(await Bun.file("<unit-doc>/SPEC.md").text(), "Acceptance criteria")).digest("hex"))'
+bun -e 'const {sectionText} = await import("./packages/agentic-workflow/src/runner/unit-doc-phases.mjs"), {createHash} = await import("node:crypto"); console.log(createHash("sha256").update(sectionText(await Bun.file("<unit-doc>/SPEC.md").text(), "Acceptance criteria")).digest("hex"))'
 ```
 
 An AC change after the freeze is a plan repair: this step recomputes and

@@ -43,7 +43,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import { closesFence, headingBoundsAll, openFence } from "./unit-doc-phases.mjs";
+import { closesFence, headingBoundsAll, openFence } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

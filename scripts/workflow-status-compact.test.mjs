@@ -32,7 +32,8 @@ import { fileURLToPath } from "node:url";
 import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(repoRoot, "scripts", "workflow-status.mjs");
+/** The runner's bin: the sensor answers as its subcommand. */
+const SCRIPT = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 const { loadSchemaRuntime } = await import("./schema-runtime.mjs");
 const { validateEnvelope } = await loadSchemaRuntime();
@@ -112,7 +113,7 @@ process.exit(1);
   execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "fixture"], { cwd: dir });
   if (dirty) write(dirty, "uncommitted work\n");
 
-  const run = (args = []) => spawnSync(process.execPath, [SCRIPT, ...args], {
+  const run = (args = []) => spawnSync(process.execPath, [SCRIPT, "workflow-status", ...args], {
     cwd: dir,
     encoding: "utf8",
     env: { ...process.env, PATH: `${binDir}:${process.env.PATH}` },

@@ -31,19 +31,20 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { CEREMONY_PROFILE_PIECES } from "./ceremony-profile.mjs";
+import { CEREMONY_PROFILE_PIECES } from "../packages/agentic-workflow/src/runner/ceremony-profile.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(REPO_ROOT, "scripts", "unit-route.mjs");
+/** The runner's bin: the router answers as its `unit-route` subcommand. */
+const SCRIPT = path.join(REPO_ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 const FIXTURES = path.join(REPO_ROOT, "scripts", "fixtures", "ceremony-profile");
-const CATALOG_PATH = path.join(REPO_ROOT, "scripts", "catalog.json");
+const CATALOG_PATH = path.join(REPO_ROOT, "packages", "agentic-workflow", "src", "runner", "catalog.json");
 
 function scenario(name) {
   return path.join(FIXTURES, name);
 }
 
 function runTriage(name, args = []) {
-  const result = spawnSync(process.execPath, [SCRIPT, "--triage", "900-check-unit", ...args], {
+  const result = spawnSync(process.execPath, [SCRIPT, "unit-route", "--triage", "900-check-unit", ...args], {
     cwd: REPO_ROOT,
     env: { ...process.env, UNIT_ROUTE_REPO: scenario(name) },
     encoding: "utf8",

@@ -52,7 +52,7 @@ import {
   roadmapTableRows,
   tableCells,
 } from "../packages/agentic-workflow/src/index-document.mjs";
-import { sectionBounds, sectionText } from "./unit-doc-phases.mjs";
+import { sectionBounds, sectionText } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.dirname(SCRIPTS_DIR);

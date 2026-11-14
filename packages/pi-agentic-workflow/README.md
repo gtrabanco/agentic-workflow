@@ -199,17 +199,20 @@ call them by name at any time.
 
 | Tool | Wraps | Returns as `structuredContent` |
 | --- | --- | --- |
-| `agentic_workflow_status` | `scripts/workflow-status.mjs --json-only` | The validated Envelope v2 (the schema package's published `envelope.schema.json`, reused verbatim) |
-| `agentic_workflow_diff_guard` | `scripts/diff-guard.mjs --json` | Measured lines/files/additions/deletions against the budget |
-| `agentic_workflow_phase_lint` | `scripts/phase-lint.mjs` | `{ verdict, fingerprint, phases[], docFindings[] }` parsed from the byte-stable block |
+| `agentic_workflow_status` | `agentic-workflow workflow-status --json-only` | The validated Envelope v2 (the schema package's published `envelope.schema.json`, reused verbatim) |
+| `agentic_workflow_diff_guard` | `agentic-workflow diff-guard --json` | Measured lines/files/additions/deletions against the budget |
+| `agentic_workflow_phase_lint` | `agentic-workflow phase-lint` | `{ verdict, fingerprint, phases[], docFindings[] }` parsed from the byte-stable block |
 | `agentic_workflow_audit_pr_gate` | `scripts/audit-pr-gate.mjs evaluate` | The merge verdict report (`verdict`, `action`, `actionReason`, head/pr) |
-| `agentic_workflow_snapshot_verify` | `scripts/pre-execution-snapshot.mjs verify` | The freshness report (`current`, `digestMatches`, `structural`) |
+| `agentic_workflow_snapshot_verify` | `agentic-workflow pre-execution-snapshot verify` | The freshness report (`current`, `digestMatches`, `structural`) |
 
 Two properties hold for every tool:
 
-- **The project's own checkout runs.** Each tool spawns the script in the
-  session's cwd — the repository being worked on — never the package's pinned
-  copy, and never an in-process import. The receipts are the same ones the
+- **One pinned runner over the project's bytes.** Each tool spawns the
+  pinned package's `agentic-workflow` bin (`workflow-status`, `diff-guard`,
+  `phase-lint`, `pre-execution-snapshot`) with the session's cwd as the
+  project root — the pin decides the behaviour and the project's tree
+  supplies the data; `audit-pr-gate` still runs the project's own
+  `scripts/audit-pr-gate.mjs`. The receipts are the same ones the
   skills' bash wording produces.
 - **Red gates are errors with data.** A breach, a `BLOCKED` verdict, a stale or
   missing receipt, or a non-`MERGE-READY` gate returns `isError: true` with the
