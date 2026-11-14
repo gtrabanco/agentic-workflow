@@ -410,6 +410,7 @@ test("every former remote check survives as a step of the local gate", () => {
     "temp-hygiene",
     "tmp-gc",
     "worktree-guard",
+    "rigidity-review",
     "schema-node-compat",
     "pi-node-compat",
     "pi-compat-guard",

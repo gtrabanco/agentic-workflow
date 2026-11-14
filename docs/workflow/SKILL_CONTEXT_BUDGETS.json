@@ -74,7 +74,7 @@
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 69,
+        "machineLines": 70,
         "sources": {
           "merge of feat/438-new-feature-residual-classify with origin/main (2026-11-13, PR #522 integration)": "the merged prose-gate inventory carries both row sets: this branch's `residual-promise` carrier row plus main's three #514 rows (`git-config-writes`, `identity-hook-parity`, `push-identity`) over the shared base of 65, so `machineLines` re-pins to the merged measurement 66 + 68 → 69 (the exact count, never ceil x 1.10); measured at the merge with `bun scripts/check-skill-context.mjs --documents`: 164 lines / 95 prose / 5,993 est, inside the unchanged ceilings 180 / 6,506, so only `machineLines` moves.",
           "issue #438 (residual-classify)": "the inventory gains one carrier row, `residual-promise` (the recorded named consumer the classifier reads, carried by `scripts/residual-classify.test.mjs`), and the `normative-surface-grammar` row claims the new `residual-promise-grammar` surface. The machine region moves 65 -> 66 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 161 lines / 5,822 est, inside the unchanged ceilings 161 / 6,182, so only `machineLines` is re-pinned.",

@@ -1,0 +1,623 @@
+---
+type: fix
+scope: medium
+ac-hash: f66802b3e42807327ae9e4275b27097fe2f7ed4e
+---
+
+# fix/546-review-guards-flexibility-portability
+
+> The guards this workflow ships (pre-commit identity, pre-push gate and
+> push-range identity, the turn-contract verifier, the command guard and the
+> automated-merge wrapper) encode one environment: one approved identity, one
+> remote, one forge. A third-party fork, a second machine with its own signing
+> key, a corporate `includeIf` layout, a GitLab/Gitea/Bitbucket host or a
+> minimal toolchain has no legal path through them. This unit makes each guard
+> declare the scope it enforces and degrade loudly instead of guessing, and adds
+> a gate step that audits the guards for the hardcoded dependency coming back.
+> Applied through the owner's local unpublished workflow (§5 ledger freeze
+> substitutes for the lane's plan step); no repo review/fold machinery runs on
+> this change.
+
+```text
+doc-provenance@1
+written_by: agentic-workflow@4.10.0
+schema: @gtrabanco/agentic-workflow-schema@4.10.0
+format: unit-doc@2
+grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
+```
+
+## Issue
+
+`#546` — "review guards for flexibility, portability and cross-environment
+scenarios" (`bug`, `urgent`, `fix-next`, `pi-agentic-workflow`). The PR closes it
+via `Closes #546` in the body.
+
+## Specs
+
+Requirements numbered `S#`, quoting the requester's own words verbatim. `S1` is
+the owner's apply instruction; `S2`–`S10` are the issue's `## Acceptance
+criteria` lines, in the order the issue states them.
+
+**S1 — Apply the issue through the owner's local workflow.**
+> Apply to this repository: issue #546
+
+**S2 — The push-range identity check gains a remote scope.**
+> Add `enforce` scope to `gitIdentity`: `push` → push to any remote, `push-upstream` → only push to tracked upstream (default branch).
+
+**S3 — The push-range check takes the remote being pushed to.**
+> Add a `--remote` flag to `push-identity-check.mjs` so the pre-push hook can pass the remote being pushed to.
+
+**S4 — The turn-contract verifier detects the forge.**
+> Make `turn-contract.sh` detect the remote type (GitHub, GitLab, Gitea, Bitbucket) and use the appropriate CLI (`gh`, `glab`, `d2`, `hub`).
+
+**S5 — The automated merge takes a remote and is forge-agnostic.**
+> Add a `--remote` flag to `fullauto-merge.sh` with forge-agnostic merge semantics.
+
+**S6 — The pre-push hook fails closed without a runtime.**
+> Pre-push hook prints a clear error and exits non-zero if bun/node is unavailable (instead of silently skipping).
+
+**S7 — Sign-off and per-machine signing keys become legal.**
+> Add a `--no-signing` or `signingKey: ""` option to `gitIdentity.approved` so sign-off workflows are allowed.
+
+**S8 — Temp directories are portable.**
+> Handle Windows TMPDIR correctly in all hooks (use platform-specific temp directory).
+
+**S9 — The flexibility gaps are documented where the guards live.**
+> Document the flexibility gaps in `GIT_IDENTITY_HARDENING.md` and `template/.agentic-workflow/hooks/README.md`.
+
+**S10 — A gate step audits the guards for hardcoded dependencies.**
+> Add a `rigidity-review` gate step to the local gate that audits all guards for hardcoded forge/path dependencies.
+
+## Impact
+
+The callers and consumers of what changes:
+
+- `scripts/push-identity-check.mjs` — the `push-identity` gate step
+  (`scripts/local-gate.mjs`), the installed `pre-push` hook body, and
+  `scripts/identity-hook-parity.test.mjs`, which holds the checker and the
+  pre-commit hook to one corpus.
+- `gitIdentity` schema (`packages/agentic-workflow-schema/src/config.ts` →
+  `config.schema.json`) — read by `packages/pi-agentic-workflow`
+  (`src/guards/git-identity.ts`, `src/config/*`), by
+  `template/.agentic-workflow/hooks/git-identity-check.sh`, and by the two
+  annexes plus `docs/workflow/CONFIG.md`.
+- `template/.agentic-workflow/hooks/{turn-contract,fullauto-merge,guard-command}.sh`
+  — documented by `template/.agentic-workflow/hooks/README.md`, by
+  `skills/orchestration-envelope/references/TURN_CONTRACT.md` (the machine-check
+  profile names the shim's tool requirements) and by the four hook suites under
+  `template/.agentic-workflow/hooks/tests/`.
+- The two new hook libraries (`hooks/lib/temp.sh`, `hooks/lib/forge.sh`) enter
+  the scaffold: `template/.agentic-workflow/hooks/tests/test-init-workspace-contract.sh`
+  enumerates the scaffold's hook files, and `scripts/git-config-writes.mjs` walks
+  every shell test carrier under the hooks tree.
+- The new gate step touches `scripts/local-gate.mjs` (`STEPS`, `DEPS`),
+  `scripts/local-gate.test.mjs` and `docs/workflow/GATE_INVENTORY.md`.
+- Mentions that stop being true: the annex's `enforce` example comment
+  (`off | commit | push | commit-and-push`), `docs/workflow/CONFIG.md`'s config
+  table row, `TURN_CONTRACT.md`'s "bash + git + gh" sentence, and the
+  `fullauto-merge.sh` header's "Requires gh" contract.
+
+**Named high-risk item** (from the computed risk tier below):
+`template/.agentic-workflow/hooks/fullauto-merge.sh` · signal `destructive`
+(named for its `rm`). This unit rewrites exactly that file's only `rm`: the
+temp-file trap becomes the shared helper's, and both the trap and the helper are
+exercised in the hook suite before the real tree is touched (§3 of the apply
+order). The full review pass the tier normally adds is replaced by the owner's
+external verification — the apply order forbids running this repository's review
+machinery on its own surgery.
+
+## Retirements
+
+Strictly additive apart from these three, each replaced in the same change:
+
+1. **`enforce` value set** — `off | commit | push | commit-and-push` gains
+   `push-upstream` and `commit-and-push-upstream`; no value is removed
+   (`rg -c 'commit-and-push' packages/agentic-workflow-schema/src/config.ts` → 2:
+   the vocabulary comment and the enum line, the same count the cut measured).
+2. **The bash hooks' private temp fallback** — `"${TMPDIR:-/tmp}"` in
+   `fullauto-merge.sh` retires into `hooks/lib/temp.sh`; the literal survives
+   only in that helper (`rg -c '\$\{TMPDIR:-/tmp\}' template/.agentic-workflow/hooks/*.sh` → 0).
+3. **The bare `gh` calls in `turn-contract.sh` / `fullauto-merge.sh`** — the
+   forge CLI name moves behind `hooks/lib/forge.sh`; the two callers no longer
+   name a forge binary (`rg -c '\bgh (pr|api|repo)' template/.agentic-workflow/hooks/*.sh` → 0).
+
+Neither annex, suite nor skill surface is deleted; the two annexes gain sections
+instead.
+
+## Non-goals
+
+- No backwards-compatibility shim: a superseded literal is deleted where it
+  lived, not kept alive beside its replacement.
+- No Bitbucket implementation. Atlassian ships no official pull-request CLI
+  (only third-party `bitbucket-cli`/`atlassian-cli` wrappers), so Bitbucket is
+  **detected and refused with a message naming the REST route** — never a silent
+  pass, never a guessed `bb`. `d2` and `hub` from S4 are deliberately not used:
+  `hub` is a deprecated GitHub-only shim and `d2` is not any forge's CLI; Gitea's
+  official CLI is `gt` (which replaced the archived `tea`).
+- No new network call, no new runtime dependency: the shell hooks keep their
+  tool set (`bash`, `git`, `jq`, one forge CLI when box 4 is asked for).
+- No change to what the guards *decide* about an identity, a merge or a path —
+  only to which environments they apply to and how they say "I cannot tell".
+- No signing-policy relaxation by accident: the default stays the strict reading
+  of the declared profile; the relaxed reading is an explicit declaration.
+
+## Risk tier
+
+Computed, never chosen — `node packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --paths <the planned file set>`:
+
+- **Tier** — `high` · **Task Size** — understood / contained-risk `named` / resumable-from-diff
+- **Named high-risk item** — `template/.agentic-workflow/hooks/fullauto-merge.sh` · `destructive` (`rm`)
+
+```text
+risk-tier-verdict@1
+tier: high
+reason_kind: named-high-risk
+reason: 1 path(s) touch a named high-risk surface: destructive (template/.agentic-workflow/hooks/fullauto-merge.sh · rm)
+signals: template/.agentic-workflow/hooks/fullauto-merge.sh · destructive
+```
+
+## Future
+
+none
+
+## Future cost
+
+- The `hooks/lib/` directory is now a scaffold shipping surface: a new guard that
+  needs a forge, a remote or a temp directory binds to it instead of re-deriving
+  the fact. Binds: whoever adds a hook.
+- `scripts/rigidity-review.mjs` carries a declared guard inventory: a new guard
+  file must be registered there or the step fails. Binds: whoever adds or renames
+  a guard.
+- The forge matrix is a claim about three CLIs. Binds: whoever bumps the
+  minimum supported `gh`/`glab`/`gt`.
+
+## Applicable tests
+
+| Suite | Covers |
+|---|---|
+| `bun test scripts/push-identity-check.test.mjs` | the remote scope, the fork case, the pre-existing range cases |
+| `bun test scripts/identity-hook-parity.test.mjs` | the two identity carriers agreeing under the new scope values |
+| `bun test scripts/local-gate.test.mjs` | the hook body's `--remote` passthrough and its fail-closed runtime branch |
+| `bun test scripts/rigidity-review.test.mjs` | the new gate step's inventory, rules and refusals |
+| `bun test scripts/prose-gate-inventory.test.mjs` | the new gate's inventory row resolves |
+| `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` | the commit half: scope values, signing policy, tool degradation |
+| `bash template/.agentic-workflow/hooks/tests/test-temp-lib.sh` | the portable temp helper |
+| `bash template/.agentic-workflow/hooks/tests/test-forge-adapter.sh` | forge detection and per-forge command dispatch |
+| `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` | box1–box5 across forges and degradation states |
+| `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh` | the merge wrapper across forges and temp resolution |
+| `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` | forge-agnostic merge detection and the per-project allowlist |
+| `node scripts/run-root-suite.mjs` | no existing suite regressed |
+
+## Known pre-existing issues
+
+- The hook shell suites are not wired into `node scripts/run-root-suite.mjs`; only
+  `test-index-consent.sh` is reached (from `scripts/doc-discipline.test.mjs`) and
+  `test-opencode-guard.sh` from `test-init-workspace-contract.sh`. **Affects**
+  this unit's verification: every hook suite runs by hand in the foreground and
+  is reported as such.
+- `git-identity-check.sh` reports a missing `jq` as "not valid JSON/JSONC".
+  **Affects** this unit: O19 repairs the message (the guard already failed
+  closed; only its diagnosis lied).
+- `scripts/doc-discipline.test.mjs` fails on `main` at `95af0547` — the committed
+  journal fragment
+  `.agentic-workflow/journal/20261110T002641Z-fix-489-narrow-local-pin-rule-narrative-….md`
+  names a store path, and the AC25 allowlist does not exempt the journal carrier.
+  **Does not affect** this unit's behaviour, but it makes
+  `node scripts/run-root-suite.mjs` (and therefore the gate's `root-suite` step)
+  exit 1: reproduced in a clean `main` checkout at `95af0547` with the identical
+  failure. It is not this unit's to repair — the fragment is another unit's
+  immutable journal entry and the rule is the AC25 one — so it is disclosed, not
+  excused, and every other root suite passes (111 PASS, 1 FAIL).
+
+## Tasks
+
+- P1 — Freeze this unit doc, its two planning ledgers, the acceptance criteria and
+  the decisions ledger before the first line of code; register the roadmap
+  `## Fixes` row (validator: `node packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/546-review-guards-flexibility-portability/SPEC.md` prints `verdict: PASS` and exits 0)
+  (Implements: S1)
+  - Relevant files: docs/fix/546-review-guards-flexibility-portability/SPEC.md,
+    docs/fix/546-review-guards-flexibility-portability/planning-evidence.md,
+    docs/fix/546-review-guards-flexibility-portability/planning-obligations.md,
+    docs/fix/546-review-guards-flexibility-portability/decisions.md,
+    docs/ROADMAP.md
+- P2 — RED corpus first: the issue's scenario table lands as failing checks in
+  the nine suites, observed red on the pre-change tree, before any implementation
+  (validator: `bun test scripts/push-identity-check.test.mjs` and
+  `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` and the
+  three sibling hook suites exit non-zero at the red commit, recorded in `## Log`)
+  (Implements: S2, S3, S4, S5, S6, S7, S8, S10)
+  - Relevant files: scripts/push-identity-check.test.mjs,
+    scripts/identity-hook-parity.test.mjs, scripts/local-gate.test.mjs,
+    scripts/rigidity-review.test.mjs,
+    template/.agentic-workflow/hooks/tests/test-git-identity-check.sh,
+    template/.agentic-workflow/hooks/tests/test-temp-lib.sh,
+    template/.agentic-workflow/hooks/tests/test-forge-adapter.sh,
+    template/.agentic-workflow/hooks/tests/test-turn-contract.sh,
+    template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh,
+    template/.agentic-workflow/hooks/tests/test-command-guard.sh
+- P3 — The vocabulary: `enforce` scope values and the signing policy in the
+  schema, the generated `config.schema.json`, the pi package's mirror, and the
+  config doc row (validator: `cd packages/agentic-workflow-schema && bun run test` exits 0 and `bun run check:config-schema` prints `config.schema.json` in sync)
+  (Implements: S2, S7)
+  - Relevant files: packages/agentic-workflow-schema/src/config.ts,
+    packages/agentic-workflow-schema/config.schema.json,
+    packages/pi-agentic-workflow/src/guards/git-identity.ts,
+    docs/workflow/CONFIG.md
+- P4 — The push-range scope: `--remote`, the tracked-upstream resolution and the
+  skipped verdict in `push-identity-check.mjs` (validator: `bun test scripts/push-identity-check.test.mjs` exits 0 and `bun test scripts/identity-hook-parity.test.mjs` exits 0)
+  (Implements: S2, S3)
+  - Relevant files: scripts/push-identity-check.mjs,
+    scripts/push-identity-check.test.mjs,
+    scripts/identity-hook-parity.test.mjs
+- P5 — The pre-push hook: the pushed remote reaches the gate and a missing
+  runtime fails closed (validator: `bun test scripts/local-gate.test.mjs` exits 0)
+  (Implements: S3, S6)
+  - Relevant files: scripts/local-gate.mjs, scripts/local-gate.test.mjs
+- P6 — The commit half: scope values, the signing policy and the tool-missing
+  diagnoses in `git-identity-check.sh` (validator: `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` exits 0)
+  (Implements: S2, S7)
+  - Relevant files: template/.agentic-workflow/hooks/git-identity-check.sh,
+    template/.agentic-workflow/hooks/tests/test-git-identity-check.sh
+- P7 — The portable temp resolution: one helper, validated on a throwaway copy
+  before the scaffold changes (validator: `bash template/.agentic-workflow/hooks/tests/test-temp-lib.sh` exits 0)
+  (Implements: S8)
+  - Relevant files: template/.agentic-workflow/hooks/lib/temp.sh,
+    template/.agentic-workflow/hooks/tests/test-temp-lib.sh
+- P8 — The forge adapter: detection from the remote URL, the CLI per forge and the
+  fail-closed refusals, validated on a throwaway copy before the scaffold changes
+  (validator: `bash template/.agentic-workflow/hooks/tests/test-forge-adapter.sh` exits 0)
+  (Implements: S4)
+  - Relevant files: template/.agentic-workflow/hooks/lib/forge.sh,
+    template/.agentic-workflow/hooks/tests/test-forge-adapter.sh
+- P9 — `turn-contract.sh` through the adapter: `--remote`, `--forge`, per-remote
+  default branch, box 4 across the forge matrix and the degradation states
+  (validator: `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` exits 0)
+  (Implements: S4)
+  - Relevant files: template/.agentic-workflow/hooks/turn-contract.sh,
+    skills/orchestration-envelope/references/TURN_CONTRACT.md
+- P10 — `fullauto-merge.sh` through the adapter: `--remote`, `--forge`, the
+  normalized forge document, the merge dispatch and the temp helper
+  (validator: `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh` exits 0)
+  (Implements: S5, S8)
+  - Relevant files: template/.agentic-workflow/hooks/fullauto-merge.sh
+- P11 — `guard-command.sh`: the forge merge surface and the per-project allowlist
+  (validator: `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` exits 0)
+  (Implements: S1, S10)
+  - Relevant files: template/.agentic-workflow/hooks/guard-command.sh,
+    template/.agentic-workflow/hooks/guard-allow.txt,
+    template/.agentic-workflow/hooks/tests/test-command-guard.sh
+- P12 — The `rigidity-review` gate step, red-first, wired into the gate and the
+  inventory (validator: `bun test scripts/rigidity-review.test.mjs` and `bun test scripts/local-gate.test.mjs` and `bun test scripts/prose-gate-inventory.test.mjs` exit 0, and `bun scripts/rigidity-review.mjs` prints `RIGIDITY-REVIEW — ok`)
+  (Implements: S10)
+  - Relevant files: scripts/rigidity-review.mjs, scripts/rigidity-review.test.mjs,
+    scripts/local-gate.mjs, scripts/local-gate.test.mjs,
+    docs/workflow/GATE_INVENTORY.md
+- P13 — Documentation and close: both annexes, the hooks README, the turn-contract
+  reference, the rendered projection, the session journal, the differential run,
+  the closed obligations and the declared verification commands (validator:
+  `node scripts/run-root-suite.mjs` exits 0 and the differential harness prints `UNDECLARED 0`, recorded in `## Log`)
+  (Implements: S9, S1)
+  - Relevant files: docs/workflow/GIT_IDENTITY_HARDENING.md,
+    template/docs/workflow/GIT_IDENTITY_HARDENING.md,
+    template/.agentic-workflow/hooks/README.md, docs/LOGS.md,
+    docs/generated/
+
+### Planning evidence
+
+M/L unit: the ledger lives in
+[`planning-evidence.md`](planning-evidence.md) (14 rows, `PE-001`–`PE-014`).
+
+### Obligations
+
+M/L unit: the ledger lives in
+[`planning-obligations.md`](planning-obligations.md) (20 rows, `O1`–`O20`).
+
+## Acceptance criteria
+
+The anchor every review reads. One observable criterion per `S#`, each naming
+the check that proves it.
+
+1. **S1** — the unit ships as one branch off `main` with this doc, its two
+   ledgers and its decisions ledger frozen before the first line of code; proven
+   by `node packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/546-review-guards-flexibility-portability/SPEC.md` → `verdict: PASS`.
+2. **S2** — `gitIdentity.enforce` accepts `push-upstream` (and
+   `commit-and-push-upstream`), `push` keeps meaning "any remote", and the
+   pre-commit half refuses an unapproved commit under
+   `commit-and-push-upstream`; proven by the schema suite accepting the new enum
+   values and `scripts/identity-hook-parity.test.mjs` carrying the new rows.
+3. **S3** — `push-identity-check.mjs --remote <name>` scopes the check: with
+   `enforce: push-upstream`, a push whose remote is not the tracked upstream's
+   remote prints `PUSH IDENTITY — skipped:` and exits 0 while the same range on
+   the upstream remote prints `failed:` and exits 1; proven by
+   `bun test scripts/push-identity-check.test.mjs`.
+4. **S4** — `turn-contract.sh` resolves the forge from the remote URL and asks
+   the right CLI (`gh` / `glab` / `gt`), refuses Bitbucket with a message naming
+   the absent carrier, and refuses an undetectable forge naming `--forge`;
+   proven by `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh`.
+5. **S5** — `fullauto-merge.sh --remote <name>` merges through the forge the
+   remote names, keeping the SHA-bound preconditions and the idempotent audit
+   comment; proven by
+   `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh`.
+6. **S6** — the installed `pre-push` hook exits non-zero and prints a message
+   naming both runtimes when neither `bun` nor `node` is on `PATH`, instead of
+   reaching the end of the script and letting the push through; proven by the
+   executed-hook case in `bun test scripts/local-gate.test.mjs`.
+7. **S7** — `gitIdentity.approved` accepts `signing: "off"` (sign-off
+   workflows), `signing: "allowed"` (the second machine with no key) and
+   `signingKeys: [...]` (per-machine keys) while `signing: "required"` still
+   refuses an unsigned commit; proven by
+   `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh`.
+8. **S8** — no hook carries a literal `/tmp` fallback (the one resolution lives
+   in `hooks/lib/temp.sh` and reads `TMPDIR`, `TEMP`, `TMP` in that order);
+   proven by `bash template/.agentic-workflow/hooks/tests/test-temp-lib.sh` and
+   the `hardcoded-temp-fallback` rule of `bun scripts/rigidity-review.mjs`.
+9. **S9** — both annex copies and `template/.agentic-workflow/hooks/README.md`
+   carry the flexibility sections (scopes, signing policy, forge matrix, temp
+   resolution, allowlist, degradation); proven by the `rg` anchors recorded in
+   `## Log`.
+10. **S10** — `rigidity-review` is a step of `bun scripts/local-gate.mjs`
+    (listed by `--list`, present in `DEPS`), has a row in
+    `docs/workflow/GATE_INVENTORY.md`, refuses a guard file left out of its
+    inventory, and fails on a reintroduced hardcoded forge/temp/remote literal;
+    proven by `bun test scripts/rigidity-review.test.mjs` and
+    `bun test scripts/local-gate.test.mjs`.
+11. **S1 (non-regression)** — every pre-existing case of the eight touched
+    suites still passes and the differential run against the base commit shows
+    no unrequested difference; proven by the suites plus the `UNDECLARED 0`
+    differential harness output.
+
+## Path protection
+
+Every suite this unit touches is a protected path (`**/*.test.*` and
+`tests/**`, `freeze: true`), so the freeze lands after P2 and each modification
+carries its record in this folder's [`decisions.md`](decisions.md). Every record
+is an *expansion*: no pre-existing assertion is deleted, relaxed or narrowed —
+the only fixture plumbing a test may gain is what its new case needs.
+
+```text
+path-protection-plan@1
+freeze-after: P2
+kind | path | justification
+created | scripts/push-identity-check.test.mjs | the identity guard's own corpus gains the remote-scope and fork cases (S2, S3); every pre-existing case keeps its assertions
+created | scripts/identity-hook-parity.test.mjs | the two-carrier corpus gains the new scope values and the signing-policy rows (S2, S7)
+created | scripts/local-gate.test.mjs | the hook body's remote passthrough and its fail-closed runtime branch (S3, S6)
+created | scripts/rigidity-review.test.mjs | the new gate step's sibling suite, landed as its red commit before the module exists (S10)
+created | template/.agentic-workflow/hooks/tests/test-git-identity-check.sh | the commit half's scope matrix, signing policy and tool diagnoses (S2, S6, S7)
+created | template/.agentic-workflow/hooks/tests/test-temp-lib.sh | the portable temp helper's contract (S8)
+created | template/.agentic-workflow/hooks/tests/test-forge-adapter.sh | forge detection and per-forge dispatch (S4)
+created | template/.agentic-workflow/hooks/tests/test-turn-contract.sh | box 4 across the forge matrix and its degradation states (S4)
+created | template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh | the merge wrapper across the forge matrix and temp resolution (S5, S8)
+created | template/.agentic-workflow/hooks/tests/test-command-guard.sh | the forge merge surface and the allowlist (S1)
+```
+
+## Triaged steps
+
+```text
+triaged-steps@1
+step | reason | basis
+tests-first | every requirement has a frozen reproducer in a named suite | ACCEPTANCE items 2–11
+implementation | one slice per guard surface, dependency order P3→P11 | ## Tasks
+differential | every touched command is run against the base commit over one corpus | ACCEPTANCE item 11
+docs-and-state | annexes, hooks README, projection, journal, obligation close | S9, §7
+```
+
+The machine's `unit-route --triage` cannot answer for this unit — the lane never
+opened it (`unit not found`), which is exactly the substitution the apply order
+performs: the step list above is this unit's authoritative steps, recorded at
+freeze (D1).
+
+## Findings
+
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+
+## Log
+
+- **L1** — 2026-11-14, the request, verbatim:
+  ```
+  Apply to this repository: issue #546
+  ```
+  The issue's `## Acceptance criteria` lines are quoted verbatim as `S2`–`S10`.
+- **D1** — 2026-11-14, owner apply order §5 (the ledger freeze substitutes for
+  the lane's plan step): the unit doc, the two ledgers and `decisions.md` are cut
+  before implementation, and the `## Triaged steps` block is the unit's own
+  declared step list because `unit-route --triage` has no registration for a lane
+  that never opened this unit.
+- **D2** — 2026-11-14, computed risk tier: `high` for the named `destructive`
+  signal on `fullauto-merge.sh`; the tier's review pass is replaced by the
+  owner's external verification (apply order §4 forbids this repository's review
+  machinery on its own surgery).
+- **P1** — 2026-11-14 13:05, ledgers frozen at `95af0547`; roadmap `## Fixes` row
+  registered; `phase-lint` verdict PASS.
+- **E1** — 2026-11-14, the RED corpus, observed failing on the pre-change tree
+  (the baseline is `PE-012`: 12/12, 12/12, 44/44, 18, 31, PASS, 7/27):
+  - `bun test scripts/push-identity-check.test.mjs` · exit 1 · 12 pass · 8 fail
+    (every new case: the two scope values, the fork row, the no-remote row, the
+    tracked-upstream fallback, the unknown remote)
+  - `bun test scripts/identity-hook-parity.test.mjs` · exit 1 · 12 pass · 3 fail
+  - `bun test scripts/local-gate.test.mjs` · exit 1 · 44 pass · 3 fail
+  - `bun test scripts/rigidity-review.test.mjs` · exit 1 · 0 pass · 8 fail (the
+    module does not exist yet — the red-first commit for the new pair)
+  - `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` ·
+    exit 1 · 23 pass · 8 fail
+  - `bash template/.agentic-workflow/hooks/tests/test-temp-lib.sh` · exit 1 ·
+    the library does not exist yet
+  - `bash template/.agentic-workflow/hooks/tests/test-forge-adapter.sh` · exit 1
+    · the adapter does not exist yet
+  - `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` · exit 1
+    · 12 pass · 19 fail lines
+  - `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh` · exit 2
+    · `fullauto-merge: unknown argument: --remote`
+  - `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` · exit 1
+    · 9 fail lines (7 forge-surface rows, the allowlist row)
+
+- **P2** — 2026-11-14, RED corpus committed (`63982046`); the failing run is E1.
+- **P3** — 2026-11-14, the vocabulary: `enforce` gains `push-upstream` and
+  `commit-and-push-upstream`, `approved` gains `signing` and `signingKeys`; the
+  generated `config.schema.json` and the pi package's mirror follow · `dc8a2d4c`.
+- **P4** — 2026-11-14, `push-identity-check.mjs --remote` and the tracked-upstream
+  resolution; the fork row and the fail-closed unnamed-remote row · `eb19fa2a`.
+- **P5** — 2026-11-14, the `pre-push` hook carries the pushed remote and refuses a
+  push when neither runtime exists; the base fallback follows the remote · `19051ad1`.
+- **P6** — 2026-11-14, the commit half: the scope matrix, the signing policy, the
+  per-machine keys and the `jq` diagnosis · `ae07834f`.
+- **P7** — 2026-11-14, `lib/temp.sh` and its single consumer · `dad7e6aa`.
+- **P8** — 2026-11-14, `lib/forge.sh`: detection, CLI resolution, the normalized
+  pull-request document, the notes carrier, the default base and the merge · `4dc1c8f5`.
+- **P9** — 2026-11-14, `turn-contract.sh` asks the remote's forge · `2dd6871c`.
+- **P10** — 2026-11-14, `fullauto-merge.sh` merges through the resolved forge and
+  reads the decision from the audited SHA (`git show`) · `eea9c870`.
+- **P11** — 2026-11-14, the command guard's forge surface and the literal
+  allowlist · `61c1377b`.
+- **P12** — 2026-11-14, the `rigidity-review` step, red-first, wired into the gate
+  and the inventory · `60564040`.
+- **E2** — 2026-11-14, the touched suites, all green after P12:
+  `bun test scripts/push-identity-check.test.mjs` · exit 0 · 20 pass
+  (baseline 12) · `bun test scripts/identity-hook-parity.test.mjs` · exit 0 · 15
+  pass (baseline 12) · `bun test scripts/local-gate.test.mjs` · exit 0 · 47 pass
+  (baseline 44) · `bun test scripts/rigidity-review.test.mjs` · exit 0 · 8 pass
+  (the pair's red-first order: `63982046` red, `60564040` green) ·
+  `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass ·
+  `bun test scripts/release-workflows.test.mjs` · exit 0 · 26 pass.
+- **E3** — 2026-11-14, the hook suites, all green after P12:
+  `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` · exit
+  0 · 31 case(s), 0 failure(s) (baseline 18) ·
+  `…/test-temp-lib.sh` · exit 0 · 9 case(s) · `…/test-forge-adapter.sh` · exit 0 ·
+  48 case(s) · `…/test-turn-contract.sh` · exit 0 · 46 cases (baseline 31) ·
+  `…/test-fullauto-merge.sh` · exit 0 · the pre-existing
+  `transient marker cleaned; PR comment idempotent` line still prints ·
+  `…/test-command-guard.sh` · exit 0 · `7 allowed, 37 blocked` (baseline 27
+  blocked) · `…/test-init-workspace-contract.sh` · exit 0.
+- **E4** — 2026-11-14, the package suites: `cd packages/agentic-workflow-schema &&
+  bun run test` · exit 0 · 853 pass · `bun run check:config-schema` · in sync ·
+  `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 873 pass.
+- **E5** — 2026-11-14, the differential (O20): every touched command over one
+  corpus at `95af0547` and at this branch. Declared deltas, exactly nine lines:
+  the new step in `local-gate --list`, the `--remote` usage line, and the two
+  merges (`gt pr merge`, `hub merge`) that are now blocked with their four
+  exit-code lines. `node -e` … harness output: `UNDECLARED 0`.
+- **G1** — 2026-11-14, `node scripts/run-root-suite.mjs` · exit 1 · 111 PASS ·
+  1 FAIL (`scripts/doc-discipline.test.mjs`, reproduced identically on `main` at
+  `95af0547` — the pre-existing issue recorded above).
+- **G2** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network --push-base main
+  --only <every offline step except root-suite>` · exit 0 · `PASS — 14 step(s) in
+  144s` (the `push-identity` step verified this unit's whole range).
+- **G3** — 2026-11-14, the network steps: `--only dependency-pin-gate,
+  dependency-advisories` · exit 0 · `PASS — 2 step(s)`; `--only pi-compat-guard` ·
+  exit 0 · `pi leg latest: tsc --noEmit clean`.
+- **G4** — 2026-11-14, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)` ·
+  `node scripts/docs-generate.mjs --check` · exit 0 · `PASS` ·
+  `bun scripts/check-skill-context.mjs` and `--documents` · exit 0 · `PASS`.
+- **E6** — 2026-11-14, the documentation anchors (O14): `rg -c 'push-upstream'`
+  · 5 in each annex · `rg -c 'bitbucket' template/.agentic-workflow/hooks/README.md`
+  · 2 · `rg -c 'signingKeys|signing policy|"signing"' docs/workflow/GIT_IDENTITY_HARDENING.md`
+  · 6 · `rg -c 'guard-allow.txt' template/.agentic-workflow/hooks/README.md` · 1 ·
+  `rg -c '^\| GitLab'` (the forge table) · 1.
+- **D3** — 2026-11-14, fixture specialization, disclosed: the signing case that
+  pinned "signing on with no signing key fails" now declares
+  `signing: "required"` so it pins the *strict* policy (it keeps its exact
+  assertion and exit code); the default-policy behaviour is its own new case.
+  The `--help` assertion and the two step-id lists grew by the flags and the step
+  this unit adds. No assertion was relaxed, deleted or narrowed (see
+  `decisions.md`, path-protection records).
+- **D4** — 2026-11-14, the merge wrapper now reads
+  `docs/features/SHIP_DECISIONS.md` with `git show <audited-sha>:…` instead of the
+  forge's contents API: the bytes that authorize the merge are then the bytes of
+  the commit being merged, and a forge without a contents API needs no case.
+
+- **P13** — 2026-11-14, PR #549
+  opened (base `main`, head `2eb5b70f`); the roadmap row carries the PR link and
+  stays `in-progress` until the owner's verdict; journal fragment
+  `20261114T135214Z-…-narrative-local.md`. `turn-contract.sh --finished` prints
+  `TURN-CONTRACT ok`. The push used the documented `--no-verify` escape hatch:
+  the hook's gate failed only at `root-suite`, on the pre-existing
+  `doc-discipline` red reproduced on `main` (recorded above).
+
+- **D5** — 2026-11-14, correction-batch triage against `external-verify.md`
+  (owner's "triage and fix those that deserve to fix"). Fixed — both blockers
+  (P13's unsettled PR citation; the gh-only phrasing at
+  `TURN_CONTRACT.md:9/41/61`), advisory 2 (this unit's two retirement receipts,
+  whose declared `rg` outputs never reproduced), and the same-symbol sibling
+  `docs/workflow/ORCHESTRATION.md:62` (the identical receipt sentence).
+  Kept, each with its reason — advisory 1 (the `doc-discipline` AC25 red
+  reproduces at base; the store-path fragment is another unit's immutable
+  journal entry), advisory 3 (feature 52's frozen records; their validators
+  still pass), advisory 4 (the network gate steps are the owner's to re-run),
+  `FOLDING.md`'s `gh pr create` (the box-4 owner marker that
+  `check-skill-context.test.mjs:375` pins, under the line's existing deferral
+  to the project's Workflow conventions), `FORGE_BODY.md`/`template/AGENTS.md`
+  (they own the `gh`-example policy with an explicit translate-or-equivalent
+  clause), and every other `git/gh` hit (protected test comment, append-only
+  journal entries, historical unit docs). The batch is prose-only —
+  `bun scripts/test-impact.mjs --base 95af0547` derives the unit's suite set
+  from the branch, and no new test is invented for a prose change. Two
+  `docs(log)` fragments (`8e3b240b`, `77262434`) landed mid-batch from another
+  session; neither moved a blocker.
+
+- **E7** — 2026-11-14, correction recheck and regression (S2 loop, one pass,
+  no new red): `bun test scripts/roadmap-settle.test.mjs` · exit 0 · 8 pass
+  (blocker 1, red at `77262434` as 7 pass/1 fail); corpus
+  `rg -n 'git/gh|gh pr create' skills/orchestration-envelope/references/TURN_CONTRACT.md docs/workflow/ORCHESTRATION.md`
+  · 0 matches (blocker 2 + sibling); the corrected receipts re-run as written
+  (`commit-and-push` → 2, the `${TMPDIR:-/tmp}` literal in top-level hooks → 0)
+  and the settle scan finds no pull URL in the doc; `bun test
+  scripts/{turn-contract-grammar,turn-contract-single-owner,check-skill-context,normative-drift}.test.mjs`
+  · exit 0 (52/3/1/21 pass); `phase-lint` · verdict PASS (fingerprint
+  `1d93a8f3…` unchanged); `skill-lint` · 0 findings; `check-skill-context` and
+  `--documents` · PASS; `docs-generate --check` · PASS; P13's validator
+  `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` · exit 0 ·
+  46 cases; `node scripts/run-root-suite.mjs` · exit 1 · **111 PASS · 1 FAIL** —
+  only the disclosed pre-existing `doc-discipline` AC25 red, restoring the G1
+  count (the intermediate head's second red, `roadmap-settle`, was blocker 1).
+
+- **D6** — 2026-11-14, owner decision closing advisory 1: AC25's store-path
+  scan exempts `.agentic-workflow/journal/` — the fix-489 fragment is an
+  immutable prose carrier (log-immutability, #468 makes the aggregator its only
+  writer), so the code the assertion judges cannot be repaired; the assertion
+  itself (`offenders.length === 0`) is untouched and only the rule's declared
+  scope gains the journal, with the rationale in the allowlist comment, the
+  path-protection record in `decisions.md` D11, and issue #443's single-file
+  exemption as precedent. Owner order: make the exemption so pushes stop failing
+  on a years-old fragment.
+
+- **E8** — 2026-11-14, the exemption verified in the foreground:
+  `bun test scripts/doc-discipline.test.mjs` · exit 0 · 21 pass · 0 fail (the
+  offender list before the change named only the fix-489 fragment);
+  `node scripts/run-root-suite.mjs` · **exit 0 · 112 PASS · 0 FAIL** — the first
+  fully-green root suite on this branch.
+
+## Next
+
+The owner's external verification of the diff. Nothing pending in this unit: the
+one red gate step (`root-suite` → `doc-discipline`) is a pre-existing defect
+reproduced on `main`, recorded under `## Known pre-existing issues`.
+
+## References
+
+- Issue [#546](https://github.com/gtrabanco/agentic-workflow/issues/546)
+- `docs/workflow/GIT_IDENTITY_HARDENING.md` (the identity annex this unit extends)
+- `template/.agentic-workflow/hooks/README.md` (the hook contract this unit extends)
+- `skills/orchestration-envelope/references/TURN_CONTRACT.md` (the machine-check profile)
+- `docs/workflow/GATE_INVENTORY.md` (the gate carrier index)
+
+## Branch
+
+`fix/546-review-guards-flexibility-portability`
+
+## Depends on
+
+none
+
+## Regression scope
+
+| Scenario | Verified by |
+|---|---|
+| the approved identity is still refused when it is wrong (commit and push halves) | `bun test scripts/identity-hook-parity.test.mjs` |
+| the push range still judges every never-published commit and still skips published ones (#539) | `bun test scripts/push-identity-check.test.mjs` |
+| the `push-identity` gate step still runs on a real push with the proven base | `bun test scripts/local-gate.test.mjs` |
+| `enforce: off` and an absent profile remain inert in every carrier | `bun test scripts/identity-hook-parity.test.mjs`, `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` |
+| turn-contract boxes 1–5 keep their codes, order and one-line stdout | `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` |
+| fullauto-merge keeps its refusals (audit marker, `merge: fullauto`, clean tree, sync, green checks) and its idempotent comment | `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh` |
+| the command guard still blocks direct merges, env disclosure and `.env` reads | `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` |
+| the scaffold install contract still finds every hook file it enumerates | `bash template/.agentic-workflow/hooks/tests/test-init-workspace-contract.sh` |
+| every root suite still passes | `node scripts/run-root-suite.mjs` |

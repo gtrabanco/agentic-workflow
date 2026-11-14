@@ -73,6 +73,7 @@ test("every former remote check survives as a step, and the ids are unique", () 
     "temp-hygiene",
     "tmp-gc",
     "worktree-guard",
+    "rigidity-review",
     "schema-node-compat",
     "pi-node-compat",
     "pi-compat-guard",
@@ -565,6 +566,7 @@ test("--push-base with an empty verdict plans the gate without the test steps", 
       "temp-hygiene",
       "tmp-gc",
       "worktree-guard",
+      "rigidity-review",
     ], "only the offline non-test steps survive an empty impact set");
     assert.match(result.stdout, /skipping .*test step/, "the skip names what it skipped and why");
     assert.match(result.stdout, /test-impact/);
@@ -684,6 +686,66 @@ test("--json writes the machine result beside the human log", () => {
     assert.equal(document.steps[0].id, "version-parity-content");
     assert.equal(document.steps[0].status, "passed");
     assert.equal(document.steps[0].exit_code, 0);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ------------------------------------------------- issue #546 — the remote */
+
+test("the hook passes the pushed remote to the gate (S3)", () => {
+  const body = hookBody();
+  assert.match(body, /remote="\$\{1:-\}"/, "pre-push delivers the remote name as its first argument");
+  assert.match(body, /remote_flag="--remote \$remote"/, "the remote is resolved once, before the stdin loop runs");
+  assert.match(body, /remote get-url "\$remote"/, "a name git does not know stays unnamed");
+  assert.match(body, /--skip-network \$remote_flag/, "both runtimes pass it to the gate");
+});
+
+test("--remote reaches the range-bound step (S3)", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-remote-"));
+  try {
+    fs.mkdirSync(path.join(dir, ".git"), { recursive: true });
+    fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
+    const captured = path.join(dir, "argv.txt");
+    fs.writeFileSync(
+      path.join(dir, "scripts", "push-identity-check.mjs"),
+      `import fs from "node:fs";\nfs.writeFileSync(${JSON.stringify(captured)}, process.argv.slice(2).join(" "));\n`,
+    );
+    const result = gate(["--only", "push-identity", "--repo", dir, "--push-base", "HEAD", "--remote", "upstream"]);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const argv = fs.readFileSync(captured, "utf8");
+    assert.match(argv, /--base HEAD/, "the proven range still reaches the step");
+    assert.match(argv, /--remote upstream/, "the pushed remote reaches the step");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the installed hook fails the push, naming both runtimes, when neither is installed (S6)", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-runtime-"));
+  try {
+    const init = spawnSync("git", ["init", "-q", dir], { encoding: "utf8" });
+    assert.equal(init.status, 0, init.stderr);
+    assert.equal(gate(["--install-hook", "--repo", dir]).status, 0);
+    const hook = path.join(dir, ".git", "hooks", "pre-push");
+    // A `PATH` carrying git and nothing else: the shape of a machine where the
+    // gate's runtimes are not installed.
+    const bin = path.join(dir, "bin");
+    fs.mkdirSync(bin, { recursive: true });
+    for (const name of ["git", "sh", "dirname", "uname"]) {
+      const found = spawnSync("sh", ["-c", `command -v ${name}`], { encoding: "utf8" }).stdout.trim();
+      if (found) fs.symlinkSync(found, path.join(bin, name));
+    }
+    const bash = spawnSync("sh", ["-c", "command -v bash"], { encoding: "utf8" }).stdout.trim() || "/bin/bash";
+    const run = spawnSync(bash, [hook], {
+      cwd: dir,
+      encoding: "utf8",
+      input: "",
+      env: { PATH: bin, HOME: dir },
+    });
+    assert.equal(run.status, 1, `the push must not be let through: ${run.stdout}${run.stderr}`);
+    assert.match(run.stderr, /bun/, "the message names bun");
+    assert.match(run.stderr, /node/, "the message names node");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

@@ -240,3 +240,109 @@ test("PASS: a published approved commit is skipped and the new one is verified (
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /PUSH IDENTITY — ok: 1 commit\(s\) verified/);
 });
+
+// ---------------------------------------------------------------------------
+// Issue #546 — the push range is judged against the remote it is pushed to
+// ---------------------------------------------------------------------------
+
+/** The scope values, with the same two declared facts every case shares. */
+const SCOPE = (enforce) => ({ enforce, approved: { name: APPROVED.name, email: APPROVED.email } });
+
+/**
+ * The multi-remote layout the issue's scenario table names: a fork the
+ * contributor may push to (`origin`) and the upstream the project publishes
+ * from (`upstream`), with the current branch tracking the upstream one.
+ * Remote URLs are throwaway paths — nothing is contacted, no network call runs.
+ */
+function withRemotes(repo) {
+  const branch = git(repo.root, ["branch", "--show-current"]).trim();
+  for (const name of ["origin", "upstream"]) {
+    git(repo.root, ["remote", "add", name, path.join(repo.root, ".git", `${name}.git`)]);
+  }
+  git(repo.root, ["update-ref", `refs/remotes/upstream/${branch}`, repo.base]);
+  git(repo.root, ["config", `branch.${branch}.remote`, "upstream"]);
+  git(repo.root, ["config", `branch.${branch}.merge`, `refs/heads/${branch}`]);
+  return { branch, upstream: "upstream", fork: "origin" };
+}
+
+test("PASS: enforce=push-upstream skips a push to a remote that is not the tracked upstream (S2)", (t) => {
+  const repo = fixture(t, { gitIdentity: SCOPE("push-upstream") });
+  const remotes = withRemotes(repo);
+  commitAs(repo, LEAK, "leaked-on-fork");
+  const result = run(repo, ["--remote", remotes.fork]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — skipped: /);
+  assert.ok(result.stdout.includes(`"${remotes.fork}"`), "the skipped remote is named");
+  assert.ok(result.stdout.includes(`"${remotes.upstream}"`), "the tracked upstream is named");
+});
+
+test("FAIL: the same range pushed to the tracked upstream remote is refused (S2)", (t) => {
+  const repo = fixture(t, { gitIdentity: SCOPE("push-upstream") });
+  const remotes = withRemotes(repo);
+  const sha = commitAs(repo, LEAK, "leaked");
+  const result = run(repo, ["--remote", remotes.upstream]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — failed: 1 of 1 commit\(s\) outside the approved profile/);
+  assert.ok(result.stdout.includes(sha), "the offender is named");
+});
+
+test("FAIL: enforce=push judges a push to any remote (S2)", (t) => {
+  const repo = fixture(t, { gitIdentity: SCOPE("push") });
+  const remotes = withRemotes(repo);
+  commitAs(repo, LEAK, "leaked-on-fork");
+  const result = run(repo, ["--remote", remotes.fork]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — failed: 1 of 1/);
+});
+
+test("FAIL: enforce=push-upstream with no --remote keeps the check (D9)", (t) => {
+  const repo = fixture(t, { gitIdentity: SCOPE("push-upstream") });
+  withRemotes(repo);
+  commitAs(repo, LEAK, "leaked");
+  const result = run(repo);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — failed: 1 of 1/, "an unnamed remote can never be proven to be the upstream one");
+});
+
+test("PASS: commit-and-push-upstream skips the fork remote (S2)", (t) => {
+  const repo = fixture(t, { gitIdentity: SCOPE("commit-and-push-upstream") });
+  const remotes = withRemotes(repo);
+  commitAs(repo, LEAK, "leaked-on-fork");
+  const result = run(repo, ["--remote", remotes.fork]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — skipped: /);
+});
+
+test("FAIL: commit-and-push-upstream judges the tracked upstream remote (S2)", (t) => {
+  const repo = fixture(t, { gitIdentity: SCOPE("commit-and-push-upstream") });
+  const remotes = withRemotes(repo);
+  commitAs(repo, LEAK, "leaked");
+  const result = run(repo, ["--remote", remotes.upstream]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — failed: 1 of 1/);
+});
+
+test("the tracked upstream falls back to the current branch's remote when no remote-tracking ref exists (S2)", (t) => {
+  // A brand-new branch pushing for the first time: `@{upstream}` cannot resolve
+  // yet, but `branch.<name>.remote` already names the remote git will set.
+  const repo = fixture(t, { gitIdentity: SCOPE("push-upstream") });
+  const branch = git(repo.root, ["branch", "--show-current"]).trim();
+  git(repo.root, ["remote", "add", "origin", path.join(repo.root, ".git", "origin.git")]);
+  git(repo.root, ["remote", "add", "upstream", path.join(repo.root, ".git", "upstream.git")]);
+  git(repo.root, ["config", `branch.${branch}.remote`, "upstream"]);
+  git(repo.root, ["config", `branch.${branch}.merge`, `refs/heads/${branch}`]);
+  commitAs(repo, LEAK, "leaked");
+  const skipped = run(repo, ["--remote", "origin"]);
+  assert.equal(skipped.status, 0, skipped.stdout + skipped.stderr);
+  const judged = run(repo, ["--remote", "upstream"]);
+  assert.equal(judged.status, 1, judged.stdout + judged.stderr);
+});
+
+test("--remote naming a remote git does not know is a usage error (S3)", (t) => {
+  const repo = fixture(t, { gitIdentity: SCOPE("push-upstream") });
+  withRemotes(repo);
+  commitAs(repo, APPROVED, "clean");
+  const result = run(repo, ["--remote", "nowhere"]);
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stderr, /nowhere/);
+});

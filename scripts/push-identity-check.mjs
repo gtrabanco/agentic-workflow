@@ -26,12 +26,19 @@
  * branch put main's own history in the range and refused every merge-push. The
  * rule is one module (`published-refs.mjs`), never a copy here.
  *
+ * Which pushes it judges is a declared scope (issue #546): `push` judges a push
+ * to any remote, `push-upstream` judges only a push to the branch's tracked
+ * upstream remote — a third-party fork contributor pushing to their own fork is
+ * not publishing this project's history. The caller names the remote it is
+ * pushing to (`--remote`, which the `pre-push` hook supplies); a caller that
+ * names none cannot prove the remote is the upstream one, so the check runs.
+ *
  * Read-only by construction: it spawns `git rev-list` and `git log`, reads two
  * JSON files, writes nothing, calls no network, and never repairs a value — the
  * repair text it prints is the operator's to run.
  *
  * Usage
- *   bun scripts/push-identity-check.mjs --base <rev> [--head <rev>] [--root <dir>]
+ *   bun scripts/push-identity-check.mjs --base <rev> [--head <rev>] [--remote <name>] [--root <dir>]
  *   (node fallback, same argv)
  *
  * Without `--base` the merge base with the upstream is used; a range that cannot
@@ -56,7 +63,11 @@ import { publishedRefs, unpublishedCommits } from "./published-refs.mjs";
 
 const DEFAULT_ROOT = process.cwd();
 const BASE_CONFIG_FILE = "agentic-workflow.json";
-const ENFORCE_VALUES = new Set(["off", "commit", "push", "commit-and-push"]);
+const ENFORCE_VALUES = new Set(["off", "commit", "push", "push-upstream", "commit-and-push", "commit-and-push-upstream"]);
+/** The values that ask the push half to judge this push. */
+const PUSH_ENFORCING = new Set(["push", "push-upstream", "commit-and-push", "commit-and-push-upstream"]);
+/** The fallback remote when nothing else names the mainline. The one home for it. */
+export const DEFAULT_REMOTE = "origin";
 
 /** The two repair facts every failure prints: diagnose the origin, then fix it. */
 export const REPAIR_LINES = Object.freeze([
@@ -193,6 +204,43 @@ function git(root, args) {
   return result.stdout;
 }
 
+/** The trimmed stdout of one git query, or null when git refuses it. */
+function gitQuery(root, args) {
+  const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+  return result.status === 0 ? result.stdout.trim() : null;
+}
+
+/**
+ * Which remote this branch treats as its upstream, and how it was decided:
+ *
+ *   1. the branch's own upstream ref (`@{upstream}` → `<remote>/<branch>`);
+ *   2. `branch.<name>.remote` — a branch that has not been pushed yet still
+ *      names the remote git will track once it is;
+ *   3. the remote that owns the mainline (`refs/remotes/<remote>/HEAD`);
+ *   4. `origin`, the shipped fallback.
+ *
+ * A checkout with no remote answers `origin`, which is the pre-#546 reading: the
+ * scope can only ever *skip* a push whose remote is explicitly named and differs.
+ */
+export function trackedUpstreamRemote({ root, query = gitQuery }) {
+  const upstream = query(root, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"]);
+  if (upstream) {
+    const named = /^(?:refs\/remotes\/)?([^/]+)\//.exec(upstream);
+    if (named) return { remote: named[1], source: "the branch's upstream ref" };
+  }
+  const branch = query(root, ["rev-parse", "--abbrev-ref", "HEAD"]);
+  if (branch && branch !== "HEAD") {
+    const configured = query(root, ["config", "--get", `branch.${branch}.remote`]);
+    if (configured && configured !== ".") return { remote: configured, source: `branch.${branch}.remote` };
+  }
+  const heads = query(root, ["for-each-ref", "--format=%(refname:short)", "refs/remotes"]);
+  for (const ref of (heads ?? "").split("\n")) {
+    const named = /^([^/]+)\/HEAD$/.exec(ref.trim());
+    if (named) return { remote: named[1], source: "the remote mainline" };
+  }
+  return { remote: DEFAULT_REMOTE, source: "the default remote" };
+}
+
 /** The commits of `base..head` a published ref does not reach, oldest first, as
  *  `{sha, author, committer}`. The range's own base is the pushed branch's remote
  *  tip when the hook supplies it, so it enters the published set too. */
@@ -258,7 +306,7 @@ export function renderResult({ status, commits, offenders, profile }) {
 
 function usage(message) {
   process.stderr.write(`push-identity-check: ${message}\n`);
-  process.stderr.write("usage: bun scripts/push-identity-check.mjs --base <rev> [--head <rev>] [--root <dir>]  (node fallback, same argv)\n");
+  process.stderr.write("usage: bun scripts/push-identity-check.mjs --base <rev> [--head <rev>] [--remote <name>] [--root <dir>]  (node fallback, same argv)\n");
   return 2;
 }
 
@@ -276,13 +324,15 @@ export function main(argv) {
   let root = DEFAULT_ROOT;
   let base = null;
   let head = "HEAD";
+  let remote = null;
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === "--root" || arg === "--base" || arg === "--head") {
+    if (arg === "--root" || arg === "--base" || arg === "--head" || arg === "--remote") {
       const value = argv[index + 1];
       if (value === undefined || value === "") return usage(`${arg} needs a value`);
       if (arg === "--root") root = path.resolve(value);
       else if (arg === "--base") base = value;
+      else if (arg === "--remote") remote = value;
       else head = value;
       index += 1;
       continue;
@@ -314,9 +364,28 @@ export function main(argv) {
     process.stdout.write(renderResult({ status: "skipped", offenders: "no approved identity profile", profile }));
     return 0;
   }
-  if (profile.enforce === "off" || profile.enforce === "commit") {
+  if (!PUSH_ENFORCING.has(profile.enforce)) {
     process.stdout.write(renderResult({ status: "skipped", offenders: `gitIdentity.enforce is "${profile.enforce}"`, profile }));
     return 0;
+  }
+
+  // The scope: `push` judges every remote, `push-upstream` only the tracked one.
+  // A named remote git does not know is a caller bug, never a skip.
+  if (remote !== null && gitQuery(root, ["remote", "get-url", remote]) === null) {
+    return usage(`--remote names "${remote}", which is not a remote of this repository`);
+  }
+  if (profile.enforce.endsWith("-upstream")) {
+    const upstream = trackedUpstreamRemote({ root });
+    if (remote !== null && remote !== upstream.remote) {
+      process.stdout.write(
+        renderResult({
+          status: "skipped",
+          offenders: `the pushed remote "${remote}" is not the tracked upstream remote "${upstream.remote}" (${upstream.source})`,
+          profile,
+        }),
+      );
+      return 0;
+    }
   }
 
   const resolvedBase = base ?? resolveBase(root);

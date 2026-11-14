@@ -59,7 +59,7 @@ and neither assembles the envelope by hand.
 
 Compliance for the canonical turn contract's boxes 1–5 is machine-checked: the
 profile in `skills/orchestration-envelope/references/TURN_CONTRACT.md`
-demonstrates them by pasting the verifier's one-line receipt beside the git/gh
+demonstrates them by pasting the verifier's one-line receipt beside the git/forge
 evidence instead of reciting them.
 
 ## Drive one turn
