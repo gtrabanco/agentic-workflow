@@ -516,9 +516,83 @@ freeze (D1).
   inside a quarter second. The issue's own words scope the failure to runs of
   ">1s", so this is the intent, not a relaxation.
 
+- **L2** — 2026-11-14, the correction request verbatim (external-verify
+  correction round):
+
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+
+  continue
+  ```
+
+- **P4** — 2026-11-14, the doc engine's adoption landed inside `8ccb3516`
+  (its event was carried under P3's line when the slices were cut); its
+  validator ran in the correction round: `doc --sync --profile` on a fresh
+  `mktemp -d` corpus exits 0 with the stage table on stderr, and the
+  correction's B1 fix makes that table's per-stage milliseconds and shares
+  real · `53e79b9a`, `bfae1f84`.
+
+- **E9** — 2026-11-14, `bun test packages/agentic-workflow/test/feedback.test.mjs`
+  · exit 1 at `53e79b9a` · `1 fail` — the async-stage reproducer red against
+  the pre-fix module (a suspended stage closed at its first suspension: the
+  settlement cost and the printed-total denominator both missing), 29 pass
+  untouched.
+
+- **E10** — 2026-11-14, `bun test packages/agentic-workflow/test/feedback.test.mjs`
+  · exit 0 at `bfae1f84` · `30 pass 0 fail` — the settlement case green with
+  the module fix (`stage()` closes at thenable settlement, `progress()` no
+  longer closes an open stage, the profile share denominator is the printed
+  total).
+
+- **E11** — 2026-11-14, `bun scripts/check-skill-context.mjs --documents` ·
+  exit 0 · `PASS context documents: 4 budgeted documents`, `AGENTS.md 700
+  lines / 137 machine / 563 prose / 12053 est` inside 708 / 571 / 13259 — the
+  correction round's re-measurement that supersedes E5's recorded
+  `701 / 564 / 12,082` (those numbers do not reproduce on the committed
+  bytes; the machine pin 137 and the PASS always reproduced).
+
+- **E12** — 2026-11-14, `parseRecords(decisions.md)` · `ok (5 rows)` (the
+  creation row's authority repaired to `execute-phase`; P3 and P6
+  justification+approval rows added), and
+  `node packages/agentic-workflow/bin/path-guard.mjs --unit docs/fix/424-cli-feedback-tiers
+  --phase P<n> --base f7e5dbba` for P2 / P3 / P6 · exit 0 each ·
+  `PATH-GUARD pass — clean` (P2) and `pass — justified` (P3, P6),
+  `freeze-after: P2`, offenders none — the gate arms and honors the records
+  (it failed `malformed-declaration`, exit 1, before the batch).
+
+- **E13** — 2026-11-14, the differential over `mktemp -d` copies of `f7e5dbba`
+  and of this head, one shared corpus path, nine cases (`doc --status`,
+  `--sync` ×2, `--sync --json-only`, `--query`, `--sync --quiet`, `--status`,
+  `config list`, `phase-lint`) · `UNDECLARED-DELTAS=0` — stdout, exit code and
+  feedback-stripped stderr identical on every case; the only deltas are the
+  declared feedback lines (+2 status/query, +7 first sync, +5 warm sync,
+  +0 quiet/config/phase-lint), `--json-only` still one JSON line. The
+  fresh-corpus `doc --sync --profile` table now reads `total 49ms` with
+  `scan 45ms 92%` / `stats 1ms 2%` — the B1 symptom (a 19 ms row at `100%`
+  beside `total 56ms`) is gone.
+
+- **E14** — 2026-11-14, `bun run test` in `packages/agentic-workflow` · exit 0
+  · `756 pass 0 fail` across 42 files (base 755 + the async case).
+
+- **E15** — 2026-11-14, `bun run test` in `packages/pi-agentic-workflow` ·
+  exit 0 · `873 pass 0 fail` across 77 files — the untouched consumer of the
+  bin stays green on the corrected module.
+
+- **G3** — 2026-11-14, the docs gates on the corrected tree · exit 0 ·
+  `check-skill-context --documents` PASS (E11), `normative-drift` `21 pass`,
+  `docs-generate --check` `verdict: PASS`, `workflow-docs-index` `5 pass`.
+
+- **G2** — 2026-11-14, `bun scripts/run-root-suite.mjs` · exit 0 ·
+  `root gate: 112 suite(s) …` — `112` PASS, none failing, twice on the
+  corrected tree (every edit except this line; the post-line re-run is
+  reported in the handoff).
+
 ## Next
 
-P1: land the module's red suite.
+Hand the correction batch to the owner as the external verifier: both
+blockers are repaired with their path-protection records, the six
+advisories are dispositioned in D8, and the verdict on the corrected head
+is the remaining gate.
 
 ## References
 
