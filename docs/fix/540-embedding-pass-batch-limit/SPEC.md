@@ -414,7 +414,7 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
   owner is the external verifier. Disclosed in the handoff, never silently
   skipped.
 
-- **E6** — 2026-11-14, `cd packages/agentic-workflow && bun test test/doc.embed-rejection.test.mjs test/doc.degradations.test.mjs test/doc.sync.test.mjs` · exit 0 · `20 pass · 0 fail` (write-path S2/S2a/S4/S5 + the vocabulary parity + the limit retro-apply) after `c59b3374`.
+- **E6** — 2026-11-14, `cd packages/agentic-workflow && bun test test/doc.embed-rejection.test.mjs test/doc.degradations.test.mjs test/doc.sync.test.mjs` · exit 0 · `20 pass · 0 fail` (write-path S2/S2a/S4/S5 + the vocabulary parity + the limit retro-apply) after `1ea21304`.
 - **E7** — 2026-11-14, `cd packages/agentic-workflow && bun test test/doc.store.test.mjs test/doc.hybrid.test.mjs` · exit 0 · `54 pass · 0 fail` (config budget/validation, the sync rejection envelope, `--rebuild` embedding and the keyword-only declaration).
 - **E8** — 2026-11-14, `cd packages/agentic-workflow && bun test test/doc.embeddings.test.mjs` · exit 0 · `25 pass · 0 fail` — the two re-cut cases (S9 resume on an exhausted retryable ladder; S3 401 never retried and never aborting) plus the unchanged pacing/retry/`Retry-After`/pin cases.
 - **E9** — 2026-11-14, differential against a base-commit copy in `mktemp -d` (`git archive a83b9b38`), same toy project, no provider: `doc --sync --json-only`, `--status`, `--query`, and the human `--sync` path are byte-identical in stdout, stderr and exit code; `--rebuild --json-only` differs only by the intended `degradations: ["unavailable-embeddings-not-configured"]` plus `store.{pending, model, embedded}`.
@@ -427,9 +427,9 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **G5** — 2026-11-14, `bun scripts/run-root-suite.mjs` · **exit 1** · `1 fail`: `scripts/residual-classify.test.mjs` (`Cannot find module './ceremony/lib.mjs'`), the pre-existing breakage recorded under `## Known pre-existing issues`. The same command at the base commit exits 1 with that suite **and seven more**; this change adds no failure and fixes six of them (`check-skill-context`, `correction-budget`, `doc-discipline`, `lint-changeset`, `local-gate`, `unit-route` — the base copy's own extract/git context, all green here).
 - **G6** — 2026-11-14, `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS` (projection and roadmap re-rendered by the emitter, never hand-written).
 - **G7** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network --no-bail` · **exit 1** · `FAILED root-suite` (the same `residual-classify` import error; `schema-node-compat` skipped as its dependent). Every other offline step passed: `docs-generated-projection`, `version-parity-content`, `journal-carrier-check`, `log-immutability`, `temp-hygiene`, `tmp-gc`, `worktree-guard`, `crate-suite-bun`, `crate-suite-node`.
-- **P1** — 2026-11-14, unit doc cut and both planning ledgers frozen (12 obligations, 19 evidence rows) before the first line of code · `a30fd160`'s parent.
-- **P2** — 2026-11-14, the frozen reproducers landed and were observed red (E1–E4) · `a30fd160`.
-- **P3, P5** — 2026-11-14, the write path, the vocabulary surface, the request budget, the safe chunk-limit default, the retro-applied re-chunk and `--rebuild` embedding landed; E6–E11 green · `c59b3374`.
+- **P1** — 2026-11-14, unit doc cut and both planning ledgers frozen (12 obligations, 19 evidence rows) before the first line of code · `4f90294c`'s parent.
+- **P2** — 2026-11-14, the frozen reproducers landed and were observed red (E1–E4) · `4f90294c`.
+- **P3, P5** — 2026-11-14, the write path, the vocabulary surface, the request budget, the safe chunk-limit default, the retro-applied re-chunk and `--rebuild` embedding landed; E6–E11 green · `1ea21304`.
 - **P6** — 2026-11-14, the docs/state surfaces: crate + pi READMEs, the `/aw-index` report, the gate-inventory claim, the budget re-pin, the emitter's roadmap/projection output, the changeset and this entry.
 - **D5** — 2026-11-14, decision: the `AGENTS.md` machine-table re-pin lands here at 136 and absorbs the base commit's own `135 != 134` drift, with the reason in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; the alternative (re-pinning 135 and shipping a red budget check) would have hidden the drift behind a raised ceiling nobody measured.
 - **D6** — 2026-11-14, decision: O12 stays **open** rather than flipped. Its validator (`bun scripts/run-root-suite.mjs` exits 0) cannot reproduce because of a pre-existing import error on `main` that is not this unit's to repair; the evidence (G5, G7, base-vs-head FAIL-set diff) is recorded and the owner decides whether the one-line repair belongs here.
@@ -441,6 +441,16 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **G10** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network` (the full offline gate, root-suite step included) · **exit 1** · the wrapper's root-suite step trips this host's per-test wall clock on a shifting set of subprocess-heavy suites (`audit-pr-receipt`/`activity-fusion`/`batch-scheduler`/`capabilities` in one run, `setup-env`/`phase-lint`/`test-impact`/`test-route` in the next; every one of them passes standalone and inside the green G8 run). Disclosed, not excused: G8 is the root suite's own contract and it exits 0.
 - **G11** — 2026-11-14, `bun scripts/run-root-suite.mjs` again on an idle host · **exit 0** · `110` suites pass, confirming G8. The two red runs in between failed a single suite each time, and not the same one (`unit-route`'s `F7` linear-scan benchmark at 609 ms against `<500 ms`; earlier a 10 s subprocess budget) — the host-sensitive assertions recorded under `## Known pre-existing issues`.
 - **P8** — 2026-11-14, correction batch on the owner's decision (D7): the two moved import specifiers in `scripts/residual-classify.mjs` repaired; E12/E13 + G8/G9 green; O12 flipped.
+- **D9** — 2026-11-14, identity rewrite before the first push (`d2df8bb5`→`c038a4af`
+  and siblings): the commits were authored as `Gabriel Trabanco` while
+  `.pi/agentic-workflow.json`'s approved profile is `Gabriel Trabanco Llano
+  <1969593+gtrabanco@users.noreply.github.com>`, so the pre-push
+  `push-identity` gate refused all 8. Nothing was published (the push aborted),
+  so the branch was rebased onto `main` with `--reset-author` — one linear
+  history, every author and committer on the approved profile, and the `Log`'s
+  `E`/`P` lines re-pointed at the reissued SHAs. The two journal fragments keep
+  the pre-rewrite SHAs they were written with; the fragment carrier is
+  append-only, so the correction is a third fragment rather than an edit.
 - **D8** — 2026-11-14, the merge of `main` (which advanced to `1a52465d` mid-unit: the owner's triage registered #540 as `embedding-pass-fix · pending`, plus a `docs/LOGS.md` backfill narrative). The branch keeps **one** row for #540 — the one naming this unit's folder (`embedding-pass-batch-limit`), its status and its SPEC link — and drops the triage row, because two rows for one issue is the drift `roadmap-settle`/`audit-docs` exists to catch while the folder is what the projection keys on. The triage fact it carried (M, fix-now 2026-11-13) is recorded here rather than in a cell the emitter rewrites.
 - **D7** — 2026-11-14, owner decision (answer to the O12 question, `repair`): repair `main`'s stale imports inside this unit rather than accept the red root suite, so the unit ships with the gate it declares.
 ## Next
