@@ -1,6 +1,7 @@
 ---
 type: fix
 scope: medium
+ac-hash: 25cd83b027fb6628d7a163f2d4caab66f3f38fc9cd2773f93545bc2110581013
 roadmap_summary: Issue [#540](https://github.com/gtrabanco/agentic-workflow/issues/540): the `doc --sync` embedding pass aborted the whole backfill on one non-retryable provider 400 and mislabelled it `unavailable-embeddings-provider-down` — a rejected batch is now skipped and reported with its own `embeddings-request-rejected` cause plus the provider's status/body, the request is packed under a character budget with a safe `chunk_limit` default, a limit change re-chunks on the next sync, and `--rebuild` embeds in the same pass.
 ---
 
@@ -204,6 +205,25 @@ repository's review machinery on its own surgery — the disclosure is in
   is accepted). Does **not** affect this unit: the new key is a top-level token
   (`embeddings-request-rejected`), so the family's openness neither hides it nor
   is narrowed by it. The published surface enumerates the concrete values.
+- **`scripts/residual-classify.mjs` imports a module `main` no longer ships.**
+  `edde336c refactor(352): retire the migrated runtimes from scripts/` moved the
+  runner library to `packages/agentic-workflow/src/runner/lib.mjs` and deleted
+  `scripts/ceremony/lib.mjs`, but `scripts/residual-classify.mjs:72` still reads
+  `import { parseTasks } from "./ceremony/lib.mjs"`, so the whole suite dies on
+  the module resolution (`20 fail` at `a83b9b38`, identical at HEAD).
+  **Does not affect this unit** — nothing here imports the classifier; it blocks
+  the root suite's `exits 0`, which is why O12 is reported open.
+- **`AGENTS.md` machine-table lines were already off by one at the base commit.**
+  `bun scripts/check-skill-context.mjs --documents` measured `135 != the declared
+  134` at `a83b9b38`; the row this unit adds makes it 136. The exact re-pin
+  absorbs both (+2 to `machineLines`, reason recorded in
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json`), so the pre-existing drift does
+  **not** leave a red gate behind.
+- **Timing-sensitive root suites on a slow host.** `scripts/red-first.mjs` takes
+  ~7.8 s of git history here against the suite's 10 s per-test budget, and under
+  the gate's parallel load `red-first`, `phase-lint` and `release` hit the
+  budget. Each passes green when run alone; all three also fail in the base
+  copy's run, so the flakiness is the host's, not this unit's.
 - The `doc` path has no stderr channel inside `runDocOp` (it returns the
   envelope; the CLI prints). Affects this unit's S4: the diagnostic is built in
   the envelope (`store.rejected`) and rendered by the CLI's human path, which is
@@ -386,10 +406,33 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
   owner is the external verifier. Disclosed in the handoff, never silently
   skipped.
 
+- **E6** — 2026-11-14, `cd packages/agentic-workflow && bun test test/doc.embed-rejection.test.mjs test/doc.degradations.test.mjs test/doc.sync.test.mjs` · exit 0 · `20 pass · 0 fail` (write-path S2/S2a/S4/S5 + the vocabulary parity + the limit retro-apply) after `c59b3374`.
+- **E7** — 2026-11-14, `cd packages/agentic-workflow && bun test test/doc.store.test.mjs test/doc.hybrid.test.mjs` · exit 0 · `54 pass · 0 fail` (config budget/validation, the sync rejection envelope, `--rebuild` embedding and the keyword-only declaration).
+- **E8** — 2026-11-14, `cd packages/agentic-workflow && bun test test/doc.embeddings.test.mjs` · exit 0 · `25 pass · 0 fail` — the two re-cut cases (S9 resume on an exhausted retryable ladder; S3 401 never retried and never aborting) plus the unchanged pacing/retry/`Retry-After`/pin cases.
+- **E9** — 2026-11-14, differential against a base-commit copy in `mktemp -d` (`git archive a83b9b38`), same toy project, no provider: `doc --sync --json-only`, `--status`, `--query`, and the human `--sync` path are byte-identical in stdout, stderr and exit code; `--rebuild --json-only` differs only by the intended `degradations: ["unavailable-embeddings-not-configured"]` plus `store.{pending, model, embedded}`.
+- **E10** — 2026-11-14, the frozen failure end-to-end against a provider double (`400` on the batch carrying a `POISON` file), same toy project: base `degradations: ["unavailable-embeddings-provider-down"] · embedded: 0 · pending: 2`; this change `degradations: ["embeddings-request-rejected"] · embedded: 3 · pending: 1 · store.rejected = {count: 1, failures: [{status: 400, message: "embeddings provider 400 Bad Request: {…context length exceeded…}"}], chunks: ["m.md#M"]}`, and the human path prints `doc: rejection: 400 …` + `doc: skipped: m.md#M`.
+- **E11** — 2026-11-14, the same double refusing requests above 100,000 chars with a 200,000-char chunk and **no** `provider.chunk_limit` in the config: base aborts (`unavailable-embeddings-provider-down`, `embedded: 0`); this change chunks to the 90,000-char budget, embeds everything and declares `chunk-too-large` (`embedded: 2 · pending: 0`).
+- **G1** — 2026-11-14, `cd packages/agentic-workflow && bun run test` · exit 0 · `726 pass · 0 fail · 41 files`.
+- **G2** — 2026-11-14, `cd packages/agentic-workflow && bun run test:node` · exit 0 · `727 pass · 0 fail`.
+- **G3** — 2026-11-14, `cd packages/agentic-workflow-schema && bun run test` · exit 0 · `851 pass · 0 fail · 48 files`.
+- **G4** — 2026-11-14, `cd packages/pi-agentic-workflow && bun run test` · exit 0 · `866 pass · 0 fail · 77 files` (including the two new report cases).
+- **G5** — 2026-11-14, `bun scripts/run-root-suite.mjs` · **exit 1** · `1 fail`: `scripts/residual-classify.test.mjs` (`Cannot find module './ceremony/lib.mjs'`), the pre-existing breakage recorded under `## Known pre-existing issues`. The same command at the base commit exits 1 with that suite **and seven more**; this change adds no failure and fixes six of them (`check-skill-context`, `correction-budget`, `doc-discipline`, `lint-changeset`, `local-gate`, `unit-route` — the base copy's own extract/git context, all green here).
+- **G6** — 2026-11-14, `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS` (projection and roadmap re-rendered by the emitter, never hand-written).
+- **G7** — 2026-11-14, `bun scripts/local-gate.mjs --skip-network --no-bail` · **exit 1** · `FAILED root-suite` (the same `residual-classify` import error; `schema-node-compat` skipped as its dependent). Every other offline step passed: `docs-generated-projection`, `version-parity-content`, `journal-carrier-check`, `log-immutability`, `temp-hygiene`, `tmp-gc`, `worktree-guard`, `crate-suite-bun`, `crate-suite-node`.
+- **P1** — 2026-11-14, unit doc cut and both planning ledgers frozen (12 obligations, 19 evidence rows) before the first line of code · `a30fd160`'s parent.
+- **P2** — 2026-11-14, the frozen reproducers landed and were observed red (E1–E4) · `a30fd160`.
+- **P3, P5** — 2026-11-14, the write path, the vocabulary surface, the request budget, the safe chunk-limit default, the retro-applied re-chunk and `--rebuild` embedding landed; E6–E11 green · `c59b3374`.
+- **P6** — 2026-11-14, the docs/state surfaces: crate + pi READMEs, the `/aw-index` report, the gate-inventory claim, the budget re-pin, the emitter's roadmap/projection output, the changeset and this entry.
+- **D5** — 2026-11-14, decision: the `AGENTS.md` machine-table re-pin lands here at 136 and absorbs the base commit's own `135 != 134` drift, with the reason in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; the alternative (re-pinning 135 and shipping a red budget check) would have hidden the drift behind a raised ceiling nobody measured.
+- **D6** — 2026-11-14, decision: O12 stays **open** rather than flipped. Its validator (`bun scripts/run-root-suite.mjs` exits 0) cannot reproduce because of a pre-existing import error on `main` that is not this unit's to repair; the evidence (G5, G7, base-vs-head FAIL-set diff) is recorded and the owner decides whether the one-line repair belongs here.
+
 ## Next
 
-Implement P2 (the red reproducers) and continue through P7; then hand the diff to
-the owner as the external verifier.
+The owner's decision on O12: repair `main`'s one-line stale import
+(`scripts/residual-classify.mjs:72` → `import { parseTasks } from
+"../packages/agentic-workflow/src/runner/lib.mjs"`) inside this unit, or accept
+the pre-existing root-suite red and close O12 as `n/a` with that evidence. Every
+other obligation is `verified` on a foreground run.
 
 ## References
 

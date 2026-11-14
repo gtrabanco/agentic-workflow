@@ -59,6 +59,7 @@ const {
   GATE_RECEIPT_VERDICTS,
   GATE_CHECK_STATUSES,
   GATE_RECEIPT_FRESHNESS_CODES,
+  DOC_DEGRADATIONS,
 } = await import(schemaRuntimePath);
 
 const read = (relative) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -99,9 +100,29 @@ test("the schema package publishes every canonical set, non-empty", () => {
     ["GATE_RECEIPT_VERDICTS", GATE_RECEIPT_VERDICTS],
     ["GATE_CHECK_STATUSES", GATE_CHECK_STATUSES],
     ["GATE_RECEIPT_FRESHNESS_CODES", GATE_RECEIPT_FRESHNESS_CODES],
+    ["DOC_DEGRADATIONS", DOC_DEGRADATIONS],
   ]) {
     assert.ok(Array.isArray(set) && set.length > 0, `${name} is a published const array`);
   }
+});
+
+test("the doc envelope's runtime close accepts exactly the published degradation set (fix #540)", async () => {
+  // The `doc` path is the crate's cold path and has no build step, so its close
+  // is a pattern list beside the published const, not an import of `dist`. This
+  // pin is what keeps the two one fact: every published value is accepted, a
+  // value the schema does not publish is refused, and the two open families the
+  // const documents stay open.
+  const { degradationIsKnown } = await import("../packages/agentic-workflow/src/doc/envelope.mjs");
+  for (const value of DOC_DEGRADATIONS) {
+    assert.equal(degradationIsKnown(value), true, `the runtime close refuses the published ${value}`);
+  }
+  for (const value of ["embeddings-request-failed", "embeddings-rejected", "not-a-degradation"]) {
+    assert.equal(degradationIsKnown(value), false, `the runtime close accepts the unpublished ${value}`);
+  }
+  for (const value of ["unavailable-sqlite-node", "unavailable-sqlite-bun", "unavailable-embeddings-http-401"]) {
+    assert.equal(degradationIsKnown(value), true, `${value} is an open-family emission and must stay known`);
+  }
+  assert.ok(!DOC_DEGRADATIONS.includes("unavailable-embeddings-http-401"), "an open-family emission is never enumerated");
 });
 
 test("the reader's LOG_KINDS equals the canonical declaration (F22 pattern)", () => {
