@@ -118,7 +118,11 @@ test("a consented action runs the project's own installer, records one line and 
 
     const after = receipt.after.find((row) => row.id === "merge-drivers");
     assert.equal(after.status, "ok", "the same checker re-verified the repair");
-    assert.equal(doctorJson(root).verdict, "pass");
+    assert.deepEqual(
+      receipt.after.filter((row) => row.move === "ask-consent-write"),
+      [],
+      "no consented repair is still pending after the re-verify",
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
