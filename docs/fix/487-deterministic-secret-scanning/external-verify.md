@@ -41,3 +41,10 @@ until you fixed full symbol/related stuff".
 
 This receipt is now the delta anchor: the next verification re-checks the six
 findings above, the E17 regression, and the re-run of O2/O4/O10/O15.
+- **Loop-2 (S3/S4) folded too** — the batch's own docs commit introduced three
+  regressions, all caught by re-running the declared checks and folded at
+  `d3f1c4ee` (pi package declared for the `skills/` edit; `batch-scheduler`'s
+  reference ceiling re-based to ceil(2201 × 1.10) = 2422 with the growth source
+  named; this receipt's literal reproducer made a placeholder because the fixed
+  rule now flags it). Evidence at E22; full recheck at G5 (root suite 113/113,
+  gate set PASS, scans PASS).
