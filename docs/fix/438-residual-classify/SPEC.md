@@ -487,6 +487,14 @@ surgery.
   two **main-side** commits in the upstream-based range (`b012b31d`
   "docs(logs): unknown changes", `3cbc1237`, both 2026-11-13 11:13/11:15 UTC),
   not this branch's bytes — carried in `## Next` and O23's status cell.
+- **E18** — 2026-11-13, owner amendment recorded: the batch reported that the
+  D4 closed-unit rule carried no obligation row at freeze, and the owner
+  answered `Sí, arreglalo`. Two rows join `planning-obligations.md` post-cut —
+  `O24` (a terminal roadmap row closes the unit: its tasks claim nothing; tests
+  `H3`, `H4`) and `O25` (a promise naming a closed unit refuses `ambiguous`;
+  test `P4`) — both written `verified` on this foreground run:
+  `bun test scripts/residual-classify.test.mjs` → 25 pass / 0 fail. No frozen
+  row's cell changed; the amendment itself is `D-438-4` in `decisions.md`.
 
 ## Next
 

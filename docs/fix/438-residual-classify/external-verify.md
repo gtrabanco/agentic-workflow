@@ -267,3 +267,19 @@ Open ids handed back: **O23** (the push range), nothing else — the batch's own
 new observation (the D4 closed-unit behaviour had no obligation row in the
 frozen ledger; its regression now lives in H3/P4) is reported to the owner,
 not retro-fitted into a frozen ledger.
+
+**Push evidence (2026-11-13, both attempts plain `git push`, no bypass):**
+attempts at 00:03 and earlier both abort inside the pre-push gate at
+`push-identity` (issue #514, `enforce: push`) with git exit 1 and the remote
+untouched (`origin/feat/438-new-feature-residual-classify` still `a44c6c4a`).
+The checker reports 26 offender lines over the range `a44c6c4a..HEAD` —
+`GitHub <noreply@github.com>` as committer of main's merged PRs, `journal-bot`,
+`github-actions[bot]`, and the short-name author `Gabriel Trabanco` — and
+**zero** lines for this branch's own commits (`0fbf30f2`, `4e9df6a2`,
+`620c9cad`, `ff2deb0f`, `66fa8509`, `fb951e61`, `6a5fe38a`: author and
+committer both `Gabriel Trabanco Llano <1969593+gtrabanco@users.noreply.github.com>`).
+`log-immutability` (E17) is the companion range gate the same push would meet.
+Amendment follow-up, same day: the owner authorized the post-cut ledger rows
+(`Sí, arreglalo`) → `O24`/`O25` verified on E18's run. The paragraph above
+states this batch's handoff position **before** that answer; the amendment
+supersedes it, dated the same day — the receipt appends, it never rewrites.
