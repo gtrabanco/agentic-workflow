@@ -47,7 +47,7 @@ export interface GitConfigWrite {
   file?: string;
 }
 
-export type GitIdentityEnforce = "off" | "commit" | "push" | "commit-and-push";
+export type GitIdentityEnforce = "off" | "commit" | "push" | "push-upstream" | "commit-and-push" | "commit-and-push-upstream";
 export type GitIdentityAgentMode = "ask" | "block";
 
 export interface GitIdentityApproved {
@@ -56,6 +56,10 @@ export interface GitIdentityApproved {
   fullName?: string;
   format?: "openpgp" | "ssh";
   signingKey?: string;
+  /** The per-machine keys: a resolved key matching any of these is approved. */
+  signingKeys?: string[];
+  /** What a signature means here: required, allowed (default), or off (sign-off). */
+  signing?: "required" | "allowed" | "off";
 }
 
 export interface GitIdentityAgentGuard {
@@ -80,7 +84,7 @@ export interface GitIdentityGuardOptions {
   cwd: string;
 }
 
-const ENFORCE_VALUES: readonly GitIdentityEnforce[] = ["off", "commit", "push", "commit-and-push"];
+const ENFORCE_VALUES: readonly GitIdentityEnforce[] = ["off", "commit", "push", "push-upstream", "commit-and-push", "commit-and-push-upstream"];
 
 /** The section as the extension reads it: absent keys take the shipped value. */
 export function normalizeGitIdentity(value: unknown): GitIdentityConfig {

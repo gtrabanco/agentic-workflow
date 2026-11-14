@@ -139,17 +139,25 @@ const PATH_PROTECTION_SCHEMA: JsonSchema = publish({
  *
  * `enforce` is what the carriers act on: `off` is inert (the shipped default, so
  * an unconfigured project is never blocked), `commit` enables the pre-commit
- * hook, `push` enables the push-range check, `commit-and-push` both. `approved`
- * declares only the facts a project wants verified; an absent field is not
- * checked. `agentGuard` is the model-facing half: `mode: "block"` never asks,
- * and `allow` names the writes a project permits without disabling the guard.
+ * hook, `push` enables the push-range check on any remote,
+ * `push-upstream` enables it only on the branch's tracked upstream remote, and
+ * the `commit-and-push*` pair is both halves with the same scope (issue #546).
+ * `approved` declares only the facts a project wants verified; an absent field
+ * is not checked. `signing` decides what a signature means to the project
+ * (`required`, `allowed`, `off` for a sign-off workflow) and `signingKeys` is the
+ * per-machine form of `signingKey`. `agentGuard` is the model-facing half:
+ * `mode: "block"` never asks, and `allow` names the writes a project permits
+ * without disabling the guard.
  */
 const GIT_IDENTITY_SCHEMA: JsonSchema = publish({
   type: "object",
   additionalProperties: false,
   description: "The approved commit identity and the agent-side config-write guard.",
   properties: {
-    enforce: { type: "string", enum: ["off", "commit", "push", "commit-and-push"] },
+    enforce: {
+      type: "string",
+      enum: ["off", "commit", "push", "push-upstream", "commit-and-push", "commit-and-push-upstream"],
+    },
     approved: {
       type: "object",
       additionalProperties: false,
@@ -160,6 +168,18 @@ const GIT_IDENTITY_SCHEMA: JsonSchema = publish({
         fullName: { type: "string", minLength: 1, description: "The legal name a signing key's UID must carry." },
         format: { type: "string", enum: ["openpgp", "ssh"] },
         signingKey: { type: "string", minLength: 1, description: "The resolved signing key: key id, fingerprint or path." },
+        signingKeys: {
+          type: "array",
+          items: { type: "string", minLength: 1 },
+          minItems: 1,
+          description: "The per-machine keys: a resolved key matching any of these is approved (issue #546).",
+        },
+        signing: {
+          type: "string",
+          enum: ["required", "allowed", "off"],
+          description:
+            "required: a commit must carry a signature from an approved key. allowed (default): signing is optional, and a resolved key is verified when one resolves. off: the project approves unsigned commits, so a signed one is refused.",
+        },
       },
     },
     agentGuard: {

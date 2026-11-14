@@ -113,7 +113,9 @@
             "off",
             "commit",
             "push",
-            "commit-and-push"
+            "push-upstream",
+            "commit-and-push",
+            "commit-and-push-upstream"
           ]
         },
         "approved": {
@@ -147,6 +149,24 @@
               "type": "string",
               "minLength": 1,
               "description": "The resolved signing key: key id, fingerprint or path."
+            },
+            "signingKeys": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "description": "The per-machine keys: a resolved key matching any of these is approved (issue #546)."
+            },
+            "signing": {
+              "type": "string",
+              "enum": [
+                "required",
+                "allowed",
+                "off"
+              ],
+              "description": "required: a commit must carry a signature from an approved key. allowed (default): signing is optional, and a resolved key is verified when one resolves. off: the project approves unsigned commits, so a signed one is refused."
             }
           }
         },
