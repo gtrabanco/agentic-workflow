@@ -524,6 +524,14 @@ freeze (D1).
   forge's contents API: the bytes that authorize the merge are then the bytes of
   the commit being merged, and a forge without a contents API needs no case.
 
+- **P13** — 2026-11-14, PR [#549](https://github.com/gtrabanco/agentic-workflow/pull/549)
+  opened (base `main`, head `2eb5b70f`); the roadmap row carries the PR link and
+  stays `in-progress` until the owner's verdict; journal fragment
+  `20261114T135214Z-…-narrative-local.md`. `turn-contract.sh --finished` prints
+  `TURN-CONTRACT ok`. The push used the documented `--no-verify` escape hatch:
+  the hook's gate failed only at `root-suite`, on the pre-existing
+  `doc-discipline` red reproduced on `main` (recorded above).
+
 ## Next
 
 The owner's external verification of the diff. Nothing pending in this unit: the
