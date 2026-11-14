@@ -39,7 +39,7 @@ use the single-file format only.
 The triage step reads the unit's scope from the first-pass SPEC content and
 returns a deterministic ordered list of steps the unit needs.
 
-Invoke `bun scripts/unit-route.mjs --triage <NN>` to get:
+Invoke `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <NN>` to get:
 - **Steps** the unit needs (from the closed catalog)
 - **Skipped** steps and why
 - **Budget** tier (`strong` or `cheap`)
@@ -49,7 +49,7 @@ Example outputs:
 - Trivial fix (color change) → `[implement, evidence]` — no tests, no review
 - Core-logic feature → full ordered list including `tests` and `review`
 
-**Triage rules** (from `scripts/catalog.json`):
+**Triage rules** (from `packages/agentic-workflow/src/runner/catalog.json`):
 
 | Unit condition                     | Steps returned                                                        | Skipped reason(s)                               |
 |------------------------------------|-----------------------------------------------------------------------|-------------------------------------------------|
@@ -90,7 +90,7 @@ Each step runs as an atomic gate/commit. If a step's diff exceeds its budget
 
 ### Diff-size guard
 
-`scripts/diff-guard.mjs` measures `git diff --stat` at phase boundaries. If the
+`bunx @gtrabanco/agentic-workflow@<pin> diff-guard` measures `git diff --stat` at phase boundaries. If the
 diff exceeds the phase budget, the unit is flagged for mandatory re-triage.
 
 **Anti-gaming rule (code):** "NEVER shrink a diff by deleting comments, blank
@@ -192,14 +192,14 @@ un-publishing.
 If a phase produces a 200-line diff against a 50-line budget:
 1. The guard detects the overflow at the phase boundary
 2. The unit is expelled from the light path
-3. Mandatory re-triage: `bun scripts/unit-route.mjs --triage <NN>`
+3. Mandatory re-triage: `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <NN>`
 4. The triage may route to a new set of steps or flag for `replan`
 
 ## Worked example
 
 ```
 # New feature unit: docs/features/62-some-feature/SPEC.md (complete, 14 sections)
-bun scripts/unit-route.mjs --triage 62
+bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage 62
   → Steps: design, implement, tests, evidence, review
   → Skipped: research (not a new domain), plan (not code unit), docs (not docs unit), release (small scope)
   → Budget: strong

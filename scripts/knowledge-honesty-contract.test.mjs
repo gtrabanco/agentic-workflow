@@ -32,7 +32,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { parseLedger, resolvePending } from "./needs-input.mjs";
+import { parseLedger, resolvePending } from "../packages/agentic-workflow/src/runner/sensors/needs-input.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const LANE = "skills/unit-lane";

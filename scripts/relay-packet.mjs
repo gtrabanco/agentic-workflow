@@ -34,18 +34,18 @@ const MODULE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const DEFAULT_WORKSPACE = process.env.RELAY_PACKET_REPO ? path.resolve(process.env.RELAY_PACKET_REPO) : MODULE_ROOT;
 const CATALOG_PATH = process.env.RELAY_PACKET_CATALOG
   ? path.resolve(process.env.RELAY_PACKET_CATALOG)
-  : path.join(MODULE_ROOT, "scripts", "catalog.json");
+  : path.join(MODULE_ROOT, "packages/agentic-workflow/src/runner", "catalog.json");
 const BUDGETS_PATH = process.env.RELAY_PACKET_BUDGETS
   ? path.resolve(process.env.RELAY_PACKET_BUDGETS)
   : path.join(MODULE_ROOT, "docs", "workflow", "SKILL_CONTEXT_BUDGETS.json");
 
 /** The catalog is this repository's own manifest: the block names it the way the docs do. */
-const CATALOG_LABEL = "scripts/catalog.json";
+const CATALOG_LABEL = "packages/agentic-workflow/src/runner/catalog.json";
 
 const USAGE = `usage: bun scripts/relay-packet.mjs <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
   check        validate the packet: documents, charter pointer, baton grammar, verdict grammar
   budget       measure the leg handover (charter + baton) against the declared ceiling
-  tiers        print each leg's tier from scripts/catalog.json
+  tiers        print each leg's tier from packages/agentic-workflow/src/runner/catalog.json
   obligations  verify the unit's obligations ledger is closed
   <unit>       an NN-slug unit token, or a unit directory path
   --repo       read the workspace from this directory (default: this repository)

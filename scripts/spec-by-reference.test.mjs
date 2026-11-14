@@ -32,21 +32,22 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const CORPUS = path.join(repoRoot, "scripts", "fixtures", "spec-by-reference");
 const CONVERTED = path.join(CORPUS, "258-harden-needs-input-contracts");
 const TREE = path.join(CORPUS, "tree");
-const LINTER = path.join(repoRoot, "scripts", "phase-lint.mjs");
-const ROUTER = path.join(repoRoot, "scripts", "unit-route.mjs");
+/** The runner's bin: the linter and the router answer as its subcommands. */
+const LINTER = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
+const ROUTER = LINTER;
 
 const read = (file) => fs.readFileSync(file, "utf8");
 const convertedDoc = () => read(path.join(CONVERTED, "SPEC.md"));
 
 /** Run the linter on one document; `{ status, stdout, stderr }`. */
 const lint = (file) => {
-  const result = spawnSync(process.execPath, [LINTER, file], { encoding: "utf8" });
+  const result = spawnSync(process.execPath, [LINTER, "phase-lint", file], { encoding: "utf8" });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 };
 
 /** Run the router against the fixture tree; `{ status, stdout, stderr }`. */
 const route = (args) => {
-  const result = spawnSync(process.execPath, [ROUTER, ...args], {
+  const result = spawnSync(process.execPath, [ROUTER, "unit-route", ...args], {
     encoding: "utf8",
     env: { ...process.env, UNIT_ROUTE_REPO: TREE },
   });
@@ -262,12 +263,12 @@ test("#308 the converted corpus is a unit doc both shapes accept", () => {
 });
 
 test("#308 the code's log-kind list is the published block, never a copy that drifts", () => {
-  // `scripts/unit-doc-phases.mjs` reads the closed vocabulary from `LOG_KINDS`;
+  // The runner's section reader reads the closed vocabulary from `LOG_KINDS`;
   // `scripts/normative-drift.test.mjs` pins the template block to its own literal
   // list. Nothing compared the two, so a kind added on one side and not the other
   // — the second-copy class #305 gates everywhere else — passed both suites
   // (#308 review, F22).
-  return import("./unit-doc-phases.mjs").then(({ LOG_KINDS }) => {
+  return import("../packages/agentic-workflow/src/runner/unit-doc-phases.mjs").then(({ LOG_KINDS }) => {
     for (const template of [
       "docs/features/_TEMPLATE/SPEC.md",
       "docs/fix/_TEMPLATE/SPEC.md",

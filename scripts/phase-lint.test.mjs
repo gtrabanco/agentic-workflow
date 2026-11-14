@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Corpus for `scripts/phase-lint.mjs` — the behavioural contract of the
+ * Corpus for the `phase-lint` runner subcommand — the behavioural contract of the
  * phase-lint tool. Fixtures are embedded strings written to a temporary
  * directory at run time: no network, no committed fixtures directory.
  *
@@ -17,7 +17,9 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const LINTER = fileURLToPath(new URL("./phase-lint.mjs", import.meta.url));
+const BIN = fileURLToPath(new URL("../packages/agentic-workflow/bin/agentic-workflow.mjs", import.meta.url));
+/** The runner's subcommand this corpus exercises. */
+const SUB = "phase-lint";
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "phase-lint-corpus-"));
 
 /** Write one fixture and return its path. */
@@ -29,7 +31,7 @@ function fixture(name, content) {
 
 /** Run the linter with a given runtime; returns { status, stdout, stderr }. */
 function run(runtime, ...args) {
-  const result = spawnSync(runtime, [LINTER, ...args], { encoding: "utf8" });
+  const result = spawnSync(runtime, [BIN, SUB, ...args], { encoding: "utf8" });
   if (result.error && result.error.code === "ENOENT") return null;
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
@@ -835,7 +837,7 @@ test("a degenerate multi-hundred-KB task line completes instead of backtracking"
   const task = "either ".repeat(40_000); // ~0.28 MB, tens of thousands of scan starts
   const plan = `# Degenerate scan\n\n### P1 — Handle the input\n\nLayer: docs. Done-when: \`grep -n input docs/input.md\` → matches.\n\n- [ ] ${task}\n`;
   const file = fixture("degenerate-scan.md", plan);
-  const result = spawnSync(process.execPath, [LINTER, file], { encoding: "utf8", timeout: 5000 });
+  const result = spawnSync(process.execPath, [BIN, SUB, file], { encoding: "utf8", timeout: 5000 });
   assert.equal(result.error, undefined, "the linter must finish inside 5 s");
   assert.equal(result.status, 0);
   assert.match(result.stdout, /^verdict PASS$/m);
@@ -1057,7 +1059,7 @@ test("a loose checkbox form is not a task (frozen grammar)", () => {
 test("a block larger than the pipe buffer is not truncated", () => {
   const phases = Array.from({ length: 2000 }, (_, i) => `### P${i + 1} — Work ${i + 1}\n\nLayer: config/infra. Done-when: \`node --test scripts/a${i + 1}.test.mjs\` → exit 0.\n\n- [ ] Create \`scripts/a${i + 1}.mjs\`\n`).join("\n");
   const file = fixture("pipe-drain.md", `# Pipe drain\n\n${phases}`);
-  const result = spawnSync(process.execPath, [LINTER, file], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const result = spawnSync(process.execPath, [BIN, SUB, file], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   assert.equal(result.status, 0);
   const lines = result.stdout.trimEnd().split("\n");
   assert.equal(lines.length, 2002, "every phase line plus the verdict and fingerprint lines must reach the pipe");
@@ -1071,7 +1073,7 @@ test("a block larger than the pipe buffer is not truncated", () => {
 test("an early-closing pipe consumer does not flip the exit code", async () => {
   const phases = Array.from({ length: 2000 }, (_, i) => `### P${i + 1} — Work ${i + 1}\n\nLayer: config/infra. Done-when: \`node --test scripts/b${i + 1}.test.mjs\` → exit 0.\n\n- [ ] Create \`scripts/b${i + 1}.mjs\`\n`).join("\n");
   const file = fixture("pipe-early-close.md", `# Pipe early close\n\n${phases}`);
-  const child = spawn(process.execPath, [LINTER, file], { stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(process.execPath, [BIN, SUB, file], { stdio: ["ignore", "pipe", "pipe"] });
   let stderr = "";
   child.stderr.setEncoding("utf8");
   child.stderr.on("data", (chunk) => { stderr += chunk; });
@@ -1291,8 +1293,8 @@ test("a past-the-engine-limit target token agrees across runtimes (F57)", { skip
   const token = `${"a/".repeat(1_800_000)}a`; // 3.6 MB single token, past the JSC divergence
   const plan = `# Giant target\n\n### P1 — Docs phase\n\nLayer: docs. Done-when: \`grep -n x docs/x.md\` → matches.\n\n- [ ] Edit \`${token}\`\n`;
   const file = fixture("giant-target.md", plan);
-  const viaNode = spawnSync(process.execPath, [LINTER, file], { encoding: "utf8", timeout: 30_000 });
-  const viaBun = spawnSync("bun", [LINTER, file], { encoding: "utf8", timeout: 30_000 });
+  const viaNode = spawnSync(process.execPath, [BIN, SUB, file], { encoding: "utf8", timeout: 30_000 });
+  const viaBun = spawnSync("bun", [BIN, SUB, file], { encoding: "utf8", timeout: 30_000 });
   assert.equal(viaNode.error, undefined, "the linter must finish inside 30 s under node");
   assert.equal(viaBun.error, undefined, "the linter must finish inside 30 s under bun");
   assert.equal(viaNode.stdout, viaBun.stdout, "node and bun must agree byte for byte on the giant target");
@@ -1455,7 +1457,7 @@ test("a punctuation-run target token completes inside the time bound (F64)", () 
   const file = fixture("f64-punctuation-run.md", PUNCTUATION_RUN_PLAN);
   const runtimes = [process.execPath, ...(bunAvailable ? ["bun"] : [])];
   for (const runtime of runtimes) {
-    const result = spawnSync(runtime, [LINTER, file], { encoding: "utf8", timeout: 20_000 });
+    const result = spawnSync(runtime, [BIN, SUB, file], { encoding: "utf8", timeout: 20_000 });
     assert.equal(result.signal, null, `${runtime} must complete, not be killed by the bound`);
     assert.equal(result.status, 0, `${runtime} answers PASS`);
   }

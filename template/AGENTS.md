@@ -289,7 +289,7 @@ Rules the ledger enforces:
   `path-protection-records@1` block, and the planning ledgers — one file, one
   owner, several typed blocks side by side.
 - **Halt, do not ask.** The consumed block is printed by the deterministic
-  dispatcher (`scripts/needs-input.mjs`), so a malformed ledger fails closed
+  dispatcher (`agentic-workflow needs-input`), so a malformed ledger fails closed
   instead of silently dropping a question.
 
 **Adaptive lane (unit-driven workflow).** Every NEW unit (feature
@@ -310,7 +310,7 @@ and acceptance criterion at once. The unit's path is decided by a triage
 pass against a closed catalog (research, design, plan, implement, tests,
 evidence, review, docs, release). The lane conductor (`/unit-lane`) orchestrates;
 `execute-phase` runs each step as an atomic gate/commit. A diff-size guard
-(`scripts/diff-guard.mjs`) expels units that exceed their budget back to triage.
+(`agentic-workflow diff-guard`) expels units that exceed their budget back to triage.
 Evidence rows document what was run, exit status, and verified-by. The progress
 log uses dated entries (`YYYY-MM-DD HH:MM`). Commit format: `type(scope):
 description` (conventional commits). Roadmap rows follow `idea → defined →

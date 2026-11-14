@@ -29,11 +29,13 @@ import {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPTS = path.join(ROOT, "scripts");
+/** The runner's home: the shared readers the pin guards live there since #352. */
+const RUNNER = path.join(ROOT, "packages", "agentic-workflow", "src", "runner");
 
 /* ------------------------------------------------------------------ pin A */
 
 test("pin A — every inline `## `-heading search lives in an allowlisted reader, with a reason", () => {
-  const violations = headingSearchViolations(SCRIPTS);
+  const violations = headingSearchViolations(SCRIPTS, RUNNER);
   assert.deepEqual(violations, [], "the current tree carries fence-blind `## ` readers — refactor them onto the shared sectionBounds reader or record the reason");
 });
 
@@ -70,7 +72,7 @@ test("pin A — reintroducing the F37/F38/F39 pattern under an allowlisted file 
 });
 
 test("pin A — the pin is not vacuous: every allowlisted reader really carries the pattern", () => {
-  const hits = headingSearchHits(SCRIPTS);
+  const hits = [...headingSearchHits(SCRIPTS), ...headingSearchHits(RUNNER)];
   // Keyed by repository-relative path, so a prunable entry is one nothing
   // needs any more — and an entry nobody carries is a hole, not a hedge.
   const carried = new Set(hits.map((hit) => hit.repoFile));
@@ -90,7 +92,7 @@ test("pin B — every echo path of carrier cells routes through the one flatten 
 });
 
 test("pin B — the pin covers the surfaces the issue names", () => {
-  assert.ok(FLATTEN_COVERAGE_FILES.includes("scripts/workflow-status.mjs"), "the sensor's echo paths are the corpus the issue names");
+  assert.ok(FLATTEN_COVERAGE_FILES.includes("packages/agentic-workflow/src/runner/sensors/workflow-status.mjs"), "the sensor's echo paths are the corpus the issue names");
   for (const file of FLATTEN_COVERAGE_FILES) {
     assert.ok(readFileSync(path.join(ROOT, file), "utf8").includes("flattenCell"), `${file} declares the flatten class the pin checks`);
   }

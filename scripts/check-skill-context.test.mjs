@@ -370,7 +370,7 @@ runFixtureRoute(
   const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
   const owners = [
     { box: "Branch verified FIRST", owner: "EXECUTION_CONTRACT.md", marker: "## Branch" },
-    { box: "All pre-edit gates (phase-lint, architectural invariants, dependency) RUN", owner: "PREFLIGHT.md", marker: "phase-lint.mjs <unit-doc>" },
+    { box: "All pre-edit gates (phase-lint, architectural invariants, dependency) RUN", owner: "PREFLIGHT.md", marker: "phase-lint <unit-doc>" },
     { box: "`git add`, `git commit -m", owner: "EXECUTION_CONTRACT.md", marker: "Docs COMMITTED" },
     { box: "Unit finished (single-pass/--fix/final phase)", owner: "FOLDING.md", marker: "gh pr create" },
     { box: "Clean-tree check LAST (`git status --porcelain` RUN", owner: "FOLDING.md", marker: "git status --porcelain" },

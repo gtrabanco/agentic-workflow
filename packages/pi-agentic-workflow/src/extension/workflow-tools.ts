@@ -20,6 +20,7 @@
  */
 
 import { spawn } from "node:child_process";
+import { runnerBin } from "../runner-bin.js";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
@@ -33,12 +34,13 @@ import { runtimeBin } from "../runtime.js";
 export const WORKFLOW_TOOLS_NAMESPACE = {
   name: "agentic-workflow",
   description:
-    "Deterministic workflow sensors and gates, run as thin wrappers over the " +
-    "project's own scripts. Results arrive as structured data; red gates as errors with data.",
+    "Deterministic workflow sensors and gates, run through the pinned " +
+    "@gtrabanco/agentic-workflow runner (one subcommand each). Results arrive as structured data; red gates as errors with data.",
   instructions:
-    "Each tool spawns the project's own script (scripts/<name>.mjs) in the " +
-    "session's cwd — the project's checkout copy, never the package's pinned " +
-    "one. Successful runs resolve to the tool's output schema; gate failures " +
+    "Each tool spawns the pinned package's runner bin (agentic-workflow " +
+    "<subcommand>) with the session's cwd as the project root — the pin " +
+    "decides the behaviour, never the project's checkout; audit-pr-gate " +
+    "still runs the project's own scripts/audit-pr-gate.mjs. Successful runs resolve to the tool's output schema; gate failures " +
     "(breach, BLOCKED, stale receipt, BLOCKED verdict) reject or carry " +
     "isError with the structured result attached. The tools are deferred: " +
     "find them with tool_search or call them by name from a codemode script.",
@@ -78,7 +80,8 @@ export interface WorkflowToolsDeps {
   /** The conductor's sensor seam, injectable for tests. */
   runSensor?: (cwd: string, bin: "bun" | "node") => Promise<SensorResult>;
   /**
-   * The spawn seam for the gate tools: runs `<bin> <script> <args...>` in cwd
+   * The spawn seam for the gate tools: runs `<bin> <script> <args...>` in cwd,
+   * where a runner tool's `script` is the crate bin and its `args` open with the subcommand
    * and reports exit code and captured streams. Injectable for tests.
    */
   spawnScript?: SpawnScript;
@@ -492,7 +495,7 @@ function diffGuardSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
             if (maxLines !== undefined) args.push("--max-lines", String(maxLines));
             const maxFiles = optionalNumber(p, "maxFiles");
             if (maxFiles !== undefined) args.push("--max-files", String(maxFiles));
-            return { cwd, bin, script: "scripts/diff-guard.mjs", args };
+            return { cwd, bin, script: runnerBin(), args: ["diff-guard", ...args] };
           },
         },
         deps,
@@ -529,8 +532,8 @@ function phaseLintSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
           spawn: (bin, p) => ({
             cwd,
             bin,
-            script: "scripts/phase-lint.mjs",
-            args: [requireString(p, "path")],
+            script: runnerBin(),
+            args: ["phase-lint", requireString(p, "path")],
           }),
         },
         deps,
@@ -635,7 +638,7 @@ function snapshotVerifySpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
             for (const [flag, value] of pairs) {
               if (value !== undefined) args.push(flag, value);
             }
-            return { cwd, bin, script: "scripts/pre-execution-snapshot.mjs", args };
+            return { cwd, bin, script: runnerBin(), args: ["pre-execution-snapshot", ...args] };
           },
         },
         deps,

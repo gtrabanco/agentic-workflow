@@ -3,7 +3,7 @@
  * Corpus for the golden fixture — the executable half of
  * `docs/workflow/GOLDEN_FIXTURE.md`. It asserts the committed toy trees under
  * `scripts/fixtures/golden-fixture/` by running the real tools at their CLI
- * boundary: `scripts/phase-lint.mjs` (both verdicts) and
+ * boundary: the `phase-lint` runner subcommand (both verdicts) and
  * `scripts/schema-runtime.mjs` (the envelope contract), plus the run-log Result
  * grammar, the doc's cross-references, and the audit-target trap invariants.
  *
@@ -30,7 +30,7 @@ import { loadSchemaRuntime } from "./schema-runtime.mjs";
 const REPO = fileURLToPath(new URL("..", import.meta.url));
 const FIXTURE_DIR = path.join(REPO, "scripts", "fixtures", "golden-fixture");
 const DOC = path.join(REPO, "docs", "workflow", "GOLDEN_FIXTURE.md");
-const LINTER = path.join(REPO, "scripts", "phase-lint.mjs");
+const LINTER = path.join(REPO, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 const GUIDE = path.join(REPO, "AGENTS.md");
 const INDEX = path.join(REPO, "docs", "workflow", "README.md");
 const SNAPSHOT = path.join(FIXTURE_DIR, "expected", "phase-lint-toy-plan.txt");
@@ -43,7 +43,7 @@ const { validateEnvelope } = await loadSchemaRuntime();
  * @returns {{ status: number|null, stdout: string }}
  */
 function runPhaseLint(planPath) {
-  const result = spawnSync(process.execPath, [LINTER, planPath], { encoding: "utf8" });
+  const result = spawnSync(process.execPath, [LINTER, "phase-lint", planPath], { encoding: "utf8" });
   if (result.error) throw result.error;
   return { status: result.status, stdout: result.stdout };
 }

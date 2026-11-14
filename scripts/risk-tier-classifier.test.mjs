@@ -32,7 +32,7 @@ import { test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const MODULE = path.join(ROOT, "scripts", "risk-tiers.mjs");
+const MODULE = path.join(ROOT, "packages/agentic-workflow/src/runner", "risk-tiers.mjs");
 
 /**
  * The classifier under test, loaded once; F1 owns the case where it is absent.
@@ -66,7 +66,7 @@ const prose = (n = 20) => Array.from({ length: n }, (_, i) => `Line ${i + 1} of 
 test("F1 frozen corpus: the classifier module exists and loads (base commit: ERR_MODULE_NOT_FOUND)", () => {
   const base = process.env.RISK_TIER_BASE ? path.resolve(process.env.RISK_TIER_BASE) : null;
   if (base) {
-    const probe = spawnSync(process.execPath, ["-e", "import('./scripts/risk-tiers.mjs').then(() => console.log('present'))"], {
+    const probe = spawnSync(process.execPath, ["-e", "import('./packages/agentic-workflow/src/runner/risk-tiers.mjs').then(() => console.log('present'))"], {
       cwd: base,
       encoding: "utf8",
     });
@@ -74,7 +74,7 @@ test("F1 frozen corpus: the classifier module exists and loads (base commit: ERR
     assert.match(probe.stderr, /ERR_MODULE_NOT_FOUND/, "the base-commit failure is the issue's own reproducer");
     return;
   }
-  assert.ok(fs.existsSync(MODULE), "scripts/risk-tiers.mjs is the classifier's one home");
+  assert.ok(fs.existsSync(MODULE), "packages/agentic-workflow/src/runner/risk-tiers.mjs is the classifier's one home");
   assert.equal(typeof classifyTier, "function", "classifyTier is exported");
   assert.equal(typeof taskSizeOf, "function", "taskSizeOf is exported");
 });
@@ -255,10 +255,18 @@ test("F6 the same tree yields byte-identical output (the classifier is determini
  */
 const FOREIGN_SPECIFIER = /from\s+"([^"]+)"/g;
 
+/**
+ * A foreign specifier is anything that is neither a `node:` builtin nor a
+ * relative module. The one declared exception is the workspace's own pinned
+ * package — the classifier reads the published tier vocabulary from it, and a
+ * pinned dependency is not a network or environment reach.
+ */
+const WORKSPACE_SCOPE = "@gtrabanco/";
+
 function foreignSpecifiers(source) {
   return [...source.matchAll(FOREIGN_SPECIFIER)]
     .map((match) => match[1])
-    .filter((specifier) => !specifier.startsWith("node:") && !specifier.startsWith("."));
+    .filter((specifier) => !specifier.startsWith("node:") && !specifier.startsWith(".") && !specifier.startsWith(WORKSPACE_SCOPE));
 }
 
 test("F6b there is no wall-clock, no environment and no network in the verdict", () => {

@@ -18,14 +18,14 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { schemaRuntimePath } from "./schema-runtime.mjs";
 import { CLAIM_KINDS, REASON_CODES } from "./promise-coherence.mjs";
-import { LOG_KINDS } from "./unit-doc-phases.mjs";
+import { LOG_KINDS } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 import {
   CEREMONY_PROFILE_CONTRACT_ID as CEREMONY_PROFILE_CONTRACT_ID_MJS,
   CEREMONY_PROFILE_PIECES as CEREMONY_PROFILE_PIECES_MJS,
   CEREMONY_PROFILE_ADOPTIONS as CEREMONY_PROFILE_ADOPTIONS_MJS,
   CEREMONY_REVIEW_SURFACES as CEREMONY_REVIEW_SURFACES_MJS,
   CEREMONY_PROFILE_REFUSALS as CEREMONY_PROFILE_REFUSALS_MJS,
-} from "./ceremony-profile.mjs";
+} from "../packages/agentic-workflow/src/runner/ceremony-profile.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -146,9 +146,9 @@ test("every prose copy of the Future-status set carries exactly the canonical to
 
 test("the risk tiers are the published set, and the classifier re-exports rather than restates them", () => {
   assert.deepEqual([...RISK_TIER_KINDS], ["passive", "standard", "high"]);
-  const classifier = read("scripts/risk-tiers.mjs");
+  const classifier = read("packages/agentic-workflow/src/runner/risk-tiers.mjs");
   // The classifier may re-export the sets; it may not spell a tier literal of its own.
-  assert.match(classifier, /from "\.\.\/packages\/agentic-workflow-schema\/src\/vocabularies\.ts"/,
+  assert.match(classifier, /from "@gtrabanco\/agentic-workflow-schema"/,
     "one home: the classifier imports the published consts");
   assert.doesNotMatch(classifier, /\["passive",\s*"standard"/, "no second copy of the tier set");
 });
@@ -267,7 +267,7 @@ test("#361 decision-required survives as the false-negative escalation and the f
 });
 
 test("#361 the sensor projects every ladder token onto the envelope's unchanged enum", async () => {
-  const { SEVERITY_VOCABULARY } = await import("./workflow-status.mjs");
+  const { SEVERITY_VOCABULARY } = await import("../packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
   const projection = new Map([["BLOCKER", "high"], ["CRITICAL", "high"], ["WARNING", "med"], ["SUGGESTION", "low"]]);
   for (const [token, envelope] of projection) {
     assert.equal(SEVERITY_VOCABULARY.get(token), envelope, `the ladder token '${token}' projects to '${envelope}'`);

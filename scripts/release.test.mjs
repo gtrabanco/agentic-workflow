@@ -1013,3 +1013,72 @@ test("plan never rewrites the templates, and a tree without them is a clean zero
   assert.equal(applied.status, 0, applied.stderr || applied.stdout);
   assert.match(applied.stdout, /templates: 0 unit-doc provenance stamp\(s\) stamped/, "a project without the template scaffold is not a failure");
 });
+
+// ── The runner pin (feature 91, issue #352) ────────────────────────────────
+// `skills/runner-contract/references/RUNNER.md` carries the repository's only
+// runner version literal. A release stamps it, and a canary stages it in-cut
+// beside the manifests so the published canary cites itself and the committed
+// pin stays stable.
+
+const RUNNER_PIN_REL = "skills/runner-contract/references/RUNNER.md";
+
+/** Write the pin file into a fixture at `version`; absent → the tree has none. */
+function withRunnerPin(root, version) {
+  const file = path.join(root, RUNNER_PIN_REL);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(
+    file,
+    [
+      "# The runner — one invocation, one pin",
+      "",
+      "```text",
+      "runner-pin@1",
+      "# channel: stable",
+      "field | value",
+      `invocation | bunx @gtrabanco/agentic-workflow@${version} <subcommand> [args...]`,
+      "```",
+      "",
+    ].join("\n"),
+  );
+  return file;
+}
+
+test("apply stamps the runner pin, one line, and only the runner's own scope", () => {
+  const root = fixture({ changesets: { "a.md": ["agentic:minor"] } });
+  const file = withRunnerPin(root, "0.0.1");
+  const applied = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-11-12"]);
+  assert.equal(applied.status, 0, applied.stderr || applied.stdout);
+  assert.match(applied.stdout, /runner: skills\/runner-contract\/references\/RUNNER\.md stamped/, "the stamp is reported, never silent");
+  const text = fs.readFileSync(file, "utf8");
+  assert.match(text, /^invocation \| bunx @gtrabanco\/agentic-workflow@1\.1\.0 <subcommand> \[args\.\.\.\]$/m, "the pin is the train version the cut planned");
+  assert.doesNotMatch(text, /0\.0\.1/, "the previous pin is gone, not kept beside the new one");
+});
+
+test("apply on a tree without the pin file is a clean zero, and a re-run writes nothing", () => {
+  const bare = fixture({ changesets: { "a.md": ["agentic:minor"] } });
+  const first = run(["apply", "--root", bare, "--base", "1.0.0", "--channel", "stable", "--date", "2026-11-12"]);
+  assert.equal(first.status, 0, first.stderr || first.stdout);
+  assert.match(first.stdout, /runner: skills\/runner-contract\/references\/RUNNER\.md already carried it/, "a project without the carrier is not a failure");
+
+  const second = fixture({ changesets: { "a.md": ["agentic:minor"] } });
+  const file = withRunnerPin(second, "1.1.0");
+  const before = fs.readFileSync(file, "utf8");
+  const applied = run(["apply", "--root", second, "--base", "1.0.0", "--channel", "stable", "--date", "2026-11-12"]);
+  assert.equal(applied.status, 0, applied.stderr || applied.stdout);
+  assert.equal(fs.readFileSync(file, "utf8"), before, "a pin already at the train version is a no-op");
+});
+
+test("publish-stage stages the canary pin and prints the restore that includes it", () => {
+  const root = fixture({ changesets: { "a.md": ["agentic:minor"] } });
+  const file = withRunnerPin(root, "1.0.0");
+  const staged = run(["publish-stage", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
+  assert.equal(staged.status, 0, staged.stderr || staged.stdout);
+  const prerelease = / at (\d+\.\d+\.\d+-canary\.\d{8}\.\d+)/u.exec(staged.stderr)?.[1];
+  assert.ok(prerelease, staged.stderr);
+  assert.match(fs.readFileSync(file, "utf8"), new RegExp(`agentic-workflow@${prerelease.replace(/\./gu, "\\.")} `), "the staged tree cites the canary it publishes");
+  assert.match(staged.stderr, new RegExp(`1 runner pin\\(s\\) at ${prerelease.replace(/\./gu, "\\.")}`), "the stage reports what it wrote");
+
+  const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
+  assert.equal(planned.status, 0, planned.stderr || planned.stdout);
+  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the restore the cut prints covers the staged pin");
+});

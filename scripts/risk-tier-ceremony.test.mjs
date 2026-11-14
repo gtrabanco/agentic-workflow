@@ -58,7 +58,7 @@ function fixtureRepo() {
 test("C1 ceremony: `tier classify --paths` prints the tier as JSON and exits 0", () => {
   const repo = fixtureRepo();
   fs.writeFileSync(path.join(repo, "NOTES.md"), "prose\n");
-  const result = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "classify", "--paths", "NOTES.md"], {
+  const result = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "tier", "classify", "--paths", "NOTES.md"], {
     cwd: repo,
     encoding: "utf8",
   });
@@ -73,7 +73,7 @@ test("C1a ceremony: a high-risk path prints high with its named signal", () => {
   const repo = fixtureRepo();
   fs.mkdirSync(path.join(repo, ".github", "workflows"), { recursive: true });
   fs.writeFileSync(path.join(repo, ".github", "workflows", "ci.yml"), "name: ci\n");
-  const result = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "classify", "--paths", ".github/workflows/ci.yml"], {
+  const result = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "tier", "classify", "--paths", ".github/workflows/ci.yml"], {
     cwd: repo,
     encoding: "utf8",
   });
@@ -89,7 +89,7 @@ test("C1b ceremony: the diff scope classifies HEAD against the merge base, no fl
   fs.writeFileSync(path.join(repo, "GUIDE.md"), "more prose\n");
   git(repo, ["add", "."]);
   git(repo, ["commit", "-q", "-m", "docs: readme prose"]);
-  const result = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "classify"], { cwd: repo, encoding: "utf8" });
+  const result = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "tier", "classify"], { cwd: repo, encoding: "utf8" });
   assert.equal(result.status, 0, `stderr: ${result.stderr}`);
   const payload = JSON.parse(result.stdout);
   assert.equal(payload.tier, "passive", "the branch's diff is prose only");
@@ -109,7 +109,7 @@ test("C1d ceremony: the first uncommitted path is read whole, so a dirty CI work
   // The modified file is the FIRST (and only) porcelain entry — that column is
   // where the off-by-one bit.
   fs.writeFileSync(path.join(repo, ".github", "workflows", "root-suite.yml"), "name: suite\non: push\n");
-  const result = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "classify", "--base", "main"], {
+  const result = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "tier", "classify", "--base", "main"], {
     cwd: repo,
     encoding: "utf8",
   });
@@ -125,25 +125,25 @@ test("C1c ceremony: `tier read --unit` answers the recorded tier of a unit, and 
   const repo = fixtureRepo();
   fs.mkdirSync(path.join(repo, "docs", "fix", "900-fixture"), { recursive: true });
   fs.writeFileSync(path.join(repo, "docs", "fix", "900-fixture", "SPEC.md"), "# fix/900-fixture\n\n- **E1** — 2026-11-02, `ceremony tier classify --paths docs/a.md` · exit 0 · `\"tier\": \"passive\"`.\n");
-  const ok = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "read", "--unit", "900-fixture"], { cwd: repo, encoding: "utf8" });
+  const ok = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "tier", "read", "--unit", "900-fixture"], { cwd: repo, encoding: "utf8" });
   assert.equal(ok.status, 0, `stderr: ${ok.stderr}`);
   assert.equal(JSON.parse(ok.stdout).tier, "passive", "the tier is read from the unit's own evidence line");
 
-  const missing = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "read", "--unit", "nope"], { cwd: repo, encoding: "utf8" });
+  const missing = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "tier", "read", "--unit", "nope"], { cwd: repo, encoding: "utf8" });
   assert.equal(missing.status, 1, "an unknown unit is a usage error");
   assert.equal(JSON.parse(missing.stdout).error, "unknown-slug");
 });
 
 test("C1d ceremony: an unknown tier subcommand and an unknown object still refuse in the closed world", () => {
-  const unknownOp = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "invent", "--paths", "a.md"], { cwd: ROOT, encoding: "utf8" });
+  const unknownOp = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "tier", "invent", "--paths", "a.md"], { cwd: ROOT, encoding: "utf8" });
   assert.equal(unknownOp.status, 1);
   assert.equal(JSON.parse(unknownOp.stdout).error, "unknown-op");
 
-  const unknownObject = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "teleport", "now"], { cwd: ROOT, encoding: "utf8" });
+  const unknownObject = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "teleport", "now"], { cwd: ROOT, encoding: "utf8" });
   assert.equal(unknownObject.status, 1, "the closed world refuses an object it does not declare");
   assert.equal(JSON.parse(unknownObject.stdout).error, "unknown-object");
 
-  const badFlag = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "classify", "--tier", "passive"], { cwd: ROOT, encoding: "utf8" });
+  const badFlag = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "ceremony", "tier", "classify", "--tier", "passive"], { cwd: ROOT, encoding: "utf8" });
   assert.equal(badFlag.status, 1, "a model-supplied --tier is refused: the tier is never an input");
   assert.equal(JSON.parse(badFlag.stdout).error, "unknown-flag");
 });
@@ -181,15 +181,15 @@ test("C2a the schema package publishes the tier vocabularies and the parity suit
 });
 
 test("C2b the classifier and the ceremony module agree on the vocabulary (no second copy)", async () => {
-  const { RISK_TIER_KINDS } = await import(pathToFileURL(path.join(ROOT, "scripts", "risk-tiers.mjs")).href);
+  const { RISK_TIER_KINDS } = await import(pathToFileURL(path.join(ROOT, "packages/agentic-workflow/src/runner/risk-tiers.mjs")).href);
   assert.deepEqual([...RISK_TIER_KINDS], ["passive", "standard", "high"]);
-  const ceremony = await import(pathToFileURL(path.join(ROOT, "scripts", "ceremony", "tier.mjs")).href);
+  const ceremony = await import(pathToFileURL(path.join(ROOT, "packages", "agentic-workflow", "src", "runner", "ceremony", "tier.mjs")).href);
   assert.deepEqual([...ceremony.RISK_TIER_KINDS], [...RISK_TIER_KINDS], "one declaration, imported");
 });
 
 test("C2c the size tier and the risk tier are two sources of truth in one place, and `next` stays untouched", () => {
   const repo = fixtureRepo();
-  const result = spawnSync(process.execPath, [path.join(ROOT, "scripts", "workflow-status.mjs")], {
+  const result = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "workflow-status"], {
     cwd: repo,
     encoding: "utf8",
     timeout: 60_000,
@@ -218,7 +218,7 @@ test("C3 unit-lane states the Task Size signals and never lets file counts decid
   assert.match(skill, /Contained risk/, "the contained-risk signal");
   assert.match(skill, /Resumable-from-diff/, "the resume test");
   assert.match(skill, /never decide|never read|never basis/i, "file counts never decide");
-  assert.match(skill, /ceremony\.mjs tier classify/, "the lane reads the tier from the ceremony CLI, never derives it");
+  assert.match(skill, /ceremony tier classify/, "the lane reads the tier from the ceremony CLI, never derives it");
 });
 
 test("C3a a passive verdict routes a docs-only request to the zero-ceremony path", () => {

@@ -21,7 +21,7 @@ const MODULE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 /**
  * An inline `## `-heading search: the F37/F38/F39 pattern. A regex literal
  * whose source anchors on `## ` is how a fence-blind section reader starts;
- * the shared reader is `scripts/unit-doc-phases.mjs` (`sectionText`,
+ * the shared reader is the crate's `unit-doc-phases.mjs` (`sectionText`,
  * `sectionBounds`, `H2_HEADING`) and everything else cites it.
  */
 const HEADING_SEARCH = /\/\^##\s?/;
@@ -40,11 +40,11 @@ export const HEADING_READER_ALLOWLIST = new Map([
     "the fragment close reads an entry heading out of a fragment's own bytes to build a commit subject — it never bounds a document section; the fragment grammar's one-entry-per-file shape is enforced by the crate's journal module (#405)",
   ],
   [
-    "scripts/unit-doc-phases.mjs",
+    "packages/agentic-workflow/src/runner/unit-doc-phases.mjs",
     "the shared fence-aware reader owns the grammar — sectionText, sectionBounds and H2_HEADING are the one definition (#308 F28/F39); every other reader cites it",
   ],
   [
-    "scripts/workflow-status.mjs",
+    "packages/agentic-workflow/src/runner/sensors/workflow-status.mjs",
     "the legacy TASKS.md phase reader is fence-aware since unit 84 (S3 pin); its remaining `^##` literal only labels boundaries inside the fence-aware walk, never bounds a section on its own",
   ],
   [
@@ -52,7 +52,7 @@ export const HEADING_READER_ALLOWLIST = new Map([
     "its own sectionsOf is a fence-aware reader (it collects every section, not one); the remaining literals are `## Turn contract` presence probes, never section bounds",
   ],
   [
-    "scripts/pre-execution-contract.mjs",
+    "packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs",
     "receipt chunk parser: versioned titled headings (## Pre-execution review receipt v1 — …) that the exact-name shared reader cannot match; machine-generated receipts carry no fenced blocks",
   ],
 ]);
@@ -62,7 +62,7 @@ export const HEADING_READER_ALLOWLIST = new Map([
  * class (`flattenCell` / `bounded`): the sensor surfaces the carrier cells an
  * envelope emits (F38's class).
  */
-export const FLATTEN_COVERAGE_FILES = Object.freeze(["scripts/workflow-status.mjs"]);
+export const FLATTEN_COVERAGE_FILES = Object.freeze(["packages/agentic-workflow/src/runner/sensors/workflow-status.mjs"]);
 
 /** The carrier-cell identifiers an echo path must not emit raw. */
 const CARRIER_CELL = /\$\{\s*(?<![.\w])(id|file|axis|severity|klass|route|body)\b/;
@@ -144,8 +144,10 @@ export function headingSearchHits(directory, maxEntries = PINS_MAX_ENTRIES) {
  * the fence-blind-reader pattern. Keyed on the repository-relative path, so a
  * same-named file in a subdirectory is a violation, not a silent exemption.
  */
-export function headingSearchViolations(directory) {
-  return headingSearchHits(directory).filter((hit) => !HEADING_READER_ALLOWLIST.has(hit.repoFile));
+export function headingSearchViolations(...directories) {
+  return directories
+    .flatMap((directory) => headingSearchHits(directory))
+    .filter((hit) => !HEADING_READER_ALLOWLIST.has(hit.repoFile));
 }
 
 /**

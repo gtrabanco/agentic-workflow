@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Corpus for `scripts/needs-input.mjs` — the behavioural contract of the
+ * Corpus for the `needs-input` runner subcommand — the behavioural contract of the
  * needs-input dispatcher. Fixtures are embedded strings written to a temporary
  * directory at run time: no network, no committed fixtures directory.
  *
@@ -16,9 +16,11 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { parseLedger } from "./needs-input.mjs";
+import { parseLedger } from "../packages/agentic-workflow/src/runner/sensors/needs-input.mjs";
 
-const DISPATCHER = fileURLToPath(new URL("./needs-input.mjs", import.meta.url));
+const BIN = fileURLToPath(new URL("../packages/agentic-workflow/bin/agentic-workflow.mjs", import.meta.url));
+/** The runner's subcommand this corpus exercises. */
+const SUB = "needs-input";
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "needs-input-corpus-"));
 
 after(() => fs.rmSync(TMP, { recursive: true, force: true }));
@@ -36,7 +38,7 @@ function unit({ spec = null, ledger = null } = {}) {
 
 /** Run the dispatcher; returns { status, stdout, stderr }. */
 function run(...args) {
-  const result = spawnSync(process.execPath, [DISPATCHER, ...args], { encoding: "utf8" });
+  const result = spawnSync(process.execPath, [BIN, SUB, ...args], { encoding: "utf8" });
   if (result.error && result.error.code === "ENOENT") return null;
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
@@ -187,7 +189,7 @@ test("no --tasks argument → usage error, exit 2", () => {
   const result = run();
 
   assert.equal(result.status, 2);
-  assert.match(result.stderr, /usage: needs-input\.mjs <unit-dir>/);
+  assert.match(result.stderr, /usage: agentic-workflow needs-input <unit-dir>/);
 });
 
 test("unknown option → usage error, exit 2", () => {

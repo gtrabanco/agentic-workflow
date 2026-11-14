@@ -26,7 +26,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { parseReceipts } from "./pre-execution-contract.mjs";
+import { parseReceipts } from "../packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs";
 
 const HEX64 = "a".repeat(64);
 const HEX64B = "b".repeat(64);

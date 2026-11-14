@@ -147,7 +147,7 @@ test("#305 F56: Non-goals denying a new script while the tasks name one fails cl
   assert.equal(result.verdict, "BLOCKED: contradicts-plan");
   const contradiction = failuresOf(result).find((claim) => claim.kind === "contradiction");
   assert.equal(contradiction.line, 10);
-  assert.match(contradiction.observed, /scripts\/needs-input\.mjs/);
+  assert.match(contradiction.observed, /scripts\/review-receipt\.mjs/);
 });
 
 test("#305 F56: the same Non-goals bullet naming the script itself is a stated boundary, not a contradiction", () => {
@@ -158,7 +158,7 @@ test("#305 F56: the same Non-goals bullet naming the script itself is a stated b
     const scoped = readFileSync(path.join(ROOT, fixture("unit-doc-contradiction.md")), "utf8")
       .replace(
         "- No new runtime script or machine gate for interactive input.",
-        "- No new runtime script besides `scripts/needs-input.mjs`, the dispatcher AC8 requires.",
+        "- No new runtime script besides `scripts/review-receipt.mjs`, the dispatcher AC8 requires.",
       );
     const file = join(directory, "unit-doc-contradiction-scoped.md");
     writeFileSync(file, scoped);
@@ -517,7 +517,7 @@ test("F20: the in-flight corpus rule lives in one owner, not two copies", () => 
       `${file} must not restate the published index path either`,
     );
   }
-  const shared = readFileSync(path.join(ROOT, "scripts/unit-doc-phases.mjs"), "utf8");
+  const shared = readFileSync(path.join(ROOT, "packages/agentic-workflow/src/runner/unit-doc-phases.mjs"), "utf8");
   assert.match(shared, /index-document\.mjs/, "the shared reader imports the published constants");
   assert.match(shared, /ROADMAP_FEATURES_HEADING/, "the shared reader scopes the features table");
   assert.match(shared, /ROADMAP_FIXES_HEADING/, "the shared reader owns both indexes");

@@ -66,7 +66,7 @@ function headings(text) {
 const OWNER_FILE = "packages/agentic-workflow-schema/src/pre-execution.ts";
 const SDK_FILE = "packages/agentic-workflow/src/edit/schema.mjs";
 const PRODUCER_FILE = "packages/agentic-workflow/src/edit/UnitDoc.mjs";
-const ROUTER_FILE = "scripts/unit-route.mjs";
+const ROUTER_FILE = "packages/agentic-workflow/src/runner/unit-route.mjs";
 
 const owner = () => listAfter(read(OWNER_FILE), "UNIT_DOC_REQUIRED_SECTIONS = Object.freeze(", OWNER_FILE);
 /** The re-cut list the owner publishes beside the legacy one (#308). */
@@ -289,7 +289,7 @@ test("#332 the scaffold unit templates carry the re-cut shape and lint clean", (
     let stdout = "";
     let failed = null;
     try {
-      stdout = execFileSync(process.execPath, [path.join(ROOT, "scripts/phase-lint.mjs"), path.join(ROOT, template)], { encoding: "utf8" });
+      stdout = execFileSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "phase-lint", path.join(ROOT, template)], { encoding: "utf8" });
     } catch (error) {
       failed = `${template}: exit ${error.status}\n${error.stdout ?? ""}${error.stderr ?? ""}`;
     }
@@ -351,7 +351,7 @@ test("#308 both templates pass the grammar they publish, so a fresh unit lints c
     let stdout = "";
     let failed = null;
     try {
-      stdout = execFileSync(process.execPath, [path.join(ROOT, "scripts/phase-lint.mjs"), path.join(ROOT, template)], { encoding: "utf8" });
+      stdout = execFileSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "phase-lint", path.join(ROOT, template)], { encoding: "utf8" });
     } catch (error) {
       failed = `${template}: exit ${error.status}\n${error.stdout ?? ""}${error.stderr ?? ""}`;
     }

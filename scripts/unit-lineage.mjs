@@ -45,7 +45,15 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { sectionBounds } from "./unit-doc-phases.mjs";
+import { sectionBounds } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+
+/**
+ * The runner's bin: the two runtime commands this gate re-derives its verdict
+ * with (the router's triage block and the receipt verifier) live in the crate,
+ * so the gate spawns them there instead of assuming a `scripts/` copy in the
+ * project it judges.
+ */
+const BIN = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 /** Unescaped-pipe cell split — a markdown table escapes a literal `\|`. */
 const CELL_RE = /(?<!\\)\|/;
@@ -225,7 +233,7 @@ function resolveUnitDir(root, token) {
 
 /** Run `unit-route.mjs --triage` over the unit and parse its fixed block. */
 function rederiveTriage(root, slug) {
-  const r = spawnSync(process.execPath, [path.join(root, "scripts", "unit-route.mjs"), "--triage", slug], {
+  const r = spawnSync(process.execPath, [BIN, "unit-route", "--triage", slug], {
     cwd: root, encoding: "utf8", timeout: 60000, env: { ...process.env, UNIT_ROUTE_REPO: root },
   });
   if (r.status !== 0) {
@@ -243,7 +251,7 @@ function rederiveTriage(root, slug) {
 /** Run the receipt verifier; only exit 0 (a current PASS) opens the legacy path. */
 function verifyLegacyReceipt(root, kind, slug) {
   const unitId = kind === "fix" ? `fix-${slug}` : slug;
-  const r = spawnSync(process.execPath, [path.join(root, "scripts", "pre-execution-snapshot.mjs"), "verify", "--stage", "plan", "--unit", unitId, "--root", root], {
+  const r = spawnSync(process.execPath, [BIN, "pre-execution-snapshot", "verify", "--stage", "plan", "--unit", unitId, "--root", root], {
     cwd: root, encoding: "utf8", timeout: 120000,
   });
   if (r.status === 0) return { ok: true };

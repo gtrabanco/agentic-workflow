@@ -1,6 +1,6 @@
 # Measured acceptance — what the risk tier cost
 
-The classifier (`scripts/risk-tiers.mjs`) decides which tier a unit is; this
+The classifier (`packages/agentic-workflow/src/runner/risk-tiers.mjs`) decides which tier a unit is; this
 ledger records what that tier cost, one row per measured session, and
 `scripts/tier-cost.mjs` reads it. It exists because #360's non-goal forbids a
 ceremony reduction that cannot show its measured delta: a `passive` unit that

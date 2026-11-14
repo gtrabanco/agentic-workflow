@@ -261,7 +261,7 @@ test("content: version bump with no triggered change passes without demanding a 
 });
 
 test("content: unrelated root script change passes", () => {
-  const r = content(["scripts/phase-lint.mjs"], BASE_VERSION, 0);
+  const r = content(["scripts/docs-generate.mjs"], BASE_VERSION, 0);
   assert.equal(r.ok, true);
 });
 
