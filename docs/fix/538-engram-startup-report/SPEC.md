@@ -173,7 +173,11 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
 - `scripts/run-root-suite.test.mjs` spawns other suites under timing bounds and
   has been observed red once under the gate's parallel load while green
   standalone (531's record). **Does not affect** this unit: recorded so the flake
-  is not mistaken for a regression here.
+  is not mistaken for a regression here. The same class was observed again at
+  this unit's final head (G2): `ceremony-findings-ledger`,
+  `ceremony-unit-plan` and `ceremony-workspace` were killed mid-suite by the
+  gate's 120 s suite bound under four-worker load while each passes standalone
+  (19, 18 and 14 cases, exit 0).
 - `scripts/check-skill-context.test.mjs` is **red on `main` before this branch**:
   `bun scripts/check-skill-context.mjs --documents` reports `AGENTS.md:
   machine-table lines 135 != the declared 134`. Reproduced in the primary
@@ -492,6 +496,20 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   repo's rule leaves the integration to the owner. The gate receipt (G1) is at
   this branch's head on its own base, and the two root-suite reds are identical
   at both commits.
+- **G2** — 2026-11-14, `bun scripts/local-gate.mjs --no-bail` at HEAD `4ec73023`
+  (after the ledger close and the journal commit) · exit 1 · the same 17 steps:
+  15 pass (`docs-generated-projection`, `temp-hygiene`, `log-immutability`,
+  `journal-carrier-check` — the carrier entry is conforming —,
+  `version-parity-content`, `worktree-guard`, `tmp-gc`, `workspace-install`,
+  `schema-build`, `dependency-advisories`, `dependency-pin-gate`,
+  `pi-node-compat`, `pi-compat-guard`, `crate-suite-node`, `crate-suite-bun`),
+  `root-suite` exit 1 with `check-skill-context` (E11) as the first red, and
+  `schema-node-compat` skipped. The three ceremony suites the bail / load killed
+  pass standalone (the recorded flake class). The authoritative full enumeration
+  is the fail-fast-off run behind G1: **109 suites PASS, 2 FAIL**, both E11/E12.
+- **P5/P6/P7** — 2026-11-14, the README + roadmap row + changeset + projection
+  (`e053e936`), the closed obligations with their receipts (`074af0a0`), and the
+  journal entry (`4ec73023`).
 
 ## Next
 
