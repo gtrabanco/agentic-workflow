@@ -130,7 +130,7 @@ issue #460 — still parse to zero.
   "written_at": "<ISO instant>",
   "source_revision": "<sha>",
   "claimed": {
-    "487|scripts": { "batch": 1, "lane": "scripts", "first_seen": "…", "last_seen": "…", "worktree": "fix/487-secret-scan-gate" }
+    "487|scripts": { "batch": 1, "lane": "scripts", "first_seen": "…", "last_seen": "…", "worktree": "fix/487-deterministic-secret-scanning" }
   },
   "seen": {
     "<issue-number>": { "title": "…", "batch": 1, "lane": "skills/x", "first_seen": "…", "last_seen": "…" }
