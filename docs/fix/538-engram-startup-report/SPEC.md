@@ -420,14 +420,14 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
 | O12 | S6, S2, S3 | the change differs from the base commit only in the declared deltas: the silent healthy native state, the evidenced errors, the `ENGRAM_BIN` quote, the leftover warning and the `notice` axis; every other input keeps the base's status and message | P5 | P5 | direct application (this session) | differential harness in `mktemp -d` (base module copy vs this change, identical corpus): the diff lists only those deltas | E line in SPEC `## Log` with the diff summary | verified — E8 (11 declared deltas, 9 identical rows, 8 identical binary rows) |
 | O13 | S1 | the declared deterministic gates are green before handoff | P7 | P7 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 (15 of 17 steps pass; the only red is E11/E12, reproduced on `main` before this branch) |
 | O14 | S2, S3, S4 | no suite depends on the operator's environment: the Engram cases pin `PATH`, `ENGRAM_URL` and `ENGRAM_BIN`, so a shell exporting either variable cannot flip the result | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 with `ENGRAM_URL` and `ENGRAM_BIN` exported | E line in SPEC `## Log` | verified — E6 (66 pass with `ENGRAM_URL` and `ENGRAM_BIN` exported) |
-| O15 | S9 | `scripts/residual-classify.mjs` executes again: both retired-runtime imports resolve to the shipped crate homes and the classifier's whole suite is green | P10 | P10 | direct application (this session) | `bun test scripts/residual-classify.test.mjs` exits 0 (25 pass / 0 fail) | E line in SPEC `## Log` | planned |
-| O16 | S9 | the guide's machine-region pin equals the measured region again — the `--documents` gate red on `main` since `0533c39b` | P11 | P11 | direct application (this session) | `bun scripts/check-skill-context.mjs --documents` exits 0 | E line in SPEC `## Log` | planned |
-| O17 | S9 | every triage no-fix verdict carries a dated disposition, so no advisory is silently dropped | P9 | P9 | direct application (this session) | `rg -c -e "^\- \*\*D9\*\*" -e "^\- \*\*D10\*\*" -e "^\- \*\*D11\*\*" -e "^\- \*\*D12\*\*" docs/fix/538-engram-startup-report/SPEC.md` matches 4 | E line in SPEC `## Log` | planned |
-| O18 | S9, S12 | no live surface names a runtime `edde336c` retired: the shipped comments and the one assertion message re-point at their crate homes | P12 | P12 | direct application (this session) | `rg -n -e "scripts/catalog\.json" -e "scripts/pre-execution-snapshot\.mjs" packages/agentic-workflow/src scripts/catalog.test.mjs scripts/schema-runtime.mjs` exits 1 (0 matches) | E line in SPEC `## Log` | planned |
-| O19 | S10 | the root-cause claims the fixes rest on reproduce from git history | P9 | P9 | direct application (this session) | `git show edde336c --name-only --diff-filter=D -- scripts/ceremony/lib.mjs scripts/unit-doc-phases.mjs` lists both deleted paths, and `git show 0533c39b -- AGENTS.md` contains the added `skills/runner-contract/references/RUNNER.md` row | E line in SPEC `## Log` | planned |
-| O20 | S11 | no collateral red: the full root suite runs green at the batch head | P13 | P13 | direct application (this session) | `bun scripts/run-root-suite.mjs` exits 0 (0 fail; a load-killed suite re-runs green standalone and is named in `## Log`) | G line in SPEC `## Log` | planned |
-| O21 | S11, S12 | the declared deterministic gates stay green after the batch — the two original reds fixed, nothing else opened | P13 | P13 | direct application (this session) | `bun scripts/local-gate.mjs --no-bail` exits 0 (should only the disclosed D9 load class fire, the run and the standalone re-runs are both recorded) | G line in SPEC `## Log` | planned |
-| O22 | S9, S10, S11, S12 | the documentation and projection state is fresh after the amendment | P14 | P14 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0 | E line in SPEC `## Log` | planned |
+| O15 | S9 | `scripts/residual-classify.mjs` executes again: both retired-runtime imports resolve to the shipped crate homes and the classifier's whole suite is green | P10 | P10 | direct application (this session) | `bun test scripts/residual-classify.test.mjs` exits 0 (25 pass / 0 fail) | E line in SPEC `## Log` | verified — E14 (25 pass / 0 fail; the E13 red corpus is gone) |
+| O16 | S9 | the guide's machine-region pin equals the measured region again — the `--documents` gate red on `main` since `0533c39b` | P11 | P11 | direct application (this session) | `bun scripts/check-skill-context.mjs --documents` exits 0 | E line in SPEC `## Log` | verified — E14 (`PASS context documents: 4 budgeted documents`; the base red is gone) |
+| O17 | S9 | every triage no-fix verdict carries a dated disposition, so no advisory is silently dropped | P9 | P9 | direct application (this session) | `rg -c -e "^\- \*\*D9\*\*" -e "^\- \*\*D10\*\*" -e "^\- \*\*D11\*\*" -e "^\- \*\*D12\*\*" docs/fix/538-engram-startup-report/SPEC.md` matches 4 | E line in SPEC `## Log` | verified — P9 (D9–D12 recorded at the freeze; O17 matches 4) |
+| O18 | S9, S12 | no live surface names a runtime `edde336c` retired: the shipped comments and the one assertion message re-point at their crate homes | P12 | P12 | direct application (this session) | `rg -n -e "scripts/catalog\.json" -e "scripts/pre-execution-snapshot\.mjs" packages/agentic-workflow/src scripts/catalog.test.mjs scripts/schema-runtime.mjs` exits 1 (0 matches) | E line in SPEC `## Log` | verified — E15 (exit 1; the widened sweep re-points six more narrations and its remainder is exactly AC-S12's dated carriers) |
+| O19 | S10 | the root-cause claims the fixes rest on reproduce from git history | P9 | P9 | direct application (this session) | `git show edde336c --name-only --diff-filter=D -- scripts/ceremony/lib.mjs scripts/unit-doc-phases.mjs` lists both deleted paths, and `git show 0533c39b -- AGENTS.md` contains the added `skills/runner-contract/references/RUNNER.md` row | E line in SPEC `## Log` | verified — P9 (both git reproductions recorded at the freeze) |
+| O20 | S11 | no collateral red: the full root suite runs green at the batch head | P13 | P13 | direct application (this session) | `bun scripts/run-root-suite.mjs` exits 0 (0 fail; a load-killed suite re-runs green standalone and is named in `## Log`) | G line in SPEC `## Log` | verified — G3 (110 suites PASS / 0 fail, exit 0) |
+| O21 | S11, S12 | the declared deterministic gates stay green after the batch — the two original reds fixed, nothing else opened | P13 | P13 | direct application (this session) | `bun scripts/local-gate.mjs --no-bail` exits 0 (should only the disclosed D9 load class fire, the run and the standalone re-runs are both recorded) | G line in SPEC `## Log` | verified — G3 (`local-gate: PASS — 17 step(s)`, exit 0, no step skipped) |
+| O22 | S9, S10, S11, S12 | the documentation and projection state is fresh after the amendment | P14 | P14 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0 | E line in SPEC `## Log` | verified — E17 (PASS, 3 checked · 0 stale; fragment written, carrier check 10/0 refusals) |
 
 ## Triaged steps
 
@@ -671,6 +671,60 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   `verdict PASS`, 13 phases `PASS (6/6)` (P1–P7, P9–P14), fingerprint
   `19dcbf55…` — O17's command matches 4 and O19's two commands reproduce in
   the same foreground run.
+- **E14** — 2026-11-14, the batch's fix validators, foreground: `bun test
+  scripts/residual-classify.test.mjs` · exit 0 · **25 pass / 0 fail** (the E13
+  red: 5 pass / 20 fail); `bun scripts/check-skill-context.mjs --documents` ·
+  exit 0 · `PASS context documents: 4 budgeted documents` (the E13 red:
+  `machine-table lines 135 != the declared 134`); O17's command matches 4 and
+  O19's two git reproductions list both deleted paths and the `0533c39b`
+  row — all re-run at the freeze (P9).
+- **E15** — 2026-11-14, the S12 loop's second pass: widening the sweep to the
+  suites (the first pass excluded `*.test.mjs`) surfaced six more live
+  narrations of retired runtimes — `knowledge-honesty-contract.test.mjs:20`,
+  `continuation-discipline.test.mjs:23`, `unit-route.test.mjs:1039`,
+  `ledger-ownership.test.mjs:273`, `promise-coherence.test.mjs:513` (an
+  assertion message) and `agentic-workflow-schema/src/vocabularies.ts:45` —
+  each re-pointed only after reading what the code does now;
+  `schema-runtime.mjs:18`'s sentence was rewritten, not re-pathed (the crate
+  sensor imports the package directly; the built-else-installed fallback
+  exists only in the retired script). O18's command exits 1, and the widened
+  sweep's remaining hits are exactly AC-S12's dated carriers. The carrier list
+  was repaired (plan repair) and `ac-hash` re-pinned to `d3b2e94d…`;
+  phase-lint still `verdict PASS`.
+- **E16** — 2026-11-14, the S3 catch: `bun scripts/local-gate.mjs --only
+  version-parity-content --skip-network` went exit 1 after the citation
+  commits (GATE REJECTION `shipped-content-version` — `agentic-workflow` 2
+  files, `agentic-workflow-schema` 1 file shipped without a version move), a
+  red this batch caused, caught through `local-gate.test.mjs`'s `--jobs` case.
+  Fixed by the gate's own changeset-intent route: `.changeset/538-citation-repoints.md`
+  (patch ×2, `4d43099a`); `bun scripts/lint-changeset.mjs` · exit 0 after the
+  body stopped citing a dead path (the lint's own surviving-mention rule
+  rejected the first draft); `bun test scripts/local-gate.test.mjs` · exit 0 ·
+  44 pass / 0 fail.
+- **G3** — 2026-11-14, P13's verification: `bun scripts/run-root-suite.mjs` ·
+  exit 0 · **110 suites PASS / 0 fail** (both original reds gone; the D9 flake
+  did not fire); `bun scripts/local-gate.mjs --no-bail` · exit 0 ·
+  **`local-gate: PASS — 17 step(s)`** (no step failed, none skipped);
+  `bun run --cwd packages/agentic-workflow-schema test` · exit 0 · 851 pass /
+  0 fail (the schema package ships the re-pointed vocabularies comment).
+- **P10** — the orphaned imports re-pointed at the crate homes · `411fb70b`
+  (E14).
+- **P11** — the machine-region re-pin with its growth source · `cfb37fa5`
+  (E14).
+- **P12** — the citation re-points, loop included · `ee1334a2`, plan repair
+  `e91d5bbc`, changeset `4d43099a` (E15, E16).
+- **P13** — the verification loop green · G3.
+- **E17** — 2026-11-14, P14's documentation state: `bun scripts/docs-generate.mjs
+  --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, roadmap
+  unchanged, `verdict: PASS` (re-run after this block); the narrative fragment
+  `20261114T103618Z-fix-538-engram-startup-report-narrative-local.md` written
+  through `journal write` (2,357 bytes, writer-computed name);
+  `journal aggregate --check` · exit 0 · `checked 10, refusals []`; `ac-hash`
+  `d3b2e94d…` over the repaired criteria; phase-lint `verdict PASS` (13
+  phases: P1–P7, P9–P14).
+- **P14** — the resolution notes on the two known-pre-existing bullets, the
+  evidence/disposition lines, the closed amendment ledger (O15–O22 verified)
+  and the journal fragment · E17.
 
 ## Next
 
