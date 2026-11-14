@@ -69,8 +69,8 @@ import {
   roadmapTableRows,
   tableCells,
 } from "../packages/agentic-workflow/src/index-document.mjs";
-import { parseTasks } from "./ceremony/lib.mjs";
-import { sectionBounds } from "./unit-doc-phases.mjs";
+import { parseTasks } from "../packages/agentic-workflow/src/runner/lib.mjs";
+import { sectionBounds } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 /** The document's contract id. */
 export const CONTRACT_ID = "residual-classify@1";
