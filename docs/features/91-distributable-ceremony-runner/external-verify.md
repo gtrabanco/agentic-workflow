@@ -263,3 +263,49 @@ SPEC:111 gate → 6 (claimed 0) · O22 rename pathspec → 0 renames (claimed re
 Routing: every blocker above is evidence only — corrections belong to
 `/aw-local-apply` under its correction bounds (one batch → one blockers-only
 recheck → a second only if the same blocker persists → `Needs your decision`).
+
+## Correction batch — 2026-11-13 (§9, one batch)
+
+Scope: the 11 blockers above, applied on top of the `origin/main` integration
+`35d442d6` (conflicts: `docs/LOGS.md`, `SKILL_CONTEXT_BUDGETS.json`,
+`scripts/lane-era-lineage.test.mjs` — both sides' features kept in each). Recheck
+= each blocker's own reproducer re-run after the batch:
+
+- **B1** O3 cell re-instrumented → reproducer **0** (exclusions named in the cell;
+  negative control: a runtime planted at `scripts/ceremony/<name>.mjs` still matches).
+- **B2** O6 cell import-scoped → **0**; `git diff 43e8c1f9 HEAD -- packages/agentic-workflow/package.json` still empty.
+- **B3** O18 cell greps the slug the roadmap carries → **1**.
+- **B4** O22 pathspec dropped, summary form → **21** renames reported.
+- **B5** five placeholder SHAs + three pre-re-author SHAs bound to ancestors of
+  head; G9/G10's p1p2 count corrected to **12** (the suite's own output at the stated head).
+- **B6** `rg -c 'scripts/ceremony' skills/` → **0**, the six survivors named in the cell.
+- **B7** pi tool instructions + README table name the pinned runner bin
+  (`audit-pr-gate` still the project script) → reproducer quiet.
+- **B8** root README ✓ · **B9** four template twins + `template/AGENTS.md` ✓
+  (`scaffold-parity` 17/17, `guide-split` 15/15).
+- **B10** shipped usage headers → **0** retired-path matches · **B11**
+  `unit-cycle` prompt, `promise-coherence` allowlist, twelve headers → **0**
+  (`unit-cycle` 45/45, `promise-coherence` 37/37).
+
+Integration finding folded in (both features must hold): main's #514
+`git-config-writes` gate failed on this branch's three crate fixture suites →
+migrated to the `-c`-per-invocation convention (`e8e8e393`), scanner 9/9.
+
+**Verification:** `LOG_IMMUTABILITY_BASE=8079f11a bun scripts/local-gate.mjs` →
+**PASS — 17 steps in 219s** at `e8e8e393`.
+
+**New finding (§9 — owner decides, nothing was routed around):** the pre-push
+`push-identity` step cannot pass for *any* push of this branch — its range
+necessarily includes `origin/main`'s 13 already-published non-approved
+committers (GitHub merges, journal-bot, github-actions, one name variant), none
+from this branch; the journal step likewise needs
+`LOG_IMMUTABILITY_BASE=8079f11a` (delta over main → 0 violations) because
+`origin/main` itself carries two hand-appended entries. Push attempted exactly
+as the hook requires → **refused at `push-identity`, nothing uploaded**.
+Options: run the push with the hook's documented escape hatch
+`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` and record the reason, or settle the
+checker's range policy for merge pushes first.
+
+**O20 note:** this receipt is now committed (`860437e8`), so its directory grep
+reads 1 permanently — by design of this protocol; O20's validator (commit list:
+no `review-change`/`audit-pr` receipt commit) stays green.
