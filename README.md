@@ -96,7 +96,7 @@ review the change → audit → merge.**
 
 ### Setup
 
-> Provisioning this repo's own authoring toolchain (bun, uv + serena-agent, engram, the `gentle-engram` pi package)? Run `node scripts/setup-env.mjs` — the full guide is [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md).
+> Provisioning this repo's own authoring toolchain (bun, uv + serena-agent, engram, the `gentle-engram` pi package)? Run `node scripts/setup-env.mjs` — the full guide is [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md). To see what the state actually *is* first, run `node scripts/setup-env.mjs --doctor` (the crate's `agentic-workflow doctor`): one row per documented tool with its real evidence, its version pair and its move. The documented inventory every row comes from is [`packages/agentic-workflow/README.md`](packages/agentic-workflow/README.md#doctor--the-tool-doctor-and-the-documented-inventory-issue-537).
 
 | Skill            | What it does                                                                                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
