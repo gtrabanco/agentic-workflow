@@ -187,7 +187,7 @@ export async function runDoctor({ ops = null, root, inventoryText = null } = {})
     const row = {
       id: documented.id,
       requirement: documented.requirement,
-      route: documented.route,
+      route: documented["install-route"],
       what: documented.what,
       why: documented.why,
       detectedBy: documented["detected-by"],

@@ -117,12 +117,12 @@ an `instruction` is `instruct-only`, and a row with neither is `residual`.
 This block is the **single declaration** of the tools: the code owns only the
 probes, keyed by the same ids. `doctor` reads it and refuses when the document
 and the probes disagree in either direction — a documented tool nobody checks is
-the defect this block exists to prevent. Requirement, detection and route are
+the defect this block exists to prevent. Requirement, detection and install route are
 documented facts; the move is behaviour and stays in code.
 
 ```text
 tool-inventory@1
-id | what | why | requirement | detected-by | alternative | route
+id | what | why | requirement | detected-by | alternative | install-route
 node | the JavaScript runtime the CLI runs on | everything here is JavaScript; the crate declares an engine floor | required | `node --version` against `engines.node` (`>=24`) | none — the CLI is JavaScript | instruct-only
 bun | the preferred package manager and script runner | faster installs and test runs; the root suite runs under either runtime | optional | `bun --version` against the committed `.bun-version` pin | node, the guaranteed fallback | binary
 rg | ripgrep, the first search tool | the workflow searches with rg before grep and must never assume it is installed | optional | `rg --version` on PATH | `grep`, the documented fallback | binary
