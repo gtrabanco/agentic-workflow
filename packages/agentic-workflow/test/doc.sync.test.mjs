@@ -180,3 +180,62 @@ describe("doc sync — configured store.path", () => {
   });
 
 });
+
+// ── The chunk limit is part of the chunking contract (fix #540, S6) ───────
+
+describe("doc sync — chunk limit retro-applies", () => {
+  /** A throwaway repo with one file whose section body is `chars` characters long. */
+  function bigFixture(chars) {
+    const dir = mkdtempSync(join(tmpdir(), "doc-limit-"));
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "init", "-q"], { cwd: dir });
+    writeFileSync(join(dir, "big.md"), `# Big\n${"x".repeat(chars)}\n`);
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "add", "-A"], { cwd: dir });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture"], { cwd: dir });
+    return dir;
+  }
+
+  async function bodies(dir) {
+    const { db } = await openDatabase(storePath(dir));
+    const rows = db.prepare("select body from chunks order by rowid").all();
+    db.close();
+    return rows.map((r) => r.body.length);
+  }
+
+  it("S6: a lowered limit re-chunks the stored file on the next sync, without --rebuild", async () => {
+    const dir = bigFixture(400);
+    try {
+      await syncIndex(dir); // unlimited
+      deepStrictEqual(await bodies(dir), [406]); // "# Big" + newline + 400 chars
+      const r = await syncIndex(dir, { maxChunkChars: 100 }); // same file, same hash
+      strictEqual(r.filesChanged, 1, "the limit change is a change the pass must see");
+      strictEqual(r.truncated, 1);
+      deepStrictEqual(await bodies(dir), [100]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S6: an unchanged limit does not re-chunk (no gratuitous rescan)", async () => {
+    const dir = bigFixture(400);
+    try {
+      await syncIndex(dir, { maxChunkChars: 100 });
+      const r = await syncIndex(dir, { maxChunkChars: 100 });
+      strictEqual(r.filesChanged, 0);
+      deepStrictEqual(await bodies(dir), [100]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S6: a caller that names no limit keeps the store's own chunking contract (a query-triggered freshness sync never re-expands truncated chunks)", async () => {
+    const dir = bigFixture(400);
+    try {
+      await syncIndex(dir, { maxChunkChars: 100 });
+      const r = await syncIndex(dir); // no opts — the store's recorded limit still applies
+      strictEqual(r.filesChanged, 0);
+      deepStrictEqual(await bodies(dir), [100], "the stored limit survived a limit-less sync");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

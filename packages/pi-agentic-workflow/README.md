@@ -92,7 +92,9 @@ aw-index — <store path>
 files: <n> · chunks: <n>
 pending: <n|unknown> · model: <pinned model|none>
 last sync: scanned <n> · changed <n> · deleted <n> · embedded <n>
+rejected: none | <n> chunk(s) · <status> <provider's own words> (+<n> more)
 degradations: <comma-separated|none>
+next: <n> chunk(s) remain unembedded — …   (only while pending > 0)
 ```
 
 - **Progressive and idempotent.** The sync embeds only the chunks that have no
@@ -104,6 +106,13 @@ degradations: <comma-separated|none>
 - **Declared, never silent.** A provider that is down, a missing key or a model
   mismatch arrives in `degradations:`; a failed spawn, a non-zero exit or
   unparseable output is reported as an error instead of an empty report.
+- **A refusal is not an outage** (fix #540). When the provider rejects a request
+  (a non-rate-limit `4xx`, typically a chunk larger than its input window), the
+  sync skips that batch, embeds the rest and reports `embeddings-request-rejected`
+  with the provider's status and body excerpt in `rejected:`. The chunks stay
+  pending, and the `next:` line names the remedy: re-running is resumable, and
+  `agentic-workflow doc --rebuild` re-chunks under the configured
+  `provider.chunk_limit` and embeds in the same pass.
 
 Since the write path is paced and retried, this command is also the honest way
 to backfill a store that a rate limit interrupted — it makes progress on every

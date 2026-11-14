@@ -239,3 +239,31 @@ test("S9: the renderer reads the envelope and nothing else", () => {
   const legacy = renderIndexReport(syncEnvelope({ store: { pending: undefined, model: undefined } }));
   assert.match(legacy, /pending: unknown · model: none/);
 });
+
+test("S4/S6: the report renders the rejected set and the operator's next step", () => {
+  const report = renderIndexReport(
+    syncEnvelope({
+      degradations: ["embeddings-request-rejected"],
+      store: {
+        pending: 3,
+        rejected: {
+          count: 1,
+          failures: [
+            { status: 400, message: "embeddings provider 400 Bad Request: Context length exceeded for model 'qwen3-embedding'" },
+          ],
+          chunks: ["docs/a.md#a"],
+        },
+      },
+    }),
+  );
+  assert.match(report, /rejected: 1 chunk\(s\) · 400/);
+  assert.match(report, /Context length exceeded/);
+  assert.match(report, /--rebuild/);
+  assert.match(report, /3 chunk\(s\) remain unembedded/);
+});
+
+test("S4: a clean run says rejected: none and claims no next step", () => {
+  const report = renderIndexReport(syncEnvelope());
+  assert.match(report, /rejected: none/);
+  assert.doesNotMatch(report, /remain unembedded/);
+});

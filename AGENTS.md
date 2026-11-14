@@ -402,6 +402,7 @@ batch-plan-fields | skills/batch-scheduler/references/PLAN.md | table:batch-fiel
 batch-reason-kind-vocabulary | packages/agentic-workflow-schema/src/batch-plan.ts | schema-export:BATCH_REASON_KINDS | batch-reason-kind | no
 batch-finding-code-vocabulary | packages/agentic-workflow-schema/src/batch-plan.ts | schema-export:BATCH_FINDING_CODES | batch-finding-code | no
 batch-size-hint-vocabulary | packages/agentic-workflow-schema/src/batch-plan.ts | schema-export:BATCH_SIZE_HINTS | batch-size-hint | no
+doc-degradation-vocabulary | packages/agentic-workflow-schema/src/doc-envelope.ts | schema-export:DOC_DEGRADATIONS | doc-degradation | no
 doc-provenance-format-vocabulary | packages/agentic-workflow-schema/src/doc-provenance.ts | schema-export:DOC_PROVENANCE_FORMATS | doc-provenance-format | no
 ceremony-profile-piece-vocabulary | packages/agentic-workflow-schema/src/ceremony-profile.ts | schema-export:CEREMONY_PROFILE_PIECES | ceremony-profile-piece | no
 ceremony-profile-adoption-vocabulary | packages/agentic-workflow-schema/src/ceremony-profile.ts | schema-export:CEREMONY_PROFILE_ADOPTIONS | ceremony-profile-adoption | no
