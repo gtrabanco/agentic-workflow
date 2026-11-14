@@ -13,7 +13,7 @@
  * division of ownership are published in `skills/unit-lane/references/RELAY.md`;
  * the `REVIEW-VERDICT` grammar is owned by
  * `skills/unit-lane/references/REVIEW.md`; the leg tiers come from
- * `scripts/catalog.json` and the ceiling from
+ * `packages/agentic-workflow/src/runner/catalog.json` and the ceiling from
  * `docs/workflow/SKILL_CONTEXT_BUDGETS.json`. This module mechanizes those, it
  * never redefines them.
  *

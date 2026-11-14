@@ -270,7 +270,8 @@ function ownerCellFailures(who, cell, knownSkills) {
 
 /**
  * The annotator's real emission set, read from its source rather than a magic
- * constant. `scripts/ledger-provenance.mjs` chooses its marker word from the score
+ * constant. `packages/agentic-workflow/src/runner/sensors/ledger-provenance.mjs`
+ * chooses its marker word from the score
  * ladder (`entry.token = chosen.score === 1 ? "ticked" : "fold"`), appends it in the
  * `--annotate` branch (`cells[6] = \` ${route} · ${entry.token} …\``), and re-opens an
  * unproven row with the `· REOPENED — provenance unproven` note in the same branch —

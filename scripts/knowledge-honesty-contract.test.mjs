@@ -17,7 +17,8 @@
  *     also the journal token (`pre-execution-stage`, the schema package's
  *     `PRE_EXECUTION_STAGES`).
  *   * **behavior** — the ledger shapes the references publish parse with the
- *     real `scripts/needs-input.mjs` ledger reader. Published examples that
+ *     real `packages/agentic-workflow/src/runner/sensors/needs-input.mjs`
+ *     ledger reader. Published examples that
  *     the tool's own grammar rejects are the class of drift a prose-only test
  *     cannot see (the minted `| id | gap | … |` row shapes of the first
  *     attempt at this unit had exactly that shape).
