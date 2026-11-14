@@ -693,8 +693,10 @@ test("--json writes the machine result beside the human log", () => {
 
 test("the hook passes the pushed remote to the gate (S3)", () => {
   const body = hookBody();
-  assert.match(body, /--remote "\$1"/, "pre-push delivers the remote name as its first argument");
-  assert.match(body, /--remote "\$remote"/, "the remote is captured once, before the stdin loop consumes the positional arguments");
+  assert.match(body, /remote="\$\{1:-\}"/, "pre-push delivers the remote name as its first argument");
+  assert.match(body, /remote_flag="--remote \$remote"/, "the remote is resolved once, before the stdin loop runs");
+  assert.match(body, /remote get-url "\$remote"/, "a name git does not know stays unnamed");
+  assert.match(body, /--skip-network \$remote_flag/, "both runtimes pass it to the gate");
 });
 
 test("--remote reaches the range-bound step (S3)", () => {
@@ -720,7 +722,8 @@ test("--remote reaches the range-bound step (S3)", () => {
 test("the installed hook fails the push, naming both runtimes, when neither is installed (S6)", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-runtime-"));
   try {
-    fs.mkdirSync(path.join(dir, ".git", "hooks"), { recursive: true });
+    const init = spawnSync("git", ["init", "-q", dir], { encoding: "utf8" });
+    assert.equal(init.status, 0, init.stderr);
     assert.equal(gate(["--install-hook", "--repo", dir]).status, 0);
     const hook = path.join(dir, ".git", "hooks", "pre-push");
     // A `PATH` carrying git and nothing else: the shape of a machine where the
@@ -731,7 +734,8 @@ test("the installed hook fails the push, naming both runtimes, when neither is i
       const found = spawnSync("sh", ["-c", `command -v ${name}`], { encoding: "utf8" }).stdout.trim();
       if (found) fs.symlinkSync(found, path.join(bin, name));
     }
-    const run = spawnSync("bash", [hook], {
+    const bash = spawnSync("sh", ["-c", "command -v bash"], { encoding: "utf8" }).stdout.trim() || "/bin/bash";
+    const run = spawnSync(bash, [hook], {
       cwd: dir,
       encoding: "utf8",
       input: "",
