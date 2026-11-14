@@ -88,6 +88,16 @@ describe("AC25: store paths are referenced only from the entry point's surfaces"
     // pi-package file is exempt, so the single-entry-point guard keeps biting.
     /^packages\/pi-agentic-workflow\/test\/aw-index-command\.test\.mjs$/, //
     /^template\/docs\//, // target-project scaffold docs
+    // Owner decision 2026-11-14 (unit 546's external verify; this folder's
+    // decisions.md D11): the journal is an immutable prose carrier — a fragment
+    // *narrates* removing index.db literals (the fix-489 entry quotes that very
+    // repair) and may never be edited (log-immutability, #468 — the aggregator
+    // is its only writer), so the code this assertion judges cannot be repaired.
+    // The rule governs executable surfaces — its own case name (skill, hook,
+    // schema, script) — and `docs/` is already exempt on the same reasoning:
+    // prose that mentions the store does not open it. Precedent: issue #443's
+    // single-file exemption with a recorded rationale.
+    /^\.agentic-workflow\/journal\//, // the journal fragment carrier
   ];
 
   it("no skill, hook, schema, or script outside the allowlist opens the store", () => {

@@ -47,6 +47,11 @@ const CORPUS = [
   { label: "enforce=push is the checker's half only", enforce: "push", approved: APPROVED, identity: LEAK, hook: 0, checker: 1 },
   { label: "only the declared facts are checked — name only", enforce: "commit-and-push", approved: { name: APPROVED.name }, identity: { name: APPROVED.name, email: LEAK.email }, hook: 0, checker: 0 },
   { label: "only the declared facts are checked — email only", enforce: "commit-and-push", approved: { email: APPROVED.email }, identity: { name: LEAK.name, email: APPROVED.email }, hook: 0, checker: 0 },
+  // Issue #546: the scope values. `push-upstream` is the checker's half only, and
+  // the checker is asked no remote here, so the fail-closed reading (D9) applies.
+  { label: "enforce=push-upstream leaves the commit half inert and judges the unnamed push", enforce: "push-upstream", approved: APPROVED, identity: LEAK, hook: 0, checker: 1 },
+  { label: "enforce=commit-and-push-upstream is both halves", enforce: "commit-and-push-upstream", approved: APPROVED, identity: LEAK, hook: 1, checker: 1 },
+  { label: "enforce=commit-and-push-upstream accepts a matching identity in both", enforce: "commit-and-push-upstream", approved: APPROVED, identity: APPROVED, hook: 0, checker: 0 },
 ];
 
 function git(cwd, args, identity = APPROVED) {

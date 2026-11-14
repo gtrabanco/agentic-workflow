@@ -1,0 +1,11 @@
+# Per-project merge allowlist — one WHOLE command line per entry (issue #546).
+#
+# The command guard blocks direct merges for every forge. When a project has one
+# specific merge it wants an agent to run, it writes that exact command line here,
+# unchanged: the guard compares the whole command literally, so an entry can never
+# widen into a prefix (`&& cat .env` riding along) or into another PR number.
+# `#` comments and blank lines are never entries. An absent or unreadable file
+# allows nothing.
+#
+# Example (uncomment and edit — never copy it verbatim into a project):
+# gh pr merge 12 --squash

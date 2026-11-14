@@ -42,6 +42,7 @@
  *   bun scripts/local-gate.mjs --only a,b        # a subset, in table order
  *   bun scripts/local-gate.mjs --skip-network    # the offline subset
  *   bun scripts/local-gate.mjs --push-base <rev> # skip test steps on an empty impact verdict
+ *   bun scripts/local-gate.mjs --remote <name>    # the remote that is being pushed to
  *   bun scripts/local-gate.mjs --jobs 2          # cap the worker count
  *   bun scripts/local-gate.mjs --no-bail         # run everything, report all
  *   bun scripts/local-gate.mjs --dry-run         # print the plan, run nothing
@@ -294,6 +295,14 @@ export const STEPS = [
     mirrors: "no former remote job — CI never carries worktrees (issue #476)",
   },
   {
+    id: "rigidity-review",
+    title: "Guard rigidity audit: no hardcoded forge, temp root or mainline ref (offline)",
+    cwd: ".",
+    argv: [NODE, "scripts/rigidity-review.mjs"],
+    tests: false,
+    mirrors: "no former remote job — the audit reads the guards this repository ships (issue #546)",
+  },
+  {
     id: "schema-node-compat",
     title: "Schema package (node runtime — the guaranteed fallback)",
     cwd: "packages/agentic-workflow-schema",
@@ -363,6 +372,7 @@ export const DEPS = {
   "temp-hygiene": [],
   "tmp-gc": [],
   "worktree-guard": [],
+  "rigidity-review": [],
   "schema-node-compat": ["workspace-install", "schema-build", "root-suite"],
   "pi-node-compat": ["workspace-install"],
   "pi-compat-guard": ["schema-build"],
@@ -520,12 +530,15 @@ export async function scheduleSteps(runnable, runStep, { jobs = defaultJobs(), b
  * output prints atomically after its completion line. `run:` steps execute in
  * process and stream directly (they manage their own output).
  */
-async function runStepAsync(step, root, onSpawnOutput, { pushBase = null } = {}) {
+async function runStepAsync(step, root, onSpawnOutput, { pushBase = null, remote = null } = {}) {
   if (step.run) return step.run({ root });
   const argv = step.argv.slice(1);
   // A range-bound step reads the same base the impact gate read, so the push
-  // hook verifies exactly the commits it is about to publish.
+  // hook verifies exactly the commits it is about to publish — and the same
+  // remote, because the scope a project declares is a fact about *which* remote
+  // receives the push (issue #546).
   if (step.pushBase === true && pushBase) argv.push("--root", root, "--base", pushBase);
+  if (step.pushBase === true && remote) argv.push("--remote", remote);
   return await new Promise((resolve) => {
     const child = spawn(step.argv[0], argv, {
       cwd: path.join(root, step.cwd ?? "."),
@@ -573,6 +586,7 @@ function parseArgs(argv) {
     list: false,
     installHook: false,
     force: false,
+    remote: null,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -590,6 +604,11 @@ function parseArgs(argv) {
       const value = argv[index + 1];
       if (!value) usage("--push-base needs a revision");
       options.pushBase = value;
+      index += 1;
+    } else if (arg === "--remote") {
+      const value = argv[index + 1];
+      if (!value) usage("--remote needs a remote name");
+      options.remote = value;
       index += 1;
     } else if (arg === "--skip-network") {
       options.skipNetwork = true;
@@ -721,6 +740,16 @@ fi
 
 root="\$(git rev-parse --show-toplevel)" || exit 1
 
+# The remote being pushed to, so a project whose identity scope is
+# \`push-upstream\` judges only the upstream push (issue #546). Pre-push passes it
+# as the first argument; a name git does not know (a URL, an ad-hoc path) stays
+# unnamed, and an unnamed remote keeps the check.
+remote="\${1:-}"
+remote_flag=""
+if [ -n "\$remote" ] && git -C "\$root" remote get-url "\$remote" >/dev/null 2>&1; then
+  remote_flag="--remote \$remote"
+fi
+
 # One base per push: the remote tip of the single non-delete ref being pushed.
 # A new branch (zero remote sha) falls back to the merge-base with the remote
 # default branch; several refs, or anything unresolvable, leaves base empty and
@@ -737,20 +766,30 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
   fi
 done
 if [ -z "\$base" ]; then
-  default_branch="\$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)"
+  mainline_remote="\${remote:-origin}"
+  default_branch="\$(git symbolic-ref --short "refs/remotes/\$mainline_remote/HEAD" 2>/dev/null || echo "\$mainline_remote/main")"
   base="\$(git merge-base HEAD "\$default_branch" 2>/dev/null || true)"
 fi
 
 if command -v bun >/dev/null 2>&1; then
   if [ -n "\$base" ]; then
-    exec bun "\$root/scripts/local-gate.mjs" --skip-network --push-base "\$base"
+    exec bun "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag --push-base "\$base"
   fi
-  exec bun "\$root/scripts/local-gate.mjs" --skip-network
+  exec bun "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag
 fi
-if [ -n "\$base" ]; then
-  exec node "\$root/scripts/local-gate.mjs" --skip-network --push-base "\$base"
+if command -v node >/dev/null 2>&1; then
+  if [ -n "\$base" ]; then
+    exec node "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag --push-base "\$base"
+  fi
+  exec node "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag
 fi
-exec node "\$root/scripts/local-gate.mjs" --skip-network
+
+# Neither runtime is installed: the gate cannot run, so the push is refused with
+# a message naming what is missing. Falling off the end here *passed* the push
+# unverified (issue #546 S6) — the one outcome a fail-closed hook must not have.
+printf 'local gate: neither bun nor node is installed, so the offline gate cannot run.\n' >&2
+printf 'Install one of them, or push with AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1 and record why in the PR.\n' >&2
+exit 1
 `;
 }
 
@@ -876,7 +915,7 @@ async function main(argv) {
       dispatched += 1;
       const stepStarted = Date.now();
       process.stdout.write(`\n[${total - runnable.length + dispatched}/${total}] ${step.id} — ${step.title}\n`);
-      const exit = await runStepAsync(step, options.root, onSpawnOutput, { pushBase: options.pushBase ?? null });
+      const exit = await runStepAsync(step, options.root, onSpawnOutput, { pushBase: options.pushBase ?? null, remote: options.remote ?? null });
       exits.set(step.id, exit);
       durations.set(step.id, Date.now() - stepStarted);
       const verdict = exit === 0 ? "exit 0" : `exit ${exit}`;

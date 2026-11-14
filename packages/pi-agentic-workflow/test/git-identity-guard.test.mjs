@@ -157,6 +157,10 @@ test("normalizeGitIdentity fills the shipped values and refuses a foreign mode",
     agentGuard: { mode: "ask", allow: ["user.name"] },
   });
   assert.equal(normalizeGitIdentity({ enforce: "commit-and-push" }).enforce, "commit-and-push");
+  // Issue #546: the push scope and its commit-and-push combination are values,
+  // never normalized away as foreign.
+  assert.equal(normalizeGitIdentity({ enforce: "push-upstream" }).enforce, "push-upstream");
+  assert.equal(normalizeGitIdentity({ enforce: "commit-and-push-upstream" }).enforce, "commit-and-push-upstream");
 });
 
 /* ── the consent lifecycle (O6) ───────────────────────────────────────── */
