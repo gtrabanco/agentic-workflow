@@ -191,6 +191,20 @@ test("the benign shapes this repository actually carries are never findings", ()
   }
 });
 
+test("a payload that begins with a slash is a path or a literal pattern, never a credential", () => {
+  // The regression the widened assignment boundary produced (observed red at
+  // 79264b34: the whole-tree pass flagged golden-fixture.test.mjs:203 and the
+  // gate's clean-tree case went with it): `const X_TOKEN = /re/` assigns a
+  // literal pattern, and a path-shaped value is not a credential either.
+  const benign = [
+    "const FIXTURE_TOKEN = /scripts\\/fixtures\\/golden-fixture\\/[A-Za-z0-9._\\-/]*/g;",
+    `API_TOKEN=/${BARE_PAYLOAD}/`,
+  ];
+  for (const line of benign) {
+    assert.deepEqual(scanLine(line), [], `${JSON.stringify(line.slice(0, 48))} must not be a finding`);
+  }
+});
+
 test("entropy separates a real payload from a repeating or short one", () => {
   assert.ok(entropy(PAYLOAD) > 3.5, `a mixed payload measures high entropy, got ${entropy(PAYLOAD).toFixed(2)}`);
   assert.ok(entropy("abababababababababab") < 1.1, "a repeating string measures almost nothing");
