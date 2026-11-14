@@ -11,6 +11,14 @@
  * semantics (added lines only, no path exempt, a removal is not a finding), the
  * allowlist's two directions, and the exit codes that make the gate fail closed.
  *
+ * Issue #552 moved the implementation out of `scripts/` and into the template
+ * (`template/.agentic-workflow/hooks/secret-scan.mjs`), because the scan had to
+ * reach target projects while this repository's gate kept calling one file. The
+ * corpus therefore imports the template module and drives the template's own
+ * entry point: one implementation, two invocation sites, and the cases below
+ * that pin both (a second `secret-scan.mjs`, a rule table in the runner, a
+ * project allowlist that is not the default) fail at introduction.
+ *
  * Two conventions the repository's own gates impose and this file keeps:
  *   - every secret-shaped fixture is composed at runtime except the one literal
  *     this file carries (`KNOWN_SECRET_FIXTURE`), which is the known-secret
@@ -36,6 +44,7 @@ import {
   allowlistFault,
   applyAllowlist,
   entropy,
+  inspect,
   loadAllowlist,
   payloadFault,
   redact,
@@ -45,10 +54,16 @@ import {
   scanText,
   scanTree,
   trackedFiles,
-} from "./secret-scan.mjs";
+} from "../template/.agentic-workflow/hooks/secret-scan.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(ROOT, "scripts", "secret-scan.mjs");
+/** The one implementation, at the path a scaffolded project carries it on. */
+const HOOKS_REL = path.join("template", ".agentic-workflow", "hooks");
+const SCRIPT = path.join(ROOT, HOOKS_REL, "secret-scan.mjs");
+const RUNNER = path.join(ROOT, HOOKS_REL, "secret-scan.sh");
+/** This repository's own allowlist: it stays where #487 shipped it (S10), so the
+ *  gate hands it over instead of the module assuming a project path. */
+const REPO_ALLOWLIST = "scripts/secret-scan-allowlist.json";
 
 /**
  * The one literal secret-shaped value in this file: a fake classic personal
@@ -395,7 +410,11 @@ test("an allowlist entry that matches nothing is a finding in whole-tree mode", 
     t.commit("chore: a stale allowlist");
     const result = CLI(["--root", t.root, "--all"]);
     assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
-    assert.match(result.stdout, /FINDING scripts\/secret-scan-allowlist\.json — allowlist-stale: docs\/never-scanned\.md matches no finding/);
+    assert.match(
+      result.stdout,
+      /FINDING \.agentic-workflow\/hooks\/secret-scan-allowlist\.json — allowlist-stale: docs\/never-scanned\.md matches no finding/,
+      "the stale-entry finding names the honored allowlist path",
+    );
   } finally {
     fs.rmSync(t.root, { recursive: true, force: true });
   }
@@ -409,11 +428,92 @@ test("the suite's own literal fixture is a finding under an empty allowlist and 
   assert.equal(hits.length, 1, "the known-secret fixture is detected");
   assert.equal(hits[0].rule, "github-token");
   assert.equal(applyAllowlist(hits, []).kept.length, 1, "without an entry it is a finding");
-  const shipped = loadAllowlist(ROOT);
+  const shipped = loadAllowlist(ROOT, REPO_ALLOWLIST);
   assert.deepEqual(shipped.errors, [], "the shipped allowlist is well formed");
   const verdict = applyAllowlist(hits, shipped.entries);
   assert.deepEqual(verdict.kept, [], "the shipped entry narrows exactly this file and rule");
   assert.equal(verdict.allowlisted.length, 1);
+});
+
+/* ------------------------------------------------------- the two invocation sites */
+
+test("the project allowlist is the default and --allowlist overrides it", () => {
+  const t = fixtureRepo();
+  try {
+    t.write("docs/sample.md", `api_key: "${PAYLOAD}"\n`);
+    t.allowlistFile([{ path: "docs/sample.md", rule: "credential-assignment", reason: "a documented sample" }]);
+    t.commit("docs: a sample plus the entry that narrows it");
+
+    const byDefault = CLI(["--root", t.root, "--base", t.base]);
+    assert.equal(byDefault.status, 0, `${byDefault.stdout}${byDefault.stderr}`);
+    assert.match(byDefault.stdout, /ALLOWLISTED docs\/sample\.md:1 — credential-assignment/);
+
+    const override = CLI(["--root", t.root, "--base", t.base, "--allowlist", "docs/absent-allowlist.json"]);
+    assert.equal(override.status, 1, "the flag is the file the scan honors, so the project default stops applying");
+    assert.match(override.stdout, /FINDING docs\/sample\.md:1 — credential-assignment/);
+  } finally {
+    fs.rmSync(t.root, { recursive: true, force: true });
+  }
+});
+
+test("an absent project allowlist allows nothing", () => {
+  const t = fixtureRepo();
+  try {
+    t.write("docs/sample.md", `api_key: "${PAYLOAD}"\n`);
+    t.commit("docs: a sample with no allowlist beside it");
+    const verdict = inspect({ root: t.root, base: t.base });
+    assert.equal(verdict.ok, true, "a clean fixture is scannable");
+    assert.deepEqual(verdict.entries, [], "no file means no entry, never a blanket allowance");
+    assert.equal(verdict.findings.length, 1, "the shape stays a finding with no allowlist present");
+  } finally {
+    fs.rmSync(t.root, { recursive: true, force: true });
+  }
+});
+
+test("a run from a subdirectory scans the whole working tree, never a narrowed cwd", () => {
+  const t = fixtureRepo();
+  try {
+    t.write("app.env", `token: "${PAYLOAD}"\n`);
+    t.commit("feat: a leak at the top of the tree");
+    const result = CLI(["--all", "--json"], path.join(t.root, "docs"));
+    assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+    const document = JSON.parse(result.stdout);
+    assert.ok(
+      document.findings.some((finding) => finding.file === "app.env"),
+      `the leak outside the caller's directory is still scanned: ${result.stdout}`,
+    );
+  } finally {
+    fs.rmSync(t.root, { recursive: true, force: true });
+  }
+});
+
+test("one implementation: the template module is the only scanner and the runner carries no rule", () => {
+  const hooks = path.join(ROOT, HOOKS_REL);
+  const modules = fs.readdirSync(hooks).filter((name) => name.endsWith(".mjs")).sort();
+  assert.deepEqual(modules, ["secret-scan.mjs"], "the shipped hooks tree carries exactly one scanner module");
+  assert.equal(fs.existsSync(path.join(ROOT, "scripts", "secret-scan.mjs")), false, "the repository keeps no second copy");
+  const runner = fs.readFileSync(RUNNER, "utf8");
+  for (const rule of RULES) assert.ok(!runner.includes(rule), `the runner never re-states the rule ${rule}`);
+  assert.doesNotMatch(runner, /PRIVATE KEY|gh\[pousr\]_|AKIA/u, "the runner carries no detection pattern");
+  assert.match(runner, /secret-scan\.mjs/u, "the runner names the one module it executes");
+});
+
+test("the runner is the second door onto the same scan: argv and the exit code are forwarded", () => {
+  const t = fixtureRepo();
+  try {
+    const run = (args) => spawnSync("bash", [RUNNER, ...args], { cwd: t.root, encoding: "utf8" });
+    const clean = run(["--root", t.root, "--base", t.base]);
+    assert.equal(clean.status, 0, `${clean.stdout}${clean.stderr}`);
+    assert.match(clean.stdout, /^verdict: PASS$/m);
+    t.write("leak.md", `token: "${PAYLOAD}"\n`);
+    t.commit("docs: a leak");
+    const leaked = run(["--root", t.root, "--base", t.base]);
+    assert.equal(leaked.status, 1, `${leaked.stdout}${leaked.stderr}`);
+    assert.match(leaked.stdout, /FINDING leak\.md:1 — credential-assignment/);
+    assert.equal(run(["--nope"]).status, 2, "the module's usage exit is forwarded unchanged");
+  } finally {
+    fs.rmSync(t.root, { recursive: true, force: true });
+  }
 });
 
 /* ------------------------------------------------------------------ live tree */
@@ -422,7 +522,7 @@ test("the shipped whole-tree scan of this repository passes with the shipped all
   // The step's fallback mode, run against the tree it ships in: a green evidence
   // case that a real credential has not landed, and the receipt that the
   // allowlist entry above is matched by real bytes.
-  const result = CLI(["--all"]);
+  const result = CLI(["--all", "--allowlist", REPO_ALLOWLIST]);
   assert.equal(result.status, 0, `the shipped tree must not carry a secret:\n${result.stdout}${result.stderr}`);
   assert.match(result.stdout, /^verdict: PASS$/m);
   assert.match(result.stdout, /ALLOWLISTED scripts\/secret-scan\.test\.mjs:\d+ — github-token/);
@@ -479,10 +579,11 @@ function fixtureRepo() {
       fs.writeFileSync(absolute, content);
     },
     allowlistFile(entries) {
-      const target = path.join(root, "scripts");
-      fs.mkdirSync(target, { recursive: true });
-      fs.writeFileSync(path.join(target, "secret-scan-allowlist.json"), `${JSON.stringify(entries, null, 2)}\n`);
-      return path.join("scripts", "secret-scan-allowlist.json");
+      const relative = path.join(".agentic-workflow", "hooks", "secret-scan-allowlist.json");
+      const absolute = path.join(root, relative);
+      fs.mkdirSync(path.dirname(absolute), { recursive: true });
+      fs.writeFileSync(absolute, `${JSON.stringify(entries, null, 2)}\n`);
+      return relative;
     },
     commit(message) {
       git(root, ["add", "-A"]);
