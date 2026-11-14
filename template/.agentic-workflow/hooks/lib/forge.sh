@@ -40,9 +40,12 @@ forge_detect() {
     esac
     return 0
   fi
-  # A filesystem remote names no forge; the project's default CLI answers.
+  # A bare filesystem path names no forge; the project's default CLI answers.
+  # A `file://` URL is still a URL — a fixture, a mirror or a local proxy — so it
+  # is classified by what it names, which is also what lets a project test the
+  # forge path without contacting one.
   case "$url" in
-    "" | /* | ./* | ../* | file://*) printf 'default\n'; return 0 ;;
+    "" | /* | ./* | ../*) printf 'default\n'; return 0 ;;
   esac
   case "$url" in
     *github.com*) printf 'github\n' ;;
@@ -114,7 +117,7 @@ forge_pr_json() {
   cli=$(forge_require "$forge") || return 1
   case "$forge" in
     github | default)
-      "$cli" pr view "$pr" --json number,url,state,baseRefName,headRefOid,mergeable,statusCheckRollup,comments,headRepository,headRefName
+      "$cli" pr view "$pr" --json number,url,state,baseRefName,headRefOid,mergeable,statusCheckRollup,comments,headRepository,headRefName,mergeCommit
       ;;
     gitlab)
       "$cli" mr view "$pr" -F json | jq -c '{
@@ -125,7 +128,8 @@ forge_pr_json() {
         headRefOid: .sha,
         mergeable: (if .merge_status == "can_be_merged" then "MERGEABLE" else "CONFLICTING" end),
         statusCheckRollup: (if ((.head_pipeline.status // "") | ascii_downcase) == "success" then [{conclusion: "SUCCESS"}] else [{conclusion: ((.head_pipeline.status // "pending") | ascii_upcase)}] end),
-        comments: []
+        comments: [],
+        mergeCommit: {oid: (.merge_commit_sha // "")}
       }'
       ;;
     gitea)
@@ -197,6 +201,24 @@ forge_pr_line() {
     *)
       printf 'agentic-workflow: forge "%s" has no pull-request reader\n' "$forge" >&2
       return 4
+      ;;
+  esac
+}
+
+# forge_comment <forge> <pr> <body-file> — post the audit comment. The comment is
+# the durable automerge trail, so a forge that cannot carry one has to fail.
+forge_comment() {
+  local forge=${1:-} pr=${2:-} file=${3:-} cli body
+  cli=$(forge_require "$forge") || return 1
+  [ -f "$file" ] || { printf 'agentic-workflow: %s does not exist\n' "$file" >&2; return 1; }
+  body=$(cat "$file")
+  case "$forge" in
+    github | default) "$cli" pr comment "$pr" --body-file "$file" ;;
+    gitlab) "$cli" mr note "$pr" -m "$body" ;;
+    gitea) "$cli" pr comment "$pr" -m "$body" ;;
+    *)
+      printf 'agentic-workflow: forge "%s" has no comment carrier\n' "$forge" >&2
+      return 1
       ;;
   esac
 }
