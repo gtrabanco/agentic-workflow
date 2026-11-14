@@ -457,11 +457,18 @@ describe("S3/S9 sync resilience (D5)", () => {
           throw providerError(401, "401 unauthorized");
         },
       };
-      const result = await embedPendingChunks(dir, bad, { sleep: clock.sleep, now: clock.now, random: () => 0 });
+      const result = await embedPendingChunks(dir, bad, {
+        sleep: clock.sleep,
+        now: clock.now,
+        random: () => 0,
+        // A backoff would spend 7000 ms before a second attempt, so `sleeps`
+        // below isolates the pacing interval from a retry.
+        pacing: { baseDelayMs: 7000, requestsPerMinute: 60 },
+      });
       strictEqual(result.embedded, 0);
       strictEqual(result.rejected.length, 2, "one rejected batch per file");
       strictEqual(bad.calls, 2, "one attempt per batch: a 401 is never retried");
-      deepStrictEqual(clock.sleeps, []);
+      deepStrictEqual(clock.sleeps, [1000], "only the pacing interval (60 rpm) — no backoff was spent; " + JSON.stringify(clock.sleeps));
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

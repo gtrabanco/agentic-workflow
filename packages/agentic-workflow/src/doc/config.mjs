@@ -17,6 +17,14 @@
  * D21 file exclusion: `index.excludes` (array of path prefixes, or null) —
  * files under these prefixes leave the corpus. `null`/absent resolves to the
  * shipped defaults; an explicit array replaces them entirely.
+ *
+ * Request budget (fix #540 S5): `provider.max_request_chars` (positive integer,
+ * default `DEFAULT_MAX_REQUEST_CHARS`) is the most text one embed request may
+ * carry. With a provider configured and no explicit `chunk_limit`, the effective
+ * per-chunk limit **is** that budget — a chunk can then never outgrow a request,
+ * and the budget bounds the batch — so the shipped configuration cannot emit a
+ * request the provider must refuse. The keyword-only path keeps `0 = unlimited`
+ * (fix #495's semantics, unchanged).
  */
 
 import { existsSync, readFileSync, realpathSync } from "node:fs";
@@ -24,6 +32,52 @@ import { dirname, join, resolve, sep } from "node:path";
 import { DEFAULT_EXCLUSIONS } from "./manifest.mjs";
 
 export const CONFIG_VERSION = 1;
+
+/**
+ * The shipped request budget (fix #540 S5): 90,000 characters. At the 4
+ * chars/token the budget assumes, that is ≈22,500 tokens — comfortably inside
+ * the 32,768-token input window the configured provider publishes, with room
+ * for prose that tokenizes denser than English. It is an assumption the
+ * operator can correct per repository: lower it when a corpus tokenizes denser,
+ * raise it when the provider's window is larger.
+ */
+export const DEFAULT_MAX_REQUEST_CHARS = 90000;
+
+/** The environment override for the request budget, beside the pacing overrides. */
+export const MAX_REQUEST_CHARS_ENV = "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS";
+
+/** A positive integer, or a refusal naming where the value came from. */
+function positiveInteger(value, name, hint) {
+  const parsed = typeof value === "number" ? value : Number(String(value).trim());
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(
+      `invalid ${name}: ${JSON.stringify(value)} (expected a positive integer; ${hint})`,
+    );
+  }
+  return parsed;
+}
+
+/**
+ * The request budget: CLI > environment > `provider.max_request_chars` > the
+ * shipped default. Validated once, so no caller can pack a request against a
+ * `NaN`.
+ */
+export function resolveMaxRequestChars({ config = {}, env = {}, cli = {} } = {}) {
+  const raw =
+    cli.maxRequestChars ?? env[MAX_REQUEST_CHARS_ENV] ?? config.provider?.max_request_chars ?? DEFAULT_MAX_REQUEST_CHARS;
+  return positiveInteger(raw, `maxRequestChars`, `set provider.max_request_chars in index.json or ${MAX_REQUEST_CHARS_ENV}`);
+}
+
+/**
+ * The chunk limit the chunker must honour. An explicit `provider.chunk_limit`
+ * always wins; otherwise a configured provider gets the request budget (no chunk
+ * it could not send) and the keyword-only path keeps `0 = unlimited`.
+ */
+export function effectiveChunkLimit({ config = {}, providerConfigured = false, env = {}, cli = {} } = {}) {
+  const explicit = config.provider?.chunk_limit;
+  if (explicit !== undefined) return explicit;
+  return providerConfigured ? resolveMaxRequestChars({ config, env, cli }) : 0;
+}
 
 export const DEFAULT_CONFIG = Object.freeze({
   version: CONFIG_VERSION,
@@ -112,6 +166,24 @@ function validateConfig(parsed) {
         `index.json provider.chunk_limit must be a positive integer (got ${JSON.stringify(parsed.provider.chunk_limit)})`,
       );
     }
+  }
+
+  // provider.max_request_chars: optional positive integer, and a chunk_limit may
+  // never exceed it — a chunk larger than a whole request could never be sent
+  // (fix #540 S5: fail closed at config load, never at the provider's 400).
+  if (parsed.provider?.max_request_chars !== undefined) {
+    positiveInteger(
+      parsed.provider.max_request_chars,
+      "index.json provider.max_request_chars",
+      `it is the most text one embed request may carry, default ${DEFAULT_MAX_REQUEST_CHARS}`,
+    );
+  }
+  const budget = parsed.provider?.max_request_chars ?? DEFAULT_MAX_REQUEST_CHARS;
+  if (parsed.provider?.chunk_limit !== undefined && Number(parsed.provider.chunk_limit) > Number(budget)) {
+    throw new Error(
+      `index.json provider.chunk_limit (${parsed.provider.chunk_limit}) must not exceed provider.max_request_chars ` +
+        `(${budget}): a chunk that large could never be sent in one request — lower chunk_limit or raise max_request_chars`,
+    );
   }
 
   // index.excludes: optional array of strings, or null (defaults)

@@ -4029,6 +4029,15 @@ export { CONTINUATION_CANONICAL_VECTORS, CONTINUATION_VECTOR_CONTRACT } from "./
 /** The digest surface the evidence token is bound through (feature 59, D-59-9). */
 export { sha256Hex, sha256HexSync } from "./sha256.js";
 
+/**
+ * The `doc` retrieval envelope's closed degradation vocabulary (fix #540 S3):
+ * the enumerated causes, plus the two open families the runtime close keeps
+ * (`unavailable-sqlite-<runtime>`, `unavailable-embeddings-<cause>`), documented
+ * in the module itself.
+ */
+export { DOC_DEGRADATIONS } from "./doc-envelope.js";
+export type { DocDegradation } from "./doc-envelope.js";
+
 export type {
   ContinuationEvidence,
   ContinuationPlatformFamily,

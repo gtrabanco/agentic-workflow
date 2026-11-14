@@ -20,13 +20,23 @@
  * commits its rows and — on the first one — pins the store's model, so a run
  * that stops part-way resumes from the store's own pending predicate instead of
  * re-embedding what already landed.
+ *
+ * Bounded requests and rejection containment (fix #540 S2/S4/S5): a request
+ * never carries more characters than the request budget, so a batch cannot
+ * outgrow the provider's input window; and a provider that *rejects* a request
+ * (a non-rate-limit 4xx: input too large, unknown model, bad credentials) ends
+ * that batch's future, never the pass. The rejected chunks stay pending, the
+ * rest embed, and the result names every skipped chunk together with the
+ * provider's status and body excerpt. The provider being down — a retryable
+ * failure whose ladder is exhausted, or a transport error — still stops the
+ * pass: that is a different diagnosis and a different degradation.
  */
 
 export const VECTOR_TAG = "awkvec-f32le1";
 
 import { openDatabase } from "./sqlite.mjs";
 import { storePath } from "./store.mjs";
-import { loadConfig } from "./config.mjs";
+import { loadConfig, resolveMaxRequestChars } from "./config.mjs";
 
 const DIRECT_ENV = {
   baseUrl: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL",
@@ -92,6 +102,19 @@ function isRetryable(error) {
   return status === 408 || status === 429 || (status >= 500 && status < 600);
 }
 
+/**
+ * A request the provider answered with a refusal: a non-rate-limit 4xx (input
+ * too large, an unknown model, bad credentials). Retrying cannot help — the same
+ * request produces the same refusal — and the pass must skip it rather than
+ * report the provider as down (fix #540 S2). A status-less error is *not* a
+ * rejection: it is a transport failure, which the retry policy owns.
+ */
+function isRejected(error) {
+  const status = error?.status;
+  if (typeof status !== "number") return false;
+  return status >= 400 && status < 500 && status !== 408 && status !== 429;
+}
+
 /** Encode a float vector as the tagged little-endian float32 blob. */
 export function encodeVector(vector) {
   const header = Buffer.from(VECTOR_TAG, "binary");
@@ -135,6 +158,12 @@ export function resolveEmbedConfig({ config = {}, env = {}, cli = {} } = {}) {
  * returns junk vectors — and the error carries the machine-readable pieces
  * the retry policy branches on (`status`, and `retryAfter` when the provider
  * names one), never a message a caller has to parse.
+ *
+ * The provider's own diagnosis is carried too (fix #540 S4): a failed response's
+ * body is read once, bounded, and folded into the error's message. The text is
+ * the only place a provider says *why* it refused (`Context length exceeded for
+ * model … maximum context length is 32768 tokens`), and discarding it left the
+ * operator with a `provider down` label and no way to reach the cause.
  */
 export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl } = {}) {
   const doFetch = fetchImpl ?? ((url, init) => fetch(url, init));
@@ -147,8 +176,12 @@ export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl } = {}) {
         body: JSON.stringify({ model, input: texts }),
       });
       if (!response.ok) {
-        const error = new Error(`embeddings provider ${response.status} ${response.statusText}`);
+        const excerpt = await responseBodyExcerpt(response);
+        const error = new Error(
+          `embeddings provider ${response.status} ${response.statusText ?? ""}${excerpt ? `: ${excerpt}` : ""}`.trim(),
+        );
         error.status = response.status;
+        if (excerpt) error.body = excerpt;
         const retryAfter = response.headers?.get?.("retry-after");
         const seconds = Number(retryAfter);
         if (retryAfter && Number.isFinite(seconds) && seconds >= 0) error.retryAfter = seconds;
@@ -158,6 +191,21 @@ export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl } = {}) {
       return data.data.map((d) => d.embedding);
     },
   };
+}
+
+/** The longest provider body excerpt an error message carries — a diagnosis, not a payload. */
+const BODY_EXCERPT_LIMIT = 400;
+
+/** A failed response's body, bounded and whitespace-collapsed; "" when it cannot be read. */
+async function responseBodyExcerpt(response) {
+  if (typeof response.text !== "function") return "";
+  try {
+    const text = await response.text();
+    return String(text).replace(/\s+/g, " ").trim().slice(0, BODY_EXCERPT_LIMIT);
+  } catch {
+    // A consumed or broken stream is not the diagnosis: the status still is.
+    return "";
+  }
 }
 
 /**
@@ -198,16 +246,24 @@ export async function embeddingStats(root, model = null) {
  * `emb_model`) fails closed on mismatch (AC18): the new provider is never
  * called, the old vectors stay consistent, and the caller degrades —
  * `--rebuild` re-embeds under the new model. Returns
- * `{embedded, calls, model}` or `{skipped: true, reason}`.
+ * `{embedded, calls, model, rejected}` or `{skipped: true, reason}`.
+ *
+ * `rejected` is one entry per refused request — `{status, message, chunks}`,
+ * where `chunks` names every chunk that batch carried by `path`/`section`. Those
+ * chunks stay pending (never invented, never partially written); the pass goes
+ * on. An empty array means nothing was refused.
  *
  * Resilience (issue #443 S3/S9, D4/D5): `opts` carries the seams a test owns —
- * `pacing` (a partial merged over the resolved policy), `sleep`, `now` and
- * `random`; production resolves the policy from the config + environment and
- * sleeps for real.
+ * `pacing` (a partial merged over the resolved policy), `maxRequestChars` (the
+ * request budget), `sleep`, `now` and `random`; production resolves the policy
+ * and the budget from the config + environment and sleeps for real.
  */
 export async function embedPendingChunks(root, provider, opts = {}) {
-  const pacing = { ...resolvePacing({ config: loadConfig(root), env: process.env }), ...(opts.pacing ?? {}) };
+  const config = loadConfig(root);
+  const pacing = { ...resolvePacing({ config, env: process.env }), ...(opts.pacing ?? {}) };
   for (const name of Object.keys(DEFAULT_PACING)) pacing[name] = positiveInteger(pacing[name], name);
+  const maxRequestChars =
+    opts.maxRequestChars ?? resolveMaxRequestChars({ config, env: process.env });
   const sleep = opts.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const now = opts.now ?? (() => Date.now());
   const random = opts.random ?? Math.random;
@@ -225,17 +281,18 @@ export async function embedPendingChunks(root, provider, opts = {}) {
 
     const pending = db
       .prepare(
-        "select rowid, path, body from chunks where embedding is null order by path, rowid",
+        "select rowid, path, section, body from chunks where embedding is null order by path, rowid",
       )
       .all();
     if (pending.length === 0) {
       pin();
-      return { embedded: 0, calls: 0, model: provider.model };
+      return { embedded: 0, calls: 0, model: provider.model, rejected: [] };
     }
 
     let calls = 0;
     let embedded = 0;
     let lastStart = null;
+    const rejected = [];
 
     // Pacing: two request starts are never closer than the configured interval.
     const pace = async () => {
@@ -266,11 +323,27 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     };
 
     let batch = [];
+    let batchChars = 0;
     const flush = async () => {
       if (batch.length === 0) return;
       const carrying = batch;
       batch = [];
-      const vectors = await request(carrying.map((c) => c.body));
+      batchChars = 0;
+      let vectors;
+      try {
+        vectors = await request(carrying.map((c) => c.body));
+      } catch (error) {
+        // A refusal ends the batch's future, never the pass (fix #540 S2): the
+        // chunks stay pending and the caller reports them with the provider's
+        // own status and body. Anything else is the provider being down.
+        if (!isRejected(error)) throw error;
+        rejected.push({
+          status: error.status ?? null,
+          message: error.message,
+          chunks: carrying.map((c) => ({ path: c.path, section: c.section })),
+        });
+        return;
+      }
       if (!Array.isArray(vectors) || vectors.length !== carrying.length) {
         throw new Error(
           `embeddings provider returned ${vectors?.length ?? 0} vectors for ${carrying.length} texts`,
@@ -293,7 +366,13 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     for (const chunk of pending) {
       if (currentPath !== null && chunk.path !== currentPath) await flush();
       currentPath = chunk.path;
+      // The provider refuses more text than its input window holds; the budget,
+      // the batch cap and the file boundary are all respected, and a chunk that
+      // alone crosses the budget gets its own request (so it is dropped alone,
+      // never dragging well-sized chunks with it — fix #540 S2a/S5).
+      if (batch.length > 0 && batchChars + chunk.body.length > maxRequestChars) await flush();
       batch.push(chunk);
+      batchChars += chunk.body.length;
       // The provider refuses more texts than its batch cap; the cap, never the
       // file boundary, is what a request must respect (D4).
       if (batch.length >= pacing.batchSize) await flush();
@@ -301,7 +380,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     await flush();
 
     pin();
-    return { embedded, calls, model: provider.model };
+    return { embedded, calls, model: provider.model, rejected };
   } finally {
     db.close();
   }

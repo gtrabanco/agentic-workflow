@@ -17,6 +17,14 @@
  * chunk bodies exceeding it are automatically truncated (never skipped) and
  * the count lands in the result's `truncated`.
  *
+ * The limit is part of the chunking contract (fix #540 S6): it is recorded in
+ * the store's `meta` (`chunk_limit`) and the re-chunk predicate compares it, so
+ * lowering or raising it re-chunks every stored file on the next pass instead
+ * of leaving chunks the current limit would have shaped differently. A caller
+ * that names no limit keeps the store's own recorded contract — a
+ * query-triggered freshness sync therefore never re-expands chunks the
+ * operator's limit truncated.
+ *
  * D21 file exclusion: `syncIndex` accepts `opts.exclusions`; the manifest
  * filters these prefix paths before chunking. The chunker version is bumped
  * so existing stores rescan and excluded files' chunks are reaped (AC11).
@@ -82,6 +90,16 @@ function storedChunkerVersion(db) {
   }
 }
 
+/** The chunk limit this store was chunked under, or null when it carries none. */
+function storedChunkLimit(db) {
+  try {
+    const row = db.prepare("select value from meta where key = 'chunk_limit'").get();
+    return row ? row.value : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Counts for `--status`: `{files, chunks}` over the store at `root`. */
 export async function storeStats(root) {
   const { db } = await openDatabase(storePath(root));
@@ -101,7 +119,6 @@ export async function storeStats(root) {
  * filters these paths before chunking.
  */
 export async function syncIndex(root, opts = {}) {
-  const maxChunkChars = opts.maxChunkChars ?? 0;
   const exclusions = opts.exclusions;
   loadConfig(root); // config errors surface here too (usage/IO), even in sync
   const manifest = collectManifest(root, { exclusions });
@@ -109,7 +126,11 @@ export async function syncIndex(root, opts = {}) {
   db.exec(SCHEMA);
 
   const stored = storedManifest(db);
-  const sameChunker = storedChunkerVersion(db) === String(CHUNKER_VERSION);
+  const previousLimit = storedChunkLimit(db);
+  // An unnamed limit keeps the store's own contract; a named one replaces it.
+  const maxChunkChars = opts.maxChunkChars ?? (previousLimit === null ? 0 : Number(previousLimit));
+  const sameChunker =
+    storedChunkerVersion(db) === String(CHUNKER_VERSION) && previousLimit === String(maxChunkChars);
   const oldFiles = stored?.files ?? {};
   const changed = [];
   const deleted = [];
@@ -160,6 +181,7 @@ export async function syncIndex(root, opts = {}) {
     // the scanner that produced these rows so a future scanner change re-scans.
     db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('manifest', ?)").run(canonicalJson(manifest));
     db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('chunker', ?)").run(String(CHUNKER_VERSION));
+    db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('chunk_limit', ?)").run(String(maxChunkChars));
     db.close();
     writeFileSync(manifestExportPath(root), `${canonicalJson(manifest)}\n`);
 
