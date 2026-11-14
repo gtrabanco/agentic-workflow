@@ -644,6 +644,19 @@ authoritative step list.
   scripts/published-refs.test.mjs scripts/push-identity-check.test.mjs
   scripts/log-immutability.test.mjs` · exit 0 · 41 pass · 0 fail (the suites
   judge fixtures; the live red is history, not corpus).
+- **E13** — 2026-11-14, the fragment fix verified end-to-end · bytes: `git
+  show 8cac00a0` → the fragment's single line replaced by the five fills only,
+  no original word removed, and a slot-pattern `rg` finds 0 leftovers ·
+  grammar: `agentic-workflow journal aggregate --check` · exit 0 · 12 checked
+  · 0 refusals (the CLI documents `--check` as the same validation as
+  consumption) · consumption: a real `journal aggregate` over a `mktemp -d`
+  clone via `--dir` (removed after) · exit 0 · `{"ok":true,"appended":[… the
+  095214Z fragment …],"removed":[…],"fragments":12}` — the filled `Decisions`
+  line lands in that clone's `docs/LOGS.md` with every name intact
+  (`scripts/published-refs.mjs`, `push-identity-check`, `log-immutability`,
+  `--no-verify`), the fragment is consumed, and the post-consumption `--check`
+  answers 0 refusals; the live tree stayed clean throughout. The only red on
+  this branch remains D6's authorized `fragment-hand-edited` (`8cac00a0`).
 
 ## Next
 
