@@ -3,7 +3,8 @@
 Every command this workflow ships reports through one channel: the runner
 crate's [`src/feedback/index.mjs`](../../packages/agentic-workflow/src/feedback/index.mjs).
 This page is that contract's single owner — [`AGENTS.md`](../../AGENTS.md) states
-the rule and links here, and no other document restates it.
+the rule and links here; a surface that restates part of it (the crate README's
+crate-surface section) names this page as its owner.
 
 The carencia it closes: a CLI that works silently cannot be told apart from a
 frozen machine. The worst case was `doc --sync`, which scans, embeds and indexes

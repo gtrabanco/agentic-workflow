@@ -338,8 +338,8 @@ The `rg`-first *search feature* stays #269's; this rule owns the tool choice onl
 
 **Every CLI reports through the feedback channel.** A command that can take
 noticeable time says so — start, what it is doing, and how long it took — through
-the runner crate's `src/feedback/index.mjs`, whose published `FEEDBACK_TIERS` are
-`--debug` and `--profile`. Every line goes to **stderr**: stdout and the envelope
+the runner crate's `src/feedback/index.mjs`, which publishes `FEEDBACK_TIERS`
+and takes the tier flags `--debug` and `--profile`. Every line goes to **stderr**: stdout and the envelope
 stay the machine receipt. A second progress convention, a private timer or a
 progress byte on stdout is the defect; the contract and its authoring rules are
 owned by [`docs/workflow/FEEDBACK.md`](docs/workflow/FEEDBACK.md).
