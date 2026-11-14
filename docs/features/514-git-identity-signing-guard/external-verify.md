@@ -47,3 +47,28 @@ applied and observed, it does not re-verdict.
 | Blocker 2 — 12 `git config` writes remained in 3 suites; the Retirements check and S7/S9 failed (`SPEC.md:90`, O12, O14) | migrated `doc.envelope`, `review-receipt` and `audit-pr-receipt` to this unit's `-c`-triple shape (same fixture identity values, no assertion or path changed); O12's validator cell now carries the literal retirement search | gate `278 carriers / 0 findings` PASS, gate suite 9/0, receipt suites 58/0, doc.envelope 41/0, retirement `rg` → 0 (was 12); pre/post differential over base bytes: identical 99-test multisets, exit 0 both legs (E18) |
 | Blocker 3 — O11's validator cell named nonexistent `template/docs/workflow/README.md` while the status and D6 claimed it repaired (`planning-obligations.md:19`, `SPEC.md:297-300`) | the cell now names `template/.agentic-workflow/hooks/README.md` — the surface D6 always described; status flipped back before the batch and re-verified after | `rg -n 'GIT_IDENTITY_HARDENING' docs/workflow/README.md template/.agentic-workflow/hooks/README.md` → matches 2, exit 0; D6's sentence now true of the bytes |
 | Advisories 1–2 (pre-existing red-first timeout; budget re-serialization) | not in the batch — pre-existing/report-only never earns a correction round | recorded here as declined, unchanged |
+
+## Recheck — 2026-11-14 (implementer side, not a verdict)
+
+The receipt above is unchanged: its three blockers are what the 2026-11-12 batch
+answered. This section re-runs those blockers' validators at head `0563b19d` (the
+unit merged as `e6a696e9`, PR #520) and records what changed underneath the
+receipt since. It is not a verdict and grants nothing; the owner's external
+verification is still what closes the unit.
+
+| blocker | what the 2026-11-12 batch did | observed 2026-11-14 | state |
+|---|---|---|---|
+| 1 — the `-c` gate false-PASSed on its own tree (`scripts/git-config-writes.mjs:132`) | line-bounded quote state + regex-literal skipping, red corpus first | `bun test scripts/git-config-writes.test.mjs` 9/0 exit 0 · `node scripts/git-config-writes.mjs` → `294 carriers scanned, 0 findings / verdict: PASS` exit 0 | **fixed**, reproduces green |
+| 2 — 12 writes remained in 3 suites (`SPEC.md:90`, O12, O14) | migrated to the `-c` triple, O12's cell carries the literal search | the retirement search `rg -n '"config", "user\.\|"config", "commit\.gpgsign"' scripts packages --glob '*.test.mjs'` → 0 matches (exit 1) · the three suites 58/0 and 41/0 · whole tree `node scripts/run-root-suite.mjs` → 113 suites PASS / 0 FAIL, exit 0 | **fixed**, reproduces green |
+| 3 — O11's validator named a nonexistent path (`planning-obligations.md:19`) | cell pointed at `template/.agentic-workflow/hooks/README.md`, which then matched 2 across both files | the path is real and matches, but the cell's **files-wide total** no longer holds: `2eb5b70f` (unit #546, 2026-11-14, after this unit) added a second annex link in the template hooks README, so the total reads 3 with both surfaces ≥1 | **substance fixed, validation outcome invalidated by a later unit** — O11 flipped back, the cell rewritten to per-surface presence, re-verified: `rg -c 'GIT_IDENTITY_HARDENING' docs/workflow/README.md` → 1 and `... template/.agentic-workflow/hooks/README.md` → 2, both ≥1, `node scripts/skill-lint.mjs` exit 0 |
+
+Two things this recheck deliberately does not do: it does not re-verdict the unit
+(the roadmap row stays `in-progress` until the owner's verdict), and it does not
+touch any number in the receipt above — the receipt records what was observed on
+2026-11-12, and a later observation belongs in a later section.
+
+Boundaries honoured: every command above is read-only (`git rev-list`/`log`/
+`config --get`, filesystem reads) or a suite inside its own throwaway fixtures;
+no repository write, commit, push or forge mutation was made by the recheck
+itself, and nothing introduced by this unit was executed against the live tree
+outside the repo's own deterministic gates.
