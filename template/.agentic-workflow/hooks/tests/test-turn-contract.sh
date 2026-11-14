@@ -9,6 +9,7 @@ set -u
 test_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 shim=$test_dir/../turn-contract.sh
 failures=0
+cases=0
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
@@ -38,6 +39,7 @@ run() {
 
 # assert <label> <want-code> <want-stdout>
 assert() {
+  cases=$((cases + 1))
   ok=1
   if [ "$code" -ne "$2" ]; then
     printf 'FAIL %s: exit %s, want %s\n' "$1" "$code" "$2" >&2
@@ -48,6 +50,30 @@ assert() {
     ok=0
   fi
   [ "$ok" -eq 1 ] || failures=$((failures + 1))
+}
+
+# assert_grep <label> <fixed-string> <file>: a diagnostic companion to `assert`,
+# used where the verdict comes from stderr rather than the one-line stdout.
+assert_grep() {
+  cases=$((cases + 1))
+  if grep -q -- "$2" "$3"; then
+    printf 'ok — %s\n' "$1"
+  else
+    printf 'FAIL %s: no match for %s\n' "$1" "$2" >&2
+    sed 's/^/    /' "$3" >&2
+    failures=$((failures + 1))
+  fi
+}
+
+assert_grep_i() {
+  cases=$((cases + 1))
+  if grep -qi -- "$2" "$3"; then
+    printf 'ok — %s\n' "$1"
+  else
+    printf 'FAIL %s: no match for %s\n' "$1" "$2" >&2
+    sed 's/^/    /' "$3" >&2
+    failures=$((failures + 1))
+  fi
 }
 
 # ---- shared fixtures -------------------------------------------------------
@@ -302,6 +328,126 @@ run --finished
 assert "box4 numeric branch is not a PR number" 1 'TURN-CONTRACT fail box4: pr-not-open'
 GH_STUB_VIEW_JSON=''
 
+
+# ---- box4 across the forge matrix (issue #546) ------------------------------
+# Each forge is asked through its own CLI; the remote URL is what names it. The
+# stubs answer the one normalized line the adapter reads, and the local bare
+# remotes above keep their `default` (no host) classification.
+
+cat > "$stub_dir/glab" <<'STUB'
+#!/usr/bin/env bash
+case "$1 $2" in
+  "mr list")
+    printf '%s\n' "${GLAB_STUB_LINE:-}"
+    exit "${GLAB_STUB_EXIT:-0}"
+    ;;
+  *) exit 3 ;;
+esac
+STUB
+chmod +x "$stub_dir/glab"
+
+cat > "$stub_dir/gt" <<'STUB'
+#!/usr/bin/env bash
+case "$1 $2" in
+  "pr list")
+    printf '%s\n' "${GT_STUB_LINE:-}"
+    exit "${GT_STUB_EXIT:-0}"
+    ;;
+  *) exit 3 ;;
+esac
+STUB
+chmod +x "$stub_dir/gt"
+
+# A pushed branch whose origin is a forge URL rather than a local path.
+forge_repo=$tmp/forge
+new_branch "$forge_repo" main
+gitc -C "$forge_repo" checkout -q -b feat/forge
+commit_file "$forge_repo" docs/features/forge/SPEC.md 'frozen'
+gitc -C "$forge_repo" remote add origin https://gitlab.com/acme/app.git
+forge_head=$(gitc -C "$forge_repo" rev-parse HEAD)
+
+GLAB_STUB_LINE="opened $forge_head"
+run_dir=$forge_repo
+run --finished
+assert "box4 gitlab open PR at HEAD" 0 'TURN-CONTRACT ok'
+
+GLAB_STUB_LINE="merged $forge_head"
+run_dir=$forge_repo
+run --finished
+assert "box4 gitlab merged PR is not an open PR" 1 'TURN-CONTRACT fail box4: pr-not-open'
+
+GLAB_STUB_LINE="closed $forge_head"
+run_dir=$forge_repo
+run --finished
+assert "box4 gitlab closed PR is not an open PR" 1 'TURN-CONTRACT fail box4: pr-not-open'
+
+GLAB_STUB_LINE="opened 0000000000000000000000000000000000000000"
+run_dir=$forge_repo
+run --finished
+assert "box4 gitlab head mismatch" 1 'TURN-CONTRACT fail box4: pr-head-mismatch'
+
+GLAB_STUB_LINE=""
+GLAB_STUB_EXIT=1
+run_dir=$forge_repo
+run --finished
+assert "box4 gitlab unreachable" 1 'TURN-CONTRACT fail box4: pr-unreachable'
+GLAB_STUB_EXIT=0
+
+GLAB_STUB_LINE=""
+run_dir=$forge_repo
+run --finished
+assert "box4 gitlab no MR for the branch" 1 'TURN-CONTRACT fail box4: pr-not-open'
+
+# Gitea: the same branch on a gitea host, answered by `gt`.
+gitc -C "$forge_repo" remote set-url origin https://gitea.com/acme/app.git
+GT_STUB_LINE="open $forge_head"
+run_dir=$forge_repo
+run --finished
+assert "box4 gitea open PR at HEAD" 0 'TURN-CONTRACT ok'
+
+GT_STUB_LINE=""
+run_dir=$forge_repo
+run --finished
+assert "box4 gitea no PR for the branch" 1 'TURN-CONTRACT fail box4: pr-not-open'
+
+# Net: a forge with no official CLI is refused, never guessed.
+gitc -C "$forge_repo" remote set-url origin https://bitbucket.org/acme/app.git
+run_dir=$forge_repo
+run --finished
+assert "box4 bitbucket is refused" 1 'TURN-CONTRACT fail box4: pr-unreachable'
+assert_grep_i "the refusal names bitbucket" 'bitbucket' "$tmp/stderr"
+
+# A host whose name says nothing: refused with both overrides named.
+gitc -C "$forge_repo" remote set-url origin https://git.example.com/acme/app.git
+run_dir=$forge_repo
+run --finished
+assert "box4 unknown forge host is refused" 1 'TURN-CONTRACT fail box4: pr-unreachable'
+assert_grep "the refusal names --forge" -- '--forge' "$tmp/stderr"
+assert_grep "the refusal names AGENTIC_WORKFLOW_FORGE" 'AGENTIC_WORKFLOW_FORGE' "$tmp/stderr"
+
+# The override wins over the host, and an absent CLI fails closed naming it.
+gitc -C "$forge_repo" remote set-url origin https://gitlab.com/acme/app.git
+GT_STUB_LINE="open $forge_head"
+run_dir=$forge_repo
+run --finished --forge gitea
+assert "box4 --forge overrides the detected host" 0 'TURN-CONTRACT ok'
+
+run_dir=$forge_repo
+run --finished --forge private-forge
+assert "box4 an unknown --forge value is a usage error" 2 ''
+
+PATH="/usr/bin:/bin"
+run_dir=$forge_repo
+run --finished --forge gitea
+assert "box4 a missing forge CLI fails closed" 1 'TURN-CONTRACT fail box4: pr-unreachable'
+assert_grep "the refusal names the missing CLI" 'gt' "$tmp/stderr"
+export PATH="$stub_dir:$PATH"
+
+# A --remote that git does not know is refused, never silently defaulted.
+run_dir=$forge_repo
+run --finished --remote nowhere
+assert "box4 an unknown remote is refused" 1 'TURN-CONTRACT fail box4: pr-unreachable'
+
 # ---- box5 ------------------------------------------------------------------
 
 run_dir=$dirty_repo
@@ -382,10 +528,12 @@ fi
 
 run_dir=$ok_repo
 run --help
-assert "--help exits 0" 0 "usage: turn-contract.sh [--finished|--help]
+assert "--help exits 0" 0 "usage: turn-contract.sh [--finished|--remote <name>|--forge <name>|--help]
 
-  --finished  also check box4 (pushed branch + open pull request whose head is local HEAD)
-  --help      print this usage and exit 0"
+  --finished    also check box4 (pushed branch + open pull request whose head is local HEAD)
+  --remote <n>  the remote box4 asks the forge about (default origin)
+  --forge <n>   force the forge instead of detecting it (github, gitlab, gitea, bitbucket)
+  --help        print this usage and exit 0"
 
 run_dir=$ok_repo
 run --nope
@@ -396,4 +544,4 @@ if ! grep -q 'unknown argument: --nope' "$tmp/stderr"; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS turn contract: 31 cases\n'
+printf 'PASS turn contract: %d cases\n' "$cases"

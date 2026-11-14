@@ -688,3 +688,59 @@ test("--json writes the machine result beside the human log", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+/* ------------------------------------------------- issue #546 — the remote */
+
+test("the hook passes the pushed remote to the gate (S3)", () => {
+  const body = hookBody();
+  assert.match(body, /--remote "\$1"/, "pre-push delivers the remote name as its first argument");
+  assert.match(body, /--remote "\$remote"/, "the remote is captured once, before the stdin loop consumes the positional arguments");
+});
+
+test("--remote reaches the range-bound step (S3)", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-remote-"));
+  try {
+    fs.mkdirSync(path.join(dir, ".git"), { recursive: true });
+    fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
+    const captured = path.join(dir, "argv.txt");
+    fs.writeFileSync(
+      path.join(dir, "scripts", "push-identity-check.mjs"),
+      `import fs from "node:fs";\nfs.writeFileSync(${JSON.stringify(captured)}, process.argv.slice(2).join(" "));\n`,
+    );
+    const result = gate(["--only", "push-identity", "--repo", dir, "--push-base", "HEAD", "--remote", "upstream"]);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const argv = fs.readFileSync(captured, "utf8");
+    assert.match(argv, /--base HEAD/, "the proven range still reaches the step");
+    assert.match(argv, /--remote upstream/, "the pushed remote reaches the step");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the installed hook fails the push, naming both runtimes, when neither is installed (S6)", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-runtime-"));
+  try {
+    fs.mkdirSync(path.join(dir, ".git", "hooks"), { recursive: true });
+    assert.equal(gate(["--install-hook", "--repo", dir]).status, 0);
+    const hook = path.join(dir, ".git", "hooks", "pre-push");
+    // A `PATH` carrying git and nothing else: the shape of a machine where the
+    // gate's runtimes are not installed.
+    const bin = path.join(dir, "bin");
+    fs.mkdirSync(bin, { recursive: true });
+    for (const name of ["git", "sh", "dirname", "uname"]) {
+      const found = spawnSync("sh", ["-c", `command -v ${name}`], { encoding: "utf8" }).stdout.trim();
+      if (found) fs.symlinkSync(found, path.join(bin, name));
+    }
+    const run = spawnSync("bash", [hook], {
+      cwd: dir,
+      encoding: "utf8",
+      input: "",
+      env: { PATH: bin, HOME: dir },
+    });
+    assert.equal(run.status, 1, `the push must not be let through: ${run.stdout}${run.stderr}`);
+    assert.match(run.stderr, /bun/, "the message names bun");
+    assert.match(run.stderr, /node/, "the message names node");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

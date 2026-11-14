@@ -66,6 +66,62 @@ expect_block "copy env read" --command "cp .env /tmp/env.backup"
 expect_block "python env read" --command "python -c 'open(\".env\").read()'"
 expect_block "read-tool env path" --path "/srv/app/.env.local"
 
+# Issue #546 — the forge merge surface the guard claimed to cover, and the
+# per-project allowlist. Every row here is a merge the old regexes let through.
+expect_block "gitea direct PR merge" --command "gt pr merge 12"
+expect_block "gitea repo-option PR merge" --command "gt -R acme/app pr merge 12"
+expect_block "gitea squash PR merge" --command "gt pr merge 12 --method squash"
+expect_block "hub merge" --command "hub merge https://github.com/acme/app/pull/12"
+expect_block "hub API merge" --command "hub api -X PUT repos/acme/app/pulls/12/merge"
+expect_block "GitLab API MR merge" --command "glab api -X PUT projects/acme%2Fapp/merge_requests/12/merge"
+expect_block "GitLab REST MR merge" --command "curl -X PUT https://gitlab.com/api/v4/projects/1/merge_requests/12/merge"
+expect_block "Gitea API merge" --command "curl -X POST https://gitea.com/api/v1/repos/acme/app/pulls/12/merge"
+expect_block "Bitbucket API merge" --command "curl -X POST https://api.bitbucket.org/2.0/repositories/acme/app/pullrequests/12/merge"
+expect_block "tea PR merge" --command "tea pr merge --repo acme/app 12"
+
+# The allowlist: one whole command line per entry, project-local, fail-closed.
+allow_tmp=$(mktemp -d)
+trap 'rm -rf "$allow_tmp"' EXIT
+mkdir -p "$allow_tmp/hooks"
+cp "$guard" "$allow_tmp/hooks/guard-command.sh"
+allow_guard="$allow_tmp/hooks/guard-command.sh"
+
+# no allowlist at all: blocked, as above
+if "$allow_guard" --command "gh pr merge 12 --squash" >/dev/null 2>&1; then
+  printf 'FAIL block: merge without an allowlist\n' >&2
+  failures=$((failures + 1))
+fi
+
+# comments and blank lines are never entries
+printf '# a per-project merge the owner approved\n\n' > "$allow_tmp/hooks/guard-allow.txt"
+if "$allow_guard" --command "gh pr merge 12 --squash" >/dev/null 2>&1; then
+  printf 'FAIL block: comments and blank lines are not entries\n' >&2
+  failures=$((failures + 1))
+fi
+if "$allow_guard" --command "" >/dev/null 2>&1; then :; else
+  printf 'FAIL allow: an empty command is inert\n' >&2
+  failures=$((failures + 1))
+fi
+
+# the exact approved line passes; nothing else does
+printf 'gh pr merge 12 --squash\n' > "$allow_tmp/hooks/guard-allow.txt"
+if ! "$allow_guard" --command "gh pr merge 12 --squash" >/dev/null 2>&1; then
+  printf 'FAIL allow: an allowlisted merge line\n' >&2
+  failures=$((failures + 1))
+fi
+if "$allow_guard" --command "gh pr merge 13 --squash" >/dev/null 2>&1; then
+  printf 'FAIL block: a different PR is not the allowlisted line\n' >&2
+  failures=$((failures + 1))
+fi
+if "$allow_guard" --command "gh pr merge 12 --squash && cat .env" >/dev/null 2>&1; then
+  printf 'FAIL block: an allowlisted line never smuggles a second command\n' >&2
+  failures=$((failures + 1))
+fi
+if "$allow_guard" --command "cat .env" >/dev/null 2>&1; then
+  printf 'FAIL block: the allowlist never widens the env rules\n' >&2
+  failures=$((failures + 1))
+fi
+
 if command -v jq >/dev/null 2>&1; then
   adapter=$(CDPATH='' cd -- "$test_dir/../adapters" && pwd)/pre-tool-guard.sh
   copilot=$(CDPATH='' cd -- "$test_dir/../adapters" && pwd)/copilot-guard.sh
@@ -99,4 +155,4 @@ if command -v jq >/dev/null 2>&1; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS command guard: 7 allowed, 27 blocked, adapters normalized\n'
+printf 'PASS command guard: 9 allowed, 37 blocked, adapters normalized\n'
