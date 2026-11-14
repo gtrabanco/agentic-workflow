@@ -429,13 +429,70 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   aggregate --check` · `ok:true, checked:2, refusals:[]` · `node
   scripts/log-immutability.mjs` · PASS (range 15 commits) · `node
   scripts/temp-hygiene.mjs` · PASS (0 findings).
+- **L4** — 2026-11-14, the request, verbatim:
+  ```
+  Apply to this repository: issue #514
+  ```
+- **D9** — 2026-11-14, recheck resolution: the unit is already merged
+  (`e6a696e9`, PR [#520](https://github.com/gtrabanco/agentic-workflow/pull/520)),
+  so the apply action has **zero** matching rows — no unticked task, no unverified
+  obligation, no open finding. The one open item the state declares is the §9
+  recheck of the 2026-11-12 `EXTERNAL VERIFY` receipt's three blockers, so the
+  turn's scope is that recheck and nothing else. Blockers 1 and 2 reproduce green
+  at this head; blocker 3's substance (a nonexistent path) is fixed, but the
+  validation outcome of O11's repaired cell was invalidated by a later unrelated
+  unit — #546 added a second annex link in the template hooks README, so the
+  cell's files-wide `matches 2` reads 3. O11 flips back before the repair, and the
+  cell becomes **per-surface presence**, which is what the obligation asserts: the
+  old total of 2 across both files could pass with both links on one surface and
+  none on the other, so the new shape is stricter, not a relaxation to pass.
+- **E20** — 2026-11-14, the recheck, foreground, every command run at this head:
+  blocker 1 · `bun test scripts/git-config-writes.test.mjs` · exit 0 · 9 pass / 0
+  fail · `node scripts/git-config-writes.mjs` · exit 0 · `294 carriers scanned, 0
+  findings / verdict: PASS` (294 where the receipt read 278 — later units added
+  carriers; the finding count is the claim that matters) · blocker 2 · the
+  retirement search `rg -n '"config", "user\.|"config", "commit\.gpgsign"'
+  scripts packages --glob '*.test.mjs'` · exit 1 · 0 matches (was 12) · `bun test
+  scripts/review-receipt.test.mjs scripts/audit-pr-receipt.test.mjs` · 58 pass / 0
+  fail · `bun test packages/agentic-workflow/test/doc.envelope.test.mjs` · 41 pass
+  / 0 fail · blocker 3 · `node scripts/skill-lint.mjs` · exit 0 · `101 file(s) · 7
+  check(s) · 0 finding(s) / verdict: PASS` · `rg -c 'GIT_IDENTITY_HARDENING'
+  docs/workflow/README.md` · 1 · `rg -c 'GIT_IDENTITY_HARDENING'
+  template/.agentic-workflow/hooks/README.md` · 2, both ≥1 — and the remaining
+  obligations' validators re-run green at this head: `git-env` 6/0,
+  `push-identity-check` 20/0, `identity-hook-parity` 15/0, `git-identity-guard`
+  22/0, the hook shell suite 31 cases / 0 failures, `config-contract` 17/0,
+  `local-gate.test` 49/0, `receipt-guard` 13/0, `prose-gate-inventory` 22/0,
+  `unit-doc-contract` + `ledger-provenance` 48/0, `red-first` `54 pair(s) · 0
+  finding(s) / verdict: PASS`, `docs-generate --check` `3 checked · 0 missing · 0
+  stale · 0 orphaned / verdict: PASS`, `check-skill-context` `PASS context
+  budgets: 30 skills`, `local-gate --list` names `push-identity`, and
+  `rg -c 'GIT_CONFIG_COUNT'` on both carriers · 0 matches.
+- **G8** — 2026-11-14, `node scripts/run-root-suite.mjs` · exit 0 · 113 suites
+  PASS / 0 FAIL (113 where G6 read 109 — later units added suites; the exit status
+  is the claim that matters).
 
 ## Next
 
-Owner's external verification of the correction batch (the head carrying the
-red corpus, the gate fix and the migration). One correction batch has been
-applied per the bound: recheck limited to the three reported blockers; a
-second batch only if the same blocker persists, then `Needs your decision`.
+Owner's external verification of this recheck: the merged unit (PR
+[#520](https://github.com/gtrabanco/agentic-workflow/pull/520)) plus the
+2026-11-14 blocker recheck and O11's per-surface cell.
+
+One item this recheck found and did **not** repair, because no writer can:
+`docs/ROADMAP.md` carries **two** rows for NN 514 — an `idea` row at line 156
+appended by `31439d10 chore: regen` (2026-11-13, the emitter) and this unit's own
+`in-progress` row at line 166 (`d449f9aa`). Every other NN in `## Features` has
+exactly one row. Because `parseIndexRows` is a `Map` keyed by NN, the last row
+wins, so the index reads `in-progress` for a unit whose PR is merged, and the
+settle writer (`roadmap rowUpsert`) can only rewrite the **first** matching row —
+it would update the `idea` duplicate and leave the verdict red. `bun
+scripts/roadmap-settle.mjs` now fails on the two PR-URL lines this recheck added
+(`SPEC.md:437`, `SPEC.md:478`), which is the gate telling the truth about that
+row, not a defect of this batch. The repair needs the owner: delete the emitter's
+duplicate row and settle the survivor through `roadmap rowUpsert` to
+`done · [#520](https://github.com/gtrabanco/agentic-workflow/pull/520)`, or fix
+the emitter's row key as its own unit. A hand edit of the shared index is the one
+thing this session must not do.
 
 ## References
 
