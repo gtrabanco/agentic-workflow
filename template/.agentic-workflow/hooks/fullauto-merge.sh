@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+hook_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=lib/temp.sh
+. "$hook_dir/lib/temp.sh" || { printf 'fullauto-merge: %s is missing\n' "$hook_dir/lib/temp.sh" >&2; exit 1; }
+
 pr=""
 run_id=""
 method="merge"
@@ -68,7 +72,7 @@ comment_exists() {
 
 post_comment() {
   merge_sha=$1
-  comment_file=$(mktemp "${TMPDIR:-/tmp}/agentic-workflow-automerge.XXXXXX")
+  comment_file=$(aw_mktemp_file agentic-workflow-automerge) || fail "no writable temporary directory (TMPDIR, TEMP, TMP, /tmp)"
   tick='`'
   {
     printf '%s\n' "$marker"
