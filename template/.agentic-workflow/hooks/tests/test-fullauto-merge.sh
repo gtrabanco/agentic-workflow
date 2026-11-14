@@ -29,10 +29,14 @@ printf '\n' > "$fixture/state/method"
 printf 'main\n' > "$fixture/state/base"
 printf 'SUCCESS\n' > "$fixture/state/checks"
 
-sed "s/__HEAD__/$head_sha/g" > "$fixture/bin/gh" <<'FIXTURE'
+# The stub's head is the fixture's own, unless `HEAD_SHA` names another (the
+# forge-matrix fixtures each have their own head).
+printf '%s\n' "$head_sha" > "$fixture/state/head"
+cat > "$fixture/bin/gh" <<'FIXTURE'
 #!/usr/bin/env bash
 set -euo pipefail
 state_dir=${GH_TEST_STATE:?}
+head=$(cat "$state_dir/head")
 if [ "$1 $2" = "pr view" ]; then
   state=$(cat "$state_dir/pr-state")
   comments=$(cat "$state_dir/comments")
@@ -40,26 +44,22 @@ if [ "$1 $2" = "pr view" ]; then
   base=$(cat "$state_dir/base")
   bodies='[]'
   if [ "$comments" -gt 0 ]; then
-    bodies='[{"body":"<!-- agentic-workflow:automerge head=__HEAD__ -->"}]'
+    bodies='[{"body":"<!-- agentic-workflow:automerge head='"$head"' -->"}]'
   fi
   if [ "${GH_TEST_AUDIT:-1}" = "stale" ]; then
     bodies='[{"body":"<!-- audit-pr:merge-ready sha=deadbeef -->"}]'
   elif [ "${GH_TEST_AUDIT:-1}" = "1" ]; then
     if [ "$comments" -gt 0 ]; then
-      bodies='[{"body":"<!-- agentic-workflow:automerge head=__HEAD__ -->"},{"body":"<!-- audit-pr:merge-ready sha=__HEAD__ -->"}]'
+      bodies='[{"body":"<!-- agentic-workflow:automerge head='"$head"' -->"},{"body":"<!-- audit-pr:merge-ready sha='"$head"' -->"}]'
     else
-      bodies='[{"body":"<!-- audit-pr:merge-ready sha=__HEAD__ -->"}]'
+      bodies='[{"body":"<!-- audit-pr:merge-ready sha='"$head"' -->"}]'
     fi
   fi
   status='[]'
   if [ "$checks" != "NONE" ]; then
     status="[{\"conclusion\":\"$checks\"}]"
   fi
-  if printf '%s\n' "$*" | grep -q 'mergeCommit'; then
-    printf '{"number":12,"url":"https://example.invalid/pr/12","state":"%s","baseRefName":"%s","headRefOid":"__HEAD__","mergeable":"MERGEABLE","statusCheckRollup":%s,"comments":%s,"mergeCommit":{"oid":"abc1234"}}\n' "$state" "$base" "$status" "$bodies"
-  else
-    printf '{"number":12,"url":"https://example.invalid/pr/12","state":"%s","baseRefName":"%s","headRefOid":"__HEAD__","mergeable":"MERGEABLE","statusCheckRollup":%s,"comments":%s}\n' "$state" "$base" "$status" "$bodies"
-  fi
+  printf '{"number":12,"url":"https://example.invalid/pr/12","state":"%s","baseRefName":"%s","headRefOid":"%s","mergeable":"MERGEABLE","statusCheckRollup":%s,"comments":%s,"mergeCommit":{"oid":"abc1234"}}\n' "$state" "$base" "$head" "$status" "$bodies"
   exit 0
 fi
 if [ "$1 $2" = "repo view" ]; then
@@ -155,6 +155,16 @@ fi
 mkdir -p "$fixture/forge-state"
 export GH_TEST_STATE="$fixture/forge-state"
 
+# The gh stub's fixture files, in the state a green, mergeable PR has.
+seed_forge_state() {
+  printf '%s\n' "${1:-$head_sha}" > "$fixture/forge-state/head"
+  printf 'OPEN\n' > "$fixture/forge-state/pr-state"
+  printf 'main\n' > "$fixture/forge-state/base"
+  printf 'SUCCESS\n' > "$fixture/forge-state/checks"
+  printf '0\n' > "$fixture/forge-state/comments"
+  printf '0\n' > "$fixture/forge-state/merges"
+}
+
 # The GitLab and Gitea stubs answer the adapter's documented argv.
 cat > "$fixture/bin/glab" <<'FIXTURE'
 #!/usr/bin/env bash
@@ -164,8 +174,13 @@ printf '%s\n' "$*" >> "$state_dir/glab.argv"
 case "$1 $2" in
   "mr view") cat "$state_dir/glab.mr" ;;
   "repo view") printf '{"default_branch":"main"}\n' ;;
-  api) cat "$state_dir/glab.notes" ;;
-  "mr merge") printf 'MERGED\n' > "$state_dir/glab.merged" ;;
+  "mr note") printf '%s\n' "$*" > "$state_dir/glab.comment.argv" ;;
+  api*) cat "$state_dir/glab.notes" ;;
+  "mr merge")
+    printf 'MERGED\n' > "$state_dir/glab.merged"
+    sed -e 's/"state":"opened"/"state":"merged"/' -e 's/"merge_status":"can_be_merged"/"merge_commit_sha":"abc1234"/' "$state_dir/glab.mr" > "$state_dir/glab.mr.new"
+    mv "$state_dir/glab.mr.new" "$state_dir/glab.mr"
+    ;;
   *) printf 'unsupported fake glab call: %s\n' "$*" >&2; exit 2 ;;
 esac
 FIXTURE
@@ -179,29 +194,44 @@ printf '%s\n' "$*" >> "$state_dir/gt.argv"
 case "$1 $2" in
   "pr view") cat "$state_dir/gt.pr" ;;
   "repo view") printf '{"default_branch":"main"}\n' ;;
-  "pr merge") printf 'MERGED\n' > "$state_dir/gt.merged" ;;
+  "pr comment") printf '%s\n' "$*" > "$state_dir/gt.comment.argv" ;;
+  "pr merge")
+    printf 'MERGED\n' > "$state_dir/gt.merged"
+    sed -e 's/"merged":false/"merged":true/' -e 's/"state":"open"/"state":"closed"/' -e 's/"draft":false,$/"merge_commit_sha":"abc1234",/' "$state_dir/gt.pr" > "$state_dir/gt.pr.new"
+    mv "$state_dir/gt.pr.new" "$state_dir/gt.pr"
+    ;;
   *) printf 'unsupported fake gt call: %s\n' "$*" >&2; exit 2 ;;
 esac
 FIXTURE
 chmod +x "$fixture/bin/gt"
 
-# new_forge_repo <name> <remote-url>: a clean pushed branch whose origin is a
-# forge URL rather than a filesystem path.
+# new_forge_repo <name> <host>: a clean, pushed branch whose origin is a `file://`
+# URL that names a forge host. The URL is a real repository on disk, so the
+# wrapper's `git fetch` never leaves the machine, and the adapter still has a
+# host to classify. An empty host keeps the plain path (the `default` forge).
 new_forge_repo() {
-  local name=$1 url=$2 dir="$fixture/forge-$1"
-  git init -q --bare "$fixture/$name-remote.git"
+  local name=$1 host=${2:-} dir="$fixture/forge-$1"
+  local bare="$fixture/$name-remote.git"
+  if [ -n "$host" ]; then
+    bare="$fixture/$name/$host/acme/app.git"
+  fi
+  mkdir -p "$(dirname -- "$bare")"
+  git init -q --bare "$bare"
   git init -q -b main "$dir"
   printf 'fixture\n' > "$dir/README.md"
-  printf 'merge: fullauto\n' > "$dir/SHIP_DECISIONS.md"
-  git -C "$dir" "${identity[@]}" add README.md SHIP_DECISIONS.md
+  mkdir -p "$dir/docs/features"
+  printf 'merge: fullauto\n' > "$dir/docs/features/SHIP_DECISIONS.md"
+  git -C "$dir" "${identity[@]}" add README.md docs/features/SHIP_DECISIONS.md
   git -C "$dir" "${identity[@]}" commit -qm fixture
-  git -C "$dir" remote add origin "$fixture/$name-remote.git"
+  git -C "$dir" remote add origin "$bare"
   git -C "$dir" "${identity[@]}" push -qu origin main
   git -C "$dir" switch -qc feat/fixture
   printf 'feature\n' >> "$dir/README.md"
   git -C "$dir" "${identity[@]}" commit -qam feature
   git -C "$dir" "${identity[@]}" push -qu origin feat/fixture
-  git -C "$dir" remote set-url origin "$url"
+  if [ -n "$host" ]; then
+    git -C "$dir" remote set-url origin "file://$bare"
+  fi
   printf '%s' "$(git -C "$dir" rev-parse HEAD)"
 }
 
@@ -213,18 +243,13 @@ run_forge() {
 }
 
 # ---- the `--remote` flag names the remote box4-equivalent facts come from ----
-forge_head=$(new_forge_repo remote "$fixture/remote-again.git")
-cp "$fixture/state/checks" "$fixture/forge-state/checks"
-printf 'SUCCESS\n' > "$fixture/forge-state/checks"
-printf 'OPEN\n' > "$fixture/forge-state/pr-state"
-printf '0\n' > "$fixture/forge-state/comments"
-printf '0\n' > "$fixture/forge-state/merges"
+forge_head=$(new_forge_repo remote "")
+seed_forge_state "$forge_head"
 
 run_forge "$fixture/forge-remote" --remote origin >/dev/null
 [ "$(cat "$fixture/forge-state/merges")" = "1" ]
 
-printf 'OPEN\n' > "$fixture/forge-state/pr-state"
-printf '0\n' > "$fixture/forge-state/merges"
+seed_forge_state "$forge_head"
 if run_forge "$fixture/forge-remote" --remote nowhere >/dev/null 2>&1; then
   echo "FAIL: an unknown --remote was accepted" >&2
   exit 1
@@ -232,9 +257,8 @@ fi
 [ "$(cat "$fixture/forge-state/merges")" = "0" ]
 
 # ---- GitLab: glab answers the view, the notes and the merge ----------------
-glab_head=$(new_forge_repo gitlab https://gitlab.com/acme/app.git)
-printf 'OPEN\n' > "$fixture/forge-state/pr-state"
-printf '0\n' > "$fixture/forge-state/merges"
+glab_head=$(new_forge_repo gitlab gitlab.com)
+seed_forge_state "$glab_head"
 printf '{"iid":12,"web_url":"https://gitlab.com/acme/app/-/merge_requests/12","state":"opened","target_branch":"main","sha":"%s","merge_status":"can_be_merged","draft":false,"head_pipeline":{"status":"success"}}\n' "$glab_head" > "$fixture/forge-state/glab.mr"
 printf '[{"body":"<!-- audit-pr:merge-ready sha=%s -->"}]\n' "$glab_head" > "$fixture/forge-state/glab.notes"
 : > "$fixture/forge-state/glab.argv"
@@ -262,23 +286,23 @@ fi
 printf '[{"body":"<!-- audit-pr:merge-ready sha=%s -->"}]\n' "$glab_head" > "$fixture/forge-state/glab.notes"
 
 # ---- Gitea: gt answers the view and the merge ------------------------------
-gitea_head=$(new_forge_repo gitea https://gitea.com/acme/app.git)
-printf 'OPEN\n' > "$fixture/forge-state/pr-state"
-printf '0\n' > "$fixture/forge-state/merges"
+gitea_head=$(new_forge_repo gitea gitea.com)
+seed_forge_state "$gitea_head"
 printf '{"number":12,"url":"https://gitea.com/acme/app/pulls/12","state":"open","base":"main","head_sha":"%s","mergeable":true,"draft":false,"merged":false,"comments":[{"body":"<!-- audit-pr:merge-ready sha=%s -->"}]}\n' "$gitea_head" "$gitea_head" > "$fixture/forge-state/gt.pr"
 : > "$fixture/forge-state/gt.argv"
 rm -f "$fixture/forge-state/gt.merged"
 
-run_forge "$fixture/forge-gitea" --remote origin >/dev/null
+# Gitea exposes no check rollup through the CLI this unit pins, so the wrapper
+# falls back to the pre-existing local-gate proof for the same SHA.
+AGENTIC_WORKFLOW_LOCAL_GATE_SHA="$gitea_head" run_forge "$fixture/forge-gitea" --remote origin >/dev/null
 if [ -f "$fixture/forge-state/gt.merged" ]; then :; else
   echo "FAIL: gitea PR was not merged through gt" >&2
   exit 1
 fi
 
 # ---- the forges without a carrier are refused, never merged --------------
-bitbucket_head=$(new_forge_repo bitbucket https://bitbucket.org/acme/app.git)
-printf 'OPEN\n' > "$fixture/forge-state/pr-state"
-printf '0\n' > "$fixture/forge-state/merges"
+bitbucket_head=$(new_forge_repo bitbucket bitbucket.org)
+seed_forge_state "$bitbucket_head"
 if run_forge "$fixture/forge-bitbucket" --remote origin >/dev/null 2>&1; then
   echo "FAIL: bitbucket was merged without a carrier" >&2
   exit 1
@@ -288,11 +312,10 @@ fi
 # ---- the override wins over the host, and an absent CLI fails closed ------
 printf '{"number":12,"url":"https://gitlab.com/acme/app/-/merge_requests/12","state":"open","base":"main","head_sha":"%s","mergeable":true,"draft":false,"merged":false,"comments":[{"body":"<!-- audit-pr:merge-ready sha=%s -->"}]}\n' "$glab_head" "$glab_head" > "$fixture/forge-state/gt.pr"
 rm -f "$fixture/forge-state/gt.merged"
-run_forge "$fixture/forge-gitlab" --remote origin --forge gitea >/dev/null
+AGENTIC_WORKFLOW_LOCAL_GATE_SHA="$glab_head" run_forge "$fixture/forge-gitlab" --remote origin --forge gitea >/dev/null
 [ -f "$fixture/forge-state/gt.merged" ]
 
-printf 'OPEN\n' > "$fixture/forge-state/pr-state"
-printf '0\n' > "$fixture/forge-state/merges"
+seed_forge_state "$glab_head"
 rm -f "$fixture/forge-state/gt.merged"
 missing_output=$( cd "$fixture/forge-gitlab" && PATH="$fixture/only-gh:$PATH" GH_TEST_STATE="$fixture/forge-state" \
   "$wrapper" --pr 12 --run-id fixture-run --remote origin --forge gitea 2>&1 ) && exit 1 || true
