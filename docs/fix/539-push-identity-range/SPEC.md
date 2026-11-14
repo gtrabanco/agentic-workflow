@@ -105,12 +105,18 @@ what the two gates judge:
   `rg -n 'PUSH IDENTITY —|Log-immutability:' scripts` still finds the same two
   renderers, and `PUSH IDENTITY — skipped:` / `Log-immutability: <code>` keep
   their wording.
-- The superseded claim — "every commit of `<base>..<head>` is judged" — is
+- The superseded claim — "every commit of `<base>..<head>` is judged" — was
   prose in three places (the two headers and
-  `docs/workflow/GIT_IDENTITY_HARDENING.md`); each is rewritten in this change,
-  and `rg -n 'every author \*and\* committer of' docs/workflow
-  template/docs/workflow` still resolves to prose that names the published-ref
-  boundary.
+  `docs/workflow/GIT_IDENTITY_HARDENING.md`). Each now carries the boundary: the
+  log header's baseline bullet and both annex layer-table rows were rewritten in
+  place, and the push-identity header sentence plus the annex push-range lead
+  keep their general wording directly beside the reachability paragraph that
+  names it ("only the never-published commits are judged"). The old
+  single-asterisk phrasing is absent from the docs surface: `rg -n 'every author
+  \*and\* committer of' docs/workflow template/docs/workflow` finds nothing
+  (exit 1), while `rg -c 'never-published' docs/workflow/GIT_IDENTITY_HARDENING.md
+  template/docs/workflow/GIT_IDENTITY_HARDENING.md` answers 2 lines in each
+  copy.
 - No second copy of the range policy survives: the two scripts call one module
   (`rg -c 'publishedRefs\\(' scripts/*.mjs` → the module's definition and its two
   callers, never a private copy).
@@ -528,6 +534,47 @@ authoritative step list.
   `fix/539-push-identity-range` pushed; PR [#542](https://github.com/gtrabanco/agentic-workflow/pull/542)
   opened; the `## Fixes` row settled `done · [#542]` through `roadmap fixrow`
   (CAS `f00688c4` → `2292abc8`).
+- **L4** — 2026-11-14, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Correction batch for the 2026-11-14 `EXTERNAL VERIFY` (2 blockers): the
+  `## Retirements` receipt now records its true observed result (the
+  single-asterisk phrasing matches nothing in the two docs directories; the
+  boundary-naming prose is the rewritten rows and the reachability paragraphs),
+  and G3's promise-coherence invocation is corrected here, not edited — the
+  recorded tally belongs to the path-scoped command
+  `bun scripts/promise-coherence.mjs docs/fix/539-push-identity-range/SPEC.md`
+  (exit 0 · `verdict PASS` · 2 claims checked · 13 skipped, reproduced at the
+  recorded head `8a642cfd` and at this batch), whose path argument G3's line
+  omitted; the bare command answers `38 checked · 22 skipped`. A correction
+  appends — it never edits an earlier line.
+- **E10** — 2026-11-14, the blockers-only recheck and the S2 differential ·
+  `rg -n 'every author \*and\* committer of' docs/workflow template/docs/workflow`
+  · exit 1 · 0 matches — the result the rewritten `## Retirements` records;
+  `rg -c 'never-published' docs/workflow/GIT_IDENTITY_HARDENING.md template/docs/workflow/GIT_IDENTITY_HARDENING.md`
+  · exit 0 · `2` lines per copy; the path-scoped promise-coherence of L4 · exit
+  0 · `2 claims checked · 13 skipped`; the bare
+  `bun scripts/promise-coherence.mjs` · exit 0 · `38 checked · 22 skipped`
+  (unchanged by this batch); `bun test scripts/published-refs.test.mjs
+  scripts/push-identity-check.test.mjs scripts/log-immutability.test.mjs` · exit
+  0 · 41 pass · 0 fail; `agentic-workflow verify` on this doc · exit 0 ·
+  `ok: true` (0 violations); `agentic-workflow phase-lint` · exit 0 ·
+  `verdict PASS` (fingerprint unchanged); `bun scripts/docs-generate.mjs --check`
+  · exit 0 · PASS; `bun scripts/red-first.mjs` · exit 0 · 0 findings;
+  `node scripts/log-immutability.mjs --base a83b9b38` · exit 0 · `0 violations ·
+  range 7 commits · verdict: PASS`; `agentic-workflow journal aggregate --check`
+  · exit 0 · `{"ok":true,"checked":9}`; the five load-flaked suites alone
+  (byte-identical to base) · exit 0 · 156 pass · 0 fail.
+- **G4** — 2026-11-14, the correction head. `bun scripts/run-root-suite.mjs` ·
+  exit 1 · 109 PASS · 2 FAIL — `check-skill-context` and `residual-classify`,
+  the E9 base reds only; two interim runs showed extra `ceremony-*`,
+  `next-step-ranking` and `setup-env` reds while two sibling sessions ran their
+  own root-suite/local-gate on this shared box (load 6–9 on 6 CPUs), and every
+  one of those suites is byte-identical to base and passes standalone. `bun
+  scripts/local-gate.mjs` · exit 1 · `FAILED at root-suite` — the same red step
+  (fail-fast also cut in-flight suites short under that load); the steps this
+  change moves are green in E10.
 
 ## Next
 
