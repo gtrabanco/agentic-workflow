@@ -1,5 +1,6 @@
 ---
 "@gtrabanco/agentic-workflow": minor
+"@gtrabanco/pi-agentic-workflow": patch
 ---
 
 feat(gate): a deterministic push-range secret scan (issue #487)
