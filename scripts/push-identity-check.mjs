@@ -18,6 +18,13 @@
  * global). Publication is the last moment this is cheap to stop; after the push
  * the only repair is a history rewrite.
  *
+ * What the range *is* respects reachability (issue #539): a commit already
+ * reachable from a published ref — the remote mainline, and the pushed branch's
+ * own remote tip — cannot be changed by this push, so it is skipped and only the
+ * never-published commits are judged. Without that, merging `origin/main` into a
+ * branch put main's own history in the range and refused every merge-push. The
+ * rule is one module (`published-refs.mjs`), never a copy here.
+ *
  * Read-only by construction: it spawns `git rev-list` and `git log`, reads two
  * JSON files, writes nothing, calls no network, and never repairs a value — the
  * repair text it prints is the operator's to run.
@@ -43,6 +50,8 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+
+import { publishedRefs, unpublishedCommits } from "./published-refs.mjs";
 
 const DEFAULT_ROOT = process.cwd();
 const BASE_CONFIG_FILE = "agentic-workflow.json";
@@ -183,9 +192,11 @@ function git(root, args) {
   return result.stdout;
 }
 
-/** The commits of `base..head`, oldest first, as `{sha, author, committer}`. */
-export function rangeCommits({ root, base, head = "HEAD" }) {
-  const shas = git(root, ["rev-list", "--reverse", `${base}..${head}`]).split("\n").filter(Boolean);
+/** The commits of `base..head` a published ref does not reach, oldest first, as
+ *  `{sha, author, committer}`. The range's own base is the pushed branch's remote
+ *  tip when the hook supplies it, so it enters the published set too. */
+export function rangeCommits({ root, base, head = "HEAD", published = [] }) {
+  const shas = unpublishedCommits({ root, base, head, published });
   return shas.map((sha) => {
     const [authorName, authorEmail, committerName, committerEmail] = git(root, [
       "log",
@@ -312,7 +323,7 @@ export function main(argv) {
 
   let commits;
   try {
-    commits = rangeCommits({ root, base: resolvedBase, head });
+    commits = rangeCommits({ root, base: resolvedBase, head, published: publishedRefs({ root, extra: [resolvedBase] }) });
   } catch (error) {
     return usage(error.message);
   }
