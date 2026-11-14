@@ -133,6 +133,7 @@ import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
 import { checkTrial, boundLine, parseDuration, CheckError, readPidLive } from "../src/resources/check.mjs";
 import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
+import { createFeedback, parseFeedbackArgs } from "../src/feedback/index.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -392,6 +393,25 @@ function docRefuse(code, message) {
   process.exit(2);
 }
 
+/**
+ * The one-line summary a `doc` run reports to the feedback channel (issue #424):
+ * what the envelope already carries, phrased for a reader rather than a parser.
+ * The envelope stays the machine receipt (S7) — this adds no field to it.
+ */
+function docSummary(envelope) {
+  const sync = envelope.store?.lastSync;
+  if (sync) {
+    return `${sync.files_scanned} files scanned, ${sync.files_changed} changed, ${sync.files_deleted} deleted · ${envelope.store.chunks} chunks`;
+  }
+  if (envelope.command === "status") {
+    return `${envelope.store?.files ?? 0} files · ${envelope.store?.chunks ?? 0} chunks`;
+  }
+  if (envelope.store?.embedded !== undefined) {
+    return `${envelope.store.files} files · ${envelope.store.chunks} chunks · ${envelope.store.embedded} embedded`;
+  }
+  return `${envelope.results.length} result(s)`;
+}
+
 /** The seam an appended block needs at the section's end: a block boundary, so
  *  the text never glues to the previous line nor to the next heading. */
 function appendSeam(body) {
@@ -540,16 +560,33 @@ function configRefusal(message, issues, json) {
   process.exit(2);
 }
 
-const command = process.argv[2];
+// The tier flags are consumed before any command's grammar runs (issue #424):
+// every grammar downstream is closed, so `doc` would call `--debug` an unknown
+// flag. One strip here makes the tiers universal.
+const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(2));
+const command = argv[0];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> ...");
+  console.error(
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...",
+  );
   process.exit(1);
 }
 
-const restArgs = process.argv.slice(3);
+const restArgs = argv.slice(1);
+/**
+ * The process-wide feedback channel: one attachment covers every subcommand
+ * (the editor services below and the runner family through `RUNNER_COMMANDS`).
+ * It announces itself only once the run passes the threshold, and reports the
+ * exit in the closing line — nothing here touches stdout.
+ */
+const feedback = createFeedback({
+  tier: feedbackTier,
+  subject: `agentic-workflow ${command}`,
+  quiet: restArgs.includes("--quiet"),
+});
+feedback.attach();
 const parsed = parseArgs(restArgs);
 const rawArgs = parsed.args;
-
 switch (command) {
   // ── relay — the lane's offline half of pi-web's packet contract ──────
   case "relay": {
@@ -815,7 +852,11 @@ switch (command) {
     }
     let envelope;
     try {
-      envelope = await runDocOp(grammar, { rootDir: process.cwd() });
+      // The channel is the `doc` half of issue #424: the retrieval ops are the
+      // runs long enough to look frozen, so their stages and per-file progress
+      // report through it. `--quiet` mutes the regular tier (AC23) and the
+      // machine receipt on stdout is untouched either way.
+      envelope = await runDocOp(grammar, { rootDir: process.cwd(), feedback });
     } catch (e) {
       // IO/store failures are usage/IO territory (exit 1, D3); the message
       // goes to stderr and stdout stays empty.
@@ -851,6 +892,7 @@ switch (command) {
       }
       console.log(`doc ${envelope.command}: ${envelope.results.length} result(s)`);
     }
+    feedback.done(docSummary(envelope));
     break;
   }
 
