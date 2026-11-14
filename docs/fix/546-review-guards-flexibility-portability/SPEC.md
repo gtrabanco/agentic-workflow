@@ -570,6 +570,22 @@ freeze (D1).
   only the disclosed pre-existing `doc-discipline` AC25 red, restoring the G1
   count (the intermediate head's second red, `roadmap-settle`, was blocker 1).
 
+- **D6** — 2026-11-14, owner decision closing advisory 1: AC25's store-path
+  scan exempts `.agentic-workflow/journal/` — the fix-489 fragment is an
+  immutable prose carrier (log-immutability, #468 makes the aggregator its only
+  writer), so the code the assertion judges cannot be repaired; the assertion
+  itself (`offenders.length === 0`) is untouched and only the rule's declared
+  scope gains the journal, with the rationale in the allowlist comment, the
+  path-protection record in `decisions.md` D11, and issue #443's single-file
+  exemption as precedent. Owner order: make the exemption so pushes stop failing
+  on a years-old fragment.
+
+- **E8** — 2026-11-14, the exemption verified in the foreground:
+  `bun test scripts/doc-discipline.test.mjs` · exit 0 · 21 pass · 0 fail (the
+  offender list before the change named only the fix-489 fragment);
+  `node scripts/run-root-suite.mjs` · **exit 0 · 112 PASS · 0 FAIL** — the first
+  fully-green root suite on this branch.
+
 ## Next
 
 The owner's external verification of the diff. Nothing pending in this unit: the
