@@ -165,7 +165,7 @@ describe("feedback — the threshold (S2, D3)", () => {
     clock.t += 500;
     clock.onExit(3);
     deepStrictEqual(kinds(lines), ["start", "done"]);
-    match(lines.at(-1), /^feedback: done agentic-workflow verify · exit 3 · 0\.75s$/);
+    match(lines.at(-1), /^feedback: done agentic-workflow verify · exit 3 · 750ms$/);
   });
 
   it("keeps a fast universal run silent at the regular tier", () => {
@@ -232,12 +232,11 @@ describe("feedback — progress and the estimate (S2, S3)", () => {
 describe("feedback — the debug tier (S3)", () => {
   it("names every unit of work, unthrottled, and times each stage", () => {
     const { channel, lines, clock } = harness({ tier: "debug" });
-    channel.stage("scan", () => {
-      clock.t += 0;
+    channel.stage("scan", () => 1);
+    channel.stage("embed", () => {
+      clock.t += 120;
       return 1;
     });
-    clock.t += 120;
-    channel.stage("embed", () => 1);
     for (let done = 1; done <= 3; done += 1) {
       channel.progress({ done, total: 3, unit: "files", detail: `docs/${done}.md` });
       clock.t += 1;
