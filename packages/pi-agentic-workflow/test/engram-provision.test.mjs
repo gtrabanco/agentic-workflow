@@ -2,15 +2,24 @@
  * Tests for the Engram MCP provisioning (feature 66, P4 — AC3, O10/O11).
  *
  * The contract these pin, in the order the module decides it (issue #531 adds
- * the two skip statuses the native-only Engram model demands):
+ * the two skip statuses the native-only Engram model demands; issue #538 turns
+ * the report into the consent × runtime-health state machine, so every status
+ * also carries the `notice` Pi's UI should apply):
  *
- *   not-consented      no `memory.engram` opt-in ⇒ nothing registered
- *   native-active      the native gentle-engram package provides mem_* ⇒ nothing registered
- *   external-server    `ENGRAM_URL` names a running server ⇒ nothing registered
- *   binary-missing     no `engram` core binary on PATH ⇒ nothing registered, surfaces named
- *   unsupported-host   a Pi host without `registerMcpServer` ⇒ nothing written
- *   already-declared   the operator's `mcp.json` name wins ⇒ nothing shadowed
- *   registered         the exact command + args, read back verbatim
+ *   not-consented      no `memory.engram` opt-in ⇒ nothing registered, nothing said
+ *   native-active      the native gentle-engram package provides mem_* ⇒ nothing registered:
+ *                      silent when the substrate resolves, an error when it does not,
+ *                      a warning when a leftover `mcp.json` entry breaks native-only writes
+ *   external-server    `ENGRAM_URL` names a running server ⇒ nothing registered, one info line
+ *   binary-missing     no `engram` core binary on PATH ⇒ nothing registered, an error with evidence
+ *   unsupported-host   a Pi host without `registerMcpServer` ⇒ nothing written, an error
+ *   already-declared   the operator's `mcp.json` name wins ⇒ nothing shadowed, one info line
+ *   registered         the exact command + args, read back verbatim, one info line
+ *
+ * The `notice` axis is the issue's whole point: a healthy opted-in install owes
+ * the operator no line at all, and the broken one owes the exact resolution that
+ * failed. A test that asserts a message on a silent state would re-introduce the
+ * advisory #538 removed.
  *
  * Nothing here touches the network, a real PATH or a Pi session: the binary
  * lookup and the registrar are injected, which is what makes every branch
@@ -59,6 +68,10 @@ describe("engram provisioning — consent is first", () => {
     const report = provisionEngram({ consented: false, binaryPath: BINARY, declaredNames: [], register });
     strictEqual(report.status, "not-consented");
     strictEqual(calls.length, 0);
+    // Issue #538 S4/S8: the opt-out is silent — an operator who does not want
+    // memory owes the report nothing, and that is a property of the report, not
+    // only of the adapter that renders it.
+    strictEqual(report.notice, "silent");
     ok(report.message.includes("memory"));
     ok(!report.server);
   });
@@ -111,8 +124,11 @@ describe("engram provisioning — the binary must resolve (AC3)", () => {
   });
 });
 
-describe("engram provisioning — the native gentle-engram package wins (issue #531, AC1)", () => {
-  it("registers nothing and reports native-active when the native extension is installed", () => {
+describe("engram provisioning — the native gentle-engram package wins (issue #531, AC1; issue #538, S2/S3/S7)", () => {
+  it("a healthy native install says nothing: no registration and no line to read", () => {
+    // Issue #538's reproducer: the native package is installed, `memory.engram`
+    // is opted in, the core binary resolves — and the old report still printed a
+    // remediation advisory on every session start.
     const { calls, register } = recorder();
     const report = provisionEngram({
       consented: true,
@@ -122,14 +138,72 @@ describe("engram provisioning — the native gentle-engram package wins (issue #
       register,
     });
     strictEqual(report.status, "native-active");
+    strictEqual(report.notice, "silent", "a healthy opted-in install owes the operator nothing");
+    strictEqual(report.message, "");
     strictEqual(calls.length, 0, "the native mem_* tools already exist; a second MCP path would duplicate them");
-    ok(!report.server);
-    ok(report.message.includes("gentle-engram"), report.message);
-    ok(/native-only/u.test(report.message), "the report names the native-only agent-write guarantee");
+    strictEqual(report.server, undefined);
+  });
+
+  it("a native install served by ENGRAM_URL is silent too — health has two evidence routes", () => {
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: null,
+      engramUrl: "http://127.0.0.1:7437",
+      nativePackagePresent: true,
+      declaredNames: [],
+      register: () => {},
+    });
+    strictEqual(report.status, "native-active");
+    strictEqual(report.notice, "silent");
+    strictEqual(report.message, "");
+  });
+
+  it("binaryPath is the input that decides: the same install without it is an error, not silence (S6)", () => {
+    // The old branch read `engramUrl` alone, so this pair was indistinguishable.
+    const base = { consented: true, nativePackagePresent: true, declaredNames: [], register: () => {} };
+    const healthy = provisionEngram({ ...base, binaryPath: BINARY });
+    const broken = provisionEngram({ ...base, binaryPath: null });
+    strictEqual(healthy.notice, "silent");
+    strictEqual(broken.notice, "error");
+    strictEqual(broken.status, "native-active", "the status still says what provisioning did: nothing, natively");
+  });
+
+  it("the broken native state names the resolution that failed and every repair route (S3/S7)", () => {
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: null,
+      nativePackagePresent: true,
+      declaredNames: [],
+      register: () => {},
+    });
+    strictEqual(report.notice, "error");
+    ok(/no "engram" core binary/u.test(report.message), report.message);
+    ok(/ENGRAM_BIN is unset/u.test(report.message), `the failed resolution is the evidence: ${report.message}`);
+    ok(report.message.includes("PATH"), report.message);
+    ok(report.message.includes("ENGRAM_URL"), report.message);
+    ok(/engram --version/u.test(report.message), `the binary-vs-served version pair is named: ${report.message}`);
+    ok(report.message.includes(ENGRAM_INSTALL_ROUTE), "the companion route is named as one surface, not the fix");
     ok(/nothing was written/u.test(report.message), report.message);
   });
 
-  it("native-active outranks the MCP path even when the binary resolves and nothing is declared", () => {
+  it("an ENGRAM_BIN that resolves nothing is quoted, so 'unresolvable' is not reported as 'absent' (S7)", () => {
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: null,
+      nativePackagePresent: true,
+      engramBin: "/nope/engram",
+      declaredNames: [],
+      register: () => {},
+    });
+    strictEqual(report.notice, "error");
+    ok(report.message.includes("/nope/engram"), report.message);
+    ok(
+      !/ENGRAM_BIN is unset/u.test(report.message),
+      `the override is set, so the report must not call it unset: ${report.message}`,
+    );
+  });
+
+  it("a leftover declaration keeps its callout, as a warning: memory resolves, the write guarantee does not", () => {
     const report = provisionEngram({
       consented: true,
       binaryPath: BINARY,
@@ -138,11 +212,14 @@ describe("engram provisioning — the native gentle-engram package wins (issue #
       register: () => {},
     });
     strictEqual(report.status, "native-active");
+    strictEqual(report.notice, "warning");
     // The leftover declaration is the one thing that still breaks native-only
     // writes, and this branch is the only one that can say so: `already-declared`
     // never runs once the native package answers first.
     ok(/mcp\.json Pi reads still declares/u.test(report.message), report.message);
     ok(/remove that entry/u.test(report.message), report.message);
+    ok(/native-only/u.test(report.message), report.message);
+    ok(/nothing was written/u.test(report.message), report.message);
   });
 
   it("consent still comes first: no opt-in stays silent even with the native package present", () => {
@@ -155,6 +232,7 @@ describe("engram provisioning — the native gentle-engram package wins (issue #
       register,
     });
     strictEqual(report.status, "not-consented");
+    strictEqual(report.notice, "silent");
     strictEqual(calls.length, 0);
   });
 });
@@ -170,6 +248,7 @@ describe("engram provisioning — an external server is a deliberate choice (iss
       register,
     });
     strictEqual(report.status, "external-server");
+    strictEqual(report.notice, "info", "a deliberate configuration is information, not a defect");
     strictEqual(calls.length, 0, "stdio MCP cannot target a URL; the native tools serve memory there");
     ok(report.message.includes("ENGRAM_URL"), report.message);
     ok(/nothing was written/u.test(report.message), report.message);
@@ -184,6 +263,7 @@ describe("engram provisioning — an external server is a deliberate choice (iss
       register: () => {},
     });
     strictEqual(report.status, "binary-missing");
+    strictEqual(report.notice, "error");
   });
 
   it("the native package outranks the external server: both present reports native-active", () => {
@@ -195,14 +275,16 @@ describe("engram provisioning — an external server is a deliberate choice (iss
       declaredNames: [],
       register: () => {},
     });
-    strictEqual(report.status, "native-active");
-    // …and the deliberate configuration is still stated, never hidden by the
-    // native branch: AC2 asks for it to be reported, AC1 for the native fact.
-    ok(/served by the external Engram server/u.test(report.message), report.message);
+    strictEqual(report.status, "native-active", "the ordering 531 pinned is unchanged");
+    // Issue #538 D3 supersedes 531 O8's sentence: the external-server fact keeps
+    // its own status for a host without the native package, and beside the
+    // native package the healthy state says nothing (S2/S8).
+    strictEqual(report.notice, "silent");
+    strictEqual(report.message, "");
   });
 });
 
-describe("engram provisioning — the binary-missing message names the core binary (issue #531, AC3)", () => {
+describe("engram provisioning — a missing binary is an error that names what failed (issue #531 AC3; issue #538 S3/S7)", () => {
   it("names PATH and ENGRAM_BIN for the core binary, ENGRAM_URL for a server, and the companion route separately", () => {
     const report = provisionEngram({
       consented: true,
@@ -211,10 +293,26 @@ describe("engram provisioning — the binary-missing message names the core bina
       register: () => {},
     });
     strictEqual(report.status, "binary-missing");
+    strictEqual(report.notice, "error", "an opted-in session without memory is broken, not a warning");
     ok(/core binary/u.test(report.message), report.message);
     ok(report.message.includes("ENGRAM_BIN"), report.message);
     ok(report.message.includes("ENGRAM_URL"), report.message);
     ok(report.message.includes(ENGRAM_INSTALL_ROUTE), "the companion route stays named, as one surface among three");
+    ok(/ENGRAM_BIN is unset/u.test(report.message), `the evidence names the unset override: ${report.message}`);
+    ok(/engram --version/u.test(report.message), `the binary-vs-served version pair is named: ${report.message}`);
+  });
+
+  it("quotes an ENGRAM_BIN that resolves nothing instead of calling the binary absent (S7)", () => {
+    const report = provisionEngram({
+      consented: true,
+      binaryPath: null,
+      engramBin: "engram-custom",
+      declaredNames: [],
+      register: () => {},
+    });
+    strictEqual(report.notice, "error");
+    ok(report.message.includes("engram-custom"), report.message);
+    ok(!/ENGRAM_BIN is unset/u.test(report.message), report.message);
   });
 });
 
@@ -371,6 +469,7 @@ describe("engram provisioning — an older host degrades", () => {
   it("reports unsupported-host instead of throwing when registerMcpServer is absent", () => {
     const report = provisionEngram({ consented: true, binaryPath: BINARY, declaredNames: [], register: null });
     strictEqual(report.status, "unsupported-host");
+    strictEqual(report.notice, "error", "a host that cannot register leaves an opted-in session without memory");
     ok(report.message.includes("registerMcpServer"));
     ok(!report.server);
   });
@@ -386,6 +485,7 @@ describe("engram provisioning — the operator's mcp.json wins", () => {
       register,
     });
     strictEqual(report.status, "already-declared");
+    strictEqual(report.notice, "info", "the operator's own declaration is a working setup, not a defect");
     strictEqual(calls.length, 0);
     ok(report.message.includes("mcp.json"));
   });
@@ -410,6 +510,7 @@ describe("engram provisioning — registration reports exactly what was written 
     const { calls, register } = recorder();
     const report = provisionEngram({ consented: true, binaryPath: BINARY, declaredNames: [], register });
     strictEqual(report.status, "registered");
+    strictEqual(report.notice, "info", "the write receipt is information: it states exactly what was written");
     deepStrictEqual(calls, [{ name: ENGRAM_SERVER_NAME, config: { command: BINARY, args: [...ENGRAM_ARGS] } }]);
     deepStrictEqual(report.server, { name: ENGRAM_SERVER_NAME, command: BINARY, args: [...ENGRAM_ARGS] });
     ok(report.message.includes(BINARY), report.message);
@@ -498,6 +599,7 @@ describe("engram provisioning — an unreadable config is not a refusal the oper
       register,
     });
     strictEqual(report.status, "config-invalid");
+    strictEqual(report.notice, "error", "an unreadable consent is a broken install, not information");
     strictEqual(calls.length, 0, "consent that cannot be read is never treated as granted…");
     ok(/invalid/u.test(report.message), report.message);
     ok(/nothing was written/u.test(report.message), "…and the refusal says nothing was written");

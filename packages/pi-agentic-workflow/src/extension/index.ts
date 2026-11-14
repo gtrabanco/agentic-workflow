@@ -25,7 +25,7 @@ import { createHooksWiring } from "./hooks-wiring.js";
 import type { HooksContext } from "./hooks-wiring.js";
 import { createInvocationWatch } from "./log-session-command.js";
 import { provisionEngram, readDeclaredServerNamesFrom, readInstalledPackageSourcesFrom, isNativeEngramPackage, piSettingsPaths, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
-import type { EngramServerConfig, EngramStatus } from "./engram.js";
+import type { EngramServerConfig } from "./engram.js";
 import { runSettingsConsole } from "../settings/console.js";
 import { readConfigFile, writeConfigFile } from "../settings/store.js";
 import { SETTINGS_COMMAND } from "../routing/types.js";
@@ -272,19 +272,6 @@ function mcpRegistrar(pi: ExtensionAPI): ((name: string, config: EngramServerCon
 }
 
 /**
- * The provisioning outcomes the operator reads as information rather than as a
- * defect: a registration that happened, or a deliberate configuration that makes
- * the MCP path unnecessary. Everything else is a warning, and the opt-out is
- * silent. The level is decided here because it is what Pi's UI shows, and it is
- * the half of "says so once, informatively" no pure module can own.
- */
-const INFORMATIONAL_ENGRAM: ReadonlySet<EngramStatus> = new Set<EngramStatus>([
-  "registered",
-  "native-active",
-  "external-server",
-]);
-
-/**
  * The server names the operator already has declared — the set the anti-shadow
  * guard is judged against. Both surfaces are unioned: Pi's own `getMcpServers()`
  * (read structurally for the same peer-floor reason as the registrar; it is the
@@ -462,17 +449,18 @@ export default function extension(pi: ExtensionAPI): void {
         readInstalledPackageSourcesFrom(piSettingsPaths({ agentDir, cwd: ctx.cwd, projectTrusted })),
       ),
       engramUrl: process.env.ENGRAM_URL ?? null,
+      // Issue #538 S7 — the override is the evidence that separates "absent"
+      // from "unresolvable" when the binary does not resolve.
+      engramBin: process.env.ENGRAM_BIN ?? null,
       declaredNames: declaredServerNames(pi, agentDir, ctx),
       register: mcpRegistrar(pi),
     });
-    // The opt-out stays silent; every other outcome is stated once, in the
-    // module's own words (it already says what was written, or why not), and at
-    // the level the operator should read it at: a deliberate configuration is
-    // information, a broken one is a warning (issue #531 — "says so once,
-    // informatively").
-    if (report.status !== "not-consented") {
-      ctx.ui.notify(report.message, INFORMATIONAL_ENGRAM.has(report.status) ? "info" : "warning");
-    }
+    // Issue #538 — the report is a consent × runtime-health state machine: a
+    // healthy opted-in install says nothing, a broken one says once what failed
+    // and how to repair it, and the opt-out says nothing at all. The level is
+    // the module's `notice` (it decides the outcome, so it decides how loudly
+    // the outcome is delivered); the adapter only renders it.
+    if (report.notice !== "silent") ctx.ui.notify(report.message, report.notice);
   });
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));

@@ -97,6 +97,19 @@ const CONFORMING = `## 2026-11-02T10:00:00Z — feat/x — narrative
 - **Next:** Nothing.
 `;
 
+const CONFORMING_2 = `## 2026-11-03T10:00:00Z — feat/y — narrative
+- **Commits:** 1 (\`ddddcccc…bbbbaaaa\`)
+- **Files:** —
+- **Summary:** A second conforming appended entry.
+- **Decisions:** None.
+- **Next:** Nothing.
+`;
+
+/** The fixture stand-in for a fetched remote: a published ref at one commit. */
+function publish(fx, sha, ref = "refs/remotes/origin/main") {
+  git(fx.root, ["update-ref", ref, sha]);
+}
+
 // ---------------------------------------------------------------------------
 // Pure predicates
 // ---------------------------------------------------------------------------
@@ -244,6 +257,66 @@ test("PASS: the bot actor env certifies the merge identity in CI", (t) => {
   fx.commit("merge: integration resolution", { name: "GitHub", email: "noreply@github.com" });
   const result = run(fx.root, ["--base", fx.base], { GITHUB_ACTOR: "github-actions[bot]" });
   assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+// ---------------------------------------------------------------------------
+// Issue #539 — judge only never-published commits
+// ---------------------------------------------------------------------------
+
+test("PASS: a published hand-append is not re-judged (S5)", (t) => {
+  const fx = fixture(t);
+  fx.editLog(CONFORMING, true);
+  publish(fx, fx.commit("published hand-append"));
+  fx.editLog(CONFORMING_2, true);
+  fx.commit("bot: append the entry", BOT);
+  const result = run(fx.root, ["--base", fx.base]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /verdict: PASS/);
+});
+
+test("PASS: a journal that extends the published tip passes (S5)", (t) => {
+  // The incident's shape: main's own journal was rewritten after the branch's
+  // baseline, so the merged journal extends the *published* tip and can never
+  // extend the branch's old baseline. Judging it against the old base refused
+  // every integration push (issue #539's second evidence bullet).
+  const fx = fixture(t);
+  fx.editLog(fs.readFileSync(path.join(fx.root, LOG), "utf8").replace("The seed entry", "A PUBLISHED REWRITE"), false);
+  publish(fx, fx.commit("published rewrite"));
+  fx.editLog(CONFORMING, true);
+  fx.commit("bot: append the entry", BOT);
+  const result = run(fx.root, ["--base", fx.base]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /verdict: PASS/);
+});
+
+test("FAIL log-hand-appended: a new hand-append fails beside a published one (S6)", (t) => {
+  const fx = fixture(t);
+  fx.editLog(CONFORMING, true);
+  publish(fx, fx.commit("published hand-append"));
+  fx.editLog(CONFORMING_2, true);
+  fx.commit("fresh hand-append");
+  const result = run(fx.root, ["--base", fx.base]);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stdout, /log-hand-appended/);
+  assert.match(result.stdout, /fresh hand-append/, "the genuinely new commit is the one named");
+  assert.doesNotMatch(result.stdout, /published hand-append/, "the published commit is not re-judged");
+  assert.match(result.stdout, /Log-immutability: 1 violations/);
+});
+
+test("PASS: a fragment the published history deleted is not blamed on a merge (S5)", (t) => {
+  // The aggregator's own consumption, already published, must not be attributed
+  // to the local merge that carries it — the deletion is not this push's act.
+  const fx = fixture(t);
+  fs.rmSync(path.join(fx.root, CARRIER, "20261101T090000Z-main-narrative-local.md"));
+  const published = fx.commit("published deletion");
+  publish(fx, published);
+  git(fx.root, ["checkout", "-q", "-b", "work", fx.base]);
+  fs.writeFileSync(path.join(fx.root, "untouched.txt"), "changed\n");
+  fx.commit("session: unrelated change");
+  git(fx.root, ["merge", "--no-ff", "-q", "-m", "merge main", published]);
+  const result = run(fx.root, ["--base", fx.base]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /verdict: PASS/);
 });
 
 // ---------------------------------------------------------------------------
