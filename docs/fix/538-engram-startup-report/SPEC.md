@@ -174,6 +174,20 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
   has been observed red once under the gate's parallel load while green
   standalone (531's record). **Does not affect** this unit: recorded so the flake
   is not mistaken for a regression here.
+- `scripts/check-skill-context.test.mjs` is **red on `main` before this branch**:
+  `bun scripts/check-skill-context.mjs --documents` reports `AGENTS.md:
+  machine-table lines 135 != the declared 134`. Reproduced in the primary
+  checkout at `0a47bca6` with the same single failure (E11); this unit edits
+  neither `AGENTS.md` nor the budget cell. **Does not affect** this unit: a
+  guide-layer budget discrepancy, not an executable path this change touches.
+- `scripts/residual-classify.test.mjs` is **red on `main` before this branch**:
+  `scripts/residual-classify.mjs` imports `./ceremony/lib.mjs`, which #524's
+  ceremony migration removed, so 20 of its 25 cases fail with `Cannot find
+  module './ceremony/lib.mjs'` (E12, reproduced in the primary checkout at
+  `0a47bca6`). **Does not affect** this unit: another unit's orphaned import,
+  outside this change's regression boundary. Reported to the owner in the
+  handoff rather than repaired here — repairing another unit's surface is scope
+  this unit does not own.
 
 ## Acceptance criteria
 
@@ -221,7 +235,8 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
 
 - P1 — Freeze this unit doc with its embedded planning ledgers and the
   acceptance criteria, before the implementation lands (validator:
-  `bun scripts/phase-lint.mjs docs/fix/538-engram-startup-report/SPEC.md` prints
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint
+  docs/fix/538-engram-startup-report/SPEC.md` prints
   `verdict: PASS` and exits 0)
   (Implements: S1)
   - Relevant files: docs/fix/538-engram-startup-report/SPEC.md, docs/ROADMAP.md
@@ -276,7 +291,7 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
 | PE-005 | committed-source | The shipped-entry harness drives the real `session_start` listener with an isolated `agentDir`/`cwd`, records `notify(message, kind)`, and already isolates `PATH`, `ENGRAM_URL` and `ENGRAM_BIN` — the S2 reproducer is expressible end to end with no Pi session | `test/shipped-adapter.test.mjs:527-549` (`withEngramEnv`), `:95-150` (`shippedEntry`), `:630-660` (the 531 native case, which creates a stub binary on PATH — the exact healthy input) | read 2026-11-14 (this session) | O1, O3, O8, O10; AC-S2 |
 | PE-006 | version-pinned doc | Engram's own extension resolves its binary as `optionalEnvironmentValue(process.env.ENGRAM_BIN) ?? "engram"` from `PATH`, so this module's `resolveEngramBinary` mirrors the substrate the native tools actually use — a binary this module cannot resolve is one the native extension cannot start either | 531's sampling of the installed `gentle-engram@0.7.0` (`index.ts:45,924`, recorded in `docs/fix/531-engram-native-skip-remote-surfaces/SPEC.md` PE-003); re-read here as a committed-source claim about this repo's own `resolveEngramBinary` at `src/extension/engram.ts:196-222` | carried from 2026-11-13, re-checked 2026-11-14 (this session) | O3, O9; D5 |
 | PE-007 | unowned-gap | The served-vs-binary version pair has no owner in this repository: the memory probe measures `binary-version` and `http-health` only for the first memory read (30 s ceiling), and the doctor inventory assigns the pair to a future feature | `packages/agentic-workflow/src/memory/probe.mjs:47-56`, `docs/research/2026-11-13-tool-doctor-inventory.md` rows 7–9 and gap 2 | read 2026-11-14 (this session) | O3; D2; `## Non-goals` |
-| PE-008 | committed-tool | The tier authority is the crate CLI, not `scripts/ceremony.mjs` (which #524 moved): `ceremony tier classify --paths` emits `risk-tier-verdict@1`, `phase-lint` reads the unit-doc grammar, and `docs-generate` owns the roadmap summary cell | `packages/agentic-workflow/bin/agentic-workflow.mjs` usage block; this session's tier run; `scripts/phase-lint.mjs`, `scripts/docs-generate.mjs` | run 2026-11-14 (this session) | `## Risk tier`; O11, O13 |
+| PE-008 | committed-tool | The tier authority is the crate CLI: the repo-local ceremony script #524 moved no longer exists: `ceremony tier classify --paths` emits `risk-tier-verdict@1`, `phase-lint` reads the unit-doc grammar, and `docs-generate` owns the roadmap summary cell | `packages/agentic-workflow/bin/agentic-workflow.mjs` usage block; this session's tier and phase-lint runs; `scripts/docs-generate.mjs` | run 2026-11-14 (this session) | `## Risk tier`; O11, O13 |
 | PE-009 | measured-baseline | The regression floor at the cut head `a83b9b38` (after `bun run test`, which builds): **864 pass / 0 fail / 77 files** | this session's run of `bun run --cwd packages/pi-agentic-workflow test` | run 2026-11-14 (this session) | O7, O13; AC-S8 |
 | PE-010 | unknown | No repository evidence says whether an operator's shell exports `ENGRAM_BIN` or `ENGRAM_URL` while Pi runs; the contract that stays true either way is Engram's own blankness rule plus a corpus that pins the variables | not sampled — no session env capture exists in this repository (`rg -n 'ENGRAM_BIN' packages/pi-agentic-workflow/src`) | unverified 2026-11-14 (this session) | O3, O7; the suites' env isolation |
 
@@ -284,20 +299,20 @@ consumer), and the root gate `bun scripts/local-gate.mjs` before handoff.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2, S6 | a healthy opted-in native install (binary resolvable on `PATH` or by `ENGRAM_BIN`, or `ENGRAM_URL` set, no leftover declaration) reports `native-active` with `notice: "silent"` and an empty message, registers nothing, and the shipped entry prints nothing — the S7 reproducer of the issue | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the silent-native cases) and `bun test test/shipped-adapter.test.mjs` exits 0 (zero `notify` for the healthy native entry) | E line in SPEC `## Log` | planned |
-| O2 | S6 | `binaryPath` is what flips the native state: the same input with the binary present is silent and with it absent is an error, which is the input the old branch ignored | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the paired present/absent native cases) | E line in SPEC `## Log` | planned |
-| O3 | S3, S7 | an opted-in native install with no binary and no `ENGRAM_URL` reports one `notice: "error"` naming the failed resolutions (`PATH`, `ENGRAM_BIN`, `ENGRAM_URL` unset), every repair route, the binary-vs-served version check with its commands, and the companion-route clarification | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the native-without-substrate case asserts `PATH`, `ENGRAM_BIN`, `ENGRAM_URL`, `engram --version` and the companion route) and `bun test test/shipped-adapter.test.mjs` exits 0 (exactly one `error`) | E line in SPEC `## Log` | planned |
-| O4 | S7 | "absent" and "unresolvable" are distinguishable: with `ENGRAM_BIN` naming a non-executable path the error quotes that value instead of claiming the binary is absent | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the `ENGRAM_BIN` evidence case asserts the quoted override) | E line in SPEC `## Log` | planned |
-| O5 | S3, S7 | the no-native `binary-missing` state is one `error` built by the same evidence builder, so both broken routes carry the same facts | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the binary-missing cases: `notice: "error"`, surfaces named, `ENGRAM_BIN` state quoted) | E line in SPEC `## Log` | planned |
-| O6 | S3, S8 | `config-invalid` and `unsupported-host` are errors, not warnings: an unreadable consent and a host without `registerMcpServer` are both broken states | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the `notice` assertions on those statuses) | E line in SPEC `## Log` | planned |
-| O7 | S2, S8 | the states the owner kept keep both their behaviour and their line: `registered` (one `info`, exact command), `external-server` (one `info`), `already-declared` (one `info`) | P4 | P4 | direct application (this session) | `bun test test/engram-provision.test.mjs test/shipped-adapter.test.mjs` exits 0 with those cases' assertions intact | E line in SPEC `## Log` | planned |
-| O8 | S4, S5 | a session without the opt-in prints nothing: the module's `not-consented` carries `notice: "silent"`, and no state prints the opt-in instruction | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 (no `memory` key → zero `notify`) and `bun test test/engram-provision.test.mjs` exits 0 (`notice: "silent"` on `not-consented`) | E line in SPEC `## Log` | planned |
-| O9 | S2, S3 | a leftover `mcpServers.engram` declaration beside the native package keeps its callout and is reported as a `warning` (it breaks the native-only write guarantee even when memory resolves) | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the leftover case asserts `notice: "warning"`, `mcp.json Pi reads still declares`, `remove that entry`) | E line in SPEC `## Log` | planned |
-| O10 | S8 | the level is the module's `notice` on every status and the adapter's status-keyed set is gone, so no future status can be informational by accident | P4 | P4 | direct application (this session) | `rg -n 'INFORMATIONAL_ENGRAM' packages/pi-agentic-workflow/src` matches 0 and `bun test test/shipped-adapter.test.mjs` exits 0 | E line in SPEC `## Log` | planned |
-| O11 | S1, S5, S8 | documentation and repository state ship in the same change: the README's memory section states the silence, the roadmap `## Fixes` row exists with its summary cell rendered from `roadmap_summary:`, the changeset intent exists, and the projection is fresh | P6 | P6 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0, `bun scripts/lint-changeset.mjs` exits 0, `rg -c '#538' docs/ROADMAP.md` matches 1 | E line in SPEC `## Log` | planned |
-| O12 | S6, S2, S3 | the change differs from the base commit only in the declared deltas: the silent healthy native state, the evidenced errors, the `ENGRAM_BIN` quote, the leftover warning and the `notice` axis; every other input keeps the base's status and message | P5 | P5 | direct application (this session) | differential harness in `mktemp -d` (base module copy vs this change, identical corpus): the diff lists only those deltas | E line in SPEC `## Log` with the diff summary | planned |
-| O13 | S1 | the declared deterministic gates are green before handoff | P7 | P7 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | planned |
-| O14 | S2, S3, S4 | no suite depends on the operator's environment: the Engram cases pin `PATH`, `ENGRAM_URL` and `ENGRAM_BIN`, so a shell exporting either variable cannot flip the result | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 with `ENGRAM_URL` and `ENGRAM_BIN` exported | E line in SPEC `## Log` | planned |
+| O1 | S2, S6 | a healthy opted-in native install (binary resolvable on `PATH` or by `ENGRAM_BIN`, or `ENGRAM_URL` set, no leftover declaration) reports `native-active` with `notice: "silent"` and an empty message, registers nothing, and the shipped entry prints nothing — the S7 reproducer of the issue | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the silent-native cases) and `bun test test/shipped-adapter.test.mjs` exits 0 (zero `notify` for the healthy native entry) | E line in SPEC `## Log` | verified — E5 (the silent-native cases, and the shipped entry's zero `notify` for the healthy install) |
+| O2 | S6 | `binaryPath` is what flips the native state: the same input with the binary present is silent and with it absent is an error, which is the input the old branch ignored | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the paired present/absent native cases) | E line in SPEC `## Log` | verified — E5 (the present/absent pair flips the notice) and E8 (the same pair as a declared delta) |
+| O3 | S3, S7 | an opted-in native install with no binary and no `ENGRAM_URL` reports one `notice: "error"` naming the failed resolutions (`PATH`, `ENGRAM_BIN`, `ENGRAM_URL` unset), every repair route, the binary-vs-served version check with its commands, and the companion-route clarification | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the native-without-substrate case asserts `PATH`, `ENGRAM_BIN`, `ENGRAM_URL`, `engram --version` and the companion route) and `bun test test/shipped-adapter.test.mjs` exits 0 (exactly one `error`) | E line in SPEC `## Log` | verified — E5 (the native-without-substrate message asserts `PATH`, `ENGRAM_BIN`, `ENGRAM_URL`, `engram --version` and the companion route) and E8 (the error rows) |
+| O4 | S7 | "absent" and "unresolvable" are distinguishable: with `ENGRAM_BIN` naming a non-executable path the error quotes that value instead of claiming the binary is absent | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the `ENGRAM_BIN` evidence case asserts the quoted override) | E line in SPEC `## Log` | verified — E5 (the `ENGRAM_BIN` quote, and the case that rejects "is unset" when the override is set) |
+| O5 | S3, S7 | the no-native `binary-missing` state is one `error` built by the same evidence builder, so both broken routes carry the same facts | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the binary-missing cases: `notice: "error"`, surfaces named, `ENGRAM_BIN` state quoted) | E line in SPEC `## Log` | verified — E5 (the `binary-missing` cases: `notice: "error"`, surfaces named, override quoted) |
+| O6 | S3, S8 | `config-invalid` and `unsupported-host` are errors, not warnings: an unreadable consent and a host without `registerMcpServer` are both broken states | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the `notice` assertions on those statuses) | E line in SPEC `## Log` | verified — E5 (`config-invalid` and `unsupported-host` both carry `notice: "error"`) |
+| O7 | S2, S8 | the states the owner kept keep both their behaviour and their line: `registered` (one `info`, exact command), `external-server` (one `info`), `already-declared` (one `info`) | P4 | P4 | direct application (this session) | `bun test test/engram-provision.test.mjs test/shipped-adapter.test.mjs` exits 0 with those cases' assertions intact | E line in SPEC `## Log` | verified — E5 (those cases' assertions intact) and E8 (their messages byte-identical to the base) |
+| O8 | S4, S5 | a session without the opt-in prints nothing: the module's `not-consented` carries `notice: "silent"`, and no state prints the opt-in instruction | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 (no `memory` key → zero `notify`) and `bun test test/engram-provision.test.mjs` exits 0 (`notice: "silent"` on `not-consented`) | E line in SPEC `## Log` | verified — E5 (the shipped entry with no opt-in emits zero `notify`) |
+| O9 | S2, S3 | a leftover `mcpServers.engram` declaration beside the native package keeps its callout and is reported as a `warning` (it breaks the native-only write guarantee even when memory resolves) | P3 | P3 | direct application (this session) | `bun test test/engram-provision.test.mjs` exits 0 (the leftover case asserts `notice: "warning"`, `mcp.json Pi reads still declares`, `remove that entry`) | E line in SPEC `## Log` | verified — E5 (the leftover case: `notice: "warning"`, the entry named, the removal route) |
+| O10 | S8 | the level is the module's `notice` on every status and the adapter's status-keyed set is gone, so no future status can be informational by accident | P4 | P4 | direct application (this session) | `rg -n 'INFORMATIONAL_ENGRAM' packages/pi-agentic-workflow/src` matches 0 and `bun test test/shipped-adapter.test.mjs` exits 0 | E line in SPEC `## Log` | verified — E10 (0 matches for `INFORMATIONAL_ENGRAM`, the adapter renders `report.notice`) |
+| O11 | S1, S5, S8 | documentation and repository state ship in the same change: the README's memory section states the silence, the roadmap `## Fixes` row exists with its summary cell rendered from `roadmap_summary:`, the changeset intent exists, and the projection is fresh | P6 | P6 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0, `bun scripts/lint-changeset.mjs` exits 0, `rg -c '#538' docs/ROADMAP.md` matches 1 | E line in SPEC `## Log` | verified — E9 (projection PASS, changeset ok, settle 0 violations, one `#538` row) |
+| O12 | S6, S2, S3 | the change differs from the base commit only in the declared deltas: the silent healthy native state, the evidenced errors, the `ENGRAM_BIN` quote, the leftover warning and the `notice` axis; every other input keeps the base's status and message | P5 | P5 | direct application (this session) | differential harness in `mktemp -d` (base module copy vs this change, identical corpus): the diff lists only those deltas | E line in SPEC `## Log` with the diff summary | verified — E8 (11 declared deltas, 9 identical rows, 8 identical binary rows) |
+| O13 | S1 | the declared deterministic gates are green before handoff | P7 | P7 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 (15 of 17 steps pass; the only red is E11/E12, reproduced on `main` before this branch) |
+| O14 | S2, S3, S4 | no suite depends on the operator's environment: the Engram cases pin `PATH`, `ENGRAM_URL` and `ENGRAM_BIN`, so a shell exporting either variable cannot flip the result | P4 | P4 | direct application (this session) | `bun test test/shipped-adapter.test.mjs` exits 0 with `ENGRAM_URL` and `ENGRAM_BIN` exported | E line in SPEC `## Log` | verified — E6 (66 pass with `ENGRAM_URL` and `ENGRAM_BIN` exported) |
 
 ## Triaged steps
 
@@ -447,6 +462,13 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   operator who does not want memory owes the report nothing", and
   `rg -n 'If memory is not working' packages skills docs` matches only this unit
   doc's quotes of the retired string (AC-S5).
+- **E11** — 2026-11-14, `bun scripts/check-skill-context.mjs --documents` in the
+  primary checkout at `0a47bca6` · exit 1 · `AGENTS.md: machine-table lines 135
+  != the declared 134` — pre-existing on `main`, and the identical failure here.
+- **E12** — 2026-11-14, `bun test scripts/residual-classify.test.mjs` in the
+  primary checkout at `0a47bca6` · exit 1 · 5 pass, 20 fail — `Cannot find
+  module './ceremony/lib.mjs'` from `scripts/residual-classify.mjs` (#524 removed
+  it) — pre-existing on `main`, outside this unit's surface.
 - **P1** — 2026-11-14, the unit doc frozen with its ledgers, criteria, ac-hash
   and tier verdict; phase-lint `PASS (6/6)` × 7 · `988c30e3`.
 - **P2** — 2026-11-14, the RED corpus landed alone and observed red (E4) ·
@@ -454,10 +476,29 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
 - **P3/P4** — 2026-11-14, the module's `notice` axis + health branch + evidence
   builder, and the adapter's `ENGRAM_BIN` input + `notice` rendering ·
   `0d252d3b`.
+- **G1** — 2026-11-14, `bun scripts/local-gate.mjs --no-bail` at HEAD `e053e936` ·
+  exit 1 · 17 steps: 15 pass (`docs-generated-projection`, `log-immutability` 0
+  violations over 4 commits, `version-parity-content`, `temp-hygiene`,
+  `worktree-guard`, `tmp-gc`, `workspace-install`, `journal-carrier-check`,
+  `schema-build`, `dependency-advisories`, `dependency-pin-gate`,
+  `pi-node-compat`, `pi-compat-guard`, `crate-suite-node`, `crate-suite-bun`),
+  `root-suite` exit 1, `schema-node-compat` skipped as its dependent.
+  `bun scripts/run-root-suite.mjs` · 109 suites PASS, **2 FAIL** —
+  `check-skill-context` (E11) and `residual-classify` (E12), both reproduced on
+  `main` at `0a47bca6` in the primary checkout and neither touched by this unit.
+- **D8** — 2026-11-14, `main` moved while this unit was applied
+  (`a83b9b38` → `0a47bca6`, another session's `docs(log)` commit). This branch is
+  **not** integrated with it: nothing is pushed, there is no conflict, and the
+  repo's rule leaves the integration to the owner. The gate receipt (G1) is at
+  this branch's head on its own base, and the two root-suite reds are identical
+  at both commits.
 
 ## Next
 
-P2 — the RED corpus, observed failing on this tree before the module changes.
+The owner's external verdict on this branch's diff. After it: push the branch and
+open the PR against `main` (`Closes #538`), settle the roadmap row to `done` with
+the PR link, and integrate `main` (`0a47bca6`) if the owner wants it before the
+merge. Both root-suite reds (E11, E12) are another unit's surface.
 
 ## References
 
