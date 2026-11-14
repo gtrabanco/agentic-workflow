@@ -418,6 +418,27 @@ freeze (D1).
   machinery on its own surgery).
 - **P1** — 2026-11-14 13:05, ledgers frozen at `95af0547`; roadmap `## Fixes` row
   registered; `phase-lint` verdict PASS.
+- **E1** — 2026-11-14, the RED corpus, observed failing on the pre-change tree
+  (the baseline is `PE-012`: 12/12, 12/12, 44/44, 18, 31, PASS, 7/27):
+  - `bun test scripts/push-identity-check.test.mjs` · exit 1 · 12 pass · 8 fail
+    (every new case: the two scope values, the fork row, the no-remote row, the
+    tracked-upstream fallback, the unknown remote)
+  - `bun test scripts/identity-hook-parity.test.mjs` · exit 1 · 12 pass · 3 fail
+  - `bun test scripts/local-gate.test.mjs` · exit 1 · 44 pass · 3 fail
+  - `bun test scripts/rigidity-review.test.mjs` · exit 1 · 0 pass · 8 fail (the
+    module does not exist yet — the red-first commit for the new pair)
+  - `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` ·
+    exit 1 · 23 pass · 8 fail
+  - `bash template/.agentic-workflow/hooks/tests/test-temp-lib.sh` · exit 1 ·
+    the library does not exist yet
+  - `bash template/.agentic-workflow/hooks/tests/test-forge-adapter.sh` · exit 1
+    · the adapter does not exist yet
+  - `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` · exit 1
+    · 12 pass · 19 fail lines
+  - `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh` · exit 2
+    · `fullauto-merge: unknown argument: --remote`
+  - `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` · exit 1
+    · 9 fail lines (7 forge-surface rows, the allowlist row)
 
 ## Next
 

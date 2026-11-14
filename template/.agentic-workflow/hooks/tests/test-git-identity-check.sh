@@ -168,11 +168,15 @@ run_hook "Fixture Human" "human@example.com"
 check "a JSONC profile is read" 0 "$dir" "$output"
 cleanup
 
-# ── 8. signing: commit.gpgsign=true with no key fails ─────────────────────
+# ── 8. signing: the strict policy refuses an unresolvable key ─────────────
+# The policy is declared here (issue #546 S7): the default (`allowed`) permits a
+# machine whose signing is on but whose key does not resolve (gpg selects by
+# UID), so the refusal this case pins is the *declared* strict one. The relaxed
+# default is its own case below.
 make_repo
-code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com"}}'
+code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com","signing":"required"}}'
 run_hook_cfg "Fixture Human" "human@example.com" commit.gpgsign=true
-check "signing on with no signing key fails" 1 "$dir" "$output"
+check "signing required with no signing key fails" 1 "$dir" "$output"
 if grep -q 'no user.signingKey' "$output"; then
   cases=$((cases + 1)); pass "the failure names the missing key"
 else
@@ -226,6 +230,111 @@ if [ "$before_profile" = "$after_profile" ] && [ "$before_config" = "$after_conf
   pass "a failing check repairs nothing"
 else
   fail "a failing check repaired something"
+fi
+cleanup
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Issue #546 — the scope values, the signing policy, the tool diagnoses
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── 13. scope: which enforce values the commit half answers to ────────────
+make_repo
+code '{"enforce":"push-upstream","approved":{"name":"Fixture Human","email":"human@example.com"}}'
+run_hook "t" "t@example.test"
+check "enforce=push-upstream leaves the commit hook inert" 0 "$dir" "$output"
+cleanup
+
+make_repo
+code '{"enforce":"commit-and-push-upstream","approved":{"name":"Fixture Human","email":"human@example.com"}}'
+run_hook "t" "t@example.test"
+check "enforce=commit-and-push-upstream refuses a misattributed commit" 1 "$dir" "$output"
+cleanup
+
+make_repo
+code '{"enforce":"commit-and-push-upstream","approved":{"name":"Fixture Human","email":"human@example.com"}}'
+run_hook "Fixture Human" "human@example.com"
+check "enforce=commit-and-push-upstream accepts the approved identity" 0 "$dir" "$output"
+cleanup
+
+make_repo
+code '{"enforce":"push-anywhere","approved":{"name":"Fixture Human","email":"human@example.com"}}'
+run_hook "Fixture Human" "human@example.com"
+check "an unknown enforce value is refused, never ignored" 1 "$dir" "$output"
+if grep -q 'push-upstream' "$output"; then
+  cases=$((cases + 1)); pass "the refusal names the vocabulary"
+else
+  cases=$((cases + 1)); fail "the refusal names the vocabulary"; sed 's/^/    /' "$output"
+fi
+cleanup
+
+# ── 14. signing: the default policy permits an unresolvable key ───────────
+make_repo
+code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com"}}'
+run_hook_cfg "Fixture Human" "human@example.com" commit.gpgsign=true
+check "signing on with no declared policy and no key passes (gpg selects by UID)" 0 "$dir" "$output"
+cleanup
+
+# ── 15. signing: "off" is the sign-off workflow ───────────────────────────
+make_repo
+code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com","signing":"off"}}'
+run_hook_cfg "Fixture Human" "human@example.com"
+check "signing off accepts an unsigned commit" 0 "$dir" "$output"
+cleanup
+
+make_repo
+code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com","signing":"off"}}'
+printf 'not a real key\n' >"$dir/id_ed25519"
+run_hook_cfg "Fixture Human" "human@example.com" commit.gpgsign=true gpg.format=ssh user.signingKey="$dir/id_ed25519"
+check "signing off refuses a signed commit" 1 "$dir" "$output"
+cleanup
+
+# ── 16. signing: required means a commit must carry a signature ───────────
+make_repo
+code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com","signing":"required"}}'
+run_hook_cfg "Fixture Human" "human@example.com"
+check "signing required refuses an unsigned commit" 1 "$dir" "$output"
+cleanup
+
+# ── 17. signing: per-machine keys ─────────────────────────────────────────
+make_repo
+printf 'machine-a\n' >"$dir/machine_a_ed25519"
+printf 'machine-b\n' >"$dir/machine_b_ed25519"
+code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com","signing":"required","signingKeys":["'"$dir"'/machine_a_ed25519","'"$dir"'/machine_b_ed25519"]}}'
+run_hook_cfg "Fixture Human" "human@example.com" commit.gpgsign=true gpg.format=ssh user.signingKey="$dir/machine_b_ed25519"
+check "a per-machine key from signingKeys passes" 0 "$dir" "$output"
+cleanup
+
+make_repo
+printf 'machine-a\n' >"$dir/machine_a_ed25519"
+printf 'stranger\n' >"$dir/stranger_ed25519"
+code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com","signing":"required","signingKeys":["'"$dir"'/machine_a_ed25519"]}}'
+run_hook_cfg "Fixture Human" "human@example.com" commit.gpgsign=true gpg.format=ssh user.signingKey="$dir/stranger_ed25519"
+check "a key outside signingKeys is refused" 1 "$dir" "$output"
+cleanup
+
+# ── 18. a missing tool is named, not misdiagnosed ─────────────────────────
+# A `PATH` carrying the hook's minimum and no `jq`: the shape of a minimal host.
+make_repo
+code '{"enforce":"commit","approved":{"name":"Fixture Human","email":"human@example.com"}}'
+bin="$dir/bin"
+mkdir -p "$bin"
+bash_bin=$(command -v bash)
+for tool in git dirname; do
+  resolved=$(command -v "$tool" || true)
+  [ -n "$resolved" ] && ln -sf "$resolved" "$bin/$tool"
+done
+output="$dir/hook.out"
+( cd "$dir" && HOME="$global_dir" PI_CODING_AGENT_DIR="$global_dir" \
+    GIT_AUTHOR_NAME="Fixture Human" GIT_AUTHOR_EMAIL="human@example.com" \
+    GIT_COMMITTER_NAME="Fixture Human" GIT_COMMITTER_EMAIL="human@example.com" \
+    PATH="$bin" "$bash_bin" "$hook" ) >"$output" 2>&1
+status=$?
+check "a missing jq fails closed" 1 "$dir" "$output"
+if grep -qi 'jq' "$output" && ! grep -q 'not valid JSON' "$output"; then
+  cases=$((cases + 1)); pass "the message names jq instead of claiming invalid JSON"
+else
+  cases=$((cases + 1)); fail "the message names jq instead of claiming invalid JSON"; sed 's/^/    /' "$output"
 fi
 cleanup
 
