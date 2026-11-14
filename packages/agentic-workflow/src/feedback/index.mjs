@@ -221,25 +221,21 @@ export function createFeedback(options = {}) {
     progress({ done, total, unit = "", detail = "" } = {}) {
       closeStage();
       announce();
+      const percent = total > 0 ? Math.floor((done / total) * 100) : 0;
+      const noun = unit === "" ? "" : ` ${unit}`;
+      const head = `${MARK}progress ${done}/${total}${noun} (${percent}%)`;
       if (allowed("regular")) {
         const atEnd = done >= total;
         const first = lastProgressAt === null;
         if (!atEnd && !first && now() - lastProgressAt < progressEveryMs) return;
         lastProgressAt = now();
-        const percent = total > 0 ? Math.floor((done / total) * 100) : 0;
-        const noun = unit === "" ? "" : ` ${unit}`;
-        let line = `${MARK}progress ${done}/${total}${noun} (${percent}%)`;
+        // The estimate is the observed rate applied to what is left; it is
+        // printed only once it is worth reading.
         const estimate = total > 0 && done > 0 ? ((now() - beganAt) * (total - done)) / done : 0;
-        if (estimate >= ESTIMATE_FLOOR_MS) line += ` · ~${formatDuration(estimate)} left`;
-        write(line);
+        write(estimate >= ESTIMATE_FLOOR_MS ? `${head} · ~${formatDuration(estimate)} left` : head);
         return;
       }
-      if (allowed("diagnostic")) {
-        const percent = total > 0 ? Math.floor((done / total) * 100) : 0;
-        const noun = unit === "" ? "" : ` ${unit}`;
-        const suffix = detail === "" ? "" : ` · ${detail}`;
-        write(`${MARK}progress ${done}/${total}${noun} (${percent}%)${suffix}`);
-      }
+      if (allowed("diagnostic")) write(detail === "" ? head : `${head} · ${detail}`);
     },
 
     /** A diagnostic line — printed at `--debug` and above, never at regular. */
