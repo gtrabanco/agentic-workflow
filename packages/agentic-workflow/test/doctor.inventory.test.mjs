@@ -24,7 +24,7 @@ test("the crate README declares the inventory block with the published columns",
   assert.ok(README.includes(INVENTORY_MARKER), `the crate README carries ${INVENTORY_MARKER}`);
   const parsed = parseInventory(README);
   assert.deepEqual(parsed.errors, []);
-  assert.deepEqual(parsed.columns, ["id", "what", "why", "requirement", "detected-by", "alternative", "route"]);
+  assert.deepEqual(parsed.columns, ["id", "what", "why", "requirement", "detected-by", "alternative", "install-route"]);
   assert.equal(parsed.rows.length, 14, "one row per checked surface");
 });
 
@@ -44,7 +44,7 @@ test("probed → documented: every probe is declared, with a published route and
     const row = byId.get(probe.id);
     assert.ok(row, `${probe.id} is documented`);
     assert.ok(["required", "optional"].includes(row.requirement), `${probe.id}: requirement vocabulary`);
-    assert.ok(INSTALL_ROUTES.includes(row.route), `${probe.id}: route vocabulary`);
+    assert.ok(INSTALL_ROUTES.includes(row["install-route"]), `${probe.id}: install-route vocabulary`);
     assert.ok(row.what && row.why && row["detected-by"] && row.alternative, `${probe.id}: every column is filled`);
   }
 });

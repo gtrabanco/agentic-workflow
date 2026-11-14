@@ -24,7 +24,7 @@ export const INVENTORY_COLUMNS = Object.freeze([
   "requirement",
   "detected-by",
   "alternative",
-  "route",
+  "install-route",
 ]);
 
 /** Where the declaration lives, relative to the package root. */
