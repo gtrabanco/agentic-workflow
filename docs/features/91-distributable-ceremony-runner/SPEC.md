@@ -468,6 +468,39 @@ steps: P1, P2, P3, P4, P5, P6, P7, P8, P9
   carried (issue #384 F1); the case is pinned in `runner.ceremony-p0.test.mjs`.
 - **G10** — 2026-11-12, HEAD `d094440a` · `node --test` on the four crate contract suites · exit 0 · 8 + 9 + 12 + 6
   pass (`runner.sensors`, `runner.ceremony-p0`, `runner.ceremony-p1p2`, `runner.dispatch`; the p1p2 count amended 2026-11-13 with G9), crate suite 697 pass; `node scripts/run-root-suite.mjs` exit 0 · 106/106.
+- **E8** — 2026-11-13, the correction batch for the `EXTERNAL VERIFY` receipt of
+  2026-11-13 (11 blockers), applied on top of the `origin/main` integration
+  `35d442d6`: the three conflicts resolved with both features intact (`docs/LOGS.md`
+  as a byte-extension of `origin/main` with this branch's two entries appended at
+  EOF — the shape a merge-to-main produces; `SKILL_CONTEXT_BUDGETS.json` by
+  key-union with `init-workspace` re-based on the merged measurement 4890/328 →
+  5379/361 spelled as a numeric `ceil()` for F26; `lane-era-lineage.test.mjs`
+  keeping both the crate-bin re-aim and #514's `-c` fixture identity). The four
+  obligation cells were re-instrumented (O3/O6/O18/O22 — each command now states
+  exactly its row's claim; re-run 0 / 0 / 1 / 21, negative control included);
+  this Log's five placeholder SHAs and three pre-re-author SHAs were bound to
+  commits in the branch history (`bdf47890`, `7cb595a3`, `6318f597`, `78175d9c`,
+  `38e1d5b2`, `edde336c`, `d094440a`) with G9/G10's p1p2 count corrected to 12;
+  SPEC:111's retirement gate restated to the grep that holds; the five sibling
+  surfaces re-pointed (pi tool instructions + README tool table, root README, the
+  four template twins + `template/AGENTS.md`, the shipped sensors' usage headers,
+  `unit-cycle`'s generated prompt + `promise-coherence`'s dead allowlist entry +
+  twelve suite headers); and this branch's three crate fixture suites migrated
+  to main's `-c` identity convention because #514's `git-config-writes` gate
+  arrived with the merge — both features hold (`e8e8e393`).
+- **G11** — 2026-11-13, HEAD `e8e8e393` · `LOG_IMMUTABILITY_BASE=8079f11a bun
+  scripts/local-gate.mjs` · **PASS — 17 steps in 219s** (root-suite 109 suites,
+  crate-suite-bun 697, crate-suite-node, budgets 30/14/4, projection, carrier).
+  `git push` was then attempted exactly as the hook requires and **refused at
+  `push-identity`**: its range (branch upstream … head) carries
+  `origin/main`'s 13 already-published non-approved committers (GitHub merges,
+  journal-bot, github-actions, one name variant) — none from this branch — and
+  the journal step passes only pinned to this branch's delta
+  (`LOG_IMMUTABILITY_BASE=8079f11a` → 0 violations), its default upstream base
+  false-positiving on `origin/main`'s own two hand-appended entries. Escalated to
+  the owner (new finding, never exercised before this merge): the hook's
+  documented escape hatch with a recorded reason, or the checker's range policy
+  for merge pushes, decides the push. Nothing was uploaded.
 
 ## Next
 
