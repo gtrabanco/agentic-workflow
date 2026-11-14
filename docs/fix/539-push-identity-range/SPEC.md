@@ -613,6 +613,37 @@ authoritative step list.
   the declared 134`) — same signature, nothing widened; `bun
   scripts/run-root-suite.mjs` · exit 1 · 109 PASS · 2 FAIL — the E9 base reds
   only.
+- **L6** — 2026-11-14, the owner's instruction and bypass decision, verbatim:
+  ```
+  Okey, si todo sale bien, arreglalo, si te has encontrado más findings en el camino haz triage, estima el alcance igual que has hecho antes y si tiene sentido arreglar arreglalo. Cuidado con no romper el contrato de lo que realmente tenías que hacer y no te vayas a hacer "otras cosas" o acabes borrando features que no tocar borrar o acabes borrando parte de lo que te he pedido que hagas.
+  ```
+  ```
+  fragment-fix: … Answered: selected bypass
+  ```
+  Triage of the findings on the road: blockers 1–2 and advisory 1 already
+  fixed (`b7481990`, `76e51560`); advisory 2 stays another units' (base-present
+  reds); G3's `of 112` line count and E5's abridged quote reproduce as recorded
+  (ignore); the load-flake reds normalized. The one reparable finding — the
+  foreign session fragment's five unsubstituted slots — is forbidden to every
+  session (closed aggregator set; the working-tree half FAILs pre-commit in a
+  scratch clone), so the owner chose the bypass recorded in `decisions.md` D6:
+  the slots filled in place, the resulting `fragment-hand-edited` red disclosed
+  in E12, a later push only under the documented `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`
+  hatch with D6's reason. Nothing deleted; the fills are the issue's own names
+  (the range-policy module, both gates, `--no-verify`).
+- **E12** — 2026-11-14, the bypass batch's evidence · pre-check in a
+  `mktemp -d` clone (removed): editing the fragment uncommitted → `node
+  scripts/log-immutability.mjs` · exit 1 · `fragment-hand-edited … edited in
+  the working tree — append-only holds at fragment level too`; after `8cac00a0`
+  on this branch · `node scripts/log-immutability.mjs --base a83b9b38` · exit 1
+  · 1 violation · `fragment-hand-edited … edited by non-aggregator commit
+  8cac00a0` · `verdict: FAIL` — the authorized red of D6, disclosed, never
+  hidden; `node scripts/push-identity-check.mjs --base a83b9b38` · exit 0 ·
+  `ok: 14 commit(s) verified`; `agentic-workflow journal aggregate --check` ·
+  exit 0 · `{"ok":true,"checked":12}` (the filled content parses); `bun test
+  scripts/published-refs.test.mjs scripts/push-identity-check.test.mjs
+  scripts/log-immutability.test.mjs` · exit 0 · 41 pass · 0 fail (the suites
+  judge fixtures; the live red is history, not corpus).
 
 ## Next
 
