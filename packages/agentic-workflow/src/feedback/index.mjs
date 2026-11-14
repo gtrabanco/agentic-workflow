@@ -192,6 +192,10 @@ export function createFeedback(options = {}) {
      * for the same stage would be the noise `--debug` exists to avoid); the
      * profile tier records it for the table.
      *
+     * An async `fn` ends its stage when its promise settles, not at its first
+     * suspension: the caller awaits one stage before opening the next, so the
+     * cost covers the whole stage — the awaits inside it included.
+     *
      * @template T
      * @param {string} name
      * @param {() => T} fn
@@ -203,23 +207,39 @@ export function createFeedback(options = {}) {
       if (allowed("regular")) write(`${MARK}stage ${name}`);
       openStage = name;
       stageStartedAt = now();
+      let out;
       try {
-        return fn();
-      } finally {
+        out = fn();
+      } catch (error) {
         closeStage();
+        throw error;
       }
+      if (out !== null && typeof out.then === "function") {
+        return Promise.resolve(out).then(
+          (value) => {
+            closeStage();
+            return value;
+          },
+          (error) => {
+            closeStage();
+            throw error;
+          },
+        );
+      }
+      closeStage();
+      return out;
     },
 
     /**
      * One unit of work done out of a known total. The regular tier prints the
      * first tick, one per interval and the last tick (so a reader always sees
      * the work move and always sees it end); the diagnostic tiers print every
-     * tick and append the unit's own detail.
+     * tick and append the unit's own detail. A tick inside an open stage never
+     * closes it — the stage ends with its own work, at settlement.
      *
      * @param {{done: number, total: number, unit?: string, detail?: string}} event
      */
     progress({ done, total, unit = "", detail = "" } = {}) {
-      closeStage();
       announce();
       const percent = total > 0 ? Math.floor((done / total) * 100) : 0;
       const noun = unit === "" ? "" : ` ${unit}`;
@@ -270,8 +290,9 @@ export function createFeedback(options = {}) {
       profilePrinted = true;
       const elapsed = now() - beganAt;
       const rows = stages.length > 0 ? stages : [{ name: "run", ms: elapsed }];
-      const total = rows.reduce((sum, stage) => sum + stage.ms, 0);
-      const share = (ms) => (total > 0 ? Math.round((ms / total) * 100) : 0);
+      // The share is of the printed total — the run's whole elapsed time — so a
+      // row and the header can never disagree about where the time went.
+      const share = (ms) => (elapsed > 0 ? Math.round((ms / elapsed) * 100) : 0);
       const width = Math.max(...rows.map((s) => s.name.length));
       const lines = [`FEEDBACK PROFILE — ${subject} · total ${formatDuration(elapsed)}`];
       for (const stage of rows) {
