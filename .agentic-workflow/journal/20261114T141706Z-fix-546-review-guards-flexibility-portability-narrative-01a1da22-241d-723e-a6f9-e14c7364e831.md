@@ -1,0 +1,6 @@
+## 2026-11-14T14:17:06Z — fix-546-review-guards-flexibility-portability — narrative
+- **Commits:** 15 (`537bf602…8e3b240b`)
+- **Files:** 43 files
+- **Summary:** Review guards para flexibilidad, portabilidad y escenarios cross-environment: se implementaron todos los AC del issue #546 — scopes de gitIdentity (push-upstream/push-any), detección forge-agnostic (GitHub/GitLab/Gitea/Bitbucket) en turn-contract, fullauto-merge y guard-command, graceful degradation del pre-push gate, manejo portable de TMPDIR, la rigidity-review gate step, allowlist por proyecto, y documentación completa (GIT_IDENTITY_HARDENING.md, hooks README, TURN_CONTRACT update, GATE_INVENTORY update, schema package bump).
+- **Decisions:** 1) gitIdentity gains enforce scopes push vs push-upstream en vez de un bloque global (AC1-2): permite fork PRs sin romper upstream guard. 2) forge detection via one adapter (lib/forge.sh) en vez de gh-only: AC3-6. 3) rigidity-review gate step auditó todos los hooks contra hardcoded forge/paths/temp/mainline ref: AC7. 4) guard-command allows one literal command per project via guard-allow.txt. 5) Schema bumped to 1.4.1 with push_scope and signing_policy. 6) Pre-push gate fails-closed when bun/node unavailable.
+- **Next:** Crear PR a main con gh pr create. Verificar reviewer pack. Revisar AC pendientes (signingKey empty opt-in, Windows TMPDIR).
