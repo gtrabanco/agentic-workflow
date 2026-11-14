@@ -469,6 +469,11 @@ writer-driver-contract | packages/agentic-workflow/README.md | block:writer-driv
 writer-refusal-vocabulary | packages/agentic-workflow/src/writer/driver.mjs | schema-export:WRITER_REFUSAL_REASONS | writer-refusal-reason | no
 shared-merge-class-vocabulary | scripts/shared-doc-merge.mjs | schema-export:SHARED_MERGE_CLASSES | shared-merge-class | no
 shared-merge-refusal-vocabulary | scripts/shared-doc-merge.mjs | schema-export:SHARED_MERGE_REFUSAL_REASONS | shared-merge-refusal-reason | no
+tool-inventory | packages/agentic-workflow/README.md | block:tool-inventory@1 | n/a | no
+tool-doctor-envelope | packages/agentic-workflow/README.md | block:doctor-envelope@1 | n/a | no
+doctor-check-status-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:DOCTOR_CHECK_STATUSES | doctor-check-status | no
+doctor-install-route-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:INSTALL_ROUTES | install-route | no
+doctor-wizard-move-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:WIZARD_MOVES | wizard-move | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
