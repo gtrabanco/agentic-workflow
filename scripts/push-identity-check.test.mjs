@@ -74,6 +74,11 @@ function run(repo, extra = []) {
   );
 }
 
+/** The fixture stand-in for a fetched remote: a published ref at one commit. */
+function publish(repo, sha, ref = "refs/remotes/origin/main") {
+  git(repo.root, ["update-ref", ref, sha]);
+}
+
 const PROFILE = { enforce: "commit-and-push", approved: { name: APPROVED.name, email: APPROVED.email } };
 
 test("a clean range passes and names the commit count", (t) => {
@@ -181,4 +186,57 @@ test("usage errors exit 2", (t) => {
     env: { ...process.env, PI_CODING_AGENT_DIR: repo.globalDir },
   });
   assert.equal(bare.status, 2, bare.stdout + bare.stderr);
+});
+
+// ---------------------------------------------------------------------------
+// Issue #539 — judge only never-published commits
+// ---------------------------------------------------------------------------
+
+test("PASS: a commit already published on origin/main is not judged (S3)", (t) => {
+  const repo = fixture(t, { gitIdentity: PROFILE });
+  const published = commitAs(repo, LEAK, "published-leak");
+  publish(repo, published);
+  commitAs(repo, APPROVED, "own");
+  const result = run(repo);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — ok: 1 commit\(s\) verified/);
+  assert.ok(!result.stdout.includes(published), "the published commit is not named as an offender");
+});
+
+test("PASS: a push that merges origin/main skips its published commits and judges its own (S3)", (t) => {
+  // The incident's exact range shape: base = the pushed branch's own remote tip,
+  // and the range carries origin/main's already-published commits because the
+  // branch merged them.
+  const repo = fixture(t, { gitIdentity: PROFILE });
+  const published = commitAs(repo, LEAK, "published-leak");
+  publish(repo, published);
+  publish(repo, repo.base, "refs/remotes/origin/fix-539");
+  git(repo.root, ["checkout", "-q", "-b", "work", repo.base]);
+  commitAs(repo, APPROVED, "own-1");
+  git(repo.root, ["merge", "--no-ff", "-q", "-m", "merge main", published]);
+  commitAs(repo, APPROVED, "own-2");
+  const result = run(repo);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — ok: 3 commit\(s\) verified/);
+});
+
+test("FAIL: a new misattributed commit is still refused beside a published ref (S4)", (t) => {
+  const repo = fixture(t, { gitIdentity: PROFILE });
+  const published = commitAs(repo, LEAK, "published-leak");
+  publish(repo, published);
+  const fresh = commitAs(repo, LEAK, "fresh-leak");
+  const result = run(repo);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — failed: 1 of 1 commit\(s\) outside the approved profile/);
+  assert.ok(result.stdout.includes(fresh), "the new commit is the one named");
+  assert.ok(!result.stdout.includes(published), "the published commit is not re-judged");
+});
+
+test("PASS: a published approved commit is skipped and the new one is verified (S4)", (t) => {
+  const repo = fixture(t, { gitIdentity: PROFILE });
+  publish(repo, commitAs(repo, APPROVED, "published-approved"));
+  commitAs(repo, APPROVED, "own");
+  const result = run(repo);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /PUSH IDENTITY — ok: 1 commit\(s\) verified/);
 });
