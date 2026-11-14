@@ -13,10 +13,11 @@
  * says nothing about attribution.
  *
  * So the push range is checked as one fact: every author *and* committer of
- * `<base>..<head>` must match the approved profile the project declares in the
- * unified config (`gitIdentity` in `.pi/agentic-workflow.json`, project over
- * global). Publication is the last moment this is cheap to stop; after the push
- * the only repair is a history rewrite.
+ * the never-published commits of `<base>..<head>` must match the approved
+ * profile the project declares in the unified config (`gitIdentity` in
+ * `.pi/agentic-workflow.json`, project over global). Publication is the last
+ * moment this is cheap to stop; after the push the only repair is a history
+ * rewrite.
  *
  * What the range *is* respects reachability (issue #539): a commit already
  * reachable from a published ref — the remote mainline, and the pushed branch's

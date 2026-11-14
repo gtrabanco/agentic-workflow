@@ -107,15 +107,15 @@ what the two gates judge:
   their wording.
 - The superseded claim — "every commit of `<base>..<head>` is judged" — was
   prose in three places (the two headers and
-  `docs/workflow/GIT_IDENTITY_HARDENING.md`). Each now carries the boundary: the
-  log header's baseline bullet and both annex layer-table rows were rewritten in
-  place, and the push-identity header sentence plus the annex push-range lead
-  keep their general wording directly beside the reachability paragraph that
-  names it ("only the never-published commits are judged"). The old
+  `docs/workflow/GIT_IDENTITY_HARDENING.md`). Each now names the boundary in
+  place: the log header's baseline bullet, the push-identity header sentence and
+  both annex push-range leads were rewritten to the never-published rule; the
+  annex layer-table rows and the reachability paragraphs beside them carry the
+  same rule and the incident's why. The old
   single-asterisk phrasing is absent from the docs surface: `rg -n 'every author
   \*and\* committer of' docs/workflow template/docs/workflow` finds nothing
   (exit 1), while `rg -c 'never-published' docs/workflow/GIT_IDENTITY_HARDENING.md
-  template/docs/workflow/GIT_IDENTITY_HARDENING.md` answers 2 lines in each
+  template/docs/workflow/GIT_IDENTITY_HARDENING.md` answers 3 lines in each
   copy.
 - No second copy of the range policy survives: the two scripts call one module
   (`rg -c 'publishedRefs\\(' scripts/*.mjs` → the module's definition and its two
@@ -575,6 +575,44 @@ authoritative step list.
   scripts/local-gate.mjs` · exit 1 · `FAILED at root-suite` — the same red step
   (fail-fast also cut in-flight suites short under that load); the steps this
   change moves are green in E10.
+- **L5** — 2026-11-14, the owner's follow-up, verbatim:
+  ```
+  Arregla Advisory 1
+  ```
+  ```
+  Arreglarlo ahora tendría consecuencias en alguna otra parte? Qué motivos hay para no hacerlo y que motivos hay para arreglarlo ahora?
+  Asegurate de que no rompe nada en otro sitio
+  ```
+  The advisory-1 batch (owner-directed scope beyond the two blockers): the three
+  surviving old-shorthand leads — `scripts/push-identity-check.mjs`'s header
+  sentence and both annexes' push-range lead — were rewritten to the
+  never-published rule in place, and the `## Retirements` receipt above was
+  re-synced with them (its wording no longer claims the leads keep the old
+  phrasing; its `never-published` count is now 3 lines per annex copy). E10
+  keeps its recorded 2 as the run at the head it names — log lines append and
+  are never edited. No test, budget or index pins any of the three sentences
+  (`rg -l 'GIT_IDENTITY_HARDENING' scripts/*.test.mjs` → none;
+  `SKILL_CONTEXT_BUDGETS.json` declares no ceiling for the annex).
+- **E11** — 2026-11-14, the advisory-1 batch's recheck (owner-directed, L5) ·
+  the annex sweep · `rg -n 'committer of .base\.\.HEAD' docs/workflow template/docs/workflow`
+  · exit 1 · 0 matches — neither push-range lead claims the whole range anymore
+  (the `external-verify.md` receipt's own `pre-change` quote is history, outside
+  these two paths); the re-synced Retirements count · `rg -c 'never-published'
+  docs/workflow/GIT_IDENTITY_HARDENING.md template/docs/workflow/GIT_IDENTITY_HARDENING.md`
+  · exit 0 · `3` lines per copy; `bun test scripts/published-refs.test.mjs
+  scripts/push-identity-check.test.mjs scripts/log-immutability.test.mjs` · exit
+  0 · 41 pass · 0 fail (the push-identity header comment moved, every case
+  holds); `bun test scripts/workflow-docs-index.test.mjs` · exit 0 · 5 pass · 0
+  fail; `bun test scripts/unit-doc-contract.test.mjs
+  scripts/spec-by-reference.test.mjs scripts/roadmap-settle.test.mjs` · exit 0 ·
+  46 pass · 0 fail; `bun test scripts/invocation-drift.test.mjs
+  scripts/residue-dimensions.test.mjs` · exit 0 · 43 pass · 0 fail; `bun
+  scripts/docs-generate.mjs --check` · exit 0 · PASS; `bun scripts/red-first.mjs`
+  · exit 0 · 0 findings; `bun test scripts/check-skill-context.test.mjs` · exit
+  1 with the base's exact single failure (`AGENTS.md: machine-table lines 135 !=
+  the declared 134`) — same signature, nothing widened; `bun
+  scripts/run-root-suite.mjs` · exit 1 · 109 PASS · 2 FAIL — the E9 base reds
+  only.
 
 ## Next
 
