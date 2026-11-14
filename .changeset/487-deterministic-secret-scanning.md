@@ -10,9 +10,10 @@ skipped, and paying for a grep the platform can run for free on every push.
 
 `scripts/secret-scan.mjs` reads the added lines of a push range and reports
 private-key blocks, provider token prefixes (GitHub, GitLab, OpenAI, AWS,
-Google, Slack, npm, SendGrid, JWTs), `<key>: "<payload>"` assignments whose
-payload clears an entropy and placeholder floor, and credentials inside a
-connection string. Every tracked text path is in scope — a token pasted into a
+Google, Slack, npm, SendGrid, JWTs), `<key>[:=] <payload>` assignments —
+quoted or bare, with the key name allowed as the tail of a longer identifier —
+whose payload clears an entropy, path and placeholder floor, and credentials
+inside a connection string. Every tracked text path is in scope — a token pasted into a
 fixture, a test, a log line or a documentation example is exactly the leak path
 the issue names.
 
