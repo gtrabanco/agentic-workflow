@@ -34,6 +34,32 @@ function sandbox() {
   return dir;
 }
 
+/** A throwaway checkout that is a real git repository carrying the shipped
+ *  secret-scan step, so a gate-level run proves the step refuses a tree it
+ *  judges. Identity travels per invocation with `git -c` — no fixture writes
+ *  git configuration (`scripts/git-config-writes.test.mjs`). */
+function secretSandbox() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-secret-"));
+  fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
+  // The shipped allowlist narrows the suite's own known-secret fixture, so the
+  // fixture checkout carries the suite too — otherwise the entry would read as
+  // stale in the very tree the gate is judging.
+  for (const name of ["secret-scan.mjs", "secret-scan.test.mjs", "secret-scan-allowlist.json"]) {
+    fs.copyFileSync(path.join(ROOT, "scripts", name), path.join(dir, "scripts", name));
+  }
+  const git = (args) => {
+    const result = spawnSync(
+      "git",
+      ["-c", "user.name=Fixture Human", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false", ...args],
+      { cwd: dir, encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, `git ${args.join(" ")} failed: ${result.stderr}`);
+    return result.stdout;
+  };
+  git(["init", "-q", "-b", "main"]);
+  return { dir, git };
+}
+
 test("a step never inherits the caller's repository locator", () => {
   // `git push` exports GIT_DIR to its pre-push hook; a fixture that `git init`s
   // a throwaway directory then re-initializes the caller's repository. The gate
@@ -70,6 +96,7 @@ test("every former remote check survives as a step, and the ids are unique", () 
     "journal-carrier-check",
     "log-immutability",
     "push-identity",
+    "secret-scan",
     "temp-hygiene",
     "tmp-gc",
     "worktree-guard",
@@ -122,6 +149,45 @@ test("journal-carrier-check fails on a malformed fixture carrier and moves no by
     assert.match(result.stderr, /^JOURNAL REFUSAL — 1 non-conforming fragment/u);
     assert.match(result.stderr, /main-manual-narrative-local\.md/u);
     assert.deepEqual(fs.readdirSync(carrier), ["20261108T121830Z-main-manual-narrative-local.md"], "validate-only: nothing consumed");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ------------------------------------------------------- the secret scan step */
+
+test("the secret-scan step is offline, non-test-bearing and never dropped for want of a range", () => {
+  // S8's marker pair and S2's offline placement: the prose-only push is the leak
+  // path, so an empty impact verdict must not skip the scan, and a hook that can
+  // prove no base must not lose the step — the script resolves its own range.
+  const step = STEPS.find((candidate) => candidate.id === "secret-scan");
+  assert.ok(step, "the scan is a declared step");
+  assert.equal(step.tests, false, "a secret is exactly what a prose-only push can carry");
+  assert.ok(!step.network, "a secret must never wait on a registry to be caught");
+  assert.notEqual(step.pushBase, true, "a range-bound step is dropped when no base is proven");
+  assert.deepEqual(DEPS["secret-scan"], [], "the scan reads the range, never another step's output");
+});
+
+test("a tree carrying a secret fails the gate through the shipped step", () => {
+  const { dir, git } = secretSandbox();
+  try {
+    fs.writeFileSync(path.join(dir, "seed.txt"), "nothing to see here\n");
+    git(["add", "-A"]);
+    git(["commit", "-q", "-m", "seed: a clean tree"]);
+    const clean = gate(["--only", "secret-scan", "--repo", dir, "--skip-network"]);
+    assert.equal(clean.status, 0, `a clean tree passes the step: ${clean.stdout}${clean.stderr}`);
+
+    // The payload is composed here so this suite carries no literal secret; the
+    // step judges the fixture tree, not this file.
+    const payload = ["d4f1a2b3", "c4d5e6f7", "a8b9c0d1", "e2f3a4b5"].join("");
+    fs.writeFileSync(path.join(dir, "app.env"), `API_TOKEN="${payload}"\n`);
+    git(["add", "-A"]);
+    git(["commit", "-q", "-m", "feat: a leak"]);
+    const leaked = gate(["--only", "secret-scan", "--repo", dir, "--skip-network"]);
+    assert.equal(leaked.status, 1, `the gate must refuse the tree: ${leaked.stdout}${leaked.stderr}`);
+    assert.match(leaked.stdout, /FINDING app\.env:1 — credential-assignment/);
+    assert.match(leaked.stderr, /FAILED at secret-scan/);
+    assert.match(leaked.stdout, /secret-scan: exit 1/);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -563,6 +629,7 @@ test("--push-base with an empty verdict plans the gate without the test steps", 
       "journal-carrier-check",
       "log-immutability",
       "push-identity",
+      "secret-scan",
       "temp-hygiene",
       "tmp-gc",
       "worktree-guard",
