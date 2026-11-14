@@ -1,0 +1,6 @@
+## 2026-11-12T02:01:42Z — feat/438-new-feature-residual-classify — 438 residual-classify applied inline
+- **Commits:** 4 (`f70ab7c6…cd53c4fd`)
+- **Files:** 11 files
+- **Summary:** Issue #438 lands through the owner's local workflow: scripts/residual-classify.mjs and its red-first suite decide used / andamio / half-built / orphan from the plan's own surfaces (live tree, roadmap rows, open-unit tasks, recorded residual-promise@1 rows, charter planned-work rows) with a path receipt per conditional and a fail-closed ambiguous; --inventory is the diff-derived manifest a strictly additive unit answers Retirements with and --receipt is the dated record only orphan may leave. The four unit-doc templates and the design step carry the amendment; residual-promise@1 is registered in normative-surfaces@1.
+- **Decisions:** States are decided by precedence used > half-built > andamio > orphan, because the middle two are defined as no-consumer; a claim needs a recorded named consumer, so prose never produces one and an unresolvable promise consumer refuses; a terminal roadmap row is not a plan claim (delivered-but-unconsumed is the orphan case); the inventory reads git diff, not a repository audit.
+- **Next:** Owner external verification of the branch diff; every obligation is planned, none self-verified.
