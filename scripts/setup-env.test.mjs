@@ -901,6 +901,28 @@ describe("the serena local override (S10, AC14)", () => {
     }
   });
 
+  it("the --doctor carrier prints the crate's doctor@1 envelope (issue #537 S7)", () => {
+    const result = spawnSync(process.execPath, [path.join(REPO_ROOT, "scripts", "setup-env.mjs"), "--doctor", "--json"], {
+      cwd: REPO_ROOT,
+      encoding: "utf8",
+      timeout: 90_000,
+    });
+    assert.notEqual(result.stdout, "", `the carrier prints its envelope (stderr: ${result.stderr})`);
+    const envelope = JSON.parse(result.stdout);
+    assert.equal(envelope.contract, "doctor@1");
+    assert.ok(envelope.rows.length >= 14, "one row per documented surface");
+    assert.equal(result.status, envelope.exitCode, "the exit code is the envelope's");
+  });
+
+  it("--check and --doctor are different readings and never combine", () => {
+    const result = spawnSync(process.execPath, [path.join(REPO_ROOT, "scripts", "setup-env.mjs"), "--check", "--doctor"], {
+      cwd: REPO_ROOT,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /pass one/u);
+  });
+
   it("SETUP.md documents the override row", () => {
     const text = fs.readFileSync(path.join(REPO_ROOT, "docs", "workflow", "SETUP.md"), "utf8");
     assert.ok(text.includes("project.local.yml"), "SETUP.md must mention the machine-local override");
