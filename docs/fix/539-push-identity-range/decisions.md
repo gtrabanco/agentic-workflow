@@ -42,3 +42,14 @@ justification | scripts/published-refs.test.mjs | P2 | 2026-11-14 | execute-phas
 - **D5** (2026-11-14) — no `.changeset/` intent file: the change touches
   `scripts/` and `docs/` only — no package or skill source, which is what the
   changeset format declares (same call as `docs/fix/534-prose-gate-worktree-scan/decisions.md` D2).
+- **D6** (2026-11-14) — owner-authorized journal-gate bypass: the foreign
+  session's fragment `20261114T095214Z-…-01a1d77a-…md` shipped five
+  unsubstituted template slots in its `Decisions` line, and every legal writer
+  of a committed fragment's bytes is the closed aggregator set (journal-bot /
+  GitHub noreply / github-actions), so a session repair is
+  `fragment-hand-edited` in both halves — proved in a `mktemp -d` clone (the
+  working-tree half FAILs before any commit). The owner chose the bypass:
+  fill the slots in place, accept `log-immutability`'s
+  `fragment-hand-edited` red on this branch, and push later with the
+  documented `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` hatch recording this reason.
+  No identity is spoofed; the red is disclosed (L6/E12), never hidden.
