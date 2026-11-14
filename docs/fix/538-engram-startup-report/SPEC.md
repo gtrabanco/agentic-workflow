@@ -510,18 +510,33 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
 - **P5/P6/P7** — 2026-11-14, the README + roadmap row + changeset + projection
   (`e053e936`), the closed obligations with their receipts (`074af0a0`), and the
   journal entry (`4ec73023`).
+- **P8** — 2026-11-14, the branch pushed and PR
+  [#543](https://github.com/gtrabanco/agentic-workflow/pull/543) opened against
+  `main`; the roadmap row settles to `done` with the PR link (the row is removed
+  after the merge, never before). The push's pre-push hook runs the offline gate
+  subset, whose `root-suite` step is red on `main` before this branch for E11/E12,
+  so it used the repository's documented escape hatch
+  (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`) with the reason recorded in the PR body.
 
 ## Next
 
-The owner's external verdict on this branch's diff. After it: push the branch and
-open the PR against `main` (`Closes #538`), settle the roadmap row to `done` with
-the PR link, and integrate `main` (`0a47bca6`) if the owner wants it before the
-merge. Both root-suite reds (E11, E12) are another unit's surface.
+The owner's external verdict on PR
+[#543](https://github.com/gtrabanco/agentic-workflow/pull/543). After it: the
+merge (the roadmap row settles to `done` with the PR link and is removed only
+after the merge), and the integration of `main` (`0a47bca6` moved while this
+branch was cut; no conflict, the owner runs the integration). Both root-suite
+reds (E11, E12) are another unit's surface.
 
 ## References
 
-Issues, roadmap rows, related material. The PR closes the tracked issue via
-`Closes #538`. `none` if empty.
+Issue [#538](https://github.com/gtrabanco/agentic-workflow/issues/538) — closed by
+PR [#543](https://github.com/gtrabanco/agentic-workflow/pull/543), which carries
+the full evidence table. The module's previous contract is
+[fix 531](../531-engram-native-skip-remote-surfaces/SPEC.md) (its O8 sentence is
+superseded for the native branch, `D3`), and the evidence background the issue
+cites is
+[docs/research/2026-11-13-tool-doctor-inventory.md](../../research/2026-11-13-tool-doctor-inventory.md)
+(rows 7–9, whose version-pair gap this unit names but does not close).
 
 ## Branch
 
