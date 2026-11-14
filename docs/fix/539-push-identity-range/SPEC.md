@@ -201,12 +201,13 @@ change edits, and each is another unit's to repair.
   `feat/352` merge retired `scripts/ceremony/*` and left that import behind
   (`git ls-tree a83b9b38 scripts/ceremony/` → `testing.mjs` only). **Does not
   affect** this unit: a different script, and the import is broken at base.
-- `worktree-guard` (a `local-gate` step, no remote twin) — 2 findings on the
-  shared checkout: `.worktrees/fix-538-engram-startup-report` and
-  `.worktrees/fix-540-embedding-pass-batch-limit` are merged into `origin/main`
-  (`STALE`). **Does not affect** this unit: another unit's parked worktrees, and
-  removing them is the owner's call (#505/#534 precedent) — this unit's own
-  worktree is clean and not among the findings.
+- `worktree-guard` (a `local-gate` step, no remote twin) — at G1 it reported 2
+  findings on the shared checkout: `.worktrees/fix-538-engram-startup-report` and
+  `.worktrees/fix-540-embedding-pass-batch-limit` were merged into `origin/main`
+  (`STALE`); at G3 the same step answers `4 worktree(s) · 0 finding(s)` — the
+  other units moved on, nothing here changed. **Does not affect** this unit:
+  another unit's parked worktrees, and this unit's own worktree is clean and was
+  never among the findings.
 - `dependency-advisories` reports 4 blocking `undici` rows and exits 0 by its
   own contract (report-only, scoped by the review to dependencies a change adds
   or updates). **Does not affect** this unit: no dependency is added or changed.
@@ -496,9 +497,29 @@ authoritative step list.
   amended in L3 and green after it: `bun test scripts/roadmap-settle.test.mjs
   scripts/unit-doc-contract.test.mjs scripts/spec-by-reference.test.mjs` · exit 0 ·
   46 pass · 0 fail).
-- **P5** — 2026-11-14, documentation and repository state: both hardening-annex
-  copies, the two gate-inventory rows, the roadmap row through the writer, the
-  rendered projection and the journal fragment (this commit).
+- **P5** — 2026-11-14, documentation and repository state · `8a642cfd`: both
+  hardening-annex copies, the two gate-inventory rows, the roadmap row through
+  the writer, the rendered projection and the journal fragment.
+- **G3** — 2026-11-14, HEAD 8a642cfdbf84ffb8aba01ef64519905c776b1859 · the
+  final verification at the committed head. `bun scripts/run-root-suite.mjs` ·
+  exit 1 · **110 PASS / 2 FAIL of 112** — `check-skill-context` and
+  `residual-classify`, both reproduced at the base commit (E9), none on this
+  change's surface. At the same head and green: `bun test
+  scripts/published-refs.test.mjs scripts/push-identity-check.test.mjs
+  scripts/log-immutability.test.mjs` · exit 0 · 41 pass · 0 fail;
+  `bun scripts/docs-generate.mjs --check` · exit 0 · PASS; `bun
+  scripts/red-first.mjs` · exit 0 · 52 pairs · 27 after the cutoff · 0 findings
+  (the new pair's suite precedes its module); `agentic-workflow verify` on this
+  doc · exit 0 · `VERIFY PASS` (7 checks, 0 violations); `bun
+  scripts/promise-coherence.mjs` · exit 0 · `verdict PASS` · 2 claims checked ·
+  13 skipped; `agentic-workflow phase-lint` · exit 0 · `verdict PASS`;
+  `node scripts/log-immutability.mjs --base a83b9b38` · exit 0 · `0 violations ·
+  verdict: PASS`; `node scripts/push-identity-check.mjs --base a83b9b38` · exit 0
+  · `ok: 5 commit(s) verified`. `bun scripts/local-gate.mjs` · exit 1 ·
+  `FAILED at root-suite` — the same two pre-existing reds, with
+  `worktree-guard` now green (0 findings).
+- **P6** — 2026-11-14, the ledger line above, recorded at the head it names
+  (docs-only; no source, script or template byte moves in that commit).
 
 ## Next
 
