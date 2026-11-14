@@ -189,3 +189,29 @@ test("a section key may only be claimed once", () => {
   assert.equal(resolved.ok, false);
   assert.match(resolved.issues[0].message, /duplicate/i);
 });
+
+// ---------------------------------------------------------------------------
+// Issue #546 — the identity section's scope and signing vocabulary
+// ---------------------------------------------------------------------------
+
+test("gitIdentity.enforce accepts every scope value and refuses a made-up one", () => {
+  const identity = section("gitIdentity");
+  for (const value of ["off", "commit", "push", "push-upstream", "commit-and-push", "commit-and-push-upstream"]) {
+    assert.deepEqual(validateSectionValue(identity, { enforce: value }), [], value);
+  }
+  assert.equal(validateSectionValue(identity, { enforce: "push-anywhere" }).length, 1);
+});
+
+test("gitIdentity.approved takes the signing policy and the per-machine key list", () => {
+  const identity = section("gitIdentity");
+  assert.deepEqual(validateSectionValue(identity, { approved: { signing: "off" } }), []);
+  assert.deepEqual(validateSectionValue(identity, { approved: { signing: "allowed" } }), []);
+  assert.deepEqual(validateSectionValue(identity, { approved: { signing: "required" } }), []);
+  assert.deepEqual(
+    validateSectionValue(identity, { approved: { signingKeys: ["AAAA", "/home/u/.ssh/id_ed25519"] } }),
+    [],
+  );
+  assert.equal(validateSectionValue(identity, { approved: { signing: "opt-in" } }).length, 1, "an unknown policy is refused");
+  assert.equal(validateSectionValue(identity, { approved: { signingKeys: [] } }).length, 1, "an empty key list declares nothing");
+  assert.equal(validateSectionValue(identity, { approved: { signingKey: "" } }).length, 1, "an empty key is a typo, not a policy");
+});
