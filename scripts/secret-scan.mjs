@@ -238,6 +238,10 @@ export function placeholderFault(value) {
 export function payloadFault(value) {
   const text = String(value ?? "");
   if (text.length < PAYLOAD_MIN_LENGTH) return `too short: ${text.length} char(s)`;
+  // A value that begins with `/` is an absolute path or a literal pattern
+  // (`const X_TOKEN = /re/`), never a credential — the shape the widened
+  // assignment boundary started flagging (external-verify correction batch).
+  if (text.startsWith("/")) return "a path or a literal pattern, not a credential";
   const reference = referenceFault(text);
   if (reference) return reference;
   const placeholder = placeholderFault(text);
