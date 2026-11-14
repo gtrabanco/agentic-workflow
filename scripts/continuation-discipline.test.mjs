@@ -19,8 +19,8 @@
  * The commands are agent skills, not OS binaries, so "executing" means running
  * the command's documented effect through the SAME machinery the skill runs: a
  * `/workflow-status` continuation re-runs the sensor, and a `/review-spec` or
- * `/review-plan` continuation builds the stage snapshot with
- * `scripts/pre-execution-snapshot.mjs` and persists the receipt block the review
+ * `/review-plan` continuation builds the stage snapshot with the crate's
+ * `pre-execution-snapshot` subcommand and persists the receipt block the review
  * skill publishes (`OUTPUT.md`). That is the strongest execution a docs-and-scripts
  * repository can fixture without a model in the loop.
  *

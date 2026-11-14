@@ -42,8 +42,9 @@ export type FindingsTableImpact = (typeof FINDINGS_TABLE_IMPACTS)[number];
 // `findings-table@1` block cites — no second const is created here.
 
 /** The `## Log` line-kind vocabulary (`log-kind`), published by the
- *  `log-kind@1` block. The reader const is `scripts/unit-doc-phases.mjs`
- *  `LOG_KINDS`; the parity suite pins the two together. */
+ *  `log-kind@1` block. The reader const is `LOG_KINDS` in
+ *  `packages/agentic-workflow/src/runner/unit-doc-phases.mjs`; the parity
+ *  suite pins the two together. */
 export const LOG_KIND_TOKENS = Object.freeze(["L", "E", "G", "F", "D", "P", "R", "V"]);
 export type LogKindToken = (typeof LOG_KIND_TOKENS)[number];
 
