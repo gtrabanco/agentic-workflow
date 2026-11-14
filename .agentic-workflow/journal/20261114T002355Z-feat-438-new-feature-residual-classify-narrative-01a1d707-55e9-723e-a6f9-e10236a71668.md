@@ -1,0 +1,6 @@
+## 2026-11-14T00:23:55Z — feat/438-new-feature-residual-classify — narrative
+- **Commits:** 17 (`f70ab7c6…cf6e5139`)
+- **Files:** 25 files
+- **Summary:** feat/438: residual-classify — applied a correction batch from an EXTERNAL VERIFY receipt (2 blockers fixed, 2 advisories folded) plus integration of origin/main (PR #522) and its merge conflicts, all passing gates; push blocked by main-side log-immutability and push-identity
+- **Decisions:** Owner amendment: Sí, arreglalo — O24/O25 added as post-cut obligations (closed-unit rule had no ledger row at freeze, now verified 25/0); no --no-verify bypass taken on owner instruction; push range a44c6c4a..HEAD fails on 26 main-side identity violations (GitHub/journal-bot/short-name) plus 2 log-hand-appended commits (b012b31d, 3cbc1237) that are main's own writes outside the aggregator
+- **Next:** Owner must resolve the push block: order a bypass with push-identity enforcement disabled (not --no-verify), restructure those two gates to exclude commits already present in origin/main, or use git push --force-with-lease for push-identity only — PR #522 will go from CONFLICTING to mergeable once the remote tip moves past a44c6c4a; also decide on precondition-closure.mjs SPEC citation (pre-existing, verified refuses it)
