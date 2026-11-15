@@ -62,7 +62,10 @@ S2's `format: <artifact-format-version>` token is implemented as a
 **closed published vocabulary of `<family>@<generation>` tokens**
 (`unit-doc-legacy@1`, `unit-doc-spec-by-reference@1`), not as a free version
 number: the family is what a reader dispatches on, the generation is what the
-semver comparison orders, and a free string would be a parser guess. The
+semver comparison orders, and a free string would be a parser guess.
+*(Amended 2026-11-09 by D4: the published vocabulary is one linear generation
+per carrier — `unit-doc@1` (legacy) and `unit-doc@2` (spec-by-reference); the
+tokens named above were the first draft and are not published.)* The
 existing carrier heuristic (`resolveUnitDocShape`, the heading set a document
 actually carries) is the **derivation source** S5 names, and it gains no second
 definition — the stamp's `format` is checked for parity against it (S8).
@@ -434,6 +437,66 @@ surgery (workflow §4).
 - **D5** — 2026-11-09, owner-instruction authority (S1, §8): the O1–O3/O8 validators name the contract’s own suite instead of the package-wide `bun run test`, because two package-wide cases (AC8 `npm pack`, F112) can never be green in this environment (`npm`/`node` absent) and a `verified` row whose validator does not reproduce is exactly the defect the 460 external verify blocked on. The package-wide result is recorded as E12 with its counts; nothing is claimed green that did not run.
 - **G1** — 2026-11-09, HEAD 1b907d7de3267cc73cb76eb5a08b4118744a1a08, `AGENTIC_WORKFLOW_NODE=bun bun scripts/local-gate.mjs --jobs 4 --no-bail` · exit 1 · 12/17 steps PASS (workspace-install, version-parity-content, docs-generated-projection, log-immutability, temp-hygiene, tmp-gc, worktree-guard, dependency-pin-gate, dependency-advisories, schema-build, journal-carrier-check, crate-suite-bun 565 pass / 0 fail); 4 FAIL, all environment-caused: `crate-suite-node` and `pi-node-compat` (no `node` binary), `pi-compat-guard` (no npm/network to install the peer floor), `root-suite` (the base-caused stub failures of E14); 1 SKIPPED (`schema-node-compat`, dependent on a failed step).
 - **E17** — 2026-11-09, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":3,"refusals":[]}` — this session’s `docs/LOGS.md` entry is the conforming fragment `.agentic-workflow/journal/20261109T154621Z-feat-462-document-provenance-narrative-local.md` (the aggregator is the only legal writer of the journal, issue #468); `rg -c "#462" docs/ROADMAP.md docs/LOGS.md` → 1 and 1.
+- **L3** — 2026-11-09, the correction request after the external verify, verbatim:
+  ```
+  Apply to this repository: fix the advisories if theyre confirmed
+  ```
+  Both advisories of the 2026-11-09 EXTERNAL VERIFY block (`external-verify.md`)
+  were confirmed against current bytes and folded in one batch (F1, F2). No
+  blockers existed; the correction touched no shipped behavior.
+- **F1** — 2026-11-09, folded · `d621787c` — external-verify advisory 1:
+  `scripts/release.test.mjs:974,1000` used the unpublished token
+  `unit-doc-spec-by-reference@1` in the stamp fixture and its carrier-axis
+  assertion. Renamed to the published `unit-doc@2`; the assertion's meaning
+  (the stamper never touches the carrier axis) is unchanged. Verified:
+  `rg -c 'unit-doc-spec-by-reference' scripts/release.test.mjs` → 0 matches and
+  `bun test scripts/release.test.mjs` · exit 0 · 70 pass / 0 fail (E18).
+- **F2** — 2026-11-09, folded · this commit — external-verify advisory 2:
+  Decision D1 (SPEC) still named the pre-D4 vocabulary tokens as current.
+  D1 now carries a dated pointer to its D4 amendment; D4's own record (Log)
+  keeps the old names as history, untouched. Verified: the pointer matches
+  once at D1 (E19) and the unit-doc verifier stays green (E19).
+- **E18** — 2026-11-09, `bun test scripts/release.test.mjs` · exit 0 · 70 pass /
+  0 fail (the fixture token now belongs to `DOC_PROVENANCE_FORMATS`;
+  `rg -c 'unit-doc-spec-by-reference' scripts/release.test.mjs` → 0 matches).
+- **E19** — 2026-11-09, `rg -n 'Amended 2026-11-09 by D4'
+  docs/features/462-doc-provenance-stamp/SPEC.md` · the pointer matches once at
+  D1 (line 66; the Log's own E19 line is the only other occurrence, quoting the
+  pattern);
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify
+  docs/features/462-doc-provenance-stamp/SPEC.md --no-git` · exit 0 ·
+  `VERIFY PASS`, 0 violations (the stamped doc stays green after the edit).
+- **E20** — 2026-11-09, regression floor over the correction batch:
+  `bun test scripts/unit-doc-contract.test.mjs` · exit 0 · 21 pass / 0 fail;
+  `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`;
+  `bun scripts/test-impact.mjs --base 226a3367` · 7 changed files, 1 executable
+  (the test file itself), no suite matches its touched symbols → the project-gate
+  fallback for `scripts/release.test.mjs` is the release suite, which ran green
+  (E18); the six remaining files are prose. No behavioral RED corpus is due:
+  S1 names consistency repairs, not behavior; the pre-fix confirmation checks
+  R1 (2 matches) and R2 (pointer absent) were the failing corpus and both turn
+  green here.
+- **D6** — 2026-11-09, owner-instruction authority (S1): the advisories are
+  repaired, not dismissed — the external verify had classified both as kept
+  for the evidence trail, and the owner's correction request overrides the
+  report-only default. The fix is the smallest action the receipt named: a
+  fixture-token rename and a dated pointer; no stamper validation behavior
+  was added (that would be a new surface nobody asked for).
+- **G2** — 2026-11-09, HEAD 17691cb0 (pre-restructure),
+  `bun scripts/local-gate.mjs --jobs 4` · exit 1 · red at `log-immutability`,
+  6 violations: 5 attribution (the aggregation commit carried a human identity)
+  + 1 `log-block-malformed`. The attribution half is fixed by restructure: the
+  aggregation's own bytes (LOGS.md append + consumed fragments, produced by the
+  real `journal aggregate` CLI) are committed separately under the aggregator's
+  git identity. The `log-block-malformed` half is a **new finding, pre-existing
+  at base**: a scratch run of the base's own code (one clean baseline, one
+  conforming fragment, the real `aggregateJournal` append, a bot-identified
+  commit) reproduces the violation — `aggregate.mjs` appends `"\n" + content`
+  unconditionally while `log-immutability.mjs` `logShapeViolations` requires
+  the appended bytes to start with `## `; the gate's own PASS test appends
+  without the separator, so the pair is untested against each other. Per the
+  correction bounds (§9) a new finding goes to the owner unrouted — this batch
+  does not touch either surface.
 
 ## Next
 
