@@ -454,15 +454,16 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
 
 ## Next
 
-The owner's external verify of the change. On approval: open the PR against
-`main` with `Closes #537`, settle the roadmap row to `done` with the PR link
-(`roadmap-settle.mjs` refuses the close-out otherwise), and let the journal
-aggregator on `main` consume the fragment.
+Merge PR [#558](https://github.com/gtrabanco/agentic-workflow/pull/558) once the
+owner's verdict is in; the roadmap row is settled to `done` with the PR link and
+the journal aggregator on `main` consumes the fragment.
 
 ## References
 
 - Issue [#537](https://github.com/gtrabanco/agentic-workflow/issues/537) — the
   tracked issue; the PR closes it via `Closes #537`.
+- PR [#558](https://github.com/gtrabanco/agentic-workflow/pull/558) — the
+  delivery of this unit.
 - `docs/research/2026-11-13-tool-doctor-inventory.md` (`fbbf336e`) — the spike
   whose thirteen rows, delimitation rule and four gaps this unit implements.
 - `docs/ROADMAP.md` row 537.
