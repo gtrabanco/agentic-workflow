@@ -118,6 +118,54 @@ Since the write path is paced and retried, this command is also the honest way
 to backfill a store that a rate limit interrupted — it makes progress on every
 run instead of aborting on the first 429.
 
+## Doc-index embedding profile — a preset's `index.json` (issue #541)
+
+The `doc` engine is provider-neutral: it reads the committed
+`.agentic-workflow/index.json` and nothing else. What a provider *needs* — its
+endpoint, model, key variable, a chunk limit its input window tolerates, pacing
+its rate limit tolerates — is provider data, so a companion package ships it as
+a preset's **embed profile** and this package materializes it on request.
+
+**The seam.** `ProviderPreset.embedProfile` is the literal `provider` block
+(`baseUrl`, `model`, `envVar`, `chunk_limit`, `max_request_chars`, `pacing`) the
+companion wants a project to use. It is data: this package names no provider,
+and the preset is refused at registration if the runner crate's schema would
+refuse it, so a broken companion fails loudly instead of staging an unusable
+config. `getEmbedProfiles()` is the read surface.
+
+**The surface.** `/agentic-workflow-settings` → `Doc index embedding profile`
+shows, per key, whether the value in force came from the preset, from you, or
+from the crate's shipped default:
+
+```text
+doc-index embedding profile — <provider>
+  <root>/.agentic-workflow/index.json (absent — the file is created on write)
+  provider.baseUrl = (none — keyword-only) · default (preset: https://…)
+  provider.model = mine-embed · user (preset: acme-embed-1)
+  provider.pacing.batchSize = 6 · preset
+  <n> key(s) to fill from the preset · <m> kept as written
+```
+
+- **Nearest instruction wins, per key.** A value your `index.json` already
+  carries always wins — the write fills only the keys that are *absent*, never
+  rewrites one (not even one the preset wrote earlier), and decides `pacing`
+  knob by knob. That makes a second run a no-op, and it means a later change to
+  the preset's values reaches your file only if you delete the key and re-apply.
+- **Consent, every time.** The action asks before writing, writes nothing on a
+  no, writes nothing outside an explicit answer, and refuses while the project is
+  untrusted (the index config is committed project state). An `index.json` that
+  does not parse is refused by name and left alone.
+- **Validated by the crate, never here.** The candidate file is judged by the
+  runner crate's own `validateIndexConfigObject` before a byte is written, so a
+  bad preset value is refused rather than staged and this package keeps no copy
+  of the schema.
+- **Origin is a comparison, not a record.** `preset` means the value in force
+  equals the preset's (whoever wrote it); `user` means a different value is in
+  force; `default` means the key is absent and the crate's shipped value is what
+  runs today. Nothing is stored in your file to say so.
+- **Why not automatically.** Nothing is written at extension load, in a query, or
+  by `doc --sync`: a committed config file changes only when you say so.
+
 ## Unattended durability — supervisor resume (issue #284)
 
 `/advance` is the deterministic conductor: sensor → decide → invoke, one stage
@@ -469,7 +517,8 @@ set of routes, and you can define as many as you like under `profiles`:
   available. A preset may also read the generic `tierRouting` opt-out
   (`false`, or `{ "enabled": false }` global / `{ "skills": { … } }` per
   skill) — the cost policy the names stand for lives in the companion, never
-  here.
+  here. A preset may also carry the provider's **doc-index embedding profile**
+  (`embedProfile`) — see [Doc-index embedding profile](#doc-index-embedding-profile--a-presets-indexjson-issue-541).
 - **`profileFallback`** — what happens when the preferred profile's model is
   unusable:
   - `applyTo`: `"flow"` (default) records the switch so later commands keep using the

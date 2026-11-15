@@ -146,7 +146,7 @@ test("precedence: a value the operator wrote and the preset agrees with is repor
 test("precedence: pacing precedence is per knob, not per block", () => {
   const plan = planFor(JSON.stringify({ version: 1, provider: { pacing: { batchSize: 4 } } }));
   assert.equal(rowOf(plan, "provider.pacing.batchSize").origin, "user");
-  assert.equal(rowOf(plan, "provider.pacing.batchSize").inForce, 4);
+  assert.equal(rowOf(plan, "provider.pacing.batchSize").inForce, "4");
   assert.equal(rowOf(plan, "provider.pacing.requestsPerMinute").origin, "default");
   assert.deepEqual(plan.next.pacing, { batchSize: 4, requestsPerMinute: 60 });
 });
@@ -271,9 +271,9 @@ test("report: every key is named with the value in force and where it came from"
   const text = renderEmbedProfileReport(plan).join("\n");
   assert.match(text, /acme/u, "the provider is named");
   assert.match(text, /provider\.model = mine-embed · user \(preset: acme-embed-1\)/u);
-  assert.match(text, /provider\.baseUrl = https:\/\/acme\.example\/v1 · default/u);
+  assert.match(text, /provider\.baseUrl = \(none — keyword-only\) · default \(preset: https:\/\/acme\.example\/v1\)/u);
   assert.match(text, /provider\.pacing\.batchSize = 4 · user/u);
-  assert.match(text, /1 key\(s\) to fill/u);
+  assert.match(text, /4 key\(s\) to fill from the preset · 2 kept as written/u);
   assert.deepEqual([...EMBED_PROFILE_ORIGINS], ["preset", "user", "default"]);
 });
 

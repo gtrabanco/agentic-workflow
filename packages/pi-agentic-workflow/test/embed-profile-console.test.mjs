@@ -85,8 +85,12 @@ test("S7: the console reports every key's origin and writes only after an explic
 
     const report = harness.notify.find((entry) => /embedding profile/iu.test(entry.message));
     assert.ok(report, "the origin report is notified");
-    assert.match(report.message, /provider\.model = acme-embed-1 · default/u);
-    assert.match(report.message, /provider\.baseUrl = https:\/\/acme\.example\/v1 · default/u);
+    assert.match(report.message, /provider\.model = \(none — keyword-only\) · default \(preset: acme-embed-1\)/u);
+    assert.match(
+      report.message,
+      /provider\.pacing\.requestsPerMinute = 60 · default \(preset: 60\)/u,
+      "a knob the crate ships a default for reports the value that runs today",
+    );
     assert.equal(harness.written.size, 1, "one file written");
     const text = harness.written.get(indexPath);
     assert.ok(text, "the write targets the project's index config");
