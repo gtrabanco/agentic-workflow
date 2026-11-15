@@ -86,6 +86,21 @@ function insertAfterLineEdit(lines, offsets, total, sepIdx, replacement) {
   return { start: afterNewline, end: afterNewline, replacement: `${replacement}\n` };
 }
 
+/**
+ * The line indexes of the rows keyed `nn`, scoped to the table the `| NN |`
+ * header opens (every line when no header exists): one scope for the whole
+ * NN-lookup family — upsert, read and annotate must never disagree, and a bare
+ * `| N |` row under another header is a different key's row (issue #514 P12).
+ */
+function nnRowIndexes(lines, nn, headerIdx) {
+  const matches = [];
+  for (let i = headerIdx === -1 ? 0 : headerIdx; i < lines.length; i += 1) {
+    if (headerIdx !== -1 && !/^\s*\|/.test(lines[i])) break;
+    if (/^\| (\d+) \|/.test(lines[i]) && lines[i].trim().startsWith(`| ${nn} |`)) matches.push(i);
+  }
+  return matches;
+}
+
 /** The splice declaration for `rowUpsert`: locate the row (or the insert
  * position) and declare that one range — never the whole content. */
 function rowUpsertEdits(content, { nn, slug, status, dependsOn, description }) {
@@ -100,13 +115,29 @@ function rowUpsertEdits(content, { nn, slug, status, dependsOn, description }) {
     return { ok: false, reason: "invalid-document", detail: "Roadmap table separator not found (expected line with |---|)" };
   }
 
-  const existingRowIdx = lines.findIndex((l) => {
-    return /^\| (\d+) \|/.test(l) && l.trim().startsWith(`| ${nn} |`);
-  });
+  // NN-keyed matches, scoped by the shared helper — the header exists here
+  // (refused above when absent), so the walk stops at the table's end.
+  const matches = nnRowIndexes(lines, nn, headerIdx);
 
   const newRow = `| ${nn} | ${slug || ""} | ${status || ""} | ${dependsOn || ""} | ${description || ""} |`;
 
-  if (existingRowIdx !== -1) {
+  if (matches.length > 1) {
+    // Duplicate NN rows: every reader keeps the last (a Map keyed by NN is
+    // overwritten in order), so the last row is the one that settles — the
+    // earlier duplicates are unread state this upsert collapses away
+    // (issue #514, external-verify 2026-11-15 blocker 1, D10). Each deletion
+    // consumes the row's own newline; the survivor is spliced like any update.
+    const keeper = matches[matches.length - 1];
+    const edits = matches.slice(0, -1).map((i) => ({
+      start: offsets[i],
+      end: Math.min(offsets[i] + lines[i].length + 1, total),
+      replacement: "",
+    }));
+    edits.push({ start: offsets[keeper], end: offsets[keeper] + lines[keeper].length, replacement: newRow });
+    return { ok: true, edits };
+  }
+  if (matches.length === 1) {
+    const existingRowIdx = matches[0];
     return {
       ok: true,
       edits: [{ start: offsets[existingRowIdx], end: offsets[existingRowIdx] + lines[existingRowIdx].length, replacement: newRow }],
@@ -120,7 +151,9 @@ function rowUpsertEdits(content, { nn, slug, status, dependsOn, description }) {
 /**
  * rowUpsert(table, { nn, slug, status, dependsOn, description })
  * Upserts a row by NN (the first column).  If the NN already exists,
- * the row is updated in place.  Otherwise a new row is inserted after
+ * the row is updated in place — and when the key carries duplicate rows,
+ * the last one (the row every reader keeps) is updated while the earlier
+ * duplicates are spliced out.  Otherwise a new row is inserted after
  * the header.  Keeps the | NN | pipe format and column count.
  * Never invents issue links — a link is passed in explicitly.
  *
@@ -159,11 +192,14 @@ export function rowUpsert(table, { nn, slug, status, dependsOn, description, exp
  *
  * Returns { nn, slug, status, dependsOn, description, line } or null when the
  * row is absent. slug keeps the raw cell (backticks included); callers that
- * compare slugs strip them.
+ * compare slugs strip them. When duplicates exist the last row answers — the
+ * one `parseIndexRows` keeps (a Map keyed by NN, overwritten in order).
  */
 export function findRow(table, nn) {
   const content = readFileSync(table, "utf8");
-  const line = content.split("\n").find((l) => l.trim().startsWith(`| ${nn} |`) && /^\| (\d+) \|/.test(l.trim()));
+  const lines = content.split("\n");
+  const matches = nnRowIndexes(lines, nn, lines.findIndex((l) => l.includes("| NN |")));
+  const line = matches.length > 0 ? lines[matches[matches.length - 1]] : null;
   if (!line) return null;
   const cells = line.split("|").map((c) => c.trim());
   return {
@@ -295,9 +331,10 @@ export function annotate(table, nn, note, { expected } = {}) {
     expected,
     apply: (content) => {
       const { lines, offsets } = lineOffsets(content);
-      const existingRowIdx = lines.findIndex((l) => {
-        return /^\| (\d+) \|/.test(l) && l.trim().startsWith(`| ${nn} |`);
-      });
+      // The reader's row: last match wins — the same scope and rule `findRow`
+      // answers by, so the note lands where every reader looks.
+      const rowMatches = nnRowIndexes(lines, nn, lines.findIndex((l) => l.includes("| NN |")));
+      const existingRowIdx = rowMatches.length > 0 ? rowMatches[rowMatches.length - 1] : -1;
       if (existingRowIdx === -1) {
         return { ok: false, reason: "invalid-document", detail: `Roadmap row for NN ${nn} not found` };
       }
