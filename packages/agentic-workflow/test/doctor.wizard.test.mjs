@@ -6,6 +6,11 @@
  * so the wizard's contract — nothing without an explicit yes, one runnable
  * action per repair, a recorded consent line, a re-verify, a second run that is a
  * proven no-op — is exercised end to end without touching the live tree.
+ *
+ * Every case spawns the real bin (~2.7s per spawn on this host — the doctor's
+ * real probes), so each carries `timeout: 30_000`: the package suite's own
+ * budget, making the declared plain `bun test test/doctor.wizard.test.mjs`
+ * check exit 0 under any runner (measured 2026-11-15).
  */
 
 import { test } from "node:test";
@@ -64,7 +69,7 @@ function fixture() {
   return root;
 }
 
-test("the doctor reports the declared-but-un-armed driver and the missing hook", { skip: gitAvailable ? false : "git is not available" }, () => {
+test("the doctor reports the declared-but-un-armed driver and the missing hook", { skip: gitAvailable ? false : "git is not available", timeout: 30_000 }, () => {
   const root = fixture();
   try {
     const envelope = doctorJson(root);
@@ -80,7 +85,7 @@ test("the doctor reports the declared-but-un-armed driver and the missing hook",
   }
 });
 
-test("without --yes the wizard prints the plan, writes nothing and says so (S6)", { skip: gitAvailable ? false : "git is not available" }, () => {
+test("without --yes the wizard prints the plan, writes nothing and says so (S6)", { skip: gitAvailable ? false : "git is not available", timeout: 30_000 }, () => {
   const root = fixture();
   try {
     const result = run(root, "setup", "--json");
@@ -100,7 +105,7 @@ test("without --yes the wizard prints the plan, writes nothing and says so (S6)"
   }
 });
 
-test("a consented action runs the project's own installer, records one line and re-verifies (S6)", { skip: gitAvailable ? false : "git is not available" }, () => {
+test("a consented action runs the project's own installer, records one line and re-verifies (S6)", { skip: gitAvailable ? false : "git is not available", timeout: 30_000 }, () => {
   const root = fixture();
   try {
     const result = run(root, "setup", "--json", "--yes", "git-hooks", "--yes", "merge-drivers");
@@ -128,7 +133,7 @@ test("a consented action runs the project's own installer, records one line and 
   }
 });
 
-test("the second run is a proven no-op (S6)", { skip: gitAvailable ? false : "git is not available" }, () => {
+test("the second run is a proven no-op (S6)", { skip: gitAvailable ? false : "git is not available", timeout: 30_000 }, () => {
   const root = fixture();
   try {
     run(root, "setup", "--json", "--yes", "git-hooks,merge-drivers");
@@ -146,7 +151,7 @@ test("the second run is a proven no-op (S6)", { skip: gitAvailable ? false : "gi
   }
 });
 
-test("an unknown id in --yes is a refusal, exit 2, before any action", { skip: gitAvailable ? false : "git is not available" }, () => {
+test("an unknown id in --yes is a refusal, exit 2, before any action", { skip: gitAvailable ? false : "git is not available", timeout: 30_000 }, () => {
   const root = fixture();
   try {
     const result = run(root, "setup", "--yes", "nope");
@@ -158,7 +163,7 @@ test("an unknown id in --yes is a refusal, exit 2, before any action", { skip: g
   }
 });
 
-test("instruct-only rows are printed with their exact command and never applied", { skip: gitAvailable ? false : "git is not available" }, () => {
+test("instruct-only rows are printed with their exact command and never applied", { skip: gitAvailable ? false : "git is not available", timeout: 30_000 }, () => {
   const root = fixture();
   try {
     const receipt = JSON.parse(run(root, "setup", "--json").stdout);

@@ -63,7 +63,7 @@
  * failed install; 2 = usage error.
  *
  * Usage:
- *   node scripts/setup-env.mjs [--check]
+ *   node scripts/setup-env.mjs [--check | --doctor [--json]]
  */
 
 import { spawnSync } from "node:child_process";
