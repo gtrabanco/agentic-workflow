@@ -141,3 +141,34 @@ test("catalog snapshot: the file carries its provenance header", () => {
     assert.ok(raw.includes(marker), `the provenance header is missing "${marker}"`);
   }
 });
+
+// ── The doc-index embedding profile (issue #541) ─────────────────────────
+
+test("catalog snapshot: the embedding profile's values are the catalog's facts", async () => {
+  const { NAN_EMBED_PROFILE } = await import("../dist/preset.js");
+  const embedding = catalog.models.find((model) => model.type === "embedding");
+  assert.ok(embedding, "the snapshot records an embedding model");
+  assert.equal(NAN_EMBED_PROFILE.model, embedding.slug, "the profile pins the snapshot's embedding slug");
+  assert.equal(NAN_EMBED_PROFILE.baseUrl, catalog.base_url, "the profile's endpoint is the snapshot's base_url");
+  assert.equal(
+    NAN_EMBED_PROFILE.pacing.requestsPerMinute,
+    catalog.rate_limits.requests_per_minute,
+    "the profile's pace is the snapshot's per-key request cap",
+  );
+  assert.equal(embedding.cost, 0, "the embedding model bills no credits — the pace is a rate limit, not a spend guard");
+  const requestChars = NAN_EMBED_PROFILE.chunk_limit * NAN_EMBED_PROFILE.pacing.batchSize;
+  assert.ok(
+    requestChars / 4 < embedding.max_input,
+    `one request (${requestChars} chars ≈ ${requestChars / 4} tokens) must stay inside max_input ${embedding.max_input}`,
+  );
+});
+
+test("catalog snapshot: the README documents the embedding profile and its key-global caveat", async () => {
+  const { NAN_EMBED_PROFILE } = await import("../dist/preset.js");
+  const doc = readme();
+  assert.ok(doc.includes("qwen3-embedding"), "the README names the embedding model");
+  assert.ok(doc.includes(String(NAN_EMBED_PROFILE.envVar)), "the README names the key variable");
+  assert.ok(doc.includes(`${NAN_EMBED_PROFILE.chunk_limit}`), "the README quotes the chunk limit");
+  assert.match(doc, /per (API )?key|key-global/iu, "the README states that the 60 rpm cap is key-global");
+  assert.match(doc, /shared with|chat traffic/iu, "and that chat traffic shares it");
+});
