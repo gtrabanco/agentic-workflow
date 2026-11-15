@@ -26,6 +26,7 @@ changed after the previous phase's own run:
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/triage-rescope.test.mjs | P1 | 2026-11-15 | execute-phase | Two corrections inside the RED landing itself, before any implementation exists: the batch-flow regression control asserted the batch summary's grouping against the skill body when the grouping paragraph lives in ISSUE_PROCESS.md (the assertion now reads the file that owns it, and it is the one test that must be GREEN at the red commit — it proves the assertions target real base text), and the one-shot test's tier clause accepts the wording the reference actually uses. No assertion was relaxed, skipped or narrowed to make a future phase pass.
+justification | scripts/triage-rescope.test.mjs | P9 | 2026-11-15 | execute-phase | The correction batch over the 2026-11-15 EXTERNAL VERIFY receipt (external-verify.md, blockers B1-B7 plus the advisories this batch repairs): the suite gains eight ADDED assertions, one per frozen reproducer, landed observed RED against the pre-correction bytes before any prose is touched. No existing assertion is relaxed, skipped, narrowed or deleted — the batch only adds, and what it pins is the receipt's own reproducers.
 ```
 
 The ledgers and the acceptance criteria froze at the cut (`ef4c41e4`), before
