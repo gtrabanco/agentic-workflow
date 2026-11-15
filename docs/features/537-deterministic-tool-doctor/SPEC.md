@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: large
-roadmap_summary: One deterministic doctor + consent-gated setup wizard as `agentic-workflow doctor` / `setup`: a read-only checker with real evidence per tool surface, a closed install-route vocabulary, the documented tool inventory as its single declaration, and one envelope consumed by `setup-env.mjs` and `init-workspace`
+roadmap_summary: `agentic-workflow doctor` + `setup` — one read-only checker over 14 documented tool surfaces with real evidence (path, version, version pair, health, config state), a closed install-route vocabulary, and a consent-gated wizard that only asks where a write or a real decision exists. Closes the silent-degradation gap (un-armed shared-merge drivers, missing `pre-push` hook, a stale engram server) and gives `setup-env.mjs` and `init-workspace` one envelope to consume
 ---
 
 # 537 — deterministic-tool-doctor
@@ -378,10 +378,67 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   ```
   This feature delivers **one deterministic doctor + setup wizard** as subcommands of the existing `agentic-workflow` bin: a read-only checker that observes every tool surface with real evidence (path, version, version pairs, health probes, config state), and a consent-gated wizard that only asks where a write or a real decision exists.
   ```
+- **E1** — 2026-11-14, the RED corpus (P2), `bun test test/doctor.checks.test.mjs
+  test/doctor.inventory.test.mjs test/doctor.cli.test.mjs
+  test/doctor.wizard.test.mjs` · exit 1 · `0 pass / 9 fail / 3 errors`, every
+  failure `Cannot find module '../src/doctor/*.mjs'` (commit `61cef010`).
+- **E2** — 2026-11-14, the crate suite after the corpus calibration (fixture
+  fidelity: rows carry no leading pipe, the fake's closures see a removed path,
+  the advisory carries its command) · `bun run --cwd packages/agentic-workflow
+  test` · exit 0 · `794 pass / 0 fail / 46 files` (208.77s standalone).
+- **E3** — 2026-11-14, the differential harness (P6) in `mktemp -d`, base
+  `origin/main` vs this change over ten argv cases · exit 0 · `7/10 identical ·
+  differing: usage line (no command), doctor, setup (no consent)` — each one a
+  declared delta: the usage line gains `doctor|setup`, and the base tree refuses
+  both with `EDIT REFUSAL — Unknown service: <name>` (exit 2) where the change
+  answers the envelope (exit 0). `setup-env --check`, `setup-env --nope`,
+  `phase-lint`, `verify`, `resolve-passes`, `journal aggregate --check` and
+  `diff-guard` are byte-identical.
+- **E4** — 2026-11-14, the surface gates · `bun test --timeout=10000
+  scripts/normative-drift.test.mjs` exit 0 (21 pass) and `bun test
+  --timeout=10000 scripts/prose-gate-inventory.test.mjs` exit 0 (22 pass).
+- **E5** — 2026-11-14, the budgets · `bun scripts/check-skill-context.mjs
+  --documents` PASS (AGENTS.md 705 lines / 142 machine / 563 prose / 12,204 est)
+  and `bun scripts/check-skill-context.mjs` PASS (30 skills);
+  `bun scripts/skill-lint.mjs` PASS (0 findings).
+- **E6** — 2026-11-14, the carriers · `bun test --timeout=10000
+  scripts/setup-env.test.mjs` exit 0 (78 pass, including the `--doctor` envelope
+  and the `--check`/`--doctor` refusal).
+- **E7** — 2026-11-14, repository state · `bun scripts/docs-generate.mjs --check`
+  PASS (3 files, 0 stale; roadmap unchanged) and `bun scripts/lint-changeset.mjs`
+  exit 0 (`ok 537-deterministic-tool-doctor.md`).
+- **E8** — 2026-11-14, the projection pin · `node --test
+  --test-timeout=10000 test/projection.test.mjs` in `packages/pi-agentic-workflow`
+  exit 0 (19 pass) — `CRATE_COMMANDS` follows the crate's dispatch, as its own
+  comment requires.
+- **P1** — 2026-11-14 12:00, the unit doc, both ledgers and the acceptance
+  criteria frozen · `065af558`.
+- **P2** — 2026-11-14 12:20, the four suites landed red (see E1) · `61cef010`.
+- **P3** — 2026-11-14 13:05, the vocabularies, the inventory parser and the
+  documented `tool-inventory@1` block · `d950ad29`.
+- **P4** — 2026-11-14 13:05, the fourteen probes, the evaluators and the
+  `doctor@1` envelope (same commit as P3).
+- **P5** — 2026-11-14 13:40, the wizard and the bin wiring (`doctor`, `setup`) ·
+  `439f3fe9`.
+- **P6** — 2026-11-14 14:10, the differential harness (see E3) — no undeclared
+  difference.
+- **P7** — 2026-11-14 14:30, the two carriers (`setup-env --doctor`,
+  `init-workspace`'s discovery step) and the gate-inventory carrier row ·
+  `315b831e`.
+- **P8** — 2026-11-14 15:00, the five normative rows, the two budget re-pins, the
+  SETUP/README currency and the changeset · `763a2fb6`.
+- **P9** — 2026-11-14 15:20, the roadmap row through the crate's writer and the
+  rendered projection · `20663752`; the projection's `CRATE_COMMANDS` follows the
+  crate's dispatch · `c65530c8`.
+- **D1** — 2026-11-14, the two corpus calibrations recorded in E2 are fixture
+  fidelity, not relaxed assertions: the block's rows never had a leading pipe,
+  the fake's `readText`/`exists`/`listDir` close over their own maps (overriding
+  the map alone changes nothing), and an advisory that recommends a command
+  carries it. Every assertion the RED commit made still holds.
 
 ## Next
 
-P2 — the RED corpus, observed failing on the pre-change tree.
+G1 — the full local gate at this head, then the external verdict.
 
 ## References
 
