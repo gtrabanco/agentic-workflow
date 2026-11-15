@@ -35,7 +35,7 @@ inputs:
     description: "The revision the run's git facts are read against. Defaults to `origin/main`, then `main`."
     required: false
   block:
-    description: "Path to one already-rendered entry block, instead of the prose fields. Use `-` for stdin."
+    description: "Path to one already-rendered entry block (a file in the workspace), instead of the prose fields."
     required: false
   root:
     description: "The project root the carrier and the git facts are read from."
@@ -44,7 +44,7 @@ inputs:
 
 outputs:
   fragment:
-    description: "Absolute path of the fragment this run wrote, or of the one it already had."
+    description: "Absolute path of the fragment this run wrote, or of the one it already had — once the aggregator consumed it, the journal file that carries the entry."
     value: ${{ steps.write.outputs.fragment }}
   name:
     description: "The fragment's name — its identity in the carrier."

@@ -28,7 +28,8 @@ invalid run id or issue, a prose+block pair and a collision are exit 2
 (`uses: gtrabanco/agentic-workflow/journal@<tag>`), and `journal/headless.mjs` is
 its adapter: it maps the run's environment onto the operation, derives the crate
 version from its own tagged tree (no second version literal), honours
-`AGENTIC_WORKFLOW_RUNNER`, and fails closed with an actionable refusal when no
+`AGENTIC_WORKFLOW_RUNNER`, never launches a runtime below the crate's own
+`engines`, and fails closed with an actionable refusal when no
 runner resolves. No model in the write path, no token, no forge call — the
 action's only effect is one file under the project's carrier, which the shipped
 aggregator later appends to the journal.
