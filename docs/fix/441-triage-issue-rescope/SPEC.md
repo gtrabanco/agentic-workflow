@@ -386,11 +386,36 @@ freeze (D1).
 - **G2** — 2026-11-15, HEAD 6e9e9e45e6aca014aeb5de4bc89fbd41f0d9a27d — `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 289s` (run over that HEAD's tree, before this Log-only delta).
 - **D6** — 2026-11-15, disclosure: the same gate failed twice before it passed, with three spawned-ceremony suites (`ceremony-findings-ledger`, `ceremony-unit-plan`, `ceremony-workspace`) killed mid-run under the pool — each passes standalone (exit 0), and the base commit `4eedcf61` passed the same pool at `--jobs 6`, so the class is load sensitivity, not this change. The two later runs, including the green one at G2, carried the identical step set. Recorded rather than hidden: a load-sensitive kill is not a passing suite.
 
+- **L2** — 2026-11-15, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Resolved against this unit's own state before acting: the latest
+  `EXTERNAL VERIFY` receipt ([`external-verify.md`](external-verify.md),
+  7 blockers / 6 advisories, `NEEDS-DECISION`, 2026-11-15) selects the repair
+  route — one correction batch, then one blocker-limited recheck.
+- **D7** — 2026-11-15, correction triage (authority: the receipt's own
+  reproducers, each re-read in context before it was touched): all 7 blockers
+  deserved the fix and were repaired in one batch; of the advisories, A1/A2/A4
+  were repaired with them, **A3 left** because `scripts/batch-scheduler.mjs`'s
+  `BODY_TRIAGE_RE` matches `skills/batch-scheduler/references/PLAN.md`'s row
+  exactly — only the code could change, and that is its own decision, **A5
+  left** because S5 is a frozen verbatim quote of the issue, and **A6 left**
+  because it is a closed unit's frozen SPEC. No executable behaviour changed:
+  every edit is prose or a comment.
+- **E9** — 2026-11-15, HEAD `76602376` — `bun test scripts/triage-rescope.test.mjs` · exit 1 · 12 pass / 8 fail: the receipt's eight reproducers observed RED against the pre-correction bytes, the twelve pre-existing assertions still green (the regression control).
+- **E10** — 2026-11-15, HEAD `bcbdef33` — `bun test scripts/triage-rescope.test.mjs` · exit 0 · 20 pass / 0 fail (the same eight, after the batch).
+- **E11** — 2026-11-15, HEAD `bcbdef33`, the blocker-limited recheck of every touched obligation row's validator, run in the foreground: `bun test scripts/normative-drift.test.mjs` · 21/0 (O1); `bun test scripts/triage-rescope.test.mjs` · 20/0 (O2–O12); `bun test scripts/review-loop-discipline.test.mjs` · exit 0 (O12); `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/441-triage-issue-rescope/SPEC.md` · `ok: true`, 0 violations (O13); plus the batch's own surfaces — `bun run --cwd packages/agentic-workflow-schema test` · 853/0 (B7), `bun scripts/check-skill-context.mjs` and `--documents` · `PASS context budgets: 30 skills` / `PASS context documents: 4 budgeted documents`, `bun scripts/docs-generate.mjs --check` · `verdict: PASS` (B6's row), `bun scripts/roadmap-settle.mjs` · PASS, 0 violations across 204 unit docs, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/features/83-odd-hybrid-direction/SPEC.md` · PASS, 0 violations, `bun scripts/residual-classify.mjs --inventory --base 4eedcf61` · the five rows B5 now describes (four `used` symbols, the suite `orphan`/`no-plan-claim`), and `bun packages/agentic-workflow/bin/path-guard.mjs --unit docs/fix/441-triage-issue-rescope --phase P9 --base b8505a8f` · `PATH-GUARD pass — justified`, offenders: none (the P9 record for the suite's modify). Differential vs the receipt head `b8505a8f`: every command above exited 0 there too, and the only output delta is the asked-for one (the suite 12 → 20 tests). All O1–O13 statuses stay `verified`; none flipped back.
+- **G3** — 2026-11-15, HEAD `bcbdef33` — `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 350s` (run over that HEAD's tree, before this Log-only delta).
+
 ## Next
 
 PR [#559](https://github.com/gtrabanco/agentic-workflow/pull/559) is open against
 `main` and awaits the owner's merge — the owner is this workflow's external
-verifier, so the merge (not the gate) is what closes #441.
+verifier, so the merge (not the gate) is what closes #441. The 2026-11-15
+correction batch (`76602376` red corpus + `bcbdef33` repairs) closed all seven
+blockers of [`external-verify.md`](external-verify.md) and awaits the owner's
+delta re-verdict.
 
 ## References
 
