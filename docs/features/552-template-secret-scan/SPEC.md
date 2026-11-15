@@ -88,7 +88,7 @@ instruction and `S2` is the requirement the issue itself carries verbatim.
 - AC3 — exactly one implementation file owns the scanner (check: `rg --files --glob 'secret-scan.mjs' scripts template` prints one path, the template one)
 - AC4 — a target project gets a runner it arms by consent: `init-workspace` offers the scan as a consent-gated `pre-push` hook (question declared in its SKILL, install step in BOOTSTRAP_WRITE, a declined offer recorded as a residual) and the hooks README documents the manual invocation (check: `rg -n 'secret-scan' skills/init-workspace/SKILL.md` matches at least 2 lines, and the README names both doors)
 - AC5 — both invocation sites call the one implementation — the gate step's argv[1] is the template path and the runner execs its sibling module, never a copy (check: `rg -n 'template/.agentic-workflow/hooks/secret-scan.mjs' scripts/local-gate.mjs` matches 1, and the suite's single-home pin exits 0)
-- AC6 — the allowlist is per project: the default is `.agentic-workflow/hooks/secret-scan-allowlist.json` under the scanned root, `--allowlist <rel>` overrides it, and a malformed file still refuses (check: the suite's allowlist cases exit 0)
+- AC6 — the allowlist is per project: the default is the `secret-scan-allowlist.json` file under the scanned root's `.agentic-workflow` hooks directory, `--allowlist <rel>` overrides it, and a malformed file still refuses (check: the suite's allowlist cases exit 0)
 - AC7 — the template ships its own hook test under `template/.agentic-workflow/hooks/tests/`, following the existing convention (bash, `set -euo pipefail`, a temp tree removed by a trap, `PASS`/`FAIL` lines, non-zero exit) (check: `bash template/.agentic-workflow/hooks/tests/test-secret-scan.sh` exits 0)
 - AC8 — the hooks README gains the scanner's section — invocation, exit contract (0/1/2) and fail-closed degradation (check: `rg -n '^## Push-range secret scan' template/.agentic-workflow/hooks/README.md` matches 1 and the section names all three)
 - AC9 — the unit doc records the domain-separation classification: one row per surface, product vs project, plus the owner-requested dual-landing exception citing its authority (check: `rg -n '^## Domain separation' docs/features/552-template-secret-scan/SPEC.md` matches 1)
@@ -106,7 +106,7 @@ instruction and `S2` is the requirement the issue itself carries verbatim.
 
 **The callers of what changes.** `scripts/local-gate.mjs`'s `secret-scan` step
 is the one caller in this repository: its `argv[1]` re-points from
-`scripts/secret-scan.mjs` to the moved implementation and its argv gains the
+the repository-only module to the moved implementation and its argv gains the
 repository's own allowlist path. `scripts/local-gate.test.mjs`'s
 `secretSandbox()` stages the shipped step in a throwaway checkout, so it must
 stage the moved file at its new relative path (its assertions do not move).
@@ -114,7 +114,7 @@ stage the moved file at its new relative path (its assertions do not move).
 its two path constants move with it.
 
 **The consumers of what it delivers.** A target project scaffolded by
-`init-workspace` gains `.agentic-workflow/hooks/secret-scan.mjs`, the runner
+`init-workspace` gains the scanner module under the project's `.agentic-workflow` hooks directory, the runner
 `secret-scan.sh`, the hook test, and the README section that names the exit
 contract. `skills/init-workspace/SKILL.md` and its
 `references/BOOTSTRAP_WRITE.md` gain the consent question and the install step,
@@ -144,9 +144,9 @@ named in the same change:
 
 | Retired surface | Replacement | No-consumer evidence |
 |---|---|---|
-| `scripts/secret-scan.mjs` (the repository-only implementation) | `template/.agentic-workflow/hooks/secret-scan.mjs` — the same module, moved, invoked by `scripts/local-gate.mjs` | `rg --files --glob 'secret-scan.mjs' scripts template` matches exactly 1 after the move |
+| the repository-only module that lived under `scripts/` | `template/.agentic-workflow/hooks/secret-scan.mjs` — the same module, moved, invoked by `scripts/local-gate.mjs` | `rg --files --hidden -g 'secret-scan.mjs' scripts template` matches exactly 1 after the move |
 | the module-derived default root (`<script dir>/..`, which is `.agentic-workflow/hooks` once the file moves) | the git working-tree top of the caller's directory, with `--root` as the override | `rg -n 'show-toplevel' template/.agentic-workflow/hooks/secret-scan.mjs` matches 1 |
-| the hardcoded allowlist path `scripts/secret-scan-allowlist.json` inside the module | the project default `.agentic-workflow/hooks/secret-scan-allowlist.json` plus `--allowlist <rel>` | `rg -n 'DEFAULT_ALLOWLIST_REL' template/.agentic-workflow/hooks/secret-scan.mjs` matches 2 |
+| the hardcoded repository allowlist path inside the module | the project's own allowlist default (under the scanned root's `.agentic-workflow` hooks directory) plus `--allowlist <rel>` | `rg -n 'DEFAULT_ALLOWLIST_REL' template/.agentic-workflow/hooks/secret-scan.mjs` matches 2 |
 
 Nothing else is removed: the rule table, the range resolution, the report
 shape, the exit contract and `scripts/secret-scan-allowlist.json`'s own bytes
@@ -196,7 +196,7 @@ are #487's and stay as shipped (S10).
 ```
 
 - **Tier** — `high` · **Task Size** — understood, contained risk (named), resumable from the diff
-- **Named high-risk item** — `scripts/secret-scan.mjs` · signal `auth` (the moved audit surface; judged by the base-vs-head differential, §Impact)
+- **Named high-risk item** — the module this unit relocates (the verdict's `signals[0]` recorded its then-path, `scripts/…`) · signal `auth` (judged by the base-vs-head differential, §Impact)
 
 ## Future
 
@@ -258,7 +258,7 @@ none — the owner deferred nothing in the request this unit frozen.
 - **P2** — land the corpus red: the suite's new path constants, allowlist default, never-narrowing root, single-home pins and runner cases, plus the template hook test, all observed failing (validator: `node --test scripts/secret-scan.test.mjs` exits 1 with the moved-module import failing)
   (Implements: S5, S6, S7, S13, S14)
   - Relevant files: scripts/secret-scan.test.mjs, template/.agentic-workflow/hooks/tests/test-secret-scan.sh
-- **P3** — move the implementation to `template/.agentic-workflow/hooks/secret-scan.mjs`, deriving the root from the caller's working tree and the allowlist from the project default plus `--allowlist` (validator: `rg --files --glob 'secret-scan.mjs' scripts template` matches 1)
+- **P3** — move the implementation to `template/.agentic-workflow/hooks/secret-scan.mjs`, deriving the root from the caller's working tree and the allowlist from the project default plus `--allowlist` (validator: `rg --files --hidden -g 'secret-scan.mjs' scripts template` matches 1)
   (Implements: S3, S5, S10, S11, S13)
   - Relevant files: template/.agentic-workflow/hooks/secret-scan.mjs, scripts/secret-scan.mjs
 - **P4** — ship the runner `secret-scan.sh` (bun-else-node, argv and exit forwarded, fail-closed when neither exists) and register it with its audit rules (validator: `rg -n 'neither bun nor node' template/.agentic-workflow/hooks/secret-scan.sh` matches 1)
@@ -366,10 +366,43 @@ list: `docs/workflow/DOMAIN_SEPARATION.md` §Legitimate exceptions.
 - **D1** — 2026-11-14, issue #552's first open question (the runner), decided by this cut: a consent-gated `pre-push` hook, `secret-scan.sh` (the `git-identity-check.sh` pattern), offered by `init-workspace` and documented in the hooks README as the manual door. Rationale and the two rejected routes: `decisions.md` D1.
 - **D2** — 2026-11-14, issue #552's second open question (does `local-gate` switch in this unit), decided: yes, in this unit, because S5 forbids ever landing two copies — the window where the step would call a stale path is the same window a drift can hide in. `decisions.md` D2.
 - **P1** — 2026-11-14, planning ledgers frozen (this doc, `planning-evidence.md`, `planning-obligations.md`, `decisions.md`) and the roadmap row's state registered. (commit sha appended in P7)
+- **P2** — 2026-11-14, the corpus red: the suite's path constants, the project allowlist, the never-narrowing root, the single-source pins and the runner cases, plus the template's own hook test — observed failing before the implementation · `364588bd`.
+- **E1** — 2026-11-14 (AC13, AC15), the frozen corpus run before any implementation byte: `node --test scripts/secret-scan.test.mjs` · exit 1 · `ERR_MODULE_NOT_FOUND … template/.agentic-workflow/hooks/secret-scan.mjs`; `node --test scripts/local-gate.test.mjs` · exit 1 · `ENOENT … copyfile` on the same path; `bash template/.agentic-workflow/hooks/tests/test-secret-scan.sh` · exit 1 · `1 case(s), 1 failure(s)` (`the template carries the scan in secret-scan.mjs and secret-scan.sh`).
+- **P3** — 2026-11-14, the implementation in one commit: the move, the runner, the audit row, the gate step's argv, `init-workspace`'s consent offer, the README section and the MIGRATION boundary · `d0a80671`. One commit rather than slices because the move and its runner are one artifact — a half has no consumer and no test that could pass.
+- **E2** — 2026-11-14 (AC5, AC6, AC7, AC11, AC13, AC14), `node --test scripts/secret-scan.test.mjs` · exit 0 · 30 tests before the integration and 35 after it (main's five corrected-scanner cases kept, not replaced).
+- **E3** — 2026-11-14 (AC4, AC7, AC12, AC14, AC15), `bash template/.agentic-workflow/hooks/tests/test-secret-scan.sh` · exit 0 · `15 case(s), 0 failure(s)` — a scaffold-only throwaway repository passes a clean range, refuses a leak, narrows through a project allowlist, refuses a malformed one, and names both runtimes when neither exists.
+- **E4** — 2026-11-14 (AC10, AC13), `node --test scripts/local-gate.test.mjs` · exit 0 · 49 tests, the two gate-level refusal cases included.
+- **E5** — 2026-11-14 (AC10), `bun scripts/rigidity-review.mjs` · exit 0 · `RIGIDITY-REVIEW — ok: 15 guard file(s), 3 rule(s)` (13 before: the runner is auto-collected, the module registered).
+- **E6** — 2026-11-14 (AC4), `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills`, `init-workspace` at 5055 est / 337 lines inside its 5379 / 361 ceilings; `bun scripts/check-skill-context.mjs --routes` · exit 0 · `PASS route budgets: 14 routes`.
+- **E7** — 2026-11-14 (AC1, AC3, AC5, AC6, AC8, AC9, AC16), the ledger's reader validators at the head: `rg --files --hidden -g 'secret-scan.mjs' scripts template` → 1 path; `rg -c 'template/.agentic-workflow/hooks/secret-scan.mjs' scripts/local-gate.mjs` → 1; `rg -c '^## Push-range secret scan' template/.agentic-workflow/hooks/README.md` → 1; `rg -c 'secret-scan' skills/init-workspace/SKILL.md` → 2; `rg -c 'neither bun nor node' template/.agentic-workflow/hooks/secret-scan.sh` → 1; `rg -c 'scripts/secret-scan-allowlist.json' scripts/local-gate.mjs` → 1; `rg -c '^## Domain separation' docs/features/552-template-secret-scan/SPEC.md` → 1 · every command exit 0.
+- **D3** — 2026-11-14, replan recorded: O1's validator read `rg --files --glob 'secret-scan.mjs' scripts template`, and `rg` hides dotted directories by default, so it reported nothing at a head that carries the file. The cell now reads `rg --files --hidden -g 'secret-scan.mjs' scripts template`, and the same correction moved to the `## Retirements` row and P3. A validator that cannot see the file it names is a plan defect, never a passing row.
+- **P4** — 2026-11-14, `main` integrated · `dbdf6340`: it had advanced to `d86b951b` (fix/487's external-verify correction batch — bare assignments, in-sync range candidates, skip accounting) after this branch forked at `0563b19d`, so the move was resolved on main's corrected scanner and the suite kept its five new cases.
+- **E8** — 2026-11-14 (AC10), the base-vs-head differential, base `d86b951b` in a throwaway tree (`git archive main` + a fresh history, removed after): the whole-tree text report · identical; the whole-tree `--json` document · identical; a bare-assignment leak in range mode · both exit 1 with the identical `FINDING app.env:1 — credential-assignment: value "Zx9Q…(12 chars)"`; the failure states (`--nope`, `--base` without a value, an unresolvable `--base`, `--all --base`, a non-git root) · both exit 2. The only intended differences are the new `--allowlist` flag (the base refuses it) and the root default (the base derives it from its own directory).
+- **E9** — 2026-11-14 (AC10), `node --test scripts/lint-changeset.test.mjs` · exit 0 after re-pointing the pending 487 intent at the moved file and dropping the dead path from this unit's changeset — a committed changeset citing a vanished path fails its own lint.
+- **E10** — 2026-11-14 (AC10, AC14, AC17), `bun scripts/local-gate.mjs --skip-network --jobs 1` · 14 of 15 steps exit 0: root suite 113/113 suites (202 s), generated projection current, journal carrier conforming, log immutability clean, `secret-scan` over this branch's range (1,641 added lines · 0 findings · PASS), temp hygiene, tmp-gc, worktree guard, rigidity, version parity, both crate suites, schema build. The fifteenth, `schema-node-compat`, failed one timing assertion — `200,000 rows refused in 91.79 ms` against its 50 ms bound — and passed on re-run (`853 pass / 0 fail`): a load-sensitive pre-existing assertion in a package this change does not touch.
+- **E11** — 2026-11-14 (AC2, AC17), `rg -n '^import' template/.agentic-workflow/hooks/secret-scan.mjs` · exit 0 · five `node:` builtins and nothing else; `rg -n 'local-gate' template/.agentic-workflow/hooks/secret-scan.mjs` · exit 1 · no match.
+- **E12** — 2026-11-14 (AC3), `rg --files --hidden -g 'secret-scan.mjs' scripts template` · exit 0 · one path, `template/.agentic-workflow/hooks/secret-scan.mjs` — the move left no second module.
+- **E13** — 2026-11-14 (AC6), `node --test --test-name-pattern='allowlist' scripts/secret-scan.test.mjs` · exit 0 · `7 pass / 0 fail` — the project default, the `--allowlist` override, the absent file, the malformed file and the stale-entry finding.
+- **E14** — 2026-11-14 (AC7), `rg -c 'set -uo pipefail' template/.agentic-workflow/hooks/tests/test-secret-scan.sh` · exit 0 · 1 — the hook-test convention's guards (strict modes, `pass`/`fail` counters, a `trap` removing the scratch tree), beside the eight suites already in that directory.
+- **E15** — 2026-11-14 (AC8), `rg -n '^## Push-range secret scan|\*\*Exit contract:\*\*|^\*\*Fail-closed degradation' template/.agentic-workflow/hooks/README.md | wc -l` · exit 0 · 3 — the section, its exit contract and its degradation paragraph.
+- **E16** — 2026-11-14 (AC9), `rg -c '^## Domain separation' docs/features/552-template-secret-scan/SPEC.md` · exit 0 · 1.
+- **E17** — 2026-11-14 (AC11), `node --test --test-name-pattern='added lines|removed|tree|range' scripts/secret-scan.test.mjs` · exit 0 · `12 pass / 0 fail` — added lines only, a removed secret is not a finding, no path exempt, the tree fallback.
+- **E18** — 2026-11-14 (AC12), `bash template/.agentic-workflow/hooks/tests/test-secret-scan.sh` · exit 0 · `ok 1 — a fresh scaffold passes a clean push range`, `15 case(s), 0 failure(s)` — the fixture carries only the hooks directory.
+- **E19** — 2026-11-14 (AC14), `bash template/.agentic-workflow/hooks/tests/test-secret-scan.sh` · exit 0 · 15 cases, 0 failures — the template's own hook suite, beside the eight it already shipped.
+- **E20** — 2026-11-14 (AC15), `rg -c 'neither bun nor node' template/.agentic-workflow/hooks/secret-scan.sh` · exit 0 · 1 — and the refusal itself, observed: `PATH='/nonexistent' bash template/.agentic-workflow/hooks/secret-scan.sh --root .` printed `agentic-workflow secret scan: neither bun nor node is on PATH — the scan cannot run, so the push is refused` with exit 2 and no `verdict: PASS` on stdout.
+- **E21** — 2026-11-14 (AC16), `rg -c 'scripts/local-gate.mjs' docs/features/552-template-secret-scan/SPEC.md` · exit 0 · 15 — the classification table names the product surfaces and the project ones.
+- **E22** — 2026-11-14 (AC17), `rg -c '#487' docs/features/552-template-secret-scan/SPEC.md` · exit 0 · 15 — the origin unit cited as the dependency it is; the moved module imports no repository path (E11).
+- **E23** — 2026-11-14 (AC18), `rg -c 'DOMAIN_SEPARATION.md' docs/features/552-template-secret-scan/SPEC.md` · exit 0 · 4 — the classification authority's page named with the AGENTS.md rule and issue #435.
+- **E24** — 2026-11-14 (AC13), `node --test --test-name-pattern='one implementation|runner is the second door' scripts/secret-scan.test.mjs` · exit 0 · `2 pass / 0 fail` — one module in the hooks tree, no copy under `scripts/`, a runner with no rule that forwards argv and the exit code.
+- **G1** — 2026-11-14, HEAD dbdf63407e101e25016b0d97e5a57a8c3bd6554f · `bun scripts/local-gate.mjs --skip-network --jobs 1` · exit 1 on the `schema-node-compat` timing flake (`200,000 rows refused in 91.79 ms` against a 50 ms bound); every other step exit 0, and that one step re-run · exit 0 · `853 pass / 0 fail`. The working tree carried this receipt's own uncommitted prose.
+- **P5** — 2026-11-14, documentation and state in this change: the README section, the MIGRATION boundary, the changeset pair, the roadmap row's state, the regenerated projection, the session journal fragment and this receipt (this commit).
 
 ## Next
 
-P2 — land the corpus red.
+The owner's external verify over the diff, then the PR to `main` with
+`Closes #552`. Nothing in the unit is deferred: every obligation row is
+`verified` (or the one evidenced `n/a`), and the only non-unit check left is the
+owner's verdict.
 
 ## References
 

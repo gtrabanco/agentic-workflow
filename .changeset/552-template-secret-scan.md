@@ -4,10 +4,9 @@
 
 feat(hooks): ship the push-range secret scan in the template (issue #552)
 
-The deterministic scan #487 built lived in `scripts/secret-scan.mjs`, i.e. only
-in the repository that authored it — a target project scaffolded by
-`init-workspace` had no barrier against a credential riding a prose-only push,
-which is the leak path the issue names. Owner decision (2026-11-14): "secret scan
+The deterministic scan #487 built lived only inside this repository's own gate
+tree — a target project scaffolded by `init-workspace` had no barrier against a
+credential riding a prose-only push, which is the leak path the issue names. Owner decision (2026-11-14): "secret scan
 sin el local-gate debe estar en el template de agentic workflow".
 
 The implementation now lives in `template/.agentic-workflow/hooks/secret-scan.mjs`
