@@ -1,0 +1,6 @@
+## 2026-11-15T10:50:11Z — feat/552-new-feature-ship-the-push-range-secret-scan-in-template — narrative
+- **Commits:** 15 (`8d836493…bbf57948`)
+- **Files:** 25 files
+- **Summary:** External-verify correction batch on the 552 unit (receipt 2026-11-15): repaired all four blockers — Next PR URL removed so roadmap-settle goes green while the row stays honestly in-progress, AC2/AC18 checks re-scoped to their actual semantics, E11/E23 receipts corrected to what reproduces, and #487's fix row re-pointed at the moved scanner through its deterministic writer (CAS, scratch-rehearsed). Advisory 4 wontfix; advisory 1-3 folded. Root suite 113/113 twice. In-batch discovery: D5 completed D3's --hidden sweep on AC3's check, disclosed here rather than queued.
+- **Decisions:** All four blockers repaired; advisory 4 wontfix (batch-scheduler fixtures are illustrative issue text, outside correction batch blast radius); D5 counts as this batch under S4 (same defect class as blockers 2-3, disclosed to owner); roadmap cell written through its deterministic writer (never hand-edited); no new obligation rows — the batch changes no normative behaviour.
+- **Next:** Owner external verify of this batch (recheck limited to the four reported blockers plus the disclosed AC3), then verdict on PR #557; merge stays the owner's step.
