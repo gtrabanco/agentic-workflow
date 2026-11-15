@@ -36,7 +36,12 @@ export const VECTOR_TAG = "awkvec-f32le1";
 
 import { openDatabase } from "./sqlite.mjs";
 import { storePath } from "./store.mjs";
-import { loadConfig, resolveMaxRequestChars } from "./config.mjs";
+import { loadConfig, resolveMaxRequestChars, DEFAULT_PACING } from "./config.mjs";
+
+/** Re-exported from the config owner (issue #541): the pacing defaults are the
+ *  shipped values of a config key, and the validation that reads them lives
+ *  there too. */
+export { DEFAULT_PACING };
 
 const DIRECT_ENV = {
   baseUrl: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL",
@@ -44,20 +49,9 @@ const DIRECT_ENV = {
   apiKey: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY",
 };
 
-/**
- * The pacing/write-policy defaults — the provider's published limits
- * (`32 texts/batch`, `60 requests/min`) plus a bounded retry ladder. Every one
- * of them is overridable (config `provider.pacing`, then the
- * `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_<PARAM>` environment variables), so an
- * operator never edits code to match a provider's real limits (issue #443 S10).
- */
-export const DEFAULT_PACING = Object.freeze({
-  batchSize: 32,
-  requestsPerMinute: 60,
-  maxAttempts: 3,
-  baseDelayMs: 1000,
-  maxDelayMs: 60000,
-});
+/** The pacing/write-policy defaults (owner: `config.mjs` `DEFAULT_PACING`) —
+ *  the provider's published limits (`32 texts/batch`, `60 requests/min`) plus a
+ *  bounded retry ladder, every one overridable (issue #443 S10). */
 
 const PACING_ENV = Object.freeze({
   batchSize: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BATCH_SIZE",
