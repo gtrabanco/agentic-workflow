@@ -258,14 +258,23 @@ signals: (none — not a high-tier unit)
   `template/.github/workflows/agentic-workflow-journal.yml.example` vs `@v7.0.0`
   / `@v6.4.0` in `.github/workflows/`). *Does not affect* this unit: the new
   action declares no `uses:` of its own and the example is not changed here.
-- **Two pre-existing suites are load-sensitive on a 6-CPU sandbox at
-  `--jobs 4`**: `scripts/phase-lint.test.mjs` costs 95–120 s of real work
-  against its own 120 s suite bound, and `scripts/unit-route.test.mjs` (60 CLI
-  spawns) can cross the 10 s per-test budget under contention. Both files are
-  byte-identical to the base commit, both pass standalone (four concurrent runs
-  included) and both pass at `--jobs 2`. *Affects* this unit's verification
-  only: the reported root-suite and gate runs use `--jobs 2`, and the
-  `--jobs 4` reds are named as this environment's, never as this change's.
+- **Two pre-existing suites are load-sensitive on this 6-CPU sandbox**:
+  `scripts/phase-lint.test.mjs` legitimately costs 40–120 s and
+  `scripts/unit-route.test.mjs` (60 CLI spawns) can cross the 10 s per-test
+  budget. Both files are byte-identical to the base commit. Reds were observed
+  only while this session ran another heavy command beside the suite (the first
+  `--jobs 4` run: `phase-lint` 95 s → timeout, `unit-route` budget); with the
+  box free, the same suites pass at the gate's default four workers
+  (`phase-lint` 39.7 s, root suite 113/113) and at `--jobs 2` (113/113). *Affects*
+  this unit's verification only: the reds are named as this environment's
+  concurrent load, never as this change's.
+- **`tmp-gc` can race the suites it no longer waits for**: the sweep lists `/tmp`
+  candidates and removes them, while the root suite's fixtures create and clean
+  `/tmp/<prefix>-*` directories in the same run; one gate run red-ed with
+  `GC-ERROR /tmp/wording-manifest-… ENOENT` (the candidate vanished between the
+  listing and the `lstat`) and the next passed. *Does not affect* this change:
+  the candidates it named are other suites' fixtures and the sweep's own
+  contract is unchanged.
 
 ## Tasks
 
