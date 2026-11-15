@@ -144,8 +144,6 @@ import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
 import { checkTrial, boundLine, parseDuration, CheckError, readPidLive } from "../src/resources/check.mjs";
 import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
 import { createFeedback, parseFeedbackArgs } from "../src/feedback/index.mjs";
-import { DoctorRefusal, renderDoctor, runDoctor } from "../src/doctor/doctor.mjs";
-import { planSetup, realSetupOps, renderSetup, runSetup } from "../src/doctor/wizard.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -917,6 +915,12 @@ switch (command) {
   // ── doctor / setup — the tool doctor and its consent-gated wizard (issue #537) ──
   case "doctor":
   case "setup": {
+    // Loaded on demand: this family is two modules heavier than every other
+    // command, and a suite that spawns the bin dozens of times pays the import
+    // cost per spawn (measured: +60ms each). The lazy load keeps every other
+    // subcommand's startup exactly what it was.
+    const { DoctorRefusal, renderDoctor, runDoctor } = await import("../src/doctor/doctor.mjs");
+    const { planSetup, realSetupOps, renderSetup, runSetup } = await import("../src/doctor/wizard.mjs");
     const flags = { root: process.cwd(), json: false, yes: new Set(), dryRun: false };
     for (let i = 0; i < restArgs.length; i++) {
       const arg = restArgs[i];
