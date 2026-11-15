@@ -456,14 +456,50 @@ freeze (D1).
 - **G3** — 2026-11-15, HEAD `bcbdef33` — `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 350s` (run over that HEAD's tree, before this Log-only delta).
 - **D8** — 2026-11-15, owner decision (authority: the pre-push hook's own documented escape hatch, `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`, authorized by the owner when the push was blocked): push with the hook's gate skipped, the reason recorded here and owed to the PR note. Five hook runs failed — every red a load artifact of three concurrent sessions on six CPUs, never this change: `ceremony-passive` C6 timed out at 10058ms against the 10s per-test budget (10035ms on an earlier attempt), `ceremony-unit-plan` / `ceremony-findings-ledger` / `ceremony-docs` bailed the same way (bail then kills the in-flight suites, which is why fast suites show FAIL with all-pass output), and `tmp-gc` once swept stale fixtures left by killed runs and exited 1. Counter-evidence for this head: the same suites green standalone (9/0, 18/0, 19/0), `bun scripts/run-root-suite.mjs` exit 0 at `ba91951c`, G3's full-gate PASS at `bcbdef33`, and a 10-minute poll that found no quiet window (8 concurrent gate processes; load peaked 11.6 on 6 CPUs). Not a self-granted exception — §4 of the apply order reserves that to the owner, who gave it.
 
+- **L3** — 2026-11-15, the scope-amendment request, verbatim:
+  ```
+  Prefiero arreglarlo en esta misma unidad
+  ```
+  Asked where the five gate fixes should land (a new unit or this one), the
+  owner selected A-441: this unit and PR #559. The five-item scope is the plan
+  table adopted with that answer (S9 says so); the one-PR override over "one PR
+  per unit" is D9.
+- **D9** — 2026-11-15, owner decision: the gate fixes ride this unit's PR
+  instead of opening `fix/gate-concurrency-robustness`. I recommended the
+  separate unit (two concerns in one PR); the owner chose this one — recorded
+  here and in decisions.md (D-441-3) — and the amendment still pays full
+  price: S9, AC11, P10–P14, O14–O19, PE-011–PE-015, a red-first corpus.
+- **D10** — 2026-11-15, plan decision (S9a): the dist bytes get a chain, not
+  a patch — every writer after the reader it would race, the writers
+  serialized among themselves, every reader after the last writer, and
+  `root-suite` keeps its slot so the common red never waits. Chosen over
+  removing the `build &&` from the crate package scripts (they must stay
+  self-contained for standalone runs) and over putting `root-suite` last
+  (feedback latency on the most-run red).
+- **D11** — 2026-11-15, plan decision (S9d): only the `lstat` TOCTOU becomes
+  a skip, and only for `ENOENT` — the peer's success is this sweep's own goal.
+  `rmSync` already runs `force:true`; every other stat failure still fails
+  closed, and an unreadable root is still an error.
+- **D12** — 2026-11-15, plan decision (S9e): the load policy lives in the
+  gate as the pure `autoJobs(load, cpus, cap)` (testable against a fixture
+  load; `os.loadavg` works where `/proc` does not), the hook passes
+  `--jobs ${AGENTIC_WORKFLOW_GATE_JOBS:-auto}`, and an explicit `--jobs <n>`
+  still overrides everything — chosen over a fixed `--jobs 2` (which punishes
+  idle pushes) and over shell arithmetic in the hook (untestable).
+- **E12** — 2026-11-15, HEAD `a64e0194` — the S9 RED corpus: `bun test scripts/local-gate.test.mjs` · exit 1 · 49 pass / 4 fail; `bun test scripts/run-root-suite.test.mjs` · exit 1 · 23 pass / 2 fail; `bun test scripts/tmp-gc.test.mjs` · exit 1 · 11 pass / 1 fail — seven reproducers, every pre-existing assertion still green.
+- **E13** — 2026-11-15, HEAD `a88108ff`, foreground recheck after the three fixes: `bun test scripts/local-gate.test.mjs` · 53 pass / 0 fail; `bun test scripts/run-root-suite.test.mjs` · 25/0; `bun test scripts/tmp-gc.test.mjs` · 12/0; `bun test scripts/triage-rescope.test.mjs` · 20/0 (the first batch's corpus untouched); `bun scripts/check-skill-context.mjs` · `PASS context budgets: 30 skills` and `--documents` · `PASS context documents: 4 budgeted documents` (AGENTS.md 707 lines / 144 machine / 12,322 est); `bun packages/agentic-workflow/bin/path-guard.mjs --unit docs/fix/441-triage-issue-rescope --phase P10 --base e864c710` · `PATH-GUARD pass — justified`, offenders: none.
+- **G4** — 2026-11-15, HEAD `a88108ff` — `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 404s` (the amended graph included: the crate suites now serialize after `root-suite`).
+- **E14** — 2026-11-15 — O14–O19 flipped to `verified` on the runs above (19/19 rows closed); `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/441-triage-issue-rescope/SPEC.md` · exit 0 · `ok: true`, 0 violations.
+
 ## Next
 
 PR [#559](https://github.com/gtrabanco/agentic-workflow/pull/559) is open against
 `main` and awaits the owner's merge — the owner is this workflow's external
 verifier, so the merge (not the gate) is what closes #441. The 2026-11-15
 correction batch (`76602376` red corpus + `bcbdef33` repairs) closed all seven
-blockers of [`external-verify.md`](external-verify.md) and awaits the owner's
-delta re-verdict.
+blockers of [`external-verify.md`](external-verify.md), and the S9 scope
+amendment (`305b79af` ledgers → `a88108ff` fixes, G4 green) rides the same PR
+— the delta re-verdict now covers both.
 
 ## References
 
