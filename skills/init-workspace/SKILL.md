@@ -176,8 +176,13 @@ step 4:
   a wholesale scaffold copy opts nobody in. Offer it as one consented question
   (bootstrap or upgrade): a yes creates `.agentic-workflow/journal/` and
   installs one merge wiring; a no writes nothing — no directory, no workflow,
-  no config — and the project keeps today's direct-append journal. The naming
-  grammar has one owner (`journal-fragment-grammar@1` in
+  no config — and the project keeps today's direct-append journal. The same
+  question names the headless half (issue #471): an opted-in project whose CI
+  agents land pull requests can add the distributable action's step
+  (`gtrabanco/agentic-workflow/journal@<tag>`) to its run, and the carrier
+  document it already received explains that step — installing it is editing
+  the project's own workflow, so it is offered as text, never written for it.
+  The naming grammar has one owner (`journal-fragment-grammar@1` in
   `@gtrabanco/agentic-workflow`'s README); this skill never restates it.
 - **The docs-site format is a declared choice.** The `Docs site` block's
   `format` slot (`markdown`/`md`, `mdx`/`starlight`/`docusaurus`, `html`,

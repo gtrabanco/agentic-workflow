@@ -2,7 +2,7 @@
 type: feature
 scope: medium
 ac-hash: 87944e7000e5f0ea37917a2a01ae128cd700e39d7565a7a4e32c65166c7f3c49
-roadmap_summary: Headless runs get a journal entry — a distributable composite action (`uses: …/journal@<tag>`) that hands the run's declaration to the crate's own fragment writer, provenance in the grammar's fields, no model and no token in the write path.
+roadmap_summary: Feature row 471 delivered through the fix lane at the owner apply request: a distributable composite action (`gtrabanco/agentic-workflow/journal@<tag>`) turns a headless run's declaration into one journal fragment through the crate's own writer — provenance in the fragment grammar's fields (session `gha-<run id>`, heading label), idempotent per run, no model and no token in the write path; the shipped aggregator stays the only writer of the journal file.
 ---
 
 # fix/471-journal-github-action
@@ -258,6 +258,14 @@ signals: (none — not a high-tier unit)
   `template/.github/workflows/agentic-workflow-journal.yml.example` vs `@v7.0.0`
   / `@v6.4.0` in `.github/workflows/`). *Does not affect* this unit: the new
   action declares no `uses:` of its own and the example is not changed here.
+- **Two pre-existing suites are load-sensitive on a 6-CPU sandbox at
+  `--jobs 4`**: `scripts/phase-lint.test.mjs` costs 95–120 s of real work
+  against its own 120 s suite bound, and `scripts/unit-route.test.mjs` (60 CLI
+  spawns) can cross the 10 s per-test budget under contention. Both files are
+  byte-identical to the base commit, both pass standalone (four concurrent runs
+  included) and both pass at `--jobs 2`. *Affects* this unit's verification
+  only: the reported root-suite and gate runs use `--jobs 2`, and the
+  `--jobs 4` reds are named as this environment's, never as this change's.
 
 ## Tasks
 
@@ -377,11 +385,30 @@ the block above is this unit's authoritative step list, recorded at the freeze
 ## Log
 
 - **L1** — 2026-11-15, the request, verbatim: "Apply to this repository: issue #471" plus the ten-step local-application protocol frozen as S2–S12; the issue's own requirement bullets are S13–S20. The §0 resolution: `proceed` — `git log main..HEAD` → 0 commits, `HEAD..main` → 0, the single native `blocked-by` (#307) is CLOSED, `docs/fix/471-*` absent, Features row 471 reads `idea · postponed`.
-- **P1** — 2026-11-15, ledgers frozen at `4eedcf61`: this doc, `planning-evidence.md` (PE-001–PE-010), `planning-obligations.md` (O1–O14, every row `planned`) and `decisions.md`; the `## Fixes` row registered through `roadmap fixrow`; `phase-lint` verdict PASS.
+- **P1** — 2026-11-15, ledgers frozen at `4eedcf61`: this doc, `planning-evidence.md` (PE-001–PE-010), `planning-obligations.md` (O1–O14, every row `planned`) and `decisions.md`; the `## Fixes` row registered through `roadmap fixrow`; `phase-lint` verdict PASS · `67deef3f`.
+- **E1** — 2026-11-15, the RED corpus: `cd packages/agentic-workflow && bun test test/journal.headless.test.mjs` at `4f512cd2` · exit 1 · `0 pass / 1 fail / 1 error`, `Cannot find module '../src/journal/headless.mjs'` — the operation, the module and the action did not exist.
+- **P2** — 2026-11-15, the corpus (24 cases: declaration, cells, files override, stdin block, provenance, the four refusals, idempotency, the aggregator consumer, the CLI contract, the action metadata and the adapter) · `4f512cd2`.
+- **E2** — 2026-11-15, the fixture walk before the live tree (S6/S7): a `mktemp -d /tmp/aw471-dbg-…` toy repository (git `main`, one commit, an empty carrier) ran `journal headless` through the working tree — exit 0, one fragment `20261115T163102Z-main-narrative-gha-42.md`, the `$GITHUB_OUTPUT` receipt carrying `fragment`/`name`/`status`; the second invocation answered `already-present`; scratch removed. No mutating run touched this worktree's carrier.
+- **P3** — 2026-11-15, the module: declaration validation, provenance composition, block rendering through `renderEntryBlock`, one-entry-per-run, delegation to `writeJournal` · `bd0d8048`.
+- **P4** — 2026-11-15, the CLI operation `journal headless` with its closed flag set and its exit contract, plus the crate README's command row and `journal-headless-grammar@1` · `bd0d8048`.
+- **P5** — 2026-11-15, the action: `journal/action.yml` (eight inputs, three outputs, one composite step) and `journal/headless.mjs` (env → argv, the crate version derived from its own tree, `AGENTIC_WORKFLOW_RUNNER`, the named refusals, `$GITHUB_OUTPUT`) · `679fcda5`.
+- **E3** — 2026-11-15, `bun test test/journal.headless.test.mjs` · exit 0 · 24 pass; `bun test test/journal.test.mjs test/journal.write.test.mjs test/journal.surfaces.test.mjs` · exit 0 · 60 pass with no assertion edited. Two defects the corpus caught in the new code and fixed: the adapter mapped `fragment` from a receipt key that is `path`, and the crate module's docstring named the CI host, which `journal.surfaces.test.mjs`'s forge-free case refuses.
+- **E4** — 2026-11-15, `cd packages/agentic-workflow && bun run test` · exit 0 · 822 pass across 47 files; `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 873 pass across 77 files.
+- **P6** — 2026-11-15, the surface declarations: the `normative-surfaces@1` row, the two gate-inventory claims, the `machineLines` exact re-pin (142 → 143), the carrier document's writer row and headless section, the init-workspace consent clause, the capabilities row, the changeset and the roadmap state · commit recorded below.
+- **E5** — 2026-11-15, the differential (O14): `4eedcf61` and this head exported to `mktemp -d /tmp/aw471-diff-…`, each package's `node_modules` linked, and one fixture corpus run against both (`journal name`, `journal write --json`, `journal aggregate --check`, `journal aggregate` twice, `log render --raw`, `journal` no-op, `journal name` without `--kind`, `journal write` without flags). Declared deltas only: the `journal` refusal now names the new operation, and `journal name`'s clock second is normalized as a wall-clock artifact. Harness: `UNDECLARED=0`. Scratch removed.
+- **G1** — 2026-11-15, `node scripts/run-root-suite.mjs --jobs 2` · exit 0 · 113/113 suites PASS. At `--jobs 4` on this 6-CPU sandbox the pre-existing `scripts/phase-lint.test.mjs` (95–120 s of real work, byte-identical to base) hits its own 120 s suite bound and `scripts/unit-route.test.mjs` intermittently crosses the 10 s per-test budget; both pass alone, four concurrent standalone `unit-route` runs pass, and both pass at `--jobs 2` — the contention artifact the manifest already records for `secret-scan`. No suite touched by this unit failed in any run.
+- **G2** — 2026-11-15, `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 · `PASS — 15 step(s) in 335s`; the four network steps run on their own: `--only workspace-install,pi-compat-guard` · exit 0 · `Checked 172 installs across 188 packages (no changes)`, `pi leg latest: tsc --noEmit clean`; `--only dependency-pin-gate,dependency-advisories` · exit 0 · both pins match the local train.
+- **G3** — 2026-11-15, the prose and index gates: `bun scripts/skill-lint.mjs` · `0 finding(s)`; `bun scripts/check-skill-context.mjs` · `PASS context budgets: 30 skills`; `--documents` · `PASS context documents: 4 budgeted documents`; `bun test scripts/normative-drift.test.mjs scripts/prose-gate-inventory.test.mjs` · 43 pass; `bun scripts/docs-generate.mjs --check` · `PASS`; `bun scripts/roadmap-settle.mjs` · `violations: 0`; `bun scripts/lint-changeset.mjs .changeset/471-journal-github-action.md` · `ok`; `phase-lint` · `verdict PASS`; `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs scripts/capability-inventory.test.mjs scripts/doc-discipline.test.mjs` · 47 pass.
+- **E6** — 2026-11-15, the mechanical cells: `rg -n 'LOGS\.md' journal/ packages/agentic-workflow/src/journal/headless.mjs` → 0 lines (O5); `rg -ci 'gh api|api\.github\.com|GITHUB_TOKEN|GH_TOKEN|permissions:' journal/` → 0 (O6); `rg -ci 'github|gitlab|forge' packages/agentic-workflow/src/journal/headless.mjs` → 0 (the crate module knows no host — the AC5 rule the corpus enforces).
+- **D1** — 2026-11-15, the `version-parity-content` step caught the first changeset as incomplete: editing `skills/init-workspace/SKILL.md` ships content in `@gtrabanco/pi-agentic-workflow`, so the changeset declares it (`patch`) beside the crate's `minor`. Fixed in the changeset, not in the gate.
+- **D2** — 2026-11-15, the roadmap's two tables went through their own writers: the `## Fixes` row through `roadmap fixrow`, the Features row's status through `roadmap rowUpsert` with the row's existing slug, depends-on and description read back byte-exact, and the projection through `bun scripts/docs-generate.mjs`. The emitter then applied this doc's `roadmap_summary:` over the Fixes row's Notes cell — its documented behaviour — so the summary here is the detailed text and the row carries it verbatim.
 
 ## Next
 
-P2: land the RED corpus in `packages/agentic-workflow/test/journal.headless.test.mjs` and observe it fail before any implementation.
+The owner's external verification of the diff (S11). Nothing is pending in this
+unit: every obligation is `verified` on a foreground run, and the one gate step
+that reds at `--jobs 4` on this sandbox is the recorded contention artifact (G1),
+green at `--jobs 2` and untouched by this change.
 
 ## References
 
