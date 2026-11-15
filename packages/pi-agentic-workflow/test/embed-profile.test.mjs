@@ -160,7 +160,7 @@ test("plan: a key the operator wrote that the preset does not declare is reporte
 });
 
 test("write: the profile lands in .agentic-workflow/index.json, 2-space JSON with a trailing newline, other keys untouched", () => {
-  const root = rootWith(JSON.stringify({ version: 1, store: { path: ".agentic-workflow/index/index.db" }, index: { excludes: null } }, null, 2));
+  const root = rootWith(JSON.stringify({ version: 1, store: { path: ".agentic-workflow/custom/store.sqlite" }, index: { excludes: null } }, null, 2));
   try {
     const readFile = readOf(root);
     const written = [];
@@ -172,7 +172,7 @@ test("write: the profile lands in .agentic-workflow/index.json, 2-space JSON wit
     assert.equal(written[0].text.endsWith("\n"), true);
     const parsed = JSON.parse(written[0].text);
     assert.deepEqual(parsed.provider, FIXTURE_PROFILE);
-    assert.deepEqual(parsed.store, { path: ".agentic-workflow/index/index.db" }, "an unrelated block is preserved");
+    assert.deepEqual(parsed.store, { path: ".agentic-workflow/custom/store.sqlite" }, "an unrelated block is preserved");
     assert.equal(parsed.index.excludes, null);
     assert.equal(written[0].text.includes('\n  "provider"'), true, "2-space indentation");
   } finally {
