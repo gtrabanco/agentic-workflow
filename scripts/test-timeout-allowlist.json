@@ -10,5 +10,11 @@
     "timeoutMs": 30000,
     "reason": "the shipped-history case walks the repository's full git history through the red-first gate — the cost is the walk itself, not waste; bun's own 5s default already failed this suite standalone before this unit (pre-existing, measured at f349d7b5)",
     "measured": "~12s the shipped-history walk under the bun leg (12.4s suite), 2026-11-10"
+  },
+  {
+    "path": "scripts/setup-env.test.mjs",
+    "timeoutMs": 20000,
+    "reason": "the file's two subprocess cases spawn the real provisioner: the .engram/ byte-identity case runs `setup-env.mjs --check`, whose probes include `serena --version` (seconds on a cold interpreter), and the --doctor carrier runs the crate's 14-surface checker. Both are behaviour under test, not waste — the budget covers the two spawns when the root gate runs four suites wide. Measured: 13.4s for the whole file standalone, and the .engram case crossed the 10s per-test budget at 10.3s under gate load",
+    "measured": "10.3s (.engram byte-identity case, gate load 4-wide) and 13.4s (whole file, standalone) under the bun leg, 2026-11-14"
   }
 ]
