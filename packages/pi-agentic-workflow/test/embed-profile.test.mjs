@@ -283,3 +283,43 @@ test("report: a fully materialized index reads as the preset's, with nothing to 
   assert.match(text, /nothing to fill/u);
   assert.doesNotMatch(text, /default/u, "every value is either the preset's or the operator's");
 });
+
+test("refusal: a provider block that is not an object is refused where the reason is visible", () => {
+  for (const bad of ["acme", true, [1, 2]]) {
+    const root = rootWith(JSON.stringify({ version: 1, provider: bad }));
+    try {
+      assert.throws(
+        () => planEmbedProfile({ root, entry, readFile: readOf(root) }),
+        (error) =>
+          error.name === "EmbedProfileRefusal" &&
+          error.reason === "invalid-index-config" &&
+          /provider block that is not an object/u.test(error.message),
+        `accepted provider=${JSON.stringify(bad)}`,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }
+});
+
+test("refusal: the operator's smaller request budget wins — the fill is refused instead of writing an impossible limit", () => {
+  // The project lowered max_request_chars below the preset's chunk_limit. No
+  // value may be rewritten (precedence), so the only honest answer is the
+  // crate's own refusal naming both keys — never a silently invalid file.
+  const root = rootWith(JSON.stringify({ version: 1, provider: { max_request_chars: 4000 } }));
+  try {
+    const plan = planEmbedProfile({ root, entry, readFile: readOf(root) });
+    assert.equal(plan.fills.includes("provider.chunk_limit"), true, "the preset's limit is what would be filled");
+    let writes = 0;
+    assert.throws(
+      () => applyEmbedProfile({ root, plan, writeFile: () => (writes += 1) }),
+      (error) =>
+        error.reason === "invalid-profile" &&
+        /chunk_limit/u.test(error.message) &&
+        /max_request_chars/u.test(error.message),
+    );
+    assert.equal(writes, 0);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
