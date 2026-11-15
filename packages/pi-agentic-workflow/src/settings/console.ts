@@ -26,7 +26,14 @@ import type { ConfigFile, ModelRef, ModelSetting, ProfileFile, Route, RouteFile,
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 import { applyConfigEdits } from "./jsonc-write.js";
 import { SELECT_OPTION_LIMIT, pagedSelect, providerOf } from "./picker.js";
-import { getProviderPresets, resolvePresetEntry } from "../config/presets.js";
+import { getEmbedProfiles, getProviderPresets, resolvePresetEntry } from "../config/presets.js";
+import type { EmbedProfileEntry } from "../config/embed-profile.js";
+import {
+  EmbedProfileRefusal,
+  applyEmbedProfile,
+  planEmbedProfile,
+  renderEmbedProfileReport,
+} from "../config/embed-profile.js";
 
 export interface SettingsDeps {
   ui: SettingsUi;
@@ -107,6 +114,9 @@ export const prompts = {
   chainAppend: "Add a fallback",
   chainRemoveLast: "Remove the last",
   chainDone: "Done",
+  embedProfile: "Doc index embedding profile",
+  embedProfileProvider: "Which preset's embedding profile?",
+  embedProfileConfirm: "Write the preset's embedding profile into .agentic-workflow/index.json?",
 } as const;
 
 const GLOBAL_LABEL = "Global";
@@ -147,6 +157,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       prompts.policy,
       prompts.settle,
       prompts.stateFlow,
+      prompts.embedProfile,
       ...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),
       prompts.save,
       prompts.cancel,
@@ -334,6 +345,14 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
     }
     if (choice === prompts.stateFlow) {
       draft = await editStateFlow(deps, draft, merged.config.stateFlow);
+      continue;
+    }
+    // Issue #541: the doc-index embedding profile. A different file (the crate's
+    // committed `index.json`) with its own consent question — never part of this
+    // console's draft, so a materialization can be declined without touching the
+    // unified config and vice versa.
+    if (choice === prompts.embedProfile) {
+      await editEmbedProfile(deps);
       continue;
     }
     if (choice === prompts.save) {
@@ -811,6 +830,81 @@ async function discard(ui: SettingsUi): Promise<boolean> {
   const dropped = await ui.confirm(prompts.discard, "Your edits are not in any config file yet.");
   if (!dropped) ui.notify("Draft kept — nothing was saved.", "info");
   return Boolean(dropped);
+}
+
+/**
+ * The doc-index embedding profile (issue #541 S4/S7): show, per key, whether the
+ * value came from the preset, the operator or the default — then ask before
+ * writing. The file is the crate's committed `.agentic-workflow/index.json`, not
+ * the unified config this console edits, so the write is its own consented step
+ * and never rides the draft/save flow.
+ */
+async function editEmbedProfile(deps: SettingsDeps): Promise<void> {
+  const available = getEmbedProfiles();
+  if (available.length === 0) {
+    deps.ui.notify(
+      "No installed preset ships a doc-index embedding profile — nothing to apply. (A provider package registers one; the main package never names a provider.)",
+      "warning",
+    );
+    return;
+  }
+  if (!deps.projectTrusted) {
+    deps.ui.notify(
+      ".agentic-workflow/index.json is committed project state and is not editable while this project is untrusted — trust the project, then re-open this action.",
+      "warning",
+    );
+    return;
+  }
+
+  let entry: EmbedProfileEntry = available[0];
+  if (available.length > 1) {
+    const picked = await deps.ui.select(
+      prompts.embedProfileProvider,
+      available.map((candidate) => candidate.provider),
+    );
+    const chosen = available.find((candidate) => candidate.provider === picked);
+    if (chosen === undefined) return;
+    entry = chosen;
+  }
+
+  let plan;
+  try {
+    plan = planEmbedProfile({ root: deps.cwd, entry, readFile: deps.readFile });
+  } catch (error) {
+    if (error instanceof EmbedProfileRefusal) {
+      deps.ui.notify(error.message, "error");
+      return;
+    }
+    throw error;
+  }
+
+  deps.ui.notify(renderEmbedProfileReport(plan).join("\n"), "info");
+  if (plan.fills.length === 0) {
+    deps.ui.notify("Nothing to write — every key the preset declares already has a value.", "info");
+    return;
+  }
+
+  const accepted = await deps.ui.confirm(
+    prompts.embedProfileConfirm,
+    `${plan.path} — ${plan.fills.length} key(s) filled from the ${entry.provider} preset; values already written are kept.`,
+  );
+  if (!accepted) {
+    deps.ui.notify("Nothing was written — the project's index config is unchanged.", "info");
+    return;
+  }
+
+  try {
+    const result = applyEmbedProfile({ root: deps.cwd, plan, writeFile: deps.writeFile });
+    deps.ui.notify(
+      result.wrote
+        ? `Wrote ${result.path} — ${plan.fills.length} key(s) from the ${entry.provider} preset.`
+        : `Nothing was written — ${result.path} was already complete.`,
+      "info",
+    );
+  } catch (error) {
+    if (error instanceof EmbedProfileRefusal) deps.ui.notify(error.message, "error");
+    else throw error;
+  }
 }
 
 function problemsFor(file: ConfigFile, scope: "global" | "project"): ConfigProblem[] {
