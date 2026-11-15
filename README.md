@@ -32,7 +32,8 @@ packages/                four companion npm packages: @gtrabanco/agentic-workflo
                          services, guards and the `doc` retrieval index), @gtrabanco/agentic-workflow-schema
                          (machine contracts), @gtrabanco/pi-agentic-workflow (one-command install for Pi —
                          see Install) and @gtrabanco/pi-nan-agentic-workflow (the optional NaN.builders
-                         preset: provider profile, model ladder, quota-tier routing)
+                         preset: provider profile, model ladder, quota-tier routing, doc-index
+                         embedding profile)
 scripts/                 the deterministic gates, sensors and generators, each with its sibling *.test.mjs
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -52,7 +53,11 @@ otherwise, and an explicit `--mode` always wins — so the vectors the sync pays
 are the ones the query uses. `doc --sync` embeds the pending chunks with pacing,
 retry/backoff and a resume point, and the pi package's native `/aw-index` command
 runs that sync and prints its report (pending chunks, pinned model, last sync,
-degradations). It is a **discovery aid, never authority**: no gate or decision
+degradations). A provider preset can also ship the `provider` block the index
+needs as data (issue #541): `/agentic-workflow-settings` → `Doc index embedding
+profile` shows each value's origin and materializes it into the committed
+`.agentic-workflow/index.json`, filling only the keys the project leaves absent.
+It is a **discovery aid, never authority**: no gate or decision
 reads it. Positional document operations (`doc read|edit|index`) are unit `71`,
 still `defined` — the CLI refuses them by name and only accepts the four
 retrieval flags.

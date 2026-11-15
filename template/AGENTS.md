@@ -39,7 +39,7 @@ your domains.
 | Brand identity / voice | `docs/brand/BRAND.md` |
 | Domain / business rules | `docs/domain/*`, `docs/business/*` |
 | Legal / compliance | `docs/legal/*` |
-| Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks)* |
+| Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks + headless CI runs through the journal action)* |
 | Project identity, deployment, license & policies | the **Project charter** section (below) — written by `/init-workspace`, read before any design or plan |
 | Acceptance criteria & review passes per surface | `docs/workflow/VERIFICATION_CRITERIA.md` *(the project's criteria catalogue; extended only with a recorded decision)* |
 | Cross-session memory | Engram, the workflow's memory substrate *(ask-first: provisioned by `/init-workspace` on a non-pi host, or by the pi package's `memory.engram` consent; the save/recall protocol is `unit-lane`'s `references/MEMORY.md`)* |

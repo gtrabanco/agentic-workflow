@@ -1,0 +1,6 @@
+## 2026-11-15T20:16:28Z — feat/541-new-feature-nan-preset-ships-the-doc-index-embed — narrative
+- **Commits:** 14 (`85caa101…bba4fb88`)
+- **Files:** 29 files
+- **Summary:** Correction batch on the 2026-11-15 EXTERNAL VERIFY of fix/541 (1 blocker, 2 advisories): the blocker was a citation, not a test — P2/AC-S3/O1/O2/O3 named test/doc.config.test.mjs, a file on no ref, while the ten provider-block cases live in test/doc.store.test.mjs; four SPEC surfaces and three ledger cells repointed, no test edited or moved. Advisory 1 disposed as D6 (the live-provider doc --sync stays the operator's acceptance step); advisory 2 rewrites the Retirements bullet to the disclosed truth. Recheck 37/17 pass, root suite 113 PASS, test-impact empty, all docs gates green.
+- **Decisions:** Repoint the citation rather than move the cases: doc.store.test.mjs already hosts the doc config describes and the red commit 4bb3a73a put them there, so moving tests would rewrite history for no behaviour gain; D6 records the issue's verbatim first AC as out-of-domain for automated verification (no provider key or network) with AC-S6/O11 as the unit's observable criterion
+- **Next:** Owner runs the delta EXTERNAL VERIFY (re-verify the blocker at bba4fb88 + spot check), then merge PR #561

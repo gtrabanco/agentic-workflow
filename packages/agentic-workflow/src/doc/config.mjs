@@ -25,6 +25,14 @@
  * and the budget bounds the batch — so the shipped configuration cannot emit a
  * request the provider must refuse. The keyword-only path keeps `0 = unlimited`
  * (fix #495's semantics, unchanged).
+ *
+ * The provider block is the crate's schema (issue #541 S3): a companion package
+ * donates this object verbatim (a provider preset's embed profile), so every
+ * value is validated here, by this module, and by no second copy elsewhere —
+ * `validateIndexConfigObject` is the entry point an outside writer calls before
+ * it stages a candidate into a project's `index.json`, and `loadConfig`
+ * delegates to it. A bad value is refused by name at load, never discovered at
+ * the provider's 400.
  */
 
 import { existsSync, readFileSync, realpathSync } from "node:fs";
@@ -43,6 +51,25 @@ export const CONFIG_VERSION = 1;
  */
 export const DEFAULT_MAX_REQUEST_CHARS = 90000;
 
+/**
+ * The pacing/write-policy defaults — the provider's published limits
+ * (`32 texts/batch`, `60 requests/min`) plus a bounded retry ladder. Every one
+ * of them is overridable (config `provider.pacing`, then the
+ * `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_<PARAM>` environment variables), so an
+ * operator never edits code to match a provider's real limits (issue #443 S10).
+ *
+ * The names are the closed set `provider.pacing` may carry (issue #541 S3): the
+ * validation below and the resolver in `embeddings.mjs` both iterate this
+ * object, so a new knob is added once.
+ */
+export const DEFAULT_PACING = Object.freeze({
+  batchSize: 32,
+  requestsPerMinute: 60,
+  maxAttempts: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 60000,
+});
+
 /** The environment override for the request budget, beside the pacing overrides. */
 export const MAX_REQUEST_CHARS_ENV = "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS";
 
@@ -51,7 +78,7 @@ function positiveInteger(value, name, hint) {
   const parsed = typeof value === "number" ? value : Number(String(value).trim());
   if (!Number.isInteger(parsed) || parsed <= 0) {
     throw new Error(
-      `invalid ${name}: ${JSON.stringify(value)} (expected a positive integer; ${hint})`,
+      `invalid ${name}: ${JSON.stringify(value)} (expected a positive integer${hint ? `; ${hint}` : ""})`,
     );
   }
   return parsed;
@@ -140,6 +167,78 @@ function containStorePath(root, candidate, shareEnabled) {
 }
 
 /**
+ * A non-empty string — the three provider fields that name an endpoint, a model
+ * and the environment variable holding the key. Each is refused by name: an
+ * empty string resolves as "not configured" at runtime, which would turn a
+ * typo into a silent keyword-only store.
+ */
+function nonEmptyString(value, name) {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`index.json ${name} must be a non-empty string (got ${JSON.stringify(value)})`);
+  }
+  return value;
+}
+
+/**
+ * Validate the `provider` block (issue #541 S3) — the object a provider preset
+ * donates verbatim. `null`/absent keeps the keyword-only path, so it is the one
+ * accepted non-object. Every present value is checked; an unknown key is left
+ * alone (the block is open, as it always has been).
+ */
+export function validateProviderConfig(provider) {
+  if (provider === undefined || provider === null) return;
+  if (typeof provider !== "object" || Array.isArray(provider)) {
+    throw new Error(`index.json provider must be an object (got ${JSON.stringify(provider)})`);
+  }
+
+  for (const field of ["baseUrl", "model", "envVar"]) {
+    if (provider[field] !== undefined) nonEmptyString(provider[field], `provider.${field}`);
+  }
+
+  // provider.chunk_limit: optional positive integer
+  if (provider.chunk_limit !== undefined) {
+    const num = Number(provider.chunk_limit);
+    if (!Number.isInteger(num) || num <= 0) {
+      throw new Error(
+        `index.json provider.chunk_limit must be a positive integer (got ${JSON.stringify(provider.chunk_limit)})`,
+      );
+    }
+  }
+
+  // provider.max_request_chars: optional positive integer, and a chunk_limit may
+  // never exceed it — a chunk larger than a whole request could never be sent
+  // (fix #540 S5: fail closed at config load, never at the provider's 400).
+  if (provider.max_request_chars !== undefined) {
+    positiveInteger(
+      provider.max_request_chars,
+      "index.json provider.max_request_chars",
+      `it is the most text one embed request may carry, default ${DEFAULT_MAX_REQUEST_CHARS}`,
+    );
+  }
+  const budget = provider.max_request_chars ?? DEFAULT_MAX_REQUEST_CHARS;
+  if (provider.chunk_limit !== undefined && Number(provider.chunk_limit) > Number(budget)) {
+    throw new Error(
+      `index.json provider.chunk_limit (${provider.chunk_limit}) must not exceed provider.max_request_chars ` +
+        `(${budget}): a chunk that large could never be sent in one request — lower chunk_limit or raise max_request_chars`,
+    );
+  }
+
+  // provider.pacing: optional object; every present knob is a positive integer
+  // (issue #541 S3). Validated here rather than only where it is resolved, so a
+  // preset's value is refused before it is written and a hand edit reports the
+  // problem on every command, not just on a sync.
+  if (provider.pacing !== undefined) {
+    if (typeof provider.pacing !== "object" || provider.pacing === null || Array.isArray(provider.pacing)) {
+      throw new Error(`index.json provider.pacing must be an object (got ${JSON.stringify(provider.pacing)})`);
+    }
+    for (const name of Object.keys(DEFAULT_PACING)) {
+      if (provider.pacing[name] === undefined) continue;
+      positiveInteger(provider.pacing[name], `index.json provider.pacing.${name}`);
+    }
+  }
+}
+
+/**
  * Validate the config keys introduced by D20 (shared store, chunk limit) and
  * D21 (file exclusion). Throws on invalid shapes — a named usage error, never
  * a silent guess.
@@ -158,33 +257,7 @@ function validateConfig(parsed) {
     }
   }
 
-  // provider.chunk_limit: optional positive integer
-  if (parsed.provider?.chunk_limit !== undefined) {
-    const num = Number(parsed.provider.chunk_limit);
-    if (!Number.isInteger(num) || num <= 0) {
-      throw new Error(
-        `index.json provider.chunk_limit must be a positive integer (got ${JSON.stringify(parsed.provider.chunk_limit)})`,
-      );
-    }
-  }
-
-  // provider.max_request_chars: optional positive integer, and a chunk_limit may
-  // never exceed it — a chunk larger than a whole request could never be sent
-  // (fix #540 S5: fail closed at config load, never at the provider's 400).
-  if (parsed.provider?.max_request_chars !== undefined) {
-    positiveInteger(
-      parsed.provider.max_request_chars,
-      "index.json provider.max_request_chars",
-      `it is the most text one embed request may carry, default ${DEFAULT_MAX_REQUEST_CHARS}`,
-    );
-  }
-  const budget = parsed.provider?.max_request_chars ?? DEFAULT_MAX_REQUEST_CHARS;
-  if (parsed.provider?.chunk_limit !== undefined && Number(parsed.provider.chunk_limit) > Number(budget)) {
-    throw new Error(
-      `index.json provider.chunk_limit (${parsed.provider.chunk_limit}) must not exceed provider.max_request_chars ` +
-        `(${budget}): a chunk that large could never be sent in one request — lower chunk_limit or raise max_request_chars`,
-    );
-  }
+  validateProviderConfig(parsed.provider);
 
   // index.excludes: optional array of strings, or null (defaults)
   if (parsed.index?.excludes !== undefined && parsed.index.excludes !== null) {
@@ -199,6 +272,36 @@ function validateConfig(parsed) {
       }
     }
   }
+}
+
+/**
+ * Validate a **candidate** index-config body against this crate's schema and
+ * return the merged config — the same judgment `loadConfig` applies to a file it
+ * read, exposed so a writer outside the crate (the pi package's provider-preset
+ * materializer, issue #541 S4) never keeps a second copy of the rules: one
+ * implementation, two callers.
+ *
+ * `root` is required because the store containment check (F36/F37) is part of
+ * the judgment: a candidate the loader would refuse must be refused here, before
+ * anything is written.
+ */
+export function validateIndexConfigObject(root, parsed) {
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`index.json must be a JSON object (${configPath(root)})`);
+  }
+  if (parsed.version !== undefined && parsed.version !== CONFIG_VERSION) {
+    throw new Error(`index.json version ${parsed.version} is not supported (expected ${CONFIG_VERSION})`);
+  }
+
+  validateConfig(parsed);
+
+  const merged = { ...structuredClone(DEFAULT_CONFIG), ...parsed };
+  // D21: resolve the exclusion list — null/absent ⇒ shipped defaults.
+  merged.index = { ...merged.index, excludes: merged.index?.excludes ?? DEFAULT_EXCLUSIONS };
+  // storePath() falls back to the default when `store.path` is falsy —
+  // contain exactly the path that will be used.
+  containStorePath(root, merged.store?.path || DEFAULT_CONFIG.store.path, merged.store?.share?.enabled);
+  return merged;
 }
 
 /**
@@ -230,24 +333,10 @@ export function loadConfig(root) {
   if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new Error(`index.json must be a JSON object (${path})`);
   }
-  if (parsed.version !== undefined && parsed.version !== CONFIG_VERSION) {
-    throw new Error(`index.json version ${parsed.version} is not supported (expected ${CONFIG_VERSION})`);
-  }
 
-  // Validate the new D20/D21 config keys (throws on invalid shapes)
-  validateConfig(parsed);
-
-  // Contain the MERGED store path inside the repository's gitignored
-  // `.agentic-workflow/` directory (F36/F37/F50, decision D12) — see
-  // containStorePath. Runs on every branch: an explicit `store.path`, a
-  // config without a `store` key, and the absent-config default alike.
-  // D20: skip containment when share is enabled (the shared store is
-  // explicitly placed in a user-level directory).
-  const merged = { ...structuredClone(DEFAULT_CONFIG), ...parsed };
-  // D21: resolve the exclusion list — null/absent ⇒ shipped defaults.
-  merged.index = { ...merged.index, excludes: merged.index?.excludes ?? DEFAULT_EXCLUSIONS };
-  // storePath() falls back to the default when `store.path` is falsy —
-  // contain exactly the path that will be used.
-  containStorePath(root, merged.store?.path || DEFAULT_CONFIG.store.path, merged.store?.share?.enabled);
-  return merged;
+  // Issue #541: the judgment — version, the provider block, the D20/D21 keys,
+  // the exclusion defaults and the store containment — is one function, so a
+  // writer outside this crate validates a candidate against exactly what the
+  // loader enforces on a file it read.
+  return validateIndexConfigObject(root, parsed);
 }

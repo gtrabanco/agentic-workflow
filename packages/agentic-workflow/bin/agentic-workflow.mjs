@@ -19,6 +19,7 @@
  *   agentic-workflow log render --facts <path|-> [--raw]
  *   agentic-workflow journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--check] [--json]
  *   agentic-workflow journal write --kind <mechanical|narrative> [fields] [--session <id>]
+ *   agentic-workflow journal headless --workflow <w> --run-id <id> --actor <a> (--summary <t> | --block <path|->) [fields]
  *   agentic-workflow journal name --kind <mechanical|narrative> [--dir <root>] [--branch <b>] [--session <id>]
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *   agentic-workflow resolve-passes [--global <path>] [--project <path>] [--command <name>]
@@ -93,6 +94,13 @@
  * supplies prose fields or a rendered block on stdin, and the name, timestamp,
  * branch and bytes are computed — a caller never composes a filename. `name`
  * prints the deterministic fragment name for a reader, never writing anything.
+ * `headless` (issue #471) is the same writer for a run with no operator: the
+ * caller declares what the run did (`--issue`, `--summary`, `--decisions`,
+ * `--next`, `--files`, or a rendered `--block`) and the provenance every CI run
+ * has (`--workflow`, `--run-id`, `--actor`), and the fragment's session slot
+ * carries `gha-<run id>` so a re-run of the same run answers `already-present`
+ * instead of duplicating the entry. The distributable GitHub Action in
+ * `journal/` calls exactly this operation.
  * The example GitHub workflow and the documented `post-receive` hook both call
  * `journal aggregate` unchanged.
  */
@@ -133,6 +141,7 @@ import { renderReceipt } from "../src/log/render.mjs";
 import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
 import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragment.mjs";
 import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from "../src/journal/write.mjs";
+import { JournalHeadlessError, parseHeadlessArgs, writeHeadlessJournal } from "../src/journal/headless.mjs";
 import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
@@ -1154,6 +1163,49 @@ switch (command) {
       process.stdout.write(`${JSON.stringify(receipt, null, parsed.json ? 2 : 0)}\n`);
       break;
     }
+    if (op === "headless") {
+      let flags;
+      try {
+        flags = parseHeadlessArgs(restArgs);
+      } catch (error) {
+        if (error instanceof JournalHeadlessError) journalRefuse(error.message);
+        throw error;
+      }
+      const readBlock = () => {
+        const source = flags.block;
+        if (source === "-") return readFileSync(0, "utf8");
+        try {
+          return readFileSync(resolve(rootDir, source), "utf8");
+        } catch (error) {
+          journalRefuse(`cannot read the --block source (${source}): ${error.message}`);
+        }
+      };
+      let receipt;
+      try {
+        receipt = writeHeadlessJournal({
+          root: rootDir,
+          journalDir: flags["journal-dir"],
+          timestamp: flags.timestamp,
+          base: flags.base,
+          declaration: {
+            issue: flags.issue,
+            summary: flags.summary,
+            decisions: flags.decisions,
+            next: flags.next,
+            files: flags.files,
+            block: flags.block === undefined ? undefined : readBlock(),
+          },
+          context: { workflow: flags.workflow, runId: flags["run-id"], actor: flags.actor },
+        });
+      } catch (error) {
+        if (error instanceof JournalHeadlessError || WRITE_REFUSALS.some((kindOf) => error instanceof kindOf)) {
+          journalRefuse(error.message);
+        }
+        throw error;
+      }
+      process.stdout.write(`${JSON.stringify(receipt, null, parsed.json ? 2 : 0)}\n`);
+      break;
+    }
     if (op === "name") {
       const { flags } = parseJournalArgs(restArgs);
       const kind = flags.kind;
@@ -1176,7 +1228,7 @@ switch (command) {
       process.stdout.write(`${flags["journal-dir"] ?? JOURNAL_DIR}/${name}\n`);
       break;
     }
-    journalRefuse(`journal requires the \`aggregate\`, \`write\` or \`name\` operation, got "${op ?? ""}"`);
+    journalRefuse(`journal requires the \`aggregate\`, \`write\`, \`headless\` or \`name\` operation, got "${op ?? ""}"`);
     break;
   }
 
