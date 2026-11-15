@@ -145,7 +145,7 @@ test("catalog snapshot: the file carries its provenance header", () => {
 // ── The doc-index embedding profile (issue #541) ─────────────────────────
 
 test("catalog snapshot: the embedding profile's values are the catalog's facts", async () => {
-  const { NAN_EMBED_PROFILE } = await import("../dist/preset.js");
+  const { NAN_EMBED_PROFILE } = await import("../dist/embed-profile.js");
   const embedding = catalog.models.find((model) => model.type === "embedding");
   assert.ok(embedding, "the snapshot records an embedding model");
   assert.equal(NAN_EMBED_PROFILE.model, embedding.slug, "the profile pins the snapshot's embedding slug");
@@ -164,7 +164,7 @@ test("catalog snapshot: the embedding profile's values are the catalog's facts",
 });
 
 test("catalog snapshot: the README documents the embedding profile and its key-global caveat", async () => {
-  const { NAN_EMBED_PROFILE } = await import("../dist/preset.js");
+  const { NAN_EMBED_PROFILE } = await import("../dist/embed-profile.js");
   const doc = readme();
   assert.ok(doc.includes("qwen3-embedding"), "the README names the embedding model");
   assert.ok(doc.includes(String(NAN_EMBED_PROFILE.envVar)), "the README names the key variable");

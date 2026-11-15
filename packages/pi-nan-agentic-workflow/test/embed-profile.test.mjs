@@ -19,7 +19,8 @@ import {
 } from "@gtrabanco/pi-agentic-workflow/dist/config/presets.js";
 import { applyEmbedProfile, planEmbedProfile } from "@gtrabanco/pi-agentic-workflow/dist/config/embed-profile.js";
 import extension from "../dist/extension.js";
-import { NAN_EMBED_PROFILE, PROVIDER } from "../dist/preset.js";
+import { NAN_EMBED_PROFILE } from "../dist/embed-profile.js";
+import { PROVIDER } from "../dist/preset.js";
 
 const readOf = (root) => (path) => {
   try {

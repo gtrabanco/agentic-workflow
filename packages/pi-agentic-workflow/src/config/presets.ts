@@ -17,6 +17,11 @@ import type { EffectiveConfig, RecommendedProfile } from "./types.js";
 import type { ProviderConfig } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
 import { validateProviderConfig } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
 
+/** The provider's `provider` block shape — re-exported so a companion package
+ *  can type its own embed profile against the crate's schema without depending
+ *  on the crate itself (issue #541). */
+export type { ProviderConfig } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
+
 /** What a preset's resolver receives: the merged, validated config, plus —
  *  amendment 2 — the named profile the chain asked for. `profile` is present
  *  only when a catalog profile is addressed (a `<provider>.<profile>` chain
