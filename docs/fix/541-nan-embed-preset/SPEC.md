@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-roadmap_summary: Issue [#541](https://github.com/gtrabanco/agentic-workflow/issues/541): the NaN preset ships the doc-index **embedding profile** (provider block, a measured `chunk_limit`, and pacing derived from the provider's documented limits) through the provider-preset seam, and the settings console materializes it into `.agentic-workflow/index.json` per key behind user-written values — so a NaN install gets working auto-hybrid retrieval with no hand-written `index.json`, while the runner crate stays provider-neutral and validates the profile against its own config schema.
+roadmap_summary: Issue [#541](https://github.com/gtrabanco/agentic-workflow/issues/541): the NaN preset ships the doc-index **embedding profile** — the literal `.agentic-workflow/index.json` `provider` block (endpoint, `qwen3-embedding`, `NAN_API_KEY`, a measured `chunk_limit`, pacing at the provider's 60 rpm per-key cap) — through the provider-preset seam, and the settings console materializes it per key behind user-written values, so a NaN install gets working auto-hybrid retrieval with no hand-written `index.json`. The runner crate stays provider-neutral and gains the block's validation plus `validateIndexConfigObject`, so the writer keeps no second copy of the schema. Applied through the owner's local workflow (ledgers frozen at cut); the status stays `in-progress` until the owner's review — the external verifier of this workflow is the owner. SPEC: [SPEC](fix/541-nan-embed-preset/SPEC.md)
 ---
 
 # fix/541-nan-embed-preset
