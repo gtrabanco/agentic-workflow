@@ -429,13 +429,160 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   aggregate --check` · `ok:true, checked:2, refusals:[]` · `node
   scripts/log-immutability.mjs` · PASS (range 15 commits) · `node
   scripts/temp-hygiene.mjs` · PASS (0 findings).
+- **L4** — 2026-11-14, the request, verbatim:
+  ```
+  Apply to this repository: issue #514
+  ```
+- **D9** — 2026-11-14, recheck resolution: the unit is already merged
+  (`e6a696e9`, PR [#520](https://github.com/gtrabanco/agentic-workflow/pull/520)),
+  so the apply action has **zero** matching rows — no unticked task, no unverified
+  obligation, no open finding. The one open item the state declares is the §9
+  recheck of the 2026-11-12 `EXTERNAL VERIFY` receipt's three blockers, so the
+  turn's scope is that recheck and nothing else. Blockers 1 and 2 reproduce green
+  at this head; blocker 3's substance (a nonexistent path) is fixed, but the
+  validation outcome of O11's repaired cell was invalidated by a later unrelated
+  unit — #546 added a second annex link in the template hooks README, so the
+  cell's files-wide `matches 2` reads 3. O11 flips back before the repair, and the
+  cell becomes **per-surface presence**, which is what the obligation asserts: the
+  old total of 2 across both files could pass with both links on one surface and
+  none on the other, so the new shape is stricter, not a relaxation to pass.
+- **E20** — 2026-11-14, the recheck, foreground, every command run at this head:
+  blocker 1 · `bun test scripts/git-config-writes.test.mjs` · exit 0 · 9 pass / 0
+  fail · `node scripts/git-config-writes.mjs` · exit 0 · `294 carriers scanned, 0
+  findings / verdict: PASS` (294 where the receipt read 278 — later units added
+  carriers; the finding count is the claim that matters) · blocker 2 · the
+  retirement search `rg -n '"config", "user\.|"config", "commit\.gpgsign"'
+  scripts packages --glob '*.test.mjs'` · exit 1 · 0 matches (was 12) · `bun test
+  scripts/review-receipt.test.mjs scripts/audit-pr-receipt.test.mjs` · 58 pass / 0
+  fail · `bun test packages/agentic-workflow/test/doc.envelope.test.mjs` · 41 pass
+  / 0 fail · blocker 3 · `node scripts/skill-lint.mjs` · exit 0 · `101 file(s) · 7
+  check(s) · 0 finding(s) / verdict: PASS` · `rg -c 'GIT_IDENTITY_HARDENING'
+  docs/workflow/README.md` · 1 · `rg -c 'GIT_IDENTITY_HARDENING'
+  template/.agentic-workflow/hooks/README.md` · 2, both ≥1 — and the remaining
+  obligations' validators re-run green at this head: `git-env` 6/0,
+  `push-identity-check` 20/0, `identity-hook-parity` 15/0, `git-identity-guard`
+  22/0, the hook shell suite 31 cases / 0 failures, `config-contract` 17/0,
+  `local-gate.test` 49/0, `receipt-guard` 13/0, `prose-gate-inventory` 22/0,
+  `unit-doc-contract` + `ledger-provenance` 48/0, `red-first` `54 pair(s) · 0
+  finding(s) / verdict: PASS`, `docs-generate --check` `3 checked · 0 missing · 0
+  stale · 0 orphaned / verdict: PASS`, `check-skill-context` `PASS context
+  budgets: 30 skills`, `local-gate --list` names `push-identity`, and
+  `rg -c 'GIT_CONFIG_COUNT'` on both carriers · 0 matches.
+- **G8** — 2026-11-14, `node scripts/run-root-suite.mjs` · exit 0 · 113 suites
+  PASS / 0 FAIL (113 where G6 read 109 — later units added suites; the exit status
+  is the claim that matters).
+- **L5** — 2026-11-15, the correction request, verbatim (numbered `S1..S3` for
+  this batch; distinct from the `## Specs` ids, which are the issue's own):
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Batch numbering, each clause the requester's own words from the quote above:
+  **S1** — "triage and fix those that deserve to fix but understand the context before fix"; **S2** — "check you haven't broke another different thing"; **S3** — "if you have done, start the loop again until you fixed full symbol/related stuff".
+- **D10** — 2026-11-15, the correction batch's resolution of L5 (S1 triage: the
+  latest receipt's blockers 1–3 all deserve the fix; S2 differential: every
+  touched command runs against a base archive in `mktemp` scratch first; S3 loop:
+  the whole NN-row lookup family — `rowUpsertEdits`, `findRow`, `annotate` — is
+  corrected together, not just the call that failed): the duplicate NN-514
+  roadmap row is collapsed by making the writer duplicate-safe, and the survivor
+  settles to `done · [#520](https://github.com/gtrabanco/agentic-workflow/pull/520)`
+  through `roadmap rowUpsert` on the CLI — never a hand edit of the shared index.
+  O14 and O17 flip back before any code (their validator is red at the cut) and
+  re-verify on their own validators at close; the receipt's falsified claims are
+  corrected everywhere prose may be edited. Two carriers are append-only and are
+  marked, never rewritten: **G8** in this Log is retracted by this line and
+  superseded by G9, and the committed journal fragment of 2026-11-14 keeps its
+  bytes with this batch's own fragment recording the supersession
+  (`log-immutability` refuses any other shape). `P12` is this batch's phase, the
+  successor to P11 (D8). The L5 request's acceptance criteria live in the O18–O20
+  validator cells: the re-cut shape this unit carries has no
+  `## Acceptance criteria` section to freeze them into
+  (`unit-doc-contract.test.mjs` names it legacy-only) — a deviation from the
+  apply template, recorded here, not hidden.
+- **E21** — 2026-11-15, the frozen-failure corpus observed red at `bff0e11b`
+  (tests committed, implementation not yet applied): `bun test
+  packages/agentic-workflow/test/edit.test.mjs` · exit 1 · 28 pass / 3 fail —
+  the duplicate collapse, the reader-row `findRow` and the annotate-target
+  cases; the fourth case (the linkless Fixes row under another header) passed
+  at red by design — it pins the behaviour the scoped scan must keep, not a
+  reproducer.
+- **E22** — 2026-11-15, green at `cd372114`: the same suite · exit 0 · 31 pass /
+  0 fail, twice · `bun run test` in `packages/agentic-workflow` · 760 pass /
+  0 fail · the scratch toy (mktemp) proved the CLI path end-to-end —
+  `roadmap read` answered the reader's row, `rowUpsert --expect` wrote the
+  collapse with an `ok:true` receipt, a stale `--expect` refused `stale-read`
+  exit 2, and `node scripts/roadmap-settle.mjs --root <toy>` · PASS, 0
+  violations · the base-vs-head differential over identical fixtures: the
+  single-row scenario byte-identical, the duplicate scenario differing only in
+  the three fixed behaviours (read target, collapse, note target) — no output
+  nobody asked to change.
+- **E23** — 2026-11-15, the live settle through the writer, never by hand:
+  `roadmap read docs/ROADMAP.md --nn 514` → revision `5a31adac`, row
+  `in-progress · applied inline per the owner's local workflow`; `roadmap
+  rowUpsert … --expect 5a31adac` → `ok:true` (`5a31adac` → `6e8a6362`); one
+  `| 514 |` row survives — `done · [#520](https://github.com/gtrabanco/agentic-workflow/pull/520)`
+  at the reader's old position, the stale registration duplicate spliced out —
+  then `node scripts/roadmap-settle.mjs` · exit 0 · `201 unit docs · PASS`;
+  `bun scripts/docs-generate.mjs --check` → `units.md: stale`, the generator
+  rewrote exactly that one line (514 status `idea` → `done · [#520](…)`) and
+  the re-check passed with `0 stale`.
+- **G9** — 2026-11-15, `node scripts/run-root-suite.mjs` · exit 0 · 113 suites
+  PASS / 0 FAIL — the run G8 claimed at a head where it could not hold; this
+  one runs after the settle and the release intent, and is the line D10 names
+  as G8's supersession.
+- **E24** — 2026-11-15, every obligation validator re-run in the foreground,
+  each exit 0: `config-contract` 17/0 · `git-identity-guard` 22/0 ·
+  `receipt-guard` 13/0 · `git-env` 6/0 · `git-config-writes` 9/0 and the gate
+  `0 findings / verdict: PASS` · `push-identity-check` 20/0 ·
+  `identity-hook-parity` 15/0 · `prose-gate-inventory` 22/0 · the hook shell
+  suite 31 cases / 0 failures · the retirement search → 0 · O11's two cells →
+  1 and 2 · `GIT_CONFIG_COUNT` → 0 · `skill-lint` `101 file(s) · 7 check(s) ·
+  0 finding(s)` PASS · `red-first` `54 pair(s) · 0 finding(s)` PASS ·
+  `check-skill-context` `PASS … 30 skills` · `local-gate --list` names
+  `push-identity` · `docs-generate --check` PASS · `promise-coherence` PASS
+  (39 checked · 22 skipped) · `phase-lint` PASS (P1–P10) · `lint-changeset`
+  ok · `version-parity-content` PASS · `local-gate.test` 49/0 ·
+  `roadmap-settle.test` 8/0 · `unit-route.test` 64/0 standalone.
+- **E25** — 2026-11-15, blocker 3's corrections at this head: O20's count
+  search over this document → 0 matches (exit 1) and its retraction search
+  over [`external-verify.md`](external-verify.md) → matches present — while
+  the settlement gate's three report lines are the ones the receipt named
+  (`SPEC.md:437`, `SPEC.md:478`, `SPEC.md:493`); the superseding session
+  entry `.agentic-workflow/journal/20261115T110423Z-feat-514-new-feature-git-identity-signing-guard-per-project-appr-narrative-local.md`
+  records G8's retraction and the 2026-11-14 fragment's supersession — that
+  committed fragment keeps its bytes, because `log-immutability` refuses any
+  other shape (PE-017).
+- **P12** — 2026-11-15, the correction batch: ledger freeze and receipt
+  `d63dcfef` (L5/D10, the O14/O17 flip, O18–O20 planned, PE-015–PE-018, the
+  P12 path-protection record); red corpus `bff0e11b` (E21); the duplicate-safe
+  NN lookup family with its release intent
+  `.changeset/514-duplicate-safe-roadmap-upsert.md` at `cd372114` (E22 — the
+  S2 differential is what surfaced the missing intent: `version-parity-content`
+  refused the crate change until it landed); the live settle, the claim
+  corrections and this evidence in the batch's docs commit (E23–E25, G9).
+- **G10** — 2026-11-15, `node scripts/run-root-suite.mjs --jobs 1` · exit 0 ·
+  113 suites PASS / 0 FAIL at the batch's final bytes — the gate's documented
+  serial mode, after three default-mode attempts died only to the 120.0s suite
+  wall-clock killer under concurrent machine load (rotating victims, zero
+  assertion failures: `unit-route` 64/0 and `phase-lint` 162/0 green
+  standalone, and `workflow-status-sensor`'s two ~10.6s timeout-path cases are
+  allowlisted in `scripts/test-timeout-allowlist.json` since 2026-11-10).
+  G9 remains the default-mode green run.
 
 ## Next
 
-Owner's external verification of the correction batch (the head carrying the
-red corpus, the gate fix and the migration). One correction batch has been
-applied per the bound: recheck limited to the three reported blockers; a
-second batch only if the same blocker persists, then `Needs your decision`.
+Owner's external verification of the P12 correction batch: the duplicate-safe
+NN lookup family (`cd372114`), the live settle of the NN-514 row through the
+writer (E23), the claim corrections (E25) and the obligations closed on
+E21–E25/G9. The 2026-11-15 receipt's three blockers are answered; its
+NEEDS-DECISION verdict stands until the owner re-runs it.
+
+Two carried notes, recorded rather than acted on: this branch sits below
+`origin/main` (the #552 merges moved `docs/ROADMAP.md` and
+`docs/generated/units.md`, which this batch also changed — integration is the
+owner's step, and the 514 region sits close enough to the 552 rows to want a
+joint look), and the load-dependent `unit-route.test` pool flake (one in-pool
+51.0s failure against standalone 64/0 and G9's green pool run) stays an
+advisory of the receipt, untouched here.
 
 ## References
 

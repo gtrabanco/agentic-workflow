@@ -15,7 +15,7 @@ import { spawn } from "node:child_process";
 
 // ── SDK imports ──────────────────────────────────────────────────────────
 import { create, setSection, evidence_addRow, progress_logEntry, validate } from "../src/edit/UnitDoc.mjs";
-import { rowUpsert, annotate, fixRowUpsert } from "../src/edit/Roadmap.mjs";
+import { rowUpsert, annotate, fixRowUpsert, findRow } from "../src/edit/Roadmap.mjs";
 import { readShared } from "../src/writer/driver.mjs";
 import { rowAdd } from "../src/edit/Changelog.mjs";
 import { ceilingRebase } from "../src/edit/Budgets.mjs";
@@ -197,6 +197,91 @@ describe("Roadmap", () => {
     for (const line of lines.slice(headerIdx)) {
       if (line.trim() !== "") ok(line.startsWith("|"), line);
     }
+  });
+
+  // ── the duplicate-NN corpus (external-verify 2026-11-15, blocker 1, L5/O18) ──
+  // The live defect: docs/ROADMAP.md carried two `| 99 |`-shaped NN rows for
+  // one key. Every reader keys a Map by NN (last wins) while the writers
+  // matched the first, so a settle could never change what readers read and a
+  // duplicate survived every write. Added red, observed failing before the
+  // fix (D10); each case writes its own throwaway table.
+  function dupRoadmap() {
+    const path = join(tmpDir, "ROADMAP-dup.md");
+    writeFileSync(
+      path,
+      `# Roadmap
+
+| NN | slug | status | depends-on | description |
+|---|---|---|---|---|
+| 99 | \`dup-slug\` | idea | — | Summary cell |
+| 77 | \`other-unit\` | planned | — | Untouched row |
+| 99 | \`dup-slug\` | in-progress | — | Summary cell |
+
+## Fixes
+
+| Issue | Topic | Status | Notes |
+|---|---|---|---|
+| 99 | a linkless fixes row sharing the number | open | never this key |
+`,
+      "utf8",
+    );
+    return path;
+  }
+
+  it("rowUpsert collapses duplicate NN rows to the row readers keep (O18)", () => {
+    const path = dupRoadmap();
+    const receipt = rowUpsert(path, {
+      nn: "99",
+      slug: "dup-slug",
+      status: "done · [#999](https://example.test/999)",
+      dependsOn: "—",
+      description: "Summary cell",
+    });
+    strictEqual(receipt.ok, true);
+
+    const features = readFileSync(path, "utf8").split("\n## Fixes")[0];
+    const rows = features.split("\n").filter((l) => l.startsWith("| 99 |"));
+    strictEqual(rows.length, 1, `duplicate rows survived: ${JSON.stringify(rows)}`);
+    ok(rows[0].includes("done · [#999](https://example.test/999)"), rows[0]);
+    // The survivor is the row the readers kept — the one after `77`, not the
+    // stale first registration the old first-match wrote over.
+    ok(features.indexOf("| 77 |") < features.indexOf("| 99 |"), "the survivor sits where the reader read");
+    ok(features.includes("| 77 | `other-unit` | planned | — | Untouched row |"), "an unrelated row changed");
+  });
+
+  it("rowUpsert never reaches the Fixes table's linkless row (O18)", () => {
+    const path = dupRoadmap();
+    rowUpsert(path, {
+      nn: "99",
+      slug: "dup-slug",
+      status: "done",
+      dependsOn: "—",
+      description: "Summary cell",
+    });
+
+    const content = readFileSync(path, "utf8");
+    ok(
+      content.includes("| 99 | a linkless fixes row sharing the number | open | never this key |"),
+      "the collapse reached under another header",
+    );
+  });
+
+  it("findRow answers the row readers read when duplicates exist (O18)", () => {
+    const path = dupRoadmap();
+    const row = findRow(path, "99");
+    strictEqual(row.status, "in-progress", "findRow answered the stale first row");
+  });
+
+  it("annotate lands on the reader's row when duplicates exist (O18)", () => {
+    const path = dupRoadmap();
+    annotate(path, "99", "annotated the reader's row");
+
+    const features = readFileSync(path, "utf8").split("\n## Fixes")[0];
+    const rows = features.split("\n").filter((l) => l.startsWith("| 99 |"));
+    const stale = rows.find((l) => l.includes("idea"));
+    ok(stale !== undefined && !stale.includes("annotated the reader's row"), `the note went to the stale first row: ${stale}`);
+    const kept = rows.find((l) => l.includes("in-progress"));
+    ok(kept !== undefined && kept.includes("annotated the reader's row"), kept);
   });
 });
 
