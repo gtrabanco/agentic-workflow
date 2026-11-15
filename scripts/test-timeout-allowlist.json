@@ -12,6 +12,12 @@
     "measured": "~12s the shipped-history walk under the bun leg (12.4s suite), 2026-11-10"
   },
   {
+    "path": "scripts/secret-scan.test.mjs",
+    "timeoutMs": 30000,
+    "reason": "the shipped whole-tree case scans every tracked file of this repository (~2,000 paths) through the shipped CLI, and the scan is the behavior under test — it is the only case that proves the shipped allowlist entry narrows real bytes rather than a fixture, so mocking or splitting it would untest the evidence it carries. Issue #552 moved the module into the template and left the case as #487 wrote it; it costs ~1.8s idle and crossed the 10s per-test budget once under the gate's four-worker load",
+    "measured": "10083ms under a 4-worker root-suite run at 199e769d, 2026-11-14; ~1.8s standalone at the same head"
+  },
+  {
     "path": "scripts/setup-env.test.mjs",
     "timeoutMs": 20000,
     "reason": "the file's two subprocess cases spawn the real provisioner: the .engram/ byte-identity case runs `setup-env.mjs --check`, whose probes include `serena --version` (seconds on a cold interpreter), and the --doctor carrier runs the crate's 14-surface checker. Both are behaviour under test, not waste — the budget covers the two spawns when the root gate runs four suites wide. Measured: 13.4s for the whole file standalone, and the .engram case crossed the 10s per-test budget at 10.3s under gate load",

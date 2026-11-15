@@ -9,6 +9,20 @@
  * session-fragment example under `docs/`, riding a prose-only push that skips
  * every test-bearing gate step.
  *
+ * Why it lives here: issue #552's owner decision — "secret scan sin el local-gate
+ * debe estar en el template de agentic workflow" — a target project has no
+ * `scripts/local-gate.mjs`, so the scan cannot depend on it. This file is the
+ * one implementation; `secret-scan.sh` beside it is the runner a project arms as
+ * a `pre-push` hook, and the repository that ships it calls this same file from
+ * its own gate step. A second copy anywhere is the defect.
+ *
+ * Where: the scanned root — `--root <dir>`, default: the caller's git
+ * working-tree top. Deliberately not the module's own directory (a project
+ * carries this file at `.agentic-workflow/hooks/`) and not the raw working
+ * directory: `git ls-files` answers relative to it, so a run from a subdirectory
+ * would silently scan less. A `pre-push` hook already runs at the tree's top, so
+ * both doors agree.
+ *
  * What it reads: the added lines of a push range (`--base`, default: the first
  * candidate that adds lines — the upstream merge-base, then `origin/main`'s,
  * skipping one already in sync with HEAD — then the whole tracked tree when
@@ -46,10 +60,12 @@
  * payload's length, so a finding in a CI log does not republish the secret it
  * caught.
  *
- * The allowlist (`scripts/secret-scan-allowlist.json`) is the only way a benign
- * shape stops being a finding: one entry per `path` (+ `*` glob) and `rule`
- * (`*` allowed), each with a reason. An entry that matches nothing in
- * whole-tree mode is itself a finding, so the file cannot rot into silence.
+ * The allowlist is the only way a benign shape stops being a finding: one entry
+ * per `path` (+ `*` glob) and `rule` (`*` allowed), each with a reason. It is
+ * project configuration, never implementation: `--allowlist <path>` (relative to
+ * the root) or the default `.agentic-workflow/hooks/secret-scan-allowlist.json`,
+ * and an absent file allows nothing. An entry that matches nothing in whole-tree
+ * mode is itself a finding, so the file cannot rot into silence.
  *
  * Known limit (declared, not silent): a binary container — an archive, a
  * compiled artifact, a compressed chunk — is skipped by extension or by a NUL
@@ -57,7 +73,8 @@
  * largest tracked text file in this repository is the journal at 1.6 MB.
  *
  * Read-only: it writes nothing, calls no network, and holds no state between
- * runs. Its sibling suite is `scripts/secret-scan.test.mjs`.
+ * runs. Its corpus is the shipping repository's `scripts/secret-scan.test.mjs`;
+ * the template's own entry-point suite is `tests/test-secret-scan.sh` beside it.
  */
 
 import fs from "node:fs";
@@ -66,9 +83,23 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const ALLOWLIST_REL = "scripts/secret-scan-allowlist.json";
+/** The project's allowlist, resolved under the scanned root — the
+ *  `hooks/guard-allow.txt` pattern: a file the project writes, never one the
+ *  scanner carries, and an absent file allows nothing. */
+export const DEFAULT_ALLOWLIST_REL = ".agentic-workflow/hooks/secret-scan-allowlist.json";
 const SCHEMA = "secret-scan@1";
+
+/** The scanned root: the caller's git working-tree top, or `null` when the
+ *  directory is not inside a checkout. Deliberately not the module's directory
+ *  (a project carries this file at `.agentic-workflow/hooks/`) and not the raw
+ *  working directory (`git ls-files` would answer relative to it, so a run from
+ *  a subdirectory would silently scan less). */
+export function resolveRoot(directory = process.cwd()) {
+  const result = spawnSync("git", ["-C", directory, "rev-parse", "--show-toplevel"], { encoding: "utf8" });
+  if (result.status !== 0 || result.error !== undefined) return null;
+  const top = result.stdout.trim();
+  return top === "" ? null : path.resolve(top);
+}
 
 /** `git ls-files`/`git diff` over a large tree: the same 64 MiB ceiling the
  *  other push-range gates use, because spawnSync's 1 MiB default kills a range
@@ -162,11 +193,15 @@ const BINARY_EXTENSIONS = new Set([
   ".p12", ".pfx", ".jks", ".keystore", ".bin", ".dat", ".mp3", ".mp4", ".mov",
 ]);
 
-const USAGE = `usage: secret-scan [--root <dir>] [--base <rev>] [--all] [--json]
+const USAGE = `usage: secret-scan [--root <dir>] [--base <rev>] [--all] [--allowlist <path>] [--json]
 
-  --root <dir>  the tree to scan (default: this repository)
-  --base <rev>  the push range's base (default: the first candidate that adds
-                lines — the upstream merge-base, then origin/main's — else the
+  --root <dir>       the tree to scan (default: the caller's git working-tree top)
+  --base <rev>       the push range's base (default: the first candidate that adds
+                     lines — the upstream merge-base, then origin/main's — else
+                     the whole tracked tree)
+  --allowlist <path> the allowlist file, relative to the root (default:
+                     ${DEFAULT_ALLOWLIST_REL}; an
+                     absent file allows nothing)
                 whole tracked tree)
   --all         scan every tracked file at the head, not a range (exclusive
                 with --base)
@@ -439,19 +474,23 @@ export function allowlistFault(value) {
 }
 
 /** Read and validate the allowlist. A malformed file is an error, never silence. */
-export function loadAllowlist(root) {
-  const file = path.join(root, ALLOWLIST_REL);
+export function loadAllowlist(root, allowlistRel = DEFAULT_ALLOWLIST_REL) {
+  const file = path.join(root, allowlistRel);
+  const named = reportPath(allowlistRel);
   if (!fs.existsSync(file)) return { entries: [], errors: [], file: null };
   let parsed;
   try {
     parsed = JSON.parse(fs.readFileSync(file, "utf8"));
   } catch (error) {
-    return { entries: [], errors: [`${ALLOWLIST_REL} is not valid JSON: ${error.message}`], file };
+    return { entries: [], errors: [`${named} is not valid JSON: ${error.message}`], file };
   }
   const fault = allowlistFault(parsed);
-  if (fault !== null) return { entries: [], errors: [`${ALLOWLIST_REL} ${fault}`], file };
+  if (fault !== null) return { entries: [], errors: [`${named} ${fault}`], file };
   return { entries: parsed, errors: [], file };
 }
+
+/** A root-relative path as the report spells it, on every platform. */
+const reportPath = (relative) => String(relative).split(path.sep).join("/");
 
 /** `**` crosses a path separator, `*` alone does not, `?` is one character. */
 function globToRegExp(glob) {
@@ -490,7 +529,7 @@ export function applyAllowlist(findings, entries) {
 
 /** An entry that narrows nothing is a finding of its own (whole-tree mode only):
  *  it is the check that keeps the allowlist from rotting into silence. */
-export function staleEntries(entries, findings) {
+export function staleEntries(entries, findings, allowlistRel = DEFAULT_ALLOWLIST_REL) {
   const stale = [];
   for (const entry of entries) {
     const matched = findings.some(
@@ -498,7 +537,7 @@ export function staleEntries(entries, findings) {
     );
     if (!matched) {
       stale.push({
-        file: ALLOWLIST_REL,
+        file: reportPath(allowlistRel),
         line: null,
         rule: "allowlist-stale",
         detail: `${entry.path} matches no finding${entry.rule === "*" ? "" : ` of rule ${entry.rule}`}`,
@@ -530,7 +569,7 @@ export function report({ root, mode, base, head, scanned, skipped, binary, unrea
 }
 
 function parseArgs(argv) {
-  const options = { root: DEFAULT_ROOT, base: null, all: false, json: false };
+  const options = { root: null, base: null, all: false, json: false, allowlist: DEFAULT_ALLOWLIST_REL };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--root") {
@@ -543,6 +582,11 @@ function parseArgs(argv) {
       if (value === undefined) usage("--base needs a revision");
       options.base = value;
       index += 1;
+    } else if (arg === "--allowlist") {
+      const value = argv[index + 1];
+      if (value === undefined) usage("--allowlist needs a path, relative to the root");
+      options.allowlist = value;
+      index += 1;
     } else if (arg === "--all") options.all = true;
     else if (arg === "--json") options.json = true;
     else usage(`unknown argument ${arg}`);
@@ -552,15 +596,15 @@ function parseArgs(argv) {
 }
 
 /** The scan, as data: the caller decides what to print and which exit it earns. */
-export function inspect({ root = DEFAULT_ROOT, base = null, all = false } = {}) {
-  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
-    return { ok: false, reason: `${root} is not a directory` };
+export function inspect({ root = resolveRoot(), base = null, all = false, allowlist = DEFAULT_ALLOWLIST_REL } = {}) {
+  if (root === null || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+    return { ok: false, reason: `${root ?? process.cwd()} is not a directory` };
   }
   if (trackedFiles(root) === null) {
     return { ok: false, reason: `${root} is not a git checkout, so no tracked file can be read` };
   }
-  const allowlist = loadAllowlist(root);
-  if (allowlist.errors.length > 0) return { ok: false, reason: allowlist.errors.join("; ") };
+  const allowlistFile = loadAllowlist(root, allowlist);
+  if (allowlistFile.errors.length > 0) return { ok: false, reason: allowlistFile.errors.join("; ") };
 
   const range = all ? { mode: "tree", base: null, head: "HEAD" } : resolveRange({ root, explicit: base ?? undefined });
   let raw = [];
@@ -584,8 +628,8 @@ export function inspect({ root = DEFAULT_ROOT, base = null, all = false } = {}) 
     raw = tree.findings;
   }
 
-  const added = range.mode === "tree" ? staleEntries(allowlist.entries, raw) : [];
-  const narrowed = applyAllowlist(raw, allowlist.entries);
+  const added = range.mode === "tree" ? staleEntries(allowlistFile.entries, raw, allowlist) : [];
+  const narrowed = applyAllowlist(raw, allowlistFile.entries);
   return {
     ok: true,
     mode: range.mode,
@@ -595,7 +639,7 @@ export function inspect({ root = DEFAULT_ROOT, base = null, all = false } = {}) 
     skipped,
     binary,
     unreadable,
-    entries: allowlist.entries,
+    entries: allowlistFile.entries,
     findings: [...narrowed.kept, ...added],
     allowlisted: narrowed.allowlisted,
   };
@@ -603,7 +647,9 @@ export function inspect({ root = DEFAULT_ROOT, base = null, all = false } = {}) 
 
 function main(argv) {
   const options = parseArgs(argv);
-  const result = inspect({ root: options.root, base: options.base, all: options.all });
+  const root = options.root ?? resolveRoot();
+  if (root === null) usage(`${process.cwd()} is not inside a git checkout, so no tracked file can be read`);
+  const result = inspect({ root, base: options.base, all: options.all, allowlist: options.allowlist });
   if (!result.ok) usage(result.reason);
 
   const verdict = result.findings.length === 0 ? "PASS" : "FAIL";
@@ -623,7 +669,7 @@ function main(argv) {
       })}\n`,
     );
   } else {
-    process.stdout.write(`${report({ root: options.root, ...result })}\n`);
+    process.stdout.write(`${report({ root, ...result })}\n`);
   }
   return verdict === "PASS" ? 0 : 1;
 }
