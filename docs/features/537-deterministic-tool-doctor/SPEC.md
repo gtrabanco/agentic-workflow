@@ -454,7 +454,10 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
 
 ## Next
 
-G1 — the full local gate at this head, then the external verdict.
+The owner's external verify of the change. On approval: open the PR against
+`main` with `Closes #537`, settle the roadmap row to `done` with the PR link
+(`roadmap-settle.mjs` refuses the close-out otherwise), and let the journal
+aggregator on `main` consume the fragment.
 
 ## References
 
