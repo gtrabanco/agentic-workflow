@@ -403,10 +403,11 @@ list: `docs/workflow/DOMAIN_SEPARATION.md` §Legitimate exceptions.
 
 ## Next
 
-The owner's external verify over the diff, then the PR to `main` with
-`Closes #552`. Nothing in the unit is deferred: every obligation row is
-`verified` (or the one evidenced `n/a`), and the only non-unit check left is the
-owner's verdict.
+The owner's external verify over PR [#557](https://github.com/gtrabanco/agentic-workflow/pull/557)
+(`Closes #552`), then the merge. Nothing in the unit is deferred: every
+obligation row is `verified` (or the one evidenced `n/a`), the PR reports
+`MERGEABLE`/`CLEAN` against `main`, and the only check left is the owner's
+verdict.
 
 ## References
 
