@@ -22,5 +22,17 @@
     "timeoutMs": 20000,
     "reason": "the file's two subprocess cases spawn the real provisioner: the .engram/ byte-identity case runs `setup-env.mjs --check`, whose probes include `serena --version` (seconds on a cold interpreter), and the --doctor carrier runs the crate's 14-surface checker. Both are behaviour under test, not waste — the budget covers the two spawns when the root gate runs four suites wide. Measured: 13.4s for the whole file standalone, and the .engram case crossed the 10s per-test budget at 10.3s under gate load",
     "measured": "10.3s (.engram byte-identity case, gate load 4-wide) and 13.4s (whole file, standalone) under the bun leg, 2026-11-14"
+  },
+  {
+    "path": "scripts/ceremony-passive.test.mjs",
+    "timeoutMs": 30000,
+    "reason": "the suite drives the shipped ceremony CLI end to end (passive add/read/list spawn the real bin per case), so its cost is the spawn itself; under the root gate's pool with concurrent sessions on the box that wall-clock inflated past the per-test budget while the same test measures ~2.2s idle — behaviour under test, not waste",
+    "measured": "10035ms (C6 usage errors stay exit 1 with JSON on stdout) in a 6-worker root-suite run on 2026-11-15 at b8505a8f and 10058ms on a second attempt the same day at e864c710, both while two other sessions' gates ran on the same box; 2181ms idle for the same test at e864c710"
+  },
+  {
+    "path": "scripts/ceremony-unit-plan.test.mjs",
+    "timeoutMs": 30000,
+    "reason": "the suite spawns the shipped CLI per case (create/read/update/delete over a real unit doc through the plan section); the same pool-driven wall-clock inflation crossed the per-test budget while the same test measures ~2.1s idle — behaviour under test, not waste",
+    "measured": "10051ms (plan create/read/update/delete over the Tasks section (S5, S7, O8)) in the owner's 6-worker run on 2026-11-15 with concurrent sessions; 2143ms idle for the same test at e864c710"
   }
 ]

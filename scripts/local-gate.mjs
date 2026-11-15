@@ -8,9 +8,9 @@
  * this script, so a push spends no runner minutes and the command a contributor
  * runs before pushing is byte-for-byte the command CI runs.
  *
- * Concurrency: `jobs` workers (one per CPU capped at 4 by default, `--jobs`
- * overrides) pull the next step whose prerequisites — the `DEPS` graph — have
- * all passed. The graph exists because table order no longer serializes the
+ * Concurrency: `jobs` workers (one per CPU capped at 4 by default; `--jobs`
+ * overrides and `--jobs auto` sizes from the load average) pull the next step
+ * whose prerequisites — the `DEPS` graph — have all passed. The graph exists because table order no longer serializes the
  * steps: `schema-build`'s tsc writes dist/, and both the schema node-compat
  * step (its own tsc writes the same tree) and every suite that resolves dist
  * at import time depend on it. With bail — the default — the first red stops
@@ -44,6 +44,7 @@
  *   bun scripts/local-gate.mjs --push-base <rev> # skip test steps on an empty impact verdict
  *   bun scripts/local-gate.mjs --remote <name>    # the remote that is being pushed to
  *   bun scripts/local-gate.mjs --jobs 2          # cap the worker count
+ *   bun scripts/local-gate.mjs --jobs auto       # size the pool from the load average (what the push hook passes)
  *   bun scripts/local-gate.mjs --no-bail         # run everything, report all
  *   bun scripts/local-gate.mjs --dry-run         # print the plan, run nothing
  *   bun scripts/local-gate.mjs --json <path>     # also write the machine result document
@@ -365,23 +366,25 @@ export const STEPS = [
 /**
  * The prerequisite ids per step id. The gate runs its steps in a bounded worker
  * pool, so steps that would race on the same bytes are held apart by the graph
- * instead of by table order: `schema-build`'s tsc writes dist/, and both the
- * schema node-compat step (its own tsc writes the same tree) and every suite
- * that resolves dist at import time depend on it. `schema-node-compat` also
- * waits for `root-suite`: its tsc re-emits the dist the root suites read
- * through the spawned crate CLI, and a reader between two emissions imports a
- * half-written module. `pi-compat-guard` links the package's workspace
- * dependencies into its scratch project (issue #429), so it reads the schema's
- * `dist/` types too and waits for the build that emits them. Every id must name
- * a declared
+ * instead of by table order. Four steps emit `packages/agentic-workflow-schema/dist`
+ * — `schema-build`, the two crate suites (their package scripts re-run that
+ * tsc) and `schema-node-compat` — and five resolve it at import time:
+ * `root-suite` through the spawned crate CLI, the crate suites' own tests,
+ * `schema-node-compat`, `pi-compat-guard`'s linked types (issue #429) and
+ * `pi-node-compat`'s direct imports. The chain is therefore writer → reader →
+ * writer: `root-suite` first, so the common red keeps its slot, then
+ * `crate-suite-bun`, `crate-suite-node`, `schema-node-compat`, and both pi
+ * readers last (owner amendment S9 — before it only `schema-node-compat`
+ * waited for `root-suite`, so the crate `tsc` runs overlapped the reader * and each other, and a reader between two emissions imports a half-written
+ * module: observed, intermittent). Every id must name a declared
  * step, the map is closed over STEPS, and the graph is acyclic — all pinned by
  * `scripts/local-gate.test.mjs`.
  */
 export const DEPS = {
   "workspace-install": [],
   "schema-build": ["workspace-install"],
-  "crate-suite-bun": ["workspace-install", "schema-build"],
-  "crate-suite-node": ["workspace-install", "schema-build"],
+  "crate-suite-bun": ["workspace-install", "schema-build", "root-suite"],
+  "crate-suite-node": ["workspace-install", "schema-build", "crate-suite-bun"],
   "root-suite": ["workspace-install", "schema-build"],
   "version-parity-content": [],
   "docs-generated-projection": [],
@@ -393,9 +396,9 @@ export const DEPS = {
   "tmp-gc": [],
   "worktree-guard": [],
   "rigidity-review": [],
-  "schema-node-compat": ["workspace-install", "schema-build", "root-suite"],
-  "pi-node-compat": ["workspace-install"],
-  "pi-compat-guard": ["schema-build"],
+  "schema-node-compat": ["workspace-install", "schema-build", "root-suite", "crate-suite-node"],
+  "pi-node-compat": ["workspace-install", "schema-node-compat"],
+  "pi-compat-guard": ["schema-build", "schema-node-compat"],
   "dependency-pin-gate": [],
   "dependency-advisories": [],
 };
@@ -405,6 +408,21 @@ export const DEPS = {
  * adds memory pressure on a laptop. */
 export function defaultJobs() {
   return Math.min(4, Math.max(1, os.availableParallelism?.() ?? os.cpus().length));
+}
+
+/** The load-aware worker count behind `--jobs auto` (owner amendment S9): an
+ * idle machine keeps the default, half the cores busy halves the pool, a
+ * saturated box runs one worker — never below one, never above the cap.
+ * Pure in its inputs so the policy is tested against a fixture load instead
+ * of the machine's own. */
+export function autoJobs(
+  load = os.loadavg()[0],
+  cpus = Math.max(1, os.availableParallelism?.() ?? os.cpus().length),
+  cap = defaultJobs(),
+) {
+  if (load >= cpus) return 1;
+  if (load >= cpus / 2) return Math.min(2, cap);
+  return Math.max(1, Math.min(cap, cpus));
 }
 
 /** The per-step output tail the machine result keeps: enough for a bounded
@@ -582,7 +600,7 @@ async function runStepAsync(step, root, onSpawnOutput, { pushBase = null, remote
 
 const USAGE = [
   "usage: bun scripts/local-gate.mjs [--list] [--only <id,id>] [--skip-network]",
-  "                                    [--push-base <rev>] [--no-bail] [--jobs <n>] [--dry-run]",
+  "                                    [--push-base <rev>] [--no-bail] [--jobs <n|auto>] [--dry-run]",
   "                                    [--json <path>]",
   "                                    [--install-hook [--force]] [--repo <dir>]",
   "       (node fallback, same argv)",
@@ -636,10 +654,15 @@ function parseArgs(argv) {
       options.bail = false;
     } else if (arg === "--jobs") {
       const value = argv[index + 1];
-      if (value === undefined || !/^\d+$/.test(value) || Number(value) < 1) {
-        usage(`--jobs needs a positive integer${value === undefined ? "" : `, got ${JSON.stringify(value)}`}`);
+      if (value === "auto") {
+        // The push hook's sizing policy (owner amendment S9): load-aware, so
+        // a shared machine never gets claimed whole by one gate.
+        options.jobs = autoJobs();
+      } else if (value === undefined || !/^\d+$/.test(value) || Number(value) < 1) {
+        usage(`--jobs needs a positive integer or \"auto\"${value === undefined ? "" : `, got ${JSON.stringify(value)}`}`);
+      } else {
+        options.jobs = Number(value);
       }
-      options.jobs = Number(value);
       index += 1;
     } else if (arg === "--json") {
       const value = argv[index + 1];
@@ -770,6 +793,12 @@ if [ -n "\$remote" ] && git -C "\$root" remote get-url "\$remote" >/dev/null 2>&
   remote_flag="--remote \$remote"
 fi
 
+# Concurrency for the push: the offline subset still spawns suites, and a push
+# usually runs while other sessions work on the same machine — the per-test
+# budget is wall-clock. The gate sizes the pool from the load average (auto);
+# AGENTIC_WORKFLOW_GATE_JOBS overrides it per machine (owner amendment S9).
+jobs_flag="--jobs \${AGENTIC_WORKFLOW_GATE_JOBS:-auto}"
+
 # One base per push: the remote tip of the single non-delete ref being pushed.
 # A new branch (zero remote sha) falls back to the merge-base with the remote
 # default branch; several refs, or anything unresolvable, leaves base empty and
@@ -793,15 +822,15 @@ fi
 
 if command -v bun >/dev/null 2>&1; then
   if [ -n "\$base" ]; then
-    exec bun "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag --push-base "\$base"
+    exec bun "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag \$jobs_flag --push-base "\$base"
   fi
-  exec bun "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag
+  exec bun "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag \$jobs_flag
 fi
 if command -v node >/dev/null 2>&1; then
   if [ -n "\$base" ]; then
-    exec node "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag --push-base "\$base"
+    exec node "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag \$jobs_flag --push-base "\$base"
   fi
-  exec node "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag
+  exec node "\$root/scripts/local-gate.mjs" --skip-network \$remote_flag \$jobs_flag
 fi
 
 # Neither runtime is installed: the gate cannot run, so the push is refused with

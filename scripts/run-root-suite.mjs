@@ -298,12 +298,18 @@ function spawnReal(file, bail, signal, bounds, testTimeoutMs) {
     child.on("close", (status) => {
       clearTimeout(wallClock);
       clearInterval(watchdog);
-      resolve({ status: verdict ? 1 : status ?? 1, output: Buffer.concat(chunks), ms: Date.now() - started, verdict });
+      // A SIGKILL from the bail abort leaves status null: that suite is
+      // collateral of the first red, not a second failure (owner amendment
+      // S9). Name it KILLED so the tally never shows an all-green suite as
+      // FAIL — the exit status stays the first red's own either way.
+      const bailKilled = status === null && verdict === null && signal?.aborted === true;
+      resolve({ status: verdict ? 1 : status ?? 1, output: Buffer.concat(chunks), ms: Date.now() - started, verdict: verdict ?? (bailKilled ? "BAIL KILL" : null) });
     });
     child.on("error", () => {
       clearTimeout(wallClock);
       clearInterval(watchdog);
-      resolve({ status: 1, output: Buffer.concat(chunks), ms: Date.now() - started, verdict });
+      const bailKilled = verdict === null && signal?.aborted === true;
+      resolve({ status: 1, output: Buffer.concat(chunks), ms: Date.now() - started, verdict: verdict ?? (bailKilled ? "BAIL KILL" : null) });
     });
   });
 }
@@ -340,6 +346,12 @@ async function main(argv) {
     onResult: (file, result) => {
       if ((result.status ?? 1) === 0) {
         process.stdout.write(`PASS ${file} (${seconds(result.ms)})\n`);
+        return;
+      }
+      if (result.verdict === "BAIL KILL") {
+        // The partial output of a killed suite is noise beside the first red
+        // that killed it: the line is the receipt, the dump is not (S9).
+        process.stdout.write(`KILLED ${file} (${seconds(result.ms)}) — in flight when the first red stopped the dispatch (bail)\n`);
         return;
       }
       process.stdout.write(`FAIL ${file} (${seconds(result.ms)})${result.verdict ? ` — ${result.verdict}` : ""}\n`);

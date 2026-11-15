@@ -267,7 +267,7 @@ also spends the push range before running it: it passes the remote tip to the
 gate as `--push-base`, and a `test-impact` verdict of `empty` (no executable
 path changed — prose and assets only) skips the test-bearing steps; a `targeted`
 verdict, a refusal or an absent script runs the full gate, never a silent skip.
-A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook`.
+A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook`; the installed hook passes `--jobs auto` (load-sized, overridable with `AGENTIC_WORKFLOW_GATE_JOBS`), so a push never claims the whole box while other sessions work.
 The shared-document classes (issue #498) arm the same way and are documented here
 because the arming is the same per-checkout limitation: `.gitattributes` names
 `docs/ROADMAP.md merge=agentic-shared-roadmap`,
@@ -445,6 +445,8 @@ findings-carrier | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md 
 findings-severity-ladder | skills/review-implementation/references/CLASSIFY.md | block:finding-severity-ladder@1 | finding-severity-ladder | no
 findings-impact | skills/review-implementation/references/CLASSIFY.md | block:finding-impact@1 | finding-impact | no
 pass-name-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PASS_NAMES | pass-name | no
+triage-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TRIAGE_VERDICTS | triage-verdict | no
+triage-criteria-provenance-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TRIAGE_CRITERIA_PROVENANCE | triage-criteria-provenance | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
 feedback-tiers | packages/agentic-workflow/src/feedback/index.mjs | schema-export:FEEDBACK_TIERS | feedback-tier | no
 risk-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_KINDS | risk-tier | yes

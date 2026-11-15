@@ -45,6 +45,28 @@ after `/fold-findings` leaves rows unresolved.
    user to continue manually with `/execute-phase <unit> P<n>` (or the fix
    equivalent), then re-run `/review-change` on the resulting HEAD (the manual path).
 
+### The fold→repair route switch (conditional — off today)
+
+The first bullet above names `/fold-findings` because that is the route the tree
+actually ships. The direction's end state replaces it with a bounded repair
+invocation — `execute-phase --repair <receipt>` — and this skill switches to it
+**only when the fold-findings retirement triggers are green**:
+
+- the direction's three review-economics inputs are in place: the computed
+  correction budget (#362, absorbed by #437), slice-based review, and machine
+  gate receipts (#409);
+- the retirement is **measured**, per the direction's measured-acceptance rule —
+  never declared on the strength of an impression;
+- **the winning command exists.** `execute-phase --repair` must be shipped and
+  reachable before any hand-off prints it. Today it is not
+  (`rg -c -- '--repair' skills/execute-phase/SKILL.md` → 0), which is the
+  fail-closed gate this section obeys.
+
+Until all three hold, `/fold-findings` is the only route this skill may emit.
+Switching earlier reopens the unbounded review→fold loop the correction bound was
+built to close, so the switch is a migration commit paired with the retirement —
+never a drive-by prose edit.
+
 Return exactly one block per finding:
 
 ```text
