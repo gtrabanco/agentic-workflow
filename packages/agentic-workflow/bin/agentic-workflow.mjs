@@ -56,6 +56,16 @@
  * the `verify@1` receipt; a violation → exit 2 and
  * `VERIFY REFUSAL — <violations>` on stderr.
  *
+ * `doctor` / `setup` (issue #537) is the deterministic tool doctor and its
+ * consent-gated wizard: `doctor` prints the read-only `doctor@1` envelope — one
+ * row per documented surface (the crate README's `tool-inventory@1` block is the
+ * single declaration) with real evidence, the derived move, the tally and the
+ * verdict — and exits 0 when no required surface is broken. `setup` applies the
+ * rows whose repair is the project's own installer, only after an explicit yes
+ * (`--yes <ids>`, or the terminal question), records the consent once and
+ * re-reads the same envelope, so a repaired row leaves the plan and a second run
+ * is a no-op. It never runs a package manager: an install route is text.
+ *
  * `resolve-passes` (issue #201) is the spawned-pass model resolution: it reads
  * the two routing config files (global, then project — the project file wins
  * per entry and per key) and prints the `resolve-passes@1` JSON table for
@@ -185,6 +195,12 @@ function flagValue(args, flag) {
  *  own vocabulary, e.g. `PASSES REFUSAL`). */
 function sensorRefuse(prefix, reason) {
   process.stderr.write(`${prefix} REFUSAL — ${reason}\n`);
+  process.exit(2);
+}
+
+/** The doctor family's refusal (issue #537): exit 2, stdout empty, nothing written. */
+function doctorRefuse(reason) {
+  process.stderr.write(`DOCTOR REFUSAL — ${reason}\n`);
   process.exit(2);
 }
 
@@ -567,7 +583,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -893,6 +909,84 @@ switch (command) {
       console.log(`doc ${envelope.command}: ${envelope.results.length} result(s)`);
     }
     feedback.done(docSummary(envelope));
+    break;
+  }
+
+  // ── doctor / setup — the tool doctor and its consent-gated wizard (issue #537) ──
+  case "doctor":
+  case "setup": {
+    // Loaded on demand: this family is two modules heavier than every other
+    // command, and a suite that spawns the bin dozens of times pays the import
+    // cost per spawn (measured: +60ms each). The lazy load keeps every other
+    // subcommand's startup exactly what it was.
+    const { DoctorRefusal, renderDoctor, runDoctor } = await import("../src/doctor/doctor.mjs");
+    const { planSetup, realSetupOps, renderSetup, runSetup } = await import("../src/doctor/wizard.mjs");
+    const flags = { root: process.cwd(), json: false, yes: new Set(), dryRun: false };
+    for (let i = 0; i < restArgs.length; i++) {
+      const arg = restArgs[i];
+      if (arg === "--json") {
+        flags.json = true;
+        continue;
+      }
+      if (arg === "--dry-run") {
+        flags.dryRun = true;
+        continue;
+      }
+      if (arg === "--root") {
+        if (i + 1 >= restArgs.length) doctorRefuse("--root requires a value");
+        flags.root = resolve(restArgs[++i]);
+        continue;
+      }
+      if (arg === "--yes") {
+        if (i + 1 >= restArgs.length) doctorRefuse("--yes requires one or more check ids");
+        for (const id of String(restArgs[++i]).split(",").map((value) => value.trim()).filter(Boolean)) flags.yes.add(id);
+        continue;
+      }
+      doctorRefuse(`unknown argument "${arg}" (usage: doctor [--json] [--root <dir>] | setup [--yes <ids>] [--dry-run] [--json] [--root <dir>])`);
+    }
+    const readEnvelope = async () => {
+      try {
+        return await runDoctor({ root: flags.root });
+      } catch (error) {
+        if (error instanceof DoctorRefusal) doctorRefuse(error.message);
+        throw error;
+      }
+    };
+    const envelope = await readEnvelope();
+    if (command === "doctor") {
+      process.stdout.write(flags.json ? `${JSON.stringify(envelope, null, 2)}\n` : `${renderDoctor(envelope)}\n`);
+      feedback.done(`${envelope.rows.length} surfaces · ${envelope.verdict} · ${envelope.summary.advisories} advisories`);
+      process.exit(envelope.exitCode);
+    }
+    // The wizard asks only where a write or a real decision exists: an
+    // interactive terminal is asked per actionable row, a scripted run needs
+    // --yes, and neither can write without an explicit answer.
+    const consent = new Set(flags.yes);
+    if (consent.size === 0 && process.stdin.isTTY && process.stdout.isTTY) {
+      const plan = planSetup(envelope);
+      for (const row of plan.actions) {
+        const { createInterface } = await import("node:readline/promises");
+        const prompt = createInterface({ input: process.stdin, output: process.stdout });
+        const answer = await prompt.question(`Run \`${row.action.display}\` for ${row.id}? [y/N] `);
+        prompt.close();
+        if (/^y(?:es)?$/iu.test(answer.trim())) consent.add(row.id);
+      }
+    }
+    let receipt;
+    try {
+      receipt = await runSetup({
+        envelope,
+        consent,
+        dryRun: flags.dryRun,
+        ops: realSetupOps({ root: flags.root, doctor: readEnvelope }),
+      });
+    } catch (error) {
+      if (error instanceof DoctorRefusal) doctorRefuse(error.message);
+      throw error;
+    }
+    process.stdout.write(flags.json ? `${JSON.stringify(receipt, null, 2)}\n` : `${renderSetup(receipt)}\n`);
+    feedback.done(`${receipt.applied.length} applied · ${receipt.declined.length} pending`);
+    process.exit(receipt.failed.length > 0 ? 1 : 0);
     break;
   }
 

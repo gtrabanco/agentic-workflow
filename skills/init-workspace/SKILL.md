@@ -85,6 +85,13 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
   `Cargo.toml`, `Gemfile`, …) to *propose* gate commands and naming conventions.
 - Note the git state (is it a repo, what's the default branch, and the **remote
   URL → forge**: github.com → GitHub/`gh`, gitlab → GitLab/`glab`, else ask).
+- Read the **tool evidence once**: `bunx @gtrabanco/agentic-workflow@<pin>
+  doctor --json` prints one row per documented tool with its real evidence and
+  a move — take the rows as the tool facts instead of re-deriving a path, a
+  version or a hook by hand. An `instruct-only` row is the exact command to
+  print, an `ask-consent-write` row is the project's own installer and still
+  needs this skill's consent, and a `residual` row names what another owner
+  decides. The row contract is the crate README's `tool-inventory@1` block.
 
 
 ## Progressive loading — bootstrap or upgrade, never both

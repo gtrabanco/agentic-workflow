@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -61,12 +61,108 @@ writing anything**.
 | `ledger-provenance <ledger-or-unit-doc> [--json] [--check] [--annotate]` | The **fold-queue recount** (feature 91): reads a `## Findings` table (or a legacy `review-findings.md`) and proves each `folded: yes` row cites a commit that is reachable and whose subject claims that row. `--check` runs the same walk read-only and exits 1 on any row needing a repair, naming the rows by cause; `--annotate` is the one writer. Exit 0 clean · 1 repair needed · 2 usage |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | The **unit router** (feature 91, moved out of the repository's `scripts/`): reads one unit doc's own ledger and prints the `UNIT ROUTE —` block — `status`, `route`, `next`, the open row ids, the bounded read set, `review-cycles`, `ledger-size` and a `fingerprint` — or, with `--triage <unit> --json`, the closed nine-step plan block derived from the bundled catalog (`src/runner/catalog.json`). Read-only, offline, dependency-free beyond the pinned schema package; exit 0 answered · 1 usage · 2 triage refusal. The project it senses is the worktree enclosing the caller's working directory, so it runs from any sub-directory of the project |
 
+| `doctor [--json] [--root <dir>]` | The **tool doctor** (issue #537): one read-only check per documented tool surface, printing the fixed `doctor@1` envelope — the host, one row per surface with its real evidence (resolved path, version, version pair, health probe, config state), the derived move, and the summary/verdict. Exit 0 when no required surface is broken · 1 when one is. A missing optional tool is an advisory that never fails the run. `--root` re-points the project it observes. It writes nothing, and it never runs a package manager: an install is text an operator pastes. The documented inventory it validates is `tool-inventory@1` below, and a documented row without a probe (or a probe without a documented row) is a `DOCTOR REFUSAL`, exit 2 |
+| `setup [--yes <ids>] [--dry-run] [--json] [--root <dir>]` | The **consent-gated setup wizard** (issue #537) over the same envelope. Each row maps to one move: `report-only` (healthy), `ask-consent-write` (the project's own installer repairs it), `instruct-only` (the exact operator command is printed) and `residual` (another owner decides). Nothing is written without an explicit yes — a non-interactive run without `--yes` prints the plan, writes nothing and says so; each applied action is recorded once in `.agentic-workflow/provision-log.jsonl`, then the same checker re-reads the envelope so a repaired row leaves the plan. The second run is a no-op. Exit 0 clean · 1 an applied action failed · 2 usage |
+
 Two sibling binaries ship in the same package and are invoked by the skills:
 
 | Binary | What it does |
 |---|---|
 | `bin/path-guard.mjs` | Tier 1 path-protection gate (feature 60): `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`, read-only and offline, printing `PATH-GUARD <pass\|fail> — <code>` · exit 0 pass, 1 fail, 2 usage |
 | `bin/turn-contract.mjs` | Verifies the canonical turn contract's mechanical boxes: prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>`; `--finished` also requires the pushed branch with its open pull request |
+
+## `doctor` — the tool doctor and the documented inventory (issue #537)
+
+The third-party tools the workflow depends on used to be discovered by prose:
+`init-workspace` narrated a per-tool detection step, `scripts/setup-env.mjs`
+hardcoded each provisioning route, and several setup-state surfaces degraded
+silently months later (an un-armed shared-merge driver, a missing `pre-push`
+hook, a memory server still serving from a binary that had been replaced).
+`doctor` is the deterministic half: one read-only check per documented surface,
+its real evidence, and a derived move.
+
+The delimitation rule decides what a generic checker may claim: **generic** is
+anything observable without a live agent session (files, binaries, HTTP
+endpoints, `git config`, hooks); **pi-specific** is session semantics (memory
+store ownership, caller binding) and maintainer-curated pairing knowledge, which
+the row reports with a pointer and never decides; **instruct-only** is what
+belongs to the operator's shell or the host's package manager, which the doctor
+prints and never runs. `not-applicable` is the fourth answer — a project that
+does not declare a surface has no defect there.
+
+### The envelope
+
+```text
+doctor-envelope@1
+contract   "doctor@1"
+host       platform · arch · node · root
+inventory  source (packages/agentic-workflow/README.md) · rows
+row        id · requirement (required|optional) · route (INSTALL_ROUTES) ·
+           status (DOCTOR_CHECK_STATUSES) · move (WIZARD_MOVES) ·
+           evidence{} · advisory|null · instruction|null · action|null
+summary    ok · missing · mismatch · unarmed · unreachable · n/a · advisories
+verdict    pass | attention
+exitCode   0 no required surface broken · 1 otherwise
+```
+
+The human block is fixed: `DOCTOR — tool doctor (doctor@1) · <n> surfaces`, one
+`<LABEL>  <id>  <detail>` line per row (`ok`, `MISS`, `MISMATCH`, `UNARMED`,
+`UNREACHABLE`, `N/A`), then the `SUMMARY —` tally and the `VERDICT:` line. The
+move is derived, never declared a second time: `ok`/`not-applicable` is
+`report-only`, a row carrying an `action` is `ask-consent-write`, a row carrying
+an `instruction` is `instruct-only`, and a row with neither is `residual`.
+
+### The documented inventory
+
+This block is the **single declaration** of the tools: the code owns only the
+probes, keyed by the same ids. `doctor` reads it and refuses when the document
+and the probes disagree in either direction — a documented tool nobody checks is
+the defect this block exists to prevent. Requirement, detection and install route are
+documented facts; the move is behaviour and stays in code.
+
+```text
+tool-inventory@1
+id | what | why | requirement | detected-by | alternative | install-route
+node | the JavaScript runtime the CLI runs on | everything here is JavaScript; the crate declares an engine floor | required | `node --version` against `engines.node` (`>=24`) | none — the CLI is JavaScript | instruct-only
+bun | the preferred package manager and script runner | faster installs and test runs; the root suite runs under either runtime | optional | `bun --version` against the committed `.bun-version` pin | node, the guaranteed fallback | binary
+rg | ripgrep, the first search tool | the workflow searches with rg before grep and must never assume it is installed | optional | `rg --version` on PATH | `grep`, the documented fallback | binary
+git | the version-control CLI | every unit commits, and a commit needs an author identity | required | `git --version`, then `git config --get user.name` and `user.email` | none | instruct-only
+gh | the forge CLI | issues, pull requests and labels are read and written through it | optional | `gh --version`, then `gh auth status` | the forge's web interface, by hand | instruct-only
+serena | the language-server manager | symbol-level reads and diagnostics for the executor | optional | `serena --version`, the `language_servers` list in `.serena/project.yml`, `.serena/project.local.yml` | the editor's own LSP, read by hand | pip-uv
+engram-binary | the core memory binary | the memory substrate's server is this binary | optional | `ENGRAM_BIN` first, then `engram --version` on PATH | no memory substrate; `memory probe` reports the degradation | brew
+engram-server | the running memory server | a server started from an older binary keeps serving after an upgrade — the 2026-11-13 incident | optional | `GET $ENGRAM_URL/health` (default `http://127.0.0.1:7437`) version compared with the binary's | point `ENGRAM_URL` at a server you manage | instruct-only
+gentle-engram | the Pi companion package | the memory tools reach Engram through it, over the server, with no MCP registration | optional | the `packages` pin in Pi's `settings.json` plus the installed package version, against the curated pair | none — it is the MCP-free path | npm
+pi | the agent host | the workflow's skills and commands run inside it | optional | `pi --version` and the agent directory | another supported adapter | instruct-only
+agent-adapters | the detected agent adapters' config | the scaffold installs per-adapter safety config; the doctor only observes it | optional | a read-only scan of each adapter's MCP or settings file | none — an undetected adapter is scaffolded by `init-workspace` | instruct-only
+git-hooks | the project's git hooks | the local gate's offline subset runs before a push | optional | `git rev-parse --git-path hooks` and the files there | run the gate by hand before pushing | instruct-only
+merge-drivers | the shared-document merge drivers | `.gitattributes` declares semantic merges, and an un-armed driver silently falls back to a textual merge | optional | `merge.<driver>.driver` for every driver `.gitattributes` names | text merges, resolved by hand | instruct-only
+skills-cli | the skills CLI manifest | an authoring tree publishes and lists its skills through it | optional | `skills.sh.json` at the project root | authoring-only; a consuming project needs none | instruct-only
+```
+
+The routes are the published `INSTALL_ROUTES`: a package manager (`npm`, `bun`,
+`pip-uv`, `brew`), the project's own `binary` download, or `instruct-only`. No
+row of this table is a promise that the CLI installs anything.
+
+## `setup` — the consent-gated wizard (issue #537)
+
+`setup` is the mutating half, and it is deliberately small: it asks only where a
+write or a real decision exists. Every row keeps its move, and the four moves
+are exhaustive — there is no fifth path a repair can take.
+
+- **`ask-consent-write`** — the repair is the *project's own* installer, never a
+  second implementation of it: `scripts/shared-doc-merge.mjs --install` for the
+  shared-document drivers, `scripts/docs-generated-merge.mjs --install` for the
+  projection, `scripts/local-gate.mjs --install-hook` for the pre-push hook. The
+  wizard runs it only after an explicit yes (`--yes <id>` or the terminal
+  question), records the consent once in `.agentic-workflow/provision-log.jsonl`,
+  and then re-reads the envelope with the same checker — a repaired row leaves
+  the plan, so a second run is a no-op.
+- **`instruct-only`** — the exact command, printed. A package manager is never
+  run for the operator.
+- **`residual`** — the doctor names it and stops: a curated companion↔core pair
+  is a maintainer decision, and a session-level fact (memory store ownership)
+  belongs to the pi extension.
+- **`report-only`** — nothing to do; the row is printed for the record.
 
 ## CLI feedback — the three tiers (issue #424)
 
