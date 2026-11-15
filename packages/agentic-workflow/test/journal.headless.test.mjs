@@ -429,3 +429,86 @@ test("S17 the adapter refuses an incomplete GitHub context by name", (t) => {
   assert.equal(run.status, 2);
   assert.match(run.stderr, /GITHUB_RUN_ID/u);
 });
+
+// ── the re-run promise survives aggregation (S13, D6 — verify blocker B1) ──
+
+test("S13 a re-run after aggregation is a no-op the journal already carries", (t) => {
+  const root = makeRepo(t, { journal: true });
+  const first = writeHeadlessJournal({ root, declaration: DECLARATION, context: CONTEXT, timestamp: TIMESTAMP });
+  assert.equal(first.status, "written");
+
+  const consumed = aggregateJournal({ root });
+  assert.deepEqual(consumed.appended, [first.name], "the fragment is consumed before the re-run");
+  const logPath = path.join(root, "docs", "LOGS.md");
+  const logBefore = fs.readFileSync(logPath, "utf8");
+
+  const receipt = writeHeadlessJournal({ root, declaration: DECLARATION, context: CONTEXT, timestamp: TIMESTAMP });
+  assert.equal(
+    receipt.status,
+    "already-present",
+    "the run's entry already lives in the journal — a re-run never duplicates it",
+  );
+  assert.equal(receipt.path, logPath, "the receipt names where the entry lives now");
+  assert.equal(receipt.bytes, Buffer.byteLength(logBefore, "utf8"), "bytes describes the file the path names");
+  assert.equal(parseFragmentName(receipt.name).sessionId, "gha-42", "the reconstructed identity round-trips");
+  assert.deepEqual(carrierNames(root), [], "nothing lands in the carrier");
+  assert.equal(fs.readFileSync(logPath, "utf8"), logBefore, "detection is read-only — the log's bytes never move");
+
+  const again = aggregateJournal({ root });
+  assert.deepEqual(again.appended, [], "a later aggregation has nothing left to duplicate");
+  const headings = fs
+    .readFileSync(logPath, "utf8")
+    .split("\n")
+    .filter((line) => line.startsWith("## ") && line.includes("headless ci run 42"));
+  assert.equal(headings.length, 1, "exactly one journal entry for the run");
+});
+
+// ── the runner chain honours both engine floors (S13, D8 — verify advisory A2) ──
+
+/**
+ * A private PATH home of fake executables: every runner records its argv, the
+ * two launchers print a writer receipt, and `node` records if it is ever
+ * spawned directly (the adapter must only probe it, never run it).
+ */
+function fakeRunner(t) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "aw471-run-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const receipt = JSON.stringify({ ok: true, name: "m.md", path: path.join(dir, "m.md"), status: "written" });
+  const argvScript = (name) => `printf '%s ' "$@" > "${dir}/${name}-argv.txt"\nprintf '%s\\n' '${receipt}'`;
+  const write = (name, body) => fs.writeFileSync(path.join(dir, name), `#!/bin/sh\n${body}\n`, { mode: 0o755 });
+  write("bunx", argvScript("bunx"));
+  write("npx", argvScript("npx"));
+  write("node", argvScript("node"));
+  const argvOf = (name) => {
+    const file = path.join(dir, `${name}-argv.txt`);
+    return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
+  };
+  return { dir, write, argvOf };
+}
+
+const crateVersion = () => JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8")).version;
+
+test("S13 the adapter resolves an eligible bun through bunx", (t) => {
+  const root = makeRepo(t);
+  const fake = fakeRunner(t);
+  fake.write("bun", 'echo "1.4.5"');
+  const run = runAdapter(root, adapterEnv(root, { AGENTIC_WORKFLOW_RUNNER: "", PATH: fake.dir }));
+  assert.equal(run.status, 0, run.stderr);
+  const argv = fake.argvOf("bunx");
+  assert.ok(argv !== null && argv.includes(`@gtrabanco/agentic-workflow@${crateVersion()}`), "bunx launches the crate at its own version");
+  assert.ok(argv.includes("journal headless"), "bunx runs the headless operation");
+  assert.equal(fake.argvOf("npx"), null, "npx stays the fallback, never a second launch");
+  assert.equal(fake.argvOf("node"), null, "the adapter probes node, never spawns it");
+});
+
+test("S13 the adapter never runs the crate on a bun below the engine floor", (t) => {
+  const root = makeRepo(t);
+  const fake = fakeRunner(t);
+  fake.write("bun", 'echo "1.3.0"');
+  const run = runAdapter(root, adapterEnv(root, { AGENTIC_WORKFLOW_RUNNER: "", PATH: fake.dir }));
+  assert.equal(run.status, 0, run.stderr);
+  const argv = fake.argvOf("npx");
+  assert.ok(argv !== null && argv.includes(`--yes @gtrabanco/agentic-workflow@${crateVersion()}`), "the old bun falls through to npx at the crate version");
+  assert.equal(fake.argvOf("bunx"), null, "bunx never launches under an engine below the manifest's floor");
+  assert.equal(fake.argvOf("node"), null, "the adapter probes node, never spawns it");
+});
