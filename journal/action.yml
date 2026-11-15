@@ -1,0 +1,70 @@
+name: Headless journal fragment
+description: >-
+  Write one deterministic journal fragment for a headless agent run (issue #471):
+  the run's declaration goes in, one conforming fragment comes out. No model in
+  the write path, no token, no forge call — the action's only effect is one file
+  under the project's fragment carrier, which the project's own aggregation step
+  later appends to its journal.
+author: gtrabanco
+branding:
+  icon: book-open
+  color: blue
+
+# The project must have opted into the fragment carrier (`.agentic-workflow/
+# journal/`); an absent carrier is a refusal, never a silent install. The
+# calling job declares its own permissions — a composite action has none of its
+# own — and `contents: write` is the only one this action's documentation asks
+# for, because pushing the fragment is the calling job's step, not this one's.
+inputs:
+  summary:
+    description: "What the run did. Required unless `block` carries a rendered entry block."
+    required: false
+  decisions:
+    description: "The decisions the run took, when it took any."
+    required: false
+  next:
+    description: "The next step the next session should pick up."
+    required: false
+  issue:
+    description: "The issue or unit number the run worked on, with or without a leading `#`."
+    required: false
+  files:
+    description: "The files touched, comma-separated. Defaults to the paths the run's git range touched."
+    required: false
+  base:
+    description: "The revision the run's git facts are read against. Defaults to `origin/main`, then `main`."
+    required: false
+  block:
+    description: "Path to one already-rendered entry block (a file in the workspace), instead of the prose fields."
+    required: false
+  root:
+    description: "The project root the carrier and the git facts are read from."
+    required: false
+    default: "."
+
+outputs:
+  fragment:
+    description: "Absolute path of the fragment this run wrote, or of the one it already had — once the aggregator consumed it, the journal file that carries the entry."
+    value: ${{ steps.write.outputs.fragment }}
+  name:
+    description: "The fragment's name — its identity in the carrier."
+    value: ${{ steps.write.outputs.name }}
+  status:
+    description: "`written` for a new fragment, `already-present` when this run already had one."
+    value: ${{ steps.write.outputs.status }}
+
+runs:
+  using: composite
+  steps:
+    - id: write
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/headless.mjs"
+      env:
+        INPUT_SUMMARY: ${{ inputs.summary }}
+        INPUT_DECISIONS: ${{ inputs.decisions }}
+        INPUT_NEXT: ${{ inputs.next }}
+        INPUT_ISSUE: ${{ inputs.issue }}
+        INPUT_FILES: ${{ inputs.files }}
+        INPUT_BASE: ${{ inputs.base }}
+        INPUT_BLOCK: ${{ inputs.block }}
+        INPUT_ROOT: ${{ inputs.root }}
