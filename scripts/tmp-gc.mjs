@@ -141,7 +141,7 @@ export function defaultRoots() {
 
 /** Sweep one root: the matching entries older than `maxAgeMs`. With `dry`
  *  the candidates are reported and nothing is written. */
-export function sweep(root, prefixes, maxAgeMs, dry) {
+export function sweep(root, prefixes, maxAgeMs, dry, statSync = fs.lstatSync) {
   const removed = [];
   const errors = [];
   let candidates = 0;
@@ -158,8 +158,14 @@ export function sweep(root, prefixes, maxAgeMs, dry) {
     const full = path.join(root, dirent.name);
     let mtimeMs;
     try {
-      mtimeMs = fs.lstatSync(full).mtimeMs;
+      mtimeMs = statSync(full).mtimeMs;
     } catch (error) {
+      // A candidate a peer sweep already removed between readdir and stat is
+      // this sweep's own goal reached by someone else — never its failure
+      // (owner amendment S9: the 2026-11-15 push red had candidates == removed
+      // and still exited 1, because only this stat could produce the error;
+      // the rm below already runs with force:true, which ignores ENOENT).
+      if (error.code === "ENOENT") continue;
       errors.push({ full, detail: error.message });
       continue;
     }
