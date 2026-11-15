@@ -381,7 +381,9 @@ freeze (D1).
 
 ## Next
 
-Owner verdict on the branch diff; then `Closes #441` on the PR.
+PR [#559](https://github.com/gtrabanco/agentic-workflow/pull/559) is open against
+`main` and awaits the owner's merge — the owner is this workflow's external
+verifier, so the merge (not the gate) is what closes #441.
 
 ## References
 
