@@ -21,6 +21,14 @@
  *      a command that does not exist yet;
  *   9. the batch flow is unchanged, and neither new verdict invents a label.
  *
+ * And, since the 2026-11-15 `EXTERNAL VERIFY` receipt
+ * (`docs/fix/441-triage-issue-rescope/external-verify.md`), the reproducers of
+ * the surfaces that kept the pre-rescope truth after the change landed: the
+ * sibling mentions of the verdict set (B1-B4), the unit doc's two claims
+ * (B5-B6), the vocabulary comment's citation (B7), and the tutorial-index and
+ * line-citation advisories this batch repairs (A1/A2/A4). One assertion per
+ * reproducer; the section only ever adds assertions.
+ *
  * The suite reads the machine from the built schema package (the same runtime
  * `vocabulary-parity` and `normative-drift` read) and the prose from the skill's
  * own files. It is deliberately assertion-per-rule: a rule that regresses names
@@ -201,4 +209,105 @@ test("#441 neither new verdict invents a label", () => {
   for (const invented of ["`one-shot` label", "`remove` label"]) {
     assert.ok(!declared.includes(invented), `a verdict naming a label that does not exist: ${invented}`);
   }
+});
+
+/* ── The 2026-11-15 EXTERNAL VERIFY reproducers (receipt blockers B1–B7 and
+ * the advisories A1/A2/A4 this correction batch repairs). Each test fails on
+ * the pre-correction bytes and passes after them; the receipt is the corpus. */
+
+const SPEC_DOC = "docs/fix/441-triage-issue-rescope/SPEC.md";
+const WORKFLOW_SKILLS = "docs/workflow/SKILLS.md";
+const WORKFLOW_README = "docs/workflow/README.md";
+const PORTABLE_PROMPT = "docs/workflow/PORTABLE_PROMPT.md";
+const SENSOR_SIGNALS = "skills/workflow-status/references/SENSOR_SIGNALS.md";
+const ROADMAP = "docs/ROADMAP.md";
+const PASSIVE_SETTLE = "docs/passive/2026-11-15-settle-odd-hybrid-direction.md";
+const DIRECTION_DRAFT = "docs/features/83-odd-hybrid-direction/SPEC.md";
+const SCHEMA_VOCAB = "packages/agentic-workflow-schema/src/vocabularies.ts";
+
+test("#441-B1/B2 ISSUE_PROCESS never calls the published classification four-verdict", () => {
+  const text = read(ISSUE_PROCESS);
+  assert.ok(
+    !text.includes("four-verdict"),
+    "ISSUE_PROCESS.md still says `four-verdict … unchanged` beside step 4's seven published verdicts (receipt B1 at the scope-membership fall-through, B2 under the verdict block)",
+  );
+});
+
+test("#441-B3 audit mode defers to the published verdict set, not the four", () => {
+  const text = read(AUDIT_FINDINGS);
+  assert.ok(
+    !text.includes("same four verdicts"),
+    "AUDIT_FINDINGS.md still classifies audit findings with the pre-rescope four verdicts (receipt B3)",
+  );
+  assert.match(text, /triage-verdict@1/, "audit mode names the published set its classification defers to");
+});
+
+test("#441-B4 the workflow index's triage diagram names every published verdict", () => {
+  const text = read(WORKFLOW_SKILLS);
+  const start = text.indexOf("ISSUE(any) ─▶ triage-issue");
+  assert.notEqual(start, -1, "docs/workflow/SKILLS.md carries the triage-issue verdict diagram");
+  const diagram = text.slice(start, text.indexOf("review→fold", start));
+  for (const verdict of TRIAGE_VERDICTS) {
+    assert.ok(diagram.includes(verdict), `the SKILLS.md verdict→route diagram omits \`${verdict}\` (receipt B4)`);
+  }
+});
+
+test("#441-B5 the Retirements receipt states the rows the inventory actually prints", () => {
+  const spec = read(SPEC_DOC);
+  assert.ok(
+    !spec.includes("with the state the plan"),
+    "the Retirements claim still says the printed states are the plan's — the inventory prints `used` and `orphan — no-plan-claim` (receipt B5)",
+  );
+  assert.match(spec, /`orphan`/, "the Retirements claim names the state the inventory prints for the new suite");
+});
+
+test("#441-B6 the settle evidence cites only rows that show delivery", () => {
+  const row83 = read(ROADMAP).split("\n").find((line) => line.startsWith("| 83 |"));
+  assert.ok(row83 !== undefined, "roadmap row 83 exists");
+  assert.ok(
+    !row83.includes("delivered by its own row"),
+    "row 83 still claims delivery by rows that do not show it — fix 269 reads `in-progress`, fix 303 has no row (receipt B6)",
+  );
+  const passive = read(PASSIVE_SETTLE);
+  assert.ok(
+    !passive.includes("every slice delivered by its own row"),
+    "the passive readback repeats the superseded delivery claim (receipt B6)",
+  );
+  assert.match(read(DIRECTION_DRAFT), /\*\*L3\*\*/, "the direction draft's append-only Log carries the correction to L2");
+});
+
+test("#441-B7 the provenance comment cites the requirement that carries the tokens (#435 S10)", () => {
+  const text = read(SCHEMA_VOCAB);
+  assert.ok(
+    !text.includes("#435 S9"),
+    "the vocabulary comment cites #435 S9, which owns the catalogue — the provenance rule is S10 (receipt B7)",
+  );
+  assert.match(text, /#435 S10/, "the vocabulary comment cites #435 S10, whose quote carries the three tokens");
+});
+
+test("#441-A1/A2 the tutorial index and the portable prompt enumerate the current verdict set", () => {
+  const readme = read(WORKFLOW_README);
+  assert.ok(
+    !readme.includes("fix-now / postpone / wontfix / promote"),
+    "docs/workflow/README.md still lists the pre-rescope four verdicts (advisory A1)",
+  );
+  for (const verdict of TRIAGE_VERDICTS) {
+    assert.ok(readme.includes(verdict), `docs/workflow/README.md never names \`${verdict}\``);
+  }
+  const portable = read(PORTABLE_PROMPT);
+  assert.ok(
+    !portable.includes("fix-now / promote-to-feature / postpone /"),
+    "docs/workflow/PORTABLE_PROMPT.md still lists the pre-rescope four verdicts (advisory A2)",
+  );
+  for (const verdict of TRIAGE_VERDICTS) {
+    assert.ok(portable.includes(verdict), `docs/workflow/PORTABLE_PROMPT.md never names \`${verdict}\``);
+  }
+});
+
+test("#441-A4 no live reference pins triage-issue's SKILL.md by line number", () => {
+  const text = read(SENSOR_SIGNALS);
+  assert.ok(
+    !/triage-issue\/SKILL\.md:\d+/.test(text),
+    "a line-number citation into SKILL.md drifts with every edit — cite the owning block instead (advisory A4)",
+  );
 });
