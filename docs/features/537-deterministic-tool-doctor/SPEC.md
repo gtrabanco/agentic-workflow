@@ -430,13 +430,14 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
 - **P9** — 2026-11-14 15:20, the roadmap row through the crate's writer and the
   rendered projection · `20663752`; the projection's `CRATE_COMMANDS` follows the
   crate's dispatch · `c65530c8`.
-- **G1** — 2026-11-14, `bun scripts/local-gate.mjs` · HEAD 585c47d8d8e99ef149f7b8d76c593ea7044f5d46 · exit 0 · `PASS — 19 step(s) in 331s`: workspace install, schema build, the crate
+- **G1** — 2026-11-14, `bun scripts/local-gate.mjs` · HEAD 0bc76a6c62c09d523925c8e947304472a4551a4b · exit 0 · `PASS — 19 step(s) in 331s`: workspace install, schema build, the crate
   suite under bun and node (794 pass / 0 fail each), the root gate (113 suites),
   version-parity-content, the docs projection, the journal carrier lint, log
   immutability, secret scan, temp hygiene, worktree guard, rigidity review, the
   two node-compat legs, and the dependency pins. HEAD is the changeset/fragment
-  commit, i.e. every byte of this unit except the two prose commits that follow
-  it (the perf note below and this receipt) — disclosed, never implied.
+  commit — the last commit of this unit that changes an executable byte; the one
+  prose commit that follows it (this receipt and the perf note below) is
+  disclosed rather than implied.
 - **E9** — 2026-11-14, the startup regression the first two gate runs exposed ·
   three root suites (`ceremony-passive`, `ceremony-unit-plan`,
   `ceremony-findings-ledger`) crossed their 10s per-test budget while spawning
