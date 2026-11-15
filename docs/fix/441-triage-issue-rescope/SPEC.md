@@ -232,6 +232,17 @@ One observable criterion per requirement; each names the check that proves it.
 
 ## Tasks
 
+The plan declaration the protected-path gate reads (one home: this block; an
+escape record, when one is needed, lives in
+[`decisions.md`](decisions.md)):
+
+```text
+path-protection-plan@1
+freeze-after: none
+kind | path | justification
+created | scripts/triage-rescope.test.mjs | The unit's frozen reproducers: every S2-S8 rule of issue #441 asserts here, landed alone and observed red at P1 before any implementation (the repo's red-first rule). No existing suite is edited by this unit (D-441-1), so a create is all the gate has to see.
+```
+
 - P1 — Land the RED corpus alone: `scripts/triage-rescope.test.mjs` asserting the two unpublished vocabularies, the verdict block, the `one-shot` eligibility, the `remove` inputs, the profile read, the criteria provenance, the receipt mode and the conditional switch (validator: `bun test scripts/triage-rescope.test.mjs` exits 1, naming the unpublished vocabularies and the missing grammars)
   (Implements: S2, S3, S4, S5, S6, S7, S8)
   - Relevant files: scripts/triage-rescope.test.mjs, skills/triage-issue/SKILL.md
