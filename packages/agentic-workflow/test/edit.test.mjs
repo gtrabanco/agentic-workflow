@@ -277,9 +277,10 @@ describe("Roadmap", () => {
     annotate(path, "99", "annotated the reader's row");
 
     const features = readFileSync(path, "utf8").split("\n## Fixes")[0];
-    const stale = features.split("\n").find((l) => l.startsWith("| 99 |") && l.includes("idea"));
-    strictEqual(stale, undefined, "the note went to the stale first row");
-    const kept = features.split("\n").find((l) => l.startsWith("| 99 |") && l.includes("in-progress"));
+    const rows = features.split("\n").filter((l) => l.startsWith("| 99 |"));
+    const stale = rows.find((l) => l.includes("idea"));
+    ok(stale !== undefined && !stale.includes("annotated the reader's row"), `the note went to the stale first row: ${stale}`);
+    const kept = rows.find((l) => l.includes("in-progress"));
     ok(kept !== undefined && kept.includes("annotated the reader's row"), kept);
   });
 });
