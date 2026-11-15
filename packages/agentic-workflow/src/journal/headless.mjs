@@ -23,7 +23,11 @@
  *    a CI entry distinguishable from an operator's.
  *  - **One entry per run.** A re-run of the same workflow run carries the same
  *    run id, so the second invocation answers `already-present` with the
- *    existing fragment instead of duplicating the entry or failing the job.
+ *    existing fragment instead of duplicating the entry or failing the job —
+ *    and once the aggregator consumed that fragment, with the journal entry
+ *    that carries the run, still writing nothing (D6; the read-only lookup
+ *    below never moves the journal's bytes — the aggregator stays its only
+ *    writer).
  *  - **The opt-in is still the carrier.** An absent carrier is a refusal, and a
  *    refusal creates nothing — not the directory, not a journal.
  */
@@ -31,8 +35,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { JOURNAL_DIR, parseFragmentName } from "./fragment.mjs";
+import { JOURNAL_DIR, fragmentName, parseFragmentName } from "./fragment.mjs";
 import { currentBranch, isoSecond, readSessionFacts, renderEntryBlock, resolveBase } from "./block.mjs";
+import { DEFAULT_LOG } from "./aggregate.mjs";
 import { writeJournal } from "./write.mjs";
 
 /** A refused headless write. The CLI maps this to exit 2, "JOURNAL REFUSAL —". */
@@ -192,6 +197,51 @@ function findRunFragment(dir, session) {
 }
 
 /**
+ * The run's entry in the journal itself, when its fragment was already
+ * aggregated away: the heading's label carries the run's identity (`headless
+ * <workflow> run <run-id> by <actor> …`) and the heading's stamp, branch and
+ * the run's session slug reconstruct the original name through the one name
+ * owner — so a re-run after aggregation reports where the entry lives now
+ * instead of writing a second one (issue #471, D6; the EXTERNAL VERIFY B1
+ * reproducer).
+ *
+ * Read-only by contract: this lookup never writes the journal — the
+ * aggregation step stays its only writer (#405 AC1, #468). A heading that
+ * cannot be decided (no stamp, an unparsable name) is skipped, never guessed;
+ * no journal yet means nothing this run can already have written.
+ *
+ * Returns `{ name, path, branch, bytes }` or null.
+ */
+function findConsumedEntry(root, identity) {
+  const logPath = path.join(root, DEFAULT_LOG);
+  let text;
+  try {
+    text = fs.readFileSync(logPath, "utf8");
+  } catch {
+    return null;
+  }
+  const needle = ` run ${identity.runId} by `;
+  for (const line of text.split("\n")) {
+    if (!line.startsWith("## ")) continue;
+    const parts = line.slice(3).split(" — ");
+    if (parts.length < 3) continue;
+    const label = parts.slice(2).join(" — ");
+    if (!label.startsWith("headless ") || !label.includes(needle)) continue;
+    const stamp = Date.parse(parts[0]);
+    if (!Number.isFinite(stamp)) continue;
+    const name = fragmentName({
+      timestamp: stamp,
+      branch: parts[1],
+      kind: "narrative",
+      sessionId: identity.session,
+    });
+    if (parseFragmentName(name) === null) continue;
+    return { name, path: logPath, branch: parts[1], bytes: Buffer.byteLength(text, "utf8") };
+  }
+  return null;
+}
+
+/**
  * Write one fragment for a headless run.
  *
  * `declaration` is what the run did: `issue`, `summary`, `decisions`, `next`,
@@ -229,6 +279,25 @@ export function writeHeadlessJournal(options) {
       path: file,
       bytes: Buffer.byteLength(fs.readFileSync(file, "utf8"), "utf8"),
       branch: existing.parsed.branch,
+      session: identity.session,
+      label: identity.label,
+    };
+  }
+
+  // The same promise across the whole lifecycle: once the aggregator consumed
+  // the fragment, the run's entry lives in the journal — the re-run reports it
+  // there (read-only) instead of writing a second fragment the next
+  // aggregation would append as a duplicate entry.
+  const consumed = findConsumedEntry(root, identity);
+  if (consumed !== null) {
+    return {
+      ok: true,
+      status: "already-present",
+      kind: "narrative",
+      name: consumed.name,
+      path: consumed.path,
+      bytes: consumed.bytes,
+      branch: consumed.branch,
       session: identity.session,
       label: identity.label,
     };
