@@ -161,6 +161,64 @@ Reasoning traces arrive in `message.reasoning_content`. Cap any agentic loop's
 stream is closed by the platform (a `finish_reason: "length"` on an empty
 delta, not billed) if a model plans without converging.
 
+## The doc-index embedding profile
+
+The agentic workflow's retrieval index embeds your project's markdown so a query
+can rank semantically as well as by keyword. It reads one block for that — the
+`provider` block of the committed `.agentic-workflow/index.json` — and nobody
+wants to hand-derive it, so this package ships it. With the preset installed,
+`/agentic-workflow-settings` → **`Doc index embedding profile`** shows the block,
+per key, with where each value came from (the preset, you, or the engine's
+default), and writes it after you say yes:
+
+```jsonc
+{
+  "version": 1,
+  "provider": {
+    "baseUrl": "https://api.nan.builders/v1",
+    "model": "qwen3-embedding",
+    "envVar": "NAN_API_KEY",
+    "chunk_limit": 6000,
+    "pacing": { "batchSize": 6, "requestsPerMinute": 60 }
+  }
+}
+```
+
+| Value | Where it comes from |
+|---|---|
+| `baseUrl` | the catalog's `base_url` |
+| `model` | **qwen3-embedding** — the catalog's embedding entry: `cost: 0`, 4,096 dimensions, `max_input` 32,768 tokens |
+| `envVar` | **NAN_API_KEY** — the variable the same key your chat traffic uses is read from |
+| `chunk_limit` | 6,000 characters, measured on this project's ~10.9K-chunk corpus (fix #540) |
+| `pacing.batchSize` | 6 texts per request, measured with the same corpus |
+| `pacing.requestsPerMinute` | the catalog's per-key request cap: 60 |
+
+One request therefore carries at most 6 × 6,000 = 36,000 characters ≈ 9,000
+tokens — a third of the model's 32,768-token input window, so even dense prose
+cannot outgrow it. Embeddings bill no credits (`cost: 0`), which is why the pace
+is not a spending decision. `maxAttempts` and the retry delays are left to the
+engine's defaults on purpose: no NaN document defines them.
+
+**The 60 rpm cap is per API key, and it is shared with your chat traffic.** This
+is the one caveat worth reading: Open WebUI, another agent, a script — anything
+using the same key spends from the same 60 requests per minute, and a paced
+backfill at 60 rpm will collide with a busy chat session (the index retries the
+throttled request, but it makes no progress while your chats saturate the key).
+The shipped value matches the documented cap and this project's own backfill ran
+under it; when you share the key with other tools, ship a conservative pace
+instead by writing the value you want — any value you write always wins:
+
+```jsonc
+{ "provider": { "pacing": { "requestsPerMinute": 30 } } }
+```
+
+**Precedence is per key.** Materializing the profile fills only the keys your
+`index.json` leaves absent; a value you (or your team) already wrote is never
+rewritten, `pacing` included knob by knob. Re-applying is safe and idempotent,
+and taking a later preset change for a key you already have means deleting that
+key and applying again. Nothing is written at extension load, on a query, or by
+a sync: your committed config changes only when you answer yes.
+
 ## Data residency — what runs where
 
 **Not every model in the tables above processes under the same legal

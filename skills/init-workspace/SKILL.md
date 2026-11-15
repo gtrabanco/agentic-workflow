@@ -232,6 +232,14 @@ step 4:
   are only a freshness fast path), and never write `.git/hooks/` or the config
   on a later visit without a fresh yes. The hooks are best-effort by contract
   (`doc --sync --quiet`, always exit 0 — a fast path never breaks git).
+  **Never hand-write the config's `provider` block** (issue #541): when an
+  installed provider preset ships a doc-index embedding profile, the block is
+  materialized by `/agentic-workflow-settings` → `Doc index embedding profile`,
+  which shows each value's origin, asks before writing, and fills only the keys
+  the project leaves absent. That action is the only writer this skill may
+  name — its precedence rule (a value the project wrote always wins) is what
+  keeps a re-run safe, and the runner crate validates the block, so a value
+  invented here would be refused rather than applied.
 - **The push-range secret scan is consent-gated and never installs itself (issue
   #552).** One question — "install the push-range secret scan as a `pre-push`
   hook?" — joins the hook consents, and a yes chains
