@@ -241,7 +241,7 @@ export type TriageVerdict = (typeof TRIAGE_VERDICTS)[number];
 
 /** The provenance a verdict records for the criteria it used
  *  (`triage-criteria-provenance`, issue #441, from the charter's rule:
- *  issue #435 S9). `workflow-generic` — the workflow's own baseline, the only
+ *  issue #435 S10). `workflow-generic` — the workflow's own baseline, the only
  *  value a project with no declared catalogue can honestly claim;
  *  `project-declared` — the project's criteria catalogue
  *  (`docs/workflow/VERIFICATION_CRITERIA.md`) said so; `stamped-assumption` —

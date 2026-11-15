@@ -38,8 +38,8 @@
        **scope-bleed restore**: the route is restore-the-criterion-in-the-unit
        (no matching `## Amendments` entry); the issue closes as
        scope-returned, not as new work.
-   - No candidate matched → fall through to today's four-verdict
-     classification below, unchanged.
+   - No candidate matched → fall through to the published classification
+     below — the seven rows of `triage-verdict@1`, unchanged by this step.
 4. **Classify** into exactly one of the seven published verdicts. The set is
    machine grammar — `TRIAGE_VERDICTS` in
    `@gtrabanco/agentic-workflow-schema`, mirrored by the block below — so a
@@ -156,7 +156,7 @@ remove | none | the unit that performs the deletion, carrying its measured recei
 
    No member unit matched a `fix-in-unit` candidate for this issue → the
    verdict, evidence, and action above are exactly what they would have been
-   without the scope-membership step — today's four-verdict classification,
+   without the scope-membership step — the published classification,
    unchanged.
 
    **Criteria provenance (mandatory, every verdict).** The `Criteria:` line

@@ -111,9 +111,16 @@ inventory is the receipt.
 bun scripts/residual-classify.mjs --inventory --base 4eedcf61
 ```
 
-prints one row per added surface (the two vocabularies, the five reference
-sections, the new reference file, the new suite) with the state the plan
-decides for it. No existing verdict, label, route or section is removed: the
+prints one row per added surface it recognizes — the added export symbols
+(`TRIAGE_VERDICTS`, `TRIAGE_CRITERIA_PROVENANCE` and their two type aliases,
+each `used`) and the added non-documentation file
+(`scripts/triage-rescope.test.mjs`, state `orphan`, reason `no-plan-claim`).
+The five reference sections are edits, not additions, and the new
+`references/RECEIPTS.md` is documentation, so neither is a row; the suite's
+`created` row in this document's `path-protection-plan@1` is what claims it for
+the plan — the classifier's consult order (live tree → roadmap rows →
+open-unit tasks → forward promises → charter planned work) ends a claim at a
+terminal row, and this unit's row already reads `done`. No existing verdict, label, route or section is removed: the
 five-verdict classification keeps its five verdicts, `fold-findings` keeps its
 route until S7's triggers are green, and the label vocabulary is byte-unchanged
 (S8 + the issue's own Non-goals).

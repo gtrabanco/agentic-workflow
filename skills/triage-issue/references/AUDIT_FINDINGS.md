@@ -21,8 +21,9 @@ argument is an issue number, unchanged.
 3. **Check for an existing issue** — `gh issue list --search "Audit <id> F<k>"`
    plus a title match; if one exists, triage THAT issue via the normal Process
    (never open a duplicate).
-4. **Classify** with the same four verdicts (plus `fix-in-unit` via step 3 of
-   the Process). Then:
+4. **Classify** with the published verdicts the Process defines (the seven
+   rows of `triage-verdict@1`; `fix-in-unit` arrives via step 3 of the
+   Process). Then:
    - **fix-now / postpone / promote** → this is the moment the GitHub issue is
      **opened** (the audit itself never files issues): body written with the
      Write tool and `gh issue create --body-file`, citing provenance on its
@@ -31,6 +32,10 @@ argument is an issue number, unchanged.
      class. Then apply the verdict's labels/comment/routing exactly as the
      normal Process dictates for that verdict.
    - **wontfix / already-fixed** → open nothing; the verdict block is the record.
+   - **one-shot / remove** → the Process's own verdict rules apply unchanged
+     (owner consent and the tier gate; the measured receipts) — this mode adds
+     no routing of its own, and step 5's note records the verdict like any
+     other.
 5. **Mark the finding triaged** in the audit file: append directly under the
    `F<k>` line one indented note —
    `↳ triaged <YYYY-MM-DD>: <verdict> — issue #<n> | no issue (<why>)` —
