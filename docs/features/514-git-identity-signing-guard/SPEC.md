@@ -559,6 +559,14 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   S2 differential is what surfaced the missing intent: `version-parity-content`
   refused the crate change until it landed); the live settle, the claim
   corrections and this evidence in the batch's docs commit (E23–E25, G9).
+- **G10** — 2026-11-15, `node scripts/run-root-suite.mjs --jobs 1` · exit 0 ·
+  113 suites PASS / 0 FAIL at the batch's final bytes — the gate's documented
+  serial mode, after three default-mode attempts died only to the 120.0s suite
+  wall-clock killer under concurrent machine load (rotating victims, zero
+  assertion failures: `unit-route` 64/0 and `phase-lint` 162/0 green
+  standalone, and `workflow-status-sensor`'s two ~10.6s timeout-path cases are
+  allowlisted in `scripts/test-timeout-allowlist.json` since 2026-11-10).
+  G9 remains the default-mode green run.
 
 ## Next
 
