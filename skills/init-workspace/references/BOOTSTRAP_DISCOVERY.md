@@ -2,6 +2,10 @@
 
 1. **Preflight.** Confirm the target dir and the discovery findings. If scaffold
    files already exist, get an explicit decision before overwriting.
+   The tool facts are one reading, not a per-tool interview:
+   `bunx @gtrabanco/agentic-workflow@<pin> doctor --json` — each row carries its
+   evidence and its move, and a `residual` row is a decision this route never
+   makes for the operator.
 2. **Fetch the template.** `npx degit gtrabanco/agentic-workflow/template <dir>`
    (into the target if empty, else a temp dir to merge from). **`degit` can't read
    a private repo — it fails, or in `--mode=git` silently leaves an empty dir; for

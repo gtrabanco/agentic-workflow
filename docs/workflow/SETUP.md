@@ -9,10 +9,13 @@ archaeology through logs and side notes is two scripts plus this page
 ```sh
 node scripts/setup-env.mjs            # provision everything that is missing
 node scripts/setup-env.mjs --check    # verify only — installs nothing, writes nothing
+node scripts/setup-env.mjs --doctor   # the tool doctor's evidence, per surface
 ```
 
-Both scripts are package-manager-agnostic and run with `node`; bun runs them
-too. Supported on macOS and Linux. **Windows is WSL-only** — not a supported
+All three run with `node`; bun runs them too. The first two are this repository's
+provisioner; `--doctor` is the deterministic **checker** (feature 537,
+`agentic-workflow doctor`) and prints the same `doctor@1` envelope the bin and
+`init-workspace` read, so a state is never re-derived by hand. Supported on macOS and Linux. **Windows is WSL-only** — not a supported
 target: run everything inside WSL (the scripts refuse `win32` with this note).
 
 ## Prerequisites
@@ -27,6 +30,31 @@ target: run everything inside WSL (the scripts refuse `win32` with this note).
 the time of writing); it is read by CI, not by `setup-env.mjs`. A newer major
 on your machine is fine — node is your prerequisite, not the script's concern
 (S11).
+
+## The doctor — what the state actually is
+
+`agentic-workflow doctor` (`node scripts/setup-env.mjs --doctor` here) is one
+read-only pass over the **documented** tool inventory — the `tool-inventory@1`
+block of [`packages/agentic-workflow/README.md`](../../packages/agentic-workflow/README.md) —
+and it is the single declaration of what the workflow depends on: each row says
+what the tool is, why it exists, whether it is required or optional, how it is
+detected, its alternative and its install route.
+
+Per row it answers with real evidence, never a guess: the resolved path, the
+version, a version **pair** where one exists (bun against `.bun-version`, the
+`engram` binary against what its `/health` endpoint serves), the health answer,
+and the config state. The status is one of `ok`, `missing`, `mismatch`,
+`unarmed` (a declared contract whose configuration was never applied — an
+un-armed shared-merge driver, a missing `pre-push` hook), `unreachable`, or
+`not-applicable` (the project does not declare that surface, which is not a
+defect). A missing **required** surface exits 1; a missing optional one is an
+advisory that never fails the run.
+
+`agentic-workflow setup` is the mutating half and asks only where a write or a
+real decision exists: `ask-consent-write` runs the **project's own** installer
+after an explicit yes, `instruct-only` prints the exact command, `residual` names
+a decision another owner makes, and the second run is a no-op. Nothing installs
+a package for you — an install route is text you paste.
 
 ## The toolchain, per tool
 

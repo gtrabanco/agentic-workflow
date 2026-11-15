@@ -10,6 +10,14 @@
  *   node scripts/setup-env.mjs           install what is missing
  *   node scripts/setup-env.mjs --check   verify only — installs nothing,
  *                                        writes nothing; exit 0 / 1
+ *   node scripts/setup-env.mjs --doctor  print the crate's `doctor@1` envelope
+ *                                        for this checkout (read-only; add
+ *                                        `--json` for the machine receipt). The
+ *                                        checker has one implementation — issue
+ *                                        #537's `agentic-workflow doctor` — and
+ *                                        this mode is the repo's carrier for it;
+ *                                        the row contract and the carrier map
+ *                                        are owned by `docs/workflow/GATE_INVENTORY.md`
  *
  * What it installs (binaries first, S7 — never a package manager as the only
  * route):
@@ -55,7 +63,7 @@
  * failed install; 2 = usage error.
  *
  * Usage:
- *   node scripts/setup-env.mjs [--check]
+ *   node scripts/setup-env.mjs [--check | --doctor [--json]]
  */
 
 import { spawnSync } from "node:child_process";
@@ -593,10 +601,30 @@ function renderCheck(result) {
 
 async function main(argv) {
   const check = argv.includes("--check");
-  const unknown = argv.filter((arg) => arg !== "--check");
+  const doctor = argv.includes("--doctor");
+  const json = argv.includes("--json");
+  const unknown = argv.filter((arg) => !["--check", "--doctor", "--json"].includes(arg));
   if (unknown.length > 0) {
-    process.stderr.write(`usage: node scripts/setup-env.mjs [--check]\nunknown argument: ${unknown[0]}\n`);
+    process.stderr.write(`usage: node scripts/setup-env.mjs [--check | --doctor [--json]]\nunknown argument: ${unknown[0]}\n`);
     return 2;
+  }
+  if (check && doctor) {
+    process.stderr.write("usage: node scripts/setup-env.mjs [--check | --doctor [--json]]\n--check and --doctor are different readings; pass one\n");
+    return 2;
+  }
+  if (json && !doctor) {
+    process.stderr.write("usage: node scripts/setup-env.mjs [--check | --doctor [--json]]\n--json only applies to --doctor\n");
+    return 2;
+  }
+
+  // The doctor carrier (issue #537 S7): one checker, two carriers. The crate's
+  // module is imported, never re-implemented, so this mode and `agentic-workflow
+  // doctor` can never print different evidence for the same checkout.
+  if (doctor) {
+    const { renderDoctor, runDoctor } = await import("../packages/agentic-workflow/src/doctor/doctor.mjs");
+    const envelope = await runDoctor({ root: REPO_ROOT });
+    process.stdout.write(json ? `${JSON.stringify(envelope, null, 2)}\n` : `${renderDoctor(envelope)}\n`);
+    return envelope.exitCode;
   }
 
   const guard = platformGuard(process.platform);
