@@ -375,6 +375,10 @@ freeze (D1).
 - **E7** — 2026-11-15, `bun scripts/lint-changeset.mjs` · exit 0 · `ok triage-issue-rescope.md`; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
 - **E8** — 2026-11-15, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/441-triage-issue-rescope/SPEC.md` · exit 0 · `verdict PASS`, P1–P9 all `PASS (6/6)`.
 
+- **G1** — 2026-11-15, HEAD 6e9e9e45e6aca014aeb5de4bc89fbd41f0d9a27d — `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/441-triage-issue-rescope/SPEC.md` · exit 0 · zero violations (13/13 obligations closed, every cited path present).
+- **G2** — 2026-11-15, HEAD 6e9e9e45e6aca014aeb5de4bc89fbd41f0d9a27d — `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 289s` (run over that HEAD's tree, before this Log-only delta).
+- **D6** — 2026-11-15, disclosure: the same gate failed twice before it passed, with three spawned-ceremony suites (`ceremony-findings-ledger`, `ceremony-unit-plan`, `ceremony-workspace`) killed mid-run under the pool — each passes standalone (exit 0), and the base commit `4eedcf61` passed the same pool at `--jobs 6`, so the class is load sensitivity, not this change. The two later runs, including the green one at G2, carried the identical step set. Recorded rather than hidden: a load-sensitive kill is not a passing suite.
+
 ## Next
 
 Owner verdict on the branch diff; then `Closes #441` on the PR.
