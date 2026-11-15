@@ -16,6 +16,7 @@ Creating `.agentic-workflow/journal/` **is** the opt-in. From then on:
 | The template's SessionEnd hook (`.claude/hooks/log-session-end.sh`) | appends the mechanical entry to `docs/LOGS.md` | writes a **fragment** under `.agentic-workflow/journal/`; never touches `docs/LOGS.md` |
 | The pi extension (`logSession: mechanical`) | same append | same fragment behaviour (one crate, one grammar) |
 | `/log-session` (narrative entry) | appends to `docs/LOGS.md` | writes one narrative fragment; `session-close close` commits the fragments and **refuses a touched `docs/LOGS.md`** |
+| A **headless CI run** (the journal action below) | no entry at all — there is no operator to run `/log-session` | writes one **fragment** per run through `journal headless`; never touches `docs/LOGS.md` |
 | The **aggregator** (this carrier's merge step) | — | the **only** writer of `docs/LOGS.md`: appends the pending fragments newest-first and deletes them |
 
 A repo that opts out keeps today's direct-append behaviour with zero residue.
@@ -86,6 +87,57 @@ git -c user.name="journal-bot" -c user.email="journal-bot@$(hostname)" \
 No concurrency group exists on a bare receive hook — the `flock` above is the
 retry/lock story: a second simultaneous push declines, and the fragments it
 carried are aggregated by its own push's run or the next one.
+
+### Headless runs: the journal action (issue #471)
+
+An interactive session is covered by `/log-session` and the mechanical entry. A
+**CI-driven** session — an agent action landing a pull request, a scheduled
+driver, a compiled workflow — has no operator, so nothing writes its entry. The
+distributable action closes that gap by handing the run's declaration to the same
+writer every other writer uses; it is an adapter, not a second journal:
+
+```yaml
+# In the job that already checked the repository out, AFTER the run's work.
+- name: Journal this run
+  uses: gtrabanco/agentic-workflow/journal@<tag>   # the train tag: the same version runner-pin@1 names
+  with:
+    issue: "471"
+    summary: "What this run did."
+    decisions: "What it decided, when it decided something."
+    next: "What the next session should pick up."
+```
+
+The tag is the crate's own: read it from `runner-pin@1`
+(`skills/runner-contract/references/RUNNER.md`) and pin it exactly — `@main` runs
+whatever the default branch holds, which is not what a journal entry should
+record.
+
+| What the action takes | Where it comes from |
+|---|---|
+| `summary` (or `block`, a path to an already-rendered entry block) | the run's declaration — required |
+| `decisions`, `next`, `issue`, `files` | the run's declaration — optional; `files` defaults to the paths the run's git range touched |
+| `base` | the revision the git facts are read against — optional |
+| the run's provenance | the job's own environment: the workflow name, the run id and the actor. Nothing to pass, nothing to remember |
+
+What it writes, and what it never does:
+
+- **One fragment per run**, under `.agentic-workflow/journal/`, through
+  `journal headless` — the name, the bytes and the collision rule stay the
+  crate's (`journal-fragment-grammar@1` and `journal-headless-grammar@1`).
+- **Provenance inside the grammar's fields**: the fragment's session slot carries
+  `gha-<run id>` and the entry's heading names the workflow, the run and the
+  actor, so a CI entry is easy to tell from an operator's.
+- **A re-run is a no-op**: the same run id reports `already-present` and writes
+  nothing, so re-running a job never duplicates an entry and never fails on it.
+- **Never the journal file.** The action has no model in its write path, reads no
+  token, calls no forge API and never comments, labels or triages
+  (least privilege: the calling job's `contents: write` is the only permission
+  the snippet needs, because pushing the fragment is the job's own step).
+- **Never an opt-in.** An absent carrier is a refusal: install the carrier first,
+  then add the step.
+
+Commit the fragment like any other change — it belongs in the run's pull request,
+and the aggregator consumes it after merge.
 
 ## Fragment rules (the short version)
 
