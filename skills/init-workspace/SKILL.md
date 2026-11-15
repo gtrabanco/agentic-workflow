@@ -176,8 +176,13 @@ step 4:
   a wholesale scaffold copy opts nobody in. Offer it as one consented question
   (bootstrap or upgrade): a yes creates `.agentic-workflow/journal/` and
   installs one merge wiring; a no writes nothing — no directory, no workflow,
-  no config — and the project keeps today's direct-append journal. The naming
-  grammar has one owner (`journal-fragment-grammar@1` in
+  no config — and the project keeps today's direct-append journal. The same
+  question names the headless half (issue #471): an opted-in project whose CI
+  agents land pull requests can add the distributable action's step
+  (`gtrabanco/agentic-workflow/journal@<tag>`) to its run, and the carrier
+  document it already received explains that step — installing it is editing
+  the project's own workflow, so it is offered as text, never written for it.
+  The naming grammar has one owner (`journal-fragment-grammar@1` in
   `@gtrabanco/agentic-workflow`'s README); this skill never restates it.
 - **The docs-site format is a declared choice.** The `Docs site` block's
   `format` slot (`markdown`/`md`, `mdx`/`starlight`/`docusaurus`, `html`,
@@ -227,6 +232,14 @@ step 4:
   are only a freshness fast path), and never write `.git/hooks/` or the config
   on a later visit without a fresh yes. The hooks are best-effort by contract
   (`doc --sync --quiet`, always exit 0 — a fast path never breaks git).
+  **Never hand-write the config's `provider` block** (issue #541): when an
+  installed provider preset ships a doc-index embedding profile, the block is
+  materialized by `/agentic-workflow-settings` → `Doc index embedding profile`,
+  which shows each value's origin, asks before writing, and fills only the keys
+  the project leaves absent. That action is the only writer this skill may
+  name — its precedence rule (a value the project wrote always wins) is what
+  keeps a re-run safe, and the runner crate validates the block, so a value
+  invented here would be refused rather than applied.
 - **The push-range secret scan is consent-gated and never installs itself (issue
   #552).** One question — "install the push-range secret scan as a `pre-push`
   hook?" — joins the hook consents, and a yes chains

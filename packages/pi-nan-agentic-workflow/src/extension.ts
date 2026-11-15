@@ -10,12 +10,17 @@
 import { registerProviderPreset } from "@gtrabanco/pi-agentic-workflow/dist/config/presets.js";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { PROVIDER, PROFILES, DEFAULT_PROFILE, resolvePresetProfile } from "./preset.js";
+import { NAN_EMBED_PROFILE } from "./embed-profile.js";
 
 function register(): void {
   registerProviderPreset({
     provider: PROVIDER,
     profiles: PROFILES,
     defaultProfile: DEFAULT_PROFILE,
+    // Issue #541: the doc-index embedding profile rides the same registration,
+    // typed against the runner crate's provider block by the main package's
+    // seam — this companion never depends on the crate itself.
+    embedProfile: NAN_EMBED_PROFILE,
     resolveProfile: ({ config, profile }) =>
       resolvePresetProfile({ tierRouting: config.tierRouting, profile }),
   });
