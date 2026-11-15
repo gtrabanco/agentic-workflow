@@ -219,6 +219,14 @@ none — nothing was deferred by the owner.
   skills/execute-phase/SKILL.md` → 0). **Affects this unit by design**: S7 can
   only describe the switch as conditional and must keep `/fold-findings` as the
   live route. The prose never emits the future command as a live `→ Next:`.
+- **`local-gate --install-hook` refuses a worktree** (`ENOTDIR` at
+  `scripts/local-gate.mjs:848`: `installHook` builds `<root>/.git/hooks`, but a
+  worktree's `.git` is a file and the hooks live in the common dir). **Does
+  not affect this unit's gate**: the push runs the already-installed hook, and
+  the S9 hook body installs after merge from a checkout where `.git` is a
+  directory. Reported, not repaired — it is pre-existing (the same line sits
+  at `e864c710`) and outside S9's adopted five; smallest action: resolve the
+  hooks directory with `git rev-parse --git-common-dir`, as its own unit.
 
 ## Acceptance criteria
 
