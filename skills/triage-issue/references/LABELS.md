@@ -82,6 +82,16 @@ A **fix-now** verdict is unchanged by this section — it gets no disposition
 label (it is tracked via the fix index + its route, and its high-severity
 case already gets the urgency label above).
 
+**The two verdicts this vocabulary deliberately does not label (issue #441).**
+`one-shot` and `remove` apply **no disposition label** and no urgency label.
+`one-shot` is an inline action taken on the owner's explicit consent, and
+`remove` is work routed to the unit that performs the deletion; both are tracked
+by their route and their dated comment, exactly as `fix-now` and `fix-in-unit`
+are. The reason is not tidiness: `workflow-status` reads label **presence** as
+"this issue was triaged", so a verdict that invented a label would change that
+signal for every consumer. Label ownership and the injection-safety invariant
+stay untouched — the issue's own Non-goals forbid otherwise.
+
 ## Review-gate label vocabulary (human-owned)
 
 Not a verdict this skill reaches: this label is a **human's hold**, applied when

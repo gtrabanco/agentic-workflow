@@ -4091,6 +4091,8 @@ export {
   ADVERSARIAL_VERDICTS,
   ADVERSARIAL_REFLECTOR_VERDICTS,
   ADVERSARIAL_STABILITY_VERDICTS,
+  TRIAGE_VERDICTS,
+  TRIAGE_CRITERIA_PROVENANCE,
 } from "./vocabularies.js";
 export type {
   FutureStatus,
@@ -4106,6 +4108,8 @@ export type {
   AdversarialVerdict,
   AdversarialReflectorVerdict,
   AdversarialStabilityVerdict,
+  TriageVerdict,
+  TriageCriteriaProvenance,
 } from "./vocabularies.js";
 
 // ── The workflow-projection contract (issue #406) ───────────────────────────

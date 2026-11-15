@@ -9,6 +9,12 @@ argument is an issue number, unchanged.
 1. **Read the audit report** `docs/audits/<id>-*.md` (exactly one file matches;
    zero or several → stop and report the mismatch). Locate each requested
    `F<k>` row in `## Findings` and any proposal citing it (`from: F<k>`).
+   **A typed receipt is an equally legal input** (issue #441 S6): when the
+   findings arrive as `EnvelopeFixNowFinding` rows or as the local flow's
+   `EXTERNAL VERIFY` block, read them through
+   [typed receipts](RECEIPTS.md) — same steps, same ids, same rules — and keep
+   the `↳ triaged` note in the carrier the receipt came from. A receipt is read
+   in addition to a markdown audit file, never instead of one that exists.
 2. **Verify against current code** — same as Process step 2: the audit may be
    stale; re-check its evidence (paths, counts, repro) before acting. An
    already-fixed finding → verdict **wontfix** (obsolete), no issue opened.

@@ -249,9 +249,9 @@ created | scripts/triage-rescope.test.mjs | The unit's frozen reproducers: every
 - P2 — Publish `TRIAGE_VERDICTS` and `TRIAGE_CRITERIA_PROVENANCE` in the schema package and re-export them from its index (validator: `bun run --cwd packages/agentic-workflow-schema test` exits 0)
   (Implements: S2, S3, S5)
   - Relevant files: packages/agentic-workflow-schema/src/vocabularies.ts, packages/agentic-workflow-schema/src/index.ts
-- P3 — Declare both vocabularies as normative surfaces in `AGENTS.md` and pin them in the parity suite's published-set list (validator: `bun test scripts/normative-drift.test.mjs` exits 0 and `bun test scripts/vocabulary-parity.test.mjs` exits 0)
+- P3 — Declare both vocabularies as normative surfaces in `AGENTS.md` (the `schema-export` declaration home, `must-name: no`) (validator: `bun test scripts/normative-drift.test.mjs` exits 0 with both surfaces fault-free and `bun test scripts/triage-rescope.test.mjs` exits 0)
   (Implements: S2, S3, S5)
-  - Relevant files: AGENTS.md, scripts/vocabulary-parity.test.mjs
+  - Relevant files: AGENTS.md
 - P4 — Rewrite the classification in `ISSUE_PROCESS.md`: the seven-verdict table with `one-shot` and `remove` as their own entries, the six-condition eligibility checklist with the consent and tier-disqualification clauses, and the removal verdict's three measured inputs (validator: `bun test scripts/triage-rescope.test.mjs` exits 0 for the verdict-grammar, eligibility and removal assertions)
   (Implements: S2, S3)
   - Relevant files: skills/triage-issue/references/ISSUE_PROCESS.md
@@ -323,6 +323,57 @@ freeze (D1).
   label. Authority: the issue's Non-goal *"No change to label ownership/
   injection-safety invariants"* and the existing contract where `fix-now` and
   `fix-in-unit` also carry no disposition label.
+- **D4** — 2026-11-15, plan repair after the cut (recorded, no requirement
+  changed): P3's scope drops the `scripts/vocabulary-parity.test.mjs` and
+  `scripts/normative-drift.test.mjs` edits. Both are `**/*.test.*` protected
+  paths and a post-cut modify needs the owner's recorded `approval`, which an
+  agent may never write for itself; the two vocabularies are instead pinned by
+  this unit's own suite, and the inventory rows are declared `must-name: no`
+  because the surface that *orders* the verdicts is the skill's reference, not
+  an inventoried file. Authority: the path-protection policy (the guard refused
+  the edit) and [`decisions.md`](decisions.md) D-441-1.
+- **D5** — 2026-11-15, budget re-base: `docs/workflow/SKILL_CONTEXT_BUDGETS.json`
+  gains its first `triage-issue` entry (main 3491, reference 3255), both exact
+  `ceil(measured x 1.10)` over what the seven behaviours measured at this change,
+  and `AGENTS.md`'s `machineLines` pin moves 142 → 144 for the two inventory
+  rows. Authority: the manifest's own declared re-basis rule ("ceiling =
+  ceil(measured x 1.10) at each declared re-basis", growth source named here and
+  in the commit); no ceiling this unit did not spend was re-based.
+- **P1** — 2026-11-15, the RED corpus landed alone at `2c9dd42c`: twelve
+  assertions, one per rule, 1 pass / 11 fail (the pass is the regression control
+  proving the rest target real base text).
+- **P2** — 2026-11-15, the two vocabularies published in the schema package and
+  re-exported from its index.
+- **P3** — 2026-11-15, both declared as normative surfaces in
+  `AGENTS.md` and claimed by `docs/workflow/GATE_INVENTORY.md`'s
+  `normative-surface-grammar` row.
+- **P4** — 2026-11-15, `ISSUE_PROCESS.md`: the seven-verdict `triage-verdict@1`
+  block, the six-condition `one-shot` checklist with consent and the tier
+  disqualification, the `remove` verdict's three measured inputs, the
+  `triage-verdict-block@1` verdict block with its `Criteria:` line, the stale-row
+  guard in the scope-membership check and `rg`-first in the evidence step.
+- **P5** — 2026-11-15, `SKILL.md`: the ceremony-profile read with both anti-gaming
+  directions, the `one-shot`/`remove`/typed-receipt modes, the criteria box in the
+  turn contract, the six-path allowlist and every `→ Next:` line the new verdicts
+  need.
+- **P6** — 2026-11-15, criteria provenance wired through the verdict block and
+  `LABELS.md`'s explicit no-label obligation for both new verdicts.
+- **P7** — 2026-11-15, `references/RECEIPTS.md` (the typed-receipt input mode)
+  plus the audit-mode and review-mode wiring, and the conditional fold→repair
+  switch with its three-gate condition.
+- **P8** — 2026-11-15, documentation currency: the `SKILLS.md` rows, the
+  `ISSUE_WORKFLOW.md` verdict table, the `README.md` classifier row, the
+  changeset intent, the roadmap row (feature 152 → `in-progress · carried by fix
+  #441`, `## Fixes` row written by `roadmap fixrow`) and the re-rendered
+  projection.
+- **E1** — 2026-11-15, `bun test scripts/triage-rescope.test.mjs` · exit 0 · 12 pass / 0 fail (the red commit `2c9dd42c` measured 1 pass / 11 fail, exit 1).
+- **E2** — 2026-11-15, `bun run --cwd packages/agentic-workflow-schema test` · exit 0 · tsc clean, 853 pass / 0 fail across 48 files.
+- **E3** — 2026-11-15, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass / 0 fail (both surfaces fault-free); `bun test scripts/vocabulary-parity.test.mjs` · exit 0 · 22 pass / 0 fail.
+- **E4** — 2026-11-15, `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass / 0 fail (the two new surface ids are claimed).
+- **E5** — 2026-11-15, `bun test scripts/unit-doc-contract.test.mjs` · exit 0 · 21 pass / 0 fail; `bun test scripts/spec-by-reference.test.mjs` · exit 0 · 17 pass / 0 fail; `bun test scripts/skill-lint.test.mjs` · exit 0 · 20 pass / 0 fail.
+- **E6** — 2026-11-15, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills` (triage-issue 3173 est / 216 lines against the re-based 3491); `--documents` · exit 0 · `PASS context documents: 4 budgeted documents`.
+- **E7** — 2026-11-15, `bun scripts/lint-changeset.mjs` · exit 0 · `ok triage-issue-rescope.md`; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
+- **E8** — 2026-11-15, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/441-triage-issue-rescope/SPEC.md` · exit 0 · `verdict PASS`, P1–P9 all `PASS (6/6)`.
 
 ## Next
 

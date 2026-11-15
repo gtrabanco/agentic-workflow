@@ -44,11 +44,19 @@ Cite the evidence (paths, counts, line refs) in the decision.
 
 | Verdict | When | Route |
 |---|---|---|
+| **one-shot** | Small and understood, all six eligibility conditions evidenced, and the owner consents | Run inline with the gate only — no unit doc, no review pass; the computed tier must not answer `standard` or `high` |
 | **fix-now** | Defect, or the trigger is met | Lane fix mode → `execute-phase --fix`; add to fix index |
 | **fix-in-unit** | The issue already belongs to a unit that is currently open | Resolve on that unit's own branch via the lane's catalog steps |
 | **promote-to-feature** | It's really new capability | Lane feature mode → triage → catalog steps |
 | **postpone** | Valid but trigger unmet | Leave open; post dated re-confirmation comment |
 | **wontfix** | Obsolete or explicitly bounded | Propose closing with rationale |
+| **remove** | A deletion decided by measurement — residual state, code-net band, impact sweep | Route the unit that performs the deletion; no measured verdict, no removal |
+
+Every verdict also records the provenance of the criteria it used
+(`workflow-generic` / `project-declared` / `stamped-assumption`) and reads the
+project's `ceremony-profile@1` before naming a surface, so a verdict can never
+route to ceremony the project does not pay for. Neither `one-shot` nor `remove`
+applies a label.
 
 If the call hinges on product/risk judgment rather than evidence, present the
 verdict + options and let the user decide before acting.

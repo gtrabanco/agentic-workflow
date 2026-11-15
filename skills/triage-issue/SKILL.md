@@ -34,6 +34,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ Audit-finding mode (`<audit-id> F<k>`): the audit file carries its `↳ triaged` note, and any opened issue cites `Origin: product audit <id>, finding F<k>`
 ✓ Review-finding mode (`--prioritize-now <unit> F<k>`): every named unresolved finding gets a verdict **and a route** — a `fix-now` row is routed to `/fold-findings` (or an explicit `/execute-phase <unit> P<n>`), never implemented in this turn
 ✓ Batched input? The closing recommendation maps every issue/finding ID to its own next command, joined with ` + `; it never collapses to one generic action
+✓ Every verdict's `Criteria:` line carries a **published** provenance token (`TRIAGE_CRITERIA_PROVENANCE`) — never an invented criteria set, never a silent default
 ```
 
 Missing reference → STOP. About to end the turn with any box unchecked? The
@@ -60,6 +61,18 @@ end-of-document duties; this list is first on purpose).
   for a later turn; it does not permit a downgrade, postponement, or silent
   drop, and it never authorizes implementing them here — the fold owns the fix
   and the `folded:` flip.
+- **Typed receipts** — the same modes accept a **receipt** wherever they accept
+  a markdown file: a typed `EnvelopeFixNowFinding` envelope, or the local
+  flow's `EXTERNAL VERIFY` block. Read
+  [typed receipts](references/RECEIPTS.md) before consuming one.
+- **The organic route (`one-shot`)** — small, understood work that meets all
+  six eligibility conditions runs inline with the gate only, on your explicit
+  consent, and opens no unit. The conditions and the tier disqualification are
+  the issue process's classification step; this skill never invents a seventh.
+- **Removal (`remove`)** — a deletion is a verdict over measurements published
+  by the tree (the residual classifier, the code-net band, the impact sweep),
+  never a judgment. It routes the unit that performs the deletion; nothing is
+  deleted in a triage turn.
 
 
 ## Step 0 — Discover the project (always first)
@@ -68,6 +81,20 @@ end-of-document duties; this list is first on purpose).
 cite its backlog-sweep `Checked:` line in the body — procedural, auditable
 after the fact. When triaging a new issue on behalf of the user, the body
 includes a `Checked: <what was searched>` line.
+
+**Ceremony profile (read it before routing).** A project may declare a
+`ceremony-profile@1` block in its guide's `## Project charter` — the versioned
+machine block that says **which surfaces this project pays for** (grammar owned
+by `@gtrabanco/agentic-workflow-schema`; the router reads it and prints
+`Profile: <n> applied, <m> refused (ceremony-profile@1 — <source>)`, and an
+unprofiled project declares none). Read it before a verdict names a surface: a
+review pass or audit the profile marks `discarded` is not a route this skill may
+offer, and a piece it does not declare is not added on this skill's authority.
+The anti-gaming guard holds **in both directions**: the profile never authorizes
+skipping a tier gate, a verification or a non-negotiable (the direction's four
+non-negotiables), and a **discarded piece never turns a declared surface into an
+error** — it is an explicit, recorded skip, not a silent absence. No profile is
+the unprofiled default: unchanged behaviour.
 
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 what THIS skill needs: the location index (e.g. `docs/ROADMAP.md`, whose
@@ -92,7 +119,7 @@ gh issue view <N> --json number,title,body,labels,state,comments
 
 ## Progressive loading — select the triage source
 
-The reference allowlist is exactly the five linked paths below. Never invent or
+The reference allowlist is exactly the six linked paths below. Never invent or
 read another `references/` path. After Step 0:
 
 - Forge issue number(s): read [issue process](references/ISSUE_PROCESS.md).
@@ -105,6 +132,8 @@ read another `references/` path. After Step 0:
   names, colors, and mutation rules.
 - Only when the verdict writes a row (`fix-in-unit` or `fix-now`), read
   [fold ledger](references/FOLD_LEDGER.md) before writing the row.
+- When the findings input is a receipt rather than a markdown file, read
+  [typed receipts](references/RECEIPTS.md) before consuming it.
 
 Every resource is one hop from this file. A missing source artifact or required
 resource stops that item; batch items remain independent. Never invent a label,
@@ -132,12 +161,14 @@ classification, label ownership, and persisted-output contracts do not change.
 ## Relationship to other skills
 
 ```
-                 ┌─ fix-now ─────────▶ /unit-lane --fix <n> ─▶ the lane's implement step
+                 ┌─ one-shot ─────────▶ run inline with the gate only (owner consent, no unit doc)
+                 ├─ fix-now ─────────▶ /unit-lane --fix <n> ─▶ the lane's implement step
                  ├─ fix-in-unit ─────▶ execute-phase <NN> P<k> (fold into phase)
 triage-issue ────┤                    or fold-findings (ledger row)
                  │                    or unit-route <unit> → /unit-lane <unit> (replan)
                  ├─ promote ─────────▶ /unit-lane --from-issue <n> (feature from issue)
                  ├─ postpone ────────▶ dated comment, leave open
+                 ├─ remove ──────────▶ /unit-lane --fix <n> carrying the measured receipts
                  └─ wontfix ─────────▶ propose close
 ```
 
@@ -166,6 +197,8 @@ those phases; this skill never implements them.
   → Next: apply every verdict: #<n1> → <command> + #<n2> → <command> + #<n3> → <command>
     · fix-now → /unit-lane --fix <n>   · promote → /unit-lane --from-issue <n>
     · fix-in-unit → /execute-phase <NN> P<k> or /fold-findings — never a new planner skill
+    · one-shot → run it inline with the gate only, on the owner's consent — no unit doc
+    · remove → /unit-lane --fix <n> with the measured receipts attached
     · postpone → dated comment, leave open   · wontfix → propose close
     · same inconsistency across several issues → /product-audit (a recurring pattern,
       not isolated tickets — sweep the product rather than triaging one by one)
@@ -173,6 +206,11 @@ those phases; this skill never implements them.
 
   Replace every placeholder with every actual issue/finding ID and its recorded
   route before printing; never print `<n2>`, `<command>`, or `…` in a live batch.
+
+  A verdict whose route is the fold keeps `/fold-findings` as its command. The
+  `execute-phase --repair <receipt>` route is **not live** until the
+  fold-findings retirement triggers are green (issue #441 S7): a hand-off block
+  never prints a command the tree does not ship.
 
   The `/product-audit` line fires **only on a recurring inconsistency** — the same
   underlying problem behind multiple issues, not any single triage.

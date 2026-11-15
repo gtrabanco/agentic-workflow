@@ -7,13 +7,16 @@
    - count real consumers of a duplicated helper (is the "3rd consumer" here?),
    - check a threshold (article count, p95 latency, row count),
    - reproduce a reported defect, or confirm it's already fixed.
-   Use `grep`/`gh`/tests — cite the evidence (paths, counts, line refs).
+   Use `rg`/`gh`/tests — cite the evidence (paths, counts, line refs).
 3. **Scope-membership check.** Before classifying, decide whether this issue
    already belongs to a unit that is currently open, per this fixed checklist
    (every item independently checkable):
    - List candidate open units mechanically: roadmap/fix-index rows with
      status `in-progress` or `planned`, plus any unit with an open PR
-     (`gh pr list --state open`).
+     (`gh pr list --state open`). **Confirm the row against the forge before
+     treating it as an open unit:** a row still reading `in-progress` whose
+     issue is closed (`gh issue view <n> --json state` → `CLOSED`) is a stale
+     index cell, never a home unit — the issue's own state decides.
    - For each candidate, compare the issue against it: membership = ✓ the
      issue's ask overlaps a SPEC **acceptance criterion** or a **phase task**
      — quote **both** sides (the issue's own line and the matching SPEC/phase
@@ -37,7 +40,48 @@
        scope-returned, not as new work.
    - No candidate matched → fall through to today's four-verdict
      classification below, unchanged.
-4. **Classify** into one of:
+4. **Classify** into exactly one of the seven published verdicts. The set is
+   machine grammar — `TRIAGE_VERDICTS` in
+   `@gtrabanco/agentic-workflow-schema`, mirrored by the block below — so a
+   verdict spelled here and published nowhere is a defect, not a nuance. The
+   rows are ordered the way the classification walks: the cheapest organic
+   route first, then the five original verdicts, then removal.
+
+```text
+triage-verdict@1
+verdict | label | route
+one-shot | none | inline with the gate only, on the owner's explicit consent
+fix-now | urgent · fix-next (high severity only) | /unit-lane --fix <n>
+fix-in-unit | none | fold into the open unit, or an explicit execute-phase phase
+promote | promoted | /unit-lane --from-issue <n>
+postpone | postponed | dated comment, leave open
+wontfix | wontfix | propose close
+remove | none | the unit that performs the deletion, carrying its measured receipts
+```
+
+   - **one-shot** — the organic route: work that is small and understood runs
+     inline with the gate only, never as a unit. All six conditions must be
+     **evidenced**, not asserted:
+     1. **single surface** — one owner file or one contract surface;
+     2. **no pending design decision** — nothing waits on the owner and no
+        `open-questions@1` row is open;
+     3. **no contract consumed by others** — no other skill, package or consumer
+        reads what changes;
+     4. **existing validator** — a command that already proves the surface is
+        named before the work starts;
+     5. **resumable-from-diff** — a reader of the diff can continue the work;
+     6. **reversible** — the change is undone by reverting its own diff.
+     A condition you cannot evidence disqualifies the verdict; it never becomes
+     an assumption. **The computed tier outranks the verdict**: a `standard` or
+     `high` answer from `ceremony tier classify` disqualifies `one-shot` — fail
+     closed upward, because the classifier is not overridable by a prompt and
+     `high` never runs without its named high-risk item. The owner's explicit
+     consent is the last gate: without it, the answer is a unit.
+     A `one-shot` opens **no unit doc** and pays **no review pass**. Its record
+     is the issue's dated closing comment carrying the gate command and its
+     observed result — plus `docs/passive/<id>.md` (`ceremony passive add`) when
+     the classifier answered `passive`. Nothing else is emitted: no new receipt
+     enters without an older one retiring.
    - **fix-now** — defect or trigger met → route to `/unit-lane --fix <n>`
      (creates the fix unit and triages it; the lane's `implement` step runs
      it); add the entry to the fix index. **High severity** →
@@ -55,6 +99,24 @@
    - **wontfix** — obsolete or explicitly bounded by the issue → propose closing,
      with rationale. Apply the `wontfix` disposition label per *Disposition
      label vocabulary* above.
+   - **remove** — the deletion decision is a measurement, never a free judgment
+     (design note 11 of the direction). The verdict carries its inputs as
+     receipts and fails closed: **no measured verdict, no removal.**
+     - **residual state** — `bun scripts/residual-classify.mjs --receipt
+       <surface|symbol> --date <YYYY-MM-DD>`; for the surfaces the unit itself
+       adds, `bun scripts/residual-classify.mjs --inventory --base <rev>`. An
+       **orphan** is the only retire-legitimate state: a scaffold (`andamio`)
+       requires the recorded planned-consumer promise, and `half-built` routes
+       to resume instead of removal.
+     - **code-net ratio (ARW)** — eliminations over touched code surfaces, in
+       the band the findings corpus owns (#437). Below three measured units the
+       band is `insufficient-corpus`, so a removal cannot claim a trend.
+     - **impact sweep** — the callers and consumers of the candidate surface,
+       named from a real search of the tree.
+     A `remove` verdict applies **no label** and implements nothing here: it
+     routes the work to the unit that performs the deletion (`/unit-lane --fix
+     <n>`), which then owes the ordinary evidence. Label ownership stays
+     untouched, exactly as the issue's Non-goals state.
 5. **When the call is the user's, ask.** If the decision hinges on product/risk
    judgment rather than evidence, present the verdict and options and let the
    user choose before acting.
@@ -82,11 +144,13 @@
    then add one summary table):
 
    ```
+   triage-verdict-block@1
    ISSUE #<n> — <title>
    Trigger (the issue's own): <quoted clause | "none stated">
    Checked: <the exact commands/counts/repro run>
    Evidence: <paths, counts, line refs, output>
-   VERDICT: fix-now | fix-in-unit | promote | postpone | wontfix
+   Criteria: <workflow-generic | project-declared | stamped-assumption> — <the criterion, or "none — no project catalogue declared">
+   VERDICT: fix-now | fix-in-unit | promote | postpone | wontfix | one-shot | remove
    Action taken: <fix-index entry + route | dated comment posted + disposition label applied | close proposed + disposition label applied>
    ```
 
@@ -94,6 +158,23 @@
    verdict, evidence, and action above are exactly what they would have been
    without the scope-membership step — today's four-verdict classification,
    unchanged.
+
+   **Criteria provenance (mandatory, every verdict).** The `Criteria:` line
+   records where the criteria this verdict used come from, from the published
+   set `TRIAGE_CRITERIA_PROVENANCE`:
+   - `workflow-generic` — the workflow's own baseline. It is the only honest
+     value when the project declares no criteria catalogue
+     (`docs/workflow/VERIFICATION_CRITERIA.md` absent from the documentation
+     map), and it is never a silent substitute for one.
+   - `project-declared` — the project's criteria catalogue states it; quote the
+     catalogue row.
+   - `stamped-assumption` — a **dated** assumption, recorded because the
+     project declares no catalogue yet and the verdict cannot wait.
+   A verdict that touches an **open-with-default** criterion surfaces it to the
+   owner and waits for the answer (help-mode per the charter's question
+   protocol: the recommended option with its reason) instead of assuming it. A
+   criterion with no provenance is a defect, the same way a claim without a
+   source is.
 
    **Batch summary table — group by home unit.** When triaging several issues
    in one run, the closing summary table groups every `fix-in-unit` issue
