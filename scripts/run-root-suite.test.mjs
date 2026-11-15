@@ -250,6 +250,20 @@ test("testBudgetFor: an allowlisted suite gets its own budget, everything else t
   assert.equal(testBudgetFor("scripts/fast.test.mjs", new Map()), 10_000);
 });
 
+test("S9: the two measured spawn-heavy suites carry their declared budget in the shipped allowlist", () => {
+  // Both spawn the shipped ceremony CLI per case, so their cost is the spawn
+  // itself: under the gate's 6-worker pool with concurrent sessions on the
+  // box they crossed the 10s per-test budget (10035/10058ms and 10051ms on
+  // 2026-11-15) while measuring ~2.1s idle (owner amendment S9).
+  const allowlist = readAllowlist();
+  for (const file of ["scripts/ceremony-passive.test.mjs", "scripts/ceremony-unit-plan.test.mjs"]) {
+    assert.equal(testBudgetFor(file, allowlist), 30_000, `${file} crossed the 10s per-test budget under load — its measured budget must be declared`);
+    const entry = allowlist.get(file);
+    assert.ok(entry.reason.trim(), `${file} declares why it needs the budget`);
+    assert.ok(entry.measured.trim(), `${file} declares what was measured`);
+  }
+});
+
 /* -------------------------------------------------- execution bounds (live) */
 
 /** A suite whose only test never resolves while keeping the event loop alive
@@ -303,6 +317,30 @@ test("end-to-end: a suite that allocates past the memory cap dies with a named S
   assert.notEqual(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /SUITE MEMORY CAP/, "the verdict is named, never a silent pass");
   assert.match(result.stdout, /FAIL .*alloc\.test\.mjs/);
+});
+
+test("end-to-end: a suite killed by --bail reports KILLED, never FAIL, and keeps its partial output out of the log (S9)", () => {
+  // The first red aborts the dispatch and SIGKILLs what is still in flight:
+  // that suite is collateral of the first failure, not a second one — it used
+  // to print FAIL over all-green output, which reads as a second defect
+  // (owner amendment S9).
+  const dir = tempRoot("root-suite-bailkill-");
+  const red = join(dir, "red.test.mjs");
+  const hang = join(dir, "hang.test.mjs");
+  writeFileSync(red, 'import { test } from "node:test";\ntest("fails at once", () => { throw new Error("boom"); });\n');
+  writeFileSync(
+    hang,
+    'import { test } from "node:test";\nconsole.log("PARTIAL-MARKER");\ntest("never resolves", () => new Promise(() => setInterval(() => {}, 1_000)));\n',
+  );
+  const result = spawnSync(
+    process.execPath,
+    [SCRIPT, "--bail", "--jobs", "2", red, hang],
+    { cwd: ROOT, encoding: "utf8", timeout: 60_000 },
+  );
+  assert.notEqual(result.status, 0, `the first red exits non-zero (stdout: ${result.stdout})`);
+  assert.match(result.stdout, /KILLED .*hang\.test\.mjs/, "a bail-killed suite is named KILLED");
+  assert.ok(!/FAIL .*hang\.test\.mjs/.test(result.stdout), "a bail-killed suite is never FAIL");
+  assert.ok(!result.stdout.includes("PARTIAL-MARKER"), "a killed suite's partial output stays out of the log");
 });
 
 /* ------------------------------------------------------------ integration */
