@@ -142,6 +142,16 @@ export function planEmbedProfile({ root, entry, readFile }: EmbedProfileDeps): E
   const path = configPath(root);
   const body = readIndexConfig(path, readFile);
   const current = body?.provider ?? null;
+  // A `provider` that is present but not an object (`"provider": "acme"`, an
+  // array, `true`) cannot be merged per key at all: refuse it here, where the
+  // reason is visible, instead of building a candidate the crate would then
+  // reject with a message about a key nobody names.
+  if (current !== null && (typeof current !== "object" || Array.isArray(current))) {
+    throw new EmbedProfileRefusal(
+      "invalid-index-config",
+      `${path} has a provider block that is not an object (${JSON.stringify(current)}) — fix it before a profile can be applied`,
+    );
+  }
   const preset = entry.profile;
 
   const rows: EmbedProfileRow[] = [];
