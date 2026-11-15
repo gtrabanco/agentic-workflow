@@ -14,6 +14,8 @@
 // installed package's extension at startup).
 
 import type { EffectiveConfig, RecommendedProfile } from "./types.js";
+import type { ProviderConfig } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
+import { validateProviderConfig } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
 
 /** What a preset's resolver receives: the merged, validated config, plus —
  *  amendment 2 — the named profile the chain asked for. `profile` is present
@@ -46,6 +48,18 @@ export interface ProviderPreset {
    *  unknown `presetProfile` selection) resolves to. Required whenever
    *  `profiles` is set. */
   defaultProfile?: string;
+  /**
+   * Issue #541: the provider's **doc-index embedding profile** — the literal
+   * `.agentic-workflow/index.json` `provider` block this preset wants a project
+   * to use (endpoint, model, key variable, chunk limit, pacing). It is config
+   * data, never behaviour: this package carries it to the surface that writes it
+   * and the runner crate validates it against its own schema, so the crate stays
+   * provider-neutral and no vendor name enters this package.
+   *
+   * A profile the crate would refuse is refused **here**, at registration, so a
+   * broken companion fails loudly instead of staging an unusable config later.
+   */
+  embedProfile?: ProviderConfig;
   resolveProfile(input: PresetResolutionInput): RecommendedProfile;
 }
 
@@ -58,6 +72,19 @@ export function registerProviderPreset(preset: ProviderPreset): void {
   }
   if (typeof preset.resolveProfile !== "function") {
     throw new TypeError("registerProviderPreset: preset.resolveProfile must be a function");
+  }
+  if (preset.embedProfile !== undefined) {
+    // Issue #541: the shape is the crate's, so its validator is the judge — a
+    // second set of checks here would drift from the one that loads the file.
+    try {
+      validateProviderConfig(preset.embedProfile);
+    } catch (error) {
+      throw new TypeError(
+        `registerProviderPreset: ${preset.provider}'s embedProfile is not a valid index provider block — ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
   registry.set(preset.provider, preset);
 }
@@ -80,6 +107,17 @@ export function getProviderPresets(): readonly ProviderPreset[] {
 /** Look one preset up by provider id. */
 export function findProviderPreset(provider: string): ProviderPreset | undefined {
   return registry.get(provider);
+}
+
+/**
+ * The doc-index embedding profiles the registered presets carry, in registration
+ * order (issue #541). The materialization surface reads this; a preset without a
+ * profile contributes nothing here, so every existing companion is unaffected.
+ */
+export function getEmbedProfiles(): readonly { provider: string; profile: ProviderConfig }[] {
+  return [...registry.values()]
+    .filter((preset): preset is ProviderPreset & { embedProfile: ProviderConfig } => preset.embedProfile !== undefined)
+    .map((preset) => ({ provider: preset.provider, profile: preset.embedProfile }));
 }
 
 /** The chain name one preset profile travels under: bare provider for the
