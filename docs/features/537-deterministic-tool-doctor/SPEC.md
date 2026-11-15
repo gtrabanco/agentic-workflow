@@ -113,7 +113,7 @@ consumer rather than an orphan):
 | `tool-inventory@1` (crate README block) | the checker's own inventory parser (the doctor refuses when the doc and the probes disagree) |
 | `COMPANION_PAIRINGS` (crate) | the `gentle-engram` check's curated pair |
 
-`rg -c 'retire' <this change>` is 0 by construction: no name is removed.
+`git diff origin/main...HEAD -- packages scripts skills template .changeset README.md AGENTS.md docs/workflow docs/generated docs/ROADMAP.md | rg -ci retire` → 0 by construction: no name is removed. (The whole-diff count is 4 — every hit this section's own prose; the bare `<this change>` spelling was self-referential, external verify 2026-11-15.)
 
 ## Non-goals
 
@@ -171,10 +171,12 @@ none
 
 ## Known pre-existing issues
 
-- `docs/workflow/SKILL_CONTEXT_BUDGETS.json` declares `AGENTS.md`
-  `machineLines: 137`. Adding rows to `normative-surfaces@1` changes that
-  number; the re-pin is part of this change with its source recorded, exactly
-  the procedure the manifest declares. Affects: yes (it is this unit's write).
+- `docs/workflow/SKILL_CONTEXT_BUDGETS.json` declared `AGENTS.md`
+  `machineLines: 137` at the cut. Adding rows to `normative-surfaces@1` changed
+  that number; the re-pin shipped with this change with its source recorded,
+  exactly the procedure the manifest declares — the manifest pins 142 and
+  `bun scripts/check-skill-context.mjs --documents` is green. Affects: yes (it
+  is this unit's write).
 - `scripts/local-gate.mjs`'s shared-document merge drivers are unarmed in a
   fresh worktree (`git config merge.agentic-shared-*.driver` unset here); that
   is the degradation this unit detects, not a defect it introduces. Affects:
@@ -207,8 +209,13 @@ none
   Check: `bun test test/doctor.checks.test.mjs` exits 0 (all fourteen
   documented surfaces, the pi-specific rows carrying a pointer, no installer
   invocation in any path).
-- **AC-S4** — The checker is `doctor@1`, read-only, with injectable probes: no
-  test touches the host's real binaries, HTTP endpoints or git config.
+- **AC-S4** — The checker is `doctor@1`, read-only, with injectable probes: the
+  contract suites (`doctor.checks`, `doctor.inventory`) touch none of the
+  host's real binaries, HTTP endpoints or git config — every case runs through
+  injected `ops`. The two CLI boundary suites (`doctor.cli`, `doctor.wizard`)
+  spawn the real bin against `--root` scratch trees by design (their headers
+  declare it): they write nothing, and their assertions stay host-independent
+  (the wizard's git cases skip on a machine without git).
   Check: `bun test test/doctor.checks.test.mjs test/doctor.inventory.test.mjs`
   exits 0 with every case driven through injected `ops`.
 - **AC-S5** — The three new vocabularies are published as crate
@@ -229,8 +236,9 @@ none
   step names the envelope as its tool evidence, and `GATE_INVENTORY.md` owns the
   carrier rows.
   Check: `bun test scripts/setup-env.test.mjs` exits 0 (the carrier mode plus
-  the unchanged `--check`), `rg -n 'agentic-workflow doctor' skills/init-workspace`
-  matches ≥1, and `rg -n 'doctor@1' docs/workflow/GATE_INVENTORY.md` matches ≥1.
+  the unchanged `--check`), `rg -n 'agentic-workflow@<pin> doctor --json'
+  skills/init-workspace` matches ≥1, and `rg -n 'doctor@1'
+  docs/workflow/GATE_INVENTORY.md` matches ≥1.
 - **AC-S8** — The crate README's `tool-inventory@1` block is the single
   declaration of every default third-party tool (what, why, required/optional,
   how detected, alternative, route); the doctor reads it and refuses when the
@@ -451,6 +459,27 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   the fake's `readText`/`exists`/`listDir` close over their own maps (overriding
   the map alone changes nothing), and an advisory that recommends a command
   carries it. Every assertion the RED commit made still holds.
+- **L3** — 2026-11-15, the owner's correction request, verbatim (the external
+  verify's five blockers and two advisories are the corpus it names):
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **E10** — 2026-11-15, the differential refreshed at the correction head
+  (external verify B3) · `git archive` copies of `origin/main` and the branch
+  in `mktemp -d`, `node scripts/setup-env.mjs --check` and `--nope` in both ·
+  `--check` byte-identical stdout, stderr and exit (1) · `--nope` identical
+  stdout and exit (2), stderr differing only in the usage line (`[--check]` →
+  `[--check | --doctor [--json]]`, the `315b831e` message edit E3 never re-ran
+  after) — now declared here and in the regression-scope row; E3's 14:10 record
+  stands for the head it ran at.
+- **E11** — 2026-11-15, the correction batch's corpus re-run · `bun test
+  test/doctor.cli.test.mjs` exit 0 (6 pass; was exit 1 on bun's 5s default) ·
+  `bun test test/doctor.wizard.test.mjs` exit 0 (6 pass; was exit 1) · the
+  four-suite plain run exit 0 (38 pass, covering O3's injected-`ops` validator)
+  · `rg -c ' \*   node scripts/setup-env\.mjs \[--check\]$' scripts/setup-env.mjs`
+  → 0 (the stale usage line, B2) — re-running O1, O2, O3 and O15–O19's declared
+  validators after the per-test spawn budget, the usage-line repair and the
+  O3/AC-S4 claim re-scope; no assertion was touched.
 
 ## Next
 
@@ -486,7 +515,7 @@ merged, so the doctor lands as subcommands of the existing bin.
 | scenario | verify with |
 |---|---|
 | every existing bin subcommand keeps its argv, receipt and exit codes | `bun test` in `packages/agentic-workflow` exits 0 with the pre-existing suites unchanged |
-| `scripts/setup-env.mjs --check` output, exit codes and refusal rows are byte-identical to the base commit | the differential harness in `mktemp -d` reports zero difference for `--check` |
+| `scripts/setup-env.mjs --check` output and exit codes are byte-identical to the base commit; the refusal *usage line* gained `| --doctor [--json]` as this change's declared delta (E10) | the differential harness in `mktemp -d` reports zero difference for `--check`, and only the declared usage line for `--nope` |
 | `scripts/setup-env.mjs`'s install path is untouched (this unit adds a read-only mode) | `bun test scripts/setup-env.test.mjs` exits 0 with the pre-existing cases unchanged |
 | `init-workspace` keeps loading exactly its declared reference set | `rg -n 'references/' skills/init-workspace/SKILL.md` names only the six allowlisted paths |
 | the drift gate, the context budgets and the docs projection stay green | `bun scripts/local-gate.mjs` exits 0 |
