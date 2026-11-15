@@ -73,6 +73,7 @@ export const CRATE_COMMANDS = Object.freeze([
   "changelog",
   "config",
   "doc",
+  "doctor",
   "journal",
   "log",
   "manifest",
@@ -83,6 +84,7 @@ export const CRATE_COMMANDS = Object.freeze([
   "resources",
   "roadmap",
   "section",
+  "setup",
   "unit-doc",
   "verify",
 ]);
