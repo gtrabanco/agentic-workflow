@@ -5,6 +5,13 @@
  * envelope, the exit-code mapping and the read-only invariant (a scratch tree is
  * byte-identical after a run). The probes are the real ones — this suite runs
  * against a scratch root so no project file of this repository is read.
+ *
+ * Every case that spawns the bin carries `{ timeout: 30_000 }` — one spawn
+ * costs ~2.7s on this host (the doctor's real probes; `serena --version` alone
+ * is seconds on a cold interpreter), so a two-spawn case crosses bun's 5s
+ * default under a plain `bun test <file>` run. The package suite already runs
+ * with `--timeout=30000`; the per-test budget makes the file's own declared
+ * check command exit 0 under any runner (measured 2026-11-15).
  */
 
 import { test } from "node:test";
@@ -54,7 +61,7 @@ function scratchProject() {
   return root;
 }
 
-test("`doctor --json` prints the doctor@1 envelope with one row per documented surface", () => {
+test("`doctor --json` prints the doctor@1 envelope with one row per documented surface", { timeout: 30_000 }, () => {
   const root = scratchProject();
   try {
     const result = run("doctor", "--json", "--root", root);
@@ -74,7 +81,7 @@ test("`doctor --json` prints the doctor@1 envelope with one row per documented s
   }
 });
 
-test("the exit code is the required-surface rule, recomputed from the rows", () => {
+test("the exit code is the required-surface rule, recomputed from the rows", { timeout: 30_000 }, () => {
   const root = scratchProject();
   try {
     const envelope = JSON.parse(run("doctor", "--json", "--root", root).stdout);
@@ -85,7 +92,7 @@ test("the exit code is the required-surface rule, recomputed from the rows", () 
   }
 });
 
-test("`doctor` writes nothing: the scratch tree is byte-identical after the run", () => {
+test("`doctor` writes nothing: the scratch tree is byte-identical after the run", { timeout: 30_000 }, () => {
   const root = scratchProject();
   try {
     const before = snapshot(root);
@@ -97,7 +104,7 @@ test("`doctor` writes nothing: the scratch tree is byte-identical after the run"
   }
 });
 
-test("the human block is the fixed one: header, one labelled line per row, verdict", () => {
+test("the human block is the fixed one: header, one labelled line per row, verdict", { timeout: 30_000 }, () => {
   const root = scratchProject();
   try {
     const result = run("doctor", "--root", root);
@@ -112,7 +119,7 @@ test("the human block is the fixed one: header, one labelled line per row, verdi
   }
 });
 
-test("an unknown flag is a refusal naming the usage, exit 2", () => {
+test("an unknown flag is a refusal naming the usage, exit 2", { timeout: 30_000 }, () => {
   const root = scratchProject();
   try {
     const result = run("doctor", "--root", root, "--nope");
