@@ -29,7 +29,7 @@ import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { discoverPrefixes } from "./tmp-gc.mjs";
+import { discoverPrefixes, sweep } from "./tmp-gc.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GC = path.join(repoRoot, "scripts/tmp-gc.mjs");
@@ -107,6 +107,32 @@ test("the GC removes matching entries older than the age bound and keeps everyth
       assert.match(result.stdout, /REMOVED/);
     },
     { entries: [["gc-fixture-old", 180], ["gc-fixture-fresh", 0], ["unrelated-old", 180]] },
+  );
+});
+
+test("S9: a candidate a peer sweep removed between readdir and stat is skipped, never a GC error", () => {
+  // Two gates on one machine sweep the same roots: the peer's success lands
+  // between this sweep's readdir and its lstat, the stat throws ENOENT, and
+  // the error used to fail the verdict (owner amendment S9 — the push red of
+  // 2026-11-15: candidates and removals equal, exit 1 anyway).
+  withFixture(
+    ({ root, sources }) => {
+      const prefixes = discoverPrefixes(sources);
+      const target = path.join(root, "gc-fixture-old");
+      const peerSwept = (full) => {
+        if (full === target) {
+          const error = new Error(`ENOENT: no such file or directory, lstat '${full}'`);
+          error.code = "ENOENT";
+          throw error;
+        }
+        return fs.lstatSync(full);
+      };
+      const result = sweep(root, prefixes, 60 * 60_000, false, peerSwept);
+      assert.equal(result.errors.length, 0, `a peer's success is not this sweep's error: ${JSON.stringify(result.errors)}`);
+      assert.equal(result.candidates, 0, "an entry that vanished before the stat is not a candidate");
+      assert.equal(fs.existsSync(target), true, "nothing is removed on behalf of an entry that could not be stat'd");
+    },
+    { entries: [["gc-fixture-old", 180]] },
   );
 });
 

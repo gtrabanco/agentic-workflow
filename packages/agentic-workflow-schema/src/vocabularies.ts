@@ -214,3 +214,42 @@ export const PASS_NAMES = Object.freeze([
   "debt",
 ]);
 export type PassName = (typeof PASS_NAMES)[number];
+
+/** The `triage-issue` verdict vocabulary (`triage-verdict`, issue #441).
+ *  The router of the ODD-hybrid direction (#307) classifies every input into
+ *  exactly one of these, and the set is ordered the way the classification
+ *  walks: the organic route first (`one-shot` — small understood work runs
+ *  inline with the gate only), then the five verdicts the skill has always
+ *  had, then `remove` — the deletion decision, which is a measurement and not
+ *  a judgment. The prose surface (`triage-verdict@1` in the skill's
+ *  `references/ISSUE_PROCESS.md`) enumerates the same tokens in the same
+ *  order; a token added here without a row there is the drift the inventory
+ *  refuses.
+ *
+ *  Neither `one-shot` nor `remove` applies a disposition label: the label
+ *  vocabulary stays untouched (issue #441's Non-goals). */
+export const TRIAGE_VERDICTS = Object.freeze([
+  "one-shot",
+  "fix-now",
+  "fix-in-unit",
+  "promote",
+  "postpone",
+  "wontfix",
+  "remove",
+]);
+export type TriageVerdict = (typeof TRIAGE_VERDICTS)[number];
+
+/** The provenance a verdict records for the criteria it used
+ *  (`triage-criteria-provenance`, issue #441, from the charter's rule:
+ *  issue #435 S10). `workflow-generic` — the workflow's own baseline, the only
+ *  value a project with no declared catalogue can honestly claim;
+ *  `project-declared` — the project's criteria catalogue
+ *  (`docs/workflow/VERIFICATION_CRITERIA.md`) said so; `stamped-assumption` —
+ *  a dated assumption recorded because the project declares no catalogue yet,
+ *  never a silent default. A criterion with no provenance is a defect. */
+export const TRIAGE_CRITERIA_PROVENANCE = Object.freeze([
+  "workflow-generic",
+  "project-declared",
+  "stamped-assumption",
+]);
+export type TriageCriteriaProvenance = (typeof TRIAGE_CRITERIA_PROVENANCE)[number];

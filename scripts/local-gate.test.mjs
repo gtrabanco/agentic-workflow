@@ -350,6 +350,43 @@ test("the schema dist writer waits for the root-suite reader that spawns the cra
   );
 });
 
+test("S9: every dist writer is chained and no reader overlaps a writer", () => {
+  // The DEPS comment above promises exactly this ("a reader between two
+  // emissions imports a half-written module"), but only schema-node-compat
+  // carried the edge: the crate steps' package scripts re-run that tsc while
+  // root-suite spawns the CLI that imports it, the two crate steps are
+  // siblings (so their two tsc runs overlap each other), and pi-compat-guard /
+  // pi-node-compat read the very same dist with no writer edge at all
+  // (owner amendment S9, 2026-11-15).
+  assert.ok(DEPS["crate-suite-bun"].includes("root-suite"), "crate-suite-bun re-emits dist while root-suite reads it — it must wait for the reader");
+  assert.ok(DEPS["crate-suite-node"].includes("crate-suite-bun"), "the two package-script tsc runs must never overlap each other");
+  assert.ok(DEPS["schema-node-compat"].includes("crate-suite-node"), "schema-node-compat's own tsc waits for the last crate writer");
+  assert.ok(DEPS["pi-compat-guard"].includes("schema-node-compat"), "pi-compat-guard reads the schema's types after the last writer");
+  assert.ok(DEPS["pi-node-compat"].includes("schema-node-compat"), "pi-node-compat imports the schema package after the last writer");
+  assert.deepEqual(DEPS["root-suite"], ["workspace-install", "schema-build"], "root-suite keeps its slot: the common red must not wait behind the crate suites");
+});
+
+test("S9: --jobs auto sizes the pool from the load, capped at the default", async () => {
+  const { autoJobs } = await import("./local-gate.mjs");
+  assert.equal(typeof autoJobs, "function", "autoJobs is exported for the hook's sizing policy");
+  assert.equal(autoJobs(0.2, 6, 4), 4, "an idle machine keeps the default");
+  assert.equal(autoJobs(3, 6, 4), 2, "half the cores busy halves the pool");
+  assert.equal(autoJobs(6, 6, 4), 1, "a saturated machine runs one worker");
+  assert.equal(autoJobs(12.5, 6, 4), 1, "load above the core count still one worker");
+  assert.equal(autoJobs(0.1, 1, 1), 1, "never below one worker");
+});
+
+test("S9: the gate accepts --jobs auto as a bounded worker count", () => {
+  const result = gate(["--only", "version-parity-content", "--jobs", "auto", "--skip-network"]);
+  assert.equal(result.status, 0, `--jobs auto is a legal value (status ${result.status}: ${result.stderr})`);
+});
+
+test("S9: the push hook passes an explicit, overridable jobs budget on every exec line", () => {
+  const body = hookBody();
+  assert.match(body, /jobs_flag="--jobs \$\{AGENTIC_WORKFLOW_GATE_JOBS:-auto\}"/, "the hook sizes itself from the load, overridable per machine");
+  assert.equal((body.match(/\$jobs_flag/g) ?? []).length, 4, "all four exec lines carry the jobs budget");
+});
+
 /** A mock runner: each step's duration and exit status come from its row. */
 function mockRunner(timeline) {
   const events = [];

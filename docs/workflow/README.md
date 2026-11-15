@@ -13,7 +13,7 @@ Notion ("Agentic Workflow").
 |---|---|
 | [LANE_FLOW.md](LANE_FLOW.md) | How a unit flows through the adaptive lane: lifecycle, triage rules, guards, evidence, review, deterministic next-step, command cheat-sheet, and programmatic contract |
 | [FEATURE_WORKFLOW.md](FEATURE_WORKFLOW.md) | Idea/issue → SPEC + artifacts → phase execution → hardening → review → audit → PR |
-| [ISSUE_WORKFLOW.md](ISSUE_WORKFLOW.md) | Triage → classify (fix-now / postpone / wontfix / promote) → route → report |
+| [ISSUE_WORKFLOW.md](ISSUE_WORKFLOW.md) | Triage → classify (one-shot / fix-now / fix-in-unit / promote / postpone / wontfix / remove) → route → report |
 | [SKILLS.md](SKILLS.md) | Every skill in the system, what it does, and how they compose |
 | [SKILL_AUTHORING.md](SKILL_AUTHORING.md) | The authoring contract for a skill: frontmatter, body sections, the closing `→ Next:` block, and the hand-off-versus-compose rule across model tiers |
 | [REVIEW_AND_CLASSIFY.md](REVIEW_AND_CLASSIFY.md) | When & how to review — `review-change` (the right reviews per platform) and its `review-implementation` engine (find → classified decision table) |
@@ -74,6 +74,7 @@ must not have one.
                  ┌─────────────── ISSUE ───────────────┐
                  │            triage-issue              │
                  │   fix-now │ promote │ postpone │ wontfix
+                 │   one-shot │ fix-in-unit │ remove
                  └─────┬──────────┬──────────┬──────────┘
                        │          │          └─ leave open + dated comment
                        │          │
