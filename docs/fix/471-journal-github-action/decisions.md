@@ -79,7 +79,14 @@ justification | packages/agentic-workflow/test/journal.headless.test.mjs | P2 | 
   unrelated step, and the writer must not create a second entry or fail the job.
   `journal headless` therefore answers `already-present` (exit 0, the existing
   name and path) when the carrier already holds this run's narrative fragment.
-  Authority: `S13`, PE-006 (`GITHUB_RUN_ID` is unchanged by a re-run).
+  **Amended 2026-11-15 (correction batch, EXTERNAL VERIFY B1):** the detection
+  reads further than the carrier — once the aggregator consumed the fragment,
+  the run's entry lives in the journal itself, so the lookup finds it there
+  (read-only, through the heading label the run's identity rides in) and answers
+  `already-present` with where the entry lives and the reconstructed original
+  name. The no-duplicate promise now holds across the whole lifecycle, not only
+  while the fragment is pending. Authority: `S13`, PE-006 (`GITHUB_RUN_ID` is
+  unchanged by a re-run).
 
 - **D7** (2026-11-15) — **The action never holds a token and declares no
   permission.** A composite action's metadata has no `permissions` key (PE-006),

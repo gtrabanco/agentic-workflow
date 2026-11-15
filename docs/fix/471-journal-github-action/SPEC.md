@@ -113,8 +113,10 @@ What this change touches beyond its own lines, cut at plan time:
   GitHub Action. `journal/` is the path the `uses:` form names
   (`gtrabanco/agentic-workflow/journal@<tag>`), so the directory enters the repo
   root layout; nothing in the tree enumerates root directories for a verdict
-  (`rg -l 'readdirSync\(.*ROOT' scripts/*.test.mjs` → only
-  `pre-execution-quality.test.mjs:607`, scoped to `*.md`).
+  (`rg -l 'readdirSync\(.*ROOT' scripts/*.test.mjs` → `unit-doc-contract.test.mjs`,
+  `vocabulary-parity.test.mjs`, `git-env.test.mjs` — every match opens a fixed
+  subdirectory (`skills/init-workspace/references`, `skills`, `packages`), never
+  the root itself).
 - **New: `packages/agentic-workflow/src/journal/headless.mjs`**, reached through
   a new `journal headless` operation in `bin/agentic-workflow.mjs`. The router
   branch is additive: the existing `journal aggregate|write|name` branches keep
@@ -417,12 +419,19 @@ the block above is this unit's authoritative step list, recorded at the freeze
 - **E6** — 2026-11-15, the mechanical cells: `rg -n 'LOGS\.md' journal/ packages/agentic-workflow/src/journal/headless.mjs` → 0 lines (O5); `rg -ci 'gh api|api\.github\.com|GITHUB_TOKEN|GH_TOKEN|permissions:' journal/` → 0 (O6); `rg -ci 'github|gitlab|forge' packages/agentic-workflow/src/journal/headless.mjs` → 0 (the crate module knows no host — the AC5 rule the corpus enforces).
 - **D1** — 2026-11-15, the `version-parity-content` step caught the first changeset as incomplete: editing `skills/init-workspace/SKILL.md` ships content in `@gtrabanco/pi-agentic-workflow`, so the changeset declares it (`patch`) beside the crate's `minor`. Fixed in the changeset, not in the gate.
 - **D2** — 2026-11-15, the roadmap's two tables went through their own writers: the `## Fixes` row through `roadmap fixrow`, the Features row's status through `roadmap rowUpsert` with the row's existing slug, depends-on and description read back byte-exact, and the projection through `bun scripts/docs-generate.mjs`. The emitter then applied this doc's `roadmap_summary:` over the Fixes row's Notes cell — its documented behaviour — so the summary here is the detailed text and the row carries it verbatim.
+- **L2** — 2026-11-15, the correction request, verbatim: "Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff" — §0 resolved `fix findings / repair` against `external-verify.md` (NEEDS-DECISION, 2 blockers, 5 advisories); O5, O10 and O12 flipped `planned` before the first line of code · `158c6048`.
+- **E7** — 2026-11-15, the frozen-failure corpus (§2): `bun test packages/agentic-workflow/test/journal.headless.test.mjs` at `54f1a3e3` · exit 1 · 25 pass / 2 fail — B1's reproducer (the re-run after aggregation answered `'written'` where the receipt demands `already-present`) and A2's floor rule (a `1.3.0` bun still launched `bunx`); the eligible-bun pin (`1.4.5` → `bunx` at the crate version) was green from the start as the previous-behavior test.
+- **E8** — 2026-11-15, green at `376550bc` · exit 0 · 27 pass / 0 fail; the toy-repo walk (`mktemp -d`, removed after): write → `journal aggregate` consumes → re-run answers `already-present` with the exactly reconstructed name `20261115T204848Z-main-narrative-gha-42.md`, the journal's bytes unchanged by the lookup (`md5` identical), the carrier empty, the second aggregate appends nothing, exactly one heading for the run.
+- **E9** — 2026-11-15, O5's cells re-run: `rg -n 'LOGS\.md' journal/ packages/agentic-workflow/src/journal/headless.mjs` → 0 lines and no `appendFileSync` in either file — the run-detection reads through `DEFAULT_LOG`, imported from the aggregator's own module; the cell now states the writer-only invariant S15/AC7 freezes (never writes, appends or edits).
+- **F1** — 2026-11-15, the EXTERNAL VERIFY blockers folded in one batch: B1 (carrier-scoped idempotency) → the consumed-entry lookup in `src/journal/headless.mjs`, corpus `54f1a3e3` (red) → `376550bc` (green); B2 (the `readdirSync.*ROOT` citation whose recorded result never reproduced) → the Impact parenthetical now records the command's real output, re-runnable verbatim in this tree. Receipt addendum in `external-verify.md`.
+- **F2** — 2026-11-15, advisory triage: A1 folded (the action's `block` input no longer promises the `-` stdin the composite step cannot feed; the `fragment` output names the journal once the aggregator consumed the entry), A2 folded (the adapter gates `bun` by the manifest's own `engines.bun`; an old bun falls through to `npx`, tested both ways), A4 folded (the template's doc-map writer row gains the headless CI run); A3 wontfix (the roadmap Features-row description is the hand-owned issue-proposal cell `rowUpsert` preserves byte-exact, and the system-level statement stays true through the aggregator), A5 wontfix (fix-452's dated receipt is frozen history, not live narration).
 
 ## Next
 
-The owner's verification of PR [#562](https://github.com/gtrabanco/agentic-workflow/pull/562)
-and the merge (merge authority stays with the owner). Nothing is pending in this
-unit: every obligation is `verified` on a foreground run.
+Owner **delta re-verify** of the correction batch's two folded blockers (F1:
+re-run E7 → E9's validators plus the touched obligation rows' cells), then the
+merge of PR [#562](https://github.com/gtrabanco/agentic-workflow/pull/562)
+(merge authority stays with the owner). A3/A5 stand wontfix with reasons (F2).
 
 ## References
 
