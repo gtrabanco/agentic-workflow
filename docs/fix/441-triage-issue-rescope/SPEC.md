@@ -69,6 +69,21 @@ and the owner's routing answer to the resolution question:
 **S8 — Batch flow unchanged.**
 > **Batch flow unchanged**: fixed-format verdict blocks, labels applied by verdict per the contract, summary table + `→ Next` map with one command per issue.
 
+**S9 — Fix the gate's five concurrency defects in this unit.**
+> Prefiero arreglarlo en esta misma unidad
+
+Scope adopted with that answer (the owner's selection of option A-441 over the
+enumerated plan table; the enumeration below is the adopted plan, not the
+requester's prose): (a) the `DEPS` graph lets `crate-suite-bun` /
+`crate-suite-node` re-emit `packages/agentic-workflow-schema/dist/` while
+`root-suite` imports it — and the two package-script `tsc` runs also overlap
+each other; (b) a suite killed by `--bail` is reported `FAIL` with all-green
+output; (c) the spawn-heavy suites that cross the 10s per-test budget under
+load are undeclared in `scripts/test-timeout-allowlist.json`; (d) `tmp-gc`
+reds when a concurrent sweep removes a candidate between its `readdir` and
+its `lstat`; (e) the pre-push hook runs the offline subset at the full worker
+count with no regard for the load other sessions already put on the machine.
+
 ## Impact
 
 The sweep this unit owes — cut here, not rediscovered at review:
@@ -101,6 +116,15 @@ The sweep this unit owes — cut here, not rediscovered at review:
   issue is closed) — so the scope-membership step must not treat a stale
   `in-progress` row as an open unit without checking the issue's state. That
   is recorded as a known pre-existing issue below and is **not** repaired here.
+
+**Scope amendment S9 (2026-11-15, owner):** the same unit now also repairs the
+gate's five concurrency defects — see `S9`, tasks P10–P14 and obligations
+O14–O19. Surfaces: `scripts/local-gate.mjs` (the dist-writer chain, `--jobs
+auto`, the hook body), `scripts/run-root-suite.mjs` (the bail-kill line),
+`scripts/test-timeout-allowlist.json` (two measured entries),
+`scripts/tmp-gc.mjs` (the `ENOENT` skip), their three sibling suites, and one
+inline clause in `AGENTS.md`'s gate paragraph. The one-PR override over
+"one PR per unit" is the owner's and is recorded as D9.
 
 ## Retirements
 
@@ -236,6 +260,14 @@ One observable criterion per requirement; each names the check that proves it.
    `scripts/review-loop-discipline.test.mjs` stay green).
 10. **AC10 (all)** — the repository gate accepts the change:
     `bun scripts/local-gate.mjs` exits 0.
+11. **AC11 (S9)** — the five gate defects are gone and the gate still passes:
+    `bun test scripts/local-gate.test.mjs` exits 0 (the dist-writer chain, the
+    `--jobs auto` policy, the hook's jobs flag),
+    `bun test scripts/run-root-suite.test.mjs` exits 0 (the two declared
+    budgets and the `KILLED` wire format),
+    `bun test scripts/tmp-gc.test.mjs` exits 0 (the concurrent-sweep skip),
+    `bun scripts/check-skill-context.mjs --documents` exits 0 (the AGENTS
+    clause), and `bun scripts/local-gate.mjs` exits 0.
 
 ## Tasks
 
@@ -277,6 +309,21 @@ created | scripts/triage-rescope.test.mjs | The unit's frozen reproducers: every
 - P9 — Verify: the new suite, the schema package suite, the context budgets, the document verifier and the full local gate, with every obligation row closed by a foreground run (validator: `bun scripts/local-gate.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
   - Relevant files: docs/fix/441-triage-issue-rescope/SPEC.md, docs/fix/441-triage-issue-rescope/planning-obligations.md
+- P10 — Land the S9 RED corpus across the three sibling suites: the dist-graph edges, the hook's jobs flag and `--jobs auto`, the two declared budgets, the `KILLED (bail)` wire format and the concurrent-sweep skip (validator: `bun test scripts/local-gate.test.mjs`, `bun test scripts/run-root-suite.test.mjs` and `bun test scripts/tmp-gc.test.mjs` each exit 1, naming their missing piece)
+  (Implements: S9)
+  - Relevant files: scripts/local-gate.test.mjs, scripts/run-root-suite.test.mjs, scripts/tmp-gc.test.mjs
+- P11 — `tmp-gc`: an `ENOENT` between `readdir` and `lstat` is a candidate a peer sweep already took — skipped, never a `GC-ERROR` (validator: `bun test scripts/tmp-gc.test.mjs` exits 0)
+  (Implements: S9)
+  - Relevant files: scripts/tmp-gc.mjs
+- P12 — `run-root-suite`: report a bail-killed suite as `KILLED … (bail)` without dumping its partial output, and declare the two measured spawn-heavy suites in the timeout allowlist (validator: `bun test scripts/run-root-suite.test.mjs` exits 0)
+  (Implements: S9)
+  - Relevant files: scripts/run-root-suite.mjs, scripts/test-timeout-allowlist.json
+- P13 — the graph and the hook: chain every dist writer, order every dist reader after the last writer, keep `root-suite` in its slot; add `--jobs auto` (load-aware, in the gate) and pass it from the hook with the env override; document both where the gate is documented (validator: `bun test scripts/local-gate.test.mjs` exits 0 and `bun scripts/check-skill-context.mjs --documents` exits 0)
+  (Implements: S9)
+  - Relevant files: scripts/local-gate.mjs, AGENTS.md
+- P14 — Verify the amendment: the three suites, the touched documents and the full gate, with every S9 obligation closed on a foreground run (validator: `bun scripts/local-gate.mjs` exits 0)
+  (Implements: S9)
+  - Relevant files: docs/fix/441-triage-issue-rescope/planning-obligations.md
 
 ## Planning evidence
 
@@ -455,3 +502,5 @@ Empty — every declared input (#436, #437, #438) is closed at the branch base.
 | A `fix-now` finding is still routed to `/fold-findings` and never implemented in the triage turn | `bun test scripts/triage-rescope.test.mjs` exits 0 (the live route assertion in the review-mode reference) |
 | No new label is created or applied by the two new verdicts | `bun test scripts/triage-rescope.test.mjs` exits 0 (the `LABELS.md` obligation assertion) |
 | The skill still fits its declared context budget | `bun scripts/check-skill-context.mjs` exits 0 |
+| No dist writer overlaps a dist reader, and the two package-script `tsc` runs never overlap each other | `bun test scripts/local-gate.test.mjs` exits 0 (the S9 chain assertions, acyclicity included) |
+| A suite killed by `--bail` never reads as a failing suite in the tally | `bun test scripts/run-root-suite.test.mjs` exits 0 (the end-to-end `KILLED` line) |
