@@ -171,3 +171,41 @@ batch → one blockers-only recheck → a second only if the same blocker persis
 → `Needs your decision`). This receipt is left uncommitted — the run is
 read-only; the owner (or the apply session) commits it with the correction
 batch.
+
+---
+
+## 2026-11-15 — correction batch applied (append-only addendum)
+
+One batch per §9 on the verdict above, at the owner's request "Apply to this
+repository: triage and fix those that deserve to fix but understand the context
+before fix and check you haven't broke another different thing …". Commits:
+`158c6048` (this receipt persisted; O5, O10, O12 flipped `planned`) →
+`54f1a3e3` (red corpus: exit 1, 25 pass / 2 fail) → `376550bc` (fix: exit 0,
+27 pass / 0 fail) → `7b1632e7` (docs, ledgers, surfaces).
+
+- **B1 folded** — `src/journal/headless.mjs` looks for the run's consumed entry
+  in the journal itself once the fragment is aggregated: read-only through
+  `DEFAULT_LOG` (no `docs/LOGS.md` literal in the module, no `appendFileSync`),
+  the heading label carries the run's identity, and the original fragment name
+  is reconstructed through `fragmentName`. The re-run answers `already-present`
+  with where the entry lives and writes nothing. Reproducer green (SPEC E8):
+  one heading for the run, log bytes unchanged, carrier empty; O10 re-verified
+  with both idempotency cases; D6 amended in place; the README grammar row's
+  one-entry-per-run cell states the full-lifecycle promise.
+- **B2 folded** — `SPEC.md`'s Impact parenthetical now records what
+  `rg -l 'readdirSync\(.*ROOT' scripts/*.test.mjs` actually prints (three
+  subdir-scoped files); the safety invariant the sentence supports is unchanged.
+- **A1, A2, A4 folded; A3, A5 wontfix with recorded reasons** — SPEC `## Log` F2.
+- **O5's cell reworded (disclosed)** — its "names or opens" wording overreached
+  its own authority (S15/AC7 freeze the writer-only invariant); the cell now
+  states that invariant, validators unchanged and green (E9: `rg` → 0, no
+  `appendFileSync`, never-touches case green).
+- **Closing sweep green** — root suite 113/113, `local-gate --skip-network
+  --jobs 1` PASS 15/15 + the four network steps PASS, crate 825/0, pi 873/0,
+  differential `UNDECLARED 0` (only the original declared refusal delta).
+  Full command-observed list: SPEC `## Log` G4.
+
+**Delta recheck scope for the next verifier:** E7 → E9's validators, the
+O5/O10/O12 cells, and the two reproducers (B1's toy walk, B2's `rg`). The
+verdict block above stands unedited until that recheck; no other line of this
+receipt changes.
