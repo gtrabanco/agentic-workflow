@@ -1,0 +1,6 @@
+## 2026-11-14T23:31:30Z — feat/514-new-feature-git-identity-signing-guard-per-project-approved-identity — 514 recheck
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Recheck of the 2026-11-12 external-verify blockers on unit 514 (git identity signing guard), which is already merged as e6a696e9 (PR #520): blockers 1 and 2 reproduce green at head (gate 294 carriers / 0 findings, retirement search 0 matches, whole-tree root suite 113 suites PASS / 0 FAIL); blocker 3's substance is fixed but its cell's files-wide count was invalidated by unit #546's second annex link, so O11 flipped back, its validator became per-surface presence, and it re-verified.
+- **Decisions:** Resolution was 'apply has zero rows, state's one open item is the §9 recheck' — no new work invented, no self-approval. O11's validator cell now asserts per-surface presence (>=1 on docs/workflow/README.md and >=1 on template/.agentic-workflow/hooks/README.md) instead of a total of 2 across both files, because the total could pass with both links on one surface and none on the other. The roadmap row stays in-progress until the owner's verdict.
+- **Next:** Owner's external verification of the recheck; the roadmap row flips to done only on that verdict.
