@@ -108,7 +108,8 @@ mechanized.*
     *Disposition label vocabulary*) and label mutation is triage+-permission-
     gated, so its presence cannot be forged by comment text. A dated
     `triage-issue` `VERDICT:` comment (the fixed-format block —
-    `skills/triage-issue/SKILL.md:193-200`) is honored too, as a **legacy
+    `skills/triage-issue/references/ISSUE_PROCESS.md`, `triage-verdict-block@1`)
+    is honored too, as a **legacy
     fallback** for issues triaged before disposition labels existed — kept for
     backward compatibility, not because it is as trustworthy as the label.
     **Accepted residual:** because the comment-text fallback stays active, a

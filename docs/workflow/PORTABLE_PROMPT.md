@@ -137,11 +137,12 @@ step; `planning-preflight`/`replan-findings` → triage and replanning;
 8. `fold-findings` — repair every persisted fix-now finding in compatible atomic
    batches: root-cause fix, green gate, commit, and the per-row `folded: yes`
    update. Never reclassify, never substitute backlog notes.
-9. `triage-issue` — classify an issue (fix-now / promote-to-feature / postpone /
-   wontfix). Parse the issue's own "when to fix"/trigger and VERIFY it against the
-   current code (grep counts, thresholds, repro). Route, or leave open with a
-   dated re-confirmation comment. Never implement deferred work inline. Accept
-   several issue numbers in one batch (independent verdicts, one summary table).
+9. `triage-issue` — classify an issue (one-shot / fix-now / fix-in-unit / promote
+   / postpone / wontfix / remove). Parse the issue's own "when to fix"/trigger
+   and VERIFY it against the current code (grep counts, thresholds, repro).
+   Route, or leave open with a dated re-confirmation comment. Never implement
+   deferred work inline. Accept several issue numbers in one batch (independent
+   verdicts, one summary table).
 10. `workflow-status` — the read-only sensor: emit the deterministic Envelope v2
     result (what can run now, what is blocked and by what) and interpret it;
     never decide for the driver.

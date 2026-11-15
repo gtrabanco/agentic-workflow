@@ -207,10 +207,12 @@ ROADMAP --next ─────────▶ /unit-lane <slug> of the next star
                              (implement/tests/evidence steps hand off to /execute-phase for an already-triaged unit)
                              → open PR (`done`) ─▶ fold-findings → re-run review-change ─▶ audit-pr ─▶ merge
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ /unit-lane --fix <n>
+ISSUE(any) ─▶ triage-issue ─┬─ one-shot ─▶ run inline with the gate only (owner consent, no unit doc)
+                            ├─ fix-now ─▶ /unit-lane --fix <n>
                             ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
                             ├─ promote ─▶ /unit-lane --from-issue <n>
                             ├─ postpone ─▶ dated comment, leave open
+                            ├─ remove ─▶ /unit-lane --fix <n> with the measured receipts
                             └─ wontfix ─▶ propose close
 
 review→fold (manual) ── fold-findings → re-run review-change on a changed HEAD;

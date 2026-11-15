@@ -161,6 +161,14 @@ input triage consumes.
   live in issue [#441](https://github.com/gtrabanco/agentic-workflow/issues/441) /
   roadmap row 152. This document stays as the direction's record; it is never a
   unit doc.
+- **L3** — 2026-11-15, correction to L2 (external-verify blocker 6): L2's
+  enumeration over-claimed — "every implementing slice is delivered by its own
+  row" holds for 79, 97, 148, feature 437 and fix units 201, 260 and 487, but
+  fix 269's row reads `in-progress` (its own open correction batch) and fix 303
+  has no roadmap row at all, so neither is delivery evidence. The settle itself
+  is unchanged: all 11 native blockers are closed, issues #269 and #303 are
+  closed, row 83 names no startable unit, and the corrected enumeration lives
+  in roadmap row 83's description.
 
 ## References
 
