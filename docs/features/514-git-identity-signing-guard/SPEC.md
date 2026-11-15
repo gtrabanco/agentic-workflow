@@ -471,6 +471,33 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **G8** — 2026-11-14, `node scripts/run-root-suite.mjs` · exit 0 · 113 suites
   PASS / 0 FAIL (113 where G6 read 109 — later units added suites; the exit status
   is the claim that matters).
+- **L5** — 2026-11-15, the correction request, verbatim (numbered `S1..S3` for
+  this batch; distinct from the `## Specs` ids, which are the issue's own):
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Batch numbering, each clause the requester's own words from the quote above:
+  **S1** — "triage and fix those that deserve to fix but understand the context before fix"; **S2** — "check you haven't broke another different thing"; **S3** — "if you have done, start the loop again until you fixed full symbol/related stuff".
+- **D10** — 2026-11-15, the correction batch's resolution of L5 (S1 triage: the
+  latest receipt's blockers 1–3 all deserve the fix; S2 differential: every
+  touched command runs against a base archive in `mktemp` scratch first; S3 loop:
+  the whole NN-row lookup family — `rowUpsertEdits`, `findRow`, `annotate` — is
+  corrected together, not just the call that failed): the duplicate NN-514
+  roadmap row is collapsed by making the writer duplicate-safe, and the survivor
+  settles to `done · [#520](https://github.com/gtrabanco/agentic-workflow/pull/520)`
+  through `roadmap rowUpsert` on the CLI — never a hand edit of the shared index.
+  O14 and O17 flip back before any code (their validator is red at the cut) and
+  re-verify on their own validators at close; the receipt's falsified claims are
+  corrected everywhere prose may be edited. Two carriers are append-only and are
+  marked, never rewritten: **G8** in this Log is retracted by this line and
+  superseded by G9, and the committed journal fragment of 2026-11-14 keeps its
+  bytes with this batch's own fragment recording the supersession
+  (`log-immutability` refuses any other shape). `P12` is this batch's phase, the
+  successor to P11 (D8). The L5 request's acceptance criteria live in the O18–O20
+  validator cells: the re-cut shape this unit carries has no
+  `## Acceptance criteria` section to freeze them into
+  (`unit-doc-contract.test.mjs` names it legacy-only) — a deviation from the
+  apply template, recorded here, not hidden.
 
 ## Next
 
