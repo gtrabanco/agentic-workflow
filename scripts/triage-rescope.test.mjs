@@ -66,11 +66,19 @@ const ONE_SHOT_CONDITIONS = [
   "reversible",
 ];
 
-/** One `versionedBlock` read: the fence carrying `<marker>` plus its body. */
+/** One versioned block read: the fence whose first line is `<marker>`, de-indented.
+ *  Blocks inside a list item are indented with it, so the common leading
+ *  whitespace is stripped before the marker and the rows are read. */
 function versionedBlock(file, marker) {
   const text = read(file);
-  const fenced = [...text.matchAll(/```[a-z]*\n([\s\S]*?)```/g)].map((m) => m[1]);
-  const block = fenced.find((body) => body.startsWith(`${marker}\n`));
+  const bodies = [...text.matchAll(/```[a-z]*\n([\s\S]*?)```/g)].map((m) => m[1]);
+  const deindent = (body) => {
+    const lines = body.split("\n");
+    const indents = lines.filter((line) => line.trim() !== "").map((line) => line.length - line.trimStart().length);
+    const strip = indents.length === 0 ? 0 : Math.min(...indents);
+    return lines.map((line) => line.slice(Math.min(strip, line.length - line.trimStart().length))).join("\n");
+  };
+  const block = bodies.map(deindent).find((body) => body.split("\n")[0].trim() === marker);
   assert.ok(block, `${file} carries no \`${marker}\` block`);
   return block;
 }
@@ -103,7 +111,7 @@ test("#441 one-shot carries its six conditions, the consent rule and the tier di
   for (const condition of ONE_SHOT_CONDITIONS) {
     assert.ok(text.includes(condition), `the one-shot eligibility block does not name \`${condition}\``);
   }
-  assert.match(text, /owner consent/i, "one-shot requires the owner's explicit consent");
+  assert.match(text, /owner'?s? (explicit )?consent/i, "one-shot requires the owner's explicit consent");
   assert.match(text, /standard|high/, "one-shot names the tiers that disqualify it");
   assert.match(text, /tier (verdict )?(wins|disqualif|outranks)/i,
     "the computed tier outranks the one-shot route (fail closed upward)");
@@ -133,7 +141,7 @@ test("#441 every verdict block records the provenance of the criteria it used", 
   for (const token of TRIAGE_CRITERIA_PROVENANCE) {
     assert.ok(text.includes(token), `the provenance token \`${token}\` is never named where the block is defined`);
   }
-  assert.match(text, /surfaced to the owner|surface .* to the owner/i,
+  assert.match(text, /surface[sd]? it to the\s+owner|surfaced to the\s+owner/i,
     "an open-with-default criterion the unit touches is surfaced to the owner, never assumed");
   assert.match(text, /workflow-generic/, "a project with no declared catalogue records the generic provenance");
 });
