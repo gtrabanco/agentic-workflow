@@ -268,13 +268,15 @@ signals: (none — not a high-tier unit)
   (`phase-lint` 39.7 s, root suite 113/113) and at `--jobs 2` (113/113). *Affects*
   this unit's verification only: the reds are named as this environment's
   concurrent load, never as this change's.
-- **`tmp-gc` can race the suites it no longer waits for**: the sweep lists `/tmp`
-  candidates and removes them, while the root suite's fixtures create and clean
-  `/tmp/<prefix>-*` directories in the same run; one gate run red-ed with
-  `GC-ERROR /tmp/wording-manifest-… ENOENT` (the candidate vanished between the
-  listing and the `lstat`) and the next passed. *Does not affect* this change:
-  the candidates it named are other suites' fixtures and the sweep's own
-  contract is unchanged.
+- **`tmp-gc` races the suites dispatched beside it**: the sweep lists `/tmp`
+  candidates and removes them, while the suites create and clean their own
+  `/tmp/<prefix>-*` fixtures in the same run. Reproduced twice at the final head
+  under parallel dispatch — `GC-ERROR /tmp/wording-manifest-… ENOENT` and
+  `GC-ERROR /tmp/feedback-cli-… ENOENT`, each a candidate that vanished between
+  the listing and the `lstat` — and never at `--jobs 1`, where the sweep runs
+  with nothing beside it (15/15 steps PASS). *Does not affect* this change: the
+  candidates it names are other suites' fixtures and the sweep's contract is
+  unchanged; the recorded green run is the serialized one.
 
 ## Tasks
 
