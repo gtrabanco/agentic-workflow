@@ -114,9 +114,12 @@ exercised in `/tmp` fixtures and in-memory collectors only.
   `validateProviderConfig` (one implementation, two callers: the loader and the
   materializer). Evidence they moved, not vanished:
   `rg -c 'provider\.chunk_limit must be a positive integer' packages/agentic-workflow/src/doc/config.mjs` → 1.
-- The console's "the only file this console writes is the unified config" is
-  narrowed by prose, not by code: the index-config write is a separate,
-  consent-gated action with its own file. Nothing is removed.
+- The console's write surface widens by prose, not by code: the index-config
+  write is a separate, consent-gated action with its own file. The sentence
+  this bullet originally said it narrowed — that the console's only output is
+  the unified config — exists at neither base nor head (the 2026-11-15 external
+  verify's sweep, advisory 2), so the correction is the disclosed truth: no such
+  sentence to narrow, nothing removed.
 - Everything else is **strictly additive**; the added-surface inventory is the
   diff (`git diff --stat main..HEAD`) plus the `## Obligations` rows, each with
   its named consumer.
@@ -162,8 +165,11 @@ none
 
 ## Applicable tests
 
-- `packages/agentic-workflow/test/doc.config.test.mjs` (new sibling suite: the
-  provider block, the exported validator, the load-path parity).
+- `packages/agentic-workflow/test/doc.store.test.mjs` (`doc config — the
+  provider block` describe: the provider-block cases, the exported validator,
+  the load-path parity — path corrected 2026-11-15, L3: this is the suite red
+  commit `4bb3a73a` landed the cases in; the file this bullet originally named
+  exists on no ref).
 - `packages/agentic-workflow` regression: `doc.store`, `doc.embeddings`,
   `doc.sync`, `doc.hybrid` suites (the loader's consumers).
 - `packages/pi-agentic-workflow/test/embed-profile.test.mjs` (new: plan,
@@ -204,8 +210,9 @@ none
   the 60 rpm limit to the recorded snapshot.
 - **AC-S3** — The profile validates against the crate's config schema, and a bad
   value is refused by name instead of written. Check:
-  `cd packages/agentic-workflow && bun test test/doc.config.test.mjs` exits 0
-  (positive-integer `chunk_limit`, positive-integer pacing, the string fields)
+  `cd packages/agentic-workflow && bun test test/doc.store.test.mjs` exits 0
+  (positive-integer `chunk_limit`, positive-integer pacing, the string fields —
+  the `doc config — the provider block` cases; path corrected 2026-11-15, L3)
   and `cd packages/pi-agentic-workflow && bun test test/embed-profile.test.mjs`
   exits 0 (a fixture preset with `chunk_limit: 0` and one with
   `pacing.batchSize: 0` are both refused, nothing is written).
@@ -257,9 +264,9 @@ none
   - Relevant files: docs/fix/541-nan-embed-preset/SPEC.md, docs/fix/541-nan-embed-preset/planning-evidence.md, docs/fix/541-nan-embed-preset/planning-obligations.md
 - P2 — Land the crate's validation suite red, then green: the provider-block
   checks and the exported `validateIndexConfigObject`.
-  (validator: `cd packages/agentic-workflow && bun test test/doc.config.test.mjs` exits 0)
+  (validator: `cd packages/agentic-workflow && bun test test/doc.store.test.mjs` exits 0)
   (Implements: S3, S9)
-  - Relevant files: packages/agentic-workflow/test/doc.config.test.mjs, packages/agentic-workflow/src/doc/config.mjs, packages/agentic-workflow/src/doc/config.d.mts
+  - Relevant files: packages/agentic-workflow/test/doc.store.test.mjs, packages/agentic-workflow/src/doc/config.mjs, packages/agentic-workflow/src/doc/config.d.mts
 - P3 — Extend the seam with `embedProfile` and `getEmbedProfiles`, red then
   green. (validator: `cd packages/pi-agentic-workflow && bun test test/provider-presets.test.mjs test/embed-profile.test.mjs` exits 0)
   (Implements: S2, S5)
@@ -395,6 +402,60 @@ n/a — the owner's local workflow replaces the triage step list for this unit
 - **E15** — 2026-11-15, final package suites at `034aa68d`: pi `899 pass · 0 fail` (bun, 80 files), companion `36 pass · 0 fail` (bun, 5 files); the gate below ran the crate under both runtimes.
 - **G4** — 2026-11-15, `bun scripts/local-gate.mjs --jobs 1` at `034aa68d` · exit 0 · `local-gate: PASS — 19 step(s) in 576s`; inside it: `crate-suite-bun` exit 0 (`808 pass · 0 fail`, 286s), `crate-suite-node` exit 0 (`809 pass · 0 fail`), `root-suite` exit 0 (`113` suites PASS, `0` FAIL, 141s), plus the projection, version-parity, journal-carrier, log-immutability, secret-scan, hygiene, worktree-guard, rigidity-review, both node-compat legs, pi-compat and dependency steps.
 - **V1** — 2026-11-15, the two load-sensitive failures seen on intermediate runs are **not** this unit's, and stand recorded rather than excused: `ceremony-unit-plan.test.mjs` crossed the 10 s per-test budget once under the default four-worker gate (3.5 s for that case standalone, 17.9 s for the file) and `unit-route.test.mjs`'s `#291 F7` tripped its own `< 500 ms` wall-clock assertion once (331–400 ms standalone, three consecutive runs). Both suites pass in the serial gate on the same bytes; neither file is touched by this change, and a concurrent process from another session (a `local-gate --skip-network` run, load average 9.5) explains the timing.
+- **L3** — 2026-11-15, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Correction batch for the 2026-11-15 `EXTERNAL VERIFY` (1 blocker, 2
+  advisories): the blocker was a citation, not a test — P2's validator, AC-S3's
+  check, the `## Applicable tests` bullet and O1/O2/O3's `validator` cells named
+  `test/doc.config.test.mjs`, a file that exists on no ref (`git log --all --
+  '*doc.config.test.mjs'` empty), while the ten provider-block cases this unit
+  landed red-first (`4bb3a73a`, 169 lines) live in `test/doc.store.test.mjs`
+  under the `doc config — the provider block` describe — the same file that
+  already hosted `doc config — embedding request budget`. The four SPEC
+  surfaces and the three ledger cells now name that suite; no test was edited,
+  narrowed or moved, and no assertion changed. Advisory 1 is disposed as D6
+  below; advisory 2 rewrites the `## Retirements` bullet to the disclosed truth.
+  A correction appends — it never edits an earlier line.
+- **D6** — 2026-11-15, disposition (external-verify advisory 1): the issue's
+  verbatim first acceptance bullet (S9) — a live `doc --sync` on this
+  repository through the real provider with no hand-written `index.json` — is
+  out-of-domain for automated verification here (no provider key or network in
+  the verifying environment, and this repository's own committed
+  `.agentic-workflow/index.json` is guarded, PE-009). The unit's observable
+  criterion for that need stays AC-S6/O11: the git fixture plus injected
+  embedder proves `pending: 0`, no degradation and the pinned model equal to
+  the profile's. The live-provider run remains the operator's acceptance step,
+  named here so the re-scope is recorded rather than silent.
+- **E16** — 2026-11-15, the blockers-only recheck (§9) at this batch · the
+  corrected validator `cd packages/agentic-workflow && bun test
+  test/doc.store.test.mjs` · exit 0 · `37 pass · 0 fail` (P2, AC-S3, O1, O2,
+  O3 — the same green the mis-cited command could not produce: at batch start
+  `bun test test/doc.config.test.mjs` · exit 1 · `The following filters did not
+  match any test files`); `rg -n 'bun test test/doc\.config\.test\.mjs' docs/`
+  after the batch · only `external-verify.md` (the verifier's receipt quoting
+  the blocker by design) · and the declaration-style sweep
+  (`validator:`/`Check:`/`Relevant files:` lines) · exit 1 · 0 matches;
+  `cd packages/pi-agentic-workflow && bun test test/embed-profile.test.mjs` ·
+  exit 0 · `17 pass · 0 fail` (AC-S3's refusal half); ledger shapes: 15 O rows
+  with cell counts byte-identical to pre-edit, 21 PE rows (PE-021 appended),
+  every status cell non-blank; differential `git diff --numstat 5379370d` ·
+  `SPEC.md 42/9 · planning-evidence.md 1/0 · planning-obligations.md 3/3` —
+  three prose files under this unit dir, no executable byte, so S2's "did the
+  fix break another thing" answer is structural (nothing executable moved) and
+  is backed by G5's runs.
+- **G5** — 2026-11-15, the collateral sweep (S2) at this batch's bytes ·
+  `bun scripts/test-impact.mjs --base 5379370d` · exit 0 · `changed: 3 ·
+  executable: 0 · suites (0)` → `empty` ("no executable path changed — record
+  this verdict, run no TDD ceremony, invent no test"); `bun scripts/run-root-suite.mjs`
+  · exit 0 · `113` suites PASS · `0` FAIL; `bun scripts/docs-generate.mjs
+  --check` · exit 0 · `0 stale` · `verdict: PASS`; `bun scripts/lint-changeset.mjs`
+  · exit 0; `bun scripts/version-parity-gate.mjs --content` · exit 0 ·
+  `VERDICT: PASS`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS
+  context budgets: 30 skills`; `node packages/agentic-workflow/bin/agentic-workflow.mjs
+  roadmap check docs/fix/541-nan-embed-preset/SPEC.md` · exit 0 ·
+  `violations: 0`; `node --test scripts/doc-discipline.test.mjs` · exit 0.
 
 ## Next
 
