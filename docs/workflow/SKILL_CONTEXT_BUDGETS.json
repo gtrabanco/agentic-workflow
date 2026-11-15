@@ -160,6 +160,12 @@
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract loads the canonical TURN_CONTRACT.md (P9 migration); the loader line pushed the measured estimate over the flat default. Measured at the change by `bun scripts/check-skill-context.mjs`: 2810 est / 221 lines; ceiling re-based to ceil(2810 x 1.10) = 3091 (lines stay under the flat default), reason declared (single-owner migration)."
       }
     },
+    "batch-scheduler": {
+      "referenceEstimateMax": 2422,
+      "referenceSources": {
+        "issue #487 correction batch (2026-11-14)": "the batch-scheduler claim example in references/PLAN.md names the real worktree for issue #487 (`fix/487-deterministic-secret-scanning`) instead of the pre-change intake slug, growing the reference from measured 2198 est to 2201 est; the reference ceiling re-bases from the flat default 2200 to ceil(2201 x 1.10) = 2422, growth source named (external-verify advisory 4, issue #487). Measured with `bun scripts/check-skill-context.mjs`."
+      }
+    },
     "audit-pr": {
       "mainEstimateMax": 3695,
       "referenceEstimateMax": 2889,
