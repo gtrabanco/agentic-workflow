@@ -1,5 +1,7 @@
 ---
 "@gtrabanco/agentic-workflow": minor
+"@gtrabanco/pi-agentic-workflow": minor
+"init-workspace": minor
 ---
 
 feat(cli): `doctor` and `setup` — the deterministic tool doctor and its consent-gated wizard
