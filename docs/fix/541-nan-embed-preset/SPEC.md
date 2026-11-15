@@ -385,6 +385,16 @@ n/a — the owner's local workflow replaces the triage step list for this unit
 - **G1** — 2026-11-15, `bun scripts/run-root-suite.mjs` · exit 0 · `113` suites PASS, no FAIL.
 - **G2** — 2026-11-15, `bun scripts/local-gate.mjs --jobs 1` · exit 0 · `local-gate: PASS — 19 step(s) in 845s` (schema-build, crate suite bun + node, root suite, version parity, generated projection, journal carrier, log immutability, secret scan, temp hygiene, tmp-gc, worktree guard, rigidity review, both node-compat legs, pi compat, dependency pins + advisories).
 - **G3** — 2026-11-15, the gate's default parallel run (`--jobs 4`, 4 workers) **failed at `root-suite`** with four `ceremony-*` suites over the 10 s per-test budget (`ceremony-passive`, `ceremony-docs`, `ceremony-findings-ledger`, `ceremony-unit-plan`) while `crate-suite-bun`/`-node` ran concurrently; each passes standalone (`ceremony-unit-plan`: 3.5 s for that case, 20.7 s for the file) and the serial gate is green. Recorded, not excused: this change touches no `scripts/` file and no ceremony path, and the same four suites pass in the serial run on the same bytes.
+- **P9** — 2026-11-15, two hardening edges found in self-review and pinned
+  (`034aa68d`): a `provider` block that is present but not an object is refused
+  at plan time (the file and the value are named), and a project whose
+  `max_request_chars` sits below the preset's `chunk_limit` gets the crate's
+  refusal naming both keys instead of a fill that would write an impossible
+  limit.
+- **E14** — 2026-11-15, the hardening cases: `cd packages/pi-agentic-workflow && bun test test/embed-profile.test.mjs` · exit 0 · `17 pass · 0 fail` (the two new refusals included); the console and e2e suites re-run at the same bytes · `9 pass · 0 fail`.
+- **E15** — 2026-11-15, final package suites at `034aa68d`: pi `899 pass · 0 fail` (bun, 80 files), companion `36 pass · 0 fail` (bun, 5 files); the gate below ran the crate under both runtimes.
+- **G4** — 2026-11-15, `bun scripts/local-gate.mjs --jobs 1` at `034aa68d` · exit 0 · `local-gate: PASS — 19 step(s) in 576s`; inside it: `crate-suite-bun` exit 0 (`808 pass · 0 fail`, 286s), `crate-suite-node` exit 0 (`809 pass · 0 fail`), `root-suite` exit 0 (`113` suites PASS, `0` FAIL, 141s), plus the projection, version-parity, journal-carrier, log-immutability, secret-scan, hygiene, worktree-guard, rigidity-review, both node-compat legs, pi-compat and dependency steps.
+- **V1** — 2026-11-15, the two load-sensitive failures seen on intermediate runs are **not** this unit's, and stand recorded rather than excused: `ceremony-unit-plan.test.mjs` crossed the 10 s per-test budget once under the default four-worker gate (3.5 s for that case standalone, 17.9 s for the file) and `unit-route.test.mjs`'s `#291 F7` tripped its own `< 500 ms` wall-clock assertion once (331–400 ms standalone, three consecutive runs). Both suites pass in the serial gate on the same bytes; neither file is touched by this change, and a concurrent process from another session (a `local-gate --skip-network` run, load average 9.5) explains the timing.
 
 ## Next
 
