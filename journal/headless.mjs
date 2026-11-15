@@ -26,7 +26,8 @@
  *  - **Fail closed, never skip.** No runner, a runner that cannot start, a
  *    runner that exits non-zero, or a receipt that does not parse is a
  *    `JOURNAL REFUSAL` with exit 2 — the job fails, and the fragment is either
- *    complete or absent.
+ *    complete or absent. A runtime below the crate's own `engines` is never
+ *    launched: an old bun falls through to `npx`, an old node refuses by name.
  *  - **The receipt is the output.** `fragment`, `name` and `status` go to
  *    `$GITHUB_OUTPUT` when the job provides it, so a later step can commit the
  *    file it names.
@@ -64,8 +65,8 @@ function readContext() {
   return { workflow: env("GITHUB_WORKFLOW"), runId: env("GITHUB_RUN_ID"), actor: env("GITHUB_ACTOR") };
 }
 
-/** The crate version this action's own tree ships. */
-function crateVersion() {
+/** The crate's manifest: its version and its engine floors are its own tree's, never restated here. */
+function crateManifest() {
   const manifest = path.resolve(ACTION_DIR, "..", "packages", "agentic-workflow", "package.json");
   let parsed;
   try {
@@ -76,7 +77,23 @@ function crateVersion() {
   if (typeof parsed.version !== "string" || parsed.version === "") {
     refuse(`the crate manifest at ${manifest} declares no version`);
   }
-  return parsed.version;
+  return parsed;
+}
+
+/**
+ * The manifest's `engines.bun` floor as `[major, minor]` (the crate declares
+ * `>=X.Y`). A form this reader cannot decide is a refusal, never a guess — the
+ * runner must not launch a runtime the manifest would refuse to support.
+ */
+function bunFloor(manifest) {
+  const spec = String(manifest.engines?.bun ?? "");
+  const match = /^>=\s*(\d+)\.(\d+)/u.exec(spec);
+  if (match === null) {
+    refuse(
+      `cannot derive the crate's bun engine floor from engines.bun ${JSON.stringify(spec)} — refusing to guess which runtimes are supported`,
+    );
+  }
+  return [Number(match[1]), Number(match[2])];
 }
 
 /** Whether an executable is on PATH — the same resolution a shell would use. */
@@ -96,6 +113,10 @@ function hasCommand(name) {
 /**
  * The runner argv. The override is the documented escape hatch; otherwise bun's
  * `bunx` and npm's `npx` run the crate at the exact version this action ships.
+ * Both candidates are gated by the manifest's own `engines`: a `bun` below
+ * `engines.bun` is never asked to launch (it falls through to `npx`), the node
+ * floor keeps its refusal, and with no eligible runner the action refuses
+ * instead of installing or silently skipping.
  */
 function resolveRunner() {
   const override = env("AGENTIC_WORKFLOW_RUNNER");
@@ -104,9 +125,20 @@ function resolveRunner() {
     if (argv.length === 0) refuse("AGENTIC_WORKFLOW_RUNNER is set but names no command");
     return { argv, source: "AGENTIC_WORKFLOW_RUNNER" };
   }
-  const version = crateVersion();
+  const manifest = crateManifest();
+  const version = manifest.version;
+  const floor = bunFloor(manifest);
+  let bunReport = "";
   if (hasCommand("bun")) {
-    return { argv: ["bunx", `@gtrabanco/agentic-workflow@${version}`], source: "bunx" };
+    const probe = spawnSync("bun", ["--version"], { encoding: "utf8", timeout: 15_000 });
+    bunReport = probe.error === undefined && probe.status === 0 ? String(probe.stdout).trim() : "";
+    const found = /^(\d+)\.(\d+)/u.exec(bunReport);
+    const eligible =
+      found !== null &&
+      (Number(found[1]) > floor[0] || (Number(found[1]) === floor[0] && Number(found[2]) >= floor[1]));
+    if (eligible) {
+      return { argv: ["bunx", `@gtrabanco/agentic-workflow@${version}`], source: "bunx" };
+    }
   }
   if (hasCommand("node")) {
     const major = Number(String(process.versions.node).split(".")[0]);
@@ -117,7 +149,11 @@ function resolveRunner() {
     }
     return { argv: ["npx", "--yes", `@gtrabanco/agentic-workflow@${version}`], source: "npx" };
   }
-  refuse("no runner resolved: set AGENTIC_WORKFLOW_RUNNER, or put bun (bunx) or node >= 24 (npx) on the job's PATH");
+  refuse(
+    `no runner resolved: set AGENTIC_WORKFLOW_RUNNER, or put bun (bunx) or node >= 24 (npx) on the job's PATH${
+      bunReport === "" ? "" : ` — bun ${bunReport} is below the crate's engine floor >=${floor[0]}.${floor[1]}`
+    }`,
+  );
 }
 
 const context = readContext();
