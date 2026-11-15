@@ -36,11 +36,22 @@ import {
   DEFAULT_MAX_REQUEST_CHARS,
   effectiveChunkLimit,
   resolveMaxRequestChars,
+  validateIndexConfigObject,
 } from "../src/doc/config.mjs";
 import { runtimeName, openDatabase } from "../src/doc/sqlite.mjs";
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = join(PACKAGE_ROOT, "..", "..");
+
+/** The message a refusal carries, so two entry points can be compared verbatim. */
+function captureError(fn) {
+  try {
+    fn();
+  } catch (error) {
+    return error.message;
+  }
+  return null;
+}
 
 // ── Store location (D4) ──────────────────────────────────────────────────
 
@@ -380,6 +391,164 @@ describe("doc config — embedding request budget", () => {
         () => resolveMaxRequestChars({ config: cfg, env: { AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS: "0" } }),
         /MAX_REQUEST_CHARS|maxRequestChars/,
       );
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── The provider block (issue #541) ──────────────────────────────────────
+//
+// S3 makes the crate the schema owner for the whole `provider` block, not just
+// its two budgets: a provider preset in a companion package donates this object
+// verbatim, so a value the crate would refuse must be refused *here* — before
+// any writer copies it into a project's `index.json` — and by the same code the
+// loader runs. `validateIndexConfigObject` is that one entry point; the loader
+// delegates to it, so the parity cases below are the anti-duplication receipt.
+
+describe("doc config — the provider block", () => {
+  /** A throwaway repo carrying one `index.json` body. */
+  function withConfig(body) {
+    const tmp = mkdtempSync(join(tmpdir(), "doc-provider-"));
+    mkdirSync(join(tmp, ".agentic-workflow"));
+    writeFileSync(join(tmp, ".agentic-workflow", "index.json"), JSON.stringify(body));
+    return tmp;
+  }
+
+  /** The same refactor's contract: the loader and the export agree on a body. */
+  const loadAndValidate = (tmp, body) => [loadConfig(tmp), validateIndexConfigObject(tmp, body)];
+
+  it("accepts a complete provider block and keeps every value the file wrote", () => {
+    const provider = {
+      baseUrl: "https://provider.example/v1",
+      model: "embed-1",
+      envVar: "PROVIDER_KEY",
+      chunk_limit: 6000,
+      max_request_chars: 90000,
+      pacing: { batchSize: 6, requestsPerMinute: 60, maxAttempts: 3, baseDelayMs: 1000, maxDelayMs: 60000 },
+    };
+    const tmp = withConfig({ version: 1, provider });
+    try {
+      const cfg = loadConfig(tmp);
+      deepStrictEqual(cfg.provider, provider, "a valid block is passed through untouched");
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts a partial provider block and a partial pacing block", () => {
+    const tmp = withConfig({ version: 1, provider: { baseUrl: "u", model: "m", pacing: { batchSize: 6 } } });
+    try {
+      deepStrictEqual(loadConfig(tmp).provider, { baseUrl: "u", model: "m", pacing: { batchSize: 6 } });
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a provider string field that would make the block unusable, naming it", () => {
+    for (const [field, bad] of [
+      ["baseUrl", ""],
+      ["baseUrl", 42],
+      ["model", ""],
+      ["model", ["m"]],
+      ["envVar", ""],
+      ["envVar", null],
+    ]) {
+      const tmp = withConfig({ version: 1, provider: { baseUrl: "u", model: "m", envVar: "K", [field]: bad } });
+      try {
+        throws(() => loadConfig(tmp), new RegExp(`provider\\.${field}`), `accepted ${field}=${JSON.stringify(bad)}`);
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("refuses a pacing block that is not an object", () => {
+    for (const bad of ["fast", 60, [60], null]) {
+      const tmp = withConfig({ version: 1, provider: { baseUrl: "u", model: "m", envVar: "K", pacing: bad } });
+      try {
+        throws(() => loadConfig(tmp), /provider\.pacing/, `accepted pacing=${JSON.stringify(bad)}`);
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("refuses every non-positive or unparseable pacing value by its own name", () => {
+    for (const [key, bad] of [
+      ["batchSize", 0],
+      ["requestsPerMinute", "sixty"],
+      ["maxAttempts", -1],
+      ["baseDelayMs", 0],
+      ["maxDelayMs", 1.5],
+    ]) {
+      const tmp = withConfig({ version: 1, provider: { baseUrl: "u", model: "m", envVar: "K", pacing: { [key]: bad } } });
+      try {
+        throws(
+          () => loadConfig(tmp),
+          new RegExp(`provider\\.pacing\\.${key}`),
+          `accepted ${key}=${JSON.stringify(bad)}`,
+        );
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("leaves provider.pacing absent as absent — the resolution defaults are not baked into the file", () => {
+    const tmp = withConfig({ version: 1, provider: { baseUrl: "u", model: "m", envVar: "K" } });
+    try {
+      strictEqual(loadConfig(tmp).provider.pacing, undefined);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("validateIndexConfigObject returns exactly what loadConfig returns for the same bytes", () => {
+    const body = {
+      version: 1,
+      store: { path: ".agentic-workflow/index/index.db" },
+      provider: { baseUrl: "u", model: "m", envVar: "K", chunk_limit: 6000, pacing: { batchSize: 6 } },
+    };
+    const tmp = withConfig(body);
+    try {
+      const [loaded, validated] = loadAndValidate(tmp, body);
+      deepStrictEqual(validated, loaded, "one validation, two callers");
+      ok(Array.isArray(validated.index.excludes) && validated.index.excludes.length > 0, "the exclusion defaults resolve");
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("validateIndexConfigObject refuses the same candidate as loadConfig, with the same message", () => {
+    const body = { version: 1, provider: { baseUrl: "u", model: "m", envVar: "K", chunk_limit: 0 } };
+    const tmp = withConfig(body);
+    try {
+      const fromLoader = captureError(() => loadConfig(tmp));
+      const fromExport = captureError(() => validateIndexConfigObject(tmp, body));
+      strictEqual(fromExport, fromLoader, "a second implementation would drift exactly here");
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("validateIndexConfigObject keeps the store containment check — the candidate is judged against the root", () => {
+    const outside = mkdtempSync(join(tmpdir(), "doc-provider-outside-"));
+    const tmp = withConfig({ version: 1, store: { path: join(outside, "index.db") } });
+    try {
+      throws(() => validateIndexConfigObject(tmp, JSON.parse(readFileSync(configPath(tmp), "utf8"))), /\.agentic-workflow\//);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  it("validateIndexConfigObject refuses an unsupported version and a non-object candidate", () => {
+    const tmp = withConfig({ version: 99 });
+    try {
+      throws(() => validateIndexConfigObject(tmp, { version: 99 }), /version/);
+      throws(() => validateIndexConfigObject(tmp, [1, 2, 3]), /JSON object/);
+      throws(() => validateIndexConfigObject(tmp, null), /JSON object/);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
