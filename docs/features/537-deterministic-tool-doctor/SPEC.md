@@ -430,6 +430,21 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
 - **P9** — 2026-11-14 15:20, the roadmap row through the crate's writer and the
   rendered projection · `20663752`; the projection's `CRATE_COMMANDS` follows the
   crate's dispatch · `c65530c8`.
+- **G1** — 2026-11-14, `bun scripts/local-gate.mjs` · HEAD 585c47d8d8e99ef149f7b8d76c593ea7044f5d46 · exit 0 · `PASS — 19 step(s) in 331s`: workspace install, schema build, the crate
+  suite under bun and node (794 pass / 0 fail each), the root gate (113 suites),
+  version-parity-content, the docs projection, the journal carrier lint, log
+  immutability, secret scan, temp hygiene, worktree guard, rigidity review, the
+  two node-compat legs, and the dependency pins. HEAD is the changeset/fragment
+  commit, i.e. every byte of this unit except the two prose commits that follow
+  it (the perf note below and this receipt) — disclosed, never implied.
+- **E9** — 2026-11-14, the startup regression the first two gate runs exposed ·
+  three root suites (`ceremony-passive`, `ceremony-unit-plan`,
+  `ceremony-findings-ledger`) crossed their 10s per-test budget while spawning
+  the bin dozens of times: importing the doctor modules at the top cost ~60ms
+  per spawn. Measured after `0bc76a6c`'s lazy load: worktree 442–536ms vs base
+  426–498ms over four runs each (within noise), and the same gate passes.
+- **P10** — 2026-11-14 16:40, the doctor family loaded on demand (`0bc76a6c`),
+  and G1 green at the head before it.
 - **D1** — 2026-11-14, the two corpus calibrations recorded in E2 are fixture
   fidelity, not relaxed assertions: the block's rows never had a leading pipe,
   the fake's `readText`/`exists`/`listDir` close over their own maps (overriding
