@@ -408,6 +408,7 @@ the block above is this unit's authoritative step list, recorded at the freeze
 - **P7** — 2026-11-15, the grammar and its declaration: the crate README's command row and `journal-headless-grammar@1` block, the `normative-surfaces@1` row, the two gate-inventory claims and the `machineLines` exact re-pin (142 → 143) · `bd0d8048`, `53d054d0`.
 - **P8** — 2026-11-15, the consent and product surfaces: the carrier document's writer row and headless section, the init-workspace consent clause and the capabilities row · `53d054d0`.
 - **P9** — 2026-11-15, release and index state: the changeset (crate `minor`, pi package `patch` per D1), the `## Fixes` row through `roadmap fixrow`, the Features row's status through `rowUpsert`, the projection through `docs-generate` and the session fragment through `journal write` · `67deef3f`, `53d054d0`, `130b8ce0`.
+- **P11** — 2026-11-15, the branch is pushed and **PR [#562](https://github.com/gtrabanco/agentic-workflow/pull/562)** is open against `main` with `Closes #471`; the `## Fixes` row and the Feature row 471 settle to `done · [#562]` through their writers (`roadmap fixrow`, `roadmap rowUpsert`). The push used the hook's documented escape hatch (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`): a normal push was attempted first and blocked at `tmp-gc` only — the pre-existing sweep/suite `/tmp` race recorded under `## Known pre-existing issues`, green at `--jobs 1` in the same tree — and the PR's "Gate status" section names it. The exception covers the push only.
 - **P10** — 2026-11-15, verification and closure: the differential (E5), the root suite (G1), the offline gate and its four network steps (G2), the prose/index gates (G3), the mechanical cells (E6), every obligation flipped with its evidence, and the two corrections the runs produced (D1, D2) · `130b8ce0`, `fefcf231`.
 - **E5** — 2026-11-15, the differential (O14): `4eedcf61` and this head exported to `mktemp -d /tmp/aw471-diff-…`, each package's `node_modules` linked, and one fixture corpus run against both (`journal name`, `journal write --json`, `journal aggregate --check`, `journal aggregate` twice, `log render --raw`, `journal` no-op, `journal name` without `--kind`, `journal write` without flags). Declared deltas only: the `journal` refusal now names the new operation, and `journal name`'s clock second is normalized as a wall-clock artifact. Harness: `UNDECLARED=0`. Scratch removed.
 - **G1** — 2026-11-15, `node scripts/run-root-suite.mjs --jobs 2` · exit 0 · 113/113 suites PASS. At `--jobs 4` on this 6-CPU sandbox the pre-existing `scripts/phase-lint.test.mjs` (95–120 s of real work, byte-identical to base) hits its own 120 s suite bound and `scripts/unit-route.test.mjs` intermittently crosses the 10 s per-test budget; both pass alone, four concurrent standalone `unit-route` runs pass, and both pass at `--jobs 2` — the contention artifact the manifest already records for `secret-scan`. No suite touched by this unit failed in any run.
@@ -419,10 +420,9 @@ the block above is this unit's authoritative step list, recorded at the freeze
 
 ## Next
 
-The owner's external verification of the diff (S11). Nothing is pending in this
-unit: every obligation is `verified` on a foreground run, and the one gate step
-that reds at `--jobs 4` on this sandbox is the recorded contention artifact (G1),
-green at `--jobs 2` and untouched by this change.
+The owner's verification of PR [#562](https://github.com/gtrabanco/agentic-workflow/pull/562)
+and the merge (merge authority stays with the owner). Nothing is pending in this
+unit: every obligation is `verified` on a foreground run.
 
 ## References
 
