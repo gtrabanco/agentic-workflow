@@ -326,6 +326,65 @@ n/a — the owner's local workflow replaces the triage step list for this unit
   - [ ] The pi package tests cover the materialization and precedence; the preset package tests cover the profile data; both packages' suites pass.
   - [ ] Crate README documents the provider surface; preset README documents the profile and the 60 rpm key-global caveat; version-parity and changeset gates pass.
   ```
+- **D1** — 2026-11-15, decision (S10's first open question): the profile
+  materializes into `.agentic-workflow/index.json`, never the unified config.
+  The runner crate reads only that file (PE-003), so it is the zero-code path the
+  issue names; the unified config stays what it is (its four-question policy
+  guards user-tunable settings, and an engine knob the crate reads is not one).
+- **D2** — 2026-11-15, decision (S10's surface question): the materialization
+  surface is the settings console action, not an init-workspace write. The
+  provider-preset registry exists only inside the host process (PE-004), so no
+  standalone CLI can see a registered preset; `init-workspace` names the action
+  and never writes the block itself.
+- **D3** — 2026-11-15, decision (S10's pacing question): ship
+  `requestsPerMinute: 60` with `batchSize: 6` and `chunk_limit: 6000`. The
+  request's Goal pins the provider's documented cap, S6's caveat explicitly
+  allows stating the trade-off instead of lowering the pace, and this
+  repository's own ~10.9K-chunk backfill ran under exactly that pair (PE-009).
+  A key shared with chat traffic is the operator's call, and any value they
+  write wins.
+- **D4** — 2026-11-15, decision: the crate's provider-block validation is a
+  **declared tightening** (PE-001, PE-002). A latent bad `provider.pacing` value
+  used to survive `loadConfig` and refuse only at sync; it is now refused at load
+  by name. The differential is E5 — valid configs and the keyword-only path are
+  byte-identical, and only the invalid ones changed verdict.
+- **D5** — 2026-11-15, decision: `DEFAULT_PACING` moves to
+  `src/doc/config.mjs` (and `embeddings.mjs` re-exports it) because the defaults
+  are a config key's shipped values and the validation iterates the same closed
+  set — one file owns the list, and `provider.pacing` gains a knob in one place.
+- **P1** — 2026-11-15, unit doc + both planning ledgers frozen (`85caa101`).
+- **P2** — 2026-11-15, crate suite red (`4bb3a73a`) then green (`049ec9ac`):
+  the provider block's validation and `validateIndexConfigObject`.
+- **P3/P4** — 2026-11-15, the seam field and the materializer, red
+  (`17a8d0ee`) then green (`a2e539f2`).
+- **P5/P6** — 2026-11-15, the console action and the end-to-end sync proof, in
+  the same commit (`a2e539f2`). Two render contracts the red suite pinned loosely
+  were settled while implementing — the value in force for an absent
+  non-defaulted key reads `(none — keyword-only)`, and the "to fill" count in a
+  partial fixture is 4, not 1. Both were test-side wording/counting errors
+  against the frozen design (origin per key, honest in-force value), never a
+  narrowed assertion: the three assertions were corrected to the contract the
+  unit doc states, and no requirement moved.
+- **P7** — 2026-11-15, the companion's profile + parity suite red (`c0f25562`)
+  then green (`a83c9d8b`).
+- **P8** — 2026-11-15, docs, release intent and index rows (`e20477bf`), plus
+  the doc-discipline fixture repair (`a5a5a0b6`).
+- **E1** — 2026-11-15, `cd packages/agentic-workflow && bun test test/doc.store.test.mjs` at `4bb3a73a` · exit 1 · `SyntaxError: Export named 'validateIndexConfigObject' not found in module …/src/doc/config.mjs` (0 pass, 1 error).
+- **E2** — 2026-11-15, same command at `049ec9ac` · exit 0 · `37 pass · 0 fail` (10 new provider-block cases included).
+- **E3** — 2026-11-15, `cd packages/pi-agentic-workflow && bun test test/embed-profile.test.mjs test/embed-profile-console.test.mjs test/embed-profile-e2e.test.mjs` at `17a8d0ee` · exit 1 · `Cannot find module '../dist/config/embed-profile.js'`; the console suite 0 pass / 7 fail on the missing prompt.
+- **E4** — 2026-11-15, the three suites at `a2e539f2` · exit 0 · `embed-profile 15/0 · embed-profile-console 7/0 · embed-profile-e2e 2/0`.
+- **E5** — 2026-11-15, **differential** on a `/tmp` fixture (`git archive main` copy with the schema `dist` and the package `node_modules` linked, versus this tree), `doc --status --json-only` on the same fixture: a valid provider block and a `provider: null` body are byte-identical (stdout + exit 0 on both); `provider.pacing.batchSize: 0` and `provider.baseUrl: ""` answer `{"ok":true…}` exit 0 on main and `doc: invalid index.json provider.pacing.batchSize: 0 …` / `doc: index.json provider.baseUrl must be a non-empty string (got "")` exit 1 here. Nothing else in the touched command family moved.
+- **E6** — 2026-11-15, `cd packages/pi-nan-agentic-workflow && bun test test/embed-profile.test.mjs test/catalog-parity.test.mjs` at `c0f25562` · exit 1 · 3 failed (missing export, two parity rows).
+- **E7** — 2026-11-15, `cd packages/pi-nan-agentic-workflow && bun test` at `a83c9d8b` · exit 0 · `36 pass · 0 fail` (7 new).
+- **E8** — 2026-11-15, the type cable: `cd packages/pi-nan-agentic-workflow && bunx tsc --noEmit` with `chunkLimit` → `TS2561: … 'chunkLimit' does not exist in type 'ProviderConfig'`; with `chunk_limit: "6000"` → `TS2322 … Type 'string' is not assignable to type 'number'`; the shipped file → exit 0. The crate's block type reaches the companion through the main package, so the preset cannot drift from the schema.
+- **E9** — 2026-11-15, provider neutrality: `rg -qi 'nan' packages/pi-agentic-workflow/src/config/embed-profile.ts packages/pi-agentic-workflow/src/config/presets.ts` → exit 1 (no match), `rg -q 'nan' packages/agentic-workflow/src/doc/config.mjs` → exit 1 (no match), `cd packages/pi-agentic-workflow && bun test test/vendor-neutral.test.mjs` → `3 pass`.
+- **E10** — 2026-11-15, `node --test scripts/doc-discipline.test.mjs` · exit 0 · `21 pass · 0 fail` — after the fixture in `test/embed-profile.test.mjs` stopped naming the guarded store path (AC25 allows it only on the entry point's surfaces; the allowlist was not widened).
+- **E11** — 2026-11-15, `node packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/541-nan-embed-preset/SPEC.md` · PASS, `violations: 0`; `bun scripts/docs-generate.mjs --check` · PASS, `0 stale`; `bun scripts/lint-changeset.mjs` · 91 ok (incl. `541-nan-embed-preset.md`); `node scripts/version-parity-gate.mjs --content` · `VERDICT: PASS`.
+- **E12** — 2026-11-15, baseline at `4eedcf61`: crate `798 pass · 0 fail · 162.52s`, pi `873 pass · 0 fail`, companion `29 pass · 0 fail`.
+- **E13** — 2026-11-15, final suites: crate `808 pass · 0 fail` (bun, 183.59s) and `809 pass · 0 fail` (node); pi `897 pass · 0 fail` (bun) and `896 pass · 0 fail` (node); companion `36 pass · 0 fail` (bun) and `36 pass · 0 fail` (node).
+- **G1** — 2026-11-15, `bun scripts/run-root-suite.mjs` · exit 0 · `113` suites PASS, no FAIL.
+- **G2** — 2026-11-15, `bun scripts/local-gate.mjs --jobs 1` · exit 0 · `local-gate: PASS — 19 step(s) in 845s` (schema-build, crate suite bun + node, root suite, version parity, generated projection, journal carrier, log immutability, secret scan, temp hygiene, tmp-gc, worktree guard, rigidity review, both node-compat legs, pi compat, dependency pins + advisories).
+- **G3** — 2026-11-15, the gate's default parallel run (`--jobs 4`, 4 workers) **failed at `root-suite`** with four `ceremony-*` suites over the 10 s per-test budget (`ceremony-passive`, `ceremony-docs`, `ceremony-findings-ledger`, `ceremony-unit-plan`) while `crate-suite-bun`/`-node` ran concurrently; each passes standalone (`ceremony-unit-plan`: 3.5 s for that case, 20.7 s for the file) and the serial gate is green. Recorded, not excused: this change touches no `scripts/` file and no ceremony path, and the same four suites pass in the serial run on the same bytes.
 
 ## Next
 
