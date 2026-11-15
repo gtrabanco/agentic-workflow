@@ -498,28 +498,83 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   `## Acceptance criteria` section to freeze them into
   (`unit-doc-contract.test.mjs` names it legacy-only) — a deviation from the
   apply template, recorded here, not hidden.
+- **E21** — 2026-11-15, the frozen-failure corpus observed red at `bff0e11b`
+  (tests committed, implementation not yet applied): `bun test
+  packages/agentic-workflow/test/edit.test.mjs` · exit 1 · 28 pass / 3 fail —
+  the duplicate collapse, the reader-row `findRow` and the annotate-target
+  cases; the fourth case (the linkless Fixes row under another header) passed
+  at red by design — it pins the behaviour the scoped scan must keep, not a
+  reproducer.
+- **E22** — 2026-11-15, green at `cd372114`: the same suite · exit 0 · 31 pass /
+  0 fail, twice · `bun run test` in `packages/agentic-workflow` · 760 pass /
+  0 fail · the scratch toy (mktemp) proved the CLI path end-to-end —
+  `roadmap read` answered the reader's row, `rowUpsert --expect` wrote the
+  collapse with an `ok:true` receipt, a stale `--expect` refused `stale-read`
+  exit 2, and `node scripts/roadmap-settle.mjs --root <toy>` · PASS, 0
+  violations · the base-vs-head differential over identical fixtures: the
+  single-row scenario byte-identical, the duplicate scenario differing only in
+  the three fixed behaviours (read target, collapse, note target) — no output
+  nobody asked to change.
+- **E23** — 2026-11-15, the live settle through the writer, never by hand:
+  `roadmap read docs/ROADMAP.md --nn 514` → revision `5a31adac`, row
+  `in-progress · applied inline per the owner's local workflow`; `roadmap
+  rowUpsert … --expect 5a31adac` → `ok:true` (`5a31adac` → `6e8a6362`); one
+  `| 514 |` row survives — `done · [#520](https://github.com/gtrabanco/agentic-workflow/pull/520)`
+  at the reader's old position, the stale registration duplicate spliced out —
+  then `node scripts/roadmap-settle.mjs` · exit 0 · `201 unit docs · PASS`;
+  `bun scripts/docs-generate.mjs --check` → `units.md: stale`, the generator
+  rewrote exactly that one line (514 status `idea` → `done · [#520](…)`) and
+  the re-check passed with `0 stale`.
+- **G9** — 2026-11-15, `node scripts/run-root-suite.mjs` · exit 0 · 113 suites
+  PASS / 0 FAIL — the run G8 claimed at a head where it could not hold; this
+  one runs after the settle and the release intent, and is the line D10 names
+  as G8's supersession.
+- **E24** — 2026-11-15, every obligation validator re-run in the foreground,
+  each exit 0: `config-contract` 17/0 · `git-identity-guard` 22/0 ·
+  `receipt-guard` 13/0 · `git-env` 6/0 · `git-config-writes` 9/0 and the gate
+  `0 findings / verdict: PASS` · `push-identity-check` 20/0 ·
+  `identity-hook-parity` 15/0 · `prose-gate-inventory` 22/0 · the hook shell
+  suite 31 cases / 0 failures · the retirement search → 0 · O11's two cells →
+  1 and 2 · `GIT_CONFIG_COUNT` → 0 · `skill-lint` `101 file(s) · 7 check(s) ·
+  0 finding(s)` PASS · `red-first` `54 pair(s) · 0 finding(s)` PASS ·
+  `check-skill-context` `PASS … 30 skills` · `local-gate --list` names
+  `push-identity` · `docs-generate --check` PASS · `promise-coherence` PASS
+  (39 checked · 22 skipped) · `phase-lint` PASS (P1–P10) · `lint-changeset`
+  ok · `version-parity-content` PASS · `local-gate.test` 49/0 ·
+  `roadmap-settle.test` 8/0 · `unit-route.test` 64/0 standalone.
+- **E25** — 2026-11-15, blocker 3's corrections at this head: O20's count
+  search over this document → 0 matches (exit 1) and its retraction search
+  over [`external-verify.md`](external-verify.md) → matches present — while
+  the settlement gate's three report lines are the ones the receipt named
+  (`SPEC.md:437`, `SPEC.md:478`, `SPEC.md:493`); the superseding session
+  entry `.agentic-workflow/journal/20261115T110423Z-feat-514-new-feature-git-identity-signing-guard-per-project-appr-narrative-local.md`
+  records G8's retraction and the 2026-11-14 fragment's supersession — that
+  committed fragment keeps its bytes, because `log-immutability` refuses any
+  other shape (PE-017).
+- **P12** — 2026-11-15, the correction batch: ledger freeze and receipt
+  `d63dcfef` (L5/D10, the O14/O17 flip, O18–O20 planned, PE-015–PE-018, the
+  P12 path-protection record); red corpus `bff0e11b` (E21); the duplicate-safe
+  NN lookup family with its release intent
+  `.changeset/514-duplicate-safe-roadmap-upsert.md` at `cd372114` (E22 — the
+  S2 differential is what surfaced the missing intent: `version-parity-content`
+  refused the crate change until it landed); the live settle, the claim
+  corrections and this evidence in the batch's docs commit (E23–E25, G9).
 
 ## Next
 
-Owner's external verification of this recheck: the merged unit (PR
-[#520](https://github.com/gtrabanco/agentic-workflow/pull/520)) plus the
-2026-11-14 blocker recheck and O11's per-surface cell.
+Owner's external verification of the P12 correction batch: the duplicate-safe
+NN lookup family (`cd372114`), the live settle of the NN-514 row through the
+writer (E23), the claim corrections (E25) and the obligations closed on
+E21–E25/G9. The 2026-11-15 receipt's three blockers are answered; its
+NEEDS-DECISION verdict stands until the owner re-runs it.
 
-One item this recheck found and did **not** repair, because no writer can:
-`docs/ROADMAP.md` carries **two** rows for NN 514 — an `idea` row at line 156
-appended by `31439d10 chore: regen` (2026-11-13, the emitter) and this unit's own
-`in-progress` row at line 166 (`d449f9aa`). Every other NN in `## Features` has
-exactly one row. Because `parseIndexRows` is a `Map` keyed by NN, the last row
-wins, so the index reads `in-progress` for a unit whose PR is merged, and the
-settle writer (`roadmap rowUpsert`) can only rewrite the **first** matching row —
-it would update the `idea` duplicate and leave the verdict red. `bun
-scripts/roadmap-settle.mjs` now fails on the two PR-URL lines this recheck added
-(`SPEC.md:437`, `SPEC.md:478`), which is the gate telling the truth about that
-row, not a defect of this batch. The repair needs the owner: delete the emitter's
-duplicate row and settle the survivor through `roadmap rowUpsert` to
-`done · [#520](https://github.com/gtrabanco/agentic-workflow/pull/520)`, or fix
-the emitter's row key as its own unit. A hand edit of the shared index is the one
-thing this session must not do.
+Two carried notes, recorded rather than acted on: this branch sits below
+`origin/main` (the #552 merges moved `docs/ROADMAP.md` and
+`docs/generated/units.md`, which this batch also changed — integration is the
+owner's step, and the 514 region sits close enough to the 552 rows to want a
+joint look), and the load-dependent `unit-route.test` pool flake (one in-pool
+51.0s failure against standalone 64/0 and G9's green pool run) stays an
+advisory of the receipt, untouched here.
 
 ## References
 
