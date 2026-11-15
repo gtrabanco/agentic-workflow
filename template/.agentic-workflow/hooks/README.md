@@ -25,6 +25,7 @@ The shell adapters require `jq`; OpenCode uses Bun's built-in process API. Run:
 bash .agentic-workflow/hooks/tests/test-command-guard.sh
 bash .agentic-workflow/hooks/tests/test-temp-lib.sh
 bash .agentic-workflow/hooks/tests/test-forge-adapter.sh
+bash .agentic-workflow/hooks/tests/test-secret-scan.sh
 ```
 
 Do not activate or overwrite a customized platform hook without explicit
@@ -65,6 +66,68 @@ bash .agentic-workflow/hooks/tests/test-git-identity-check.sh
 The full annex — the two layers, the corporate profile, the environment layout,
 and what is deliberately not recommended — is
 [`../../docs/workflow/GIT_IDENTITY_HARDENING.md`](../../docs/workflow/GIT_IDENTITY_HARDENING.md).
+
+## Push-range secret scan
+
+`secret-scan.mjs` refuses a push whose **added lines** carry a credential shape —
+a private-key header, a provider token prefix, a high-entropy assignment, a
+password inside a connection string — on every tracked text path, with no
+directory exempt. `secret-scan.sh` is the runner: it resolves `bun`, else `node`,
+execs the module beside it with your argv, and forwards the exit code. Two doors,
+one implementation: a repository that ships the workflow and a project that
+installs it run the same file, so a rule is never written twice.
+
+Install it by consent, chained from an existing hook when there is one (the hook
+never installs itself):
+
+```sh
+cat > .git/hooks/pre-push <<'SH'
+#!/usr/bin/env bash
+set -u
+.agentic-workflow/hooks/secret-scan.sh "$@" || exit 1
+SH
+chmod +x .git/hooks/pre-push
+bash .agentic-workflow/hooks/tests/test-secret-scan.sh
+```
+
+Or run it by hand — from anywhere inside the checkout, since the scanned root is
+the working tree's top, never the directory you happen to be in:
+
+```sh
+bash .agentic-workflow/hooks/secret-scan.sh            # the push range
+bash .agentic-workflow/hooks/secret-scan.sh --all      # every tracked file
+bash .agentic-workflow/hooks/secret-scan.sh --base <rev> --json
+```
+
+**Exit contract:** `0` the range is clean (or every hit is allowlisted) · `1` a
+finding — the push is refused · `2` a usage error. The range is resolved from
+`--base`, then the branch's upstream merge-base, then `origin/main`'s, then the
+whole tracked tree: a shallow clone and a hook that cannot prove its refs are
+scanned *more*, never skipped.
+
+**Fail-closed degradation, always named:** no `bun` and no `node` → exit 2 naming
+both runtimes and the repair; a directory that is not a git checkout → exit 2
+naming the directory; an unreadable tree or an unresolvable `--base` → exit 2;
+a malformed allowlist → exit 2 naming the file. A scanner that cannot look never
+reports nothing to see, and a finding never echoes the secret it caught — the
+detail carries a four-character prefix and the payload's length.
+
+**The allowlist is per project**, at
+`<project root>/.agentic-workflow/hooks/secret-scan-allowlist.json` — the scanned
+root, not this directory — override it with `--allowlist <path>` (relative to
+that root):
+
+```json
+[
+  { "path": "docs/examples/*.md", "rule": "credential-assignment", "reason": "documented sample values" }
+]
+```
+
+It lives at `.agentic-workflow/hooks/secret-scan-allowlist.json` beside this
+README, one entry per `path` (with `*`/`**` globs) and `rule` (`*` allowed), each
+carrying its reason. **An absent file allows nothing.** An entry that matches
+nothing in a whole-tree run is itself a finding, so the file cannot rot into a
+blanket silence.
 
 ## Forges, remotes and degradation
 

@@ -67,6 +67,8 @@ export const INVENTORY = Object.freeze([
   { path: `${HOOKS}/guard-command.sh`, rules: ["hardcoded-temp-fallback"], note: "its subject is the forge command line, so naming the binaries is the guard's job" },
   { path: `${HOOKS}/fullauto-merge.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/git-identity-check.sh`, rules: RULES_ALL },
+  { path: `${HOOKS}/secret-scan.mjs`, rules: ["hardcoded-temp-fallback", "hardcoded-forge-cli"], note: "the scan's range fallback names the mainline ref — the one literal `hardcoded-remote` refuses. #487's range contract freezes that fallback and `template/` cannot import scripts/published-refs.mjs, so the exemption is recorded with its re-trigger in docs/features/552-template-secret-scan/SPEC.md §Future cost" },
+  { path: `${HOOKS}/secret-scan.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/index-sync.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/turn-contract.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/adapters/copilot-guard.sh`, rules: RULES_ALL },

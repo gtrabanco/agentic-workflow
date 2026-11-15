@@ -41,10 +41,15 @@ function sandbox() {
 function secretSandbox() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-secret-"));
   fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
-  // The shipped allowlist narrows the suite's own known-secret fixture, so the
-  // fixture checkout carries the suite too — otherwise the entry would read as
-  // stale in the very tree the gate is judging.
-  for (const name of ["secret-scan.mjs", "secret-scan.test.mjs", "secret-scan-allowlist.json"]) {
+  // The shipped step runs the template's one implementation (issue #552), so the
+  // fixture stages the module where the step's argv names it. The shipped
+  // allowlist narrows the suite's own known-secret fixture, so the fixture
+  // checkout carries the suite too — otherwise the entry would read as stale in
+  // the very tree the gate is judging.
+  const hooksRel = path.join("template", ".agentic-workflow", "hooks");
+  fs.mkdirSync(path.join(dir, hooksRel), { recursive: true });
+  fs.copyFileSync(path.join(ROOT, hooksRel, "secret-scan.mjs"), path.join(dir, hooksRel, "secret-scan.mjs"));
+  for (const name of ["secret-scan.test.mjs", "secret-scan-allowlist.json"]) {
     fs.copyFileSync(path.join(ROOT, "scripts", name), path.join(dir, "scripts", name));
   }
   const git = (args) => {

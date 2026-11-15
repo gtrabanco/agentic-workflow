@@ -9,7 +9,9 @@ The only barrier against a committed credential was one line of the
 `review-security` checklist — model-conducted, inside a review pass that can be
 skipped, and paying for a grep the platform can run for free on every push.
 
-`scripts/secret-scan.mjs` reads the added lines of a push range and reports
+`template/.agentic-workflow/hooks/secret-scan.mjs` — the implementation this
+entry shipped under `scripts/`, moved to the template by issue #552 so target
+projects get the same scan — reads the added lines of a push range and reports
 private-key blocks, provider token prefixes (GitHub, GitLab, OpenAI, AWS,
 Google, Slack, npm, SendGrid, JWTs), `<key>[:=] <payload>` assignments —
 quoted or bare, with the key name allowed as the tail of a longer identifier —
