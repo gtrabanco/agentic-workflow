@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: large
-roadmap_summary: Per-turn telemetry: the sample carries the phase and package version that produced it, the model, and the input/output/cache/reasoning breakdown, written to a per-session JSONL beside the `tier-cost@2` ledger, readable through a report CLI and enforced by a coverage test.
+roadmap_summary: Per-turn telemetry: the sample carries the phase and package version that produced it, the model, and the input/output/cache/reasoning breakdown, written to a per-session JSONL beside the `tier-cost@2` ledger, readable through a report CLI and enforced by a coverage test. Implementation issue: [#504](https://github.com/gtrabanco/agentic-workflow/issues/504). Unit doc: [features/494-telemetry-by-turn](features/494-telemetry-by-turn/SPEC.md)
 ---
 
 # features/494-telemetry-by-turn
