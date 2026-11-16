@@ -33,6 +33,12 @@ the JSONL sink, the ledger grammar version, the report CLI and the coverage
 test are all newer than the first draft). It is rewritten here, in English per
 the repository's language rule, against the request as it stands.
 
+The draft also carried items #504 never asks for — a configurable `sinks`
+array, a `telemetry.anonymize` flag, `docs/telemetry/README.md` and example
+plugin sinks — and the rewrite drops them with the draft: S3 names exactly one
+path key, S9 keeps every output machine-first, S14 makes remote sinks a
+non-goal, and no obligation row ever carried them.
+
 ## Specs
 
 **S1 — the sample carries phase, version and the field-level breakdown.**
@@ -528,12 +534,64 @@ in the handoff to the owner.
 - **G2** — 2026-11-17, `bun scripts/local-gate.mjs --jobs 2 --no-bail` at `HEAD eb9bdd4a` · **18 of 19 steps exit 0** — root-suite 116 suites PASS in 286s, crate suite under both runtimes (276s / 139s), the schema and Pi packages under the node fallback, the peer-floor type-check, the generated projection, log immutability, the secret scan, the journal carrier and the worktree audit — and the one red is `dependency-pin-gate` for the pre-existing `pi-extensible-workflows` drift of E18, which this unit must not bump.
 - **P7** — 2026-11-17, the branch published and PR [#593](https://github.com/gtrabanco/agentic-workflow/pull/593) opened against `main` with the `Closes #504` footer; the pre-push hook ran the gate's offline subset — **PASS, 16 steps in 998s** — with no skip flag (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE` unset) at any point.
 - **G1** — 2026-11-17, `node scripts/run-root-suite.mjs` over the whole branch at `HEAD 1fcb5359` · 112 suites PASS (the four reds re-run alone and green, D7 and the load artifacts named there); the four reds were machine-load artifacts, each re-run alone and green: `red-first` (a real finding, D7, fixed), `unit-route` (a 580 ms timing assertion against a 500 ms bound), `phase-lint` and `workflow-status-sensor` (suite wall-clock caps under a saturated box — 62 s and 91 s alone, against the 120 s cap).
+- **L2** — 2026-11-16, the owner's correction order, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  The corpus is the 2026-11-16 `EXTERNAL VERIFY` receipt in
+  [`external-verify.md`](external-verify.md) (4 blockers, 7 advisories); the
+  batch folds blockers B1–B4 and advisories A1, A2, A5 and dispositions the rest
+  in the receipt's correction record.
+- **F1** — 2026-11-16, the correction batch, one batch, four commits: B1 (the
+  `pr-url-unsettled` settle drift) · `2554bf35`; B2 (O14's malformed date) ·
+  red corpus `cabaaec0` + fix `957c641d`; B3/B4 (the surviving `tier-cost@1`
+  mentions) · `bf02254b`. Verified: every red reproducer green (E19→E21), the
+  differential on nine unchanged report invocations byte-identical (E20), the
+  settle gate 8/0 through the CAS writer (E21), the gate back to its recorded
+  18/19 with root-suite 116/0 (G3).
+- **E19** — 2026-11-16, the red corpus at `cabaaec0`, before any fix:
+  `bun test scripts/telemetry-report.test.mjs` → exit 0 with **10 pass / 1 fail**
+  (the new calendar case: `--from 2026-11-31` exited 0);
+  `bun test scripts/telemetry-coverage.test.mjs` → **5 pass / 1 fail** (the
+  sibling pin: three `tier-cost@1` mentions in `telemetry-sinks.ts`);
+  `node --test scripts/roadmap-settle.test.mjs` → **7 pass / 1 fail**
+  (`SPEC.md:529 pr-url-unsettled`) — B1's reproducer, already red at head.
+- **E20** — 2026-11-16, after the fixes: `bun test scripts/telemetry-report.test.mjs`
+  → **11 pass / 0 fail**; `bun test scripts/telemetry-coverage.test.mjs` →
+  **6 pass / 0 fail**; and the differential — nine unchanged invocations
+  (default JSON, `--human`, `--by phase`, the inclusive window, `--model …
+  --human`, an unknown flag, the real ledger, `--help`, `--schema`) captured
+  before and after the fix in `mktemp -d` scratch → byte-identical stdout,
+  stderr and exit (scratch removed).
+- **E21** — 2026-11-16, the settle (fixture-first): a `mktemp -d` copy of
+  `docs/ROADMAP.md` written by `agentic-workflow roadmap <copy> rowUpsert
+  --expect <revision>` → `diff` against the original shows the status cell
+  alone, `roadmap check --roadmap <copy>` → `ok: true`; the real write then ran
+  with CAS (`Before: 07debbcd · After: 69b28229`);
+  `node --test scripts/roadmap-settle.test.mjs` → **8 pass / 0 fail**;
+  `agentic-workflow roadmap check docs/features/494-telemetry-by-turn/SPEC.md
+  --json` → `violations: 0`; `bun scripts/docs-generate.mjs` → PASS, 1 file
+  written (the row's `done · [#593]` status in `docs/generated/units.md`).
+- **G3** — 2026-11-16, `bun scripts/local-gate.mjs --jobs 2 --no-bail` after the
+  batch · **18 of 19 steps exit 0** — root-suite **exit 0 in 213 s, 116 suites
+  PASS / 0 FAIL** (the settle red gone; no load flakes this run), crate suite
+  under both runtimes (202 s / 190 s), schema-node 23 s, pi-compat-guard 69 s,
+  the offline set all green — and the one red is still the pre-existing
+  `dependency-pin-gate` (E18, base-proven). `pi-node-compat`'s tail was cut by
+  the gate's own exit flush, so it was re-run standalone → 947 tests, 946 pass /
+  0 fail / 1 pre-existing skip, exit 0.
 
 ## Next
 
-The unit is built and hands back for the owner's external verdict over
-`888aaceb..HEAD`: seven commits, every obligation verified (E6–E16), the three
-package suites green (E14). Open, deliberately out of this unit: per-phase
+The 2026-11-16 external-verify receipt (4 blockers) is applied as one
+correction batch (L2, F1): the settle gate green (E21), O14's date refusal
+landed red-first (E19→E20), the surviving `tier-cost@1` mentions retired and
+pinned by the coverage suite (6/0), and the gate is back to its recorded 18/19
+with root-suite 116/0 (G3). The batch hands back for the owner's **delta
+external verification** against [`external-verify.md`](external-verify.md);
+advisories A1 (O10's column count) and A2 (O9's validator spelling) folded in,
+A5 landed as the Issue-section disposition, the rest are dispositioned in the
+receipt's correction record. Open, deliberately out of this unit: per-phase
 attribution inside one session (`## Future`) and the fact that a target project
 carries no ledger until it creates one (`## Known pre-existing issues`).
 
