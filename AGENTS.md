@@ -478,6 +478,9 @@ tool-doctor-envelope | packages/agentic-workflow/README.md | block:doctor-envelo
 doctor-check-status-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:DOCTOR_CHECK_STATUSES | doctor-check-status | no
 doctor-install-route-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:INSTALL_ROUTES | install-route | no
 doctor-wizard-move-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:WIZARD_MOVES | wizard-move | no
+quality-metric-name-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_METRIC_NAMES | quality-metric-name | no
+quality-confidence-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_CONFIDENCES | quality-confidence | no
+quality-metrics-fields | packages/agentic-workflow/README.md | block:quality-metrics@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
