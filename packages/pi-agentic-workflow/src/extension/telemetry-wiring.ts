@@ -13,6 +13,12 @@
  *    the project's own directories. A session that ran no unit-scoped command
  *    emits nothing: a sample without a unit would be a row the ledger cannot
  *    attribute, which is worse than no row.
+ *  - **The phase is the same command's name** (#504 S1), from the published
+ *    `PHASE_LABELS` vocabulary, and it also rides `AG_WF_PHASE` so a spawned
+ *    runner reads the phase in flight from its environment instead of guessing.
+ *    A command outside the vocabulary never overwrites the phase it inherits,
+ *    and the session clears the variable at shutdown: a later session must not
+ *    inherit the previous one's phase.
  *  - **The sample names its session.** The sink's idempotency guard compares a
  *    whole row, so the session id in `source` is what keeps a second session of
  *    the same unit — the same day, the same tree — from being written over.
@@ -23,7 +29,7 @@
 
 import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { createSessionTelemetry, unitFromCommand, type TelemetrySink } from "../session-telemetry.js";
+import { createSessionTelemetry, phaseFromCommand, unitFromCommand, type TelemetrySink } from "../session-telemetry.js";
 import { createLedgerSink } from "../telemetry-sinks.js";
 
 /** The events this wiring listens to. */
@@ -145,6 +151,7 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
   const source = (): string => options.source ?? `pi:session=${identityOf()}`;
 
   let unit: string | null = null;
+  let phase: string | null = null;
   let accumulator: ReturnType<typeof createSessionTelemetry> | null = null;
 
   function build(): ReturnType<typeof createSessionTelemetry> | null {
@@ -153,6 +160,7 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
     return createSessionTelemetry({
       enabled: true,
       unit,
+      phase,
       changedPaths,
       sinks,
       now,
@@ -164,9 +172,16 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
   return {
     noteCommand(command, args) {
       if (!options.enabled) return;
+      // The command's own name is the phase, whichever command it is: a runner
+      // spawned from here reads it from the environment it inherits. A name the
+      // vocabulary does not publish (a typo, a host command) is not a phase and
+      // leaves the one already in flight untouched.
+      const resolvedPhase = phaseFromCommand(command);
+      if (resolvedPhase !== null) process.env.AG_WF_PHASE = resolvedPhase;
       const resolved = unitFromCommand(options.root, command, args);
       if (resolved === null) return;
       unit = resolved;
+      phase ??= resolvedPhase;
       // A second command in the same session keeps the first unit it named: the
       // sample belongs to the work the session actually did, and re-pointing it
       // mid-session would attribute the tokens to the last thing typed.
@@ -184,6 +199,10 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
       pi.on("tool_execution_end", (event) => accumulator?.onToolEnd((event ?? {}) as { durationMs?: number }));
       pi.on("session_shutdown", () => {
         accumulator?.flush();
+        // The phase in flight belonged to this session: a later one must not
+        // inherit it. Deleting here is the other half of setting it in
+        // `noteCommand`.
+        delete process.env.AG_WF_PHASE;
       });
     },
   };
