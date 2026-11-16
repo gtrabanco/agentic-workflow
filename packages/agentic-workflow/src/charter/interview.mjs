@@ -347,6 +347,19 @@ const parseFlags = (args) => {
   return flags;
 };
 
+/**
+ * The flags each operation takes (`--json` is legal everywhere). An
+ * operation-foreign flag is refused with exit 2 before anything is read or
+ * written — the crate's `verify` refuses an unknown argument the same way,
+ * and a flag accepted-and-discarded would report success for a check that
+ * never ran (PE-011, O18).
+ */
+const OPERATION_FLAGS = Object.freeze({
+  state: ["guide"],
+  land: ["guide", "answers"],
+  check: ["guide", "bank"],
+});
+
 const readText = (file, what) => {
   try {
     return readFileSync(resolve(file), "utf8");
@@ -365,6 +378,13 @@ export function run(args) {
   try {
     const [operation, ...rest] = args;
     const flags = parseFlags(rest);
+    const allowed = OPERATION_FLAGS[operation];
+    if (allowed !== undefined) {
+      for (const flag of Object.keys(flags)) {
+        if (flag === "json" || allowed.includes(flag)) continue;
+        throw new CharterRefusal(`unknown argument "--${flag}" for \`charter ${operation}\` — ${USAGE}`);
+      }
+    }
     if (flags.guide === undefined) throw new CharterRefusal(`no --guide given — ${USAGE}`);
     const guideText = readText(flags.guide, "the guide");
 
