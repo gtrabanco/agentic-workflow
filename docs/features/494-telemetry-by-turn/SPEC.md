@@ -526,6 +526,7 @@ in the handoff to the owner.
 - **E17** — 2026-11-17, the gate budget the branch needed: `node --test scripts/red-first.test.mjs` at `HEAD 1fcb5359` · the shipped-history walk took **29.2s** standalone (34.4s suite) and crossed the declared 30s budget inside a `--jobs auto` gate run, so `scripts/test-timeout-allowlist.json` carries 60s for it with the new measurement. The walk's cost is the repository's own history (54 pairs · 29 after the cutoff); no assertion moved.
 - **E18** — 2026-11-17, `bun scripts/version-parity-gate.mjs --pins --package packages/pi-agentic-workflow` at the head · exit 1 · `GATE REJECTION — dependency-pin-drift: pins pi-extensible-workflows at 6.3.0 but the registry published 6.4.0`; the same pin is on `origin/main` (`git show origin/main:packages/pi-agentic-workflow/package.json`) and `git diff origin/main...HEAD -- packages/*/package.json bun.lock` is empty — the drift is pre-existing and outside this unit (Known pre-existing issues).
 - **G2** — 2026-11-17, `bun scripts/local-gate.mjs --jobs 2 --no-bail` at `HEAD eb9bdd4a` · **18 of 19 steps exit 0** — root-suite 116 suites PASS in 286s, crate suite under both runtimes (276s / 139s), the schema and Pi packages under the node fallback, the peer-floor type-check, the generated projection, log immutability, the secret scan, the journal carrier and the worktree audit — and the one red is `dependency-pin-gate` for the pre-existing `pi-extensible-workflows` drift of E18, which this unit must not bump.
+- **P7** — 2026-11-17, the branch published and PR [#593](https://github.com/gtrabanco/agentic-workflow/pull/593) opened against `main` with the `Closes #504` footer; the pre-push hook ran the gate's offline subset — **PASS, 16 steps in 998s** — with no skip flag (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE` unset) at any point.
 - **G1** — 2026-11-17, `node scripts/run-root-suite.mjs` over the whole branch at `HEAD 1fcb5359` · 112 suites PASS (the four reds re-run alone and green, D7 and the load artifacts named there); the four reds were machine-load artifacts, each re-run alone and green: `red-first` (a real finding, D7, fixed), `unit-route` (a 580 ms timing assertion against a 500 ms bound), `phase-lint` and `workflow-status-sensor` (suite wall-clock caps under a saturated box — 62 s and 91 s alone, against the 120 s cap).
 
 ## Next
@@ -538,7 +539,8 @@ carries no ledger until it creates one (`## Known pre-existing issues`).
 
 ## References
 
-Issue [#504](https://github.com/gtrabanco/agentic-workflow/issues/504) · the
+Issue [#504](https://github.com/gtrabanco/agentic-workflow/issues/504) · the PR
+[#593](https://github.com/gtrabanco/agentic-workflow/pull/593) · the
 promoted feature row 494 in [`docs/ROADMAP.md`](../../ROADMAP.md) · #383
 (`docs/fix/383-measured-acceptance/`), whose accumulator, sinks and ledger this
 unit widens · [`docs/workflow/TIER_COST.md`](../../workflow/TIER_COST.md) — the
