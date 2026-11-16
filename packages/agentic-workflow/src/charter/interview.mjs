@@ -56,7 +56,7 @@ const ANGLE_TOKEN = /<[^>]+>/;
  * a ` · `-separated list whose every entry still carries an unfilled `<…>`. A
  * documented shape is not an answer — the interview must still ask for it.
  */
-const isPlaceholder = (value) => {
+export const isPlaceholder = (value) => {
   if (value === "") return true;
   if (PLACEHOLDER.test(value)) return true;
   const entries = value.replace(/`/g, "").split(" · ");
