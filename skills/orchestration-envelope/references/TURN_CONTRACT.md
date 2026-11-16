@@ -185,19 +185,7 @@ missing-config | degraded
 malformed-config | degraded
 ```
 
-**Runtime enforcement — issue #567, owner ruling 2026-11-16 (same-policy
-evaluation):** the guard's verdict covers the structured `write`/`edit` tools
-*and* **shell-bound writes**: a bash call is evaluated before execution, so a
-visible literal target that resolves outside the project root receives the same
-containment (block when the session is headless; an owner-visible approval
-through `ctx.ui.confirm` when it has UI), a target under the OS temp dirs
-passes as scratch (the live-tree guard's own `mktemp` mandate), and an existing
-protected in-root target receives this same Tier 2 decision — never a looser
-path. Targets computed at runtime are **not statically visible**: the guard
-evaluates the command's literal operands and the source of a directly
-executed, readable local script within a byte bound, and a write-shaped command
-with no visible literal target passes on that stated boundary — the contract
-claims exactly this surface, never full shell coverage.
+**Runtime enforcement — issue #567, owner ruling 2026-11-16 (same-policy evaluation):** the guard covers `write`/`edit` *and* **shell-bound writes**: a bash call is judged before execution — a visible literal target outside the project root gets `edit`'s containment (block headless; `ctx.ui.confirm` approval with UI), OS-temp targets pass as scratch (the `mktemp` mandate), and an existing protected in-root target gets this Tier 2 decision, never a looser path. Runtime-computed targets are **not statically visible**: only the command's literal operands and a directly executed readable script's source (byte-bounded) are judged, and a write-shaped command with no visible literal passes on that stated boundary — this surface only, never full shell coverage.
 
 The gate prints one fixed block (`PATH-GUARD <pass|fail> — <reason>`, then an
 `offenders:` line, then `phase: … freeze-after: … checked:`, then any `DEGRADED`
