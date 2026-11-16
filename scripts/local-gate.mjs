@@ -807,8 +807,9 @@ jobs_flag="--jobs \${AGENTIC_WORKFLOW_GATE_JOBS:-auto}"
 # only deletions — has no range: git still runs this hook, and a fabricated
 # merge-base put published history in the range and refused a push that sent
 # nothing (issue #580). A new branch (zero remote sha) falls back to the
-# merge-base with the remote default branch; several refs, or anything
-# unresolvable, leaves base empty and the range-bound steps stay dropped.
+# merge-base with the remote default branch; several publishable refs, or
+# anything unresolvable, leaves base empty and the range-bound steps stay
+# dropped.
 base=""
 publishable=0
 while read -r _local_ref local_sha _remote_ref remote_sha; do

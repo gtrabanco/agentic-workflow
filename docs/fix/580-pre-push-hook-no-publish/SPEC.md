@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: xs
-roadmap_summary: Issue [#580](https://github.com/gtrabanco/agentic-workflow/issues/580): a push that publishes nothing — an up-to-date branch, a dry run, a deletion — carried no ref line on the `pre-push` hook's stdin, and the hook fabricated a mainline merge-base range from it; the range gates then judged already-published history (a GitHub web-UI merge) and refused a push that sent nothing. The hook now exits 0 before any range step when nothing is published, several refs leave the base unproven, `--install-hook` asks git where the hooks live (so it works from a worktree) and its own-body marker is interpolated into the body it generates. SPEC: [SPEC](fix/580-pre-push-hook-no-publish/SPEC.md)
+roadmap_summary: Issue [#580](https://github.com/gtrabanco/agentic-workflow/issues/580): a push that publishes nothing — an up-to-date branch, a dry run, a deletion — carried no ref line on the `pre-push` hook's stdin, and the hook fabricated a mainline merge-base range from it; the range gates then judged already-published history (a GitHub web-UI merge) and refused a push that sent nothing. The hook now exits 0 before any range step when nothing is published, several publishable refs leave the base unproven, `--install-hook` asks git where the hooks live (so it works from a worktree) and its own-body marker is interpolated into the body it generates. SPEC: [SPEC](fix/580-pre-push-hook-no-publish/SPEC.md)
 ---
 
 # fix/580-pre-push-hook-no-publish
@@ -120,9 +120,9 @@ none
 ## Applicable tests
 
 - `scripts/local-gate.test.mjs` — the hook's own corpus: the six cases this unit
-  adds (empty stdin, deletion-only, new-branch fallback, several refs, worktree
-  install, older-body replacement) plus every pre-existing body and installer
-  pin.
+  adds (empty stdin, deletion-only, new-branch fallback, several publishable
+  refs, worktree install, older-body replacement) plus every pre-existing body
+  and installer pin.
 
 ## Known pre-existing issues
 
@@ -304,6 +304,20 @@ machinery on the repository's own tooling.
   `20261116T112241Z-fix-580-pre-push-hook-no-publish-narrative-01a1e416-…md`,
   and `journal aggregate --check` · exit 0 · `checked: 70 · refusals: []`. No
   hand-written byte: the aggregator appends it to `docs/LOGS.md` at merge.
+- **L5** — 2026-11-16, the external-verify correction batch, one pass over the
+  receipt's blockers and the advisories that deserve repair. **B1** the guide's
+  fused sentences (`stay dropped.A checkout` → `stay dropped. A checkout`);
+  **B2** its new clause said "several refs" where the hook counts *publishable*
+  refs, corrected in the guide, in the hook's own comment, in this doc's
+  roadmap summary and corpus line, and in the generated roadmap row that the
+  summary produces; **A2** the guide's older "passes the remote tip as
+  `--push-base`" now names the single-new-branch merge-base it actually passes;
+  **A1** the frozen `docs/fix/441-triage-issue-rescope/SPEC.md` record that
+  called this defect "reported, not repaired" carries an additive
+  `## Superseded record:` section (#572's shape: annotate a frozen unit doc,
+  never rewrite it). Recorded, not repaired: **A3** the branch's merge state
+  against a moved `main` (the owner runs the integration, AGENTS.md › Working
+  rules) and **A4** O3's validator naming a worktree that no longer exists.
 
 ## Next
 
