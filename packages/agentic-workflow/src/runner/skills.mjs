@@ -80,17 +80,30 @@ function parseFlags(args, allowed) {
   return flags;
 }
 
-/** The named file's text, or stdin for `-`. */
-function readInput(target) {
-  if (target === "-") return readFileSync(0, "utf8");
-  return readFileSync(resolve(target), "utf8");
+/** The named file's text, or stdin for `-`; an unreadable input is a refusal. */
+function readInput(target, label) {
+  try {
+    if (target === "-") return readFileSync(0, "utf8");
+    return readFileSync(resolve(target), "utf8");
+  } catch {
+    throw new SkillDiscoveryRefusal(`the ${label} file ${target} could not be read`);
+  }
+}
+
+/** The input's parsed JSON; a malformed document is a refusal, never a stack trace. */
+function parseInput(text, label) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new SkillDiscoveryRefusal(`the ${label} file is not valid JSON`);
+  }
 }
 
 function discover(args) {
   const flags = parseFlags(args, VERB_FLAGS.discover);
   if (flags.candidates === undefined) throw new SkillDiscoveryRefusal("discover needs --candidates <path|->");
-  const payload = JSON.parse(readInput(flags.candidates));
-  const consent = flags.consent === undefined ? {} : parseConsent(JSON.parse(readInput(flags.consent)));
+  const payload = parseInput(readInput(flags.candidates, "candidates"), "candidates");
+  const consent = flags.consent === undefined ? {} : parseConsent(parseInput(readInput(flags.consent, "consent"), "consent"));
   const root = resolve(flags.root ?? process.cwd());
   const report = buildDiscoveryReport({ payload, consent, root });
   if (flags.json) process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
