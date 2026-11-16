@@ -51,17 +51,37 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 **S11 — Context budget compliance.**
 > "the bank is a reference loaded only when the route reaches the interview (entrypoint stays within the committed ceiling)."
 
+## Acceptance criteria
+
+- AC1 — S1: the bank carries one objectives-layer row per dimension the issue names (purpose, users, team shape, optimization target, automation appetite), and each names the workflow behaviour its answer toggles. (check: `rg -c '^\| OBJ-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints 5, and `bun packages/agentic-workflow/bin/agentic-workflow.mjs charter check --guide template/AGENTS.md --bank skills/init-workspace/references/ENGINEERING_INTERVIEW.md` exits 0)
+- AC2 — S2: the testing area carries Cohn's pyramid, Feathers' characterization tests and the property/fuzz appetite, each with its citation. (check: `rg -c '^\| TST-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints 3, and the rows name `Cohn`, `Feathers` and `QuickCheck`)
+- AC3 — S3: the boundaries area declares Evans/Parnas as its vocabulary and asks the per-boundary machine-or-prose question. (check: `rg -n '^\| ARC-02 \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` matches 1, and the row's question carries `machine` and `prose-only`)
+- AC4 — S4: dependency policy, production verification, decision records and API posture each carry at least one cited question. (check: `rg -c '^\| (DEP|VER|DEC|API)-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints 5 or more)
+- AC5 — S5: a row earns its place only with two behaviour-changing answers and a stated ask condition; a row missing either is refused. (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with the `row-toggles-single` and `row-applies-when-missing` refusal cases, and every shipped row carries both)
+- AC6 — S6: a team convention is never overwritten — `charter land` reports the slot `kept` and leaves its bytes intact. (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with the `pre-seeded convention survives` case)
+- AC7 — S7: a concrete answer lands in the guide's charter slot, and an unanswered slot with a bank default lands as a dated assumption (`assumed <YYYY-MM-DD> — <value>`). (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with the `written` and `assumed` cases, and `rg -c '^- \*\*(Repo purpose|Users|Team shape|Optimization target|Automation appetite|Testing strategy|Architectural boundaries|Dependency policy|Production verification|Decision records|API posture):\*\*' template/AGENTS.md` prints 11)
+- AC8 — S8: the bank's own check refuses a question with no bibliography source or no toggled behaviour, and passes the shipped bank. (check: `bun packages/agentic-workflow/bin/agentic-workflow.mjs charter check --guide template/AGENTS.md --bank skills/init-workspace/references/ENGINEERING_INTERVIEW.md` exits 0, and the same command on a fixture row missing `source` exits 1 with `CHARTER CHECK BLOCKED`)
+- AC9 — S9: the pre-seeded-convention fixture survives the landing pass while a placeholder slot beside it receives the answer. (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with the fixture asserting both slots in one run)
+- AC10 — S10: the enforcement answer is written into the guide's `Architectural boundaries` slot in the documented shape (`<boundary> → machine: <mechanism>` or `<boundary> → prose-only`), where the materialization step reads it. (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with `the enforcement answer has two legal shapes and a filled slot outside them is refused`, and `rg -l 'Architectural boundaries' template/AGENTS.md skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints both files)
+- AC11 — S11: the bank ships as a reference the route loads at the interview, and the entrypoint stays inside its declared ceiling (the ceiling is rebased in this change with its growth source named). (check: `bun scripts/check-skill-context.mjs --skill init-workspace` exits 0, and `rg -c '\(references/ENGINEERING_INTERVIEW\.md\)' skills/init-workspace/SKILL.md` prints 2 — the allowlist entry and the §Charter bullet both name it)
+
 ## Impact
 
-- `init-workspace` skill: gains two new interview layers (objectives + technical)
-- `template/`: updated agent guide to include the new charter sections
-- `docs/research/2026-11-15-all-code-is-slop-mapping.md`: evidence reference
-- Consumed by `verification-materialization` (557) for boundary enforcement answers
-- Depends on charter layer 1-2 (#435)
+- `init-workspace` skill: `§Charter` gains layer 3, the progressive-loading allowlist gains the interview reference, and the two bootstrap references gain the layer-3 round and its write.
+- `template/AGENTS.md`: the `## Project charter` section gains the objectives layer and the engineering-posture slots; a bootstrapped project ships twenty-one keyed slots — the base's eleven plus layer 3's ten (`charter state` reports 21, and P3's validator counts the ten new ones).
+- `skills/init-workspace/references/BOOTSTRAP_WRITE.md`: each layer-3 posture answer becomes a criteria row with its own provenance — `project-declared` when the owner stated it, `stamped assumption (<YYYY-MM-DD>)` when the bank's default stood — so the posture answers reach the registered criteria catalogue the template already seeds with a bootstrap-interview stamped-assumption row.
+- `packages/agentic-workflow`: a new `charter` file service (`state`, `land`, `check`) — the deterministic landing the write step invokes, and the bank's own check. Its bin usage line and README command table are one surface (`packages/agentic-workflow/test/cli.surface.test.mjs` pins both).
+- Consumed by `verification-materialization` (557): S1/S4 of that SPEC read the declared boundary's enforcement answer; this unit writes it into the `Architectural boundaries` slot in a documented shape.
+- `docs/workflow/SKILL_CONTEXT_BUDGETS.json`: the `init-workspace` main ceiling is rebased with the growth source named (the manifest's own rule), because the entrypoint carries 4 lines of slack today.
+- Nothing stops being true: the identity/domain layers (#435) and their write step keep their contracts; layer 3 is added beside them, not over them.
 
 ## Retirements
 
-none — strictly additive
+Strictly additive: this unit retires no surface. Its added-surface inventory is the anti-divergence receipt, computed after the change lands (the tree has no base commit before it):
+
+```text
+bun scripts/residual-classify.mjs --inventory --base main
+```
 
 ## Non-goals
 
@@ -70,8 +90,6 @@ none — strictly additive
 - Any stack/framework-specific question
 
 ## Risk tier
-
-`standard` (affects `init-workspace` + `template/`; no behavioral change to the delivery pipeline)
 
 **Tier** — `standard` · **Task Size** — `standard`
 **Named high-risk item** — `none — not a high-tier unit`
@@ -82,41 +100,66 @@ none
 
 ## Future cost
 
-The bibliography citations must stay idea-adapted, never vendored text.
+The bibliography citations must stay idea-adapted, never vendored text: a bank row cites author + work as the idea's source, and never copies a passage. A later sweep that adds a row inherits the same cell contract, so attribution stays one rule (`docs/research/ATTRIBUTION.md`).
 
 ## Applicable tests
 
-n/a — no tests step for this unit
+The landing and the bank check are deterministic, so they are tested where the code lives:
+
+- `bun test packages/agentic-workflow/test/charter.test.mjs` — the `charter` file service (`state` / `land` / `check`), its refusal cases, and the shipped bank + template pin.
+- `bun scripts/skill-lint.mjs` — the new reference and the edited skill surfaces.
+- `bun scripts/check-skill-context.mjs` — the entrypoint stays inside its rebased ceiling; the new reference inside the reference ceiling.
+- `bun test scripts/normative-drift.test.mjs` — the new `interview-bank` surface row resolves.
+- `bun test scripts/scaffold-guide.test.mjs` — the template guide stays neutral, visible and undated.
+- `bun scripts/test-impact.mjs --base main` — the derived set this change can affect.
 
 ## Known pre-existing issues
 
-none
+- `docs/ROADMAP.md` rows 556–558 never name their own issues — issue #569, triaged fix-now; does-not-affect this unit (this unit edits its own unit doc, and the projection re-syncs its summary cell from that doc).
+- `bun scripts/worktree-guard.mjs` reports `STALE` for sibling sessions' worktrees (`.worktrees/feat-527-readme-evidence-rationale` and `.worktrees/feat-555-programmatic-runner-detection`, branches already merged into `origin/main`; the count grew while this unit ran) — does-not-affect this unit: the finding names no path this change touches, and this branch's own worktree is clean at the gate's head. Owner: the sessions that own those worktrees remove them.
 
 ## Tasks
 
-- P1 — Define the repo-objectives interview questions with workflow consequences (validator: `bun scripts/skill-lint.mjs` exits 0)
-  (Implements: S1, S6, S11)
+- [x] P1 — Freeze this unit's planning ledgers and acceptance criteria beside the SPEC (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/556-engineering-interview/SPEC.md` exits 0)
+  (Implements: S5, S6)
+  - Relevant files: docs/features/556-engineering-interview/SPEC.md, docs/features/556-engineering-interview/planning-evidence.md, docs/features/556-engineering-interview/planning-obligations.md
+- [x] P2 — Write the engineering interview reference: the objectives layer plus the eight-cell question bank (validator: `rg -c '^\| [A-Z]{3}-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` matches 16)
+  (Implements: S1, S2, S3, S4, S5, S6, S10, S11)
+  - Relevant files: skills/init-workspace/references/ENGINEERING_INTERVIEW.md
+- [x] P3 — Add the layer-3 charter slots to the template agent guide (validator: `rg -c '^- \*\*(Repo purpose|Team shape|Optimization target|Automation appetite|Testing strategy|Architectural boundaries|Dependency policy|Production verification|Decision records|API posture):\*\*' template/AGENTS.md` matches 10)
+  (Implements: S1, S7, S10)
+  - Relevant files: template/AGENTS.md
+- [x] P4 — Land the `charter` service's suite first, observed red on the missing module (validator: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 1 with the missing-module error)
+  (Implements: S8, S9)
+  - Relevant files: packages/agentic-workflow/test/charter.test.mjs
+- [x] P5 — Implement the `charter` file service and document it beside its siblings (validator: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0)
+  (Implements: S6, S7, S8, S9, S10)
+  - Relevant files: packages/agentic-workflow/src/charter/interview.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/README.md
+- [x] P6 — Wire the interview round into the skill's charter section and progressive-loading allowlist (validator: `rg -c 'references/ENGINEERING_INTERVIEW\.md' skills/init-workspace/SKILL.md` matches 2)
+  (Implements: S5, S6, S11)
   - Relevant files: skills/init-workspace/SKILL.md
-- P2 — Build the technical question bank referencing bibliography sources (validator: `bun scripts/skill-lint.mjs` exits 0)
-  (Implements: S2, S3, S4, S8)
-  - Relevant files: skills/init-workspace/SKILL.md, skills/init-workspace/references/technical-bank.md
-- P3 — Integrate both layers into `init-workspace`'s interview flow (validator: `bun scripts/skill-lint.mjs` exits 0)
-  (Implements: S5, S7, S9)
-  - Relevant files: skills/init-workspace/SKILL.md, template/AGENTS.md
-- P4 — Verify the bootstrapped output on a test repo (validator: `bun scripts/skill-lint.mjs` exits 0)
-  (Implements: S7, S8, S9, S10, S11)
-
-### Planning evidence
-
-none
-
-### Obligations
-
-none
+- [x] P7 — Wire the discovery round into bootstrap discovery and its landing into the write step (validator: `rg -c 'charter land' skills/init-workspace/references/BOOTSTRAP_WRITE.md` matches 1)
+  (Implements: S1, S3, S6, S7, S10)
+  - Relevant files: skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md
+- [x] P8 — Declare the bank as a normative surface and rebase the skill's context ceiling with its growth source (validator: `bun test scripts/normative-drift.test.mjs` exits 0)
+  (Implements: S8, S11)
+  - Relevant files: AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- [x] P9 — Record the evidence, flip the obligation rows, and regenerate the projection (validator: `bun scripts/docs-generate.mjs --check` exits 0)
+  (Implements: S7, S11)
+  - Relevant files: docs/features/556-engineering-interview/SPEC.md, docs/features/556-engineering-interview/planning-obligations.md, docs/LOGS.md
 
 ## Triaged steps
 
-> Awaiting `unit-route` execution after lane triage.
+```text
+TRIAGE — 556-engineering-interview (feature)
+Steps: research, design, plan, implement, tests, evidence, review, docs, release
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
+Skipped: none
+Budget: strong
+Fused: design + plan — one investigate→orient→ask→decide pass, carriers separated (activity-fusion@1)
+relay: bootstrap-needed — no packet at .pi-web/relays/556-engineering-interview
+relay-next: create .pi-web/relays/556-engineering-interview/ (charter → docs/features/556-engineering-interview/SPEC.md) then dispatch_relay(packet: ".pi-web/relays/556-engineering-interview", leg: "1") · legs: 10 = 9 phases + 1 coherence review
+```
 
 ## Findings
 
@@ -130,12 +173,57 @@ none
   NEW FEATURE: init-workspace engineering interview — repo objectives + bibliography-backed technical question bank (charter layer 3)
   ```
 - D1 — 2026-11-15, triaged as `promote` — valid feature proposal with clear scope, dependencies, and acceptance criteria. The issue is well-structured (goal, business value, in scope, out of scope, acceptance criteria, dependencies) and aligns with the workflow's charter-driven design principles.
+- D2 — 2026-11-16, the deterministic half is a crate file service, not a loose `scripts/` entry: every file service the workflow invokes ships as a `agentic-workflow` subcommand (`packages/agentic-workflow/README.md`), and `init-workspace` runs in a target project that carries no `scripts/` tree (PE-001).
+- D3 — 2026-11-16, the bank's data lives in a `table:interview-bank@1` surface in the reference and its cell contract in the same document's fenced block; the check compares the table's header with the declared cells, so a new column cannot arrive unannounced (PE-004).
+- P1 — 2026-11-16 06:40, froze this unit's SPEC (S1–S11, AC1–AC10), the evidence ledger (PE-001..PE-010) and the obligations ledger (O1–O17) · `1c2851d0`.
+- P2 — 2026-11-16 07:10, the interview bank (16 rows, eight cells, two layers) and the eleven layer-3 charter slots · `4b5ad664`.
+- E1 — 2026-11-16 09:20, `bun test packages/agentic-workflow/test/charter.test.mjs` · exit 1 · `Cannot find module '../src/charter/interview.mjs'` — the red commit `2420df6f` carries the suite alone.
+- P3 — 2026-11-16 09:25, red suite committed alone · `2420df6f`.
+- P4 — 2026-11-16 11:40, the `charter` file service (`state`/`land`/`check`), its bin dispatch, its README row, the discovery round and the write step · `bbecee0a`, `eb9b479d`.
+- E2 — 2026-11-16 11:44, `bun test packages/agentic-workflow/test/charter.test.mjs` · exit 0 · 22 pass / 0 fail (the refusal cases, the kept/written/assumed landing, the boundary shapes, the shipped pin, the CLI boundary).
+- E3 — 2026-11-16 11:50, `node packages/agentic-workflow/bin/agentic-workflow.mjs charter check --guide template/AGENTS.md --bank skills/init-workspace/references/ENGINEERING_INTERVIEW.md` · exit 0 · `CHARTER CHECK PASS — … 16 row(s) · 22 slot(s)`; the same command on a fixture row without a source exits 1 with `CHARTER CHECK BLOCKED`.
+- E4 — 2026-11-16 11:52, the row counts the SPEC's criteria read: `rg -c '^\| OBJ-[0-9]{2} \|'` = 5, `TST` = 3, `ARC` = 2, `DEP|VER|DEC|API` = 6, and the five objectives slots in `template/AGENTS.md` = 5.
+- G1 — 2026-11-16 11:56, `bun test packages/agentic-workflow/…` full crate suite · exit 0 · 858 pass / 0 fail across 48 files.
+- G2 — 2026-11-16 12:02, `bun scripts/skill-lint.mjs` · exit 0 · 0 finding(s) in 103 files.
+- G3 — 2026-11-16 12:04, `bun scripts/check-skill-context.mjs` · exit 0 · PASS context budgets: 30 skills; `--documents` PASS context documents: 4; `--routes` PASS route budgets: 14 routes.
+- G4 — 2026-11-16 12:06, `bun scripts/normative-drift.test.mjs` · exit 0 · 21 pass / 0 fail — the `interview-bank` row resolves in the inventory.
+- G5 — 2026-11-16 12:08, `bun scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass / 0 fail — `charter-bank-shape` is cited and its surface claimed.
+- G6 — 2026-11-16 12:10, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 files checked, 0 stale, roadmap unchanged.
+- G7 — 2026-11-16 12:12, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/556-engineering-interview/SPEC.md` · exit 0 · `verdict PASS`, nine phases at PASS (6/6).
+- D6 — 2026-11-16, the template's layer-3 block first shipped a `Dependency policy` bullet beside the domain layer's own slot of that name; the check now refuses a duplicated key (`slot-duplicate`) and the bullet is gone, so the dependency questions land in the one home the domain layer owns and the shipped charter carries 21 slots, not the 22 the earlier lines in this log ran against. Appended, never an edit of those lines.
+- P5 — 2026-11-16 12:14, declared the bank as a normative surface
+- D5 — 2026-11-16, correcting D3's wording (appended, never edited): the bank's declared grammar is `block:interview-bank@1` — the fenced cell contract in the reference — and its question rows are the markdown table after that block; a table-marker surface would have been found by the drift gate at a marker-bearing heading, which this document does not carry.
+- D7 — 2026-11-16, three criteria named their check loosely and now name it exactly as the tree prints it (AC5's finding codes, AC10's case name, AC11's count of 2 links rather than 1). Corrected before the first review, and recorded here rather than silently rewritten.
+- D8 — 2026-11-16, the owner chose `integrate-now` (PR #584 read `CONFLICTING`): `origin/main` was 53 commits ahead and both sides had edited `packages/agentic-workflow/README.md` — one hunk, my `charter` row above the memory-probe row main changed from five checks to six. Resolved by keeping both (main's wording, my row), merged as `4b2f91eb`; `origin/main` had touched none of this unit's surfaces (`template/AGENTS.md`, `skills/init-workspace/`, the context manifest, the gate inventory, the unit doc) and the merge left no other conflict.
+- G10 — 2026-11-16 15:42, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail` on the merged tree · exit 0 · `local-gate: PASS — 15 step(s) in 669s` (root-suite 204s, crate bun 289s / node 124s, schema 10s, pi 41s, and `worktree-guard` now 0 findings — the sibling worktrees G9 recorded were removed by their owners).
+- G9 — 2026-11-16 14:09, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail` · 14 of 15 steps exit 0 (version-parity, schema-build, docs projection, journal carrier, log immutability, secret scan, temp hygiene, tmp-gc, rigidity, root-suite 182s, crate bun 206s / node 95s, schema 7s, pi 17s) and the one red step is `worktree-guard`, which names two sibling sessions' merged worktrees and no path of this change — recorded under Known pre-existing issues.
+- G8 — 2026-11-16 13:20, `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 · `local-gate: PASS — 15 step(s) in 503s` (root-suite 174s, crate-suite bun 262s / node 127s, schema and pi legs green; the first run's only red was the version-parity step, which the changeset cleared, and the pi node leg's `CRATE_COMMANDS` parity pin, which now lists `charter`).
+- D4 — 2026-11-16, the two edges this change had to move on existing surfaces, each with its reason: `scripts/review-loop-discipline.test.mjs` pinned the template's charter-slot count at 11 and the shipped template now prints 22 (layer 3's eleven slots) — the assertion's property (every charter slot prints, none skipped) is unchanged and the count follows the template; `packages/pi-agentic-workflow/scripts/projection.mjs`'s `CRATE_COMMANDS` is the declared set the projection may name, and a newly dispatched bin command enters it (the parity test compares it with the bin's case list). Neither edit relaxes an assertion.
+ with its gate row, and rebased the `init-workspace` main and reference ceilings with their growth sources · `9d140350`.
+- L2 — 2026-11-16, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- E5 — 2026-11-16, `bun test packages/agentic-workflow/test/charter.test.mjs` · exit 1 · 24 pass / 1 fail — the red corpus case `an operation-foreign flag is refused before any byte moves` over the external verify's three reproducers, committed alone at `3856d9dd` and re-observed red from a `git archive` scratch of that commit (24 pass / 1 fail, exit 1).
+- E6 — 2026-11-16, `bun test packages/agentic-workflow/test/charter.test.mjs` · exit 0 · 25 pass / 0 fail after the refusal landed at `d397dacc`; the reproducers answer `EDIT REFUSAL — unknown argument …` with exit 2 under bun and node, and `charter land … --bank <missing>` leaves the guide byte-identical.
+- E7 — 2026-11-16, the base-vs-change differential over `git archive 3c48ad4f` scratch: thirteen charter invocations — every valid and neutral invocation byte-identical in exit/stdout/stderr (including `land` writing identical guide bytes); the only differences are the three asked refusals (`state/check --answers`, `land --bank`), plus one stderr diff that normalized away as the fixture's absolute path.
+- F1 — 2026-11-16, folded from `external-verify.md` (blocker B1 + advisories 1–5) at `fbc7783d` over the fix `d397dacc`: B1 is refused by the per-operation flag contract (PE-011, O18 verified — E5→E6); advisory 1's Impact counts corrected (twenty-one slots over the base's eleven, layer 3's ten); advisory 3 re-pointed the Impact bullet at `BOOTSTRAP_WRITE.md`, and the `cli.surface.test.mjs` claim path was made resolvable (`bun scripts/promise-coherence.mjs docs/features/556-engineering-interview/SPEC.md` verdict PASS over its earlier `BLOCKED: surface-missing`); advisory 4 canonicalized the live validator spellings to `bun test scripts/…` (Applicable tests, P8, O15 — G4/G5's recorded runs stand as append-only history); advisory 5 replaced the five obligation case names with tokens the suite prints verbatim; the changeset's slot count and land clause were corrected with them. Dispositioned without edit: the two journal fragments (append-only session receipts — frozen history, not live narration) and advisory 6 (an environmental disclosure, no code surface).
+- G11 — 2026-11-16, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail` · exit 0 · `local-gate: PASS — 15 step(s) in 592s` (root-suite 162s, crate bun 286s / node 96s, schema 12s, pi 36s) — started at `fbc7783d`; this batch's log lines and journal fragment landed during its root-suite and were validated separately (`journal aggregate --check` exit 0 · 87 checked · 0 refusals; `bun scripts/docs-generate.mjs --check` exit 0). The two afternoon root-suite reds this batch disclosed are the load-marginal, allowlisted boundary tests (next-step-ranking 10050ms, red-first 30076ms at load 11–13 on 6 CPUs), each green standalone where its budget allows and neither touching a path this change edited.
+- G12 — 2026-11-16, post-log readers: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/556-engineering-interview/SPEC.md` · exit 0; `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/556-engineering-interview/SPEC.md` · exit 0 · verdict PASS; `bun scripts/promise-coherence.mjs docs/features/556-engineering-interview/SPEC.md` · exit 0 · verdict PASS; `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass (O15's canonical spelling); `bun test scripts/scaffold-guide.test.mjs` · exit 0 · 8 pass; `bun scripts/red-first.mjs` · exit 0 · 0 findings; `bun test packages/agentic-workflow/test/charter.test.mjs` · exit 0 · 25 pass (O6/O7/O9/O12/O17/O18).
+- L3 — 2026-11-16, the integration request, verbatim:
+  ```
+  There are still merge conflicts
+  ```
+  (executing the reconciliation plan the owner reviewed the same session: "Hay merge conflicts en la PR #584 necesito que reconcilies todos los cambios sin perder ninguna feature que no deba ser borrada … verifica en base a los commits y features donde se hicieron esos commits para verificar que debe ser preservado y que no").
+- D9 — 2026-11-16, origin/main `2c85804a` merged as `e2346296`; the four conflicted files resolved by union, each side traced to its feature: the usage line keeps `runner` (555) + `charter` (556) + `quality-metrics` (558), token-identical in bin and README; the `normative-surface-grammar` surfaces list keeps `interview-bank` beside `runner-set` and the three quality tokens; the budgets `sources` carry both lineages with the AGENTS.md scalars re-pinned to the merged measurement (713 lines / 150 machine) and `GATE_INVENTORY` `estimateMax` 6,506 -> 6,512. This unit's seven `bunx …@<pin> charter …` citations re-point to `runner charter …` because issue #555's runner-prose gate forbids a launcher spelling in the staged bundle — every command, flag and prose line preserved on both sides, no feature text deleted.
+- G13 — 2026-11-16, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail` · exit 0 · `local-gate: PASS — 15 step(s) in 503s` — the full offline gate on the merged tree (root-suite, crate bun 196s / node 144s, schema 7s, pi 17s carrying runner-prose and the `CRATE_COMMANDS` parity), after the schema `dist/` rebuild the merged source requires.
 
 ## Next
 
-Run `/unit-lane 556-engineering-interview` to begin the design phase.
+Owner verdict on the diff (the owner is the external verifier for this repository's own surgery). After the verdict: the owner integrates `main` on the branch and merges, and 557 reads the `Architectural boundaries` slot.
 
 ## References
 
 - Depends on: #435 (charter layers 1-2), #526 (checklist-first evidence)
 - Consumed by: #564 (verification materialization)
+- Evidence: `docs/research/2026-11-15-all-code-is-slop-mapping.md` (owner-directed mapping of Lauren Tan's talk), `docs/research/2026-11-12-input-quality-and-editing/` (checklist-first)

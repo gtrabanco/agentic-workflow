@@ -40,6 +40,29 @@
        default). Where the answer is already in evidence (a lockfile, CI
        config, an existing guide), propose it and mark it confirmed rather
        than re-asking.
+     - **Layer 3 — objectives and engineering posture, open-with-defaults.**
+       Asked right after the domain layer, from the bank in
+       `references/ENGINEERING_INTERVIEW.md`. Its two halves: **objectives**
+       (repo purpose, users, team shape, optimization target, automation
+       appetite) and **technical posture** (testing strategy, architectural
+       boundaries, dependency policy, production verification, decision
+       records, API posture) — each question cites the bibliography idea it
+       adapts and names the two answers that change a workflow behaviour.
+       Run it as a checklist, never as a questionnaire:
+       - **Read before asking.**
+         `runner charter state --guide AGENTS.md`
+         reports every charter slot as `filled` or `placeholder`; a filled slot
+         is the team's own rule — never re-asked, never overwritten.
+       - **Ask only earned rows.** A row is asked when its `applies-when`
+         condition holds; a simple install never earns the full bank.
+       - **Two-layer wording.** Every question is offered as a recommended
+         option with its why, one alternative, plus the two standing exits
+         "Decide for me" and "Explain the options".
+       - **Stop on a blocking gap.** An unanswered layer-1 identity question
+         still halts through the fail-closed flow above; layer 3 never
+         substitutes an assumption for it.
+       - **Record, never invent.** Unanswered rows with a bank default become
+         dated assumptions at the write step; the run reports each one.
      - **Verification-criteria catalogue (the domain layer's last item):**
        which acceptance criteria exist at project level, which review passes
        apply per surface type, what "done" means beyond the generic baseline.

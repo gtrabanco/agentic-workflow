@@ -417,6 +417,7 @@ ceremony-profile-piece-vocabulary | packages/agentic-workflow-schema/src/ceremon
 ceremony-profile-adoption-vocabulary | packages/agentic-workflow-schema/src/ceremony-profile.ts | schema-export:CEREMONY_PROFILE_ADOPTIONS | ceremony-profile-adoption | no
 ceremony-profile-refusal-vocabulary | packages/agentic-workflow-schema/src/ceremony-profile.ts | schema-export:CEREMONY_PROFILE_REFUSALS | ceremony-profile-refusal | no
 ceremony-profile-block | packages/agentic-workflow-schema/README.md | block:ceremony-profile@1 | n/a | no
+interview-bank | skills/init-workspace/references/ENGINEERING_INTERVIEW.md | block:interview-bank@1 | n/a | no
 doc-provenance-grammar-family-vocabulary | packages/agentic-workflow-schema/src/doc-provenance.ts | schema-export:DOC_GRAMMAR_FAMILIES | doc-grammar-family | no
 doc-provenance-stamp | packages/agentic-workflow-schema/README.md | block:doc-provenance@1 | doc-provenance-format+doc-grammar-family | no
 continuation-refusal-vocabulary | packages/agentic-workflow-schema/src/continuation.ts | schema-export:CONTINUATION_REFUSALS | continuation-refusal-type | yes
@@ -478,6 +479,9 @@ tool-doctor-envelope | packages/agentic-workflow/README.md | block:doctor-envelo
 doctor-check-status-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:DOCTOR_CHECK_STATUSES | doctor-check-status | no
 doctor-install-route-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:INSTALL_ROUTES | install-route | no
 doctor-wizard-move-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:WIZARD_MOVES | wizard-move | no
+quality-metric-name-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_METRIC_NAMES | quality-metric-name | no
+quality-confidence-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_CONFIDENCES | quality-confidence | no
+quality-metrics-fields | packages/agentic-workflow/README.md | block:quality-metrics@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

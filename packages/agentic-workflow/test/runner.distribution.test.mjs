@@ -22,6 +22,8 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { RUNNER_COMMANDS } from "../src/runner/cli.mjs";
+
 const packageRoot = fileURLToPath(new URL("..", import.meta.url));
 const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
 
@@ -90,6 +92,15 @@ test("the pin the skills cite is the version this package publishes", () => {
   const runner = readFileSync(fileURLToPath(new URL("../../../skills/runner-contract/references/RUNNER.md", import.meta.url)), "utf8");
   const pin = /bunx @gtrabanco\/agentic-workflow@([0-9A-Za-z.\-]+)/u.exec(runner)?.[1];
   assert.equal(pin, manifest.version, "RUNNER.md's pin and the crate's manifest are one value — the drift gate recomputes both");
+});
+
+test("the runner contract's subcommand table names every runner command", () => {
+  const runner = readFileSync(fileURLToPath(new URL("../../../skills/runner-contract/references/RUNNER.md", import.meta.url)), "utf8");
+  const section = runner.slice(runner.indexOf("## Subcommands"), runner.indexOf("## Exit codes"));
+  // The leading token of every backticked span in the table's cells: `unit-route <unit|…>` → `unit-route`.
+  const named = new Set([...section.matchAll(/`([a-z][a-z0-9-]*)/gu)].map((match) => match[1]));
+  const missing = Object.keys(RUNNER_COMMANDS).filter((name) => !named.has(name));
+  assert.deepEqual(missing, [], "every key of the crate's dispatch table appears in the runner contract's table — a name outside it is a usage error, so the table must not lag the dispatch");
 });
 
 test("no version literal is restated anywhere else the skills cite", () => {
