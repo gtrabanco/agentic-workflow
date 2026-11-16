@@ -394,6 +394,14 @@ state.
   surface, and stacked PRs are refused by this repository's guide). The size is
   the unit's own scope, named here rather than hidden.
 
+- **P9** — 2026-11-16, the unit published for external verification:
+  `agentic-workflow ceremony pr create --base main` → PR
+  [#599](https://github.com/gtrabanco/agentic-workflow/pull/599) · head
+  `3464cbf3` (28 files, +1296/−59). The branch was pushed after the pre-push
+  local gate reported `PASS — 16 step(s)`, re-run with
+  `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` after two hook-equipped pushes exited
+  141 (SIGPIPE) *after* that PASS line; the PR records both facts.
+
 ## Next
 
 The owner's external verdict on this diff — 2026-11-16 handoff; no tracked task
