@@ -392,6 +392,14 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
 - **G2** — 2026-11-16, `bun scripts/local-gate.mjs` at HEAD `53e5effe` · exit 0 ·
   **`local-gate: PASS — 19 step(s)` in 719s**, `schema-build` (1s) ahead of
   `root-suite` (210s) and every other step green, none skipped (O7, S6).
+- **G3** — 2026-11-16, `bun scripts/local-gate.mjs` at HEAD `9b51fc33` (after the
+  evidence commit) · exit 0 · **`local-gate: PASS — 19 step(s)` in 510s**, none
+  skipped, `root-suite` 176s — the receipt the handoff cites.
+- **P4** — 2026-11-16, the differential recorded (E6: identical stdout, empty
+  stderr on a current build; E5: the declared delta on a stale one).
+- **P5** — 2026-11-16, the guide clause inside its re-pinned ceiling, the roadmap
+  row and projection through the emitter, and the journal fragment (E10–E12).
+- **P6** — 2026-11-16, the full gate green at the handoff head (G3).
 
 ## Next
 
