@@ -351,10 +351,15 @@ deterministic gates still run (§8).
 - **P2** — 2026-11-17, the README section (`## Why it works this way`, 34 added lines) plus `D5`'s validator amendment · `8bc37b85`.
 - **D6** — 2026-11-17, four validator cells are rewritten into the reader's declared-outcome form (`matches <N>` instead of `→ 1` / `≥ 1`) while the claims they assert are unchanged: `scripts/promise-coherence.mjs` re-runs an obligation's own command and compares the declared outcome, so an arrow-form cell was skipped as "no declared outcome" — disclosed but unverified — and one of them (O1) mis-bound the later `exits 1` as the first command's outcome. After the rewrite the reader re-runs six claims against the tree and reports `verdict PASS · 6 checked · 10 skipped`, the skips naming their own reason. Authority: the §5 freeze is over the ledger's rulings and shape; an outcome form the reader cannot execute is a closed obligation without a receipt, so it is corrected with its reason recorded instead of left skipped.
 
+- **P3** — 2026-11-17, the indexes and the session door: both `## Fixes`/features writes through the crate's writers, the projection re-rendered by the emitter (one added row) and the narrative fragment `20261116T135024Z-feat-527-readme-evidence-rationale-narrative-local.md` (1,979 bytes, `journal aggregate --check` → `85 checked · 0 refusals`, `log-immutability` → `PASS · 0 violations`) · `58af96b2`.
+- **P4** — 2026-11-17, the verification sweep and the receipt batch: E5–E16 and G1–G5 recorded, every obligation closed, then the validator-form correction (`D6`) · `6187430d`, `2fde06c0`.
+- **G6** — 2026-11-17, HEAD `2fde06c0`, the final-head readers, all exit 0: `agentic-workflow verify` (`VERIFY PASS`, `ok: true`), `agentic-workflow phase-lint` (`verdict PASS`, P1–P4 6/6), `scripts/docs-generate.mjs --check` (`0 missing · 0 stale · 0 orphaned`), `scripts/roadmap-settle.mjs` (`217 unit docs checked · 0 violations`), `scripts/promise-coherence.mjs` (`verdict PASS · 6 checked · 10 skipped`, each skip naming its reason).
 ## Next
 
-P4 — the verification sweep: readers, projection, touched suites and the offline
-root gate, then the `Needs your decision` handoff.
+`Needs your decision` — the owner's verdict on the diff at this head: approve
+and the PR opens against `main` with `Closes #527` (both index rows then settle
+to `done · <PR>`), or name the disputed claim and the correction batch runs
+against it.
 
 ## References
 
