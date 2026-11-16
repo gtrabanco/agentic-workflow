@@ -69,7 +69,10 @@ import { scrubGitLocator } from "./git-env.mjs";
 const SCRIPT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BUN = process.env.AGENTIC_WORKFLOW_BUN ?? "bun";
 const NODE = process.env.AGENTIC_WORKFLOW_NODE ?? "node";
-const HOOK_MARKER = "scripts/local-gate.mjs --skip-network";
+/** The header sentence that marks a hook as this gate's own. It is
+ *  interpolated into the body, so a marker that no longer matches the body it
+ *  generates cannot happen (issue #580). */
+const HOOK_MARKER = "installed by `bun scripts/local-gate.mjs --install-hook`";
 
 /**
  * The lowest version a consumer may install, read from a peer range.
@@ -762,7 +765,7 @@ function checkImpact(root, base) {
 /** The hook body: banner, escape hatch, then the offline subset of this gate. */
 export function hookBody() {
   return `#!/usr/bin/env bash
-# Local gate on push — installed by \`bun scripts/local-gate.mjs --install-hook\`.
+# Local gate on push — ${HOOK_MARKER}.
 # Owner: AGENTS.md → Verification → "Where the gate runs".
 #
 # Runs the offline subset: a registry that happens to be unreachable must not
@@ -799,22 +802,31 @@ fi
 # AGENTIC_WORKFLOW_GATE_JOBS overrides it per machine (owner amendment S9).
 jobs_flag="--jobs \${AGENTIC_WORKFLOW_GATE_JOBS:-auto}"
 
-# One base per push: the remote tip of the single non-delete ref being pushed.
-# A new branch (zero remote sha) falls back to the merge-base with the remote
-# default branch; several refs, or anything unresolvable, leaves base empty and
-# the gate runs every step.
+# One base per push: the remote tip of the single ref being pushed. A push that
+# publishes nothing — no ref line at all (an up-to-date branch, a dry run) or
+# only deletions — has no range: git still runs this hook, and a fabricated
+# merge-base put published history in the range and refused a push that sent
+# nothing (issue #580). A new branch (zero remote sha) falls back to the
+# merge-base with the remote default branch; several refs, or anything
+# unresolvable, leaves base empty and the range-bound steps stay dropped.
 base=""
+publishable=0
 while read -r _local_ref local_sha _remote_ref remote_sha; do
+  # A deletion (local sha all zeros) publishes no commit.
   case "\$local_sha" in *[!0]*) ;; *) continue ;; esac
-  case "\$remote_sha" in *[!0]*) ;; *) continue ;; esac
-  if [ -z "\$base" ]; then
-    base="\$remote_sha"
-  else
+  publishable=\$((publishable + 1))
+  if [ "\$publishable" -gt 1 ]; then
     base=""
     break
   fi
+  case "\$remote_sha" in *[!0]*) base="\$remote_sha" ;; *) base="" ;; esac
 done
-if [ -z "\$base" ]; then
+
+if [ "\$publishable" = 0 ]; then
+  printf 'local gate: nothing to publish — this push sends no ref update, so it has no range to judge\n' >&2
+  exit 0
+fi
+if [ -z "\$base" ] && [ "\$publishable" = 1 ]; then
   mainline_remote="\${remote:-origin}"
   default_branch="\$(git symbolic-ref --short "refs/remotes/\$mainline_remote/HEAD" 2>/dev/null || echo "\$mainline_remote/main")"
   base="\$(git merge-base HEAD "\$default_branch" 2>/dev/null || true)"
@@ -842,9 +854,24 @@ exit 1
 `;
 }
 
+/**
+ * Where git keeps this checkout's hooks, asked of git: in a worktree `.git` is a
+ * file, and the hooks directory is the one the main checkout owns — guessing it
+ * from the shape of `.git` crashed the installer exactly where this repository
+ * builds its units (issue #580). `null` is "not a checkout", never "install
+ * nowhere".
+ */
+function hooksDir(root) {
+  const result = spawnSync("git", ["-C", root, "rev-parse", "--git-path", "hooks"], { encoding: "utf8" });
+  if (result.status !== 0) return null;
+  const printed = result.stdout.trim();
+  if (printed === "") return null;
+  return path.isAbsolute(printed) ? printed : path.resolve(root, printed);
+}
+
 function installHook({ root, force }) {
-  const hooks = path.join(root, ".git", "hooks");
-  if (!fs.existsSync(path.join(root, ".git"))) usage(`${root} is not a git checkout`);
+  const hooks = hooksDir(root);
+  if (hooks === null) usage(`${root} is not a git checkout`);
   fs.mkdirSync(hooks, { recursive: true });
   const target = path.join(hooks, "pre-push");
   const body = hookBody();
