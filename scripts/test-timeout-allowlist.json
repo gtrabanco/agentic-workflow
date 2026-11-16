@@ -34,5 +34,11 @@
     "timeoutMs": 30000,
     "reason": "the suite spawns the shipped CLI per case (create/read/update/delete over a real unit doc through the plan section); the same pool-driven wall-clock inflation crossed the per-test budget while the same test measures ~2.1s idle — behaviour under test, not waste",
     "measured": "10051ms (plan create/read/update/delete over the Tasks section (S5, S7, O8)) in the owner's 6-worker run on 2026-11-15 with concurrent sessions; 2143ms idle for the same test at e864c710"
+  },
+  {
+    "path": "scripts/next-step-ranking.test.mjs",
+    "timeoutMs": 30000,
+    "reason": "the suite drives the shipped workflow-status sensor end to end six times per case (a fixture git walk, a shimmed gh and a full envelope parse per spawn), so the six real spawns are the behaviour under test; under the root-gate pool while five concurrent local-gates ran on the box its per-test wall-clock crossed the 10s default while the whole 29-test file measures 18.2s in a green jobs-4 gate run",
+    "measured": "10026.89ms (node leg, pre-push gate run, 2026-11-16 at load average 15.9 with five concurrent local-gates) and 5009.80ms (bun leg standalone, same load); 18.2s for the whole 29-test file in the green jobs-4 gate run the same day"
   }
 ]
