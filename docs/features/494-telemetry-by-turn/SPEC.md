@@ -34,7 +34,7 @@ test are all newer than the first draft). It is rewritten here, in English per
 the repository's language rule, against the request as it stands.
 
 The draft also carried items #504 never asks for — a configurable `sinks`
-array, a `telemetry.anonymize` flag, `docs/telemetry/README.md` and example
+array, a `telemetry.anonymize` flag, a `docs/telemetry/` README and example
 plugin sinks — and the rewrite drops them with the draft: S3 names exactly one
 path key, S9 keeps every output machine-first, S14 makes remote sinks a
 non-goal, and no obligation row ever carried them.
@@ -572,8 +572,8 @@ in the handoff to the owner.
   `agentic-workflow roadmap check docs/features/494-telemetry-by-turn/SPEC.md
   --json` → `violations: 0`; `bun scripts/docs-generate.mjs` → PASS, 1 file
   written (the row's `done · [#593]` status in `docs/generated/units.md`).
-- **G3** — 2026-11-16, `bun scripts/local-gate.mjs --jobs 2 --no-bail` after the
-  batch · **18 of 19 steps exit 0** — root-suite **exit 0 in 213 s, 116 suites
+- **G3** — 2026-11-16, at `HEAD 2554bf3578e85d9afcbc39824f1504a84d19eb80`:
+  `bun scripts/local-gate.mjs --jobs 2 --no-bail` · **18 of 19 steps exit 0** — root-suite **exit 0 in 213 s, 116 suites
   PASS / 0 FAIL** (the settle red gone; no load flakes this run), crate suite
   under both runtimes (202 s / 190 s), schema-node 23 s, pi-compat-guard 69 s,
   the offline set all green — and the one red is still the pre-existing
