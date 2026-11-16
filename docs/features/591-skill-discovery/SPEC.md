@@ -439,6 +439,15 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   scripts/lint-changeset.mjs .changeset/591-skill-discovery.md` exit 0
   (`ok 591-skill-discovery.md`), `bun scripts/docs-generate.mjs --check` exit 0
   (`verdict: PASS`), `rg -c '#591' docs/research/ATTRIBUTION.md` → `2`.
+- **P4** — 2026-11-16, the branch pushed and the pull request opened: `git push`
+  ran the pre-push hook (the offline gate, `PASS — 16 step(s) in 636s`) and PR
+  #594 was created against `main` with `Closes #591`. Roadmap row 591 carries the
+  PR URL in its status cell (`in-progress · [#594](…)`), written by `roadmap
+  rowUpsert`; this document deliberately cites no PR URL while the PR is open,
+  because `pr-url-unsettled` reads a doc-side URL as a claim the row is `done`.
+  The row's slug is the emitter's folder-derived `skill-discovery` — the
+  issue-side name `skill-discovery-init` made `docs-generate` append a second row
+  591, which the writer's duplicate-key collapse removed.
 - **G1** — 2026-11-16, the offline gate at HEAD f7fc4227245336321982f0a6b09080e767285c7a ·
   `bun scripts/local-gate.mjs --skip-network --no-bail --jobs auto` · exit 0 ·
   `PASS — 15 step(s) in 745s`. The four network steps were skipped by the flag; the earlier full run's
@@ -473,6 +482,8 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
 - Issue [#591](https://github.com/gtrabanco/agentic-workflow/issues/591) — the
   feature proposal this unit applies (`Closes #591`).
 - `docs/ROADMAP.md` row 591 — the worklist entry.
+- Pull request #594 — `Closes #591`; its URL lives in the roadmap row's status
+  cell, never here while the PR is open (`pr-url-unsettled`).
 - `docs/research/ATTRIBUTION.md` — the Voyager/SAGE and self-evolving-agent
   rows this unit confirms.
 - `skills/skill-lint/references/CHECKS.md` — the owner of each check's meaning.
