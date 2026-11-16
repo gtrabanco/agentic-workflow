@@ -71,7 +71,6 @@ One observable, testable criterion per requirement; each names the check that pr
 | AC-6 (S6) | `--window <days>` (default 90) sets the trailing window and the document carries `days`/`since`/`until`; an out-of-range value is refused | `bun test packages/agentic-workflow/test/quality-metrics.cli.test.mjs` |
 | AC-7 (S7) | every metric row carries one of `measured`/`derived`/`unavailable`, and `unavailable` implies `value: null` plus a declared reason | `bun test packages/agentic-workflow-schema/test/quality-metrics.test.mjs` |
 | AC-8 (S8) | the metric definitions — formula, unit, confidence rule, heuristics, degradation codes — have one home in the crate README | `rg -c '^quality-metrics@1$' packages/agentic-workflow/README.md` matches 1, and `bun test scripts/normative-drift.test.mjs` exits 0 |
- packages/agentic-workflow/README.md` matches 1, and `bun test scripts/normative-drift.test.mjs` exits 0 |
 | AC-9 (S9) | stdout is exactly the envelope JSON, every feedback line is on stderr, and the document validates against the published contract before it is printed | `bun test packages/agentic-workflow/test/quality-metrics.cli.test.mjs` (the stderr-only and self-check cases) |
 | AC-10 (S10) | a run leaves the repository byte-identical, and `--out` is the only write it may perform | same suite (the read-only and `--out` cases) |
 | AC-11 (S11) | the command emits a valid envelope on this repository and its numbers are reconciled by hand once, recorded here | the `## Log` pilot lines (envelope bytes + reconciliation) |
@@ -388,6 +387,60 @@ P | P<n> | a phase's progress — what was done and the commit
   supersedes G2 as the receipt for the final tree; the same four network steps are
   skipped and reported as skipped, not passed: `workspace-install`,
   `pi-compat-guard`, `dependency-pin-gate`, `dependency-advisories`.
+- L3 — 2026-11-16, the correction request this batch applies (verbatim, the
+  owner's local workflow):
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Run as **one** correction batch on this unit's `EXTERNAL VERIFY` receipt
+  (2026-11-16, base `d1287c3d` · head `71648377`, blockers B1–B3, verdict
+  `NEEDS-DECISION (3)`); its advisory A1 is not a blocker and is not in this
+  batch. Triage of the three: all three reproduce, all three are change-caused,
+  none is out of domain — B1 and B3 are sibling/option-consistency defects of
+  the registration this unit landed, B2 is a duplicated fragment in the unit's
+  own acceptance table. No blocker was dismissed.
+- E15 — 2026-11-16, the frozen-failure corpus observed **red** at `71648377`
+  before any repair: B1 `node packages/agentic-workflow/bin/agentic-workflow.mjs
+  quality-metrics --repo /nonexistent-xyz-558 --until 2026-11-16T12:00:00.000Z`
+  → exit 0 carrying this worktree's `lead_time_for_change 5.57 derived` and
+  `pr_volume 236 measured` beside `degraded: [unavailable-findings-corpus,
+  unavailable-history-not-a-repository]`; B2 the acceptance-table render → 15
+  rows with a phantom row after AC-8; B3 `rg -c quality-metrics
+  skills/runner-contract/references/RUNNER.md` → no match while
+  `quality-metrics --help` → exit 0. The two new cases red for the same reasons:
+  `bun test test/quality-metrics.cli.test.mjs` → `14 pass 1 fail` (`--repo
+  selects every reader`), `bun test test/runner.distribution.test.mjs` → `3 pass
+  1 fail` (missing `quality-metrics`).
+- E16 — 2026-11-16, after the repair: `cd packages/agentic-workflow && bun test
+  test/quality-metrics.cli.test.mjs` · exit 0 · `15 pass 0 fail`; `bun test
+  test/runner.distribution.test.mjs` · exit 0 · `4 pass 0 fail`; the five suites
+  that share the touched modules (collect, cli, runner.distribution, cli.surface,
+  runner.dispatch) · exit 0 · `64 pass 0 fail` — every pre-existing case kept its
+  expectation.
+- E17 — 2026-11-16, the three reproducers re-run after the repair: B1 → exit 0
+  with `degraded [unavailable-findings-corpus, unavailable-forge-no-network,
+  unavailable-history-not-a-repository]`, `source_revision null` and all six rows
+  `unavailable`/`null` with their reason — no foreign project's numbers anywhere;
+  `--repo <mktemp repo>` run from this worktree → `unavailable-forge-no-network`
+  instead of the live rows; B2 the render → `14 rows`, no phantom; B3 `rg -c` →
+  `1`. One regression the contract itself caught mid-batch: the first
+  not-a-directory return used the reader's *inner* failure shape, so `forge.code`
+  came out `undefined` and the document was refused (`QUALITY REFUSAL — the
+  collected document does not satisfy its own contract: each degraded entry must
+  match unavailable-<source>-<cause> (got undefined)`, exit 2, nothing printed)
+  — repaired to `{ ok: false, code: … }` before the batch continued.
+- G7 — 2026-11-16, the batch's deterministic gates, all foreground: `bun
+  scripts/skill-lint.mjs` · `verdict: PASS` (0 findings); `bun
+  scripts/check-skill-context.mjs` · `PASS context budgets: 30 skills`;
+  `--documents` · `PASS context documents: 4 budgeted documents`; `bun test
+  scripts/normative-drift.test.mjs` · `21 pass 0 fail`; `bun
+  scripts/prose-gate-inventory.mjs` · `verdict: PASS`; `bun
+  scripts/docs-generate.mjs --check` · `verdict: PASS`; `bun
+  scripts/lint-changeset.mjs .changeset/565-quality-sensor.md` · `ok`;
+  `bun test scripts/structural-sibling-pins.test.mjs` · `8 pass 0 fail`;
+  `node --test scripts/red-first.test.mjs` · `9 pass 0 fail` (the standalone bun
+  run hits the declared 5 s budget case already allowlisted in
+  `scripts/test-timeout-allowlist.json` as pre-existing).
 
 ## Next
 

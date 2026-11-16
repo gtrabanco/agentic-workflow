@@ -469,6 +469,9 @@ reports, and interpretation is the caller's.
 
 **Read-only.** Every `git` and `gh` call is a read. `--out <path>` is the only
 byte the command may write, and it writes exactly the bytes stdout carried.
+**One project.** `--repo <dir>` scopes every reader — git, forge and corpus — to
+the directory it names: the forge reads run inside it, so one document never
+carries two projects' rows.
 **Bounded.** Each git call has a 15 s bound, the three forge reads share one 30 s
 budget with a 10 s per-call cap, and the first-commit read is a bounded sample
 (see *Why a sample* below). **Fail closed.** A metric that cannot be computed is

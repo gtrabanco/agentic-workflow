@@ -169,8 +169,8 @@ const inWindow = (instant, since, until) => {
 // ---------------------------------------------------------------------------
 
 /** Run a command, bounded, and return a structured result. Never throws. */
-function shell(command, args, { timeout = COMMAND_TIMEOUT_MS } = {}) {
-  const result = spawnSync(command, args, { encoding: "utf8", timeout, maxBuffer: 64 * 1024 * 1024 });
+function shell(command, args, { timeout = COMMAND_TIMEOUT_MS, cwd } = {}) {
+  const result = spawnSync(command, args, { encoding: "utf8", timeout, maxBuffer: 64 * 1024 * 1024, cwd });
   return {
     ok: result.status === 0,
     status: result.status,
@@ -268,13 +268,28 @@ function forgeDegradation(failure, malformed) {
  *   samples_truncated: boolean, created: object[], created_truncated: boolean } | { ok: false, code: string }}
  */
 export function readForge({ repo, since }) {
+  // `gh` resolves the repository from its own working directory, so the reads run
+  // inside the project `--repo` names: a read spawned anywhere else answers with
+  // another project's rows, labelled `measured` (receipt B1). The directory is
+  // checked first because spawnSync reports a bad `cwd` as the same ENOENT it
+  // reports for a missing binary — `error.path` is the command either way — and
+  // `unavailable-forge-missing-cli` must keep meaning "gh is not on PATH".
+  let target = null;
+  try {
+    target = fs.statSync(repo);
+  } catch {
+    target = null;
+  }
+  if (!target?.isDirectory()) {
+    return { ok: false, code: "unavailable-forge-no-network" };
+  }
   const budget = { remaining: FORGE_DIMENSION_MS };
   const readList = (args) => {
     if (budget.remaining <= 0) {
       return { ok: false, failure: { timedOut: true }, malformed: false };
     }
     const started = Date.now();
-    const result = shell("gh", args, { timeout: Math.min(FORGE_TIMEOUT_MS, budget.remaining) });
+    const result = shell("gh", args, { timeout: Math.min(FORGE_TIMEOUT_MS, budget.remaining), cwd: repo });
     budget.remaining -= Date.now() - started;
     if (!result.ok) return { ok: false, failure: result, malformed: false };
     let parsed;
