@@ -24,6 +24,8 @@
 | O12 | S7 | the new vocabularies and grammars are named normative surfaces the drift gate resolves from committed source, and the guide's `machineLines` is re-pinned to the measured region with its growth source recorded | P9 | P9 | AGENTS.md | `bun test scripts/normative-drift.test.mjs` exits 0 and `bun scripts/check-skill-context.mjs --documents` exits 0 | `G` line with both exits and the measured machine-region count | verified |
 | O13 | S7 | the repository's indexes and prose report the change: the roadmap row leaves `idea` through its writer, the generated projection is rendered rather than hand-written, the changeset lints, and `ATTRIBUTION.md` confirms this unit's adoption rows | P9 | P9 | docs/ROADMAP.md | `bun scripts/lint-changeset.mjs .changeset/591-skill-discovery.md` exits 0, `bun scripts/docs-generate.mjs --check` exits 0 and `rg -c '#591' docs/research/ATTRIBUTION.md` matches ≥2 | `G` line with all three exits and the attribution match count | verified |
 | O14 | S6, S7 | the live-tree guard holds: every mutating case ran under a temporary directory, no scratch directory survives, `git status --porcelain` names no scratch path, and no `review-change`/`audit-pr`/fold cycle ran on this change | P10 | P10 | docs/features/591-skill-discovery/SPEC.md | `bun scripts/local-gate.mjs` exits 0 and `rg -c '^- \*\*(R\|F\|V)[0-9]' docs/features/591-skill-discovery/SPEC.md` matches 0 | `G` line with the gate exit and the zero review/fold mark count | verified |
+| O15 | S3, S6 (receipt B3/B4) | sibling truth after the engine move: the skill-lint reference and skill name `packages/agentic-workflow/src/skills/screen.mjs` as the pattern carrier — no shipped surface still asserts the patterns live in `scripts/skill-lint.mjs`, and the script is described as this repository's CLI over the engine | P11 | P11 | skills/skill-lint/references/CHECKS.md | `rg -n 'carries the patterns\|patterns live in .scripts/skill-lint' skills/skill-lint/` exits 1 with no match and `bun scripts/skill-lint.mjs` exits 0 | `E` line with both exits | verified |
+| O16 | S7 (receipt B5) | the E4 receipt runs the five suites its corrected command names and yields the output it reports | P11 | P11 | docs/features/591-skill-discovery/SPEC.md | `cd packages/agentic-workflow && bun test test/skills.screen.test.mjs test/skills.discovery.test.mjs test/skills.register.test.mjs test/skills.cli.test.mjs test/cli.surface.test.mjs` exits 0 | `E` line with both runs: `42 pass` at `09821263` before the correction corpus grew and `47 pass` after | verified |
 
 ## Verification
 
@@ -38,3 +40,8 @@
   unit's `## Log`, because no `review-change`, `audit-pr` or fold cycle ran on
   this change.
 - No row was deferred: nothing in this ledger leaves the unit.
+- Amendment, the correction batch (SPEC `L3`, task `P11`): `O15` and `O16` were
+  appended so every frozen-failure reproducer of the 2026-11-16 `EXTERNAL
+  VERIFY` receipt is at least one row's validator; `O2` and `O10` were re-run
+  against the correction corpus before their `verified` status stands (SPEC
+  `L3`, `E10`/`E11`).
