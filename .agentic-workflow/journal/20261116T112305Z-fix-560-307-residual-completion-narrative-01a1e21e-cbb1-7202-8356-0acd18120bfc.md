@@ -1,6 +1,0 @@
-## 2026-11-16T11:23:05Z — fix/560-307-residual-completion — narrative
-- **Commits:** 31 (`0a37c272…059b6fdf`)
-- **Files:** 34 files
-- **Summary:** Built issues #566 and #567 on the fix-560 branch (owner ruled fix-here / a-enforce for #567): #566 corrected MEMORY.md §7's mirror-reconciliation clause to the v4.5.0 contract (superseded words deleted, feature 66 annotated) and added the additive instance-id capability check to the memory probe (red-first 8-fail→green 25/0, live probe ok); #567 shipped new pure guards/shell-path.ts gated bash writes with edit's containment before seam dispatch (red-first module-absent→green 21/21 + 920 full pi run, base probe 3 NOT BLOCKED→head all 3 BLOCKED with edit-parity reasons). Both ledgers 12/12 verified. PR #577 updated with Refs lines and push record.
-- **Decisions:** D1 route fix-here for both (owner, no new branches); D2 #567 a-enforce same-policy for bash (owner); D3 gate failure repaired: contract paragraph over skill budget shrunk to 107 words; integration duplicate rows resolved to byte-identical main copies; #540 restored after shifted-index slip; push used AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1 after hook-green + SIGPIPE (recorded in PR)
-- **Next:** Owner verdicts the batch on PR #577 (Refs #566, Refs #567); note: origin/main moved again during session — re-integrate before merge if desired.
