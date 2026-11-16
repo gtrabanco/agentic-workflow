@@ -3,7 +3,7 @@
  *
  * The five fixtures the plan names, plus the parse and ceiling contracts:
  *
- *   fixture-healthy         all five checks pass → verdict `ok` (keeps `ok`
+ *   fixture-healthy         all six checks pass → verdict `ok` (keeps `ok`
  *                           reachable, so the suite is not always-degraded)
  *   fixture-timeout         the transport accepts the connection and never
  *                           answers → `degraded` on `http-health`, and on every
@@ -75,6 +75,7 @@ function enoent(command) {
 const healthyRun = async (command, args) => {
   const joined = args.join(" ");
   if (joined === "--version") return { code: 0, stdout: "engram 3.4.0\n", stderr: "", timedOut: false, spawnError: null };
+  if (joined === "instance-id") return { code: 0, stdout: "engram-i-abc123\n", stderr: "", timedOut: false, spawnError: null };
   if (joined === "mcp --tools=agent") return { code: 0, stdout: INIT_OK, stderr: "", timedOut: false, spawnError: null };
   if (joined === "sync --status") {
     return {
@@ -101,7 +102,7 @@ const byId = (report) => Object.fromEntries(report.checks.map((c) => [c.id, c]))
 /* ── verdict contract ──────────────────────────────────────────────────── */
 
 describe("memory probe — verdict contract (AC2)", () => {
-  it("fixture-healthy: all five checks pass and the verdict is ok", async () => {
+  it("fixture-healthy: all six checks pass and the verdict is ok", async () => {
     const report = await runProbe({ fetchImpl: healthyFetch, runImpl: healthyRun });
     strictEqual(report.schema, PROBE_SCHEMA);
     strictEqual(report.verdict, "ok");
@@ -118,6 +119,7 @@ describe("memory probe — verdict contract (AC2)", () => {
       "binary-version",
       "sync-staleness",
       "session-ambiguity",
+      "instance-id",
     ]);
   });
 
@@ -128,6 +130,7 @@ describe("memory probe — verdict contract (AC2)", () => {
       binaryVersion: 4_000,
       syncStaleness: 10_000,
       sessionAmbiguity: 10_000,
+      instanceId: 4_000,
       total: 30_000,
     });
   });
@@ -186,7 +189,7 @@ describe("memory probe — fixture-timeout (bounded, never hangs)", () => {
     });
     const elapsed = Date.now() - started;
     strictEqual(report.verdict, "degraded");
-    strictEqual(report.checks.length, 5);
+    strictEqual(report.checks.length, 6);
     ok(report.checks.every((c) => c.status === "failed"), JSON.stringify(report.checks));
     ok(elapsed < 100, `the bounds were summed, not shared: ${elapsed} ms`);
   });
@@ -404,6 +407,91 @@ describe("memory probe — session-ambiguity (AC5's machine signal)", () => {
 });
 
 /* ── no mutation ───────────────────────────────────────────────────────── */
+
+/* ── instance-id capability (issue #566 B2) ──────────────────────────── */
+
+describe("memory probe — instance-id capability (B2)", () => {
+  it("the sixth check rides the probe form: engram instance-id under a fresh temp data dir", async () => {
+    const seen = [];
+    const run = async (command, args, opts) => {
+      seen.push({ command, args, env: opts?.env });
+      return healthyRun(command, args);
+    };
+    const report = await runProbe({ fetchImpl: healthyFetch, runImpl: run, env: {}, timeoutMs: 20 });
+    strictEqual(report.verdict, "ok");
+    const call = seen.find((c) => c.args[0] === "instance-id");
+    ok(call, "the instance-id capability was asked");
+    strictEqual(call.command, "engram");
+    strictEqual(call.env.ENGRAM_NO_UPDATE_CHECK, "1");
+    ok(typeof call.env.ENGRAM_DATA_DIR === "string" && call.env.ENGRAM_DATA_DIR.length > 0, "a temp ENGRAM_DATA_DIR is passed");
+    strictEqual(byId(report)["instance-id"].status, "ok");
+  });
+
+  it("ENGRAM_URL makes the remote authoritative: the local binary is not judged", async () => {
+    const seen = [];
+    const run = async (command, args, opts) => {
+      seen.push(args.join(" "));
+      return healthyRun(command, args);
+    };
+    const report = await runProbe({
+      fetchImpl: healthyFetch,
+      runImpl: run,
+      env: { ENGRAM_URL: "http://127.0.0.1:7437" },
+      timeoutMs: 20,
+    });
+    ok(!seen.includes("instance-id"), "no local capability spawn when the remote is authoritative");
+    const check = byId(report)["instance-id"];
+    strictEqual(check.status, "ok");
+    ok(/remote/i.test(check.detail), check.detail);
+    strictEqual(report.verdict, "ok");
+  });
+
+  it("a missing binary stays a degraded answer, never a hard incompatibility", async () => {
+    const run = async (command) => ({
+      code: null,
+      stdout: "",
+      stderr: "",
+      timedOut: false,
+      spawnError: enoent(command),
+    });
+    const report = await runProbe({ fetchImpl: healthyFetch, runImpl: run, env: {}, timeoutMs: 20 });
+    const check = byId(report)["instance-id"];
+    strictEqual(check.status, "failed");
+    strictEqual(check.reason, "binary-missing");
+    strictEqual(report.verdict, "degraded");
+    // the probe is never hard-refused: the other transports still answer
+    strictEqual(byId(report)["http-health"].status, "ok");
+  });
+
+  it("an unmet capability fails with a reason that names instance-id", async () => {
+    const run = async (command, args) => {
+      if (args.join(" ") === "instance-id") {
+        return { code: 1, stdout: "", stderr: "engram: unknown command: instance-id\n", timedOut: false, spawnError: null };
+      }
+      return healthyRun(command, args);
+    };
+    const report = await runProbe({ fetchImpl: healthyFetch, runImpl: run, env: {}, timeoutMs: 20 });
+    const check = byId(report)["instance-id"];
+    strictEqual(check.status, "failed");
+    ok(/instance-id/.test(`${check.reason} ${check.detail}`), JSON.stringify(check));
+    strictEqual(report.verdict, "degraded");
+    ok(report.degraded.includes("instance-id"));
+  });
+
+  it("an unanswerable capability check times out under its own bound, not the ceiling", async () => {
+    const run = async (command, args, opts) => {
+      if (args.join(" ") === "instance-id") {
+        return new Promise((resolve) =>
+          setTimeout(() => resolve({ code: null, stdout: "", stderr: "", timedOut: true, spawnError: null }), opts.timeoutMs ?? 0),
+        );
+      }
+      return healthyRun(command, args);
+    };
+    const report = await runProbe({ fetchImpl: healthyFetch, runImpl: run, env: {}, timeoutMs: 20, totalTimeoutMs: 5_000 });
+    strictEqual(byId(report)["instance-id"].reason, "timeout");
+    strictEqual(report.verdict, "degraded");
+  });
+});
 
 describe("memory probe — read-only contract", () => {
   it("never issues an MCP tool call: only initialize reaches the runner", async () => {
