@@ -69,7 +69,11 @@ function fixture(name, verdict = null) {
   mkdirSync(join(dir, "scripts"), { recursive: true });
   // The sensor spawns the runner; `AGENTIC_WORKFLOW_RUNNER` points it at the stub,
   // which is the documented local override and needs no repository copy.
+  // The override names a *command* (RUNNER.md's form), so the stub carries its
+  // own shebang and the mode that makes it executable; the conductor spawns it
+  // verbatim instead of guessing a runtime for a bare path.
   writeFileSync(join(dir, "scripts", "workflow-status.mjs"), SENSOR_STUB, "utf8");
+  chmodSync(join(dir, "scripts", "workflow-status.mjs"), 0o755);
   mkdirSync(join(dir, "receipts"), { recursive: true });
   if (verdict) writeFileSync(join(dir, "verdict.json"), JSON.stringify(verdict), "utf8");
 

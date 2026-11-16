@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-roadmap_summary: extend init-workspace's charter interrogation with a repo-objectives interview and a bibliography-backed technical question bank (charter layer 3)
+roadmap_summary: Issue [#563](https://github.com/gtrabanco/agentic-workflow/issues/563) (M): extend init-workspace's charter interrogation with a repo-objectives interview and a bibliography-backed technical question bank (charter layer 3)
 ---
 
 # 556 — engineering-interview

@@ -7,8 +7,7 @@ them, not the user. A blank or missing objective/scope is therefore a **document
 defect**: stop and repair the SPEC (`/unit-lane <unit>` — its §1 writes the
 objective/why/user-outcome) or re-triage. Never infer unit scope, and never
 turn a doc defect into a question the user cannot answer. A gap that survives
-the repair runs `bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>` (npx fallback if bun is
-not installed), pastes the `open-questions@1` block and stops, routed to `design`
+the repair runs `runner needs-input <unit-dir>`, pastes the `open-questions@1` block and stops, routed to `design`
 or `unit-lane` by the owning stage.
 
 ## Purpose

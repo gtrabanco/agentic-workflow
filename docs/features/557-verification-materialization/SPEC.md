@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-roadmap_summary: init-workspace verification materialization — declared boundaries become project-local enforcement, feature map, evidence-capture driver
+roadmap_summary: Issue [#564](https://github.com/gtrabanco/agentic-workflow/issues/564) (M): init-workspace verification materialization — declared boundaries become project-local enforcement, feature map, evidence-capture driver
 ---
 
 # 557 — verification-materialization

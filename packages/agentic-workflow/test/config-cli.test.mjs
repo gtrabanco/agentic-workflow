@@ -1,7 +1,7 @@
 // config-cli.test.mjs — the unified config CLI/API (issue #427 S6/S7).
 //
 // Every assertion runs the real binary in a throwaway project, because the CLI
-// is the contract an operator and `bunx @gtrabanco/agentic-workflow` use.
+// is the contract an operator and a `runner <subcommand>` citation use.
 
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
