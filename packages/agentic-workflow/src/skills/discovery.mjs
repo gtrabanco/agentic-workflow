@@ -8,7 +8,9 @@
  *
  *   1. every candidate is screened with the seven `skill-lint` checks
  *      (`./screen.mjs`, the same engine this repository's authoring lint runs)
- *      **before** any consent is asked;
+ *      **before** any consent is asked — every skill file in the candidate's
+ *      tree wherever it lives, and a tree that yields no skill file is
+ *      excluded rather than screened clean;
  *   2. provenance is screened too — a source URL, an author, a version and a
  *      license, or the candidate is out;
  *   3. consent is per candidate, and a `yes` on a candidate that failed the
@@ -29,7 +31,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { screenSkillTree } from "./screen.mjs";
+import { screenCandidateTree } from "./screen.mjs";
 
 /** The block this module prints, and the only contract a consumer binds. */
 export const SKILL_DISCOVERY_CONTRACT_ID = "skill-discovery@1";
@@ -131,13 +133,18 @@ export function evaluateCandidate({ candidate, consent = "pending", root }) {
     screen = { verdict: "excluded", files: 0, findings: [] };
     excludedReason = "tree-unreadable";
   } else {
-    const result = screenSkillTree({ root: tree });
-    screen = {
-      verdict: result.verdict === "PASS" ? "screened" : "excluded",
-      files: result.files.length,
-      findings: result.findings,
-    };
-    if (result.verdict !== "PASS") excludedReason = "screen-failed";
+    const result = screenCandidateTree({ root: tree });
+    if (result.files.length === 0) {
+      screen = { verdict: "excluded", files: 0, findings: [] };
+      excludedReason = "no-skill-files";
+    } else {
+      screen = {
+        verdict: result.verdict === "PASS" ? "screened" : "excluded",
+        files: result.files.length,
+        findings: result.findings,
+      };
+      if (result.verdict !== "PASS") excludedReason = "screen-failed";
+    }
   }
 
   if (provenance === "incomplete") excludedReason = "provenance-incomplete";

@@ -627,7 +627,7 @@ field | shape | what it orders
 header | `skill-discovery@1 — <n> candidate(s) · screened <a> · excluded <b> · consented <c>` | the run's identity and its counts
 candidate | `CANDIDATE <name> — <install|skip|blocked> · screen <screened|excluded> · provenance <complete|incomplete> · consent <pending|yes|no>` | one row per candidate, in manifest order
 cells | `source … · pin … · author … · license … · tree …` | the candidate's declared provenance, echoed
-reason | `reason <provenance-incomplete|screen-failed|tree-unreadable> — …` | why a candidate is excluded; the missing cells are named for a provenance gap
+reason | `reason <provenance-incomplete|screen-failed|tree-unreadable|no-skill-files> — …` | why a candidate is excluded; the missing cells are named for a provenance gap, and `no-skill-files` is a tree that yielded no skill file to screen
 finding | `FINDING <SL-0n> <name> <path>:<line> — <detail>` | the screen's receipt, one line per finding, from the same engine `scripts/skill-lint.mjs` runs
 install | `install: npx skills add <source>` | text only, and only for a consented candidate the screen passed
 summary | `summary: candidates … · screened … · excluded … · installed-counts …` | the tally the verdict reads

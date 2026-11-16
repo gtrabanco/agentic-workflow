@@ -128,6 +128,45 @@ export function discoverSkillFiles({ root, only = [] } = {}) {
 
 // ── The checks ────────────────────────────────────────────────────────────
 
+/** Directories a candidate walk never descends into. */
+const CANDIDATE_SKIP_DIRS = new Set([".git", "node_modules"]);
+
+/**
+ * Every `.md` a candidate checkout ships as skill content: each `SKILL.md`
+ * wherever it sits (root layout, `skills/`, `.claude/skills/`, … — the
+ * locations the installer the route cites accepts), plus every `.md` under a
+ * `skills/` container, which is where a skill's own references live. A README
+ * or doc beside a root-layout `SKILL.md` is not skill content and is not
+ * screened — the screen certifies what an install would carry, not the repo's
+ * prose.
+ * @param {{ root: string }} input
+ * @returns {string[]} root-relative paths, sorted
+ */
+export function discoverCandidateFiles({ root }) {
+  const out = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!CANDIDATE_SKIP_DIRS.has(entry.name)) walk(full);
+        continue;
+      }
+      if (!entry.name.endsWith(".md")) continue;
+      const segments = path.relative(root, full).split(path.sep);
+      if (segments.at(-1) === "SKILL.md" || segments.includes("skills")) out.push(path.relative(root, full));
+    }
+  };
+  walk(root);
+  return [...new Set(out)].sort();
+}
+
+/** The findings and verdict for a resolved file set, one owner for both walks. */
+const screenFiles = (root, files) => {
+  const findings = files.flatMap((relative) => screenSkillFile({ file: relative, text: fs.readFileSync(path.join(root, relative), "utf8") }));
+  const distinctFiles = new Set(findings.map((finding) => finding.file)).size;
+  return { root, files, findings, tally: { findings: findings.length, files: distinctFiles }, verdict: findings.length === 0 ? "PASS" : "FAIL" };
+};
+
 /**
  * Every finding in one file, in line order.
  * @param {{ file: string, text: string }} input — the file as the report names it, and its bytes
@@ -194,7 +233,17 @@ export function screenSkillFile({ file, text }) {
  */
 export function screenSkillTree({ root, only = [] }) {
   const { files } = discoverSkillFiles({ root, only });
-  const findings = files.flatMap((relative) => screenSkillFile({ file: relative, text: fs.readFileSync(path.join(root, relative), "utf8") }));
-  const distinctFiles = new Set(findings.map((finding) => finding.file)).size;
-  return { root, files, findings, tally: { findings: findings.length, files: distinctFiles }, verdict: findings.length === 0 ? "PASS" : "FAIL" };
+  return screenFiles(root, files);
+}
+
+/**
+ * Screen a candidate checkout: every skill file wherever it lives in the tree
+ * (see `discoverCandidateFiles`), plus the tally and the verdict — the shape
+ * `skills discover` binds, so a candidate can never be `screened` on a walk
+ * that found nothing.
+ * @param {{ root: string }} input
+ * @returns {{ root: string, files: string[], findings: object[], tally: { findings: number, files: number }, verdict: "PASS"|"FAIL" }}
+ */
+export function screenCandidateTree({ root }) {
+  return screenFiles(root, discoverCandidateFiles({ root }));
 }
