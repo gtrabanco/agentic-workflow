@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: medium
-ac-hash: 864d1aafd5ce17abce7974f69240593d959677b3217d3c3681de4bbd8ba84a8d
+ac-hash: 1a615a18f6801f04fa9b8b15c9af946d88d8087ecce8347ac7904f92dd7a0e37
 roadmap_summary: Issue [#574](https://github.com/gtrabanco/agentic-workflow/issues/574) (M): batch-scheduler surface detection had three blind spots — a fenced code block in an issue body desynchronised the global backtick pairing and swallowed every later declared token (#504 declares `packages/pi-agentic-workflow/` and resolved to no surface at all), an issue declaring nothing was silently planned as `general` with no degradation and no finding, and a unit doc on disk was never consulted. The planner now tokenizes per line with fenced blocks inert, reads a declared `## Surfaces` section first (`## Where`/`## In scope` unchanged), falls back to the unit doc's `## Surfaces` and then its `Relevant files:`, and reports each blind issue as `surface-unknown-issue-<n>` in `degraded[]` plus a `blind-spot` finding when a batch carries two or more. The four SPEC templates and the four issue forms publish the section; `--infer-surfaces <n>` prints the ready-to-paste declaration for triage. SPEC: [SPEC](fix/574-batch-scheduler-surface-detection/SPEC.md)
 ---
 
@@ -205,7 +205,7 @@ One criterion per requirement, each naming the check that proves it.
   are the fallback; with nothing anywhere the issue is reported
   `surface-unknown-issue-<n>` in `degraded[]` and a batch carrying two or more
   such issues reports one `blind-spot` finding. Check: `bun test
-  scripts/batch-scheduler.test.mjs` exits 0 (`F1`–`F6`).
+  scripts/batch-scheduler.test.mjs` exits 0 (`F1`–`F5`, `F7`).
 - **AC-S4** — The backfill route is stated where triage reads it and needs no
   live forge write from this change. Check: `rg -n 'surface-unknown'
   skills/triage-issue/` matches ≥2 and `git diff --stat origin/main..HEAD --
@@ -246,7 +246,7 @@ One criterion per requirement, each naming the check that proves it.
   - Relevant files: scripts/batch-scheduler.mjs
 - P5 — Script: `resolveSurfaces` — unit-doc fallback (`## Surfaces`, then
   `Relevant files:`), the degraded entry and the `blind-spot` finding
-  (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0 — `F3`–`F6`)
+  (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0 — `F3`, `F4`, `F5`)
   (Implements: S3)
   - Relevant files: scripts/batch-scheduler.mjs
 - P6 — Script: `--infer-surfaces <n>` printing the ready-to-paste block,
