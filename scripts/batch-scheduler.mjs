@@ -509,18 +509,23 @@ function surfaceKeys(text, { bare = false } = {}) {
  * declaration beats the prose beside it, and an empty one is a declaration of
  * unknown — never an invitation to infer from the prose it sits next to.
  * Without it, `## Where` and `## In scope` keep the union the planner has always
- * read, and a body with neither is its own inference source.
+ * read; when those name no lane key the body is its own inference source, the
+ * same rule a body with no section at all follows.
  *
  * @returns {{surfaces: Set<string>, declared: boolean}}
  */
 function resolveBodySurfaces(body) {
   const sections = declaredSections(body);
   const explicit = sections.filter((section) => section.name === "Surfaces");
-  const sources = explicit.length > 0 ? explicit : sections;
-  if (sources.length > 0) {
+  if (explicit.length > 0) {
     const surfaces = new Set();
-    for (const section of sources) for (const key of surfaceKeys(section.text, { bare: true })) surfaces.add(key);
+    for (const section of explicit) for (const key of surfaceKeys(section.text, { bare: true })) surfaces.add(key);
     return { surfaces, declared: true };
+  }
+  if (sections.length > 0) {
+    const surfaces = new Set();
+    for (const section of sections) for (const key of surfaceKeys(section.text, { bare: true })) surfaces.add(key);
+    if (surfaces.size > 0) return { surfaces, declared: true };
   }
   return { surfaces: surfaceKeys(body), declared: false };
 }

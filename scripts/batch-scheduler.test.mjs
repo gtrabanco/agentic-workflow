@@ -403,6 +403,12 @@ test("F2: a declared `## Surfaces` section is exclusive, and the prose sections 
   // the declaration, so a careless author still lands in the right lane.
   const bare = "## Surfaces\n\n- packages/agentic-workflow\n- scripts\n- docs — the workflow tutorial\n";
   assert.deepEqual([...extractSurfaces(bare)].sort(), ["docs", "packages/agentic-workflow", "scripts"]);
+
+  // A prose section that names no lane key is not a declaration of "nothing to
+  // see": the body stays the inference source, the same rule a section-less body
+  // follows (the live corpus's #554 declares its crate path in `## Context`).
+  const proseOnly = "## In scope\n\n- Move the logic into the crate\n\n## Context\n\n- `packages/alpha/src/x.ts`, `template/hooks/a.sh`\n";
+  assert.deepEqual([...extractSurfaces(proseOnly)].sort(), ["packages/alpha", "template"]);
 });
 
 test("F3: with nothing declared in the body, the unit doc is the fallback — its section, then its Relevant files", () => {
