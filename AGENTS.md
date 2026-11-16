@@ -226,12 +226,13 @@ This repo has no application build. "Green" means:
   references it indexes) are within the ceilings the same manifest declares.
 - No stack/real-project references leaked into the skills or shared docs.
 - Root suites pass: `node scripts/run-root-suite.mjs` (the same
-  `scripts/*.test.mjs` with git signing neutralized for the throwaway fixture
-  repositories, so an operator's `commit.gpgsign=true` cannot fail a suite that
-  commits nothing real); per file, `bun test scripts/<file>.test.mjs` runs the
-  identical suite bun-first (`node --test scripts/<file>.test.mjs` is the
-  fallback) — including `scripts/golden-fixture.test.mjs`, which asserts the
-  golden fixture's deterministic half.
+  `scripts/*.test.mjs`, git signing neutralized for throwaway fixtures so an
+  operator's `commit.gpgsign=true` cannot fail a suite that commits nothing
+  real, and the schema package's gitignored `dist/` rebuilt first when it is
+  stale — no contract suite reads another source set's build); per file,
+  `bun test scripts/<file>.test.mjs` runs the identical suite bun-first
+  (`node --test scripts/<file>.test.mjs` is the fallback), the
+  `scripts/golden-fixture.test.mjs` deterministic half included.
 - The root gate is a bounded worker pool, one worker per CPU by default
   (`--jobs <n>` caps it, `--jobs 1` runs one suite at a time): each worker runs
   the identical per-file invocation, so a suite is isolated in its own process

@@ -28,6 +28,21 @@
  *   bun scripts/run-root-suite.mjs --jobs 2   # cap the worker count
  *   bun scripts/run-root-suite.mjs <suite…>   # a subset, in the order given
  *
+ * `packages/agentic-workflow-schema/dist/` is a gitignored build output and
+ * `main` in that package points at it, so the contract suites read whatever
+ * build happens to sit on disk. A stale one turns them red with assertions that
+ * read like a broken contract (`TRIAGE_VERDICTS is not iterable`), which is
+ * issue #571: this runner therefore brings that build up to date **before** it
+ * dispatches, and says so in one line on stderr. It runs the package's own
+ * `build` script through the package manager of the runtime that launched it
+ * (bun under bun, npm under node) instead of carrying a second copy of what
+ * "the build" means. Three outcomes, each named: a rebuild proceeds silently
+ * into the pool; a package manager that does not exist here prints why and the
+ * suites still run (an unprovisioned tree keeps its previous behaviour); a
+ * build that runs and fails stops the run with the compiler's own output,
+ * because a tree that does not compile must not report contract results from
+ * the build before it. A diagnostic only.
+ *
  * The suites run in a bounded worker pool (unit 100): one worker per CPU by
  * default, each worker pulling the next suite as soon as it frees — the same
  * per-file invocation the per-suite rule prescribes, so a suite is isolated in
@@ -40,7 +55,7 @@
  * status.
  */
 
-import { spawn, execFileSync } from "node:child_process";
+import { spawn, spawnSync, execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -56,6 +71,169 @@ export const DEFAULT_SUITE_TIMEOUT_MS = 120_000;
 export const DEFAULT_SUITE_MEM_CAP_MB = 1536;
 export const DEFAULT_TEST_TIMEOUT_MS = 10_000;
 export const ALLOWLIST_PATH = path.join(REPO_ROOT, "scripts", "test-timeout-allowlist.json");
+
+/** The schema package whose gitignored build the contract suites read (issue #571). */
+export const SCHEMA_PACKAGE_DIR = path.join(REPO_ROOT, "packages", "agentic-workflow-schema");
+
+/** A compiler run that outlives this is a wedged toolchain, not a slow build. */
+const SCHEMA_BUILD_TIMEOUT_MS = 300_000;
+
+/** Every file under `dir` whose name matches `pattern`, relative and sorted.
+ *  An absent directory is an empty list: the predicate reports what it sees. */
+function relativeTree(dir, pattern, readdir) {
+  const found = [];
+  const walk = (current, prefix) => {
+    let entries;
+    try {
+      entries = readdir(current, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const rel = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
+      if (entry.isDirectory()) walk(path.join(current, entry.name), rel);
+      else if (pattern.test(entry.name)) found.push(rel);
+    }
+  };
+  walk(dir, "");
+  return found.sort();
+}
+
+/**
+ * What the build in `dist/` is relative to the sources it came from — the one
+ * predicate both the dispatch decision and its suites rest on:
+ *
+ *   missing  `dist/index.js` is absent (a fresh clone, before any build)
+ *   stale    a source has no emitted `.js`, or the newest source/config is
+ *            newer than the oldest output (a build that predates the sources)
+ *   fresh    the build is newer than every source
+ *
+ * The mtime comparison is the conservative direction: any edit writes its file
+ * with a newer mtime, and `tsc` rewrites every output on every run, so a tree a
+ * build just left can never read as stale. An incomplete build is caught the
+ * other way, by the output set, which mtimes cannot see.
+ */
+export function readSchemaDistState({
+  packageDir = SCHEMA_PACKAGE_DIR,
+  stat = fs.statSync,
+  readdir = fs.readdirSync,
+} = {}) {
+  const distDir = path.join(packageDir, "dist");
+  const mtime = (file) => {
+    try {
+      return stat(file).mtimeMs;
+    } catch {
+      return null;
+    }
+  };
+  if (mtime(path.join(distDir, "index.js")) === null) {
+    return { status: "missing", detail: "dist/index.js is absent" };
+  }
+  const sources = relativeTree(path.join(packageDir, "src"), /\.ts$/, readdir);
+  if (sources.length === 0) {
+    return { status: "fresh", detail: "no sources to compare the build against" };
+  }
+  const unbuilt = sources.map((rel) => rel.replace(/\.ts$/, ".js")).find((rel) => mtime(path.join(distDir, rel)) === null);
+  if (unbuilt !== undefined) {
+    return { status: "stale", detail: `dist/${unbuilt} is absent — the build is incomplete` };
+  }
+  const outputs = relativeTree(distDir, /\.js$/, readdir).map((rel) => mtime(path.join(distDir, rel))).filter((value) => value !== null);
+  const oldestOutput = outputs.reduce((oldest, value) => Math.min(oldest, value), Number.POSITIVE_INFINITY);
+  const candidates = [
+    ...sources.map((rel) => ({ label: `src/${rel}`, mtime: mtime(path.join(packageDir, "src", rel)) ?? 0 })),
+    { label: "tsconfig.json", mtime: mtime(path.join(packageDir, "tsconfig.json")) ?? 0 },
+  ];
+  const newest = candidates.reduce((latest, row) => (row.mtime > latest.mtime ? row : latest), candidates[0]);
+  if (newest.mtime > oldestOutput) {
+    return { status: "stale", detail: `${newest.label} is newer than the build in dist/` };
+  }
+  return { status: "fresh", detail: "the build is newer than every source" };
+}
+
+/**
+ * The package manager that runs the schema package's declared `build` script:
+ * the runtime that launched this process decides, the same way the crate's own
+ * test scripts resolve theirs. Bun is never forced on a node install, and node
+ * ships its own manager, so neither runtime needs a probe.
+ */
+export function schemaBuildManager(execPath = process.execPath) {
+  return execPath.includes("bun") ? "bun" : "npm";
+}
+
+/**
+ * Run that build. `spawn` is injected so the decision is testable without a
+ * compiler; it resolves three outcomes and never throws:
+ *
+ *   built        the declared script exited 0
+ *   unavailable  the package manager does not exist here (ENOENT) — this tree
+ *                was never provisioned, which is not the gate's verdict to make
+ *   failed       the script ran and did not exit 0, or was killed (timeout)
+ */
+export function ensureSchemaBuild({
+  manager = schemaBuildManager(),
+  packageDir = SCHEMA_PACKAGE_DIR,
+  spawn = spawnSync,
+} = {}) {
+  const started = Date.now();
+  const result = spawn(manager, ["run", "build"], {
+    cwd: packageDir,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: SCHEMA_BUILD_TIMEOUT_MS,
+  });
+  const ms = Date.now() - started;
+  if (result.error?.code === "ENOENT") {
+    return { outcome: "unavailable", manager, ms, detail: `${manager} is not available on PATH (ENOENT)` };
+  }
+  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`.trim();
+  if (result.error || result.signal || result.status !== 0) {
+    return {
+      outcome: "failed",
+      manager,
+      ms,
+      status: result.status ?? null,
+      output,
+      detail: result.error?.message ?? `exit ${result.status}${result.signal ? ` (${result.signal})` : ""}`,
+    };
+  }
+  return { outcome: "built", manager, ms, output };
+}
+
+/** The dispatch decision: a current build is left alone, anything else is
+ *  rebuilt before a worker pulls a suite — the whole of issue #571's mechanism. */
+export function prepareSchemaRuntime({ state = readSchemaDistState(), build = ensureSchemaBuild } = {}) {
+  if (state.status === "fresh") return { action: "current", state };
+  const result = build();
+  if (result.outcome === "built") return { action: "rebuilt", state, manager: result.manager, ms: result.ms };
+  if (result.outcome === "unavailable") return { action: "unavailable", state, manager: result.manager, detail: result.detail };
+  return { action: "failed", state, manager: result.manager, status: result.status, output: result.output, detail: result.detail };
+}
+
+/** What the decision is read back as: stderr lines, and whether the run stops. */
+export function dispatchReport(decision) {
+  if (decision.action === "current") return { lines: [], stop: false };
+  if (decision.action === "rebuilt") {
+    return {
+      lines: [`root gate: schema dist rebuilt in ${(decision.ms / 1000).toFixed(1)}s (dist/ is a build output; the contract suites read it)`],
+      stop: false,
+    };
+  }
+  if (decision.action === "unavailable") {
+    return {
+      lines: [
+        `root gate: schema dist is ${decision.state.status} and is not rebuilt here — ${decision.detail}; `
+          + "build it with (cd packages/agentic-workflow-schema && bun run build) if a suite reads it",
+      ],
+      stop: false,
+    };
+  }
+  const lines = decision.output === "" ? [] : [decision.output];
+  lines.push(
+    `root gate: the schema package does not build (${decision.manager} run build, exit ${decision.status ?? "?"}) — `
+      + "the contract suites would read a dist/ that is not built from these sources",
+  );
+  return { lines, stop: true };
+}
 
 /** Every root suite, discovered the same way the shell glob does. */
 function suites() {
@@ -330,6 +508,13 @@ async function main(argv) {
     process.stderr.write(`root gate: ${error.message}\n`);
     return 2;
   }
+  // Before a worker pulls anything (issue #571): the contract suites import a
+  // gitignored build, and a stale one fails them with assertions that read like
+  // a broken contract. The report is stderr — stdout stays the receipt.
+  const decision = prepareSchemaRuntime();
+  const report = dispatchReport(decision);
+  for (const line of report.lines) process.stderr.write(`${line}\n`);
+  if (report.stop) return 1;
   const selected = parsed.selected.length > 0 ? parsed.selected : suites();
   const jobs = parsed.jobs ?? Math.max(1, Math.min(defaultJobs(), selected.length));
   const seconds = (ms) => `${(ms / 1000).toFixed(1)}s`;
