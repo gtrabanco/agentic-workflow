@@ -184,6 +184,13 @@ crate suite pair and the root gate.
 - **`scripts/tier-cost.mjs` needs the schema package built** (`bun run build` in
   `packages/agentic-workflow-schema`) in a fresh worktree, because it imports the
   published consts — an environment fact, recorded in `## Log` E2, not a defect.
+- **`scripts/next-step-ranking.test.mjs` can exceed its per-test budget on a
+  loaded shared machine**: its last case spawns fixtures and had no entry in
+  `scripts/test-timeout-allowlist.json`, so a concurrent root-suite run crossed
+  the 10 s budget while the suite alone passes at this head and at base
+  (`## Log` G6). `does-not-affect` this unit — a pre-existing flake of a suite
+  this change never touches, and the final gate is green at `--jobs 1`; the
+  allowlist decision belongs to the suite's owner.
 
 ## Tasks
 
@@ -372,7 +379,7 @@ relay-next: create .pi-web/relays/560-307-residual-completion/ (charter → docs
 - **E9** — 2026-11-16, D1 evidence: `rg -n '^tier-cost \| docs/workflow/TIER_COST.md' skills/pre-execution-review/references/LEDGERS.md` · line 178, owner `pi-agentic-workflow:session-telemetry`; `bun test scripts/ledger-ownership.test.mjs` · exit 0 · the eighth class and its tree entry pinned (suite output recorded at G5).
 - **E10** — 2026-11-16, D2 evidence: `git diff d7b391b4^1 d7b391b4 -- skills/review-verify/SKILL.md skills/audit-pr/references/01_MERGE_GATES.md` · the removed "verification gate ran in THIS review … paste exit status per command" and the plain merge-gate row, replaced by the receipt's consumption/route; `git log -S 'gate-receipt@1' -- packages/agentic-workflow-schema/README.md` → `78ac7c82` (the publisher), PR #491 merge `d7b391b4`.
 - **E11** — 2026-11-16, D4 evidence: `ls .agentic-workflow/journal | wc -l` · 84 fragments; a sample fragment carries `- **Commits:** 11 (\`b2b4f04d…12f9ff4e\`)` — the unit→commit mapping exists, and carries no token/turn/time cell (PE-008), so the currency the comparison needs is not reconstructible.
-- **E12** — 2026-11-16, the impact set: `bun scripts/test-impact.mjs --base 2907d5f6` · `verdict: empty` · `changed: 8` · `executable: 0` · `suites (0)` — a prose-only change, so no test is invented (`## Applicable tests`).
+- **E12** — 2026-11-16, the impact set: `bun scripts/test-impact.mjs --base 2907d5f6` · `verdict: empty` · `changed: 9` · `executable: 0` · `suites (0)` — a prose-only change, so no test is invented (`## Applicable tests`).
 - **E13** — 2026-11-16, the risk verdict (copied into `## Risk tier`): `bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --paths "docs/fix/560-307-residual-completion/SPEC.md,docs/fix/560-307-residual-completion/planning-evidence.md,docs/fix/560-307-residual-completion/planning-obligations.md,docs/fix/560-307-residual-completion/decisions.md,docs/fix/383-measured-acceptance/SPEC.md,docs/features/108-machine-gate-receipts/SPEC.md,docs/ROADMAP.md"` · exit 0 · `tier: passive`, `reason_kind: no-executable-effect`, `signals: []`, `task_size: {understood: true, contained_risk: contained, resumable_from_diff: true, ceremony: none, verification: readback}`.
 - **E14** — 2026-11-16, differential, the untouched instrument: `bun scripts/tier-cost.mjs compare --ledger docs/workflow/TIER_COST.md` in a scratch copy of base `2907d5f6` (`git archive` into `mktemp -d`, `bun install --frozen-lockfile` plus schema build there, removed after) and at head · exit 2 both sides · byte-identical stdout (`sha256 09d2d20d…` on both files) — the verdict records the corpus and this change moved no instrument byte.
 - **E15** — 2026-11-16, differential, the emitter: in a scratch copy of base `2907d5f6` (`git archive` into `mktemp -d`, `bun install --frozen-lockfile` + schema build there, removed after) `bun scripts/docs-generate.mjs --check` · exit 0 · 0 stale — the base projection was **clean**; at head before the re-render · exit 1 · 1 stale (`docs/generated/units.md` missing this unit's row), so the drift was this change's own, never pre-existing; after the emitter's re-render at head · exit 0 · 0 stale. The only rendered delta is this unit's one row.
@@ -392,6 +399,7 @@ relay-next: create .pi-web/relays/560-307-residual-completion/ (charter → docs
 - **P6** — 2026-11-16, the measured run (exit 2, `insufficient-corpus`), the row registrations (`rowUpsert 6ca6dfc9 → 41544b39` for row 560; `fixrow 41544b39 → 48e97de7`), the projection re-render (exactly one added row) and the narrative fragment `20261116T005405Z-fix-560-307-residual-completion-narrative-local.md` (1,762 bytes) · `d1aceb23`.
 - **P7** — 2026-11-16, the verification sweep: the base-vs-head differential (E14/E15) and the offline root gate 15/15 (G5) · `d1aceb23`.
 - **E19** — 2026-11-16, the PR and the settle: PR [#577](https://github.com/gtrabanco/agentic-workflow/pull/577) opened against `main` with `Closes #560`; features row 560 settled to `done · [#577] · carried by fix #560` (`rowUpsert 48e97de7 → 8b66fc7e`) and the `## Fixes` row to `done · [#577]` (`fixrow 8b66fc7e → a54f5414`), both through the crate's writers; the projection re-rendered by the emitter.
+- **G6** — 2026-11-16, HEAD `7b586769331c9da2a72b93c5b6a08b4e08a42d38`, the final-head root gate: `bun scripts/local-gate.mjs --skip-network --jobs 1` · exit 0 · **`local-gate: PASS — 15 step(s) in 713s`** (`root-suite` green inside it). A concurrent `--jobs auto` run (2 workers) failed at `scripts/next-step-ranking.test.mjs`'s 10 s per-test budget under shared-machine load; the suite passed standalone at this head (**29 pass · 0 fail**, 22.2 s) and at base, so the red was a pre-existing load flake (Known pre-existing issues), not this change.
 
 ## Next
 
