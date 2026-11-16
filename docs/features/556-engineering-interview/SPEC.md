@@ -51,17 +51,37 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 **S11 — Context budget compliance.**
 > "the bank is a reference loaded only when the route reaches the interview (entrypoint stays within the committed ceiling)."
 
+## Acceptance criteria
+
+- AC1 — S1: the bank carries one objectives-layer row per dimension the issue names (purpose, users, team shape, optimization target, automation appetite), and each names the workflow behaviour its answer toggles. (check: `rg -c '^\| OBJ-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints 5, and `bun packages/agentic-workflow/bin/agentic-workflow.mjs charter check --guide template/AGENTS.md --bank skills/init-workspace/references/ENGINEERING_INTERVIEW.md` exits 0)
+- AC2 — S2: the testing area carries Cohn's pyramid, Feathers' characterization tests and the property/fuzz appetite, each with its citation. (check: `rg -c '^\| TST-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints 3, and the rows name `Cohn`, `Feathers` and `QuickCheck`)
+- AC3 — S3: the boundaries area declares Evans/Parnas as its vocabulary and asks the per-boundary machine-or-prose question. (check: `rg -n '^\| ARC-02 \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` matches 1, and the row's question carries `machine` and `prose-only`)
+- AC4 — S4: dependency policy, production verification, decision records and API posture each carry at least one cited question. (check: `rg -c '^\| (DEP|VER|DEC|API)-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints 5 or more)
+- AC5 — S5: a row earns its place only with two behaviour-changing answers and a stated ask condition; a row missing either is refused. (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with the `one toggled behaviour` and `missing applies-when` cases, and every shipped row carries both)
+- AC6 — S6: a team convention is never overwritten — `charter land` reports the slot `kept` and leaves its bytes intact. (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with the `pre-seeded convention survives` case)
+- AC7 — S7: a concrete answer lands in the guide's charter slot, and an unanswered slot with a bank default lands as a dated assumption (`assumed <YYYY-MM-DD> — <value>`). (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with the `written` and `assumed` cases, and `rg -c '^- \*\*(Repo purpose|Users|Team shape|Optimization target|Automation appetite|Testing strategy|Architectural boundaries|Dependency policy|Production verification|Decision records|API posture):\*\*' template/AGENTS.md` prints 11)
+- AC8 — S8: the bank's own check refuses a question with no bibliography source or no toggled behaviour, and passes the shipped bank. (check: `bun packages/agentic-workflow/bin/agentic-workflow.mjs charter check --guide template/AGENTS.md --bank skills/init-workspace/references/ENGINEERING_INTERVIEW.md` exits 0, and the same command on a fixture row missing `source` exits 1 with `CHARTER CHECK BLOCKED`)
+- AC9 — S9: the pre-seeded-convention fixture survives the landing pass while a placeholder slot beside it receives the answer. (check: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0 with the fixture asserting both slots in one run)
+- AC10 — S10: the enforcement answer is written into the guide's `Architectural boundaries` slot in the documented shape (`<boundary> → machine: <mechanism>` or `<boundary> → prose-only`), where the materialization step reads it. (check: the check's `boundary-enforcement shape` cases exit 0, and `rg -n 'Architectural boundaries' template/AGENTS.md skills/init-workspace/references/ENGINEERING_INTERVIEW.md` matches both files)
+- AC11 — S11: the bank ships as a reference the route loads at the interview, and the entrypoint stays inside its declared ceiling (the ceiling is rebased in this change with its growth source named). (check: `bun scripts/check-skill-context.mjs --skill init-workspace` exits 0, and `rg -n '\(references/ENGINEERING_INTERVIEW\.md\)' skills/init-workspace/SKILL.md` matches 1)
+
 ## Impact
 
-- `init-workspace` skill: gains two new interview layers (objectives + technical)
-- `template/`: updated agent guide to include the new charter sections
-- `docs/research/2026-11-15-all-code-is-slop-mapping.md`: evidence reference
-- Consumed by `verification-materialization` (557) for boundary enforcement answers
-- Depends on charter layer 1-2 (#435)
+- `init-workspace` skill: `§Charter` gains layer 3, the progressive-loading allowlist gains the interview reference, and the two bootstrap references gain the layer-3 round and its write.
+- `template/AGENTS.md`: the `## Project charter` section gains the objectives layer and the engineering-posture slots; a bootstrapped project starts with eleven keyed slots instead of six.
+- `template/docs/workflow/VERIFICATION_CRITERIA.md`: names the interview as a source of `stamped assumption (dated)` rows, so the posture answers reach the registered criteria catalogue.
+- `packages/agentic-workflow`: a new `charter` file service (`state`, `land`, `check`) — the deterministic landing the write step invokes, and the bank's own check. Its bin usage line and README command table are one surface (`test/cli.surface.test.mjs` pins both).
+- Consumed by `verification-materialization` (557): S1/S4 of that SPEC read the declared boundary's enforcement answer; this unit writes it into the `Architectural boundaries` slot in a documented shape.
+- `docs/workflow/SKILL_CONTEXT_BUDGETS.json`: the `init-workspace` main ceiling is rebased with the growth source named (the manifest's own rule), because the entrypoint carries 4 lines of slack today.
+- Nothing stops being true: the identity/domain layers (#435) and their write step keep their contracts; layer 3 is added beside them, not over them.
 
 ## Retirements
 
-none — strictly additive
+Strictly additive: this unit retires no surface. Its added-surface inventory is the anti-divergence receipt, computed after the change lands (the tree has no base commit before it):
+
+```text
+bun scripts/residual-classify.mjs --inventory --base main
+```
 
 ## Non-goals
 
@@ -70,8 +90,6 @@ none — strictly additive
 - Any stack/framework-specific question
 
 ## Risk tier
-
-`standard` (affects `init-workspace` + `template/`; no behavioral change to the delivery pipeline)
 
 **Tier** — `standard` · **Task Size** — `standard`
 **Named high-risk item** — `none — not a high-tier unit`
@@ -82,41 +100,58 @@ none
 
 ## Future cost
 
-The bibliography citations must stay idea-adapted, never vendored text.
+The bibliography citations must stay idea-adapted, never vendored text: a bank row cites author + work as the idea's source, and never copies a passage. A later sweep that adds a row inherits the same cell contract, so attribution stays one rule (`docs/research/ATTRIBUTION.md`).
 
 ## Applicable tests
 
-n/a — no tests step for this unit
+The landing and the bank check are deterministic, so they are tested where the code lives:
+
+- `bun test packages/agentic-workflow/test/charter.test.mjs` — the `charter` file service (`state` / `land` / `check`), its refusal cases, and the shipped bank + template pin.
+- `bun scripts/skill-lint.mjs` — the new reference and the edited skill surfaces.
+- `bun scripts/check-skill-context.mjs` — the entrypoint stays inside its rebased ceiling; the new reference inside the reference ceiling.
+- `bun scripts/normative-drift.test.mjs` — the new `interview-bank` surface row resolves.
+- `bun scripts/scaffold-guide.test.mjs` — the template guide stays neutral, visible and undated.
+- `bun scripts/test-impact.mjs --base main` — the derived set this change can affect.
 
 ## Known pre-existing issues
 
-none
+- `docs/ROADMAP.md` rows 556–558 never name their own issues — issue #569, triaged fix-now; does-not-affect this unit (this unit edits its own unit doc, and the projection re-syncs its summary cell from that doc).
 
 ## Tasks
 
-- P1 — Define the repo-objectives interview questions with workflow consequences (validator: `bun scripts/skill-lint.mjs` exits 0)
-  (Implements: S1, S6, S11)
-  - Relevant files: skills/init-workspace/SKILL.md
-- P2 — Build the technical question bank referencing bibliography sources (validator: `bun scripts/skill-lint.mjs` exits 0)
-  (Implements: S2, S3, S4, S8)
-  - Relevant files: skills/init-workspace/SKILL.md, skills/init-workspace/references/technical-bank.md
-- P3 — Integrate both layers into `init-workspace`'s interview flow (validator: `bun scripts/skill-lint.mjs` exits 0)
-  (Implements: S5, S7, S9)
-  - Relevant files: skills/init-workspace/SKILL.md, template/AGENTS.md
-- P4 — Verify the bootstrapped output on a test repo (validator: `bun scripts/skill-lint.mjs` exits 0)
-  (Implements: S7, S8, S9, S10, S11)
-
-### Planning evidence
-
-none
-
-### Obligations
-
-none
+- P1 — Freeze this unit's planning ledgers and acceptance criteria beside the SPEC (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/556-engineering-interview/SPEC.md` exits 0)
+  (Implements: S5, S6)
+  - Relevant files: docs/features/556-engineering-interview/SPEC.md, docs/features/556-engineering-interview/planning-evidence.md, docs/features/556-engineering-interview/planning-obligations.md
+- P2 — Write the engineering interview reference: the objectives layer plus the eight-cell question bank (validator: `rg -c '^\| [A-Z]{3}-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints 12)
+  (Implements: S1, S2, S3, S4, S5, S6, S10, S11)
+  - Relevant files: skills/init-workspace/references/ENGINEERING_INTERVIEW.md
+- P3 — Add the layer-3 charter slots to the template agent guide (validator: `rg -c '^- \*\*(Repo purpose|Team shape|Optimization target|Automation appetite|Testing strategy|Architectural boundaries|Dependency policy|Production verification|Decision records|API posture):\*\*' template/AGENTS.md` prints 10)
+  (Implements: S1, S7, S10)
+  - Relevant files: template/AGENTS.md
+- P4 — Land the `charter` service's suite first, observed red on the missing module (validator: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 1 with a missing-module error)
+  (Implements: S8, S9)
+  - Relevant files: packages/agentic-workflow/test/charter.test.mjs
+- P5 — Implement the `charter` file service and document it beside its siblings (validator: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0)
+  (Implements: S6, S7, S8, S9, S10)
+  - Relevant files: packages/agentic-workflow/src/charter/interview.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/README.md
+- P6 — Wire layer 3 into the skill's charter round and its write step (validator: `rg -n 'charter (state|land|check)' skills/init-workspace/SKILL.md skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md skills/init-workspace/references/BOOTSTRAP_WRITE.md` prints 3 or more)
+  (Implements: S5, S6, S7, S10, S11)
+  - Relevant files: skills/init-workspace/SKILL.md, skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md, template/docs/workflow/VERIFICATION_CRITERIA.md
+- P7 — Declare the bank as a normative surface and rebase the skill's context ceiling with its growth source (validator: `bun scripts/normative-drift.test.mjs` exits 0 with the `interview-bank` row resolving)
+  (Implements: S8, S11)
+  - Relevant files: AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- P8 — Record the evidence, flip the obligation rows, and regenerate the projection (validator: `bun scripts/docs-generate.mjs --check` exits 0 and `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/556-engineering-interview/SPEC.md` exits 0)
+  (Implements: S7, S11)
+  - Relevant files: docs/features/556-engineering-interview/SPEC.md, docs/features/556-engineering-interview/planning-obligations.md, docs/LOGS.md
 
 ## Triaged steps
 
-> Awaiting `unit-route` execution after lane triage.
+> Pasted verbatim from the machine's own triage once `## Applicable tests` names the tests step.
+
+```text
+TRIAGE — 556-engineering-interview (feature)
+Steps: research, design, plan, implement, evidence, review, docs, release
+```
 
 ## Findings
 
@@ -130,12 +165,15 @@ none
   NEW FEATURE: init-workspace engineering interview — repo objectives + bibliography-backed technical question bank (charter layer 3)
   ```
 - D1 — 2026-11-15, triaged as `promote` — valid feature proposal with clear scope, dependencies, and acceptance criteria. The issue is well-structured (goal, business value, in scope, out of scope, acceptance criteria, dependencies) and aligns with the workflow's charter-driven design principles.
+- D2 — 2026-11-16, the deterministic half is a crate file service, not a loose `scripts/` entry: every file service the workflow invokes ships as a `agentic-workflow` subcommand (`packages/agentic-workflow/README.md`), and `init-workspace` runs in a target project that carries no `scripts/` tree (PE-001).
+- D3 — 2026-11-16, the bank's data lives in a `table:interview-bank@1` surface in the reference and its cell contract in the same document's fenced block; the check compares the table's header with the declared cells, so a new column cannot arrive unannounced (PE-004).
 
 ## Next
 
-Run `/unit-lane 556-engineering-interview` to begin the design phase.
+P1 — freeze the planning ledgers, then P2 (the bank reference).
 
 ## References
 
 - Depends on: #435 (charter layers 1-2), #526 (checklist-first evidence)
 - Consumed by: #564 (verification materialization)
+- Evidence: `docs/research/2026-11-15-all-code-is-slop-mapping.md` (owner-directed mapping of Lauren Tan's talk), `docs/research/2026-11-12-input-quality-and-editing/` (checklist-first)
