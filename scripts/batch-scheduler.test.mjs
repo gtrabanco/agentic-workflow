@@ -398,6 +398,11 @@ test("F2: a declared `## Surfaces` section is exclusive, and the prose sections 
     ["packages/beta", "skills/alpha"],
     "with no `## Surfaces` the two legacy sections keep today's union",
   );
+
+  // A declared section is a list of lane keys: the backticks are style, never
+  // the declaration, so a careless author still lands in the right lane.
+  const bare = "## Surfaces\n\n- packages/agentic-workflow\n- scripts\n- docs — the workflow tutorial\n";
+  assert.deepEqual([...extractSurfaces(bare)].sort(), ["docs", "packages/agentic-workflow", "scripts"]);
 });
 
 test("F3: with nothing declared in the body, the unit doc is the fallback — its section, then its Relevant files", () => {
@@ -532,12 +537,8 @@ test("F7: `--infer-surfaces` prints the block triage pastes, or the honest unkno
 });
 
 test("T1: the templates declare the `## Surfaces` section the parser reads, and the contract keeps it optional", () => {
-  const TEMPLATES = [
-    "docs/fix/_TEMPLATE/SPEC.md",
-    "docs/features/_TEMPLATE/SPEC.md",
-    "template/docs/fix/_TEMPLATE/SPEC.md",
-    "template/docs/features/_TEMPLATE/SPEC.md",
-  ];
+  // This repository's own templates name the six lane keys the planner resolves.
+  const TEMPLATES = ["docs/fix/_TEMPLATE/SPEC.md", "docs/features/_TEMPLATE/SPEC.md"];
   for (const rel of TEMPLATES) {
     const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
     const at = text.indexOf("\n## Surfaces\n");
@@ -550,18 +551,34 @@ test("T1: the templates declare the `## Surfaces` section the parser reads, and 
     assert.ok(at > text.indexOf("\n## Impact\n"), `${rel}: the section follows ## Impact`);
   }
 
-  const FORMS = [
-    ".github/ISSUE_TEMPLATE/fix.yml",
-    ".github/ISSUE_TEMPLATE/feature.yml",
-    "template/.github/ISSUE_TEMPLATE/fix.yml",
-    "template/.github/ISSUE_TEMPLATE/feature.yml",
-  ];
+  // The exported scaffold is a product surface: it carries the same section and
+  // the same honest unknown, and it must NOT hardcode this repository's tree —
+  // a target project's lanes are its own (domain separation, owner decision
+  // 2026-11-07).
+  for (const rel of ["template/docs/fix/_TEMPLATE/SPEC.md", "template/docs/features/_TEMPLATE/SPEC.md"]) {
+    const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
+    const at = text.indexOf("\n## Surfaces\n");
+    assert.notEqual(at, -1, `${rel} carries ## Surfaces — a bootstrapped project is cut on it`);
+    const body = text.slice(at + 1, text.indexOf("\n## ", at + 1));
+    assert.ok(body.includes("surface-unknown"), `${rel}: the honest unknown is part of the shape`);
+    for (const key of ["packages/<name>", "skills/<name>"]) {
+      assert.ok(!body.includes(key), `${rel} hardcodes this repository's lane key ${key} into the scaffold`);
+    }
+  }
+
+  const FORMS = [".github/ISSUE_TEMPLATE/fix.yml", ".github/ISSUE_TEMPLATE/feature.yml"];
   for (const rel of FORMS) {
     const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
     assert.match(text, /^\s+id: surfaces$/mu, `${rel} asks for the surfaces`);
     for (const key of ["packages/<name>", "skills/<name>", "scripts", "docs", "template", ".github"]) {
       assert.ok(text.includes(key), `${rel}: the field names the lane key ${key}`);
     }
+  }
+  for (const rel of ["template/.github/ISSUE_TEMPLATE/fix.yml", "template/.github/ISSUE_TEMPLATE/feature.yml"]) {
+    const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
+    assert.match(text, /^\s+id: surfaces$/mu, `${rel} asks for the surfaces`);
+    assert.ok(text.includes("surface-unknown"), `${rel}: the honest unknown is part of the field`);
+    assert.ok(!text.includes("packages/<name>"), `${rel} hardcodes this repository's lane keys into the scaffold`);
   }
 
   // The section must NOT be required: declaring it would refuse the unit docs the
