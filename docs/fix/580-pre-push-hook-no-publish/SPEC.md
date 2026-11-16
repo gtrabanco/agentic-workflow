@@ -282,12 +282,28 @@ machinery on the repository's own tooling.
   · exit 0 · `local-gate: PASS — 19 step(s) in 408s` (the root suite, the crate and pi
   suites, the doc projections, the secret scan and the compat legs).
 
+- **E13** — 2026-11-16, the push of the unit branch, with the installed hook:
+  `git push -u origin fix/580-pre-push-hook-no-publish` ran the gate to
+  `local-gate: PASS` (16 step(s) in 405s, then 439s, then 430s on three
+  attempts) and every attempt ended `exit 141` (SIGPIPE) with no object sent and
+  no remote ref created — git lists the remote refs (that is where `pre-push`'s
+  remote sha comes from) and then waits for the hook, so the connection sits
+  idle for the gate's whole run and the receive side is gone when the pack is
+  written. The fourth push used the documented hatch
+  (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`) after the gate had passed at the same
+  head — reason stated here and in the PR body — and completed in one second,
+  which isolates the delay as the cause. **This is a separate defect of its own
+  surface** (a push whose gate runs the test steps cannot complete), not
+  introduced by this unit: the base hook also runs the full gate for a new
+  branch, through the same merge-base fallback.
+
 ## Next
 
 The diff goes to the owner as the external verifier; the `## Fixes` row leaves
-the table once the PR merges. The by-hand `--base origin/main` recipe in
+the table once the PR merges. Two findings this unit does not fix and that no
+open issue covers yet: the by-hand `--base origin/main` recipe in
 `docs/workflow/GIT_IDENTITY_HARDENING.md` still over-judges a branch carrying a
-forge merge — it is not this unit's acceptance, and it needs its own issue.
+forge merge, and the long-gate push above (E13).
 
 ## References
 
