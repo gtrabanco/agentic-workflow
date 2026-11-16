@@ -172,7 +172,7 @@ removes them post-merge).
 | 560 | `307-residual-completion` | promoted | 383 (soft) · 409 (soft) · 436 (soft) · 307 (soft) · 504 (soft) | Issue [#560](https://github.com/gtrabanco/agentic-workflow/issues/560) (M, **promoted 2026-12-18**): #307 completeness audit residual completion — run the measured acceptance over the historical corpus, rule on receipt-neutrality carriers, settle ceremony-profile self-adoption and row 436 status. Owner decisions D1–D6 captured in unit doc. Soft deps only (no blockers). Triaged promote 2026-12-18 |
 | 556 | `engineering-interview` | promoted | 526 (soft) | extend init-workspace's charter interrogation with a repo-objectives interview and a bibliography-backed technical question bank (charter layer 3) |
 | 557 | `verification-materialization` | postponed · blocked on #563 | 563 (hard, native blocked-by) | init-workspace verification materialization — declared boundaries become project-local enforcement, feature map, evidence-capture driver |
-| 558 | `quality-sensor` | promoted | 504 (soft) | deterministic forge/git quality metrics envelope (DORA + reversion ratio), the talk-mapped point 5 end-to-end |
+| 558 | `quality-sensor` | in-progress | 504 (soft) | Issue [#565](https://github.com/gtrabanco/agentic-workflow/issues/565) (M): a read-only `agentic-workflow quality-metrics` command — the DORA four keys plus the reversion ratio over a trailing window (default 90 days) as one validated `quality-metrics@1` envelope, every row labelled `measured`/`derived`/`unavailable`, an unreadable forge or a truncated history degrading declared instead of reporting a zero, the definitions owned by the crate README. Unit doc: [features/558-quality-sensor](features/558-quality-sensor/SPEC.md) |
 
 ## Fixes
 
