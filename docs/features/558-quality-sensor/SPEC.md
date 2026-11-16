@@ -323,9 +323,19 @@ P | P<n> | a phase's progress — what was done and the commit
   `5416169b`.
 - P6 — 2026-11-16, the three normative surfaces are registered and the guide's
   machine pin moves · `1988c2ba`.
+- P7 — 2026-11-16, a self-review repair inside the phase, caught before the
+  handoff and not deferred: a capped **deploy** read truncated the denominator of
+  `change_failure_rate`, `lead_time_for_change` and `pr_volume` while their
+  confidence stayed `measured` — the rule S12 forbids. `merged_truncated` now
+  demotes all three and each detail line names the cap; the new collect case is
+  the reproducer the repair was measured against. Test count for the collector
+  moves 35 → 36 · `5655a989`.
+- P8 — 2026-11-16, closeout: the tier re-classified over the real diff, the
+  roadmap row settled through the emitter, the changeset and the journal fragment
+  shipped, the projection regenerated, and the whole local gate run.
 - E1 — 2026-11-16, `cd packages/agentic-workflow-schema && bun test test/quality-metrics.test.mjs` · exit 0 · `32 pass 0 fail`.
 - E2 — 2026-11-16, `cd packages/agentic-workflow-schema && bun run test` · exit 0 · `885 pass 0 fail · 49 files`.
-- E3 — 2026-11-16, `cd packages/agentic-workflow && bun test test/quality-metrics.collect.test.mjs` · exit 0 · `35 pass 0 fail`.
+- E3 — 2026-11-16, `cd packages/agentic-workflow && bun test test/quality-metrics.collect.test.mjs` · exit 0 · `35 pass 0 fail` (36 after P7's repair, E14).
 - E4 — 2026-11-16, `cd packages/agentic-workflow && bun test test/quality-metrics.cli.test.mjs` · exit 0 · `14 pass 0 fail`.
 - E5 — 2026-11-16, `cd packages/agentic-workflow && bun run test` · exit 0 · `885 pass 0 fail · 49 files · 251s`.
 - E6 — 2026-11-16, `bun test scripts/normative-drift.test.mjs` · exit 0 · `21 pass 0 fail`.
@@ -355,6 +365,9 @@ P | P<n> | a phase's progress — what was done and the commit
   `mkdtemp` (`qm-git-`, `qm-corpus-`, `qm-cli-`, `qm-out-`, `qm-norepo-`), the pilot
   is the only run against this worktree, and `ls -d /tmp/qm-* 2>/dev/null` matches
   `0` lines after cleanup.
+- E14 — 2026-11-16, after the P7 repair: `cd packages/agentic-workflow && bun test
+  test/quality-metrics.collect.test.mjs test/quality-metrics.cli.test.mjs` · exit 0
+  · `50 pass 0 fail` (36 collector cases, 14 CLI cases).
 - G1 — 2026-11-16, `bun scripts/docs-generate.mjs` · exit 0 · `1 written · 0 deleted ·
   2 unchanged · Roadmap: updated · verdict: PASS`; then, after the unit doc and the
   ledgers settled, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked ·
@@ -368,6 +381,13 @@ P | P<n> | a phase's progress — what was done and the commit
 - G3 — 2026-11-16, `node packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/558-quality-sensor/SPEC.md` · exit 0 · `VERIFY PASS` (sections, obligations closure, provenance stamp, receipt marks, log kinds, cited paths, cited gates).
 - G4 — 2026-11-16, `node packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/558-quality-sensor/SPEC.md` · exit 0 · `P1–P8 Phase-lint: PASS (6/6)` and `verdict PASS`.
 - G5 — 2026-11-16, `bun test scripts/pre-execution-quality.test.mjs` · exit 0 · `1 pass 1 skip 0 fail` (the ledger-shape case: both planning ledgers are one contiguous table).
+- G6 — 2026-11-16, the gate re-run that this receipt is: after the P7 repair and the
+  definition caveat landed, `bun scripts/local-gate.mjs --skip-network --no-bail` ·
+  exit 0 · `local-gate: PASS — 15 step(s) in 501s` (root-suite 182s, crate-suite-bun
+  202s, crate-suite-node 95s, schema-node-compat 6s, pi-node-compat 15s). This
+  supersedes G2 as the receipt for the final tree; the same four network steps are
+  skipped and reported as skipped, not passed: `workspace-install`,
+  `pi-compat-guard`, `dependency-pin-gate`, `dependency-advisories`.
 
 ## Next
 
