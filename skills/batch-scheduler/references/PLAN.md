@@ -116,8 +116,9 @@ vocabularies only, so it stays `batch-plan@3`.
 The body's `## Surfaces` (exclusive when present; backticks optional), then the
 body's `## Where`/`## In scope` union, then the unit doc (`## Surfaces`, then its
 tasks' `Relevant files:`), then nothing: `surface-unknown-issue-<n>`, and a
-`blind-spot` when two rows of one batch share that state. A body with no section
-is its own source, read per line with fences inert.
+`blind-spot` when two rows of one batch share that state. A body whose sections
+name no lane key — or that has no section at all — is its own source: every
+backticked path in it counts, read per line with fences inert.
 
 ## The dependency parser (fail-closed, with a recovery pass)
 
