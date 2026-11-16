@@ -16,3 +16,12 @@ Completeness: S1–S11 resolved (tasks P1–P9 all carry (Implements: S#) and th
 Spot check: bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail → match (run 2: `local-gate: PASS — 15 step(s) in 770s`; run 1 mismatched on the load-marginal pre-existing root-suite test of advisory 6 — first-run disagreement disclosed here)
 Verdict: NEEDS-DECISION (1 open blocker)
 ```
+
+## Correction batch — 2026-11-16 (owner-directed; verbatim request in the unit log L2)
+
+Applied on this branch after the verdict above; the next run is a delta verdict.
+
+- **B1 fixed** — `packages/agentic-workflow/src/charter/interview.mjs` refuses an operation-foreign flag with `EDIT REFUSAL …` exit 2 before any byte moves (red corpus test `3856d9dd`, fix `d397dacc`, O18 verified). The base-vs-change differential shows the three refusals as the only behavior change.
+- **Advisories 1, 3, 4, 5 and the changeset half of 2 folded** at `fbc7783d` (unit log F1): Impact counts (21 over 11), the VERIFICATION_CRITERIA bullet re-pointed at `BOOTSTRAP_WRITE.md`, the SPEC:73 claim path resolvable (promise-coherence PASS over BLOCKED), validator spellings canonicalized to `bun test …` (O15/P8/Applicable tests), the five obligation case names made verbatim, the changeset's count and land clause corrected.
+- **Dispositioned without edit:** advisory 2's two journal fragments (append-only session receipts — frozen history, not live narration) and advisory 6 (environmental disclosure; the disclosed first-run gate red is the load-marginal, allowlisted boundary tests of `scripts/next-step-ranking.test.mjs` and `scripts/red-first.test.mjs`, not this change).
+- **Extra finding folded in the same batch** (found while understanding context, not in the verdict above): `bun scripts/promise-coherence.mjs docs/features/556-engineering-interview/SPEC.md` was `verdict BLOCKED: surface-missing` at `3c48ad4f` (SPEC:73 cited `test/cli.surface.test.mjs`, which does not resolve); the path now names `packages/agentic-workflow/test/cli.surface.test.mjs` and the verdict is PASS.
