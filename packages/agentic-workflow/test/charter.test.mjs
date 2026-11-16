@@ -315,3 +315,35 @@ test("`charter state` reports slots without writing, and `charter land` writes o
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+// ── 6. The flag contract — external verify 2026-11-16, blocker B1 ──────────
+
+test("an operation-foreign flag is refused before any byte moves", () => {
+  const root = scratch();
+  try {
+    const guidePath = path.join(root, "AGENTS.md");
+    const original = guideFixture([["Repo purpose", "`<job>`"]]);
+    writeFileSync(guidePath, original);
+    const payloadPath = path.join(root, "answers.json");
+    writeFileSync(payloadPath, JSON.stringify({ date: "2026-11-16", answers: { "Repo purpose": "the job" } }));
+
+    // `state` takes no --answers: even a path that does not exist must be refused.
+    const state = run("charter", "state", "--guide", guidePath, "--answers", path.join(root, "missing.json"));
+    assert.equal(state.status, 2, state.stdout);
+    assert.match(state.stderr, /EDIT REFUSAL/);
+    assert.match(state.stderr, /--answers/, "the refusal names the offending flag");
+
+    // `check` takes no --answers.
+    const check = run("charter", "check", "--guide", guidePath, "--bank", path.join(REPO, BANK_REL), "--answers", payloadPath);
+    assert.equal(check.status, 2, check.stdout);
+    assert.match(check.stderr, /EDIT REFUSAL/);
+
+    // `land` takes no --bank: the payload must not land beside an ignored flag.
+    const land = run("charter", "land", "--guide", guidePath, "--answers", payloadPath, "--bank", path.join(root, "missing.md"));
+    assert.equal(land.status, 2, land.stdout);
+    assert.match(land.stderr, /EDIT REFUSAL/);
+    assert.equal(readFileSync(guidePath, "utf8"), original, "a refused land writes nothing");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
