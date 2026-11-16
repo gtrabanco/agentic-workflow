@@ -90,13 +90,16 @@ const TOOL_NAMES = [
   "agentic_workflow_phase_lint",
   "agentic_workflow_audit_pr_gate",
   "agentic_workflow_snapshot_verify",
+  // Issue #555's generic door: the subcommands the skills cite symbolically
+  // and no typed tool wraps.
+  "agentic_workflow_run",
 ];
 
 // ---------------------------------------------------------------------------
 // Registration shape (AC2, O3)
 // ---------------------------------------------------------------------------
 
-test("registration: five deferred tools in the agentic-workflow namespace, readOnly", async () => {
+test("registration: six deferred tools in the agentic-workflow namespace, readOnly", async () => {
   const { createWorkflowTools, WORKFLOW_TOOLS_NAMESPACE } = await loadModule();
   const tools = createWorkflowTools();
   assert.deepEqual(
