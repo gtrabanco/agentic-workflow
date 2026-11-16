@@ -1,6 +1,7 @@
 ---
 type: fix
 scope: xs
+ac-hash: f660c27dbf92d06ccff8ad5575ee5c2f2073a039176e0fa375a42bb6d147ab04
 ---
 
 # fix/527-readme-evidence-rationale
@@ -73,6 +74,12 @@ correction is recorded (`PE-002`, `O1`) instead of quoting a retired one.
 
 **S7 — the non-goal.**
 > - No new claims: every citation comes from the committed research folder or ATTRIBUTION.md — the README states no unverified figure (the README is a narrative surface; the sweep is the evidence carrier).
+
+**S8 — Fold the external-verify findings that deserve a fix (correction batch, 2026-11-16; the session's first ask, recorded in-doc as S8 to continue the id sequence).**
+> triage and fix those that deserve to fix but understand the context before fix
+
+**S9 — Prove the batch broke nothing else, looping until the related surface is whole (the session's second ask).**
+> check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
 
 ## Impact
 
@@ -208,6 +215,12 @@ executable paths, so no test is invented and no existing suite is weakened
   (Implements: S1)
   (validator: `bun scripts/local-gate.mjs --skip-network --jobs auto` exits 0)
   - Relevant files: README.md
+- P5 — Fold the EXTERNAL VERIFY blocker B1 of this unit (receipt `external-verify.md`): restate the Retirements receipt so it
+  reproduces as declared, execute the triage the verdict recorded (A1's forge label under D1; A2/A3 dispositions; A4's
+  head re-observation), and re-run the unit's gates.
+  (Implements: S8, S9)
+  (validator: `rg -c 'Why it works this way' --glob '!README.md' --glob '!docs/ROADMAP.md' --glob '!docs/fix/527-readme-evidence-rationale/**' --glob '!.agentic-workflow/**'` exits 1)
+  - Relevant files: docs/fix/527-readme-evidence-rationale/SPEC.md, docs/fix/527-readme-evidence-rationale/external-verify.md
 
 ### Planning evidence
 
@@ -226,6 +239,8 @@ executable paths, so no test is invented and no existing suite is weakened
 | PE-011 | measured-probe | The generated projection is **clean at base**, so any drift after the change is this unit's own rather than pre-existing | `bun scripts/docs-generate.mjs --check` at `7b18226b` → exit 0, 0 stale | run 2026-11-17 at `7b18226b` | O8 |
 | PE-012 | committed-source | The index writers are the crate's, not a hand edit: `roadmap rowUpsert` (features table) and `roadmap fixrow` (the `## Fixes` table) are CAS-guarded (`--expect`) and return a receipt | `packages/agentic-workflow/src/edit/Roadmap.mjs:166,412`; `packages/agentic-workflow/bin/agentic-workflow.mjs:1317-1425` | read 2026-11-17 at `7b18226b` | S4; O9, O10 |
 | PE-013 | measured-probe | README already names the retired `ship-roadmap` autopilot in its *Projects built with this workflow* table (line 577, "the (now retired) `ship-roadmap` autopilot"), which is why O5's validator scopes to this unit's own section rather than the whole file | `rg -n 'ship-roadmap' README.md` at `7b18226b` → `577:` only | run 2026-11-17 at `7b18226b` | S6; O5; D5 |
+| PE-014 | measured-probe | The B1 receipt defect reproduces and its fix is stable: the as-recorded command `rg -c 'Why it works this way' --glob '!README.md'` prints `docs/fix/527-readme-evidence-rationale/external-verify.md:1`, `docs/fix/527-readme-evidence-rationale/SPEC.md:11` and `docs/ROADMAP.md:1` at head (plus the journal fragment under `--hidden`) against the receipt's `→ 0`, while the scoped form excluding this unit's own carriers answers no match, and base `7b18226b` carries zero mentions of the heading (the heading does not exist there) | foreground runs of both forms at `7dff1c21`; `git grep 'Why it works this way' 7b18226b` → no match | run 2026-11-16 at `7dff1c21` | S8; O13 |
+| PE-015 | committed-source | The forge still carries the `postponed` verdict D1 superseded, and that label has machine consumers: `BATCH_BLOCKING_LABELS = ["postponed", "backlog", "human-revision-needed"]` makes an issue unlaunchable and `workflow-status` classifies `postponed` as a disposition label, so the stale verdict misroutes the sensors | `scripts/batch-scheduler.mjs:71`; `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs:1226-1228,1265`; `gh issue view 527 --json labels` → `["backlog","postponed"]` | read/run 2026-11-16 at `7dff1c21` | S8; O14 |
 
 ### Obligations
 
@@ -243,6 +258,9 @@ executable paths, so no test is invented and no existing suite is weakened
 | O10 | S4 | The dated activation condition is recorded, not silently dropped: the un-postpone authority is a decision line and row 527 stops reading `idea · postponed` | P1 | P1 | direct application (this session) | `rg -c 'idea · postponed' docs/ROADMAP.md` for row 527 → 0 after `E13`; `rg -c '^\- \*\*D1\*\*' docs/fix/527-readme-evidence-rationale/SPEC.md` → 1 | `E` line (E13) plus the `D1` line | verified (E13) |
 | O11 | S1 | The unit doc lints PASS under its own grammar and every obligation closes through the readers | P1 | P4 | direct application (this session) | `phase-lint` exits 0 with `verdict PASS`; `verify` exits 0 with `obligations-closure` ok | `G` lines (G1, G2) | verified (G1, G2) |
 | O12 | S2 | The section is discoverable where the "what" is: it sits between `## Core principles` and `## Install` and names `docs/research/` as its carrier | P2 | P2 | direct application (this session) | `rg -c '^## Why it works this way$' README.md` matches 1 and `rg -c 'docs/research/2026-11-12-input-quality-and-editing/' README.md` matches 1, with the heading-order receipt in E14 | `E` line (E14) | verified (E14) |
+| O13 | S8 | The Retirements receipt reproduces as declared after the fold: zero mentions of the heading outside README and this unit's own carriers, so the shipped claim never overstates its sweep again | P5 | P5 | direct application (this session) | `rg -c 'Why it works this way' --glob '!README.md' --glob '!docs/ROADMAP.md' --glob '!docs/fix/527-readme-evidence-rationale/**' --glob '!.agentic-workflow/**'` exits 1 | `E` line in `## Log` (E19) | planned |
+| O14 | S8 | The forge carries the un-postpone D1 recorded: issue #527 no longer carries the superseded `postponed` verdict its machine consumers read | P5 | P5 | direct application (this session) | `gh issue view 527 --json labels --jq '[.labels[].name]'` matches `["backlog"]` | `E` line (E19) | planned |
+| O15 | S9 | The batch breaks nothing: the unit's readers, the projection and the offline root gate stay green on the corrected head | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs --skip-network --jobs auto` exits 0 | `G` lines (G7, G8) | planned |
 
 ## Acceptance criteria
 
@@ -271,6 +289,12 @@ proves it (frozen at cut):
 - **AC7 (S7)** — no new claim: every arXiv id in the section resolves in
   `docs/research/` or `ATTRIBUTION.md`, and every figure is quoted verbatim
   (E6, E7).
+- **AC8 (S8)** — the correction batch folds B1 and executes the triage the verdict recorded: the scoped Retirements
+  command exits 1, the receipt carries the batch addendum, and issue #527 carries no `postponed` label. Checks: the
+  O13 and O14 validators (E19).
+- **AC9 (S9)** — the batch introduces no regression: unit readers, projection, settle and the offline root gate re-run
+  green on the corrected head. Check: O15's validator (G7, G8) plus `bun scripts/test-impact.mjs --base 7b18226b`
+  staying `empty` (E20).
 
 ## Triaged steps
 
@@ -355,6 +379,13 @@ deterministic gates still run (§8).
 - **P4** — 2026-11-17, the verification sweep and the receipt batch: E5–E16 and G1–G5 recorded, every obligation closed, then the validator-form correction (`D6`) · `6187430d`, `2fde06c0`.
 - **G6** — 2026-11-17, HEAD `2fde06c0`, the final-head readers, all exit 0: `agentic-workflow verify` (`VERIFY PASS`, `ok: true`), `agentic-workflow phase-lint` (`verdict PASS`, P1–P4 6/6), `scripts/docs-generate.mjs --check` (`0 missing · 0 stale · 0 orphaned`), `scripts/roadmap-settle.mjs` (`217 unit docs checked · 0 violations`), `scripts/promise-coherence.mjs` (`verdict PASS · 6 checked · 10 skipped`, each skip naming its reason).
 - **E17** — 2026-11-17, the PR and the settle: PR [#585](https://github.com/gtrabanco/agentic-workflow/pull/585) opened against `main` with `Closes #527`; feature row 527 settled to `done · [#585] · carried by fix #527` (`rowUpsert 491075d1 → af302d2e`) and the `## Fixes` row to `done · [#585]` (`fixrow af302d2e → 9b69d8f6`), both through the crate's writers with every other cell preserved; the projection re-rendered by the emitter (one changed row) and `bun scripts/docs-generate.mjs --check` · exit 0 · `0 missing · 0 stale · 0 orphaned`.
+- **L3** — 2026-11-16, the correction-batch request, verbatim (recorded in-doc as S8/S9 to continue the id sequence):
+  ```
+  triage and fix those that deserve to fix but understand the context before fix
+  check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Scope resolved from state before acting: the latest `EXTERNAL VERIFY` block (this unit's `external-verify.md`, base `7b18226b` · head `7dff1c21`) — one blocker (B1), four advisories (A1–A4), so the verb is *fix findings* and the outcome `proceed`. Triage at cut: **B1 fix** — restate the Retirements receipt so it reproduces (O13); **A1 fix** — remove the forge's superseded `postponed` verdict under D1's recorded authority (machine consumers in PE-015, O14), `backlog` kept — it is not a LABELS.md verdict label and D1 supersedes only `postponed`; **A2 dispose** — the 2026-11-12 decision record and the LOGS entries are dated history, never rewritten (same class as the journal); **A3 dispose** — environmental load flake with no code cause (suite passes standalone, test-impact `empty`); **A4 fix** — head re-observation appended (E20).
+- **E18** — 2026-11-16, frozen-failure corpus RED before the fold (§2): `rg -c 'Why it works this way' --glob '!README.md'` · exit 0 · `docs/fix/527-readme-evidence-rationale/external-verify.md:1`, `docs/fix/527-readme-evidence-rationale/SPEC.md:11`, `docs/ROADMAP.md:1` — plus `.agentic-workflow/journal/20261116T135024Z-…-narrative-local.md:1` under `--hidden` — against the receipt's recorded `→ 0`. Base side: `git grep 'Why it works this way' 7b18226b` → no match (the heading does not exist at base). The scoped reproducer the fold ships answers `exits 1` at head (fixture run before any edit).
 ## Next
 
 The merge is the owner's: PR [#585](https://github.com/gtrabanco/agentic-workflow/pull/585)
