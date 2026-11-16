@@ -220,8 +220,9 @@ One criterion per requirement, each naming the check that proves it.
 ## Tasks
 
 - P1 — Freeze the unit doc and both planning ledgers from the issue's verbatim
-  text (validator: `ls docs/fix/574-batch-scheduler-surface-detection/` lists
-  SPEC.md, planning-evidence.md, planning-obligations.md) (Implements: S1)
+  text (validator: `ls docs/fix/574-batch-scheduler-surface-detection/ | wc -l`
+  matches 3)
+  (Implements: S1)
   - Relevant files: docs/fix/574-batch-scheduler-surface-detection/
 - P2 — RED corpus: one failing case per surface rule (fence inertness, declared
   `## Surfaces` precedence, unit-doc fallback, `surface-unknown` degradation,
@@ -250,12 +251,14 @@ One criterion per requirement, each naming the check that proves it.
   - Relevant files: scripts/batch-scheduler.mjs
 - P6 — Script: `--infer-surfaces <n>` printing the ready-to-paste block,
   print-only (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0 —
-  `F7`) (Implements: S2)
+  `F7`)
+  (Implements: S2)
   - Relevant files: scripts/batch-scheduler.mjs
 - P7 — Templates: `## Surfaces` in the four SPEC templates and a `surfaces`
   field in the four issue forms (validator: `bun test
   scripts/unit-doc-contract.test.mjs` exits 0 and `bun test
-  scripts/scaffold-parity.test.mjs` exits 0) (Implements: S1)
+  scripts/scaffold-parity.test.mjs` exits 0)
+  (Implements: S1)
   - Relevant files: docs/fix/_TEMPLATE/SPEC.md, docs/features/_TEMPLATE/SPEC.md,
     template/docs/fix/_TEMPLATE/SPEC.md, template/docs/features/_TEMPLATE/SPEC.md,
     .github/ISSUE_TEMPLATE/fix.yml, .github/ISSUE_TEMPLATE/feature.yml,
@@ -268,14 +271,15 @@ One criterion per requirement, each naming the check that proves it.
   the roadmap row status, changeset intent, `docs/LOGS.md`, the generated
   projection through the renderer (validator: `bun
   scripts/check-skill-context.mjs` exits 0, `bun scripts/docs-generate.mjs
-  --check` exits 0) (Implements: S1, S2, S4)
+  --check` exits 0)
+  (Implements: S1, S2, S4)
   - Relevant files: skills/batch-scheduler/, skills/triage-issue/,
     docs/workflow/ISSUE_WORKFLOW.md, README.md, docs/ROADMAP.md, .changeset/,
     docs/LOGS.md
 - P9 — Verification: the declared gates in the foreground, the differential run
   base-vs-change over the live issue corpus, every obligation closed
-  (validator: `node scripts/run-root-suite.mjs` exits 0) (Implements: S1, S2,
-  S3, S4, S5, S6)
+  (validator: `node scripts/run-root-suite.mjs` exits 0)
+  (Implements: S1, S2, S3, S4, S5, S6)
 
 ### Planning evidence
 
@@ -344,10 +348,56 @@ state.
   mechanism is verified — the local workflow's live-tree guard forbids running
   new code against the live tree before that.
 
+- **E1** — 2026-11-16, `bun test scripts/batch-scheduler.test.mjs` · exit 0 ·
+  77 pass, 0 fail (the 70 pre-existing cases plus `F1`–`F5`, `F7`, `T1`); the
+  same suite under `node --test` is 77 pass, 0 fail.
+- **E2** — 2026-11-16, `bun test scripts/unit-doc-contract.test.mjs` · exit 0 ·
+  21 pass, 0 fail (the four templates keep the re-cut order; the section stays
+  out of both required lists).
+- **E3** — 2026-11-16, `bun test scripts/scaffold-parity.test.mjs` · exit 0 ·
+  17 pass, 0 fail (the exported scaffold mirrors its repo twin's H2 set).
+- **E4** — 2026-11-16, `bun run test` in `packages/agentic-workflow-schema` ·
+  exit 0 · 887 pass, 0 fail (49 files; the two vocabulary additions and the
+  draft-07 projection).
+- **E5** — 2026-11-16, the differential (O14): `batch-scheduler.mjs --root .
+  --issues-file <11 open issues> --no-state --json-only` on the base copy
+  (`origin/main` = `888aaceb`) against the change · both exit 0 · two intended
+  differences and no other: `#554` moves from the `general` lane to
+  `packages/pi-agentic-workflow` + `template`, and the `file-overlap: 504,590`
+  finding disappears because the `docs`/`scripts` lanes now name the unit in
+  flight on them and the pair serializes there instead of being offered as
+  parallel. `degraded[]`, `launched[]`, `label_blocked[]` and every other lane
+  are byte-identical.
+- **E6** — 2026-11-16, `bun scripts/check-skill-context.mjs` · exit 0 · PASS 30
+  skills; `--documents` PASS 4 budgeted documents.
+- **E7** — 2026-11-16, `bun scripts/docs-generate.mjs --check` · exit 0 · 3
+  checked, 0 missing, 0 stale, 0 orphaned.
+- **E8** — 2026-11-16, `rg -n 'surface-unknown' skills/triage-issue/` · exit 0 ·
+  3 matches (the declaration step's unknown answer, the verdict line's cell, the
+  never-rewrite rule).
+- **E9** — 2026-11-16, `agentic-workflow phase-lint docs/fix/574-…/SPEC.md` ·
+  exit 0 · `verdict PASS`, every phase 6/6.
+- **E10** — 2026-11-16, `bun scripts/promise-coherence.mjs` · exit 0 · verdict
+  PASS, 42 checked / 23 skipped (historical bases); the unit doc alone: PASS,
+  1 checked.
+- **E11** — 2026-11-16, `node scripts/run-root-suite.mjs --suite-timeout 400` ·
+  exit 1 · 113 of 114 suites pass; `scripts/unit-route.test.mjs` fails only its
+  `#291 F7` wall-clock assertion (582ms, expected <500ms) on a box at load
+  average ~9.5 on 6 CPUs — the same test passes 3/3 standalone (327–431ms) and
+  neither `unit-route.mjs` nor `unit-doc-phases.mjs` is in this unit's diff.
+  With the default 120s bound, `scripts/phase-lint.test.mjs` additionally hits
+  the suite bound under that load; it passes 162/162 in 73s standalone.
+- **G1** — 2026-11-16, `HEAD 05838c8a` · `agentic-workflow diff-guard --base origin/main` · exit 1
+  · `DIFF-GUARD BREACH — 1307 lines > 400 · 28 files > 8`. Reported, not
+  force-fit: the unit must land the parser, the two vocabularies, the eight
+  templates and the docs together (a section nothing parses is an orphan
+  surface, and stacked PRs are refused by this repository's guide). The size is
+  the unit's own scope, named here rather than hidden.
+
 ## Next
 
-P2 — the RED corpus in `scripts/batch-scheduler.test.mjs`, observed failing
-before any implementation.
+The owner's external verdict on this diff — 2026-11-16 handoff; no tracked task
+is pending inside the unit.
 
 ## References
 
