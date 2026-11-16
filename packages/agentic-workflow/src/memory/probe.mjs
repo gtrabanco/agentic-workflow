@@ -3,7 +3,7 @@
  *
  * Answers one question before a session's first memory read: is the Engram
  * memory layer healthy enough to trust, and if not, exactly which layer is
- * degraded? Five checks, one verdict:
+ * degraded? Six checks, one verdict:
  *
  *   http-health        GET :7437/health — the HTTP server pi talks to.
  *   mcp-runner         one `initialize` round-trip to a spawned
@@ -13,6 +13,11 @@
  *   session-ambiguity  `engram doctor --json --check` on the two findings
  *                      that make a session id unreliable or a sync target
  *                      unreachable.
+ *   instance-id        `engram instance-id` — the capability the memory tools
+ *                      hard-require (issue #566 B2): presence and version do
+ *                      not establish it, so the probe asks for it directly;
+ *                      `ENGRAM_URL` set makes the remote authoritative and the
+ *                      local binary is not judged.
  *
  * Two design rules ride on measured failure modes, not guesses:
  *
@@ -26,14 +31,15 @@
  *   non-`ok` permanently on a machine with session-attribution ambiguity, so
  *   stopping at it would silence the sync signal there forever.
  *
- * The five checks are independent, so they are launched together and each keeps
- * its own bound: the worst case is the slowest bound, never the sum of five
- * (4+4+4+10+10 = 32 s, which the 30 s ceiling could not fit). The probe never
+ * The six checks are independent, so they are launched together and each keeps
+ * its own bound: the worst case is the slowest bound, never the sum of six
+ * (4+4+4+4+10+10 = 36 s, which the 30 s ceiling could not fit). The probe never
  * issues an MCP *tool* call — only `initialize` — so running it can never mutate
- * the memory layer. Bounds: 4 s for the HTTP/runner/version calls, 10 s for the
- * two CLI-backed calls, and a 30 s ceiling over the whole probe, which stops any
- * dependency that ignored its own bound. A bound hit fails that check and the
- * verdict becomes `degraded` — never a hang, never a blocked unit (D1).
+ * the memory layer. Bounds: 4 s for the HTTP/runner/version/capability calls,
+ * 10 s for the staleness/session CLI calls, and a 30 s ceiling over the whole
+ * probe, which stops any dependency that ignored its own bound. A bound hit
+ * fails that check and the verdict becomes `degraded` — never a hang, never a
+ * blocked unit (D1).
  *
  * `runProbe` takes its side effects by injection (`fetchImpl`, `runImpl`,
  * `timeoutMs`, `totalTimeoutMs`) — the crate's existing shape
@@ -43,6 +49,9 @@
  */
 
 import { spawn } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 export const PROBE_SCHEMA = "memory-probe@1";
 
@@ -53,6 +62,7 @@ export const PROBE_TIMEOUTS = Object.freeze({
   binaryVersion: 4_000,
   syncStaleness: 10_000,
   sessionAmbiguity: 10_000,
+  instanceId: 4_000,
   total: 30_000,
 });
 
@@ -76,6 +86,7 @@ const CHECK_IDS = Object.freeze([
   "binary-version",
   "sync-staleness",
   "session-ambiguity",
+  "instance-id",
 ]);
 
 function pass(id, detail) {
@@ -93,9 +104,10 @@ function fail(id, reason, detail) {
  *
  * `stdin` is written and the stream closed immediately: the MCP runner would
  * otherwise wait forever for its client, which is the hang this probe exists
- * to avoid.
+ * to avoid. `env` overrides are merged over the parent environment for this
+ * child only — the probe never mutates `process.env`.
  */
-function runBounded(command, args, { timeoutMs, stdin = null } = {}) {
+function runBounded(command, args, { timeoutMs, stdin = null, env = null } = {}) {
   return new Promise((resolve) => {
     let settled = false;
     let child;
@@ -117,7 +129,10 @@ function runBounded(command, args, { timeoutMs, stdin = null } = {}) {
     }, timeoutMs);
 
     try {
-      child = spawn(command, args, { stdio: ["pipe", "pipe", "pipe"] });
+      child = spawn(command, args, {
+        stdio: ["pipe", "pipe", "pipe"],
+        ...(env ? { env: { ...process.env, ...env } } : {}),
+      });
     } catch (error) {
       done({ code: null, stdout: "", stderr: "", timedOut: false, spawnError: error });
       return;
@@ -266,6 +281,51 @@ async function askDoctor(runImpl, checkId, timeoutMs) {
  */
 const RESULT_RANK = { error: 3, blocked: 2, warning: 1 };
 
+/**
+ * B2 (issue #566) — the capability, not the version: presence and any version
+ * string pass `binary-version` while every core below `v2.0.0-rc.11` lacks the
+ * `instance-id` capability the memory tools hard-require. The check asks the
+ * effective runtime directly: `ENGRAM_URL` set makes the remote authoritative
+ * (the local binary is not judged), otherwise `engram instance-id` runs under a
+ * fresh temp `ENGRAM_DATA_DIR` with update checks off — a data dir this probe
+ * creates and removes, so no memory layer is ever touched. A missing binary
+ * stays a degraded answer (`binary-missing`, the version check's family), never
+ * a hard incompatibility; a non-zero or empty answer fails with a reason and
+ * detail that name the unmet `instance-id` capability.
+ */
+async function checkInstanceId(runImpl, timeoutMs, env) {
+  const id = "instance-id";
+  if (typeof env?.ENGRAM_URL === "string" && env.ENGRAM_URL !== "") {
+    return pass(id, `remote runtime authoritative (${env.ENGRAM_URL}) — local instance-id not judged`);
+  }
+  let dir;
+  try {
+    dir = mkdtempSync(join(tmpdir(), "aw-memory-probe-"));
+  } catch (error) {
+    return fail(id, "probe-error", `temp ENGRAM_DATA_DIR unavailable: ${error?.message ?? String(error)}`);
+  }
+  try {
+    const result = await runImpl(ENGRAM_BIN, ["instance-id"], {
+      timeoutMs,
+      env: { ENGRAM_NO_UPDATE_CHECK: "1", ENGRAM_DATA_DIR: dir },
+    });
+    if (result.spawnError) return fail(id, "binary-missing", result.spawnError.message);
+    if (result.timedOut) return fail(id, "timeout", `no instance-id answer within ${timeoutMs} ms`);
+    const output = (result.stdout ?? "").trim();
+    if (result.code !== 0 || output === "") {
+      const detail = (result.stderr ?? "").trim().split("\n").pop() || `exit ${result.code}`;
+      return fail(id, "capability-unmet", `the effective runtime does not serve the instance-id capability: ${detail}`);
+    }
+    return pass(id, `instance-id capability served (${output.split("\n")[0].slice(0, 60)})`);
+  } finally {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // best-effort cleanup — the temp dir is never a memory layer
+    }
+  }
+}
+
 async function checkSessionAmbiguity(runImpl, timeoutMs) {
   const id = "session-ambiguity";
   // Both scoped checks are asked, every time, and in parallel: each is bounded
@@ -299,10 +359,11 @@ const CHECKS = [
   { id: "binary-version", timeout: PROBE_TIMEOUTS.binaryVersion, run: (deps, ms) => checkBinaryVersion(deps.runImpl, ms) },
   { id: "sync-staleness", timeout: PROBE_TIMEOUTS.syncStaleness, run: (deps, ms) => checkSyncStaleness(deps.runImpl, ms) },
   { id: "session-ambiguity", timeout: PROBE_TIMEOUTS.sessionAmbiguity, run: (deps, ms) => checkSessionAmbiguity(deps.runImpl, ms) },
+  { id: "instance-id", timeout: PROBE_TIMEOUTS.instanceId, run: (deps, ms) => checkInstanceId(deps.runImpl, ms, deps.env) },
 ];
 
 /**
- * Run the five checks and return the verdict:
+ * Run the six checks and return the verdict:
  *
  *   {schema, verdict: "ok" | "degraded", checks: [{id, status, reason?, detail}],
  *    degraded: [check ids], ceilingHit: boolean}
@@ -313,12 +374,15 @@ const CHECKS = [
  * slow machine can never masquerade as healthy and never hangs.
  *
  * `timeoutMs` overrides every per-check bound (tests use milliseconds);
- * `totalTimeoutMs` overrides the ceiling.
+ * `totalTimeoutMs` overrides the ceiling; `env` is the environment the check
+ * set reads (`ENGRAM_URL` authority) — defaults to `process.env`, and tests
+ * inject an empty object to pin the local-judged path.
  */
-export async function runProbe({ fetchImpl, runImpl, timeoutMs, totalTimeoutMs } = {}) {
+export async function runProbe({ fetchImpl, runImpl, timeoutMs, totalTimeoutMs, env } = {}) {
   const deps = {
     fetchImpl: fetchImpl ?? ((url, init) => fetch(url, init)),
     runImpl: runImpl ?? ((command, args, opts) => runBounded(command, args, opts)),
+    env: env ?? process.env,
   };
   const perCheck = timeoutMs ?? null;
   const ceiling = totalTimeoutMs ?? PROBE_TIMEOUTS.total;

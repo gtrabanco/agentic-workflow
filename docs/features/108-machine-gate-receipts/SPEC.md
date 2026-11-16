@@ -169,6 +169,32 @@ true). The *claim* this unit narrows is S3's "bound to head SHA": delivered as
 HEAD-sha **provenance** plus a content-manifest **validity** criterion, per S12's
 later owner directive; recorded here rather than edited out of the verbatim quote.
 
+### Amendment — 2026-11-16 (the retirement record, issue [#560](https://github.com/gtrabanco/agentic-workflow/issues/560) D2)
+
+The paragraph above keeps the cut-time state as history; it is not the whole truth
+of the entry. `gate-receipt@1` retired the review-local gate re-run attestation
+when it entered (PR [#491](https://github.com/gtrabanco/agentic-workflow/pull/491),
+merge `d7b391b4`, publisher `78ac7c82`), in that same PR:
+
+- `skills/review-verify/SKILL.md` carried "The project's verification gate ran in
+  THIS review (type-check, tests, build per the project's declared commands) —
+  paste exit status per command"; it now carries "**Gate evidence is consumed,
+  not re-run**", citing the receipt's `checks[]` ids and `manifest.digest`, and
+  routes `missing` (3) / `stale` (4) / `invalid` (5) to `gate-receipt.mjs run`.
+- `skills/audit-pr/references/01_MERGE_GATES.md`'s "Verification gate / CI" row
+  required only that the gate pass; it now also requires a **current** receipt
+  (`status: current` + `verdict: pass`), with a missing/stale/invalid receipt a
+  blocker routed to the runner, never re-run from the audit.
+
+Receipt-neutrality therefore holds for this carrier: one machine receipt entered
+and one prose attestation left, in the same change (`git diff d7b391b4^1 d7b391b4
+-- skills/review-verify/SKILL.md skills/audit-pr/references/01_MERGE_GATES.md`).
+What was **not** retired: the `gate-ran@1` mark (`GATE-RAN` · HEAD · commands ·
+exit) is the unit's own `## Log` carrier
+(`skills/pre-execution-review/references/LEDGERS.md:253-260`) and coexists — it
+records that a unit ran its gate; the receipt is the content-bound artifact that
+review and audit consume.
+
 ## Non-goals
 
 - No remote CI orchestration, no pi hook/guard/prereq surface (S7).
