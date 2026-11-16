@@ -68,9 +68,9 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 ## Impact
 
 - `init-workspace` skill: `§Charter` gains layer 3, the progressive-loading allowlist gains the interview reference, and the two bootstrap references gain the layer-3 round and its write.
-- `template/AGENTS.md`: the `## Project charter` section gains the objectives layer and the engineering-posture slots; a bootstrapped project starts with eleven keyed slots instead of six.
-- `template/docs/workflow/VERIFICATION_CRITERIA.md`: names the interview as a source of `stamped assumption (dated)` rows, so the posture answers reach the registered criteria catalogue.
-- `packages/agentic-workflow`: a new `charter` file service (`state`, `land`, `check`) — the deterministic landing the write step invokes, and the bank's own check. Its bin usage line and README command table are one surface (`test/cli.surface.test.mjs` pins both).
+- `template/AGENTS.md`: the `## Project charter` section gains the objectives layer and the engineering-posture slots; a bootstrapped project ships twenty-one keyed slots — the base's eleven plus layer 3's ten (`charter state` reports 21, and P3's validator counts the ten new ones).
+- `skills/init-workspace/references/BOOTSTRAP_WRITE.md`: each layer-3 posture answer becomes a criteria row with its own provenance — `project-declared` when the owner stated it, `stamped assumption (<YYYY-MM-DD>)` when the bank's default stood — so the posture answers reach the registered criteria catalogue the template already seeds with a bootstrap-interview stamped-assumption row.
+- `packages/agentic-workflow`: a new `charter` file service (`state`, `land`, `check`) — the deterministic landing the write step invokes, and the bank's own check. Its bin usage line and README command table are one surface (`packages/agentic-workflow/test/cli.surface.test.mjs` pins both).
 - Consumed by `verification-materialization` (557): S1/S4 of that SPEC read the declared boundary's enforcement answer; this unit writes it into the `Architectural boundaries` slot in a documented shape.
 - `docs/workflow/SKILL_CONTEXT_BUDGETS.json`: the `init-workspace` main ceiling is rebased with the growth source named (the manifest's own rule), because the entrypoint carries 4 lines of slack today.
 - Nothing stops being true: the identity/domain layers (#435) and their write step keep their contracts; layer 3 is added beside them, not over them.
@@ -109,8 +109,8 @@ The landing and the bank check are deterministic, so they are tested where the c
 - `bun test packages/agentic-workflow/test/charter.test.mjs` — the `charter` file service (`state` / `land` / `check`), its refusal cases, and the shipped bank + template pin.
 - `bun scripts/skill-lint.mjs` — the new reference and the edited skill surfaces.
 - `bun scripts/check-skill-context.mjs` — the entrypoint stays inside its rebased ceiling; the new reference inside the reference ceiling.
-- `bun scripts/normative-drift.test.mjs` — the new `interview-bank` surface row resolves.
-- `bun scripts/scaffold-guide.test.mjs` — the template guide stays neutral, visible and undated.
+- `bun test scripts/normative-drift.test.mjs` — the new `interview-bank` surface row resolves.
+- `bun test scripts/scaffold-guide.test.mjs` — the template guide stays neutral, visible and undated.
 - `bun scripts/test-impact.mjs --base main` — the derived set this change can affect.
 
 ## Known pre-existing issues
@@ -141,7 +141,7 @@ The landing and the bank check are deterministic, so they are tested where the c
 - [x] P7 — Wire the discovery round into bootstrap discovery and its landing into the write step (validator: `rg -c 'charter land' skills/init-workspace/references/BOOTSTRAP_WRITE.md` matches 1)
   (Implements: S1, S3, S6, S7, S10)
   - Relevant files: skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md
-- [x] P8 — Declare the bank as a normative surface and rebase the skill's context ceiling with its growth source (validator: `bun scripts/normative-drift.test.mjs` exits 0)
+- [x] P8 — Declare the bank as a normative surface and rebase the skill's context ceiling with its growth source (validator: `bun test scripts/normative-drift.test.mjs` exits 0)
   (Implements: S8, S11)
   - Relevant files: AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
 - [x] P9 — Record the evidence, flip the obligation rows, and regenerate the projection (validator: `bun scripts/docs-generate.mjs --check` exits 0)

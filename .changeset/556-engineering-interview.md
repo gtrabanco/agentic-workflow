@@ -22,11 +22,12 @@ must not be prose are now code:
   only what the project has not declared; `land` writes an answer into a
   placeholder, reports a slot the project already filled as `kept` and never
   rewrites it, records a recommendation as `assumed <date> — <value>`, and
-  refuses an unknown slot or an undated assumption before moving any byte;
+  refuses an unknown slot, an undated assumption, or a flag the operation does
+  not take before moving any byte;
   `check` refuses a question that cites no source, toggles one behaviour, states
   no condition, or lands in a slot the guide lacks, and refuses a boundary entry
   outside `<boundary> → machine: <mechanism>` or `<boundary> → prose-only`.
-- `template/AGENTS.md` ships the eleven new charter slots, the last of them the
+- `template/AGENTS.md` ships the ten new charter slots, among them the
   `Architectural boundaries` row the verification-materialization step reads.
 
 Why: an install stops shipping placeholders and starts shipping the team's own
