@@ -385,6 +385,31 @@ this flow.
   link in the 553–555 sibling form (`E7`) · `ce7f2dec`.
 - **P4** — 2026-11-16, the render and its fixed point: the emitter writes the
   three cells (`E8`), `--check` answers `unchanged` (`E9`) · `ce7f2dec`.
+- **P5** — 2026-11-16, the index row and the session door: `roadmap fixrow`
+  `pending → in-progress` with the topic aligned to the unit folder (`E12`,
+  `D3`), the status projected by the emitter, and the narrative fragment
+  `20261116T172459Z-fix-569-roadmap-rows-issue-links-narrative-local.md`
+  (2,050 bytes, `journal aggregate --check` → `7 checked · 0 refusals`) ·
+  `4e267347`.
+- **G1** — 2026-11-16, HEAD `4e267347`, the offline root gate: `bun
+  scripts/local-gate.mjs --skip-network --jobs auto` · exit 0 · `local-gate:
+  PASS — 15 step(s) in 529s`. The four network steps were skipped by the flag
+  and are named, never counted as run: `workspace-install`,
+  `pi-compat-guard`, `dependency-pin-gate`, `dependency-advisories`.
+- **G2** — 2026-11-16, HEAD `4e267347`, the unit's own readers: `agentic-workflow
+  verify` · exit 0 · `ok: true`, `violations: []` (all seven checks including
+  `obligations-closure`); `agentic-workflow phase-lint` · exit 0 · `verdict
+  PASS` (P1–P6, 6/6 each); `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  `0 missing · 0 stale · 0 orphaned` / `Roadmap: docs/ROADMAP.md — unchanged`;
+  `bun scripts/roadmap-settle.mjs` · exit 0 · `219 unit docs checked · 0
+  violations`; `bun scripts/promise-coherence.mjs
+  docs/fix/569-roadmap-rows-issue-links/SPEC.md` · exit 0 · `verdict PASS` /
+  `7 checked · 6 skipped`, each skip naming its own reason (the CLI verdicts,
+  the git differential and the suite runner are outside the reader allowlist;
+  every one of them ran in the foreground as `E7`–`E13`).
+- **P6** — 2026-11-16, the verification sweep and this receipt batch, every
+  obligation flipped on its own foreground run (`E7`–`E13`, `G1`–`G2`) · this
+  commit.
 - **L3** — 2026-11-16, disclosed side effect (§3 live-tree guard): probing the
   `journal write` CLI's flag surface wrote one placeholder fragment, the
   name ending
