@@ -160,7 +160,7 @@ required failure state (9-column shape owned by
 | O2 | S1, S3 | The frozen failure: in a CI-shaped environment (unauthenticated `gh`, no Engram server) the fixed block carries one labelled line per surface — `14`, where base yields `12` | P1 | P1 | direct application (this session) | the §`## Log` E7 reproduction (stub `gh` + dead `ENGRAM_URL`) prints `14` lines matching the labelled-line grammar, against `12` at base (E6) | `E` lines in SPEC `## Log` naming both counts | verified (E6 = 12 at base · E7 = 14 at change) |
 | O3 | S1, S2 | Red-first: the new case fails on the base implementation with the specific missing-gutter assertion, and passes only with the fix | P2 | P2 | direct application (this session) | `bun test test/doctor.checks.test.mjs` over base `src/doctor/doctor.mjs` in a `/tmp` copy exits 1 with `unreachable: at least two spaces before the row id` (actual `UNREACHABLE surface-unreachable-`) | `E` line in SPEC `## Log` naming the base run and its assertion | verified (E6) |
 | O4 | S2 | Compatibility invariant: the `--json` envelope and the block's header, summary and verdict are byte-identical, and the shorter labels keep the 12-column — only `UNREACHABLE` row lines may differ | P2 | P2 | direct application (this session) | the differential of `doctor` and `doctor --json` at base vs change: `diff` reports exactly the two `UNREACHABLE` stdout lines and nothing for `--json` | `E` line in SPEC `## Log` naming the differential | verified (E7) |
-| O5 | S1, S2 | No previous behaviour regresses in the package: the crate suite, the doctor CLI cases and the renderer's siblings stay green | P3 | P3 | direct application (this session) | `cd packages/agentic-workflow && bun run test` exits 0 | `G` line in SPEC `## Log` naming the suite and its totals | verified (E9) |
+| O5 | S1, S2 | No previous behaviour regresses in the package: the crate suite, the doctor CLI cases and the renderer's siblings stay green | P3 | P3 | direct application (this session) | `cd packages/agentic-workflow && bun run test` exits 0 | `E` line in SPEC `## Log` naming the suite and its totals (E9), plus the root gate's `G` line (G1) | verified (E9, G1) |
 
 ## Triaged steps
 
@@ -233,6 +233,9 @@ reader — passes on all seven of its checks.
   deviation is recorded here rather than hidden.
 - **L3** — 2026-11-16, the work-unit commits: `29da095c` the red case alone
   (tree red at that commit, E6) and `7ebec46c` the fix that turns it green.
+- **G1** — 2026-11-16, the root gate at head `75940e83`: `bun scripts/local-gate.mjs
+  --jobs auto` · exit 0 · `local-gate: PASS — 19 step(s) in 423s` (the root
+  suite, the crate and pi suites, the doc projections and the compat legs).
 
 ## Next
 
