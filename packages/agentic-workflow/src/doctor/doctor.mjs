@@ -115,7 +115,9 @@ export function renderDoctor(envelope) {
     const label = STATUS_LABELS[row.status] ?? row.status;
     const detail = describe(row);
     const advisory = row.advisory ? ` — ${row.advisory}${row.instruction ? ` · ${row.instruction}` : ""}` : "";
-    lines.push(`${label.padEnd(12)}${row.id.padEnd(16)}${detail}${advisory}`);
+    // The label column is 12 wide with a minimum two-space gutter, so the
+    // fixed block keeps its separation even for the 11-character UNREACHABLE.
+    lines.push(`${label}${" ".repeat(Math.max(12 - label.length, 2))}${row.id.padEnd(16)}${detail}${advisory}`);
   }
   const summary = envelope.summary;
   lines.push(

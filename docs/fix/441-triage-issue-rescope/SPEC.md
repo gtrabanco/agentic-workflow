@@ -548,3 +548,15 @@ Empty — every declared input (#436, #437, #438) is closed at the branch base.
 | The skill still fits its declared context budget | `bun scripts/check-skill-context.mjs` exits 0 |
 | No dist writer overlaps a dist reader, and the two package-script `tsc` runs never overlap each other | `bun test scripts/local-gate.test.mjs` exits 0 (the S9 chain assertions, acyclicity included) |
 | A suite killed by `--bail` never reads as a failing suite in the tally | `bun test scripts/run-root-suite.test.mjs` exits 0 (the end-to-end `KILLED` line) |
+
+## Superseded record:
+
+- **`local-gate --install-hook` refuses a worktree** — repaired. Issue
+  [#580](https://github.com/gtrabanco/agentic-workflow/issues/580) (PR
+  [#581](https://github.com/gtrabanco/agentic-workflow/pull/581)) resolves the
+  hooks directory by asking git (`git rev-parse --git-path hooks`) instead of
+  composing `<root>/.git/hooks`, so the installer writes the shared hook from a
+  worktree, and a directory that is not a checkout is still a usage error
+  (exit 2). The record above stays as written — it states what this unit knew
+  at its own time, and the `--git-common-dir` action it named belongs to the
+  same git query the repair uses.
