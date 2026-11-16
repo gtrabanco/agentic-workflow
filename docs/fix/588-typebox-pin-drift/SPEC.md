@@ -185,7 +185,8 @@ allowed (E3 vs E9).
   it flagless, so a crate-only pin drift passes the wired gate.
   **does-not-affect** this unit's deliverable (the drift is caught by
   `pin-watch` and by `--pins --package packages/agentic-workflow`); it
-  **affects** the premise S1 quotes. Recorded as F1 for the owner.
+  **affects** the premise S1 quotes. Recorded for the owner — a pre-existing
+  gate gap, deliberately not repaired here.
 - **Sibling worktrees in progress** (`feat/563-init-workspace-interview`,
   `feat/565-quality-sensor`) — `scripts/worktree-guard.mjs` judges each one;
   neither touches this unit's paths, and this unit neither reads nor writes
@@ -214,7 +215,7 @@ One row per Engineering claim (column order and vocabularies owned by
 |---|---|---|---|---|---|
 | PE-001 | registry | `typebox`'s latest published release is `1.4.7` (2026-11-12T16:30:12Z); `1.4.6` published 2026-11-08T10:59:01Z, so the window is one release | `https://registry.npmjs.org/typebox` (`dist-tags.latest`, `time`) fetched 2026-11-16 | current | O1, O2 |
 | PE-002 | repository | the drift is real at the cut HEAD `15b04c2a`: the crate pins `1.4.6` and the watch reports it | `packages/agentic-workflow/package.json` (`dependencies.typebox`); `bun scripts/pin-watch.mjs --check` → exit 1, `drift: @gtrabanco/agentic-workflow · typebox 1.4.6 → 1.4.7` (E1) | current | O1, O2 |
-| PE-003 | repository | `version-parity-gate --pins` defaults to `PACKAGE_DIR` (Pi only) when `--package` is absent, and the local gate calls it flagless — so the crate's pins are only checked with an explicit `--package` | `bun scripts/version-parity-gate.mjs --pins` → PASS, 4 Pi pins (E2a) vs `--pins --package packages/agentic-workflow` → FAIL, `GATE REJECTION — dependency-pin-drift` (E2b) | current | O1, F1 |
+| PE-003 | repository | `version-parity-gate --pins` defaults to `PACKAGE_DIR` (Pi only) when `--package` is absent, and the local gate calls it flagless — so the crate's pins are only checked with an explicit `--package` | `bun scripts/version-parity-gate.mjs --pins` → PASS, 4 Pi pins (E2a) vs `--pins --package packages/agentic-workflow` → FAIL, `GATE REJECTION — dependency-pin-drift` (E2b) | current | O1, known pre-existing issue 1 |
 | PE-004 | repository | a valid `.changeset/*.md` declaring the package satisfies the version-parity content half in place of a manual version bump, and the release train applies it at cut; D-40-14 keeps one train version across the four packages | `docs/workflow/PACKAGES.md:46-50`; `scripts/unit-doc-contract.test.mjs:433` (one train version); precedent `docs/fix/484-chore-deps-pin-drift/` D1 | current | O4, O7, S2 |
 | PE-005 | repository | no deterministic emitter writes a single package's companion CHANGELOG row: the row is inserted only by `release.mjs apply` (the whole train) | `scripts/release.mjs` (`insertCompanionRow`, apply path only); `docs/fix/484-chore-deps-pin-drift/` PE-005 (same package, same gate) | current | O4 |
 | PE-006 | tool-behaviour | `typebox` 1.4.7 changes no surface this crate reaches: three files differ from 1.4.6 (`build/schema/resolve/resolve.mjs`, `package.json`, `readme.md`), 0 added, 0 removed, and the crate imports only `Type` builders plus `typebox/compile` while using no `$ref`/`$id`/`$dynamicRef`/`$dynamicAnchor` | npm tarball diff 1.4.6 vs 1.4.7 (E4); `rg -n '\$ref|\$id|\$dynamicRef|\$dynamicAnchor' packages/agentic-workflow/src packages/agentic-workflow/test` → no schema keyword (E4); `src/doc/envelope.mjs:42-44`, `src/doc/structure-schema.mjs:15-17` | current | O6 |
@@ -261,9 +262,15 @@ owner's external verification. The deterministic readers still run over the doc
 
 ## Findings
 
+No OPEN row: this unit carries no `review-change` or `triage-issue` run (§4
+runs the surgery inline), so nothing here was persisted by either writer of the
+`review-findings` truth class. The one advisory the verification surfaced — the
+`--pins` default that never checks the crate — is a pre-existing gate gap
+recorded under `## Known pre-existing issues` and in the handoff, not a finding
+this unit owns.
+
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | S1 · scripts/version-parity-gate.mjs | correctness | WARNING | report-only | source | product owner — the `--pins` default is the Pi package while the script header and `docs/workflow/PACKAGES.md` say every package under `packages/`; `scripts/local-gate.mjs` runs it flagless, so a crate-only pin drift passes the wired gate. Pre-existing (carried by #484 as its F1), deliberately out of this unit's scope. |
 
 ## Log
 
@@ -303,7 +310,7 @@ owner's external verification. The deterministic readers still run over the doc
 - **D1** — 2026-11-16, decision (route for S2): the release intent carries the version and the train stamps it at cut. D-40-14 keeps **one** version across the four packages (`scripts/unit-doc-contract.test.mjs` enforces it), the version-parity content half accepts a changeset in place of a manual bump (`docs/workflow/PACKAGES.md`), and no deterministic emitter writes a single package's CHANGELOG row outside `release.mjs apply` (PE-004, PE-005). A hand bump of `@gtrabanco/agentic-workflow` alone would break the train invariant, and a hand CHANGELOG row for a version no release cut would record a release that never happened.
 - **P2** — 2026-11-16 18:35, the pin moves (`1.4.6` → `1.4.7`), the root lock is refreshed with `bun install --lockfile-only` (two-line diff, exactly the fixture's, E5), and the release intent ships with the notes-window record — P2 and P3 landed in one commit because they are one change unit · `3469cb45`.
 - **E7** — 2026-11-16, `bun scripts/pin-watch.mjs --check` at `3469cb45` · exit 0 · `no drift — every exact pin matches the registry's latest or its local package version…`, `VERDICT: PASS` — E1's reproducer is green (O2).
-- **E8** — 2026-11-16, `bun scripts/version-parity-gate.mjs --pins --package packages/agentic-workflow` · exit 0 · `[@gtrabanco/agentic-workflow] exact pins checked: 3`, `VERDICT: PASS`, replacing E2b's rejection; `--pins` flagless (as wired) · exit 0 · `VERDICT: PASS` (O1, F1 unchanged).
+- **E8** — 2026-11-16, `bun scripts/version-parity-gate.mjs --pins --package packages/agentic-workflow` · exit 0 · `[@gtrabanco/agentic-workflow] exact pins checked: 3`, `VERDICT: PASS`, replacing E2b's rejection; `--pins` flagless (as wired) · exit 0 · `VERDICT: PASS` (O1; the flagless default still skips the crate — Known pre-existing issues).
 - **E9** — 2026-11-16, `bun test --timeout=30000 test/` in `packages/agentic-workflow` at `3469cb45` (resolved `typebox` 1.4.7) · **858 pass / 0 fail** (171s) — byte-identical to the base run E3 (O6).
 - **E10** — 2026-11-16, `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `[@gtrabanco/agentic-workflow]` change accepted by the changeset, `VERDICT: PASS` (O7).
 - **E11** — 2026-11-16, `bun install --frozen-lockfile` at the root · exit 0 · `2 packages installed`; `rg -c '"typebox": "1.4.7"' packages/agentic-workflow/package.json` matches 1; `rg -c 'typebox@1\.4\.7' bun.lock` matches 1; `rg -c 'typebox@1\.4\.6' bun.lock` matches 0; the crate resolves `1.4.7` (O5).
@@ -312,15 +319,16 @@ owner's external verification. The deterministic readers still run over the doc
 - **E14** — 2026-11-16, `git diff --stat origin/main...HEAD` names only `.changeset/588-typebox-pin-bump.md`, `bun.lock`, `packages/agentic-workflow/package.json`, `docs/ROADMAP.md`, `docs/generated/units.md` and the unit folder + journal fragment — no unrelated work folded in (O3); `git log -1 --format=%B 3469cb45 | rg -c 'Closes #588'` matches 1 (O8).
 - **E15** — 2026-11-16, the state surfaces: `bun scripts/docs-generate.mjs` regenerated `docs/generated/units.md` and `--check` then answers `verdict: PASS`; `bun scripts/roadmap-settle.mjs` · `verdict: PASS`, `violations: 0`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":12,"refusals":[]}`; `bun scripts/log-immutability.mjs` · exit 0 · `0 violations`.
 - **D2** — 2026-11-16, decision (the session entry's carrier): `docs/LOGS.md` has exactly one legal writer — the merge-to-main aggregator — and `scripts/log-immutability.mjs` refuses a non-aggregator commit that touches it, so this unit ships its session entry as a committed **journal fragment** (`.agentic-workflow/journal/20261116T183801Z-fix-588-typebox-pin-drift-narrative-local.md`, written through `journal write`), which the aggregator appends at merge. A hand append here would be the one thing the gate exists to stop.
+- **D3** — 2026-11-16, decision (the advisory's carrier): the `--pins` default gap was first written as a `## Findings` row, which turned `scripts/findings-corpus.test.mjs`'s frozen census red (1153 → 1154). The row left the table instead of re-baselining the census: the `findings-table@1` grammar admits OPEN rows only and they are appended by `review-change`/`triage-issue`, neither of which ran here (§4), so the row was in the wrong carrier — the gap is recorded under `## Known pre-existing issues` instead. The census is untouched.
 - **P3** — 2026-11-16 18:40, the evidence rows above, the fragment and the regenerated projection · this commit.
 
 ## Next
 
 The unit is built and its reproducers, gate halves and differential are green
 (E7–E15); it hands back for the owner's external verdict over
-`8e4faa77..HEAD`. Open, deliberately out of this unit: F1 (the `--pins`
-default never checks the crate). After the verdict: open the PR with the
-`Closes #588` footer.
+`8e4faa77..HEAD`. Open, deliberately out of this unit: the `--pins`
+default that never checks the crate (Known pre-existing issues). After the
+verdict: open the PR with the `Closes #588` footer.
 
 ## References
 
