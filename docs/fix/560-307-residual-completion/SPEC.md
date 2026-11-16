@@ -391,14 +391,17 @@ relay-next: create .pi-web/relays/560-307-residual-completion/ (charter → docs
 - **P5** — 2026-11-16, D5's non-adoption ruling recorded · `0a37c272`.
 - **P6** — 2026-11-16, the measured run (exit 2, `insufficient-corpus`), the row registrations (`rowUpsert 6ca6dfc9 → 41544b39` for row 560; `fixrow 41544b39 → 48e97de7`), the projection re-render (exactly one added row) and the narrative fragment `20261116T005405Z-fix-560-307-residual-completion-narrative-local.md` (1,762 bytes) · `d1aceb23`.
 - **P7** — 2026-11-16, the verification sweep: the base-vs-head differential (E14/E15) and the offline root gate 15/15 (G5) · `d1aceb23`.
+- **E19** — 2026-11-16, the PR and the settle: PR [#577](https://github.com/gtrabanco/agentic-workflow/pull/577) opened against `main` with `Closes #560`; features row 560 settled to `done · [#577] · carried by fix #560` (`rowUpsert 48e97de7 → 8b66fc7e`) and the `## Fixes` row to `done · [#577]` (`fixrow 8b66fc7e → a54f5414`), both through the crate's writers; the projection re-rendered by the emitter.
 
 ## Next
 
-The owner is the external verifier (§8): review this diff, the obligations
+The owner is the external verifier (§8): review PR
+[#577](https://github.com/gtrabanco/agentic-workflow/pull/577), the obligations
 ledger state (15/15 `verified`) and the verification block in the handoff. The
 PR carries `Closes #560`; the measured acceptance stays `insufficient-corpus`
 until the sink records ≥3 units per tier, and the pre-sink half is permanently
-out (D4).
+out (D4). `main` moved 6 commits after the fork, so the integration (and any
+`## Fixes` insert collision in `docs/ROADMAP.md`) is the owner's step.
 
 ## References
 
@@ -410,6 +413,7 @@ out (D4).
 - `docs/fix/500-declare-docs-site-block/` — the `passive`-tier/`unit-doc` precedence precedent this unit reapplies (D8).
 - PR [#515](https://github.com/gtrabanco/agentic-workflow/pull/515) — the `ceremony-profile@1` delivery whose roadmap row 436 this unit settles (D6).
 - PR [#491](https://github.com/gtrabanco/agentic-workflow/pull/491) — the `gate-receipt@1` delivery whose retired surface D2 records.
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/577 — this unit's delivery (`Closes #560`).
 
 ## Branch
 
