@@ -1,6 +1,0 @@
-## 2026-11-16T11:22:19Z — fix/568-doctor-unreachable-gutter — narrative
-- **Commits:** 11 (`29da095c…86f00df4`)
-- **Files:** 11 files
-- **Summary:** Root-caused and fixed why git push refused the fix/568 branch with push-identity — a pre-push hook defect that fabricated a mainline range from empty stdin, refused a forge-made merge that could never be rewritten, and also fixed the worktree --install-hook crash and its own-body marker drift
-- **Decisions:** Diagnosed the hook's stdin via a logging core.hooksPath wrapper: git sends ZERO lines on an up-to-date push, so merge-base fallback was a false positive. Opened issue #580 and PR #581 on a new worktree (fix/580-pre-push-hook-no-publish) with red-first tests, full gate PASS, and a 5-commit squash. Pushed with AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1 after gate PASS (exit 141 SIGPIPE on three attempts — long-gate push is a separate defect). Disclosed two fixture corrections in the unit doc.
-- **Next:** Owner merge PR #581 on main, then git push fix/568-doctor-unreachable-gutter should clear. Two open follow-ups: (1) fix the long-gate SIGPIPE push (PR #581 hit exit 141 after gate PASS at the same head) — a separate defect; (2) publishedRefs() still needs @{upstream} resolution for the by-hand --base origin/main recipe — issue #580's out-of-scope note already named it.
