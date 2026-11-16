@@ -449,6 +449,10 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   13.2 s on a clone of the base commit, so that red was the load-marginal class
   `scripts/test-timeout-allowlist.json` documents, not a content difference — the
   same gate then passed on the same tree.
+- **G3** — 2026-11-16, the offline gate re-run over the receipt commit at HEAD 82a3c1651acdf7419039c200069602a17f9641cf ·
+  `bun scripts/local-gate.mjs --skip-network --no-bail --jobs auto` · exit 0 ·
+  `PASS — 15 step(s) in 875s` (the same 15 offline steps; the four network steps
+  skipped by the flag again).
 - **G2** — 2026-11-16, the document verifier at HEAD f7fc4227245336321982f0a6b09080e767285c7a ·
   `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify
   docs/features/591-skill-discovery/SPEC.md` · exit 2 first, refusing exactly
