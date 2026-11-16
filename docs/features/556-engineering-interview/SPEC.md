@@ -189,7 +189,10 @@ relay-next: create .pi-web/relays/556-engineering-interview/ (charter → docs/f
 - G5 — 2026-11-16 12:08, `bun scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass / 0 fail — `charter-bank-shape` is cited and its surface claimed.
 - G6 — 2026-11-16 12:10, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 files checked, 0 stale, roadmap unchanged.
 - G7 — 2026-11-16 12:12, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/556-engineering-interview/SPEC.md` · exit 0 · `verdict PASS`, nine phases at PASS (6/6).
-- P5 — 2026-11-16 12:14, declared the bank as a normative surface with its gate row, and rebased the `init-workspace` main and reference ceilings with their growth sources · `9d140350`.
+- P5 — 2026-11-16 12:14, declared the bank as a normative surface
+- G8 — 2026-11-16 13:20, `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 · `local-gate: PASS — 15 step(s) in 503s` (root-suite 174s, crate-suite bun 262s / node 127s, schema and pi legs green; the first run's only red was the version-parity step, which the changeset cleared, and the pi node leg's `CRATE_COMMANDS` parity pin, which now lists `charter`).
+- D4 — 2026-11-16, the two edges this change had to move on existing surfaces, each with its reason: `scripts/review-loop-discipline.test.mjs` pinned the template's charter-slot count at 11 and the shipped template now prints 22 (layer 3's eleven slots) — the assertion's property (every charter slot prints, none skipped) is unchanged and the count follows the template; `packages/pi-agentic-workflow/scripts/projection.mjs`'s `CRATE_COMMANDS` is the declared set the projection may name, and a newly dispatched bin command enters it (the parity test compares it with the bin's case list). Neither edit relaxes an assertion.
+ with its gate row, and rebased the `init-workspace` main and reference ceilings with their growth sources · `9d140350`.
 
 ## Next
 
