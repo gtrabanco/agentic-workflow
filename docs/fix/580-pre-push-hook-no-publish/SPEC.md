@@ -297,6 +297,14 @@ machinery on the repository's own tooling.
   introduced by this unit: the base hook also runs the full gate for a new
   branch, through the same merge-base fallback.
 
+- **L4** — 2026-11-16, the §7 journal surface was the one row still absent at this
+  head (no entry for this branch in `docs/LOGS.md` and no fragment in the
+  carrier), so it is written through the carrier's own writer —
+  `agentic-workflow journal write --kind narrative --base a05d6907` · exit 0 ·
+  `20261116T112241Z-fix-580-pre-push-hook-no-publish-narrative-01a1e416-…md`,
+  and `journal aggregate --check` · exit 0 · `checked: 70 · refusals: []`. No
+  hand-written byte: the aggregator appends it to `docs/LOGS.md` at merge.
+
 ## Next
 
 The diff goes to the owner as the external verifier; the `## Fixes` row leaves
