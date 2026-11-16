@@ -201,41 +201,41 @@ set, and they live in RUNNER.md (standalone) and in code (resolver).
 
 ## Tasks
 
-- P1 — Freeze the unit doc, the two planning ledgers and the triaged steps block
+- [x] P1 — Freeze the unit doc, the two planning ledgers and the triaged steps block
   (validator: `node packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/555-programmatic-runner/SPEC.md` exits 0)
   (Implements: S1)
   - Relevant files: docs/features/555-programmatic-runner/SPEC.md, docs/features/555-programmatic-runner/planning-evidence.md, docs/features/555-programmatic-runner/planning-obligations.md
-- P2 — RED: land `runner.resolve.test.mjs` alone (resolver cases + the RUNNER.md
+- [x] P2 — RED: land `runner.resolve.test.mjs` alone (resolver cases + the RUNNER.md
   parity scan), observed failing on the absent module and on the absent
   `runner-set@1` block (validator: `bun test packages/agentic-workflow/test/runner.resolve.test.mjs` exits 1 — the module is absent)
   (Implements: S2, S7, S9)
   - Relevant files: packages/agentic-workflow/test/runner.resolve.test.mjs
-- P3 — GREEN: the resolver module, the `runner resolve` command (bin usage,
+- [x] P3 — GREEN: the resolver module, the `runner resolve` command (bin usage,
   dispatch, crate README usage line + Commands row, projection `CRATE_COMMANDS`),
   and the lit parity block in RUNNER.md (validator: `bun test packages/agentic-workflow/test/runner.resolve.test.mjs` exits 0)
   (Implements: S2, S5, S7)
   - Relevant files: packages/agentic-workflow/src/runner/resolve.mjs, packages/agentic-workflow/src/runner/cli.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/README.md, packages/pi-agentic-workflow/scripts/projection.mjs, skills/runner-contract/references/RUNNER.md
-- P4 — RUNNER.md owns the prose: closed set, symbolic `runner` form, the
+- [x] P4 — RUNNER.md owns the prose: closed set, symbolic `runner` form, the
   cache/exact-pin contract, the pi-session section, the override; every other
   runner citation in `skills/`, the repo docs and the four SPEC templates
   becomes symbolic (validator: `rg -l '(bunx|npx( --yes)?|pnpm dlx) @gtrabanco/agentic-workflow' skills --glob '!runner-contract/references/RUNNER.md'` matches 0 files)
   (Implements: S5, S6, S9, S13)
   - Relevant files: skills/runner-contract/SKILL.md, skills/runner-contract/references/RUNNER.md, skills/*/SKILL.md, skills/*/references/*.md, docs/workflow/*.md, README.md, docs/features/_TEMPLATE/SPEC.md, docs/fix/_TEMPLATE/SPEC.md, template/docs/features/_TEMPLATE/SPEC.md, template/docs/fix/_TEMPLATE/SPEC.md
-- P5 — pi consumes the resolver and drops the prose: `runnerLaunch`, the generic
+- [x] P5 — pi consumes the resolver and drops the prose: `runnerLaunch`, the generic
   `agentic_workflow_run` tool, the projection rule, the README rewrite, the pi
   suites (validator: `cd packages/pi-agentic-workflow && bun run test` exits 0)
   (Implements: S3, S4, S8, S12)
   - Relevant files: packages/pi-agentic-workflow/src/runner-bin.ts, packages/pi-agentic-workflow/src/extension/workflow-tools.ts, packages/pi-agentic-workflow/src/conductor/sensor.ts, packages/pi-agentic-workflow/src/extension/aw-index-command.ts, packages/pi-agentic-workflow/projection-manifest.json, packages/pi-agentic-workflow/README.md, packages/pi-agentic-workflow/scripts/mutation-check.mjs, packages/pi-agentic-workflow/test/*
-- P6 — The action's private resolver is deleted; `journal/headless.mjs` imports
+- [x] P6 — The action's private resolver is deleted; `journal/headless.mjs` imports
   the crate module, keeping the S13 argv and refusals (validator: `bun test packages/agentic-workflow/test/journal.headless.test.mjs` exits 0)
   (Implements: S3)
   - Relevant files: journal/headless.mjs
-- P7 — State ships: the changeset intent, the roadmap status/summary, the
+- [x] P7 — State ships: the changeset intent, the roadmap status/summary, the
   `normative-surfaces@1` row and the `machineLines` re-pin, `docs/LOGS.md`, the
   generated projection (validator: `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/check-skill-context.mjs --documents` exits 0)
   (Implements: S10)
   - Relevant files: .changeset/*.md, docs/ROADMAP.md, AGENTS.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, docs/LOGS.md, docs/generated/**
-- P8 — Verify: every obligation's validator run in the foreground; the root gate,
+- [x] P8 — Verify: every obligation's validator run in the foreground; the root gate,
   the crate suite and the pi suite green; the obligations ledger closed
   (validator: `bun scripts/local-gate.mjs --jobs 1` exits 0)
   (Implements: S10, S11)
@@ -279,9 +279,88 @@ relay-next: create .pi-web/relays/555-programmatic-runner/ (charter → docs/fea
   ```
   The issue's own frozen text is `## Specs` above (`S1`–`S13`).
 
+- **D1** — 2026-11-16, S2/S7 (owner-named set; PE-005, PE-010). The closed set
+  is `bunx` → `npx --yes` → `pnpm dlx`, in that order. `npx` carries `--yes`
+  because a skill is non-interactive (the install prompt would hang it); `pnpm
+  dlx` is last because a standalone pnpm ships its own runtime, so it is the one
+  candidate that can exist on a box with no `node`. The floors are the crate's
+  `engines`, read from its manifest — never a number restated here.
+- **D2** — 2026-11-16, S3 (the issue's own third chicken-and-egg candidate:
+  "prose fallback (bunx→npx) with the resolver only for code"). One
+  implementation, `packages/agentic-workflow/src/runner/resolve.mjs`; consumers:
+  the crate's `runner resolve`, pi (module import through its own dependency),
+  and `journal/headless.mjs` (relative import from the action's checkout). The
+  skills keep the prose; no skill is asked to resolve in code.
+- **D3** — 2026-11-16, S5/S9. The invocation prose has one home: `RUNNER.md`
+  declares the set in `runner-set@1`, every other skill cites the symbolic
+  `runner <subcommand> [args…]`, and the crate suite parses the block against
+  `RUNNER_CANDIDATES` — ids, order and rendered invocation, never a paraphrase.
+- **D4** — 2026-11-16, S4 ("bundle filter vs pi-specific variant"). Chosen: the
+  declared projection the package already owns — one hash-bound `pointerize`
+  rule over `RUNNER.md`'s `## The invocation`, enforced by `runner resolve`. No
+  second skills tree and no per-citation rule set; the pi route lives in the
+  contract's `## In a pi session` section, which both trees share.
+- **D5** — 2026-11-16, S3, assumption A2. A pi session needs a door for the
+  subcommands no typed tool wraps, so the package gains one generic deferred
+  tool (`agentic_workflow_run`) beside the five typed ones; without it the
+  bundle's symbolic citations would be executable only by guesswork.
+- **D6** — 2026-11-16, S3. `journal/headless.mjs` deletes its private chooser
+  (`crateManifest`, `bunFloor`, `hasCommand`, `resolveRunner`) and imports the
+  crate module; its four S13 behaviours are the differential corpus, unchanged.
+- **D7** — 2026-11-16, PE-003, S6. The override is tokenised in every consumer,
+  so `AGENTIC_WORKFLOW_RUNNER="bun /abs/bin.mjs"` now works in pi (the previous
+  `runner-bin` silently ignored any value containing a space and used the
+  installed bin).
+- **D8** — 2026-11-16, PE-011, PE-014. The closed set is a normative surface:
+  one `runner-set` row in `normative-surfaces@1`, one `machineLines` re-pin
+  (145 → 146, the line ceiling spent exactly at 709) with its growth source, and
+  the `normative-surface-grammar` surfaces cell in `GATE_INVENTORY.md`.
+- **D9** — 2026-11-16, two honest test-side corrections, both disclosed. (a) The
+  `runner-prose` case first asserted the symbolic citation in backticks with an
+  ellipsis; the contract carries it as a fenced `runner <subcommand> [args...]`,
+  so the assertion was corrected to the real spelling — the intent (the
+  definition stays in the bundle) is unchanged and nothing was relaxed. (b) The
+  crash-resume fixture's sensor stub is now executable and carries its shebang:
+  the override names a *command* (RUNNER.md's form), so a bare non-executable
+  path is no longer a legal value.
+- **E1** — 2026-11-16, `bun test packages/agentic-workflow/test/runner.resolve.test.mjs` · exit 1 at `eb961b9f` · `0 pass · 1 fail · 1 error`
+  (`Cannot find module '../src/runner/resolve.mjs'`).
+- **E2** — 2026-11-16, `bun test packages/agentic-workflow/test/runner.resolve.test.mjs` · exit 0 at `4aae8a50` · `17 pass · 0 fail`.
+- **E3** — 2026-11-16, `bun test packages/agentic-workflow/test/cli.surface.test.mjs packages/agentic-workflow/test/runner.distribution.test.mjs` · exit 0 · `6 pass · 0 fail`.
+- **E4** — 2026-11-16, `cd packages/pi-agentic-workflow && bun test test/runner-launch.test.mjs test/runner-prose.test.mjs` · exit 1 at `e282728e` · `0 pass · 5 fail · 1 error` (no resolver consumer, no generic door, no projection rule).
+- **E5** — 2026-11-16, same pi command · exit 0 at `a1979dab` · `8 pass · 0 fail`.
+- **E6** — 2026-11-16, `cd packages/pi-agentic-workflow && bun run test` · exit 0 · `928 pass · 0 fail` (83 files, bundle + `tsc` + suites).
+- **E7** — 2026-11-16, `bun test packages/agentic-workflow/test/journal.headless.test.mjs` · exit 0 · `27 pass · 0 fail` (the action's S13 differential corpus, unchanged).
+- **E8** — 2026-11-16, `cd packages/agentic-workflow && bun run test` · exit 0 · `858 pass · 0 fail` (48 files).
+- **E9** — 2026-11-16, `bun scripts/local-gate.mjs --jobs 1` · exit 0 · `local-gate: PASS — 19 step(s) in 431s`.
+- **E10** — 2026-11-16, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md 709 lines / 146 machine / 563 prose / 12,505 est — PASS`.
+- **E11** — 2026-11-16, `bun scripts/check-skill-context.mjs --routes` · exit 0 · `PASS route budgets: 14 routes`.
+- **E12** — 2026-11-16, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills`.
+- **E13** — 2026-11-16, `node --test scripts/normative-drift.test.mjs` · exit 0 · `21 pass · 0 fail`.
+- **E14** — 2026-11-16, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, `verdict: PASS`.
+- **E15** — 2026-11-16, `bun test scripts/release.test.mjs` · exit 0 · `73 pass · 0 fail`; `git diff origin/main -- scripts/release.mjs scripts/normative-drift.test.mjs` is empty.
+- **E16** — 2026-11-16, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)`, `verdict: PASS`.
+- **E17** — 2026-11-16, `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · `22 pass · 0 fail`.
+- **E18** — 2026-11-16, `bun test scripts/promise-coherence.test.mjs scripts/unit-cycle.test.mjs` · exit 0 · `82 pass · 0 fail` (the scanners read the symbolic citation; the loop's prompt command is resolved).
+- **E19** — 2026-11-16, the citation scans · `rg -l '(bunx|npx( --yes)?|pnpm dlx) @gtrabanco/agentic-workflow' skills` → `skills/runner-contract/references/RUNNER.md` only; `rg -c … packages/pi-agentic-workflow/skills` → 0 files; `rg -n '(bunx|npx)' packages/pi-agentic-workflow/README.md packages/pi-agentic-workflow/scripts` → 0 lines; 13 header notes cite the symbolic form; `npx fallback if bun is not installed` → 0.
+- **E20** — 2026-11-16, differential of pi's spawn argv (base formula resolved from the pi package's own dependency vs the head resolver) · `{"base":["node","…/packages/agentic-workflow/bin/agentic-workflow.mjs","workflow-status","--json-only"],"head":<same>,"source":"installed","equal":true}` — no unrequested difference.
+- **E21** — 2026-11-16, `node packages/agentic-workflow/bin/agentic-workflow.mjs runner resolve --json phase-lint docs/x.md` · exit 0 · `{"source":"bunx","argv":["bunx","@gtrabanco/agentic-workflow@4.10.0","phase-lint","docs/x.md"],…}`.
+- **E22** — 2026-11-16, `node scripts/lint-changeset.mjs .changeset/programmatic-runner-detection.md` · exit 0 · `ok programmatic-runner-detection.md`.
+- **P1** — 2026-11-16, unit doc, the two planning ledgers and the triage block frozen · `0c49b74a`.
+- **P2** — 2026-11-16, the resolver suite landed alone, observed red (E1) · `eb961b9f`.
+- **P3** — 2026-11-16, the resolver module, `runner resolve`, the crate README/usage/dispatch, `CRATE_COMMANDS` and RUNNER.md's parity block · `4aae8a50`.
+- **P4** — 2026-11-16, the symbolic sweep: RUNNER.md owns the prose, 42 files re-pointed, the retired fallback rule deleted · `4e44eb49`.
+- **P5** — 2026-11-16, pi's red suites landed alone (E4) · `e282728e`; the resolver consumer, the projection rule, the generic door and the README/suite work went green (E5, E6) · `a1979dab`.
+- **P6** — 2026-11-16, the action's private chooser deleted, its S13 corpus green (E7) · `7961192e`.
+- **P7** — 2026-11-16, state: changeset, roadmap row, the `runner-set` inventory row + `machineLines`, the gate inventory's surfaces cell, the generated projection (E14) · `fa81c10a`.
+- **P8** — 2026-11-16, verification: every obligation's validator run in the foreground (E2–E22); the three suites and the root gate green.
+
 ## Next
 
-P1 — paste the triage block, then P2's red suite.
+External verification: the delivery is complete on the branch (all 23 obligation
+rows `verified`, the root gate green at `fa81c10a`) and the owner — the external
+verifier — decides. Any blocker found is one correction batch over its rows,
+never a second review cycle.
 
 ## References
 
