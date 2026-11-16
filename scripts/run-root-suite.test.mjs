@@ -457,6 +457,30 @@ test("ensureSchemaBuild: a build that ran and failed is 'failed' and carries the
   assert.match(outcome.output, /error TS1005/);
 });
 
+// The injected seam above proves the decision, never the default: a suite that
+// only passes fakes cannot see a default that does not exist. This drives the
+// real spawn against a throwaway package, so the manager resolution, the argv
+// and the cwd are exercised end to end with nothing of this repository touched.
+test("ensureSchemaBuild: the default spawn really runs the package's build script", () => {
+  const { packageDir } = schemaTree({
+    "package.json": JSON.stringify({
+      name: "fixture-schema",
+      version: "0.0.0",
+      scripts: { build: "node -e \"require('node:fs').mkdirSync('dist',{recursive:true});require('node:fs').writeFileSync('dist/index.js','export const built = true;')\"" },
+    }),
+  });
+  const outcome = ensureSchemaBuild({ packageDir });
+  assert.equal(outcome.outcome, "built", outcome.output || outcome.detail);
+  assert.equal(readSchemaDistState({ packageDir }).status, "fresh", "the built tree is current, so the decision would skip the next rebuild");
+});
+
+test("ensureSchemaBuild: a manager that does not exist is 'unavailable' for real", () => {
+  const { packageDir } = schemaTree({});
+  const outcome = ensureSchemaBuild({ manager: "not-a-real-package-manager-xyz", packageDir });
+  assert.equal(outcome.outcome, "unavailable");
+  assert.match(outcome.detail, /ENOENT/);
+});
+
 /* ------------------------------------------------ the dispatch decision */
 
 test("prepareSchemaRuntime: a current build is not rebuilt — the gate's own tree pays nothing", () => {
