@@ -604,6 +604,23 @@ test("--install-hook writes an executable pre-push that runs the offline subset"
   }
 });
 
+test("an older gate-owned hook is replaced without --force (issue #580)", () => {
+  const dir = sandbox();
+  try {
+    assert.equal(gate(["--install-hook", "--repo", dir]).status, 0);
+    const hook = path.join(dir, ".git", "hooks", "pre-push");
+    // The body an earlier release installed: still this gate's hook, one line behind.
+    const stale = fs.readFileSync(hook, "utf8").replace("${AGENTIC_WORKFLOW_GATE_JOBS:-auto}", "auto");
+    assert.notEqual(stale, hookBody(), "the fixture must differ from the current body");
+    fs.writeFileSync(hook, stale);
+    const replaced = gate(["--install-hook", "--repo", dir]);
+    assert.equal(replaced.status, 0, `an older body is still this gate's hook: ${replaced.stdout}${replaced.stderr}`);
+    assert.equal(fs.readFileSync(hook, "utf8"), hookBody());
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("--install-hook is idempotent", () => {
   const dir = sandbox();
   try {
