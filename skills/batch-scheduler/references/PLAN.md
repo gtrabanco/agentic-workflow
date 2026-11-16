@@ -7,7 +7,8 @@ the document's closed field set (grammar `table:batch-fields@1`, pinned in the
 guide's normative-surfaces inventory); the schema package owns the closed
 vocabularies and the validator. v2 (issue #460) added the lifecycle delta and the triage/soft-dep signals; v3
 (issue #509) adds `label_blocked[]` with its summary count and the
-`file-overlap`/`stale-claim` findings.
+`file-overlap`/`stale-claim` findings. Issue #574 extends two
+vocabularies only, so it stays `batch-plan@3`.
 
 ## The field inventory — batch-fields@1
 
@@ -67,9 +68,9 @@ vocabularies and the validator. v2 (issue #460) added the lifecycle delta and th
 |---|---|
 | `contract` / `version` / `schema` | `agentic-workflow/batch-plan` · `3` · `batch-plan@3` |
 | `source_revision` | the git revision the plan was computed at |
-| `degraded[]` | what could not be read, `unavailable-<source>-<cause>` (launch reads: `unavailable-launch-evidence-*`, `unavailable-forge-pr-list-*`); the plan still prints |
+| `degraded[]` | what could not be read, `unavailable-<source>-<cause>` (launch reads: `unavailable-launch-evidence-*`, `unavailable-forge-pr-list-*`); the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read and the issue still declares no surface, so its lane is a guess |
 | `batches[].n` | 1 = runnable now; N+1 when batch N completes |
-| `lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts`, `docs`, `template`, `.github`, or `general` when no path is named |
+| `lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts`, `docs`, `template`, `.github`, or `general` when nothing resolved. The keys come from the issue body first, then the unit doc (see *Where the surfaces come from*) |
 | `lanes[].occupied_by` | the **evidence** of the in-flight unit on the surface (`branch fix/1-x + unit-doc docs/fix/1-x`), or `null` |
 | `lanes[].issues[]` | the issues serialized in the lane, in run order |
 | `issue.worktree` | `<feat\|fix>/<issue>-<slug>` — reported, never created |
@@ -83,7 +84,7 @@ vocabularies and the validator. v2 (issue #460) added the lifecycle delta and th
 | `launched[]` | issues running now, on evidence: an `OPEN` PR or an unmerged `fix\|feat/<n>-*` branch, named in `evidence`. A unit doc corroborates, never decides. Excluded from every batch |
 | `label_blocked[]` | issues a hold label keeps unlaunchable (`postponed`, `backlog`, `human-revision-needed`) with those labels — never batched |
 | `new_issues[]` / `closed_since[]` | the lifecycle delta — first seen; closed since with the last known row |
-| `findings[]` | `cycle` (a wait no batch can satisfy; in flight is a state) · `orphaned-soft-dep` (a target neither open, in flight, label-blocked, closed-since nor indexed) · `prose-native-mismatch` (a `hard` row without a native `blocked-by`) · `file-overlap` (parallel issues whose files intersect) · `stale-claim` (a claim that no longer stands, keyed) |
+| `findings[]` | `cycle` (a wait no batch can satisfy; in flight is a state) · `orphaned-soft-dep` (a target neither open, in flight, label-blocked, closed-since nor indexed) · `prose-native-mismatch` (a `hard` row without a native `blocked-by`) · `file-overlap` (parallel issues whose files intersect) · `stale-claim` (a claim that no longer stands, keyed) · `blind-spot` (a batch with two or more issues that declare no surface — it runs serially) |
 | `summary` | the totals: `open_issues`, `batched`, `blocked`, `launched`, `findings`, `batches`, `label_blocked` |
 
 ## The standing constraints
@@ -105,7 +106,18 @@ vocabularies and the validator. v2 (issue #460) added the lifecycle delta and th
    glob claims nothing. A batched issue with no branch contributes only what it
    declares — an overlap on a file nobody declared is invisible, a declared
    limit, not a guess.
-7. **Size hints are facts**; the lane count is the consumer's.
+7. **Silence about a surface is a bug** (issue #574): the row is
+   `surface-unknown-issue-<n>`; two or more in one batch are a `blind-spot`, and
+   that batch never reads as verified.
+8. **Size hints are facts**; the lane count is the consumer's.
+
+## Where the surfaces come from
+
+The body's `## Surfaces` (exclusive when present; backticks optional), then the
+body's `## Where`/`## In scope` union, then the unit doc (`## Surfaces`, then its
+tasks' `Relevant files:`), then nothing: `surface-unknown-issue-<n>`, and a
+`blind-spot` when two rows of one batch share that state. A body with no section
+is its own source, read per line with fences inert.
 
 ## The dependency parser (fail-closed, with a recovery pass)
 
@@ -160,9 +172,12 @@ supplies, so the same inputs produce a byte-identical envelope.
 bun scripts/batch-scheduler.mjs [--root <dir>] [--issues-file <json>]
                                 [--state <path> | --no-state]
                                 [--remote <url>] [--mark-launched <n>] [--json-only]
+bun scripts/batch-scheduler.mjs --infer-surfaces <n> [--issues-file <json>]
 ```
 
 `node` is the fallback. `--remote <url>` names the forge for the three reads
-(issues, relations, PRs). Exit codes: `0` plan printed (degradations are
-reported, not fatal); `1` the document failed its own `batch-plan@3` validation
-(a producer bug); `2` usage error. One call per dimension, never per issue.
+(issues, relations, PRs). `--infer-surfaces <n>` is triage's emitter (issue
+#574): the `## Surfaces` block to paste, `- surface-unknown` when nothing
+resolves, no write at all. Exit codes: `0` printed (degradations are reported,
+not fatal); `1` the document failed `batch-plan@3` validation or the issue is
+unreadable; `2` usage error.
