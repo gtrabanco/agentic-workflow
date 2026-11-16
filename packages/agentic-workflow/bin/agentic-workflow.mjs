@@ -65,6 +65,17 @@
  * the `verify@1` receipt; a violation → exit 2 and
  * `VERIFY REFUSAL — <violations>` on stderr.
  *
+ * `quality-metrics` (feature 558, issue #565) is the project-quality sensor: the
+ * DORA four keys plus the reversion ratio over a trailing window (default 90
+ * days), printed as the `quality-metrics@1` document the schema package
+ * publishes. Every row carries a `measured`/`derived`/`unavailable` label, and a
+ * metric that cannot be computed names its cause instead of reporting a zero —
+ * `no-reviews-in-window` and `unavailable-forge-missing-cli` are answers, not
+ * failures. `--until` pins the window's end so a report is reproducible, and
+ * `--out` is the only byte it may write. The metric definitions are the crate
+ * README's `quality-metrics@1` block; the refusal contract is exit 2 with
+ * `QUALITY REFUSAL — <reason>` before anything is measured.
+ *
  * `doctor` / `setup` (issue #537) is the deterministic tool doctor and its
  * consent-gated wizard: `doctor` prints the read-only `doctor@1` envelope — one
  * row per documented surface (the crate README's `tool-inventory@1` block is the
@@ -145,6 +156,7 @@ import {
 } from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
 import { isRunnerCommand, runRunnerCommand } from "../src/runner/cli.mjs";
+import { run as runRunnerService } from "../src/runner/runner.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
 import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
 import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragment.mjs";
@@ -601,7 +613,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -622,6 +634,12 @@ feedback.attach();
 const parsed = parseArgs(restArgs);
 const rawArgs = parsed.args;
 switch (command) {
+  // ── runner — the programmatic runner choice (issue #555) ─────────────
+  case "runner": {
+    process.exit(runRunnerService(restArgs));
+    break;
+  }
+
   // ── relay — the lane's offline half of pi-web's packet contract ──────
   case "relay": {
     const rootDir = resolve(process.cwd());
@@ -1748,7 +1766,7 @@ switch (command) {
     // share one bin without one growing switch. A name outside both tables is
     // still the closed-world refusal below — never a shell fallback.
     if (isRunnerCommand(command)) {
-      const runnerCode = runRunnerCommand(command, restArgs);
+      const runnerCode = runRunnerCommand(command, restArgs, { feedback });
       if (typeof runnerCode === "number") process.exitCode = runnerCode;
       else if (runnerCode && typeof runnerCode.then === "function") {
         runnerCode.then((code) => {

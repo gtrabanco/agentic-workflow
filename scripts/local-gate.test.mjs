@@ -133,6 +133,24 @@ test("a step never inherits the caller's repository locator", () => {
   }
 });
 
+test("a step never inherits the caller's ambient git tracing", () => {
+  // The same seam, the reported incident's path: `GIT_TRACE=1 git push` reaches
+  // the hook's environment, the gate spawns every suite from it, and a suite
+  // that pins an empty stderr fails on git's own trace lines (2026-11-16).
+  const saved = { ...process.env };
+  try {
+    process.env.GIT_TRACE = "1";
+    process.env.GIT_TRACE2 = "/tmp/trace2";
+    const env = stepEnv();
+    assert.equal(env.GIT_TRACE, undefined, "GIT_TRACE must not reach a step");
+    assert.equal(env.GIT_TRACE2, undefined, "GIT_TRACE2 must not reach a step");
+    assert.equal(env.PATH, process.env.PATH, "the rest of the environment is inherited");
+  } finally {
+    for (const name of ["GIT_TRACE", "GIT_TRACE2"]) delete process.env[name];
+    Object.assign(process.env, saved);
+  }
+});
+
 /* ------------------------------------------------------------------ table */
 
 test("every former remote check survives as a step, and the ids are unique", () => {

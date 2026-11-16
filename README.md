@@ -119,7 +119,7 @@ review the change → audit → merge.**
 
 | Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `execute-phase` | Executes **one phase per turn** (`<NN> P<k>`, tier attached) with its own acceptance-blob check, phase/invariant/dependency gates, tests, docs, and commit — the closing hand-off names the next single phase and the catalog tier, and resumes `unit-lane` after the last phase. Looping all remaining phases (`<NN>` with no phase) is an explicit operator choice only. Halts on red/no-progress/attempt budget. Discoveries become `Autofix`, `Opportunistic Fix`, or a proposal—never an automatic issue. Each phase's pre-flight runs `bunx @gtrabanco/agentic-workflow@<pin> phase-lint <plan>` and pastes its output. The whole-unit close-out settles the roadmap row through the crate's writer (`bun scripts/roadmap-settle.mjs` exits 0, issue #316). It never interviews: a missing input runs the three-tier dispatch and then `bunx @gtrabanco/agentic-workflow@<pin> needs-input` prints the `open-questions@1` block and the run stops, routed back to the stage that owns the fact. |
+| `execute-phase` | Executes **one phase per turn** (`<NN> P<k>`, tier attached) with its own acceptance-blob check, phase/invariant/dependency gates, tests, docs, and commit — the closing hand-off names the next single phase and the catalog tier, and resumes `unit-lane` after the last phase. Looping all remaining phases (`<NN>` with no phase) is an explicit operator choice only. Halts on red/no-progress/attempt budget. Discoveries become `Autofix`, `Opportunistic Fix`, or a proposal—never an automatic issue. Each phase's pre-flight runs `runner phase-lint <plan>` (every `runner` command is defined by the [runner contract](skills/runner-contract/references/RUNNER.md)) and pastes its output. The whole-unit close-out settles the roadmap row through the crate's writer (`bun scripts/roadmap-settle.mjs` exits 0, issue #316). It never interviews: a missing input runs the three-tier dispatch and then `runner needs-input` prints the `open-questions@1` block and the run stops, routed back to the stage that owns the fact. |
 
 ### Review & audit — _change → PR → product_
 
@@ -355,6 +355,40 @@ last entry on start so you resume cold — no model, no token cost for the captu
 4. **One PR per unit, against the default branch** — never on `main`, never stacked.
 5. **Evidence over reflex** — triage verifies triggers; deferred work is tracked, not inlined.
 6. **Gate before commit** — type-check + tests + build green.
+
+## Why it works this way
+
+Every rule above costs something — tokens, turns, or a wait — so each one carries
+the evidence that earned it. The measurements and their verdict tables live in
+[`docs/research/`](docs/research/): the
+[2026-11-12 input-quality & editing sweep](docs/research/2026-11-12-input-quality-and-editing/)
+holds the per-paper verdicts, composed stack included, and
+[`ATTRIBUTION.md`](docs/research/ATTRIBUTION.md) records what each source was
+taken for. This table is the map from a shipped decision to its source — the
+sweep stays the evidence carrier, so a claim stated here without a row there does
+not exist.
+
+| Shipped decision | What the evidence measured | Where it landed |
+| --- | --- | --- |
+| **Ceremony proportional to risk, never to size** | A methodology's ceremony is a function of a unit's risk and size rather than one fixed gauge — the tiering argument of Cockburn's *Crystal* and Parnas's "fake it" — and no ceremony reduction ships without its measured delta | `skills/execute-phase/references/risk-tiers.md`, the classifier `packages/agentic-workflow/src/runner/risk-tiers.mjs`, and the [`TIER_COST.md`](docs/workflow/TIER_COST.md) ledger that pays for each tier's cost |
+| **Never review a change with the writer's own model family** | Cross-family critics catch correlated blind spots (arXiv [2604.19049](https://arxiv.org/abs/2604.19049)), and same-model elicitation measured **negative** strict pass@1 while a cross-family pipeline measured +6.3 points (arXiv [2610.22382](https://arxiv.org/abs/2610.22382)) | `review-change`'s `--adversarial N` family-diversity preference |
+| **A unit doc is referenced, never paraphrased** | Paraphrased hand-offs failed 13/26 measured attempts while a spec passed by reference was accepted first round (gentle-shell#1718), and long-horizon agents degrade when a local revision becomes a global rewrite (arXiv [2609.36789](https://arxiv.org/abs/2609.36789)) | the `spec-by-reference` unit docs and their templates |
+| **Gates are code; a prose gate names the file and section it lives in** | Constraint violations climb from 0% to 19–59% after context compaction (arXiv [2606.22528](https://arxiv.org/abs/2606.22528)): a prose-only rule silently disappears mid-run while the run continues as if it existed | [`GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md), which names the carrier — `script`, `cli` or `prose` — of every gate |
+| **The merge decision stays a human's** | Merge outcomes are not a quality signal: 15.4% of merged agentic PRs still needed reviewer involvement and 33.1% of rejections recorded no rationale (arXiv [2605.22534](https://arxiv.org/abs/2605.22534)), and automated approval leaves an accountability gap when a change causes harm (arXiv [2606.13175](https://arxiv.org/abs/2606.13175)) | `audit-pr`'s SHA-bound `MERGE-READY` receipt, and a conductor whose verb set refuses `merge` outright |
+| **Search with `rg`; state commands and boundaries, never derivable description** | Repository *overviews* in a context file cost +20% reasoning tokens with no success gain, while instructions and commands work (arXiv [2602.11988](https://arxiv.org/abs/2602.11988)); a root guide measurably reduces tokens on real PRs (arXiv [2601.20404](https://arxiv.org/abs/2601.20404)); adherence depends on how the file is structured (arXiv [2605.10039](https://arxiv.org/abs/2605.10039)) | the guide's tool-choice rule and its documentation map |
+| **Localize first, then read the file exactly as written** | Structure-aware views save 17–39% of tokens when localization is the bottleneck and gain little when authoring is (arXiv [2611.07286](https://arxiv.org/abs/2611.07286)); at an equal token budget, choosing whole files verbatim beats compressors by +6.3 points and retrievers by +9.3/+12.7 (arXiv [2610.21073](https://arxiv.org/abs/2610.21073)) | Serena-backed localization ([feature 67](docs/features/67-serena-provisioning/SPEC.md), via `init-workspace`) and each phase's `Relevant files:` line |
+
+Three of those papers answer a different question — *how* to write the change
+rather than where to look. Whole-file generation beats iterative diff-editing on
+every metric measured, while block-level diffs match its accuracy at over 30%
+less latency and cost on long files (arXiv [2609.05779](https://arxiv.org/abs/2609.05779),
+arXiv [2604.27296](https://arxiv.org/abs/2604.27296)). That half is
+**recorded, not shipped**: it belongs to the one-shot/repair direction, and so
+does the preservation instruction that cuts over-editing — excess edit distance
+0.195 → 0.131, added complexity −26.6%, Pass@1 +2.3 (arXiv
+[2609.04061](https://arxiv.org/abs/2609.04061)) — recorded as a candidate
+amendment, not as current behaviour. Nothing above describes a capability the
+skills do not have.
 
 ## Install
 

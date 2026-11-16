@@ -31,8 +31,8 @@
    profile contract's. **Layer 3 lands through the deterministic writer** (unit
    556): assemble one payload from the interview —
    `{ "date": "<YYYY-MM-DD>", "answers": {…}, "defaults": {…} }` — and run
-   `bunx @gtrabanco/agentic-workflow@<pin> charter land --guide AGENTS.md
-   --answers <payload>`. A slot the project already filled is reported `kept`
+   `runner charter land --guide AGENTS.md --answers <payload>`.
+   A slot the project already filled is reported `kept`
    and left byte-identical (a team convention always wins); a placeholder with
    an answer is `written`; a placeholder covered only by a bank default becomes
    `assumed <YYYY-MM-DD> — <default>`; a slot nobody answered and no default
@@ -41,8 +41,8 @@
    machine-checked shape (`<boundary> → machine: <mechanism>` or
    `<boundary> → prose-only`), which is the location the materialization step
    reads. Run
-   `bunx @gtrabanco/agentic-workflow@<pin> charter check --guide AGENTS.md
-   --bank <the shipped bank>` first: it proves every question still lands in a
+   `runner charter check --guide AGENTS.md --bank <the shipped bank>` first:
+   it proves every question still lands in a
    slot this guide carries. The verification-criteria answers fill
    `docs/workflow/VERIFICATION_CRITERIA.md` (copied from the template) with one
    provenance value per criterion from the closed set `workflow-generic` /

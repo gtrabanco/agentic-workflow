@@ -27,7 +27,7 @@ Ask one consented question: **“Create the project config file now?”**. On ye
 run the package's own initializer — never hand-write the file:
 
 ```bash
-bunx @gtrabanco/agentic-workflow config init --scope project
+runner config init --scope project
 ```
 
 The command writes a commented `.pi/agentic-workflow.json` whose every value is
@@ -37,7 +37,7 @@ On no, write nothing and record the residual; the CLI still resolves defaults.
 For a package-specific section, the owner is the package, not this skill:
 
 ```bash
-bunx @gtrabanco/agentic-workflow config set pi.model.default provider/model-id --scope project
+runner config set pi.model.default provider/model-id --scope project
 ```
 
 (Replace `model.default` with the path `config list` prints; the pi package
@@ -46,7 +46,7 @@ publishes its own section.)
 ## Verification
 
 ```bash
-bunx @gtrabanco/agentic-workflow config validate --scope both
+runner config validate --scope both
 ```
 
 Exit 0 is clean; exit 2 lists every issue by path. `--sanitize` removes unknown

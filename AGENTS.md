@@ -432,6 +432,7 @@ relay-status-grammar | skills/unit-lane/references/RELAY.md | block:relay-status
 journal-fragment-grammar | packages/agentic-workflow/README.md | block:journal-fragment-grammar@1 | n/a | no
 journal-write-grammar | packages/agentic-workflow/README.md | block:journal-write-grammar@1 | n/a | no
 journal-headless-grammar | packages/agentic-workflow/README.md | block:journal-headless-grammar@1 | n/a | no
+runner-set | skills/runner-contract/references/RUNNER.md | block:runner-set@1 | n/a | no
 journal-entry-contract | packages/agentic-workflow-schema/src/journal.ts | schema-export:JOURNAL_ENTRY_KINDS | journal-entry | no
 journal-driver-contract | packages/agentic-workflow/README.md | block:journal-driver-contract@1 | n/a | no
 turn-contract-fields | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-fields@1 | envelope-field:next | yes
@@ -478,6 +479,9 @@ tool-doctor-envelope | packages/agentic-workflow/README.md | block:doctor-envelo
 doctor-check-status-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:DOCTOR_CHECK_STATUSES | doctor-check-status | no
 doctor-install-route-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:INSTALL_ROUTES | install-route | no
 doctor-wizard-move-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:WIZARD_MOVES | wizard-move | no
+quality-metric-name-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_METRIC_NAMES | quality-metric-name | no
+quality-confidence-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_CONFIDENCES | quality-confidence | no
+quality-metrics-fields | packages/agentic-workflow/README.md | block:quality-metrics@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

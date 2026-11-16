@@ -62,9 +62,9 @@ the unit router already read. Slots are written by the deterministic writer,
 never by hand:
 
 ```text
-bunx @gtrabanco/agentic-workflow@<pin> charter state --guide AGENTS.md
-bunx @gtrabanco/agentic-workflow@<pin> charter land  --guide AGENTS.md --answers <payload>
-bunx @gtrabanco/agentic-workflow@<pin> charter check --guide AGENTS.md --bank <this file>
+runner charter state --guide AGENTS.md
+runner charter land  --guide AGENTS.md --answers <payload>
+runner charter check --guide AGENTS.md --bank <this file>
 ```
 
 - `state` is the run's first read: it reports every keyed slot of the guide's

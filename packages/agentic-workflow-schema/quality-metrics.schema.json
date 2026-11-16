@@ -1,0 +1,227 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/quality-metrics.schema.json",
+  "title": "agentic-workflow quality metrics v1",
+  "description": "The project-quality sensor's machine envelope (feature 558, issue #565): DORA's four keys plus the reversion ratio, one row per metric, every row carrying a confidence label. Core is closed — an unknown key anywhere is refused. `unavailable` rows carry a null value and a declared reason, so a zero is never presented as a measurement. Read-only: the document reports, it never advises.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "version", "schema", "source_revision", "window", "degraded", "metrics"],
+  "properties": {
+    "contract": { "const": "agentic-workflow/quality-metrics" },
+    "version": { "const": 1 },
+    "schema": { "const": "quality-metrics@1" },
+    "source_revision": {
+      "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^[0-9a-f]{7,40}$" }]
+    },
+    "window": { "$ref": "#/definitions/window" },
+    "degraded": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^unavailable-[a-z0-9-]+$" }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reversion_ratio",
+        "change_failure_rate",
+        "lead_time_for_change",
+        "pr_volume",
+        "review_latency",
+        "escaped_defects"
+      ],
+      "properties": {
+        "reversion_ratio": { "$ref": "#/definitions/reversionRatio" },
+        "change_failure_rate": { "$ref": "#/definitions/changeFailureRate" },
+        "lead_time_for_change": { "$ref": "#/definitions/leadTimeForChange" },
+        "pr_volume": { "$ref": "#/definitions/prVolume" },
+        "review_latency": { "$ref": "#/definitions/reviewLatency" },
+        "escaped_defects": { "$ref": "#/definitions/escapedDefects" }
+      }
+    }
+  },
+  "definitions": {
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["days", "since", "until"],
+      "properties": {
+        "days": { "type": "integer", "minimum": 1, "maximum": 3650 },
+        "since": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$" },
+        "until": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$" }
+      }
+    },
+    "componentCell": {
+      "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }]
+    },
+    "detail": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "reason": {
+      "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }]
+    },
+    "rowFlags": {
+      "type": "object",
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "confidence": { "const": "unavailable" } },
+            "required": ["confidence"]
+          },
+          "then": {
+            "properties": { "value": { "type": "null" }, "reason": { "type": "string" } },
+            "required": ["reason"]
+          },
+          "else": {
+            "properties": { "value": { "not": { "type": "null" } }, "reason": { "type": "null" } },
+            "required": ["reason"]
+          }
+        }
+      ]
+    },
+    "reversionRatio": {
+      "allOf": [{ "$ref": "#/definitions/rowFlags" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confidence", "value", "unit", "reason", "detail", "components"],
+      "properties": {
+        "confidence": { "enum": ["measured", "derived", "unavailable"] },
+        "value": {
+          "oneOf": [{ "type": "null" }, { "type": "number", "minimum": 0, "maximum": 1 }]
+        },
+        "unit": { "const": "ratio" },
+        "reason": { "$ref": "#/definitions/reason" },
+        "detail": { "$ref": "#/definitions/detail" },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["revert_commits", "total_commits"],
+          "properties": {
+            "revert_commits": { "$ref": "#/definitions/componentCell" },
+            "total_commits": { "$ref": "#/definitions/componentCell" }
+          }
+        }
+      }
+    },
+    "changeFailureRate": {
+      "allOf": [{ "$ref": "#/definitions/rowFlags" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confidence", "value", "unit", "reason", "detail", "components"],
+      "properties": {
+        "confidence": { "enum": ["measured", "derived", "unavailable"] },
+        "value": {
+          "oneOf": [{ "type": "null" }, { "type": "number", "minimum": 0, "maximum": 1 }]
+        },
+        "unit": { "const": "ratio" },
+        "reason": { "$ref": "#/definitions/reason" },
+        "detail": { "$ref": "#/definitions/detail" },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reverted_deploys", "deploys"],
+          "properties": {
+            "reverted_deploys": { "$ref": "#/definitions/componentCell" },
+            "deploys": { "$ref": "#/definitions/componentCell" }
+          }
+        }
+      }
+    },
+    "leadTimeForChange": {
+      "allOf": [{ "$ref": "#/definitions/rowFlags" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confidence", "value", "unit", "reason", "detail", "components"],
+      "properties": {
+        "confidence": { "enum": ["measured", "derived", "unavailable"] },
+        "value": {
+          "oneOf": [{ "type": "null" }, { "type": "number", "minimum": 0 }]
+        },
+        "unit": { "const": "hours" },
+        "reason": { "$ref": "#/definitions/reason" },
+        "detail": { "$ref": "#/definitions/detail" },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["merged_pulls", "sampled_pulls"],
+          "properties": {
+            "merged_pulls": { "$ref": "#/definitions/componentCell" },
+            "sampled_pulls": { "$ref": "#/definitions/componentCell" }
+          }
+        }
+      }
+    },
+    "prVolume": {
+      "allOf": [{ "$ref": "#/definitions/rowFlags" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confidence", "value", "unit", "reason", "detail", "components"],
+      "properties": {
+        "confidence": { "enum": ["measured", "derived", "unavailable"] },
+        "value": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }]
+        },
+        "unit": { "const": "count" },
+        "reason": { "$ref": "#/definitions/reason" },
+        "detail": { "$ref": "#/definitions/detail" },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["opened_pulls", "merged_pulls"],
+          "properties": {
+            "opened_pulls": { "$ref": "#/definitions/componentCell" },
+            "merged_pulls": { "$ref": "#/definitions/componentCell" }
+          }
+        }
+      }
+    },
+    "reviewLatency": {
+      "allOf": [{ "$ref": "#/definitions/rowFlags" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confidence", "value", "unit", "reason", "detail", "components"],
+      "properties": {
+        "confidence": { "enum": ["measured", "derived", "unavailable"] },
+        "value": {
+          "oneOf": [{ "type": "null" }, { "type": "number", "minimum": 0 }]
+        },
+        "unit": { "const": "hours" },
+        "reason": { "$ref": "#/definitions/reason" },
+        "detail": { "$ref": "#/definitions/detail" },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewed_pulls", "opened_pulls"],
+          "properties": {
+            "reviewed_pulls": { "$ref": "#/definitions/componentCell" },
+            "opened_pulls": { "$ref": "#/definitions/componentCell" }
+          }
+        }
+      }
+    },
+    "escapedDefects": {
+      "allOf": [{ "$ref": "#/definitions/rowFlags" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confidence", "value", "unit", "reason", "detail", "components"],
+      "properties": {
+        "confidence": { "enum": ["measured", "derived", "unavailable"] },
+        "value": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }]
+        },
+        "unit": { "const": "count" },
+        "reason": { "$ref": "#/definitions/reason" },
+        "detail": { "$ref": "#/definitions/detail" },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["open_findings", "unit_docs"],
+          "properties": {
+            "open_findings": { "$ref": "#/definitions/componentCell" },
+            "unit_docs": { "$ref": "#/definitions/componentCell" }
+          }
+        }
+      }
+    }
+  }
+}

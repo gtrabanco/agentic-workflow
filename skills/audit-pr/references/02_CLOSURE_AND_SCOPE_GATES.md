@@ -100,11 +100,11 @@ verdict:
    criteria` is the canonical acceptance source — issue #285):
    - **Legacy path** — opened only when the unit's `progress.md` carries a
      `## Pre-execution review receipt v1 — plan` whose digest **re-derives**
-     (`bunx @gtrabanco/agentic-workflow@<pin> pre-execution-snapshot verify --stage plan` exits 0 over the
+     (`runner pre-execution-snapshot verify --stage plan` exits 0 over the
      bound bytes): the unit's
      `progress.md` carries
      `## Pre-execution review receipt v1 — plan` whose digest re-derives
-     identically (`bunx @gtrabanco/agentic-workflow@<pin> pre-execution-snapshot verify --stage plan
+     identically (`runner pre-execution-snapshot verify --stage plan
      --parent <the receipt's Product digest>`; a fix unit binds no parent —
      `structural.reasonCode`/`changedPaths` name the drifted dimension), and —
      for a feature unit — its named `— spec` parent re-derives the same way.
@@ -121,7 +121,7 @@ verdict:
    - **Lane-era path** (feature 61's single-doc contract) — the unit doc's
      Evidence section carries the `## Triaged steps` block whose `Steps:` /
      `Skipped:` / `Budget:` lines re-derive identically from the doc's own
-     facts (`bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <unit>`), and the obligation
+     facts (`runner unit-route --triage <unit>`), and the obligation
      ledger carries ≥1 row with every row `verified` or an explicit
      `n/a: <reason>` (see item 2 for the ledger shapes). This comparison binds
      the unit doc's **bytes**: the triage output is a pure function of the

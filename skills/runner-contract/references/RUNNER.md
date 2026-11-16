@@ -1,8 +1,10 @@
-# The runner — one invocation, one pin
+# The runner — one invocation, one pin, one closed set
 
-> Owner of the runner's invocation contract (feature 91, issue #352). Every
-> skill that runs a deterministic workflow command cites this file for the
-> **version** and nothing else; the command itself it states in full.
+> Owner of the runner's invocation contract (feature 91, issue #352; the closed
+> set and the symbolic citation are issue #555's). Every skill that runs a
+> deterministic workflow command cites this file for the **launcher** and the
+> **version** and nothing else; the command itself it states with the symbolic
+> form below.
 
 ## The invocation
 
@@ -18,10 +20,58 @@ field | value
 invocation | bunx @gtrabanco/agentic-workflow@4.10.0 <subcommand> [args...]
 ```
 
-`bunx` first, `npx` when bun is not installed — the same bun-first rule the
-workflow applies to its own scripts, spelled `npx` in place of `bunx` and
-pinning the same version. An unpinned `latest` is never a legal invocation: the
-skills that call it were written against one train.
+```text
+runner-set@1
+candidate | requires | invocation
+bunx | bun >= the crate's engines.bun | bunx @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+npx | node >= the crate's engines.node | npx --yes @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+pnpm dlx | pnpm on PATH, and node >= its floor when node is present | pnpm dlx @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+```
+
+The set is **closed and ordered**: the first candidate present and at or above
+its floor launches the package, and a later one is a fallback only — never a
+second launch, never a probe that guesses. The floors are the crate's own
+`engines` (its manifest is the authority, the numbers are not restated here), and
+a standalone `pnpm` ships its own runtime, so the node floor binds it only when a
+node is present. `npx` carries `--yes` because a skill is non-interactive: the
+install prompt would be a hang, not a question.
+
+The same order is implemented **once**, in
+`packages/agentic-workflow/src/runner/resolve.mjs`: `agentic-workflow runner
+resolve` prints the answer a caller spawns, and
+`packages/agentic-workflow/test/runner.resolve.test.mjs` refuses a drift between
+this table and that module. A new candidate is one row here plus one entry there,
+in the same change — the set is a contract, not a list of habits.
+
+## What a skill cites
+
+A skill that runs a runner command states it with the symbolic form and names
+this contract beside it:
+
+```text
+runner <subcommand> [args...]
+```
+
+`runner` means "the first candidate in The invocation's closed set that is
+eligible, at the pin above". A skill never spells a launcher and never restates
+the order: the words live here, the choice lives in code, and the two cannot
+drift apart.
+
+`<pin>` is read from this file — never restated, never guessed, never replaced by
+`latest`. A skill that hard-codes a version re-opens the per-release maintenance
+this contract exists to remove, and `scripts/normative-drift.test.mjs` fails
+closed on a pin that drifts from the crate's own version.
+
+## What the pin buys: one download, then a cache hit
+
+The first run of a candidate downloads `@gtrabanco/agentic-workflow@<pin>`; every
+run after it is a cache hit — `bunx` keeps its installs in Bun's global cache for
+future use, `npx` installs a specifier's package into a folder of the npm cache,
+and `pnpm dlx` reuses its own cached install. The exact pin is what makes that
+cache correct rather than merely convenient: it names one immutable train, so
+the behaviour a skill describes and the behaviour a caller gets are the same
+release until a cut moves the pin and the package together. `latest` would let
+the cache serve a contract nobody wrote; an exact pin cannot.
 
 ## The local and canary override
 
@@ -32,15 +82,32 @@ environment, in the same shape `AGENTIC_WORKFLOW_RUNTIME` uses:
 AGENTIC_WORKFLOW_RUNNER="bun /absolute/path/to/packages/agentic-workflow/bin/agentic-workflow.mjs"
 ```
 
+- The value is one command, tokenised on whitespace, so the spaced form above is
+  the legal form — and every consumer honours it: the crate's resolver, the
+  distributable action in `journal/`, and the pi package. An empty value is the
+  unset spelling.
 - A skill or a test that finds `AGENTIC_WORKFLOW_RUNNER` set runs **that**
-  command instead of the pinned invocation, and says so in its output.
-- Unset, the pinned invocation runs. The repository's own suite sets it to the
+  command instead of the closed set, and says so in its output.
+- Unset, the closed set decides. The repository's own suite sets it to the
   working tree's bin, which is how the crate is dogfooded before a cut.
-- A canary cut stages its version into this file for the duration of the
-  publish and restores it, so the committed pin always names a stable release.
-  A project that never upgrades keeps the pair (skills at vX, package at vX)
-  coherent with zero maintenance: the pin is exact, so vX stays installable
-  forever.
+- A canary cut stages its version into this file for the duration of the publish
+  and restores it, so the committed pin always names a stable release. A project
+  that never upgrades keeps the pair (skills at vX, package at vX) coherent with
+  zero maintenance: the pin is exact, so vX stays installable forever.
+
+## In a pi session
+
+Pi resolves the runner for you, so nothing here asks a session to pick one. The
+crate ships as this package's own dependency and the extension spawns its bin
+under the runtime that launched pi (`createRequire`, never a download); the
+resolver above is the fallback for a tree where that dependency is missing.
+
+The package's workflow tools are **deferred** (`tool_search` finds the
+`agentic-workflow` namespace), and `agentic_workflow_run` runs any subcommand
+with its arguments in the session's project, returning stdout, stderr and the
+exit code. In a pi session `runner <subcommand>` means that tool — or the typed
+tool for the commands that carry one. The closed set exists for the standalone
+skills and for code without an installed crate.
 
 ## Subcommands
 
@@ -50,12 +117,14 @@ shell fallback.
 
 | Subcommand | What it runs |
 |---|---|
+| `runner resolve` | the programmatic launcher answer — `source`, `program`, `argv` and every candidate it tried; exit 2 with `RUNNER REFUSAL —` when none of the set resolves |
 | `workflow-status` | the workflow sensor — the Envelope v2 result the drivers consume |
 | `phase-lint <plan-path>` | the phase linter over a unit doc's `## Tasks` |
 | `diff-guard --base <ref>` | the diff-size guard |
 | `pre-execution-snapshot <build\|verify\|contract>` | the pre-execution snapshot and its drift check |
 | `needs-input <unit-dir>` | the open-question sensor |
 | `ledger-provenance <ledger> [--check\|--annotate]` | the fold-queue recount |
+| `quality-metrics [--window <days>] [--until <instant>] [--repo <dir>] [--out <path>]` | the project-quality sensor — the DORA four keys plus the reversion ratio as one `quality-metrics@1` document (definitions in the crate README) |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | the unit router and the triage step list |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
