@@ -50,7 +50,7 @@ test("discover exits 1 when a consented candidate is excluded, and prints no ins
     const consent = writeConsent(root, { "hidden-reviewer": "yes" });
     const result = run(["skills", "discover", "--candidates", candidates, "--consent", consent, "--root", root]);
     assert.equal(result.status, 1, result.stderr);
-    assert.match(result.stdout, /^CANDIDATE hidden-reviewer — blocked/u);
+    assert.match(result.stdout, /^CANDIDATE hidden-reviewer — blocked/mu);
     assert.doesNotMatch(result.stdout, /^ {2}install:/mu);
     assert.match(result.stdout, /^verdict: blocked$/mu);
   } finally {
@@ -124,7 +124,7 @@ test("inventory exits 1 on a decay state and 0 when every row is ok", () => {
     const ok = run(["skills", "inventory", "--guide", guide, "--as-of", "2026-11-16", "--max-age-days", "180"]);
     assert.equal(ok.status, 0, ok.stderr);
     assert.match(ok.stdout, /^verdict: pass$/mu);
-    assert.match(ok.stdout, /^row-2\.1\.0-2026-11-16 — ok/u);
+    assert.match(ok.stdout, /^row-2\.1\.0-2026-11-16 — ok/mu);
 
     assert.equal(register("latest", "2026-11-16").status, 0);
     assert.equal(register("1.0.0", "2025-01-01").status, 0);

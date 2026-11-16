@@ -205,7 +205,7 @@ test("the whole evaluation writes nothing", () => {
     const consent = writeConsent(root, { "clean-reviewer": "yes" });
     const before = treeDigest(root);
     const report = buildDiscoveryReport({
-      payload: parseCandidates(JSON.parse(readFileSync(candidates, "utf8"))),
+      payload: JSON.parse(readFileSync(candidates, "utf8")),
       consent: parseConsent(JSON.parse(readFileSync(consent, "utf8"))),
       root,
     });
@@ -234,7 +234,7 @@ test("the block is one header, one row per candidate, a summary and a verdict", 
       payload: { candidates: [cleanCandidate(clean), cleanCandidate(hidden, { name: "hidden-reviewer" })] },
       root,
     });
-    const lines = renderDiscovery(report).split("\n");
+    const lines = renderDiscovery(report).trimEnd().split("\n");
     assert.match(lines[0], /^skill-discovery@1 — 2 candidate\(s\)/u);
     assert.equal(lines.filter((line) => line.startsWith("CANDIDATE ")).length, 2);
     assert.match(lines.at(-2), /^summary: /u);
