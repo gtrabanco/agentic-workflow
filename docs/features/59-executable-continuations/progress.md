@@ -270,3 +270,20 @@ Notes:
 - PR: [#238](https://github.com/gtrabanco/agentic-workflow/pull/238) (open, base `main`, head `feat/59-executable-continuations-fixture`). The PR already existed for this branch carrying the design-phase title/body; its title and body were updated to the full execution summary via the REST API with `--body-file` (`gh pr edit` fails on this repository's classic-projects GraphQL surface).
 - Roadmap row 59 flipped `planned` → `done · [#238](https://github.com/gtrabanco/agentic-workflow/pull/238)`; this commit is `docs: link PR #238`.
 - All five phases complete; unit-loop receipts P1–P5 recorded above; acceptance blob `d046f0b537da92251c6d81893e816bbc0de1a252` unchanged.
+
+## Dead references
+
+The following references point to now-deleted files and are dead.
+`skills/design-feature/references/INTERVIEW.md` was deleted by
+commit `4b2e0759` (feat(61-P8b): ledger ownership re-homed to the lane
++ fix-tree unit-doc template). The file no longer exists anywhere in
+the repository.
+
+- `[interview](references/INTERVIEW.md)` (line 234): the target file
+  was deleted. The file was not moved — it was removed as part of
+  the ledger ownership re-homing.
+- Text references to `INTERVIEW.md` (lines 75, 234, 246): these mention
+  the now-deleted file by name but are not clickable links. They remain
+  as historical context describing what the file contained.
+- Issue: [#572](https://github.com/gtrabanco/agentic-workflow/issues/572)
+  (legacy-broken-links)

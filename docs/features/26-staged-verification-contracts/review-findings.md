@@ -114,3 +114,37 @@
 | F111 | packages/agentic-workflow-schema/src/index.ts:1 (worktree state: modified src/index.ts + src/verification-contract.ts, untracked test/verification-preflight.test.mjs) | workflow | high | fix-now | P18 — fold the uncommitted preflight work in (2026-08-27 default review @d58d30e): the worktree is dirty at review time — the P18 candidate bytes (bounded-capture signature change in both source files plus the red-first `test/verification-preflight.test.mjs` suite) sit outside any commit while the reviewed candidate is the pushed `d58d30e`; the workflow axis rule is that a review verdict on a branch whose real state is not committed is worthless — finish the P18 fold atomically (implementation + red-first suite + F99 flip naming the P18 commit), commit and push · default review @d58d30e, workflow axis — folded in P18 (implementation + red-first suite + F99/F111 flips in one atomic pushed commit; P17 = d58d30e); P18 = 67627b3 | yes |
 | F112 | packages/agentic-workflow-schema/scripts/check-verification-package.mjs:15-18 | code | minor | fix-now | fold into current unit (PACKAGE_ROOT is derived from `new URL("..", import.meta.url).pathname`, so a checkout path containing spaces or non-ASCII characters hands `child_process` a percent-encoded cwd and the package gate fails on a healthy package — pathname keeps `%20` where the filesystem has a space; derive it with `fileURLToPath(new URL("..", import.meta.url))`, the pattern `scripts/generate-verification-schemas.mjs` already uses) · default review @d58d30e, review-code pass — folded in the F112 batch commit (spawned regression case in `test/verification-gates.test.mjs` runs the gate from a temp checkout whose path holds a space and a non-ASCII char — red first: exit 1, `spawnSync npm ENOENT`; green after: the same 15-file / 72,596 B tarball the real checkout packs); batch SHA = 48d10f8 | yes |
 | F113 | docs/features/26-staged-verification-contracts/TASKS.md:265 | All phases complete (audit-pr) | high | fix-now | fold into current phase — complete the P21 close-out via execute-phase 26-staged-verification-contracts P21 (post-P20 gate + AC1–AC10 execution receipt recorded in progress.md; `/review-change --adversarial 3` at the terminal head — the 47b3af0f REVIEW-PASS receipt records no adversarial N=3, which P21's Done-when requires; fold the fix-now rows that review produces; `/loop-review-fold 26-staged-verification-contracts` to PASS; roadmap row 26 re-flip to `done · [#145]`; PR #145 body re-qualification at the head the close-out ends on — the body currently states no `review-change:pass` receipt exists at any head after 1380e3b, false since the 47b3af0f receipt posted 2026-08-28T11:41Z) · P21 execution @2b002601: gate + AC1-AC10 receipt landed (4e3cc4b), `--adversarial 3` ran with three isolated reviewers on three model families and the isolated classifier/debt passes; its only two fix-now rows are this row's own queue (roadmap row 26 + F113), and its fold is the roadmap re-flip plus the P21 task ticks that land in the close-out commit named in the folded column; · terminal-head re-review @ca2bd37, `--adversarial 3` again (R1 correctness, R2 security, R3 SPEC-coverage, three model families): R1 and R2 returned empty tables, and the round's one substantive row was this receipt's own headline in progress.md — it asserted "321 cases across 13 files" where the named suites sum to 319 and two feature-26 suites (defense 8, gates 13) sat outside the inventory; folded in the commit carrying this annotation, which restates the measured inventory (304 in the 15 `verification-*` files incl. docs 24, plus 60 in `canonical-legacy-compat` = 364 of 554); that fold is commit 26e2fd6, whose subject claims this id and whose diff owns the row's cited surface; the round's isolated classifier and debt transform then ran at 26e2fd6 and returned REVIEW-PASS with 0 debt items, recorded as the exact-HEAD `review-change:pass` marker at PR #145 comment 5454858503; the row still reads `no` because the only thing it now owes is `/loop-review-fold` to PASS and this tick, and a row cannot tick itself into existing — pre-asserting either would be the F106 defect in a closing commit; loop-review-fold PASS and the terminal-head re-qualification remain a separate turn because a fold commit cannot certify its own review · P21 close-out landed: gate + AC1-AC10 receipt (4e3cc4b), adversarial-3 round folded with the roadmap re-flip (e03282d); /loop-review-fold then returns PASS on this row from the current exact-HEAD marker, so the queue is now one step deep: /loop-review-fold at this head resumes from the current exact-HEAD `review-change:pass` marker and ticks this row itself, which is the only honest place for that tick — a fold commit cannot certify the review that follows it · loop-review-fold PASS consumed from the exact-HEAD `review-change:pass` marker at `19273fa7c468832c09185266f7be5e6f312e4e52` (PR #145 comment 5461523967); ticked by this F113-named fold commit · re-run /audit-pr after | yes |
+
+## Dead references
+
+The following rows reference now-deleted bilingual files (`.es.md` siblings)
+that were removed by the English-only decision (2026-09-15). These rows
+remain valid historical records of the original findings but now contain
+citations to files that no longer exist.
+
+### `README.es.md` references (deleted)
+
+The file `packages/pi-agentic-workflow/README.es.md` was deleted.
+
+| Row | Line | Context |
+|---|---|---|
+| F55 | 55 | `README.es.md:318` cited in "Where" column |
+| F68 | 68 | `README.es.md:283-332` cited in "Where" column |
+| F78 | 78 | `README.es.md:381` cited in "Where" column |
+| F96 | 99 | `README.es.md` sibling referenced in description |
+| F102 | 105 | `README.es.md` sibling referenced in "Where" column |
+| F103 | 106 | `README.es.md` reference table cited in "Where" column |
+| F104 | 107 | `README.es.md:172` cited in "Where" column |
+| F105 | 108 | `README.es.md:276-295` cited in "Where" column |
+| F110 | 113 | `README.es.md:382` cited in "Where" column |
+
+### `CHANGELOG.es.md` references (deleted)
+
+The file `CHANGELOG.es.md` was deleted.
+
+| Row | Line | Context |
+|---|---|---|
+| F90 | 86 | `CHANGELOG.es.md` cited in "Where" column |
+
+- Issue: [#572](https://github.com/gtrabanco/agentic-workflow/issues/572)
+  (legacy-broken-links)

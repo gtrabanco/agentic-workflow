@@ -73,3 +73,20 @@ Layer: hardening · Done-when: `cd packages/pi-agentic-workflow && npm test` →
 - [x] open the PR (`gh pr create --body-file …`) → **https://github.com/gtrabanco/agentic-workflow/pull/150**, printed in chat; roadmap-only traceability, so the body references feature 27 and carries no `Closes #` line
 - [x] roadmap row 27 → `done · [#150](https://github.com/gtrabanco/agentic-workflow/pull/150)`
 - [x] commit `docs: link PR #150` and push `feat/27-pi-agentic-workflow`
+
+## Dead references
+
+The following references point to now-deleted files and are dead.
+These links were valid when the file was authored but became dead after
+the English-only decision (2026-09-15) which removed all bilingual
+`.es.md` siblings from the repository.
+
+- `[Versión en español](README.es.md)` (line 62): the target
+  `packages/pi-agentic-workflow/README.es.md` was deleted by the
+  English-only decision. The counterpart `README.md` link at the same
+  location remains valid.
+- Text reference to `README.es.md` (lines 58, 61, 71): these mention
+  the now-deleted file by name but are not clickable links.
+  They remain as historical context describing what the unit tested.
+- Issue: [#572](https://github.com/gtrabanco/agentic-workflow/issues/572)
+  (legacy-broken-links)
