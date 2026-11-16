@@ -88,6 +88,30 @@ every bootstrap, never a silent default:
 - **Data / PII:** `<what data the project handles and its handling rules, or "none">`
 - **i18n:** `<locales and the translation policy, or "none">`
 
+**Objectives layer — filled at bootstrap, open-with-defaults.** Layer 3 asks
+what the repository is *for* and how this team engineers, then records each
+answer here with the workflow behaviour it toggles. An unanswered slot is
+recorded as a dated assumption (`assumed <YYYY-MM-DD> — <value>`), never a
+silent default; a value this project already declares is kept as written and
+never overwritten by a recommendation:
+
+- **Repo purpose:** `<one sentence naming the job the repository does>`
+- **Users:** `<who uses it, and whose workflow wins when two groups conflict — the identity layer's answer where it has one>`
+- **Team shape:** `<solo | small | large — how many people work here>`
+- **Optimization target:** `<speed | stability | compliance — which wins when they conflict>`
+- **Automation appetite:** `<how much trigger-driven automation, and only after which gate is stable>`
+
+**Engineering posture — filled at bootstrap, open-with-defaults.** The
+*why-grade* decisions a later unit reads instead of re-deriving: each slot
+records the team's rule, never a recommendation the team did not confirm.
+
+- **Testing strategy:** `<which test layer carries regression safety; whether uncovered code is pinned before it changes; how much property/fuzz testing>`
+- **Architectural boundaries:** `<boundary> → machine: <mechanism>` · `<boundary> → prose-only` — one entry per declared boundary, either enforced by a named rule or marked for materialization
+- **Dependency policy:** `<pinning posture; when vendoring beats a dependency; how deprecation is removed>`
+- **Production verification:** `<whether a green pipeline job or the local gate is the verification; the service signals and error budget, or "no running service">`
+- **Decision records:** `<where architecture decisions live and which ones need a record before a unit plans work>`
+- **API posture:** `<safer-API over exception-first, or the team's own error contract>`
+
 **Verification-criteria catalogue.** What "done" means *at this project*,
 beyond the workflow's generic baseline — per-surface acceptance criteria,
 which review passes apply per surface type, framework-specific gate commands,
