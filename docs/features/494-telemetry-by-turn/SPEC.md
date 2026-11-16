@@ -360,6 +360,13 @@ The unit's own tests, all run in the foreground:
   contract change in the crate. **does-not-affect** this unit's deliverable
   (the sample is written by the extension, which knows the phase); it **affects**
   any future design that wants a subprocess to amend the sample.
+- **`pi-extensible-workflows` pin drift (6.3.0 → 6.4.0)** — the registry-reachable
+  half of the gate (`dependency-pin-gate`) is red at the cut and at this unit's
+  head for a pin this change never touched: `git diff origin/main...HEAD --
+  packages/*/package.json bun.lock` is empty and both refs pin `6.3.0`.
+  **does-not-affect** this unit — a dependency bump is a deliberate `fix(deps)`
+  unit of its own (`docs/workflow/PACKAGES.md`), never a side effect of unrelated
+  work. Recorded for the owner with its evidence (E18).
 - **`docs/workflow/TIER_COST.md` is repo-local** (`find template -name
   'TIER_COST*'` → nothing), so a target project that installs the package has
   no ledger until it creates one. **does-not-affect** this unit — the sink
@@ -516,6 +523,9 @@ in the handoff to the owner.
 - **P6** — 2026-11-17, the report CLI's corpus red first (`2aefe10f`), then the CLI, the coverage gate, the schema projection and the package README · `1fcb5359`.
 - **D7** — 2026-11-17, decision (the red-first split): the first cut of the report CLI landed its suite and its module in one commit, which the repository's own `scripts/red-first.test.mjs` refused (`the pair lands in one commit (db367f9): no red commit exists`). The commit was split before any push — the suite alone (`2aefe10f`), then the implementation (`1fcb5359`) — because that gate exists to prove the corpus was seen failing, exactly as E5 records it.
 - **D8** — 2026-11-17, decision (the diff size): the change is 2,685 authored lines across 35 files in six commits, above the ~400-line slice guidance. The slices are coherent (one vocabulary, one accumulator, one sink, one grammar, one CLI, one gate) and cannot be shrunk further without deleting tests or comments — the request's own S15 names four suites that must move with it, and two more were derived (`config-contract`, `default-inherit`).
+- **E17** — 2026-11-17, the gate budget the branch needed: `node --test scripts/red-first.test.mjs` at `HEAD 1fcb5359` · the shipped-history walk took **29.2s** standalone (34.4s suite) and crossed the declared 30s budget inside a `--jobs auto` gate run, so `scripts/test-timeout-allowlist.json` carries 60s for it with the new measurement. The walk's cost is the repository's own history (54 pairs · 29 after the cutoff); no assertion moved.
+- **E18** — 2026-11-17, `bun scripts/version-parity-gate.mjs --pins --package packages/pi-agentic-workflow` at the head · exit 1 · `GATE REJECTION — dependency-pin-drift: pins pi-extensible-workflows at 6.3.0 but the registry published 6.4.0`; the same pin is on `origin/main` (`git show origin/main:packages/pi-agentic-workflow/package.json`) and `git diff origin/main...HEAD -- packages/*/package.json bun.lock` is empty — the drift is pre-existing and outside this unit (Known pre-existing issues).
+- **G2** — 2026-11-17, `bun scripts/local-gate.mjs --jobs 2` at `HEAD 450e6cce` · root-suite **exit 0 — 116 suites PASS in 266s**; the gate stops at `dependency-pin-gate` for the pre-existing `pi-extensible-workflows` drift of E18, which this unit must not bump.
 - **G1** — 2026-11-17, `node scripts/run-root-suite.mjs` over the whole branch at `HEAD 1fcb5359` · 112 suites PASS (the four reds re-run alone and green, D7 and the load artifacts named there); the four reds were machine-load artifacts, each re-run alone and green: `red-first` (a real finding, D7, fixed), `unit-route` (a 580 ms timing assertion against a 500 ms bound), `phase-lint` and `workflow-status-sensor` (suite wall-clock caps under a saturated box — 62 s and 91 s alone, against the 120 s cap).
 
 ## Next
