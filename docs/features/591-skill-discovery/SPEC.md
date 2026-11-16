@@ -485,6 +485,14 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   `receipt-malformed-head` on this document's two `G` lines (a gate receipt
   without the 40-hex head it ran against) · repaired by citing that head on each
   receipt's own first line, after which the verifier exits 0.
+- **G4** — 2026-11-16, the offline gate over the correction batch (P11) at HEAD
+  `4e70662bf189fba113854f53c19c4f35e266379c` · `bun scripts/local-gate.mjs
+  --skip-network --no-bail --jobs auto` · exit 0 · `PASS — 15 step(s) in 622s`.
+  A first run of the same gate went red on `root-suite` without the failing
+  suite's name surviving the output tail; `node scripts/run-root-suite.mjs`
+  standalone then exited 0 across 114 suites and the identical gate re-run
+  passed 15/15 — the load-marginal class G1 records, no content difference.
+  The four network steps were skipped by the flag, as in G1/G3.
 - **L3** — 2026-11-16, the owner's correction request, verbatim:
   ```
   Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
