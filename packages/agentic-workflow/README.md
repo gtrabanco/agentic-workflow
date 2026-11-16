@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -51,6 +51,7 @@ writing anything**.
 | `journal name --kind <mechanical\|narrative> [--dir <root>] [--branch <b>] [--session <id>]` | Prints the deterministic fragment name for a writer to use — the grammar below, computed, never hand-rolled. Writes nothing; a missing `--kind` is exit 2 |
 | `journal headless --workflow <w> --run-id <id> --actor <a> (--summary <t> \| --block <path\|->) [fields]` | The **headless run's writer** (issue #471): a CI-driven session has no operator, so it declares what it did (`--issue`, `--summary`, `--decisions`, `--next`, `--files`, or a rendered `--block`) plus the identifiers it carries (`--workflow`, `--run-id`, `--actor`), and this operation composes the fragment through the same owners `journal write` does — the session slot carries `gha-<run-id>` and the heading label names the workflow, the run and the actor, so a CI entry is distinguishable from an operator's inside `journal-fragment-grammar@1`'s own fields. One entry per run: a second invocation for the same run id answers `already-present` and writes nothing, so a re-run never duplicates the entry. An absent carrier, an incomplete provenance, an invalid run id or issue, a prose+block pair and a collision are exit 2 `JOURNAL REFUSAL — <reason>` before any byte lands. The distributable action in `journal/` is its adapter (`journal-headless-grammar@1` below) |
 | `resolve-passes [--global <path>] [--project <path>] [--command <name>]` | The **spawned-pass model resolution** (issue #201): reads the two routing config files (project wins per entry and per key; both optional) and prints the `resolve-passes@1` JSON table for every published pass name — `model`, `thinking`, `source`, `spawn` (`pinned \| auto \| inline`) and `reason` — with the fail-closed chain applied in code: `passes.<name>` → `passes.default` → the configured cheap tier (`commands.execute-phase`) → the inline floor at the orchestrator's model, recorded, never silent. A malformed selected route refuses before any output: exit 2, `PASSES REFUSAL — <reason>`. Read-only: it writes nothing |
+| `runner resolve [--json] [<subcommand> [args...]]` | The **programmatic runner choice** (issue #555): answers which launcher runs this package at its own pin — the closed set `bunx` → `npx --yes` → `pnpm dlx`, each gated by the runtime floors this manifest declares (`engines.bun`, `engines.node`), with `AGENTIC_WORKFLOW_RUNNER` first and a caller's installed bin second. JSON prints `source`, `program`, `argv` and the per-candidate `attempts`; with none of the set, exit 2 `RUNNER REFUSAL —` names every candidate it tried. Read-only and offline: it installs nothing and prompts nothing |
 | `verify <unit-doc-path> [--no-git]` | The **document verifier** (issue #260, non-negotiable 2 — the writer's sibling, a deterministic script and never LSP): checks a unit doc against the mirrored unit-doc schema constants — required sections and their order, obligations-ledger closure, the `doc-provenance@1` stamp (well-formed, a generation this package publishes, and in parity with the carrier the document actually carries: `provenance-invalid`, `provenance-unpublished`, `provenance-newer-than-reader`, `provenance-format-mismatch`, `provenance-grammar-mismatch` — an absent stamp is a degradation, never a violation), receipt marks (`REVIEW-RAN`/`GATE-RAN` whose head sha the repository holds and whose date is not in the future) and `## Log` kind tokens. Also the tree cross-checks (issue #227's 2026-11-03 re-scope residual): a root-relative path citation (`dir/…/file.ext`, optional `:line` suffix) must exist in the repository (`cited-path-missing`), and a `` `id` gate `` citation must resolve to something published — the gate inventory's ids, audit-pr's `GATE_NAMES`, an existing skill or script stem (`cited-gate-unknown`). Context-relative shorthand, brace expansion, commands, branch names and fenced verbatim quotes are not claims, so they are never checked; with no repo context (`--no-git`) both cross-checks are skipped and stay out of the receipt's `checks`. Fails closed: exit 0 prints the `verify@1` receipt, exit 2 prints `VERIFY REFUSAL —` naming every violation. Read-only; the writing half stays `unit-doc` |
 | `resources <detect\|admit\|check\|bound> [flags]` | The **trial-envelope layer** (issue #260 S6): `detect` prints the `resources-detect@1` host envelope (memory total/available, cgroup limit, cores/threads, derived parallelism); `admit` refuses an un-decidable brief (no `expected_duration`/`requirements`) or a requirement over the cap/envelope with a `resources-admit@1` receipt, admits a fitting bounded trial, and blocks an identical re-run after a recorded bound-kill; `check` reads a recorded trial's receipt and prints the check-in verdict with data (`resources-check@1`: within/over the estimate, unmeasurable, bound-killed), `--pid` adding the live state and cumulative CPU; `bound` prints the S6 layer-A `systemd-run --user --scope` trial envelope plus its after-exit `systemctl show` receipt read. `--json` where the output is a receipt (detect, admit, check) — `bound` prints shell lines and refuses it. `admit --record-dir` is the one writer (the receipt it records) |
 | `provision rg [--yes] [--dir <root>] [--json]` | The **ask-first `rg` bootstrap** (issue #269's remaining P1 scope): skips entirely when `rg` is on PATH; otherwise asks before installing (a non-interactive run without `--yes` is a `refused-consent` refusal, never a silent install) and records consent in `<root>/.agentic-workflow/provision-log.jsonl`; installs through user-scoped managers only — brew, cargo, npm, bun, pipx, scoop, in that order, **no sudo/root ever** (a root process is refused before anything runs); with no manager it downloads the pinned ripgrep 15.2.0 binary, verifies the embedded sha256 before any byte lands, and lands it in `~/.local/bin` when writable and on `$PATH`, else `<root>/.agentic-workflow/bin/` plus the `.gitignore` entry. Receipt `provision-rg@1`: `installed \| already-installed \| refused-*`, exit 0 success · 1 refusal · 2 usage. One owner — `src/provision/rg.mjs` — injectable, so tests cover the whole contract without a real manager or download |
@@ -61,6 +62,7 @@ writing anything**.
 | `pre-execution-snapshot <build\|verify\|contract> [flags]` | The **pre-execution snapshot** (feature 91): `build` writes the `pre-execution-snapshot@1` receipt for a stage (content-bound digests of the bound paths, plus a parent digest for a feature plan stage), `verify` re-derives a receipt's bound digest and reports drift, `contract` prints the published contract constants. `--root` re-points the sensed repository. Exit 0 ok · 1 a real error (named, never a stack trace in the receipt) |
 | `needs-input <unit-dir> [--json]` | The **open-question sensor** (feature 91): reads the unit's `decisions.md` `open-questions@1` ledger and prints the block (`open-questions@1`, open count, entries, route back) or the refusal naming the defective row. Exit 0 answered · 1 refused · 2 usage. Read-only |
 | `ledger-provenance <ledger-or-unit-doc> [--json] [--check] [--annotate]` | The **fold-queue recount** (feature 91): reads a `## Findings` table (or a legacy `review-findings.md`) and proves each `folded: yes` row cites a commit that is reachable and whose subject claims that row. `--check` runs the same walk read-only and exits 1 on any row needing a repair, naming the rows by cause; `--annotate` is the one writer. Exit 0 clean · 1 repair needed · 2 usage |
+| `quality-metrics [--window <days>] [--until <instant>] [--repo <dir>] [--out <path>]` | The **project-quality sensor** (feature 558, issue #565): the DORA four keys plus the reversion ratio over a trailing window (default 90 days), printed as the `quality-metrics@1` document the schema package publishes — six metric rows, every row carrying a `measured`/`derived`/`unavailable` label, and a metric that cannot be computed naming its cause instead of reporting a zero. `--until` pins the window's end so a report is reproducible; `--out` is the only byte it may write. Read-only: every git and forge call is a read, the forge dimension is bounded, and an unreadable forge or a history that truncates the window degrades the affected rows in `degraded`. Exit 0 a validated document · 2 a refusal (bad flag or value, nothing measured) · 1 an unexpected failure. The metric definitions are `quality-metrics@1` below |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | The **unit router** (feature 91, moved out of the repository's `scripts/`): reads one unit doc's own ledger and prints the `UNIT ROUTE —` block — `status`, `route`, `next`, the open row ids, the bounded read set, `review-cycles`, `ledger-size` and a `fingerprint` — or, with `--triage <unit> --json`, the closed nine-step plan block derived from the bundled catalog (`src/runner/catalog.json`). Read-only, offline, dependency-free beyond the pinned schema package; exit 0 answered · 1 usage · 2 triage refusal. The project it senses is the worktree enclosing the caller's working directory, so it runs from any sub-directory of the project |
 
 | `doctor [--json] [--root <dir>]` | The **tool doctor** (issue #537): one read-only check per documented tool surface, printing the fixed `doctor@1` envelope — the host, one row per surface with its real evidence (resolved path, version, version pair, health probe, config state), the derived move, and the summary/verdict. Exit 0 when no required surface is broken · 1 when one is. A missing optional tool is an advisory that never fails the run. `--root` re-points the project it observes. It writes nothing, and it never runs a package manager: an install is text an operator pastes. The documented inventory it validates is `tool-inventory@1` below, and a documented row without a probe (or a probe without a documented row) is a `DOCTOR REFUSAL`, exit 2 |
@@ -457,3 +459,126 @@ in under half a second each. `runProbe({ fetchImpl, runImpl, timeoutMs,
 totalTimeoutMs })` takes its side effects by injection, so the suite drives
 every degraded path with fakes and millisecond bounds — no network, no PATH, no
 real engram process.
+
+## `quality-metrics` — the project-quality sensor (feature 558, issue #565)
+
+`workflow-status` measures workflow *state*. This measures workflow *quality*:
+the DORA four keys — change-failure rate, lead time for change, and their two
+companions — plus the reversion ratio, computed from git history and forge data
+over a trailing window and printed as one validated document.
+
+Three things it will not do: it never advises, never gates and never fixes. It
+reports, and interpretation is the caller's.
+
+**Read-only.** Every `git` and `gh` call is a read. `--out <path>` is the only
+byte the command may write, and it writes exactly the bytes stdout carried.
+**One project.** `--repo <dir>` scopes every reader — git, forge and corpus — to
+the directory it names: the forge reads run inside it, so one document never
+carries two projects' rows.
+**Bounded.** Each git call has a 15 s bound, the three forge reads share one 30 s
+budget with a 10 s per-call cap, and the first-commit read is a bounded sample
+(see *Why a sample* below). **Fail closed.** A metric that cannot be computed is
+`unavailable` with a `reason`, and that reason also appears in `degraded`; a
+metric whose sources answered but whose denominator is empty carries a
+`no-<observation>` reason. Neither is ever a zero.
+
+### The window
+
+The document measures `[until − days, until]`. `days` defaults to 90 and is the
+`--window` flag; `until` is the flag of the same name, defaulting to the run's
+instant, so a report is reproducible when the caller pins it. A report is
+therefore auditable: the window that produced a number travels inside it.
+
+### The metric definitions — the one home
+
+| Metric | Formula | Unit | Confidence |
+|---|---|---|---|
+| `reversion_ratio` | revert commits ÷ total commits in the window | ratio (0..1) | `derived` — the revert identification is a message heuristic |
+| `change_failure_rate` | deploys merged in the window that a revert names ÷ deploys merged in the window | ratio (0..1) | `derived` — the linkage is a heuristic and cannot see a deploy merged by hand |
+| `lead_time_for_change` | median of first commit → merge over the sampled merged pulls inside the window | hours | `measured`, demoted to `derived` when the sample is truncated |
+| `pr_volume` | pulls opened inside the window, with merged carried beside it | count | `measured`, demoted to `derived` when the created read hits its cap |
+| `review_latency` | median of pull opened → first submitted review over the in-window pulls that carry a review | hours | `measured`, demoted to `derived` when the created read hits its cap |
+| `escaped_defects` | open rows of the unit-doc findings corpus, with the document count beside it | count | `measured` — or `unavailable` when there is no corpus |
+
+Median, not mean: one pull that sat open for a month should not move the
+number a team acts on. Hours are rounded to two decimals and ratios to four, so
+the same sources and the same window produce byte-identical bytes.
+
+**The two revert heuristics.** A commit is a revert when `git revert` wrote it:
+its subject starts `Revert "`, or its body carries `This reverts commit <oid>.`
+The second form is also where the target oid comes from.
+Its **false-positive shape**: a hand-written subject that literally starts
+`Revert "` but reverts nothing, which inflates the ratio. Its
+**false-negative shape**: a revert committed with a custom message, folded into
+another change, or squashed into a merge, which deflates it. The two readings of
+"% of commits reverted" are both reported rather than conflated: this ratio
+counts the *revert commits* (needing no linkage), and the *reverted deploys* are
+`change_failure_rate`'s numerator.
+
+**Why a sample.** `gh pr list --json commits` builds a GraphQL query whose
+`authors` connection explodes past GitHub's 500,000-node ceiling at roughly 100
+pulls (measured: 40 answers, 100 fails), so the first-commit read asks for the
+25 most recent merged pulls and the row says so when that is fewer than the
+window's deploys. The deploy read and the created read ask for up to 1,000 rows
+each, and **every row resting on a capped read drops to `derived`**: a subset is
+never reported as a measurement, and the detail line names which read was
+capped and at what.
+
+**The escaped-defect slot is a slot.** It reports the open rows of the
+findings corpus — the unit docs' `## Findings` tables and the legacy
+`review-findings.md` ledgers, read through the fold queue's own parsers — and
+says `unavailable` when a project carries no corpus. The corpus has no
+per-row timestamp, so the window does not apply to it, and the row says that
+too. Read it as an **upper bound**: a migrated unit's `## Findings` table only
+carries rows nobody folded, but a legacy ledger can still show `folded: no` on
+a unit that merged long ago, so on a mature project the number counts ledger
+debt beside live escapes. The row's `detail` names that reading instead of
+implying a defect count.
+
+### The degradation codes
+
+| Code | Cause |
+|---|---|
+| `unavailable-forge-missing-cli` | `gh` is not on PATH |
+| `unavailable-forge-timeout` | a forge read exceeded its bound, or the dimension's budget was spent |
+| `unavailable-forge-auth` | the forge answered an authentication failure |
+| `unavailable-forge-no-network` | the forge read failed for any other reason |
+| `unavailable-forge-malformed-answer` | the forge answered something that is not the expected JSON list |
+| `unavailable-history-not-a-repository` | the path is not a git worktree (or `git` is absent) |
+| `unavailable-history-unreadable` | a git read failed after the repository was found |
+| `unavailable-history-shallow` | the clone is shallow **and** its oldest commit is inside the window, so the window's commit count is a subset |
+| `unavailable-findings-corpus` | the project carries neither `docs/features/` nor `docs/fix/` unit documents |
+
+A shallow clone whose history still reaches past `since` is **not** degraded:
+coverage is asked of the history, not of the flag. And the zero-observation
+reasons (`no-commits-in-window`, `no-deploys-in-window`, `no-pulls-in-window`,
+`no-reviews-in-window`) are answers about the window, not failures — they are
+never listed in `degraded`.
+
+### The document — `quality-metrics@1`
+
+The contract id is `agentic-workflow/quality-metrics`, the version is 1, and the
+schema package publishes the validator (`validateQualityMetrics`) and the
+draft-07 projection (`quality-metrics.schema.json`). The core is closed: an
+unknown key anywhere is refused, and the two vocabularies (`QUALITY_METRIC_NAMES`,
+`QUALITY_CONFIDENCES`) are the sets a consumer switches on.
+
+```text
+quality-metrics@1
+field | shape | what it orders
+contract | agentic-workflow/quality-metrics | the document's identity
+version | 1 | the core version; a field change bumps it
+schema | quality-metrics@1 | the token a reader dispatches on
+source_revision | <7-40 hex> or null | the commit the report is anchored on; null when the history is unreadable
+window.days | integer 1..3650 | the trailing day count the report measured
+window.since | UTC instant | the window's opening instant, exactly `days` before its end
+window.until | UTC instant | the window's closing instant
+degraded | array of unavailable-<source>-<cause> | every source failure behind the unusable rows, deduplicated and sorted
+metrics.<name> | one row per published metric name | the six rows; the name set is closed
+row.confidence | measured \| derived \| unavailable | how far the value may be trusted, and never decoration
+row.value | number or null | the measurement; null exactly when the row is unavailable
+row.unit | ratio \| hours \| count | fixed by the metric, never chosen by a producer
+row.reason | string or null | the declared cause: a code from `degraded`, or a no-<observation> code; null when measured
+row.detail | 1..512 characters | the heuristic, the sample and the denominator in one readable line
+row.components | closed per metric | the counts the value was computed from (see the definitions table)
+```

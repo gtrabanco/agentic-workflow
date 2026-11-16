@@ -215,11 +215,13 @@ const CREATED_SCRIPT = /\bscripts\/[A-Za-z0-9_.-]+\.mjs\b/;
 /** A Turn-contract box invoking a script. */
 const SCRIPT_INVOCATION = /\b(?:node|bun)\s+scripts\/([A-Za-z0-9_.-]+\.mjs)([^\n`]*)/g;
 /**
- * The same claim in the shipped runner's spelling (feature 91): a box that runs
- * `bunx @gtrabanco/agentic-workflow@<pin> <subcommand> …` names the subcommand,
- * which is the module's own name without its extension.
+ * The same claim in the shipped runner's spelling (features 91 and 555): a box
+ * that runs the symbolic `` `runner <subcommand> …` `` citation (the form
+ * RUNNER.md owns) names the subcommand, which is the module's own name without
+ * its extension. The backtick is part of the match, so prose that merely says
+ * "the runner" is not an invocation.
  */
-const RUNNER_INVOCATION = /\b(?:bunx|npx)\s+@gtrabanco\/agentic-workflow@[^\s`]*\s+([a-z][a-z0-9-]*)([^\n`]*)/g;
+const RUNNER_INVOCATION = /`runner\s+([a-z][a-z0-9-]*)([^\n`]*)/g;
 
 /* ------------------------------------------------------------------ files */
 

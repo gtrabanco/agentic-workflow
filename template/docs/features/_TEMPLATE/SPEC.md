@@ -84,7 +84,7 @@ What this unit is NOT. Findings discovered during implementation never expand sc
 ## Risk tier
 
 The unit's ceremony is proportional to risk, and the tier is **computed, never
-chosen**: `bunx @gtrabanco/agentic-workflow@<pin> ceremony tier classify` reads the change's paths and
+chosen**: `runner ceremony tier classify` reads the change's paths and
 contents and emits `passive | standard | high` (owner:
 `skills/execute-phase/references/risk-tiers.md`, block `risk-tier-verdict@1`).
 Copy the verdict below verbatim; a tier written from memory is not a tier.
@@ -172,7 +172,7 @@ and this section names it — never both. Before the unit ships, every row is
 
 ## Triaged steps
 
-> Paste the `## Triaged steps` block from `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <slug>`
+> Paste the `## Triaged steps` block from `runner unit-route --triage <slug>`
 > here verbatim. This block is the machine's authoritative step list; the lane
 > never re-derives or reorders it (owner: `skills/unit-lane/SKILL.md` §Turn contract).
 

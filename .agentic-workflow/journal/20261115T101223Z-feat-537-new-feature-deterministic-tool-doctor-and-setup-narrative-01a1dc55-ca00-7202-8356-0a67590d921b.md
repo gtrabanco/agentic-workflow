@@ -1,6 +1,0 @@
-## 2026-11-15T10:12:23Z — feat/537-new-feature-deterministic-tool-doctor-and-setup — narrative
-- **Commits:** 19 (`065af558…07fdef01`)
-- **Files:** 30 files
-- **Summary:** Shipped issue 537: deterministic tool doctor (agentic-workflow doctor) and consent-gated setup wizard (agentic-workflow setup) as PR #558 against main.
-- **Decisions:** The drift gate flagged 'route' as the skill-route vocabulary → renamed the column install-route so every real install route (npm, brew, tarball, etc.) stops being classified as unknown-route. Eager imports at the top of the bin cost ~60 ms/spawn and pushed three spawn-heavy root suites over their 10 s budget → lazy await import() inside the command case. The pre-push hook re-ran the local gate twice: one push was blocked by setup-env.test.mjs crossing its per-test budget (fixed by declaring it in test-timeout-allowlist.json); the other by a pre-existing mid-write read race between crate-suite-bun and root-suite on agentic-workflow-schema/dist (worked around by running tsc before the gate). The roadmap row was settled done · [#558](…) through the crate's writer, the projection re-rendered, and the journal fragment landed at .agentic-workflow/journal/.
-- **Next:** Wait for the owner's external verify on PR #558; if approved, merge with the squashed option.

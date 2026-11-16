@@ -32,6 +32,7 @@ import {
   renderReport,
   run,
 } from "./dependency-advisory-pass.mjs";
+import { semverGt } from "./version-parity-gate.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -466,4 +467,43 @@ test("the local gate runs the pass in the degraded-not-failed step", () => {
   assert.match(block, /report-only/iu, "the step says the pass cannot fail the gate");
   assert.match(block, /never fails/iu, "the degraded-not-failed contract is stated in the step");
   assert.match(block, /network: true/u, "the pass is the online half, so the pre-push subset skips it");
+});
+
+/* --------------------------------------------- issue #570 (the resolved floor) */
+
+/**
+ * The floor tracked by issue #570: the release that closes the four
+ * blocking-ladder `undici` advisories (GHSA-2m5v-pch6-74hx,
+ * GHSA-4w7w-5xrc-9h26, GHSA-qrxm-fqhp-jwvm, GHSA-xjj6-f33q-929c).
+ *
+ * A literal on purpose. A floor derived from the receipt would move with the
+ * receipt, and the whole point is that it cannot move down.
+ */
+const UNDICI_FIX_FLOOR = "8.12.2";
+
+/** The floor's violation message, or null when the resolved tree clears it. */
+function undiciFloorViolation(packages) {
+  const resolved = packages.find((entry) => entry.name === "undici");
+  assert.ok(resolved, "undici is absent from the resolved tree — the advisory floor cannot be judged");
+  if (!semverGt(UNDICI_FIX_FLOOR, resolved.version)) return null;
+  return (
+    `undici resolves ${resolved.version}, below the ${UNDICI_FIX_FLOOR} advisory fix floor ` +
+    "(GHSA-2m5v-pch6-74hx, GHSA-4w7w-5xrc-9h26, GHSA-qrxm-fqhp-jwvm, GHSA-xjj6-f33q-929c)"
+  );
+}
+
+test("the committed tree resolves undici at or above the advisory fix floor", () => {
+  // Issue #570 tracked this state so it "cannot drift silently": the peer
+  // toolchain pins undici exactly, so a stale lock keeps a fixed advisory open
+  // across audits. The floor is asserted here rather than left to the walks,
+  // because `pin-watch` and the pin gate read `packages/*` manifests and cannot
+  // see a transitive resolution or the root override that now carries it.
+  const violation = undiciFloorViolation(collectResolved({ root: ROOT }));
+  assert.equal(violation, null, violation);
+});
+
+test("the floor assertion is not vacuous: a sub-floor resolution fails it", () => {
+  const violation = undiciFloorViolation([{ name: "undici", version: "8.10.2", direct: false }]);
+  assert.match(violation, /undici resolves 8\.10\.2, below the 8\.12\.2 advisory fix floor/u);
+  assert.equal(undiciFloorViolation([{ name: "undici", version: "8.12.2", direct: false }]), null);
 });
