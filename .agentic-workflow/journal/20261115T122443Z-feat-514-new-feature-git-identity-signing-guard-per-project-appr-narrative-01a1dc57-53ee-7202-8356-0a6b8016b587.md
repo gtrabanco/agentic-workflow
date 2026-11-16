@@ -1,6 +1,0 @@
-## 2026-11-15T12:24:43Z — feat/514-new-feature-git-identity-signing-guard-per-project-approved-identity — narrative
-- **Commits:** 7 (`583f5536…7b55197a`)
-- **Files:** 13 files
-- **Summary:** Push P12 correction batch: 6 commits landed on origin/feat/514-new-feature-git-identity-signing-guard-per-project-approved-identity, resolving all 3 external-verify blockers (duplicate NN-row in roadmap, false root-suite claims, stale obligations) — the NN-row writer fix (shared nnRowIndexes scope, last-match-wins across rowUpsert/findRow/annotate) plus docs settlement and G10 evidence. The push itself required 2 retries under concurrent machine load (another session's gate campaign), then accepted green.
-- **Decisions:** G10: default-mode root-suite kills by 120s suite wall-clock under load; serial-mode --jobs 1 proves green 113/0; the fix is documented, never a silent gap. Load 1.88 accepted push, 9.13 refused at ceremony suites — the failure was the machine, not the branch.
-- **Next:** Owner: external verification of the receipt head (7b55197a) on this branch, then integration with origin/main via PR #556 — the 552 merges touched docs/ROADMAP.md and docs/generated/units.md, so review the joint conflict area.

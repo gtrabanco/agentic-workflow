@@ -1,6 +1,0 @@
-## 2026-11-15T21:43:35Z — feat/541-new-feature-nan-preset-ships-the-doc-index-embed — narrative
-- **Commits:** 15 (`85caa101…7fc6b1af`)
-- **Files:** 30 files
-- **Summary:** External verify of fix/541 (1 blocker, 2 advisories, verdict NEEDS-DECISION): the blocker was a citation defect — P2/AC-S3/O1-O3 named test/doc.config.test.mjs (file on no ref) instead of test/doc.store.test.mjs (37 pass); corrected in one batch (bba4fb88 + 7fc6b1af), all 15 obligations verified, root suite 113 PASS, local-gate 19 steps PASS. Then doc --sync on this repo — full backfill: 1266 files, 11336 chunks, 0 pending, model=qwen3-embedding, no provider degradation, 56m09s, tree clean.
-- **Decisions:** Repoint the citation rather than move the test suite: test/doc.store.test.mjs already hosts the doc config describes and the red commit 4bb3a73a put them there, so moving tests would rewrite history for no behaviour gain; D6 records the issue's verbatim first AC as out-of-domain for automated verification (no provider key or network in the verifying environment) with AC-S6/O11 as the unit's observable criterion
-- **Next:** Delta EXTERNAL VERIFY at bba4fb88 (re-verify the one blocker + spot check), then merge PR #561
