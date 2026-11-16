@@ -24,6 +24,7 @@
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *   agentic-workflow resolve-passes [--global <path>] [--project <path>] [--command <name>]
  *   agentic-workflow verify <unit-doc-path>
+ *   agentic-workflow charter <state|land|check> --guide <path> [--answers <path|->] [--bank <path>]
  *   agentic-workflow config <get|set|list|show|validate|init|reset|schema> [path] [value] [--scope global|project|resolved|both] [--project <dir>] [--global-dir <dir>] [--json]
  *
  * --json prints the operation receipt as JSON.
@@ -46,6 +47,13 @@
  * and `obligations` verifies the unit's obligations ledger is closed. It is the
  * same module `scripts/relay-packet.mjs` runs, so a project that carries only
  * the crate gets the identical block. Read-only: it writes nothing.
+ *
+ * `charter` (unit 556) is the engineering interview's deterministic half: `state`
+ * reports the guide's `## Project charter` slots, `land` writes answers into the
+ * placeholders without ever overwriting a team convention (and records a
+ * recommendation as a dated assumption), and `check` refuses a bank question that
+ * cites no source, toggles one behaviour, states no condition, or lands in a slot
+ * the guide does not carry. Only `land` writes, and it refuses before any byte moves.
  *
  * `verify` (issue #260) is the document verifier — non-negotiable #2's tool,
  * distinct from the `edit` writer CLI: it reads one unit document against the
@@ -152,6 +160,7 @@ import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
 import { checkTrial, boundLine, parseDuration, CheckError, readPidLive } from "../src/resources/check.mjs";
 import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
+import { run as runCharter } from "../src/charter/interview.mjs";
 import { createFeedback, parseFeedbackArgs } from "../src/feedback/index.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -592,7 +601,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -739,6 +748,15 @@ switch (command) {
     }
     process.stdout.write(`VERIFY PASS — ${JSON.stringify({ ...result, violations: [] }, null, 2)}\n`);
     process.exit(0);
+    break;
+  }
+
+  // ── charter — the engineering interview's landing and bank check (unit 556) ──
+  case "charter": {
+    // The interview itself is prose (the answers are a conversation); this is the
+    // deterministic half: where an answer lands (`state`/`land`) and whether a
+    // question earned its place (`check`). `land` is the only writer.
+    process.exit(runCharter(restArgs));
     break;
   }
 
