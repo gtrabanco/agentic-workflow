@@ -165,7 +165,7 @@ verdict instead of the TDD ceremony). The frozen-failure corpus is instead the
 - P2 — Record the frozen-failure corpus RED at base before any edit: the three
   cells are nameless while the emitter reports the tree in sync (§2).
   (Implements: S1, S2, S3)
-  (validator: `rg -c 'issues/563|issues/564|issues/565' docs/ROADMAP.md` exits 1 — 0 matches at base)
+  (validator: `rg -c 'issues/563|issues/564|issues/565' docs/ROADMAP.md` matches 3)
   - Relevant files: docs/ROADMAP.md
 - P3 — Add each unit's own issue link to the three `roadmap_summary:` lines, in
   the 553–555 sibling form.
@@ -215,13 +215,13 @@ required failure state (9-column shape owned by
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S5 | Each of the three unit docs' `roadmap_summary:` opens with its own issue link, in the 553–555 sibling form (`Issue [#NNN](url) (M): <the existing summary, verbatim>`) | P3 | P3 | direct application (this session) | `rg -c '^roadmap_summary: Issue \[#56[345]\]' docs/features/55[678]-*/SPEC.md` matches 3 | `E` line in this doc's `## Log` naming the command and the count | planned |
-| O2 | S1, S3, S5 | The three summary cells carry the refs after a render, and a second render is a fixed point — the refs cannot be reverted the way `811ff65a` reverted them | P4 | P4 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0 with `Roadmap: docs/ROADMAP.md — unchanged`, and `sed -n '/^\| 55[678] \|/p' docs/ROADMAP.md \| rg -c 'issues/56[345]'` matches 3 | `E` lines naming the render, the `--check` verdict and the count | planned |
-| O3 | S1, S2, S3 | The frozen failure, reproduced at base before any edit: the three cells name no issue while the emitter reports the tree in sync — the RED corpus this change closes | P2 | P2 | direct application (this session) | `rg -c 'issues/563\|issues/564\|issues/565' docs/ROADMAP.md` exits 1 — 0 matches at base `f49998f5`; the same command at the change matches 3 | `E` lines naming the base run (0) and the change run (3) | planned |
-| O4 | S2 | Issue-keyed consumers match a row to its open forge issue: `findRow`'s `description` for NN 556/557/558 opens with `Issue [#56N](`, the number `rowNumber` recovers is the forge issue, and that issue is `OPEN` | P4 | P4 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap read docs/ROADMAP.md --nn 556 --json` matches `"description": "Issue [#563](` | `E` line quoting the three `description` values and the three forge states | planned |
-| O5 | S4 | Compatibility invariant: no other cell of the Features table moves, rows 553–555 stay byte-identical, and no table byte is hand-written — the diff's only `docs/ROADMAP.md` content lines are the three summary cells plus this unit's fix row | P4 | P4 | direct application (this session) | `git diff main -- docs/ROADMAP.md \| rg -c '^[-+][^-+]'` matches 8; `git diff main -- docs/ROADMAP.md \| rg -c '^[-+]\| 55[345] \|'` exits 1 | `E` line naming both diffs | planned |
-| O6 | S1–S5 | No previous behaviour regresses on the surfaces this change reads or writes: the emitter, roadmap and unit-doc suites stay green, and the readers report clean | P6 | P6 | direct application (this session) | `bun test scripts/docs-generate.test.mjs scripts/roadmap-settle.test.mjs scripts/index-document.test.mjs scripts/unit-doc-contract.test.mjs` exits 0 | `E` line naming the suite totals | planned |
-| O7 | S1 | This unit's `## Fixes` row is written by the crate's writer (status `in-progress`, Notes naming this SPEC) and the unit doc's `roadmap_summary:` is that Notes cell's single source, so the next render cannot revert it | P5 | P5 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap read docs/ROADMAP.md --nn 569 --json` matches `"status": "in-progress"` | `E` line quoting the read receipt, its `description`, and the following `--check` verdict | planned |
+| O1 | S5 | Each of the three unit docs' `roadmap_summary:` opens with its own issue link, in the 553–555 sibling form (`Issue [#NNN](url) (M): <the existing summary, verbatim>`) | P3 | P3 | direct application (this session) | `rg -c '^roadmap_summary: Issue \[#56[345]\]' docs/features/55[678]-*/SPEC.md` matches 3 | `E` line in this doc's `## Log` naming the command and the count | verified (E7; one match per unit) |
+| O2 | S1, S3, S5 | The three summary cells carry the refs after a render, and a second render is a fixed point — the refs cannot be reverted the way `811ff65a` reverted them | P4 | P4 | direct application (this session) | `rg -c '^\| 55[678] \|.*issues/56[345]' docs/ROADMAP.md` matches 3 | `E` lines naming the render, the `--check` verdict and the count | verified (E8 render · E9 fixed point + 3) |
+| O3 | S1, S2, S3 | The frozen failure, reproduced at base before any edit: the three cells name no issue while the emitter reports the tree in sync — the RED corpus this change closes | P2 | P2 | direct application (this session) | `rg -c 'issues/56[345]' docs/ROADMAP.md` matches 3 | `E1` (base `f49998f5`: exit 1, 0 matches — the RED) and `E9` (the change: 3) | verified (E1 = 0 at base · E9 = 3 at change) |
+| O4 | S2 | Issue-keyed consumers match a row to its open forge issue: `findRow`'s `description` for NN 556/557/558 opens with `Issue [#56N](`, the number `rowNumber` recovers is the forge issue, and that issue is `OPEN` | P4 | P4 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap read docs/ROADMAP.md --nn 556 --json` matches `"description": "Issue [#563](` | `E` line quoting the three `description` values and the three forge states | verified (E10; three descriptions, three `OPEN`) |
+| O5 | S4 | Compatibility invariant: no other cell of the Features table moves, rows 553–555 stay byte-identical, and no table byte is hand-written — the diff's only `docs/ROADMAP.md` content lines are the three summary cells plus this unit's fix row | P4 | P4 | direct application (this session) | `git diff main -- docs/ROADMAP.md \| rg -c '^[-+][^-+]'` matches 8 | `E11`'s diff pair (8 changed content lines; 0 for a `55[345]` row) | verified (E11: 8 lines, 0 rows 553–555) |
+| O6 | S1–S5 | No previous behaviour regresses on the surfaces this change reads or writes: the emitter, roadmap and unit-doc suites stay green, and the readers report clean | P6 | P6 | direct application (this session) | `bun test scripts/docs-generate.test.mjs scripts/roadmap-settle.test.mjs scripts/index-document.test.mjs scripts/unit-doc-contract.test.mjs` exits 0 | `E` line naming the suite totals | verified (E13: 69 pass · 0 fail; settle PASS · 0 violations) |
+| O7 | S1 | This unit's `## Fixes` row is written by the crate's writer (status `in-progress`, topic matching the unit folder, Notes naming this SPEC) and the unit doc's `roadmap_summary:` is that Notes cell's single source, so the next render cannot revert it | P5 | P5 | direct application (this session) | `bun scripts/roadmap-settle.mjs` exits 0 | `E` line quoting the row verbatim, the two writer receipts and the `roadmap check` verdict | verified (E12: `roadmap check` PASS · 0 violations; E13 settle PASS) |
 
 ## Triaged steps
 
@@ -294,11 +294,114 @@ this flow.
   `node_modules` and the CLI refused with `Cannot find package
   'mdast-util-from-markdown'` — `bun install --frozen-lockfile` → `164 packages
   installed [3.29s]`, after which every reader answered.
+- **D1** — 2026-11-16, the `passive` tier and the §5 unit-doc order coexist: the
+  classifier's verdict is copied verbatim into `## Risk tier` and this doc is
+  cut anyway, with no `docs/passive/` record beside it — the fix #500 / #527 /
+  #560 precedence, one change one carrier. Authority: the owner's local
+  workflow §5; `PE-009`.
+- **D2** — 2026-11-16, each summary keeps a `(M)` size marker beside its new
+  issue link. S5 asks for the refs and S1 compares the rows to siblings 553–555,
+  every one of which opens `Issue [#NNN](url) (M): …`; each unit doc already
+  declares `scope: medium`, so the marker restates a committed fact instead of
+  inventing one. Authority: S1's sibling form; `PE-003`.
+- **E7** — 2026-11-16, O1 and P3: `rg -c '^roadmap_summary: Issue
+  \[#56[345]\]' docs/features/55[678]-*/SPEC.md` → `556:1`, `557:1`, `558:1`
+  (exit 0); the per-unit mapping `rg -c 'roadmap_summary: Issue [#<its own>]'` →
+  `1` for 556→#563, 557→#564, 558→#565.
+- **E8** — 2026-11-16, O2 and P4, the render: `bun scripts/docs-generate.mjs
+  --dry-run` → `Roadmap: docs/ROADMAP.md — would update`; `bun
+  scripts/docs-generate.mjs` → `Files: 1 written · 0 deleted · 2 unchanged` /
+  `Roadmap: docs/ROADMAP.md — updated`; `git diff --stat -- docs/ROADMAP.md` →
+  `1 file changed, 3 insertions(+), 3 deletions(-)`.
+- **E9** — 2026-11-16, O2 and O3's change pole: `bun scripts/docs-generate.mjs
+  --check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale · 0 orphaned` /
+  `Roadmap: docs/ROADMAP.md — unchanged` / `verdict: PASS`; `rg -c
+  'issues/563|issues/564|issues/565' docs/ROADMAP.md` → `3` (O3's base pole is
+  `E1`'s 0 matches, exit 1).
+- **E10** — 2026-11-16, O4, the issue-keyed read path: `roadmap read
+  docs/ROADMAP.md --nn 556/557/558 --json` → `description` opens `Issue
+  [#563](https://github.com/gtrabanco/agentic-workflow/issues/563)`,
+  `[#564](…)`, `[#565](…)` respectively; `gh issue view 563/564/565 --json
+  state` → `OPEN`, `OPEN`, `OPEN`.
+- **E11** — 2026-11-16, O5, the compatibility invariant: `git diff main --
+  docs/ROADMAP.md | rg -c '^[-+][^-+]'` → `8` (the three summary cells and this
+  unit's fix row); the same diff for a changed `55[345]` row line · exit 1 (`0`
+  matches) — rows 553–555 are untouched.
+- **E12** — 2026-11-16, O7 and P5, the index row through the crate's writers:
+  `roadmap fixrow` on a `/tmp` copy of the table first (before/after
+  `27e5b740 → 4b3dd2e1`, and a repeated write `4b3dd2e1 → 4b3dd2e1` —
+  idempotent); the live write `27e5b740 → 4b3dd2e1`, then a second one naming
+  the topic after `roadmap check` reported `slug-mismatch` (`4b3dd2e1 →
+  98488a9b`, `D3`). The row now reads `| [#569](…/issues/569) |
+  roadmap-rows-issue-links | in-progress | Issue [#569](…): … SPEC:
+  [SPEC](fix/569-roadmap-rows-issue-links/SPEC.md) |`, and `roadmap check
+  docs/fix/569-roadmap-rows-issue-links/SPEC.md` → `verdict: PASS` /
+  `violations: 0`. The emitter then projected the status (`Files: 1 written ·
+  0 deleted · 2 unchanged`, `Roadmap: docs/ROADMAP.md — unchanged`) and
+  `--check` went back to `0 stale · 0 orphaned`.
+- **D3** — 2026-11-16, the fix row's topic cell moves `roadmap-issue-refs` →
+  `roadmap-rows-issue-links`: `roadmap check` reads the unit folder's topic and
+  the row's, and reported `slug-mismatch — doc folder says
+  'roadmap-rows-issue-links', row says 'roadmap-issue-refs'`. The row was
+  registered by triage before a folder existed. Corrected through `fixrow`
+  (never by hand), which also makes this doc's `roadmap_summary:` the Notes
+  cell's single source — the same clobber class this unit repairs, prevented on
+  its own row. Authority: S3/S4's mechanism; O7.
+- **E13** — 2026-11-16, O6 and P6, the readers and the affected suites: `bun
+  test scripts/docs-generate.test.mjs scripts/roadmap-settle.test.mjs
+  scripts/index-document.test.mjs scripts/unit-doc-contract.test.mjs` · exit 0 ·
+  `69 pass · 0 fail` across 4 files (9.07s); `bun scripts/roadmap-settle.mjs` ·
+  exit 0 · `219 unit docs checked · 0 fix docs skipped` / `verdict: PASS` /
+  `violations: 0`; `bun scripts/test-impact.mjs --base main` · `verdict: empty`
+  · `changed: 6` · `executable: 0` · `reason: no executable path changed —
+  record this verdict, run no TDD ceremony, invent no test` (`PE-010`).
+- **D4** — 2026-11-16, `docs/LOGS.md` is not aggregated in this change: the
+  narrative fragment is committed as the session door's output and `journal
+  aggregate --check` validates it, while the append itself is the aggregation
+  step that consumes **every** pending fragment — six others from other units
+  sit in this tree and are not this change's to fold. The fix #527 precedent
+  (`## Log` `P3`), disclosed rather than silently left pending.
+- **D5** — 2026-11-16, three validator cells were rewritten before the ledger
+  closed, with the reason recorded rather than the cells quietly relaxed: (1)
+  O3's and P2's cell declared the **base** pole (`exits 1`), which cannot
+  reproduce once the change lands — the base pole moves into `required-evidence`
+  as `E1` and the cell keeps the change pole; (2) O3's alternation was written
+  `issues/563\|issues/564\|issues/565` inside a markdown table, where the
+  escaped pipe is a **literal** to the shell and to `rg`, so the claim read 0
+  matches (exit 1) instead of 3 — rewritten as the character class
+  `issues/56[345]`; (3) O5's cell carried two commands, and a multi-command cell
+  mis-binds the second outcome to the first command, so it keeps the single
+  invariant (`matches 8`). Authority: the fix #527 `D6` precedent — an outcome
+  form the reader cannot reproduce is a closed obligation with no receipt.
+  After the rewrite `bun scripts/promise-coherence.mjs
+  docs/fix/569-roadmap-rows-issue-links/SPEC.md` answers `verdict PASS · 7
+  checked · 6 skipped`, every skip naming its own reason (`G3`).
+- **P1** — 2026-11-16, this unit doc with the frozen planning ledgers, the
+  acceptance criteria and every obligation `planned` at cut · `20cf11a3`.
+- **P2** — 2026-11-16, the frozen-failure corpus at base, before the first
+  edit: 0 of 3 rows name an issue, the emitter reports the tree in sync (`E1`) ·
+  no tree change (the receipt is `E1`).
+- **P3** — 2026-11-16, the three `roadmap_summary:` lines gain their own issue
+  link in the 553–555 sibling form (`E7`) · `ce7f2dec`.
+- **P4** — 2026-11-16, the render and its fixed point: the emitter writes the
+  three cells (`E8`), `--check` answers `unchanged` (`E9`) · `ce7f2dec`.
+- **L3** — 2026-11-16, disclosed side effect (§3 live-tree guard): probing the
+  `journal write` CLI's flag surface wrote one placeholder fragment, the
+  name ending
+  ```text
+  20261116T172141Z-fix-569-roadmap-rows-issue-links-narrative-local.md
+  ```
+  (154 bytes, `Summary: x`). It never entered a commit — deleted immediately
+  after inspection, the carrier's other six fragments untouched, and the real
+  fragment written afterwards by the proper fields. No other mutating command
+  ran against the live tree outside the repo's own writers and gates.
 
 ## Next
 
-P2 — record the frozen-failure corpus RED, then P3's three frontmatter lines,
-P4's render, P5's index + journal writes and P6's verification sweep.
+The handoff: the diff (three frontmatter lines, their projected cells, this
+unit's fix row, the re-rendered projection and the session fragment), the
+obligations ledger closed `7/7 verified`, and the verification block — for the
+owner's external verdict. Nothing is self-approved here.
 
 ## References
 
