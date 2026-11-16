@@ -19,6 +19,7 @@ import { run as runWorkflowStatus } from "./sensors/workflow-status.mjs";
 import { run as runPreExecutionSnapshot } from "./sensors/pre-execution-snapshot.mjs";
 import { run as runNeedsInput } from "./sensors/needs-input.mjs";
 import { run as runLedgerProvenance } from "./sensors/ledger-provenance.mjs";
+import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 
 /**
@@ -33,6 +34,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "pre-execution-snapshot": runPreExecutionSnapshot,
   "needs-input": runNeedsInput,
   "ledger-provenance": runLedgerProvenance,
+  "quality-metrics": runQualityMetrics,
   ceremony: runCeremony,
 });
 
