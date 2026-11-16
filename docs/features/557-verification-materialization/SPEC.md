@@ -170,7 +170,7 @@ drift gates, and the budget/gate-inventory checks the new surfaces move:
 
 ## Known pre-existing issues
 
-none
+- **`scripts/unit-route.test.mjs` → `#291 F7: long Progress-log line uses linear scan` asserts a spawned `unit-route` finishes in under 500 ms** — a wall-clock budget on a subprocess, so it straddles the line under load: observed 455 ms / 485 ms / 578 ms on three standalone runs during this session, and 165–538 ms after the bin started loading the new `materialize` module on demand instead of at every invocation. `does-not-affect` this unit: the case measures a command this change does not touch, and the full offline gate passed at the final head (G2). Re-trigger: any red on that case alone under load is this row, not a regression — the durable fix is a load-independent assertion, not a raised budget.
 
 ## Tasks
 
