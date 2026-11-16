@@ -198,7 +198,7 @@ drift gates, and the budget/gate-inventory checks the new surfaces move:
 - [x] P8 — Declare the machine surfaces and re-pin what they spend: the four `normative-surfaces@1` rows, the gate-inventory row, and the two budgeted documents (validator: `bun test scripts/normative-drift.test.mjs` exits 0, `bun scripts/prose-gate-inventory.mjs` exits 0 and `bun scripts/check-skill-context.mjs --documents` exits 0)
   (Implements: S1, S3, S4)
   - Relevant files: AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
-- **P9** — Verify the unit: ledgers closed, projection current, unit doc valid, repository gate green (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
+- [x] P9 — Verify the unit: ledgers closed, projection current, unit doc valid, repository gate green (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10)
   - Relevant files: docs/features/557-verification-materialization/SPEC.md, docs/features/557-verification-materialization/planning-obligations.md, docs/LOGS.md
 
@@ -230,6 +230,7 @@ files, never embedded here.
   ```
   NEW FEATURE: init-workspace verification materialization — declared boundaries become project-local enforcement, feature map, evidence-capture driver
   ```
+- **D1** — 2026-11-15, triaged as `promote` — valid feature proposal. Hard dependency on 556 (engineering interview) is correct: materialization consumes the interview's enforcement answers. Well-structured with clear consent gates and stack-agnostic design.
 - **L2** — 2026-11-16, the owner's local-workflow request, verbatim:
   ```
   Apply to this repository: issue #564
@@ -269,14 +270,19 @@ files, never embedded here.
 - **G2** — 2026-11-16, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail` · exit 0 · `local-gate: PASS — 15 step(s) in 744s` (root-suite 167s, crate node 186s, schema 23s, pi 48s) — the full gate again at the committed head `7dd4447e68ec71f1f21a233d2f1eae5bf6275f31`, after the unit doc, the ledgers and the journal fragment landed. HEAD 7dd4447e68ec71f1f21a233d2f1eae5bf6275f31
 - **E9** — 2026-11-16, `node packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/557-verification-materialization/SPEC.md` · exit 0 (the closed ledgers, the receipts and the tree citations); `node scripts/promise-coherence.mjs docs/features/557-verification-materialization/SPEC.md` · exit 0 · `verdict PASS`.
 - **P9** — 2026-11-16, the unit verified: ledgers closed, projection current, unit doc valid, repository gate green.
- — valid feature proposal. Hard dependency on 556 (engineering interview) is correct: materialization consumes the interview's enforcement answers. Well-structured with clear consent gates and stack-agnostic design.
+
+- **D6** — 2026-11-16, the L2-P9 block above was first appended dated 2026-11-17, a day ahead of the session's UTC date and therefore a future-dated evidence line (the receipt-fabrication tell `verify` exists to catch), and in the unbolded form — the `log-kind@1` shape the tick and progress checkers read is `- **<kind><n>** — `. Dates and form are corrected before any review of this unit, and recorded here rather than silently; the commands, exit codes and outputs those lines name are the runs of this session.
 
 ## Next
 
-Run `/unit-lane 557-verification-materialization` to begin the design phase (after 556).
+PR [#601](https://github.com/gtrabanco/agentic-workflow/pull/601) is open against `main`. The owner's
+verdict is the next step; then integrate `main` on the branch and merge — the merge closes #564 and
+unblocks roadmap row 590. The `postponed` label on #564 needs a `triage-issue` un-postpone before the
+merge closes it (only that skill writes disposition labels).
 
 ## References
 
 - Depends on: #563 (engineering interview, hard)
 - Extends: #435 (charter layers 1-2), mapped talk points 2, 3, 4
-- D6 — 2026-11-16, the L2-P9 block above was first appended dated 2026-11-17, a day ahead of the session's UTC date (2026-11-16) and therefore a future-dated evidence line, which is exactly the receipt-fabrication tell `verify` exists to catch. The dates are corrected in place before any review of this unit and recorded here rather than silently: the commands, the exit codes and the outputs those lines name are the runs of this session. This is the one edit the block takes.
+- PR: [#601](https://github.com/gtrabanco/agentic-workflow/pull/601) — `Closes #564`
+- Unit folder: [`planning-evidence.md`](planning-evidence.md), [`planning-obligations.md`](planning-obligations.md), [`decisions.md`](decisions.md)
