@@ -119,38 +119,45 @@ The landing and the bank check are deterministic, so they are tested where the c
 
 ## Tasks
 
-- P1 — Freeze this unit's planning ledgers and acceptance criteria beside the SPEC (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/556-engineering-interview/SPEC.md` exits 0)
+- [x] P1 — Freeze this unit's planning ledgers and acceptance criteria beside the SPEC (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/556-engineering-interview/SPEC.md` exits 0)
   (Implements: S5, S6)
   - Relevant files: docs/features/556-engineering-interview/SPEC.md, docs/features/556-engineering-interview/planning-evidence.md, docs/features/556-engineering-interview/planning-obligations.md
-- P2 — Write the engineering interview reference: the objectives layer plus the eight-cell question bank (validator: `rg -c '^\| [A-Z]{3}-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` prints 12)
+- [x] P2 — Write the engineering interview reference: the objectives layer plus the eight-cell question bank (validator: `rg -c '^\| [A-Z]{3}-[0-9]{2} \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` matches 16)
   (Implements: S1, S2, S3, S4, S5, S6, S10, S11)
   - Relevant files: skills/init-workspace/references/ENGINEERING_INTERVIEW.md
-- P3 — Add the layer-3 charter slots to the template agent guide (validator: `rg -c '^- \*\*(Repo purpose|Team shape|Optimization target|Automation appetite|Testing strategy|Architectural boundaries|Dependency policy|Production verification|Decision records|API posture):\*\*' template/AGENTS.md` prints 10)
+- [x] P3 — Add the layer-3 charter slots to the template agent guide (validator: `rg -c '^- \*\*(Repo purpose|Team shape|Optimization target|Automation appetite|Testing strategy|Architectural boundaries|Dependency policy|Production verification|Decision records|API posture):\*\*' template/AGENTS.md` matches 10)
   (Implements: S1, S7, S10)
   - Relevant files: template/AGENTS.md
-- P4 — Land the `charter` service's suite first, observed red on the missing module (validator: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 1 with a missing-module error)
+- [x] P4 — Land the `charter` service's suite first, observed red on the missing module (validator: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 1 with the missing-module error)
   (Implements: S8, S9)
   - Relevant files: packages/agentic-workflow/test/charter.test.mjs
-- P5 — Implement the `charter` file service and document it beside its siblings (validator: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0)
+- [x] P5 — Implement the `charter` file service and document it beside its siblings (validator: `bun test packages/agentic-workflow/test/charter.test.mjs` exits 0)
   (Implements: S6, S7, S8, S9, S10)
   - Relevant files: packages/agentic-workflow/src/charter/interview.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/README.md
-- P6 — Wire layer 3 into the skill's charter round and its write step (validator: `rg -n 'charter (state|land|check)' skills/init-workspace/SKILL.md skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md skills/init-workspace/references/BOOTSTRAP_WRITE.md` prints 3 or more)
-  (Implements: S5, S6, S7, S10, S11)
-  - Relevant files: skills/init-workspace/SKILL.md, skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md, template/docs/workflow/VERIFICATION_CRITERIA.md
-- P7 — Declare the bank as a normative surface and rebase the skill's context ceiling with its growth source (validator: `bun scripts/normative-drift.test.mjs` exits 0 with the `interview-bank` row resolving)
+- [x] P6 — Wire the interview round into the skill's charter section and progressive-loading allowlist (validator: `rg -c 'references/ENGINEERING_INTERVIEW\.md' skills/init-workspace/SKILL.md` matches 2)
+  (Implements: S5, S6, S11)
+  - Relevant files: skills/init-workspace/SKILL.md
+- [x] P7 — Wire the discovery round into bootstrap discovery and its landing into the write step (validator: `rg -c 'charter land' skills/init-workspace/references/BOOTSTRAP_WRITE.md` matches 1)
+  (Implements: S1, S3, S6, S7, S10)
+  - Relevant files: skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md
+- [x] P8 — Declare the bank as a normative surface and rebase the skill's context ceiling with its growth source (validator: `bun scripts/normative-drift.test.mjs` exits 0)
   (Implements: S8, S11)
   - Relevant files: AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
-- P8 — Record the evidence, flip the obligation rows, and regenerate the projection (validator: `bun scripts/docs-generate.mjs --check` exits 0 and `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/556-engineering-interview/SPEC.md` exits 0)
+- [x] P9 — Record the evidence, flip the obligation rows, and regenerate the projection (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S7, S11)
   - Relevant files: docs/features/556-engineering-interview/SPEC.md, docs/features/556-engineering-interview/planning-obligations.md, docs/LOGS.md
 
 ## Triaged steps
 
-> Pasted verbatim from the machine's own triage once `## Applicable tests` names the tests step.
-
 ```text
 TRIAGE — 556-engineering-interview (feature)
-Steps: research, design, plan, implement, evidence, review, docs, release
+Steps: research, design, plan, implement, tests, evidence, review, docs, release
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
+Skipped: none
+Budget: strong
+Fused: design + plan — one investigate→orient→ask→decide pass, carriers separated (activity-fusion@1)
+relay: bootstrap-needed — no packet at .pi-web/relays/556-engineering-interview
+relay-next: create .pi-web/relays/556-engineering-interview/ (charter → docs/features/556-engineering-interview/SPEC.md) then dispatch_relay(packet: ".pi-web/relays/556-engineering-interview", leg: "1") · legs: 10 = 9 phases + 1 coherence review
 ```
 
 ## Findings
@@ -167,10 +174,26 @@ Steps: research, design, plan, implement, evidence, review, docs, release
 - D1 — 2026-11-15, triaged as `promote` — valid feature proposal with clear scope, dependencies, and acceptance criteria. The issue is well-structured (goal, business value, in scope, out of scope, acceptance criteria, dependencies) and aligns with the workflow's charter-driven design principles.
 - D2 — 2026-11-16, the deterministic half is a crate file service, not a loose `scripts/` entry: every file service the workflow invokes ships as a `agentic-workflow` subcommand (`packages/agentic-workflow/README.md`), and `init-workspace` runs in a target project that carries no `scripts/` tree (PE-001).
 - D3 — 2026-11-16, the bank's data lives in a `table:interview-bank@1` surface in the reference and its cell contract in the same document's fenced block; the check compares the table's header with the declared cells, so a new column cannot arrive unannounced (PE-004).
+- P1 — 2026-11-16 06:40, froze this unit's SPEC (S1–S11, AC1–AC10), the evidence ledger (PE-001..PE-010) and the obligations ledger (O1–O17) · `1c2851d0`.
+- P2 — 2026-11-16 07:10, the interview bank (16 rows, eight cells, two layers) and the eleven layer-3 charter slots · `4b5ad664`.
+- E1 — 2026-11-16 09:20, `bun test packages/agentic-workflow/test/charter.test.mjs` · exit 1 · `Cannot find module '../src/charter/interview.mjs'` — the red commit `2420df6f` carries the suite alone.
+- P3 — 2026-11-16 09:25, red suite committed alone · `2420df6f`.
+- P4 — 2026-11-16 11:40, the `charter` file service (`state`/`land`/`check`), its bin dispatch, its README row, the discovery round and the write step · `bbecee0a`, `eb9b479d`.
+- E2 — 2026-11-16 11:44, `bun test packages/agentic-workflow/test/charter.test.mjs` · exit 0 · 22 pass / 0 fail (the refusal cases, the kept/written/assumed landing, the boundary shapes, the shipped pin, the CLI boundary).
+- E3 — 2026-11-16 11:50, `node packages/agentic-workflow/bin/agentic-workflow.mjs charter check --guide template/AGENTS.md --bank skills/init-workspace/references/ENGINEERING_INTERVIEW.md` · exit 0 · `CHARTER CHECK PASS — … 16 row(s) · 22 slot(s)`; the same command on a fixture row without a source exits 1 with `CHARTER CHECK BLOCKED`.
+- E4 — 2026-11-16 11:52, the row counts the SPEC's criteria read: `rg -c '^\| OBJ-[0-9]{2} \|'` = 5, `TST` = 3, `ARC` = 2, `DEP|VER|DEC|API` = 6, and the five objectives slots in `template/AGENTS.md` = 5.
+- G1 — 2026-11-16 11:56, `bun test packages/agentic-workflow/…` full crate suite · exit 0 · 858 pass / 0 fail across 48 files.
+- G2 — 2026-11-16 12:02, `bun scripts/skill-lint.mjs` · exit 0 · 0 finding(s) in 103 files.
+- G3 — 2026-11-16 12:04, `bun scripts/check-skill-context.mjs` · exit 0 · PASS context budgets: 30 skills; `--documents` PASS context documents: 4; `--routes` PASS route budgets: 14 routes.
+- G4 — 2026-11-16 12:06, `bun scripts/normative-drift.test.mjs` · exit 0 · 21 pass / 0 fail — the `interview-bank` row resolves in the inventory.
+- G5 — 2026-11-16 12:08, `bun scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass / 0 fail — `charter-bank-shape` is cited and its surface claimed.
+- G6 — 2026-11-16 12:10, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 files checked, 0 stale, roadmap unchanged.
+- G7 — 2026-11-16 12:12, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/556-engineering-interview/SPEC.md` · exit 0 · `verdict PASS`, nine phases at PASS (6/6).
+- P5 — 2026-11-16 12:14, declared the bank as a normative surface with its gate row, and rebased the `init-workspace` main and reference ceilings with their growth sources · `9d140350`.
 
 ## Next
 
-P1 — freeze the planning ledgers, then P2 (the bank reference).
+Owner verdict on the diff (the owner is the external verifier for this repository's own surgery). After the verdict: the owner integrates `main` on the branch and merges, and 557 reads the `Architectural boundaries` slot.
 
 ## References
 
