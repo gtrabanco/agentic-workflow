@@ -198,6 +198,13 @@ export function checkBank({ guideText, bankText }) {
 
   const slots = readSlots(guideText);
   const slotKeys = new Set(slots.map((slot) => slot.key));
+  // Two slots of one key make the answer's home ambiguous: a landing pass would
+  // write both, so one answer would exist twice and neither would be authoritative.
+  const seenKeys = new Set();
+  for (const slot of slots) {
+    if (seenKeys.has(slot.key)) findings.push({ code: "slot-duplicate", detail: `"${slot.key}" appears more than once in the ${CHARTER_HEADING} section — an answer needs one home` });
+    seenKeys.add(slot.key);
+  }
   const ids = new Set();
   for (const row of bank.rows) {
     const id = row.id ?? "";

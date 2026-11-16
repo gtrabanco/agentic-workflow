@@ -157,6 +157,21 @@ test("a bank without its contract block or its table is refused, never read as e
   assert.ok(checkBank({ guideText: guideFixture([["Repo purpose", "x"]]), bankText: noTable }).findings.some((finding) => finding.code === "bank-table-missing"));
 });
 
+test("a key that appears twice in the charter is refused — one answer, one home", () => {
+  const guide = guideFixture([
+    ["Dependency policy", "`<selection criteria>`"],
+    ["Architectural boundaries", "`<one entry per boundary>`"],
+    ["Dependency policy", "`<pinning posture>`"],
+  ]);
+  const findings = checkBank({ guideText: guide, bankText: bankFixture([goodRow({ lands: "Dependency policy" })]) }).findings;
+  assert.ok(findings.some((finding) => finding.code === "slot-duplicate" && finding.detail.includes("Dependency policy")), JSON.stringify(findings));
+});
+
+test("the shipped template carries no duplicated charter key", () => {
+  const keys = readSlots(read(GUIDE_REL)).map((slot) => slot.key);
+  assert.equal(new Set(keys).size, keys.length, `duplicated keys: ${keys.filter((key, index) => keys.indexOf(key) !== index).join(", ")}`);
+});
+
 // ── 2. Boundary enforcement (S10) ───────────────────────────────────────────
 
 test("the enforcement answer has two legal shapes and a filled slot outside them is refused", () => {
