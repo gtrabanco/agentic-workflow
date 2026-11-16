@@ -21,6 +21,7 @@ import { run as runNeedsInput } from "./sensors/needs-input.mjs";
 import { run as runLedgerProvenance } from "./sensors/ledger-provenance.mjs";
 import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
+import { run as runSkills } from "./skills.mjs";
 
 /**
  * @typedef {(args: string[]) => void | number} RunnerCommand
@@ -36,6 +37,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "ledger-provenance": runLedgerProvenance,
   "quality-metrics": runQualityMetrics,
   ceremony: runCeremony,
+  skills: runSkills,
 });
 
 /**

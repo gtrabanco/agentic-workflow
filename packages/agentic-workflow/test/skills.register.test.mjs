@@ -79,10 +79,15 @@ test("the inventory reports the four states from the row's own cells", () => {
     { ...ROW, name: "ok-row" },
     { ...ROW, name: "unpinned-row", pin: "latest" },
     { ...ROW, name: "stale-row", installed: "2025-01-01" },
-    { ...ROW, name: "incomplete-row", axis: "" },
   ].reduce((text, row) => registerReviewExtra({ guideText: text, ...row }).text, GUIDE_WITHOUT_NOTE);
+  // The incomplete row is a hand-edited one — exactly the drift the inventory
+  // exists to catch, and the reason `register` refuses it on the way in.
+  const withBrokenRow = guide.replace(
+    /^(stale-row \|.*)$/mu,
+    `$1\nincomplete-row | https://github.com/example/f | 1.0.0 | 2026-11-16 | `,
+  );
 
-  const report = inventoryExtras({ guideText: guide, asOf: "2026-11-16", maxAgeDays: 180 });
+  const report = inventoryExtras({ guideText: withBrokenRow, asOf: "2026-11-16", maxAgeDays: 180 });
   assert.deepEqual(
     report.rows.map((row) => [row.name, row.state]),
     [
