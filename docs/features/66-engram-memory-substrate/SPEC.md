@@ -103,6 +103,12 @@ miss knows the miss is keyword-bound, not proof that nothing was saved.
    unrelated safe work continues, sync resumes when available, and both writes
    (file + mirror) are read back with irreconcilable versions preserved and
    surfaced. (source: #262 comment 2026-10-21 items 3–4)
+   **Mirror-contract note (issue #566 B1, clause corrected 2026-11-16):** the
+   "read back … preserved and surfaced" wording above is this unit's shipped
+   history; the live contract in `skills/unit-lane/references/MEMORY.md` §7 now
+   reads the corrected form — the document is the source, a stale mirror is
+   refreshed and never a blocker, applied writes are never replayed, and both
+   versions are preserved only until the human resolves a genuine conflict.
 9. **The gate stays green.** `node --test scripts/*.test.mjs`,
    `bun scripts/check-skill-context.mjs`, and the tests of every touched
    package exit 0, with the touched skills' `version:` bumped per the
