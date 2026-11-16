@@ -478,7 +478,10 @@ function fakeRunner(t) {
   const write = (name, body) => fs.writeFileSync(path.join(dir, name), `#!/bin/sh\n${body}\n`, { mode: 0o755 });
   write("bunx", argvScript("bunx"));
   write("npx", argvScript("npx"));
-  write("node", argvScript("node"));
+  // `node` is probed for its version (the crate's engines floor) and never
+  // launched with the crate: the version branch deliberately records no argv,
+  // so `argvOf("node")` still answers "the adapter probes node, never runs it".
+  write("node", `if [ "$1" = "--version" ]; then echo "v26.13.0"; exit 0; fi\n${argvScript("node")}`);
   const argvOf = (name) => {
     const file = path.join(dir, `${name}-argv.txt`);
     return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;

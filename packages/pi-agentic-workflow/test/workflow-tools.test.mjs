@@ -90,13 +90,16 @@ const TOOL_NAMES = [
   "agentic_workflow_phase_lint",
   "agentic_workflow_audit_pr_gate",
   "agentic_workflow_snapshot_verify",
+  // Issue #555's generic door: the subcommands the skills cite symbolically
+  // and no typed tool wraps.
+  "agentic_workflow_run",
 ];
 
 // ---------------------------------------------------------------------------
 // Registration shape (AC2, O3)
 // ---------------------------------------------------------------------------
 
-test("registration: five deferred tools in the agentic-workflow namespace, readOnly", async () => {
+test("registration: six deferred tools in the agentic-workflow namespace, readOnly", async () => {
   const { createWorkflowTools, WORKFLOW_TOOLS_NAMESPACE } = await loadModule();
   const tools = createWorkflowTools();
   assert.deepEqual(
@@ -474,11 +477,10 @@ test("audit-pr-gate: the spawn leaves the forge scope to the spawn cwd", async (
   await gate.execute({ pr: "9", head: "c".repeat(40) }, "/fixture/project");
   assert.equal(requests.length, 1);
   assert.equal(requests[0].cwd, "/fixture/project");
-  assert.equal(requests[0].bin, "bun");
-  assert.equal(requests[0].script, "scripts/audit-pr-gate.mjs");
+  assert.equal(requests[0].program, "bun");
   // `--repo`/`-R` is a forge scope (`[HOST/]OWNER/REPO`), never a filesystem
   // path: the script reads git in its cwd and `gh` infers the repo from it.
-  assert.deepEqual(requests[0].args, ["evaluate", "--pr", "9", "--head", "c".repeat(40)]);
+  assert.deepEqual(requests[0].argv, ["scripts/audit-pr-gate.mjs", "evaluate", "--pr", "9", "--head", "c".repeat(40)]);
 });
 
 test("audit-pr-gate live: the tool reaches the script's own report contract", async () => {

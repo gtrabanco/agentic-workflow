@@ -34,6 +34,7 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { parseUnitDocPhases } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+import { RunnerResolutionError, resolveRunner } from "../packages/agentic-workflow/src/runner/resolve.mjs";
 import { compute as needsInputCompute } from "../packages/agentic-workflow/src/runner/sensors/needs-input.mjs";
 import { checkUnitDoc, findRow, rowUpsert } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
 import { ROADMAP_DOCUMENT, readRoadmapIndex } from "../packages/agentic-workflow/src/index-document.mjs";
@@ -199,6 +200,22 @@ export function decide(state) {
   return step("audit");
 }
 
+/**
+ * The diff-guard command a phase executor receives, resolved rather than typed:
+ * the crate's resolver answers the launcher (issue #555), so the prompt names a
+ * command that exists on this machine. A box with none of the set keeps the
+ * symbolic form and the contract explains it.
+ */
+function diffGuardCommand(phase) {
+  const args = ["diff-guard", "--unit", String(phase)];
+  try {
+    return resolveRunner({ args }).argv.join(" ");
+  } catch (error) {
+    if (error instanceof RunnerResolutionError) return `runner ${args.join(" ")}`;
+    throw error;
+  }
+}
+
 /** The exact command one judgment step receives. */
 export function renderPrompt(action, state) {
   const unit = state.unit;
@@ -214,7 +231,7 @@ export function renderPrompt(action, state) {
         prompt:
           `${head}\n\nStep: run \`/execute-phase ${unit} P${action.n} (tier: ${tier})\` — ` +
           `exactly one phase: implement it, run the phase validator and ` +
-          `\`bunx @gtrabanco/agentic-workflow@<pin> diff-guard --unit ${action.n}\`, commit, and stop. ` +
+          `\`${diffGuardCommand(action.n)}\`, commit, and stop. ` +
           `Do not start another phase.`,
       };
     }

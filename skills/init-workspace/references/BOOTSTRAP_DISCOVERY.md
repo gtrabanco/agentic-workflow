@@ -3,7 +3,7 @@
 1. **Preflight.** Confirm the target dir and the discovery findings. If scaffold
    files already exist, get an explicit decision before overwriting.
    The tool facts are one reading, not a per-tool interview:
-   `bunx @gtrabanco/agentic-workflow@<pin> doctor --json` — each row carries its
+   `runner doctor --json` — each row carries its
    evidence and its move, and a `residual` row is a decision this route never
    makes for the operator.
 2. **Fetch the template.** `npx degit gtrabanco/agentic-workflow/template <dir>`
@@ -28,7 +28,7 @@
        checked in code by the dispatcher). Expensive to undo ⇒ unanswered is **not** a default: an
        identity question without a concrete answer halts the run through the
        same fail-closed flow §Consent uses (scratch unit folder +
-       `bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>`, paste the `open-questions@1`
+       `runner needs-input <unit-dir>`, paste the `open-questions@1`
        block verbatim, stop).
      - **Domain layer — open-with-defaults, cheap to undo as dated
        assumptions:** tests policy and the project's gate commands; dependency

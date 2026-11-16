@@ -19,7 +19,7 @@ import { validateEnvelope } from "@gtrabanco/agentic-workflow-schema";
 import type { Envelope } from "@gtrabanco/agentic-workflow-schema";
 
 import type { EnvelopeLike, SensorResult } from "./types.js";
-import { runnerBin } from "../runner-bin.js";
+import { installedCandidate, runnerLaunch } from "../runner-bin.js";
 
 const TIMEOUT_MS = 30_000;
 
@@ -49,12 +49,25 @@ function resolveCwd(cwd: string): string {
   }
 }
 
-export function runSensor(cwd: string, bin: "bun" | "node"): Promise<SensorResult> {
+export async function runSensor(cwd: string, bin: "bun" | "node"): Promise<SensorResult> {
+  // The runner is composed, never typed: the crate bin this package resolves
+  // under the runtime that launched pi, and the crate's closed set only when
+  // that dependency is missing (issue #555).
+  let command;
+  try {
+    command = await runnerLaunch(["workflow-status", "--json-only"], { installed: installedCandidate(bin) });
+  } catch (error) {
+    return {
+      ok: false,
+      refusal: "sensor-degraded",
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
   return new Promise((resolve) => {
     const resolvedCwd = resolveCwd(cwd);
     const child = spawn(
-      bin,
-      [runnerBin(), "workflow-status", "--json-only"],
+      command.argv[0],
+      command.argv.slice(1),
       {
         cwd: resolvedCwd,
         stdio: ["ignore", "pipe", "pipe"],
