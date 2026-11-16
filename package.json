@@ -5,5 +5,8 @@
   "license": "MIT",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "overrides": {
+    "undici": "8.12.4"
+  }
 }
