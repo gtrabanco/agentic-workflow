@@ -243,15 +243,15 @@ Verdict `risk-tier-verdict@1` for the change's executable path,
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2, S5 | a root-suite dispatch never hands the contract suites a `dist/` built from another source set: when the build is missing, incomplete or older than `src/`, the runner rebuilds it before the pool starts | P3 | P3 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 0 (the dispatch-decision cases) and the stale-tree reproducer run in scratch exits 0 with the rebuild line on stderr | E line in SPEC `## Log` | planned |
-| O2 | S3 | the four `dist/` states are decidable from the tree alone: missing entry, a source without its emitted `.js`, an output older than its sources, and a current build | P3 | P3 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 0 (one case per verdict, on throwaway trees) | E line in SPEC `## Log` | planned |
-| O3 | S5 | exactly one mechanism lands: `scripts/schema-runtime.mjs` and `scripts/local-gate.mjs` are untouched by this unit | P3 | P3 | direct application (this session) | `git diff --stat 44a20ab6 -- scripts/schema-runtime.mjs scripts/local-gate.mjs` prints nothing (exit 0, empty) | E line in SPEC `## Log` | planned |
-| O4 | S2, S4 | a current build is never rebuilt and never reported: on a fresh tree the runner spawns no build and says nothing about the schema, and its stdout keeps the exact `root gate:` header plus `PASS`/`FAIL`/`KILLED` lines | P4 | P4 | direct application (this session) | the differential comparison in `mktemp -d` lists only the declared stderr delta, with stdout and exit status identical, and `bun test scripts/run-root-suite.test.mjs` exits 0 (the fresh-tree case asserts zero spawned builds) | E line in SPEC `## Log` | planned |
-| O5 | S4 | a dispatch that cannot rebuild keeps the previous behaviour and says so: an absent package manager prints one line naming the manual command and the suites still run | P3 | P3 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 0 (the unavailable-manager case) | E line in SPEC `## Log` | planned |
-| O6 | S4, S2 | a schema package that does not compile stops the run: the compiler's own output is printed and the exit is non-zero, so no suite reports contract results from the previous build | P3 | P3 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 0 (the failed-build case) and the scratch tree with a type error exits 1 naming the compiler error | E line in SPEC `## Log` | planned |
-| O7 | S6 | the gate path is unchanged: the runner issues no build on the tree `schema-build` just produced, and `local-gate`'s step graph still orders `schema-build` before `root-suite` | P6 | P6 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 and `git diff --stat 44a20ab6 -- scripts/local-gate.mjs` prints nothing | G line in SPEC `## Log` | planned |
-| O8 | S1, S4 | documentation and repository state ship in the same change: the `## Verification` clause fits the guide's line ceiling, the roadmap row carries its status and rendered summary, the projection is fresh and the journal entry is written | P5 | P5 | direct application (this session) | `bun scripts/check-skill-context.mjs --documents` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `bun scripts/roadmap-settle.mjs` exits 0 | E line in SPEC `## Log` | planned |
-| O9 | S1 | the red corpus precedes the implementation and both runs are observable: the suite fails on the pre-change module and passes after it | P2 | P2 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 1 at the red commit and 0 at the implementation commit, and `bun scripts/red-first.mjs` prints `verdict: PASS` | E line in SPEC `## Log` naming both commits | planned |
+| O1 | S2, S5 | a root-suite dispatch never hands the contract suites a `dist/` built from another source set: when the build is missing, incomplete or older than `src/`, the runner rebuilds it before the pool starts | P3 | P3 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 0 (the dispatch-decision cases) and the stale-tree reproducer run in scratch exits 0 with the rebuild line on stderr | E line in SPEC `## Log` | verified — E5 (the stale reproducer exits 0 while the base exits 1) and E8 (the dispatch-decision cases) |
+| O2 | S3 | the four `dist/` states are decidable from the tree alone: missing entry, a source without its emitted `.js`, an output older than its sources, and a current build | P3 | P3 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 0 (one case per verdict, on throwaway trees) | E line in SPEC `## Log` | verified — E8 (one case per verdict, on throwaway trees) |
+| O3 | S5 | exactly one mechanism lands: `scripts/schema-runtime.mjs` and `scripts/local-gate.mjs` are untouched by this unit | P3 | P3 | direct application (this session) | `git diff --stat 44a20ab6 -- scripts/schema-runtime.mjs scripts/local-gate.mjs` prints nothing (exit 0, empty) | E line in SPEC `## Log` | verified — E9 (empty diff for both files) |
+| O4 | S2, S4 | a current build is never rebuilt and never reported: on a fresh tree the runner spawns no build and says nothing about the schema, and its stdout keeps the exact `root gate:` header plus `PASS`/`FAIL`/`KILLED` lines | P4 | P4 | direct application (this session) | the differential comparison in `mktemp -d` lists only the declared stderr delta, with stdout and exit status identical, and `bun test scripts/run-root-suite.test.mjs` exits 0 (the fresh-tree case asserts zero spawned builds) | E line in SPEC `## Log` | verified — E6 (stdout and exit identical to the base on a fresh tree, stderr empty) and E8 (the fresh-tree case spawns no build) |
+| O5 | S4 | a dispatch that cannot rebuild keeps the previous behaviour and says so: an absent package manager prints one line naming the manual command and the suites still run | P3 | P3 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 0 (the unavailable-manager case) | E line in SPEC `## Log` | verified — E8 (the unavailable case, including a real ENOENT against a manager that does not exist) |
+| O6 | S4, S2 | a schema package that does not compile stops the run: the compiler's own output is printed and the exit is non-zero, so no suite reports contract results from the previous build | P3 | P3 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 0 (the failed-build case) and the scratch tree with a type error exits 1 naming the compiler error | E line in SPEC `## Log` | verified — E7 (a non-compiling package exits 1 with the compiler's own error and no suite runs) |
+| O7 | S6 | the gate path is unchanged: the runner issues no build on the tree `schema-build` just produced, and `local-gate`'s step graph still orders `schema-build` before `root-suite` | P6 | P6 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 and `git diff --stat 44a20ab6 -- scripts/local-gate.mjs` prints nothing | G line in SPEC `## Log` | verified — G2 (the gate's 19 steps pass; `schema-build` precedes `root-suite`) and E9 |
+| O8 | S1, S4 | documentation and repository state ship in the same change: the `## Verification` clause fits the guide's line ceiling, the roadmap row carries its status and rendered summary, the projection is fresh and the journal entry is written | P5 | P5 | direct application (this session) | `bun scripts/check-skill-context.mjs --documents` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `bun scripts/roadmap-settle.mjs` exits 0 | E line in SPEC `## Log` | verified — E10, E11, E12 (budgets, projection and settle all PASS) plus the journal fragment |
+| O9 | S1 | the red corpus precedes the implementation and both runs are observable: the suite fails on the pre-change module and passes after it | P2 | P2 | direct application (this session) | `bun test scripts/run-root-suite.test.mjs` exits 1 at the red commit and 0 at the implementation commit, and `bun scripts/red-first.mjs` prints `verdict: PASS` | E line in SPEC `## Log` naming both commits | verified — E2 (the red commit fails to import the new exports) and E8 (the implementation commit passes), with `bun scripts/red-first.mjs` reporting 0 findings |
 
 ## Triaged steps
 
@@ -284,6 +284,114 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
 
   Either rebuild the schema package before the suites in `run-root-suite.mjs`, or give `schema-runtime.mjs` a named stale-module precondition (e.g. compare a committed marker against the built output and fail with "run bun run build", mirroring the existing missing-module message). One mechanism, red-first suite, sibling `.test.mjs`.
   ```
+
+- **D1** — 2026-11-16, the mechanism is S5's first branch: the runner rebuilds
+  before it dispatches. Two committed precedents decided it — the crate's own
+  `test`/`test:node` scripts already run the schema package's build first, and
+  `scripts/local-gate.mjs` already orders `schema-build` before the suites — so
+  the standalone runner is the outlier this unit removes. The second branch (a
+  named stale refusal in `scripts/schema-runtime.mjs`) only relabels the false
+  reds into a refusal and leaves the documented command needing a manual step.
+- **D2** — 2026-11-16, the build is invoked as the package's *declared* script,
+  through the package manager of the runtime that launched the runner (bun under
+  bun, npm under node), never as a hardcoded compiler path: the compiler is not
+  on `PATH` in this repository (PE-012), and a second copy of "the build" would
+  drift from `scripts.build` the first time that script gains a step.
+- **D3** — 2026-11-16, the rebuild is gated by a `dist/` state verdict rather
+  than run unconditionally. An unconditional build costs 0.45 s and repairs any
+  staleness, but `scripts/run-root-suite.test.mjs` spawns the real runner six
+  times inside the gate's concurrent worker pool (PE-006): each of those would
+  rewrite `dist/` under suites that are importing it — exactly the
+  module-read flakiness this unit exists to remove. A current build is
+  therefore left alone, and the gate path pays nothing.
+- **D4** — 2026-11-16, the staleness signal is the output set plus mtimes, and
+  what it cannot see is recorded as `## Future`: `tsc` rewrites every output on
+  every run (PE-007), so a just-built tree can never read as stale, while any
+  real edit writes its source with a newer mtime. A tree whose sources carry
+  *older* mtimes than the build it actually postdates — a `git archive`
+  extraction, which stamps commit times — reads as current; a content stamp
+  written by the build is the answer to that case and needs a writer inside a
+  package this unit does not own.
+- **D5** — 2026-11-16, a build that runs and fails stops the run (exit 1) while
+  a package manager that does not exist is reported and tolerated. The split is
+  `spawnSync`'s own ENOENT (PE-008): "this tree was never provisioned" is not a
+  verdict the gate makes, and today such a tree still runs the suites it can,
+  while "these sources do not compile" is exactly the state in which contract
+  results from the previous build are worthless.
+- **E1** — 2026-11-16, `bun scripts/check-skill-context.mjs --documents` at
+  `44a20ab6` · exit 0 · `AGENTS.md 708 lines / 145 machine / 563 prose / 12,349
+  est` against `linesMax 708` — the ceiling fully spent, which is why the guide
+  clause is re-wrapped rather than appended (PE-010).
+- **E2** — 2026-11-16, the RED corpus at `6ede8c3c`:
+  `bun test scripts/run-root-suite.test.mjs` · exit 1 · **0 pass / 1 fail /
+  1 error** — `SyntaxError: Export named 'dispatchReport' not found in module
+  …/run-root-suite.mjs`: the pre-change module exports none of the predicate,
+  the seam or the decision.
+- **E3** — 2026-11-16, the base reproduction in scratch
+  (`/tmp/aw571-repro.mSl45J`, a `git archive` of `44a20ab6` plus
+  `bun install --frozen-lockfile`): `dist/` built from `6e9e9e45~1`'s sources
+  with `HEAD`'s sources on disk and their mtimes advanced the way an edit
+  advances them, then `node scripts/run-root-suite.mjs --jobs 1
+  scripts/triage-rescope.test.mjs` at `44a20ab6`'s runner · exit 1 · `FAIL
+  scripts/triage-rescope.test.mjs`, 3 assertions naming `TRIAGE_VERDICTS is not
+  iterable` — the audit's failure, reproduced from the tree rather than quoted.
+- **E4** — 2026-11-16, the differential earned its keep: the same stale tree
+  with the change in place first died `ReferenceError: spawnSync is not defined`
+  — the injected-spawn cases could not see a missing default import. Fixed by
+  importing it, and pinned by two cases that drive the real spawn (a throwaway
+  package whose `build` script writes its `dist/`, and a manager that does not
+  exist → `unavailable` for real).
+- **E5** — 2026-11-16, the same stale tree with the change · exit 0 · `PASS
+  scripts/triage-rescope.test.mjs` and one stderr line: `root gate: schema dist
+  rebuilt in 0.7s (dist/ is a build output; the contract suites read it)`;
+  `rg -c TRIAGE_VERDICTS packages/agentic-workflow-schema/dist/vocabularies.js`
+  → 1 afterwards, 0 before. The red is a green suite, not a relabelled refusal.
+- **E6** — 2026-11-16, the differential on a *current* build (the gate's own
+  tree): `44a20ab6`'s runner and this change, same suite, same tree ·
+  `diff` of stdout → identical, stderr empty in both, exit 0 in both. The only
+  declared delta in the whole comparison is the stderr line E5 records, which
+  appears only when a rebuild happened.
+- **E7** — 2026-11-16, the non-compiling case: `export const broken: number =
+  "not a number";` appended to `packages/agentic-workflow-schema/src/vocabularies.ts`
+  in scratch, then `node scripts/run-root-suite.mjs --jobs 1
+  scripts/triage-rescope.test.mjs` · exit 1 · stdout empty (**no suite ran**),
+  stderr carrying `src/vocabularies.ts(257,14): error TS2322: Type 'string' is
+  not assignable to type 'number'.` and the stop line
+  `root gate: the schema package does not build (npm run build, exit 2) — …`.
+  The appended line was reverted after the run.
+- **E8** — 2026-11-16, `bun test scripts/run-root-suite.test.mjs` · exit 0 ·
+  **45 pass / 0 fail** (27 cases before this unit; the 18 new ones are one per
+  `dist/` verdict, the manager and seam cases, the decision cases, the report
+  cases and the two real-spawn cases).
+- **E9** — 2026-11-16, one mechanism only:
+  `git diff --stat 44a20ab6 -- scripts/schema-runtime.mjs scripts/local-gate.mjs`
+  · exit 0 · no output.
+- **E10** — 2026-11-16, `bun scripts/check-skill-context.mjs --documents` ·
+  exit 0 · `PASS context documents: 4 budgeted documents`, `AGENTS.md 709 lines
+  / 145 machine / 564 prose / 12,368 est` against the re-pinned
+  `linesMax 709` (the `sources` row in
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` records why only that boundary
+  moved).
+- **E11** — 2026-11-16, `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  `3 checked · 0 missing · 0 stale · 0 orphaned`, `verdict: PASS`.
+- **E12** — 2026-11-16, `bun scripts/roadmap-settle.mjs` · exit 0 · `210 unit
+  docs checked`, `violations: 0`; `bun scripts/red-first.mjs` · exit 0 · `28`
+  pairs after the cutoff, `0 finding(s)`, `verdict: PASS` — this unit's pair
+  lands suite-first.
+- **P1** — 2026-11-16, the unit doc frozen with its ledgers, criteria, ac-hash
+  and phase-lint `PASS (6/6)` × 6 · `5ce78550`.
+- **P2** — 2026-11-16, the red corpus landed alone and observed red (E2) ·
+  `6ede8c3c`.
+- **P3** — 2026-11-16, the predicate, the build seam, the decision, the report
+  and the dispatch wiring, with the guide clause and its budget row ·
+  `53e5effe` (E5–E10).
+- **G1** — 2026-11-16, `bun scripts/run-root-suite.mjs` at HEAD `53e5effe` · exit 0 ·
+  **114 suites PASS / 0 FAIL** in 4m03s, stderr empty — the change's own command,
+  run on a tree the build had already made current, so the rebuild path stayed
+  off (O4, O7).
+- **G2** — 2026-11-16, `bun scripts/local-gate.mjs` at HEAD `53e5effe` · exit 0 ·
+  **`local-gate: PASS — 19 step(s)` in 719s**, `schema-build` (1s) ahead of
+  `root-suite` (210s) and every other step green, none skipped (O7, S6).
 
 ## Next
 
