@@ -330,13 +330,15 @@ this unit owns.
 
 The unit is built and its reproducers, gate halves and differential are green
 (E7–E15); it hands back for the owner's external verdict over
-`8e4faa77..HEAD`. Open, deliberately out of this unit: the `--pins`
-default that never checks the crate (Known pre-existing issues). After the
-verdict: open the PR with the `Closes #588` footer.
+`8e4faa77..HEAD`. PR [#592](https://github.com/gtrabanco/agentic-workflow/pull/592)
+is open against `main` with the `Closes #588` footer. Open, deliberately out of
+this unit: the `--pins` default that never checks the crate (Known pre-existing
+issues).
 
 ## References
 
-Issue [#588](https://github.com/gtrabanco/agentic-workflow/issues/588) · the watch
+Issue [#588](https://github.com/gtrabanco/agentic-workflow/issues/588) · the PR
+[#592](https://github.com/gtrabanco/agentic-workflow/pull/592) · the watch
 that filed it, issue [#219](https://github.com/gtrabanco/agentic-workflow/issues/219)
 (`scripts/pin-watch.mjs`, feature 67 AC2) · the same package's previous bump,
 [#484](https://github.com/gtrabanco/agentic-workflow/issues/484) (`1.4.5` →
