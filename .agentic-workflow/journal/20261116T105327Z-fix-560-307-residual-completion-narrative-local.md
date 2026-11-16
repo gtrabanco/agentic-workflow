@@ -1,6 +1,0 @@
-## 2026-11-16T10:53:27Z — fix/560-307-residual-completion — fix-567-path-protection-bypass
-- **Commits:** 30 (`0a37c272…233254a5`)
-- **Files:** 32 files
-- **Summary:** Built issue #567 on the fix-560 branch (owner ruled a-enforce): new pure guards/shell-path.ts (static extraction incl. tilde + readable-script scan; in-root Tier 2 first, then the OS-temp carve-out, then durable out-of-root block-headless/approval-with-UI; non-static targets pass on a recorded boundary) wired into the tool_call handler before the seams, red-first (suite lands alone failing at 6fff112f, green 21/21 + 920 full pi run at fba3baef); the base-side bypass probe flipped 3 NOT BLOCKED to 3 BLOCKED with edit-parity reasons. Contract statement beside path-protection@1 with both grammar pins; rows #566/#567 settled done · [#577]. Obligations 12/12 verified; branch gate PASS 15/15.
-- **Decisions:** D1 route fix-here; D2 full enforcement design incl. temp carve-out and the not-statically-visible boundary; D3 no consent store; D4 contract placement outside the fence; D5 plan block for the new suite
-- **Next:** Owner verdicts the batch on PR #577 (Refs #567); the duplicate-row integration slip was repaired at 3c519e15 and disclosed.
