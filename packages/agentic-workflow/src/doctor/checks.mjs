@@ -15,10 +15,21 @@
  * server's `/health` answer), computed once per run by `doctor.mjs`.
  */
 
+import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { RUNNER_CANDIDATES, renderInvocation } from "../runner/resolve.mjs";
 import { COMPANION_PAIRINGS, NODE_ENGINE } from "./vocabulary.mjs";
 import { releaseLine, versionAtLeast } from "./probes.mjs";
+
+/**
+ * This crate's own version and the bun-first closed-set head rendered at it —
+ * the one symbol `resolve.mjs` owns, so the doctor's bootstrap instruction can
+ * never drift from the pin the contract carries (issue #555: the launcher and
+ * the pin live in one place, never spelled twice).
+ */
+const CRATE_VERSION = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version;
+const RG_BOOTSTRAP = renderInvocation(RUNNER_CANDIDATES[0], CRATE_VERSION, ["provision", "rg", "--yes"]);
 
 const at = (ops, ...parts) => path.join(ops.root, ...parts);
 
@@ -157,7 +168,7 @@ export const CHECK_PROBES = Object.freeze([
         : {
             status: "missing",
             advisory: "rg is not on PATH — the workflow searches with rg first and falls back to grep, but a session that assumes rg is present is the gap this check closes",
-            instruction: "bunx @gtrabanco/agentic-workflow provision rg --yes",
+            instruction: RG_BOOTSTRAP,
           },
   },
   {
