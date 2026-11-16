@@ -50,7 +50,7 @@ const CANONICAL = {
   version: BATCH_PLAN_VERSION,
   schema: BATCH_PLAN_SCHEMA,
   source_revision: "b8b1d8147b1ecb79ef92355a53309c2b82a3c3d2",
-  degraded: ["unavailable-forge-gh-cli-missing"],
+  degraded: ["unavailable-forge-gh-cli-missing", "surface-unknown-issue-574"],
   batches: [
     {
       n: 1,
@@ -111,8 +111,9 @@ const CANONICAL = {
     { code: "prose-native-mismatch", numbers: [407], detail: "prose row declared hard with no native blocked-by" },
     { code: "file-overlap", numbers: [405, 408], detail: "both modify: scripts/docs-generate.mjs" },
     { code: "stale-claim", numbers: [409], detail: "claim 409|scripts expired: last seen 2026-11-08 is older than the 48h claim TTL" },
+    { code: "blind-spot", numbers: [447, 448], detail: "batch 1 carries two issues that declare no surface — serialise them" },
   ],
-  summary: { open_issues: 8, batched: 2, blocked: 1, launched: 1, findings: 5, batches: 2, label_blocked: 2 },
+  summary: { open_issues: 8, batched: 2, blocked: 1, launched: 1, findings: 6, batches: 2, label_blocked: 2 },
 };
 
 test("batch-plan: the canonical vector validates", () => {
@@ -144,9 +145,33 @@ test("batch-plan: contract id, version and schema token agree", () => {
 
 test("batch-plan: the closed vocabularies are exactly the published sets", () => {
   assert.deepEqual([...BATCH_REASON_KINDS], ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"]);
-  assert.deepEqual([...BATCH_FINDING_CODES], ["cycle", "orphaned-soft-dep", "prose-native-mismatch", "file-overlap", "stale-claim"]);
+  assert.deepEqual([...BATCH_FINDING_CODES], ["cycle", "orphaned-soft-dep", "prose-native-mismatch", "file-overlap", "stale-claim", "blind-spot"]);
   assert.deepEqual([...BATCH_SIZE_HINTS], ["light", "mixed", "heavy"]);
   assert.deepEqual([...BATCH_BLOCKING_LABELS], ["postponed", "backlog", "human-revision-needed"]);
+});
+
+test("batch-plan: the surface-unknown degraded family is accepted and a malformed member is refused (#574)", () => {
+  const accepted = structuredClone(CANONICAL);
+  accepted.degraded = ["surface-unknown-issue-7", "surface-unknown-issue-1234"];
+  assert.deepEqual(validateBatchPlan(accepted), { ok: true, errors: [] });
+  assert.equal(schemaValidates(accepted), true, "the draft-07 projection publishes the same family");
+  // A second degraded family is a grammar, not free text: the issue number is
+  // required. (`unavailable-surface-unknown-issue-7` is *not* malformed — the
+  // first family's cause is free by contract, so it is a legal member of it.)
+  for (const malformed of ["surface-unknown", "surface-unknown-issue-", "surface-unknown-issue-abc"]) {
+    const mutated = structuredClone(CANONICAL);
+    mutated.degraded = [malformed];
+    assert.equal(validateBatchPlan(mutated).ok, false, `the validator accepts ${malformed}`);
+    assert.equal(schemaValidates(mutated), false, `the schema accepts ${malformed}`);
+  }
+});
+
+test("batch-plan: the blind-spot finding code round-trips through validator and schema (#574)", () => {
+  const blind = structuredClone(CANONICAL);
+  blind.findings = [{ code: "blind-spot", numbers: [7, 8], detail: "batch 2 carries two issues that declare no surface" }];
+  blind.summary.findings = 1;
+  assert.deepEqual(validateBatchPlan(blind), { ok: true, errors: [] });
+  assert.equal(schemaValidates(blind), true);
 });
 
 test("batch-plan: an unknown top-level key is refused (core closed, no metadata escape)", () => {
