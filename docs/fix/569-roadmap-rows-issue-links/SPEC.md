@@ -425,6 +425,20 @@ this flow.
   and the row's Notes cell is unchanged, so the settle did not re-open the
   clobber this unit closes.
 - **P7** — 2026-11-16, the PR and the row settle · see `E14`.
+- **D6** — 2026-11-16, the session fragment was **not** rewritten, and the
+  reason is a gate, not a preference: `journal write` names a fragment by its
+  UTC second, so a second narrative from this conversation landed as a **new**
+  file (`20261116T174914Z-…-narrative-local.md`) instead of updating the first
+  (`--session local` is the shared identity, which never fires the
+  already-registered refusal). Retiring the pre-PR fragment — the obvious
+  cleanup, since both would duplicate this session in `docs/LOGS.md` at
+  aggregation — was **refused by the push gate**: `local-gate: FAILED at
+  log-immutability`, because a fragment that exists at the remote tip may not
+  be deleted inside a push range; the journal is aggregator-only. So the
+  in-range second fragment is discarded, `P5`'s fragment stands as written, and
+  its `Commits: 3` line stays a snapshot taken at write time — the grammar's
+  contract, the same way fix #527's fragment carries its own snapshot. Recorded
+  rather than worked around: no history was rewritten to make a gate agree.
 - **L3** — 2026-11-16, disclosed side effect (§3 live-tree guard): probing the
   `journal write` CLI's flag surface wrote one placeholder fragment, the
   name ending
