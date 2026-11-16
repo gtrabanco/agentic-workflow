@@ -77,6 +77,19 @@ const SUM_FIELDS = Object.freeze([
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * Whether a bound names a day that exists — `2026-11-31` has the shape and no
+ * such day (O14: a malformed date is a refusal, never an empty table that reads
+ * like "no cost"). The round-trip through `Date.UTC` is the calendar itself:
+ * February 29 only survives it in a leap year.
+ */
+function isCalendarDay(value) {
+  if (!ISO_DAY.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
 /** Print a JSON answer on stdout and set the exit code. */
 function out(payload, code = 0) {
   process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
@@ -237,8 +250,8 @@ function main(argv, cwd) {
     return refuse("unknown-flag-value", `--by accepts ${GROUP_KEYS.join(", ")}, got ${flags.by}`, { flag: "--by" });
   }
   for (const bound of ["from", "to"]) {
-    if (flags[bound] !== undefined && !ISO_DAY.test(flags[bound])) {
-      return refuse("bad-date", `--${bound} needs YYYY-MM-DD, got ${flags[bound]}`, { flag: `--${bound}` });
+    if (flags[bound] !== undefined && !isCalendarDay(flags[bound])) {
+      return refuse("bad-date", `--${bound} needs YYYY-MM-DD (a day that exists), got ${flags[bound]}`, { flag: `--${bound}` });
     }
   }
 
