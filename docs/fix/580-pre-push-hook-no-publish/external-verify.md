@@ -153,3 +153,28 @@ with the owner (PR #581 is `dirty` against a `main` that moved 13 commits).
   change's surface (`git status` carried only this unit's files); both advanced
   their branches and the guard is `0 finding(s)` now. Nothing of theirs was
   removed or touched.
+
+## After the batch: integration and recheck on the integrated head
+
+The owner integrated `main` into the branch while the batch was in flight
+(`9c1a4d56`, GitHub web-merge). The batch's two unpublished commits were
+replayed onto it; the armed shared-doc driver resolved `docs/ROADMAP.md` to the
+union of both sides' rows (568's and 580's) and the emitter reported the
+projection unchanged.
+
+- `bun test scripts/local-gate.test.mjs` · 59 pass · 0 fail
+- `bun test scripts/triage-rescope.test.mjs` · 20 pass · 0 fail
+- `bun test scripts/release-workflows.test.mjs` · 26 pass · 0 fail
+- `bun test scripts/invocation-drift.test.mjs` · 13 pass · 0 fail
+- `bun test scripts/residue-dimensions.test.mjs` · 30 pass · 0 fail
+- `bun test scripts/pre-execution-quality.test.mjs` · 1 pass · 0 fail
+- `bun test scripts/git-env.test.mjs` · 6 pass · 0 fail
+- `bun test packages/agentic-workflow/test/doctor.checks.test.mjs` · 21 pass · 0 fail
+- `bun scripts/local-gate.mjs --jobs auto --no-bail` · exit 0 · `PASS — 19 step(s) in 841s`
+
+Two reds seen and cleared during that sequence, both foreign to this change and
+both named here rather than buried: `worktree-guard` flagged
+`feat-563-init-workspace-interview` (another session's fresh worktree, no commits
+of its own, so the guard reads it as merged); and one `--no-bail` run reported
+`root-suite` red under load average 10 with one worker, a step that passes
+standalone (`bun scripts/run-root-suite.mjs` exit 0) and in the next gate run.

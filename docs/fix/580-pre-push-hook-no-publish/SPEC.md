@@ -319,6 +319,26 @@ machinery on the repository's own tooling.
   against a moved `main` (the owner runs the integration, AGENTS.md › Working
   rules) and **A4** O3's validator naming a worktree that no longer exists.
 
+- **L6** — 2026-11-16, the correction batch landed and the owner integrated
+  `main` into the branch (`9c1a4d56`, a GitHub web-merge) while the batch was in
+  flight; the two unpublished commits were replayed onto it, the armed
+  shared-doc driver resolved `docs/ROADMAP.md` to the union of both sides' rows,
+  and the emitter reported the projection unchanged (`docs-generate --check`
+  PASS). Recheck on the integrated head: `local-gate` suite `59 pass`, and
+  `triage-rescope 20`, `release-workflows 26`, `invocation-drift 13`,
+  `residue-dimensions 30`, `pre-execution-quality 1`, `git-env 6`,
+  `doctor.checks 21` — all `0 fail`. Gate: one `--bail` run stopped at
+  `worktree-guard` on a **foreign** worktree (`feat-563-init-workspace-interview`,
+  a session's fresh tree with no commits of its own — it cleared on its own); a
+  `--no-bail` run then reported `root-suite` red under load average 10 with
+  `jobs 1`, and the same step passes standalone (`bun scripts/run-root-suite.mjs`
+  exit 0); the next `--no-bail` run · `local-gate: PASS — 19 step(s) in 841s`.
+  **Push**, recorded because it is a bypass: the hook's own gate passed at this
+  head (16 steps, 545s) and the push still ended `exit 141` with no object sent
+  — the E13 transport defect, not a content failure — so the landing push used
+  `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` after that PASS at the same head, reason
+  recorded here and on PR #581.
+
 ## Next
 
 The diff goes to the owner as the external verifier; the `## Fixes` row leaves
