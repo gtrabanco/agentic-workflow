@@ -323,6 +323,16 @@ relay-next: create .pi-web/relays/555-programmatic-runner/ (charter → docs/fea
   crash-resume fixture's sensor stub is now executable and carries its shebang:
   the override names a *command* (RUNNER.md's form), so a bare non-executable
   path is no longer a legal value.
+- **D10** — 2026-11-16, the external-verify correction batch (§9, over the verdict
+  `NEEDS-DECISION (O21)`). O21's validator cell is widened (`--reverse` plus the
+  implementation path) so its stated outcome is what the command prints. A1 pins
+  the doctor's `rg` bootstrap by rendering `RUNNER_CANDIDATES[0]` at the crate's
+  own manifest version through `renderInvocation` — bun-first kept (the doctor's
+  bun row owns a missing bun), the evaluator stays pure over evidence, and the
+  launcher/pin symbol has one home beside the resolver. A2/A3 re-point the last
+  old-shape citation comments in crate code. A4 is dispositioned, not fixed:
+  `docs/ROADMAP.md:169` quotes issue #553 verbatim and its linked unit doc is
+  absent at base and at head — a reword belongs to #553's triage, not this unit.
 - **E1** — 2026-11-16, `bun test packages/agentic-workflow/test/runner.resolve.test.mjs` · exit 1 at `eb961b9f` · `0 pass · 1 fail · 1 error`
   (`Cannot find module '../src/runner/resolve.mjs'`).
 - **E2** — 2026-11-16, `bun test packages/agentic-workflow/test/runner.resolve.test.mjs` · exit 0 at `4aae8a50` · `17 pass · 0 fail`.
@@ -346,6 +356,10 @@ relay-next: create .pi-web/relays/555-programmatic-runner/ (charter → docs/fea
 - **E20** — 2026-11-16, differential of pi's spawn argv (base formula resolved from the pi package's own dependency vs the head resolver) · `{"base":["node","…/packages/agentic-workflow/bin/agentic-workflow.mjs","workflow-status","--json-only"],"head":<same>,"source":"installed","equal":true}` — no unrequested difference.
 - **E21** — 2026-11-16, `node packages/agentic-workflow/bin/agentic-workflow.mjs runner resolve --json phase-lint docs/x.md` · exit 0 · `{"source":"bunx","argv":["bunx","@gtrabanco/agentic-workflow@4.10.0","phase-lint","docs/x.md"],…}`.
 - **E22** — 2026-11-16, `node scripts/lint-changeset.mjs .changeset/programmatic-runner-detection.md` · exit 0 · `ok programmatic-runner-detection.md`.
+- **E23** — 2026-11-16, correction-batch RED before implementation · `bun test packages/agentic-workflow/test/doctor.checks.test.mjs` · exit 1 at the pre-fix working tree · `AssertionError: the bootstrap instruction is pinned to the crate's own version (never an unpinned latest)` — 1 fail, the rest green.
+- **E24** — 2026-11-16, correction-batch GREEN after · same suite · exit 0 · `21 pass · 0 fail`; `bun test packages/agentic-workflow/test/doctor.cli.test.mjs packages/agentic-workflow/test/doctor.inventory.test.mjs packages/agentic-workflow/test/doctor.wizard.test.mjs packages/agentic-workflow/test/config-cli.test.mjs` · exit 0 · `28 pass · 0 fail`; corrected O21 validator · exit 0 · exactly `eb961b9f` (red) then `4aae8a50` (green); the re-pointed-comment scans (`rg` over `phase-lint.mjs` and `config-cli.test.mjs`) → 0 matches each.
+- **E25** — 2026-11-16, differential vs the batch base `099244c2`, base copy in `mktemp -d` scratch (never committed, removed at close) · healthy env `doctor`: content byte-identical (only the measured-duration feedback line differs); `rg`-absent env (a PATH with no `rg` on it, exit 0 both sides): the only content delta is the instruction gaining `@4.10.0`, `3 advisories` on both sides; `phase-lint` on this unit doc: byte-identical — no unrequested stdout/stderr/exit difference.
+- **E26** — 2026-11-16, `bun scripts/local-gate.mjs --jobs 1` · exit 0 at `9bba62cd` · `local-gate: PASS — 19 step(s) in 745s`. The first attempt red'd at `root-suite` while the box ran ~10×6 load from concurrent sessions (two different victims across runs; `bun test scripts/unit-route.test.mjs` → `64 pass · 0 fail` and `bun test scripts/phase-lint.test.mjs` → `162 pass · 0 fail` standalone) — environment, not change-caused; no code change was made for it.
 - **P1** — 2026-11-16, unit doc, the two planning ledgers and the triage block frozen · `0c49b74a`.
 - **P2** — 2026-11-16, the resolver suite landed alone, observed red (E1) · `eb961b9f`.
 - **P3** — 2026-11-16, the resolver module, `runner resolve`, the crate README/usage/dispatch, `CRATE_COMMANDS` and RUNNER.md's parity block · `4aae8a50`.
@@ -354,6 +368,7 @@ relay-next: create .pi-web/relays/555-programmatic-runner/ (charter → docs/fea
 - **P6** — 2026-11-16, the action's private chooser deleted, its S13 corpus green (E7) · `7961192e`.
 - **P7** — 2026-11-16, state: changeset, roadmap row, the `runner-set` inventory row + `machineLines`, the gate inventory's surfaces cell, the generated projection (E14) · `fa81c10a`.
 - **P8** — 2026-11-16, verification: every obligation's validator run in the foreground (E2–E22); the three suites and the root gate green.
+- **P9** — 2026-11-16, the §9 correction batch: O21's cell, the pinned doctor instruction, the two re-pointed comments (E23–E25) · `9bba62cd`; the batch gate green (E26).
 
 ## Next
 
