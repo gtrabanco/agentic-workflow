@@ -57,6 +57,12 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 **S13 — Normative surface registration.**
 > "Metric definitions are documented in one place and the envelope field vocabulary is registered per the normative-surfaces rule before merge."
 
+**S14 — Load-stable budget for the known slow suite (owner-routed, L4).**
+> "`scripts/next-step-ranking.test.mjs` carries a declared per-test budget in the shipped allowlist — `timeoutMs`, a `reason` and a `measured` cost — so the push gate no longer reddens on it when the box runs concurrent sessions."
+
+**S15 — Traced-shell hermetic suites (owner-routed, L4).**
+> "No suite inherits the caller's ambient `GIT_TRACE`/`GIT_TRACE2`: the suite-boundary scrub strips them at every entry point that spawns suites, while the published locator semantics and `GIT_CONFIG_*`/`GIT_AUTHOR_*` survive untouched."
+
 ## Acceptance criteria
 
 One observable, testable criterion per requirement; each names the check that proves it.
@@ -76,6 +82,8 @@ One observable, testable criterion per requirement; each names the check that pr
 | AC-11 (S11) | the command emits a valid envelope on this repository and its numbers are reconciled by hand once, recorded here | the `## Log` pilot lines (envelope bytes + reconciliation) |
 | AC-12 (S12) | an unreadable forge or a history that truncates the window degrades the affected rows to `unavailable` with a declared code, never a zero value | `bun test packages/agentic-workflow/test/quality-metrics.collect.test.mjs` (the degradation matrix) |
 | AC-13 (S13) | the two vocabularies and the field grammar are registered in `normative-surfaces@1`, claimed by the gate inventory, and the guide's machine-region pin moves with them | `bun test scripts/normative-drift.test.mjs` exits 0, `bun scripts/prose-gate-inventory.mjs` exits 0, `bun scripts/check-skill-context.mjs --documents` exits 0 |
+| AC-14 (S14) | the shipped allowlist declares a budget above the 10 s default for `scripts/next-step-ranking.test.mjs`, with non-empty `reason` and `measured`, and the runner applies it | `bun test scripts/run-root-suite.test.mjs` exits 0 with the declared-budget case, and `bun scripts/run-root-suite.mjs scripts/next-step-ranking.test.mjs` exits 0 |
+| AC-15 (S15) | a run under an ambient traced shell keeps every suite green: the boundary scrub deletes `GIT_TRACE`/`GIT_TRACE2` and still passes `GIT_CONFIG_*`/`GIT_AUTHOR_*` through | `GIT_TRACE=1 bun test packages/agentic-workflow/test/feedback.test.mjs` exits 0, and `bun test scripts/git-env.test.mjs` exits 0 with the trace cases |
 
 ## Impact
 
@@ -214,6 +222,12 @@ none — nothing was deferred.
   (Implements: S11)
 - P8 — Close the unit: re-classify the tier over the real diff, settle the roadmap row, ship the changeset and the session log, run the whole gate (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
   (Implements: S11, S13)
+- P9 — Land the owner-routed budget fix: the allowlist entry for the load-inflated sensor suite plus the pin that keeps it declared (validator: `bun test scripts/run-root-suite.test.mjs` exits 0 with the declared-budget case, and `bun scripts/run-root-suite.mjs scripts/next-step-ranking.test.mjs` exits 0)
+  (Implements: S14)
+  - Relevant files: scripts/test-timeout-allowlist.json, scripts/run-root-suite.test.mjs
+- P10 — Land the owner-routed hermetic fix: the boundary scrub gains the ambient trace variables at every entry point that spawns suites (validator: `bun test scripts/git-env.test.mjs` exits 0 with the trace cases, and `GIT_TRACE=1 cd packages/agentic-workflow && bun test test/feedback.test.mjs` exits 0)
+  (Implements: S15)
+  - Relevant files: scripts/git-env.mjs, scripts/test-preload.mjs, scripts/local-gate.mjs, scripts/run-root-suite.mjs, scripts/git-env.test.mjs
 
 The link grammar (`task-spec-link@1`): every task bullet names the requirements
 it delivers on its own `(Implements: …)` line.
@@ -460,6 +474,45 @@ P | P<n> | a phase's progress — what was done and the commit
   passed: `workspace-install`, `pi-compat-guard`, `dependency-pin-gate`,
   `dependency-advisories`). This supersedes G8 as the receipt for the batch's
   final tree; the only prose after this run is this line itself.
+- L4 — 2026-11-16, the owner's routing answer to the ledger-home question for the
+  two reported test failures (verbatim):
+  ```
+  selected here
+  ```
+  option label "On this branch (feat/565)", authorizing the A-fix (the
+  `next-step-ranking` allowlist entry) and the B-fix (the `GIT_TRACE` strip at
+  the suite boundary) to land in this unit's worktree — a recorded exception to
+  one-PR-per-unit, granted by the owner. The C-finding (push exit 141 after a
+  green gate) is not in this batch: it is not a test, it needs the owner's route
+  (hatch-with-reason or a trace-level investigation) and per §9 it goes to him.
+  S14/S15 and tasks P9/P10 are this routing's frozen requirements.
+- E18 — 2026-11-16, the frozen-failure corpus and the new pins observed **red**
+  before any implementation: `bun test scripts/git-env.test.mjs` → `5 pass 2
+  fail` (the boundary case — `scrubGitEnv` not yet published — and the preload
+  proof's `GIT_TRACE`), `bun test scripts/local-gate.test.mjs` → `53 pass 1
+  fail` (a step still inherits ambient tracing), `bun test
+  scripts/run-root-suite.test.mjs` → `45 pass 2 fail` (the S14 budget read
+  `10000` against the required `30000`, and `suiteChildEnv` unpublished). The
+  two known failures reproduced red too: `GIT_TRACE=1 bun test test/` in the
+  crate → `1 fail / 888` (only `--quiet writes nothing on a successful sync`),
+  and the shipped allowlist gave `scripts/next-step-ranking.test.mjs` the
+  `10000` default while the push gate had measured `10026.89ms` against it.
+- E19 — 2026-11-16, green after the implementation, every run in the
+  foreground: `bun test scripts/git-env.test.mjs scripts/local-gate.test.mjs
+  scripts/run-root-suite.test.mjs` · exit 0 · `108 pass 0 fail` (104
+  pre-existing + the 4 new pins, no existing case touched); `GIT_TRACE=1 bun test
+  packages/agentic-workflow/test/feedback.test.mjs` · exit 0 · `30 pass 0
+  fail` — the frozen reproducer green under the traced shell; `bun
+  scripts/run-root-suite.mjs scripts/next-step-ranking.test.mjs` · exit 0 ·
+  `PASS scripts/next-step-ranking.test.mjs (30.6s)` under the declared `30000`
+  budget (`testBudgetFor` → `30000`, default `10000`).
+- E20 — 2026-11-16, the differential against the base of this batch
+  (`HEAD` = `c4f37ed3`, in `mktemp -d`, never committed, removed after): with
+  no `GIT_TRACE` set, base `scrubGitLocator(env)` and head `scrubGitEnv(env)`
+  return the **same** object (`JSON.stringify` equal — the scrub is a no-op in
+  normal conditions), with `GIT_TRACE=1` base keeps `"1"` and head removes it,
+  and `GIT_LOCATOR_VARS` is byte-identical between the two versions;
+  `ls -d /tmp/qm-diff-*` → `0` lines after cleanup.
 
 ## Next
 

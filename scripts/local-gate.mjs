@@ -64,7 +64,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import { scrubGitLocator } from "./git-env.mjs";
+import { scrubGitEnv } from "./git-env.mjs";
 
 const SCRIPT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BUN = process.env.AGENTIC_WORKFLOW_BUN ?? "bun";
@@ -885,9 +885,12 @@ function selectSteps(options) {
  * `GIT_DIR` exported, and a suite that `git init`s a fixture directory under it
  * re-initializes the caller's repository instead (see `scripts/git-env.mjs`);
  * the locator variables are stripped once, here, so no fixture has to know.
+ * The same call strips the caller's ambient `GIT_TRACE`/`GIT_TRACE2` too: a
+ * traced push must not hand its suites a flag whose output lands in the stderr
+ * a test pins (owner-routed S15).
  */
 export function stepEnv() {
-  return scrubGitLocator();
+  return scrubGitEnv();
 }
 
 async function main(argv) {

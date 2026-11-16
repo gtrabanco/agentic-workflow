@@ -270,6 +270,45 @@ test("S9: the two measured spawn-heavy suites carry their declared budget in the
   }
 });
 
+test("S14: the load-inflated sensor suite carries its declared budget in the shipped allowlist", () => {
+  // Six real workflow-status spawns per case (fixture git walk + shimmed gh +
+  // envelope parse); under the push gate with five concurrent local-gates on
+  // this box it crossed the 10s per-test budget (10026.89ms on 2026-11-16,
+  // load 15.9) while the same file measures 18.2s for 29 tests in a green
+  // jobs-4 gate run (owner-routed S14, SPEC L4).
+  const file = "scripts/next-step-ranking.test.mjs";
+  const allowlist = readAllowlist();
+  assert.equal(testBudgetFor(file, allowlist), 30_000, `${file} crossed the 10s per-test budget under load — its measured budget must be declared`);
+  const entry = allowlist.get(file);
+  assert.ok(entry, `${file} must be in the shipped allowlist`);
+  assert.ok(entry.reason.trim(), `${file} declares why it needs the budget`);
+  assert.ok(entry.measured.trim(), `${file} declares what was measured`);
+});
+
+test("the suite spawned by the runner inherits no ambient git tracing (owner-routed S15)", async () => {
+  // Imported here rather than at the top so this case fails on its own evidence
+  // while the S14 case above still reports its budget assertion.
+  const { suiteChildEnv } = await import("./run-root-suite.mjs");
+  assert.equal(typeof suiteChildEnv, "function", "the runner publishes its suite-env builder");
+  const saved = { ...process.env };
+  try {
+    process.env.GIT_TRACE = "1";
+    process.env.GIT_TRACE2 = "/tmp/trace2";
+    const index = String(process.env.GIT_CONFIG_COUNT ?? "0");
+    const env = suiteChildEnv();
+    assert.equal(env.GIT_TRACE, undefined, "GIT_TRACE must not reach a suite");
+    assert.equal(env.GIT_TRACE2, undefined, "GIT_TRACE2 must not reach a suite");
+    assert.equal(env.GIT_DIR, undefined, "the locator contract still holds through this builder");
+    assert.equal(env[`GIT_CONFIG_KEY_${index}`], "commit.gpgsign", "the gate's own config still lands");
+    assert.equal(env[`GIT_CONFIG_VALUE_${index}`], "false");
+    assert.equal(env.NODE_TEST_CONTEXT, undefined, "a suite never inherits its parent's test-runner context");
+    assert.equal(env.PATH, process.env.PATH, "the rest of the environment is inherited");
+  } finally {
+    for (const name of ["GIT_TRACE", "GIT_TRACE2"]) delete process.env[name];
+    Object.assign(process.env, saved);
+  }
+});
+
 /* -------------------------------------------------- execution bounds (live) */
 
 /** A suite whose only test never resolves while keeping the event loop alive
