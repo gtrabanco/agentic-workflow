@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-roadmap_summary: deterministic forge/git quality metrics envelope (DORA + reversion ratio), the talk-mapped point 5 end-to-end
+roadmap_summary: Issue [#565](https://github.com/gtrabanco/agentic-workflow/issues/565) (M): deterministic forge/git quality metrics envelope (DORA + reversion ratio), the talk-mapped point 5 end-to-end
 ---
 
 # 558 — quality-sensor
