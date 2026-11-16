@@ -418,6 +418,7 @@ ceremony-profile-piece-vocabulary | packages/agentic-workflow-schema/src/ceremon
 ceremony-profile-adoption-vocabulary | packages/agentic-workflow-schema/src/ceremony-profile.ts | schema-export:CEREMONY_PROFILE_ADOPTIONS | ceremony-profile-adoption | no
 ceremony-profile-refusal-vocabulary | packages/agentic-workflow-schema/src/ceremony-profile.ts | schema-export:CEREMONY_PROFILE_REFUSALS | ceremony-profile-refusal | no
 ceremony-profile-block | packages/agentic-workflow-schema/README.md | block:ceremony-profile@1 | n/a | no
+interview-bank | skills/init-workspace/references/ENGINEERING_INTERVIEW.md | block:interview-bank@1 | n/a | no
 doc-provenance-grammar-family-vocabulary | packages/agentic-workflow-schema/src/doc-provenance.ts | schema-export:DOC_GRAMMAR_FAMILIES | doc-grammar-family | no
 doc-provenance-stamp | packages/agentic-workflow-schema/README.md | block:doc-provenance@1 | doc-provenance-format+doc-grammar-family | no
 continuation-refusal-vocabulary | packages/agentic-workflow-schema/src/continuation.ts | schema-export:CONTINUATION_REFUSALS | continuation-refusal-type | yes
