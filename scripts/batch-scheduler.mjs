@@ -48,6 +48,12 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { readRoadmapIndex, roadmapTableRows } from "../packages/agentic-workflow/src/index-document.mjs";
+import {
+  closesFence,
+  headingBoundsAll,
+  openFence,
+  parseUnitDocPhases,
+} from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 
 /** The state file's name, under `<root>/.agentic-workflow/` (untracked, durable). */
 export const STATE_FILE_NAME = "batches.json";
@@ -216,6 +222,42 @@ function sanitizeCause(cause) {
   return text.slice(0, 40) || "error";
 }
 
+/**
+ * Read one issue — from the injected fixture when there is one, else the forge
+ * (issue #574, S2). The triage step's `--infer-surfaces` path is its only
+ * caller: everything it returns is either the issue or a named reason, never an
+ * empty body a caller could mistake for "declares nothing".
+ *
+ * @returns {{issue: object} | {error: string}}
+ */
+function readOneIssue(number, { issuesFile, remote = null, ghBin = "gh" } = {}) {
+  if (issuesFile) {
+    let raw;
+    try {
+      raw = JSON.parse(fs.readFileSync(issuesFile, "utf8"));
+    } catch (cause) {
+      return { error: `the issues fixture is unreadable (${sanitizeCause(cause)})` };
+    }
+    if (!Array.isArray(raw)) return { error: "the issues fixture is not a JSON array" };
+    const found = normalizeIssues(raw).find((issue) => issue.number === number);
+    return found === undefined ? { error: "the issues fixture does not carry it" } : { issue: found };
+  }
+  const origin = remote ?? gitOriginUrl();
+  const parsed = origin === null ? null : parseOrigin(origin);
+  const repoArgs = parsed === null ? [] : ["-R", `${parsed.owner}/${parsed.name}`];
+  const run = spawnSync(ghBin, ["issue", "view", String(number), ...repoArgs, "--json", "number,title,body"], {
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  if (run.error) return { error: `gh is unavailable (${sanitizeCause(run.error)})` };
+  if (run.status !== 0) return { error: `the forge refused the read (${sanitizeCause(run.stderr || "gh issue view failed")})` };
+  try {
+    return { issue: normalizeIssues([JSON.parse(run.stdout)])[0] ?? { error: "issue" } };
+  } catch (cause) {
+    return { error: `the forge answered with unreadable JSON (${sanitizeCause(cause)})` };
+  }
+}
+
 // ── launch evidence (issue #509, S3) ──────────────────────────────────────
 
 /** A unit branch: `fix/<issue>-<slug>` / `feat/<issue>-<slug>`. */
@@ -363,21 +405,104 @@ function inFlightEvidence(slot, unitDir) {
 
 // ── surfaces, dependencies, sizes (all read from where they live) ─────────
 
-/** The `## Where` and `## In scope` sections an issue declares its surface in. */
-function scopeSections(body) {
-  const sections = [];
-  for (const heading of ["## Where", "## In scope"]) {
-    const idx = body.indexOf(heading);
-    if (idx === -1) continue;
-    const rest = body.slice(idx + heading.length);
-    const end = rest.indexOf("\n## ");
-    sections.push(end === -1 ? rest : rest.slice(0, end));
+/**
+ * The section names an issue declares its surfaces in, in precedence order
+ * (issue #574, decision D3). `## Surfaces` is the declaration the four issue
+ * forms, the four SPEC templates and the triage step publish; `## Where` and
+ * `## In scope` are the prose sections the planner has always read, and they
+ * keep the union they had so no existing issue changes lanes.
+ */
+const SURFACE_SECTIONS = ["Surfaces", "Where", "In scope"];
+
+/** What triage writes when its own inference found nothing (issue #574, D5). */
+export const SURFACE_UNKNOWN_TOKEN = "surface-unknown";
+
+/**
+ * The backticked tokens of a body's prose, with fenced code blocks inert.
+ *
+ * Per line, deliberately (issue #574, decision D7): pairing backticks across a
+ * whole document let one fenced block desynchronise every later span — `#504`
+ * declares `packages/pi-agentic-workflow/` and resolved to no surface at all,
+ * while its file claims harvested the fence's own contents
+ * (`bash\nbun test scripts/telemetry-coverage.test.mjs`). A fence is code, so
+ * nothing inside one is a declaration, and an unmatched backtick can now spoil
+ * only its own line.
+ *
+ * @param {string} text
+ * @returns {string[]}
+ */
+function proseTokens(text) {
+  const tokens = [];
+  let fence = null;
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (fence !== null) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened !== null) {
+      fence = opened;
+      continue;
+    }
+    for (const match of line.matchAll(/`([^`]+)`/gu)) tokens.push(match[1]);
   }
-  return sections.length > 0 ? sections : [body];
+  return tokens;
 }
 
-/** The concrete files an issue's body claims, from the same `## Where` /
- * `## In scope` sections the surfaces come from (issue #509, S4).
+/**
+ * The declared surface sections present in a body, fence-aware and at any
+ * heading level: an issue form renders its field labels at level 3, a hand-typed
+ * body at level 2, and both are the same declaration (decision D3).
+ *
+ * @param {string} body
+ * @returns {Array<{name: string, text: string}>}
+ */
+function declaredSections(body) {
+  const sections = [];
+  for (const name of SURFACE_SECTIONS) {
+    for (const bounds of headingBoundsAll(body, name)) sections.push({ name, text: body.slice(bounds.start, bounds.end) });
+  }
+  return sections;
+}
+
+/** The lane keys one text declares (see `surfaceKey`). */
+function surfaceKeys(text) {
+  const surfaces = new Set();
+  for (const token of proseTokens(text)) {
+    const key = surfaceKey(token);
+    if (key !== null) surfaces.add(key);
+  }
+  return surfaces;
+}
+
+/**
+ * The surfaces a body declares, and whether it declared any.
+ *
+ * A `## Surfaces` section is exclusive when present (S3, decision D3): a
+ * declaration beats the prose beside it, and an empty one is a declaration of
+ * unknown — never an invitation to infer from the prose it sits next to.
+ * Without it, `## Where` and `## In scope` keep the union the planner has always
+ * read, and a body with neither is its own inference source.
+ *
+ * @returns {{surfaces: Set<string>, declared: boolean}}
+ */
+function resolveBodySurfaces(body) {
+  const sections = declaredSections(body);
+  const explicit = sections.filter((section) => section.name === "Surfaces");
+  const sources = explicit.length > 0 ? explicit : sections;
+  if (sources.length > 0) {
+    const surfaces = new Set();
+    for (const section of sources) for (const key of surfaceKeys(section.text)) surfaces.add(key);
+    return { surfaces, declared: true };
+  }
+  return { surfaces: surfaceKeys(body), declared: false };
+}
+
+/**
+ * The concrete files an issue's body claims — the same declared sections the
+ * surfaces come from, plus the `## Surfaces` section, or the whole body when it
+ * declares none (issue #509, S4; issue #574 extends the sources).
  *
  * A token qualifies only when it names a file — an extension, no wildcard — so
  * a directory or a glob claims nothing: expanding a directory into its children
@@ -387,10 +512,12 @@ function scopeSections(body) {
  * @returns {string[]} the sorted, unique file paths
  */
 export function extractFileClaims(body) {
+  const sections = declaredSections(body);
+  const sources = sections.length > 0 ? sections.map((section) => section.text) : [body];
   const files = new Set();
-  for (const section of scopeSections(body)) {
-    for (const match of section.matchAll(/`([^`]+)`/g)) {
-      const file = fileToken(match[1]);
+  for (const text of sources) {
+    for (const token of proseTokens(text)) {
+      const file = fileToken(token);
       if (file !== null) files.add(file);
     }
   }
@@ -405,12 +532,57 @@ function fileToken(token) {
   return /^[^/]+\.[A-Za-z][A-Za-z0-9]{0,9}$/u.test(last) && !last.startsWith(".") ? clean : null;
 }
 
-/** Normalize one path token to its lane key (see `surfaceKey`). */
+/** The surfaces one issue body declares (see `resolveBodySurfaces`). */
 export function extractSurfaces(body) {
+  return resolveBodySurfaces(body).surfaces;
+}
+
+/**
+ * Where an issue's surfaces come from, in the order the plan trusts them
+ * (issue #574, S3, decisions D3/D4).
+ *
+ * The body is the forge's own word and wins. When it declares nothing — or
+ * declares `surface-unknown`, which triage writes when its inference failed —
+ * the unit doc the lane cut is the next source: its `## Surfaces` section, then
+ * the `Relevant files:` read sets its tasks already carry. When neither says
+ * anything, the answer is *nothing*, which the plan reports as
+ * `surface-unknown-issue-<n>` instead of hiding behind the `general` lane.
+ *
+ * @returns {{surfaces: Set<string>, source: "declared"|"inferred"|"unit-doc"|"declared-unknown"|"unknown"}}
+ */
+function resolveSurfaces(root, issue, unitDir) {
+  const body = resolveBodySurfaces(issue.body ?? "");
+  if (body.surfaces.size > 0) return { surfaces: body.surfaces, source: body.declared ? "declared" : "inferred" };
+  const fromDoc = unitDir === undefined ? null : unitDocSurfaces(root, unitDir);
+  if (fromDoc !== null && fromDoc.size > 0) return { surfaces: fromDoc, source: "unit-doc" };
+  return { surfaces: new Set(), source: body.declared ? "declared-unknown" : "unknown" };
+}
+
+/**
+ * The surfaces a unit doc declares: its `## Surfaces` section, else the union of
+ * its `## Tasks` `Relevant files:` cells (the grammar `scripts/relevant-files.mjs`
+ * reads, never a second parser). An absent or unreadable doc declares nothing.
+ *
+ * @returns {Set<string>|null} null when the doc cannot be read at all
+ */
+function unitDocSurfaces(root, unitDir) {
+  let text;
+  try {
+    text = fs.readFileSync(path.join(root, unitDir, "SPEC.md"), "utf8");
+  } catch {
+    return null;
+  }
+  const declared = new Set();
+  for (const bounds of headingBoundsAll(text, "Surfaces")) {
+    for (const key of surfaceKeys(text.slice(bounds.start, bounds.end))) declared.add(key);
+  }
+  if (declared.size > 0) return declared;
+  const { phases } = parseUnitDocPhases(text);
   const surfaces = new Set();
-  for (const scope of scopeSections(body)) {
-    for (const match of scope.matchAll(/`([^`]+)`/g)) {
-      const key = surfaceKey(match[1]);
+  for (const phase of phases) {
+    for (const entry of String(phase.relevantFiles ?? "").split(",")) {
+      const trimmed = entry.trim();
+      const key = trimmed === "" ? null : surfaceKey(trimmed);
       if (key !== null) surfaces.add(key);
     }
   }
@@ -741,9 +913,17 @@ export function buildBatchPlan({
   }
 
   const model = new Map();
+  // The issues whose surfaces nothing declares (issue #574, S3): the lane they
+  // land in is a guess, so the plan says so twice — one degradation per issue
+  // and, when a batch carries two or more, one `blind-spot` finding.
+  const surfaceUnknown = new Set();
   for (const issue of launchable) {
-    const surfaces = extractSurfaces(issue.body);
-    const surfaceSet = surfaces.size > 0 ? surfaces : new Set(["general"]);
+    const resolved = resolveSurfaces(root, issue, unitDirByIssue.get(issue.number));
+    if (resolved.surfaces.size === 0) {
+      surfaceUnknown.add(issue.number);
+      degradations.push(`surface-unknown-issue-${issue.number}`);
+    }
+    const surfaceSet = resolved.surfaces.size > 0 ? resolved.surfaces : new Set(["general"]);
     let prose = extractProseDependencies(issue.body);
     if (prose.malformed) {
       // The declared shape is refused (issue #460, S5); what a row still
@@ -954,6 +1134,20 @@ export function buildBatchPlan({
       continue;
     }
     liveClaims.add(key);
+  }
+  // A batch whose issues declare no surface cannot be shown parallel-safe
+  // (issue #574, S3, decision D8): two or more blind rows in one batch are the
+  // finding, because the plan is presenting lanes it never verified.
+  for (const batch of batches) {
+    const blind = [...new Set(batch.lanes.flatMap((lane) => lane.issues.map((row) => row.number)))].filter((number) =>
+      surfaceUnknown.has(number),
+    );
+    if (blind.length < 2) continue;
+    findings.push({
+      code: "blind-spot",
+      numbers: blind.sort((a, b) => a - b),
+      detail: `batch ${batch.n} carries ${blind.length} issues that declare no surface — the batch cannot be shown parallel-safe; run them serially`,
+    });
   }
   // File-level overlap across the pairs the plan presents as running in
   // parallel (issue #509, S4): two rows of one batch on different lanes, two
@@ -1318,7 +1512,8 @@ export function saveState(statePath, state) {
 function usage() {
   process.stderr.write(
     "usage: batch-scheduler.mjs [--root <dir>] [--issues-file <json>] [--state <path> | --no-state]\n"
-      + "                           [--remote <url>] [--mark-launched <n>] [--json-only]\n",
+      + "                           [--remote <url>] [--mark-launched <n>] [--json-only]\n"
+      + "       batch-scheduler.mjs --infer-surfaces <n> [--issues-file <json> | --remote <url>]\n",
   );
 }
 
@@ -1330,7 +1525,7 @@ function fail(message) {
 }
 
 async function main(argv) {
-  const args = { root: process.cwd(), jsonOnly: false, noState: false, markLaunched: null, statePath: null, issuesFile: null, remote: null };
+  const args = { root: process.cwd(), jsonOnly: false, noState: false, markLaunched: null, statePath: null, issuesFile: null, remote: null, inferSurfaces: null };
   const valueAt = (flag, index) => {
     const value = argv[index];
     if (value === undefined) fail(`${flag} needs a value`);
@@ -1345,6 +1540,7 @@ async function main(argv) {
     else if (arg === "--mark-launched") args.markLaunched = Number(valueAt(arg, ++i));
     else if (arg === "--json-only") args.jsonOnly = true;
     else if (arg === "--remote") args.remote = valueAt(arg, ++i);
+    else if (arg === "--infer-surfaces") args.inferSurfaces = Number(valueAt(arg, ++i));
     else fail(`unknown argument: ${arg}`);
   }
   if (args.noState && args.markLaunched !== null) {
@@ -1353,8 +1549,28 @@ async function main(argv) {
   if (argv.includes("--mark-launched") && (!Number.isInteger(args.markLaunched) || args.markLaunched <= 0)) {
     fail("--mark-launched needs a positive issue number");
   }
+  if (argv.includes("--infer-surfaces")) {
+    if (!Number.isInteger(args.inferSurfaces) || args.inferSurfaces <= 0) fail("--infer-surfaces needs a positive issue number");
+    if (args.markLaunched !== null) fail("--infer-surfaces prints a declaration; it never marks a lane launched");
+  }
   const statePath = args.statePath ?? path.join(args.root, ".agentic-workflow", STATE_FILE_NAME);
   const head = readHead(args.root);
+
+  if (args.inferSurfaces !== null) {
+    // The triage step's emitter (issue #574, S2, decision D6): the block to paste
+    // into the issue body, and nothing else — no state, no forge write. A model
+    // hand-writing lane keys is the drift this replaces.
+    const issue = readOneIssue(args.inferSurfaces, { issuesFile: args.issuesFile, remote: args.remote });
+    if (issue.error !== undefined) {
+      process.stderr.write(`cannot read issue #${args.inferSurfaces}: ${issue.error}\n`);
+      process.exit(1);
+    }
+    const { surfaces } = resolveBodySurfaces(issue.issue.body ?? "");
+    const keys = [...surfaces].sort((a, b) => a.localeCompare(b));
+    const lines = keys.length === 0 ? [SURFACE_UNKNOWN_TOKEN] : keys;
+    console.log(["## Surfaces", "", ...lines.map((key) => `- \`${key}\``)].join("\n"));
+    return;
+  }
 
   if (args.markLaunched !== null) {
     // Manual operator mark after launching a lane outside the sensor. The only
