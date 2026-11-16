@@ -15,10 +15,11 @@ description: >
 ---
 
 # Review Implementation (internal scope/classification engine)
-> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
-> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
-> release and never guessed: a hard-coded version re-opens the per-release sweep the
-> contract removes, and `latest` is not a legal pin.
+> **Runner commands** below are `runner <subcommand> [args…]` — the launcher,
+> its order and the pin are owned by
+> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before
+> the first command, then keep it for the whole unit. A launcher or a version
+> spelled anywhere else is the drift this contract removes.
 
 The classification engine the review/audit skills compose: it consumes the
 **synthesized findings table** (the fused output of the applicable per-axis
@@ -110,7 +111,7 @@ each classification as its table row immediately and drop raw file content.
   rubric.
 - Sits in **Stage 4** of the feature workflow (verification & review).
 - `fix-now` folds into the current unit; `replan-in-unit` runs
-  `bunx @gtrabanco/agentic-workflow@<pin> unit-route <unit>` (npx fallback if bun is not installed),
+  `runner unit-route <unit>`,
   whose `route: replan` line names the
   planner that appends user-confirmed phases before `execute-phase`;
   `decision-required` blocks for the user; independent work becomes proposals

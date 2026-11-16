@@ -13,10 +13,11 @@ description: >
 ---
 
 # Init Workspace
-> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
-> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
-> release and never guessed: a hard-coded version re-opens the per-release sweep the
-> contract removes, and `latest` is not a legal pin.
+> **Runner commands** below are `runner <subcommand> [args…]` — the launcher,
+> its order and the pin are owned by
+> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before
+> the first command, then keep it for the whole unit. A launcher or a version
+> spelled anywhere else is the drift this contract removes.
 
 Turn an empty or existing repo into one that works with the agentic workflow:
 copy the generic scaffold, then **tailor it to this project** instead of leaving
@@ -57,7 +58,7 @@ explicit yes; context never supplies one, and an ambiguous repository state
 (partially scaffolding) is not a route to guess. A consent gap is an open
 question: **(0) provenance** (search the repo's own docs and record where) →
 **(1) research** (concrete options) → **(2) halt**: run `bun
-`bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>`, paste the `open-questions@1` block verbatim,
+`runner needs-input <unit-dir>`, paste the `open-questions@1` block verbatim,
 stop with the questions carried in it. The dispatcher needs a unit folder, and
 consent gaps usually precede any unit — so the run first writes a scratch one
 (`SPEC.md` + `decisions.md` in a `mktemp` directory, deleted after the paste)
@@ -85,8 +86,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
   `Cargo.toml`, `Gemfile`, …) to *propose* gate commands and naming conventions.
 - Note the git state (is it a repo, what's the default branch, and the **remote
   URL → forge**: github.com → GitHub/`gh`, gitlab → GitLab/`glab`, else ask).
-- Read the **tool evidence once**: `bunx @gtrabanco/agentic-workflow@<pin>
-  doctor --json` prints one row per documented tool with its real evidence and
+- Read the **tool evidence once**: `runner doctor --json` prints one row per documented tool with its real evidence and
   a move — take the rows as the tool facts instead of re-deriving a path, a
   version or a hook by hand. An `instruct-only` row is the exact command to
   print, an `ask-consent-write` row is the project's own installer and still
@@ -251,7 +251,7 @@ step 4:
   name without either — a scanner that cannot look never reports nothing to see.
 - **Unified config is offered, never hand-written (issue #427).** One consented
   question offers the project config; a yes runs
-  `bunx @gtrabanco/agentic-workflow config init --scope project` (which refuses
+  `runner config init --scope project` (which refuses
   to overwrite), a no writes nothing and records the residual. The two files,
   their scopes, the resolution order and the new-feature policy are owned by
   [CONFIG](references/CONFIG.md); this skill never restates a schema or edits a
