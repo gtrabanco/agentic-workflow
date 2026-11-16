@@ -105,3 +105,19 @@ now reads `folded: yes`.
 | REVIEW-RAN | HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · 2026-09-11 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 1 |
 | REVIEW-RAN | HEAD e5fa988c7973e5871387e4d1bf7fb84782452604 · 2026-09-11 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 2 · folded-row re-verification: 15/15 pass | | | | | |
 | REVIEW-RAN | HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · 2026-09-12 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 3 · folded-row re-verification: 21/21 pass · user-instructed third cycle (two-cycle-cap escape) | | | | | |
+
+## Dead references:
+
+The following rows reference now-deleted bilingual files and contain dead
+markdown links. These files were deleted by the English-only decision
+(2026-09-15) which removed all `.es.md` siblings from the repository.
+
+- `MIGRATION.es.md` (lines 32, 61, 71, 94, 104): the target
+  `docs/workflow/MIGRATION.es.md` was deleted. Line 104 (VF-36) contains
+  quoted markdown links to `MIGRATION.es.md` (dead) and `MIGRATION.md`
+  (the counterpart still exists). Line 71 (F36) references
+  `MIGRATION.es.md:3` in the "Where" column. Lines 61 and 94 reference
+  `.es.md` paths (abbreviated in the table). Line 32 references the file
+  by name in the fold summary.
+- Issue: [#572](https://github.com/gtrabanco/agentic-workflow/issues/572)
+  (legacy-broken-links)
