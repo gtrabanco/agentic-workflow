@@ -18,6 +18,14 @@ field | value
 invocation | bunx @gtrabanco/agentic-workflow@4.10.0 <subcommand> [args...]
 ```
 
+```text
+runner-set@1
+candidate | requires | invocation
+bunx | bun >= the crate's engines.bun | bunx @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+npx | node >= the crate's engines.node | npx --yes @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+pnpm dlx | pnpm on PATH, and node >= its floor when node is present | pnpm dlx @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+```
+
 `bunx` first, `npx` when bun is not installed — the same bun-first rule the
 workflow applies to its own scripts, spelled `npx` in place of `bunx` and
 pinning the same version. An unpinned `latest` is never a legal invocation: the
