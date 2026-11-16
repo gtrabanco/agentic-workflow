@@ -271,7 +271,7 @@ Notes:
 - Roadmap row 59 flipped `planned` → `done · [#238](https://github.com/gtrabanco/agentic-workflow/pull/238)`; this commit is `docs: link PR #238`.
 - All five phases complete; unit-loop receipts P1–P5 recorded above; acceptance blob `d046f0b537da92251c6d81893e816bbc0de1a252` unchanged.
 
-## Dead references
+## Dead references:
 
 The following references point to now-deleted files and are dead.
 `skills/design-feature/references/INTERVIEW.md` was deleted by

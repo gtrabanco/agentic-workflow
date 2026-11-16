@@ -104,10 +104,9 @@ now reads `folded: yes`.
 | VF-36 | docs/workflow/MIGRATION.es.md:3 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck direct read: switcher is `> 🇪🇸 [Versión en español](MIGRATION.es.md)` (self-link); main had `> 🇬🇧 [English version](MIGRATION.md)`; introduced by 3161b614 (P4) | usage-docs | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · 2026-09-11 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 1 |
 | REVIEW-RAN | HEAD e5fa988c7973e5871387e4d1bf7fb84782452604 · 2026-09-11 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 2 · folded-row re-verification: 15/15 pass | | | | | |
-| REVIEW-RAN | HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · 2026-09-12 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 3 · folded-row re-verification: 21/21 pass · user-instructed third cycle (two-cycle-cap escape) |
-| | | | | | |
+| REVIEW-RAN | HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · 2026-09-12 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 3 · folded-row re-verification: 21/21 pass · user-instructed third cycle (two-cycle-cap escape) | | | | | |
 
-## Dead references
+## Dead references:
 
 The following rows reference now-deleted bilingual files and contain dead
 markdown links. These files were deleted by the English-only decision
