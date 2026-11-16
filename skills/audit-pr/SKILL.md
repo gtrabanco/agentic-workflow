@@ -14,11 +14,10 @@ description: >
 ---
 
 # Audit PR
-> **Runner commands** below are `runner <subcommand> [args…]` — the launcher,
-> its order and the pin are owned by
-> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before
-> the first command, then keep it for the whole unit. A launcher or a version
-> spelled anywhere else is the drift this contract removes.
+> **Runner commands** below are `runner <subcommand> [args…]` — the launcher, its
+> order and the pin are owned by
+> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before the
+> first command, then keep it for the whole unit — nowhere else spells either.
 
 The manager's **"can this ship?"** gate. A read-first audit over the *entire* PR —
 its SPEC, all phases, docs, CI status, and review receipt — that returns a single

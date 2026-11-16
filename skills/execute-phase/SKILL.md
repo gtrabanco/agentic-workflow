@@ -16,11 +16,10 @@ description: >
 ---
 
 # Execute Phase
-> **Runner commands** below are `runner <subcommand> [args…]` — the launcher,
-> its order and the pin are owned by
-> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before
-> the first command, then keep it for the whole unit. A launcher or a version
-> spelled anywhere else is the drift this contract removes.
+> **Runner commands** below are `runner <subcommand> [args…]` — the launcher, its
+> order and the pin are owned by
+> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before the
+> first command, then keep it for the whole unit — nowhere else spells either.
 
 Step executor for units. The unit doc (created by `unit-lane`) owns `Tasks` P1…Pn,
 `Evidence` rows, and a `Progress` log — these replace PLAN.md, TASKS.md,
