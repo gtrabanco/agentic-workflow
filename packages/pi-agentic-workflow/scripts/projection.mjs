@@ -83,6 +83,7 @@ export const CRATE_COMMANDS = Object.freeze([
   "resolve-passes",
   "resources",
   "roadmap",
+  "runner",
   "section",
   "setup",
   "unit-doc",

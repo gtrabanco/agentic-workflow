@@ -146,7 +146,7 @@ pre-existing issues, Tasks, Evidence, Progress log, Next, References), and the
 re-cut **spec-by-reference** shape, whose `## Specs` numbers the owner's
 requirements `S#` verbatim (replacing Objective / Why / User outcome / Acceptance
 criteria), whose `## Tasks` links each phase to its `S#`, and whose `## Findings` +
-append-only `## Log` replace Evidence + Progress log. `bunx @gtrabanco/agentic-workflow@<pin> unit-route`
+append-only `## Log` replace Evidence + Progress log. `runner unit-route`
 resolves which shape a document carries; both route, lint and execute. Closed units
 keep the shape they were written in and are never rewritten.
 
@@ -258,7 +258,7 @@ four fixture-building suites moved with it in the same change.
 ## 2026-09-11 — the workflow-status envelope has a deterministic script producer (`workflow-status` 3.3.0, additive)
 
 **Additive minor bump, no migration required.** `workflow-status` 3.2.1 → 3.3.0
-ships `bunx @gtrabanco/agentic-workflow@<pin> workflow-status`, the deterministic producer of the Envelope
+ships `runner workflow-status`, the deterministic producer of the Envelope
 v2 the skill used to assemble from prose. The script executes the published
 `SENSOR_CORE` sequence (steps 1–9 incl. 6a), self-validates with the schema
 package's `validateEnvelope` (diagnostic only — a mismatch is printed to stderr as
@@ -274,9 +274,9 @@ The skill slims to "run the script, read the JSON, interpret `next.recommended`"
 The **external argv and the envelope contract are unchanged** — same flags
 (`--json-only`, `--last-envelope <json|path>`), same Envelope v2 shape, same
 state mapping — so existing drivers and skills keep working. One operational
-note: the script lives at `bunx @gtrabanco/agentic-workflow@<pin> workflow-status` in the repository, not in
-the bundled skill (the `scripts/` distribution gap, known-issues `B-01` →
-feature 44 / #198).
+note: the sensor ships in the crate the runner contract names (`runner
+workflow-status`), not in the bundled skill (the `scripts/` distribution gap,
+known-issues `B-01` → feature 44 / #198).
 
 ## 2026-09-07 — the review→fold loop is decision-driven and delta-scoped (additive)
 
@@ -1021,7 +1021,7 @@ Every runtime command a skill cites now ships **inside** the npm package
 without a clone of this repository. The invocation is the same for all of them:
 
 ```sh
-bunx @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+runner <subcommand> [args...]
 ```
 
 `<pin>` is read from `skills/runner-contract/references/RUNNER.md` — the one file

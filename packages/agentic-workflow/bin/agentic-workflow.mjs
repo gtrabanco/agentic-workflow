@@ -148,6 +148,7 @@ import {
 } from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
 import { isRunnerCommand, runRunnerCommand } from "../src/runner/cli.mjs";
+import { run as runRunnerService } from "../src/runner/runner.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
 import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
 import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragment.mjs";
@@ -603,7 +604,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|verify|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -624,6 +625,12 @@ feedback.attach();
 const parsed = parseArgs(restArgs);
 const rawArgs = parsed.args;
 switch (command) {
+  // ── runner — the programmatic runner choice (issue #555) ─────────────
+  case "runner": {
+    process.exit(runRunnerService(restArgs));
+    break;
+  }
+
   // ── relay — the lane's offline half of pi-web's packet contract ──────
   case "relay": {
     const rootDir = resolve(process.cwd());

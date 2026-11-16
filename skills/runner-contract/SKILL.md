@@ -13,29 +13,32 @@ description: >
 # Runner contract (internal)
 
 The workflow's deterministic layer ships as **one npm package**, not as scripts
-inside a skill folder: `@gtrabanco/agentic-workflow`, invoked with `bunx` or
-`npx` at a version that travels with the skills. A target project installs the
-skills and gets every command they cite, with no clone of this repository.
+inside a skill folder: `@gtrabanco/agentic-workflow`, invoked at a version that
+travels with the skills. A target project installs the skills and gets every
+command they cite, with no clone of this repository.
 
-[RUNNER.md](references/RUNNER.md) is that contract's one home: the canonical
-invocation, the version pin, the subcommand map and the exit codes. **The pin
-lives there and nowhere else** — a skill cites the runner and points at
-RUNNER.md for the version, so a release stamps one file instead of thirteen.
+[RUNNER.md](references/RUNNER.md) is that contract's one home: the closed
+launcher set, the canonical invocation, the version pin, the subcommand map and
+the exit codes. **The launcher and the pin live there and nowhere else** — a
+skill cites the runner with the symbolic form below and points at RUNNER.md, so
+a release stamps one file instead of thirteen and a runner choice has one
+owner.
 
 ## What a skill cites
 
-A skill that runs a runner command states the command with the pin written as a
-placeholder and names this contract beside it:
+A skill that runs a runner command states the command with the symbolic form
+below and names this contract beside it:
 
 ```text
-bunx @gtrabanco/agentic-workflow@<pin> <subcommand> [args...]
+runner <subcommand> [args...]
 ```
 
-`<pin>` is read from [RUNNER.md](references/RUNNER.md) — never restated, never
-guessed, never replaced by `latest`. A skill that hard-codes a version re-opens
-the per-release manual edit this contract exists to remove, and
-`scripts/normative-drift.test.mjs` fails closed on a pin that drifts from the
-crate's own version.
+`runner`, the launcher order and the pin all come from
+[RUNNER.md](references/RUNNER.md) — never spelled in a skill, never restated,
+never guessed, never replaced by `latest`. A skill that hard-codes a launcher or
+a version re-opens the per-release manual edit this contract exists to remove,
+and `scripts/normative-drift.test.mjs` fails closed on a pin that drifts from
+the crate's own version.
 
 ## What it covers
 
@@ -50,6 +53,9 @@ ship, and no skill cites them.
 
 - The bin's surface: `packages/agentic-workflow/bin/agentic-workflow.mjs`.
 - The subcommand table: `packages/agentic-workflow/src/runner/cli.mjs`.
+- The launcher choice: `packages/agentic-workflow/src/runner/resolve.mjs`,
+  printed by `runner resolve` and pinned to RUNNER.md's `runner-set@1` block by
+  `test/runner.resolve.test.mjs`.
 - The crate's README: `packages/agentic-workflow/README.md` (one Commands row
   per subcommand, asserted by `test/cli.surface.test.mjs`).
 - The pin: [RUNNER.md](references/RUNNER.md), stamped by

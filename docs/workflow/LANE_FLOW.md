@@ -14,7 +14,8 @@ idea → unit doc → triage → catalog steps → evidence → review → merge
    `docs/fix/<issue>-<slug>/SPEC.md`, created by `unit-lane` from the template, in
    either accepted shape (#308): the 14-section set, or the re-cut set whose
    `## Specs` / `## Findings` / `## Log` replace the four prose sections and the two
-   receipt sections. `bunx @gtrabanco/agentic-workflow@<pin> unit-route` resolves which one a doc carries.
+   receipt sections. `runner unit-route` (the symbolic form of the [runner
+   contract](../../skills/runner-contract/references/RUNNER.md)) resolves which one a doc carries.
 3. **triage** — `unit-route.mjs --triage <NN>` reads the unit doc's observable
    facts (type, scope, tests) and returns a deterministic ordered step list.
 4. **catalog steps** — the triaged steps run in order (research → design →
@@ -51,7 +52,7 @@ idea → unit doc → triage → catalog steps → evidence → review → merge
 Invoke:
 
 ```
-bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <NN> [--json]
+runner unit-route --triage <NN> [--json]
 ```
 
 Triage reads the unit doc's frontmatter (`type`, `scope`) and the `## Applicable
@@ -122,7 +123,7 @@ only a user decision closes a question.
 Consume it with the deterministic dispatcher:
 
 ```
-bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir> [--json]
+runner needs-input <unit-dir> [--json]
 ```
 
 It reads the unit doc plus `decisions.md` and prints the versioned
@@ -143,7 +144,7 @@ state instead of proceeding on a guess.
 
 Three guards enforce unit boundaries:
 
-1. **Diff-size guard** (`bunx @gtrabanco/agentic-workflow@<pin> diff-guard`): after every `implement` step.
+1. **Diff-size guard** (`runner diff-guard`): after every `implement` step.
    Measures `git diff --numstat` between `--base` and HEAD (staged + unstaged).
    Default budget: 400 lines, 8 files.
 
@@ -217,7 +218,7 @@ sections — `UNIT_DOC_REQUIRED_SECTIONS` is the whole list, `## Impact` include
 A **re-cut** doc (#308) keeps rows 5–10 and 13–14 and replaces the rest: `## Specs`
 (numbered `S#` quoting the requester verbatim) for rows 1–4, and `## Findings` +
 `## Log` for rows 11–12. Both shapes are read by the same linter, router and
-executor; `bunx @gtrabanco/agentic-workflow@<pin> unit-route` resolves the shape from the headings present.
+executor; `runner unit-route` resolves the shape from the headings present.
 
 The Evidence table uses the five columns: `AC`, `What was run`, `Exit / digest`,
 `Output (≤2 lines)`, `Verified-by`. The Progress log entry regex:
@@ -225,7 +226,7 @@ The Evidence table uses the five columns: `AC`, `What was run`, `Exit / digest`,
 
 ## Deterministic next-step — the sensor's queue
 
-`bunx @gtrabanco/agentic-workflow@<pin> workflow-status` emits Envelope v2 on stdout. The top-level `next`
+`runner workflow-status` emits Envelope v2 on stdout. The top-level `next`
 field is a priority queue (first non-empty wins):
 
 | Priority | Condition | `reason` code | Typical `next.recommended` |
@@ -259,9 +260,9 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `/audit-pr` | Merge gate audit on a PR |
 | `advance` | Pi-native conductor: sensor → decide → invoke loop (feature 62) |
 | `workflow-status` | Read the sensor envelope |
-| `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <NN> [--json]` | Triage a unit |
-| `bunx @gtrabanco/agentic-workflow@<pin> needs-input <unit-dir>` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
-| `bunx @gtrabanco/agentic-workflow@<pin> diff-guard --base <ref>` | Diff-size guard check |
+| `runner unit-route --triage <NN> [--json]` | Triage a unit |
+| `runner needs-input <unit-dir>` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
+| `runner diff-guard --base <ref>` | Diff-size guard check |
 | `agentic-workflow memory probe [--json]` | Bounded memory-substrate health verdict (`memory-probe@1`), once per session before the first memory read; always exits 0 |
 | `agentic-workflow unit-doc create` | Create a unit doc (SDK) |
 | `agentic-workflow unit-doc setSection` | Replace a section (SDK) |
@@ -284,7 +285,7 @@ from the repository's authoritative modules.
 
 ### 1. Envelope v2 emission
 
-`bunx @gtrabanco/agentic-workflow@<pin> workflow-status` → stdout (JSON). Top-level fields:
+`runner workflow-status` → stdout (JSON). Top-level fields:
 
 ```
 {
@@ -353,7 +354,7 @@ no-decision-available, sensor-degraded}`.
 
 ### 3. Triage output (`--triage`)
 
-`bunx @gtrabanco/agentic-workflow@<pin> unit-route` --triage <NN> [--json]`:
+`runner unit-route --triage <NN> [--json]`:
 
 Human text:
 ```
@@ -421,7 +422,7 @@ Operation names by service (from `file-schemas.ts`):
 
 ### 6. Diff-guard invocation
 
-`bunx @gtrabanco/agentic-workflow@<pin> diff-guard` --base <ref> [--repo <path>] [--unit <label>] [--max-lines N] [--max-files N] [--json]`
+`runner diff-guard --base <ref> [--repo <path>] [--unit <label>] [--max-lines N] [--max-files N] [--json]`
 
 Exit: 0 = PASS, 1 = BREACH, 2 = ERROR.
 
@@ -451,7 +452,7 @@ conductor drives units end-to-end through one deterministic loop:
 sensor (Envelope v2) → decideWorkflowAction() → /skill:<verb> <args>
 ```
 
-Per iteration: (1) spawn `bunx @gtrabanco/agentic-workflow@<pin> workflow-status` via `runtimeBin`,
+Per iteration: (1) spawn `runner workflow-status` via `runtimeBin`,
 (2) validate the Envelope v2 JSON, (3) map to `WorkflowSnapshot`, (4) feed
 snapshot + policy to `decideWorkflowAction()`, (5) on `invoke` send the
 decision's command verbatim through the pi router (`argv` never mutated).

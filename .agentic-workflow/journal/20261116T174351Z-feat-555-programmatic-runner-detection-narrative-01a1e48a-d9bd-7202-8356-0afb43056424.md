@@ -1,0 +1,6 @@
+## 2026-11-16T17:43:51Z — feat/555-programmatic-runner-detection — manual
+- **Commits:** 12 (`0c49b74a…e11bf510`)
+- **Files:** 83 files
+- **Summary:** Apply the EXTERNAL VERIFY correction batch for unit 555: fix 1 blocker (O21 validator mismatch) and triage/fix 4 advisories (A1 doctor bootstrap pin, A2/A3 old-shape citations, A4 ROADMAP row dispositioned). Verify against base in scratch, commit corrections, and push to remote.
+- **Decisions:** O21: widened git log path list to include both test file (runner.resolve.test.mjs) and impl file (src/runner/resolve.mjs) so both red/green SHAs appear. A1: rendered doctor bootstrap instruction dynamically via renderInvocation(RUNNER_CANDIDATES[0], CRATE_VERSION, ...) instead of hardcoding bunx provision rg. A2/A3: re-pointed old-shape citations in phase-lint.mjs and config-cli.test.mjs to symbolic runner <subcommand> form. A4: left ROADMAP.md row 553 alone — the missing unit doc 553-universal-cli-coverage belongs to #553 triage, not #555. Push: gate PASSed 16/16 twice (665s, 523s) but git push died 141 (SIGPIPE) from idle SSH transport during hook; resolved with AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1 escape hatch.
+- **Next:** User reviews diffs, accepts, and merges PR #587. If SIGPIPE recurs, use AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1 with documented reason line.

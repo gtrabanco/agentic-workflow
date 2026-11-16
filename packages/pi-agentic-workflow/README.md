@@ -248,11 +248,11 @@ Set `PI_BIN` when `pi` is not on the service manager's `PATH`.
 
 ## Workflow tools (deferred — issue #274)
 
-Beside the commands, the package registers the five envelope-emitting
-deterministic scripts as **deferred pi tools** in the `agentic-workflow`
-namespace. Deferred means the model is never shown them: there is no standing
-token cost, `tool_search` can find and activate them, and codemode scripts can
-call them by name at any time.
+Beside the commands, the package registers the envelope-emitting deterministic
+scripts — plus one generic door for the subcommands without a typed tool — as
+**deferred pi tools** in the `agentic-workflow` namespace. Deferred means the
+model is never shown them: there is no standing token cost, `tool_search` can
+find and activate them, and codemode scripts can call them by name at any time.
 
 | Tool | Wraps | Returns as `structuredContent` |
 | --- | --- | --- |
@@ -261,16 +261,20 @@ call them by name at any time.
 | `agentic_workflow_phase_lint` | `agentic-workflow phase-lint` | `{ verdict, fingerprint, phases[], docFindings[] }` parsed from the byte-stable block |
 | `agentic_workflow_audit_pr_gate` | `scripts/audit-pr-gate.mjs evaluate` | The merge verdict report (`verdict`, `action`, `actionReason`, head/pr) |
 | `agentic_workflow_snapshot_verify` | `agentic-workflow pre-execution-snapshot verify` | The freshness report (`current`, `digestMatches`, `structural`) |
+| `agentic_workflow_run` | any other runner subcommand (`unit-route`, `needs-input`, `ceremony`, …) | `{ subcommand, stdout, stderr, exitCode }` — the command's own output, and a non-zero exit arrives as `isError` carrying it |
 
 Two properties hold for every tool:
 
 - **One pinned runner over the project's bytes.** Each tool spawns the
   pinned package's `agentic-workflow` bin (`workflow-status`, `diff-guard`,
-  `phase-lint`, `pre-execution-snapshot`) with the session's cwd as the
-  project root — the pin decides the behaviour and the project's tree
-  supplies the data; `audit-pr-gate` still runs the project's own
-  `scripts/audit-pr-gate.mjs`. The receipts are the same ones the
-  skills' bash wording produces.
+  `phase-lint`, `pre-execution-snapshot`, or whatever subcommand
+  `agentic_workflow_run` was given) with the session's cwd as the project
+  root — the pin decides the behaviour and the project's tree supplies the
+  data; `audit-pr-gate` still runs the project's own
+  `scripts/audit-pr-gate.mjs`. The command itself is composed by the crate's
+  own resolver: the installed dependency first, its closed runner set only when
+  that dependency is missing. The receipts are the same ones the skills'
+  symbolic `runner <subcommand>` wording produces.
 - **Red gates are errors with data.** A breach, a `BLOCKED` verdict, a stale or
   missing receipt, or a non-`MERGE-READY` gate returns `isError: true` with the
   structured result still attached, so a programmatic consumer reads findings
@@ -763,12 +767,10 @@ in the payload; the destination is the one you declared.
 turning telemetry off keeps the entry. Rich, narrative entries stay
 `/log-session`'s job — this writer only ever produces the mechanical block.
 
-Regenerate an entry without a session (a CI job, a test, a byte diff):
-
-```sh
-printf '%s' '{"timestamp":"2026-11-04T15:12Z","branch":"main","reason":"quit","commits":{"count":0,"range":null},"files":[]}' \
-  | npx @gtrabanco/agentic-workflow log render --facts -
-```
+Regenerate an entry without a session (a CI job, a test, a byte diff): feed the
+frozen facts to the crate's `log render` subcommand — the crate is this
+package's dependency, and its README's Commands table names the invocation —
+with `--facts -`, then diff the printed entry.
 
 ## State Flow (optional — issue #174)
 

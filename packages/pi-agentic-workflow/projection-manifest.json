@@ -1,5 +1,14 @@
 {
   "contract": "agentic-workflow/projection-manifest",
   "version": 1,
-  "rules": []
+  "rules": [
+    {
+      "id": "runner-invocation-not-shipped",
+      "op": "pointerize",
+      "source": "skills/runner-contract/references/RUNNER.md",
+      "selector": { "path": ["The runner — one invocation, one pin, one closed set", "The invocation"] },
+      "enforcingCommand": "runner resolve",
+      "contentHash": "sha256:2d843205ba4f383a4a8d31e41d2147d68b2f725c8e9fe7136523586534528279"
+    }
+  ]
 }
