@@ -391,7 +391,10 @@ export const DEPS = {
   "root-suite": ["workspace-install", "schema-build"],
   "version-parity-content": [],
   "docs-generated-projection": [],
-  "journal-carrier-check": ["workspace-install"],
+  // journal-carrier-check spawns the crate CLI, whose workspace import resolves
+  // the schema's dist — without the edge it raced schema-build's tsc and read
+  // a stale or half-written dist ('does not provide an export named ...').
+  "journal-carrier-check": ["workspace-install", "schema-build"],
   "log-immutability": [],
   "push-identity": [],
   "secret-scan": [],
