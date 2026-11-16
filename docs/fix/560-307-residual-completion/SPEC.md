@@ -94,9 +94,9 @@ roadmap cell, and no surface, token, helper, contract or narrative is deleted.
 The three retired *states* disappear because the fact now exists, not because
 anything was removed, and each carries its pin:
 
-- `decision-required` in #383's `## Future` row 4 — the class shipped in
-  `f4b23e60` (AC16 third amendment); pin:
-  `rg -c 'decision-required' docs/fix/383-measured-acceptance/SPEC.md` → 0.
+- the `open`/`decision-required` **state** in #383's `## Future` row 4 — the class shipped in
+  `f4b23e60` (AC16 third amendment), so the row is settled; pin:
+  `rg -c '^- `open` — 2026-11-03, \*\*decision-required' docs/fix/383-measured-acceptance/SPEC.md` → 0.
 - `Nothing is retired` as the whole truth of #108's `## Retirements` — the
   receipt-neutrality record enters below it, and the original sentence stays as
   the pre-`gate-receipt@1` history it describes; pin:
@@ -261,8 +261,10 @@ proves it (frozen at cut):
   `bun test scripts/ledger-ownership.test.mjs` exiting 0 and
   `rg -n '^tier-cost \| docs/workflow/TIER_COST.md' skills/pre-execution-review/references/LEDGERS.md`
   matching 1.
-- **AC3 (S2)** — #383's row 4 stops claiming `decision-required` — proved by
-  `rg -c 'decision-required' docs/fix/383-measured-acceptance/SPEC.md` exiting 1.
+- **AC3 (S2)** — #383's row 4 leaves the `open`/`decision-required` state and records
+  the ruling — proved by
+  `rg -c '^- `open` — 2026-11-03, \*\*decision-required' docs/fix/383-measured-acceptance/SPEC.md`
+  exiting 1 and `rg -c 'settled, \*\*not rejected\*\*' docs/fix/383-measured-acceptance/SPEC.md` matching 1.
 - **AC4 (S3)** — D2 is recorded on its carrier: #108's `## Retirements` names
   what `gate-receipt@1` retired — proved by
   `rg -c 'retired the review-local gate re-run attestation' docs/features/108-machine-gate-receipts/SPEC.md`
@@ -363,36 +365,40 @@ relay-next: create .pi-web/relays/560-307-residual-completion/ (charter → docs
 - **E2** — 2026-11-16, environment receipt: `bun install --frozen-lockfile` → `164 packages installed [1.53s]`, then `cd packages/agentic-workflow-schema && bun run build` → `tsc`, exit 0 (the fresh worktree had no `node_modules`/`dist`; Known pre-existing issues).
 - **E3** — 2026-11-16, the measured run (S8): `bun scripts/tier-cost.mjs compare --ledger docs/workflow/TIER_COST.md` · exit **2** · `verdict: insufficient-corpus`, `min_units_per_tier: 3`, `short_tiers: passive 0 · standard 0 · high 0`, every `by_risk_tier`/`by_size_tier` group `units: 0` — the honest verdict, naming the missing precondition.
 - **E4** — 2026-11-16, corpus state: `rg -n '^\| (24|3[0-9])' docs/workflow/TIER_COST.md` over the samples table → no data rows (only the header), so the ledger is a corpus of zero (S9, S11).
-- **E5** — 2026-11-16, §2 reproducer, RED before the fix: `rg -n 'decision-required.*tier-cost|tier-cost.*decision-required' docs/fix/383-measured-acceptance/SPEC.md` · exit 0 · line 92 (`#383 ## Future` row 4) still orders a class that `f4b23e60` already shipped.
+- **E5** — 2026-11-16, §2 reproducer, RED before the fix: `git show 2907d5f6:docs/fix/383-measured-acceptance/SPEC.md | rg -c '^- `open` — 2026-11-03, \*\*decision-required'` · 1 · line 92 still carries the `open`/`decision-required` state for a class that `f4b23e60` already shipped; the same pattern at head · exit 1 (0 matches, GREEN).
 - **E6** — 2026-11-16, §2 reproducer, RED before the fix: `rg -n 'Nothing is retired' docs/features/108-machine-gate-receipts/SPEC.md` · exit 0 · line 165 — the carrier says nothing was retired while PR #491 replaced the review-local gate attestation.
 - **E7** — 2026-11-16, §2 reproducer, RED before the fix: `roadmap read docs/ROADMAP.md --nn 436` · row status `planned`, while `gh api .../issues/436` → `state: closed` (`2026-11-11T22:49:50Z`) and `gh api .../pulls/515` → `merged: true` (`2026-11-11T22:49:48Z`).
 - **E8** — 2026-11-16, §2 reproducer, the non-adoption fact (D5): `rg -c '^## Project charter' AGENTS.md` · exit 1 (0 matches); `rg -c '^ceremony-profile@1$' AGENTS.md` · exit 1 (0 matches); the single `ceremony-profile@1` mention is the normative-surface row `ceremony-profile-block | packages/agentic-workflow-schema/README.md | block:ceremony-profile@1` (AGENTS.md:419).
 - **E9** — 2026-11-16, D1 evidence: `rg -n '^tier-cost \| docs/workflow/TIER_COST.md' skills/pre-execution-review/references/LEDGERS.md` · line 178, owner `pi-agentic-workflow:session-telemetry`; `bun test scripts/ledger-ownership.test.mjs` · exit 0 · the eighth class and its tree entry pinned (suite output recorded at G5).
 - **E10** — 2026-11-16, D2 evidence: `git diff d7b391b4^1 d7b391b4 -- skills/review-verify/SKILL.md skills/audit-pr/references/01_MERGE_GATES.md` · the removed "verification gate ran in THIS review … paste exit status per command" and the plain merge-gate row, replaced by the receipt's consumption/route; `git log -S 'gate-receipt@1' -- packages/agentic-workflow-schema/README.md` → `78ac7c82` (the publisher), PR #491 merge `d7b391b4`.
 - **E11** — 2026-11-16, D4 evidence: `ls .agentic-workflow/journal | wc -l` · 84 fragments; a sample fragment carries `- **Commits:** 11 (\`b2b4f04d…12f9ff4e\`)` — the unit→commit mapping exists, and carries no token/turn/time cell (PE-008), so the currency the comparison needs is not reconstructible.
-- **E12** — 2026-11-16, the impact set: `bun scripts/test-impact.mjs --base 2907d5f6` · `verdict: empty` (prose-only change; no test invented) — recorded for `## Applicable tests`.
-- **E13** — 2026-11-16, the risk verdict (copied into `## Risk tier`): `bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --paths "<the seven prose paths>"` · exit 0 · `tier: passive`, `reason_kind: no-executable-effect`, `signals: []`, `task_size: {understood: true, contained_risk: contained, resumable_from_diff: true, ceremony: none, verification: readback}`.
-- **E14** — 2026-11-16, differential, the untouched instrument: `bun scripts/tier-cost.mjs compare --ledger docs/workflow/TIER_COST.md` at base `2907d5f6` (scratch copy in `mktemp -d`, removed) and at head — byte-identical stdout, exit 2 both sides: the verdict records the corpus, and this change moved no instrument byte.
+- **E12** — 2026-11-16, the impact set: `bun scripts/test-impact.mjs --base 2907d5f6` · `verdict: empty` · `changed: 8` · `executable: 0` · `suites (0)` — a prose-only change, so no test is invented (`## Applicable tests`).
+- **E13** — 2026-11-16, the risk verdict (copied into `## Risk tier`): `bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --paths "docs/fix/560-307-residual-completion/SPEC.md,docs/fix/560-307-residual-completion/planning-evidence.md,docs/fix/560-307-residual-completion/planning-obligations.md,docs/fix/560-307-residual-completion/decisions.md,docs/fix/383-measured-acceptance/SPEC.md,docs/features/108-machine-gate-receipts/SPEC.md,docs/ROADMAP.md"` · exit 0 · `tier: passive`, `reason_kind: no-executable-effect`, `signals: []`, `task_size: {understood: true, contained_risk: contained, resumable_from_diff: true, ceremony: none, verification: readback}`.
+- **E14** — 2026-11-16, differential, the untouched instrument: `bun scripts/tier-cost.mjs compare --ledger docs/workflow/TIER_COST.md` in a scratch copy of base `2907d5f6` (`git archive` into `mktemp -d`, `bun install --frozen-lockfile` plus schema build there, removed after) and at head · exit 2 both sides · byte-identical stdout (`sha256 09d2d20d…` on both files) — the verdict records the corpus and this change moved no instrument byte.
 - **E15** — 2026-11-16, differential, the emitter: in a scratch copy of base `2907d5f6` (`git archive` into `mktemp -d`, `bun install --frozen-lockfile` + schema build there, removed after) `bun scripts/docs-generate.mjs --check` · exit 0 · 0 stale — the base projection was **clean**; at head before the re-render · exit 1 · 1 stale (`docs/generated/units.md` missing this unit's row), so the drift was this change's own, never pre-existing; after the emitter's re-render at head · exit 0 · 0 stale. The only rendered delta is this unit's one row.
-- **E16** — 2026-11-16, the carriers after the rulings: `rg -c 'decision-required' docs/fix/383-measured-acceptance/SPEC.md` · exit 1 (0 matches); `rg -c 'forward-only' docs/fix/383-measured-acceptance/SPEC.md` · 1; `rg -c 'retired the review-local gate re-run attestation' docs/features/108-machine-gate-receipts/SPEC.md` · 1; `rg -c 'wall[_-]clock|\belapsed\b' scripts/tier-cost.mjs docs/workflow/TIER_COST.md` · exit 1 (0 matches).
+- **E16** — 2026-11-16, the carriers after the rulings: `rg -c '^- `open` — 2026-11-03, \*\*decision-required' docs/fix/383-measured-acceptance/SPEC.md` · exit 1 (0 matches); `rg -c 'forward-only' docs/fix/383-measured-acceptance/SPEC.md` · 1; `rg -c 'retired the review-local gate re-run attestation' docs/features/108-machine-gate-receipts/SPEC.md` · 1; `rg -c 'wall[_-]clock|\belapsed\b' scripts/tier-cost.mjs docs/workflow/TIER_COST.md` · exit 1 (0 matches).
 - **E17** — 2026-11-16, the roadmap writes: `roadmap read docs/ROADMAP.md --nn 436` → `done · [#515]` (receipt `rowUpsert` with the row's other cells preserved); `roadmap read --nn 560` → `in-progress · carried by fix #560`; `roadmap read` over the `## Fixes` table → the `#560` row `in-progress`; `bun scripts/roadmap-settle.mjs` · exit 0 · PASS.
-- **E18** — 2026-11-16, the session door: `journal write --kind narrative …` · exit 0 · the fragment under `.agentic-workflow/journal/` (name recorded in the close P-line); `git diff 2907d5f6...HEAD -- docs/LOGS.md` → no output (the aggregator's file untouched).
-- **G1** — 2026-11-16, HEAD `pending`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs unit-route 560-307-residual-completion` · exit 0 · the `UNIT ROUTE —` block (status/route/next/open rows/fingerprint).
-- **G2** — 2026-11-16, HEAD `pending`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/560-307-residual-completion/SPEC.md` · exit 0 · `verdict PASS`.
-- **G3** — 2026-11-16, HEAD `pending`, the unit-doc readers: `bun scripts/promise-coherence.mjs docs/fix/560-307-residual-completion/SPEC.md` · exit 0 · `verdict PASS`; `bun scripts/docs-generate.mjs --check` · exit 0 · `0 stale`.
-- **G4** — 2026-11-16, HEAD `pending`, the touched suites: `bun test scripts/tier-cost.test.mjs scripts/ledger-ownership.test.mjs scripts/normative-drift.test.mjs` · exit 0.
-- **G5** — 2026-11-16, HEAD `pending`, the root gate: `bun scripts/local-gate.mjs --jobs auto` · exit 0 (the run's step tally recorded in the handoff).
-- **P1** — 2026-11-16, the unit doc, both M-size planning ledgers and `decisions.md` cut, every obligation `planned` · `pending`.
-- **P2** — 2026-11-16, #383's three Future rows settled (D1, D3, D4) · `pending`.
-- **P3** — 2026-11-16, #108's `## Retirements` gains the receipt-neutrality record (D2) · `pending`.
-- **P4** — 2026-11-16, row 436 settled through the crate writer (D6) · `pending`.
-- **P5** — 2026-11-16, D5's non-adoption ruling recorded · `pending`.
-- **P6** — 2026-11-16, the measured run, the row registrations, the projection re-render and the narrative fragment · `pending`.
-- **P7** — 2026-11-16, the verification sweep (differential + gates) · `pending`.
+- **E18** — 2026-11-16, the session door: `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal write --kind narrative --title fix-560-307-residual-completion …` · exit 0 · `20261116T005405Z-fix-560-307-residual-completion-narrative-local.md` (1,762 bytes, branch `fix/560-307-residual-completion`); `journal-carrier-check` exit 0 (61 fragments, 0 refusals) and `git diff 2907d5f6...HEAD -- docs/LOGS.md` → no output (the aggregator's file untouched).
+- **G1** — 2026-11-16, HEAD `d1aceb237e4011e906d58fde18f96c0add45074a`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs unit-route --triage 560-307-residual-completion` · exit 0 · the block pasted in `## Triaged steps`; the routing mode answers `unit docs/… has all phases recorded but status is 'in-progress' (not 'done') — settle the index or roadmap status before routing to close-out` (exit 2), which is the correct answer while the fix row is open.
+- **G2** — 2026-11-16, HEAD `d1aceb237e4011e906d58fde18f96c0add45074a`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/560-307-residual-completion/SPEC.md` · exit 0 · `verdict PASS` (P1–P7, 6/6 each).
+- **G3** — 2026-11-16, HEAD `d1aceb237e4011e906d58fde18f96c0add45074a`, the unit-doc readers: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/560-307-residual-completion/SPEC.md` · exit 0 · `ok: true` (sections, obligations-closure, provenance-stamp, receipt-marks, log-kinds, cited-paths, cited-gates); `bun scripts/promise-coherence.mjs docs/fix/560-307-residual-completion/SPEC.md` · exit 0 · `PASS` 7 checked · 0 skipped; `bun scripts/docs-generate.mjs --check` · exit 0 · 0 stale.
+- **G4** — 2026-11-16, HEAD `d1aceb237e4011e906d58fde18f96c0add45074a`, the touched suites: `bun test scripts/tier-cost.test.mjs scripts/ledger-ownership.test.mjs scripts/normative-drift.test.mjs scripts/roadmap-settle.test.mjs scripts/vocabulary-probe.test.mjs` · exit 0 · **63 pass · 0 fail** (8.45s); `bun scripts/vocabulary-probe.mjs` · exit 0 · `probe: 0 violations`; `bun scripts/roadmap-settle.mjs` · exit 0 · `210 unit docs checked · 0 violations`.
+- **G5** — 2026-11-16, HEAD `d1aceb237e4011e906d58fde18f96c0add45074a`, the root gate: `bun scripts/local-gate.mjs --skip-network --jobs auto` · exit 0 · **`local-gate: PASS — 15 step(s) in 455s`**, including `root-suite` exit 0 in 173s, `crate-suite-bun` exit 0 in 175s and `crate-suite-node` exit 0 in 82s. The 4 network steps (`workspace-install`, `pi-compat-guard`, `dependency-pin-gate`, `dependency-advisories`) are skipped by the offline subset and disclosed, never counted as run. A first run at the same head failed at `worktree-guard` on **another session's** stale registration (`.worktrees/fix-571-false-semantic-reds`, directory absent); the direct guard re-ran green and the full gate pass above followed — concurrent shared state, never this change.
+- **P1** — 2026-11-16, the unit doc, both M-size planning ledgers and `decisions.md` cut, every obligation `planned` at cut · `0a37c272`.
+- **P2** — 2026-11-16, #383's three Future rows settled (D1, D3, D4) · `6f518c3f`.
+- **P3** — 2026-11-16, #108's `## Retirements` gains the receipt-neutrality record (D2) · `6f518c3f`.
+- **P4** — 2026-11-16, row 436 settled through the crate writer (D6): `rowUpsert 3066c91f → 6ca6dfc9`, the description cell byte-identical · `d1aceb23`.
+- **P5** — 2026-11-16, D5's non-adoption ruling recorded · `0a37c272`.
+- **P6** — 2026-11-16, the measured run (exit 2, `insufficient-corpus`), the row registrations (`rowUpsert 6ca6dfc9 → 41544b39` for row 560; `fixrow 41544b39 → 48e97de7`), the projection re-render (exactly one added row) and the narrative fragment `20261116T005405Z-fix-560-307-residual-completion-narrative-local.md` (1,762 bytes) · `d1aceb23`.
+- **P7** — 2026-11-16, the verification sweep: the base-vs-head differential (E14/E15) and the offline root gate 15/15 (G5) · `d1aceb23`.
 
 ## Next
 
-P1 — commit the unit doc and both ledgers, then run P2…P7 in order.
+The owner is the external verifier (§8): review this diff, the obligations
+ledger state (15/15 `verified`) and the verification block in the handoff. The
+PR carries `Closes #560`; the measured acceptance stays `insufficient-corpus`
+until the sink records ≥3 units per tier, and the pre-sink half is permanently
+out (D4).
 
 ## References
 
