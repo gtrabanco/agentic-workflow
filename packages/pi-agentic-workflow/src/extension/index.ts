@@ -424,7 +424,18 @@ export default function extension(pi: ExtensionAPI): void {
       // The id is read once, here: pi invalidates a captured context after the
       // session is replaced, and one extension instance serves one session.
       const sessionId = ctx.sessionManager.getSessionId();
-      telemetry = createTelemetryWiring({ root: ctx.cwd, enabled: true, sessionId: () => sessionId });
+      // #504 S3: the same switch writes the per-session JSONL beside the ledger,
+      // at the path the base feature section resolves (`.pi/.telemetry/…` by
+      // default). A relative path is the project's, never the process's cwd of
+      // the moment — the sample belongs to the tree it measured.
+      telemetry = createTelemetryWiring({
+        root: ctx.cwd,
+        enabled: true,
+        jsonFile: typeof loaded.config.telemetry.jsonFile === "string"
+          ? resolve(loaded.config.telemetry.jsonFile, ctx.cwd)
+          : undefined,
+        sessionId: () => sessionId,
+      });
       telemetry.register(pi);
     }
     // Issue #394 — the same first chance, a separate switch: `off` registers no

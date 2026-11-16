@@ -30,7 +30,7 @@
 import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { createSessionTelemetry, phaseFromCommand, unitFromCommand, type TelemetrySink } from "../session-telemetry.js";
-import { createLedgerSink } from "../telemetry-sinks.js";
+import { createJsonlSink, createLedgerSink } from "../telemetry-sinks.js";
 
 /** The events this wiring listens to. */
 export const TELEMETRY_EVENTS = Object.freeze([
@@ -52,6 +52,12 @@ export interface TelemetryWiringOptions {
   readonly sinks?: readonly TelemetrySink[];
   /** Where the ledger lives, relative to `root`. */
   readonly ledgerPath?: string;
+  /**
+   * Where the per-session JSONL file lives (#504 S3). Absent means the ledger is
+   * the only destination — the resolver in the extension passes the configured
+   * path, so a test that wants one sink can ask for one.
+   */
+  readonly jsonFile?: string;
   /** How many paths this session changed; injected so the suite owns git too. */
   readonly changedPaths?: () => number;
   /** The HEAD the session started on, captured at `session_start`. */
@@ -119,7 +125,12 @@ export function sessionChangedPaths(root: string, startSha: string): number {
  * commit.
  */
 export function createTelemetryWiring(options: TelemetryWiringOptions): TelemetryWiring {
-  const sinks = options.sinks ?? [createLedgerSink({ ledgerPath: options.ledgerPath ?? `${options.root}/${DEFAULT_LEDGER}` })];
+  const sinks = options.sinks ?? [
+    createLedgerSink({ ledgerPath: options.ledgerPath ?? `${options.root}/${DEFAULT_LEDGER}` }),
+    // Only when a path is configured: the ledger stays the one destination a
+    // project always has, and a caller that names no file gets no file.
+    ...(options.jsonFile ? [createJsonlSink({ path: options.jsonFile })] : []),
+  ];
   const now = options.now ?? Date.now;
   const date = options.date ?? (() => new Date(now()).toISOString().slice(0, 10));
   const startSha = options.sessionStartSha ?? (() => git(options.root, ["rev-parse", "HEAD"]).trim());
