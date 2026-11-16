@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { DoctorRefusal, runDoctor } from "../src/doctor/doctor.mjs";
+import { DoctorRefusal, renderDoctor, runDoctor } from "../src/doctor/doctor.mjs";
 import { CHECK_PROBES } from "../src/doctor/checks.mjs";
 import {
   COMPANION_PAIRINGS,
@@ -383,6 +383,43 @@ test("the envelope is deterministic: two runs over the same ops are byte-identic
   const first = await runDoctor({ ops: healthyOps(), inventoryText: README });
   const second = await runDoctor({ ops: healthyOps(), inventoryText: README });
   assert.equal(JSON.stringify(first), JSON.stringify(second));
+});
+
+const LABELLED_LINE = /^(ok|MISS|MISMATCH|UNARMED|UNREACHABLE|N\/A)\s{2,}\S/u;
+
+/** An envelope whose rows carry one status each, so the block renders every label. */
+function oneRowPerStatus() {
+  const rows = DOCTOR_CHECK_STATUSES.map((status) => ({
+    id: `surface-${status}`,
+    requirement: "optional",
+    status,
+    route: "instruct-only",
+    action: null,
+    instruction: null,
+    advisory: null,
+    move: "report-only",
+    evidence: {},
+  }));
+  return {
+    contract: DOCTOR_CONTRACT_ID,
+    host: { platform: "linux", arch: "x64" },
+    rows,
+    summary: { ok: 1, missing: 1, mismatch: 1, unarmed: 1, unreachable: 1, notApplicable: 1, advisories: 0 },
+    verdict: "pass",
+  };
+}
+
+test("the human block keeps a two-space gutter after every published label (S2)", () => {
+  const envelope = oneRowPerStatus();
+  const lines = renderDoctor(envelope).split("\n");
+  // The 11-character UNREACHABLE is the longest label, so a padded label column
+  // alone leaves it one space short of the fixed block's separation.
+  for (const row of envelope.rows) {
+    const line = lines.find((candidate) => candidate.includes(row.id));
+    assert.ok(line, `${row.status}: the row is rendered`);
+    assert.match(line, LABELLED_LINE, `${row.status}: at least two spaces before the row id`);
+  }
+  assert.equal(lines.filter((line) => LABELLED_LINE.test(line)).length, envelope.rows.length, "one labelled line per row");
 });
 
 test("the documented inventory is the declaration: a drift refuses in both directions (S8)", async () => {
