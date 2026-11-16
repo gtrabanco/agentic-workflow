@@ -1,6 +1,7 @@
 ---
 "@gtrabanco/agentic-workflow": minor
 "@gtrabanco/agentic-workflow-schema": minor
+"@gtrabanco/pi-agentic-workflow": minor
 ---
 
 feat(quality-metrics): the read-only project-quality sensor (issue #565)
@@ -22,3 +23,7 @@ report is reproducible.
 The metric definitions have one home — the runner crate's README — so a review
 or an audit can cite them; the contract, its closed vocabularies and its
 draft-07 JSON Schema live in the schema package.
+
+The Pi package ships the same command beside them: `skills/runner-contract`'s
+subcommand table gains the `quality-metrics` row, so the runner contract's
+closed list keeps pace with the crate's dispatch table.
