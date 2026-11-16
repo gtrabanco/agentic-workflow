@@ -425,12 +425,21 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   owns the full statement.
 - **P6** — 2026-11-16, the gate receipts recorded (G1 green, G2 red on another
   session's worktree).
+- **P7** — 2026-11-16, the branch pushed and PR
+  [#582](https://github.com/gtrabanco/agentic-workflow/pull/582) opened against
+  `main`; the row settles to `done · [#582]` with this commit. The push itself
+  needed the hook's documented escape hatch
+  (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`) after `git push` was refused at
+  `worktree-guard` for a sibling session's dirty worktree (G2) — the full gate
+  had already run green in the foreground on this tree (G1), and the reason is
+  recorded in the PR body.
 
 ## Next
 
-The owner's external verification of the diff: §8's verification block, the
-obligations ledger (8 rows, all `verified`) and the honest list of what was
-skipped.
+The owner's external verdict on PR
+[#582](https://github.com/gtrabanco/agentic-workflow/pull/582) (base `main`, head
+`f68eb405` plus this settle commit). After it: the merge — the row leaves
+`## Fixes` only after the merge.
 
 ## References
 
