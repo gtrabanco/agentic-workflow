@@ -89,8 +89,8 @@ which is never rewritten.
   are checked only when a caller passes the flag — while the script's own
   header says "by default every package under `packages/` is checked". S1's
   premise ("the PR-time `--pins` half fails the same drift") therefore does not
-  hold for the wired gate (F1). It is a behaviour change to a gate, needs its
-  own unit, and this unit must not widen its own diff.
+  hold for the wired gate (Known pre-existing issues). It is a behaviour change
+  to a gate, needs its own unit, and this unit must not widen its own diff.
 - A manual `version:` bump of the crate: D-40-14 keeps one train version across
   the four packages (`scripts/unit-doc-contract.test.mjs:433` enforces it) and
   the release train stamps every version at cut from the changeset (PE-004).
@@ -143,7 +143,8 @@ cut, copied verbatim, never written from memory.
 ## Future
 
 none — nothing was deferred. The `--pins` default wiring is a pre-existing gate
-gap recorded for the owner (F1), not a deferred row of this unit.
+gap recorded for the owner under Known pre-existing issues, not a deferred row of
+this unit.
 
 ## Future cost
 
@@ -300,7 +301,7 @@ this unit owns.
   ```
 - **L2** — 2026-11-16, owner apply-request, verbatim: "Apply to this repository: issue #588" then "continue" — state resolved it to **proceed** (branch `fix/588-typebox-pin-drift` at `15b04c2a`, clean worktree, no unit folder, nothing in flight).
 - **E1** — 2026-11-16, `node scripts/pin-watch.mjs --check` at `15b04c2a` · exit 1 · `pins checked: 14`, `drift: @gtrabanco/agentic-workflow · typebox 1.4.6 → 1.4.7`, `VERDICT: DRIFT` (the §2 frozen failure).
-- **E2a** — 2026-11-16, `node scripts/version-parity-gate.mjs --pins` (as wired, flagless) at `15b04c2a` · exit 0 · `[@gtrabanco/pi-agentic-workflow] exact pins checked: 4`, `VERDICT: PASS` — the crate unchecked (PE-003, F1).
+- **E2a** — 2026-11-16, `node scripts/version-parity-gate.mjs --pins` (as wired, flagless) at `15b04c2a` · exit 0 · `[@gtrabanco/pi-agentic-workflow] exact pins checked: 4`, `VERDICT: PASS` — the crate unchecked (PE-003, Known pre-existing issues).
 - **E2b** — 2026-11-16, `node scripts/version-parity-gate.mjs --pins --package packages/agentic-workflow` at `15b04c2a` · exit 1 · `GATE REJECTION — dependency-pin-drift … pins typebox at 1.4.6 but the registry published 1.4.7`.
 - **E3** — 2026-11-16, `bun test --timeout=30000 test/` in `packages/agentic-workflow` at `15b04c2a` (resolved `typebox` 1.4.6) · 858 pass / 0 fail (174s) — the differential baseline.
 - **E4** — 2026-11-16, the notes window read from the two npm tarballs in `/tmp` (upstream publishes none: `https://api.github.com/repos/sinclairzx81/typebox/releases?per_page=5` → `[]`): 1419 files in both, **0 added, 0 removed, 3 content-changed** — `build/schema/resolve/resolve.mjs`, `package.json`, `readme.md` (readme 96-line diff, entirely the spec-conformance table). `rg -n '\$ref|\$id|\$dynamicRef|\$dynamicAnchor' packages/agentic-workflow/{src,test}` · 0 schema-keyword hits. Scratch removed.
@@ -319,7 +320,10 @@ this unit owns.
 - **E14** — 2026-11-16, `git diff --stat origin/main...HEAD` names only `.changeset/588-typebox-pin-bump.md`, `bun.lock`, `packages/agentic-workflow/package.json`, `docs/ROADMAP.md`, `docs/generated/units.md` and the unit folder + journal fragment — no unrelated work folded in (O3); `git log -1 --format=%B 3469cb45 | rg -c 'Closes #588'` matches 1 (O8).
 - **E15** — 2026-11-16, the state surfaces: `bun scripts/docs-generate.mjs` regenerated `docs/generated/units.md` and `--check` then answers `verdict: PASS`; `bun scripts/roadmap-settle.mjs` · `verdict: PASS`, `violations: 0`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":12,"refusals":[]}`; `bun scripts/log-immutability.mjs` · exit 0 · `0 violations`.
 - **D2** — 2026-11-16, decision (the session entry's carrier): `docs/LOGS.md` has exactly one legal writer — the merge-to-main aggregator — and `scripts/log-immutability.mjs` refuses a non-aggregator commit that touches it, so this unit ships its session entry as a committed **journal fragment** (`.agentic-workflow/journal/20261116T183801Z-fix-588-typebox-pin-drift-narrative-local.md`, written through `journal write`), which the aggregator appends at merge. A hand append here would be the one thing the gate exists to stop.
-- **D3** — 2026-11-16, decision (the advisory's carrier): the `--pins` default gap was first written as a `## Findings` row, which turned `scripts/findings-corpus.test.mjs`'s frozen census red (1153 → 1154). The row left the table instead of re-baselining the census: the `findings-table@1` grammar admits OPEN rows only and they are appended by `review-change`/`triage-issue`, neither of which ran here (§4), so the row was in the wrong carrier — the gap is recorded under `## Known pre-existing issues` instead. The census is untouched.
+- **D3** — 2026-11-16, decision (the advisory's carrier): the `--pins` default gap was first written as a `## Findings` row, which turned `scripts/findings-corpus.test.mjs`'s frozen census red (1153 → 1154). The row left the table instead of re-baselining the census: the `findings-table@1` grammar admits OPEN rows only and they are appended by `review-change`/`triage-issue`, neither of which ran here (§4), so the row was in the wrong carrier — the gap is recorded under `## Known pre-existing issues` instead. The census is untouched (the suite is green again in G1/G2).
+- **G1** — 2026-11-16, `bun scripts/local-gate.mjs --jobs auto` · **PASS — 19 step(s) in 400s** (the first run bailed at `root-suite` on `scripts/findings-corpus.test.mjs`, 1154 vs 1153 — the census red D3 resolves; every other suite was already green).
+- **G2** — 2026-11-16, `node scripts/run-root-suite.mjs` · exit 0 · **114 suites PASS / 0 FAIL** — the root suite under the node leg agrees with the bun leg G1 ran.
+- **P4** — 2026-11-16 19:05, the advisory's carrier corrected, the gate receipts (G1/G2) recorded, and the stale `F1` references re-pointed at `## Known pre-existing issues` · this commit.
 - **P3** — 2026-11-16 18:40, the evidence rows above, the fragment and the regenerated projection · this commit.
 
 ## Next
