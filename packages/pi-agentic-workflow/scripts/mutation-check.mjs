@@ -132,7 +132,7 @@ export function runMutationSuite() {
       continue;
     }
     writeFileSync(join(work, mutant.file), original.replace(mutant.from, mutant.to));
-    const built = run("npx", ["tsc", "-p", "tsconfig.json"]);
+    const built = run("bun", ["x", "tsc", "-p", "tsconfig.json"]);
     if (built.status !== 0) {
       results.push({ ...mutant, status: "compile-error", detail: (built.stdout + built.stderr).split("\n").find((line) => line.includes("error TS")) ?? "build failed" });
     } else {

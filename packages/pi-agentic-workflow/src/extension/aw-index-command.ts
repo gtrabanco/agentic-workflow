@@ -17,9 +17,10 @@
  * Nothing here writes a byte of store state itself; the runner owns it.
  */
 
-import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 
+import { installedCandidate, runnerLaunch } from "../runner-bin.js";
+import type { RunnerAnswer } from "../runner-bin.js";
 import { runtimeBin } from "../runtime.js";
 import { AW_INDEX_COMMAND } from "../routing/types.js";
 import type { CommandRegistrar } from "./factory.js";
@@ -67,8 +68,8 @@ export interface SyncEnvelopeLike {
 
 /** One runner invocation, injectable so a suite owns argv, cwd and exit status. */
 export type IndexRunRequest = {
-  bin: string;
-  args: string[];
+  program: string;
+  argv: string[];
   cwd: string;
   timeoutMs: number;
 };
@@ -76,32 +77,24 @@ export type IndexRunRequest = {
 /** The spawn result, narrowed to what the command reads. */
 export type IndexRunResult = { status: number | null; stdout: string; stderr: string; error?: Error };
 
-/** The resolved runner entry point, or the reason it could not be resolved. */
-export type ResolvedScript = { ok: true; path: string } | { ok: false; detail: string };
-
 export interface AwIndexCommandDeps {
   readonly run?: (request: IndexRunRequest) => IndexRunResult;
-  readonly bin?: string;
-  readonly resolveScript?: () => ResolvedScript;
+  /** The composed runner command; defaults to the shared `runnerLaunch`. */
+  readonly launch?: (args: string[]) => Promise<RunnerAnswer>;
   readonly timeoutMs?: number;
 }
 
 /**
- * The runner crate's entry point, resolved from this package's own dependency
- * (the same resolution `workflow-tools.ts` uses for the schema package's JSON).
- * A host where the dependency is absent reports the reason instead of throwing.
+ * The composed runner command: the crate bin this package resolves, or the
+ * crate's closed runner set when that dependency is missing (issue #555). A
+ * host where neither resolves reports the reason instead of throwing.
  */
-function defaultResolveScript(): ResolvedScript {
-  try {
-    const require = createRequire(import.meta.url);
-    return { ok: true, path: require.resolve("@gtrabanco/agentic-workflow/bin/agentic-workflow.mjs") };
-  } catch (error) {
-    return { ok: false, detail: error instanceof Error ? error.message : String(error) };
-  }
+async function defaultLaunch(args: string[]): Promise<RunnerAnswer> {
+  return runnerLaunch(args, { installed: installedCandidate(runtimeBin()) });
 }
 
 function defaultRun(request: IndexRunRequest): IndexRunResult {
-  const result = spawnSync(request.bin, request.args, {
+  const result = spawnSync(request.program, request.argv, {
     cwd: request.cwd,
     encoding: "utf8",
     timeout: request.timeoutMs,
@@ -175,7 +168,7 @@ export function registerAwIndexCommand<M extends ModelRef = ModelRef>(
   registrar: CommandRegistrar<M>,
   deps: AwIndexCommandDeps = {},
 ): void {
-  const resolveScript = deps.resolveScript ?? defaultResolveScript;
+  const launchFor = deps.launch ?? defaultLaunch;
   const run = deps.run ?? defaultRun;
   const timeoutMs = deps.timeoutMs ?? RUN_TIMEOUT_MS;
 
@@ -183,20 +176,22 @@ export function registerAwIndexCommand<M extends ModelRef = ModelRef>(
     description:
       "Index the project docs now: a progressive, resumable sync that reports pending chunks, the pinned embedding model, the last sync and any degradation.",
     handler: async (_args: string, ctx: InvocationContext<M>): Promise<void> => {
-      const script = resolveScript();
-      if (!script.ok) {
-        ctx.notify(`/aw-index could not find the runner crate: ${script.detail}. Nothing was indexed.`, "error");
+      let launch: RunnerAnswer;
+      try {
+        launch = await launchFor(["doc", "--sync", "--json-only"]);
+      } catch (error) {
+        ctx.notify(
+          `/aw-index could not find the runner crate: ${error instanceof Error ? error.message : String(error)}. Nothing was indexed.`,
+          "error",
+        );
         return;
       }
 
       let result: IndexRunResult;
       try {
-        result = run({
-          bin: deps.bin ?? runtimeBin(),
-          args: [script.path, "doc", "--sync", "--json-only"],
-          cwd: ctx.cwd,
-          timeoutMs,
-        });
+        // The resolver answers a full argv; the spawn seam takes the program
+        // beside the arguments it receives.
+        result = run({ program: launch.argv[0], argv: launch.argv.slice(1), cwd: ctx.cwd, timeoutMs });
       } catch (error) {
         ctx.notify(
           `/aw-index could not run the index sync: ${error instanceof Error ? error.message : String(error)}`,

@@ -83,7 +83,7 @@ function extensionOver({ run, program = "bun", skillsDir } = {}) {
     awIndex: {
       // The composed command is the crate bin this package resolves; the suite
       // owns the invocation so argv and exit status are observable.
-      launch: async (args) => ({ source: "installed", program, argv: ["/fixture/crate/bin/agentic-workflow.mjs", ...args] }),
+      launch: async (args) => ({ source: "installed", program, argv: [program, "/fixture/crate/bin/agentic-workflow.mjs", ...args] }),
       run: (request) => {
         calls.spawns.push(request);
         return run ? run(request) : { status: 0, stdout: JSON.stringify(syncEnvelope()), stderr: "" };

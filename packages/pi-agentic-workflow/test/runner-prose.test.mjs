@@ -69,7 +69,7 @@ test("the package's own files carry no runner invocation", () => {
 test("the projected contract keeps the pi route and drops the invocation", () => {
   const runner = readFileSync(join(BUNDLE, "runner-contract", "references", "RUNNER.md"), "utf8");
   assert.match(runner, /^## In a pi session$/mu, "the pi route stays in the packaged contract");
-  assert.match(runner, /`runner <subcommand> \[args…\]`/u, "the symbolic citation pi sessions resolve stays");
+  assert.match(runner, /^runner <subcommand> \[args\.\.\.\]$/mu, "the symbolic citation pi sessions resolve stays");
   assert.match(runner, /Enforced by `runner resolve`/u, "the invocation section is pointerised, not paraphrased");
   assert.doesNotMatch(runner, /runner-set@1/u, "the closed-set table is the standalone tree's, not the bundle's");
 });
