@@ -513,6 +513,16 @@ P | P<n> | a phase's progress — what was done and the commit
   normal conditions), with `GIT_TRACE=1` base keeps `"1"` and head removes it,
   and `GIT_LOCATOR_VARS` is byte-identical between the two versions;
   `ls -d /tmp/qm-diff-*` → `0` lines after cleanup.
+- G10 — 2026-11-16, the batch's gate on the committed tree · `bun
+  scripts/local-gate.mjs --skip-network --no-bail` · exit 0 · `local-gate: PASS —
+  15 step(s) in 626s`, with `PASS scripts/next-step-ranking.test.mjs (24.7s)`
+  inside the root suite — the suite that reddened the pre-push gate twice today
+  now runs green under its declared budget while five other sessions' work ran
+  on the box. Every leg green with the new preload active (root-suite 200s,
+  crate-suite-bun 245s, crate-suite-node 129s, schema-node-compat 16s,
+  pi-node-compat 34s); the four network steps are skipped and reported as
+  skipped, not passed: `workspace-install`, `pi-compat-guard`,
+  `dependency-pin-gate`, `dependency-advisories`.
 
 ## Next
 
