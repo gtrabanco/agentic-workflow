@@ -354,12 +354,12 @@ deterministic gates still run (§8).
 - **P3** — 2026-11-17, the indexes and the session door: both `## Fixes`/features writes through the crate's writers, the projection re-rendered by the emitter (one added row) and the narrative fragment `20261116T135024Z-feat-527-readme-evidence-rationale-narrative-local.md` (1,979 bytes, `journal aggregate --check` → `85 checked · 0 refusals`, `log-immutability` → `PASS · 0 violations`) · `58af96b2`.
 - **P4** — 2026-11-17, the verification sweep and the receipt batch: E5–E16 and G1–G5 recorded, every obligation closed, then the validator-form correction (`D6`) · `6187430d`, `2fde06c0`.
 - **G6** — 2026-11-17, HEAD `2fde06c0`, the final-head readers, all exit 0: `agentic-workflow verify` (`VERIFY PASS`, `ok: true`), `agentic-workflow phase-lint` (`verdict PASS`, P1–P4 6/6), `scripts/docs-generate.mjs --check` (`0 missing · 0 stale · 0 orphaned`), `scripts/roadmap-settle.mjs` (`217 unit docs checked · 0 violations`), `scripts/promise-coherence.mjs` (`verdict PASS · 6 checked · 10 skipped`, each skip naming its reason).
+- **E17** — 2026-11-17, the PR and the settle: PR [#585](https://github.com/gtrabanco/agentic-workflow/pull/585) opened against `main` with `Closes #527`; feature row 527 settled to `done · [#585] · carried by fix #527` (`rowUpsert 491075d1 → af302d2e`) and the `## Fixes` row to `done · [#585]` (`fixrow af302d2e → 9b69d8f6`), both through the crate's writers with every other cell preserved; the projection re-rendered by the emitter (one changed row) and `bun scripts/docs-generate.mjs --check` · exit 0 · `0 missing · 0 stale · 0 orphaned`.
 ## Next
 
-`Needs your decision` — the owner's verdict on the diff at this head: approve
-and the PR opens against `main` with `Closes #527` (both index rows then settle
-to `done · <PR>`), or name the disputed claim and the correction batch runs
-against it.
+The merge is the owner's: PR [#585](https://github.com/gtrabanco/agentic-workflow/pull/585)
+carries the reviewed diff at this head, both index rows read `done · [#585]`, and
+the six offline gate steps this change can touch are green on it.
 
 ## References
 
