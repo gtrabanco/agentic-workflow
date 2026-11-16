@@ -466,11 +466,37 @@ function declaredSections(body) {
   return sections;
 }
 
-/** The lane keys one text declares (see `surfaceKey`). */
-function surfaceKeys(text) {
+/** The lane keys one text declares (see `surfaceKey`).
+ *
+ * `bare` adds the list-item form a human types without backticks — `- scripts`
+ * — because a declared section is a list of lane keys whose punctuation is never
+ * the point (issue #574, S1/S2: the field must work for a careless author). It
+ * is deliberately off for the whole-body inference, where only a backticked
+ * token is evidence that the word names a path.
+ */
+function surfaceKeys(text, { bare = false } = {}) {
   const surfaces = new Set();
   for (const token of proseTokens(text)) {
     const key = surfaceKey(token);
+    if (key !== null) surfaces.add(key);
+  }
+  if (!bare) return surfaces;
+  let fence = null;
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (fence !== null) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened !== null) {
+      fence = opened;
+      continue;
+    }
+    const item = /^[-*+]\s+(.+)$/u.exec(trimmed);
+    if (item === null) continue;
+    const [head] = item[1].split(/[\s,;:(]/u);
+    const key = surfaceKey(head.replace(/^`+|`+$/gu, ""));
     if (key !== null) surfaces.add(key);
   }
   return surfaces;
@@ -493,7 +519,7 @@ function resolveBodySurfaces(body) {
   const sources = explicit.length > 0 ? explicit : sections;
   if (sources.length > 0) {
     const surfaces = new Set();
-    for (const section of sources) for (const key of surfaceKeys(section.text)) surfaces.add(key);
+    for (const section of sources) for (const key of surfaceKeys(section.text, { bare: true })) surfaces.add(key);
     return { surfaces, declared: true };
   }
   return { surfaces: surfaceKeys(body), declared: false };
@@ -574,7 +600,7 @@ function unitDocSurfaces(root, unitDir) {
   }
   const declared = new Set();
   for (const bounds of headingBoundsAll(text, "Surfaces")) {
-    for (const key of surfaceKeys(text.slice(bounds.start, bounds.end))) declared.add(key);
+    for (const key of surfaceKeys(text.slice(bounds.start, bounds.end), { bare: true })) declared.add(key);
   }
   if (declared.size > 0) return declared;
   const { phases } = parseUnitDocPhases(text);
