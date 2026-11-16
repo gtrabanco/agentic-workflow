@@ -150,9 +150,15 @@ When the probe says `degraded` or a write fails:
 - **Unrelated safe work continues.** Never stop a unit for a mirror failure.
 - **Sync resumes when the layer answers** — retry the pending write at the next
   boundary, not in a loop.
-- **Read both sides back.** After a write, read the file and the mirror; when
-  the versions are irreconcilable, keep both and surface the difference rather
-  than silently picking one.
+- **Read both sides back.** After a write, read the file and the mirror back
+  with the normal read tool — they are not atomic. The document is the source:
+  a mirror that differs from the document just written is refreshed from it,
+  never a blocker and never a surfaced difference. After a partial or failed
+  sync, check which writes already applied and continue from that state —
+  never replay an applied write, and never author comparison or reconciliation
+  scripts or gates for the two sides. Preserve both versions only until the
+  human resolves a genuine conflict (both sides independently edited
+  differently); that one case asks, and every stale-mirror case does not.
 
 ## Checklist (pass only if)
 
