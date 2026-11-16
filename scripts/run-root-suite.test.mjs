@@ -17,7 +17,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, utimesSync, writeFileSync } from "node:fs";
 import path, { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -25,9 +25,15 @@ import { fileURLToPath } from "node:url";
 import {
   argvFor,
   defaultJobs,
+  dispatchReport,
+  ensureSchemaBuild,
   parseArgs,
+  prepareSchemaRuntime,
   readAllowlist,
+  readSchemaDistState,
   runSuites,
+  SCHEMA_PACKAGE_DIR,
+  schemaBuildManager,
   testBudgetFor,
 } from "./run-root-suite.mjs";
 import { tempRoot } from "./temp-root.mjs";
@@ -343,6 +349,204 @@ test("end-to-end: a suite killed by --bail reports KILLED, never FAIL, and keeps
   assert.ok(!result.stdout.includes("PARTIAL-MARKER"), "a killed suite's partial output stays out of the log");
 });
 
+/* ------------------------------------------------------ schema dist state */
+
+/**
+ * A throwaway checkout skeleton: `<root>/packages/agentic-workflow-schema/<rel>`
+ * for every entry. Sizes and mtimes are set by the case that needs them, so the
+ * predicate is exercised without touching this repository's own build output.
+ */
+function schemaTree(files) {
+  const root = tempRoot("root-suite-dist-");
+  const packageDir = join(root, "packages", "agentic-workflow-schema");
+  for (const [rel, content] of Object.entries(files)) {
+    mkdirSync(path.dirname(join(packageDir, rel)), { recursive: true });
+    writeFileSync(join(packageDir, rel), content);
+  }
+  return { root, packageDir };
+}
+
+/** Pin one path's mtime, so "older than its sources" is stated, never raced. */
+function stamp(file, secondsSinceEpoch) {
+  utimesSync(file, secondsSinceEpoch, secondsSinceEpoch);
+}
+
+test("readSchemaDistState: an absent dist entry is 'missing', not a rebuild of nothing", () => {
+  const { packageDir } = schemaTree({ "src/index.ts": "export const a = 1;\n" });
+  const state = readSchemaDistState({ packageDir });
+  assert.equal(state.status, "missing");
+  assert.match(state.detail, /dist\/index\.js/);
+});
+
+test("readSchemaDistState: a source without its emitted module is 'stale' — a half-built dist is never current", () => {
+  const { packageDir } = schemaTree({
+    "src/index.ts": "export * from './a.js';\n",
+    "src/a.ts": "export const a = 1;\n",
+    "dist/index.js": "export * from './a.js';\n",
+    "dist/a.d.ts": "export declare const a = 1;\n",
+  });
+  const state = readSchemaDistState({ packageDir });
+  assert.equal(state.status, "stale");
+  assert.match(state.detail, /dist[\\/]a\.js/);
+});
+
+test("readSchemaDistState: an output older than its sources is 'stale', and the newer source is named", () => {
+  const { packageDir } = schemaTree({
+    "src/index.ts": "export const a = 1;\n",
+    "dist/index.js": "export const a = 1;\n",
+  });
+  stamp(join(packageDir, "dist", "index.js"), 1_000_000);
+  stamp(join(packageDir, "src", "index.ts"), 2_000_000);
+  const state = readSchemaDistState({ packageDir });
+  assert.equal(state.status, "stale");
+  assert.match(state.detail, /src[\\/]index\.ts/);
+});
+
+test("readSchemaDistState: a build newer than every source is 'fresh' — the tree a build just left", () => {
+  const { packageDir } = schemaTree({
+    "src/index.ts": "export const a = 1;\n",
+    "tsconfig.json": "{}\n",
+    "dist/index.js": "export const a = 1;\n",
+  });
+  stamp(join(packageDir, "src", "index.ts"), 1_000_000);
+  stamp(join(packageDir, "tsconfig.json"), 1_000_000);
+  stamp(join(packageDir, "dist", "index.js"), 2_000_000);
+  assert.equal(readSchemaDistState({ packageDir }).status, "fresh");
+});
+
+test("SCHEMA_PACKAGE_DIR is the package this repository's suites read", () => {
+  assert.equal(SCHEMA_PACKAGE_DIR, join(ROOT, "packages", "agentic-workflow-schema"));
+});
+
+/* ------------------------------------------------------- the build seam */
+
+test("schemaBuildManager: the runner's own runtime picks the package manager", () => {
+  assert.equal(schemaBuildManager("/home/agent/.bun/bin/bun"), "bun");
+  assert.equal(schemaBuildManager("/usr/bin/node"), "npm");
+});
+
+test("ensureSchemaBuild: runs the package's declared build script in the package directory", () => {
+  const calls = [];
+  const outcome = ensureSchemaBuild({
+    manager: "bun",
+    spawn: (bin, args, options) => {
+      calls.push({ bin, args, cwd: options.cwd });
+      return { status: 0, stdout: "$ tsc\n", stderr: "" };
+    },
+  });
+  assert.deepEqual(calls, [{ bin: "bun", args: ["run", "build"], cwd: SCHEMA_PACKAGE_DIR }]);
+  assert.equal(outcome.outcome, "built");
+});
+
+test("ensureSchemaBuild: an absent package manager is 'unavailable' — the dispatch is never blocked by a toolchain", () => {
+  const outcome = ensureSchemaBuild({
+    manager: "npm",
+    spawn: () => ({ status: null, error: Object.assign(new Error("spawn npm ENOENT"), { code: "ENOENT" }) }),
+  });
+  assert.equal(outcome.outcome, "unavailable");
+  assert.match(outcome.detail, /npm/);
+});
+
+test("ensureSchemaBuild: a build that ran and failed is 'failed' and carries the compiler's own output", () => {
+  const outcome = ensureSchemaBuild({
+    manager: "bun",
+    spawn: () => ({ status: 2, stdout: "src/x.ts(1,1): error TS1005: ';' expected.\n", stderr: "" }),
+  });
+  assert.equal(outcome.outcome, "failed");
+  assert.equal(outcome.status, 2);
+  assert.match(outcome.output, /error TS1005/);
+});
+
+/* ------------------------------------------------ the dispatch decision */
+
+test("prepareSchemaRuntime: a current build is not rebuilt — the gate's own tree pays nothing", () => {
+  let built = false;
+  const decision = prepareSchemaRuntime({
+    state: { status: "fresh", detail: "" },
+    build: () => {
+      built = true;
+      return { outcome: "built" };
+    },
+  });
+  assert.equal(decision.action, "current");
+  assert.equal(built, false);
+});
+
+test("prepareSchemaRuntime: a stale build is rebuilt before the pool starts", () => {
+  const decision = prepareSchemaRuntime({
+    state: { status: "stale", detail: "src/index.ts is newer than the build" },
+    build: () => ({ outcome: "built", manager: "bun", ms: 450 }),
+  });
+  assert.equal(decision.action, "rebuilt");
+  assert.equal(decision.manager, "bun");
+});
+
+test("prepareSchemaRuntime: a missing build is rebuilt too — the fresh-clone case", () => {
+  const decision = prepareSchemaRuntime({
+    state: { status: "missing", detail: "dist/index.js is absent" },
+    build: () => ({ outcome: "built", manager: "npm", ms: 900 }),
+  });
+  assert.equal(decision.action, "rebuilt");
+});
+
+test("prepareSchemaRuntime: an unavailable toolchain is reported and the suites still run", () => {
+  const decision = prepareSchemaRuntime({
+    state: { status: "stale", detail: "dist is older than src" },
+    build: () => ({ outcome: "unavailable", detail: "npm is not available (ENOENT)" }),
+  });
+  assert.equal(decision.action, "unavailable");
+  assert.match(decision.detail, /npm is not available/);
+});
+
+test("prepareSchemaRuntime: a failed build is reported with its output, never swallowed", () => {
+  const decision = prepareSchemaRuntime({
+    state: { status: "stale", detail: "dist is older than src" },
+    build: () => ({ outcome: "failed", status: 2, output: "error TS1005" }),
+  });
+  assert.equal(decision.action, "failed");
+  assert.equal(decision.output, "error TS1005");
+});
+
+/* --------------------------------------------------------- the report */
+
+test("dispatchReport: a current build says nothing and stops nothing", () => {
+  assert.deepEqual(dispatchReport({ action: "current" }), { lines: [], stop: false });
+});
+
+test("dispatchReport: a rebuild is one line naming the build it replaced", () => {
+  const report = dispatchReport({ action: "rebuilt", state: { status: "stale" }, manager: "bun", ms: 450 });
+  assert.equal(report.stop, false);
+  assert.equal(report.lines.length, 1);
+  assert.match(report.lines[0], /^root gate: schema dist rebuilt in 0\.5s/);
+});
+
+test("dispatchReport: an unavailable toolchain names the manual command and the dispatch continues", () => {
+  const report = dispatchReport({
+    action: "unavailable",
+    state: { status: "missing" },
+    manager: "npm",
+    detail: "npm is not available (ENOENT)",
+  });
+  assert.equal(report.stop, false, "an unprovisioned tree keeps today's behaviour");
+  assert.equal(report.lines.length, 1);
+  assert.match(report.lines[0], /schema dist is missing/);
+  assert.match(report.lines[0], /bun run build/);
+  assert.match(report.lines[0], /npm is not available/);
+});
+
+test("dispatchReport: a package that does not compile prints the compiler's output and stops the run", () => {
+  const report = dispatchReport({
+    action: "failed",
+    state: { status: "stale" },
+    manager: "bun",
+    status: 2,
+    output: "src/x.ts(1,1): error TS1005: ';' expected.",
+  });
+  assert.equal(report.stop, true, "a tree that does not compile never reports contract results");
+  assert.ok(report.lines.some((line) => line.includes("error TS1005")), "the compiler's own words reach the reader");
+  assert.ok(report.lines.some((line) => /^root gate: the schema package does not build/.test(line)));
+});
+
 /* ------------------------------------------------------------ integration */
 
 test("end-to-end: one cheap real suite, two workers, green and reported", () => {
@@ -354,6 +558,10 @@ test("end-to-end: one cheap real suite, two workers, green and reported", () => 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /root gate: 1 suite\(s\)/, "the header names the plan");
   assert.match(result.stdout, /PASS scripts\/workspace-lock-policy\.test\.mjs/);
+  // The schema-build report is stderr on purpose: stdout stays the machine
+  // receipt a caller reads, and the header keeps its first line.
+  assert.ok(result.stdout.startsWith("root gate: 1 suite(s)"), `the header opens stdout, not the build report: ${result.stdout.slice(0, 120)}`);
+  assert.doesNotMatch(result.stdout, /root gate: schema/, "the build report never lands on stdout");
 });
 
 test("end-to-end: a suite that does not exist fails the gate verbatim", () => {
