@@ -68,8 +68,8 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
   assert.equal(isRunnerCommand("invented-command"), false, "a name outside the table is not a runner command");
   assert.deepEqual(
     Object.keys(RUNNER_COMMANDS),
-    ["unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input", "ledger-provenance", "ceremony"],
-    "the shell-visible half of the runner is exactly these commands: the router, the six sensors, and the ceremony registry",
+    ["unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input", "ledger-provenance", "quality-metrics", "ceremony"],
+    "the shell-visible half of the runner is exactly these commands: the router, the six sensors, the quality sensor, and the ceremony registry",
   );
   for (const [name, handler] of Object.entries(RUNNER_COMMANDS)) {
     assert.equal(typeof handler, "function", `${name} is a function`);
@@ -84,6 +84,7 @@ test("every sensor exposes its entry and none of them executes on import", async
     ["pre-execution-snapshot", "pre-execution-snapshot.mjs"],
     ["needs-input", "needs-input.mjs"],
     ["ledger-provenance", "ledger-provenance.mjs"],
+    ["quality-metrics", "quality-metrics.mjs"],
   ];
   for (const [name, file] of sensors) {
     // Importing is the whole assertion: a module that ran itself at import time

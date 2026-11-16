@@ -24,6 +24,7 @@
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *   agentic-workflow resolve-passes [--global <path>] [--project <path>] [--command <name>]
  *   agentic-workflow verify <unit-doc-path>
+ *   agentic-workflow charter <state|land|check> --guide <path> [--answers <path|->] [--bank <path>]
  *   agentic-workflow config <get|set|list|show|validate|init|reset|schema> [path] [value] [--scope global|project|resolved|both] [--project <dir>] [--global-dir <dir>] [--json]
  *
  * --json prints the operation receipt as JSON.
@@ -47,6 +48,13 @@
  * same module `scripts/relay-packet.mjs` runs, so a project that carries only
  * the crate gets the identical block. Read-only: it writes nothing.
  *
+ * `charter` (unit 556) is the engineering interview's deterministic half: `state`
+ * reports the guide's `## Project charter` slots, `land` writes answers into the
+ * placeholders without ever overwriting a team convention (and records a
+ * recommendation as a dated assumption), and `check` refuses a bank question that
+ * cites no source, toggles one behaviour, states no condition, or lands in a slot
+ * the guide does not carry. Only `land` writes, and it refuses before any byte moves.
+ *
  * `verify` (issue #260) is the document verifier — non-negotiable #2's tool,
  * distinct from the `edit` writer CLI: it reads one unit document against the
  * frozen schemas (required sections per accepted shape, evidence columns,
@@ -56,6 +64,17 @@
  * refusal, never a pass). Read-only: it writes nothing. Clean → exit 0 with
  * the `verify@1` receipt; a violation → exit 2 and
  * `VERIFY REFUSAL — <violations>` on stderr.
+ *
+ * `quality-metrics` (feature 558, issue #565) is the project-quality sensor: the
+ * DORA four keys plus the reversion ratio over a trailing window (default 90
+ * days), printed as the `quality-metrics@1` document the schema package
+ * publishes. Every row carries a `measured`/`derived`/`unavailable` label, and a
+ * metric that cannot be computed names its cause instead of reporting a zero —
+ * `no-reviews-in-window` and `unavailable-forge-missing-cli` are answers, not
+ * failures. `--until` pins the window's end so a report is reproducible, and
+ * `--out` is the only byte it may write. The metric definitions are the crate
+ * README's `quality-metrics@1` block; the refusal contract is exit 2 with
+ * `QUALITY REFUSAL — <reason>` before anything is measured.
  *
  * `doctor` / `setup` (issue #537) is the deterministic tool doctor and its
  * consent-gated wizard: `doctor` prints the read-only `doctor@1` envelope — one
@@ -153,6 +172,7 @@ import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
 import { checkTrial, boundLine, parseDuration, CheckError, readPidLive } from "../src/resources/check.mjs";
 import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
+import { run as runCharter } from "../src/charter/interview.mjs";
 import { createFeedback, parseFeedbackArgs } from "../src/feedback/index.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -593,7 +613,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -746,6 +766,15 @@ switch (command) {
     }
     process.stdout.write(`VERIFY PASS — ${JSON.stringify({ ...result, violations: [] }, null, 2)}\n`);
     process.exit(0);
+    break;
+  }
+
+  // ── charter — the engineering interview's landing and bank check (unit 556) ──
+  case "charter": {
+    // The interview itself is prose (the answers are a conversation); this is the
+    // deterministic half: where an answer lands (`state`/`land`) and whether a
+    // question earned its place (`check`). `land` is the only writer.
+    process.exit(runCharter(restArgs));
     break;
   }
 
@@ -1737,7 +1766,7 @@ switch (command) {
     // share one bin without one growing switch. A name outside both tables is
     // still the closed-world refusal below — never a shell fallback.
     if (isRunnerCommand(command)) {
-      const runnerCode = runRunnerCommand(command, restArgs);
+      const runnerCode = runRunnerCommand(command, restArgs, { feedback });
       if (typeof runnerCode === "number") process.exitCode = runnerCode;
       else if (runnerCode && typeof runnerCode.then === "function") {
         runnerCode.then((code) => {

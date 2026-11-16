@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|ceremony> [--debug|--profile] ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -42,6 +42,7 @@ writing anything**.
 | `doc (--sync \| --query <term> \| --status \| --rebuild) [--json-only]` | The **retrieval index** (feature 65, hardened by issue #443): one gitignored SQLite store under `.agentic-workflow/index/`, freshness checked on every query. `--query` resolves its mode **at query time** (see the `doc` section below): hybrid when a provider is configured and the store holds chunks embedded under the pinned model, keyword with the declared cause otherwise; an explicit `--mode keyword\|hybrid` always wins. `--sync` chunks incrementally and then embeds the pending chunks with pacing and retry. Degradations are declared, never silent: `unavailable-embeddings-not-configured`, `unavailable-embeddings-not-indexed`, `embeddings-model-mismatch`, `unavailable-embeddings-provider-down`, and — when the provider refuses a request instead of being unreachable — `embeddings-request-rejected` with the provider's status/body in the additive `store.rejected` record, the rejected chunks left pending and the rest embedded. `--rebuild` re-chunks from scratch and embeds in the same pass. Discovery only: no gate reads it. The pi package's native `/aw-index` command runs the same sync and prints its report. **Experimental.** |
 | `doc read \| edit \| index` | The **doc CLI** (issue #366, half A of #192): section-level reads and splices over the #407 locator plus a derived structure index. `doc read --file <path\|-> [--section <id\|title>] [--json]` prints the located section's original bytes (no `--section` → the whole file; the reference is a D5 id `path#slug`, its bare slug, or the exact heading title — a path-qualified id needs a real document path, so with `--file -` the title or the bare slug is the reference); `doc edit --file <path> --section <id\|title> (--replacement <path\|-> \| --set <text\|-> \| --append <text\|->) [--dry-run] [--json]` splices one body source over the located section in place — `--replacement` names a file, `--set`/`--append` carry their text inline (stdin with `-`), exactly one is legal, and `--append` places its block after the section's own bytes; every byte outside the range is the source's own, and a selector resolving to nothing or to several sections is refused (`DOC REFUSAL — NO_MATCH\|AMBIGUOUS_MATCH\|BAD_SELECTOR`, exit 2, before any write); `doc index [--out <path>] [--json]` regenerates the derived JSON structure document (stable section IDs through 65's shared D5 function, parsed frontmatter, skill triggers, unit-doc phase mapping previous/current/next, dependencies) validated against TypeBox schemas — content only, so two runs over an unchanged corpus are byte-identical, and `--out` is where a project decides to keep it. It never opens the retrieval store and is **experimental** until promotion is earned (issue #192's constraint). |
 | `section <locate|remove|replace> --file <path\|-> --selector <json> [--replacement <path\|->] [--write] [--json]` | The **section locator** (issue #407): one Markdown document parsed with `mdast-util-from-markdown`, section bounds from node positions (a fenced `##`-like line is never a heading), and a byte-offset splice of the original string. Selectors: heading title, depth-aware heading path, heading regex, and line-in-scope exact/regex. `locate` prints the range receipt, `remove`/`replace` print the transformed document (or persist it with `--write`), `--json` emits one receipt, a selector resolving to 0 or >1 sections refuses with exit 2 (`SECTION REFUSAL — <code>`), a malformed invocation is exit 1 |
+| `charter <state\|land\|check> --guide <path> [--answers <path\|->] [--bank <path>] [--json]` | The **engineering interview's deterministic half** (unit 556): the interview itself is prose because the answers are a conversation, but *where an answer lands* and *whether a question earned its place* are checked. `state` reports every `- **Key:** value` slot in the guide's `## Project charter` section as `filled` or `placeholder` (a slot whose value is still one `<…>` placeholder, or a list whose every entry carries one, is a placeholder — a documented shape is not an answer), so the round asks only what the project has not declared. `land` writes the payload's `answers` into placeholder slots, records a `defaults` entry as `assumed <date> — <value>` (a defaults payload without `date` is refused: an assumption is never undated), reports a slot the project already filled as `kept` and never rewrites its bytes, and leaves an unanswerable slot `unanswered`. `check` is the bank's own check: the `interview-bank@1` block's declared cells must equal the question table's header, every row must cite a bibliography `source`, state the two behaviours its answers `toggles`, state the `applies-when` condition that earns it, and land in a slot the guide carries; the guide must carry the `Architectural boundaries` slot and its value must be one `<boundary> → machine: <mechanism>` or `<boundary> → prose-only` entry per boundary. Exit 0 pass (write done / check passed) · 1 check blocked · 2 refusal, `EDIT REFUSAL — <reason>` on stderr before any byte moves. No clock, no network, no git: two runs over the same bytes produce the same bytes |
 | `memory probe [--json]` | The six-check memory-substrate health sensor (below) — writes nothing, always exits 0 |
 | `relay <check\|budget\|tiers\|obligations> <unit> [--repo <dir>] [--packet <dir>]` | The **Relay packet checker** (unit 82): the lane's offline half of pi-web's Relay contract. `check` validates the three documents pi-web dispatches (pointer-shaped charter, baton with a closed state, leg and phase cursor, one log entry per leg); `budget` measures the leg handover against the manifest's `relays` ceiling; `tiers` reads each leg's tier from the catalog; `obligations` verifies the unit's ledger is closed. Read-only, stdout is one fixed block ending in `verdict: PASS\|FAIL`, exit 0 pass · 1 fail · 2 usage. One owner for the grammar — `src/relay/Packet.mjs` — which `scripts/relay-packet.mjs` also runs, so both entry points print the identical block |
 | `log render --facts <path\|-> [--raw]` | The **journal entry renderer** (feature 394): reads a frozen `log-facts@1` payload (`timestamp`, `branch`, `reason`, `commits{count,range}`, `files[]`) and prints the `docs/LOGS.md` block the pi extension writes at session shutdown. JSON on stdout (`--raw` for the entry alone, so `diff` needs no parsing); exit 0 rendered, exit 2 refused with `LOG REFUSAL — <reason>`. Pure: no clock, no git, no session, so a test or a CI job regenerates and byte-diffs an entry. One owner for the shape — `src/log/render.mjs` — which the extension imports and the parity suite compares against `template/.claude/hooks/log-session-end.sh` |
@@ -61,6 +62,7 @@ writing anything**.
 | `pre-execution-snapshot <build\|verify\|contract> [flags]` | The **pre-execution snapshot** (feature 91): `build` writes the `pre-execution-snapshot@1` receipt for a stage (content-bound digests of the bound paths, plus a parent digest for a feature plan stage), `verify` re-derives a receipt's bound digest and reports drift, `contract` prints the published contract constants. `--root` re-points the sensed repository. Exit 0 ok · 1 a real error (named, never a stack trace in the receipt) |
 | `needs-input <unit-dir> [--json]` | The **open-question sensor** (feature 91): reads the unit's `decisions.md` `open-questions@1` ledger and prints the block (`open-questions@1`, open count, entries, route back) or the refusal naming the defective row. Exit 0 answered · 1 refused · 2 usage. Read-only |
 | `ledger-provenance <ledger-or-unit-doc> [--json] [--check] [--annotate]` | The **fold-queue recount** (feature 91): reads a `## Findings` table (or a legacy `review-findings.md`) and proves each `folded: yes` row cites a commit that is reachable and whose subject claims that row. `--check` runs the same walk read-only and exits 1 on any row needing a repair, naming the rows by cause; `--annotate` is the one writer. Exit 0 clean · 1 repair needed · 2 usage |
+| `quality-metrics [--window <days>] [--until <instant>] [--repo <dir>] [--out <path>]` | The **project-quality sensor** (feature 558, issue #565): the DORA four keys plus the reversion ratio over a trailing window (default 90 days), printed as the `quality-metrics@1` document the schema package publishes — six metric rows, every row carrying a `measured`/`derived`/`unavailable` label, and a metric that cannot be computed naming its cause instead of reporting a zero. `--until` pins the window's end so a report is reproducible; `--out` is the only byte it may write. Read-only: every git and forge call is a read, the forge dimension is bounded, and an unreadable forge or a history that truncates the window degrades the affected rows in `degraded`. Exit 0 a validated document · 2 a refusal (bad flag or value, nothing measured) · 1 an unexpected failure. The metric definitions are `quality-metrics@1` below |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | The **unit router** (feature 91, moved out of the repository's `scripts/`): reads one unit doc's own ledger and prints the `UNIT ROUTE —` block — `status`, `route`, `next`, the open row ids, the bounded read set, `review-cycles`, `ledger-size` and a `fingerprint` — or, with `--triage <unit> --json`, the closed nine-step plan block derived from the bundled catalog (`src/runner/catalog.json`). Read-only, offline, dependency-free beyond the pinned schema package; exit 0 answered · 1 usage · 2 triage refusal. The project it senses is the worktree enclosing the caller's working directory, so it runs from any sub-directory of the project |
 
 | `doctor [--json] [--root <dir>]` | The **tool doctor** (issue #537): one read-only check per documented tool surface, printing the fixed `doctor@1` envelope — the host, one row per surface with its real evidence (resolved path, version, version pair, health probe, config state), the derived move, and the summary/verdict. Exit 0 when no required surface is broken · 1 when one is. A missing optional tool is an advisory that never fails the run. `--root` re-points the project it observes. It writes nothing, and it never runs a package manager: an install is text an operator pastes. The documented inventory it validates is `tool-inventory@1` below, and a documented row without a probe (or a probe without a documented row) is a `DOCTOR REFUSAL`, exit 2 |
@@ -457,3 +459,126 @@ in under half a second each. `runProbe({ fetchImpl, runImpl, timeoutMs,
 totalTimeoutMs })` takes its side effects by injection, so the suite drives
 every degraded path with fakes and millisecond bounds — no network, no PATH, no
 real engram process.
+
+## `quality-metrics` — the project-quality sensor (feature 558, issue #565)
+
+`workflow-status` measures workflow *state*. This measures workflow *quality*:
+the DORA four keys — change-failure rate, lead time for change, and their two
+companions — plus the reversion ratio, computed from git history and forge data
+over a trailing window and printed as one validated document.
+
+Three things it will not do: it never advises, never gates and never fixes. It
+reports, and interpretation is the caller's.
+
+**Read-only.** Every `git` and `gh` call is a read. `--out <path>` is the only
+byte the command may write, and it writes exactly the bytes stdout carried.
+**One project.** `--repo <dir>` scopes every reader — git, forge and corpus — to
+the directory it names: the forge reads run inside it, so one document never
+carries two projects' rows.
+**Bounded.** Each git call has a 15 s bound, the three forge reads share one 30 s
+budget with a 10 s per-call cap, and the first-commit read is a bounded sample
+(see *Why a sample* below). **Fail closed.** A metric that cannot be computed is
+`unavailable` with a `reason`, and that reason also appears in `degraded`; a
+metric whose sources answered but whose denominator is empty carries a
+`no-<observation>` reason. Neither is ever a zero.
+
+### The window
+
+The document measures `[until − days, until]`. `days` defaults to 90 and is the
+`--window` flag; `until` is the flag of the same name, defaulting to the run's
+instant, so a report is reproducible when the caller pins it. A report is
+therefore auditable: the window that produced a number travels inside it.
+
+### The metric definitions — the one home
+
+| Metric | Formula | Unit | Confidence |
+|---|---|---|---|
+| `reversion_ratio` | revert commits ÷ total commits in the window | ratio (0..1) | `derived` — the revert identification is a message heuristic |
+| `change_failure_rate` | deploys merged in the window that a revert names ÷ deploys merged in the window | ratio (0..1) | `derived` — the linkage is a heuristic and cannot see a deploy merged by hand |
+| `lead_time_for_change` | median of first commit → merge over the sampled merged pulls inside the window | hours | `measured`, demoted to `derived` when the sample is truncated |
+| `pr_volume` | pulls opened inside the window, with merged carried beside it | count | `measured`, demoted to `derived` when the created read hits its cap |
+| `review_latency` | median of pull opened → first submitted review over the in-window pulls that carry a review | hours | `measured`, demoted to `derived` when the created read hits its cap |
+| `escaped_defects` | open rows of the unit-doc findings corpus, with the document count beside it | count | `measured` — or `unavailable` when there is no corpus |
+
+Median, not mean: one pull that sat open for a month should not move the
+number a team acts on. Hours are rounded to two decimals and ratios to four, so
+the same sources and the same window produce byte-identical bytes.
+
+**The two revert heuristics.** A commit is a revert when `git revert` wrote it:
+its subject starts `Revert "`, or its body carries `This reverts commit <oid>.`
+The second form is also where the target oid comes from.
+Its **false-positive shape**: a hand-written subject that literally starts
+`Revert "` but reverts nothing, which inflates the ratio. Its
+**false-negative shape**: a revert committed with a custom message, folded into
+another change, or squashed into a merge, which deflates it. The two readings of
+"% of commits reverted" are both reported rather than conflated: this ratio
+counts the *revert commits* (needing no linkage), and the *reverted deploys* are
+`change_failure_rate`'s numerator.
+
+**Why a sample.** `gh pr list --json commits` builds a GraphQL query whose
+`authors` connection explodes past GitHub's 500,000-node ceiling at roughly 100
+pulls (measured: 40 answers, 100 fails), so the first-commit read asks for the
+25 most recent merged pulls and the row says so when that is fewer than the
+window's deploys. The deploy read and the created read ask for up to 1,000 rows
+each, and **every row resting on a capped read drops to `derived`**: a subset is
+never reported as a measurement, and the detail line names which read was
+capped and at what.
+
+**The escaped-defect slot is a slot.** It reports the open rows of the
+findings corpus — the unit docs' `## Findings` tables and the legacy
+`review-findings.md` ledgers, read through the fold queue's own parsers — and
+says `unavailable` when a project carries no corpus. The corpus has no
+per-row timestamp, so the window does not apply to it, and the row says that
+too. Read it as an **upper bound**: a migrated unit's `## Findings` table only
+carries rows nobody folded, but a legacy ledger can still show `folded: no` on
+a unit that merged long ago, so on a mature project the number counts ledger
+debt beside live escapes. The row's `detail` names that reading instead of
+implying a defect count.
+
+### The degradation codes
+
+| Code | Cause |
+|---|---|
+| `unavailable-forge-missing-cli` | `gh` is not on PATH |
+| `unavailable-forge-timeout` | a forge read exceeded its bound, or the dimension's budget was spent |
+| `unavailable-forge-auth` | the forge answered an authentication failure |
+| `unavailable-forge-no-network` | the forge read failed for any other reason |
+| `unavailable-forge-malformed-answer` | the forge answered something that is not the expected JSON list |
+| `unavailable-history-not-a-repository` | the path is not a git worktree (or `git` is absent) |
+| `unavailable-history-unreadable` | a git read failed after the repository was found |
+| `unavailable-history-shallow` | the clone is shallow **and** its oldest commit is inside the window, so the window's commit count is a subset |
+| `unavailable-findings-corpus` | the project carries neither `docs/features/` nor `docs/fix/` unit documents |
+
+A shallow clone whose history still reaches past `since` is **not** degraded:
+coverage is asked of the history, not of the flag. And the zero-observation
+reasons (`no-commits-in-window`, `no-deploys-in-window`, `no-pulls-in-window`,
+`no-reviews-in-window`) are answers about the window, not failures — they are
+never listed in `degraded`.
+
+### The document — `quality-metrics@1`
+
+The contract id is `agentic-workflow/quality-metrics`, the version is 1, and the
+schema package publishes the validator (`validateQualityMetrics`) and the
+draft-07 projection (`quality-metrics.schema.json`). The core is closed: an
+unknown key anywhere is refused, and the two vocabularies (`QUALITY_METRIC_NAMES`,
+`QUALITY_CONFIDENCES`) are the sets a consumer switches on.
+
+```text
+quality-metrics@1
+field | shape | what it orders
+contract | agentic-workflow/quality-metrics | the document's identity
+version | 1 | the core version; a field change bumps it
+schema | quality-metrics@1 | the token a reader dispatches on
+source_revision | <7-40 hex> or null | the commit the report is anchored on; null when the history is unreadable
+window.days | integer 1..3650 | the trailing day count the report measured
+window.since | UTC instant | the window's opening instant, exactly `days` before its end
+window.until | UTC instant | the window's closing instant
+degraded | array of unavailable-<source>-<cause> | every source failure behind the unusable rows, deduplicated and sorted
+metrics.<name> | one row per published metric name | the six rows; the name set is closed
+row.confidence | measured \| derived \| unavailable | how far the value may be trusted, and never decoration
+row.value | number or null | the measurement; null exactly when the row is unavailable
+row.unit | ratio \| hours \| count | fixed by the metric, never chosen by a producer
+row.reason | string or null | the declared cause: a code from `degraded`, or a no-<observation> code; null when measured
+row.detail | 1..512 characters | the heuristic, the sample and the denominator in one readable line
+row.components | closed per metric | the counts the value was computed from (see the definitions table)
+```

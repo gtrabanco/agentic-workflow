@@ -19,6 +19,7 @@ import { run as runWorkflowStatus } from "./sensors/workflow-status.mjs";
 import { run as runPreExecutionSnapshot } from "./sensors/pre-execution-snapshot.mjs";
 import { run as runNeedsInput } from "./sensors/needs-input.mjs";
 import { run as runLedgerProvenance } from "./sensors/ledger-provenance.mjs";
+import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 
 /**
@@ -33,6 +34,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "pre-execution-snapshot": runPreExecutionSnapshot,
   "needs-input": runNeedsInput,
   "ledger-provenance": runLedgerProvenance,
+  "quality-metrics": runQualityMetrics,
   ceremony: runCeremony,
 });
 
@@ -48,12 +50,19 @@ export const isRunnerCommand = (name) => Object.hasOwn(RUNNER_COMMANDS, name);
  * `undefined` return means the command already printed and set (or left) its
  * own code.
  *
+ * `context` is the process the bin already owns — the feedback channel, so far.
+ * It rides as an explicit argument rather than a module-level singleton: a
+ * command that knows it is long-running (`quality-metrics` spends seconds in
+ * bounded subprocesses that block the loop) flushes its start line through the
+ * same channel every other command uses, instead of a second convention.
+ *
  * @param {string} name
  * @param {string[]} args
+ * @param {{ feedback?: object }} [context]
  * @returns {number | void | Promise<number | void>}
  */
-export function runRunnerCommand(name, args) {
+export function runRunnerCommand(name, args, context = {}) {
   const handler = RUNNER_COMMANDS[name];
   if (!handler) return undefined;
-  return handler(args);
+  return handler(args, context);
 }

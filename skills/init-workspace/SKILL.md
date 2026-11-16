@@ -95,7 +95,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
 ## Progressive loading — bootstrap or upgrade, never both
 
-The reference allowlist is exactly the six linked paths below. Never invent or
+The reference allowlist is exactly the seven linked paths below. Never invent or
 read another `references/` path. Step 0 selects exactly one route:
 
 **Hard rule for an existing Claude Code, Cursor, Copilot, or OpenCode
@@ -106,8 +106,11 @@ or portability unless the runtime platform has no named adapter at all.
 - Bare/foreign repository: read
   [bootstrap discovery](references/BOOTSTRAP_DISCOVERY.md), complete its
   interview — **the charter round first: the identity layer is blocking, the
-  domain layer is open-with-defaults (§Charter below)** — then read
+  domain layer and layer 3 are open-with-defaults (§Charter below)** — then read
   [bootstrap write](references/BOOTSTRAP_WRITE.md).
+  When the round reaches the engineering interview, load
+  [the interview bank](references/ENGINEERING_INTERVIEW.md): it carries layer
+  3's questions, their bibliography sources and the landing contract.
   Both the discovery and write routes load
   [SERENA language servers](references/SERENA.md) for stack detection.
 - Existing agentic-workflow scaffold: read [upgrade](references/UPGRADE.md)
@@ -149,6 +152,20 @@ step 4:
   derivable-from-code description — in the agent guide's `## Project charter`
   section plus the registered criteria catalogue; coverage computed by
   `audit-docs` (check 16), never policed here.
+- **Layer 3 — objectives and engineering posture, open-with-defaults:** asked
+  immediately after the domain layer, from the bank
+  [engineering interview](references/ENGINEERING_INTERVIEW.md): what the repo is
+  for, who it serves, the team's shape, what it optimizes for and how much
+  automation it wants, plus the six technical areas (testing, boundaries,
+  dependencies, production verification, decision records, API posture). Every
+  question earns its place only with two answers that change workflow behaviour
+  and the condition that asks it. The answers land in the guide's layer-3 slots
+  through the deterministic writer — `runner charter state`
+  before asking, `charter land` to write (a slot the project already
+  filled is `kept`, never overwritten; an unanswered slot with a bank default
+  lands as `assumed <YYYY-MM-DD> — <value>`), and `charter check` validates the
+  bank, including that every declared boundary records `machine: <mechanism>`
+  or `prose-only`.
 
 ## Guardrails
 
