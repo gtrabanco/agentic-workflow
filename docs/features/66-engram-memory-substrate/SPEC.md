@@ -103,6 +103,12 @@ miss knows the miss is keyword-bound, not proof that nothing was saved.
    unrelated safe work continues, sync resumes when available, and both writes
    (file + mirror) are read back with irreconcilable versions preserved and
    surfaced. (source: #262 comment 2026-10-21 items 3–4)
+   **Mirror-contract note (issue #566 B1, clause corrected 2026-11-16):** the
+   "read back … preserved and surfaced" wording above is this unit's shipped
+   history; the live contract in `skills/unit-lane/references/MEMORY.md` §7 now
+   reads the corrected form — the document is the source, a stale mirror is
+   refreshed and never a blocker, applied writes are never replayed, and both
+   versions are preserved only until the human resolves a genuine conflict.
 9. **The gate stays green.** `node --test scripts/*.test.mjs`,
    `bun scripts/check-skill-context.mjs`, and the tests of every touched
    package exit 0, with the touched skills' `version:` bumped per the
@@ -250,8 +256,7 @@ staleness/session CLI call, 30 s whole-probe ceiling; a bound hit fails that
 check, sets the verdict `degraded`, never a hang, never a blocked unit. The
 verdict is `ok` only when all five checks pass: healthy HTTP, runner
 `initialize` answered, binary present, no pending sync work, no non-`ok` sync
-target finding, no session-ambiguity finding (AC2 staleness signal).
-**Injection seam**: `runProbe({ fetchImpl, runImpl, timeoutMs })` — the
+target finding, no session-ambiguity finding (AC2 staleness signal). **Six-check note (issue #566 B2, corrected 2026-11-16):** the five-check inventory and the 4 s/10 s bounds split above predate 2026-11-16 — a sixth check, `instance-id` (4 s), shipped, so `ok` requires all six (4+4+4+4+10+10 = 36 s sum, 30 s ceiling) and `packages/agentic-workflow/README.md`'s table is the current one. **Injection seam**: `runProbe({ fetchImpl, runImpl, timeoutMs })` — the
 crate's own injectable-dependency shape
 (`packages/agentic-workflow/src/doc/embeddings.mjs:70`, `fetchImpl ?? fetch`);
 the bin wires the real fetch/child-process defaults, tests inject fakes plus
@@ -263,7 +268,7 @@ engram process. **Fixtures** (obligations O1/O2, all in
 `degraded` on `binary-version`), `fixture-missing-runner` (spawn failure,
 connection refused, `degraded` on `mcp-runner`/`http-health`), `fixture-stale`
 (pending sync work, verdict `degraded` on `sync-staleness`), `fixture-healthy`
-(all five checks pass, verdict `ok`).
+(all five checks pass, verdict `ok`). **Six-check note (issue #566 B2):** the shipped fixture has passed all six checks since 2026-11-16 — the five-check phrasing is this task's cut-time wording.
 (validator: `bun run test` exits 0 in packages/agentic-workflow)
   - Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/src/memory/probe.mjs, packages/agentic-workflow/test/memory-probe.test.mjs, packages/agentic-workflow/package.json
 - P2 — Canonical memory protocol: write
@@ -341,7 +346,7 @@ output (≤2 lines), verified-by.
 | AC5 | `grep -n "session attribution\|mem_session_end\|project fallback" skills/unit-lane/references/MEMORY.md` §5 | exit 0 · 4 hits | attribution is explicit on every write and names its **carrier per surface** — `session_id` where the write tool declares it, an open session plus explicit `project` on a provider that binds the runtime session itself; `mem_session_end` only on confirmed-stale ids; the `project` fallback stays the escape hatch (folded as F7) | review-fold cycle 1, 2026-10-23 |
 | AC6 | `grep -n "mem_session_summary" skills/log-session/SKILL.md`; `grep -n "canonical split" skills/unit-lane/references/MEMORY.md` §6 | exit 0 · 1 hit each | `docs/LOGS.md` = the git-traveling team journal; `mem_session_summary` / `unit/<NN-slug>/doc` = local unit-keyed recall; neither mirrors the other — recorded in both writers' texts | review-fold cycle 1, 2026-10-23 |
 | AC7 | `grep -n "keyword-bound\|FTS5" skills/unit-lane/references/MEMORY.md` §4 | exit 0 · 3 hits | the ceiling is disclosed where recall is documented (a miss is not evidence of absence; save searchable words); hybrid FTS5+vector stays Engram's own direction (#192) | review-fold cycle 1, 2026-10-23 |
-| AC8 | `grep -n "pending" skills/unit-lane/references/MEMORY.md` §7 | exit 0 · 3 hits in §7 (4 across the file) | five degradation obligations stated: local progress preserved, mirror marked pending explicitly, unrelated safe work continues, sync resumes at the next boundary, both sides read back with irreconcilable versions surfaced | review-fold cycle 1, 2026-10-23 |
+| AC8 | `grep -n "pending" skills/unit-lane/references/MEMORY.md` §7 | exit 0 · 3 hits in §7 (4 across the file) | five degradation obligations stated: local progress preserved, mirror marked pending explicitly, unrelated safe work continues, sync resumes at the next boundary, both sides read back with irreconcilable versions surfaced — superseded wording; **Mirror-contract note (issue #566 B1, corrected 2026-11-16)**: MEMORY.md §7 now reads the corrected form (the document is the source; a stale mirror is refreshed and never surfaced) | review-fold cycle 1, 2026-10-23; note added 2026-11-16 |
 | AC9 | `node --test scripts/*.test.mjs`; `bun scripts/check-skill-context.mjs`; `bun scripts/check-skill-context.mjs --routes`; `bun scripts/phase-lint.mjs docs/features/66-engram-memory-substrate/SPEC.md`; both touched package suites; `node scripts/promise-coherence.mjs`; `node scripts/version-parity-gate.mjs --content --base main` and `--pins` | all exit 0 | 775/775 · budgets PASS 28 skills · routes PASS 14 · phase-lint PASS fingerprint `e0b6fb80…` (unchanged) · crate 236/0 · pi 451/0 · coherence PASS (35 claims) · parity content + pins PASS; `unit-lane` 2.4.1, `execute-phase` 6.2.1, `log-session` 2.3.0, `init-workspace` 4.1.0 each with a CHANGELOG row | review-fold cycle 1, 2026-10-23 |
 | R1 | `grep -rn -i "engram" skills/ packages/*/src packages/*/README.md` | exit 0, 2 hits | both are path-ignore mentions (`REVIEW_PROCESS.md:95`, `audit-pr/SKILL.md:128`); no protocol/provisioning/health text exists | research step, 2026-10-21 |
 | R2 | `engram --version`; `cat ~/.pi/agent/mcp.json`; `grep -n engram ~/.pi/agent/settings.json` | exit 0 | `engram 3.4.0`; `mcpServers.engram` → `/home/agent/.local/bin/engram mcp --tools=agent`; `npm:gentle-engram@latest` | research step, 2026-10-21 |

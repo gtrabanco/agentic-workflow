@@ -27,11 +27,59 @@ const GATE = path.join(ROOT, "scripts", "local-gate.mjs");
 const gate = (args, options = {}) =>
   spawnSync(process.execPath, [GATE, ...args], { cwd: options.cwd ?? ROOT, encoding: "utf8" });
 
-/** A throwaway checkout: the hook installer only needs a `.git` directory. */
+/** A commit identity for every fixture invocation — no fixture writes the
+ *  caller's git configuration (`scripts/git-config-writes.test.mjs`). */
+const FIXTURE_IDENTITY = ["-c", "user.name=Fixture Human", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false"];
+
+/** A throwaway checkout. The hook installer asks git where the hooks live, so a
+ *  fixture is a real repository — a directory that merely holds a `.git`
+ *  directory is not a checkout, and the installer says so (issue #580). */
 function sandbox() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-"));
-  fs.mkdirSync(path.join(dir, ".git", "hooks"), { recursive: true });
+  const init = spawnSync("git", ["init", "-q", "-b", "main", dir], { encoding: "utf8" });
+  assert.equal(init.status, 0, init.stderr);
   return dir;
+}
+
+/** A throwaway repository with one commit and a stub gate, so a hook run proves
+ *  which argv the gate receives and whether the gate ran at all. */
+function hookSandbox() {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), "local-gate-hook-"));
+  const dir = path.join(parent, "repo");
+  fs.mkdirSync(dir);
+  const git = (args) => {
+    const result = spawnSync("git", [...FIXTURE_IDENTITY, ...args], { cwd: dir, encoding: "utf8" });
+    assert.equal(result.status, 0, `git ${args.join(" ")} failed: ${result.stderr}`);
+    return result.stdout.trim();
+  };
+  git(["init", "-q", "-b", "main"]);
+  fs.writeFileSync(path.join(dir, "file.txt"), "one\n");
+  git(["add", "."]);
+  git(["commit", "-q", "-m", "one"]);
+  const recorded = path.join(parent, "argv.txt");
+  fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "scripts", "local-gate.mjs"),
+    `import fs from "node:fs";\nfs.writeFileSync(${JSON.stringify(recorded)}, process.argv.slice(2).join(" "));\n`,
+  );
+  return { parent, dir, git, recorded, hook: path.join(dir, ".git", "hooks", "pre-push") };
+}
+
+const ZERO_SHA = "0".repeat(40);
+const SOME_SHA = "1".repeat(40);
+
+/** The ref line `pre-push` delivers for one pushed ref. */
+function refLine(localRef, localSha, remoteRef, remoteSha) {
+  return `${localRef} ${localSha} ${remoteRef} ${remoteSha}\n`;
+}
+
+/** Run the installed hook the way git does: the remote as `$1`, the refs on stdin. */
+function runHook(fixture, stdin) {
+  return spawnSync("bash", [fixture.hook, "origin", "git@example.test:fixture/repo.git"], {
+    cwd: fixture.dir,
+    encoding: "utf8",
+    input: stdin,
+  });
 }
 
 /** A throwaway checkout that is a real git repository carrying the shipped
@@ -556,6 +604,23 @@ test("--install-hook writes an executable pre-push that runs the offline subset"
   }
 });
 
+test("an older gate-owned hook is replaced without --force (issue #580)", () => {
+  const dir = sandbox();
+  try {
+    assert.equal(gate(["--install-hook", "--repo", dir]).status, 0);
+    const hook = path.join(dir, ".git", "hooks", "pre-push");
+    // The body an earlier release installed: still this gate's hook, one line behind.
+    const stale = fs.readFileSync(hook, "utf8").replace("${AGENTIC_WORKFLOW_GATE_JOBS:-auto}", "auto");
+    assert.notEqual(stale, hookBody(), "the fixture must differ from the current body");
+    fs.writeFileSync(hook, stale);
+    const replaced = gate(["--install-hook", "--repo", dir]);
+    assert.equal(replaced.status, 0, `an older body is still this gate's hook: ${replaced.stdout}${replaced.stderr}`);
+    assert.equal(fs.readFileSync(hook, "utf8"), hookBody());
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("--install-hook is idempotent", () => {
   const dir = sandbox();
   try {
@@ -849,7 +914,7 @@ test("the installed hook fails the push, naming both runtimes, when neither is i
     const run = spawnSync(bash, [hook], {
       cwd: dir,
       encoding: "utf8",
-      input: "",
+      input: refLine("refs/heads/main", SOME_SHA, "refs/heads/main", ZERO_SHA),
       env: { PATH: bin, HOME: dir },
     });
     assert.equal(run.status, 1, `the push must not be let through: ${run.stdout}${run.stderr}`);
@@ -857,5 +922,88 @@ test("the installed hook fails the push, naming both runtimes, when neither is i
     assert.match(run.stderr, /node/, "the message names node");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ------------------------------- issue #580 — no ref to publish, worktrees */
+
+test("a push that publishes nothing runs no range step (issue #580)", () => {
+  const fixture = hookSandbox();
+  try {
+    assert.equal(gate(["--install-hook", "--repo", fixture.dir]).status, 0);
+    const run = runHook(fixture, "");
+    assert.equal(run.status, 0, `a push with nothing to send must be let through: ${run.stdout}${run.stderr}`);
+    assert.match(run.stderr, /nothing to publish/, "the hook says why it has no range");
+    assert.equal(fs.existsSync(fixture.recorded), false, "the gate never ran: a push that sends no ref update has no range");
+  } finally {
+    fs.rmSync(fixture.parent, { recursive: true, force: true });
+  }
+});
+
+test("a deletion-only push publishes nothing (issue #580)", () => {
+  const fixture = hookSandbox();
+  try {
+    assert.equal(gate(["--install-hook", "--repo", fixture.dir]).status, 0);
+    const run = runHook(fixture, refLine("refs/heads/gone", ZERO_SHA, "refs/heads/gone", SOME_SHA));
+    assert.equal(run.status, 0, `a deletion publishes no commit: ${run.stdout}${run.stderr}`);
+    assert.match(run.stderr, /nothing to publish/);
+    assert.equal(fs.existsSync(fixture.recorded), false, "the gate never ran");
+  } finally {
+    fs.rmSync(fixture.parent, { recursive: true, force: true });
+  }
+});
+
+test("a single new branch keeps the merge-base fallback (issue #580)", () => {
+  const fixture = hookSandbox();
+  try {
+    const base = fixture.git(["rev-parse", "HEAD"]);
+    fs.writeFileSync(path.join(fixture.dir, "file.txt"), "two\n");
+    fixture.git(["add", "."]);
+    fixture.git(["commit", "-q", "-m", "two"]);
+    fixture.git(["update-ref", "refs/remotes/origin/main", base]);
+    assert.equal(gate(["--install-hook", "--repo", fixture.dir]).status, 0);
+    const head = fixture.git(["rev-parse", "HEAD"]);
+    const run = runHook(fixture, refLine("refs/heads/topic", head, "refs/heads/topic", ZERO_SHA));
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    const argv = fs.readFileSync(fixture.recorded, "utf8");
+    assert.match(argv, new RegExp(`--push-base ${base}`), "a branch with no remote ref is judged against the mainline merge-base");
+  } finally {
+    fs.rmSync(fixture.parent, { recursive: true, force: true });
+  }
+});
+
+test("several publishable refs leave the base unproven (issue #580)", () => {
+  const fixture = hookSandbox();
+  try {
+    const mainline = fixture.git(["rev-parse", "HEAD"]);
+    fs.writeFileSync(path.join(fixture.dir, "file.txt"), "two\n");
+    fixture.git(["add", "."]);
+    fixture.git(["commit", "-q", "-m", "two"]);
+    // A resolvable mainline, so the fallback the case forbids is available to take.
+    fixture.git(["update-ref", "refs/remotes/origin/main", mainline]);
+    const head = fixture.git(["rev-parse", "HEAD"]);
+    assert.equal(gate(["--install-hook", "--repo", fixture.dir]).status, 0);
+    const stdin = refLine("refs/heads/a", SOME_SHA, "refs/heads/a", head) + refLine("refs/heads/b", SOME_SHA, "refs/heads/b", head);
+    const run = runHook(fixture, stdin);
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    const argv = fs.readFileSync(fixture.recorded, "utf8");
+    assert.equal(argv.includes("--push-base"), false, "no single proven base: the range-bound steps stay dropped");
+    assert.match(argv, /--skip-network/, "the offline subset still runs");
+  } finally {
+    fs.rmSync(fixture.parent, { recursive: true, force: true });
+  }
+});
+
+test("--install-hook installs the shared hook from a worktree (issue #580)", () => {
+  const fixture = hookSandbox();
+  const tree = path.join(fixture.parent, "tree");
+  try {
+    fixture.git(["worktree", "add", "-q", tree, "-b", "topic"]);
+    const result = gate(["--install-hook", "--repo", tree]);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const shared = path.join(fixture.dir, ".git", "hooks", "pre-push");
+    assert.equal(fs.readFileSync(shared, "utf8"), hookBody(), "a worktree's hooks live in the shared git dir");
+  } finally {
+    fs.rmSync(fixture.parent, { recursive: true, force: true });
   }
 });
