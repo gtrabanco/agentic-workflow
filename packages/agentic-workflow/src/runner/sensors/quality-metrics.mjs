@@ -485,7 +485,7 @@ function changeFailureRate(forge, git, since, until) {
     confidence: "derived",
     value: rounded(reverted / deploys.length, 4),
     unit,
-    detail: `${reverted} of ${deploys.length} deploys merged in the window were named by a revert — linked by the revert's target oid matching the pull's merge commit; a deploy merged by hand or rebased after a direct push carries no merge commit and cannot be linked`,
+    detail: `${reverted} of ${deploys.length} deploys merged in the window were named by a revert — linked by the revert's target oid matching the pull's merge commit; a deploy merged by hand or rebased after a direct push carries no merge commit and cannot be linked${forge.merged_truncated ? `; the deploy read is capped at ${MERGED_PULLS_CAP} pulls, so the denominator is a subset` : ""}`,
     components: { reverted_deploys: reverted, deploys: deploys.length },
   });
 }
@@ -517,12 +517,12 @@ function leadTimeForChange(forge, since, until) {
       components,
     });
   }
-  const truncated = forge.samples_truncated && deploys.length > sampled.length;
+  const truncated = forge.merged_truncated || (forge.samples_truncated && deploys.length > sampled.length);
   return rowOf({
     confidence: truncated ? "derived" : "measured",
     value: rounded(median(hours), 2),
     unit,
-    detail: `median first-commit→merge over ${hours.length} sampled pull${hours.length === 1 ? "" : "s"} of ${deploys.length} merged in the window${truncated ? ` (the first-commit read is bounded to ${FORGE_SAMPLE_PULLS} pulls, so this is a sample)` : ""}`,
+    detail: `median first-commit→merge over ${hours.length} sampled pull${hours.length === 1 ? "" : "s"} of ${deploys.length} merged in the window${truncated ? ` (the reads behind it are bounded — ${FORGE_SAMPLE_PULLS} pulls for the first commit, ${MERGED_PULLS_CAP} for the deploy list — so this rests on a sample)` : ""}`,
     components,
   });
 }
@@ -539,11 +539,16 @@ function prVolume(forge, since, until) {
   }
   const opened = forge.created.filter((pull) => pull.created_at !== null && inWindow(pull.created_at, since, until));
   const merged = deploysInWindow(forge.merged, since, until);
+  const capped = forge.created_truncated || forge.merged_truncated;
+  const caps = [
+    forge.created_truncated ? `the created read is capped at ${CREATED_PULLS_CAP} pulls` : null,
+    forge.merged_truncated ? `the deploy read is capped at ${MERGED_PULLS_CAP} pulls` : null,
+  ].filter((entry) => entry !== null);
   return rowOf({
-    confidence: forge.created_truncated ? "derived" : "measured",
+    confidence: capped ? "derived" : "measured",
     value: opened.length,
     unit,
-    detail: `${opened.length} pull${opened.length === 1 ? "" : "s"} opened and ${merged.length} merged inside the window${forge.created_truncated ? ` (the created read is bounded to ${CREATED_PULLS_CAP} pulls)` : ""}`,
+    detail: `${opened.length} pull${opened.length === 1 ? "" : "s"} opened and ${merged.length} merged inside the window${capped ? ` (${caps.join("; ")})` : ""}`,
     components: { opened_pulls: opened.length, merged_pulls: merged.length },
   });
 }

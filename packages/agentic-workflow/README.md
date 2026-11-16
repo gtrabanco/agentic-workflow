@@ -514,7 +514,9 @@ counts the *revert commits* (needing no linkage), and the *reverted deploys* are
 pulls (measured: 40 answers, 100 fails), so the first-commit read asks for the
 25 most recent merged pulls and the row says so when that is fewer than the
 window's deploys. The deploy read and the created read ask for up to 1,000 rows
-each and declare truncation the same way.
+each, and **every row resting on a capped read drops to `derived`**: a subset is
+never reported as a measurement, and the detail line names which read was
+capped and at what.
 
 **The escaped-defect slot is a slot.** It reports the open rows of the
 findings corpus — the unit docs' `## Findings` tables and the legacy

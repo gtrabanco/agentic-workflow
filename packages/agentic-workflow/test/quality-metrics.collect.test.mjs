@@ -413,6 +413,27 @@ test("PR volume reports the pulls opened in the window with merged beside it", (
   assert.deepEqual(row.components, { opened_pulls: 3, merged_pulls: 2 });
 });
 
+test("a capped deploy read demotes every row whose denominator it truncates", () => {
+  const document = collectValid({
+    readGit: () => ({ ok: true, head: HEAD, coverage: "complete", commits: [commit("1".repeat(40))] }),
+    readForge: () => ({
+      ok: true,
+      merged: [pull(1), pull(2)],
+      merged_truncated: true,
+      commit_samples: [sample(1, { mergedAt: at(12), firstCommitAt: at(2) })],
+      samples_truncated: false,
+      created: [createdPull(1)],
+      created_truncated: false,
+    }),
+  });
+  // The deploy list is a subset of the window's merges, so no row resting on it
+  // may still call itself a measurement.
+  assert.equal(document.metrics.pr_volume.confidence, "derived");
+  assert.equal(document.metrics.lead_time_for_change.confidence, "derived");
+  assert.match(document.metrics.pr_volume.detail, /capped/u);
+  assert.match(document.metrics.change_failure_rate.detail, /capped/u);
+});
+
 test("a truncated created list demotes the volume to derived", () => {
   const document = collectValid({
     readForge: () => ({
