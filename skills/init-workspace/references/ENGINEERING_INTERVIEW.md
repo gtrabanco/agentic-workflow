@@ -67,9 +67,11 @@ bunx @gtrabanco/agentic-workflow@<pin> charter land  --guide AGENTS.md --answers
 bunx @gtrabanco/agentic-workflow@<pin> charter check --guide AGENTS.md --bank <this file>
 ```
 
-- `state` is the run's first read: it reports every slot as `filled`,
-  `placeholder` or `absent`, so the interview asks only what the project has not
-  declared.
+- `state` is the run's first read: it reports every keyed slot of the guide's
+  `## Project charter` section as `filled` or `placeholder` (a value that is
+  still one `<…>` token, or a ` · `-separated list whose every entry carries
+  one, is a placeholder — a documented shape is not an answer), so the round
+  asks only what the project has not declared.
 - `land` writes an answer into a placeholder slot, records a default as a dated
   assumption, reports a filled slot as `kept`, and refuses an unknown key or a
   payload whose defaults carry no date — before any byte moves.

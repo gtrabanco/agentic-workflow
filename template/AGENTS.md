@@ -106,10 +106,11 @@ never overwritten by a recommendation:
 records the team's rule, never a recommendation the team did not confirm.
 
 - **Testing strategy:** `<which test layer carries regression safety; whether uncovered code is pinned before it changes; how much property/fuzz testing>`
-- **Architectural boundaries:** `<boundary> → machine: <mechanism>` · `<boundary> → prose-only`
+- **Architectural boundaries:** `<one enforcement entry per declared boundary>`
 
-  One entry per declared boundary: either enforced by a named rule, or marked
-  for materialization. Prose-only is an honest answer, never an accident.
+  One entry per declared boundary, in the machine-checked shape:
+  `<boundary> → machine: <mechanism>` or `<boundary> → prose-only`. Prose-only
+  is an honest answer, never an accident: it marks a boundary to materialize.
 - **Dependency policy:** `<pinning posture; when vendoring beats a dependency; how deprecation is removed>`
 - **Production verification:** `<whether a green pipeline job or the local gate is the verification; the service signals and error budget, or "no running service">`
 - **Decision records:** `<where architecture decisions live and which ones need a record before a unit plans work>`
