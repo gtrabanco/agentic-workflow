@@ -74,7 +74,7 @@ Layer: hardening · Done-when: `cd packages/pi-agentic-workflow && npm test` →
 - [x] roadmap row 27 → `done · [#150](https://github.com/gtrabanco/agentic-workflow/pull/150)`
 - [x] commit `docs: link PR #150` and push `feat/27-pi-agentic-workflow`
 
-## Dead references
+## Dead references:
 
 The following references point to now-deleted files and are dead.
 These links were valid when the file was authored but became dead after
