@@ -441,6 +441,25 @@ P | P<n> | a phase's progress — what was done and the commit
   `node --test scripts/red-first.test.mjs` · `9 pass 0 fail` (the standalone bun
   run hits the declared 5 s budget case already allowlisted in
   `scripts/test-timeout-allowlist.json` as pre-existing).
+- G8 — 2026-11-16, the batch's **first** full gate · `bun
+  scripts/local-gate.mjs --skip-network --no-bail` · exit 1 · `FAILED at
+  version-parity-content` — `GATE REJECTION — shipped-content-version`:
+  `@gtrabanco/pi-agentic-workflow` ships changed content (the batch's first edit
+  under root `skills/`, the runner-contract row) with no declared intent, and
+  the root suite's own `local-gate.test.mjs` S9 case reddened with it. Repaired
+  in `25bff722` by the gate's declared alternative — `.changeset/565-quality-sensor.md`
+  now declares `@gtrabanco/pi-agentic-workflow` minor beside the crate and
+  schema rows — then `bun scripts/lint-changeset.mjs .changeset/565-quality-sensor.md`
+  · `ok`, `node scripts/version-parity-gate.mjs --content` · `VERDICT: PASS`.
+- G9 — 2026-11-16, the re-run after that repair · `bun
+  scripts/local-gate.mjs --skip-network --no-bail` · exit 0 · `local-gate: PASS —
+  15 step(s) in 539s` (root-suite, crate-suite-bun, crate-suite-node,
+  schema-node-compat, pi-node-compat, version-parity-content,
+  docs-generated-projection, journal-carrier-check and the offline guards all
+  green; the same four network steps skipped and reported as skipped, not
+  passed: `workspace-install`, `pi-compat-guard`, `dependency-pin-gate`,
+  `dependency-advisories`). This supersedes G8 as the receipt for the batch's
+  final tree; the only prose after this run is this line itself.
 
 ## Next
 
