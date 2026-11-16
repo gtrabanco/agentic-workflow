@@ -19,7 +19,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-const { GIT_LOCATOR_VARS, scrubGitLocator } = await import("./git-env.mjs");
+const { GIT_LOCATOR_VARS, GIT_TRACE_VARS, scrubGitEnv, scrubGitLocator } = await import("./git-env.mjs");
 
 test("every variable that points git at a repository is scrubbed", () => {
   const dirty = {
@@ -74,6 +74,38 @@ test("an env with no git locator is returned intact", () => {
   assert.deepEqual(scrubGitLocator(env), env);
 });
 
+/* ── the suite boundary: ambient tracing, not just location (owner-routed S15) ── */
+
+test("the suite boundary drops the caller's ambient git tracing, and the two vocabularies stay distinct", () => {
+  // `GIT_TRACE=1 git push` reaches every suite through the hook's environment:
+  // the product's own `git` calls then write `git.c:479 trace: …` to stderr and
+  // fail a test that pins an empty stderr (observed 2026-11-16, feedback.test.mjs).
+  const env = {
+    GIT_TRACE: "1",
+    GIT_TRACE2: "/tmp/trace2",
+    GIT_DIR: "/real/.git",
+    GIT_CONFIG_COUNT: "1",
+    GIT_CONFIG_KEY_0: "commit.gpgsign",
+    GIT_CONFIG_VALUE_0: "false",
+    GIT_AUTHOR_NAME: "Fixture",
+    GIT_AUTHOR_EMAIL: "fixture@example.com",
+    PATH: "/usr/bin",
+  };
+  const clean = scrubGitEnv(env);
+  assert.equal(clean.GIT_TRACE, undefined, "GIT_TRACE must not reach a suite");
+  assert.equal(clean.GIT_TRACE2, undefined, "GIT_TRACE2 must not reach a suite");
+  assert.equal(clean.GIT_DIR, undefined, "the locators still go");
+  assert.equal(clean.GIT_CONFIG_COUNT, "1", "config passes through: the gate sets it on purpose");
+  assert.equal(clean.GIT_CONFIG_KEY_0, "commit.gpgsign");
+  assert.equal(clean.GIT_CONFIG_VALUE_0, "false");
+  assert.equal(clean.GIT_AUTHOR_NAME, "Fixture", "identity passes through: a fixture sets its own");
+  assert.equal(clean.PATH, "/usr/bin", "the rest of the environment is inherited");
+  assert.deepEqual(GIT_TRACE_VARS, ["GIT_TRACE", "GIT_TRACE2"], "the trace vocabulary is closed");
+  assert.ok(!GIT_LOCATOR_VARS.includes("GIT_TRACE"), "the locator set stays locator-only — a trace does not point git at a repository");
+  assert.equal(scrubGitLocator(env).GIT_TRACE, "1", "scrubGitLocator keeps its published locator-only meaning");
+  assert.equal(env.GIT_TRACE, "1", "the caller's object is left alone");
+});
+
 /* ── the per-file and per-suite entry points (issue #514 S9) ───────────── */
 
 import fs from "node:fs";
@@ -123,13 +155,14 @@ test("a real `bun test` run reaches the suite with the locators already gone", (
       '  assert.equal(process.env.GIT_DIR, undefined, "GIT_DIR");',
       '  assert.equal(process.env.GIT_WORK_TREE, undefined, "GIT_WORK_TREE");',
       '  assert.equal(process.env.GIT_INDEX_FILE, undefined, "GIT_INDEX_FILE");',
+      '  assert.equal(process.env.GIT_TRACE, undefined, "GIT_TRACE");',
       "});",
       "",
     ].join("\n"),
   );
   // A suite is never handed its parent's test-runner context: with
   // NODE_TEST_CONTEXT set, node's runner skips the file and exits 0.
-  const env = { ...process.env, GIT_DIR: "/real/.git", GIT_WORK_TREE: "/real", GIT_INDEX_FILE: "/real/.git/index" };
+  const env = { ...process.env, GIT_DIR: "/real/.git", GIT_WORK_TREE: "/real", GIT_INDEX_FILE: "/real/.git/index", GIT_TRACE: "1" };
   delete env.NODE_TEST_CONTEXT;
   const result = spawnSync(bun, ["test", "proof.test.mjs"], { cwd: dir, encoding: "utf8", env });
   const output = `${result.stdout}\n${result.stderr}`;
