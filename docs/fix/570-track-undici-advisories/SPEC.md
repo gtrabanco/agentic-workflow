@@ -457,6 +457,22 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   red (two other sessions' parked worktrees, `feat-527`/`feat-555`, merged into
   the advanced `origin/main`; guard script byte-identical to base — the
   `## Known pre-existing issues` class, G2).
+- **L4** — 2026-11-16, the owner-ordered landing: `origin/main` integrated at
+  `e877e3d2` — the armed drivers resolved `docs/ROADMAP.md` as the union of
+  both sides and flagged `docs/generated/units.md` stale, regenerated through
+  `bun scripts/docs-generate.mjs` (then `--check` PASS, roadmap-settle PASS on
+  217 docs). Foreground gate `--no-bail` at the merge → 18 of 19 exit 0 (the
+  merged `local-gate.test.mjs` suite included), `worktree-guard` red only on
+  two sibling sessions' then-parked state and green standalone minutes later
+  (0 findings; guard script still byte-identical to base). The pre-push hook's
+  own gate passed twice at `e877e3d2` (16 offline steps, 515s and 475s,
+  root-suite green) yet `git push` ended **exit 141 (SIGPIPE) with no object
+  sent** — the transport defect fix/571 records in `## Known pre-existing
+  issues` and fix/580 as E13 ("not a content failure", not fixed by either
+  unit). The landing push therefore used the repository's documented escape
+  hatch `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` after those PASSes at the same
+  head — reason recorded here exactly as #578 and #581 recorded theirs; the
+  full offline gate re-ran green inside both hook attempts.
 
 ## Next
 
