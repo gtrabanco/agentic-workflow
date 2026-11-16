@@ -177,7 +177,7 @@ describe("memory probe — fixture-timeout (bounded, never hangs)", () => {
   });
 
   it("the checks share the clock: the run costs the slowest bound, not the sum (F8)", async () => {
-    // Five checks at a 20 ms bound cost ~20 ms together and ~120 ms in series
+    // Six checks at a 20 ms bound cost ~20 ms together and ~140 ms in series
     // (the session check asks two ids). Sharing the clock is what keeps a dead
     // memory layer from stalling a session's first memory read for the ceiling.
     const started = Date.now();
