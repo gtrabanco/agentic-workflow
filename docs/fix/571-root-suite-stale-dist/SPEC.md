@@ -144,6 +144,16 @@ Verdict `risk-tier-verdict@1` for the change's executable path,
 - The crate's own suites read the same `dist/` and rebuild it in their
   `test` scripts. **Does not affect** this unit: that path already repairs
   itself, which is the precedent this unit follows for the root runner.
+- **The `pre-push` hook path dies with exit 141 (SIGPIPE) after the gate
+  passes**, so a push from this checkout never reaches the remote unless the
+  documented escape hatch is set (observed twice on 2026-11-16: the hook ran
+  `local-gate: PASS — 16 step(s)` and `git push` returned 141 without contacting
+  the remote; the same push with `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` succeeded).
+  **Does not affect** this unit: neither the hook nor `scripts/local-gate.mjs` is
+  touched here (`git diff --stat 44a20ab6 -- scripts/local-gate.mjs` is empty),
+  the full gate was run green in the foreground twice before the push, and the
+  escape hatch's reason is recorded in PR #578. Reported, not hidden, for the
+  owner's own unit.
 
 ## Acceptance criteria
 
@@ -400,17 +410,28 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
 - **P5** — 2026-11-16, the guide clause inside its re-pinned ceiling, the roadmap
   row and projection through the emitter, and the journal fragment (E10–E12).
 - **P6** — 2026-11-16, the full gate green at the handoff head (G3).
+- **P7** — 2026-11-16, the branch pushed and PR
+  [#578](https://github.com/gtrabanco/agentic-workflow/pull/578) opened against
+  `main`; the row settles to `done · [#578]` with this commit. The push itself
+  needed the repository's documented escape hatch
+  (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`) after the hook answered
+  `local-gate: PASS — 16 step(s)` and `git push` still returned **141**
+  without contacting the remote (recorded in `## Known pre-existing issues` and
+  in the PR body; the full gate was green at this head twice in the foreground).
 
 ## Next
 
-The owner's external verdict on the diff: `scripts/run-root-suite.mjs`, its
-sibling suite, the guide clause and this document. After it: the PR, the
-roadmap row's `done · [#N](<url>)` settle and the merge.
+The owner's external verdict on PR
+[#578](https://github.com/gtrabanco/agentic-workflow/pull/578) (base `main`, head
+`41a9659d` plus this settle commit). After it: the merge — the roadmap row
+settles to `done` with the PR link and is removed only after the merge.
 
 ## References
 
-Issue [#571](https://github.com/gtrabanco/agentic-workflow/issues/571); its
-origin is finding F4 of [product audit 2](../../audits/2-2026-11-16.md). The gate
+Issue [#571](https://github.com/gtrabanco/agentic-workflow/issues/571) — closed by
+PR [#578](https://github.com/gtrabanco/agentic-workflow/pull/578), which carries
+the evidence pack. Its origin is finding F4 of
+[product audit 2](../../audits/2-2026-11-16.md). The gate
 this unit leaves untouched is
 [local-first gate](../local-first-gate/SPEC.md), and the build it repairs is
 declared in `packages/agentic-workflow-schema/package.json`.
