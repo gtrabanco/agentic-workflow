@@ -49,7 +49,7 @@ command can settle carries that command — ``<cmd> exits 0``, ``<cmd> matches
 can demand a demonstration for every AC. A criterion only a human can settle
 keeps an explicit `manual:` label with the exact observation; a criterion with
 neither fails closed at review (the `no command, no claim` admission rule
-applied to the acceptance surface).
+applied to the acceptance surface). **Artifact evidence (issue #564):** a criterion naming `artifact: screenshot|video|state-snapshot` records `digest: sha256:<hex>` and the charter's `Evidence driver` command, and with no driver declared it fails closed with `manual: <observation>` — `runner materialize evidence --guide AGENTS.md --unit <doc>` is the check.
 
 **Validator stability.** A validator must never gate on a surface other workflow
 actors mutate — the branch diff as a whole, the session log, progress entries,
