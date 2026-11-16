@@ -243,6 +243,8 @@ Automated written using an AI.
 - **P3** — 2026-11-16, the guard module and handler wiring land, suite + full pi run green, bypass probe flips · `fba3baef`.
 - **P4** — 2026-11-16, the contract statement beside `path-protection@1` and the changeset · `7ef2f738`.
 - **P5** — 2026-11-16, rows #566/#567 settled through `fixrow`, projection re-rendered · `2238fbd8` + `2e3b870a`.
+- **E9** — 2026-11-16, this unit's share of the gate's first red and the repair: `bun scripts/local-gate.mjs --skip-network --jobs 1` · exit 1 at `root-suite` (bail) — this unit's contract paragraph put `orchestration-envelope/TURN_CONTRACT.md` at `estimate 3029 > 3020`, which failed `check-skill-context` AND skipped `promise-coherence`'s at-the-head measure claim to PASS (its guard reads that checker's numbers); the third red, `roadmap-settle` live-tree, was the duplicate `[#571](` row the owner's integration `7f1c726d` left (`pr-url-unsettled` — recorded at E7). Repairs: `20840f2d` (paragraph shrunk to 107 words, both pins — `shell-bound writes`, `not statically visible` — kept) + `3c519e15` (integration row resolution: duplicates collapsed to their `origin/main` copies, `#540` restored after a shifted-index slip the key-set audit caught; 38 rows = main's 37 + #560, no dupes, main order preserved). Re-runs all green (budgets 30 skills, suites 38/38, settle 213/0, projection PASS).
+- **G1** — 2026-11-16, HEAD `3c519e15425652193b47e07a8ed31bdb84823bec`, the offline branch gate over both units on this PR: `bun scripts/local-gate.mjs --skip-network --jobs 1` · exit 0 · **`local-gate: PASS — 15 step(s) in 428s`** (the 4 network steps skipped by the offline subset as always; the first attempt and its repair are E9).
 
 ## Next
 
