@@ -133,7 +133,7 @@ and no published behaviour moves.
   every session start; this repository already owns a bounded probe for the first
   memory read (`packages/agentic-workflow/src/memory/probe.mjs`, five checks, 30 s
   ceiling) and the research inventory assigns the version pair to the doctor
-  feature (`docs/research/2026-11-13-tool-doctor-inventory.md`, row 8). S3's
+  feature (`docs/research/2026-11-13-tool-doctor-inventory.md`, row 8). **Six-check note (issue #566 B2, corrected 2026-11-16):** the probe has carried six checks (`instance-id`, 4 s) since 2026-11-16; the 30 s ceiling stands. S3's
   version pair is therefore **named as a check to run**, with its commands, and
   never claimed as measured. Carried as an assumption in the owner's answer
   (`D2`); overrule in one line if the probe is wanted.
