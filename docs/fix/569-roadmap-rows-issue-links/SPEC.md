@@ -410,6 +410,21 @@ this flow.
 - **P6** — 2026-11-16, the verification sweep and this receipt batch, every
   obligation flipped on its own foreground run (`E7`–`E13`, `G1`–`G2`) · this
   commit.
+- **E14** — 2026-11-16, the PR and the settle: `git push -u origin
+  fix/569-roadmap-rows-issue-links` · exit 0 · the `pre-push` hook answered
+  `local-gate: PASS — 10 step(s) in 1s`, having skipped the six test-bearing
+  steps on a `test-impact: empty` verdict (`6 commit(s) verified` by
+  `push-identity`, `479 added line(s) scanned` by `secret-scan`, `7 checked ·
+  0 refusals` by the journal carrier check); PR
+  [#589](https://github.com/gtrabanco/agentic-workflow/pull/589) opened against
+  `main` with `Closes #569`. The `## Fixes` row was then settled through
+  `fixrow` (`98488a9b → 09c19ddd`) to `done · [#589](…/pull/589)`, the
+  projection re-rendered by the emitter (`Files: 1 written · 0 deleted · 2
+  unchanged`) and `bun scripts/docs-generate.mjs --check` back to `0 missing ·
+  0 stale · 0 orphaned`; `roadmap check` stays `verdict: PASS · violations: 0`
+  and the row's Notes cell is unchanged, so the settle did not re-open the
+  clobber this unit closes.
+- **P7** — 2026-11-16, the PR and the row settle · see `E14`.
 - **L3** — 2026-11-16, disclosed side effect (§3 live-tree guard): probing the
   `journal write` CLI's flag surface wrote one placeholder fragment, the
   name ending
@@ -423,15 +438,17 @@ this flow.
 
 ## Next
 
-The handoff: the diff (three frontmatter lines, their projected cells, this
-unit's fix row, the re-rendered projection and the session fragment), the
-obligations ledger closed `7/7 verified`, and the verification block — for the
-owner's external verdict. Nothing is self-approved here.
+PR [#589](https://github.com/gtrabanco/agentic-workflow/pull/589) carries the
+reviewed diff and both index states; the merge is the owner's. Next for the
+owner: the external verdict on this head (the three frontmatter lines, their
+projected cells, the fix row and the projections), then the merge — `Closes
+#569`.
 
 ## References
 
 - Issue [#569](https://github.com/gtrabanco/agentic-workflow/issues/569) —
-  closed by this PR via `Closes #569`.
+  closed by PR [#589](https://github.com/gtrabanco/agentic-workflow/pull/589)
+  via `Closes #569`.
 - [Product audit 2](../../audits/2-2026-11-16.md) — finding F1 and its triage
   line.
 - [Features 556](../features/556-engineering-interview/SPEC.md),
