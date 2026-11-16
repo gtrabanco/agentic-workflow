@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: 7602df3c6539de41d3e2e9e92df5e6ac47ce75956c123bb871f369790a7e083f
+ac-hash: f0aed19b3661e16f261005adb95b5ac9aafa9353b08690d163ef2c35ac98c766
 roadmap_summary: Issue [#570](https://github.com/gtrabanco/agentic-workflow/issues/570): the dev toolchain's undici sat at 8.10.2 across two product audits, carrying four blocking-ladder advisories that the repo's own pass classified report-only — the root workspace now overrides the peer toolchain's transitive pin to 8.12.4, and a contract case in the advisory suite fails the root suite whenever the resolved version falls back below the 8.12.2 fix floor, so the tracked drift cannot return silently.
 ---
 
@@ -55,7 +55,8 @@ they appear.
   root entry's override block. Every other resolved version must stay
   byte-identical (O4); a broad `bun update` moves 47 package lines and was
   rejected for exactly that reason (`## Log` D2).
-- `scripts/dependency-advisory-pass.test.mjs` — one appended case. The suite
+- `scripts/dependency-advisory-pass.test.mjs` — two appended cases (the floor
+  case and its non-vacuity sibling). The suite
   already carries two tree-reading cases at its tail (the review pack's carrier
   and the gate step), so a repository-state assertion belongs to this contract
   rather than to a new script the audits would then have to find a consumer for.
@@ -188,8 +189,9 @@ single trailing newline:
   observed results.
 - **AC-S2** — The resolved tree stops carrying the four blocking-ladder rows:
   `node scripts/dependency-advisory-pass.mjs` reports `0 blocking` and no
-  `undici` row, where the base commit reports `4 blocking` and nine `undici`
-  rows. Check: the two foreground runs recorded in `## Log`, and
+  `undici` row, where the base commit reports `4 blocking` and eight `undici`
+  rows (nine advisories in total, counting `minimatch`). Check: the two
+  foreground runs recorded in `## Log`, and
   `bun test scripts/dependency-advisory-pass.test.mjs` exits 0.
 - **AC-S3** — Nothing shipped changes: no package under `packages/` gains an
   `undici` entry in any dependency field, and no `src/` file moves. Check:
@@ -463,7 +465,7 @@ none.
 
 | Scenario | How it is verified |
 |---|---|
-| the advisory pass reports the same shape and the same exit code for a clean, a degraded and a blocking tree | `bun test scripts/dependency-advisory-pass.test.mjs` exits 0 (the 19 pre-existing cases, untouched) |
+| the advisory pass reports the same shape and the same exit code for a clean, a degraded and a blocking tree | `bun test scripts/dependency-advisory-pass.test.mjs` exits 0 (the 20 pre-existing cases, untouched) |
 | a `report-only` verdict still never reddens a review | the pass norm is unchanged (`git diff --stat d1287c3d -- scripts/dependency-advisory-pass.mjs` prints nothing) and the suite's report-only case stays green |
 | the four packages import the peer toolchain at runtime and must keep working with the overridden `undici` | `bun run test` in `packages/pi-agentic-workflow` and `packages/agentic-workflow` exit 0; `bun scripts/run-root-suite.mjs` exits 0 |
 | a fresh checkout can still install from the committed lock | the gate's `workspace-install` step (`bun install --frozen-lockfile`) exits 0 |
