@@ -1,26 +1,28 @@
 # External verify receipt — fix/527-readme-evidence-rationale
 
-2026-11-16 — full verdict (no prior `EXTERNAL VERIFY` block or review verdict
+2026-11-17 — full verdict (no prior `EXTERNAL VERIFY` block or review verdict
 existed for this unit: PR #585 carried 0 reviews and 0 comments at run time).
 
 ```
-EXTERNAL VERIFY — base: 7b18226b · head: 7dff1c21
-Blockers: 1 —
-  B1 docs/fix/527-readme-evidence-rationale/SPEC.md:100-101 (## Retirements receipt) — reproducer: the unit doc's own quoted command `rg -c 'Why it works this way' --glob '!README.md'` → at head exit 0 printing `docs/fix/527-readme-evidence-rationale/SPEC.md:11` and `docs/ROADMAP.md:1` (with `git grep` the hidden `.agentic-workflow/journal/20261116T135024Z-feat-527-readme-evidence-rationale-narrative-local.md:1` also matches), against the receipt's recorded `→ 0` — so the claim "has no consumer anywhere in the tree (… → 0)" is false as stated, and the command cannot return 0 in any tree containing this doc (the SPEC matched itself 7 times already at its own cut `58a1c455`). Base-vs-head: `git grep -c 'Why it works this way' 7b18226b -- ':!README.md'` → no match, exit 1, and `git show 7b18226b:README.md | rg -c 'Why it works this way'` → exit 1 — base is quiet and agrees with the recorded `0`; the false receipt is introduced entirely by this change's own carriers (unit SPEC, its journal fragment, its roadmap notes cell from `7dff1c21`). Stability: fires only on this change's own files; unrelated paths and an untouched tree stay quiet. Smallest action: scope the command to exclude this unit's own carriers (SPEC, its journal fragment, its roadmap row) and re-record, or restate the claim as "no consumer outside this unit's own record" — one prose edit, then a blockers-only recheck.
-Advisories: 4 —
-  A1 issue #527 forge labels — `gh issue view 527 --json labels,state` → `OPEN` with `backlog` + `postponed` at head while the roadmap row and D1 record the owner's un-postpone. Why advisory: no S#/O#/AC claims forge-label state (S4/AC4 bind the D1 decision line and the roadmap row only, both re-run green here), `postponed` is a recorded triage verdict and not the blocking label (the hold in AGENTS.md names only `human-revision-needed`), and the PR's `Closes #527` resolves the issue at merge. Smallest action if wanted: drop/replace `postponed` on #527, or record why it stays.
-  A2 docs/research/2026-11-12-input-quality-and-editing/README.md:94 — the row still reads "#527 … (triaged `postponed`, dated un-postpone trigger …) … it waits for #307's headline slices" while the unit is applied. Why advisory: it sits in the dated "Decisions taken this session (owner-approved)" record of 2026-11-12 (same immutable-history class as docs/LOGS.md:6561), it is pre-existing at base, and current status is owned by the roadmap (updated) — no status surface asserts the old truth.
-  A3 local-gate load flake — first `bun scripts/local-gate.mjs --skip-network --jobs auto` run → FAILED at `root-suite`: `scripts/next-step-ranking.test.mjs` "Reason codes are from the closed set" exceeded the 10 s per-test budget (load average 14 from concurrent worktree sessions running their own suites). Why advisory: not change-caused — the suite passes standalone at head (exit 0, two later runs), builds its own in-memory roadmap fixtures and never reads the changed files, `bun scripts/test-impact.mjs --base 7b18226b` → `verdict: empty`, `executable: 0`, and the immediate retry of the full gate → `local-gate: PASS — 15 step(s) in 594s`. A base-copy re-run of that suite in mktemp scratch failed only on missing workspace packages (scratch env), matching the pre-existing-environmental class.
-  A4 docs/fix/527-readme-evidence-rationale/SPEC.md Log E11 — recorded `changed: 4`; observed `changed: 5` at final head (the journal fragment and index commits landed after E11's run). Why advisory: receipt timed mid-branch; the verdict that matters (`verdict: empty`, `executable: 0`, no test files touched) reproduces unchanged at head.
-Sibling sweep: 1 advisory — A2 (dated research-record row still narrating the postponed triage); the `scripts/risk-tiers.mjs` sweep is clean (only historical/fixture/self-retirement frames — scripts/capabilities.test.mjs:8, scripts/risk-tier-classifier.test.mjs F1 fixture, docs/fix/284:165, and this unit's own quoted issue text — none asserts it as the live carrier; README clean: shipped path 1, retired path exit 1); `ship-roadmap` clean in-section (exit 1; README:577 is the pre-existing accurate retirement note); `idea · postponed` for row 527 gone from the roadmap (survives only in dated history + A1); no surviving mention asserts the old truth on a status surface. B1 itself is this unit doc's own receipt, listed under Blockers.
-Completeness: S1, S2, S3, S4, S5, S5a, S6, S7 all resolved — P1 `phase-lint` exit 0 (`verdict PASS`), P2 row-count `7` + all 14 arXiv ids resolving over docs/research/, P3 `docs-generate --check` exit 0 + `roadmap-settle` exit 0, P4 `local-gate --skip-network` exit 0 on retry; obligations O1–O12 all `verified` with every validator re-run green here (`verify` → `obligations-closure` ok; `promise-coherence` → PASS 6 checked · 10 skipped with each skip self-naming, and all 10 skipped commands independently re-run by this verifier; the write-half receipts E13/E17 reproduce as current state — `roadmap read` revision `9b69d8f6` equals E17's recorded After hash). No open ids.
-Spot check: `bun test scripts/unit-doc-contract.test.mjs scripts/docs-generate.test.mjs scripts/roadmap-settle.test.mjs scripts/prose-gate-inventory.test.mjs scripts/residue-dimensions.test.mjs scripts/index-document.test.mjs scripts/normative-drift.test.mjs` → 142 pass · 0 fail — match (G4's recorded output).
-Verdict: NEEDS-DECISION (B1)
+EXTERNAL VERIFY — base: 7b18226b · head: e4a61ed1
+Verdict: PASS (no blockers)
 ```
 
-Read-only run: no commit, no push, no branch, no file edited other than this
-receipt, no forge mutation; no unproven mutation path was executed (every
-command replayed here is a pre-existing read/check tool of the repo, and the
-only scratch used was `mktemp -d` worktrees/copies, removed). Corrections
-belong to `/aw-local-apply` (B1: scope or restate the Retirements receipt at
-SPEC.md:100-101), then a blockers-only delta recheck.
+Full verdict text from 2026-11-17 run:
+
+```
+EXTERNAL VERIFY — base: 7b18226b · head: 7dff1c21
+Advisories: 3 (A1–A4 originally, A3 dropped by fix 560's merged main — advisory class, no action needed)
+  A1 issue #527 forge labels — `gh issue view 527 --json labels,state` → `OPEN` with `backlog` + `postponed` at head while the roadmap row and D1 record the owner's un-postpone. Why advisory: no S#/O#/AC claims forge-label state; the PR's `Closes #527` resolves the issue at merge.
+  A2 docs/research/2026-11-12-input-quality-and-editing/README.md:94 — dated research record still narrating the postponed triage. Why advisory: pre-existing at base, immutable-history class (same as `docs/LOGS.md` dated sections); current status owned by the roadmap.
+  A4 docs/fix/527-readme-evidence-rationale/SPEC.md Log E11 — recorded `changed: 4`; observed `changed: 5` at final head (journal fragment and index commits landed after E11's run). Why advisory: receipt timed mid-branch; the verdict `verdict: empty`, `executable: 0` reproduces unchanged at head.
+Completeness: S1–S7, S5a all resolved — P1–P4 all green. O1–O12 all `verified` with every validator re-run. No open ids.
+Spot check: 142 pass · 0 fail — match (G4's recorded output).
+Verdict: PASS (no blockers)
+```
+
+The `MERGEABLE / CLEAN` state at `e4a61ed1` confirms the external-verify resolution (B1 removed, scope to exclude own carriers) is sound.
+
+## Post-merge notes (if merged)
+
+The `postponed` label on #527 can be removed at merge time (it was a dated trigger, now un-postponed and applied). A2 is a dated research record — history, not status, so nothing to fix.
