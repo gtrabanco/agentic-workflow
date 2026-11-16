@@ -478,8 +478,8 @@ in the handoff to the owner.
   command `pi telemetry report`, and I5 spells it
   `bun scripts/telemetry-report.mjs`. Pi's extension API registers slash
   commands, tools, flags and events — it has no CLI-subcommand seam
-  (`@earendil-works/pi-coding-agent` `docs/extensions.md`, read at the pinned
-  host 1.5.2), so a package cannot create a `pi <subcommand>` verb. The script
+  (`@earendil-works/pi-coding-agent`'s own `extensions.md`, read at the
+  pinned host 1.5.2), so a package cannot create a `pi <subcommand>` verb. The script
   I5 names is the invoked form, and the report engine lives in the schema
   package's vocabulary so one declaration feeds it (PE-003).
 - **D5** — 2026-11-17, decision (the ledger's grammar coexistence): one
@@ -492,11 +492,39 @@ in the handoff to the owner.
   `.pi/.telemetry/sessions.jsonl` as the configured value and S11 asks for no
   extra switch, so that path ships as the default and `telemetry.jsonFile`
   overrides it. One switch (`enabled`), one path.
+- **E1** — 2026-11-17, `bun scripts/tier-cost.mjs read --ledger docs/workflow/TIER_COST.md` at `888aaceb` · exit 0 · `contract: tier-cost@1`, `rows: []` — the samples table is empty, so the grammar migration rewrites no row (D5).
+- **E2** — 2026-11-17, `bun test --timeout=20000 test/` in `packages/pi-agentic-workflow` at `888aaceb` · 928 pass / 0 fail — the baseline the widening must not break (PE-010).
+- **E3** — 2026-11-17, `pi --version` · 1.5.2 — the host whose `turn_end` payload and extension surface PE-002/PE-003 were read against.
+- **E4** — 2026-11-17, the command surface re-derived for S2: `for f in skills/*/SKILL.md` (frontmatter `user-invocable:` → 14 skills) plus the four native `*_COMMAND` exports in `routing/types.ts` — `fold-findings` still ships, while `plan-feature`, `plan-fix`, `review-spec`, `review-plan`, `external-verify`, `unit-route`, `close-out` and `triage` (the command is `triage-issue`) do not exist. The vocabulary ships the 18 real names (PE-001).
+- **E5** — 2026-11-17, the red-first runs, each observed before its module existed: `bun test test/telemetry.test.mjs` in the schema package → `SyntaxError: Export named 'PHASE_LABELS' not found`; `bun test test/session-telemetry.test.mjs` → `Export named 'phaseFromCommand' not found`; `bun test test/telemetry-jsonl-sink.test.mjs` → `Export named 'createJsonlSink' not found`; `node --test scripts/tier-cost.test.mjs` → 6 failing cases on the single grammar; `node --test scripts/telemetry-report.test.mjs` → `exit 1` for every case (the script did not exist).
+- **E6** — 2026-11-17, `bun test test/telemetry.test.mjs` (schema package) · 8 pass / 0 fail; `bun test test/session-telemetry.test.mjs` · 18 pass / 0 fail; `bun test test/telemetry-wiring.test.mjs` · 14 pass / 0 fail (O1–O5).
+- **E7** — 2026-11-17, `bun test test/telemetry-jsonl-sink.test.mjs` · 6 pass / 0 fail, including the shipped-wiring case that writes the ledger row and the JSONL line from one sample (O8, O19).
+- **E8** — 2026-11-17, `bun test test/telemetry-ledger-sink.test.mjs` · 15 pass / 0 fail (both grammars, the unknown-column refusal, the untouched #383 cases) and `bun test scripts/tier-cost.test.mjs` · 13 pass / 0 fail (O10–O12).
+- **E9** — 2026-11-17, `bun scripts/tier-cost.mjs read --ledger docs/workflow/TIER_COST.md` after the migration · exit 0 · `contract: tier-cost@2`, 16 columns, `rows: []` (O10).
+- **E10** — 2026-11-17, `bun test scripts/telemetry-report.test.mjs` · 10 pass / 0 fail; `bun scripts/telemetry-report.mjs --ledger docs/workflow/TIER_COST.md` · exit 0 · `contract: telemetry-report@1`, `samples: 0`; `bun scripts/telemetry-report.mjs --help` · exit 0 and names every flag (O13, O14).
+- **E11** — 2026-11-17, `bun scripts/telemetry-report.mjs --schema > docs/telemetry/schema.json`, printed identically under `bun` and `node` (`diff` → no output) and deep-equal to `telemetrySampleJsonSchema()` in the coverage suite (O15).
+- **E12** — 2026-11-17, `bun test scripts/telemetry-coverage.test.mjs` · 5 pass / 0 fail — the crossing (18 labels × 18 commands), its two mutations, the committed schema, the ledger grammar and the README invariant (O6, O7, O21).
+- **E13** — 2026-11-17, the O3/O16/O17/AC12 greps: `rg -c '4\.10\.0' packages/pi-agentic-workflow/src` → 0 matches; `rg -n 'createSessionTelemetry|createJsonlSink|createLedgerSink' scripts/ packages/agentic-workflow/src` → 0 matches; `rg -n 'fetch\(|https?://|net\.|http\.'` over the three producer modules → 0 matches; `rg -n 'archived-sessions' packages/ scripts/` → 0 matches; `git diff --stat origin/main...HEAD -- packages/agentic-workflow` → empty (O16, O17, AC12).
+- **E14** — 2026-11-17, the package suites at the branch head: `bun test` in `packages/pi-agentic-workflow` → **947 pass / 0 fail** (was 928 at `888aaceb`); in `packages/agentic-workflow-schema` → **893 pass / 0 fail**; in `packages/agentic-workflow` → **935 pass / 0 fail** (O19, regression scope).
+- **E15** — 2026-11-17, `bun scripts/lint-changeset.mjs .changeset/504-extended-telemetry.md` · exit 0 · `ok 504-extended-telemetry.md` (O20).
+- **E16** — 2026-11-17, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/494-telemetry-by-turn/SPEC.md` · `verdict PASS` (8/8 phases, fingerprint `bcac4289`), and the same crate's `verify` on the doc after the obligations closed (O20 is why the doc could be cut at all).
+- **P1** — 2026-11-17, the unit doc, both planning ledgers and the decisions ledger cut with my `S1`–`S15` quoted verbatim and every obligation row `planned` · `a0e850ef`.
+- **P2** — 2026-11-17, the schema package's published vocabulary (RED suite first, E5) · `600585ea`.
+- **P3** — 2026-11-17, the sample widened: phase, version, model and the five token fields, with `AG_WF_PHASE` reaching a spawned runner · `6ac1ac8b`.
+- **P4** — 2026-11-17, the JSONL sink and the `telemetry.jsonFile` key · `51ae4db7`.
+- **P5** — 2026-11-17, `tier-cost@2` in the reader, the sink and this repository's ledger · `c665ea84`.
+- **P6** — 2026-11-17, the report CLI's corpus red first (`2aefe10f`), then the CLI, the coverage gate, the schema projection and the package README · `1fcb5359`.
+- **D7** — 2026-11-17, decision (the red-first split): the first cut of the report CLI landed its suite and its module in one commit, which the repository's own `scripts/red-first.test.mjs` refused (`the pair lands in one commit (db367f9): no red commit exists`). The commit was split before any push — the suite alone (`2aefe10f`), then the implementation (`1fcb5359`) — because that gate exists to prove the corpus was seen failing, exactly as E5 records it.
+- **D8** — 2026-11-17, decision (the diff size): the change is 2,685 authored lines across 35 files in six commits, above the ~400-line slice guidance. The slices are coherent (one vocabulary, one accumulator, one sink, one grammar, one CLI, one gate) and cannot be shrunk further without deleting tests or comments — the request's own S15 names four suites that must move with it, and two more were derived (`config-contract`, `default-inherit`).
+- **G1** — 2026-11-17, `node scripts/run-root-suite.mjs` over the whole branch at `HEAD 1fcb5359` · 112 suites PASS (the four reds re-run alone and green, D7 and the load artifacts named there); the four reds were machine-load artifacts, each re-run alone and green: `red-first` (a real finding, D7, fixed), `unit-route` (a 580 ms timing assertion against a 500 ms bound), `phase-lint` and `workflow-status-sensor` (suite wall-clock caps under a saturated box — 62 s and 91 s alone, against the 120 s cap).
 
 ## Next
 
-P2: the schema package's published vocabulary lands first (RED suite, then the
-module), because every later task reads it.
+The unit is built and hands back for the owner's external verdict over
+`888aaceb..HEAD`: seven commits, every obligation verified (E6–E16), the three
+package suites green (E14). Open, deliberately out of this unit: per-phase
+attribution inside one session (`## Future`) and the fact that a target project
+carries no ledger until it creates one (`## Known pre-existing issues`).
 
 ## References
 
