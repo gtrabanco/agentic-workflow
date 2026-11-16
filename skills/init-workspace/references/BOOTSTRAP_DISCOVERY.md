@@ -70,6 +70,31 @@
        criteria is walked through a recommended option with its why,
        "Explain the options", or "Decide for me" — proposals land as recorded
        dated assumptions, never silent defaults.
+   - **Skill discovery — opt-in and consented, after the charter.** The workflow
+     ships its own review pack, so an external skill is an extra, never a
+     dependency. Once the project kind is answered, offer the route and run none
+     of it without a yes:
+     1. **search** the registries the owner names (autoskills.sh, skills.sh,
+        GitHub) with the declared project kind and the criteria catalogue as
+        query terms — read-only, nothing fetched into the project;
+     2. **screen before any consent is asked**:
+        `runner skills discover --candidates <manifest> --root <dir>` prints the
+        `skill-discovery@1` envelope — the seven `skill-lint` checks plus
+        provenance (source, author, version, license). An excluded candidate is
+        reported with the finding that excluded it, and is never offered;
+     3. **ask per candidate** — what it reviews, the surface type it targets, its
+        lint receipt, its provenance line; the answers ride `--consent`. A `no`
+        installs nothing and is not asked again in the same bootstrap, and a
+        candidate the screen excluded is never installable however it was
+        answered;
+     4. **install** only on that yes — `npx skills add <source>` is the text the
+        envelope prints, run by the human or the consented agent — then register
+        it, so the guide carries its source, pin, install date and axis:
+        `runner skills register --guide AGENTS.md --name <n> --source <s>
+        --pin <p> --axis <a>`.
+     The commands are `agentic-workflow skills`; the crate README's `skills`
+     section owns the flags and both grammars. Declining every candidate leaves
+     the tree byte-identical.
    - **Project** — name + one-line purpose.
    - **Gate** — dev / build / test commands and the verification gate (proposed
      from the detected stack; confirm).

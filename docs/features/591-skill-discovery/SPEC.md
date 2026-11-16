@@ -181,6 +181,12 @@ none
 - `skills/init-workspace` carries a per-skill context ceiling; the route's prose
   is bounded by it and the re-pin (if needed) names its growth source. Affects:
   yes, and it is checked by `bun scripts/check-skill-context.mjs`.
+- The gate's network step `dependency-pin-gate` reports upstream drift on a pin
+  this unit does not touch (`@gtrabanco/pi-agentic-workflow` →
+  `pi-extensible-workflows` `6.3.0 → 6.4.0`); `git diff origin/main --
+  packages/pi-agentic-workflow/package.json` is empty, so the drift predates this
+  change and owns its own `fix(deps)` PR. Affects: no — nothing in this unit
+  selects, pins or bumps that dependency.
 - No suite pins `skills/runner-contract/references/RUNNER.md`'s subcommand table
   against `RUNNER_COMMANDS`; the table is hand-maintained. Affects: no — this
   unit adds one row and verifies it by reading, the mechanical pin is #558's
@@ -369,12 +375,80 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   ```
   1. **Discovery route (consented, read-only by default).** After the charter round, offer: search the trusted registries the owner names (candidates: autoskills.sh, skills.sh, GitHub) using the declared project kind + criteria catalogue as query terms. Search is read-only; nothing is fetched into the project without the following gates.
   ```
+- **P1** — 2026-11-16, this unit doc, its two planning ledgers and the acceptance
+  criteria frozen before the first line of code · `3f9fb62e`.
+- **E1** — 2026-11-16, the RED corpus (P2) · `cd packages/agentic-workflow && bun
+  test test/skills.screen.test.mjs test/skills.discovery.test.mjs
+  test/skills.register.test.mjs test/skills.cli.test.mjs` · exit 1 · `0 pass / 12
+  fail / 3 errors`, every error `Cannot find module '../src/skills/*.mjs'`
+  (commit `8d1658a8`).
+- **P2** — 2026-11-16, the seven checks moved into the crate
+  (`src/skills/screen.mjs`) and `scripts/skill-lint.mjs` rewired as their thin CLI
+  · `5a5ea5a1`.
+- **E2** — 2026-11-16, the moved engine against its shipped corpus · `bun test
+  scripts/skill-lint.test.mjs` · exit 0 · `20 pass / 0 fail`.
+- **E3** — 2026-11-16, the differential check (P8): `bun scripts/skill-lint.mjs`
+  and `git archive origin/main`'s copy of it, driven in `mktemp -d` over a dirty
+  fixture tree and over the shipped tree · exit 1 and exit 0 on both sides, and
+  `diff` empty both ways — zero differing line.
+- **E4** — 2026-11-16, the discovery corpus green · `cd packages/agentic-workflow
+  && bun test test/skills.screen.test.mjs test/skills.discovery.test.mjs
+  test/skills.register.test.mjs test/skills.cli.test.mjs test/cli.surface.test.mjs`
+  · exit 0 · `42 pass / 0 fail`.
+- **P3** — 2026-11-16, the discovery envelope, the registration ledger, the
+  `skills` subcommand and its three documented surfaces · `762026a2`.
+- **E5** — 2026-11-16, the crate suite · `bun run test` in
+  `packages/agentic-workflow` · exit 1 first (`973 pass / 1 fail`: the
+  dispatch-table exhaustive pin did not know `skills`) and exit 0 after that pin
+  named the new command, which the gate's `crate-suite-bun` and `crate-suite-node`
+  steps then confirmed.
+- **E6** — 2026-11-16, the round trip of S5/S7 on a scratch project (the template
+  guide copied into `mktemp -d`): `skills discover` printed `framework-review —
+  install … consent yes` and left the guide byte-identical; `skills register`
+  answered `changed appended`; `skills inventory --as-of 2026-11-16` read the row
+  back `framework-review — ok … axis review-design`; a second copy run through
+  `discover` with no consent answers stayed byte-identical.
+- **D1** — 2026-11-16, owner-facing decision recorded by the design, not a
+  question asked: the install line is the documented source form
+  `npx skills add <source>` with the pin as its own envelope cell, because a
+  version-suffix syntax is unverified in this tree (PE-010) and the workflow never
+  runs the command.
+- **D2** — 2026-11-16, housekeeping disclosed rather than hidden: `journal
+  aggregate` was run once by mistake and consumed the 24 pending fragments other
+  sessions had left in this worktree's carrier. The run was reverted with `git
+  restore docs/LOGS.md .agentic-workflow/journal/` — `docs/LOGS.md` and every
+  fragment are byte-identical to the pre-run tree (`bun scripts/log-immutability.mjs`
+  exit 0 afterwards) — and this session leaves one unaggregated fragment, so
+  aggregation stays the owner's merge step.
+- **E7** — 2026-11-16, the context budgets · `bun scripts/check-skill-context.mjs`
+  · exit 0 · `PASS context budgets: 30 skills`; `bun
+  scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents:
+  4 budgeted documents` (AGENTS.md 718 lines / 155 machine / 563 prose / 12,793
+  est; GATE_INVENTORY.md 168 / 73 / 95 / 6,547).
+- **E8** — 2026-11-16, the normative surfaces and the gate inventory · `bun test
+  scripts/normative-drift.test.mjs` exit 0 (`21 pass`), `bun
+  scripts/prose-gate-inventory.mjs` exit 0 (`verdict: PASS`), `bun test
+  scripts/ledger-ownership.test.mjs` exit 0 (`14 pass`), `bun
+  scripts/invocation-drift.mjs` exit 0 (`verdict: PASS`).
+- **E9** — 2026-11-16, the release and repository-state surfaces · `bun
+  scripts/lint-changeset.mjs .changeset/591-skill-discovery.md` exit 0
+  (`ok 591-skill-discovery.md`), `bun scripts/docs-generate.mjs --check` exit 0
+  (`verdict: PASS`), `rg -c '#591' docs/research/ATTRIBUTION.md` → `2`.
+- **G1** — 2026-11-16, the offline gate · `bun scripts/local-gate.mjs
+  --skip-network --no-bail --jobs auto` · exit 0 · `PASS — 15 step(s) in 708s`.
+  The four network steps were skipped by the flag; the earlier full run's
+  `dependency-pin-gate` reported the pre-existing upstream drift this document's
+  `## Known pre-existing issues` records.
+- **G2** — 2026-11-16, the document verifier · `bun
+  packages/agentic-workflow/bin/agentic-workflow.mjs verify
+  docs/features/591-skill-discovery/SPEC.md` · exit 0.
 
 ## Next
 
 ````text
-→ Next: P2 — the RED corpus: the four `skills.*.test.mjs` suites, observed failing
-  · then P3 (the screen engine move) → P4 → P5 → P6 → P7 → P8 → P9 → P10
+→ Next: the owner's external verification of this diff — no review-change, no
+  audit-pr and no fold cycle ran on this change (§4 of the working rules)
+  · on a blocker → one correction batch → one recheck limited to those blockers
 ````
 
 ## References
