@@ -288,9 +288,18 @@ both).
 
 - The ceremony profile seed's **machine grammar** (a `@1` block, vocabulary,
   tier-cost integration) — its own unit, issue [#436](https://github.com/gtrabanco/agentic-workflow/issues/436), `blocked-by` this one. Status: `planned`.
+  **Resolved 2026-11-16 (fix #560 external-verify advisory 2):** the work
+  shipped — issue #436 closed 2026-11-11, PR
+  [#515](https://github.com/gtrabanco/agentic-workflow/pull/515) merged
+  2026-11-11, and roadmap row 436 settled `done · [#515]` (fix #560 D6). The
+  original status line above is kept as the cut-time state it was.
 - **Section-level charter reads** through the doc CLI (`doc read`, feature 106's
   locator) so downstream skills read charter sections cheaply — issue
   [#366](https://github.com/gtrabanco/agentic-workflow/issues/366). Status: `planned`.
+  **Resolved 2026-11-16 (fix #560 external-verify advisory 2):** issue #366
+  closed `completed` 2026-11-08 (the runner-crate Doc CLI section-level
+  read/edit/index, feature 71 half A of #192). The original status line above
+  is kept as the cut-time state it was.
 
 ## Future cost
 
