@@ -60,7 +60,7 @@ function syncEnvelope(overrides = {}) {
  * so the suite owns argv, cwd and exit status (the seams the shipped adapter
  * leaves to the runtime).
  */
-function extensionOver({ run, bin = "bun", skillsDir } = {}) {
+function extensionOver({ run, program = "bun", skillsDir } = {}) {
   const { registered, registrar } = recorder();
   const calls = { spawns: [], notify: [] };
   const noopContext = {
@@ -81,7 +81,9 @@ function extensionOver({ run, bin = "bun", skillsDir } = {}) {
     loadConfig: () => ({ ok: true, config: configFor({}), problems: [] }),
     settings: ({ ctx }) => ctx.notify("settings"),
     awIndex: {
-      bin,
+      // The composed command is the crate bin this package resolves; the suite
+      // owns the invocation so argv and exit status are observable.
+      launch: async (args) => ({ source: "installed", program, argv: ["/fixture/crate/bin/agentic-workflow.mjs", ...args] }),
       run: (request) => {
         calls.spawns.push(request);
         return run ? run(request) : { status: 0, stdout: JSON.stringify(syncEnvelope()), stderr: "" };
@@ -130,9 +132,9 @@ test("S5/S9: the handler runs the runner crate's sync in the project directory",
     await registered.get(AW_INDEX_COMMAND).handler("", noopContext);
     assert.equal(calls.spawns.length, 1);
     const spawn = calls.spawns[0];
-    assert.equal(spawn.bin, "bun");
-    assert.deepEqual(spawn.args.slice(-2), ["--sync", "--json-only"], "the sync is the only operation the command runs");
-    assert.ok(spawn.args.includes("doc"), "the runner crate's doc entry point");
+    assert.equal(spawn.program, "bun");
+    assert.deepEqual(spawn.argv.slice(-2), ["--sync", "--json-only"], "the sync is the only operation the command runs");
+    assert.ok(spawn.argv.includes("doc"), "the runner crate's doc entry point");
     assert.equal(spawn.cwd, "/fixture/repo", "the project directory, never the extension's own");
     assert.equal(calls.notify.at(-1).kind, "info");
   } finally {
