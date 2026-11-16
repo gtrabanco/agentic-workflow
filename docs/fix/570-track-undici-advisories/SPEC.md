@@ -163,6 +163,14 @@ Verdict `risk-tier-verdict@1` for the change's executable path,
 - The `pre-push` hook's SIGPIPE exit 141 recorded in fix 571's unit doc.
   **Does not affect** this unit: the gate is run in the foreground here, and any
   push detail is recorded in `## Log` without a claim about the hook.
+- **`worktree-guard` reddens on *other* sessions' worktrees.** The step audits the
+  whole repository's worktree set, so a sibling unit mid-edit (`feat-565-quality-sensor`
+  and `feat-563-init-workspace-interview` were both live during this session)
+  fails it with `STALE: branch … is merged into origin/main`, whatever this
+  branch contains. **Does not affect** this unit: `scripts/worktree-guard.mjs` is
+  byte-identical to the base (`git diff d1287c3d -- scripts/worktree-guard.mjs`
+  prints nothing), the finding names paths outside this branch, and the same 19
+  steps are green — `worktree-guard` included — on the quiet tree G1 records.
 
 ## Acceptance criteria
 
@@ -255,14 +263,14 @@ single trailing newline:
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2, S5 | the resolved tree no longer carries the four blocking-ladder `undici` advisories: `node scripts/dependency-advisory-pass.mjs` reports `0 blocking` and no `undici` row | P3 | P3 | direct application (this session) | `node scripts/dependency-advisory-pass.mjs` exits 0 with `1 advisory, 0 blocking` and no `undici` line | E line in SPEC `## Log` | verified — E4 (the change) against E3 (the base: `9 advisories, 4 blocking`) |
-| O2 | S4 | the frozen-failure corpus precedes the implementation and both runs are observable: the floor case fails on the pre-change lock and passes on the change | P2 | P2 | direct application (this session) | `bun test scripts/dependency-advisory-pass.test.mjs` exits 1 at the red commit and 0 at the implementation commit | E lines in SPEC `## Log` naming both commits | verified — E1 (red, `undici resolves 8.10.2, below the 8.12.2 advisory fix floor`) and E2 (green) |
-| O3 | S3, S5 | nothing shipped moves: no `packages/**` manifest or `src/` file changes, and the mechanism lives in the root workspace alone | P3 | P3 | direct application (this session) | `git diff --stat <base> -- packages/` prints nothing and `rg -c '"undici"' packages/*/package.json` matches nothing | E line in SPEC `## Log` | verified — E6 (empty `packages/` diff, zero `undici` manifest matches) |
-| O4 | S2, S5 | the lock agrees with the manifest and moves nothing else: `bun install --frozen-lockfile` exits 0 and every non-`undici` resolution is byte-identical to the base | P3 | P3 | direct application (this session) | `bun install --frozen-lockfile` exits 0 and `git diff <base> -- bun.lock` names only the `undici` line and the root entry's override block | E line in SPEC `## Log` | verified — E7 (frozen install 0, the lock diff is exactly two lines) |
-| O5 | S3 | the pass stays report-only: its exit code and classification rule are unchanged, so a future advisory is still a receipt row and never a gate failure | P4 | P4 | direct application (this session) | `git diff --stat <base> -- scripts/dependency-advisory-pass.mjs` prints nothing, and the suite's classification cases stay green | E line in SPEC `## Log` | verified — E5 (identical stdout except the declared rows, same exit 0; E8 the 19 pre-existing cases green) |
-| O6 | S4 | the drift cannot return silently: a resolution below the 8.12.2 floor fails the root suite and the failure names the floor and the advisories | P2 | P2 | direct application (this session) | `bun test scripts/dependency-advisory-pass.test.mjs` exits 1 when the case is driven against a sub-floor lock fixture | E line in SPEC `## Log` | verified — E1 (the real pre-change lock) and E9 (a toy lock at 8.10.2 in `mktemp -d`) |
+| O1 | S2, S5 | the resolved tree no longer carries the four blocking-ladder `undici` advisories: `node scripts/dependency-advisory-pass.mjs` reports `0 blocking` and no `undici` row | P3 | P3 | direct application (this session) | `node scripts/dependency-advisory-pass.mjs` exits 0 with `1 advisory, 0 blocking` and no `undici` line | E line in SPEC `## Log` | verified — E4 (the change: `1 advisory, 0 blocking`) against E3 (the base: `9 advisories, 4 blocking`) |
+| O2 | S4 | the frozen-failure corpus precedes the implementation and both runs are observable: the floor case fails on the pre-change lock and passes on the change | P2 | P2 | direct application (this session) | `bun test scripts/dependency-advisory-pass.test.mjs` exits 1 at the red commit and 0 at the implementation commit | E lines in SPEC `## Log` naming both commits | verified — E1 (`56451e61`, 21 pass / 1 fail) and E2 (`c8e40871`, 22 pass / 0 fail) |
+| O3 | S3, S5 | nothing shipped moves: no `packages/**` manifest or `src/` file changes, and the mechanism lives in the root workspace alone | P3 | P3 | direct application (this session) | `git diff --stat d1287c3d -- packages/` prints nothing and `rg -c '"undici"' packages/*/package.json` matches nothing | E line in SPEC `## Log` | verified — E6 (empty `packages/` diff, zero `undici` manifest matches) |
+| O4 | S2, S5 | the lock agrees with the manifest and moves nothing else: `bun install --frozen-lockfile` exits 0 and every non-`undici` resolution is byte-identical to the base | P3 | P3 | direct application (this session) | `bun install --frozen-lockfile` exits 0 and `git diff d1287c3d -- bun.lock` names only the `undici` line and the root entry's override block | E line in SPEC `## Log` | verified — E7 (`Checked 172 installs across 188 packages (no changes)`; the lock diff is 4 insertions / 1 deletion) |
+| O5 | S3 | the pass stays report-only: its exit code and classification rule are unchanged, so a future advisory is still a receipt row and never a gate failure | P4 | P4 | direct application (this session) | `git diff --stat d1287c3d -- scripts/dependency-advisory-pass.mjs` prints nothing, and the suite's classification cases stay green | E line in SPEC `## Log` | verified — E5 (empty diff; the differential's stdout differs only in the declared rows, exit 0 both sides) and E8 (all cases green) |
+| O6 | S4 | the drift cannot return silently: a resolution below the 8.12.2 floor fails the root suite and the failure names the floor and the advisories | P2 | P2 | direct application (this session) | `bun test scripts/dependency-advisory-pass.test.mjs` exits 1 when the case is driven against a sub-floor lock fixture | E line in SPEC `## Log` | verified — E1 (the real pre-change lock) and E9 (a toy lock at `undici@8.10.2`, read through the same collector) |
 | O7 | S1, S4 | documentation and repository state ship in the same change: the `## Fixes` row, the projection through the emitter and the journal fragment | P5 | P5 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/roadmap-settle.mjs` exits 0 | E line in SPEC `## Log` | verified — E10, E11 (projection and settle both PASS) plus the journal fragment |
-| O8 | S1 | the deterministic gate is green on the change's own tree | P6 | P6 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 |
+| O8 | S1 | the deterministic gate is green on the change's own tree | P6 | P6 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | G line in SPEC `## Log` | verified — G1 (`--no-bail`: all 19 steps PASS in 617s); G2 records the bail-mode red the repository's shared worktree set produces while sibling sessions are mid-edit |
 
 ## Triaged steps
 
@@ -335,41 +343,88 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   that table is owner-managed end to end by declaration (`docs/ROADMAP.md`); the
   emitter only rewrites its summary cell from this document's `roadmap_summary:`,
   which is what `bun scripts/docs-generate.mjs` does in P5.
-- **E1** — 2026-11-16, the RED corpus at `TBD-RED`:
-  `bun test scripts/dependency-advisory-pass.test.mjs` · exit 1 · **19 pass /
+- **E1** — 2026-11-16, the RED corpus at `56451e61`:
+  `bun test scripts/dependency-advisory-pass.test.mjs` · exit 1 · **21 pass /
   1 fail** — `undici resolves 8.10.2, below the 8.12.2 advisory fix floor
   (GHSA-2m5v-pch6-74hx, GHSA-4w7w-5xrc-9h26, GHSA-qrxm-fqhp-jwvm,
-  GHSA-xjj6-f33q-929c)`. The case is the frozen failure, not a restatement of it.
-- **E2** — 2026-11-16, the same suite on the change · exit 0 · **20 pass /
-  0 fail**.
-- **E3** — 2026-11-16, the base receipt (scratch `git archive` of `d1287c3d`):
-  `bun scripts/dependency-advisory-pass.mjs` · exit 0 · `186 packages resolved,
-  9 advisories, 4 blocking, 5 report-only`, with the four blocking rows all
-  `undici 8.10.2`.
-- **E4** — 2026-11-16, the change's receipt: `186 packages resolved, 1 advisory,
-  0 blocking, 1 report-only` — the surviving row is `minimatch 10.2.6`. The
-  differential against E3 is exactly the eight `undici` rows and the blocking
-  count; no other line moved and the exit status is 0 in both.
+  GHSA-xjj6-f33q-929c)`. The case is the frozen failure, not a restatement of
+  it, and the red commit lands alone before the override exists.
+- **E2** — 2026-11-16, the same suite on the change (`c8e40871`) · exit 0 ·
+  **22 pass / 0 fail**.
+- **E3** — 2026-11-16, the base receipt (scratch `git archive` of `d1287c3d` in
+  `/tmp/aw570-base-*`): `node scripts/dependency-advisory-pass.mjs` · exit 0 ·
+  `186 packages resolved, 9 advisories, 4 blocking, 5 report-only`, with the
+  four blocking rows all `undici 8.10.2` and the four remaining ones
+  `report-only`.
+- **E4** — 2026-11-16, the change's receipt · exit 0 · `186 packages resolved,
+  1 advisory, 0 blocking, 1 report-only`; the surviving row is `minimatch
+  10.2.6`. The differential against E3 is the count line and the eight `undici`
+  rows, nothing else; stderr is byte-identical and the exit status is 0 on both
+  sides.
 - **E5** — 2026-11-16, the pass is untouched:
   `git diff --stat d1287c3d -- scripts/dependency-advisory-pass.mjs` · exit 0 ·
-  no output, and the suite's 19 pre-existing cases stay green (E2).
+  no output; every pre-existing case stays green in E2.
 - **E6** — 2026-11-16, nothing shipped moves:
   `git diff --stat d1287c3d -- packages/` · exit 0 · no output;
-  `rg -c '"undici"' packages/*/package.json` · 0 matches.
-- **E7** — 2026-11-16, the lock agrees and nothing else moves:
-  `bun install --frozen-lockfile` · exit 0 · `Checked 164 installs across 177
-  packages (no changes)`; `git diff d1287c3d -- bun.lock` names the `undici`
-  resolution line and the root entry's override block, and nothing else.
+  `rg -c '"undici"' packages/*/package.json` · 0 matches (rg exits 1 on no
+  match, which is the clean result here).
+- **E7** — 2026-11-16, the lock agrees with the manifest and moves nothing else:
+  `bun install --frozen-lockfile` · exit 0 · `Checked 172 installs across 188
+  packages (no changes)`; `git diff --stat d1287c3d -- bun.lock` → `4
+  insertions(+), 1 deletion(-)`, which is the root entry's three-line override
+  block plus the one resolution line.
 - **E8** — 2026-11-16, `bun test scripts/dependency-advisory-pass.test.mjs` ·
-  exit 0 · 20 pass / 0 fail (19 before this unit).
-- **E9** — 2026-11-16, the floor case is not vacuous: a toy workspace in
-  `mktemp -d` carrying a lock that resolves `undici@8.10.2` drives the same
-  assertion to the same failure message, so the case would catch a regression
-  rather than passing because the real tree happens to be green.
-- **E10** — 2026-11-16, `bun scripts/docs-generate.mjs --check` · exit 0 · the
-  projection and both roadmap tables are a fixed point.
-- **E11** — 2026-11-16, `bun scripts/roadmap-settle.mjs` · exit 0 · `211 unit
-  docs checked`, `violations: 0`.
+  exit 0 · 22 pass / 0 fail (20 cases before this unit: the red corpus added
+  the floor case and its non-vacuity sibling).
+- **E9** — 2026-11-16, the floor mechanism is not vacuous: a toy workspace in
+  `mktemp -d` (`package.json`, one workspace member declaring the peer, a
+  `bun.lock` resolving `peer@1.4.0` and `undici@8.10.2`) read through the same
+  `collectResolved`, then compared against the 8.12.2 floor · exit 0 ·
+  `resolved: peer@1.4.0, undici@8.10.2, undici-types@8.9.0`, `violation: true`.
+  The suite carries the same comparison as a case, so the pin cannot pass by
+  accident on the real tree alone.
+- **E12** — 2026-11-16, the regression surface behind the override — the two
+  packages that import the peer toolchain at runtime, which the gate's steps do
+  not cover: `bun run test` in `packages/pi-agentic-workflow` · exit 0 ·
+  **899 pass / 0 fail across 80 files**; `bun run test` in
+  `packages/pi-nan-agentic-workflow` · exit 0 · **36 pass / 0 fail across 5
+  files**. The override moves `undici` under a `src/` that resolves the peer at
+  runtime, so this is the run that could have regressed.
+- **E10** — 2026-11-16, `node scripts/docs-generate.mjs --check` · exit 0 ·
+  `Files: 3 checked · 0 missing · 0 stale · 0 orphaned`, `Roadmap: unchanged`,
+  `verdict: PASS`.
+- **E11** — 2026-11-16, `node scripts/roadmap-settle.mjs` · exit 0 · `213 unit
+  docs checked`, `0 fix docs skipped`, `violations: 0`.
+- **P1** — 2026-11-16, the unit doc frozen with its ledgers, its six criteria,
+  its `ac-hash` and its six tasks · `1bb68475`.
+- **P2** — 2026-11-16, the red corpus landed alone and observed red (E1) ·
+  `56451e61`.
+- **P3** — 2026-11-16, the root `overrides` entry and the lock resolution it
+  produced (E2, E4, E7) · `c8e40871`.
+- **P4** — 2026-11-16, the differential recorded (E3 vs E4: the count line and
+  the eight `undici` rows, identical stderr, exit 0 both sides) and the runtime
+  regression run (E12).
+- **P5** — 2026-11-16, the `## Fixes` row, the projection through the emitter
+  and the journal fragment (E10, E11) · `d7baaee6`.
+- **G1** — 2026-11-16, `bun scripts/local-gate.mjs --no-bail` at HEAD
+  `d7baaee6` · exit 0 · **`local-gate: PASS — 19 step(s)` in 617s**, none
+  skipped:
+  `workspace-install` (4s), `root-suite` (227s), `crate-suite-bun`,
+  `crate-suite-node` (102s), `schema-node-compat`, `pi-node-compat`,
+  `pi-compat-guard` (37s), `worktree-guard` and the four offline document
+  steps. Run with fail-fast off on purpose: one red step (see G2) was the whole
+  worktree set's state, and every other step needed a receipt.
+- **G2** — 2026-11-16, `bun scripts/local-gate.mjs` (the canonical bail mode) at HEAD
+  `d7baaee6` · exit 1 · `local-gate: FAILED at worktree-guard`, finding
+  `.worktrees/feat-563-init-workspace-interview — STALE: branch
+  feat-563-init-workspace-interview is merged into origin/main`. That worktree is
+  a sibling session's live checkout, created and edited outside this unit (its
+  `git log` shows its own commits from the same hour); `scripts/worktree-guard.mjs`
+  is untouched by this branch and the same step passed in G1 minutes earlier
+  when the tree was quiet. Recorded, not excused: `## Known pre-existing issues`
+  owns the full statement.
+- **P6** — 2026-11-16, the gate receipts recorded (G1 green, G2 red on another
+  session's worktree).
 
 ## Next
 
