@@ -13,11 +13,10 @@ description: >
 ---
 
 # Fold Findings
-> **Runner commands** below are `runner <subcommand> [args…]` — the launcher,
-> its order and the pin are owned by
-> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before
-> the first command, then keep it for the whole unit. A launcher or a version
-> spelled anywhere else is the drift this contract removes.
+> **Runner commands** below are `runner <subcommand> [args…]` — the launcher, its
+> order and the pin are owned by
+> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before the
+> first command, then keep it for the whole unit — nowhere else spells either.
 
 Repair persisted fix-now findings. `review-change` and `audit-pr` classify; this
 skill fixes each root cause, never relabeling, deferring, or weakening its check.

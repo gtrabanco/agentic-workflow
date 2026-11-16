@@ -15,11 +15,10 @@ description: >
 ---
 
 # Triage Issue
-> **Runner commands** below are `runner <subcommand> [args…]` — the launcher,
-> its order and the pin are owned by
-> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before
-> the first command, then keep it for the whole unit. A launcher or a version
-> spelled anywhere else is the drift this contract removes.
+> **Runner commands** below are `runner <subcommand> [args…]` — the launcher, its
+> order and the pin are owned by
+> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before the
+> first command, then keep it for the whole unit — nowhere else spells either.
 
 Decide what happens to an issue, grounded in evidence — not vibes. Prevents both
 premature work (acting on a deferred item whose trigger is unmet) and silent rot

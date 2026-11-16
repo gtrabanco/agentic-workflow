@@ -14,11 +14,10 @@ description: >
 ---
 
 # Pre-Execution Review Policy (internal)
-> **Runner commands** below are `runner <subcommand> [args…]` — the launcher,
-> its order and the pin are owned by
-> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before
-> the first command, then keep it for the whole unit. A launcher or a version
-> spelled anywhere else is the drift this contract removes.
+> **Runner commands** below are `runner <subcommand> [args…]` — the launcher, its
+> order and the pin are owned by
+> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before the
+> first command, then keep it for the whole unit — nowhere else spells either.
 
 One owner for the rules that both pre-execution reviewers apply, so a Product
 review and a Plan review cannot drift into two different definitions of
