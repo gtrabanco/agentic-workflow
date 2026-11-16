@@ -16,9 +16,20 @@
  * already in the ledger stays where it is. That is also the one shape this sink
  * accepts — the samples table has to be the file's last section, because a row
  * appended after trailing prose would land outside the table.
+ *
+ * #504 added the second destination (#504 S3): the same sample as one JSON
+ * object per line, for a consumer that streams rather than reads a document. It
+ * is the same append contract — one `O_APPEND` per line, no lock, nothing
+ * rewritten — and the same field order, taken from the schema package's
+ * published list so a line and a ledger row cannot disagree about what a sample
+ * carries.
  */
 
 import fs from "node:fs";
+import path from "node:path";
+
+import { TELEMETRY_SAMPLE_FIELDS } from "@gtrabanco/agentic-workflow-schema";
+
 import type { TelemetrySample, TelemetrySink } from "./session-telemetry.js";
 
 export interface LedgerSinkOptions {
@@ -101,6 +112,43 @@ export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
       }
 
       fs.appendFileSync(ledgerPath, `| ${declared.map((column) => String(values[column])).join(" | ")} |\n`);
+    },
+  };
+}
+
+export interface JsonlSinkOptions {
+  /** The absolute path of the per-session JSONL file this sink appends to. */
+  readonly path: string;
+}
+
+/**
+ * A sink that appends one JSON object per line — the sample itself, in the
+ * published field order (`TELEMETRY_SAMPLE_FIELDS`), with no wrapper and no
+ * prose (#504 S3, S9).
+ *
+ * It refuses a sample that cannot fill every published field, rather than
+ * writing a line a consumer would have to special-case: the fields are the
+ * contract, and a missing one is a producer defect, not an absent value. The
+ * directory is created on demand, so a project needs no `.pi` before its first
+ * session; two sessions appending from separate processes each take their own
+ * `O_APPEND`, which the kernel places atomically.
+ *
+ * No duplicate guard: a sample is emitted once per session by construction
+ * (`flush()` emits once), so a repeated line would be a repeated sample, not a
+ * re-emission to swallow.
+ */
+export function createJsonlSink(options: JsonlSinkOptions): TelemetrySink {
+  const { path: file } = options;
+  return {
+    name: "jsonl",
+    write(sample: TelemetrySample): void {
+      const values = sample as unknown as Record<string, unknown>;
+      const missing = TELEMETRY_SAMPLE_FIELDS.filter((field) => !(field in values));
+      if (missing.length > 0) throw new Error(`the sample carries no value for: ${missing.join(", ")}`);
+      const ordered: Record<string, unknown> = {};
+      for (const field of TELEMETRY_SAMPLE_FIELDS) ordered[field] = values[field];
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.appendFileSync(file, `${JSON.stringify(ordered)}\n`);
     },
   };
 }
