@@ -331,6 +331,23 @@ P1…P8 with stable ids, dependency-topological order first.
   (Implements: S7)
   - Relevant files: docs/features/591-skill-discovery/planning-obligations.md,
     docs/LOGS.md
+- P11 — The correction batch on this unit's 2026-11-16 `EXTERNAL VERIFY` receipt
+  (blockers B1–B5): the candidate screen takes every skill file in the tree
+  wherever it lives and excludes a tree that yields none, unreadable discovery
+  inputs are refusals, the skill-lint reference and skill name the crate engine
+  as the pattern carrier, and E4's receipt command reproduces its reported
+  output (validator: `cd packages/agentic-workflow && bun test
+  test/skills.screen.test.mjs test/skills.discovery.test.mjs
+  test/skills.register.test.mjs test/skills.cli.test.mjs
+  test/cli.surface.test.mjs` exits 0, `bun scripts/skill-lint.mjs` exits 0 and
+  `rg -n 'carries the patterns|patterns live in .scripts/skill-lint'
+  skills/skill-lint/` exits 1 with no match)
+  (Implements: S1)
+  - Relevant files: packages/agentic-workflow/src/skills/screen.mjs,
+    packages/agentic-workflow/src/skills/discovery.mjs,
+    packages/agentic-workflow/src/runner/skills.mjs, skills/skill-lint/SKILL.md,
+    skills/skill-lint/references/CHECKS.md,
+    docs/features/591-skill-discovery/SPEC.md
 
 The link grammar (`task-spec-link@1`): every task bullet names the requirements
 it delivers on its own `(Implements: …)` line, and `phase-lint` refuses a bullet
@@ -396,9 +413,9 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   `diff` empty both ways — zero differing line.
 - **E4** — 2026-11-16, the discovery corpus green · `cd packages/agentic-workflow
   && bun test test/skills.screen.test.mjs test/skills.discovery.test.mjs
-  packages/agentic-workflow/test/skills.register.test.mjs
-  packages/agentic-workflow/test/skills.cli.test.mjs
-  packages/agentic-workflow/test/cli.surface.test.mjs`
+  test/skills.register.test.mjs
+  test/skills.cli.test.mjs
+  test/cli.surface.test.mjs`
   · exit 0 · `42 pass / 0 fail`.
 - **P3** — 2026-11-16, the discovery envelope, the registration ledger, the
   `skills` subcommand and its three documented surfaces · `762026a2`.
@@ -468,6 +485,41 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   `receipt-malformed-head` on this document's two `G` lines (a gate receipt
   without the 40-hex head it ran against) · repaired by citing that head on each
   receipt's own first line, after which the verifier exits 0.
+- **L3** — 2026-11-16, the owner's correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  The `EXTERNAL VERIFY` receipt of the same date named blockers B1–B5; all five
+  triaged fix-worthy. `O2`/`O10`'s stated outcomes did not hold at `a1bacb72`
+  (the red corpus) and were re-verified by E11 before their `verified` status
+  stands at this commit.
+- **E10** — 2026-11-16, the correction corpus RED (B1/B2) · `cd
+  packages/agentic-workflow && bun test test/skills.discovery.test.mjs
+  test/skills.cli.test.mjs` · exit 1 · `22 pass / 5 fail`, every failure one of
+  the receipt's five reproducers (root-layout `SKILL.md`, `.claude/skills`
+  layout, no-skill-file tree, missing and non-JSON `--candidates`) · commit
+  `a1bacb72`, the suite alone.
+- **E11** — 2026-11-16, the fix green · the two red suites `27 pass / 0 fail`,
+  the five-skill corpus `47 pass / 0 fail`, the crate suite `bun run test`
+  exit 0 (`979 pass / 0 fail`), and the base-vs-head differential of
+  `bun scripts/skill-lint.mjs` over dirty, clean and usage fixtures byte-empty
+  with exits 1/0/2 — the shared engine's CLI path unchanged · commit
+  `c21f9246`. The scratch replay of the receipt probes: root and `.claude`
+  layouts `blocked` with `FINDING SL-01 … SKILL.md:<line>` and no install line
+  (exit 1), both bad inputs `SKILLS REFUSAL —` exit 2 with no stack, a hollow
+  tree `reason no-skill-files`.
+- **E12** — 2026-11-16, B5 repaired: E4's command corrected to the five
+  `test/…` path forms (its reported `42 pass / 0 fail` was right, its printed
+  command was not — the two `packages/agentic-workflow/test/…` filters matched
+  nothing from that cwd and dropped two suites). The corrected command ran at
+  head `09821263` before the corpus grew · exit 0 · `42 pass / 0 fail`, and
+  after the fix corpus · exit 0 · `47 pass / 0 fail`.
+- **E13** — 2026-11-16, the sibling-truth repair (B3/B4) and its validators ·
+  `bun scripts/skill-lint.mjs` exit 0 (`103 file(s) · 7 check(s) · 0 finding(s)`),
+  `bun scripts/check-skill-context.mjs` exit 0 (`PASS context budgets: 30
+  skills`), `rg -n 'carries the patterns|patterns live in .scripts/skill-lint'
+  skills/skill-lint/` exit 1 with no match — no shipped surface still names
+  `scripts/skill-lint.mjs` as the pattern home.
 
 ## Next
 
