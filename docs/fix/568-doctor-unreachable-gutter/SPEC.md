@@ -236,6 +236,18 @@ reader — passes on all seven of its checks.
 - **G1** — 2026-11-16, the root gate at head `75940e83`: `bun scripts/local-gate.mjs
   --jobs auto` · exit 0 · `local-gate: PASS — 19 step(s) in 423s` (the root
   suite, the crate and pi suites, the doc projections and the compat legs).
+- **L4** — 2026-11-16 (local-apply), the request, verbatim: `Apply to this
+  repository: triage and fix those that deserve to fix but understand the context
+  before fix and check you haven't broke another different thing, if you have done,
+  start the loop again until you fixed full symbol/related stuff` — the target was
+  ambiguous (four candidate sets), one question asked; this unit's search receipt:
+  `rg -n "Blockers: 0|Verdict: VERIFIED" docs/fix/568-doctor-unreachable-gutter/external-verify.md`
+  → lines 13, 22 · exit 0, and the `## Findings` data-row scan → no match · exit 1 —
+  outcome `empty`: zero matching rows, no correction batch run, receipt only.
+- **D1** — 2026-11-16, owner decision (the answer to ask
+  `53ee44e8-7a7c-475b-ace6-2da676fc59f2`): scope is `fix-568-only` — the repo-wide
+  candidates (22 NEEDS-DECISION receipts, the reopened `folded: no` ledgers,
+  pending #567/#566) are out of scope for this run.
 
 ## Next
 
