@@ -178,3 +178,64 @@ both named here rather than buried: `worktree-guard` flagged
 of its own, so the guard reads it as merged); and one `--no-bail` run reported
 `root-suite` red under load average 10 with one worker, a step that passes
 standalone (`bun scripts/run-root-suite.mjs` exit 0) and in the next gate run.
+
+## Delta verdict — 2026-11-16 · base `d1287c3d` · head `010531a5`
+
+Corrections have landed since the receipt above (`dda35ce3`, `90f49ae5`, the
+owner's integration `9c1a4d56`, `010531a5`) → **delta verdict**: B1 and B2
+re-verified, the delta `71285603..010531a5` reviewed for new findings, then the
+spot check. Read-only: no commit, no push, no branch, no forge mutation, no file
+edit outside this receipt. Every behavioural probe ran in `mktemp -d` scratch
+(`/tmp/xv580-mAYNUa`, removed after the run) with an argv-capturing `bun` stub;
+`--install-hook` was never pointed at this checkout — the live
+`<main>/.git/hooks/pre-push` was only read and compared byte-for-byte against
+`hookBody()` (still identical, so E11 still reproduces). One harness note for
+honesty: a first probe round mispointed `PATH` at an empty stub dir, so those
+scratch runs exec'd the real bun against a scratch dummy script — harmless
+(scratch only), and every quoted probe below was re-run with the stub wired and
+is the observed result. The full 19-step gate was not re-run this delta: its
+recorded `PASS — 19 step(s) in 841s` stands at the integrated head, the delta on
+top of it is docs-only, and the repo's own `test-impact --base 71285603` set plus
+the doc validators all re-ran green here.
+
+```text
+EXTERNAL VERIFY — base: d1287c3d · head: 010531a5
+Blockers: 0 — none in the delta 71285603..010531a5; the receipt's two blockers both re-verify as fixed: B1 `rg -c 'stay dropped\.A checkout' AGENTS.md` → 0 at head (base side 71285603 → 1); B2 every corrected surface reads "several publishable refs" (AGENTS.md:270, scripts/local-gate.mjs:810, SPEC roadmap_summary and corpus line, docs/ROADMAP.md:199) and the probes agree — two publishable refs → gate argv has no `--push-base`; deletion + one publishable → `--push-base <remote sha>`; single publishable → remote tip; single new branch → `--push-base <merge-base>` (the A2 sentence, measured)
+Advisories: 3 — A-d1 .agentic-workflow/journal/20261116T112241Z-fix-580-pre-push-hook-no-publish-narrative-01a1e416-….md:5 decision (2) still says "several refs leave the base unproven" — written at 71285603 before the correction, append-only journal history (the LOGS class), prose record while every binding surface carries the qualifier; A-d2 docs/fix/487-deterministic-secret-scanning/decisions.md:5 and docs/fix/487-deterministic-secret-scanning/planning-evidence.md:11 say "several refs" — present at base a05d6907 (already stale there: the base hook refilled the fabricated merge-base), frozen unit doc of another unit, A1's class; A4 (carried) O3's validator names the removed fix-568 worktree so E6 is receipt-only — mechanism re-proven here in scratch (empty stdin → exit 0, the exact E6 stderr line, gate never ran). A1 and A2 are repaired and re-verified in this delta; A3 is closed (PR #581 now mergeable MERGEABLE / mergeStateStatus CLEAN after integration 9c1a4d56).
+Sibling sweep: list — repo-wide: `stay dropped.A` → only this receipt's and SPEC.md:309's quotes of the finding; `several refs` → the two advisory mentions above plus those same quotes; `gate runs every step` → 0 matches; `--git-common-dir` → 441's frozen record, now carrying its additive `## Superseded record:` section (triage-rescope 20 pass), plus unrelated worktree-guard code and LOGS history; `.git/hooks` path composition survives only inside test fixtures over real scratch repos.
+Completeness: S1→P1,P2,P4 · S2→P2,P4 · S3→P1,P3 · S4→P1,P3 resolved · obligations O1–O7 all verified, every runnable validator re-run green here — test-impact --base 71285603 set: local-gate 59, batch-scheduler 70, dependency-advisory-pass 20, gate-receipt 10, schema gate-receipt 20, git-env 6, release-workflows 26, doctor.checks 21 — plus triage-rescope 20, invocation-drift 13, residue-dimensions 30, pre-execution-quality 1 pass / 1 pre-existing conditional skip, docs-generate --check PASS (3 files · 0 stale · roadmap unchanged), check-skill-context --documents PASS (AGENTS.md 708 of 709); 0 fail anywhere · no open ids
+Spot check: bun test scripts/local-gate.test.mjs → match (59 pass · 0 fail this run; reported 59 pass · 0 fail)
+Verdict: VERIFIED
+```
+
+Probe ledger for this delta (`mktemp -d`, removed after the run): hook stdin legs
+crafted directly against the installed head hook with a stub `bun` capturing
+argv — empty stdin, deletion-only → exit 0, exactly the E6 stderr line, gate
+never ran; single publishable → `--push-base` = that ref's remote sha; single new
+branch → `--push-base` = `git merge-base HEAD refs/remotes/origin/HEAD`; two
+publishable → gate argv without `--push-base`; deletion + one publishable →
+`--push-base` present (why the "publishable" qualifier is the true one).
+Installer legs, all scratch: plain repo install → exit 0; re-run →
+`already installed`; install from a worktree → writes the main repo's shared
+`.git/hooks/pre-push` (S3; base side E8's ENOTDIR stands); non-checkout dir →
+exit 2; foreign hook → exit 2 with S4's verbatim message; head installer over a
+base-installed body → exit 0, replaced without `--force` (O5); base installer
+over the head body → exit 2 with S4's verbatim message (the S4 defect at base).
+
+## Correction triage — 2026-11-16 (`/aw-local-apply` · batch: empty)
+
+Searched the latest `EXTERNAL VERIFY` block (`base d1287c3d · head 010531a5`,
+Verdict VERIFIED): **0 blocker rows** → no correction batch ran; `empty` is the
+done receipt for the blocker set. The 3 advisories were each triaged against the
+context before any fix was considered, and none deserves a correction:
+
+| advisory | verdict | reason |
+|---|---|---|
+| A-d1 journal fragment decision (2) | no fix | writer-owned append-only journal artifact (SPEC L4 "No hand-written byte", aggregates at merge); every binding surface carries "publishable"; SPEC L5 already records the correction |
+| A-d2 `docs/fix/487-…` "several refs" ×2 | no fix | frozen other-unit doc; the PE row is freshness-stamped historical evidence (`read 2026-11-14 at f7e5dbab`), present at base and made *more* true by this unit, not less |
+| A4 O3 validator names a removed worktree | no fix | ledgers freeze at cut except `status`; a validator cell needs a SPEC amendment (owner), the limitation is recorded in L5/L6 and the mechanism was re-proven in scratch |
+
+Recorded out-of-batch (owner's call, not this batch): E13's long-gate push and
+the `GIT_IDENTITY_HARDENING` `--base` recipe — both need their own issue/unit
+(`## Next`). No code or contract text changed by this triage; the only bytes this
+cycle ships are this receipt.
