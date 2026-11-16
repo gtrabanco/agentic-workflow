@@ -54,6 +54,24 @@
    documentation-map rows (charter, criteria catalogue) are
    registered so design/plan provenance searches reach the answers without new
    machinery; `audit-docs`' charter check (16) recomputes the coverage.
+
+   **Materialize the verification answers (unit 557, issue #564).** A charter
+   answer that says a boundary is `prose-only` is an item this write step owes,
+   never a note to carry forward: load
+   [materialization](MATERIALIZATION.md) and run its round here, after the
+   landing and before the closing report. Read the plan first
+   (`runner materialize plan --guide AGENTS.md`), propose one outcome per
+   `pending` boundary, and write the sanctioned ones back with
+   `runner materialize apply --guide AGENTS.md --outcomes <payload>` — the only
+   writer, and it needs an explicit `consent: "yes"` per item: a scaffolded rule
+   lands in the tree and flips the charter answer to `machine: <mechanism>`, a
+   filed forge issue records its reference, and a `no` writes nothing and prints
+   one residual per item. Seed `docs/workflow/FEATURE_MAP.md` from the copy in
+   `template/` with one row per user-facing flow, and read the `Evidence driver`
+   answer the interview landed (a capture criterion records its digest with it,
+   or fails closed with `manual:`). A project with no forge degrades to
+   scaffold-or-decline — never to a failed run — and every refusal is a residual
+   in the closing report.
 5. **Install the generated-surfaces and shared-document merge drivers (fix #507 on the #498 base).** The generated
    projection and the roadmap tables are functions of the tree
    (`scripts/docs-generate.mjs`), and the shared documents the concurrent

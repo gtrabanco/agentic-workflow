@@ -57,6 +57,15 @@ Update the unit doc's **`## Log`** and any project docs:
 - Changelog updated per project conventions
 - Template files updated if the unit changes a template
 - Documentation map updated if new artifacts were created
+- **If the unit adds, changes or removes a user-facing flow,**
+  `docs/workflow/FEATURE_MAP.md` carries the change: its row is updated in the
+  same commit (what exists, how a user reaches it, what demonstrates it —
+  `none — <why>` where nothing does yet), because a flow nobody can name is a
+  flow nobody can verify. The column contract is `materialization@1` in the
+  runner crate's README; the map's seed and the check that reports a stale or
+  templated row (`runner materialize check`, `feature-map-shape`) belong to
+  `init-workspace`'s materialization round. A unit that touches no flow records
+  that it left the map untouched, rather than leaving the duty implicit.
 - Every README that describes a surface this unit changed now describes the
   shipped state — the root `README.md` for workflow-facing changes, the touched
   `packages/<pkg>/README.md` for a package's own surface — and the prose it
@@ -77,6 +86,8 @@ Update the unit doc's **`## Log`** and any project docs:
       nothing
 - [ ] Superseded documentation is deleted in this change, and its replacement
       is named in the `## Log` entry
+- [ ] A user-facing flow this unit added, changed or removed is reflected in
+      `docs/workflow/FEATURE_MAP.md` — or the unit states that it touched none
 - [ ] The generated projection is fresh: `bun scripts/docs-generate.mjs --check`
       exits 0, and no generated file was hand-edited
 - [ ] Changelog/templates follow the project's declared conventions
