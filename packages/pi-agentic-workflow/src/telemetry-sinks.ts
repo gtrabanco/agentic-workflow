@@ -37,8 +37,14 @@ export interface LedgerSinkOptions {
   readonly ledgerPath: string;
 }
 
-/** The contract id the ledger's grammar block opens with. */
-const MARKER = "tier-cost@1";
+/**
+ * The line that declares the ledger's grammar. The sink does not own the
+ * version: it reads whatever `tier-cost@N` block the file carries, validates the
+ * columns it declares against the published sample fields, and writes them in
+ * that order — which is what lets a project still on `@1` keep appending eight
+ * cells while a `@2` project appends sixteen.
+ */
+const MARKER = /^tier-cost@\d+$/;
 
 /** The trimmed cells of one markdown table row. */
 function cellsOf(line: string): string[] {
@@ -67,8 +73,8 @@ export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
       const text = fs.readFileSync(ledgerPath, "utf8");
       const lines = text.split("\n");
 
-      const markerAt = lines.findIndex((line) => line.trim() === MARKER);
-      if (markerAt === -1) throw new Error(`${ledgerPath} carries no ${MARKER} block`);
+      const markerAt = lines.findIndex((line) => MARKER.test(line.trim()));
+      if (markerAt === -1) throw new Error(`${ledgerPath} carries no tier-cost@N block`);
 
       const fenceEnd = lines.findIndex((line, index) => index > markerAt && line.trim().startsWith("```"));
       if (fenceEnd === -1) throw new Error(`${ledgerPath}: the ${MARKER} block is not closed`);
@@ -82,8 +88,11 @@ export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
 
       const values = sample as unknown as Record<string, unknown>;
       // The ledger owns the column list; the sample owns the values. A declared
-      // column the sample cannot fill is a refusal; a sample field the ledger
-      // does not store (the tier, which the reader derives) is not written.
+      // column that is not a published sample field is a grammar the sample
+      // cannot satisfy, and one the sample cannot fill is a producer defect:
+      // both are refusals, never a row written blind.
+      const unpublished = declared.filter((column) => !(TELEMETRY_SAMPLE_FIELDS as readonly string[]).includes(column));
+      if (unpublished.length > 0) throw new Error(`${ledgerPath} declares columns no sample carries: ${unpublished.join(", ")}`);
       const missing = declared.filter((column) => !(column in values));
       if (missing.length > 0) throw new Error(`the sample carries no value for: ${missing.join(", ")}`);
 
