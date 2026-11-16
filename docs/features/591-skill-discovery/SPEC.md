@@ -76,15 +76,16 @@ What the change touches beyond its own files:
 - **The seven checks get one owner.** They live today in
   `scripts/skill-lint.mjs`, which a target project never has: the skills ship as
   prose and the crate is the only code a project installs. The engine moves into
-  the crate (`src/skills/screen.mjs`) and `scripts/skill-lint.mjs` becomes its
-  thin CLI — same argv, same block, same exit codes, because the screen cannot
+  the crate (`packages/agentic-workflow/src/skills/screen.mjs`) and `scripts/skill-lint.mjs`
+  becomes its thin CLI — same argv, same block, same exit codes, because the screen cannot
   have two copies of a rule's meaning.
 - **`scripts/skill-lint.mjs` is a shipped repo contract**: its block is pinned by
   `scripts/skill-lint.test.mjs` and its verdict is quoted by `skill-lint`'s turn
   contract, so the rewire is differentially checked against a base-commit copy.
 - **The runner's surface is shared**: the bin's usage line, the crate README's
   usage line and its Commands rows are one surface
-  (`test/cli.surface.test.mjs`), and `skills/runner-contract/references/RUNNER.md`
+  (`packages/agentic-workflow/test/cli.surface.test.mjs`), and
+  `skills/runner-contract/references/RUNNER.md`
   enumerates the subcommand set.
 - **`skills/init-workspace` is a consumption surface**: its discovery step gains
   the route and its write step 15 gains the registration, so two skills and one
@@ -105,7 +106,7 @@ named consumer (the anti-divergence inventory, so no added surface is an orphan)
 
 | added surface | named consumer |
 |---|---|
-| `packages/agentic-workflow/src/skills/screen.mjs` (the seven checks) | `scripts/skill-lint.mjs`, `src/skills/discovery.mjs` |
+| `packages/agentic-workflow/src/skills/screen.mjs` (the seven checks) | `scripts/skill-lint.mjs`, `packages/agentic-workflow/src/skills/discovery.mjs` |
 | `packages/agentic-workflow/src/skills/discovery.mjs` (`skill-discovery@1`) | `runner skills discover`, the `init-workspace` discovery route |
 | `packages/agentic-workflow/src/skills/register.mjs` (`review-extras@1`) | `runner skills register`, `runner skills inventory`, `product-audit`'s Installed tooling dimension |
 | `SKILL_SCREEN_VERDICTS` / `SKILL_CONSENT_ANSWERS` / `SKILL_EXTRA_STATES` | the drift gate's `normative-surfaces@1` rows |
@@ -287,7 +288,8 @@ P1…P8 with stable ids, dependency-topological order first.
 - P6 — The `skills` subcommand: `discover`, `register`, `inventory`, the exit
   contract, the dispatch table, the bin's usage line and the crate README's
   Commands row (validator: `cd packages/agentic-workflow && bun test
-  test/skills.cli.test.mjs test/cli.surface.test.mjs` exits 0)
+  packages/agentic-workflow/test/skills.cli.test.mjs
+  packages/agentic-workflow/test/cli.surface.test.mjs` exits 0)
   (Implements: S2, S4, S5)
   - Relevant files: packages/agentic-workflow/src/runner/skills.mjs,
     packages/agentic-workflow/src/runner/cli.mjs,
@@ -383,7 +385,8 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   fail / 3 errors`, every error `Cannot find module '../src/skills/*.mjs'`
   (commit `8d1658a8`).
 - **P2** — 2026-11-16, the seven checks moved into the crate
-  (`src/skills/screen.mjs`) and `scripts/skill-lint.mjs` rewired as their thin CLI
+  (`packages/agentic-workflow/src/skills/screen.mjs`) and `scripts/skill-lint.mjs`
+  rewired as their thin CLI
   · `5a5ea5a1`.
 - **E2** — 2026-11-16, the moved engine against its shipped corpus · `bun test
   scripts/skill-lint.test.mjs` · exit 0 · `20 pass / 0 fail`.
@@ -393,7 +396,9 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   `diff` empty both ways — zero differing line.
 - **E4** — 2026-11-16, the discovery corpus green · `cd packages/agentic-workflow
   && bun test test/skills.screen.test.mjs test/skills.discovery.test.mjs
-  test/skills.register.test.mjs test/skills.cli.test.mjs test/cli.surface.test.mjs`
+  packages/agentic-workflow/test/skills.register.test.mjs
+  packages/agentic-workflow/test/skills.cli.test.mjs
+  packages/agentic-workflow/test/cli.surface.test.mjs`
   · exit 0 · `42 pass / 0 fail`.
 - **P3** — 2026-11-16, the discovery envelope, the registration ledger, the
   `skills` subcommand and its three documented surfaces · `762026a2`.
@@ -434,14 +439,22 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   scripts/lint-changeset.mjs .changeset/591-skill-discovery.md` exit 0
   (`ok 591-skill-discovery.md`), `bun scripts/docs-generate.mjs --check` exit 0
   (`verdict: PASS`), `rg -c '#591' docs/research/ATTRIBUTION.md` → `2`.
-- **G1** — 2026-11-16, the offline gate · `bun scripts/local-gate.mjs
-  --skip-network --no-bail --jobs auto` · exit 0 · `PASS — 15 step(s) in 708s`.
-  The four network steps were skipped by the flag; the earlier full run's
+- **G1** — 2026-11-16, the offline gate at HEAD f7fc4227245336321982f0a6b09080e767285c7a ·
+  `bun scripts/local-gate.mjs --skip-network --no-bail --jobs auto` · exit 0 ·
+  `PASS — 15 step(s) in 745s`. The four network steps were skipped by the flag; the earlier full run's
   `dependency-pin-gate` reported the pre-existing upstream drift this document's
-  `## Known pre-existing issues` records.
-- **G2** — 2026-11-16, the document verifier · `bun
-  packages/agentic-workflow/bin/agentic-workflow.mjs verify
-  docs/features/591-skill-discovery/SPEC.md` · exit 0.
+  `## Known pre-existing issues` records. A first run of the same gate went red
+  on `root-suite` with `scripts/red-first.test.mjs`'s shipped-history case timing
+  out at its declared 30 s budget; the walk measures 8.7–9.1 s warm at idle and
+  13.2 s on a clone of the base commit, so that red was the load-marginal class
+  `scripts/test-timeout-allowlist.json` documents, not a content difference — the
+  same gate then passed on the same tree.
+- **G2** — 2026-11-16, the document verifier at HEAD f7fc4227245336321982f0a6b09080e767285c7a ·
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify
+  docs/features/591-skill-discovery/SPEC.md` · exit 2 first, refusing exactly
+  `receipt-malformed-head` on this document's two `G` lines (a gate receipt
+  without the 40-hex head it ran against) · repaired by citing that head on each
+  receipt's own first line, after which the verifier exits 0.
 
 ## Next
 
