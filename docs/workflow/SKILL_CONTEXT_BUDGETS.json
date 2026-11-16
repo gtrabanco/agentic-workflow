@@ -26,7 +26,7 @@
     ],
     "files": {
       "AGENTS.md": {
-        "linesMax": 713,
+        "linesMax": 717,
         "proseLinesMax": 571,
         "estimateMax": 13259,
         "machineBlocks": [
@@ -34,8 +34,9 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 150,
+        "machineLines": 154,
         "sources": {
+          "unit 557 (verification materialization, issue #564)": "unit 557 adds four `normative-surfaces@1` rows — the three schema-export vocabulary rows for the materialization contract (MATERIALIZATION_OUTCOMES, MATERIALIZATION_FINDING_CODES, ARTIFACT_EVIDENCE_KINDS) plus the `materialization-grammar` row binding the `block:materialization@1` field contract the runner crate's README publishes. The machine region moves 150 -> 154 lines and the guide measures 717 lines / 154 machine / 563 prose / 12,800 est with `bun scripts/check-skill-context.mjs --documents`; `linesMax` is re-pinned 713 -> 717 and `machineLines` 150 -> 154 (the exact boundary the tree measures, the fix #571 precedent rather than the manifest's `ceil(measured x 1.10)` arithmetic, which would grant room nobody asked for). `proseLinesMax` (571) and `estimateMax` (13,259) have headroom and are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "merge of feat/563-init-workspace-interview with main (PR #584, issue #563)": "the integration unions both row sets in `normative-surfaces@1` — unit 556's `interview-bank` plus issue #555's `runner-set` and feature 558's three quality rows — so the machine region is 150 lines and the merged guide measures 713 lines / 150 machine / 563 prose / 12,633 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` is re-pinned 710 -> 713 and `machineLines` 146 -> 150 (the exact boundary the merged tree measures); `proseLinesMax` (571) and `estimateMax` (13,259) have headroom and are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "merge of feat/565-quality-sensor with main (PR #583, issue #565 / #555)": "merge of feat/565-quality-sensor with main (PR #583, issue #565 / #555): two open lineages each added `normative-surfaces@1` rows and each re-pinned for its own tree; merged, both row sets stand — issue #555's `runner-set` row plus feature 558's three quality rows — so the machine region is 149 lines (146 + 3), and the merged guide measures 712 lines / 149 machine / 563 prose / 12,605 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 146 -> 149 and `linesMax` 709 -> 712 (the exact boundary the merged guide measures, spending what feature 558's own re-pin had already spent); `proseLinesMax` (571) and `estimateMax` (13,259) have headroom and are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "feature 558 (quality sensor, issue #565)": "feature 558 (quality sensor, issue #565): normative-surfaces@1 gains three rows — `quality-metric-name-vocabulary` and `quality-confidence-vocabulary` binding the schema package's QUALITY_METRIC_NAMES / QUALITY_CONFIDENCES exports, and `quality-metrics-fields` binding the field grammar the runner crate's README publishes (`block:quality-metrics@1`). The machine region moves 145 -> 148 lines and the guide 709 -> 712 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 712 lines / 148 machine / 564 prose / 12,468 est. `machineLines` is re-pinned exactly (the pin is exact, not a ceiling) and `linesMax` 709 -> 712 absorbs exactly the three rows this unit adds — not the manifest's `ceil(measured x 1.10)` arithmetic (784), which would grant room nobody asked for; the fix #571 precedent is the same choice. `proseLinesMax` (571) and `estimateMax` (13,259) have headroom and are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
@@ -80,12 +81,13 @@
       },
       "docs/workflow/GATE_INVENTORY.md": {
         "linesMax": 180,
-        "estimateMax": 6512,
+        "estimateMax": 6699,
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 73,
+        "machineLines": 74,
         "sources": {
+          "unit 557 (verification materialization, issue #564)": "the inventory gains one row, `materialization-check` (carrier `cli`), claiming the four new materialization surfaces on the self-inventory row (`normative-surface-grammar`). The machine region moves 73 -> 74 lines and the file measures 169 lines / 95 prose / 6,699 est with `bun scripts/check-skill-context.mjs --documents`; `machineLines` is re-pinned exactly and `estimateMax` 6,512 -> 6,699 (the exact boundary the new rows measure). `linesMax` (180) and `proseLinesMax` are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "merge of feat/563-init-workspace-interview with main (PR #584, issues #563 / #555 / #565)": "the merged `normative-surface-grammar` surfaces list unions unit 556's `interview-bank` with issue #555's `runner-set` and feature 558's three quality tokens, and the `charter-bank-shape` gate row stands beside main's own; measured on the merged tree with `bun scripts/check-skill-context.mjs --documents`: 168 lines / 95 prose / 6,512 est, so `estimateMax` is re-pinned 6,506 -> 6,512 (the exact boundary the merged tree measures). `linesMax` (180) and `machineLines` (73) are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "unit 556 (engineering interview, layer 3)": "unit 556 adds one gate row, `charter-bank-shape` (carrier `cli`), and claims the new `interview-bank` normative surface on the self-inventory row. The machine region moves 72 -> 73 lines and the file measures 168 lines / 95 prose / 6,489 est with `bun scripts/check-skill-context.mjs --documents`, inside the unchanged ceilings 180 / 6,506, so only `machineLines` is re-pinned. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here.",
         "issue #487 (deterministic secret scanning, 2026-11-14)": "the inventory gains one row, `secret-scan`: the push-range credential scan (private-key blocks, provider token prefixes, high-entropy credential assignments and connection strings, with a narrow allowlist), citing its suite scripts/secret-scan.test.mjs. The machine region moves 70 -> 71 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 166 lines / 95 prose / 6,218 est, inside the unchanged ceilings 180 / 6,506, so only `machineLines` is re-pinned.",
