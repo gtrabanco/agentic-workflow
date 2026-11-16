@@ -72,3 +72,13 @@ verbatim asks, L3):
   `check-skill-context --documents` PASS.
 - Owner delta-verify: re-run the scoped reproducer + the O13–O15 and repaired
   O7 validators, then the merge.
+
+**Concurrent-session note (appended by the batch, recorded not contested):** the
+top verdict block above (`base: 7b18226b · head: e4a61ed1 · Verdict: PASS`) was
+authored by the concurrent integration session in commit `9b3974f6` (16:40 UTC):
+it re-dates the run to 2026-11-17 and condenses the historical NEEDS-DECISION
+text (B1 and A3 lines removed). The system clock and every commit date put each
+run of this receipt on **2026-11-16**; the pristine original survives at
+`git show e4a61ed1:docs/fix/527-readme-evidence-rationale/external-verify.md`.
+The verdict is the verifier's and the owner's to issue — this batch adds
+evidence (the addendum above), never a verdict of its own.
