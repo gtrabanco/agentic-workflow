@@ -36,6 +36,9 @@ const ghStub = (root) => {
       "#!/usr/bin/env bash",
       "# PATH-stub for gh: three list reads, each answering its own fixture JSON.",
       "# $QM_GH_EXIT forces a failure (the fail-closed matrix).",
+      "# $QM_GH_PWD_FILE records the working directory each read ran in, so a",
+      "# test can prove the reads followed --repo instead of the process cwd.",
+      '[ -z "${QM_GH_PWD_FILE:-}" ] || pwd >> "${QM_GH_PWD_FILE}"',
       'case "$*" in',
       '  *"--json number,createdAt,mergedAt,mergeCommit"*) printf \'%s\\n\' "${QM_GH_MERGED:-[]}" ;;',
       '  *"--json number,mergedAt,commits"*) printf \'%s\\n\' "${QM_GH_SAMPLES:-[]}" ;;',
@@ -195,6 +198,24 @@ test("--out is the only write, and it lands the bytes stdout carried", () => {
 // ---------------------------------------------------------------------------
 // Feedback and the machine channel (S9)
 // ---------------------------------------------------------------------------
+
+test("--repo selects every reader: the forge reads run inside the named project", () => {
+  const fx = fixture();
+  try {
+    // The process's working directory is `fx.root`; `--repo` names `fx.root/repo`.
+    // The forge reads must follow `--repo`, or one document mixes two projects.
+    const pwdFile = path.join(fx.root, "gh-pwd.txt");
+    const result = runCli(fx.root, pinned(fx), { ...fx.env, QM_GH_PWD_FILE: pwdFile });
+    assert.equal(result.status, 0, result.stderr);
+    const recorded = readFileSync(pwdFile, "utf8").trim().split("\n").filter(Boolean);
+    assert.equal(recorded.length, 3, "each of the three forge reads recorded a working directory");
+    for (const cwd of recorded) {
+      assert.equal(cwd, fx.repo, "gh must resolve the project from --repo, never from the process's working directory");
+    }
+  } finally {
+    fx.cleanup();
+  }
+});
 
 test("--debug and --profile change nothing on stdout", () => {
   const fx = fixture();
