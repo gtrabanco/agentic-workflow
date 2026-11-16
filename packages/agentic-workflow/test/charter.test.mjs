@@ -245,7 +245,7 @@ test("the shipped guide carries every slot the bank lands in, so no answer has n
   const bank = readBank(read(BANK_REL));
   const slots = new Set(readSlots(read(GUIDE_REL)).map((slot) => slot.key));
   for (const row of bank.rows) {
-    assert.ok(slots.has(row.lands), `${row.id} lands in "${row.lands}", which the template guide does not carry`);
+    assert.ok(slots.has(row["lands-in"]), `${row.id} lands in "${row["lands-in"]}", which the template guide does not carry`);
   }
 });
 
