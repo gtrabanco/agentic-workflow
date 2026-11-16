@@ -435,6 +435,28 @@ substitutes for the lane's plan step, and no repo machinery runs on this surgery
   `worktree-guard` for a sibling session's dirty worktree (G2) — the full gate
   had already run green in the foreground on this tree (G1), and the reason is
   recorded in the PR body.
+- **L3** — 2026-11-16, the external-verify receipt ([`external-verify.md`](external-verify.md),
+  `NEEDS-DECISION`, 2 blockers + 2 advisories) and its single correction batch:
+  AC-S2's base-side count `nine` → `eight` `undici` rows (nine advisories in
+  total, counting `minimatch` — the base scratch run prints 8 rows), the
+  regression row's `19` → `20` pre-existing cases (E8), and the advisory
+  `one appended case` → `two` (E8 names both); the audit-F2 advisory triaged
+  **no-fix** (frozen dated receipt, the next audit's correction). `ac-hash`
+  re-stamped to `f0aed19b…` for the amended section. Disclosures: the edits
+  were staged and pushed to PR #582 by a concurrent session in this checkout as
+  `53b7b154`, whose message ("recompute ac-hash after Next section was added …
+  section contents did not change") misdescribes its own diff — the section
+  contents changed by exactly these three corrections; published history is
+  owner-written, so the true record is this line, never a rewrite. The same
+  session deleted this directory's `external-verify.md` from the working tree
+  (13:20–13:25 window; no commit ever contained it); restored verbatim and
+  committed beside this line. Recheck receipts: corpus green both sides,
+  sibling sweep clean repo-wide, `verify` ok, phase-lint `verdict PASS`
+  (fingerprint unchanged), docs-generate `--check` and roadmap-settle PASS,
+  `local-gate --no-bail` → 18 of 19 steps exit 0 with `worktree-guard` the only
+  red (two other sessions' parked worktrees, `feat-527`/`feat-555`, merged into
+  the advanced `origin/main`; guard script byte-identical to base — the
+  `## Known pre-existing issues` class, G2).
 
 ## Next
 
