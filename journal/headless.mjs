@@ -20,14 +20,17 @@
  *  - **One train, one pin.** The crate version is read from the action's own
  *    tagged tree (`../packages/agentic-workflow/package.json`), never restated
  *    here, so the action and the crate it runs cannot drift.
- *  - **`AGENTIC_WORKFLOW_RUNNER` wins.** The runner contract's documented
- *    override lets this repository's suites (and an operator's checkout) run the
- *    working tree instead of the published package.
+ *  - **The choice is the crate's resolver.** `AGENTIC_WORKFLOW_RUNNER` wins
+ *    (the contract's documented override, which is how this repository's suites
+ *    run the working tree), and otherwise the crate's own resolver answers the
+ *    closed set at the pin its manifest carries — one implementation, shared
+ *    with pi and with `runner resolve` (issue #555).
  *  - **Fail closed, never skip.** No runner, a runner that cannot start, a
  *    runner that exits non-zero, or a receipt that does not parse is a
  *    `JOURNAL REFUSAL` with exit 2 — the job fails, and the fragment is either
  *    complete or absent. A runtime below the crate's own `engines` is never
- *    launched: an old bun falls through to `npx`, an old node refuses by name.
+ *    launched: an old bun falls through to the next candidate, and with none
+ *    eligible the refusal names what it tried.
  *  - **The receipt is the output.** `fragment`, `name` and `status` go to
  *    `$GITHUB_OUTPUT` when the job provides it, so a later step can commit the
  *    file it names.
@@ -37,9 +40,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
-
-const ACTION_DIR = path.dirname(fileURLToPath(import.meta.url));
+import { RunnerResolutionError, resolveRunner } from "../packages/agentic-workflow/src/runner/resolve.mjs";
 
 /** The one refusal shape, so a headless job fails with the same line every time. */
 function refuse(reason) {
@@ -65,100 +66,8 @@ function readContext() {
   return { workflow: env("GITHUB_WORKFLOW"), runId: env("GITHUB_RUN_ID"), actor: env("GITHUB_ACTOR") };
 }
 
-/** The crate's manifest: its version and its engine floors are its own tree's, never restated here. */
-function crateManifest() {
-  const manifest = path.resolve(ACTION_DIR, "..", "packages", "agentic-workflow", "package.json");
-  let parsed;
-  try {
-    parsed = JSON.parse(fs.readFileSync(manifest, "utf8"));
-  } catch (error) {
-    refuse(`cannot read the crate manifest at ${manifest}: ${error.message}`);
-  }
-  if (typeof parsed.version !== "string" || parsed.version === "") {
-    refuse(`the crate manifest at ${manifest} declares no version`);
-  }
-  return parsed;
-}
-
-/**
- * The manifest's `engines.bun` floor as `[major, minor]` (the crate declares
- * `>=X.Y`). A form this reader cannot decide is a refusal, never a guess — the
- * runner must not launch a runtime the manifest would refuse to support.
- */
-function bunFloor(manifest) {
-  const spec = String(manifest.engines?.bun ?? "");
-  const match = /^>=\s*(\d+)\.(\d+)/u.exec(spec);
-  if (match === null) {
-    refuse(
-      `cannot derive the crate's bun engine floor from engines.bun ${JSON.stringify(spec)} — refusing to guess which runtimes are supported`,
-    );
-  }
-  return [Number(match[1]), Number(match[2])];
-}
-
-/** Whether an executable is on PATH — the same resolution a shell would use. */
-function hasCommand(name) {
-  for (const dir of String(process.env.PATH ?? "").split(path.delimiter)) {
-    if (dir === "") continue;
-    try {
-      const candidate = path.join(dir, name);
-      if (fs.statSync(candidate).isFile()) return true;
-    } catch {
-      // A PATH entry that does not hold the command is not an error.
-    }
-  }
-  return false;
-}
-
-/**
- * The runner argv. The override is the documented escape hatch; otherwise bun's
- * `bunx` and npm's `npx` run the crate at the exact version this action ships.
- * Both candidates are gated by the manifest's own `engines`: a `bun` below
- * `engines.bun` is never asked to launch (it falls through to `npx`), the node
- * floor keeps its refusal, and with no eligible runner the action refuses
- * instead of installing or silently skipping.
- */
-function resolveRunner() {
-  const override = env("AGENTIC_WORKFLOW_RUNNER");
-  if (override !== "") {
-    const argv = override.split(/\s+/u).filter(Boolean);
-    if (argv.length === 0) refuse("AGENTIC_WORKFLOW_RUNNER is set but names no command");
-    return { argv, source: "AGENTIC_WORKFLOW_RUNNER" };
-  }
-  const manifest = crateManifest();
-  const version = manifest.version;
-  const floor = bunFloor(manifest);
-  let bunReport = "";
-  if (hasCommand("bun")) {
-    const probe = spawnSync("bun", ["--version"], { encoding: "utf8", timeout: 15_000 });
-    bunReport = probe.error === undefined && probe.status === 0 ? String(probe.stdout).trim() : "";
-    const found = /^(\d+)\.(\d+)/u.exec(bunReport);
-    const eligible =
-      found !== null &&
-      (Number(found[1]) > floor[0] || (Number(found[1]) === floor[0] && Number(found[2]) >= floor[1]));
-    if (eligible) {
-      return { argv: ["bunx", `@gtrabanco/agentic-workflow@${version}`], source: "bunx" };
-    }
-  }
-  if (hasCommand("node")) {
-    const major = Number(String(process.versions.node).split(".")[0]);
-    if (Number.isFinite(major) && major < 24) {
-      refuse(
-        `node ${process.versions.node} is older than the crate's engine (>=24) — set up node 24 before this step, or set AGENTIC_WORKFLOW_RUNNER`,
-      );
-    }
-    return { argv: ["npx", "--yes", `@gtrabanco/agentic-workflow@${version}`], source: "npx" };
-  }
-  refuse(
-    `no runner resolved: set AGENTIC_WORKFLOW_RUNNER, or put bun (bunx) or node >= 24 (npx) on the job's PATH${
-      bunReport === "" ? "" : ` — bun ${bunReport} is below the crate's engine floor >=${floor[0]}.${floor[1]}`
-    }`,
-  );
-}
-
 const context = readContext();
 const root = path.resolve(env("INPUT_ROOT") || ".");
-const runner = resolveRunner();
 
 const cli = [
   "journal",
@@ -184,7 +93,19 @@ for (const [variable, flag] of [
   if (value !== "") cli.push(flag, value);
 }
 
-const run = spawnSync(runner.argv[0], [...runner.argv.slice(1), ...cli], {
+// One implementation, shared with pi and with `runner resolve` (issue #555):
+// the crate's resolver reads the crate's own manifest for the pin and the
+// engine floors, honours the documented override, and refuses naming every
+// candidate it tried instead of installing or silently skipping.
+let runner;
+try {
+  runner = resolveRunner({ args: cli });
+} catch (error) {
+  if (error instanceof RunnerResolutionError) refuse(error.message);
+  throw error;
+}
+
+const run = spawnSync(runner.argv[0], runner.argv.slice(1), {
   cwd: root,
   encoding: "utf8",
   env: process.env,
