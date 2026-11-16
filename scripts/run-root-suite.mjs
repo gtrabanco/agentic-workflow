@@ -62,7 +62,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import { scrubGitLocator } from "./git-env.mjs";
+import { scrubGitEnv } from "./git-env.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -375,17 +375,27 @@ export function testBudgetFor(file, allowlist) {
 // The per-test budget defaults to 10s (issue #493 S4); scripts/test-timeout-allowlist.json
 // carries the suites that measured above it, with the reason and the cost.
 const isBun = process.execPath.includes("bun");
-const childEnv = scrubGitLocator({
-  ...process.env,
-  GIT_CONFIG_COUNT: String(Number(process.env.GIT_CONFIG_COUNT ?? 0) + 1),
-  [`GIT_CONFIG_KEY_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "commit.gpgsign",
-  [`GIT_CONFIG_VALUE_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "false",
-  // A suite never inherits its parent's test-runner context: with
-  // NODE_TEST_CONTEXT set, `node --test <file>` skips the file entirely and
-  // exits 0 — a silent pass for every suite (observed when the gate itself is
-  // exercised from inside a node test run; issue #493).
-  NODE_TEST_CONTEXT: undefined,
-});
+
+/**
+ * The environment a suite is spawned with: the caller's repository locators and
+ * ambient git tracing stripped (`scripts/git-env.mjs` owns both vocabularies),
+ * the gate's own `commit.gpgsign=false` layer added, and the parent's
+ * test-runner context dropped (issue #493: with `NODE_TEST_CONTEXT` set,
+ * `node --test <file>` skips the file entirely and exits 0). Published so its
+ * contract is pinnable, mirroring the gate's `stepEnv`.
+ * @returns {Record<string, string | undefined>}
+ */
+export function suiteChildEnv() {
+  return scrubGitEnv({
+    ...process.env,
+    GIT_CONFIG_COUNT: String(Number(process.env.GIT_CONFIG_COUNT ?? 0) + 1),
+    [`GIT_CONFIG_KEY_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "commit.gpgsign",
+    [`GIT_CONFIG_VALUE_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "false",
+    NODE_TEST_CONTEXT: undefined,
+  });
+}
+
+const childEnv = suiteChildEnv();
 
 export function argvFor(file, bail, testTimeoutMs, runtime = isBun ? "bun" : "node") {
   const budget = `--${runtime === "bun" ? "" : "test-"}timeout=${testTimeoutMs}`;

@@ -4326,3 +4326,31 @@ export type {
   GateReceiptVerdict,
   GateRunReceipt,
 } from "./gate-receipt.js";
+
+// ── The project-quality sensor's document (feature 558, issue #565) ─────────
+// DORA's four keys plus the reversion ratio as one fixed envelope: six metric
+// rows, three confidence labels, closed per-metric components. Read-only
+// measurements — the definitions live in the runner crate's README, and the
+// grammar block there (`quality-metrics@1`) is the field inventory.
+export {
+  QUALITY_CONFIDENCES,
+  QUALITY_METRICS_CONTRACT_ID,
+  QUALITY_METRICS_LIMITS,
+  QUALITY_METRICS_SCHEMA,
+  QUALITY_METRICS_VERSION,
+  QUALITY_METRIC_COMPONENTS,
+  QUALITY_METRIC_NAMES,
+  QUALITY_METRIC_UNITS,
+  QUALITY_METRIC_UNITS_BY_NAME,
+  validateQualityMetrics,
+} from "./quality-metrics.js";
+export type {
+  QualityConfidence,
+  QualityMetricComponents,
+  QualityMetricName,
+  QualityMetricRow,
+  QualityMetricsDocument,
+  QualityMetricsValidationResult,
+  QualityMetricsWindow,
+  QualityMetricUnit,
+} from "./quality-metrics.js";
