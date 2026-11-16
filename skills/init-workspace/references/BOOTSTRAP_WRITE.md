@@ -28,12 +28,30 @@
    `review-passes: <surfaces|none>`, `publish-gate`, `test-policy`), undeclared
    pieces keeping the catalog default; a full-ceremony adopter may omit the
    block entirely. Never invent piece names — the closed vocabulary is the
-   profile contract's. The verification-criteria answers fill
+   profile contract's. **Layer 3 lands through the deterministic writer** (unit
+   556): assemble one payload from the interview —
+   `{ "date": "<YYYY-MM-DD>", "answers": {…}, "defaults": {…} }` — and run
+   `runner charter land --guide AGENTS.md --answers <payload>`.
+   A slot the project already filled is reported `kept`
+   and left byte-identical (a team convention always wins); a placeholder with
+   an answer is `written`; a placeholder covered only by a bank default becomes
+   `assumed <YYYY-MM-DD> — <default>`; a slot nobody answered and no default
+   covers stays `unanswered` and joins the residuals — never an invented value.
+   The boundary answer is written into `Architectural boundaries` in the
+   machine-checked shape (`<boundary> → machine: <mechanism>` or
+   `<boundary> → prose-only`), which is the location the materialization step
+   reads. Run
+   `runner charter check --guide AGENTS.md --bank <the shipped bank>` first:
+   it proves every question still lands in a
+   slot this guide carries. The verification-criteria answers fill
    `docs/workflow/VERIFICATION_CRITERIA.md` (copied from the template) with one
    provenance value per criterion from the closed set `workflow-generic` /
    `project-declared` / `stamped assumption (dated)` — a row without one is
    written `unresolved — <question>` and listed with the residuals, never
-   guessed. Both documentation-map rows (charter, criteria catalogue) are
+   guessed. Each layer-3 posture answer becomes a criteria row with its own
+   provenance: `project-declared` when the owner stated it, `stamped
+   assumption (<YYYY-MM-DD>)` when the bank's default was left in place. Both
+   documentation-map rows (charter, criteria catalogue) are
    registered so design/plan provenance searches reach the answers without new
    machinery; `audit-docs`' charter check (16) recomputes the coverage.
 5. **Install the generated-surfaces and shared-document merge drivers (fix #507 on the #498 base).** The generated

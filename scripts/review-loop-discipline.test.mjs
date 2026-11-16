@@ -599,7 +599,12 @@ assert.match(templateGuide, /^- \*\*Backward compatibility — /m, "the template
 
 // The raw template is the positive case — every charter slot prints.
 const rawHits = scanGuide(templateGuide);
-assert.equal(rawHits.length, 11, "the raw template prints its 11 charter slots");
+// 21, not the 11 of the two-layer charter: unit 556 added layer 3 (five
+// objectives slots and five engineering-posture slots — the dependency
+// questions land in the domain layer's own slot, so no key is duplicated). The property this case
+// pins is unchanged — every charter slot of the shipped template prints, none is
+// silently skipped — so the count follows the template rather than capping it.
+assert.equal(rawHits.length, 21, "the raw template prints its 21 charter slots");
 assert.ok(rawHits.every((hit) => !hit.includes("Backward compatibility")), "no hit is the non-charter stub");
 
 // A filled charter with the guide's honest residue elsewhere prints nothing.
