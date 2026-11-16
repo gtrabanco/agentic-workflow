@@ -34,6 +34,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ Audit-finding mode (`<audit-id> F<k>`): the audit file carries its `↳ triaged` note, and any opened issue cites `Origin: product audit <id>, finding F<k>`
 ✓ Review-finding mode (`--prioritize-now <unit> F<k>`): every named unresolved finding gets a verdict **and a route** — a `fix-now` row is routed to `/fold-findings` (or an explicit `/execute-phase <unit> P<n>`), never implemented in this turn
 ✓ Batched input? The closing recommendation maps every issue/finding ID to its own next command, joined with ` + `; it never collapses to one generic action
+✓ The issue body carries a `## Surfaces` declaration the batch scheduler can read — written from `--infer-surfaces` output, never hand-typed, never rewritten when one is already there (owner: [ISSUE_PROCESS.md](references/ISSUE_PROCESS.md) step 6)
 ✓ Every verdict's `Criteria:` line carries a **published** provenance token (`TRIAGE_CRITERIA_PROVENANCE`) — never an invented criteria set, never a silent default
 ```
 
@@ -148,7 +149,9 @@ audit findings and fold ledger.
   the tree does not evidence is checked and asked about, never assumed.
 - Don't build deferred work just because asked to "look at" the issue — surface
   that the trigger is unmet and stop.
-- Keep issues, the fix index, and docs in sync with reality.
+- Keep issues, the fix index, and docs in sync with reality — the issue body's
+  `## Surfaces` section included: it is what the batch scheduler routes on, so a
+  stale one plans the wrong lanes and a missing one plans a guess.
 - Otherwise per the project's **Workflow conventions** (docs-language, evidence):
   state exactly what you checked.
 

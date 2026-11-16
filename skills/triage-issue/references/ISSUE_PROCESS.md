@@ -140,6 +140,22 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    becomes an active fix, register it in the fix index; if
    closed, remove any stale index entry. Any **other** GitHub state mutation
    (closing, unrelated labels) still needs confirmation when ambiguous.
+
+   **Declare the surfaces (issue #574).** The batch scheduler routes parallel
+   work on the issue body's `## Surfaces`, and a missing one is planned as a
+   guess:
+   - `bun scripts/batch-scheduler.mjs --infer-surfaces <n>` prints the block to
+     paste (fences inert, `## Where`/`## In scope` honored) or
+     `- surface-unknown`. `--issues-file <cache>` works offline. Never hand-write
+     the lane keys: the six the project resolves are the script's vocabulary.
+   - **No `## Surfaces`** → append the printed block with
+     `gh issue edit <n> --body-file <path>` (write the file first, never an
+     inline `--body`), after the last section, never inside an existing one.
+   - **An existing `## Surfaces`** is the author's: never rewrite or reorder it.
+     A declaration your evidence contradicts is reported, and the owner changes it.
+   - State the outcome in `Action taken`: `surfaces: declared <keys>` ·
+     `surface-unknown` · `already declared`; the write is fully determined by the
+     script's output, so it needs no separate confirmation.
 7. **Return exactly, per issue** (fixed verdict format — batch runs repeat it,
    then add one summary table):
 
@@ -151,7 +167,7 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    Evidence: <paths, counts, line refs, output>
    Criteria: <workflow-generic | project-declared | stamped-assumption> — <the criterion, or "none — no project catalogue declared">
    VERDICT: fix-now | fix-in-unit | promote | postpone | wontfix | one-shot | remove
-   Action taken: <fix-index entry + route | dated comment posted + disposition label applied | close proposed + disposition label applied>
+   Action taken: <fix-index entry + route | dated comment posted + disposition label applied | close proposed + disposition label applied> · surfaces: declared <keys> | surface-unknown | already declared | n/a — receipt or finding input
    ```
 
    No member unit matched a `fix-in-unit` candidate for this issue → the

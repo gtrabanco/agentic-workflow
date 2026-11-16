@@ -101,6 +101,14 @@ Whatever the verdict:
 - If it became an active fix → it's in the fix index; if it merged/closed →
   remove the stale index row.
 - Any **other** GitHub state mutation still needs confirmation when ambiguous.
+- **The issue body's `## Surfaces` stays true** — it is what the batch
+  scheduler (`batch-scheduler`) routes parallel work on, so a stale section
+  plans the wrong lanes and a missing one plans a guess. Triage writes it from
+  the emitter, never by hand: `bun scripts/batch-scheduler.mjs --infer-surfaces
+  <n>` prints the block (or `- surface-unknown`), and an existing declaration is
+  never rewritten — a contradiction is reported and the owner changes it. The
+  lane vocabulary is the scheduler's (`skills/batch-scheduler/references/PLAN.md`),
+  and the issue forms ask for it, so a new issue arrives with it filled in.
 
 A periodic `audit-docs` run catches fix-index rows whose issue already closed,
 deferred issues that quietly became actionable, and similar drift.

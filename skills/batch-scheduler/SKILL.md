@@ -35,9 +35,11 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ Every degraded dimension is named in the envelope `degraded[]` and reported
   to the human — a degraded plan is never presented as complete truth
 ✓ Every finding (`cycle`, `orphaned-soft-dep`, `prose-native-mismatch`,
-  `file-overlap`, `stale-claim`) is reported with its issue numbers — findings
-  are never silently dropped, never auto-fixed, and `file-overlap` is never
-  turned into a re-batch by this skill
+  `file-overlap`, `stale-claim`, `blind-spot`) is reported with its issue numbers
+  — findings are never silently dropped, never auto-fixed, and `file-overlap` is
+  never turned into a re-batch by this skill
+✓ A `surface-unknown-issue-<n>` row is *run serially*, never as a free lane;
+  a `blind-spot` names the batch nobody can call safe
 ✓ `worktree` and `command` are REPORTED, never executed — the planner plans,
   it does not launch (no worktree creation, no session spawn, ever)
 ✓ The human-readable summary is printed (unless `--json-only`), then the
@@ -108,14 +110,19 @@ the script emitted.
 ## Guardrails
 
 - **Findings are findings.** `cycle`, `orphaned-soft-dep`,
-  `prose-native-mismatch`, `file-overlap` and `stale-claim` are work-graph
-  defects the audit can feed; report them with numbers and detail, never fix
-  them here (the prose rows belong to triage, per the #442 contract). A target
-  that is open and in flight is a **state**, not a defect: `blocked[]` names it
-  as in flight and no finding is emitted for it.
+  `prose-native-mismatch`, `file-overlap`, `stale-claim` and `blind-spot` are
+  work-graph defects the audit can feed; report them with numbers and detail,
+  never fix them here (the prose rows belong to triage, per the #442 contract).
+  A target that is open and in flight is a **state**, not a defect: `blocked[]`
+  names it as in flight and no finding is emitted for it.
 - **`file-overlap` means run them one at a time.** Two parallel picks that
   rewrite the same file are reported, never re-ordered by this skill: the
   consumer decides to serialize them, and the plan's batches stay as computed.
+- **An unknown surface means serial, not parallel.**
+  `surface-unknown-issue-<n>` marks a row whose body, unit doc and triage all
+  declare nothing: report it, run it beside nothing, hand the declaration to
+  triage; two or more in one batch are the `blind-spot` finding. Never guess a
+  lane to make the plan look complete.
 - **In flight is evidence, never a unit doc.** A merged or parked unit doc is
   not a running lane; `launched[]` names the PR or branch that says otherwise.
   If the forge is unreadable, say so — the branch evidence is what remains.
@@ -143,7 +150,8 @@ the script emitted.
 
 - **A file overlap nobody declared is invisible.** Claims come from the paths
   an issue's body names plus the paths its branch rewrites; a directory token
-  claims nothing. Silence is not proof of no conflict.
+  claims nothing. Silence is not proof of no conflict — hence the
+  `surface-unknown` degradation.
 - **An issue without a branch has no file claims.** It is planned from its
   declared surfaces only.
 - **A soft dep on a target never seen open is an orphan, not a resolution.**
@@ -173,7 +181,7 @@ the script emitted.
   them.
 - `triage-issue` owns the labels and verdicts this sensor reads (`postponed`,
   `backlog`, `human-revision-needed`; `fix-now`/`postponed`/`promoted`/
-  `wontfix` in a body).
+  `wontfix` in a body) **and the `## Surfaces` declaration** it reads for lanes.
 - #295's panel is the planned renderer: it reads this envelope as data.
 - Schema owner: `orchestration-envelope`'s package
   (`agentic-workflow/batch-plan`), validated by the script before printing.
