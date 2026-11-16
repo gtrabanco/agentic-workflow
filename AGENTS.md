@@ -267,8 +267,7 @@ that runs the offline subset, so a push never waits on the registry. That hook
 also spends the push range before running it: it passes the remote tip to the
 gate as `--push-base`, and a `test-impact` verdict of `empty` (no executable
 path changed — prose and assets only) skips the test-bearing steps; a `targeted`
-verdict, a refusal or an absent script runs the full gate, never a silent skip.
-A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook`; the installed hook passes `--jobs auto` (load-sized, overridable with `AGENTIC_WORKFLOW_GATE_JOBS`), so a push never claims the whole box while other sessions work.
+verdict, a refusal or an absent script runs the full gate, never a silent skip. A push that sends no ref update — an up-to-date branch, a dry run — or only deletions publishes nothing, so the hook exits 0 before any range step instead of inventing a merge-base range; several refs, or a ref git cannot prove a base for, leaves the base unproven and the range-bound steps stay dropped.A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook` (which asks git where the hooks live, so it works from a worktree, where `.git` is a file); the installed hook passes `--jobs auto` (load-sized, overridable with `AGENTIC_WORKFLOW_GATE_JOBS`), so a push never claims the whole box while other sessions work.
 The shared-document classes (issue #498) arm the same way and are documented here
 because the arming is the same per-checkout limitation: `.gitattributes` names
 `docs/ROADMAP.md merge=agentic-shared-roadmap`,
