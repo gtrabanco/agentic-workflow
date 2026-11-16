@@ -2,8 +2,9 @@
  * telemetry-sinks.ts — where a session sample goes (issue #383 S3/S4b).
  *
  * The accumulator (`session-telemetry.ts`) measures; a sink delivers. This module
- * ships the one sink this unit needs — the repository's `tier-cost@1` ledger —
- * and the interface it implements is what `#394` plugs its log writer into.
+ * ships the sinks a sample needs — the project's ledger (whichever `tier-cost@N`
+ * grammar its block declares) and, since #504, the per-session JSONL — and the
+ * interface it implements is what `#394` plugs its log writer into.
  *
  * The sink never owns the grammar: it reads the ledger's declared columns and
  * writes the sample in *that* order, refusing when the two disagree in either
@@ -33,7 +34,7 @@ import { TELEMETRY_SAMPLE_FIELDS } from "@gtrabanco/agentic-workflow-schema";
 import type { TelemetrySample, TelemetrySink } from "./session-telemetry.js";
 
 export interface LedgerSinkOptions {
-  /** The absolute path of the `tier-cost@1` ledger this sink appends to. */
+  /** The absolute path of the ledger this sink appends to — any declared `tier-cost@N` grammar. */
   readonly ledgerPath: string;
 }
 
@@ -52,8 +53,8 @@ function cellsOf(line: string): string[] {
 }
 
 /**
- * A sink that appends one row to the `tier-cost@1` ledger, in the order the
- * ledger declares, once per sample.
+ * A sink that appends one row to the project's ledger (any declared `tier-cost@N`
+ * grammar), in the order the ledger declares, once per sample.
  *
  * It throws — rather than writing something plausible — when the ledger carries
  * no grammar block, when the sample and the declared columns disagree, when the
