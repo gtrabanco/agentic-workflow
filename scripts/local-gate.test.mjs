@@ -393,8 +393,10 @@ test("the dist producer and every step that reads or rebuilds dist depend on sch
   // same tree, the suites resolve dist at import time, and pi-compat-guard
   // links the schema package from the folder and reads the very same types
   // (issue #429). Concurrent runs would race on the same bytes — the graph is
-  // what keeps them apart.
-  for (const consumer of ["schema-node-compat", "crate-suite-bun", "crate-suite-node", "root-suite", "pi-compat-guard"]) {
+  // what keeps them apart. journal-carrier-check spawns the crate CLI, whose
+  // workspace import resolves the same dist — observed red: 'does not provide
+  // an export named QUALITY_METRICS_CONTRACT_ID' when it ran beside schema-build.
+  for (const consumer of ["schema-node-compat", "crate-suite-bun", "crate-suite-node", "root-suite", "pi-compat-guard", "journal-carrier-check"]) {
     assert.ok(DEPS[consumer].includes("schema-build"), `${consumer} must wait for schema-build`);
   }
   assert.deepEqual(DEPS["schema-build"], ["workspace-install"], "the build itself waits only for the install");
