@@ -38,10 +38,10 @@ all sensor-specific extensions, including `design_candidates`, live under it.
 The package validates new v2 results strictly; `parseEnvelope()` remains for
 existing legacy consumers.
 
-The envelope has a **deterministic producer**: the read-only sensor script
-`bunx @gtrabanco/agentic-workflow@<pin> workflow-status`. Run it as
-`bunx @gtrabanco/agentic-workflow@<pin> workflow-status [--json-only] [--last-envelope <json|path>] [--compact]`
-(node is the fallback when bun is absent);
+The envelope has a **deterministic producer**: the read-only sensor, invoked as
+`runner workflow-status [--json-only] [--last-envelope <json|path>] [--compact]`
+(the symbolic form, launcher and pin are the
+[runner contract](../../skills/runner-contract/references/RUNNER.md)'s);
 it executes the published `SENSOR_CORE` sequence, self-validates the result, and
 prints one Envelope v2 JSON document on stdout. `--compact` emits the same
 envelope with repository history dropped (proved-merged units out of
@@ -182,7 +182,7 @@ orchestration role (feature 61 P9, PR #251). The conductor is deterministic
 code, not model-held procedure: sensor → decide → invoke, one iteration at a
 time.
 
-Each iteration runs the repo's sensor (`bunx @gtrabanco/agentic-workflow@<pin> workflow-status` via
+Each iteration runs the repo's sensor (`runner workflow-status` via
 `runtimeBin`), validates the Envelope v2 JSON, maps it to a `WorkflowSnapshot`,
 and feeds both to `decideWorkflowAction()`. On an `invoke` verdict the
 conductor sends the printed continuation verbatim — `/skill:<verb> <args>` —

@@ -39,7 +39,8 @@ use the single-file format only.
 The triage step reads the unit's scope from the first-pass SPEC content and
 returns a deterministic ordered list of steps the unit needs.
 
-Invoke `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <NN>` to get:
+Invoke `runner unit-route --triage <NN>` (the symbolic form — the launcher and
+the pin are the [runner contract](../../skills/runner-contract/references/RUNNER.md)'s) to get:
 - **Steps** the unit needs (from the closed catalog)
 - **Skipped** steps and why
 - **Budget** tier (`strong` or `cheap`)
@@ -90,7 +91,7 @@ Each step runs as an atomic gate/commit. If a step's diff exceeds its budget
 
 ### Diff-size guard
 
-`bunx @gtrabanco/agentic-workflow@<pin> diff-guard` measures `git diff --stat` at phase boundaries. If the
+`runner diff-guard` measures `git diff --stat` at phase boundaries. If the
 diff exceeds the phase budget, the unit is flagged for mandatory re-triage.
 
 **Anti-gaming rule (code):** "NEVER shrink a diff by deleting comments, blank
@@ -192,14 +193,14 @@ un-publishing.
 If a phase produces a 200-line diff against a 50-line budget:
 1. The guard detects the overflow at the phase boundary
 2. The unit is expelled from the light path
-3. Mandatory re-triage: `bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage <NN>`
+3. Mandatory re-triage: `runner unit-route --triage <NN>`
 4. The triage may route to a new set of steps or flag for `replan`
 
 ## Worked example
 
 ```
 # New feature unit: docs/features/62-some-feature/SPEC.md (complete, 14 sections)
-bunx @gtrabanco/agentic-workflow@<pin> unit-route --triage 62
+runner unit-route --triage 62
   → Steps: design, implement, tests, evidence, review
   → Skipped: research (not a new domain), plan (not code unit), docs (not docs unit), release (small scope)
   → Budget: strong
