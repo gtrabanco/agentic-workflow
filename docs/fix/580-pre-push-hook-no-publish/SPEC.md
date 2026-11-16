@@ -278,8 +278,9 @@ machinery on the repository's own tooling.
   `bun test scripts/local-gate.test.mjs -t 'journal-carrier-check'` at base
   `a05d6907` · exit 1 · `Cannot find package 'mdast-util-from-markdown'`;
   after `bun install --frozen-lockfile` in the worktree · exit 0.
-- **G1** — 2026-11-16, the root gate at head `2f0c97dd`: `bun scripts/local-gate.mjs --jobs auto`
-  · exit 0 · `local-gate: PASS — 20 step(s) in 509s`.
+- **G1** — 2026-11-16, the root gate at head `c576debf`: `bun scripts/local-gate.mjs --jobs auto`
+  · exit 0 · `local-gate: PASS — 19 step(s) in 408s` (the root suite, the crate and pi
+  suites, the doc projections, the secret scan and the compat legs).
 
 ## Next
 
