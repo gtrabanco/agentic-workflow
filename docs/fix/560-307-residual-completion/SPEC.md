@@ -399,6 +399,7 @@ relay-next: create .pi-web/relays/560-307-residual-completion/ (charter → docs
 - **P6** — 2026-11-16, the measured run (exit 2, `insufficient-corpus`), the row registrations (`rowUpsert 6ca6dfc9 → 41544b39` for row 560; `fixrow 41544b39 → 48e97de7`), the projection re-render (exactly one added row) and the narrative fragment `20261116T005405Z-fix-560-307-residual-completion-narrative-local.md` (1,762 bytes) · `d1aceb23`.
 - **P7** — 2026-11-16, the verification sweep: the base-vs-head differential (E14/E15) and the offline root gate 15/15 (G5) · `d1aceb23`.
 - **E19** — 2026-11-16, the PR and the settle: PR [#577](https://github.com/gtrabanco/agentic-workflow/pull/577) opened against `main` with `Closes #560`; features row 560 settled to `done · [#577] · carried by fix #560` (`rowUpsert 48e97de7 → 8b66fc7e`) and the `## Fixes` row to `done · [#577]` (`fixrow 8b66fc7e → a54f5414`), both through the crate's writers; the projection re-rendered by the emitter.
+- **E20** — 2026-11-16, the integration and the mergeable PR: `git merge origin/main` with the shared-doc driver armed (`bun scripts/shared-doc-merge.mjs --install`; `agentic-shared-roadmap`) → merge commit `d4a8287fe3724a3c91e11054d2a3054c0cc0e399`, `docs/ROADMAP.md` resolved to the union of both sides' edits (main's 37 `## Fixes` rows + this unit's `#560` row = 38, nothing lost, verified by key-set comparison); at that head `verify`/`phase-lint`/`promise-coherence`/`roadmap-settle`/`docs-generate --check` all green, `test-impact --base origin/main` → `verdict: empty` (changed 9, executable 0), and `bun scripts/local-gate.mjs --skip-network --jobs 1` → **PASS — 15 step(s) in 507s**; pushed, PR #577 then answered `MERGEABLE / CLEAN`.
 - **G6** — 2026-11-16, HEAD `7b586769331c9da2a72b93c5b6a08b4e08a42d38`, the final-head root gate: `bun scripts/local-gate.mjs --skip-network --jobs 1` · exit 0 · **`local-gate: PASS — 15 step(s) in 713s`** (`root-suite` green inside it). A concurrent `--jobs auto` run (2 workers) failed at `scripts/next-step-ranking.test.mjs`'s 10 s per-test budget under shared-machine load; the suite passed standalone at this head (**29 pass · 0 fail**, 22.2 s) and at base, so the red was a pre-existing load flake (Known pre-existing issues), not this change.
 
 ## Next
@@ -406,10 +407,10 @@ relay-next: create .pi-web/relays/560-307-residual-completion/ (charter → docs
 The owner is the external verifier (§8): review PR
 [#577](https://github.com/gtrabanco/agentic-workflow/pull/577), the obligations
 ledger state (15/15 `verified`) and the verification block in the handoff. The
-PR carries `Closes #560`; the measured acceptance stays `insufficient-corpus`
-until the sink records ≥3 units per tier, and the pre-sink half is permanently
-out (D4). `main` moved 6 commits after the fork, so the integration (and any
-`## Fixes` insert collision in `docs/ROADMAP.md`) is the owner's step.
+PR carries `Closes #560` and is mergeable/clean after integrating `origin/main`
+(E20); the merge itself is the owner's step. The measured acceptance stays
+`insufficient-corpus` until the sink records ≥3 units per tier, and the pre-sink
+half is permanently out (D4).
 
 ## References
 
