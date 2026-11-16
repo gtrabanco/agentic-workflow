@@ -137,7 +137,7 @@ const unitFixture = ({ driver = true, digest = true, driverCommand = "bun run ca
           "| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |",
           "|---|---|---|---|---|",
           `| AC-1 | \`bun test\` | exit 0 | ok | agent |`,
-          `| AC-2 | ${digest ? `\`${driverCommand}\`` : "`bun test`"} | ${digest ? "digest: sha256:9f2c" : "exit 0"} | captured | agent |`,
+          `| AC-2 | ${digest ? `\`${driverCommand}\`` : "`bun test`"} | ${digest ? "digest: sha256:9f2c0a6b" : "exit 0"} | captured | agent |`,
           "",
         ].join("\n")
       : [
@@ -147,7 +147,7 @@ const unitFixture = ({ driver = true, digest = true, driverCommand = "bun run ca
           "|---|---|",
           `- **E1** — 2026-11-17, \`bun test\` · exit 0 · ok`,
           digest
-            ? `- **E2** — 2026-11-17, AC-2 \`${driverCommand}\` · digest: sha256:9f2c · captured`
+            ? `- **E2** — 2026-11-17, AC-2 \`${driverCommand}\` · digest: sha256:9f2c0a6b · captured`
             : "- **E2** — 2026-11-17, AC-2 · exit 0 · nothing captured",
           "",
         ].join("\n");
@@ -192,7 +192,7 @@ test("the boundary entries are read from the charter slot, both legal shapes", (
 test("an entry outside the charter's two shapes is reported as malformed, never guessed", () => {
   const { malformed } = readBoundaryEntries(guideFixture({ boundaries: "`api → probably fine`" }));
   assert.equal(malformed.length, 1);
-  assert.match(malformed[0].detail, /names no enforcement/);
+  assert.match(malformed[0].detail, /neither/);
 });
 
 test("a placeholder boundary slot declares nothing yet — it is not a malformed entry", () => {
@@ -292,7 +292,7 @@ test("a scaffold recorded while the charter still answers prose-only stays pendi
 
 test("an unanswered interview leaves one residual naming the round, not a boundary row", () => {
   const plan = planMaterialization({
-    guideText: guideFixture({ boundaries: "`<boundary> → prose-only`" }),
+    guideText: guideFixture({ boundaries: "`<boundary> → machine: <mechanism>` · `<boundary> → prose-only`" }),
     recordText: null,
     featureMapText: null,
   });
@@ -603,7 +603,7 @@ test("the CLI prints the plan receipt and exits 0 even when items are pending", 
     writeFileSync(path.join(root, "AGENTS.md"), guideFixture({ boundaries: "`web → prose-only`" }));
     const result = run("materialize", "plan", "--guide", "AGENTS.md", "--root", root);
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /^MATERIALIZE PLAN — AGENTS\.md · 2 item\(s\) · pending 2/m);
+    assert.match(result.stdout, /^MATERIALIZE PLAN — AGENTS\.md · 3 item\(s\) · pending 2/m);
     assert.match(result.stdout, /^residual: boundary web — /m);
     assert.match(result.stdout, /^verdict: PENDING$/m);
   } finally {

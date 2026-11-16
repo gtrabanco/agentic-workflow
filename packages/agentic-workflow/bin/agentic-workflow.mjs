@@ -613,7 +613,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -775,6 +775,19 @@ switch (command) {
     // deterministic half: where an answer lands (`state`/`land`) and whether a
     // question earned its place (`check`). `land` is the only writer.
     process.exit(runCharter(restArgs));
+    break;
+  }
+
+  // ── materialize — declared boundaries become project-local enforcement (unit 557) ──
+  case "materialize": {
+    // The interview records the team's answer; this service turns a `prose-only`
+    // boundary into a recorded outcome and refuses to let one stay prose. `apply`
+    // is the only writer, and it needs an explicit consent. Loaded on demand: a
+    // command's module cost is paid by the command that runs, never by every
+    // invocation of the bin (the sensor commands start in the tens of
+    // milliseconds and their budgets are measured).
+    const { run: runMaterialize } = await import("../src/materialize/materialize.mjs");
+    process.exit(runMaterialize(restArgs));
     break;
   }
 
