@@ -123,6 +123,20 @@ test("--from and --to bound the observed day inclusively", () => {
   assert.equal(json(["--ledger", ledger, "--from", "2026-11-11", "--to", "2026-11-13"]).samples, 0, "a window with no sample is zero rows, not a refusal");
 });
 
+test("--from/--to refuse a shape-valid day that does not exist — a malformed date is a refusal, never an empty table (O14)", () => {
+  const { ledger } = project();
+  for (const bound of ["--from", "--to"]) {
+    for (const value of ["2026-11-31", "2026-02-30", "2026-02-29", "2026-13-99", "2026-00-10"]) {
+      const refused = spawnSync(process.execPath, [CLI, "--ledger", ledger, bound, value], { encoding: "utf8" });
+      assert.equal(refused.status, 1, `${bound} ${value} is no day that exists and must be refused, got exit ${refused.status}`);
+      assert.equal(JSON.parse(refused.stdout).error, "bad-date");
+      assert.match(refused.stderr, new RegExp(`${bound} needs`), "the bound is named on stderr");
+    }
+  }
+  // 2028 is a leap year: that leap day exists and answers a report with exit 0.
+  assert.equal(json(["--ledger", ledger, "--from", "2028-02-29", "--to", "2028-03-01"]).samples, 0, "an existing bound day stays a valid window");
+});
+
 test("--by phase groups the samples and sums what they carried", () => {
   const { ledger } = project();
   const report = json(["--ledger", ledger, "--by", "phase"]);

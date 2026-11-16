@@ -168,3 +168,13 @@ test("the package README carries the invariant an author reads before adding a c
   assert.match(readme, /Delete command → remove telemetry/);
   assert.match(readme, /Rename command → update telemetry/);
 });
+
+test("the surfaces that describe the ledger name its current grammar (external-verify 2026-11-16 B3/B4)", () => {
+  // The F51/F53 class: the grammar moved to `tier-cost@2` and a sibling comment
+  // or prose row still asserting `tier-cost@1` as the current truth lies to the
+  // next reader — a surviving mention is the defect, not the grammar bump.
+  const sinks = read("packages/pi-agentic-workflow/src/telemetry-sinks.ts");
+  assert.doesNotMatch(sinks, /tier-cost@1/, "the sink's own docs never name a superseded grammar");
+  const mapRow = read("docs/workflow/README.md").split("\n").find((line) => line.includes("[TIER_COST.md]")) ?? "";
+  assert.match(mapRow, /tier-cost@2/, "the docs-map row describes TIER_COST.md by the grammar its block declares");
+});
