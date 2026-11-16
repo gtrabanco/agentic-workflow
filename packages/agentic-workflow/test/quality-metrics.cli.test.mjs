@@ -214,6 +214,22 @@ test("--debug and --profile change nothing on stdout", () => {
   }
 });
 
+test("a plain run announces itself on stderr and reports its duration, stdout stays the document", () => {
+  const fx = fixture();
+  try {
+    const result = runCli(fx.root, pinned(fx), fx.env);
+    assert.equal(result.status, 0, result.stderr);
+    // The collection blocks the event loop in bounded subprocesses, so the
+    // channel's own timer could never fire: the stage flushes the start line
+    // before the first read and the closing line carries the duration.
+    assert.match(result.stderr, /feedback: start agentic-workflow quality-metrics/u);
+    assert.match(result.stderr, /feedback: done agentic-workflow quality-metrics · \d+\/6 metrics usable/u);
+    assert.equal(JSON.parse(result.stdout).schema, "quality-metrics@1");
+  } finally {
+    fx.cleanup();
+  }
+});
+
 // ---------------------------------------------------------------------------
 // The window (S6)
 // ---------------------------------------------------------------------------

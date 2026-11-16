@@ -593,7 +593,7 @@ function escapedDefects(corpus) {
     confidence: "measured",
     value: corpus.open_rows,
     unit,
-    detail: `${corpus.open_rows} open findings row${corpus.open_rows === 1 ? "" : "s"} across ${corpus.unit_docs} unit document${corpus.unit_docs === 1 ? "" : "s"} in the findings corpus; the corpus carries no per-row timestamp, so the window does not apply to this slot`,
+    detail: `${corpus.open_rows} open findings row${corpus.open_rows === 1 ? "" : "s"} across ${corpus.unit_docs} unit document${corpus.unit_docs === 1 ? "" : "s"} — the corpus as the fold queue reads it: a migrated unit's \`## Findings\` table plus a legacy ledger's unticked rows, so on a mature project this counts ledger debt beside live escapes, and the corpus carries no per-row timestamp for the window to apply to`,
     components: { open_findings: corpus.open_rows, unit_docs: corpus.unit_docs },
   });
 }
@@ -747,9 +747,12 @@ function refuse(reason) {
  * there is nothing to await and the bin's `process.exitCode` is final.
  *
  * @param {string[]} argv
+ * @param {{ feedback?: object }} [context] — the bin's feedback channel, when the
+ *   CLI was invoked through it. The collection stages through it so a run that
+ *   spends seconds in bounded subprocesses announces itself before it blocks.
  * @returns {number}
  */
-export function run(argv = process.argv.slice(2)) {
+export function run(argv = process.argv.slice(2), { feedback = null } = {}) {
   const parsed = parseArgs(argv);
   if (parsed.help) {
     process.stdout.write(`${USAGE}\n`);
@@ -768,11 +771,15 @@ export function run(argv = process.argv.slice(2)) {
 
   let document;
   try {
-    document = collectQualityMetrics({
-      repo: repo === null ? process.cwd() : path.resolve(repo),
-      windowDays,
-      until: until ?? new Date().toISOString(),
-    });
+    const collect = () =>
+      collectQualityMetrics({
+        repo: repo === null ? process.cwd() : path.resolve(repo),
+        windowDays,
+        until: until ?? new Date().toISOString(),
+      });
+    // The reads block the loop, so a channel that waited for its own timer would
+    // stay silent for the whole run: the stage flushes the start line first.
+    document = feedback === null ? collect() : feedback.stage("collect", collect);
   } catch (error) {
     if (error instanceof QualityMetricsError) return refuse(error.message);
     process.stderr.write(`quality-metrics failed: ${error?.message ?? error}\n`);
@@ -787,6 +794,11 @@ export function run(argv = process.argv.slice(2)) {
       process.stderr.write(`quality-metrics failed to write ${out}: ${error?.message ?? error}\n`);
       return FATAL_EXIT_CODE;
     }
+  }
+  if (feedback !== null) {
+    const totals = Object.values(document.metrics);
+    const unavailable = totals.filter((row) => row.confidence === "unavailable").length;
+    feedback.done(`${totals.length - unavailable}/${totals.length} metrics usable · ${document.degraded.length} degraded`);
   }
   process.stdout.write(text);
   return 0;
