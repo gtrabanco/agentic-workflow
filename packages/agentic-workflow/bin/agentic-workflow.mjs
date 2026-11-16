@@ -1741,7 +1741,7 @@ switch (command) {
     // share one bin without one growing switch. A name outside both tables is
     // still the closed-world refusal below — never a shell fallback.
     if (isRunnerCommand(command)) {
-      const runnerCode = runRunnerCommand(command, restArgs);
+      const runnerCode = runRunnerCommand(command, restArgs, { feedback });
       if (typeof runnerCode === "number") process.exitCode = runnerCode;
       else if (runnerCode && typeof runnerCode.then === "function") {
         runnerCode.then((code) => {
