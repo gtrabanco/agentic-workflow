@@ -20,7 +20,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { runnerBin } from "../runner-bin.js";
+import { installedCandidate, runnerLaunch } from "../runner-bin.js";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
@@ -35,15 +35,22 @@ export const WORKFLOW_TOOLS_NAMESPACE = {
   name: "agentic-workflow",
   description:
     "Deterministic workflow sensors and gates, run through the pinned " +
-    "@gtrabanco/agentic-workflow runner (one subcommand each). Results arrive as structured data; red gates as errors with data.",
+    "@gtrabanco/agentic-workflow runner (one subcommand each), plus the generic " +
+    "runner door for every other subcommand. Results arrive as structured data; " +
+    "red gates as errors with data.",
   instructions:
     "Each tool spawns the pinned package's runner bin (agentic-workflow " +
     "<subcommand>) with the session's cwd as the project root — the pin " +
     "decides the behaviour, never the project's checkout; audit-pr-gate " +
-    "still runs the project's own scripts/audit-pr-gate.mjs. Successful runs resolve to the tool's output schema; gate failures " +
-    "(breach, BLOCKED, stale receipt, BLOCKED verdict) reject or carry " +
-    "isError with the structured result attached. The tools are deferred: " +
-    "find them with tool_search or call them by name from a codemode script.",
+    "still runs the project's own scripts/audit-pr-gate.mjs. A skill's " +
+    "`runner <subcommand> [args…]` citation runs through `agentic_workflow_run`, " +
+    "which composes the command itself (installed bin first, the crate's closed " +
+    "runner set only when that dependency is missing) and returns the " +
+    "subcommand's own stdout, stderr and exit code. Successful runs resolve to " +
+    "the tool's output schema; gate failures (breach, BLOCKED, stale receipt, " +
+    "BLOCKED verdict, non-zero subcommand exit) reject or carry isError with the " +
+    "structured result attached. The tools are deferred: find them with " +
+    "tool_search or call them by name from a codemode script.",
 } as const;
 
 /** What one tool run returns to the adapter. */
@@ -80,18 +87,20 @@ export interface WorkflowToolsDeps {
   /** The conductor's sensor seam, injectable for tests. */
   runSensor?: (cwd: string, bin: "bun" | "node") => Promise<SensorResult>;
   /**
-   * The spawn seam for the gate tools: runs `<bin> <script> <args...>` in cwd,
-   * where a runner tool's `script` is the crate bin and its `args` open with the subcommand
-   * and reports exit code and captured streams. Injectable for tests.
+   * The spawn seam for the gate tools: runs one composed command in cwd and
+   * reports its exit code and captured streams. Injectable for tests.
    */
   spawnScript?: SpawnScript;
 }
 
+/**
+ * One spawn the tools composed: the program and its argv exactly as the
+ * resolver answered, never a path this module guessed.
+ */
 export interface SpawnRequest {
   cwd: string;
-  bin: "bun" | "node";
-  script: string;
-  args: string[];
+  program: string;
+  argv: string[];
 }
 
 export interface SpawnOutcome {
@@ -155,7 +164,7 @@ export function readPublishedEnvelopeSchema(): Record<string, unknown> {
 /** Default spawn seam: the real child process, bounded like the sensor. */
 function spawnScript(request: SpawnRequest): Promise<SpawnOutcome> {
   return new Promise((resolve) => {
-    const child = spawn(request.bin, [request.script, ...request.args], {
+    const child = spawn(request.program, request.argv, {
       cwd: request.cwd,
       stdio: ["ignore", "pipe", "pipe"],
       timeout: SPAWN_TIMEOUT_MS,
@@ -220,13 +229,25 @@ function gateDegraded(
   return run(textOf(record), record, true);
 }
 
+/**
+ * Compose one runner spawn through the shared resolver (issue #555): the crate
+ * bin this package resolves under the runtime that launched pi, and the crate's
+ * closed runner set only when that dependency is missing. `bin` is that runtime.
+ */
+async function launchRequest(cwd: string, args: string[], bin: "bun" | "node"): Promise<SpawnRequest> {
+  const launch = await runnerLaunch(args, { installed: installedCandidate(bin) });
+  // The resolver answers a full argv (its `argv[0]` is what a caller spawns);
+  // a spawn request carries the program beside the arguments it receives.
+  return { cwd, program: launch.argv[0], argv: launch.argv.slice(1) };
+}
+
 /** Shared gate-tool body: spawn the script, parse its report with the tool's
  * own parser, and map the exit code onto ok / isError-with-data / degraded. */
 async function runGateTool(
   spec: {
     name: string;
     parse: (stdout: string) => Record<string, unknown> | null;
-    spawn: (bin: "bun" | "node", params: Record<string, unknown>, cwd: string) => SpawnRequest;
+    spawn: (bin: "bun" | "node", params: Record<string, unknown>, cwd: string) => Promise<SpawnRequest>;
   },
   deps: { spawnScript?: SpawnScript; bin?: () => "bun" | "node" },
   params: Record<string, unknown>,
@@ -236,7 +257,7 @@ async function runGateTool(
   const bin = (deps.bin ?? runtimeBin)();
   let outcome: SpawnOutcome;
   try {
-    outcome = await doSpawn(spec.spawn(bin, params, cwd));
+    outcome = await doSpawn(await spec.spawn(bin, params, cwd));
   } catch (error) {
     const record = degraded(spec.name, "gate-unavailable", error instanceof Error ? error.message : String(error));
     return run(textOf(record), record, true);
@@ -487,7 +508,7 @@ function diffGuardSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
         {
           name: "agentic_workflow_diff_guard",
           parse: parseJsonObject,
-          spawn: (bin, p) => {
+          spawn: async (bin, p) => {
             const args = ["--base", requireString(p, "base"), "--repo", cwd, "--json"];
             const unit = optionalString(p, "unit");
             if (unit !== undefined) args.push("--unit", unit);
@@ -495,7 +516,7 @@ function diffGuardSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
             if (maxLines !== undefined) args.push("--max-lines", String(maxLines));
             const maxFiles = optionalNumber(p, "maxFiles");
             if (maxFiles !== undefined) args.push("--max-files", String(maxFiles));
-            return { cwd, bin, script: runnerBin(), args: ["diff-guard", ...args] };
+            return launchRequest(cwd, ["diff-guard", ...args], bin);
           },
         },
         deps,
@@ -529,12 +550,7 @@ function phaseLintSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
         {
           name: "agentic_workflow_phase_lint",
           parse: parsePhaseLintBlock,
-          spawn: (bin, p) => ({
-            cwd,
-            bin,
-            script: runnerBin(),
-            args: ["phase-lint", requireString(p, "path")],
-          }),
+          spawn: (bin, p) => launchRequest(cwd, ["phase-lint", requireString(p, "path")], bin),
         },
         deps,
         params,
@@ -567,7 +583,7 @@ function auditPrGateSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
         {
           name: "agentic_workflow_audit_pr_gate",
           parse: parseJsonObject,
-          spawn: (bin, p) => {
+          spawn: async (bin, p) => {
             // The spawn cwd *is* the project under work: the script reads git
             // there and `gh` infers the repository from it. Passing that cwd as
             // a forge scope was refused (`gh` wants [HOST/]OWNER/REPO) and turned
@@ -577,7 +593,7 @@ function auditPrGateSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
             if (pr !== undefined) args.push("--pr", pr);
             const head = optionalString(p, "head");
             if (head !== undefined) args.push("--head", head);
-            return { cwd, bin, script: "scripts/audit-pr-gate.mjs", args };
+            return { cwd, program: bin, argv: ["scripts/audit-pr-gate.mjs", ...args] };
           },
         },
         deps,
@@ -618,7 +634,7 @@ function snapshotVerifySpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
         {
           name: "agentic_workflow_snapshot_verify",
           parse: parseJsonObject,
-          spawn: (bin, p) => {
+          spawn: async (bin, p) => {
             const args = [
               "verify",
               "--stage",
@@ -638,7 +654,7 @@ function snapshotVerifySpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
             for (const [flag, value] of pairs) {
               if (value !== undefined) args.push(flag, value);
             }
-            return { cwd, bin, script: runnerBin(), args: ["pre-execution-snapshot", ...args] };
+            return launchRequest(cwd, ["pre-execution-snapshot", ...args], bin);
           },
         },
         deps,
@@ -649,12 +665,82 @@ function snapshotVerifySpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
   };
 }
 
+// ---------------------------------------------------------------------------
+// The runner door (issue #555): any subcommand the skills' symbolic citations name
+// ---------------------------------------------------------------------------
+
+const RUNNER_RUN_RESULT_SCHEMA: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["subcommand", "stdout", "stderr", "exitCode"],
+  properties: {
+    subcommand: { type: "string" },
+    stdout: { type: "string" },
+    stderr: { type: "string" },
+    exitCode: { type: ["integer", "null"], description: "The subcommand's own exit code; null when it never started." },
+  },
+};
+
 /**
- * The five deferred workflow tools, in the issue's phase order: the contract +
- * `workflow-status` tool first, then the red gates. The P3 scripts
- * (`unit-route`, the record writers) are deliberately absent — evaluated
- * against the issue's real-gain bar with no named programmatic consumer
- * (unit 70's SPEC §P3 evaluation).
+ * The generic door. The packaged skills cite `runner <subcommand> [args…]`
+ * (issue #555's symbolic form, owned by `skills/runner-contract/references/
+ * RUNNER.md`); five of those subcommands have a typed tool, and this one runs
+ * every other — the same spawn path, the same resolver, no new authority. Its
+ * text is the command's own output, so the block a skill asks the agent to
+ * paste arrives unparaphrased; a non-zero exit is an error carrying it.
+ */
+function runnerRunSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
+  return {
+    ...TOOL_COMMON,
+    name: "agentic_workflow_run",
+    label: "agentic-workflow runner",
+    description:
+      "Run one runner subcommand (`unit-route`, `needs-input`, `ceremony`, " +
+      "`pre-execution-snapshot`, …) in the project and return its stdout, " +
+      "stderr and exit code. Every `runner <subcommand>` citation in the " +
+      "packaged skills means this tool in a pi session; the package composes " +
+      "the command. A non-zero exit arrives as an error carrying the output.",
+    parameters: {
+      type: "object",
+      required: ["subcommand"],
+      additionalProperties: false,
+      properties: {
+        subcommand: { type: "string", description: "The runner subcommand, without the symbolic `runner` prefix." },
+        args: {
+          type: "array",
+          items: { type: "string" },
+          description: "The subcommand's arguments, forwarded verbatim.",
+        },
+      },
+    },
+    outputSchema: { oneOf: [RUNNER_RUN_RESULT_SCHEMA, degradedSchema("runner-unavailable")] },
+    async execute(params, cwd) {
+      const subcommand = requireString(params, "subcommand");
+      const forwarded = Array.isArray(params.args) ? params.args.filter((arg): arg is string => typeof arg === "string") : [];
+      const doSpawn = deps.spawnScript ?? spawnScript;
+      let outcome: SpawnOutcome;
+      try {
+        outcome = await doSpawn(await launchRequest(cwd, [subcommand, ...forwarded], (deps.bin ?? runtimeBin)()));
+      } catch (error) {
+        const record = degraded("agentic_workflow_run", "runner-unavailable", error instanceof Error ? error.message : String(error));
+        return run(textOf(record), record, true);
+      }
+      if (outcome.spawnError !== undefined) {
+        return gateDegraded("agentic_workflow_run", outcome, "runner-unavailable");
+      }
+      const result = { subcommand, stdout: outcome.stdout, stderr: outcome.stderr, exitCode: outcome.code };
+      const text = [outcome.stdout.trimEnd(), outcome.stderr.trimEnd()].filter((part) => part !== "").join("\n");
+      return run(text === "" ? textOf(result) : text, result, outcome.code !== 0);
+    },
+  };
+}
+
+/**
+ * The deferred workflow tools: the contract + `workflow-status` tool first, then
+ * the red gates. The generic runner door (issue #555) runs the subcommands
+ * without a typed tool, so the skills' symbolic citations stay executable in a
+ * pi session. The P3 scripts evaluated with no named programmatic consumer stay
+ * absent (unit 70's SPEC §P3 evaluation).
  */
 export function createWorkflowTools(deps: WorkflowToolsDeps = {}): WorkflowToolSpec[] {
   return [
@@ -663,6 +749,7 @@ export function createWorkflowTools(deps: WorkflowToolsDeps = {}): WorkflowToolS
     phaseLintSpec(deps),
     auditPrGateSpec(deps),
     snapshotVerifySpec(deps),
+    runnerRunSpec(deps),
   ];
 }
 

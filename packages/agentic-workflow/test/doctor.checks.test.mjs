@@ -27,6 +27,7 @@ import {
 } from "../src/doctor/vocabulary.mjs";
 
 const README = readFileSync(fileURLToPath(new URL("../README.md", import.meta.url)), "utf8");
+const MANIFEST = JSON.parse(readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8"));
 const ROOT = "/project";
 const HOME = "/home/agent";
 const AGENT_DIR = `${HOME}/.pi/agent`;
@@ -203,6 +204,11 @@ test("rg's absence is detected with the pinned bootstrap command (gap 1)", async
   const row = check(envelope, "rg");
   assert.equal(row.status, "missing");
   assert.match(row.advisory, /provision rg/u);
+  assert.equal(
+    row.instruction,
+    `bunx @gtrabanco/agentic-workflow@${MANIFEST.version} provision rg --yes`,
+    "the bootstrap instruction is pinned to the crate's own version (never an unpinned latest)",
+  );
   assert.equal(row.requirement, "optional");
 });
 

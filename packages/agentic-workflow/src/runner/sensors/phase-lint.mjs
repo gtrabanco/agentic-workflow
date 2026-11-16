@@ -7,7 +7,8 @@
  * mechanizes checking them (it never carries a second copy of rule semantics).
  *
  * Usage
- *   agentic-workflow phase-lint <plan.md>      (from a project: bunx @gtrabanco/agentic-workflow@<pin> phase-lint <plan.md>)
+ *   agentic-workflow phase-lint <plan.md>      (from a project: runner phase-lint <plan.md> —
+ *                                                skills/runner-contract/references/RUNNER.md owns launcher and pin)
  *
  * stdout: one fixed, byte-stable text block — a `Phase-lint:` line per phase,
  * one `<rule-id>: <finding>` line per failing rule, a final verdict line, and a

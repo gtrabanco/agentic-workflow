@@ -71,24 +71,24 @@ that class.
 
 ```bash
 # Read (default scope: project; `resolved` merges both scopes and defaults)
-bunx @gtrabanco/agentic-workflow config get logSession
-bunx @gtrabanco/agentic-workflow config get --scope resolved pi.default.model
+runner config get logSession
+runner config get --scope resolved pi.default.model
 
 # Write (validated before the file changes; no coercion)
-bunx @gtrabanco/agentic-workflow config set logSession true
-bunx @gtrabanco/agentic-workflow config set pi.model.default "nan/qwen3-32b" --scope global
+runner config set logSession true
+runner config set pi.model.default "nan/qwen3-32b" --scope global
 
 # Discover every writable node, its type, category and shipped default
-bunx @gtrabanco/agentic-workflow config list
-bunx @gtrabanco/agentic-workflow config list --category pi --json
+runner config list
+runner config list --category pi --json
 
 # Resolved view, validation, reset, initializer, composed schema
-bunx @gtrabanco/agentic-workflow config show
-bunx @gtrabanco/agentic-workflow config validate --scope both
-bunx @gtrabanco/agentic-workflow config validate --sanitize
-bunx @gtrabanco/agentic-workflow config reset logSession.publisher
-bunx @gtrabanco/agentic-workflow config init --scope project
-bunx @gtrabanco/agentic-workflow config schema
+runner config show
+runner config validate --scope both
+runner config validate --sanitize
+runner config reset logSession.publisher
+runner config init --scope project
+runner config schema
 ```
 
 `--project <dir>` points at the project root (default: cwd); `--global-dir <dir>`

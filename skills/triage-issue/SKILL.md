@@ -15,10 +15,10 @@ description: >
 ---
 
 # Triage Issue
-> **Runner commands** below are `bunx @gtrabanco/agentic-workflow@<pin> …` — read `<pin>`
-> from [references/RUNNER.md](../runner-contract/references/RUNNER.md). It is stamped at
-> release and never guessed: a hard-coded version re-opens the per-release sweep the
-> contract removes, and `latest` is not a legal pin.
+> **Runner commands** below are `runner <subcommand> [args…]` — the launcher, its
+> order and the pin are owned by
+> [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before the
+> first command, then keep it for the whole unit — nowhere else spells either.
 
 Decide what happens to an issue, grounded in evidence — not vibes. Prevents both
 premature work (acting on a deferred item whose trigger is unmet) and silent rot
@@ -172,8 +172,8 @@ triage-issue ────┤                    or fold-findings (ledger row)
                  └─ wontfix ─────────▶ propose close
 ```
 
-In review-finding mode, `replan-in-unit` runs `bunx @gtrabanco/agentic-workflow@<pin> unit-route
-<unit>` (npx fallback if bun is not installed): its `route: replan` line prints
+In review-finding mode, `replan-in-unit` runs `runner unit-route
+<unit>`: its `route: replan` line prints
 the planner command — `/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
 for a fix — which re-runs the
 lane's `plan` catalog step and appends new `P<n>` phases to the same unit. The
