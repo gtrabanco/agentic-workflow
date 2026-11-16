@@ -30,17 +30,26 @@ const SAMPLE = {
   source: "pi:session=abc",
 };
 
+/** The `tier-cost@1` row the earlier grammar published. */
+const LEGACY_COLUMNS = ["unit", "changed_paths", "tokens", "turns", "model_ms", "tool_ms", "observed", "source"];
+
+/** The current grammar's row, in its declared order (#504 S4). */
+const CURRENT_COLUMNS = [
+  "unit", "phase", "version", "model", "changed_paths", "tokens", "turns",
+  "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens",
+  "model_ms", "tool_ms", "observed", "source",
+];
+
 /** A ledger shaped exactly like `docs/workflow/TIER_COST.md`, rows included. */
-function ledgerText(rows = []) {
-  const columns = ["unit", "changed_paths", "tokens", "turns", "model_ms", "tool_ms", "observed", "source"];
+function ledgerText(rows = [], { contract = "tier-cost@1", columns = LEGACY_COLUMNS } = {}) {
   const block = columns.map((c) => `${c} | \`x\` | what it holds`).join("\n");
   const header = `| ${columns.join(" | ")} |\n|${columns.map(() => "---").join("|")}|`;
   const body = rows.map((cells) => `\n| ${cells.join(" | ")} |`).join("");
-  return `# Measured acceptance\n\n\`\`\`text\ntier-cost@1\ncolumn | shape | what it holds\n${block}\n\`\`\`\n\n## Reading it\n\nNothing else.\n\n## Samples\n\nOne row per measured session.\n\n${header}${body}\n`;
+  return `# Measured acceptance\n\n\`\`\`text\n${contract}\ncolumn | shape | what it holds\n${block}\n\`\`\`\n\n## Reading it\n\nNothing else.\n\n## Samples\n\nOne row per measured session.\n\n${header}${body}\n`;
 }
 
 /** A throwaway project carrying one unit doc, so a row's tier can be resolved. */
-function project(ledgerRows = []) {
+function project(ledgerRows = [], ledgerOptions = {}) {
   const root = tempRoot("ledger-sink-");
   fs.mkdirSync(path.join(root, "docs/fix/383-measured-acceptance"), { recursive: true });
   fs.writeFileSync(
@@ -49,7 +58,7 @@ function project(ledgerRows = []) {
   );
   fs.mkdirSync(path.join(root, "docs/workflow"), { recursive: true });
   const ledgerPath = path.join(root, "docs/workflow/TIER_COST.md");
-  fs.writeFileSync(ledgerPath, ledgerText(ledgerRows));
+  fs.writeFileSync(ledgerPath, ledgerText(ledgerRows, ledgerOptions));
   return { root, ledgerPath };
 }
 
@@ -213,4 +222,63 @@ test("a ledger whose last line is not a row is refused, never appended to blind"
   const before = fs.readFileSync(ledgerPath, "utf8");
   assert.throws(() => createLedgerSink({ ledgerPath }).write(SAMPLE), /must end with a newline/);
   assert.equal(fs.readFileSync(ledgerPath, "utf8"), before);
+});
+
+// --- the grammar moved to `@2` (#504 S4, S15) -------------------------------
+//
+// The sink never owned the version: it reads the block the ledger declares and
+// writes the columns it declares. These cases pin the other half of "coexists" —
+// a `@2` ledger gets the sixteen cells, and a declared column no sample carries
+// is a refusal rather than a row written blind.
+
+/** A sample in the current grammar: every declared field, populated. */
+const CURRENT_SAMPLE = {
+  unit: "383-measured-acceptance",
+  phase: "execute-phase",
+  version: "4.10.0",
+  model: "glm5.3-flash",
+  changed_paths: 12,
+  tokens: 1_500,
+  turns: 4,
+  input_tokens: 800,
+  output_tokens: 300,
+  cache_read_tokens: 250,
+  cache_write_tokens: 100,
+  reasoning_tokens: 50,
+  model_ms: 9_400,
+  tool_ms: 600,
+  observed: DATE,
+  source: "pi:session=abc",
+};
+
+test("a tier-cost@2 ledger gets the sixteen declared cells, in its own order", () => {
+  const { root, ledgerPath } = project([], { contract: "tier-cost@2", columns: CURRENT_COLUMNS });
+  createLedgerSink({ ledgerPath }).write(CURRENT_SAMPLE);
+
+  const parsed = parseLedger(fs.readFileSync(ledgerPath, "utf8"));
+  assert.equal(parsed.error, undefined, parsed.detail ?? "");
+  assert.equal(parsed.contract, "tier-cost@2");
+  assert.equal(parsed.rows.length, 1);
+  const [row] = parsed.rows;
+  for (const column of CURRENT_COLUMNS) {
+    assert.deepEqual(row[column], CURRENT_SAMPLE[column], `the sink wrote the declared column ${column}`);
+  }
+  assert.equal(readLedger(root, fs.readFileSync(ledgerPath, "utf8")).rows[0].tier, "standard");
+});
+
+test("a tier-cost@1 ledger still gets its eight cells — the grammar is negotiated, not assumed", () => {
+  const { ledgerPath } = project();
+  createLedgerSink({ ledgerPath }).write(CURRENT_SAMPLE);
+  const parsed = parseLedger(fs.readFileSync(ledgerPath, "utf8"));
+  assert.equal(parsed.contract, "tier-cost@1");
+  assert.deepEqual(parsed.columns, LEGACY_COLUMNS);
+  assert.deepEqual(Object.keys(parsed.rows[0]).sort(), [...LEGACY_COLUMNS].sort(), "the row carries exactly what the file declares");
+  assert.equal(parsed.rows[0].tokens, 1_500);
+});
+
+test("a ledger declaring a column no sample carries is refused, never written blind", () => {
+  const { ledgerPath } = project([], { contract: "tier-cost@2", columns: [...CURRENT_COLUMNS, "wall_clock"] });
+  const before = fs.readFileSync(ledgerPath, "utf8");
+  assert.throws(() => createLedgerSink({ ledgerPath }).write(CURRENT_SAMPLE), /wall_clock/);
+  assert.equal(fs.readFileSync(ledgerPath, "utf8"), before, "a refused write leaves the ledger byte-identical");
 });
