@@ -35,10 +35,11 @@
  * its own bound: the worst case is the slowest bound, never the sum of six
  * (4+4+4+4+10+10 = 36 s, which the 30 s ceiling could not fit). The probe never
  * issues an MCP *tool* call — only `initialize` — so running it can never mutate
- * the memory layer. Bounds: 4 s for the HTTP/runner/version calls, 10 s for the
- * two CLI-backed calls, and a 30 s ceiling over the whole probe, which stops any
- * dependency that ignored its own bound. A bound hit fails that check and the
- * verdict becomes `degraded` — never a hang, never a blocked unit (D1).
+ * the memory layer. Bounds: 4 s for the HTTP/runner/version/capability calls,
+ * 10 s for the staleness/session CLI calls, and a 30 s ceiling over the whole
+ * probe, which stops any dependency that ignored its own bound. A bound hit
+ * fails that check and the verdict becomes `degraded` — never a hang, never a
+ * blocked unit (D1).
  *
  * `runProbe` takes its side effects by injection (`fetchImpl`, `runImpl`,
  * `timeoutMs`, `totalTimeoutMs`) — the crate's existing shape

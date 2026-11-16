@@ -163,12 +163,14 @@ created beside it: one change, one carrier.
 
 ## Applicable tests
 
-`n/a — no tests step for this fix`: the change touches no executable path, so
-`bun scripts/test-impact.mjs --base 2907d5f6` answers `verdict: empty` (E12).
-The deterministic gates run instead, and their receipts are in `## Log`: the
-tier-cost, ledger-ownership, normative-drift and roadmap suites, the emitter's
-`--check`, `roadmap-settle`, `phase-lint`, `unit-route`, `promise-coherence`, the
-crate suite pair and the root gate.
+`bun scripts/test-impact.mjs --base 2907d5f6` answers `targeted` — 8 executable
+paths, 18 suites (amended 2026-11-16, external-verify B1: `verdict: empty`
+held only before the owner routed #566/#567 onto this branch; this unit's own
+delta stays prose plus one probe-comment line, E29). The named suites run in the
+root gate, and the deterministic gates run regardless; their receipts are in
+`## Log`: the tier-cost, ledger-ownership, normative-drift and roadmap suites,
+the emitter's `--check`, `roadmap-settle`, `phase-lint`, `unit-route`,
+`promise-coherence`, the crate suite pair and the root gate.
 
 ## Known pre-existing issues
 
@@ -299,9 +301,13 @@ proves it (frozen at cut):
   `bun scripts/tier-cost.mjs read --ledger docs/workflow/TIER_COST.md` reporting
   0 rows.
 - **AC12 (S12)** — receipt-neutrality holds: no new grammar/receipt/ledger class
-  enters and every touched carrier is prose — proved by
-  `git diff --name-only 2907d5f6...HEAD | rg '^(packages|scripts|skills)/'` exiting 1
-  and `bun test scripts/normative-drift.test.mjs` exiting 0.
+  enters; unit-560's own change is prose-only, and the branch's executable paths
+  are exactly the ten surfaces declared by #566, #567 and the merged #571
+  (amended 2026-11-16, external-verify B1 — the original 0-path proof held only
+  before the owner routed #566/#567 onto this branch) — proved by
+  `git diff --name-only 2907d5f6...HEAD | rg '^(packages|scripts|skills)/' | rg -v '^(packages/agentic-workflow/README.md|packages/agentic-workflow/src/memory/probe.mjs|packages/agentic-workflow/test/memory-probe.test.mjs|packages/pi-agentic-workflow/src/extension/index.ts|packages/pi-agentic-workflow/src/guards/shell-path.ts|packages/pi-agentic-workflow/test/shell-write-guard.test.mjs|scripts/run-root-suite.mjs|scripts/run-root-suite.test.mjs|skills/orchestration-envelope/references/TURN_CONTRACT.md|skills/unit-lane/references/MEMORY.md)$'`
+  exiting 1 (no undeclared executable path) and
+  `bun test scripts/normative-drift.test.mjs` exiting 0.
 
 ## Triaged steps
 
@@ -413,6 +419,9 @@ relay-next: create .pi-web/relays/560-307-residual-completion/ (charter → docs
 - **P8** — 2026-11-16, the advisory correction batch: the four date cells rewritten through `rowUpsert`/`fixrow`, 435's two Future rows resolved, the 560 Impact cell settled · `8b9857d6` + `1a1dfa02`.
 - **L4** — 2026-11-16, the owner's correction request on this unit's delta `EXTERNAL VERIFY` receipt (4 blockers B1–B4, 5 advisories A1–A5), verbatim: "Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff" — §0 bound to `external-verify.md`'s latest block (`NEEDS-DECISION`), so the batch is blocker-scope by the owner's order; the triage is D14.
 - **D14** — 2026-11-16, the triage of the receipt's nine findings (authority: L4): **B1 fixed** — the "0 executable paths / prose-only" assertion proved wider than the receipt named it: `## Applicable tests` (SPEC:166-167) and the regression-scope row (SPEC:455) carried the same claim and were caught by this batch's own claim-family sweep; AC12, both prose carriers and O12's cells are rescoped to the branch's ten declared executable paths with an allowlist validator. **B2 fixed** — 566's AC4/O10 "skills diff is MEMORY.md only" scoped to this unit's change plus #567's declared `TURN_CONTRACT.md`, allowlist validator. **B3 fixed** — feature 66's AC8 description gains the promised `Mirror-contract note`, O3's validator re-pinned to `Mirror-contract note` matches 2. **B4 fixed** — the three five-check lines (66:257, 66:272, 538:134) gain dated `Six-check note`s. **A2 fixed** — probe.mjs's bounds sentence names the capability call's 4 s (comment only; no test pins the sentence). **A3 fixed** — 566 AC3's parenthetical states the observed `exits 1 (0 matches …)`. **A1 wontfix here** — a new write indicator (`sed -i`, `dd`) is 567's Future-cost rule (recorded D-row + a red case first; D2's boundary is owner-ruled), never a docs-batch widening. **A4 environment** — the worktree-guard flake and the mid-run ref/head movement are disclosures, no repo byte. **A5 wontfix** — the two dated historical mentions stay history per receipt-1's D13. Batch shape: this unit's own correction history (L3/D13/E21–E26/G7) — existing-row status flips per the correction bounds (O12, O10, O3 reopened in this commit before any fix), no new obligation rows because the batch owns no unit `S#` for their authority column. Evidence: E27–E29, gate G8.
+- **E27** — 2026-11-16, the §2 frozen-failure corpus observed before the first edit: AC12/O12's declared proof `git diff --name-only 2907d5f6...HEAD | rg '^(packages|scripts|skills)/'` · **exit 0 · 10 paths** (both require exit 1); AC4's `git diff --name-only origin/main...HEAD -- skills/` → MEMORY.md + TURN_CONTRACT.md (claimed: MEMORY.md only); `rg -c 'Mirror-contract note' docs/features/66-engram-memory-substrate/SPEC.md` → **1** (B3 needs 2); `rg -c 'Six-check note'` → exit 1 in 66's SPEC and exit 1 in 538's SPEC (B4 needs 2 and 1); `rg -c 'capability call' packages/agentic-workflow/src/memory/probe.mjs` → exit 1, `rg -c 'two CLI-backed'` → 1 (A2); `rg -c 'exits 1, 0 matches in skills' docs/fix/566-…SPEC.md` → exit 1 (A3); the B1 claim-family sweep added by this batch's own loop: `rg -n 'touches no executable|No executable surface changed' docs/fix/560-307-residual-completion/SPEC.md` → SPEC:166-167 and SPEC:455 (same false claim outside the receipt's named lines).
+- **E28** — 2026-11-16, the same corpus green and the §9 flips: AC12's proof command (this doc, `## Acceptance criteria`) · **exit 1** · AC4's allowlist proof (566 SPEC) · **exit 1** · `rg -c 'Mirror-contract note' docs/features/66-engram-memory-substrate/SPEC.md` · **2** · `rg -c 'Six-check note' docs/features/66-engram-memory-substrate/SPEC.md` · **2** and `rg -c 'Six-check note' docs/fix/538-engram-startup-report/SPEC.md` · **1** · `rg -c 'capability call' packages/agentic-workflow/src/memory/probe.mjs` · **1** · `rg -c 'two CLI-backed' packages/agentic-workflow/src/memory/probe.mjs` · exit 1 · `rg -c 'exits 1, 0 matches in skills' docs/fix/566-upstream-corrected-instruction-bugs/SPEC.md` · **1** · claim-family sweep · exit 1 (0 live carriers); O12's amended validator (its ledger cell) · exit 1 with `bun test scripts/normative-drift.test.mjs` · 21 pass/0 fail · O10's amended validator (its ledger cell) · exit 1 (clause-1 empty output re-observed) · O3's re-pinned validator (its ledger cell) · **2** — rows O12 (560), O10/O3 (566) flip `planned → verified` in this batch; `bun scripts/test-impact.mjs --base 2907d5f6` · `verdict: targeted` · `executable: 8` · `suites (18)` — the number the amended `## Applicable tests` now states.
+- **E29** — 2026-11-16, differential and collateral (S3/S4): probe differential — `git diff 084f70cf..HEAD -- packages/agentic-workflow/src/memory/probe.mjs` → comment lines only, no code byte; `bun test packages/agentic-workflow/test/memory-probe.test.mjs` · exit 0 · 25 pass/0 fail at the pre-batch head (receipt run) and at the batch head. The loop fired once and was closed in-batch: the first placement of 66's Six-check note used blank lines inside P1's box → `phase-lint` 66 · exit 1 · `P1 box-8: bullet carries no (validator: …)`; the note went inline and phase-lint re-ran · exit 0 · fingerprint `e0b6fb80…` unchanged (base side by stash-proof at `084f70cf`: phase-lint 66 exit 0). Readers green at the batch head: phase-lint 560/566/567/66/538 · exit 0; verify 560/566/567 · `ok: true`; promise-coherence 560 PASS 7·0, 566 PASS 2·4, 567 PASS 2·4, 538 PASS 7·28; roadmap-settle · PASS 213/0; docs-generate --check · 0 stale; check-skill-context --routes --budgets · PASS 30 skills. Pre-existing, byte-identical at base (`git stash` proof at `084f70cf`, popped in the same run) and at head — reported, never fixed here: verify 66 · REFUSAL 71 violations (legacy obligations-open/progress-entry), verify 538 · REFUSAL 7 violations (head-less G3 receipt + five cited `scripts/…` paths absent at base too), promise-coherence 66 · BLOCKED validator-mismatch (13 checked · 14 skipped) — none of the three is in this batch's declared battery and none carries a byte this batch touched.
 
 ## Next
 
@@ -454,4 +463,4 @@ none — the five dependencies are soft prose relations (issue #560), and the na
 | The roadmap stays consistent for every unit doc (no new `pr-url-unsettled`, no slug mismatch) | `bun scripts/roadmap-settle.mjs` exits 0 (E17) |
 | The docs projection is emitter-owned and current at head | `bun scripts/docs-generate.mjs --check` exits 0 after the re-render (E15) |
 | `docs/LOGS.md` is byte-untouched (aggregator-only) | `git diff 2907d5f6...HEAD -- docs/LOGS.md` prints nothing (E18) |
-| No executable surface changed, so no suite can regress behaviourally | `bun scripts/test-impact.mjs --base 2907d5f6` → `verdict: empty` (E12), plus the root gate (G5) |
+| The branch's executable surfaces are exactly the #566/#567/#571-declared paths (AC12), each carried by its own suite | `bun scripts/test-impact.mjs --base 2907d5f6` → `targeted` with its named suites (E29), plus the root gate (G8) |
