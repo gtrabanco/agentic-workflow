@@ -40,6 +40,11 @@ export type BatchReasonKind = (typeof BATCH_REASON_KINDS)[number];
  * carries a pre-v3 bare-number key) is a work-graph fact the plan reports
  * instead of honoring. Both extend the vocabulary only — no field is added, so
  * the version stays put (the core-closed rule above bumps it for a field).
+ *
+ * `blind-spot` is issue #574's: a batch whose issues declare no surface at all
+ * cannot be shown to be parallel-safe, so the plan names the batch and every
+ * blind issue in it instead of presenting the batch as verified. Same rule as
+ * #509's pair — vocabulary only, version stays at 3.
  */
 export const BATCH_FINDING_CODES = [
   "cycle",
@@ -47,6 +52,7 @@ export const BATCH_FINDING_CODES = [
   "prose-native-mismatch",
   "file-overlap",
   "stale-claim",
+  "blind-spot",
 ] as const;
 export type BatchFindingCode = (typeof BATCH_FINDING_CODES)[number];
 
@@ -77,8 +83,12 @@ export const BATCH_PLAN_FIELDS = [
  * Degradations follow the sensor convention `unavailable-<source>-<cause>`
  * (`unavailable-forge-gh-cli`, `unavailable-roadmap-missing`); the prefix is
  * checked, the cause is free.
+ *
+ * Issue #574 adds the second family: `surface-unknown-issue-<n>` says every
+ * source *was* read and the issue declares no surface. That is a different
+ * fact from an unreadable source, so it never travels as `unavailable-…`.
  */
-const DEGRADED = /^unavailable-[a-z0-9-]+$/u;
+const DEGRADED = /^(?:unavailable-[a-z0-9-]+|surface-unknown-issue-\d+)$/u;
 
 /** A git revision (abbreviated or full) as the plan's source anchor. */
 const REVISION = /^[0-9a-f]{7,40}$/u;
@@ -267,7 +277,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
   else {
     if (value.degraded.length > MAX_ITEMS) errors.push(`degraded exceeds ${MAX_ITEMS} entries`);
     for (const d of value.degraded) {
-      if (typeof d !== "string" || !DEGRADED.test(d)) errors.push("each degraded entry must match unavailable-<source>-<cause>");
+      if (typeof d !== "string" || !DEGRADED.test(d)) errors.push("each degraded entry must match `unavailable-<source>-<cause>` or `surface-unknown-issue-<n>`");
     }
   }
 
