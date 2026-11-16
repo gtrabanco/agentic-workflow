@@ -521,7 +521,11 @@ findings corpus — the unit docs' `## Findings` tables and the legacy
 `review-findings.md` ledgers, read through the fold queue's own parsers — and
 says `unavailable` when a project carries no corpus. The corpus has no
 per-row timestamp, so the window does not apply to it, and the row says that
-too.
+too. Read it as an **upper bound**: a migrated unit's `## Findings` table only
+carries rows nobody folded, but a legacy ledger can still show `folded: no` on
+a unit that merged long ago, so on a mature project the number counts ledger
+debt beside live escapes. The row's `detail` names that reading instead of
+implying a defect count.
 
 ### The degradation codes
 

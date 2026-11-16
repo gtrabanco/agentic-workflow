@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-roadmap_summary: deterministic forge/git quality metrics envelope (DORA + reversion ratio), the talk-mapped point 5 end-to-end
+roadmap_summary: Issue [#565](https://github.com/gtrabanco/agentic-workflow/issues/565) (M): a read-only `agentic-workflow quality-metrics` command — the DORA four keys plus the reversion ratio over a trailing window (default 90 days) as one validated `quality-metrics@1` envelope, every row labelled `measured`/`derived`/`unavailable`, an unreadable forge or a truncated history degrading declared instead of reporting a zero, the definitions owned by the crate README. Unit doc: [features/558-quality-sensor](features/558-quality-sensor/SPEC.md)
 ---
 
 # 558 — quality-sensor
@@ -182,6 +182,14 @@ none — nothing was deferred.
   explodes past GitHub's 500,000-node ceiling at ~100 pull requests (measured:
   `--limit 40` succeeds, `--limit 100` fails). Does not affect this unit: the lead-time
   sample is bounded to 25 pulls and the truncation is declared.
+- `scripts/next-step-ranking.test.mjs` — `Reason codes are from the closed set`
+  spawns `workflow-status` six times and overruns bun's 5 s per-test budget on this
+  machine (`5012ms`, exit 1), and once overran node's 10 s budget under the
+  parallel gate workers. Reproduced on the untouched `main` checkout at `d1287c3d`,
+  so it is pre-existing and environmental (this host's forge reads are slow), not
+  caused by this unit: it passes in the `--no-bail` gate run recorded below.
+  **Does not affect this unit** — the command it exercises is `workflow-status`,
+  which this change does not touch.
 
 ## Tasks
 
@@ -246,6 +254,19 @@ Budget: strong
 
 ## Log
 
+Append-only. `L` is a request or correction, `D` an owner decision, `P` a phase's
+progress, `E` an evidence run, `G` a gate run. A line never edits an earlier one.
+
+```text
+log-kind@1
+kind | token | what the line records
+L | L<n> | the request or a correction, quoting the requester verbatim
+E | E<n> | an evidence run — the command, its exit code and its output
+G | G<n> | a gate run — the command and its exit code
+D | D<n> | an owner decision — the authority and what was decided
+P | P<n> | a phase's progress — what was done and the commit
+```
+
 - L1 — 2026-11-15, the request (GitHub issue #565):
   ```
   NEW FEATURE: quality sensor — deterministic forge/git quality metrics envelope (DORA + reversion ratio), the talk-mapped point 5 end-to-end
@@ -283,10 +304,76 @@ Budget: strong
   pulls as its value and carries `merged` beside it; (c) the lead-time, revert-link
   and latency definitions each name their heuristic and its false-positive/negative
   shape in the crate README (S8's one home).
+- D6 — 2026-11-16, the escaped-defect slot counts the corpus exactly as the fold
+  queue reads it — a migrated unit's `## Findings` rows **and** a legacy ledger's
+  unticked rows — so on this project it reports 279 (27 doc-carrier rows across 7
+  documents plus 252 legacy rows). It is an **upper bound**, not a defect tally:
+  a legacy ledger can still show `folded: no` on a unit that merged long ago. The
+  row's `detail` and the README say so; narrowing it to one carrier was rejected
+  because it would be a second definition of "open" beside the fold queue's own.
+- P1 — 2026-11-16, the unit doc and both planning ledgers are frozen before the
+  first line of code · `36271cc3`.
+- P2 — 2026-11-16, the `quality-metrics@1` contract lands with its red-first suite
+  and its draft-07 projection · `3b7d8dc6`.
+- P3 — 2026-11-16, the collector lands: six rows, three readers, the declared
+  failure states · `63e0aab1`.
+- P4 — 2026-11-16, the command is dispatched and documented in the three places the
+  surface test reads · `da593086`.
+- P5 — 2026-11-16, the metric definitions get their one home in the crate README ·
+  `5416169b`.
+- P6 — 2026-11-16, the three normative surfaces are registered and the guide's
+  machine pin moves · `1988c2ba`.
+- E1 — 2026-11-16, `cd packages/agentic-workflow-schema && bun test test/quality-metrics.test.mjs` · exit 0 · `32 pass 0 fail`.
+- E2 — 2026-11-16, `cd packages/agentic-workflow-schema && bun run test` · exit 0 · `885 pass 0 fail · 49 files`.
+- E3 — 2026-11-16, `cd packages/agentic-workflow && bun test test/quality-metrics.collect.test.mjs` · exit 0 · `35 pass 0 fail`.
+- E4 — 2026-11-16, `cd packages/agentic-workflow && bun test test/quality-metrics.cli.test.mjs` · exit 0 · `14 pass 0 fail`.
+- E5 — 2026-11-16, `cd packages/agentic-workflow && bun run test` · exit 0 · `885 pass 0 fail · 49 files · 251s`.
+- E6 — 2026-11-16, `bun test scripts/normative-drift.test.mjs` · exit 0 · `21 pass 0 fail`.
+- E7 — 2026-11-16, `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS`.
+- E8 — 2026-11-16, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md 712 lines / 148 machine / 564 prose / 12468 est · PASS context documents`.
+- E9 — 2026-11-16, `rg -c '^quality-metrics@1$' packages/agentic-workflow/README.md` · exit 0 · `1`; `cd packages/agentic-workflow && bun test test/cli.surface.test.mjs` · exit 0 · `3 pass 0 fail`.
+- E10 — 2026-11-16, the pilot: `node packages/agentic-workflow/bin/agentic-workflow.mjs quality-metrics --until 2026-11-16T12:00:00.000Z` · exit 0 · 2810-byte document, `sha256 a5fcb2a75c4e2ff6ea0edaa3a60901c5072df06b00ab2ee89555886abf163d61`,
+  `reversion_ratio 0.0007 (3/4360, derived) · change_failure_rate 0 (0/230, derived) ·
+  lead_time_for_change 5.21 h (25 of 230 sampled, derived) · pr_volume 236 opened
+  (230 merged, measured) · review_latency 14.94 h (1 reviewed of 236, measured) ·
+  escaped_defects 279 open rows of 214 unit documents (measured) · degraded []`.
+- E11 — 2026-11-16, the pilot numbers reconciled by hand, each against an
+  independent read: `git log --since=2026-08-18T12:00:00Z --until=… | wc -l` →
+  `4360` commits and `3` reverts by subject, by body and by the union;
+  `gh pr list --state merged --limit 1000` → `230` merged inside the window and
+  none of the three revert targets is any merged pull's merge commit, so
+  `change_failure_rate` is `0/230` with the reason the detail line names (those
+  three went in by direct push or rebase, which the linkage cannot see);
+  `gh pr list --state all --search "created:>=2026-08-18"` → `236` created;
+  `gh pr view 351` → created `2026-11-01T21:14:12Z`, first review
+  `2026-11-02T12:10:42Z` = `14.94 h`, the only reviewed pull in the window; the
+  first-commit sample recomputed independently → `median 5.21 h over 25 samples`;
+  the corpus counted independently → `214 documents`, `27` rows in doc carriers,
+  `252` legacy rows (D6).
+- E12 — 2026-11-16, `bun scripts/lint-changeset.mjs .changeset/565-quality-sensor.md` · exit 0 · `ok 565-quality-sensor.md`.
+- E13 — 2026-11-16, the live-tree guard: every mutating fixture ran under
+  `mkdtemp` (`qm-git-`, `qm-corpus-`, `qm-cli-`, `qm-out-`, `qm-norepo-`), the pilot
+  is the only run against this worktree, and `ls -d /tmp/qm-* 2>/dev/null` matches
+  `0` lines after cleanup.
+- G1 — 2026-11-16, `bun scripts/docs-generate.mjs` · exit 0 · `1 written · 0 deleted ·
+  2 unchanged · Roadmap: updated · verdict: PASS`; then, after the unit doc and the
+  ledgers settled, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked ·
+  0 missing · 0 stale · 0 orphaned · verdict: PASS`.
+- G2 — 2026-11-16, `bun scripts/local-gate.mjs --skip-network --no-bail` · exit 0 ·
+  `local-gate: PASS — 15 step(s) in 789s` (crate-suite-bun 312s, root-suite 214s,
+  crate-suite-node 203s, pi-node-compat 46s, schema-node-compat 12s). Four network
+  steps are skipped by `--skip-network` and are reported as skipped, not passed:
+  `workspace-install`, `pi-compat-guard`, `dependency-pin-gate`,
+  `dependency-advisories`.
+- G3 — 2026-11-16, `node packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/558-quality-sensor/SPEC.md` · exit 0 · `VERIFY PASS` (sections, obligations closure, provenance stamp, receipt marks, log kinds, cited paths, cited gates).
+- G4 — 2026-11-16, `node packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/558-quality-sensor/SPEC.md` · exit 0 · `P1–P8 Phase-lint: PASS (6/6)` and `verdict PASS`.
+- G5 — 2026-11-16, `bun test scripts/pre-execution-quality.test.mjs` · exit 0 · `1 pass 1 skip 0 fail` (the ledger-shape case: both planning ledgers are one contiguous table).
 
 ## Next
 
-P1 — publish the `quality-metrics@1` contract with its red-first suite.
+Hand the diff to the owner. Nothing in this unit is left to open a follow-up for:
+the six rows, the CLI, the definitions, the registration and the pilot all ship
+here. The only open items are the owner's verdict and the PR itself.
 
 ## References
 
