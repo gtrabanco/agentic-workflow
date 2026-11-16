@@ -198,7 +198,7 @@ none
 - [x] P8 — Declare the machine surfaces and re-pin what they spend: the four `normative-surfaces@1` rows, the gate-inventory row, and the two budgeted documents (validator: `bun test scripts/normative-drift.test.mjs` exits 0, `bun scripts/prose-gate-inventory.mjs` exits 0 and `bun scripts/check-skill-context.mjs --documents` exits 0)
   (Implements: S1, S3, S4)
   - Relevant files: AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
-- P9 — Verify the unit: ledgers closed, projection current, unit doc valid, repository gate green (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
+- **P9** — Verify the unit: ledgers closed, projection current, unit doc valid, repository gate green (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10)
   - Relevant files: docs/features/557-verification-materialization/SPEC.md, docs/features/557-verification-materialization/planning-obligations.md, docs/LOGS.md
 
@@ -226,48 +226,49 @@ files, never embedded here.
 
 ## Log
 
-- L1 — 2026-11-15, the request (GitHub issue #564):
+- **L1** — 2026-11-15, the request (GitHub issue #564):
   ```
   NEW FEATURE: init-workspace verification materialization — declared boundaries become project-local enforcement, feature map, evidence-capture driver
   ```
-- L2 — 2026-11-17, the owner's local-workflow request, verbatim:
+- **L2** — 2026-11-16, the owner's local-workflow request, verbatim:
   ```
   Apply to this repository: issue #564
   ```
   (the state resolved the intent as **continue**: the unit was already promoted,
   its hard blocker #563 is closed, and the next incomplete phase was the plan).
-- D2 — 2026-11-17, the local-workflow substitution (`decisions.md` D2): no
+- **D2** — 2026-11-16, the local-workflow substitution (`decisions.md` D2): no
   `review-change`, no `audit-pr`, no fold cycle on this surgery; the frozen
   ledgers are the plan, the deterministic gates run always, and the owner is the
   external verifier of the handed-over diff.
-- D3 — 2026-11-17, the mechanism is the project's, never the workflow's:
+- **D3** — 2026-11-16, the mechanism is the project's, never the workflow's:
   `apply` refuses a `scaffold` without a `mechanism` string, so nothing
   stack-specific ships and no stack is named in the skills.
-- D4 — 2026-11-17, `audit-docs` (not `review-design`, which is UI-scoped) carries
+- **D4** — 2026-11-16, `audit-docs` (not `review-design`, which is UI-scoped) carries
   the unenforced-boundary finding as check 17.
-- D5 — 2026-11-17, two shipped pins follow their source with their property
+- **D5** — 2026-11-16, two shipped pins follow their source with their property
   unchanged: the template's charter-slot count 21 → 22 (the `Evidence driver`
   slot) and the interview bank's row count 16 → 17 with its area totals (VER-03).
-- E1 — 2026-11-17, `bun test packages/agentic-workflow/test/materialize.test.mjs` · exit 1 · `Cannot find module '../src/materialize/materialize.mjs'` — the red commit `67b941d4` carries the suite alone.
-- P1 — 2026-11-17, the service's contract cut red over fixtures only (the live tree was never a mutating target) · `67b941d4`.
-- E2 — 2026-11-17, `bun test packages/agentic-workflow/test/materialize.test.mjs` · exit 0 · `40 pass / 0 fail` (the four operations, the consent gate, the idempotent second apply, the fail-closed evidence check and six CLI cases).
-- P2 — 2026-11-17, the four operations, the CLI dispatch (module loaded on demand), the crate README row and its `materialization@1` contract · `06860bef`.
-- E3 — 2026-11-17, `bun test packages/agentic-workflow-schema/test/materialization.test.mjs` · exit 0 · `4 pass / 0 fail`; `bun test scripts/vocabulary-parity.test.mjs` · exit 0 · `23 pass / 0 fail` (the crate's mirror equals the published consts).
-- P3 — 2026-11-17, the three vocabularies published, the crate mirror pinned, `materialize` added to the pi package's `CRATE_COMMANDS` · `06860bef`.
-- P4 — 2026-11-17, the feature map, the boundary record, the charter slot with its bank row, and the invariants enforcement bullet · `caa586a1`.
-- P5 — 2026-11-17, the materialization round as a reference, the write-step invocation, the discovery inputs and the entrypoint citation · `bee19504`.
-- P6 — 2026-11-17, the artifact-evidence clause in `verification-contract` and the feature map's duty in the lane's docs step · `bee19504`.
-- P7 — 2026-11-17, `audit-docs` check 17 with the report count · `caa586a1` (the skill) and `bee19504`.
-- P8 — 2026-11-17, the four normative rows, the gate-inventory row and the two rebased documents · `2a0cd5bd`.
-- E4 — 2026-11-17, the reader counts each obligation's validator states: `rg -c '^feature-map@1$' template/docs/workflow/FEATURE_MAP.md` = 1 · `rg -c '^boundary-enforcement@1$' template/docs/workflow/BOUNDARY_ENFORCEMENT.md` = 1 · `rg -c '^- \*\*Evidence driver:\*\*' template/AGENTS.md` = 1 · `rg -c '^\| VER-03 \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` = 1 · `rg -c '^- Enforcement: ' template/docs/architecture/ARCHITECTURAL_INVARIANTS.md` = 1 · `rg -c 'runner materialize apply' skills/init-workspace/references/BOOTSTRAP_WRITE.md` = 1 · `rg -c 'MATERIALIZATION.md' skills/init-workspace/SKILL.md` = 2 · `rg -c 'FEATURE_MAP.md' skills/unit-lane/references/DOCS.md` = 2 · `rg -c 'artifact: screenshot' skills/verification-contract/SKILL.md` = 1 · `rg -c '^17\. \*\*Declared-but-unenforced' skills/audit-docs/SKILL.md` = 1.
-- E5 — 2026-11-17, `bun test scripts/normative-drift.test.mjs` · exit 0 · `21 pass / 0 fail` (the four rows resolve in the inventory); `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS` (every new surface is cited by a gate row).
-- E6 — 2026-11-17, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s) in 104 file(s)`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills`; `--documents` · exit 0 · `PASS context documents: 4`; `--routes` · exit 0 · `PASS route budgets: 14 routes`.
-- E7 — 2026-11-17, `bun test scripts/review-loop-discipline.test.mjs` · exit 0 · `PASS` (the audit-docs contract at 17 checks, the 22 charter slots).
-- E8 — 2026-11-17, `bun test --timeout=10000 test/` in `packages/agentic-workflow` · exit 0 · `975 pass / 0 fail` (the crate suite, including the two bank pins this unit moved).
-- G1 — 2026-11-17, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail` · exit 0 · `local-gate: PASS — 15 step(s) in 853s` (root-suite 262s, crate bun 414s / node 130s, schema 15s, pi 31s).
-- G2 — 2026-11-17, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 files checked · 0 stale · roadmap unchanged`.
-- E9 — 2026-11-17, `node packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/557-verification-materialization/SPEC.md` · exit 0 (the closed ledgers, the receipts and the tree citations); `node scripts/promise-coherence.mjs docs/features/557-verification-materialization/SPEC.md` · exit 0 · `verdict PASS`.
-- P9 — 2026-11-17, the unit verified: ledgers closed, projection current, unit doc valid, repository gate green.
+- **E1** — 2026-11-16, `bun test packages/agentic-workflow/test/materialize.test.mjs` · exit 1 · `Cannot find module '../src/materialize/materialize.mjs'` — the red commit `67b941d4` carries the suite alone.
+- **P1** — 2026-11-16, the service's contract cut red over fixtures only (the live tree was never a mutating target) · `67b941d4`.
+- **E2** — 2026-11-16, `bun test packages/agentic-workflow/test/materialize.test.mjs` · exit 0 · `40 pass / 0 fail` (the four operations, the consent gate, the idempotent second apply, the fail-closed evidence check and six CLI cases).
+- **P2** — 2026-11-16, the four operations, the CLI dispatch (module loaded on demand), the crate README row and its `materialization@1` contract · `06860bef`.
+- **E3** — 2026-11-16, `bun test packages/agentic-workflow-schema/test/materialization.test.mjs` · exit 0 · `4 pass / 0 fail`; `bun test scripts/vocabulary-parity.test.mjs` · exit 0 · `23 pass / 0 fail` (the crate's mirror equals the published consts).
+- **P3** — 2026-11-16, the three vocabularies published, the crate mirror pinned, `materialize` added to the pi package's `CRATE_COMMANDS` · `06860bef`.
+- **P4** — 2026-11-16, the feature map, the boundary record, the charter slot with its bank row, and the invariants enforcement bullet · `caa586a1`.
+- **P5** — 2026-11-16, the materialization round as a reference, the write-step invocation, the discovery inputs and the entrypoint citation · `bee19504`.
+- **P6** — 2026-11-16, the artifact-evidence clause in `verification-contract` and the feature map's duty in the lane's docs step · `bee19504`.
+- **P7** — 2026-11-16, `audit-docs` check 17 with the report count · `caa586a1` (the skill) and `bee19504`.
+- **P8** — 2026-11-16, the four normative rows, the gate-inventory row and the two rebased documents · `2a0cd5bd`.
+- **E4** — 2026-11-16, the reader counts each obligation's validator states: `rg -c '^feature-map@1$' template/docs/workflow/FEATURE_MAP.md` = 1 · `rg -c '^boundary-enforcement@1$' template/docs/workflow/BOUNDARY_ENFORCEMENT.md` = 1 · `rg -c '^- \*\*Evidence driver:\*\*' template/AGENTS.md` = 1 · `rg -c '^\| VER-03 \|' skills/init-workspace/references/ENGINEERING_INTERVIEW.md` = 1 · `rg -c '^- Enforcement: ' template/docs/architecture/ARCHITECTURAL_INVARIANTS.md` = 1 · `rg -c 'runner materialize apply' skills/init-workspace/references/BOOTSTRAP_WRITE.md` = 1 · `rg -c 'MATERIALIZATION.md' skills/init-workspace/SKILL.md` = 2 · `rg -c 'FEATURE_MAP.md' skills/unit-lane/references/DOCS.md` = 2 · `rg -c 'artifact: screenshot' skills/verification-contract/SKILL.md` = 1 · `rg -c '^17\. \*\*Declared-but-unenforced' skills/audit-docs/SKILL.md` = 1.
+- **E5** — 2026-11-16, `bun test scripts/normative-drift.test.mjs` · exit 0 · `21 pass / 0 fail` (the four rows resolve in the inventory); `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS` (every new surface is cited by a gate row).
+- **E6** — 2026-11-16, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s) in 104 file(s)`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills`; `--documents` · exit 0 · `PASS context documents: 4`; `--routes` · exit 0 · `PASS route budgets: 14 routes`.
+- **E7** — 2026-11-16, `bun test scripts/review-loop-discipline.test.mjs` · exit 0 · `PASS` (the audit-docs contract at 17 checks, the 22 charter slots).
+- **E8** — 2026-11-16, `bun test --timeout=10000 test/` in `packages/agentic-workflow` · exit 0 · `975 pass / 0 fail` (the crate suite, including the two bank pins this unit moved).
+- **G1** — 2026-11-16, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail` · exit 0 · `local-gate: PASS — 15 step(s) in 853s` (root-suite 262s, crate bun 414s / node 130s, schema 15s, pi 31s) — run over the working tree on top of `67b941d40309c5934a1f04a50fd8d423dcf8e929` (the red commit), where the slices landed. HEAD 67b941d40309c5934a1f04a50fd8d423dcf8e929
+- **E10** — 2026-11-16, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 files checked · 0 missing · 0 stale · 0 orphaned`, `roadmap unchanged`.
+- **G2** — 2026-11-16, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail` · exit 0 · `local-gate: PASS — 15 step(s) in 744s` (root-suite 167s, crate node 186s, schema 23s, pi 48s) — the full gate again at the committed head `7dd4447e68ec71f1f21a233d2f1eae5bf6275f31`, after the unit doc, the ledgers and the journal fragment landed. HEAD 7dd4447e68ec71f1f21a233d2f1eae5bf6275f31
+- **E9** — 2026-11-16, `node packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/557-verification-materialization/SPEC.md` · exit 0 (the closed ledgers, the receipts and the tree citations); `node scripts/promise-coherence.mjs docs/features/557-verification-materialization/SPEC.md` · exit 0 · `verdict PASS`.
+- **P9** — 2026-11-16, the unit verified: ledgers closed, projection current, unit doc valid, repository gate green.
  — valid feature proposal. Hard dependency on 556 (engineering interview) is correct: materialization consumes the interview's enforcement answers. Well-structured with clear consent gates and stack-agnostic design.
 
 ## Next
@@ -278,3 +279,4 @@ Run `/unit-lane 557-verification-materialization` to begin the design phase (aft
 
 - Depends on: #563 (engineering interview, hard)
 - Extends: #435 (charter layers 1-2), mapped talk points 2, 3, 4
+- D6 — 2026-11-16, the L2-P9 block above was first appended dated 2026-11-17, a day ahead of the session's UTC date (2026-11-16) and therefore a future-dated evidence line, which is exactly the receipt-fabrication tell `verify` exists to catch. The dates are corrected in place before any review of this unit and recorded here rather than silently: the commands, the exit codes and the outputs those lines name are the runs of this session. This is the one edit the block takes.

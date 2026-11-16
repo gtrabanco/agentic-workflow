@@ -44,5 +44,5 @@ declaration-only defect is readable today.
 ```text
 residual-promise@1
 surface | consumer | date | owner
-`packages/agentic-workflow/test/materialize.test.mjs` | unit:docs/features/557-verification-materialization | 2026-11-17 | owner
+`packages/agentic-workflow/test/materialize.test.mjs` | unit:docs/features/557-verification-materialization | 2026-11-16 | owner
 ```
