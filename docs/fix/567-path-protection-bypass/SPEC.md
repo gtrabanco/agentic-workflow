@@ -55,7 +55,7 @@ Cut at plan time. Every surface this unit reads or writes, and what changes on i
 | Surface | Why it changes | Its consumers |
 |---|---|---|
 | `packages/pi-agentic-workflow/src/extension/index.ts` (the `tool_call` handler) | S1: the bash branch stops returning before path prevention — a new shell-write guard runs after the git-identity guard and before the seam dispatch; the early-return comment retires with it | every pi session's bash calls; the seam-hooks dispatcher (order preserved: seams still see non-blocked calls) |
-| `packages/pi-agentic-workflow/src/guards/shell-write.ts` (new) | S1: the pure extraction + decision module (`analyzeShellWrite`, `decideShellWrite`) — same injection shape as the git-identity guard | the extension handler; the new sibling suite |
+| `packages/pi-agentic-workflow/src/guards/shell-path.ts` (new) | S1: the pure extraction + decision module (`analyzeShellWrite`, `decideShellWrite`) — same injection shape as the git-identity guard | the extension handler; the new sibling suite |
 | `packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` (new) | S1/S2: the red-first sibling suite, including the end-to-end bypass pin against the shipped handler | the pi package test run (`bun run test`) |
 | `skills/orchestration-envelope/references/TURN_CONTRACT.md` (section "Path-protection checkpoint") | S3: the recorded enforcement decision and its parse boundary are stated beside the `path-protection@1` block | `verification-contract`, orchestration readers, `normative-drift` (block grammar untouched — the statement lives in the section prose, the block fence keeps its reason table) |
 | `docs/ROADMAP.md` `## Fixes` rows #566 and #567 | both rows settle `done · [#577]` through the fixrow writer when the work lands (D1 route; O11) | `roadmap-settle`, `workflow-status` |
@@ -114,7 +114,7 @@ the new guard module and suite after P3 (E5):
 
 ## Known pre-existing issues
 
-- **The pi test run needs `tsc`** — `bun run test` builds first, so the new suite imports `../dist/guards/shell-write.js` exactly as `git-identity-guard.test.mjs` imports its guard; a stale `dist/` is rebuilt by the same command, never hand-patched. `does-not-affect`.
+- **The pi test run needs `tsc`** — `bun run test` builds first, so the new suite imports `../dist/guards/shell-path.js` exactly as `git-identity-guard.test.mjs` imports its guard; a stale `dist/` is rebuilt by the same command, never hand-patched. `does-not-affect`.
 - **`scripts/next-step-ranking.test.mjs` load flake** (fix #560's disclosure) — `does-not-affect`: unrelated suite, serial gate green.
 
 ## Tasks
@@ -125,9 +125,9 @@ the new guard module and suite after P3 (E5):
 - P2 — Red-first part 1: the sibling suite lands alone and is observed failing (the module and the wiring do not exist yet) (validator: `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` exits 1)
   (Implements: S1, S2)
   - Relevant files: packages/pi-agentic-workflow/test/shell-write-guard.test.mjs
-- P3 — Red-first part 2: `guards/shell-write.ts` + the handler wiring land and the full pi run is green (validator: `cd packages/pi-agentic-workflow && bun run test` exits 0)
+- P3 — Red-first part 2: `guards/shell-path.ts` + the handler wiring land and the full pi run is green (validator: `cd packages/pi-agentic-workflow && bun run test` exits 0)
   (Implements: S1, S2)
-  - Relevant files: packages/pi-agentic-workflow/src/guards/shell-write.ts, packages/pi-agentic-workflow/src/extension/index.ts
+  - Relevant files: packages/pi-agentic-workflow/src/guards/shell-path.ts, packages/pi-agentic-workflow/src/extension/index.ts
 - P4 — Contract + currency: the TURN_CONTRACT statement, the changeset (validator: `rg -c 'shell-bound writes' skills/orchestration-envelope/references/TURN_CONTRACT.md` matches 1)
   (Implements: S3, S1)
   - Relevant files: skills/orchestration-envelope/references/TURN_CONTRACT.md, .changeset/
@@ -149,7 +149,7 @@ M-sized unit: the ledger lives in [`planning-obligations.md`](planning-obligatio
 ## Acceptance criteria
 
 - **AC1 (S1)** — the bypass is pinned end-to-end: `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` exits 0 with cases that drive the shipped handler — an out-of-root `echo > …` bash call and an incident-choreography `bun /tmp/…/patch.mjs` write both return `{block: true}`, while the same targets through `edit` are refused identically and in-root/temp writes pass.
-- **AC2 (S2)** — the owner's shape ruling is obeyed: shell-bound writes are evaluated before execution (approval via `ctx.ui.confirm` when `hasUI`, block when headless or declined) — proved by the suite's approval/headless cases and `rg -c 'export function decideShellWrite' packages/pi-agentic-workflow/src/guards/shell-write.ts` matching 1.
+- **AC2 (S2)** — the owner's shape ruling is obeyed: shell-bound writes are evaluated before execution (approval via `ctx.ui.confirm` when `hasUI`, block when headless or declined) — proved by the suite's approval/headless cases and `rg -c 'export function decideShellWrite' packages/pi-agentic-workflow/src/guards/shell-path.ts` matching 1.
 - **AC3 (S3)** — the decision is recorded with its parse boundary — `decisions.md` D2 + the contract statement: `rg -c 'not statically visible' skills/orchestration-envelope/references/TURN_CONTRACT.md` matches 1.
 - **AC4 (S3)** — contract currency: `rg -c 'shell-bound writes' skills/orchestration-envelope/references/TURN_CONTRACT.md` matches 1, and `bun test scripts/normative-drift.test.mjs` exits 0 (the `path-protection@1` block grammar untouched).
 - **AC5 (S1)** — red-first observed: the suite commit lands alone with `bun test …/shell-write-guard.test.mjs` exit 1, then the implementation commit with the full pi run green (both receipts in `## Log`).
@@ -230,8 +230,9 @@ None blocking. Related (soft order only): #346 (guards' reliability precedent �
 Automated written using an AI.
   ```
 - **L2** — 2026-11-16, the owner's rulings, verbatim: "567-shape: #567's own AC1 requires an owner decision on the enforcement shape — which branch do you rule? … Answered: selected a-enforce"; route: "Answered: selected refs-no-reopen" and earlier "Wait don't work on 566 worktree, do it in this branch & pr…" → `fix-here`. Recorded as D1 (route) and D2 (shape).
-- **E1** — 2026-11-16, the §2 RED corpus, observed before any fix: `rg -c 'never reaches the write/edit prevention' packages/pi-agentic-workflow/src/extension/index.ts` · 1 (the structural exemption); `ls packages/pi-agentic-workflow/src/guards/shell-write.ts` · exit 2 (absent); `ls packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` · exit 2; `rg -c 'shell-bound writes' skills/orchestration-envelope/references/TURN_CONTRACT.md` · exit 1; `ls .changeset/path-protection-shell-writes.md` · exit 2; `rg -c '^\| \[#567\]\(.*\| pending \|' docs/ROADMAP.md` · 1 (row still `pending` while the issue is closed-undone).
+- **E1** — 2026-11-16, the §2 RED corpus, observed before any fix: `rg -c 'never reaches the write/edit prevention' packages/pi-agentic-workflow/src/extension/index.ts` · 1 (the structural exemption); `ls packages/pi-agentic-workflow/src/guards/shell-path.ts` · exit 2 (absent); `ls packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` · exit 2; `rg -c 'shell-bound writes' skills/orchestration-envelope/references/TURN_CONTRACT.md` · exit 1; `ls .changeset/path-protection-shell-writes.md` · exit 2; `rg -c '^\| \[#567\]\(.*\| pending \|' docs/ROADMAP.md` · 1 (row still `pending` while the issue is closed-undone).
 - **E2** — 2026-11-16, the plan receipts: `bun packages/agentic-workflow/bin/agentic-workflow.mjs unit-route --triage 567-path-protection-bypass` · exit 0 · the block pasted in `## Triaged steps`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --paths "…6 changed paths…"` · exit 0 · `tier: standard`, `reason_kind: executable-content`, `signals: []`, `task_size: {understood: true, contained_risk: contained, resumable_from_diff: true, ceremony: unit-doc, verification: gates}` — pasted in `## Risk tier`.
+- **E3** — 2026-11-16, a P1 lint red and its repair: `phase-lint` at `c03c5812` · exit 1 · `P3 box-4: task 1 creates 2 files of distinct concerns` — the lint's creation-verb regex (`\bwrite\b`) matches *inside the planned filename* `shell-write.ts`, so P3's two Relevant files read as two creations. The module did not exist yet: it was renamed (planned name only) to `guards/shell-path.ts` — no code, no export, no behaviour changed — and `phase-lint` re-ran · exit 0 · `verdict PASS` (same fingerprint). The task never carried two creations: `extension/index.ts` is a modification.
 
 ## Next
 
