@@ -456,3 +456,117 @@ in under half a second each. `runProbe({ fetchImpl, runImpl, timeoutMs,
 totalTimeoutMs })` takes its side effects by injection, so the suite drives
 every degraded path with fakes and millisecond bounds — no network, no PATH, no
 real engram process.
+
+## `quality-metrics` — the project-quality sensor (feature 558, issue #565)
+
+`workflow-status` measures workflow *state*. This measures workflow *quality*:
+the DORA four keys — change-failure rate, lead time for change, and their two
+companions — plus the reversion ratio, computed from git history and forge data
+over a trailing window and printed as one validated document.
+
+Three things it will not do: it never advises, never gates and never fixes. It
+reports, and interpretation is the caller's.
+
+**Read-only.** Every `git` and `gh` call is a read. `--out <path>` is the only
+byte the command may write, and it writes exactly the bytes stdout carried.
+**Bounded.** Each git call has a 15 s bound, the three forge reads share one 30 s
+budget with a 10 s per-call cap, and the first-commit read is a bounded sample
+(see *Why a sample* below). **Fail closed.** A metric that cannot be computed is
+`unavailable` with a `reason`, and that reason also appears in `degraded`; a
+metric whose sources answered but whose denominator is empty carries a
+`no-<observation>` reason. Neither is ever a zero.
+
+### The window
+
+The document measures `[until − days, until]`. `days` defaults to 90 and is the
+`--window` flag; `until` is the flag of the same name, defaulting to the run's
+instant, so a report is reproducible when the caller pins it. A report is
+therefore auditable: the window that produced a number travels inside it.
+
+### The metric definitions — the one home
+
+| Metric | Formula | Unit | Confidence |
+|---|---|---|---|
+| `reversion_ratio` | revert commits ÷ total commits in the window | ratio (0..1) | `derived` — the revert identification is a message heuristic |
+| `change_failure_rate` | deploys merged in the window that a revert names ÷ deploys merged in the window | ratio (0..1) | `derived` — the linkage is a heuristic and cannot see a deploy merged by hand |
+| `lead_time_for_change` | median of first commit → merge over the sampled merged pulls inside the window | hours | `measured`, demoted to `derived` when the sample is truncated |
+| `pr_volume` | pulls opened inside the window, with merged carried beside it | count | `measured`, demoted to `derived` when the created read hits its cap |
+| `review_latency` | median of pull opened → first submitted review over the in-window pulls that carry a review | hours | `measured`, demoted to `derived` when the created read hits its cap |
+| `escaped_defects` | open rows of the unit-doc findings corpus, with the document count beside it | count | `measured` — or `unavailable` when there is no corpus |
+
+Median, not mean: one pull that sat open for a month should not move the
+number a team acts on. Hours are rounded to two decimals and ratios to four, so
+the same sources and the same window produce byte-identical bytes.
+
+**The two revert heuristics.** A commit is a revert when `git revert` wrote it:
+its subject starts `Revert "`, or its body carries `This reverts commit <oid>.`
+The second form is also where the target oid comes from.
+Its **false-positive shape**: a hand-written subject that literally starts
+`Revert "` but reverts nothing, which inflates the ratio. Its
+**false-negative shape**: a revert committed with a custom message, folded into
+another change, or squashed into a merge, which deflates it. The two readings of
+"% of commits reverted" are both reported rather than conflated: this ratio
+counts the *revert commits* (needing no linkage), and the *reverted deploys* are
+`change_failure_rate`'s numerator.
+
+**Why a sample.** `gh pr list --json commits` builds a GraphQL query whose
+`authors` connection explodes past GitHub's 500,000-node ceiling at roughly 100
+pulls (measured: 40 answers, 100 fails), so the first-commit read asks for the
+25 most recent merged pulls and the row says so when that is fewer than the
+window's deploys. The deploy read and the created read ask for up to 1,000 rows
+each and declare truncation the same way.
+
+**The escaped-defect slot is a slot.** It reports the open rows of the
+findings corpus — the unit docs' `## Findings` tables and the legacy
+`review-findings.md` ledgers, read through the fold queue's own parsers — and
+says `unavailable` when a project carries no corpus. The corpus has no
+per-row timestamp, so the window does not apply to it, and the row says that
+too.
+
+### The degradation codes
+
+| Code | Cause |
+|---|---|
+| `unavailable-forge-missing-cli` | `gh` is not on PATH |
+| `unavailable-forge-timeout` | a forge read exceeded its bound, or the dimension's budget was spent |
+| `unavailable-forge-auth` | the forge answered an authentication failure |
+| `unavailable-forge-no-network` | the forge read failed for any other reason |
+| `unavailable-forge-malformed-answer` | the forge answered something that is not the expected JSON list |
+| `unavailable-history-not-a-repository` | the path is not a git worktree (or `git` is absent) |
+| `unavailable-history-unreadable` | a git read failed after the repository was found |
+| `unavailable-history-shallow` | the clone is shallow **and** its oldest commit is inside the window, so the window's commit count is a subset |
+| `unavailable-findings-corpus` | the project carries neither `docs/features/` nor `docs/fix/` unit documents |
+
+A shallow clone whose history still reaches past `since` is **not** degraded:
+coverage is asked of the history, not of the flag. And the zero-observation
+reasons (`no-commits-in-window`, `no-deploys-in-window`, `no-pulls-in-window`,
+`no-reviews-in-window`) are answers about the window, not failures — they are
+never listed in `degraded`.
+
+### The document — `quality-metrics@1`
+
+The contract id is `agentic-workflow/quality-metrics`, the version is 1, and the
+schema package publishes the validator (`validateQualityMetrics`) and the
+draft-07 projection (`quality-metrics.schema.json`). The core is closed: an
+unknown key anywhere is refused, and the two vocabularies (`QUALITY_METRIC_NAMES`,
+`QUALITY_CONFIDENCES`) are the sets a consumer switches on.
+
+```text
+quality-metrics@1
+field | shape | what it orders
+contract | agentic-workflow/quality-metrics | the document's identity
+version | 1 | the core version; a field change bumps it
+schema | quality-metrics@1 | the token a reader dispatches on
+source_revision | <7-40 hex> or null | the commit the report is anchored on; null when the history is unreadable
+window.days | integer 1..3650 | the trailing day count the report measured
+window.since | UTC instant | the window's opening instant, exactly `days` before its end
+window.until | UTC instant | the window's closing instant
+degraded | array of unavailable-<source>-<cause> | every source failure behind the unusable rows, deduplicated and sorted
+metrics.<name> | one row per published metric name | the six rows; the name set is closed
+row.confidence | measured \| derived \| unavailable | how far the value may be trusted, and never decoration
+row.value | number or null | the measurement; null exactly when the row is unavailable
+row.unit | ratio \| hours \| count | fixed by the metric, never chosen by a producer
+row.reason | string or null | the declared cause: a code from `degraded`, or a no-<observation> code; null when measured
+row.detail | 1..512 characters | the heuristic, the sample and the denominator in one readable line
+row.components | closed per metric | the counts the value was computed from (see the definitions table)
+```
