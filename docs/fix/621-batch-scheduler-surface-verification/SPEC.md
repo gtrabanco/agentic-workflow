@@ -167,7 +167,7 @@ none
 - **AC-S1** — Every acceptance criterion the issue states is delivered by this
   unit's ledger: no S2–S6 clause is left unimplemented, and the unit doc, the
   roadmap row and the changeset exist. Check:
-  `rg -n '^AC-S[1-6]' docs/fix/621-batch-scheduler-surface-verification/SPEC.md`
+  `rg -n '^- \*\*AC-S[1-6]\*\*' docs/fix/621-batch-scheduler-surface-verification/SPEC.md`
   matches 6, and every `O` row of `planning-obligations.md` reads `verified`.
 - **AC-S2** — The envelope is `batch-plan@4` everywhere the token lives, and the
   schema package's suite is green: `BATCH_PLAN_VERSION` is `4`, `BATCH_PLAN_SCHEMA`
@@ -322,6 +322,48 @@ are the authoritative order (`P1` → `P5`).
   fragment through `agentic-workflow journal write --kind narrative` (the carrier's
   only writer; a direct `LOGS.md` append is refused in carrier mode).
 - **D5** — 2026-11-17, the summary's sink became an injectable parameter so the rule is proved without spawning a process; the CLI's behaviour is unchanged (the default sink is `console.log`).
+- **L3** — 2026-11-17, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **D6** — 2026-11-17, B2 is repaired in the producer, never in the frozen ledgers: P3,
+  O11 and the changeset all promise one line per flagged issue, so the summary splits
+  into one labeled line per issue; a single flagged issue stays byte-identical and the
+  SUM fixture's "one section line" assertion still holds because it carries one flagged
+  issue. Authority: the 2026-11-17 `EXTERNAL VERIFY` receipt, blocker B2.
+- **D7** — 2026-11-17, B1's guard is the in-scope `surfaceUnknown` set rather than a
+  `general` string comparison: that set is exactly the condition under which the model
+  coerces the lane guess, so no declared-surface row can change. Authority: blocker B1
+  and O5's "exactly the declared surfaces".
+- **E14** — 2026-11-17, red at `9e2c7fcb` (the pin suite alone against the pre-fix tree):
+  `bun test scripts/batch-scheduler.test.mjs` · exit 1 · 93 pass / 3 fail — CS5, SUM2 and
+  the stale-token sweep extended to the INVENTORY row; the stash re-run against the
+  pre-fix script re-confirms CS5 + SUM2 red (94 pass / 2 fail with the INVENTORY row
+  already corrected in the worktree).
+- **E15** — 2026-11-17, `bun test scripts/batch-scheduler.test.mjs` at `ba3668f9` · exit 0 ·
+  96 pass / 0 fail (CS5, SUM2, V6 green; the sweep owns `docs/features/107-mechanization-inventory/INVENTORY.md`).
+- **E16** — 2026-11-17, differential against `78dc2292` (both scripts over one fixed corpus
+  in `mktemp` scratch): exactly 1 differing leaf path — `batches[0].lanes[1].issues[0].claimed_surface[0]: "general" -> undefined`,
+  nothing else; the single-flagged summary is byte-identical; two-flagged claimed lines 1 → 2 (the B2 rule).
+- **E17** — 2026-11-17, B4's closure: the two results E12 recorded do not reproduce —
+  `rg -n '^AC-S[1-6]' …/SPEC.md` · exit 1 · 0 matches and `rg -c 'Closes #621' …/SPEC.md` · 6,
+  not 2, at head and at the freeze commit `fb2d3d6e` alike (E12's counts stand superseded;
+  the Log is append-only). After re-anchoring AC-S1's Check: `rg -n '^- \*\*AC-S[1-6]\*\*' …/SPEC.md` ·
+  exit 0 · 6 matches; `rg -c 'Closes #621' …/SPEC.md` · 6; `test -f` on both planning ledgers · exit 0.
+- **F1** — 2026-11-17, folded from the 2026-11-17 `EXTERNAL VERIFY` receipt: blockers
+  B1/B2/B3 (`9e2c7fcb` red pins, `ba3668f9` fixes) and B4 (AC-S1's Check re-anchored here) —
+  verified by E15/E16/E17; advisory A2 closed by the V6 pin (`9e2c7fcb`), which makes the
+  regression-scope row's citation of the `V` cases true. A1/A3/A4/A5 remain reported
+  advisories (owner forge text, cross-unit doc, receipt probe, prose illustrations).
+- **P6** — 2026-11-17, correction batch on the receipt: red pins at `9e2c7fcb`, fixes at
+  `ba3668f9`, this record and the receipt addendum.
+- **G2** — 2026-11-17, the correction batch's gate on the final tree: `node scripts/run-root-suite.mjs` ·
+  exit 0 · 121 suites PASS (first attempt exit 1 under parallel load — `phase-lint` SUITE TIMEOUT
+  at 120.1s and `unit-route` failed at 44.0s; both green individually on the same bytes, 162/0 and
+  64/0 — load flake, not change-caused, disclosed here); `cd packages/agentic-workflow-schema && bun run test`
+  909/0; `bun test scripts/batch-scheduler.test.mjs` 96/0; `bun scripts/check-skill-context.mjs --routes`
+  PASS (14 routes); `bun scripts/docs-generate.mjs --check` PASS (3 checked · 0 stale); `bun scripts/skill-lint.mjs`
+  PASS; `bun scripts/lint-changeset.mjs .changeset/fix-621-batch-scheduler-surface-verification.md` ok.
 
 ## Next
 
