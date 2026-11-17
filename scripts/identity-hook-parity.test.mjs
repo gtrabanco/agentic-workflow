@@ -31,6 +31,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const HOOK = path.join(ROOT, "template", ".agentic-workflow", "hooks", "git-identity-check.sh");
 const CHECKER = path.join(HERE, "push-identity-check.mjs");
+// The hook is a shim since unit 554: it execs the universal CLI, which owns the
+// decision. The corpus asserts the same verdicts as before; only the carrier's
+// entry point is named here.
+const CLI = path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 const APPROVED = { name: "Fixture Human", email: "human@example.com" };
 const LEAK = { name: "t", email: "t@example.test" };
@@ -99,6 +103,7 @@ function runHook({ root, home, identity }) {
       ...process.env,
       HOME: home,
       PI_CODING_AGENT_DIR: home,
+      AGENTIC_WORKFLOW_BIN: CLI,
       GIT_AUTHOR_NAME: identity.name,
       GIT_AUTHOR_EMAIL: identity.email,
       GIT_COMMITTER_NAME: identity.name,

@@ -15,6 +15,8 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, "..", "..", "..");
 export const ENGINE = path.join(REPO_ROOT, "packages/agentic-workflow/bin/turn-contract.mjs");
+// The universal CLI the hook shims exec (unit 554): one entry point, one pin.
+export const CLI = path.join(REPO_ROOT, "packages/agentic-workflow/bin/agentic-workflow.mjs");
 export const SHIM = path.join(REPO_ROOT, "template/.agentic-workflow/hooks/turn-contract.sh");
 
 // The fixture identity, carried `-c` per invocation (issue #514 S7): no test
@@ -248,10 +250,14 @@ export function makeContext() {
       return { code: r.status, stdout: r.stdout, stderr: r.stderr };
     },
     runShim(cwd, args = [], env = {}) {
+      // The shim execs the universal CLI (unit 554): it resolves
+      // `AGENTIC_WORKFLOW_BIN` first, then its own PATH. A fixture names this
+      // checkout's bin so the parity suite compares the two faces of one engine
+      // rather than a shim that found nothing to exec.
       const r = spawnSync("bash", [SHIM, ...args], {
         cwd,
         encoding: "utf8",
-        env: { ...baseEnv(ghDir), ...env },
+        env: { AGENTIC_WORKFLOW_BIN: CLI, ...baseEnv(ghDir), ...env },
       });
       return { code: r.status, stdout: r.stdout, stderr: r.stderr };
     },
