@@ -73,3 +73,26 @@ advisory A2's cited-verifier gap; A1/A3/A4/A5 triaged as remaining advisories
 - A2 closed: the `V6` pin asserts the `[worktree]` tag the regression-scope row
   cites.
 - Next: external re-verify of this batch (delta verdict over the receipt above).
+- Receipt-sha repair (found by `agentic-workflow verify` while re-checking, not
+  in the receipt): every `G<n>` line must carry a resolvable 40-hex `HEAD` sha
+  (`verify@1` non-negotiable). **G1 pre-existed malformed** (no HEAD sha — cut
+  before this batch; its own self-note already contemplated the attribution) and
+  G2 was being written the same way; both now cite their gated tree
+  (`HEAD fb2d3d6ee0afd674d5cd427044e092185e258d17` and
+  `HEAD 5f58818185505cebaae80c2d673844bdea0b4dc3`). The G1 line's own bytes were
+  amended to add the sha — disclosed here because the Log's append-only rule
+  governs entries, and the verifier's receipt grammar is the non-negotiable one.
+- Advisory A6 (pre-existing, disclosed): `phase-lint <SPEC>` answers
+  `spec-unlinked: S1 is implemented by no phase` → `verdict BLOCKED:
+  lint-blocked` — byte-identical fingerprint at the original cut `fb2d3d6e`
+  (same verdict, same sha), so this batch did not cause it; fix units 460 and
+  509 carry the same verdict for the same binding-request-shaped S1 ("Apply to
+  this repository: …") and shipped with it. Not repaired here: binding a phase
+  to an `(Implements: S1)` claim it does not truthfully carry would game the
+  lint with the frozen Tasks — an owner-level semantic call. Not part of the
+  declared verification (the root suite's phase-lint leg is fixture-based and
+  green).
+- `unit-route docs/fix/621-…` answers "all phases recorded but status is
+  'in-progress' — settle the index or roadmap status before routing to
+  close-out": the expected answer for a unit awaiting the owner's verdict, not
+  a defect.

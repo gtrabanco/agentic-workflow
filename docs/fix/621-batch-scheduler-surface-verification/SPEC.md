@@ -312,7 +312,7 @@ are the authoritative order (`P1` → `P5`).
 - **P2** — 2026-11-17, the contract bump and the discriminated emission landed green at `867fe72a` (`S2`, `S3`, `S4`).
 - **P3** — 2026-11-17, the human summary's actionable-only rule rides `867fe72a` (`S3`).
 - **P4** — 2026-11-17, docs currency, the re-based reference ceiling and the `minor` changeset at `b1fb413b` (`S2`).
-- **G1** — 2026-11-17, the close gate on the final tree: `node scripts/run-root-suite.mjs` · exit 0 ·
+- **G1** — 2026-11-17, the close gate on the final tree at `HEAD fb2d3d6ee0afd674d5cd427044e092185e258d17`: `node scripts/run-root-suite.mjs` · exit 0 ·
   121 suites PASS; `cd packages/agentic-workflow-schema && bun run test` 909/0;
   `bun test scripts/batch-scheduler.test.mjs` 93/0; `bun scripts/check-skill-context.mjs --routes`
   PASS (14 routes); `bun scripts/docs-generate.mjs --check` PASS; `bun scripts/skill-lint.mjs` PASS.
@@ -357,7 +357,8 @@ are the authoritative order (`P1` → `P5`).
   advisories (owner forge text, cross-unit doc, receipt probe, prose illustrations).
 - **P6** — 2026-11-17, correction batch on the receipt: red pins at `9e2c7fcb`, fixes at
   `ba3668f9`, this record and the receipt addendum.
-- **G2** — 2026-11-17, the correction batch's gate on the final tree: `node scripts/run-root-suite.mjs` ·
+- **G2** — 2026-11-17, the correction batch's gate on the final tree at `HEAD 5f58818185505cebaae80c2d673844bdea0b4dc3` (the only deltas after
+  the run are receipt lines: this one and G1's missing HEAD sha): `node scripts/run-root-suite.mjs` ·
   exit 0 · 121 suites PASS (first attempt exit 1 under parallel load — `phase-lint` SUITE TIMEOUT
   at 120.1s and `unit-route` failed at 44.0s; both green individually on the same bytes, 162/0 and
   64/0 — load flake, not change-caused, disclosed here); `cd packages/agentic-workflow-schema && bun run test`
