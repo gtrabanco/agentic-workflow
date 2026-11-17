@@ -1,6 +1,0 @@
-## 2026-11-16T23:33:57Z — feat/564-verification-materialization — narrative
-- **Commits:** 11 (`67b941d4…6a805d3b`)
-- **Files:** 35 files
-- **Summary:** Create PR #601 for issue #564 (verification materialization) — pushed branch, created PR against main, posted receipts, and fixed roadmap-settle red
-- **Decisions:** PR body used the documented escape hatch (AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1) because the pre-push hook's transport died SIGPIPE (exit 141) twice without publishing; all gate runs in the foreground confirmed PASS; two real reds found after PR opened and fixed — roadmap-settle (pr-url-unsettled: unit doc carries PR URL while row reads in-progress, fixed by settling row 557 to done and regenerating projection), phase-lint (D1 head consumed by insertion, P9 task bullet bolded into non-task shape, D6 placed under wrong heading); all repaired and re-pushed. Final head 6a805d3b: local-gate PASS 15 steps 719s, root-suite 273s. Issue #564 still postponed (only triage-issue can write disposition labels) — owner must un-postpone before merge.
-- **Next:** Owner reviews PR #601, triage-issue un-postpones #564, then merges feat/564-verification-materialization into main — merge closes #564 and unblocks roadmap row 590
