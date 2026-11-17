@@ -845,7 +845,10 @@ export function extractPartialDependencies(body) {
 
 /** Measured-size hint: declared `(S)/(M)/(L)/(XL)` token first, then surface count. */
 export function sizeHint(issue, surfaces) {
-  const token = /\(([SMLXL])\)/.exec(issue.title) ?? /\(([SMLXL])\)/.exec(issue.body.slice(0, 400));
+  // The published token set is S/M/L/XL. An alternation, not a character class:
+  // `(X)` is a git status code in plenty of issue bodies on a forge, and a
+  // single-letter class also made `(XL)` unreachable.
+  const token = /\((XL|S|M|L)\)/u.exec(issue.title) ?? /\((XL|S|M|L)\)/u.exec(issue.body.slice(0, 400));
   if (token) return SIZE_FROM_TOKEN[token[1]];
   if (surfaces.size >= 3) return "heavy";
   if (surfaces.size === 2) return "mixed";
