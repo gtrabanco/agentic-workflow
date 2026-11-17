@@ -521,6 +521,75 @@ list is the frozen task list above, in dependency-topological order:
   skipped` (the deleted-skill skip), the node compatibility leg green and
   unpunished.
 
+- **D11** — 2026-11-17, the external-verify correction batch (owner-ordered,
+  §9 bounds, direct application): **B1** fixed at the wrapper — the three `-g`
+  glob mappers de-quote the input's own quotes and emit exactly one shell word
+  (`packages/agentic-workflow/src/tool-choice/policy.mjs`, `dequote` +
+  `shellWord`, apostrophes escaped the way `protect()` escapes them), because
+  keeping both pairs produced `''*.ts''`, a word the shell un-quotes back into an
+  unquoted, glob-expanding token — a rewrite into a different command. **B2/A2**
+  corrected two ledger cells whose frozen wording could not be satisfied as
+  written: `O13`'s `'canary\|before/after'` is a literal pipe under ripgrep (0
+  matches; its alternation reading matched 14, never 1) and `O14` counted 4 under
+  a `matches 1` cell whose `SPEC.md:449` pointer had drifted to 527. Both cells
+  now carry fixed-string presence checks (`rg -q -F …` exits 0) that run verbatim
+  from the raw bytes and survive a growing `## Log`; statuses stay `verified` /
+  evidenced `n/a` — the D7 precedent (check corrected, status unchanged).
+  **A4** closed by naming the section in every enumeration of the pi file's
+  contents (`docs/workflow/CONFIG.md:22`,
+  `skills/init-workspace/references/CONFIG.md:14`,
+  `packages/pi-agentic-workflow/src/config/extension.ts:6`). Triage **no-fix**,
+  with reasons: **A1** (phase-lint's 120 s bound under default-worker load — the
+  suite has an empty diff against base and passes alone and serialized; editing
+  an unrelated test to satisfy it is forbidden), **A3** (`$( … )`/`xargs` reach —
+  behaviour past the recorded non-goals, an owner decision), **A5**
+  (`pi-extensible-workflows` 6.3.0 vs the registry's 6.4.0 — pre-existing at
+  base, the dependants' declared unit). Also triaged: the settings console keeps
+  every key it does not edit (`draft: ConfigFile = original`, spread-merged), so
+  `toolChoice` survives a console save — adding a submenu is scope, not a repair.
+- **E19** — 2026-11-17, the frozen-failure corpus before any implementation ·
+  exit 1 · `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs`
+  → `20 pass, 1 fail` — `F21` red on the reproducer byte string
+  `rg -g ''*.ts'' -n TODO src` — with the pre-fix suggestion snapshot frozen
+  (53 lines: corpus `C01`–`C33` plus the representative list).
+- **E20** — 2026-11-17, after the wrapper fix · the same suite → exit 0 ·
+  `21 pass, 0 fail`; differential snapshot post-fix vs pre-fix → exactly the six
+  quoted-glob lines moved (`--include`/`--exclude`/`--exclude-dir` carrying the
+  input's own quotes), every corpus segment, every unquoted form and every
+  node/sanctioned byte identical; the emitted token executed in scratch:
+  `rg -g '*.ts' …` → the match, exit 0, where `rg -g ''*.ts'' …` had
+  `rg: x: No such file or directory (os error 2)`, exit 2; an embedded apostrophe
+  emits `rg -g 'it'\''s.ts'` and matches the file it names.
+
+- **E21** — 2026-11-17, the blockers-only recheck (§9 scope: B1, B2 and the
+  A2/A4 batch rows) · all exit 0 unless noted · corrected `O13`/`O14` validators
+  run verbatim from the raw bytes → 0 / 0 / 0; untouched-row counts unchanged
+  (`O5` 1 / 0, `O6` 1, `O15` 1 / 1, `O16` 0 / 1); policy `21 pass, 0 fail` ·
+  guard `9, 0` · parity `4, 0` · invocation-drift suite `13, 0` + gate
+  `verdict: PASS` · config-extension `2, 0` · residue-dimensions `30, 0`;
+  shipped-handler probe (block reason, rewrite mutation, plain-rewrite,
+  sanctioned, filter and block-posture controls) all held; pi package
+  `965 pass, 0 fail` (dist rebuilt); crate `1072 pass, 0 fail` (+1 = `F21`);
+  prose/structural gates: prose-gate-inventory `verdict: PASS` + `22, 0`,
+  normative-drift `21, 0`, doc-discipline `21, 0`, unit-doc-contract `21, 0`,
+  pre-execution-quality `1, 0`, ledger-ownership `15, 0`, index-document `9, 0`,
+  structural-sibling-pins `8, 0`, red-first `verdict: PASS`, skill-lint
+  `verdict: PASS`, docs-generate --check `verdict: PASS`,
+  check-skill-context both modes PASS, promise-coherence `verdict PASS`,
+  dimension-regression `verdict | clean`, log-immutability `23, 0`.
+- **E22** — 2026-11-17, `bun scripts/local-gate.mjs --jobs 2 --no-bail` at this
+  head · exit 1 · **18 of 19 steps exit 0** (`workspace-install`,
+  `version-parity-content`, `docs-generated-projection`, `log-immutability`,
+  `secret-scan` 0 findings, `temp-hygiene` 0, `tmp-gc` 3 removed, `schema-build`,
+  `worktree-guard` 0 findings, `rigidity-review`, **`root-suite` exit 0 in 126s
+  over 119 suites with 4 workers — A1's phase-lint timeout did not recur**,
+  `journal-carrier-check` (the batch's fragment conforms),
+  `dependency-advisories`, `crate-suite-bun` 193s, `crate-suite-node` 93s,
+  `schema-node-compat`, `pi-node-compat` 24s, `pi-compat-guard` 24s), then
+  **`dependency-pin-gate` exit 1 on the pre-existing registry drift**
+  (`pi-extensible-workflows` 6.3.0 pinned, 6.4.0 published; this batch changes
+  no manifest — same known issue as E18, not this batch's).
+
 ## Next
 
 The owner's external verify. Then the PR (`Closes #610`), then the published
