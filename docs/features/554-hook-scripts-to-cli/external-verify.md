@@ -187,3 +187,16 @@ skill-lint PASS; changeset lint ok; eight template shell suites green.
 
 **Verdict after recheck: NEEDS-DECISION (1 — B10, awaiting the recorded
 human-owner approval; no other open blocker).**
+
+**Second pass on the same blocker (B4/O17, §9):** the batch's own F1/E29
+record lines re-quoted the anchor token, so the cell's first re-spelling
+answered 3 the moment they landed (the E26 class, reproduced by the correction
+itself). The validator now anchors on E24's distinguishing tail and answers 1
+in the foreground; O17 flipped planned → verified again (Log E30). Still one
+open blocker: B10.
+
+**S3 loop, same run:** the addendum sentence "Findings row F6 carries it" is
+superseded — the row was removed when `scripts/findings-corpus.test.mjs`
+refused it (harvest pin 1153, the batch lifted the tree to 1154). The findings
+table's writer contract belongs to `review-change`/`triage-issue`; B10's
+carrier is this receipt (Log E31 in the unit doc records the loop).
