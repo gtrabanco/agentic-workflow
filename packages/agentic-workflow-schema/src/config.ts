@@ -236,8 +236,16 @@ const CONTENT_GUARD_SCHEMA: JsonSchema = publish({
   },
 });
 
-function stringList(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+/**
+ * One provided list, or `null` when it is not one: a side that cannot be read is
+ * never filtered into something that looks legal. `undefined` (absent) reads as
+ * the empty list, which is what the union below means by "nothing declared".
+ */
+function readList(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return null;
+  if (value.some((entry) => typeof entry !== "string")) return null;
+  return value;
 }
 
 /**
@@ -245,7 +253,12 @@ function stringList(value: unknown): string[] {
  * intersects (a project may narrow what a global value admitted, never widen
  * it), the login lists union, and a side that is absent passes the other through.
  * An unknown key is passed through untouched so strict validation reports it
- * instead of the merge swallowing it.
+ * instead of the merge swallowing it — and so is a *value* it cannot read: this
+ * merge runs before validation, so filtering `[123]` or `"everyone"` into `[]`
+ * handed the validator a legal, intentional-looking lockdown and the policy
+ * narrowed in silence. An unreadable side wins unchanged, validation refuses the
+ * section whole, and the caller gets the strictest default with a declared
+ * reason.
  */
 export function mergeContentGuardOverrides(globalValue: unknown, projectValue: unknown): unknown {
   if (!isRecord(globalValue) && !isRecord(projectValue)) return {};
@@ -254,17 +267,25 @@ export function mergeContentGuardOverrides(globalValue: unknown, projectValue: u
   const out: Record<string, unknown> = {};
 
   if (globalRecord.trustedRoles !== undefined || projectRecord.trustedRoles !== undefined) {
-    const globalRoles = stringList(globalRecord.trustedRoles);
-    const projectRoles = stringList(projectRecord.trustedRoles);
-    out.trustedRoles = globalRecord.trustedRoles === undefined
-      ? [...new Set(projectRoles)]
-      : projectRecord.trustedRoles === undefined
-        ? [...new Set(globalRoles)]
-        : [...new Set(globalRoles.filter((role) => projectRoles.includes(role)))];
+    const globalRoles = readList(globalRecord.trustedRoles);
+    const projectRoles = readList(projectRecord.trustedRoles);
+    if (globalRoles === null) out.trustedRoles = globalRecord.trustedRoles;
+    else if (projectRoles === null) out.trustedRoles = projectRecord.trustedRoles;
+    else {
+      out.trustedRoles = globalRecord.trustedRoles === undefined
+        ? [...new Set(projectRoles)]
+        : projectRecord.trustedRoles === undefined
+          ? [...new Set(globalRoles)]
+          : [...new Set(globalRoles.filter((role) => projectRoles.includes(role)))];
+    }
   }
   for (const key of ["allowLogins", "denyLogins"]) {
     if (globalRecord[key] === undefined && projectRecord[key] === undefined) continue;
-    out[key] = [...new Set([...stringList(globalRecord[key]), ...stringList(projectRecord[key])])];
+    const globalLogins = readList(globalRecord[key]);
+    const projectLogins = readList(projectRecord[key]);
+    if (globalLogins === null) out[key] = globalRecord[key];
+    else if (projectLogins === null) out[key] = projectRecord[key];
+    else out[key] = [...new Set([...globalLogins, ...projectLogins])];
   }
   for (const [key, value] of Object.entries(projectRecord)) if (!(key in out)) out[key] = value;
   for (const [key, value] of Object.entries(globalRecord)) if (!(key in out)) out[key] = value;

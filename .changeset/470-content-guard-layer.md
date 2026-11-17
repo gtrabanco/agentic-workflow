@@ -30,3 +30,10 @@ degradation grammar gains the guard's two families —
 `unavailable-<source>-<cause>` and `surface-unknown-issue-<n>`. A plan over a
 repository with hidden material or an untrusted author therefore prints and says
 what it could not use, instead of being refused by its own envelope.
+
+A `contentGuard` list that is not the declared shape is refused whole instead of
+being narrowed: the tighten-only merge runs before validation, so filtering
+`[123]` or `"everyone"` into an empty list handed the validator a legal,
+intentional-looking lockdown and the policy narrowed in silence. The unreadable
+side now passes through untouched, validation refuses the section, and the caller
+gets the shipped strictest policy with a declared `malformed-config`.
