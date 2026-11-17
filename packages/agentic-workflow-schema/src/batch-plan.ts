@@ -1,5 +1,5 @@
 /**
- * The canonical batch plan (`batch-plan@3`) — issue #449's machine envelope:
+ * The canonical batch plan (`batch-plan@4`) — issue #449's machine envelope:
  * the deterministic batch scheduler's document, read as data by the owner and
  * by the #295 panel.
  *
@@ -22,10 +22,18 @@
 export const BATCH_PLAN_CONTRACT_ID = "agentic-workflow/batch-plan";
 
 /** The schema token printed in the document's `schema` field. */
-export const BATCH_PLAN_SCHEMA = "batch-plan@3";
+export const BATCH_PLAN_SCHEMA = "batch-plan@4";
 
-/** The version constant: adding or changing a core field bumps this. */
-export const BATCH_PLAN_VERSION = 3;
+/**
+ * The version constant: adding or changing a core field bumps this.
+ *
+ * v2 (issue #460) added the lifecycle delta, the triage flag and the two reason
+ * kinds; v3 (issue #509) added `label_blocked[]` and its summary count; v4
+ * (issue #621) is the field `claimed_surface` — added at v3 without the bump the
+ * rule above mandates, so the token moved once the addition was complete, and
+ * the field's type was cut to the single shape its one producer emits.
+ */
+export const BATCH_PLAN_VERSION = 4;
 
 /** The closed reason-kind set — why an issue sits where it sits (S4). */
 export const BATCH_REASON_KINDS = ["satisfied-inputs", "surface-conflict", "soft-ordered", "untriaged", "soft-deps-open"] as const;
@@ -44,7 +52,8 @@ export type BatchReasonKind = (typeof BATCH_REASON_KINDS)[number];
  * `blind-spot` is issue #574's: a batch whose issues declare no surface at all
  * cannot be shown to be parallel-safe, so the plan names the batch and every
  * blind issue in it instead of presenting the batch as verified. Same rule as
- * #509's pair — vocabulary only, version stays at 3.
+ * #509's pair — vocabulary only, version stays at 3. The version moved to 4 for
+ * issue #621's field addition, never for a vocabulary.
  */
 export const BATCH_FINDING_CODES = [
   "cycle",
@@ -149,8 +158,18 @@ export interface BatchIssue {
   claimed?: boolean;
   /** False when the issue's roadmap row shows no triage yet (issue #460); absent when triaged. */
   triaged?: boolean;
-  /** Surfaces the issue declares but couldn't verify against an actual branch diff — because it has no branch, its branch merged, or the diff could not be computed. The planner cross-references declared surfaces with actual file claims from the branch diff; any declared surface that produces no actual file is reported here so the consumer knows the surface claim is unverified and a merge conflict is possible. Issue #449 follow-up. */
-  claimed_surface?: string | string[];
+  /**
+   * A row of `issues[]`: the declared surfaces a **live** branch does not
+   * cover, so a merge conflict is still possible (issue #621).
+   *
+   * The field reports one cause: a branch exists, its diff against the trunk was
+   * computed, and that diff leaves some declared surface without a file. The
+   * other two causes the earlier shape conflated are deliberately **not** rows —
+   * an issue with no branch has nothing to verify, and a merged branch's own
+   * diff is empty by construction (it cannot conflict); a diff that could not be
+   * computed is a declared `degraded[]` entry instead of a silent "no files".
+   */
+  claimed_surface?: string[];
 }
 
 export interface BatchLane {
@@ -280,7 +299,7 @@ function issueNumber(value: unknown, label: string, errors: string[]): boolean {
 }
 
 /**
- * Validate one document against `batch-plan@3`. Structural and
+ * Validate one document against `batch-plan@4`. Structural and
  * vocabulary-closed; ordering/semantics stay the producer's tests.
  */
 export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
@@ -348,7 +367,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
           else {
             rejectUnexpectedKeys(row.reason, `${rowLabel}.reason`, ["kind", "detail"], errors);
             if (!(BATCH_REASON_KINDS as readonly string[]).includes(row.reason.kind as BatchReasonKind)) {
-              errors.push(`${rowLabel}.reason.kind must be satisfied-inputs|surface-conflict|soft-ordered`);
+              errors.push(`${rowLabel}.reason.kind must be one of ${BATCH_REASON_KINDS.join("|")}`);
             }
             boundedString(row.reason.detail, `${rowLabel}.reason.detail`, MAX_DETAIL, errors);
           }
@@ -356,14 +375,16 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
           if (row.claimed !== undefined && typeof row.claimed !== "boolean") errors.push(`${rowLabel}.claimed must be a boolean when present`);
           if (row.triaged !== undefined && typeof row.triaged !== "boolean") errors.push(`${rowLabel}.triaged must be a boolean when present`);
           if (row.claimed_surface !== undefined) {
-            if (typeof row.claimed_surface === "string") {
-              /* single unverified surface */
-            } else if (Array.isArray(row.claimed_surface)) {
-              for (const s of row.claimed_surface) {
-                if (typeof s !== "string" || s.length === 0) errors.push(`${rowLabel}.claimed_surface[] entries must be non-empty strings`);
-              }
+            if (!Array.isArray(row.claimed_surface) || row.claimed_surface.length === 0) {
+              errors.push(`${rowLabel}.claimed_surface must be a non-empty array of surface keys`);
             } else {
-              errors.push(`${rowLabel}.claimed_surface must be a string or string array`);
+              for (const surface of row.claimed_surface) {
+                if (typeof surface !== "string" || surface.length === 0) {
+                  errors.push(`${rowLabel}.claimed_surface[] entries must be non-empty strings`);
+                } else if (surface.length > MAX_PATH) {
+                  errors.push(`${rowLabel}.claimed_surface[] entries exceed ${MAX_PATH} characters`);
+                }
+              }
             }
           }
         });
@@ -426,7 +447,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
       if (!isObj(row)) return errors.push(`${label} must be an object`);
       rejectUnexpectedKeys(row, label, ["code", "numbers", "detail"], errors);
       if (!(BATCH_FINDING_CODES as readonly string[]).includes(row.code as BatchFindingCode)) {
-        errors.push(`${label}.code must be cycle|orphaned-soft-dep|prose-native-mismatch|file-overlap|stale-claim`);
+        errors.push(`${label}.code must be one of ${BATCH_FINDING_CODES.join("|")}`);
       }
       if (!Array.isArray(row.numbers) || row.numbers.length === 0) errors.push(`${label}.numbers must be a non-empty array`);
       else for (const n of row.numbers) issueNumber(n, `${label}.numbers[]`, errors);
