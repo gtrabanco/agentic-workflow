@@ -54,6 +54,8 @@ the homes of the prose; this table is the index that makes them enumerable.
 ## The inventory
 
 findings-corpus | the findings corpus is harvested from both carriers, admission-gated and attributed | script | scripts/findings-corpus.test.mjs | - | the real tree yields the counts the planning ledger froze | - | 3 | 3 | 3 | script | - | -
+coverage-gap-join | the coverage gap between declared criteria, installed detectors and the recurring findings corpus is joined by one deterministic script that names absent inputs instead of guessing | script | scripts/coverage-gap.test.mjs | - | exactly one gap per class | - | 2 | 3 | 3 | script | - | -
+dimension-regression | a unit that changes a review dimension, review skill or audit producer re-verifies the prior dimensions; a dropped dimension needs a recorded owner decision and a missing run is refused | script | scripts/dimension-regression.test.mjs | - | missing-reverification-evidence | - | 3 | 3 | 3 | script | - | -
 correction-budget | the correction budget is measured from the corpus, bounded, and stopped when spent | script | scripts/correction-budget.test.mjs | - | the budget is bounded and computed from the measured batch size | - | 2 | 3 | 3 | script | - | -
 differential-baseline | a base failure is an advisory; a base-pass/head-fail is a regression | script | scripts/differential-baseline.test.mjs | - | a base failure alone is an advisory | - | 3 | 3 | 3 | script | - | -
 ```text

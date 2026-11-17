@@ -326,6 +326,18 @@ export const STEPS = [
     mirrors: "no former remote job — the audit reads the guards this repository ships (issue #546)",
   },
   {
+    id: "dimension-regression",
+    title: "Review-dimension evolution regression over the push range (offline)",
+    cwd: ".",
+    argv: [NODE, "scripts/dimension-regression.mjs"],
+    // A range-bound step: the hook passes `--push-base`, and a full local run
+    // without a range is `not-applicable` rather than a failure. Not `tests:` —
+    // a prose-only push is exactly the push that can drop a review dimension.
+    pushBase: true,
+    tests: false,
+    mirrors: "no former remote job — the evolution-regression gate is local-first by definition (issue #590)",
+  },
+  {
     id: "schema-node-compat",
     title: "Schema package (node runtime — the guaranteed fallback)",
     cwd: "packages/agentic-workflow-schema",
@@ -402,6 +414,7 @@ export const DEPS = {
   "tmp-gc": [],
   "worktree-guard": [],
   "rigidity-review": [],
+  "dimension-regression": [],
   "schema-node-compat": ["workspace-install", "schema-build", "root-suite", "crate-suite-node"],
   "pi-node-compat": ["workspace-install", "schema-node-compat"],
   "pi-compat-guard": ["schema-build", "schema-node-compat"],
