@@ -92,7 +92,9 @@ print the next step:
 - **Never commit or push** — this skill only lints and reports.
 - **Never weaken a check to get a green** — a finding is repaired in the prose
   that caused it, or recorded as a decision in `references/CHECKS.md`; the
-  patterns live in `scripts/skill-lint.mjs` and are pinned by its suite.
+  patterns live in `packages/agentic-workflow/src/skills/screen.mjs` (the
+  engine `scripts/skill-lint.mjs` runs) and are pinned by that CLI's suite,
+  `scripts/skill-lint.test.mjs`.
 - If a skill file is not tracked by git (new file not yet added), say so in
   the report — the change-discovery step cannot see it.
 
