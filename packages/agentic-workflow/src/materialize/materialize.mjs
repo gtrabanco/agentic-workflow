@@ -653,11 +653,9 @@ const readText = (file, what) => {
   try {
     return readFileSync(resolve(file), "utf8");
   } catch (error) {
-    throw new MaterializeRefusal(`${what} is present but unreadable: ${error instanceof Error ? error.message : String(error)}`);
+    throw new MaterializeRefusal(`${what} could not be read: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
-
-const optionalText = (file, what) => (file === undefined ? null : readText(file, what));
 
 /** The receipt lines every operation prints after its own block. */
 const printFindings = (findings) => {
@@ -685,10 +683,12 @@ export function run(args) {
 
     if (operation === "plan") {
       const guideText = readText(at(flags.guide), "the guide");
+      const recordPath = flags.record === undefined ? RECORD_PATH : flags.record;
+      const featureMapPath = flags["feature-map"] === undefined ? FEATURE_MAP_PATH : flags["feature-map"];
       const result = planMaterialization({
         guideText,
-        recordText: optionalText(flags.record === undefined ? undefined : at(flags.record), "the record"),
-        featureMapText: optionalText(flags["feature-map"] === undefined ? undefined : at(flags["feature-map"]), "the feature map"),
+        recordText: existsSync(at(recordPath)) ? readText(at(recordPath), "the record") : null,
+        featureMapText: existsSync(at(featureMapPath)) ? readText(at(featureMapPath), "the feature map") : null,
       });
       const pending = result.rows.filter((row) => row.status === "pending" || row.status === "missing" || row.status === "undeclared").length;
       if (flags.json) {
@@ -707,11 +707,12 @@ export function run(args) {
       const recordPath = flags.record === undefined ? RECORD_PATH : flags.record;
       const recordText = existsSync(at(recordPath)) ? readText(at(recordPath), "the record") : null;
       const invariantsPath = flags.invariants === undefined ? "docs/architecture/ARCHITECTURAL_INVARIANTS.md" : flags.invariants;
+      const featureMapPath = flags["feature-map"] === undefined ? FEATURE_MAP_PATH : flags["feature-map"];
       const result = checkMaterialization({
         guideText,
         recordText,
         invariantsText: existsSync(at(invariantsPath)) ? readText(at(invariantsPath), "the invariants document") : null,
-        featureMapText: flags["feature-map"] !== undefined && existsSync(at(flags["feature-map"])) ? readText(at(flags["feature-map"]), "the feature map") : null,
+        featureMapText: existsSync(at(featureMapPath)) ? readText(at(featureMapPath), "the feature map") : null,
         featureMapDeclared: flags["feature-map-declared"] === true,
         invariantsPath,
         pathExists: (rel) => existsSync(at(rel)),
