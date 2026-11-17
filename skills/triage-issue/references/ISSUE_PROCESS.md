@@ -63,8 +63,9 @@ remove | none | the unit that performs the deletion, carrying its measured recei
      inline with the gate only, never as a unit. All six conditions must be
      **evidenced**, not asserted:
      1. **single surface** — one owner file or one contract surface;
-     2. **no pending design decision** — the pre-spec cut before triage says
-        `questions: none`, and no `open-questions@1` row is open;
+     2. **no pending design decision** — nothing waits on the owner — evidenced
+        by the pre-spec cut before triage saying `questions: none` — and no
+        `open-questions@1` row is open;
      3. **no contract consumed by others** — no other skill, package or consumer
         reads what changes;
      4. **existing validator** — a command that already proves the surface is
