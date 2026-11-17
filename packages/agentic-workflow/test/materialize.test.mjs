@@ -704,3 +704,85 @@ test("the shipped template's boundary slot declares no boundary yet, and the pla
   assert.equal(plan.verdict, "PENDING");
   assert.ok(plan.residuals.some((row) => row.item === BOUNDARY_SLOT));
 });
+
+// ── external-verify 557: the default-path corpus (B1, B2), landed red ───────
+// The documented canonical commands (`plan`/`check --guide AGENTS.md`) must
+// read the record and the feature map at their default paths exactly as `check`
+// and `apply` already do — one case per frozen reproducer in external-verify.md.
+
+/** A map at the shipped template's columns, one row; the default-path corpus never reads `template/`. */
+const shippedMap = (row) =>
+  [
+    "# Feature map",
+    "",
+    "```text",
+    FEATURE_MAP_MARKER,
+    "```",
+    "",
+    "| flow | what-exists | how-a-user-reaches-it | evidence | status |",
+    "|---|---|---|---|---|",
+    row,
+    "",
+  ].join("\n");
+
+test("the CLI plan reads the default record and feature-map paths — a settled project is COMPLETE (external-verify 557 B1)", () => {
+  const root = scratch();
+  try {
+    writeFileSync(path.join(root, "AGENTS.md"), guideFixture({ boundaries: "`web → prose-only` · `billing → machine: eslint no-cycle`" }));
+    mkdirSync(path.join(root, "docs", "workflow"), { recursive: true });
+    writeFileSync(path.join(root, RECORD_PATH), recordFixture(["| web | prose-only | issue | #42 | 2026-03-04 |"]));
+    writeFileSync(path.join(root, FEATURE_MAP_PATH), shippedMap("| Sign in | passwordless session | `GET /login` | none — no capture test yet | shipped |"));
+    const result = run("materialize", "plan", "--guide", "AGENTS.md", "--root", root);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /- boundary web: recorded-issue \(issue #42 proposes the rule\)/);
+    assert.match(result.stdout, /- feature-map docs\/workflow\/FEATURE_MAP\.md: seeded \(1 flow\(s\)\)/);
+    assert.doesNotMatch(result.stdout, /residual: boundary web/);
+    assert.doesNotMatch(result.stdout, /residual: feature-map/);
+    assert.match(result.stdout, /^verdict: COMPLETE$/m);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("the CLI check reads the feature map at its default path — a templated map is a finding without any flag (external-verify 557 B2)", () => {
+  const root = scratch();
+  try {
+    writeFileSync(path.join(root, "AGENTS.md"), guideFixture({ boundaries: "`billing → machine: eslint no-cycle`" }));
+    mkdirSync(path.join(root, "docs", "workflow"), { recursive: true });
+    writeFileSync(path.join(root, FEATURE_MAP_PATH), mapFixture(["| `<flow>` | `<what>` | `<how>` | `<evidence>` | `<status>` |"]));
+    const result = run("materialize", "check", "--guide", "AGENTS.md", "--root", root);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /- feature-map-shape: 5 placeholder cell\(s\) survive/);
+    assert.match(result.stdout, /^verdict: BLOCKED$/m);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("check --feature-map-declared without --feature-map reads the default path — an existing map is never called absent (external-verify 557 B2)", () => {
+  const root = scratch();
+  try {
+    writeFileSync(path.join(root, "AGENTS.md"), guideFixture({ boundaries: "`billing → machine: eslint no-cycle`" }));
+    mkdirSync(path.join(root, "docs", "workflow"), { recursive: true });
+    writeFileSync(path.join(root, FEATURE_MAP_PATH), shippedMap("| Sign in | passwordless session | `GET /login` | none — no capture test yet | shipped |"));
+    const result = run("materialize", "check", "--guide", "AGENTS.md", "--feature-map-declared", "--root", root);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.doesNotMatch(result.stdout, /feature-map-missing/);
+    assert.match(result.stdout, /^verdict: PASS$/m);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("check --feature-map-declared over a really absent default-path map still reports feature-map-missing (external-verify 557 B2, preservation)", () => {
+  const root = scratch();
+  try {
+    writeFileSync(path.join(root, "AGENTS.md"), guideFixture({ boundaries: "`billing → machine: eslint no-cycle`" }));
+    const result = run("materialize", "check", "--guide", "AGENTS.md", "--feature-map-declared", "--root", root);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /- feature-map-missing: .*absent from the tree/);
+    assert.match(result.stdout, /^verdict: BLOCKED$/m);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
