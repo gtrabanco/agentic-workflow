@@ -322,11 +322,73 @@ recorded as a transcription rather than passed off as a run. An owner-triggered
   run: a first-pass claim that the process carries ten numbered steps was wrong
   (it carries eleven, measured), and the inventory-claim filter read the wrong
   column of the 13-column row.
+- **E2** — 2026-11-17, `bun test scripts/product-audit-surplus.test.mjs` · exit 0 ·
+  13 pass / 0 fail (the dimension row and its depleted-direction regression, the
+  `test-surplus@1` block and its three checks, the three evidence standards, the
+  kill-rate bound, the citations, the receipt, the process receipt, class and
+  route, the boundary, the registration claim, and the two structural
+  regressions).
+- **E3** — 2026-11-17, the sibling suites that read the same two references · all
+  exit 0 · `product-audit-rescope` 16 pass / 0 fail, `residue-dimensions` 30 pass /
+  0 fail, `coverage-gap` 20 pass / 0 fail, `dimension-regression` 10 pass / 0 fail.
+- **E4** — 2026-11-17, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21
+  pass / 0 fail, and `bun scripts/prose-gate-inventory.mjs` · exit 0 ·
+  `verdict: PASS`, 70 rows (script 44 · cli 12 · prose 14 · migrate 0), the new
+  row resolved at `scripts/product-audit-surplus.test.mjs:105` and
+  `test-surplus-grammar` claimed once.
+- **E5** — 2026-11-17, `bun test scripts/guide-split.test.mjs` · exit 0 · 15 pass /
+  0 fail, and `bun test scripts/promise-coherence.test.mjs` · exit 0 · 37 pass /
+  0 fail (`bun scripts/promise-coherence.mjs` · exit 0 · `verdict PASS`, 42 claims
+  checked / 23 skipped as historical basis). The first run of this pair was red on
+  a real defect in this unit's own narration: `ceil(4923 x 1.10) = 5,416` written
+  with thousands separators, which the formula reader cannot parse — rewritten as
+  `ceil(4923 x 1.10) = 5416`.
+- **E6** — 2026-11-17, `bun scripts/skill-lint.mjs` · exit 0 · 104 files, 7 checks,
+  0 findings, `verdict: PASS`. Its first run found `SL-04 unpinned-url` on the
+  issue link this reference cited; the citation is a bare `#595` now.
+- **E7** — 2026-11-17, `bun scripts/lint-changeset.mjs .changeset/595-test-surplus-audit.md`
+  · exit 0 · `ok 595-test-surplus-audit.md`.
+- **E8** — 2026-11-17, the differential check against the base commit
+  (`8b51f375`, extracted with `git archive` into a throwaway tree): the six
+  commands this change touches — `prose-gate-inventory`, `check-skill-context
+  --documents`, `check-skill-context --skill product-audit`, `docs-generate
+  --check`, `skill-lint`, `promise-coherence`, plus `dimension-regression` with no
+  base — answer the same exit code and the same verdict on both trees, and the
+  only output difference is the intended measurement growth (AGENTS.md
+  723/160/563/12987 → 724/161/563/13014; GATE_INVENTORY.md
+  171/76/95/6899 → 172/77/95/7040). No unasked behaviour change.
+- **E9** — 2026-11-17, the declared non-goals as invariants:
+  `git diff --name-only 8b51f375...HEAD -- packages/agentic-workflow-schema
+  scripts/local-gate.mjs` prints nothing, and
+  `rg -c '^- \*\*R' docs/features/595-test-surplus-audit/SPEC.md` matches 0 — no
+  schema vocabulary, no gate step, no review run.
+- **G1** — 2026-11-17, `bun scripts/check-skill-context.mjs --documents` · exit 0 ·
+  `PASS context documents: 4 budgeted documents` (AGENTS.md 724/161/563/13014;
+  GATE_INVENTORY.md 172/77/95/7040) and `--skill product-audit` · exit 0 ·
+  `PASS context budgets: 1 skills`. Both ceilings were re-pinned in this commit:
+  the guide to the exact measurement it spends, the reference by the manifest's
+  own arithmetic (4923 est → 5416).
+- **G2** — 2026-11-17, `bun scripts/dimension-regression.mjs --base 8b51f375` · exit 0 ·
+  `verdict | clean`, 17 dimensions on both sides, 4 changed review surfaces, this
+  unit doc as the evidence carrier. Its first run was `refused` with
+  `missing-reverification-evidence` — the gate working, then satisfied by this
+  line, which is why the command sits on it rather than below. Beside it,
+  `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS` for
+  `docs/generated` (3 files, 0 stale, 0 orphaned) and `Roadmap: docs/ROADMAP.md —
+  unchanged`, so the emitter left the owner's row alone.
+- **G3** — 2026-11-17, `bun scripts/run-root-suite.mjs --jobs 4` · exit 0 · 119
+  suites, none failed. Its first run was red on `scripts/promise-coherence.test.mjs`
+  (E5's defect, fixed before this run).
+- **E10** — 2026-11-17, `git status --porcelain docs/LOGS.md` prints nothing: the
+  journal stayed untouched and the session entry is a fragment written through
+  `node scripts/session-close.mjs render` (the sanctioned writer's shape), never a
+  hand append.
 
 ## Next
 
-P3 — write the Tests dimension row, the surplus sweep section and its
-`test-surplus@1` grammar.
+Hand the diff to the owner as the external verifier; on the owner's verdict, open
+one PR against `main` with `Closes #595`. The observation half of AC-7 (a real
+audit pass recording the receipt) waits for the next owner-triggered audit.
 
 ## References
 
