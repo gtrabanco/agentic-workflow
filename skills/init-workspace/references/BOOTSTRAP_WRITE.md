@@ -167,9 +167,10 @@
    existing owner-written `.agentic-workflow/path-policy.json` untouched and
    report it as a residual. For each accepted platform,
    activate only its repository config/example as documented in the hook pack.
-   Run `bash .agentic-workflow/hooks/tests/test-command-guard.sh`; missing `jq`,
-   an unknown payload, or an existing customized hook file becomes a residual,
-   never a silent overwrite. Direct merges remain blocked; do not create a
+   Run `bash .agentic-workflow/hooks/tests/test-command-guard.sh`; a missing
+   `agentic-workflow` CLI (the hooks are shims over it), an unknown payload, or
+   an existing customized hook file becomes a residual, never a silent
+   overwrite. Direct merges remain blocked; do not create a
    `.automerge` exception.
 13. **Install accepted agent safety hooks.** Keep the canonical policy and
     fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
@@ -180,9 +181,10 @@
     existing owner-written `.agentic-workflow/path-policy.json` untouched and
     report it as a residual. For each accepted platform,
     activate only its repository config/example as documented in the hook pack.
-    Run `bash .agentic-workflow/hooks/tests/test-command-guard.sh`; missing `jq`,
-    an unknown payload, or an existing customized hook file becomes a residual,
-    never a silent overwrite. Direct merges remain blocked; do not create a
+    Run `bash .agentic-workflow/hooks/tests/test-command-guard.sh`; a missing
+    `agentic-workflow` CLI (the hooks are shims over it), an unknown payload, or
+    an existing customized hook file becomes a residual, never a silent
+    overwrite. Direct merges remain blocked; do not create a
     `.automerge` exception. Then offer the **push-range secret scan** (issue
     #552) as one consent question — "install the push-range secret scan as a
     `pre-push` hook?" — and, on a yes, write a `pre-push` hook that execs

@@ -191,7 +191,6 @@ export function main(argv, { stdin = () => readFileSync(0, "utf8"), stdout = (te
       const value = rest.shift();
       if (value === undefined) {
         stderr(`agentic-workflow guard: ${arg} needs a value\n`);
-        stderr(USAGE);
         return 2;
       }
       if (arg === "--command") command = value;
@@ -201,12 +200,10 @@ export function main(argv, { stdin = () => readFileSync(0, "utf8"), stdout = (te
       continue;
     }
     stderr(`agentic-workflow guard: unknown argument: ${arg}\n`);
-    stderr(USAGE);
     return 2;
   }
   if (!["plain", "copilot", "json"].includes(format)) {
     stderr(`agentic-workflow guard: --format must be plain, copilot or json\n`);
-    stderr(USAGE);
     return 2;
   }
 

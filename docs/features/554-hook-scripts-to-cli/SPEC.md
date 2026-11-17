@@ -128,11 +128,11 @@ Each criterion is observable and names the check that proves it.
 
 ## Impact
 
-- **What stops being true:** `template/.agentic-workflow/hooks/lib/forge.sh`,
-  `lib/temp.sh` and the rule bodies of `turn-contract.sh`,
+- **What stops being true:** the hooks' two sourced libraries (the `lib/` forge
+  adapter and temp resolver) and the rule bodies of `turn-contract.sh`,
   `guard-command.sh`, `git-identity-check.sh`, `fullauto-merge.sh`,
   `adapters/normalize-hook-payload.sh` are deleted by the change. Their two shell
-  suites (`test-forge-adapter.sh`, `test-temp-lib.sh`) are retired with them and
+  suites (the `lib/forge` and `lib/temp` adapter suites) are retired with them and
   every case ports to the crate suites in the same commit — a rule that loses its
   test is not a move.
 - **Consumers:** `skills/orchestration-envelope/references/TURN_CONTRACT.md`
@@ -165,11 +165,11 @@ Each criterion is observable and names the check that proves it.
 
 | Retired surface | Replacement / no-consumer evidence |
 |---|---|
-| `template/.agentic-workflow/hooks/lib/forge.sh` | `packages/agentic-workflow/src/forge.mjs`; `rg -c 'lib/forge.sh' template skills docs` → 0 after the change |
-| `template/.agentic-workflow/hooks/lib/temp.sh` | `packages/agentic-workflow/src/temp.mjs`; same count → 0 |
-| `template/.agentic-workflow/hooks/tests/test-forge-adapter.sh` | every case ports to `packages/agentic-workflow/test/forge.test.mjs` |
-| `template/.agentic-workflow/hooks/tests/test-temp-lib.sh` | every case ports to `packages/agentic-workflow/test/temp.test.mjs` |
-| the rule bodies of `guard-command.sh`, `turn-contract.sh`, `git-identity-check.sh`, `fullauto-merge.sh`, `adapters/normalize-hook-payload.sh` | the shim body (resolve + exec + forward) plus the crate modules |
+| the hooks' `lib/` forge adapter (the sourced shell library that named every forge binary) | the crate's `packages/agentic-workflow/src/forge.mjs`; `rg -c 'forge_detect' template` → 0 after the change |
+| the hooks' `lib/` temp resolver (the sourced shell library that held the candidate order) | the crate's `packages/agentic-workflow/src/temp.mjs`; `rg -c 'aw_tmpdir' template` → 0 |
+| the forge adapter's own shell suite | every case ports to `packages/agentic-workflow/test/forge.test.mjs` |
+| the temp resolver's own shell suite | every case ports to `packages/agentic-workflow/test/temp.test.mjs` |
+| the rule bodies of the five hook files (`guard-command`, `turn-contract`, `git-identity-check`, `fullauto-merge`, the payload normalizer) | the shim body (resolve + exec + forward) plus the crate modules; pinned by `packages/agentic-workflow/test/hook-shims.test.mjs` |
 
 ## Non-goals
 
@@ -324,6 +324,44 @@ this repository?*
   ```
   Apply to this repository: issue #554
   ```
+- **D1** — 2026-11-17, the cut's decisions are the engineering ones recorded in
+  `decisions.md` (D1–D11); no owner decision was requested or taken in-session.
+  The roadmap's 554 row moves `idea` → `in-progress` because execution started
+  (the convention the lane applies); the owner's verdict may override it.
+- **P1** — 2026-11-17, unit doc + `planning-evidence.md` (15 rows) +
+  `planning-obligations.md` (19 rows, all `planned`) + `decisions.md` frozen
+  · `2e160663`.
+- **E1** — 2026-11-17, `node packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/554-hook-scripts-to-cli/SPEC.md` · exit 2 · at cut: the expected refusal (19 obligations `planned`, and the paths this unit is about to create do not exist yet).
+- **E2** — 2026-11-17, `bun scripts/docs-generate.mjs --check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale · 0 orphaned` · `verdict: PASS` (the base half of the documentation differential).
+- **E3** — 2026-11-17, `node scripts/setup-env.mjs` · exit 0 · schema `dist` built, pi `node_modules` installed (both gitignored build output a fresh worktree lacks).
+- **P2** — 2026-11-17, the crate's temp + forge modules with their corpus: `temp.test.mjs` and `forge.test.mjs` landed first and were observed red on `ERR_MODULE_NOT_FOUND`, then green · `d7cff85a`.
+- **E4** — 2026-11-17, `node --test packages/agentic-workflow/test/temp.test.mjs packages/agentic-workflow/test/forge.test.mjs` · exit 0 · `pass 22` (red first: `Cannot find module …/src/temp.mjs`).
+- **P3** — 2026-11-17, the guard's decision and payload rule in the crate, the `guard-command` subcommand, and the three adapters reduced to their format seam · `d7cff85a`.
+- **E5** — 2026-11-17, `node --test packages/agentic-workflow/test/guard.command.test.mjs packages/agentic-workflow/test/guard.payload.test.mjs` · exit 0 · `pass 74` (red first on the missing `src/guard/command.mjs`).
+- **E6** — 2026-11-17, `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` · exit 0 · `PASS command guard: 8 allowed, 44 blocked, allowlist literal, adapters delegated`.
+- **E7** — 2026-11-17, `bash template/.agentic-workflow/hooks/tests/test-opencode-guard.sh` · exit 0 · `PASS OpenCode guard: allow and block paths exercised`.
+- **P4** — 2026-11-17, the turn-contract engine and the identity check into the crate, both shims reduced, the pi and `scripts/` duplicates deleted · `17e9fe76`.
+- **E8** — 2026-11-17, `node --test packages/agentic-workflow/test/turn-contract.engine.test.mjs packages/agentic-workflow/test/turn-contract.parity.test.mjs packages/agentic-workflow/test/turn-contract.forge.test.mjs packages/agentic-workflow/test/git-identity.hook.test.mjs packages/agentic-workflow/test/cli.surface.test.mjs` · exit 0 · `pass 92`.
+- **E9** — 2026-11-17, `node --test scripts/identity-hook-parity.test.mjs scripts/push-identity-check.test.mjs` · exit 0 · `pass 35` (the frozen 12-row corpus, both carriers on the crate module).
+- **E10** — 2026-11-17, `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` · exit 0 · `PASS turn contract: 46 cases`.
+- **E11** — 2026-11-17, `bash template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` · exit 0 · `31 case(s), 0 failure(s)`.
+- **E12** — 2026-11-17, `bun run --cwd packages/pi-agentic-workflow test` · exit 0 · `956 pass / 0 fail`.
+- **P5** — 2026-11-17, the automated merge wrapper in the crate, its shim reduced to resolve + exec · `6ad7f0ab`.
+- **E13** — 2026-11-17, `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh` · exit 0 · `PASS fullauto merge: transient marker cleaned; PR comment idempotent`.
+- **E14** — 2026-11-17, `node --test packages/agentic-workflow/test/fullauto-merge.test.mjs` · exit 0 · `pass 7`.
+- **P6** — 2026-11-17, `lib/forge.sh`, `lib/temp.sh` and their two suites retired with every case ported, the shim shape pinned, and the audit re-homed.
+- **E15** — 2026-11-17, `bash template/.agentic-workflow/hooks/tests/test-hook-shims.sh` · exit 0 · `23 case(s), 0 failure(s)`.
+- **E16** — 2026-11-17, `node --test packages/agentic-workflow/test/hook-shims.test.mjs` · exit 0 · `pass 19`.
+- **E17** — 2026-11-17, `bun scripts/rigidity-review.mjs` · exit 0 · `ok: 15 guard file(s), 3 rule(s)` · `homes: src/forge.mjs, src/temp.mjs`.
+- **E18** — 2026-11-17, `rg --files template/.agentic-workflow/hooks/lib` · exit 1 with no output · `lib/` holds no file (the shell source layer is gone).
+- **E19** — 2026-11-17, `rg -n 'grep -E|jq -|forge_detect|aw_tmpdir|origin/HEAD' template/.agentic-workflow/hooks --glob '!tests/**'` · exit 0 with **no match** · no hook file carries a rule.
+- **P7** — 2026-11-17, documentation and repository state in the same change: the hooks README rewritten around the shim and its degradation table, the crate README's four new Commands rows, `TURN_CONTRACT.md` and `GIT_IDENTITY_HARDENING.md` rewritten, `MIGRATION.md` entry, changeset, roadmap state, generated projection and journal fragment.
+- **E20** — 2026-11-17, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills` (the first cut was 3 estimate points over `TURN_CONTRACT.md`'s ceiling and the sentence was trimmed, never the budget re-based).
+- **E21** — 2026-11-17, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 4 budgeted documents`.
+- **E22** — 2026-11-17, `bun scripts/docs-generate.mjs --check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale` · `verdict: PASS`.
+- **E23** — 2026-11-17, `node --test scripts/git-config-writes.test.mjs` · exit 0 · `pass 9` (the template suites this unit edited write no git configuration).
+- **E24** — 2026-11-17, the base-vs-head differential on `guard-command`: the base hook (`git archive 9de62e1c`) and the head shim, run over 24 documented invocations (every allow and block family, the allowlist, the `.env` path rule, an empty command and the three usage errors) → **0 differences** in stdout, stderr and exit code. Harness in `mktemp -d`, removed after.
+- **E25** — 2026-11-17, the base assertions against the head implementation (`/tmp` copy of the base suites, their `guard=`/`shim=`/`hook=`/`wrapper=` re-pointed at the head): `test-command-guard` PASS · `test-fullauto-merge` PASS · `test-turn-contract` 46 cases with **three declared deltas** (the glab/gt stubs answer a JSON document instead of the retired `--jq` line; the minimal-PATH case carries the CLI's runtime; `--help` names `turn-contract`) · `test-git-identity-check` 31 cases with **one declared delta** (the retired `jq` precondition, 2 of its cases). Every delta is the change this document declares; none is a silent regression.
 
 ## Next
 

@@ -1,14 +1,58 @@
 # Agent safety hooks
 
-Repository-scoped, opt-in adapters for the agentic workflow. Every platform
-normalizes its payload into `guard-command.sh`; the policy blocks obvious
-environment disclosure, direct environment-file reads, and direct merge
+Repository-scoped, opt-in adapters for the agentic workflow. Each platform
+normalizes its payload into the command guard's decision; the policy blocks
+obvious environment disclosure, direct environment-file reads, and direct merge
 commands. Legitimate assignments such as `export NODE_ENV=test` remain allowed.
 
-Two shared libraries carry the facts no hook should hardcode: `lib/forge.sh`
-(which CLI speaks a forge, and how to ask it) and `lib/temp.sh` (the one writable
-temporary directory). A hook that needs either sources the library from its own
-directory — no `PATH` entry, no second copy.
+## The CLI is the one implementation
+
+Every hook in this directory is a **shim**: it resolves the `agentic-workflow` CLI,
+`exec`s it with its own argv, and forwards the exit code. It holds no rule, no
+allowlist, no payload precedence and no merge precondition — those live in the CLI
+(`@gtrabanco/agentic-workflow`), which is also what the shipped skills and this
+repository's own gates run. One implementation, two faces: `src/<name>.mjs` is the
+module a JavaScript caller imports, and the subcommand is the face a shell hook,
+a skill or a CI job spawns.
+
+| Hook | Subcommand | What decides |
+|---|---|---|
+| `guard-command.sh` | `guard-command` | the allowlist, the merge families of every forge, environment disclosure, `.env` reads |
+| `turn-contract.sh` | `turn-contract` | the five boxes of the canonical turn contract, box4 asked of the checked remote's forge |
+| `git-identity-check.sh` | `git-identity-check` | the resolved author/committer against `gitIdentity`, and the signing policy |
+| `fullauto-merge.sh` | `fullauto-merge` | every precondition of the automated merge, then the merge itself |
+| `index-sync.sh` | `doc --sync --quiet` | the documentation index refresh (unit 65's fast path) |
+| `adapters/pre-tool-guard.sh` | `guard-command --payload --format plain` | the decision, answered in plain text on stderr |
+| `adapters/copilot-guard.sh` | `guard-command --payload --format copilot` | the decision, answered as Copilot's `{continue, stopReason}` |
+| `adapters/normalize-hook-payload.sh` | `guard-command --payload --format json` | the payload normalized to `[command, path]` for an adapter that formats its own answer |
+| `secret-scan.sh` | `bun`, else `node` | the push-range secret scan (its own runner; see below) |
+
+The resolution is one line in every shim and it is ordered: `AGENTIC_WORKFLOW_BIN`
+when the caller set it, else `command -v agentic-workflow`. A project that installs
+the scaffold gets the CLI from `npx`/`bunx` or a global install; a source checkout
+points the variable at `packages/agentic-workflow/bin/agentic-workflow.mjs`, which
+is what the hook suites do. `jq` is no longer required by any hook: the payload rule
+and every forge document are parsed in JavaScript.
+
+## Degradation
+
+A shim whose CLI is absent cannot decide, so each capability answers with its own
+declared contract — never silence, and never a guess:
+
+| Hook | Without the CLI |
+|---|---|
+| `guard-command.sh`, `adapters/*` | **refuses** (exit 2, or `{continue:false}` for Copilot), naming the missing CLI: an absent decision engine must not allow |
+| `git-identity-check.sh` | **refuses the commit** (exit 1), naming the missing CLI: an unverified identity is not an approved one |
+| `turn-contract.sh` | **exit 2**, naming the missing CLI: it never prints a receipt it did not compute |
+| `fullauto-merge.sh` | **exit 1**, naming the missing CLI: nothing merges without the preconditions |
+| `index-sync.sh` | **silent no-op, exit 0**: a best-effort index refresh must never fail a git operation (unit 65, AC21), so with no entry point installed the hook is inert and the `grep` fallback holds |
+| `secret-scan.sh` | **exit 2** naming both runtimes: a scanner that cannot look never reports nothing to see |
+
+The same rule covers a forge that cannot be asked: an uninstalled `gh`/`glab`/`gt`,
+a Bitbucket remote (no official pull-request CLI) and a self-hosted hostname that
+says nothing are refused with the message that names the missing thing and both
+overrides (`--forge`, `AGENTIC_WORKFLOW_FORGE`). None of them passes silently, and
+none of them "helpfully" continues.
 
 ## Activate one or more adapters
 
@@ -19,13 +63,18 @@ directory — no `PATH` entry, no second copy.
 | Copilot | copy `.github/hooks/agentic-workflow.json.example` to `.github/hooks/agentic-workflow.json` |
 | OpenCode | copy `.opencode/plugins/agentic-workflow-guard.ts.example` to `.opencode/plugins/agentic-workflow-guard.ts` |
 
-The shell adapters require `jq`; OpenCode uses Bun's built-in process API. Run:
+The adapters own their platform's *shape* (which file carries the payload, and
+which document the host reads back) and nothing else: which key holds the command,
+which holds the path, and what is allowed are the CLI's. Run the suites:
 
 ```sh
+bash .agentic-workflow/hooks/tests/test-hook-shims.sh
 bash .agentic-workflow/hooks/tests/test-command-guard.sh
-bash .agentic-workflow/hooks/tests/test-temp-lib.sh
-bash .agentic-workflow/hooks/tests/test-forge-adapter.sh
+bash .agentic-workflow/hooks/tests/test-turn-contract.sh
+bash .agentic-workflow/hooks/tests/test-git-identity-check.sh
+bash .agentic-workflow/hooks/tests/test-fullauto-merge.sh
 bash .agentic-workflow/hooks/tests/test-secret-scan.sh
+bash .agentic-workflow/hooks/tests/test-index-sync.sh
 ```
 
 Do not activate or overwrite a customized platform hook without explicit
@@ -62,6 +111,13 @@ SH
 chmod +x .git/hooks/pre-commit
 bash .agentic-workflow/hooks/tests/test-git-identity-check.sh
 ```
+
+The profile rule — the enforce vocabulary, the approved facts, the signing policy
+— and the commit comparison are one module
+(`@gtrabanco/agentic-workflow/src/guard/git-identity.mjs`). The pre-commit shim and
+`scripts/push-identity-check.mjs` are its two carriers, and the pi extension's
+agent guard imports the same normalizer. Two carriers, one implementation: the
+parity corpus holds them to the same verdicts.
 
 The full annex — the two layers, the corporate profile, the environment layout,
 and what is deliberately not recommended — is
@@ -131,9 +187,10 @@ blanket silence.
 
 ## Forges, remotes and degradation
 
-`turn-contract.sh` and `fullauto-merge.sh` ask a forge, and which one is a fact
-about the remote they are pointed at (`--remote`, default `origin`), never a
-build-time choice. `lib/forge.sh` resolves it:
+`turn-contract` and `fullauto-merge` ask a forge, and which one is a fact about the
+remote they are pointed at (`--remote`, default `origin`), never a build-time
+choice. The CLI's `src/forge.mjs` resolves it, and it is the only place a forge
+binary is named:
 
 | Remote names | CLI | Notes |
 |---|---|---|
@@ -148,26 +205,10 @@ A self-hosted instance whose hostname says nothing is named explicitly —
 `--forge github|gitlab|gitea|bitbucket` or `AGENTIC_WORKFLOW_FORGE` — and the
 refusal names both, so the fix is one flag rather than an afternoon.
 
-**Degradation is always fail-closed and always names the missing thing.** A forge
-CLI that is not installed, a forge that cannot be classified, a Bitbucket remote, a
-`pre-push` hook on a host with neither `bun` nor `node`, a missing `jq` in the
-identity hook: each exits non-zero with a message naming the tool, the host or the
-provider it could not use. None of them passes silently, and none of them
-"helpfully" continues.
-
-## Temporary directories
-
-`lib/temp.sh` is the one resolution: `TMPDIR`, then `TEMP`, then `TMP`, then
-`/tmp`, each used only when it is a writable directory. That order is what makes a
-Windows host (which sets `TEMP`, not `TMPDIR`) and a minimal container (which sets
-neither) both work, and it is why no hook carries its own
-`${TMPDIR:-/tmp}` anymore. `aw_mktemp_file <prefix>` creates the file;
-`aw_tmpdir` answers the directory.
-
 ## Automated merge
 
 Direct merge commands are always blocked. The former `ship-roadmap --fullauto`
-was the sole automated merge authority and called `fullauto-merge.sh` only after
+was the sole automated merge authority and asked for `fullauto-merge` only after
 a fresh SHA-bound audit. The wrapper creates a transient marker under the git
 common directory, removes it on every exit, and posts an idempotent audit
 comment on the merged PR/MR. It never creates a persistent `.automerge`
@@ -190,6 +231,15 @@ forge contents API is involved.
 
 These hooks are defense-in-depth, not a sandbox. Keep secret-manager controls
 and forge branch protection/rulesets enabled.
+
+## Temporary directories
+
+One resolution serves every consumer that needs a scratch file:
+`@gtrabanco/agentic-workflow/src/temp.mjs` — `TMPDIR`, then `TEMP`, then `TMP`,
+then `/tmp`, each used only when it is a writable directory. That order is what
+makes a Windows host (which sets `TEMP`, not `TMPDIR`) and a minimal container
+(which sets neither) both work, and no hook carries its own `${TMPDIR:-/tmp}`
+anymore because no hook carries a rule at all.
 
 ## The command guard's allowlist
 
