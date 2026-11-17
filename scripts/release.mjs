@@ -689,7 +689,16 @@ function compareBase(a, b) {
  * canary also separates the changes it adds from the ones it merely reprints.
  * The body ends with the "Contributions" section `renderContributors()` builds
  * from the PRs merged since the previous release.
+ *
+ * The body also cannot exceed GitHub's release-body limit (125,000 characters —
+ * HTTP 422 "body is too long", run 43999980103): a canary never consumes
+ * changesets, so the backlog it reprints grows with every train between stable
+ * cuts. The render sheds detail down a ladder, never a change — the carried
+ * bodies go first, then every body; the headings, the install block, the bumps
+ * table, the contributors and the Full Changelog link survive every rung.
  */
+const RELEASE_BODY_MAX_CHARS = 125000;
+
 function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, gitRepo }) {
   const tag = channel === "canary"
     ? canaryVersion(root, plan.canaryBase, stamp, channel, gitRepo)
@@ -706,8 +715,8 @@ function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, 
   const news = changes.filter((change) => !isCarried(change));
   const earlier = changes.filter(isCarried);
 
-  const out = [];
-  out.push(
+  const intro = [];
+  intro.push(
     channel === "canary"
       ? `Prerelease of the next stable train \`${plan.canaryBase}\`: every change below is pending on`
         + " `main`, the stable cut consumes it, and nothing here is published as `latest`."
@@ -715,52 +724,61 @@ function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, 
     "",
   );
   if (plan.forced) {
-    out.push(channel === "canary"
+    intro.push(channel === "canary"
       ? `> Canary base forced by operator: \`${plan.canaryBase}\`.`
       : `> Version forced by operator: ${tag}.`, "");
   }
-  out.push(...installBlock({ channel, tag, bumps: bumpRows(changesets) }), "");
+  intro.push(...installBlock({ channel, tag, bumps: bumpRows(changesets) }), "");
 
-  out.push("## Package bumps", "", "| What | Bump |", "|---|---|");
-  for (const row of bumpRows(changesets)) out.push(`| \`${row.pkg}\` | ${row.level} |`);
-  out.push("");
+  intro.push("## Package bumps", "", "| What | Bump |", "|---|---|");
+  for (const row of bumpRows(changesets)) intro.push(`| \`${row.pkg}\` | ${row.level} |`);
+  intro.push("");
 
-  const section = (title, rows) => {
+  const section = (out, rows, withDetail) => {
     if (rows.length === 0) return;
-    out.push(`## ${title}`, "");
     for (const row of rows) {
       out.push(`### ${row.head}`, "");
-      if (row.detail) out.push(row.detail, "");
+      if (row.detail && withDetail) out.push(row.detail, "");
     }
   };
-  section("Breaking changes", news.filter((change) => change.breaking));
-  // "anything not feat or fix falls into Fixes" (NOTE_GROUPS above): a change
-  // whose body carries no conventional title (type "other") is a change all
-  // the same — dropping it would publish a release body that hides real work.
-  for (const [type, title] of NOTE_GROUPS) {
-    const rows = type === "fix"
-      ? news.filter((change) => !change.breaking && change.type !== "feat")
-      : news.filter((change) => !change.breaking && change.type === type);
-    section(title, rows);
-  }
-
-  if (earlier.length > 0) {
+  const newsSections = (out, withDetail) => {
+    // "anything not feat or fix falls into Fixes" (NOTE_GROUPS above): a change
+    // whose body carries no conventional title (type "other") is a change all
+    // the same — dropping it would publish a release body that hides real work.
+    const grouped = (title, rows) => {
+      if (rows.length === 0) return;
+      out.push(`## ${title}`, "");
+      section(out, rows, withDetail);
+    };
+    grouped("Breaking changes", news.filter((change) => change.breaking));
+    for (const [type, title] of NOTE_GROUPS) {
+      grouped(title, type === "fix"
+        ? news.filter((change) => !change.breaking && change.type !== "feat")
+        : news.filter((change) => !change.breaking && change.type === type));
+    }
+  };
+  const carriedSections = (out, withDetail) => {
+    if (earlier.length === 0) return;
     out.push("## Also in this prerelease", "",
       `Already carried by \`${previous}\` — the same tree, nothing new to read here.`, "",
       "<details>", `<summary>${earlier.length} earlier change${earlier.length === 1 ? "" : "s"}</summary>`, "");
-    for (const row of earlier) {
-      out.push(`### ${row.head}`, "");
-      if (row.detail) out.push(row.detail, "");
-    }
+    section(out, earlier, withDetail);
     out.push("</details>", "");
-  }
+  };
+  const carriedCollapsed = (out) => {
+    if (earlier.length === 0) return;
+    out.push("## Also in this prerelease", "",
+      `The ${earlier.length} change${earlier.length === 1 ? "" : "s"} already carried by \`${previous}\` are elided — the release body hit GitHub's ceiling. Read them through the changelog compare below.`, "");
+  };
+  const shedNote = (out) => {
+    out.push("> Some change bodies are elided here — the release body reached GitHub's 125,000-character cap. Every change is still listed by heading; the full text is one commit away through the changelog compare below.", "");
+  };
 
-  // Contributions section — the PRs merged since the previous release, in the
-  // shape `--generate-notes` produced; appended last so the rendered body keeps
-  // its own structure.
+  // The tail survives every shedding rung: credits and the compare link are
+  // how a reader reaches the full text the body shed.
+  const tail = [];
   const contributions = renderContributors(root, channel, tag, gitRepo);
-  if (contributions) out.push(contributions);
-
+  if (contributions) tail.push(contributions);
   // Full Changelog link — the range that `--generate-notes` appends by default.
   const prev = channel === "canary"
     ? previousCanaryTag(root, tag)
@@ -775,12 +793,60 @@ function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, 
     const remote = git(root, ["remote", "get-url", "origin"]);
     const slug = githubSlug(remote);
     if (slug) {
-      out.push("Thank you to all contributors for your support.");
-      out.push(`**Full Changelog**: https://github.com/${slug}/compare/${prevTag}...${tag.startsWith("v") ? tag : `v${tag}`}`);
+      tail.push("Thank you to all contributors for your support.");
+      tail.push(`**Full Changelog**: https://github.com/${slug}/compare/${prevTag}...${tag.startsWith("v") ? tag : `v${tag}`}`);
     }
   }
 
-  return out.join("\n").trimEnd();
+  const assemble = ({ newsDetail, carriedDetail, collapse }) => {
+    const out = [...intro];
+    newsSections(out, newsDetail);
+    if (collapse) carriedCollapsed(out); else carriedSections(out, carriedDetail);
+    if (!newsDetail || !carriedDetail) shedNote(out);
+    return out;
+  };
+  const withTail = (headLines) => {
+    const out = [...headLines];
+    if (contributions) out.push(contributions);
+    out.push(...tail);
+    return out.join("\n").trimEnd();
+  };
+
+  const LADDER = [
+    { newsDetail: true, carriedDetail: true },
+    { newsDetail: true, carriedDetail: false },
+    { newsDetail: false, carriedDetail: false },
+    { newsDetail: false, carriedDetail: false, collapse: true },
+  ];
+  let body = null;
+  for (const rung of LADDER) {
+    const candidate = withTail(assemble(rung));
+    if (candidate.length <= RELEASE_BODY_MAX_CHARS) {
+      body = candidate;
+      break;
+    }
+  }
+  // The last rung: even the headings do not fit. Truncate the head at a line
+  // boundary, then re-attach the tail — the compare link is how the reader
+  // reaches the changes the body could not hold.
+  if (body === null) {
+    const rest = [...(contributions ? [contributions] : []), ...tail].join("\n");
+    const marker = "… this release carries more changes than a GitHub release body can render — the changelog compare below holds every change.";
+    let head = assemble({ newsDetail: false, carriedDetail: false, collapse: true }).join("\n").trimEnd();
+    const room = RELEASE_BODY_MAX_CHARS - rest.length - marker.length - 8;
+    if (room > 0 && head.length > room) {
+      head = head.slice(0, room);
+      const cut = head.lastIndexOf("\n");
+      if (cut > Math.floor(room / 2)) head = head.slice(0, cut);
+      head += `\n\n${marker}`;
+    }
+    body = `${head}\n\n${rest}`.trimEnd();
+    if (body.length > RELEASE_BODY_MAX_CHARS) {
+      body = `${body.slice(0, RELEASE_BODY_MAX_CHARS - 1)}\n[… elided — the release body hit GitHub's 125,000-character cap …]`;
+    }
+  }
+
+  return body;
 }
 
 // --- apply (stable channel) -------------------------------------------------
