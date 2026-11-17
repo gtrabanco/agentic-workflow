@@ -194,7 +194,7 @@ required failure state, in the 9-column shape owned by
 | O3 | S1 · AC-S1 · PE-008 | A real durable out-of-root target in the same command still blocks headless and still asks once interactively, and the reason names the durable path, never the sink | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` exits 0 (cases `F4`, `F5`) | `E` line naming `F4`/`F5` | verified — E3 line (`F4` blocks naming `/home/person/durable.md`; `F5` one prompt) |
 | O4 | S2 · AC-S2 | Every sink S2 names is skipped: `/dev/null`, `/dev/zero`, `/dev/full`, `/dev/stdin`, `/dev/stdout`, `/dev/stderr`, `/dev/tty` and `/dev/fd/<n>` | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` exits 0 (case `F6` over the eight names) | `E` line naming `F6` and the eight names | verified — E3 line (`F6` covers all eight) |
 | O5 | S2 · AC-S2 · PE-003/PE-005 | The skip runs before resolution: the injected `resolveTarget` is never called for a device sink, so `/dev/std*`'s `/proc/self/fd/…` form cannot block | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` exits 0 (case `F7`: resolver call count 0 and a throw-on-call resolver still passes) | `E` line naming `F7` | verified — E3 line (`F7`: 0 resolver calls, throwing resolver unreached) |
-| O6 | S2 · AC-S2 · PE-002 | The carve-out is exact, never a prefix on the raw text: a relative `dev/null`, a trailing-slash form and `/dev/nullx` are still judged, and `analyzeShellWrite` still reports the operand | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` exits 0 (case `F8`) | `E` line naming `F8` | verified — E3 line (`F8`: three non-sink forms still block, analysis unchanged) |
+| O6 | S2 · AC-S2 · PE-002 · D3 | The carve-out is exact, never a prefix on the raw text: a relative `dev/null`, the bare `/dev/fd` and `/dev/nullx` are still judged, a spelling that lexically resolves to a named sink (`/dev/null/`, `//dev/null`) is that sink under D3 rather than a lookalike, and `analyzeShellWrite` still reports the operand | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` exits 0 (case `F8`) | `E` line naming `F8` | verified — E3 line (`F8`: three non-sink forms still block, analysis unchanged) + E10 line (F8 pin: normalized sink spellings skip before resolution) |
 | O7 | regression scope · PE-006 | Every pre-existing guard behaviour is unchanged: the 21 cut-head cases (containment, temp carve-out, Tier 2, tilde, script scan, receipt/git ordering) still pass | P4 | P4 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` exits 0 (all cut-head cases present, unchanged) | `E` line with the run's pass count and `0 fail` | verified — E3 line (30 pass = 21 cut-head + 9 new) |
 | O8 | S1 · S2 · PE-007 | The guard's declared contract surface states the carve-out, so the contract stops implying a device sink is a durable out-of-root target | P3 | P3 | direct application (this session) | `rg -n 'device sink' skills/orchestration-envelope/references/TURN_CONTRACT.md` matches 1 | `E` line with the command and its match | verified — E4 line (1 match at TURN_CONTRACT.md:188) |
 | O9 | S1 · S2 | The whole deterministic gate passes with the change in place, and the docs projection is a fixed point | P4 | P4 | direct application (this session) | `node scripts/run-root-suite.mjs` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0 | `E` lines with both verdicts | verified — E7/E8 lines (root gate 116/116 exit 0, `--jobs 1`; projection + docs checks exit 0) |
@@ -309,6 +309,25 @@ required failure state, in the 9-column shape owned by
 - **E9** — 2026-11-17, `bun scripts/residual-classify.mjs --inventory --base b25ef8a9`
   · exit 0 · `rows: []` — the carve-out adds no manifest surface, matching
   `## Retirements`.
+- **D4** — 2026-11-17, external-verify A1 reconciliation (correction batch 1): O6's
+  use-case text named "a trailing-slash form … still judged", which no validator
+  covered and which contradicts D3 — `path.resolve` normalizes the spelling before
+  the exact-equality compare, and bash itself refuses `> /dev/null/` (`Is a
+  directory`). The guard's behaviour is kept (D3-correct; `//dev/null` is a working
+  discard redirect S1 says must pass), the O6 text now states the tested forms plus
+  the normalization clause, and F8 gains the pin for it.
+- **E10** — 2026-11-17, correction batch 1 for external-verify A1 · red before the
+  edit: the O6 claim check (`bun /tmp/aw606-fix/redcheck.mjs docs/fix/606-shell-guard-device-sinks/SPEC.md`)
+  → exit 1 (`O6 still asserts the trailing-slash form is judged`), with the probe
+  showing `/dev/null/` and `//dev/null` → `block:false`, 0 resolver calls at head
+  while the base copy judges both · green after: the same check → exit 0,
+  `bun test packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` → exit 0 ·
+  `30 pass, 0 fail` (F8 pin), `cd packages/pi-agentic-workflow && bun run test` →
+  exit 0 · `956 pass, 0 fail`, `bun scripts/test-impact.mjs --base 34211721` →
+  `targeted`, `node scripts/run-root-suite.mjs` → exit 0 · `116/116 PASS`,
+  `phase-lint docs/fix/606-shell-guard-device-sinks/SPEC.md` → `verdict PASS`,
+  `bun scripts/docs-generate.mjs --check` → PASS, `bun scripts/promise-coherence.mjs`
+  → PASS (42 checked · 23 skipped).
 
 ## Next
 
