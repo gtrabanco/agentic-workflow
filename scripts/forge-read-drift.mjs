@@ -139,7 +139,12 @@ const lineAt = (text, offset) => text.slice(0, offset).split("\n").length;
  * @param {{files: Map<string, string>, exemptions?: Array<{file: string, why: string}>, transportExempt?: Array<{file: string, why: string}>}} model
  * @returns {{findings: Array<{code: string, file: string, line: number|null, detail: string}>, checked: number, sanctioned: string[], citations: number}}
  */
-export function scanForgeReadDrift({ files, exemptions = [], transportExempt = [] }) {
+export function scanForgeReadDrift(input = {}) {
+  // A bare `Map` is the model itself; the object form carries the injected
+  // exemptions a test adds without rebuilding the file map.
+  const files = input instanceof Map ? input : (input.files ?? new Map());
+  const exemptions = input instanceof Map ? [] : (input.exemptions ?? []);
+  const transportExempt = input instanceof Map ? [] : (input.transportExempt ?? []);
   const findings = [];
   const checked = [...files.keys()].filter((file) => SCANNED_ROOTS.some((dir) => file.startsWith(`${dir}/`))).sort();
   const excluded = new Set([...EXCLUSIONS.keys(), ...exemptions.map((entry) => entry.file)]);

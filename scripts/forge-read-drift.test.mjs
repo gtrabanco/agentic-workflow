@@ -42,10 +42,15 @@ const RUNNER_TABLE = [
   "## Exit codes",
 ].join("\n");
 
-/** A model with one prose file and the runner contract's table. */
+/**
+ * A model with the page under test, one page that orders the sanctioned form (as
+ * every real tree must) and the runner contract's table — so an injected case
+ * isolates the rule it is about instead of tripping the citation rule too.
+ */
 function model(text, runner = RUNNER_TABLE) {
   return new Map([
     ["skills/demo/SKILL.md", text],
+    ["skills/demo/references/READ.md", "`runner forge-read pr <n> --comments` reads the thread."],
     ["skills/runner-contract/references/RUNNER.md", runner],
   ]);
 }
