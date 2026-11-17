@@ -364,8 +364,12 @@ OpenCode adapter does not load this fallback.
 
 - A tailored `AGENTS.md` + `docs/` scaffold + `.github/` templates exist in the
   target, unused folders pruned, residual placeholders flagged, the platform's
-  companion review skills are recorded (and offered), and the `urgent`/
-  `fix-next` labels are seeded (scaffold) or additively reconciled (upgrade),
+  companion review skills are recorded (and offered), the skill-discovery route
+  was offered after the charter round — and either every installed extra is
+  registered in the guide's `review-extras@1` note with its source, pin, install
+  date and axis, or nothing was installed and the tree is byte-identical — and
+  the `urgent`/`fix-next` labels are seeded (scaffold) or additively reconciled
+  (upgrade),
   and every accepted safety adapter is active and fixture-tested — or explicitly
   listed as a residual when its hook API/dependency was unavailable.
   The adaptive lane conventions (unit document, triage, catalog steps, guards,
