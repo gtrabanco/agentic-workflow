@@ -125,6 +125,7 @@ shell fallback.
 | `needs-input <unit-dir>` | the open-question sensor |
 | `ledger-provenance <ledger> [--check\|--annotate]` | the fold-queue recount |
 | `quality-metrics [--window <days>] [--until <instant>] [--repo <dir>] [--out <path>]` | the project-quality sensor — the DORA four keys plus the reversion ratio as one `quality-metrics@1` document (definitions in the crate README) |
+| `forge-read <issue\|pr> <number> [--comments] [--reviews] [--json]` | the guarded forge read — one issue or pull request, its threads on request, every content field through the content guard and printed as the fenced delivery (or as the `forge-read@1` envelope with `--json`); `forge-read shim <install\|check\|exec>` is the ad-hoc `gh` interceptor the same route drives |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | the unit router and the triage step list |
 | `skills <discover\|register\|inventory> [flags]` | the skill-discovery route's machine half — the screen, the consented install decision and the registration/decay inventory (issue #591; grammars in the crate README) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
