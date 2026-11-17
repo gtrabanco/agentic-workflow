@@ -1,0 +1,6 @@
+## 2026-11-17T18:04:38Z — main — narrative
+- **Commits:** 2 (`ac1006a4…5141c5b8`)
+- **Files:** 9 files
+- **Summary:** Debug shell write guard: false-positive /dev/null prompts, declined approvals ignored (sync confirm vs async Promise), device-sink inventory across Linux/macOS/Windows, package comparison (permission-guard-pi 0.3.0 dominates), owner decision: adopt guard, retire in-repo shell guard as removal unit (#606) blocked-by SystemOne guard-answering surface (#444).
+- **Decisions:** Adopted permission-guard-pi as the shell/bash write guard: it handles device sinks correctly, honors declined approvals, provides session+persistent grants, off-switch, Windows path normalization. Our guard is leaky (dd of=, sed -i, curl -o, computed vars, node -e, process substitution, python -c all bypass silently), has P0 sync-confirm bug, no config switch. SystemOne answering surface: driver-layer RPC for third-party guards, in-process decide seam for in-repo guards.
+- **Next:** When owner confirms adoption: implement #606 removal (delete shell-path.ts, handler wiring, suite, prose) + README docs with permission-guard-pi pointer; implement #444 adoption docs + guard-answering surface. Pre-adoption checks: Windows host run, e2e prompt-honoring, unreliable_command UX on > /dev/null combos.
