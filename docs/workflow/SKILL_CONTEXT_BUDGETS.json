@@ -293,7 +293,7 @@
     },
     "unit-lane": {
       "mainEstimateMax": 5246,
-      "mainLinesMax": 365,
+      "mainLinesMax": 403,
       "mainSources": {
         "fix/258 harden-needs-input": "the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and the no-silent-feature-default rule has one home — measured 3112 est / 246 lines; ceiling ceil(3112 x 1.10) = 3424 / ceil(246 x 1.10) = 271 (down from 3464/280, the body shrank)",
         "fix #303 (investigate → orient → ask → decide)": "the design and plan steps are restated positively (investigate search + `sources.md` citation ledger, orient tiers 0/1/2, ask, decide) and each fixed output contract gains the questions pane; measured DESIGN.md 2529 est / 196 lines and PLAN.md 2377 est / 187 lines, so the skill-level reference ceilings are re-based to ceil(2529 x 1.10) = 2782 and ceil(196 x 1.10) = 216 (the tighter of the two files' lines that still bounds both); the main-entry ceilings (3424 / 271) are unchanged and the two new turn-contract boxes fit inside them (measured 3277 est / 255 lines)",
@@ -303,7 +303,8 @@
         "fix 340 (third-party + ask-dont-infer owner block)": "fix 340: the conductor gains the owner pointers on its two ask-don't-infer mentions — main entry measured 3789 est / 292 lines at this re-basis, inside the unchanged ceilings 4135 / 319",
         "issue #360 (unit 360a-risk-tiered-ceremony)": "step 1a reads the risk tier from the closed ceremony CLI (`tier classify`) before any unit doc exists: the three Task Size signals, the passive route, and the pointer to the one owner of the per-tier table. Measured at the change with `bun scripts/check-skill-context.mjs`: 4148 est / 322 lines; ceilings re-based to ceil(4148 x 1.10) = 4563 and ceil(322 x 1.10) = 355.",
         "issue #294 (unit 82 relay-lane-execution)": "the relay hand-off paragraph and close-out pointer grew this entry; measured 4317 est / 331 lines at this cut, so the ceilings are ceil(4317 x 1.10) = 4749 and ceil(331 x 1.10) = 365",
-        "fix 434 (tier-fused design/plan, delta provenance)": "the conductor's step-contract paragraph gains the fused-pass rule with its owner pointer (the normative block lives in references/PLAN.md — one pointer in main, never a restatement); measured 4769 est / 353 lines at this cut, so the estimate ceiling re-bases to exact ceil(4769 x 1.10) = 5246 while the line ceiling stays 365 (353 < 365). Growth source = fix 434's SKILL.md fused-pass paragraph"
+        "fix 434 (tier-fused design/plan, delta provenance)": "the conductor's step-contract paragraph gains the fused-pass rule with its owner pointer (the normative block lives in references/PLAN.md — one pointer in main, never a restatement); measured 4769 est / 353 lines at this cut, so the estimate ceiling re-bases to exact ceil(4769 x 1.10) = 5246 while the line ceiling stays 365 (353 < 365). Growth source = fix 434's SKILL.md fused-pass paragraph",
+        "feature 526 (evidence-backed elicitation, Layer 0)": "the lane's entry gains the Layer-0 pre-spec step (before triage) and its turn-contract box, both pointing at references/ELICITATION.md; measured 4946 est / 366 lines against the previous 365 line ceiling, so the line ceiling is re-set to ceil(366 x 1.10) = 403 and the estimate ceiling stands (4946 of 5246). Growth source = feature 526's Layer-0 step, one box and one four-line section."
       },
       "referenceEstimateMax": 5218,
       "referenceLinesMax": 360,
