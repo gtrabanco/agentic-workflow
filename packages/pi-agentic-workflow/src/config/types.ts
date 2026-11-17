@@ -122,6 +122,35 @@ export const DEFAULT_STATE_FLOW: StateFlowConfig = {
 };
 
 // ---------------------------------------------------------------------------
+// Shell-tool choice (issue #610)
+// ---------------------------------------------------------------------------
+
+/** What the command-time carrier does with a violation. `block` surfaces the
+ *  equivalent to the model and refuses the call; `rewrite` forwards the command
+ *  in place when the translation is exact and blocks when it is not. */
+export const TOOL_CHOICE_MODES = ["block", "rewrite"] as const;
+export type ToolChoiceMode = (typeof TOOL_CHOICE_MODES)[number];
+
+/** What an operator WRITES under `toolChoice`. Everything optional. */
+export interface ToolChoiceConfigFile {
+  /** Master switch; shipped on — the convention is enforced unless opted out. */
+  enabled?: boolean;
+  /** `block` (shipped) or `rewrite`. */
+  mode?: ToolChoiceMode;
+}
+
+/** What the extension READS: the resolved `toolChoice` posture. */
+export interface ToolChoiceConfig {
+  enabled: boolean;
+  mode: ToolChoiceMode;
+}
+
+export const DEFAULT_TOOL_CHOICE: ToolChoiceConfig = {
+  enabled: true,
+  mode: "block",
+};
+
+// ---------------------------------------------------------------------------
 // Model-profiles fields (feature 63)
 // ---------------------------------------------------------------------------
 
@@ -221,6 +250,8 @@ export interface ConfigFile {
   subagents?: SubagentsConfigFile;
   /** Issue #174: the opt-in, command-scoped State Flow episode lifecycle. */
   stateFlow?: StateFlowConfigFile;
+  /** Issue #610: the command-time shell-tool-choice carrier. */
+  toolChoice?: ToolChoiceConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -326,6 +357,8 @@ export interface EffectiveConfig {
   subagents: SubagentsConfigFile;
   /** Issue #174: the State Flow episode lifecycle, resolved. */
   stateFlow: StateFlowConfig;
+  /** Issue #610: the shell-tool-choice carrier, resolved. */
+  toolChoice: ToolChoiceConfig;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }
