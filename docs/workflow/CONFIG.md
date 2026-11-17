@@ -19,7 +19,7 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
   and π; only the implementation of each feature differs.
 - **Extension file** — package-specific config. The `pi-agentic-workflow`
   package owns `pi-agentic-workflow.json` (model routing, profiles, passes,
-  subagent limits, State Flow). A package that is not installed contributes
+  subagent limits, State Flow, shell-tool choice). A package that is not installed contributes
   neither a section nor a file, so the base config never breaks.
 - Both files are **JSONC**: `//` and `/* */` comments and trailing commas are
   accepted. On Bun the runtime's own parser (`Bun.JSONC.parse`) reads the file
@@ -62,7 +62,7 @@ project can never silently drop a global glob or lower a requirement.
 | `gitIdentity` | base | `{ "enforce": "off", "approved": {}, "agentGuard": { "mode": "ask", "allow": [] } }` | `enforce` = `off`/`commit`/`push`/`push-upstream`/`commit-and-push`/`commit-and-push-upstream` (`push` judges a push to any remote, `push-upstream` only the branch's tracked upstream remote); `approved` = `name`, `email`, `fullName`, `format` (`openpgp`/`ssh`), `signingKey`, `signingKeys` (per-machine keys), `signing` (`required`/`allowed`/`off` — `off` is a sign-off workflow) — only the declared facts are verified; `agentGuard.mode` = `ask`/`block`, `agentGuard.allow` = config keys the agent may write without asking |
 | `pathProtection` | base | `{}` | `protectedGlobs` plus `requirements.<pre-freeze\|post-freeze\|always>.<create\|modify\|delete\|rename>` = `none`/`justification`/`approval` |
 | `contentGuard` | base | `{ "trustedRoles": ["OWNER", "MEMBER", "COLLABORATOR"], "allowLogins": [], "denyLogins": [] }` | `trustedRoles` = the author associations whose forge content may be ingested (any value `packages/agentic-workflow-schema/src/content-guard.ts` publishes); `allowLogins` admits a login regardless of association, `denyLogins` refuses one regardless of role. There is no `enabled` switch: the layer is always active and an unconfigured project runs the strictest policy. The merge between scopes tightens only — roles intersect, the login lists union — and a list that is not the declared shape (a wrong type, or an entry that is not a string) is never narrowed into an empty one: the section is refused whole, the caller gets the shipped strictest policy and the refusal is declared (`malformed-config`) |
-| `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow` |
+| `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing) |
 
 Unknown keys are refused, never merged or coerced. `config validate` reports
 each one by path; `--sanitize` removes them; `--no-warn-unknown` suppresses only
