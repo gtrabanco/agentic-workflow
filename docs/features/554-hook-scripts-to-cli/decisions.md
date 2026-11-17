@@ -116,3 +116,20 @@ It is the only path that merges without a human, and its guards are the whole
 reason it is allowed to exist. The port is proven against the unmodified
 338-line shell corpus; any behaviour difference is a regression, not a
 rationalization.
+
+## Path-protection records
+
+The correction batch's one protected-path edit (external-verify B10): the
+comment-only header repair of `scripts/identity-hook-parity.test.mjs`. The file
+is post-freeze `**/*.test.*`, so the gate needs both rows; the owner's approval
+was given in-session (2026-11-17, question "¿Apruebo el fix (solo comentario)
+y registro las filas justification + approval (human-owner)?", answered
+`approve-and-record`), under the batch authority S1 ("triage and fix those that
+deserve to fix").
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | **/scripts/identity-hook-parity.test.mjs | P4 | 2026-11-17 | execute-phase | External-verify B10 (comment-only): the header still asserted the pre-#554 architecture — "two implementations", "they cannot share code … may not shell out to a node CLI" — while the commit hook is now a shim that execs the CLI and both carriers read src/guard/git-identity.mjs; no assertion, no case and no behavior is touched
+approval | **/scripts/identity-hook-parity.test.mjs | P4 | 2026-11-17 | human-owner | Owner approval recorded 2026-11-17 in-session (asked verbatim, answered approve-and-record): apply the comment-only header fix using these two rows
+```

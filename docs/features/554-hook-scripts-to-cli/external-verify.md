@@ -200,3 +200,21 @@ superseded — the row was removed when `scripts/findings-corpus.test.mjs`
 refused it (harvest pin 1153, the batch lifted the tree to 1154). The findings
 table's writer contract belongs to `review-change`/`triage-issue`; B10's
 carrier is this receipt (Log E31 in the unit doc records the loop).
+
+## B10 folded — 2026-11-17 (owner approval recorded)
+
+The owner answered `approve-and-record` on the asked question, so the unit's
+`decisions.md` carries the `path-protection-records@1` block with both rows
+(justification · execute-phase · P4 · 2026-11-17 and approval · human-owner ·
+2026-11-17) and the comment-only header of
+`scripts/identity-hook-parity.test.mjs` was rewritten to the
+one-implementation/two-carriers truth. Recheck in the foreground:
+`identity-hook-parity` **15/0** · `findings-corpus` **14/14** ·
+`git-config-writes` **9/0** · `verify` **exit 0** · `phase-lint` **PASS** ·
+serialized root gate over the final bytes **exit 0 · 118/118** ·
+`journal aggregate --check` **exit 0 (18 fragments)**.
+
+**Final verdict: VERIFIED — 0 open blockers** (10 of 10 fixed and re-checked;
+6 advisories dispositioned: A1 and A2 kept with reasons, A3/A4/A5/A6 folded).
+The two default-pool root flakes and the local-gate pin-step registry drift
+remain disclosed as non-change-caused.
