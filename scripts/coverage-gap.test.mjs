@@ -181,6 +181,40 @@ test("a project with no corpus names it and marks the corpus edge n/a", () => {
   }
 });
 
+// The 2026-11-17 EXTERNAL VERIFY reproducers (external-verify.md B1/B2): the two
+// frozen failures this correction batch exists to repair. They land before the
+// fix and are observed failing first (path-protection record: decisions.md P8).
+
+test("a project with no gate inventory gets exactly one detectors input line that names the absence (B1)", () => {
+  const dir = makeTree({ [CATALOGUE_REL]: CATALOGUE });
+  try {
+    const text = renderReceipt(buildCoverageGap(dir));
+    const detectorLines = text.split("\n").filter((line) => line.startsWith("detectors |"));
+    assert.equal(detectorLines.length, 1, `O2 orders one detectors line, got:\n${detectorLines.join("\n")}`);
+    assert.match(
+      detectorLines[0],
+      /^detectors \| absent · docs\/workflow\/GATE_INVENTORY\.md( |$)/,
+      "the absent carrier is named with its path, never counted as a measured zero",
+    );
+    assert.ok(!text.includes("gates 0"), "an unread inventory reports absent, not gates 0");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the producer spelling the reference prints runs: a positional directory is --repo (B2)", () => {
+  const dir = makeTree({ [CATALOGUE_REL]: CATALOGUE, "docs/workflow/GATE_INVENTORY.md": INVENTORY });
+  try {
+    const flagged = run([cli, "--repo", dir]);
+    const positional = run([cli, dir]);
+    assert.equal(flagged.status, 0, flagged.stderr);
+    assert.equal(positional.status, 0, `the reference's own command must run: ${positional.stderr}`);
+    assert.equal(positional.stdout, flagged.stdout, "one receipt, whichever spelling the reader uses");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ── 4. the refusals ─────────────────────────────────────────────────────────
 
 test("an unparsable ledger is a fatal exit naming the file and line", () => {
