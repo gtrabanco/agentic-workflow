@@ -52,6 +52,11 @@ import { openFence, closesFence, sectionBounds, parseLog } from "../unit-doc-pha
 // Issue #360 — the risk tier of the change in scope. The classifier decides it
 // (one home, `../risk-tiers.mjs`); this sensor only projects the verdict.
 import { classifyTier, taskSizeOf, sizeTierOf } from "../risk-tiers.mjs";
+// Issue #470 — forge text is third-party content. The guard runs in this
+// collection step, so every consumer of `forge.openIssues`/`forge.openPrs` reads
+// the guarded value: no title reaches the envelope without passing the sanitizer
+// and the author-provenance policy, and nothing is excluded silently.
+import { collectAssociations, guardForgeContent, readContentGuardPolicy } from "../../content-guard.mjs";
 
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
 /** The repository being sensed. Defaults to the process working directory. */
@@ -359,14 +364,85 @@ function readForgeState(budget = forgeBudget()) {
     degradations.push({ source: "forge", code, detail: "a partial forge read failed; affected sections are omitted" });
     observations.push(`forge partially unavailable (${code})`);
   }
+  // The author association arrives over one paginated REST call: the pinned `gh`
+  // has no `authorAssociation` JSON field, and `--paginate` walks the pages inside
+  // a single child process bounded by the same forge budget.
+  const policy = readContentGuardPolicy({ projectDir: PROJECT });
+  for (const code of policy.degradations) {
+    degradations.push({
+      source: "content-guard",
+      code,
+      detail: "the author-provenance policy could not be read; the strictest default is in force",
+    });
+  }
+  const associations = openIssues.data.length === 0
+    ? { associations: new Map(), degradation: null }
+    : collectAssociations({
+        owner: "{owner}",
+        name: "{repo}",
+        spawn: (args) => {
+          const result = ghBounded(budget, ...args);
+          return {
+            status: result.status,
+            stdout: result.stdout,
+            stderr: result.stderr,
+            error: result.missing ? { code: "ENOENT" } : result.timedOut ? { code: "ETIMEDOUT" } : undefined,
+          };
+        },
+      });
+  if (associations.degradation !== null) {
+    degradations.push({
+      source: "content-guard",
+      code: associations.degradation,
+      detail: "author associations are unavailable; the affected content is excluded rather than assumed trusted",
+    });
+  }
   return {
-    openPrs: first.data,
+    openPrs: guardForgeTitles(first.data, {
+      source: "pr-title",
+      associations: associations.associations,
+      policy: policy.policy,
+      degradations,
+    }),
     mergedPrs: mergedPrs.data,
-    openIssues: openIssues.data,
+    openIssues: guardForgeTitles(openIssues.data, {
+      source: "issue-title",
+      associations: associations.associations,
+      policy: policy.policy,
+      degradations,
+    }),
     observations,
     available: true,
     degradations,
   };
+}
+
+/**
+ * The one door forge text walks before it is stored (issue #470): a title is
+ * either the sanitized text or nothing, and every decision is declared — an
+ * excluded title is never silently dropped, a stripped one never silently
+ * rewritten.
+ */
+function guardForgeTitles(items, { source, associations, policy, degradations = [] }) {
+  return items.map((item) => {
+    const author = associations.get(item.number) ?? null;
+    const decision = guardForgeContent({
+      source,
+      id: item.number,
+      author: author?.login ?? null,
+      association: author?.association ?? null,
+      text: typeof item.title === "string" ? item.title : "",
+      policy,
+    });
+    if (decision.verdict !== "allowed" || decision.removals.length > 0) {
+      degradations.push({
+        source: "content-guard",
+        code: decision.verdict === "allowed" ? "stripped-forge-content" : "excluded-forge-content",
+        detail: decision.degradations.join(" ") || `${source}-${item.number}-${decision.reason}`,
+      });
+    }
+    return { ...item, title: decision.text ?? "" };
+  });
 }
 
 // ---------------------------------------------------------------------------
