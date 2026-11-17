@@ -19,7 +19,7 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
   and π; only the implementation of each feature differs.
 - **Extension file** — package-specific config. The `pi-agentic-workflow`
   package owns `pi-agentic-workflow.json` (model routing, profiles, passes,
-  subagent limits, State Flow). A package that is not installed contributes
+  subagent limits, State Flow, shell-tool choice). A package that is not installed contributes
   neither a section nor a file, so the base config never breaks.
 - Both files are **JSONC**: `//` and `/* */` comments and trailing commas are
   accepted. On Bun the runtime's own parser (`Bun.JSONC.parse`) reads the file
