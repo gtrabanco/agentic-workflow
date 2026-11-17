@@ -362,13 +362,13 @@ recorded as a transcription rather than passed off as a run. An owner-triggered
   scripts/local-gate.mjs` prints nothing, and
   `rg -c '^- \*\*R' docs/features/595-test-surplus-audit/SPEC.md` matches 0 — no
   schema vocabulary, no gate step, no review run.
-- **G1** — 2026-11-17, `bun scripts/check-skill-context.mjs --documents` · exit 0 ·
+- **G1** — 2026-11-17, HEAD b1c261cb9e3fd299f3437f3941ba807c3f5aefce, `bun scripts/check-skill-context.mjs --documents` · exit 0 ·
   `PASS context documents: 4 budgeted documents` (AGENTS.md 724/161/563/13014;
   GATE_INVENTORY.md 172/77/95/7040) and `--skill product-audit` · exit 0 ·
   `PASS context budgets: 1 skills`. Both ceilings were re-pinned in this commit:
   the guide to the exact measurement it spends, the reference by the manifest's
   own arithmetic (4923 est → 5416).
-- **G2** — 2026-11-17, `bun scripts/dimension-regression.mjs --base 8b51f375` · exit 0 ·
+- **G2** — 2026-11-17, HEAD b1c261cb9e3fd299f3437f3941ba807c3f5aefce, `bun scripts/dimension-regression.mjs --base 8b51f375` · exit 0 ·
   `verdict | clean`, 17 dimensions on both sides, 4 changed review surfaces, this
   unit doc as the evidence carrier. Its first run was `refused` with
   `missing-reverification-evidence` — the gate working, then satisfied by this
@@ -376,24 +376,39 @@ recorded as a transcription rather than passed off as a run. An owner-triggered
   `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS` for
   `docs/generated` (3 files, 0 stale, 0 orphaned) and `Roadmap: docs/ROADMAP.md —
   unchanged`, so the emitter left the owner's row alone.
-- **G3** — 2026-11-17, `bun scripts/run-root-suite.mjs --jobs 4` · exit 0 · 119
+- **G3** — 2026-11-17, HEAD b1c261cb9e3fd299f3437f3941ba807c3f5aefce, `bun scripts/run-root-suite.mjs --jobs 4` · exit 0 · 119
   suites, none failed. Its first run was red on `scripts/promise-coherence.test.mjs`
   (E5's defect, fixed before this run).
 - **E10** — 2026-11-17, `git status --porcelain docs/LOGS.md` prints nothing: the
   journal stayed untouched and the session entry is a fragment written through
   `node scripts/session-close.mjs render` (the sanctioned writer's shape), never a
   hand append.
+- **P6** — 2026-11-17, PR [#609](https://github.com/gtrabanco/agentic-workflow/pull/609)
+  opened against `main` on `feat/595-test-surplus-audit`, and the roadmap row
+  settled to `done · [#609](…)` through
+  `agentic-workflow roadmap docs/ROADMAP.md rowUpsert` (`Receipt: pass`,
+  `0d084226` → `d1b9cb06`) — the writer's output, never a hand edit. Two writer
+  defects are reported, not worked around: the ceremony wrapper
+  `ceremony roadmap row-upsert` passes the table's **text** where the writer takes a
+  path and dies `ENAMETOOLONG` (same shape in `ceremony roadmap settle`), and the
+  first `rowUpsert` call wrote the slug cell without its backticks because the
+  writer copies the cell verbatim — the row was re-upserted through the same writer
+  with the cell as the table's convention spells it. `bun scripts/roadmap-settle.mjs`
+  after the settle: exit 0, 225 unit docs checked, `violations: 0`.
 
 ## Next
 
-Hand the diff to the owner as the external verifier; on the owner's verdict, open
-one PR against `main` with `Closes #595`. The observation half of AC-7 (a real
-audit pass recording the receipt) waits for the next owner-triggered audit.
+Owner review of PR [#609](https://github.com/gtrabanco/agentic-workflow/pull/609). The
+observation half of AC-7 (a real audit pass recording the receipt) waits for the
+next owner-triggered audit.
 
 ## References
 
 - Issue [#595](https://github.com/gtrabanco/agentic-workflow/issues/595) — the PR
   closes it via `Closes #595`.
+- PR [#609](https://github.com/gtrabanco/agentic-workflow/pull/609) — one PR against
+  `main`; its roadmap row is settled to `done · [#609](…)` through the roadmap
+  writer, never by hand.
 - `skills/product-audit/references/AUDIT_DIMENSIONS.md` § Residue sweeps — the
   dead-code rule and the `fix-now (delete)` notation this sweep composes.
 - `skills/review-implementation/references/CLASSIFY.md` — the closed class set and
