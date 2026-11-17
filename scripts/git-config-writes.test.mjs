@@ -14,7 +14,7 @@
  *
  * The rule is textual on purpose, and its boundary is stated: a `git`
  * invocation assembled by variable indirection (`c=config; git $c …`) is out of
- * scope, exactly like `guard-command.sh`'s literal-token boundary. False
+ * scope, exactly like `src/guard/command.mjs`'s literal-token boundary. False
  * positives are repaired by rewording the suite, never by widening an exemption
  * list.
  *

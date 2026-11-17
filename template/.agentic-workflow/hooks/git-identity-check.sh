@@ -19,8 +19,9 @@
 #
 # Exit: 0 the commit may proceed (or the project enforces nothing on commit);
 #       1 the identity, the signing key or the profile is not what the project
-#         approved — the commit is refused; 2 the CLI is absent or the argv is
-#         unusable.
+#         approved — the commit is refused; a host with no CLI is refused the
+#         same way, because an unverified identity is never an approved one;
+#         2 the argv is unusable (the CLI's own usage error).
 #
 # Requirements: bash, git, and the agentic-workflow CLI.
 
