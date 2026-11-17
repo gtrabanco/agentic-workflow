@@ -4093,6 +4093,9 @@ export {
   ADVERSARIAL_STABILITY_VERDICTS,
   TRIAGE_VERDICTS,
   TRIAGE_CRITERIA_PROVENANCE,
+  MATERIALIZATION_OUTCOMES,
+  MATERIALIZATION_FINDING_CODES,
+  ARTIFACT_EVIDENCE_KINDS,
 } from "./vocabularies.js";
 export type {
   FutureStatus,
@@ -4110,6 +4113,9 @@ export type {
   AdversarialStabilityVerdict,
   TriageVerdict,
   TriageCriteriaProvenance,
+  MaterializationOutcome,
+  MaterializationFindingCode,
+  ArtifactEvidenceKind,
 } from "./vocabularies.js";
 
 // ── The workflow-projection contract (issue #406) ───────────────────────────

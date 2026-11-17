@@ -20,6 +20,11 @@ import { schemaRuntimePath } from "./schema-runtime.mjs";
 import { CLAIM_KINDS, REASON_CODES } from "./promise-coherence.mjs";
 import { LOG_KINDS } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 import {
+  ARTIFACT_KINDS as ARTIFACT_KINDS_MJS,
+  FINDING_CODES as FINDING_CODES_MJS,
+  OUTCOMES as OUTCOMES_MJS,
+} from "../packages/agentic-workflow/src/materialize/materialize.mjs";
+import {
   CEREMONY_PROFILE_CONTRACT_ID as CEREMONY_PROFILE_CONTRACT_ID_MJS,
   CEREMONY_PROFILE_PIECES as CEREMONY_PROFILE_PIECES_MJS,
   CEREMONY_PROFILE_ADOPTIONS as CEREMONY_PROFILE_ADOPTIONS_MJS,
@@ -60,6 +65,9 @@ const {
   GATE_CHECK_STATUSES,
   GATE_RECEIPT_FRESHNESS_CODES,
   DOC_DEGRADATIONS,
+  MATERIALIZATION_OUTCOMES,
+  MATERIALIZATION_FINDING_CODES,
+  ARTIFACT_EVIDENCE_KINDS,
 } = await import(schemaRuntimePath);
 
 const read = (relative) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -101,6 +109,9 @@ test("the schema package publishes every canonical set, non-empty", () => {
     ["GATE_CHECK_STATUSES", GATE_CHECK_STATUSES],
     ["GATE_RECEIPT_FRESHNESS_CODES", GATE_RECEIPT_FRESHNESS_CODES],
     ["DOC_DEGRADATIONS", DOC_DEGRADATIONS],
+    ["MATERIALIZATION_OUTCOMES", MATERIALIZATION_OUTCOMES],
+    ["MATERIALIZATION_FINDING_CODES", MATERIALIZATION_FINDING_CODES],
+    ["ARTIFACT_EVIDENCE_KINDS", ARTIFACT_EVIDENCE_KINDS],
   ]) {
     assert.ok(Array.isArray(set) && set.length > 0, `${name} is a published const array`);
   }
@@ -127,6 +138,12 @@ test("the doc envelope's runtime close accepts exactly the published degradation
 
 test("the reader's LOG_KINDS equals the canonical declaration (F22 pattern)", () => {
   assert.deepEqual([...LOG_KINDS], [...LOG_KIND_TOKENS]);
+});
+
+test("the materialize contract's copies equal the canonical declarations (F22 pattern, issue #564)", () => {
+  assert.deepEqual([...OUTCOMES_MJS], [...MATERIALIZATION_OUTCOMES]);
+  assert.deepEqual([...FINDING_CODES_MJS], [...MATERIALIZATION_FINDING_CODES]);
+  assert.deepEqual([...ARTIFACT_KINDS_MJS], [...ARTIFACT_EVIDENCE_KINDS]);
 });
 
 test("the ceremony-profile runtime copies equal the canonical declarations (F22 pattern, issue #436)", () => {

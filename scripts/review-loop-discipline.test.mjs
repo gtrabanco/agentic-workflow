@@ -545,13 +545,14 @@ assert.match(classify, /D10[\s\S]*verdict[\s\S]*unchanged/i);
 // IS-3: report-note definition cited to LEDGERS.md §3.
 assert.match(classify, /LEDGERS.md.*§3/);
 
-// IS-2: audit-docs report contract — 16 checks, no MEDIUM. The count follows
+// IS-2: audit-docs report contract — 17 checks, no MEDIUM. The count follows
 // the skill (audit-docs owns it, per the citation check below): check 15 moved
-// the header with it, exactly as feature 32 P3 moved it 13 → 14, and issue
-// #435's charter-coverage check added 16 the same way.
+// the header with it, exactly as feature 32 P3 moved it 13 → 14, issue #435's
+// charter-coverage check added 16 the same way, and issue #564's
+// declaration-enforcement check added 17.
 const auditDocs = read("skills/audit-docs/SKILL.md");
-assert.match(auditDocs, /Check \(1-16\)/);
-assert.match(auditDocs, /Checks run: <n>\/16/);
+assert.match(auditDocs, /Check \(1-17\)/);
+assert.match(auditDocs, /Checks run: <n>\/17/);
 assert.doesNotMatch(auditDocs, /MEDIUM/);
 
 // IS-2b (issue #435): check 16's charter-slot scan is bounded to the `## Project
@@ -599,12 +600,14 @@ assert.match(templateGuide, /^- \*\*Backward compatibility — /m, "the template
 
 // The raw template is the positive case — every charter slot prints.
 const rawHits = scanGuide(templateGuide);
-// 21, not the 11 of the two-layer charter: unit 556 added layer 3 (five
+// 22, not the 11 of the two-layer charter: unit 556 added layer 3 (five
 // objectives slots and five engineering-posture slots — the dependency
-// questions land in the domain layer's own slot, so no key is duplicated). The property this case
+// questions land in the domain layer's own slot, so no key is duplicated) and
+// unit 557 added `Evidence driver` (the capture command an artifact criterion
+// records its digest with). The property this case
 // pins is unchanged — every charter slot of the shipped template prints, none is
 // silently skipped — so the count follows the template rather than capping it.
-assert.equal(rawHits.length, 21, "the raw template prints its 21 charter slots");
+assert.equal(rawHits.length, 22, "the raw template prints its 22 charter slots");
 assert.ok(rawHits.every((hit) => !hit.includes("Backward compatibility")), "no hit is the non-charter stub");
 
 // A filled charter with the guide's honest residue elsewhere prints nothing.

@@ -95,7 +95,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
 ## Progressive loading — bootstrap or upgrade, never both
 
-The reference allowlist is exactly the seven linked paths below. Never invent or
+The reference allowlist is exactly the eight linked paths below. Never invent or
 read another `references/` path. Step 0 selects exactly one route:
 
 **Hard rule for an existing Claude Code, Cursor, Copilot, or OpenCode
@@ -111,6 +111,10 @@ or portability unless the runtime platform has no named adapter at all.
   When the round reaches the engineering interview, load
   [the interview bank](references/ENGINEERING_INTERVIEW.md): it carries layer
   3's questions, their bibliography sources and the landing contract.
+  The write step's materialization round loads
+  [materialization](references/MATERIALIZATION.md): declared boundaries become
+  recorded outcomes, the feature map is seeded, and the artifact-capture driver
+  is read — the three things a `prose-only` answer still owes.
   Both the discovery and write routes load
   [SERENA language servers](references/SERENA.md) for stack detection.
 - Existing agentic-workflow scaffold: read [upgrade](references/UPGRADE.md)
@@ -166,6 +170,15 @@ step 4:
   lands as `assumed <YYYY-MM-DD> — <value>`), and `charter check` validates the
   bank, including that every declared boundary records `machine: <mechanism>`
   or `prose-only`.
+- **Layer 3's answers materialize — never stay prose (unit 557, issue #564):**
+  every `prose-only` boundary the interview records is an item the write step
+  settles as a scaffolded rule, a filed target-forge issue, or a recorded
+  decline — one consent question each, and a `no` writes nothing and leaves a
+  residual. The feature map (`docs/workflow/FEATURE_MAP.md`) is seeded from the
+  discovery evidence, and the `Evidence driver` answer is what an artifact
+  criterion records its digest with. Owner of the round:
+  [materialization](references/MATERIALIZATION.md); the check that keeps it true
+  is `runner materialize check`, run by `audit-docs` check 17.
 
 ## Guardrails
 

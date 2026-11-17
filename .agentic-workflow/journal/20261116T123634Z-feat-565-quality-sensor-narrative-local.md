@@ -1,6 +1,0 @@
-## 2026-11-16T12:36:34Z — feat/565-quality-sensor — 558 quality-sensor: the read-only project-quality metrics command
-- **Commits:** 6 (`36271cc3…1988c2ba`)
-- **Files:** 19 files
-- **Summary:** Applied issue #565 end to end: the quality-metrics@1 contract (six DORA/reversion rows, three confidence labels, closed per-metric components) in the schema package, the collector and CLI in the runner crate, the definitions' one home in the crate README, the three normative-surface rows, and the pilot on this repository (3/4360 revert commits, 0/230 linked failures, 5.21 h lead time over 25 sampled pulls, 236 opened / 230 merged, 14.94 h review latency, 279 open corpus rows) reconciled by hand against independent git and gh reads.
-- **Decisions:** The window ends at --until and travels in the document, so a report is reproducible. The reversion ratio counts revert commits while change_failure_rate carries the reverted-deploy view. The escaped-defect slot is an upper bound (doc carrier plus legacy unticked rows) and says so. File placement follows the crate's sensor convention rather than the triage draft's bare src/quality-metrics.mjs.
-- **Next:** Owner verdict on the diff, then the PR (Closes #565) and the roadmap row settled to done with its PR link.
