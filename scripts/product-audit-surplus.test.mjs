@@ -47,6 +47,8 @@ const SECTION = "Test-surplus sweep (pass-only-if)";
 
 const dimensions = () => read(DIMENSIONS_REL);
 const process_ = () => read(PROCESS_REL);
+/** Prose wraps: a phrase check reads the flattened text, never a line. */
+const flat = (text) => text.replace(/\s+/g, " ");
 /** The section this unit adds, or fail loudly: a renamed heading is a real miss. */
 const sweep = () => {
   const text = sectionText(dimensions(), SECTION);
@@ -118,8 +120,9 @@ test("each check carries its own evidence standard (O3)", () => {
   // sweep's no-prose-consumer rule is composed by reference, never restated.
   assert.match(text, /dead-surface/i);
   assert.match(text, /live-tree search|search that proves/i, "dead-surface states no evidence standard");
-  assert.match(text, /prose citation is not evidence of a consumer/,
-    "dead-surface must compose the residue sweep's rule by reference");
+  assert.match(text, /dead-code rule/, "dead-surface does not name the rule it composes");
+  assert.match(text, /not evidence of a consumer/,
+    "dead-surface must compose the residue sweep's no-prose-consumer rule by reference");
   assert.match(text, /Residue sweeps/, "the dead-code rule's owner is cited, not restated");
   // obligation-duplicate: the asserted behaviour, never line coverage.
   assert.match(text, /obligation-duplicate/i);
@@ -136,7 +139,8 @@ test("selective kill-rate is a confirmation for contested clusters, never a swee
   const text = sweep();
   assert.match(text, /kill-rate/i, "the confirmation mechanism is not named");
   assert.match(text, /contested/i, "kill-rate without a contested cluster is an exhaustive sweep");
-  assert.match(text, /never an exhaustive sweep/i, "the cost bound is not stated");
+  assert.match(text, /exhaustive (mutation )?sweep is never run|never an exhaustive sweep/i,
+    "the cost bound is not stated");
 });
 
 test("the checks cite their sources and invent no repository fact (O4)", () => {
@@ -151,13 +155,13 @@ test("the checks cite their sources and invent no repository fact (O4)", () => {
 test("the receipt is a verification, not a reward for deletion (O5)", () => {
   const text = sweep();
   assert.match(text, /verified: no surplus tests/, "the receipt row is not published");
-  assert.match(text, /not a reward for deletion/i, "the receipt's meaning is not stated");
+  assert.match(text, /(not|never) a reward for deletion/i, "the receipt's meaning is not stated");
 });
 
 test("the process records the receipt for every pass that reaches the Tests dimension (O5, S7)", () => {
   const text = process_();
   assert.match(text, /verified: no surplus tests/, `${PROCESS_REL} does not carry the receipt`);
-  assert.match(text, /Test-surplus sweep/, `${PROCESS_REL} does not point at the sweep it consumes`);
+  assert.match(flat(text), /Test-surplus sweep/, `${PROCESS_REL} does not point at the sweep it consumes`);
   // The receipt rides the dimension's health line, which is where the report
   // already puts a dimension's verdict — no new report section is invented.
   assert.match(text, /health line/, "the receipt's carrier in the report is not named");
