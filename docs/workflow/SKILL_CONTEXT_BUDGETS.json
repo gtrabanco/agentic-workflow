@@ -186,9 +186,14 @@
       }
     },
     "batch-scheduler": {
-      "referenceEstimateMax": 2422,
+      "mainEstimateMax": 3225,
+      "referenceEstimateMax": 2768,
+      "mainSources": {
+        "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 adds the surface contract this sensor reports on: one Turn-contract box (an unknown surface runs serially; `blind-spot` names the batch nobody can call safe) and two guardrail paragraphs (findings include `blind-spot`; an unknown surface means serial, never parallel). Measured with `bun scripts/check-skill-context.mjs` at the change: SKILL.md 2931 est / 203 lines against the flat default 2800, which the file had already spent, so the ceiling is ceil(2931 x 1.10) = 3225; growth source = issue #574's normative additions."
+      },
       "referenceSources": {
-        "issue #487 correction batch (2026-11-14)": "the batch-scheduler claim example in references/PLAN.md names the real worktree for issue #487 (`fix/487-deterministic-secret-scanning`) instead of the pre-change intake slug, growing the reference from measured 2198 est to 2201 est; the reference ceiling re-bases from the flat default 2200 to ceil(2201 x 1.10) = 2422, growth source named (external-verify advisory 4, issue #487). Measured with `bun scripts/check-skill-context.mjs`."
+        "issue #487 correction batch (2026-11-14)": "the batch-scheduler claim example in references/PLAN.md names the real worktree for issue #487 (`fix/487-deterministic-secret-scanning`) instead of the pre-change intake slug, growing the reference from measured 2198 est to 2201 est; the reference ceiling re-bases from the flat default 2200 to ceil(2201 x 1.10) = 2422, growth source named (external-verify advisory 4, issue #487). Measured with `bun scripts/check-skill-context.mjs`.",
+        "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 adds the surface section to references/PLAN.md: the `## Where the surfaces come from` grammar, the `blind-spot` finding and the `surface-unknown-issue-<n>` degraded family in the field table, constraint 7, and the `--infer-surfaces` rule in the CLI block. Measured at the change: PLAN.md 2516 est / 184 lines; ceiling ceil(2516 x 1.10) = 2768, growth source = issue #574's normative additions."
       }
     },
     "audit-pr": {
@@ -316,9 +321,12 @@
     },
     "triage-issue": {
       "mainEstimateMax": 3491,
-      "referenceEstimateMax": 3255,
+      "referenceEstimateMax": 3586,
       "mainSources": {
         "issue #441 (unit 441-triage-issue-rescope)": "the router re-scope lands seven behaviours in one contract: the seven-verdict classification block with each verdict's label and route, the one-shot eligibility checklist (six evidenced conditions + the owner's consent + the tier disqualification), the removal verdict's three measured inputs, the typed-receipt input mode and its allowlist entry, the ceremony-profile read with the anti-gaming guard in both directions, and the conditional fold-to-repair switch. Measured at the change by `bun scripts/check-skill-context.mjs`: SKILL.md 3173 est / 216 lines, references max (ISSUE_PROCESS.md) 2959 est / 184 lines; ceilings re-based to exact ceil(measured x 1.10) = 3491 / 3255, reason declared (issue #441) — first per-skill ceiling for this skill, since the flat defaults (2800 / 2200) predate the seven-verdict contract."
+      },
+      "referenceSources": {
+        "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 extends references/ISSUE_PROCESS.md step 6 with the `## Surfaces` declaration: the `--infer-surfaces` emitter, the append-only body write, the never-rewrite rule for an existing declaration, and the `Action taken` clause that states the outcome. Measured at the change: ISSUE_PROCESS.md 3260 est / 200 lines, which was 5 est over the previous ceiling before this addition; ceiling ceil(3260 x 1.10) = 3586, growth source = issue #574's normative additions. SKILL.md stays at its own re-basis ceil(3173 x 1.10) = 3491 (issue #441), 3251 est at this change."
       }
     }
   },

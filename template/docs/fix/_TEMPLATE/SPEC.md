@@ -66,6 +66,17 @@ consumers of what it delivers, the mentions that stop being true when it lands
 touching something live on the other side. Cut at plan time; the fix sweeps
 this surface, it is not rediscovered at review.
 
+## Surfaces
+
+The surface keys this unit occupies — the lane vocabulary the project's batch
+plan reports, where one key names one area two units cannot safely change at the
+same time — one per line. Write `surface-unknown` when the unit cannot name
+them: an honest unknown is a legal answer, and the plan reports it. Advisory
+only: no reader requires this section, and an absent one falls back to the issue
+body and then to this document's `Relevant files:` lines.
+
+- <the project's lane key>
+
 ## Retirements
 
 What this unit makes obsolete: every surface, token, pane, helper, contract or
