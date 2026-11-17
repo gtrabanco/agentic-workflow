@@ -75,6 +75,7 @@ export const CRATE_COMMANDS = Object.freeze([
   "config",
   "doc",
   "doctor",
+  "elicitation",
   "journal",
   "log",
   "manifest",
