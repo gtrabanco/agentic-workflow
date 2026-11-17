@@ -30,7 +30,7 @@
  * `insufficient-input` verdict (exit 1), never a vacuous `clean`.
  *
  * Usage
- *   bun scripts/coverage-gap.mjs [--repo <dir>]
+ *   bun scripts/coverage-gap.mjs [<dir> | --repo <dir>]
  *   (node fallback, same argv)
  *
  * Exit: 0 a receipt was produced (with or without gaps); 1 a required input is
@@ -333,9 +333,10 @@ export function renderReceipt(result) {
       : `catalogue | absent · ${result.catalogue.path}`,
   );
   lines.push(
-    `detectors | ${result.detectors.gates + result.detectors.passes} · gates ${result.detectors.gates} · passes ${result.detectors.passes} · consuming ${result.detectors.consuming}`,
+    result.detectors.source.gates === "absent"
+      ? `detectors | absent · ${INVENTORY_REL} · passes ${result.detectors.passes}`
+      : `detectors | present · ${INVENTORY_REL} · gates ${result.detectors.gates} · passes ${result.detectors.passes} · consuming ${result.detectors.consuming}`,
   );
-  if (result.detectors.source.gates === "absent") lines.push(`detectors | gates absent · ${INVENTORY_REL}`);
   lines.push(
     result.corpus.present
       ? `corpus | present · admitted ${result.corpus.admitted} · classes ${result.corpus.classes}`
@@ -376,21 +377,37 @@ export function buildCoverageGap(root) {
   return result;
 }
 
-const USAGE = "usage: coverage-gap.mjs [--repo <dir>]";
+const USAGE = "usage: coverage-gap.mjs [<dir> | --repo <dir>]";
 
 function main(argv) {
   let root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  let dirGiven = false;
   for (let index = 0; index < argv.length; index += 1) {
-    if (argv[index] === "--repo") {
+    const arg = argv[index];
+    if (arg === "--repo") {
       const value = argv[index + 1];
       if (!value) {
         process.stderr.write(`coverage-gap: --repo needs a directory\n${USAGE}\n`);
         return 2;
       }
+      if (dirGiven) {
+        process.stderr.write(`coverage-gap: one directory only, --repo and a path were both given\n${USAGE}\n`);
+        return 2;
+      }
       root = path.resolve(value);
+      dirGiven = true;
       index += 1;
+    } else if (!arg.startsWith("-")) {
+      // The reference's own spelling — `bun scripts/coverage-gap.mjs <repo>` —
+      // is a legal directory argument, equal to --repo (EXTERNAL VERIFY B2).
+      if (dirGiven) {
+        process.stderr.write(`coverage-gap: one directory only, two were given\n${USAGE}\n`);
+        return 2;
+      }
+      root = path.resolve(arg);
+      dirGiven = true;
     } else {
-      process.stderr.write(`coverage-gap: unknown argument ${argv[index]}\n${USAGE}\n`);
+      process.stderr.write(`coverage-gap: unknown argument ${arg}\n${USAGE}\n`);
       return 2;
     }
   }
