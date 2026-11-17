@@ -585,6 +585,25 @@ freeze (D1).
   offender list before the change named only the fix-489 fragment);
   `node scripts/run-root-suite.mjs` · **exit 0 · 112 PASS · 0 FAIL** — the first
   fully-green root suite on this branch.
+- **F1** — 2026-11-17, folded in one batch from #554's external verify (receipt
+  `docs/features/554-hook-scripts-to-cli/external-verify.md`, blocker B8): three
+  obligation rows here still named validators #554 deleted
+  (`test-forge-adapter.sh`, `test-temp-lib.sh`, the `jq unavailable` case) and
+  asserted the pre-#554 homes (`hooks/lib/temp.sh`, `jq` as a precondition) while
+  reading `verified`. The rows are re-scoped to the crate homes and re-verified at
+  E9; D10 gained a dated supersession pointer to #554's D4. Dated history in this
+  unit's design prose and PE rows (freshness-stamped reads at `9de62e1c`) is kept
+  as history, not rewritten.
+- **E9** — 2026-11-17, the re-scoped validators run in the foreground: `node
+  --test packages/agentic-workflow/test/forge.test.mjs` · exit 0 · **18 pass**
+  (the `test-forge-adapter.sh` corpus) · `bash
+  template/.agentic-workflow/hooks/tests/test-turn-contract.sh` · exit 0 · **46
+  cases** · `node --test packages/agentic-workflow/test/temp.test.mjs` · exit 0 ·
+  **10 pass** (the `test-temp-lib.sh` corpus) · `bun scripts/rigidity-review.mjs`
+  · exit 0 · `ok: 15 guard file(s), 3 rule(s)` · `bash
+  template/.agentic-workflow/hooks/tests/test-git-identity-check.sh` · exit 0 ·
+  **31 cases, 0 failures** (the absent-CLI pair that replaced the retired `jq
+  unavailable` pair).
 
 ## Next
 
