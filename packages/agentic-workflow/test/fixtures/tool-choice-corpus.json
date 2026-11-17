@@ -1,0 +1,237 @@
+{
+  "contract": "tool-choice-corpus@1",
+  "source": "the three audited authoring sessions of 2026-11-17 (01a1e8b0, 01a1e91d, 01a1e95e), message.content[].toolCall.arguments.command for the bash tool, split into segments and de-duplicated",
+  "entries": [
+    {
+      "id": "C01",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -v \"docs/research/2026-11-12\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C02",
+      "kind": "grep",
+      "operator": ";",
+      "text": "grep -n \"^| normative-surface-grammar\" docs/workflow/GATE_INVENTORY.md",
+      "expect": "grep-search"
+    },
+    {
+      "id": "C03",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -i \"^PI_\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C04",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -E \"^\\((pass|fail)\\)|AssertionError|Expected|actual:|expected:\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C05",
+      "kind": "grep",
+      "operator": "\n",
+      "text": "grep -n 'case \"elicitation\"' packages/agentic-workflow/bin/agentic-workflow.mjs",
+      "expect": "grep-search"
+    },
+    {
+      "id": "C06",
+      "kind": "grep",
+      "operator": "\n",
+      "text": "grep -n \"^- \\*\\*G\" docs/features/526-elicitation-layer/SPEC.md",
+      "expect": "grep-search"
+    },
+    {
+      "id": "C07",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -i \"pre-push\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C08",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -c \"526\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C09",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -c \"bundle-skills\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C10",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -E \"git push|local-gate|bundle-skills|pre-push\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C11",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -v grep",
+      "expect": "pass"
+    },
+    {
+      "id": "C12",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -c \"[g]it push\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C13",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep \"[g]it push\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C14",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep \"[g]it push -u origin feat/526\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C15",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep \"[g]it\"",
+      "expect": "pass"
+    },
+    {
+      "id": "C16",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -v normative-drift",
+      "expect": "pass"
+    },
+    {
+      "id": "C17",
+      "kind": "node",
+      "operator": "",
+      "text": "node -e '\nconst fs = require(\"fs\");\nconst p = \"docs/workflow/GATE_INVENTORY.md\";\nlet t = fs.readFileSync(p, \"utf8\");\nconst m = t.match(/<<<<<<< HEAD\\n([\\s\\S]*?)=======\\n([\\s\\S]*?)>>>>>>> origin\\/main\\n/);\nif (!m) { console.error(\"no conflict\"); process.exit(1); }\nconst ours = m[1].split(\"\\n\").filter(Boolean);\nconst theirs = m[2].split(\"\\n\").filter(Boolean);\n// theirs: coverage-gap-join, dimension-regression, normative-surface-grammar(main)\nconst oursGrammar = ours.find(l => l.startsWith(\"normative-surface-grammar\"));\nconst theirsGrammar = theirs.find(l => l.startsWith(\"normative-surface-grammar\"));\nconst theirOther = theirs.filter(l => !l.startsWith(\"normative-surface-grammar\"));\n// union surfaces cell: theirs surfaces + ours-only additions appended\nconst cellOf = l => l.split(\"|\")[6];\nconst oSurf = cellOf(oursGrammar).split(\",\").map(s=>s.trim());\nconst tSurf = cellOf(theirsGrammar).split(\",\").map(s=>s.trim());\nconst union = tSurf.concat(oSurf.filter(s => !tSurf.includes(s)));\nconst mergedGrammar = theirsGrammar.replace(cellOf(theirsGrammar), union.join(\",\"));\nconst replacement = [...theirOther, mergedGrammar].join(\"\\n\") + \"\\n\";\nt = t.replace(m[0], replacement);\nfs.writeFileSync(p, t);\nconsole.log(\"union surfaces:\", union.length, \"| added:\", union.filter(s=>!tSurf.includes(s)));\n'",
+      "expect": "node-default"
+    },
+    {
+      "id": "C18",
+      "kind": "node",
+      "operator": ";",
+      "text": "node -e 'JSON.parse(require(\"fs\").readFileSync(\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"utf8\")); console.log(\"json valid\")'",
+      "expect": "node-default"
+    },
+    {
+      "id": "C19",
+      "kind": "node",
+      "operator": "",
+      "text": "node -e 'JSON.parse(require(\"fs\").readFileSync(\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"utf8\")); console.log(\"json valid\")' && bun scripts/check-skill-context.mjs --documents 2>&1",
+      "expect": "node-default"
+    },
+    {
+      "id": "C20",
+      "kind": "node",
+      "operator": "",
+      "text": "node -e 'JSON.parse(require(\"fs\").readFileSync(\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"utf8\"));console.log(\"json valid\")' && bun scripts/check-skill-context.mjs --skill product-audit 2>&1",
+      "expect": "node-default"
+    },
+    {
+      "id": "C21",
+      "kind": "node",
+      "operator": ";",
+      "text": "node -e \"console.log(require('child_process').execSync('npx --yes @gtrabanco/agentic-workflow --help',{cwd:process.env.PWD,encoding:'utf8'}).slice(0,200))\" 2>&1",
+      "expect": "node-default"
+    },
+    {
+      "id": "C22",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -v node_modules",
+      "expect": "pass"
+    },
+    {
+      "id": "C23",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -v worktrees",
+      "expect": "pass"
+    },
+    {
+      "id": "C24",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep -v '.agentic-workflow'",
+      "expect": "pass"
+    },
+    {
+      "id": "C25",
+      "kind": "grep",
+      "operator": ";",
+      "text": "grep -r 'journal' scripts/*.mjs",
+      "expect": "grep-search"
+    },
+    {
+      "id": "C26",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep 'export\\|const\\|function'",
+      "expect": "pass"
+    },
+    {
+      "id": "C27",
+      "kind": "node",
+      "operator": ";",
+      "text": "node scripts/session-close.mjs render --summary \"test\" 2>&1",
+      "expect": "node-default"
+    },
+    {
+      "id": "C28",
+      "kind": "grep",
+      "operator": "|",
+      "text": "grep 01a1e95e",
+      "expect": "pass"
+    },
+    {
+      "id": "C29",
+      "kind": "grep",
+      "operator": ";",
+      "text": "grep -n 'entry end' /home/agent/projects/agentic-workflow/scripts/session-close.mjs",
+      "expect": "grep-search"
+    },
+    {
+      "id": "C30",
+      "kind": "grep",
+      "operator": "",
+      "text": "grep -n 'entry end\\|entry-end\\|---\\|FRAGMENT_END' /home/agent/projects/agentic-workflow/scripts/session-close.mjs",
+      "expect": "grep-search"
+    },
+    {
+      "id": "C31",
+      "kind": "grep",
+      "operator": ";",
+      "text": "grep -n 'entry end' /home/agent/projects/agentic-workflow/packages/agentic-workflow/src/journal/block.mjs",
+      "expect": "grep-search"
+    },
+    {
+      "id": "C32",
+      "kind": "grep",
+      "operator": ";",
+      "text": "grep -n 'entry end' /home/agent/projects/agentic-workflow/packages/agentic-workflow/src/journal/fragment.mjs",
+      "expect": "grep-search"
+    },
+    {
+      "id": "C33",
+      "kind": "node",
+      "operator": "",
+      "text": "node -e \"const f=require('fs').readFileSync('/home/agent/projects/agentic-workflow/.worktrees/feat-526-evidence-backed-elicitation/.agentic-workflow/journal/20261117T131330Z-feat-526-evidence-backed-elicitation-narrative-01a1e95e-9d8d-7202-8356-0b8d061f8573.md','utf8'); console.log('ends newline:', f.endsWith('\\\\n')); console.log('starts ##:', f.startsWith('## ')); console.log('first line:', f.split('\\\\n')[0]); console.log('last 5 bytes:', JSON.stringify(f.slice(-5)));\"",
+      "expect": "node-default"
+    }
+  ]
+}
