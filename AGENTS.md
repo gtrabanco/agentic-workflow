@@ -450,6 +450,7 @@ pass-name-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | sc
 triage-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TRIAGE_VERDICTS | triage-verdict | no
 triage-criteria-provenance-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TRIAGE_CRITERIA_PROVENANCE | triage-criteria-provenance | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
+content-guard-reasons | packages/agentic-workflow-schema/src/content-guard.ts | schema-export:CONTENT_GUARD_REASONS | content-guard-reason | yes
 feedback-tiers | packages/agentic-workflow/src/feedback/index.mjs | schema-export:FEEDBACK_TIERS | feedback-tier | no
 risk-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_KINDS | risk-tier | yes
 risk-tier-signals | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_SIGNAL_KINDS | risk-tier-signal | yes
