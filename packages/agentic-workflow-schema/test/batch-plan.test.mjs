@@ -12,8 +12,9 @@
  *    `metadata` escape: the plan is a computed projection of the live work
  *    graph, so an unknown key anywhere is refused.
  *  - **Closed vocabularies.** Reason kinds, finding codes and size hints are
- *    the published sets; degradation entries carry the
- *    `unavailable-<source>-<cause>` prefix with a free cause.
+ *    the published sets; degradation entries carry one of the three declared
+ *    grammars — `unavailable-<source>-<cause>`, `surface-unknown-issue-<n>` or
+ *    the content guard's `(excluded|stripped)-forge-content-<source>-<id>-<cause>`.
  *  - **Facts, never policy.** `worktree` and `command` validate as reported
  *    strings; the validator never judges whether the plan should have
  *    launched anything.
@@ -163,6 +164,56 @@ test("batch-plan: the surface-unknown degraded family is accepted and a malforme
     mutated.degraded = [malformed];
     assert.equal(validateBatchPlan(mutated).ok, false, `the validator accepts ${malformed}`);
     assert.equal(schemaValidates(mutated), false, `the schema accepts ${malformed}`);
+  }
+});
+
+test("batch-plan: the guard's exclusion and strip families are accepted and a malformed member is refused (#470)", () => {
+  const accepted = structuredClone(CANONICAL);
+  accepted.degraded = [
+    "excluded-forge-content-issue-title-41-untrusted-author",
+    "excluded-forge-content-issue-body-50-unknown-author",
+    "stripped-forge-content-issue-body-30-html-comment-1",
+    "stripped-forge-content-issue-title-7-zero-width-2",
+  ];
+  assert.deepEqual(validateBatchPlan(accepted), { ok: true, errors: [] });
+  assert.equal(schemaValidates(accepted), true, "the draft-07 projection publishes the same family");
+  // A third degraded family is a grammar too, never free text: the verdict
+  // prefix, the `forge-content` marker and a lowercase cause are fixed.
+  for (const malformed of [
+    "excluded-forge-content",
+    "stripped-forge-content-",
+    "excluded-forge-content-issue-41-OWNER",
+    "forge-content-issue-41-untrusted-author",
+    "excluded-forge-content-issue-41-untrusted author",
+  ]) {
+    const mutated = structuredClone(CANONICAL);
+    mutated.degraded = [malformed];
+    assert.equal(validateBatchPlan(mutated).ok, false, `the validator accepts ${malformed}`);
+    assert.equal(schemaValidates(mutated), false, `the schema accepts ${malformed}`);
+  }
+});
+
+test("batch-plan: an excluded title travels empty and a non-string title is still refused (#470)", () => {
+  // AC9's other half: the guard's exclusion leaves no text at all, so the row's
+  // `title` is empty and its `degraded[]` entry names the issue and the role.
+  // The empty string is the declared fact, never a missing field — a non-string
+  // title stays a refusal on both surfaces, and so does a missing one.
+  const accepted = structuredClone(CANONICAL);
+  accepted.batches[0].lanes[0].issues[0].title = "";
+  accepted.degraded = ["excluded-forge-content-issue-title-11-untrusted-author"];
+  accepted.new_issues = [{ number: 11, title: "" }];
+  accepted.closed_since = [{ number: 12, title: "", batch: null, lane: null, last_seen: "2026-11-17T00:00:00Z" }];
+  assert.deepEqual(validateBatchPlan(accepted), { ok: true, errors: [] });
+  assert.equal(schemaValidates(accepted), true, "the draft-07 projection carries no minLength on `title`");
+  for (const mutate of [
+    (doc) => { doc.batches[0].lanes[0].issues[0].title = 42; },
+    (doc) => { delete doc.batches[0].lanes[0].issues[0].title; },
+    (doc) => { doc.batches[0].lanes[0].issues[0].title = "x".repeat(513); },
+  ]) {
+    const mutated = structuredClone(accepted);
+    mutate(mutated);
+    assert.equal(validateBatchPlan(mutated).ok, false, "a title that is not a bounded string is refused");
+    assert.equal(schemaValidates(mutated), false, "and the schema refuses it too");
   }
 });
 

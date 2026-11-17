@@ -27,7 +27,8 @@
  *     that P13's normalizer order places strictly before a freeze; importing it
  *     would make a drift gate depend on a build and fail a fresh clone.
  *   * The closed set for the machine → text direction is exactly the vocabularies
- *     marked `must-name: yes` in that inventory: `gate-rejection-type`,
+ *     marked `must-name: yes` in that inventory: `content-guard-reason` (issue
+ *     #470 — the guard's decision vocabulary), `gate-rejection-type`,
  *     `pre-execution-verdict`, the `next` object of the envelope, the four
  *     risk/size-tier sets, the two gate-receipt sets and the six
  *     workflow-projection sets. They are what an
@@ -930,6 +931,7 @@ test("text → machine: the live repository orders nothing the machine surface d
 test("machine → text: every value of the must-name vocabularies is ordered by a surface", () => {
   const vocabularies = live.surfaces.filter((s) => s.mustName).flatMap((s) => s.machine);
   assert.deepEqual(uniq(vocabularies).sort(), [
+    "content-guard-reason",
     "continuation-refusal-type", "envelope-field:next", "gate-check-status",
     "gate-receipt-verdict", "gate-rejection-type",
     "guard-rejection-reason", "guard-verdict", "projection-hash-algorithm",

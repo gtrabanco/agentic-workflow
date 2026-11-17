@@ -48,6 +48,15 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { readRoadmapIndex, roadmapTableRows } from "../packages/agentic-workflow/src/index-document.mjs";
+// Third-party forge text is untrusted by construction (issue #470): every title
+// and body this planner ingests goes through the content guard, and the guard's
+// output is the only form a caller ever sees.
+import {
+  collectAssociations,
+  guardForgeContent,
+  readContentGuardPolicy,
+} from "../packages/agentic-workflow/src/content-guard.mjs";
+
 import {
   closesFence,
   headingBoundsAll,
@@ -103,9 +112,10 @@ const ZERO_REVISION = "0000000000000000000000000000000000000000";
  *
  * @returns {Promise<{issues: Array<{number:number,title:string,body:string,blockedBy:number[],labels:string[]}>, degradations: string[]}>}
  */
-export async function collectIssues({ issuesFile, ghBin = "gh", remote = null } = {}) {
+export async function collectIssues({ issuesFile, ghBin = "gh", remote = null, root = process.cwd() } = {}) {
+  const guard = loadGuardPolicy(root);
+  const degradations = [...guard.degradations];
   if (issuesFile) {
-    const degradations = [];
     let raw = null;
     try {
       raw = JSON.parse(fs.readFileSync(issuesFile, "utf8"));
@@ -114,10 +124,17 @@ export async function collectIssues({ issuesFile, ghBin = "gh", remote = null } 
       degradations.push(`unavailable-forge-issues-file-${sanitizeCause(cause)}`);
       return { issues: [], degradations, relationsKnown: false, openSetKnown: false };
     }
+    // A fixture that carries associations is what the policy decides on; one that
+    // does not (a plain `gh issue list` export) takes the live read, best-effort —
+    // never an assumption that everybody is trusted.
+    const declared = fixtureAssociations(raw);
+    const associations = declared.size === 0 && raw.length > 0
+      ? await fetchAssociations({ ghBin, remote, degradations })
+      : declared;
     // A cache that carries the native relations needs no forge call; one that
-    // does not (a plain `gh issue list` export) fetches them live, best-effort.
+    // does not fetches them live, best-effort.
     const hasRelations = raw.every((i) => i !== null && typeof i === "object" && Array.isArray(i.blockedBy));
-    const issues = normalizeIssues(raw);
+    const issues = normalizeIssues(raw, { associations, policy: guard.policy, degradations });
     if (hasRelations) return { issues, degradations, relationsKnown: true, openSetKnown: true };
     const relations = await fetchRelations({ ghBin, remote, degradations });
     return {
@@ -127,11 +144,38 @@ export async function collectIssues({ issuesFile, ghBin = "gh", remote = null } 
       openSetKnown: true,
     };
   }
-  return collectIssuesLive({ ghBin, remote });
+  return collectIssuesLive({ ghBin, remote, policy: guard.policy, degradations });
 }
 
-async function collectIssuesLive({ ghBin, remote }) {
-  const degradations = [];
+/** The effective author policy, read once per collection. A broken config fails closed. */
+function loadGuardPolicy(root) {
+  const resolved = readContentGuardPolicy({ projectDir: root });
+  return {
+    policy: resolved.policy,
+    degradations: resolved.degradations.map((code) => `content-guard-policy-${code}`),
+  };
+}
+
+/**
+ * The associations a fixture declares, keyed by issue number. A plain export
+ * carries none and takes the live read instead.
+ */
+function fixtureAssociations(raw) {
+  const associations = new Map();
+  for (const item of raw) {
+    if (item === null || typeof item !== "object" || typeof item.number !== "number") continue;
+    if (typeof item.authorAssociation !== "string") continue;
+    const author = typeof item.author === "string" ? item.author : item.author?.login;
+    associations.set(item.number, {
+      association: item.authorAssociation,
+      login: typeof author === "string" ? author : "",
+      pullRequest: false,
+    });
+  }
+  return associations;
+}
+
+async function collectIssuesLive({ ghBin, remote, policy, degradations }) {
   // The documented scratch-origin case: a clone whose `origin` is a local path
   // cannot tell `gh` which repository to read, so `--remote` names it for BOTH
   // sources — the issue list and the relations call.
@@ -154,8 +198,28 @@ async function collectIssuesLive({ ghBin, remote }) {
   }
 
   const relations = await fetchRelations({ ghBin, remote, degradations });
-  const issues = normalizeIssues(listed).map((issue) => ({ ...issue, blockedBy: relations.get(issue.number) ?? [] }));
+  const associations = await fetchAssociations({ ghBin, remote, degradations });
+  const issues = normalizeIssues(listed, { associations, policy, degradations })
+    .map((issue) => ({ ...issue, blockedBy: relations.get(issue.number) ?? [] }));
   return { issues, degradations, relationsKnown: relations.size > 0 || issues.length === 0, openSetKnown: true };
+}
+
+/**
+ * One forge read for the open issues' author associations. A failure degrades
+ * declared and leaves the map empty: the guard then excludes those titles and
+ * bodies as `unknown-author` — the fail-closed answer, never a silent assumption
+ * that everybody is trusted.
+ */
+async function fetchAssociations({ ghBin, remote, degradations }) {
+  const origin = remote ?? gitOriginUrl();
+  const parsed = origin !== null ? parseOrigin(origin) : null;
+  if (parsed === null) {
+    degradations.push("unavailable-forge-associations-no-remote");
+    return new Map();
+  }
+  const { associations, degradation } = collectAssociations({ ghBin, owner: parsed.owner, name: parsed.name });
+  if (degradation !== null) degradations.push(degradation);
+  return associations;
 }
 
 /**
@@ -202,18 +266,40 @@ function parseOrigin(url) {
   return null;
 }
 
-function normalizeIssues(raw) {
+function normalizeIssues(raw, { associations = new Map(), policy, degradations = [] } = {}) {
   return raw
     .filter((i) => typeof i?.number === "number")
-    .map((i) => ({
-      number: i.number,
-      title: typeof i.title === "string" ? i.title : "",
-      body: typeof i.body === "string" ? i.body : "",
-      blockedBy: Array.isArray(i.blockedBy) ? i.blockedBy.filter((n) => typeof n === "number") : [],
-      labels: Array.isArray(i.labels)
-        ? i.labels.map((l) => (typeof l === "string" ? l : l?.name)).filter((l) => typeof l === "string")
-        : [],
-    }))
+    .map((i) => {
+      const author = associations.get(i.number) ?? null;
+      const ingress = {
+        id: i.number,
+        author: author?.login ?? null,
+        association: author?.association ?? null,
+        policy,
+      };
+      const title = guardForgeContent({
+        ...ingress,
+        source: "issue-title",
+        text: typeof i.title === "string" ? i.title : "",
+      });
+      const body = guardForgeContent({
+        ...ingress,
+        source: "issue-body",
+        text: typeof i.body === "string" ? i.body : "",
+      });
+      // Every decision is reported: an exclusion names its source, id and role,
+      // a removal names its kind and count.
+      degradations.push(...title.degradations, ...body.degradations);
+      return {
+        number: i.number,
+        title: title.text ?? "",
+        body: body.text ?? "",
+        blockedBy: Array.isArray(i.blockedBy) ? i.blockedBy.filter((n) => typeof n === "number") : [],
+        labels: Array.isArray(i.labels)
+          ? i.labels.map((l) => (typeof l === "string" ? l : l?.name)).filter((l) => typeof l === "string")
+          : [],
+      };
+    })
     .sort((a, b) => a.number - b.number);
 }
 
@@ -239,7 +325,19 @@ function readOneIssue(number, { issuesFile, remote = null, ghBin = "gh" } = {}) 
       return { error: `the issues fixture is unreadable (${sanitizeCause(cause)})` };
     }
     if (!Array.isArray(raw)) return { error: "the issues fixture is not a JSON array" };
-    const found = normalizeIssues(raw).find((issue) => issue.number === number);
+    // When the fixture carries authorAssociation at the top level, build an
+    // associations Map from it so normalizeIssues can pass the author through
+    // the content guard without falling back to unknown-author (issue #470).
+    const associations = new Map();
+    for (const item of raw) {
+      if (item !== null && typeof item === "object" && typeof item.number === "number") {
+        associations.set(item.number, {
+          login: item.author?.login ?? `user-${item.number}`,
+          association: item.authorAssociation ?? null,
+        });
+      }
+    }
+    const found = normalizeIssues(raw, { associations }).find((issue) => issue.number === number);
     return found === undefined ? { error: "the issues fixture does not carry it" } : { issue: found };
   }
   const origin = remote ?? gitOriginUrl();
@@ -747,7 +845,10 @@ export function extractPartialDependencies(body) {
 
 /** Measured-size hint: declared `(S)/(M)/(L)/(XL)` token first, then surface count. */
 export function sizeHint(issue, surfaces) {
-  const token = /\(([SMLXL])\)/.exec(issue.title) ?? /\(([SMLXL])\)/.exec(issue.body.slice(0, 400));
+  // The published token set is S/M/L/XL. An alternation, not a character class:
+  // `(X)` is a git status code in plenty of issue bodies on a forge, and a
+  // single-letter class also made `(XL)` unreachable.
+  const token = /\((XL|S|M|L)\)/u.exec(issue.title) ?? /\((XL|S|M|L)\)/u.exec(issue.body.slice(0, 400));
   if (token) return SIZE_FROM_TOKEN[token[1]];
   if (surfaces.size >= 3) return "heavy";
   if (surfaces.size === 2) return "mixed";
@@ -1636,7 +1737,7 @@ async function main(argv) {
 
   const runInstant = new Date().toISOString();
   const [collected, launch, schema] = await Promise.all([
-    collectIssues({ issuesFile: args.issuesFile, remote: args.remote }),
+    collectIssues({ issuesFile: args.issuesFile, remote: args.remote, root: args.root }),
     collectLaunchEvidence({ root: args.root, remote: args.remote }),
     loadSchemaRuntime(),
   ]);
