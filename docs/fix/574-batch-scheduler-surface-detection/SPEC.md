@@ -280,6 +280,16 @@ One criterion per requirement, each naming the check that proves it.
   base-vs-change over the live issue corpus, every obligation closed
   (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6)
+- P10 — Correction batch 1: the six blockers of the 2026-11-16 external verify
+  closed in one batch with their red-first corpus and one blockers-limited
+  recheck (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0 and
+  `bun test scripts/unit-doc-contract.test.mjs` exits 0)
+  (Implements: S1, S3, S5)
+  - Relevant files: scripts/batch-scheduler.mjs, scripts/batch-scheduler.test.mjs,
+    packages/agentic-workflow-schema/src/batch-plan.ts,
+    skills/batch-scheduler/references/PLAN.md, skills/batch-scheduler/SKILL.md,
+    docs/fix/574-batch-scheduler-surface-detection/SPEC.md,
+    docs/fix/574-batch-scheduler-surface-detection/planning-obligations.md
 
 ### Planning evidence
 
