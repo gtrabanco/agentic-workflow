@@ -395,12 +395,60 @@ recorded as a transcription rather than passed off as a run. An owner-triggered
   writer copies the cell verbatim — the row was re-upserted through the same writer
   with the cell as the table's convention spells it. `bun scripts/roadmap-settle.mjs`
   after the settle: exit 0, 225 unit docs checked, `violations: 0`.
+- **E11** — 2026-11-17, the correction batch over the `EXTERNAL VERIFY` receipt (0
+  blockers, A1–A4): the four reproducers observed red at the batch start —
+  `rg '74 rows'` matched planning-evidence.md:17, the five cited line bindings
+  (`dimension-regression.mjs:83/:41`, `normative-drift.test.mjs:392/:376`,
+  `prose-gate-inventory.mjs:88/:209/:390+`, `:95/:121`) named lines carrying none
+  of the symbols they bind, PE-014's `→ 0` contradicted an `8b51f375` run
+  (`docs/LOGS.md:1`, `docs/ROADMAP.md:1`), and `referenceEstimateMax 5416` failed
+  the manifest's own arithmetic over the measured 4908 est. All are green after
+  the fixes (the six samples re-point at the symbols they name):
+  `bun scripts/check-skill-context.mjs --skill product-audit` · exit 0 with 5399
+  = ceil(4908 x 1.10), and `bun scripts/promise-coherence.mjs` · exit 0 ·
+  `verdict PASS`, 42 checked / 24 skipped — the new `referenceSources` entry's
+  formula derives the ceiling.
+- **E12** — 2026-11-17, A5 folded by the main integration: `git merge origin/main`
+  (`807d89f5`) conflicted only in `docs/workflow/GATE_INVENTORY.md` (the shared
+  surfaces cell) and `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; the shared-doc
+  driver announced its semantic conflict but left the worktree byte-identical to
+  our side (md5 == stage 2), so the union was hand-built from the three stages —
+  both sides' `sources` entries kept (including main's deletion-target `issue
+  #590` rows), main's `unit-lane mainLinesMax 403` taken, merged pins re-measured.
+  Post-merge battery, all exit 0: `bun scripts/run-root-suite.mjs --jobs 4` ·
+  119 suites / 119 pass / 0 fail, `packages/agentic-workflow` · 1051 pass / 0
+  fail, `packages/pi-agentic-workflow` · 947 pass / 0 fail,
+  `bun scripts/local-gate.mjs --skip-network` · `PASS — 15 step(s)`,
+  `bun scripts/docs-generate.mjs` (1 written) then `--check` · PASS,
+  `bun scripts/roadmap-settle.mjs` · PASS, 226 docs / 0 violations,
+  `bun scripts/prose-gate-inventory.mjs` · PASS, 70 rows,
+  `bun test scripts/normative-drift.test.mjs` · 21 pass, `bun scripts/skill-lint.mjs`
+  · PASS, both changesets `ok`, and the R5 reproducer
+  (`git merge-tree --write-tree origin/main HEAD`) · exit 0.
+- **G4** — 2026-11-17, HEAD `d886e03b`, `bun scripts/dimension-regression.mjs
+  --base 8b51f375` · exit 0 · `verdict | clean`, 17 dimensions both sides, 4
+  changed review surfaces, evidence = this doc; `bun scripts/check-skill-context.mjs
+  --documents` · exit 0 · `PASS context documents` with the merged re-pins
+  (AGENTS.md 726 / 163 / 563 / 13063; GATE_INVENTORY.md 172 / 77 / 95 / 7048),
+  `bun scripts/check-skill-context.mjs --skill product-audit` · exit 0 · PASS
+  (referenceEstimateMax 5399), `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 30 skills`, `bun scripts/docs-generate.mjs --check` ·
+  exit 0 · PASS (3 files, 0 stale), `bun scripts/roadmap-settle.mjs` · exit 0 ·
+  226 unit docs, `violations: 0`.
+- **G5** — 2026-11-17, HEAD `d886e03b`, `bun test scripts/normative-drift.test.mjs`
+  · exit 0 · 21 pass / 0 fail, and `bun scripts/prose-gate-inventory.mjs` · exit
+  0 · `verdict: PASS`, 70 rows (script 44 · cli 12 · prose 14 · migrate 0),
+  `test-surplus-grammar` claimed once — both re-run after the correction batch and
+  the main integration.
 
 ## Next
 
-Owner review of PR [#609](https://github.com/gtrabanco/agentic-workflow/pull/609). The
-observation half of AC-7 (a real audit pass recording the receipt) waits for the
-next owner-triggered audit.
+Owner review of the correction batch (the `EXTERNAL VERIFY` A1–A5 triage, D-D) and
+of PR [#609](https://github.com/gtrabanco/agentic-workflow/pull/609) — the branch now
+integrates `origin/main` at `807d89f5`; the push and the merge stay the owner's,
+and the PR's `mergeable` state re-reports after the push. The observation half of
+AC-7 (a real audit pass recording the receipt) waits for the next owner-triggered
+audit.
 
 ## References
 
