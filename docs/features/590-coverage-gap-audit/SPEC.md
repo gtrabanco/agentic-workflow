@@ -336,9 +336,16 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
 - **G5** — 2026-11-17, `bun scripts/dimension-regression.mjs --base origin/main` · exit 0 ·
   `verdict | clean` (17 dimensions head / 16 base, 5 review surfaces, evidence = this doc).
 
+- **P8** — 2026-11-17, the delivery open: PR
+  [#604](https://github.com/gtrabanco/agentic-workflow/pull/604) opened against
+  `main`, and row 590 settled through the crate's own writer
+  (`roadmap rowUpsert` receipt `before fb1c2bb1 → after 10ece22e`).
+
 ## Next
 
-P1 — commit the cut, then the join's red suite.
+Hand the diff to the owner for the external verify. The only open items are the
+owner's verdict and the merge of PR
+[#604](https://github.com/gtrabanco/agentic-workflow/pull/604).
 
 ## References
 
@@ -354,3 +361,5 @@ P1 — commit the cut, then the join's red suite.
   skill-discovery route a gap's external-skill branch hands off to.
 - `docs/research/2026-11-16-product-audit-extensibility.md` — the direction note.
 - `docs/research/ATTRIBUTION.md` — the two 2026-11-16 rows this unit adopts.
+- [PR #604](https://github.com/gtrabanco/agentic-workflow/pull/604) — this unit's
+  delivery PR (`Closes #590`).
