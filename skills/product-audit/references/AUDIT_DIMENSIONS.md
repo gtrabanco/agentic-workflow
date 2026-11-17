@@ -44,6 +44,7 @@ invents profile slots or waives a verification contract.
 | **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks mechanically** (cite the count from `audit-docs`; never restated in the dimension table); never assume a rule held because it "should". **Scope-export recurrence:** across the most recent units (merged or in-flight), each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) counts as one scope-exporting unit — **≥ 2 consecutive** such units is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (**#64**), not re-litigated as a per-unit defect | `audit-docs` mechanical checks — receipt-quoted (already the contract of this row) | all |
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | `audit-docs` script-first index checks — receipt-quoted where they cover the row set; the gap/opportunity judgment is model | all |
 | **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope; every row the project registered in its `review-extras@1` note is reported with its decay state (`unpinned`, `stale`, `incomplete`), so an extra that rotted is a finding rather than a memory | `agentic-workflow skills inventory --guide AGENTS.md` — receipt-quoted for the registered set; the MCP half is the agent's own inventory, stated plainly when it cannot be enumerated | all |
+| **Coverage gaps** | Declared verification criteria with no detector, admitted recurring finding classes with no preventive gate, and declared detectors consuming no criterion — the forward-looking half the findings corpus (#437) does not cover | `bun scripts/coverage-gap.mjs <repo>` receipt-quoted (`coverage-gap@1`, § Coverage-gap sweep) | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
 **say which you skipped and why**. Every axis is covered by the workflow's own
@@ -87,3 +88,80 @@ on demand outside the repository) carries one seed per residue class — a
 duplicated grammar copy, an exported-but-unconsumed function, a doc naming a
 removed surface, a live surface with no doc — plus a clean twin: the sweeps
 must yield exactly one finding per seed on `seeded/` and zero on `clean/`.
+
+## Coverage-gap sweep (pass-only-if)
+
+The forward-looking half the findings corpus does not cover: #437 attributes what
+already went wrong, this join asks what the project declared against what could
+catch it. It consumes ONE deterministic receipt — `bun scripts/coverage-gap.mjs
+<repo>` — quoted like every other producer and never re-derived by inspection.
+The receipt crosses three committed carriers: the project's verification-criteria
+catalogue (`docs/workflow/VERIFICATION_CRITERIA.md`; its shape and closed
+provenance set are owned by `template/docs/workflow/VERIFICATION_CRITERIA.md` and
+`audit-docs` check 16), the installed detectors (`docs/workflow/GATE_INVENTORY.md`
+through its one reader, plus the review surfaces the guide's
+`ceremony-profile@1` leaves paid — #436's consumption-side rule), and the corpus
+(`scripts/findings-corpus.mjs`'s own `buildCorpus`, never a second parser). A
+carrier the project does not carry is named in the receipt and its edge reads
+`n/a` — never guessed.
+
+### The receipt grammar (`coverage-gap@1`)
+
+```text
+coverage-gap@1
+kind | shape | what it orders
+receipt | coverage-gap@1 … | one fixed block: the three input lines, one line per edge, one line per gap, the verdict
+input | catalogue · detectors · corpus | each line says present or absent: a file-backed carrier (catalogue, detectors) carries its path either way, the corpus carries what it read or why it read nothing — an absent carrier is named, never guessed
+edge | criterion→detector | a criterion is covered when a backticked token in its `Source / authority` or `Notes` cell resolves to a gate id, a review pass, an existing path or a declared command
+gap | criterion-uncovered | a criterion whose declared check resolves to nothing, or whose provenance sits outside the catalogue's closed set
+gap | class-uncovered | an admitted recurring corpus class whose axis no detector names
+gap | detector-idle | a declared gate-inventory row no criterion names (the reverse edge; the shipped review pack is the baseline and is never reported idle)
+```
+
+The script decides no severity and no route — it emits the gap, this dimension
+judges it.
+
+**Pass only if:**
+
+- ✓ every `gap — <kind>` line the receipt carries became exactly one finding, and
+  every finding cites that receipt line as its evidence
+- ✓ a gap is a finding only when its surface is evidenced — a declared criterion or
+  an admitted corpus class; a speculative "this might be uncovered" is not a
+  finding and never enters the report
+- ✓ the run over the seeded fixture (`bun scripts/product-audit-gap-fixture.mjs
+  <dir>`) yields exactly one gap per class on `seeded/` and zero on its `clean/`
+  twin
+- ✓ the dimension is reported `n/a — no catalogue and no corpus` when the project
+  carries neither, instead of a clean sweep of nothing
+
+**Routes** — every gap finding's `route:` cell is the `finding-route@1` hand-off owned
+by `SKILL.md` (`<verb> — <target>`, never a command invocation); the three
+destinations below are what each gap class resolves to, and no bespoke route is
+introduced here:
+
+- a recommended external skill covers the gap → `agentic-workflow skills discover`
+  (#591's route: trusted registries → the seven `skill-lint` checks → per-candidate
+  owner consent), with the install and its registration as separate decisions
+- an own skill or gate is warranted → a proposal: `/unit-lane` builds it under its
+  gates, never this audit
+- the criterion is obsolete or unverifiable → the init-workspace upgrade route
+  (`references/UPGRADE.md`) re-triages the catalogue
+
+### Evolution regression (anti-erosion)
+
+A unit that adds or changes a review dimension, a review skill or an audit producer
+re-verifies that the previously present dimensions still pass — the workflow-side
+analogue of the residue sweeps' features-preserved-without-it check. The gate is
+`scripts/dimension-regression.mjs`: over a push range it refuses a dropped
+dimension with no recorded owner decision (`dimension-dropped`) and a review-surface
+change with no recorded run (`missing-reverification-evidence`), and its sibling
+suite re-asserts the frozen dimension set on every push. Unconstrained
+self-evolution degrades previously acquired capabilities (arXiv 2605.09315), so a
+dimension change is gated, never proposed.
+
+### Emission-only
+
+The sweep emits evidence; it never repairs what it finds. Improvement lands through
+the owner's decision and `/unit-lane` with its gates, and an agent never self-edits
+this reference or any workflow prose in response to its own findings (arXiv
+2310.01798; 2605.09315).
