@@ -3,8 +3,9 @@
  * (issue #427, the owner's plugin architecture).
  *
  * This package owns the vault of keys that only make sense inside
- * `pi-agentic-workflow` — model routing, profiles, passes, subagent limits and
- * the State Flow lifecycle. It ships them as data: `agentic-workflow config`
+ * `pi-agentic-workflow` — model routing, profiles, passes, subagent limits, the
+ * State Flow lifecycle and the shell-tool choice carrier. It ships them as data:
+ * `agentic-workflow config`
  * discovers `agentic-workflow.config.json`, composes this schema with the base
  * feature schema, and reads/writes `pi-agentic-workflow.json` without importing
  * this package.
