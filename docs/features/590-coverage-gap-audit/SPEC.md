@@ -286,6 +286,56 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   was re-created from the same branch at `a370cc84` and the plan re-cut before any
   code landed; nothing of this unit was published from the lost tree.
 
+- **D4** — 2026-11-17, the gate-surface decision: `scripts/ledger-ownership.test.mjs`'s
+  declared `DECISION_BACKED_WRITERS` map gains the `(SPEC.md, scripts/product-audit-gap-fixture.mjs)`
+  pair, because the coverage-gap fixture must materialize throwaway unit docs for the
+  corpus admission it demonstrates and the scan's textual floor cannot see "only under a
+  caller-supplied directory". The pair is pinned by script *and* ledger name, the block
+  list is untouched, and a new negative case proves any other script writing `SPEC.md`
+  still fails.
+- **E1** — 2026-11-17, `bun test scripts/coverage-gap.test.mjs` · exit 0 · 18 pass / 0 fail
+  (the absent-catalogue/inventory/corpus cases, the unparsable-ledger and malformed-inventory
+  refusals, the four resolvers, the admitted-vs-annotated corpus edge, the profile
+  narrowing, the seeded/clean twins, the two-run byte equality, the prose pins).
+- **E2** — 2026-11-17, `bun scripts/product-audit-gap-fixture.mjs <dir>` · exit 0 ·
+  `bun scripts/coverage-gap.mjs --repo <dir>/seeded` → `verdict | gaps 3` (one
+  `criterion-uncovered`, one `class-uncovered`, one `detector-idle`), `--repo <dir>/clean`
+  → `verdict | clean`.
+- **E3** — 2026-11-17, `bun test scripts/dimension-regression.test.mjs` · exit 0 · 10 pass /
+  0 fail (the four change vectors, the live frozen set, and the three push-range CLI cases).
+- **E4** — 2026-11-17, `bun test scripts/local-gate.test.mjs` · exit 0 · 60 pass / 0 fail, and
+  `bun test scripts/release-workflows.test.mjs` · exit 0 · 26 pass / 0 fail — the new step id
+  in both pinned sets and the empty-impact dry-run plan.
+- **E5** — 2026-11-17, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass / 0 fail,
+  and `bun scripts/prose-gate-inventory.mjs` · `verdict: PASS` · 69 rows, both new rows
+  resolved (`coverage-gap-join` at the suite's token, `dimension-regression` at its own).
+- **E6** — 2026-11-17, `bun test scripts/ledger-ownership.test.mjs` · exit 0 · 15 pass / 0 fail
+  (the D4 pair recorded, the block list unrelaxed by the new negative case).
+- **E7** — 2026-11-17, `bun test scripts/product-audit-rescope.test.mjs` · exit 0 · 16 pass /
+  0 fail, and `bun test scripts/residue-dimensions.test.mjs` · exit 0 · 30 pass / 0 fail.
+- **E8** — 2026-11-17, the dogfooding reading: `bun scripts/coverage-gap.mjs --repo .` ·
+  `catalogue | absent`, `corpus | present · admitted 125 · classes 9`, `verdict | gaps 4` —
+  the four axes no detector names (`workflow`, `docs`, `correctness`, `spec-drift`). Recorded
+  as the receipt's output, not fixed by this unit (the catalogue is #435/#564's surface).
+- **E9** — 2026-11-17, `rg -c 'coverage-gap join' docs/research/ATTRIBUTION.md` → `2`, and
+  `rg -c '^- \*\*R' docs/features/590-coverage-gap-audit/SPEC.md` → `0`.
+- **G1** — 2026-11-17, `bun scripts/check-skill-context.mjs --documents` · exit 0 ·
+  `AGENTS.md 723 / 160 / 563 / 12987`, `GATE_INVENTORY.md 171 / 76 / 95 / 6899`; and
+  `bun scripts/check-skill-context.mjs --skill product-audit` · exit 0 ·
+  `AUDIT_DIMENSIONS.md 3799 est` inside the re-based 4179.
+- **G2** — 2026-11-17, `bun scripts/run-root-suite.mjs` · exit 0 · 118 suites PASS, 0 FAIL
+  (a first run under load 11 reddened `unit-route.test.mjs`'s 500 ms wall-clock assertion at
+  529 ms and hit the sensor suite's 120 s wall clock; both are load-sensitive pre-existing
+  assertions, green at this head).
+- **G3** — 2026-11-17, `bun scripts/lint-changeset.mjs .changeset/590-coverage-gap-audit.md` ·
+  exit 0, and `bun scripts/docs-generate.mjs --check` · exit 0.
+- **G4** — 2026-11-17, `bun scripts/dimension-regression.mjs --base origin/main` · exit 1 ·
+  `verdict | refused` with `missing-reverification-evidence` — the gate biting on this very
+  change before this Log carried the run. That is its designed failing vector on real data,
+  not a repaired test.
+- **G5** — 2026-11-17, `bun scripts/dimension-regression.mjs --base origin/main` · exit 0 ·
+  `verdict | clean` (17 dimensions head / 16 base, 5 review surfaces, evidence = this doc).
+
 ## Next
 
 P1 — commit the cut, then the join's red suite.
