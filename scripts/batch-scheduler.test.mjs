@@ -542,6 +542,57 @@ test("F7: `--infer-surfaces` prints the block triage pastes, or the honest unkno
   }
 });
 
+test("F8: a `## Surfaces` declaration never narrows file claims — the prose beside it keeps claiming its files", () => {
+  const surfacesOnly = ["## Surfaces", "", "`docs`", "", "## Problem", "Fix `scripts/shared-clean.mjs` please."].join("\n");
+  assert.deepEqual(
+    extractFileClaims(surfacesOnly),
+    ["scripts/shared-clean.mjs"],
+    "a Surfaces-only body claims what its Problem prose names — base's rule, not the section's",
+  );
+
+  const formOrder = ["### Describe the bug", "Run `bun test scripts/telemetry-coverage.test.mjs` fails", "", "### Surfaces", "scripts"].join("\n");
+  assert.deepEqual(
+    extractFileClaims(formOrder),
+    ["bun test scripts/telemetry-coverage.test.mjs"],
+    "the form's Describe prose keeps its claim beside the rendered Surfaces field (the yml forms always render it)",
+  );
+
+  const whereControl = ["## Where", "`scripts`", "", "## Problem", "Fix `scripts/shared-clean.mjs` please."].join("\n");
+  assert.deepEqual(extractFileClaims(whereControl), [], "Where still narrows: the Problem prose beside it claims nothing (issue #509's rule, unchanged)");
+
+  const fenced = ["## Surfaces", "`docs`", "", "```js", "const p = 'docs/fenced-thing.md';", "```", "", "See `docs/real.md`."].join("\n");
+  assert.deepEqual(extractFileClaims(fenced), ["docs/real.md"], "a fenced path is still not a claim under a Surfaces section");
+});
+
+test("F9: a `<…>` vocabulary placeholder is never a surface — no lane, and nothing declares it", () => {
+  assert.deepEqual(
+    [...extractSurfaces("Touches `packages/<name>` and `scripts`.")].sort(),
+    ["scripts"],
+    "a quoted placeholder resolves to nothing; the real key beside it survives",
+  );
+
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    unitDoc(root, "docs/fix/84-template-example", `# 84\n\n${surfacesSection(["packages/<name>", "skills/<name>"])}\n`);
+    unitDoc(root, "docs/fix/85-example-and-key", `# 85\n\n${surfacesSection(["packages/<name>", "scripts"])}\n`);
+    const issues = [
+      issue(84, "Doc carries the template example", "## Problem\n\nNo paths are named in this body."),
+      issue(85, "Doc example beside a real key", "## Problem\n\nNo paths are named here either."),
+      issue(86, "Body quotes the vocabulary", `${surfacesSection(["skills/<usage-carrier>", "scripts"])}\n`),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(lanesOfIssue(plan, 84), ["general"], "placeholders only declare nothing — the documented unknown lane, never a phantom");
+    assert.ok(plan.degraded.includes("surface-unknown-issue-84"), "and the plan reports it, never a silent lane");
+    assert.deepEqual(lanesOfIssue(plan, 85), ["scripts"], "the real key beside the template example still lands; the placeholder never does");
+    assert.deepEqual(lanesOfIssue(plan, 86), ["scripts"], "a placeholder in the body's own declaration is ignored the same way");
+    assert.ok(!lanesOfIssue(plan, 85).some((lane) => lane.includes("<")), "no lane ever contains a placeholder");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("T1: the templates declare the `## Surfaces` section the parser reads, and the contract keeps it optional", () => {
   // This repository's own templates name the six lane keys the planner resolves.
   const TEMPLATES = ["docs/fix/_TEMPLATE/SPEC.md", "docs/features/_TEMPLATE/SPEC.md"];
