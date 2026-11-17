@@ -189,6 +189,104 @@ test("a new or unprotected in-root write passes untouched", () => {
   assert.equal(verdict("echo fresh > new-file.txt").block, false);
 });
 
+/* ── decideShellWrite: virtual device sinks (issue #606) ──────────────── */
+//
+// The three reproducers the issue lists, the named set it orders skipped, and
+// the failure state its `Expected` section keeps: a real durable out-of-root
+// target in the same command still blocks. Every case is a command string the
+// guard judges before execution; nothing here writes to a device node.
+
+test("F1 a device-sink redirect passes headless — the `> /dev/null 2>&1` reproducer", () => {
+  const command = "bun run build > /dev/null 2>&1";
+  const analysis = analyzeShellWrite(command, { cwd: CWD, homedir: "/home/person" });
+  assert.deepEqual(analysis.targets, ["/dev/null"], "the analysis layer keeps reporting the operand");
+  assert.equal(verdict(command).block, false);
+});
+
+test("F2 a sink-only command asks nothing in a UI session", () => {
+  const asked = [];
+  const commands = [
+    "bun run build > /dev/null 2>&1",
+    "gh pr view 604 --json body -q .body > body.md 2>/dev/null",
+  ];
+  for (const command of commands) {
+    const result = verdict(command, { interactive: true, confirm: (question) => (asked.push(question), true) });
+    assert.equal(result.block, false, command);
+  }
+  assert.deepEqual(asked, [], "no approval prompt for a sink, whose durable target is in-root");
+});
+
+test("F3 `/dev/stdout` and `/dev/stderr` pass on a resolver that cannot canonicalize /proc/self/fd", () => {
+  const uncanonicalizable = () => ({ ok: false, reason: "ENOENT: /proc/self/fd/1" });
+  const command = "bun run build > /dev/stdout 2>/dev/stderr";
+  assert.equal(verdict(command, { resolveTarget: uncanonicalizable }).block, false);
+  const asked = [];
+  const interactive = verdict(command, {
+    interactive: true,
+    resolveTarget: uncanonicalizable,
+    confirm: (question) => (asked.push(question), true),
+  });
+  assert.equal(interactive.block, false);
+  assert.deepEqual(asked, []);
+});
+
+test("F4 a durable out-of-root target in the same command still blocks headless, and is the one named", () => {
+  const result = verdict("echo x > /dev/null 2>/home/person/durable.md");
+  assert.equal(result.block, true);
+  assert.match(result.reason, /\/home\/person\/durable\.md/);
+  assert.doesNotMatch(result.reason, /"\/dev\/null"/);
+});
+
+test("F5 the same command asks once interactively, for the durable target", () => {
+  const command = "echo x > /dev/null 2>/home/person/durable.md";
+  const asked = [];
+  const approved = verdict(command, { interactive: true, confirm: (question) => (asked.push(question), true) });
+  assert.equal(approved.block, false);
+  assert.equal(asked.length, 1);
+  assert.match(asked[0], /\/home\/person\/durable\.md/);
+  assert.doesNotMatch(asked[0], /dev\/null/);
+  assert.equal(verdict(command, { interactive: true, confirm: () => false }).block, true);
+});
+
+test("F6 every named device sink is skipped", () => {
+  const sinks = ["/dev/null", "/dev/zero", "/dev/full", "/dev/stdin", "/dev/stdout", "/dev/stderr", "/dev/tty", "/dev/fd/3"];
+  for (const sink of sinks) {
+    const asked = [];
+    const result = verdict(`echo x > ${sink}`, { interactive: true, confirm: (question) => (asked.push(question), true) });
+    assert.equal(result.block, false, sink);
+    assert.deepEqual(asked, [], sink);
+  }
+});
+
+test("F7 the skip runs before resolution — the resolver is never called for a sink", () => {
+  let calls = 0;
+  const sinkOnly = verdict("echo x > /dev/stdout", {
+    resolveTarget: () => {
+      calls += 1;
+      throw new Error("the resolver must not run for a device sink");
+    },
+  });
+  assert.equal(sinkOnly.block, false);
+  assert.equal(calls, 0);
+  calls = 0;
+  const mixed = verdict("echo x > /dev/null 2>/home/person/durable.md", {
+    resolveTarget: (absolute) => (calls += 1, { ok: true, real: absolute }),
+  });
+  assert.equal(mixed.block, true, "the durable target is still resolved and judged");
+  assert.equal(calls, 1, "only the non-sink target reaches the resolver");
+});
+
+test("F8 the carve-out is exact — a lookalike, a relative form and the /dev/fd directory are still judged", () => {
+  assert.equal(verdict("echo x > /dev/nullx").block, true);
+  assert.equal(verdict("echo x > ../dev/null").block, true);
+  assert.equal(verdict("echo x > /dev/fd").block, true);
+  const resolved = [];
+  const record = (absolute) => (resolved.push(absolute), { ok: true, real: absolute });
+  verdict("echo x > /dev/nullx", { resolveTarget: record });
+  verdict("echo x > dev/null", { resolveTarget: record });
+  assert.deepEqual(resolved, ["/dev/nullx", "/work/repo/dev/null"], "a relative name resolves against cwd and is judged");
+});
+
 /* ── the shipped handler: the bypass pinned end-to-end ─────────────────── */
 
 /** A Pi-shaped API that records event handlers instead of registering them. */
@@ -330,6 +428,36 @@ test("interactive approval: a session with UI may allow the durable out-of-root 
       context(cwd, { hasUI: true, confirmResult: false }),
     );
     assert.equal(refused.block, true, "a decline blocks");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("F9 the shipped handler passes a device-sink redirect and still blocks a durable target beside one", async () => {
+  const { root, cwd, agentDir } = tempRoot("device-sinks");
+  try {
+    const entry = await shippedEntry(cwd, agentDir);
+    const handle = entry.handlers.get("tool_call");
+    for (const command of ["bun run build > /dev/null 2>&1", "bun run build > /dev/stdout 2>/dev/stderr"]) {
+      const headless = await handle({ toolName: "bash", input: { command } }, context(cwd));
+      assert.equal(headless?.block ?? false, false, command);
+    }
+    const asked = [];
+    const ui = context(cwd, { hasUI: true });
+    ui.ui = { ...ui.ui, confirm: (question) => (asked.push(question), true) };
+    const silent = await handle(
+      { toolName: "bash", input: { command: "gh pr view 604 --json body -q .body > body.md 2>/dev/null" } },
+      ui,
+    );
+    assert.equal(silent?.block ?? false, false);
+    assert.deepEqual(asked, [], "no approval prompt for a sink in a real session with UI");
+    const durable = join(homedir(), ".aw-shell-guard-fixture", "still-blocked.md");
+    const blocked = await handle(
+      { toolName: "bash", input: { command: `echo x > /dev/null 2>${durable}` } },
+      context(cwd),
+    );
+    assert.equal(blocked.block, true, "a real durable target in the same command still blocks");
+    assert.match(blocked.reason, /still-blocked\.md/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
