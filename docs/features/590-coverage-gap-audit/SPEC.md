@@ -80,7 +80,7 @@ One observable, testable criterion per requirement; each names the check that pr
 | AC-1 (S2) | one deterministic script emits the `coverage-gap@1` receipt from the catalogue, the gate inventory and the findings corpus, naming an absent input instead of guessing it | `bun test scripts/coverage-gap.test.mjs` (the absent-input and resolution cases) |
 | AC-2 (S2) | the receipt prints exactly three gap classes — `criterion-uncovered`, `class-uncovered`, `detector-idle` — and no judgment about a gap's severity or route | `bun test scripts/coverage-gap.test.mjs` (the receipt-shape and corpus cases) |
 | AC-3 (S3) | `AUDIT_DIMENSIONS.md` carries the `Coverage gaps` dimension with the producer pre-pass and a pass-only-if contract; `AUDIT_PROCESS.md` consumes the receipt as a step | `bun test scripts/coverage-gap.test.mjs` (the prose-pin cases) and `bun scripts/prose-gate-inventory.mjs` exits 0 |
-| AC-4 (S3) | every gap row becomes exactly one finding routed through one of the three `finding-route@1` hand-offs; no bespoke route exists | `bun test scripts/coverage-gap.test.mjs` (the route-vocabulary case) and `bun test scripts/product-audit-rescope.test.mjs` exits 0 |
+| AC-4 (S3) | every gap row becomes exactly one finding whose `route:` cell is a `finding-route@1` hand-off, resolved to one of the three destinations the dimension declares (discovery, proposal, catalogue re-triage); no bespoke route exists | `bun test scripts/coverage-gap.test.mjs` (the route-vocabulary case) and `bun test scripts/product-audit-rescope.test.mjs` exits 0 |
 | AC-5 (S7) | the fixture's `seeded/` tree yields exactly one gap per class and its `clean/` twin yields zero | `bun scripts/product-audit-gap-fixture.mjs <dir>` then `bun test scripts/coverage-gap.test.mjs` (the seeded/clean cases) |
 | AC-6 (S4) | a change that adds a review dimension without re-verification evidence is refused; a dropped prior dimension needs a recorded owner decision | `bun test scripts/dimension-regression.test.mjs` exits 0 with the four change vectors |
 | AC-7 (S4) | the frozen dimension set is asserted on the live tree, so adding a dimension cannot silently drop a prior one | `bun test scripts/dimension-regression.test.mjs` (the live-tree case) |
@@ -115,7 +115,9 @@ One observable, testable criterion per requirement; each names the check that pr
   (`agentic-workflow skills discover`), and #436's `ceremony-profile@1`
   (`review-passes` narrows the pass set; absent profile = the full pack).
 - **What stops being true**: the claim that product-audit has no consumer for the
-  verification-criteria catalogue (audit 2's recorded gap) — the join consumes it;
+  verification-criteria catalogue — recorded at
+  `docs/research/2026-11-16-product-audit-extensibility.md` under "Verified state at
+  session time" (audit 2 carries no such line) — the join consumes it;
   and the claim that a review-dimension change is verified only by whatever suites
   the author remembered to run.
 - **Ask before touching**: the catalogue's provenance vocabulary (owned by the
@@ -275,6 +277,12 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   #560 it is done, continue
   ```
 
+- **L3** — 2026-11-17, the owner's correction request, verbatim:
+
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+
 - **D1** — 2026-11-17, the blocked-by resolves from the forge, not from the message:
   #590's native `blockedBy` was `#564` (`CLOSED` 2026-11-17T01:55:59Z, merged as PR
   #601) — `#560` closed 2026-11-16T13:22:50Z and was never this unit's blocker.
@@ -341,10 +349,68 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   `main`, and row 590 settled through the crate's own writer
   (`roadmap rowUpsert` receipt `before fb1c2bb1 → after 10ece22e`).
 
+- **D5** — 2026-11-17, correction batch over the 2026-11-17 `EXTERNAL VERIFY`
+  receipt (`external-verify.md`, blockers B1/B2, advisories A1–A4): the route claim
+  is sharpened on every live surface — AC-4, `AUDIT_DIMENSIONS.md` § Routes and
+  `AUDIT_PROCESS.md` step 4 now say the `route:` cell **is** the `finding-route@1`
+  hand-off (`<verb> — <target>`, never a command invocation) and the three named
+  things are the **destinations** each gap class resolves to, because
+  `skills/product-audit/SKILL.md`'s `finding-route@1` block owns exactly two kinds
+  (`<verb> — <target>` and `none`) and forbids a command invocation. The substance
+  and every proof are unchanged. Two surfaces keep the issue's "hand-offs" wording
+  on purpose and are this note's disposition: S3 (the owner's verbatim request,
+  never rewritten) and O9 (frozen at cut except `status`).
+
+- **D6** — 2026-11-17, A4 dispositioned, not fixed: `planning-evidence.md` PE-010
+  still names `referenceEstimateMax 2743` as its cut-time sample under that ledger's
+  own "Frozen at the cut … except `status`" header, and its own clause — "a
+  reference-only growth re-bases `referenceEstimateMax` with a declared source" —
+  is exactly what this change shipped (`SKILL_CONTEXT_BUDGETS.json`, source row
+  "issue #590 (coverage-gap audit)", 3799 est → 4179). Editing a frozen claim cell
+  would break the freeze the row states; the measurement is re-run green in G1/G6.
+
+- **E10** — 2026-11-17, the red-first record this unit's Log owed (EXTERNAL VERIFY
+  A2): both reds re-observed in scratch clones — `git checkout de52a5c2` →
+  `scripts/coverage-gap.test.mjs` fails on the missing `scripts/coverage-gap.mjs`,
+  `git checkout dd9b5901` → `scripts/dimension-regression.test.mjs` fails the same
+  way — and `bun scripts/red-first.mjs` → `verdict: PASS` (56 pairs · 31 after the
+  cutoff · 0 findings). Disclosure: the cut-time red runs at P2/P4 were observed but
+  never written here; this line is their belated record, dated to the batch run.
+
+- **E11** — 2026-11-17, the batch's own RED corpus first: `bun test
+  scripts/coverage-gap.test.mjs` at the pre-fix bytes → exit 1 · 18 pass / **2 fail**,
+  naming the B1 receipt (`detectors | 9 · gates 0 …` + `detectors | gates absent …`)
+  and the B2 command (`coverage-gap: unknown argument .`); the two tests land before
+  any implementation (path-protection record `decisions.md` P8 — added assertions
+  only, no existing assertion relaxed, skipped or narrowed). After the fix → exit 0 ·
+  **20 pass / 0 fail**.
+
+- **E12** — 2026-11-17, differential, base head `0d5ce407` vs this batch over four
+  invocations (`--repo .`, no-arg, `--repo <seeded>`, `--repo <clean>`): the only
+  byte delta in stdout is the `detectors |` input line (the requested fix), exit
+  codes unchanged (0/0); base side re-run in a scratch clone at `0d5ce407` →
+  `bun scripts/coverage-gap.mjs .` exit 2 `unknown argument .` (B2 is change-caused)
+  and `--repo .` exit 0 with the old line. Live reproducers at head: absent-inventory
+  receipt → one `detectors | absent · docs/workflow/GATE_INVENTORY.md · passes 9`,
+  no `gates 0`; `bun scripts/coverage-gap.mjs <dir>` → exit 0; `--bogus` → exit 2;
+  two directories → exit 2.
+
+- **E13** — 2026-11-17, the batch's evidence runs, all in the foreground: `bun test
+  scripts/product-audit-rescope.test.mjs` · exit 0 · 16 pass / 0 fail, `bun test
+  scripts/residue-dimensions.test.mjs` · exit 0 · 30 pass / 0 fail, `bun test
+  scripts/dimension-regression.test.mjs` · exit 0 · 10 pass / 0 fail, `bun test
+  scripts/normative-drift.test.mjs` · exit 0 · 21 pass / 0 fail, `bun scripts/red-first.mjs`
+  · exit 0 · PASS (56 pairs · 31 after the cutoff · 0 findings), `bun scripts/skill-lint.mjs`
+  · exit 0 · PASS (0 findings in 104 files), `bun scripts/lint-changeset.mjs
+  .changeset/590-coverage-gap-audit.md` · exit 0 · `ok`, `phase-lint` on this doc ·
+  exit 0 · PASS (6/6), `bun scripts/roadmap-settle.mjs` · exit 0 · 223 unit docs · 0
+  violations. The gate runs (root suite, budgets, inventory, projection) are `G6`
+  with their head, appended after the batch lands.
+
 ## Next
 
-Hand the diff to the owner for the external verify. The only open items are the
-owner's verdict and the merge of PR
+The owner's recheck of receipt `external-verify.md` blockers B1 and B2 (the §9
+recheck is limited to them), then the merge of PR
 [#604](https://github.com/gtrabanco/agentic-workflow/pull/604).
 
 ## References

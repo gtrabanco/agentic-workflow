@@ -24,9 +24,9 @@ writes seeded/clean twins as real git repositories, so the class admission the
 receipt depends on is demonstrated instead of assumed.
 
 product-audit's `Coverage gaps` dimension consumes that receipt in its producer
-pre-pass and routes every gap through the existing `finding-route@1` hand-offs:
-an external skill to the discovery route, an own gate to `/unit-lane`, an
-obsolete criterion back to the catalogue's upgrade route.
+pre-pass; every gap finding's `route:` cell is a `finding-route@1` hand-off, and
+its destination is one of three: an external skill to the discovery route, an own
+gate to `/unit-lane`, an obsolete criterion back to the catalogue's upgrade route.
 
 `scripts/dimension-regression.mjs` is the evolution-regression gate: a unit that
 adds or changes a review dimension, a review skill or an audit producer
