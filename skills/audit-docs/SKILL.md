@@ -200,9 +200,9 @@ run the command shown, don't infer.
     - `boundary-artifact-missing` (an outcome names a rule file the tree does
       not carry) is **HIGH** — the record claims an enforcement the repository
       disproves;
-    - `feature-map-missing` / `feature-map-shape` is **HIGH** when the
-      documentation map declares `docs/workflow/FEATURE_MAP.md`, **LOW**
-      otherwise — a placeholder cell beside a shipped flow misleads a reader;
+    - `feature-map-shape` is **HIGH** when the documentation map declares
+      `docs/workflow/FEATURE_MAP.md`, **LOW** otherwise — a placeholder cell
+      still misleads; `feature-map-missing` (declared + absent: `--feature-map-declared`) is **HIGH**;
     - `evidence-driver-missing` / `artifact-evidence-missing` is **LOW** here
       (the unit's own evidence carrier is `verification-contract`'s finding at
       review time), and the finding's `route` cell says where it resolves.
