@@ -9,16 +9,19 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
 import {
+  comment,
+  defaultBase,
   detectForge,
   forgeCli,
   mergePr,
   prJson,
   prLine,
+  prNotes,
   projectPath,
   requireForgeCli,
 } from "../src/forge.mjs";
@@ -196,6 +199,73 @@ test("mergePr refuses a forge with no merge carrier", () => {
   const refused = mergePr("bitbucket", "12", "merge", "sha", { env: env() });
   assert.equal(refused.ok, false);
   assert.match(refused.message, /no official pull-request CLI/u);
+});
+
+
+test("the pull-request readers use the CLI's documented argv", () => {
+  const log = path.join(scratch, "argv.log");
+  stub("glab", 'printf \'%s\\n\' \'[{"state":"opened","sha":"s"}]\'');
+  stub("gt", 'printf \'%s\\n\' \'[{"state":"open","head_sha":"s"}]\'');
+  prLine("gitlab", "feat/x", { env: env({ STUB_LOG: log }) });
+  prLine("gitea", "feat/x", { env: env({ STUB_LOG: log }) });
+  const lines = requiredLines(log);
+  assert.equal(lines[0], "mr list --source-branch feat/x -F json");
+  assert.equal(lines[1], "pr list --head feat/x --json state,head_sha");
+});
+
+test("prNotes reads GitLab's notes through its API, with the project URL-encoded", () => {
+  const log = path.join(scratch, "notes.log");
+  stub("glab", 'printf \'%s\\n\' \'[{"body":"<!-- audit-pr:merge-ready sha=x -->"}]\'');
+  const notes = prNotes("gitlab", "12", "https://gitlab.com/acme/app.git", { env: env({ STUB_LOG: log }) });
+  assert.equal(notes.ok, true);
+  assert.deepEqual(notes.notes, [{ body: "<!-- audit-pr:merge-ready sha=x -->" }]);
+  assert.equal(requiredLines(log)[0], "api projects/acme%2Fapp/merge_requests/12/notes?per_page=100");
+});
+
+test("prNotes is a no-op for the forges that carry comments in the document", () => {
+  for (const forge of ["github", "gitea", "default"]) {
+    assert.deepEqual(prNotes(forge, "12", "https://github.com/o/r"), { ok: true, notes: [] });
+  }
+});
+
+test("defaultBase reads each forge's repository view", () => {
+  stub("gh", 'printf \'%s\\n\' \'{"defaultBranchRef":{"name":"main"}}\'');
+  stub("glab", 'printf \'%s\\n\' \'{"default_branch":"trunk"}\'');
+  stub("gt", 'printf \'%s\\n\' \'{"default_branch":"trunk"}\'');
+  assert.deepEqual(defaultBase("github", { env: env() }), { ok: true, branch: "main" });
+  assert.deepEqual(defaultBase("gitlab", { env: env() }), { ok: true, branch: "trunk" });
+  assert.deepEqual(defaultBase("gitea", { env: env() }), { ok: true, branch: "trunk" });
+});
+
+test("comment carries the body per forge, and `gh` gets a temporary body file", () => {
+  const log = path.join(scratch, "comment.log");
+  const home = mkdtempSync(path.join(scratch, "comment-tmp-"));
+  stub("gh", "exit 0");
+  stub("glab", "exit 0");
+  stub("gt", "exit 0");
+  const envWithTmp = (extra = {}) => env({ TMPDIR: home, STUB_LOG: log, ...extra });
+
+  assert.equal(comment("github", "12", "audit trail", { env: envWithTmp() }).ok, true);
+  assert.equal(comment("gitlab", "12", "audit trail", { env: envWithTmp() }).ok, true);
+  assert.equal(comment("gitea", "12", "audit trail", { env: envWithTmp() }).ok, true);
+
+  const lines = requiredLines(log);
+  assert.match(lines[0], new RegExp(`^pr comment 12 --body-file ${home}/agentic-workflow-comment\\.`, "u"));
+  assert.equal(lines[1], "mr note 12 -m audit trail");
+  assert.equal(lines[2], "pr comment 12 -m audit trail");
+  assert.deepEqual(readdirSync(home), [], "the temporary body file is removed after the call");
+});
+
+test("comment falls back to /tmp when every declared temp candidate is unusable", () => {
+  const log = path.join(scratch, "comment-fallback.log");
+  stub("gh", "exit 0");
+  // temp.test.mjs owns the candidate matrix; this case proves the consumer uses it
+  // rather than a private `${TMPDIR:-/tmp}`: a bad TMPDIR/TEMP/TMP lands on /tmp.
+  const result = comment("github", "12", "audit trail", {
+    env: env({ TMPDIR: "/nope", TEMP: "/nope2", TMP: "/nope3", STUB_LOG: log }),
+  });
+  assert.equal(result.ok, true);
+  assert.match(requiredLines(log)[0], /--body-file \/tmp\/agentic-workflow-comment\./u);
 });
 
 function requiredLines(file) {

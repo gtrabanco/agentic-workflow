@@ -77,6 +77,9 @@ ignored — declare the key path in `signingKey` instead.
 ```sh
 # the hook ships in the scaffold
 ls .agentic-workflow/hooks/git-identity-check.sh
+# it is a shim: the decision and the profile rule live in the universal CLI, so the
+# host needs `agentic-workflow` on PATH or `AGENTIC_WORKFLOW_BIN` pointing at it
+agentic-workflow git-identity-check --help
 
 # chain it from your pre-commit hook (the safe route when you already have one)
 cat > .git/hooks/pre-commit <<'SH'

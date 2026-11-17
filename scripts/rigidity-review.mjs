@@ -14,14 +14,15 @@
  * tree must be named here (a new guard cannot enter unaudited), and the rules a
  * row declares are the literals that file may not carry. The two facts that are
  * legitimately shared — which binary speaks a forge, which directory is writable —
- * live in `lib/forge.sh` and `lib/temp.sh`, the declared homes the rules exempt.
+ * live in the crate's `src/forge.mjs` and `src/temp.mjs`, the declared homes the
+ * rules exempt (until unit 554 they were the hooks' `lib/*.sh`).
  *
  * Usage
  *   bun scripts/rigidity-review.mjs [--root <dir>]
  *   (node fallback, same argv)
  *
  * stdout, ok:    `RIGIDITY-REVIEW — ok: <n> guard file(s), <m> rule(s)` then
- *                `homes: lib/forge.sh, lib/temp.sh`
+ *                `homes: src/forge.mjs, src/temp.mjs`
  * stdout, fail:  `RIGIDITY-REVIEW — failed: <k> finding(s) in <n> guard file(s)`
  *                then one `<path>:<line> <rule> — <evidence>` per finding
  *                (`<path> <rule> — …` for the two coverage rules)
@@ -54,7 +55,7 @@ export const RULES = Object.freeze({
 });
 
 /** The declared homes: the one place each shared fact is allowed to live. */
-export const HOMES = Object.freeze(["lib/forge.sh", "lib/temp.sh"]);
+export const HOMES = Object.freeze(["src/forge.mjs", "src/temp.mjs"]);
 
 const RULES_ALL = ["hardcoded-forge-cli", "hardcoded-temp-fallback", "hardcoded-remote"];
 
@@ -64,7 +65,7 @@ const RULES_ALL = ["hardcoded-forge-cli", "hardcoded-temp-fallback", "hardcoded-
  * is the whole point — the audit reaches a new guard the day it lands.
  */
 export const INVENTORY = Object.freeze([
-  { path: `${HOOKS}/guard-command.sh`, rules: ["hardcoded-temp-fallback"], note: "its subject is the forge command line, so naming the binaries is the guard's job" },
+  { path: `${HOOKS}/guard-command.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/fullauto-merge.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/git-identity-check.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/secret-scan.mjs`, rules: ["hardcoded-temp-fallback", "hardcoded-forge-cli"], note: "the scan's range fallback names the mainline ref — the one literal `hardcoded-remote` refuses. #487's range contract freezes that fallback and `template/` cannot import scripts/published-refs.mjs, so the exemption is recorded with its re-trigger in docs/features/552-template-secret-scan/SPEC.md §Future cost" },
@@ -74,8 +75,8 @@ export const INVENTORY = Object.freeze([
   { path: `${HOOKS}/adapters/copilot-guard.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/adapters/normalize-hook-payload.sh`, rules: RULES_ALL },
   { path: `${HOOKS}/adapters/pre-tool-guard.sh`, rules: RULES_ALL },
-  { path: `${HOOKS}/lib/forge.sh`, rules: [], note: "the declared home for every forge binary" },
-  { path: `${HOOKS}/lib/temp.sh`, rules: [], note: "the declared home for every temp directory candidate" },
+  { path: "packages/agentic-workflow/src/forge.mjs", rules: [], note: "the declared home for every forge binary (unit 554: the hook decision moved into the crate)" },
+  { path: "packages/agentic-workflow/src/temp.mjs", rules: [], note: "the declared home for every temp directory candidate" },
   { path: "scripts/published-refs.mjs", rules: [], note: "the declared home for the mainline ref names" },
   { path: "scripts/push-identity-check.mjs", rules: ["hardcoded-temp-fallback"] },
   { path: "scripts/local-gate.mjs", rules: ["hardcoded-temp-fallback", "hardcoded-forge-cli"] },
