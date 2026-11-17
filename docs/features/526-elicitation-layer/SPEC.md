@@ -48,16 +48,16 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 - AC2 — S2: the checklist is a checklist, not a free interview — every bank row applicable to the pre-spec's declared shape must appear as a row, and a missing one is refused. (check: `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 with the case `a pre-spec missing an applicable checklist row is refused`)
 - AC3 — S3: qualification is mechanical — a bank row whose `toggles` cell carries fewer than two `answer → behaviour` clauses is refused. (check: `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 with the case `a bank row with one toggled behaviour is refused`)
 - AC4 — S4: calibration is enforced — at most one open question per pre-spec, `questions: none` needs its why, and a `default: none` row left `unknown` must be a question. (check: `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 with the cases `a second open question in one pre-spec is refused`, `questions: none without a why is refused`, `an unknown on a row that declares no default must be a question`)
-- AC5 — S4: the question block is the published `open-questions@1` grammar, read through the crate's own owner rather than a copy — a header that differs from the published columns is refused. (check: `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 with the case `a question block whose header differs from the published columns is refused`, and `rg -c 'LEDGER_COLUMNS' packages/agentic-workflow/src/elicitation/prespec.mjs` matches 1)
+- AC5 — S4: the question block is the published `open-questions@1` grammar, read through the crate's own owner rather than a copy — a header that differs from the published columns is refused. (check: `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 with the case `a question block whose header differs from the published columns is refused`, and `rg -c 'LEDGER_COLUMNS' packages/agentic-workflow/src/elicitation/prespec.mjs` matches 3)
 - AC6 — S5: equal declared families are refused unless the degraded run is declared — `a declared same-family reason is accepted and reported` and `equal elicitor and implementer families are refused`. (check: `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 with both cases)
-- AC7 — S6: triage's one-shot eligibility reads the pre-spec, and the layer adds no gate — the eligibility conditions keep their six rows and no gate row is coined for the layer's check. (check: `rg -c 'pre-spec' skills/triage-issue/references/ISSUE_PROCESS.md` matches 2, `rg -c '^\s+\d\. \*\*' skills/triage-issue/references/ISSUE_PROCESS.md` matches 6, and `rg -c '^\| elicitation[a-z-]* \|' docs/workflow/GATE_INVENTORY.md` prints 0)
-- AC8 — S7: simple work earns nothing — a pre-spec whose applicable rows are all answered by the request or the repository asks no question and passes; and the layer coins no harness vocabulary (its shape vocabulary is four request families). (check: `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 with the case `a fully answered pre-spec asks nothing and passes`, and `rg -c '^\| shape \|' skills/unit-lane/references/ELICITATION.md` matches 1)
+- AC7 — S6: triage's one-shot eligibility reads the pre-spec, and the layer adds no gate — the eligibility conditions keep their six rows and no gate row is coined for the layer's check. (check: `rg -c 'pre-spec' skills/triage-issue/references/ISSUE_PROCESS.md` matches 2, `rg -c '^\s+\d\. \*\*' skills/triage-issue/references/ISSUE_PROCESS.md` matches 6, and `rg -c '^\| elicitation[a-z-]* \|' docs/workflow/GATE_INVENTORY.md` finds no match (rg exits 1) — the drift row's `surfaces` cell claims the two ids instead)
+- AC8 — S7: simple work earns nothing — a pre-spec whose applicable rows are all answered by the request or the repository asks no question and passes; and the layer coins no harness vocabulary (its shape vocabulary is four request families). (check: `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 with the case `a fully answered pre-spec asks nothing and passes`, and `rg -c '^shape \|' skills/unit-lane/references/ELICITATION.md` matches 1)
 - AC9 — S8: the contextual-approval rule ships with its hard boundary — the reference carries the immediately-preceding-proposal rule and states that it waives no consent, authority or destructive-action stop. (check: `rg -c 'immediately preceding proposal' skills/unit-lane/references/ELICITATION.md` matches 1 and `rg -c "never waives" skills/unit-lane/references/ELICITATION.md` matches 1)
 - AC10 — S1..S8: the layer is a declared normative surface read by the drift gate, and the lane stays inside its reference ceiling. (check: `bun test scripts/normative-drift.test.mjs` exits 0 with the `elicitation-checklist` and `pre-spec` rows resolving, and `bun scripts/check-skill-context.mjs --skill unit-lane` exits 0)
 
 ## Impact
 
-- `skills/unit-lane/`: the lane's entry gains the pre-spec step and the reference link; `references/ELICITATION.md` is new and is the layer's single normative owner (bank cells, artifact grammar, calibration, family rule, output contract).
+- `skills/unit-lane/`: the lane's entry gains the pre-spec step and the reference link; `skills/unit-lane/references/ELICITATION.md` is new and is the layer's single normative owner (bank cells, artifact grammar, calibration, family rule, output contract).
 - `skills/triage-issue/references/ISSUE_PROCESS.md`: the `one-shot` classification reads the pre-spec instead of asserting "small and understood" — its six eligibility conditions are unchanged, and the pre-spec's `questions: none` is the evidence for the second.
 - `packages/agentic-workflow/`: a new `elicitation` file service (`check`) with its bin dispatch, usage line and README row; `packages/pi-agentic-workflow/scripts/projection.mjs`'s `CRATE_COMMANDS` gains the command (its parity test compares it with the bin's dispatch list).
 - `docs/pre-spec/`: the artifact's home, one file per request, mirroring `docs/passive/`'s `<YYYY-MM-DD>-<slug>.md` id convention. Its named consumers are this unit's own pre-spec, triage's one-shot eligibility and the design step's `## Specs` seed.
@@ -110,7 +110,7 @@ The bank's rows are a contract: a later row must carry two behaviour-changing an
 ## Known pre-existing issues
 
 - `docs/ROADMAP.md` rows 556–558 never name their own issues — issue #569, triaged fix-now; does-not-affect this unit (row 526 names issue #526, and the projection re-syncs summary cells from the unit docs).
-- `scripts/worktree-guard.mjs` may report sibling sessions' worktrees as `STALE` — does-not-affect this unit: the finding names no path this change touches.
+- `bun scripts/worktree-guard.mjs` reports `FINDING .worktrees/fix-606-shell-guard-device-sinks — STALE: branch fix/606-shell-guard-device-sinks is merged into origin/main` (observed 2026-11-17 at `24a0c367`) — does-not-affect this unit: the finding names another session's worktree and no path this change touches. Owner: the session that owns that worktree removes it; this unit does not touch another session's tree.
 
 ## Tasks
 
@@ -131,7 +131,7 @@ The bank's rows are a contract: a later row must carry two behaviour-changing an
   - Relevant files: skills/unit-lane/SKILL.md, skills/triage-issue/references/ISSUE_PROCESS.md, docs/workflow/LANE_FLOW.md, AGENTS.md
 - [ ] P6 — Write this unit's own pre-spec and land the state: changeset, roadmap row, the session journal fragment (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs elicitation check --bank skills/unit-lane/references/ELICITATION.md --spec docs/pre-spec/2026-11-17-526-elicitation-layer.md` exits 0)
   (Implements: S1, S6)
-  - Relevant files: docs/pre-spec/2026-11-17-526-elicitation-layer.md, .changeset, docs/ROADMAP.md
+  - Relevant files: docs/pre-spec/2026-11-17-526-elicitation-layer.md, .changeset/*.md, docs/ROADMAP.md
 - [ ] P7 — Run the declared verification in the foreground, flip every obligation row and append the log (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/526-elicitation-layer/SPEC.md` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
   - Relevant files: docs/features/526-elicitation-layer/SPEC.md, docs/features/526-elicitation-layer/planning-obligations.md
@@ -145,7 +145,8 @@ Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: st
 Skipped: none
 Budget: strong
 Fused: design + plan — one investigate→orient→ask→decide pass, carriers separated (activity-fusion@1)
-relay: no packet in this session — the owner's local apply order runs the unit inline
+relay: bootstrap-needed — no packet at .pi-web/relays/526-elicitation-layer
+relay-next: create .pi-web/relays/526-elicitation-layer/ (charter → docs/features/526-elicitation-layer/SPEC.md) then dispatch_relay(packet: ".pi-web/relays/526-elicitation-layer", leg: "1") · legs: 8 = 7 phases + 1 coherence review
 ```
 
 ## Findings
@@ -165,6 +166,30 @@ relay: no packet in this session — the owner's local apply order runs the unit
 - **D4** — 2026-11-17, no repair corpus exists for this unit: it is a new capability, not a fix, so §2 of the owner's local apply order has no reproducer set to extract. The red-first corpus is the service's own refusal cases (P3 lands them alone, observed red).
 - **D5** — 2026-11-17, the layer decides *pre-triage intent* questions; `DESIGN.md`'s batched ask keeps owning design-tier questions. The boundary is stated in the reference so the two asks cannot be read as rivals (S1, S4).
 - **P1** — 2026-11-17, froze this unit's SPEC (S1–S8, AC1–AC10), the evidence ledger (PE-001..PE-013) and the obligations ledger (O1–O16).
+- **P2** — 2026-11-17 08:58, the layer's one owner — the 16-row checklist bank over six request families plus `any`, the `pre-spec@1` artifact grammar and its `docs/pre-spec/` home, fill-then-assume-or-ask, one-question-at-a-time calibration, the cross-family rule and the contextual-approval block · `2ebb9a24`.
+- **P3** — 2026-11-17 09:02, the service's suite landed alone · `af042f2a`.
+- **E1** — 2026-11-17 09:02, `bun test packages/agentic-workflow/test/elicitation.test.mjs` · exit 1 · `error: Cannot find module '../src/elicitation/prespec.mjs'` — the red commit carried the suite alone (the red half of the red-first pair; O3/O5–O10/O13/O14's cases are that corpus).
+- **P4** — 2026-11-17 09:07, the `elicitation` file service, its dispatch, usage line, bin header note, README row and `CRATE_COMMANDS` entry · `cbe4131c`.
+- **E2** — 2026-11-17 09:12, `bun test packages/agentic-workflow/test/elicitation.test.mjs` · exit 0 · 28 pass / 0 fail (every refusal case plus the shipped bank and the shipped pair).
+- **E3** — 2026-11-17 09:13, `bun test packages/agentic-workflow/test/cli.surface.test.mjs` · exit 0 · 3 pass / 0 fail (the usage line and the Commands row stay token-identical).
+- **P5** — 2026-11-17 09:15, the consumers — triage's one-shot condition 2, the tutorial's lifecycle, the two `normative-surfaces@1` rows and the drift row's `surfaces` claim — plus the unit folder renaming to the roadmap row's own slug so the projection syncs one row · `24a0c367`.
+- **E4** — 2026-11-17 09:16, the counts the criteria read: `rg -c 'pre-spec' skills/unit-lane/SKILL.md` = 2 (O1) · bank rows = 16 (O4) · `pre-spec` in `ISSUE_PROCESS.md` = 2 and the six eligibility rows = 6 (O11) · `immediately preceding proposal` = 1 and `never waives` = 1 (O15) · `^shape \|` = 1 (AC8) · `LEDGER_COLUMNS` = 3 (AC5).
+- **E5** — 2026-11-17 09:16, `bun packages/agentic-workflow/bin/agentic-workflow.mjs elicitation check --bank skills/unit-lane/references/ELICITATION.md --spec docs/pre-spec/2026-11-17-526-elicitation-layer.md` · exit 0 · `ELICITATION CHECK PASS — … 5 row(s) · 0 question(s) · feature` plus `- same-family: …` (the degraded run declared, never hidden).
+- **G1** — 2026-11-17 09:16, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass / 0 fail — the `elicitation-checklist` and `pre-spec` rows resolve.
+- **G2** — 2026-11-17 09:16, `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS` — both ids claimed by the existing drift row, no gate row coined (O12).
+- **G3** — 2026-11-17 09:16, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)` over 105 files.
+- **G4** — 2026-11-17 09:17, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills`, `PASS context documents: 4 budgeted documents` after the two declared re-bases.
+- **G5** — 2026-11-17 09:16, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 stale`, roadmap in sync.
+- **G6** — 2026-11-17 09:16, `bun scripts/red-first.mjs` · exit 0 · `54 pair(s) · 0 finding(s)`.
+- **G7** — 2026-11-17 09:16, `bun scripts/roadmap-settle.mjs` · exit 0 · `224 unit docs checked · violations: 0`.
+- **E6** — 2026-11-17 09:16, `bun scripts/test-impact.mjs --base main` · exit 0 · 5 executable path(s), 14 symbol(s), 206 suite(s) — the derived set this change can affect.
+- **E7** — 2026-11-17 09:19, the base-vs-change differential over a `git archive b25ef8a9` scratch: `unit-route --triage 556`, `charter check` on the shipped pair, `needs-input 556`, `phase-lint 556` and an unknown-command invocation are byte-identical in stdout/stderr/exit; `roadmap read` differs only in the absolute path and the table revision, `verify 556` only in the absolute path, and `elicitation` answers `Unknown service` on the base because the command is new — no unasked difference.
+- **D6** — 2026-11-17, four validator counts were corrected to what the tree prints (`pre-spec` in the lane's entry = 2 not 1, `LEDGER_COLUMNS` = 3 not 1, the bank's shape cell read as `^shape \|`, and the no-gate-row check stated as a no-match rather than a printed zero) — corrected before the first review and recorded here rather than silently rewritten.
+- **D7** — 2026-11-17, the layer is a **reference** of `unit-lane` and not a tenth catalog step: `STEPS.md` publishes a closed nine-step set the router reads (PE-002), so Layer 0 lives in the lane's entry before triage (step 1b) and its catalog is untouched.
+- **D8** — 2026-11-17, this unit's own pre-spec declares a **same-family** run: the owner's local apply order ran the whole unit in one session on one model, and the artifact says so instead of hiding it. That is the rule working, not an exception to it — the refusal targets a *silent* same-family run.
+- **D9** — 2026-11-17, `docs/CAPABILITIES.md` is unchanged: its rows are the adopting *project's* cross-cutting subsystems (auth, ACL, navigation, …), and Layer 0 introduces a workflow surface with no project-side subsystem, role or permission to register. Recorded rather than silently skipped.
+- **G8** — 2026-11-17 09:14, `bun run test` in `packages/agentic-workflow` · exit 0 · 1051 pass / 0 fail across 57 files; `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 947 pass / 0 fail across 84 files (the `CRATE_COMMANDS` parity holds with the new command).
+
 
 ## Next
 
