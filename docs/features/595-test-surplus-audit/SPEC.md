@@ -148,12 +148,22 @@ named.
 - **Tier** — `standard` · **Task Size** — `unit-doc`
 - **Named high-risk item** — `none — not a high-tier unit`.
 
-The verdict is computed, never chosen: `agentic-workflow ceremony tier classify`
-drops a path that does not exist yet, so a P1-time run over the documentation-only
-set answers `passive — no-executable-effect`. The authoritative run happens at P2,
-once `scripts/product-audit-surplus.test.mjs` exists, and its verdict is copied
-verbatim into the D2 log line; this section is corrected to match if the verdict
-differs from `standard`.
+Computed, never chosen. `agentic-workflow ceremony tier classify` over the unit's
+full path set answers, verbatim:
+
+```text
+contract: risk-tier-verdict@1
+tier: standard
+reason: 2 path(s) carry executable content: docs/workflow/SKILL_CONTEXT_BUDGETS.json, scripts/product-audit-surplus.test.mjs
+reason_kind: executable-content
+signals: []
+task_size: { understood: true, contained_risk: contained, resumable_from_diff: true, ceremony: unit-doc, verification: gates }
+```
+
+Read the receipt's own trap: the classifier's `--paths` flag does not aggregate, so
+repeating it keeps only the last value. A run that repeats the flag answers
+`passive — no executable effect` over a single documentation path — the verdict
+this unit first got and corrected (D3).
 
 ## Future
 
@@ -295,10 +305,28 @@ recorded as a transcription rather than passed off as a run. An owner-triggered
   job is to keep the new normative surface from silently vanishing after a
   compaction — the defect class `docs/workflow/GATE_INVENTORY.md` exists to
   prevent. No producer, no local-gate step, no schema vocabulary.
+- **D3** — 2026-11-17, the risk tier is computed, and the first run was wrong for a
+  reason worth recording: `ceremony tier classify --paths a --paths b` keeps only
+  the last flag value (`parseFlags` does not aggregate), so it answered `passive —
+  every changed path is documentation` over one documentation path. Re-run with a
+  single comma-joined `--paths` value over the unit's full path set: `tier:
+  "standard"`, `reason_kind: "executable-content"` (two executable paths),
+  `task_size.ceremony: "unit-doc"`, `signals: []`. The verbatim receipt is in `##
+  Risk tier`.
+- **E1** — 2026-11-17, P2's red observation: `bun test
+  scripts/product-audit-surplus.test.mjs` · exit 1 · 3 pass / 10 fail. The three
+  passes are the pins that must keep holding (the depleted-direction row, the
+  applicability table's shape, the process's eleven numbered steps); the ten
+  failures are exactly the rules the unit adds, so the corpus is the requested
+  rule set and nothing else. Two corrections were made to the suite before this
+  run: a first-pass claim that the process carries ten numbered steps was wrong
+  (it carries eleven, measured), and the inventory-claim filter read the wrong
+  column of the 13-column row.
 
 ## Next
 
-P2 — land the pin suite alone and observe it red.
+P3 — write the Tests dimension row, the surplus sweep section and its
+`test-surplus@1` grammar.
 
 ## References
 
