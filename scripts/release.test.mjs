@@ -525,6 +525,58 @@ test("release-notes refuses to render a stable cut with no release intent", () =
   assert.match(result.stderr || result.stdout, /no release intent/i);
 });
 
+// GitHub refuses a release body above 125,000 characters (HTTP 422, run
+// 43999980103 — the 2026-11-17 canary cut failed after the npm publish had
+// already succeeded). A canary never consumes changesets, so the backlog it
+// reprints grows with every train between stable cuts. The render sheds
+// detail, never changes: the carried bodies go first, then every body — the
+// headings, the install block and the Full Changelog link survive every rung.
+test("release-notes caps a canary body below GitHub's 125,000-character release limit", () => {
+  const root = fixture({ changesets: {}, git: true });
+  const gits = (...argv) =>
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...argv], { cwd: root });
+  const writeChange = (name, title, detail) =>
+    fs.writeFileSync(
+      path.join(root, ".changeset", name),
+      ["---", '"@gtrabanco/pi-agentic-workflow": patch', "---", "", title, "", detail, ""].join("\n"),
+    );
+  for (let i = 0; i < 60; i++) {
+    writeChange(`carried-${String(i).padStart(2, "0")}.md`, `feat(pi): carried change ${i}`, "Carried detail text. ".repeat(160));
+  }
+  gits("add", "-A");
+  gits("commit", "-qm", "backlog");
+  gits("tag", "v1.0.1-canary.20261101.1");
+  writeChange("fresh.md", "feat(pi): the change this cut adds", "Fresh detail text.");
+  gits("add", "-A");
+  gits("commit", "-qm", "fresh");
+
+  const result = run(["release-notes", "--root", root, "--channel", "canary", "--date", "2026-11-02"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.ok(result.stdout.length <= 125000, `the body is ${result.stdout.length} chars — GitHub refuses a release body above 125,000`);
+  assert.match(result.stdout, /^### feat\(pi\): the change this cut adds$/m, "the new change is rendered");
+  assert.match(result.stdout, /Fresh detail text/, "the news keep their bodies — the carried half sheds them");
+  assert.match(result.stdout, /^### feat\(pi\): carried change 0$/m, "the carried changes stay discoverable by heading");
+  assert.doesNotMatch(result.stdout, /Carried detail text/, "the carried bodies are shed — that is how the cap is met");
+  assert.match(result.stdout, /elided/i, "the body says why change bodies are missing");
+});
+
+test("release-notes caps a stable body below GitHub's 125,000-character release limit", () => {
+  const root = fixture({ changesets: {} });
+  for (let i = 0; i < 60; i++) {
+    fs.writeFileSync(
+      path.join(root, ".changeset", `big-${String(i).padStart(2, "0")}.md`),
+      ["---", '"@gtrabanco/pi-agentic-workflow": patch', "---", "", `feat(pi): change number ${i}`, "", "Stable detail text. ".repeat(160), ""].join("\n"),
+    );
+  }
+
+  const result = run(["release-notes", "--root", root, "--channel", "stable"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.ok(result.stdout.length <= 125000, `the body is ${result.stdout.length} chars — GitHub refuses a release body above 125,000`);
+  assert.match(result.stdout, /^### feat\(pi\): change number 0$/m, "every change stays discoverable by heading");
+  assert.doesNotMatch(result.stdout, /Stable detail text/, "the change bodies are shed to meet the cap");
+  assert.match(result.stdout, /elided/i, "the body says why change bodies are missing");
+});
+
 // ---------------------------------------------------------------------------
 // The Contributors section: the window is the release immediately BEFORE the
 // cut — never the first one of the series — and every bullet credits the PR's
