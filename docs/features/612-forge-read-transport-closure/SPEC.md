@@ -415,6 +415,10 @@ own surgery.
   (it cross-checks git context the tarball has no `.git` for), so its code is
   confirmed untouched instead: `git diff --name-only main -- …/src/edit …/src/verify
   …/src/runner/sensors` prints nothing.
+- **E14** — 2026-11-18, `npx --yes skills add . --list` · exit 0 · the shipped
+  tree still discovers every skill (the guard, the re-pointed triage and audit
+  skills and `runner-contract` among them), which is AC6's second half beside
+  the context budgets in `E10`.
 - **P1** — 2026-11-18, the request, acceptance criteria and both ledgers frozen ·
   `fbacbb9d`.
 - **P2** — 2026-11-18, the read route's grammar, the guarded read (transport,
