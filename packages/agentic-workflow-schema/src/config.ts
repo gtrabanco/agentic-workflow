@@ -357,7 +357,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     category: "feature",
     file: BASE_CONFIG_FILE,
     path: ["telemetry"],
-    description: "Per-unit cost measurement. Opt-in; absent or false measures nothing.",
+    description: "Per-unit cost measurement. On by default — the sample stays local and anonymized (no prompt text, no model output, no diff, no file content); false opts a project out.",
     schema: {
       type: "object",
       additionalProperties: false,
@@ -369,7 +369,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
         jsonFile: { type: "string", minLength: 1 },
       },
     },
-    defaults: { enabled: false, jsonFile: ".pi/.telemetry/sessions.jsonl" },
+    defaults: { enabled: true, jsonFile: ".pi/.telemetry/sessions.jsonl" },
   },
   {
     key: "guards",

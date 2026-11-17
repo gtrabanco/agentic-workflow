@@ -423,7 +423,9 @@ export default function extension(pi: ExtensionAPI): void {
     if (loaded.config.telemetry?.enabled === true && telemetry === null) {
       // The id is read once, here: pi invalidates a captured context after the
       // session is replaced, and one extension instance serves one session.
-      const sessionId = ctx.sessionManager.getSessionId();
+      // Read defensively (sessionIdOf): a context without a session manager
+      // named no id — the sample records that, it does not throw.
+      const sessionId = sessionIdOf(ctx);
       // #504 S3: the same switch writes the per-session JSONL beside the ledger,
       // at the path the base feature section resolves (`.pi/.telemetry/…` by
       // default). A relative path is the project's, never the process's cwd of

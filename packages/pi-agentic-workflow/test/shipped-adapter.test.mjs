@@ -55,7 +55,15 @@ function piDouble(options = {}) {
       calls.setThinkingLevel.push(level);
       state.thinking = level;
     },
-    on: (type, handler) => handlers.set(type, handler),
+    // A real host invokes every listener an event carries (the extension
+    // registers its own session_start/session_shutdown handlers and, when the
+    // telemetry or journal switches are on, the wirings register more on the
+    // same events) — compose in registration order instead of last-writer-wins,
+    // or a second listener silently silences the first.
+    on: (type, handler) => {
+      const previous = handlers.get(type);
+      handlers.set(type, previous ? (...args) => { previous(...args); return handler(...args); } : handler);
+    },
     // Engram provisioning reaches both structurally (the peer floor is a range),
     // so the double can say what the host could see. `mcpServers` is the
     // operator's own list; an empty one makes the `mcp.json` files the only

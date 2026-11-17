@@ -57,9 +57,10 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // Feature 66 — the memory substrate is ask-first: nothing is provisioned
     // until the operator opts in.
     memory: { engram: false },
-    // Issue #383: the measured acceptance is opt-in, so the shipped shape carries
-    // it switched off — the same record feature 66's memory consent uses here.
-    telemetry: { enabled: false, jsonFile: ".pi/.telemetry/sessions.jsonl" },
+    // Issue #383, owner re-decision 2026-11-17: the sample is local and
+    // anonymized (no prompt text, no model output, no diff, no file content),
+    // so the shipped shape measures by default — "enabled": false opts out.
+    telemetry: { enabled: true, jsonFile: ".pi/.telemetry/sessions.jsonl" },
     // Issue #394 / #427: the journal writer is opt-in as well — off, and no
     // publisher named, so a fresh install writes nothing at either switch.
     logSession: { enabled: false, publisher: null },

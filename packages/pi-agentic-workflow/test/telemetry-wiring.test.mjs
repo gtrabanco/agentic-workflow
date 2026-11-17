@@ -190,7 +190,7 @@ test("the switch is one boolean, off by default, and a stray key is refused", ()
   assert.deepEqual(validateSectionValue(section, { enabled: true }), []);
   assert.equal(validateSectionValue(section, { off: true }).length, 1, "an unknown telemetry key is a validation failure, not a silent no-op");
   assert.equal(validateSectionValue(section, { enabled: "yes" }).length, 1, "a non-boolean is refused");
-  assert.equal(mergeConfigs({}, {}).telemetry.enabled, false, "a fresh install measures nothing");
+  assert.equal(mergeConfigs({}, {}).telemetry.enabled, true, "a fresh install measures — samples are local and anonymized; false opts out");
 });
 
 test("a session's own scope is counted from git: its commits plus what is still uncommitted", () => {
