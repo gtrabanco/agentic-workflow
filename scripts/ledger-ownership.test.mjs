@@ -413,6 +413,13 @@ function resolvedLiterals(expression, bindings, depth = 0) {
 const DECISION_BACKED_WRITERS = new Map([
   ["SKILL.md", "scripts/release.mjs"],
   ["skills/runner-contract/references/RUNNER.md", "scripts/release.mjs"],
+  // Issue #590: the coverage-gap fixture materializes throwaway unit docs into a
+  // caller-supplied directory (its `seeded/` and `clean/` twins, always outside
+  // this repository) so the corpus admission the join depends on can be
+  // demonstrated instead of assumed. It never writes the live record: the pair
+  // is pinned by script AND ledger name, so every other script writing SPEC.md
+  // still fails, and the block list stays intact for the repository within.
+  ["SPEC.md", "scripts/product-audit-gap-fixture.mjs"],
 ]);
 
 function writePathScan({ patterns, blocked, sources, label }) {
@@ -436,6 +443,12 @@ function writePathScan({ patterns, blocked, sources, label }) {
   };
   for (const [rel, source] of Object.entries(sources)) {
     for (const target of writtenLedgers(source)) {
+      // A decision-backed writer answers before the block list: it is a
+      // (script, ledger) pair, never a narrowing of the list itself.
+      if (DECISION_BACKED_WRITERS.get(target) === rel) {
+        writers.add(`${rel} → ${basename(target)}`);
+        continue;
+      }
       if (blocked.has(basename(target))) {
         failures.push(`${label}: ${rel} writes "${target}", a durable record the map forbids any script to write`);
         continue;
@@ -679,6 +692,20 @@ test("scan 2 fails when the map loses the row for a ledger a script writes", () 
   assert.ok(scan.failures.some((f) => f.includes("known-issues.md") && f.includes("absent from the ownership map")), JSON.stringify(scan.failures));
 });
 
+test("scan 2 still blocks SPEC.md for any script outside the issue #590 fixture pair", () => {
+  const writer = [
+    "#!/usr/bin/env node",
+    'import { writeFileSync } from "node:fs";',
+    'writeFileSync("docs/features/001-x/SPEC.md", "rewritten");',
+    "",
+  ].join("\n");
+  const scan = scan2(writer);
+  assert.ok(
+    scan.failures.some((f) => /fixture-writer\.mjs writes "[^"]*SPEC\.md".*forbids any script/.test(f)),
+    JSON.stringify(scan.failures),
+  );
+});
+
 test("scan 2 blocks a durable record the map forbids any script to write", () => {
   const scan = scan2(UNDECLARED_WRITER.replace("known-issues.md", "planning-obligations.md"));
   assert.ok(scan.failures.some((f) => /planning-obligations\.md.*forbids any script/.test(f)), JSON.stringify(scan.failures));
@@ -727,8 +754,13 @@ test("scan 2 passes the real tree and still recognises its declared annotator", 
   assert.deepEqual(written.failures, [], written.failures.join(" | "));
   assert.deepEqual(
     written.writers,
-    [`${PROVENANCE_REL} → review-findings.md`, "scripts/release.mjs → RUNNER.md", "scripts/release.mjs → SKILL.md"],
-    "three non-test script writes are sanctioned today: the map's annotator, the D-40-14 train stamp and the runner pin stamp",
+    [
+      `${PROVENANCE_REL} → review-findings.md`,
+      "scripts/product-audit-gap-fixture.mjs → SPEC.md",
+      "scripts/release.mjs → RUNNER.md",
+      "scripts/release.mjs → SKILL.md",
+    ],
+    "four non-test script writes are sanctioned today: the map's annotator, issue #590's throwaway-tree generator, the D-40-14 train stamp and the runner pin stamp",
   );
 });
 
