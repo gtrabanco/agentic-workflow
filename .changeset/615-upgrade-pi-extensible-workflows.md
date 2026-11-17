@@ -20,6 +20,14 @@ npm- or git-installed packages, so a path-loaded extension shows **no release
 notes** at all. Nothing else in the extension's user surface disappears: the
 five subagent tools, their schemas and the durable run records are unchanged.
 
+**The bump also fixes a load failure this package already had.** The pinned
+`6.3.0` bundle imports `Type` from `@earendil-works/pi-ai`, which stopped
+re-exporting it at `1.5.0` (`1.4.0` still did) — so on Pi ≥ 1.5.0 the subagents
+entry this package registers by path **failed to load**, and the five tools were
+missing. `6.4.0` imports `Type` from the `typebox` peer the bundle already used
+for `typebox/value` and `typebox/compile`, so it loads on Pi `1.1.0` through
+`1.5.x` with the same five tools and byte-identical parameter schemas.
+
 **The window, entry by entry** (9 of 9 changelog bullets, the breaking one first):
 
 - *Breaking — the release-notes notice is gone*: affects us; documented above,
@@ -37,9 +45,12 @@ five subagent tools, their schemas and the durable run records are unchanged.
   ships nor invokes that CLI.
 - *`minimatch` `^10.2.5` → `^11.0.8`* (`GHSA-g3hv-75wg-m249`): resolution only.
   The workspace lock moves the top-level `minimatch` `10.2.6` → `11.0.9` and
-  adds `@isaacs/nonrecursive-glob-match`; Pi's own declared `10.2.6` stays nested
-  under `@earendil-works/pi-coding-agent`, so the advisory pass keeps reporting
-  that copy report-only — it is Pi's manifest, not this package's.
+  adds `@isaacs/nonrecursive-glob-match`, so the advisory pass reports no
+  advisories over the resolved tree; Pi's own declared `10.2.6` stays in the
+  lock as a nested entry under `@earendil-works/pi-coding-agent`, which that
+  pass does not read. The invalid-pattern refusal the extension performs was
+  rewritten on `minimatch` 11's matcher (`makeRe()` is gone) and keeps the same
+  verdicts.
 - *Prompt inspection on Pi ≥ 1.2.0*: engine surface, never loaded here.
 - *Home/End end the notices again in the agents workspace on Pi 1.5*: the
   keybinding matcher is inside the bundle this package loads, so `/subagents`

@@ -135,7 +135,7 @@ unit's own `## Log` carries both runs.
 | W2 | New `worktreeSetup` workflow setting (shell commands run in each newly created workflow/subagent worktree, `PIEWF_WORKTREE_PATH`/`PIEWF_SOURCE_ROOT`/`PIEWF_WORKTREE_BRANCH`, failure or 10-minute timeout ⇒ `WORKTREE_FAILED` and the worktree is removed) | worth adopting — proposed, owner decides | it automates a copy step, but only in **piew-created** worktrees: this repo creates its worktrees with `git worktree add` per `AGENTS.md` (*Worktree creation*, step 5), and the subagents extension only creates one when a subagent is launched with a worktree scope — which no skill here instructs. Case and owner question: `## Future` PR1 |
 | W3 | `reviewLoop` accepts `sharedReviewer: true` (one persistent reviewer handle across iterations instead of a fresh reviewer each time) | worth adopting — **recommend reject** | this repository never calls piew's `reviewLoop` (the starter extension is not loaded and no skill names `reviewLoop`); the reviews that would use it are `review-change`'s, whose isolation rule mandates independent passes. Adopting it would trade that independence for cost: PR2 |
 | W4 | `@piewf/cli` bundles Pi 1.5.2 instead of 1.0.0 (drops Pi 1.0.0's vulnerable `undici`/`brace-expansion`) | does not affect us | `piewf` is upstream's standalone CLI; this repository neither ships it nor invokes it (`rg -c 'piewf' skills packages/pi-agentic-workflow/src packages/pi-agentic-workflow/README.md` → 0 matches) |
-| W5 | Core depends on `minimatch` 11.0.8 instead of 10.2.5, fixing `GHSA-g3hv-75wg-m249` | affects us (resolution only) | our lock's `pi-extensible-workflows` entry moves `minimatch` `^10.2.5` → `^11.0.8`, so the top-level resolution goes `10.2.6` → `11.0.9`; Pi 1.4.0 (our dev-resolved peer) keeps its own `minimatch` `10.2.6`, so the advisory pass still reports that copy report-only — it is Pi's manifest, not ours |
+| W5 | Core depends on `minimatch` 11.0.8 instead of 10.2.5, fixing `GHSA-g3hv-75wg-m249` | affects us (resolution only) | our lock's `pi-extensible-workflows` entry moves `minimatch` `^10.2.5` → `^11.0.8`, so the top-level resolution goes `10.2.6` → `11.0.9` and the advisory pass now reports **0 advisories** over the resolved tree. Pi 1.4.0's own `minimatch` `10.2.6` stays in the lock as a **nested** entry, which the pass does not read (Known pre-existing issues) |
 | W6 | Prompt inspection works again on Pi 1.2.0 and later (the internal `before_agent_start` emitter signature changed) | does not affect us | prompt inspection is the workflow **engine** extension's `inspect` surface; `pi.extensions` registers only our own extension and the subagents entry — the engine is never loaded |
 | W7 | In the agents workspace, plain Home and End (`\x1b[1~`, `\x1b[4~` from tmux and screen) end the notices again on Pi 1.5, where they no longer bind to an alt-screen action | affects us (positively, no action) | the keybinding matcher lives in the bundle we load (`dist/subagents/index.js`), so `/subagents`, the picker this extension registers, gets the wider action set back |
 | W8 | `piewf doctor cleanup` and automatic retention no longer refuse a whole session as "corrupt or incomplete" when a worktree one of its runs borrowed was already removed; a missing directory counts as already cleaned up | affects us (positively, no action) | the store that decides this is inside the bundle we load (`store.ts` → `ownedWorktree`/`findNamedWorktree`/`validateBorrowedWorktrees` gain `requireDirectory = false` for the deletion path): a subagent run whose borrowed worktree was removed by hand is no longer un-retainable. No CLI involvement in our surface |
@@ -152,7 +152,7 @@ actually executes. Every hunk, classified:
 
 | hunk | verdict |
 |---|---|
-| `Type` imported from `typebox` instead of `@earendil-works/pi-ai` (`host.ts`, `agent-execution.ts`, `subagents/src/contracts.ts`) | compatible: the bundle already imported `typebox/value` and `typebox/compile` at runtime in 6.3.0, so the peer-resolved `typebox` was already a load-time requirement; 6.4.0 unifies the two instances on the peer one |
+| `Type` imported from `typebox` instead of `@earendil-works/pi-ai` (`host.ts`, `agent-execution.ts`, `subagents/src/contracts.ts`) | **required**, not cosmetic: `@earendil-works/pi-ai` stops re-exporting `Type` at 1.5.0 (`1.4.0` still does), so the 6.3.0 bundle **fails to load** on Pi ≥ 1.5.0 (E16) and 6.4.0 loads on both legs. The bundle already imported `typebox/value` and `typebox/compile` at runtime in 6.3.0, so the peer-resolved `typebox` was already a load-time requirement; 6.4.0 only unifies the two instances on the peer one |
 | `resourcePatternMatches` invalid-pattern check: `matcher.makeRe() === false` → `matcher.set.length === 0` | behaviour-preserving: minimatch 11 no longer exposes the same `makeRe()` contract; the invalid-pattern refusal keeps its message. Pinned by the settings/selector probe (E9) |
 | `runWorktreeSetup` + `settings.worktreeSetup` decode/validate/allow-list + adapter `create(context, setup)` | W2, inert until a user sets the key (the settings schema refuses an unknown key, so before 6.4.0 the same file was rejected) |
 | `decodePhaseRecord` accepts an optional `startedAt` | additive acceptance: a persisted run record written by the newer engine still decodes |
@@ -231,12 +231,13 @@ owner, and never implemented here. Status stays `open` until the owner answers.
   is that a reviewer never inherits the conclusions of the pass before. The
   likely verdict is reject on that ground, not on cost.
 - **PR3 — `minimatch` (`GHSA-g3hv-75wg-m249`) in the tree (status: open,
-  proposed 2026-11-17).** *Case:* after this bump the top-level `minimatch`
-  resolves `11.0.9` (fixed); the only `10.2.6` left is
-  `@earendil-works/pi-coding-agent@1.4.0`'s own declared dependency. Moving it
-  means moving the Pi version this repository dev-resolves and tests against —
-  a separate unit with its own peer-window review, and the advisory is
-  report-only until then.
+  proposed 2026-11-17).** *Case:* after this bump the resolved top-level
+  `minimatch` is `11.0.9` (fixed), and the advisory pass reports zero rows. The
+  `10.2.6` copy that remains is `@earendil-works/pi-coding-agent@1.4.0`'s own
+  declared dependency, carried as a nested lock entry the pass does not read.
+  Moving it means moving the Pi version this repository dev-resolves and tests
+  against — a separate unit with its own peer-window review; whether the pass
+  should read nested entries is a second one (Known pre-existing issues).
 
 ## Future cost
 
@@ -326,10 +327,14 @@ The behavioural differential is the package suite plus the load probe
   (W7) is only in the changelog. **does-not-affect** this unit: the
   classification is cut from the changelog at the tag, and W7 is recorded there.
   Recorded so the next reader does not take the issue's list as complete.
-- **`@earendil-works/pi-coding-agent@1.4.0` carries `minimatch@10.2.6`**, one
-  advisory row that survives the bump (`GHSA-g3hv-75wg-m249`, report-only).
-  **does-not-affect** this unit's deliverable (the drift and its gate are the
-  bump's subject); the remaining copy is a peer-version decision — PR3.
+- **`@earendil-works/pi-coding-agent@1.4.0` carries `minimatch@10.2.6`**, which
+  the advisory pass no longer sees: it walks the lock's top-level `packages`
+  map, and the bump's range change pushed Pi's copy into a **nested** entry
+  (`@earendil-works/pi-coding-agent/minimatch`). **does-not-affect** this unit's
+  deliverable (the drift and its gate are the bump's subject, and the copy the
+  piew entry resolves is fixed); the nested-entry blind spot is a pre-existing
+  property of `scripts/dependency-advisory-pass.mjs`, recorded here for the
+  owner and left unowned by this unit — PR3 carries the proposal.
 - **`version-parity-gate --pins` defaults to the Pi package only** when
   `--package` is absent (the same gap `docs/fix/588-typebox-pin-drift` recorded),
   so a crate-only drift passes the wired gate. **does-not-affect** this unit: the
@@ -389,7 +394,7 @@ whose validator runs the row; `task` names the task that implements it.
 | O4 | S3 | the version-parity content half accepts the change carried by that intent | P4 | P4 | execute-phase | `bun scripts/version-parity-gate.mjs --content --base origin/main` exits 0 | the E line with the gate's verdict | planned |
 | O5 | S9 | the workspace lock resolves exactly the bumped artifact and stays installable frozen | P4 | P2 | execute-phase | `bun install --frozen-lockfile` exits 0 and `rg -c 'pi-extensible-workflows@6\.4\.0' bun.lock` matches 1 | the E line with both results | planned |
 | O6 | S9 | no resolution moves but the ones the bump forces | P4 | P2 | execute-phase | `git diff origin/main...HEAD -- bun.lock` names only the importer pin, the `pi-extensible-workflows` entry, `minimatch`, `@isaacs/nonrecursive-glob-match` and Pi's nested `minimatch` | the lock diff listed in the Log's P2 line, against the fixture E8 | planned |
-| O7 | S5 | the window is classified entry by entry, the breaking item included, and the loaded-entry delta is classified separately | P4 | P3 | execute-phase | `rg -c '^\| W[0-9]+ \|' docs/fix/615-upgrade-pi-extensible-workflows/SPEC.md` matches 9 and `rg -c '^\| .* \| (affects\|does not\|compatible\|behaviour-preserving)' docs/fix/615-upgrade-pi-extensible-workflows/SPEC.md` matches ≥16 | the two tables and the count | planned |
+| O7 | S5 | the window is classified entry by entry, the breaking item included, and the loaded-entry delta is classified separately | P4 | P3 | execute-phase | `rg -c '^\| W[0-9]+ \|' docs/fix/615-upgrade-pi-extensible-workflows/SPEC.md` matches 9 and `awk '/^### Delta of the entry we load/,/^## Surfaces/' docs/fix/615-upgrade-pi-extensible-workflows/SPEC.md \| rg -c '^\| '` matches 8 | the two tables and their counts | planned |
 | O8 | S6 | the extension still loads by path on the pinned Pi floor and on the latest leg, registering the same five tools as 6.3.0 | P4 | P4 | execute-phase | the scratch load probe imports both versions' `dist/subagents/index.js` at `pi-coding-agent@1.1.0` and at latest, exits 0, and prints the same five tool names | the E line with both legs' tool lists | planned |
 | O9 | S7 | the breaking item's consequence is stated where the pin is documented | P4 | P3 | execute-phase | `rg -c 'no release notes' packages/pi-agentic-workflow/README.md` matches 1 and `rg -c '6\.4\.0' packages/pi-agentic-workflow/README.md` matches ≥1 | the README paragraph quoted in the Log | planned |
 | O10 | S8 | every "worth adopting" item is a recorded proposal with its case, and nothing accepted is implemented here | P4 | P1 | execute-phase | `rg -c '^- \*\*PR[0-9]' docs/fix/615-upgrade-pi-extensible-workflows/SPEC.md` matches 3 and `git diff --stat origin/main...HEAD` names no source path beyond the pin, the lock and docs | the proposals table and the diff stat | planned |
@@ -591,7 +596,17 @@ writer of the `review-findings` truth class.
 - **E10** — 2026-11-17, the answered-at-cut API inventory (`S2`): the 9 `exports` entries are unchanged, and the settings surface gains exactly one key (`worktreeSetup`) while `reviewLoop` gains one boolean option (`sharedReviewer`); both are recorded as proposals, neither is adopted (`## Future` PR1/PR2). No other exported API was added or removed (`exports` byte-identical, E4).
 - **E11** — 2026-11-17, `node scripts/setup-env.mjs --check` before provisioning · `MISS schema-dist`, `MISS pi-crate-modules`; `node scripts/setup-env.mjs` · `SETUP — everything is already provisioned`, `tsc` clean, `bun install` frozen, Pi package modules installed with `pi-extensible-workflows` **6.3.0**.
 - **E12** — 2026-11-17, `bun run --cwd packages/pi-agentic-workflow test` at `8c1a05a8` (resolved `pi-extensible-workflows` 6.3.0) · **956 pass / 0 fail**, 84 files (26s) — the differential baseline.
-- **P2** — pending.
+- **P2** — 2026-11-17 17:05, the pin moves (`6.3.0` → `6.4.0`) and the root lock is refreshed with `bun install`: the diff is byte-for-byte the fixture's E8 prediction (the importer's pin, the `pi-extensible-workflows@6.4.0` entry with its integrity, `minimatch` `10.2.6` → `11.0.9` plus `@isaacs/nonrecursive-glob-match@1.1.0`, and Pi's nested `minimatch@10.2.6`) · `339276e9`.
+- **P3** — 2026-11-17 17:10, the release intent (declaring `@gtrabanco/pi-agentic-workflow`, patch) carries the 9-entry window record, and the README's *Subagent layer* sentence names `6.4.0` and states that a path-loaded extension shows no release notes · `8c43eff1`.
+- **E13** — 2026-11-17, the floor leg: a `mktemp -d` with `@earendil-works/pi-coding-agent@1.1.0` (and its sibling members pinned to `1.1.0`, `typebox@1.3.27`) plus `pi-extensible-workflows@6.4.0`; `HOME` pointed at a temp dir so nothing reads or writes the live agent dir; the probe imports `dist/subagents/index.js`, calls the default export with a stub `pi` and records what registers · exit 0 · `piew 6.4.0` / `pi 1.1.0`, the same five tools (`subagents_run`, `subagents_inspect`, `subagents_steer`, `subagents_stop`, `subagents_retry`), parameter-schema hashes identical to the 1.5.2 leg, events `[session_start, session_shutdown]`.
+- **E14** — 2026-11-17, the latest leg: the same probe with `@earendil-works/pi-coding-agent@1.5.2` · exit 0 · five tools registered, identical parameter-schema hashes and identical description hashes to E13 — the 6.4.0 surface does not differ between the floor and the latest Pi.
+- **E15** — 2026-11-17, the differential: the same probe against `pi-extensible-workflows@6.3.0` on the same `1.1.0` leg · exit 0 · the same five tools with the **same parameter-schema hashes**, and four of five description hashes identical — the only difference is `subagents_run`'s description (`5def1180…` → `3bd43d26…`), which is W9's added sentence. Nothing else in the registered surface moved (O8, O11).
+- **E16** — 2026-11-17, the same probe against `pi-extensible-workflows@6.3.0` with `@earendil-works/pi-coding-agent@1.5.2` · **exit 1** · `SyntaxError: The requested module '@earendil-works/pi-ai' does not provide an export named 'Type'` at `dist/subagents/index.js:3018`. Export census of the three candidate peers: `pi-ai@1.4.0` re-exports `Type`, `pi-ai@1.5.0` and `1.5.2` do not — so the pinned **6.3.0 subagents entry cannot load on Pi ≥ 1.5.0**, and this bump is what restores the substrate there. Recorded in the release intent and the handoff.
+- **E17** — 2026-11-17, the in-checkout load: `import` of `packages/pi-agentic-workflow/node_modules/pi-extensible-workflows/dist/subagents/index.js` (the exact path `pi.extensions` registers) with a temp `HOME` · exit 0 · five tools registered; `import.meta.resolve` from that directory answers `@earendil-works/pi-coding-agent@1.4.0` and `typebox@1.4.7` (the workspace's own resolutions), so the entry also loads against the dev peer, not only the two probed legs.
+- **E18** — 2026-11-17, the `minimatch` equivalence the loaded entry's validation rests on: an 18-pattern corpus evaluated with each version's own rule — `new Minimatch(p).makeRe() === false` under 10.2.6 (the 6.3.0 resolution) vs `new Minimatch(p).set.length === 0` under 11.0.9 (the 6.4.0 resolution) · the two rules agree on every pattern (only `##` is refused; `[`, `[]`, `a**b`, `src/[a-`, `**.ts`, … are all accepted by both), and 11.x has no `makeRe()` at all — the upstream rewrite is mandatory and behaviour-preserving here.
+- **E19** — 2026-11-17, `bun run --cwd packages/pi-agentic-workflow test` at the head (resolved `pi-extensible-workflows` 6.4.0) · **956 pass / 0 fail**, 84 files (15.5s) — identical to the base run E12, `config-merge-subagents` and `settings-console` included (O11).
+- **E20** — 2026-11-17, `bun scripts/dependency-advisory-pass.mjs` at the head · `188 packages resolved, 0 advisories`, `VERDICT: REPORT-ONLY` — E6's single `minimatch 10.2.6` row is gone. The pass walks the lock's top-level `packages` map, so Pi's nested `minimatch@10.2.6` entry is not read (Known pre-existing issues, PR3).
+- **P4** — pending.
 
 ## Next
 
