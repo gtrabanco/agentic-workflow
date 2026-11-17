@@ -126,6 +126,7 @@ shell fallback.
 | `ledger-provenance <ledger> [--check\|--annotate]` | the fold-queue recount |
 | `quality-metrics [--window <days>] [--until <instant>] [--repo <dir>] [--out <path>]` | the project-quality sensor — the DORA four keys plus the reversion ratio as one `quality-metrics@1` document (definitions in the crate README) |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | the unit router and the triage step list |
+| `skills <discover\|register\|inventory> [flags]` | the skill-discovery route's machine half — the screen, the consented install decision and the registration/decay inventory (issue #591; grammars in the crate README) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 

@@ -486,6 +486,11 @@ doctor-wizard-move-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.
 quality-metric-name-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_METRIC_NAMES | quality-metric-name | no
 quality-confidence-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_CONFIDENCES | quality-confidence | no
 quality-metrics-fields | packages/agentic-workflow/README.md | block:quality-metrics@1 | n/a | no
+skill-screen-verdict-vocabulary | packages/agentic-workflow/src/skills/discovery.mjs | schema-export:SKILL_SCREEN_VERDICTS | skill-screen-verdict | no
+skill-consent-answer-vocabulary | packages/agentic-workflow/src/skills/discovery.mjs | schema-export:SKILL_CONSENT_ANSWERS | skill-consent-answer | no
+skill-extra-state-vocabulary | packages/agentic-workflow/src/skills/register.mjs | schema-export:SKILL_EXTRA_STATES | skill-extra-state | no
+skill-discovery-envelope | packages/agentic-workflow/README.md | block:skill-discovery@1 | n/a | no
+review-extras-grammar | packages/agentic-workflow/README.md | block:review-extras@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

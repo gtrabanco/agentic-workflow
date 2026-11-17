@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony> [--debug|--profile] ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills> [--debug|--profile] ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -57,6 +57,7 @@ writing anything**.
 | `resources <detect\|admit\|check\|bound> [flags]` | The **trial-envelope layer** (issue #260 S6): `detect` prints the `resources-detect@1` host envelope (memory total/available, cgroup limit, cores/threads, derived parallelism); `admit` refuses an un-decidable brief (no `expected_duration`/`requirements`) or a requirement over the cap/envelope with a `resources-admit@1` receipt, admits a fitting bounded trial, and blocks an identical re-run after a recorded bound-kill; `check` reads a recorded trial's receipt and prints the check-in verdict with data (`resources-check@1`: within/over the estimate, unmeasurable, bound-killed), `--pid` adding the live state and cumulative CPU; `bound` prints the S6 layer-A `systemd-run --user --scope` trial envelope plus its after-exit `systemctl show` receipt read. `--json` where the output is a receipt (detect, admit, check) — `bound` prints shell lines and refuses it. `admit --record-dir` is the one writer (the receipt it records) |
 | `provision rg [--yes] [--dir <root>] [--json]` | The **ask-first `rg` bootstrap** (issue #269's remaining P1 scope): skips entirely when `rg` is on PATH; otherwise asks before installing (a non-interactive run without `--yes` is a `refused-consent` refusal, never a silent install) and records consent in `<root>/.agentic-workflow/provision-log.jsonl`; installs through user-scoped managers only — brew, cargo, npm, bun, pipx, scoop, in that order, **no sudo/root ever** (a root process is refused before anything runs); with no manager it downloads the pinned ripgrep 15.2.0 binary, verifies the embedded sha256 before any byte lands, and lands it in `~/.local/bin` when writable and on `$PATH`, else `<root>/.agentic-workflow/bin/` plus the `.gitignore` entry. Receipt `provision-rg@1`: `installed \| already-installed \| refused-*`, exit 0 success · 1 refusal · 2 usage. One owner — `src/provision/rg.mjs` — injectable, so tests cover the whole contract without a real manager or download |
 | `ceremony <object> <op> [flags...]` | The **closed ceremony CLI** (fix #338's registry, distributable since issue #352): `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `progress`, `evidence`, `acceptance`, `delta`, `refutation`, `fusion`, `review`, `commit`, `roadmap`, `pr` — the whole map, one registry, JSON on stdout, and the uniform exit contract (0 success · 1 usage error · 2 ceremonial block). An object or operation outside the registry is a JSON usage error, never an invented shell command. `pr` is the only operation family that reaches outside the process (`gh`), and its absence is a declared degradation — `gh-missing` and `gh-unauthenticated` are ceremonial blocks (exit 2), any other `gh` failure is a `gh-error` usage error (exit 1), and no path invents an API call. `unit`/`plan` delegate their routing and linting to the same bin's `unit-route` and `phase-lint`, and a write never touches a legacy side ledger — a `folded: yes` row moves to the unit doc's `## Log` |
+| `skills <discover\|register\|inventory> [flags]` | The **skill-discovery route's machine half** (issue #591): `discover` screens a candidates manifest — the seven `skill-lint` checks plus provenance (source, author, version, license) — and prints the `skill-discovery@1` envelope with a row per candidate, its per-candidate lint receipt and its consent record; a consented candidate that failed the screen is `blocked` and names no install command. `register` appends the one `review-extras@1` row the owner consented to into the guide's "Optional review extras" note (creating the note when absent, refusing a duplicate name or an incomplete row before any byte moves), and `inventory` reads the note back with a decay state per row — `ok`, `unpinned`, `stale`, `incomplete` — which is what `product-audit`'s Installed tooling dimension reports. Offline by contract: no fetch, no installer, and `register` is the only write |
 | `phase-lint <plan-path>` | The **phase linter** (feature 91, moved out of the repository's `scripts/`): reads one unit doc's `## Tasks` phase bullets and prints `P<n> Phase-lint: PASS (6/6) · fingerprint …` per phase plus the `verdict` and `fingerprint` lines; a failing rule prints `P<n> box-<k>: <finding>`. Fail-closed codes: `missing-plan`, `no-phases`, `unparseable`, `lint-blocked`. Exit 0 pass · 1 blocked or usage (a second path argument is a usage error, stderr, exit 1). Read-only |
 | `diff-guard --base <ref> [--max-lines <n>] [--max-files <n>] [--json]` | The **diff-size guard**: measures `git diff --numstat <ref>..HEAD` against the ceiling and prints `DIFF-GUARD PASS — …` or `DIFF-GUARD BREACH — …` with the anti-gaming note (`DIFF-GUARD ERROR — …`, exit 2, for a usage or unknown ref). Exit 0 pass · 1 breach · 2 usage. Deterministic: no timestamps, no hashes |
 | `workflow-status [--compact] [--rag] [--help] [--version]` | The **workflow sensor** (feature 91): the strict Envelope v2 result the drivers consume — repository state, the two roadmap tables, open findings, the fix queue, tier and continuation — validated against the pinned schema package before it is printed. Exit 0 a validated envelope · 1 a fatal read. Read-only, offline except the bounded `gh` forge reads |
@@ -624,3 +625,68 @@ The document stamps are the writer's: the record carries `boundary-enforcement@1
 and the map `feature-map@1` as their first fenced line, so a reader knows which
 columns the file was written for. Their columns are the two `record.column` /
 `map.column` rows above — one home, never a second copy in the template.
+## `skills` — discovery, consent and lifecycle (issue #591)
+
+`init-workspace` offers, after the charter round, to search the trusted
+registries the owner names. The search is a conversation and the install is the
+owner's yes; the gate between them is this command, and it is offline by
+contract — it reads a manifest and a tree, spawns no installer, fetches nothing,
+and writes nothing except the one registration row the owner consented to.
+
+```text
+agentic-workflow skills discover --candidates <path|-> [--consent <path|->] [--root <dir>] [--json]
+agentic-workflow skills register --guide <path> --name <n> --source <s> --pin <p> [--installed <YYYY-MM-DD>] --axis <a> [--json]
+agentic-workflow skills inventory --guide <path> [--as-of <YYYY-MM-DD>] [--max-age-days <n>] [--json]
+```
+
+`--candidates` is `{ "candidates": [{ name, source, author, version, license, tree }] }`:
+`name` and `tree` are required, the other four are the provenance the screen
+checks. `--consent` is `{ "consent": { "<candidate>": "yes" | "no" } }` — the
+owner's per-candidate answer, `pending` when absent. A `yes` on a candidate that
+failed the screen is **blocked**: the candidate is never installable, and no
+install command is printed for it. The install command is text
+(`npx skills add <source>`); the workflow never runs it.
+
+`register` appends one row to the guide's "Optional review extras" note,
+creating the note and its block when the guide carries neither, and refusing a
+duplicate name or an incomplete row before any byte moves. `inventory` reads the
+note back with a decay state per row, so a later `product-audit` reports a
+rotting extra instead of walking past it. Exit: `discover` 0 consistent · 1 a
+consented candidate blocked; `register` 0 written · 2 refusal; `inventory` 0
+every row `ok` · 1 a decay state. Every refusal is exit 2 with
+`SKILLS REFUSAL — <reason>` on stderr.
+
+### The discovery envelope — `skill-discovery@1`
+
+The engine is `src/skills/screen.mjs` (the seven `skill-lint` checks, one owner)
+plus `src/skills/discovery.mjs` (provenance, consent, decision). The block below
+is the whole report; `--json` prints the same fields as JSON.
+
+```text
+skill-discovery@1
+field | shape | what it orders
+header | `skill-discovery@1 — <n> candidate(s) · screened <a> · excluded <b> · consented <c>` | the run's identity and its counts
+candidate | `CANDIDATE <name> — <install|skip|blocked> · screen <screened|excluded> · provenance <complete|incomplete> · consent <pending|yes|no>` | one row per candidate, in manifest order
+cells | `source … · pin … · author … · license … · tree …` | the candidate's declared provenance, echoed
+reason | `reason <provenance-incomplete|screen-failed|tree-unreadable|no-skill-files> — …` | why a candidate is excluded; the missing cells are named for a provenance gap, and `no-skill-files` is a tree that yielded no skill file to screen
+finding | `FINDING <SL-0n> <name> <path>:<line> — <detail>` | the screen's receipt, one line per finding, from the same engine `scripts/skill-lint.mjs` runs
+install | `install: npx skills add <source>` | text only, and only for a consented candidate the screen passed
+summary | `summary: candidates … · screened … · excluded … · installed-counts …` | the tally the verdict reads
+verdict | `pass` \| `blocked` | `blocked` exactly when a consented candidate was excluded
+```
+
+### The registration ledger — `review-extras@1`
+
+One row per installed external skill, inside the guide's "Optional review
+extras" note. The columns are frozen: a new column is a grammar change, not a
+hand edit of somebody's guide.
+
+```text
+review-extras@1
+column | shape | what it holds
+name | kebab-case skill name | the installed skill, and the key a duplicate is refused on
+source | the registry or repository it came from | provenance, so a stale copy can be traced
+pin | the version it is pinned to | a `latest`/`unpinned`/`main` value is the `unpinned` decay state
+installed | YYYY-MM-DD | the install date; a real calendar day, and the age the `stale` state measures
+axis | a review axis name | what the skill covers, so `product-audit` can tell it apart from the workflow's own pack
+```

@@ -1,9 +1,12 @@
 ## Skill content checks — smells and the supply chain
 
-`scripts/skill-lint.mjs` mechanizes the seven checks below. This file owns what
+`scripts/skill-lint.mjs` runs the seven checks below. This file owns what
 each check *means*, the shapes each one admits, and the smells this repository
-deliberately does not adopt; the script carries the patterns and never a second
-copy of the meaning. Sources: `docs/research/papers-sweep-2026-11-02.md`
+deliberately does not adopt; the patterns live in the crate's engine
+(`packages/agentic-workflow/src/skills/screen.mjs`) — the same code the
+discovery route screens candidates with — and this script is this repository's
+CLI over that engine (argv, report block, exit codes), never a second copy of
+the meaning. Sources: `docs/research/papers-sweep-2026-11-02.md`
 (arXiv 2607.01456 — SKILL.md smells; arXiv 2601.10338 + 2604.02837 — the skills
 supply chain), adopted in `docs/research/ATTRIBUTION.md`.
 
