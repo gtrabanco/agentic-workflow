@@ -1,14 +1,16 @@
-# The plan grammar — `batch-plan@3`
+# The plan grammar — `batch-plan@4`
 
 The batch scheduler's machine envelope: one fixed JSON document, produced only
 by `scripts/batch-scheduler.mjs` and validated against the schema package's
 `agentic-workflow/batch-plan` contract before printing. The inventory below is
 the document's closed field set (grammar `table:batch-fields@1`, pinned in the
 guide's normative-surfaces inventory); the schema package owns the closed
-vocabularies and the validator. v2 (issue #460) added the lifecycle delta and the triage/soft-dep signals; v3
-(issue #509) adds `label_blocked[]` with its summary count and the
-`file-overlap`/`stale-claim` findings. Issue #574 extends two
-vocabularies only, so it stays `batch-plan@3`.
+vocabularies and the validator. v2 (issue #460) added the lifecycle delta and
+the triage/soft-dep signals; v3 (issue #509) adds `label_blocked[]` with its
+summary count and the `file-overlap`/`stale-claim` findings; v4 (issue #621)
+publishes `claimed_surface` as a non-empty array of surface keys — the field
+addition bumps the version, which is the rule its first landing missed. Issue
+#574 extended two vocabularies only, so it kept the token it found.
 
 ## The field inventory — batch-fields@1
 
@@ -67,9 +69,9 @@ vocabularies only, so it stays `batch-plan@3`.
 
 | field | meaning |
 |---|---|
-| `contract` / `version` / `schema` | `agentic-workflow/batch-plan` · `3` · `batch-plan@3` |
+| `contract` / `version` / `schema` | `agentic-workflow/batch-plan` · `4` · `batch-plan@4` |
 | `source_revision` | the git revision the plan was computed at |
-| `degraded[]` | what could not be read, `unavailable-<source>-<cause>`; the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read but the issue still declares no surface. Third family: the content guard's decisions (issue #470) — `excluded-forge-content-<source>-<id>-<reason>` (untrusted/unknown author, so no title/body) and `stripped-forge-content-<source>-<id>-<kind>-<count>` (the source was read and the layer reduced it). All three are declared. |
+| `degraded[]` | what could not be read, `unavailable-<source>-<cause>`; the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read but the issue still declares no surface. Third family: the content guard's decisions (issue #470) — `excluded-forge-content-<source>-<id>-<reason>` (untrusted/unknown author, so no title/body) and `stripped-forge-content-<source>-<id>-<kind>-<count>` (the source was read and the layer reduced it). Fourth: `unavailable-launch-evidence-diff-issue-<n>-<cause>` — a live branch's diff against the trunk could not be computed, so its coverage is unknown rather than empty (issue #621). All four are declared. |
 | `batches[].n` | 1 = runnable now; N+1 when batch N completes |
 | `lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts`, `docs`, `template`, `.github`, or `general` when nothing resolved. Keys come from the issue body, then the unit doc (see *Where the surfaces come from*) |
 | `lanes[].occupied_by` | the **evidence** of the in-flight unit on the surface (`branch fix/1-x + unit-doc docs/fix/1-x`), or `null` |
@@ -82,7 +84,7 @@ vocabularies only, so it stays `batch-plan@3`.
 | `issue.size_hint` | `light` / `mixed` / `heavy` — the declared `(S)`/`(M)`/`(L)`/`(XL)` token, else the distinct-surface count (1, 2, ≥3). A parenthesised letter outside that set — a body's `[A(X) U(Y) M(Z) D(W)]` git status codes — is prose, so the count decides |
 | `lane.size_hint` | the max of its issues' hints — a fact, never a lane-count policy |
 | `issue.claimed` | `true` only for a **live** claim on this exact `(issue, lane)` pair: another lane's claim never marks it, an expired one never does |
-| `issue.claimed_surface` | surfaces the issue declares but couldn't verify against an actual branch diff — no branch, merged branch, or diff could not be computed. A string or array of surface keys. A merge conflict is possible when the surface is broader than the actual changes (issue #449 follow-up). |
+| `issue.claimed_surface` | the declared surfaces the issue's **live** branch leaves uncovered, as a non-empty array of surface keys — the only cause worth a row, because a merge conflict is still possible (issue #621). Absent when the issue has no branch (nothing to verify), when its branch already merged (its own trunk diff is empty by construction, and a merged branch cannot conflict), and when the diff could not be computed (that is the `degraded[]` entry above). A declared parent covers its children: `skills` is verified by any `skills/<name>` file, independent of what a sibling row declares. |
 | `blocked[]` | issues gated by open native `blocked-by` relations, with the blockers and the reason. |
 | `launched[]` | issues running now, on evidence: an `OPEN` PR or an unmerged `fix\|feat/<n>-*` branch, named in `evidence`. A unit doc corroborates, never decides. Excluded from every batch |
 | `label_blocked[]` | issues a hold label keeps unlaunchable (`postponed`, `backlog`, `human-revision-needed`) with those labels — never batched |
@@ -113,6 +115,11 @@ vocabularies only, so it stays `batch-plan@3`.
    `surface-unknown-issue-<n>`; two or more in one batch are a `blind-spot`, and
    that batch never reads as verified.
 8. **Size hints are facts**; the lane count is the consumer's.
+9. **A claimed surface is a live risk, never a census** (issue #621): the field
+   exists to say "the branch is thinner than the declaration, a merge conflict is
+   possible". A no-branch issue has nothing to verify, a merged branch cannot
+   conflict, and a diff that could not be computed is declared in `degraded[]` —
+   none of the three becomes a `claimed_surface` row.
 
 ## Where the surfaces come from
 
@@ -183,5 +190,5 @@ bun scripts/batch-scheduler.mjs --infer-surfaces <n> [--issues-file <json>]
 (issues, relations, PRs). `--infer-surfaces <n>` is triage's emitter (issue
 #574): the `## Surfaces` block to paste, `- surface-unknown` when nothing
 resolves, no write at all. Exit codes: `0` printed (degradations are reported,
-not fatal); `1` the document failed `batch-plan@3` validation or the issue is
+not fatal); `1` the document failed `batch-plan@4` validation or the issue is
 unreadable; `2` usage error. One call per dimension, never per issue.

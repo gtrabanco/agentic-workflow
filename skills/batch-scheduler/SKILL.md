@@ -6,7 +6,7 @@ argument-hint: "[--json-only] [--issues-file <json>] [--no-state] [--remote <url
 description: >
   Deterministic batch planner: read the live work graph and emit
   parallel-execution batches (order-respecting, collision-free) as the fixed
-  `batch-plan@3` machine envelope — which issues can run together now, which
+  `batch-plan@4` machine envelope — which issues can run together now, which
   are blocked and by what, which unit is really in flight, which pairs would
   rewrite the same file, which surface each lane occupies, what changed.
   Triggers: "batch scheduler", "what can run in parallel", "plan the
@@ -17,7 +17,7 @@ description: >
 
 One pass that answers the parallel question the single-next sensor cannot:
 **which open issues can run together right now, in which lane, in which
-order** — emitted as the fixed `batch-plan@3` machine envelope. The **script is
+order** — emitted as the fixed `batch-plan@4` machine envelope. The **script is
 the deterministic producer**: `scripts/batch-scheduler.mjs` reads the live work
 graph and prints the document. This skill runs the script, reads the JSON, and
 interprets it against [the plan grammar](references/PLAN.md) — it never
@@ -92,7 +92,9 @@ to interpret a field the script emitted.
    `batches[]` in order (batch 1 = runnable now), each lane one surface with
    its size hint and its issue rows (`number`, `worktree`, `command`,
    `reason.kind` + `detail`, `claimed` — live only for that lane, `triaged`,
-   `claimed_surface` — surfaces declared but unverified against branch diff),
+   `claimed_surface` — the declared surfaces a **live** branch leaves uncovered,
+   so a merge conflict is possible; absent when there is no branch, the branch
+   merged, or the diff could not be computed — which is a `degraded[]` entry),
    `blocked[]` with the open blockers that gate each issue, `launched[]` with
    the **evidence** that marked each unit in flight (an open PR or an unmerged
    branch — a unit doc never decides), `label_blocked[]` with the hold labels,
