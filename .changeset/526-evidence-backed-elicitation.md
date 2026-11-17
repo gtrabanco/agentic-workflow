@@ -27,8 +27,7 @@ and only what survives both becomes **one** open question in the
   columns are imported from the `needs-input` reader, so the layer cannot drift
   from the grammar it feeds.
 - `triage-issue`'s `one-shot` eligibility reads the pre-spec (`questions: none`
-  is its evidence that no design decision is pending) instead of asserting that
-  the work is "small and understood"; the six conditions are unchanged, and the
-  layer adds no gate.
+  is its evidence that no design decision is pending); the six conditions are
+  unchanged, and the layer adds no gate.
 - Not a second ask mechanism: design-tier questions stay the design step's
   batched ask, and the pre-spec is a record — never an approval.
