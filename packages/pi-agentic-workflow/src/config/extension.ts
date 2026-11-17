@@ -28,6 +28,7 @@ import {
   STATE_FLOW_MISSING_POLICIES,
   STATE_FLOW_STOP_POLICIES,
   THINKING_LEVELS,
+  TOOL_CHOICE_MODES,
   UNAVAILABLE_ROUTE_POLICIES,
 } from "./types.js";
 
@@ -115,6 +116,16 @@ const PI_SCHEMA = {
         onBackendMissing: { type: "string", enum: [...STATE_FLOW_MISSING_POLICIES] },
       },
     },
+    // Issue #610 — the shell-tool-choice carrier, published to the config CLI so
+    // `agentic-workflow config schema` offers exactly what the runtime validates.
+    toolChoice: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        enabled: { type: "boolean" },
+        mode: { type: "string", enum: [...TOOL_CHOICE_MODES] },
+      },
+    },
   },
 } satisfies JsonSchema;
 
@@ -124,7 +135,7 @@ export const PI_CONFIG_EXTENSION: ConfigExtensionDescriptor = {
   contract: CONFIG_EXTENSION_CONTRACT,
   key: "pi",
   file: "pi-agentic-workflow.json",
-  description: "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow.",
+  description: "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice.",
   schema: PI_SCHEMA,
   defaults: piDefaults,
 };

@@ -11,8 +11,11 @@ import { loadConfig } from "../config/load.js";
 import { evaluateToolCall, isProtectedPath, normalizeTarget } from "../config/path-policy.js";
 import { applyGitIdentityGuard, findGitConfigWrites, guardOptions, scratchDirs } from "../guards/git-identity.js";
 import { decideShellWrite, SCRIPT_SCAN_MAX_BYTES } from "../guards/shell-path.js";
+import { enforceToolChoice } from "../guards/tool-choice.js";
+import type { ToolChoiceAvailability, ToolChoiceDecision } from "../guards/tool-choice.js";
+import { resolveToolChoiceAvailability } from "@gtrabanco/agentic-workflow/src/tool-choice/availability.mjs";
 import { createGitIdentityConsentStore, gitIdentityConsentPath } from "../guards/git-identity-consent.js";
-import { THINKING_LEVELS } from "../config/types.js";
+import { DEFAULT_TOOL_CHOICE, THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
 import { readGitStatusBounded } from "./receipt-guard.js";
@@ -328,6 +331,20 @@ export default function extension(pi: ExtensionAPI): void {
   // Said once per session: an override that was ignored (or a malformed file)
   // is reported the first time the guard runs, never on every tool call.
   let reportedDegradations = false;
+  // Issue #610 — the shell-tool-choice carrier's posture, resolved on the first
+  // bash call and kept for the session: the availability answer is the crate's
+  // one reading of the doctor's resolver (`findOnPath`), never a second probe
+  // here, and the config is read once because a misconfigured file must not pay
+  // a parse per command.
+  let toolChoicePosture: { config: typeof DEFAULT_TOOL_CHOICE; availability: ToolChoiceAvailability } | null = null;
+  const resolveToolChoicePosture = (context: ExtensionContext): typeof toolChoicePosture => {
+    if (toolChoicePosture !== null) return toolChoicePosture;
+    const availability: ToolChoiceAvailability = resolveToolChoiceAvailability();
+    const loaded = loadConfig({ agentDir, cwd: context.cwd, projectTrusted: context.isProjectTrusted() });
+    const config = loaded.config.toolChoice ?? DEFAULT_TOOL_CHOICE;
+    toolChoicePosture = { config, availability };
+    return toolChoicePosture;
+  };
   // Issue #383 — the session accumulator. Pi builds a fresh extension instance
   // per session (its runtime factory rebuilds the services, and the resource
   // loader re-runs every factory), so one instance owns one session's sample.
@@ -491,7 +508,21 @@ export default function extension(pi: ExtensionAPI): void {
   // itself filters to `bash`, so every tool call is checked — nesting it under
   // one tool name would make the block unreachable for the calls it exists for.
   pi.on("tool_call", async (event, ctx) => {
-    const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
+    let command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
+    // Issue #610 — the shell-tool-choice carrier: the cheapest decision, taken
+    // before anything reads the command text, so the convention is re-made at
+    // command time instead of relied on from prose read once. A rewrite lands on
+    // the call itself (`event.input` is mutable) and every guard below judges the
+    // command that will actually run.
+    if (event.toolName === "bash" && typeof command === "string" && command !== "") {
+      const posture = resolveToolChoicePosture(ctx);
+      const choice: ToolChoiceDecision = enforceToolChoice(command, posture ?? { availability: { rg: false, bun: false } });
+      if (choice.block) return { block: true, reason: choice.reason };
+      if (typeof choice.command === "string" && choice.command !== command) {
+        event.input.command = choice.command;
+        command = choice.command;
+      }
+    }
     const receipt = guards.receiptGuard({ toolName: event.toolName, command });
     if (receipt.block) return receipt;
     // Issue #514 — the agent-side git identity guard (Layer 1). Only a command

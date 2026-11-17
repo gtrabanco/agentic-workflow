@@ -643,6 +643,46 @@ notification. `requirements` is keyed by phase state (`pre-freeze`, `post-freeze
 matching `path-protection-records@1` `justification` row in the unit's
 `decisions.md`.
 
+## Shell-tool choice, enforced at the tool call (issue #610)
+
+The repository's convention — search with `rg` before `grep`, run scripts with
+`bun` before `node` — used to live only in prose, and prose read once decays: the
+audited authoring sessions behind this feature issued 15 `node`-as-default and 13
+`grep`-as-search commands with both preferred tools on `PATH` the whole time. The
+convention's own home stays [`AGENTS.md`](../../AGENTS.md) §Runtime convention
+(#269 owns the `rg`-first default); this section is only what the package ships.
+
+On every `bash` call the extension reads the command *before* it runs and answers:
+
+| Command | Verdict |
+|---|---|
+| `grep` used as search (a path operand, or a recursion flag) | blocked, with the `rg` equivalent in the reason |
+| `grep` behind a pipe (`… \| grep -v x`), or reading stdin | passes — a filter is not search |
+| `node -e …`, `node -p …`, `node <script>` | blocked, with the `bun` form in the reason |
+| `node --test …`, `node scripts/run-root-suite.mjs`, the bootstrap pair, `node --version` | passes — node is the guaranteed fallback |
+| anything else | passes |
+
+A preferred tool that is not on `PATH` stands the carrier down for its class, so
+the documented fallback is never blocked. Availability is the tool doctor's own
+resolver — one answer, no second `PATH` probe. The reason names the rule's owner
+rather than restating it, so the carrier cannot become a second prose home.
+
+```json
+{
+  "toolChoice": { "enabled": true, "mode": "block" }
+}
+```
+
+`mode` is `block` (the default: refuse and name the equivalent) or `rewrite`
+(forward the command in place when the translation is exact, block when it is
+not — `rg` spells several `grep` flags differently, and a silent rewrite into a
+different command would be worse than a refusal). `enabled: false` turns the
+carrier off. The section lives in `pi-agentic-workflow.json`, so the base config
+other hosts read is unchanged. Boundary: this sees the `bash` tool call itself,
+not a `grep` inside a script the command executes. This is the recorded
+domain-separation exception that lets the package carry the convention at all —
+see [`docs/workflow/DOMAIN_SEPARATION.md`](../../docs/workflow/DOMAIN_SEPARATION.md).
+
 ## Memory substrate — Engram (optional, ask-first)
 
 The workflow's units save and recall their decisions through Engram, the memory
