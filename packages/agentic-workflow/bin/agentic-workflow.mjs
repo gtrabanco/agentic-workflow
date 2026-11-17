@@ -632,7 +632,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation|guard-command|turn-contract|git-identity-check> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -656,6 +656,13 @@ switch (command) {
   // ── runner — the programmatic runner choice (issue #555) ─────────────
   case "runner": {
     process.exit(runRunnerService(restArgs));
+    break;
+  }
+
+  // ── fullauto-merge — the audited, forge-agnostic merge (unit 554) ────
+  case "fullauto-merge": {
+    const { main } = await import("../src/fullauto-merge.mjs");
+    process.exit(main(restArgs));
     break;
   }
 
