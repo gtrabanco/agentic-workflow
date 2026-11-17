@@ -253,3 +253,48 @@ export const TRIAGE_CRITERIA_PROVENANCE = Object.freeze([
   "stamped-assumption",
 ]);
 export type TriageCriteriaProvenance = (typeof TRIAGE_CRITERIA_PROVENANCE)[number];
+
+/** The routes a `prose-only` boundary may take in the materialization round
+ *  (`materialization-outcome`, issue #564 S1/S5). `scaffold` — the project's own
+ *  rule file lands in the target repository; `issue` — the item is filed on the
+ *  target forge for the team to build; `declined` — the team answered no, and
+ *  the refusal is recorded with its reason. The three are the closed set a
+ *  receipt row's `outcome` cell may carry: a prose-only boundary ends with one
+ *  of them, never with silence. */
+export const MATERIALIZATION_OUTCOMES = Object.freeze([
+  "scaffold",
+  "issue",
+  "declined",
+]);
+export type MaterializationOutcome = (typeof MATERIALIZATION_OUTCOMES)[number];
+
+/** The closed finding-code set the materialization check emits
+ *  (`materialization-finding-code`, issue #564 S4/S9). Every code names a
+ *  declared-but-unmaterialized state, so a boundary can never slip back into
+ *  "lives in reviewer memory" while the receipt reports a pass:
+ *  `boundary-declared-unenforced` (declared, no enforcement recorded),
+ *  `boundary-artifact-missing` (an outcome names a rule file the tree lacks),
+ *  `feature-map-missing` / `feature-map-shape` (the map is declared and absent,
+ *  or still templated), `evidence-driver-missing` (a capture criterion with no
+ *  declared driver) and `artifact-evidence-missing` (a criterion whose carrier
+ *  records no digest or names no driver). */
+export const MATERIALIZATION_FINDING_CODES = Object.freeze([
+  "artifact-evidence-missing",
+  "boundary-artifact-missing",
+  "boundary-declared-unenforced",
+  "evidence-driver-missing",
+  "feature-map-missing",
+  "feature-map-shape",
+]);
+export type MaterializationFindingCode = (typeof MATERIALIZATION_FINDING_CODES)[number];
+
+/** The artifact kinds an acceptance criterion may name as its evidence
+ *  (`artifact-evidence-kind`, issue #564 S3): the shapes a capture driver can
+ *  produce a digest for. A capture the set does not carry is prose, not
+ *  evidence. */
+export const ARTIFACT_EVIDENCE_KINDS = Object.freeze([
+  "screenshot",
+  "video",
+  "state-snapshot",
+]);
+export type ArtifactEvidenceKind = (typeof ARTIFACT_EVIDENCE_KINDS)[number];

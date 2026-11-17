@@ -113,6 +113,7 @@ lands-in | <keyed slot> | the `## Project charter` slot the answer is written to
 | DEP-02 | technical | What does deprecation handling look like — who removes a deprecated surface, and when? | a surface is deprecated or a dependency is retired | Fowler, *Refactoring* (2nd ed., 2018) — the smell vocabulary | remove-in-unit → the change that supersedes a surface deletes it; keep-for-consumers → a pin keeps the old line alive | remove in the same change, no compatibility shim | Dependency policy |
 | VER-01 | technical | Is the deploy pipeline the verification — does a unit need a green pipeline job, or is the local gate the whole check? | the project deploys something, or runs CI jobs | Humble & Farley, *Continuous Delivery* (2010) — the pipeline as verification | pipeline-gated → a unit's evidence names the job; local-only → the declared gate is the receipt | the declared local gate, plus the pipeline job where one exists | Production verification |
 | VER-02 | technical | Which service-level signals matter, and what error budget does the team accept? | the project runs a service | Beyer, Jones, Petoff & Murphy, *Site Reliability Engineering* (2016) — SLIs and error budgets | signals declared → a unit changing a service names its signal; none → no service-level claim is made | n/a for a project with no running service | Production verification |
+| VER-03 | technical | How are artifact captures produced — which command the project runs, and who runs it? | the project has a user-facing surface whose evidence is a capture | Humble & Farley, *Continuous Delivery* (2010) — evidence as a pipeline artifact; the mapping note's artifact-evidence point | a declared driver → a capture criterion records its digest and the command that produced it; no driver → the criterion fails closed with `manual:` instead of passing on prose | n/a — no artifact evidence required | Evidence driver |
 | DEC-01 | technical | Where do architecture decisions live, and which decisions must be recorded before a unit plans work? | the project makes structural decisions | Nygard, *Documenting Architecture Decisions* (2011) — the ADR | ADRs kept → the design step cites the ADR it continues; none → decisions land as the charter's dated assumptions | one ADR per irreversible decision | Decision records |
 | API-01 | technical | Is the API designed for misuse — are errors contracts at the boundary — or is exception-first the team's style? | the project exposes an API, a CLI or a module surface | Meyer, *Object-Oriented Software Construction* (1988) — design by contract | safer-API → review-code checks signatures that invite misuse; exception-first → errors surface at the boundary with their cause | safer-API: reject the misuse at the boundary | API posture |
 
@@ -138,6 +139,21 @@ The right half is machine-checked, because the materialization step reads it:
 
 A value outside those two shapes is refused by the check, which is what keeps a
 declared boundary from quietly becoming reviewer memory again.
+
+`charter check` validates the shape; **materializing** the answer is the round
+owned by [`MATERIALIZATION`](MATERIALIZATION.md), which reads this slot and
+turns every `prose-only` entry into a recorded outcome.
+
+## The evidence driver
+
+`Evidence driver` names the project's own capture command — the one a criterion
+invoking `artifact: screenshot`, `artifact: video` or `artifact: state-snapshot`
+records its digest with. The workflow records and invokes the command; it never
+ships a driver, because a capture is always the adopting team's stack. A value of
+`n/a — no artifact evidence required` is a legal answer: with no driver declared,
+a capture criterion fails closed with a `manual:` label instead of passing on
+prose (owner: `skills/verification-contract/SKILL.md`), and
+`agentic-workflow materialize evidence` is the check that reports it.
 
 ## Authoring a new question
 
