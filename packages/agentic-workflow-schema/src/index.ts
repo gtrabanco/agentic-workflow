@@ -4265,6 +4265,17 @@ export type {
 } from "./ceremony-profile.js";
 
 // ---------------------------------------------------------------------------
+// Content guard contract (issue #470)
+// ---------------------------------------------------------------------------
+export {
+  CONTENT_AUTHOR_ASSOCIATIONS,
+  CONTENT_GUARD_CONTRACT,
+  CONTENT_GUARD_REASONS,
+  CONTENT_HIDDEN_KINDS,
+  CONTENT_SOURCES,
+} from "./content-guard.js";
+
+// ---------------------------------------------------------------------------
 // Unified config contract (issue #427)
 // ---------------------------------------------------------------------------
 export {
@@ -4275,6 +4286,7 @@ export {
   composeConfigSchema,
   effectiveSections,
   fillDefaults,
+  mergeContentGuardOverrides,
   normalizeLogSession,
   resolveConfigDocuments,
   sanitizeJsonSchema,

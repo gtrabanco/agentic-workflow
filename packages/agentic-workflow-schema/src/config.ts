@@ -13,6 +13,8 @@
  * from the same descriptors a runtime uses, so the two cannot drift.
  */
 
+import { CONTENT_AUTHOR_ASSOCIATIONS } from "./content-guard.js";
+
 export type ConfigCategory = "feature" | "pi";
 
 export interface JsonSchema {
@@ -202,6 +204,73 @@ function requirementMatrixDefault(): Record<string, unknown> {
   return {};
 }
 
+/**
+ * The author-provenance policy for third-party forge content (issue #470).
+ *
+ * There is no `enabled` switch on purpose: a bypass is exactly the setting the
+ * layer exists to deny, and an unconfigured project must run the strictest
+ * policy (trusted roles only) rather than nothing. A project that needs a wider
+ * role set or a named login widens it here, explicitly and visibly.
+ */
+const CONTENT_GUARD_SCHEMA: JsonSchema = publish({
+  type: "object",
+  additionalProperties: false,
+  description: "Author-provenance policy for third-party forge content: which authors are ingested as readable content.",
+  properties: {
+    trustedRoles: {
+      type: "array",
+      items: { type: "string", enum: [...CONTENT_AUTHOR_ASSOCIATIONS] },
+      maxItems: CONTENT_AUTHOR_ASSOCIATIONS.length,
+      description: "The author associations whose content may be ingested; every other association is excluded and declared.",
+    },
+    allowLogins: {
+      type: "array",
+      items: { type: "string", minLength: 1 },
+      description: "Logins admitted regardless of association — an explicit, reviewable exception list.",
+    },
+    denyLogins: {
+      type: "array",
+      items: { type: "string", minLength: 1 },
+      description: "Logins excluded regardless of association; a deny always beats an allow.",
+    },
+  },
+});
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+}
+
+/**
+ * Content guard merges by tightening, never by replacement: `trustedRoles`
+ * intersects (a project may narrow what a global value admitted, never widen
+ * it), the login lists union, and a side that is absent passes the other through.
+ * An unknown key is passed through untouched so strict validation reports it
+ * instead of the merge swallowing it.
+ */
+export function mergeContentGuardOverrides(globalValue: unknown, projectValue: unknown): unknown {
+  if (!isRecord(globalValue) && !isRecord(projectValue)) return {};
+  const globalRecord = isRecord(globalValue) ? globalValue : {};
+  const projectRecord = isRecord(projectValue) ? projectValue : {};
+  const out: Record<string, unknown> = {};
+
+  if (globalRecord.trustedRoles !== undefined || projectRecord.trustedRoles !== undefined) {
+    const globalRoles = stringList(globalRecord.trustedRoles);
+    const projectRoles = stringList(projectRecord.trustedRoles);
+    out.trustedRoles = globalRecord.trustedRoles === undefined
+      ? [...new Set(projectRoles)]
+      : projectRecord.trustedRoles === undefined
+        ? [...new Set(globalRoles)]
+        : [...new Set(globalRoles.filter((role) => projectRoles.includes(role)))];
+  }
+  for (const key of ["allowLogins", "denyLogins"]) {
+    if (globalRecord[key] === undefined && projectRecord[key] === undefined) continue;
+    out[key] = [...new Set([...stringList(globalRecord[key]), ...stringList(projectRecord[key])])];
+  }
+  for (const [key, value] of Object.entries(projectRecord)) if (!(key in out)) out[key] = value;
+  for (const [key, value] of Object.entries(globalRecord)) if (!(key in out)) out[key] = value;
+  return out;
+}
+
 const REQUIREMENT_RANK = new Map(PATH_REQUIREMENTS.map((value, index) => [value, index]));
 
 /**
@@ -344,6 +413,16 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     schema: PATH_PROTECTION_SCHEMA,
     defaults: requirementMatrixDefault(),
     merge: mergePathProtectionOverrides,
+  },
+  {
+    key: "contentGuard",
+    category: "feature",
+    file: BASE_CONFIG_FILE,
+    path: ["contentGuard"],
+    description: "Author-provenance policy for third-party forge content: trusted roles plus allow/deny login lists (tighten-only).",
+    schema: CONTENT_GUARD_SCHEMA,
+    defaults: { trustedRoles: ["OWNER", "MEMBER", "COLLABORATOR"], allowLogins: [], denyLogins: [] },
+    merge: mergeContentGuardOverrides,
   },
 ];
 
