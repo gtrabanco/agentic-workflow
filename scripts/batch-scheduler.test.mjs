@@ -1532,6 +1532,85 @@ test("P4: extractProseDependencies parses the declared form and refuses every ot
   assert.deepEqual(noTable, { soft: [], proseHard: [], malformed: false });
 });
 
+// ── CS — claimed surfaces: declared but unverified against branch diffs ───
+
+test("CS: an issue with a branch that rewrites only some declared surfaces gets claimed_surface", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    // Issue declares two surfaces but its branch only rewrites a file in one of them.
+    // Branch is merged so the issue is batchable, not launched.
+    const issues = [
+      issue(10, "Multi-surface issue", whereSection(["skills/alpha/SKILL.md", "scripts"]), [], [], "OWNER"),
+    ];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-multi-surface", merged: true }], // merged → batchable
+        pr: null,
+        files: ["scripts/makefile.mjs"], // only scripts, not skills/alpha
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.equal(plan.launched.length, 0, "merged branch → not launched");
+    assert.ok(plan.batches.length > 0, "issue is batched");
+    assert.equal(plan.batches[0].lanes.length, 2, "two lanes for two surfaces");
+    // claimed_surface is per-issue: the same issue row carries the unverified
+    // surfaces regardless of which lane it sits in.
+    const alphaRow = plan.batches[0].lanes.find((l) => l.surface === "skills/alpha").issues[0];
+    assert.deepEqual(alphaRow.claimed_surface, ["skills/alpha"], "unverified surface is reported when branch has no matching file");
+    const scriptsRow = plan.batches[0].lanes.find((l) => l.surface === "scripts").issues[0];
+    // The scripts lane's row still carries claimed_surface (per-issue) but
+    // scripts is verified, so the array only contains the unverified surface.
+    assert.deepEqual(scriptsRow.claimed_surface, ["skills/alpha"], "scripts lane carries same claimed_surface (per-issue) but only lists unverified");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("CS: an issue with no branch at all gets all declared surfaces as claimed_surface", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    // Issue has no branch, so no actual files — all surfaces unverified
+    const issues = [
+      issue(10, "No-branch issue", whereSection(["skills/alpha/SKILL.md", "docs"]), [], [], "OWNER"),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    const row = plan.batches[0].lanes[0].issues[0];
+    assert.ok(Array.isArray(row.claimed_surface), "declared surfaces are reported as an array");
+    assert.ok(row.claimed_surface.includes("skills/alpha"), "first surface is in the array");
+    assert.ok(row.claimed_surface.includes("docs"), "second surface is in the array");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("CS: an issue whose branch files cover all declared surfaces has no claimed_surface", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(10, "Full coverage issue", whereSection(["scripts"]), [], [], "OWNER"),
+    ];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-full-coverage", merged: true }], // merged → batchable
+        pr: null,
+        files: ["scripts/makefile.mjs", "scripts/helper.mjs"],
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.equal(plan.launched.length, 0, "merged branch → not launched");
+    const row = plan.batches[0].lanes[0].issues[0];
+    assert.equal(row.claimed_surface, undefined, "all surfaces verified — no claimed_surface field");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── S8 — no decision model anywhere in the path ────────────────────────────
 
 test("S8: identical inputs produce byte-identical envelopes (no wall clock, no model)", () => {
