@@ -193,7 +193,7 @@ export interface BatchPlan {
   schema: string;
   /** The git revision the plan was computed at. */
   source_revision: string;
-  /** Declared degradations, `unavailable-<source>-<cause>` (never a silent empty plan). */
+  /** Declared degradations — `unavailable-<source>-<cause>` or `surface-unknown-issue-<n>` (never a silent empty plan). */
   degraded: string[];
   /** Batch 1 is the runnable-now set; batch N+1 becomes runnable when batch N completes. */
   batches: Batch[];
