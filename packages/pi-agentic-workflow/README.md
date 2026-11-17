@@ -702,19 +702,20 @@ instead of failing the session. The workflow-side protocol — when units save,
 the recall order, the degraded path — lives in `unit-lane`'s memory reference,
 not here.
 
-## Session telemetry — the measured sample (optional)
+## Session telemetry — the measured sample
 
-Turn the switch on and every session that runs a unit-scoped command emits one
-**sample** at shutdown: the unit it worked on, the phase (the command that
-started the work), this package's version, the model that served the most turns,
-how many paths it changed, its turns, the model's and the tools' milliseconds,
-and the provider's own token counts — `tokens` plus the `input`, `output`,
-`cache_read`, `cache_write` and `reasoning` fields that make it up. No prompt
-text, no model output, no diff, no file content: the accumulator never receives
-any of them.
+Every session that runs a unit-scoped command emits one **sample** at shutdown:
+the unit it worked on, the phase (the command that started the work), this
+package's version, the model that served the most turns, how many paths it
+changed, its turns, the model's and the tools' milliseconds, and the provider's
+own token counts — `tokens` plus the `input`, `output`, `cache_read`,
+`cache_write` and `reasoning` fields that make it up. No prompt text, no model
+output, no diff, no file content: the accumulator never receives any of them, so
+the sample is local and anonymized by construction and measures by default —
+`"enabled": false` opts a project out:
 
 ```json
-{ "telemetry": { "enabled": true, "jsonFile": ".pi/.telemetry/sessions.jsonl" } }
+{ "telemetry": { "enabled": false } }
 ```
 
 Two destinations, one sample. The project's `tier-cost@2` ledger
@@ -737,8 +738,8 @@ bun scripts/telemetry-report.mjs --jsonl .pi/.telemetry/sessions.jsonl --model q
 ```
 
 Nothing is sent anywhere: there is no remote sink, no consent prompt and no
-opt-out — one switch, one path. A project that never enables it measures nothing
-and carries no file.
+opt-out beside the switch itself — one switch, one path. A project that sets
+`"enabled": false` measures nothing and carries no file.
 
 **New command → register telemetry.**
 **Delete command → remove telemetry.**
