@@ -42,9 +42,10 @@ step (2–6). Each item ends with exactly one fallback; never pick another one m
   Fallback: `mark unverified`.
 
 4. **Audit process, docs & coverage gaps** — every `gap — <kind>` row the
-   coverage-gap receipt carries becomes exactly one finding here, routed through
-   the three `finding-route@1` hand-offs its own section declares (discovery,
-   proposal, catalogue re-triage); a project carrying neither catalogue nor corpus
+   coverage-gap receipt carries becomes exactly one finding here, its `route:` cell
+   a `finding-route@1` hand-off (`<verb> — <target>`) and its destination one of the
+   three this dimension's section declares (discovery, proposal, catalogue
+   re-triage); a project carrying neither catalogue nor corpus
    reports the dimension `n/a`, never a clean sweep of nothing. Then: incomplete
    phases on the unit's own carrier
    (`audit-docs` check 11 discriminates it: lane-era `## Tasks`/`## Log`, legacy

@@ -111,7 +111,7 @@ carrier the project does not carry is named in the receipt and its edge reads
 coverage-gap@1
 kind | shape | what it orders
 receipt | coverage-gap@1 … | one fixed block: the three input lines, one line per edge, one line per gap, the verdict
-input | catalogue · detectors · corpus | each line says present or absent with its path — an absent carrier is named, never guessed
+input | catalogue · detectors · corpus | each line says present or absent: a file-backed carrier (catalogue, detectors) carries its path either way, the corpus carries what it read or why it read nothing — an absent carrier is named, never guessed
 edge | criterion→detector | a criterion is covered when a backticked token in its `Source / authority` or `Notes` cell resolves to a gate id, a review pass, an existing path or a declared command
 gap | criterion-uncovered | a criterion whose declared check resolves to nothing, or whose provenance sits outside the catalogue's closed set
 gap | class-uncovered | an admitted recurring corpus class whose axis no detector names
@@ -134,8 +134,10 @@ judges it.
 - ✓ the dimension is reported `n/a — no catalogue and no corpus` when the project
   carries neither, instead of a clean sweep of nothing
 
-**Routes** — the `finding-route@1` hand-offs owned by `SKILL.md`; no bespoke route
-is introduced here:
+**Routes** — every gap finding's `route:` cell is the `finding-route@1` hand-off owned
+by `SKILL.md` (`<verb> — <target>`, never a command invocation); the three
+destinations below are what each gap class resolves to, and no bespoke route is
+introduced here:
 
 - a recommended external skill covers the gap → `agentic-workflow skills discover`
   (#591's route: trusted registries → the seven `skill-lint` checks → per-candidate
