@@ -189,7 +189,9 @@ test("the CLI is clean once the unit records the re-verification run", () => {
     write("docs/features/001-x/SPEC.md", unitDoc("- **P1** — cut", EVIDENCE));
     git(dir, ["add", "-A"]);
     git(dir, ["commit", "-q", "-m", "record the run"]);
-    const result = runCli(dir, ["--base", base]);
+    // the local gate passes both flags: a pushBase step that refused --remote
+    // would redden every push
+    const result = runCli(dir, ["--base", base, "--remote", "origin"]);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /^verdict \| clean$/m);
   } finally {

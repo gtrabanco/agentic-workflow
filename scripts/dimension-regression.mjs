@@ -180,21 +180,24 @@ export function renderReport(result, rev) {
   return `${lines.join("\n")}\n`;
 }
 
-const USAGE = "usage: dimension-regression.mjs [--root <dir>] [--base <rev>]";
+const USAGE = "usage: dimension-regression.mjs [--root <dir>] [--base <rev>] [--remote <name>]";
 
 function main(argv) {
   let root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   let base = null;
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === "--root" || arg === "--base") {
+    // The local gate hands a pushBase step `--root <dir> --base <rev>` and, when
+    // the hook knows it, `--remote <name>`. The range is local history, so the
+    // remote is accepted and unused: refusing it would redden every push.
+    if (arg === "--root" || arg === "--base" || arg === "--remote") {
       const value = argv[index + 1];
       if (!value) {
         process.stderr.write(`dimension-regression: ${arg} needs a value\n${USAGE}\n`);
         return 2;
       }
       if (arg === "--root") root = path.resolve(value);
-      else base = value;
+      else if (arg === "--base") base = value;
       index += 1;
     } else {
       process.stderr.write(`dimension-regression: unknown argument ${arg}\n${USAGE}\n`);
