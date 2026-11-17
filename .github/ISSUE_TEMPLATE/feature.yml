@@ -57,6 +57,20 @@ body:
       required: false
 
   - type: textarea
+    id: surfaces
+    attributes:
+      label: Surfaces
+      description: >-
+        The batch scheduler's lane keys this touches, one per line —
+        packages/<name>, skills/<name>, scripts, docs, template, .github. Write
+        surface-unknown when you cannot name them; triage infers them and fills
+        this in.
+      placeholder: |
+        - packages/agentic-workflow
+        - scripts
+    validations:
+      required: true
+  - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
