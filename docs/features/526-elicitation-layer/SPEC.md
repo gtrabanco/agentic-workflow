@@ -194,15 +194,19 @@ relay-next: create .pi-web/relays/526-elicitation-layer/ (charter → docs/featu
 - **P7** — 2026-11-17 09:56, every obligation row flipped to `verified` on a foreground-run validator, `verify` and `phase-lint` clean at the head, and the session journal fragment written · `198300e5`.
 - **D10** — 2026-11-17, correcting D7's sibling note: the `worktree-guard` finding recorded under Known pre-existing issues was reproduced on the first gate attempt and is **gone** on the second (0 findings, the owning session removed its stale worktree), so the gate is green rather than excused. The note stays as the history of what was observed, never as a standing exception.
 - **D11** — 2026-11-17, the pre-spec's own `roadmap_summary` replaced the roadmap row's description cell — the emitter's declared behaviour (the unit doc owns the summary cell, the table never does). The research prose, the dependency set and the evidence link were carried into the new summary rather than dropped.
+- **P8** — 2026-11-17, branch pushed and PR [#607](https://github.com/gtrabanco/agentic-workflow/pull/607) opened against `main`; the roadmap row settled to `done · [#607](…)` through the crate's `roadmap rowUpsert`, and the projection regenerated from it.
 
 
 ## Next
 
-P2 — write `skills/unit-lane/references/ELICITATION.md` (the bank, the artifact grammar, calibration, the family rule, the contextual-approval block).
+Owner verdict on PR [#607](https://github.com/gtrabanco/agentic-workflow/pull/607)
+(the owner is the external verifier for this repository's own surgery). After the
+verdict: the owner integrates `main` on the branch and merges.
 
 ## References
 
 - Issue: [#526](https://github.com/gtrabanco/agentic-workflow/issues/526) · roadmap row 526
+- Pull request: [#607](https://github.com/gtrabanco/agentic-workflow/pull/607)
 - Evidence: `docs/research/2026-11-12-input-quality-and-editing/` (checklist-first, CONTRA, cross-model elicitation), `docs/research/ATTRIBUTION.md`
 - Sibling mechanism: `skills/init-workspace/references/ENGINEERING_INTERVIEW.md` (the charter bank and its qualification rule), `docs/features/556-engineering-interview/`
 - Consumed by: `skills/triage-issue/references/ISSUE_PROCESS.md` (`one-shot` eligibility), `skills/unit-lane/references/DESIGN.md` (`## Specs` seed)
