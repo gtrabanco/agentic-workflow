@@ -14,6 +14,18 @@ hook="$hooks_dir/git-identity-check.sh"
 failures=0
 cases=0
 
+# The hook is a shim since unit 554: it execs the universal CLI, which owns the
+# decision. Point it at this checkout's crate bin when the caller named none, so
+# the suite drives the same code path an installed project does; the absent-CLI
+# case below unset it deliberately.
+if [ -z "${AGENTIC_WORKFLOW_BIN:-}" ]; then
+  repo_root=$(CDPATH='' cd -- "$hooks_dir/../../.." && pwd)
+  if [ -f "$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs" ]; then
+    AGENTIC_WORKFLOW_BIN="$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs"
+    export AGENTIC_WORKFLOW_BIN
+  fi
+fi
+
 pass() { printf 'ok %d — %s\n' "$cases" "$1"; }
 fail() { printf 'not ok %d — %s\n' "$cases" "$1"; failures=$((failures + 1)); }
 
@@ -330,11 +342,19 @@ output="$dir/hook.out"
     GIT_COMMITTER_NAME="Fixture Human" GIT_COMMITTER_EMAIL="human@example.com" \
     PATH="$bin" "$bash_bin" "$hook" ) >"$output" 2>&1
 status=$?
-check "a missing jq fails closed" 1 "$dir" "$output"
-if grep -qi 'jq' "$output" && ! grep -q 'not valid JSON' "$output"; then
-  cases=$((cases + 1)); pass "the message names jq instead of claiming invalid JSON"
+# The hook's new precondition is the CLI itself: a host without it cannot verify
+# the identity, so the commit is refused and the message names the missing entry
+# point. (The retired shell hook's `jq` precondition went with its jq dependency.)
+(cd "$dir" && env -u AGENTIC_WORKFLOW_BIN HOME="$global_dir" PI_CODING_AGENT_DIR="$global_dir" \
+  GIT_AUTHOR_NAME="Fixture Human" GIT_AUTHOR_EMAIL="human@example.com" \
+  GIT_COMMITTER_NAME="Fixture Human" GIT_COMMITTER_EMAIL="human@example.com" \
+  PATH="$bin" "$bash_bin" "$hook") >"$output" 2>&1
+status=$?
+check "a missing agentic-workflow CLI fails closed" 1 "$dir" "$output"
+if grep -qi 'agentic-workflow CLI is not installed' "$output"; then
+  cases=$((cases + 1)); pass "the message names the missing CLI"
 else
-  cases=$((cases + 1)); fail "the message names jq instead of claiming invalid JSON"; sed 's/^/    /' "$output"
+  cases=$((cases + 1)); fail "the message names the missing CLI"; sed 's/^/    /' "$output"
 fi
 cleanup
 

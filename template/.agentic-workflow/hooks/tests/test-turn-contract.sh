@@ -9,6 +9,17 @@ set -u
 test_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 shim=$test_dir/../turn-contract.sh
 failures=0
+
+# The shim execs the universal CLI (unit 554): point it at this checkout's crate
+# bin when the caller named none, so the suite drives the same code path an
+# installed project does.
+if [ -z "${AGENTIC_WORKFLOW_BIN:-}" ]; then
+  repo_root=$(CDPATH='' cd -- "$test_dir/../../../.." && pwd)
+  if [ -f "$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs" ]; then
+    AGENTIC_WORKFLOW_BIN="$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs"
+    export AGENTIC_WORKFLOW_BIN
+  fi
+fi
 cases=0
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -338,7 +349,7 @@ cat > "$stub_dir/glab" <<'STUB'
 #!/usr/bin/env bash
 case "$1 $2" in
   "mr list")
-    printf '%s\n' "${GLAB_STUB_LINE:-}"
+    printf '%s\n' "${GLAB_STUB_JSON:-[]}"
     exit "${GLAB_STUB_EXIT:-0}"
     ;;
   *) exit 3 ;;
@@ -350,13 +361,22 @@ cat > "$stub_dir/gt" <<'STUB'
 #!/usr/bin/env bash
 case "$1 $2" in
   "pr list")
-    printf '%s\n' "${GT_STUB_LINE:-}"
+    printf '%s\n' "${GT_STUB_JSON:-[]}"
     exit "${GT_STUB_EXIT:-0}"
     ;;
   *) exit 3 ;;
 esac
 STUB
 chmod +x "$stub_dir/gt"
+
+# The minimal PATH the absent-CLI case needs: the hook's runtime, git and the
+# suite's own assertion tools — and no forge CLI at all.
+minbin=$tmp/minbin
+mkdir -p "$minbin"
+for tool in node git dirname bash grep sed; do
+  resolved=$(command -v "$tool" || true)
+  [ -n "$resolved" ] && ln -sf "$resolved" "$minbin/$tool"
+done
 
 # A pushed branch whose origin resolves to a forge URL rather than a local path:
 # the push establishes the upstream box4 requires, then the URL is swapped so the
@@ -371,46 +391,46 @@ gitc -C "$forge_repo" push -qu origin feat/forge
 gitc -C "$forge_repo" remote set-url origin https://gitlab.com/acme/app.git
 forge_head=$(gitc -C "$forge_repo" rev-parse HEAD)
 
-export GLAB_STUB_LINE="opened $forge_head"
+export GLAB_STUB_JSON="[{\"state\":\"opened\",\"sha\":\"$forge_head\"}]"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab open PR at HEAD" 0 'TURN-CONTRACT ok'
 
-export GLAB_STUB_LINE="merged $forge_head"
+export GLAB_STUB_JSON="[{\"state\":\"merged\",\"sha\":\"$forge_head\"}]"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab merged PR is not an open PR" 1 'TURN-CONTRACT fail box4: pr-not-open'
 
-export GLAB_STUB_LINE="closed $forge_head"
+export GLAB_STUB_JSON="[{\"state\":\"closed\",\"sha\":\"$forge_head\"}]"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab closed PR is not an open PR" 1 'TURN-CONTRACT fail box4: pr-not-open'
 
-export GLAB_STUB_LINE="opened 0000000000000000000000000000000000000000"
+export GLAB_STUB_JSON="[{\"state\":\"opened\",\"sha\":\"0000000000000000000000000000000000000000\"}]"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab head mismatch" 1 'TURN-CONTRACT fail box4: pr-head-mismatch'
 
-export GLAB_STUB_LINE=""
+export GLAB_STUB_JSON='[]'
 export GLAB_STUB_EXIT=1
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab unreachable" 1 'TURN-CONTRACT fail box4: pr-unreachable'
 export GLAB_STUB_EXIT=0
 
-export GLAB_STUB_LINE=""
+export GLAB_STUB_JSON='[]'
 run_dir=$forge_repo
 run --finished
 assert "box4 gitlab no MR for the branch" 1 'TURN-CONTRACT fail box4: pr-not-open'
 
 # Gitea: the same branch on a gitea host, answered by `gt`.
 gitc -C "$forge_repo" remote set-url origin https://gitea.com/acme/app.git
-export GT_STUB_LINE="open $forge_head"
+export GT_STUB_JSON="[{\"state\":\"open\",\"head_sha\":\"$forge_head\"}]"
 run_dir=$forge_repo
 run --finished
 assert "box4 gitea open PR at HEAD" 0 'TURN-CONTRACT ok'
 
-export GT_STUB_LINE=""
+export GT_STUB_JSON='[]'
 run_dir=$forge_repo
 run --finished
 assert "box4 gitea no PR for the branch" 1 'TURN-CONTRACT fail box4: pr-not-open'
@@ -432,7 +452,7 @@ assert_grep "the refusal names AGENTIC_WORKFLOW_FORGE" 'AGENTIC_WORKFLOW_FORGE' 
 
 # The override wins over the host, and an absent CLI fails closed naming it.
 gitc -C "$forge_repo" remote set-url origin https://gitlab.com/acme/app.git
-export GT_STUB_LINE="open $forge_head"
+export GT_STUB_JSON="[{\"state\":\"open\",\"head_sha\":\"$forge_head\"}]"
 run_dir=$forge_repo
 run --finished --forge gitea
 assert "box4 --forge overrides the detected host" 0 'TURN-CONTRACT ok'
@@ -441,12 +461,13 @@ run_dir=$forge_repo
 run --finished --forge private-forge
 assert "box4 an unknown --forge value is a usage error" 2 ''
 
-PATH="/usr/bin:/bin"
+full_path=$PATH
+PATH="$minbin"
 run_dir=$forge_repo
 run --finished --forge gitea
 assert "box4 a missing forge CLI fails closed" 1 'TURN-CONTRACT fail box4: pr-unreachable'
 assert_grep "the refusal names the missing CLI" 'gt' "$tmp/stderr"
-export PATH="$stub_dir:$PATH"
+export PATH="$full_path"
 
 # A --remote that git does not know is refused, never silently defaulted.
 run_dir=$forge_repo
@@ -533,7 +554,7 @@ fi
 
 run_dir=$ok_repo
 run --help
-assert "--help exits 0" 0 "usage: turn-contract.sh [--finished|--remote <name>|--forge <name>|--help]
+assert "--help exits 0" 0 "usage: turn-contract [--finished|--remote <name>|--forge <name>|--help]
 
   --finished    also check box4 (pushed branch + open pull request whose head is local HEAD)
   --remote <n>  the remote box4 asks the forge about (default origin)

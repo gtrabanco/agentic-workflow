@@ -19,6 +19,12 @@
  * moment this is cheap to stop; after the push the only repair is a history
  * rewrite.
  *
+ * The profile rule and the commit comparison are not this script's: they live in
+ * the crate (`packages/agentic-workflow/src/guard/git-identity.mjs`), which the
+ * pre-commit hook and the pi guard read too (unit 554). Two carriers of one
+ * contract, one implementation — `scripts/identity-hook-parity.test.mjs` proves
+ * they still answer identically.
+ *
  * What the range *is* respects reachability (issue #539): a commit already
  * reachable from a published ref — the remote mainline, and the pushed branch's
  * own remote tip — cannot be changed by this push, so it is skipped and only the
@@ -60,139 +66,24 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { publishedRefs, unpublishedCommits } from "./published-refs.mjs";
+import {
+  ENFORCE_VALUES,
+  PUSH_ENFORCING,
+  REPAIR_LINES,
+  commitViolations,
+  describeApproved,
+  resolveIdentityProfile,
+} from "../packages/agentic-workflow/src/guard/git-identity.mjs";
 
 const DEFAULT_ROOT = process.cwd();
-const BASE_CONFIG_FILE = "agentic-workflow.json";
-const ENFORCE_VALUES = new Set(["off", "commit", "push", "push-upstream", "commit-and-push", "commit-and-push-upstream"]);
+/** The two repair facts every failure prints: diagnose the origin, then fix it. */
+export { REPAIR_LINES, resolveIdentityProfile };
+/** The enforce vocabulary, as the set this script asks. */
+const ENFORCE = new Set(ENFORCE_VALUES);
 /** The values that ask the push half to judge this push. */
-const PUSH_ENFORCING = new Set(["push", "push-upstream", "commit-and-push", "commit-and-push-upstream"]);
+const PUSHING = new Set(PUSH_ENFORCING);
 /** The fallback remote when nothing else names the mainline. The one home for it. */
 export const DEFAULT_REMOTE = "origin";
-
-/** The two repair facts every failure prints: diagnose the origin, then fix it. */
-export const REPAIR_LINES = Object.freeze([
-  "git config --show-origin --get-all user.name",
-  "git config --show-origin --get-all user.email",
-  "git config --unset user.name    # only when a stale local value shadows the approved one",
-  "git var GIT_AUTHOR_IDENT",
-  "git var GIT_COMMITTER_IDENT",
-]);
-
-/**
- * Read a JSONC document with one documented rule — the same rule the template's
- * pre-commit hook applies (they are two implementations of one contract, pinned
- * by `scripts/identity-hook-parity.test.mjs`): full-line `//` comments, `/* … *\/`
- * blocks, and trailing commas before `}`/`]` are accepted; everything else is
- * JSON. A string's own `//` is never touched because the scan respects quotes.
- */
-export function parseJsonc(text) {
-  let out = "";
-  let quote = null;
-  let index = 0;
-  let lineStart = true;
-  while (index < text.length) {
-    const char = text[index];
-    const next = text[index + 1];
-    if (quote !== null) {
-      out += char;
-      if (char === "\\" && next !== undefined) {
-        out += next;
-        index += 2;
-        continue;
-      }
-      if (char === quote) quote = null;
-      index += 1;
-      continue;
-    }
-    if (char === '"') {
-      quote = char;
-      out += char;
-      lineStart = false;
-      index += 1;
-      continue;
-    }
-    if (char === "/" && next === "/" && lineStart) {
-      while (index < text.length && text[index] !== "\n") index += 1;
-      continue;
-    }
-    if (char === "/" && next === "*") {
-      index += 2;
-      while (index < text.length && !(text[index] === "*" && text[index + 1] === "/")) index += 1;
-      index += 2;
-      continue;
-    }
-    if (char === "," ) {
-      // Drop the comma when the next significant character closes an object or array.
-      let lookahead = index + 1;
-      while (lookahead < text.length && /\s/u.test(text[lookahead])) lookahead += 1;
-      if (text[lookahead] === "}" || text[lookahead] === "]") {
-        index += 1;
-        continue;
-      }
-    }
-    out += char;
-    lineStart = char === "\n" || (lineStart && /\s/u.test(char));
-    index += 1;
-  }
-  return JSON.parse(out);
-}
-
-function readConfigFile(file) {
-  let text;
-  try {
-    text = fs.readFileSync(file, "utf8");
-  } catch {
-    return null;
-  }
-  try {
-    const value = parseJsonc(text);
-    if (typeof value !== "object" || value === null || Array.isArray(value)) {
-      throw new Error("not a JSON object");
-    }
-    return value;
-  } catch (error) {
-    const failure = new Error(`${file}: ${error instanceof Error ? error.message : String(error)}`);
-    failure.code = "config-unparseable";
-    throw failure;
-  }
-}
-
-/** The global agent directory: the host's, then `~/.pi/agent`. */
-export function globalAgentDir(env = process.env) {
-  return env.PI_CODING_AGENT_DIR && env.PI_CODING_AGENT_DIR !== "" ? env.PI_CODING_AGENT_DIR : path.join(os.homedir(), ".pi", "agent");
-}
-
-/**
- * Resolve the `gitIdentity` section: global then project, per field,
- * project wins. Returns `{ enforce, approved, sources }` — `sources` names the
- * file each truth came from, so a failure can say where the profile lives.
- */
-export function resolveIdentityProfile({ root, env = process.env }) {
-  const globalFile = path.join(globalAgentDir(env), BASE_CONFIG_FILE);
-  const projectFile = path.join(root, ".pi", BASE_CONFIG_FILE);
-  const globalConfig = readConfigFile(globalFile);
-  const projectConfig = readConfigFile(projectFile);
-  const globalSection = globalConfig?.gitIdentity ?? {};
-  const projectSection = projectConfig?.gitIdentity ?? {};
-  const approved = {
-    ...(typeof globalSection.approved === "object" ? globalSection.approved : {}),
-    ...(typeof projectSection.approved === "object" ? projectSection.approved : {}),
-  };
-  const declared = projectSection.enforce ?? globalSection.enforce;
-  const enforce = declared ?? "off";
-  const named = Object.values(approved).some((value) => typeof value === "string" && value !== "");
-  return {
-    enforce,
-    enforceDeclared: declared !== undefined,
-    approved,
-    named,
-    sources: {
-      global: globalFile,
-      project: projectFile,
-      profile: projectSection.approved !== undefined ? "project" : globalSection.approved !== undefined ? "global" : "none",
-    },
-  };
-}
 
 function git(root, args) {
   const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
@@ -257,29 +148,6 @@ export function rangeCommits({ root, base, head = "HEAD", published = [] }) {
       .split("\u0000");
     return { sha, author: { name: authorName, email: authorEmail }, committer: { name: committerName, email: committerEmail } };
   });
-}
-
-function matches(value, expected) {
-  if (typeof expected !== "string" || expected === "") return true;
-  return String(value).toLowerCase() === expected.toLowerCase();
-}
-
-/** Which identity facts of one commit fall outside the approved profile. */
-export function commitViolations(commit, approved) {
-  const violations = [];
-  for (const role of ["author", "committer"]) {
-    const actual = commit[role];
-    const nameOk = matches(actual.name, approved.name);
-    const emailOk = matches(actual.email, approved.email);
-    if (!nameOk || !emailOk) violations.push({ role, actual });
-  }
-  return violations;
-}
-
-function describeApproved(approved) {
-  const name = typeof approved.name === "string" && approved.name !== "" ? approved.name : "<any name>";
-  const email = typeof approved.email === "string" && approved.email !== "" ? `<${approved.email}>` : "<any email>";
-  return `${name} ${email}`;
 }
 
 /** The optional profile facts the *commit* cannot carry; the hook checks them. */
@@ -347,8 +215,8 @@ export function main(argv) {
     process.stderr.write(`PUSH IDENTITY — config error: ${error.message}\n`);
     return 2;
   }
-  if (!ENFORCE_VALUES.has(profile.enforce)) {
-    process.stderr.write(`PUSH IDENTITY — config error: gitIdentity.enforce "${profile.enforce}" is not one of ${[...ENFORCE_VALUES].join(", ")}\n`);
+  if (!ENFORCE.has(profile.enforce)) {
+    process.stderr.write(`PUSH IDENTITY — config error: gitIdentity.enforce "${profile.enforce}" is not one of ${[...ENFORCE].join(", ")}\n`);
     return 2;
   }
   if (!profile.named) {
@@ -364,7 +232,7 @@ export function main(argv) {
     process.stdout.write(renderResult({ status: "skipped", offenders: "no approved identity profile", profile }));
     return 0;
   }
-  if (!PUSH_ENFORCING.has(profile.enforce)) {
+  if (!PUSHING.has(profile.enforce)) {
     process.stdout.write(renderResult({ status: "skipped", offenders: `gitIdentity.enforce is "${profile.enforce}"`, profile }));
     return 0;
   }

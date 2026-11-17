@@ -34,6 +34,18 @@
 
 import { isAbsolute, normalize, resolve, sep } from "node:path";
 
+import {
+  DEFAULT_AGENT_MODE,
+  type GitIdentityAgentGuard,
+  type GitIdentityAgentMode,
+  type GitIdentityApproved,
+  type GitIdentityConfig,
+} from "@gtrabanco/agentic-workflow/src/guard/git-identity.mjs";
+
+export type { GitIdentityAgentGuard, GitIdentityAgentMode, GitIdentityApproved, GitIdentityConfig };
+export type { GitIdentityEnforce } from "@gtrabanco/agentic-workflow/src/guard/git-identity.mjs";
+export { COMMIT_ENFORCING, DEFAULT_AGENT_MODE, ENFORCE_VALUES, normalizeGitIdentity } from "@gtrabanco/agentic-workflow/src/guard/git-identity.mjs";
+
 export type GitConfigScope = "local" | "global" | "system" | "worktree" | "file";
 
 /** One `git config` write, as the command line spells it. */
@@ -47,33 +59,7 @@ export interface GitConfigWrite {
   file?: string;
 }
 
-export type GitIdentityEnforce = "off" | "commit" | "push" | "push-upstream" | "commit-and-push" | "commit-and-push-upstream";
-export type GitIdentityAgentMode = "ask" | "block";
-
-export interface GitIdentityApproved {
-  name?: string;
-  email?: string;
-  fullName?: string;
-  format?: "openpgp" | "ssh";
-  signingKey?: string;
-  /** The per-machine keys: a resolved key matching any of these is approved. */
-  signingKeys?: string[];
-  /** What a signature means here: required, allowed (default), or off (sign-off). */
-  signing?: "required" | "allowed" | "off";
-}
-
-export interface GitIdentityAgentGuard {
-  mode: GitIdentityAgentMode;
-  allow: string[];
-}
-
-/** The base config section this guard reads (issue #514, `gitIdentity`). */
-export interface GitIdentityConfig {
-  enforce: GitIdentityEnforce;
-  approved: GitIdentityApproved;
-  agentGuard: GitIdentityAgentGuard;
-}
-
+/** What the guard needs to decide one command line (the pi-side options). */
 export interface GitIdentityGuardOptions {
   mode: GitIdentityAgentMode;
   /** Config keys the project allows the agent to write, matched case-insensitively. */
@@ -84,36 +70,17 @@ export interface GitIdentityGuardOptions {
   cwd: string;
 }
 
-const ENFORCE_VALUES: readonly GitIdentityEnforce[] = ["off", "commit", "push", "push-upstream", "commit-and-push", "commit-and-push-upstream"];
-
-/** The section as the extension reads it: absent keys take the shipped value. */
-export function normalizeGitIdentity(value: unknown): GitIdentityConfig {
-  const section = typeof value === "object" && value !== null ? (value as Partial<GitIdentityConfig>) : {};
-  const agentGuard = (typeof section.agentGuard === "object" && section.agentGuard !== null ? section.agentGuard : {}) as Partial<GitIdentityAgentGuard>;
-  const approved = section.approved;
-  return {
-    enforce: ENFORCE_VALUES.includes(section.enforce as GitIdentityEnforce) ? (section.enforce as GitIdentityEnforce) : "off",
-    approved: typeof approved === "object" && approved !== null ? approved : {},
-    agentGuard: {
-      mode: agentGuard.mode === "block" ? "block" : DEFAULT_MODE,
-      allow: Array.isArray(agentGuard.allow) ? agentGuard.allow.filter((entry): entry is string => typeof entry === "string") : [...DEFAULT_ALLOW],
-    },
-  };
-}
-
 export type GuardVerdict =
   | { action: "allow" }
   | { action: "ask" | "block"; write: GitConfigWrite; reason: string };
 
-const DEFAULT_MODE: GitIdentityAgentMode = "ask";
-const DEFAULT_ALLOW: readonly string[] = [];
 
 /** The guard's options with the shipped defaults filled in. */
 export function guardOptions(config: Partial<GitIdentityConfig> | undefined, cwd: string, scratchDirs: readonly string[]): GitIdentityGuardOptions {
-  const agentGuard = config?.agentGuard ?? { mode: DEFAULT_MODE, allow: [] };
+  const agentGuard = config?.agentGuard ?? { mode: DEFAULT_AGENT_MODE, allow: [] };
   return {
-    mode: agentGuard.mode === "block" ? "block" : DEFAULT_MODE,
-    allow: Array.isArray(agentGuard.allow) ? agentGuard.allow : DEFAULT_ALLOW,
+    mode: agentGuard.mode === "block" ? "block" : DEFAULT_AGENT_MODE,
+    allow: Array.isArray(agentGuard.allow) ? agentGuard.allow : [],
     scratchDirs,
     cwd,
   };

@@ -104,6 +104,10 @@ justification | template/.agentic-workflow/hooks/tests/test-forge-adapter.sh | P
   `git-identity-check.sh` already uses), so a scaffold install needs no `PATH`
   entry. A hook whose library is missing fails closed with a message naming the
   file, never silently skips the check.
+  **Superseded 2026-11-17 by #554's decision D4**: `hooks/lib/` is deleted with
+  its suites, the shared facts live in `packages/agentic-workflow/src/forge.mjs`
+  and `src/temp.mjs` (the rule-homes `rigidity-review` declares), and a scaffold
+  host now needs the `agentic-workflow` CLI rather than a sibling library file.
 
 - **D11** (2026-11-14) — **AC25's scope excludes the journal carrier (owner
   decision; path-protection record for a protected-path modification).** The
