@@ -276,3 +276,17 @@ finding.** The full `local-gate` receipt for this head:
   **`dependency-pin-gate` exit 1 on the pre-existing registry drift**
   (`pi-extensible-workflows` 6.3.0 vs the registry's 6.4.0; this batch changes
   no manifest, `package.json` or `bun.lock`), the same known issue E18 recorded.
+
+## Push record — 2026-11-17 (escape hatch, recorded as the hook asks)
+
+`git push` ran the installed pre-push gate twice on this range
+(`d87d01ff..e32b91d2`) and both runs finished **`local-gate: PASS — 17 step(s)`**
+(529s, then 468s) — after which **git itself exited 141 (SIGPIPE)** and nothing
+was published (remote tip stayed `d87d01ff`). The transport is healthy on the
+same range: `git -c core.hooksPath=<empty> push --dry-run` → exit 0,
+`d87d01ff..e32b91d2`, no hook. The publish was therefore completed with the
+hook's own documented escape hatch, `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`, on the
+grounds that the offline gate had already passed for exactly this range twice in
+this session — recorded here per the hook's "record why" line, and worth one
+line on PR #617 as the owner's step. A stray `SIGPIPE` in git's post-hook phase
+is not this unit's surface; it is reported, not hidden.
