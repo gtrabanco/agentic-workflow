@@ -1191,6 +1191,11 @@ export function buildBatchPlan({
   }
   const claimedSurfaceMap = new Map();
   for (const [number, row] of model) {
+    // Nothing was declared → nothing can be reported uncovered: the `general`
+    // lane is the guess the `surface-unknown-issue-<n>` degradation already
+    // names, never a surface a branch could fail to cover (external verify
+    // 2026-11-17, blocker B1).
+    if (surfaceUnknown.has(number)) continue;
     if (launchEvidence?.get(number)?.filesKnown !== true) continue;
     const actual = filesBySurface.get(number) ?? new Set();
     const unverified = row.surfaces.filter((surface) => !surfaceCovered(surface, actual));
@@ -1894,20 +1899,21 @@ export function printHumanSummary(plan, write = (line) => console.log(line)) {
   }
   // Claimed surfaces: the declared surfaces a live branch does not cover. The
   // producer emits only that one cause, so this section lists what is actionable
-  // and nothing else; the same issue appears per lane, hence the dedup.
+  // and nothing else — one labeled line per flagged issue (O11/P3), deduplicated
+  // because the same issue appears per lane.
   const seenClaimed = new Set();
-  const claimedSurfaces = [];
+  const claimedIssues = [];
   for (const batch of plan.batches) {
     for (const lane of batch.lanes) {
       for (const row of lane.issues) {
         if (!row.claimed_surface || row.claimed_surface.length === 0 || seenClaimed.has(row.number)) continue;
         seenClaimed.add(row.number);
-        claimedSurfaces.push(`#${row.number}: ${row.claimed_surface.join(", ")}`);
+        claimedIssues.push(`#${row.number}: ${row.claimed_surface.join(", ")}`);
       }
     }
   }
-  if (claimedSurfaces.length > 0) {
-    write(`\nclaimed surfaces (unverified — merge conflict possible): ${claimedSurfaces.join(", ")}`);
+  for (const entry of claimedIssues) {
+    write(`\nclaimed surfaces (unverified — merge conflict possible): ${entry}`);
   }
   for (const finding of plan.findings) write(`finding ${finding.code}: ${finding.numbers.map((n) => `#${n}`).join(", ")} — ${finding.detail}`);
   for (const d of plan.degraded) write(`degraded: ${d}`);
