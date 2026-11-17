@@ -31,7 +31,10 @@
  * The allowlist is the bootstrap pair: `setup-env.mjs` provisions bun, so it
  * cannot print a bun usage string on a machine without bun, and
  * `update-tools.mjs` is declared node-run beside it (#331 S6/AC8). Every other
- * script prints the bun form.
+ * script prints the bun form. Its one home is the crate's tool-choice policy
+ * (`packages/agentic-workflow/src/tool-choice/policy.mjs`, issue #610): the
+ * command-time carrier reads the same map, and `scripts/tool-choice-parity.test.mjs`
+ * refuses a divergence — this gate imports it, it never keeps a copy.
  *
  * Usage
  *   bun scripts/invocation-drift.mjs            # this checkout
@@ -46,13 +49,15 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { BOOTSTRAP_SCRIPTS } from "../packages/agentic-workflow/src/tool-choice/policy.mjs";
+
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Declared node-run scripts: the bootstrap pair, each with its reason. */
-const BOOTSTRAP_SCRIPTS = new Map([
-  ["scripts/setup-env.mjs", "provisions bun, so it must run before bun exists (#331 S6/AC8)"],
-  ["scripts/update-tools.mjs", "declared node-run beside setup-env (#331 S6/AC8)"],
-]);
+/**
+ * The allowlist this gate reads, re-exported so the parity suite can prove it is
+ * the same object the command-time carrier classifies with (issue #610).
+ */
+export { BOOTSTRAP_SCRIPTS };
 
 /** S1 — the normative sentence both guides must carry, whitespace-normalized. */
 export const GUIDE_LINE =
@@ -81,8 +86,16 @@ const WORKFLOW_DOC_EXCLUSIONS = new Map([
   ["docs/workflow/REPOSITORY_STATE.md", "frozen Normalized Repository State receipts (read-only facts contract, never instructions)"],
 ]);
 
-/** The bootstrap pair's node literal stays legal in prose too (D1). */
-const BOOTSTRAP_LITERAL = /^scripts\/(setup-env|update-tools)\.mjs$/;
+/**
+ * The bootstrap pair's node literal stays legal in prose too (D1). Derived from
+ * the shared allowlist so a row added there is exempt here without a second edit.
+ */
+const BOOTSTRAP_LITERAL = bootstrapLiteral(BOOTSTRAP_SCRIPTS.keys());
+
+function bootstrapLiteral(scripts) {
+  const names = [...scripts].map((script) => script.replace(/^scripts\//, "").replace(/\.mjs$/, ""));
+  return new RegExp(`^scripts/(${names.join("|")})\\.mjs$`);
+}
 
 /**
  * A literal an agent copies as an invocation: `node scripts/…` (a manual
