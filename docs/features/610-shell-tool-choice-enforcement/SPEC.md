@@ -234,6 +234,14 @@ Verdict copied from the crate's classifier over the planned paths
 - **A model can call a *different* shell tool (a custom `bash`-like tool) and
   bypass the hook** — *does not affect* this unit: the hook keys on the host's
   `bash` tool, which is the one the workflow's skills invoke.
+- **`dependency-pin-gate` is red at this head on registry drift, not on this
+  unit**: `@gtrabanco/pi-agentic-workflow` pins `pi-extensible-workflows` at
+  6.3.0 and the registry published 6.4.0 (`GATE REJECTION — dependency-pin-drift`).
+  This unit changes no dependency, no pin and neither manifest —
+  `git diff main -- packages/pi-agentic-workflow/package.json bun.lock` is empty —
+  so the drift predates it; bumping the pin (+ the package version) is the
+  dependants' declared unit, never a silent edit here. *Does not affect* this
+  unit's behaviour or its verification: every other gate step is green.
 
 ## Tasks
 
@@ -499,6 +507,18 @@ list is the frozen task list above, in dependency-topological order:
   the serialized run: `node --test scripts/unit-route.test.mjs` → `64 pass, 0
   fail` (`F7` 430 ms); `node --test scripts/phase-lint.test.mjs` → `162 pass,
   0 fail` (96 s). Neither suite is touched by this unit.
+
+- **E18** — 2026-11-17, `bun scripts/local-gate.mjs --jobs 2` · steps 1–12 PASS
+  (`workspace-install`, `version-parity-content`, `docs-generated-projection`,
+  `log-immutability`, `secret-scan`, `schema-build`, `temp-hygiene`, `tmp-gc`,
+  `worktree-guard`, `root-suite`, `journal-carrier-check`, `rigidity-review`),
+  then **`dependency-pin-gate` FAIL on pre-existing registry drift**
+  (`pi-extensible-workflows` pinned 6.3.0, 6.4.0 published — no manifest in this
+  unit touches it, recorded under `## Known pre-existing issues`). The
+  fail-fast stopped steps 14–19; `pi-node-compat` was run on its own —
+  `cd packages/pi-agentic-workflow && bun run test:node` → `964 pass, 0 fail, 1
+  skipped` (the deleted-skill skip), the node compatibility leg green and
+  unpunished.
 
 ## Next
 
