@@ -433,6 +433,12 @@ own surgery.
   row (emitted) · `bb6fdabc`; the session log and this unit doc close the same
   batch.
 
+- **G1** — 2026-11-18, HEAD ccd92adba455bc6db1e52b02b8aeb80195759e1e,
+  `node scripts/run-root-suite.mjs` · exit 0 · 122 suites PASS, 0 fail;
+  `bun scripts/local-gate.mjs --only version-parity-content,docs-generated-projection,journal-carrier-check,log-immutability,push-identity,secret-scan,temp-hygiene,tmp-gc,worktree-guard,rigidity-review,dimension-regression`
+  · exit 0 · 9 steps PASS; `bun scripts/local-gate.mjs --only
+  schema-node-compat,pi-node-compat,pi-compat-guard,dependency-pin-gate` · exit 0
+  · 4 steps PASS.
 ## Next
 
 The owner's review of the delivered diff — this unit stops at the handoff.
