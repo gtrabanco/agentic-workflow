@@ -9,5 +9,11 @@
       "name": "Gabriel Trabanco Llano",
       "email": "1969593+gtrabanco@users.noreply.github.com"
     }
+  },
+  // Per-unit cost measurement (issue #383): opt-in, off by default — this repo
+  // never opted in, so the ledger's samples table stayed empty. The JSONL path
+  // is the shipped default (.pi/.telemetry/sessions.jsonl, gitignored).
+  "telemetry": {
+    "enabled": true
   }
 }
