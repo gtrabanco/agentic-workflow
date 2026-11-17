@@ -75,8 +75,8 @@ export const BATCH_PLAN_FIELDS = [
   "contract", "version", "schema", "source_revision", "degraded", "batches", "blocked", "launched", "findings", "summary",
   "new_issues", "closed_since", "label_blocked",
   "n", "lanes", "surface", "occupied_by", "issues", "number", "title", "lane", "worktree", "command", "reason", "kind",
-  "size_hint", "claimed", "triaged", "blockers", "evidence", "code", "numbers", "detail", "open_issues", "batched",
-  "labels",
+  "size_hint", "claimed", "triaged", "claimed_surface", "blockers", "evidence", "code", "numbers", "detail", "open_issues",
+  "batched", "labels",
 ] as const;
 
 /**
@@ -149,6 +149,8 @@ export interface BatchIssue {
   claimed?: boolean;
   /** False when the issue's roadmap row shows no triage yet (issue #460); absent when triaged. */
   triaged?: boolean;
+  /** Surfaces the issue declares but couldn't verify against an actual branch diff — because it has no branch, its branch merged, or the diff could not be computed. The planner cross-references declared surfaces with actual file claims from the branch diff; any declared surface that produces no actual file is reported here so the consumer knows the surface claim is unverified and a merge conflict is possible. Issue #449 follow-up. */
+  claimed_surface?: string | string[];
 }
 
 export interface BatchLane {
@@ -335,7 +337,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
           const rowLabel = `${laneLabel}.issues[${ii}]`;
           issueCount += 1;
           if (!isObj(row)) return errors.push(`${rowLabel} must be an object`);
-          rejectUnexpectedKeys(row, rowLabel, ["number", "title", "lane", "worktree", "command", "reason", "size_hint", "claimed", "triaged"], errors);
+          rejectUnexpectedKeys(row, rowLabel, ["number", "title", "lane", "worktree", "command", "reason", "size_hint", "claimed", "triaged", "claimed_surface"], errors);
           issueNumber(row.number, `${rowLabel}.number`, errors);
           rowTitle(row.title, `${rowLabel}.title`, errors);
           boundedString(row.lane, `${rowLabel}.lane`, MAX_PATH, errors);
@@ -353,6 +355,17 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
           if (!(BATCH_SIZE_HINTS as readonly string[]).includes(row.size_hint as BatchSizeHint)) errors.push(`${rowLabel}.size_hint must be light|mixed|heavy`);
           if (row.claimed !== undefined && typeof row.claimed !== "boolean") errors.push(`${rowLabel}.claimed must be a boolean when present`);
           if (row.triaged !== undefined && typeof row.triaged !== "boolean") errors.push(`${rowLabel}.triaged must be a boolean when present`);
+          if (row.claimed_surface !== undefined) {
+            if (typeof row.claimed_surface === "string") {
+              /* single unverified surface */
+            } else if (Array.isArray(row.claimed_surface)) {
+              for (const s of row.claimed_surface) {
+                if (typeof s !== "string" || s.length === 0) errors.push(`${rowLabel}.claimed_surface[] entries must be non-empty strings`);
+              }
+            } else {
+              errors.push(`${rowLabel}.claimed_surface must be a string or string array`);
+            }
+          }
         });
       });
     });

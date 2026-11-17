@@ -489,6 +489,9 @@ async function collectPrStates({ root, ghBin, remote, degradations }) {
  * establishes it. The forge is authoritative: an `OPEN` PR is in flight and a
  * `MERGED`/`CLOSED` one is terminal, whatever the local branch says. Without a
  * PR, an unmerged branch is the evidence; a unit doc only corroborates it.
+ *
+ * An issue with a local worktree is flagged with `[worktree]` so the consumer
+ * can distinguish a remote PR from a truly-local work-in-progress.
  */
 function inFlightEvidence(slot, unitDir) {
   const pr = slot?.pr ?? null;
@@ -496,7 +499,10 @@ function inFlightEvidence(slot, unitDir) {
   const live = (slot?.branches ?? []).filter((branch) => !branch.merged);
   if (pr === null && live.length === 0) return null;
   const parts = pr !== null ? [`PR #${pr.number} open`] : [];
-  for (const branch of live) parts.push(`branch ${branch.name}`);
+  for (const branch of live) {
+    const bt = slot.worktree ? ` [worktree]` : "";
+    parts.push(`branch ${branch.name}${bt}`);
+  }
   if (unitDir !== undefined) parts.push(`unit-doc ${unitDir}`);
   return parts.join(" + ");
 }
@@ -562,6 +568,24 @@ function declaredSections(body) {
     for (const bounds of headingBoundsAll(body, name)) sections.push({ name, text: body.slice(bounds.start, bounds.end) });
   }
   return sections;
+}
+
+/**
+ * Map one file path to its surface key — the inverse of `surfaceKey`.
+ * A file inside `skills/<name>/` resolves to `skills/<name>`, etc.
+ * If the file is not inside a known surface tree, returns null.
+ */
+function surfaceKeyFor(file) {
+  const parts = file.split("/");
+  if (parts.length === 0) return null;
+  const top = parts[0];
+  if (["skills", "packages"].includes(top) && parts.length > 1 && parts[1] !== "") {
+    return `${top}/${parts[1]}`;
+  }
+  if (["scripts", "docs", "template", ".github"].includes(top) && parts.length === 1) return top;
+  // A file inside one of these trees but not directly under top (e.g. scripts/foo/bar.mjs)
+  if (["scripts", "docs", "template", ".github"].includes(top)) return top;
+  return null;
 }
 
 /** The lane keys one text declares (see `surfaceKey`).
@@ -1119,6 +1143,32 @@ export function buildBatchPlan({
       : [];
   }
 
+  // ── claimed surfaces: declared but unverified against actual branch diffs ──
+  // For each launchable issue, cross-reference declared surfaces against the
+  // actual files rewritten by its branch. A surface with no matching file is
+  // *claimed* but unverified — a merge conflict is possible when the surface
+  // is broader than the actual changes. If the issue has no branch at all
+  // (no evidence), every declared surface is unverified (S4).
+  /** Surface → { file → true } mapping for actual branch files. */
+  const filesBySurface = new Map();
+  for (const [number, slot] of launchEvidence ?? []) {
+    for (const file of slot.files ?? []) {
+      const sk = surfaceKeyFor(file);
+      if (sk === null) continue;
+      if (!filesBySurface.has(number)) filesBySurface.set(number, new Map());
+      filesBySurface.get(number).set(sk, true);
+    }
+  }
+  const claimedSurfaceMap = new Map();
+  for (const [number, row] of model) {
+    const actual = filesBySurface.get(number);
+    const unverified = [];
+    for (const surface of row.surfaces) {
+      if (actual === undefined || !actual.has(surface)) unverified.push(surface);
+    }
+    if (unverified.length > 0) claimedSurfaceMap.set(number, unverified);
+  }
+
   const findings = [];
   for (const [number, row] of model) {
     const native = byNumber.get(number)?.blockedBy ?? [];
@@ -1235,7 +1285,7 @@ export function buildBatchPlan({
   const documentBatchOf = new Map(normalized.map(([original], index) => [original, index + 1]));
   const batches = normalized.map(([original, numbers], index) => ({
     n: index + 1,
-    lanes: buildLanes(numbers, model, launched, launchedSurfaces, {
+    lanes: buildLanes(numbers, model, launched, launchedSurfaces, claimedSurfaceMap, {
       batchOf,
       documentBatchOf,
       documentBatch: index + 1,
@@ -1350,6 +1400,7 @@ function buildLanes(
   model,
   launched,
   launchedSurfaces,
+  claimedSurfaceMap,
   { batchOf, documentBatchOf, documentBatch, openNumbers, launchedNumbers, openSetKnown },
 ) {
   const bySurface = new Map();
@@ -1438,6 +1489,7 @@ function buildLanes(
         reason,
         size_hint: row.size,
         ...(row.triaged ? {} : { triaged: false }),
+        ...(claimedSurfaceMap.has(number) ? { claimed_surface: claimedSurfaceMap.get(number) } : {}),
       };
     });
     const laneHint = issues.reduce((max, issue) => Math.max(max, SIZE_ORDER[issue.size_hint]), 0);
@@ -1806,6 +1858,26 @@ function printHumanSummary(plan) {
     console.log(
       `\nuntriaged: ${untriaged.map((row) => `#${row.number}`).join(", ")} — scope undetermined; co-scheduling provisional until their lane triage runs`,
     );
+  }
+  // Claimed surfaces: issues whose declared surfaces couldn't be verified against
+  // an actual branch diff. A merge conflict is possible when the surface is broader
+  // than the actual changes. Deduplicate by issue since the same row appears per-lane.
+  const seenClaimed = new Set();
+  const claimedSurfaces = [];
+  for (const batch of plan.batches) {
+    for (const lane of batch.lanes) {
+      for (const row of lane.issues) {
+        if (row.claimed_surface && row.claimed_surface.length > 0 && !seenClaimed.has(row.number)) {
+          seenClaimed.add(row.number);
+          claimedSurfaces.push(
+            `#${row.number}: ${Array.isArray(row.claimed_surface) ? row.claimed_surface.join(", ") : row.claimed_surface}`,
+          );
+        }
+      }
+    }
+  }
+  if (claimedSurfaces.length > 0) {
+    console.log(`\nclaimed surfaces (unverified — merge conflict possible): ${claimedSurfaces.join(", ")}`);
   }
   for (const finding of plan.findings) console.log(`finding ${finding.code}: ${finding.numbers.map((n) => `#${n}`).join(", ")} — ${finding.detail}`);
   for (const d of plan.degraded) console.log(`degraded: ${d}`);

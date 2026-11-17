@@ -44,6 +44,7 @@ vocabularies only, so it stays `batch-plan@3`.
 | issue | size_hint |
 | issue | claimed |
 | issue | triaged |
+| issue | claimed_surface |
 | blocked | number |
 | blocked | blockers |
 | blocked | reason |
@@ -81,6 +82,8 @@ vocabularies only, so it stays `batch-plan@3`.
 | `issue.size_hint` | `light` / `mixed` / `heavy` — the declared `(S)`/`(M)`/`(L)`/`(XL)` token, else the distinct-surface count (1, 2, ≥3). A parenthesised letter outside that set — a body's `[A(X) U(Y) M(Z) D(W)]` git status codes — is prose, so the count decides |
 | `lane.size_hint` | the max of its issues' hints — a fact, never a lane-count policy |
 | `issue.claimed` | `true` only for a **live** claim on this exact `(issue, lane)` pair: another lane's claim never marks it, an expired one never does |
+| `issue.triaged` | `false` when the roadmap row is below `planned` **and** the body carries no verdict (`fix-now`, `postponed`, `promoted`, `wontfix`) |
+| `issue.claimed_surface` | surfaces the issue declares but couldn't verify against an actual branch diff — because it has no branch, its branch merged, or the diff couldn't be computed. A string or array of surface keys. A merge conflict is possible when the surface is broader than the actual changes (issue #449 follow-up). |
 | `blocked[]` | issues gated by open native `blocked-by` relations, with the blockers and the reason |
 | `launched[]` | issues running now, on evidence: an `OPEN` PR or an unmerged `fix\|feat/<n>-*` branch, named in `evidence`. A unit doc corroborates, never decides. Excluded from every batch |
 | `label_blocked[]` | issues a hold label keeps unlaunchable (`postponed`, `backlog`, `human-revision-needed`) with those labels — never batched |

@@ -91,7 +91,8 @@ to interpret a field the script emitted.
 2. Read the envelope against [the plan grammar](references/PLAN.md):
    `batches[]` in order (batch 1 = runnable now), each lane one surface with
    its size hint and its issue rows (`number`, `worktree`, `command`,
-   `reason.kind` + `detail`, `claimed` — live only for that lane, `triaged`),
+   `reason.kind` + `detail`, `claimed` — live only for that lane, `triaged`,
+   `claimed_surface` — surfaces declared but unverified against branch diff),
    `blocked[]` with the open blockers that gate each issue, `launched[]` with
    the **evidence** that marked each unit in flight (an open PR or an unmerged
    branch — a unit doc never decides), `label_blocked[]` with the hold labels,
