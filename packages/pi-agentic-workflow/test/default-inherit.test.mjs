@@ -90,6 +90,10 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
       stopOn: "command_settled",
       onBackendMissing: "noop",
     },
+    // Issue #610: the shell-tool-choice carrier ships on — the convention is
+    // enforced unless an operator opts out, and node stays the documented
+    // fallback for the forms `node --test` and the root suite's leg.
+    toolChoice: { enabled: true, mode: "block" },
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });
