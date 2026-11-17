@@ -493,6 +493,21 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   standalone then exited 0 across 114 suites and the identical gate re-run
   passed 15/15 — the load-marginal class G1 records, no content difference.
   The four network steps were skipped by the flag, as in G1/G3.
+- **D3** — 2026-11-17, integrate, never rewrite: the pre-push hook's first two
+  runs failed on facts outside this batch — `root-suite`'s `red-first`
+  shipped-history case timed out at its 30 s budget once (G1's load-marginal
+  class; the standalone suite and the next hook run both exited 0), and
+  `push-identity` exited 2 twice because the remote tip moved mid-run to
+  `0e566db7` (another session's main-into-branch merge, which this checkout did
+  not hold: `git rev-list <unknown>..HEAD` refused). The remote branch was
+  fetched and merged — `c1b50444`, zero conflicts, published history untouched.
+- **G5** — 2026-11-17, the offline gate at the integrated head
+  `c1b50444111fe8d28e2606df2cd482ccff4de588` · `bun scripts/local-gate.mjs
+  --skip-network --no-bail --jobs auto` · exit 0 · `PASS — 15 step(s) in 549s`.
+  The fast set re-ran green at the merged head first: the five-skill corpus
+  `47 pass / 0 fail`, `skill-lint` PASS, both context budgets PASS,
+  `normative-drift` `21/0`, `ledger-ownership` `14/0`, `phase-lint` PASS,
+  `verify` `ok: true`, changeset ok, `docs-generate --check` PASS.
 - **L3** — 2026-11-16, the owner's correction request, verbatim:
   ```
   Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
