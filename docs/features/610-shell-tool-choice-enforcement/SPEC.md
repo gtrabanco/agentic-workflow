@@ -508,6 +508,7 @@ list is the frozen task list above, in dependency-topological order:
   fail` (`F7` 430 ms); `node --test scripts/phase-lint.test.mjs` → `162 pass,
   0 fail` (96 s). Neither suite is touched by this unit.
 
+- **G1** — 2026-11-17, HEAD 2d3b48560aa72a02e764eb907bf25c23fa2a2f35, `bun scripts/dimension-regression.mjs --base 9de62e1c` · exit 1 · `evidence | none` → `finding — missing-reverification-evidence` (the range touches one review surface, `docs/workflow/GATE_INVENTORY.md`; the re-run after this line lands is the clean receipt — the 17 dimensions are unchanged at the base and at the head, so nothing was dropped).
 - **E18** — 2026-11-17, `bun scripts/local-gate.mjs --jobs 2` · steps 1–12 PASS
   (`workspace-install`, `version-parity-content`, `docs-generated-projection`,
   `log-immutability`, `secret-scan`, `schema-build`, `temp-hygiene`, `tmp-gc`,
