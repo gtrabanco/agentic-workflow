@@ -49,8 +49,15 @@ function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/**
+ * One provided list, or `null` when it is not declared shape. A list carrying a
+ * non-string is unreadable, not a list with holes: filtering it would hand the
+ * caller an empty set that looks like a deliberate lockdown.
+ */
 function stringList(value) {
-  return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : null;
+  if (!Array.isArray(value)) return null;
+  if (value.some((entry) => typeof entry !== "string")) return null;
+  return value;
 }
 
 /** The full reason vocabulary, re-exported from the schema package's single home. */
