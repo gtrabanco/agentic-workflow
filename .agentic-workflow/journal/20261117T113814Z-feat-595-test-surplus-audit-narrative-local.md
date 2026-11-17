@@ -1,0 +1,6 @@
+## 2026-11-17T11:38:10Z — feat/595-test-surplus-audit — manual
+- **Commits:** 6 (`e59c5d45…0db0e469`)
+- **Files:** 12 files
+- **Summary:** Applied issue #595: product-audit's Tests dimension now sweeps the surplus direction — three evidence-standard checks (dead-surface, obligation-level duplicate, cost-over-value) in a versioned test-surplus@1 block, a verified: no surplus tests receipt on the dimension's health line, fix-now (delete) routed through finding-route@1 to /fold-findings, the delete-vs-weaken boundary stated where the check is defined, and the surface registered once as test-surplus-grammar. scripts/product-audit-surplus.test.mjs pins the prose (landed red at 3 pass / 10 fail, green at 13 pass).
+- **Decisions:** Non-goal read narrowly: the duplication producer and any gate step are #596's, so this unit adds a prose pin only; no schema vocabulary lands because the surplus direction adds a check, not a finding code; the tier is computed (standard / unit-doc) after finding that ceremony tier classify keeps only the last --paths value.
+- **Next:** Owner's external verification of the diff, then one PR against main with Closes #595. The observation half of AC-7 waits for the next owner-triggered audit pass.
