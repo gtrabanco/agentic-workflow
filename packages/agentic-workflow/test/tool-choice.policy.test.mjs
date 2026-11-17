@@ -243,3 +243,40 @@ test("F20 — availability comes from the doctor's resolver and an unresolvable 
   );
   assert.deepEqual(TOOL_CHOICE_TOOLS, ["rg", "bun"], "the resolver probes exactly the tools the policy forwards to");
 });
+
+test("F21 — a quoted glob value is de-quoted before the -g value is re-quoted", () => {
+  // External verify 2026-11-17 B1: the translated `-g` value wrapped input that
+  // still carried its own quotes, so `--include='*.ts'` forwarded as
+  // `rg -g ''*.ts'' …` — the shell strips both pairs and globs the result, which
+  // is a rewrite into a different command. The wrapper owns the quoting; the
+  // input's quotes are not part of the value.
+  assert.equal(
+    classifySegment({ operator: "", text: "grep --include='*.ts' -rn TODO src" }).suggestion,
+    "rg -g '*.ts' -n TODO src",
+  );
+  assert.equal(
+    classifySegment({ operator: "", text: 'grep --include="*.ts" -rn TODO src' }).suggestion,
+    "rg -g '*.ts' -n TODO src",
+  );
+  assert.equal(
+    classifySegment({ operator: "", text: "grep --exclude='*.log' -n x ." }).suggestion,
+    "rg -g '!*.log' -n x .",
+  );
+  assert.equal(
+    classifySegment({ operator: "", text: "grep --exclude-dir='node_modules' -rn 'x' ." }).suggestion,
+    "rg -g '!node_modules/**' -n 'x' .",
+  );
+  assert.equal(
+    classifySegment({ operator: "", text: "grep --include='my file.ts' -n x ." }).suggestion,
+    "rg -g 'my file.ts' -n x .",
+    "a value with a space stays one shell word after the de-quote",
+  );
+  assert.match(
+    analyzeToolChoice("grep --include='*.ts' -rn TODO src").violations[0].reason,
+    /`rg -g '\*\.ts' -n TODO src`/,
+    "the reason the model reads carries the shell-safe equivalent",
+  );
+  // Differential: the unquoted spelling keeps its exact bytes — only the
+  // double-quoted value class moves.
+  assert.equal(forwardGrepSegment(["grep", "-r", "--include=*.mjs", "x", "."]), "rg -g '*.mjs' x .");
+});

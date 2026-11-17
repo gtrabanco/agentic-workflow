@@ -217,13 +217,33 @@ const LONG_DROPS = new Set([
   "--directories=skip",
 ]);
 
+/**
+ * The glob value as the tool must read it. Two rules, one invariant (the
+ * emitted `-g` argument is exactly one shell word that expands to the value the
+ * input named):
+ *
+ *   * the input's own quotes are shell quoting, not part of the value — the
+ *     wrapper below owns the quoting, and keeping both pairs emits `''*.ts''`,
+ *     which the shell un-quotes back into an unquoted, glob-expanding word (the
+ *     external-verify B1 class: a rewrite into a different command);
+ *   * an embedded quote is escaped the way `protect()` escapes it, so a value
+ *     the input quoted never splits the word in two.
+ *
+ * Only the three glob mappers de-quote: `--color`/`--colour` pass the value
+ * through untouched, because their emitted spelling is already correct as
+ * written and nothing outside this class may move.
+ */
+const dequote = (value) => value.replace(/^(['"])([\s\S]*)\1$/u, "$2");
+const shellWord = (raw) => `'${raw.replaceAll("'", `'\\''`)}'`;
+
 /** Long grep flags that carry a value, and the rg spelling of that value. */
 const LONG_VALUES = new Map([
-  // A translated glob is quoted: `--include=*.mjs` reached the tool as one
-  // literal word, and an unquoted `-g *.mjs` would let the shell expand it.
-  ["--include", (value) => ["-g", `'${value}'`]],
-  ["--exclude", (value) => ["-g", `'!${value}'`]],
-  ["--exclude-dir", (value) => ["-g", `'!${value}/**'`]],
+  // A translated glob is one shell word: `--include=*.mjs` reached the tool as
+  // one literal word, and an unquoted `-g *.mjs` would let the shell expand it
+  // before rg sees it.
+  ["--include", (value) => ["-g", shellWord(dequote(value))]],
+  ["--exclude", (value) => ["-g", shellWord(`!${dequote(value)}`)]],
+  ["--exclude-dir", (value) => ["-g", shellWord(`!${dequote(value)}/**`)]],
   ["--binary-files", (value) => (value === "text" ? ["-a"] : [])],
   ["--color", (value) => [`--color=${value}`]],
   ["--colour", (value) => [`--color=${value}`]],
