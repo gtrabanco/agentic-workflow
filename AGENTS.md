@@ -460,6 +460,7 @@ triage-criteria-provenance-vocabulary | packages/agentic-workflow-schema/src/voc
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
 content-guard-reasons | packages/agentic-workflow-schema/src/content-guard.ts | schema-export:CONTENT_GUARD_REASONS | content-guard-reason | yes
 feedback-tiers | packages/agentic-workflow/src/feedback/index.mjs | schema-export:FEEDBACK_TIERS | feedback-tier | no
+shell-tool-choice-grammar | packages/agentic-workflow/src/tool-choice/policy.mjs | schema-export:NODE_SANCTIONED_SCRIPTS | node-sanctioned-script | no
 risk-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_KINDS | risk-tier | yes
 risk-tier-signals | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_SIGNAL_KINDS | risk-tier-signal | yes
 risk-tier-reasons | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_REASONS | risk-tier-reason | yes
