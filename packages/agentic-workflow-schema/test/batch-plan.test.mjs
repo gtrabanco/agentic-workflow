@@ -6,7 +6,7 @@
  * application workflow: one test per requested rule, red first). The contract
  * it pins:
  *
- *  - **One versioned document.** `batch-plan@3` — contract id + version + the
+ *  - **One versioned document.** `batch-plan@4` — contract id + version + the
  *    convenience `schema` token, the journal-entry precedent.
  *  - **Core is closed, wholly.** Unlike the journal entry there is no
  *    `metadata` escape: the plan is a computed projection of the live work
@@ -70,6 +70,7 @@ const CANONICAL = {
               reason: { kind: "satisfied-inputs", detail: "no open blockers; surface free" },
               size_hint: "light",
               triaged: false,
+              claimed_surface: ["skills/beta"],
             },
           ],
         },
@@ -122,6 +123,32 @@ test("batch-plan: the canonical vector validates", () => {
   assert.deepEqual(result, { ok: true, errors: [] });
 });
 
+test("batch-plan: `claimed_surface` is a non-empty string[] on both surfaces (#621)", () => {
+  // The core-closed contract carries one shape and one producer: the sole
+  // emitter (`claimedSurfaceMap`) always emitted an array, so the union's
+  // `string` arm was dead surface — and the compiled projection never carried
+  // the field at all, so strict Ajv refused a document the validator accepted.
+  const accepted = structuredClone(CANONICAL);
+  assert.deepEqual(validateBatchPlan(accepted), { ok: true, errors: [] });
+  assert.equal(schemaValidates(accepted), true, "the projection publishes the field the validator accepts");
+  for (const bad of ["skills/beta", [], ["skills/beta", ""], ["skills/beta", 3]]) {
+    const mutated = structuredClone(CANONICAL);
+    mutated.batches[0].lanes[0].issues[0].claimed_surface = bad;
+    assert.equal(validateBatchPlan(mutated).ok, false, `the validator accepts ${JSON.stringify(bad)}`);
+    assert.equal(schemaValidates(mutated), false, `the schema accepts ${JSON.stringify(bad)}`);
+  }
+});
+
+test("batch-plan: the superseded `@3` token is refused after the bump (the closed-core guard, #621)", () => {
+  const stale = structuredClone(CANONICAL);
+  stale.version = 3;
+  stale.schema = "batch-plan@3";
+  const result = validateBatchPlan(stale);
+  assert.equal(result.ok, false, "a document stamped with the superseded version is refused");
+  assert.ok(result.errors.some((e) => e.includes("version must be")));
+  assert.equal(schemaValidates(stale), false, "and the projection refuses it too");
+});
+
 test("batch-plan: a label_blocked row outside the published labels is refused", () => {
   const mutated = structuredClone(CANONICAL);
   mutated.label_blocked[0].labels = ["wontfix"];
@@ -139,8 +166,8 @@ test("batch-plan: the canonical vector validates under strict Ajv", () => {
 
 test("batch-plan: contract id, version and schema token agree", () => {
   assert.equal(BATCH_PLAN_CONTRACT_ID, "agentic-workflow/batch-plan");
-  assert.equal(BATCH_PLAN_VERSION, 3);
-  assert.equal(BATCH_PLAN_SCHEMA, "batch-plan@3");
+  assert.equal(BATCH_PLAN_VERSION, 4);
+  assert.equal(BATCH_PLAN_SCHEMA, "batch-plan@4");
   assert.equal(`${BATCH_PLAN_CONTRACT_ID.split("/")[1]}@${BATCH_PLAN_VERSION}`, BATCH_PLAN_SCHEMA);
 });
 
