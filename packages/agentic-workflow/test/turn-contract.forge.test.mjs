@@ -47,6 +47,10 @@ function forgeStub(binDir, name, answer) {
  */
 function fixture(name, { head = null } = {}) {
   const root = mkdtempSync(path.join(scratch, `${name}-`));
+  // A home of its own, never the checkout: under `bun` the process's HOME is its
+  // install root, so pointing HOME at the fixture repository made bun write
+  // `.bun/install/cache/…` inside it and box5 rightly called the tree dirty.
+  const home = mkdtempSync(path.join(scratch, `${name}-home-`));
   const bare = path.join(scratch, `${name}-remote.git`);
   const bin = path.join(scratch, `${name}-bin`);
   mkdirSync(bin, { recursive: true });
@@ -72,8 +76,8 @@ function fixture(name, { head = null } = {}) {
     ...process.env,
     PATH: `${bin}:${process.env.PATH}`,
     AGENTIC_WORKFLOW_BIN: CLI,
-    HOME: root,
-    PI_CODING_AGENT_DIR: root,
+    HOME: home,
+    PI_CODING_AGENT_DIR: home,
   };
   return { root, env, sha };
 }
