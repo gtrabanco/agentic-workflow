@@ -2,7 +2,7 @@
   "contract": "config-extension@1",
   "key": "pi",
   "file": "pi-agentic-workflow.json",
-  "description": "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow.",
+  "description": "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice.",
   "schema": {
     "type": "object",
     "additionalProperties": false,
@@ -355,6 +355,22 @@
             ]
           }
         }
+      },
+      "toolChoice": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "block",
+              "rewrite"
+            ]
+          }
+        }
       }
     }
   },
@@ -385,6 +401,10 @@
       ],
       "stopOn": "command_settled",
       "onBackendMissing": "noop"
+    },
+    "toolChoice": {
+      "enabled": true,
+      "mode": "block"
     }
   }
 }
