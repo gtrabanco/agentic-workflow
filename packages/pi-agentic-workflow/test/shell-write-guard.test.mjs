@@ -285,6 +285,13 @@ test("F8 the carve-out is exact — a lookalike, a relative form and the /dev/fd
   verdict("echo x > /dev/nullx", { resolveTarget: record });
   verdict("echo x > dev/null", { resolveTarget: record });
   assert.deepEqual(resolved, ["/dev/nullx", "/work/repo/dev/null"], "a relative name resolves against cwd and is judged");
+  // A spelling that lexically resolves to a named sink is that sink (D3), not a
+  // lookalike: the trailing-slash and double-slash forms skip like the sink itself.
+  const normalized = [];
+  const recordNormalized = (absolute) => (normalized.push(absolute), { ok: true, real: absolute });
+  assert.equal(verdict("echo x > /dev/null/", { resolveTarget: recordNormalized }).block, false);
+  assert.equal(verdict("echo x > //dev/null", { resolveTarget: recordNormalized }).block, false);
+  assert.deepEqual(normalized, [], "a sink's normalized spelling never reaches the resolver");
 });
 
 /* ── the shipped handler: the bypass pinned end-to-end ─────────────────── */
