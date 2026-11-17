@@ -1,4 +1,4 @@
-# Planning evidence — feature/526-evidence-backed-elicitation
+# Planning evidence — feature/526-elicitation-layer
 
 One row per Engineering claim the change rests on. Frozen at cut except
 `freshness` re-verification notes. Shape owned by

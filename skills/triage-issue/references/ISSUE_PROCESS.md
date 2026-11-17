@@ -63,8 +63,8 @@ remove | none | the unit that performs the deletion, carrying its measured recei
      inline with the gate only, never as a unit. All six conditions must be
      **evidenced**, not asserted:
      1. **single surface** — one owner file or one contract surface;
-     2. **no pending design decision** — nothing waits on the owner and no
-        `open-questions@1` row is open;
+     2. **no pending design decision** — the pre-spec cut before triage says
+        `questions: none`, and no `open-questions@1` row is open;
      3. **no contract consumed by others** — no other skill, package or consumer
         reads what changes;
      4. **existing validator** — a command that already proves the surface is
@@ -80,8 +80,11 @@ remove | none | the unit that performs the deletion, carrying its measured recei
      A `one-shot` opens **no unit doc** and pays **no review pass**. Its record
      is the issue's dated closing comment carrying the gate command and its
      observed result — plus `docs/passive/<id>.md` (`ceremony passive add`) when
-     the classifier answered `passive`. Nothing else is emitted: no new receipt
-     enters without an older one retiring.
+     the classifier answered `passive`. The record written before this verdict
+     (`docs/pre-spec/<id>.md`, owner: `skills/unit-lane/references/ELICITATION.md`)
+     is part of that record: it is where `questions: none` was written and what
+     the conditions above were evidenced from. Nothing else is emitted: no new
+     receipt enters without an older one retiring.
    - **fix-now** — defect or trigger met → route to `/unit-lane --fix <n>`
      (creates the fix unit and triages it; the lane's `implement` step runs
      it); add the entry to the fix index. **High severity** →

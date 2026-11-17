@@ -1,5 +1,5 @@
 /**
- * prespec.mjs — the `elicitation` file service (feature/526, docs/features/526-evidence-backed-elicitation).
+ * prespec.mjs — the `elicitation` file service (feature/526, docs/features/526-elicitation-layer).
  *
  * Layer 0 of the input path is a checklist before it is an interview. The bank
  * says which fields a request of a given shape must fill; filling runs first
