@@ -233,9 +233,10 @@
         "feature 69 / issue #270": "the repo-wide-sweep ownership claim (frontmatter description + the `## When to use` bullet) grew SKILL.md from the measured 2799 (one estimate unit under the 2800 default) to 2901; ceiling re-based to ceil(2901 x 1.10) = 3192",
         "fix 440 (product-audit re-scope)": "the measured-trigger cadence replaces the periodic one: the audit-trigger@1 grammar block + the insufficient-corpus verdict block + the finding-route@1 resolver-hand-off grammar (S4/S5 of the unit doc). Measured by `scripts/check-skill-context.mjs` at this re-basis: 3876 est / 288 lines; ceilings re-based to ceil(3876 x 1.10) = 4264 and ceil(288 x 1.10) = 317"
       },
-      "referenceEstimateMax": 2743,
+      "referenceEstimateMax": 4179,
       "referenceSources": {
-        "fix 440 (product-audit re-scope)": "AUDIT_DIMENSIONS.md gains the deterministic-producer pre-pass section, the profile-aware scope section and the Producer (pre-pass) column (S2/S3). Measured at this re-basis: 2493 est; ceiling re-based to ceil(2493 x 1.10) = 2743"
+        "fix 440 (product-audit re-scope)": "AUDIT_DIMENSIONS.md gains the deterministic-producer pre-pass section, the profile-aware scope section and the Producer (pre-pass) column (S2/S3). Measured at this re-basis: 2493 est; ceiling re-based to ceil(2493 x 1.10) = 2743",
+        "issue #590 (coverage-gap audit)": "issue #590 (coverage-gap audit): the product-audit reference gains the `Coverage gaps` dimension row, the pass-only-if section with the `coverage-gap@1` grammar block, and the evolution-regression / emission-only rules (S3/S4/S5/S8). Measured at the change with `bun scripts/check-skill-context.mjs --skill product-audit`: AUDIT_DIMENSIONS.md 3799 est; ceiling re-based to ceil(3799 x 1.10) = 4179. SKILL.md is untouched (3883 est / 284 lines, inside its unchanged 4264 / 317)."
       }
     },
     "review-implementation": {
