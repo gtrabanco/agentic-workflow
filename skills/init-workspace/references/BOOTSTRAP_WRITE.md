@@ -186,6 +186,16 @@
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
+   A skill installed through the discovery route
+   ([BOOTSTRAP_DISCOVERY](BOOTSTRAP_DISCOVERY.md) step 3) is recorded by that
+   route's own command, one `review-extras@1` row per skill carrying source,
+   pin, install date and axis:
+   `agentic-workflow skills register --guide AGENTS.md --name <n> --source <s>
+   --pin <p> --axis <a>`. The scaffolded `AGENTS.md` already carries the note
+   and an empty block, so registration appends a row and never invents a
+   section; `agentic-workflow skills inventory --guide AGENTS.md` reads the
+   block back and is what `product-audit`'s Installed tooling dimension
+   reports. A `no` writes no row.
 16. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
    two capability-gated GitHub labels `triage-issue` owns and applies
    (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
