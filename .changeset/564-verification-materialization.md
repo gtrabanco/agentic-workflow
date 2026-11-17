@@ -21,8 +21,8 @@ entry with no recorded outcome, an invariant section with no `Enforcement` bulle
 a scaffolded rule the tree does not carry, or a declared feature map that is
 absent or still templated is one typed finding from a published vocabulary, each
 carrying a `finding-route@1`-shaped route. `apply` is the only writer and needs
-an explicit consent per batch: it records each outcome in
-`template/docs/workflow/BOUNDARY_ENFORCEMENT.md` and flips a scaffolded boundary's charter
+an explicit consent per batch: it records each outcome in the target's
+`docs/workflow/BOUNDARY_ENFORCEMENT.md` and flips a scaffolded boundary's charter
 answer to `machine: <mechanism>`; a `no` writes nothing and leaves one residual
 per item, and an absent consent is a refusal. `evidence` closes the
 artifact-evidence half: a criterion naming `artifact: screenshot|video|state-snapshot`
