@@ -69,25 +69,24 @@ vocabularies only, so it stays `batch-plan@3`.
 |---|---|
 | `contract` / `version` / `schema` | `agentic-workflow/batch-plan` · `3` · `batch-plan@3` |
 | `source_revision` | the git revision the plan was computed at |
-| `degraded[]` | what could not be read, `unavailable-<source>-<cause>` (launch reads: `unavailable-launch-evidence-*`, `unavailable-forge-pr-list-*`); the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read and the issue still declares no surface, so its lane is a guess. Third family: the content guard's decisions (issue #470) — `excluded-forge-content-<source>-<id>-<reason>` (an untrusted or unknown author, so the issue carries no title and no body at all) and `stripped-forge-content-<source>-<id>-<kind>-<count>` (the source *was* read and the layer removed hidden material before the plan saw it). All three are declared, so a plan never hides what it could not use |
+| `degraded[]` | what could not be read, `unavailable-<source>-<cause>`; the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read but the issue still declares no surface. Third family: the content guard's decisions (issue #470) — `excluded-forge-content-<source>-<id>-<reason>` (untrusted/unknown author, so no title/body) and `stripped-forge-content-<source>-<id>-<kind>-<count>` (the source was read and the layer reduced it). All three are declared. |
 | `batches[].n` | 1 = runnable now; N+1 when batch N completes |
-| `lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts`, `docs`, `template`, `.github`, or `general` when nothing resolved. The keys come from the issue body first, then the unit doc (see *Where the surfaces come from*) |
+| `lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts`, `docs`, `template`, `.github`, or `general` when nothing resolved. Keys come from the issue body, then the unit doc (see *Where the surfaces come from*) |
 | `lanes[].occupied_by` | the **evidence** of the in-flight unit on the surface (`branch fix/1-x + unit-doc docs/fix/1-x`), or `null` |
 | `lanes[].issues[]` | the issues serialized in the lane, in run order |
-| `issue.worktree` | `<feat\|fix>/<issue>-<slug>` — reported, never created. The slug falls back to `unit` when the title is empty (an excluded title, below) |
-| `issue.title` | the guarded title. **Empty** — and only ever empty — when the guard excluded the issue's text: the plan carries no title rather than a placeholder it invented, and `degraded[]` names that issue, the source and the role |
-| `issue.command` | `/unit-lane --from-issue <N>` — the published form |
+| `issue.worktree` | `<feat\|fix>/<issue>-<slug>` — reported, never created. Slug falls back to `unit` when the title is empty (an excluded title, below) |
+| `issue.title` | the guarded title. **Empty** — and only ever empty — when the guard excluded the issue's text: the plan carries no title rather than a placeholder it invented, and `degraded[]` names that issue, the source and the role. |
+| `issue.command` | `/unit-lane --from-issue <N>` |
 | `issue.reason.kind` | `satisfied-inputs` · `surface-conflict` (after the previous occupant) · `soft-ordered` · `untriaged` (no triage anywhere; provisional) · `soft-deps-open` (soft deps not delivered strictly first: other lane, later in the lane, unbatched, or `state unknown`) |
 | `issue.triaged` | `false` when the roadmap row is below `planned` **and** the body carries no verdict (`fix-now`, `postponed`, `promoted`, `wontfix`) |
 | `issue.size_hint` | `light` / `mixed` / `heavy` — the declared `(S)`/`(M)`/`(L)`/`(XL)` token, else the distinct-surface count (1, 2, ≥3). A parenthesised letter outside that set — a body's `[A(X) U(Y) M(Z) D(W)]` git status codes — is prose, so the count decides |
 | `lane.size_hint` | the max of its issues' hints — a fact, never a lane-count policy |
 | `issue.claimed` | `true` only for a **live** claim on this exact `(issue, lane)` pair: another lane's claim never marks it, an expired one never does |
-| `issue.triaged` | `false` when the roadmap row is below `planned` **and** the body carries no verdict (`fix-now`, `postponed`, `promoted`, `wontfix`) |
-| `issue.claimed_surface` | surfaces the issue declares but couldn't verify against an actual branch diff — because it has no branch, its branch merged, or the diff couldn't be computed. A string or array of surface keys. A merge conflict is possible when the surface is broader than the actual changes (issue #449 follow-up). |
-| `blocked[]` | issues gated by open native `blocked-by` relations, with the blockers and the reason |
+| `issue.claimed_surface` | surfaces the issue declares but couldn't verify against an actual branch diff — no branch, merged branch, or diff could not be computed. A string or array of surface keys. A merge conflict is possible when the surface is broader than the actual changes (issue #449 follow-up). |
+| `blocked[]` | issues gated by open native `blocked-by` relations, with the blockers and the reason. |
 | `launched[]` | issues running now, on evidence: an `OPEN` PR or an unmerged `fix\|feat/<n>-*` branch, named in `evidence`. A unit doc corroborates, never decides. Excluded from every batch |
 | `label_blocked[]` | issues a hold label keeps unlaunchable (`postponed`, `backlog`, `human-revision-needed`) with those labels — never batched |
-| `new_issues[]` / `closed_since[]` | the lifecycle delta — first seen; closed since with the last known row |
+| `new_issues[]` / `closed_since[]` | the lifecycle delta — first seen; closed since with the last known row. |
 | `findings[]` | `cycle` (a wait no batch can satisfy; in flight is a state) · `orphaned-soft-dep` (a target neither open, in flight, label-blocked, closed-since nor indexed) · `prose-native-mismatch` (a `hard` row without a native `blocked-by`) · `file-overlap` (parallel issues whose files intersect) · `stale-claim` (a claim that no longer stands, keyed) · `blind-spot` (a batch with two or more issues that declare no surface — it runs serially) |
 | `summary` | the totals: `open_issues`, `batched`, `blocked`, `launched`, `findings`, `batches`, `label_blocked` |
 
