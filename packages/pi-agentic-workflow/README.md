@@ -420,8 +420,9 @@ agent designs, briefs and verifies while atomic work runs in context-free
 subagents on the cheap tier the `passes` table approves. Two pieces ship
 here:
 
-- **Durable subagents** (`pi-extensible-workflows` 6.3.0, pinned — the
-  substrate the owner adopted in 2026-11-08 for issue #260). The package
+- **Durable subagents** (`pi-extensible-workflows` 6.4.0, pinned — the
+  substrate the owner adopted in 2026-11-08 for issue #260 and moved to 6.4.0
+  on 2026-11-17). The package
   registers only that extension's five tools: `subagents_run`,
   `subagents_inspect`, `subagents_steer`, `subagents_stop`,
   `subagents_retry` — subagent runs persist durable records with their own
@@ -430,7 +431,12 @@ here:
   are **not** loaded. To disable the substrate entirely, remove the
   `./node_modules/pi-extensible-workflows/dist/subagents/index.js` line from
   this package's `pi.extensions` (a local `package.json` edit — pi has no
-  per-extension switch).
+  per-extension switch). Since 6.4.0 the extension ships **no release notes**
+  of its own (its startup notice is gone and `changelog-state.json` is no
+  longer used), and because it is registered **by path**, Pi's *Extension
+  Updates* page — which reads npm- and git-installed packages — cannot show
+  them for it: read `node_modules/pi-extensible-workflows/CHANGELOG.md` after
+  an upgrade.
 - **Resource limits, optional** (owner decision 6, 2026-10-28): the
   top-level `subagents` config key bounds the trial envelope — parallelism
   plus explicit caps. Absent, the layer self-detects the host with
