@@ -12,11 +12,13 @@
 //     bound. A computed target (`> $DEST`) is write-shaped with no literal:
 //     that is the recorded boundary (D2.7), never a silent pass claim.
 //   * `decideShellWrite(command, deps)` — containment mirroring `edit`
-//     fail-closed: resolution errors block; scratch targets under the OS temp
-//     roots pass (the repo's own live-tree guard mandates bash mktemp writes);
-//     a durable out-of-root target blocks headless and is offered to the owner
-//     interactively; an in-root existing target hands off to the injected
-//     Tier 2 decision `edit` uses.
+//     fail-closed: virtual device sinks (`/dev/null`, `/dev/std*`, …) are
+//     skipped before resolution, since their write is discarded or routed to a
+//     stream the session already owns; resolution errors block; scratch targets
+//     under the OS temp roots pass (the repo's own live-tree guard mandates
+//     bash mktemp writes); a durable out-of-root target blocks headless and is
+//     offered to the owner interactively; an in-root existing target hands off
+//     to the injected Tier 2 decision `edit` uses.
 
 import { isAbsolute, relative, resolve } from "node:path";
 
@@ -296,6 +298,23 @@ export function isScratchPath(realPath: string, tempRoots: string[]): boolean {
   });
 }
 
+/**
+ * Virtual device sinks (issue #606): the write is discarded or routed to a
+ * stream the session already owns, never to durable storage, so containment has
+ * no verdict to give. Matched on the lexically normalized absolute path and
+ * never through the filesystem: `/dev/std*` and `/dev/fd/*` are symlinks into
+ * `/proc/self/fd/…` that the fail-closed resolver cannot canonicalize for a
+ * non-tty caller, which is why the skip runs before resolution.
+ */
+const DEVICE_SINKS = new Set(["/dev/null", "/dev/zero", "/dev/full", "/dev/stdin", "/dev/stdout", "/dev/stderr", "/dev/tty"]);
+const DEVICE_FD_PREFIX = "/dev/fd/";
+
+/** True when the written literal names a device sink rather than durable storage. */
+function isDeviceSink(cwd: string, raw: string): boolean {
+  const key = resolve(cwd, raw);
+  return DEVICE_SINKS.has(key) || key.startsWith(DEVICE_FD_PREFIX);
+}
+
 const OUT_OF_ROOT = (raw: string, cwd: string) =>
   `"${raw}" resolves outside the project root (${cwd}); path protection cannot verify it, so the bash write is blocked before execution.`;
 
@@ -312,6 +331,9 @@ export function decideShellWrite(command: string, deps: ShellGuardDeps): ShellVe
   if (analysis.targets.length === 0) return { block: false };
 
   for (const raw of analysis.targets) {
+    // A device sink is never a durable target (S1/S2): skip it here, before the
+    // resolver whose `/proc/self/fd/…` canonicalization is what blocks `/dev/*`.
+    if (isDeviceSink(deps.cwd, raw)) continue;
     const absolute = isAbsolute(raw) ? raw : resolve(deps.cwd, raw);
     const resolved = deps.resolveTarget(absolute);
     if (!resolved.ok) {
