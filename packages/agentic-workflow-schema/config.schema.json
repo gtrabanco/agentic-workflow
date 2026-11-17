@@ -360,6 +360,47 @@
           }
         }
       }
+    },
+    "contentGuard": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Author-provenance policy for third-party forge content: which authors are ingested as readable content.",
+      "properties": {
+        "trustedRoles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "OWNER",
+              "MEMBER",
+              "COLLABORATOR",
+              "CONTRIBUTOR",
+              "FIRST_TIME_CONTRIBUTOR",
+              "FIRST_TIMER",
+              "MANNEQUIN",
+              "NONE"
+            ]
+          },
+          "maxItems": 8,
+          "description": "The author associations whose content may be ingested; every other association is excluded and declared."
+        },
+        "allowLogins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Logins admitted regardless of association — an explicit, reviewable exception list."
+        },
+        "denyLogins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Logins excluded regardless of association; a deny always beats an allow."
+        }
+      }
     }
   }
 }
