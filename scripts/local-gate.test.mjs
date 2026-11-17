@@ -172,6 +172,7 @@ test("every former remote check survives as a step, and the ids are unique", () 
     "tmp-gc",
     "worktree-guard",
     "rigidity-review",
+    "dimension-regression",
     "schema-node-compat",
     "pi-node-compat",
     "pi-compat-guard",
@@ -761,6 +762,7 @@ test("--push-base with an empty verdict plans the gate without the test steps", 
       "tmp-gc",
       "worktree-guard",
       "rigidity-review",
+      "dimension-regression",
     ], "only the offline non-test steps survive an empty impact set");
     assert.match(result.stdout, /skipping .*test step/, "the skip names what it skipped and why");
     assert.match(result.stdout, /test-impact/);
