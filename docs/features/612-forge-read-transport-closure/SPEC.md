@@ -127,7 +127,18 @@ What this unit touches beyond its own files, cut at plan time:
   that told `audit-pr` to read its marker with `gh pr view --json comments`.
 - **Live-tree safety** — the shim's install path is the only writer this unit
   adds; it is exercised in scratch only (`mktemp -d`), never against this
-  worktree's own `PATH`.
+  worktree's own `PATH`. **Named high-risk item** (from the risk verdict, quoted
+  above): `packages/agentic-workflow/bin/agentic-workflow.mjs`, signal
+  `destructive` — its diff here is one token on the usage line, the subcommand
+  the closed set gained, and the differential in `E13` names it as the only
+  observable change in any pre-existing command.
+- **Two existing test surfaces move with the mechanism, not to pass** — the
+  dispatch table's declared command list gains `forge-read` (the list is the
+  closed set, and a new key must appear) and `scripts/audit-pr-receipt.test.mjs`
+  stops asserting one `gh pr view --json headRefOid,comments` call and asserts
+  both halves of the sanctioned split (the head from the metadata read, the
+  comments from the guarded read) plus the absence of the old form — the rule
+  keeps both of its teeth.
 
 ## Surfaces
 
@@ -186,12 +197,21 @@ cover a route nobody enumerates. Four residuals are named, and each one's owner:
 
 ## Risk tier
 
-Verdict copied from the crate's classifier over the changed paths
-(`contract: risk-tier-verdict@1`), never written from memory — filled at the
-verification step from `runner ceremony tier classify`.
+Verdict copied verbatim from `runner ceremony tier classify --base main`
+(`contract: risk-tier-verdict@1`), never written from memory:
 
-- **Tier** — `standard` · **Task Size** — understood / contained / resumable-from-diff
-- **Named high-risk item** — none — not a high-tier unit
+- **Tier** — `high` · **Task Size** — understood / contained: named / resumable-from-diff
+- **Named high-risk item** — `packages/agentic-workflow/bin/agentic-workflow.mjs`
+  · signal `destructive` · `reason_kind: named-high-risk` — the classifier's own
+  words: "1 path(s) touch a named high-risk surface: destructive
+  (packages/agentic-workflow/bin/agentic-workflow.mjs · ../src/doc/retrieval.mjs ·
+  (module-level))". The named path's change in this unit is the usage line
+  gaining one subcommand token; the classifier reads the file as a whole, and
+  the verdict is recorded as computed rather than argued down.
+- **Ceremony the verdict asks** — `unit-doc+review-change`. The review pass is
+  the owner's (this workflow is the local, unpublished one: §4 forbids running
+  this repository's own review machinery on its own surgery), so the unit
+  hands the diff over instead of self-reviewing it.
 
 ## Future
 
@@ -325,6 +345,11 @@ own surgery.
   forms and metadata-only `--json` lists stay sanctioned, and the title exposure
   a list carries is declared in `### Residual — ad-hoc raw reads` rather than
   silently widened.
+- **D8** — 2026-11-18, four validator cells corrected at verification: `O2`,
+  `O3`, `O4` and `O7` named suite case ids before the suites existed, so they
+  were aligned to the ids the shipped suites carry (`F7`, `F9`, `F10`, `F7`/`F8`).
+  No rule a row asserts changed — the cells pointed at the wrong case, and a
+  validator nobody can re-run is the defect the ledger exists to prevent.
 - **D3** — 2026-11-18, one grammar home: `src/forge-read/grammar.mjs` classifies
   argv for the read, the shim and the pin; the pin reads the sanctioned spelling
   from `RUNNER.md`'s subcommand table, never a second list.
@@ -336,6 +361,77 @@ own surgery.
   `runner forge-read shim install --dir <dir>`; calling it from the setup step is
   #611's (its issue owns the `AGENTIC_WORKFLOW_RUNNER` arming), so no second
   setup path enters `scripts/setup-env.mjs` here.
+- **D6** — 2026-11-18, the risk verdict is `high` (quoted in `## Risk tier`), and
+  the ceremony it asks for is `unit-doc+review-change`; the review pass is the
+  owner's, per this workflow's §4.
+- **D7** — 2026-11-18, two pre-existing test surfaces move with the mechanism:
+  the dispatch table's declared command list gains `forge-read` (the list IS the
+  closed set), and `scripts/audit-pr-receipt.test.mjs` asserts both halves of the
+  sanctioned split instead of one combined call — plus the absence of the old
+  form, so the rule keeps both of its teeth.
+- **E1** — 2026-11-18, `bun test scripts/forge-read-drift.test.mjs` at `4525f38c`
+  (the suite's own commit, landed before its script) · exit 1 ·
+  `Cannot find module './forge-read-drift.mjs'` — the red commit.
+- **E2** — 2026-11-18, `bun scripts/forge-read-drift.mjs` at `c678a37e` (the
+  pin's commit, before the prose re-point) · exit 1 · `verdict: FAIL` with
+  **twelve** findings — the eleven `raw-content-read` occurrences across the ten
+  shipped pages, the one `elided-field-list` at `skills/audit-pr/SKILL.md:115`,
+  and `sanctioned-citation-missing` — the frozen corpus this unit repairs.
+- **E3** — 2026-11-18, `bun scripts/forge-read-drift.mjs` after the re-point ·
+  exit 0 · `sanctioned: forge-read · citations: 6 · files: 159` · `verdict: PASS`.
+- **E4** — 2026-11-18, `bun test scripts/forge-read-drift.test.mjs` · exit 0 ·
+  9 pass, 0 fail (the live case plus `F2`/`F3`/`F4`/`F12`/`F13`, the transport
+  rule and the citation rule).
+- **E5** — 2026-11-18, `bun test packages/agentic-workflow/test/forge-read.test.mjs`
+  · exit 0 · 16 pass, 0 fail (`F1`–`F11`: the grammar, the fenced delivery, the
+  exclusions, the stripping, the four refusal classes).
+- **E6** — 2026-11-18, `bun test packages/agentic-workflow/test/forge-read.shim.test.mjs`
+  · exit 0 · 8 pass, 0 fail (`F14` install/check, `F15` the installed trampoline
+  through `sh`, `F16` the pass-through matrix, `F17` both refusal sides).
+- **E7** — 2026-11-18, `bun test scripts/content-guard-discipline.test.mjs` · exit 0
+  · 9 pass, 0 fail (R1–R5 on the live tree, the new seam, the injected R5
+  disagreement).
+- **E8** — 2026-11-18, `bun test packages/agentic-workflow/test/cli.surface.test.mjs`
+  · exit 0 · 3 pass and `bun test packages/agentic-workflow/test/runner.distribution.test.mjs`
+  · exit 0 · 4 pass — the command-surface pins this unit shares.
+- **E9** — 2026-11-18, `cd packages/agentic-workflow && bun run test` · exit 0 ·
+  1,273 pass, 0 fail across 69 files.
+- **E10** — 2026-11-18, `bun scripts/check-skill-context.mjs` · exit 0 →
+  `PASS context budgets: 30 skills`; `--routes` → `PASS route budgets: 14 routes`;
+  `--documents` → `PASS context documents: 4 budgeted documents`.
+- **E11** — 2026-11-18, `git diff main -- packages/agentic-workflow-schema/src`
+  prints nothing and `bun test scripts/normative-drift.test.mjs` · exit 0 ·
+  21 pass, 0 fail — no new schema vocabulary, no surface drift.
+- **E12** — 2026-11-18, `bun scripts/prose-gate-inventory.mjs` → `verdict: PASS`
+  (the restated `content-guard-discipline` row resolves to R1–R5 and the new
+  `forge-read-drift` row resolves to its suite) and
+  `bun scripts/docs-generate.mjs --check` → `verdict: PASS`.
+- **E13** — 2026-11-18, the differential against the base commit (a
+  `git archive main` export in `/tmp`, `bun install --frozen-lockfile`, scratch
+  removed): a bare `agentic-workflow` prints the same usage line plus exactly one
+  token — `forge-read`; an unknown service answers byte-identical stdout, stderr
+  and exit 2; `roadmap read` answers the same shape and exit, differing only in
+  the tree's path and revision. `verify` is **not** comparable from an archive
+  (it cross-checks git context the tarball has no `.git` for), so its code is
+  confirmed untouched instead: `git diff --name-only main -- …/src/edit …/src/verify
+  …/src/runner/sensors` prints nothing.
+- **P1** — 2026-11-18, the request, acceptance criteria and both ledgers frozen ·
+  `fbacbb9d`.
+- **P2** — 2026-11-18, the read route's grammar, the guarded read (transport,
+  guard wiring, envelope, fenced render, refusal classes) and its registration
+  (dispatch table, usage line, command list, `RUNNER.md` row) · `8f14add8`.
+- **P3** — 2026-11-18, the ad-hoc read shim: the generated trampoline, the
+  install/check receipt and the pass-through-or-replace decision · `8f14add8`.
+- **P4** — 2026-11-18, the pin's suite landed red · `4525f38c`.
+- **P5** — 2026-11-18, the pin, red on the live corpus · `c678a37e`.
+- **P6** — 2026-11-18, the prose re-point: ten shipped sites and the tutorial
+  page; the pin turns green (`E3`) · `bb6fdabc`.
+- **P7** — 2026-11-18, the discipline gate's read-route rule (the new seam and
+  R5) and the gate-inventory rows · `ac5cb71b`.
+- **P8** — 2026-11-18, the declared surfaces: the crate README's superseded
+  paragraph rewritten and its `forge-read` section, the changeset, the roadmap
+  row (emitted) · `bb6fdabc`; the session log and this unit doc close the same
+  batch.
 
 ## Next
 
