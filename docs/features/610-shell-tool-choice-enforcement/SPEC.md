@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-roadmap_summary: Issue [#610](https://github.com/gtrabanco/agentic-workflow/issues/610) (M): shell-tool choice enforced at command time — a pi `tool_call` carrier blocks or rewrites `grep`-as-search to `rg` and `node`-as-default to `bun` (the sanctioned node forms pass untouched), availability comes from the doctor's own resolver, one shared allowlist feeds both the carrier and `scripts/invocation-drift.mjs` with a parity pin, and the `invocation-drift` GATE_INVENTORY row is re-declared to what it actually checks while the carrier claims its own row.
+roadmap_summary: Issue [#610](https://github.com/gtrabanco/agentic-workflow/issues/610) (M): shell-tool choice enforced at command time — a pi `tool_call` carrier blocks or rewrites `grep`-as-search to `rg` and `node`-as-default to `bun` (the sanctioned node forms pass untouched), availability comes from the doctor's own resolver, one shared allowlist feeds both the carrier and `scripts/invocation-drift.mjs` with a parity pin, and the `invocation-drift` GATE_INVENTORY row is re-declared to what it actually checks while the carrier claims its own row. Triaged promote 2026-11-18 (already in progress via PR #617).
 ---
 
 # 610 — shell-tool-choice-enforcement
