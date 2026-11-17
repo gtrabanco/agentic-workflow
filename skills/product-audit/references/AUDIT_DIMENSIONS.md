@@ -31,7 +31,7 @@ invents profile slots or waives a verification contract.
 | **Correctness & architecture** | Bugs, layer/boundary violations, dead code, overengineering, drift from the architecture doc | none — the repo-wide bug hunt is this skill's exclusive model surface | all |
 | **Security & cybersecurity** | Secrets in repo, authz gaps, input validation, dependency / supply-chain risk | `dependency-advisories` (already a local-gate step) receipt-quoted; pin/posture checks when the profile declares them (#436 scorecard-family slot) — the rest (repo-wide security research) is model | all |
 | **Performance** | Hotspots, complexity, N+1s, bundle/asset weight (web), resource leaks | a profiler only when the project's profile declares one (#436) — receipt-quoted; otherwise none | all |
-| **Tests** | Coverage of critical paths, missing/!flaky tests, untested failure modes | the project's declared test/coverage gate receipt when one exists; otherwise none | all |
+| **Tests** | Coverage of critical paths, missing/!flaky tests, untested failure modes — and the **surplus** direction: tests that should not exist (§ Test-surplus sweep) | the project's declared test/coverage gate receipt when one exists; otherwise none | all |
 | **UX / UI** | Design-system adherence, broken states, inconsistency | none — model sweep (the `review-design` pass) | web / mobile / TUI |
 | **Accessibility** | a11y conformance for user-facing surfaces | none — model sweep (the `review-a11y` pass) | web / mobile |
 | **SEO** | Indexability, metadata, structured data | none — model sweep (the `review-seo` pass) | web |
@@ -165,3 +165,56 @@ The sweep emits evidence; it never repairs what it finds. Improvement lands thro
 the owner's decision and `/unit-lane` with its gates, and an agent never self-edits
 this reference or any workflow prose in response to its own findings (arXiv
 2310.01798; 2605.09315).
+
+## Test-surplus sweep (pass-only-if)
+
+The Tests dimension asked one direction only — which tests are missing — so an
+audit could complete without ever asking the other one: **which tests should not
+exist**. A suite grows by accretion and nothing in the workflow asked for a test's
+justification. The measured reason is not cosmetic: line coverage stops tracking
+effectiveness once suite size is controlled (Inozemtseva & Holmes, ICSE 2014), a
+test's value unit is the obligation it asserts rather than the lines it touches
+(Zhang & Mesbah, ESEC/FSE 2015), and coverage-safe minimization still severely
+compromises fault detection (Rothermel et al., 1998/2004). "It passes" and "it
+covers lines" both fail to justify a test's existence. The citations are issue
+[#595](https://github.com/gtrabanco/agentic-workflow/issues/595)'s own; this
+reference restates none of their measurements.
+
+A check with no evidence is not a finding. Three checks, three evidence standards:
+
+```text
+test-surplus@1
+kind | shape | what it orders
+check | dead-surface | a test (or suite) whose tagged or claimed protecting surface no longer exists: the evidence is the live-tree search that proves the surface gone, and the rule that decides a claimed consumer is the dead-code rule owned by § Residue sweeps — a prose citation is not evidence of a consumer — composed here by reference, never restated
+check | obligation-duplicate | two or more tests asserting the same behavioural obligation on the same surface: the evidence is the asserted behaviour read from the tests, never line coverage, because identical lines can carry different obligations and different lines can carry the same one
+check | cost-over-value | a test whose execution and maintenance cost exceeds the behavioural risk it covers: the evidence is the risk the test covers plus the cost measured (wall-clock, fixture weight, maintenance churn), so intensity follows complexity and risk, never surface visibility
+receipt | verified: no surplus tests | the Tests health line's content when the sweep found nothing; a sweep that found something carries its findings instead, so the row is a verification and never a reward for deletion
+class | fix-now (delete) | the only class a surplus finding takes, and only with its check's evidence standard — the residue sweep's notation, not a second class vocabulary
+route | finding-route@1 | the audit's published hand-off grammar; the executor is /fold-findings, the audit never deletes and never edits code
+boundary | delete is not weaken | deleting a test with the evidence above is legal and is a separate, evidence-gated action; weakening a test so it passes never enters this sweep (owner: AGENTS.md § Working rules)
+```
+
+**Selective mutation kill-rate is a confirmation, never a sweep.** When an
+obligation-level duplicate cluster is contested, a kill-rate measurement over that
+cluster decides it. An exhaustive mutation sweep is never run for this check — its
+cost is measured elsewhere and the receipt it produces is not this dimension's
+authority.
+
+**Pass only if:**
+
+- ✓ every surplus finding cites its check and that check's evidence — a dead
+  surface proven gone, an obligation shown to repeat, or a cost and a risk stated
+- ✓ an obligation-level duplicate is decided on asserted behaviour alone; line
+  coverage is never the argument, in either direction
+- ✓ a `fix-now (delete)` row exists only where the evidence standard was met, and
+  its executor is named, so the audit's own emission boundary holds
+- ✓ the Tests health line carries its receipt — `verified: no surplus tests` on a
+  clean sweep, the finding ids otherwise — because an audit that skipped the sweep
+  cannot write the row
+- ✓ the boundary is stated where the check is defined, so a deletion is never read
+  as an exception to the red-first rule; a weakening proposal is not a finding of
+  this sweep at all
+
+This sweep changes a dimension, so the evolution-regression rule governs it:
+`bun scripts/dimension-regression.mjs` re-verifies that the dimensions already
+present still pass (see § Evolution regression (anti-erosion)).
