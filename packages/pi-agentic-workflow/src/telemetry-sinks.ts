@@ -2,8 +2,9 @@
  * telemetry-sinks.ts — where a session sample goes (issue #383 S3/S4b).
  *
  * The accumulator (`session-telemetry.ts`) measures; a sink delivers. This module
- * ships the one sink this unit needs — the repository's `tier-cost@1` ledger —
- * and the interface it implements is what `#394` plugs its log writer into.
+ * ships the sinks a sample needs — the project's ledger (whichever `tier-cost@N`
+ * grammar its block declares) and, since #504, the per-session JSONL — and the
+ * interface it implements is what `#394` plugs its log writer into.
  *
  * The sink never owns the grammar: it reads the ledger's declared columns and
  * writes the sample in *that* order, refusing when the two disagree in either
@@ -16,18 +17,35 @@
  * already in the ledger stays where it is. That is also the one shape this sink
  * accepts — the samples table has to be the file's last section, because a row
  * appended after trailing prose would land outside the table.
+ *
+ * #504 added the second destination (#504 S3): the same sample as one JSON
+ * object per line, for a consumer that streams rather than reads a document. It
+ * is the same append contract — one `O_APPEND` per line, no lock, nothing
+ * rewritten — and the same field order, taken from the schema package's
+ * published list so a line and a ledger row cannot disagree about what a sample
+ * carries.
  */
 
 import fs from "node:fs";
+import path from "node:path";
+
+import { TELEMETRY_SAMPLE_FIELDS } from "@gtrabanco/agentic-workflow-schema";
+
 import type { TelemetrySample, TelemetrySink } from "./session-telemetry.js";
 
 export interface LedgerSinkOptions {
-  /** The absolute path of the `tier-cost@1` ledger this sink appends to. */
+  /** The absolute path of the ledger this sink appends to — any declared `tier-cost@N` grammar. */
   readonly ledgerPath: string;
 }
 
-/** The contract id the ledger's grammar block opens with. */
-const MARKER = "tier-cost@1";
+/**
+ * The line that declares the ledger's grammar. The sink does not own the
+ * version: it reads whatever `tier-cost@N` block the file carries, validates the
+ * columns it declares against the published sample fields, and writes them in
+ * that order — which is what lets a project still on `@1` keep appending eight
+ * cells while a `@2` project appends sixteen.
+ */
+const MARKER = /^tier-cost@\d+$/;
 
 /** The trimmed cells of one markdown table row. */
 function cellsOf(line: string): string[] {
@@ -35,8 +53,8 @@ function cellsOf(line: string): string[] {
 }
 
 /**
- * A sink that appends one row to the `tier-cost@1` ledger, in the order the
- * ledger declares, once per sample.
+ * A sink that appends one row to the project's ledger (any declared `tier-cost@N`
+ * grammar), in the order the ledger declares, once per sample.
  *
  * It throws — rather than writing something plausible — when the ledger carries
  * no grammar block, when the sample and the declared columns disagree, when the
@@ -56,8 +74,8 @@ export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
       const text = fs.readFileSync(ledgerPath, "utf8");
       const lines = text.split("\n");
 
-      const markerAt = lines.findIndex((line) => line.trim() === MARKER);
-      if (markerAt === -1) throw new Error(`${ledgerPath} carries no ${MARKER} block`);
+      const markerAt = lines.findIndex((line) => MARKER.test(line.trim()));
+      if (markerAt === -1) throw new Error(`${ledgerPath} carries no tier-cost@N block`);
 
       const fenceEnd = lines.findIndex((line, index) => index > markerAt && line.trim().startsWith("```"));
       if (fenceEnd === -1) throw new Error(`${ledgerPath}: the ${MARKER} block is not closed`);
@@ -71,8 +89,11 @@ export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
 
       const values = sample as unknown as Record<string, unknown>;
       // The ledger owns the column list; the sample owns the values. A declared
-      // column the sample cannot fill is a refusal; a sample field the ledger
-      // does not store (the tier, which the reader derives) is not written.
+      // column that is not a published sample field is a grammar the sample
+      // cannot satisfy, and one the sample cannot fill is a producer defect:
+      // both are refusals, never a row written blind.
+      const unpublished = declared.filter((column) => !(TELEMETRY_SAMPLE_FIELDS as readonly string[]).includes(column));
+      if (unpublished.length > 0) throw new Error(`${ledgerPath} declares columns no sample carries: ${unpublished.join(", ")}`);
       const missing = declared.filter((column) => !(column in values));
       if (missing.length > 0) throw new Error(`the sample carries no value for: ${missing.join(", ")}`);
 
@@ -101,6 +122,43 @@ export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
       }
 
       fs.appendFileSync(ledgerPath, `| ${declared.map((column) => String(values[column])).join(" | ")} |\n`);
+    },
+  };
+}
+
+export interface JsonlSinkOptions {
+  /** The absolute path of the per-session JSONL file this sink appends to. */
+  readonly path: string;
+}
+
+/**
+ * A sink that appends one JSON object per line — the sample itself, in the
+ * published field order (`TELEMETRY_SAMPLE_FIELDS`), with no wrapper and no
+ * prose (#504 S3, S9).
+ *
+ * It refuses a sample that cannot fill every published field, rather than
+ * writing a line a consumer would have to special-case: the fields are the
+ * contract, and a missing one is a producer defect, not an absent value. The
+ * directory is created on demand, so a project needs no `.pi` before its first
+ * session; two sessions appending from separate processes each take their own
+ * `O_APPEND`, which the kernel places atomically.
+ *
+ * No duplicate guard: a sample is emitted once per session by construction
+ * (`flush()` emits once), so a repeated line would be a repeated sample, not a
+ * re-emission to swallow.
+ */
+export function createJsonlSink(options: JsonlSinkOptions): TelemetrySink {
+  const { path: file } = options;
+  return {
+    name: "jsonl",
+    write(sample: TelemetrySample): void {
+      const values = sample as unknown as Record<string, unknown>;
+      const missing = TELEMETRY_SAMPLE_FIELDS.filter((field) => !(field in values));
+      if (missing.length > 0) throw new Error(`the sample carries no value for: ${missing.join(", ")}`);
+      const ordered: Record<string, unknown> = {};
+      for (const field of TELEMETRY_SAMPLE_FIELDS) ordered[field] = values[field];
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.appendFileSync(file, `${JSON.stringify(ordered)}\n`);
     },
   };
 }

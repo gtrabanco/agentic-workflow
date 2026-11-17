@@ -13,7 +13,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { createSessionTelemetry, unitFromCommand } from "../dist/session-telemetry.js";
+import { createSessionTelemetry, phaseFromCommand, unitFromCommand } from "../dist/session-telemetry.js";
+import { readFileSync } from "node:fs";
 import { tempRoot } from "../../../scripts/temp-root.mjs";
 
 /** A clock the test owns, in milliseconds. */
@@ -142,11 +143,13 @@ test("the sample is content-free: a unit id and numbers, nothing a model said", 
   telemetry.onTurnEnd({ message: { usage: { totalTokens: 10, input: 4, output: 6 } } });
   const sample = telemetry.flush();
   assert.deepEqual(Object.keys(sample).sort(), [
-    "changed_paths", "model_ms", "observed", "source", "tokens", "tool_ms", "turns", "unit",
+    "cache_read_tokens", "cache_write_tokens", "changed_paths", "input_tokens", "model",
+    "model_ms", "observed", "output_tokens", "phase", "reasoning_tokens", "source",
+    "tokens", "tool_ms", "turns", "unit", "version",
   ]);
   for (const [key, value] of Object.entries(sample)) {
-    if (["unit", "observed", "source"].includes(key)) {
-      assert.equal(typeof value, "string", `${key} is the only kind of string a sample carries`);
+    if (["unit", "observed", "source", "phase", "version", "model"].includes(key)) {
+      assert.ok(value === null || typeof value === "string", `${key} is a string or an unnamed value`);
       continue;
     }
     assert.equal(typeof value, "number", `${key} is a number`);
@@ -192,4 +195,99 @@ test("a unit is resolved from the command invocation, deterministically, or not 
   assert.equal(unitFromCommand(root, "execute-phase", ["999"]), null, "an issue with no unit dir invents nothing");
   assert.equal(unitFromCommand(root, "log-session", ["383"]), null, "only unit-scoped commands name a unit");
   assert.equal(unitFromCommand(root, "execute-phase", ["--fix"]), null);
+});
+
+// --- the breakdown (#504 S1) -----------------------------------------------
+//
+// #383 collapsed every provider field into `tokens`. These cases pin the
+// widening: the total stays what it always was and each provider field is
+// carried beside it, so a cost regression can be attributed to what actually
+// grew (output against input, cache against uncached, reasoning).
+
+test("the provider's five fields are carried beside the total, never instead of it", () => {
+  const { telemetry } = accumulator();
+  telemetry.onTurnEnd({ message: { usage: { input: 800, output: 300, cacheRead: 250, cacheWrite: 100, reasoning: 50 } } });
+  const sample = telemetry.flush();
+  assert.equal(sample.input_tokens, 800);
+  assert.equal(sample.output_tokens, 300);
+  assert.equal(sample.cache_read_tokens, 250);
+  assert.equal(sample.cache_write_tokens, 100);
+  assert.equal(sample.reasoning_tokens, 50);
+  assert.equal(sample.tokens, 1_500, "the total is the parts' sum when the provider names no total");
+});
+
+test("the breakdown accumulates across turns, like the total it belongs to", () => {
+  const { telemetry } = accumulator();
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 100, input: 60, output: 40 } } });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 300, input: 100, output: 200, cacheRead: 7 } } });
+  const sample = telemetry.flush();
+  assert.equal(sample.tokens, 400, "the provider's own total wins when it names one");
+  assert.equal(sample.input_tokens, 160);
+  assert.equal(sample.output_tokens, 240);
+  assert.equal(sample.cache_read_tokens, 7);
+  assert.equal(sample.cache_write_tokens, 0, "a field no turn carried stays a zero, never absent");
+  assert.equal(sample.reasoning_tokens, 0);
+});
+
+test("a turn with no usage at all leaves every count at zero — absence, never an estimate", () => {
+  const { telemetry } = accumulator();
+  telemetry.onTurnEnd({ message: {} });
+  telemetry.onTurnEnd({});
+  const sample = telemetry.flush();
+  assert.equal(sample.tokens, 0);
+  assert.equal(sample.input_tokens, 0);
+  assert.equal(sample.output_tokens, 0);
+  assert.equal(sample.turns, 2, "the turns still counted: the session turned twice and spent nothing measured");
+});
+
+// --- the phase (#504 S1/S2) -------------------------------------------------
+
+test("a phase is the dispatched command's own name, and only a registered label is one", () => {
+  assert.equal(phaseFromCommand("execute-phase"), "execute-phase");
+  assert.equal(phaseFromCommand("review-change"), "review-change");
+  assert.equal(phaseFromCommand("aw-settings"), "aw-settings", "a native command has a label too");
+  assert.equal(phaseFromCommand("log-session-typo"), null, "an unregistered name is no phase, never a guess");
+  assert.equal(phaseFromCommand(""), null);
+});
+
+test("the sample names its phase, and leaves it unnamed when the caller gave none", () => {
+  const { telemetry } = accumulator({ phase: "execute-phase" });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  assert.equal(telemetry.flush().phase, "execute-phase");
+
+  const plain = accumulator();
+  plain.telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  assert.equal(plain.telemetry.flush().phase, null, "a sample built without a phase says so instead of inventing one");
+});
+
+// --- the version (#504 S1) --------------------------------------------------
+
+test("the version is the package's own, read at emit time, never a literal", () => {
+  const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  const { telemetry } = accumulator({ version: undefined });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  assert.equal(telemetry.flush().version, manifest.version, "the sample names the package that produced it");
+
+  const injected = accumulator({ version: "9.9.9" });
+  injected.telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  assert.equal(injected.telemetry.flush().version, "9.9.9", "the suite can own the value, like the clock");
+});
+
+// --- the model (#504 S5, D1) ------------------------------------------------
+
+test("the model is the one that served the most turns, first seen on a tie", () => {
+  const { telemetry } = accumulator();
+  telemetry.onTurnEnd({ message: { model: "glm5.3-flash", usage: { totalTokens: 10 } } });
+  telemetry.onTurnEnd({ message: { model: "deepseek-v4-flash", usage: { totalTokens: 10 } } });
+  telemetry.onTurnEnd({ message: { model: "deepseek-v4-flash", usage: { totalTokens: 10 } } });
+  assert.equal(telemetry.flush().model, "deepseek-v4-flash", "two turns against one: the majority names the sample");
+
+  const tie = accumulator();
+  tie.telemetry.onTurnEnd({ message: { model: "first", usage: { totalTokens: 10 } } });
+  tie.telemetry.onTurnEnd({ message: { model: "second", usage: { totalTokens: 10 } } });
+  assert.equal(tie.telemetry.flush().model, "first", "a tie resolves deterministically to the first model seen");
+
+  const unnamed = accumulator();
+  unnamed.telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  assert.equal(unnamed.telemetry.flush().model, null, "a turn that named no model gets no invented one");
 });

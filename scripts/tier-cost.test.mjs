@@ -29,8 +29,21 @@ import { tempRoot } from "./temp-root.mjs";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = path.join(ROOT, "scripts/tier-cost.mjs");
 
-const { COLUMNS, CEREMONY_STEPS, TIER_COST_CONTRACT_ID, parseLedger, readLedger, aggregate, compare, ceremonyOf, resolveTier } =
-  await import("./tier-cost.mjs");
+const {
+  COLUMNS,
+  LEGACY_COLUMNS,
+  COLUMNS_BY_CONTRACT,
+  CEREMONY_STEPS,
+  TIER_COST_CONTRACT_ID,
+  TIER_COST_CONTRACT_IDS,
+  TIER_COST_LEGACY_CONTRACT_ID,
+  parseLedger,
+  readLedger,
+  aggregate,
+  compare,
+  ceremonyOf,
+  resolveTier,
+} = await import("./tier-cost.mjs");
 
 /** A throwaway project root; the caller fills it and it is removed by the OS. */
 function project(files) {
@@ -43,16 +56,47 @@ function project(files) {
 }
 
 /** The ledger text a sample table is read out of: the grammar block + the rows. */
-function ledger(rows, columns = COLUMNS) {
+function ledger(rows, columns = COLUMNS, contract = TIER_COST_CONTRACT_ID) {
   const declarations = columns.map((c) => `${c} | \`x\` | what it holds`).join("\n");
   const head = `| ${columns.join(" | ")} |`;
   const rule = `|${columns.map(() => "---").join("|")}|`;
   const body = rows.map((cells) => `| ${cells.join(" | ")} |`).join("\n");
-  return `# Tier cost\n\n\`\`\`text\n${TIER_COST_CONTRACT_ID}\ncolumn | shape | what it holds\n${declarations}\n\`\`\`\n\n${head}\n${rule}\n${body}\n`;
+  return `# Tier cost\n\n\`\`\`text\n${contract}\ncolumn | shape | what it holds\n${declarations}\n\`\`\`\n\n${head}\n${rule}\n${body}\n`;
 }
 
-/** One sample row, in the published column order. */
-function row(unit, { changed = 4, tokens = 1000, turns = 3, model = 900, tool = 60, observed = "2026-11-03", source = "pi:session=abc" } = {}) {
+/**
+ * One sample row in the current grammar's published column order. Every cell is
+ * a value the sample carries; the tier, the size tier and the ceremony counts
+ * are resolved at read time and never stored.
+ */
+function row(
+  unit,
+  {
+    phase = "execute-phase",
+    version = "4.10.0",
+    model = "glm5.3-flash",
+    changed = 4,
+    tokens = 1000,
+    turns = 3,
+    input = 600,
+    output = 300,
+    cacheRead = 60,
+    cacheWrite = 20,
+    reasoning = 20,
+    model_ms = 900,
+    tool_ms = 60,
+    observed = "2026-11-03",
+    source = "pi:session=abc",
+  } = {},
+) {
+  return [
+    unit, phase, version, model, changed, tokens, turns,
+    input, output, cacheRead, cacheWrite, reasoning, model_ms, tool_ms, observed, source,
+  ];
+}
+
+/** One `tier-cost@1` row: the eight cells the earlier grammar published. */
+function legacyRow(unit, { changed = 4, tokens = 1000, turns = 3, model = 900, tool = 60, observed = "2026-11-03", source = "pi:session=abc" } = {}) {
   return [unit, changed, tokens, turns, model, tool, observed, source];
 }
 
@@ -71,25 +115,73 @@ function passiveCarrier(id) {
   return `passive-record@1\nid | \`${id}\` | the passive unit's stable id\ntier | passive | the verdict as the classifier emitted it\npaths | docs/x.md | the readback's own scope\nreadback | every changed file read and classified | the structural readback\ngate | \`true\` · exit 0 | the deterministic gate that ran beside it\n`;
 }
 
-test("the instrument publishes its contract id and the exact column set", () => {
-  assert.equal(TIER_COST_CONTRACT_ID, "tier-cost@1");
+test("the instrument publishes both grammars and the exact column set of each", () => {
+  assert.equal(TIER_COST_CONTRACT_ID, "tier-cost@2", "the current grammar is the one this module publishes");
+  assert.equal(TIER_COST_LEGACY_CONTRACT_ID, "tier-cost@1", "the earlier grammar stays readable (S4: it coexists)");
+  assert.deepEqual([...TIER_COST_CONTRACT_IDS], ["tier-cost@1", "tier-cost@2"]);
   assert.deepEqual(COLUMNS, [
-    "unit", "changed_paths", "tokens", "turns", "model_ms", "tool_ms", "observed", "source",
+    "unit", "phase", "version", "model", "changed_paths", "tokens", "turns",
+    "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens",
+    "model_ms", "tool_ms", "observed", "source",
   ], "the row is what was measured: the tier, the size tier and the ceremony counts are derived at read time");
+  assert.deepEqual(LEGACY_COLUMNS, [
+    "unit", "changed_paths", "tokens", "turns", "model_ms", "tool_ms", "observed", "source",
+  ], "the @1 eight are all still declared: the widening was additive at the row level");
+  assert.deepEqual(Object.keys(COLUMNS_BY_CONTRACT).sort(), ["tier-cost@1", "tier-cost@2"]);
   assert.deepEqual(CEREMONY_STEPS, ["unit-doc", "phases", "evidence-table", "review"], "the four ceremony steps are the ones risk-tiers.md declares");
+});
+
+test("both grammars parse, and each read names the grammar it read", () => {
+  const current = parseLedger(ledger([row("111-a")]));
+  assert.equal(current.error, undefined);
+  assert.equal(current.contract, "tier-cost@2");
+  assert.deepEqual(current.columns, [...COLUMNS]);
+
+  const legacy = parseLedger(ledger([legacyRow("111-a")], LEGACY_COLUMNS, "tier-cost@1"));
+  assert.equal(legacy.error, undefined, "a project still on the earlier grammar keeps being read");
+  assert.equal(legacy.contract, "tier-cost@1");
+  assert.deepEqual(legacy.columns, [...LEGACY_COLUMNS], "the row keeps the eight cells it was written with");
+  assert.equal(legacy.rows[0].tokens, 1000);
+});
+
+test("the current grammar carries the phase, the version, the model and the breakdown", () => {
+  const parsed = parseLedger(ledger([row("111-a")]));
+  assert.equal(parsed.error, undefined);
+  const [sample] = parsed.rows;
+  assert.equal(sample.phase, "execute-phase");
+  assert.equal(sample.version, "4.10.0");
+  assert.equal(sample.model, "glm5.3-flash");
+  for (const field of ["tokens", "turns", "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens", "model_ms", "tool_ms"]) {
+    assert.equal(typeof sample[field], "number", `${field} is coerced to a number by the reader`);
+  }
+  assert.equal(sample.input_tokens, 600);
+  assert.equal(sample.reasoning_tokens, 20);
+});
+
+test("the grammar is a versioned contract: two blocks or an unknown id are refused", () => {
+  const mixed = `${ledger([row("111-a")])}\n# legacy\n\n\`\`\`text\n${
+    `tier-cost@1\ncolumn | shape | what it holds\n${LEGACY_COLUMNS.map((c) => `${c} | \`x\` | what it holds`).join("\n")}\n`
+  }\`\`\`\n`;
+  assert.equal(parseLedger(mixed).error, "ambiguous-grammar", "one grammar per ledger, chosen by the declared block");
+
+  const unknown = ledger([row("111-a")]).replace("tier-cost@2", "tier-cost@9");
+  assert.equal(parseLedger(unknown).error, "unknown-grammar", "a grammar this reader does not know is refused, never guessed");
 });
 
 test("the grammar is the header: an undeclared column is refused, a short row is refused", () => {
   const ok = parseLedger(ledger([row("111-a")]));
-  assert.equal(ok.columns.length, 8);
+  assert.equal(ok.columns.length, 16);
   assert.equal(ok.rows.length, 1);
 
   const extra = parseLedger(ledger([row("111-a")], [...COLUMNS, "wall_clock"]));
   assert.equal(extra.error, "undeclared-column");
   assert.match(extra.detail, /wall_clock/);
 
-  const short = ledger([[...row("111-a").slice(0, 7)]]);
+  const short = ledger([[...row("111-a").slice(0, 15)]]);
   assert.equal(parseLedger(short).error, "row-shape");
+
+  const float = ledger([[row("111-a")[0], ...row("111-a").slice(1, 5), "10.5", ...row("111-a").slice(6)]]);
+  assert.equal(parseLedger(float).error, "row-shape", "a count is an integer: a float cell is refused, never rounded");
 });
 
 test("the tier comes from the unit's carrier at read time, and a unit with no carrier is refused", () => {
@@ -201,7 +293,9 @@ test("the CLI reads a ledger, aggregates it, and blocks the comparison on a thin
   const ledgerPath = path.join(root, "docs/workflow/TIER_COST.md");
 
   const read = JSON.parse(execFileSync(process.execPath, [CLI, "read", "--ledger", ledgerPath], { encoding: "utf8" }));
+  assert.equal(read.contract, "tier-cost@2", "the read names the grammar it read");
   assert.equal(read.rows.length, 1);
+  assert.equal(read.rows[0].phase, "execute-phase");
   assert.equal(read.rows[0].tokens, 1000);
   assert.equal(read.rows[0].turns, 3);
   assert.equal(read.rows[0].ceremony_recorded, 3);

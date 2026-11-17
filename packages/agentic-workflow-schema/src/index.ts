@@ -4354,3 +4354,16 @@ export type {
   QualityMetricsWindow,
   QualityMetricUnit,
 } from "./quality-metrics.js";
+
+// ── The session sample's vocabulary (issue #504, unit 494) ──────────────────
+// One home for what a telemetry sample is: the phase labels a command may name,
+// the field list the `tier-cost@2` ledger declares and the JSON Schema derived
+// from it. The accumulator in `@gtrabanco/pi-agentic-workflow` measures; these
+// constants are the shape it measures into.
+export {
+  PHASE_LABELS,
+  TELEMETRY_SAMPLE_FIELDS,
+  TELEMETRY_TOKEN_FIELDS,
+  telemetrySampleJsonSchema,
+} from "./telemetry.js";
+export type { TelemetrySampleJsonSchema } from "./telemetry.js";

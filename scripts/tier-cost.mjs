@@ -30,20 +30,61 @@ import path from "node:path";
 import { recordedTier } from "../packages/agentic-workflow/src/runner/ceremony/tier.mjs";
 import { RISK_TIER_KINDS, sizeTierOf } from "../packages/agentic-workflow/src/runner/risk-tiers.mjs";
 
-/** The contract id the ledger publishes and this module reads. */
-export const TIER_COST_CONTRACT_ID = "tier-cost@1";
+/** The earlier grammar: still read, and still what a project on it writes. */
+export const TIER_COST_LEGACY_CONTRACT_ID = "tier-cost@1";
+
+/**
+ * The contract id this module publishes (#504 S4).
+ *
+ * A grammar is versioned, never widened in place: `@2` adds `phase`, `version`,
+ * `model` and the five provider token fields to the `@1` eight, and a reader
+ * that knows only `@1` refuses an `@2` header instead of misreading its cells.
+ * The writer follows whichever block the ledger declares, so the two coexist.
+ */
+export const TIER_COST_CONTRACT_ID = "tier-cost@2";
+
+/** Every grammar this reader accepts, oldest first. */
+export const TIER_COST_CONTRACT_IDS = Object.freeze([TIER_COST_LEGACY_CONTRACT_ID, TIER_COST_CONTRACT_ID]);
 
 /** The ledger's only carrier. */
 export const LEDGER_PATH = "docs/workflow/TIER_COST.md";
 
 /**
- * The row, in order. `changed_paths` is a fact — the size tier is derived from
- * it, never stored — and `source` is the producer's own provenance string, so a
- * row can always be traced to the command that wrote it.
+ * The `tier-cost@1` row, in order. `changed_paths` is a fact — the size tier is
+ * derived from it, never stored — and `source` is the producer's own provenance
+ * string, so a row can always be traced to the command that wrote it.
  */
-export const COLUMNS = Object.freeze([
+export const LEGACY_COLUMNS = Object.freeze([
   "unit", "changed_paths", "tokens", "turns", "model_ms", "tool_ms", "observed", "source",
 ]);
+
+/**
+ * The current row, in order: the `@1` eight widened by the work's identity
+ * (`phase`, `version`, `model`) and the provider's five token fields. `tokens`
+ * stays the provider's own total; the five break it down so a cost regression
+ * can be attributed to what actually grew.
+ */
+export const COLUMNS = Object.freeze([
+  "unit", "phase", "version", "model", "changed_paths", "tokens", "turns",
+  "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens",
+  "model_ms", "tool_ms", "observed", "source",
+]);
+
+/** Each grammar's published column list — the one authority the parse reads. */
+export const COLUMNS_BY_CONTRACT = Object.freeze({
+  [TIER_COST_LEGACY_CONTRACT_ID]: LEGACY_COLUMNS,
+  [TIER_COST_CONTRACT_ID]: COLUMNS,
+});
+
+/** The columns whose cell is a count: a non-negative integer, never a float. */
+const INTEGER_COLUMNS = Object.freeze([
+  "changed_paths", "tokens", "turns",
+  "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens",
+  "model_ms", "tool_ms",
+]);
+
+/** The columns a sample may leave unnamed; the row carries the literal `null`. */
+const NULLABLE_COLUMNS = Object.freeze(["phase", "version", "model"]);
 
 /**
  * The four ceremony steps a tier owes, as `skills/execute-phase/references/risk-tiers.md`
@@ -64,11 +105,30 @@ function cellsOf(line) {
   return body.split(CELL_SPLIT).map((cell) => cell.trim());
 }
 
-/** The fenced block that declares the grammar, as `{ columns, rest }`. */
-function declaredColumns(text) {
+/** A line that declares a grammar: the contract id alone, fenced or not. */
+const CONTRACT_LINE = /^tier-cost@(\d+)$/;
+
+/**
+ * The fenced block that declares the grammar, as `{ contract, columns, rest }`.
+ *
+ * One grammar per ledger: the file says which grammar its table is written in,
+ * so a `@1` table is never read as a `@2` one. Two blocks in one file is the
+ * ambiguity this refuses — a table whose header disagrees with the block is
+ * caught one step later, by the header check.
+ */
+function declaredBlock(text) {
   const lines = String(text).split("\n");
-  const open = lines.findIndex((line) => line.trim() === TIER_COST_CONTRACT_ID);
-  if (open === -1) return null;
+  const markers = lines
+    .map((line, index) => ({ index, marker: CONTRACT_LINE.test(line.trim()) ? line.trim() : null }))
+    .filter((entry) => entry.marker !== null);
+  if (markers.length === 0) return { error: "missing-contract", detail: `no ${TIER_COST_CONTRACT_ID} block` };
+  if (markers.length > 1) {
+    return { error: "ambiguous-grammar", detail: `two grammar blocks: ${markers.map((entry) => entry.marker).join(", ")}` };
+  }
+  const { index: open, marker: contract } = markers[0];
+  if (!TIER_COST_CONTRACT_IDS.includes(contract)) {
+    return { error: "unknown-grammar", detail: `${contract}, expected one of ${TIER_COST_CONTRACT_IDS.join(", ")}` };
+  }
   const close = lines.findIndex((line, index) => index > open && line.trim().startsWith("```"));
   const end = close === -1 ? lines.length : close;
   const declarations = [];
@@ -77,7 +137,7 @@ function declaredColumns(text) {
     const [column] = cellsOf(line);
     if (column) declarations.push(column);
   }
-  return { columns: declarations, rest: lines.slice(end + 1) };
+  return { contract, columns: declarations, rest: lines.slice(end + 1) };
 }
 
 /**
@@ -87,32 +147,38 @@ function declaredColumns(text) {
  * grammar is the header, so a widened table would silently stop being read.
  */
 export function parseLedger(text) {
-  const declared = declaredColumns(text);
-  if (declared === null) return { error: "missing-contract", detail: `no ${TIER_COST_CONTRACT_ID} block` };
+  const declared = declaredBlock(text);
+  if (declared.error !== undefined) return declared;
 
-  const extra = declared.columns.filter((column) => !COLUMNS.includes(column));
-  if (extra.length > 0) return { error: "undeclared-column", detail: extra.join(", ") };
-  if (declared.columns.length !== COLUMNS.length || COLUMNS.some((column, index) => declared.columns[index] !== column)) {
-    return { error: "column-set", detail: `expected ${COLUMNS.join(", ")}` };
+  const published = COLUMNS_BY_CONTRACT[declared.contract];
+  const extra = declared.columns.filter((column) => !published.includes(column));
+  if (extra.length > 0) return { error: "undeclared-column", contract: declared.contract, detail: extra.join(", ") };
+  if (declared.columns.length !== published.length || published.some((column, index) => declared.columns[index] !== column)) {
+    return { error: "column-set", contract: declared.contract, detail: `expected ${published.join(", ")}` };
   }
 
   const lines = declared.rest;
   const headerAt = lines.findIndex((line) => cellsOf(line).length > 1 && line.includes("|"));
-  if (headerAt === -1) return { error: "missing-table", detail: `no sample table after the ${TIER_COST_CONTRACT_ID} block` };
+  if (headerAt === -1) return { error: "missing-table", contract: declared.contract, detail: `no sample table after the ${declared.contract} block` };
 
   const rows = [];
   for (const line of lines.slice(headerAt + 2)) {
     if (!line.trim().startsWith("|")) break;
     const cells = cellsOf(line);
-    if (cells.length !== COLUMNS.length) return { error: "row-shape", detail: `${cells.length} cells, expected ${COLUMNS.length}: ${line.trim()}` };
-    const record = Object.fromEntries(COLUMNS.map((column, index) => [column, cells[index]]));
-    for (const numeric of ["changed_paths", "tokens", "turns", "model_ms", "tool_ms"]) {
-      if (!/^\d+$/.test(record[numeric])) return { error: "row-shape", detail: `${record.unit}: ${numeric} is not a non-negative integer` };
+    if (cells.length !== published.length) {
+      return { error: "row-shape", contract: declared.contract, detail: `${cells.length} cells, expected ${published.length}: ${line.trim()}` };
+    }
+    const record = Object.fromEntries(published.map((column, index) => [column, cells[index]]));
+    for (const numeric of INTEGER_COLUMNS.filter((column) => published.includes(column))) {
+      if (!/^\d+$/.test(record[numeric])) return { error: "row-shape", contract: declared.contract, detail: `${record.unit}: ${numeric} is not a non-negative integer` };
       record[numeric] = Number(record[numeric]);
+    }
+    for (const nullable of NULLABLE_COLUMNS.filter((column) => published.includes(column))) {
+      if (record[nullable] === "null") record[nullable] = null;
     }
     rows.push(record);
   }
-  return { columns: [...COLUMNS], rows };
+  return { contract: declared.contract, columns: [...published], rows };
 }
 
 /** The project root a ledger path belongs to (`<root>/docs/workflow/TIER_COST.md`). */
@@ -195,7 +261,7 @@ export function readLedger(root, text) {
     // could only drift from the carrier it is supposed to report.
     rows.push({ ...row, tier: recorded, ceremony_recorded: ceremony.recorded, ceremony_skipped: ceremony.skipped });
   }
-  return { columns: parsed.columns, rows };
+  return { contract: parsed.contract, columns: parsed.columns, rows };
 }
 
 /** The median of a numeric list, averaged across the middle pair when even. */
@@ -296,10 +362,10 @@ function main(argv) {
   if (read.error !== undefined) return out({ contract: TIER_COST_CONTRACT_ID, ...read }, 1);
 
   const rows = read.rows;
-  if (command === "read") return out({ contract: TIER_COST_CONTRACT_ID, columns: read.columns, rows });
-  if (command === "aggregate") return out({ contract: TIER_COST_CONTRACT_ID, ...aggregate(rows) });
+  if (command === "read") return out({ contract: read.contract, columns: read.columns, rows });
+  if (command === "aggregate") return out({ contract: read.contract, ...aggregate(rows) });
 
-  const comparison = compare(rows);
+  const comparison = { ...compare(rows), contract: read.contract };
   return out(comparison, comparison.verdict === "ok" ? 0 : 2);
 }
 
