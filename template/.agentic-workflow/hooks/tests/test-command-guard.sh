@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
+# Hook suite for guard-command.sh (unit 554). The shim resolves the
+# agentic-workflow CLI and execs it, so every case here drives the real decision
+# (`src/guard/command.mjs`) through the same path an installed project uses.
 
 set -u
 
 test_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 guard=$(CDPATH='' cd -- "$test_dir/.." && pwd)/guard-command.sh
 failures=0
+
+# The shims exec the universal CLI (unit 554): point them at this checkout's crate
+# bin when the caller named none. An override the caller set is honoured, and
+# leaving it unset keeps the absent-CLI degradation honest.
+if [ -z "${AGENTIC_WORKFLOW_BIN:-}" ]; then
+  repo_root=$(CDPATH='' cd -- "$test_dir/../../../.." && pwd)
+  if [ -f "$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs" ]; then
+    AGENTIC_WORKFLOW_BIN="$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs"
+    export AGENTIC_WORKFLOW_BIN
+  fi
+fi
 
 expect_allow() {
   label=$1
@@ -122,37 +136,43 @@ if "$allow_guard" --command "cat .env" >/dev/null 2>&1; then
   failures=$((failures + 1))
 fi
 
-if command -v jq >/dev/null 2>&1; then
-  adapter=$(CDPATH='' cd -- "$test_dir/../adapters" && pwd)/pre-tool-guard.sh
-  copilot=$(CDPATH='' cd -- "$test_dir/../adapters" && pwd)/copilot-guard.sh
-  if printf '%s' '{"tool_input":{"command":"gh pr merge 12"}}' | "$adapter" >/dev/null 2>&1; then
-    printf 'FAIL block: normalized Claude/Cursor adapter\n' >&2
-    failures=$((failures + 1))
-  fi
-  copilot_output=$(printf '%s' '{"tool_input":{"file_path":".env"}}' | "$copilot")
-  printf '%s' "$copilot_output" | jq -e '.continue == false and (.stopReason | contains("Blocked"))' >/dev/null || {
+# The adapters delegate the decision to the CLI, so nothing here needs `jq`: the
+# platform seam is the output shape each one names (unit 554).
+adapter=$(CDPATH='' cd -- "$test_dir/../adapters" && pwd)/pre-tool-guard.sh
+copilot=$(CDPATH='' cd -- "$test_dir/../adapters" && pwd)/copilot-guard.sh
+if printf '%s' '{"tool_input":{"command":"gh pr merge 12"}}' | "$adapter" >/dev/null 2>&1; then
+  printf 'FAIL block: normalized Claude/Cursor adapter\n' >&2
+  failures=$((failures + 1))
+fi
+copilot_output=$(printf '%s' '{"tool_input":{"file_path":".env"}}' | "$copilot")
+case "$copilot_output" in
+  *'"continue":false'*Blocked*) ;;
+  *)
     printf 'FAIL block: Copilot adapter\n' >&2
     failures=$((failures + 1))
-  }
-  if printf '%s' '{not-json' | "$adapter" >/dev/null 2>&1; then
-    printf 'FAIL block: malformed Claude/Cursor payload\n' >&2
-    failures=$((failures + 1))
-  fi
-  if printf '%s' '{}' | "$adapter" >/dev/null 2>&1; then
-    printf 'FAIL block: unrecognized Claude/Cursor payload\n' >&2
-    failures=$((failures + 1))
-  fi
-  newline_payload='{"tool_input":{"command":"echo safe\ngh pr merge 12"}}'
-  if printf '%s' "$newline_payload" | "$adapter" >/dev/null 2>&1; then
-    printf 'FAIL block: newline merge payload\n' >&2
-    failures=$((failures + 1))
-  fi
-  copilot_output=$(printf '%s' '{not-json' | "$copilot")
-  printf '%s' "$copilot_output" | jq -e '.continue == false and (.stopReason | contains("invalid hook payload"))' >/dev/null || {
+    ;;
+esac
+if printf '%s' '{not-json' | "$adapter" >/dev/null 2>&1; then
+  printf 'FAIL block: malformed Claude/Cursor payload\n' >&2
+  failures=$((failures + 1))
+fi
+if printf '%s' '{}' | "$adapter" >/dev/null 2>&1; then
+  printf 'FAIL block: unrecognized Claude/Cursor payload\n' >&2
+  failures=$((failures + 1))
+fi
+newline_payload='{"tool_input":{"command":"echo safe\ngh pr merge 12"}}'
+if printf '%s' "$newline_payload" | "$adapter" >/dev/null 2>&1; then
+  printf 'FAIL block: newline merge payload\n' >&2
+  failures=$((failures + 1))
+fi
+copilot_output=$(printf '%s' '{not-json' | "$copilot")
+case "$copilot_output" in
+  *'"continue":false'*'invalid hook payload'*) ;;
+  *)
     printf 'FAIL block: malformed Copilot payload\n' >&2
     failures=$((failures + 1))
-  }
-fi
+    ;;
+esac
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS command guard: 7 allowed, 37 blocked, allowlist literal, adapters normalized\n'
+printf 'PASS command guard: 8 allowed, 44 blocked, allowlist literal, adapters delegated\n'

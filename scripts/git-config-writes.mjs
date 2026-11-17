@@ -22,7 +22,7 @@
  *
  * Boundary, stated once: the rule is textual. An invocation assembled by
  * variable indirection (`c=config; git $c user.name x`) is out of scope — the
- * same boundary `template/.agentic-workflow/hooks/guard-command.sh` declares.
+ * same boundary `packages/agentic-workflow/src/guard/command.mjs` declares.
  * A false positive is repaired by rewording the suite, never by an exemption.
  *
  * Usage

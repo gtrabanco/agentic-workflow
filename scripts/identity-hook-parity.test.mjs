@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * identity-hook-parity.test.mjs — one contract, two implementations, one corpus
+ * identity-hook-parity.test.mjs — one contract, one implementation, two carriers, one corpus
  * (issue #514 S3/S4).
  *
- * Layer 2 has two carriers and they cannot share code: the commit hook is a bash
- * script a target project installs into `.git/hooks/` (it may not shell out to a
- * node CLI that the project does not have), and the push-range check is a repo
- * script. Two implementations of "is this identity the one the project
- * approved?" drift the moment one of them learns a rule the other does not.
+ * Layer 2 has two carriers: the commit hook — a shim a target project installs
+ * into `.git/hooks/` that resolves and execs the universal CLI — and the
+ * push-range check, a repo script. Since unit 554 both answer from the crate
+ * module (`src/guard/git-identity.mjs`), so drift means a carrier stopped
+ * reaching that module (resolution, argv or environment), never one carrier
+ * learning a rule the other does not.
  *
  * So they are held to the same corpus: the same fixture repository, the same
  * profile file, the same identity, and an assertion that both answer the same
@@ -31,6 +32,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const HOOK = path.join(ROOT, "template", ".agentic-workflow", "hooks", "git-identity-check.sh");
 const CHECKER = path.join(HERE, "push-identity-check.mjs");
+// The hook is a shim since unit 554: it execs the universal CLI, which owns the
+// decision. The corpus asserts the same verdicts as before; only the carrier's
+// entry point is named here.
+const CLI = path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 const APPROVED = { name: "Fixture Human", email: "human@example.com" };
 const LEAK = { name: "t", email: "t@example.test" };
@@ -99,6 +104,7 @@ function runHook({ root, home, identity }) {
       ...process.env,
       HOME: home,
       PI_CODING_AGENT_DIR: home,
+      AGENTIC_WORKFLOW_BIN: CLI,
       GIT_AUTHOR_NAME: identity.name,
       GIT_AUTHOR_EMAIL: identity.email,
       GIT_COMMITTER_NAME: identity.name,
