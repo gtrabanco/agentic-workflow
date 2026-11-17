@@ -1,4 +1,4 @@
-# Obligations — feature/526-evidence-backed-elicitation
+# Obligations — feature/526-elicitation-layer
 
 Shape owned by `skills/pre-execution-review/references/LEDGERS.md` §2. Frozen at
 cut except `status`; a row flips to `verified` only on a foreground-run

@@ -1,5 +1,5 @@
 /**
- * elicitation.test.mjs — the `elicitation` file service (feature/526-evidence-backed-elicitation).
+ * elicitation.test.mjs — the `elicitation` file service (feature/526-elicitation-layer).
  *
  * Layer 0 of the input path is a checklist before it is an interview: the bank
  * says which fields a request of a given shape must fill, and only the fields

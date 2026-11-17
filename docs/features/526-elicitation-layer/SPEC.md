@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-roadmap_summary: Issue [#526](https://github.com/gtrabanco/agentic-workflow/issues/526) (M): Layer 0 of the input path — a checklist-first pre-spec before triage, with behavior-changing questions only, one focused question at a time, a cross-family elicitor, and a `pre-spec@1` artifact consumed by triage and the design step; never a new gate
+roadmap_summary: Issue [#526](https://github.com/gtrabanco/agentic-workflow/issues/526) (M, owner direction 2026-11-12 research): Layer 0 of the input path — a checklist-first `pre-spec@1` before triage (home `docs/pre-spec/`), behavior-changing questions only (CONTRA-style mechanical qualification), one focused question at a time through `open-questions@1`, a cross-family elicitor (same-model elicitation measured negative — arXiv 2610.22382); consumed by #441's `one-shot` verdict and the design step, and never a new gate. Evidence: [docs/research/2026-11-12-input-quality-and-editing/](research/2026-11-12-input-quality-and-editing/). **Applied in the owner's local order 2026-11-17:** unit doc [features/526-elicitation-layer](features/526-elicitation-layer/SPEC.md), `agentic-workflow elicitation check` in the crate, and `skills/unit-lane/references/ELICITATION.md` as the layer's one owner.
 ---
 
 # 526 — evidence-backed elicitation
@@ -114,9 +114,9 @@ The bank's rows are a contract: a later row must carry two behaviour-changing an
 
 ## Tasks
 
-- [ ] P1 — Cut this unit's ledger freeze: SPEC S1–S8, AC1–AC10, the evidence ledger and the obligations ledger (validator: `rg -c '^\| O[0-9]+ \|' docs/features/526-evidence-backed-elicitation/planning-obligations.md` matches 16 and `rg -c '^\| PE-[0-9]{3} \|' docs/features/526-evidence-backed-elicitation/planning-evidence.md` matches 13)
+- [ ] P1 — Cut this unit's ledger freeze: SPEC S1–S8, AC1–AC10, the evidence ledger and the obligations ledger (validator: `rg -c '^\| O[0-9]+ \|' docs/features/526-elicitation-layer/planning-obligations.md` matches 16 and `rg -c '^\| PE-[0-9]{3} \|' docs/features/526-elicitation-layer/planning-evidence.md` matches 13)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
-  - Relevant files: docs/features/526-evidence-backed-elicitation/SPEC.md, docs/features/526-evidence-backed-elicitation/planning-evidence.md, docs/features/526-evidence-backed-elicitation/planning-obligations.md
+  - Relevant files: docs/features/526-elicitation-layer/SPEC.md, docs/features/526-elicitation-layer/planning-evidence.md, docs/features/526-elicitation-layer/planning-obligations.md
 - [ ] P2 — Write the layer's normative owner: the checklist bank, the `pre-spec@1` artifact grammar, calibration, the family rule and the contextual-approval block (validator: `bun scripts/skill-lint.mjs` exits 0 and `rg -c '^\| (FEA|FIX|REF|DOC|DEP|PER|ANY)-[0-9]{2} \|' skills/unit-lane/references/ELICITATION.md` matches 16)
   (Implements: S1, S2, S3, S4, S5, S7, S8)
   - Relevant files: skills/unit-lane/references/ELICITATION.md
@@ -132,14 +132,14 @@ The bank's rows are a contract: a later row must carry two behaviour-changing an
 - [ ] P6 — Write this unit's own pre-spec and land the state: changeset, roadmap row, the session journal fragment (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs elicitation check --bank skills/unit-lane/references/ELICITATION.md --spec docs/pre-spec/2026-11-17-526-elicitation-layer.md` exits 0)
   (Implements: S1, S6)
   - Relevant files: docs/pre-spec/2026-11-17-526-elicitation-layer.md, .changeset, docs/ROADMAP.md
-- [ ] P7 — Run the declared verification in the foreground, flip every obligation row and append the log (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/526-evidence-backed-elicitation/SPEC.md` exits 0)
+- [ ] P7 — Run the declared verification in the foreground, flip every obligation row and append the log (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/526-elicitation-layer/SPEC.md` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
-  - Relevant files: docs/features/526-evidence-backed-elicitation/SPEC.md, docs/features/526-evidence-backed-elicitation/planning-obligations.md
+  - Relevant files: docs/features/526-elicitation-layer/SPEC.md, docs/features/526-elicitation-layer/planning-obligations.md
 
 ## Triaged steps
 
 ```text
-TRIAGE — 526-evidence-backed-elicitation (feature)
+TRIAGE — 526-elicitation-layer (feature)
 Steps: research, design, plan, implement, tests, evidence, review, docs, release
 Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
 Skipped: none
