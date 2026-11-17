@@ -6,10 +6,17 @@ and a catalog of adaptive steps. No separate SPEC/PLAN/TASKS/ACCEPTANCE files.
 ## Lifecycle
 
 ```
-idea → unit doc → triage → catalog steps → evidence → review → merge
+idea → pre-spec → unit doc → triage → catalog steps → evidence → review → merge
 ```
 
 1. **idea** — a feature request, issue, or raw concept. No unit folder yet.
+   Before any verdict it becomes a **pre-spec** at
+   `docs/pre-spec/<YYYY-MM-DD>-<slug>.md` (owner:
+   [ELICITATION.md](../../skills/unit-lane/references/ELICITATION.md)): the
+   checklist bank fills what the request, the tree and the docs already answer, a
+   cheap default lands as a dated assumption, and what survives both is **one**
+   open question. Triage reads its `questions:` as evidence and the design step
+   seeds `## Specs` from its rows; it is a record, never a gate.
 2. **unit doc** — `docs/features/<NN>-<slug>/SPEC.md` or
    `docs/fix/<issue>-<slug>/SPEC.md`, created by `unit-lane` from the template, in
    either accepted shape (#308): the 14-section set, or the re-cut set whose
