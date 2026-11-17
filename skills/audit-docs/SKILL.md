@@ -172,8 +172,8 @@ run the command shown, don't infer.
       awk '/^## Project charter/{f=1; next} f && /^## /{f=0} f && /^- \*\*[^*]+:\*\* `?<[^>]+>`?$/ {print FILENAME":"FNR":"$0}' AGENTS.md   → prints nothing
       ```
 
-      (the template's own file is the positive case — its 11 slots print with
-      `path:line`; a legal `unresolved — <question>` value never matches; an
+      (the template's own file is the positive case — every charter slot prints
+      with `path:line`; a legal `unresolved — <question>` value never matches; an
       identity bullet — the five the template names — is **HIGH**, a domain
       bullet **LOW**);
     - the catalogue carries no raw placeholder cell — same scan as the
@@ -182,6 +182,30 @@ run the command shown, don't infer.
       the closed set (`workflow-generic` / `project-declared` /
       `stamped assumption (dated)`) — a row naming none is **LOW** (it cannot
       be consumed as declared);
+17. **Declared-but-unenforced boundaries (issue #564).** Applies when the
+    guide declares a charter or the project carries
+    `docs/architecture/ARCHITECTURAL_INVARIANTS.md`; an install that declares
+    neither is stated `n/a` (absent structure, never a finding). Mechanical —
+    run the project's own checker, never infer:
+
+    ```text
+    runner materialize check --guide AGENTS.md
+    ```
+
+    - exit 0 is the only pass. A `boundary-declared-unenforced` finding — a
+      `prose-only` charter entry with no recorded outcome, or an invariant
+      section whose `Enforcement` bullet is missing or outside
+      `machine: <mechanism>` / `prose-only` — is **HIGH**: a boundary kept in a
+      reviewer's memory is the state this check exists to end;
+    - `boundary-artifact-missing` (an outcome names a rule file the tree does
+      not carry) is **HIGH** — the record claims an enforcement the repository
+      disproves;
+    - `feature-map-shape` is **HIGH** when the documentation map declares
+      `docs/workflow/FEATURE_MAP.md`, **LOW** otherwise — a placeholder cell
+      still misleads; `feature-map-missing` (declared + absent: `--feature-map-declared`) is **HIGH**;
+    - `evidence-driver-missing` / `artifact-evidence-missing` is **LOW** here
+      (the unit's own evidence carrier is `verification-contract`'s finding at
+      review time), and the finding's `route` cell says where it resolves.
 
 Adapt the list to what the project has; skip checks for absent structures and
 say so.
@@ -195,11 +219,11 @@ say so.
    ```
    AUDIT DOCS — scope: <docs tree / roadmap / fix index / issues checked>
 
-   | # | Check (1-16) | Finding | Sev | Evidence | Proposed fix |
+   | # | Check (1-17) | Finding | Sev | Evidence | Proposed fix |
    |---|-------------|---------|-----|----------|--------------|
    | 1 | <which>     | <what>  | high|low | <path:line / #issue> | <smallest action> |
 
-   Checks run: <n>/16 (skipped: <which + why — absent structures only>)
+   Checks run: <n>/17 (skipped: <which + why — absent structures only>)
    Summary: <1-2 sentences>
    Decision: PASS | FAIL   (FAIL if any high-severity finding is open)
    ```

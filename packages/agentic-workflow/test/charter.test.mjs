@@ -239,10 +239,14 @@ test("the landing is deterministic: two runs over the same payload produce the s
 
 // ── 4. The shipped pin: the real bank, the real guide ──────────────────────
 
-test("the shipped bank declares the cell contract and sixteen rows over the two layers", () => {
+test("the shipped bank declares the cell contract and seventeen rows over the two layers", () => {
   const bank = readBank(read(BANK_REL));
   assert.deepEqual(bank.cells, ["id", "layer", "question", "applies-when", "source", "toggles", "default", "lands-in"]);
-  assert.equal(bank.rows.length, 16);
+  // The count follows the shipped bank (unit 556's sixteen + unit 557's VER-03,
+  // the artifact-capture driver question); the property this case pins — the
+  // eight declared cells, one row per question, both layers present — is
+  // unchanged.
+  assert.equal(bank.rows.length, 17);
   assert.deepEqual([...new Set(bank.rows.map((row) => row.layer))].sort(), [...LAYERS].sort());
 });
 
@@ -252,7 +256,9 @@ test("the bank covers each technical area the interview asks about", () => {
   assert.equal(area("OBJ-"), 5);
   assert.equal(area("TST-"), 3);
   assert.equal(area("ARC-"), 2);
-  assert.equal(area("DEP-") + area("VER-") + area("DEC-") + area("API-"), 6);
+  // 7, not 6: unit 557 added VER-03 (the artifact-capture driver), so the four
+  // remaining areas carry 2 + 3 + 1 + 1 rows.
+  assert.equal(area("DEP-") + area("VER-") + area("DEC-") + area("API-"), 7);
   assert.equal(rows.filter((row) => row.layer === "objectives").length, 5);
 });
 

@@ -115,6 +115,17 @@
    - **Docs language.**
    - **Architecture** — pattern, layers/modules, and dependency-direction rules
      (stay architecture-agnostic; record the user's choice in `ARCHITECTURE.md`).
+     For each boundary the user names, also detect **how it is enforced today**:
+     the lint rule, dependency-analysis configuration or CI job the tree already
+     carries, or nothing at all. Record the answer in the charter's
+     `Architectural boundaries` slot in the machine-checked shape
+     (`<boundary> → machine: <mechanism>` or `<boundary> → prose-only`) — the
+     write step's materialization round reads exactly this slot, and a
+     `prose-only` answer is the item it must materialize, never a silent one.
+   - **User-facing flows** — the flows a user reaches (a route, a command, a
+     menu path) and what demonstrates each one. This is the feature map's seed
+     (`docs/workflow/FEATURE_MAP.md`); an evidence cell nobody can fill is
+     written `none — <why>`, never a placeholder.
    - **Doc domains** — which of `providers/ brand/ domain/ business/
      infrastructure/ legal/ frontend/` apply. **Delete the folders that don't**
      (e.g. `frontend/` for a non-UI project).

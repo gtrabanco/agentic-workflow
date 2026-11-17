@@ -379,7 +379,13 @@ jobs:
 
       - name: Generate release notes
         if: hashFiles('publish-plan.tsv') != ''
-        run: node scripts/release.mjs release-notes > release-notes.txt
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          args=()
+          if [ -n "$VERSION" ]; then args+=(--version "$VERSION"); fi
+          node scripts/release.mjs release-notes --channel "$CHANNEL" --date "$CUT_DATE" "${args[@]}" > release-notes.txt
 
       - name: Record the cut as a tag and a GitHub pre-release
         if: hashFiles('publish-plan.tsv') != ''
