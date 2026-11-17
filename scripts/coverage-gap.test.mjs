@@ -133,7 +133,8 @@ test("a criterion is covered only when one of the four resolvers answers", () =>
     const result = evaluateCoverage({ catalogue, detectors, corpus: { present: false }, root: dir });
     assert.deepEqual(
       result.rows.filter((row) => row.kind === "criterion-uncovered").map((row) => row.subject),
-      ["by nothing", "by no token", "by bad provenance"],
+      ["by bad provenance", "by no token", "by nothing"],
+      "the receipt sorts gaps by kind then subject, so the order is stable across runs",
     );
     const bySubject = Object.fromEntries(result.rows.map((row) => [row.subject, row.detail]));
     assert.match(bySubject["by nothing"], /scripts\/absent\.mjs/, "the refused token is named");
@@ -185,13 +186,13 @@ test("a project with no corpus names it and marks the corpus edge n/a", () => {
 test("an unparsable ledger is a fatal exit naming the file and line", () => {
   const dir = makeTree({
     [CATALOGUE_REL]: CATALOGUE,
-    "docs/features/001-broken/SPEC.md": "## Findings\n\n| id | S# / file:line | axis | severity | impact | class | route |\n|---|---|---|---|---|---|---|\n| F1 | bad shape |\n",
+    "docs/features/001-broken/review-findings.md": "# Findings\n\n| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n| F1 | bad shape |\n",
   });
   try {
     const result = runCli(dir);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /findings-corpus|unparsable/i);
-    assert.match(result.stderr, /001-broken\/SPEC\.md/, "the offending carrier is named");
+    assert.match(result.stderr, /001-broken\/review-findings\.md:1/, "the offending carrier and line are named");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -255,7 +256,7 @@ test("the seeded twin yields exactly one gap per class and the clean twin yields
     const seededGaps = seeded.stdout.split("\n").filter((line) => line.startsWith("gap — "));
     assert.equal(seededGaps.length, 3, `one gap per class, got:\n${seededGaps.join("\n")}`);
     for (const kind of GAP_KINDS) {
-      assert.equal(seededGaps.filter((line) => line.includes(`· ${kind} ·`)).length, 1, `exactly one ${kind}`);
+      assert.equal(seededGaps.filter((line) => line.startsWith(`gap — ${kind} ·`)).length, 1, `exactly one ${kind}`);
     }
     assert.match(seeded.stdout, /^verdict \| gaps 3$/m);
 
