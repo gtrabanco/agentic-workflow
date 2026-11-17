@@ -312,12 +312,14 @@ required failure state, in the 9-column shape owned by
 
 ## Next
 
-The owner's external verify.
+The owner's external verify, then the merge.
 
 ## References
 
-Issue [#606](https://github.com/gtrabanco/agentic-workflow/issues/606); the #567
-unit (`docs/fix/567-path-protection-bypass/`) owns the guard this unit repairs.
+Issue [#606](https://github.com/gtrabanco/agentic-workflow/issues/606); PR
+[#608](https://github.com/gtrabanco/agentic-workflow/pull/608) (`Closes #606`).
+The #567 unit (`docs/fix/567-path-protection-bypass/`) owns the guard this unit
+repairs.
 
 ## Branch
 
