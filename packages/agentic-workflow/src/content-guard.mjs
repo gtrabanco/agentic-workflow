@@ -411,7 +411,9 @@ export function collectAssociations({ ghBin = "gh", owner, name, timeoutMs = 30_
     + '\\(if .pull_request then "pr" else "issue" end)"';
   const run = spawnSync(ghBin, ["api", "--paginate", path, "--jq", filter], { encoding: "utf8", timeout: timeoutMs });
   if (run.error !== undefined && run.error !== null) {
-    return degrade(run.error.code === "ENOENT" ? "missing-cli" : causeWord(run.error));
+    if (run.error.code === "ENOENT") return degrade("missing-cli");
+    if (run.error.code === "ETIMEDOUT") return degrade("timeout");
+    return degrade(causeWord(run.error));
   }
   if (run.status !== 0) {
     const stderr = String(run.stderr ?? "");
