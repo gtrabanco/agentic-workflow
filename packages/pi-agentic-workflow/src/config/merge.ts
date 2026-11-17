@@ -1,5 +1,5 @@
 import { DEFAULT_PI_CONFIG, DEFAULT_ROUTE, BASE_EFFECTIVE_DEFAULTS } from "./defaults.js";
-import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW } from "./types.js";
+import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW, DEFAULT_TOOL_CHOICE } from "./types.js";
 import type {
   ConfigFile,
   EffectiveConfig,
@@ -11,6 +11,7 @@ import type {
   RouteFile,
   StateFlowConfig,
   SubagentsConfigFile,
+  ToolChoiceConfig,
 } from "./types.js";
 
 /**
@@ -199,6 +200,7 @@ export function mergeConfigs(
     passes,
     subagents: mergeSubagents(globalFile.subagents, projectFile.subagents),
     stateFlow: mergeStateFlow(globalFile.stateFlow, projectFile.stateFlow),
+    toolChoice: mergeToolChoice(globalFile.toolChoice, projectFile.toolChoice),
     declared: { default: declaredDefault, commands: declaredCommands },
   };
 }
@@ -214,6 +216,18 @@ function mergeStateFlow(globalStateFlow: ConfigFile["stateFlow"], projectStateFl
     commands: commands === undefined ? [...DEFAULT_STATE_FLOW.commands] : [...commands],
     stopOn: pick(DEFAULT_STATE_FLOW.stopOn, projectStateFlow?.stopOn, globalStateFlow?.stopOn),
     onBackendMissing: pick(DEFAULT_STATE_FLOW.onBackendMissing, projectStateFlow?.onBackendMissing, globalStateFlow?.onBackendMissing),
+  };
+}
+
+/**
+ * Issue #610 — project-over-global merge of the `toolChoice` block. Two scalars,
+ * each resolved independently: an operator who only turns the carrier off keeps
+ * the shipped mode, and one who only changes the mode keeps it on.
+ */
+function mergeToolChoice(globalToolChoice: ConfigFile["toolChoice"], projectToolChoice: ConfigFile["toolChoice"]): ToolChoiceConfig {
+  return {
+    enabled: pick(DEFAULT_TOOL_CHOICE.enabled, projectToolChoice?.enabled, globalToolChoice?.enabled) === true,
+    mode: pick(DEFAULT_TOOL_CHOICE.mode, projectToolChoice?.mode, globalToolChoice?.mode),
   };
 }
 

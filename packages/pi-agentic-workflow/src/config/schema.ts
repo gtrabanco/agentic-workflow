@@ -8,6 +8,7 @@ import {
   STATE_FLOW_BACKENDS,
   STATE_FLOW_MISSING_POLICIES,
   STATE_FLOW_STOP_POLICIES,
+  TOOL_CHOICE_MODES,
 } from "./types.js";
 import { PASS_NAMES, parseJsonc } from "@gtrabanco/agentic-workflow-schema";
 import type {
@@ -20,6 +21,7 @@ import type {
   UnavailableRoutePolicy,
   ProfileFile,
   StateFlowConfigFile,
+  ToolChoiceConfigFile,
   PassModelSetting,
   PassRouteFile,
   PassesConfigFile,
@@ -50,6 +52,7 @@ const ROOT_KEYS = new Set([
   "passes",
   "subagents",
   "stateFlow",
+  "toolChoice",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -632,7 +635,53 @@ function validateConfig(value: unknown): ParseResult {
     if (stateFlow) config.stateFlow = stateFlow;
   }
 
+  if (value.toolChoice !== undefined) {
+    const toolChoice = checkToolChoice(value.toolChoice, "$.toolChoice", issues);
+    if (toolChoice) config.toolChoice = toolChoice;
+  }
+
   return issues.length > 0 ? { ok: false, issues } : { ok: true, config };
+}
+
+/**
+ * Strict validator for the `toolChoice` block (issue #610). Two optional scalars
+ * and no coercion: an operator who writes `"enabled": "yes"` gets a refusal they
+ * can act on, never a carrier that silently stays on (or off) while they believe
+ * the opposite.
+ */
+function checkToolChoice(value: unknown, path: string, issues: ConfigIssue[]): ToolChoiceConfigFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
+    return undefined;
+  }
+  let unknown = false;
+  for (const key of Object.keys(value)) {
+    if (key !== "enabled" && key !== "mode") {
+      unknown = true;
+      issues.push({
+        path: `${path}.${displayKey(key)}`,
+        message: `unknown toolChoice key "${key}" (allowed: enabled, mode)`,
+      });
+    }
+  }
+  const out: ToolChoiceConfigFile = {};
+  if (value.enabled !== undefined) {
+    if (typeof value.enabled !== "boolean") {
+      issues.push({ path: `${path}.enabled`, message: `must be a boolean, got ${describe(value.enabled)}` });
+      unknown = true;
+    } else {
+      out.enabled = value.enabled;
+    }
+  }
+  if (value.mode !== undefined) {
+    if (!(TOOL_CHOICE_MODES as readonly string[]).includes(value.mode as string)) {
+      issues.push({ path: `${path}.mode`, message: `must be one of ${TOOL_CHOICE_MODES.join(", ")}, got ${describe(value.mode)}` });
+      unknown = true;
+    } else {
+      out.mode = value.mode as ToolChoiceConfigFile["mode"];
+    }
+  }
+  return unknown && Object.keys(out).length === 0 ? undefined : out;
 }
 
 /**
