@@ -419,6 +419,12 @@ own surgery.
   tree still discovers every skill (the guard, the re-pointed triage and audit
   skills and `runner-contract` among them), which is AC6's second half beside
   the context budgets in `E10`.
+- **E15** — 2026-11-18, `bun scripts/dimension-regression.mjs --base 5334f5af`
+  · exit 1 on the first run → `finding — missing-reverification-evidence` (17 dimensions,
+  1 changed review surface: this unit re-points `audit-pr`'s read); the run recorded here
+  is the evidence that gate asks for, so the same command's re-run reads
+  `evidence | docs/features/612-forge-read-transport-closure/SPEC.md` · exit 0 ·
+  `verdict | clean`.
 - **P1** — 2026-11-18, the request, acceptance criteria and both ledgers frozen ·
   `fbacbb9d`.
 - **P2** — 2026-11-18, the read route's grammar, the guarded read (transport,
