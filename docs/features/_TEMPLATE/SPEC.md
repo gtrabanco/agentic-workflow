@@ -55,6 +55,18 @@ old shape), and what must be asked before touching something live on the other
 side. Cut at plan time — the executor sweeps this surface, it is not
 rediscovered at review.
 
+## Surfaces
+
+The batch scheduler's lane keys this unit occupies, one per line, so a plan can
+tell which units collide before one is launched. The vocabulary is the
+scheduler's own: `packages/<name>`, `skills/<name>`, `scripts`, `docs`,
+`template`, `.github`. Write `surface-unknown` when the unit cannot name them —
+an honest unknown is a legal answer, and the plan reports it. Advisory only: no
+reader requires this section, and an absent one falls back to the issue body and
+then to this document's `Relevant files:` lines.
+
+- `packages/<name>`
+
 ## Retirements
 
 What this unit makes obsolete: every surface, token, pane, helper, contract or

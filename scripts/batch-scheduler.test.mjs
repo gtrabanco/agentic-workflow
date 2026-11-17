@@ -19,6 +19,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const scriptPath = fileURLToPath(new URL("./batch-scheduler.mjs", import.meta.url));
+const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const {
   buildBatchPlan,
   collectIssues,
@@ -29,6 +30,7 @@ const {
   claimedKey,
   CLAIM_TTL_MS,
   extractSurfaces,
+  extractFileClaims,
   extractProseDependencies,
   STATE_FILE_NAME,
 } = await import(scriptPath);
@@ -314,6 +316,337 @@ test("B3: a body with no Where/In scope section still names its surfaces (the do
     assert.deepEqual(plan.batches[0].lanes.map((l) => l.surface).sort(), ["packages/beta", "skills"], "the body is the fallback source");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── F — surface detection: the blind spots of issue #574 ───────────────────
+// The three reproducers, each measured against the live corpus at the cut head:
+//   1. a fenced code block desynchronised the global backtick pairing, so every
+//      declaration after it vanished — #504 declares `packages/pi-agentic-workflow/`
+//      in prose and resolved to no surface at all, and its file claims carried
+//      the garbage token `bash\nbun test scripts/telemetry-coverage.test.mjs`;
+//   2. an issue declaring nothing anywhere was planned in the `general` lane with
+//      no degradation and no finding — planned as if it touched nothing;
+//   3. a unit doc on disk was never consulted, although the lane cuts one first.
+
+/** A declaration that sits after a fenced block — the #504 shape. */
+const DECLARATION_AFTER_FENCE = [
+  "## Impact",
+  "",
+  "The sample keeps its shape:",
+  "",
+  "```ts",
+  "export interface Sample {",
+  "  readonly tokens: number;",
+  "}",
+  "```",
+  "",
+  "- `packages/agentic-workflow/src/sample.ts`",
+  "- `scripts/sample.mjs`",
+].join("\n");
+
+/** A `## Surfaces` section as the templates and triage publish it. */
+function surfacesSection(keys, level = 2) {
+  return [`${"#".repeat(level)} Surfaces`, "", ...keys.map((key) => `- \`${key}\``)].join("\n");
+}
+
+/** Write a unit doc (or only its folder) under the scratch root. */
+function unitDoc(root, folder, text) {
+  const dir = path.join(root, folder);
+  fs.mkdirSync(dir, { recursive: true });
+  if (text !== null) fs.writeFileSync(path.join(dir, "SPEC.md"), text);
+  return dir;
+}
+
+/** The lanes one issue occupies in a plan. */
+const lanesOfIssue = (plan, number) =>
+  plan.batches
+    .flatMap((batch) => batch.lanes)
+    .filter((lane) => lane.issues.some((row) => row.number === number))
+    .map((lane) => lane.surface)
+    .sort();
+
+test("F1: a fenced block is inert — a declaration after it resolves, one inside it never does", () => {
+  assert.deepEqual(
+    [...extractSurfaces(DECLARATION_AFTER_FENCE)].sort(),
+    ["packages/agentic-workflow", "scripts"],
+    "the fence no longer swallows the declarations that follow it (#504's defect)",
+  );
+  assert.deepEqual(
+    extractFileClaims(DECLARATION_AFTER_FENCE),
+    ["packages/agentic-workflow/src/sample.ts", "scripts/sample.mjs"],
+    "and no garbage token is harvested where the pairing used to shift",
+  );
+  const inside = ["Intro.", "", "```", "- `packages/hidden/src/x.ts`", "```", "", "Nothing is declared here."].join("\n");
+  assert.deepEqual([...extractSurfaces(inside)], [], "a fenced block is code, never a declaration");
+  assert.deepEqual(extractFileClaims(inside), [], "a fenced path is not a file claim either");
+});
+
+test("F2: a declared `## Surfaces` section is exclusive, and the prose sections keep their union", () => {
+  const declared = `${surfacesSection(["skills/alpha"])}\n\n## In scope\n\n- \`packages/beta/src/x.ts\`\n`;
+  assert.deepEqual([...extractSurfaces(declared)], ["skills/alpha"], "a declaration beats the prose section beside it");
+
+  const formGenerated = `${surfacesSection(["scripts"], 3)}\n\n## Problem\n\n- \`packages/beta/src/x.ts\`\n`;
+  assert.deepEqual([...extractSurfaces(formGenerated)], ["scripts"], "an issue form renders its label at level 3");
+
+  const empty = `## Surfaces\n\n(unknown)\n\n## In scope\n\n- \`packages/beta/src/x.ts\`\n`;
+  assert.deepEqual([...extractSurfaces(empty)], [], "an empty declaration is a declaration of unknown, never an invitation to guess");
+
+  const prose = `## Where\n\n- \`skills/alpha/SKILL.md\`\n\n## In scope\n\n- \`packages/beta/src/y.ts\`\n`;
+  assert.deepEqual(
+    [...extractSurfaces(prose)].sort(),
+    ["packages/beta", "skills/alpha"],
+    "with no `## Surfaces` the two legacy sections keep today's union",
+  );
+
+  // A declared section is a list of lane keys: the backticks are style, never
+  // the declaration, so a careless author still lands in the right lane.
+  const bare = "## Surfaces\n\n- packages/agentic-workflow\n- scripts\n- docs — the workflow tutorial\n";
+  assert.deepEqual([...extractSurfaces(bare)].sort(), ["docs", "packages/agentic-workflow", "scripts"]);
+
+  // A prose section that names no lane key is not a declaration of "nothing to
+  // see": the body stays the inference source, the same rule a section-less body
+  // follows (the live corpus's #554 declares its crate path in `## Context`).
+  const proseOnly = "## In scope\n\n- Move the logic into the crate\n\n## Context\n\n- `packages/alpha/src/x.ts`, `template/hooks/a.sh`\n";
+  assert.deepEqual([...extractSurfaces(proseOnly)].sort(), ["packages/alpha", "template"]);
+});
+
+test("F3: with nothing declared in the body, the unit doc is the fallback — its section, then its Relevant files", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    unitDoc(root, "docs/fix/60-declares-surfaces", `# 60\n\n${surfacesSection(["template"])}\n`);
+    unitDoc(
+      root,
+      "docs/fix/61-declares-relevant-files",
+      "# 61\n\n## Tasks\n\n- P1 — Do it (validator: `bun test` exits 0)\n  - Relevant files: packages/beta/src/a.mjs, scripts/b.mjs\n",
+    );
+    unitDoc(root, "docs/fix/62-has-no-spec", null);
+    const issues = [
+      issue(60, "Doc declares surfaces", "## Problem\n\nNo paths are named in this body."),
+      issue(61, "Doc declares relevant files", "## Problem\n\nNo paths are named in this body either."),
+      issue(62, "Doc is unreadable", "## Problem\n\nNo paths here."),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(lanesOfIssue(plan, 60), ["template"], "the unit doc's own `## Surfaces` section is the fallback");
+    assert.deepEqual(lanesOfIssue(plan, 61), ["packages/beta", "scripts"], "then the `Relevant files:` grammar the lane already writes");
+    assert.deepEqual(lanesOfIssue(plan, 62), ["general"], "a unit doc with no SPEC.md declares nothing");
+    assert.ok(plan.degraded.includes("surface-unknown-issue-62"), "and that is reported, never silent");
+    assert.ok(!plan.degraded.includes("surface-unknown-issue-60"), "a fallback that resolved is not a degradation");
+    assert.ok(!plan.degraded.includes("surface-unknown-issue-61"));
+
+    // the body is the declaration; the doc never outvotes it.
+    const declared = issue(63, "Body wins", `${surfacesSection(["scripts"])}\n`);
+    unitDoc(root, "docs/fix/63-body-wins", `# 63\n\n${surfacesSection(["packages/beta"])}\n`);
+    const withBody = buildBatchPlan(baseInput([declared], root));
+    assert.deepEqual(lanesOfIssue(withBody, 63), ["scripts"], "a body declaration outranks the unit doc it sits beside");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("F4: an issue with no declaration anywhere is degraded as surface-unknown and the envelope still validates", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issuesFile = path.join(root, "issues.json");
+    fs.writeFileSync(issuesFile, JSON.stringify([issue(70, "Declares nothing", "## Problem\n\nNo paths.")]));
+    const run = spawnSync(
+      process.execPath,
+      [scriptPath, "--root", root, "--issues-file", issuesFile, "--no-state", "--json-only"],
+      { encoding: "utf8" },
+    );
+    assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+    const plan = JSON.parse(run.stdout);
+    assert.ok(
+      plan.degraded.includes("surface-unknown-issue-70"),
+      "the missing declaration is a degraded dimension of the plan, not a silent `general`",
+    );
+    assert.deepEqual(lanesOfIssue(plan, 70), ["general"], "the lane stays the documented key");
+
+    const human = spawnSync(
+      process.execPath,
+      [scriptPath, "--root", root, "--issues-file", issuesFile, "--no-state"],
+      { encoding: "utf8" },
+    );
+    assert.equal(human.status, 0, human.stderr);
+    assert.match(human.stdout, /^degraded: surface-unknown-issue-70$/mu, "the human summary names it too");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("F5: two unknown-surface issues in one batch are one `blind-spot` finding; a single one is none", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const blind = [
+      issue(70, "Declares nothing", "## Problem\n\nNo paths."),
+      issue(71, "Also declares nothing", "## Problem\n\nAlso no paths."),
+    ];
+    const plan = buildBatchPlan(baseInput(blind, root));
+    const spots = plan.findings.filter((finding) => finding.code === "blind-spot");
+    assert.equal(spots.length, 1, "one finding for the batch, never one per issue");
+    assert.deepEqual(spots[0].numbers, [70, 71], "naming every blind issue");
+    assert.match(spots[0].detail, /batch 1/u, "and the batch the human must serialize");
+
+    const single = buildBatchPlan(baseInput([blind[0]], root));
+    assert.deepEqual(single.findings.filter((finding) => finding.code === "blind-spot"), [], "one unknown is a degradation, not a finding");
+
+    const mixed = buildBatchPlan(baseInput([blind[0], issue(72, "Declares a surface", whereSection(["skills/alpha/SKILL.md"]))], root));
+    assert.deepEqual(mixed.findings.filter((finding) => finding.code === "blind-spot"), [], "one unknown beside a declared row is not a blind spot");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("F7: `--infer-surfaces` prints the block triage pastes, or the honest unknown, and writes nothing", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issuesFile = path.join(root, "issues.json");
+    fs.writeFileSync(
+      issuesFile,
+      JSON.stringify([
+        issue(80, "Declares after a fence", DECLARATION_AFTER_FENCE),
+        issue(81, "Declares nothing", "## Problem\n\nNo paths."),
+      ]),
+    );
+    const infer = (number) =>
+      spawnSync(process.execPath, [scriptPath, "--root", root, "--issues-file", issuesFile, "--infer-surfaces", String(number)], { encoding: "utf8" });
+
+    const fenced = infer(80);
+    assert.equal(fenced.status, 0, fenced.stderr);
+    assert.equal(
+      fenced.stdout,
+      "## Surfaces\n\n- `packages/agentic-workflow`\n- `scripts`\n",
+      "the block is ready to paste, one lane key per line",
+    );
+
+    const unknown = infer(81);
+    assert.equal(unknown.status, 0, unknown.stderr);
+    assert.equal(unknown.stdout, "## Surfaces\n\n- `surface-unknown`\n", "an inference that finds nothing says so");
+
+    const missing = infer(99);
+    assert.equal(missing.status, 1, "an unreadable issue is a named refusal, never an empty block");
+    assert.match(missing.stderr, /99/u);
+    assert.equal(missing.stdout, "");
+
+    assert.equal(fs.existsSync(path.join(root, ".agentic-workflow")), false, "the print-only path writes no state");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("F8: a `## Surfaces` declaration never narrows file claims — the prose beside it keeps claiming its files", () => {
+  const surfacesOnly = ["## Surfaces", "", "`docs`", "", "## Problem", "Fix `scripts/shared-clean.mjs` please."].join("\n");
+  assert.deepEqual(
+    extractFileClaims(surfacesOnly),
+    ["scripts/shared-clean.mjs"],
+    "a Surfaces-only body claims what its Problem prose names — base's rule, not the section's",
+  );
+
+  const formOrder = ["### Describe the bug", "Run `bun test scripts/telemetry-coverage.test.mjs` fails", "", "### Surfaces", "scripts"].join("\n");
+  assert.deepEqual(
+    extractFileClaims(formOrder),
+    ["bun test scripts/telemetry-coverage.test.mjs"],
+    "the form's Describe prose keeps its claim beside the rendered Surfaces field (the yml forms always render it)",
+  );
+
+  const whereControl = ["## Where", "`scripts`", "", "## Problem", "Fix `scripts/shared-clean.mjs` please."].join("\n");
+  assert.deepEqual(extractFileClaims(whereControl), [], "Where still narrows: the Problem prose beside it claims nothing (issue #509's rule, unchanged)");
+
+  const fenced = ["## Surfaces", "`docs`", "", "```js", "const p = 'docs/fenced-thing.md';", "```", "", "See `docs/real.md`."].join("\n");
+  assert.deepEqual(extractFileClaims(fenced), ["docs/real.md"], "a fenced path is still not a claim under a Surfaces section");
+});
+
+test("F9: a `<…>` vocabulary placeholder is never a surface — no lane, and nothing declares it", () => {
+  assert.deepEqual(
+    [...extractSurfaces("Touches `packages/<name>` and `scripts`.")].sort(),
+    ["scripts"],
+    "a quoted placeholder resolves to nothing; the real key beside it survives",
+  );
+
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    unitDoc(root, "docs/fix/84-template-example", `# 84\n\n${surfacesSection(["packages/<name>", "skills/<name>"])}\n`);
+    unitDoc(root, "docs/fix/85-example-and-key", `# 85\n\n${surfacesSection(["packages/<name>", "scripts"])}\n`);
+    const issues = [
+      issue(84, "Doc carries the template example", "## Problem\n\nNo paths are named in this body."),
+      issue(85, "Doc example beside a real key", "## Problem\n\nNo paths are named here either."),
+      issue(86, "Body quotes the vocabulary", `${surfacesSection(["skills/<usage-carrier>", "scripts"])}\n`),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(lanesOfIssue(plan, 84), ["general"], "placeholders only declare nothing — the documented unknown lane, never a phantom");
+    assert.ok(plan.degraded.includes("surface-unknown-issue-84"), "and the plan reports it, never a silent lane");
+    assert.deepEqual(lanesOfIssue(plan, 85), ["scripts"], "the real key beside the template example still lands; the placeholder never does");
+    assert.deepEqual(lanesOfIssue(plan, 86), ["scripts"], "a placeholder in the body's own declaration is ignored the same way");
+    assert.ok(!lanesOfIssue(plan, 85).some((lane) => lane.includes("<")), "no lane ever contains a placeholder");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("T1: the templates declare the `## Surfaces` section the parser reads, and the contract keeps it optional", () => {
+  // This repository's own templates name the six lane keys the planner resolves.
+  const TEMPLATES = ["docs/fix/_TEMPLATE/SPEC.md", "docs/features/_TEMPLATE/SPEC.md"];
+  for (const rel of TEMPLATES) {
+    const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
+    const at = text.indexOf("\n## Surfaces\n");
+    assert.notEqual(at, -1, `${rel} carries ## Surfaces — triage cuts a unit from it`);
+    const body = text.slice(at + 1, text.indexOf("\n## ", at + 1));
+    for (const key of ["packages/<name>", "skills/<name>", "scripts", "docs", "template", ".github"]) {
+      assert.ok(body.includes(key), `${rel}: the section names the lane key ${key} the parser resolves`);
+    }
+    assert.ok(body.includes("surface-unknown"), `${rel}: an unknown declaration is a legal answer`);
+    assert.ok(at > text.indexOf("\n## Impact\n"), `${rel}: the section follows ## Impact`);
+  }
+
+  // The exported scaffold is a product surface: it carries the same section and
+  // the same honest unknown, and it must NOT hardcode this repository's tree —
+  // a target project's lanes are its own (domain separation, owner decision
+  // 2026-11-07).
+  for (const rel of ["template/docs/fix/_TEMPLATE/SPEC.md", "template/docs/features/_TEMPLATE/SPEC.md"]) {
+    const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
+    const at = text.indexOf("\n## Surfaces\n");
+    assert.notEqual(at, -1, `${rel} carries ## Surfaces — a bootstrapped project is cut on it`);
+    const body = text.slice(at + 1, text.indexOf("\n## ", at + 1));
+    assert.ok(body.includes("surface-unknown"), `${rel}: the honest unknown is part of the shape`);
+    for (const key of ["packages/<name>", "skills/<name>"]) {
+      assert.ok(!body.includes(key), `${rel} hardcodes this repository's lane key ${key} into the scaffold`);
+    }
+  }
+
+  const FORMS = [".github/ISSUE_TEMPLATE/fix.yml", ".github/ISSUE_TEMPLATE/feature.yml"];
+  for (const rel of FORMS) {
+    const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
+    assert.match(text, /^\s+id: surfaces$/mu, `${rel} asks for the surfaces`);
+    for (const key of ["packages/<name>", "skills/<name>", "scripts", "docs", "template", ".github"]) {
+      assert.ok(text.includes(key), `${rel}: the field names the lane key ${key}`);
+    }
+  }
+  for (const rel of ["template/.github/ISSUE_TEMPLATE/fix.yml", "template/.github/ISSUE_TEMPLATE/feature.yml"]) {
+    const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
+    assert.match(text, /^\s+id: surfaces$/mu, `${rel} asks for the surfaces`);
+    assert.ok(text.includes("surface-unknown"), `${rel}: the honest unknown is part of the field`);
+    assert.ok(!text.includes("packages/<name>"), `${rel} hardcodes this repository's lane keys into the scaffold`);
+  }
+
+  // The section must NOT be required: declaring it would refuse the unit docs the
+  // selector accepts today (108 `spec-by-reference`, 7 `legacy` at the cut head).
+  const owner = fs.readFileSync(path.join(repoRoot, "packages/agentic-workflow-schema/src/pre-execution.ts"), "utf8");
+  for (const marker of ["UNIT_DOC_REQUIRED_SECTIONS = Object.freeze(", "UNIT_DOC_SPEC_REF_SECTIONS = Object.freeze("]) {
+    const start = owner.indexOf(marker);
+    assert.notEqual(start, -1, `the owner still publishes ${marker}`);
+    const open = owner.indexOf("[", start);
+    const close = owner.indexOf("]", open);
+    assert.ok(!owner.slice(open, close).includes('"Surfaces"'), `${marker} must not require ## Surfaces — the closed corpus stays valid`);
   }
 });
 

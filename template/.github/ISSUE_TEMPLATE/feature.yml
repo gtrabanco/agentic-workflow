@@ -18,6 +18,18 @@ body:
     validations:
       required: true
   - type: textarea
+    id: surfaces
+    attributes:
+      label: Surfaces
+      description: >-
+        The surface keys this touches, one per line — the lane vocabulary the
+        project's batch plan reports. Write surface-unknown when you cannot name
+        them; triage infers them and fills this in.
+      placeholder: |
+        - <the project's lane key>
+    validations:
+      required: true
+  - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
