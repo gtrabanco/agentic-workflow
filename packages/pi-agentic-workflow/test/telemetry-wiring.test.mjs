@@ -209,3 +209,56 @@ test("a session's own scope is counted from git: its commits plus what is still 
   fs.writeFileSync(path.join(root, "c.txt"), "c\n");
   assert.equal(sessionChangedPaths(root, start), 2, "committed b plus uncommitted c — the session's own scope, not the branch's");
 });
+
+// --- the phase and the environment (#504 S1) --------------------------------
+
+test("the sample names the phase the dispatched command belongs to", () => {
+  const { instance, written } = wiring({ changedPaths: () => 1 });
+  const { pi, fire } = fakePi();
+  instance.register(pi);
+  instance.noteCommand("execute-phase", ["383"]);
+  fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+  fire("session_shutdown");
+  assert.equal(written[0].phase, "execute-phase", "the phase is the command's own name, from the published vocabulary");
+});
+
+test("a spawned runner inherits the phase in flight, and the session clears it on shutdown", () => {
+  const before = process.env.AG_WF_PHASE;
+  try {
+    delete process.env.AG_WF_PHASE;
+    const { instance } = wiring({ changedPaths: () => 1 });
+    const { pi, fire } = fakePi();
+    instance.register(pi);
+    instance.noteCommand("execute-phase", ["383"]);
+    assert.equal(process.env.AG_WF_PHASE, "execute-phase", "a runner subprocess reads the phase from its environment");
+
+    // A registered command is a label (the coverage suite pins that), so this
+    // case proves the guard for the one moment it can matter: a command that
+    // shipped before its label landed must not rename the phase in flight.
+    instance.noteCommand("not-a-phase", []);
+    assert.equal(
+      process.env.AG_WF_PHASE,
+      "execute-phase",
+      "a command outside the vocabulary never overwrites the phase in flight",
+    );
+
+    fire("session_shutdown");
+    assert.equal(process.env.AG_WF_PHASE, undefined, "the shutdown clears it: the next session starts unnamed");
+  } finally {
+    if (before === undefined) delete process.env.AG_WF_PHASE;
+    else process.env.AG_WF_PHASE = before;
+  }
+});
+
+test("off touches no environment at all — the switch is absence, not a listener", () => {
+  const before = process.env.AG_WF_PHASE;
+  try {
+    delete process.env.AG_WF_PHASE;
+    const { instance } = wiring({ enabled: false });
+    instance.noteCommand("execute-phase", ["383"]);
+    assert.equal(process.env.AG_WF_PHASE, undefined);
+  } finally {
+    if (before === undefined) delete process.env.AG_WF_PHASE;
+    else process.env.AG_WF_PHASE = before;
+  }
+});
