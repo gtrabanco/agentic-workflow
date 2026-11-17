@@ -490,8 +490,15 @@ list is the frozen task list above, in dependency-topological order:
     (2 blocked attempts re-run with the preferred tool)**.
 - **P9** — 2026-11-17, verification: the package gates, the root gate and the
   docs projection.
-- **E17** — 2026-11-17, `node scripts/run-root-suite.mjs` · exit 0 · the whole
-  deterministic gate green (verdict and tally in `## Next`).
+- **E17** — 2026-11-17, `node scripts/run-root-suite.mjs --jobs 1` · exit 0 ·
+  `119/119 PASS`, the whole deterministic gate. Disclosed: two earlier runs on
+  this box's load (average 9.0 on 6 CPUs, other sessions working) reddened two
+  suites on **time**, never on assertion — `scripts/unit-route.test.mjs`
+  (`F7 linear scan took 691ms, expected <500ms`) and
+  `scripts/phase-lint.test.mjs` (120 s suite bound). Both are green alone and in
+  the serialized run: `node --test scripts/unit-route.test.mjs` → `64 pass, 0
+  fail` (`F7` 430 ms); `node --test scripts/phase-lint.test.mjs` → `162 pass,
+  0 fail` (96 s). Neither suite is touched by this unit.
 
 ## Next
 
