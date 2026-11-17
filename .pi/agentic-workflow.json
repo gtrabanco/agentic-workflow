@@ -4,10 +4,9 @@
   // author and committer of a push range; the pre-commit hook is not installed
   // in this checkout, so the commit half stays out of the way.
   "gitIdentity": {
-    "enforce": "push",
-    "approved": {
-      "name": "Gabriel Trabanco Llano",
-      "email": "1969593+gtrabanco@users.noreply.github.com"
+    "enforce": "off",
+    "agentGuard": {
+      "mode": "deny"
     }
   },
   // Per-unit cost measurement (issue #383): this repo opted out.
