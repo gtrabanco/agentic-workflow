@@ -1,6 +1,7 @@
 // Two-engine parity suite: the same fixture-repo matrix through the crate
 // engine and the scaffold shim must produce byte-identical stdout and exit
-// codes (AC7). This is the drift gate between the two implementations.
+// codes (AC7). This is the drift gate between the two faces of the one
+// implementation: the crate engine bin and the scaffold shim that execs the CLI.
 
 import test from "node:test";
 import assert from "node:assert/strict";

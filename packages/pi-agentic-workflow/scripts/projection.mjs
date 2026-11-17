@@ -76,6 +76,9 @@ export const CRATE_COMMANDS = Object.freeze([
   "doc",
   "doctor",
   "elicitation",
+  "fullauto-merge",
+  "git-identity-check",
+  "guard-command",
   "journal",
   "log",
   "manifest",
@@ -89,6 +92,7 @@ export const CRATE_COMMANDS = Object.freeze([
   "runner",
   "section",
   "setup",
+  "turn-contract",
   "unit-doc",
   "verify",
 ]);
