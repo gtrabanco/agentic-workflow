@@ -1,108 +1,26 @@
 #!/usr/bin/env bash
+# The command guard's shim (unit 554).
+#
+# The decision lives in the agentic-workflow CLI — `src/guard/command.mjs`, one
+# implementation behind the `guard-command` subcommand. This file resolves that
+# entry point, execs it, and forwards its exit code; a template hook carries no
+# rule of its own.
+#
+# The guard is fail-closed: a host where the CLI is not installed cannot decide,
+# so it blocks and names the missing entry point rather than passing silently.
+#
+# usage: guard-command.sh [--command <text>] [--path <text>] [--help]
+# exit:  0 allowed · 2 blocked or unusable — see the CLI's own usage.
 
 set -u
 
-command_text=""
-file_path=""
+bin="${AGENTIC_WORKFLOW_BIN:-$(command -v agentic-workflow 2>/dev/null || true)}"
 
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --command)
-      [ "$#" -ge 2 ] || { echo "agentic-workflow guard: --command needs a value" >&2; exit 2; }
-      command_text=$2
-      shift 2
-      ;;
-    --path)
-      [ "$#" -ge 2 ] || { echo "agentic-workflow guard: --path needs a value" >&2; exit 2; }
-      file_path=$2
-      shift 2
-      ;;
-    *)
-      echo "agentic-workflow guard: unknown argument: $1" >&2
-      exit 2
-      ;;
-  esac
-done
-
-deny() {
-  printf 'Blocked by agentic-workflow safety policy: %s\n' "$1" >&2
+if [ -z "${bin}" ]; then
+  printf 'Blocked by agentic-workflow safety policy: the agentic-workflow CLI is not installed, so this guard cannot decide; install @gtrabanco/agentic-workflow or set AGENTIC_WORKFLOW_BIN\n' >&2
   exit 2
-}
+fi
 
 hook_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
-# The per-project allowlist (issue #546): one *whole* command line per entry, so
-# a project can approve the single merge it wants without opening the pattern.
-# `#` comments and blank lines are never entries; an absent or unreadable file
-# allows nothing. The literal comparison is the point — a prefix or a substring
-# match would let `… && cat .env` ride in on an approved line.
-allowlisted() {
-  [ -f "$hook_dir/guard-allow.txt" ] || return 1
-  while IFS= read -r entry || [ -n "$entry" ]; do
-    case "$entry" in '' | '#'*) continue ;; esac
-    [ "$entry" = "$1" ] && return 0
-  done <"$hook_dir/guard-allow.txt"
-  return 1
-}
 
-is_env_path() {
-  printf '%s\n' "$1" | grep -Eqi '(^|/)(\.env($|\.)|[^/]*\.env($|\.))'
-}
-
-if [ -n "$file_path" ] && is_env_path "$file_path"; then
-  deny "reading environment files may disclose secrets"
-fi
-
-if [ -z "$command_text" ]; then
-  exit 0
-fi
-
-# Direct merges stay blocked, for every forge the workflow can drive — not just
-# the two it once named. Automated merges use fullauto-merge.sh, whose child
-# process is outside the agent tool boundary and has its own fail-closed checks.
-# There is intentionally no persistent allow marker for these patterns; the one
-# exception is the project's own `guard-allow.txt`, matched literally.
-# The literal-token match is a deliberate boundary: variable-indirection
-# (`cmd=gh; $cmd pr merge`) is out of scope by design, so do not rely on this
-# guard as a sandbox — the forge branch rule / CI is the enforcement boundary.
-if ! allowlisted "$command_text"; then
-  if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?gh([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+pr[[:space:]]+merge([^[:alnum:]_-]|$)'; then
-    deny "direct pull-request merge; the unattended-conductor role is deferred to roadmap row 62"
-  fi
-  if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])glab([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+mr[[:space:]]+merge([^[:alnum:]_-]|$)'; then
-    deny "direct merge-request merge; the unattended-conductor role is deferred to roadmap row 62"
-  fi
-  if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?(gt|tea)([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+pr[[:space:]]+merge([^[:alnum:]_-]|$)'; then
-    deny "direct pull-request merge through a Gitea CLI; the unattended-conductor role is deferred to roadmap row 62"
-  fi
-  if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?hub([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+merge([^[:alnum:]_-]|$)'; then
-    deny "direct pull-request merge through hub"
-  fi
-  if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?git([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+merge([^[:alnum:]_-]|$)'; then
-    deny "direct git merge"
-  fi
-  if printf '%s\n' "$command_text" | grep -Eqi 'mergePullRequest|/pulls/[0-9]+/merge|/merge_requests/[0-9]+/merge|/pullrequests/[0-9]+/merge([?[:space:]]|$)'; then
-    deny "merge through a forge API"
-  fi
-fi
-
-# Block disclosure commands, not legitimate assignments such as
-# `export NODE_ENV=test` or `env NODE_ENV=test command`.
-if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])([^;&|()[:space:]]*/)?printenv([[:space:]]|$)' \
-  || printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])([^;&|()[:space:]]*/)?(declare|typeset)[[:space:]]+-x([[:space:]]|$)'; then
-  deny "environment-variable disclosure"
-fi
-if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])export([[:space:]]+-p)?[[:space:]]*($|[;&|)])'; then
-  deny "environment export listing"
-fi
-if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])([^;&|()[:space:]]*/)?env([[:space:]]+(-0|--null))?[[:space:]]*($|[;&|)])' \
-  || printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])([^;&|()[:space:]]*/)?env([[:space:]]+[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]+)+[[:space:]]*($|[;&|)])' \
-  || printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])([^;&|()[:space:]]*/)?set[[:space:]]*($|[;&|)])'; then
-  deny "environment-variable disclosure"
-fi
-
-# Shell reads are covered even on platforms that expose only a shell hook.
-if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_])\.env([[:alnum:]_.-]*)([^[:alnum:]_]|$)'; then
-  deny "reading environment files may disclose secrets"
-fi
-
-exit 0
+exec "$bin" guard-command --allowlist "$hook_dir/guard-allow.txt" "$@"

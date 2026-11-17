@@ -26,6 +26,7 @@
  *   agentic-workflow verify <unit-doc-path>
  *   agentic-workflow charter <state|land|check> --guide <path> [--answers <path|->] [--bank <path>]
  *   agentic-workflow config <get|set|list|show|validate|init|reset|schema> [path] [value] [--scope global|project|resolved|both] [--project <dir>] [--global-dir <dir>] [--json]
+ *   agentic-workflow guard-command [--command <text>] [--path <text>] [--allowlist <file>] [--payload] [--format plain|copilot|json]
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -93,6 +94,15 @@
  * (`--yes <ids>`, or the terminal question), records the consent once and
  * re-reads the same envelope, so a repaired row leaves the plan and a second run
  * is a no-op. It never runs a package manager: an install route is text.
+ *
+ * `guard-command` (unit 554) is the safety hooks' one decision, moved out of the
+ * template shell scripts so a target project installs shims instead of rules: the
+ * per-project literal allowlist, the merge families of every forge the workflow
+ * can drive, environment disclosure and `.env` reads. `--payload` reads a
+ * platform hook payload from stdin and `--format` names the seam
+ * (`plain` for the pre-tool and OpenCode shapes, `copilot` for its
+ * `{continue, stopReason}` document, `json` for the normalized `[command, path]`
+ * an adapter formats itself). Read-only: it decides, and writes nothing.
  *
  * `resolve-passes` (issue #201) is the spawned-pass model resolution: it reads
  * the two routing config files (global, then project — the project file wins
@@ -622,7 +632,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation|guard-command> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -646,6 +656,13 @@ switch (command) {
   // ── runner — the programmatic runner choice (issue #555) ─────────────
   case "runner": {
     process.exit(runRunnerService(restArgs));
+    break;
+  }
+
+  // ── guard-command — the platform adapters' one decision (unit 554) ──
+  case "guard-command": {
+    const { main } = await import("../src/guard/command.mjs");
+    process.exit(main(restArgs));
     break;
   }
 

@@ -1,24 +1,23 @@
 #!/usr/bin/env bash
+# The Copilot adapter's shim (unit 554).
+#
+# Platform seam: Copilot answers with a decision document
+# (`{continue, stopReason}`) on stdout and always exits 0, because the host reads
+# the document rather than the status. The decision itself — the payload rule and
+# the command rule — is the CLI's, so this adapter names its format and nothing
+# else. `jq` is no longer required.
+#
+# stdin: Copilot's hook payload (JSON). stdout: the decision document.
 
 set -u
 
-hooks_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+bin="${AGENTIC_WORKFLOW_BIN:-$(command -v agentic-workflow 2>/dev/null || true)}"
 
-if ! parsed=$("$hooks_dir/adapters/normalize-hook-payload.sh" 2>/dev/null); then
-  printf '%s\n' '{"continue":false,"stopReason":"Blocked by agentic-workflow safety policy: invalid hook payload"}'
+if [ -z "${bin}" ]; then
+  printf '%s\n' '{"continue":false,"stopReason":"Blocked by agentic-workflow safety policy: the agentic-workflow CLI is not installed, so this guard cannot decide; install @gtrabanco/agentic-workflow or set AGENTIC_WORKFLOW_BIN"}'
   exit 0
 fi
 
-command_text=$(printf '%s' "$parsed" | jq -er '.[0]')
-file_path=$(printf '%s' "$parsed" | jq -er '.[1]')
+hook_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 
-set +e
-reason=$("$hooks_dir/guard-command.sh" --command "$command_text" --path "$file_path" 2>&1)
-status=$?
-set -e
-
-if [ "$status" -ne 0 ]; then
-  jq -cn --arg reason "$reason" '{continue:false,stopReason:$reason}'
-fi
-
-exit 0
+exec "$bin" guard-command --payload --format copilot --allowlist "$hook_dir/guard-allow.txt"
