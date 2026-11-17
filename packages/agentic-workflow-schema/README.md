@@ -38,13 +38,15 @@ cannot disagree about a key, its type or its shipped default:
 
 - `BASE_CONFIG_SECTIONS` — the cross-tool feature sections and their JSON
   Schema fragments: `logSession`, `memory`, `telemetry`, `guards`, `advance`,
-  `pathProtection`.
+  `pathProtection`, `contentGuard`.
 - `CONFIG_EXTENSION_CONTRACT` (`config-extension@1`) — the descriptor a package
   ships to publish its own section and file. `validateConfigExtension` refuses
   a malformed descriptor or one that redefines a base section.
 - `resolveConfigDocuments` — project over global, then shipped defaults for
   keys the operator left undefined, then strict validation. `pathProtection`
-  merges tighter-only (globs union, requirements take the higher rank).
+  merges tighter-only (globs union, requirements take the higher rank), and so
+  does `contentGuard` (`mergeContentGuardOverrides`: the trusted roles
+  intersect, the allow/deny login lists union).
 - `parseJsonc` — dependency-free JSONC (comments, trailing commas, BOM) with a
   line and column on every error.
 - `composeConfigSchema` — one object schema naming every section.
@@ -53,6 +55,25 @@ The committed [`config.schema.json`](./config.schema.json) is generated from
 the same descriptors (`bun run generate:config-schema`; `--check` is the drift
 gate). The human guide is `docs/workflow/CONFIG.md`; the operator CLI is
 `@gtrabanco/agentic-workflow config`.
+
+## Content guard contract (issue #470)
+
+Third-party forge text — issue and PR titles, bodies and comments — is untrusted
+by construction. This package owns the vocabularies a guard decision speaks and
+the config section that gates the author policy; the enforcement lives in
+`@gtrabanco/agentic-workflow`'s `src/content-guard.mjs`, which is the only module
+that returns third-party text.
+
+- `src/content-guard.ts` — `CONTENT_GUARD_CONTRACT`, the decision reasons
+  (`CONTENT_GUARD_REASONS`, registered in the repository's
+  `normative-surfaces@1` inventory as a `schema-export:` surface), the ingestion
+  kinds, GitHub's author-association enum and the hidden-content kinds. The
+  source is the single home of each set: prose that repeats the values is a
+  defect, the export is the machine.
+- The `contentGuard` base section — `trustedRoles`, `allowLogins`,
+  `denyLogins`, with the shipped strictest default and no bypass switch. There
+  is deliberately no `enabled` key: an unconfigured project must run the
+  strictest policy, never nothing.
 
 ## Content-bound review receipts (v1)
 

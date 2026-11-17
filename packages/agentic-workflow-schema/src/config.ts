@@ -13,6 +13,8 @@
  * from the same descriptors a runtime uses, so the two cannot drift.
  */
 
+import { CONTENT_AUTHOR_ASSOCIATIONS } from "./content-guard.js";
+
 export type ConfigCategory = "feature" | "pi";
 
 export interface JsonSchema {
@@ -202,6 +204,94 @@ function requirementMatrixDefault(): Record<string, unknown> {
   return {};
 }
 
+/**
+ * The author-provenance policy for third-party forge content (issue #470).
+ *
+ * There is no `enabled` switch on purpose: a bypass is exactly the setting the
+ * layer exists to deny, and an unconfigured project must run the strictest
+ * policy (trusted roles only) rather than nothing. A project that needs a wider
+ * role set or a named login widens it here, explicitly and visibly.
+ */
+const CONTENT_GUARD_SCHEMA: JsonSchema = publish({
+  type: "object",
+  additionalProperties: false,
+  description: "Author-provenance policy for third-party forge content: which authors are ingested as readable content.",
+  properties: {
+    trustedRoles: {
+      type: "array",
+      items: { type: "string", enum: [...CONTENT_AUTHOR_ASSOCIATIONS] },
+      maxItems: CONTENT_AUTHOR_ASSOCIATIONS.length,
+      description: "The author associations whose content may be ingested; every other association is excluded and declared.",
+    },
+    allowLogins: {
+      type: "array",
+      items: { type: "string", minLength: 1 },
+      description: "Logins admitted regardless of association — an explicit, reviewable exception list.",
+    },
+    denyLogins: {
+      type: "array",
+      items: { type: "string", minLength: 1 },
+      description: "Logins excluded regardless of association; a deny always beats an allow.",
+    },
+  },
+});
+
+/**
+ * One provided list, or `null` when it is not one: a side that cannot be read is
+ * never filtered into something that looks legal. `undefined` (absent) reads as
+ * the empty list, which is what the union below means by "nothing declared".
+ */
+function readList(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return null;
+  if (value.some((entry) => typeof entry !== "string")) return null;
+  return value;
+}
+
+/**
+ * Content guard merges by tightening, never by replacement: `trustedRoles`
+ * intersects (a project may narrow what a global value admitted, never widen
+ * it), the login lists union, and a side that is absent passes the other through.
+ * An unknown key is passed through untouched so strict validation reports it
+ * instead of the merge swallowing it — and so is a *value* it cannot read: this
+ * merge runs before validation, so filtering `[123]` or `"everyone"` into `[]`
+ * handed the validator a legal, intentional-looking lockdown and the policy
+ * narrowed in silence. An unreadable side wins unchanged, validation refuses the
+ * section whole, and the caller gets the strictest default with a declared
+ * reason.
+ */
+export function mergeContentGuardOverrides(globalValue: unknown, projectValue: unknown): unknown {
+  if (!isRecord(globalValue) && !isRecord(projectValue)) return {};
+  const globalRecord = isRecord(globalValue) ? globalValue : {};
+  const projectRecord = isRecord(projectValue) ? projectValue : {};
+  const out: Record<string, unknown> = {};
+
+  if (globalRecord.trustedRoles !== undefined || projectRecord.trustedRoles !== undefined) {
+    const globalRoles = readList(globalRecord.trustedRoles);
+    const projectRoles = readList(projectRecord.trustedRoles);
+    if (globalRoles === null) out.trustedRoles = globalRecord.trustedRoles;
+    else if (projectRoles === null) out.trustedRoles = projectRecord.trustedRoles;
+    else {
+      out.trustedRoles = globalRecord.trustedRoles === undefined
+        ? [...new Set(projectRoles)]
+        : projectRecord.trustedRoles === undefined
+          ? [...new Set(globalRoles)]
+          : [...new Set(globalRoles.filter((role) => projectRoles.includes(role)))];
+    }
+  }
+  for (const key of ["allowLogins", "denyLogins"]) {
+    if (globalRecord[key] === undefined && projectRecord[key] === undefined) continue;
+    const globalLogins = readList(globalRecord[key]);
+    const projectLogins = readList(projectRecord[key]);
+    if (globalLogins === null) out[key] = globalRecord[key];
+    else if (projectLogins === null) out[key] = projectRecord[key];
+    else out[key] = [...new Set([...globalLogins, ...projectLogins])];
+  }
+  for (const [key, value] of Object.entries(projectRecord)) if (!(key in out)) out[key] = value;
+  for (const [key, value] of Object.entries(globalRecord)) if (!(key in out)) out[key] = value;
+  return out;
+}
+
 const REQUIREMENT_RANK = new Map(PATH_REQUIREMENTS.map((value, index) => [value, index]));
 
 /**
@@ -344,6 +434,16 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     schema: PATH_PROTECTION_SCHEMA,
     defaults: requirementMatrixDefault(),
     merge: mergePathProtectionOverrides,
+  },
+  {
+    key: "contentGuard",
+    category: "feature",
+    file: BASE_CONFIG_FILE,
+    path: ["contentGuard"],
+    description: "Author-provenance policy for third-party forge content: trusted roles plus allow/deny login lists (tighten-only).",
+    schema: CONTENT_GUARD_SCHEMA,
+    defaults: { trustedRoles: ["OWNER", "MEMBER", "COLLABORATOR"], allowLogins: [], denyLogins: [] },
+    merge: mergeContentGuardOverrides,
   },
 ];
 
