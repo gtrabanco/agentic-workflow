@@ -192,6 +192,12 @@ test("cut + canary opens the GitHub pre-release with the rendered notes", () => 
   const block = jobBlock(read(PUBLISH), "cut-prerelease");
   assert.match(block, /gh release create "v\$V" --prerelease --verify-tag --title "v\$V" --notes-file release-notes\.txt/);
   assert.match(block, /release\.mjs release-notes/);
+  // Run 43999980103: the step rendered the DEFAULT (stable) body for a canary
+  // cut — and a canary never consumes changesets, so that backlog render grows
+  // unbounded until GitHub refuses the body (HTTP 422, cap 125,000 chars). The
+  // canary cut renders the canary body: the prerelease header, the channel's
+  // install block, and the carried/news split the stable render has no use for.
+  assert.match(block, /release-notes --channel "\$CHANNEL" --date "\$CUT_DATE"/, "the canary cut renders the canary body, pinned to the same cut date the plan and the stage read");
   assert.doesNotMatch(block, /--generate-notes/);
   const create = block.indexOf("gh release create");
   assert.ok(create !== -1, "opens the pre-release");
