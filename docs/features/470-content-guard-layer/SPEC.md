@@ -31,7 +31,7 @@ close it via `Closes #470` in the body.
 > A **content guard layer** in the deterministic collection path: every piece of third-party content the workflow reads from the forge — issue bodies, issue/PR comments, review comments, PR titles and descriptions, code comments in changed files — passes a sanitizer and an author-provenance policy **before** any model sees it. Untrusted content is filtered, fenced, and reported; it never reaches the agent as raw instruction-bearing text.
 
 **S3 — guards live in deterministic code, at the collection seam, never in model discipline.**
-> **Guards live in deterministic code, never in model discipline.** The filter runs in the collection layer (where `collectIssues` already lives in the sensors; the same seam for PR/review collection). "Ignore your author filter" arriving in a comment is text the filter already processed — it cannot retroactively disable itself. Same philosophy as `path-policy` (the model can never allow what policy denies) and #444's discipline test.
+> **Guards live in deterministic code, never in model discipline.** The filter runs in the collection layer (where `collectIssues` already lives in the sensors; the same seam for PR/review collection). "Ignore your author filter" arriving in a comment is text the filter already processed — it cannot retroactively disable itself. Same philosophy as the path-protection policy (the model can never allow what policy denies) and #444's discipline test.
 
 **S4 — author provenance policy, config-gated: trusted roles only by default, everything else excluded and declared.**
 > **Author provenance policy (config-gated).** Reads `authorAssociation` (GitHub: OWNER / MEMBER / COLLABORATOR vs CONTRIBUTOR / FIRST_TIME_CONTRIBUTOR / NONE). Default policy: only trusted roles are ingested as readable content; content from other roles is **excluded and declared** (a `degraded[]`-style entry naming issue/comment and role) — never silently dropped, never silently included. Configurable allow/deny lists of logins and stricter/looser role sets via the unified config (#427).
@@ -139,7 +139,7 @@ change (the anti-divergence receipt) is `E5` in `## Log`, produced by
 - **A complete solution to prompt injection** — it does not exist. Semantics-only
   injection in visible trusted-role text stays out of the filter and belongs to
   the review passes (S12).
-- **`npx`, sandbox or permission changes**: `path-policy` and the session's own
+- **`npx`, sandbox or permission changes**: the path-protection policy and the session's own
   permission model remain separate and authoritative.
 - **Rate limiting or forge abuse prevention** — unrelated threat class.
 - **A collector for every content kind S2 names.** The layer's API accepts every
@@ -189,7 +189,7 @@ paths:
   published vocabulary, the section descriptor, the tighten-only merge.
 - `bun test packages/agentic-workflow/test/content-guard.test.mjs` — sanitizer,
   fence, policy resolution, guard pipeline, association collector.
-- `bun test packages/agentic-workflow/test/workflow-status.test.mjs` — the
+- `bun test scripts/workflow-status-sensor.test.mjs` — the
   sensor's previous behaviour pinned (title emitted for a trusted author,
   excluded-and-declared for an unknown one).
 - `bun test scripts/batch-scheduler.test.mjs` — the planner's previous
@@ -269,7 +269,7 @@ The section is frozen from here (`ac-hash`).
   each excluded source and role, and each removal count, so an operator can audit
   what a third party hid.
   *Proved by:* the degradations assertions in `scripts/batch-scheduler.test.mjs`
-  and `packages/agentic-workflow/test/workflow-status.test.mjs` exit 0.
+  and `scripts/workflow-status-sensor.test.mjs` exit 0.
 - **AC10 (S11)** — no forge-specific handling enters `skills/`: the change adds
   none, and the guard's home is the crate + schema package.
   *Proved by:* `git diff --name-only <base> -- skills/` matches `0` lines.
@@ -277,7 +277,7 @@ The section is frozen from here (`ac-hash`).
   compromise, semantics-only visible-text injection, the kinds with no
   deterministic collector, homoglyph detection being keyword-bounded) and states
   that the runtime permission model remains the backstop.
-  *Proved by:* `rg -c 'Backstop — the residual risk' docs/features/470-content-guard-layer/SPEC.md` matches `1`.
+  *Proved by:* `rg -c '^## Backstop — the residual risk$' docs/features/470-content-guard-layer/SPEC.md` matches `1`.
 - **AC12 (S13)** — with no config the layer is active; for this repository's
   owner-authored content the sanitized text is byte-identical to the input
   (differential check against the base commit) and the seams' previous
@@ -312,51 +312,38 @@ Declared, not implied away (S12):
   outside that table is reported by nothing.
 
 **Backstop** — the runtime permission model (the agent's tool approvals, the
-`path-policy` gate and the session's own confinement) stays authoritative: the
+path-protection gate and the session's own confinement) stays authoritative: the
 guard is surface reduction in front of it, never a replacement.
 
 ## Tasks
 
 Dependency-topological, smallest first within a ready set.
 
-- P1 — publish the vocabulary and the config section in the schema package:
-  `CONTENT_GUARD_REASONS`, the source/association/hidden-kind vocabularies, the
-  `contentGuard` base section (strictest defaults, tighten-only merge), the index
-  export, and the regenerated `config.schema.json`.
+- P1 — publish `packages/agentic-workflow-schema/src/content-guard.ts`'s vocabularies (`CONTENT_GUARD_REASONS`, sources, associations, hidden kinds) and the `contentGuard` base section in `config.ts`, suite `packages/agentic-workflow-schema/test/content-guard.test.mjs` red first, plus the index export and the regenerated `config.schema.json`.
   (validator: `bun run --cwd packages/agentic-workflow-schema test` exits 0)
-  (Implements: S4, S7, S8, S14)
+  (Implements: S1, S4, S7, S8, S14)
   - Relevant files: packages/agentic-workflow-schema/src/content-guard.ts, packages/agentic-workflow-schema/src/config.ts, packages/agentic-workflow-schema/src/index.ts, packages/agentic-workflow-schema/config.schema.json, packages/agentic-workflow-schema/test/content-guard.test.mjs
-- P2 — the guard module in the crate: hidden-content sanitizer, policy
-  resolution (fail-closed), fence with escaped terminator, the single
-  `guardForgeContent` ingestion path, `readContentGuardPolicy` over the config
-  API, and `collectAssociations` over the REST issues endpoint.
+- P2 — the guard module `packages/agentic-workflow/src/content-guard.mjs`, suite `packages/agentic-workflow/test/content-guard.test.mjs` red first: hidden-content sanitizer, fail-closed policy resolution, fence with escaped terminator, the single `guardForgeContent` ingestion path, `readContentGuardPolicy` over the config API and `collectAssociations` over the REST issues endpoint.
   (validator: `bun test packages/agentic-workflow/test/content-guard.test.mjs` exits 0)
   (Implements: S2, S4, S5, S6, S8)
   - Relevant files: packages/agentic-workflow/src/content-guard.mjs, packages/agentic-workflow/test/content-guard.test.mjs
-- P3 — wire the planner's collection seam: `collectIssues()` collects
-  associations and `normalizeIssues()` routes every title/body through the guard,
-  declaring each exclusion and removal count in the plan's degradations.
+- P3 — wire `scripts/batch-scheduler.mjs`'s collection seam: `collectIssues()` collects associations and `normalizeIssues()` routes every title/body through the guard, declaring each exclusion and removal count in the plan's degradations; its suite `scripts/batch-scheduler.test.mjs` gains the payload and exclusion cases.
   (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0)
   (Implements: S2, S3, S4, S5, S10, S13)
   - Relevant files: scripts/batch-scheduler.mjs, scripts/batch-scheduler.test.mjs
-- P4 — wire the sensor's collection seam: `readForgeState()` reads issue
-  associations, and the envelope's issue titles are the guarded/fenced value with
-  a declared degradation when the association read fails.
-  (validator: `bun test packages/agentic-workflow/test/workflow-status.test.mjs` exits 0)
+- P4 — wire `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs`'s forge collection: `readForgeState()` reads the associations and every emitted title is the guarded value, suite `scripts/workflow-status-sensor.test.mjs` pinning the trusted, stripped and unknown-author cases.
+  (validator: `bun test scripts/workflow-status-sensor.test.mjs` exits 0)
   (Implements: S2, S3, S4, S6, S10, S13)
-  - Relevant files: packages/agentic-workflow/src/runner/sensors/workflow-status.mjs, packages/agentic-workflow/test/workflow-status.test.mjs, scripts/workflow-status-sensor.test.mjs
-- P5 — the discipline suite: the declared seam table, the static and behavioural
-  checks, and the two injected-disagreement fixtures.
+  - Relevant files: packages/agentic-workflow/src/runner/sensors/workflow-status.mjs, scripts/workflow-status-sensor.test.mjs
+- P5 — the discipline suite `scripts/content-guard-discipline.test.mjs`: the declared seam table, the four rules and their injected-disagreement fixtures.
   (validator: `bun test scripts/content-guard-discipline.test.mjs` exits 0)
   (Implements: S9, S11)
   - Relevant files: scripts/content-guard-discipline.test.mjs
-- P6 — docs and state: the normative-surfaces row, the config doc row, the crate
-  README section, the changeset, the unit doc evidence/log, and the session entry.
-  (validator: `bun test scripts/normative-drift.test.mjs` exits 0)
+- P6 — docs and state: the `AGENTS.md` normative-surfaces row and its ledger row, the config doc row, the two README sections, the changeset, the unit doc evidence/log and the session entry.
+  (validator: `bun test scripts/normative-drift.test.mjs` exits 0 and `bun scripts/prose-gate-inventory.mjs` exits 0)
   (Implements: S7, S14, S12)
-  - Relevant files: AGENTS.md, docs/workflow/CONFIG.md, packages/agentic-workflow/README.md, packages/agentic-workflow-schema/README.md, .changeset/470-content-guard-layer.md, docs/features/470-content-guard-layer/SPEC.md, docs/LOGS.md
-- P7 — verification: the whole root gate, both package suites, the version-parity
-  gate and the differential check.
+  - Relevant files: AGENTS.md, docs/workflow/CONFIG.md, docs/workflow/GATE_INVENTORY.md, packages/agentic-workflow/README.md, packages/agentic-workflow-schema/README.md, .changeset/470-content-guard-layer.md, docs/features/470-content-guard-layer/SPEC.md, docs/LOGS.md
+- P7 — verification: the whole root gate, both package suites, the version-parity gate, the docs projection check and the differential runs.
   (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S12, S13, S15)
   - Relevant files: packages/agentic-workflow-schema/test/content-guard.test.mjs, packages/agentic-workflow/test/content-guard.test.mjs, scripts/content-guard-discipline.test.mjs, scripts/batch-scheduler.test.mjs
@@ -389,8 +376,8 @@ names it, never duplicates it).
 - **D1** — 2026-11-17, cut decision: the unit is a **feature** (`feat/470-…`,
   roadmap Features row 470), so its home is `docs/features/470-content-guard-layer/`
   — the owner's "unit dir `docs/fix/<issue>-<topic>/`" rule names the fix kind;
-  the feature kind's equivalent home is the features folder (`docs/AGENTS.md`
-  layout, roadmap row kind `feature`).
+  the feature kind's equivalent home is the features folder (`docs/features/<n>-<slug>/`, the
+  roadmap's own row kind `feature`).
 - **D2** — 2026-11-17, cut decision (S2 scope): the deterministic seams that
   carry forge text into a model-visible value today are `collectIssues()`
   (planner) and `readForgeState()` (sensor). Comment/code-comment kinds have no
@@ -404,10 +391,51 @@ names it, never duplicates it).
   the REST issues endpoint (`gh api --paginate repos/{o}/{r}/issues`) because the
   pinned `gh` 2.46.0 has no `authorAssociation` JSON field on `issue list` —
   verified live, PE-002.
+- **D5** — 2026-11-17, cut decision (S6 delivery): the fence is the *text-channel*
+  delivery form. A JSON envelope already bounds every string by its field, and
+  S13 demands the owner-authored bytes stay identical, so the two seams emit the
+  sanitized text and the fence is delivered where content is spliced into a text
+  channel; the removed `clean` reason went with it (every admitted payload is
+  admitted by a rule, and a policy failure excludes).
+- **D6** — 2026-11-17, pre-flip ledger correction, recorded not silently applied:
+  three validator cells were cut with an outcome the tree does not produce — O1
+  counted call sites (observed `3` and `2` per file), O13's pattern matched the
+  heading and the criterion that cites it (anchored to `^## …$`, `1`), and O14
+  named `differential-baseline.mjs`, whose base checkout carries no installed
+  workspace, so it reports `repaired` for a module-resolution failure instead of
+  a behavioural pair. O14 now names the differential runs actually executed
+  (`E6`, `E7`). No obligation was dropped and no outcome was relaxed.
+- **D7** — 2026-11-17, the residual inventory (`E5`) first reported the four new
+  code files as `orphan · no-plan-claim`: the classifier claims a surface from a
+  task *label*, and the paths lived only in the `Relevant files:` metadata. The
+  task labels now name the surface they deliver (the classifier's own rule), and
+  the four rows read `half-built · unmet-task` — the honest state of an open unit.
+- **E1** — 2026-11-17, `runner ceremony tier classify --paths …` · exit 0 · `tier: standard`, `reason_kind: executable-content`, `signals: []`, task size understood/contained/resumable.
+- **E2** — 2026-11-17, `gh issue list --state open --limit 2 --json authorAssociation` · exit 1 · `Unknown JSON field: "authorAssociation"` (gh 2.46.0), while `gh api --paginate "repos/gtrabanco/agentic-workflow/issues?state=open&per_page=2" --jq …` answered `601 OWNER pr` / `600 OWNER issue` across pages.
+- **E3** — 2026-11-17, `gh api graphql -f query='{__type(name:"CommentAuthorAssociation"){enumValues{name}}}'` · exit 0 · the eight published associations (MEMBER, OWNER, MANNEQUIN, COLLABORATOR, CONTRIBUTOR, FIRST_TIME_CONTRIBUTOR, FIRST_TIMER, NONE).
+- **E4** — 2026-11-17 (red before green) · `bun test packages/agentic-workflow-schema/test/content-guard.test.mjs` · exit 1 · `Export named 'CONTENT_AUTHOR_ASSOCIATIONS' not found in module …/dist/index.js`; then `bun test packages/agentic-workflow/test/content-guard.test.mjs` · exit 1 · `Cannot find module '../src/content-guard.mjs'`. Both green after their implementation (`G1`, `G2`).
+- **E5** — 2026-11-17, `bun scripts/residual-classify.mjs --inventory --base 5ef01c1f` · exit 0 · 21 rows: 17 `used · live-consumer`, 4 `half-built · unmet-task` (the four new code files), 0 `orphan` after D7.
+- **E6** — 2026-11-17, differential over one owner/member-authored fixture: `git show 5ef01c1f:scripts/batch-scheduler.mjs` vs the changed planner, `--root <scratch> --issues-file <fixture> --no-state` · both exit 0 · JSON stdout identical (1680 bytes) and human stdout identical — no unrequested difference.
+- **E7** — 2026-11-17, differential over one owner-authored fixture: the base sensor module vs the changed one, `workflow-status --json-only` with the same `gh` shim · both exit 0 · envelope identical (3492 bytes).
+- **E8** — 2026-11-17, `git archive 5ef01c1f | tar -x` into a scratch tree, `bun test scripts/batch-scheduler.test.mjs` · exit 0 · 70 pass, 0 fail (the base tree's suite is green, so the head's green is not a repair).
+- **P1** — 2026-11-17, the schema package publishes the four vocabularies and the `contentGuard` section; `config.schema.json` regenerated by its generator · `bbb124c5`.
+- **P2** — 2026-11-17, the crate guard module (sanitizer, policy, fence, `guardForgeContent`, association collector) · `be0415a5`.
+- **P3** — 2026-11-17, the planner's collection seam guarded · `172606e2`.
+- **P4** — 2026-11-17, the sensor's forge collection guarded · `1c357cc6`.
+- **P5** — 2026-11-17, the discipline suite with its four injected disagreements · `bbc79821`.
+- **P6** — 2026-11-17, docs and state: the normative-surfaces row, the gate-inventory ledger row, the config doc row, both README sections, the changeset, this log and the session entry · the docs commit that carries this line.
+- **G1** — 2026-11-17, HEAD bbc79821657729c6f8c82aa942b4aa11a41ec706, `bun test packages/agentic-workflow/test/content-guard.test.mjs` · exit 0 · 15 pass, 0 fail (sanitizer, policy, fence, pipeline, config read, collector).
+- **G2** — 2026-11-17, HEAD bbc79821657729c6f8c82aa942b4aa11a41ec706, `bun test scripts/batch-scheduler.test.mjs` · exit 0 · 73 pass, 0 fail.
+- **G3** — 2026-11-17, HEAD bbc79821657729c6f8c82aa942b4aa11a41ec706, `bun test --timeout 30000 scripts/workflow-status-sensor.test.mjs` · exit 0 · 81 pass, 0 fail.
+- **G4** — 2026-11-17, HEAD bbc79821657729c6f8c82aa942b4aa11a41ec706, `bun test scripts/content-guard-discipline.test.mjs` · exit 0 · 7 pass, 0 fail (R1–R4 plus four injected disagreements).
+- **G5** — 2026-11-17, HEAD bbc79821657729c6f8c82aa942b4aa11a41ec706, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass, 0 fail; `bun run --cwd packages/agentic-workflow-schema check:config-schema` · exit 0 · `config.schema.json: current`.
+- **G6** — 2026-11-17, HEAD bbc79821657729c6f8c82aa942b4aa11a41ec706, `bun run --cwd packages/agentic-workflow-schema test` · exit 0 · 898 pass, 0 fail; `(cd packages/agentic-workflow && bun run test)` · exit 0 · 994 pass, 0 fail.
+- **G7** — 2026-11-17, HEAD bbc79821657729c6f8c82aa942b4aa11a41ec706 plus this commit's docs edits, `node scripts/run-root-suite.mjs` · exit 0 · 117 suites; `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS`; `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
+- **P7** — 2026-11-17, verification complete: `G1`–`G7` above, the differential pair (`E6`, `E7`) and the base-tree run (`E8`). Every obligation row is `verified`; nothing is deferred.
 
 ## Next
 
-P1 — publish the vocabulary and the config section in the schema package.
+P1 — publish the vocabulary and the config section in the schema package (done: see `P1`–`P7`). The unit waits on the owner's external verify: the unit folder's `external-verify.md` (written when the verdict lands) is the verdict carrier, and the roadmap row's owner-written status cell (`defined` → `in-progress · applied inline per the owner's local workflow`) is the owner's to flip, not the emitter's.
 
 ## References
 
