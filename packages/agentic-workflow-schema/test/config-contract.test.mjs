@@ -140,7 +140,7 @@ test("resolution is feature-by-feature, project over global, defaults for absent
     publisher: { command: ["global-sink"], timeoutMs: 5000 },
   });
   assert.deepEqual(resolved.config.memory, { engram: true });
-  assert.deepEqual(resolved.config.telemetry, { enabled: true });
+  assert.deepEqual(resolved.config.telemetry, { enabled: true, jsonFile: ".pi/.telemetry/sessions.jsonl" });
   assert.deepEqual(resolved.config.guards, { merge: false, history: false, ci: false, cost: { maxTokens: 500000 } });
 });
 

@@ -35,6 +35,9 @@ packages/*/.serena/
 # The #429 invocation record: one per session, written by the `/log-session`
 # command handler, and as local as the start marker above.
 .pi/.session-*.log-session
+# Issue #504: the per-session telemetry JSONL this package appends when a project
+# opts into `telemetry.enabled`.
+.pi/.telemetry/
 # The machine gate receipt and its full log (issue #409): a run record, local to
 # the checkout like the pre-execution gates below — never a committed artifact.
 .agentic-workflow/gate/

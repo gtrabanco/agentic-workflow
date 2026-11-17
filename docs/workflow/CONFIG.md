@@ -56,7 +56,7 @@ project can never silently drop a global glob or lower a requirement.
 |---|---|---|---|
 | `logSession` | base | `false` | `true`/`1`/`"on"` enable the mechanical LOGS.md entry; `false`/`0`/`"off"` disable it; `{ "publisher": { "command": [...], "timeoutMs": 5000 }, "enabled": true }` runs the publisher and (when `enabled`) appends too |
 | `memory` | base | `{ "engram": false }` | `{ "engram": true }` opts in to Engram MCP registration |
-| `telemetry` | base | `{ "enabled": false }` | `{ "enabled": true }` measures the per-unit cost sample |
+| `telemetry` | base | `{ "enabled": false, "jsonFile": ".pi/.telemetry/sessions.jsonl" }` | `{ "enabled": true }` measures the per-unit cost sample; `jsonFile` is the per-session JSONL path, resolved against the project root (issue #504) |
 | `guards` | base | `{ "merge": false, "history": false, "ci": false, "cost": { "maxTokens": 500000 } }` | booleans plus a positive `cost.maxTokens` |
 | `advance` | base | `{ "iterationsCap": 12, "sensitivePaths": [], "securityPaths": [], "runLogPath": ".agentic-workflow/advance-run.log" }` | conductor knobs |
 | `gitIdentity` | base | `{ "enforce": "off", "approved": {}, "agentGuard": { "mode": "ask", "allow": [] } }` | `enforce` = `off`/`commit`/`push`/`push-upstream`/`commit-and-push`/`commit-and-push-upstream` (`push` judges a push to any remote, `push-upstream` only the branch's tracked upstream remote); `approved` = `name`, `email`, `fullName`, `format` (`openpgp`/`ssh`), `signingKey`, `signingKeys` (per-machine keys), `signing` (`required`/`allowed`/`off` — `off` is a sign-off workflow) — only the declared facts are verified; `agentGuard.mode` = `ask`/`block`, `agentGuard.allow` = config keys the agent may write without asking |

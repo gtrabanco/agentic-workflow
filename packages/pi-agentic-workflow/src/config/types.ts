@@ -265,9 +265,12 @@ export interface GuardsConfig {
  *  consumer with rules attached to it. */
 export type { GitIdentityConfig, GitIdentityApproved, GitIdentityAgentGuard } from "../guards/git-identity.js";
 
-/** What the extension READS: the telemetry switch, resolved (issue #383). */
+/** What the extension READS: the telemetry switch and its JSONL path, resolved
+ *  (issue #383; the path is #504 S3). One switch, one path — no sampling rate,
+ *  consent gate or remote destination. */
 export interface TelemetryConfig {
   enabled: boolean;
+  jsonFile: string;
 }
 
 export interface ConfigIssue {

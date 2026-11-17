@@ -702,6 +702,54 @@ instead of failing the session. The workflow-side protocol — when units save,
 the recall order, the degraded path — lives in `unit-lane`'s memory reference,
 not here.
 
+## Session telemetry — the measured sample (optional)
+
+Turn the switch on and every session that runs a unit-scoped command emits one
+**sample** at shutdown: the unit it worked on, the phase (the command that
+started the work), this package's version, the model that served the most turns,
+how many paths it changed, its turns, the model's and the tools' milliseconds,
+and the provider's own token counts — `tokens` plus the `input`, `output`,
+`cache_read`, `cache_write` and `reasoning` fields that make it up. No prompt
+text, no model output, no diff, no file content: the accumulator never receives
+any of them.
+
+```json
+{ "telemetry": { "enabled": true, "jsonFile": ".pi/.telemetry/sessions.jsonl" } }
+```
+
+Two destinations, one sample. The project's `tier-cost@2` ledger
+(`docs/workflow/TIER_COST.md`) gets a markdown row appended with one atomic
+write, and the JSONL file gets one JSON object per line at the path
+`telemetry.jsonFile` names (`.pi/.telemetry/sessions.jsonl` by default). Add the
+file to your ignore list if you do not want it in the repository:
+
+```gitignore
+.pi/.telemetry/
+```
+
+Read it back with the report, which answers JSON by default and a markdown table
+on request — filters by model, unit and observed day, and aggregates by phase or
+unit:
+
+```bash
+bun scripts/telemetry-report.mjs --ledger docs/workflow/TIER_COST.md --by phase
+bun scripts/telemetry-report.mjs --jsonl .pi/.telemetry/sessions.jsonl --model qwen3.6 --human
+```
+
+Nothing is sent anywhere: there is no remote sink, no consent prompt and no
+opt-out — one switch, one path. A project that never enables it measures nothing
+and carries no file.
+
+**New command → register telemetry.**
+**Delete command → remove telemetry.**
+**Rename command → update telemetry.**
+The phase vocabulary is the closed `PHASE_LABELS`
+list the schema package publishes, and the repository's coverage suite crosses it
+against the real command surface in both directions — a command with no label and
+a label with no command are the same defect. Instrumenting anything else (the
+repo's scripts, single tool calls) is out of scope: Pi's own session log already
+carries tool-level detail.
+
 ## Session journal — auto log-session (optional)
 
 One mechanical entry in the project's `docs/LOGS.md` when a session ends: the
