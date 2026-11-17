@@ -329,11 +329,11 @@ test("the emission-only principle is stated once with both sources (S5)", () => 
   assert.match(text, /emission-only/i);
   assert.match(text, /2310\.01798/);
   assert.match(text, /2605\.09315/);
-  assert.doesNotMatch(text, /self-edits|automatic rewrite/i);
+  assert.match(text, /never self-edits/i, "the constraint is stated as a prohibition, never a mechanism");
 });
 
 test("the block grammar is registered in the guide and claimed by the inventory (S6)", () => {
-  assert.match(guide(), /^\| coverage-gap-grammar \| skills\/product-audit\/references\/AUDIT_DIMENSIONS\.md \| block:coverage-gap@1 \|/m);
+  assert.match(guide(), /^coverage-gap-grammar \| skills\/product-audit\/references\/AUDIT_DIMENSIONS\.md \| block:coverage-gap@1 \| n\/a \| no$/m);
   assert.match(dimensions(), /```text\ncoverage-gap@1\n/);
   const grammarRow = inventory().split("\n").find((line) => line.startsWith("normative-surface-grammar |"));
   assert.ok(grammarRow, "the inventory claims the grammar family");
