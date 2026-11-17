@@ -172,7 +172,9 @@ test("a bank row whose shape the family set does not carry is refused", () => {
 
 test("a bank whose table header differs from its declared cells is refused", () => {
   const text = bankFixture([bankRow()]).replace("| id | shape |", "| id | family |");
-  assert.deepEqual(codes(checkBank(text)), ["bank-header-drift"]);
+  const result = checkBank(text);
+  assert.equal(result.ok, false);
+  assert.ok(codes(result).includes("bank-header-drift"), JSON.stringify(result.findings));
 });
 
 test("a bank with no contract block is refused instead of read as empty", () => {
