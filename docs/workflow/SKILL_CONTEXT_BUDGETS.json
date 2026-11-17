@@ -84,12 +84,12 @@
         }
       },
       "docs/workflow/GATE_INVENTORY.md": {
-        "linesMax": 180,
-        "estimateMax": 6899,
+        "linesMax": 172,
+        "estimateMax": 6985,
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 75,
+        "machineLines": 77,
         "sources": {
           "unit 557 (verification materialization, issue #564)": "the inventory gains one row, `materialization-check` (carrier `cli`), claiming the four new materialization surfaces on the self-inventory row (`normative-surface-grammar`). The machine region moves 73 -> 74 lines and the file measures 169 lines / 95 prose / 6,699 est with `bun scripts/check-skill-context.mjs --documents`; `machineLines` is re-pinned exactly and `estimateMax` 6,512 -> 6,699 (the exact boundary the new rows measure). `linesMax` (180) and `proseLinesMax` are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "merge of feat/563-init-workspace-interview with main (PR #584, issues #563 / #555 / #565)": "the merged `normative-surface-grammar` surfaces list unions unit 556's `interview-bank` with issue #555's `runner-set` and feature 558's three quality tokens, and the `charter-bank-shape` gate row stands beside main's own; measured on the merged tree with `bun scripts/check-skill-context.mjs --documents`: 168 lines / 95 prose / 6,512 est, so `estimateMax` is re-pinned 6,506 -> 6,512 (the exact boundary the merged tree measures). `linesMax` (180) and `machineLines` (73) are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
@@ -113,7 +113,8 @@
           "issue #591 (skill discovery, 2026-11-16)": "the `normative-surface-grammar` row's `surfaces` cell claims the five new ids, so the document measures 6547 est with `bun scripts/check-skill-context.mjs --documents`; re-based by the manifest's declared arithmetic, ceil(6547 x 1.10) = 7202. Lines (168) stay inside the unchanged 180 ceiling.",
           "merge of PR #594 (main, issue #591) into feat/564-verification-materialization (2026-11-17)": "the merged `normative-surface-grammar` surfaces cell unions this unit's four materialization ids with PR #594's five skill-discovery ids (98 claimed surfaces), and this unit's `materialization-check` row stands beside main's rows; measured on the merged tree with `bun scripts/check-skill-context.mjs --documents`: 169 lines / 74 machine / 95 prose / 6,734 est, so `estimateMax` is re-pinned 6,699 -> 6,734 (the exact boundary the merged tree measures). `linesMax` (180) and `machineLines` (74, this unit's row) are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "issue #590 (coverage-gap audit)": "the inventory gains two `script` rows — `coverage-gap-join` (the deterministic join and its seeded/clean fixture) and `dimension-regression` (the push-range evolution gate) — and the `normative-surface-grammar` row claims the new `coverage-gap-grammar` surface. Both rows land inside the `prose-gate-inventory@1` block, so the machine region moves 74 -> 76 lines and the file measures 171 lines / 76 machine / 95 prose / 6,899 est with `bun scripts/check-skill-context.mjs --documents`; `estimateMax` is re-pinned 6,734 -> 6,899 (the exact boundary the new rows measure). `linesMax` (180) is unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
-          "merge of feat/470-content-guard-layer with main (2026-11-17, issue #470)": "both sides grew the inventory — main's materialization gate rows plus this unit's `content-guard-discipline` row, plus the subsequent main push (unit 590's `coverage-gap-join`, `dimension-regression`, `coverage-gap-grammar`) — so the merged machine table measures 75 lines and the file 170; pins re-set to the measurement."
+          "merge of feat/470-content-guard-layer with main (2026-11-17, issue #470)": "both sides grew the inventory — main's materialization gate rows plus this unit's `content-guard-discipline` row, plus the subsequent main push (unit 590's `coverage-gap-join`, `dimension-regression`, `coverage-gap-grammar`) — so the merged machine table measures 75 lines and the file 170; pins re-set to the measurement.",
+          "re-add content-guard-discipline after main merge": "the merge with main (2026-11-17) brought coverage-gap rows but lost content-guard-discipline; it was re-added after the merge. The merged file measures 171 lines / 77 machine / 96 prose / 6,979 est."
         }
       },
       "docs/workflow/SKILL_AUTHORING.md": {
