@@ -83,24 +83,27 @@ Each criterion is observable and names the check that proves it.
    exits 0 · `rg -n 'features/554-hook-scripts-to-cli/SPEC.md' docs/ROADMAP.md` matches 1.
 2. **S2/S3** — the four capabilities reachable from the CLI as subcommands, and
    no template hook contains the logic:
-   `rg -n '^(turn-contract|guard-command|git-identity-check|fullauto-merge)$' -c packages/agentic-workflow/bin/agentic-workflow.mjs`
+   `rg -n 'case "(turn-contract|guard-command|git-identity-check|fullauto-merge)":' -c packages/agentic-workflow/bin/agentic-workflow.mjs`
    matches 4 (one case label each, asserted by the shim suite).
 3. **S4** — the decision logic is crate modules:
    `rg --files packages/agentic-workflow/src` lists
    `temp.mjs`, `forge.mjs`, `guard/command.mjs`, `guard/payload.mjs`, `guard/git-identity.mjs`,
    `turn-contract.mjs`, `fullauto-merge.mjs` — each with a sibling suite under
    `packages/agentic-workflow/test/`.
-4. **S5** — the shims: every file in `template/.agentic-workflow/hooks/*.sh`
-   other than `tests/` resolves `AGENTIC_WORKFLOW_BIN`/`command -v`, execs the
-   CLI, and forwards the exit — `bash template/.agentic-workflow/hooks/tests/test-hook-shims.sh`
-   exits 0.
+4. **S5** — the shims: every hook file this unit converted — the four shims and
+   the three platform adapters — resolves `AGENTIC_WORKFLOW_BIN`/`command -v`,
+   execs the CLI, and forwards the exit (`index-sync.sh` and `secret-scan.sh`
+   predate the unit and keep their own contracts: a silent no-op and a runtime
+   runner) — `bash template/.agentic-workflow/hooks/tests/test-hook-shims.sh`
+   exits 0, its shim list naming exactly the converted files.
 5. **S6** — one turn-contract engine: the shell shim and the crate engine produce
    byte-identical stdout and equal exit codes across the shared fixture matrix —
    `node --test packages/agentic-workflow/test/turn-contract.parity.test.mjs`
    exits 0.
 6. **S7/S13** — pi imports the crate's profile normalizer and its suite is green:
    `rg -n 'from "@gtrabanco/agentic-workflow/src/guard/git-identity.mjs"' packages/pi-agentic-workflow/src/guards/git-identity.ts`
-   matches 1 · `bun run --cwd packages/pi-agentic-workflow test` exits 0.
+   matches 3 — the import and both re-exports, every reference resolving to the
+   crate module · `bun run --cwd packages/pi-agentic-workflow test` exits 0.
 7. **S8** — forge and temp resolution are importable modules with the documented
    refusal order — `node --test packages/agentic-workflow/test/forge.test.mjs packages/agentic-workflow/test/temp.test.mjs`
    exits 0.
@@ -111,7 +114,7 @@ Each criterion is observable and names the check that proves it.
    documentation surfaces the change owns (hooks README, crate README, the
    skills' references) name the shim shape.
 10. **S11** — no shell file carries a decision rule:
-    `rg -n 'grep -E|jq -|forge_detect|aw_tmpdir' template/.agentic-workflow/hooks --glob '!tests/**'`
+    `rg -n 'grep -E|jq -|forge_detect|aw_tmpdir' template/.agentic-workflow/hooks -g '!**/tests/**'`
     matches 0.
 11. **S12** — the shim rule is machine-pinned: each of the six hook scripts is
     `set -u` + resolve + exec, asserted by `tests/test-hook-shims.sh` case
@@ -247,36 +250,36 @@ section and the full review pass.
 
 ## Tasks
 
-- **P1** — freeze the ledgers, the acceptance criteria and the roadmap state
+- P1 — freeze the ledgers, the acceptance criteria and the roadmap state
   (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/554-hook-scripts-to-cli/SPEC.md` exits 0)
   (Implements: S1)
   - Relevant files: docs/features/554-hook-scripts-to-cli/SPEC.md, docs/features/554-hook-scripts-to-cli/planning-evidence.md, docs/features/554-hook-scripts-to-cli/planning-obligations.md, docs/features/554-hook-scripts-to-cli/decisions.md, docs/ROADMAP.md
-- **P2** — land the crate's temp and forge modules with their red corpus first
+- P2 — land the crate's temp and forge modules with their red corpus first
   (validator: `node --test packages/agentic-workflow/test/temp.test.mjs packages/agentic-workflow/test/forge.test.mjs` exits 0)
-  (Implements: S8, S11)
+  (Implements: S2, S8, S11)
   - Relevant files: packages/agentic-workflow/src/temp.mjs, packages/agentic-workflow/src/forge.mjs, packages/agentic-workflow/test/temp.test.mjs, packages/agentic-workflow/test/forge.test.mjs
-- **P3** — land the guard's command and payload decision in the crate, expose
+- P3 — land the guard's command and payload decision in the crate, expose
   `guard-command`, and reduce the adapters to their format seam
   (validator: `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` exits 0)
-  (Implements: S4, S5, S9, S11, S12)
+  (Implements: S2, S3, S4, S5, S9, S11, S12)
   - Relevant files: packages/agentic-workflow/src/guard/command.mjs, packages/agentic-workflow/src/guard/payload.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, template/.agentic-workflow/hooks/guard-command.sh, template/.agentic-workflow/hooks/adapters/
-- **P4** — move the turn-contract engine and the identity check into the crate,
+- P4 — move the turn-contract engine and the identity check into the crate,
   reduce both shims, and delete the pi and `scripts/` duplicates
   (validator: `node --test packages/agentic-workflow/test/turn-contract.parity.test.mjs scripts/identity-hook-parity.test.mjs` exits 0)
-  (Implements: S6, S7, S11, S13)
+  (Implements: S2, S6, S7, S11, S13)
   - Relevant files: packages/agentic-workflow/src/turn-contract.mjs, packages/agentic-workflow/src/guard/git-identity.mjs, packages/agentic-workflow/bin/turn-contract.mjs, template/.agentic-workflow/hooks/turn-contract.sh, template/.agentic-workflow/hooks/git-identity-check.sh, packages/pi-agentic-workflow/src/guards/git-identity.ts, scripts/push-identity-check.mjs
-- **P5** — move the automated-merge wrapper into the crate and reduce its shim
+- P5 — move the automated-merge wrapper into the crate and reduce its shim
   (validator: `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh` exits 0)
-  (Implements: S4, S11, S12)
+  (Implements: S2, S4, S11, S12)
   - Relevant files: packages/agentic-workflow/src/fullauto-merge.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, template/.agentic-workflow/hooks/fullauto-merge.sh
-- **P6** — retire the shell libraries and their suites with every case ported,
+- P6 — retire the shell libraries and their suites with every case ported,
   and pin the shim shape and its degradation
   (validator: `bash template/.agentic-workflow/hooks/tests/test-hook-shims.sh` exits 0)
-  (Implements: S5, S8, S11, S12, S15)
+  (Implements: S3, S5, S8, S11, S12, S15)
   - Relevant files: template/.agentic-workflow/hooks/lib/, template/.agentic-workflow/hooks/tests/test-hook-shims.sh, scripts/rigidity-review.mjs
-- **P7** — ship the documentation and the repository state, then run the whole
+- P7 — ship the documentation and the repository state, then run the whole
   corpus (validator: `node scripts/run-root-suite.mjs` exits 0)
-  (Implements: S10, S14, S15)
+  (Implements: S10, S14, S15, S16)
   - Relevant files: template/.agentic-workflow/hooks/README.md, packages/agentic-workflow/README.md, skills/orchestration-envelope/references/TURN_CONTRACT.md, skills/init-workspace/SKILL.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md, docs/workflow/GIT_IDENTITY_HARDENING.md, template/docs/workflow/GIT_IDENTITY_HARDENING.md, .changeset/554-hook-scripts-to-cli.md
 
 ### Planning evidence
