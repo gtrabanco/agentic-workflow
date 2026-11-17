@@ -1,6 +1,8 @@
 ---
 "@gtrabanco/agentic-workflow-schema": minor
 "@gtrabanco/agentic-workflow": minor
+"@gtrabanco/pi-agentic-workflow": patch
+"batch-scheduler": patch
 ---
 
 feat(guard): a content guard layer in the deterministic collection path (issue #470)
@@ -20,3 +22,11 @@ workflow-status sensor's forge collection both route through it, so a payload in
 an issue title or body is gone before it reaches an envelope, and a discipline
 suite fails any producer that reads a forge `title`/`body` field list without
 being either a declared seam or an explained exemption.
+
+Those two decisions travel as declared degradations, so `batch-plan@3`'s
+degradation grammar gains the guard's two families —
+`excluded-forge-content-<source>-<id>-<reason>` and
+`stripped-forge-content-<source>-<id>-<kind>-<count>` — beside
+`unavailable-<source>-<cause>` and `surface-unknown-issue-<n>`. A plan over a
+repository with hidden material or an untrusted author therefore prints and says
+what it could not use, instead of being refused by its own envelope.
