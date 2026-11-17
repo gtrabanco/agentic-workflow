@@ -59,7 +59,7 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     memory: { engram: false },
     // Issue #383: the measured acceptance is opt-in, so the shipped shape carries
     // it switched off — the same record feature 66's memory consent uses here.
-    telemetry: { enabled: false },
+    telemetry: { enabled: false, jsonFile: ".pi/.telemetry/sessions.jsonl" },
     // Issue #394 / #427: the journal writer is opt-in as well — off, and no
     // publisher named, so a fresh install writes nothing at either switch.
     logSession: { enabled: false, publisher: null },

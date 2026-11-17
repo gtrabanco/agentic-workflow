@@ -74,6 +74,10 @@
       "properties": {
         "enabled": {
           "type": "boolean"
+        },
+        "jsonFile": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

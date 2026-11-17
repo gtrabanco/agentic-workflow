@@ -7,9 +7,9 @@
   },
   {
     "path": "scripts/red-first.test.mjs",
-    "timeoutMs": 30000,
-    "reason": "the shipped-history case walks the repository's full git history through the red-first gate — the cost is the walk itself, not waste; bun's own 5s default already failed this suite standalone before this unit (pre-existing, measured at f349d7b5)",
-    "measured": "~12s the shipped-history walk under the bun leg (12.4s suite), 2026-11-10"
+    "timeoutMs": 60000,
+    "reason": "the shipped-history case walks the repository's full git history through the red-first gate — the cost is the walk itself, not waste; bun's own 5s default already failed this suite standalone before this unit (pre-existing, measured at f349d7b5), and the walk grows with every unit the repository lands (54 pairs, 29 after the cutoff at issue #504's cut, against the count the 30s budget was set on)",
+    "measured": "29.2s the shipped-history walk standalone (34.4s suite) on 2026-11-17 at 1fcb5359 under a busy box, and >30s in a `--jobs auto` gate run the same day — the earlier ~12s reading is 2026-11-10 at 54 fewer landed units"
   },
   {
     "path": "scripts/secret-scan.test.mjs",

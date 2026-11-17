@@ -27,6 +27,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { PHASE_LABELS } from "@gtrabanco/agentic-workflow-schema";
+
 /** The provider's usage record for one assistant message; every field optional. */
 export interface MessageUsage {
   totalTokens?: number;
@@ -37,12 +39,27 @@ export interface MessageUsage {
   reasoning?: number;
 }
 
-/** One unit sample — the numbers only, in the ledger's own column order. */
+/**
+ * One unit sample — the numbers only, in the ledger's own column order.
+ *
+ * #504 widened it: `phase`, `version` and `model` name the work, and the five
+ * provider fields break `tokens` down, so a cost regression can be attributed
+ * to a work type instead of a single opaque number. The eight fields #383
+ * shipped keep their meaning; `tokens` is still the provider's own total.
+ */
 export interface TelemetrySample {
   readonly unit: string;
+  readonly phase: string | null;
+  readonly version: string | null;
+  readonly model: string | null;
   readonly changed_paths: number;
   readonly tokens: number;
   readonly turns: number;
+  readonly input_tokens: number;
+  readonly output_tokens: number;
+  readonly cache_read_tokens: number;
+  readonly cache_write_tokens: number;
+  readonly reasoning_tokens: number;
   readonly model_ms: number;
   readonly tool_ms: number;
   readonly observed: string;
@@ -60,6 +77,18 @@ export interface SessionTelemetryOptions {
   readonly enabled: boolean;
   /** The unit the session is working on, as its directory is named. */
   readonly unit: string;
+  /**
+   * The command that named the unit, from the closed `PHASE_LABELS` vocabulary.
+   * Absent means the sample names no phase, which is what a caller outside a
+   * dispatched command honestly has.
+   */
+  readonly phase?: string | null;
+  /**
+   * The producing package's version. Defaults to this package's own manifest —
+   * the value a row traces back to — and is injectable for the same reason the
+   * clock is: so the suite owns it.
+   */
+  readonly version?: string | null;
   /**
    * How many paths this session changed. A function is evaluated when the sample
    * is written, which is the only moment the answer is known: a count taken when
@@ -81,7 +110,7 @@ export interface SessionTelemetryOptions {
 
 export interface SessionTelemetry {
   onTurnStart(event: { timestamp?: number }): void;
-  onTurnEnd(event: { message?: { usage?: MessageUsage } }): void;
+  onTurnEnd(event: { message?: { usage?: MessageUsage; model?: string } }): void;
   onToolEnd(event: { durationMs?: number }): void;
   /** The counters as a sample, without emitting it. */
   peek(): TelemetrySample | null;
@@ -95,8 +124,49 @@ const EPOCH_DAY = /^\d{4}-\d{2}-\d{2}$/;
 function tokensOf(usage: MessageUsage | undefined): number {
   if (!usage) return 0;
   if (typeof usage.totalTokens === "number") return Math.max(0, Math.trunc(usage.totalTokens));
-  const parts = [usage.input, usage.output, usage.cacheRead, usage.cacheWrite, usage.reasoning];
-  return parts.reduce<number>((sum, part) => sum + (typeof part === "number" ? Math.max(0, Math.trunc(part)) : 0), 0);
+  return sumOf(usage);
+}
+
+/** One provider field as a non-negative integer; an absent field is a zero. */
+function countOf(value: number | undefined): number {
+  return typeof value === "number" ? Math.max(0, Math.trunc(value)) : 0;
+}
+
+/** The five provider fields, summed — the total when the provider names none. */
+function sumOf(usage: MessageUsage): number {
+  return [usage.input, usage.output, usage.cacheRead, usage.cacheWrite, usage.reasoning]
+    .reduce<number>((sum, part) => sum + countOf(part), 0);
+}
+
+let cachedVersion: string | null | undefined;
+
+/**
+ * The package's own version, read from its manifest.
+ *
+ * `dist/session-telemetry.js` sits one directory below the manifest, so the
+ * path is the same in the source tree and in a packed install. A package whose
+ * manifest cannot be read answers `null` rather than a literal nobody bumped.
+ */
+export function packageVersion(): string | null {
+  if (cachedVersion === undefined) {
+    try {
+      const manifest = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version?: unknown };
+      cachedVersion = typeof manifest.version === "string" && manifest.version !== "" ? manifest.version : null;
+    } catch {
+      cachedVersion = null;
+    }
+  }
+  return cachedVersion;
+}
+
+/**
+ * The phase a dispatched command names, or `null` for a name the vocabulary does
+ * not publish. The set is closed: a command that ran without being registered is
+ * a coverage defect the repository's own test catches (`S7`), never a label
+ * invented here.
+ */
+export function phaseFromCommand(command: string): string | null {
+  return (PHASE_LABELS as readonly string[]).includes(command) ? command : null;
 }
 
 /**
@@ -118,6 +188,23 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
   let windowStart: number | null = null;
   let windowToolMs = 0;
   let emitted = false;
+  // The provider's own fields, accumulated beside the total they belong to.
+  const tokenFields = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0 };
+  // Which model served which turns. A session may switch models, and the sample
+  // is the session's cost: it names the majority's model, first seen on a tie.
+  const modelTurns = new Map<string, number>();
+
+  function modelOf(): string | null {
+    let best: string | null = null;
+    let bestTurns = 0;
+    for (const [model, served] of modelTurns) {
+      if (served > bestTurns) {
+        best = model;
+        bestTurns = served;
+      }
+    }
+    return best;
+  }
 
   function sample(): TelemetrySample | null {
     if (!options.enabled) return null;
@@ -125,9 +212,17 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
     if (!EPOCH_DAY.test(observed)) throw new Error(`observed date must be YYYY-MM-DD, got ${observed}`);
     return {
       unit: options.unit,
+      phase: options.phase ?? null,
+      version: options.version === undefined ? packageVersion() : options.version,
+      model: modelOf(),
       changed_paths: typeof changedPaths === "function" ? changedPaths() : changedPaths,
       tokens,
       turns,
+      input_tokens: tokenFields.input,
+      output_tokens: tokenFields.output,
+      cache_read_tokens: tokenFields.cacheRead,
+      cache_write_tokens: tokenFields.cacheWrite,
+      reasoning_tokens: tokenFields.reasoning,
       model_ms: Math.max(0, Math.round(modelMs)),
       tool_ms: Math.max(0, Math.round(toolMs)),
       observed,
@@ -144,7 +239,19 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
 
     onTurnEnd(event) {
       if (!options.enabled) return;
-      tokens += tokensOf(event.message?.usage);
+      const message = event.message;
+      const usage = message?.usage;
+      tokens += tokensOf(usage);
+      if (usage) {
+        tokenFields.input += countOf(usage.input);
+        tokenFields.output += countOf(usage.output);
+        tokenFields.cacheRead += countOf(usage.cacheRead);
+        tokenFields.cacheWrite += countOf(usage.cacheWrite);
+        tokenFields.reasoning += countOf(usage.reasoning);
+      }
+      if (typeof message?.model === "string" && message.model !== "") {
+        modelTurns.set(message.model, (modelTurns.get(message.model) ?? 0) + 1);
+      }
       turns += 1;
       if (windowStart !== null) {
         // The window covers the whole turn, tools included; what the model spent

@@ -271,9 +271,15 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     schema: {
       type: "object",
       additionalProperties: false,
-      properties: { enabled: { type: "boolean" } },
+      properties: {
+        enabled: { type: "boolean" },
+        // #504 S3: the per-session JSONL destination, relative to the project
+        // root. One switch (`enabled`) and one path — a consent gate, a sampling
+        // rate or a remote destination is not a key this section carries.
+        jsonFile: { type: "string", minLength: 1 },
+      },
     },
-    defaults: { enabled: false },
+    defaults: { enabled: false, jsonFile: ".pi/.telemetry/sessions.jsonl" },
   },
   {
     key: "guards",
