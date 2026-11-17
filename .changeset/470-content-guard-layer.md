@@ -3,6 +3,7 @@
 "@gtrabanco/agentic-workflow": minor
 "@gtrabanco/pi-agentic-workflow": patch
 "batch-scheduler": patch
+"unit-lane": patch
 ---
 
 feat(guard): a content guard layer in the deterministic collection path (issue #470)
