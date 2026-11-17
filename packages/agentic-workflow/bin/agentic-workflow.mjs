@@ -632,7 +632,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation|guard-command> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation|guard-command|turn-contract|git-identity-check> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -656,6 +656,20 @@ switch (command) {
   // ── runner — the programmatic runner choice (issue #555) ─────────────
   case "runner": {
     process.exit(runRunnerService(restArgs));
+    break;
+  }
+
+  // ── git-identity-check — Layer 2's commit half (issue #514, unit 554) ─
+  case "git-identity-check": {
+    const { main } = await import("../src/guard/git-identity.mjs");
+    process.exit(main(restArgs));
+    break;
+  }
+
+  // ── turn-contract — the canonical turn contract (feature 52, unit 554) ─
+  case "turn-contract": {
+    const { main } = await import("../src/turn-contract.mjs");
+    process.exit(main(restArgs));
     break;
   }
 
