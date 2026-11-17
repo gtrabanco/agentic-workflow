@@ -204,13 +204,14 @@
     },
     "batch-scheduler": {
       "mainEstimateMax": 3225,
-      "referenceEstimateMax": 2768,
+      "referenceEstimateMax": 3325,
       "mainSources": {
         "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 adds the surface contract this sensor reports on: one Turn-contract box (an unknown surface runs serially; `blind-spot` names the batch nobody can call safe) and two guardrail paragraphs (findings include `blind-spot`; an unknown surface means serial, never parallel). Measured with `bun scripts/check-skill-context.mjs` at the change: SKILL.md 2931 est / 203 lines against the flat default 2800, which the file had already spent, so the ceiling is ceil(2931 x 1.10) = 3225; growth source = issue #574's normative additions."
       },
       "referenceSources": {
         "issue #487 correction batch (2026-11-14)": "the batch-scheduler claim example in references/PLAN.md names the real worktree for issue #487 (`fix/487-deterministic-secret-scanning`) instead of the pre-change intake slug, growing the reference from measured 2198 est to 2201 est; the reference ceiling re-bases from the flat default 2200 to ceil(2201 x 1.10) = 2422, growth source named (external-verify advisory 4, issue #487). Measured with `bun scripts/check-skill-context.mjs`.",
-        "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 adds the surface section to references/PLAN.md: the `## Where the surfaces come from` grammar, the `blind-spot` finding and the `surface-unknown-issue-<n>` degraded family in the field table, constraint 7, and the `--infer-surfaces` rule in the CLI block. Measured at the change: PLAN.md 2516 est / 184 lines; ceiling ceil(2516 x 1.10) = 2768, growth source = issue #574's normative additions."
+        "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 adds the surface section to references/PLAN.md: the `## Where the surfaces come from` grammar, the `blind-spot` finding and the `surface-unknown-issue-<n>` degraded family in the field table, constraint 7, and the `--infer-surfaces` rule in the CLI block. Measured at the change: PLAN.md 2516 est / 184 lines; ceiling ceil(2516 x 1.10) = 2768, growth source = issue #574's normative additions.",
+        "issue #621 (unit 621-batch-scheduler-surface-verification)": "issue #621 finishes the claimed-surface contract and documents it: the `claimed_surface` field row names the one cause it reports (a live branch's uncovered declared surfaces) and the three that never become a row, the `degraded[]` row gains the `unavailable-launch-evidence-diff-issue-<n>-<cause>` family, the version history moves to v4 and constraint 9 states the live-risk rule. Measured at the change: PLAN.md 3022 est / 194 lines; the ceiling re-bases from 2768 to ceil(3022 x 1.10) = 3325, growth source = issue #621's normative additions."
       }
     },
     "audit-pr": {
