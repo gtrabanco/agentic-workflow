@@ -117,3 +117,12 @@ Status at handoff: corrections applied, all touched validators re-run green in
 the foreground, two local commits (receipt, batch). **The owner is the external
 verifier — a delta recheck of these blockers is owed; nothing here is
 self-approved.**
+
+**Addendum (2026-11-17, same run):** the correction records landed in four
+local commits (verdict receipt, batch, journal fragment, the `G11` load note).
+Full-gate state: green once with the batch applied (`G8`: 117 PASS, exit 0);
+four later attempts on this host (load 4.9–16.2) red only in pre-existing
+wall-clock checks (`#291 F7` at 511ms vs its `<500ms` assertion — `V1`'s
+documented failure, fixture-based — and two 120 s suite kill-times), every red
+suite green in isolation on this head (`unit-route` 64/0, `phase-lint` 162/0,
+`workflow-status-sensor` 81/0), no assertion touched. Evidence: unit doc `G11`.
