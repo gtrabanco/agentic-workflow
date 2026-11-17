@@ -864,6 +864,33 @@ test("V5: a directory that is not a git repository degrades declared instead of 
   }
 });
 
+test("V6: a local worktree tags the in-flight evidence `[worktree]`", () => {
+  // External verify 2026-11-17, advisory A2: the unit doc's regression scope
+  // cites the `V` cases as the verifier for the `[worktree]` tag and no test
+  // asserted it — this pin makes the citation true.
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    withInFlightUnit(root, 10, "alpha-skill-change");
+    const issues = [issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"]))];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "fix/10-alpha-skill-change", merged: false }],
+        worktree: "/repo/.worktrees/fix-10-alpha-skill-change",
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.deepEqual(
+      plan.launched,
+      [{ number: 10, evidence: "branch fix/10-alpha-skill-change [worktree] + unit-doc docs/fix/10-alpha-skill-change" }],
+      "a local worktree stays distinguishable from a remote PR",
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── W — file-level overlap between lanes (issue #509, S4) ──────────────────
 // Reproducer of bug 3: #507 (lane scripts) and #269 (lane docs) both rewrite
 // scripts/docs-generate.mjs and the plan calls them parallel-runnable.
@@ -1666,6 +1693,38 @@ test("CS4: an issue whose live branch covers every declared surface carries no c
   }
 });
 
+test("CS5: an issue that declares no surface carries no claimed_surface, even with a computed live diff", () => {
+  // External verify 2026-11-17, blocker B1: the lane-guess fallback (`general`)
+  // fed the emitter, so an undeclared issue reported an unverified surface it
+  // never declared — beside the `surface-unknown-issue-<n>` degradation that says
+  // the declaration is unknown. O5's rule: exactly the *declared* surfaces.
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Undeclared issue", "Plain prose body; nothing declares a lane.")];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-live", merged: false }],
+        pr: { number: 640, state: "CLOSED" },
+        files: ["scripts/tool.mjs"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.ok(plan.degraded.includes("surface-unknown-issue-10"), "the unknown declaration stays declared");
+    for (const row of firstBatchRows(plan)) {
+      assert.equal(
+        row.claimed_surface,
+        undefined,
+        "nothing was declared, so nothing can be reported uncovered — the `general` lane is a guess, never a claim",
+      );
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── PS — a declared parent surface (issue #621 §6.3) ──────────────────────
 // The probe's input: an issue declaring the bare parent `skills` whose branch
 // rewrites `skills/alpha/SKILL.md`, with no sibling declaring `skills/alpha`.
@@ -1806,6 +1865,56 @@ test("SUM: the human summary lists one line per actionable issue and nothing whe
     const quiet = [];
     printHumanSummary(buildBatchPlan(baseInput(issues, root)), (line) => quiet.push(line));
     assert.deepEqual(quiet.filter((line) => line.includes("claimed surfaces")), [], "no field anywhere → no section");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("SUM2: the summary prints one line per issue that carries the field (O11, P3)", () => {
+  // External verify 2026-11-17, blocker B2: O11/P3 (and the changeset) promise
+  // one line per flagged issue; the summary joined every entry onto one line,
+  // so the stated outcome stopped reproducing at two flagged issues.
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(10, "First leftover branch", whereSection(["docs"])),
+      issue(11, "Second leftover branch", whereSection(["docs"])),
+    ];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-live", merged: false }],
+        pr: { number: 641, state: "CLOSED" },
+        files: ["scripts/tool.mjs"],
+        filesKnown: true,
+      },
+      11: {
+        branches: [{ name: "feat/11-live", merged: false }],
+        pr: { number: 642, state: "CLOSED" },
+        files: ["scripts/tool.mjs"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    const lines = [];
+    printHumanSummary(plan, (line) => lines.push(line));
+    const claimed = lines.filter((line) => line.includes("claimed surfaces"));
+    assert.equal(claimed.length, 2, "one line per flagged issue — never one joined line");
+    for (const number of [10, 11]) {
+      assert.equal(
+        claimed.filter((line) => line.includes(`#${number}:`)).length,
+        1,
+        `exactly one line names #${number}`,
+      );
+    }
+    for (const line of claimed) {
+      assert.ok(
+        line.includes("#10:") !== line.includes("#11:"),
+        `one issue per line, got ${JSON.stringify(line)}`,
+      );
+      assert.match(line, /^\n?claimed surfaces \(unverified — merge conflict possible\):/u, "each line carries the section label");
+    }
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -2166,6 +2275,10 @@ test("envelope: no owned surface keeps a superseded batch-plan token", () => {
     "skills/batch-scheduler/references/PLAN.md",
     "README.md",
     "docs/workflow/SKILLS.md",
+    // External verify 2026-11-17, blocker B3: the previous bump (509's 371b5a0b)
+    // updated this row's token, so it is a contract-narrating sibling of every
+    // batch-plan version bump — an unowned survivor is exactly the F51/F53 class.
+    "docs/features/107-mechanization-inventory/INVENTORY.md",
   ];
   const stale = [];
   for (const rel of owned) {
