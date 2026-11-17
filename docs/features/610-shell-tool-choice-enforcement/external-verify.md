@@ -290,3 +290,54 @@ grounds that the offline gate had already passed for exactly this range twice in
 this session — recorded here per the hook's "record why" line, and worth one
 line on PR #617 as the owner's step. A stray `SIGPIPE` in git's post-hook phase
 is not this unit's surface; it is reported, not hidden.
+
+## Integration of origin/main — 2026-11-17 (linear rebase, owner-ordered)
+
+`origin/main` had moved 72 commits (telemetry by default #383, the content-guard
+layer #470/#605, `pi-extensible-workflows` 6.3.0 → 6.4.0 #619, the owner's #610
+triage row, four new roadmap rows). The owner asked for the conflicts solved
+**with linear history**, so this branch's 14 commits were rebased onto
+`origin/main` (backup `bak/610-pre-rebase` at `44335820`), and the three
+conflicted files were resolved by hand beside the armed drivers:
+
+- `docs/workflow/CONFIG.md` — union: main's `telemetry` (default on) and
+  `contentGuard` rows stand, this unit's `pi` row with `toolChoice` stands.
+- `docs/ROADMAP.md` — union: main's status cell `in-progress · [#617]` with this
+  unit's summary; main's triage sentence moved into the unit doc's
+  `roadmap_summary` so the emitter keeps it (`docs-generate` → PASS).
+- `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — the driver kept main's side and
+  dropped this unit's narration, so both narrations were restored and the two
+  ceilings re-pinned to the merged measurement (AGENTS.md 728/165, the inventory
+  174/79/8,015) → `check-skill-context --documents` PASS.
+
+One red pair appeared right after the rebase and was traced to a **stale schema
+`dist/`** (main's new `CONTENT_AUTHOR_ASSOCIATIONS` export), not to a defect:
+rebuild → `unit-doc-contract` and `doc-discipline` back to `21 pass · 0 fail`.
+
+Receipt for the merged head `5c9ceaf2`:
+
+- `bun scripts/local-gate.mjs --jobs 2 --no-bail` · exit 0 · **`local-gate:
+  PASS — 19 step(s) in 717s`**, every step exit 0 — `dependency-pin-gate` now
+  green (main's 6.4.0 pin matches the registry, closing advisory A5),
+  `root-suite` exit 0 in 268s, `crate-suite-bun` 233s, `crate-suite-node` 173s,
+  `schema-node-compat`, `pi-node-compat`, `pi-compat-guard`, `secret-scan`,
+  `log-immutability`, `journal-carrier-check`, `worktree-guard`, projection.
+- suites: `unit-doc-contract` 21·0 · `doc-discipline` 21·0 · schema package
+  907·0 · pi package 965·0 · crate 1088·0 (59 files, main's inherited suites
+  included) · policy 21·0 · guard 9·0 · parity 4·0 · invocation-drift 13·0 +
+  gate PASS · config-extension 2·0 · budgets both modes PASS ·
+  `docs-generate --check` PASS · `dimension-regression --base origin/main`
+  `verdict | clean`.
+- feature preservation probed both ways: `toolChoice` (CONFIG, types, guards,
+  `shell-tool-choice-grammar`/`shell-tool-choice-carrier` rows, receipt,
+  obligations) and main's `telemetry` default, `contentGuard` row, 6.4.0 pin,
+  new roadmap rows — all present, no conflict marker anywhere in the tree.
+
+Push record for this integration: the pre-push hook's range base is this ref's
+remote tip — the *pre-rebase* tip `44335820`, which is no longer an ancestor —
+and the two earlier pushes showed that a long gate run leaves git exiting 141
+(SIGPIPE) in its post-hook phase without publishing (recorded above). With the
+full gate having just passed on exactly this tree (19/19, 717s), this force push
+uses the hook's documented `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` escape hatch,
+pushing with `--force-with-lease` as the owner's linear-history instruction
+requires; the reason is recorded here and should be echoed on PR #617.
