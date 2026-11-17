@@ -222,7 +222,8 @@ The section is frozen from here (`ac-hash`).
   *Proved by:* `bun test packages/agentic-workflow/test/content-guard.test.mjs`
   exits 0 with the sanitizer/fence/pipeline cases, **and**
   `rg -c 'guardForgeContent' scripts/batch-scheduler.mjs packages/agentic-workflow/src/runner/sensors/workflow-status.mjs`
-  matches `2` (one per seam).
+  matches `3` and `2` — one import plus one call per guarded field (title and
+  body in the planner, titles in the sensor).
 - **AC2 (S3)** — the guard runs inside the collection layer, before the value is
   stored or emitted: a payload injected in a fixture's `title`/`body` is already
   stripped in `collectIssues()`'s return value.
@@ -290,8 +291,8 @@ The section is frozen from here (`ac-hash`).
   version-parity gate pass over the change.
   *Proved by:* `node scripts/run-root-suite.mjs` exits 0, `bun run --cwd
   packages/agentic-workflow-schema test` exits 0, `bun run test` in
-  `packages/agentic-workflow` exits 0, `bun scripts/version-parity-gate.mjs`
-  exits 0.
+  `packages/agentic-workflow` exits 0,
+  `bun scripts/version-parity-gate.mjs --content` exits 0.
 
 ## Backstop — the residual risk
 
@@ -436,6 +437,11 @@ names it, never duplicates it).
 - **V2** — 2026-11-17, `unit-route` still answers `error` for this unit ("all phases recorded but status is 'in-progress' (not 'done')") — the router's close-out guard, and the correct answer before the owner's merge: the phases are logged, the index is not `done`, and nothing but the merge may say it is.
 - **V1** — 2026-11-17, the same aggregate run failed earlier on this host: `unit-route.test.mjs` #291/F7 (`a long Progress-log line uses linear scan`, a pre-existing `<500ms` wall-clock assertion) measured 559–1032 ms under load average 6.2–8.6 and 145 ms isolated, and the source it measures is untouched by this change (`git diff --name-only 5ef01c1f..HEAD -- packages/agentic-workflow/src/runner/` names only `sensors/workflow-status.mjs`). The green runs above repeat it at load 3.56 and 2.52. No test was edited.
 - **P7** — 2026-11-17, verification complete: `G1`–`G7` above, the differential pair (`E6`, `E7`) and the base-tree run (`E8`). Every obligation row is `verified`; nothing is deferred.
+- **D10** — 2026-11-17, correction batch over the external-verify receipt (`external-verify.md`, NEEDS-DECISION, 4 blockers) at the owner's apply instruction (S1: "triage and fix those that deserve to fix…"): all four blockers triaged fix, B1–B3 corrected (the shared-budget union restored in `SKILL_CONTEXT_BUDGETS.json` — ceiling `5071` plus the five main-side provenance notes the merge resolution dropped, 470's own pins intact; O10/AC13's parity command aimed at `--content`; O11's skills range retargeted at `origin/main...HEAD`), and B4's premise refuted rather than acted on: the session entry exists as the committed journal fragment `.agentic-workflow/journal/20261117T024105Z-feat-470-content-guard-layer-narrative-local.md` (landed in `21f0df3b`), which is where `/log-session` writes under `docs/LOGS.md`'s fragment rule — so `docs/LOGS.md` stays untouched by design and the receipt carries a dated retraction instead. Advisories A1 (AC1's count `2` → `3` and `2`) and A2 (the `release.mjs` exemption's false SPEC citation removed, justified by the `path-protection-records@1` row in the unit's new `decisions.md`) fixed in the same batch; A3 (origin/main advanced mid-verify) stays with the owner as the integration step. New finding reported, not chased (correction bounds): `path-guard --unit docs/features/470-content-guard-layer --phase P5 --base 3a5b76b4` fails `malformed-declaration` because this unit declares no `path-protection-plan@1` block — the parse result is byte-identical on HEAD and on the worktree, so it predates this batch.
+- **E9** — 2026-11-17, the frozen-failure corpus re-run before the batch, every reproducer red as the receipt described: `bun scripts/version-parity-gate.mjs` · exit 2 (usage); `git diff --name-only 5ef01c1f..HEAD -- skills/` → 8 files against the row's claimed 0; `git diff --stat 3a5b76b4...HEAD -- docs/LOGS.md` → empty against P6's claimed entry; `git diff 3a5b76b4...HEAD -- docs/workflow/SKILL_CONTEXT_BUDGETS.json` → the `5071 → 4848` ceiling revert plus the five deleted provenance notes, head ceiling `4848` over a measured `4610`.
+- **G8** — 2026-11-17, HEAD 5dd7a0b8a57667640afdc8874eb63d95130a24bb (the correction batch in the worktree), O10 re-run after B2 (corrected cell): `node scripts/run-root-suite.mjs` · exit 0 · 117 PASS / 0 FAIL; `bun run --cwd packages/agentic-workflow-schema test` · exit 0 · 902 pass, 0 fail; `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS`.
+- **G9** — 2026-11-17, HEAD 5dd7a0b8a57667640afdc8874eb63d95130a24bb (the correction batch in the worktree), O11 re-run after B3 (corrected range): `bun test scripts/content-guard-discipline.test.mjs` · exit 0 · 7 pass, 0 fail; `git diff --name-only origin/main...HEAD -- skills/` · 0 lines.
+- **G10** — 2026-11-17, HEAD 5dd7a0b8a57667640afdc8874eb63d95130a24bb (the correction batch in the worktree), the rest of the batch's re-checks: `bun scripts/check-skill-context.mjs` · PASS (30 skills) and `--documents` · PASS (AGENTS.md 723/160, GATE_INVENTORY 170/75 inside their pins; the restored init-workspace ceiling 5071 covers the measured 4610) with the structural union assertions (5 notes + ceiling byte-equal to base, 470's pins/notes kept) passing in the fix script; `rg -c 'guardForgeContent' …` → 3 and 2 (AC1's reworded clause); `bun scripts/docs-generate.mjs --check` · `verdict: PASS`; `bun scripts/lint-changeset.mjs` · exit 0; `journal aggregate --check` · ok, 2 fragments conforming; `agentic-workflow verify docs/features/470-content-guard-layer/SPEC.md` · `VERIFY PASS` (sections, obligations-closure, provenance-stamp, log-kinds, cited-paths).
 
 ## Next
 

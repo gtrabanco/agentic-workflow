@@ -71,3 +71,49 @@ Corrections for blockers 1–4 belong to `/aw-local-apply` under its own bounds
 (one batch → one blockers-only recheck → a second only if the same blocker
 persists → `Needs your decision`). This verdict suggests no fix beyond the
 smallest action named per blocker above.
+
+## Correction — owner apply instruction, 2026-11-17 (same run)
+
+The apply pass ran one correction batch over this receipt (§0 `fix findings /
+repair`, S1 "triage and fix those that deserve to fix"). The verdict block above
+stays as issued — a dated receipt is never rewritten in place. Outcomes, with
+the evidence in the unit doc's `## Log` (`D10`, `E9`, `G8`–`G10`):
+
+- **Blockers 1–3 — fixed.** B1: `SKILL_CONTEXT_BUDGETS.json` restored to a true
+  union (init-workspace ceiling `4848 → 5071` and all five main-side provenance
+  notes back, byte-equal to base; 470's own pins and notes untouched; structural
+  assertions in the fix script, `check-skill-context` PASS in both modes).
+  B2: O10's third command and AC13 now read
+  `bun scripts/version-parity-gate.mjs --content`; re-run green (`G8`: root suite
+  exit 0 / 117 PASS, schema 902/0, parity PASS). B3: O11's range is now
+  `origin/main...HEAD -- skills/` → 0 lines; discipline suite 7/0 (`G9`).
+- **Blocker 4 — retracted: this receipt's premise was wrong.** The session entry
+  exists: `.agentic-workflow/journal/20261117T024105Z-feat-470-content-guard-layer-narrative-local.md`,
+  a committed fragment (tracked since `21f0df3b`), which is where `/log-session`
+  writes under `docs/LOGS.md`'s own fragment rule (#405, opted in here — the
+  aggregator is that file's only writer). This verifier grepped `docs/LOGS.md`
+  alone and missed the carrier. No append was made: a direct append would violate
+  the file's contract. The correction session's own entry lands through the
+  carrier's writer, not by hand.
+- **Advisories 1–2 — fixed.** AC1's proved-by now states `3` and `2`
+  (matching O1's verified cell and the observed `rg -c`); the `release.mjs`
+  exemption no longer cites a SPEC record that does not exist — its false clause
+  was removed under a `path-protection-records@1` justification row in the unit's
+  new `decisions.md` (the edit-time path policy required the record before the
+  test file could be touched; no assertion changed, suite 7/0).
+- **Advisory 3 — stands, owner's step.** `origin/main` advanced mid-verify
+  (`3a5b76b4 → b25ef8a9`); the branch owes one more integration, and
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` is a real conflict surface there.
+- **New finding, reported under the correction bounds and not chased:**
+  `path-guard --unit docs/features/470-content-guard-layer --phase P5 --base
+  3a5b76b4` fails `malformed-declaration` because this unit declares no
+  `path-protection-plan@1` block. The parse result is byte-identical on `HEAD`
+  and on the worktree, so it predates this batch (the unit never declared a
+  plan). Smallest action: the owner declares the plan block retroactively or
+  waives the checkpoint for this unit — never an unrequested retroactive
+  declaration by the applier.
+
+Status at handoff: corrections applied, all touched validators re-run green in
+the foreground, two local commits (receipt, batch). **The owner is the external
+verifier — a delta recheck of these blockers is owed; nothing here is
+self-approved.**
