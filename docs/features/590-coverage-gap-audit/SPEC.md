@@ -407,6 +407,8 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   violations. The gate runs (root suite, budgets, inventory, projection) are `G6`
   with their head, appended after the batch lands.
 
+- **G6** — 2026-11-17, the batch's gate runs, foreground, `HEAD ff24c8c4f0b1be9ffff09eb7d3d15890528543f7`: `bun scripts/run-root-suite.mjs` · exit 0 · **118 suites PASS / 0 FAIL**; `bun scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md 723 / 160 / 563 / 12987`, `GATE_INVENTORY.md 171 / 76 / 95 / 6899`; `bun scripts/check-skill-context.mjs --skill product-audit` · exit 0 · `product-audit 3883 / 284 / 2 refs`; `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS`; `bun scripts/docs-generate.mjs --check` · exit 0 · 0 stale · `verdict: PASS`; `bun scripts/dimension-regression.mjs --base origin/main` · exit 0 · `verdict | clean` (17 dimensions head / 16 base · 5 review surfaces · evidence = this doc).
+
 ## Next
 
 The owner's recheck of receipt `external-verify.md` blockers B1 and B2 (the §9
