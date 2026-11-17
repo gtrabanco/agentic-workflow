@@ -68,16 +68,17 @@ vocabularies only, so it stays `batch-plan@3`.
 |---|---|
 | `contract` / `version` / `schema` | `agentic-workflow/batch-plan` · `3` · `batch-plan@3` |
 | `source_revision` | the git revision the plan was computed at |
-| `degraded[]` | what could not be read, `unavailable-<source>-<cause>` (launch reads: `unavailable-launch-evidence-*`, `unavailable-forge-pr-list-*`); the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read and the issue still declares no surface, so its lane is a guess |
+| `degraded[]` | what could not be read, `unavailable-<source>-<cause>` (launch reads: `unavailable-launch-evidence-*`, `unavailable-forge-pr-list-*`); the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read and the issue still declares no surface, so its lane is a guess. Third family: the content guard's decisions (issue #470) — `excluded-forge-content-<source>-<id>-<reason>` (an untrusted or unknown author, so the issue carries no title and no body at all) and `stripped-forge-content-<source>-<id>-<kind>-<count>` (the source *was* read and the layer removed hidden material before the plan saw it). All three are declared, so a plan never hides what it could not use |
 | `batches[].n` | 1 = runnable now; N+1 when batch N completes |
 | `lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts`, `docs`, `template`, `.github`, or `general` when nothing resolved. The keys come from the issue body first, then the unit doc (see *Where the surfaces come from*) |
 | `lanes[].occupied_by` | the **evidence** of the in-flight unit on the surface (`branch fix/1-x + unit-doc docs/fix/1-x`), or `null` |
 | `lanes[].issues[]` | the issues serialized in the lane, in run order |
-| `issue.worktree` | `<feat\|fix>/<issue>-<slug>` — reported, never created |
+| `issue.worktree` | `<feat\|fix>/<issue>-<slug>` — reported, never created. The slug falls back to `unit` when the title is empty (an excluded title, below) |
+| `issue.title` | the guarded title. **Empty** — and only ever empty — when the guard excluded the issue's text: the plan carries no title rather than a placeholder it invented, and `degraded[]` names that issue, the source and the role |
 | `issue.command` | `/unit-lane --from-issue <N>` — the published form |
 | `issue.reason.kind` | `satisfied-inputs` · `surface-conflict` (after the previous occupant) · `soft-ordered` · `untriaged` (no triage anywhere; provisional) · `soft-deps-open` (soft deps not delivered strictly first: other lane, later in the lane, unbatched, or `state unknown`) |
 | `issue.triaged` | `false` when the roadmap row is below `planned` **and** the body carries no verdict (`fix-now`, `postponed`, `promoted`, `wontfix`) |
-| `issue.size_hint` | `light` / `mixed` / `heavy` — the declared `(S)/(M)/(L)` token, else the distinct-surface count (1, 2, ≥3) |
+| `issue.size_hint` | `light` / `mixed` / `heavy` — the declared `(S)`/`(M)`/`(L)`/`(XL)` token, else the distinct-surface count (1, 2, ≥3). A parenthesised letter outside that set — a body's `[A(X) U(Y) M(Z) D(W)]` git status codes — is prose, so the count decides |
 | `lane.size_hint` | the max of its issues' hints — a fact, never a lane-count policy |
 | `issue.claimed` | `true` only for a **live** claim on this exact `(issue, lane)` pair: another lane's claim never marks it, an expired one never does |
 | `blocked[]` | issues gated by open native `blocked-by` relations, with the blockers and the reason |

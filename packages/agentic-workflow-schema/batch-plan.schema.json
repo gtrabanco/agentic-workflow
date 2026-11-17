@@ -11,7 +11,7 @@
     "version": { "const": 3 },
     "schema": { "const": "batch-plan@3" },
     "source_revision": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
-    "degraded": { "type": "array", "items": { "type": "string", "pattern": "^(?:unavailable-[a-z0-9-]+|surface-unknown-issue-[0-9]+)$" } },
+    "degraded": { "type": "array", "items": { "type": "string", "pattern": "^(?:unavailable-[a-z0-9-]+|surface-unknown-issue-[0-9]+|(?:excluded|stripped)-forge-content-[a-z0-9-]+)$" } },
     "batches": { "type": "array", "items": { "$ref": "#/definitions/batch" } },
     "blocked": { "type": "array", "items": { "$ref": "#/definitions/blocked" } },
     "launched": { "type": "array", "items": { "$ref": "#/definitions/launched" } },
@@ -51,7 +51,7 @@
       "required": ["number", "title", "lane", "worktree", "command", "reason", "size_hint"],
       "properties": {
         "number": { "type": "integer", "minimum": 1 },
-        "title": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "title": { "type": "string", "maxLength": 512 },
         "lane": { "type": "string", "minLength": 1, "maxLength": 1024 },
         "worktree": { "type": "string", "pattern": "^[a-z][a-z0-9-]*/\\d+-[a-z0-9-]*$" },
         "command": { "type": "string", "minLength": 1, "maxLength": 1024 },
@@ -75,7 +75,7 @@
       "required": ["number", "title"],
       "properties": {
         "number": { "type": "integer", "minimum": 1 },
-        "title": { "type": "string", "minLength": 1, "maxLength": 512 }
+        "title": { "type": "string", "maxLength": 512 }
       }
     },
     "closedSince": {
@@ -84,7 +84,7 @@
       "required": ["number", "title", "batch", "lane", "last_seen"],
       "properties": {
         "number": { "type": "integer", "minimum": 1 },
-        "title": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "title": { "type": "string", "maxLength": 512 },
         "batch": { "type": ["integer", "null"], "minimum": 0 },
         "lane": { "type": ["string", "null"], "minLength": 1, "maxLength": 1024 },
         "last_seen": { "type": "string", "minLength": 1, "maxLength": 64 }

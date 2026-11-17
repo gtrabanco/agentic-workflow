@@ -328,10 +328,10 @@ Dependency-topological, smallest first within a ready set.
   (validator: `bun test packages/agentic-workflow/test/content-guard.test.mjs` exits 0)
   (Implements: S2, S4, S5, S6, S8)
   - Relevant files: packages/agentic-workflow/src/content-guard.mjs, packages/agentic-workflow/test/content-guard.test.mjs
-- P3 — wire `scripts/batch-scheduler.mjs`'s collection seam: `collectIssues()` collects associations and `normalizeIssues()` routes every title/body through the guard, declaring each exclusion and removal count in the plan's degradations; its suite `scripts/batch-scheduler.test.mjs` gains the payload and exclusion cases.
-  (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0)
+- P3 — wire `scripts/batch-scheduler.mjs`'s collection seam: `collectIssues()` collects associations and `normalizeIssues()` routes every title/body through the guard, declaring each exclusion and removal count in the plan's degradations; its suite `scripts/batch-scheduler.test.mjs` gains the payload and exclusion cases, and the plan's envelope grammar gains the guard's two families (`batch-plan.ts` + its JSON Schema projection + `PLAN.md`'s `degraded[]` row) so a declared decision never refuses the plan that carries it.
+  (validator: `bun test scripts/batch-scheduler.test.mjs` exits 0 and `bun run --cwd packages/agentic-workflow-schema test` exits 0)
   (Implements: S2, S3, S4, S5, S10, S13)
-  - Relevant files: scripts/batch-scheduler.mjs, scripts/batch-scheduler.test.mjs
+  - Relevant files: scripts/batch-scheduler.mjs, scripts/batch-scheduler.test.mjs, packages/agentic-workflow-schema/src/batch-plan.ts, packages/agentic-workflow-schema/batch-plan.schema.json, packages/agentic-workflow-schema/test/batch-plan.test.mjs, skills/batch-scheduler/references/PLAN.md
 - P4 — wire `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs`'s forge collection: `readForgeState()` reads the associations and every emitted title is the guarded value, suite `scripts/workflow-status-sensor.test.mjs` pinning the trusted, stripped and unknown-author cases.
   (validator: `bun test scripts/workflow-status-sensor.test.mjs` exits 0)
   (Implements: S2, S3, S4, S6, S10, S13)

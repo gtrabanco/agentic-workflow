@@ -87,8 +87,15 @@ export const BATCH_PLAN_FIELDS = [
  * Issue #574 adds the second family: `surface-unknown-issue-<n>` says every
  * source *was* read and the issue declares no surface. That is a different
  * fact from an unreadable source, so it never travels as `unavailable-…`.
+ *
+ * Issue #470 adds the third: the content guard's decisions,
+ * `excluded-forge-content-<source>-<id>-<reason>` (an untrusted or unknown
+ * author, so no text at all) and
+ * `stripped-forge-content-<source>-<id>-<kind>-<count>` (the source was read and
+ * the layer reduced it). Both name the source, the issue and the cause, so an
+ * operator can audit what a third party hid; neither is an unreadable source.
  */
-const DEGRADED = /^(?:unavailable-[a-z0-9-]+|surface-unknown-issue-\d+)$/u;
+const DEGRADED = /^(?:unavailable-[a-z0-9-]+|surface-unknown-issue-\d+|(?:excluded|stripped)-forge-content-[a-z0-9-]+)$/u;
 
 /** A git revision (abbreviated or full) as the plan's source anchor. */
 const REVISION = /^[0-9a-f]{7,40}$/u;
@@ -193,7 +200,7 @@ export interface BatchPlan {
   schema: string;
   /** The git revision the plan was computed at. */
   source_revision: string;
-  /** Declared degradations — `unavailable-<source>-<cause>` or `surface-unknown-issue-<n>` (never a silent empty plan). */
+  /** Declared degradations — `unavailable-<source>-<cause>`, `surface-unknown-issue-<n>` or the guard's `(excluded|stripped)-forge-content-…` (never a silent empty plan). */
   degraded: string[];
   /** Batch 1 is the runnable-now set; batch N+1 becomes runnable when batch N completes. */
   batches: Batch[];
@@ -238,6 +245,22 @@ function boundedString(value: unknown, label: string, max: number, errors: strin
   if (value.length > max) errors.push(`${label} exceeds ${max} characters`);
 }
 
+/**
+ * A row's `title` is a display field, and an empty one is a *declared* fact, not
+ * a missing one: the content guard excluded that issue's text (issue #470), so
+ * the plan carries no title at all and its `degraded[]` entry names the issue,
+ * the source and the role. Every other bounded string keeps the non-empty rule —
+ * an empty one there would hide a bug, while an empty title says exactly what
+ * happened. A placeholder title would be content the planner invented.
+ */
+function rowTitle(value: unknown, label: string, errors: string[]): void {
+  if (typeof value !== "string") {
+    errors.push(`${label} must be a string`);
+    return;
+  }
+  if (value.length > MAX_TITLE) errors.push(`${label} exceeds ${MAX_TITLE} characters`);
+}
+
 function positiveInt(value: unknown, label: string, errors: string[]): boolean {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
     errors.push(`${label} must be a non-negative integer`);
@@ -277,7 +300,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
   else {
     if (value.degraded.length > MAX_ITEMS) errors.push(`degraded exceeds ${MAX_ITEMS} entries`);
     for (const d of value.degraded) {
-      if (typeof d !== "string" || !DEGRADED.test(d)) errors.push("each degraded entry must match `unavailable-<source>-<cause>` or `surface-unknown-issue-<n>`");
+      if (typeof d !== "string" || !DEGRADED.test(d)) errors.push("each degraded entry must match `unavailable-<source>-<cause>`, `surface-unknown-issue-<n>` or `(excluded|stripped)-forge-content-<source>-<id>-<cause>`");
     }
   }
 
@@ -314,7 +337,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
           if (!isObj(row)) return errors.push(`${rowLabel} must be an object`);
           rejectUnexpectedKeys(row, rowLabel, ["number", "title", "lane", "worktree", "command", "reason", "size_hint", "claimed", "triaged"], errors);
           issueNumber(row.number, `${rowLabel}.number`, errors);
-          boundedString(row.title, `${rowLabel}.title`, MAX_TITLE, errors);
+          rowTitle(row.title, `${rowLabel}.title`, errors);
           boundedString(row.lane, `${rowLabel}.lane`, MAX_PATH, errors);
           if (row.lane !== lane.surface) errors.push(`${rowLabel}.lane must equal its lane's surface`);
           if (typeof row.worktree !== "string" || !WORKTREE.test(row.worktree)) errors.push(`${rowLabel}.worktree must be <prefix>/<issue>-<slug>`);
@@ -406,7 +429,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
       if (!isObj(row)) return errors.push(`${label} must be an object`);
       rejectUnexpectedKeys(row, label, ["number", "title"], errors);
       issueNumber(row.number, `${label}.number`, errors);
-      boundedString(row.title, `${label}.title`, MAX_TITLE, errors);
+      rowTitle(row.title, `${label}.title`, errors);
     });
   }
 
@@ -418,7 +441,7 @@ export function validateBatchPlan(value: unknown): BatchPlanValidationResult {
       if (!isObj(row)) return errors.push(`${label} must be an object`);
       rejectUnexpectedKeys(row, label, ["number", "title", "batch", "lane", "last_seen"], errors);
       issueNumber(row.number, `${label}.number`, errors);
-      boundedString(row.title, `${label}.title`, MAX_TITLE, errors);
+      rowTitle(row.title, `${label}.title`, errors);
       if (row.batch !== null && (typeof row.batch !== "number" || !Number.isInteger(row.batch) || row.batch < 0)) {
         errors.push(`${label}.batch must be a non-negative integer or null`);
       }
