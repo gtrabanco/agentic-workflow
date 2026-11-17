@@ -37,6 +37,9 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ Every question asked is recorded with its resolution (owner answer, "Decide
   for me" + reason, or the explicit `none — no questions` line) in
   `decisions.md`; no question the user already answered is asked twice.
+✓ The request became a `pre-spec@1` before any verdict (Layer 0,
+  [references/ELICITATION.md](references/ELICITATION.md)): checklist first, at
+  most one open question, and `questions: none` is the `one-shot` evidence
 ✓ Triage ran (runner unit-route --triage <slug>) and its block pasted
   verbatim into the unit doc's Evidence section as the authoritative step list
 ✓ Unit doc exists at docs/features/<NN>-<slug>/SPEC.md (created from template
@@ -153,6 +156,12 @@ the per-tier ceremony are stated once in `execute-phase`'s
 **Task Size = Understood + Contained risk + Resumable-from-diff.** File counts
 never decide: the classifier reports how many paths changed and reads none of
 them as a reason.
+
+### 1b. Pre-spec — before triage
+
+The request becomes a `pre-spec@1` at `docs/pre-spec/<YYYY-MM-DD>-<slug>.md`
+before any verdict: checklist first, one open question at most. Not a gate —
+triage and design read it (owner: [references/ELICITATION.md](references/ELICITATION.md)).
 
 ### 2. Triage — read the catalog, never re-derive
 
