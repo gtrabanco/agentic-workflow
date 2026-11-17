@@ -20,6 +20,13 @@
    documentation — product-wide, across code and skill/docs prose, with the
    features-preserved-without-it check after every proposed deletion. Classify
    findings (the published severity ladder plus the impact cell and the closed class set, all owned by `review-implementation/CLASSIFY.md`).
+   Then run the **test-surplus sweep** (`AUDIT_DIMENSIONS.md` § Test-surplus
+   sweep): the depleted direction asks which tests are missing, the surplus
+   direction asks which should not exist, and every pass that reaches the Tests
+   dimension records its **receipt** — `verified: no surplus tests` on the
+   dimension's **health line** when the sweep found nothing, the finding ids when
+   it did. The row is a verification, so an audit that skipped the sweep cannot
+   write it and a clean sweep is never rewarded with a deletion.
 
 **Evidence-provenance gate (fixed):** applies during every evidence-collecting sweep
 step (2–6). Each item ends with exactly one fallback; never pick another one mid-audit.
@@ -87,6 +94,11 @@ step (2–6). Each item ends with exactly one fallback; never pick another one m
    reference that hand-off needs
    when that reference is not already loaded here. Deciding the route now is
    what makes the next run progressive; executing it is never this run's job.
+   A **surplus** finding (a test that should not exist) is typed `fix-now
+   (delete)` — the residue sweep's notation — and **only** with its check's
+   evidence standard; its `route:` is a `finding-route@1` hand-off whose executor
+   is `/fold-findings`. This audit never deletes, never edits code, and never
+   opens a second class vocabulary for the direction.
 9. **Delta vs prior audit of equivalent scope** — only after the findings are
    synthesized and numbered on your own (step 7), load the newest previous audit
    in `docs/audits/` with an equivalent scope (whole product, or the same
