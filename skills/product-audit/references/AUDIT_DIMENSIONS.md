@@ -177,8 +177,7 @@ test's value unit is the obligation it asserts rather than the lines it touches
 (Zhang & Mesbah, ESEC/FSE 2015), and coverage-safe minimization still severely
 compromises fault detection (Rothermel et al., 1998/2004). "It passes" and "it
 covers lines" both fail to justify a test's existence. The citations are issue
-[#595](https://github.com/gtrabanco/agentic-workflow/issues/595)'s own; this
-reference restates none of their measurements.
+#595's own; this reference restates none of their measurements.
 
 A check with no evidence is not a finding. Three checks, three evidence standards:
 
