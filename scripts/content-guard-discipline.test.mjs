@@ -66,7 +66,7 @@ const EXEMPT = [
   },
   {
     file: "scripts/release.mjs",
-    why: "renders merged PR titles into the CHANGELOG contributor list — a human-read document the model does not follow; recorded as a planned guard consumer in docs/features/470-content-guard-layer/SPEC.md",
+    why: "renders merged PR titles into the CHANGELOG contributor list — a human-read document the model does not follow, so the rendered title is never an instruction the model follows",
   },
   {
     file: "packages/agentic-workflow/src/runner/ceremony/pr.mjs",
