@@ -27,7 +27,6 @@ const section = BASE_CONFIG_SECTIONS.find((entry) => entry.key === "contentGuard
 test("the contract publishes the four closed vocabularies", () => {
   assert.equal(CONTENT_GUARD_CONTRACT, "content-guard@1");
   assert.deepEqual([...CONTENT_GUARD_REASONS], [
-    "clean",
     "trusted-author",
     "allow-listed",
     "hidden-content-stripped",

@@ -24,11 +24,11 @@ export const CONTENT_GUARD_CONTRACT = "content-guard@1";
 
 /**
  * The closed decision vocabulary. Adding a reason is a SPEC change, never a code
- * path: `clean`, `trusted-author`, `allow-listed` and
- * `hidden-content-stripped` are allowed verdicts; the rest are exclusions.
+ * path. `trusted-author`, `allow-listed` and `hidden-content-stripped` are
+ * admitted verdicts; `untrusted-author`, `deny-listed`, `unknown-author` and
+ * `malformed-policy` are exclusions, and an exclusion never delivers content.
  */
 export const CONTENT_GUARD_REASONS = Object.freeze([
-  "clean",
   "trusted-author",
   "allow-listed",
   "hidden-content-stripped",
