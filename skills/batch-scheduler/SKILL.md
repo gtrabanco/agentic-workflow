@@ -64,10 +64,10 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 Per the agent guide's **Workflow conventions** + **documentation map**. The
 script reads what it needs itself — the location index (`docs/ROADMAP.md`, via
 the shared `index-document.mjs` parsers), the open issues and their native
-`blocked-by` relations from the forge, the prose `## Dependencies` rows and
-`## Where`/`## In scope` sections from issue bodies, and the unit docs under
-`docs/fix/` + `docs/features/`. Read them yourself only to interpret a field
-the script emitted.
+`blocked-by` relations from the forge, the prose `## Dependencies` rows, each
+body's `## Surfaces` declaration and its `## Where`/`## In scope` prose, and
+the unit docs under `docs/fix/` + `docs/features/`. Read them yourself only
+to interpret a field the script emitted.
 
 ## Process
 

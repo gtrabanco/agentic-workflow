@@ -181,4 +181,4 @@ bun scripts/batch-scheduler.mjs --infer-surfaces <n> [--issues-file <json>]
 #574): the `## Surfaces` block to paste, `- surface-unknown` when nothing
 resolves, no write at all. Exit codes: `0` printed (degradations are reported,
 not fatal); `1` the document failed `batch-plan@3` validation or the issue is
-unreadable; `2` usage error.
+unreadable; `2` usage error. One call per dimension, never per issue.

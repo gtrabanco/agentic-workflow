@@ -185,8 +185,11 @@ Triage-decided, one line per suite this unit runs:
 One criterion per requirement, each naming the check that proves it.
 
 - **AC-S1** — The four SPEC templates carry `## Surfaces` directly after
-  `## Impact`, and the four issue forms carry a `surfaces` field whose
-  description names the six lane keys, while `UNIT_DOC_SPEC_REF_SECTIONS` does
+  `## Impact`, and the four issue forms carry a `surfaces` field: the two
+  repository forms' descriptions name the six lane keys, the two exported
+  template forms describe the vocabulary generically and name none (domain
+  separation — the scaffold must not hardcode this repository's tree), while
+  `UNIT_DOC_SPEC_REF_SECTIONS` does
   **not** gain the section (an existing closed unit still resolves its shape).
   Check: `bun test scripts/unit-doc-contract.test.mjs` exits 0 and `bun test
   scripts/batch-scheduler.test.mjs` exits 0 (the template-coherence case reads
@@ -358,6 +361,17 @@ state.
   mechanism is verified — the local workflow's live-tree guard forbids running
   new code against the live tree before that.
 
+- **D11** — 2026-11-16, correction batch 1 (S1/S2 of the apply request): two
+  design calls the external verify forced. File claims return to issue #509's
+  rule exactly — `## Where`/`## In scope` narrow, nothing else does, and a
+  `## Surfaces` section never narrows them (this unit's Non-goal already froze
+  claims as "what the body declares"; the section names lane keys, not files).
+  And `surfaceKey` refuses a `<…>` placeholder child, so the vocabulary's
+  `<name>` metavariable — which the templates are required to carry (T1) and
+  issue #574 quotes — resolves to nothing instead of opening a lane. The guard
+  sits at the single choke point, so the body path that base's pairing used to
+  hide is corrected together with the new readers (S2: the full symbol).
+
 - **E1** — 2026-11-16, `bun test scripts/batch-scheduler.test.mjs` · exit 0 ·
   77 pass, 0 fail (the 70 pre-existing cases plus `F1`–`F5`, `F7`, `T1`); the
   same suite under `node --test` is 77 pass, 0 fail.
@@ -404,6 +418,61 @@ state.
   surface, and stacked PRs are refused by this repository's guide). The size is
   the unit's own scope, named here rather than hidden.
 
+- **E12** — 2026-11-16, correction batch 1's red corpus at `2b7ad81e`:
+  `bun test scripts/batch-scheduler.test.mjs` · exit 1 · 77 pass, 2 fail —
+  `F8` (a `## Surfaces` body must not narrow file claims) and `F9` (a `<…>`
+  placeholder must never be a surface) fail exactly as the receipt's B1/B2
+  predict; every other case stays green.
+- **E13** — 2026-11-16, the batch green: `bun test scripts/batch-scheduler.test.mjs`
+  · exit 0 · 79 pass, 0 fail (the 77 pre-existing cases unchanged plus `F8`/
+  `F9`); `bun test scripts/unit-doc-contract.test.mjs` · 21 pass;
+  `bun test scripts/scaffold-parity.test.mjs` · 17 pass; schema package
+  `bun run test` · 887 pass; pi package `bun run test` · 928 pass (its skill
+  parity reads the edited `SKILL.md`/`PLAN.md`); `test-impact --base 888aaceb`
+  → `targeted`, 7 suites, all run — check-skill-context 1, docs-generated-merge
+  18, guide-split 15, promise-coherence 37, shared-doc-merge 12, each 0 fail;
+  `skill-lint` PASS 0 findings; `check-skill-context` PASS 30 (+
+  `--documents` PASS 4); `docs-generate --check` PASS; `lint-changeset`
+  exit 0; `phase-lint` verdict PASS, P4–P10 6/6, fingerprint
+  `8c5e8dfb5b56…`; `promise-coherence` PASS 42 checked · 23 skipped. The
+  prose validators: `rg -n 'One call per dimension, never per issue'
+  skills/batch-scheduler/references/PLAN.md` · exit 0 · 1 match (:184);
+  `rg -n 'sections from issue bodies' skills/batch-scheduler/SKILL.md` ·
+  exit 1 — the stale enumeration is gone; `rg -n 'residual-classify'
+  docs/fix/574-batch-scheduler-surface-detection/SPEC.md` · exit 0 (E15
+  present).
+- **E14** — 2026-11-16, the correction differential (O22): base `5ef01c1f`
+  copy vs the batch, 14 open issues (`603,600,598,597,596,595,590,574,554,553,526,470,444,295`),
+  `--no-state --json-only`, both exit 0. Intended differences, every one:
+  `#554` `general` → `packages/pi-agentic-workflow` + `template` (E5);
+  `#603` `general` → its declared `packages/agentic-workflow` +
+  `packages/pi-agentic-workflow` (S3's section reading; its
+  `skills/<usage-carrier>` placeholder dropped); `#574` surfaces
+  `[]`→`[.github, docs, packages/agentic-workflow, scripts, template]` and
+  claims `[]`→`[scripts/batch-scheduler.test.mjs, scripts/tier-cost.mjs]`
+  (the fence recovery, F1/E5-class); three base `file-overlap` warnings gone
+  (`574,590` · `574,596` · `574,597` — E5's serialization mechanism once #574
+  names its lanes); `occupied_by` on `docs`/`scripts` reads
+  `branch feat/590-…` at base vs `PR #599 … + unit-doc …` at head (advisory A1,
+  display-only). The pre-fix head-only phantoms `packages/<name>[598]` /
+  `skills/<usage-carrier>[603]` are gone — both plans now carry zero
+  placeholder lanes. Post-fix fixture claims are base==head on `surfaces-only`,
+  `form-order` and `where-control`; `degraded`, `summary` and the batch numbers
+  are otherwise equal.
+- **E15** — 2026-11-16, the receipt Retirements promised (B6): `bun scripts/residual-classify.mjs
+  --inventory --base origin/main` · exit 0 · one row — `SURFACE_UNKNOWN_TOKEN` /
+  symbol / `used` / `live-consumer` (`scripts/batch-scheduler.mjs:1606`) —
+  and no `orphan` row.
+- **E16** — 2026-11-16, the batch's recheck (S2): `test-impact --base 888aaceb`
+  targeted and all 7 suites run green (E13); `node scripts/run-root-suite.mjs
+  --suite-timeout 400` · exit 1 · 113 of 114 — `scripts/unit-route.test.mjs`
+  `#291 F7` wall-clock again (1189ms, expected <500ms; the disclosed E11/O13
+  load flake, run while the seven impact suites were running in parallel), and
+  `bun test scripts/unit-route.test.mjs` standalone · 64 pass, 0 fail;
+  `diff-guard --base 888aaceb` · exit 1 · `DIFF-GUARD BREACH — 1651 lines >
+  400 · 35 files > 8`, G1's disclosed exception growing with the batch, still
+  reported and never force-fit.
+
 - **P9** — 2026-11-16, the unit published for external verification:
   `agentic-workflow ceremony pr create --base main` → PR
   [#599](https://github.com/gtrabanco/agentic-workflow/pull/599) · head
@@ -412,10 +481,18 @@ state.
   `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` after two hook-equipped pushes exited
   141 (SIGPIPE) *after* that PASS line; the PR records both facts.
 
+- **P10** — 2026-11-16, correction batch 1 closed against the external verify
+  receipt (`external-verify.md`, NEEDS-DECISION): B1–B6 fixed behind their
+  red-first corpus — observed red at `2b7ad81e` (E12), green at 79 pass ·
+  0 fail with the impact, schema and pi-package suites re-run (E13), the
+  differential re-recorded (E14), and the promised receipts kept (E15/E16).
+  Awaiting the owner's blockers-limited recheck.
+
 ## Next
 
-The owner's external verdict on this diff — 2026-11-16 handoff; no tracked task
-is pending inside the unit.
+The owner's blockers-limited recheck of correction batch 1 — the six rows of
+[`external-verify.md`](external-verify.md) closed at P10 — 2026-11-16 handoff;
+no tracked task is pending inside the unit.
 
 ## References
 

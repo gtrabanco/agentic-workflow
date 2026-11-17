@@ -531,9 +531,10 @@ function resolveBodySurfaces(body) {
 }
 
 /**
- * The concrete files an issue's body claims — the same declared sections the
- * surfaces come from, plus the `## Surfaces` section, or the whole body when it
- * declares none (issue #509, S4; issue #574 extends the sources).
+ * The concrete files an issue's body claims — the `## Where` / `## In scope`
+ * sections when they declare, else the whole body (issue #509's rule; issue
+ * #574's Non-goal keeps claims what the body declares: a `## Surfaces`
+ * section names lane keys and never narrows them).
  *
  * A token qualifies only when it names a file — an extension, no wildcard — so
  * a directory or a glob claims nothing: expanding a directory into its children
@@ -543,8 +544,8 @@ function resolveBodySurfaces(body) {
  * @returns {string[]} the sorted, unique file paths
  */
 export function extractFileClaims(body) {
-  const sections = declaredSections(body);
-  const sources = sections.length > 0 ? sections.map((section) => section.text) : [body];
+  const prose = declaredSections(body).filter((section) => section.name !== "Surfaces");
+  const sources = prose.length > 0 ? prose.map((section) => section.text) : [body];
   const files = new Set();
   for (const text of sources) {
     for (const token of proseTokens(text)) {
@@ -623,8 +624,11 @@ function unitDocSurfaces(root, unitDir) {
 /**
  * One lane key from one path token.
  *
- * `skills/<name>` and `packages/<name>` are the documented surfaces; a token
- * that names the tree instead of a child — `skills`, `skills/`, `skills/**`,
+ * `skills/…` and `packages/…` are the documented surfaces. The vocabulary is
+ * written with a `<name>` metavariable (the templates are required to carry
+ * those literals), and a placeholder child is notation — it resolves to
+ * nothing, so a quoted example or a template bullet never opens a lane. A
+ * token that names the tree instead of a child — `skills`, `skills/`, `skills/**`,
  * a wildcard child — collapses to the tree-root key, never to a wildcard
  * (a wildcard lane would run beside the concrete lanes it covers). A
  * top-level directory is its own key; anything else names no surface.
@@ -636,6 +640,7 @@ function surfaceKey(token) {
   const top = parts[0];
   if (top === "skills" || top === "packages") {
     const child = parts[1];
+    if (child !== undefined && /[<>]/u.test(child)) return null;
     return child !== undefined && !/^\*+$/u.test(child) ? `${top}/${child}` : top;
   }
   if (["scripts", "docs", "template", ".github"].includes(top)) return top;
