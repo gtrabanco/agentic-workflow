@@ -113,6 +113,32 @@ test("the merge tightens: roles intersect, login lists union, an absent side pas
   assert.deepEqual(mergeContentGuardOverrides(undefined, undefined), {});
 });
 
+test("the merge never coerces a value it cannot read, so strict validation reports it (#470)", () => {
+  // The merge runs BEFORE validation, so a filtered value reaches the validator
+  // already looking valid — and `[123]` used to arrive as `[]`, which is a legal,
+  // intentional lockdown. An unreadable side is passed through untouched instead:
+  // the section is then refused whole and falls back to the shipped default with
+  // a declared reason, instead of narrowing in silence.
+  for (const unreadable of ["everyone", [123], [null], ["OWNER", 7], { 0: "OWNER" }]) {
+    assert.deepEqual(
+      mergeContentGuardOverrides(undefined, { trustedRoles: unreadable }),
+      { trustedRoles: unreadable },
+      `a lone ${JSON.stringify(unreadable)} must reach validation unchanged`,
+    );
+    assert.deepEqual(
+      mergeContentGuardOverrides({ trustedRoles: ["OWNER"] }, { trustedRoles: unreadable }),
+      { trustedRoles: unreadable },
+      "an unreadable project side wins, so the refusal names it rather than a silently narrowed set",
+    );
+  }
+  for (const key of ["allowLogins", "denyLogins"]) {
+    assert.deepEqual(mergeContentGuardOverrides({ [key]: ["alice"] }, { [key]: [7] }), { [key]: [7] });
+    assert.deepEqual(mergeContentGuardOverrides({ [key]: "alice" }, undefined), { [key]: "alice" });
+  }
+  // A value it CAN read still merges by tightening, unchanged.
+  assert.deepEqual(mergeContentGuardOverrides({ trustedRoles: ["OWNER", "MEMBER"] }, { trustedRoles: [] }), { trustedRoles: [] });
+});
+
 test("the composed schema publishes the section and a plain lookup sees it", () => {
   const composed = composeConfigSchema(BASE_CONFIG_SECTIONS);
   assert.deepEqual(Object.keys(composed.properties).includes("contentGuard"), true);
