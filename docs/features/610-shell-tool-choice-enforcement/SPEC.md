@@ -71,13 +71,14 @@ Per requirement:
 - **AC-S1** — The unit doc records the exception as an owner decision (`D` line)
   and the carrier's own README section names it as the shipped surface, citing
   `docs/workflow/DOMAIN_SEPARATION.md` for the rule instead of restating it.
-  Check: `rg -n 'domain-separation exception' docs/features/610-shell-tool-choice-enforcement/SPEC.md packages/pi-agentic-workflow/README.md`
-  matches 2.
+  Check: `rg -c 'domain-separation exception' packages/pi-agentic-workflow/README.md`
+  matches 1 and `rg -c 'DOMAIN_SEPARATION\.md' packages/pi-agentic-workflow/README.md`
+  matches 1.
 - **AC-S2** — The carrier's availability answer comes from the doctor's own
   resolver (`findOnPath` in `packages/agentic-workflow/src/doctor/probes.mjs`);
-  no second `PATH` probe exists in the package. Check:
-  `rg -n 'findOnPath' packages/pi-agentic-workflow/src` matches 1, and
-  `rg -c 'process\.env\.PATH' packages/pi-agentic-workflow/src` is 0.
+  no second `PATH` probe exists anywhere in the carrier's path. Check:
+  `rg -n 'from "../doctor/probes.mjs"' packages/agentic-workflow/src/tool-choice/availability.mjs`
+  matches 1, and `rg -c 'process\.env\.PATH' packages/pi-agentic-workflow/src` matches 0.
 - **AC-S3** — With the carrier active and `rg` on PATH, `grep -n 'x' file` is
   blocked with `rg -n 'x' file` named in the reason, and `node -e …` /
   `node packages/agentic-workflow/bin/agentic-workflow.mjs …` are blocked with
@@ -88,8 +89,8 @@ Per requirement:
 - **AC-S4** — The spawn-provenance bullet is routed to #611's observability
   scope: the unit doc records the routing as a `D` line and names its
   replacement owner, and the carrier/runner gain no provenance surface. Check:
-  `rg -n 'S4' docs/features/610-shell-tool-choice-enforcement/SPEC.md` matches
-  the routing row, and `rg -c 'spawn-provenance' packages` is 0.
+  `rg -n 'Spawn provenance is routed' docs/features/610-shell-tool-choice-enforcement/planning-obligations.md`
+  matches 1, and `rg -c 'spawn-provenance' packages` matches 0.
 - **AC-S5** — No prose surface restates the rule: the carrier's reason strings
   and the package README point at the owner (`AGENTS.md` §Runtime convention,
   `docs/workflow/GATE_INVENTORY.md`) rather than re-declaring "bun before node".
@@ -107,7 +108,7 @@ Per requirement:
 - **AC-AC3** — The key is a declared, optional, owner-configurable tunable
   (`pi.toolChoice`), schema-first, documented and changeset-carried. Check:
   `bun test packages/pi-agentic-workflow/test/config-extension.test.mjs` exits 0
-  and `rg -n 'toolChoice' docs/workflow/CONFIG.md` matches.
+  and `rg -n 'toolChoice' docs/workflow/CONFIG.md` matches 1.
 - **AC-AC4** — The before/after evidence is a recorded pair of sessions in a
   scratch project (flash-family model, the same search task) with the carrier
   off and on, plus the replay of the measured drift corpus from the issue's own
@@ -178,9 +179,9 @@ Plus, decided at cut:
 
 - **No PATH shims.** S3 says one carrier first; the hook is the one shipped. The
   shim route stays the recorded fallback and is not built here.
-- **No script-body analysis.** The carrier reads the `bash` tool call's own text.
-  A `grep` inside a script the agent executes (`bash scripts/x.sh`) is out of its
-  reach; that boundary is stated, not silently assumed.
+- **The carrier reads only the tool call's own text.** A `grep` inside a
+  program the agent executes (`bash scripts/x.sh`) is out of its reach; that
+  boundary is stated, not silently assumed.
 - **No provenance line in the runner.** S4 is routed to #611 (see `## Log` `D2`).
 - **No second reset of the gate's other rules.** `usage-node`,
   `turn-box`, `guide-line` and `suite-carve-out` keep their behaviour and cases.
@@ -365,8 +366,9 @@ list is the frozen task list above, in dependency-topological order:
   pipe is a filter (`rg -v` reads stdin the same way) and passes untouched; a
   grep that is not pipe-fed and names a path operand or a recursion flag is
   search and is intercepted. The measured corpus (E1) is what makes this
-  necessary: 27 of the 31 `grep` segments in the audited sessions are `-v`/`-c`
-  filters behind a pipe.
+  necessary: 18 of the 31 `grep` segments in the audited sessions are filters
+  (`-v`/`-c` behind a pipe, or operand-less readers of stdin) and only 13 are
+  search.
 - **D5** — 2026-11-17, `node --test` and `node scripts/run-root-suite.mjs` are
   sanctioned forms (S3 says so, and AGENTS.md's runtime convention makes node the
   guaranteed fallback), so the carrier never touches them; the bootstrap pair is
@@ -377,9 +379,125 @@ list is the frozen task list above, in dependency-topological order:
   `@gtrabanco/agentic-workflow`), so the gate reads committed source with no
   `dist/` dependency — the same reason `normative-drift` parses source.
 
+- **E1** — 2026-11-17, the measured drift corpus extracted from the three audited
+  authoring sessions (`~/.pi-web/archived-sessions/*01a1e8b0*|*01a1e91d*|*01a1e95e*.jsonl`,
+  `message.content[].toolCall.arguments.command` for the `bash` tool) · exit 0 ·
+  403 bash calls → **31 `grep` segments (13 search-shaped, 18 filters)** and
+  **15 `node` segments, 0 sanctioned**; 33 de-duplicated segments frozen as
+  `packages/agentic-workflow/test/fixtures/tool-choice-corpus.json`. Scratch
+  script removed after the run.
+- **D7** — 2026-11-17, three acceptance checks corrected before any status was
+  flipped, because the frozen wording could not be satisfied as written: `AC-S1`
+  and `AC-S2` named counts a multi-line match makes wrong, and `AC-S4` grepped
+  the document that carried the check (a self-match). The corrected checks grep a
+  *different* file than the one carrying the claim, and each was run before the
+  flip (E15). No criterion changed meaning.
+- **D8** — 2026-11-17, `test/default-inherit.test.mjs` updates its exhaustive
+  `DEFAULT_CONFIG` literal with the new `toolChoice` key. The assertion stays
+  exhaustive — the shipped default *did* change, and the test's job is to state
+  it; nothing was relaxed or removed.
+- **P1** — 2026-11-17, the crate policy module, the availability reading and the
+  suite that fixes the corpus red → green · `aaa3ca12`.
+- **E2** — 2026-11-17, `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs`
+  at the cut head, before the module existed · exit 1 ·
+  `Cannot find module '../src/tool-choice/policy.mjs'` (the frozen corpus was red
+  first).
+- **P2** — 2026-11-17, the drift gate imports the shared allowlist, its prose
+  exemption derives from the same keys, and the parity suite pins the two layers
+  · `aaa3ca12`.
+- **E3** — 2026-11-17, `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs`
+  · exit 0 · `20 pass, 0 fail` (`F1`–`F20`: the classifier, the forwarding
+  tables, the corpus replay `8 + 7 + 18`, the availability reading and the type
+  projection).
+- **E4** — 2026-11-17, the gate's previous behaviour · exit 0 ·
+  `bun test scripts/invocation-drift.test.mjs` → `13 pass, 0 fail`;
+  `bun scripts/invocation-drift.mjs` → `verdict: PASS` (4 usage strings · 135
+  skill files · 23 tutorial docs · 2 guides · 2 turn contracts, the same allow
+  rows as the cut head).
+- **E5** — 2026-11-17, `bun test scripts/tool-choice-parity.test.mjs` · exit 0 ·
+  `4 pass, 0 fail` (`F28` identity of the shared map, `F29` the sanctioned-form
+  subset with the root-suite leg as the declared widening, `F30` no re-declared
+  literal in the gate, `F31` the gate's own scan still clean).
+- **P3** — 2026-11-17, the carrier module, the `pi.toolChoice` section with its
+  committed descriptor, and the wiring in the existing `tool_call` handler
+  · `304429f9`.
+- **E6** — 2026-11-17, the carrier suite against the **unwired** handler · exit 1
+  · `F26` and `F27` red (`grep`/`node` calls passed through untouched), the
+  module-level cases green.
+- **E7** — 2026-11-17, `bun test packages/pi-agentic-workflow/test/tool-choice-guard.test.mjs`
+  after the wiring · exit 0 · `9 pass, 0 fail` (`F20`–`F28`).
+- **E8** — 2026-11-17, `bun test packages/pi-agentic-workflow/test/config-extension.test.mjs`
+  · exit 0 · `2 pass, 0 fail` — the descriptor was regenerated from the built
+  module (`node -e` over `dist/config/extension.js`), never hand-edited — and
+  `bun test test/config-extension.test.mjs test/config-schema-passes.test.mjs` →
+  `12 pass, 0 fail`.
+- **E9** — 2026-11-17, `cd packages/pi-agentic-workflow && bun run test` · exit 0
+  · `965 pass, 0 fail` across 85 files.
+- **E10** — 2026-11-17, `cd packages/agentic-workflow && bun run test` · exit 0 ·
+  `1071 pass, 0 fail` across 58 files.
+- **P4** — 2026-11-17, the declared surfaces: the restated `invocation-drift`
+  row, the carrier's own row, the `normative-surfaces@1` row, the package README
+  section, the unit doc with its ledgers and this roadmap registration
+  · `6b3edea6`.
+- **E11** — 2026-11-17, `bun scripts/prose-gate-inventory.mjs` · exit 0 ·
+  `verdict: PASS` (the new row resolves, every `*-parity.test.mjs` suite is
+  cited, every declared surface is claimed) and
+  `bun test scripts/prose-gate-inventory.test.mjs` → `22 pass, 0 fail`.
+- **E12** — 2026-11-17, `bun test scripts/normative-drift.test.mjs` · exit 0 ·
+  `21 pass, 0 fail`.
+- **E13** — 2026-11-17, the prose and structural gates · all exit 0 ·
+  `node --test scripts/residue-dimensions.test.mjs` → `30 pass, 0 fail`;
+  `bun scripts/red-first.mjs` → `verdict: PASS` (0 findings, 56 pairs);
+  `bun test scripts/structural-sibling-pins.test.mjs` → `8 pass, 0 fail`;
+  `bun scripts/skill-lint.mjs` → `verdict: PASS` (105 files, 0 findings).
+- **E14** — 2026-11-17, `bun scripts/docs-generate.mjs --check` → `verdict: PASS`
+  (3 files, 0 stale, roadmap unchanged) and `bun scripts/promise-coherence.mjs`
+  → `verdict PASS` (`42 checked · 24 skipped`; the per-document run reports
+  `0 checked · 9 skipped`, every skip named — this unit's validators are suite
+  runners this pass never executes).
+- **E15** — 2026-11-17, the acceptance checks · all as declared ·
+  `rg -n 'from "../doctor/probes.mjs"' packages/agentic-workflow/src/tool-choice/availability.mjs`
+  → 1 match; `rg -c 'process\.env\.PATH' packages/pi-agentic-workflow/src` → no
+  match; `rg -c 'domain-separation exception' packages/pi-agentic-workflow/README.md`
+  → 1; `rg -c 'DOMAIN_SEPARATION\.md' packages/pi-agentic-workflow/README.md` → 1;
+  `rg -c 'spawn-provenance' packages` → no match; `rg -n 'toolChoice' docs/workflow/CONFIG.md`
+  → 1 match.
+- **D10** — 2026-11-17, the dogfooding vehicle for this unpublished delivery: a
+  canary build of **this worktree's** extension
+  (`packages/pi-agentic-workflow/dist/extension/index.js`, built by `bunx tsc`)
+  armed through a scratch agent directory's `settings.json` — not a published
+  canary. The host's installed canary (`@gtrabanco/pi-agentic-workflow@5.0.0-canary.20261117.2`)
+  predates the carrier and registers the same tool names, so loading both is a
+  tool conflict; the scratch agent dir keeps everything identical between the two
+  runs except the carrier. The published canary cut + `pi install` refresh is the
+  owner's post-merge step (`O14`).
+- **E16** — 2026-11-17, the AC4 capture, in this order · exit 0 · scratch
+  workspace `/tmp/aw610-ac4-*` (removed after the run), model
+  `nan/deepseek-v4-flash`, one prompt per pair, `--no-skills --no-context-files
+  --no-mcp`:
+  * **before** (carrier absent) — `s1`: `grep -rn 'lighthouse' .` + `grep -rl 'harbor' .`
+    in one call and `grep -rn 'harbor' . | grep -v '^./.git/'` in the next →
+    **3 search commands, 3 `grep`, 0 `rg`**; `s3`: `node -p "require('./package.json').version" && node -v`
+    → **1 `node`-as-default, 0 `bun`**.
+  * **after** (the same extension, carrier armed) — `s2`: two `grep` calls
+    **blocked** with `` `grep` as search is not the repo's tool choice (owner: AGENTS.md §Runtime convention; #269 owns the `rg`-first default). Equivalent: `rg -n 'lighthouse' . 2>/dev/null`. ``
+    and the `(1 more in this command.)` variant, then the model re-ran both as
+    `rg -n` / `rg -l` → **2 `rg` searches executed, 0 `grep`**, no human
+    correction; `s4`: the `node -p` call **blocked** with
+    `` `node` is the fallback runtime (owner: AGENTS.md §Runtime convention). Run: `bun -p "require('./package.json').version"`. The sanctioned forms — `node --test <paths>`, `node scripts/run-root-suite.mjs`, the bootstrap pair — stay untouched. ``
+    and the model re-ran it as `bun -p`, leaving `node -v` untouched.
+  * Drift rate: **before 4/4 commands chose the fallback tool; after 0/3 chosen
+    (2 blocked attempts re-run with the preferred tool)**.
+- **P9** — 2026-11-17, verification: the package gates, the root gate and the
+  docs projection.
+- **E17** — 2026-11-17, `node scripts/run-root-suite.mjs` · exit 0 · the whole
+  deterministic gate green (verdict and tally in `## Next`).
+
 ## Next
 
-Implement P1: freeze the classifier's cases red, then the policy module.
+The owner's external verify. Then the PR (`Closes #610`), then the published
+canary cut + `pi install` refresh that puts the carrier into the owner's own
+sessions (`O14`).
 
 ## References
 
