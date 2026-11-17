@@ -55,6 +55,14 @@
  * cites no source, toggles one behaviour, states no condition, or lands in a slot
  * the guide does not carry. Only `land` writes, and it refuses before any byte moves.
  *
+ * `elicitation` (feature 526) is Layer 0 of the input path: the pre-spec before
+ * triage is a checklist, and `check` is that artifact's own check — the bank's
+ * cells (two behaviour-changing answers, an ask condition, a default or a stated
+ * `none`, a source) and the pre-spec against them (every applicable row, each
+ * provenance's receipt, one open question at a time, declared model families with
+ * a `same-family: <why>` where they are equal). Read-only: it validates a
+ * record, never a transition.
+ *
  * `verify` (issue #260) is the document verifier — non-negotiable #2's tool,
  * distinct from the `edit` writer CLI: it reads one unit document against the
  * frozen schemas (required sections per accepted shape, evidence columns,
@@ -173,6 +181,7 @@ import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
 import { checkTrial, boundLine, parseDuration, CheckError, readPidLive } from "../src/resources/check.mjs";
 import { verifyUnitDoc, VERIFY_CONTRACT_ID } from "../src/verify/Verify.mjs";
 import { run as runCharter } from "../src/charter/interview.mjs";
+import { run as runElicitation } from "../src/elicitation/prespec.mjs";
 import { createFeedback, parseFeedbackArgs } from "../src/feedback/index.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -613,7 +622,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -775,6 +784,16 @@ switch (command) {
     // deterministic half: where an answer lands (`state`/`land`) and whether a
     // question earned its place (`check`). `land` is the only writer.
     process.exit(runCharter(restArgs));
+    break;
+  }
+
+  // ── elicitation — the pre-spec before triage (feature 526) ──
+  case "elicitation": {
+    // Layer 0 of the input path: a checklist fills what the request, the tree and
+    // the docs already answer, and only what survives becomes one question. This
+    // is the artifact's own check — it validates the bank's cells and a pre-spec
+    // against them, refuses nothing a transition depends on, and writes nothing.
+    process.exit(runElicitation(restArgs));
     break;
   }
 

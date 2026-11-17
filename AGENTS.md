@@ -419,6 +419,8 @@ ceremony-profile-adoption-vocabulary | packages/agentic-workflow-schema/src/cere
 ceremony-profile-refusal-vocabulary | packages/agentic-workflow-schema/src/ceremony-profile.ts | schema-export:CEREMONY_PROFILE_REFUSALS | ceremony-profile-refusal | no
 ceremony-profile-block | packages/agentic-workflow-schema/README.md | block:ceremony-profile@1 | n/a | no
 interview-bank | skills/init-workspace/references/ENGINEERING_INTERVIEW.md | block:interview-bank@1 | n/a | no
+elicitation-checklist | skills/unit-lane/references/ELICITATION.md | block:elicitation-checklist@1 | n/a | no
+pre-spec | skills/unit-lane/references/ELICITATION.md | block:pre-spec@1 | n/a | no
 materialization-outcome-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:MATERIALIZATION_OUTCOMES | materialization-outcome | no
 materialization-finding-code-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:MATERIALIZATION_FINDING_CODES | materialization-finding-code | no
 artifact-evidence-kind-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ARTIFACT_EVIDENCE_KINDS | artifact-evidence-kind | no
