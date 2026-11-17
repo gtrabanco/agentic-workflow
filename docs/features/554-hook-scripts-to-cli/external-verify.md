@@ -151,3 +151,39 @@ No finding here is a conversion target; none was waived.
   base. Reproducer: read the header against
   `template/.agentic-workflow/hooks/git-identity-check.sh`. Blocker count:
   9 → 10; disposition unchanged (one batch → one recheck).
+
+## Correction batch & recheck — 2026-11-17
+
+One batch under the owner's local apply order (S1–S4, §9). B1–B9 fixed and
+re-scoped; B10 parked by the path-protection gate. The recheck was limited to
+the blockers, every command re-run in the foreground (unit doc `## Log` E29,
+F1–F5; 546's fold at its F1/E9):
+
+- **B1** criterion 2 → `4` ✓ (`9fd8d5e7`)
+- **B2** criterion 6 → `3` ✓
+- **B3** criterion 10 → `0 matches, exit 1` ✓; E19 kept as run, superseded by F1
+- **B4** O17 → `1`, row planned → re-run → verified ✓
+- **B5** `phase-lint` → `verdict PASS` (P1–P7, 6/6 each); S2/S3/S16 linked; `verify` → exit 0 ✓
+- **B6** BOOTSTRAP_DISCOVERY jq claim → `0 matches` ✓ (`c07f7aa4`)
+- **B7** git-config-writes attribution → `0 matches`, crate module named ✓
+- **B8** 546 O1/O12/O19 re-scoped, five validators green (18/0, 46, 10/0, ok, 31/0), verified at E9 ✓ (`02dd2762`)
+- **B9** shim header now matches code and README (absent CLI exits 1, usage 2) ✓
+- **B10 OPEN** — `scripts/identity-hook-parity.test.mjs` is a post-freeze
+  protected test file: the gate requires a `justification` row *plus* a
+  recorded `human-owner` `approval` row in
+  `docs/features/554-hook-scripts-to-cli/decisions.md`; one question asked;
+  Findings row F6 carries it.
+
+Advisories: A3/A4/A5 folded in the same batch; A1 (pre-existing `no-phases`
+class on docs 15 and 552), A2 (E18 exit-1 vs exit-2; "matches 0" still true)
+and A6 (dated D10 supersession pointer) recorded — none blocking.
+
+Regression (S3): root `--jobs 1` → **exit 0 · 118/118**; default pool 117/118
+with only `unit-route`'s disclosed load flake (standalone 64/64); local-gate
+steps 1–17 PASS, step 18/19 `dependency-pin-gate` red on registry drift
+(`pi-extensible-workflows` 6.3.0 vs 6.4.0 — pin surface absent from the diff,
+identical rejection at base); pi 956/0; budgets PASS ×2; docs-generate PASS;
+skill-lint PASS; changeset lint ok; eight template shell suites green.
+
+**Verdict after recheck: NEEDS-DECISION (1 — B10, awaiting the recorded
+human-owner approval; no other open blocker).**
