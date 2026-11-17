@@ -289,6 +289,40 @@ test("the policy is read through the unified config, project over global, fail-c
   assert.ok(broken.degradations.includes("malformed-config"));
 });
 
+test("a policy section that is not the declared shape is refused whole, never narrowed in silence (#470)", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "content-guard-shape-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const writeProject = (text) => {
+    mkdirSync(join(root, ".pi"), { recursive: true });
+    writeFileSync(join(root, ".pi", "agentic-workflow.json"), text);
+  };
+
+  // Every one of these used to resolve to `state: "explicit"` with an EMPTY
+  // trusted set and no degradation: fail-closed by accident, indistinguishable
+  // from an intentional lockdown, and silent — the one thing the layer denies.
+  for (const unreadable of ['"everyone"', "[123]", "[null]", '["OWNER", 7]', '{ "0": "OWNER" }']) {
+    writeProject(`{ "contentGuard": { "trustedRoles": ${unreadable} } }\n`);
+    const read = readContentGuardPolicy({ projectDir: root });
+    assert.equal(read.policy.state, "malformed", `trustedRoles ${unreadable} must be refused whole`);
+    assert.deepEqual(read.policy.trustedRoles, ["OWNER", "MEMBER", "COLLABORATOR"], "the strictest default is in force");
+    assert.ok(read.degradations.includes("malformed-config"), `the refusal is declared, got ${JSON.stringify(read.degradations)}`);
+  }
+  for (const key of ["allowLogins", "denyLogins"]) {
+    writeProject(`{ "contentGuard": { "${key}": [7] } }\n`);
+    const read = readContentGuardPolicy({ projectDir: root });
+    assert.equal(read.policy.state, "malformed", `${key} with a non-string entry is malformed`);
+    assert.ok(read.degradations.includes("malformed-config"));
+  }
+
+  // The contrast that keeps the fix honest: an EMPTY list is a declared lockdown,
+  // not an unreadable section — refusing it would break a legitimate config.
+  writeProject('{ "contentGuard": { "trustedRoles": [] } }\n');
+  const lockdown = readContentGuardPolicy({ projectDir: root });
+  assert.equal(lockdown.policy.state, "explicit");
+  assert.deepEqual(lockdown.policy.trustedRoles, []);
+  assert.deepEqual(lockdown.degradations, []);
+});
+
 test("the association collector reads one paginated forge call and degrades by cause", (t) => {
   const dir = mkdtempSync(join(tmpdir(), "content-guard-gh-"));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
