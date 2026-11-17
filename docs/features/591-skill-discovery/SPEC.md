@@ -508,6 +508,16 @@ surgery. The declared deterministic gates (tests, lints) run in the foreground.
   `47 pass / 0 fail`, `skill-lint` PASS, both context budgets PASS,
   `normative-drift` `21/0`, `ledger-ownership` `14/0`, `phase-lint` PASS,
   `verify` `ok: true`, changeset ok, `docs-generate --check` PASS.
+- **D4** — 2026-11-17, delivery disclosed, no gate touched: three pushes died
+  with SIGPIPE (`exit 141`) immediately after a green 16-step pre-push gate,
+  before any ref update. `GIT_TRACE=1` places the death exactly there: `git
+  push` opens its `git-receive-pack` ssh session *before* the hook, that
+  connection then sits idle through the gate's ~10 minutes, and the write after
+  the hook lands on a connection that died meanwhile (`ssh -T git@github.com`
+  and `git ls-remote` both healthy; no keepalive configured). The push is
+  re-sent with a one-off `git -c core.sshCommand='ssh -o ServerAliveInterval=20
+  -o ServerAliveCountMax=6'` so the transport survives the gate's idle window —
+  every gate step still runs unmodified, nothing skipped, no escape hatch.
 - **L3** — 2026-11-16, the owner's correction request, verbatim:
   ```
   Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
