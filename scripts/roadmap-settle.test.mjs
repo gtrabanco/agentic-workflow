@@ -80,6 +80,16 @@ test("the live tree is green — the suite keeps the real drift red, not the fix
   assert.match(r.stdout, /verdict: PASS/);
 });
 
+test("no roadmap cell quotes row 557's superseded status (external-verify 557 B3)", () => {
+  const text = fs.readFileSync(path.join(ROOT, "docs", "ROADMAP.md"), "utf8");
+  assert.doesNotMatch(text, /postponed · blocked on #563/, "row 557's pre-#601 status survives in the index");
+});
+
+test("no roadmap cell explains another row's status with a quoted stale value (external-verify 557 B3)", () => {
+  const text = fs.readFileSync(path.join(ROOT, "docs", "ROADMAP.md"), "utf8");
+  assert.doesNotMatch(text, /row 557's .*carries the same blocker/, "row 590 still quotes row 557's old status cell");
+});
+
 test("--json emits the envelope with the same codes", () => {
   const r = run(["--root", FIXTURES, "--json"]);
   assert.equal(r.status, 1);

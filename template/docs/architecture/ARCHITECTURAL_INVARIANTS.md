@@ -19,9 +19,17 @@ are declared; workflow skills must remain compatible with that state.
 - Rule: <property that must remain true>
 - Rationale: <why it protects the repository>
 - Applies to: <modules, public contracts, or change types>
+- Enforcement: <machine: <mechanism> | prose-only>
 - Evidence: <paths, tests, commands, or diagrams that establish the rule>
 - Change authority: <decision record or named approval path>
 ```
+
+The `Enforcement` bullet is the one a reader (and `agentic-workflow materialize
+check`) can decide: `machine: <mechanism>` names the lint rule, dependency
+analysis or CI job that fails a violation, and `prose-only` is the honest
+admission that nothing does. A section without the bullet is reported as a typed
+finding, not as a stylistic gap — an invariant whose enforcement lives in a
+reviewer's memory is an invariant that will be broken.
 
 ## Invariants
 

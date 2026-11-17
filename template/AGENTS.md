@@ -42,6 +42,8 @@ your domains.
 | Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks + headless CI runs through the journal action)* |
 | Project identity, deployment, license & policies | the **Project charter** section (below) — written by `/init-workspace`, read before any design or plan |
 | Acceptance criteria & review passes per surface | `docs/workflow/VERIFICATION_CRITERIA.md` *(the project's criteria catalogue; extended only with a recorded decision)* |
+| User-facing flows, and what demonstrates each one | `docs/workflow/FEATURE_MAP.md` *(seeded at bootstrap, maintained by the lane's docs step)* |
+| Declared boundaries and how each is enforced | `docs/workflow/BOUNDARY_ENFORCEMENT.md` *(written by `agentic-workflow materialize apply`, never by hand)* |
 | Cross-session memory | Engram, the workflow's memory substrate *(ask-first: provisioned by `/init-workspace` on a non-pi host, or by the pi package's `memory.engram` consent; the save/recall protocol is `unit-lane`'s `references/MEMORY.md`)* |
 | Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
 | Architectural constraints | `docs/architecture/ARCHITECTURAL_INVARIANTS.md` *(optional; explicit rules that architectural changes must preserve)* |
@@ -114,6 +116,12 @@ layer's **Dependency policy** slot above — one home, never a second slot.
   `<boundary> → machine: <mechanism>` or `<boundary> → prose-only`. Prose-only
   is an honest answer, never an accident: it marks a boundary to materialize.
 - **Production verification:** `<whether a green pipeline job or the local gate is the verification; the service signals and error budget, or "no running service">`
+- **Evidence driver:** `<the project's own command that captures an artifact (screenshot, video, state snapshot), or "n/a — no artifact evidence required">`
+
+  The one command a capture criterion invokes. The workflow records and invokes
+  it; it never ships a driver. With no driver declared, a criterion naming
+  `artifact: screenshot|video|state-snapshot` fails closed with a `manual:` label
+  instead of passing on prose (`skills/verification-contract/SKILL.md`).
 - **Decision records:** `<where architecture decisions live and which ones need a record before a unit plans work>`
 - **API posture:** `<safer-API over exception-first, or the team's own error contract>`
 

@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills> [--debug|--profile] ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills> [--debug|--profile] ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -45,6 +45,7 @@ writing anything**.
 | `charter <state\|land\|check> --guide <path> [--answers <path\|->] [--bank <path>] [--json]` | The **engineering interview's deterministic half** (unit 556): the interview itself is prose because the answers are a conversation, but *where an answer lands* and *whether a question earned its place* are checked. `state` reports every `- **Key:** value` slot in the guide's `## Project charter` section as `filled` or `placeholder` (a slot whose value is still one `<…>` placeholder, or a list whose every entry carries one, is a placeholder — a documented shape is not an answer), so the round asks only what the project has not declared. `land` writes the payload's `answers` into placeholder slots, records a `defaults` entry as `assumed <date> — <value>` (a defaults payload without `date` is refused: an assumption is never undated), reports a slot the project already filled as `kept` and never rewrites its bytes, and leaves an unanswerable slot `unanswered`. `check` is the bank's own check: the `interview-bank@1` block's declared cells must equal the question table's header, every row must cite a bibliography `source`, state the two behaviours its answers `toggles`, state the `applies-when` condition that earns it, and land in a slot the guide carries; the guide must carry the `Architectural boundaries` slot and its value must be one `<boundary> → machine: <mechanism>` or `<boundary> → prose-only` entry per boundary. Exit 0 pass (write done / check passed) · 1 check blocked · 2 refusal, `EDIT REFUSAL — <reason>` on stderr before any byte moves. No clock, no network, no git: two runs over the same bytes produce the same bytes |
 | `memory probe [--json]` | The six-check memory-substrate health sensor (below) — writes nothing, always exits 0 |
 | `relay <check\|budget\|tiers\|obligations> <unit> [--repo <dir>] [--packet <dir>]` | The **Relay packet checker** (unit 82): the lane's offline half of pi-web's Relay contract. `check` validates the three documents pi-web dispatches (pointer-shaped charter, baton with a closed state, leg and phase cursor, one log entry per leg); `budget` measures the leg handover against the manifest's `relays` ceiling; `tiers` reads each leg's tier from the catalog; `obligations` verifies the unit's ledger is closed. Read-only, stdout is one fixed block ending in `verdict: PASS\|FAIL`, exit 0 pass · 1 fail · 2 usage. One owner for the grammar — `src/relay/Packet.mjs` — which `scripts/relay-packet.mjs` also runs, so both entry points print the identical block |
+| `materialize plan\|check\|apply\|evidence --guide <path> [--record <path>] [--invariants <path>] [--feature-map <path>] [--feature-map-declared] [--unit <path>] [--outcomes <path\|->] [--date <YYYY-MM-DD>] [--root <dir>] [--json]` | The **verification-materialization service** (unit 557, issue #564): the interview records a per-boundary `machine: <mechanism>` or `prose-only` answer, and this service is the last mile the product owns — it materializes the *decision*, never the verification. `plan` prints one row per declared boundary plus the feature map and the artifact-capture driver, and a residual for every item without an outcome (`enforced` · `recorded-issue` · `declined` · `pending` · `seeded`/`missing` · `declared`/`undeclared`), exit 0 with `verdict: COMPLETE\|PENDING`. `check` is the declaration-enforcement check: a boundary declared in the charter or in `ARCHITECTURAL_INVARIANTS.md` with no named enforcement mechanism, a scaffolded rule the tree does not carry, or a declared feature map that is absent or still templated is one typed finding from the published vocabulary, each carrying a `finding-route@1`-shaped route (exit 0 pass · 1 blocked). `apply` is the only writer and needs an explicit `consent: "yes"` in its payload: it records each outcome in `docs/workflow/BOUNDARY_ENFORCEMENT.md` and flips a scaffolded boundary's charter answer to `machine: <mechanism>`, writes nothing when a consent is absent or the answer is `"no"` (one residual per item), and blocks the whole batch when a scaffold names a rule file the tree lacks. `evidence` closes the artifact-evidence half: a criterion naming `artifact: screenshot\|video\|state-snapshot` must record `digest: sha256:<hex>` and the project's declared driver command in its evidence carrier, and fails closed with `manual: <AC>` when no driver is declared (exit 0 pass · 1 blocked). Read-only except `apply`; no clock (the landing date is the payload's), no network, no git — two runs over the same bytes produce the same bytes. The shapes are `materialization@1` below |
 | `log render --facts <path\|-> [--raw]` | The **journal entry renderer** (feature 394): reads a frozen `log-facts@1` payload (`timestamp`, `branch`, `reason`, `commits{count,range}`, `files[]`) and prints the `docs/LOGS.md` block the pi extension writes at session shutdown. JSON on stdout (`--raw` for the entry alone, so `diff` needs no parsing); exit 0 rendered, exit 2 refused with `LOG REFUSAL — <reason>`. Pure: no clock, no git, no session, so a test or a CI job regenerates and byte-diffs an entry. One owner for the shape — `src/log/render.mjs` — which the extension imports and the parity suite compares against `template/.claude/hooks/log-session-end.sh` |
 | `journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--check] [--json]` | The **merge-to-main aggregator** (issue #405) and, with `--check`, the carrier's **validate-only lint** (issue #452 S3): appends the pending fragments under `.agentic-workflow/journal/` to `docs/LOGS.md` newest-first (ties: branch, kind, session ascending), deletes the consumed fragments, consumes already-present bytes without appending (a crash between append and delete re-runs as a no-op), and refuses anything ambiguous before the first byte moves — exit 2, `JOURNAL REFUSAL — <reason>`. `--check` moves no byte and lists *every* non-conforming entry (exit 0 conforming · 2 otherwise), so the local gate's offline subset can run it on every push. Forge-free by contract (AC5): the example GitHub workflow and the documented `post-receive` hook call this command unchanged |
 | `journal write --kind <mechanical\|narrative> [fields] [--session <id>]` | The **programmatic fragment writer** (issue #452): the caller supplies prose fields (`--summary`, `--decisions`, `--next`, `--title`) or a rendered block (`--content -`), or `--facts <path\|->` for the mechanical kind, and the CLI computes the UTC second, the branch, the session slug, the block bytes and the fragment name, self-validates the name and lands the file with an exclusive create. A caller never composes a filename (`--name` does not exist), a foreign kind or a bad body is exit 2 `JOURNAL REFUSAL — <reason>` before any byte lands, a collision is refused, never overwritten, and a second fragment of one kind from an explicit `--session` whose conversation already landed one is refused as already registered (issue #468) — one entry per conversation per kind, so the auto-log's mechanical entry and `/log-session`'s narrative one coexist. The write grammar below is `journal-write-grammar@1` |
@@ -584,6 +585,46 @@ row.detail | 1..512 characters | the heuristic, the sample and the denominator i
 row.components | closed per metric | the counts the value was computed from (see the definitions table)
 ```
 
+## `materialize` — declared boundaries become recorded outcomes (unit 557, issue #564)
+
+The engineering interview records, per boundary, whether it is enforced by a
+machine or by prose only. A `prose-only` answer is honest and it is also the
+defect: a boundary that lives in a reviewer's memory is not a boundary. This
+service owns the last mile the product can own — it materializes the **decision**:
+
+- the **rule content** is always the adopting team's (a lint rule set, a
+  dependency-analysis config, a CI job): the workflow proposes, the project
+  names the mechanism, and `apply` records it. Nothing stack-specific ships here;
+- the **record** is the workflow's: `docs/workflow/BOUNDARY_ENFORCEMENT.md` holds
+  one row per declared boundary, so the same prose-only answer cannot reappear
+  quietly in the next session;
+- the **check** is deterministic: a boundary declared with no enforcement
+  mechanism is a typed finding with a route that resolves it, and a capture
+  criterion with no digest fails closed instead of passing on prose.
+
+```text
+materialization@1
+row | shape | what it orders
+contract | agentic-workflow/materialization | the receipt's identity
+operation | plan \| check \| apply \| evidence | which half of the round ran
+item.kind | boundary \| feature-map \| evidence-driver | the three things a bootstrap materializes
+item.status | enforced \| recorded-issue \| declined \| pending \| seeded \| missing \| declared \| undeclared | what the plan found; only `enforced`, `recorded-issue`, `declined`, `seeded` and `declared` are answers
+residual.item | the item the round still owes | one row per unanswered item, never a silent omission
+finding.code | MATERIALIZATION_FINDING_CODES | the closed set the schema package publishes: `boundary-declared-unenforced`, `boundary-artifact-missing`, `feature-map-missing`, `feature-map-shape`, `evidence-driver-missing`, `artifact-evidence-missing`
+finding.route | <a finding-route@1 hand-off> — <the concrete target> | the single-input verb plus what resolves it (`continue — init-workspace`, `fix — <path>`); never bespoke prose
+outcome | MATERIALIZATION_OUTCOMES | the three routes a prose-only boundary may take: `scaffold` (the project's rule file lands in the tree), `issue` (filed on the target forge), `declined` (the team said no, with its reason)
+record.column | boundary \| enforcement \| outcome \| artifact \| recorded | the record document's one row per boundary; `artifact` is the rule path or the forge reference, `—` for a declined row
+map.column | flow \| what-exists \| how-a-user-reaches-it \| evidence \| status | the feature map's one row per user-facing flow
+criterion.id | AC-<n> | the acceptance criterion an artifact-evidence row signs
+criterion.artifact | artifact: screenshot \| video \| state-snapshot | ARTIFACT_EVIDENCE_KINDS: the capture shapes a criterion may demand
+evidence.digest | digest: sha256:<8-64 hex> | the artifact digest the evidence carrier records
+evidence.driver | the guide's `Evidence driver` slot value | the project-declared capture command the evidence carrier must name
+```
+
+The document stamps are the writer's: the record carries `boundary-enforcement@1`
+and the map `feature-map@1` as their first fenced line, so a reader knows which
+columns the file was written for. Their columns are the two `record.column` /
+`map.column` rows above — one home, never a second copy in the template.
 ## `skills` — discovery, consent and lifecycle (issue #591)
 
 `init-workspace` offers, after the charter round, to search the trusted
