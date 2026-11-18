@@ -16,6 +16,7 @@ must not weaken, and its record is written here rather than assumed:
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/dimension-regression.test.mjs | P5 | 2026-11-18 | execute-phase | The evolution gate's own contract says a new review dimension extends its frozen id list "here in the same change"; the row added is `Journal signals`, one assertion datum, and no existing assertion is relaxed, skipped, narrowed or deleted. The approval row is deliberately absent: no auto-approval authority exists, so the owner approves this addition with the handoff.
+justification | scripts/journal-corpus.test.mjs | P2 | 2026-11-18 | execute-phase | One correction inside the RED landing itself, before any implementation exists: the attribution case first seeded a single joined row per class and expected two attributed classes, which the recurrence rule (2, the corpus's own default) cannot produce. The case now seeds two rows for the first class as well, so what it asserts is the rule it names. No assertion was relaxed, skipped or narrowed to make a later phase pass — the file is still observed failing on the missing `scripts/journal-corpus.mjs`.
 ```
 
 ## Why the corpus is joined, not re-parsed
