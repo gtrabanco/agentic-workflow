@@ -215,6 +215,14 @@ test("an unarmed row is instruct-only in the wizard's vocabulary, and prints the
   assert.equal(found.evidence.vehicle.arming, found.instruction, "the row prints the one arming string it derived");
 });
 
+test("the rendered line prints the row's instruction exactly once (A1, external verify 2026-11-18)", async () => {
+  const envelope = await runDoctor({ ops: healthyOps({ env: {} }) });
+  const instruction = row(envelope).instruction;
+  const rendered = renderDoctor(envelope);
+  const copies = rendered.split(instruction).length - 1;
+  assert.equal(copies, 1, `the arming line renders ${copies} times — the row derives one command and prints it once`);
+});
+
 test("the doctor writes nothing: the vehicle module carries no write or installer call", () => {
   assert.doesNotMatch(VEHICLE_SOURCE, /\b(?:writeFileSync|writeFile|appendFileSync|mkdirSync|rmSync|unlinkSync|execFileSync|spawnSync)\b/u);
   assert.doesNotMatch(VEHICLE_SOURCE, /git\([^)]*\[[^\]]*"(?:config|add|commit|push)"/u);
