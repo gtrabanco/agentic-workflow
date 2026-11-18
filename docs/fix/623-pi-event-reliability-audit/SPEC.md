@@ -279,12 +279,31 @@ its validator runs in the foreground.
 - **E6** — 2026-11-18, `rg -n 'agent_settled' dist/core/agent-session.js dist/server/sessions/piSessionService.js` over the installed host and web host · the host emits `agent_settled` from `_emitAgentSettled` after every run and the web session service branches on it per run, while that module names no `session_shutdown` at all (PE-011, PE-012).
 - **E7** — 2026-11-18, `bun test --timeout=10000 test/telemetry-wiring.test.mjs test/auto-log-session-wiring.test.mjs test/session-telemetry.test.mjs test/telemetry-ledger-sink.test.mjs test/telemetry-jsonl-sink.test.mjs test/auto-log-session.test.mjs test/telemetry-extension.test.mjs` in `packages/pi-agentic-workflow` · 80 pass / 0 fail · the baseline these obligations start from.
 - **D1** — 2026-11-18, the local workflow's §5 plan step — the planning ledgers are re-cut into the repository's own shapes: `planning-obligations.md` as a markdown table the repo's reader parses (`scripts/unit-lineage.mjs` accepts only `O<n>`/`AC-<name>` ids and refuses an empty ledger, so the cut's text block and descriptive ids were unreadable to it), `planning-evidence.md` in `LEDGERS.md`'s closed column order, and AC1–AC6 frozen in `## Acceptance criteria`.
+- **E8** — 2026-11-18, the RED run of the new corpus before any implementation: `bun test --timeout=10000 test/telemetry-wiring.test.mjs test/auto-log-session-wiring.test.mjs test/session-telemetry.test.mjs test/telemetry-ledger-sink.test.mjs test/telemetry-jsonl-sink.test.mjs test/auto-log-session.test.mjs test/event-reliability-matrix.test.mjs` · exit 1 · 20 failing cases, one per requested rule (settle emission, per-run JSONL line, ledger upsert, phase reset, journal entry at the settle, marker at both boundaries, stale purge, matrix coverage).
+- **E9** — 2026-11-18, `bun test packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs` · 18 pass / 0 fail · the settle-emission, per-run and phase-reset cases are green.
+- **E10** — 2026-11-18, `bun test packages/pi-agentic-workflow/test/telemetry-ledger-sink.test.mjs` · 18 pass / 0 fail · one row per source, the other rows byte-identical, the no-`source` grammar still appends.
+- **E11** — 2026-11-18, `bun test packages/pi-agentic-workflow/test/telemetry-jsonl-sink.test.mjs` · 7 pass / 0 fail · two settled runs, two cumulative lines, one ledger row.
+- **E12** — 2026-11-18, `bun test packages/pi-agentic-workflow/test/session-telemetry.test.mjs` · 21 pass / 0 fail · the earlier single-emission and disabled cases stay green beside the boundary cases.
+- **E13** — 2026-11-18, `bun test packages/pi-agentic-workflow/test/auto-log-session-wiring.test.mjs` · 16 pass / 0 fail · a settle-only session writes one entry and leaves no marker; a second boundary adds none.
+- **E14** — 2026-11-18, `bun test packages/pi-agentic-workflow/test/auto-log-session.test.mjs` · 15 pass / 0 fail · the sweep removes only a marker past the window and never an undated or another session's live one.
+- **E15** — 2026-11-18, `bun test packages/pi-agentic-workflow/test/event-reliability-matrix.test.mjs` · 6 pass / 0 fail · the registered set derived from `src/extension/` equals the matrix's rows, and the shutdown row carries the `session:end` warning.
+- **E16** — 2026-11-18, `rg -n 'pi\.on\("session_shutdown"' packages/pi-agentic-workflow/src/extension/` · exit 0 · 3 matches (`index.ts:504`, `telemetry-wiring.ts:233`, `auto-log-session-wiring.ts:168`) — the event is still listened to by all three, no Pi API changed.
+- **E17** — 2026-11-18, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, verdict PASS.
+- **E18** — 2026-11-18, the whole package: `bun run --cwd packages/pi-agentic-workflow test` · exit 0 · **988 pass / 0 fail** across 86 suites (the build included), so every pre-existing case still holds.
+- **E19** — 2026-11-18, the differential: `rg -rn 'telemetry-sinks|session-telemetry|createLedgerSink|createJsonlSink|createSessionTelemetry'` outside the two modules and their suites · only the extension's own wiring, so no command outside the package shares the changed code; the readers that do (`scripts/tier-cost.mjs`, the JSONL consumer) are exercised by the sink round-trip cases in E10/E11.
+- **P1** — 2026-11-18, the plan re-cut: `planning-obligations.md` (O1–O13), `planning-evidence.md` (PE-001–PE-016), AC1–AC6, and the repaired `L1` fence · `f9a4dd31`.
+- **P2** — 2026-11-18, telemetry at the settled run: `emit()` on the accumulator, the ledger upsert, the JSONL per-run line, the phase reset · `5066b893`.
+- **P3** — 2026-11-18, the journal entry at the first boundary, the stale-marker sweep, and the adapter suite's host-faithful `pi` double · `fe2d6f0c`.
 
 ## Next
 
-Run `runner unit-route --triage 623-pi-event-reliability-audit`, paste the
-triaged steps block, and begin the P3/P4 documentation work before the P5/P6
-test-first code changes.
+Hand the branch to the owner as the external verifier: `fix/base 623` was applied
+through the local apply protocol (no triage, no review cycle, no fold), so the
+`## Triaged steps` block stays empty by design — `runner unit-route --triage`
+was never run and `scripts/unit-lineage.mjs --unit 623-pi-event-reliability-audit`
+therefore answers BLOCKED on the missing triage re-derivation, not on the
+obligations (all 13 are `verified`). The diff, the obligation ledger and the
+evidence block are the handoff.
 
 ## References
 

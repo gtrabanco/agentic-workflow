@@ -581,6 +581,14 @@ in the handoff to the owner.
   the gate's own exit flush, so it was re-run standalone → 947 tests, 946 pass /
   0 fail / 1 pre-existing skip, exit 0.
 
+- **D9** — 2026-11-18, the emission boundary moves to the settled run (fix #623 S6): the sample was
+  emitted once per session at `session_shutdown`, so a host whose session never tears down never emitted
+  one. `agent_settled` — documented as "final and notification-only" and fired after every settled run in
+  every host — now emits the cumulative sample, so `jsonFile` gains one line per run and the ledger keeps
+  one row per session by upserting on `source`; `session_shutdown` stays the final, latched flush. The
+  accumulator's `TELEMETRY_SAMPLE_FIELDS` and the ledger's `tier-cost@2` columns are unchanged: the upsert
+  and the re-emission guard live in the sink and the accumulator, not in the sample.
+
 ## Next
 
 The 2026-11-16 external-verify receipt (4 blockers) is applied as one

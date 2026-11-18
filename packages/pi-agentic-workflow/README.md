@@ -750,7 +750,7 @@ not here.
 
 ## Session telemetry — the measured sample
 
-Every session that runs a unit-scoped command emits one **sample** at shutdown:
+Every session that runs a unit-scoped command emits a **sample**:
 the unit it worked on, the phase (the command that started the work), this
 package's version, the model that served the most turns, how many paths it
 changed, its turns, the model's and the tools' milliseconds, and the provider's
@@ -765,10 +765,13 @@ the sample is local and anonymized by construction and measures by default —
 ```
 
 Two destinations, one sample. The project's `tier-cost@2` ledger
-(`docs/workflow/TIER_COST.md`) gets a markdown row appended with one atomic
-write, and the JSONL file gets one JSON object per line at the path
-`telemetry.jsonFile` names (`.pi/.telemetry/sessions.jsonl` by default). Add the
-file to your ignore list if you do not want it in the repository:
+(`docs/workflow/TIER_COST.md`) keeps one row per session: a new session appends
+with one atomic write, and a later emission of the same session replaces its own
+row. The JSONL file gets one JSON object per line at the path
+`telemetry.jsonFile` names (`.pi/.telemetry/sessions.jsonl` by default), one line
+per settled run and cumulative, so a consumer differences consecutive lines
+instead of reading one row per session. Add the file to your ignore list if you
+do not want it in the repository:
 
 ```gitignore
 .pi/.telemetry/
@@ -827,10 +830,21 @@ the residue a non-participating project must not carry.
 
 What it does per session, all of it git:
 
-- on start, records `.pi/.session-<id>.start` (`HEAD` sha, epoch, timestamp);
-- on shutdown, appends **one** entry and removes that marker. A marker left by a
-  crashed session is never adopted — each session only ever reads its own, and
-  two sessions in one workspace stay two sessions.
+- on start, records `.pi/.session-<id>.start` (`HEAD` sha, epoch, timestamp) and
+  sweeps any marker older than seven days that a crash or an older build left;
+- at the first boundary it reaches — the first settled run, or the shutdown when
+  no run settled — appends **one** entry and removes that marker. A marker left
+  by a crashed session is never adopted — each session only ever reads its own, and
+  two sessions in one workspace stay two sessions. The entry is written at
+  `agent_settled` because `session_shutdown` fires only when a runtime is torn
+  down, and a session that stays alive between prompts never reaches it; a later
+  boundary writes nothing, because the journal is append-only.
+
+The one event this package cannot move is the hooks `session:end` seam: it is
+dispatched only at `session_shutdown`, so a web session that never tears down
+never runs a declared `session:end` hook. That gap is declared in
+[`docs/workflow/CONFIG.md`](../../docs/workflow/CONFIG.md#pi-event-reliability)
+with the reliability matrix, not silently repaired.
 
 The marker is this package's own bookkeeping, so add it to your ignore file (git
 tracks nothing while a session runs; a crash can leave the file behind):
