@@ -373,9 +373,15 @@ required failure state, in the 9-column shape owned by
   data, a backtick span is a command. `PE-006`–`PE-008` measure each at the cut
   head.
 - **D4** — 2026-11-18, the heredoc rule's own guard: a `<<` is only a heredoc when
-  a later line is exactly its delimiter. With no terminator bash itself fails the
-  command (`unexpected EOF`), so reading that text as ordinary words loses no
-  execution — and it keeps `echo "a << b"` from swallowing the rest of a command.
+  a later line is exactly its delimiter. With no terminator bash warns
+  (`here-document delimited by end-of-file`) and runs the command with the
+  partial body — it does not fail — so reading that text as ordinary words
+  cannot miss an execution: the body is still tokenized as words and a write in
+  it is over-detected, never missed. It also keeps `echo "a << b"` from
+  swallowing the rest of a command. (Amended 2026-11-18 with the external-verify
+  correction batch: the original claimed bash fails the command with
+  `unexpected EOF`; measured false for a bare delimiter — that error belongs to
+  the unterminated-*quote* case, which does fail.)
 - **D5** — 2026-11-18, the boundary this unit states and does not cross: a heredoc
   piped into an interpreter (`bash <<'EOF' … EOF`), a command substitution inside
   a double-quoted string, and an invocation built by variable indirection are
