@@ -284,12 +284,19 @@ export interface LogSessionConfig {
 }
 
 /** What the extension READS: guard switches, resolved. */
-export interface GuardsConfig {
-  merge: boolean;
-  history: boolean;
-  ci: boolean;
-  cost: { maxTokens: number };
+/**
+ * Issue #626: one disposition per guard, resolved from the base file's `guard`
+ * section. `default` is what every guard fell back to, kept for a reader that
+ * wants to report the posture; each named entry is the value the guard acts on.
+ */
+export interface GuardConfig {
+  default: GuardMode;
+  gitIdentity: GuardMode;
+  toolChoice: GuardMode;
+  receipt: GuardMode;
 }
+
+export type GuardMode = "allow" | "deny" | "ask";
 
 /** What the extension READS: the approved identity profile and the agent-side
  *  guard (issue #514). Owned by the guard module, which is the section's only
@@ -346,8 +353,8 @@ export interface EffectiveConfig {
   telemetry: TelemetryConfig;
   /** #394: automatic session logging, resolved. */
   logSession: LogSessionConfig;
-  /** Guard switches, resolved. */
-  guards: GuardsConfig;
+  /** Issue #626: the guard dispositions, resolved from `guard.default`. */
+  guard: GuardConfig;
   /** Issue #201: the declared pass routes, merged project-over-global; empty
    *  when no scope declares one — the resolver owns the fail-closed chain. */
   passes: Record<string, PassRouteFile>;

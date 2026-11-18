@@ -43,6 +43,8 @@
 
 import { isAbsolute, normalize, resolve, sep } from "node:path";
 
+import { GUARD_MODES } from "@gtrabanco/agentic-workflow-schema";
+
 import {
   DEFAULT_AGENT_MODE,
   type GitIdentityAgentGuard,
@@ -70,6 +72,7 @@ export interface GitConfigWrite {
 
 /** What the guard needs to decide one command line (the pi-side options). */
 export interface GitIdentityGuardOptions {
+  /** The resolved `guard.gitIdentity.mode` (issue #626). */
   mode: GitIdentityAgentMode;
   /** Config keys the project allows the agent to write, matched case-insensitively. */
   allow: readonly string[];
@@ -84,11 +87,21 @@ export type GuardVerdict =
   | { action: "ask" | "block"; write: GitConfigWrite; reason: string };
 
 
-/** The guard's options with the shipped defaults filled in. */
-export function guardOptions(config: Partial<GitIdentityConfig> | undefined, cwd: string, scratchDirs: readonly string[]): GitIdentityGuardOptions {
-  const agentGuard = config?.agentGuard ?? { mode: DEFAULT_AGENT_MODE, allow: [] };
+/**
+ * The guard's options with the shipped defaults filled in. The disposition is
+ * the caller's resolved `guard.gitIdentity.mode` (issue #626) — the section's own
+ * `agentGuard` object now carries the allow-list only, so a written
+ * `agentGuard.mode` is inert.
+ */
+export function guardOptions(
+  config: Partial<GitIdentityConfig> | undefined,
+  cwd: string,
+  scratchDirs: readonly string[],
+  mode: GitIdentityAgentMode = DEFAULT_AGENT_MODE,
+): GitIdentityGuardOptions {
+  const agentGuard = config?.agentGuard ?? { allow: [] };
   return {
-    mode: agentGuard.mode === "block" ? "block" : DEFAULT_AGENT_MODE,
+    mode: (GUARD_MODES as readonly string[]).includes(mode) ? mode : DEFAULT_AGENT_MODE,
     allow: Array.isArray(agentGuard.allow) ? agentGuard.allow : [],
     scratchDirs,
     cwd,
@@ -461,7 +474,7 @@ function reasonFor(write: GitConfigWrite): string {
 export function decideGitConfigCall(command: string, options: GitIdentityGuardOptions): GuardVerdict {
   for (const write of findGitConfigWrites(command)) {
     if (questionFor(write, options) === null) continue;
-    return { action: options.mode === "block" ? "block" : "ask", write, reason: reasonFor(write) };
+    return { action: options.mode === "allow" ? "allow" : options.mode === "deny" ? "block" : "ask", write, reason: reasonFor(write) };
   }
   return { action: "allow" };
 }

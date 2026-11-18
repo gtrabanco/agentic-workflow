@@ -82,6 +82,35 @@ const GIT_IDENTITY_ALLOW_MAX = 64;
 const PATH_OPERATIONS = ["create", "modify", "delete", "rename"] as const;
 const PATH_PHASE_STATES = ["pre-freeze", "post-freeze", "always"] as const;
 
+/**
+ * The guard disposition vocabulary (issue #626). One publisher, three values:
+ *
+ *   * `allow` — the guard stands down and the action runs untouched;
+ *   * `deny` — the guard refuses without asking, and its reason teaches the
+ *     supported route;
+ *   * `ask` — the guard asks the operator when the host has a UI, and answers
+ *     `deny` when it cannot ask (a headless session is never asked).
+ *
+ * `deny` replaces the retired `block` spelling: `block` named the mechanism, not
+ * the decision, and read as "stops" rather than "refuses".
+ */
+export const GUARD_MODES = Object.freeze(["allow", "deny", "ask"] as const);
+export type GuardMode = (typeof GUARD_MODES)[number];
+
+/**
+ * The guards whose disposition is configurable, in the order the reference
+ * table documents them (issue #626). A guard not named here has no disposition
+ * on purpose: `pathProtection` is tighten-only and `contentGuard` is always on,
+ * so neither can be turned off from config.
+ */
+export const GUARD_NAMES = Object.freeze(["gitIdentity", "toolChoice", "receipt"] as const);
+export type GuardName = (typeof GUARD_NAMES)[number];
+
+/** What every carrier reads: the global default plus each guard resolved. */
+export interface ResolvedGuardConfig extends Record<GuardName, GuardMode> {
+  default: GuardMode;
+}
+
 const publish = (schema: JsonSchema): JsonSchema => ({ ...schema });
 
 const LOG_SESSION_SCHEMA: JsonSchema = publish({
@@ -147,9 +176,9 @@ const PATH_PROTECTION_SCHEMA: JsonSchema = publish({
  * `approved` declares only the facts a project wants verified; an absent field
  * is not checked. `signing` decides what a signature means to the project
  * (`required`, `allowed`, `off` for a sign-off workflow) and `signingKeys` is the
- * per-machine form of `signingKey`. `agentGuard` is the model-facing half:
- * `mode: "block"` never asks, and `allow` names the writes a project permits
- * without disabling the guard.
+ * per-machine form of `signingKey`. `agentGuard.allow` names the config writes a
+ * project permits without asking; the guard's own disposition is
+ * `guard.gitIdentity.mode` (issue #626), never a second `mode` here.
  */
 const GIT_IDENTITY_SCHEMA: JsonSchema = publish({
   type: "object",
@@ -187,8 +216,8 @@ const GIT_IDENTITY_SCHEMA: JsonSchema = publish({
     agentGuard: {
       type: "object",
       additionalProperties: false,
+      description: "The model-facing half of the identity guard: the config keys the agent may write without asking.",
       properties: {
-        mode: { type: "string", enum: ["ask", "block"] },
         allow: {
           type: "array",
           items: { type: "string", minLength: 1 },
@@ -199,6 +228,63 @@ const GIT_IDENTITY_SCHEMA: JsonSchema = publish({
     },
   },
 });
+
+/**
+ * The guard dispositions (issue #626): one global default and one entry per
+ * guard, each a single `mode`. The shape is deliberately flat — a guard that
+ * needs an option other than its disposition owns a section of its own and
+ * never grows a second `mode` here.
+ */
+const GUARD_SECTION_SCHEMA: JsonSchema = publish({
+  type: "object",
+  additionalProperties: false,
+  description:
+    "One disposition per guard: allow (the guard stands down), deny (it refuses without asking) or ask (it asks when the host has a UI, and denies when it cannot). `default` is what every guard falls back to; a guard's own `mode` overrides it. Guards that can be configured here: gitIdentity, toolChoice, receipt. Always on and not configurable: pathProtection (tighten-only) and contentGuard (no bypass).",
+  properties: {
+    default: {
+      type: "string",
+      enum: [...GUARD_MODES],
+      description: "The disposition every guard falls back to when its own entry declares no mode. Shipped: ask.",
+    },
+    gitIdentity: {
+      type: "object",
+      additionalProperties: false,
+      description: "The agent-side `git config` write guard (issue #514). `ask` can really ask; a headless session is denied.",
+      properties: { mode: { type: "string", enum: [...GUARD_MODES] } },
+    },
+    toolChoice: {
+      type: "object",
+      additionalProperties: false,
+      description: "The command-time `rg`/`bun` carrier (issue #610). This guard cannot ask, so `ask` answers as `deny`.",
+      properties: { mode: { type: "string", enum: [...GUARD_MODES] } },
+    },
+    receipt: {
+      type: "object",
+      additionalProperties: false,
+      description: "The inline PR-receipt guard (issue #182). This guard cannot ask, so `ask` answers as `deny`.",
+      properties: { mode: { type: "string", enum: [...GUARD_MODES] } },
+    },
+  },
+});
+
+/**
+ * The `guard` section as every carrier reads it: the global default, then each
+ * guard resolved to the value its own entry declares or, failing that, the
+ * default. A value the schema refuses is never honoured — the shipped `ask`
+ * stands, so a typo can never silently allow a guard.
+ */
+export function normalizeGuard(value: unknown): ResolvedGuardConfig {
+  const section = isRecord(value) ? value : {};
+  const read = (candidate: unknown): GuardMode | undefined =>
+    (GUARD_MODES as readonly unknown[]).includes(candidate) ? (candidate as GuardMode) : undefined;
+  const fallback = read(section.default) ?? "ask";
+  const resolved: ResolvedGuardConfig = { default: fallback } as ResolvedGuardConfig;
+  for (const name of GUARD_NAMES) {
+    const entry = section[name];
+    resolved[name] = (isRecord(entry) ? read(entry.mode) : undefined) ?? fallback;
+  }
+  return resolved;
+}
 
 function requirementMatrixDefault(): Record<string, unknown> {
   return {};
@@ -372,26 +458,14 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     defaults: { enabled: true, jsonFile: ".pi/.telemetry/sessions.jsonl" },
   },
   {
-    key: "guards",
+    key: "guard",
     category: "feature",
     file: BASE_CONFIG_FILE,
-    path: ["guards"],
-    description: "Tool-safety guard switches and the token ceiling.",
-    schema: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        merge: { type: "boolean" },
-        history: { type: "boolean" },
-        ci: { type: "boolean" },
-        cost: {
-          type: "object",
-          additionalProperties: false,
-          properties: { maxTokens: { type: "integer", minimum: 1 } },
-        },
-      },
-    },
-    defaults: { merge: false, history: false, ci: false, cost: { maxTokens: 500_000 } },
+    path: ["guard"],
+    description:
+      "Guard dispositions — allow, deny or ask — as one global default plus one override per guard (gitIdentity, toolChoice, receipt). A refused value falls back to the shipped ask.",
+    schema: GUARD_SECTION_SCHEMA,
+    defaults: { default: "ask" },
   },
   {
     key: "gitIdentity",
@@ -453,8 +527,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/**
+ * The reported path of a violated key. A key the CLI accepts as a dotted segment
+ * (camelCase or kebab-case, starting lower-case) stays dotted — `config validate`
+ * and `config get` must name the same node the same way — and anything else
+ * (`agentGuard` is camelCase, so it stays dotted too) falls back to the bracket
+ * form so the path is never ambiguous.
+ */
 function keyPath(base: string, key: string): string {
-  return /^[a-z][a-z0-9-]*$/u.test(key) ? `${base}.${key}` : `${base}[${JSON.stringify(key)}]`;
+  return /^[a-z][a-zA-Z0-9]*(-[a-z0-9]+)*$/u.test(key) ? `${base}.${key}` : `${base}[${JSON.stringify(key)}]`;
 }
 
 function typeName(value: unknown): string {
@@ -698,8 +779,8 @@ export function validateConfigExtension(value: unknown): ConfigIssue[] {
   if (value.contract !== CONFIG_EXTENSION_CONTRACT) {
     issues.push({ path: "contract", message: `must be "${CONFIG_EXTENSION_CONTRACT}"` });
   }
-  if (typeof value.key !== "string" || !/^[a-z][a-z0-9-]*$/u.test(value.key)) {
-    issues.push({ path: "key", message: "must be a lower-case section key" });
+  if (typeof value.key !== "string" || !/^[a-z][a-zA-Z0-9-]*$/u.test(value.key)) {
+    issues.push({ path: "key", message: "must be a lower-case section key (camelCase or kebab-case)" });
   } else if (BASE_KEYS.has(value.key)) {
     issues.push({ path: "key", message: `"${value.key}" is a base feature section and cannot be redefined` });
   }

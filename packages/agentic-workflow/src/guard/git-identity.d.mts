@@ -15,7 +15,7 @@ export type GitIdentityEnforce =
   | "commit-and-push"
   | "commit-and-push-upstream";
 
-export type GitIdentityAgentMode = "ask" | "block";
+export type GitIdentityAgentMode = "allow" | "deny" | "ask";
 
 export type GitIdentitySigning = "required" | "allowed" | "off";
 
@@ -72,7 +72,9 @@ export declare const DEFAULT_AGENT_MODE: GitIdentityAgentMode;
 export declare const REPAIR_LINES: readonly string[];
 
 export declare function globalAgentDir(env?: NodeJS.ProcessEnv): string;
-export declare function normalizeGitIdentity(value: unknown): GitIdentityConfig;
+export declare function normalizeGitIdentity(value: unknown, guardValue?: unknown): GitIdentityConfig;
+
+export declare function guardDisposition(guardValue: unknown, name: "gitIdentity" | "toolChoice" | "receipt"): GitIdentityAgentMode;
 export declare function resolveIdentityProfile(options?: {
   root?: string;
   env?: NodeJS.ProcessEnv;

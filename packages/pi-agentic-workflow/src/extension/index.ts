@@ -16,6 +16,7 @@ import type { ToolChoiceAvailability, ToolChoiceDecision } from "../guards/tool-
 import { resolveToolChoiceAvailability } from "@gtrabanco/agentic-workflow/src/tool-choice/availability.mjs";
 import { createGitIdentityConsentStore, gitIdentityConsentPath } from "../guards/git-identity-consent.js";
 import { DEFAULT_TOOL_CHOICE, THINKING_LEVELS } from "../config/types.js";
+import type { EffectiveConfig, GuardMode } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
 import { readGitStatusBounded } from "./receipt-guard.js";
@@ -336,13 +337,27 @@ export default function extension(pi: ExtensionAPI): void {
   // one reading of the doctor's resolver (`findOnPath`), never a second probe
   // here, and the config is read once because a misconfigured file must not pay
   // a parse per command.
-  let toolChoicePosture: { config: typeof DEFAULT_TOOL_CHOICE; availability: ToolChoiceAvailability } | null = null;
+  let toolChoicePosture:
+    | { config: typeof DEFAULT_TOOL_CHOICE; availability: ToolChoiceAvailability; disposition: GuardMode }
+    | null = null;
+  // Issue #626 — the guard dispositions are read from the same session config
+  // the tool-choice posture needs, once: the receipt guard is consulted on every
+  // tool call, so a per-call parse would pay for the same bytes twice. The
+  // identity guard keeps its own fresh read — it only pays for a `git config`
+  // write, and a mid-session edit there is what an operator expects to apply.
+  let resolvedGuard: ReturnType<typeof resolveSessionGuard> | null = null;
+  const resolveSessionGuard = (context: ExtensionContext): EffectiveConfig["guard"] => {
+    if (resolvedGuard !== null) return resolvedGuard;
+    const loaded = loadConfig({ agentDir, cwd: context.cwd, projectTrusted: context.isProjectTrusted() });
+    resolvedGuard = loaded.config.guard;
+    return resolvedGuard;
+  };
   const resolveToolChoicePosture = (context: ExtensionContext): typeof toolChoicePosture => {
     if (toolChoicePosture !== null) return toolChoicePosture;
     const availability: ToolChoiceAvailability = resolveToolChoiceAvailability();
     const loaded = loadConfig({ agentDir, cwd: context.cwd, projectTrusted: context.isProjectTrusted() });
     const config = loaded.config.toolChoice ?? DEFAULT_TOOL_CHOICE;
-    toolChoicePosture = { config, availability };
+    toolChoicePosture = { config, availability, disposition: loaded.config.guard.toolChoice };
     return toolChoicePosture;
   };
   // Issue #383 — the session accumulator. Pi builds a fresh extension instance
@@ -516,14 +531,17 @@ export default function extension(pi: ExtensionAPI): void {
     // command that will actually run.
     if (event.toolName === "bash" && typeof command === "string" && command !== "") {
       const posture = resolveToolChoicePosture(ctx);
-      const choice: ToolChoiceDecision = enforceToolChoice(command, posture ?? { availability: { rg: false, bun: false } });
+      const choice: ToolChoiceDecision = enforceToolChoice(
+        command,
+        posture ?? { availability: { rg: false, bun: false } },
+      );
       if (choice.block) return { block: true, reason: choice.reason };
       if (typeof choice.command === "string" && choice.command !== command) {
         event.input.command = choice.command;
         command = choice.command;
       }
     }
-    const receipt = guards.receiptGuard({ toolName: event.toolName, command });
+    const receipt = guards.receiptGuard({ toolName: event.toolName, command }, resolveSessionGuard(ctx).receipt);
     if (receipt.block) return receipt;
     // Issue #514 — the agent-side git identity guard (Layer 1). Only a command
     // that actually performs a `git config` write pays for the config read; a
@@ -532,7 +550,7 @@ export default function extension(pi: ExtensionAPI): void {
       const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() });
       const identity = await applyGitIdentityGuard(
         command,
-        guardOptions(loaded.config.gitIdentity, ctx.cwd, scratchDirs()),
+        guardOptions(loaded.config.gitIdentity, ctx.cwd, scratchDirs(), loaded.config.guard.gitIdentity),
         {
           // A session with no UI cannot ask, so it blocks: an unanswered prompt
           // is not consent, and guessing one is how attribution was lost before.

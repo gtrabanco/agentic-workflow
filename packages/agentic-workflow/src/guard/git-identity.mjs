@@ -39,7 +39,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { parseJsonc } from "@gtrabanco/agentic-workflow-schema";
+import { normalizeGuard, parseJsonc } from "@gtrabanco/agentic-workflow-schema";
 
 /** The base config file both scopes carry (the pipeline's one config file). */
 export const BASE_CONFIG_FILE = "agentic-workflow.json";
@@ -92,8 +92,13 @@ export function globalAgentDir(env = process.env) {
  * The `gitIdentity` section as every carrier reads it: absent keys take the
  * shipped value, so a project that never configures identity never blocks, and
  * the pi guard and this module answer the same object for the same bytes.
+ *
+ * The guard's disposition (issue #626) is not this section's: it is
+ * `guard.gitIdentity.mode` in the same base file, resolved here through the
+ * schema package's `normalizeGuard` so a typo can never silently allow the guard.
+ * `agentGuard.mode` was the pre-#626 spelling; it is retired and inert.
  */
-export function normalizeGitIdentity(value) {
+export function normalizeGitIdentity(value, guardValue) {
   const section = typeof value === "object" && value !== null ? value : {};
   const agentGuard = typeof section.agentGuard === "object" && section.agentGuard !== null ? section.agentGuard : {};
   const approved = typeof section.approved === "object" && section.approved !== null ? section.approved : {};
@@ -101,10 +106,16 @@ export function normalizeGitIdentity(value) {
     enforce: ENFORCE_VALUES.includes(section.enforce) ? section.enforce : "off",
     approved,
     agentGuard: {
-      mode: agentGuard.mode === "block" ? "block" : DEFAULT_AGENT_MODE,
+      mode: normalizeGuard(guardValue).gitIdentity,
       allow: Array.isArray(agentGuard.allow) ? agentGuard.allow.filter((entry) => typeof entry === "string") : [],
     },
   };
+}
+
+/** One guard's resolved disposition (`allow`/`deny`/`ask`), for a carrier that
+ *  reads the section on its own — the receipt and tool-choice guards. */
+export function guardDisposition(guardValue, name) {
+  return normalizeGuard(guardValue)[name];
 }
 
 function readConfigFile(file) {
