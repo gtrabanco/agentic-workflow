@@ -1,0 +1,2 @@
+{"type":"session","version":3,"id":"sess-no-usage","timestamp":"2026-11-03T10:00:00.000Z","cwd":"<PROJECT>"}
+{"type":"message","id":"u1","parentId":null,"timestamp":"2026-11-03T10:00:01.000Z","message":{"role":"user","content":[{"type":"text","text":"nothing happened"}],"timestamp":"2026-11-03T10:00:01.000Z"}}
