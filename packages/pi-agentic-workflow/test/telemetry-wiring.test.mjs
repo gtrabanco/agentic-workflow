@@ -2,9 +2,10 @@
 // to a real session or the ledger stays empty forever.
 //
 // The wiring is a pure factory over a `pi`-shaped object (`on(event, handler)`),
-// so the corpus drives the five lifecycle events directly and never needs a live
+// so the corpus drives the six lifecycle events directly and never needs a live
 // Pi. What it pins: `off` registers nothing, the unit comes from the command that
-// was dispatched, and one session emits one sample.
+// was dispatched, and each settled run emits one cumulative sample — three
+// settled runs are three samples, never one frozen at the first.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";

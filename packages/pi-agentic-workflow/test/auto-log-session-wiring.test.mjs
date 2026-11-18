@@ -2,13 +2,15 @@
 // S9/S10/S11).
 //
 // The wiring is a factory over a `pi`-shaped object (`on(event, handler)`), so
-// this suite drives `session_start` and `session_shutdown` directly and never
-// needs a live session. What it pins, in the order the requirements state them:
+// this suite drives `session_start`, `session_shutdown` and the settle boundary
+// `agent_settled` directly and never needs a live session. What it pins, in the
+// order the requirements state them:
 //
 //  - **Off registers nothing.** Not a listener that wakes up to find itself
 //    disabled: `pi.on` is never called.
-//  - **One entry per shutdown**, then the marker is gone; a second shutdown
-//    appends nothing.
+//  - **One entry per session, at the first boundary that closes it** — a settled
+//    run, or the shutdown after it when no run settled — then the marker is
+//    gone; a second boundary appends nothing.
 //  - **The failure states are the feature**: no journal, no marker, a foreign
 //    marker, a publisher that fails — each has its own case below, because a
 //    journal writer that only works when everything is fine is a journal writer
