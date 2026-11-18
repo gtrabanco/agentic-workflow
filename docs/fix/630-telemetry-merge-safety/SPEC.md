@@ -235,6 +235,18 @@ append-only rule is stated once, in the crate README's writer contract.
   session with `config.enabled` — **does not affect** this unit; the checkout was
   repaired by the operator before the first command ran, and no artefact of it
   ships.
+- `bun scripts/worktree-guard.mjs` fails on this host over two **other** sessions'
+  worktrees (`.worktrees/feat-611-dogfooding-vehicle`: branch merged into
+  `origin/main`; `.worktrees/fix-626-config-guards-ux`: merged and dirty) —
+  **does not affect** this unit: the guard reads `git worktree list`, never the
+  diff, and names no path of this branch. Left in place deliberately (one of them
+  holds another session's uncommitted work); the owner decides their removal.
+- Two default-jobs runs of `node scripts/run-root-suite.mjs` on this host (load
+  average 8.0 on 6 cores, five worktrees) hit the 120 s suite wall clock on
+  `scripts/phase-lint.test.mjs` and failed `scripts/unit-route.test.mjs` —
+  **does not affect** this unit: both suites pass alone (`bun test
+  scripts/unit-route.test.mjs`: 64 pass; `node --test` the same) and the pool run
+  at `--jobs 2` is green end to end (`E14`). Recorded, not excused.
 - The crate's `dist/` is gitignored build output, rebuilt by the gate when stale
   — **does not affect** this unit; no contract suite reads another source set's
   build.
@@ -244,7 +256,7 @@ append-only rule is stated once, in the crate README's writer contract.
 P1 first, smallest within each ready set; the prerequisite order is the one the
 dependency graph forces (corpus → semantics → driver → surfaces → docs → gate).
 
-- P1 — Freeze the issue's four test-evidence reproducers as failing checks: the two append-union cases, the dedup case, the non-append-only refusal, and the concurrent-writer pair that justifies S5 (validator: `bun test packages/agentic-workflow/test/writer.merge.test.mjs` exits nonzero and names `F-630-1`…`F-630-5`)
+- P1 — Freeze the issue's four test-evidence reproducers as failing checks: the two append-union cases, the dedup case, the non-append-only refusal, and the concurrent-writer pair that justifies S5 (validator: `bun test packages/agentic-workflow/test/writer.merge.test.mjs` exits 1 and matches `F-630-1` through `F-630-5`)
   (Implements: S1, S5)
   - Relevant files: packages/agentic-workflow/test/writer.merge.test.mjs
 - P2 — Implement the append-only union and the telemetry row key in the merge library (validator: `bun test packages/agentic-workflow/test/writer.merge.test.mjs` exits 0)
@@ -255,7 +267,7 @@ dependency graph forces (corpus → semantics → driver → surfaces → docs �
   - Relevant files: packages/agentic-workflow/src/writer/shared-merge.mjs, packages/agentic-workflow/bin/shared-merge.mjs, scripts/shared-doc-merge.mjs
 - P4 — Declare the class in the repository's and the template's `.gitattributes`, and move the two `AGENTS.md` normative rows with the vocabulary (validator: `bun scripts/prose-gate-inventory.mjs` prints `verdict: PASS` and `bun test scripts/normative-drift.test.mjs` exits 0)
   (Implements: S1, S2)
-  - Relevant files: .gitattributes, template/.gitattributes, AGENTS.md
+  - Relevant files: ./.gitattributes, template/.gitattributes, AGENTS.md
 - P5 — Ship the installer as `agentic-workflow telemetry merge-install` and wire the reconciliation trigger into `telemetry reconstruct write` (validator: `bun test packages/agentic-workflow/test/telemetry-merge-install.test.mjs` and `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exit 0)
   (Implements: S2, S3, S4)
   - Relevant files: packages/agentic-workflow/src/telemetry/merge-install.mjs, packages/agentic-workflow/src/telemetry/reconstruct.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs
@@ -374,6 +386,61 @@ and hands the diff over, so no in-repo review pack runs on it.
   config and reports the declaration; the `.gitattributes` write belongs to
   `merge-install` (explicit) and init-workspace (scaffold). A telemetry
   reconstruction never rewrites a tracked file behind the operator's back.
+- **P1** — 2026-11-18 15:05, the unit doc and the frozen ledger pair cut before
+  any code · `ef64284c`.
+- **E1** — 2026-11-18, `runner unit-route --triage 630-telemetry-merge-safety` · exit 0 ·
+  `Steps: plan, implement, tests, evidence, review, docs` · `Budget: strong`.
+- **E2** — 2026-11-18, the frozen corpus is RED before the implementation:
+  `bun test packages/agentic-workflow/test/writer.merge.test.mjs` · exit 1 ·
+  `0 pass, 1 fail, 1 error` (`Export named 'telemetryRowKey' not found`).
+- **E3** — 2026-11-18, the driver's corpus is RED too:
+  `bun test scripts/shared-doc-merge.test.mjs` · exit 1 · `12 pass, 5 fail`
+  (`F-630-6`…`F-630-10`).
+- **P2** — 2026-11-18 15:20, the red corpus committed · `f6e4e9ee`.
+- **E4** — 2026-11-18, `bun test packages/agentic-workflow/test/writer.merge.test.mjs` · exit 0 ·
+  `20 pass, 0 fail` (`F-630-1`…`F-630-5` plus the 15 pre-existing cases).
+- **E5** — 2026-11-18, `bun test scripts/shared-doc-merge.test.mjs` · exit 0 · `17 pass, 0 fail`
+  (`F-630-6`…`F-630-10`, the 12 pre-existing cases unchanged, `--install` arming five classes).
+- **E5b** — 2026-11-18, `bun test scripts/docs-generated-merge.test.mjs` · exit 0 · `18 pass, 0 fail`
+  (both `.gitattributes` pins now derive from `attributeLines()`).
+- **E6** — 2026-11-18, `bun test packages/agentic-workflow/test/telemetry-merge-install.test.mjs` ·
+  exit 0 · `8 pass, 0 fail` (`F-630-11`…`F-630-14`, the npm-only merge through the crate bin included).
+- **E7** — 2026-11-18, `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` ·
+  exit 0 · `18 pass, 0 fail` (the `merge_driver` receipt, `armed` → `unchanged`, and the
+  `unavailable` degradation; `write touches nothing outside the two destinations it names` green).
+- **E8** — 2026-11-18, the measured corpus behind S5 (`/tmp/aw630probe`, removed):
+  `append` 20 × 100 lines → `2000 lines, 20 unique sessions, 0 corrupt`;
+  `staging` 20 × 100 lines → `548 lines, 18 unique sessions` (the issue measured 42–55/1000).
+- **E9** — 2026-11-18, `bun test packages/agentic-workflow/test/doctor.checks.test.mjs` · exit 0 ·
+  `21 pass, 0 fail` (the `merge-drivers` probe and installer unchanged by the relocation).
+- **P3** — 2026-11-18 15:35, the merge library and the relocated mechanics committed ·
+  `ba3c631c`.
+- **P4** — 2026-11-18 15:50, the declaration, the installer and the docs committed ·
+  `3474aced`.
+- **E10** — 2026-11-18, the count pins: `rg -c 'TIER_COST.md merge=agentic-shared-telemetry'` →
+  `.gitattributes` 1 · `template/.gitattributes` 1 · `BOOTSTRAP_WRITE.md` 1;
+  `rg -c 'sessions.jsonl merge=agentic-shared-telemetry'` → 1 · 1; `rg -c 'agentic-shared-telemetry'
+  UPGRADE.md` → 1; `rg -c 'appendFileSync' src/writer/shared-merge.mjs` → 2;
+  `rg -c 'agentic-shared-telemetry' packages/agentic-workflow/README.md docs/workflow/TIER_COST.md` → 3 · 2.
+- **E11** — 2026-11-18, `bun scripts/check-skill-context.mjs --documents` · exit 0 ·
+  `PASS context documents: 4 budgeted documents` (AGENTS.md 725 lines of its 728 ceiling, 560 of 571
+  prose, 13,085 of 13,259 est — the guide paragraph was compressed to a pointer at the crate README
+  rather than re-pinning a ceiling).
+- **E12** — 2026-11-18, `bun test scripts/normative-drift.test.mjs` · exit 0 · `21 pass, 0 fail`
+  (the two `shared-merge-*` vocabulary rows now read the crate file) and
+  `bun scripts/prose-gate-inventory.mjs` → `verdict: PASS`.
+- **E13** — 2026-11-18, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 stale ·
+  0 orphaned` · `Roadmap: unchanged` (fix rows stay owner-managed, `PE-012`).
+- **E14** — 2026-11-18, `node scripts/run-root-suite.mjs --jobs 2` · exit 0 · `122` suites PASS, 0 FAIL
+  (the node leg of the whole repository).
+- **E15** — 2026-11-18, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS`
+  after the changeset declared `@gtrabanco/pi-agentic-workflow` (patch) beside the crate's minor.
+- **P5** — 2026-11-18 16:05, the registry and both attribute pins derived from one map ·
+  `d49c78e5`.
+### Correction history
+
+None: the owner's external verification is the next step, and this unit carries no
+correction batch yet.
 
 ## Next
 
