@@ -457,6 +457,16 @@ required failure state, in the 9-column shape owned by
   (`343 carriers scanned, 0 findings`, `verdict: PASS`). Scratch removed after
   the run.
 - **P7** — 2026-11-18, verification (E5, E7–E14).
+- **E15** — 2026-11-18, the root gate's receipt and the load-sensitive reds it
+  needed two attempts to escape: `node scripts/run-root-suite.mjs --jobs 2` →
+  exit 0, **122/122 PASS**. The default 4-worker run on this box failed twice,
+  each time on the same two untouched suites and on nothing else —
+  `scripts/phase-lint.test.mjs` hit the 120s per-suite wall (standalone:
+  `node --test scripts/phase-lint.test.mjs` → `162 pass, 0 fail`, 66s) and
+  `scripts/unit-route.test.mjs`'s `#291 F7` timing assertion measured 568–803ms
+  against its 500ms ceiling (standalone `1 pass, 0 fail`, twice). Load average
+  6.4–8.1 on 6 CPUs during the runs; neither suite reads a file this change
+  touches. The serialized receipt is the green one.
 
 ## Next
 
