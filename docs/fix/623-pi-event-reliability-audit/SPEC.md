@@ -294,6 +294,11 @@ its validator runs in the foreground.
 - **P1** — 2026-11-18, the plan re-cut: `planning-obligations.md` (O1–O13), `planning-evidence.md` (PE-001–PE-016), AC1–AC6, and the repaired `L1` fence · `f9a4dd31`.
 - **P2** — 2026-11-18, telemetry at the settled run: `emit()` on the accumulator, the ledger upsert, the JSONL per-run line, the phase reset · `5066b893`.
 - **P3** — 2026-11-18, the journal entry at the first boundary, the stale-marker sweep, and the adapter suite's host-faithful `pi` double · `fe2d6f0c`.
+- **P4** — 2026-11-18, the matrix (`pi-event-reliability@1` in `docs/workflow/CONFIG.md`), its coverage suite, the four documented surfaces, the changeset, and the obligations' closure with the evidence block · `f333895f`.
+- **G1** — 2026-11-18, `node scripts/run-root-suite.mjs` at the final head with the default pool, on a box at load average 4.8 of 6 cores · exit 1 · **120 of 121 suites PASS**; the one red is `scripts/phase-lint.test.mjs — SUITE TIMEOUT` at the 120s external bound. The suite's own file is untouched by this unit (`git diff origin/main...HEAD -- scripts/phase-lint.test.mjs` empty) and it passes standalone: `node --test scripts/phase-lint.test.mjs` → 162 pass / 0 fail in 77s. An intermediate `--jobs 2` run tripped a second load-sensitive case of the same class, `unit-route`'s `F7 linear scan took 518ms (expected <500ms)`, green standalone (64 pass, 21.7s).
+- **G2** — 2026-11-18, `node scripts/run-root-suite.mjs --jobs 2` at the final head · exit 0 · **121 suites PASS, 0 FAIL** — the authoritative root receipt for this branch.
+- **G3** — 2026-11-18, `bun run --cwd packages/pi-agentic-workflow test` at the final head · exit 0 · 988 pass / 0 fail across 86 suites (the same tally as E18, re-run after the docs commit).
+- **G4** — 2026-11-18, `bun scripts/docs-generate.mjs --check` and `node scripts/promise-coherence.mjs docs/fix/623-pi-event-reliability-audit/SPEC.md` at the final head · exit 0 both · projection PASS (3 files, 0 stale) and promise-coherence `verdict PASS`, 1 claim checked / 6 skipped (each skip named: the suite runners and the docs check, which that pass never executes).
 
 ## Next
 
