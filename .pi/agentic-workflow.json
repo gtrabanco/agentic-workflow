@@ -1,9 +1,11 @@
 {
-  "gitIdentity": {
-    "enforce": "off",
-    "agentGuard": {
-      "mode": "block"
+  "guard": {
+    "gitIdentity": {
+      "mode": "deny"
     }
+  },
+  "gitIdentity": {
+    "enforce": "off"
   },
   "telemetry": {
     "enabled": true

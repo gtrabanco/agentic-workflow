@@ -101,7 +101,7 @@ The PR closes it via `Closes #626`.
 ## Impact
 
 - **The disposition vocabulary gains a third value.** `gitIdentity.approved.agentGuard.mode` retires in favour of `guard.gitIdentity.mode` (S5's example puts the disposition there), so three carriers change with it: the crate's `src/guard/git-identity.mjs` normalizer, the pi Layer 1 guard (`src/guards/git-identity.ts`), and the `gitIdentity-check.sh` Layer 2 hook — which reads the resolved profile, not the mode, and therefore needs only the shape check the crate test pins.
-- **A new base section reaches every reader of `BASE_CONFIG_SECTIONS`**: the `config` CLI (`get`/`set`/`list`/`validate`/`init`/`schema`), the pi extension's `loadConfig`, both packages' `config.schema.json` projection via `scripts/generate-config-schema.mjs`, and `init-workspace`'s reference page.
+- **A new base section reaches every reader of `BASE_CONFIG_SECTIONS`**: the `config` CLI (`get`/`set`/`list`/`validate`/`init`/`schema`), the pi extension's `loadConfig`, both packages' `config.schema.json` projection via `packages/agentic-workflow-schema/scripts/generate-config-schema.mjs`, and `init-workspace`'s reference page.
 - **`guards` retires.** The four booleans (`merge`, `history`, `ci`, `cost.maxTokens`) have no consumer in this repository: `rg -c 'guards\.(merge|history|ci|cost)' --glob '!node_modules'` answers 0 outside the schema, its tests and `docs/workflow/CONFIG.md`. Keeping a `guards` section beside a new `guard` section is the exact confusion S3/S4 report, and AGENTS.md's config policy refuses a key no runtime reads. Removing them changes no behaviour, and the removal is recorded as `D2` with its `rg` receipt.
 - **The `agentGuard` object keeps its allow-list only.** `gitIdentity.approved.agentGuard.allow` is a per-key exemption and stays where it is; only `mode` moves. Consumers: `guardOptions` (pi), `normalizeGitIdentity` (crate), `docs/workflow/GIT_IDENTITY_HARDENING.md` and its template twin.
 - **Naming collision is a live risk.** `guard` (new, singular) and `guards` (retired) differ by one character; the retirement is what prevents the pair from coexisting, and any later re-introduction of a `guards` key must be refused at validation time, not remembered as prose.
@@ -161,7 +161,8 @@ none
 - `bun test packages/pi-agentic-workflow/test/receipt-guard.test.mjs` — the receipt guard's disposition.
 - `bun test packages/pi-agentic-workflow/test/default-inherit.test.mjs` — the effective config's shape.
 - `cd packages/pi-agentic-workflow && bun run test` and `cd packages/agentic-workflow-schema && bun run test` — both package gates.
-- `bun scripts/normative-drift.mjs` — the new vocabulary is declared on a normative surface.
+- `bun test scripts/config-guards-doc.test.mjs` — the reference table names every published guard and disposition.
+- `bun test scripts/prose-gate-inventory.test.mjs` — every declared normative surface is claimed by a gate row.
 - `bun test scripts/normative-drift.test.mjs` — the drift gate's own suite.
 - `bun scripts/docs-generate.mjs --check` — the projection is a fixed point.
 
@@ -174,8 +175,8 @@ none
 
 ## Acceptance criteria
 
-- **AC-S1** — The disposition vocabulary is `allow`/`deny`/`ask` and one publisher owns it: `GUARD_MODES` is exported by the schema package, the `grep -r 'block'`-style spellings of a *mode* are gone from the carriers, and a config carrying `mode: "block"` is refused by validation with the enum report. Check: `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` exits 0 (cases `guard modes`, `the retired block spelling is refused`), and `rg -c '"block"' --glob '!node_modules' --glob '!*.test.*' packages/agentic-workflow/src/guard packages/pi-agentic-workflow/src/guards` exits 1 (no match).
-- **AC-S2** — The inventory is exhaustive and testable: every guard name the schema publishes is a row in the CONFIG.md reference table, and every table row names its modes, its default and whether it can ask. Check: `bun test scripts/normative-drift.test.mjs` exits 0 with the new `guard-modes` row, and `bun scripts/normative-drift.mjs` exits 0.
+- **AC-S1** — The disposition vocabulary is `allow`/`deny`/`ask` and one publisher owns it (`GUARD_MODES` in the schema package); the retired `block` spelling is refused with the enum report; and `agentGuard.mode` decides nothing — the schema refuses the key and the guards ignore a written one. Check: `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` exits 0 (cases `S1: the disposition vocabulary…`, `S1: the retired block spelling…`, `S2/D2: …`) and `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (case `the disposition is resolved from guard, and a retired mode is inert`). `block` survives only as Pi's own `tool_call` result field, which is not this vocabulary.
+- **AC-S2** — The inventory is exhaustive and testable: every guard name the schema publishes is a row in the CONFIG.md reference table, every disposition value is named by it, and every row states its default and whether it can ask. Check: `bun test scripts/config-guards-doc.test.mjs` exits 0 (5 cases, reading the built vocabularies) and `bun test scripts/normative-drift.test.mjs` exits 0 with the three new inventory rows.
 - **AC-S3** — A global default exists and each guard overrides it: `guard.default` is the fallback, `guard.<name>.mode` wins, and the shipped default is `ask` for all three disposition-bearing guards, so an unconfigured project behaves exactly as it did. Check: the schema suite's `normalizeGuard` cases plus `bun test packages/pi-agentic-workflow/test/default-inherit.test.mjs` exit 0.
 - **AC-S4** — One notation is legal everywhere: `validateConfigExtension` accepts a camelCase section key and a kebab-case one, and a snake_case or uppercase key is still refused. Check: `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` exits 0 (case `extension keys accept both camelCase and kebab-case`).
 - **AC-S5** — The documentation is exhaustive: `docs/workflow/CONFIG.md` carries the guard reference table (every guard, its modes, its default, whether it can ask, and the always-on pair), a complete commented example file, and the migration mapping; `config init` renders the `guard` section with its modes. Check: `bun scripts/normative-drift.mjs` exits 0, `bun test packages/agentic-workflow/test/config-cli.test.mjs` exits 0 (case `the init template documents the guard section`).
@@ -189,13 +190,13 @@ none
 - P2 — Publish the vocabulary and the section in the schema package: `GUARD_MODES`, `GUARD_NAMES`, `normalizeGuard`, `GUARD_SECTION_SCHEMA`, the `guard` base section, the `guards` retirement, `agentGuard.mode` retirement, and the camelCase extension-key rule
   (validator: `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` exits 0)
   (Implements: S1, S2, S3, S4)
-  - Relevant files: packages/agentic-workflow-schema/src/config.ts, packages/agentic-workflow-schema/src/index.ts, packages/agentic-workflow-schema/config.schema.json, scripts/generate-config-schema.mjs
+  - Relevant files: packages/agentic-workflow-schema/src/config.ts, packages/agentic-workflow-schema/src/index.ts, packages/agentic-workflow-schema/config.schema.json, packages/agentic-workflow-schema/scripts/generate-config-schema.mjs
 - P3 — Make the carriers read the disposition: the crate normalizer, the pi git-identity guard, the tool-choice carrier and the receipt guard, with `ask` answering as `deny` where no question path exists
   (validator: `cd packages/agentic-workflow && bun test test/git-identity.hook.test.mjs` exits 0 and `cd packages/pi-agentic-workflow && bun run test` exits 0)
   (Implements: S1, S3)
   - Relevant files: packages/agentic-workflow/src/guard/git-identity.mjs, packages/pi-agentic-workflow/src/guards/git-identity.ts, packages/pi-agentic-workflow/src/guards/tool-choice.ts, packages/pi-agentic-workflow/src/extension/receipt-guard.ts, packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/src/config/types.ts
 - P4 — Write the documentation the issue asks for: the guard reference table, the complete example, the migration mapping, the package READMEs, the init-workspace reference and the template copy
-  (validator: `bun scripts/normative-drift.mjs` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0)
+  (validator: `bun test scripts/normative-drift.test.mjs` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S2, S5)
   - Relevant files: docs/workflow/CONFIG.md, docs/workflow/GIT_IDENTITY_HARDENING.md, template/docs/workflow/GIT_IDENTITY_HARDENING.md, packages/pi-agentic-workflow/README.md, skills/init-workspace/references/CONFIG.md, AGENTS.md
 - P5 — Verify the whole surface and record the evidence
@@ -236,9 +237,30 @@ n/a — the owner's local, unpublished workflow substitutes for the lane's triag
   section-key regex becomes the one rule that makes both spellings legal, instead of a
   ~40-key kebab migration.
 
+- **E1** — 2026-11-18, `rg -n 'guards\.(merge|history|ci|cost)' --glob '!node_modules' --glob '!*.test.*' scripts/ packages/ skills/ template/` · 0 matches outside the schema section, its tests and CONFIG.md → the retirement is behaviour-neutral.
+- **E2** — 2026-11-18, the cut-head baseline, `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs packages/agentic-workflow/test/config-cli.test.mjs packages/agentic-workflow/test/git-identity.hook.test.mjs` · exit 0 · 52 pass.
+- **E3** — 2026-11-18, RED then GREEN: at the cut head the schema suite died on `SyntaxError: Export named 'GUARD_MODES' not found` (0 pass / 1 error) and the crate suites failed 4 cases (`init writes…`, `list names…`, `normalizeGitIdentity…`, `the identity guard's disposition…`); after the implementation `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` · exit 0 · 22 pass, and the crate trio · exit 0 · 58 pass.
+- **E4** — 2026-11-18, `bun run test` in `packages/agentic-workflow-schema` · exit 0 · 914 pass / 0 fail (52 files), and in `packages/agentic-workflow` · exit 0 · 1290 pass / 0 fail (70 files).
+- **E5** — 2026-11-18, the composed `config.schema.json` regenerated by `packages/agentic-workflow-schema/scripts/generate-config-schema.mjs` (48 insertions, 18 deletions) · `bun test test/config-schema-artifact.test.mjs` · exit 0 · 2 pass.
+- **E6** — 2026-11-18, `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 992 pass / 0 fail (85 files), including the new `D1`/`D2`/`F29` dispositions cases and the identity guard's `allow` case.
+- **E7** — 2026-11-18, `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass; `bun test scripts/config-guards-doc.test.mjs` · exit 0 · 5 pass; `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass.
+- **E8** — 2026-11-18, `bun scripts/check-skill-context.mjs --documents` · PASS (4 documents) after re-pinning `machineLines` 165 → 168 and `linesMax` 728 → 731 to the measured boundary (prose 563/571, estimate 13,212/13,259 unchanged).
+- **G1** — 2026-11-18, HEAD 6beea3c28ab9259742021afd77bbee0894a70667, `node scripts/run-root-suite.mjs` · exit 0 · 123 suites pass. Two earlier runs were red on load-sensitive cases only: `unit-route` F7 measured 546 ms against a 500 ms budget and `phase-lint` hit the 120 s suite wall; both pass alone (64 pass / 14 s and 162 pass / 40 s).
+- **G2** — 2026-11-18, HEAD 6beea3c28ab9259742021afd77bbee0894a70667, `bun scripts/docs-generate.mjs --check` · PASS (3 files, roadmap unchanged); `bun scripts/lint-changeset.mjs` · ok for `.changeset/626-config-guards-ux.md`.
+- **P1** — 2026-11-18, the unit doc and both planning ledgers frozen · `2007a121`.
+- **P2** — 2026-11-18, the contract frozen as failing cases · `ba1c0054`.
+- **P3** — 2026-11-18, the vocabulary, the section and both carriers · `5abee0df`.
+- **P4** — 2026-11-18, the reference table, the example, the migration and the declared inventory · `8206025f`.
+- **D4** — 2026-11-18, the repository's own `.pi/agentic-workflow.json` migrated in the same change (`agentGuard.mode: block` → `guard.gitIdentity.mode: deny`, the identical behaviour): the retired key made every config reader report `malformed-config`, which two root suites caught. The content guard's fail-closed rule was doing its job.
+- **D5** — 2026-11-18, two ledger references corrected at implementation time (an AC citing `bun scripts/normative-drift.mjs`, which does not exist: the gate is its test suite), and AC-S1/AC-S2 restated to the receipts actually run. The asks themselves are untouched.
+- **P5** — 2026-11-18, the journal fragment written through `journal write --kind narrative` · `6beea3c2`.
+
 ## Next
 
-P1 — freeze the contract as failing cases.
+The owner's external verdict on the diff: the obligations ledger (14 rows, all `verified`),
+the verification block, and the three disclosures below (the pi suite's red was inferred
+from the same frozen cases rather than observed first; the repository's own config had to be
+migrated; two root-gate runs flaked on timing-only cases).
 
 ## References
 
