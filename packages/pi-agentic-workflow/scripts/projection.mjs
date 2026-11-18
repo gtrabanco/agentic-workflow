@@ -92,6 +92,7 @@ export const CRATE_COMMANDS = Object.freeze([
   "runner",
   "section",
   "setup",
+  "telemetry",
   "turn-contract",
   "unit-doc",
   "verify",

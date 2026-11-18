@@ -632,7 +632,7 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge> [--debug|--profile] ...",
+    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|ceremony|skills|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...",
   );
   process.exit(1);
 }
@@ -653,6 +653,13 @@ feedback.attach();
 const parsed = parseArgs(restArgs);
 const rawArgs = parsed.args;
 switch (command) {
+  // ── telemetry — the manual reconstruction of the session samples (#624) ──
+  case "telemetry": {
+    const { main } = await import("../src/telemetry/reconstruct.mjs");
+    process.exit(main(restArgs));
+    break;
+  }
+
   // ── runner — the programmatic runner choice (issue #555) ─────────────
   case "runner": {
     process.exit(runRunnerService(restArgs));
