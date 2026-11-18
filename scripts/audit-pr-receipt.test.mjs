@@ -96,7 +96,12 @@ test("stale receipt (any later commit) → BLOCKED routed to /review-change; no 
 });
 
 test("audit-pr fetches the PR head with comments and treats every SHA mismatch as stale", () => {
-  assert.match(auditSkill, /--json[^\n]*headRefOid[^\n]*comments|--json[^\n]*comments[^\n]*headRefOid/);
+  // Since issue #612 the head and the comments arrive in one step from two
+  // sanctioned reads: the head from the metadata read, the comments from the
+  // guarded read. Both halves are still required — dropping either fails here.
+  assert.match(auditSkill, /--json[^\n]*headRefOid/);
+  assert.match(auditSkill, /runner forge-read pr <N> --comments/);
+  assert.doesNotMatch(auditSkill, /--json[^\n]*headRefOid[^\n]*comments/);
   assert.match(auditProcess, /headRefOid.*current head SHA|current head SHA.*headRefOid/s);
   assert.doesNotMatch(auditSkill, /If \*\*empty\*\*.*receipt is still valid/s);
   assert.match(auditProcess, /\*\*absent \/ stale\*\* → \*\*BLOCKER\*\*/);
