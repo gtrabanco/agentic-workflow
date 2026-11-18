@@ -394,13 +394,23 @@ test("the shipped entry binds the settled turn to the invocation notice", async 
   process.env.PI_CODING_AGENT_DIR = agentDir;
   const handlers = new Map();
   const notifications = [];
+  /**
+   * A `pi` double that stacks handlers per event, the way the host does: its
+   * extension runner keeps an array per event type and awaits every handler in
+   * registration order, so two extensions — or one extension and a wiring it
+   * registers later — both run. A map that overwrites would hide the adapter's
+   * own settled handler behind the wiring's.
+   */
+  const fire = (type, ...args) => {
+    for (const handler of handlers.get(type) ?? []) handler(...args);
+  };
   const api = {
     registerCommand: () => {},
     sendUserMessage: () => {},
     setModel: async () => true,
     getThinkingLevel: () => "medium",
     setThinkingLevel: () => {},
-    on: (type, handler) => handlers.set(type, handler),
+    on: (type, handler) => handlers.set(type, [...(handlers.get(type) ?? []), handler]),
     getMcpServers: () => [],
   };
   try {
@@ -424,11 +434,11 @@ test("the shipped entry binds the settled turn to the invocation notice", async 
       compact: () => {},
       getSystemPrompt: () => "",
     };
-    handlers.get("session_start")({}, context);
+    fire("session_start", {}, context);
     assert.equal(existsSync(invocationMarkerPath(cwd, SESSION)), false, "starting a session logs nothing");
 
     planInvocation({ root: cwd, sessionId: SESSION });
-    handlers.get("agent_settled")({}, context);
+    fire("agent_settled", {}, context);
     assert.ok(
       notifications.some((message) => /no entry was written/u.test(message)),
       `the settled turn says it: ${JSON.stringify(notifications)}`,
@@ -436,7 +446,7 @@ test("the shipped entry binds the settled turn to the invocation notice", async 
 
     writeFileSync(join(cwd, "docs/LOGS.md"), readFileSync(join(cwd, "docs/LOGS.md"), "utf8") + "\n## entry\n");
     planInvocation({ root: cwd, sessionId: "second" });
-    handlers.get("agent_settled")({}, context);
+    fire("agent_settled", {}, context);
     assert.equal(existsSync(invocationMarkerPath(cwd, "second")), true, "a later invocation of the same session is a new report");
   } finally {
     if (previous === undefined) delete process.env.PI_CODING_AGENT_DIR;

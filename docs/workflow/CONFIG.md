@@ -68,6 +68,75 @@ Unknown keys are refused, never merged or coerced. `config validate` reports
 each one by path; `--sanitize` removes them; `--no-warn-unknown` suppresses only
 that class.
 
+## Pi event reliability
+
+The extension registers ten of Pi's events, and they do not all fire in every
+host. The ones a session cannot count on are exactly the ones a *session
+lifecycle* event suggests: `session_shutdown` tears a runtime down, and a host
+whose sessions stay alive between prompts never tears one down. So every
+observable effect the package produces — the cost sample, the journal entry, the
+marker — hangs off the run boundary (`agent_settled`), and the shutdown stays the
+closing call rather than the only one.
+
+This table is the surface the wiring is built against. It also carries the
+evidence behind each `reliable` claim, because a documented host behaviour that
+nobody sampled is an assumption wearing a heading.
+
+```text
+pi-event-reliability@1
+source | pi.dev/docs/latest/extensions and the installed @earendil-works/pi-coding-agent@1.5.2 docs/extensions.md (identical 37-event catalogues), plus the installed pi-web session service, which branches on agent_settled on every run and names no session_shutdown
+column | meaning
+event | the Pi event, spelled exactly as pi.on() spells it
+listeners | the handlers this package registers, by file
+fires | when Pi emits it, in any host
+tui | the terminal host
+web | the pi-web host
+headless | pi -p and RPC-driven hosts
+reliability | reliable | unreliable | host-dependent
+effect | the observable effect the listeners produce
+gap | what a session loses when the event does not fire
+cells | fires | not-fire | conditional
+reliability-vocabulary | reliable | unreliable | host-dependent
+| event | listeners | fires | tui | web | headless | reliability | effect | gap |
+| session_start | index.ts (readiness notice, hooks session:start seam, wiring registration), telemetry-wiring.ts (session id, accumulator, phase reset), auto-log-session-wiring.ts (marker, stale sweep) | a session runtime starts: startup, /new, /resume, /fork, reload | fires | fires | fires | reliable | the session's marker, its accumulator, and a cleared AG_WF_PHASE | — |
+| agent_settled | index.ts (router and stateflow settle, terminal and /log-session notices), telemetry-wiring.ts (per-run sample), auto-log-session-wiring.ts (the session's journal entry) | a run settles: after retries, compaction and queued follow-ups | fires | fires | fires | reliable | the cost sample reaches its sinks and the journal entry lands, with no teardown involved | — |
+| turn_start | telemetry-wiring.ts (the turn window opens) | each turn begins | fires | fires | fires | reliable | — | — |
+| turn_end | telemetry-wiring.ts (tokens, model, turn count) | each turn ends | fires | fires | fires | reliable | the sample's token, model and turn fields | — |
+| tool_execution_end | telemetry-wiring.ts (tool duration) | a tool call finishes | fires | fires | fires | reliable | the sample's tool_ms | — |
+| session_shutdown | index.ts (hooks session:end seam), telemetry-wiring.ts (final flush, phase clear), auto-log-session-wiring.ts (fallback entry, marker removal) | a runtime is torn down: exit (Ctrl+C/D, SIGHUP, SIGTERM), session replacement (/new, /resume, /fork, /clone), reload, ctx.shutdown() | fires | conditional | fires | unreliable | the final sample, the fallback entry, the marker removal, and the hooks session:end seam | a web session that stays alive between prompts never tears down, so this event does not fire there between prompts — and a hook declared for the session:end seam therefore never runs in it. That is a known-issue, warned about here: the seam cannot move earlier (it reports on a session that has ended), so the sample, the entry and the marker removal were moved to agent_settled instead, and the seam's own gap stays declared rather than silently repaired |
+| model_select | index.ts (routing state note) | the host selects a model | conditional | conditional | conditional | host-dependent | — | a host without model selection never fires it, and no observable effect depends on it |
+| thinking_level_select | index.ts (routing state note) | the thinking level changes | conditional | conditional | conditional | host-dependent | — | the same: a routing note, never a persistence trigger |
+| tool_call | index.ts (path protection, shell write guard, tool-choice carrier, receipt guard; hooks pre:commit and pre:push) | before a tool runs | fires | fires | fires | reliable | block decisions and rewritten inputs | — |
+| tool_result | index.ts (hooks post:commit notice) | after a tool ran | fires | fires | fires | reliable | the post-commit warning notice | — |
+```
+
+`test/event-reliability-matrix.test.mjs` derives the registered set from
+`src/extension/` and compares it with this table: a listener with no row, a row
+for an event nobody listens to, a host cell outside the declared vocabulary or an
+empty `effect`/`gap` fails the suite, so the table cannot drift away from the
+code it describes.
+
+**Warning — `session:end` hooks do not run in a long-lived web session.** The
+seam is dispatched only at `session_shutdown`; a session that never tears down
+never dispatches it. Nothing can undo that from inside the extension (a session
+that has not ended has no `session:end` to report), so a web-hosted project that
+declares one gets no report until its session is closed or replaced. The
+`session:start` half of the seam is unaffected.
+
+What the wiring does with this table:
+
+- `telemetry` emits at `agent_settled` and keeps `session_shutdown` as the final
+  flush. Each settled run appends one cumulative line to `jsonFile`, and the
+  ledger keeps one row per session, upserted on the sample's `source`, so a
+  session that settles ten times is ten lines and one row.
+- `logSession` publishes the session's entry at the first boundary it reaches —
+  the settled run, or the shutdown when no run settled — and removes the marker
+  there. A second boundary adds no second entry: the journal is append-only, so
+  "later" cannot mean "replaces".
+- A marker a crash or an older build stranded is swept at `session_start` once it
+  is older than seven days. The sweep dates each file by the epoch it records and
+  never adopts one.
+
 ## CLI
 
 ```bash

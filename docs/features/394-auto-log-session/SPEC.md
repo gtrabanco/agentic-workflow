@@ -257,6 +257,15 @@ plus the roadmap settle after the owner opens the PR.
 - **E16** — 2026-11-04, `node scripts/check-skill-context.mjs --documents` · exit 0 · PASS — the guide-layer red (AGENTS.md 6884 > 6881) is closed, so the root suite's only failures are gone.
 - **E17** — 2026-11-04, `node scripts/run-root-suite.mjs` · exit 0 · `fail 0` (first fully green root gate on this branch; `bun scripts/skill-lint.mjs` clean, both package suites green, `check-skill-context` 28 skills PASS).
 - **L3** — 2026-11-05, correcting line for `E15` (kept, never rewritten): the sweep's "no match" stopped holding the moment this log itself was appended — `docs/LOGS.md` now carries a journal entry quoting the retired phrase (line 4224), so the bare `rg` over the journal matches again. The retirement pin is unaffected (`rg -c "until feature 41's" docs/LOGS.md` still exits 1) and the quote is an append-only historical record, not live prose; the honest command for the sweep is the pin, or the sweep minus the journal.
+- **D12** — 2026-11-18, the entry's write boundary is the settled run (fix #623 S4): `session_shutdown`
+  fires only when a runtime is torn down, and a host whose sessions stay alive between prompts never
+  tears one down, so a web session wrote no entry at all. The wiring publishes at the first boundary it
+  reaches — `agent_settled`, or the shutdown when no run settled — and removes the marker there.
+  `session_start` also sweeps markers older than seven days, so a crash no longer leaves one behind.
+  What this supersedes, and the reason a second boundary writes nothing: D11's "one entry per shutdown"
+  becomes "one entry per session", because `docs/LOGS.md` is append-only by `scripts/log-immutability.mjs`
+  — a later boundary cannot replace an earlier entry, so it must not write one.
+
 - **P11** — 2026-11-05, the external-verifier repair round: `main` merged in (union of both journals, both roadmap rows; no rebase — the branch timeline is preserved), and the one code advisory was closed red-first: a shutdown `reason` outside the renderer's lowercase-token grammar is normalized to `unknown` at the wiring boundary instead of being refused at the renderer and costing the local entry (`test` commit then `fix` commit, suite 528 pass · 0 fail).
 
 ## Next
