@@ -86,6 +86,17 @@ test("a file option is skipped before the key is read", () => {
   assert.equal(classifyInvocation([CONFIG, "--global", "--get", "user.name"]).kind, "read");
 });
 
+test("one positional is a read, two are the implicit set write (issue #618)", () => {
+  assert.equal(classifyInvocation([CONFIG, "user.name"]).kind, "read");
+  assert.equal(classifyInvocation([CONFIG, "--global", "user.email"]).kind, "read");
+  assert.equal(classifyInvocation([CONFIG, "--file", "/tmp/x", "commit.gpgsign"]).kind, "read");
+  const implied = classifyInvocation([CONFIG, "user.name", "Fixture"]);
+  assert.equal(implied.kind, "write");
+  assert.equal(implied.key, "user.name");
+  assert.equal(classifyInvocation([CONFIG, "--global", "user.email", "t@example.test"]).kind, "write");
+  assert.equal(classifyInvocation([CONFIG, "--file", "/tmp/x", "user.email", "a@b"]).kind, "write");
+});
+
 test("an unbalanced quote on an earlier line never hides a later write (issue #514 correction)", () => {
   // Frozen-failure corpus from the 2026-11-12 external verify: each poison is a
   // quote the tokenizer used to toggle state on — inside a regex literal — and

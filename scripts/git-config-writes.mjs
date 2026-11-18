@@ -275,6 +275,10 @@ export function classifyInvocation(input) {
       return writeResult(words, index, word === "edit" ? null : words[index + 1]);
     }
     if (isKeyShaped(word)) {
+      // One positional prints the value — a read; git only writes configuration
+      // when a value follows the key (issue #618). A flag after the key is that
+      // value in git's own grammar, so it still counts as one.
+      if (words.length - index < 2) return { kind: "read" };
       return writeResult(words, index, word);
     }
     return { kind: "none" };
@@ -307,21 +311,31 @@ function statements(tokens) {
   return out;
 }
 
-/** A statement as words, plus whether each word directly follows a bracket. */
+/** A statement as words, plus whether each word directly follows a bracket and its bracket depth. */
 function shape(statement) {
   const words = [];
   const afterBracket = [];
+  const depths = [];
   let pending = false;
+  let depth = 0;
   for (const token of statement) {
     if (token.soft) {
-      if (token.value === "(" || token.value === "[" || token.value === ",") pending = true;
+      if (token.value === "(" || token.value === "[") {
+        pending = true;
+        depth += 1;
+      } else if (token.value === ")" || token.value === "]") {
+        depth = Math.max(0, depth - 1);
+      } else if (token.value === ",") {
+        pending = true;
+      }
       continue;
     }
     words.push(token);
     afterBracket.push(pending);
+    depths.push(depth);
     pending = false;
   }
-  return { words, afterBracket };
+  return { words, afterBracket, depths };
 }
 
 /**
@@ -335,14 +349,19 @@ function shape(statement) {
 export function scanSource(text) {
   const findings = [];
   for (const statement of statements(tokenize(text))) {
-    const { words, afterBracket } = shape(statement);
+    const { words, afterBracket, depths } = shape(statement);
     const values = words.map((word) => word.value);
     for (let index = 0; index < values.length; index += 1) {
       if (values[index] !== "config") continue;
       const gitIndex = values.lastIndexOf("git", index - 1);
       const precedesCommand = gitIndex >= 0 && firstNonOption(values, gitIndex + 1) === index;
       if (!precedesCommand && !afterBracket[index]) continue;
-      const result = classifyInvocation(values.slice(index + 1));
+      // The invocation ends with its own bracket scope, so an argv array's
+      // trailing call arguments are never mistaken for configuration values.
+      const baseDepth = depths[index + 1] ?? 0;
+      let end = index + 1;
+      while (end < values.length && (depths[end] ?? 0) >= baseDepth) end += 1;
+      const result = classifyInvocation(values.slice(index + 1, end));
       if (result.kind !== "write") continue;
       findings.push({ line: words[index].line, kind: "write", key: result.key, reason: result.reason });
     }

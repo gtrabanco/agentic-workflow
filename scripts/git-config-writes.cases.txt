@@ -46,6 +46,22 @@ read | git config get user.email
 read | git config list --show-origin
 read | git(["config", "--local", "--get", "merge.docs-generated.driver"]);
 
+# ── one positional is a read: git prints the value (issue #618 S8) ───────
+read | git config user.name
+read | git config user.email
+read | git config commit.gpgsign
+read | git config user.signingkey
+read | git config --global user.name
+read | git config --file /tmp/throwaway.gitconfig user.name
+read | git("config", "user.name")
+read | git(["config", "user.name"]);
+read | execFileSync("git", ["config", "user.email"], { cwd: root });
+read | repo.run(["config", "commit.gpgsign"]);
+
+# ── a flag after the key is the value git writes, never a read ───────────
+write | git config user.name --get
+write | git config user.name --local
+
 # ── not a config invocation at all ───────────────────────────────────────
 read | git -c user.name=Fixture commit -m "message"
 read | git status --porcelain
