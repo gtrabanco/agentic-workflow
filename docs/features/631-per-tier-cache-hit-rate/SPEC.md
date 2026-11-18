@@ -318,7 +318,7 @@ scope, not deferrals of this one.
 - **P4** — 2026-11-18, the state settle: the roadmap row, the regenerated
   projection, this log and the closed obligations ride the commit that carries
   this line.
-- **G1** — 2026-11-18, `bun scripts/local-gate.mjs --jobs 2` · exit 0 ·
+- **G1** — 2026-11-18, HEAD 7965f6b25638be8befe17f780405ea27d3275a52, `bun scripts/local-gate.mjs --jobs 2` · exit 0 ·
   `local-gate: PASS — 19 step(s) in 1215s`; the first attempt at the default pool
   bailed on `scripts/unit-route.test.mjs` F7 (`585ms` against its `500ms`
   wall-clock bound, a timing assertion under 4-way parallel load) — the suite
@@ -328,12 +328,15 @@ scope, not deferrals of this one.
 
 ## Next
 
-- The owner's external verification of the diff handed back in this session; the
-  unit's remaining action is the PR after that verdict.
+- The owner's external verification of the pull request this unit's roadmap row
+  links (it settles to `done` on merge); nothing else is open on this unit.
 
 ## References
 
 - Issue [#631](https://github.com/gtrabanco/agentic-workflow/issues/631) — `Closes #631`.
+- The pull request this unit opened is the one its roadmap row links; it is not
+  written here, because a unit doc that names its own PR URL is refused until the
+  row reads `done` (`scripts/roadmap-settle.mjs`, `pr-url-unsettled`).
 - [`docs/ROADMAP.md`](../../ROADMAP.md) row 631.
 - [#504](../../features/494-telemetry-by-turn/SPEC.md) — the `tier-cost@2` row the
   cache cells came from; [#560](../560-307-residual-completion/SPEC.md) D3/D4 —
