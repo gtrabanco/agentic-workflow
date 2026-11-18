@@ -128,6 +128,22 @@ test("a later emission for the same source replaces its row instead of appending
   assert.equal(rows[0].turns, 7);
 });
 
+test("a live emission replaces the row a reconstruction wrote for the same session (#624)", () => {
+  // The reconstruction (#624) writes `pi:reconstruct=<id>` for a session the
+  // sink never flushed; when that session finally flushes live it writes
+  // `pi:session=<id>`. One row per session means the live emission replaces the
+  // reconstructed one — the two prefixes are two producers naming one session,
+  // not two sessions.
+  const { ledgerPath } = project();
+  const sink = createLedgerSink({ ledgerPath });
+  sink.write({ ...SAMPLE, tokens: 500, turns: 2, source: "pi:reconstruct=abc" });
+  sink.write({ ...SAMPLE, tokens: 9_000, turns: 20, source: "pi:session=abc" });
+  const rows = rowsOf(ledgerPath);
+  assert.equal(rows.length, 1, "one session is one row, whichever producer prefix names it");
+  assert.equal(rows[0].tokens, 9_000, "the row carries the later, cumulative totals");
+  assert.equal(rows[0].source, "pi:session=abc", "the live emission's provenance wins");
+});
+
 test("an upsert touches only its own row: the other sessions' rows stay byte-identical", () => {
   const { ledgerPath } = project();
   const sink = createLedgerSink({ ledgerPath });
