@@ -51,6 +51,9 @@ const KIND_REQUIRES: Record<string, keyof ToolChoiceAvailability> = {
 export interface EnforceOptions {
   /** The resolved `pi.toolChoice` posture. */
   config?: ToolChoiceConfig;
+  /** The resolved `guard.toolChoice.mode` (issue #626). This guard has no
+   *  question path, so `ask` answers as `deny`; `allow` stands it down. */
+  disposition?: "allow" | "deny" | "ask";
   /** The tools the host has; a missing preferred tool stands the carrier down. */
   availability: ToolChoiceAvailability;
 }
@@ -58,7 +61,8 @@ export interface EnforceOptions {
 /**
  * Decide what to do with one bash command.
  *
- * - the carrier disabled, or the command unparseable → pass untouched;
+ * - the carrier disabled or allowed by its `guard` disposition, or the command
+ *   unparseable → pass untouched;
  * - a violation whose preferred tool is absent → pass untouched (the fallback
  *   is never blocked: that would trade a convention for a broken session);
  * - `rewrite` and every violation translatable → the forwarded command;
@@ -66,6 +70,7 @@ export interface EnforceOptions {
  */
 export function enforceToolChoice(command: string, options: EnforceOptions): ToolChoiceDecision {
   const config = options.config ?? DEFAULT_TOOL_CHOICE;
+  if (options.disposition === "allow") return { block: false };
   if (config.enabled !== true) return { block: false };
   if (typeof command !== "string" || command.trim() === "") return { block: false };
   const analysis = analyzeToolChoice(command);
