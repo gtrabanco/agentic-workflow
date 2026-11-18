@@ -126,6 +126,11 @@ const READ_VERBS = new Set(["get", "list", "--get", "--get-all", "--get-regexp",
 const DESTRUCTIVE_VERBS = new Set(["unset", "unset-all", "remove-section", "rename-section", "edit", "--unset", "--unset-all", "--edit", "-e", "--remove-section", "--rename-section"]);
 const WRITE_VERBS = new Set(["set", "--add", "--replace-all"]);
 
+/** Whether a word is a `git config` action, the form that opens the modern argument list. */
+function isActionWord(word: string): boolean {
+  return READ_VERBS.has(word) || DESTRUCTIVE_VERBS.has(word) || WRITE_VERBS.has(word);
+}
+
 /**
  * Whether a key carries identity or signing meaning. A write to one of these is
  * the class this guard exists for; everything else is a project's own choice.
@@ -265,10 +270,20 @@ export function findGitConfigWrites(command: string): GitConfigWrite[] {
     let scope: GitConfigScope = "local";
     let file: string | undefined;
     let cursor = subcommand + 1;
-    // A file/display option may precede or follow the verb; collect both.
     const positional: string[] = [];
+    // Options are read only where git reads them: before the key in the legacy
+    // grammar (`git config --global user.name <value>`), and before the key in
+    // the modern one, where an action word (`set`, `get`, `unset`, …) opens the
+    // argument list. Past the key every word is positional, which is why
+    // `git config user.name --local` sets the literal value "--local".
+    const optionsOpen = () => positional.length === 0 || (positional.length === 1 && isActionWord(positional[0]));
     while (cursor < words.length) {
       const word = words[cursor];
+      if (!optionsOpen()) {
+        positional.push(word);
+        cursor += 1;
+        continue;
+      }
       if (CONFIG_VALUE_OPTIONS.has(word)) {
         const value = words[cursor + 1];
         if (word === "--file" || word === "-f") {
@@ -300,8 +315,11 @@ export function findGitConfigWrites(command: string): GitConfigWrite[] {
     const head = positional[0];
     if (READ_VERBS.has(head)) continue;
     // An explicit verb puts the key in the next slot; the implicit legacy form
-    // (`git config user.email …`) puts it first.
+    // (`git config user.email …`) puts it first. Git prints the value for one
+    // positional — a read, exit 1 when unset — and only two or more are the
+    // legacy write, the second one the value (issue #618).
     const explicit = DESTRUCTIVE_VERBS.has(head) || WRITE_VERBS.has(head);
+    if (!explicit && positional.length < 2) continue;
     const verbName = explicit ? head : "set";
     const keySlot = explicit ? 1 : 0;
     const candidate = positional[keySlot];
