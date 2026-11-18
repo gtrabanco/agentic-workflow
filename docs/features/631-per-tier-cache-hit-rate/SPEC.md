@@ -306,6 +306,11 @@ scope, not deferrals of this one.
   (`S4`: verified, no repair owed).
 - **E6** — 2026-11-18, `git diff --name-only main...HEAD | rg -c 'risk-tiers|routing/|wall_clock'`
   matches 0, and the `time is never a span` case passes inside `E2` (`S8`).
+- **E8** — 2026-11-18, `bun scripts/dimension-regression.mjs --base 2a609bca` · exit 0 ·
+  `dimension-regression@1`: base 17 dimensions, head the same 17, one changed
+  review surface (`docs/workflow/GATE_INVENTORY.md`, the `tier-cost-comparison`
+  claim), no dimension dropped and no review axis edited — the run recorded here
+  is its evidence, as that gate requires of a range touching a review surface.
 - **E7** — 2026-11-18, the differential against `git archive main` in a temp tree:
   `read` is byte-identical on the same corpus; `aggregate`/`compare` differ only
   by the declared additive keys; the exit codes are identical on both grammars
