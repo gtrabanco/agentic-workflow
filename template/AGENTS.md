@@ -220,7 +220,7 @@ backticks, zero backslashes) and pass **`--body-file <path>`**
 `gh issue comment --body-file`, or the forge's equivalent) — **never** an inline
 `--body "…"` or a quoted `<<'EOF'` heredoc, both of which mangle backticks or
 preserve the stray `\`. A bare non-Markdown one-liner (e.g. `Closes #12`) may
-stay inline. Verify after: `gh issue view <n> --json body` shows backticks
+stay inline. Verify after: `runner forge-read issue <n>` shows backticks
 rendering, no literal `` \` ``.
 
 **Notation — forge numbers vs workflow numbers.** Two independent number spaces

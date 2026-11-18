@@ -106,13 +106,14 @@ CI. Default target is the current branch's PR; accept a PR number to target anot
    project's verification gate (type-check / tests / build / CI). Do **not** load
    full feature/fix templates — the SPEC below is the only planning artifact this
    audit reads (AC 14).
-2. **The PR.** Identify it and read it in full (forge CLI per the project's
-   Workflow conventions — examples use `gh`):
+2. **The PR.** Read it in full: the guarded read for the content, the metadata
+   read for the audit's own facts (forge CLI — examples use `gh`):
    ```sh
-   gh pr view <N> --json number,url,title,body,baseRefName,headRefName,headRefOid,isDraft,mergeable,mergeStateStatus,files,commits,statusCheckRollup,closingIssuesReferences
+   runner forge-read pr <N>
+   gh pr view <N> --json number,url,baseRefName,headRefName,headRefOid,isDraft,mergeable,mergeStateStatus,files,commits,statusCheckRollup,closingIssuesReferences
    ```
    If no PR number is given, resolve the current branch's PR
-   (`gh pr view --json ...`). If none exists yet, audit the branch vs. the default
+   (`gh pr view --json number,url`). If none exists yet, audit the branch vs. the default
    base and say "no PR open yet" — the contract still applies.
 3. **The SPEC.** Locate the governing SPEC — `docs/features/<NN>-<slug>/` (feature)
    or `docs/fix/<n>-<topic>/` (fix) — and its planning artifacts (`PLAN.md`,
@@ -127,11 +128,10 @@ comments together, then find the **newest** comment carrying the marker
 `<!-- review-change:pass sha=<40-hex> contract=v1 -->`:
 
 ```sh
-gh pr view <N> --json headRefOid,comments
+runner forge-read pr <N> --comments
 ```
 
-- **current** — marker `sha` equals that snapshot's `headRefOid` (the current
-  head SHA). Acknowledge
+- **current** — marker `sha` equals the head SHA the delivery reports. Acknowledge
   its scope/axes, acceptance coverage, invariant result, and manual checks as the
   review evidence, then evaluate the delivery gates below.
 - **absent** — no matching marker on the PR → **BLOCKER**: no review evidence at

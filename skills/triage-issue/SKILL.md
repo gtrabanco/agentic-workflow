@@ -110,11 +110,13 @@ the index is never a decision authority. In review-finding mode, read the target
 acceptance, `review-findings.md`, current diff, and PR instead of looking for an
 issue comment. Verification starts from the affected-file set — the finding's
 `file:line` citations plus the unit doc's per-phase `Relevant files:` lists —
-and widens only on a cited lead; never a repo-wide survey from scratch. Otherwise read the issue in full, including comments and labels
-(forge CLI per the project's Workflow conventions — examples use `gh`):
+and widens only on a cited lead; never a repo-wide survey from scratch. Otherwise
+read the issue in full, comments and labels included, through the guarded read —
+the transport lives in the crate, so this is the same command on any forge
+(`skills/runner-contract/references/RUNNER.md` owns the invocation):
 
 ```sh
-gh issue view <N> --json number,title,body,labels,state,comments
+runner forge-read issue <N> --comments
 ```
 
 
