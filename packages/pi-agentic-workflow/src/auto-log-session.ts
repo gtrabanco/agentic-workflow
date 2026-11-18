@@ -193,6 +193,49 @@ export function removeMarker(root: string, sessionId: string): void {
 }
 
 /**
+ * How long a stranded marker may live (#623 S3). Seven days: long enough for a
+ * session paused over a weekend, short enough that the directory never grows one
+ * inert file per crashed session forever.
+ */
+export const STALE_MARKER_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Remove the markers whose session is older than the retention window, and return
+ * the session ids it swept.
+ *
+ * A marker is written at `session_start` and removed at a boundary; a crash, a
+ * killed host or a build that removed it only at shutdown stranded one per dead
+ * session. Nothing adopts a found marker by design, so the files were inert — but
+ * an inert file per session is still a directory nobody can read. The sweep dates
+ * a marker by its own recorded epoch and never guesses: a file it cannot parse,
+ * and a file that is not a marker, is left alone. It is a sweeper, not a reader —
+ * no caller learns anything about the sessions it removes.
+ */
+export function purgeStaleMarkers(options: { root: string; now?: () => number; maxAgeMs?: number }): string[] {
+  const nowMs = (options.now ?? Date.now)();
+  const maxAgeMs = options.maxAgeMs ?? STALE_MARKER_MS;
+  let entries: string[];
+  try {
+    entries = fs.readdirSync(path.join(options.root, MARKER_DIR));
+  } catch {
+    return []; // no marker directory: nothing to sweep
+  }
+  const purged: string[] = [];
+  for (const name of entries) {
+    const match = /^\.session-(.+)\.start$/u.exec(name);
+    if (match === null) continue;
+    const sessionId = match[1];
+    const marker = readMarker(options.root, sessionId);
+    // An undated marker has no provable age, and a marker exactly at the window
+    // is not older than it: both stay.
+    if (marker === null || nowMs - marker.epoch * 1_000 <= maxAgeMs) continue;
+    removeMarker(options.root, sessionId);
+    purged.push(sessionId);
+  }
+  return purged.sort();
+}
+
+/**
  * The paths this session touched: the commits since its marker, plus whatever is
  * still uncommitted or untracked. Project-relative, in git's own order, deduped.
  *

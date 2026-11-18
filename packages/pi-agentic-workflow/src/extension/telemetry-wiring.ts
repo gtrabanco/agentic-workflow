@@ -3,11 +3,11 @@
  * (issue #383 S4/S4b, P5).
  *
  * The accumulator and its sink are pure; this file is the only place that knows
- * Pi exists. It is a factory over a `pi`-shaped object so the suite can drive the
- * five events directly, and so `#394` can add a second sink without touching how
- * the session is observed.
+ * Pi exists. It is a factory over a `pi`-shaped object so the suite can drive
+ * the six events directly, and so `#394` can add a second sink without touching
+ * how the session is observed.
  *
- * Two decisions worth knowing when reading it:
+ * Five decisions worth knowing when reading it:
  *
  *  - **The unit comes from the command that was dispatched**, resolved against
  *    the project's own directories. A session that ran no unit-scoped command
@@ -17,11 +17,16 @@
  *    `PHASE_LABELS` vocabulary, and it also rides `AG_WF_PHASE` so a spawned
  *    runner reads the phase in flight from its environment instead of guessing.
  *    A command outside the vocabulary never overwrites the phase it inherits,
- *    and the session clears the variable at shutdown: a later session must not
- *    inherit the previous one's phase.
+ *    and the variable is cleared both at `session_start` and at shutdown: a
+ *    later session must not inherit the previous one's phase.
  *  - **The sample names its session.** The sink's idempotency guard compares a
  *    whole row, so the session id in `source` is what keeps a second session of
  *    the same unit — the same day, the same tree — from being written over.
+ *  - **A settled run is the boundary, a teardown is only the last one** (#623
+ *    S4/S6). `session_shutdown` fires when a runtime is torn down, and a host
+ *    whose session stays alive between prompts never tears one down, so the
+ *    sample leaves memory at every `agent_settled` and the shutdown flush adds
+ *    only what the last run did not already emit.
  *  - **Off registers no listener at all.** A listener that wakes up to find itself
  *    disabled is a cost with no feature, so `enabled: false` means `pi.on` is
  *    never called.
@@ -32,12 +37,19 @@ import { execFileSync } from "node:child_process";
 import { createSessionTelemetry, phaseFromCommand, unitFromCommand, type TelemetrySink } from "../session-telemetry.js";
 import { createJsonlSink, createLedgerSink } from "../telemetry-sinks.js";
 
-/** The events this wiring listens to. */
+/**
+ * The events this wiring listens to.
+ *
+ * `agent_settled` is the emission boundary (#623 S4/S6): it fires after every
+ * settled run, in every host, so a session that never tears down still emits —
+ * `session_shutdown` stays the final flush, not the only one.
+ */
 export const TELEMETRY_EVENTS = Object.freeze([
   "session_start",
   "turn_start",
   "turn_end",
   "tool_execution_end",
+  "agent_settled",
   "session_shutdown",
 ] as const);
 
@@ -203,11 +215,21 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
       if (!options.enabled) return;
       pi.on("session_start", (_event, ctx) => {
         fromContext = sessionIdOf(ctx);
+        // The phase in flight belonged to another session — a host that keeps
+        // sessions alive can start a new one in the same process, so the starting
+        // session clears it rather than inheriting it (#623 S3).
+        delete process.env.AG_WF_PHASE;
         accumulator ??= build();
       });
       pi.on("turn_start", (event) => accumulator?.onTurnStart((event ?? {}) as { timestamp?: number }));
       pi.on("turn_end", (event) => accumulator?.onTurnEnd((event ?? {}) as { message?: { usage?: Record<string, number> } }));
       pi.on("tool_execution_end", (event) => accumulator?.onToolEnd((event ?? {}) as { durationMs?: number }));
+      // The run boundary (#623 S4/S6): a settled run is the reliable unit of
+      // observation, so the sample leaves memory at every settled run instead of
+      // waiting for a teardown the host may never perform. The accumulator drops
+      // a re-emission of the same sample, so a host that settles twice without
+      // new activity writes nothing twice.
+      pi.on("agent_settled", () => accumulator?.emit());
       pi.on("session_shutdown", () => {
         accumulator?.flush();
         // The phase in flight belonged to this session: a later one must not
