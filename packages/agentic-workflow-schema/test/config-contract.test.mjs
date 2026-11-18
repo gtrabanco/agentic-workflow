@@ -12,8 +12,11 @@ import test from "node:test";
 import {
   BASE_CONFIG_SECTIONS,
   CONFIG_EXTENSION_CONTRACT,
+  GUARD_MODES,
+  GUARD_NAMES,
   composeConfigSchema,
   fillDefaults,
+  normalizeGuard,
   normalizeLogSession,
   resolveConfigDocuments,
   sanitizeSectionValue,
@@ -25,7 +28,7 @@ const section = (key) => BASE_CONFIG_SECTIONS.find((entry) => entry.key === key)
 
 test("the base registry carries the feature sections the issue names", () => {
   const keys = BASE_CONFIG_SECTIONS.map((entry) => entry.key);
-  assert.deepEqual(keys, ["logSession", "memory", "telemetry", "guards", "gitIdentity", "advance", "pathProtection", "contentGuard"]);
+  assert.deepEqual(keys, ["logSession", "memory", "telemetry", "guard", "gitIdentity", "advance", "pathProtection", "contentGuard"]);
   for (const entry of BASE_CONFIG_SECTIONS) {
     assert.equal(entry.category, "feature");
     assert.equal(entry.file, "agentic-workflow.json");
@@ -74,10 +77,84 @@ test("no coercion: a string where a boolean belongs is refused", () => {
   assert.equal(issues[0].path, "telemetry.enabled");
 });
 
-test("guards validates its booleans and the token ceiling", () => {
-  assert.deepEqual(validateSectionValue(section("guards"), { merge: true, history: false, ci: true, cost: { maxTokens: 500000 } }), []);
-  assert.equal(validateSectionValue(section("guards"), { cost: { maxTokens: 0 } }).length, 1);
-  assert.equal(validateSectionValue(section("guards"), { merge: "yes" }).length, 1);
+test("S1: the disposition vocabulary is exactly allow, deny and ask", () => {
+  assert.deepEqual([...GUARD_MODES], ["allow", "deny", "ask"]);
+  assert.deepEqual([...GUARD_NAMES], ["gitIdentity", "toolChoice", "receipt"]);
+});
+
+test("S3: guard validates the global default and one override per guard", () => {
+  assert.deepEqual(validateSectionValue(section("guard"), { default: "ask" }), []);
+  assert.deepEqual(
+    validateSectionValue(section("guard"), {
+      default: "ask",
+      gitIdentity: { mode: "deny" },
+      toolChoice: { mode: "allow" },
+      receipt: { mode: "ask" },
+    }),
+    [],
+  );
+  // A foreign disposition, a foreign guard name and a foreign option are refused.
+  assert.equal(validateSectionValue(section("guard"), { default: "block" }).length, 1);
+  assert.equal(validateSectionValue(section("guard"), { pathProtection: { mode: "allow" } }).length, 1);
+  assert.equal(validateSectionValue(section("guard"), { gitIdentity: { allow: true } }).length, 1);
+});
+
+test("S1: the retired block spelling is refused with the enum report", () => {
+  const issues = validateSectionValue(section("guard"), { gitIdentity: { mode: "block" } });
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0].path, "guard.gitIdentity.mode");
+  assert.match(issues[0].message, /\"allow\", \"deny\", \"ask\"/);
+});
+
+test("S3: every guard falls back to the shipped ask default", () => {
+  assert.deepEqual(normalizeGuard(undefined), {
+    default: "ask",
+    gitIdentity: "ask",
+    toolChoice: "ask",
+    receipt: "ask",
+  });
+  assert.deepEqual(normalizeGuard({ default: "allow" }), {
+    default: "allow",
+    gitIdentity: "allow",
+    toolChoice: "allow",
+    receipt: "allow",
+  });
+  // A per-guard entry is the override; the default still governs the others.
+  assert.deepEqual(normalizeGuard({ default: "ask", gitIdentity: { mode: "deny" }, toolChoice: { mode: "allow" } }), {
+    default: "ask",
+    gitIdentity: "deny",
+    toolChoice: "allow",
+    receipt: "ask",
+  });
+  // A value the schema refuses is never honoured: the fallback stands.
+  assert.equal(normalizeGuard({ default: "nope", receipt: { mode: "block" } }).default, "ask");
+  assert.equal(normalizeGuard({ receipt: { mode: "block" } }).receipt, "ask");
+});
+
+test("S2/D2: the retired guards section and the agentGuard mode are refused", () => {
+  assert.equal(BASE_CONFIG_SECTIONS.some((entry) => entry.key === "guards"), false);
+  const issues = validateSectionValue(section("gitIdentity"), { agentGuard: { mode: "deny" } });
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0].path, "gitIdentity.agentGuard.mode");
+  assert.match(issues[0].message, /unknown key/);
+  // The allow-list keeps its home.
+  assert.deepEqual(validateSectionValue(section("gitIdentity"), { agentGuard: { allow: ["user.name"] } }), []);
+});
+
+test("S4: extension section keys accept camelCase and kebab-case, nothing else", () => {
+  const descriptor = (key) => ({
+    contract: CONFIG_EXTENSION_CONTRACT,
+    key,
+    file: "pkg.json",
+    description: "a package section",
+    schema: { type: "object" },
+    defaults: {},
+  });
+  assert.deepEqual(validateConfigExtension(descriptor("myFeature")), []);
+  assert.deepEqual(validateConfigExtension(descriptor("my-feature")), []);
+  assert.equal(validateConfigExtension(descriptor("my_feature")).length, 1);
+  assert.equal(validateConfigExtension(descriptor("MyFeature")).length, 1);
+  assert.equal(validateConfigExtension(descriptor("logSession")).length, 1, "a base key is still redefined-proof");
 });
 
 test("advance validates its knobs and paths", () => {
@@ -141,7 +218,7 @@ test("resolution is feature-by-feature, project over global, defaults for absent
   });
   assert.deepEqual(resolved.config.memory, { engram: true });
   assert.deepEqual(resolved.config.telemetry, { enabled: true, jsonFile: ".pi/.telemetry/sessions.jsonl" });
-  assert.deepEqual(resolved.config.guards, { merge: false, history: false, ci: false, cost: { maxTokens: 500000 } });
+  assert.deepEqual(resolved.config.guard, { default: "ask" });
 });
 
 test("an invalid section is reported and the effective value is not invented", () => {

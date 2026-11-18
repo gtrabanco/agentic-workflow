@@ -65,7 +65,7 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // publisher named, so a fresh install writes nothing at either switch.
     logSession: { enabled: false, publisher: null },
     // #427: tool-safety guard switches and the token ceiling.
-    guards: { merge: false, history: false, ci: false, cost: { maxTokens: 500000 } },
+    guard: { default: "ask", gitIdentity: "ask", toolChoice: "ask", receipt: "ask" },
     // Feature 62: the conductor knobs are always resolved from the base file.
     advance: {
       iterationsCap: 12,

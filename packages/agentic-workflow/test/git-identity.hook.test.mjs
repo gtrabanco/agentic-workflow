@@ -90,13 +90,24 @@ function runHook(repo, identity, { config = {}, entry = CLI, extraArgv = [], env
 }
 
 test("normalizeGitIdentity fills the shipped defaults", () => {
-  assert.deepEqual(normalizeGitIdentity(undefined), { enforce: "off", approved: {}, agentGuard: { mode: "ask", allow: [] } });
-  assert.deepEqual(normalizeGitIdentity({ enforce: "commit", approved: { name: "x" }, agentGuard: { mode: "block", allow: ["user.name", 7] } }), {
+  assert.deepEqual(normalizeGitIdentity(undefined, undefined), { enforce: "off", approved: {}, agentGuard: { mode: "ask", allow: [] } });
+  assert.deepEqual(normalizeGitIdentity({ enforce: "commit", approved: { name: "x" }, agentGuard: { allow: ["user.name", 7] } }, { gitIdentity: { mode: "deny" } }), {
     enforce: "commit",
     approved: { name: "x" },
-    agentGuard: { mode: "block", allow: ["user.name"] },
+    agentGuard: { mode: "deny", allow: ["user.name"] },
   });
   assert.equal(normalizeGitIdentity({ enforce: "nope" }).enforce, "off", "an unknown scope is refused elsewhere, never silently honoured");
+});
+
+test("the identity guard's disposition comes from the guard section (issue #626)", () => {
+  // The global default governs when the guard declares nothing.
+  assert.equal(normalizeGitIdentity({}, { default: "allow" }).agentGuard.mode, "allow");
+  // The guard's own entry wins over the default.
+  assert.equal(normalizeGitIdentity({}, { default: "allow", gitIdentity: { mode: "deny" } }).agentGuard.mode, "deny");
+  // A foreign value is never honoured: the shipped ask stands.
+  assert.equal(normalizeGitIdentity({}, { gitIdentity: { mode: "block" } }).agentGuard.mode, "ask");
+  // A written `agentGuard.mode` is a retired key and has no effect.
+  assert.equal(normalizeGitIdentity({ agentGuard: { mode: "block" } }, undefined).agentGuard.mode, "ask");
 });
 
 test("resolveIdentityProfile merges global over project, per field", (t) => {
