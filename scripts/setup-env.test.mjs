@@ -70,6 +70,7 @@ function fullState(overrides = {}) {
 function vehicleState(overrides = {}) {
   const bin = `/repo/${VEHICLE_TARGET}`;
   return {
+    root: "/repo",
     source: "AGENTIC_WORKFLOW_RUNNER",
     raw: `bun ${bin}`,
     target: bin,
@@ -997,8 +998,8 @@ describe("the dogfooding vehicle — the authoring checkout runs its own tree (i
     assert.match(row.detail, /opt-in/u);
   });
 
-  it("an unarmed checkout is red with the arming line, and the source is what the resolver answered", () => {
-    const { vehicle, ...rest } = fullState();
+  it("an unarmed checkout is red with the arming line, and the row claims no source it did not observe", () => {
+    const { vehicle: _ignored, ...rest } = fullState();
     const unarmed = vehicleState({
       source: "unset",
       raw: "",
@@ -1013,9 +1014,9 @@ describe("the dogfooding vehicle — the authoring checkout runs its own tree (i
     assert.equal(row.ok, false);
     assert.match(row.detail, /export AGENTIC_WORKFLOW_RUNNER='/u);
     assert.match(row.detail, /v5\.0\.0-canary\.20261118\.2/u, "the newest canary tag is named");
-    // The requirement's other half: the resolver really answers the override's
-    // source, so the check never claims a route it did not observe.
-    assert.equal(vehicle.source, "unset");
+    // The requirement's other half: the row reports the source it observed, so an
+    // unarmed process is never described as if the override were applied.
+    assert.doesNotMatch(row.detail, /source: AGENTIC_WORKFLOW_RUNNER/u);
   });
 
   it("the armed command is a sourceable export with the local-file marker and the override's exact value shape", () => {

@@ -50,7 +50,7 @@ function parseRoute(text) {
     if (trimmed === "" || trimmed.startsWith("```")) break;
     const cells = trimmed.split("|").map((cell) => cell.trim());
     if (cells.length !== 4 || cells[0] === "row") continue;
-    rows.push({ id: cells[0], when: cells[1], classification: cells[2], route: cells[3] });
+    rows.push({ id: cells[0], when: cells[1], classification: cells[2], move: cells[3] });
   }
   return { header, rows };
 }
@@ -60,11 +60,11 @@ const route = parseRoute(processText);
 
 test("the route is declared once, in the triage skill's own reference file (S3)", () => {
   assert.ok(route, `${ISSUE_PROCESS} declares the setup-defect-route@1 block`);
-  assert.equal(route.header, "row | when | classification | route");
+  assert.equal(route.header, "row | when | classification | move");
   assert.deepEqual(route.rows.map((row) => row.id), ["R1", "R2", "R3", "R4"], "four rows, ordered");
   for (const row of route.rows) {
     assert.ok(row.when.length > 20, `${row.id} states a condition`);
-    assert.ok(row.route.length > 10, `${row.id} states where it goes`);
+    assert.ok(row.move.length > 10, `${row.id} states where it goes`);
   }
 });
 
@@ -144,6 +144,6 @@ test("the route ends on a published verdict and hands the move, not an implement
 
 test("the surface is registered where the drift gate reads it, and the skill points at the paragraph (S3, S5)", () => {
   const guide = read(GUIDE);
-  assert.match(guide, /^\| setup-defect-route \| skills\/triage-issue\/references\/ISSUE_PROCESS\.md \| block:setup-defect-route@1 \|/mu);
+  assert.match(guide, /^setup-defect-route \| skills\/triage-issue\/references\/ISSUE_PROCESS\.md \| block:setup-defect-route@1 \|/mu);
   assert.match(read(SKILL), /ISSUE_PROCESS\.md/u, "the skill still routes to the file that owns the rule");
 });

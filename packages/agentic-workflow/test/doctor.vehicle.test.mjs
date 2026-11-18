@@ -139,7 +139,7 @@ test("ok with a behind release: the row stays ok — the tree is the newer half 
   const verdict = evaluateVehicle(evidence);
   assert.equal(verdict.status, "ok");
   assert.match(verdict.advisory, /5\.0\.0-canary\.20261113\.1/u);
-  assert.match(verdict.advisory, CANARY);
+  assert.ok(verdict.advisory.includes(CANARY), "the newest canary tag is named");
 });
 
 test("stale: the override is applied but does not reach this checkout, so the vehicle in force is a release", () => {
