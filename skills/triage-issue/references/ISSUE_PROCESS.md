@@ -59,6 +59,32 @@ wontfix | wontfix | propose close
 remove | none | the unit that performs the deletion, carrying its measured receipts
 ```
 
+   **Setup-defect check first (issue #611).** A runner refusal is not a defect
+   until the vehicle is ruled out. Read the tool doctor's `dogfooding-vehicle` row
+   (the row's statuses, evidence and instruction are owned by the crate README's
+   `tool-inventory@1`) and the working tree, then apply this table. The decision it
+   encodes is implemented once, as `classifySetupState` in
+   `packages/agentic-workflow/src/doctor/vehicle.mjs`, and
+   `scripts/triage-setup-defect.test.mjs` refuses a drift between the two. The
+   override's semantics stay where they are owned —
+   `../runner-contract/references/RUNNER.md` — and are never restated here:
+
+   ```text
+   setup-defect-route@1
+   row | when | classification | move
+   R1 | the runner refuses, and the named subcommand or skill exists in the working tree, and the `dogfooding-vehicle` row reads `stale` or `unarmed` | setup-defect | apply the row's arming or refresh move, re-run the refused command, then re-triage what survives
+   R2 | the named subcommand or skill does not exist in the working tree | code-bug | the ordinary classification, unchanged
+   R3 | the `dogfooding-vehicle` row reads `ok` | code-bug | the ordinary classification, unchanged
+   R4 | the row reads `unreachable` or `not-applicable`, so the vehicle cannot be shown healthy | unresolved | repair what the row's evidence names — its instruction is the exact command — then re-classify
+   ```
+
+   A `setup-defect` classification is never worked around in code: the move is
+   applied, the command re-run, and every symptom it explained leaves the report.
+   What survives falls through to the ordinary classification unchanged. When the
+   move explains every reported symptom the verdict is `wontfix` — the report
+   named a setup state, and there was no code defect to fix — and the closing
+   comment carries the move's observed result.
+
    - **one-shot** — the organic route: work that is small and understood runs
      inline with the gate only, never as a unit. All six conditions must be
      **evidenced**, not asserted:

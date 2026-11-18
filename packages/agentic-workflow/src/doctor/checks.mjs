@@ -20,6 +20,7 @@ import path from "node:path";
 
 import { RUNNER_CANDIDATES, renderInvocation } from "../runner/resolve.mjs";
 import { COMPANION_PAIRINGS, NODE_ENGINE } from "./vocabulary.mjs";
+import { evaluateVehicle, piAgentDir, vehicleEvidence } from "./vehicle.mjs";
 import { releaseLine, versionAtLeast } from "./probes.mjs";
 
 /**
@@ -32,12 +33,6 @@ const CRATE_VERSION = JSON.parse(readFileSync(new URL("../../package.json", impo
 const RG_BOOTSTRAP = renderInvocation(RUNNER_CANDIDATES[0], CRATE_VERSION, ["provision", "rg", "--yes"]);
 
 const at = (ops, ...parts) => path.join(ops.root, ...parts);
-
-/** Pi's agent directory: `$PI_CODING_AGENT_DIR`, else `~/.pi/agent`. */
-export function piAgentDir(ops) {
-  const configured = String(ops.env?.PI_CODING_AGENT_DIR ?? "").trim();
-  return configured !== "" ? configured : path.join(ops.home, ".pi", "agent");
-}
 
 /** The npm spec a project declared for `gentle-engram`, from Pi's own list shape. */
 function companionPin(ops, dir) {
@@ -358,6 +353,14 @@ export const CHECK_PROBES = Object.freeze([
             advisory: "the pi host is not installed — the workflow's skills and commands run inside it; another supported adapter is the alternative",
             instruction: null,
           },
+  },
+  {
+    id: "dogfooding-vehicle",
+    // Issue #611: the authoring checkout's own vehicle. The evidence answers "does
+    // this session run the working tree, and if not how far behind is the release
+    // it runs instead" — a setup state, never a code defect.
+    probe: (ops) => ({ vehicle: vehicleEvidence(ops) }),
+    evaluate: (evidence) => evaluateVehicle(evidence.vehicle),
   },
   {
     id: "agent-adapters",
