@@ -251,6 +251,8 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
 - **E16** — 2026-11-18, `bun scripts/dimension-regression.mjs --base origin/main` · exit 0, verdict `refused` · `missing-reverification-evidence` — the range touches one review surface (`skills/triage-issue/references/ISSUE_PROCESS.md`), which is a route addition, not a dimension change; 17 dimensions at base and 17 at head, none dropped. This line is the re-verification record the finding asks for.
 - **E17** — 2026-11-18, `bun scripts/dimension-regression.mjs --base origin/main` after E16 landed · exit 0 · `dimension-regression@1 · base 2dda53f · 17 dimensions · head 17 dimensions · changed review surfaces 1 · evidence: this unit doc · verdict: pass` (no finding).
 
+- **E18** — 2026-11-18, correction of E17 (a Log line is never edited, so this appends): `bun scripts/dimension-regression.mjs --base origin/main` after E16 landed · exit 0 · the observed block is `base | 2dda53f · 17 dimensions` / `head | 17 dimensions · changed review surfaces 1` / `evidence | docs/features/611-dogfooding-vehicle/SPEC.md` / `verdict | clean` — E17's `verdict: pass` was typed before the run; the observed word is `clean`.
+
 ## Next
 
 The owner's external verdict on this handoff — the unit doc, the obligation ledger
