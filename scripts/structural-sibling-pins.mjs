@@ -55,6 +55,10 @@ export const HEADING_READER_ALLOWLIST = new Map([
     "packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs",
     "receipt chunk parser: versioned titled headings (## Pre-execution review receipt v1 — …) that the exact-name shared reader cannot match; machine-generated receipts carry no fenced blocks",
   ],
+  [
+    "scripts/journal-corpus.mjs",
+    "the journal carrier bounds entries, never a document section: a level-2 heading whose stamp the entry grammar accepts opens one journal entry, and every journal entry carries a different name, so the exact-name section reader cannot serve it. The walk is fence-aware through the runner's own openFence/closesFence (#616)",
+  ],
 ]);
 
 /**
