@@ -168,7 +168,8 @@ events as fallbacks wherever possible).
 - `test/config-merge-stateflow.test.mjs`
 - `test/shipped-adapter.test.mjs`
 - `test/path-protection.test.mjs`
-- `test/auto-log-session-wiring.test.mjs`
+- `test/event-reliability-matrix.test.mjs`
+- `test/auto-log-session.test.mjs`
 - `scripts/run-root-suite.mjs` (todo el root suite)
 
 ## Known pre-existing issues
@@ -183,7 +184,7 @@ Refined at planning from the issue's P1–P9; the emission-boundary decision
 - P1 — Record the full `pi.on()` listener inventory of `packages/pi-agentic-workflow/src/extension/` in the planning evidence: event, file:line, purpose (validator: `rg -n 'pi\.on\(' packages/pi-agentic-workflow/src/extension/` matches 16 — 14 at the cut plus the two `agent_settled` registrations P5 and P6 add)
   (Implements: S1)
   - Relevant files: packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts, packages/pi-agentic-workflow/src/extension/auto-log-session-wiring.ts
-- P2 — Record the `skills/`, `scripts/` and schema-package inventory — zero live registrations there, only `scripts/mutation-check.mjs` string matches (validator: `rg -n 'pi\.on\(' skills/ scripts/ packages/agentic-workflow-schema/src/ --glob '!*.test.mjs'` returns only mutation-check matches)
+- P2 — Record the `skills/`, `scripts/` and schema-package inventory — zero live registrations there, only `packages/pi-agentic-workflow/scripts/mutation-check.mjs` string matches (validator: `rg -n 'pi\.on\(' skills/ scripts/ packages/pi-agentic-workflow/scripts/ packages/agentic-workflow-schema/src/ --glob '!*.test.mjs'` returns only mutation-check matches)
   (Implements: S1)
   - Relevant files: skills/, scripts/, packages/agentic-workflow-schema/src/
 - P3 — Write the event reliability matrix (the 37-event catalogue × host) into `docs/workflow/CONFIG.md`, distinguishing the run-boundary events that fire every host (`turn_*`, `tool_*`, `agent_start/end/before_settle/settled`) from the session-lifecycle events whose `session_shutdown` never fires between prompts in pi-web (validator: the matrix section exists, names every event the extension registers, and cites the pi.dev source)
@@ -272,7 +273,7 @@ its validator runs in the foreground.
 - **E5** — 2026-06-30, `grep -rn "pi.on(" packages/pi-agentic-workflow/src/extension/` · multiple matches · El problema puede estar en otros listeners además de session_shutdown
   ```
 - **E1** — `rg -n 'pi\.on\(' packages/pi-agentic-workflow/src/extension/` · exit 0 · 14 live registrations: `index.ts` (7), `telemetry-wiring.ts` (5), `auto-log-session-wiring.ts` (2).
-- **E2** — `rg -n 'pi\.on\(' skills/ scripts/ packages/agentic-workflow-schema/src/` · exit 0 · only `scripts/mutation-check.mjs` string matches; no live registration outside the extension directory.
+- **E2** — `rg -n 'pi\.on\(' skills/ scripts/ packages/pi-agentic-workflow/scripts/ packages/agentic-workflow-schema/src/ --glob '!*.test.mjs'` · exit 0 · only `packages/pi-agentic-workflow/scripts/mutation-check.mjs` string matches; no live registration outside the extension directory.
 - **E3** — web fetch `https://pi.dev/docs/latest/extensions` with the installed `@earendil-works/pi-coding-agent@1.5.2 docs/extensions.md` · identical 37-event catalogue; the docs describe `session_shutdown` for exit and session-replacement only, and cite `on("agent_settled")` as the run-finished boundary.
 - **E4** — read `packages/pi-agentic-workflow/src/session-telemetry.ts` and `src/telemetry-sinks.ts` · `flush()` latches (`emitted = true`) and the ledger sink compares whole rows — the two facts that discard the issue's naive `turn_end`-debounce route (see S6).
 - **E5** — read `packages/pi-agentic-workflow/src/auto-log-session.ts` · the marker is write-only state (created at `session_start`, removed only at `session_shutdown`) — a session that never closes leaves it forever, so P7 purges stale ones.
@@ -299,6 +300,11 @@ its validator runs in the foreground.
 - **G2** — 2026-11-18, `node scripts/run-root-suite.mjs --jobs 2` at the final head · exit 0 · **121 suites PASS, 0 FAIL** — the authoritative root receipt for this branch.
 - **G3** — 2026-11-18, `bun run --cwd packages/pi-agentic-workflow test` at the final head · exit 0 · 988 pass / 0 fail across 86 suites (the same tally as E18, re-run after the docs commit).
 - **G4** — 2026-11-18, `bun scripts/docs-generate.mjs --check` and `node scripts/promise-coherence.mjs docs/fix/623-pi-event-reliability-audit/SPEC.md` at the final head · exit 0 both · projection PASS (3 files, 0 stale) and promise-coherence `verdict PASS`, 1 claim checked / 6 skipped (each skip named: the suite runners and the docs check, which that pass never executes).
+- **E20** — 2026-11-18, the correction batch's RED corpus, run before any implementation: `bun test scripts/telemetry-report.test.mjs` (the new cumulative-stream case) · exit 1 · 11 pass / 1 fail (`2 !== 1`: one session's two cumulative lines read as two samples); `bun test packages/pi-agentic-workflow/test/event-reliability-matrix.test.mjs` · exit 1 · 5 pass / 1 fail (`not-fire` read where the cell must be `conditional`).
+- **E21** — 2026-11-18, the same two runs after the fix · exit 0 both · `telemetry-report` 12 pass / 0 fail, `event-reliability-matrix` 6 pass / 0 fail; `bun test packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs packages/pi-agentic-workflow/test/session-telemetry.test.mjs packages/pi-agentic-workflow/test/auto-log-session-wiring.test.mjs` · exit 0 · 55 pass / 0 fail (the three refreshed headers' own suites); `rg -n 'pi\.on\(' skills/ scripts/ packages/pi-agentic-workflow/scripts/ packages/agentic-workflow-schema/src/ --glob '!*.test.mjs'` · exit 0 · 2 matches, both `packages/pi-agentic-workflow/scripts/mutation-check.mjs` — the path P2, E2 and PE-002 now name.
+- **E22** — 2026-11-18, the differential for the report reader, in scratch: the base copy at `63c50421` vs `scripts/telemetry-report.mjs` on a one-line-per-session JSONL across six flag combinations (`--jsonl`, `--by unit`, `--human`, `--model`, `--unit`, `--schema`) · byte-identical stdout, 0 differences; on a cumulative two-line stream the base reads `samples=2 rows=2 tokens=2000,3500` and the head reads `samples=1 rows=1 tokens=3500` — the fix, on the input it exists for.
+- **G5** — 2026-11-18, `bun scripts/local-gate.mjs --jobs 2` at the batch's code tree (four external-verify blockers folded) · exit 0 · **local-gate: PASS — 19 step(s) in 703s**; root-suite step `121 suite(s) … exit 0 in 227s`; node-compat step exit 0 with one pre-existing node-only skip (`config-jsonc.test.mjs` — "this runtime has no native JSONC parser"), a file this batch never touches.
+- **G6** — 2026-11-18, `bun scripts/docs-generate.mjs --check` (PASS · 3 files, 0 stale), `bun scripts/promise-coherence.mjs docs/fix/623-pi-event-reliability-audit/SPEC.md` (PASS · 1 checked / 6 skipped — the same six as the cut, so repointing P2's validator changed no promise's execution), `bun scripts/lint-changeset.mjs`, `bun scripts/skill-lint.mjs` (PASS · 0 findings), `bun scripts/check-skill-context.mjs --documents` (PASS · 4 budgeted documents), `bun scripts/roadmap-settle.mjs` (PASS · 0 violations) · exit 0 all six.
 
 ## Next
 

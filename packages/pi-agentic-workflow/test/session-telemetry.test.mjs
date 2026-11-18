@@ -3,9 +3,9 @@
 //
 // The corpus is the four failure shapes the accumulator exists to prevent:
 // counting a session span as work, counting a hung tool as model time, emitting
-// a second sample for one session, and letting one broken sink cost the others
-// their row. Every case injects the clock, so nothing here depends on how long
-// the suite takes.
+// two samples for one settled run — a later run boundary owns the next sample —
+// and letting one broken sink cost the others their row. Every case injects the
+// clock, so nothing here depends on how long the suite takes.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";

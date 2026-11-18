@@ -111,7 +111,7 @@ test("the shutdown row carries the session:end seam's documented warning (S3/S4 
   const shutdown = rows.find(([event]) => event === "session_shutdown");
   assert.ok(shutdown, "session_shutdown has no row");
   const [, , , , web, , verdict, effect, gap] = shutdown;
-  assert.equal(web, "not-fire", "the web host does not fire session_shutdown between prompts — that is the gap this unit exists for");
+  assert.equal(web, "conditional", "pi-web fires session_shutdown only when the session is closed, archived, restored, reloaded or forked — never between prompts of a live session, so the cell is conditional, not not-fire");
   assert.equal(verdict, "unreliable", "session_shutdown is the unreliable boundary, by definition");
   assert.match(effect, /session:end/u, "the shutdown row names the hook seam it hosts");
   assert.match(gap, /session:end/u, "the seam's web gap is the known-issue this row warns about");
