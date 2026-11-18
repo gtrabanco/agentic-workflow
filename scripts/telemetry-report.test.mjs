@@ -185,6 +185,29 @@ test("--jsonl reads the per-session file instead of the ledger, and one source i
   assert.match(JSON.parse(both.stdout).error, /two-sources/);
 });
 
+test("--jsonl reads a cumulative stream as one row per session, the way the ledger holds it", () => {
+  // #623: the sink appends the session's latest cumulative line at every
+  // settled run, so the stream holds run 1 and run 2 of the same session. The
+  // ledger upserts them into one row; summing every line would count run 1's
+  // tokens once per run.
+  const { jsonlPath } = project({
+    jsonl: [
+      { ...SAMPLE, tokens: 150, turns: 1, input_tokens: 90, output_tokens: 60, observed: "2026-11-11" },
+      { ...SAMPLE, tokens: 400, turns: 2, input_tokens: 240, output_tokens: 160 },
+    ],
+  });
+
+  const report = json(["--jsonl", jsonlPath]);
+  assert.equal(report.samples, 1, "one session's worth of lines is one sample, not one sample per settled run");
+  assert.equal(report.rows.length, 1, "one row per source");
+  assert.equal(report.rows[0].tokens, 400, "the last line of the session wins, as the ledger's upserted row reads");
+
+  const groups = json(["--jsonl", jsonlPath, "--by", "unit"]);
+  assert.equal(groups.groups[0].samples, 1);
+  assert.equal(groups.groups[0].tokens_sum, 400, "summing cumulative lines would report 550 tokens for a session that spent 400");
+  assert.equal(groups.groups[0].turns_sum, 2);
+});
+
 test("a report it cannot answer is a refusal that names what it rejected", () => {
   const { ledger } = project();
   const unknown = spawnSync(process.execPath, [CLI, "--ledger", ledger, "--nope"], { encoding: "utf8" });

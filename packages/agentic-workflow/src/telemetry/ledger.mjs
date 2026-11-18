@@ -15,13 +15,18 @@
  *  - **The ledger owns the column list; the sample owns the values.** The sink
  *    writes the columns the file declares, in that order, refusing a column the
  *    published sample fields do not carry or a sample that cannot fill one.
- *  - **One `O_APPEND` per row, nothing rewritten.** Two sessions append from
- *    separate processes and the kernel places each line atomically: no lock, no
- *    queue, no lost row. The samples table must be the file's last section, or a
- *    row appended after trailing prose would land outside it.
+ *  - **One row per session.** A session the ledger does not carry appends with
+ *    one `O_APPEND` — the kernel places each line atomically, so two sessions
+ *    appending from separate processes need no lock, no queue and lose no row —
+ *    and a later emission for a `source` the table already carries replaces that
+ *    row through a staged write and an atomic rename (#623 S6). The samples
+ *    table must be the file's last section, or a row appended after trailing
+ *    prose would land outside it.
  *  - **The idempotency guard compares a whole row.** A repeated emission is
- *    dropped, a different sample never is. The session identity that keeps two
- *    sessions apart lives in the sample's `source`, not in a key invented here.
+ *    dropped, a different sample never is: the session identity that keeps two
+ *    sessions apart lives in the sample's `source`, not in a key invented here,
+ *    and a ledger that declares no `source` column has no identity to replace on,
+ *    so it keeps the append contract rather than inventing a key.
  */
 
 import fs from "node:fs";
@@ -184,8 +189,9 @@ export function orderedSample(sample) {
  * write`). The plan reads the ledger once, so it is applied without delay —
  * not held across other writes.
  *
- * A row the table already carries plans to a no-op: the duplicate guard is part
- * of the plan, never a mid-apply surprise.
+ * A row the table already carries plans to a no-op, and a row the same session
+ * already owns plans its replacement: both guards are part of the plan, never a
+ * mid-apply surprise.
  */
 export function prepareLedgerAppend({ ledgerPath, sample }) {
   const text = fs.readFileSync(ledgerPath, "utf8");
@@ -229,24 +235,47 @@ export function prepareLedgerAppend({ ledgerPath, sample }) {
     throw new Error(`${ledgerPath}: the samples table must be the ledger's last section, found ${JSON.stringify(tail)}`);
   }
 
-  // One row per sample: the guard compares the whole row, because the row is
-  // what a sample is. Keying it on a few cells (unit, source, day) would
-  // swallow a second session of the same unit — the exact case the ledger
-  // exists to record — while an identical row is a re-emission, not a sample.
-  for (const line of lines.slice(headerAt + 2)) {
-    if (!line.trim().startsWith("|")) break;
-    const cells = cellsOf(line);
-    if (declared.every((column, at) => (cells[at] ?? "") === String(values[column]))) return () => {};
+  // One row per session: an identical row is a re-emission, and a row whose
+  // `source` matches is this very session's earlier emission — the ledger keeps
+  // one row per session, whatever its row count per run (#623 S6). Keying on a
+  // few other cells (unit, day) would swallow a second session of the same unit,
+  // the exact case the ledger exists to record.
+  const row = `| ${declared.map((column) => String(values[column])).join(" | ")} |`;
+  const dataRows = [];
+  for (let at = headerAt + 2; at < lines.length; at += 1) {
+    if (!lines[at].trim().startsWith("|")) break;
+    dataRows.push(at);
   }
+  const identical = (at) => declared.every((column, index) => (cellsOf(lines[at])[index] ?? "") === String(values[column]));
+  if (dataRows.some(identical)) return () => {};
 
-  const row = `| ${declared.map((column) => String(values[column])).join(" | ")} |\n`;
-  return () => fs.appendFileSync(ledgerPath, row);
+  const sourceAt = declared.indexOf("source");
+  const sameSource = sourceAt === -1 ? undefined : dataRows.find((at) => (cellsOf(lines[at])[sourceAt] ?? "") === String(values.source));
+  if (sameSource === undefined) return () => fs.appendFileSync(ledgerPath, `${row}\n`);
+
+  // The staged write + rename is a whole-file swap, so a reader never sees a
+  // half-written ledger. The residual race — another process appending between
+  // this read and the swap — costs that process its row in this document; the
+  // JSONL stream still carries it, and the row this swap replaces belongs to
+  // this session alone.
+  lines[sameSource] = row;
+  return () => {
+    const staged = `${ledgerPath}.${process.pid}.tmp`;
+    try {
+      fs.writeFileSync(staged, lines.join("\n"));
+      fs.renameSync(staged, ledgerPath);
+    } finally {
+      fs.rmSync(staged, { force: true });
+    }
+  };
 }
 
 /**
- * Append one sample to the project's ledger, in the order the ledger declares:
- * plan the append (every refusal above), then apply it. The caller catches a
- * sink failure so one broken destination never costs the others their sample.
+ * Write one sample to the project's ledger, in the order the ledger declares:
+ * plan it (every refusal above), then apply it — appending the row of a session
+ * the ledger does not carry, replacing the row a returning session does. The
+ * caller catches a sink failure so one broken destination never costs the others
+ * their sample.
  */
 export function appendLedgerSample(options) {
   prepareLedgerAppend(options)();
