@@ -33,6 +33,11 @@ import {
   runProvision,
   augmentPath,
   versionAtLeast,
+  VEHICLE_FILE,
+  VEHICLE_TARGET,
+  vehicleCommand,
+  vehicleEnvFile,
+  readVehicleCommand,
 } from "./setup-env.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -56,6 +61,31 @@ function fullState(overrides = {}) {
     piCrateModulesPresent: true,
     engramConfigValid: true,
     serenaLocalOverridePresent: true,
+    vehicle: vehicleState(),
+    ...overrides,
+  };
+}
+
+/** The armed, in-sync vehicle this repo's own checkout has (issue #611, S1). */
+function vehicleState(overrides = {}) {
+  const bin = `/repo/${VEHICLE_TARGET}`;
+  return {
+    source: "AGENTIC_WORKFLOW_RUNNER",
+    raw: `bun ${bin}`,
+    target: bin,
+    targetExists: true,
+    targetInCheckout: true,
+    bin,
+    binPresent: true,
+    program: "bun",
+    command: `bun ${bin}`,
+    arming: `export AGENTIC_WORKFLOW_RUNNER='bun ${bin}'`,
+    refresh: ["bun scripts/release.mjs apply --channel canary", "pi install npm:@gtrabanco/pi-agentic-workflow@canary"],
+    installed: { version: "5.0.0-canary.20261118.2", path: "/home/agent/.pi/agent/npm/node_modules/@gtrabanco/pi-agentic-workflow/package.json" },
+    canary: { tag: "v5.0.0-canary.20261118.2", version: "5.0.0", date: "20261118", serial: 2 },
+    tagsVisible: 1,
+    behind: false,
+    fileCommand: `bun ${bin}`,
     ...overrides,
   };
 }
@@ -926,5 +956,101 @@ describe("the serena local override (S10, AC14)", () => {
   it("SETUP.md documents the override row", () => {
     const text = fs.readFileSync(path.join(REPO_ROOT, "docs", "workflow", "SETUP.md"), "utf8");
     assert.ok(text.includes("project.local.yml"), "SETUP.md must mention the machine-local override");
+  });
+});
+
+describe("the dogfooding vehicle — the authoring checkout runs its own tree (issue #611, S1)", () => {
+  it("an armed, in-sync checkout plans no vehicle step and verifies green", () => {
+    const plan = planSetup(fullState());
+    assert.equal(plan.steps.find((step) => step.tool === "dogfooding-vehicle"), undefined);
+    const row = verify(fullState()).results.find((entry) => entry.tool === "dogfooding-vehicle");
+    assert.ok(row.ok, "the armed row is green");
+    assert.match(row.detail, /source: AGENTIC_WORKFLOW_RUNNER/u);
+  });
+
+  it("a checkout without the file plans exactly one local write naming this checkout's bin", () => {
+    const { vehicle, ...rest } = fullState();
+    const plan = planSetup({ ...rest, vehicle: vehicleState({ fileCommand: null }) });
+    const steps = plan.steps.filter((step) => step.tool === "dogfooding-vehicle");
+    assert.equal(steps.length, 1);
+    assert.equal(steps[0].kind, "write-vehicle");
+    assert.equal(steps[0].target, VEHICLE_FILE);
+    assert.equal(steps[0].content, vehicleEnvFile(`bun /repo/${VEHICLE_TARGET}`));
+    assert.match(steps[0].content, new RegExp(`^export AGENTIC_WORKFLOW_RUNNER='bun /repo/${VEHICLE_TARGET.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}'$`, "mu"));
+  });
+
+  it("a file pointing at another checkout is re-armed, not trusted", () => {
+    const { vehicle, ...rest } = fullState();
+    const plan = planSetup({ ...rest, vehicle: vehicleState({ fileCommand: "bun /gone/packages/agentic-workflow/bin/agentic-workflow.mjs" }) });
+    const steps = plan.steps.filter((step) => step.tool === "dogfooding-vehicle");
+    assert.equal(steps.length, 1, "a stale path is repaired");
+    assert.match(steps[0].reason, /re-armed/u);
+    assert.match(steps[0].content, /bun \/repo\//u);
+  });
+
+  it("without pi the vehicle stays opt-in: no step, and the check row warns", () => {
+    const state = fullState({ pi: { present: false, version: null }, vehicle: vehicleState({ fileCommand: null }) });
+    assert.equal(planSetup(state).steps.find((step) => step.tool === "dogfooding-vehicle"), undefined);
+    const row = verify(state).results.find((entry) => entry.tool === "dogfooding-vehicle");
+    assert.equal(row.ok, true, "a contributor without pi is never failed");
+    assert.equal(row.warn, true);
+    assert.match(row.detail, /opt-in/u);
+  });
+
+  it("an unarmed checkout is red with the arming line, and the source is what the resolver answered", () => {
+    const { vehicle, ...rest } = fullState();
+    const unarmed = vehicleState({
+      source: "unset",
+      raw: "",
+      target: null,
+      targetExists: false,
+      targetInCheckout: false,
+      fileCommand: null,
+      behind: true,
+      installed: { version: "5.0.0-canary.20261113.1", path: "x" },
+    });
+    const row = verify({ ...rest, vehicle: unarmed }).results.find((entry) => entry.tool === "dogfooding-vehicle");
+    assert.equal(row.ok, false);
+    assert.match(row.detail, /export AGENTIC_WORKFLOW_RUNNER='/u);
+    assert.match(row.detail, /v5\.0\.0-canary\.20261118\.2/u, "the newest canary tag is named");
+    // The requirement's other half: the resolver really answers the override's
+    // source, so the check never claims a route it did not observe.
+    assert.equal(vehicle.source, "unset");
+  });
+
+  it("the armed command is a sourceable export with the local-file marker and the override's exact value shape", () => {
+    const text = vehicleEnvFile(vehicleCommand({ root: "/repo", bunPresent: true }));
+    assert.equal(vehicleCommand({ root: "/repo", bunPresent: true }), `bun /repo/${VEHICLE_TARGET}`);
+    assert.equal(vehicleCommand({ root: "/repo", bunPresent: false }), `node /repo/${VEHICLE_TARGET}`, "node is the documented fallback runtime");
+    assert.match(text, /^# Machine-local dogfooding vehicle/mu);
+    assert.match(text, /^export AGENTIC_WORKFLOW_RUNNER='bun \/repo\//mu);
+    assert.equal(readVehicleCommand({ text }), `bun /repo/${VEHICLE_TARGET}`);
+    assert.equal(readVehicleCommand({ text: "# nothing here\n" }), null);
+    assert.equal(readVehicleCommand({ text: null }), null);
+  });
+
+  it("probeEnvironment reads the local file and the exported value as two different facts", () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "setup-env-vehicle-"));
+    try {
+      fs.mkdirSync(path.join(tmp, ".pi"), { recursive: true });
+      fs.writeFileSync(path.join(tmp, ".pi", "vehicle.env"), vehicleEnvFile(`bun ${tmp}/${VEHICLE_TARGET}`));
+      const state = probeEnvironment({ root: tmp, platform: "linux", home: tmp, env: {}, probe: () => null });
+      assert.equal(state.vehicle.fileCommand, `bun ${tmp}/${VEHICLE_TARGET}`);
+      assert.equal(state.vehicle.source, "unset", "the file arms a shell; only the export arms a process");
+      assert.equal(state.vehicle.binPresent, false, "a checkout without the crate source is not an authoring checkout");
+      const armed = probeEnvironment({
+        root: tmp,
+        platform: "linux",
+        home: tmp,
+        env: { AGENTIC_WORKFLOW_RUNNER: `bun ${tmp}/${VEHICLE_TARGET}` },
+        probe: () => null,
+      });
+      assert.equal(armed.vehicle.source, "AGENTIC_WORKFLOW_RUNNER");
+      assert.equal(armed.vehicle.targetExists, false, "the fixture has no bin: existing is not assumed");
+      const blank = probeEnvironment({ root: tmp, platform: "linux", home: tmp, env: { AGENTIC_WORKFLOW_RUNNER: "   " }, probe: () => null });
+      assert.equal(blank.vehicle.source, "unset", "the empty value is the unset spelling");
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
