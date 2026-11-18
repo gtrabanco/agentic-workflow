@@ -327,6 +327,42 @@ test("merge: a missing ledger is absent when defaulted and a refusal when named"
   assert.match(named.stderr, /RECONSTRUCT REFUSAL —/);
 });
 
+test("merge: an absent default ledger with records to merge is reported absent, and the JSONL still merges", () => {
+  // External verify 2026-11-18, blocker 1: with at least one record the absent
+  // default ledger used to be appended to anyway — ENOENT after the JSONL byte,
+  // a refusal with a partial write, against the usage's own "an absent default
+  // is reported as absent, never created".
+  const root = project({ ledger: false });
+  const agent = agentStore(root, { "session-full.jsonl": fixture("session-full.jsonl") });
+  const answered = run(["reconstruct", "write"], { cwd: root, env: { PI_CODING_AGENT_DIR: agent } });
+  assert.equal(answered.code, 0, answered.stderr);
+  const receipt = JSON.parse(answered.stdout);
+  assert.deepEqual(receipt.ledger, {
+    path: path.join(root, "docs/workflow/TIER_COST.md"),
+    status: "absent",
+    added: 0,
+    skipped: 0,
+  });
+  assert.equal(fs.existsSync(path.join(root, "docs/workflow/TIER_COST.md")), false, "an absent ledger is never created");
+  assert.equal(receipt.jsonl.added, 1, "the JSONL destination still merges");
+  assert.equal(fs.readFileSync(path.join(root, DEFAULT_JSONL), "utf8").trim().split("\n").length, 1);
+});
+
+test("merge: a ledger the append cannot satisfy refuses before the JSONL byte", () => {
+  // Same class as the blocker, one step deeper: the ledger parses (the table is
+  // readable) but the append refuses it (trailing prose), so the refusal has to
+  // be raised while nothing is written — README: exit 2 refused, nothing written.
+  const root = project();
+  const agent = agentStore(root, { "session-full.jsonl": fixture("session-full.jsonl") });
+  const jsonl = path.join(root, DEFAULT_JSONL);
+  const ledger = path.join(root, "docs/workflow/TIER_COST.md");
+  fs.appendFileSync(ledger, "\nTrailing prose after the table.\n");
+  const refused = run(["reconstruct", "write"], { cwd: root, env: { PI_CODING_AGENT_DIR: agent } });
+  assert.equal(refused.code, 2, refused.stdout);
+  assert.match(refused.stderr, /RECONSTRUCT REFUSAL — .*last section/);
+  assert.equal(fs.existsSync(jsonl), false, "the JSONL was not written before the ledger append was validated");
+});
+
 test("merge: the helpers answer the merge without a CLI, and the record text is the published order", () => {
   const root = project({ jsonl: true });
   const jsonl = path.join(root, DEFAULT_JSONL);
