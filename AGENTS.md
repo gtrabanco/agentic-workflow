@@ -397,6 +397,7 @@ sensor-labels | skills/workflow-status/references/PRE_EXECUTION.md | table:One l
 product-audit-trigger | skills/product-audit/SKILL.md | block:audit-trigger@1 | n/a | no
 product-audit-finding-route | skills/product-audit/SKILL.md | block:finding-route@1 | n/a | no
 coverage-gap-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | block:coverage-gap@1 | n/a | no
+journal-corpus-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | block:journal-corpus@1 | n/a | no
 test-surplus-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | block:test-surplus@1 | n/a | no
 sweep-declaration-grammar | skills/execute-phase/references/FOLDING.md | block:sweep-declaration@1 | n/a | no
 snapshot-commands | skills/pre-execution-review/references/SNAPSHOT.md | fenced:--stage | pre-execution-stage+pre-execution-unit-kind | no
