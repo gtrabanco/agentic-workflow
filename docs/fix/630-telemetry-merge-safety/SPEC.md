@@ -437,6 +437,15 @@ and hands the diff over, so no in-repo review pack runs on it.
   after the changeset declared `@gtrabanco/pi-agentic-workflow` (patch) beside the crate's minor.
 - **P5** — 2026-11-18 16:05, the registry and both attribute pins derived from one map ·
   `d49c78e5`.
+- **G1** — 2026-11-18, HEAD dc656baa136b8688480f545a288abe43365cb8d9,
+  `bun scripts/local-gate.mjs --no-bail` · 18 of 19 steps exit 0
+  (`docs-generated-projection`, `version-parity-content`, `version-parity-pins`, `secret-scan`,
+  `log-immutability`, `workspace-install`, `root-suite`, `crate-suite-bun`, `crate-suite-node`,
+  `schema-node-compat`, `pi-compat-guard`, `pi-node-compat`, `dependency-pin-gate`,
+  `dependency-advisories`) · the one red is `worktree-guard` (exit 1), whose two findings name
+  **other** sessions' worktrees — the pre-existing host condition recorded in
+  §Known pre-existing issues, unchanged by this unit and left for the owner. This line lands in a
+  docs-only commit after the run, so the gate receipt attests `dc656baa` plus this record.
 ### Correction history
 
 None: the owner's external verification is the next step, and this unit carries no
