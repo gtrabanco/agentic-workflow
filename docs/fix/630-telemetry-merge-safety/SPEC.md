@@ -312,6 +312,12 @@ and hands the diff over, so no in-repo review pack runs on it.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | SPEC.md Log `E10` | evidence-recording | SUGGESTION | docs-only | plan | fold |
+| F2 | planning-evidence.md `PE-008` | evidence-recording | SUGGESTION | docs-only | plan | fold |
+| F3 | packages/agentic-workflow/bin/shared-merge.mjs:9 | docs-currency | SUGGESTION | docs-only | source | fold |
+| F4 | packages/agentic-workflow/src/writer/shared-merge.mjs (`resolveMerge` plain form) | correctness | WARNING | report-only | source | fold |
+| F5 | skills/init-workspace/references/UPGRADE.md:107 | docs-currency | SUGGESTION | docs-only | plan | fold |
+| F6 | packages/agentic-workflow/src/telemetry/reconstruct.mjs (`main` refusal wording) | docs-currency | SUGGESTION | report-only | source | fold |
 
 ## Log
 
@@ -446,10 +452,58 @@ and hands the diff over, so no in-repo review pack runs on it.
   **other** sessions' worktrees — the pre-existing host condition recorded in
   §Known pre-existing issues, unchanged by this unit and left for the owner. This line lands in a
   docs-only commit after the run, so the gate receipt attests `dc656baa` plus this record.
+- **L2** — 2026-11-18, the owner's correction request on this unit's 2026-11-18 `EXTERNAL VERIFY`
+  receipt (`external-verify.md`: VERIFIED, 0 blockers, 6 advisories A1–A6), verbatim:
+  "Apply to this repository: triage and fix those that deserve to fix but understand the context
+  before fix and check you haven't broke another different thing, if you have done, start the loop
+  again until you fixed full symbol/related stuff" — §0 resolves the verb as **fix findings**: the
+  blockers set is empty, so the batch is advisory-scope by the owner's order (the same wording on
+  VERIFIED receipts); §9 bounds apply — one batch, one recheck of what it touched, a second pass
+  only if the same finding still fails.
+- **P6** — 2026-11-18, the correction ledgers frozen before any code: obligations O18–O19 cut
+  `planned`, evidence PE-013 appended, the six advisories routed as findings F1–F6, the verify
+  receipt committed beside this doc · this commit.
+- **D8** — 2026-11-18, §0 resolution from state before any action: **fix findings** against the
+  unit's first `EXTERNAL VERIFY` receipt (base `748a372f`, head `c607c53a`) — outcome `proceed`, no
+  ambiguity: the unit dir, its ledgers and the receipt all bind. Authority: L2, §9.
+- **D9** — 2026-11-18, advisory A1 (`E10`'s README/TIER_COST counts): folded as an append-only
+  evidence correction — `E16` records the observed counts; `E10` is never edited (the log-kind
+  contract: a correction appends, never edits). The underlying validator (O14, at least 1 match
+  per carrier) holds either way.
+- **D10** — 2026-11-18, advisory A2 (`PE-008`'s base tallies 13/14): folded as `PE-013`, which
+  supersedes the two tallies with the measured 12/15 — frozen evidence rows are never edited, and
+  the head−base arithmetic (exactly the 5+5 new `F-630-*` cases) confirms the suites' substance.
+- **D11** — 2026-11-18, advisory A3 (the crate bin's bare direct-execution spellings over a
+  100644 file): folded as a docstring fix — the two usage lines spell `bun node_modules/…` per the
+  runtime convention (manual invocation is bun-first; usage strings show the bun form). chmod 755
+  is rejected: direct exec would pin the shebang's `node` and silently violate that convention,
+  which the armed command resolves properly with its own bun-else-node switch.
+- **D12** — 2026-11-18, advisory A4 (the plain-form class inference never fires — the code reads
+  `argv[5]` where git's plain `%O %A %B %L %P` delivers the path at `argv[4]`): folded as the code
+  fix — `resolveMerge` falls back to `argv[4]` when `argv[5]` is absent, making the module's own
+  plain-form contract true. Red-first: the inference case lands failing at its own commit. A
+  doc-only fix (deleting the plain-form claim) is rejected: the documented capability is the right
+  behavior and the index is the defect, and the unknown-path refusal stays closed either way.
+- **D13** — 2026-11-18, advisory A5 (`UPGRADE.md` "the five … class lines" counts classes, not
+  lines): folded as the recount reword — five classes, six registry lines, both enumerated.
+- **D14** — 2026-11-18, advisory A6 (the bare `telemetry` refusal wording now names the second
+  token): **wontfix** — the new wording is the correct consequence of the `merge-install` route;
+  reverting would make the refusal lie about what it accepts. The `telemetry-reconstruct@1`
+  refusal envelope, the exit codes and every pinned assertion are unchanged.
+- **E16** — 2026-11-18, advisory A1's observed counts: `rg -c 'agentic-shared-telemetry'
+  packages/agentic-workflow/README.md docs/workflow/TIER_COST.md` · exit 0 · `README.md:1`,
+  `TIER_COST.md:1` (matching lines; 2 · 1 occurrences by `rg -o`) — identical at head `c607c53a`
+  and at every commit in the range (`3474aced`, `d49c78e5`); `E10`'s "3 · 2" matched no state of
+  the tree. The other six counts on `E10` reproduce exactly.
 ### Correction history
 
-None: the owner's external verification is the next step, and this unit carries no
-correction batch yet.
+2026-11-18 — one owner-directed correction batch on the first `EXTERNAL VERIFY`
+receipt (VERIFIED, 0 blockers, 6 advisories): F1–F5 folded (E16's observed
+counts, PE-013's superseding base tallies, the crate bin's runtime-prefixed
+usage spellings, the plain-form class inference fix, the UPGRADE.md recount),
+F6 folded wontfix (D14). Red-first: the plain-form case landed failing at its
+own commit before the fix. Obligations O18–O19 cut `planned` at the batch cut
+and flipped only on their foreground validators.
 
 ## Next
 
