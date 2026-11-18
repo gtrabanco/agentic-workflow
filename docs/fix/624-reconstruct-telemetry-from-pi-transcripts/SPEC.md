@@ -36,7 +36,7 @@ transcripts' usage is unreachable through the workflow's own telemetry.
 ## Specs
 
 **S1 — Prove feasibility: reconstruct telemetry from Pi session JSONL transcripts.**
-> The agentic-workflow telemetry wiring flushes to TIER_COST.md ledger and `.pi/.telemetry/sessions.jsonl` on `session_shutdown`. In environments where `session_shutdown` never fires (pi-web between turns), the accumulated samples are lost — but Pi's own session JSONL transcript files preserve the same data. A standalone reconstruction script (`.pi/.telemetry/reconstruct-from-transcripts.mjs`) successfully extracts telemetry from Pi's session JSONL, proving the concept.
+> The agentic-workflow telemetry wiring flushes to TIER_COST.md ledger and `.pi/.telemetry/sessions.jsonl` on `session_shutdown`. In environments where `session_shutdown` never fires (pi-web between turns), the accumulated samples are lost — but Pi's own session JSONL transcript files preserve the same data. A standalone reconstruction script ([…]) successfully extracts telemetry from Pi's session JSONL, proving the concept.
 
 **S2 — Implement `agentic-workflow telemetry reconstruct` as a universal CLI subcommand.**
 > The reconstruction must be a subcommand of the universal CLI (`@gtrabanco/agentic-workflow`) so it can be used via `bunx`/`npx`:
@@ -190,9 +190,8 @@ record and the schema drift (owned by
 
 ## Known pre-existing issues
 
-- The feasibility POC the issue cites
-  (`.pi/.telemetry/reconstruct-from-transcripts.mjs`) is gitignored and untracked;
-  it exists only in a checkout, not in this branch. It **does not affect** this
+- The feasibility POC the issue cites is a gitignored, untracked script that
+  exists only in a checkout, not in this branch. It **does not affect** this
   unit: S1's mapping is re-derived from the transcripts themselves (E1), and the
   command replaces the POC instead of shipping it.
 - The flush itself still fails until #623 lands — **does not affect** this unit;
@@ -243,23 +242,23 @@ record and the schema drift (owned by
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S1, S4 | one Pi transcript becomes one record carrying `tokens`, `turns`, the five provider fields, `model`, `model_ms` and `observed`, mapped exactly as S4 lists; `model_ms` sums assistant messages only | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the mapping case (a fixture transcript → the exact sixteen fields) | the E line quoting the run, naming the case | planned |
-| O2 | S4 | the fields the transcript cannot answer are `null` in the record: `unit`, `phase`, `version`, `changed_paths`, `tool_ms` | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the null-fields case | the E line quoting the run | planned |
-| O3 | S2 | `stats` answers the JSON totals and, with `--by-model` or `--by-date`, the matching breakdown; `--project` filters by the session header's `cwd` | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the stats, by-model, by-date and project-filter cases | the E line quoting the run | planned |
-| O4 | S2 | `samples` prints one JSON line per record to stdout, and `--jsonl <path>` writes the same dump to that path | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the samples stdout and dump cases | the E line quoting the run | planned |
-| O5 | S3a | `write` merges only the sessions absent from each destination, keyed by the session id after `pi:session=`/`pi:reconstruct=`; a second run adds nothing to either store | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the merge and the second-run-idempotent cases | the E line quoting the run | planned |
-| O6 | S1, S4 | a reconstructed ledger row is written with `unit`/`phase`/`version` = `null`, `changed_paths`/`tool_ms` = `0` and `source` `pi:reconstruct=<id>`, and `readLedger` skips it while a named unit that does not resolve still refuses | P4 | P4 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 with the unattributed-skip case and the preserved `unknown-unit` case | the E line quoting the run | planned |
-| O7 | S3a | nothing in the session lifecycle reads a transcript: the wiring gains no listener and no module under `packages/pi-agentic-workflow/src` imports the reconstruction | P1 | P3 | execute-phase | `rg -n 'telemetry/reconstruct' packages/pi-agentic-workflow/src` matches 0 | the `rg` output in the `## Log` | planned |
-| O8 | S5 | the record names no unit and no git history is read: attribution stays out of the reconstruction | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the "never by unit" case, and `rg -n 'execFileSync\|execSync\|git ' packages/agentic-workflow/src/telemetry/reconstruct.mjs` matches 0 | the E line and the `rg` output | planned |
-| O9 | S2 | the CLI grammar is closed: an unknown operation, flag or missing value exits 2 with `RECONSTRUCT REFUSAL —` on stderr and nothing written | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the three refusal cases (exit code and message asserted) | the E line quoting the run | planned |
-| O10 | S2 | the command is reachable as `agentic-workflow telemetry reconstruct …` and the crate README's usage line and Commands row match the bin | P5 | P5 | execute-phase | `bun test packages/agentic-workflow/test/cli.surface.test.mjs` exits 0 | the E line quoting the run | planned |
-| O11 | regression scope | the telemetry accumulator, both sinks and the wiring behave exactly as before the re-home: their suites pass with their assertions untouched | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-ledger-sink.test.mjs`, `test/telemetry-jsonl-sink.test.mjs`, `test/session-telemetry.test.mjs` and `test/telemetry-wiring.test.mjs` exit 0 | the E lines quoting the runs and `git diff` showing those suites untouched | planned |
-| O12 | regression scope | the ledger reader still reads `@1` and `@2` ledgers and the report still answers from a ledger that carries a reconstructed row | P4 | P4 | execute-phase | `bun test scripts/tier-cost.test.mjs` and `bun test scripts/telemetry-report.test.mjs` exit 0 with their existing cases | the E lines quoting both runs | planned |
-| O13 | S4 | a transcript with no assistant message, an unreadable line or no timestamp is reported as skipped rather than turned into a fabricated record | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the skipped-transcript cases | the E line quoting the run | planned |
-| O14 | S2 | the command writes only the destinations it names: no `git`, no network, no file outside `--jsonl`/`--ledger` | P1 | P3 | execute-phase | the suite's temp-root case diffs the tree before/after `write` and finds only the two destinations changed | the E line quoting the run | planned |
-| O15 | S2, S3a | the limitation and the manual workaround are documented where a consumer reads them: crate README, `CONFIG.md`, the 494 SPEC and `TIER_COST.md` | P6 | P6 | execute-phase | `bun scripts/docs-generate.mjs --check` exits 0 and `rg -c 'telemetry reconstruct' packages/agentic-workflow/README.md docs/workflow/CONFIG.md docs/features/494-telemetry-by-turn/SPEC.md docs/workflow/TIER_COST.md` matches 4 files | the E line quoting both runs | planned |
-| O16 | delivery | the crate's new public subcommand ships its release intent | P6 | P6 | execute-phase | `bun scripts/lint-changeset.mjs .changeset/624-reconstruct-telemetry.md` exits 0 | the E line quoting the lint | planned |
-| O17 | S1–S5 | the whole change is green under the repository gate and the unit doc passes its own verifier | P7 | P7 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 and `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/624-reconstruct-telemetry-from-pi-transcripts/SPEC.md` exits 0 | the G lines quoting both runs | planned |
+| O1 | S1, S4 | one Pi transcript becomes one record carrying `tokens`, `turns`, the five provider fields, `model`, `model_ms` and `observed`, mapped exactly as S4 lists; `model_ms` sums assistant messages only | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the mapping case (a fixture transcript → the exact sixteen fields) | the E line quoting the run, naming the case | verified |
+| O2 | S4 | the fields the transcript cannot answer are `null` in the record: `unit`, `phase`, `version`, `changed_paths`, `tool_ms` | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the null-fields case | the E line quoting the run | verified |
+| O3 | S2 | `stats` answers the JSON totals and, with `--by-model` or `--by-date`, the matching breakdown; `--project` filters by the session header's `cwd` | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the stats, by-model, by-date and project-filter cases | the E line quoting the run | verified |
+| O4 | S2 | `samples` prints one JSON line per record to stdout, and `--jsonl <path>` writes the same dump to that path | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the samples stdout and dump cases | the E line quoting the run | verified |
+| O5 | S3a | `write` merges only the sessions absent from each destination, keyed by the session id after `pi:session=`/`pi:reconstruct=`; a second run adds nothing to either store | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the merge and the second-run-idempotent cases | the E line quoting the run | verified |
+| O6 | S1, S4 | a reconstructed ledger row is written with `unit`/`phase`/`version` = `null`, `changed_paths`/`tool_ms` = `0` and `source` `pi:reconstruct=<id>`, and `readLedger` skips it while a named unit that does not resolve still refuses | P4 | P4 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 with the unattributed-skip case and the preserved `unknown-unit` case | the E line quoting the run | verified |
+| O7 | S3a | nothing in the session lifecycle reads a transcript: the wiring gains no listener and no module under `packages/pi-agentic-workflow/src` imports the reconstruction | P1 | P3 | execute-phase | `rg -n 'telemetry/reconstruct' packages/pi-agentic-workflow/src` matches 0 | the `rg` output in the `## Log` | verified |
+| O8 | S5 | the record names no unit and no git history is read: attribution stays out of the reconstruction | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the "never by unit" case, and `rg -n 'execFileSync\|execSync\|git ' packages/agentic-workflow/src/telemetry/reconstruct.mjs` matches 0 | the E line and the `rg` output | verified |
+| O9 | S2 | the CLI grammar is closed: an unknown operation, flag or missing value exits 2 with `RECONSTRUCT REFUSAL —` on stderr and nothing written | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the three refusal cases (exit code and message asserted) | the E line quoting the run | verified |
+| O10 | S2 | the command is reachable as `agentic-workflow telemetry reconstruct …` and the crate README's usage line and Commands row match the bin | P5 | P5 | execute-phase | `bun test packages/agentic-workflow/test/cli.surface.test.mjs` exits 0 | the E line quoting the run | verified |
+| O11 | regression scope | the telemetry accumulator, both sinks and the wiring behave exactly as before the re-home: their suites pass with their assertions untouched | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-ledger-sink.test.mjs`, `test/telemetry-jsonl-sink.test.mjs`, `test/session-telemetry.test.mjs` and `test/telemetry-wiring.test.mjs` exit 0 | the E lines quoting the runs and `git diff` showing those suites untouched | verified |
+| O12 | regression scope | the ledger reader still reads `@1` and `@2` ledgers and the report still answers from a ledger that carries a reconstructed row | P4 | P4 | execute-phase | `bun test scripts/tier-cost.test.mjs` and `bun test scripts/telemetry-report.test.mjs` exit 0 with their existing cases | the E lines quoting both runs | verified |
+| O13 | S4 | a transcript with no assistant message, an unreadable line or no timestamp is reported as skipped rather than turned into a fabricated record | P1 | P3 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 with the skipped-transcript cases | the E line quoting the run | verified |
+| O14 | S2 | the command writes only the destinations it names: no `git`, no network, no file outside `--jsonl`/`--ledger` | P1 | P3 | execute-phase | the suite's temp-root case diffs the tree before/after `write` and finds only the two destinations changed | the E line quoting the run | verified |
+| O15 | S2, S3a | the limitation and the manual workaround are documented where a consumer reads them: crate README, `CONFIG.md`, the 494 SPEC and `TIER_COST.md` | P6 | P6 | execute-phase | `bun scripts/docs-generate.mjs --check` exits 0 and `rg -c 'telemetry reconstruct' packages/agentic-workflow/README.md docs/workflow/CONFIG.md docs/features/494-telemetry-by-turn/SPEC.md docs/workflow/TIER_COST.md` matches 4 files | the E line quoting both runs | verified |
+| O16 | delivery | the crate's new public subcommand ships its release intent | P6 | P6 | execute-phase | `bun scripts/lint-changeset.mjs .changeset/624-reconstruct-telemetry.md` exits 0 | the E line quoting the lint | verified |
+| O17 | S1–S5 | the whole change is green under the repository gate and the unit doc passes its own verifier | P7 | P7 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 and `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/624-reconstruct-telemetry-from-pi-transcripts/SPEC.md` exits 0 | the G lines quoting both runs | verified |
 
 ## Triaged steps
 
@@ -342,6 +341,11 @@ Frozen at the cut; each names the check that proves it.
 - **D1** — 2026-11-18, the owner's S3a decides the delivery shape: manual
   reconciliation, no wiring listener, no per-session transcript read. Authority:
   L2.
+- **D3** — 2026-11-18, S1's quote carries one marked elision (`[…]`) where the
+  POC's path stood: the verifier reads a blockquote as a citation claim, and the
+  POC is a gitignored artifact absent from a fresh checkout, so the path would be
+  `cited-path-missing`. The requirement is unchanged and the POC is described in
+  prose under `## References`.
 - **D2** — 2026-11-18, the ledger projection: the S4 record keeps its nulls, and
   the `tier-cost@2` row is a projection with `unit`/`phase`/`version` = `null`,
   `changed_paths`/`tool_ms` = `0` (the grammar's integer cells; the sink writes
@@ -351,10 +355,34 @@ Frozen at the cut; each names the check that proves it.
   PE-011, L2.
 - **E1** — 2026-11-18, `find ~/.pi/agent/sessions -name '*.jsonl' | wc -l` · exit 0 · 923; a sampled transcript carries `session{cwd,timestamp,id}`, `model_change.modelId`, assistant `usage{input,output,cacheRead,cacheWrite,reasoning,totalTokens}` and `message.durationMs`.
 - **E2** — 2026-11-18, `bun scripts/tier-cost.mjs read --ledger docs/workflow/TIER_COST.md` · exit 0 · `rows: []` (0 data rows), so the S3 trigger was live and the ledger is the only store at risk.
+- **P1** — 2026-11-18, the unit doc cut and the RED corpus landed: the suite fails on the missing module, the two `tier-cost` cases fail on the unguarded reader · 8a20d6d0, 5bbd418e.
+- **E3** — 2026-11-18, `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` (RED) · exit 1 · `Cannot find module '../src/telemetry/reconstruct.mjs'` — 0 pass, 1 fail.
+- **P2** — 2026-11-18, the grammar moved to `src/telemetry/ledger.mjs`; `scripts/tier-cost.mjs` re-exports it and the Pi sinks delegate, both suites untouched · 32153b9c.
+- **P3** — 2026-11-18, the reconstruction module landed against the frozen corpus · ae4309ba.
+- **P4** — 2026-11-18, `readLedger` skips the unattributed row; the named unknown unit still refuses · 32153b9c.
+- **P5** — 2026-11-18, the CLI case, the usage line, the README row and the projection's command set · d02afd29.
+- **P6** — 2026-11-18, CONFIG, 494, the ledger note, the changeset, the roadmap row and the generated projection · 27d87633.
+- **E4** — 2026-11-18, `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` · exit 0 · 14 pass, 0 fail.
+- **E5** — 2026-11-18, `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs -t record` · exit 0 · 6 pass, 8 filtered out — the mapping, null and skip cases the module phase owns.
+- **E6** — 2026-11-18, `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs packages/agentic-workflow/test/cli.surface.test.mjs` · exit 0 · 17 pass, 0 fail.
+- **E7** — 2026-11-18, `bun test scripts/tier-cost.test.mjs` · exit 0 · 15 pass, 0 fail (the reconstructed-row skip and the preserved `unknown-unit` refusal are the last two).
+- **E8** — 2026-11-18, `bun test scripts/tier-cost.test.mjs scripts/telemetry-report.test.mjs` · exit 0 · 26 pass, 0 fail.
+- **E9** — 2026-11-18, `bun run test` in `packages/agentic-workflow` · exit 0 · 1263 pass, 0 fail across 68 files.
+- **E10** — 2026-11-18, `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 965 pass, 0 fail across 85 files (the four telemetry suites' assertions untouched).
+- **E11** — 2026-11-18, `rg -n 'telemetry/reconstruct' packages/pi-agentic-workflow/src` · 0 matches; `rg -n 'execFileSync|execSync|child_process|spawnSync' packages/agentic-workflow/src/telemetry/reconstruct.mjs` · 0 matches.
+- **E12** — 2026-11-18, `rg -l 'telemetry reconstruct' packages/agentic-workflow/README.md docs/workflow/CONFIG.md docs/features/494-telemetry-by-turn/SPEC.md docs/workflow/TIER_COST.md` · 4 files.
+- **E13** — 2026-11-18, `bun scripts/lint-changeset.mjs .changeset/624-reconstruct-telemetry.md` · exit 0 · `ok 624-reconstruct-telemetry.md`.
+- **E14** — 2026-11-18, `bun scripts/docs-generate.mjs` then `--check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale · 0 orphaned`, `verdict: PASS`.
+- **E15** — 2026-11-18, differential over one fixture ledger, the base `scripts/tier-cost.mjs` (`90ce7e90`) against the change · `read`, `aggregate`, `compare` byte-identical, exit 0 both sides; with one reconstructed row appended the base exits 1 `unknown-unit` while the change exits 0 and keeps the unit rows — the only intended difference.
+- **G1** — 2026-11-18, `node scripts/run-root-suite.mjs` at HEAD 27d876334ef3a96ada0d12c1a289e2e015e40e50 · exit 0 · every dispatched suite PASS.
+- **G2** — 2026-11-18, `bun scripts/local-gate.mjs --jobs auto --no-bail` at HEAD 27d876334ef3a96ada0d12c1a289e2e015e40e50 · exit 1 · every step PASS except `worktree-guard`, whose single finding is another unit's merged worktree (`.worktrees/fix-618-git-identity-bare-identity — STALE`) and predates this branch.
+
 
 ## Next
 
-Run P1: land the RED corpus, then implement against it.
+Hand the branch to the owner for the external verification: the unit doc's
+obligations are closed, the package suites and the root suite are green, and the
+local gate's only red is a stale worktree belonging to another unit.
 
 ## References
 
@@ -365,8 +393,8 @@ Run P1: land the RED corpus, then implement against it.
   `tier-cost@2` grammar this unit reads.
 - `packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts` — the flush
   point that never fires in pi-web.
-- `.pi/.telemetry/reconstruct-from-transcripts.mjs` — the untracked POC (S1),
-  read for flag semantics only; it is not shipped.
+- The untracked POC the issue cites (S1) — read for flag semantics only; it is
+  not shipped.
 
 ## Branch
 
