@@ -311,3 +311,28 @@ test("the CLI reads a ledger, aggregates it, and blocks the comparison on a thin
   const again = execFileSync(process.execPath, [CLI, "read", "--ledger", ledgerPath], { encoding: "utf8" });
   assert.equal(again, execFileSync(process.execPath, [CLI, "read", "--ledger", ledgerPath], { encoding: "utf8" }), "the same ledger yields the same bytes");
 });
+
+test("a reconstructed row is skipped: it names no unit and is not tier evidence (issue #624)", () => {
+  // The row `agentic-workflow telemetry reconstruct` appends: the S4 record's
+  // nulls in the grammar's nullable cells, 0 in its two count cells, and a
+  // provenance that says it was reconstructed rather than measured live. It is
+  // data about a session, never a unit's tier evidence, so the read skips it and
+  // the unit rows beside it still answer.
+  const root = project({ "docs/fix/111-a/SPEC.md": unitDoc("standard") });
+  const text = ledger([
+    row("111-a"),
+    ["null", "null", "null", "qwen3.6", 0, 402, 2, 300, 30, 60, 1, 11, 2000, 0, "2026-11-01", "pi:reconstruct=sess-full"],
+  ]);
+  const read = readLedger(root, text);
+  assert.equal(read.error, undefined);
+  assert.equal(read.rows.length, 1, "the unattributed reconstruction is skipped, the measured unit row stays");
+  assert.equal(read.rows[0].unit, "111-a");
+  assert.equal(aggregate(read.rows).rows, 1);
+});
+
+test("a named unit that resolves to no carrier still refuses the whole ledger", () => {
+  const root = project({ "docs/fix/111-a/SPEC.md": unitDoc("standard") });
+  const read = readLedger(root, ledger([row("111-a"), row("999-ghost")]));
+  assert.equal(read.error, "unknown-unit", "the skip is narrow: only the literal null unit is a reconstruction");
+  assert.match(read.detail, /999-ghost/);
+});
