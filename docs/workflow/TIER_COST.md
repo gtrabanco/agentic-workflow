@@ -14,7 +14,7 @@ provider's token breakdown to the `@1` eight, and both grammars are read — a
 project still on `@1` keeps appending and reading its eight cells, and the writer
 follows whichever block the file declares.
 
-**Who writes a row.** Only the metric sink of `@gtrabanco/pi-agentic-workflow`
+**Who writes a row.** The metric sink of `@gtrabanco/pi-agentic-workflow`
 (`turn_start` → `turn_end` → `session_shutdown`), from the numbers the model
 provider and the tool runtime already produced. No human and no model types a
 value here: a cell that came from a prompt would be the defect #383 S7 forbids.
@@ -23,6 +23,20 @@ append is atomic, so neither row is lost to the other. The same sample is also
 appended to a per-session JSONL file (`telemetry.jsonFile`, `.pi/.telemetry/`
 `sessions.jsonl` by default — #504 S3) as one JSON object per line, for a consumer
 that streams instead of reading this document.
+
+**The one reconstruction row.** `agentic-workflow telemetry reconstruct write`
+(issue #624) is the second writer, and it is manual: when the sink never flushed
+(a pi-web session stays alive between prompts, so `session_shutdown` never fires),
+the command rebuilds the session from Pi's own transcript and appends it here. The
+row is visibly not a unit sample: `unit`, `phase` and `version` are the literal
+`null` (a transcript cannot attribute any of them), `changed_paths` and `tool_ms`
+are `0` (the grammar's cells are digits only and the transcript cannot answer
+them), and `source` is `pi:reconstruct=<session id>`. `scripts/tier-cost.mjs`
+skips an unattributed row instead of refusing the ledger, so a reconstruction
+never enters a tier or size comparison; a *named* unit that resolves to no carrier
+is still refused. The grammar itself is unchanged: its one reader and writer live
+in the crate's `src/telemetry/ledger.mjs`, and both `scripts/tier-cost.mjs` and
+the Pi sink consume them.
 
 **What a row never carries.** No derived fact: the tier and the ceremony counts are repository facts that `scripts/tier-cost.mjs` resolves from the unit's own carrier at read time, so a stored copy could only drift.  No prompt text, no model output, no diff, no file
 content — and no session span. A session's first and last timestamps measure how
