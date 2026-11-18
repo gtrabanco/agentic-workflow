@@ -290,8 +290,10 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   finding id of which 16 resolve onto a corpus row.
 - **E2** — 2026-11-18, the pair's red and green, both foreground:
   `bun test scripts/journal-corpus.test.mjs` at the suite's own commit
-  (`43c1aef5`) · exit 1 · `Cannot find module './journal-corpus.mjs'`; after the
-  reader and the fixture builder land · exit 0 · 23 pass / 0 fail.
+  (`43c1aef5`) · exit 1 · `Cannot find module './journal-corpus.mjs'` — the frozen
+  reproducer of the gap; at this head, after the reader, the fixture builder and
+  the prose pins land · exit 0 · 23 pass / 0 fail. `bun scripts/red-first.mjs` ·
+  exit 0 · `58 pair(s) · 33 after the cutoff · 0 finding(s) · verdict: PASS`.
 - **E3** — 2026-11-18, the live receipt: `bun scripts/journal-corpus.mjs` · exit 0
   · `log | docs/LOGS.md · entries 1059`, `fragments | .agentic-workflow/journal ·
   files 80`, `entries | 1139 · skipped headings 24`, `rows | 30 · corrections 3 ·
@@ -339,11 +341,46 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
 - **G4** — 2026-11-18, `bun scripts/dimension-regression.mjs --base main` · exit 0 ·
   `verdict | clean` (18 dimensions head / 17 base, 5 review surfaces, evidence =
   this doc).
+- **G5** — 2026-11-18, `bun scripts/run-root-suite.mjs --jobs 1` · exit 0 · 125
+  suites PASS, 0 FAIL. Disclosure: two earlier parallel dispatches (`--jobs auto`
+  and `--jobs 2`) reddened three load-bound assertions this change does not
+  touch — `scripts/unit-route.test.mjs`'s F7 500 ms spawn budget (three isolated
+  runs measured 336 ms, 378 ms and 570 ms at load 9, and the case runs against a
+  fixture repo, so no unit folder of this tree is in its path),
+  `scripts/phase-lint.test.mjs` (98.7 s standalone) and
+  `scripts/workflow-status-sensor.test.mjs` (87.5 s standalone, 57.8 s in the
+  serial run) against the gate's 120 s suite wall clock. The sensor's two
+  forge-timeout cases also exceeded bun's bare 5 s default and are green under the
+  budget `scripts/test-timeout-allowlist.json` declares for that suite (81 pass /
+  0 fail at `--timeout 30000`) — the same pre-existing sensitivity unit 590's G2
+  reports.
+- **G6** — 2026-11-18, the state close-out, all foreground:
+  `bun scripts/lint-changeset.mjs .changeset/616-journal-carrier.md` · exit 0 ·
+  `ok 616-journal-carrier.md`; `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  `Files: 3 checked · 0 missing · 0 stale · 0 orphaned · verdict: PASS`;
+  `bun scripts/prose-gate-inventory.mjs` · `verdict: PASS`; the session entry is
+  the fragment `20261118T211302Z-feat-616-journal-carrier-narrative-local.md`, and
+  `journal aggregate --check` answers `{"checked":81,"refusals":[]}`.
+- **P1** — 2026-11-18, the plan cut: unit doc, both ledgers, the decisions record
+  and the roadmap row · `7ad2e3ae`.
+- **P2** — 2026-11-18, the suite landed alone and observed red · `43c1aef5`.
+- **P3** — 2026-11-18, the reader, the fixture builder and the shared destination
+  export · `6cad4aeb`.
+- **P4** — 2026-11-18, the dimension, its consuming step, the registered grammar
+  and both re-pinned budgets · `e641a3b5`.
+- **P5** — 2026-11-18, the frozen dimension set extended and the gate clean ·
+  `eb860add`.
+- **E8** — 2026-11-18, the read-only proofs: `rg -c
+  'writeFileSync|appendFileSync|mkdirSync' scripts/journal-corpus.mjs` matches
+  nothing (exit 1), and `rg -c 'from "\./findings-corpus\.mjs"'
+  scripts/journal-corpus.mjs` matches 1.
 
 ## Next
 
-P2: land `scripts/journal-corpus.test.mjs` alone and observe it failing on the
-missing `scripts/journal-corpus.mjs`.
+Owner verdict on the diff. Two items are the owner's, not an agent's: approve the
+one protected-path assertion (`Journal signals` in
+`scripts/dimension-regression.test.mjs`'s frozen set, recorded in
+`decisions.md`) and open the PR that closes #616.
 
 ## References
 
