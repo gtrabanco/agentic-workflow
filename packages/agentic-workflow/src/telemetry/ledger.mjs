@@ -172,15 +172,22 @@ export function orderedSample(sample) {
 }
 
 /**
- * Append one sample to the project's ledger, in the order the ledger declares.
+ * Validate one ledger append and return the function that performs it — the
+ * plan half of "plan every append, then apply it".
  *
  * It throws — rather than writing something plausible — when the ledger carries
  * no grammar block, when the sample and the declared columns disagree, when the
  * table's header is not the declared set, or when the table is not the file's
- * last section. The caller catches a sink failure so one broken destination never
- * costs the others their sample.
+ * last section. Every refusal this append can raise is therefore raised before
+ * the caller has written a byte to any destination, which is what makes a
+ * refusal write nothing (issue #624's correction of `telemetry reconstruct
+ * write`). The plan reads the ledger once, so it is applied without delay —
+ * not held across other writes.
+ *
+ * A row the table already carries plans to a no-op: the duplicate guard is part
+ * of the plan, never a mid-apply surprise.
  */
-export function appendLedgerSample({ ledgerPath, sample }) {
+export function prepareLedgerAppend({ ledgerPath, sample }) {
   const text = fs.readFileSync(ledgerPath, "utf8");
   const lines = text.split("\n");
 
@@ -229,10 +236,20 @@ export function appendLedgerSample({ ledgerPath, sample }) {
   for (const line of lines.slice(headerAt + 2)) {
     if (!line.trim().startsWith("|")) break;
     const cells = cellsOf(line);
-    if (declared.every((column, at) => (cells[at] ?? "") === String(values[column]))) return;
+    if (declared.every((column, at) => (cells[at] ?? "") === String(values[column]))) return () => {};
   }
 
-  fs.appendFileSync(ledgerPath, `| ${declared.map((column) => String(values[column])).join(" | ")} |\n`);
+  const row = `| ${declared.map((column) => String(values[column])).join(" | ")} |\n`;
+  return () => fs.appendFileSync(ledgerPath, row);
+}
+
+/**
+ * Append one sample to the project's ledger, in the order the ledger declares:
+ * plan the append (every refusal above), then apply it. The caller catches a
+ * sink failure so one broken destination never costs the others their sample.
+ */
+export function appendLedgerSample(options) {
+  prepareLedgerAppend(options)();
 }
 
 /**

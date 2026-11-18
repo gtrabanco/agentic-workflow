@@ -33,7 +33,7 @@ import path from "node:path";
 
 import { TELEMETRY_SAMPLE_FIELDS } from "@gtrabanco/agentic-workflow-schema";
 
-import { LEDGER_PATH, appendJsonlSample, appendLedgerSample, orderedSample, parseLedger } from "./ledger.mjs";
+import { LEDGER_PATH, appendJsonlSample, appendLedgerSample, orderedSample, parseLedger, prepareLedgerAppend } from "./ledger.mjs";
 
 /** The contract id of the answer this command prints. */
 export const RECONSTRUCT_CONTRACT_ID = "telemetry-reconstruct@1";
@@ -446,7 +446,9 @@ function write(flags, { cwd, env }) {
   const { records, skipped } = reconstructProject({ agentDir: piAgentDir(env), project });
 
   // Read every destination first: a malformed store or an explicitly named
-  // missing ledger refuses before a single row is appended.
+  // missing ledger refuses before a single row is appended — and the ledger
+  // append itself is planned (grammar, header, tail) while nothing is written,
+  // so a refusal at either destination leaves every destination untouched.
   const jsonlRows = readStoreIfPresent(jsonl);
   const ledgerExists = fs.existsSync(ledger);
   if (!ledgerExists && flags.ledger !== undefined) throw new ReconstructRefusal(`ledger not found: ${ledger}`);
@@ -462,10 +464,13 @@ function write(flags, { cwd, env }) {
   const jsonlKnown = new Set(jsonlRows.map((row) => sessionKeyOf(row.source)));
   const jsonlAdded = records.filter((record) => !jsonlKnown.has(sessionKeyOf(record.source)));
   const ledgerKnown = new Set(ledgerRows.map((row) => sessionKeyOf(row.source)));
-  const ledgerAdded = records.filter((record) => !ledgerKnown.has(sessionKeyOf(record.source)));
+  // An absent default ledger is a status, never an append: nothing to plan and
+  // nothing created (the usage's own "reported as absent, never created").
+  const ledgerAdded = ledgerExists ? records.filter((record) => !ledgerKnown.has(sessionKeyOf(record.source))) : [];
+  const ledgerPlans = ledgerAdded.map((record) => prepareLedgerAppend({ ledgerPath: ledger, sample: ledgerRowOf(record) }));
 
   for (const record of jsonlAdded) appendJsonlSample({ path: jsonl, sample: record });
-  for (const record of ledgerAdded) appendLedgerSample({ ledgerPath: ledger, sample: ledgerRowOf(record) });
+  for (const apply of ledgerPlans) apply();
 
   return {
     contract: RECONSTRUCT_CONTRACT_ID,
@@ -478,7 +483,7 @@ function write(flags, { cwd, env }) {
       path: ledger,
       status: ledgerExists ? "merged" : "absent",
       added: ledgerAdded.length,
-      skipped: records.length - ledgerAdded.length,
+      skipped: ledgerExists ? records.length - ledgerAdded.length : 0,
     },
   };
 }
