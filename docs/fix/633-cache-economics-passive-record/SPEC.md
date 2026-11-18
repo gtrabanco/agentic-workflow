@@ -532,6 +532,9 @@ the authoritative order (`P1` → `P4`).
   body carrying `Closes #633` (O9).
 - **G1** — 2026-11-18, `bun scripts/local-gate.mjs` · exit 0 ·
   `local-gate: PASS — 19 step(s) in 957s`, at `cb984a4e` (O7).
+- **G2** — 2026-11-18, `bun scripts/local-gate.mjs` · exit 0 ·
+  `local-gate: PASS — 19 step(s) in 902s`, at `e8e4ec46` — the shipped head, after
+  the settle repair (E12), so the receipt matches the bytes the PR carries (O7).
 - **E12** — 2026-11-18, the settle gate caught a real miss of mine at `44673573`:
   `bun scripts/roadmap-settle.mjs` → `pr-url-unsettled` on this doc, because its
   Log carries the PR URL while the row still read `in-progress`; the contract is
