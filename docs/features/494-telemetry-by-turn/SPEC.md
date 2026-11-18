@@ -625,3 +625,31 @@ keeps that grammar readable so its evidence never stops being reproducible.
 | The ledger's append-only, atomic single-write shape survives the `@2` column set | `telemetry-ledger-sink.test.mjs`'s concurrency and prefix cases |
 | The crate reader still resolves tier and ceremony from the unit's carrier | `scripts/tier-cost.test.mjs` (unchanged assertions) |
 | The four package suites and the root suites stay green | `bun scripts/local-gate.mjs --jobs auto` |
+
+## Reconstruction from Pi transcripts (issue #624)
+
+**The limitation.** This unit's sample is emitted once, from `session_shutdown`.
+A host that keeps a session alive between prompts — pi-web's normal shape — never
+fires that event, so the session's in-memory counters are never flushed and both
+destinations stay empty. The wiring's own suites prove the flush, not the host's
+lifecycle, which is why the defect was invisible here.
+
+**The workaround, manual by decision.** Pi's transcript store
+(`~/.pi/agent/sessions/--<project>--/*.jsonl`) carries the same provider usage,
+model and assistant durations. `agentic-workflow telemetry reconstruct` reads
+them back: `stats` answers the totals and the `--by-model`/`--by-date`
+breakdowns, `samples` prints one JSON line per reconstructed record, and `write`
+merges only the sessions a destination does not already carry — keyed by the
+session id, so a session flushed live (`pi:session=<id>`) and a previous
+reconstruction (`pi:reconstruct=<id>`) are never counted twice. Nothing runs from
+a session event: the operator forces the reconciliation when they want it, and no
+session reads a transcript on its own (owner decision, `S3a` of
+[fix/624](../../fix/624-reconstruct-telemetry-from-pi-transcripts/SPEC.md)).
+
+**What a reconstructed record cannot say.** `unit`, `phase`, `version`,
+`changed_paths` and `tool_ms` are `null`: attribution and diff size are not in a
+transcript, and the reconstruction does not infer them from git history (that is
+explicit future work). The ledger row is therefore a projection — the literal
+`null` unit and `0` in the two count cells — and `scripts/tier-cost.mjs` skips it
+rather than refusing the ledger. `model_ms` sums the assistant messages'
+`durationMs`; a tool-result message's duration is not model time and is excluded.
