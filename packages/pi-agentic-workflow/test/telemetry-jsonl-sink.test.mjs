@@ -99,7 +99,8 @@ test("a sink that cannot write throws, so the accumulator can report it and keep
   assert.throws(() => sink.write(SAMPLE));
 });
 
-test("the shipped wiring writes the ledger and the JSONL from one sample", () => {
+/** A throwaway project that opts telemetry in: a unit doc, a ledger, the wiring's clock. */
+function shippedProject() {
   const root = project();
   fs.mkdirSync(path.join(root, "docs/fix/494-telemetry-by-turn"), { recursive: true });
   fs.writeFileSync(
@@ -131,6 +132,11 @@ test("the shipped wiring writes the ledger and the JSONL from one sample", () =>
   });
   instance.register({ on: (event, handler) => handlers.set(event, handler) });
   instance.noteCommand("execute-phase", ["494"]);
+  return { root, ledgerPath, jsonlPath, handlers };
+}
+
+test("the shipped wiring writes the ledger and the JSONL from one sample", () => {
+  const { ledgerPath, jsonlPath, handlers } = shippedProject();
   handlers.get("turn_end")({ message: { model: "glm5.3-flash", usage: { input: 10, output: 5 } } });
   handlers.get("session_shutdown")({});
 
@@ -144,4 +150,24 @@ test("the shipped wiring writes the ledger and the JSONL from one sample", () =>
 
   const ledger = fs.readFileSync(ledgerPath, "utf8");
   assert.match(ledger, /\| 494-telemetry-by-turn \|/, "the same sample reached the markdown ledger");
+});
+
+test("one line per settled run: a session that never shuts down still streams its samples", () => {
+  const { jsonlPath, ledgerPath, handlers } = shippedProject();
+  handlers.get("turn_end")({ message: { usage: { totalTokens: 100 } } });
+  handlers.get("agent_settled")({});
+  handlers.get("turn_end")({ message: { usage: { totalTokens: 250 } } });
+  handlers.get("agent_settled")({});
+
+  const records = lines(jsonlPath);
+  assert.deepEqual(records.map((record) => record.tokens), [100, 350], "each settled run appends its cumulative sample: 100, then 100 + 250");
+  assert.deepEqual(records.map((record) => record.turns), [1, 2]);
+  assert.equal(records.every((record) => record.source === "pi:session=sess-504"), true, "both lines belong to the one session");
+
+  const ledgerRows = fs.readFileSync(ledgerPath, "utf8").split("\n").filter((line) => line.startsWith("| 494-telemetry-by-turn"));
+  assert.equal(ledgerRows.length, 1, "the ledger keeps one row for the session, upserted to the latest totals");
+  assert.match(ledgerRows[0], /\| 350 \|/, "the row carries the last run's cumulative count");
+
+  handlers.get("session_shutdown")({});
+  assert.equal(lines(jsonlPath).length, 2, "the shutdown adds no duplicate line when the last run already emitted the same sample");
 });

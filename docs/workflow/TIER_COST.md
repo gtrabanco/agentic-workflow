@@ -15,14 +15,19 @@ project still on `@1` keeps appending and reading its eight cells, and the write
 follows whichever block the file declares.
 
 **Who writes a row.** The metric sink of `@gtrabanco/pi-agentic-workflow`
-(`turn_start` → `turn_end` → `session_shutdown`), from the numbers the model
+(`turn_start` → `turn_end` → `agent_settled` → `session_shutdown`), from the numbers the model
 provider and the tool runtime already produced. No human and no model types a
 value here: a cell that came from a prompt would be the defect #383 S7 forbids.
-Two sessions append on their own shutdowns from separate processes, and the
-append is atomic, so neither row is lost to the other. The same sample is also
-appended to a per-session JSONL file (`telemetry.jsonFile`, `.pi/.telemetry/`
-`sessions.jsonl` by default — #504 S3) as one JSON object per line, for a consumer
-that streams instead of reading this document.
+Since #623 the sample leaves memory at every settled run, and the sink keeps one
+row per session: a later emission whose `source` the ledger already carries
+replaces that row, while a new session appends its own. Two sessions append from
+separate processes and the append is atomic, so neither row is lost to the other;
+`session_shutdown` is the final, latched flush, not the only chance. The same
+sample is also appended to a per-session JSONL file (`telemetry.jsonFile`,
+`.pi/.telemetry/` `sessions.jsonl` by default — #504 S3) as one JSON object per
+line, one line per settled run and cumulative, for a consumer that streams
+instead of reading this document (a consumer differences consecutive lines; the
+ledger holds the session's latest totals).
 
 **The one reconstruction row.** `agentic-workflow telemetry reconstruct write`
 (issue #624) is the second writer, and it is manual: when the sink never flushed
