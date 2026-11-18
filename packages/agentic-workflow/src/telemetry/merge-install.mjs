@@ -38,13 +38,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import {
-  TELEMETRY_JSONL_PATH,
-  TELEMETRY_LEDGER_PATH,
-  armDriver,
-  driverName,
-  isGitCheckout,
-} from "../writer/shared-merge.mjs";
+import { armDriver, attributeLines, isGitCheckout } from "../writer/shared-merge.mjs";
 
 /** The receipt's contract id. */
 export const MERGE_INSTALL_CONTRACT_ID = "telemetry-merge-install@1";
@@ -52,11 +46,9 @@ export const MERGE_INSTALL_CONTRACT_ID = "telemetry-merge-install@1";
 /** The class the installer arms. */
 export const TELEMETRY_CLASS = "telemetry";
 
-/** The two registry lines the telemetry class needs, in `.gitattributes` order. */
-export const TELEMETRY_ATTRIBUTE_LINES = Object.freeze([
-  `${TELEMETRY_LEDGER_PATH} merge=${driverName(TELEMETRY_CLASS)}`,
-  `${TELEMETRY_JSONL_PATH} merge=${driverName(TELEMETRY_CLASS)}`,
-]);
+/** The two registry lines the telemetry class needs, derived from the registry's
+ * one map so the destination list is never restated here (issue #630). */
+export const TELEMETRY_ATTRIBUTE_LINES = Object.freeze(attributeLines([TELEMETRY_CLASS]));
 
 /** The root entry a replicated workflow carries, relative to the project. */
 export const ROOT_DRIVER_ENTRY = "scripts/shared-doc-merge.mjs";

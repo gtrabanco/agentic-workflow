@@ -115,16 +115,33 @@ export const TELEMETRY_JSONL_PATH = ".pi/.telemetry/sessions.jsonl";
 export const TELEMETRY_PATHS = Object.freeze([TELEMETRY_LEDGER_PATH, TELEMETRY_JSONL_PATH]);
 
 /**
+ * The paths each class owns — the registry's one home. `classForPath`, the
+ * `.gitattributes` lines and the installers are all derived from it, so a new
+ * class or a new destination is one edit, not four copies that can disagree
+ * (issue #630: the telemetry class owns two paths on purpose).
+ */
+export const SHARED_MERGE_PATHS = Object.freeze({
+  roadmap: Object.freeze(["docs/ROADMAP.md"]),
+  budgets: Object.freeze(["docs/workflow/SKILL_CONTEXT_BUDGETS.json"]),
+  "repo-state": Object.freeze(["docs/workflow/REPOSITORY_STATE.md"]),
+  logs: Object.freeze(["docs/LOGS.md"]),
+  telemetry: TELEMETRY_PATHS,
+});
+
+/** The `.gitattributes` registry lines the classes need, in registry order. */
+export function attributeLines(classes = SHARED_MERGE_CLASSES) {
+  return classes.flatMap((cls) => (SHARED_MERGE_PATHS[cls] ?? []).map((owned) => `${owned} merge=${driverName(cls)}`));
+}
+
+/**
  * The class a repository-relative path belongs to, or `null` for a path no
  * class owns. The `generated` projection is a named refusal, never a guess.
  */
 export function classForPath(relPath) {
   const p = relPath.replace(/^\.\//, "");
-  if (p === "docs/ROADMAP.md") return "roadmap";
-  if (p === "docs/workflow/SKILL_CONTEXT_BUDGETS.json") return "budgets";
-  if (p === "docs/workflow/REPOSITORY_STATE.md") return "repo-state";
-  if (p === "docs/LOGS.md") return "logs";
-  if (TELEMETRY_PATHS.includes(p)) return "telemetry";
+  for (const [cls, paths] of Object.entries(SHARED_MERGE_PATHS)) {
+    if (paths.includes(p)) return cls;
+  }
   if (p === "docs/generated" || p.startsWith("docs/generated/")) return "generated";
   return null;
 }
