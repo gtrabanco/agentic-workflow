@@ -203,7 +203,7 @@ findings' scope, recorded as triage rows, not deferrals of this one.
 | O3 | S1 | the spawn-level correctness assertions survive in kind: exit status 0, no phase captured from either long line, the `next: P2` hand-off line unchanged | P2 | P2 | execute-phase | the F7 case's diff keeps the three assertions; the suite's other 63 cases are byte-untouched (`git diff --stat` names one file) | `E2` + the diff receipt | verified |
 | O4 | S1 | the bare-pool root suite (the configuration that flaked twice) passes with the change in the tree, and the full gate passes | P3 | P3 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 and `bun scripts/local-gate.mjs --jobs 2` exits 0 | `G1`/`G2` lines with exit codes | verified |
 | O5 | S1 | every same-class timing bound in the suites is triaged and recorded: the F7 case repaired, the five 5 s bounds (phase-lint ×2, promise-coherence ×2, schema min-of-3) classified with their observed-flake history, none touched without an observed flake | P3 | P3 | execute-phase | the sweep receipt `E4`: `rg -n "elapsed <" scripts/*.test.mjs packages/*/test/*.mjs` names only triaged rows, each carrying its disposition in this unit doc | `E4` line | verified |
-| O6 | S1 | no shipped command's bytes move: the diff names only the test file, this unit's docs and the session journal fragment | P3 | P3 | execute-phase | `git diff --name-only origin/main` names only `scripts/unit-route.test.mjs`, `docs/fix/local-f7-progress-log-scan-flake/**` and `.agentic-workflow/journal/*local-f7*` | `E5` line | verified |
+| O6 | S1 | no shipped command's bytes move: the diff names only the test file, this unit's docs and the session journal fragment | P3 | P3 | execute-phase | `git diff --name-only b47c071e HEAD` (the branch point) names only `scripts/unit-route.test.mjs`, `docs/fix/local-f7-progress-log-scan-flake/**` and `.agentic-workflow/journal/*local-f7*` — `origin/main` itself moved after the branch was cut (unit 616 delivered), so the branch-point form is the one that isolates this delta | `E5` line | verified |
 
 ## Acceptance criteria
 
@@ -301,10 +301,13 @@ findings' scope, recorded as triage rows, not deferrals of this one.
   exit 0 · `local-gate: PASS — 19 step(s) in 679s` (O4 second leg; the full
   gate including log-immutability, docs-generated-projection, context budgets
   and the identity steps).
-- **E5** — 2026-11-18, `git diff --name-only origin/main` names
-  `scripts/unit-route.test.mjs`, `docs/fix/local-f7-progress-log-scan-flake/SPEC.md`
-  and the session journal fragment under `.agentic-workflow/journal/` — no
-  package, skill, template or gate surface moves. The session entry lands as a
+- **E5** — 2026-11-18, `git diff --name-only b47c071e HEAD` (the branch
+  point) names `scripts/unit-route.test.mjs`,
+  `docs/fix/local-f7-progress-log-scan-flake/SPEC.md` and the session journal
+  fragment under `.agentic-workflow/journal/` — no package, skill, template or
+  gate surface moves. `origin/main` moved after the branch was cut (unit
+  616's delivery landed, 10 commits); its files name none of this unit's
+  surfaces, so the future merge is clean. The session entry lands as a
   fragment, never a `docs/LOGS.md` hand edit (`scripts/log-immutability.mjs`
   refuses those; the aggregator owns that file).
 
