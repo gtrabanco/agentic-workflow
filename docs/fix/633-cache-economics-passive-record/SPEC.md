@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: xs
-roadmap_summary: Issue [#633](https://github.com/gtrabanco/agentic-workflow/issues/633) (S): session chaining and its cache economics recorded — one session runs the lane and the executor, no model switch mid-unit (a switch is a full re-prefill), the 5-minute cache TTL rewards consecutive turns, and Relay's per-leg isolation is justified only where isolation is the point. The practice, its caveats and four verified evidence pointers live in this unit doc; carrier is the unit doc + ledgers, never both it and a `ceremony passive add` record (D1). Status stays `in-progress` until the owner's verdict — the external verifier of this workflow is the owner. SPEC: [SPEC](fix/633-cache-economics-passive-record/SPEC.md)
+roadmap_summary: Issue [#633](https://github.com/gtrabanco/agentic-workflow/issues/633) (S): session chaining and its cache economics recorded — one session runs the lane and the executor, no model switch mid-unit (a switch is a full re-prefill), the 5-minute cache TTL rewards consecutive turns, and Relay's per-leg isolation is justified only where isolation is the point. The practice, its caveats and four verified evidence pointers live in this unit doc; carrier is the unit doc + ledgers, never both it and a `ceremony passive add` record (D1). PR [#637](https://github.com/gtrabanco/agentic-workflow/pull/637) — `done` in the status machine means built and awaiting the merge, and the owner is this workflow's external verifier. SPEC: [SPEC](fix/633-cache-economics-passive-record/SPEC.md)
 ---
 
 # fix/633-cache-economics-passive-record
@@ -532,6 +532,16 @@ the authoritative order (`P1` → `P4`).
   body carrying `Closes #633` (O9).
 - **G1** — 2026-11-18, `bun scripts/local-gate.mjs` · exit 0 ·
   `local-gate: PASS — 19 step(s) in 957s`, at `cb984a4e` (O7).
+- **E12** — 2026-11-18, the settle gate caught a real miss of mine at `44673573`:
+  `bun scripts/roadmap-settle.mjs` → `pr-url-unsettled` on this doc, because its
+  Log carries the PR URL while the row still read `in-progress`; the contract is
+  `done · [#N](<same url>)`. Repaired through the writers, never by hand:
+  `roadmap rowUpsert` (Features row) and `roadmap fixrow` (Fixes row) → both at
+  `done · [#637](https://github.com/gtrabanco/agentic-workflow/pull/637)`, then
+  `bun scripts/docs-generate.mjs` re-synced the Fixes notes cell from
+  `roadmap_summary:`. `bun scripts/roadmap-settle.mjs` → `violations: 0`, PASS.
+  The first commit's `in-progress` was wrong, and the gate — not a reviewer —
+  caught it, which is the point of the settle invariant.
 
 ## Next
 
