@@ -33,7 +33,7 @@ import path from "node:path";
 
 import { TELEMETRY_SAMPLE_FIELDS } from "@gtrabanco/agentic-workflow-schema";
 
-import { LEDGER_PATH, appendJsonlSample, appendLedgerSample, orderedSample, parseLedger, prepareLedgerAppend } from "./ledger.mjs";
+import { LEDGER_PATH, appendJsonlSample, appendLedgerSample, orderedSample, parseLedger, prepareLedgerAppend, sessionKeyOf } from "./ledger.mjs";
 import { armTelemetryMerge } from "./merge-install.mjs";
 
 /** The contract id of the answer this command prints. */
@@ -42,11 +42,15 @@ export const RECONSTRUCT_CONTRACT_ID = "telemetry-reconstruct@1";
 /** The per-session JSONL store the live sink writes, relative to a project root. */
 export const DEFAULT_JSONL = ".pi/.telemetry/sessions.jsonl";
 
-/** The provenance prefix a reconstructed record carries. */
+/** The provenance prefix a reconstructed record carries (owned by the ledger writer). */
 export const RECONSTRUCT_SOURCE_PREFIX = "pi:reconstruct=";
 
-/** The provenance prefix the live sink writes. */
+/** The provenance prefix the live sink writes (owned by the ledger writer). */
 export const LIVE_SOURCE_PREFIX = "pi:session=";
+
+/** The session identity a provenance string names, whichever sink wrote it
+ *  (owned by the ledger writer; re-exported for the merge guards here). */
+export { sessionKeyOf };
 
 /** A refusal: the command answers `RECONSTRUCT REFUSAL — <message>` and exits 2. */
 export class ReconstructRefusal extends Error {}
@@ -77,22 +81,56 @@ export function piAgentDir(env = process.env, home = os.homedir()) {
 const SUBAGENT_DIR = /^subagent-artifacts/;
 const SUBAGENT_FILE = /_(subagent|worker|reviewer|scout|delegate)_/;
 
-/** The header of a Pi transcript, or null when the file is not one. */
+/** The `session_info` name prefix the old layout marks a subagent's transcript with. */
+const SUBAGENT_NAME_PREFIX = "subagent-";
+
+/**
+ * The header of a Pi transcript, plus whether the transcript itself is a
+ * subagent's own session, or null when the file is not one.
+ *
+ * The two store layouts mark a subagent differently: the new layout names the
+ * artifact file (`*_reviewer_0_transcript.jsonl`), the old layout nests the
+ * transcript under the parent session and marks it with a `session_info` name
+ * prefixed `subagent-` before the first message. The marker is read from the
+ * transcript's opening lines, so a marked subagent is excluded wherever it is
+ * stored — a worker's own file is not a session the operator drove. An
+ * unmarked transcript counts, exactly as an unmarked file name does.
+ */
 function sessionHeader(transcriptPath) {
-  let first;
+  let text;
   try {
-    first = fs.readFileSync(transcriptPath, "utf8").split("\n", 1)[0];
+    text = fs.readFileSync(transcriptPath, "utf8");
   } catch {
     return null;
   }
   let entry;
   try {
-    entry = JSON.parse(first);
+    entry = JSON.parse(text.split("\n", 1)[0]);
   } catch {
     return null;
   }
   if (entry?.type !== "session" || typeof entry.cwd !== "string" || entry.cwd === "") return null;
-  return { id: typeof entry.id === "string" && entry.id !== "" ? entry.id : null, cwd: entry.cwd, timestamp: entry.timestamp };
+  let subagent = false;
+  for (const line of text.split("\n").slice(1)) {
+    if (line.trim() === "") continue;
+    let opener;
+    try {
+      opener = JSON.parse(line);
+    } catch {
+      break; // The opening prefix ends at the first unreadable line.
+    }
+    if (opener?.type === "session_info") {
+      subagent = typeof opener.name === "string" && opener.name.startsWith(SUBAGENT_NAME_PREFIX);
+      break;
+    }
+    if (opener?.type === "message") break; // No session_info before the first message.
+  }
+  return {
+    id: typeof entry.id === "string" && entry.id !== "" ? entry.id : null,
+    cwd: entry.cwd,
+    timestamp: entry.timestamp,
+    subagent,
+  };
 }
 
 /**
@@ -100,8 +138,20 @@ function sessionHeader(transcriptPath) {
  * sorted by path so two runs answer the same order.
  *
  * A missing store is "no transcripts", not a failure: a machine that never ran
- * Pi has nothing to reconstruct. Subagent artifacts are excluded — they are a
- * worker's own file, not a session the operator drove.
+ * Pi has nothing to reconstruct. Subagents are excluded in both store layouts —
+ * a worker's own file is not a session the operator drove: the new layout
+ * stores them as artifact files beside the session (`*_reviewer_…_transcript.jsonl`,
+ * a `subagent-artifacts/` directory), and the old layout stores them as nested
+ * `<run>/session.jsonl` transcripts marked by their own `session_info` name
+ * (verified against a real store: every nested transcript is a subagent's —
+ * the operator transcript was never persisted in that layout).
+ *
+ * Pi has two transcript layouts:
+ *   - New (post-2026-11): the session's `.jsonl` file directly in the project's
+ *     session directory.
+ *   - Old (pre-2026-11): one directory per session, holding nested
+ *     `<sub-session>/<run>/session.jsonl` transcripts.
+ * This reader handles both so a reconstruction is not blind to either.
  */
 export function listTranscripts({ agentDir = piAgentDir(), project = null } = {}) {
   const sessions = path.join(agentDir, "sessions");
@@ -121,11 +171,13 @@ export function listTranscripts({ agentDir = piAgentDir(), project = null } = {}
     } catch {
       continue;
     }
+
+    // New format: `.jsonl` file directly in the session directory.
     for (const file of files) {
       if (!file.endsWith(".jsonl") || SUBAGENT_FILE.test(file)) continue;
       const transcriptPath = path.join(dir, file);
       const header = sessionHeader(transcriptPath);
-      if (header === null) continue;
+      if (header === null || header.subagent) continue;
       if (project !== null && path.resolve(header.cwd) !== project) continue;
       found.push({
         path: transcriptPath,
@@ -133,6 +185,56 @@ export function listTranscripts({ agentDir = piAgentDir(), project = null } = {}
         cwd: path.resolve(header.cwd),
         timestamp: typeof header.timestamp === "string" ? header.timestamp : null,
       });
+    }
+
+    // Old format: the transcript lives inside a `run-*/session.jsonl` that is
+    // one level deeper than the sub-session directory.
+    //   sub-session/  (UUID)
+    //     run-0/      (run directory)
+    //       session.jsonl
+    for (const file of files) {
+      if (SUBAGENT_DIR.test(file)) continue; // already handled by top-level gate
+      const subDir = path.join(dir, file);
+      let subEntries;
+      try {
+        subEntries = fs.readdirSync(subDir, { withFileTypes: true });
+      } catch {
+        continue;
+      }
+      for (const sub of subEntries) {
+        if (!sub.isDirectory()) continue;
+        const runDir = path.join(subDir, sub.name);
+        let runEntries;
+        try {
+          runEntries = fs.readdirSync(runDir, { withFileTypes: true });
+        } catch {
+          continue;
+        }
+        for (const runFile of runEntries) {
+          if (!runFile.isDirectory()) continue; // e.g. run-0/
+          const innerDir = path.join(runDir, runFile.name);
+          let innerEntries;
+          try {
+            innerEntries = fs.readdirSync(innerDir, { withFileTypes: true });
+          } catch {
+            continue;
+          }
+          for (const innerFile of innerEntries) {
+            if (innerFile.name === "session.jsonl") {
+              const transcriptPath = path.join(innerDir, innerFile.name);
+              const header = sessionHeader(transcriptPath);
+              if (header === null || header.subagent) continue;
+              if (project !== null && path.resolve(header.cwd) !== project) continue;
+              found.push({
+                path: transcriptPath,
+                sessionId: header.id ?? path.basename(subDir),
+                cwd: path.resolve(header.cwd),
+                timestamp: typeof header.timestamp === "string" ? header.timestamp : null,
+              });
+            }
+          }
+        }
+      }
     }
   }
   return found.sort((left, right) => left.path.localeCompare(right.path));
@@ -328,15 +430,6 @@ export function statsOf({ project, records, skipped = [], byModel = false, byDat
 /** One JSON object per record, in the published field order. */
 export function recordsText(records) {
   return records.map((record) => `${JSON.stringify(orderedSample(record))}\n`).join("");
-}
-
-/** The session identity a provenance string names, whichever sink wrote it. */
-export function sessionKeyOf(source) {
-  const text = String(source ?? "");
-  for (const prefix of [RECONSTRUCT_SOURCE_PREFIX, LIVE_SOURCE_PREFIX]) {
-    if (text.startsWith(prefix)) return text.slice(prefix.length);
-  }
-  return text;
 }
 
 /** The rows of a JSONL store, or a refusal naming the line that is not JSON. */

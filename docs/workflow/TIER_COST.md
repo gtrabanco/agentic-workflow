@@ -19,8 +19,10 @@ follows whichever block the file declares.
 provider and the tool runtime already produced. No human and no model types a
 value here: a cell that came from a prompt would be the defect #383 S7 forbids.
 Since #623 the sample leaves memory at every settled run, and the sink keeps one
-row per session: a later emission whose `source` the ledger already carries
-replaces that row, while a new session appends its own. Two sessions append from
+row per session: a later emission for a session the ledger already carries
+replaces that row — whichever producer prefix (`pi:session=` from the live sink,
+`pi:reconstruct=` from a #624 reconstruction) names it — while a new session
+appends its own. Two sessions append from
 separate processes and the append is atomic, so neither row is lost to the other;
 `session_shutdown` is the final, latched flush, not the only chance. The same
 sample is also appended to a per-session JSONL file (`telemetry.jsonFile`,
