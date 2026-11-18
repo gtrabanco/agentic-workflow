@@ -149,6 +149,157 @@ test("the boundary is stated, not implied: variable indirection is not seen", ()
   assert.deepEqual(verdict("c=config; git $c user.email t@example.test"), "allow");
 });
 
+/* ── reads are not writes: the positional rule (issue #618) ───────────── */
+
+const IDENTITY_KEYS = ["user.name", "user.email", "user.signingkey", "commit.gpgsign", "tag.gpgsign", "gpg.format", "author.name", "committer.email"];
+
+test("R1: the filed reproducer — one positional derives no write and passes", () => {
+  assert.deepEqual(findGitConfigWrites("git config user.name"), []);
+  assert.equal(verdict("git config user.name"), "allow");
+  assert.equal(verdict("git config user.name", BLOCK()), "allow", "a read is not a write, so the headless posture has nothing to block");
+});
+
+test("R2: every identity key reads with one positional, in both postures", () => {
+  for (const key of IDENTITY_KEYS) {
+    assert.deepEqual(findGitConfigWrites(`git config ${key}`), [], key);
+    assert.equal(verdict(`git config ${key}`), "allow", key);
+    assert.equal(verdict(`git config ${key}`, BLOCK()), "allow", key);
+  }
+});
+
+test("R3: a quoted key is the same read", () => {
+  for (const command of ["git config 'user.name'", 'git config "user.email"', "git config 'commit.gpgsign'", "git config 'user.signingkey'"]) {
+    assert.deepEqual(findGitConfigWrites(command), [], command);
+    assert.equal(verdict(command), "allow", command);
+  }
+});
+
+test("R4: a scope flag with one positional is a read in that scope, not a write", () => {
+  for (const command of ["git config --global user.name", "git config --system user.email", "git config --worktree user.name", "git config --local user.email"]) {
+    assert.deepEqual(findGitConfigWrites(command), [], command);
+    assert.equal(verdict(command), "allow", command);
+  }
+});
+
+test("R5: a file or type option with one positional is the same read", () => {
+  for (const command of [
+    "git config --file /tmp/aw618-fixture.gitconfig user.name",
+    "git config --file /work/project/.git/config user.email",
+    "git config -f /tmp/aw618-fixture.gitconfig commit.gpgsign",
+    "git config --type=bool commit.gpgsign",
+  ]) {
+    assert.deepEqual(findGitConfigWrites(command), [], command);
+    assert.equal(verdict(command), "allow", command);
+  }
+});
+
+test("R6: the compound command that fired in the wild passes whole", () => {
+  const command = "git config user.name; git config user.email; git config commit.gpgsign";
+  assert.deepEqual(findGitConfigWrites(command), []);
+  assert.equal(verdict(command), "allow");
+  assert.equal(verdict(command, BLOCK()), "allow");
+});
+
+test("R7: the bare read and the recommended diagnostic agree", () => {
+  for (const key of ["user.name", "user.email"]) {
+    assert.equal(verdict(`git config ${key}`), "allow", "the bare read passes");
+    assert.equal(verdict(`git config --show-origin --get-all ${key}`), "allow", "the form the refusal recommends passes too");
+  }
+});
+
+test("W1: two positionals are still the implicit set write", () => {
+  for (const command of ["git config user.name Fixture", "git config user.email t@example.test", "git config commit.gpgsign false"]) {
+    assert.deepEqual(findGitConfigWrites(command), [{ verb: "set", key: command.split(" ")[2], scope: "local" }], command);
+    assert.equal(verdict(command), "ask", command);
+  }
+});
+
+test("W2: three positionals are still a write", () => {
+  for (const command of ["git config user.name Fixture Person", "git config user.email t@example.test extra"]) {
+    assert.equal(findGitConfigWrites(command).length, 1, command);
+    assert.equal(verdict(command), "ask", command);
+  }
+});
+
+test("W3: an empty value is a value, so it is a write", () => {
+  assert.equal(findGitConfigWrites("git config user.name ''").length, 1);
+  assert.equal(verdict("git config user.name ''"), "ask");
+});
+
+test("W4: a flag after the key is a value, exactly as git reads it", () => {
+  for (const command of ["git config user.name --get", "git config user.name --unset", "git config user.name --local"]) {
+    assert.equal(findGitConfigWrites(command).length, 1, command);
+    assert.equal(verdict(command), "ask", command);
+  }
+});
+
+/* ── what the shell runs, and what it only carries (issue #618 S7) ────── */
+
+/** A heredoc body quoting the issue's own reproduction, one write per line and one compound line. */
+const HEREDOC_BODY = [
+  "## Reproduction steps",
+  "",
+  "- run `git config user.name` and read the value",
+  "- git config user.email t@example.test; git config commit.gpgsign false",
+  "",
+];
+
+function heredocCommand(open, close = "EOF") {
+  return [`gh issue create --repo owner/project --title ISSUE --body-file - ${open}`, ...HEREDOC_BODY, close].join("\n");
+}
+
+test("H1: a quoted heredoc delimiter carries data, never commands", () => {
+  const command = heredocCommand("<<'EOF'");
+  assert.deepEqual(findGitConfigWrites(command), []);
+  assert.equal(verdict(command, BLOCK()), "allow");
+});
+
+test("H2: a bare heredoc delimiter does the same", () => {
+  const command = heredocCommand("<<EOF");
+  assert.deepEqual(findGitConfigWrites(command), []);
+  assert.equal(verdict(command, BLOCK()), "allow");
+});
+
+test("H3: a tab-stripped heredoc delimiter does the same", () => {
+  const command = ["gh issue create --body-file - <<-EOF", ...HEREDOC_BODY.map((line) => `\t${line}`), "\tEOF"].join("\n");
+  assert.deepEqual(findGitConfigWrites(command), []);
+  assert.equal(verdict(command, BLOCK()), "allow");
+});
+
+test("H4: the live capture shape — a heredoc nested in a quoted command substitution", () => {
+  const command = [`gh issue create --repo owner/project --title ISSUE --body "$(cat <<'EOF'`, ...HEREDOC_BODY, "EOF", `)"`].join("\n");
+  assert.deepEqual(findGitConfigWrites(command), []);
+  assert.equal(verdict(command, BLOCK()), "allow");
+});
+
+test("H5: a write on its own line is still a write — the newline is a statement boundary", () => {
+  for (const command of ["git config user.email t@example.test\ngit status --porcelain", "cd /work/project\ngit config commit.gpgsign true"]) {
+    assert.equal(findGitConfigWrites(command).length, 1, command);
+    assert.equal(verdict(command), "ask", command);
+  }
+});
+
+test("H6: the body ends at its terminator — a write after it is judged", () => {
+  const command = ["cat <<'EOF' > /tmp/aw618-note.md", "git config user.name Fixture", "EOF", "git config user.email t@example.test"].join("\n");
+  assert.deepEqual(findGitConfigWrites(command), [{ verb: "set", key: "user.email", scope: "local" }]);
+  assert.equal(verdict(command), "ask");
+});
+
+test("H8: a heredoc with no terminator is ordinary text — bash fails the command anyway", () => {
+  for (const command of ["cat <<EOF", "cat <<< 'note'", "echo 'a << b'", "echo \"a << b\" && git status --porcelain"]) {
+    assert.deepEqual(findGitConfigWrites(command), [], command);
+  }
+});
+
+test("B1: backtick substitution is a command, so a write inside it asks", () => {
+  assert.equal(verdict("echo `git config user.email t@example.test`"), "ask");
+  assert.equal(verdict("for k in x; do echo `git config commit.gpgsign false`; done"), "ask");
+});
+
+test("B2: the stated boundary — a backtick span inside a quoted string stays data", () => {
+  assert.deepEqual(findGitConfigWrites('echo "`git config user.email t@example.test`"'), []);
+});
+
 test("normalizeGitIdentity fills the shipped values and refuses a foreign mode", () => {
   assert.deepEqual(normalizeGitIdentity(undefined), { enforce: "off", approved: {}, agentGuard: { mode: "ask", allow: [] } });
   assert.deepEqual(normalizeGitIdentity({ enforce: "nope", agentGuard: { mode: "nope", allow: ["user.name", 7] } }), {
@@ -332,6 +483,34 @@ test("wiring: read-only and non-config bash calls pass the guard untouched", asy
   for (const command of ["git config --get user.name", "git -c user.name=one-off commit -m x", "git status --porcelain"]) {
     assert.equal(await toolCall({ toolName: "bash", input: { command } }, wiredContext(cwd)), undefined, command);
   }
+});
+
+test("R9 wiring: a headless session runs a bare identity read — the whole call is no longer a write", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "identity-wiring-read-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const cwd = path.join(root, "repo");
+  const agentDir = path.join(root, "agent");
+  fs.mkdirSync(cwd, { recursive: true });
+  fs.mkdirSync(agentDir, { recursive: true });
+
+  const entry = await shippedEntry(cwd, agentDir);
+  const toolCall = entry.handler("tool_call");
+  for (const command of ["git config user.name", "git config user.name; git config user.email; git config commit.gpgsign"]) {
+    assert.equal(await toolCall({ toolName: "bash", input: { command } }, wiredContext(cwd)), undefined, command);
+  }
+});
+
+test("H7 wiring: a headless heredoc carrier of the same prose passes", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "identity-wiring-heredoc-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const cwd = path.join(root, "repo");
+  const agentDir = path.join(root, "agent");
+  fs.mkdirSync(cwd, { recursive: true });
+  fs.mkdirSync(agentDir, { recursive: true });
+
+  const entry = await shippedEntry(cwd, agentDir);
+  const command = heredocCommand("<<'EOF'");
+  assert.equal(await entry.handler("tool_call")({ toolName: "bash", input: { command } }, wiredContext(cwd)), undefined);
 });
 
 test("wiring: an interactive approval is asked once and remembered", async (t) => {
