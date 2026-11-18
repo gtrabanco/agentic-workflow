@@ -169,8 +169,9 @@ interface Token {
  * delimiter, closed by a line that is exactly that delimiter — leading tabs
  * stripped for `<<-`. Bash feeds the body to the command's stdin and never runs
  * it, so the body is data (issue #618). A `<<` with no closing delimiter line
- * stays ordinary words: bash itself fails such a command with `unexpected EOF`,
- * so no execution hides behind treating it as text.
+ * stays ordinary words: bash warns (`here-document delimited by end-of-file`)
+ * and runs the command with the partial body instead of failing, so that text
+ * is still tokenized as words — a write in it is over-detected, never missed.
  */
 function readHeredoc(command: string, at: number): number | null {
   let cursor = at + 2;

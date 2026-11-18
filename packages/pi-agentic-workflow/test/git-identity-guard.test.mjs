@@ -285,7 +285,7 @@ test("H6: the body ends at its terminator — a write after it is judged", () =>
   assert.equal(verdict(command), "ask");
 });
 
-test("H8: a heredoc with no terminator is ordinary text — bash fails the command anyway", () => {
+test("H8: a heredoc with no terminator is ordinary text — bash runs the command anyway", () => {
   for (const command of ["cat <<EOF", "cat <<< 'note'", "echo 'a << b'", "echo \"a << b\" && git status --porcelain"]) {
     assert.deepEqual(findGitConfigWrites(command), [], command);
   }
