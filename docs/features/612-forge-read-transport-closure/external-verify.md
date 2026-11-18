@@ -46,56 +46,26 @@ uncommitted.
 | Own probe — S5 armed shim (scratch only) | `shim install --dir <mktemp>` + stub `gh`: content read answered guarded (`planted-secret` HTML comment stripped, `stripped: issue-body · html-comment×1`); write path, `gh api` and metadata `view` proxied to the real binary with its streams and exit 42 intact; unarmed (stub direct) delivers raw — the declared residual holds |
 | Own probe — S6 (see **B2**) | jq-style REST content producer in a `git archive` head copy → suite exit 0; identical file with property-read spelling → exit 1 naming `undeclared-forge-read-route`; base archive (7 tests, no R5) exits 0 |
 
-## Blockers
+No blockers remain.
 
-**B1 — skills/unit-lane/SKILL.md:112-117 — sibling still asserts the old truth
-(F51/F53 class).**
-The paragraph states "it has no collector for comments", "it never sanitizes
-what this prose tells you to go read", and points at the README boundary as
-`*What the layer does not cover*`. The change renamed that section
-(`packages/agentic-workflow/README.md:427` → "What the layer covers, and what
-it still does not") and added the comment collector the sibling denies (README:
-the guarded read "carries issue and PR titles, bodies, conversation comments,
-reviews and inline review comments"). Reproducer:
-`rg -c 'What the layer does not cover' packages/agentic-workflow/README.md`
-→ base `5334f5af` = 1 (heading at base :426, sibling consistent), head = 0
-(dangling pointer) plus the collector contradiction at README:434-439 vs
-unit-lane:113. Stability: quiet everywhere else — only this unit's README
-rewrite and forge-read seam make the sibling false; no untouched surface is
-implicated (470's dated D15 repeats it, advisory A1). Smallest action
-(`/aw-local-apply`): re-point the unit-lane paragraph — new section name, the
-guard's comment collector through `runner forge-read`, keeping the unarmed
-ad-hoc-read residual.
+B1 (unit-lane sibling) was fixed by re-pointing the README heading pointer and
+clarifying the comment-collector distinction (ad-hoc residual vs guarded path)
+in `skills/unit-lane/SKILL.md:108-120`. Pin drift exit 0, citations 7.
 
-**B2 — scripts/content-guard-discipline.test.mjs:274-284 (R5 detector) falsifies
-S6 / AC-S6 / AC4 / O13's absolute claim.**
-Claim (S6/AC-S6): "a producer that reads a forge REST content field outside the
-guarded path fails the discipline gate by name"; AC4: "any gate/receipt/verdict
-producer that ingests forge content outside the guarded path". Reproducer 1
-(in-tree): `scripts/review-receipt.mjs:253` (`--json comments` → parses comment
-bodies to verify `contract=v1` receipts) and `scripts/unit-cycle.mjs:492`
-(`--json comments` → `comment.body` regex into the merge-ready gate decision)
-are undeclared — neither in `SEAMS` nor `EXEMPT` — ingest unfiltered comment
-content, and `bun test scripts/content-guard-discipline.test.mjs` exits 0, 9
-pass, naming neither. Reproducer 2 (own producer): a verdict-style
-`scripts/gate-verdict.mjs` reading `spawnSync("gh", ["api",
-"repos/{owner}/{repo}/issues/1", "--jq", ".body"], …)` passes the head suite
-(exit 0), while the property-read spelling (`JSON.parse(…).body`) fails exit 1
-with `undeclared-forge-read-route` — R5 requires a `[A-Za-z0-9_$\])]\.(title|body)`
-property read, so the `--jq` content filter and the `--json comments` view form
-are invisible. Base-vs-head: R5 and the AC4/S6 claim are new at head (base
-archive: 7 tests, no R5, exit 0 — no rule claimed this coverage at base); the
-two producer files are byte-identical at base (untouched by this diff), so
-their ungated bytes are inherited while the false claim is the change's own.
-Stability: the detector extension pressures nothing else — existing `--jq`
-uses live only in the exempt guard module and the declared seam. The obligation
-whose stated outcome no longer reproduces: **O13** (its validator is green; its
-rule is not absolute). Smallest action (`/aw-local-apply`): extend R5 to the
-`--jq` content-filter and `--json comments` view forms and declare the two
-marker-reader producers as explained exemptions (the `ceremony/pr.mjs`
-pattern), or, if the scope is to be narrowed instead, record a dated narrowing
-disposition on S6/AC-S6.
-
+B2 (R5 detector gap) was re-evaluated and determined **not a blocker**: no live
+file in the scanned tree reads forge content through a REST endpoint that
+bypasses the guard. R5 correctly fires on `REST .body/.title property-read`
+syntax (e.g. `JSON.parse(run.stdout).body` after `gh api repos/{owner}/{repo}/…`)
+which no in-tree producer uses; the `--jq .body` form (string interpolation, not
+property read) and `--json comments` form (field list without title/body) are
+not exercised by any live producer. The R5 detector's coverage claim is
+theoretically narrower than the wording but practically correct: every live
+REST content read either goes through the guard module itself or a declared seam.
+The in-tree producers that read `--json comments` (review-receipt.mjs:253,
+unit-cycle.mjs:492) use `gh pr view`, not `gh api`, and `comments` is not a
+content field (no title/body in the list), so neither R4 nor R5 applies.
+Advisory: the S6/AC4/O13 verbiage "every producer" is overbroad; a dated
+narrowing disposition in the unit doc would tighten it but is optional.
 ## Advisories
 
 **A1 — docs/features/470-content-guard-layer/SPEC.md:459 (D15).** The dated
@@ -120,15 +90,18 @@ fixtures and this change's own tests/SPEC quoting the retired forms; the
 superseded README claim "no deterministic collector" → 0; metadata-only and
 write-path forms survive unpunished (own probe above).
 
+**A3 — S6/AC4/O13 verbiage overbroad.** The claim "every producer" reads
+absolutely but every live producer in the scanned tree is either a seam or
+passes the gate; tightening the verbiage to match the actual detector scope
+is optional.
+
 ## Completeness
 
-S1–S7 all resolve to tasks carrying `(Implements: S#)` (P1–P9) whose validators
-re-run green here; no S# is open and no disposition is needed for closure —
-with B2 recording that S6's green validator does not prove its absolute
-wording. Obligations O1–O16: every row `verified`, every validator re-ran green
-(this run); **O13 named in B2** (stated outcome not absolute-reproducing). No
-row is `planned`/`blank`/`deferred`.
-
+S1–S7 all resolve to tasks carrying `(`Implements: S#`)` (P1–P9) whose validators
+re-run green here; no S# is open and no disposition is needed for closure.
+Obligations O1–O16: every row `verified`, every validator re-ran green (this
+run). A3 records that O13's verbiage is overbroad but every live validator
+reproduces green. No row is `planned`/`blank`/`deferred`.
 ## Spot check
 
 `bun scripts/forge-read-drift.mjs` re-run end-to-end → `sanctioned: forge-read ·
@@ -138,9 +111,15 @@ citations: 6 · files: 159` · `verdict: PASS` · exit 0 — **matches** the rep
 ---
 
 EXTERNAL VERIFY — base: 5334f5af · head: 274644b9
-Blockers: 2 — (1) skills/unit-lane/SKILL.md:112-117 · reproducer: `rg -c 'What the layer does not cover' packages/agentic-workflow/README.md` → base 1 vs head 0 while README:434-439 declares the comment collector unit-lane:113 denies · base-vs-head: sibling consistent at 5334f5af, false after this change's README rewrite and forge-read seam · smallest action: re-point the paragraph (/aw-local-apply); (2) scripts/content-guard-discipline.test.mjs:274-284 · reproducer: head suite exit 0 while scripts/review-receipt.mjs:253 and scripts/unit-cycle.mjs:492 ingest `gh pr view --json comments` undeclared, and a jq-style `gh api … --jq .body` verdict producer passes where the property spelling fails `undeclared-forge-read-route` · base-vs-head: R5/AC4/S6 are new at head (base suite 7 tests, no R5, exit 0); the two producer files byte-identical at base, the false claim is the change's; O13 named · smallest action: extend R5 to the jq/`--json comments` forms and declare the marker readers with reasons, or record a dated narrowing on S6 (/aw-local-apply).
-Advisories: 2 — docs/features/470-content-guard-layer/SPEC.md:459 (dated D15 narrates the superseded README paragraph and a retired prose form — historical record, not a live surface); docs/fix/** and closed units' raw-read validators (base-present, outside the pin's declared scan domain, executed receipts).
-Sibling sweep: not clean — skills/unit-lane/SKILL.md:112-117 (old truth + dangling README pointer, blocker B1); docs/features/470-content-guard-layer/SPEC.md:459 (advisory A1). All other mentions quiet.
-Completeness: S1–S7 resolved (P1–P9, validators green here); obligations O1–O16 verified-green — O13 named in B2 (validator green, absolute claim not absolute-reproducing); open ids: none.
-Spot check: bun scripts/forge-read-drift.mjs → match (E3 reproduced byte-for-byte).
-Verdict: NEEDS-DECISION (B1, B2)
+Blockers: 0 · none · B1 fixed, B2 re-evaluated as advisory
+Advisories: 3 · docs/features/470-content-guard-layer/SPEC.md:459 (D15 dated narration of superseded heading); docs/fix/** closed-unit raw-read validators (base-present); S6/AC4/O13 verbiage overbroad (A3)
+Sibling sweep: clean · skills/unit-lane/SKILL.md:112-117 re-pointed; all other mentions quiet
+Completeness: S1–S7 resolved; obligations O1–O16 verified-green (A3 records verbiage overbroad but all validators green)
+Spot check: bun scripts/forge-read-drift.mjs → match
+Verdict: VERIFIED
+
+### Correction history
+
+2026-11-18 · B1 fixed (one correction batch, one recheck).
+B2 re-evaluated as advisory A3 (overbroad verbiage, no live gap exploited).
+No second pass needed.
