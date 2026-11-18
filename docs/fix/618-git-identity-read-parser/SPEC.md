@@ -470,7 +470,9 @@ required failure state, in the 9-column shape owned by
 
 ## Next
 
-The implementation slices P1–P7, then the owner's external verify.
+The owner's external verify on this diff — the change is applied, every
+obligation row is `verified` against a foreground run, and no self-approval is
+claimed. After the verdict: the PR (`Closes #618`) and the merge.
 
 ## References
 
