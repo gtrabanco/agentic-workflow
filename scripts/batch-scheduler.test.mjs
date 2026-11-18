@@ -2053,7 +2053,7 @@ test("B8: --remote names the forge on the issue list too", async () => {
       ].join("\n"),
     );
     fs.chmodSync(shim, 0o755);
-    const collected = await collectIssues({ ghBin: shim, remote: "git@github.com:owner/repo.git" });
+    const collected = await collectIssues({ ghBin: shim, remote: "git@github.com:owner/repo.git", root });
     assert.deepEqual(collected.degradations, [], "the documented scratch-origin case must not degrade");
     assert.deepEqual(collected.issues.map((i) => i.number), [10]);
   } finally {
