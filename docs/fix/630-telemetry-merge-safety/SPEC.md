@@ -312,12 +312,7 @@ and hands the diff over, so no in-repo review pack runs on it.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | SPEC.md Log `E10` | evidence-recording | SUGGESTION | docs-only | plan | fold |
-| F2 | planning-evidence.md `PE-008` | evidence-recording | SUGGESTION | docs-only | plan | fold |
-| F3 | packages/agentic-workflow/bin/shared-merge.mjs:9 | docs-currency | SUGGESTION | docs-only | source | fold |
-| F4 | packages/agentic-workflow/src/writer/shared-merge.mjs (`resolveMerge` plain form) | correctness | WARNING | report-only | source | fold |
-| F5 | skills/init-workspace/references/UPGRADE.md:107 | docs-currency | SUGGESTION | docs-only | plan | fold |
-| F6 | packages/agentic-workflow/src/telemetry/reconstruct.mjs (`main` refusal wording) | docs-currency | SUGGESTION | report-only | source | fold |
+
 
 ## Log
 
@@ -495,6 +490,59 @@ and hands the diff over, so no in-repo review pack runs on it.
   `TIER_COST.md:1` (matching lines; 2 · 1 occurrences by `rg -o`) — identical at head `c607c53a`
   and at every commit in the range (`3474aced`, `d49c78e5`); `E10`'s "3 · 2" matched no state of
   the tree. The other six counts on `E10` reproduce exactly.
+- **E17** — 2026-11-18, RED observed before the fix · `bun test scripts/shared-doc-merge.test.mjs`
+  · exit 1 · `17 pass, 1 fail` — the plain-form case fails at its status assertion (the driver
+  refuses `unknown-path` where the module's contract says it infers) · corpus commit `c542cef0`.
+- **E18** — 2026-11-18, GREEN after the fix · `bun test scripts/shared-doc-merge.test.mjs` · exit 0
+  · `18 pass, 0 fail` (the plain form infers `roadmap` from the named path, unions the rows, and
+  the unknown plain-form path still refuses) · fix commit `893f3734` (O18 verified).
+- **E19** — 2026-11-18, O19's validators in the foreground: `rg -c 'bun
+  node_modules/@gtrabanco/agentic-workflow/bin/shared-merge.mjs'
+  packages/agentic-workflow/bin/shared-merge.mjs` → 2; `rg -c 'the five .agentic-shared'
+  skills/init-workspace/references/UPGRADE.md` → 1; `rg -c 'six registry lines'
+  skills/init-workspace/references/UPGRADE.md` → 1; `bun scripts/check-skill-context.mjs
+  --documents` → `PASS context documents: 4 budgeted documents` and the skills mode → `PASS
+  context budgets: 30 skills` (O19 verified).
+- **E20** — 2026-11-18, the loop check over everything that reads the touched module · all exit 0:
+  `scripts/docs-generated-merge.test.mjs` 18/0 · `writer.merge.test.mjs` 20/0 ·
+  `telemetry-merge-install.test.mjs` 8/0 · `telemetry-reconstruct.test.mjs` 18/0 ·
+  `doctor.checks.test.mjs` 21/0 · `normative-drift.test.mjs` 21/0 · the crate suite `bun run test`
+  1304/0 · `scripts/unit-route.test.mjs` alone 64/0.
+- **E21** — 2026-11-18, the differential (§6): pre-batch head `c607c53a` vs batch head `893f3734`,
+  identical scratch fixtures, fresh `%A` copies per case, every touched command through the root
+  entry · 12 cases: 10 byte-identical (install both shapes, roadmap union, telemetry table, JSONL
+  union, unknown-path and class-mismatch refusals, unreadable-side, both usage errors) · the two
+  differences are exactly the asked repair: `plain-known` refuses `unknown-path` exit 1 at base →
+  infers `roadmap` from the named path and resolves exit 0 at head, and `plain-unknown`'s refusal
+  now names the path the driver was handed instead of the base temp file (exit 1 both).
+- **F1** — 2026-11-18, folded at `b190821d`: `E16` records the observed counts beside `E10`, which
+  is never edited; the underlying validator (O14) re-confirmed green in the verify receipt.
+- **F2** — 2026-11-18, folded at `b190821d`: `PE-013` supersedes `PE-008`'s two tallies with the
+  measured 12/15 (scratch `git archive origin/main` run); the head−base delta arithmetic confirms
+  the suites' substance.
+- **F3** — 2026-11-18, folded at `b12a8bbf`: the crate bin's two usage spellings carry the `bun`
+  runtime prefix (O19's count pins them); the file's mode stays 100644 per the `path-guard.mjs`
+  precedent, so no armed path changes.
+- **F4** — 2026-11-18, folded at `893f3734`: `resolveMerge` falls back to `argv[4]` when `argv[5]`
+  is absent — the plain form infers the class from the named path as the module's contract states,
+  and the unknown-path refusal stays closed (red first at `c542cef0`, green at `893f3734`; the
+  differential shows the two asked differences and ten byte-identical cases).
+- **F5** — 2026-11-18, folded at `b12a8bbf`: `UPGRADE.md` now counts five classes and six registry
+  lines, both enumerated; the init-workspace budgets stay green (E19).
+- **F6** — 2026-11-18, folded wontfix at this commit (D14): the new refusal wording is the correct
+  consequence of the `merge-install` route; the envelope, exit codes and pinned assertions are
+  unchanged.
+- **P7** — 2026-11-18, the correction batch's commits: `b190821d` (ledgers + receipt), `c542cef0`
+  (red corpus), `893f3734` (the fix), `b12a8bbf` (prose currency), this commit (close-out) ·
+  `scripts/test-impact.mjs --base c607c53a` → `targeted` (3 executable paths, 1 suite by path);
+  the loop check ran the wider set by hand (E20).
+- **G2** — 2026-11-18, `bun scripts/local-gate.mjs --no-bail` at the batch content (post C5's
+  working-tree edits) · exit 0 · **PASS — 19 step(s) in 560s**, every step green including
+  `root-suite`, `crate-suite-bun`, `crate-suite-node` and `worktree-guard`. A first gate attempt
+  on this shared box hit the documented load flake (`scripts/unit-route.test.mjs` F7 — 64/0
+  alone, E20) and was re-run on a quieter host: the flake is the pre-existing environment
+  condition §Known pre-existing issues records, not a batch regression. This line lands in a
+  docs-only commit after the run, so the gate receipt attests the batch head plus this record.
 ### Correction history
 
 2026-11-18 — one owner-directed correction batch on the first `EXTERNAL VERIFY`
@@ -507,7 +555,10 @@ and flipped only on their foreground validators.
 
 ## Next
 
-`/aw-local-review` on the pushed head (the owner is the external verifier).
+The owner's delta verification of the correction batch (`/aw-local-review` or a
+delta `EXTERNAL VERIFY` on the correction head); the batch's own recheck is
+recorded in E17–E21 and G2, and the next verify run binds this unit's receipt as
+its delta base.
 
 ## References
 
