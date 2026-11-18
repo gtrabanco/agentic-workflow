@@ -370,6 +370,29 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   and both re-pinned budgets · `e641a3b5`.
 - **P5** — 2026-11-18, the frozen dimension set extended and the gate clean ·
   `eb860add`.
+- **P6** — 2026-11-18, the delivery open: the branch integrated `main`
+  (`0a7c7ab2`, one docs(log) commit, no conflict — this branch adds a fragment and
+  never appends to `docs/LOGS.md`), pushed as `feat/616-journal-carrier`, and PR
+  [#640](https://github.com/gtrabanco/agentic-workflow/pull/640) opened against
+  `main` with `Closes #616`. Row 616 settled through the crate's own writer
+  (`roadmap rowUpsert` receipt `adfcc4a3 → 0743f603`, `done · #640`).
+- **D6** — 2026-11-18, the push-hook skip and its reason: the gate's own push
+  command ran in the foreground first
+  (`bun scripts/local-gate.mjs --skip-network --remote origin --jobs 1 --push-base
+  2dda53fe`) → PASS, 17 steps, exit 0; the publish itself then used the hook's
+  documented escape `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`, because on this box
+  (`loadavg` 9–12) `--jobs auto` reds the three load-bound assertions G5 names.
+  The reason is recorded in the PR body, which is what the hook's own message
+  asks for.
+- **E9** — 2026-11-18, a repository-state contradiction found at the delivery
+  open, reported rather than edited: `docs/ROADMAP.md` carries a second row for
+  this issue — `| 616 | journal-carrier-product-audit-dimension | idea ·
+  postponed | 444 (hard, blocked) |`, added by `366350c5` ("add issues 613, 614,
+  616 as postponed features"). The forge is authoritative and disagrees:
+  `blockedBy(first:10)` on #616 is **empty**, and the issue's own body says "No
+  hard blockers — this can start immediately." The unit proceeded on that
+  authority. Removing or re-scoping the stale row is the owner's decision; no
+  hand edit was made here (`docs-generate` never deletes a hand-written row).
 - **E8** — 2026-11-18, the read-only proofs: `rg -c
   'writeFileSync|appendFileSync|mkdirSync' scripts/journal-corpus.mjs` matches
   nothing (exit 1), and `rg -c 'from "\./findings-corpus\.mjs"'
