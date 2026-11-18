@@ -213,14 +213,16 @@ export function vehicleFileArmed(state) {
  * this script uses (fs reads, the spawn probe, a bounded git read), shaped like
  * the doctor's `ops` so the evidence is produced by one module, not two.
  */
-function vehicleOps({ root, home, env, probe }) {
+function vehicleOps({ root, home, env, bunPresent }) {
   return {
     root,
     home,
     env,
     platform: process.platform,
     arch: process.arch,
-    binaryPath: (name) => (name === "bun" && probe("bun", ["--version"]) !== null ? "bun" : name === "node" ? "node" : null),
+    // Availability was already probed once above: a second `bun --version` here
+    // would be the same question asked twice per pass.
+    binaryPath: (name) => (name === "bun" && bunPresent ? "bun" : name === "node" ? "node" : null),
     version: () => null,
     readText: (file) => {
       try {
@@ -409,7 +411,7 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
     // no .bun-version → an accepted bun opt-in installs latest
   }
 
-  const vehicle = vehicleEvidence(vehicleOps({ root, home, env, probe }));
+  const vehicle = vehicleEvidence(vehicleOps({ root, home, env, bunPresent: bunOut !== null }));
   const vehicleFileText = (() => {
     try {
       return fs.readFileSync(path.join(root, VEHICLE_FILE), "utf8");
