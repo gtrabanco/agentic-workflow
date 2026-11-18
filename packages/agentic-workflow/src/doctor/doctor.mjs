@@ -120,7 +120,7 @@ export function renderDoctor(envelope) {
   for (const row of envelope.rows) {
     const label = STATUS_LABELS[row.status] ?? row.status;
     const detail = describe(row);
-    const advisory = row.advisory ? ` — ${row.advisory}${row.instruction ? ` · ${row.instruction}` : ""}` : "";
+    const advisory = row.advisory ? ` — ${row.advisory}${row.instruction && !row.advisory.includes(row.instruction) ? ` · ${row.instruction}` : ""}` : "";
     // The label column is 12 wide with a minimum two-space gutter, so the
     // fixed block keeps its separation even for the 11-character UNREACHABLE;
     // the id column widens for an id longer than it (issue #611).

@@ -15,8 +15,9 @@
  * is a setup defect; anything else falls through to the ordinary classification.
  *
  * Read-only by construction: every read goes through the doctor's injected `ops`
- * seam (`probes.mjs`), and an unanswerable read is `null` or `unreachable` —
- * never a guessed `ok`.
+ * seam (`probes.mjs`), and a read that cannot answer is `null` in the evidence
+ * with the row's advisory naming what could not be compared — never a guessed,
+ * silent `ok`.
  */
 
 import path from "node:path";
