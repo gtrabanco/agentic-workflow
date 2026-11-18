@@ -46,6 +46,15 @@ export declare function parseLedger(text: string): LedgerParse;
 /** One sample's fields in the published order. */
 export declare function orderedSample(sample: Record<string, unknown>): Record<string, unknown>;
 
+/**
+ * Validate one ledger append and return the function that performs it: every
+ * refusal is raised now, the byte only when the returned plan is applied.
+ */
+export declare function prepareLedgerAppend(options: {
+  ledgerPath: string;
+  sample: object;
+}): () => void;
+
 /** Append one sample to the project's ledger, in the order the ledger declares. */
 export declare function appendLedgerSample(options: {
   ledgerPath: string;
