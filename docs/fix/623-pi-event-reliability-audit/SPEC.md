@@ -72,6 +72,36 @@ recorded under **S6**.
 > `session-telemetry.ts` latching `flush()` would freeze partial totals, and
 > the append-only ledger sink would append growing duplicate rows.
 
+## Acceptance criteria
+
+One criterion per requirement, each naming the check that demonstrates it. The
+heading is the acceptance anchor the local workflow's plan step freezes; the
+repo's re-cut section list (`UNIT_DOC_SPEC_REF_SECTIONS`) does not carry it, and
+the conflict is reported in this unit's handoff rather than repaired here.
+
+- **AC1 (S1)** — the listener inventory names every live `pi.on()` registration
+  in `packages/pi-agentic-workflow/src/extension/` with its event, `file:line`
+  and purpose: `rg -n 'pi\.on\(' packages/pi-agentic-workflow/src/extension/`
+  matches 16, and every match is a row of the reliability matrix.
+- **AC2 (S2)** — `docs/workflow/CONFIG.md` carries the `pi-event-reliability@1`
+  matrix: every registered event × tui / web / headless, a reliability verdict,
+  and the source that backs it: `bun test packages/pi-agentic-workflow/test/event-reliability-matrix.test.mjs`
+  exits 0.
+- **AC3 (S3)** — every observable effect (telemetry emission, journal entry,
+  `session:end` seam, `AG_WF_PHASE`) has its matrix row with the environment gap
+  it survives and how: the same matrix suite exits 0.
+- **AC4 (S4)** — telemetry and the journal entry land at `agent_settled` without
+  a shutdown: `bun test packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs`
+  and `bun test packages/pi-agentic-workflow/test/auto-log-session-wiring.test.mjs`
+  exit 0.
+- **AC5 (S5)** — Pi's event contract is untouched: `session_shutdown` stays
+  registered in all three wirings (`rg -n 'pi\.on\("session_shutdown"' packages/pi-agentic-workflow/src/extension/`
+  matches 3) and the package suite stays green.
+- **AC6 (S6)** — one ledger row per `source` and one JSONL line per settled
+  run: `bun test packages/pi-agentic-workflow/test/telemetry-ledger-sink.test.mjs`
+  and `bun test packages/pi-agentic-workflow/test/telemetry-jsonl-sink.test.mjs`
+  exit 0.
+
 ## Impact
 
 - `packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts` — **ya confirmado**: flush solo en `session_shutdown`, pierde muestras en pi-web
@@ -150,7 +180,7 @@ events as fallbacks wherever possible).
 Refined at planning from the issue's P1–P9; the emission-boundary decision
 (S6) re-words P5/P6 and adds the marker purge and the env reset under P7.
 
-- P1 — Record the full `pi.on()` listener inventory of `packages/pi-agentic-workflow/src/extension/` in the planning evidence: event, file:line, purpose (validator: `rg -n 'pi\.on\(' packages/pi-agentic-workflow/src/extension/` lists 14 live registrations matching the inventory)
+- P1 — Record the full `pi.on()` listener inventory of `packages/pi-agentic-workflow/src/extension/` in the planning evidence: event, file:line, purpose (validator: `rg -n 'pi\.on\(' packages/pi-agentic-workflow/src/extension/` matches 16 — 14 at the cut plus the two `agent_settled` registrations P5 and P6 add)
   (Implements: S1)
   - Relevant files: packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts, packages/pi-agentic-workflow/src/extension/auto-log-session-wiring.ts
 - P2 — Record the `skills/`, `scripts/` and schema-package inventory — zero live registrations there, only `scripts/mutation-check.mjs` string matches (validator: `rg -n 'pi\.on\(' skills/ scripts/ packages/agentic-workflow-schema/src/ --glob '!*.test.mjs'` returns only mutation-check matches)
@@ -178,22 +208,17 @@ Refined at planning from the issue's P1–P9; the emission-boundary decision
 
 ### Planning evidence
 
-Ledger: `planning-evidence.md` in this folder (M-sized unit). The rows recorded
-during this planning session cover the listener inventory, the pi.dev event
-catalogue, the `agent_settled` documentation quotes, and the two sink facts
-(latch + append-only idempotency) that shaped S6.
+Ledger: `planning-evidence.md` in this folder (M-sized unit, separate-file
+shape). The rows cover the listener inventory, the pi.dev event catalogue, the
+`agent_settled` documentation and host evidence, and the sink facts (latch +
+append-only idempotency) that shaped S6.
 
 ### Obligations
 
-```text
-obligations@1
-obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status
-flush-on-shutdown | AGENTS.md (tests first for a non-empty test impact set) | every change runs its affected tests | triage → plan | P9 | implementer | gate passes | affected tests green | pending
-telemetry-invariant | docs/features/494-telemetry-by-turn/SPEC.md | telemetry accumulates correctly across environments | triage → plan | P5 | implementer | gate passes | telemetry works in pi-web, tui and print mode | pending
-auto-log-invariant | docs/features/394-auto-log-session/SPEC.md | auto-log-session writes to LOGS.md in all environments | triage → plan | P6 | implementer | gate passes | auto-log works in pi-web, tui and print mode | pending
-event-reliability-inventory | AGENTS.md (comprehensive audit) | all Pi events documented for cross-environment reliability | triage → plan | P1–P4 | implementer | audit complete | event reliability matrix documented | pending
-one-sample-per-session | S6 (this doc) | the ledger keeps one row per session/unit/day under upsert-by-source | triage → plan | P5 | implementer | `bun test packages/pi-agentic-workflow/test/telemetry-ledger-sink.test.mjs` exits 0 | the upsert dedupes by `source` and never appends a second row for the same | pending
-```
+Ledger: `planning-obligations.md` in this folder (M-sized unit, separate-file
+shape — never both, per `skills/pre-execution-review/references/LEDGERS.md`).
+It carries O1–O13 in the closed nine-column shape; every row is `planned` until
+its validator runs in the foreground.
 
 ## Triaged steps
 
@@ -207,9 +232,8 @@ one-sample-per-session | S6 (this doc) | the ledger keeps one row per session/un
 
 ## Log
 
-- **L1** — the issue, verbatim:
-  ```
-  - **L1** — 2026-06-30, the issue, verbatim:
+- **L1** — 2026-06-30, the issue, verbatim (the nested fence the planning
+  commit left is repaired here; the quoted text is byte-identical):
   ```
   No hay datos de telemetría en absoluto. Ni el ledger ni el JSONL tienen muestra alguna...
 
@@ -238,6 +262,9 @@ one-sample-per-session | S6 (this doc) | the ledger keeps one row per session/un
 
   El wiring de auto-log-session tiene el mismo problema: la escritura al LOGS.md solo ocurre en session_shutdown. Si la sesión de Pi-web nunca se cierra, el marker se crea y queda flotando en memoria, pero publishAll() nunca se ejecuta.
   ```
+  (The five `E` lines that followed inside this block were the issue's own
+  reproduction notes; they are kept verbatim above and are not the unit's
+  evidence runs — the unit's runs restart the numbering below.)
 - **E1** — 2026-06-30, `find ~/.pi/agent/sessions/ --name "*.jsonl" | wc -l` · 150+ session transcripts, 0 samples · Las JSONL de transcript existen pero no contienen muestras de telemetría del workflow
 - **E2** — 2026-06-30, `bun scripts/telemetry-report.mjs --ledger docs/workflow/TIER_COST.md` · exit 0 · 0 samples
 - **E3** — 2026-06-30, `grep -n "session_shutdown" packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts` · line 142 · `pi.on("session_shutdown", () => { accumulator?.flush();`
@@ -249,6 +276,9 @@ one-sample-per-session | S6 (this doc) | the ledger keeps one row per session/un
 - **E3** — web fetch `https://pi.dev/docs/latest/extensions` with the installed `@earendil-works/pi-coding-agent@1.5.2 docs/extensions.md` · identical 37-event catalogue; the docs describe `session_shutdown` for exit and session-replacement only, and cite `on("agent_settled")` as the run-finished boundary.
 - **E4** — read `packages/pi-agentic-workflow/src/session-telemetry.ts` and `src/telemetry-sinks.ts` · `flush()` latches (`emitted = true`) and the ledger sink compares whole rows — the two facts that discard the issue's naive `turn_end`-debounce route (see S6).
 - **E5** — read `packages/pi-agentic-workflow/src/auto-log-session.ts` · the marker is write-only state (created at `session_start`, removed only at `session_shutdown`) — a session that never closes leaves it forever, so P7 purges stale ones.
+- **E6** — 2026-11-18, `rg -n 'agent_settled' dist/core/agent-session.js dist/server/sessions/piSessionService.js` over the installed host and web host · the host emits `agent_settled` from `_emitAgentSettled` after every run and the web session service branches on it per run, while that module names no `session_shutdown` at all (PE-011, PE-012).
+- **E7** — 2026-11-18, `bun test --timeout=10000 test/telemetry-wiring.test.mjs test/auto-log-session-wiring.test.mjs test/session-telemetry.test.mjs test/telemetry-ledger-sink.test.mjs test/telemetry-jsonl-sink.test.mjs test/auto-log-session.test.mjs test/telemetry-extension.test.mjs` in `packages/pi-agentic-workflow` · 80 pass / 0 fail · the baseline these obligations start from.
+- **D1** — 2026-11-18, the local workflow's §5 plan step — the planning ledgers are re-cut into the repository's own shapes: `planning-obligations.md` as a markdown table the repo's reader parses (`scripts/unit-lineage.mjs` accepts only `O<n>`/`AC-<name>` ids and refuses an empty ledger, so the cut's text block and descriptive ids were unreadable to it), `planning-evidence.md` in `LEDGERS.md`'s closed column order, and AC1–AC6 frozen in `## Acceptance criteria`.
 
 ## Next
 
