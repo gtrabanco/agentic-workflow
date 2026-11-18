@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   BASE_CONFIG_FILE,
   BASE_CONFIG_SECTIONS,
+  normalizeGuard,
   normalizeLogSession,
   parseJsonc,
   resolveConfigDocuments,
@@ -157,11 +158,11 @@ export function loadConfig({ agentDir, cwd, projectTrusted, readFile = readIfExi
     logSession: normalizeLogSession(baseResolved.config.logSession),
     memory: baseResolved.config.memory,
     telemetry: baseResolved.config.telemetry,
-    guards: baseResolved.config.guards,
+    guard: normalizeGuard(baseResolved.config.guard),
     advance: baseResolved.config.advance,
     pathProtection: intersectPathPolicy(SHIPPED_PATH_POLICY, baseResolved.config.pathProtection as PathProtectionOverride),
-    gitIdentity: normalizeGitIdentity(baseResolved.config.gitIdentity),
-  } as Pick<EffectiveConfig, "logSession" | "memory" | "telemetry" | "guards" | "advance" | "pathProtection" | "gitIdentity">;
+    gitIdentity: normalizeGitIdentity(baseResolved.config.gitIdentity, baseResolved.config.guard),
+  } as Pick<EffectiveConfig, "logSession" | "memory" | "telemetry" | "guard" | "advance" | "pathProtection" | "gitIdentity">;
 
   const config = problems.length === 0 ? mergeConfigs(globalFile, projectFile, base) : DEFAULT_CONFIG;
   return {

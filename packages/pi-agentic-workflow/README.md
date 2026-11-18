@@ -329,8 +329,9 @@ The record is package bookkeeping, so ignore it beside the start marker:
 ## Model routing
 
 Two JSONC files, both optional. Model routing lives in this package's extension
-file; cross-tool feature config (`logSession`, `memory`, `telemetry`, `guards`,
-`advance`, `pathProtection`) lives in the base `agentic-workflow.json` at the
+file; cross-tool feature config (`logSession`, `memory`, `telemetry`, `guard`,
+`gitIdentity`, `advance`, `pathProtection`, `contentGuard`) lives in the base
+`agentic-workflow.json` at the
 same scope (guide: `docs/workflow/CONFIG.md`, machine contract:
 `@gtrabanco/agentic-workflow-schema`). Bun's native parser reads the file first
 and the schema package's `parseJsonc` stays the acceptance boundary, so `//` and
@@ -605,10 +606,12 @@ writes in it (legacy flags such as `--unset` and modern subcommands such as
 
 An approval is remembered **per project and per scope+key** in
 `git-identity-consent.json` beside the config, so the same question is never
-asked twice and a different project is never covered. `gitIdentity.agentGuard`
-controls it: `mode: "ask" | "block"` and `allow: ["user.name"]` for the writes a
-project permits without asking (the allow list covers local, non-destructive
-writes only — a removal or a shared file still asks).
+asked twice and a different project is never covered. Two keys control it:
+`guard.gitIdentity.mode` (issue #626 — `allow`, `deny`, `ask`; `ask` is the
+shipped default and answers as `deny` in a session with no UI) and
+`gitIdentity.agentGuard.allow: ["user.name"]` for the writes a project permits
+without asking (the allow list covers local, non-destructive writes only — a
+removal or a shared file still asks).
 
 The verdict is about the command bash runs, not the prose a command carries: a
 heredoc body is data (`git config user.email` quoted inside one is a read, never
@@ -618,7 +621,7 @@ stands unquoted.
 The profile is the base config section, so the hook and the push check read the
 same one: `gitIdentity.enforce` (`off` by default — an unconfigured install is
 never blocked), `approved` (`name`, `email`, `fullName`, `format`, `signingKey`)
-and `agentGuard`. The boundary is honest: this sees what a model asks the bash
+and `agentGuard.allow`; the guard's disposition is `guard.gitIdentity.mode` in the base file. The boundary is honest: this sees what a model asks the bash
 tool to run — not a script it launches, not a `!` command, not another host.
 That is what the pre-commit hook and the push-range check exist for; see
 [`docs/workflow/GIT_IDENTITY_HARDENING.md`](../../docs/workflow/GIT_IDENTITY_HARDENING.md).
@@ -683,7 +686,9 @@ rather than restating it, so the carrier cannot become a second prose home.
 (forward the command in place when the translation is exact, block when it is
 not — `rg` spells several `grep` flags differently, and a silent rewrite into a
 different command would be worse than a refusal). `enabled: false` turns the
-carrier off. The section lives in `pi-agentic-workflow.json`, so the base config
+carrier off, and the base file's `guard.toolChoice.mode` (issue #626) is the
+project-wide disposition: `allow` stands it down, `deny` keeps the refusal, and
+`ask` answers as `deny` because this guard has no question path. The section lives in `pi-agentic-workflow.json`, so the base config
 other hosts read is unchanged. Boundary: this sees the `bash` tool call itself,
 not a `grep` inside a script the command executes. This is the recorded
 domain-separation exception that lets the package carry the convention at all —
