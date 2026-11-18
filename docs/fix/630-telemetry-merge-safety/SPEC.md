@@ -536,10 +536,11 @@ and hands the diff over, so no in-repo review pack runs on it.
   (red corpus), `893f3734` (the fix), `b12a8bbf` (prose currency), this commit (close-out) ·
   `scripts/test-impact.mjs --base c607c53a` → `targeted` (3 executable paths, 1 suite by path);
   the loop check ran the wider set by hand (E20).
-- **G2** — 2026-11-18, `bun scripts/local-gate.mjs --no-bail` at the batch content (post C5's
-  working-tree edits) · exit 0 · **PASS — 19 step(s) in 560s**, every step green including
-  `root-suite`, `crate-suite-bun`, `crate-suite-node` and `worktree-guard`. A first gate attempt
-  on this shared box hit the documented load flake (`scripts/unit-route.test.mjs` F7 — 64/0
+- **G2** — 2026-11-18, HEAD b12a8bbf (the batch's committed content; this line lands in a docs-only
+  commit after the run, so the gate receipt attests `b12a8bbf` plus this record),
+  `bun scripts/local-gate.mjs --no-bail` · exit 0 · **PASS — 19 step(s) in 560s**, every step green
+  including `root-suite`, `crate-suite-bun`, `crate-suite-node` and `worktree-guard`. A first gate
+  attempt on this shared box hit the documented load flake (`scripts/unit-route.test.mjs` F7 — 64/0
   alone, E20) and was re-run on a quieter host: the flake is the pre-existing environment
   condition §Known pre-existing issues records, not a batch regression. This line lands in a
   docs-only commit after the run, so the gate receipt attests the batch head plus this record.
