@@ -24,6 +24,15 @@
  * host, or a variable-indirection invocation (`c=config; git $c …`) is outside
  * it — Layer 2 (the pre-commit hook and the push-range check) exists for that.
  *
+ * Two shapes the statement split has to get right, and does (issue #618): a
+ * heredoc body is data — bash feeds it to the command's stdin and never runs it,
+ * so a `git config` line quoted inside one is not a write; and a backtick span is
+ * a command substitution, so its content is parsed as its own command wherever
+ * it stands unquoted. What remains outside: a heredoc piped into an interpreter
+ * (`bash <<'EOF' … EOF`), a substitution inside a double-quoted string (read as
+ * data, the conservative direction), and the indirection above. Those identity
+ * consequences are Layer 2's.
+ *
  * The tokenizer here is a second reader of the same shell shape as
  * `scripts/git-config-writes.mjs`, and it is *not* a copy of it: that gate asks
  * "does a test carrier write configuration at all?" over repository text, while
@@ -154,10 +163,59 @@ interface Token {
 }
 
 /**
+ * The end of a heredoc's body when the text carries one, or null.
+ *
+ * A heredoc is `<<` (never the `<<<` here-string) followed by a quoted or bare
+ * delimiter, closed by a line that is exactly that delimiter — leading tabs
+ * stripped for `<<-`. Bash feeds the body to the command's stdin and never runs
+ * it, so the body is data (issue #618). A `<<` with no closing delimiter line
+ * stays ordinary words: bash itself fails such a command with `unexpected EOF`,
+ * so no execution hides behind treating it as text.
+ */
+function readHeredoc(command: string, at: number): number | null {
+  let cursor = at + 2;
+  const stripTabs = command[cursor] === "-";
+  if (stripTabs) cursor += 1;
+  while (command[cursor] === " " || command[cursor] === "\t") cursor += 1;
+  let delimiter = "";
+  const delimiterQuote = command[cursor] === '"' || command[cursor] === "'" ? command[cursor] : null;
+  if (delimiterQuote !== null) {
+    cursor += 1;
+    while (cursor < command.length && command[cursor] !== delimiterQuote) {
+      if (command[cursor] === "\\" && delimiterQuote === '"') cursor += 1;
+      delimiter += command[cursor] ?? "";
+      cursor += 1;
+    }
+    if (command[cursor] !== delimiterQuote) return null;
+    cursor += 1;
+  } else {
+    while (cursor < command.length && !/[\s;&|<>()]/.test(command[cursor])) {
+      if (command[cursor] === "\\") cursor += 1;
+      delimiter += command[cursor] ?? "";
+      cursor += 1;
+    }
+  }
+  if (delimiter === "") return null;
+  const openerLineEnd = command.indexOf("\n", cursor);
+  if (openerLineEnd < 0) return null;
+  let lineStart = openerLineEnd + 1;
+  while (lineStart <= command.length) {
+    let lineEnd = command.indexOf("\n", lineStart);
+    if (lineEnd < 0) lineEnd = command.length;
+    const raw = command.slice(lineStart, lineEnd).replace(/\r$/, "");
+    if ((stripTabs ? raw.replace(/^\t+/, "") : raw) === delimiter) return lineEnd < command.length ? lineEnd + 1 : command.length;
+    if (lineEnd >= command.length) return null;
+    lineStart = lineEnd + 1;
+  }
+  return null;
+}
+
+/**
  * Split a command line into statements of words. Quotes are honoured so a key or
- * a path with spaces survives; `#` starts a comment at a word boundary; the
- * separators end a statement. Command substitutions are split as their own
- * statements so `$(git config …)` is seen.
+ * a path with spaces survives; `#` starts a comment at a word boundary; a
+ * newline and the separators end a statement, as bash runs them. Command
+ * substitutions are split as their own statements so `$(git config …)` and a
+ * backtick span are seen; a heredoc body is data and is skipped whole.
  */
 export function tokenizeCommand(command: string): Token[][] {
   const statements: Token[][] = [];
@@ -182,6 +240,17 @@ export function tokenizeCommand(command: string): Token[][] {
   for (let index = 0; index < command.length; index += 1) {
     const char = command[index];
     const next = command[index + 1];
+    // A heredoc body is data wherever its opener sits — an unquoted
+    // `<<'EOF'`, and the same opener inside a quoted `"$(cat <<'EOF' …)"`,
+    // which is the live-capture shape this reader has to survive.
+    if (char === "<" && next === "<" && command[index + 2] !== "<") {
+      const bodyEnd = readHeredoc(command, index);
+      if (bodyEnd !== null) {
+        flushStatement();
+        index = bodyEnd - 1;
+        continue;
+      }
+    }
     if (quote !== null) {
       if (char === quote) {
         quote = null;
@@ -216,8 +285,19 @@ export function tokenizeCommand(command: string): Token[][] {
       flushStatement();
       continue;
     }
+    if (char === "\n") {
+      flushStatement();
+      continue;
+    }
     if (char === " " || char === "\t" || char === "\r") {
       flushWord();
+      continue;
+    }
+    if (char === "`") {
+      // A backtick span is command substitution in bash: its content is its own
+      // command. Inside a quoted string the same character is data and the
+      // quote branch above has already consumed it.
+      flushStatement();
       continue;
     }
     if (char === ";" || char === "|" || char === "&") {
