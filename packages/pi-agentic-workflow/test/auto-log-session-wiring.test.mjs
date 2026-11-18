@@ -171,11 +171,13 @@ test("AW-04 a project without a journal did not opt in: no marker, no entry, no 
   fs.rmSync(root, { recursive: true, force: true });
 });
 
-test("AW-05 a marker left by another session is never adopted and never removed", () => {
+test("AW-05 a marker left by another session is never adopted, and only a stale one is swept", () => {
   const { root, run } = project();
-  // A crashed session's marker, older than this one.
+  // A crashed session's marker, older than the retention window, and a marker of
+  // another session that is still recent. Neither may become this session's range.
   fs.mkdirSync(path.join(root, ".pi"), { recursive: true });
   fs.writeFileSync(markerPath(root, "crashed-session"), "deadbee 1700000000 2023-11-14T22:13Z\n");
+  fs.writeFileSync(markerPath(root, "live-elsewhere"), `cafebabe ${Math.floor((NOW() - 60_000) / 1000)} 2026-11-04T15:11Z\n`);
 
   // This session marks its own HEAD, commits, then shuts down: its range must be
   // the work it did, never the crashed marker's sha.
@@ -191,7 +193,8 @@ test("AW-05 a marker left by another session is never adopted and never removed"
   const journal = fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8");
   assert.match(journal, /- \*\*Commits:\*\* 1 `/u, "the entry counts this session's commit");
   assert.equal(journal.includes("deadbee"), false, "the crashed marker's sha never reaches the entry");
-  assert.equal(fs.readFileSync(markerPath(root, "crashed-session"), "utf8"), "deadbee 1700000000 2023-11-14T22:13Z\n");
+  assert.equal(fs.existsSync(markerPath(root, "crashed-session")), false, "a stranded marker past the retention window is swept at session start (#623 S3)");
+  assert.equal(fs.existsSync(markerPath(root, "live-elsewhere")), true, "another session's recent marker is never touched");
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -263,7 +266,7 @@ test("AW-10 telemetry on with the log off writes the ledger row and no journal e
   const telemetry = createTelemetryWiring({ root, enabled: true, now: () => NOW(), date: () => "2026-11-04", sessionId: () => "tel-1" });
   telemetry.register(pi.pi);
   createAutoLogSessionWiring({ root, enabled: false, now: NOW }).register(pi.pi);
-  assert.deepEqual(pi.registered(), ["session_shutdown", "session_start", "tool_execution_end", "turn_end", "turn_start"]);
+  assert.deepEqual(pi.registered(), ["agent_settled", "session_shutdown", "session_start", "tool_execution_end", "turn_end", "turn_start"]);
   telemetry.noteCommand("unit-lane", ["394-auto-log-session"]);
   pi.fire("session_start", {}, { sessionManager: { getSessionId: () => "tel-1" } });
   pi.fire("turn_start", { timestamp: NOW() });
@@ -308,5 +311,56 @@ test("AW-12 in a carrier project the entry goes to a fragment and docs/LOGS.md i
     commits: { count: 0, range: `${marker.sha}…${marker.sha}` },
     files: [],
   }));
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+/* ── the reliable boundary (#623 S3/S4) ──────────────────────────────── */
+
+// `session_shutdown` fires only when a session runtime is torn down. A host whose
+// sessions stay alive between prompts never tears one down, so the marker it
+// writes at `session_start` and the entry only the shutdown would publish are
+// both stranded. The run boundary (`agent_settled`) is where the entry lands
+// instead, and the shutdown stays the fallback for a session that never settled.
+// One entry per session, whichever boundary got there first: the journal is
+// append-only by the repository's own write gate, so a second boundary could not
+// replace the first one's entry.
+
+const entriesIn = (root) => fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8").split("\n").filter((line) => line.startsWith("## ")).length;
+
+test("AW-13 a session that never shuts down still writes its entry at a settled run", () => {
+  const { root } = project();
+  const wiring = createAutoLogSessionWiring({ root, enabled: true, now: NOW });
+  const driven = session(wiring);
+  assert.ok(readMarker(root, SESSION), "session_start recorded the marker");
+
+  driven.pi.fire("agent_settled", {}, driven.ctx);
+
+  assert.equal(entriesIn(root), 1, "the settled run published the entry, with no shutdown in sight");
+  assert.match(fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8"), /auto \(settled\)/u, "the entry names the boundary it was written at");
+  assert.equal(fs.existsSync(markerPath(root, SESSION)), false, "the marker is removed at the run boundary too");
+
+  driven.shutdown();
+  assert.equal(entriesIn(root), 1, "the shutdown adds no second entry: one session, one entry, whatever boundary wrote it");
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("AW-14 a second settled run adds no second entry, and the shutdown still publishes when no run settled", () => {
+  const { root } = project();
+  const driven = session(createAutoLogSessionWiring({ root, enabled: true, now: NOW }));
+  driven.pi.fire("agent_settled", {}, driven.ctx);
+  driven.pi.fire("agent_settled", {}, driven.ctx);
+  assert.equal(entriesIn(root), 1, "two settled runs of one session are still one entry");
+
+  // The fallback half: a session whose first boundary is the shutdown.
+  const second = session(createAutoLogSessionWiring({ root, enabled: true, now: NOW }), { id: "s-394-b" });
+  second.shutdown();
+  assert.equal(entriesIn(root), 2, "a session that never settled is written by its shutdown");
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test("AW-15 a project without a journal publishes nothing at the run boundary either", () => {
+  const { root } = project({ journal: false });
+  const driven = session(createAutoLogSessionWiring({ root, enabled: true, now: NOW }));
+  driven.pi.fire("agent_settled", {}, driven.ctx);
+  assert.equal(fs.existsSync(path.join(root, "docs/LOGS.md")), false, "no opt-in means no journal, at every boundary");
   fs.rmSync(root, { recursive: true, force: true });
 });
