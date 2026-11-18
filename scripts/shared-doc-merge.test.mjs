@@ -492,3 +492,39 @@ test("F-630-10 — an unregistered path still refuses (the class map is exact)",
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("correction A4 — the plain form (%O %A %B %L %P) infers the class from the named path, and still refuses an unknown one", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw630-plain-"));
+  try {
+    const side = (name, text) => {
+      const file = join(dir, name);
+      writeFileSync(file, text, "utf8");
+      return file;
+    };
+    // Git invokes a merge driver armed without the class prefix as `%O %A %B %L %P` —
+    // five arguments, the named path at index 4. The module's own contract says the
+    // class is then inferred from the named path; the inference must fire and the
+    // union must resolve exactly as the class-prefixed form resolves.
+    const header = "| id | status | topic |";
+    const sep = "|---|---|---|";
+    const row = (id, status, topic) => `| ${id} | ${status} | ${topic} |`;
+    const baseText = `# Roadmap\n\n${header}\n${sep}\n${row(1, "done · [#1]", "a")}\n`;
+    const oursText = `${baseText}${row(2, "open", "b")}\n`;
+    const theirsText = `${baseText}${row(3, "open", "c")}\n`;
+    const ours = side("plain-ours", oursText);
+    const merged = run([side("plain-base", baseText), ours, side("plain-theirs", theirsText), "7", "docs/ROADMAP.md"], dir);
+    assert.equal(merged.status, 0, merged.stderr);
+    const union = readFileSync(ours, "utf8");
+    assert.ok(!union.includes("<<<<<<<"), "no conflict marker survives the union");
+    for (const topic of ["a", "b", "c"]) assert.ok(union.includes(`| ${topic} |`), `row ${topic} survives`);
+
+    // A plain-form path no class owns is still a refusal, never a guess — and it
+    // names the path the driver was handed, not the base temp file.
+    const unknown = run([side("plain-base-2", "x\n"), side("plain-ours-2", "x\ny\n"), side("plain-theirs-2", "x\nz\n"), "7", "docs/workflow/COSTS.md"], dir);
+    assert.equal(unknown.status, 1);
+    assert.ok(unknown.stderr.includes("unknown-path"));
+    assert.ok(unknown.stderr.includes("docs/workflow/COSTS.md"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
