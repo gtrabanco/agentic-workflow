@@ -2,9 +2,10 @@
 // to a real session or the ledger stays empty forever.
 //
 // The wiring is a pure factory over a `pi`-shaped object (`on(event, handler)`),
-// so the corpus drives the five lifecycle events directly and never needs a live
+// so the corpus drives the six lifecycle events directly and never needs a live
 // Pi. What it pins: `off` registers nothing, the unit comes from the command that
-// was dispatched, and one session emits one sample.
+// was dispatched, and each settled run emits one cumulative sample — three
+// settled runs are three samples, never one frozen at the first.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -64,11 +65,11 @@ test("off registers nothing at all — absence, not a listener that does nothing
   assert.deepEqual(registered(), []);
 });
 
-test("on registers the five lifecycle events", () => {
+test("on registers the six lifecycle events", () => {
   const { instance } = wiring();
   const { pi, registered } = fakePi();
   instance.register(pi);
-  assert.deepEqual(registered(), ["session_shutdown", "session_start", "tool_execution_end", "turn_end", "turn_start"]);
+  assert.deepEqual(registered(), ["agent_settled", "session_shutdown", "session_start", "tool_execution_end", "turn_end", "turn_start"]);
 });
 
 test("the unit comes from the dispatched command, and one session emits one sample", () => {
@@ -257,6 +258,84 @@ test("off touches no environment at all — the switch is absence, not a listene
     const { instance } = wiring({ enabled: false });
     instance.noteCommand("execute-phase", ["383"]);
     assert.equal(process.env.AG_WF_PHASE, undefined);
+  } finally {
+    if (before === undefined) delete process.env.AG_WF_PHASE;
+    else process.env.AG_WF_PHASE = before;
+  }
+});
+
+// --- the emission boundary (#623 S4/S6) ------------------------------------
+//
+// `session_shutdown` fires only when a session runtime is torn down, and a
+// long-lived host session is not: it answers prompts and goes idle without ever
+// tearing down, so the accumulator's `flush()` at shutdown never runs and every
+// sample of the session is lost. The reliable boundary is `agent_settled`, which
+// fires after every settled run in every host. These cases drive the wiring the
+// way such a host does — settles and no shutdown — and then the way a CLI does.
+
+test("a settled run emits its sample without waiting for a shutdown", () => {
+  const { instance, written } = wiring({ changedPaths: () => 7 });
+  const { pi, fire } = fakePi();
+  instance.register(pi);
+  instance.noteCommand("execute-phase", ["383", "P2"]);
+
+  fire("session_start");
+  fire("turn_start", { timestamp: 1_000 });
+  fire("tool_execution_end", { durationMs: 200 });
+  fire("turn_end", { message: { usage: { totalTokens: 750 } } });
+  fire("agent_settled");
+
+  assert.equal(written.length, 1, "the sample lands at the run boundary, with no shutdown in sight");
+  assert.equal(written[0].unit, "383-measured-acceptance");
+  assert.equal(written[0].tokens, 750);
+  assert.equal(written[0].turns, 1);
+
+  fire("turn_start", { timestamp: 1_000 });
+  fire("turn_end", { message: { usage: { totalTokens: 250 } } });
+  fire("agent_settled");
+  assert.equal(written.length, 2, "the next run is the next sample");
+  assert.equal(written[1].tokens, 1_000, "the samples are cumulative, so a consumer differences consecutive ones");
+  assert.equal(written[1].turns, 2);
+
+  fire("session_shutdown");
+  assert.equal(written.length, 2, "the final flush adds nothing when the last run already emitted the same sample");
+});
+
+test("a settled run that measured nothing new writes nothing", () => {
+  const { instance, written } = wiring({ changedPaths: () => 3 });
+  const { pi, fire } = fakePi();
+  instance.register(pi);
+  instance.noteCommand("execute-phase", ["383"]);
+  fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+  fire("agent_settled");
+  assert.equal(written.length, 1);
+  fire("agent_settled");
+  assert.equal(written.length, 1, "a re-emission of the same sample is not a new run, and writes no second row or line");
+});
+
+test("a session that never shuts down keeps emitting per run, never freezing at the first", () => {
+  const { instance, written } = wiring({ changedPaths: () => 2 });
+  const { pi, fire } = fakePi();
+  instance.register(pi);
+  instance.noteCommand("execute-phase", ["383"]);
+  for (const tokens of [100, 200, 300]) {
+    fire("turn_start", { timestamp: 1_000 });
+    fire("turn_end", { message: { usage: { totalTokens: tokens } } });
+    fire("agent_settled");
+  }
+  assert.equal(written.length, 3, "three settled runs are three samples — the web host's whole session is measured");
+  assert.deepEqual(written.map((sample) => sample.tokens), [100, 300, 600], "each sample is the cumulative total at that run");
+});
+
+test("a session start clears the phase in flight, so one session cannot inherit another's", () => {
+  const before = process.env.AG_WF_PHASE;
+  try {
+    process.env.AG_WF_PHASE = "execute-phase";
+    const { instance } = wiring({ changedPaths: () => 1 });
+    const { pi, fire } = fakePi();
+    instance.register(pi);
+    fire("session_start");
+    assert.equal(process.env.AG_WF_PHASE, undefined, "the starting session names no phase until its own command does");
   } finally {
     if (before === undefined) delete process.env.AG_WF_PHASE;
     else process.env.AG_WF_PHASE = before;

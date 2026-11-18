@@ -98,15 +98,64 @@ test("two sessions of the same unit on the same day are two rows", () => {
   assert.deepEqual(rows.map((row) => row.tokens), [1_500, 2_000]);
 });
 
-test("only an identical row is a duplicate: the guard never swallows a different sample", () => {
+test("the guard never swallows a different sample from another session", () => {
   const { ledgerPath } = project();
   const sink = createLedgerSink({ ledgerPath });
   sink.write(SAMPLE);
   for (const change of [{ tokens: 1 }, { turns: 9 }, { observed: "2026-11-04" }, { changed_paths: 0 }]) {
     const before = rowsOf(ledgerPath).length;
-    sink.write({ ...SAMPLE, ...change });
+    sink.write({ ...SAMPLE, ...change, source: `pi:session=other-${Object.keys(change)[0]}` });
     assert.equal(rowsOf(ledgerPath).length, before + 1, `a row differing in ${Object.keys(change)[0]} is a new sample`);
   }
+});
+
+// --- one row per source: the session's row is upserted (#623 S6) ------------
+//
+// A settled session emits its cumulative sample once per run, so the same
+// session reaches the ledger more than once. The sink's whole-row guard would
+// append every one of those as a new row. S6 picks the other shape: the sample's
+// `source` is the row's identity, so a later emission for the same session
+// replaces that row with the newer totals.
+
+test("a later emission for the same source replaces its row instead of appending a second one", () => {
+  const { ledgerPath } = project();
+  const sink = createLedgerSink({ ledgerPath });
+  sink.write(SAMPLE);
+  sink.write({ ...SAMPLE, tokens: 2_000, turns: 7 });
+  const rows = rowsOf(ledgerPath);
+  assert.equal(rows.length, 1, "one session is one row, however many runs it settled");
+  assert.equal(rows[0].tokens, 2_000, "the row carries the later, cumulative totals");
+  assert.equal(rows[0].turns, 7);
+});
+
+test("an upsert touches only its own row: the other sessions' rows stay byte-identical", () => {
+  const { ledgerPath } = project();
+  const sink = createLedgerSink({ ledgerPath });
+  sink.write(SAMPLE);
+  sink.write({ ...SAMPLE, source: "pi:session=def", tokens: 2_000 });
+  const otherRow = fs.readFileSync(ledgerPath, "utf8").split("\n").find((line) => line.includes("pi:session=def"));
+  sink.write({ ...SAMPLE, tokens: 1_800 });
+  const rows = rowsOf(ledgerPath);
+  assert.equal(rows.length, 2, "a second session keeps its own row");
+  assert.equal(rows[0].source, "pi:session=abc", "the replaced row keeps its position");
+  assert.equal(rows[0].tokens, 1_800);
+  assert.equal(rows[1].tokens, 2_000);
+  assert.equal(
+    fs.readFileSync(ledgerPath, "utf8").split("\n").find((line) => line.includes("pi:session=def")),
+    otherRow,
+    "the other session's row is byte-identical after the upsert",
+  );
+  assert.equal(fs.readFileSync(ledgerPath, "utf8").startsWith("# Measured acceptance"), true, "the document's prose is untouched");
+});
+
+test("a ledger that declares no source column cannot upsert, so a second sample appends", () => {
+  const columns = LEGACY_COLUMNS.filter((column) => column !== "source");
+  const { ledgerPath } = project([], { columns });
+  const sink = createLedgerSink({ ledgerPath });
+  const rowCount = () => fs.readFileSync(ledgerPath, "utf8").split("\n").filter((line) => line.startsWith("| 383")).length;
+  sink.write(SAMPLE);
+  sink.write({ ...SAMPLE, tokens: 2_000 });
+  assert.equal(rowCount(), 2, "without an identity column the append contract stands: no invented key is guessed");
 });
 
 test("the sink never rewrites an earlier row", () => {
@@ -160,12 +209,15 @@ test("round trip: the repository's reader accepts the sink's row and reads the s
 
 // --- the ledger is a file two sessions can reach at once -------------------
 //
-// Pi runs sessions in separate processes, and each one appends on its own
-// shutdown. A read-modify-write loses the row of whichever writer read last:
-// two sessions measured, one row kept, and nothing says so. The writer therefore
-// never rewrites the file — it appends one line with `O_APPEND`, which the
-// kernel places atomically — so no lock, no queue and no lost row is needed.
-// These cases pin that shape.
+// Pi runs sessions in separate processes. A new sample appends one line with
+// `O_APPEND`, which the kernel places atomically, so no lock, no queue and no
+// lost row is needed for the common case. Since #623 S6 the one rewrite is an
+// upsert: a sample whose `source` already has a row replaces that row, and the
+// row it replaces is its own — a session never rewrites another session's
+// sample. The residual race (another process appending between the upsert's
+// read and its atomic swap) costs at most that process's row, which the JSONL
+// stream still carries; it is a declared limit, not a silent loss. These cases
+// pin the append half and its no-lock shape.
 
 /** The lock a rewriting writer would need; the append-only one takes none. */
 const lockPath = (ledgerPath) => `${ledgerPath}.lock`;
