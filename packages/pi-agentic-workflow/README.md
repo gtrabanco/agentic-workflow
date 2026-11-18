@@ -596,6 +596,7 @@ writes in it (legacy flags such as `--unset` and modern subcommands such as
 | Invocation | Verdict |
 |---|---|
 | read-only (`--get`, `--list`, `--show-origin`, `get`, `list`) | passes |
+| one positional — `git config user.name`, `git config --global user.email` (git prints the value) | passes |
 | per-invocation `-c user.name=…` | passes — it writes nothing |
 | identity or signing write (`user.*`, `commit.gpgsign`, `gpg.*`, `tag.gpgsign`) | asks (headless: blocks) |
 | `--unset`, `--unset-all`, `--replace-all`, `remove-section`, `rename-section`, `edit` | asks |
@@ -608,6 +609,11 @@ asked twice and a different project is never covered. `gitIdentity.agentGuard`
 controls it: `mode: "ask" | "block"` and `allow: ["user.name"]` for the writes a
 project permits without asking (the allow list covers local, non-destructive
 writes only — a removal or a shared file still asks).
+
+The verdict is about the command bash runs, not the prose a command carries: a
+heredoc body is data (`git config user.email` quoted inside one is a read, never
+a write), and a backtick span is a command substitution, judged wherever it
+stands unquoted.
 
 The profile is the base config section, so the hook and the push check read the
 same one: `gitIdentity.enforce` (`off` by default — an unconfigured install is
