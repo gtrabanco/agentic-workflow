@@ -58,7 +58,7 @@ The issue's `## Acceptance criteria`, verbatim:
 Per requirement:
 
 - **S1** — `bun test scripts/setup-env.test.mjs` exits 0: the arming step writes the working tree's bin, is idempotent, treats an empty exported value as unset, and `--check` reports the resolved source without writing. (AC1)
-- **S2** — `bun test packages/agentic-workflow/test/doctor.vehicle.test.mjs` exits 0: `unarmed` when the override is unset, `stale` when the installed package predates the newest canary tag, `ok` when armed, `unreachable` when no canary tag is visible, `not-applicable` outside an authoring checkout — each with its evidence and its `instruct-only` command. (AC3)
+- **S2** — `bun test packages/agentic-workflow/test/doctor.vehicle.test.mjs` exits 0: `unarmed` when the override is unset, `stale` when the applied override does not reach this checkout's bin, `unreachable` when the armed path does not exist, `ok` when armed at an existing target, `not-applicable` outside an authoring checkout — each with its evidence and its `instruct-only` command; the installed-behind-canary fact rides the evidence and the advisory in every branch, never a status of its own (D2's precedence; the criterion's status mapping re-worded 2026-11-18 by the owner's correction batch — L2 — it had carried AC3's literal mapping the shipped code supersedes). (AC3)
 - **S3** — `bun test scripts/triage-setup-defect.test.mjs` exits 0: the route fires for the refusal+in-tree+stale/unarmed shape, never for a genuinely missing subcommand, and the prose block cites its owners instead of restating the override. (AC4)
 - **S4** — `rg -c 'merged unit touched' docs/workflow/SETUP.md` matches 1: the ritual is documented where the provisioning page lives. (S4)
 - **S5** — `bun test scripts/prose-gate-inventory.test.mjs` exits 0 and `rg -c 'setup-env.mjs' skills/runner-contract/references/RUNNER.md` matches 1: the surface registration resolves and the pointer is written. (AC5, AC6)
@@ -122,8 +122,11 @@ decided in `D1` below, not deferred.
   construction: a worktree re-runs `setup-env.mjs` (idempotent) instead of
   copying a stale path. Binds every checkout created from this change on.
 - `stale` compares against the **local** canary tags: a clone that never fetches
-  tags reports `unreachable` and a repair, never a false `ok`. Binds CI-less
-  checkouts.
+  tags is never a silent `ok` — with the override unset the row reads `unarmed`
+  carrying the `git fetch --tags` repair, and when armed the status stays `ok`
+  (the vehicle itself works) while the advisory names the fetch repair.
+  `unreachable` stays reserved for an armed path that does not exist (D2;
+  re-worded by the 2026-11-18 correction batch — L2). Binds CI-less checkouts.
 
 ## Applicable tests
 
@@ -174,6 +177,9 @@ decided in `D1` below, not deferred.
 - P7 — Verification: the crate suite, the root gate and the differential pass (validator: `bun scripts/run-root-suite.mjs` exits 0 and `cd packages/agentic-workflow && bun run test` exits 0)
   (Implements: S1, S2, S3, S4, S5)
   - Relevant files: docs/features/611-dogfooding-vehicle/SPEC.md, docs/features/611-dogfooding-vehicle/planning-obligations.md
+- P8 — Correction batch on the 2026-11-18 external verify: the rendered row instruction prints once, and the frozen record states the shipped vehicle-status precedence (validator: `bun test packages/agentic-workflow/test/doctor.vehicle.test.mjs` exits 0 and `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/611-dogfooding-vehicle/SPEC.md` exits 0)
+  (Implements: S2)
+  - Relevant files: packages/agentic-workflow/src/doctor/doctor.mjs, packages/agentic-workflow/src/doctor/vehicle.mjs, docs/features/611-dogfooding-vehicle/SPEC.md, docs/features/611-dogfooding-vehicle/planning-obligations.md, docs/features/611-dogfooding-vehicle/planning-evidence.md
 
 ### Planning evidence
 
@@ -253,11 +259,27 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
 
 - **E18** — 2026-11-18, correction of E17 (a Log line is never edited, so this appends): `bun scripts/dimension-regression.mjs --base origin/main` after E16 landed · exit 0 · the observed block is `base | 2dda53f · 17 dimensions` / `head | 17 dimensions · changed review surfaces 1` / `evidence | docs/features/611-dogfooding-vehicle/SPEC.md` / `verdict | clean` — E17's `verdict: pass` was typed before the run; the observed word is `clean`.
 
+- **L2** — 2026-11-18, the correction request (the §9 batch on this unit's external verify), verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  (Bound against the 2026-11-18 external verify receipt —
+  [external-verify.md](external-verify.md), `NEEDS-DECISION`, blocker B1 +
+  advisory A1; one correction batch, one recheck limited to those findings.)
+
+- **E19** — 2026-11-18, `bun test packages/agentic-workflow/test/doctor.vehicle.test.mjs` · exit 1 · the rendered-instruction case (A1) red before the fix: `the arming line renders 2 times — the row derives one command and prints it once` (13 pass, 1 fail; the red commit `604067dd`). The same doubling is visible at the pre-batch head on the pre-existing `git-hooks` row of an unarmed host — the defect is the renderer's, shared by every row carrying an instruction, not the vehicle row's own (the receipt's new-row-only reading was too narrow).
+
+- **E20** — 2026-11-18, `bun test packages/agentic-workflow/test/doctor.vehicle.test.mjs packages/agentic-workflow/test/doctor.checks.test.mjs packages/agentic-workflow/test/doctor.inventory.test.mjs` · exit 0 · 41 pass, 0 fail after the render fix (`1197f6e7`); the differential (`mktemp -d`, `git archive 4c4f1f94`, `renderDoctor` over the same real host from both trees) shows the fix's only rendered difference is a row's instruction printing once where the renderer doubled it (vehicle row; the `git-hooks` row's identical doubling on an unarmed host).
+
+- **E21** — 2026-11-18, the B1 re-read after the re-word: `rg -n "cannot see any canary tag reports" docs/features/611-dogfooding-vehicle/` matches only the receipt's historical quotations of the pre-fix lines (and this line) — none of the four record spots; the receipt's probes re-run green (armed + no local tags → `ok` with the fetch advisory; unset + no tags → `unarmed` with the fetch-and-arm instruction); O10's invariant and its own F3 evidence now agree; `phase-lint docs/features/611-dogfooding-vehicle/SPEC.md` exits 0 (P1–P8, verdict PASS).
+
+- **V1** — 2026-11-18, recheck of the 2026-11-18 external verify's findings (§9): B1 — the four spots re-worded (the S2 criterion, Future cost, O10's first clause, PE-012) plus the `vehicle.mjs` header comment, validator `bun test packages/agentic-workflow/test/doctor.vehicle.test.mjs` exit 0; A1 — the rendered instruction prints once (the `git-hooks` row included), same validator exit 0. No new finding.
+
 ## Next
 
 The owner's external verdict on this handoff — the unit doc, the obligation ledger
-(13/13 verified) and the diff are the pack; the merge and any published canary cut
-are the owner's.
+(14/14 verified, including the correction batch's O14) and the diff are the pack;
+the merge and any published canary cut are the owner's.
 
 ## References
 
