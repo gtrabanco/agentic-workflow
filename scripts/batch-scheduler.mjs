@@ -3,7 +3,7 @@
 /**
  * batch-scheduler — the deterministic batch planner (issue #449).
  *
- * One pass over the live work graph that emits the fixed `batch-plan@3`
+ * One pass over the live work graph that emits the fixed `batch-plan@4`
  * document (schema package: `agentic-workflow/batch-plan`): which open issues
  * can run together now (batch 1), which come next (batch N+1…), which surface
  * each lane occupies, and which spots are unresolvable — always findings,
@@ -363,7 +363,7 @@ const BRANCH_RE = /^(?:fix|feat)\/(\d+)-/u;
 
 /** The evidence slot of one issue: the sources that describe its lifecycle. */
 function evidenceSlot(evidence, number) {
-  if (!evidence.has(number)) evidence.set(number, { branches: [], pr: null, worktree: null, files: [] });
+  if (!evidence.has(number)) evidence.set(number, { branches: [], pr: null, worktree: null, files: [], filesKnown: false });
   return evidence.get(number);
 }
 
@@ -377,7 +377,7 @@ function evidenceSlot(evidence, number) {
  * (`unavailable-<source>-<cause>`) and leaves the rest of the plan standing;
  * the caller never falls back to unit-doc existence.
  *
- * @returns {Promise<{evidence: Map<number, {branches: Array<{name:string,merged:boolean}>, pr: {number:number,state:string}|null, worktree: string|null, files: string[]}>, degradations: string[]}>}
+ * @returns {Promise<{evidence: Map<number, {branches: Array<{name:string,merged:boolean}>, pr: {number:number,state:string}|null, worktree: string|null, files: string[], filesKnown: boolean}>, degradations: string[]}>}
  */
 export async function collectLaunchEvidence({ root, ghBin = "gh", remote = null, gitBin = "git" } = {}) {
   const degradations = [];
@@ -421,15 +421,31 @@ export async function collectLaunchEvidence({ root, ghBin = "gh", remote = null,
   const trunk = branches.length === 0 ? null : resolveTrunk(git);
   if (branches.length > 0 && trunk === null) degradations.push("unavailable-launch-evidence-no-trunk");
 
+  const diffComputed = new Set();
+  const diffFailed = new Set();
+
   for (const name of branches) {
-    const slot = evidenceSlot(evidence, Number(BRANCH_RE.exec(name)[1]));
-    slot.branches.push({ name, merged: trunk !== null && git(["merge-base", "--is-ancestor", name, trunk]).status === 0 });
+    const number = Number(BRANCH_RE.exec(name)[1]);
+    const slot = evidenceSlot(evidence, number);
+    const merged = trunk !== null && git(["merge-base", "--is-ancestor", name, trunk]).status === 0;
+    slot.branches.push({ name, merged });
     if (worktreeOfBranch.has(name)) slot.worktree = worktreeOfBranch.get(name);
-    if (trunk === null) continue;
-    // What the branch actually rewrites: the only overlap evidence the lane
-    // derivation cannot see (a declared file token already names its lane).
+    // A merged branch's own diff against the trunk is empty by construction (its
+    // tip is reachable from the trunk), so reading it would report "this branch
+    // touched nothing": the merged case is decided by `merged`, never by a diff.
+    if (trunk === null || merged) continue;
+    // What the branch actually rewrites: the overlap evidence the lane derivation
+    // cannot see, and the surface verification's only input (issue #621).
     const diff = git(["diff", "--name-only", `${trunk}...${name}`]);
-    if (diff.status !== 0) continue;
+    if (diff.status !== 0) {
+      // A diff that could not be computed is not "no files": it is a declared
+      // degradation naming the issue, and the slot stays not-known so no surface
+      // is called unverified on the strength of a failed read.
+      degradations.push(`unavailable-launch-evidence-diff-issue-${number}-${sanitizeCause(diff.stderr || "git diff failed")}`);
+      diffFailed.add(number);
+      continue;
+    }
+    diffComputed.add(number);
     for (const file of diff.stdout.split("\n").map((line) => line.trim())) {
       if (file !== "" && !slot.files.includes(file)) slot.files.push(file);
     }
@@ -441,6 +457,7 @@ export async function collectLaunchEvidence({ root, ghBin = "gh", remote = null,
     evidenceSlot(evidence, Number(match[1])).pr = pr;
   }
   for (const slot of evidence.values()) slot.files.sort((a, b) => a.localeCompare(b));
+  for (const [number, slot] of evidence) slot.filesKnown = diffComputed.has(number) && !diffFailed.has(number);
   return { evidence, degradations };
 }
 
@@ -489,6 +506,9 @@ async function collectPrStates({ root, ghBin, remote, degradations }) {
  * establishes it. The forge is authoritative: an `OPEN` PR is in flight and a
  * `MERGED`/`CLOSED` one is terminal, whatever the local branch says. Without a
  * PR, an unmerged branch is the evidence; a unit doc only corroborates it.
+ *
+ * An issue with a local worktree is flagged with `[worktree]` so the consumer
+ * can distinguish a remote PR from a truly-local work-in-progress.
  */
 function inFlightEvidence(slot, unitDir) {
   const pr = slot?.pr ?? null;
@@ -496,7 +516,10 @@ function inFlightEvidence(slot, unitDir) {
   const live = (slot?.branches ?? []).filter((branch) => !branch.merged);
   if (pr === null && live.length === 0) return null;
   const parts = pr !== null ? [`PR #${pr.number} open`] : [];
-  for (const branch of live) parts.push(`branch ${branch.name}`);
+  for (const branch of live) {
+    const bt = slot.worktree ? ` [worktree]` : "";
+    parts.push(`branch ${branch.name}${bt}`);
+  }
   if (unitDir !== undefined) parts.push(`unit-doc ${unitDir}`);
   return parts.join(" + ");
 }
@@ -562,6 +585,38 @@ function declaredSections(body) {
     for (const bounds of headingBoundsAll(body, name)) sections.push({ name, text: body.slice(bounds.start, bounds.end) });
   }
   return sections;
+}
+
+/**
+ * Map one file path to its surface key — the inverse of `surfaceKey`.
+ * A file inside `skills/<name>/` resolves to `skills/<name>`, etc.
+ * If the file is not inside a known surface tree, returns null.
+ */
+function surfaceKeyFor(file) {
+  const parts = file.split("/");
+  if (parts.length === 0) return null;
+  const top = parts[0];
+  if (["skills", "packages"].includes(top) && parts.length > 1 && parts[1] !== "") {
+    return `${top}/${parts[1]}`;
+  }
+  if (["scripts", "docs", "template", ".github"].includes(top) && parts.length === 1) return top;
+  // A file inside one of these trees but not directly under top (e.g. scripts/foo/bar.mjs)
+  if (["scripts", "docs", "template", ".github"].includes(top)) return top;
+  return null;
+}
+
+/**
+ * Whether a branch's actual surface keys cover a declared one: the key itself, or
+ * any child of it. A declared parent — the bare `skills` a careless author writes
+ * — is covered by `skills/alpha`, so the plan never reports as unverified a
+ * surface the diff does cover, independent of what a sibling row happens to
+ * declare (issue #621 §6.3: the parent→children expansion only reads siblings).
+ */
+function surfaceCovered(surface, actual) {
+  if (actual.has(surface)) return true;
+  const prefix = `${surface}/`;
+  for (const key of actual) if (key.startsWith(prefix)) return true;
+  return false;
 }
 
 /** The lane keys one text declares (see `surfaceKey`).
@@ -1119,6 +1174,34 @@ export function buildBatchPlan({
       : [];
   }
 
+  // ── claimed surfaces: a live branch's partial coverage (issue #621) ───────
+  // The field reports one cause: a branch exists, its diff against the trunk was
+  // computed (`filesKnown`), and that diff leaves a declared surface without a
+  // file — the case where a merge conflict is still possible. An issue with no
+  // branch has nothing to verify, a merged branch cannot conflict, and a diff
+  // that could not be computed already degraded; none of those is a row here.
+  const filesBySurface = new Map();
+  for (const [number, slot] of launchEvidence ?? []) {
+    for (const file of slot.files ?? []) {
+      const key = surfaceKeyFor(file);
+      if (key === null) continue;
+      if (!filesBySurface.has(number)) filesBySurface.set(number, new Set());
+      filesBySurface.get(number).add(key);
+    }
+  }
+  const claimedSurfaceMap = new Map();
+  for (const [number, row] of model) {
+    // Nothing was declared → nothing can be reported uncovered: the `general`
+    // lane is the guess the `surface-unknown-issue-<n>` degradation already
+    // names, never a surface a branch could fail to cover (external verify
+    // 2026-11-17, blocker B1).
+    if (surfaceUnknown.has(number)) continue;
+    if (launchEvidence?.get(number)?.filesKnown !== true) continue;
+    const actual = filesBySurface.get(number) ?? new Set();
+    const unverified = row.surfaces.filter((surface) => !surfaceCovered(surface, actual));
+    if (unverified.length > 0) claimedSurfaceMap.set(number, unverified);
+  }
+
   const findings = [];
   for (const [number, row] of model) {
     const native = byNumber.get(number)?.blockedBy ?? [];
@@ -1235,7 +1318,7 @@ export function buildBatchPlan({
   const documentBatchOf = new Map(normalized.map(([original], index) => [original, index + 1]));
   const batches = normalized.map(([original, numbers], index) => ({
     n: index + 1,
-    lanes: buildLanes(numbers, model, launched, launchedSurfaces, {
+    lanes: buildLanes(numbers, model, launched, launchedSurfaces, claimedSurfaceMap, {
       batchOf,
       documentBatchOf,
       documentBatch: index + 1,
@@ -1315,8 +1398,8 @@ export function buildBatchPlan({
 
   const plan = {
     contract: "agentic-workflow/batch-plan",
-    version: 3,
-    schema: "batch-plan@3",
+    version: 4,
+    schema: "batch-plan@4",
     source_revision: head,
     degraded: degradations.sort((a, b) => a.localeCompare(b)),
     batches,
@@ -1350,6 +1433,7 @@ function buildLanes(
   model,
   launched,
   launchedSurfaces,
+  claimedSurfaceMap,
   { batchOf, documentBatchOf, documentBatch, openNumbers, launchedNumbers, openSetKnown },
 ) {
   const bySurface = new Map();
@@ -1438,6 +1522,7 @@ function buildLanes(
         reason,
         size_hint: row.size,
         ...(row.triaged ? {} : { triaged: false }),
+        ...(claimedSurfaceMap.has(number) ? { claimed_surface: claimedSurfaceMap.get(number) } : {}),
       };
     });
     const laneHint = issues.reduce((max, issue) => Math.max(max, SIZE_ORDER[issue.size_hint]), 0);
@@ -1782,33 +1867,56 @@ function readHead(root) {
   }
 }
 
-function printHumanSummary(plan) {
-  console.log(`# Batch plan (${plan.source_revision.slice(0, 12)}) — ${plan.summary.batches} batch(es), ${plan.summary.batched} batched, ${plan.summary.blocked} blocked, ${plan.summary.launched} launched, ${plan.summary.label_blocked} label-blocked, ${plan.summary.findings} finding(s)`);
+/**
+ * The human summary the CLI prints above the envelope, one line per fact. The
+ * sink is injectable so the suite can read the block without spawning a process
+ * (issue #621's summary rule).
+ */
+export function printHumanSummary(plan, write = (line) => console.log(line)) {
+  write(`# Batch plan (${plan.source_revision.slice(0, 12)}) — ${plan.summary.batches} batch(es), ${plan.summary.batched} batched, ${plan.summary.blocked} blocked, ${plan.summary.launched} launched, ${plan.summary.label_blocked} label-blocked, ${plan.summary.findings} finding(s)`);
   for (const batch of plan.batches) {
-    console.log(`\n## Batch ${batch.n}`);
+    write(`\n## Batch ${batch.n}`);
     for (const lane of batch.lanes) {
       const occupied = lane.occupied_by ? ` (occupied: ${lane.occupied_by})` : "";
-      console.log(`  lane ${lane.surface} [${lane.size_hint}]${occupied}`);
+      write(`  lane ${lane.surface} [${lane.size_hint}]${occupied}`);
       for (const issue of lane.issues) {
-        console.log(`    #${issue.number} ${issue.title} — ${issue.reason.kind}${issue.claimed ? " · claimed" : ""} · ${issue.command}`);
+        write(`    #${issue.number} ${issue.title} — ${issue.reason.kind}${issue.claimed ? " · claimed" : ""} · ${issue.command}`);
       }
     }
   }
-  for (const row of plan.blocked) console.log(`\nblocked #${row.number}: ${row.reason}`);
+  for (const row of plan.blocked) write(`\nblocked #${row.number}: ${row.reason}`);
   if (plan.label_blocked.length > 0) {
-    console.log(`\nlabel-blocked: ${plan.label_blocked.map((row) => `#${row.number} (${row.labels.join(", ")})`).join(", ")}`);
+    write(`\nlabel-blocked: ${plan.label_blocked.map((row) => `#${row.number} (${row.labels.join(", ")})`).join(", ")}`);
   }
   const untriaged = plan.batches
     .flatMap((batch) => batch.lanes)
     .flatMap((lane) => lane.issues)
     .filter((row) => row.triaged === false);
   if (untriaged.length > 0) {
-    console.log(
+    write(
       `\nuntriaged: ${untriaged.map((row) => `#${row.number}`).join(", ")} — scope undetermined; co-scheduling provisional until their lane triage runs`,
     );
   }
-  for (const finding of plan.findings) console.log(`finding ${finding.code}: ${finding.numbers.map((n) => `#${n}`).join(", ")} — ${finding.detail}`);
-  for (const d of plan.degraded) console.log(`degraded: ${d}`);
+  // Claimed surfaces: the declared surfaces a live branch does not cover. The
+  // producer emits only that one cause, so this section lists what is actionable
+  // and nothing else — one labeled line per flagged issue (O11/P3), deduplicated
+  // because the same issue appears per lane.
+  const seenClaimed = new Set();
+  const claimedIssues = [];
+  for (const batch of plan.batches) {
+    for (const lane of batch.lanes) {
+      for (const row of lane.issues) {
+        if (!row.claimed_surface || row.claimed_surface.length === 0 || seenClaimed.has(row.number)) continue;
+        seenClaimed.add(row.number);
+        claimedIssues.push(`#${row.number}: ${row.claimed_surface.join(", ")}`);
+      }
+    }
+  }
+  for (const entry of claimedIssues) {
+    write(`\nclaimed surfaces (unverified — merge conflict possible): ${entry}`);
+  }
+  for (const finding of plan.findings) write(`finding ${finding.code}: ${finding.numbers.map((n) => `#${n}`).join(", ")} — ${finding.detail}`);
+  for (const d of plan.degraded) write(`degraded: ${d}`);
 }
 
 // The schema runtime loader is imported lazily: the pure functions stay

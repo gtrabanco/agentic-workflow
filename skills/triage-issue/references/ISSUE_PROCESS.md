@@ -131,8 +131,8 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    a file with the Write tool (plain Markdown, real backticks, zero backslashes)
    and post it with **`gh issue comment <n> --body-file <path>`** (or the
    declared forge's equivalent) — never an inline `--body "…"` or a quoted
-   heredoc, which mangle backticks. After posting, `gh issue view <n> --json
-   comments` must show the backticks rendering, no literal `` \` ``. On a
+   heredoc, which mangle backticks. After posting, `runner forge-read issue <n>
+   --comments` must show the backticks rendering, no literal `` \` ``. On a
    fix-now + high-severity verdict, the comment also states the urgency label
    applied (or the failure to apply it — see *Apply-on-verdict (urgency)*
    above); on a **postpone**, **promote**, or **wontfix** verdict, the comment
