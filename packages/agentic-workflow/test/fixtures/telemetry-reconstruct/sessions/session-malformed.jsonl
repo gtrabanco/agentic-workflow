@@ -1,0 +1,3 @@
+{"type":"session","version":3,"id":"sess-malformed","timestamp":"2026-11-04T10:00:00.000Z","cwd":"<PROJECT>"}
+{"type": 
+{"type":"message","id":"a1","parentId":null,"timestamp":"2026-11-04T10:00:01.000Z","message":{"role":"assistant","content":[{"type":"text","text":"half a line above"}],"provider":"nan","model":"qwen3.6","usage":{"input":1,"output":1,"totalTokens":2},"durationMs":10,"timestamp":"2026-11-04T10:00:01.000Z"}}
