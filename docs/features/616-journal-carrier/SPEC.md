@@ -288,9 +288,57 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   bytes → 1059 stamped entries, 24 unstamped `## ` headings, 80 pending fragments
   (80 stamped entries), 3 bold `Correction` lines, 27 refutation lines naming a
   finding id of which 16 resolve onto a corpus row.
-- **E2** — 2026-11-18, `bun scripts/findings-corpus.mjs` over the fixture trees this
-  unit's builder writes later: not yet — recorded with the fixture run in the
-  batch's own evidence lines.
+- **E2** — 2026-11-18, the pair's red and green, both foreground:
+  `bun test scripts/journal-corpus.test.mjs` at the suite's own commit
+  (`43c1aef5`) · exit 1 · `Cannot find module './journal-corpus.mjs'`; after the
+  reader and the fixture builder land · exit 0 · 23 pass / 0 fail.
+- **E3** — 2026-11-18, the live receipt: `bun scripts/journal-corpus.mjs` · exit 0
+  · `log | docs/LOGS.md · entries 1059`, `fragments | .agentic-workflow/journal ·
+  files 80`, `entries | 1139 · skipped headings 24`, `rows | 30 · corrections 3 ·
+  refuted 27`, `join | rows 30 · corpus-rows 13 · clusters 3 · unjoined 14`,
+  `verdict | signals 183`, in 0.81 s.
+- **E4** — 2026-11-18, the pass-only-if twins:
+  `bun scripts/product-audit-journal-fixture.mjs <scratch>` · exit 0 →
+  `seeded/` yields exactly three signals (one correction class, one rework unit,
+  one admitted false positive) and `clean/` yields `verdict | clean`; the suite's
+  seeded/clean case is green over both.
+- **E5** — 2026-11-18, the differential against the base tree (`main` = `2dda53fe`,
+  read from a throwaway `git worktree add --detach` under `/tmp`): the two
+  commands that share the changed code answer the same bytes at base and head —
+  `bun scripts/coverage-gap.mjs --repo .` is byte-identical (exit 0 both sides);
+  `bun scripts/findings-corpus.mjs` differs only in `units 240 -> 241` and
+  `migrated-carriers 129 -> 130`, the arithmetic of this unit's own folder
+  carrying a `## Findings` section. No stdout, stderr or exit delta nobody asked
+  for.
+- **E6** — 2026-11-18, the budgets and the registration, all foreground:
+  `bun scripts/prose-gate-inventory.mjs` · `verdict: PASS` (the new
+  `journal-corpus` row resolves its suite token and `journal-corpus-grammar` is
+  claimed); `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass /
+  0 fail; `bun scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md
+  729 / 169 / 560 / 13,188`, `GATE_INVENTORY.md 177 / 82 / 95 / 7,617`;
+  `bun scripts/check-skill-context.mjs --skill product-audit` · exit 0 (6,239 est
+  / 265 lines inside the re-based 6,863).
+- **E7** — 2026-11-18, the two sweeps this change can redden, and they did:
+  `bun test scripts/skill-lint.test.mjs` · exit 1 · `SL-04 unpinned-url
+  skills/product-audit/references/AUDIT_DIMENSIONS.md:172` — the issue link was a
+  URL where the reference's convention is a bare `#616`; repaired, re-run exit 0 ·
+  20 pass / 0 fail. `bun test scripts/promise-coherence.test.mjs` · exit 1 ·
+  `formula-mismatch ceil(6254 x 1.10)` narrated 6,879/6,881 where the exact
+  arithmetic answers 6,880; the narration and the ceiling were corrected to the
+  measured 6,239 → `ceil(6239 x 1.10) = 6863`, re-run exit 0 · 37 pass / 0 fail.
+- **G1** — 2026-11-18, `bun test scripts/structural-sibling-pins.test.mjs` · exit 0 ·
+  8 pass / 0 fail — the reader joined the heading-reader allowlist with its reason
+  instead of silencing the pin.
+- **G2** — 2026-11-18, `bun test scripts/dimension-regression.test.mjs` · exit 0 ·
+  10 pass / 0 fail with `Journal signals` in the frozen set (18 dimensions at the
+  live tree).
+- **G3** — 2026-11-18, `bun scripts/dimension-regression.mjs --base main` · exit 1 ·
+  `verdict | refused` with `missing-reverification-evidence` — the evolution gate
+  biting on this very change before this Log carried the run. That is its designed
+  failing vector on real data, not a repaired test.
+- **G4** — 2026-11-18, `bun scripts/dimension-regression.mjs --base main` · exit 0 ·
+  `verdict | clean` (18 dimensions head / 17 base, 5 review surfaces, evidence =
+  this doc).
 
 ## Next
 
