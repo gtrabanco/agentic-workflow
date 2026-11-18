@@ -293,6 +293,14 @@ findings' scope, recorded as triage rows, not deferrals of this one.
   left untouched and re-triaged on its first observed flake (the phase-lint
   F99 pair and the promise-coherence pair are the closest class to F7 and the
   first to revisit).
+- **G1** — 2026-11-18, HEAD 40cfeee7, `node scripts/run-root-suite.mjs` ·
+  exit 0 · all suites PASS, no failing tests — the bare-pool configuration that
+  flaked twice is green on the first attempt (O4 first leg; the F7 case no
+  longer carries a spawn bound to flake).
+- **G2** — 2026-11-18, HEAD 40cfeee7, `bun scripts/local-gate.mjs --jobs 2` ·
+  exit 0 · `local-gate: PASS — 19 step(s) in 679s` (O4 second leg; the full
+  gate including log-immutability, docs-generated-projection, context budgets
+  and the identity steps).
 - **E5** — 2026-11-18, `git diff --name-only origin/main` names
   `scripts/unit-route.test.mjs`, `docs/fix/local-f7-progress-log-scan-flake/SPEC.md`
   and the session journal fragment under `.agentic-workflow/journal/` — no
