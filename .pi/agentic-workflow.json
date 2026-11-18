@@ -1,5 +1,5 @@
 {
-  "guard": {
+  "guards": {
     "gitIdentity": {
       "mode": "deny"
     }
