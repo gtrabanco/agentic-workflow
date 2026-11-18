@@ -219,9 +219,40 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   (The elided spans repeat the standing local apply-order text — the same text
   every unit of this workflow receives; the issue is quoted in full in `## Specs`.)
 
+- **D1** — 2026-11-18, owner request (S1) read against its own open question: arming is **default-on where `pi` is installed** (the authoring environment) and opt-in elsewhere. A contributor without pi gets the export line in the check output and nothing is written, so the provisioner never guesses at an environment it cannot own. (An agent never applies a decision the owner kept open without recording which way it read.)
+- **D2** — 2026-11-18, AC3 is read as three statuses with one precedence, stated once in `evaluateVehicle`: `unarmed` when the override is unset (AC3's own words), `stale` when the override **is** applied but does not reach this checkout's bin (the vehicle in force is a release), `unreachable` when the armed path does not exist, `ok` otherwise. The "installed package predates the newest canary" fact rides the evidence and the advisory in every branch, so the measured defect (574/590/526) stays visible whichever status names it — the row never hides a behind release.
+- **D3** — 2026-11-18, the route's outcome vocabulary is `setup-defect | code-bug | unresolved`, never a new triage verdict (the set is closed, `TRIAGE_VERDICTS`): a report whose every symptom the move explains ends as `wontfix`, and a surviving symptom falls through to the ordinary classification unchanged.
+- **D4** — 2026-11-18, the arming surface is a **gitignored env fragment plus the documented `source`**, not a config key and not a daemon change: S1 asks for arming, and the issue's own "not a new mechanism" rule forbids re-homing the override's semantics. A session that never sources the file reports `unarmed` — the honest signal, and the reason the doctor row reads the process, not the file.
+- **E0** — 2026-11-18, `bun test packages/agentic-workflow/test/doctor.checks.test.mjs packages/agentic-workflow/test/doctor.inventory.test.mjs` · exit 0 · 27 pass (the cut-head baseline, PE-013).
+- **E1** — 2026-11-18, the three new suites before any implementation · exit 1 · `Cannot find module '../src/doctor/vehicle.mjs'`, `Export named 'VEHICLE_FILE' not found in module`, and the parity suite failing on the same missing module (the red commit `92d9c161`).
+- **E2** — 2026-11-18, `bun test packages/agentic-workflow/test/doctor.vehicle.test.mjs packages/agentic-workflow/test/doctor.inventory.test.mjs packages/agentic-workflow/test/doctor.checks.test.mjs` · exit 0 · 40 pass, 0 fail (cases `F1`–`F4`, `F13`).
+- **E3** — 2026-11-18, `bun test scripts/setup-env.test.mjs` · exit 0 · 85 pass, 0 fail (cases `F5`–`F8` plus every pre-existing case).
+- **E4** — 2026-11-18, `bun test scripts/triage-setup-defect.test.mjs` · exit 0 · 7 pass, 0 fail (cases `F9`–`F12`).
+- **E5** — 2026-11-18, `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass; `bun test scripts/normative-drift.test.mjs` · exit 0 · 21 pass (the surface is claimed and its grammar resolves).
+- **E6** — 2026-11-18, `bun test scripts/residue-dimensions.test.mjs scripts/guide-split.test.mjs scripts/doc-discipline.test.mjs scripts/invocation-drift.test.mjs` · exit 0 · 79 pass (the new rule name has one owner, the guide did not grow a second copy).
+- **E7** — 2026-11-18, `cd packages/agentic-workflow && bun test` · exit 0 · 1318 pass, 0 fail, 72 files.
+- **E8** — 2026-11-18, `bun scripts/check-skill-context.mjs` · PASS 30 skills; `bun scripts/check-skill-context.mjs --documents` · PASS 4 budgeted documents (after the declared re-bases recorded in `SKILL_CONTEXT_BUDGETS.json`).
+- **E9** — 2026-11-18, `node scripts/setup-env.mjs --check` before arming · exit 1 · `MISS dogfooding-vehicle: AGENTIC_WORKFLOW_RUNNER is not set … (installed 5.0.0-canary.20261118.2, newest canary v5.0.0-canary.20261118.2) — run: export AGENTIC_WORKFLOW_RUNNER='bun /home/agent/projects/agentic-workflow/.worktrees/feat-611-dogfooding-vehicle/packages/agentic-workflow/bin/agentic-workflow.mjs'`.
+- **E10** — 2026-11-18, `node scripts/setup-env.mjs` · exit 0 · two steps (`serena-cache`, `dogfooding-vehicle`), then the idempotent re-run line. `.pi/vehicle.env` written; `git status --short` empty (the file is ignored, `#611` explained the file).
+- **E11** — 2026-11-18, `. .pi/vehicle.env && bun packages/agentic-workflow/bin/agentic-workflow.mjs runner resolve` · exit 0 · `RUNNER RESOLVED — AGENTIC_WORKFLOW_RUNNER` with `argv: bun /home/agent/…/packages/agentic-workflow/bin/agentic-workflow.mjs` (AC1's second half).
+- **E12** — 2026-11-18, `node scripts/setup-env.mjs --check` after arming · exit 0 · `ok dogfooding-vehicle: bun /home/agent/…/agentic-workflow.mjs (source: AGENTIC_WORKFLOW_RUNNER)`, `VERDICT: PASS`.
+- **E13** — 2026-11-18, `node scripts/setup-env.mjs --doctor` · exit 0 · `ok dogfooding-vehicle vehicle armed → /home/agent/… · installed 5.0.0-canary.20261118.2 · canary v5.0.0-canary.20261118.2`, `SUMMARY — ok 14 … n/a 1`, `VERDICT: PASS`.
+- **E14** — 2026-11-18, the differential (`mktemp -d`, `git archive 2a609bca`, both doctor modules and both setup-env modules observing this checkout) · exit 0 · `DIFFERENTIAL — no unrequested difference`: every pre-existing row, its human line, its summary key and every `--check` row byte-identical; the only addition is the documented row.
+- **E15** — 2026-11-18, `bun scripts/version-parity-gate.mjs --content` · exit 1 before the changeset (`GATE REJECTION — shipped-content-version` for both packages) → exit 0 after `.changeset/611-dogfooding-vehicle.md` was added; the gate's alternative route, not a version bump nobody asked for.
+- **G1** — 2026-11-18, `bun scripts/local-gate.mjs --jobs 4` · exit 0 · `local-gate: PASS — 19 step(s) in 959s` (root suite, crate suites, both compat legs, budgets, projections, changeset lint).
+- **P1** — 2026-11-18, the unit doc and its two ledgers frozen (`a6fd5231`); phase-lint PASS over `P1`–`P7`.
+- **P2** — 2026-11-18, the three suites landed red (`92d9c161`), E1.
+- **P3** — 2026-11-18, the vehicle module, the doctor row and its documented inventory row (`a842aa6e`), E2.
+- **P4** — 2026-11-18, the arming step and the read-only check in `setup-env.mjs` (`a842aa6e`), E3, E9–E12.
+- **P5** — 2026-11-18, the triage setup-defect route and its parity pin (`a842aa6e`), E4.
+- **P6** — 2026-11-18, the SETUP.md vehicle section, the RUNNER.md pointer, the surface registration and the budget re-bases (`7aa4838b`), E5, E6, E8, E9(ritual).
+- **P7** — 2026-11-18, the crate suite, the differential and the local gate (`7aa4838b` + the changeset), E7, E14, E15, G1.
+
 ## Next
 
-P2 — land the three suites RED before any implementation byte.
+The owner's external verdict on this handoff — the unit doc, the obligation ledger
+(13/13 verified) and the diff are the pack; the merge and any published canary cut
+are the owner's.
 
 ## References
 
