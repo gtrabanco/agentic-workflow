@@ -431,10 +431,14 @@ test("F-630-8 — a side that is not an append refuses closed and leaves %A unto
     repo.git(["add", "."]);
     repo.git(["commit", "-q", "-m", "two rows"]);
     diverge(repo, "ours", "docs/workflow/TIER_COST.md", (text) => text + `${telemetryRow("pi:session=ours")}\n`);
+    // The incoming side both appends (so the merge really conflicts at EOF and
+    // the driver runs) and rewrites a committed row (so it is no longer an
+    // append). The second half is the one the class must refuse.
     const theirs = diverge(repo, "theirs", "docs/workflow/TIER_COST.md", (text) =>
-      text.replace("pi:session=second", "pi:session=EDITED"),
+      `${text + telemetryRow("pi:session=theirs")}\n`.replace("pi:session=second", "pi:session=EDITED"),
     );
     const oursContent = repo.git(["show", "ours:docs/workflow/TIER_COST.md"]).stdout;
+    assert.equal(repo.git(["merge", "ours", "--no-edit"]).status, 0, "ours is a fast-forward");
     const merged = repo.git(["merge", theirs, "--no-edit"]);
     assert.notEqual(merged.status, 0, "a rewrite of a committed row is a real conflict");
     const left = readFileSync(join(repo.dir, "docs/workflow/TIER_COST.md"), "utf8");

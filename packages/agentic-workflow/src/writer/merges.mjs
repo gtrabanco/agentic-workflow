@@ -1,10 +1,11 @@
 /**
  * merges.mjs — the merge library the file-class git merge drivers run on
- * (issue #498, layer 2). Pure functions over strings: no git, no filesystem,
- * no network — the driver script (`scripts/shared-doc-merge.mjs`) owns the
- * git mechanics, this module owns the semantics.
+ * (issue #498, layer 2; the telemetry class is issue #630). Pure functions over
+ * strings: no git, no filesystem, no network — the driver entry
+ * (`src/writer/shared-merge.mjs`) owns the git mechanics, this module owns the
+ * semantics.
  *
- * Two merges:
+ * Three merges:
  *
  *   - `unionTableRows(base, ours, theirs, keyFn)` — mechanical union of a
  *     Markdown table document by row key, scoped per table block (a block is
@@ -13,6 +14,11 @@
  *     sides editing the same row differently is a real conflict (FF-4) that
  *     answers conflict markers, never a silent resolution. Non-table lines
  *     are carried through byte for byte (ours' prose, byte-identical).
+ *   - `unionAppendOnly(base, ours, theirs, keyOf)` — the append-only line
+ *     union the telemetry JSONL store merges by (issue #630 S5): each side
+ *     must be an append-only extension of the base, both sides' new lines
+ *     union, and an identical line lands once. A side that is not such an
+ *     extension refuses closed — an append never rewrites a committed line.
  *   - `structuralJsonMerge(base, ours, theirs)` — recursive union by JSON key
  *     (decision D3): one side's change wins when the other side never touched
  *     the key; both sides setting the same leaf differently is a conflict
@@ -24,6 +30,19 @@
  * headers or JSON shape changed is for a human, not for a driver.
  */
 
+/** The cell splitter a Markdown table row uses: a pipe that is not escaped. */
+const CELL_SPLIT = /(?<!\\)\|/;
+
+/**
+ * The trimmed cells of one Markdown table row, cells only. The ledger's own
+ * reader and the telemetry row key both read cells this way, so a row means
+ * the same thing to the writer and to the merge (one grammar, one splitter).
+ */
+export function tableCells(line) {
+  const body = String(line).trim().replace(/^\|/, "").replace(/\|$/, "");
+  return body.split(CELL_SPLIT).map((cell) => cell.trim());
+}
+
 /** Row key: a leading numeric first cell — the roadmap Features table. */
 export function numericRowKey(line) {
   const m = /^\|\s*(\d+)\s*\|/.exec(line);
@@ -34,6 +53,18 @@ export function numericRowKey(line) {
 export function issueRowKey(line) {
   const m = /^\|\s*\[#(\d+)\]/.exec(line);
   return m ? m[1] : null;
+}
+
+/**
+ * Row key: the row's last cell — the `source` column of both `tier-cost@N`
+ * grammars (issue #630 D2). One row per session is the ledger's own contract,
+ * so the provenance string every row carries is the identity two branches'
+ * appends can be unioned and deduplicated by. A row with fewer than two cells
+ * is not a samples row and is never keyed.
+ */
+export function telemetryRowKey(line) {
+  const cells = tableCells(line);
+  return cells.length < 2 ? null : cells.at(-1);
 }
 
 const SEP_RE = /^\s*\|[-: |]+\|?\s*$/;
@@ -229,6 +260,62 @@ export function unionTableRows(base, ours, theirs, keyFn) {
     return { ok: false, reason: "conflict", conflicts, content: out.join("\n") };
   }
   return { ok: true, content: out.join("\n") };
+}
+
+/** The non-empty lines of a file, without its single trailing newline. */
+function appendLines(text) {
+  const value = typeof text === "string" ? text : "";
+  if (value === "") return [];
+  const body = value.endsWith("\n") ? value.slice(0, -1) : value;
+  return body === "" ? [] : body.split("\n");
+}
+
+/**
+ * unionAppendOnly(base, ours, theirs, keyOf) — the append-only line union
+ * (issue #630 S5).
+ *
+ * The telemetry JSONL store grows by one `O_APPEND` per line, so a merge is the
+ * union of what each side appended: the base's lines are a prefix of both
+ * sides (anything else means a committed line was edited, reordered or dropped,
+ * which an append can never do), the lines beyond the base union, and an
+ * identical line — the same `keyOf` — lands once. The result always extends
+ * `ours` byte for byte, which is what lets the driver append the delta instead
+ * of rewriting the file.
+ *
+ * `keyOf` defaults to the line itself; the telemetry class passes the sample's
+ * canonical identity so a re-serialized twin still deduplicates.
+ */
+export function unionAppendOnly(base, ours, theirs, keyOf = (line) => line) {
+  const baseLines = appendLines(base);
+  const oursLines = appendLines(ours);
+  const theirsLines = appendLines(theirs);
+
+  const extendsBase = (lines) => lines.length >= baseLines.length && baseLines.every((line, index) => lines[index] === line);
+  const trailing = typeof ours === "string" && (ours === "" || ours.endsWith("\n"));
+
+  if (!extendsBase(oursLines)) {
+    return { ok: false, reason: "not-append-only", side: "ours", detail: "the ours side is not an append-only extension of the base" };
+  }
+  if (!extendsBase(theirsLines)) {
+    return {
+      ok: false,
+      reason: "not-append-only",
+      side: "theirs",
+      conflicts: [{ key: "line", detail: "the incoming side edited, reordered or dropped a committed line" }],
+      content: ours,
+    };
+  }
+
+  const seen = new Set([...baseLines, ...oursLines].map(keyOf));
+  const appended = [];
+  for (const line of theirsLines.slice(baseLines.length)) {
+    const key = keyOf(line);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    appended.push(line);
+  }
+  const content = appended.length === 0 ? ours : [...oursLines, ...appended].join("\n") + (trailing ? "\n" : "");
+  return { ok: true, content };
 }
 
 function canonical(value) {
