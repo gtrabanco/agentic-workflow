@@ -3,11 +3,11 @@
  * (issue #383 S4/S4b, P5).
  *
  * The accumulator and its sink are pure; this file is the only place that knows
- * Pi exists. It is a factory over a `pi`-shaped object so the suite can drive the
- * five events directly, and so `#394` can add a second sink without touching how
- * the session is observed.
+ * Pi exists. It is a factory over a `pi`-shaped object so the suite can drive
+ * the six events directly, and so `#394` can add a second sink without touching
+ * how the session is observed.
  *
- * Two decisions worth knowing when reading it:
+ * Five decisions worth knowing when reading it:
  *
  *  - **The unit comes from the command that was dispatched**, resolved against
  *    the project's own directories. A session that ran no unit-scoped command
@@ -17,8 +17,8 @@
  *    `PHASE_LABELS` vocabulary, and it also rides `AG_WF_PHASE` so a spawned
  *    runner reads the phase in flight from its environment instead of guessing.
  *    A command outside the vocabulary never overwrites the phase it inherits,
- *    and the session clears the variable at shutdown: a later session must not
- *    inherit the previous one's phase.
+ *    and the variable is cleared both at `session_start` and at shutdown: a
+ *    later session must not inherit the previous one's phase.
  *  - **The sample names its session.** The sink's idempotency guard compares a
  *    whole row, so the session id in `source` is what keeps a second session of
  *    the same unit — the same day, the same tree — from being written over.

@@ -2,10 +2,12 @@
  * session-telemetry.ts — the session accumulator and its sinks (issue #383,
  * S4/S4a/S4b). It is the one place a unit's cost is observed from inside the
  * runtime that spent it: the model provider's own token counts and the tool
- * runtime's monotonic durations, accumulated per turn and emitted once, at
- * shutdown, to every registered sink.
+ * runtime's monotonic durations, accumulated per turn and emitted to every
+ * registered sink — at each settled run (`emit()`) and once more at teardown
+ * (`flush()`), which writes nothing when the last run already emitted the same
+ * value.
  *
- * Three rules, each a test in `test/session-telemetry.test.mjs`:
+ * Five rules, each a test in `test/session-telemetry.test.mjs`:
  *
  *  - **Turn boundaries, never a session span.** A session's first and last
  *    timestamps measure how long a person was away. A turn's window, minus the
