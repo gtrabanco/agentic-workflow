@@ -11,12 +11,20 @@
  * direction. A column list copied into this file would be a second grammar, and
  * the round-trip test exists to catch exactly that.
  *
- * Two sessions of one project append on their own shutdowns, and Pi runs them in
- * separate processes. The write is therefore a single `O_APPEND`, which the
- * kernel places atomically: no lock, no queue, no lost row, and every byte
- * already in the ledger stays where it is. That is also the one shape this sink
- * accepts — the samples table has to be the file's last section, because a row
- * appended after trailing prose would land outside the table.
+ * Two sessions of one project write on their own boundaries, and Pi runs them in
+ * separate processes. A sample whose `source` has no row appends one line with
+ * `O_APPEND`, which the kernel places atomically: no lock, no queue, no lost row,
+ * and every byte already in the ledger stays where it is. That is also the one
+ * shape this sink accepts — the samples table has to be the file's last section,
+ * because a row appended after trailing prose would land outside the table.
+ *
+ * Since #623 S6 the ledger keeps one row per session: a settled session emits its
+ * cumulative sample once per run, so the same `source` arrives more than once. A
+ * later emission for a `source` the ledger already carries replaces that row
+ * through a staged write and an atomic rename — the row belongs to that session
+ * alone, nothing else moves, and the document's prose and column order are never
+ * rewritten. A ledger that declares no `source` column has no identity to upsert
+ * on, so it keeps the append contract rather than inventing a key.
  *
  * #504 added the second destination (#504 S3): the same sample as one JSON
  * object per line, for a consumer that streams rather than reads a document. It
@@ -62,9 +70,9 @@ function cellsOf(line: string): string[] {
  * last section. The accumulator catches a sink failure so one broken destination
  * never costs the others their sample.
  *
- * Its idempotency guard compares a whole row: a repeated emission is dropped, a
- * different sample never is. The session identity that keeps two sessions apart
- * lives in the sample's `source`, not in a key invented here.
+ * Its idempotency guard spans both shapes: an identical row is a re-emission and
+ * is dropped, a `source` the ledger already carries is the same session and is
+ * replaced, and a different sample never is.
  */
 export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
   const { ledgerPath } = options;
@@ -111,17 +119,41 @@ export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
         throw new Error(`${ledgerPath}: the samples table must be the ledger's last section, found ${JSON.stringify(tail)}`);
       }
 
-      // One row per sample: the guard compares the whole row, because the row is
-      // what a sample is. Keying it on a few cells (unit, source, day) would
-      // swallow a second session of the same unit — the exact case the ledger
-      // exists to record — while an identical row is a re-emission, not a sample.
-      for (const line of lines.slice(headerAt + 2)) {
-        if (!line.trim().startsWith("|")) break;
-        const cells = cellsOf(line);
-        if (declared.every((column, at) => (cells[at] ?? "") === String(values[column]))) return;
+      // One row per sample: an identical row is a re-emission, and a row whose
+      // `source` matches is this very session's earlier emission — the ledger
+      // keeps one row per session, whatever its row count per run (#623 S6).
+      const row = `| ${declared.map((column) => String(values[column])).join(" | ")} |`;
+      const dataRows: number[] = [];
+      for (let at = headerAt + 2; at < lines.length; at += 1) {
+        if (!lines[at].trim().startsWith("|")) break;
+        dataRows.push(at);
+      }
+      const identical = (at: number): boolean => {
+        const cells = cellsOf(lines[at]);
+        return declared.every((column, index) => (cells[index] ?? "") === String(values[column]));
+      };
+      if (dataRows.some(identical)) return;
+
+      const sourceAt = declared.indexOf("source");
+      const sameSource = sourceAt === -1 ? undefined : dataRows.find((at) => (cellsOf(lines[at])[sourceAt] ?? "") === String(values.source));
+      if (sameSource === undefined) {
+        fs.appendFileSync(ledgerPath, `${row}\n`);
+        return;
       }
 
-      fs.appendFileSync(ledgerPath, `| ${declared.map((column) => String(values[column])).join(" | ")} |\n`);
+      // The staged write + rename is a whole-file swap, so a reader never sees a
+      // half-written ledger. The residual race — another process appending
+      // between this read and the swap — costs that process its row in this
+      // document; the JSONL stream still carries it, and the row this swap
+      // replaces belongs to this session alone.
+      lines[sameSource] = row;
+      const staged = `${ledgerPath}.${process.pid}.tmp`;
+      try {
+        fs.writeFileSync(staged, lines.join("\n"));
+        fs.renameSync(staged, ledgerPath);
+      } finally {
+        fs.rmSync(staged, { force: true });
+      }
     },
   };
 }
@@ -143,9 +175,11 @@ export interface JsonlSinkOptions {
  * session; two sessions appending from separate processes each take their own
  * `O_APPEND`, which the kernel places atomically.
  *
- * No duplicate guard: a sample is emitted once per session by construction
- * (`flush()` emits once), so a repeated line would be a repeated sample, not a
- * re-emission to swallow.
+ * No duplicate guard of its own: the accumulator emits a value once (`emit()`
+ * drops a re-emission and `flush()` is latched), so a repeated line would be a
+ * repeated sample, not a re-emission to swallow. With #623 S6 the file carries
+ * one line per settled run, cumulative, so a consumer differences consecutive
+ * lines instead of reading one row per session.
  */
 export function createJsonlSink(options: JsonlSinkOptions): TelemetrySink {
   const { path: file } = options;

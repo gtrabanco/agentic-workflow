@@ -17,6 +17,11 @@
  *    provenance string may be functions, resolved as the sample is taken: a
  *    value captured when the accumulator was built describes the tree and the
  *    run *before* the work the sample exists to record.
+ *  - **A run boundary emits, a teardown closes (#623 S4/S6).** `emit()` writes
+ *    the cumulative sample at a settled run and drops a re-emission of the value
+ *    the sinks already hold; `flush()` is the final, latched emission. That is
+ *    what lets a session that never shuts down keep emitting without duplicating,
+ *    and what keeps the shutdown from adding a second copy of the last run's row.
  *  - **Off means absent.** A disabled accumulator emits nothing and reports
  *    nothing; it never estimates the sample it did not take.
  *
@@ -114,7 +119,14 @@ export interface SessionTelemetry {
   onToolEnd(event: { durationMs?: number }): void;
   /** The counters as a sample, without emitting it. */
   peek(): TelemetrySample | null;
-  /** Emit once to every sink; a second call emits nothing. */
+  /**
+   * Emit the current cumulative sample at a run boundary. Returns the sample it
+   * wrote, or `null` when there was nothing new: a disabled accumulator, a
+   * closed session, or the same value the sinks already hold (a re-emission is
+   * not a second sample).
+   */
+  emit(): TelemetrySample | null;
+  /** Emit the final sample to every sink, once; a second call emits nothing. */
   flush(): TelemetrySample | null;
 }
 
@@ -187,7 +199,10 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
   let toolMs = 0;
   let windowStart: number | null = null;
   let windowToolMs = 0;
+  /** The final flush happened: the session is closed, no boundary may emit. */
   let emitted = false;
+  /** The identity of the last sample the sinks received, so a re-emission is dropped. */
+  let lastWritten = "";
   // The provider's own fields, accumulated beside the total they belong to.
   const tokenFields = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0 };
   // Which model served which turns. A session may switch models, and the sample
@@ -228,6 +243,29 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
       observed,
       source: typeof source === "function" ? source() : source,
     };
+  }
+
+  /**
+   * Write the current sample unless the sinks already hold exactly this one. A
+   * sample repeated unchanged can only be a re-emission — a run that measured
+   * nothing adds no turn, no token and no tool millisecond — and writing it
+   * again would be the one duplicate the sinks do not guard against.
+   */
+  function writeCurrent(): TelemetrySample | null {
+    const payload = sample();
+    if (payload === null) return null;
+    const identity = JSON.stringify(payload);
+    if (identity === lastWritten) return null;
+    lastWritten = identity;
+    for (const sink of sinks) {
+      try {
+        sink.write(payload);
+      } catch {
+        // One broken destination must not cost the others their sample, and a
+        // shutdown must never be blocked by a writer.
+      }
+    }
+    return payload;
   }
 
   return {
@@ -274,20 +312,15 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
       return sample();
     },
 
+    emit() {
+      if (emitted) return null;
+      return writeCurrent();
+    },
+
     flush() {
       if (emitted) return null;
-      const payload = sample();
-      if (payload === null) return null;
       emitted = true;
-      for (const sink of sinks) {
-        try {
-          sink.write(payload);
-        } catch {
-          // One broken destination must not cost the others their sample, and a
-          // shutdown must never be blocked by a writer.
-        }
-      }
-      return payload;
+      return writeCurrent();
     },
   };
 }

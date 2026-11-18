@@ -119,6 +119,44 @@ test("one session emits exactly one sample", () => {
   assert.equal(written.length, 1);
 });
 
+// --- the run boundary (#623 S4/S6) -----------------------------------------
+//
+// A session that never tears down still has run boundaries, and the accumulator
+// is the only place that knows whether a boundary has something new to say: it
+// holds the cumulative counters, and a re-emission of the same value must not be
+// written twice. The sink stays dumb (one write is one sample), so the guard
+// lives here, beside the state it compares.
+
+test("a run boundary emits the cumulative sample, and an unchanged re-emission writes nothing", () => {
+  const { telemetry, written } = accumulator();
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  const first = telemetry.emit();
+  assert.equal(first.tokens, 10, "the boundary emits what the session has measured so far");
+  assert.equal(written.length, 1);
+  assert.equal(telemetry.emit(), null, "an emission identical to the last one is a re-emission, not a new sample");
+  assert.equal(written.length, 1);
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 5 } } });
+  const second = telemetry.emit();
+  assert.equal(second.tokens, 15, "the next boundary's sample is cumulative: 10 + 5");
+  assert.equal(written.length, 2);
+  assert.equal(telemetry.emit(), null, "and its own re-emission is dropped too");
+});
+
+test("the final flush adds no second copy of the sample a run boundary already wrote", () => {
+  const { telemetry, written } = accumulator();
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  telemetry.emit();
+  assert.equal(telemetry.flush(), null, "the last run's sample is already on the sinks");
+  assert.equal(written.length, 1);
+  assert.equal(telemetry.emit(), null, "the session is closed: a later boundary writes nothing");
+});
+test("a boundary that measured nothing emits nothing", () => {
+  const { telemetry, written } = accumulator({ enabled: false });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  assert.equal(telemetry.emit(), null);
+  assert.deepEqual(written, []);
+});
+
 test("one broken sink costs the others nothing, and never blocks shutdown", () => {
   const clock = clockAt(0);
   const good = [];
