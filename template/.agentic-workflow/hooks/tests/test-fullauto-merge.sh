@@ -4,6 +4,17 @@ set -euo pipefail
 
 hooks_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 wrapper="$hooks_dir/fullauto-merge.sh"
+
+# The shim execs the universal CLI (unit 554): point it at this checkout's crate
+# bin when the caller named none, so the suite drives the same code path an
+# installed project does.
+if [ -z "${AGENTIC_WORKFLOW_BIN:-}" ]; then
+  repo_root=$(CDPATH='' cd -- "$hooks_dir/../../.." && pwd)
+  if [ -f "$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs" ]; then
+    AGENTIC_WORKFLOW_BIN="$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs"
+    export AGENTIC_WORKFLOW_BIN
+  fi
+fi
 fixture=$(mktemp -d "${TMPDIR:-/tmp}/agentic-workflow-fullauto.XXXXXX")
 trap 'rm -rf "$fixture"' EXIT HUP INT TERM
 

@@ -9,6 +9,13 @@ command -v bun >/dev/null 2>&1 || {
 
 test_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 repo_root=$(CDPATH='' cd -- "$test_dir/../../../.." && pwd)
+
+# The plugin spawns the hook shim, which execs the universal CLI (unit 554).
+# Point it at this checkout's crate bin when the caller named none.
+if [ -z "${AGENTIC_WORKFLOW_BIN:-}" ] && [ -f "$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs" ]; then
+  AGENTIC_WORKFLOW_BIN="$repo_root/packages/agentic-workflow/bin/agentic-workflow.mjs"
+  export AGENTIC_WORKFLOW_BIN
+fi
 fixture=$(mktemp -d "${TMPDIR:-/tmp}/agentic-workflow-opencode.XXXXXX")
 trap 'rm -rf "$fixture"' EXIT HUP INT TERM
 

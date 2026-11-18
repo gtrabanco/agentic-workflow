@@ -1,5 +1,36 @@
 # Migration notes
 
+## 2026-11-17 — the template hooks are shims over the universal CLI (issue #554)
+
+**What changed.** Every hook the scaffold ships under
+`.agentic-workflow/hooks/` used to carry its own decision in shell. Each is now a
+**shim**: it resolves `AGENTIC_WORKFLOW_BIN`, else `command -v agentic-workflow`,
+execs the CLI's subcommand, and forwards the exit code. The rules moved into
+`@gtrabanco/agentic-workflow` (`src/temp.mjs`, `src/forge.mjs`,
+`src/guard/command.mjs`, `src/guard/payload.mjs`, `src/guard/git-identity.mjs`,
+`src/turn-contract.mjs`, `src/fullauto-merge.mjs`), and the two sourced libraries
+(`lib/forge.sh`, `lib/temp.sh`) are gone.
+
+**What you have to do.** A project that installed the previous hooks keeps them
+working only after the CLI is reachable on the host that runs them — a global
+install, `npx`/`bunx`, or `AGENTIC_WORKFLOW_BIN` in the hook's environment. Copy
+the new hook files (`init-workspace` offers exactly that on its next visit; it
+never overwrites a customized hook without consent). `jq` is no longer required
+by the command guard, the payload adapters or the merge wrapper: the payload rule
+and every forge document are parsed in JavaScript.
+
+**What degradation you will see.** The guards, the turn contract and the merge
+wrapper **refuse** and name the missing CLI (a safety decision with no engine is
+not a pass); `index-sync.sh` keeps its documented silent no-op, because a
+best-effort index refresh must never fail a git operation. The hooks README's
+`## Degradation` table is the authoritative list.
+
+**How to verify.** `bash .agentic-workflow/hooks/tests/test-hook-shims.sh` pins
+the shim shape and each capability's answer without the CLI; the per-capability
+suites (`test-command-guard.sh`, `test-turn-contract.sh`,
+`test-git-identity-check.sh`, `test-fullauto-merge.sh`) still run the same cases,
+now through the CLI.
+
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 
 **What changed.** A machine-read unit doc can carry a `doc-provenance@1` block —
