@@ -143,6 +143,13 @@ decided in `D1` below, not deferred.
   are edited additively, one row each.
 - `docs/LOGS.md` is shared (`.gitattributes` names it). **Affects** the merge
   only; this unit appends through the journal writer.
+- Feature 537's unit doc and its roadmap row state "14 documented tool
+  surfaces". That is a closed unit's frozen record, not a live claim, and
+  `rendered-facts@1` does not pin it. **Does not affect** this unit: the count a
+  reader acts on is the inventory block's own (`doctor` refuses a documented row
+  without a probe, whichever the number), and this unit adds the fifteenth row
+  without editing history. Re-trigger condition: a future unit that needs the
+  live count to be prose-visible pins it in `rendered-facts@1` first.
 
 ## Tasks
 
