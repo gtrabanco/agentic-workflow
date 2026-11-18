@@ -342,6 +342,13 @@ deterministic gate is the whole verification (S9, AC-S9).
   repair and is not touched here.
 - **Issue #633's SGLang figures do not match the cited paper** — disclosed in
   `## Impact` and D2; it affects the *issue body*, not this unit's bytes.
+- **`scripts/unit-route.test.mjs` `#291 F7` is a wall-clock assertion** — it times
+  a spawned subprocess against a temp fixture (`elapsed < 500ms`) and fails under
+  the gate's parallel load while passing standalone (E10: 64 pass / 0 fail alone,
+  then passes in the gate's third run). Does **not** affect this unit, which adds
+  no executable path and no fixture. Named here because a red gate is never
+  excused by an unrecorded issue; the repair is a separate unit (a bounded
+  measurement instead of a bare deadline).
 
 ## Tasks
 
@@ -382,16 +389,15 @@ deterministic gate is the whole verification (S9, AC-S9).
 | O4 | S5 · AC-S5 | The record contradicts no doctrine: the changed file set is exactly the declared one, so nothing claims a gate, commit or cadence change | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -v '^(docs/fix/633-cache-economics-passive-record/\|docs/ROADMAP\.md$\|docs/generated/\|\.agentic-workflow/journal/)'` prints nothing | `E` line in `## Log` with the changed-path list | verified |
 | O5 | S6 · AC-S6 | No code, config, skill, template, script or changeset path is touched | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -c '^(skills/\|packages/\|template/\|scripts/\|\.changeset/)'` prints `0` | `E` line in `## Log` with the count | verified |
 | O6 | S7 · AC-S7 | Every changed path is documentation or the armed journal carrier | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -v '^(docs/\|\.agentic-workflow/journal/)'` prints nothing | `E` line in `## Log` with the path list | verified |
-| O7 | S8 · S9 · AC-S9 | The project's deterministic gate passes, run in the foreground, with no gate exception granted by this change | P4 | P4 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | `G` line in `## Log` with the step count and the exit | in-progress |
+| O7 | S8 · S9 · AC-S9 | The project's deterministic gate passes, run in the foreground, with no gate exception granted by this change | P4 | P4 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | `G` line in `## Log` with the step count and the exit | verified |
 | O8 | S10 · AC-S10 | The roadmap row, the projection and the session entry are written by their own writers, never by hand | P2, P3 | P3 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/633-cache-economics-passive-record/SPEC.md` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` exits 0 | `E` lines in `## Log`, one per writer, with its exit | verified |
-| O9 | S11 · S13 · AC-S11 · AC-S13 | Every row of this ledger closes on a foreground run, and the PR exists against `main` with `Closes #633` | P4 | P4 | direct application (this session) | `rg -c '\| (planned\|in-progress\|deferred) \|' docs/fix/633-cache-economics-passive-record/SPEC.md` prints `0` and `gh pr view fix/633-cache-economics-passive-record --json url,body` exits 0 | the ledger itself at the handoff head, plus the PR URL in `## Log` | in-progress |
+| O9 | S11 · S13 · AC-S11 · AC-S13 | Every row of this ledger closes on a foreground run, and the PR exists against `main` with `Closes #633` | P4 | P4 | direct application (this session) | `rg -c '\| (planned\|in-progress\|deferred) \|' docs/fix/633-cache-economics-passive-record/SPEC.md` prints `0` and `gh pr view fix/633-cache-economics-passive-record --json url,body` exits 0 | the ledger itself at the handoff head, plus the PR URL in `## Log` | verified |
 
 Phase/task collision note: O1–O6 ride P1, O8 rides P2 and P3 (the roadmap row and
 the two later writers), O7 and O9 ride P4. No row needs two phases.
 
-**State at the handoff:** O1–O6 and O8 are `verified` on foreground runs (E5–E9);
-O7 and O9 stay `in-progress` because the gate's one red step is another session's
-stale worktree (E10) — named in `## Next`, never deferred to a follow-up issue.
+**State at the handoff:** every row is `verified` on a foreground run (E5–E9,
+E11, G1) — nine rows, zero open, zero deferred.
 
 ## Triaged steps
 
@@ -506,37 +512,45 @@ the authoritative order (`P1` → `P4`).
   `Files: 3 checked · 0 missing · 0 stale · 0 orphaned`, `verdict: PASS` ·
   `journal aggregate --check` → `{"ok":true,"checked":81,"refusals":[]}`,
   exit 0 (O8).
-- **E10** — 2026-11-18, `bun scripts/local-gate.mjs --no-bail` · **exit 1** · 19
-  steps, 18 PASS; the single red is `worktree-guard`:
-  `FINDING .worktrees/feat-631-cache-hit-rate — STALE: branch
-  feat-631-cache-hit-rate is merged into origin/main · dirty`. That worktree is
-  another session's, it predates this branch's commits, and nothing in this
-  unit's diff can clear it without destroying uncommitted work there — so O7
-  stays open and the owner decides (see `## Next`).
+- **E10** — 2026-11-18, `bun scripts/local-gate.mjs`, three runs recorded in full
+  because two of them were red:
+  - run 1, `--no-bail`: 19 steps, 18 PASS, red on `worktree-guard` —
+    `FINDING .worktrees/feat-631-cache-hit-rate — STALE: branch
+    feat-631-cache-hit-rate is merged into origin/main · dirty`. Another session's
+    worktree, predating this branch's commits, and nothing in this unit's diff can
+    clear it without destroying uncommitted work there. That session removed it
+    before run 3, so the finding was never this unit's.
+  - run 2, default: red on `root-suite` — `scripts/unit-route.test.mjs` `#291 F7:
+    long Progress-log line uses linear scan (not quadratic split)`, a
+    `elapsed < 500ms` wall-clock assertion around a spawned subprocess built from a
+    temp fixture, not from this tree. Standalone re-run of that suite: 64 pass,
+    0 fail. A load-sensitive flake under the gate's four-worker pool, recorded in
+    `## Known pre-existing issues`, not excused.
+  - run 3, default: PASS — 19 steps, 957s (`G1`).
+- **E11** — 2026-11-18, `gh pr create --base main --head fix/633-cache-economics-passive-record`
+  · exit 0 · PR [#637](https://github.com/gtrabanco/agentic-workflow/pull/637),
+  body carrying `Closes #633` (O9).
+- **G1** — 2026-11-18, `bun scripts/local-gate.mjs` · exit 0 ·
+  `local-gate: PASS — 19 step(s) in 957s`, at `cb984a4e` (O7).
 
 ## Next
 
-The owner's external verdict on the diff, with two rows open on purpose.
+The owner's external verdict on the diff, with the ledger closed and one thing
+left that is the owner's call and not a defect.
 
-**Open: O7 and O9 — and they are the same fact.** The deterministic gate ran in the
-foreground (`E10`) and fails one step, `worktree-guard`, on
-`.worktrees/feat-631-cache-hit-rate` — a *different* worktree, another session's,
-stale (merged into `origin/main`) and dirty, which predates this branch's commits
-and which this unit's diff cannot clear without deleting uncommitted work there.
-Every other step passes (18/19), including the root, crate, schema and pi suites and
-the `docs-generated-projection` check. O9's first half is the same count, so it
-cannot close while O7 is open. Neither row is deferred to a follow-up — there is
-no follow-up to defer to — so this is a `Needs your decision`, not a deferred row.
+**Closed:** every obligation row is `verified` on a foreground run — the practice
+and citation counts (E5, E6), the empty passive carrier (E7), the changed-path set
+(E8), the three state writers (E9), the gate (G1: `local-gate: PASS — 19 step(s)
+in 957s`) and the PR (E11).
 
-Everything else the owner needs in one read: the four practice claims (R1–R4) and
-the four evidence pointers (C1–C4) are the record itself; D1 records the carrier
-and the precedent; D2 records the one figure the issue states that its source does
-not, and D3 the roadmap route the measurement corrected.
-
-**Also open, and the owner's call, not a defect:** issue #633's AC-1 and AC-3 name
+**Open by design, not deferred:** issue #633's AC-1 and AC-3 name
 `docs/passive/<id>.md` and "no other file changed". D1's carrier writes neither, so
 those two cells of the *issue* are unmet on purpose — amending the issue body is a
-forge write the owner owns.
+forge write the owner owns and was not performed here.
+
+The record itself is R1–R4 with C1–C4 behind it; D1 holds the carrier and the
+precedent, D2 the one figure the issue states that its source does not, D3 the
+roadmap route the measurement corrected.
 
 ## References
 
