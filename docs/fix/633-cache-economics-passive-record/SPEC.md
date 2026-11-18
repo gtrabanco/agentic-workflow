@@ -172,9 +172,11 @@ proves it.
 - **AC-S3** — four evidence pointers are present and each is the fetched source
   with what it states. Check:
   `rg -c '^- \*\*C[1-4]\*\* —' docs/fix/633-cache-economics-passive-record/SPEC.md`
-  prints `4`, and `rg -c 'https://' docs/fix/633-cache-economics-passive-record/SPEC.md`
-  prints `20` — the four pointers, repeated across the spec, the impact and the
-  references.
+  prints `4`, and
+  `rg -o 'platform\.claude\.com/docs/en/build-with-claude/prompt-caching|morphllm\.com/prompt-caching|arxiv\.org/abs/2312\.07104|cognition\.ai/blog/dont-build-multi-agents' docs/fix/633-cache-economics-passive-record/SPEC.md | sort -u | wc -l`
+  prints `4` — the four distinct sources cited across the record (D5:
+  the total-URL count this replaced froze `20` and drifted to `23` as the
+  append-only `## Log` grew; a distinct-source count cannot drift).
 - **AC-S4** — the carrier is this unit doc and no `ceremony passive add` record is
   written for the same scope (D1). Check: `git status --porcelain docs/passive`
   prints nothing, and `ls docs/passive` names no file containing `633`.
@@ -499,7 +501,9 @@ the authoritative order (`P1` → `P4`).
 - **E5** — 2026-11-18, `rg -c '^- \*\*R[1-4]\*\* —' docs/fix/633-cache-economics-passive-record/SPEC.md`
   · exit 0 · `4` (O1).
 - **E6** — 2026-11-18, `rg -c '^- \*\*C[1-4]\*\* —' …` · exit 0 · `4`;
-  `rg -c 'https://' …` · exit 0 · `20` (O2).
+  `rg -c 'https://' …` · exit 0 · `20` (O2) — the URL total was true when recorded
+  and superseded 2026-11-18 by E13/D5: it drifted to `23` at the shipped head and
+  the check was replaced.
 - **E7** — 2026-11-18, `git status --porcelain docs/passive` · exit 0 · no output;
   `ls docs/passive` names no file containing `633` (O3).
 - **E8** — 2026-11-18, at `40abb897`, `git diff --name-only main...HEAD` · exit 0 ·
@@ -545,11 +549,41 @@ the authoritative order (`P1` → `P4`).
   `roadmap_summary:`. `bun scripts/roadmap-settle.mjs` → `violations: 0`, PASS.
   The first commit's `in-progress` was wrong, and the gate — not a reviewer —
   caught it, which is the point of the settle invariant.
+- **D5** — 2026-11-18, the owner's external verify returned `NEEDS-DECISION` with
+  one blocker (receipt: `external-verify.md`, head `fb1eae45`) and ordered the
+  correction batch. B1: AC-S3's second check froze a total-URL count (`20`) over
+  an append-only document, and the count drifted +1 per later commit to `23` at
+  the shipped head — a frozen outcome that no longer reproduced. The repair
+  replaces the brittle count with a distinct-source count that cannot drift (the
+  four canonical URLs, `sort -u`), not a re-frozen number the next Log line would
+  break again. Advisories triaged, none fixed in this batch: A1 (the emitter
+  projects only the first wrapped `One-line:` line, so row 633's generated
+  summary cell ends mid-sentence) is pre-existing at base — row 630 shows the
+  same artifact — and an emitter change is outside S6; owner's call. A2 (the
+  root-suite wall-clock flake class) is already in `## Known pre-existing
+  issues`. A3 is the disclosed journal-fragment convention. B1 is folded here —
+  the findings grammar folds a row into a `## Log` line, the table stays
+  open-rows-only.
+- **E13** — 2026-11-18, the correction recheck (blockers only), at the batch
+  bytes: AC-S3's repaired check
+  `rg -o '…' docs/fix/633-cache-economics-passive-record/SPEC.md | sort -u | wc -l`
+  → `4`; `rg -c '^- \*\*C[1-4]\*\* —' …` → `4` (O2); the
+  planned/in-progress/deferred sweep → 0 (AC-S11); `rg -c '^- \*\*(F|V)[0-9]+\*\*' …`
+  → 0 (AC-S12); `agentic-workflow phase-lint docs/fix/633-cache-economics-passive-record/SPEC.md`
+  → verdict PASS, 4/4 phases; `agentic-workflow roadmap check …` → PASS, 0
+  violations; `bun scripts/roadmap-settle.mjs` → PASS, 0 violations;
+  `bun scripts/docs-generate.mjs --check` → PASS; `journal aggregate --check` →
+  ok; `bun scripts/test-impact.mjs --base main` → `empty`.
 
 ## Next
 
 The owner's external verdict on the diff, with the ledger closed and one thing
 left that is the owner's call and not a defect.
+
+**Correction batch 1 (2026-11-18):** the verdict came back `NEEDS-DECISION (B1)`,
+the batch folded it (D5, E13), and the next step is the owner's delta re-verify —
+blockers only, per the receipt — plus the A1 owner's call (the emitter's
+`One-line:` projection, a separate unit's scope).
 
 **Closed:** every obligation row is `verified` on a foreground run — the practice
 and citation counts (E5, E6), the empty passive carrier (E7), the changed-path set
