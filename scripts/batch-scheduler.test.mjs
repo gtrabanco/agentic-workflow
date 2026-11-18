@@ -32,6 +32,7 @@ const {
   extractSurfaces,
   extractFileClaims,
   extractProseDependencies,
+  printHumanSummary,
   STATE_FILE_NAME,
 } = await import(scriptPath);
 
@@ -114,14 +115,15 @@ const baseInput = (issues, root, overrides = {}) => ({
 
 // ── S2/O1 — the envelope exists, is shaped, and is deterministic ───────────
 
-test("S2: emits a batch-plan@3 envelope with batches, blocked and findings arrays", () => {
+test("S2: emits a batch-plan@4 envelope with batches, blocked and findings arrays", () => {
   const root = scratchRoot();
   try {
     fs.mkdirSync(path.join(root, "docs"), { recursive: true });
     fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
     const issues = [issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"]))];
     const plan = buildBatchPlan(baseInput(issues, root));
-    assert.equal(plan.schema, "batch-plan@3");
+    assert.equal(plan.version, 4, "the closed-core version moves with the field");
+    assert.equal(plan.schema, "batch-plan@4");
     assert.equal(plan.source_revision, HEAD);
     assert.deepEqual(plan.degraded, []);
     assert.ok(Array.isArray(plan.batches));
@@ -703,7 +705,7 @@ test("S5: `(X)` is not a size token and `(XL)` is", () => {
     for (const lane of plan.batches.flatMap((b) => b.lanes)) {
       assert.ok(
         ["light", "mixed", "heavy"].includes(lane.size_hint),
-        `every lane carries a declared hint (batch-plan@3's enum), got ${JSON.stringify(lane.size_hint)} on ${lane.surface}`,
+        `every lane carries a declared hint (batch-plan@4's enum), got ${JSON.stringify(lane.size_hint)} on ${lane.surface}`,
       );
     }
   } finally {
@@ -725,7 +727,13 @@ test("S5: `(X)` is not a size token and `(XL)` is", () => {
 function evidenceFor(entries) {
   const map = new Map();
   for (const [number, entry] of Object.entries(entries)) {
-    map.set(Number(number), { branches: entry.branches ?? [], pr: entry.pr ?? null, worktree: entry.worktree ?? null, files: entry.files ?? [] });
+    map.set(Number(number), {
+      branches: entry.branches ?? [],
+      pr: entry.pr ?? null,
+      worktree: entry.worktree ?? null,
+      files: entry.files ?? [],
+      filesKnown: entry.filesKnown ?? false,
+    });
   }
   return map;
 }
@@ -851,6 +859,33 @@ test("V5: a directory that is not a git repository degrades declared instead of 
     const launch = await collectLaunchEvidence({ root });
     assert.equal(launch.evidence.size, 0);
     assert.ok(launch.degradations.includes("unavailable-launch-evidence-no-repository"));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("V6: a local worktree tags the in-flight evidence `[worktree]`", () => {
+  // External verify 2026-11-17, advisory A2: the unit doc's regression scope
+  // cites the `V` cases as the verifier for the `[worktree]` tag and no test
+  // asserted it — this pin makes the citation true.
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    withInFlightUnit(root, 10, "alpha-skill-change");
+    const issues = [issue(10, "Alpha skill change", whereSection(["skills/alpha/SKILL.md"]))];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "fix/10-alpha-skill-change", merged: false }],
+        worktree: "/repo/.worktrees/fix-10-alpha-skill-change",
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.deepEqual(
+      plan.launched,
+      [{ number: 10, evidence: "branch fix/10-alpha-skill-change [worktree] + unit-doc docs/fix/10-alpha-skill-change" }],
+      "a local worktree stays distinguishable from a remote PR",
+    );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -1532,6 +1567,359 @@ test("P4: extractProseDependencies parses the declared form and refuses every ot
   assert.deepEqual(noTable, { soft: [], proseHard: [], malformed: false });
 });
 
+// ── CS — claimed surfaces: a live branch's partial coverage (issue #621) ───
+// The field reports one cause only: an issue whose live (unmerged) branch has a
+// computed diff that leaves a declared surface uncovered — the case where a
+// merge conflict is still possible. An issue with no branch has nothing to
+// verify, a merged branch's own trunk diff is empty by construction (measured:
+// a merged fixture branch yields `git diff --name-only <trunk>...<branch>` → 0
+// files), and a diff that could not be computed is a declared degradation
+// instead of a silent "no files".
+
+/** A git fixture: `main` with one commit, then a live branch touching `files`. */
+function liveBranchRepo(root, branch, files) {
+  const git = (args) => spawnSync("git", args, { cwd: root, encoding: "utf8" });
+  const ident = ["-c", "user.email=fixture@example.invalid", "-c", "user.name=fixture", "-c", "commit.gpgsign=false"];
+  const commit = (message) => git([...ident, "commit", "-qm", message]);
+  assert.equal(git(["init", "-q", "-b", "main"]).status, 0);
+  fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+  assert.equal(git(["add", "-A"]).status, 0);
+  assert.equal(commit("base").status, 0);
+  assert.equal(git(["checkout", "-q", "-b", branch]).status, 0);
+  for (const file of files) {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.writeFileSync(path.join(root, file), "// fixture\n");
+  }
+  assert.equal(git(["add", "-A"]).status, 0);
+  assert.equal(commit("work").status, 0);
+  assert.equal(git(["checkout", "-q", "main"]).status, 0);
+  assert.equal(git(["remote", "add", "origin", "git@github.com:owner/repo.git"]).status, 0);
+}
+
+/** A `gh` shim answering `pr list` with the rows it is given. */
+function prShim(root, rows) {
+  const shim = path.join(root, "gh");
+  fs.writeFileSync(
+    shim,
+    ["#!/bin/sh", 'if [ "$1" = "pr" ] && [ "$2" = "list" ]; then', `  printf %s '${JSON.stringify(rows)}'`, "else", "  exit 5", "fi", ""].join("\n"),
+  );
+  fs.chmodSync(shim, 0o755);
+  return shim;
+}
+
+/** The rows of a plan's first batch, flattened across its lanes. */
+function firstBatchRows(plan) {
+  return plan.batches[0].lanes.flatMap((lane) => lane.issues);
+}
+
+test("CS1: a live branch whose diff covers part of the declared surfaces reports exactly the uncovered ones", async () => {
+  const root = scratchRoot();
+  try {
+    liveBranchRepo(root, "feat/10-live", ["scripts/tool.mjs"]);
+    // A CLOSED PR: the branch is left behind, so the issue stays batchable and
+    // its diff remains the evidence the field verifies.
+    const launch = await collectLaunchEvidence({
+      root,
+      ghBin: prShim(root, [{ number: 622, headRefName: "feat/10-live", state: "CLOSED" }]),
+    });
+    assert.deepEqual(launch.degradations, [], "every read succeeds on the fixture, so nothing degrades");
+    assert.equal(launch.evidence.get(10).filesKnown, true, "the live branch's diff was computed");
+    const issues = [issue(10, "Leftover branch", whereSection(["scripts", "docs"]))];
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence: launch.evidence }));
+    assert.deepEqual(plan.launched, [], "a closed PR plus a leftover branch is not in flight");
+    const rows = firstBatchRows(plan);
+    assert.equal(rows.length, 2, "one row per declared surface's lane");
+    for (const row of rows) {
+      assert.deepEqual(row.claimed_surface, ["docs"], "only the surface the branch does not cover is reported, per issue");
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("CS2: an issue with no branch at all carries no claimed_surface", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "No-branch issue", whereSection(["skills/alpha/SKILL.md", "docs"]))];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    const row = plan.batches[0].lanes[0].issues[0];
+    assert.equal(row.claimed_surface, undefined, "there is nothing to verify, so nothing is reported");
+    assert.deepEqual(plan.degraded, [], "and no degradation is invented for it either");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("CS3: an issue whose branch already merged carries no claimed_surface", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Merged branch issue", whereSection(["skills/alpha/SKILL.md", "docs"]))];
+    const launchEvidence = evidenceFor({
+      10: { branches: [{ name: "feat/10-merged", merged: true }], files: [], filesKnown: false },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.deepEqual(plan.launched, [], "a merged branch is not in flight");
+    for (const row of firstBatchRows(plan)) {
+      assert.equal(row.claimed_surface, undefined, "a merged branch cannot conflict, so its surfaces are not flagged");
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("CS4: an issue whose live branch covers every declared surface carries no claimed_surface", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Full coverage issue", whereSection(["scripts"]))];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-full", merged: false }],
+        pr: { number: 611, state: "CLOSED" },
+        files: ["scripts/makefile.mjs", "scripts/helper.mjs"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.equal(firstBatchRows(plan)[0].claimed_surface, undefined, "full coverage — no field");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("CS5: an issue that declares no surface carries no claimed_surface, even with a computed live diff", () => {
+  // External verify 2026-11-17, blocker B1: the lane-guess fallback (`general`)
+  // fed the emitter, so an undeclared issue reported an unverified surface it
+  // never declared — beside the `surface-unknown-issue-<n>` degradation that says
+  // the declaration is unknown. O5's rule: exactly the *declared* surfaces.
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Undeclared issue", "Plain prose body; nothing declares a lane.")];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-live", merged: false }],
+        pr: { number: 640, state: "CLOSED" },
+        files: ["scripts/tool.mjs"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.ok(plan.degraded.includes("surface-unknown-issue-10"), "the unknown declaration stays declared");
+    for (const row of firstBatchRows(plan)) {
+      assert.equal(
+        row.claimed_surface,
+        undefined,
+        "nothing was declared, so nothing can be reported uncovered — the `general` lane is a guess, never a claim",
+      );
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── PS — a declared parent surface (issue #621 §6.3) ──────────────────────
+// The probe's input: an issue declaring the bare parent `skills` whose branch
+// rewrites `skills/alpha/SKILL.md`, with no sibling declaring `skills/alpha`.
+
+test("PS1: a declared parent surface is verified by any actual child file, with no sibling declaration", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Parent surface issue", whereSection(["skills"]))];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-parent", merged: false }],
+        pr: { number: 622, state: "CLOSED" },
+        files: ["skills/alpha/SKILL.md"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    for (const row of firstBatchRows(plan)) {
+      assert.equal(row.claimed_surface, undefined, "the parent is covered by its child file — no false positive");
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("PS2: a declared parent surface nothing covers is still reported", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Parent surface issue", whereSection(["skills"]))];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-parent", merged: false }],
+        pr: { number: 622, state: "CLOSED" },
+        files: ["scripts/tool.mjs"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.deepEqual(firstBatchRows(plan)[0].claimed_surface, ["skills"], "the parent fix never silences a real gap");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("PS3: an exact surface key stays verified by its own files", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [issue(10, "Exact key issue", whereSection(["skills/alpha", "skills/beta/SKILL.md"]))];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-exact", merged: false }],
+        pr: { number: 622, state: "CLOSED" },
+        files: ["skills/alpha/SKILL.md", "skills/beta/reference.md"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    assert.equal(firstBatchRows(plan)[0].claimed_surface, undefined, "both keys resolve exactly from the branch files");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── DL — a diff that could not be computed (issue #621) ───────────────────
+
+test("DL1: a failed git diff degrades declared, naming the issue, and reports no claimed_surface", async () => {
+  const root = scratchRoot();
+  try {
+    liveBranchRepo(root, "feat/10-live", ["scripts/tool.mjs"]);
+    const gitShim = path.join(root, "git-diff-fails");
+    fs.writeFileSync(
+      gitShim,
+      [
+        "#!/bin/sh",
+        'for arg in "$@"; do',
+        '  if [ "$arg" = "diff" ]; then',
+        '    echo "fatal: ambiguous argument" >&2',
+        "    exit 128",
+        "  fi",
+        "done",
+        'exec git "$@"',
+        "",
+      ].join("\n"),
+    );
+    fs.chmodSync(gitShim, 0o755);
+    const launch = await collectLaunchEvidence({
+      root,
+      gitBin: gitShim,
+      ghBin: prShim(root, [{ number: 622, headRefName: "feat/10-live", state: "CLOSED" }]),
+    });
+    const declared = launch.degradations.filter((entry) => /^unavailable-launch-evidence-diff-issue-10-/u.test(entry));
+    assert.equal(declared.length, 1, `the failed diff is declared and names the issue (got ${JSON.stringify(launch.degradations)})`);
+    assert.equal(launch.evidence.get(10).filesKnown, false, "an uncomputed diff is never `known`");
+    const issues = [issue(10, "Leftover branch", whereSection(["scripts", "docs"]))];
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence: launch.evidence }));
+    assert.ok(
+      firstBatchRows(plan).every((row) => row.claimed_surface === undefined),
+      "the degradation replaces the field — never a silent `no files` guess",
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── SUM — the human summary lists what is actionable (issue #621) ──────────
+
+test("SUM: the human summary lists one line per actionable issue and nothing when no row carries the field", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(10, "Leftover branch", whereSection(["scripts", "docs"])),
+      issue(11, "No branch", whereSection(["docs"])),
+    ];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-live", merged: false }],
+        pr: { number: 622, state: "CLOSED" },
+        files: ["scripts/tool.mjs"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    const lines = [];
+    printHumanSummary(plan, (line) => lines.push(line));
+    const claimed = lines.filter((line) => line.includes("claimed surfaces"));
+    assert.equal(claimed.length, 1, "one section line, never one per lane");
+    assert.match(claimed[0], /#10: docs/u, "the partial-coverage issue is named with its uncovered surface");
+    assert.doesNotMatch(claimed[0], /#11/u, "a no-branch issue is not actionable and is never listed");
+
+    const quiet = [];
+    printHumanSummary(buildBatchPlan(baseInput(issues, root)), (line) => quiet.push(line));
+    assert.deepEqual(quiet.filter((line) => line.includes("claimed surfaces")), [], "no field anywhere → no section");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("SUM2: the summary prints one line per issue that carries the field (O11, P3)", () => {
+  // External verify 2026-11-17, blocker B2: O11/P3 (and the changeset) promise
+  // one line per flagged issue; the summary joined every entry onto one line,
+  // so the stated outcome stopped reproducing at two flagged issues.
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    const issues = [
+      issue(10, "First leftover branch", whereSection(["docs"])),
+      issue(11, "Second leftover branch", whereSection(["docs"])),
+    ];
+    const launchEvidence = evidenceFor({
+      10: {
+        branches: [{ name: "feat/10-live", merged: false }],
+        pr: { number: 641, state: "CLOSED" },
+        files: ["scripts/tool.mjs"],
+        filesKnown: true,
+      },
+      11: {
+        branches: [{ name: "feat/11-live", merged: false }],
+        pr: { number: 642, state: "CLOSED" },
+        files: ["scripts/tool.mjs"],
+        filesKnown: true,
+      },
+    });
+    const plan = buildBatchPlan(baseInput(issues, root, { launchEvidence }));
+    const lines = [];
+    printHumanSummary(plan, (line) => lines.push(line));
+    const claimed = lines.filter((line) => line.includes("claimed surfaces"));
+    assert.equal(claimed.length, 2, "one line per flagged issue — never one joined line");
+    for (const number of [10, 11]) {
+      assert.equal(
+        claimed.filter((line) => line.includes(`#${number}:`)).length,
+        1,
+        `exactly one line names #${number}`,
+      );
+    }
+    for (const line of claimed) {
+      assert.ok(
+        line.includes("#10:") !== line.includes("#11:"),
+        `one issue per line, got ${JSON.stringify(line)}`,
+      );
+      assert.match(line, /^\n?claimed surfaces \(unverified — merge conflict possible\):/u, "each line carries the section label");
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── S8 — no decision model anywhere in the path ────────────────────────────
 
 test("S8: identical inputs produce byte-identical envelopes (no wall clock, no model)", () => {
@@ -1591,7 +1979,7 @@ test("CLI: --issues-file --root --no-state --json-only prints the envelope and e
     });
     assert.equal(run.status, 0, run.stderr);
     const plan = JSON.parse(run.stdout);
-    assert.equal(plan.schema, "batch-plan@3");
+    assert.equal(plan.schema, "batch-plan@4");
     assert.ok(!fs.existsSync(path.join(root, ".agentic-workflow", STATE_FILE_NAME)), "--no-state writes nothing");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -1757,7 +2145,7 @@ test("S8: no association and no forge fails closed — unknown authors, declared
   }
 });
 
-test("AC9: a guard decision rides the emitted plan without breaking batch-plan@3", () => {
+test("AC9: a guard decision rides the emitted plan without breaking batch-plan@4", () => {
   // The live failure this pins (issue #470): the collection seam declares its
   // decisions as `stripped-forge-content-…` / `excluded-forge-content-…`, and a
   // plan carrying one of them was refused by the envelope's own grammar — so a
@@ -1783,7 +2171,7 @@ test("AC9: a guard decision rides the emitted plan without breaking batch-plan@3
     );
     assert.equal(run.status, 0, `the production must survive a guard decision:\n${run.stderr}`);
     const plan = JSON.parse(run.stdout);
-    assert.equal(plan.schema, "batch-plan@3");
+    assert.equal(plan.schema, "batch-plan@4");
     assert.ok(
       plan.degraded.includes("stripped-forge-content-issue-body-30-html-comment-1"),
       `the removal reaches the envelope, got ${JSON.stringify(plan.degraded)}`,
@@ -1872,9 +2260,13 @@ test("parity: the plan grammar inventory matches the emitted envelope and the sc
 test("envelope: no owned surface keeps a superseded batch-plan token", () => {
   // Every version bump rewrote the token; a sibling that keeps narrating an old
   // one asserts a contract the document no longer carries (issue #460's own
-  // external-verify sibling sweep, extended to @2 by issue #509's bump). Only
-  // the validator's wrong-value vectors may name one, and they are recognised by
-  // their mutation, not by their line.
+  // external-verify sibling sweep, extended to @2 by issue #509's bump and to
+  // @3 by issue #621's). Only the validator's wrong-value vectors may name one,
+  // and they are recognised by their mutation, not by their line.
+  const WRONG_VALUE_VECTOR = [
+    /\.(?:schema|version)\s*=\s*(?:"batch-plan@\d+"|\d+)\s*;/u,
+    /validateBatchPlan\("batch-plan@\d+"\)/u,
+  ];
   const owned = [
     "scripts/batch-scheduler.mjs",
     "packages/agentic-workflow-schema/src/batch-plan.ts",
@@ -1883,17 +2275,21 @@ test("envelope: no owned surface keeps a superseded batch-plan token", () => {
     "skills/batch-scheduler/references/PLAN.md",
     "README.md",
     "docs/workflow/SKILLS.md",
+    // External verify 2026-11-17, blocker B3: the previous bump (509's 371b5a0b)
+    // updated this row's token, so it is a contract-narrating sibling of every
+    // batch-plan version bump — an unowned survivor is exactly the F51/F53 class.
+    "docs/features/107-mechanization-inventory/INVENTORY.md",
   ];
   const stale = [];
   for (const rel of owned) {
     const lines = fs.readFileSync(new URL(`../${rel}`, import.meta.url), "utf8").split("\n");
     lines.forEach((line, index) => {
-      if (!line.includes("batch-plan@1") && !line.includes("batch-plan@2")) return;
-      if (line.includes('m.schema = "batch-plan@1"') || line.includes('"batch-plan@2"')) return;
+      if (!/batch-plan@[123]/u.test(line)) return;
+      if (WRONG_VALUE_VECTOR.some((pattern) => pattern.test(line))) return;
       stale.push(`${rel}:${index + 1}`);
     });
   }
-  assert.deepEqual(stale, [], "every owned surface names batch-plan@3");
+  assert.deepEqual(stale, [], "every owned surface names batch-plan@4");
 });
 
 // ── A — a launched claim whose worktree is gone expires (issue #509, S8) ──

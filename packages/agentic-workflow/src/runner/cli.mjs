@@ -20,6 +20,7 @@ import { run as runPreExecutionSnapshot } from "./sensors/pre-execution-snapshot
 import { run as runNeedsInput } from "./sensors/needs-input.mjs";
 import { run as runLedgerProvenance } from "./sensors/ledger-provenance.mjs";
 import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
+import { run as runForgeRead } from "../forge-read/index.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 import { run as runSkills } from "./skills.mjs";
 
@@ -36,6 +37,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "needs-input": runNeedsInput,
   "ledger-provenance": runLedgerProvenance,
   "quality-metrics": runQualityMetrics,
+  "forge-read": runForgeRead,
   ceremony: runCeremony,
   skills: runSkills,
 });

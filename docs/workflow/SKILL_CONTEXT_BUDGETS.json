@@ -92,13 +92,14 @@
         }
       },
       "docs/workflow/GATE_INVENTORY.md": {
-        "linesMax": 174,
+        "linesMax": 175,
         "estimateMax": 8015,
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 79,
+        "machineLines": 80,
         "sources": {
+          "issue #612 (unit 612-forge-read-transport-closure)": "issue #612 adds one gate row, forge-read-drift, binding the sanctioned-forms pin (the crate own classifier over the shipped prose, the sanctioned spelling read from RUNNER.md), and restates the content-guard-discipline row to its R5 rule and its read route. The machine region moves 79 -> 80 lines and the inventory measures 175 lines with bun scripts/check-skill-context.mjs --documents; linesMax is re-pinned 174 -> 175 and machineLines 79 -> 80 (the exact boundary this unit spends), while estimateMax (8,015) keeps its headroom. No emitter exists for the documents section (the budgets CLI rebases routes only), so this row is a hand edit recorded here rather than a silent one.",
           "merge of origin/main into feat/610-new-feature-enforce-shell-tool-choice-programmat (2026-11-17)": "the integration carries both sides' gate rows — main's rows plus this unit's `invocation-drift` restatement and its `shell-tool-choice-carrier` row — so the merged inventory measures 174 lines / 79 machine / 95 prose / 7,286 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` is re-pinned 173 -> 174 and `machineLines` 78 -> 79 (the exact boundary the merged tree measures), and `estimateMax` 7,134 -> 8,015 by the manifest's own arithmetic, ceil(7,286 x 1.10); `linesMax` had been re-pinned down to main's own measured boundary before this integration, so only the merged measurement governs. Recorded hand edit, never a silent one.",
           "issue #610 (unit 610-shell-tool-choice-enforcement)": "the inventory gains one row (`shell-tool-choice-carrier`, citing `scripts/tool-choice-parity.test.mjs`) and the `invocation-drift` row is restated to what it actually checks, its checkability dropping 3 -> 2 because the command-time half is now a separate named gate (issue #610 S7). The machine region moves 76 -> 77 lines and the document measures 7,058 est with `bun scripts/check-skill-context.mjs --documents`, above the previous 6,906 ceiling the restated rows no longer meet; `machineLines` is re-pinned 76 -> 77 (the exact boundary) and `estimateMax` is re-set by the manifest's own arithmetic, ceil(7,058 x 1.10) = 7,764. `linesMax` (180) has headroom and is unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "unit 557 (verification materialization, issue #564)": "the inventory gains one row, `materialization-check` (carrier `cli`), claiming the four new materialization surfaces on the self-inventory row (`normative-surface-grammar`). The machine region moves 73 -> 74 lines and the file measures 169 lines / 95 prose / 6,699 est with `bun scripts/check-skill-context.mjs --documents`; `machineLines` is re-pinned exactly and `estimateMax` 6,512 -> 6,699 (the exact boundary the new rows measure). `linesMax` (180) and `proseLinesMax` are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
@@ -204,13 +205,14 @@
     },
     "batch-scheduler": {
       "mainEstimateMax": 3225,
-      "referenceEstimateMax": 2768,
+      "referenceEstimateMax": 3325,
       "mainSources": {
         "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 adds the surface contract this sensor reports on: one Turn-contract box (an unknown surface runs serially; `blind-spot` names the batch nobody can call safe) and two guardrail paragraphs (findings include `blind-spot`; an unknown surface means serial, never parallel). Measured with `bun scripts/check-skill-context.mjs` at the change: SKILL.md 2931 est / 203 lines against the flat default 2800, which the file had already spent, so the ceiling is ceil(2931 x 1.10) = 3225; growth source = issue #574's normative additions."
       },
       "referenceSources": {
         "issue #487 correction batch (2026-11-14)": "the batch-scheduler claim example in references/PLAN.md names the real worktree for issue #487 (`fix/487-deterministic-secret-scanning`) instead of the pre-change intake slug, growing the reference from measured 2198 est to 2201 est; the reference ceiling re-bases from the flat default 2200 to ceil(2201 x 1.10) = 2422, growth source named (external-verify advisory 4, issue #487). Measured with `bun scripts/check-skill-context.mjs`.",
-        "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 adds the surface section to references/PLAN.md: the `## Where the surfaces come from` grammar, the `blind-spot` finding and the `surface-unknown-issue-<n>` degraded family in the field table, constraint 7, and the `--infer-surfaces` rule in the CLI block. Measured at the change: PLAN.md 2516 est / 184 lines; ceiling ceil(2516 x 1.10) = 2768, growth source = issue #574's normative additions."
+        "issue #574 (unit 574-batch-scheduler-surface-detection)": "issue #574 adds the surface section to references/PLAN.md: the `## Where the surfaces come from` grammar, the `blind-spot` finding and the `surface-unknown-issue-<n>` degraded family in the field table, constraint 7, and the `--infer-surfaces` rule in the CLI block. Measured at the change: PLAN.md 2516 est / 184 lines; ceiling ceil(2516 x 1.10) = 2768, growth source = issue #574's normative additions.",
+        "issue #621 (unit 621-batch-scheduler-surface-verification)": "issue #621 finishes the claimed-surface contract and documents it: the `claimed_surface` field row names the one cause it reports (a live branch's uncovered declared surfaces) and the three that never become a row, the `degraded[]` row gains the `unavailable-launch-evidence-diff-issue-<n>-<cause>` family, the version history moves to v4 and constraint 9 states the live-risk rule. Measured at the change: PLAN.md 3022 est / 194 lines; the ceiling re-bases from 2768 to ceil(3022 x 1.10) = 3325, growth source = issue #621's normative additions."
       }
     },
     "audit-pr": {

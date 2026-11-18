@@ -14,10 +14,11 @@ summary table.
 
 `triage-issue` reads the agent guide + documentation map, the fix index
 (the index's `## Fixes` table) and fix SPEC template, the roadmap, and then the issue
-itself in full (body, labels, comments):
+itself in full (body, labels, comments) through the guarded read, which fences
+third-party text and strips hidden content before the model sees it:
 
 ```sh
-gh issue view <N> --json number,title,body,labels,state,comments
+runner forge-read issue <N> --comments
 ```
 
 ## Stage 1 — Parse the issue's own contract

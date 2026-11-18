@@ -23,7 +23,7 @@
 - **Forge bodies are Markdown, not shell — never hand-escape.** The comment's
   backticks are formatting; a `\` before them renders literally. Write the
   body to a file and pass `--body-file <path>` — never inline `--body "…"` or
-  a quoted heredoc. Verify with `gh pr view <N> --json comments` that no
+  a quoted heredoc. Verify with `runner forge-read pr <N> --comments` that no
   literal `` \` `` survived.
 - **Never imply that MERGE-READY is permission.** It is evidence bound to one
   SHA; pending work makes it stale, and merge ownership remains external.
