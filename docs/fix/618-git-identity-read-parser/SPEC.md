@@ -480,6 +480,44 @@ required failure state, in the 9-column shape owned by
   and then did not create the remote ref; the retry pushed the identical tree
   with `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`, as the hook's own header requires
   it to be recorded.
+- **L2** — 2026-11-18, the correction request, verbatim: "Apply to this
+  repository: triage and fix those that deserve to fix but understand the
+  context before fix and check you haven't broke another different thing, if
+  you have done, start the loop again until you fixed full symbol/related
+  stuff" — run against this unit's `external-verify.md` receipt (0 blockers,
+  3 advisories). Triage: advisory 1 (the false bash premise in the module
+  header, D4 and the H8 title) folded; advisory 2 not fixed — out of this
+  unit's scope (another unit's untouched `scripts/unit-route.test.mjs` `#291
+  F7` timing assertion, pre-existing load sensitivity reproduced on untouched
+  code); advisory 3 not fixed — excluded by this unit's frozen boundary
+  (PE-008/D5 record the quoted-substitution recall gap as a separate unit's
+  decision). Disclosed incident: a `journal aggregate --help` probe executed
+  the aggregation (52 pending fragments appended and consumed); cleaned by
+  restoring `docs/LOGS.md` and the fragment files to HEAD, re-checked pending
+  with `journal aggregate --check` (52 checked, ok). New finding handed to the
+  owner, not folded here: `journal aggregate --help` runs the operation instead
+  of printing help.
+- **E16** — 2026-11-18, the batch's recheck, foreground: the false-premise
+  corpus (`rg -n 'bash itself fails|bash fails the command'` over packages/,
+  this unit's dir, scripts/, template/, .changeset/) → the three assertion
+  sites gone; the two remaining hits are this receipt's finding text and D4's
+  dated amendment, both quoting the former claim as history. `bun test
+  packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` · exit 0 ·
+  `44 pass, 0 fail`; `bun test scripts/git-config-writes.test.mjs` · exit 0 ·
+  `10 pass, 0 fail`; `cd packages/pi-agentic-workflow && bun run test` · exit 0
+  · `987 pass, 0 fail` (85 files); `node scripts/run-root-suite.mjs --jobs 2`
+  · exit 0 · 122 suites PASS; `bun scripts/docs-generate.mjs --check` · exit 0
+  · `3 checked · 0 stale · 0 orphaned · verdict PASS`; `bun
+  scripts/check-skill-context.mjs` · exit 0; `phase-lint` · `verdict PASS`,
+  fingerprint unchanged `1b6b17f7…`; `verify` on this doc · `ok: true`, no
+  violations; the independent 31-case probe re-run · `31 pass, 0 fail` (the
+  diff to the module and the suite touches comments and one test title only —
+  no executable line changed).
+- **F1** — 2026-11-18, the folded external-verify advisory 1: the false
+  "bash itself fails … `unexpected EOF`" premise reworded at
+  `packages/pi-agentic-workflow/src/guards/git-identity.ts` (module header),
+  this doc's D4 (amended in place with a dated note), and the H8 test title ·
+  `d2c516d4`; verified by E16.
 
 ## Next
 
