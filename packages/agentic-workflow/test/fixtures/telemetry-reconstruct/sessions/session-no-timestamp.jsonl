@@ -1,0 +1,2 @@
+{"type":"session","version":3,"id":"sess-no-time","cwd":"<PROJECT>"}
+{"type":"message","id":"a1","parentId":null,"message":{"role":"assistant","content":[{"type":"text","text":"no clock anywhere"}],"provider":"nan","model":"qwen3.6","usage":{"input":1,"output":1,"totalTokens":2},"durationMs":10}}
