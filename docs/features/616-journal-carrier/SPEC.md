@@ -311,7 +311,12 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
   `bun scripts/findings-corpus.mjs` differs only in `units 240 -> 241` and
   `migrated-carriers 129 -> 130`, the arithmetic of this unit's own folder
   carrying a `## Findings` section. No stdout, stderr or exit delta nobody asked
-  for.
+  for. *(Correction 2026-11-18, external verify: at the delivery head
+  `fcdeedff` the `coverage-gap.mjs` run is no longer byte-identical — base
+  `2dda53fe` vs head differs in exactly one line, `gates 74` → `gates 75`, the
+  arithmetic of this unit's own `journal-corpus` gate-inventory row, which is
+  the output change P4 asked for; the `findings-corpus.mjs` delta is exactly as
+  recorded above. Receipt: [external-verify.md](external-verify.md).)*
 - **E6** — 2026-11-18, the budgets and the registration, all foreground:
   `bun scripts/prose-gate-inventory.mjs` · `verdict: PASS` (the new
   `journal-corpus` row resolves its suite token and `journal-corpus-grammar` is
