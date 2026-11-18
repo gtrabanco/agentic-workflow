@@ -29,6 +29,9 @@ test("init writes a commented file and refuses to overwrite it", () => {
     const text = readFileSync(join(project, ".pi", "agentic-workflow.json"), "utf8");
     assert.match(text, /agentic-workflow config/);
     assert.match(text, /logSession/);
+    // Issue #626: the first file an operator writes explains the guard vocabulary.
+    assert.match(text, /\"guard\"/);
+    assert.match(text, /allow.*deny.*ask/);
     const again = run(["init", "--project", project, "--global-dir", global]);
     assert.equal(again.status, 2);
     assert.match(again.stderr, /CONFIG REFUSAL/);
@@ -101,7 +104,9 @@ test("list names every node with type, category and default", () => {
     const nodes = JSON.parse(listed.stdout);
     const memory = nodes.find((node) => node.path === "memory.engram");
     assert.deepEqual({ type: memory.type, category: memory.category, defaultValue: memory.defaultValue }, { type: "boolean", category: "feature", defaultValue: false });
-    assert.equal(nodes.some((node) => node.path === "guards.cost.maxTokens"), true);
+    assert.equal(nodes.some((node) => node.path === "guard.gitIdentity.mode"), true);
+    assert.equal(nodes.some((node) => node.path === "guard.default"), true);
+    assert.equal(nodes.some((node) => node.path.startsWith("guards.")), false, "the retired section is not listed");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -164,7 +169,13 @@ test("an installed package extends the schema and the same CLI edits its file", 
     const set = run(["set", "pi.default.model", '"nan/qwen3-32b"', "--project", project, "--global-dir", global]);
     assert.equal(set.status, 0, set.stderr);
     assert.deepEqual(JSON.parse(readFileSync(join(project, ".pi", "pi-agentic-workflow.json"), "utf8")), { default: { model: "nan/qwen3-32b" } });
-    const got = run(["get", "default.model", "--scope", "resolved", "--project", project, "--global-dir", global, "--json"]);
+    // Issue #626: `guard.default` and the extension's own `default` share a
+    // first segment, so the unprefixed path is refused and the section prefix is
+    // what names the node (the CLI's own teaching message says so).
+    const ambiguous = run(["get", "default.model", "--scope", "resolved", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(ambiguous.status, 2);
+    assert.match(ambiguous.stderr, /belongs to several sections: guard, pi/);
+    const got = run(["get", "pi.default.model", "--scope", "resolved", "--project", project, "--global-dir", global, "--json"]);
     assert.equal(got.status, 0, got.stderr);
     assert.equal(JSON.parse(got.stdout).value, "nan/qwen3-32b");
   } finally {

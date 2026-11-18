@@ -94,6 +94,20 @@ test("F25 — a disabled carrier, and a command that is not a command, pass unto
   assert.deepEqual(enforceToolChoice("grep -n 'x' file", { availability: BOTH }), enforceToolChoice("grep -n 'x' file", { config: DEFAULT_TOOL_CHOICE, availability: BOTH }), "an absent config means the shipped default");
 });
 
+test("D1 — the allow disposition stands the carrier down for every violation", () => {
+  for (const command of ["grep -n 'x' file", "node -e 'console.log(1)'", "grep -rn 'x' . && node -p 1"]) {
+    assert.deepEqual(enforceToolChoice(command, { config: BLOCK, availability: BOTH, disposition: "allow" }), { block: false }, command);
+  }
+});
+
+test("D2 — deny keeps the teaching block and ask answers as deny where no question path exists", () => {
+  const denied = enforceToolChoice("grep -n 'x' file", { config: BLOCK, availability: BOTH, disposition: "deny" });
+  const asked = enforceToolChoice("grep -n 'x' file", { config: BLOCK, availability: BOTH, disposition: "ask" });
+  assert.equal(denied.block, true);
+  assert.deepEqual(asked, denied, "this guard cannot ask, so `ask` is `deny` (documented in CONFIG.md)");
+  assert.equal(enforceToolChoice("grep -n 'x' file", { config: BLOCK, availability: BOTH }).block, true, "an absent disposition is the shipped decision");
+});
+
 /* ── the shipped entry ───────────────────────────────────────────────── */
 
 function piDouble() {
@@ -124,7 +138,7 @@ function context(cwd) {
 }
 
 /** A scratch project: a cwd, an isolated agent dir and a `PATH` we control. */
-function scratch(name, { tools = ["rg", "bun"], config } = {}) {
+function scratch(name, { tools = ["rg", "bun"], config, baseConfig } = {}) {
   const root = mkdtempSync(join(tmpdir(), `paw-tool-choice-${name}-`));
   const cwd = join(root, "repo");
   const agentDir = join(root, "agent");
@@ -136,6 +150,8 @@ function scratch(name, { tools = ["rg", "bun"], config } = {}) {
     chmodSync(stub, 0o755);
   }
   if (config !== undefined) writeFileSync(join(cwd, ".pi", "pi-agentic-workflow.json"), JSON.stringify(config));
+  // Issue #626: the disposition lives in the base file's `guard` section.
+  if (baseConfig !== undefined) writeFileSync(join(cwd, ".pi", "agentic-workflow.json"), JSON.stringify(baseConfig));
   return { root, cwd, agentDir, bin };
 }
 
@@ -221,5 +237,21 @@ test("F28 — the shipped handler stands down when the preferred tool is absent 
   } finally {
     rmSync(absent.root, { recursive: true, force: true });
     rmSync(off.root, { recursive: true, force: true });
+  }
+});
+
+test("F29 — the shipped handler reads the disposition from the base file's guard section", async () => {
+  const allowed = scratch("guard-allow", { baseConfig: { guard: { toolChoice: { mode: "allow" } } } });
+  const denied = scratch("guard-deny", { baseConfig: { guard: { toolChoice: { mode: "deny" } } } });
+  try {
+    for (const [project, expected] of [[allowed, false], [denied, true]]) {
+      const entry = await shippedEntry(project);
+      const call = { toolName: "bash", input: { command: "grep -n 'x' README.md" } };
+      const decision = await callInProcess(project, entry, call);
+      assert.equal(decision?.block ?? false, expected, project.cwd);
+    }
+  } finally {
+    rmSync(allowed.root, { recursive: true, force: true });
+    rmSync(denied.root, { recursive: true, force: true });
   }
 });

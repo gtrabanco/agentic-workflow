@@ -96,7 +96,7 @@ function piDouble(options = {}) {
  * the hint state live) and its own repo cwd (where `.pi/` would live), so the
  * adapter's real file reads are exercised without touching this machine's `~/.pi`.
  */
-const FEATURE_KEYS = new Set(["logSession", "memory", "telemetry", "guards", "advance", "pathProtection"]);
+const FEATURE_KEYS = new Set(["logSession", "memory", "telemetry", "guard", "advance", "pathProtection"]);
 
 function splitConfig(config) {
   const feature = {};
