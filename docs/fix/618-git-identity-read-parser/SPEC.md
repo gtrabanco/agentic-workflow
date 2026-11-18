@@ -180,7 +180,7 @@ none
   postures — interactive asks nothing, headless returns `block: false` — for
   identity keys, quoted keys, a scope flag, a `--file`, a `--type=`, and a
   compound command ending in three reads. Check: the same suite exits 0 (cases
-  `R2`–`R8`), plus the shipped-wiring case `R9`.
+  `R2`–`R6`), plus the shipped-wiring case `R9`.
 - **AC-S3** — Two or more positionals remain the implicit `set` write, including
   three positionals and an empty value, and `git config <key> --get`/
   `git config <key> --unset` stay writes (they set the literal value). Check: the
@@ -199,15 +199,15 @@ none
 - **AC-S7** — A heredoc body is data: the live-capture shape (`gh issue create
   --body … <<'EOF' … EOF`, quoted, bare and `<<-` delimiters, nested in `$(…)`
   inside a quoted argument) derives no write, while a write outside the body —
-  on the next line, or after the terminator — still asks. Check: cases `H1`–`H6`
-  of the same suite.
+  on its own line, or after the terminator — still asks. Check: cases
+  `H1`–`H6` and `H8` of the same suite.
 - **AC-S8** — The sibling reader shares the rule: `classifyInvocation` answers
   `read` for one positional and `write` for two or more, the corpus carries both
   rows, and this repository stays compliant. Check: `bun test
   scripts/git-config-writes.test.mjs` exits 0.
 - **AC-S9** — The refusal text and the passing form agree: the bare read passes
   and the recommended `--show-origin --get-all` form passes, both asserted in one
-  case. Check: case `R2` of the guard suite.
+  case. Check: case `R7` of the guard suite.
 - **AC-S10** — Tests precede the implementation: the frozen corpus is observed
   red at the cut head before the parser changes, and the parser change is exactly
   `!explicit && positional.length === 1` → no write / `>= 2` → implicit `set`.
@@ -279,19 +279,19 @@ required failure state, in the 9-column shape owned by
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S1 · S2 · S6 · S9 · PE-001/PE-003/PE-009 · AC-S1 | A bare identity read derives no write: `findGitConfigWrites("git config user.name")` is `[]` and `decideGitConfigCall` answers `allow`, so the read never reaches the consent question | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (case `R1`) | `E` line naming `R1` and its `[]`/`allow` assertion | planned |
-| O2 | S2 · S10 · PE-001 · AC-S2 · AC-S9 | One positional passes in both postures for the identity keys, the quoted spellings, a scope flag, `--file`, `--type=` and a compound command ending in three reads — and the recommended `--show-origin --get-all` form passes in the same case | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `R2`–`R8`) | `E` line naming `R2`–`R8` and the posture each asserts | planned |
-| O3 | S3 · PE-002 · AC-S3 | Two or more positionals are still the implicit `set` write, an empty value included, and `git config <key> --get` / `--unset` stay writes because git sets the literal value | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `W1`–`W4`) | `E` line naming `W1`–`W4` | planned |
-| O4 | S4 · AC-S4 | Every explicit verb and every scope-flag write keeps its classification and its reason text | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (the cut-head write corpus, unchanged) | `E` line with the run's pass count and `0 fail` | planned |
-| O5 | S5 · PE-005 · AC-S5 | The #514 write corpus is untouched: no assertion deleted, skipped or narrowed, and its 22 cut-head cases still pass | P2 | P2 | direct application (this session) | `git diff 63c50421 -- packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` shows additions only | `E` line with the diff's removal count (0) | planned |
-| O6 | S7 · PE-007/PE-008 · AC-S7 | A heredoc body is data: the live-capture shapes (quoted, bare and `<<-` delimiters, nested in `$(…)` inside a quoted argument) derive no write | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `H1`–`H3`) | `E` line naming `H1`–`H3` | planned |
-| O7 | S7 · PE-006 · AC-S7 | A write the shell will actually run is still judged: on its own line inside a multi-line command, and after a heredoc terminator | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `H4`–`H6`) | `E` line naming `H4`–`H6` | planned |
-| O8 | S7 · PE-008 · AC-S7 | Backtick command substitution is parsed as a command where the tokenizer sees it (outside a quoted string), so a write inside one asks; inside a quoted string it stays data, as the header states | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `B1`–`B2`) | `E` line naming `B1`/`B2` | planned |
-| O9 | S7 · S10 · PE-010 · AC-S7 | The module header states the heredoc and backtick boundaries, closing the gap S7 names (the boundary list named only script, `!` command and indirection) | P3 | P3 | direct application (this session) | `rg -n 'heredoc body' packages/pi-agentic-workflow/src/guards/git-identity.ts` matches 1 | `E` line with the command and its match | planned |
-| O10 | S8 · PE-004 · AC-S8 | The sibling reader answers `read` for one positional and keeps every write row: the corpus carries both, and this repository stays compliant | P5 | P5 | direct application (this session) | `bun test scripts/git-config-writes.test.mjs` exits 0 | `E` line with the pass count and the compliance case | planned |
-| O11 | S2 · S7 · AC-S2/AC-S7 | The shipped `tool_call` wiring follows the module: a headless bare read passes untouched, a headless heredoc-body prose call passes, and a headless write still blocks naming the repair | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `R9`, `H7`, the cut-head write wiring case) | `E` line naming `R9`/`H7` | planned |
-| O12 | S2 · S7 · PE-010 | The package README's guard description states the read rule and the heredoc boundary, so the shipped prose matches the behaviour | P6 | P6 | direct application (this session) | `rg -n 'one positional\|heredoc' packages/pi-agentic-workflow/README.md` matches 2 | `E` line with the command and its matches | planned |
-| O13 | S5 · S11 · AC-S11 | The whole gate passes with the change in place, the projection is a fixed point, and the out-of-scope surfaces are untouched | P7 | P7 | direct application (this session) | `node scripts/run-root-suite.mjs` exits 0 and `cd packages/pi-agentic-workflow && bun run test` exits 0 | `E` lines with both verdicts and the diff stat | planned |
+| O1 | S1 · S2 · S6 · S9 · PE-001/PE-003/PE-009 · AC-S1 | A bare identity read derives no write: `findGitConfigWrites("git config user.name")` is `[]` and `decideGitConfigCall` answers `allow`, so the read never reaches the consent question | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (case `R1`) | `E` line naming `R1` and its `[]`/`allow` assertion | verified — E5 line (44 pass: `R1` derives `[]` and answers `allow` in both postures) |
+| O2 | S2 · S10 · PE-001 · AC-S2 · AC-S9 | One positional passes in both postures for the identity keys, the quoted spellings, a scope flag, `--file`, `--type=` and a compound command ending in three reads — and the recommended `--show-origin --get-all` form passes in the same case | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `R2`–`R7`) | `E` line naming `R2`–`R7` and the posture each asserts | verified — E5 line (`R2`–`R7` green: identity keys, quoted spellings, scope flags, `--file`, `--type=`, the compound three-read command and the recommended diagnostic) |
+| O3 | S3 · PE-002 · AC-S3 | Two or more positionals are still the implicit `set` write, an empty value included, and `git config <key> --get` / `--unset` stay writes because git sets the literal value | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `W1`–`W4`) | `E` line naming `W1`–`W4` | verified — E5 line (`W1`–`W4` green: two positionals, three positionals, an empty value and the post-key flag) |
+| O4 | S4 · AC-S4 | Every explicit verb and every scope-flag write keeps its classification and its reason text | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (the cut-head write corpus, unchanged) | `E` line with the run's pass count and `0 fail` | verified — E5 line (the cut-head explicit-verb and scope write cases pass unchanged) |
+| O5 | S5 · PE-005 · AC-S5 | The #514 write corpus is untouched: no assertion deleted, skipped or narrowed, and its 22 cut-head cases still pass | P2 | P2 | direct application (this session) | `git diff 63c50421 -- packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` shows additions only | `E` line with the diff's removal count (0) | verified — E9 line (`git diff 63c50421` on both test files: 0 removed assertion lines; the 22 cut-head cases green) |
+| O6 | S7 · PE-007/PE-008 · AC-S7 | A heredoc body is data: the live-capture shapes (quoted, bare and `<<-` delimiters, nested in `$(…)` inside a quoted argument) derive no write, and a `<<` with no terminator stays ordinary text | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `H1`–`H4`, `H8`) | `E` line naming `H1`–`H4`/`H8` | verified — E5 line (`H1`–`H4`, `H8` green) |
+| O7 | S7 · PE-006 · AC-S7 | A write the shell will actually run is still judged: on its own line inside a multi-line command, and after a heredoc terminator | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `H5`, `H6`) | `E` line naming `H5`/`H6` | verified — E5 line (`H5`, `H6` green) |
+| O8 | S7 · PE-008 · AC-S7 | Backtick command substitution is parsed as a command where the tokenizer sees it (outside a quoted string), so a write inside one asks; inside a quoted string it stays data, as the header states | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `B1`–`B2`) | `E` line naming `B1`/`B2` | verified — E5 line (`B1`, `B2` green) |
+| O9 | S7 · S10 · PE-010 · AC-S7 | The module header states the heredoc and backtick boundaries, closing the gap S7 names (the boundary list named only script, `!` command and indirection) | P3 | P3 | direct application (this session) | `rg -n 'heredoc piped into an interpreter' packages/pi-agentic-workflow/src/guards/git-identity.ts` matches 1 and `rg -n 'backtick span is' packages/pi-agentic-workflow/src/guards/git-identity.ts` matches 2 | `E` line with both commands and their match counts | verified — E11 line (1 match and 2 matches) |
+| O10 | S8 · PE-004 · AC-S8 | The sibling reader answers `read` for one positional and keeps every write row: the corpus carries both, and this repository stays compliant | P5 | P5 | direct application (this session) | `bun test scripts/git-config-writes.test.mjs` exits 0 | `E` line with the pass count and the compliance case | verified — E7 line (10 pass, 0 fail; the repository-compliance case green) |
+| O11 | S2 · S7 · AC-S2/AC-S7 | The shipped `tool_call` wiring follows the module: a headless bare read passes untouched, a headless heredoc-body prose call passes, and a headless write still blocks naming the repair | P2 | P2 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` exits 0 (cases `R9`, `H7`, the cut-head write wiring case) | `E` line naming `R9`/`H7` | verified — E5 line (`R9` and `H7` green beside the cut-head write wiring case) |
+| O12 | S2 · S7 · PE-010 | The package README's guard description states the read rule and the heredoc boundary, so the shipped prose matches the behaviour | P6 | P6 | direct application (this session) | `rg -n 'one positional' packages/pi-agentic-workflow/README.md` matches 1 and `rg -n 'heredoc body is data' packages/pi-agentic-workflow/README.md` matches 1 | `E` line with both commands and their matches | verified — E12 line (1 match and 1 match) |
+| O13 | S5 · S11 · AC-S11 | The whole gate passes with the change in place, the projection is a fixed point, and the out-of-scope surfaces are untouched | P7 | P7 | direct application (this session) | `node scripts/run-root-suite.mjs` exits 0 and `cd packages/pi-agentic-workflow && bun run test` exits 0 | `E` lines with both verdicts and the diff stat | verified — E8/E9/E10 lines (package 987 pass, root gate exit 0, projection PASS) |
 
 ## Findings
 
@@ -391,6 +391,72 @@ required failure state, in the 9-column shape owned by
   `decideGitConfigCall` → `ask` (headless `block`) for `user.name`, `user.email`,
   `commit.gpgsign`, the quoted spellings and the compound three-read command.
   Scratch removed after the run.
+- **P1** — 2026-11-18, the 21 read, heredoc, newline and backtick cases frozen as
+  failing tests (`R1`–`R7`, `W1`–`W4`, `H1`–`H8`, `B1`, `B2`, `R9`, `H7`) with the
+  cut-head write corpus untouched · `c7775671`.
+- **E3** — 2026-11-18, `bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs`
+  at `c7775671` · exit 1 · `44 tests: 29 pass, 15 fail` — the read cases and the
+  heredoc/newline/backtick cases red, the write cases green.
+- **P2** — 2026-11-18, `findGitConfigWrites` derives a write from 2+ positionals
+  and reads options only where git reads them (past the key a flag-shaped word is
+  the value) · `b5a40345`.
+- **E4** — 2026-11-18, the same suite at `b5a40345` · exit 1 · `44 tests: 37 pass,
+  7 fail` — every `R`/`W` case green; the S7 corpus still red, pending P3.
+- **P3** — 2026-11-18, `tokenizeCommand` learns the statement boundary (newline),
+  the heredoc body (data, skipped whole) and the backtick span (its own command),
+  and the module header states both boundaries · `e8c9d0ae`.
+- **E5** — 2026-11-18, the same suite at `e8c9d0ae` · exit 0 · `44 pass, 0 fail`
+  (22 cut-head cases unchanged + 22 new).
+- **P4** — 2026-11-18, the sibling gate's corpus frozen red: 10 `read` rows for
+  the one-positional forms and 2 `write` rows pinning that a post-key flag is the
+  value git writes · `d4e50afb`.
+- **E6** — 2026-11-18, `bun test scripts/git-config-writes.test.mjs` at `d4e50afb`
+  · exit 1 · `10 tests: 8 pass, 2 fail` (the corpus case and the new arity case
+  red, every pre-existing case green).
+- **P5** — 2026-11-18, `classifyInvocation` answers `read` for one positional, and
+  `scanSource` bounds an invocation by its own bracket scope so an argv array's
+  trailing call arguments are never read as values · `fc24404d`.
+- **E7** — 2026-11-18, `bun test scripts/git-config-writes.test.mjs` at `fc24404d`
+  · exit 0 · `10 pass, 0 fail`, the repository-compliance case included.
+- **P6** — 2026-11-18, the package README's guard table and paragraph, this doc
+  and the release intent (`patch`) · this commit.
+- **E8** — 2026-11-18, `cd packages/pi-agentic-workflow && bun run test` · exit 0 ·
+  `987 pass, 0 fail` across 85 files (bundle, `tsc`, every suite).
+- **E9** — 2026-11-18, the write-corpus invariant and the whole root gate ·
+  `git diff 63c50421 -- packages/pi-agentic-workflow/test/git-identity-guard.test.mjs scripts/git-config-writes.test.mjs scripts/git-config-writes.cases.txt`
+  → **0** removed lines; `node scripts/run-root-suite.mjs` → exit 0 (every suite
+  PASS). Disclosed: the **first** root-gate run carried one red on the untouched
+  `scripts/unit-route.test.mjs` `#291 F7` timing assertion (`803ms` against its
+  `500ms` ceiling) while the box was under load; standalone it is `1 pass, 0 fail`
+  twice, and the following full run is green. Not this change's path.
+- **E10** — 2026-11-18, `bun scripts/docs-generate.mjs --check` · exit 0 · `3
+  files checked · 0 stale · 0 orphaned`, roadmap unchanged, `verdict: PASS`.
+- **E11** — 2026-11-18, `rg -n 'heredoc piped into an interpreter'
+  packages/pi-agentic-workflow/src/guards/git-identity.ts` → 1 match;
+  `rg -n 'backtick span is' packages/pi-agentic-workflow/src/guards/git-identity.ts`
+  → 2 matches (the header paragraph and the tokenizer's own comment).
+- **E12** — 2026-11-18, `rg -n 'one positional' packages/pi-agentic-workflow/README.md`
+  → 1 match (the guard table row); `rg -n 'heredoc body is data' packages/pi-agentic-workflow/README.md`
+  → 1 match (the new paragraph).
+- **E13** — 2026-11-18, the differential (§6): a 61-command corpus judged on the
+  cut head's `git show 63c50421:…/git-identity.ts` (compiled in `/tmp`, resolving
+  the package's own `node_modules` through a symlink) and on the change, three
+  readings each (ask, block, derived writes) · **40 identical · 21 differing**:
+  18 are the asked-for precision (13 bare/scope/`--file`/`--type=` reads, the
+  compound three-read command, three heredoc bodies, and the one row whose only
+  delta is the removed write record), 3 are S7's recall fold (`cd …` + a write on
+  the next line, a write after a heredoc terminator, a write inside a backtick
+  span — all previously unseen). No unasked difference. Scratch removed after the
+  run. Disclosed: the *published* guard blocked this very session's first attempt
+  to run the differential, in a heredoc body — the defect, live.
+- **E14** — 2026-11-18, the sibling gate's differential: a `/tmp` fixture tree
+  (two carrier suites under a scratch `scripts/` and a scratch
+  `packages/demo/test/`) scanned by the cut head's script and by the change ·
+  `7 findings → 4`, the three dropped rows being the one-positional reads and
+  every write still found; the repository's own tree is byte-identical both ways
+  (`343 carriers scanned, 0 findings`, `verdict: PASS`). Scratch removed after
+  the run.
+- **P7** — 2026-11-18, verification (E5, E7–E14).
 
 ## Next
 
