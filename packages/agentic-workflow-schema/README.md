@@ -37,8 +37,11 @@ The unified config's machine surface lives here so the CLI and the extension
 cannot disagree about a key, its type or its shipped default:
 
 - `BASE_CONFIG_SECTIONS` — the cross-tool feature sections and their JSON
-  Schema fragments: `logSession`, `memory`, `telemetry`, `guards`, `advance`,
-  `pathProtection`, `contentGuard`.
+  Schema fragments: `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`,
+  `advance`, `pathProtection`, `contentGuard`. `GUARD_MODES` (`allow`/`deny`/`ask`)
+  and `GUARD_NAMES` are the one publisher of the guard disposition vocabulary
+  (issue #626): `normalizeGuard` resolves `guard.default` plus each per-guard
+  override, and a value the schema refuses falls back to the shipped `ask`.
 - `CONFIG_EXTENSION_CONTRACT` (`config-extension@1`) — the descriptor a package
   ships to publish its own section and file. `validateConfigExtension` refuses
   a malformed descriptor or one that redefines a base section.
