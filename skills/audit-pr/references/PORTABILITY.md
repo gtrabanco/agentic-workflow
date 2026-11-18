@@ -6,7 +6,7 @@ keeps only its own fallbacks:
   the merge gate is the highest-stakes automated verdict — run it on your
   **strongest** model, never on the cheap tier that wrote the code.
 - **Receipt consumption is comment-based, not forge-branded.** The
-  `review-change:pass` marker lives in PR comments (`gh pr view <N> --json
-  comments` on GitHub). On a forge without a native comments list, use its
-  closest equivalent (MR notes, review threads); the newest-marker-wins and
-  head-SHA comparison semantics are forge-independent.
+  `review-change:pass` marker lives in PR comments, read through the guarded
+  read (`runner forge-read pr <N> --comments`). On a forge without a native
+  comments list, use its closest equivalent (MR notes, review threads); the
+  newest-marker-wins and head-SHA comparison semantics are forge-independent.

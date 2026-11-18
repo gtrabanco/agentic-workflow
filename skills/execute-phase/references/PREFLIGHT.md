@@ -13,9 +13,9 @@ Run this check for **every** unit before touching anything:
 2. Build the **transitive closure**: for each dependency, read *its* roadmap
    row and collect its dependencies too, until none remain.
 3. For each entry in the closure, its status must be **merged in the forge**
-   (`gh pr view` on its PR, or the row's PR reference) — `done`-but-PR-open is
-   NOT met (its code isn't on the default branch), and a missing folder/row is
-   NOT met.
+   (the row's PR reference, or its state read with the forge CLI) —
+   `done`-but-PR-open is NOT met (its code isn't on the default branch), and a
+   missing folder/row is NOT met.
 4. **All met** → proceed to the **own-status precondition** below.
 5. **Any unmet → STOP before any edit** and print exactly:
 
