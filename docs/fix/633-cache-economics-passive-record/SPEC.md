@@ -376,18 +376,22 @@ deterministic gate is the whole verification (S9, AC-S9).
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2 · AC-S2 | The record states all four practice claims: one session for lane and executor, no mid-unit model switch (a full re-prefill), the five-minute TTL rewarding consecutive turns, Relay's isolation justified only where isolation is the point | P1 | P1 | direct application (this session) | `rg -c '^- \*\*R[1-4]\*\* —' docs/fix/633-cache-economics-passive-record/SPEC.md` prints `4` | `E` line in `## Log` naming the run and the count | planned |
-| O2 | S3 · AC-S3 | Each of the four evidence pointers is present with what its source states, and no figure is written that the source does not carry | P1 | P1 | direct application (this session) | `rg -c '^- \*\*C[1-4]\*\* —' docs/fix/633-cache-economics-passive-record/SPEC.md` prints `4` | `E` line in `## Log` with the same count, plus the fetch receipts | planned |
-| O3 | S4 · S8 · D1 · AC-S4 | The carrier is this unit doc and no `docs/passive/<id>.md` record exists for the same scope — the two carriers are mutually exclusive | P1 | P1 | direct application (this session) | `git status --porcelain docs/passive` prints nothing | `E` line in `## Log` naming the run and its empty output | planned |
-| O4 | S5 · AC-S5 | The record contradicts no doctrine: the changed file set is exactly the declared one, so nothing claims a gate, commit or cadence change | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -v '^(docs/fix/633-cache-economics-passive-record/\|docs/ROADMAP\.md$\|docs/generated/\|\.agentic-workflow/journal/)'` prints nothing | `E` line in `## Log` with the changed-path list | planned |
-| O5 | S6 · AC-S6 | No code, config, skill, template, script or changeset path is touched | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -c '^(skills/\|packages/\|template/\|scripts/\|\.changeset/)'` prints `0` | `E` line in `## Log` with the count | planned |
-| O6 | S7 · AC-S7 | Every changed path is documentation or the armed journal carrier | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -v '^(docs/\|\.agentic-workflow/journal/)'` prints nothing | `E` line in `## Log` with the path list | planned |
-| O7 | S8 · S9 · AC-S9 | The project's deterministic gate passes, run in the foreground, with no gate exception granted by this change | P4 | P4 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | `G` line in `## Log` with the step count and the exit | planned |
-| O8 | S10 · AC-S10 | The roadmap row, the projection and the session entry are written by their own writers, never by hand | P2, P3 | P3 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/633-cache-economics-passive-record/SPEC.md` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` exits 0 | `E` lines in `## Log`, one per writer, with its exit | planned |
-| O9 | S11 · S13 · AC-S11 · AC-S13 | Every row of this ledger closes on a foreground run, and the PR exists against `main` with `Closes #633` | P4 | P4 | direct application (this session) | `rg -c '\| (planned\|in-progress\|deferred) \|' docs/fix/633-cache-economics-passive-record/SPEC.md` prints `0` and `gh pr view fix/633-cache-economics-passive-record --json url,body` exits 0 | the ledger itself at the handoff head, plus the PR URL in `## Log` | planned |
+| O1 | S2 · AC-S2 | The record states all four practice claims: one session for lane and executor, no mid-unit model switch (a full re-prefill), the five-minute TTL rewarding consecutive turns, Relay's isolation justified only where isolation is the point | P1 | P1 | direct application (this session) | `rg -c '^- \*\*R[1-4]\*\* —' docs/fix/633-cache-economics-passive-record/SPEC.md` prints `4` | `E` line in `## Log` naming the run and the count | verified |
+| O2 | S3 · AC-S3 | Each of the four evidence pointers is present with what its source states, and no figure is written that the source does not carry | P1 | P1 | direct application (this session) | `rg -c '^- \*\*C[1-4]\*\* —' docs/fix/633-cache-economics-passive-record/SPEC.md` prints `4` | `E` line in `## Log` with the same count, plus the fetch receipts | verified |
+| O3 | S4 · S8 · D1 · AC-S4 | The carrier is this unit doc and no `docs/passive/<id>.md` record exists for the same scope — the two carriers are mutually exclusive | P1 | P1 | direct application (this session) | `git status --porcelain docs/passive` prints nothing | `E` line in `## Log` naming the run and its empty output | verified |
+| O4 | S5 · AC-S5 | The record contradicts no doctrine: the changed file set is exactly the declared one, so nothing claims a gate, commit or cadence change | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -v '^(docs/fix/633-cache-economics-passive-record/\|docs/ROADMAP\.md$\|docs/generated/\|\.agentic-workflow/journal/)'` prints nothing | `E` line in `## Log` with the changed-path list | verified |
+| O5 | S6 · AC-S6 | No code, config, skill, template, script or changeset path is touched | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -c '^(skills/\|packages/\|template/\|scripts/\|\.changeset/)'` prints `0` | `E` line in `## Log` with the count | verified |
+| O6 | S7 · AC-S7 | Every changed path is documentation or the armed journal carrier | P1 | P1 | direct application (this session) | `git diff --name-only main...HEAD \| rg -v '^(docs/\|\.agentic-workflow/journal/)'` prints nothing | `E` line in `## Log` with the path list | verified |
+| O7 | S8 · S9 · AC-S9 | The project's deterministic gate passes, run in the foreground, with no gate exception granted by this change | P4 | P4 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 | `G` line in `## Log` with the step count and the exit | in-progress |
+| O8 | S10 · AC-S10 | The roadmap row, the projection and the session entry are written by their own writers, never by hand | P2, P3 | P3 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/633-cache-economics-passive-record/SPEC.md` exits 0, `bun scripts/docs-generate.mjs --check` exits 0, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` exits 0 | `E` lines in `## Log`, one per writer, with its exit | verified |
+| O9 | S11 · S13 · AC-S11 · AC-S13 | Every row of this ledger closes on a foreground run, and the PR exists against `main` with `Closes #633` | P4 | P4 | direct application (this session) | `rg -c '\| (planned\|in-progress\|deferred) \|' docs/fix/633-cache-economics-passive-record/SPEC.md` prints `0` and `gh pr view fix/633-cache-economics-passive-record --json url,body` exits 0 | the ledger itself at the handoff head, plus the PR URL in `## Log` | in-progress |
 
 Phase/task collision note: O1–O6 ride P1, O8 rides P2 and P3 (the roadmap row and
 the two later writers), O7 and O9 ride P4. No row needs two phases.
+
+**State at the handoff:** O1–O6 and O8 are `verified` on foreground runs (E5–E9);
+O7 and O9 stay `in-progress` because the gate's one red step is another session's
+stale worktree (E10) — named in `## Next`, never deferred to a follow-up issue.
 
 ## Triaged steps
 
@@ -473,17 +477,66 @@ the authoritative order (`P1` → `P4`).
   writer. S10's "the session entry is appended" is satisfied by the fragment.
 - **E1** — 2026-11-18, `gh issue view 633 --json number,title,state,labels,body` ·
   exit 0 · state `OPEN`, one label `documentation`, body as quoted in S2–S8.
-- **E2** — 2026-11-18, `bun scripts/test-impact.mjs --base main` · see the `E2`
-  receipt below (recorded when the change set existed).
-- **E3** — 2026-11-18, `bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --paths <the changed files>` · tier `passive`, `reason_kind` `no-executable-effect` — the verdict copied into `## Risk tier`.
-- **E4** — 2026-11-18, the four fetches (PE-001 … PE-004) · exit 0 each · C1: 5-min write 1.25×, 1-hour 2×, read 0.1× with per-model exceptions; C2: 90% hits → $0.459 against $1.58 (−71%), Claude Code ~100%, qwen-code 80%; C3: up to 6.4× throughput, no hit-rate figure; C4: single-threaded argument, subagents answer questions.
+- **E2** — 2026-11-18, `bun scripts/test-impact.mjs --base main` · exit 0 ·
+  `TEST IMPACT — empty` · verdict `empty` · changed 4 · executable 0 · suites 0 ·
+  reason "no executable path changed — record this verdict, run no TDD ceremony,
+  invent no test" — the prose-only ceremony is skipped, as the rule orders.
+- **E3** — 2026-11-18, `bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --paths docs/fix/633-cache-economics-passive-record/SPEC.md,docs/ROADMAP.md,docs/generated/units.md`
+  · exit 0 · tier `passive`, `reason_kind` `no-executable-effect`, `changed`
+  = 3 — the verdict copied verbatim into `## Risk tier`. The same scope handed the
+  folder path instead answers `standard`/`executable-content` (PE-005).
+- **E4** — 2026-11-18, the four fetches (PE-001 … PE-004) · exit 0 each · C1:
+  5-min write 1.25×, 1-hour 2×, read 0.1× with per-model exceptions; C2: 90% hits
+  → $0.459 against $1.58 (−71%), Claude Code ~100%, qwen-code 80%; C3: up to 6.4×
+  throughput, no hit-rate figure; C4: single-threaded argument, subagents answer
+  questions.
+- **E5** — 2026-11-18, `rg -c '^- \*\*R[1-4]\*\* —' docs/fix/633-cache-economics-passive-record/SPEC.md`
+  · exit 0 · `4` (O1).
+- **E6** — 2026-11-18, `rg -c '^- \*\*C[1-4]\*\* —' …` · exit 0 · `4`;
+  `rg -c 'https://' …` · exit 0 · `20` (O2).
+- **E7** — 2026-11-18, `git status --porcelain docs/passive` · exit 0 · no output;
+  `ls docs/passive` names no file containing `633` (O3).
+- **E8** — 2026-11-18, at `40abb897`, `git diff --name-only main...HEAD` · exit 0 ·
+  four paths — `.agentic-workflow/journal/20261118T205542Z-fix-633-…md`,
+  `docs/ROADMAP.md`, `docs/fix/633-cache-economics-passive-record/SPEC.md`,
+  `docs/generated/units.md` (O4); `… | rg -c '^(skills/|packages/|template/|scripts/|\.changeset/)'`
+  · `0` (O5); `… | rg -v '^(docs/|\.agentic-workflow/journal/)'` · no output (O6).
+- **E9** — 2026-11-18, the three state writers · `roadmap check docs/fix/633-cache-economics-passive-record/SPEC.md`
+  → `verdict: PASS`, `violations: 0` · `bun scripts/docs-generate.mjs --check` →
+  `Files: 3 checked · 0 missing · 0 stale · 0 orphaned`, `verdict: PASS` ·
+  `journal aggregate --check` → `{"ok":true,"checked":81,"refusals":[]}`,
+  exit 0 (O8).
+- **E10** — 2026-11-18, `bun scripts/local-gate.mjs --no-bail` · **exit 1** · 19
+  steps, 18 PASS; the single red is `worktree-guard`:
+  `FINDING .worktrees/feat-631-cache-hit-rate — STALE: branch
+  feat-631-cache-hit-rate is merged into origin/main · dirty`. That worktree is
+  another session's, it predates this branch's commits, and nothing in this
+  unit's diff can clear it without destroying uncommitted work there — so O7
+  stays open and the owner decides (see `## Next`).
 
 ## Next
 
-The owner's external verdict on the diff: the practice record's four claims and
-four evidence pointers, the carrier decision (D1) and the two disclosed
-divergences (the issue's SGLang figures, and its AC-1/AC-3 naming a carrier this
-unit deliberately does not write).
+The owner's external verdict on the diff, with two rows open on purpose.
+
+**Open: O7 and O9 — and they are the same fact.** The deterministic gate ran in the
+foreground (`E10`) and fails one step, `worktree-guard`, on
+`.worktrees/feat-631-cache-hit-rate` — a *different* worktree, another session's,
+stale (merged into `origin/main`) and dirty, which predates this branch's commits
+and which this unit's diff cannot clear without deleting uncommitted work there.
+Every other step passes (18/19), including the root, crate, schema and pi suites and
+the `docs-generated-projection` check. O9's first half is the same count, so it
+cannot close while O7 is open. Neither row is deferred to a follow-up — there is
+no follow-up to defer to — so this is a `Needs your decision`, not a deferred row.
+
+Everything else the owner needs in one read: the four practice claims (R1–R4) and
+the four evidence pointers (C1–C4) are the record itself; D1 records the carrier
+and the precedent; D2 records the one figure the issue states that its source does
+not, and D3 the roadmap route the measurement corrected.
+
+**Also open, and the owner's call, not a defect:** issue #633's AC-1 and AC-3 name
+`docs/passive/<id>.md` and "no other file changed". D1's carrier writes neither, so
+those two cells of the *issue* are unmet on purpose — amending the issue body is a
+forge write the owner owns.
 
 ## References
 
