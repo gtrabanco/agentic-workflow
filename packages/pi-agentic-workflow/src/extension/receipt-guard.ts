@@ -50,8 +50,16 @@ const AUDIT_REASON =
  * invocation is the scripts' own path and is allowed; a command that merely
  * mentions a marker (editing the skill docs) is allowed; every non-bash tool is
  * allowed.
+ *
+ * The second argument is the resolved `guard.receipt.mode` (issue #626): `allow`
+ * stands the guard down, and `ask` answers as `deny` because a tool call has no
+ * question path. An absent argument is the shipped `deny`.
  */
-export function receiptGuard({ toolName, command }: ToolCallLike): ReceiptGuardDecision {
+export function receiptGuard(
+  { toolName, command }: ToolCallLike,
+  disposition: "allow" | "deny" | "ask" = "deny",
+): ReceiptGuardDecision {
+  if (disposition === "allow") return { block: false };
   if (toolName !== "bash") return { block: false };
   const text = command ?? "";
   if (!GH_PR_COMMENT_RE.test(text)) return { block: false };

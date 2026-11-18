@@ -30,8 +30,12 @@ import { createGitIdentityConsentStore } from "../dist/guards/git-identity-conse
 
 const CWD = "/work/project";
 const SCRATCH = scratchDirs({ TMPDIR: "/tmp" });
-const ASK = (overrides = {}) => guardOptions({ agentGuard: { mode: "ask", allow: [] }, ...overrides }, CWD, SCRATCH);
-const BLOCK = (overrides = {}) => guardOptions({ agentGuard: { mode: "block", allow: [] }, ...overrides }, CWD, SCRATCH);
+// Issue #626: the disposition is a `guard.gitIdentity` value, never a
+// `gitIdentity.approved.agentGuard.mode` one. `BLOCK` names today's internal
+// verdict for a `deny` disposition, so the whole #514 corpus keeps its meaning.
+const ASK = (overrides = {}, mode = "ask") => guardOptions({ ...overrides }, CWD, SCRATCH, mode);
+const BLOCK = (overrides = {}) => guardOptions({ ...overrides }, CWD, SCRATCH, "deny");
+const ALLOW = (overrides = {}) => guardOptions({ ...overrides }, CWD, SCRATCH, "allow");
 
 const verdict = (command, options = ASK()) => decideGitConfigCall(command, options).action;
 
@@ -59,6 +63,18 @@ test("both syntaxes: a legacy flag write and a modern subcommand write both ask"
 test("a block-mode project never asks — it blocks the same writes", () => {
   assert.deepEqual(verdict("git config user.email t@example.test", BLOCK()), "block");
   assert.deepEqual(verdict("git config unset user.email", BLOCK()), "block");
+});
+
+test("issue #626: an allow disposition passes the same writes untouched", () => {
+  for (const command of [
+    "git config user.email t@example.test",
+    "git config user.name Fixture",
+    "git config --unset user.name",
+    "git config remove-section user",
+    "git config --file /work/project/.git/config core.autocrlf true",
+  ]) {
+    assert.deepEqual(verdict(command, ALLOW()), "allow", command);
+  }
 });
 
 test("read-only invocations and per-invocation -c passthrough pass", () => {
@@ -301,17 +317,25 @@ test("B2: the stated boundary — a backtick span inside a quoted string stays d
 });
 
 test("normalizeGitIdentity fills the shipped values and refuses a foreign mode", () => {
-  assert.deepEqual(normalizeGitIdentity(undefined), { enforce: "off", approved: {}, agentGuard: { mode: "ask", allow: [] } });
-  assert.deepEqual(normalizeGitIdentity({ enforce: "nope", agentGuard: { mode: "nope", allow: ["user.name", 7] } }), {
+  assert.deepEqual(normalizeGitIdentity(undefined, undefined), { enforce: "off", approved: {}, agentGuard: { mode: "ask", allow: [] } });
+  assert.deepEqual(normalizeGitIdentity({ enforce: "nope", agentGuard: { allow: ["user.name", 7] } }, { default: "allow" }), {
     enforce: "off",
     approved: {},
-    agentGuard: { mode: "ask", allow: ["user.name"] },
+    agentGuard: { mode: "allow", allow: ["user.name"] },
   });
   assert.equal(normalizeGitIdentity({ enforce: "commit-and-push" }).enforce, "commit-and-push");
   // Issue #546: the push scope and its commit-and-push combination are values,
   // never normalized away as foreign.
   assert.equal(normalizeGitIdentity({ enforce: "push-upstream" }).enforce, "push-upstream");
   assert.equal(normalizeGitIdentity({ enforce: "commit-and-push-upstream" }).enforce, "commit-and-push-upstream");
+});
+
+test("issue #626: the disposition is resolved from `guard`, and a retired mode is inert", () => {
+  // The guard's own entry wins over the global default.
+  assert.equal(normalizeGitIdentity({}, { default: "allow", gitIdentity: { mode: "deny" } }).agentGuard.mode, "deny");
+  // A written `agentGuard.mode` is the retired key: it does not decide anything.
+  assert.equal(normalizeGitIdentity({ agentGuard: { mode: "block" } }, undefined).agentGuard.mode, "ask");
+  assert.equal(normalizeGitIdentity({ agentGuard: { mode: "allow" } }, undefined).agentGuard.mode, "ask");
 });
 
 /* ── the consent lifecycle (O6) ───────────────────────────────────────── */

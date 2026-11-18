@@ -1,9 +1,9 @@
-import { BASE_CONFIG_SECTIONS, normalizeLogSession, resolveConfigDocuments } from "@gtrabanco/agentic-workflow-schema";
+import { BASE_CONFIG_SECTIONS, normalizeGuard, normalizeLogSession, resolveConfigDocuments } from "@gtrabanco/agentic-workflow-schema";
 
 import { normalizeGitIdentity } from "../guards/git-identity.js";
 import { SHIPPED_PATH_POLICY, intersectPathPolicy } from "./path-policy.js";
 import type { PathProtectionOverride } from "./path-policy.js";
-import type { AdvanceConfig, GuardsConfig, LogSessionConfig, MemoryConfig, TelemetryConfig } from "./types.js";
+import type { AdvanceConfig, GuardConfig, LogSessionConfig, MemoryConfig, TelemetryConfig } from "./types.js";
 import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW, DEFAULT_TOOL_CHOICE } from "./types.js";
 import type { EffectiveConfig, Route, RouteDeclaration } from "./types.js";
 
@@ -42,7 +42,7 @@ export const BASE_EFFECTIVE_DEFAULTS: {
   logSession: LogSessionConfig;
   memory: MemoryConfig;
   telemetry: TelemetryConfig;
-  guards: GuardsConfig;
+  guard: GuardConfig;
   advance: AdvanceConfig;
   pathProtection: ReturnType<typeof intersectPathPolicy>;
   gitIdentity: ReturnType<typeof normalizeGitIdentity>;
@@ -50,10 +50,10 @@ export const BASE_EFFECTIVE_DEFAULTS: {
   logSession: normalizeLogSession(shippedBase.logSession),
   memory: shippedBase.memory as MemoryConfig,
   telemetry: shippedBase.telemetry as TelemetryConfig,
-  guards: shippedBase.guards as GuardsConfig,
+  guard: normalizeGuard(shippedBase.guard),
   advance: shippedBase.advance as AdvanceConfig,
   pathProtection: intersectPathPolicy(SHIPPED_PATH_POLICY, shippedBase.pathProtection as PathProtectionOverride),
-  gitIdentity: normalizeGitIdentity(shippedBase.gitIdentity),
+  gitIdentity: normalizeGitIdentity(shippedBase.gitIdentity, shippedBase.guard),
 };
 
 export const DEFAULT_CONFIG: EffectiveConfig = {

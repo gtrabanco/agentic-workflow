@@ -4289,10 +4289,13 @@ export {
   BASE_CONFIG_SECTIONS,
   CONFIG_EXTENSION_CONTRACT,
   CONFIG_EXTENSIONS_DIR,
+  GUARD_MODES,
+  GUARD_NAMES,
   composeConfigSchema,
   effectiveSections,
   fillDefaults,
   mergeContentGuardOverrides,
+  normalizeGuard,
   normalizeLogSession,
   resolveConfigDocuments,
   sanitizeJsonSchema,
@@ -4307,9 +4310,12 @@ export type {
   ConfigExtensionDescriptor,
   ConfigIssue,
   ConfigSectionSpec,
+  GuardMode,
+  GuardName,
   JsonSchema,
   ResolveConfigInput,
   ResolvedConfig,
+  ResolvedGuardConfig,
 } from "./config.js";
 export { parseJsonc, stringifyJsoncValue } from "./config-jsonc.js";
 export type { JsoncError, JsoncResult } from "./config-jsonc.js";

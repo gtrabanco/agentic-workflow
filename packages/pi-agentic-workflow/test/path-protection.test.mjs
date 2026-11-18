@@ -103,7 +103,7 @@ test("the base resolver applies the cross-scope override to the effective policy
     logSession: { enabled: false, publisher: null },
     memory: { engram: false },
     telemetry: { enabled: false },
-    guards: { merge: false, history: false, ci: false, cost: { maxTokens: 500000 } },
+    guard: { default: "ask", gitIdentity: "ask", toolChoice: "ask", receipt: "ask" },
     advance: { iterationsCap: 12, sensitivePaths: [], securityPaths: [], runLogPath: ".agentic-workflow/advance-run.log" },
     pathProtection: intersectPathPolicy(SHIPPED_PATH_POLICY, resolved.config.pathProtection),
   });

@@ -81,26 +81,62 @@
         }
       }
     },
-    "guards": {
+    "guard": {
       "type": "object",
       "additionalProperties": false,
+      "description": "One disposition per guard: allow (the guard stands down), deny (it refuses without asking) or ask (it asks when the host has a UI, and denies when it cannot). `default` is what every guard falls back to; a guard's own `mode` overrides it. Guards that can be configured here: gitIdentity, toolChoice, receipt. Always on and not configurable: pathProtection (tighten-only) and contentGuard (no bypass).",
       "properties": {
-        "merge": {
-          "type": "boolean"
+        "default": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny",
+            "ask"
+          ],
+          "description": "The disposition every guard falls back to when its own entry declares no mode. Shipped: ask."
         },
-        "history": {
-          "type": "boolean"
-        },
-        "ci": {
-          "type": "boolean"
-        },
-        "cost": {
+        "gitIdentity": {
           "type": "object",
           "additionalProperties": false,
+          "description": "The agent-side `git config` write guard (issue #514). `ask` can really ask; a headless session is denied.",
           "properties": {
-            "maxTokens": {
-              "type": "integer",
-              "minimum": 1
+            "mode": {
+              "type": "string",
+              "enum": [
+                "allow",
+                "deny",
+                "ask"
+              ]
+            }
+          }
+        },
+        "toolChoice": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The command-time `rg`/`bun` carrier (issue #610). This guard cannot ask, so `ask` answers as `deny`.",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "allow",
+                "deny",
+                "ask"
+              ]
+            }
+          }
+        },
+        "receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The inline PR-receipt guard (issue #182). This guard cannot ask, so `ask` answers as `deny`.",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "allow",
+                "deny",
+                "ask"
+              ]
             }
           }
         }
@@ -177,14 +213,8 @@
         "agentGuard": {
           "type": "object",
           "additionalProperties": false,
+          "description": "The model-facing half of the identity guard: the config keys the agent may write without asking.",
           "properties": {
-            "mode": {
-              "type": "string",
-              "enum": [
-                "ask",
-                "block"
-              ]
-            },
             "allow": {
               "type": "array",
               "items": {
