@@ -227,16 +227,16 @@ scope, not deferrals of this one.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | `S3`/`S5` | `tier-cost aggregate` and `compare` report `cache_read_tokens_sum`, `cache_write_tokens_sum` and `cache_hit_rate` for every risk tier and every size tier group whose rows carry the cache cells | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the `per-tier cache hit-rate and cached-token totals` case) | `E2` line naming the case | planned |
-| O2 | `S7` | a group whose rows carry no cache cells (a `tier-cost@1` ledger) answers `null` sums, a `null` rate and verdict `no-cache-fields` — never a silent zero | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the `tier-cost@1` corpus case) | `E2` line naming the case | planned |
-| O3 | `S7` | rows that carry the cells but sum to no input-side token answer verdict `no-input-tokens` with a `null` rate | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the `no-input-tokens` case) | `E2` line naming the case | planned |
-| O4 | `S7` | an empty corpus answers a declared `cache` verdict at command level and no rate, so `compare` never prints a number it did not measure | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the empty-ledger case naming the `cache` block) | `E2` line naming the case | planned |
-| O5 | `S6` | the output block is one fixed grammar declared as `tier-cost-compare@1` in `docs/workflow/TIER_COST.md`, its verdict tokens equal the module's exported set, and the surface is registered in `normative-surfaces@1` | P3 | P3 | execute-phase | `bun test scripts/normative-drift.test.mjs` exits 0 and `bun test scripts/tier-cost.test.mjs` exits 0 (the doc-parity case) | `E4` line naming both runs | planned |
-| O6 | `S6` | the row grammar does not change: `tier-cost@2` keeps its 16 columns, `COLUMNS_BY_CONTRACT` keeps two ids, and no adopted ledger is forced onto a new id | P2 | P2 | execute-phase | `bun test scripts/telemetry-coverage.test.mjs` exits 0 and `bun test scripts/tier-cost.test.mjs` exits 0 | `E4` line naming both runs; `D1` records the decision | planned |
-| O7 | `S4` | a reconstructed row (`pi:reconstruct=<id>`) keeps the provider's cache cells, so the projection has real data to read — verification only, no repair owed | P1 | P4 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 | `E5` line naming the case and the exit code | planned |
-| O8 | `S8` | no routing policy, NaN cost mapping or wall-clock cell enters: the module keeps no span-shaped token and no routing source is touched | P4 | P4 | execute-phase | `git diff --name-only main...HEAD \| rg -c 'risk-tiers\|routing/\|wall_clock'` matches 0 and `bun test scripts/tier-cost.test.mjs` exits 0 (the `time is never a span` case) | `E6` line naming the count and the case | planned |
-| O9 | `S9` | every key the command published before keeps its value, so an existing consumer of the comparison reads the same answer | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the `published keys keep their values` case) and `bun test scripts/telemetry-report.test.mjs` exits 0 | `E2`/`E4` lines naming both runs | planned |
-| O10 | `S1`/`S9` | the root suite passes with the change in the tree | P4 | P4 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 | `G1` line with the exit code | planned |
+| O1 | `S3`/`S5` | `tier-cost aggregate` and `compare` report `cache_read_tokens_sum`, `cache_write_tokens_sum` and `cache_hit_rate` for every risk tier and every size tier group whose rows carry the cache cells | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the `per-tier cache hit-rate and cached-token totals` case) | `E2` line naming the case | verified |
+| O2 | `S7` | a group whose rows carry no cache cells (a `tier-cost@1` ledger) answers `null` sums, a `null` rate and verdict `no-cache-fields` — never a silent zero | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the `tier-cost@1` corpus case) | `E2` line naming the case | verified |
+| O3 | `S7` | rows that carry the cells but sum to no input-side token answer verdict `no-input-tokens` with a `null` rate | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the `no-input-tokens` case) | `E2` line naming the case | verified |
+| O4 | `S7` | an empty corpus answers a declared `cache` verdict at command level and no rate, so `compare` never prints a number it did not measure | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the empty-ledger case naming the `cache` block) | `E2` line naming the case | verified |
+| O5 | `S6` | the output block is one fixed grammar declared as `tier-cost-compare@1` in `docs/workflow/TIER_COST.md`, its verdict tokens equal the module's exported set, and the surface is registered in `normative-surfaces@1` | P3 | P3 | execute-phase | `bun test scripts/normative-drift.test.mjs` exits 0 and `bun test scripts/tier-cost.test.mjs` exits 0 (the doc-parity case) | `E4` line naming both runs | verified |
+| O6 | `S6` | the row grammar does not change: `tier-cost@2` keeps its 16 columns, `COLUMNS_BY_CONTRACT` keeps two ids, and no adopted ledger is forced onto a new id | P2 | P2 | execute-phase | `bun test scripts/telemetry-coverage.test.mjs` exits 0 and `bun test scripts/tier-cost.test.mjs` exits 0 | `E4` line naming both runs; `D1` records the decision | verified |
+| O7 | `S4` | a reconstructed row (`pi:reconstruct=<id>`) keeps the provider's cache cells, so the projection has real data to read — verification only, no repair owed | P1 | P4 | execute-phase | `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs` exits 0 | `E5` line naming the case and the exit code | verified |
+| O8 | `S8` | no routing policy, NaN cost mapping or wall-clock cell enters: the module keeps no span-shaped token and no routing source is touched | P4 | P4 | execute-phase | `git diff --name-only main...HEAD \| rg -c 'risk-tiers\|routing/\|wall_clock'` matches 0 and `bun test scripts/tier-cost.test.mjs` exits 0 (the `time is never a span` case) | `E6` line naming the count and the case | verified |
+| O9 | `S9` | every key the command published before keeps its value, so an existing consumer of the comparison reads the same answer | P2 | P2 | execute-phase | `bun test scripts/tier-cost.test.mjs` exits 0 (the `published keys keep their values` case) and `bun test scripts/telemetry-report.test.mjs` exits 0 | `E2`/`E4` lines naming both runs | verified |
+| O10 | `S1`/`S9` | the root suite passes with the change in the tree | P4 | P4 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 | `G1` line with the exit code | verified |
 
 ## Triaged steps
 
@@ -277,6 +277,49 @@ scope, not deferrals of this one.
 - **E3** — 2026-11-18, `bun packages/agentic-workflow/bin/agentic-workflow.mjs
   ceremony tier classify --paths scripts/tier-cost.mjs,scripts/tier-cost.test.mjs,docs/workflow/TIER_COST.md,AGENTS.md,docs/features/631-per-tier-cache-hit-rate/SPEC.md`
   · exit 0 · `tier: standard`, `reason_kind: executable-content`, `signals: []`.
+- **E1** — 2026-11-18, `bun test scripts/tier-cost.test.mjs` · exit 1, the RED
+  run: the six new cases failed on the keys nothing emits (the per-tier
+  projection, the `tier-cost@1` corpus, `no-input-tokens`, the empty corpus, the
+  CLI run, the output-block parity) while the 16 pre-existing cases passed —
+  including the `published keys keep their value` oracle, which passes because
+  the old keys were never at risk.
+- **P1** — 2026-11-18, the RED corpus landed with the implementation in
+  `63e56450` (this repository's sibling-suite rule commits test and code
+  together; the red observation is this line).
+- **E2** — 2026-11-18, `bun test scripts/tier-cost.test.mjs` · exit 0 · 22 pass ·
+  0 fail, and `node --test scripts/tier-cost.test.mjs` · exit 0 (both runtimes).
+- **P2** — 2026-11-18, the projection in `scripts/tier-cost.mjs` —
+  `summarise()` gains the two sums, the rate and the verdict, `aggregate`/
+  `compare` gain the corpus roll-up — `63e56450`.
+- **P3** — 2026-11-18, the output block declared as `tier-cost-compare@1` in
+  `docs/workflow/TIER_COST.md`, registered in `normative-surfaces@1`, and claimed
+  by `docs/workflow/GATE_INVENTORY.md` after `prose-gate-inventory` refused the
+  uncited surface (`PE-006`) — `63e56450` and `017fe892`.
+- **E4** — 2026-11-18, the shared-code consumers: `bun test
+  scripts/telemetry-coverage.test.mjs` · exit 0 · 6 pass · `bun test
+  scripts/normative-drift.test.mjs` · exit 0 · 21 pass · `bun test
+  scripts/telemetry-report.test.mjs` · exit 0 · 12 pass · `bun test
+  scripts/shared-doc-merge.test.mjs` · exit 0 · 18 pass.
+- **E5** — 2026-11-18, `bun test packages/agentic-workflow/test/telemetry-reconstruct.test.mjs`
+  · exit 0 · 18 pass — the reconstructed row keeps `cache_read_tokens: 30` and
+  `cache_write_tokens: 40` from the fixture's `usage.cacheRead`/`usage.cacheWrite`
+  (`S4`: verified, no repair owed).
+- **E6** — 2026-11-18, `git diff --name-only main...HEAD | rg -c 'risk-tiers|routing/|wall_clock'`
+  matches 0, and the `time is never a span` case passes inside `E2` (`S8`).
+- **E7** — 2026-11-18, the differential against `git archive main` in a temp tree:
+  `read` is byte-identical on the same corpus; `aggregate`/`compare` differ only
+  by the declared additive keys; the exit codes are identical on both grammars
+  (`0` for a three-unit corpus, `2` for a thin one and for the empty ledger).
+- **P4** — 2026-11-18, the state settle: the roadmap row, the regenerated
+  projection, this log and the closed obligations ride the commit that carries
+  this line.
+- **G1** — 2026-11-18, `bun scripts/local-gate.mjs --jobs 2` · exit 0 ·
+  `local-gate: PASS — 19 step(s) in 1215s`; the first attempt at the default pool
+  bailed on `scripts/unit-route.test.mjs` F7 (`585ms` against its `500ms`
+  wall-clock bound, a timing assertion under 4-way parallel load) — the suite
+  passes standalone (`348ms`, 64 pass) and in the `--jobs 2` run, so it is a load
+  flake in a test this unit does not touch, not a regression (`E7` is the
+  differential that would have caught one).
 
 ## Next
 
