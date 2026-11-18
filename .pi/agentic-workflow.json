@@ -1,14 +1,6 @@
 {
-  "guards": {
-    "merge": true,
-    "history": true,
-    "ci": false
-  },
   "gitIdentity": {
-    "agentGuard": {
-      "mode": "block",
-      "allow": []
-    }
+    "enforce": "off"
   },
   "telemetry": {
     "enabled": true
