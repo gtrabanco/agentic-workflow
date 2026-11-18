@@ -469,6 +469,6 @@ test("the grammar is a registered normative surface, claimed by a gate row", () 
     /journal-corpus-grammar \| skills\/product-audit\/references\/AUDIT_DIMENSIONS\.md \| block:journal-corpus@1/,
   );
   const inventory = read("docs/workflow/GATE_INVENTORY.md");
-  assert.match(inventory, /^\| journal-corpus \|/m);
+  assert.match(inventory, /^journal-corpus \|/m);
   assert.match(inventory, /journal-corpus-grammar/);
 });
