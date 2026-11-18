@@ -376,6 +376,7 @@ Frozen at the cut; each names the check that proves it.
 - **E15** — 2026-11-18, differential over one fixture ledger, the base `scripts/tier-cost.mjs` (`90ce7e90`) against the change · `read`, `aggregate`, `compare` byte-identical, exit 0 both sides; with one reconstructed row appended the base exits 1 `unknown-unit` while the change exits 0 and keeps the unit rows — the only intended difference.
 - **G1** — 2026-11-18, `node scripts/run-root-suite.mjs` at HEAD 27d876334ef3a96ada0d12c1a289e2e015e40e50 · exit 0 · every dispatched suite PASS.
 - **G2** — 2026-11-18, `bun scripts/local-gate.mjs --jobs auto --no-bail` at HEAD 27d876334ef3a96ada0d12c1a289e2e015e40e50 · exit 1 · every step PASS except `worktree-guard`, whose single finding is another unit's merged worktree (`.worktrees/fix-618-git-identity-bare-identity — STALE`) and predates this branch.
+- **G3** — 2026-11-18, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/624-reconstruct-telemetry-from-pi-transcripts/SPEC.md` at HEAD 1aee5f490d050cd483213dc7ed0b94861fb240b9 · exit 0 · `VERIFY PASS — verify@1`, every check green.
 
 
 ## Next
