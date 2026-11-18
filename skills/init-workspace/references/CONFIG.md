@@ -10,7 +10,7 @@ An agentic-workflow install reads two files at each scope:
 
 | File | Owner | Holds |
 |---|---|---|
-| `agentic-workflow.json` | the framework | cross-tool feature sections: `logSession`, `memory`, `telemetry`, `guards`, `advance`, `pathProtection` |
+| `agentic-workflow.json` | the framework | cross-tool feature sections: `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`, `advance`, `pathProtection`, `contentGuard` |
 | `pi-agentic-workflow.json` | the `pi-agentic-workflow` package | package-internal section: routing, profiles, passes, subagent limits, State Flow, shell-tool choice |
 
 - Global scope: `~/.pi/agent/` (the host's agent directory, never hardcoded).

@@ -46,9 +46,13 @@ The approved identity lives in the unified config, base file, section
       "signing": "allowed",                           // required | allowed (default) | off (sign-off)
     },
     "agentGuard": {
-      "mode": "ask",                                  // ask | block (block never prompts)
       "allow": [],                                    // config keys the agent may write locally, e.g. ["user.name"]
     },
+  },
+  // The guard's disposition lives in the `guard` section (issue #626): allow,
+  // deny or ask. `deny` is the retired `block` — it refuses without prompting.
+  "guard": {
+    "gitIdentity": { "mode": "ask" },
   },
 }
 ```

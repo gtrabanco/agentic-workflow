@@ -13,8 +13,8 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
 | project | `.pi/` | `agentic-workflow.json` | `pi-agentic-workflow.json` |
 
 - **Base file** — feature config every agentic-workflow install shares:
-  `logSession`, `memory`, `telemetry`, `guards`, `gitIdentity`, `advance`,
-  `pathProtection`.
+  `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`, `advance`,
+  `pathProtection`, `contentGuard`.
   It is cross-tool: the value means the same on Claude Code, Codex, OpenCode2
   and π; only the implementation of each feature differs.
 - **Extension file** — package-specific config. The `pi-agentic-workflow`
@@ -57,9 +57,9 @@ project can never silently drop a global glob or lower a requirement.
 | `logSession` | base | `false` | `true`/`1`/`"on"` enable the mechanical LOGS.md entry; `false`/`0`/`"off"` disable it; `{ "publisher": { "command": [...], "timeoutMs": 5000 }, "enabled": true }` runs the publisher and (when `enabled`) appends too |
 | `memory` | base | `{ "engram": false }` | `{ "engram": true }` opts in to Engram MCP registration |
 | `telemetry` | base | `{ "enabled": true, "jsonFile": ".pi/.telemetry/sessions.jsonl" }` | measures the per-unit cost sample by default — the sample stays local and anonymized (no prompt text, no model output, no diff, no file content); `"enabled": false` opts a project out. `jsonFile` is the per-session JSONL path, resolved against the project root (issue #504). A sample the wiring never flushed (`session_shutdown` does not fire while a pi-web session stays alive) is recovered by hand with `agentic-workflow telemetry reconstruct write` (issue #624), which reads Pi's own transcripts and merges only the sessions a store does not already carry |
-| `guards` | base | `{ "merge": false, "history": false, "ci": false, "cost": { "maxTokens": 500000 } }` | booleans plus a positive `cost.maxTokens` |
+| `guard` | base | `{ "default": "ask" }` | one disposition per guard — `allow`, `deny` or `ask` — with a global fallback; see [Guards](#guards) for the reference table, the resolution order and the guards that are always on. Issue #626 replaced the retired `guards` section and the `gitIdentity.agentGuard.mode` pair |
 | `advance` | base | `{ "iterationsCap": 12, "sensitivePaths": [], "securityPaths": [], "runLogPath": ".agentic-workflow/advance-run.log" }` | conductor knobs |
-| `gitIdentity` | base | `{ "enforce": "off", "approved": {}, "agentGuard": { "mode": "ask", "allow": [] } }` | `enforce` = `off`/`commit`/`push`/`push-upstream`/`commit-and-push`/`commit-and-push-upstream` (`push` judges a push to any remote, `push-upstream` only the branch's tracked upstream remote); `approved` = `name`, `email`, `fullName`, `format` (`openpgp`/`ssh`), `signingKey`, `signingKeys` (per-machine keys), `signing` (`required`/`allowed`/`off` — `off` is a sign-off workflow) — only the declared facts are verified; `agentGuard.mode` = `ask`/`block`, `agentGuard.allow` = config keys the agent may write without asking |
+| `gitIdentity` | base | `{ "enforce": "off", "approved": {}, "agentGuard": { "allow": [] } }` | `enforce` = `off`/`commit`/`push`/`push-upstream`/`commit-and-push`/`commit-and-push-upstream` (`push` judges a push to any remote, `push-upstream` only the branch's tracked upstream remote); `approved` = `name`, `email`, `fullName`, `format` (`openpgp`/`ssh`), `signingKey`, `signingKeys` (per-machine keys), `signing` (`required`/`allowed`/`off` — `off` is a sign-off workflow) — only the declared facts are verified; `agentGuard.allow` = config keys the agent may write without asking. The guard's own disposition is `guard.gitIdentity.mode`, never a second `mode` here |
 | `pathProtection` | base | `{}` | `protectedGlobs` plus `requirements.<pre-freeze\|post-freeze\|always>.<create\|modify\|delete\|rename>` = `none`/`justification`/`approval` |
 | `contentGuard` | base | `{ "trustedRoles": ["OWNER", "MEMBER", "COLLABORATOR"], "allowLogins": [], "denyLogins": [] }` | `trustedRoles` = the author associations whose forge content may be ingested (any value `packages/agentic-workflow-schema/src/content-guard.ts` publishes); `allowLogins` admits a login regardless of association, `denyLogins` refuses one regardless of role. There is no `enabled` switch: the layer is always active and an unconfigured project runs the strictest policy. The merge between scopes tightens only — roles intersect, the login lists union — and a list that is not the declared shape (a wrong type, or an entry that is not a string) is never narrowed into an empty one: the section is refused whole, the caller gets the shipped strictest policy and the refusal is declared (`malformed-config`) |
 | `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing) |
@@ -67,6 +67,129 @@ project can never silently drop a global glob or lower a requirement.
 Unknown keys are refused, never merged or coerced. `config validate` reports
 each one by path; `--sanitize` removes them; `--no-warn-unknown` suppresses only
 that class.
+
+## Guards
+
+Every guard answers one of three dispositions (issue #626):
+
+- **`allow`** — the guard stands down and the action runs untouched.
+- **`deny`** — the guard refuses without asking, and its reason teaches the
+  supported route.
+- **`ask`** — the guard asks the operator when the host has a UI, and answers
+  `deny` when it cannot ask. A headless session is never asked, and the refusal
+  says so.
+
+`deny` replaced the retired `block` spelling: `block` named the mechanism rather
+than the decision and read as "stops" instead of "refuses". A config carrying
+`block` is refused by validation, not silently mapped.
+
+**Resolution order.** The guard's own entry wins; `guard.default` is what every
+guard falls back to; the shipped default is `ask`. So an install that never
+writes the section behaves exactly as it did before #626, and
+`"default": "allow"` is the global off switch the issue asked for:
+
+```jsonc
+{
+  "guard": {
+    "default": "allow"          // every guard stands down
+  }
+}
+```
+
+A value the schema refuses is never honoured — a typo cannot allow a guard: the
+resolved value falls back to the shipped `ask`.
+
+### The guard reference — guard-reference@1
+
+| guard | what it decides | modes | shipped default | can it ask | configured by |
+|---|---|---|---|---|---|
+| `gitIdentity` | an agent's `git config` write (issue #514) | `allow`/`deny`/`ask` | `ask` | yes — the consent store remembers the answer; a session with no UI is denied | `guard.gitIdentity.mode`, plus the per-key exemption list `gitIdentity.agentGuard.allow` |
+| `toolChoice` | a `grep`-as-search or `node`-as-default command (issue #610) | `allow`/`deny`/`ask` | `ask` | no — `ask` answers as `deny` | `guard.toolChoice.mode`, plus the carrier's own `enabled` and `mode` (`block`/`rewrite`) under `pi.toolChoice` |
+| `receipt` | an inline `gh pr comment` carrying a review marker (issue #182) | `allow`/`deny`/`ask` | `ask` | no — `ask` answers as `deny` | `guard.receipt.mode` |
+| `pathProtection` | a write or rename to a protected path (feature 60) | always on (no disposition) | `approval` per phase/operation | not configurable — the section is tighten-only, so no scope can lower the floor | `pathProtection.protectedGlobs` and `pathProtection.requirements` |
+| `contentGuard` | who may be ingested from forge content (issue #470) | always on (no disposition) | the strictest role set | not configurable — there is no bypass switch on purpose | `contentGuard.trustedRoles`, `.allowLogins`, `.denyLogins` |
+
+The last two rows are the deliberate boundary: a global `allow` that reached
+them would be a security regression wearing a UX fix's clothes. Their own
+sections stay the only knobs, and they are tighten-only where they can be
+configured at all.
+
+Three worked examples:
+
+```jsonc
+{
+  // Refuse identity writes outright; keep every other guard at the default.
+  "guard": { "gitIdentity": { "mode": "deny" } }
+}
+```
+
+```jsonc
+{
+  // Silence the shell-tool-choice carrier in a project that has its own rule.
+  "guard": { "toolChoice": { "mode": "allow" } }
+}
+```
+
+```jsonc
+{
+  // Ask everywhere the host can ask, and let the two guards without a question
+  // path behave as they always did (they answer `ask` as `deny`).
+  "guard": { "default": "ask" }
+}
+```
+
+## A complete example file
+
+`runner config init --scope project` writes this template, every value commented
+out so the file starts at the shipped defaults. It is reproduced here as the
+reference the issue asked for: every section, every option this repository
+publishes, and the default each one resolves to.
+
+```jsonc
+{
+  // logSession — Automatic session logging: a boolean-like switch and an optional publisher command.
+  // default: {"enabled":false,"publisher":null}
+  // "logSession": {"enabled":false,"publisher":null},
+
+  // memory — Memory-substrate consent (the Engram MCP registration is ask-first).
+  // default: {"engram":false}
+  // "memory": {"engram":false},
+
+  // telemetry — Per-unit cost measurement.
+  // default: {"enabled":true,"jsonFile":".pi/.telemetry/sessions.jsonl"}
+  // "telemetry": {"enabled":true,"jsonFile":".pi/.telemetry/sessions.jsonl"},
+
+  // guard — Guard dispositions — allow, deny or ask — as one global default plus one override per guard.
+  // default: {"default":"ask"}
+  "guard": {
+    "default": "ask",
+    "gitIdentity": { "mode": "ask" },
+    "toolChoice": { "mode": "ask" },
+    "receipt": { "mode": "ask" }
+  },
+
+  // gitIdentity — Approved commit identity and the agent config-write guard.
+  // default: {"enforce":"off","approved":{},"agentGuard":{"allow":[]}}
+  // "gitIdentity": {"enforce":"off","approved":{},"agentGuard":{"allow":[]}},
+
+  // advance — Conductor knobs: iteration ceiling, sensitive/security path sets, run-log path.
+  // default: {"iterationsCap":12,"sensitivePaths":[],"securityPaths":[],"runLogPath":".agentic-workflow/advance-run.log"}
+  // "advance": {"iterationsCap":12,"sensitivePaths":[],"securityPaths":[],"runLogPath":".agentic-workflow/advance-run.log"},
+
+  // pathProtection — Path-protection override: extra globs and raised requirements (never a lowering).
+  // default: {}
+  // "pathProtection": {},
+
+  // contentGuard — Author-provenance policy for third-party forge content.
+  // default: {"trustedRoles":["OWNER","MEMBER","COLLABORATOR"],"allowLogins":[],"denyLogins":[]}
+  // "contentGuard": {"trustedRoles":["OWNER","MEMBER","COLLABORATOR"],"allowLogins":[],"denyLogins":[]}
+}
+```
+
+The package-owned extension file is the `pi` section, defined by
+`@gtrabanco/pi-agentic-workflow` (routing, profiles, passes, subagent limits,
+State Flow, shell-tool choice); `runner config list --category pi` prints every
+node it publishes and its shipped default.
 
 ## CLI
 
@@ -164,3 +287,20 @@ project's guide before adding a section.
   are now the `pi` section.
 - Run `config validate --scope both` after moving values; it names every key
   that is now in the wrong file.
+
+### Issue #626 (breaking)
+
+- **`guards` retired.** Its four keys (`merge`, `history`, `ci`,
+  `cost.maxTokens`) had no runtime consumer in this repository; a file that still
+  carries the section is refused with the ordinary unknown-key report. Delete the
+  key.
+- **`gitIdentity.agentGuard.mode` retired.** The identity guard's disposition is
+  `guard.gitIdentity.mode`. `block` became `deny`, and `allow` is new. A file
+  that still carries the old key is refused — and, because the guard never reads
+  it, a rewritten mode there would decide nothing.
+- **`block` is not mapped.** It is the retired spelling of `deny`; validation
+  refuses it against the published enum instead of translating it.
+- **A shared first path segment needs its section prefix.** `guard.default` and
+  the `pi` section's own `default` now share a segment, so `config get
+  default.model` is refused with `"default" belongs to several sections: guard,
+  pi; prefix the section key` — write `config get pi.default.model`.
