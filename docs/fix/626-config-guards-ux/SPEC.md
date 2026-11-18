@@ -162,6 +162,7 @@ none
 - `bun test packages/pi-agentic-workflow/test/default-inherit.test.mjs` — the effective config's shape.
 - `cd packages/pi-agentic-workflow && bun run test` and `cd packages/agentic-workflow-schema && bun run test` — both package gates.
 - `bun test scripts/config-guards-doc.test.mjs` — the reference table names every published guard and disposition.
+- `bun test scripts/local-config-contract.test.mjs` — the repository's own committed config obeys the schema it ships.
 - `bun test scripts/prose-gate-inventory.test.mjs` — every declared normative surface is claimed by a gate row.
 - `bun test scripts/normative-drift.test.mjs` — the drift gate's own suite.
 - `bun scripts/docs-generate.mjs --check` — the projection is a fixed point.
@@ -255,6 +256,8 @@ n/a — the owner's local, unpublished workflow substitutes for the lane's triag
 - **D4** — 2026-11-18, the repository's own `.pi/agentic-workflow.json` migrated in the same change (`agentGuard.mode: block` → `guard.gitIdentity.mode: deny`, the identical behaviour): the retired key made every config reader report `malformed-config`, which two root suites caught. The content guard's fail-closed rule was doing its job.
 - **D5** — 2026-11-18, two ledger references corrected at implementation time (an AC citing `bun scripts/normative-drift.mjs`, which does not exist: the gate is its test suite), and AC-S1/AC-S2 restated to the receipts actually run. The asks themselves are untouched.
 - **P5** — 2026-11-18, the journal fragment written through `journal write --kind narrative` · `6beea3c2`.
+
+- **D6** — 2026-11-18, an out-of-unit commit (`1cab6da3` `chore(config): fix config`, authored while this branch's push gate ran) rewrote `.pi/agentic-workflow.json`'s key back to the retired `guards`. The reader validated only the sections its registry names and ignored the key, so the project's identity guard fell from `deny` to the shipped `ask` with no error. Restored, and the gap that let it pass silently now has its own suite (`scripts/local-config-contract.test.mjs`, red `ac3a570e` / green `9b05bc79`): both committed config files are checked against their owners — the schema registry and the package's extension descriptor.
 
 ## Next
 
