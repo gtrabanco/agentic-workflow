@@ -467,6 +467,13 @@ required failure state, in the 9-column shape owned by
   against its 500ms ceiling (standalone `1 pass, 0 fail`, twice). Load average
   6.4–8.1 on 6 CPUs during the runs; neither suite reads a file this change
   touches. The serialized receipt is the green one.
+- **P8** — 2026-11-18, the branch pushed and the PR opened
+  ([#627](https://github.com/gtrabanco/agentic-workflow/pull/627), `Closes
+  #618`); the roadmap row moves to `done · #627`. Disclosed: the first push ran
+  the full pre-push gate on `331e6127` (`local-gate: PASS — 17 step(s) in 799s`)
+  and then did not create the remote ref; the retry pushed the identical tree
+  with `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`, as the hook's own header requires
+  it to be recorded.
 
 ## Next
 
@@ -476,8 +483,9 @@ claimed. After the verdict: the PR (`Closes #618`) and the merge.
 
 ## References
 
-Issue [#618](https://github.com/gtrabanco/agentic-workflow/issues/618); roadmap
-row `git-identity-read-parser`. The #514 unit
+Issue [#618](https://github.com/gtrabanco/agentic-workflow/issues/618); PR
+[#627](https://github.com/gtrabanco/agentic-workflow/pull/627) (`Closes #618`);
+roadmap row `git-identity-read-parser`. The #514 unit
 (`docs/fix/…`/PR [#520](https://github.com/gtrabanco/agentic-workflow/pull/520))
 owns the guard this unit repairs, and its suite is the write corpus S5 protects.
 
