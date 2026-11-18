@@ -177,6 +177,45 @@ test("record: a transcript the mapping cannot trust is skipped with its reason, 
 
 // ── Discovery (S2, S3a) ──────────────────────────────────────────────────
 
+test("discovery: the old layout is read, and only its marked subagent transcripts are excluded", () => {
+  // Evidence from the real store: the old layout (one directory per session,
+  // nested `<run>/session.jsonl` transcripts) persists only the spawned
+  // subagents' sessions — the operator transcript was never written to it — and
+  // each nested transcript marks itself with a `session_info` name prefixed
+  // `subagent-`. The reader walks the old layout but excludes what is provably a
+  // subagent, wherever it appears.
+  const root = project();
+  const agent = tempRoot("reconstruct-agent-oldlayout-");
+  const dir = path.join(agent, "sessions", "--project--");
+  fs.mkdirSync(dir, { recursive: true });
+  // New format: the operator session is a flat .jsonl file beside the session dirs.
+  fs.writeFileSync(path.join(dir, "session-full.jsonl"), fixture("session-full.jsonl").split("<PROJECT>").join(root));
+  // Old format: a parent session directory holding nested run transcripts.
+  const parent = path.join(dir, "2026-08-22T10-54-55-817Z_01a0291b-ff49-7cb3-9f42-ab654a28dcfa");
+  const subagentRun = path.join(parent, "230bf9e0-a7c9-4d18-8127-d3a279f2d26b", "run-0");
+  fs.mkdirSync(subagentRun, { recursive: true });
+  fs.writeFileSync(path.join(subagentRun, "session.jsonl"), fixture("session-old-subagent.jsonl").split("<PROJECT>").join(root));
+  const operatorRun = path.join(parent, "d8bceb0d-823a-444f-8c4a-e0ecc4202f95", "run-0");
+  fs.mkdirSync(operatorRun, { recursive: true });
+  fs.writeFileSync(path.join(operatorRun, "session.jsonl"), fixture("session-change-only.jsonl").split("<PROJECT>").join(root));
+  // The artifact copy beside the parent is not a session either.
+  fs.mkdirSync(path.join(dir, "subagent-artifacts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "subagent-artifacts", "230bf9e0-a7c9-4d18-8127-d3a279f2d26b_reviewer_0_transcript.jsonl"),
+    fixture("session-old-subagent.jsonl").split("<PROJECT>").join(root),
+  );
+
+  const found = listTranscripts({ agentDir: agent, project: root });
+  assert.deepEqual(
+    found.map((entry) => entry.sessionId).sort(),
+    ["sess-change", "sess-full"],
+    "the old layout's unmarked transcript is discovered; the marked subagent and the artifact copy are not",
+  );
+  const { records, skipped } = reconstructProject({ agentDir: agent, project: root });
+  assert.equal(records.length, 2);
+  assert.equal(skipped.length, 0);
+});
+
 test("discovery: only the project's own transcripts are read, and subagent artifacts are not sessions", () => {
   const root = project();
   const agent = agentStore(root, { "session-full.jsonl": fixture("session-full.jsonl"), "session-change-only.jsonl": fixture("session-change-only.jsonl") });
