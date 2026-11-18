@@ -3,9 +3,10 @@
  * telemetry-report.mjs — the session samples as a report (issue #504 S5, unit
  * `docs/features/494-telemetry-by-turn/`).
  *
- * The ledger and the per-session JSONL hold the same sample; this command is
- * what answers a question about it: which model spent what, in which phase, over
- * which window. It is the invoked form of the request's `pi telemetry report` —
+ * The ledger and the per-session JSONL hold the same sample: the stream carries
+ * one cumulative line per settled run, so this command keeps the last line each
+ * `source` declared before it answers a question about it — which model spent
+ * what, in which phase, over which window. It is the invoked form of the request's `pi telemetry report` —
  * a Pi extension cannot create a `pi <subcommand>` verb, so the bun script the
  * request names beside it (`bun scripts/telemetry-report.mjs`) is the door.
  *
@@ -14,8 +15,10 @@
  *  - **JSON by default.** stdout carries data; `--human` is the one markdown
  *    answer, and the diagnostics go to stderr.
  *  - **One source per run.** `--ledger` reads the document, `--jsonl` reads the
- *    stream; asking for both is a refusal, because a silent preference would
- *    make two different reports answer the same command.
+ *    stream and keeps the last line each session declared — the ledger's
+ *    upserted row, read off append-only bytes; asking for both is a refusal,
+ *    because a silent preference would make two different reports answer the
+ *    same command.
  *  - **A refusal names what it rejected.** An unknown flag, a missing value, a
  *    malformed date or an unreadable file exits 1 with a JSON error on stdout and
  *    the reason on stderr — never an empty table that reads like "no cost".
@@ -138,6 +141,11 @@ function normalise(row) {
   return sample;
 }
 
+/** The identity a stream line collapses under, or null when it declares none. */
+function sessionKey(sample) {
+  return typeof sample.source === "string" && sample.source !== "" ? sample.source : null;
+}
+
 /** Whether a sample passes every filter the run asked for. */
 function matches(sample, filters) {
   if (filters.model !== null && !String(sample.model ?? "").toLowerCase().includes(filters.model.toLowerCase())) return false;
@@ -218,7 +226,22 @@ function readSamples(flags, cwd) {
         return { error: "unreadable-source", detail: `${file}: a line is not JSON (${error.message})` };
       }
     }
-    return { source: { kind: "jsonl", path: file }, samples };
+    // The sink appends a cumulative line per settled run, so the stream holds
+    // every run's line of the same session. The ledger upserts them into one
+    // row per source; the report reads the stream the same way — the last line
+    // each `source` declared wins, in first-seen order. A line declaring no
+    // source keeps no identity, so it passes through untouched: the ledger's
+    // own grammar appends in that case too.
+    const lastLine = new Map();
+    samples.forEach((sample, index) => {
+      const key = sessionKey(sample);
+      if (key !== null) lastLine.set(key, index);
+    });
+    const rows = samples.filter((sample, index) => {
+      const key = sessionKey(sample);
+      return key === null || lastLine.get(key) === index;
+    });
+    return { source: { kind: "jsonl", path: file }, samples: rows };
   }
 
   const file = path.resolve(cwd, flags.ledger ?? DEFAULT_LEDGER);

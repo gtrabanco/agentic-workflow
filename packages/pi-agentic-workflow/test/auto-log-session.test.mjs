@@ -24,11 +24,13 @@ import { sandboxGitEnv } from "./git-sandbox.mjs";
 import {
   JOURNAL_PATH,
   MARKER_DIR,
+  STALE_MARKER_MS,
   collectFiles,
   createMarker,
   hasJournal,
   isoMinute,
   markerPath,
+  purgeStaleMarkers,
   readMarker,
   removeMarker,
   buildFacts,
@@ -196,4 +198,63 @@ test("AM-11 the timestamp is a UTC minute stamp, the hook's own precision", () =
   assert.equal(isoMinute(Date.parse("2026-11-04T15:12:43.999Z")), "2026-11-04T15:12Z");
   assert.equal(isoMinute(Date.parse("2026-01-01T00:00:00Z")), "2026-01-01T00:00Z");
   assert.match(isoMinute(Date.now()), /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/u);
+});
+
+// --- stale markers (#623 S3) -----------------------------------------------
+//
+// The marker was written at `session_start` and removed at `session_shutdown`
+// only. A host whose session never tears down therefore left its marker on disk
+// forever, while the reader that never adopts a found marker kept the file inert.
+// The run boundary removes the marker now; the purge is the other half — a marker
+// that a crash or an older build stranded is removed once it is older than the
+// retention window, so the directory does not accumulate one file per dead
+// session. It is a sweeper, never an adoption: nothing here reads a marker.
+
+/** A marker file carrying the epoch the sweep compares, in the writer's own shape. */
+function seedMarker(root, sessionId, epochSeconds) {
+  fs.mkdirSync(path.join(root, MARKER_DIR), { recursive: true });
+  fs.writeFileSync(markerPath(root, sessionId), `abc1234 ${epochSeconds} 2026-11-01T00:00Z\n`);
+}
+
+const NOW_MS = Date.parse("2026-11-18T10:00:00Z");
+
+test("AM-13 a marker older than the window is purged, a recent one and this session's mark survive", () => {
+  const { root } = repo();
+  seedMarker(root, "expired", Math.floor((NOW_MS - 8 * 86_400_000) / 1000));
+  seedMarker(root, "edge", Math.floor((NOW_MS - STALE_MARKER_MS) / 1000));
+  seedMarker(root, "recent", Math.floor((NOW_MS - 60_000) / 1000));
+
+  const purged = purgeStaleMarkers({ root, now: () => NOW_MS });
+
+  assert.deepEqual(purged, ["expired"], "only the marker past the window is removed");
+  assert.equal(fs.existsSync(markerPath(root, "expired")), false);
+  assert.equal(fs.existsSync(markerPath(root, "edge")), true, "a marker exactly at the window is not older than it");
+  assert.equal(fs.existsSync(markerPath(root, "recent")), true, "a live session's marker is never swept");
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("AM-14 the sweep reads only markers it can date, and an absent directory is not an error", () => {
+  const { root } = repo();
+  seedMarker(root, "undated", 0);
+  fs.writeFileSync(markerPath(root, "undated"), "garbage\n");  fs.writeFileSync(path.join(root, MARKER_DIR, "notes.txt"), "keep me\n");
+
+  assert.deepEqual(purgeStaleMarkers({ root, now: () => NOW_MS }), [], "a marker whose stamp does not parse has no provable age");
+  assert.equal(fs.existsSync(markerPath(root, "undated")), true);
+  assert.equal(fs.readFileSync(path.join(root, MARKER_DIR, "notes.txt"), "utf8"), "keep me\n", "the sweep only touches marker files");
+
+  const fresh = fs.mkdtempSync(path.join(os.tmpdir(), "auto-log-session-nomarkers-"));
+  assert.deepEqual(purgeStaleMarkers({ root: fresh, now: () => NOW_MS }), [], "no directory, nothing to sweep");
+  fs.rmSync(fresh, { recursive: true, force: true });
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("AM-15 this session's own marker is written after the sweep, so the sweep can never eat it", () => {
+  const { root } = repo();
+  seedMarker(root, "crashed", Math.floor((NOW_MS - 30 * 86_400_000) / 1000));
+  const purged = purgeStaleMarkers({ root, now: () => NOW_MS });
+  const marker = createMarker({ root, sessionId: "live", now: () => NOW_MS });
+  assert.deepEqual(purged, ["crashed"]);
+  assert.ok(marker, "the live session still records its own marker");
+  assert.equal(fs.existsSync(markerPath(root, "live")), true);
+  fs.rmSync(root, { recursive: true, force: true });
 });
