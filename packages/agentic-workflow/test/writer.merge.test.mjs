@@ -1,16 +1,21 @@
 /**
  * writer.merge.test.mjs — issue #498 (feature 498 shared-writer-driver): the
- * merge library the file-class git merge drivers run on.
+ * merge library the file-class git merge drivers run on, extended by issue
+ * #630 with the telemetry class's append-only union.
  *
  * Frozen-failure corpus:
  *   FF-3 — two branches each inserting a different roadmap row merge
  *          mechanically into the union (issue #498 AC3).
  *   FF-4 — two branches flipping the same row's status surface a real
  *          conflict, never silently resolved (issue #498 AC3).
+ *   F-630-1…F-630-5 — the telemetry corpus (issue #630 `# Test evidence`).
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { appendFileSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import {
   unionTableRows,
@@ -18,7 +23,10 @@ import {
   issueRowKey,
   structuralJsonMerge,
   unionLogEntries,
+  telemetryRowKey,
+  unionAppendOnly,
 } from "../src/writer/merges.mjs";
+import { COLUMNS, parseLedger } from "../src/telemetry/ledger.mjs";
 
 const BASE = [
   "# Index",
@@ -242,4 +250,123 @@ test("FF-5 — the real journal's heading shapes union clean: date-only, minute 
   // Both duplicate heading occurrences survive untouched.
   assert.equal(result.content.split("## 2026-09-07T13:00:00Z — fix/179-declared-ledger-delta-receipts — manual").length - 1, 2);
   assert.ok(result.content.includes("minute precision"), "base blocks carried through byte for byte");
+});
+
+// ── issue #630 — the telemetry class's merge semantics ───────────────────
+//
+// Frozen-failure corpus, from the issue's `# Test evidence`:
+//   F-630-1 — Test 3 → Test 4: two branches appending a row each to the
+//             telemetry ledger (TIER_COST.md) merge to the union, and the
+//             merged file is still a ledger the reader accepts.
+//   F-630-2 — the same row appended on both branches lands once.
+//   F-630-3 — the same JSONL line appended on both branches lands once.
+//   F-630-4 — Test 1 vs Test 2: an append keeps every concurrent line, a
+//             read-modify-write staging+rename loses one.
+//   F-630-5 — a side that edited a committed line is no longer an append and
+//             refuses closed.
+
+/** An empty `tier-cost@2` ledger, as the real one is shaped. */
+function ledgerFixture(rows) {
+  return [
+    "# Ledger fixture",
+    "",
+    "```text",
+    "tier-cost@2",
+    "column | shape | what it holds",
+    ...COLUMNS.map((column) => `${column} | <value> | a column`),
+    "```",
+    "",
+    `| ${COLUMNS.join(" | ")} |`,
+    `|${COLUMNS.map(() => "---").join("|")}|`,
+    ...rows,
+    "",
+  ].join("\n");
+}
+
+/** One ledger row, cells in the published column order. */
+function ledgerRow(source) {
+  const values = {
+    unit: "null", phase: "null", version: "null", model: "m",
+    changed_paths: "0", tokens: "10", turns: "1",
+    input_tokens: "4", output_tokens: "2", cache_read_tokens: "1", cache_write_tokens: "1", reasoning_tokens: "2",
+    model_ms: "5", tool_ms: "0", observed: "2026-11-18", source,
+  };
+  return `| ${COLUMNS.map((column) => values[column]).join(" | ")} |`;
+}
+
+test("F-630-1 — two sides appending a ledger row each merge to the union, readable by the ledger reader", () => {
+  const base = ledgerFixture([ledgerRow("pi:session=base")]);
+  const ours = ledgerFixture([ledgerRow("pi:session=base"), ledgerRow("pi:session=ours")]);
+  const theirs = ledgerFixture([ledgerRow("pi:session=base"), ledgerRow("pi:session=theirs")]);
+
+  const result = unionTableRows(base, ours, theirs, telemetryRowKey);
+  assert.equal(result.ok, true, result.reason);
+  assert.ok(!result.content.includes("<<<<<<<"), "no conflict marker survives a row union");
+  assert.ok(result.content.includes("pi:session=ours"));
+  assert.ok(result.content.includes("pi:session=theirs"));
+
+  const parsed = parseLedger(result.content);
+  assert.equal(parsed.error, undefined, parsed.detail);
+  assert.deepEqual(parsed.rows.map((row) => row.source), ["pi:session=base", "pi:session=ours", "pi:session=theirs"]);
+});
+
+test("F-630-2 — the identical ledger row appended on both sides lands once", () => {
+  const base = ledgerFixture([]);
+  const row = ledgerRow("pi:session=both");
+  const result = unionTableRows(base, ledgerFixture([row]), ledgerFixture([row]), telemetryRowKey);
+  assert.equal(result.ok, true, result.reason);
+  assert.equal(result.content.split("pi:session=both").length - 1, 1);
+});
+
+test("F-630-3 — two sides appending JSONL lines union, and the identical line lands once", () => {
+  const base = '{"source":"pi:session=base","tokens":1}\n';
+  const shared = '{"source":"pi:session=both","tokens":2}\n';
+  const ours = base + shared + '{"source":"pi:session=ours","tokens":3}\n';
+  const theirs = base + shared + '{"source":"pi:session=theirs","tokens":4}\n';
+
+  const result = unionAppendOnly(base, ours, theirs, (line) => line);
+  assert.equal(result.ok, true, result.reason);
+  const lines = result.content.trim().split("\n").map((line) => JSON.parse(line).source);
+  assert.deepEqual(lines, ["pi:session=base", "pi:session=both", "pi:session=ours", "pi:session=theirs"]);
+});
+
+test("F-630-4 — an append keeps every concurrent line; read-modify-write staging+rename loses one", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw630-writer-"));
+  try {
+    const file = join(dir, "samples.jsonl");
+    const base = '{"source":"pi:session=base"}\n';
+    writeFileSync(file, base);
+
+    // The issue's Test 2, as its mechanism: two writers each read the file,
+    // append to their own staging copy, and rename it over the target. The
+    // second rename drops the first writer's line — the race the issue
+    // measured at 42–55/1000 lines.
+    const readA = readFileSync(file, "utf8");
+    const readB = readFileSync(file, "utf8");
+    writeFileSync(`${file}.a`, `${readA}{"source":"pi:session=a"}\n`);
+    renameSync(`${file}.a`, file);
+    writeFileSync(`${file}.b`, `${readB}{"source":"pi:session=b"}\n`);
+    renameSync(`${file}.b`, file);
+    const staged = readFileSync(file, "utf8").trim().split("\n");
+    assert.equal(staged.length, 2, "staging+rename lost a writer's line");
+    assert.ok(!staged.some((line) => line.includes("pi:session=a")), "the first writer's line is gone");
+
+    // The append path: the same two writers, one O_APPEND each.
+    writeFileSync(file, base);
+    appendFileSync(file, '{"source":"pi:session=a"}\n');
+    appendFileSync(file, '{"source":"pi:session=b"}\n');
+    const appended = readFileSync(file, "utf8").trim().split("\n");
+    assert.equal(appended.length, 3, "an append keeps every line");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("F-630-5 — a side that edited a committed line is not an append and refuses closed", () => {
+  const base = '{"source":"pi:session=base"}\n{"source":"pi:session=second"}\n';
+  const ours = '{"source":"pi:session=base"}\n{"source":"pi:session=second"}\n{"source":"pi:session=ours"}\n';
+  const theirs = '{"source":"pi:session=base"}\n{"source":"pi:session=EDITED"}\n';
+  const result = unionAppendOnly(base, ours, theirs, (line) => line);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "not-append-only");
 });
