@@ -63,6 +63,7 @@ const FROZEN = [
   "Roadmap coherence",
   "Installed tooling",
   "Coverage gaps",
+  "Journal signals",
 ];
 
 const table = (ids) => `# Dimensions\n\n| Dimension | What it sweeps |\n|---|---|\n${ids.map((id) => `| **${id}** | sweep |`).join("\n")}\n`;
