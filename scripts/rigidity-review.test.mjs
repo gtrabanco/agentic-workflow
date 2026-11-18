@@ -32,6 +32,9 @@ function sandbox(t) {
   for (const sub of [
     path.join("template", ".agentic-workflow", "hooks"),
     "scripts",
+    // The declared homes moved into the crate with unit 554: the copy carries them
+    // so the inventory's rows resolve against the sandbox too.
+    path.join("packages", "agentic-workflow", "src"),
   ]) {
     fs.cpSync(path.join(ROOT, sub), path.join(dir, sub), {
       recursive: true,
@@ -102,13 +105,13 @@ test("a registered guard file that disappeared is a finding", (t) => {
   assert.match(result.stdout, /index-sync\.sh missing-guard/);
 });
 
-test("the adapter and the temp helper are the declared homes, not findings", (t) => {
+test("the forge and temp modules are the declared homes, not findings", (t) => {
   const dir = sandbox(t);
-  // The two libraries are where the literals belong: naming a forge binary or a
-  // temp root there is the design, so the audit must not flag them.
+  // The two modules are where the literals belong: naming a forge binary or a temp
+  // root there is the design, so the audit must not flag them.
   const result = run(["--root", dir]);
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /homes: lib\/forge\.sh, lib\/temp\.sh/);
+  assert.match(result.stdout, /homes: src\/forge\.mjs, src\/temp\.mjs/);
 });
 
 test("usage errors exit 2 and name the flag", () => {

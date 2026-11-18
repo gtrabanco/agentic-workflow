@@ -108,7 +108,8 @@
    - **Agent safety hooks** — detect where the agent actually runs and which
      repository adapters apply: Claude Code, Cursor, Copilot, OpenCode, or none.
      Recommend the shared command guard for every detected platform; explain
-     that shell adapters require `jq`, OpenCode uses the bundled Bun plugin,
+     that the shell adapters are shims over the installed `agentic-workflow` CLI
+     (no `jq` required), OpenCode uses the bundled Bun plugin,
      and hooks are defense-in-depth behind forge rulesets. Ask one explicit
      yes/no per adapter before activating it. Remote/VPS execution is not a
      reason to skip: commit the repository adapter so the remote clone loads it.
