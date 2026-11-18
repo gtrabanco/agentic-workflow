@@ -405,6 +405,7 @@ ledger-review-mark-shape | skills/pre-execution-review/references/LEDGERS.md | b
 ledger-finding-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:finding-mark@1 | n/a | no
 ledger-gate-ran-mark | skills/pre-execution-review/references/LEDGERS.md | block:gate-ran@1 | n/a | no
 tier-cost-ledger | docs/workflow/TIER_COST.md | block:tier-cost@2 | n/a | no
+tier-cost-comparison | docs/workflow/TIER_COST.md | block:tier-cost-compare@1 | n/a | no
 sensor-envelope-fields | skills/workflow-status/references/SENSOR_CORE.md | block:sensor-fields@1 | envelope-field | no
 batch-plan-fields | skills/batch-scheduler/references/PLAN.md | table:batch-fields@1 | n/a | no
 batch-reason-kind-vocabulary | packages/agentic-workflow-schema/src/batch-plan.ts | schema-export:BATCH_REASON_KINDS | batch-reason-kind | no
