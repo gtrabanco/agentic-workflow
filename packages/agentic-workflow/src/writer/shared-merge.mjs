@@ -176,22 +176,43 @@ export function driverCommand(root, cls, entry = currentEntry()) {
 /** `--install`: arm one `merge.<driver>.driver` key per class, writing only the ones that differ. */
 export function install(root, { entry } = {}) {
   const resolved = currentEntry(entry);
-  if (git(root, ["rev-parse", "--git-dir"]).status !== 0) refuse(`${root} is not a git checkout`, 2);
+  if (!isGitCheckout(root)) refuse(`${root} is not a git checkout`, 2);
   const lines = ["shared-doc-merge — " + SHARED_MERGE_CLASSES.map(driverName).join(", ")];
   for (const cls of SHARED_MERGE_CLASSES) {
-    const setting = `merge.${driverName(cls)}.driver`;
-    const value = driverCommand(root, cls, resolved);
-    const current = git(root, ["config", "--local", "--get", setting]);
-    const armed = current.status === 0 && current.stdout.trim() === value;
-    if (!armed) {
-      const written = git(root, ["config", "--local", setting, value]);
-      if (written.status !== 0) refuse(`git config ${setting} failed — ${written.stderr.trim()}`, 1);
-    }
-    lines.push(`${driverName(cls)} — ${armed ? "unchanged" : "written"}`);
+    const armed = armDriver(root, cls, { entry: resolved });
+    if (armed.status === "refused") refuse(`git config ${armed.setting} failed — ${armed.detail}`, 1);
+    lines.push(`${armed.driver} — ${armed.status}`);
   }
   lines.push("verdict: PASS");
   process.stdout.write(`${lines.join("\n")}\n`);
   process.exit(0);
+}
+
+/** Whether git recognizes `root` as a checkout — the arming precondition. */
+export function isGitCheckout(root) {
+  return git(root, ["rev-parse", "--git-dir"]).status === 0;
+}
+
+/**
+ * Arm one class's `merge.<driver>.driver` key, writing only when the value
+ * differs — the composable half of `--install`, so a caller that must not exit
+ * (the CLI's `telemetry merge-install`, the reconciliation trigger) can arm a
+ * class and report an answer instead of a process status.
+ *
+ * Answers `{ driver, setting, status: "written" | "unchanged" | "refused", command, detail? }`.
+ */
+export function armDriver(root, cls, { entry } = {}) {
+  const setting = `merge.${driverName(cls)}.driver`;
+  const value = driverCommand(root, cls, currentEntry(entry));
+  const current = git(root, ["config", "--local", "--get", setting]);
+  if (current.status === 0 && current.stdout.trim() === value) {
+    return { driver: driverName(cls), setting, status: "unchanged", command: value };
+  }
+  const written = git(root, ["config", "--local", setting, value]);
+  if (written.status !== 0) {
+    return { driver: driverName(cls), setting, status: "refused", command: value, detail: written.stderr.trim() };
+  }
+  return { driver: driverName(cls), setting, status: "written", command: value };
 }
 
 /** The path git handed this driver, unquoted (`%P` arrives shell-quoted when quoted). */
