@@ -9,8 +9,11 @@
  * for every install shape, not only for a replicated repository. The mechanics
  * are `src/writer/shared-merge.mjs` — one implementation, two entries.
  *
- *   node_modules/@gtrabanco/agentic-workflow/bin/shared-merge.mjs --install [--repo <dir>]
- *   node_modules/@gtrabanco/agentic-workflow/bin/shared-merge.mjs <class> <base> <ours> <theirs> [marker-size] [path]
+ *   bun node_modules/@gtrabanco/agentic-workflow/bin/shared-merge.mjs --install [--repo <dir>]
+ *   bun node_modules/@gtrabanco/agentic-workflow/bin/shared-merge.mjs <class> <base> <ours> <theirs> [marker-size] [path]
+ * (the runtime prefix is the repo's own invocation convention: a bare spelling
+ * would promise direct execution this file's 100644 mode denies, and direct exec
+ * would pin the shebang's node instead of the runtime convention's bun-first)
  */
 
 import path from "node:path";
