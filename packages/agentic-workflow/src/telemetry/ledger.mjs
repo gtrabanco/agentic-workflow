@@ -29,6 +29,8 @@ import path from "node:path";
 
 import { TELEMETRY_SAMPLE_FIELDS } from "@gtrabanco/agentic-workflow-schema";
 
+import { tableCells } from "../writer/merges.mjs";
+
 /** The earlier grammar: still read, and still what a project on it writes. */
 export const TIER_COST_LEGACY_CONTRACT_ID = "tier-cost@1";
 
@@ -78,14 +80,9 @@ export const INTEGER_COLUMNS = Object.freeze([
 /** The columns a sample may leave unnamed; the row carries the literal `null`. */
 export const NULLABLE_COLUMNS = Object.freeze(["phase", "version", "model"]);
 
-/** The cell splitter a markdown table row uses. */
-const CELL_SPLIT = /(?<!\\)\|/;
-
-/** The trimmed cells of one markdown table row, cells only. */
-function cellsOf(line) {
-  const body = line.trim().replace(/^\|/, "").replace(/\|$/, "");
-  return body.split(CELL_SPLIT).map((cell) => cell.trim());
-}
+/** The trimmed cells of one markdown table row — the writer's own splitter,
+ * shared with the merge library so a row means the same thing to both. */
+const cellsOf = tableCells;
 
 /** A line that declares a grammar: the contract id alone, fenced or not. */
 const CONTRACT_LINE = /^tier-cost@(\d+)$/;
