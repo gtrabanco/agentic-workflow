@@ -1,5 +1,6 @@
 ---
 "@gtrabanco/agentic-workflow": minor
+"@gtrabanco/pi-agentic-workflow": patch
 ---
 
 Telemetry merge safety (issue #630): `docs/workflow/TIER_COST.md` and the JSONL
@@ -13,3 +14,8 @@ the new `agentic-workflow telemetry merge-install` can arm a working driver in a
 project that ships no `scripts/` tree; `telemetry reconstruct write` arms the same
 key as part of its reconciliation. `scripts/shared-doc-merge.mjs` stays the
 documented entry and gains no second grammar.
+
+The `pi-agentic-workflow` patch carries the skills half: `init-workspace`'s
+bootstrap and upgrade references now name the telemetry registry lines beside the
+four existing classes, so a scaffolded project ships a guarded telemetry file
+instead of an unguarded one.

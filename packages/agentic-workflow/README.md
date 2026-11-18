@@ -398,17 +398,30 @@ second grammar (issue #630 moved them here from `scripts/` so the CLI can arm a
 driver in a project that ships no `scripts/` tree; the root
 `scripts/shared-doc-merge.mjs` and `bin/shared-merge.mjs` are its two entries).
 
+**The shared-document classes** (issue #498, plus issue #630's `telemetry` class).
+`.gitattributes` names each path once and `merge.agentic-shared-<class>.driver`
+arms it; the semantics of that class are that class's contract:
+
+| class | what it unions | what is a real conflict |
+|---|---|---|
+| `roadmap` | table rows by key (numeric first cell, `[#N]` link) | both sides changing the same row differently |
+| `budgets` | JSON leaves by key | the same leaf set differently on both sides |
+| `repo-state` | nothing — frozen facts are resolver-only | any concurrent change |
+| `logs` | journal entries by heading identity | the same heading with different bodies, or a side that is not an append-only extension of the base |
+| `telemetry` | ledger rows by their `source` cell, JSONL lines by canonical identity | a side that is not an append-only extension of the base |
+
 **The telemetry class is append-only** (issue #630). `docs/workflow/TIER_COST.md`
 and the JSONL sample store (`.pi/.telemetry/sessions.jsonl` by default) grow by an
 atomic `O_APPEND` per row/line, so their merge computes the union and **appends
 the delta to `%A`** — it never stages and renames, and it never rewrites a
 committed row or line: a side that is not an append-only extension of the base,
 or a union that would not extend ours, refuses closed (no marker, exit 1, the
-file left as `ours`). The table side keys rows by their `source` cell
-(`telemetryRowKey`), the JSONL side by each line's canonical JSON
-(`unionAppendOnly`), so a row/line both branches appended lands once. The class
-acts on tracked paths only: this repository gitignores `.pi/.telemetry/` (#504), so
-the JSONL half is live in a project that carries its telemetry corpus in git.
+file left as `ours`). `telemetryRowKey` keys the table side by each row's `source`
+cell and `unionAppendOnly` keys the JSONL side by each line's canonical JSON, so a
+row/line both branches appended lands once. The class acts on tracked paths only:
+this repository gitignores `.pi/.telemetry/` (#504), so the JSONL half is live in a
+project that carries its telemetry corpus in git. `agentic-workflow telemetry
+merge-install` installs it retroactively on both halves.
 
 ## Third-party content — the guard layer (issue #470)
 
