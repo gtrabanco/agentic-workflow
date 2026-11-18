@@ -248,6 +248,9 @@ Fused: design + plan — one investigate→orient→ask→decide pass, carriers 
 - **P6** — 2026-11-18, the SETUP.md vehicle section, the RUNNER.md pointer, the surface registration and the budget re-bases (`7aa4838b`), E5, E6, E8, E9(ritual).
 - **P7** — 2026-11-18, the crate suite, the differential and the local gate (`7aa4838b` + the changeset), E7, E14, E15, G1.
 
+- **E16** — 2026-11-18, `bun scripts/dimension-regression.mjs --base origin/main` · exit 0, verdict `refused` · `missing-reverification-evidence` — the range touches one review surface (`skills/triage-issue/references/ISSUE_PROCESS.md`), which is a route addition, not a dimension change; 17 dimensions at base and 17 at head, none dropped. This line is the re-verification record the finding asks for.
+- **E17** — 2026-11-18, `bun scripts/dimension-regression.mjs --base origin/main` after E16 landed · exit 0 · `dimension-regression@1 · base 2dda53f · 17 dimensions · head 17 dimensions · changed review surfaces 1 · evidence: this unit doc · verdict: pass` (no finding).
+
 ## Next
 
 The owner's external verdict on this handoff — the unit doc, the obligation ledger
