@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: large
-roadmap_summary: Issue [#626](https://github.com/gtrabanco/agentic-workflow/issues/626) (L, breaking): one `guard` section owns every guard disposition (`allow`/`deny`/`ask`), with a global `guard.default` and one override per guard; `block` retires in favour of `deny`, the never-wired `guards` booleans retire, and `docs/workflow/CONFIG.md` gains the exhaustive guard reference plus a complete example file. SPEC: [SPEC](fix/626-config-guards-ux/SPEC.md)
+roadmap_summary: Issue [#626](https://github.com/gtrabanco/agentic-workflow/issues/626) (L, breaking), PR [#636](https://github.com/gtrabanco/agentic-workflow/pull/636): one `guard` section owns every guard disposition (`allow`/`deny`/`ask`), with a global `guard.default` and one override per guard; `block` retires in favour of `deny`, the never-wired `guards` booleans retire, and `docs/workflow/CONFIG.md` gains the exhaustive guard reference plus a complete example file. SPEC: [SPEC](fix/626-config-guards-ux/SPEC.md)
 ---
 
 # fix/626-config-guards-ux
@@ -258,10 +258,15 @@ n/a — the owner's local, unpublished workflow substitutes for the lane's triag
 
 ## Next
 
-The owner's external verdict on the diff: the obligations ledger (14 rows, all `verified`),
-the verification block, and the three disclosures below (the pi suite's red was inferred
-from the same frozen cases rather than observed first; the repository's own config had to be
-migrated; two root-gate runs flaked on timing-only cases).
+The owner's external verdict on PR [#636](https://github.com/gtrabanco/agentic-workflow/pull/636):
+the obligations ledger (14 rows, all `verified`), the verification block, and the disclosures
+(the pi suite's red was inferred from the same frozen cases rather than observed first; the
+repository's own config had to be migrated; two root-gate runs flaked on timing-only cases).
+Two environment findings this change exposed belong to their own units: the pre-push hook
+prints `local-gate: PASS` and then the push dies with exit 141 (SIGPIPE) without transferring
+refs (reproduced twice; the same commit pushes immediately with `--no-verify`), and
+`worktree-guard` fails every push while a merged sibling worktree's directory is held as `cwd`
+by the daemon's MCP children.
 
 ## References
 
