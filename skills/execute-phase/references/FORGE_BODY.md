@@ -15,7 +15,7 @@ examples use `gh`; translate if the project declares another forge).
 > `gh pr create --body-file <path>`, `gh issue comment <n> --body-file <path>`
 > (or the declared forge's equivalent). Short one-liners with no Markdown (e.g.
 > a bare `Closes #12`) may stay inline. **Verify after creating:**
-> `gh issue view <n> --json body` / `gh pr view <n> --json body` must show
+> `runner forge-read issue <n>` / `runner forge-read pr <n>` must show
 > backticks rendering — a literal `` \` `` in the output means redo it with
 > `--body-file`.
 

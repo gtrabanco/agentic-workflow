@@ -9,7 +9,7 @@
  * other producer reads `title`/`body` out of a forge `--json` payload unless it
  * is named here with the reason its input can never become a model instruction.
  *
- * Four rules, each a refusal with a name:
+ * Five rules, each a refusal with a name:
  *   R1 — a declared seam imports the guard module (the sanitized path);
  *   R2 — each declared reader function calls `guardForgeContent`;
  *   R3 — inside a declared reader, every `.title`/`.body` read sits in a
@@ -17,7 +17,10 @@
  *        returned raw;
  *   R4 — every file in the repository that reads a forge `--json` field list
  *        carrying `title` or `body` is declared (seam) or exempted with a
- *        reason (machine-marker grammar).
+ *        reason (machine-marker grammar);
+ *   R5 — every file that reads a forge REST payload (issue #612s read route) is
+ *        the guard module itself, a declared seam, or an explained exemption —
+ *        so a producer cannot take the REST door around the guarded route.
  *
  * `scanContentGuard` is pure over a `{files, texts}` model, so the two injected
  * disagreements run the same code the live repository does instead of asserting
@@ -33,6 +36,15 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const GUARD_MODULE = "content-guard.mjs";
+
+/** The guard's own source: it IS the sanitized path, so R5 never judges it. */
+const GUARD_MODULE_FILE = "packages/agentic-workflow/src/content-guard.mjs";
+
+/** A forge REST read: the transport, its host, or its path template. */
+const FORGE_REST_READ = /\bgh\s+api\b|api\.github\.com|repos\/\{owner\}\/\{repo\}/u;
+
+/** The same property read R3 uses, without R3's stateful `g` flag. */
+const FORGE_FIELD_PROPERTY = /[A-Za-z0-9_$\])]\.(?:title|body)\b/u;
 
 /**
  * The declared ingestion seams: the file, the collection entry a caller drives,
@@ -51,6 +63,12 @@ const SEAMS = [
     entry: "readForgeState",
     readers: ["guardForgeTitles"],
     why: "the sensor's forge collection: issue titles reach the workflow-status envelope",
+  },
+  {
+    file: "packages/agentic-workflow/src/forge-read/index.mjs",
+    entry: "readForge",
+    readers: ["readForge"],
+    why: "the guarded forge read (issue #612): issue and PR titles, bodies and threads reach a model through this delivery",
   },
 ];
 
@@ -242,6 +260,20 @@ export function scanContentGuard({ targets, texts, exempt: exemptions = EXEMPT }
     });
   }
 
+  // R5 — the read route (issue #612). A REST payload is the other door to forge
+  // text; the guarded read is the only declared reader of it.
+  for (const file of targets) {
+    if (declared.has(file) || exempt.has(file) || file === GUARD_MODULE_FILE) continue;
+    const text = read(file);
+    if (!FORGE_REST_READ.test(text) || !FORGE_FIELD_PROPERTY.test(text)) continue;
+    const line = text.split("\n").find((candidate) => FORGE_FIELD_PROPERTY.test(candidate));
+    findings.push({
+      code: "undeclared-forge-read-route",
+      file,
+      detail: `R5: reads a forge REST payload and is neither the guard, a declared seam nor an explained exemption: ${(line ?? "").trim()}`,
+    });
+  }
+
   return findings;
 }
 
@@ -254,7 +286,7 @@ function liveModel() {
 
 /* ------------------------------------------------------------------- cases */
 
-test("R1–R4: the live repository satisfies the discipline gate", () => {
+test("R1–R5: the live repository satisfies the discipline gate", () => {
   const findings = scanContentGuard(liveModel());
   assert.deepEqual(
     findings, [],
@@ -262,9 +294,9 @@ test("R1–R4: the live repository satisfies the discipline gate", () => {
   );
 });
 
-test("the gate is not vacuous: both seams are declared and both really call the guard", () => {
+test("the gate is not vacuous: every seam is declared and really calls the guard", () => {
   const model = liveModel();
-  assert.equal(SEAMS.length, 2, "two collection seams carry forge text today");
+  assert.equal(SEAMS.length, 3, "three seams carry forge text today: the planner, the sensor and the guarded read");
   for (const seam of SEAMS) {
     assert.ok(model.targets.includes(seam.file), `${seam.file} is scanned`);
     const body = functionBody(model.texts.get(seam.file), seam.readers[0]);
@@ -329,6 +361,35 @@ test("R4 injected disagreement: withdrawing an exemption turns the file into a r
     findings.map((finding) => [finding.code, finding.file]),
     [["undeclared-forge-content-producer", withdrawn.file]],
     "the file that lost its reason is named, and nothing else is invented",
+  );
+});
+
+test("R5 injected disagreement: a producer that reads a forge REST payload outside the guarded route fails", () => {
+  const model = liveModel();
+  model.targets = [...model.targets, "scripts/rest-reader.mjs"];
+  model.texts.set(
+    "scripts/rest-reader.mjs",
+    [
+      "import { spawnSync } from \"node:child_process\";",
+      "const raw = JSON.parse(spawnSync(\"gh\", [\"api\", \"repos/{owner}/{repo}/issues/1\"], { encoding: \"utf8\" }).stdout);",
+      "process.stdout.write(raw.body);",
+      "",
+    ].join("\n"),
+  );
+  const findings = scanContentGuard(model);
+  assert.deepEqual(
+    findings.map((finding) => [finding.code, finding.file]),
+    [["undeclared-forge-read-route", "scripts/rest-reader.mjs"]],
+    "the REST door is named, and nothing else is invented",
+  );
+});
+
+test("R5: the guard module itself is never judged by its own rule", () => {
+  const findings = scanContentGuard(liveModel());
+  assert.deepEqual(
+    findings.filter((finding) => finding.file === GUARD_MODULE_FILE),
+    [],
+    "the sanitized path IS the guard; R5 names the doors around it, not the door",
   );
 });
 
