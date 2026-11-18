@@ -268,19 +268,16 @@ also spends the push range before running it: it passes the pushed ref's remote 
 the merge-base for a single new branch — as `--push-base`, and a `test-impact` verdict of `empty` (no executable
 path changed — prose and assets only) skips the test-bearing steps; a `targeted`
 verdict, a refusal or an absent script runs the full gate, never a silent skip. A push that sends no ref update — an up-to-date branch, a dry run — or only deletions publishes nothing, so the hook exits 0 before any range step instead of inventing a merge-base range; several publishable refs, or a ref git cannot prove a base for, leaves the base unproven and the range-bound steps stay dropped. A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook` (which asks git where the hooks live, so it works from a worktree, where `.git` is a file); the installed hook passes `--jobs auto` (load-sized, overridable with `AGENTIC_WORKFLOW_GATE_JOBS`), so a push never claims the whole box while other sessions work.
-The shared-document classes (issue #498) arm the same way and are documented here
-because the arming is the same per-checkout limitation: `.gitattributes` names
-`docs/ROADMAP.md merge=agentic-shared-roadmap`,
-`docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets`,
-`docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state` and
-`docs/LOGS.md merge=agentic-shared-logs`, and
-`bun scripts/shared-doc-merge.mjs --install` writes the driver config a clone
+The shared-document classes (issue #498, plus #630's telemetry class) arm the
+same way and are documented here because the arming is the same per-checkout
+limitation: `.gitattributes` names `docs/ROADMAP.md`,
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `docs/workflow/REPOSITORY_STATE.md`,
+`docs/LOGS.md`, `docs/workflow/TIER_COST.md` and `.pi/.telemetry/sessions.jsonl`,
+and `bun scripts/shared-doc-merge.mjs --install` writes the driver config a clone
 never inherits; arming is optional — an unarmed clone degrades to git's textual
-merge, and the armed drivers add the semantic layer (row union by key; a
-same-row status flip or a differing ceiling leaf surfaces as a real conflict;
-`REPOSITORY_STATE.md` never unions; `LOGS.md` unions journal entries by their
-heading identity — the same heading appended with different bodies, or a side
-that is not an append-only extension of the base, surfaces as a real conflict). The write-path half of the contract lives
+merge, and each armed driver adds the semantic layer its own class's contract
+states, which the [crate README](packages/agentic-workflow/README.md) owns.
+The write-path half of the contract lives
 in the crate: `writer-driver-contract@1` in
 [`packages/agentic-workflow/README.md`](packages/agentic-workflow/README.md) is
 the contract's one home.
@@ -482,8 +479,8 @@ guard-verdict-grammar | packages/agentic-workflow-schema/README.md | block:guard
 test-impact-verdict | skills/execute-phase/references/TEST_IMPACT.md | fenced:TEST IMPACT — | n/a | no
 writer-driver-contract | packages/agentic-workflow/README.md | block:writer-driver-contract@1 | n/a | no
 writer-refusal-vocabulary | packages/agentic-workflow/src/writer/driver.mjs | schema-export:WRITER_REFUSAL_REASONS | writer-refusal-reason | no
-shared-merge-class-vocabulary | scripts/shared-doc-merge.mjs | schema-export:SHARED_MERGE_CLASSES | shared-merge-class | no
-shared-merge-refusal-vocabulary | scripts/shared-doc-merge.mjs | schema-export:SHARED_MERGE_REFUSAL_REASONS | shared-merge-refusal-reason | no
+shared-merge-class-vocabulary | packages/agentic-workflow/src/writer/shared-merge.mjs | schema-export:SHARED_MERGE_CLASSES | shared-merge-class | no
+shared-merge-refusal-vocabulary | packages/agentic-workflow/src/writer/shared-merge.mjs | schema-export:SHARED_MERGE_REFUSAL_REASONS | shared-merge-refusal-reason | no
 tool-inventory | packages/agentic-workflow/README.md | block:tool-inventory@1 | n/a | no
 tool-doctor-envelope | packages/agentic-workflow/README.md | block:doctor-envelope@1 | n/a | no
 doctor-check-status-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:DOCTOR_CHECK_STATUSES | doctor-check-status | no

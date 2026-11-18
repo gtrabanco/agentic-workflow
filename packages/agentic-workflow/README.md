@@ -75,6 +75,7 @@ writing anything**.
 | `git-identity-check [--root <dir>]` | **Layer 2's commit half of the identity guard** (issue #514 S3, in the CLI since unit 554): it refuses a commit whose resolved author or committer is not the project's approved identity in `.pi/agentic-workflow.json` → `gitIdentity` (project over the global `agentic-workflow.json`), and — while `commit.gpgsign` is true — whose signing key is absent, of the wrong format, or not the approved one. The profile's declared scope decides: the `commit*` values run this check, the `push*` values leave the commit alone. It reads and prints; it never repairs, rewrites or retries, and it suggests the correct `--unset` form rather than the inverted one that once set the literal value `--unset`. Inert without a declared profile · exit 0 may commit · 1 refused · 2 usage |
 | `turn-contract [--finished] [--remote <name>] [--forge <name>]` | The **turn contract's mechanical verifier** (feature 52, in the CLI since unit 554): box1 an agent inside a git repository off its default branch, box2 the unit document at HEAD for a unit-shaped branch (plus `scripts/phase-lint.mjs` when the unit carries a `TASKS.md`), box3 at least one own commit, box4 (`--finished`) a pushed branch with an open pull request whose head is local HEAD, box5 a clean tree not ahead of its upstream. The forge is a fact about the checked remote, so box4 asks `--forge`/`--remote` (default `origin`) instead of naming `gh`; an invalid `--forge` is a usage error, never a verdict. Prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>` · exit 0 pass · 1 fail · 2 usage. Read-only: its reads are lock-free, so not even `.git/index` is rewritten |
 | `guard-command [--command <text>] [--path <text>] [--allowlist <file>] [--payload] [--format plain\|copilot\|json]` | The **safety hooks' one decision** (unit 554), moved out of the template shell scripts so a target project installs shims instead of rules: the per-project literal allowlist, the merge families of every forge the workflow can drive, environment-variable disclosure and `.env` reads. `--payload` reads a platform hook payload from stdin; `--format` names the platform seam — `plain` (silent pass, refusals on stderr, exit 2), `copilot` (its `{continue, stopReason}` document, exit 0) or `json` (the normalized `[command, path]` an adapter formats itself). Read-only: it decides and writes nothing · exit 0 pass · 2 blocked, unusable payload or usage |
+| `telemetry merge-install [--repo <dir>]` | The **telemetry merge driver's installation gate** (issue #630): appends the two `.gitattributes` registry lines the `telemetry` class needs (`docs/workflow/TIER_COST.md` and `.pi/.telemetry/sessions.jsonl`, both `merge=agentic-shared-telemetry`) — additively, so a line already claiming the path is left alone — and arms `merge.agentic-shared-telemetry.driver` in the checkout's git config, naming the project's `scripts/shared-doc-merge.mjs` when it replicated the workflow, else this package's `bin/shared-merge.mjs`. Idempotent: a second run answers `unchanged`. Prints the `telemetry-merge-install@1` receipt on stdout; exit 0 answered · 2 refused (`MERGE-INSTALL REFUSAL —`, nothing written: not a checkout, or no runnable driver entry). `telemetry reconstruct write` arms the same key as part of its reconciliation (config only, never the tracked declaration) and reports it as `merge_driver` |
 | `doctor [--json] [--root <dir>]` | The **tool doctor** (issue #537): one read-only check per documented tool surface, printing the fixed `doctor@1` envelope — the host, one row per surface with its real evidence (resolved path, version, version pair, health probe, config state), the derived move, and the summary/verdict. Exit 0 when no required surface is broken · 1 when one is. A missing optional tool is an advisory that never fails the run. `--root` re-points the project it observes. It writes nothing, and it never runs a package manager: an install is text an operator pastes. The documented inventory it validates is `tool-inventory@1` below, and a documented row without a probe (or a probe without a documented row) is a `DOCTOR REFUSAL`, exit 2 |
 | `setup [--yes <ids>] [--dry-run] [--json] [--root <dir>]` | The **consent-gated setup wizard** (issue #537) over the same envelope. Each row maps to one move: `report-only` (healthy), `ask-consent-write` (the project's own installer repairs it), `instruct-only` (the exact operator command is printed) and `residual` (another owner decides). Nothing is written without an explicit yes — a non-interactive run without `--yes` prints the plan, writes nothing and says so; each applied action is recorded once in `.agentic-workflow/provision-log.jsonl`, then the same checker re-reads the envelope so a repaired row leaves the plan. The second run is a no-op. Exit 0 clean · 1 an applied action failed · 2 usage |
 
@@ -84,6 +85,7 @@ Two sibling binaries ship in the same package and are invoked by the skills:
 |---|---|
 | `bin/path-guard.mjs` | Tier 1 path-protection gate (feature 60): `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`, read-only and offline, printing `PATH-GUARD <pass\|fail> — <code>` · exit 0 pass, 1 fail, 2 usage |
 | `bin/turn-contract.mjs` | Verifies the canonical turn contract's mechanical boxes: prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>`; `--finished` also requires the pushed branch with its open pull request |
+| `bin/shared-merge.mjs` | The shared-document merge driver's crate entry (issue #630): the same argv form as `scripts/shared-doc-merge.mjs` (`<class> %O %A %B %L %P`, or `--install`). `.gitattributes`-armed checkouts use it when the project ships no `scripts/` tree |
 
 ## `doctor` — the tool doctor and the documented inventory (issue #537)
 
@@ -389,9 +391,37 @@ guarantee | no foreign bytes · no dropped lines · no silent loss · no network
 values, and run your instance through `runWriterConformance` in your suite (a
 violating writer must fail it — the shipped fixtures prove the harness catches
 a foreign-byte rewriter, a line dropper and a stale-read acceptor). The merge
-semantics the file-class git drivers run (`unionTableRows`,
+semantics the file-class git drivers run (`unionTableRows`, `unionAppendOnly`,
 `structuralJsonMerge`, `src/writer/merges.mjs`) are pure functions over strings
-— the driver script owns the git mechanics, never a second grammar.
+— the git mechanics live beside them in `src/writer/shared-merge.mjs`, never a
+second grammar (issue #630 moved them here from `scripts/` so the CLI can arm a
+driver in a project that ships no `scripts/` tree; the root
+`scripts/shared-doc-merge.mjs` and `bin/shared-merge.mjs` are its two entries).
+
+**The shared-document classes** (issue #498, plus issue #630's `telemetry` class).
+`.gitattributes` names each path once and `merge.agentic-shared-<class>.driver`
+arms it; the semantics of that class are that class's contract:
+
+| class | what it unions | what is a real conflict |
+|---|---|---|
+| `roadmap` | table rows by key (numeric first cell, `[#N]` link) | both sides changing the same row differently |
+| `budgets` | JSON leaves by key | the same leaf set differently on both sides |
+| `repo-state` | nothing — frozen facts are resolver-only | any concurrent change |
+| `logs` | journal entries by heading identity | the same heading with different bodies, or a side that is not an append-only extension of the base |
+| `telemetry` | ledger rows by their `source` cell, JSONL lines by canonical identity | a side that is not an append-only extension of the base |
+
+**The telemetry class is append-only** (issue #630). `docs/workflow/TIER_COST.md`
+and the JSONL sample store (`.pi/.telemetry/sessions.jsonl` by default) grow by an
+atomic `O_APPEND` per row/line, so their merge computes the union and **appends
+the delta to `%A`** — it never stages and renames, and it never rewrites a
+committed row or line: a side that is not an append-only extension of the base,
+or a union that would not extend ours, refuses closed (no marker, exit 1, the
+file left as `ours`). `telemetryRowKey` keys the table side by each row's `source`
+cell and `unionAppendOnly` keys the JSONL side by each line's canonical JSON, so a
+row/line both branches appended lands once. The class acts on tracked paths only:
+this repository gitignores `.pi/.telemetry/` (#504), so the JSONL half is live in a
+project that carries its telemetry corpus in git. `agentic-workflow telemetry
+merge-install` installs it retroactively on both halves.
 
 ## Third-party content — the guard layer (issue #470)
 
