@@ -56,6 +56,51 @@ after an explicit yes, `instruct-only` prints the exact command, `residual` name
 a decision another owner makes, and the second run is a no-op. Nothing installs
 a package for you — an install route is text you paste.
 
+## The vehicle — running this checkout instead of the release
+
+An authoring session must run **this** checkout, not the last release it happens
+to have installed: a merged unit lands in the tree and reaches an installed
+release only at the next cut, so a session on the release cannot see its own
+work. The mechanism is the runner's documented override
+([`skills/runner-contract/references/RUNNER.md`](../../skills/runner-contract/references/RUNNER.md)
+owns its value shape and every consumer); this page owns only how this
+repository's checkout is **armed** with it.
+
+```sh
+node scripts/setup-env.mjs           # arms it: writes .pi/vehicle.env (gitignored)
+. .pi/vehicle.env                    # source it in the shell that launches your session
+node scripts/setup-env.mjs --check   # verifies it, read-only: the row names the observed source
+```
+
+`setup-env.mjs` writes the override pointing at this checkout's
+`packages/agentic-workflow/bin/agentic-workflow.mjs` (`bun` when it is installed,
+`node` otherwise). The file is local and per-checkout by construction — its value
+is an absolute path — so a fresh worktree re-runs the provisioner instead of
+copying one. The step is **default-on where pi is installed** (the authoring
+environment) and opt-in elsewhere: a contributor without pi gets the export line
+in the check output and nothing is written. An empty value is the unset spelling;
+`--check` reports it as unarmed rather than guessing.
+
+### The post-merge refresh — a vehicle is stale by construction after a merge
+
+When a merged unit touched `skills/` or `packages/`, the next session's installed
+release is behind the tree **by construction** — that is the normal state, not a
+defect. The tool doctor's `dogfooding-vehicle` row is what makes it visible:
+`bun scripts/setup-env.mjs --doctor` prints it with the installed version, the
+newest canary tag and the resolved target. Two moves, and only two:
+
+- **arm the override** for a session that must see the tree right now (the
+  command above), or
+- **cut and reinstall** — `bun scripts/release.mjs apply --channel canary`, then
+  `pi install npm:@gtrabanco/pi-agentic-workflow@canary` — when the release half
+  is what you need.
+
+A session that meets a refusal for a subcommand the tree already ships has a
+**setup state**, not a bug: the triage route reads the row and applies the move
+instead of filing a defect (owner:
+[`skills/triage-issue/references/ISSUE_PROCESS.md`](../../skills/triage-issue/references/ISSUE_PROCESS.md)
+§ the setup-defect check).
+
 ## The toolchain, per tool
 
 `node scripts/setup-env.mjs` is **progressive** (S8): every pass probes the
