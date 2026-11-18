@@ -10,8 +10,12 @@ docs/generated/** merge=docs-generated
 
 # Shared-document classes (issue #498): the collision-safe merge layer over the
 # documents several concurrent sessions and PRs write. Each path is stated
-# here once — no second driver claims it.
+# here once — no second driver claims it. The telemetry class (issue #630) is
+# append-only by construction: it appends the incoming side's rows/lines to the
+# union instead of rewriting the file.
 docs/ROADMAP.md merge=agentic-shared-roadmap
 docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets
 docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state
 docs/LOGS.md merge=agentic-shared-logs
+docs/workflow/TIER_COST.md merge=agentic-shared-telemetry
+.pi/.telemetry/sessions.jsonl merge=agentic-shared-telemetry

@@ -33,6 +33,7 @@ import { fileURLToPath } from "node:url";
 
 import { parseDocsSiteBlock, projectionDir } from "./docs-generate.mjs";
 import { coveredPrefix, driverCommand } from "./docs-generated-merge.mjs";
+import { attributeLines } from "../packages/agentic-workflow/src/writer/shared-merge.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(REPO, "scripts", "docs-generated-merge.mjs");
@@ -374,14 +375,8 @@ test(".gitattributes covers exactly the surfaces the generator writes", () => {
   // coordination note and the #498 LOGS reinforcement.
   assert.deepEqual(
     entries,
-    [
-      `${prefix}/** merge=${DRIVER}`,
-      "docs/ROADMAP.md merge=agentic-shared-roadmap",
-      "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
-      "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
-      "docs/LOGS.md merge=agentic-shared-logs",
-    ],
-    "the projection entry plus the four shared-document classes, exactly",
+    [`${prefix}/** merge=${DRIVER}`, ...attributeLines()],
+    "the projection entry plus the shared-document registry, exactly — both sides derived, so a class or a destination added once moves both",
   );
 });
 
@@ -401,14 +396,8 @@ test("template/.gitattributes carries the integrated registry, exactly once per 
     .filter((line) => line !== "" && !line.startsWith("#"));
   assert.deepEqual(
     entries,
-    [
-      "docs/generated/** merge=docs-generated",
-      "docs/ROADMAP.md merge=agentic-shared-roadmap",
-      "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
-      "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
-      "docs/LOGS.md merge=agentic-shared-logs",
-    ],
-    "the projection entry plus the four shared-document classes, exactly",
+    ["docs/generated/** merge=docs-generated", ...attributeLines()],
+    "the projection entry plus the shared-document registry, exactly",
   );
 });
 

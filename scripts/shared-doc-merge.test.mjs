@@ -5,6 +5,11 @@
  * Frozen-failure corpus:
  *   FF-3 — two branches each inserting a different roadmap row merge
  *          mechanically into the union (fixture `git merge`, exit 0).
+ *   F-630-6…F-630-11 — the telemetry class (issue #630): both destinations
+ *          resolve to it, two appended ledger rows and two appended JSONL lines
+ *          union through a real `git merge`, a non-append side refuses closed
+ *          leaving `%A` untouched, and an unregistered path or a wrong class
+ *          still refuses.
  *   FF-4 — two branches flipping the same row's status exit nonzero and leave
  *          a real conflict for the human/agent.
  *   FF-6 — fail closed: a driver that guesses (unknown path, unreadable side,
@@ -22,6 +27,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+
+import { SHARED_MERGE_CLASSES, classForPath } from "./shared-doc-merge.mjs";
+import { COLUMNS, parseLedger } from "../packages/agentic-workflow/src/telemetry/ledger.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./shared-doc-merge.mjs", import.meta.url));
 const RUNTIME = process.env.AGENTIC_WORKFLOW_RUNTIME === "node" ? "node" : "bun";
@@ -63,6 +71,35 @@ const LOGS_BASE = [
   "",
 ].join("\n");
 
+/** An empty `tier-cost@2` ledger with the published column list. */
+function telemetryLedger(rows) {
+  return [
+    "# Ledger fixture",
+    "",
+    "```text",
+    "tier-cost@2",
+    "column | shape | what it holds",
+    ...COLUMNS.map((column) => `${column} | <value> | a column`),
+    "```",
+    "",
+    `| ${COLUMNS.join(" | ")} |`,
+    `|${COLUMNS.map(() => "---").join("|")}|`,
+    ...rows,
+    "",
+  ].join("\n");
+}
+
+/** One ledger row in the published column order. */
+function telemetryRow(source) {
+  const values = {
+    unit: "null", phase: "null", version: "null", model: "m",
+    changed_paths: "0", tokens: "10", turns: "1",
+    input_tokens: "4", output_tokens: "2", cache_read_tokens: "1", cache_write_tokens: "1", reasoning_tokens: "2",
+    model_ms: "5", tool_ms: "0", observed: "2026-11-18", source,
+  };
+  return `| ${COLUMNS.map((column) => values[column]).join(" | ")} |`;
+}
+
 /** One fixture git repository with the shared docs on `main`. */
 function fixtureRepo() {
   const dir = mkdtempSync(join(tmpdir(), "aw-shared-merge-"));
@@ -77,6 +114,9 @@ function fixtureRepo() {
   );
   writeFileSync(join(dir, "docs", "workflow", "REPOSITORY_STATE.md"), "# Frozen facts\n\n- fact: one\n", "utf8");
   writeFileSync(join(dir, "docs", "LOGS.md"), LOGS_BASE, "utf8");
+  writeFileSync(join(dir, "docs", "workflow", "TIER_COST.md"), telemetryLedger([]), "utf8");
+  mkdirSync(join(dir, ".pi", ".telemetry"), { recursive: true });
+  writeFileSync(join(dir, ".pi", ".telemetry", "sessions.jsonl"), "", "utf8");
   // The attribute mapping is committed in the real tree; a fixture carries the
   // same lines so `git merge` dispatches to the armed drivers.
   writeFileSync(
@@ -86,6 +126,8 @@ function fixtureRepo() {
       "docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets",
       "docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state",
       "docs/LOGS.md merge=agentic-shared-logs",
+      "docs/workflow/TIER_COST.md merge=agentic-shared-telemetry",
+      ".pi/.telemetry/sessions.jsonl merge=agentic-shared-telemetry",
       "",
     ].join("\n"),
     "utf8",
@@ -120,13 +162,13 @@ function divergeJson(repo, name, transform) {
 
 // ── arming ───────────────────────────────────────────────────────────────
 
-test("--install arms the four file classes in a fixture checkout, idempotently", () => {
+test("--install arms every declared file class in a fixture checkout, idempotently", () => {
   const repo = fixtureRepo();
   try {
     const first = run(["--install", "--repo", repo.dir], repo.dir);
     assert.equal(first.status, 0, first.stderr);
     assert.ok(first.stdout.includes("verdict: PASS"));
-    for (const cls of ["roadmap", "budgets", "repo-state", "logs"]) {
+    for (const cls of SHARED_MERGE_CLASSES) {
       const driver = spawnSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "config", "--local", "--get", `merge.agentic-shared-${cls}.driver`], { cwd: repo.dir, encoding: "utf8" });
       assert.equal(driver.status, 0, `merge.agentic-shared-${cls}.driver armed`);
       assert.ok(driver.stdout.includes(`shared-doc-merge.mjs ${cls}`));
@@ -343,5 +385,146 @@ test("FF-5 — the same LOGS entry appended with different bodies exits nonzero 
     assert.ok(status.stdout.includes("UU docs/LOGS.md"), status.stdout);
   } finally {
     repo.release();
+  }
+});
+
+// ── issue #630 — the telemetry class ─────────────────────────────────────
+
+test("F-630-6 — both telemetry destinations resolve to the one `telemetry` class", () => {
+  assert.ok(SHARED_MERGE_CLASSES.includes("telemetry"), "the class is in the published vocabulary");
+  assert.equal(classForPath("docs/workflow/TIER_COST.md"), "telemetry");
+  assert.equal(classForPath(".pi/.telemetry/sessions.jsonl"), "telemetry");
+  assert.equal(classForPath("docs/workflow/tier-cost.md"), null, "the map is exact, never a pattern");
+});
+
+test("F-630-7 — two branches each appending a ledger row merge into the union (exit 0, still a ledger)", () => {
+  const repo = fixtureRepo();
+  try {
+    run(["--install", "--repo", repo.dir], repo.dir);
+    diverge(repo, "ours", "docs/workflow/TIER_COST.md", (text) => text + `${telemetryRow("pi:session=ours")}\n`);
+    diverge(repo, "theirs", "docs/workflow/TIER_COST.md", (text) => text + `${telemetryRow("pi:session=theirs")}\n`);
+    const merged = repo.git(["merge", "ours", "--no-edit"]);
+    assert.equal(merged.status, 0, merged.stderr);
+    const after = repo.git(["merge", "theirs", "--no-edit"]);
+    assert.equal(after.status, 0, after.stderr);
+    const text = readFileSync(join(repo.dir, "docs/workflow/TIER_COST.md"), "utf8");
+    assert.ok(!text.includes("<<<<<<<"), "no conflict marker survives the union");
+    assert.ok(text.includes("pi:session=ours") && text.includes("pi:session=theirs"));
+    const parsed = parseLedger(text);
+    assert.equal(parsed.error, undefined, parsed.detail);
+    assert.deepEqual(parsed.rows.map((row) => row.source).sort(), ["pi:session=ours", "pi:session=theirs"]);
+  } finally {
+    repo.release();
+  }
+});
+
+test("F-630-8 — a side that is not an append refuses closed and leaves %A untouched", () => {
+  const repo = fixtureRepo();
+  try {
+    run(["--install", "--repo", repo.dir], repo.dir);
+    // main carries two rows; ours only appends, theirs rewrites the first row.
+    writeFileSync(
+      join(repo.dir, "docs/workflow/TIER_COST.md"),
+      telemetryLedger([telemetryRow("pi:session=base"), telemetryRow("pi:session=second")]),
+      "utf8",
+    );
+    repo.git(["add", "."]);
+    repo.git(["commit", "-q", "-m", "two rows"]);
+    diverge(repo, "ours", "docs/workflow/TIER_COST.md", (text) => text + `${telemetryRow("pi:session=ours")}\n`);
+    // The incoming side both appends (so the merge really conflicts at EOF and
+    // the driver runs) and rewrites a committed row (so it is no longer an
+    // append). The second half is the one the class must refuse.
+    const theirs = diverge(repo, "theirs", "docs/workflow/TIER_COST.md", (text) =>
+      `${text + telemetryRow("pi:session=theirs")}\n`.replace("pi:session=second", "pi:session=EDITED"),
+    );
+    const oursContent = repo.git(["show", "ours:docs/workflow/TIER_COST.md"]).stdout;
+    assert.equal(repo.git(["merge", "ours", "--no-edit"]).status, 0, "ours is a fast-forward");
+    const merged = repo.git(["merge", theirs, "--no-edit"]);
+    assert.notEqual(merged.status, 0, "a rewrite of a committed row is a real conflict");
+    const left = readFileSync(join(repo.dir, "docs/workflow/TIER_COST.md"), "utf8");
+    assert.equal(left.trimEnd(), oursContent.trimEnd(), "%A still holds ours — the driver never rewrote it");
+    assert.ok(repo.git(["merge", "--abort"]).status === 0);
+  } finally {
+    repo.release();
+  }
+});
+
+test("F-630-9 — two branches each appending JSONL lines merge into the union, deduplicated", () => {
+  const repo = fixtureRepo();
+  try {
+    run(["--install", "--repo", repo.dir], repo.dir);
+    const shared = '{"source":"pi:session=both","tokens":2}\n';
+    writeFileSync(join(repo.dir, ".pi/.telemetry/sessions.jsonl"), shared, "utf8");
+    repo.git(["add", "-f", "."]);
+    repo.git(["commit", "-q", "-m", "shared line"]);
+    diverge(repo, "ours", ".pi/.telemetry/sessions.jsonl", (text) => text + '{"source":"pi:session=ours","tokens":3}\n');
+    diverge(repo, "theirs", ".pi/.telemetry/sessions.jsonl", (text) => text + '{"source":"pi:session=theirs","tokens":4}\n');
+    assert.equal(repo.git(["merge", "ours", "--no-edit"]).status, 0);
+    const merged = repo.git(["merge", "theirs", "--no-edit"]);
+    assert.equal(merged.status, 0, merged.stderr);
+    const text = readFileSync(join(repo.dir, ".pi/.telemetry/sessions.jsonl"), "utf8");
+    assert.ok(!text.includes("<<<<<<<"));
+    const sources = text.trim().split("\n").map((line) => JSON.parse(line).source);
+    assert.deepEqual(sources.sort(), ["pi:session=both", "pi:session=ours", "pi:session=theirs"]);
+  } finally {
+    repo.release();
+  }
+});
+
+test("F-630-10 — an unregistered path still refuses (the class map is exact)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw630-paths-"));
+  try {
+    const side = (name, text) => {
+      const file = join(dir, name);
+      writeFileSync(file, text, "utf8");
+      return file;
+    };
+    const base = side("base", "x\n");
+    const ours = side("ours", "x\ny\n");
+    const theirs = side("theirs", "x\nz\n");
+    const refused = run(["telemetry", base, ours, theirs, "7", "docs/workflow/COSTS.md"], dir);
+    assert.equal(refused.status, 1);
+    assert.ok(refused.stderr.includes("unknown-path"));
+    const mismatch = run(["telemetry", base, ours, theirs, "7", "docs/LOGS.md"], dir);
+    assert.equal(mismatch.status, 1);
+    assert.ok(mismatch.stderr.includes("class-mismatch"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("correction A4 — the plain form (%O %A %B %L %P) infers the class from the named path, and still refuses an unknown one", () => {
+  const dir = mkdtempSync(join(tmpdir(), "aw630-plain-"));
+  try {
+    const side = (name, text) => {
+      const file = join(dir, name);
+      writeFileSync(file, text, "utf8");
+      return file;
+    };
+    // Git invokes a merge driver armed without the class prefix as `%O %A %B %L %P` —
+    // five arguments, the named path at index 4. The module's own contract says the
+    // class is then inferred from the named path; the inference must fire and the
+    // union must resolve exactly as the class-prefixed form resolves.
+    const header = "| id | status | topic |";
+    const sep = "|---|---|---|";
+    const row = (id, status, topic) => `| ${id} | ${status} | ${topic} |`;
+    const baseText = `# Roadmap\n\n${header}\n${sep}\n${row(1, "done · [#1]", "a")}\n`;
+    const oursText = `${baseText}${row(2, "open", "b")}\n`;
+    const theirsText = `${baseText}${row(3, "open", "c")}\n`;
+    const ours = side("plain-ours", oursText);
+    const merged = run([side("plain-base", baseText), ours, side("plain-theirs", theirsText), "7", "docs/ROADMAP.md"], dir);
+    assert.equal(merged.status, 0, merged.stderr);
+    const union = readFileSync(ours, "utf8");
+    assert.ok(!union.includes("<<<<<<<"), "no conflict marker survives the union");
+    for (const topic of ["a", "b", "c"]) assert.ok(union.includes(`| ${topic} |`), `row ${topic} survives`);
+
+    // A plain-form path no class owns is still a refusal, never a guess — and it
+    // names the path the driver was handed, not the base temp file.
+    const unknown = run([side("plain-base-2", "x\n"), side("plain-ours-2", "x\ny\n"), side("plain-theirs-2", "x\nz\n"), "7", "docs/workflow/COSTS.md"], dir);
+    assert.equal(unknown.status, 1);
+    assert.ok(unknown.stderr.includes("unknown-path"));
+    assert.ok(unknown.stderr.includes("docs/workflow/COSTS.md"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
