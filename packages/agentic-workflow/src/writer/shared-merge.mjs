@@ -370,7 +370,10 @@ function resolveTelemetry(named, target, baseText, oursText, theirsText) {
 function resolveMerge(argv) {
   let [cls, base, ours, theirs, marker, relPath] = argv;
   if (!SHARED_MERGE_CLASSES.includes(cls)) {
-    const named = argv[5] !== undefined ? namedPath(argv[5]) : null;
+    // The class-prefixed form carries the named path at argv[5]; git's plain form
+    // (`%O %A %B %L %P`) carries it at argv[4]. Read whichever the invocation
+    // actually delivered — an inference failure is still a refusal, never a guess.
+    const named = argv[5] !== undefined ? namedPath(argv[5]) : argv[4] !== undefined ? namedPath(argv[4]) : null;
     const inferred = named === null ? null : classForPath(named);
     if (inferred === "generated") {
       refuse(`generated-projection — ${named} is the docs-generated projection; arm scripts/docs-generated-merge.mjs (fix #420) for it`, 1);
