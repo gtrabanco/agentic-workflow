@@ -654,7 +654,13 @@ const parsed = parseArgs(restArgs);
 const rawArgs = parsed.args;
 switch (command) {
   // ── telemetry — the manual reconstruction of the session samples (#624) ──
+  // and the merge driver's installation gate (#630).
   case "telemetry": {
+    if (restArgs[0] === "merge-install") {
+      const { main } = await import("../src/telemetry/merge-install.mjs");
+      process.exit(main(restArgs.slice(1)));
+      break;
+    }
     const { main } = await import("../src/telemetry/reconstruct.mjs");
     process.exit(main(restArgs));
     break;

@@ -272,15 +272,20 @@ The shared-document classes (issue #498) arm the same way and are documented her
 because the arming is the same per-checkout limitation: `.gitattributes` names
 `docs/ROADMAP.md merge=agentic-shared-roadmap`,
 `docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets`,
-`docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state` and
-`docs/LOGS.md merge=agentic-shared-logs`, and
+`docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state`,
+`docs/LOGS.md merge=agentic-shared-logs`, `docs/workflow/TIER_COST.md` and
+`.pi/.telemetry/sessions.jsonl` (both `merge=agentic-shared-telemetry` — issue
+#630's append-only class), and
 `bun scripts/shared-doc-merge.mjs --install` writes the driver config a clone
 never inherits; arming is optional — an unarmed clone degrades to git's textual
 merge, and the armed drivers add the semantic layer (row union by key; a
 same-row status flip or a differing ceiling leaf surfaces as a real conflict;
 `REPOSITORY_STATE.md` never unions; `LOGS.md` unions journal entries by their
 heading identity — the same heading appended with different bodies, or a side
-that is not an append-only extension of the base, surfaces as a real conflict). The write-path half of the contract lives
+that is not an append-only extension of the base, surfaces as a real conflict;
+the telemetry class appends the incoming side's rows/lines to the union rather
+than rewriting the file, deduplicates an identical row/line, and refuses closed
+when a side is not an append-only extension of the base). The write-path half of the contract lives
 in the crate: `writer-driver-contract@1` in
 [`packages/agentic-workflow/README.md`](packages/agentic-workflow/README.md) is
 the contract's one home.
@@ -482,8 +487,8 @@ guard-verdict-grammar | packages/agentic-workflow-schema/README.md | block:guard
 test-impact-verdict | skills/execute-phase/references/TEST_IMPACT.md | fenced:TEST IMPACT — | n/a | no
 writer-driver-contract | packages/agentic-workflow/README.md | block:writer-driver-contract@1 | n/a | no
 writer-refusal-vocabulary | packages/agentic-workflow/src/writer/driver.mjs | schema-export:WRITER_REFUSAL_REASONS | writer-refusal-reason | no
-shared-merge-class-vocabulary | scripts/shared-doc-merge.mjs | schema-export:SHARED_MERGE_CLASSES | shared-merge-class | no
-shared-merge-refusal-vocabulary | scripts/shared-doc-merge.mjs | schema-export:SHARED_MERGE_REFUSAL_REASONS | shared-merge-refusal-reason | no
+shared-merge-class-vocabulary | packages/agentic-workflow/src/writer/shared-merge.mjs | schema-export:SHARED_MERGE_CLASSES | shared-merge-class | no
+shared-merge-refusal-vocabulary | packages/agentic-workflow/src/writer/shared-merge.mjs | schema-export:SHARED_MERGE_REFUSAL_REASONS | shared-merge-refusal-reason | no
 tool-inventory | packages/agentic-workflow/README.md | block:tool-inventory@1 | n/a | no
 tool-doctor-envelope | packages/agentic-workflow/README.md | block:doctor-envelope@1 | n/a | no
 doctor-check-status-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:DOCTOR_CHECK_STATUSES | doctor-check-status | no

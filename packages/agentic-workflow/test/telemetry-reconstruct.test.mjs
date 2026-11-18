@@ -436,3 +436,39 @@ test("bin: `agentic-workflow telemetry reconstruct stats` answers through the re
   assert.equal(receipt.contract, RECONSTRUCT_CONTRACT_ID);
   assert.equal(receipt.totals.tokens, 402);
 });
+
+// ── The merge driver's reconciliation trigger (issue #630 S4) ────────────
+
+test("write: the reconciliation arms the telemetry merge driver and says so", () => {
+  const root = project({ jsonl: true });
+  const agent = agentStore(root, { "session-full.jsonl": fixture("session-full.jsonl") });
+  const git = (args) => spawnSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" });
+  assert.equal(git(["init", "-q", "-b", "main"]).status, 0);
+
+  const written = run(["reconstruct", "write"], { cwd: root, env: { PI_CODING_AGENT_DIR: agent } });
+  assert.equal(written.code, 0, written.stderr);
+  const receipt = JSON.parse(written.stdout);
+  assert.equal(receipt.merge_driver.status, "armed");
+  assert.equal(receipt.merge_driver.driver, "agentic-shared-telemetry");
+  assert.equal(receipt.merge_driver.declared, false, "the trigger arms the config, never the tracked declaration");
+  assert.equal(receipt.merge_driver.next, "agentic-workflow telemetry merge-install");
+  const armed = git(["config", "--local", "--get", "merge.agentic-shared-telemetry.driver"]);
+  assert.equal(armed.status, 0, "the driver key is armed in the checkout");
+  assert.ok(armed.stdout.includes("telemetry %O %A %B %L"));
+
+  // Idempotent: the second reconciliation finds the key already armed.
+  const second = run(["reconstruct", "write"], { cwd: root, env: { PI_CODING_AGENT_DIR: agent } });
+  assert.equal(second.code, 0, second.stderr);
+  assert.equal(JSON.parse(second.stdout).merge_driver.status, "unchanged");
+});
+
+test("write: a project that is not a checkout reports the driver unavailable and still writes", () => {
+  const root = project({ jsonl: true });
+  const agent = agentStore(root, { "session-full.jsonl": fixture("session-full.jsonl") });
+  const written = run(["reconstruct", "write"], { cwd: root, env: { PI_CODING_AGENT_DIR: agent } });
+  assert.equal(written.code, 0, written.stderr);
+  const receipt = JSON.parse(written.stdout);
+  assert.equal(receipt.merge_driver.status, "unavailable");
+  assert.equal(receipt.merge_driver.detail, "not a git checkout");
+  assert.equal(receipt.jsonl.added, 1, "the write landed anyway");
+});

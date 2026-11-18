@@ -104,8 +104,10 @@ lacks**. Ten ordered steps:
    #498 base)** ride the same additive contract: a `.gitattributes` missing
    registry lines is proposed from `template/.gitattributes` (append-only,
    unrelated entries untouched — `docs/generated/** merge=docs-generated` and
-   the four `agentic-shared-*` class lines — roadmap, budgets, repo-state and
-   `docs/LOGS.md` — each path claimed once), and both
+   the five `agentic-shared-*` class lines — roadmap, budgets, repo-state,
+   `docs/LOGS.md`, and the `agentic-shared-telemetry` pair claiming
+   `docs/workflow/TIER_COST.md` and `.pi/.telemetry/sessions.jsonl` (issue
+   #630) — each path claimed once), and both
    driver families are armed — `bun scripts/docs-generated-merge.mjs --install`
    and `bun scripts/shared-doc-merge.mjs --install` — with
    `git config --get merge.docs-generated.driver` and

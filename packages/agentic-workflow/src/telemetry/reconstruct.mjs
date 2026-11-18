@@ -34,6 +34,7 @@ import path from "node:path";
 import { TELEMETRY_SAMPLE_FIELDS } from "@gtrabanco/agentic-workflow-schema";
 
 import { LEDGER_PATH, appendJsonlSample, appendLedgerSample, orderedSample, parseLedger, prepareLedgerAppend } from "./ledger.mjs";
+import { armTelemetryMerge } from "./merge-install.mjs";
 
 /** The contract id of the answer this command prints. */
 export const RECONSTRUCT_CONTRACT_ID = "telemetry-reconstruct@1";
@@ -51,6 +52,7 @@ export const LIVE_SOURCE_PREFIX = "pi:session=";
 export class ReconstructRefusal extends Error {}
 
 const USAGE = `usage: agentic-workflow telemetry reconstruct <stats|samples|write> [flags]
+       agentic-workflow telemetry merge-install [--repo <dir>]
 
   stats    [--by-model] [--by-date] [--project <path>]
   samples  [--jsonl <path>] [--project <path>]
@@ -469,6 +471,13 @@ function write(flags, { cwd, env }) {
   const ledgerAdded = ledgerExists ? records.filter((record) => !ledgerKnown.has(sessionKeyOf(record.source))) : [];
   const ledgerPlans = ledgerAdded.map((record) => prepareLedgerAppend({ ledgerPath: ledger, sample: ledgerRowOf(record) }));
 
+  // Issue #630 S4 — a reconciliation is frequently the first telemetry a project
+  // ever writes, so it arms the telemetry merge driver on its way. The arming is
+  // git config only (never a tracked file, `D7`) and never costs the write: a
+  // project that is not a checkout reports `unavailable` and the reconstruction
+  // still lands.
+  const mergeDriver = armTelemetryMerge({ root: project });
+
   for (const record of jsonlAdded) appendJsonlSample({ path: jsonl, sample: record });
   for (const apply of ledgerPlans) apply();
 
@@ -485,6 +494,7 @@ function write(flags, { cwd, env }) {
       added: ledgerAdded.length,
       skipped: ledgerExists ? records.length - ledgerAdded.length : 0,
     },
+    merge_driver: mergeDriver,
   };
 }
 
@@ -501,7 +511,8 @@ export function main(argv, { cwd = process.cwd(), env = process.env, stdout = (t
       stdout(USAGE);
       return 0;
     }
-    if (argv[0] !== "reconstruct") throw new ReconstructRefusal(`expected "reconstruct", got ${JSON.stringify(argv[0] ?? "")}`);
+    if (argv[0] === "merge-install") throw new ReconstructRefusal("merge-install is served by src/telemetry/merge-install.mjs, not this module");
+    if (argv[0] !== "reconstruct") throw new ReconstructRefusal(`expected "reconstruct" or "merge-install", got ${JSON.stringify(argv[0] ?? "")}`);
     const { operation, flags } = parseCommand(argv.slice(1));
     if (flags.help === true) {
       stdout(USAGE);

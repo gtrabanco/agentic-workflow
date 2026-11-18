@@ -18,7 +18,11 @@ docs/generated/** merge=docs-generated
 # REPOSITORY_STATE.md never union; LOGS.md unions journal entries by their
 # heading identity — the same heading with different bodies, or a side that is
 # not an append-only extension of the base, surfaces as a real conflict).
+# The telemetry class (issue #630) is append-only by construction: it appends
+# the incoming side's rows/lines to the union instead of rewriting the file.
 docs/ROADMAP.md merge=agentic-shared-roadmap
 docs/workflow/SKILL_CONTEXT_BUDGETS.json merge=agentic-shared-budgets
 docs/workflow/REPOSITORY_STATE.md merge=agentic-shared-repo-state
 docs/LOGS.md merge=agentic-shared-logs
+docs/workflow/TIER_COST.md merge=agentic-shared-telemetry
+.pi/.telemetry/sessions.jsonl merge=agentic-shared-telemetry
