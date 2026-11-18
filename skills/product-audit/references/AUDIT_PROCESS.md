@@ -7,11 +7,13 @@
 2. **Deterministic-producer pre-pass** — for every applicable dimension with a
    producer in the **Producer (pre-pass)** column, obtain and consume its
    receipt (`dependency-advisories`, profile-declared linters, `audit-docs`
-   checks, and the coverage-gap join `bun scripts/coverage-gap.mjs <repo>` →
-   `coverage-gap@1`, `AUDIT_DIMENSIONS.md` § Coverage-gap sweep): receipt-quoted,
-   never re-run by the model, never re-derived by inspection — the model sweeps
-   only the non-mechanizable remainder of each dimension. Record each receipt
-   with the evidence-provenance gate below.
+   checks, the coverage-gap join `bun scripts/coverage-gap.mjs <repo>` →
+   `coverage-gap@1`, `AUDIT_DIMENSIONS.md` § Coverage-gap sweep, and the journal
+   carrier `bun scripts/journal-corpus.mjs <repo>` → `journal-corpus@1`,
+   `AUDIT_DIMENSIONS.md` § Journal-signal sweep): receipt-quoted, never re-run by
+   the model, never re-derived by inspection — the model sweeps only the
+   non-mechanizable remainder of each dimension. Record each receipt with the
+   evidence-provenance gate below.
 3. **Sweep code & axes** — run the applicable axes across the codebase: compose
    `review-implementation` plus the internal review pack's applicable passes
    (each returns its fixed-format table + PASS|FAIL), and any optional installed

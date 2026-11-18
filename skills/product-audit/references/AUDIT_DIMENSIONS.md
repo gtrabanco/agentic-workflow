@@ -45,6 +45,7 @@ invents profile slots or waives a verification contract.
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | `audit-docs` script-first index checks — receipt-quoted where they cover the row set; the gap/opportunity judgment is model | all |
 | **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope; every row the project registered in its `review-extras@1` note is reported with its decay state (`unpinned`, `stale`, `incomplete`), so an extra that rotted is a finding rather than a memory | `agentic-workflow skills inventory --guide AGENTS.md` — receipt-quoted for the registered set; the MCP half is the agent's own inventory, stated plainly when it cannot be enumerated | all |
 | **Coverage gaps** | Declared verification criteria with no detector, admitted recurring finding classes with no preventive gate, and declared detectors consuming no criterion — the forward-looking half the findings corpus (#437) does not cover | `bun scripts/coverage-gap.mjs <repo>` receipt-quoted (`coverage-gap@1`, § Coverage-gap sweep) | all |
+| **Journal signals** | The corrections a session had to make, the sessions each unit consumed (rework), and the findings its own reviewers refuted — cross-joined to the findings corpus, so a class the journal alone records still arrives with the corpus row it belongs to | `bun scripts/journal-corpus.mjs <repo>` receipt-quoted (`journal-corpus@1`, § Journal-signal sweep) | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
 **say which you skipped and why**. Every axis is covered by the workflow's own
@@ -165,6 +166,51 @@ The sweep emits evidence; it never repairs what it finds. Improvement lands thro
 the owner's decision and `/unit-lane` with its gates, and an agent never self-edits
 this reference or any workflow prose in response to its own findings (arXiv
 2310.01798; 2605.09315).
+
+## Journal-signal sweep (pass-only-if)
+
+The retrospective corpus reads the findings ledgers and the coverage join reads the declared criteria; neither reads the **session journal** — `docs/LOGS.md` plus the pending `.agentic-workflow/journal/` fragments — which records the corrections a session had to make, the sessions a unit consumed and the findings its own reviewers refuted. Issue #616 is this sweep's source, and its research bounds it: whole-trace judging is neither affordable nor accurate enough (TRAIL, Who&When, When Agents go Astray), so the receipt carries **derived aggregates** and the model judges only the remainder — *why* a unit needed that many sessions, and which named agent-error class the evidence describes (a stale verdict, a sensor false positive, a premature phase tick, receipt-binding paralysis). The source ids above are the issue's, cited by reference; no measurement of theirs is restated here.
+
+### The receipt grammar (`journal-corpus@1`)
+
+```text
+journal-corpus@1
+kind | shape | what it orders
+receipt | journal-corpus@1 … verdict | one fixed block: the two carrier lines, the totals, one line per signal, one line per attributed class, the join cardinality, the verdict
+carrier | log <path> · entries <n> | absent · <path>, fragments <dir> · files <n> | absent · <dir> | each carrier says what it read or that it is absent; neither present is `insufficient-input`, never a clean sweep of nothing
+row | correction | refuted | the two evidence kinds; every row carries its `file:line` and a 12-hex digest of its own bytes
+correction | - **Correction…** | a correcting line, the journal's own append-only shape
+refuted | <false positive, self-refuted, refuted, discarded> + F<n> | a line admitting a finding wrong that names a finding id
+class | <axis>×<klass> | unjoined · reason <why> | a correction's class is the corpus row its own bytes resolve — a class is a join, never a lexical guess — and a correction that resolves to nothing is `unjoined`, counted and listed with its reason
+dedup | one corpus row, N journal rows → one finding | a journal row that resolves onto a corpus row clusters with it into one finding citing both carriers — the audit's existing dedup rule, never a second row for the same defect
+join | rows <n> · corpus-rows <j> · clusters <c> · unjoined <u> | the join cardinality the dedup rule below rests on
+signal | corrections · class <class> · n <k> [· reason <why>] | the corrections count per class
+signal | sessions · unit <u> · sessions <n> | entries recorded against one unit; two or more is rework by definition and the thrashing threshold is this dimension's call, never the parser's
+signal | false-positive · <unit> <F<n>> · joined <provenance> | unjoined — <why> | one line per admitted false positive, cross-joined to its corpus row
+attribute | <axis> × <klass> · n <k> · phase <p> · propose <destination> | a recurring joined class through the corpus's own `axis → phase` map; an axis the map does not know reads `phase unmapped · propose none`
+verdict | clean | signals <n> | the receipt's own verdict: no row at all is clean
+```
+
+**Pass only if:**
+
+- ✓ every `signal —` line became exactly one finding, citing that receipt line as its evidence — and a `sessions` cluster is one finding per unit, never one per session
+- ✓ a journal row that resolves onto a corpus row is **one** finding citing both
+  carriers (the corpus `provenance` and the journal `file:line`): the receipt's
+  `join` line is the cardinality that clustering rests on, and a journal finding
+  never duplicates a corpus finding as a second row
+- ✓ an `unjoined` class or row is reported with the reason the receipt gives, and
+  never folded into a named class the journal did not declare
+- ✓ the model's remainder is exactly the non-mechanizable part: the named
+  agent-error class and the `why` behind a rework cluster. The counts, the join
+  and the phase are the receipt's, never re-derived by inspection
+- ✓ the run over the seeded fixture (`bun scripts/product-audit-journal-fixture.mjs
+  <dir>`) yields exactly one signal per class on `seeded/` and zero on its
+  `clean/` twin
+- ✓ the dimension is reported `n/a — no journal carrier` when the project carries
+  neither `docs/LOGS.md` nor the fragment directory, instead of a clean sweep of
+  nothing
+
+**Routes** — every journal finding's `route:` cell is the `finding-route@1` hand-off owned by `SKILL.md`, and the destination is one of three: a recurring class with a named preventive gate routes to that gate's repair (`fix — <unit>`), a rework cluster with no cause named routes to the unit's own review (`review — <unit>`), and a class the journal records with no possible detector routes to a proposal (`audit — <audit id>`) — never a bespoke route, never an automatic fix. Journal signals are **emission only**: this audit proposes, and the owner decides.
 
 ## Test-surplus sweep (pass-only-if)
 
