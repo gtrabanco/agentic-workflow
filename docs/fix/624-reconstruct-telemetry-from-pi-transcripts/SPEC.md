@@ -280,22 +280,22 @@ repository's own surgery), so no packet is created and no leg is dispatched.
 
 Frozen at the cut; each names the check that proves it.
 
-- [ ] **S1** — the reconstruction is derived from Pi's own transcripts, not
+- [x] **S1** — the reconstruction is derived from Pi's own transcripts, not
   from the untracked POC: a fixture transcript produces the documented record.
   Proof: O1's mapping case in `telemetry-reconstruct.test.mjs`.
-- [ ] **S2** — `agentic-workflow telemetry reconstruct stats|samples|write` run
+- [x] **S2** — `agentic-workflow telemetry reconstruct stats|samples|write` run
   through the crate's bin with the flags S2 lists, documented token-for-token
   in the README. Proof: O3, O4, O5, O9, O10's cases and
   `bun test packages/agentic-workflow/test/cli.surface.test.mjs`.
 - [ ] **S3** — superseded by S3a; recorded, not implemented.
-- [ ] **S3a** — the recovery is manual and merges old with current: a session
+- [x] **S3a** — the recovery is manual and merges old with current: a session
   already recorded under either source prefix is not written again to that
   destination, and no session lifecycle code reads a transcript. Proof: O5's
   idempotency case and O7's `rg`.
-- [ ] **S4** — every listed Pi field is preserved and every unavailable field is
+- [x] **S4** — every listed Pi field is preserved and every unavailable field is
   `null` in the record; the ledger row is the documented projection. Proof: O1,
   O2, O6.
-- [ ] **S5** — the reconstruction reports by project, session, date and model
+- [x] **S5** — the reconstruction reports by project, session, date and model
   and never by unit. Proof: O8's case and `rg`.
 
 ## Findings
