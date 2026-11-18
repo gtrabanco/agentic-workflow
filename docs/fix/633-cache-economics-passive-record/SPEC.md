@@ -574,6 +574,9 @@ the authoritative order (`P1` → `P4`).
   violations; `bun scripts/roadmap-settle.mjs` → PASS, 0 violations;
   `bun scripts/docs-generate.mjs --check` → PASS; `journal aggregate --check` →
   ok; `bun scripts/test-impact.mjs --base main` → `empty`.
+- **G3** — 2026-11-18, `bun scripts/local-gate.mjs` · exit 0 ·
+  `local-gate: PASS — 19 step(s) in 530s`, at `f88e2a47` — the correction
+  batch's bytes (O7).
 
 ## Next
 
