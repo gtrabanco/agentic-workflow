@@ -373,7 +373,11 @@ may pass, a gate trace it may print, a verdict it may emit, a field it may write
 a route it may hand off to. Feature 28's AC15 binds each of those to the machine
 surface that accepts it — the schema package's published vocabularies
 (`packages/agentic-workflow-schema/src/`), the `argument-hint:` frontmatter of each
-skill, and the skill directory itself. The gate reads **versioned grammar only**:
+skill, and the skill directory itself. **Which** package owns a vocabulary is not
+this table's question: `vocabulary-residency@1`
+([`docs/architecture/ARCHITECTURAL_INVARIANTS.md`](docs/architecture/ARCHITECTURAL_INVARIANTS.md))
+owns that rule, and reading this inventory as a residency policy is the misreading
+that produced issue #643. The gate reads **versioned grammar only**:
 a `block:` id, a `fenced:` fixed-output contract, a `table:` section, a
 `schema-export:` published const read from committed source, or frontmatter.
 It never parses a sentence, so a surface with no fixed grammar in the `grammar` cell
@@ -389,6 +393,7 @@ normative-surfaces@1
 # hand-off-host-commands: clear
 surface | file | grammar | machine | must-name
 skill-declared-arguments | skills/*/SKILL.md | frontmatter:argument-hint | n/a | no
+vocabulary-residency | docs/architecture/ARCHITECTURAL_INVARIANTS.md | block:vocabulary-residency@1 | n/a | no
 closing-hand-offs | skills/*/SKILL.md | fenced:→ Next: | skill | no
 gate-rejection-types | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:GATE_REJECTION_TYPES | gate-rejection-type | yes
 gate-rejection-vocabulary | skills/pre-execution-review/references/POLICY.md | block:gate-rejection-vocabulary@1 | gate-rejection-type | yes

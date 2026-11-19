@@ -521,11 +521,21 @@ test("#643 the pi package carries no second copy of a schema-published vocabular
     "the companion package is a consumer of the published vocabularies, never a second owner");
 });
 
-test("#643 the invariant has one home and the marker is not restated", () => {
-  const owners = ["AGENTS.md", INVARIANTS, ...sourceFiles("docs/architecture", [".md"]), ...sourceFiles("docs/workflow", [".md"])]
-    .filter((file) => existsSync(path.join(ROOT, file)) && read(file).includes(INVARIANT_MARKER));
-  assert.deepEqual([...new Set(owners)], [INVARIANTS],
-    `the residency rule is stated in ${owners.join(", ")} — one home, every other surface cites it`);
+test("#643 the invariant has one home and every other mention cites it", () => {
+  const files = [...new Set(["AGENTS.md", ...sourceFiles("docs/architecture", [".md"]), ...sourceFiles("docs/workflow", [".md"])])]
+    .filter((file) => existsSync(path.join(ROOT, file)));
+  // One home: the only file that declares the rule as a versioned block.
+  const declared = files.filter((file) => read(file).includes(`\`\`\`text\n${INVARIANT_MARKER}\n`));
+  assert.deepEqual(declared, [INVARIANTS],
+    `the residency rule is declared in ${declared.join(", ")} — one home, every other surface cites it`);
+  // A mention anywhere else is a citation, so it names the owner (the same rule
+  // the guide states for every repeated contract: a bare second copy is the defect).
+  for (const file of files) {
+    if (file === INVARIANTS) continue;
+    const text = read(file);
+    if (!text.includes(INVARIANT_MARKER)) continue;
+    assert.ok(text.includes("ARCHITECTURAL_INVARIANTS.md"), `${file} names the marker without citing its owner`);
+  }
 });
 
 test("#643 the gate-rejection vocabulary is published by the schema package, not by the prose", async () => {
@@ -544,19 +554,32 @@ test("#643 the gate-rejection vocabulary is published by the schema package, not
 
 test("#643 the residency receipt classifies every runner const (class 3 stays, counted)", () => {
   const published = schemaPublishedNames();
-  const files = sourceFiles(CRATE_SRC, [".mjs"]);
-  let total = 0;
+  const class1and2 = new Set();
   const class3 = [];
-  for (const file of files) {
-    for (const match of read(file).matchAll(LITERAL_DECLARATION)) {
-      total += 1;
+  for (const file of sourceFiles(CRATE_SRC, [".mjs"])) {
+    const text = read(file);
+    // class 1/2 — the names this module imports from the one owner.
+    for (const match of text.matchAll(/import\s*\{([^}]*)\}\s*from\s*"@gtrabanco\/agentic-workflow-schema"/gsu)) {
+      for (const name of match[1].split(",").map((cell) => cell.trim().split(/\s+as\s+/u)[0]).filter(Boolean)) {
+        if (published.has(name)) class1and2.add(name);
+      }
+    }
+    // class 3 — a declared set no published contract names: it stays here.
+    for (const match of text.matchAll(LITERAL_DECLARATION)) {
       if (!published.has(match[1])) class3.push(`${file}: ${match[1]}`);
     }
   }
-  assert.ok(total > 0, "the classifier reads the crate's declared vocabularies");
+  assert.ok(class1and2.size > 0, "the receipt counts the vocabularies the crate now imports");
   assert.ok(class3.length > 0, "class 3 exists by construction — an unnamed internal enum stays in the runner");
   // The receipt is a measurement a reviewer re-runs, never a number a reader trusts.
-  process.stdout.write(`--- vocabulary residency receipt ---\nclass 1+2 declarations: ${total - class3.length}\nclass 3 (stays): ${class3.length}\n${class3.join("\n")}\n--- end receipt ---\n`);
+  process.stdout.write([
+    "--- vocabulary residency receipt ---",
+    `class 1/2 imported from the schema: ${class1and2.size}`,
+    `class 3 declared here and staying: ${class3.length}`,
+    ...class3,
+    "--- end receipt ---",
+    "",
+  ].join("\n"));
 });
 
 // ---------------------------------------------------------------------------

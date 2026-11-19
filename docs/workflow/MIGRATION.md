@@ -133,10 +133,10 @@ baseline-advisory rule are owned by `skills/review-implementation/references/CLA
 docs are record, not code: no closed unit folder was rewritten.
 
 **Read alias, one write path.** The path is published, not hardcoded:
-`@gtrabanco/agentic-workflow` exports `ROADMAP_DOCUMENT` /
-`FIX_INDEX_DOCUMENT` and the two table headings from
-`src/index-document.mjs`, and `@gtrabanco/agentic-workflow-schema` publishes the
-same values from `src/paths.ts`. **The migration window is closed** (decision
+`@gtrabanco/agentic-workflow-schema` owns `ROADMAP_DOCUMENT` /
+`FIX_INDEX_DOCUMENT` and the two table headings (`src/paths.ts`), and
+`@gtrabanco/agentic-workflow` re-exports them from `src/index-document.mjs` —
+one value, one owner (issue #643). **The migration window is closed** (decision
 D4, 2026-10-30 — it supersedes D2's "one release train"): every reader resolves
 `docs/ROADMAP.md` only, and a repository that still carries only the pre-move
 path is refused with a `roadmap-moved` pointer at its new home — never a silent

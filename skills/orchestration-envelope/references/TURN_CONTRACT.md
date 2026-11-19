@@ -170,7 +170,7 @@ phase's committed range (`execute-phase`'s preflight owns the step text):
 ```text
 path-protection@1
 # checkpoint: path-guard --unit <unit-dir> --phase <P<n>> --base <P<n> base ref>
-# reasons: schema-export:PATH_GUARD_REASONS (packages/agentic-workflow/src/path-policy.mjs)
+# reasons: schema-export:PATH_GUARD_REASONS (packages/agentic-workflow-schema/src/vocabularies.ts)
 reason | kind
 clean | pass
 justified | pass
