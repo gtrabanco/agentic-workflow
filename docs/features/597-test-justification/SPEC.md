@@ -454,3 +454,28 @@ the merge.
   journal carrier, log immutability, push identity, the secret scan, the hygiene
   and worktree steps, the rigor sweep and the dimension re-verification — green at
   the head this line's commit follows.
+- **P8** — 2026-11-19, the branch pushed and PR
+  [#656](https://github.com/gtrabanco/agentic-workflow/pull/656) opened against `main`
+  with `Closes #597` (base `bf19d5831`, mergeable, body read back through
+  `forge-read pr 656` with 0 stripped fields — the Markdown rendered, no literal
+  escapes), and the roadmap row settled through the writer.
+- **D6** — 2026-11-19, the roadmap row is written by `rowUpsert`
+  (`packages/agentic-workflow/src/edit/Roadmap.mjs`), never by hand, and the
+  writer's two observed behaviours are reported rather than worked around
+  silently: (a) `ceremony roadmap row-upsert` still hands the table's **text**
+  where the writer takes a **path**, so the wrapper dies
+  `ENAMETOOLONG: name too long, open '# Roadmap…'` — the defect unit 595 reported
+  is unfixed, so the module is invoked directly with the path and its receipt
+  recorded (`before 37b6a8d9`, `after 2b…`, then a second upsert to restore the
+  caller's spelling); (b) the writer copies the `slug` cell verbatim, so the first
+  upsert dropped the row's backticks and the second passed the cell as the table
+  spells it. The status cell carries `in-progress · [#656](…)` — the convention
+  rows 591 and 594 already use — because the CLI's closed status enum accepts only
+  the bare value and cannot express the PR pointer the settle step later rewrites.
+- **E12** — 2026-11-19, the roadmap and projection after the settle:
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check
+  docs/features/597-test-justification/SPEC.md` · exit 0 · `violations: 0`;
+  `bun scripts/roadmap-settle.mjs` · exit 0 · `violations: 0`;
+  `bun scripts/docs-generate.mjs --check` · the first run was `verdict: DRIFT`
+  because the projection indexes the row's status, and the emitter's write run
+  then answered `verdict: PASS` with `Roadmap: docs/ROADMAP.md — unchanged`.
