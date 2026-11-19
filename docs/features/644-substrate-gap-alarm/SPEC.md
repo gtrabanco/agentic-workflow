@@ -166,6 +166,15 @@ the `init-workspace` done-when gate, the normative-surface rows), so no row is
   codes are added to both by hand, and the `route vocabulary` pin this unit adds
   covers the route set only — the reason list stays a known issue, recorded here
   rather than silently repaired.
+- `packages/agentic-workflow/src/elicitation/prespec.mjs:286` — the route-cell
+  check runs for `decision` rows too, whose eighth cell is "what was discarded"
+  free text, so any non-empty decision cell raises `questions-route-unknown`.
+  *Affects* this unit's verification: pre-existing — the file is untouched by
+  this change (`git diff c1ccc1985..HEAD -- prespec.mjs` is empty) and free text
+  was outside `ROUTES` at base as well; the correction batch keeps every
+  non-substrate cell's behavior byte-identical. *Does not affect* delivery:
+  repairing the type guard belongs to the elicitation layer's own unit, not to
+  this correction batch (reported to the owner as an advisory).
 
 ## Tasks
 
@@ -224,6 +233,21 @@ the `init-workspace` done-when gate, the normative-surface rows), so no row is
   (validator: `bun scripts/local-gate.mjs` exits 0)
   (Implements: S2, S3, S4, S5, S6)
   - Relevant files: scripts/needs-input.test.mjs, scripts/substrate.test.mjs
+- P9 — Correction batch (external-verify blocker 1): route the pre-spec's
+  route-cell check through the dispatcher's own `parseRoute`, so the linter
+  accepts exactly the cells the dispatcher accepts (validator:
+  `bun test packages/agentic-workflow/test/elicitation.test.mjs` exits 0 — the
+  two `#644` route cases)
+  (Implements: S3)
+  - Relevant files: packages/agentic-workflow/src/elicitation/prespec.mjs,
+    packages/agentic-workflow/test/elicitation.test.mjs
+- P10 — Correction batch (external-verify blocker 2): state the third route and
+  the current usage on the lane tutorial's needs-input section, pinned by the
+  unit's route-vocabulary suite (validator:
+  `bun test scripts/substrate.test.mjs` exits 0 and
+  `rg -o 'init-workspace:<class>' docs/workflow/LANE_FLOW.md | wc -l` matches 1)
+  (Implements: S3)
+  - Relevant files: docs/workflow/LANE_FLOW.md, scripts/substrate.test.mjs
 
 The task-to-phase order is dependency-topological: the red corpus precedes the
 implementation (S6), the census precedes the route that verifies against it, and
@@ -291,6 +315,8 @@ this unit). The rule itself is not restated here: its owner is
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F2 | S3 · `packages/agentic-workflow/src/elicitation/prespec.mjs:286` | sibling-sweep | BLOCKER | blocking | source | fold |
+| F3 | S3 · `docs/workflow/LANE_FLOW.md:117-118` (also `:133`, `:271`) | sibling-sweep | BLOCKER | docs-only | source | fold |
 
 ## Log
 
