@@ -4244,6 +4244,31 @@ export type {
   BatchPlanValidationResult,
 } from "./batch-plan.js";
 
+export {
+  PHASE_BATCHING_CACHE_POSTURES,
+  PHASE_BATCHING_CONTRACT_ID,
+  PHASE_BATCHING_DECISIONS,
+  PHASE_BATCHING_DEGRADATIONS,
+  PHASE_BATCHING_FIELDS,
+  PHASE_BATCHING_MAX_PHASES,
+  PHASE_BATCHING_REASON_KINDS,
+  PHASE_BATCHING_SCHEMA,
+  PHASE_BATCHING_TOOL_HARNESSES,
+  PHASE_BATCHING_VERSION,
+  validatePhaseBatching,
+} from "./phase-batching.js";
+export type {
+  ModelPhaseCapability,
+  PhaseBatchingCachePosture,
+  PhaseBatchingDecision,
+  PhaseBatchingDegradation,
+  PhaseBatchingEligibility,
+  PhaseBatchingReason,
+  PhaseBatchingRecommendation,
+  PhaseBatchingToolHarness,
+  PhaseBatchingValidationResult,
+} from "./phase-batching.js";
+
 // ── The document provenance stamp (issue #462) ──────────────────────────────
 // One versioned grammar, three axes (content grammars, carrier format, forensic
 // tool/schema pair), semver-dispatched readers. The grammar block is published
