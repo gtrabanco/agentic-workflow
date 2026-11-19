@@ -429,6 +429,13 @@ the unit ships every row is `verified`.
   · exit 0 · 6 `andamio` / 34 `used` / 0 `orphan`: every added surface names its
   consumer in the unit folder's `residual-promise@1` block, so no retirement is
   claimed and nothing lands unowned.
+- **E15** — 2026-11-19, the review-surface re-verification the push range
+  requires: `bun scripts/dimension-regression.mjs --base origin/main` · exit 0 ·
+  `dimension-regression@1` — base `bf19d58` with 18 review dimensions, head the
+  same 18, one changed review surface (`docs/workflow/GATE_INVENTORY.md`, whose
+  `normative-surface-grammar` row now claims the four new `schema-export`
+  surfaces), no dimension dropped and no review axis edited. This line is the
+  evidence carrier the gate reads.
 - **P1** — 2026-11-19, the contract corpus cut red — `390e36f3e`.
 - **P2** — 2026-11-19, `src/phase-batching.ts` + the `index.ts` re-export —
   `cf248bfa7`, with the `cache-posture-flat` closure in `cf95dd5f3`.
