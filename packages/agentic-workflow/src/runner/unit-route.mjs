@@ -27,6 +27,8 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { UNIT_DOC_SECTION_SHAPES } from "@gtrabanco/agentic-workflow-schema";
+
 import { parseUnitDocPhases, loggedPhases, parseLog, parseSpecs, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
 import { readCeremonyProfile, charterSectionOf, CEREMONY_PROFILE_CONTRACT_ID, CEREMONY_REVIEW_SURFACES } from "./ceremony-profile.mjs";
 import { recordedTier } from "./ceremony/tier.mjs";
@@ -632,23 +634,13 @@ function phaseCountOf(unitDir) {
 // facts; the model never re-derives the step list, it consumes this block.
 // ---------------------------------------------------------------------------
 
-// Mirrors UNIT_DOC_SECTION_SHAPES (schema package, #305 for the legacy list and
-// #308 for the re-cut one); `scripts/unit-doc-contract.test.mjs` pins the copies,
-// this one included. A unit doc satisfies ONE shape: the legacy 14 sections, or
-// the re-cut set whose `## Specs` / `## Findings` / `## Log` replace
-// `## Evidence` / `## Progress log`. Both are accepted, so an unmigrated unit
-// never breaks and a migrated one never needs the legacy sections back.
-const UNIT_DOC_SECTION_SHAPES = Object.freeze({
-  legacy: [
-    "Objective", "Why", "User outcome", "Acceptance criteria", "Impact", "Non-goals",
-    "Future cost", "Applicable tests", "Known pre-existing issues", "Tasks",
-    "Evidence", "Progress log", "Next", "References",
-  ],
-  "spec-by-reference": [
-    "Specs", "Impact", "Non-goals", "Future cost", "Applicable tests",
-    "Known pre-existing issues", "Tasks", "Findings", "Log", "Next", "References",
-  ],
-});
+// The section shapes are the schema package's published `UNIT_DOC_SECTION_SHAPES`
+// (#305 for the legacy list, #308 for the re-cut one) — the router reads them
+// instead of keeping a third copy (owner: `vocabulary-residency@1`). A unit doc
+// satisfies ONE shape: the legacy 14 sections, or the re-cut set whose
+// `## Specs` / `## Findings` / `## Log` replace `## Evidence` /
+// `## Progress log`. Both are accepted, so an unmigrated unit never breaks and a
+// migrated one never needs the legacy sections back.
 /** The legacy list, kept as the default a document satisfying neither shape is judged against. */
 const UNIT_DOC_SECTIONS = UNIT_DOC_SECTION_SHAPES.legacy;
 

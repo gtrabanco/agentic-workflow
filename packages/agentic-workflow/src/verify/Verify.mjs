@@ -3,10 +3,9 @@
  *
  * A deterministic check of one unit document against the frozen schemas,
  * distinct from the `edit` writer CLI (the writer composes; the verifier
- * only reads and fails closed). Consumes the crate's mirrored unit-doc
- * schema constants (`src/edit/schema.mjs`, the provenance-comment mirrors
- * of the schema package's published shapes) — never an LSP and never a
- * model.
+ * only reads and fails closed). Consumes the unit-doc schema constants through
+ * `src/edit/schema.mjs`, which re-exports the schema package's published shapes
+ * (owner: `vocabulary-residency@1`) — never an LSP and never a model.
  *
  * Checks, by doc shape:
  *   both shapes      — required sections (presence, duplication, order,
@@ -61,6 +60,8 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 
+import { LOG_KIND_TOKENS } from "@gtrabanco/agentic-workflow-schema";
+
 import { validate as validateShape } from "../edit/UnitDoc.mjs";
 import { resolveUnitDocShape, EVIDENCE_COLUMNS, PROGRESS_ENTRY_REGEX } from "../edit/schema.mjs";
 import { DOC_FORMAT_GRAMMARS, deriveFormat, parseProvenance, readProvenance, validateProvenance } from "../edit/Provenance.mjs";
@@ -68,9 +69,9 @@ import { DOC_FORMAT_GRAMMARS, deriveFormat, parseProvenance, readProvenance, val
 /** The receipt's fixed contract id (same `<name>@<n>` shape as the other crate receipts). */
 export const VERIFY_CONTRACT_ID = "verify@1";
 
-/** The closed Log kind tokens (mirror of the schema package's LOG_KIND_TOKENS —
- * provenance: packages/agentic-workflow-schema/src/vocabularies.ts, MIT, same repo). */
-export const LOG_KIND_TOKENS = Object.freeze(["L", "E", "G", "F", "D", "P", "R", "V"]);
+/** The closed Log kind tokens — the schema package's published `LOG_KIND_TOKENS`
+ * (owner: `vocabulary-residency@1` in docs/architecture/ARCHITECTURAL_INVARIANTS.md). */
+export { LOG_KIND_TOKENS };
 
 /** The obligation statuses that close a row. A row's status cell may carry its
  * evidence citation after the token (the closed ledger records where the

@@ -13,6 +13,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { LOG_KIND_TOKENS as LOG_KINDS } from "@gtrabanco/agentic-workflow-schema";
 import {
   FIX_INDEX_DOCUMENT,
   ROADMAP_FEATURES_HEADING,
@@ -215,11 +216,12 @@ export function parseUnitDocPhases(text) {
 
 /**
  * The closed log-kind vocabulary, published by the unit-doc templates as the
- * `log-kind@1` block. This is the reader of that block's `token` column — one
- * definition, never a second copy in code (`scripts/phase-lint.test.mjs` pins the
- * template to this exact list).
+ * `log-kind@1` block. This module is the reader of that block's `token` column;
+ * the set itself is the schema package's published `LOG_KIND_TOKENS` (owner:
+ * `vocabulary-residency@1`), re-exported under the crate's spelling
+ * (`scripts/phase-lint.test.mjs` pins the template to this exact list).
  */
-export const LOG_KINDS = Object.freeze(["L", "E", "G", "F", "D", "P", "R", "V"]);
+export { LOG_KINDS };
 
 /** A requirement heading in `## Specs`: `**S1 — title.**` / `**S2a — title.**`. */
 const SPEC_REQUIREMENT = /^\*\*(S\d+[a-z]?)\s*—\s*(.*)$/;

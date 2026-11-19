@@ -1,13 +1,11 @@
 /**
  * Provenance — the document provenance stamp (`doc-provenance@1`) in the crate.
  *
- * Canonical definition: `@gtrabanco/agentic-workflow-schema`
- * (`packages/agentic-workflow-schema/src/doc-provenance.ts`, MIT, same
- * repository). This package ships without a dependency on the schema package
- * (AC21 of unit 61), so the constants below are a provenance-commented mirror
- * and `scripts/unit-doc-contract.test.mjs` pins the two sets — the same pattern
- * the unit-doc section lists already follow. A drifting mirror is the defect,
- * not the second copy.
+ * The contract and every vocabulary it names are the schema package's published
+ * consts (`packages/agentic-workflow-schema/src/doc-provenance.ts`); this module
+ * imports them and re-exports them under the names its consumers already use, so
+ * a stamp this crate writes and a stamp that package validates cannot disagree
+ * (owner: `vocabulary-residency@1` in docs/architecture/ARCHITECTURAL_INVARIANTS.md).
  *
  * What the stamp is for (issue #462): a machine-read document declares which
  * grammar and carrier layout it speaks and which tool/schema wrote it, so a
@@ -32,61 +30,37 @@ import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  CURRENT_READER,
+  DOC_FORMAT_GRAMMARS,
+  DOC_FORMAT_SHAPES,
+  DOC_GRAMMAR_FAMILIES,
+  DOC_GRAMMAR_VERSIONS,
+  DOC_PROVENANCE_CONTRACT_ID,
+  DOC_PROVENANCE_FIELDS,
+  DOC_PROVENANCE_FORMATS,
+  DOC_PROVENANCE_READER_REASONS,
+  DOC_PROVENANCE_READER_VERDICTS,
+  DOC_PROVENANCE_SCHEMA_PACKAGE,
+  DOC_PROVENANCE_TOOLS,
+} from "@gtrabanco/agentic-workflow-schema";
+
 import { resolveUnitDocShape } from "./schema.mjs";
 
-/** The versioned contract id every stamp carries. */
-export const DOC_PROVENANCE_CONTRACT_ID = "doc-provenance@1";
-
-/** The stamp's closed field set, in canonical (serialization) order. */
-export const DOC_PROVENANCE_FIELDS = Object.freeze(["written_by", "schema", "format", "grammars"]);
-
-/** The tools allowed to write a document (mirror of `DOC_PROVENANCE_TOOLS`). */
-export const DOC_PROVENANCE_TOOLS = Object.freeze(["agentic-workflow"]);
-
-/** The schema package's published name — the `schema` field's target. */
-export const DOC_PROVENANCE_SCHEMA_PACKAGE = "@gtrabanco/agentic-workflow-schema";
-
-/** The closed carrier-format vocabulary (mirror of `DOC_PROVENANCE_FORMATS`). */
-export const DOC_PROVENANCE_FORMATS = Object.freeze(["unit-doc@1", "unit-doc@2"]);
-
-/** The closed grammar-family set a stamp may declare. */
-export const DOC_GRAMMAR_FAMILIES = Object.freeze(["findings-table", "log-kind", "obligations", "unit-doc"]);
-
-/** The generation this package publishes for each family. */
-export const DOC_GRAMMAR_VERSIONS = Object.freeze({ "findings-table": 1, "log-kind": 1, obligations: 1, "unit-doc": 1 });
-
-/** The grammar families each carrier format actually publishes (the parity target). */
-export const DOC_FORMAT_GRAMMARS = Object.freeze({
-  "unit-doc@1": Object.freeze(["obligations", "unit-doc"]),
-  "unit-doc@2": Object.freeze(["findings-table", "log-kind", "obligations", "unit-doc"]),
-});
-
-/** The unit-doc carrier shape each format names. */
-export const DOC_FORMAT_SHAPES = Object.freeze({ "unit-doc@1": "legacy", "unit-doc@2": "spec-by-reference" });
-
-/** The reader verdicts. */
-export const DOC_PROVENANCE_READER_VERDICTS = Object.freeze(["current", "degrade", "refuse"]);
-
-/** The closed reasons a verdict carries. */
-export const DOC_PROVENANCE_READER_REASONS = Object.freeze([
-  "stamp-current",
-  "absent-stamp",
-  "format-older-compatible",
-  "format-too-old",
-  "format-newer-than-reader",
-  "format-unknown-to-reader",
-  "grammar-older-compatible",
-  "grammar-newer-than-reader",
-  "grammar-unknown-to-reader",
-  "stamp-invalid",
-]);
-
-/** This crate's own reader: the published generation, window floor at 0. */
-export const CURRENT_READER = Object.freeze({
-  format: "unit-doc@2",
-  grammars: DOC_GRAMMAR_VERSIONS,
-  readable_from: 0,
-});
+export {
+  CURRENT_READER,
+  DOC_FORMAT_GRAMMARS,
+  DOC_FORMAT_SHAPES,
+  DOC_GRAMMAR_FAMILIES,
+  DOC_GRAMMAR_VERSIONS,
+  DOC_PROVENANCE_CONTRACT_ID,
+  DOC_PROVENANCE_FIELDS,
+  DOC_PROVENANCE_FORMATS,
+  DOC_PROVENANCE_READER_REASONS,
+  DOC_PROVENANCE_READER_VERDICTS,
+  DOC_PROVENANCE_SCHEMA_PACKAGE,
+  DOC_PROVENANCE_TOOLS,
+};
 
 const SEMVER = /^\d+\.\d+\.\d+$/u;
 const FORMAT_TOKEN = /^([a-z][a-z0-9-]*)@(\d+)$/u;
@@ -125,10 +99,9 @@ export function headingsOf(text) {
  * The versions the writer stamps: its own manifest version, and the schema
  * package's version under its published name.
  *
- * One train version (D-40-14) is what makes the pair deterministic — the schema
- * package cannot be resolved from an installed crate that deliberately does not
- * depend on it, and the probe proves the invariant instead of restating it. The
- * root parity suite refuses a split train, so this can never silently lie.
+ * One train version (D-40-14) is what makes the pair deterministic: the crate
+ * depends on the schema package, so the two names share one manifest version and
+ * the root parity suite refuses a split train rather than letting the stamp lie.
  */
 export function toolVersions() {
   const manifest = JSON.parse(readFileSync(fileURLToPath(new URL("../../package.json", import.meta.url)), "utf8"));

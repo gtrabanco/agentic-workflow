@@ -3,12 +3,12 @@
  * (issue #436) for the plain-`.mjs` dispatch path.
  *
  * The canonical machine contract lives in the schema package
- * (`packages/agentic-workflow-schema/src/ceremony-profile.ts`): a plain `.mjs`
- * script cannot import TypeScript, so this module mirrors the published
- * vocabularies and the reader — the same pattern as `unit-doc-phases.mjs`'s
- * `LOG_KINDS`. `scripts/vocabulary-parity.test.mjs` refuses a copy that drifts
- * from the built schema runtime, and the router corpus
- * (`scripts/ceremony-profile.test.mjs`) pins the dispatch behavior.
+ * (`packages/agentic-workflow-schema/src/ceremony-profile.ts`), and this module
+ * imports every vocabulary the contract names — the contract id, the piece,
+ * adoption, review-surface and refusal sets — instead of restating them (owner:
+ * `vocabulary-residency@1`). What stays here is the *reader*: a plain `.mjs`
+ * parser for the block, which the dispatch path reaches without TypeScript. The
+ * router corpus (`scripts/ceremony-profile.test.mjs`) pins the dispatch.
  *
  * **Anti-gaming is code, not discipline**: the vocabularies are closed and the
  * reader refuses instead of reading optimistically, so a profile can only
@@ -17,46 +17,24 @@
  * default stands); a present-but-wrong block is a typed refusal set.
  */
 
-/** The contract id of the ceremony profile. */
-export const CEREMONY_PROFILE_CONTRACT_ID = "ceremony-profile@1";
+import {
+  CEREMONY_PROFILE_ADOPTIONS,
+  CEREMONY_PROFILE_CONTRACT_ID,
+  CEREMONY_PROFILE_PIECES,
+  CEREMONY_PROFILE_REFUSALS,
+  CEREMONY_REVIEW_SURFACES,
+} from "@gtrabanco/agentic-workflow-schema";
 
-/** The closed piece vocabulary (`ceremony-profile-piece`). */
-export const CEREMONY_PROFILE_PIECES = Object.freeze([
-  "docs-step",
-  "captures",
-  "review-passes",
-  "publish-gate",
-  "test-policy",
-]);
-
-/** The closed adoption vocabulary (`ceremony-profile-adoption`). */
-export const CEREMONY_PROFILE_ADOPTIONS = Object.freeze(["paid", "discarded"]);
-
-/** The closed review-surface vocabulary (`ceremony-review-surface`), derived
- *  from the schema package's published `PASS_NAMES` (minus `classify`); the
- *  parity suite pins the derivation. */
-export const CEREMONY_REVIEW_SURFACES = Object.freeze([
-  "code",
-  "security",
-  "verify",
-  "design",
-  "a11y",
-  "brand",
-  "perf",
-  "seo",
-  "debt",
-]);
-
-/** The closed refusal vocabulary (`ceremony-profile-refusal`). */
-export const CEREMONY_PROFILE_REFUSALS = Object.freeze([
-  "bad-contract-id",
-  "malformed-line",
-  "unknown-piece",
-  "duplicate-piece",
-  "unknown-adoption",
-  "unknown-review-surface",
-  "empty-review-passes",
-]);
+/** The contract id, the piece, adoption, review-surface and refusal sets — the
+ *  schema package's published consts, re-exported under the names this crate's
+ *  dispatch and its callers use. */
+export {
+  CEREMONY_PROFILE_ADOPTIONS,
+  CEREMONY_PROFILE_CONTRACT_ID,
+  CEREMONY_PROFILE_PIECES,
+  CEREMONY_PROFILE_REFUSALS,
+  CEREMONY_REVIEW_SURFACES,
+};
 
 const MARKER_PREFIX = "ceremony-profile@";
 const LINE = /^([a-zA-Z][a-zA-Z-]*):\s*(.*)$/u;

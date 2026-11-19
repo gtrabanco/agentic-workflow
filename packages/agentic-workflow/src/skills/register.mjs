@@ -17,6 +17,8 @@
  * same states, and no clock is read in this module.
  */
 
+import { SKILL_EXTRA_STATES } from "@gtrabanco/agentic-workflow-schema";
+
 /** The block this module writes, and the only contract a consumer binds. */
 export const REVIEW_EXTRAS_CONTRACT_ID = "review-extras@1";
 
@@ -26,8 +28,8 @@ export const REVIEW_EXTRAS_HEADING = "Optional review extras";
 /** The block's column order, frozen: a new column is a grammar change. */
 export const REVIEW_EXTRAS_COLUMNS = Object.freeze(["name", "source", "pin", "installed", "axis"]);
 
-/** Where a registered row stands — the closed set the inventory reports. */
-export const SKILL_EXTRA_STATES = Object.freeze(["ok", "unpinned", "stale", "incomplete"]);
+/** Where a registered row stands — the schema package's published const. */
+export { SKILL_EXTRA_STATES };
 
 /** The declared decay window: a row older than this is `stale`. */
 export const DEFAULT_MAX_AGE_DAYS = 180;

@@ -7,11 +7,12 @@
  * The unit-doc section list (UNIT_DOC_REQUIRED_SECTIONS) is already owned
  * by src/pre-execution.ts (feature 61 P8); this file re-exports it for
  * agwo edit consumers via the index.  The SDK module at
- * `packages/agentic-workflow/src/edit/schema.mjs` duplicates with a
- * pointing comment when the crate does not depend on the schema package.
+ * `packages/agentic-workflow/src/edit/schema.mjs` re-exports these values for
+ * the crate's edit consumers (owner: `vocabulary-residency@1`, issue #643) — it
+ * declares no copy of its own.
  *
  * Consumers in `packages/agentic-workflow/src/edit/` import from here
- * (or from the SDK's schema.mjs which mirrors these values).
+ * (or from the SDK's schema.mjs, which re-exports this package's values).
  */
 
 // NOTE: UNIT_DOC_REQUIRED_SECTIONS is owned by pre-execution.ts —

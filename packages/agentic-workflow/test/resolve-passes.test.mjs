@@ -14,7 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,23 +24,6 @@ import { resolvePasses, PassesError, PASS_TABLE_CONTRACT_ID } from "../src/passe
 
 const BIN = fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url));
 
-// The mirror's parity pin reads the published set from the schema package's
-// committed source with a fixed-shape extractor (the normative-drift gate's
-// pattern: the machine is read from committed source, never from a build),
-// because this crate deliberately does not depend on the schema package.
-const schemaVocabSource = readFileSync(
-  fileURLToPath(new URL("../../agentic-workflow-schema/src/vocabularies.ts", import.meta.url)),
-  "utf8",
-);
-const publishedPassNames = (
-  schemaVocabSource.match(/export const PASS_NAMES = Object\.freeze\(\[([^\]]*)\]\)/u) ??
-  (() => {
-    throw new Error("the schema package no longer publishes PASS_NAMES in the expected shape");
-  })()
-)[1]
-  .match(/"([^"]+)"/gu)
-  .map((token) => token.slice(1, -1));
-
 const GLOBAL_EMPTY = "{}";
 
 const receiptFor = (globalText, projectText, command = "review-change") =>
@@ -49,8 +32,9 @@ const receiptFor = (globalText, projectText, command = "review-change") =>
 const rowFor = (name, globalText, projectText, command) =>
   receiptFor(globalText, projectText, command).passes[name];
 
-test("the mirrored vocabulary is byte-equal to the published one", () => {
-  assert.deepEqual([...PASS_NAMES], publishedPassNames);
+test("the vocabulary is the published one, imported rather than mirrored", async () => {
+  const schema = await import("../../agentic-workflow-schema/dist/index.js");
+  assert.equal(PASS_NAMES, schema.PASS_NAMES, "the crate re-exports the schema package's array object");
 });
 
 test("the receipt carries the fixed contract id and covers every published pass", () => {

@@ -39,10 +39,11 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { normalizeGuard, parseJsonc } from "@gtrabanco/agentic-workflow-schema";
+import { BASE_CONFIG_FILE, normalizeGuard, parseJsonc } from "@gtrabanco/agentic-workflow-schema";
 
-/** The base config file both scopes carry (the pipeline's one config file). */
-export const BASE_CONFIG_FILE = "agentic-workflow.json";
+/** The base config file both scopes carry (the pipeline's one config file) — the
+ *  schema package's published const (owner: `vocabulary-residency@1`). */
+export { BASE_CONFIG_FILE };
 
 /** The enforce vocabulary, in the order the refusal lists it. */
 export const ENFORCE_VALUES = Object.freeze([

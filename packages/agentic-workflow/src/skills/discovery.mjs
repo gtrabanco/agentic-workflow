@@ -31,16 +31,19 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import {
+  SKILL_CONSENT_ANSWERS,
+  SKILL_SCREEN_VERDICTS,
+} from "@gtrabanco/agentic-workflow-schema";
+
 import { screenCandidateTree } from "./screen.mjs";
 
 /** The block this module prints, and the only contract a consumer binds. */
 export const SKILL_DISCOVERY_CONTRACT_ID = "skill-discovery@1";
 
-/** A candidate's screen outcome — the closed set the report carries. */
-export const SKILL_SCREEN_VERDICTS = Object.freeze(["screened", "excluded"]);
-
-/** A candidate's consent record — `pending` until the owner answers. */
-export const SKILL_CONSENT_ANSWERS = Object.freeze(["pending", "yes", "no"]);
+/** A candidate's screen outcome and its consent record — the schema package's
+ *  published consts (owner: `vocabulary-residency@1`). */
+export { SKILL_CONSENT_ANSWERS, SKILL_SCREEN_VERDICTS };
 
 /** Where a candidate ends up: installable, skipped, or refused despite a yes. */
 export const SKILL_CANDIDATE_DECISIONS = Object.freeze(["install", "skip", "blocked"]);

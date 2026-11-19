@@ -930,10 +930,10 @@ in the same PR, never a prose edit. The table below is pinned to the consts by
 ## Review-pass routing vocabularies (issue #201)
 
 The spawned review passes an operator may route by name. The set is the one
-machine owner; the pi package's config validator imports it and the runner
-crate mirrors it with a provenance comment until issue #427 unifies the
-reading. Growing it is a schema-const change plus the inventory row in
-`AGENTS.md`'s `normative-surfaces@1`, in the same PR.
+machine owner; the pi package's config validator and the runner crate both
+import it (owner: `vocabulary-residency@1`, issue #643). Growing it is a
+schema-const change plus the inventory row in `AGENTS.md`'s
+`normative-surfaces@1`, in the same PR.
 
 | Export | Values | Meaning |
 | --- | --- | --- |
@@ -1056,9 +1056,10 @@ grammars | required | a non-empty object of published family keys to integer gen
 | `DOC_GRAMMAR_VERSIONS` | `1` per family | The generation this package publishes for each family |
 | `DOC_PROVENANCE_TOOLS` | `agentic-workflow` | The writers allowed to stamp a document |
 
-The runner crate ships without a dependency on this package (AC21 of unit 61), so
-it mirrors these sets with a provenance comment and `scripts/unit-doc-contract.test.mjs`
-pins the two — a drifting mirror is the defect, not the second copy.
+The runner crate imports these sets from this package (owner:
+`vocabulary-residency@1`, issue #643), and `scripts/unit-doc-contract.test.mjs`
+pins its re-exports against the published lists — a re-export that drifts from
+this package is the defect, never a second copy.
 
 
 ## The ceremony profile (issue #436)

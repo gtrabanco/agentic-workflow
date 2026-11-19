@@ -5,10 +5,11 @@
  * The type's ONE machine owner is `@gtrabanco/agentic-workflow-schema`
  * (`src/journal.ts` + `journal-entry.schema.json`, published as
  * `journal-entry.schema.json` on the package). This module is the crate's
- * dependency-free runtime mirror — the `src/edit/schema.mjs` precedent: same
- * rules, hand-rolled, and the owner named here so a reader never mistakes the
- * mirror for a second grammar. A sample the schema validator accepts, this
- * accepts; one it refuses, this refuses (the driver suite pins the agreement).
+ * runtime codec over that contract — the *reader*, never a second grammar: the
+ * contract id, its version and its closed kind set are the published consts
+ * imported below (owner: `vocabulary-residency@1`), so the crate holds no copy
+ * of them. A sample the schema validator accepts, this accepts; one it refuses,
+ * this refuses (the driver suite pins the agreement).
  *
  * Two conversions live here because they are the bridge between the frozen
  * `log-facts@1` payload and the canonical entry:
@@ -25,16 +26,17 @@
  * discipline as `normalizeFacts` next door.
  */
 
+import {
+  JOURNAL_ENTRY_CONTRACT_ID,
+  JOURNAL_ENTRY_KINDS,
+  JOURNAL_ENTRY_VERSION,
+} from "@gtrabanco/agentic-workflow-schema";
+
 import { normalizeFacts, renderEntry } from "../log/render.mjs";
 
-/** The contract id — kept in sync with the schema package's `JOURNAL_ENTRY_CONTRACT_ID`. */
-export const JOURNAL_ENTRY_CONTRACT_ID = "agentic-workflow/journal-entry";
-
-/** The version constant — kept in sync with the schema package's `JOURNAL_ENTRY_VERSION`. */
-export const JOURNAL_ENTRY_VERSION = 1;
-
-/** The closed kind set — the fragment carrier's writer classes (fix/405). */
-export const JOURNAL_ENTRY_KINDS = Object.freeze(["mechanical", "narrative"]);
+/** The contract id, its version and the closed kind set — the schema package's
+ *  published consts, re-exported under the names this crate's callers use. */
+export { JOURNAL_ENTRY_CONTRACT_ID, JOURNAL_ENTRY_KINDS, JOURNAL_ENTRY_VERSION };
 
 /** A refused entry. Named so a caller can tell a refusal from a bug. */
 export class JournalEntryError extends Error {
