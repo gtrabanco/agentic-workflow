@@ -327,6 +327,7 @@ this unit). The rule itself is not restated here: its owner is
 - **G1** — 2026-11-19, `bun scripts/run-root-suite.mjs` · exit 0 · 128 suites.
 - **G2** — 2026-11-19, `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
 - **G3** — 2026-11-19, `bun scripts/log-immutability.mjs` · exit 0 · `0 violations · base c1ccc1985`.
+- **G6** — 2026-11-19, `bun scripts/local-gate.mjs` at `39c5a463b` (the head the handoff presents) · exit 0 · `PASS — 19 step(s) in 614s`. This line is the append-only record written after it.
 - **G5** — 2026-11-19, `bun scripts/local-gate.mjs` at `ecbc7001c` (the state-registration head, every code and prose change in place) · exit 0 · `PASS — 19 step(s) in 629s`. This line is the append-only record after it; the only bytes after the gate ran are this `## Log` append and the obligation statuses it cites.
 - **G4** — 2026-11-19, `bun scripts/local-gate.mjs` at the P7 head · exit 0 · `PASS — 19 step(s) in 739s` (the first run was red on `worktree-guard` because of this unit's own differential scratch worktree; the scratch was removed and the gate re-run green).
 
