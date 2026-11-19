@@ -392,6 +392,9 @@ surgery"), read against `E2`'s step list.
 - **P9** — 2026-11-19, close: ledgers flipped to `verified`, the projection regenerated, the session entry written as a journal fragment · `09cfe44b1`.
 - **G4** — 2026-11-19, `bun scripts/dimension-regression.mjs --base origin/main` · exit 1 first — `missing-reverification-evidence`: the range touches one review surface (`docs/workflow/GATE_INVENTORY.md`, where the new gate's row lands) and no unit doc recorded the run · after this line · exit 0, `verdict | clean`, `18 dimensions` at the base and at the head, `changed review surfaces 1`, this document as the evidence carrier. Nothing was dropped and no dimension changed: the only touched review surface is the inventory's own row.
 
+- **G5** — 2026-11-19, the installed `pre-push` hook ran the offline gate over the push range `c1ccc19..39fc304a7` · exit 0 · `local-gate: PASS — 17 step(s) in 660s` (crate suites 1,015 pass / 1 pre-existing skip; every offline step green).
+- **P10** — 2026-11-19, the branch pushed and the PR opened: [#652](https://github.com/gtrabanco/agentic-workflow/pull/652) · `39fc304a7` is the head the hook verified.
+
 ## Next
 
 The operator's verdict. The unit is closed in this change: every obligation row
@@ -401,6 +404,7 @@ diff is handed over rather than self-approved (`D9`).
 ## References
 
 - Issue [#645](https://github.com/gtrabanco/agentic-workflow/issues/645) — the request this unit adopts (`Closes #645`).
+- PR [#652](https://github.com/gtrabanco/agentic-workflow/pull/652) — this unit's delivery, branch `feat/645-guide-minimalism-doctrine`.
 - [`docs/workflow/SKILL_AUTHORING.md`](../../workflow/SKILL_AUTHORING.md) — the authoring rules the doctrine joins.
 - [`docs/workflow/GATE_INVENTORY.md`](../../workflow/GATE_INVENTORY.md) — the gate ids a `materialized:` row cites.
 - [`docs/fix/_TEMPLATE/SPEC.md`](../../fix/_TEMPLATE/SPEC.md) — the ledger shapes this document mirrors.
