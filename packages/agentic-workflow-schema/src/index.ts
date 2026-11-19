@@ -4097,6 +4097,7 @@ export {
   MATERIALIZATION_FINDING_CODES,
   ARTIFACT_EVIDENCE_KINDS,
   TEST_OBLIGATION_KINDS,
+  DECISION_SCOPES,
 } from "./vocabularies.js";
 export type {
   FutureStatus,
@@ -4118,6 +4119,7 @@ export type {
   MaterializationFindingCode,
   ArtifactEvidenceKind,
   TestObligationKind,
+  DecisionScope,
 } from "./vocabularies.js";
 
 // ── The workflow-projection contract (issue #406) ───────────────────────────

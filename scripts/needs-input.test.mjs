@@ -326,6 +326,68 @@ test("a decision row maps its fields to the published per-type layout", () => {
   assert.equal(decision.discarded, "SQLite discarded");
 });
 
+test("a decision row's trailing scope cell is read, and leaves the tail intact (issue #650)", () => {
+  const parsed = parseLedger(ledger(
+    OPEN_Q1,
+    "D1 | 2026-10-19 | decision | Q1 | human-owner | chat paste | the rule | what was discarded | cross-unit",
+  ));
+
+  assert.equal(parsed.ok, true, JSON.stringify(parsed));
+  const decision = parsed.entries.find((entry) => entry.type === "decision");
+  assert.equal(decision.scope, "cross-unit");
+  assert.equal(decision.chosen, "the rule");
+  assert.equal(decision.discarded, "what was discarded");
+});
+
+test("a decision row without a scope cell keeps parsing as a legacy row (issue #650)", () => {
+  const parsed = parseLedger(ledger(
+    OPEN_Q1,
+    "D1 | 2026-10-19 | decision | Q1 | human-owner | chat paste | Postgres chosen | SQLite discarded, kept for one release",
+  ));
+
+  assert.equal(parsed.ok, true, JSON.stringify(parsed));
+  const decision = parsed.entries.find((entry) => entry.type === "decision");
+  assert.equal(decision.scope, null);
+  assert.equal(decision.discarded, "SQLite discarded, kept for one release");
+});
+
+test("a discarded cell that merely looks like a scope token stays in the tail (issue #650)", () => {
+  const parsed = parseLedger(ledger(
+    OPEN_Q1,
+    "D1 | 2026-10-19 | decision | Q1 | human-owner | chat paste | the rule | we discarded the `cross-unit` reading | unit-only",
+  ));
+
+  assert.equal(parsed.ok, true, JSON.stringify(parsed));
+  const decision = parsed.entries.find((entry) => entry.type === "decision");
+  assert.equal(decision.scope, "unit-only");
+  assert.equal(decision.discarded, "we discarded the `cross-unit` reading");
+});
+
+test("a tail cell outside the published vocabulary stays a legacy tail, never a refusal (issue #650)", () => {
+  // Eight ledgers in this repository already carry nine cells because a
+  // discarded sentence contains an unescaped pipe, so the scope can only be
+  // read when the last cell really is a member of the published set.
+  const parsed = parseLedger(ledger(
+    OPEN_Q1,
+    "D1 | 2026-10-19 | decision | Q1 | human-owner | chat paste | fix | feature | cross-units",
+  ));
+
+  assert.equal(parsed.ok, true, JSON.stringify(parsed));
+  const decision = parsed.entries.find((entry) => entry.type === "decision");
+  assert.equal(decision.scope, null);
+  assert.equal(decision.discarded, "feature | cross-units");
+});
+
+test("the printed hand-off block never carries the scope — it is not a question (issue #650)", () => {
+  const result = run(unit({
+    spec: SPEC,
+    ledger: ledger(OPEN_Q1, "D1 | 2026-10-19 | decision | Q1 | human-owner | chat paste | fix | feature | unit-only"),
+  }));
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /scope/i);
+});
+
 test("malformed ledger: decision without a receipt → fails closed", () => {
   const result = run(unit({
     spec: SPEC,

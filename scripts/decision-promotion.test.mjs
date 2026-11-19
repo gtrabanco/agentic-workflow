@@ -72,12 +72,10 @@ function unit(root, slug, rows) {
   const ledger = [
     `# Decisions — ${slug}`,
     "",
-    "```text",
     "open-questions@1",
     "id | date | type | question | blocks | search-receipt | options | route",
     "Q1 | 2026-11-20 | open-question | which owner doc carries it | nothing proceeds | `rg -n x docs/` → 0 hits | A — the guide \\| B — the architecture doc | design",
     ...rows,
-    "```",
     "",
   ].join("\n");
   fs.writeFileSync(path.join(dir, "decisions.md"), ledger);
@@ -201,7 +199,7 @@ test("a malformed ledger carrying the block is refused, one without the block is
   const broken = unit(root, "707-broken", ["D1 | not-a-date | decision | Q1 | human-owner | x | y | z | unit-only"]);
   fs.writeFileSync(
     path.join(broken, "decisions.md"),
-    ["```text", "open-questions@1", "id | date | type | question | blocks | search-receipt | options | route", "D1 | nope", "```", ""].join("\n"),
+    ["open-questions@1", "id | date | type | question | blocks | search-receipt | options | route", "D1 | nope", ""].join("\n"),
   );
   assert.throws(() => buildPromotion(root, { since: RULE_SINCE }), (error) => {
     assert.ok(error instanceof DecisionPromotionRefusal);
