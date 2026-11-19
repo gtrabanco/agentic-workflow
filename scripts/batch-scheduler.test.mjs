@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/batch-scheduler.mjs obligations=contract,failure-path,boundary
 
 /**
  * batch-scheduler — the deterministic batch planner's suite (issue #449).

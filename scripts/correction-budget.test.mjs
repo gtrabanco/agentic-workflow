@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/correction-budget.mjs obligations=contract,failure-path
+
 /**
  * correction-budget.test.mjs — the computed budget's contract (issue #437,
  * S5/S8): the batch size is measured from the corpus, the bound is computed,

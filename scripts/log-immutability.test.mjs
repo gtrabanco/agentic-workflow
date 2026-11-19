@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/log-immutability.mjs obligations=contract,failure-path
+
 /**
  * log-immutability.test.mjs — the aggregator-only write path for the journal,
  * tested against throwaway git repositories.

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs,skills/workflow-status/references/PRE_EXECUTION.md obligations=contract,failure-path
 
 /**
  * Feature 28 / P11 + P16 (finding F38) — AC20 (obligation O20): a clean unit and a

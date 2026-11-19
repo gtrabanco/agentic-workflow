@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs obligations=contract
 
 /**
  * Feature 28 — finding RS13: the sensor's staleness attribution must be the

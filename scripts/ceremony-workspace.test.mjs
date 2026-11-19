@@ -1,3 +1,5 @@
+// test-obligation: protects=packages/agentic-workflow/src/runner/ceremony/workspace.mjs obligations=contract,failure-path
+
 /**
  * ceremony-workspace.test.mjs — ceremony `workspace` module (fix #338, P3).
  *

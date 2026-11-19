@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/unit-cycle.mjs obligations=contract,failure-path
+
 /**
  * unit-cycle.test.mjs — the coded delivery loop's control logic (red-first).
  *

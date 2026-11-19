@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/published-refs.mjs obligations=contract,failure-path
+
 /**
  * published-refs.test.mjs — the range policy's sibling suite (issue #539).
  *

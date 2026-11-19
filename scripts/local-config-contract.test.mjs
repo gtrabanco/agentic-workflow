@@ -1,3 +1,5 @@
+// test-obligation: protects=packages/agentic-workflow-schema/src/config.ts obligations=contract,failure-path
+
 // local-config-contract.test.mjs — the repository's OWN config obeys the schema.
 //
 // This checkout carries committed config, and the reader is silent about a

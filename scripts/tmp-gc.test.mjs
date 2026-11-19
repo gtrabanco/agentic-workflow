@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/tmp-gc.mjs obligations=contract,failure-path
+
 /**
  * tmp-gc.test.mjs — the fixture corpus for `scripts/tmp-gc.mjs` (issue #476).
  *

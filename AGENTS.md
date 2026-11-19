@@ -181,7 +181,12 @@ under [Working rules](#working-rules)).
   the tree, so an unpaired file fails the gate. A failing test is repaired by changing the code it judges —
   never by relaxing, deleting or skipping the assertion, and never by narrowing
   its input until it passes. A case that genuinely cannot hold is `n/a` with its
-  reason recorded, not quietly removed.
+  reason recorded, not quietly removed. A suite also declares its **obligation
+  tag** at its head — the surface it protects and the obligations it asserts
+  there (owner: [`skills/unit-lane/references/TESTS.md`](skills/unit-lane/references/TESTS.md)
+  § Obligation tags; this repository's gate is
+  `bun scripts/test-obligation-tags.mjs`), which is what lets a deletion be
+  obligation-level evidence instead of line coverage.
 - **`human-revision-needed` blocks development.** An issue or PR carrying that
   label is on hold: nothing is planned, implemented, committed or merged for it
   until a human removes the label. It means "a plan is waiting for human review",
@@ -506,6 +511,8 @@ skill-consent-answer-vocabulary | packages/agentic-workflow-schema/src/vocabular
 skill-extra-state-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SKILL_EXTRA_STATES | skill-extra-state | no
 skill-discovery-envelope | packages/agentic-workflow/README.md | block:skill-discovery@1 | n/a | no
 review-extras-grammar | packages/agentic-workflow/README.md | block:review-extras@1 | n/a | no
+test-obligation-kind-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TEST_OBLIGATION_KINDS | test-obligation-kind | no
+test-obligation-tag-grammar | skills/unit-lane/references/TESTS.md | block:test-obligation-tag@1 | test-obligation-kind | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

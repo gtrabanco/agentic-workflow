@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=docs/features/_TEMPLATE/SPEC.md,docs/fix/_TEMPLATE/SPEC.md obligations=convention,contract
 
 /**
  * spec-by-reference.test.mjs — the migration corpus (issue #308).

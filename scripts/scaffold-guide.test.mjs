@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=template/AGENTS.md obligations=convention,distribution-contract
 
 /**
  * scaffold-guide.test.mjs — the template's own guide is neutral, visible and undated.

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/npm-availability-wait.mjs obligations=contract,failure-path
 
 /**
  * npm-availability-wait.test.mjs — the post-publish availability gate (issue #481).

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/fixtures/golden-fixture,docs/workflow/GOLDEN_FIXTURE.md obligations=fixture-support,contract
+
 /**
  * Corpus for the golden fixture — the executable half of
  * `docs/workflow/GOLDEN_FIXTURE.md`. It asserts the committed toy trees under

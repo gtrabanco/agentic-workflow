@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/rigidity-review.mjs obligations=contract,failure-path
+
 /**
  * rigidity-review.test.mjs — the gate step that audits the guards themselves
  * (issue #546 S10).

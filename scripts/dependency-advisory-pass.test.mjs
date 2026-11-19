@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/dependency-advisory-pass.mjs obligations=contract,failure-path
 
 /**
  * dependency-advisory-pass.test.mjs — the pass's contract (issue #365 S5–S9).

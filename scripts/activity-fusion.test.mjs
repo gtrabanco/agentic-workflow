@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/catalog.json,skills/unit-lane/references/PLAN.md obligations=convention,contract
 
 /**
  * activity-fusion.test.mjs — pins for the tier-fused design/plan activity

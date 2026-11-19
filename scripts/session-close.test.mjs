@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/session-close.mjs obligations=contract,failure-path
+
 /**
  * session-close.test.mjs — the mechanical session close, tested against the
  * runtime `/log-session` calls.

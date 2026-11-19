@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/temp-root.mjs obligations=contract,failure-path
+
 /**
  * temp-root.test.mjs — the contract for `scripts/temp-root.mjs`, the tracked
  * temp-root helper the temp-hygiene floor (issue #476) names as a cleanup

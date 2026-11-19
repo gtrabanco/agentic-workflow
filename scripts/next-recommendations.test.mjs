@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/workflow-status.mjs obligations=contract
 
 import assert from "node:assert/strict";
 import fs from "node:fs";

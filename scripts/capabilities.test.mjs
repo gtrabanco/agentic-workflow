@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/capabilities.mjs obligations=contract,failure-path
 
 /**
  * capabilities.test.mjs — the capability analysis (issue #384, unit 360c).

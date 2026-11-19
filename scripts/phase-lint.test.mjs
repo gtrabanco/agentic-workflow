@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/phase-lint.mjs obligations=contract,failure-path
+
 /**
  * Corpus for the `phase-lint` runner subcommand — the behavioural contract of the
  * phase-lint tool. Fixtures are embedded strings written to a temporary

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/pre-execution-review/references/LEDGERS.md obligations=convention,contract
 
 /**
  * Feature 28 / P9 — AC16 (clause F2): durable ledger write ownership.

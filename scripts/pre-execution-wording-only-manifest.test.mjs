@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/index-document.mjs obligations=contract,failure-path
 
 /**
  * Feature 31 F8 / D-31-11 — the wording-only exemption never certifies a

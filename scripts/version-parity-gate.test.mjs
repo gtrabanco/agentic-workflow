@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/version-parity-gate.mjs obligations=contract,failure-path,distribution-contract
+
 /**
  * version-parity-gate.test.mjs — offline, deterministic suite for
  * scripts/version-parity-gate.mjs (feature 75, issue #292).

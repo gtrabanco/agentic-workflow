@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/push-identity-check.mjs,scripts/git-config-writes.mjs obligations=contract,failure-path
+
 /**
  * identity-hook-parity.test.mjs — one contract, one implementation, two carriers, one corpus
  * (issue #514 S3/S4).

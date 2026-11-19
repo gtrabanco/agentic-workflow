@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=template/.github/PULL_REQUEST_TEMPLATE.md,skills/audit-pr/SKILL.md obligations=convention,distribution-contract
 
 /**
  * #318 S3/S7 — the PR body is an evidence pack, and both shipped templates say so.

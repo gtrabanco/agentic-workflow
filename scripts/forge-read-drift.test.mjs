@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/forge-read-drift.mjs obligations=contract,failure-path
 
 /**
  * forge-read-drift.test.mjs — the sanctioned-forms pin (issue #612, S4).

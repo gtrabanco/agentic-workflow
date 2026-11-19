@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=template/.agentic-workflow/hooks/secret-scan.mjs obligations=contract,failure-path
+
 /**
  * secret-scan.test.mjs — the corpus for the deterministic push-range secret scan
  * (issue #487).

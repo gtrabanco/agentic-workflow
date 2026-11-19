@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=docs/ROADMAP.md obligations=convention
+
 /**
  * The migration window is closed (owner decision D4, issue #319).
  *

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/unit-lane/references/RESEARCH.md obligations=convention
 
 /**
  * Fix #303 — the design and plan steps prescribed **positively**.

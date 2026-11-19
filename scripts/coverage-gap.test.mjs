@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/coverage-gap.mjs obligations=contract,failure-path
+
 /**
  * coverage-gap.test.mjs — the join's sibling suite (issue #590 S2/S6/S7/S8, S5).
  *

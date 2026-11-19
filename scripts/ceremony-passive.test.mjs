@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/ceremony/passive.mjs obligations=contract,failure-path
 
 /**
  * ceremony-passive.test.mjs — the passive carrier's only writer (issue #384,

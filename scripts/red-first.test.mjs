@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/red-first.mjs obligations=contract,failure-path
+
 /**
  * red-first.test.mjs — the fixture corpus for `scripts/red-first.mjs`
  * (fix #382, obligations O1–O5).
