@@ -621,26 +621,41 @@ test("#643 audit seed 4 — the Future-status tokens are the published ones and 
   assert.ok(!FUTURE_STATUS_KINDS.includes("deferred"), "the published Future-status set carries no `deferred` token");
 });
 
-test("#643 the stale dependency rationale is gone from source, suites and scripts", () => {
+test("#643 the stale dependency rationale is gone from source, suites, scripts and the schema package's own narration", () => {
   // The premise of every mirror this unit retires: the crate was said not to
-  // depend on the schema package. It has since 2026-11-09 (#427), so a mirror
-  // justified that way is justified by a fact that is no longer true.
+  // depend on the schema package, to duplicate the schema package's sets with a
+  // pointing comment, and to need a parity pin beside that copy. It has depended
+  // on it since 2026-11-09 (#427) and imports every set since #643, so a
+  // narration justified that way is justified by a fact that is no longer true —
+  // in the crate *and* in the owning package's own README and headers, where the
+  // external verify found the old truth surviving (B3-B6).
   const phrases = [
     "does not depend on the schema package",
     "ships without a dependency on the schema package",
+    "ships without a dependency on this package",
     "until issue #427 unifies the reading",
+    "duplicates with a pointing comment",
+    "mirrors these sets",
+    "mirrors these values",
   ];
   const offenders = [];
   // This file names the phrases to forbid them; a scanner that flagged its own
   // pattern list would be reporting the rule instead of the defect.
   const self = "scripts/vocabulary-parity.test.mjs";
-  for (const file of [...sourceFiles(CRATE_SRC, [".mjs"]), ...sourceFiles("packages/agentic-workflow/test", [".mjs"]), ...sourceFiles("scripts", [".mjs"])]) {
-    if (file === self) continue;
+  const files = [
+    ...sourceFiles(CRATE_SRC, [".mjs"]),
+    ...sourceFiles("packages/agentic-workflow/test", [".mjs"]),
+    ...sourceFiles("scripts", [".mjs"]),
+    ...sourceFiles("packages/agentic-workflow-schema/src", [".ts"]),
+    "packages/agentic-workflow-schema/README.md",
+  ];
+  for (const file of files) {
+    if (file === self || !existsSync(path.join(ROOT, file))) continue;
     // Whitespace-normalized: a rationale wrapped across two comment lines is the
     // same sentence, and reading only exact lines would let it survive the sweep.
     const text = read(file).replace(/\s+/gu, " ");
     for (const phrase of phrases) if (text.includes(phrase)) offenders.push(`${file}: ${phrase}`);
   }
   assert.deepEqual(offenders, [],
-    `${offenders.length} file(s) still justify a mirror with a premise that stopped being true on 2026-11-09 (#427 added the dependency)`);
+    `${offenders.length} surface(s) still narrate the retired mirror architecture with a premise that stopped being true (dependency since 2026-11-09 #427; imports since #643)`);
 });
