@@ -390,6 +390,7 @@ surgery"), read against `E2`'s step list.
 - **P7** — 2026-11-19, the package guide bounded: measured 1,178 lines / 16,057 est, its budget row and one-hop index row landed, the overlap measurement recorded (`PE-015` · `D11`).
 - **P8** — 2026-11-19, the gate registered in `docs/workflow/GATE_INVENTORY.md` with the `inviolable-rules` surface claimed; no `scripts/local-gate.mjs` step was added because the gate's suite rides the `root-suite` step already — the gate runs on every push through that carrier, and `G3` is the evidence.
 - **P9** — 2026-11-19, close: ledgers flipped to `verified`, the projection regenerated, the session entry written as a journal fragment · `09cfe44b1`.
+- **G4** — 2026-11-19, `bun scripts/dimension-regression.mjs --base origin/main` · exit 1 first — `missing-reverification-evidence`: the range touches one review surface (`docs/workflow/GATE_INVENTORY.md`, where the new gate's row lands) and no unit doc recorded the run · after this line · exit 0, `verdict | clean`, `18 dimensions` at the base and at the head, `changed review surfaces 1`, this document as the evidence carrier. Nothing was dropped and no dimension changed: the only touched review surface is the inventory's own row.
 
 ## Next
 
