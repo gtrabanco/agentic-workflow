@@ -56,7 +56,7 @@ proves it.
 | AC-2 (S3) | A question whose fact has no owning document routes to `init-workspace` and the block prints that route; the same question on a workspace that owns the surface is refused instead of granted the scaffold route | `bun test scripts/needs-input.test.mjs` exits 0 (the `substrate route` cases) |
 | AC-3 (S3) | The route vocabulary stays closed and is published once: the crate's set, the `open-questions@1` block's `route:` line and the fail-block's reason codes agree | `bun test scripts/substrate.test.mjs` exits 0 (the `route vocabulary` pin) |
 | AC-4 (S4) | `substrate check` reports one row per substrate class with its evidence and exits 0 only when every class is present or carries a recorded decline | `bun test scripts/substrate.test.mjs` exits 0 (the `coverage gate` cases) |
-| AC-5 (S4) | `init-workspace` runs that gate on both routes and offers the additive block in upgrade mode instead of writing it | `rg -c 'substrate check' skills/init-workspace` matches 3 and `rg -c 'substrate-declines@1' skills/init-workspace template/AGENTS.md` matches 2 |
+| AC-5 (S4) | `init-workspace` runs that gate on both routes and offers the additive block in upgrade mode instead of writing it | `rg -o 'substrate check' skills/init-workspace \| wc -l` matches 3 and `rg -o 'substrate-declines@1' skills/init-workspace template/AGENTS.md \| wc -l` matches 2 |
 | AC-6 (S5) | The evidence-staleness rule has exactly one owner, is registered as a normative surface, and its follow-up lint candidate carries a dated re-trigger condition | `rg -c 'evidence-staleness@1' skills/unit-lane/references/DESIGN.md` matches 1 and `bun test scripts/normative-drift.test.mjs` exits 0 |
 | AC-7 (S6) | Both new suites land red before the implementation and green after, and no unrelated behaviour moves | `bun test scripts/substrate.test.mjs` exits 0, `bun test scripts/needs-input.test.mjs` exits 0, and the recorded differential run shows no undeclared delta |
 
@@ -152,6 +152,10 @@ the `init-workspace` done-when gate, the normative-surface rows), so no row is
 
 ## Known pre-existing issues
 
+- `packages/agentic-workflow/src/runner/unit-doc-phases.mjs:451` — the in-flight rule matches the legacy `Progress
+  log` entry shape, so a re-cut (`## Log`) unit doc is never picked up by `promise-coherence`'s corpus sweep.
+  *Affects* this unit's verification: the guard was invoked on its three documents directly (`D9`, `V1`).
+  *Does not affect* delivery: the exported claim kinds and the corpus rule are untouched by this change.
 - `docs/fix/258-harden-needs-input-contracts/review-findings.md:937` (F47) —
   *does not affect* this unit: the route cell is a closed vocabulary and this
   unit extends it by the same mechanism, never by accepting a command form.
@@ -195,7 +199,7 @@ the `init-workspace` done-when gate, the normative-surface rows), so no row is
   `open-questions@1` block, the template's ledger example and prose, the lane's
   needs-input guard and resolution order, and `init-workspace`'s coverage gate on
   both routes (validator:
-  `rg -c 'substrate check' skills/init-workspace` matches 3 and
+  `rg -o 'substrate check' skills/init-workspace | wc -l` matches 3 and
   `bun test scripts/normative-drift.test.mjs` exits 0)
   (Implements: S3, S4)
   - Relevant files: skills/orchestration-envelope/references/TURN_CONTRACT.md,
@@ -315,7 +319,7 @@ this unit). The rule itself is not restated here: its owner is
 - **E10** — 2026-11-19, `bun test packages/agentic-workflow/test` → 1321 pass · `bun run test` in `packages/agentic-workflow-schema` → 914 pass.
 - **E11** — 2026-11-19, the gate on this repository itself: `substrate check --workspace .` · exit 1 · `architecture` and `documentation-map` present, `decision-records` and `api-posture` absent because this repository's guide carries no `## Project charter` and no `substrate-declines@1` row. Disclosed, not repaired: the gate governs scaffold installs, this repository is not one, and adding a charter here is a project-domain decision outside this unit's scope.
 - **E12** — 2026-11-19, `bun scripts/docs-generate.mjs` (1 file written — the 644 row in `docs/generated/units.md`) then `--check` · exit 0 · `PASS`.
-- **E13** — 2026-11-19, `rg -c 'substrate check' skills/init-workspace` → 3 (SKILL.md 2, UPGRADE.md 1) and `rg -c 'substrate-declines@1' skills/init-workspace template/AGENTS.md` → 2 (SKILL.md 1, template/AGENTS.md 1).
+- **E13** — 2026-11-19, `rg -o 'substrate check' skills/init-workspace | wc -l` → 3 (SKILL.md 2, UPGRADE.md 1) and `rg -o 'substrate-declines@1' skills/init-workspace template/AGENTS.md | wc -l` → 2 (SKILL.md 1, template/AGENTS.md 1). Corrected from a `rg -c` spelling in the same session: `rg -c` over a directory prints one line per file, so the tally was unreadable as a single number and the guard re-read it as 2 (F1, `V1`).
 - **E14** — 2026-11-19, `rg -c 'evidence-staleness@1' skills/unit-lane/references/DESIGN.md` → 1 (one owner; the inventory row cites it and `scripts/normative-drift.test.mjs` resolves its grammar, E8).
 - **D1** — 2026-11-19, the unit's home is `docs/features/644-substrate-gap-alarm/` because `docs/ROADMAP.md:196` already names it (authority: the roadmap's hand-owned cell; recorded as D-644-1).
 - **D2…D7** — 2026-11-19, the design decisions this unit took (qualified-and-verified substrate route, the four census surfaces, one census module, schema-owned vocabularies, a declined class keeps the route open, the staleness lint stays a candidate) — `docs/features/644-substrate-gap-alarm/decisions.md`.
@@ -323,7 +327,12 @@ this unit). The rule itself is not restated here: its owner is
 - **G1** — 2026-11-19, `bun scripts/run-root-suite.mjs` · exit 0 · 128 suites.
 - **G2** — 2026-11-19, `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
 - **G3** — 2026-11-19, `bun scripts/log-immutability.mjs` · exit 0 · `0 violations · base c1ccc1985`.
+- **G5** — 2026-11-19, `bun scripts/local-gate.mjs` at `ecbc7001c` (the state-registration head, every code and prose change in place) · exit 0 · `PASS — 19 step(s) in 629s`. This line is the append-only record after it; the only bytes after the gate ran are this `## Log` append and the obligation statuses it cites.
 - **G4** — 2026-11-19, `bun scripts/local-gate.mjs` at the P7 head · exit 0 · `PASS — 19 step(s) in 739s` (the first run was red on `worktree-guard` because of this unit's own differential scratch worktree; the scratch was removed and the gate re-run green).
+
+- **V1** — 2026-11-19, `docs/features/644-substrate-gap-alarm/SPEC.md:194` · reviewer self, before the handoff · recheck `bun scripts/promise-coherence.mjs docs/features/644-substrate-gap-alarm/SPEC.md …/planning-obligations.md …/planning-evidence.md` → `verdict PASS`, 3 claims checked · confirmed: the `rg -c` tally over a directory was unreadable as one number (observed 2), the claim now reads `rg -o … | wc -l`.
+- **F1** — 2026-11-19, folded in the session that found it: the two validator cells that spelled a directory `rg -c` were re-spelled to a single-number command (AC-5 and P5, plus `E13`'s wording). No behaviour changed — the corrected form reports the same 3 and 2, now readable as one number.
+- **D9** — 2026-11-19, disclosed gap, not repaired here: `inFlightUnitDocs()`'s in-flight rule matches the legacy `Progress log` shape (`YYYY-MM-DD HH:MM — …`), which the re-cut `## Log` `P` line the template publishes does not carry — so `promise-coherence`'s own corpus sweep examines no post-#308 unit doc, this unit included. The guard was therefore run against this unit's three documents directly (`V1`), and repairing the detector is left to the owner: it changes the corpus of every unit and belongs to its own unit, not to this one.
 
 ## Next
 
