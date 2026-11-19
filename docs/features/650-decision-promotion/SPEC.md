@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-ac-hash: 02f5cf98f744c73239d41b78e4424a0cef858701d36a766b2f32ccdb7102c81e
+ac-hash: 3f08f332a49490d582ace65cacbf8a6c1ddf465b91b58e2bdcdf967a1f96aaf9
 roadmap_summary: Cross-cutting decision promotion — a decision whose scope is cross-unit is promoted to the ONE permanent owner doc that owns that scope (the guide's laws, `ARCHITECTURE.md`, `ARCHITECTURAL_INVARIANTS.md`), with the unit ledger linking it and never copying it; the scope is recorded in the decision row at capture time, `product-audit` gains the detection dimension with its deterministic producer, and a one-time backfill sweep audits the existing ledgers.
 ---
 
@@ -109,7 +109,7 @@ proves it. Frozen at the plan cut; a criterion is never rewritten at close.
 | id | requirement | criterion | proving check |
 |---|---|---|---|
 | AC-S1 | S1 | this unit dir carries `SPEC.md`, `planning-evidence.md`, `planning-obligations.md`, `decisions.md` and `backfill-sweep.md`, and every obligation row is `verified` or an evidenced `n/a` | `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/650-decision-promotion/SPEC.md` exits 0 · `rg -c 'planned\|in-progress' docs/features/650-decision-promotion/planning-obligations.md` matches 0 |
-| AC-S2 | S2 | the promotion rule exists in exactly one owner doc per scope, and the tree states the failing state it prevents (a cross-unit decision with no permanent home) | `rg -c 'decision-scope@1' skills/unit-lane/references/DESIGN.md` matches 1 · `rg -c 'Promoting a decision' template/docs/architecture/ARCHITECTURE.md` matches 1 |
+| AC-S2 | S2 | the promotion rule exists in exactly one owner doc per scope, and the tree states the failing state it prevents (a cross-unit decision with no permanent home) | `rg -c 'decision-scope@1' skills/unit-lane/references/DESIGN.md` matches 2 · `rg -c 'Promoting a decision' template/docs/architecture/ARCHITECTURE.md` matches 1 |
 | AC-S3 | S3 | the owner-doc-per-scope mapping and the link-never-copy consequence are published once, and the unit ledger side is a citation | `rg -c 'unit-only\|cross-unit' skills/unit-lane/references/DESIGN.md` matches ≥ 2 · `rg -c 'link' template/docs/architecture/ARCHITECTURE.md` matches ≥ 1 |
 | AC-S4 | S4 | the `decision` row's scope cell is a machine vocabulary in the schema package, the reader exposes it, and the lane records it | `bun packages/agentic-workflow/bin/agentic-workflow.mjs needs-input docs/fix/384-capability-risk-detection --json` exits 0 · `bun test scripts/decision-promotion.test.mjs` exits 0 |
 | AC-S5 | S5 | the procedure is documented in the architecture doc, referenced from the lane's capture guidance and from the audit dimension, and the new grammar is registered in `normative-surfaces@1` with its vocabulary in the schema package | `bun test scripts/normative-drift.test.mjs` exits 0 · `rg -c 'decision-scope' AGENTS.md` matches ≥ 2 |
@@ -474,6 +474,8 @@ token from `log-kind@1`.
 - **G8** — 2026-11-19, `cd packages/agentic-workflow && bun test` · exit 0 · 1,324 pass / 0 fail across 72 files.
 - **G9** — 2026-11-19, `cd packages/agentic-workflow-schema && bun test` · exit 0 · 915 pass / 0 fail across 52 files.
 - **G10** — 2026-11-19, `bun test scripts/check-skill-context.test.mjs`, `scripts/scaffold-parity.test.mjs`, `scripts/residue-dimensions.test.mjs` · exit 0 · 1 / 17 / 30 pass / 0 fail.
+- **E19** — 2026-11-19, `rg -c 'decision-scope@1' skills/unit-lane/references/DESIGN.md` · exit 0 · `2` — the block marker **and** the checklist row that names it. `AC-S2`'s and `O11`'s planned cell said `1`, written from the block alone and never run; the anchor is re-pointed to the observed count, the prose is untouched (`D11`).
+- **D11** — 2026-11-19, `AC-S2`'s (and `O11`'s, which mirrors it) `matches 1` was written from intent — the grammar block alone — and the real surface carries a second occurrence, the design checklist's own row that binds the cell. Re-pointing the anchor to `matches 2` is the repair: the prose is the authority and the count follows the run. Authority: `S4`/`S5` over the checklist's own duty, read with the rule that an anchor never run is the defect.
 - **G14** — 2026-11-19, HEAD 448689e72 — `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 · `local-gate: PASS — 15 step(s) in 687s`, the crate suites 1,324 pass / 0 fail, the schema 915, the root suite 130 PASS, and `log-immutability` PASS with 0 violations over the 6-commit range (the journal change is the committed fragment, never a hand append to `docs/LOGS.md`).
 - **G13** — 2026-11-19, `bun scripts/run-root-suite.mjs` · exit 0 · 130 suites PASS, no FAIL line — the pre-change failures this batch first met are folded: the frozen dimension set (`Decision promotion` appended last, `deepEqual` kept), the ownership map's eight sanctioned (script, ledger) pairs, the budget narration's `ceil(7395 x 1.10) = 8135` formulas, and the scaffold's 22 charter slots (the promotion pointer is a continuation line, so the slot's `- **Key:** `<...>`` shape is untouched).
 - **G11** — 2026-11-19, `bun scripts/docs-generate.mjs` then `--check` · exit 0 · `Files: 2 written · 0 deleted · 1 unchanged`, `Roadmap: updated`, then `3 checked · 0 missing · 0 stale · 0 orphaned` — the projection regenerated, never hand-written.
