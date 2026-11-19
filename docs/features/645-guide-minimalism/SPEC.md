@@ -77,7 +77,7 @@ proves it. Frozen at the plan cut; a criterion is never rewritten at close.
 | AC-S3 | S3 | the guide measures **fewer** lines, prose lines and estimated bytes than the pre-change 745 / 565 / 13,586, and the manifest's ceilings are re-based **down** to `ceil(measured × 1.10)` | `bun scripts/check-skill-context.mjs --documents` exits 0 and prints `AGENTS.md` with `lines` < 745, `prose` < 565, `estimate` < 13586 |
 | AC-S4 | S4 | `docs/workflow/SKILL_AUTHORING.md` states the target-project guide doctrine and the scaffold (`template/AGENTS.md`) plus `init-workspace` carry the section | `bun test scripts/guide-split.test.mjs` and `bun test scripts/scaffold-guide.test.mjs` exit 0 |
 | AC-S5 | S5 | the package's guide is budgeted in the same manifest with a declared ceiling and no upward drift on this change | `bun scripts/check-skill-context.mjs --documents --json` exits 0 and its `documents` array carries `packages/pi-agentic-workflow/README.md` |
-| AC-S6 | S6 | the section is pinned exactly and a row naming a gate that does not exist is a fixture red in a suite; the gate is inventoried and runs in the local gate | `bun test scripts/inviolable-rules.test.mjs` exits 0 · `bun test scripts/check-skill-context.test.mjs` exits 0 · `bun test scripts/prose-gate-inventory.test.mjs` exits 0 |
+| AC-S6 | S6 | the laws table is pinned exactly by its own line count and a row naming a gate that does not exist is a fixture red in a suite; the gate is inventoried and runs in the local gate | `bun test scripts/inviolable-rules.test.mjs` exits 0 · `bun test scripts/check-skill-context.test.mjs` exits 0 · `bun test scripts/prose-gate-inventory.test.mjs` exits 0 |
 | AC-S7 | S7 | the section lives in `AGENTS.md` itself, not behind a pointer, and its rows carry the four declared cells | `rg -n '^## Inviolable rules$' AGENTS.md` matches 1 · `bun scripts/inviolable-rules.mjs` exits 0 |
 | AC-S8 | S8 | the two-tier decision is recorded in this unit's `decisions.md`, and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` is not converted into a host-laws document (it keeps its project-domain role, whatever it already declares) | `rg -c 'host laws' docs/features/645-guide-minimalism/decisions.md` matches ≥ 1 · `git diff --stat origin/main -- docs/architecture/ARCHITECTURAL_INVARIANTS.md` prints nothing |
 | AC-S9 | S9 | all three levels move: the repo guide, the scaffold + its doctrine, and the package guide | AC-S2 · AC-S4 · AC-S5 all pass |
@@ -219,10 +219,10 @@ other units' work, not this unit's future.
   (Implements: S2, S6, S11)
   - Relevant files: scripts/inviolable-rules.mjs
 
-- P4 — Pin the section exactly: suite cases first (`sectionLines` missing,
-  mismatched, and every pre-existing documents case intact), then the
-  `--documents` support that counts a named section through the shared
-  fence-aware reader.
+- P4 — Pin the laws table exactly: suite cases first (the block at its pin, one
+  line over, and a declared pin whose block is gone), then the `--documents`
+  support that counts one versioned block from its opening fence to its closing
+  fence.
   (validator: `bun test scripts/check-skill-context.test.mjs` exits 0)
   (Implements: S6)
   - Relevant files: scripts/check-skill-context.test.mjs, scripts/check-skill-context.mjs
@@ -310,14 +310,13 @@ token from `log-kind@1`.
   ```
   Apply to this repository: issue #645
   ```
-- **D1** — 2026-11-19, the section is pinned by an exact line count
-  (`sectionLines` in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`) instead of by
+- **D1** — 2026-11-19, the laws table is pinned by its **own** line count
+  (`blockLines` in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`) instead of by
   joining the guide's machine region: the machine region spans the first declared
-  block to the last, so adding a laws section inside it would place `## Inviolable
-  rules` under `## Verification`, and `## Verification`'s own order is pinned by
-  `scripts/release-workflows.test.mjs`. The pin is exact either way — one line of
-  growth fails `--documents`. Authority: S6's "counted, pinned" plus S7's
-  always-loaded placement.
+  block to the last, so a laws section placed among the guide's early sections
+  would be counted with everything between it and `rendered-facts@1`. The pin is
+  exact — one added row fails `--documents` with both counts named. Authority:
+  S6's "counted, pinned" plus S7's always-loaded placement.
 - **D2** — 2026-11-19, `IR13` (no secret enters the tree) is completed rather
   than invented: `template/AGENTS.md` §Hard rules has carried it since the
   scaffold existed and `scripts/secret-scan.test.mjs` enforces it here, so the
@@ -352,9 +351,21 @@ surgery"), read against `E2`'s step list.
   that document — and `IR1` cites `AI-001` rather than restating it. Authority:
   `docs/architecture/ARCHITECTURAL_INVARIANTS.md:31` at the cut HEAD.
 
+- **D10** — 2026-11-19, `D1`'s first shape (a heading-bounded `sectionLines` pin)
+  was replaced by the block-bounded `blockLines` pin during P4: a heading-bounded
+  count needs a second heading reader in `scripts/check-skill-context.mjs`, which
+  `scripts/structural-sibling-pins.test.mjs` refuses and which the crate's shared
+  reader cannot serve inside a copied fixture (the crate's module chain is not in
+  the fixture tree). The block bound needs no heading reader, is exact to the
+  line, and is measured by the same fence walk the checker already owns. Authority:
+  S6 ("counted, pinned"), read with the structural-sibling pin.
+- **E5** — 2026-11-19, `bun test scripts/inviolable-rules.test.mjs` · exit 1 · 17 pass, 1 fail — the live-tree case, red on the guide that does not carry the block yet (P5 closes it).
+- **E6** — 2026-11-19, `bun test scripts/check-skill-context.test.mjs` · exit 1 · red on the checker that ignored `blockLines` (the three new cases); · exit 0 after the implementation — `1 pass, 0 fail`.
+
 ## Next
 
-P2 — land the frozen-failure corpus for `scripts/inviolable-rules.mjs` red.
+P5 — rewrite the guide: the section, the reductions, the manifest's downward
+re-base.
 
 ## References
 

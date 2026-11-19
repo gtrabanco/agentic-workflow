@@ -689,10 +689,9 @@ const runDocuments = (fixture) => spawnSync(process.execPath, [path.join(fixture
   }
 }
 
-// A pinned section keeps an exact line count (issue #645 S6). The guide's laws
-// section is counted and pinned like a machine block, but it lives among the
-// guide's prose sections, so its pin is its own reading: a line added or removed
-// is a manifest edit with a reason, never a silent growth.
+// A versioned block pinned by its own line count (issue #645 S6). The guide's
+// always-loaded laws table lives among prose sections, so its pin is its own
+// reading: one added row is a manifest edit with a reason, never silent growth.
 const PINNED_SECTION = [
   "## Inviolable rules",
   "",
@@ -701,7 +700,7 @@ const PINNED_SECTION = [
   "```text",
   "inviolable-rules@1",
   "rule | statement | owner | state",
-  "IR1-example | a law the guide carries | AGENTS.md#Working rules | soft-by-design: a reason recorded as prose",
+  "IR1-example | a law the guide carries | AGENTS.md | soft-by-design: a reason recorded as prose",
   "```",
   "",
 ].join(String.fromCharCode(10));
@@ -714,12 +713,12 @@ const pinnedFixture = (section, pin) =>
     files["AGENTS.md"].linesMax = 60;
     files["AGENTS.md"].proseLinesMax = 40;
     files["AGENTS.md"].estimateMax = 2000;
-    files["AGENTS.md"].sectionLines = { "## Inviolable rules": pin };
+    files["AGENTS.md"].blockLines = { "inviolable-rules@1": pin };
   });
 
-// the pinned section at its declared size passes
+// the pinned block at its declared size passes
 {
-  const fixture = pinnedFixture(PINNED_SECTION, 10);
+  const fixture = pinnedFixture(PINNED_SECTION, 5);
   try {
     const result = runDocuments(fixture);
     assert.equal(result.status, 0, result.stderr + result.stdout);
@@ -730,23 +729,23 @@ const pinnedFixture = (section, pin) =>
 
 // one line more than the pin is refused by name, with both counts
 {
-  const fixture = pinnedFixture(PINNED_SECTION, 9);
+  const fixture = pinnedFixture(PINNED_SECTION, 4);
   try {
     const result = runDocuments(fixture);
-    assert.notEqual(result.status, 0, "a section above its pin fails closed");
-    assert.match(result.stderr, /section "## Inviolable rules" has 10 lines != the declared 9/);
+    assert.notEqual(result.status, 0, "a block above its pin fails closed");
+    assert.match(result.stderr, /block "inviolable-rules@1" has 5 lines != the declared 4/);
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
 }
 
-// a declared pin whose section the guide does not carry is refused, never skipped
+// a declared pin whose block the guide does not carry is refused, never skipped
 {
-  const fixture = pinnedFixture("", 10);
+  const fixture = pinnedFixture("", 5);
   try {
     const result = runDocuments(fixture);
     assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /section "## Inviolable rules" is missing/);
+    assert.match(result.stderr, /block "inviolable-rules@1" is missing/);
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
