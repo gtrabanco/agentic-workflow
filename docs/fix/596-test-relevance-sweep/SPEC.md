@@ -379,6 +379,14 @@ unit is what makes "tagged" real.
   · prints nothing; `node --test scripts/test-impact.test.mjs` · exit 0 ·
   21 pass / 0 fail. `node --test scripts/product-audit-surplus.test.mjs` · exit 0
   · 13 pass; `node --test scripts/vocabulary-parity.test.mjs` · exit 0 · 23 pass.
+- **E15** — 2026-11-19, `bun scripts/dimension-regression.mjs --base 176ab984b` ·
+  `base 18 dimensions · head 18 dimensions · changed review surfaces 4` — the
+  range touches `docs/workflow/GATE_INVENTORY.md` and three files under
+  `skills/product-audit/`, and no dimension id is dropped; the dimensions the
+  audit already had are re-verified at the head by
+  `node --test scripts/dimension-regression.test.mjs` and
+  `node --test scripts/product-audit-rescope.test.mjs` (both green in G1's root
+  run), so this unit adds no eighth-C check and removes none.
 - **P1** — 2026-11-19, the unit doc and both planning ledgers frozen · `23950525`.
 - **P2** — 2026-11-19, the closed vocabulary published from the schema package · `c63ea2be`.
 - **P3** — 2026-11-19, the gate's suite landed alone and observed red · `c4c58acaf`.
