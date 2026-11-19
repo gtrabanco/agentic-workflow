@@ -16,10 +16,11 @@ import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-documen
 import { execFileSync, spawnSync } from "node:child_process";
 // The router's own classifiers, imported so the collapsed carrier's column vocabularies are
 // pinned against the code the CLI runs, not against a paraphrase of it.
-import { findingsRows, routeOfRow } from "../packages/agentic-workflow/src/runner/unit-route.mjs";
+import { findingsRows, recordedPhases, routeOfRow } from "../packages/agentic-workflow/src/runner/unit-route.mjs";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -580,39 +581,57 @@ test("#291 F4b: indented list-marker continuation line does NOT re-open an entry
 });
 
 test("#291 F7: long Progress-log line uses linear scan (not quadratic split)", () => {
-  // F7 reproducer: a single very long Progress-log line must not trigger
-  // quadratic backtracking from the split(/\s+next:.*$/i) pattern.
-  // The fix replaces it with indexOf(" next:") which is O(n).
-  // This test verifies correctness (no P<n> from the long whitespace run
-  // is accidentally captured).
+  // F7 reproducer (unit 73's finding, folded in 80ada291): a Progress-log
+  // entry head carrying a long whitespace run after non-whitespace and no
+  // " next:" tail is the quadratic miss path of the old re-anchoring
+  // split(/\s+next:.*$/i) — measured 10k=139/152 ms up to 50k=4977/2464 ms
+  // (node/bun, 2026-11-18, the finding's own probe shape).  The scan the
+  // defect lived in is `recordedPhases`, so the timing assertion measures
+  // that function in-process — never the CLI spawn, whose startup noise
+  // produced the 585/750 ms gate flakes against the old 500 ms bound while
+  // the scan itself costs under a millisecond.  Measured at this change:
+  // the linear scan over this doc is <1 ms in-process, so the 100 ms bound
+  // carries >100x headroom over the measurement and sits >=25x below the
+  // quadratic cost it must catch.
   const tmpDir = os.tmpdir();
   const fixture = path.join(tmpDir, `unit-route-f7-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
   const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
   const before = fs.readFileSync(spec, "utf8");
-  // Replace the Progress log with a P1-done entry followed by a line of
-  // 50000 spaces (no " next:" at all).  A quadratic split would stall;
-  // a linear scan should return instantly and not capture any phase id.
+  // Two long lines inside the Progress log:
+  //  - a standalone whitespace run (the original pin's shape — no marker,
+  //    no phase id: it must not re-open an entry or capture a phase); and
+  //  - an entry head whose prose carries the run (the finding's shape — a
+  //    marker line whose whitespace run follows non-whitespace and whose
+  //    head carries no " next:" tail: the old split's quadratic miss path).
+  //    The linear scan answers instantly and captures no phase from it.
   fs.writeFileSync(
     spec,
     before.replace(
       "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
-      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n" + " ".repeat(50000) + "x"
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n" +
+        " ".repeat(50000) + "x\n" +
+        "- note, no phase token in this head" + " ".repeat(50000) + "x"
     )
   );
   try {
-    const t0 = Date.now();
+    const doc = fs.readFileSync(spec, "utf8");
+    // The scan, timed where it runs: in-process, so the bound judges the
+    // scan and not the runtime's startup noise.
+    const t0 = performance.now();
+    const phases = recordedPhases(doc);
+    const scanMs = performance.now() - t0;
+    assert.ok(phases.has(1), "the P1 entry still records");
+    assert.ok(!phases.has(2) && !phases.has(3), "neither long line captures a phase");
+    assert.ok(scanMs < 100, `F7 linear scan took ${scanMs}ms (expected <100ms; the quadratic path measures ~2500ms at 50k)`);
     const result = spawnSync(
       process.execPath,
       [BIN, "unit-route", "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
-    const elapsed = Date.now() - t0;
     assert.equal(result.status, 0, result.stderr);
     // The long whitespace line must not capture any phase id.
     assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
-    // Must complete in under 500ms (quadratic would take many seconds).
-    assert.ok(elapsed < 500, `F7 linear scan took ${elapsed}ms (expected <500ms)`);
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
