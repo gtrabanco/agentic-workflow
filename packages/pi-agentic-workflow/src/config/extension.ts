@@ -4,7 +4,8 @@
  *
  * This package owns the vault of keys that only make sense inside
  * `pi-agentic-workflow` — model routing, profiles, passes, subagent limits, the
- * State Flow lifecycle and the shell-tool choice carrier. It ships them as data:
+ * State Flow lifecycle, the shell-tool choice carrier and the phase-batching
+ * switch. It ships them as data:
  * `agentic-workflow config`
  * discovers `agentic-workflow.config.json`, composes this schema with the base
  * feature schema, and reads/writes `pi-agentic-workflow.json` without importing
@@ -127,6 +128,16 @@ const PI_SCHEMA = {
         mode: { type: "string", enum: [...TOOL_CHOICE_MODES] },
       },
     },
+    // Issue #632 — the phase-batching switch the companion preset's policy
+    // reads through the seam. One scalar: the policy's thresholds are preset
+    // data, so a second knob here would be a setting nothing reads.
+    phaseBatching: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        enabled: { type: "boolean" },
+      },
+    },
   },
 } satisfies JsonSchema;
 
@@ -136,7 +147,7 @@ export const PI_CONFIG_EXTENSION: ConfigExtensionDescriptor = {
   contract: CONFIG_EXTENSION_CONTRACT,
   key: "pi",
   file: "pi-agentic-workflow.json",
-  description: "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice.",
+  description: "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice, phase batching.",
   schema: PI_SCHEMA,
   defaults: piDefaults,
 };

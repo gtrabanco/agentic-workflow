@@ -151,6 +151,26 @@ export const DEFAULT_TOOL_CHOICE: ToolChoiceConfig = {
 };
 
 // ---------------------------------------------------------------------------
+// Phase batching (issue #632)
+// ---------------------------------------------------------------------------
+
+/** What an operator WRITES under `phaseBatching`. One optional scalar: the
+ *  policy's declared thresholds are preset data, never per-project knobs. */
+export interface PhaseBatchingConfigFile {
+  enabled?: boolean;
+}
+
+/** What the extension READS: the resolved switch. Shipped OFF — the trigger
+ *  that may flip it is recorded in `docs/workflow/CONFIG.md`. */
+export interface PhaseBatchingConfig {
+  enabled: boolean;
+}
+
+export const DEFAULT_PHASE_BATCHING: PhaseBatchingConfig = {
+  enabled: false,
+};
+
+// ---------------------------------------------------------------------------
 // Model-profiles fields (feature 63)
 // ---------------------------------------------------------------------------
 
@@ -252,6 +272,11 @@ export interface ConfigFile {
   stateFlow?: StateFlowConfigFile;
   /** Issue #610: the command-time shell-tool-choice carrier. */
   toolChoice?: ToolChoiceConfigFile;
+  /** Issue #632: the model-aware phase-batching policy's switch. Absent means
+   *  the shipped OFF posture — the recommendation answers one phase per turn.
+   *  Without the companion preset installed the key is a documented no-op: the
+   *  policy lives where the model knowledge lives. */
+  phaseBatching?: PhaseBatchingConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -366,6 +391,8 @@ export interface EffectiveConfig {
   stateFlow: StateFlowConfig;
   /** Issue #610: the shell-tool-choice carrier, resolved. */
   toolChoice: ToolChoiceConfig;
+  /** Issue #632: the phase-batching switch, resolved (shipped OFF). */
+  phaseBatching: PhaseBatchingConfig;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }
