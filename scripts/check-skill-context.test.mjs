@@ -689,4 +689,67 @@ const runDocuments = (fixture) => spawnSync(process.execPath, [path.join(fixture
   }
 }
 
+// A pinned section keeps an exact line count (issue #645 S6). The guide's laws
+// section is counted and pinned like a machine block, but it lives among the
+// guide's prose sections, so its pin is its own reading: a line added or removed
+// is a manifest edit with a reason, never a silent growth.
+const PINNED_SECTION = [
+  "## Inviolable rules",
+  "",
+  "The laws no session may violate.",
+  "",
+  "```text",
+  "inviolable-rules@1",
+  "rule | statement | owner | state",
+  "IR1-example | a law the guide carries | AGENTS.md#Working rules | soft-by-design: a reason recorded as prose",
+  "```",
+  "",
+].join(String.fromCharCode(10));
+
+const pinnedFixture = (section, pin) =>
+  documentsFixture((root, files) => {
+    fs.writeFileSync(path.join(root, "AGENTS.md"), GUIDE_FIXTURE + section);
+    fs.writeFileSync(path.join(root, "docs/workflow/REFERENCE.md"), "# Reference" + String.fromCharCode(10));
+    files["docs/workflow/REFERENCE.md"].linesMax = 2;
+    files["AGENTS.md"].linesMax = 60;
+    files["AGENTS.md"].proseLinesMax = 40;
+    files["AGENTS.md"].estimateMax = 2000;
+    files["AGENTS.md"].sectionLines = { "## Inviolable rules": pin };
+  });
+
+// the pinned section at its declared size passes
+{
+  const fixture = pinnedFixture(PINNED_SECTION, 10);
+  try {
+    const result = runDocuments(fixture);
+    assert.equal(result.status, 0, result.stderr + result.stdout);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+// one line more than the pin is refused by name, with both counts
+{
+  const fixture = pinnedFixture(PINNED_SECTION, 9);
+  try {
+    const result = runDocuments(fixture);
+    assert.notEqual(result.status, 0, "a section above its pin fails closed");
+    assert.match(result.stderr, /section "## Inviolable rules" has 10 lines != the declared 9/);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+// a declared pin whose section the guide does not carry is refused, never skipped
+{
+  const fixture = pinnedFixture("", 10);
+  try {
+    const result = runDocuments(fixture);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /section "## Inviolable rules" is missing/);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
 console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, route-reference, duplicate-key and guide-layer failures rejected");
