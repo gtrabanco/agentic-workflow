@@ -316,3 +316,62 @@ test("the README documents the capability record and the command", () => {
     assert.ok(doc.includes(model), `the README names ${model} where the record's harness matters`);
   }
 });
+
+// ── The handler's glue: a Pi context into the policy's inputs ────────────
+//
+// The pure core above is not the whole command: something has to resolve the
+// config, read the session's model and report through the host. These cases
+// drive that glue against a temporary agent directory, so the wiring is
+// asserted rather than trusted.
+
+test("the handler resolves the config, maps the session model and reports the document", async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { createPhaseBatchingHandler } = await import("../dist/extension.js");
+
+  const root = mkdtempSync(join(tmpdir(), "nan-phase-batching-"));
+  const agentDir = join(root, "agent");
+  const cwd = join(root, "project");
+  mkdirSync(agentDir, { recursive: true });
+  mkdirSync(join(cwd, ".pi"), { recursive: true });
+  const notices = [];
+  const ctx = {
+    cwd,
+    model: { provider: PROVIDER, id: "glm5.3-flash" },
+    isProjectTrusted: () => true,
+    ui: { notify: (message, kind) => notices.push({ message, kind }) },
+  };
+
+  try {
+    const off = createPhaseBatchingHandler({ agentDir });
+    await off("--risk-tier standard --size-tier small --phases 3", ctx);
+    assert.equal(notices.length, 1, "one notice, the document itself");
+    assert.equal(notices[0].kind, "info");
+    const offDoc = JSON.parse(notices[0].message);
+    assertValid(offDoc, "handler output");
+    assert.equal(offDoc.reason, "config-off", "no config file anywhere is the shipped OFF");
+    assert.equal(offDoc.model, `${PROVIDER}/glm5.3-flash`, "the session's model is the default subject");
+
+    writeFileSync(join(cwd, ".pi", "pi-agentic-workflow.json"), '{"phaseBatching":{"enabled":true}}');
+    notices.length = 0;
+    await off("--risk-tier standard --size-tier small --phases 3", ctx);
+    const onDoc = JSON.parse(notices[0].message);
+    assert.equal(onDoc.decision, "batched-phases", "the project file turned the policy on");
+    assert.equal(onDoc.phases_per_context, 3);
+
+    notices.length = 0;
+    await off("--wat", ctx);
+    assert.equal(notices.length, 1);
+    assert.equal(notices[0].kind, "error");
+    assert.match(notices[0].message, /--wat/u, "a refused invocation reaches the operator as an error");
+
+    notices.length = 0;
+    const sessionless = createPhaseBatchingHandler({ agentDir });
+    await sessionless("--risk-tier standard --size-tier small --phases 3", { ...ctx, model: undefined });
+    assert.equal(notices[0].kind, "error", "no session model and no --model is a refusal, not a guess");
+    assert.match(notices[0].message, /--model/u);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
