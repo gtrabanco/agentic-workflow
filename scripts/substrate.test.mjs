@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/substrate.mjs,skills/orchestration-envelope/references/TURN_CONTRACT.md obligations=contract,failure-path
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/substrate.mjs,skills/orchestration-envelope/references/TURN_CONTRACT.md,docs/workflow/LANE_FLOW.md obligations=contract,failure-path
 
 /**
  * substrate.test.mjs — the substrate census, its coverage gate, and the single
@@ -14,7 +14,10 @@
  *      class is absent: the gate `init-workspace` runs on both routes.
  *   2. The route vocabulary the alarm publishes is *one* closed set: the schema
  *      const, the crate's dispatcher, and the `open-questions@1` block's
- *      `route:` line. A token invented on one side fails here.
+ *      `route:` line. A token invented on one side fails here. The prose
+ *      surfaces that state the same vocabulary carry it too — the lane
+ *      tutorial's route-cell sentence and its dispatcher usage lines
+ *      (#644 F3, the external verify's sibling blocker).
  *
  * Every fixture is written to a `mktemp` tree at run time and removed after:
  * nothing under the repository is mutated, and the assertions are at the CLI
@@ -241,6 +244,16 @@ test("route vocabulary — the schema, the crate and the published block are one
   // is the residency rule the pin exists to protect. The tokens are compared
   // against the schema const above, one home, no second copy.
   assert.match(block, /schema-export:SUBSTRATE_CLASSES/, "the block cites the class vocabulary's owner");
+
+  // The prose surfaces that state the vocabulary must carry it too: the lane
+  // tutorial publishes the route cell and the dispatcher's usage (#644 F3).
+  const laneFlow = fs.readFileSync(path.join(ROOT, "docs", "workflow", "LANE_FLOW.md"), "utf8");
+  assert.match(laneFlow, /`init-workspace:<class>`/, "the lane tutorial states the third route");
+  const usage = [...laneFlow.matchAll(/needs-input <unit-dir>[^\n`]*/g)].map((match) => match[0]);
+  assert.ok(usage.length >= 2, "the lane tutorial carries the dispatcher usage in prose and in the command table");
+  for (const line of usage) {
+    assert.match(line, /\[--workspace <dir>\]/, `the usage line publishes --workspace: ${line}`);
+  }
 });
 
 test("route vocabulary — the dispatcher verifies a substrate route against the census, never trusting the cell", () => {
