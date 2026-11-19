@@ -205,6 +205,12 @@ none
   open. The issue's Class 1 row 11 assumed an enumerated mirror; there is none to
   delete. **Does not affect** the unit's scope; the behaviour pin
   (`test/doc.degradations.test.mjs`) stays.
+- `packages/agentic-workflow-schema/test/verification-preflight.test.mjs:208`
+  asserts a 50 ms wall-clock ceiling; under the gate's concurrent worker pool it
+  measured 61 ms once and refused, and passed on the same head in isolation and
+  on a re-run of the step. **Does not affect** this unit (it touches no
+  verification code and the base commit shows the same order of magnitude); it is
+  recorded here because a red gate is never excused by an unrecorded issue.
 
 ## Tasks
 
