@@ -384,16 +384,62 @@ surgery"), read against `E2`'s step list.
 - **E11** — 2026-11-19, `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS` with the new `inviolable-rules` row claiming the `inviolable-rules` surface.
 - **E12** — 2026-11-19, `git diff --stat origin/main -- docs/architecture/ARCHITECTURAL_INVARIANTS.md` · exit 0 · no output (the invariant document is untouched, `S8`).
 - **E13** — 2026-11-19, the line-identity comparison of the package README against `AGENTS.md` and `docs/workflow/*.md` · 1 shared line — `PE-015`, `D11`.
-- **G1** — 2026-11-19, `bun scripts/run-root-suite.mjs` · exit 0 · 128 suites PASS, no FAIL line.
-- **G2** — 2026-11-19, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, roadmap unchanged.
-- **G3** — 2026-11-19, `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 · `local-gate: PASS — 15 step(s)`, the crate suites 1,015 pass / 1 skipped (the pre-existing skip) and the root suite 128 PASS.
+- **G1** — 2026-11-19, HEAD 9f31b3d1573886eabf44c0a012e2e23b5bd4f8ad — `bun scripts/run-root-suite.mjs` · exit 0 · 128 suites PASS, no FAIL line.
+- **G2** — 2026-11-19, HEAD 9f31b3d1573886eabf44c0a012e2e23b5bd4f8ad — `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, roadmap unchanged.
+- **G3** — 2026-11-19, HEAD 09cfe44b1845851f94e4423febd3c128b7125053 — `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 · `local-gate: PASS — 15 step(s)`, the crate suites 1,015 pass / 1 skipped (the pre-existing skip) and the root suite 128 PASS.
 - **P7** — 2026-11-19, the package guide bounded: measured 1,178 lines / 16,057 est, its budget row and one-hop index row landed, the overlap measurement recorded (`PE-015` · `D11`).
 - **P8** — 2026-11-19, the gate registered in `docs/workflow/GATE_INVENTORY.md` with the `inviolable-rules` surface claimed; no `scripts/local-gate.mjs` step was added because the gate's suite rides the `root-suite` step already — the gate runs on every push through that carrier, and `G3` is the evidence.
 - **P9** — 2026-11-19, close: ledgers flipped to `verified`, the projection regenerated, the session entry written as a journal fragment · `09cfe44b1`.
-- **G4** — 2026-11-19, `bun scripts/dimension-regression.mjs --base origin/main` · exit 1 first — `missing-reverification-evidence`: the range touches one review surface (`docs/workflow/GATE_INVENTORY.md`, where the new gate's row lands) and no unit doc recorded the run · after this line · exit 0, `verdict | clean`, `18 dimensions` at the base and at the head, `changed review surfaces 1`, this document as the evidence carrier. Nothing was dropped and no dimension changed: the only touched review surface is the inventory's own row.
+- **G4** — 2026-11-19, HEAD a6a2cadf57df2a981ab47a4abaa8227b26d28802 — `bun scripts/dimension-regression.mjs --base origin/main` · exit 1 first — `missing-reverification-evidence`: the range touches one review surface (`docs/workflow/GATE_INVENTORY.md`, where the new gate's row lands) and no unit doc recorded the run · after this line · exit 0, `verdict | clean`, `18 dimensions` at the base and at the head, `changed review surfaces 1`, this document as the evidence carrier. Nothing was dropped and no dimension changed: the only touched review surface is the inventory's own row.
 
-- **G5** — 2026-11-19, the installed `pre-push` hook ran the offline gate over the push range `c1ccc19..39fc304a7` · exit 0 · `local-gate: PASS — 17 step(s) in 660s` (crate suites 1,015 pass / 1 pre-existing skip; every offline step green).
+- **G5** — 2026-11-19, HEAD 39fc304a778e511af3a34b104cb2c54c0aaa05bf — the installed `pre-push` hook ran the offline gate over the push range `c1ccc19..39fc304a7` · exit 0 · `local-gate: PASS — 17 step(s) in 660s` (crate suites 1,015 pass / 1 pre-existing skip; every offline step green).
 - **P10** — 2026-11-19, the branch pushed and the PR opened: [#652](https://github.com/gtrabanco/agentic-workflow/pull/652) · `39fc304a7` is the head the hook verified.
+
+- **L2** — 2026-11-19, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **D12** — 2026-11-19, the triage of the 2026-11-19 external-verify receipt: all four
+  blockers are fixed in this batch — row 645 settled through `roadmap rowUpsert` with
+  `--expect` CAS; O14's validator re-pointed at the declared-invariant pattern;
+  `decisions.md` D1's superseded `sectionLines` key renamed to `blockLines`; the
+  package-README budget note's false removal claim replaced with what D11 records.
+  Of the advisories, A1 (the manifest's stale 600 / 419 / 12,549 measurement and
+  ceilings that did not equal ceil(measured × 1.10)), A9 (the missing per-suite `G`
+  lines), A10 (`SKILL_AUTHORING`'s "in its interview" claim) and A11 (O3's "five
+  fixture reds" against P2/E9's six) are fixed; A2–A7 (the reduction's dropped
+  qualifiers) and A8 (the scaffold's bold header rename) are dispositioned
+  not-fixed — each qualifier's substance survives at its owner (IR9 plus "translate
+  any package surface", IR4's new-script scope plus fix #382, IR5's absolute
+  never-remove, `docs/workflow/DOMAIN_SEPARATION.md` §"Never shipped" plus IR7's
+  repo-only scope, `writer-driver-contract@1` plus the unchanged `.gitattributes`,
+  the docs-site defaults sentence), and restoring them would undo S3's reduction;
+  no anchor or link names the bold header. Authority: the receipt's severity split
+  plus S3's doctrine. The batch also completes G1-G5's missing `gate-ran@1` HEAD
+  citations — `agentic-workflow verify` refused all fourteen G lines without one
+  (four pre-existing) — metadata only: no recorded command, exit code or output
+  changed.
+- **E14** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap read docs/ROADMAP.md --nn 645 --json` · exit 0 · revision `c2f91f7e…`; the
+  `rowUpsert` splice first ran against a `mktemp` copy (diff = the status cell only),
+  then live with `--expect` → receipt pass `c2f91f7e → 2dfda9c0`.
+- **E15** — 2026-11-19, `bun test scripts/roadmap-settle.test.mjs` · exit 0 · 10 pass / 0 fail — the live `pr-url-unsettled` red is gone.
+- **E16** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/features/645-guide-minimalism/SPEC.md` · exit 0 · `verdict: PASS`, 0 violations.
+- **E17** — 2026-11-19, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md 602 181 421 12581` against ceilings 663 / 464 / 13,840 = ceil(measured × 1.10); the arithmetic self-check reports every budgeted document's declared ceilings equal to ceil(measured × 1.10) (the PACKAGES.md "spent, not re-based" row predates this unit and is untouched).
+- **E18** — 2026-11-19, `rg -c '^## AI-[0-9]+ — [^<]' docs/architecture/ARCHITECTURAL_INVARIANTS.md` · exit 0 · `1` — O14's corrected validator counts the declared invariant and skips the fenced `<short rule>` example the old pattern counted (`2`).
+- **E19** — 2026-11-19, `bun test scripts/inviolable-rules.test.mjs` · exit 0 · 18 pass / 0 fail — the six fixture reds O3 now counts (P2 and E9 both say six).
+- **E20** — 2026-11-19, `bun scripts/test-impact.mjs --base origin/main` · exit 0 · `verdict: targeted`, 9 suites; every suite in the set ran green in this batch (G6–G13).
+- **E21** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/645-guide-minimalism/SPEC.md` · exit 0 · `verdict PASS`, fingerprint `3e85467a…`.
+- **E22** — 2026-11-19, `bun scripts/check-skill-context.mjs --documents --json` · exit 0 · `packages/pi-agentic-workflow/README.md` rows `lines 1178 · estimate 16057 · linesMax 1296` (O10's evidence).
+- **G6** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun test scripts/guide-split.test.mjs` · exit 0 (17 pass).
+- **G7** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun test scripts/workflow-docs-index.test.mjs` · exit 0 (5 pass).
+- **G8** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun test scripts/scaffold-guide.test.mjs` · exit 0 (9 pass).
+- **G9** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun test scripts/residue-dimensions.test.mjs` · exit 0 (30 pass).
+- **G10** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun test scripts/normative-drift.test.mjs` · exit 0 (22 pass).
+- **G11** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 (22 pass).
+- **G12** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun test scripts/local-gate.test.mjs` · exit 0 (60 pass).
+- **G13** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — the rest of E20's impacted set — `bun test scripts/check-skill-context.test.mjs scripts/shared-doc-merge.test.mjs scripts/invocation-drift.test.mjs scripts/promise-coherence.test.mjs scripts/residual-classify.test.mjs packages/pi-agentic-workflow/test/skill-parity.test.mjs` · exit 0 (1 / 18 / 13 / 37 / 25 / 8 pass).
+- **G14** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun scripts/run-root-suite.mjs` · exit 0 · 128 suites PASS, no FAIL line (run over that HEAD's tree, before this Log-only delta).
+- **G15** — 2026-11-19, HEAD 9cc2c2a9d9e2e7034afb526cbcb2f055ff794505 — `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`.
 
 ## Next
 
