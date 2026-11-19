@@ -442,11 +442,14 @@ the unit ships every row is `verified`.
   projection — `90d0467ef`.
 - **G5** — 2026-11-19, HEAD 90d0467ef, `bun scripts/run-root-suite.mjs --jobs 4`
   · exit 0 · 129 suites PASS · 0 FAIL.
-- **G6** — 2026-11-19, HEAD 67b0b7d45, `bun scripts/local-gate.mjs --jobs 4`
-  · exit 0 · `local-gate: PASS — 19 step(s) in 688s` (a first full run at
-  `90d0467ef` also answered PASS, 941s; the commits since add the closed
-  ledgers, the session fragment and this log line, and the same gate step list
-  covers them) — root-suite 129/0,
+- **G6** — 2026-11-19, HEAD efc101690, `bun scripts/local-gate.mjs --jobs 4`
+  · exit 0 · `local-gate: PASS — 19 step(s) in 682s` — 19/19 steps green, root
+  suite 129/0, crate-suite-bun 1325/0, schema-node-compat 931/0,
+  pi-node-compat 1023 tests (1022 pass, 1 skipped, 0 fail). Two earlier full
+  runs answered PASS too (`90d0467ef`, 941s — the tree before the ledgers were
+  closed; `67b0b7d45`, 688s — the tree that recorded them); this one is the
+  tree this line is committed against, and the only change after it is this
+  receipt. — root-suite 129/0,
   crate-suite-bun 1325/0, schema-node-compat 931/0, pi-node-compat 1023 tests
   (1022 pass, 1 skipped, 0 fail), `docs-generated-projection` PASS,
   `version-parity-content` PASS on the changeset. The first attempt failed at
