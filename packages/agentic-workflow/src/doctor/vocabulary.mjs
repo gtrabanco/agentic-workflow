@@ -1,11 +1,11 @@
 /**
  * vocabulary.mjs — the doctor's published vocabularies (issue #537 S5).
  *
- * Three closed sets and the curated companion↔core pair. They are exported
- * `Object.freeze` literals because they are published vocabularies: `AGENTS.md`'s
- * `normative-surfaces@1` binds each one through a `schema-export:` row, so the
- * values an agent may pass and the values this module accepts cannot drift apart.
- * The precedent is `PATH_GUARD_REASONS` in `../path-policy.mjs`.
+ * Three closed sets and the curated companion↔core pair. The three sets are the
+ * schema package's published consts (owner: `vocabulary-residency@1`), re-exported
+ * because `AGENTS.md`'s `normative-surfaces@1` binds each one through a
+ * `schema-export:` row — so the values an agent may pass and the values this
+ * module accepts are one declaration, not two that could drift apart.
  *
  * Nothing here is a second copy of a documented fact: the *declarative* half of
  * every surface (what it is, why it exists, whether it is required, how it is
@@ -14,40 +14,19 @@
  * the closed value sets and the one maintainer-curated pairing.
  */
 
+import {
+  DOCTOR_CHECK_STATUSES,
+  INSTALL_ROUTES,
+  WIZARD_MOVES,
+} from "@gtrabanco/agentic-workflow-schema";
+
 /** The checker's own contract id — its twin is `resources-detect@1`. */
 export const DOCTOR_CONTRACT_ID = "doctor@1";
 
-/**
- * What one observation can conclude. `ok` is healthy, `missing` is an absent
- * surface, `mismatch` is two versions that disagree (a binary behind its pin, or
- * a served version behind its binary), `unarmed` is a declared contract whose
- * configuration was never applied, `unreachable` is a surface that exists but
- * cannot answer, and `not-applicable` is a surface the project does not declare
- * at all — never a defect.
- */
-export const DOCTOR_CHECK_STATUSES = Object.freeze([
-  "ok",
-  "missing",
-  "mismatch",
-  "unarmed",
-  "unreachable",
-  "not-applicable",
-]);
-
-/**
- * How a surface is installed, in the order a reader picks one: a package manager
- * (`npm`/`bun`/`pip-uv`/`brew`), the project's own `binary` download, or
- * `instruct-only` — an operator shell command this CLI never runs.
- */
-export const INSTALL_ROUTES = Object.freeze(["npm", "bun", "pip-uv", "brew", "binary", "instruct-only"]);
-
-/**
- * What the wizard may do with one check row: report it, ask consent and run the
- * project's own installer, print the exact command for the operator, or name it
- * as a residual the doctor must not touch (a curated decision or a surface
- * another owner writes).
- */
-export const WIZARD_MOVES = Object.freeze(["report-only", "ask-consent-write", "instruct-only", "residual"]);
+/** What one observation can conclude (`doctor-check-status`), how a surface is
+ *  installed (`install-route`), and what the wizard may do with one row
+ *  (`wizard-move`) — the schema package's published consts. */
+export { DOCTOR_CHECK_STATUSES, INSTALL_ROUTES, WIZARD_MOVES };
 
 /**
  * The Node.js floor the CLI declares — `packages/agentic-workflow/package.json`

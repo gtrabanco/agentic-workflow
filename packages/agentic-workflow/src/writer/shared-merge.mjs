@@ -82,25 +82,17 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+import { SHARED_MERGE_CLASSES, SHARED_MERGE_REFUSAL_REASONS } from "@gtrabanco/agentic-workflow-schema";
+
 import { structuralJsonMerge, telemetryRowKey, unionAppendOnly, unionLogEntries, unionTableRows } from "./merges.mjs";
 
 const REFUSAL = "SHARED MERGE REFUSAL —";
 
-/** The closed class vocabulary. Adding a class is a contract change, by design. */
-export const SHARED_MERGE_CLASSES = Object.freeze(["roadmap", "budgets", "repo-state", "logs", "telemetry"]);
-
-/** The closed refusal vocabulary (what stderr names, why it exited nonzero). */
-export const SHARED_MERGE_REFUSAL_REASONS = Object.freeze([
-  "unknown-path",
-  "generated-projection",
-  "class-mismatch",
-  "unreadable-side",
-  "invalid-document",
-  "not-append-only",
-  "non-append-union",
-  "refused-install",
-  "usage",
-]);
+/** The closed class vocabulary and the closed refusal vocabulary (what stderr
+ *  names, why it exited nonzero) — the schema package's published consts (owner:
+ *  `vocabulary-residency@1`). Adding a class or a reason is a contract change
+ *  there, by design. */
+export { SHARED_MERGE_CLASSES, SHARED_MERGE_REFUSAL_REASONS };
 
 /** The driver name git config arms per class; `.gitattributes` references it. */
 export function driverName(cls) {

@@ -41,13 +41,11 @@ import { readFileSync, writeFileSync, renameSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { createHash, randomBytes } from "node:crypto";
 
-/** The closed refusal vocabulary. Adding a reason is a contract change. */
-export const WRITER_REFUSAL_REASONS = Object.freeze([
-  "stale-read",
-  "missing-file",
-  "unreadable",
-  "invalid-document",
-]);
+import { WRITER_REFUSAL_REASONS } from "@gtrabanco/agentic-workflow-schema";
+
+/** The closed refusal vocabulary — the schema package's published const (owner:
+ *  `vocabulary-residency@1`). Adding a reason is a contract change there. */
+export { WRITER_REFUSAL_REASONS };
 
 /** A refused writer operation, named so a caller can tell a refusal from a bug. */
 export class WriterError extends Error {

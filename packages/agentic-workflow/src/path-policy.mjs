@@ -10,6 +10,8 @@
 // parity-pinned by the P2 done-when command) and the pi package mirror
 // (parity-pinned by the pi suite). E-60-1.
 
+import { PATH_GUARD_REASONS } from "@gtrabanco/agentic-workflow-schema";
+
 export const PATH_POLICY_SCHEMA = "path-protection-policy@1";
 export const PLAN_DECLARATION_SCHEMA = "path-protection-plan@1";
 export const RECORDS_SCHEMA = "path-protection-records@1";
@@ -35,22 +37,11 @@ export const CHANGED_PATH_LIMIT = 10000;
 
 /**
  * The closed reason vocabulary. Adding a reason is a SPEC change, never a code
- * path. Exported as a frozen literal array so the drift gate can read it via
- * its `schema-export:` surface (published by the `path-protection-reasons`
- * normative row).
+ * path. The set is the schema package's published const (owner:
+ * `vocabulary-residency@1`), which is what the `path-protection-reasons`
+ * normative row's `schema-export:` cell reads.
  */
-export const PATH_GUARD_REASONS = Object.freeze([
-  "clean",
-  "justified",
-  "approved",
-  "protected-modification",
-  "approval-required",
-  "undeclared-test",
-  "unmatched-record",
-  "malformed-declaration",
-  "missing-config",
-  "malformed-config",
-]);
+export { PATH_GUARD_REASONS };
 
 /** The published degradation codes a gate run may report. */
 export const DEGRADATION_CODES = Object.freeze([

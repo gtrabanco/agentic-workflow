@@ -35,17 +35,17 @@
  */
 
 /** The contract this module implements, versioned for the coverage tools. */
+import { NODE_SANCTIONED_SCRIPTS } from "@gtrabanco/agentic-workflow-schema";
+
 export const TOOL_CHOICE_CONTRACT = "shell-tool-choice@1";
 
 /**
- * The sanctioned `node` scripts — one declaration, two readers. Extending it is
- * a reviewed change: the parity suite refuses a consumer that stops reading it.
+ * The sanctioned `node` scripts — one declaration, two readers, and it lives in
+ * the schema package (`node-sanctioned-script`, owner: `vocabulary-residency@1`).
+ * Extending it is a reviewed change: the parity suite refuses a consumer that
+ * stops reading it.
  */
-export const NODE_SANCTIONED_SCRIPTS = Object.freeze([
-  "scripts/setup-env.mjs",
-  "scripts/update-tools.mjs",
-  "scripts/run-root-suite.mjs",
-]);
+export { NODE_SANCTIONED_SCRIPTS };
 
 /**
  * The bootstrap pair: the two scripts that must stay node-runnable, each with

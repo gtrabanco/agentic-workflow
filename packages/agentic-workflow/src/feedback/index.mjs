@@ -35,13 +35,16 @@
 
 import { writeSync } from "node:fs";
 
+import { FEEDBACK_TIERS } from "@gtrabanco/agentic-workflow-schema";
+
 /**
  * The three tiers, in precedence order. Exported as a frozen literal array
  * because it is a published vocabulary: `AGENTS.md`'s `normative-surfaces@1`
  * binds it through its `schema-export:` row, so the flags an agent may pass and
- * the values the module accepts cannot drift apart.
+ * the values the module accepts cannot drift apart. The set itself is the schema
+ * package's published const (owner: `vocabulary-residency@1`).
  */
-export const FEEDBACK_TIERS = Object.freeze(["regular", "debug", "profile"]);
+export { FEEDBACK_TIERS };
 
 /**
  * How long a universally-attached run may stay silent before it announces
