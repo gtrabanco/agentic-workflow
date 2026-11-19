@@ -212,8 +212,9 @@ test("every document the policy can emit validates, across the whole matrix", ()
 // ── The routing data is untouched (S8) ───────────────────────────────────
 
 test("the policy touches no route: the shipped ladders are byte-identical", () => {
-  assert.equal(resolvePresetProfile({ tierRouting: false, profile: "balanced" }), PUBLISHED_LADDER);
+  assert.deepEqual(resolvePresetProfile({ tierRouting: false, profile: "balanced" }), PUBLISHED_LADDER);
   assert.deepEqual(resolvePresetProfile({ tierRouting: false, profile: "economy" }), PROFILE_LADDERS.economy);
+  assert.equal(PUBLISHED_LADDER, PROFILE_LADDERS.balanced, "the reference ladder is still the same object");
 });
 
 // ── The command that prints the recommendation ───────────────────────────
