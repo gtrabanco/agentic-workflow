@@ -361,6 +361,34 @@ this unit). The rule itself is not restated here: its owner is
 - **V1** — 2026-11-19, `docs/features/644-substrate-gap-alarm/SPEC.md:194` · reviewer self, before the handoff · recheck `bun scripts/promise-coherence.mjs docs/features/644-substrate-gap-alarm/SPEC.md …/planning-obligations.md …/planning-evidence.md` → `verdict PASS`, 3 claims checked · confirmed: the `rg -c` tally over a directory was unreadable as one number (observed 2), the claim now reads `rg -o … | wc -l`.
 - **F1** — 2026-11-19, folded in the session that found it: the two validator cells that spelled a directory `rg -c` were re-spelled to a single-number command (AC-5 and P5, plus `E13`'s wording). No behaviour changed — the corrected form reports the same 3 and 2, now readable as one number.
 - **D9** — 2026-11-19, disclosed gap, not repaired here: `inFlightUnitDocs()`'s in-flight rule matches the legacy `Progress log` shape (`YYYY-MM-DD HH:MM — …`), which the re-cut `## Log` `P` line the template publishes does not carry — so `promise-coherence`'s own corpus sweep examines no post-#308 unit doc, this unit included. The guard was therefore run against this unit's three documents directly (`V1`), and repairing the detector is left to the owner: it changes the corpus of every unit and belongs to its own unit, not to this one.
+- **P9** — 2026-11-19, the correction batch for external-verify blocker 1
+  (`F2`): ledgers frozen · `a6d960b6e`, red corpus · `fae6cf8e9`, the
+  `parseRoute` migration · `01d3692f0`.
+- **P10** — 2026-11-19, the correction batch for external-verify blocker 2
+  (`F3`): the lane tutorial's route cell and both usage lines, pinned by the
+  route-vocabulary suite · `cf0be4a0d`.
+- **E16** — 2026-11-19, the frozen-failure corpus RED at `fae6cf8e9`:
+  `bun test packages/agentic-workflow/test/elicitation.test.mjs` · exit 1 ·
+  28 pass / 2 fail (both `#644` route cases) and
+  `bun test scripts/substrate.test.mjs` · exit 1 · 15 pass / 1 fail (the
+  extended `route vocabulary` pin reading `LANE_FLOW.md`).
+- **E17** — 2026-11-19, green after the batch, exit 0 everywhere: elicitation
+  30 pass · substrate 16 pass · needs-input 42 pass ·
+  `rg -o 'init-workspace:<class>' docs/workflow/LANE_FLOW.md | wc -l` → 1.
+- **E18** — 2026-11-19, the differential: a 12-cell `checkSpec` matrix over a
+  base copy of `c1ccc1985` in `mktemp` vs the head — every verdict identical
+  except the two declared deltas (the qualified `init-workspace:<class>` cell
+  accepted where the base refused it, and the refusal message enumerating
+  `design | unit-lane | init-workspace:<class>` instead of `design/unit-lane`);
+  design, unit-lane, bare, unknown class, colon forms, the empty cell and the
+  decision row's free text fire or pass on both sides.
+- **F2** — 2026-11-19, folded in the correction batch: `prespec.mjs:286` now
+  reads the cell through the reader's `parseRoute`, so the linter accepts
+  exactly the cells the dispatcher accepts (red `fae6cf8e9` → green `E17`) ·
+  fix `01d3692f0`.
+- **F3** — 2026-11-19, folded in the correction batch: `LANE_FLOW.md` states
+  the third route and both usage lines carry `[--workspace <dir>]`, pinned by
+  the substrate suite (red `E16` → green `E17`) · fix `cf0be4a0d`.
 
 ## Next
 
