@@ -268,8 +268,8 @@ this unit). The rule itself is not restated here: its owner is
 | `audit-docs` | a coherence defect it may not repair | bound-by-reference | `skills/audit-docs/SKILL.md` — fixes only low-risk items, on request | none |
 | `product-audit` | a proposed rescope | bound-by-reference | `skills/product-audit/SKILL.md` — proposes, never edits | none |
 | `unit-lane` (docs step) | doc placement ("where does this go") | bound-by-reference | `skills/unit-lane/references/DOCS.md` §Documentation currency — the documentation map owns placement | none |
-| `init-workspace` (bootstrap write) | a substrate block the template lacks | **unbound** | `skills/init-workspace/references/BOOTSTRAP_WRITE.md` narrates the writes without a coverage check | `substrate check` (P3/P5) makes "absent section, no recorded decline" a refusal |
-| `unit-lane` (evidence) | a tree-prose claim used as evidence | **unbound** | `skills/unit-lane/references/DESIGN.md` §Stage 1 journals claims without re-checking a prose claim against its neighbourhood | `evidence-staleness@1` (P6) |
+| `init-workspace` (bootstrap write) | a substrate block the template lacks | bound-by-reference | `skills/init-workspace/references/BOOTSTRAP_WRITE.md` narrates the writes; `skills/init-workspace/SKILL.md` §Substrate coverage gate now makes "absent section, no recorded decline" a refusal through `runner substrate check` | closed by this unit (P3/P5) — the gate is the reference |
+| `unit-lane` (evidence) | a tree-prose claim used as evidence | bound | `skills/unit-lane/references/DESIGN.md` §A tree claim is evidence with an expiry (`evidence-staleness@1`): the claim cites its location and is re-read against its neighbourhood before it decides | closed by this unit (P6) |
 | runner: `needs-input` | a fact the lane cannot resolve | bound-by-reference | `skills/unit-lane/references/DESIGN.md` §Needs-input guard; the crate reads the ledger, decides nothing | the substrate route (P4) |
 | runner: `unit-route` | which steps a unit needs | bound-by-reference | `skills/triage-issue/references/ISSUE_PROCESS.md` — the machine's step list is authoritative | none |
 | runner: `phase-lint` | whether a phase is well-formed | bound | `skills/phase-contract/SKILL.md` — two accepted grammars, fixed PASS/BLOCKED | none |
@@ -298,10 +298,38 @@ this unit). The rule itself is not restated here: its owner is
   ```
   NEW FEATURE: substrate-gap-alarm — missing architecture/contract facts route to init-workspace, never an inferred answer
   ```
+- **P1** — 2026-11-19 12:04, unit doc cut, the audit table landed (35 decision
+  points, 2 `unbound`), O1…O13 and PE-001…PE-016 frozen · `eea76216c`.
+- **E1** — 2026-11-19, `bun test scripts/substrate.test.mjs` at `4d603113a` · exit 1 · 15 of 16 fail; the one pass is the byte-stability control, which passed because both runs printed the same missing-command bytes.
+- **E2** — 2026-11-19, `bun test scripts/needs-input.test.mjs` at `4d603113a` · exit 1 · 6 of the 8 new cases fail; the two that pass are the refusals, which already refused (`unknown-route`) before the route existed — the fail-closed direction was never redesigned.
+- **E3** — 2026-11-19, `bun test packages/agentic-workflow/test/cli.surface.test.mjs` at `4d603113a` · exit 1 · the bin does not dispatch `substrate`.
+- **P2** — 2026-11-19 12:31, the red corpus committed alone · `4d603113a`.
+- **P3** — 2026-11-19 13:02, the census, `substrate check`, the schema consts and the dispatcher's verification · `de52801ba`.
+- **E4** — 2026-11-19, `bun test scripts/substrate.test.mjs` · exit 0 · 16 pass.
+- **E5** — 2026-11-19, `bun test scripts/needs-input.test.mjs` · exit 0 · 42 pass (34 pre-existing + 8 new).
+- **E6** — 2026-11-19, the audit tally · `rg -c '^\| [^\|]+ \| [^\|]+ \| (bound\|bound-by-reference) \|' docs/features/644-substrate-gap-alarm/SPEC.md` → 35 and `rg -q '\*\*unbound\*\*' …/SPEC.md` → exit 1 (no unbound row survives).
+- **E7** — 2026-11-19, the differential against `c1ccc1985` over one three-question ledger plus a decided row (`needs-input`, text and `--json`, stdout + stderr + exit) · no diff beyond the run label · two declaared deltas, both intended: base refuses `init-workspace:architecture` as `unknown-route` (exit 1) while the head grants it on a workspace without the document (exit 0), and `substrate` is a new subcommand (base: closed-world usage error).
+- **P4** — 2026-11-19 13:31, the published grammars, the skill wiring, the inventory rows and the budget re-pins · `29d5a1afb`.
+- **E8** — 2026-11-19, the through-the-owner suites, all exit 0: `promise-coherence` 37 · `normative-drift` 22 · `residue-dimensions` 30 · `vocabulary-parity` 35 · `ledger-ownership` 15 · `unit-doc-contract` 21 · `prose-gate-inventory` 22 · `test-obligation-tags` 15.
+- **E9** — 2026-11-19, `bun scripts/check-skill-context.mjs` → `PASS context budgets: 30 skills`; `--documents` → `PASS context documents: 4 budgeted documents` · the four re-pins are recorded in the manifest's own `sources` rows.
+- **E10** — 2026-11-19, `bun test packages/agentic-workflow/test` → 1321 pass · `bun run test` in `packages/agentic-workflow-schema` → 914 pass.
+- **E11** — 2026-11-19, the gate on this repository itself: `substrate check --workspace .` · exit 1 · `architecture` and `documentation-map` present, `decision-records` and `api-posture` absent because this repository's guide carries no `## Project charter` and no `substrate-declines@1` row. Disclosed, not repaired: the gate governs scaffold installs, this repository is not one, and adding a charter here is a project-domain decision outside this unit's scope.
+- **E12** — 2026-11-19, `bun scripts/docs-generate.mjs` (1 file written — the 644 row in `docs/generated/units.md`) then `--check` · exit 0 · `PASS`.
+- **E13** — 2026-11-19, `rg -c 'substrate check' skills/init-workspace` → 3 (SKILL.md 2, UPGRADE.md 1) and `rg -c 'substrate-declines@1' skills/init-workspace template/AGENTS.md` → 2 (SKILL.md 1, template/AGENTS.md 1).
+- **E14** — 2026-11-19, `rg -c 'evidence-staleness@1' skills/unit-lane/references/DESIGN.md` → 1 (one owner; the inventory row cites it and `scripts/normative-drift.test.mjs` resolves its grammar, E8).
+- **D1** — 2026-11-19, the unit's home is `docs/features/644-substrate-gap-alarm/` because `docs/ROADMAP.md:196` already names it (authority: the roadmap's hand-owned cell; recorded as D-644-1).
+- **D2…D7** — 2026-11-19, the design decisions this unit took (qualified-and-verified substrate route, the four census surfaces, one census module, schema-owned vocabularies, a declined class keeps the route open, the staleness lint stays a candidate) — `docs/features/644-substrate-gap-alarm/decisions.md`.
+- **D8** — 2026-11-19, disclosed side effect: a `journal aggregate` run inside this worktree consumed 114 tracked fragments and appended 115 entries to `docs/LOGS.md` (it is main's aggregator, not a branch's). Restored with `git checkout -- docs/LOGS.md .agentic-workflow/journal`; the carrier now holds 115 fragments (the 114 tracked ones plus this unit's), and this unit's entry is left for main's aggregator instead of being appended here.
+- **G1** — 2026-11-19, `bun scripts/run-root-suite.mjs` · exit 0 · 128 suites.
+- **G2** — 2026-11-19, `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`.
+- **G3** — 2026-11-19, `bun scripts/log-immutability.mjs` · exit 0 · `0 violations · base c1ccc1985`.
+- **G4** — 2026-11-19, `bun scripts/local-gate.mjs` at the P7 head · exit 0 · `PASS — 19 step(s) in 739s` (the first run was red on `worktree-guard` because of this unit's own differential scratch worktree; the scratch was removed and the gate re-run green).
 
 ## Next
 
-P1 — cut the audit table and close the two `unbound` rows with P3/P5/P6.
+The owner's verdict on the diff (external verification). Nothing in this unit is
+self-approved: the obligation rows record the validators that ran, and the
+verdict is the owner's.
 
 ## References
 
