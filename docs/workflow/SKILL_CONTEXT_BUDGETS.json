@@ -26,7 +26,7 @@
     ],
     "files": {
       "AGENTS.md": {
-        "linesMax": 745,
+        "linesMax": 749,
         "proseLinesMax": 571,
         "estimateMax": 14745,
         "machineBlocks": [
@@ -34,8 +34,9 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 180,
+        "machineLines": 184,
         "sources": {
+          "issue #644 (substrate-gap alarm)": "the inventory gains four rows — `needs-input-route-vocabulary` and `substrate-class-vocabulary` binding the two new schema consts, `substrate-coverage-block` binding the gate\u2019s fixed block in the crate README, and `evidence-staleness-rule` binding the rule that owns the #643 class — so the machine region moves 180 -> 184 lines and the guide measures 749 lines / 184 machine / 565 prose / 13,711 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` (749) is exactly the measurement — spent, not re-based (the fix #571 precedent); `proseLinesMax` (571) and `estimateMax` (14,745) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "merge of origin/main (PR #639 issue #611, PR #640 issue #616) into feat/631-cache-hit-rate (2026-11-19, PR #641 integration)": "the integration unions both lineages' `normative-surfaces@1` rows — this unit's `tier-cost-comparison` plus main's `setup-defect-route` (unit 611) and `journal-corpus-grammar` (issue #616) — so the machine region is 171 lines (this branch's 169 + main's 2) and the merged guide measures 731 lines / 171 machine / 560 prose / 13,237 est with `bun scripts/check-skill-context.mjs --documents`. Each side had re-pinned for its own single-lineage tree (this branch 731 lines / 169 machine, main 730 / 170), so `machineLines` is re-pinned 169 -> 171 (the exact boundary the merged tree measures, the fix #571 precedent rather than the manifest's `ceil(measured x 1.10)` arithmetic, which would grant room nobody asked for); `linesMax` (731) is exactly the merged measurement — spent, not re-based; `proseLinesMax` (571) and `estimateMax` (13,259) keep their headroom over the merged measurement. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #596 (test relevance sweep)": "the guide gains two `normative-surfaces@1` rows (`test-obligation-kind-vocabulary` binding the schema export, `test-obligation-tag-grammar` binding the tag block) and one clause on the sibling-suite rule pointing at the tag owner, so the machine region moves 171 -> 173 lines and the guide measures 738 lines / 173 machine / 565 prose / 13,404 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` (738) is exactly the measurement — spent, not re-based (the fix #571 precedent); `estimateMax` re-bases to ceil(13,404 x 1.10) = 14,745 and `proseLinesMax` (571) still bounds the measured 565. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "merge of origin/main (issue #596) into feat/643-single-source-vocabulary (2026-11-19)": "the integration unions both lineages additions to the guide — main `normative-surfaces@1` rows (`test-obligation-kind-vocabulary`, `test-obligation-tag-grammar`) and its clause, plus this unit `vocabulary-residency` row, `gate-rejection-types` schema-export row, `restates` rendered-facts row and AC15 pointer — so the merged guide measures 745 lines / 180 machine / 565 prose / 13,586 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 178 -> 180 and `linesMax` 738 -> 745 (the exact boundaries the merged tree measures, the fix #571 precedent); `estimateMax` keeps main 14,745 (ceil(13,404 x 1.10), headroom over the merged measurement) and `proseLinesMax` (571) still bounds 565. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
@@ -101,13 +102,14 @@
         }
       },
       "docs/workflow/GATE_INVENTORY.md": {
-        "linesMax": 178,
+        "linesMax": 179,
         "estimateMax": 8579,
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 83,
+        "machineLines": 84,
         "sources": {
+          "issue #644 (substrate-gap alarm)": "the inventory gains the `substrate-coverage` gate row (the census the alarm\u2019s third route is verified against, carried by `scripts/substrate.test.mjs`) and the `evidence-staleness-rule` surface joins the `normative-surface-grammar` row\u2019s claimed set, so the machine region moves 83 -> 84 lines and the file measures 179 lines / 84 machine / 95 prose / 7,921 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` (179) is exactly the measurement; `estimateMax` (8,579) keeps its headroom. No emitter exists for the `documents` section, so this row is a recorded hand edit.",
           "issue #596 (test relevance sweep)": "the inventory gains the `test-obligation-tags` row and claims both new normative surfaces on the row that enumerates them, so the document measures 178 lines / 83 machine / 95 prose / 7,799 est. `machineLines` is pinned exactly (83) and `linesMax` (178) is the measurement — spent, not re-based; `estimateMax` re-bases to ceil(7,799 x 1.10) = 8,579. No emitter exists for the `documents` section, so this row is a recorded hand edit.",
           "merge of origin/main (PR #639 issue #611, PR #640 issue #616) into feat/631-cache-hit-rate (2026-11-19, PR #641 integration)": "the integration unions both lineages' `prose-gate-inventory@1` carrier rows: the `normative-surface-grammar` surfaces cell carries this unit's `tier-cost-comparison` plus main's `setup-defect-route` (unit 611) and `journal-corpus-grammar` (issue #616), and main's `journal-corpus` gate row joins, so the machine region is 82 lines (this branch's 81 + 1) and the resolved inventory measures 177 lines / 82 machine / 95 prose / 7,627 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 81 -> 82 and `linesMax` 176 -> 177 — the exact boundaries the merged tree measures, the fix #571 precedent; `estimateMax` (8,015) keeps its headroom over the merged measurement. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #626 (guard dispositions)": "the inventory gains one row, `local-config-contract`, citing the suite that checks this repository's own committed config against the schema it ships (the reader validated only the sections its registry names, so a retired top-level key resolved to the shipped default silently). The machine region moves 80 -> 81 lines and the file measures 176 lines / 95 prose / 7,523 est with `bun scripts/check-skill-context.mjs --documents`; `linesMax` is re-pinned 175 -> 176 and `machineLines` 80 -> 81 to the exact boundary this unit spends, while `estimateMax` (8,015) keeps its headroom. No emitter exists for the `documents` section, so this row is a hand edit recorded here rather than a silent one.",
@@ -244,8 +246,9 @@
     },
     "orchestration-envelope": {
       "descriptionEstimateMax": 170,
-      "referenceEstimateMax": 3020,
+      "referenceEstimateMax": 3561,
       "referenceSources": {
+        "issue #644 (substrate-gap alarm)": "the open-questions@1 block gains the third route (`init-workspace:<class>`, verified against the workspace census), the `--workspace` input line and the three new fail-closed reasons, so TURN_CONTRACT.md measures 3237 est with `bun scripts/check-skill-context.mjs`; the reference ceiling re-bases by the manifest's declared arithmetic to ceil(3237 x 1.10) = 3561. Growth source = the third route's grammar (route line, fail-block reasons, the paragraph naming the schema owners it cites).",
         "fix 258 / #258 harden-needs-input": "the open-questions@1 grammar (the needs-input halt: header/fields/fail-block/route, produced by scripts/needs-input.mjs) grew TURN_CONTRACT.md from the measured 2200 (the default reference ceiling) to 2339 est; ceiling re-based to ceil(2339 x 1.10) = 2573. This per-skill referenceEstimateMax bounds every reference file this skill loads; no per-reference ceiling exists in schemaVersion 1.",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the read-only profile (P2) added the skills-that-edit-nothing substitution prose to TURN_CONTRACT.md, growing it to a measured 2745 est; ceiling re-based to ceil(2745 x 1.10) = 3020, reason declared (single-owner migration)."
       }
@@ -346,9 +349,10 @@
         "fix 434 (tier-fused design/plan, delta provenance)": "the conductor's step-contract paragraph gains the fused-pass rule with its owner pointer (the normative block lives in references/PLAN.md — one pointer in main, never a restatement); measured 4769 est / 353 lines at this cut, so the estimate ceiling re-bases to exact ceil(4769 x 1.10) = 5246 while the line ceiling stays 365 (353 < 365). Growth source = fix 434's SKILL.md fused-pass paragraph",
         "feature 526 (evidence-backed elicitation, Layer 0)": "the lane's entry gains the Layer-0 pre-spec step (before triage) and its turn-contract box, both pointing at references/ELICITATION.md; measured 4946 est / 366 lines against the previous 365 line ceiling, so the line ceiling is re-set to ceil(366 x 1.10) = 403 and the estimate ceiling stands (4946 of 5246). Growth source = feature 526's Layer-0 step, one box and one four-line section."
       },
-      "referenceEstimateMax": 5218,
-      "referenceLinesMax": 360,
+      "referenceEstimateMax": 6209,
+      "referenceLinesMax": 429,
       "referenceSources": {
+        "issue #644 (substrate-gap alarm)": "DESIGN.md gains the substrate branch in the needs-input guard and the §A tree claim is evidence with an expiry rule (`evidence-staleness@1`, the #643 class), so the largest reference measures DESIGN.md 5644 est / 390 lines with `bun scripts/check-skill-context.mjs`; the per-skill reference ceilings re-base by the manifest's declared arithmetic to ceil(5644 x 1.10) = 6209 / ceil(390 x 1.10) = 429. Growth source = issue #644's two design-step rules, both stated once at their owner and cited by the surfaces that read them.",
         "fix #303 (investigate → orient → ask → decide)": "the design and plan steps restated positively (investigate search + sources.md citation ledger, orient tiers 0/1/2, ask, decide) — measured DESIGN.md 2529 est / 196 lines, ceiling ceil(2529 x 1.10) = 2782 / ceil(196 x 1.10) = 216",
         "fix 318 (closure lives with the step that executes it)": "S2/S6/S8's three-direction closure, ask-don't-infer, document-or-don't-coin and retirements moved from the conductor's own §3 into the reference each step actually reads: DESIGN.md gains §Three-direction closure plus its checklist items, PLAN.md gains the retirements output contract plus its checklist item, and the conductor keeps only a pointer. The rule now lives where a model running `design` reads it, instead of in a section the step never opens. Measured at this re-basis: DESIGN.md 3004 est / 225 lines and PLAN.md 3017 est / 226 lines (the larger of the two), so the per-skill reference ceilings re-base to exact ceil(3017 × 1.10) = 3319 / ceil(226 × 1.10) = 249",
         "fix 340 (third-party + ask-dont-infer owner block)": "fix 340 (third-party item + ask-dont-infer@1 owner block): DESIGN.md gains the third-party-before-homemade subsection, the ask-dont-infer@1 owner block and the owner-pointer bullet — measured at this re-basis: DESIGN.md 3412 est / 250 lines (the larger of the two references), so the per-skill reference ceilings re-base to exact ceil(3412 x 1.10) = 3754 / ceil(250 x 1.10) = 275. Growth source = fix 340's DESIGN.md additions",

@@ -76,7 +76,10 @@ and append an `open-question` row to the unit's `decisions.md` recording where)
 research is a legitimate answer) → **(2) halt**: run `bun
 `runner needs-input <unit-dir>`, paste the `open-questions@1` block verbatim,
 stop. The block routes each question back to the stage that owns the fact —
-`design` for scope/architecture, `unit-lane` for plan-owned facts. Grammar and
+`design` for scope/architecture, `unit-lane` for plan-owned facts, and
+`init-workspace:<class>` when nothing could own the fact because the workspace has
+no document scaffolded for it (the dispatcher verifies that claim against the
+workspace census and refuses one on a surface that exists). Grammar and
 exit codes: `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open
 questions.
 

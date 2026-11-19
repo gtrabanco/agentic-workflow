@@ -447,6 +447,7 @@ gate-receipt-check-statuses | packages/agentic-workflow-schema/src/gate-receipt.
 gate-receipt-freshness | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_RECEIPT_FRESHNESS_CODES | gate-receipt-freshness | no
 gate-receipt-grammar | packages/agentic-workflow-schema/README.md | block:gate-receipt@1 | n/a | no
 ask-dont-infer-rule | skills/unit-lane/references/DESIGN.md | block:ask-dont-infer@1 | n/a | no
+evidence-staleness-rule | skills/unit-lane/references/DESIGN.md | block:evidence-staleness@1 | n/a | no
 activity-fusion | skills/unit-lane/references/PLAN.md | block:activity-fusion@1 | n/a | no
 residual-promise-grammar | skills/unit-lane/references/DESIGN.md | block:residual-promise@1 | n/a | no
 relay-status-grammar | skills/unit-lane/references/RELAY.md | block:relay-status@1 | n/a | no
@@ -460,6 +461,9 @@ turn-contract-fields | skills/orchestration-envelope/references/TURN_CONTRACT.md
 turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-transitions@1 | workflow-intent | no
 turn-contract-receipt | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:turn-contract-receipt@1 | n/a | no
 open-questions-block | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:open-questions@1 | continuation-refusal-type | no
+needs-input-route-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:NEEDS_INPUT_ROUTES | needs-input-route | no
+substrate-class-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SUBSTRATE_CLASSES | substrate-class | no
+substrate-coverage-block | packages/agentic-workflow/README.md | block:substrate-coverage@1 | substrate-class | no
 path-protection-contract | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:path-protection@1 | path-protection-reason | no
 spec-requirement-ids | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:spec-requirement@1 | n/a | no
 task-spec-links | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:task-spec-link@1 | n/a | no

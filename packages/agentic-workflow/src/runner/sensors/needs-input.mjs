@@ -11,7 +11,7 @@
  * infers, and never writes.
  *
  * Usage
- *   agentic-workflow needs-input <unit-dir> [--json]
+ *   agentic-workflow needs-input <unit-dir> [--workspace <dir>] [--json]
  *
  * stdout: the fixed `open-questions@1` block (grammar owned by
  * `skills/orchestration-envelope/references/TURN_CONTRACT.md`), or — when the
@@ -20,6 +20,14 @@
  * exit: 0 only for a well-formed artifact (pending questions or none);
  *       1 fail-closed on a missing/malformed artifact; 2 usage error.
  *
+ * The third route (issue #644 S3) is the only one this script *verifies*: a
+ * question routed `init-workspace:<class>` claims that no document in the
+ * workspace owns its fact, and the claim is read against the substrate census
+ * (`./substrate.mjs`) instead of trusted — an owned surface refuses the claim
+ * (`substrate-present`), so the scaffold route cannot become a way around an
+ * owner that exists. `--workspace` re-points the census; without it the
+ * workspace is the nearest ancestor carrying a guide or a git directory.
+ *
  * The continuation is the schema's existing `no-decision-available`
  * (`packages/agentic-workflow-schema/src/continuation.ts`), emitted when
  * `decisionAvailable === false` — which is exactly what an open question is —
@@ -27,7 +35,8 @@
  *
  * Fail-closed reason codes: `missing-unit-doc`, `malformed-ledger-header`,
  * `malformed-entry`, `missing-search-receipt`, `missing-options`,
- * `unknown-route`, `unknown-question`, `invalid-authority`, `duplicate-id`.
+ * `unknown-route`, `unknown-question`, `invalid-authority`, `duplicate-id`,
+ * `substrate-present`, `missing-workspace`, `malformed-workspace`.
  *
  * Read-only, dependency-free, and block-aware: a fenced example inside
  * `decisions.md` is quoted text, never an entry, and so is every other
@@ -38,6 +47,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+
+import { NEEDS_INPUT_ROUTES, SUBSTRATE_CLASSES } from "@gtrabanco/agentic-workflow-schema";
+
+import { census, discoverWorkspace, stateOf } from "./substrate.mjs";
 
 /** Contract identifier for the printed block. */
 export const BLOCK_ID = "open-questions@1";
@@ -65,8 +78,17 @@ export const LEDGER_HEADER = "open-questions@1";
 export const LEDGER_COLUMNS = [
   "id", "date", "type", "question", "blocks", "search-receipt", "options", "route",
 ];
-/** The stages that own a fact and may therefore receive it back. */
-export const ROUTES = Object.freeze(["design", "unit-lane"]);
+/** The stages that own a fact and may therefore receive it back (schema owner). */
+export const ROUTES = NEEDS_INPUT_ROUTES;
+/**
+ * The one route whose claim this script verifies: a substrate gap is routed at
+ * the scaffolder **and qualified with the class it claims**, so the claim is
+ * checkable against the workspace's census. A bare `init-workspace` names no
+ * class, so nothing could verify it and it fails closed as `unknown-route`.
+ */
+export const SUBSTRATE_ROUTE = "init-workspace";
+/** Separator between a substrate route and its claimed class. */
+export const ROUTE_QUALIFIER = ":";
 /** The only authority that may close an open question. */
 export const AUTHORITY = "human-owner";
 /**
@@ -275,6 +297,25 @@ export function parseLedger(text) {
   return { ok: true, entries };
 }
 
+/**
+ * Read a route cell: a bare member of the published set, or the scaffolder route
+ * qualified with the substrate class it claims. A bare `init-workspace` is not a
+ * route — with no class there is nothing to verify, and an unverifiable claim is
+ * exactly the inferred answer the no-assumption rule forbids.
+ *
+ * @param {string} value
+ * @returns {{ ok: true, kind: string, klass: string | null } | { ok: false }}
+ */
+export function parseRoute(value) {
+  const cell = String(value);
+  if (ROUTES.includes(cell) && cell !== SUBSTRATE_ROUTE) return { ok: true, kind: cell, klass: null };
+  const parts = cell.split(ROUTE_QUALIFIER);
+  if (parts.length !== 2) return { ok: false };
+  const [kind, klass] = parts;
+  if (kind !== SUBSTRATE_ROUTE || !SUBSTRATE_CLASSES.includes(klass)) return { ok: false };
+  return { ok: true, kind, klass };
+}
+
 /** Validate one row against the closed vocabulary; a defect fails closed. */
 function classifyRow(entry, where) {
   if (entry.id === "") return { ok: false, reason: "malformed-entry", where };
@@ -288,8 +329,9 @@ function classifyRow(entry, where) {
       ? []
       : entry.options.split(OPTIONS_SEPARATOR).map((option) => option.trim()).filter((option) => option !== "");
     if (options.length === 0) return { ok: false, reason: "missing-options", where };
-    if (!ROUTES.includes(entry.route)) return { ok: false, reason: "unknown-route", where };
-    return { ok: true, entry: { ...entry, type: "open-question", options } };
+    const route = parseRoute(entry.route);
+    if (!route.ok) return { ok: false, reason: "unknown-route", where };
+    return { ok: true, entry: { ...entry, type: "open-question", options, routeKind: route.kind, substrateClass: route.klass, where } };
   }
   if (entry.type === "decision") {
     if (entry.authority !== AUTHORITY) return { ok: false, reason: "invalid-authority", where };
@@ -341,12 +383,13 @@ function cell(value) {
 }
 
 /**
- * Compute the machine result for a unit folder. Pure apart from two file
- * reads; the renderer below never re-derives a value from this one.
+ * Compute the machine result for a unit folder. Pure apart from its file reads;
+ * the renderer below never re-derives a value from this one.
  *
  * @param {string} unitDir
+ * @param {{ workspace?: string }} [options]
  */
-export function compute(unitDir) {
+export function compute(unitDir, options = {}) {
   const dir = path.resolve(unitDir);
   const unit = path.basename(dir);
   const specPath = path.join(dir, UNIT_DOC);
@@ -361,6 +404,18 @@ export function compute(unitDir) {
     const resolved = resolvePending(parsed.entries);
     if (!resolved.ok) return { ok: false, unit, reason: resolved.reason, where: resolved.where };
     pending = resolved.pending;
+  }
+  const substrateClaims = pending.filter((entry) => entry.routeKind === SUBSTRATE_ROUTE);
+  if (substrateClaims.length > 0) {
+    const workspace = options.workspace === undefined ? discoverWorkspace(dir) : path.resolve(options.workspace);
+    if (workspace === null) return { ok: false, unit, reason: "missing-workspace", where: ledgerPath };
+    const read = census(workspace);
+    if (!read.ok) return { ok: false, unit, reason: "malformed-workspace", where: read.where };
+    for (const entry of substrateClaims) {
+      if (stateOf(read, entry.substrateClass) === "present") {
+        return { ok: false, unit, reason: "substrate-present", where: entry.where };
+      }
+    }
   }
   return {
     ok: true,
@@ -417,17 +472,35 @@ export function renderFailure(result) {
   ].join("\n") + "\n";
 }
 
-const USAGE = "usage: agentic-workflow needs-input <unit-dir> [--json]\n";
+const USAGE = "usage: agentic-workflow needs-input <unit-dir> [--workspace <dir>] [--json]\n";
 
 function main(argv) {
   const args = argv.slice(2);
-  const json = args.includes("--json");
-  const unknown = args.find((arg) => arg.startsWith("-") && arg !== "--json");
-  if (unknown !== undefined) {
-    process.stderr.write(`needs-input: unknown option: ${unknown}\n${USAGE}`);
-    return 2;
+  const positional = [];
+  let json = false;
+  let workspace;
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--json") {
+      json = true;
+      continue;
+    }
+    if (arg === "--workspace") {
+      const value = args[index + 1];
+      if (value === undefined) {
+        process.stderr.write(`needs-input: --workspace needs a value\n${USAGE}`);
+        return 2;
+      }
+      index += 1;
+      workspace = value;
+      continue;
+    }
+    if (arg.startsWith("-")) {
+      process.stderr.write(`needs-input: unknown option: ${arg}\n${USAGE}`);
+      return 2;
+    }
+    positional.push(arg);
   }
-  const positional = args.filter((arg) => arg !== "--json");
   if (positional.length === 0) {
     process.stderr.write(`needs-input: missing <unit-dir>\n${USAGE}`);
     return 2;
@@ -437,7 +510,7 @@ function main(argv) {
     return 2;
   }
 
-  const result = compute(positional[0]);
+  const result = compute(positional[0], { workspace });
   if (result.ok) {
     process.stdout.write(json ? `${JSON.stringify(result, null, 2)}\n` : render(result));
     return 0;

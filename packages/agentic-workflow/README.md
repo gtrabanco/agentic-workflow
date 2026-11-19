@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|ledger-provenance|quality-metrics|forge-read|ceremony|skills|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -63,7 +63,8 @@ writing anything**.
 | `diff-guard --base <ref> [--max-lines <n>] [--max-files <n>] [--json]` | The **diff-size guard**: measures `git diff --numstat <ref>..HEAD` against the ceiling and prints `DIFF-GUARD PASS — …` or `DIFF-GUARD BREACH — …` with the anti-gaming note (`DIFF-GUARD ERROR — …`, exit 2, for a usage or unknown ref). Exit 0 pass · 1 breach · 2 usage. Deterministic: no timestamps, no hashes |
 | `workflow-status [--compact] [--rag] [--help] [--version]` | The **workflow sensor** (feature 91): the strict Envelope v2 result the drivers consume — repository state, the two roadmap tables, open findings, the fix queue, tier and continuation — validated against the pinned schema package before it is printed. Exit 0 a validated envelope · 1 a fatal read. Read-only, offline except the bounded `gh` forge reads |
 | `pre-execution-snapshot <build\|verify\|contract> [flags]` | The **pre-execution snapshot** (feature 91): `build` writes the `pre-execution-snapshot@1` receipt for a stage (content-bound digests of the bound paths, plus a parent digest for a feature plan stage), `verify` re-derives a receipt's bound digest and reports drift, `contract` prints the published contract constants. `--root` re-points the sensed repository. Exit 0 ok · 1 a real error (named, never a stack trace in the receipt) |
-| `needs-input <unit-dir> [--json]` | The **open-question sensor** (feature 91): reads the unit's `decisions.md` `open-questions@1` ledger and prints the block (`open-questions@1`, open count, entries, route back) or the refusal naming the defective row. Exit 0 answered · 1 refused · 2 usage. Read-only |
+| `needs-input <unit-dir> [--workspace <dir>] [--json]` | The **open-question sensor** (feature 91): reads the unit's `decisions.md` `open-questions@1` ledger and prints the block (`open-questions@1`, open count, entries, route back) or the refusal naming the defective row. The third route (issue #644) is the one it **verifies**: a row routed `init-workspace:<class>` claims no document in the workspace owns its fact, so the dispatcher reads the substrate census and refuses the claim (`substrate-present`) when the surface exists — the scaffold route cannot become a way around an owner. `--workspace` re-points that census; without it, the nearest ancestor carrying a guide or a git directory. Exit 0 answered · 1 refused · 2 usage. Read-only |
+| `substrate check --workspace <dir> [--guide AGENTS.md] [--json]` | The **substrate coverage gate** (issue #644): one row per substrate class — `architecture`, `decision-records`, `api-posture`, `documentation-map` — each `present`, `declined` (a dated row in the guide's `substrate-declines@1` block, written only on an explicit yes) or `absent`, plus the summary and verdict. `init-workspace` runs it on both routes: an `absent` class is a refused install, or the recorded decline. Exit 0 nothing absent · 1 one or more absent · 2 refusal or usage. Read-only |
 | `ledger-provenance <ledger-or-unit-doc> [--json] [--check] [--annotate]` | The **fold-queue recount** (feature 91): reads a `## Findings` table (or a legacy `review-findings.md`) and proves each `folded: yes` row cites a commit that is reachable and whose subject claims that row. `--check` runs the same walk read-only and exits 1 on any row needing a repair, naming the rows by cause; `--annotate` is the one writer. Exit 0 clean · 1 repair needed · 2 usage |
 | `quality-metrics [--window <days>] [--until <instant>] [--repo <dir>] [--out <path>]` | The **project-quality sensor** (feature 558, issue #565): the DORA four keys plus the reversion ratio over a trailing window (default 90 days), printed as the `quality-metrics@1` document the schema package publishes — six metric rows, every row carrying a `measured`/`derived`/`unavailable` label, and a metric that cannot be computed naming its cause instead of reporting a zero. `--until` pins the window's end so a report is reproducible; `--out` is the only byte it may write. Read-only: every git and forge call is a read, the forge dimension is bounded, and an unreadable forge or a history that truncates the window degrades the affected rows in `degraded`. Exit 0 a validated document · 2 a refusal (bad flag or value, nothing measured) · 1 an unexpected failure. The metric definitions are `quality-metrics@1` below |
 | `telemetry reconstruct <stats\|samples\|write> [flags]` | The **manual telemetry reconciliation** (issue #624): rebuilds the session records Pi's own transcripts preserve when `session_shutdown` never fired (pi-web keeps a session alive between prompts), and merges the missing ones into the stores the live sink writes. Discovery walks both store layouts — the flat `.jsonl` file beside the session directory and the old nested `<run>/session.jsonl` one (#638) — and excludes the spawned subagents in both (artifact file name, or the transcript's own `subagent-` `session_info` mark); the old layout never persisted an operator transcript, so its unmarked transcripts are the only ones it can contribute. `stats [--by-model] [--by-date] [--project <path>]` prints the `telemetry-reconstruct@1` totals plus the requested breakdowns; `samples [--jsonl <path>] [--project <path>]` prints one JSON line per record (or dumps them to the named file); `write [--jsonl <path>] [--ledger <path>]` appends only the sessions a destination does not already carry — keyed by the session id after `pi:session=`/`pi:reconstruct=`, so a forced second run adds nothing. The record keeps `unit`, `phase`, `version`, `changed_paths` and `tool_ms` null (a transcript cannot answer them, and the reconstruction never attributes a unit); the ledger row is the documented projection with `0` in its two count cells and is skipped by `scripts/tier-cost.mjs` rather than refusing the ledger. Manual only: no session event reads a transcript. Read-only toward anything it is not told to write; exit 0 answered · 2 refused (`RECONSTRUCT REFUSAL —`, nothing written) |
@@ -86,6 +87,40 @@ Two sibling binaries ship in the same package and are invoked by the skills:
 | `bin/path-guard.mjs` | Tier 1 path-protection gate (feature 60): `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`, read-only and offline, printing `PATH-GUARD <pass\|fail> — <code>` · exit 0 pass, 1 fail, 2 usage |
 | `bin/turn-contract.mjs` | Verifies the canonical turn contract's mechanical boxes: prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>`; `--finished` also requires the pushed branch with its open pull request |
 | `bin/shared-merge.mjs` | The shared-document merge driver's crate entry (issue #630): the same argv form as `scripts/shared-doc-merge.mjs` (`<class> %O %A %B %L %P`, or `--install`). `.gitattributes`-armed checkouts use it when the project ships no `scripts/` tree |
+
+## `substrate` — the substrate coverage gate (issue #644)
+
+The no-assumption rule tells a lane to halt when a fact has no evidence. It could
+not tell *why* there was none: a question the owning document has not answered
+yet belongs to `design`, while a question the workspace has **no document
+scaffolded to own** belongs to `/init-workspace`. One census answers that for
+both consumers — the dispatcher verifies a `init-workspace:<class>` route against
+it, and this command is the gate `init-workspace` runs on both of its routes.
+
+Each class is read from the surface the engineering interview already declares as
+its home, never guessed: the architecture document, the guide's documentation
+map, and the charter's `Decision records` and `API posture` slots (through the
+crate's own slot reader, so "a documented shape is not an answer" has one
+implementation). A class the project consciously leaves unhomed carries a dated
+row in the guide's `substrate-declines@1` block and reports `declined` — written
+only after an explicit yes, never by silence.
+
+```text
+substrate-coverage@1
+# produced-by: `agentic-workflow substrate check --workspace <dir> [--guide AGENTS.md] [--json]
+# classes:     schema-export:SUBSTRATE_CLASSES
+# exit:        0 nothing absent | 1 one or more absent | 2 refusal or usage error
+header:      substrate-coverage@1
+fields:      Workspace: <absolute path>
+             - <class> · <present | declined | absent> · <the surface it read, or the decline row id>
+             Summary: <n> classes · <n> present · <n> declined · <n> absent
+             Verdict: complete | gap
+fail-block:  SUBSTRATE REFUSAL — substrate-coverage@1
+             Workspace: <absolute path>
+             Reason: <unknown-class | malformed-declines | duplicate-class>
+             Where: <path:line>
+state:       present | declined | absent
+```
 
 ## `doctor` — the tool doctor and the documented inventory (issue #537)
 

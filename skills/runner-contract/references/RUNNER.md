@@ -127,7 +127,8 @@ shell fallback.
 | `phase-lint <plan-path>` | the phase linter over a unit doc's `## Tasks` |
 | `diff-guard --base <ref>` | the diff-size guard |
 | `pre-execution-snapshot <build\|verify\|contract>` | the pre-execution snapshot and its drift check |
-| `needs-input <unit-dir>` | the open-question sensor |
+| `needs-input <unit-dir> [--workspace <dir>]` | the open-question sensor — the third route (`init-workspace:<class>`) is verified against the workspace's substrate census before it is granted |
+| `substrate check --workspace <dir> [--guide AGENTS.md] [--json]` | the substrate coverage gate — one row per class (`present`/`declined`/`absent`), the summary and the verdict |
 | `ledger-provenance <ledger> [--check\|--annotate]` | the fold-queue recount |
 | `quality-metrics [--window <days>] [--until <instant>] [--repo <dir>] [--out <path>]` | the project-quality sensor — the DORA four keys plus the reversion ratio as one `quality-metrics@1` document (definitions in the crate README) |
 | `forge-read <issue\|pr> <number> [--comments] [--reviews] [--json]` | the guarded forge read — one issue or pull request, its threads on request, every content field through the content guard and printed as the fenced delivery (or as the `forge-read@1` envelope with `--json`); `forge-read shim <install\|check\|exec>` is the ad-hoc `gh` interceptor the same route drives |

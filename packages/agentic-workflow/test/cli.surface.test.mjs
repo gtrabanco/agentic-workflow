@@ -41,3 +41,7 @@ test("every dispatched subcommand has a Commands row in the crate README", () =>
 test("the bin dispatches `provision` (issue #269's ask-first rg bootstrap)", () => {
   assert.ok(BIN.includes("provision"), "the usage line dispatches provision");
 });
+
+test("the bin dispatches `substrate` (issue #644's coverage gate)", () => {
+  assert.ok(BIN.includes("substrate"), "the usage line dispatches substrate");
+});

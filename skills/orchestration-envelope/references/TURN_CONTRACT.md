@@ -127,9 +127,10 @@ carrying the same block.
 
 ```text
 open-questions@1
-# produced-by: `agentic-workflow needs-input` <unit-dir> [--json]
+# produced-by: `agentic-workflow needs-input` <unit-dir> [--workspace <dir>] [--json]
 # input:       <unit-dir>/SPEC.md + <unit-dir>/decisions.md (the ledger's own grammar is
-#              published by the template agent guide, template/AGENTS.md)
+#              published by the template agent guide, template/AGENTS.md) +, for a
+#              substrate route, the workspace's substrate census
 # machine:     continuation-refusal-type (schema-export:CONTINUATION_REFUSALS)
 # exit:        0 well-formed artifact (pending questions or none) | 1 fail-closed | 2 usage error
 header:      open-questions@1
@@ -141,21 +142,31 @@ fields:      Unit: <unit-folder-name>
                Options:
                  - <one researched option with its trade-off>
              Pending: none                    (only when the count is 0)
-             Route back: <design | unit-lane> · … | none
+             Route back: <design | unit-lane | init-workspace:<class>> · … | none
              Continuation: no-decision-available | none
              Decision: open | none
 fail-block:  NEEDS-INPUT FAIL — needs-input@1
              Unit: <unit-folder-name>
              Reason: <missing-unit-doc | malformed-ledger-header | malformed-entry |
                       missing-search-receipt | missing-options | unknown-route |
-                      unknown-question | invalid-authority | duplicate-id>
+                      unknown-question | invalid-authority | duplicate-id |
+                      substrate-present | missing-workspace | malformed-workspace>
              Where: <path[:line]>
              Continuation: no-decision-available
-route:       design | unit-lane
+route:       design | unit-lane | init-workspace:<class>
 ```
 
 `route` is the stage that owns the fact and therefore receives it back —
-`design` for scope/architecture questions, `unit-lane` for plan-owned facts.
+`design` for scope/architecture questions, `unit-lane` for plan-owned facts, and
+`init-workspace` for a **substrate gap**: a question whose provenance search
+found no owning document because the workspace has no document scaffolded to own
+it. A substrate row must name the class it claims
+(`init-workspace:<class>`, the set published by
+`schema-export:SUBSTRATE_CLASSES` in the schema package) and the dispatcher
+verifies that claim against the workspace's substrate census — a claim on a
+surface that exists is refused as `substrate-present`, so the scaffold route can
+never become a way around an owner. Prose never states this vocabulary twice:
+`schema-export:NEEDS_INPUT_ROUTES` publishes the three route names.
 Execution never interviews: it halts with the questions. `Continuation` reuses
 the schema's existing `no-decision-available` (`decisionAvailable === false`),
 so the halt needs no new envelope field.
