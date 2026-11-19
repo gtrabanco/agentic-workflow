@@ -29,12 +29,19 @@ blocker or crash condition.
 **Allowed changes in a step:**
 - The step's own tasks (from the unit doc's `Tasks` section)
 - Tests for the behavior this step adds or alters
+- A test the step's own task schedules for deletion, on the ground that task's
+  evidence row cites — the authority, its three grounds and the row shape are
+  `skills/unit-lane/references/TESTS.md` § Deletion authority's, and a deletion
+  no scheduled task names is not allowed here
 - The per-step doc updates listed in the step completion gate below
 - The smallest refactor strictly required to land a task (state why in the commit)
 - An `Autofix` or `Opportunistic Fix` that passes every box in the
   *Opportunistic finding policy* below
 
 **Forbidden — never, even if it "would help":**
+- Weakening, emptying or skipping a test so the step's gate passes, and deleting
+  a test no scheduled task names (the allowed item above is a planned task, never
+  a repair: a red suite is fixed by the code it judges)
 - New abstractions beyond what the unit doc's Acceptance criteria name
 - New dependencies not justified in the unit doc
 - Public API / contract changes the unit doc doesn't name

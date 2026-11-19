@@ -22,7 +22,12 @@ Each test run is recorded in the Evidence section:
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| T1 | <test command> | exit_code | summary ≤2 lines | <model> |
+| T1 | `<test command>` — justifies: `<the obligation>` | exit_code | summary ≤2 lines | <model> |
+
+A row that records a test this unit authored carries the justification line
+§ The justification line owns, appended to its `What was run` cell. The five
+columns are the published set (`EVIDENCE_COLUMNS` in the schema package), so the
+clause rides a cell and never becomes a sixth column.
 
 ## Checklist (pass only if)
 
@@ -37,10 +42,17 @@ Each test run is recorded in the Evidence section:
       implementation committed after, observed green
 - [ ] A suite this unit adds or touches declares its obligation tag, and every
       surface it protects still exists (see § Obligation tags)
+- [ ] Every test this unit authored carries its justification line in the run's
+      evidence row (§ The justification line) — a missing one is a finding
+- [ ] A test this unit deletes was scheduled as a task or reached it as a
+      `fix-now (delete)` row, and its evidence cites the ground
+      (§ Deletion authority)
 
 ## Forbidden
 
 - Never weaken a test to pass
+- Never delete a test outside § Deletion authority, and never delete one to
+  make a suite green — the evidence is the ground, never the convenience
 - Never silence test failures
 - Never skip a test that the triage catalog demands
 - Do not add tests the triage did not request (scope creep)
@@ -52,6 +64,58 @@ failing on the missing module or the failing assertion (the red commit), the
 implementation commits after, observed green. The unit doc's `## Log`
 records both runs as `E` lines naming both commit SHAs — the evidence names
 the commits, never just the runs.
+
+## The justification line
+
+A test this unit requests carries **one line** naming the independent obligation
+it covers: the observable contract, the required failure path, or the boundary
+edge that would go unguarded without it — the behavioural gap, never the
+implementation under test. "It passes" and "a reference implementation would
+also pass" are two different claims, and only this line separates them: a clause
+that reads back the module it calls asserts that code exists, and one repeating
+a sibling suite's obligation is the duplication the surplus sweep prices as cost
+without value.
+
+The line rides the run's evidence row, as § Fixed output contract places it:
+
+```text
+test-justification@1
+kind | shape | what it orders
+line | — justifies: <the independent obligation> | one clause after the row's command, so a reader learns what the pass bought without opening the suite
+names | the observable contract, the required failure path, or the boundary edge | the behaviour a consumer depends on, stated as the pair (input or state → documented outcome), never as an internal step
+never | the implementation under test, a sibling suite's obligation, or the assertion restated | the three shapes that make the clause worthless: the module named instead of its behaviour, an obligation another suite already covers, and the test's own mechanism narrated back
+absent | fix-now | a test with no justification line is a review finding, never a silent pass — the class, the severity and the route belong to the classifier (`skills/review-implementation/references/CLASSIFY.md`), not to this block
+```
+
+The obligation values are the tag's (§ Obligation tags), so the clause and the
+tag cannot disagree: a line naming an obligation its tag does not declare is the
+same finding as a line that is missing.
+
+## Deletion authority
+
+The owner of `test-deletion-authority@1`, and the only place who-may-delete is
+stated. § Obligation tags' `deletion` row says *when* a test may go; this section
+says *who* executes it, so that "findings only, never edits code" and "never
+weaken a test" cannot be read as a ban on an evidenced deletion — and so that an
+evidenced one cannot be read as a licence for weakening.
+
+```text
+test-deletion-authority@1
+kind | shape | what it orders
+ground | dead-surface · obligation-duplicate · cost-over-value | exactly one ground per deletion, named in the row that records it; the ids and each one's evidence standard are the surplus checks' (owner: `skills/product-audit/references/AUDIT_DIMENSIONS.md` § Test-surplus sweep, the `test-surplus@1` block), cited here and never restated
+scheduled | a deletion task in the unit's triaged step list | `execute-phase` may delete the test that task names, and only that one: the task is retirement-shaped (`skills/unit-lane/references/PLAN.md` § Retirements), its evidence row cites the ground and the evidence source, and the commit records what the deletion removed
+fix-now | a finding row typed `fix-now (delete)` | `fold-findings` may delete the test the row names: the row already carries the finding's evidence, so the fold's commit and the row's `folded: yes` flip are the record, and the frozen classification is untouched — the fold executes what the row says and never reclassifies it
+nobody-else | a findings-only surface | `product-audit` and every `review-*` emit the finding and never delete; test-impact targeting names the tests a change can affect and never removes one
+boundary | delete ≠ weaken | deletion with the evidence above is a separate, evidence-gated action: never an exception to red-first, which governs new pairs, and never a way to turn a red suite green — a suite that goes red because a deletion removed a needed guard was a planning error, so it routes back to the owner instead of taking the rest of the guard with it
+```
+
+Two facts keep the authority from becoming a loophole. A deletion reaches the
+branch only with the evidence its ground demands; an unsupported one is the
+weakening § Forbidden already refuses, and the difference is the evidence, not
+the intention. And a deletion is a task with a validator like any other: a plan
+that schedules one without its ground fails the plan's own completeness rule,
+while a fold that deletes without a `fix-now (delete)` row has reclassified a
+finding, which the fold's contract forbids.
 
 ## Obligation tags
 
@@ -81,7 +145,7 @@ kind boundary | the edge of an input, size or time domain | empty, zero, one, th
 kind distribution-contract | a surface that ships bytes | package contents, prompt text, a generated projection, a published schema — legitimate even where the assertion looks redundant with a sibling, because a distributed byte is not covered by another module's behaviour
 kind fixture-support | a shared fixture or helper | the suite exists for the fixture other suites read, so its obligation is that the fixture stays correct, never a product behaviour
 kind convention | a repository convention no runtime enforces | naming, ordering, placement, registration — the rule a review would otherwise re-derive every unit
-deletion | delete is not weaken | a test disappears when its protected surface is gone, when another suite carries the same protected surface and the same obligation set (obligation-level duplication, read from the assertions — never from line coverage), or when its measured cost exceeds the risk it covers; weakening a test so it passes is never this rule, and § Forbidden already refuses it
+deletion | delete is not weaken | a test disappears when its protected surface is gone, when another suite carries the same protected surface and the same obligation set (obligation-level duplication, read from the assertions — never from line coverage), or when its measured cost exceeds the risk it covers; weakening a test so it passes is never this rule, and § Forbidden already refuses it. Who may execute one, and what its evidence row must cite, is § Deletion authority's
 ```
 
 The deletion rule is the reason the tag exists: without it, "the surface is
