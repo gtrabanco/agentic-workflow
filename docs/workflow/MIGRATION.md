@@ -75,7 +75,7 @@ A generation the schema package does not publish is red at `verify`
   removes.
 - **Consuming the stamp from another language?** Read the four fields as the
   grammar block describes them; the JSON projection is
-  `doc-provenance.schema.json`, and the runner crate's mirror follows the same
+  `doc-provenance.schema.json`, and the runner crate re-exports the same
   sets (a parity test pins the two).
 
 ## 2026-11-04 — the findings carrier gains a severity ladder and an impact column (issue #361)

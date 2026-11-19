@@ -253,7 +253,7 @@ none
 
 - P7 — Delete the scattered mirror pins and the stale rationales; state the
   finished pin-carrier rule in the suite header.
-  (validator: `rg -c 'does not depend on the schema package' packages/agentic-workflow/src packages/agentic-workflow/test scripts` matches 0)
+  (validator: `rg -c 'does not depend on the schema package' packages scripts --glob '!scripts/vocabulary-parity.test.mjs'` matches 0)
   (Implements: S10)
   - Relevant files: scripts/unit-doc-contract.test.mjs, scripts/index-document.test.mjs, packages/agentic-workflow/test/resolve-passes.test.mjs, packages/agentic-workflow/test/provenance.test.mjs, packages/agentic-workflow/test/journal.surfaces.test.mjs, packages/agentic-workflow/src/edit/schema.mjs, packages/agentic-workflow/src/journal/entry.mjs
 
@@ -282,7 +282,15 @@ The frozen ledger is `planning-obligations.md` beside this document (M/L shape).
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-
+| F1 | B1 · `docs/ROADMAP.md:195` (with `SPEC.md:359`, `:380`) | workflow | BLOCKER | blocking | fix-now | folded — CAS settle `96db8ee9a`; `roadmap-settle` PASS (`E17`) |
+| F2 | B2 · `SPEC.md:256`, `:331`; `planning-obligations.md` O3, O13 | workflow | BLOCKER | docs-only | fix-now | folded — cells amended, E6 corrected (`E18`, `E15`) |
+| F3 | B3 · `packages/agentic-workflow-schema/README.md:933-935` | docs | BLOCKER | docs-only | fix-now | folded — `e5c9de1e7` |
+| F4 | B4 · `packages/agentic-workflow-schema/README.md:1059-1061` | docs | BLOCKER | docs-only | fix-now | folded — `e5c9de1e7` |
+| F5 | B5 · `packages/agentic-workflow-schema/src/vocabularies.ts:200-202` | docs | BLOCKER | docs-only | fix-now | folded — `e5c9de1e7` |
+| F6 | B6 · `packages/agentic-workflow-schema/src/file-schemas.ts:8-14` | docs | BLOCKER | docs-only | fix-now | folded — `e5c9de1e7` |
+| F7 | A1 · `docs/workflow/MIGRATION.md:78-79` | docs | SUGGESTION | docs-only | fix-now | folded — "mirror" → "re-exports" |
+| F8 | A2 · `SPEC.md:59` (S11's count record) | workflow | WARNING | docs-only | fix-now | folded — before/after counts at `E16` |
+| F9 | A3 · `docs/fix/201/*`, `docs/features/462/planning-evidence.md:12`, `docs/features/60/*`, `docs/features/557/SPEC.md:257`, `CHANGELOG.md:96` | docs | SUGGESTION | docs-only | ignore | wontfix — frozen dated records; no live surface asserts them |
 ## Log
 
 - **L1** — 2026-11-19, the request, verbatim:
@@ -331,8 +339,15 @@ The frozen ledger is `planning-obligations.md` beside this document (M/L shape).
 - **E6** — 2026-11-19, `rg -c 'does not depend on the schema package|ships without
   a dependency on the schema package|until issue #427 unifies the reading'`
   over `packages/agentic-workflow/src packages/agentic-workflow/test scripts` ·
-  0 matches (the scanner in the parity suite reads whitespace-normalized text, so
-  a wrapped rationale cannot survive it either).
+  **corrected 2026-11-19 (F2): the recorded "0 matches" never reproduced** — the
+  same command answers `scripts/vocabulary-parity.test.mjs:3`, the pin carrier's
+  own phrase list, which the suite self-excludes but a raw `rg` does not. The
+  amended P7/O3/O13 cells exclude the carrier by `--glob` (green at head, red at
+  base `176ab984b`, negative control: without the glob the carrier is found —
+  `E18`). The scanner in the parity suite reads whitespace-normalized text, so a
+  wrapped rationale cannot survive it either, and since F3-F6 it sweeps
+  `packages/agentic-workflow-schema` too (red `b9e55837b` → green `e5c9de1e7`,
+  `E15`).
 - **P8** — 2026-11-19, the invariant declared, the guide bound to it, the budgets
   re-pinned · `cc0aa613a`.
 - **E7** — 2026-11-19, `bun scripts/check-skill-context.mjs --documents` · exit 0
@@ -373,14 +388,44 @@ The frozen ledger is `planning-obligations.md` beside this document (M/L shape).
   full run's `worktree-guard` failure was a peer session's leftover
   (`.worktrees/feat-596-test-relevance-sweep/.worktrees/aw596-measure-base`), which
   that session removed before the re-run; the red is recorded in `## Known
-  pre-existing issues` rather than erased.
+  pre-existing issues` rather than erased. **Superseded by `E19`** (the external
+  verify re-ran it red after P10; the correction batch re-runs it at head).
+- **E15** — 2026-11-19, external-verify B3-B6 corpus, red first · `b9e55837b` ·
+  `bun test scripts/vocabulary-parity.test.mjs` → 34 pass / **1 fail**, 6
+  offenders naming the four surfaces (file-schemas.ts ×2, vocabularies.ts,
+  README ×3); green at `e5c9de1e7` · 35 pass / 0 fail, schema `bun run build` +
+  `bun run test` · 914 pass / 0 fail.
+- **E16** — 2026-11-19, S11's `rg -n "Object.freeze\(" packages/agentic-workflow/src/`
+  count recorded before/after (A2): base `176ab984b` · **240 hits across 68
+  files** → head · **203 hits across 61 files**; the residency receipt keeps
+  every remaining declaration classified (162 Class 3, 0 pre-build mirrors, D1).
+- **E17** — 2026-11-19, B1 settle: `roadmap read --nn 643` → CAS revision
+  `6bfc6060` → `roadmap docs/ROADMAP.md rowUpsert --expect` receipt `pass`
+  (before `6bfc6060` · after `afbc9c4d`), live diff exactly one line
+  (`in-progress` → `done · [#648](…)`); `bun scripts/roadmap-settle.mjs` · exit 0
+  · PASS, 0 violations; `bun scripts/docs-generate.mjs` rewrote the one
+  projection row (`Files: 1 written`) and `--check` · exit 0.
+- **E18** — 2026-11-19, the amended declared commands, foreground · green:
+  `rg -c 'does not depend on the schema package' packages scripts --glob '!scripts/vocabulary-parity.test.mjs'`
+  → exit 1 (0 matches); the O13 four-phrase alternation over the same paths →
+  exit 1 (0 matches); negative control without the glob → `scripts/vocabulary-parity.test.mjs:1`;
+  base control at `176ab984b` → matches (the amendment discriminates head from
+  base); `bun test scripts/vocabulary-parity.test.mjs` · exit 0 · 35 pass.
+- **E19** — 2026-11-19, `bun scripts/local-gate.mjs` · exit 0 · **PASS — 19 steps
+  in 486s** on the correction batch's final tree: root-suite 126/126
+  (roadmap-settle green on the settled row, findings-corpus green on its 1162
+  pin), both crate runtimes, schema and pi legs, projection, log-immutability.
+  Replaces E13's superseded receipt; the doc-sensitive validators (phase-lint,
+  findings-corpus, parity, roadmap-settle, docs-generate `--check`,
+  log-immutability) were re-run after this receipt's own lines landed.
 
 ## Next
 
-The owner reviews PR [#648](https://github.com/gtrabanco/agentic-workflow/pull/648)
-as the external verifier: one correction batch on its blockers, if any. `main`
-moved locally to `fdd39cccc` after the branch cut (`origin/main` is still
-`176ab984b`), so the integration is the owner's.
+Correction batch applied 2026-11-19 — external-verify B1–B6 folded, A1 and A2
+folded, A3 wontfix (frozen closed-unit history, `Findings` F9). The owner runs
+the blockers-only recheck as the external verifier (§9: one recheck of these
+blockers), then merges — `main` sits at `fdd39cccc` after the branch cut, so the
+integration stays the owner's.
 
 ## References
 
