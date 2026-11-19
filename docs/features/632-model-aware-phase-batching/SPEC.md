@@ -70,7 +70,7 @@ proves it.
 
 | AC | Criterion | Check |
 |---|---|---|
-| AC-1 (S1) | The unit is applied on `feat/632-model-aware-phase-batching` with its ledgers frozen in this document and its sibling ledgers, and every obligation row closed before hand-off | `sed -n '/^| O/p' docs/features/632-model-aware-phase-batching/planning-obligations.md \| rg -c 'planned\|in-progress'` matches 0 |
+| AC-1 (S1) | The unit is applied on `feat/632-model-aware-phase-batching` with its ledgers frozen in this document and its sibling ledgers, and every obligation row closed before hand-off | `rg -c '^\| O[0-9]+ \|.*\| (planned\|in-progress) \|$' docs/features/632-model-aware-phase-batching/planning-obligations.md` matches 0 |
 | AC-2 (S2) | Every routed model carries one capability record — context window, tool harness, phases per context, cache posture — and the policy answers both decisions from it without reading anything else | `bun test test/phase-batching.test.mjs` exits 0 (the `capability record` cases, in `packages/pi-nan-agentic-workflow`) |
 | AC-3 (S3) | The policy takes the unit's eligibility facts as inputs (risk tier, size tier, Relay, phases remaining) and changes no route, tier or gate: the whole-unit executor path is recommended, never driven | `git diff --name-only main...HEAD \| rg -c 'routing/\|risk-tiers\|stateflow\|conductor/'` matches 0 |
 | AC-4 (S4) | The capability record is preset data mirrored by the snapshot and pinned: every chat model's context window, tool harness and cache posture equal the values the recorded catalog implies, and the four paid entries the snapshot stated only in prose carry the numeric field | `bun test test/catalog-parity.test.mjs` exits 0 (the `capability record` cases, in `packages/pi-nan-agentic-workflow`) |
@@ -236,7 +236,7 @@ scope, not deferrals of this one.
   (validator: `bun run test` exits 0 and `bun test test/tier-routing.test.mjs`
   exits 0)
   (Implements: S2, S3, S4, S5, S8)
-  - Relevant files: packages/pi-nan-agentic-workflow/src/phase-batching.ts, packages/pi-nan-agentic-workflow/src/preset.ts, packages/pi-nan-agentic-workflow/catalog/nan-catalog-2026-11.jsonc
+  - Relevant files: packages/pi-nan-agentic-workflow/src/phase-batching.ts, packages/pi-nan-agentic-workflow/catalog/nan-catalog-2026-11.jsonc, packages/pi-nan-agentic-workflow/package.json, packages/pi-nan-agentic-workflow/README.md
 - P5 — Declare the config key in the extension section, test-first: cut
   `packages/pi-agentic-workflow/test/config-schema-phase-batching.test.mjs` red,
   then add `phaseBatching` to `src/config/{types,schema,defaults}.ts` and
@@ -342,6 +342,118 @@ the unit ships every row is `verified`.
 - **E2** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs
   ceremony tier classify --paths …` · exit 0 · `tier: standard`,
   `reason_kind: executable-content`, `signals: []`.
+
+- **D7** — 2026-11-19, two decisions taken while implementing, recorded for the
+  verifier. **(a)** The reason set gains `cache-posture-flat`: a model whose
+  cached read is billed at the input rate is *measured*, and declining it for
+  `cache-posture-unmeasured` would have said the opposite of what the record
+  states. It owes no degradation, exactly as `discounted` does. **(b)** The
+  guide's `machineLines` pin moves 185 → 189 for the four new
+  `schema-export` rows, recorded in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`
+  with the measurement, the fix #571 precedent (the exact boundary), and no
+  ceiling re-based.
+- **E1** — 2026-11-19, the RED run of the contract corpus, `390e36f3e`:
+  `bun test test/phase-batching.test.mjs` in
+  `packages/agentic-workflow-schema` · exit 1 · 0 pass / 1 fail —
+  `Export named 'PHASE_BATCHING_CACHE_POSTURES' not found in module …/dist/index.js`.
+- **E3** — 2026-11-19, the RED run of the preset corpus, `db60b7b02`:
+  `bun test test/phase-batching.test.mjs test/catalog-parity.test.mjs` in
+  `packages/pi-nan-agentic-workflow` · exit 1 · 7 pass / 6 fail —
+  `Cannot find module '../dist/phase-batching.js'` for the record, the policy
+  and the command's cases.
+- **E4** — 2026-11-19, the RED run of the config-key corpus, `8168637c6`:
+  `bun test test/config-schema-phase-batching.test.mjs` in
+  `packages/pi-agentic-workflow` · exit 1 · 0 pass / 7 fail — the parser
+  answered `unknown config key "phaseBatching" (allowed: default, commands, …)`.
+- **E5** — 2026-11-19, the contract green, `cf248bfa7` + `cf95dd5f3`:
+  `bun run build` · exit 0 and `bun test test/phase-batching.test.mjs` · exit 0
+  · 17 pass · 0 fail; the package's whole suite
+  `bun test --timeout=10000 test/*.test.mjs` · exit 0 · 931 pass · 0 fail
+  (914 before this unit).
+- **E6** — 2026-11-19, the preset green, `f1051b65c`: `bun run test` in
+  `packages/pi-nan-agentic-workflow` · exit 0 · 63 pass · 0 fail (36 before
+  this unit): the capability record for all eleven routed models, the mirror,
+  the reason matrix (every published reason in a document of its own), the two
+  fail-closed `unmeasured` states, `cache-posture-flat`, the phase-count rule,
+  determinism, the whole input matrix validated, the ladder pin, the command's
+  flag contract and the README pin.
+- **E7** — 2026-11-19, the config key green, `709c7192f`:
+  `bun test test/config-schema-phase-batching.test.mjs test/config-extension.test.mjs`
+  in `packages/pi-agentic-workflow` · exit 0 · 9 pass · 0 fail (the committed
+  descriptor is byte-equal to the module); the package's whole suite
+  `bun test --timeout=10000 test/*.test.mjs` · exit 0 · 1023 pass · 0 fail
+  (1016 before this unit).
+- **E8** — 2026-11-19, the command and its registration inside `E6`:
+  `the command refuses to invent the facts it was not given`, `…refuses an
+  unknown flag and an out-of-vocabulary value`, `…prints the typed document`,
+  `…reads the config switch`, `…takes --relay and --model` and the five
+  `registration.test.mjs` cases — 63 pass · 0 fail. The extension registers the
+  command only when the host supplies `registerCommand`, which is why the
+  bare-object double the registration suite passes still resolves the preset.
+- **E9** — 2026-11-19, the out-of-scope pins:
+  `git diff --name-only main...HEAD | rg -c 'routing/|risk-tiers|stateflow|conductor/'`
+  matches 0 and
+  `git diff main...HEAD -- packages/pi-nan-agentic-workflow/catalog/ | rg '^[+-][^+-]' | rg -vc '"context"|^\+//'`
+  matches 0 — the recorded snapshot gains the four numeric `context` fields
+  and its own provenance note, nothing else.
+- **E10** — 2026-11-19, the surfaces and the documents:
+  `bun test scripts/normative-drift.test.mjs` · exit 0 · 22 pass · 0 fail ·
+  `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass · 0 fail ·
+  `rg -c '^## Phase batching$' docs/workflow/CONFIG.md` matches 1,
+  `rg -c 'tier-cost corpus' docs/workflow/CONFIG.md` matches 1,
+  `rg -c 'nan-phase-batching' packages/pi-nan-agentic-workflow/README.md`
+  matches 1, and `bun scripts/check-skill-context.mjs --documents` · exit 0 ·
+  `PASS context documents: 6 budgeted documents` with `AGENTS.md` at
+  610 lines / 189 machine / 421 prose / 12,760 est.
+- **E11** — 2026-11-19, no test weakened: `git diff main...HEAD -- '*.test.mjs' | rg -c '^-[^-]'`
+  matches 0 — the two touched suites only gained cases (the exact-shape
+  `DEFAULT_CONFIG` assertion in `default-inherit.test.mjs` gains the resolved
+  key, which is the declared behavioural delta of `S6`), and the three package
+  suites pass at `E5`/`E6`/`E7`.
+- **E13** — 2026-11-19, the differential against `git archive main` in
+  `/tmp/632-base-QMWM9F` (`bun install --frozen-lockfile` + the schema build,
+  never committed): `config schema --json`, `config validate`,
+  `config list --json`, `config show --scope resolved` and
+  `ceremony tier classify --paths scripts/tier-cost.mjs` are byte-identical on
+  stdout and stderr with the same exit codes in both trees — the extension
+  section is discovered from an installed package, so this repository's own
+  config answers the same. The one declared delta is the resolved
+  `EffectiveConfig` gaining `phaseBatching: { enabled: false }`, which is `S6`
+  itself and is pinned in `default-inherit.test.mjs`.
+- **E14** — 2026-11-19, `bun scripts/residual-classify.mjs --inventory --base main`
+  · exit 0 · 6 `andamio` / 34 `used` / 0 `orphan`: every added surface names its
+  consumer in the unit folder's `residual-promise@1` block, so no retirement is
+  claimed and nothing lands unowned.
+- **P1** — 2026-11-19, the contract corpus cut red — `390e36f3e`.
+- **P2** — 2026-11-19, `src/phase-batching.ts` + the `index.ts` re-export —
+  `cf248bfa7`, with the `cache-posture-flat` closure in `cf95dd5f3`.
+- **P3** — 2026-11-19, the preset corpus and the snapshot mirror cut red —
+  `db60b7b02`.
+- **P4** — 2026-11-19, the capability record, the policy, the snapshot's four
+  `context` fields, the README section and the `@gtrabanco/agentic-workflow-schema`
+  pin — `f1051b65c`. The command module and the extension wiring ride the same
+  commit, because the corpus imports both and a red suite in history is worse
+  than a 450-line slice.
+- **P5** — 2026-11-19, the config key across `types`/`schema`/`merge`/`defaults`/
+  `extension` plus the regenerated descriptor — `709c7192f`.
+- **P6** — 2026-11-19, the command and its guarded registration — `f1051b65c`.
+- **P7** — 2026-11-19, the four `schema-export` rows, the gate inventory claim,
+  the config guide with its trigger, both READMEs and the regenerated
+  projection — `90d0467ef`.
+- **G5** — 2026-11-19, HEAD 90d0467ef, `bun scripts/run-root-suite.mjs --jobs 4`
+  · exit 0 · 129 suites PASS · 0 FAIL.
+- **G6** — 2026-11-19, HEAD 90d0467ef, `bun scripts/local-gate.mjs --jobs 4`
+  · exit 0 · `local-gate: PASS — 19 step(s) in 941s` — root-suite 129/0,
+  crate-suite-bun 1325/0, schema-node-compat 931/0, pi-node-compat 1023 tests
+  (1022 pass, 1 skipped, 0 fail), `docs-generated-projection` PASS,
+  `version-parity-content` PASS on the changeset. The first attempt failed at
+  `pi-node-compat` on `test/vendor-neutral.test.mjs` (AC1 — the main package's
+  README naming the provider), which was a real defect this unit introduced and
+  repaired by rewording the section provider-neutrally, not by touching the
+  assertion.
+- **P8** — 2026-11-19, the state settle: the roadmap row to `in-progress`, the
+  obligation rows closed, this log, the journal fragment and the regenerated
+  projection.
 
 ## Next
 

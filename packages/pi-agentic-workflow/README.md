@@ -712,15 +712,15 @@ preset data, because this package knows nothing about any vendor's context
 windows. **Absent or `false` is byte-identical to the workflow before the key
 existed** — the policy inspects nothing and answers one phase per turn.
 
-- **The policy lives where the model knowledge lives.**
-  `@gtrabanco/pi-nan-agentic-workflow` carries the capability record and the
-  `phase-batching@1` recommendation; with only this package installed the key is
-  a documented no-op, and nothing in the kernel names a provider (the same
-  additive seam as `tierRouting`, #388).
+- **The policy lives where the model knowledge lives.** The companion preset
+  package carries the capability record and the `phase-batching@1`
+  recommendation; with only this package installed the key is a documented no-op,
+  and nothing in the kernel names a provider (the same additive seam as
+  `tierRouting`, #388).
 - **The recommendation is not a route.** It answers a question and touches no
-  dispatch: the command that prints it is the preset's `/nan-phase-batching`, and
-  the gates are untouched — one phase is still one commit, the diff guard still
-  runs per phase, and the evidence rows are the same rows.
+  dispatch: the preset registers the command that prints it, and the gates are
+  untouched — one phase is still one commit, the diff guard still runs per
+  phase, and the evidence rows are the same rows.
 - **Unknown keys are refused**, like every other key in this section, and
   `agentic-workflow config validate` reports a misspelling by path.
 - **The default flips only on measurement**: the tier-cost corpus (#631) showing,
