@@ -1,3 +1,5 @@
+// test-obligation: protects=docs/workflow/README.md,docs/workflow obligations=convention
+
 /**
  * The `docs/workflow/` index is complete — this repository's own doc map.
  *

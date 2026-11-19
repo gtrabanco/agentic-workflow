@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/gate-receipt.mjs obligations=contract,failure-path
+
 /**
  * gate-receipt.test.mjs — the runner and the consumption judgment (issue #409,
  * unit docs/features/108-machine-gate-receipts/).

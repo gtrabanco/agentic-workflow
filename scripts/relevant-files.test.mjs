@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/relevant-files.mjs obligations=contract,failure-path
+
 /**
  * relevant-files.test.mjs — issue #269 (remaining P2), the never-authority
  * discipline harness. `scripts/relevant-files.mjs` is the mechanical backstop

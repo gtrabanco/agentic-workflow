@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/findings-corpus.mjs obligations=contract,failure-path
+
 /**
  * findings-corpus.test.mjs — the reader's contract (issue #437, S2/S3/S4/S6/S10).
  *

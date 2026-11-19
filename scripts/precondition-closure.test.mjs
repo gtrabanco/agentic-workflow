@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/unit-lane/references/DESIGN.md obligations=convention
 
 /**
  * Fix #433 — precondition closure.

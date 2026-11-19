@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/tier-cost.mjs obligations=contract,failure-path,distribution-contract
 
 /**
  * tier-cost.test.mjs — the measured acceptance's frozen corpus (issue #383,

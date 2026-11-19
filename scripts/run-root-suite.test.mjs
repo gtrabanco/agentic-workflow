@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/run-root-suite.mjs obligations=contract,failure-path,boundary
+
 /**
  * run-root-suite.test.mjs — the sibling suite of `scripts/run-root-suite.mjs`.
  *

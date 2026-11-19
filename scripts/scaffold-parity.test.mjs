@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=template obligations=distribution-contract,convention
 
 /**
  * #355 — the scaffold comparator: `template/` against the mechanics it exports.

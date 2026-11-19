@@ -1,3 +1,5 @@
+// test-obligation: protects=skills/orchestration-envelope/references/TURN_CONTRACT.md obligations=contract,failure-path
+
 // Grammar conformance for the turn-contract receipt (AC8).
 //
 // The fenced `turn-contract-receipt@1` block in the canonical turn contract is

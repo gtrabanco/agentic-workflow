@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/unit-route.mjs obligations=contract,failure-path
 
 /**
  * fix/285 — the pre-execution lineage gate is satisfiable for lane-era units.

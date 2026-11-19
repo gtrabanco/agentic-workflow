@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/temp-hygiene.mjs obligations=convention,contract
+
 /**
  * temp-hygiene.test.mjs — the fixture corpus for `scripts/temp-hygiene.mjs`
  * (issue #476).

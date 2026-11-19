@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/pin-watch.mjs obligations=contract,failure-path
+
 /**
  * pin-watch.test.mjs — offline suite for scripts/pin-watch.mjs (feature 67 P3,
  * AC2, obligation O3, issue #219 decision D1's addendum).

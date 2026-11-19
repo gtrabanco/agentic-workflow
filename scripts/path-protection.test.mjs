@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/path-policy.mjs obligations=contract,failure-path
 
 /**
  * Feature 60 — repo-root discipline suite for the Tier 1 path-protection gate

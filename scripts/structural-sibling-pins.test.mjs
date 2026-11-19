@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/structural-sibling-pins.mjs obligations=convention
 
 /**
  * structural-sibling-pins.test.mjs — the negative-capability pins (unit 84,

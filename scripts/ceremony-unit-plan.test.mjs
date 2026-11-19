@@ -1,3 +1,5 @@
+// test-obligation: protects=packages/agentic-workflow/src/runner/ceremony/unit.mjs,packages/agentic-workflow/src/runner/ceremony/plan.mjs obligations=contract,failure-path
+
 /**
  * ceremony-unit-plan.test.mjs — ceremony `unit` + `plan` modules (fix #338, P6).
  *

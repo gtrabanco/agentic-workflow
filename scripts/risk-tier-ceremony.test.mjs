@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/execute-phase/references/risk-tiers.md obligations=contract,failure-path
 
 /**
  * risk-tier-ceremony.test.mjs — the tier as *versioned grammar* and as ceremony

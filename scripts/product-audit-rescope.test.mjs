@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/product-audit/SKILL.md obligations=convention,contract
 
 /**
  * #440 — product-audit re-scope: deterministic-first dimensions, measured

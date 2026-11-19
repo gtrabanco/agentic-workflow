@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/pre-execution-review/references/LEDGERS.md,skills/pre-execution-review/references/POLICY.md obligations=convention,contract
 
 // Feature 28 root fixtures: the pre-execution quality route as a TEXT contract.
 //

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/test-obligation-tags.mjs obligations=contract,failure-path,convention
 
 /**
  * test-obligation-tags.test.mjs — the sibling suite of the obligation-tag gate
@@ -55,11 +56,18 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
 /** The runtime that started this suite runs the CLI too — never a second guess. */
 const run = (args, options = {}) => spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8", ...options });
 
-/** A throwaway tree with a `scripts/` directory, removed when the case ends. */
+/** A throwaway tree with a `scripts/` directory, removed when the case ends. The
+ *  two sources the CLI reads from the tree it inspects are seeded too, so a
+ *  fixture asserts the refusals rather than the reader's inputs. */
 function makeTree(files) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "tag-tree-"));
-  fs.mkdirSync(path.join(root, "scripts"));
-  for (const [rel, body] of Object.entries(files)) {
+  const kinds = ["contract", "failure-path", "boundary", "distribution-contract", "fixture-support", "convention"];
+  const seeded = {
+    "packages/agentic-workflow-schema/src/vocabularies.ts": `export const TEST_OBLIGATION_KINDS = Object.freeze([${kinds.map((kind) => `"${kind}"`).join(", ")}]);\n`,
+    "skills/unit-lane/references/TESTS.md": `\`\`\`text\ntest-obligation-tag@1\nkind | shape | what it orders\n${kinds.map((kind) => `kind ${kind} | <shape> | <orders>`).join("\n")}\n\`\`\`\n`,
+    ...files,
+  };
+  for (const [rel, body] of Object.entries(seeded)) {
     const target = path.join(root, rel);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, body);
@@ -201,17 +209,24 @@ test("clusters: one row per protected surface, and identical obligation sets on 
   assert.equal(rows.find((row) => row.surface === "scripts/c.mjs").decision, "keep");
 });
 
-test("the suspect rule is declared and deterministic: cost per obligation, duplicates always, at most five selected", () => {
+test("the suspect rule is declared and deterministic: cost per obligation, duplicates always, at most five measured", () => {
   const entries = [
     { file: "scripts/slow.test.mjs", protects: ["scripts/slow.mjs"], obligations: ["contract"] },
     { file: "scripts/fast.test.mjs", protects: ["scripts/fast.mjs"], obligations: ["contract", "failure-path", "boundary", "convention"] },
+    { file: "scripts/dup-a.test.mjs", protects: ["scripts/dup.mjs"], obligations: ["contract"] },
+    { file: "scripts/dup-b.test.mjs", protects: ["scripts/dup.mjs"], obligations: ["contract"] },
   ];
   const costs = new Map([["scripts/slow.test.mjs", 30], ["scripts/fast.test.mjs", 1]]);
   const rows = selectSuspects(clusterRows(entries, costs));
-  assert.equal(rows.find((row) => row.surface === "scripts/slow.mjs").suspect, true, "30 s for one obligation is over the declared ceiling");
-  assert.equal(rows.find((row) => row.surface === "scripts/fast.mjs").suspect, false, "1 s for four obligations is under it");
+  const at = (surface) => rows.find((row) => row.surface === surface);
+  assert.equal(at("scripts/slow.mjs").suspect, true, "30 s for one obligation is over the declared ceiling");
+  assert.equal(at("scripts/slow.mjs").selected, true, "an over-ceiling cluster is measured");
+  assert.equal(at("scripts/fast.mjs").suspect, false, "1 s for four obligations is under it");
+  assert.equal(at("scripts/fast.mjs").selected, false);
+  assert.equal(at("scripts/dup.mjs").suspect, true, "an obligation-level duplicate is a suspect on its declaration alone, whatever it costs");
   assert.equal(COST_PER_OBLIGATION_LIMIT > 0, true);
   assert.equal(SUSPECT_LIMIT, 5, "the sweep is never exhaustive");
+  assert.ok(rows.filter((row) => row.selected).length <= SUSPECT_LIMIT);
 });
 
 test("the cost log the root gate already prints is the only cost input: `PASS <file> (N.Ns)` lines", () => {

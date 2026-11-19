@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/local-gate.mjs obligations=contract,failure-path
 
 import assert from "node:assert/strict";
 import crypto from "node:crypto";

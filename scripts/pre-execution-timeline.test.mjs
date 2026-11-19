@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow-schema/src/pre-execution.ts obligations=contract,failure-path
 
 /**
  * Feature 28 / fix-162 — the `impossible-timeline` freshness guard, black box.

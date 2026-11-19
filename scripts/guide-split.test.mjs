@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=AGENTS.md,docs/workflow/SKILL_CONTEXT_BUDGETS.json obligations=convention
 
 /**
  * guide-split.test.mjs — the guide layer loads progressively, and nothing is said twice.

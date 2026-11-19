@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/test-impact.mjs obligations=contract,failure-path,boundary
 
 /**
  * test-impact.test.mjs — the impact hint's corpus (issue #356).

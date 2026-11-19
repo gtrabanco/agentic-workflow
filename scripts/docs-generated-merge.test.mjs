@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/docs-generated-merge.mjs obligations=contract,failure-path,boundary
+
 /**
  * docs-generated-merge.test.mjs — the sibling suite of the projection's merge
  * driver (fix #420).

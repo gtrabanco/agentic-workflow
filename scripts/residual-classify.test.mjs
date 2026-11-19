@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/residual-classify.mjs obligations=contract,failure-path
+
 /**
  * residual-classify.test.mjs — the red-first sibling suite of
  * `scripts/residual-classify.mjs` (issue #438).

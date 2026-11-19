@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/setup-env.mjs obligations=contract,failure-path
+
 /**
  * setup-env.test.mjs — the offline suite for scripts/setup-env.mjs (issue #331,
  * unit fix/331-authoring-setup).

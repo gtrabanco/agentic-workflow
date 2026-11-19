@@ -1,3 +1,5 @@
+// test-obligation: protects=skills/orchestration-envelope/references/TURN_CONTRACT.md obligations=convention
+
 // Single-owner pin for the canonical turn contract (roadmap row 33, issue #173).
 //
 // The canonical turn contract — `skills/orchestration-envelope/references/TURN_CONTRACT.md`

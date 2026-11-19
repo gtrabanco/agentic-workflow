@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/git-env.mjs obligations=contract,failure-path
 
 /**
  * git-env.test.mjs — a gate step must not inherit the caller's repository.

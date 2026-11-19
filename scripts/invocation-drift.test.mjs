@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/invocation-drift.mjs obligations=contract,failure-path
 
 /**
  * Issue #329 — the invocation-drift gate's own suite, plus the visible-skip pin.

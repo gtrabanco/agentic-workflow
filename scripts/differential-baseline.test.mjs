@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/differential-baseline.mjs obligations=contract,failure-path
+
 /**
  * differential-baseline.test.mjs — the baseline run's contract (issue #437, S9;
  * absorbs #363's phase).

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=AGENTS.md,skills/product-audit/references/AUDIT_DIMENSIONS.md obligations=convention
 
 /**
  * #340 — deletion & reuse as obligations: pins every new normative surface.

@@ -1,3 +1,5 @@
+// test-obligation: protects=docs/workflow/CONFIG.md,packages/agentic-workflow-schema/src/config.ts obligations=convention,contract
+
 // config-guards-doc.test.mjs — the guard inventory is exhaustive (issue #626 S2/S5).
 //
 // The schema package publishes the guard disposition vocabulary and the guard

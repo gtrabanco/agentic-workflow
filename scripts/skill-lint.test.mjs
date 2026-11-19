@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/skill-lint.mjs obligations=contract,failure-path
+
 /**
  * skill-lint.test.mjs — the fixture corpus for `scripts/skill-lint.mjs`
  * (fix #357, obligations O2–O11, O14).

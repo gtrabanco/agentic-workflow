@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/roadmap-settle.mjs obligations=contract,failure-path
 
 /**
  * roadmap-settle.test.mjs — the root-suite gate for issue #316: a unit doc

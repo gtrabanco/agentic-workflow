@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/adversarial-verdict.mjs obligations=contract,failure-path
 
 /**
  * adversarial-verdict.test.mjs — the kill mandate, the diff-only reflector and

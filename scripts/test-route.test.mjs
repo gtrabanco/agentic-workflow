@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/test-route.mjs obligations=contract,failure-path
 
 /**
  * #318 S13/S14 — the gate is bounded by a committed map, and fails closed.

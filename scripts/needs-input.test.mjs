@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/needs-input.mjs obligations=contract,failure-path
+
 /**
  * Corpus for the `needs-input` runner subcommand — the behavioural contract of the
  * needs-input dispatcher. Fixtures are embedded strings written to a temporary

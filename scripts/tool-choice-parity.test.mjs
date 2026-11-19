@@ -1,3 +1,5 @@
+// test-obligation: protects=packages/agentic-workflow/src/tool-choice/policy.mjs obligations=convention,contract
+
 // tool-choice-parity.test.mjs — one allowlist, two layers, zero drift (issue #610).
 //
 // `scripts/invocation-drift.mjs` and the pi extension's command-time carrier are

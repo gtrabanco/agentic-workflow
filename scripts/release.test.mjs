@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/release.mjs obligations=contract,failure-path,distribution-contract
+
 /**
  * RED-first corpus for scripts/release.mjs (feature 40, issue #180).
  *

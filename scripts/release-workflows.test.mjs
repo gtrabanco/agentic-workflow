@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=.github/workflows obligations=distribution-contract,convention
+
 /**
  * Workflow contract for the release pipeline (feature 40, issue #180).
  *

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/local-gate.mjs obligations=contract,failure-path
 
 /**
  * local-gate.test.mjs — the sibling suite of `scripts/local-gate.mjs`.

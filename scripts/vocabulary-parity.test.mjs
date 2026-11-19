@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow-schema/src/vocabularies.ts obligations=convention,contract
 
 /**
  * vocabulary-parity.test.mjs — every second copy of a published vocabulary is

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/prose-gate-inventory.mjs obligations=contract,failure-path
+
 /**
  * Feature 96 — the prose-gate inventory is a gate of its own.
  *

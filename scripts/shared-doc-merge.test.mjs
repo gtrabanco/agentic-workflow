@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/shared-doc-merge.mjs obligations=contract,failure-path
+
 /**
  * shared-doc-merge.test.mjs — issue #498 (layer 2): the file-class git merge
  * driver over the repository's shared documents.

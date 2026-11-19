@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/index-document.mjs obligations=contract,failure-path
+
 /**
  * The location index is **one** document (`docs/ROADMAP.md`) behind **one**
  * published path constant, and this suite is the frozen receipt for the move

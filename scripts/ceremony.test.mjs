@@ -1,3 +1,5 @@
+// test-obligation: protects=packages/agentic-workflow/src/runner/ceremony/index.mjs obligations=contract,failure-path
+
 /**
  * ceremony.test.mjs — the closed CLI's entry contract (fix #338).
  *
