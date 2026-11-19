@@ -319,6 +319,10 @@ Open rows only (carrier grammar: `findings-table@1`).
   doc-reading suites re-ran green at `f1168c637`), and the temporary measurement
   worktrees the wall-clock section used are removed (the guard reads three
   worktrees, none of them a leftover).
+- **G4** — 2026-11-19, HEAD `4de3f869e` (the delivered head),
+  `node scripts/run-root-suite.mjs` · exit 0 · 127 PASS / 0 FAIL in 3m32s — the
+  run the handoff stands on; G3's third run of the same step was at the commit
+  before the sweep's heading fix.
 - **P6** — 2026-11-19, the surfaces registered: the tag grammar block in the
   tests-step reference, the two normative rows, the gate-inventory row, the
   product-audit pointer, the re-pinned budgets and the changeset · `6d8c9eadf`.
