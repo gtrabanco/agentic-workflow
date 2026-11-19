@@ -422,8 +422,10 @@ function sourceFiles(relative, extensions) {
   return out.sort();
 }
 
-/** `export const NAME = <array|object literal>` — the shape a vocabulary copy takes. */
-const LITERAL_DECLARATION = /^export const ([A-Z][A-Z0-9_]+)[^=\n]*=\s*(Object\.freeze\(\s*)?([[{])/gmu;
+/** `const NAME = <array|object literal>` — the shape a vocabulary copy takes,
+ *  exported or not: a router's private copy is exactly the mirror the rule is
+ *  about, so the classifier never asks whether the copy is exported first. */
+const LITERAL_DECLARATION = /^(?:export )?const ([A-Z][A-Z0-9_]+)[^=\n]*=\s*(Object\.freeze\(\s*)?([[{])/gmu;
 
 /** The names the schema package publishes from committed source (never `dist`: a
  *  drift gate that depended on a build would fail a fresh clone). */
@@ -597,10 +599,23 @@ test("#643 audit seed 4 — the Future-status tokens are the published ones and 
 });
 
 test("#643 the stale dependency rationale is gone from source, suites and scripts", () => {
-  const phrases = ["does not depend on the schema package", "until issue #427 unifies the reading"];
+  // The premise of every mirror this unit retires: the crate was said not to
+  // depend on the schema package. It has since 2026-11-09 (#427), so a mirror
+  // justified that way is justified by a fact that is no longer true.
+  const phrases = [
+    "does not depend on the schema package",
+    "ships without a dependency on the schema package",
+    "until issue #427 unifies the reading",
+  ];
   const offenders = [];
+  // This file names the phrases to forbid them; a scanner that flagged its own
+  // pattern list would be reporting the rule instead of the defect.
+  const self = "scripts/vocabulary-parity.test.mjs";
   for (const file of [...sourceFiles(CRATE_SRC, [".mjs"]), ...sourceFiles("packages/agentic-workflow/test", [".mjs"]), ...sourceFiles("scripts", [".mjs"])]) {
-    const text = read(file);
+    if (file === self) continue;
+    // Whitespace-normalized: a rationale wrapped across two comment lines is the
+    // same sentence, and reading only exact lines would let it survive the sweep.
+    const text = read(file).replace(/\s+/gu, " ");
     for (const phrase of phrases) if (text.includes(phrase)) offenders.push(`${file}: ${phrase}`);
   }
   assert.deepEqual(offenders, [],

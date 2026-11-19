@@ -12,11 +12,13 @@
  *   packages/agentic-workflow/src/edit/UnitDoc.mjs         the producer's skeleton
  *   docs/{features,fix}/_TEMPLATE/SPEC.md                  the human templates
  *
- * The SDK duplicate is deliberate (`@gtrabanco/agentic-workflow` ships without a
- * dependency on the schema package, AC21 of unit 61), so the parity is a test,
- * never an import. The schema package cannot be imported from here either: its
- * `dist/` is a build artifact, not committed — the source text is read, the same
- * way `scripts/normative-drift.test.mjs` reads a `schema-export:`.
+ * Since issue #643 the SDK carries no list of its own: it imports the owner's
+ * table from the schema package (owner: `vocabulary-residency@1`), so what this
+ * suite pins is the *chain* — the built `dist/` re-exports what the committed
+ * source declares, and the crate re-exports that. The source text stays the
+ * machine here for the same reason `scripts/normative-drift.test.mjs` reads it:
+ * `dist/` is a gitignored build artifact, and a contract test that silently
+ * checked last release's semantics would be a false green.
  *
  * Fix #305 is why this exists: `## Impact` shipped in both templates and the
  * producer while the constant still said 13, so the selector rejected the
@@ -91,21 +93,30 @@ test("#305 the owner constant is the 14-section contract, Impact between AC and 
   ]);
 });
 
-test("#305 the SDK's duplicate list equals the owner, in order", () => {
-  const sdk = listAfter(read(SDK_FILE), "export const UNIT_DOC_SECTIONS = ", SDK_FILE);
-  assert.deepEqual(sdk, owner(), `${SDK_FILE} duplicates the list: it must be byte-equal to ${OWNER_FILE}`);
+test("#305 the SDK re-exports the owner's list instead of duplicating it", async () => {
+  const sdk = await import(pathToFileURL(path.join(ROOT, SDK_FILE)).href);
+  assert.deepEqual([...sdk.UNIT_DOC_SECTIONS], owner(),
+    `${SDK_FILE} reads the owner's list: the crate's spelling is an alias, never a second value`);
+  assert.doesNotMatch(read(SDK_FILE), /export const UNIT_DOC_SECTIONS = \[/,
+    "the SDK declares no list literal of its own");
 });
 
-test("#305/#308 the router's duplicate lists equal the owner's, in order", () => {
-  // The triage step refuses a "mandatory" section list of its own; when it lagged
-  // the owner it answered TRIAGE on unit docs the selector rejects (blocker 3 of
-  // the external verify). Since #308 the owner publishes two accepted shapes, so
-  // the router's copy is pinned to both — the legacy list and the re-cut one.
-  const router = read(ROUTER_FILE);
-  assert.deepEqual(listAfter(router, "  legacy: [", ROUTER_FILE), owner(),
-    `${ROUTER_FILE} duplicates the legacy list: it must be byte-equal to ${OWNER_FILE}`);
-  assert.deepEqual(listAfter(router, '  "spec-by-reference": [', ROUTER_FILE), ownerSpecRef(),
-    `${ROUTER_FILE} duplicates the re-cut list: it must be byte-equal to ${OWNER_FILE}`);
+test("#305/#308 the router reads the owner's two shapes instead of its own", async () => {
+  // The triage step judges a unit doc against the shapes the selector accepts, so
+  // it must read them rather than keep a third copy: when its copy lagged the
+  // owner it answered TRIAGE on unit docs the selector rejects (blocker 3 of the
+  // external verify). Since #643 that copy is gone.
+  const router = await import(pathToFileURL(path.join(ROOT, ROUTER_FILE)).href);
+  assert.ok(typeof router.run === "function" || typeof router.main === "function",
+    `${ROUTER_FILE} still exports its entry point`);
+  const source = read(ROUTER_FILE);
+  assert.match(source, /UNIT_DOC_SECTION_SHAPES[\s\S]{0,80}from "@gtrabanco\/agentic-workflow-schema"/,
+    `${ROUTER_FILE} imports the published shape table`);
+  assert.doesNotMatch(source, /const UNIT_DOC_SECTION_SHAPES = Object\.freeze\(\{/,
+    `${ROUTER_FILE} declares no shape table of its own`);
+  // The shapes themselves are pinned once, against the owner, at the top of this file.
+  assert.deepEqual(owner(), [...(await import(pathToFileURL(path.join(ROOT, SDK_FILE)).href)).UNIT_DOC_SECTIONS]);
+  assert.equal(ownerSpecRef().length, 11, "the re-cut shape keeps its eleven headings");
 });
 
 test("#305 the producer's skeleton carries every required section in order", () => {
@@ -376,9 +387,10 @@ test("#308 every reader resolves a shape instead of duplicating one list", () =>
 // ── #462 — the provenance stamp: one contract, five producers, zero drift ────
 // The stamp is a fourth contract the same four producers carry (each template)
 // plus the crate's writer, and the schema package publishes its vocabularies.
-// The parity is a test because the crate ships without a dependency on the
-// schema package (AC21 of unit 61) — a drifting mirror is the defect, not the
-// second copy.
+// Since issue #643 the crate imports the published vocabularies, so this section
+// pins the same thing one level out: the built `dist/` still re-exports what the
+// committed source declares, and the stamp the crate writes is the stamp the
+// schema package validates.
 
 const TEMPLATES_462 = [
   "docs/features/_TEMPLATE/SPEC.md",
@@ -410,7 +422,7 @@ function schemaGrammarVersions() {
 
 const packageVersion = (dir) => JSON.parse(read(`${dir}/package.json`)).version;
 
-test("#462 the crate's mirror equals the schema package's published vocabulary", async () => {
+test("#462 the crate re-exports the schema package's published vocabulary", async () => {
   const provenance = await import(pathToFileURL(path.join(ROOT, "packages/agentic-workflow/src/edit/Provenance.mjs")).href);
   assert.deepEqual([...provenance.DOC_PROVENANCE_FORMATS].sort(), schemaQuotedList("DOC_PROVENANCE_FORMATS").sort(),
     "the format vocabulary is one set, mirrored not re-decided");

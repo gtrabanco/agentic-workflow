@@ -3,10 +3,9 @@
  *
  * A deterministic check of one unit document against the frozen schemas,
  * distinct from the `edit` writer CLI (the writer composes; the verifier
- * only reads and fails closed). Consumes the crate's mirrored unit-doc
- * schema constants (`src/edit/schema.mjs`, the provenance-comment mirrors
- * of the schema package's published shapes) — never an LSP and never a
- * model.
+ * only reads and fails closed). Consumes the unit-doc schema constants through
+ * `src/edit/schema.mjs`, which re-exports the schema package's published shapes
+ * (owner: `vocabulary-residency@1`) — never an LSP and never a model.
  *
  * Checks, by doc shape:
  *   both shapes      — required sections (presence, duplication, order,

@@ -3,10 +3,10 @@
  * #462, unit docs/features/462-doc-provenance-stamp/).
  *
  * Written red-first: `src/edit/Provenance.mjs` did not exist when this corpus
- * landed. The crate ships without a dependency on the schema package (AC21 of
- * unit 61), so it mirrors the published contract with a provenance comment and
- * this suite is the parity pin — the same pattern `unit-doc-contract.test.mjs`
- * established for the section lists.
+ * landed. The contract and its vocabularies are the schema package's published
+ * consts and the crate imports them (issue #643, owner: `vocabulary-residency@1`),
+ * so what this suite pins is the behaviour — a stamp it writes and a stamp that
+ * package validates are the same document.
  *
  * The contract it pins:
  *  - the stamp is written at creation and at a re-cut, never per edit (S4);
