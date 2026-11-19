@@ -323,6 +323,11 @@ Open rows only (carrier grammar: `findings-table@1`).
   `node scripts/run-root-suite.mjs` · exit 0 · 127 PASS / 0 FAIL in 3m32s — the
   run the handoff stands on; G3's third run of the same step was at the commit
   before the sweep's heading fix.
+- **P8** — 2026-11-19, the branch integrated `origin/main` (`7bd57037a`, a
+  journal fragment only), pushed with the offline gate green (`PASS — 17 step(s)
+  in 475s`), and the pull request opened: [#649](https://github.com/gtrabanco/agentic-workflow/pull/649). Both roadmap rows settle
+  to `done · [#649]` at the same time — `done` means built and awaiting the merge,
+  and the merge state lives in the forge.
 - **P6** — 2026-11-19, the surfaces registered: the tag grammar block in the
   tests-step reference, the two normative rows, the gate-inventory row, the
   product-audit pointer, the re-pinned budgets and the changeset · `6d8c9eadf`.
@@ -340,6 +345,7 @@ deferred out of the unit.
 
 ## References
 
+- Pull request [#649](https://github.com/gtrabanco/agentic-workflow/pull/649) — `done` in the status machine means built and awaiting the merge, and the owner is this workflow's external verifier.
 - Issue [#596](https://github.com/gtrabanco/agentic-workflow/issues/596) — closed by this PR via `Closes #596`.
 - Issue [#364](https://github.com/gtrabanco/agentic-workflow/issues/364) — the re-cut's parent (closed as a duplicate of #356; this unit ships its unshipped half).
 - Issue [#356](https://github.com/gtrabanco/agentic-workflow/issues/356) — the execution half this unit leaves untouched (`scripts/test-impact.mjs`).
