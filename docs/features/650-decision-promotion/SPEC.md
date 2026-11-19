@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: medium
-ac-hash: 3f08f332a49490d582ace65cacbf8a6c1ddf465b91b58e2bdcdf967a1f96aaf9
+ac-hash: 49001af7393d29fc6cd4e307832758a17737ddce28b42b0defd3ab1b854d020b
 roadmap_summary: Cross-cutting decision promotion — a decision whose scope is cross-unit is promoted to the ONE permanent owner doc that owns that scope (the guide's laws, `ARCHITECTURE.md`, `ARCHITECTURAL_INVARIANTS.md`), with the unit ledger linking it and never copying it; the scope is recorded in the decision row at capture time, `product-audit` gains the detection dimension with its deterministic producer, and a one-time backfill sweep audits the existing ledgers.
 ---
 
@@ -111,7 +111,7 @@ proves it. Frozen at the plan cut; a criterion is never rewritten at close.
 | AC-S1 | S1 | this unit dir carries `SPEC.md`, `planning-evidence.md`, `planning-obligations.md`, `decisions.md` and `backfill-sweep.md`, and every obligation row is `verified` or an evidenced `n/a` | `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/650-decision-promotion/SPEC.md` exits 0 · `rg -c 'planned\|in-progress' docs/features/650-decision-promotion/planning-obligations.md` matches 0 |
 | AC-S2 | S2 | the promotion rule exists in exactly one owner doc per scope, and the tree states the failing state it prevents (a cross-unit decision with no permanent home) | `rg -c 'decision-scope@1' skills/unit-lane/references/DESIGN.md` matches 2 · `rg -c 'Promoting a decision' template/docs/architecture/ARCHITECTURE.md` matches 1 |
 | AC-S3 | S3 | the owner-doc-per-scope mapping and the link-never-copy consequence are published once, and the unit ledger side is a citation | `rg -c 'unit-only\|cross-unit' skills/unit-lane/references/DESIGN.md` matches ≥ 2 · `rg -c 'link' template/docs/architecture/ARCHITECTURE.md` matches ≥ 1 |
-| AC-S4 | S4 | the `decision` row's scope cell is a machine vocabulary in the schema package, the reader exposes it, and the lane records it | `bun packages/agentic-workflow/bin/agentic-workflow.mjs needs-input docs/fix/384-capability-risk-detection --json` exits 0 · `bun test scripts/decision-promotion.test.mjs` exits 0 |
+| AC-S4 | S4 | the `decision` row's scope cell is a machine vocabulary in the schema package, the reader exposes it, and the lane records it | `bun packages/agentic-workflow/bin/agentic-workflow.mjs needs-input docs/features/650-decision-promotion --json` exits 0 · `bun test packages/agentic-workflow/test/runner.sensors.test.mjs` exits 0 · `bun test scripts/decision-promotion.test.mjs` exits 0 |
 | AC-S5 | S5 | the procedure is documented in the architecture doc, referenced from the lane's capture guidance and from the audit dimension, and the new grammar is registered in `normative-surfaces@1` with its vocabulary in the schema package | `bun test scripts/normative-drift.test.mjs` exits 0 · `rg -c 'decision-scope' AGENTS.md` matches ≥ 2 |
 | AC-S6 | S6 | `product-audit` carries the dimension row, the pass-only-if section, the receipt grammar and the seeded/clean fixture, and the producer emits one finding per unpromoted cross-unit decision | `bun test scripts/decision-promotion.test.mjs` exits 0 · `rg -c 'Decision promotion' skills/product-audit/references/AUDIT_DIMENSIONS.md` matches 1 |
 | AC-S7 | S7 | the sweep ran over its declared sample, its findings table is persisted, and every promoted statement lives in exactly one owner doc cited by its row | `rg -c '^\\| B[0-9]+ \\|' docs/features/650-decision-promotion/backfill-sweep.md` matches ≥ 12 · `bun scripts/decision-promotion.mjs --root .` exits 0 and prints `verdict \\| clean` |
@@ -129,9 +129,11 @@ proves it. Frozen at the plan cut; a criterion is never rewritten at close.
   is a decision whose scope was never recorded — `unknown`, never a refusal).
   The printed `open-questions@1` envelope is **unchanged**: the scope is not a
   question, so it never enters the hand-off block.
-- **The guide**: `AGENTS.md` gains three `normative-surfaces@1` rows and one
-  `rendered-facts@1` row, so its machine region grows by four lines and its
-  ceilings are re-based to the measurement in the same change.
+- **The guide**: `AGENTS.md` gains three `normative-surfaces@1` rows — the
+  drafted `rendered-facts@1` row was dropped at execution (`D12`: the block
+  publishes no `type` column for a `restates:` claim to recompute) — so its
+  machine region grows by three lines and its ceilings are re-based to the
+  measurement in the same change.
 - **The scaffold**: `template/AGENTS.md`'s `open-questions@1` example row gains
   the scope cell, and `template/docs/architecture/ARCHITECTURE.md` gains the
   procedure section every target project inherits; `template/` has no budget
@@ -167,7 +169,13 @@ surfaces with the state the plan decided for each (`E12` in `## Log`). Every
 addition has a consumer in this change except the two the dimension contract
 requires to be *declared before first use*: `DECISION_SCOPES` is consumed by the
 reader, the producer, the audit dimension and the two prose surfaces in the same
-change, so nothing lands as `orphan`.
+change, so nothing lands as `orphan` while the unit is open. Once the roadmap
+row reaches a terminal status the plan claim ends
+(`scripts/residual-classify.mjs`'s `unitIsOpen`/`TERMINAL_STATUS`, `PE-019`), so
+the inventory re-run at head reports `scripts/decision-promotion.test.mjs` as
+`orphan / no-plan-claim` — the classifier's done-unit semantics, not a dead
+surface: the root suite runs it (`G13`) and its producer has live consumers
+(`E22`).
 
 ## Non-goals
 
@@ -199,7 +207,7 @@ landed here or is recorded as `unit-only` with its reason).
 |---|---|
 | A new cross-unit decision is captured with its scope cell and promoted to one owner doc in the change that takes it; a later reader finds it there, never in the closed unit folder | every future unit's decide step |
 | A unit ledger that names a cross-unit decision without naming its owner doc is one `decision-promotion@1` finding, not a review judgement call | every future review, audit and fold of a promotion finding |
-| The scope vocabulary has one machine owner (`DECISION_SCOPES`); the two prose surfaces restate it under the `rendered-facts@1` row that recomputes them | every future unit that changes the scope set |
+| The scope vocabulary has one machine owner (`DECISION_SCOPES`); the prose surfaces cite it, and the block↔const equivalence pins both directions in `scripts/decision-promotion.test.mjs` (the drafted `rendered-facts@1` row was dropped, `D12`) | every future unit that changes the scope set |
 | A promotion never copies the statement into the guide: the guide carries one law row whose `owner` cell cites the mechanism doc | every future rule that is architectural rather than conventional |
 
 ## Applicable tests
@@ -207,7 +215,7 @@ landed here or is recorded as `unit-only` with its reason).
 | suite | what it proves for this unit |
 |---|---|
 | `scripts/decision-promotion.test.mjs` | the producer's receipt contract, the cross-unit/unpromoted detection, the read-only guarantee, the seeded/clean fixture pair, determinism, and the prose the dimension ships |
-| `scripts/normative-drift.test.mjs` | the two `schema-export:`/`block:` rows resolve, and the `restates:` row recomputes the block against `DECISION_SCOPES` |
+| `scripts/normative-drift.test.mjs` | the two `schema-export:`/`block:` rows resolve (no `restates:` row ships — `D12`: the block publishes no `type` column for one to recompute) |
 | `scripts/prose-gate-inventory.test.mjs` | the new gate row and the `surfaces` cell it claims |
 | `scripts/dimension-regression.test.mjs` | the dimension change carries its re-verification run |
 | `scripts/vocabulary-parity.test.mjs` | the new const has one owner and no literal copy outside the registered surfaces |
@@ -309,8 +317,9 @@ landed here or is recorded as `unit-only` with its reason).
   (Implements: S3, S4, S5)
   - Relevant files: template/AGENTS.md
 
-- P11 — Register the grammar and the gate: three `normative-surfaces@1` rows, one
-  `rendered-facts@1` row, the guide's own promotion law, the gate-inventory row
+- P11 — Register the grammar and the gate: three `normative-surfaces@1` rows (the
+  drafted `rendered-facts@1` row dropped at execution, `D12`), the guide's own
+  promotion law, the gate-inventory row
   with the claimed surface ids, and the ceiling re-pins the growth measures.
   (validator: `bun test scripts/normative-drift.test.mjs` and `bun test scripts/prose-gate-inventory.test.mjs` exit 0)
   (Implements: S3, S5, S6)
@@ -329,6 +338,15 @@ landed here or is recorded as `unit-only` with its reason).
   (validator: `bun scripts/run-root-suite.mjs` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S10)
   - Relevant files: docs/LOGS.md, docs/features/650-decision-promotion/
+
+- P15 — Correction batch (external verify 2026-11-19): re-point the three anchors
+  that never ran (`O7`, `O20`, `AC-S4`), supersede `D3`'s dropped
+  `rendered-facts@1` row, qualify the `## Retirements` inventory claim with the
+  classifier's done-unit semantics, add the scope cell to the plan stage's
+  decision-row example, and align the producer's exit-code comment.
+  (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/650-decision-promotion/SPEC.md` exits 0)
+  (Implements: S1, S4, S7)
+  - Relevant files: docs/features/650-decision-promotion/, skills/unit-lane/references/PLAN.md, scripts/decision-promotion.mjs
 
 ### Planning evidence
 
@@ -498,6 +516,80 @@ token from `log-kind@1`.
   `planning-evidence.md` (18 rows), `planning-obligations.md` (20 rows),
   `decisions.md` (three path-protection records) and the sweep carrier.
   `phase-lint` PASS 13/13 · `E2` records it.
+- **D12** — 2026-11-19, the drafted `rendered-facts@1` `restates:` row is
+  **superseded**: `decision-scope@1` publishes columns `scope | what it orders`,
+  no `type` column, and `normative-drift`'s restates claim recomputes a block's
+  declared `type` column against the const (`PE-011`), so the row can never pass
+  the gate. The two-way block↔const pin therefore lives in
+  `scripts/decision-promotion.test.mjs` (the declared set vs `DECISION_SCOPES`,
+  both directions), and the Impact, Future-cost, Applicable-tests, `P11` and
+  `O14` claims now say so. This supersedes `D3`'s registration clause; `G3`'s
+  citation of `D3` for the absence was wrong-footed — `D3` as written mandated
+  the row, and this line is its authority. Authority: external verify 2026-11-19
+  (blocker 3), re-derived against `scripts/normative-drift.test.mjs` and the
+  block's own columns.
+- **D13** — 2026-11-19, the receipt's unrun anchors are re-pointed as one
+  correction batch: `O7`'s `rg … matches 0` never ran (the untouched
+  `TURN_CONTRACT.md` has four pre-existing `scope` words) → the empty-diff
+  conjunct its own evidence already named; `O20`'s declared `docs-language.test.mjs`
+  target never existed in git history (`PE-020`) → the inventory's real carrier
+  `scripts/doc-discipline.test.mjs`; `AC-S4`'s `needs-input docs/fix/384 --json`
+  exits 1 at base and head alike (records-first prose ledger) → re-pointed to
+  the 650 unit's own ledger plus the sensor suite, criterion cell untouched,
+  `ac-hash` re-stamped with the `sectionText` recipe; the `## Retirements`
+  claim is qualified with the classifier's done-unit semantics (`PE-019`,
+  `E22`); the plan stage's example gains the scope cell (`O21`). The
+  correction task is **P15** — this Log's existing `P14` line already denotes
+  the push, and phase-lint accepts the gap (fixture-proven in `mktemp` scratch).
+  Authority: §9 of the local-apply instruction (one batch over the receipt's
+  blockers).
+- **E21** — 2026-11-19, the frozen-failure corpus observed RED before the batch,
+  each then repaired: `rg -c 'docs-language.test.mjs' …/planning-obligations.md`
+  · 1 → no match after; `rg -c 'scope' skills/orchestration-envelope/references/TURN_CONTRACT.md`
+  · 4 against the declared 0 (base-side: file untouched, the count pre-exists);
+  `rg -c 'D12' SPEC.md` · exit 1 → ≥ 1 after (6 at the final bytes: the D12 row,
+  the four claims it corrects, and this line); the old AC-S4 target path in this
+  document (the `docs/fix/384…` anchor) · 1 → no match after the AC edit;
+  `rg -c '<scope>$' skills/unit-lane/references/PLAN.md`
+  · exit 1 → `1` after; `rg -c 'no-plan-claim' SPEC.md` · exit 1 → ≥ 1 after
+  (4 once this Log quotes the token).
+- **E22** — 2026-11-19, `bun scripts/residual-classify.mjs --inventory --base origin/main`
+  · exit 0 · `scripts/decision-promotion.test.mjs` classifies
+  `orphan / no-plan-claim` while the roadmap row is terminal (`PE-019`); the
+  `## Retirements` qualification now states this beside the command it names,
+  and `E12`'s open-state receipt stands as recorded.
+- **E23** — 2026-11-19, AC-S4's re-pointed checks in the foreground:
+  `needs-input docs/features/650-decision-promotion --json` · exit 0 ·
+  `decision: none`; `bun test packages/agentic-workflow/test/runner.sensors.test.mjs`
+  · exit 0 · 9 pass; `bun test scripts/decision-promotion.test.mjs` · exit 0 ·
+  14 pass; the phantom path no longer appears in this document (`rg` exit 1).
+- **E24** — 2026-11-19, the re-pointed obligation validators in the foreground:
+  O7 `git diff --stat origin/main -- skills/orchestration-envelope/` · no
+  output · 0 lines; O21 `rg -c '<scope>$' …PLAN.md` · `1`; O22
+  `rg -c 'no-plan-claim' …SPEC.md` · ≥ 1 (1 before this Log quoted the token,
+  4 after); O23's phantom-path count · no match (exit 1), and its positive
+  command · exit 0 (`E23`).
+- **E25** — 2026-11-19, `ac-hash` re-stamped after the AC edit with the
+  `sectionText` recipe: the recipe reproduced the frozen `3f08f332…` on the
+  pre-edit bytes and now records
+  `49001af7393d29fc6cd4e307832758a17737ddce28b42b0defd3ab1b854d020b`;
+  `phase-lint` · exit 0 · `verdict PASS`, 14 phases 6/6 (P15
+  `correction-batch-external-verify-2026-11-19`), fingerprint
+  `a4169f197e3cebe8b18cdbd3850647c7bf96b306e3d5d071600ca6e87c1f2de6`.
+- **G15** — 2026-11-19, HEAD 0a28f2e3daacc78e4dacbc16922e7a5bc06769a9 — `bun test scripts/doc-discipline.test.mjs` and
+  `bun test scripts/residue-dimensions.test.mjs` · exit 0 · 21 / 30 pass —
+  `O20`'s re-pointed evidence.
+- **G16** — 2026-11-19, HEAD 0a28f2e3daacc78e4dacbc16922e7a5bc06769a9 — the touched gates re-run after the batch: `normative-drift`
+  22 pass, `decision-promotion` 14 pass, `golden-fixture` 15 pass (executor-path
+  wording change), `check-skill-context --skill unit-lane` PASS (5166/377
+  inside 5246/403; the reference ceiling binds DESIGN, not PLAN, so it does not
+  move), `docs-generate --check` PASS, and the producer's stdout over `--root .`
+  is byte-identical to its pre-edit capture (comment-only change: `0a28f2e3d`
+  vs worktree).
+- **G17** — 2026-11-19, HEAD 0a28f2e3daacc78e4dacbc16922e7a5bc06769a9 — `bun scripts/run-root-suite.mjs` · exit 0 · 130 suites
+  PASS, 0 FAIL, and `bun scripts/local-gate.mjs --skip-network --jobs 2` ·
+  exit 0 · `local-gate: PASS — 15 step(s) in 600s` — the S2 battery after the
+  correction batch found nothing else broken.
 
 ## Next
 

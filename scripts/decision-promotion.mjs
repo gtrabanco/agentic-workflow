@@ -22,8 +22,8 @@
  * stdout: one fixed block — `decision-promotion@1`, the root and the rule's
  * `since` date, the ledger totals, one `row —` line per decision, one
  * `finding — <code>` line per defect, then `verdict`. Exit: 0 clean or
- * findings reported; 1 refused (a ledger carrying the block is malformed);
- * 2 a usage error.
+ * findings reported — a ledger the parser refuses becomes a named
+ * `skipped —` line, never a fatal; 2 a usage error.
  *
  * Read-only: it reads the tree, writes nothing, calls no network.
  */
