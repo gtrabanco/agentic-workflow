@@ -383,7 +383,12 @@ the unit ships every row is `verified`.
   descriptor is byte-equal to the module); the package's whole suite
   `bun test --timeout=10000 test/*.test.mjs` · exit 0 · 1023 pass · 0 fail
   (1016 before this unit).
-- **E8** — 2026-11-19, the command and its registration inside `E6`:
+- **E8** — 2026-11-19, the command, its handler glue and its registration
+  (`f1051b65c`, `c8500370d`): `the handler resolves the config, maps the session
+  model and reports the document` drives `createPhaseBatchingHandler` against a
+  temporary agent directory — the shipped OFF, a project file turning it on, a
+  refused flag reaching the operator as an error, and a session with no model
+  refused rather than guessed. Inside `E6`/`E8`:
   `the command refuses to invent the facts it was not given`, `…refuses an
   unknown flag and an out-of-vocabulary value`, `…prints the typed document`,
   `…reads the config switch`, `…takes --relay and --model` and the five
@@ -442,14 +447,14 @@ the unit ships every row is `verified`.
   projection — `90d0467ef`.
 - **G5** — 2026-11-19, HEAD 90d0467ef, `bun scripts/run-root-suite.mjs --jobs 4`
   · exit 0 · 129 suites PASS · 0 FAIL.
-- **G6** — 2026-11-19, HEAD efc101690, `bun scripts/local-gate.mjs --jobs 4`
-  · exit 0 · `local-gate: PASS — 19 step(s) in 682s` — 19/19 steps green, root
+- **G6** — 2026-11-19, HEAD c8500370d, `bun scripts/local-gate.mjs --jobs 4`
+  · exit 0 · `local-gate: PASS — 19 step(s) in 653s` — 19/19 steps green, root
   suite 129/0, crate-suite-bun 1325/0, schema-node-compat 931/0,
-  pi-node-compat 1023 tests (1022 pass, 1 skipped, 0 fail). Two earlier full
-  runs answered PASS too (`90d0467ef`, 941s — the tree before the ledgers were
-  closed; `67b0b7d45`, 688s — the tree that recorded them); this one is the
-  tree this line is committed against, and the only change after it is this
-  receipt. — root-suite 129/0,
+  pi-node-compat 1023 tests (1022 pass, 1 skipped, 0 fail). Three earlier full
+  runs answered PASS too (`90d0467ef` 941s, `67b0b7d45` 688s, `efc101690`
+  682s — the last two are the trees the later commits were built on); this one
+  is the tree this line is committed against, and the only change after it is
+  this receipt. — root-suite 129/0,
   crate-suite-bun 1325/0, schema-node-compat 931/0, pi-node-compat 1023 tests
   (1022 pass, 1 skipped, 0 fail), `docs-generated-projection` PASS,
   `version-parity-content` PASS on the changeset. The first attempt failed at
