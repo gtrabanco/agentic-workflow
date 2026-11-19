@@ -441,3 +441,9 @@ the merge.
   for a prose pin under a "no new script" non-goal, contrasted in D3.
 - Unit [596-test-relevance-sweep](../../fix/596-test-relevance-sweep/SPEC.md) — the
   tag grammar and its gate.
+- **G2** — 2026-11-19, HEAD `b45290fe5`, `bun scripts/dimension-regression.mjs --base
+  main` · 18 dimensions on both sides · 1 changed review surface
+  (`docs/workflow/GATE_INVENTORY.md`) · this unit doc as the evidence carrier ·
+  `verdict | clean`. Its first run was `refused` with
+  `missing-reverification-evidence` — the gate working, then satisfied by this
+  line, which is why the command sits on it rather than below.
