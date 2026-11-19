@@ -355,6 +355,12 @@ The frozen ledger is `planning-obligations.md` beside this document (M/L shape).
   present here, absent from an archived tree; `tagsVisible` 0 vs N).
 - **E12** — 2026-11-19, `bun scripts/prose-gate-inventory.mjs` · exit 0 · PASS, the
   two new surface ids claimed by the drift row.
+- **P10** — 2026-11-19, the branch pushed and PR
+  [#648](https://github.com/gtrabanco/agentic-workflow/pull/648) opened against
+  `main`; the pre-push hook ran the offline gate on the range (`PASS — 17 steps`),
+  the roadmap row carries the PR link through the `annotate` CAS write, and the
+  remote gate stays manual (`gh workflow run root-suite.yml`) for branches the
+  local gate cannot cover — this one it can and did.
 - **E14** — 2026-11-19, `bun scripts/dimension-regression.mjs --base origin/main` ·
   first run refused `missing-reverification-evidence` — the range touches
   `docs/workflow/GATE_INVENTORY.md` (the two surface ids this unit claims), and no
@@ -371,9 +377,10 @@ The frozen ledger is `planning-obligations.md` beside this document (M/L shape).
 
 ## Next
 
-The owner reviews the diff as the external verifier: one correction batch on its
-blockers, if any. `main` moved locally to `fdd39cccc` after the branch cut
-(`origin/main` is still `176ab984b`), so the integration is the owner's.
+The owner reviews PR [#648](https://github.com/gtrabanco/agentic-workflow/pull/648)
+as the external verifier: one correction batch on its blockers, if any. `main`
+moved locally to `fdd39cccc` after the branch cut (`origin/main` is still
+`176ab984b`), so the integration is the owner's.
 
 ## References
 
