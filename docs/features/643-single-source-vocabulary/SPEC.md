@@ -289,10 +289,85 @@ The frozen ledger is `planning-obligations.md` beside this document (M/L shape).
   ```
   Apply to this repository: issue #643
   ```
+- **D1** — 2026-11-19, the named pre-build cold path is **empty**; authority: the
+  issue leaves it to the owner (`S4`) and the evidence decides it. Detail and the
+  import chain: `decisions.md` D1.
+- **D2** — 2026-11-19, `src/doc/envelope.mjs` owes no change (no enumerated copy
+  to delete; the pattern close accepts more than the const, by design).
+  `decisions.md` D2.
+- **D3** — 2026-11-19, every moved name keeps its historical export path; the
+  crate's differing spellings survive as aliases. `decisions.md` D3.
+- **D4** — 2026-11-19, the requirement set is `S1` (the turn's instruction) plus
+  `S2…S11` quoting issue #643 verbatim. `decisions.md` D4.
+- **E1** — 2026-11-19, `bun /tmp/pe643-*/probe.mjs` (a throwaway real-import
+  probe against `dist/index.js`, removed with its temp dir) · exit 0 · 39 checks
+  `EQUAL`, 12 `DRIFT` (the DRIFT rows are the Class 2 names the schema did not yet
+  publish). This is `PE-002`/`PE-003`'s sample.
+- **E2** — 2026-11-19, `bun test scripts/vocabulary-parity.test.mjs` on the frozen
+  tree · exit 1 · 5 failing cases: class 1 (41 literals), class 2 (12 rows
+  pointing at the runner), the invariant home, `GATE_REJECTION_TYPES`, and the
+  stale rationale. The corpus of §2, observed red before any implementation.
+- **P1** — 2026-11-19, the plan frozen (unit doc + both ledgers + decisions);
+  `phase-lint` PASS 9/9 · `00d5b60df`.
+- **P2** — 2026-11-19, the frozen-failure corpus landed red · `073bcf53d`.
+- **E3** — 2026-11-19, `cd packages/agentic-workflow-schema && bun run test` ·
+  exit 0 · 914 pass, 0 fail (52 files).
+- **P3** — 2026-11-19, the thirteen vocabularies published ·
+  `23afa6dac`.
+- **P4** — 2026-11-19, forty-one Class 1 literals replaced by imports ·
+  `009f6bc4c`.
+- **E4** — 2026-11-19, `cd packages/agentic-workflow && bun run test` · exit 0 ·
+  1320 pass, 0 fail (72 files), after P4 and again after P5.
+- **P5** — 2026-11-19, the twelve Class 2 literals replaced by imports ·
+  `212b51acf`.
+- **P6** — 2026-11-19, the drift gate reads the gate-rejection machine from the
+  schema and recomputes the block; the twelve `schema-export` rows re-pointed ·
+  `85d5f3c13`.
+- **E5** — 2026-11-19, `bun test scripts/normative-drift.test.mjs` · exit 0 ·
+  22 pass, 0 fail, including the three injected `restates` refusals (a dropped
+  token, an invented token, a removed block).
+- **P7** — 2026-11-19, the scattered pins and the stale rationales deleted; the
+  router's private shape table imported · `0fea21ad0`.
+- **E6** — 2026-11-19, `rg -c 'does not depend on the schema package|ships without
+  a dependency on the schema package|until issue #427 unifies the reading'`
+  over `packages/agentic-workflow/src packages/agentic-workflow/test scripts` ·
+  0 matches (the scanner in the parity suite reads whitespace-normalized text, so
+  a wrapped rationale cannot survive it either).
+- **P8** — 2026-11-19, the invariant declared, the guide bound to it, the budgets
+  re-pinned · `cc0aa613a`.
+- **E7** — 2026-11-19, `bun scripts/check-skill-context.mjs --documents` · exit 0
+  · PASS, AGENTS.md 738 lines / 178 machine / 560 prose / 13,418 est.
+- **P9** — 2026-11-19, the unit registered: roadmap status, generated projection,
+  changeset, journal fragment · `bc80f9aca` · `e86ca1b96` · `a7027db9b` ·
+  `24b90cb73` · `1fe5d2a1e`.
+- **E8** — 2026-11-19, `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  `Files: 3 checked · 0 missing · 0 stale · 0 orphaned`.
+- **E9** — 2026-11-19, `bun scripts/log-immutability.mjs` · exit 0 · 0 violations.
+- **E10** — 2026-11-19, `bun test scripts/vocabulary-parity.test.mjs` on the final
+  tree · exit 0 · 35 pass, 0 fail. Residency receipt: **67** names imported from
+  the schema, **162** runner declarations stay (Class 3).
+- **E11** — 2026-11-19, differential over the touched commands (base copy
+  `git archive 176ab984b` in a throwaway `/tmp` tree, path-normalized): `resolve-passes`,
+  `journal name`, `ceremony tier classify`, `guard-command`, `verify --no-git`,
+  `log render` — byte-identical stdout/stderr/exit. Two deltas, both declared:
+  `roadmap read` differs only in `revision` (this unit changed the roadmap status
+  cell) and `doctor --json` differs only in checkout state (`.serena/project.local.yml`
+  present here, absent from an archived tree; `tagsVisible` 0 vs N).
+- **E12** — 2026-11-19, `bun scripts/prose-gate-inventory.mjs` · exit 0 · PASS, the
+  two new surface ids claimed by the drift row.
+- **E13** — 2026-11-19, `bun scripts/local-gate.mjs --no-bail --json` over every
+  applicable step · exit 0 · 18 steps passed in 614s; then
+  `bun scripts/local-gate.mjs --only worktree-guard` · exit 0 · PASS. The first
+  full run's `worktree-guard` failure was a peer session's leftover
+  (`.worktrees/feat-596-test-relevance-sweep/.worktrees/aw596-measure-base`), which
+  that session removed before the re-run; the red is recorded in `## Known
+  pre-existing issues` rather than erased.
 
 ## Next
 
-Run P2: write the frozen-failure corpus red against the current tree.
+The owner reviews the diff as the external verifier: one correction batch on its
+blockers, if any. `main` moved locally to `fdd39cccc` after the branch cut
+(`origin/main` is still `176ab984b`), so the integration is the owner's.
 
 ## References
 
