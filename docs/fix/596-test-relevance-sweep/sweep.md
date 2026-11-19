@@ -26,7 +26,12 @@ at least 1 s (cost = the slowest suite on the surface, read from the root gate's
 own `PASS <file> (N.Ns)` lines); suspects are ordered by that ratio, descending,
 and at most 5 run kill-rate — the sweep is never exhaustive.
 
-## sweep
+## Measurements
+
+One subsection per ask: the cluster table, the selective kill-rate, and the
+wall-clock of the three change classes.
+
+### sweep
 
 Measured against the base revision's own root-suite log
 (`bun scripts/run-root-suite.mjs` at `176ab984b`, 126 suites, each suite's wall
@@ -182,7 +187,7 @@ deleted, merged or weakened by this unit** — the sweep's product is the eviden
 that its cost is now justifiable, and the record a later deletion decision reads
 instead of re-deriving it.
 
-## kill-rate
+### kill-rate
 
 Selective mutation kill-rate over the `5` selected clusters only — one mutant
 harness run, never an exhaustive sweep. Each cluster's mutants are three
@@ -217,7 +222,7 @@ its surface is gone, when the obligation is genuinely duplicated, or when its
 cost exceeds the risk it covers — is untouched by a low kill-rate that names an
 *absent* obligation rather than an unreachable one.
 
-## wall-clock
+### wall-clock
 
 The three change classes the issue names, measured at the base revision and at
 the change, with the command the installed `pre-push` hook runs:
