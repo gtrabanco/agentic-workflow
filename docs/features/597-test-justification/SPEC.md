@@ -447,3 +447,10 @@ the merge.
   `verdict | clean`. Its first run was `refused` with
   `missing-reverification-evidence` — the gate working, then satisfied by this
   line, which is why the command sits on it rather than below.
+- **G3** — 2026-11-19, HEAD `19df399c3`, `bun scripts/local-gate.mjs --skip-network
+  --jobs auto` · exit 0 · `local-gate: PASS — 15 step(s) in 891s`: the whole
+  local-first gate — the two runtime legs of the crate suites (1,016 tests, 1,015
+  pass / 1 skipped / 0 fail), the root suite, version parity, the projection, the
+  journal carrier, log immutability, push identity, the secret scan, the hygiene
+  and worktree steps, the rigor sweep and the dimension re-verification — green at
+  the head this line's commit follows.
