@@ -18,6 +18,7 @@ import { run as runDiffGuard } from "./sensors/diff-guard.mjs";
 import { run as runWorkflowStatus } from "./sensors/workflow-status.mjs";
 import { run as runPreExecutionSnapshot } from "./sensors/pre-execution-snapshot.mjs";
 import { run as runNeedsInput } from "./sensors/needs-input.mjs";
+import { run as runSubstrate } from "./sensors/substrate.mjs";
 import { run as runLedgerProvenance } from "./sensors/ledger-provenance.mjs";
 import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runForgeRead } from "../forge-read/index.mjs";
@@ -35,6 +36,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "workflow-status": runWorkflowStatus,
   "pre-execution-snapshot": runPreExecutionSnapshot,
   "needs-input": runNeedsInput,
+  substrate: runSubstrate,
   "ledger-provenance": runLedgerProvenance,
   "quality-metrics": runQualityMetrics,
   "forge-read": runForgeRead,

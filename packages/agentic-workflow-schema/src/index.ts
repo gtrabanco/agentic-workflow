@@ -4158,6 +4158,8 @@ export {
   SKILL_EXTRA_STATES,
   NODE_SANCTIONED_SCRIPTS,
   GATE_REJECTION_TYPES,
+  NEEDS_INPUT_ROUTES,
+  SUBSTRATE_CLASSES,
 } from "./vocabularies.js";
 export type {
   FeedbackTier,
@@ -4173,6 +4175,8 @@ export type {
   SkillExtraState,
   NodeSanctionedScript,
   GateRejectionType,
+  NeedsInputRoute,
+  SubstrateClass,
 } from "./vocabularies.js";
 export {
   PROJECTION_MANIFEST_CONTRACT_ID,

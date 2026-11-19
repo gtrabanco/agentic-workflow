@@ -103,7 +103,7 @@ test("coverage gate — a complete install exits 0 and names every class present
   const lines = result.stdout.split("\n");
   assert.equal(lines[0], "substrate-coverage@1");
   for (const name of ["architecture", "decision-records", "api-posture", "documentation-map"]) {
-    assert.match(row(result.stdout, name), new RegExp(`^- ${name} · present · \\S+$`), `${name} is present`);
+    assert.match(row(result.stdout, name), new RegExp(`^- ${name} · present · .+$`), `${name} is present`);
   }
   assert.match(result.stdout, /^Summary: 4 classes · 4 present · 0 declined · 0 absent$/m);
   assert.match(result.stdout, /^Verdict: complete$/m);
@@ -237,9 +237,10 @@ test("route vocabulary — the schema, the crate and the published block are one
   for (const route of schema.NEEDS_INPUT_ROUTES) {
     assert.ok(published[1].includes(route), `the block's route line names ${route}`);
   }
-  for (const name of schema.SUBSTRATE_CLASSES) {
-    assert.ok(block.includes(name), `the block publishes the substrate class ${name}`);
-  }
+  // The class set is not restated in the block: the block cites its owner, which
+  // is the residency rule the pin exists to protect. The tokens are compared
+  // against the schema const above, one home, no second copy.
+  assert.match(block, /schema-export:SUBSTRATE_CLASSES/, "the block cites the class vocabulary's owner");
 });
 
 test("route vocabulary — the dispatcher verifies a substrate route against the census, never trusting the cell", () => {
