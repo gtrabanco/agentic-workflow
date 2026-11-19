@@ -389,6 +389,18 @@ this unit). The rule itself is not restated here: its owner is
 - **F3** — 2026-11-19, folded in the correction batch: `LANE_FLOW.md` states
   the third route and both usage lines carry `[--workspace <dir>]`, pinned by
   the substrate suite (red `E16` → green `E17`) · fix `cf0be4a0d`.
+- **E19** — 2026-11-19, the one red the first gate run of this batch found and
+  its repair: `scripts/findings-corpus.test.mjs` pins the real tree's finding
+  total, which this unit's `F2`/`F3` fold lines moved 1162 → 1164 — the pin
+  bumped in the established form (precedent `1152 → 1153` for #507, `1153 →
+  1162` for #643's fold batch), every other pin unchanged (legacy 56 ·
+  fold-annotated 229 · review marks 173 · unparsable 0); re-run exit 0 · 14
+  pass · `fcb7d0a23`.
+- **G7** — 2026-11-19, `bun scripts/local-gate.mjs` at `fcb7d0a23` (the
+  correction batch's closing head: both blockers fixed, ledgers closed, the
+  corpus pin bumped) · exit 0 · `PASS — 19 step(s) in 488s`. This line is the
+  append-only record written after it; the only bytes after the gate ran are
+  this `## Log` append.
 
 ## Next
 
