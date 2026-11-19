@@ -115,8 +115,8 @@ test("the receipt declares its contract and a closed finding-code set", async ()
   assert.deepEqual([...FINDING_CODES].sort(), ["owner-doc-missing", "scope-unrecorded", "unpromoted-decision"]);
   assert.deepEqual([...OWNER_DOCS].sort(), [
     "AGENTS.md",
-    "docs/architecture/ARCHITECTURE.md",
     "docs/architecture/ARCHITECTURAL_INVARIANTS.md",
+    "docs/architecture/ARCHITECTURE.md",
   ]);
 });
 
@@ -175,13 +175,15 @@ test("a legacy decision row is counted and never refused", async () => {
   assert.equal(result.rows[0].scope, null);
 });
 
-test("a legacy row whose tail looks like a scope token keeps it in discarded", async () => {
+test("a discarded cell that merely carries a scope token is not a scope cell", async () => {
   const { buildPromotion } = await producer();
   const root = emptyTree();
-  unit(root, "705-lookalike", [decision(1, "2026-01-05", { chosen: "old rule", discarded: "the alternative" }, { scope: "cross-unit" })]);
-  const result = buildPromotion(root, { since: "2027-01-01" });
+  unit(root, "705-lookalike", [
+    decision(1, "2026-01-05", { chosen: "old rule", discarded: "we discarded the `cross-unit` reading" }, { scope: "unit-only" }),
+  ]);
+  const result = buildPromotion(root, { since: RULE_SINCE });
   assert.deepEqual(result.findings, []);
-  assert.equal(result.rows[0].scope, "cross-unit");
+  assert.equal(result.rows[0].scope, "unit-only");
 });
 
 test("a decision captured after the rule landed with no scope cell is scope-unrecorded", async () => {
@@ -193,19 +195,46 @@ test("a decision captured after the rule landed with no scope cell is scope-unre
   assert.equal(result.findings[0].code, "scope-unrecorded");
 });
 
-test("a malformed ledger carrying the block is refused, one without the block is skipped", async () => {
-  const { buildPromotion, DecisionPromotionRefusal } = await producer();
+test("a ledger the dispatcher cannot read is named and the rest of the tree is still read", async () => {
+  const { buildPromotion } = await producer();
   const root = emptyTree();
   const broken = unit(root, "707-broken", ["D1 | not-a-date | decision | Q1 | human-owner | x | y | z | unit-only"]);
   fs.writeFileSync(
     path.join(broken, "decisions.md"),
     ["open-questions@1", "id | date | type | question | blocks | search-receipt | options | route", "D1 | nope", ""].join("\n"),
   );
-  assert.throws(() => buildPromotion(root, { since: RULE_SINCE }), (error) => {
-    assert.ok(error instanceof DecisionPromotionRefusal);
-    assert.match(error.message, /707-broken/);
-    return true;
-  });
+  unit(root, "710-readable", [decision(1, "2026-11-20", { chosen: "the rule", discarded: "nothing" }, { scope: "unit-only" })]);
+  const tree = buildPromotion(root, { since: RULE_SINCE });
+  assert.equal(tree.totals.unreadable, 1);
+  assert.deepEqual(tree.unreadable, [{ unit: "docs/features/707-broken", reason: "malformed-entry at decisions.md:3" }]);
+  assert.equal(tree.rows.length, 1, "a broken ledger must not swallow its neighbours");
+
+  const elsewhere = emptyTree();
+  const prose = unit(elsewhere, "709-prose-first", [
+    decision(1, "2026-11-20", { chosen: "the rule", discarded: "nothing" }, { scope: "cross-unit" }),
+  ]);
+  fs.writeFileSync(
+    path.join(prose, "decisions.md"),
+    [
+      "# Decisions",
+      "",
+      "Prose first.",
+      "",
+      "## Open questions",
+      "",
+      "```text",
+      "open-questions@1",
+      "id | date | type | question | blocks | search-receipt | options | route",
+      "```",
+      "",
+      "Trailing prose the dispatcher never reaches.",
+      "",
+    ].join("\n"),
+  );
+  const result = buildPromotion(elsewhere, { since: RULE_SINCE });
+  assert.equal(result.totals.unreadable, 1);
+  assert.deepEqual(result.unreadable, [{ unit: "docs/features/709-prose-first", reason: "malformed-ledger-header at decisions.md:1" }]);
+  assert.deepEqual(result.findings, []);
 
   const clean = emptyTree();
   fs.mkdirSync(path.join(clean, "docs", "features", "708-records"), { recursive: true });
@@ -213,7 +242,9 @@ test("a malformed ledger carrying the block is refused, one without the block is
     path.join(clean, "docs", "features", "708-records", "decisions.md"),
     ["```text", "path-protection-records@1", "kind | paths | phase | date | authority | justification", "```", ""].join("\n"),
   );
-  assert.deepEqual(buildPromotion(clean, { since: RULE_SINCE }).findings, []);
+  const records = buildPromotion(clean, { since: RULE_SINCE });
+  assert.deepEqual(records.findings, []);
+  assert.equal(records.totals.noBlock, 1, "a records-only ledger carries no decision and is counted, never guessed");
 });
 
 test("the calibration pair: one finding per class on seeded, none on clean", async () => {
@@ -222,7 +253,7 @@ test("the calibration pair: one finding per class on seeded, none on clean", asy
   const fixture = spawnSync(process.execPath, [path.join(ROOT, FIXTURE_REL), dir], { encoding: "utf8" });
   assert.equal(fixture.status, 0, fixture.stderr);
 
-  const seeded = buildPromotion(path.join(dir, "seeded"), { since: fixture.stdout.trim().split("\n").find((line) => line.startsWith("since"))?.split("·").pop().trim() });
+  const seeded = buildPromotion(path.join(dir, "seeded"), { since: RULE_SINCE });
   const codes = seeded.findings.map((row) => row.code).sort();
   assert.deepEqual(codes, ["owner-doc-missing", "scope-unrecorded", "unpromoted-decision"]);
 
@@ -258,7 +289,7 @@ test("the CLI exits 0 on a clean tree and refuses a bad argument", () => {
 
 test("the schema publishes the scope vocabulary as a closed const", () => {
   const source = fs.readFileSync(path.join(ROOT, "packages/agentic-workflow-schema/src/vocabularies.ts"), "utf8");
-  assert.match(source, /export const DECISION_SCOPES = Object\.freeze\(\[[\s\S]*?"unit-only"[\s\S]*?"cross-unit"[\s\S]*?\] as const\)/);
+  assert.match(source, /export const DECISION_SCOPES = Object\.freeze\(\["unit-only", "cross-unit"\]\)/);
   const published = fs.readFileSync(path.join(ROOT, "packages/agentic-workflow-schema/src/index.ts"), "utf8");
   assert.match(published, /\bDECISION_SCOPES\b/);
 });
