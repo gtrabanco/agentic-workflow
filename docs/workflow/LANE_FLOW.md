@@ -115,7 +115,10 @@ agent guide publishes):
   the repository was searched: `path:line` hits, greps, the unit folder, prior
   units of the same area), the researched options with their trade-offs, and the
   `route` back to the stage that owns the fact (`design` for
-  scope/architecture, `unit-lane` for plan-owned facts).
+  scope/architecture, `unit-lane` for plan-owned facts, and
+  `init-workspace:<class>` when the search found no owning document because the
+  workspace has none scaffolded to own it — the dispatcher verifies that claim
+  against the workspace's substrate census before granting it).
 - `decision` — authority `human-owner`, the date, what was chosen, what was
   discarded and why.
 
@@ -130,13 +133,16 @@ only a user decision closes a question.
 Consume it with the deterministic dispatcher:
 
 ```
-runner needs-input <unit-dir> [--json]
+runner needs-input <unit-dir> [--workspace <dir>] [--json]
 ```
 
 It reads the unit doc plus `decisions.md` and prints the versioned
 `open-questions@1` block (questions, search receipts, options, the route back,
 and the typed continuation — the schema's existing `no-decision-available`,
-because no decision is available by definition). Exit 0 means a well-formed
+because no decision is available by definition). `--workspace <dir>` re-points
+the substrate census a substrate route is verified against; without it the
+workspace is the nearest ancestor carrying a guide or a git directory. Exit 0
+means a well-formed
 artifact and a block on stdout; a missing or malformed `decisions.md` exits
 non-zero and prints a `NEEDS-INPUT FAIL` line, so a broken ledger never reads as
 "nothing pending". The owning grammar lives in
@@ -268,7 +274,7 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `advance` | Pi-native conductor: sensor → decide → invoke loop (feature 62) |
 | `workflow-status` | Read the sensor envelope |
 | `runner unit-route --triage <NN> [--json]` | Triage a unit |
-| `runner needs-input <unit-dir>` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
+| `runner needs-input <unit-dir> [--workspace <dir>]` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
 | `runner diff-guard --base <ref>` | Diff-size guard check |
 | `agentic-workflow memory probe [--json]` | Bounded memory-substrate health verdict (`memory-probe@1`), once per session before the first memory read; always exits 0 |
 | `agentic-workflow unit-doc create` | Create a unit doc (SDK) |
