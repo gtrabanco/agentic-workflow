@@ -330,8 +330,6 @@ export function validatePhaseBatching(value: unknown): PhaseBatchingValidationRe
     }
   } else if (reason === "model-unknown") {
     errors.push("reason model-unknown carries no capability");
-  } else if (value.capability !== null && typeof value.capability !== "object") {
-    errors.push("capability must be an object or null");
   }
 
   // The three axes: decision, count and reason cannot disagree.
