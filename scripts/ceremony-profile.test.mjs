@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/ceremony-profile.mjs obligations=contract,failure-path
 
 /**
  * ceremony-profile.test.mjs — the dispatcher/catalog check for

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/git-config-writes.mjs obligations=convention,contract,failure-path
+
 /**
  * git-config-writes.test.mjs — the repository's `-c`-only convention for test
  * suites, pinned mechanically (issue #514 S7, precedent

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/scope-manifest.mjs obligations=contract,failure-path
 
 /**
  * fix/286 — the affecting-path scope manifest, black box over the CLI in a

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/ledger-provenance.mjs obligations=contract,failure-path
 
 /**
  * F106 / P20 — the ledger recount must be mechanical, never asserted.

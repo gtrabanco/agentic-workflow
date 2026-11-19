@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs obligations=contract,failure-path
 
 /**
  * Feature 28 — the snapshot sensor as a BLACK BOX (findings RS3(b), RS13, RS14).

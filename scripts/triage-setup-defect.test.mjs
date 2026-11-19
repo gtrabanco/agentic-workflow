@@ -1,3 +1,5 @@
+// test-obligation: protects=skills/triage-issue/references/ISSUE_PROCESS.md,packages/agentic-workflow/src/doctor/vehicle.mjs obligations=contract,failure-path
+
 /**
  * triage-setup-defect.test.mjs — the triage route for a setup state (issue #611, S3).
  *

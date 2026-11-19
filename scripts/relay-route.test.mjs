@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/relay,packages/agentic-workflow/src/runner/catalog.json obligations=contract,failure-path
 
 /**
  * relay-route.test.mjs — the router's relay hint and its degradation (unit 82).

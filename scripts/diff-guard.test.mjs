@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/diff-guard.mjs obligations=contract,failure-path
+
 /**
  * Corpus for the `diff-guard` runner subcommand — the behavioural contract of the
  * diff-size guard. Fixtures are embedded temp git repos written at run time:

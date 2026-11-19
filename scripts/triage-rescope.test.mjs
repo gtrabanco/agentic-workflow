@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/triage-issue/SKILL.md obligations=convention,contract
 
 /**
  * triage-rescope.test.mjs — the triage router's re-scoped vocabulary (issue #441).

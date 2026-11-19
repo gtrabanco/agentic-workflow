@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/telemetry-report.mjs obligations=contract,failure-path
 
 /**
  * telemetry-report.test.mjs — the report CLI (issue #504 S5).

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/execute-phase/references/FOLDING.md obligations=convention,contract
 
 // Fix #159 — the review→fold loop must terminate. Pins the four loop killers
 // to their owning skill text:

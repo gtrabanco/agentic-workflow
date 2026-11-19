@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/relay-packet.mjs obligations=contract,failure-path
 
 /**
  * relay-packet.test.mjs — the packet checker's suite (red-first, issue #294).

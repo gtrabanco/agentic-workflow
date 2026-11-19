@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/lint-changeset.mjs obligations=contract,failure-path
+
 /**
  * RED-first corpus for scripts/lint-changeset.mjs (feature 40, issue #180).
  *

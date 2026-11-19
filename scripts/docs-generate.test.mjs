@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/docs-generate.mjs obligations=contract,distribution-contract
 
 /**
  * docs-generate.test.mjs — the generator's frozen corpus (issue #396).

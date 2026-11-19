@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/content-guard.mjs obligations=contract,convention
 
 /**
  * content-guard-discipline.test.mjs — the content guard's discipline gate

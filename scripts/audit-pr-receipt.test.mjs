@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/review-receipt.mjs,skills/audit-pr/SKILL.md obligations=contract,failure-path
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";

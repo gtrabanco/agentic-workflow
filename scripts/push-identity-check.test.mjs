@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/push-identity-check.mjs obligations=contract,failure-path
+
 /**
  * push-identity-check.test.mjs — the push-range authorship check (issue #514 S4).
  *

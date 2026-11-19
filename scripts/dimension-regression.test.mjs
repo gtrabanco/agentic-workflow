@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/dimension-regression.mjs obligations=contract,failure-path
+
 /**
  * dimension-regression.test.mjs — the evolution-regression gate's sibling suite
  * (issue #590 S4/S9).

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/index-document.mjs obligations=contract
 
 /**
  * Feature 61 (P7) — deterministic next-step ranking.

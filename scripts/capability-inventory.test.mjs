@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=docs/CAPABILITIES.md,skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md obligations=contract,convention
 
 /**
  * #333 — the capability-inventory seeding contract.

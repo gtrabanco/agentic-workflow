@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/unit-route.mjs obligations=contract,failure-path
 
 /**
  * Fix 224 / P1 — the `unit-route` runner subcommand, the deterministic unit router.

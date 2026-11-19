@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/risk-tiers.mjs obligations=contract,failure-path,boundary
 
 /**
  * risk-tier-classifier.test.mjs — the computed risk-tier classifier (issue #360).

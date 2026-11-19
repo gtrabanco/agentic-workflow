@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/changeset-create.mjs obligations=contract,failure-path
+
 /**
  * Corpus for scripts/changeset-create.mjs (D-40-16): the changeset intent
  * file is created by code — affected packages/skills derived from the

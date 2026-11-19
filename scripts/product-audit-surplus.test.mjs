@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=skills/product-audit/references/AUDIT_DIMENSIONS.md obligations=convention,contract
 
 /**
  * product-audit-surplus.test.mjs — the Tests dimension's surplus direction,

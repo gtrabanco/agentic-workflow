@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/pi-agentic-workflow/src/extension/log-session-command.ts,packages/agentic-workflow/src/telemetry obligations=contract,convention
 
 /**
  * telemetry-coverage.test.mjs — a command and its telemetry move together

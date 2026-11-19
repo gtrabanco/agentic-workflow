@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/worktree-guard.mjs obligations=contract,failure-path
+
 /**
  * worktree-guard.test.mjs — the fixture corpus for `scripts/worktree-guard.mjs`
  * (issue #476).

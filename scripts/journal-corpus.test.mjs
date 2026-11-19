@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/journal-corpus.mjs obligations=contract,failure-path
+
 /**
  * journal-corpus.test.mjs — the journal carrier's sibling suite (issue #616).
  *

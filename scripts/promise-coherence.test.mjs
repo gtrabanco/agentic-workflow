@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/promise-coherence.mjs obligations=contract,failure-path
 
 /**
  * promise-coherence.test.mjs — the guard's suite, and the frozen-failure corpus.

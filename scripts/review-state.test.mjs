@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/review-state.mjs obligations=contract,failure-path
 
 /**
  * #318 S16 — per-file review state is script-written, so a review cannot claim

@@ -1,3 +1,5 @@
+// test-obligation: protects=packages/agentic-workflow/src/runner/ceremony/findings.mjs,packages/agentic-workflow/src/runner/ceremony/ledger.mjs obligations=contract,failure-path
+
 /**
  * ceremony-findings-ledger.test.mjs — ceremony `findings` + `ledger` modules
  * (fix #338, P5).

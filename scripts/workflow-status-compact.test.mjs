@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/workflow-status.mjs obligations=contract
 
 /**
  * `workflow-status --compact` — the reduced envelope.

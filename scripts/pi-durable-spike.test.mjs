@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/pi-durable-spike.mjs obligations=contract,failure-path
+
 // pi-durable-spike.test.mjs — issue #284 P2, the offline half of the spike.
 //
 // The substrate (`@earendil-works/pi-durable`) is experimental and is not a

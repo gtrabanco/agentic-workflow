@@ -1,3 +1,5 @@
+// test-obligation: protects=packages/agentic-workflow/src/doc obligations=convention,contract
+
 /**
  * Transversal discipline suites for the doc retrieval toolchain (unit 65,
  * P9 — AC4, AC24, AC25, AC26). These ride the root gate

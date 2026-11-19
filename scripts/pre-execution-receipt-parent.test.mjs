@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs obligations=contract,failure-path
 
 /**
  * fix #221 — the one receipt parser must read a null-word lineage line as absent.

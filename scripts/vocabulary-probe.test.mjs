@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/vocabulary-probe.mjs obligations=contract,failure-path
 
 /**
  * vocabulary-probe.test.mjs — the validator probe's suite (unit 84, issue #315

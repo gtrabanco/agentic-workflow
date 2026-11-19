@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=AGENTS.md,packages/agentic-workflow-schema/src/vocabularies.ts obligations=contract,failure-path
 
 /**
  * Feature 28 / P14 — AC15 (clause F1): normative prose bound to machine surfaces.

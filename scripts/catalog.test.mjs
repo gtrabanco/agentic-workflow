@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=packages/agentic-workflow/src/runner/catalog.json obligations=contract,failure-path
 
 /**
  * catalog.test.mjs — tests for the triage catalog and --triage mode.

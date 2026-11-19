@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=docs/features/_TEMPLATE/SPEC.md,docs/fix/_TEMPLATE/SPEC.md,packages/agentic-workflow-schema/src/pre-execution.ts obligations=convention,contract
 
 /**
  * unit-doc-contract.test.mjs — one contract, four producers, zero drift.

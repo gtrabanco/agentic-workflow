@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=docs/workflow/REPOSITORY_STATE.md,packages/agentic-workflow/src/runner/sensors/workflow-status.mjs obligations=contract,failure-path
 
 /**
  * Feature 59 — per-class continuation discipline (AC-03, AC-05).

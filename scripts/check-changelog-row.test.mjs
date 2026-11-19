@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/check-changelog-row.mjs obligations=contract,failure-path
 
 import assert from "node:assert/strict";
 import fs from "node:fs";

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/npm-version-gate.mjs obligations=contract,failure-path
 
 /**
  * npm-version-gate.test.mjs — the publish gate that replaced "local ≠ latest".

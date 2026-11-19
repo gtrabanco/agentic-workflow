@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=package.json,bun.lock obligations=convention,distribution-contract
+
 /**
  * workspace-lock-policy.test.mjs — one lockfile, at the workspace root.
  *

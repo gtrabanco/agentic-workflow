@@ -1,3 +1,5 @@
+// test-obligation: protects=scripts/update-tools.mjs obligations=contract,failure-path
+
 /**
  * update-tools.test.mjs — the offline suite for scripts/update-tools.mjs
  * (issue #331, unit fix/331-authoring-setup, S3).

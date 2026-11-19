@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/review-receipt.mjs obligations=contract,failure-path
+
 /**
  * review-receipt.test.mjs — the `review-change:pass` receipt contract, tested
  * against the **real** module.

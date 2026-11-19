@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// test-obligation: protects=scripts/check-skill-context.mjs obligations=contract,boundary,convention
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
