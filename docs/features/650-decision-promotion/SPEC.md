@@ -474,6 +474,8 @@ token from `log-kind@1`.
 - **G8** — 2026-11-19, `cd packages/agentic-workflow && bun test` · exit 0 · 1,324 pass / 0 fail across 72 files.
 - **G9** — 2026-11-19, `cd packages/agentic-workflow-schema && bun test` · exit 0 · 915 pass / 0 fail across 52 files.
 - **G10** — 2026-11-19, `bun test scripts/check-skill-context.test.mjs`, `scripts/scaffold-parity.test.mjs`, `scripts/residue-dimensions.test.mjs` · exit 0 · 1 / 17 / 30 pass / 0 fail.
+- **P14** — 2026-11-19, the branch pushed (the pre-push hook ran the offline gate: `local-gate: PASS — 17 step(s) in 603s`) and the PR opened as [#657](https://github.com/gtrabanco/agentic-workflow/pull/657); the roadmap row settled `done · [#657]` through `roadmap rowUpsert --expect` (revision `ee685ba8 → cb9f79a1`), never a hand edit.
+- **E20** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/features/650-decision-promotion/SPEC.md` · exit 0 · `verdict: PASS`, 0 violations, with the row carrying this unit's PR link.
 - **E19** — 2026-11-19, `rg -c 'decision-scope@1' skills/unit-lane/references/DESIGN.md` · exit 0 · `2` — the block marker **and** the checklist row that names it. `AC-S2`'s and `O11`'s planned cell said `1`, written from the block alone and never run; the anchor is re-pointed to the observed count, the prose is untouched (`D11`).
 - **D11** — 2026-11-19, `AC-S2`'s (and `O11`'s, which mirrors it) `matches 1` was written from intent — the grammar block alone — and the real surface carries a second occurrence, the design checklist's own row that binds the cell. Re-pointing the anchor to `matches 2` is the repair: the prose is the authority and the count follows the run. Authority: `S4`/`S5` over the checklist's own duty, read with the rule that an anchor never run is the defect.
 - **G14** — 2026-11-19, HEAD 448689e72 — `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 · `local-gate: PASS — 15 step(s) in 687s`, the crate suites 1,324 pass / 0 fail, the schema 915, the root suite 130 PASS, and `log-immutability` PASS with 0 violations over the 6-commit range (the journal change is the committed fragment, never a hand append to `docs/LOGS.md`).
@@ -506,6 +508,7 @@ before any implementation, then P3 … P9 in order.
 
 - Issue [#650](https://github.com/gtrabanco/agentic-workflow/issues/650) — the request this unit adopts (`Closes #650`).
 - Issue [#651](https://github.com/gtrabanco/agentic-workflow/issues/651) — the companion doc-retention unit (`Related`, soft order; no blocker either way).
+- PR [#657](https://github.com/gtrabanco/agentic-workflow/pull/657) — this unit's delivery, branch `feat/650-decision-promotion`.
 - [`docs/architecture/ARCHITECTURE.md`](../../architecture/ARCHITECTURE.md) · [`docs/architecture/ARCHITECTURAL_INVARIANTS.md`](../../architecture/ARCHITECTURAL_INVARIANTS.md) — the two owner docs the rule names.
 - [`skills/unit-lane/references/DESIGN.md`](../../../skills/unit-lane/references/DESIGN.md) — the decision row's grammar owner.
 - [`skills/product-audit/references/AUDIT_DIMENSIONS.md`](../../../skills/product-audit/references/AUDIT_DIMENSIONS.md) — the detection dimension.
