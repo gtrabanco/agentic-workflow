@@ -254,6 +254,33 @@ export const TRIAGE_CRITERIA_PROVENANCE = Object.freeze([
 ]);
 export type TriageCriteriaProvenance = (typeof TRIAGE_CRITERIA_PROVENANCE)[number];
 
+/** The obligation values a root suite's tag carries (`test-obligation-kind`,
+ *  issue #596): what the suite's assertions actually cover on the surface it
+ *  protects. The taxonomy is the one the issue adopts — the observable
+ *  contract, the required failure state, the input/size domain's edge, a
+ *  distribution surface's shipped bytes, a shared fixture's own correctness,
+ *  and a convention no runtime enforces.
+ *
+ *  `distribution-contract` is the issue's `prompt-byte`/`distribution-contract`
+ *  pair resolved to its second spelling (decision D2): it covers a surface that
+ *  ships bytes — package contents, prompt text, a generated projection, a
+ *  published schema — and it is legitimate even where the assertion looks
+ *  redundant with a sibling, which is exactly why the pair needed one token.
+ *
+ *  The values are what a suite declares at its head, so growing the set is a
+ *  schema-const change plus the owner doc's block
+ *  (`test-obligation-tag@1` in `skills/unit-lane/references/TESTS.md`) in the
+ *  same PR — never a prose-only edit. */
+export const TEST_OBLIGATION_KINDS = Object.freeze([
+  "contract",
+  "failure-path",
+  "boundary",
+  "distribution-contract",
+  "fixture-support",
+  "convention",
+]);
+export type TestObligationKind = (typeof TEST_OBLIGATION_KINDS)[number];
+
 /** The routes a `prose-only` boundary may take in the materialization round
  *  (`materialization-outcome`, issue #564 S1/S5). `scaffold` — the project's own
  *  rule file lands in the target repository; `issue` — the item is filed on the
