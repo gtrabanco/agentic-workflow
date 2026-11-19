@@ -569,6 +569,12 @@ token from `log-kind@1`.
   `rg -c 'no-plan-claim' …SPEC.md` · ≥ 1 (1 before this Log quoted the token,
   4 after); O23's phantom-path count · no match (exit 1), and its positive
   command · exit 0 (`E23`).
+- **P15** — 2026-11-19, the correction batch landed as `12577da5f` (the receipt
+  as `bbb03e98f`): every re-pointed validator (`O7`, `O14`, `O20`, `O21`,
+  `O22`, `O23`) re-ran green in the foreground, the frozen-failure corpus went
+  green (`E21`), `verify` shows only the base's twelve pre-existing receipt
+  violations, and the session entry aggregated through the fragment carrier
+  (`appended 1 · removed 1 · fragments 1`).
 - **E25** — 2026-11-19, `ac-hash` re-stamped after the AC edit with the
   `sectionText` recipe: the recipe reproduced the frozen `3f08f332…` on the
   pre-edit bytes and now records
