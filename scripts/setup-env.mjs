@@ -74,7 +74,24 @@ import process from "node:process";
 import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
+import {
+  VEHICLE_TARGET,
+  evaluateVehicle,
+  overrideTarget,
+  overrideTokens,
+  vehicleEvidence,
+} from "../packages/agentic-workflow/src/doctor/vehicle.mjs";
+
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+/**
+ * The dogfooding vehicle (issue #611, S1): the local env fragment this checkout
+ * is armed with, the crate bin it points at, and the decision functions the tool
+ * doctor already owns (`packages/agentic-workflow/src/doctor/vehicle.mjs`). One
+ * implementation, two carriers — `--check` and `--doctor` can never disagree.
+ */
+export const VEHICLE_FILE = path.join(".pi", "vehicle.env");
+export { VEHICLE_TARGET };
 
 export const BUN_INSTALL = "curl -fsSL https://bun.sh/install | bash";
 /**
@@ -127,6 +144,113 @@ language_servers:
   - json
   - yaml
 `;
+
+/**
+ * The override's value for this checkout (issue #611): one command, tokenised on
+ * whitespace, naming the working tree's crate bin. `bun` when it is on the
+ * machine, `node` otherwise — the documented fallback runtime, never a third
+ * choice (owner: `skills/runner-contract/references/RUNNER.md`).
+ */
+export function vehicleCommand({ root = REPO_ROOT, bunPresent = false } = {}) {
+  return `${bunPresent ? "bun" : "node"} ${path.join(root, VEHICLE_TARGET)}`;
+}
+
+/**
+ * The env fragment that arms a shell. The value shape is the runner contract's
+ * (`export AGENTIC_WORKFLOW_RUNNER="<program> <abs bin>"`); this file only carries
+ * it, so an authoring session sources one local file instead of re-typing a path.
+ */
+export function vehicleEnvFile(command) {
+  return `# Machine-local dogfooding vehicle — gitignored on every branch.
+#
+# Written by scripts/setup-env.mjs (issue #611). It points AGENTIC_WORKFLOW_RUNNER
+# at this checkout's crate bin, so a session that sources it runs the working tree
+# instead of the installed release (owner: skills/runner-contract/references/RUNNER.md).
+# Source it before launching an agent session: . ${VEHICLE_FILE}
+export AGENTIC_WORKFLOW_RUNNER='${command}'
+`;
+}
+
+/**
+ * The command a checkout's env fragment arms, or `null` when it carries none.
+ * `text` is injectable so the suite never reads the real file.
+ */
+export function readVehicleCommand({ root = REPO_ROOT, text = undefined, fsMod = fs } = {}) {
+  let content = text;
+  if (content === undefined) {
+    try {
+      content = fsMod.readFileSync(path.join(root, VEHICLE_FILE), "utf8");
+    } catch {
+      return null;
+    }
+  }
+  if (typeof content !== "string") return null;
+  const match = /^export AGENTIC_WORKFLOW_RUNNER=(.*)$/mu.exec(content);
+  if (match === null) return null;
+  const value = match[1].trim().replace(/^(['"])(.*)\1$/u, "$2").trim();
+  return value === "" ? null : value;
+}
+
+/**
+ * The bin a value names, resolved — the one fact that decides whether the file
+ * still points at *this* checkout. The program token is not compared: a file
+ * armed with `node` is a valid launcher, and re-writing it because bun appeared
+ * would flap the checkout on a runtime change nobody asked for.
+ */
+export function vehicleTargetOf(command) {
+  const target = overrideTarget(overrideTokens(command));
+  return target === null ? null : path.resolve(target);
+}
+
+/** Whether this checkout's env fragment points at this checkout's crate bin. */
+export function vehicleFileArmed(state) {
+  if (!state.vehicle) return false;
+  return vehicleTargetOf(state.vehicle.fileCommand) === path.resolve(state.vehicle.root, VEHICLE_TARGET) && state.vehicle.binPresent === true;
+}
+
+/**
+ * The host seam `vehicleEvidence` reads through: the same primitives the rest of
+ * this script uses (fs reads, the spawn probe, a bounded git read), shaped like
+ * the doctor's `ops` so the evidence is produced by one module, not two.
+ */
+function vehicleOps({ root, home, env, bunPresent }) {
+  return {
+    root,
+    home,
+    env,
+    platform: process.platform,
+    arch: process.arch,
+    // Availability was already probed once above: a second `bun --version` here
+    // would be the same question asked twice per pass.
+    binaryPath: (name) => (name === "bun" && bunPresent ? "bun" : name === "node" ? "node" : null),
+    version: () => null,
+    readText: (file) => {
+      try {
+        return fs.readFileSync(file, "utf8");
+      } catch {
+        return null;
+      }
+    },
+    exists: (file) => {
+      try {
+        return fs.existsSync(file);
+      } catch {
+        return false;
+      }
+    },
+    listDir: (dir) => {
+      try {
+        return fs.readdirSync(dir);
+      } catch {
+        return [];
+      }
+    },
+    git: (gitRoot, args) => {
+      const result = spawnSync("git", ["-C", gitRoot, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000 });
+      return { status: result.status ?? 1, stdout: (result.stdout ?? "").trim() };
+    },
+  };
+}
 
 /**
  * Windows is documented as WSL-only (S7): refuse before any check or install,
@@ -287,6 +411,15 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
     // no .bun-version → an accepted bun opt-in installs latest
   }
 
+  const vehicle = vehicleEvidence(vehicleOps({ root, home, env, bunPresent: bunOut !== null }));
+  const vehicleFileText = (() => {
+    try {
+      return fs.readFileSync(path.join(root, VEHICLE_FILE), "utf8");
+    } catch {
+      return null;
+    }
+  })();
+
   return {
     platform,
     home,
@@ -304,6 +437,7 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
     piCrateModulesPresent,
     engramConfigValid,
     serenaLocalOverridePresent,
+    vehicle: { ...vehicle, fileCommand: readVehicleCommand({ text: vehicleFileText }) },
   };
 }
 
@@ -388,6 +522,42 @@ export function verify(state) {
         ? { tool: "pi-crate-modules", ok: false, detail: "packages/pi-agentic-workflow/node_modules is missing — run without --check to install" }
         : { tool: "pi-crate-modules", ok: true, warn: true, detail: "packages/pi-agentic-workflow/node_modules is missing — installing it needs bun, which is not installed (optional, S11); install bun and re-run" },
   );
+
+  // The vehicle row (issue #611, S1/AC1): two facts, never merged — what this
+  // process exports, and what a shell sourcing the local file would export. The
+  // decision is the doctor's own, so `--check` and `--doctor` cannot disagree.
+  if (!state.pi.present) {
+    results.push({
+      tool: "dogfooding-vehicle",
+      ok: true,
+      warn: true,
+      detail: "the pi CLI is absent — the vehicle is opt-in for contributors without pi; arm it by hand with the export line in docs/workflow/SETUP.md, or run this script on a machine with pi",
+    });
+  } else if (state.vehicle) {
+    const exported = state.vehicle.source === "AGENTIC_WORKFLOW_RUNNER";
+    const fileArmed = vehicleFileArmed(state);
+    const verdict = evaluateVehicle(state.vehicle);
+    if (verdict.status === "ok") {
+      const observed = exported ? "source: AGENTIC_WORKFLOW_RUNNER" : `source: unarmed in this process — ${VEHICLE_FILE} arms a shell that sources it`;
+      results.push({
+        tool: "dogfooding-vehicle",
+        ok: true,
+        detail: `${state.vehicle.command} (${observed})${state.vehicle.behind ? ` — the installed package (${state.vehicle.installed.version}) is behind ${state.vehicle.canary.tag}` : ""}`,
+      });
+    } else if (!exported && fileArmed) {
+      results.push({
+        tool: "dogfooding-vehicle",
+        ok: true,
+        detail: `${VEHICLE_FILE} → ${state.vehicle.command} (source: AGENTIC_WORKFLOW_RUNNER when the shell sources it)${state.vehicle.behind ? ` — refresh after a merged unit: \`${state.vehicle.refresh[0]}\` then \`${state.vehicle.refresh[1]}\`` : ""}`,
+      });
+    } else {
+      results.push({
+        tool: "dogfooding-vehicle",
+        ok: false,
+        detail: [verdict.advisory, verdict.instruction ? `run: ${verdict.instruction}` : null].filter(Boolean).join(" — "),
+      });
+    }
+  }
 
   return { ok: results.every((row) => row.warn === true || row.ok), results };
 }
@@ -485,6 +655,24 @@ export function planSetup(state, { bunOptIn = false } = {}) {
   }
   if (bunUsable && !state.piCrateModulesPresent) {
     steps.push({ tool: "pi-crate-modules", action: "fix", kind: "shell", command: "cd packages/pi-agentic-workflow && bun install --frozen-lockfile", reason: "packages/pi-agentic-workflow/node_modules is missing — installing with a frozen lockfile" });
+  }
+  // The dogfooding vehicle (issue #611, S1): a merged-but-unreleased unit is
+  // invisible to the installed release, so the authoring checkout arms the
+  // override. Default-on where pi is installed (the authoring environment);
+  // opt-in elsewhere, where the operator exports the same value by hand.
+  if (state.pi.present && state.vehicle && !vehicleFileArmed(state)) {
+    const command = state.vehicle.fileCommand === null ? state.vehicle.command : vehicleCommand({ root: state.vehicle.root, bunPresent: state.bun.present });
+    steps.push({
+      tool: "dogfooding-vehicle",
+      action: "fix",
+      kind: "write-vehicle",
+      target: VEHICLE_FILE,
+      content: vehicleEnvFile(command),
+      reason:
+        state.vehicle.fileCommand === null
+          ? `the vehicle is not armed — writing ${VEHICLE_FILE} so this checkout's sessions run the working tree instead of the installed release`
+          : `${VEHICLE_FILE} names another checkout (${state.vehicle.fileCommand}) — re-armed to this one (a path left over from another worktree points the runner at nothing)`,
+    });
   }
   if (!state.engramConfigValid) {
     steps.push({ tool: "engram-config", action: "fail", reason: "the committed .engram/config.json is missing, invalid, or has no project_name — fix it in a commit; this script never rewrites committed shared state" });
@@ -700,6 +888,14 @@ async function main(argv) {
             fs.writeFileSync(path.join(REPO_ROOT, step.target), step.content);
             outcome = { ok: true, message: `${step.target} written (markdown deliberately absent — PE-014)` };
           }
+        } catch (error) {
+          outcome = { ok: false, message: error.message };
+        }
+      } else if (step.kind === "write-vehicle") {
+        try {
+          fs.mkdirSync(path.dirname(path.join(REPO_ROOT, step.target)), { recursive: true });
+          fs.writeFileSync(path.join(REPO_ROOT, step.target), step.content);
+          outcome = { ok: true, message: `${step.target} written — source it before launching a session: . ${step.target}` };
         } catch (error) {
           outcome = { ok: false, message: error.message };
         }

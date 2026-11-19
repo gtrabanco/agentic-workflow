@@ -1,0 +1,6 @@
+## 2026-11-18T23:12:56Z — feat-611-dogfooding-vehicle — narrative
+- **Commits:** 13 (`a6fd5231…045cca6f`)
+- **Files:** 24 files
+- **Summary:** Correction batch on the 2026-11-18 external verify of 611-dogfooding-vehicle: B1's four record spots re-worded to the shipped vehicle-status precedence (D2), the vehicle.mjs header comment made accurate, and A1's rendered-instruction duplication fixed in renderDoctor; the verify receipt itself is committed (external-verify.md). Validators green: vehicle suite 14 pass (new RED-then-green render pin), crate 1319, root gate 125/125 clean, phase-lint P1-P8 PASS.
+- **Decisions:** The dedup landed in renderDoctor (the one place both doctor carriers print through), not in evaluateVehicle's advisory; the differential corrected the receipt's A1 classification — the doubling also hit the pre-existing git-hooks row at base, so it is a latent renderer defect for any row carrying an instruction, not new-row-only. The frozen record was amended under the owner's explicit correction request, recorded as L2 with the re-read as E21 and the bounded recheck as V1.
+- **Next:** The owner's re-verdict on the correction batch (a delta external verify over 604067dd..045cca6f); the merge and any published canary cut remain the owner's.

@@ -397,6 +397,7 @@ sensor-labels | skills/workflow-status/references/PRE_EXECUTION.md | table:One l
 product-audit-trigger | skills/product-audit/SKILL.md | block:audit-trigger@1 | n/a | no
 product-audit-finding-route | skills/product-audit/SKILL.md | block:finding-route@1 | n/a | no
 coverage-gap-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | block:coverage-gap@1 | n/a | no
+journal-corpus-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | block:journal-corpus@1 | n/a | no
 test-surplus-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | block:test-surplus@1 | n/a | no
 sweep-declaration-grammar | skills/execute-phase/references/FOLDING.md | block:sweep-declaration@1 | n/a | no
 snapshot-commands | skills/pre-execution-review/references/SNAPSHOT.md | fenced:--stage | pre-execution-stage+pre-execution-unit-kind | no
@@ -458,6 +459,7 @@ findings-impact | skills/review-implementation/references/CLASSIFY.md | block:fi
 pass-name-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PASS_NAMES | pass-name | no
 triage-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TRIAGE_VERDICTS | triage-verdict | no
 triage-criteria-provenance-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TRIAGE_CRITERIA_PROVENANCE | triage-criteria-provenance | no
+setup-defect-route | skills/triage-issue/references/ISSUE_PROCESS.md | block:setup-defect-route@1 | n/a | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
 content-guard-reasons | packages/agentic-workflow-schema/src/content-guard.ts | schema-export:CONTENT_GUARD_REASONS | content-guard-reason | yes
 feedback-tiers | packages/agentic-workflow/src/feedback/index.mjs | schema-export:FEEDBACK_TIERS | feedback-tier | no
