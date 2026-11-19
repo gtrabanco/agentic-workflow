@@ -6,11 +6,11 @@
  * The path is published here so a consumer never hardcodes it again — the
  * 15-file recurrence the move was made to end.
  *
- * The same constants are mirrored by `@gtrabanco/agentic-workflow-schema`
- * (`src/paths.ts`), the package the orchestration layer imports; the mirror is
- * held in step by `scripts/index-document.test.mjs`, which reads both sources.
- * The pre-move path is spelled exactly once in the tree, in this file: the
- * alias below.
+ * The document paths and the two table headings are the schema package's
+ * published consts (`src/paths.ts`, owner: `vocabulary-residency@1`); this module
+ * imports them and adds the one thing a path constant cannot say — the runtime
+ * rollback channel and the refusal a closed window raises. The pre-move path is
+ * spelled exactly once in the tree, in this file: the alias below.
  *
  * The migration window is CLOSED (owner decision D4, 2026-10-30; it supersedes
  * unit 319's D2): every reader resolves {@link ROADMAP_DOCUMENT} only. A
@@ -24,16 +24,19 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/** The consolidated index. */
-export const ROADMAP_DOCUMENT = "docs/ROADMAP.md";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+} from "@gtrabanco/agentic-workflow-schema";
+
+/** The consolidated index, the stub index and the two table headings — the
+ *  schema package's published consts. */
+export { FIX_INDEX_DOCUMENT, ROADMAP_DOCUMENT, ROADMAP_FEATURES_HEADING, ROADMAP_FIXES_HEADING };
+
 /** The pre-move path: detected only, so the refusal can name it. Never read. */
 export const ROADMAP_LEGACY_DOCUMENT = "docs/features/ROADMAP.md";
-/** The fix index file. Before unit 319 it was the index itself; now it is a stub. */
-export const FIX_INDEX_DOCUMENT = "docs/fix/README.md";
-/** The features table's heading in the consolidated index. */
-export const ROADMAP_FEATURES_HEADING = "Features";
-/** The fixes table's heading in the consolidated index. */
-export const ROADMAP_FIXES_HEADING = "Fixes";
 /**
  * D4: the read alias is closed. Kept as an explicit, tested rollback lever:
  * `true` re-opens the pre-move path for an emergency, and every consumer reads

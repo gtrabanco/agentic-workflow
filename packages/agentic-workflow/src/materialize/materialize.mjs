@@ -33,6 +33,12 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import {
+  ARTIFACT_EVIDENCE_KINDS,
+  MATERIALIZATION_FINDING_CODES,
+  MATERIALIZATION_OUTCOMES,
+} from "@gtrabanco/agentic-workflow-schema";
+
 import { BOUNDARY_SLOT, boundaryFindings, isPlaceholder, readSlots } from "../charter/interview.mjs";
 
 /** The charter's boundary slot, re-exported because it is the location this service reads. */
@@ -50,23 +56,13 @@ export const RECORD_PATH = "docs/workflow/BOUNDARY_ENFORCEMENT.md";
 export const FEATURE_MAP_PATH = "docs/workflow/FEATURE_MAP.md";
 /** The charter slot the artifact-evidence driver is read from. */
 export const DRIVER_SLOT = "Evidence driver";
-/** The routes a prose-only boundary may take. */
-export const OUTCOMES = Object.freeze(["scaffold", "issue", "declined"]);
-/** The artifact kinds a capture criterion may name. */
-export const ARTIFACT_KINDS = Object.freeze(["screenshot", "video", "state-snapshot"]);
-/**
- * The closed finding-code set `check` and `evidence` emit (mirror of the schema
- * package's `MATERIALIZATION_FINDING_CODES` — provenance:
- * packages/agentic-workflow-schema/src/vocabularies.ts, MIT, same repo).
- */
-export const FINDING_CODES = Object.freeze([
-  "artifact-evidence-missing",
-  "boundary-artifact-missing",
-  "boundary-declared-unenforced",
-  "evidence-driver-missing",
-  "feature-map-missing",
-  "feature-map-shape",
-]);
+/** The routes a prose-only boundary may take, the artifact kinds a capture
+ *  criterion may name, and the closed finding-code set `check` and `evidence`
+ *  emit — the schema package's published consts (owner:
+ *  `vocabulary-residency@1`), under the names this service's callers use. */
+export const OUTCOMES = MATERIALIZATION_OUTCOMES;
+export const ARTIFACT_KINDS = ARTIFACT_EVIDENCE_KINDS;
+export const FINDING_CODES = MATERIALIZATION_FINDING_CODES;
 
 /** The record's columns, in the order the document prints them. */
 export const RECORD_COLUMNS = Object.freeze(["boundary", "enforcement", "outcome", "artifact", "recorded"]);

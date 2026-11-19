@@ -1,62 +1,48 @@
 /**
  * File-schema vocabularies for agentic-workflow edit typed file services.
  *
- * Canonical definitions: section lists, table columns, operation names,
- * and operation receipts.  Consumers in UnitDoc, Roadmap, Changelog,
- * Budgets, and Manifest import from here as their single authority.
- *
- * When the schema package (`agentic-workflow-schema`) gains an equivalent
- * typed module, import it instead and keep a comment pointing at the
- * package as owner.
+ * Every set here is the schema package's published const, re-exported under the
+ * name this crate's consumers already import (`UNIT_DOC_SECTIONS`,
+ * `PROGRESS_ENTRY_REGEX`, `CHANGELOG_SECTION_REGEX`). The crate holds the
+ * operation receipts and the shape resolver; it owns no vocabulary (owner:
+ * `vocabulary-residency@1` in docs/architecture/ARCHITECTURAL_INVARIANTS.md).
  */
 
-// ── Unit doc: 14 closed sections (ordered, #305) — the legacy shape ─────
-export const UNIT_DOC_SECTIONS = [
-  "Objective",
-  "Why",
-  "User outcome",
-  "Acceptance criteria",
-  "Impact",
-  "Non-goals",
-  "Future cost",
-  "Applicable tests",
-  "Known pre-existing issues",
-  "Tasks",
-  "Evidence",
-  "Progress log",
-  "Next",
-  "References",
-];
+import {
+  BUDGETS_OPERATIONS,
+  CHANGELOG_OPERATIONS,
+  CHANGELOG_SECTION_PATTERN,
+  EVIDENCE_COLUMNS,
+  MANIFEST_OPERATIONS,
+  PROGRESS_ENTRY_PATTERN,
+  ROADMAP_COLUMNS,
+  ROADMAP_OPERATIONS,
+  UNIT_DOC_OPERATIONS,
+  UNIT_DOC_REQUIRED_SECTIONS,
+  UNIT_DOC_SECTION_SHAPES,
+  UNIT_DOC_SPEC_REF_SECTIONS,
+} from "@gtrabanco/agentic-workflow-schema";
 
-// ── Unit doc: the re-cut shape (spec-by-reference, #308) ────────────────
-// `## Specs` numbers the owner's requirements verbatim, `## Findings` holds the
-// OPEN rows `review-findings.md` used to carry, and `## Log` appends every
-// request, correction, evidence run, gate run and folded finding. The re-cut adds
-// three headings and drops the six they replace; the rest is shared, so a migrated
-// doc and a closed one are read by the same code.
-export const UNIT_DOC_SPEC_REF_SECTIONS = [
-  "Specs",
-  "Impact",
-  "Non-goals",
-  "Future cost",
-  "Applicable tests",
-  "Known pre-existing issues",
-  "Tasks",
-  "Findings",
-  "Log",
-  "Next",
-  "References",
-];
+export {
+  BUDGETS_OPERATIONS,
+  CHANGELOG_OPERATIONS,
+  EVIDENCE_COLUMNS,
+  MANIFEST_OPERATIONS,
+  ROADMAP_COLUMNS,
+  ROADMAP_OPERATIONS,
+  UNIT_DOC_OPERATIONS,
+  UNIT_DOC_SECTION_SHAPES,
+  UNIT_DOC_SPEC_REF_SECTIONS,
+};
 
-// One shape table, resolved by the headings a document actually carries. Kept in
-// parity with `UNIT_DOC_SECTION_SHAPES` in
-// packages/agentic-workflow-schema/src/pre-execution.ts by
-// `scripts/unit-doc-contract.test.mjs`; the duplicate is deliberate — this
-// package ships without a dependency on the schema package.
-export const UNIT_DOC_SECTION_SHAPES = Object.freeze({
-  legacy: UNIT_DOC_SECTIONS,
-  "spec-by-reference": UNIT_DOC_SPEC_REF_SECTIONS,
-});
+/** The legacy unit-doc section list (`## Objective` … `## References`, #305). */
+export const UNIT_DOC_SECTIONS = UNIT_DOC_REQUIRED_SECTIONS;
+
+/** The `progress-log@1` entry shape. */
+export const PROGRESS_ENTRY_REGEX = PROGRESS_ENTRY_PATTERN;
+
+/** The changelog's per-skill section header. */
+export const CHANGELOG_SECTION_REGEX = CHANGELOG_SECTION_PATTERN;
 
 /** The accepted shape a set of headings satisfies, or `null` when it satisfies neither. */
 export function resolveUnitDocShape(headings) {
@@ -70,42 +56,6 @@ export function resolveUnitDocShape(headings) {
 export function unitDocSectionsFor(shape) {
   return shape === null ? UNIT_DOC_SECTIONS : UNIT_DOC_SECTION_SHAPES[shape];
 }
-
-// ── Unit doc: evidence-table@1 columns ───────────────────────────────────
-export const EVIDENCE_COLUMNS = [
-  "AC",
-  "What was run",
-  "Exit / digest",
-  "Output (≤2 lines)",
-  "Verified-by",
-];
-
-// ── Unit doc: progress-log@1 entry regex ─────────────────────────────────
-// Format: YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>
-export const PROGRESS_ENTRY_REGEX =
-  /^\d{4}-\d{2}-\d{2} \d{2}:\d{2} — .+ → .+ — next: .+$/;
-
-// ── Roadmap table columns ────────────────────────────────────────────────
-export const ROADMAP_COLUMNS = ["NN", "slug", "status", "depends-on", "description"];
-
-// ── Changelog section header pattern ─────────────────────────────────────
-// Matches: #### `skillName` (the named section per skill)
-export const CHANGELOG_SECTION_REGEX = /^#### `(.+)`$/;
-
-// ── Budgets ceiling rebase operations ────────────────────────────────────
-export const BUDGETS_OPERATIONS = ["ceilingRebase"];
-
-// ── Manifest operations ──────────────────────────────────────────────────
-export const MANIFEST_OPERATIONS = ["skillAdd", "skillRemove"];
-
-// ── Unit doc operations ──────────────────────────────────────────────────
-export const UNIT_DOC_OPERATIONS = ["create", "setSection", "evidence_addRow", "progress_logEntry", "validate"];
-
-// ── Roadmap operations ───────────────────────────────────────────────────
-export const ROADMAP_OPERATIONS = ["rowUpsert", "annotate"];
-
-// ── Changelog operations ─────────────────────────────────────────────────
-export const CHANGELOG_OPERATIONS = ["rowAdd"];
 
 // ── Receipt templates per operation kind ─────────────────────────────────
 export const OPERATION_RECEIPT = {
