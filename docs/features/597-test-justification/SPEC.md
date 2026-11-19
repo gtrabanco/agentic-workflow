@@ -104,8 +104,8 @@ proves it.
   its `deletion` row (`TESTS.md` § Obligation tags, #596), the three surplus
   checks and their evidence standards
   (`skills/product-audit/references/AUDIT_DIMENSIONS.md` § Test-surplus sweep,
-  #595), the plan's retirement shape (`skills/unit-lane/references/PLAN.md`
-  § Retirements, #340), the classifier's class set and severity ladder
+  #595), the plan's retirement shape (`skills/unit-lane/references/PLAN.md`'s
+  retirements pane, #340), the classifier's class set and severity ladder
   (`skills/review-implementation/references/CLASSIFY.md`), the fold's frozen
   classification (`skills/fold-findings/references/FOLD_POLICY.md`) and the
   guide's test-immutability law (`AGENTS.md` § Working rules, `IR3`).
@@ -274,8 +274,8 @@ unit and its own commits.
 - P7 — Close documentation and state: the release intent, the generated
   projection, the journal fragment, and every obligation row closed on its own
   validator's evidence.
-  (validator: `bun scripts/lint-changeset.mjs .changeset/597-test-justification.md` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/run-root-suite.mjs` exits 0)
-  (Implements: S5, S6, S9)
+  (validator: `bun scripts/lint-changeset.mjs .changeset/597-test-justification.md` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/run-root-suite.mjs` exits 0 and `git diff --name-only bf19d5831...HEAD -- packages scripts skills/product-audit skills/review-change` prints nothing)
+  (Implements: S5, S6, S7, S9)
   - Relevant files: .changeset/597-test-justification.md, docs/generated/, .agentic-workflow/journal/, docs/features/597-test-justification/SPEC.md
 
 The planning ledgers live beside this file, for a medium unit:
@@ -479,3 +479,78 @@ the merge.
   `bun scripts/docs-generate.mjs --check` · the first run was `verdict: DRIFT`
   because the projection indexes the row's status, and the emitter's write run
   then answered `verdict: PASS` with `Roadmap: docs/ROADMAP.md — unchanged`.
+- **D7** — 2026-11-19, the correction batch on the external verify verdict
+  (owner instruction: "triage and fix those that deserve to fix … check you
+  haven't broke another different thing …"): the blocker and advisories 1–3
+  triaged. The eight #597 route notes in
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` now state final-pr's lines ceiling
+  as `ceil(1106 x 1.10) = 1217` — the manifest's own value and the checker's
+  arithmetic (E13/E14); O14's status cell spells `n/a: <reason>`, the closed
+  shape unit 596 ships and `verify` accepts, with the evidence still in the row
+  (LEDGERS § 2 `n/a` needs evidence in the row); the two § Retirement[s]
+  citations that pointed into PLAN.md become "retirements pane", that file
+  having no such heading; P7 gains
+  `(Implements: S7)` and AC-7's diff check joins its validator. **S8's
+  completeness carrier**: S8 is a prohibition, not an implementable task, so no
+  task marker is honest for it — its dated disposition is this line: discharged
+  in-process by direct application, proved by AC-8's validator re-run green
+  (E15), never by machinery S8 forbids. Triaged out with reasons: repairing
+  `CLOSED_STATUS` (`packages/agentic-workflow/src/verify/Verify.mjs:80`) — the
+  refusal reproduces at base on untouched units 318/331, so it is a pre-existing
+  tool/contract mismatch for its own unit, and this batch touches no package.
+- **E13** — 2026-11-19, the frozen-failure corpus before the batch (RED):
+  `rg -c 'ceil\(1217 x 1.10\) = 1339' docs/workflow/SKILL_CONTEXT_BUDGETS.json`
+  · 8 · while `rg -c 'ceil\(1106 x 1.10\) = 1217'` on the same file · 0 (no
+  match); `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify
+  docs/features/597-test-justification/SPEC.md` · exit 2 · `VERIFY REFUSAL —
+  obligations-open: obligations row O14 is not closed (status: n/a)`;
+  `rg -n '§ Retirement[s]' skills/unit-lane/references/TESTS.md
+  docs/features/597-test-justification/SPEC.md` · 2 hits (TESTS.md:106 and
+  SPEC.md:108 — the Impact citation is line-broken at :107-108); `rg -c 'Implements: S[78]' docs/features/597-test-justification/SPEC.md` · no match
+  (0). The bracketed spellings keep this record from self-matching its own
+  quotations (the #596 receipt's technique).
+- **E14** — 2026-11-19, the same four reproducers after the batch (GREEN):
+  `rg -c 'ceil\(1217 x 1.10\) = 1339' docs/workflow/SKILL_CONTEXT_BUDGETS.json`
+  · no match (exit 1) · and `rg -c 'ceil\(1106 x 1.10\) = 1217'` on the same
+  file · 8 (all eight #597 route notes); `agentic-workflow verify
+  docs/features/597-test-justification/SPEC.md` · exit 0 · `VERIFY PASS`,
+  `"ok": true`, 0 violations; `rg -n '§ Retirement[s]' skills/unit-lane/references/TESTS.md
+  docs/features/597-test-justification/SPEC.md` · no match (exit 1); `rg -c 'Implements: S5, S6, S7, S[9]' docs/features/597-test-justification/SPEC.md`
+  · 1 (P7).
+- **E15** — 2026-11-19, the batch's verification in the foreground — the
+  touched obligations' validators (O1, O2, O7, O9, O10, O11, O13, O14, O15 and
+  AC-8), then the whole gate: `bun test scripts/normative-drift.test.mjs` · 22
+  pass / 0 fail; `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict:
+  PASS`, `test-deletion-authority — prose · skills/unit-lane/references/TESTS.md:109`
+  and `test-justification — prose · …:84` (both anchors unmoved — the edit
+  stayed inside :106); `bun test scripts/guide-split.test.mjs` · 17 pass / 0
+  fail; `bun scripts/inviolable-rules.mjs` · exit 0 · `PASS inviolable rules: 14
+  rows · 1 home`; the wording receipts re-derived — `rg -c 'test-justification@1'
+  skills/unit-lane/references/TESTS.md` → 1, `rg -c '^absent \| fix-now \|'
+  skills/unit-lane/references/TESTS.md` → 1, `rg -c 'justifies:'
+  skills/execute-phase/references/TEST_IMPACT.md` → 1, `rg -c 'Deletion
+  authority' skills/execute-phase/references/EXECUTION_CONTRACT.md` → 1,
+  `rg -c 'fix-now \(delete\)' skills/fold-findings/SKILL.md` → 2, `rg -c
+  'nobody-else' skills/unit-lane/references/TESTS.md` → 1, `rg -c 'delete ≠
+  weaken' skills/unit-lane/references/TESTS.md` → 1, `rg -c 'test-surplus@1'
+  skills/unit-lane/references/TESTS.md` → 1 (O1–O7, O10 — every count still
+  matches its ledger outcome); the three context modes · exit 0, with
+  `--documents` at AGENTS.md 614/187/427/12876 and GATE_INVENTORY.md
+  182/87/95/8238 (unchanged by this batch — the manifest edit touched only
+  `sources` prose) and `--routes` at `PASS route budgets: 14 routes`;
+  `bun scripts/red-first.mjs` · exit 0 · `60 pair(s) · 35 after the cutoff` ·
+  `0 finding(s)`; `bun scripts/lint-changeset.mjs
+  .changeset/597-test-justification.md` · exit 0 · `ok 597-test-justification.md`;
+  `git diff --name-only bf19d5831...HEAD -- packages scripts skills/product-audit
+  skills/review-change` · empty (O13); `agentic-workflow verify
+  docs/features/597-test-justification/SPEC.md` · exit 0 · `violations: []`
+  (O14); `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS` with
+  `Roadmap: docs/ROADMAP.md — unchanged`, and `agentic-workflow roadmap check
+  docs/features/597-test-justification/SPEC.md` · exit 0 · `violations: 0`
+  (O15); `rg -c '^- \*\*R' docs/features/597-test-justification/SPEC.md` · no
+  match (AC-8 — S8's proof); `bun scripts/skill-lint.mjs` · exit 0 · `0
+  finding(s)` · PASS; sibling suites pre-execution-quality 1/0,
+  ledger-ownership 15/0, unit-doc-contract 21/0, promise-coherence 37/0; and the
+  whole gate `bun scripts/run-root-suite.mjs` · exit 0 · `129 suite(s)` · 129
+  PASS / 0 FAIL (2m51s, working tree `8b844c68b` + this batch) — no other
+  surface turned red.
