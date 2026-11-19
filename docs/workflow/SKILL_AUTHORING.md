@@ -196,9 +196,9 @@ skill composes on the project's behalf.
   introduces the winner, and the ceilings the project declares move **down** after
   a reduction — a pass that re-bases upward has not reduced anything.
 
-`init-workspace` offers the section in its interview (never as a default), and its
-upgrade path adds a missing section to an existing guide instead of rewriting the
-project's own rules.
+`init-workspace` offers the section as one consented question, bootstrap or
+upgrade (never as a default), and its upgrade path adds a missing section to an
+existing guide instead of rewriting the project's own rules.
 
 ### Repo maintenance skill — `skill-lint`
 
