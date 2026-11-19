@@ -336,3 +336,132 @@ test("a named unit that resolves to no carrier still refuses the whole ledger", 
   assert.equal(read.error, "unknown-unit", "the skip is narrow: only the literal null unit is a reconstruction");
   assert.match(read.detail, /999-ghost/);
 });
+
+// --- Issue #631: the cache half of the measurement --------------------------
+//
+// The `@2` row has carried `cache_read_tokens`/`cache_write_tokens` since #504
+// and the comparison projected neither. These cases are the projection's whole
+// contract: what a group answers when the cells are there, what it answers when
+// they are not (a verdict, never a zero that reads like a measurement), and that
+// every key the command published before keeps its value.
+
+/** The cache cells of one group, as the size tier group carries them too. */
+const cacheOf = (group) => ({
+  read: group.cache_read_tokens_sum,
+  write: group.cache_write_tokens_sum,
+  rate: group.cache_hit_rate,
+  verdict: group.cache_hit_rate_verdict,
+});
+
+test("the comparison projects per-tier cache hit-rate and the cached-token totals (issue #631 S5)", () => {
+  const rows = [
+    { tier: "standard", changed_paths: 4, tokens: 1000, turns: 3, ceremony_skipped: 0, input_tokens: 100, cache_read_tokens: 300, cache_write_tokens: 100 },
+    { tier: "standard", changed_paths: 4, tokens: 900, turns: 2, ceremony_skipped: 0, input_tokens: 0, cache_read_tokens: 400, cache_write_tokens: 0 },
+  ];
+  const out = aggregate(rows);
+  // 700 read, 100 written, 100 uncached: the denominator is every input-side
+  // token the provider reported, so a write is a miss that populated the cache.
+  assert.deepEqual(cacheOf(out.by_risk_tier.standard), { read: 700, write: 100, rate: 0.7778, verdict: "measured" });
+  assert.deepEqual(cacheOf(out.by_size_tier.small), { read: 700, write: 100, rate: 0.7778, verdict: "measured" },
+    "the size tier groups carry the same projection, never a second rule");
+  assert.deepEqual(cacheOf(out.by_risk_tier.high), { read: null, write: null, rate: null, verdict: "no-cache-fields" },
+    "a tier with no rows measures nothing: its cells are absent, not zero");
+
+  const comparison = compare(rows);
+  assert.deepEqual(comparison.cache, { verdict: "measured", rows: 2, rows_with_cache_fields: 2 });
+  assert.equal(comparison.by_risk_tier.standard.cache_hit_rate, 0.7778, "the rate reaches the comparison's own payload");
+});
+
+test("a ledger without the cache cells answers a verdict, never a silent zero (issue #631 S7)", () => {
+  // A `tier-cost@1` ledger is a real adopter: its eight columns carry no cache
+  // cells, so the group must say so rather than report 0 read of 0.
+  const root = project({ "docs/fix/111-a/SPEC.md": unitDoc("standard") });
+  const read = readLedger(root, ledger([legacyRow("111-a")], LEGACY_COLUMNS, "tier-cost@1"));
+  assert.equal(read.error, undefined);
+  const out = aggregate(read.rows);
+  assert.deepEqual(cacheOf(out.by_risk_tier.standard), { read: null, write: null, rate: null, verdict: "no-cache-fields" });
+  assert.equal(compare(read.rows).cache.verdict, "no-cache-fields", "the command names the precondition it is missing");
+  assert.equal(out.by_risk_tier.standard.units, 1, "the tier still answers everything it did before (S9)");
+  assert.equal(out.by_risk_tier.standard.tokens_sum, 1000);
+});
+
+test("carried cells that sum to no input-side token answer no-input-tokens, never a rate (issue #631 S7)", () => {
+  const rows = [
+    { tier: "passive", changed_paths: 1, tokens: 0, turns: 0, ceremony_skipped: 4, input_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 },
+  ];
+  assert.deepEqual(cacheOf(aggregate(rows).by_risk_tier.passive), { read: 0, write: 0, rate: null, verdict: "no-input-tokens" },
+    "the cells were read and they sum to nothing: a 0.0 rate would claim a measured miss nobody observed");
+  assert.equal(compare(rows).cache.verdict, "no-input-tokens");
+});
+
+test("an empty corpus answers a declared cache verdict and no rate (issue #631 S7)", () => {
+  const grouped = aggregate([]);
+  assert.deepEqual(cacheOf(grouped.by_risk_tier.passive), { read: null, write: null, rate: null, verdict: "no-cache-fields" });
+  assert.deepEqual(compare([]).cache, { verdict: "no-cache-fields", rows: 0, rows_with_cache_fields: 0 },
+    "no samples is the smallest corpus, and it names the verdict instead of inventing a figure");
+});
+
+test("every key the comparison published before keeps its value (issue #631 S9)", () => {
+  const rows = [
+    { tier: "passive", changed_paths: 2, tokens: 100, turns: 1, ceremony_skipped: 4, input_tokens: 50, cache_read_tokens: 25, cache_write_tokens: 5 },
+    { tier: "passive", changed_paths: 2, tokens: 300, turns: 2, ceremony_skipped: 4, input_tokens: 150, cache_read_tokens: 75, cache_write_tokens: 15 },
+    { tier: "passive", changed_paths: 2, tokens: 500, turns: 4, ceremony_skipped: 4, input_tokens: 250, cache_read_tokens: 125, cache_write_tokens: 25 },
+  ];
+  const comparison = compare(rows);
+  assert.equal(comparison.contract, TIER_COST_CONTRACT_ID, "the row grammar a consumer routes on does not move (D1)");
+  assert.equal(comparison.verdict, "ok");
+  assert.equal(comparison.by_risk_tier.passive.units, 3);
+  assert.equal(comparison.by_risk_tier.passive.tokens_sum, 900);
+  assert.equal(comparison.by_risk_tier.passive.tokens_median, 300);
+  assert.equal(comparison.by_risk_tier.passive.turns_sum, 7);
+  assert.equal(comparison.by_risk_tier.passive.ceremony_skipped_sum, 12);
+  assert.equal(comparison.by_size_tier.prose.units, 3);
+  assert.deepEqual(comparison.short_tiers, []);
+});
+
+test("the CLI prints the per-tier cache fields (issue #631 S5)", () => {
+  const root = project({
+    "docs/fix/111-a/SPEC.md": unitDoc("standard"),
+    "docs/fix/222-b/SPEC.md": unitDoc("standard"),
+    "docs/fix/333-c/SPEC.md": unitDoc("standard"),
+    "docs/workflow/TIER_COST.md": ledger([
+      row("111-a", { source: "pi:session=a" }),
+      row("222-b", { source: "pi:session=b" }),
+      row("333-c", { source: "pi:session=c" }),
+    ]),
+  });
+  const ledgerPath = path.join(root, "docs/workflow/TIER_COST.md");
+  const cmp = spawnSync(process.execPath, [CLI, "compare", "--ledger", ledgerPath], { encoding: "utf8" });
+  assert.equal(cmp.status, 0, "three units on one tier is a corpus the comparison may answer");
+  const payload = JSON.parse(cmp.stdout);
+  assert.equal(payload.by_risk_tier.standard.cache_read_tokens_sum, 180, "three rows of 60 cached tokens");
+  assert.equal(payload.by_risk_tier.standard.cache_write_tokens_sum, 60);
+  // The default row carries input 600, cacheRead 60, cacheWrite 20: 1800 uncached
+  // input, 180 read, 60 written — the rate divides the reads by all of it, to
+  // the four decimals the block declares.
+  assert.equal(payload.by_risk_tier.standard.cache_hit_rate, Math.round((180 / (1800 + 180 + 60)) * 10000) / 10000);
+  assert.equal(payload.by_risk_tier.standard.cache_hit_rate_verdict, "measured");
+  assert.deepEqual(payload.cache, { verdict: "measured", rows: 3, rows_with_cache_fields: 3 });
+});
+
+test("the output block is one declared grammar and it names the verdicts the module emits (issue #631 S6)", async () => {
+  const { CACHE_HIT_RATE_VERDICTS } = await import("./tier-cost.mjs");
+  assert.deepEqual([...CACHE_HIT_RATE_VERDICTS], ["measured", "no-cache-fields", "no-input-tokens"],
+    "the closed verdict set, oldest-name-first: a fourth token is a new block version, never a quiet addition");
+
+  const document = fs.readFileSync(path.join(ROOT, "docs/workflow/TIER_COST.md"), "utf8");
+  const block = /```text\ntier-cost-compare@1\n([\s\S]*?)```/.exec(document);
+  assert.notEqual(block, null, "docs/workflow/TIER_COST.md declares the comparison's output block as a fixed grammar");
+  const declared = block[1].split("\n").filter((line) => line.trim() !== "").map((line) => line.split("|")[0].trim());
+  for (const key of ["cache_read_tokens_sum", "cache_write_tokens_sum", "cache_hit_rate", "cache_hit_rate_verdict", "cache"]) {
+    assert.ok(declared.includes(key), `the declared block names ${key}, the key the module emits`);
+  }
+  const verdictCell = block[1].split("\n").find((line) => line.startsWith("cache_hit_rate_verdict |"));
+  assert.notEqual(verdictCell, undefined, "the block declares the verdict cell");
+  for (const verdict of CACHE_HIT_RATE_VERDICTS) {
+    assert.ok(verdictCell.includes(`\`${verdict}\``), `the block spells the ${verdict} verdict the module emits`);
+  }
+  const spelled = [...new Set((verdictCell.match(/`([a-z-]+)`/g) ?? []).map((token) => token.slice(1, -1)))].sort();
+  assert.deepEqual(spelled, [...CACHE_HIT_RATE_VERDICTS].sort(),
+    "the block declares exactly the emitted set: an extra token there orders a verdict nothing emits");
+});

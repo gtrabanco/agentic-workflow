@@ -19,10 +19,8 @@ follows whichever block the file declares.
 provider and the tool runtime already produced. No human and no model types a
 value here: a cell that came from a prompt would be the defect #383 S7 forbids.
 Since #623 the sample leaves memory at every settled run, and the sink keeps one
-row per session: a later emission for a session the ledger already carries
-replaces that row — whichever producer prefix (`pi:session=` from the live sink,
-`pi:reconstruct=` from a #624 reconstruction) names it — while a new session
-appends its own. Two sessions append from
+row per session: a later emission whose `source` the ledger already carries
+replaces that row, while a new session appends its own. Two sessions append from
 separate processes and the append is atomic, so neither row is lost to the other;
 `session_shutdown` is the final, latched flush, not the only chance. The same
 sample is also appended to a per-session JSONL file (`telemetry.jsonFile`,
@@ -103,6 +101,28 @@ bun scripts/tier-cost.mjs compare --ledger docs/workflow/TIER_COST.md
 
 The reader stops at the first line of the table that is not a row, so the samples
 table has to be last for the same reason the writer appends there.
+
+**What `aggregate` and `compare` project.** The row has carried
+`cache_read_tokens`/`cache_write_tokens` since `tier-cost@2`; the comparison
+started projecting them under issue #631, so every risk tier and every size tier
+group answers the same five cells beside the counts it already answered — and so
+does the top-level `cache` roll-up, which is the command-level answer to "does
+this corpus measure cache at all". The block below is the output's fixed grammar
+(`scripts/normative-drift.test.mjs` reads it, and `scripts/tier-cost.test.mjs`
+pins its verdict tokens to the module's exported set). **The row grammar does not
+move**: no column was added, so `tier-cost@2` stays the current one and no adopted
+ledger rewrites its declared block for a grammar it already writes.
+
+```text
+tier-cost-compare@1
+key | shape | what it holds
+cache_hit_rate | `<decimal \| null>` | the group's cached reads divided by every input-side token the provider reported — uncached input plus cache reads plus cache writes, to four decimals — or `null` when the group carries no rate (the verdict beside it says why); a cache write counts as a miss that populated the cache, never as a hit
+cache_hit_rate_verdict | `measured` \| `no-cache-fields` \| `no-input-tokens` | which answer the rate is: `measured` when the group's rows answered the cells and they sum to more than nothing, `no-cache-fields` when no row answered them (an earlier grammar, an empty group), `no-input-tokens` when they were read and sum to zero input-side tokens — a fourth token is a new block version, never a quiet addition
+cache_read_tokens_sum | `<integer \| null>` | the group's `cache_read_tokens` cells summed; `null`, never `0`, when no row answered the cell
+cache_write_tokens_sum | `<integer \| null>` | the group's `cache_write_tokens` cells summed; `null` for the same reason
+rows_with_cache_fields | `<integer>` | how many of the group's rows answered all three input-side cells, so a rate over a subset can never be read as a rate over the whole group
+cache | `{verdict, rows, rows_with_cache_fields}` | the same three answers for the whole corpus, so the command says whether it measures cache at all before a reader hunts through the tiers
+```
 
 The per-session JSONL is read by the report CLI, which answers JSON by default
 and a markdown table on request:

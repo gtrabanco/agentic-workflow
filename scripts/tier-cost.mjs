@@ -9,7 +9,7 @@
  * grouped by the risk tier the unit recorded and by the size tier derived from
  * its changed paths.
  *
- * Two rules shape every line below:
+ * Three rules shape every line below:
  *
  *  - **The tier is re-resolved, never copied.** A row's `tier` cell is checked
  *    against the unit's own carrier (its unit doc's recorded tier, or the
@@ -19,6 +19,11 @@
  *    a human away for days, a command waiting on a network — not work. Time
  *    enters only as `model_ms` and `tool_ms`, measured at turn boundaries by the
  *    producer that saw the turns.
+ *  - **A rate is derived, and its absence is named.** The row's cache cells have
+ *    been measured since `tier-cost@2`; the comparison projects their sums and
+ *    the hit rate derived from them, and a group whose rows answered none of them
+ *    answers `null` beside a verdict — never a zero that reads like a
+ *    measurement (issue #631, `CACHE_HIT_RATE_VERDICTS`).
  *
  * Exit contract: 0 success, 1 usage or parse error, 2 ceremonial block (the
  * comparison refuses to run below three units per recorded tier). JSON on
@@ -64,6 +69,25 @@ export const CEREMONY_STEPS = Object.freeze(["unit-doc", "phases", "evidence-tab
 
 /** A comparison needs this many units before it may report anything. */
 export const MIN_UNITS_PER_TIER = 3;
+
+/**
+ * The closed verdict vocabulary of the cache projection (#631), declared once
+ * here and spelled out in `docs/workflow/TIER_COST.md`'s `tier-cost-compare@1`
+ * block — a fourth token is a new block version, never a quiet addition.
+ *
+ *  - `measured` — the group's rows answered every input-side cell and they sum
+ *    to more than nothing: the rate is a number the provider's own counts
+ *    produced.
+ *  - `no-cache-fields` — no row answered the cells at all (an earlier grammar,
+ *    an empty group). The sums are `null`, because 0 read of 0 is not a
+ *    measurement.
+ *  - `no-input-tokens` — the cells were read and they sum to zero input-side
+ *    tokens, so the rate is undefined; a `0` there would claim a measured miss.
+ */
+export const CACHE_HIT_RATE_VERDICTS = Object.freeze(["measured", "no-cache-fields", "no-input-tokens"]);
+
+/** The three cells a cache rate divides; a row answering all three is a cache row. */
+const CACHE_COLUMNS = Object.freeze(["input_tokens", "cache_read_tokens", "cache_write_tokens"]);
 
 /** The project root a ledger path belongs to (`<root>/docs/workflow/TIER_COST.md`). */
 export function rootOfLedger(ledgerPath) {
@@ -163,6 +187,39 @@ function median(values) {
   return sorted.length % 2 === 1 ? sorted[middle] : Math.round((sorted[middle - 1] + sorted[middle]) / 2);
 }
 
+/** The rows that answered every cell the cache rate divides (#631). */
+const cacheRows = (rows) => rows.filter((row) => CACHE_COLUMNS.every((column) => typeof row[column] === "number"));
+
+/** A ratio to four decimals — a rate the reader can recompute from the sums. */
+const ratio = (part, whole) => Math.round((part / whole) * 10000) / 10000;
+
+/**
+ * One row set's cache projection (#631): the cached read and write totals, the
+ * hit rate derived from them and the verdict that says whether the rate exists.
+ *
+ * The denominator is every input-side token the provider reported — uncached
+ * input, cache reads and cache writes — so a write counts as a miss that
+ * populated the cache rather than vanishing from the ratio (D2). A row set that
+ * answered none of the cells answers `null`, never a zero: `cache_read_tokens`
+ * absent (a `@1` ledger) and "nothing was cached" are different facts, and only
+ * the second is a measurement.
+ */
+function cacheProjection(rows) {
+  const carrying = cacheRows(rows);
+  const total = (column) => carrying.reduce((sum, row) => sum + row[column], 0);
+  const read = carrying.length === 0 ? null : total("cache_read_tokens");
+  const write = carrying.length === 0 ? null : total("cache_write_tokens");
+  const inputSide = carrying.length === 0 ? 0 : total("input_tokens") + read + write;
+  const verdict = carrying.length === 0 ? "no-cache-fields" : inputSide === 0 ? "no-input-tokens" : "measured";
+  return {
+    rows_with_cache_fields: carrying.length,
+    cache_read_tokens_sum: read,
+    cache_write_tokens_sum: write,
+    cache_hit_rate: verdict === "measured" ? ratio(read, inputSide) : null,
+    cache_hit_rate_verdict: verdict,
+  };
+}
+
 /** One group's summary — counts and medians, never a synthesised total. */
 function summarise(rows) {
   return {
@@ -171,6 +228,7 @@ function summarise(rows) {
     tokens_median: median(rows.map((row) => row.tokens)),
     turns_sum: rows.reduce((sum, row) => sum + row.turns, 0),
     ceremony_skipped_sum: rows.reduce((sum, row) => sum + (row.ceremony_skipped ?? 0), 0),
+    ...cacheProjection(rows),
   };
 }
 
@@ -187,8 +245,10 @@ export function aggregate(rows) {
     const { size_tier } = sizeTierOf({ tier: row.tier, paths_changed: row.changed_paths });
     size[size_tier].push(row);
   }
+  const projection = cacheProjection(rows);
   return {
     rows: rows.length,
+    cache: { verdict: projection.cache_hit_rate_verdict, rows: rows.length, rows_with_cache_fields: projection.rows_with_cache_fields },
     by_risk_tier: risk,
     by_size_tier: Object.fromEntries(Object.entries(size).map(([tier, group]) => [tier, summarise(group)])),
   };
@@ -213,6 +273,7 @@ export function compare(rows, { min = MIN_UNITS_PER_TIER } = {}) {
     verdict: short.length === 0 ? "ok" : "insufficient-corpus",
     min_units_per_tier: min,
     short_tiers: short,
+    cache: grouped.cache,
     by_risk_tier: grouped.by_risk_tier,
     by_size_tier: grouped.by_size_tier,
   };
