@@ -1,0 +1,5 @@
+{"type":"session","version":3,"id":"sess-old-sub","timestamp":"2026-08-22T10:55:00.000Z","cwd":"<PROJECT>"}
+{"type":"model_change","id":"mc1","parentId":null,"timestamp":"2026-08-22T10:55:00.100Z","provider":"openai-codex","modelId":"gpt-5.3-codex-spark"}
+{"type":"session_info","id":"si1","parentId":"mc1","timestamp":"2026-08-22T10:55:00.200Z","name":"subagent-reviewer-230bf9e0-a7c9-4d18-8127-d3a279f2d26b-1"}
+{"type":"message","id":"u1","parentId":"si1","timestamp":"2026-08-22T10:55:01.000Z","message":{"role":"user","content":[{"type":"text","text":"Task: You are the isolated internal reviewer."}],"timestamp":"2026-08-22T10:55:01.000Z"}}
+{"type":"message","id":"a1","parentId":"u1","timestamp":"2026-08-22T10:55:02.000Z","message":{"role":"assistant","content":[{"type":"text","text":"RESULT: PASS"}],"provider":"openai-codex","model":"gpt-5.3-codex-spark","usage":{"input":500,"output":50,"cacheRead":0,"cacheWrite":0,"reasoning":0,"totalTokens":550,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0,"totalFromProvider":false}},"stopReason":"stop","timestamp":"2026-08-22T10:55:02.000Z","durationMs":900}}

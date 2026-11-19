@@ -38,6 +38,9 @@ packages/*/.serena/
 # Issue #504: the per-session telemetry JSONL this package appends when a project
 # opts into `telemetry.enabled`.
 .pi/.telemetry/
+# Issue #611: the local dogfooding vehicle, written by scripts/setup-env.mjs. The
+# value names this checkout's absolute path, so it is per-checkout by construction.
+.pi/vehicle.env
 # The machine gate receipt and its full log (issue #409): a run record, local to
 # the checkout like the pre-execution gates below — never a committed artifact.
 .agentic-workflow/gate/

@@ -96,6 +96,12 @@ function withCommand(advisory, instruction) {
     bits.push(present.length > 0 ? `adapters: ${present.join(", ")}` : "no adapter config found");
   }
   if (evidence.project) bits.push(`language_servers: ${evidence.project.languageServers.length}`);
+  if (evidence.vehicle) {
+    const vehicle = evidence.vehicle;
+    bits.push(vehicle.source === "AGENTIC_WORKFLOW_RUNNER" ? `vehicle armed → ${vehicle.target ?? vehicle.raw}` : "vehicle unset");
+    if (vehicle.installed?.version) bits.push(`installed ${vehicle.installed.version}`);
+    bits.push(vehicle.canary?.tag ? `canary ${vehicle.canary.tag}` : "no canary tag visible");
+  }
   if (evidence.identity) {
     const identity = [evidence.identity.name, evidence.identity.email].filter(Boolean).join(" <");
     bits.push(identity ? `${identity}>` : "identity unset");
@@ -114,10 +120,12 @@ export function renderDoctor(envelope) {
   for (const row of envelope.rows) {
     const label = STATUS_LABELS[row.status] ?? row.status;
     const detail = describe(row);
-    const advisory = row.advisory ? ` — ${row.advisory}${row.instruction ? ` · ${row.instruction}` : ""}` : "";
+    const advisory = row.advisory ? ` — ${row.advisory}${row.instruction && !row.advisory.includes(row.instruction) ? ` · ${row.instruction}` : ""}` : "";
     // The label column is 12 wide with a minimum two-space gutter, so the
-    // fixed block keeps its separation even for the 11-character UNREACHABLE.
-    lines.push(`${label}${" ".repeat(Math.max(12 - label.length, 2))}${row.id.padEnd(16)}${detail}${advisory}`);
+    // fixed block keeps its separation even for the 11-character UNREACHABLE;
+    // the id column widens for an id longer than it (issue #611).
+    const gutter = Math.max(16, row.id.length + 1);
+    lines.push(`${label}${" ".repeat(Math.max(12 - label.length, 2))}${row.id.padEnd(gutter)}${detail}${advisory}`);
   }
   const summary = envelope.summary;
   lines.push(

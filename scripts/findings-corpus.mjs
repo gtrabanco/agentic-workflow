@@ -84,8 +84,10 @@ const AXIS_PHASE = Object.freeze({
   plan: "plan",
 });
 
-/** Where an attributed phase's migration proposal lands. */
-const PHASE_DESTINATION = Object.freeze({
+/** Where an attributed phase's migration proposal lands. Exported because the
+ *  journal carrier (issue #616) attributes its classes through this same map;
+ *  a second copy would let one class propose two different inventory rows. */
+export const PHASE_DESTINATION = Object.freeze({
   triage: "docs/workflow/GATE_INVENTORY.md (carrier: prose — the triage checklist row)",
   design: "docs/workflow/GATE_INVENTORY.md (carrier: cli — a design-time reader)",
   plan: "docs/workflow/GATE_INVENTORY.md (carrier: script — the plan validators)",

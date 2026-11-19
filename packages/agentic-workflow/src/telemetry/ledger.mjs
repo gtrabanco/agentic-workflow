@@ -18,10 +18,13 @@
  *  - **One row per session.** A session the ledger does not carry appends with
  *    one `O_APPEND` — the kernel places each line atomically, so two sessions
  *    appending from separate processes need no lock, no queue and lose no row —
- *    and a later emission for a `source` the table already carries replaces that
- *    row through a staged write and an atomic rename (#623 S6). The samples
- *    table must be the file's last section, or a row appended after trailing
- *    prose would land outside it.
+ *    and a later emission for a session the table already carries replaces that
+ *    row through a staged write and an atomic rename (#623 S6). The session is
+ *    identified by its `source`'s id after either producer prefix, so the live
+ *    sink's `pi:session=<id>` and a reconstruction's `pi:reconstruct=<id>` (#624)
+ *    are two producers naming one session — the later emission replaces, never
+ *    appends a second row. The samples table must be the file's last section,
+ *    or a row appended after trailing prose would land outside it.
  *  - **The idempotency guard compares a whole row.** A repeated emission is
  *    dropped, a different sample never is: the session identity that keeps two
  *    sessions apart lives in the sample's `source`, not in a key invented here,
@@ -84,6 +87,12 @@ export const INTEGER_COLUMNS = Object.freeze([
 
 /** The columns a sample may leave unnamed; the row carries the literal `null`. */
 export const NULLABLE_COLUMNS = Object.freeze(["phase", "version", "model"]);
+
+/** The provenance prefix a reconstructed record carries (#624). */
+export const RECONSTRUCT_SOURCE_PREFIX = "pi:reconstruct=";
+
+/** The provenance prefix the live sink writes. */
+export const LIVE_SOURCE_PREFIX = "pi:session=";
 
 /** The trimmed cells of one markdown table row — the writer's own splitter,
  * shared with the merge library so a row means the same thing to both. */
@@ -174,6 +183,21 @@ export function orderedSample(sample) {
 }
 
 /**
+ * The session identity a provenance string names, whichever sink wrote it: the
+ * id after a known producer prefix, else the string itself. The live sink
+ * writes `pi:session=<id>` and the #624 reconstruction writes
+ * `pi:reconstruct=<id>` — two producers naming one session, so the ledger's
+ * one-row-per-session guard keys on this, never on the raw string.
+ */
+export function sessionKeyOf(source) {
+  const text = String(source ?? "");
+  for (const prefix of [RECONSTRUCT_SOURCE_PREFIX, LIVE_SOURCE_PREFIX]) {
+    if (text.startsWith(prefix)) return text.slice(prefix.length);
+  }
+  return text;
+}
+
+/**
  * Validate one ledger append and return the function that performs it — the
  * plan half of "plan every append, then apply it".
  *
@@ -247,7 +271,11 @@ export function prepareLedgerAppend({ ledgerPath, sample }) {
   if (dataRows.some(identical)) return () => {};
 
   const sourceAt = declared.indexOf("source");
-  const sameSource = sourceAt === -1 ? undefined : dataRows.find((at) => (cellsOf(lines[at])[sourceAt] ?? "") === String(values.source));
+  // Two producers name one session with two prefixes (#624): the live sink's
+  // `pi:session=<id>` and a reconstruction's `pi:reconstruct=<id>`. The guard
+  // keys on the session identity, so a live flush replaces the row a
+  // reconstruction wrote instead of appending a second row for the session.
+  const sameSource = sourceAt === -1 ? undefined : dataRows.find((at) => sessionKeyOf(cellsOf(lines[at])[sourceAt] ?? "") === sessionKeyOf(String(values.source)));
   if (sameSource === undefined) return () => fs.appendFileSync(ledgerPath, `${row}\n`);
 
   // The staged write + rename is a whole-file swap, so a reader never sees a

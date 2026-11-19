@@ -1,0 +1,6 @@
+## 2026-11-18T23:18:54Z — feat/616-journal-carrier — narrative
+- **Commits:** 11 (`7ad2e3ae…a1c30962`)
+- **Files:** 23 files
+- **Summary:** Applied issue #616 (journal carrier) inline, then external-verified the unit, then fixed the one advisory from the verify receipt, committed & pushed.
+- **Decisions:** D1 (from the original unit): corrections use the corpus row their bytes resolve — no lexical class guess. D2: no crate change; the reader owns its heading walk via the runner's fence primitives and is allowlisted with its reason. D3 (verify): git-archive base trees silently false-clean coverage-gap because corpus admission needs git history — use a local clone instead. D4 (correction batch): amend E5 in place with a dated note (fix-618 D4 pattern); the loop closes on the first pass, no second cycle needed. D5 (push): skip the pre-push hook's escape — another session's worktree (fix-local-f7-progress-log-scan-flake) is STALE but dirty with uncommitted F7-flake edits; left untouched for its owner.
+- **Next:** Owner re-verify the PR #640 push, then merge; fix the stale worktree .worktrees/fix-local-f7-progress-log-scan-flake (git worktree remove + git branch -D) so future pushes pass the gate without the escape.
