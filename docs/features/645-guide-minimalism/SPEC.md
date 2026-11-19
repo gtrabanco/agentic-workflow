@@ -386,6 +386,10 @@ surgery"), read against `E2`'s step list.
 - **E13** — 2026-11-19, the line-identity comparison of the package README against `AGENTS.md` and `docs/workflow/*.md` · 1 shared line — `PE-015`, `D11`.
 - **G1** — 2026-11-19, `bun scripts/run-root-suite.mjs` · exit 0 · 128 suites PASS, no FAIL line.
 - **G2** — 2026-11-19, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, roadmap unchanged.
+- **G3** — 2026-11-19, `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 · `local-gate: PASS — 15 step(s)`, the crate suites 1,015 pass / 1 skipped (the pre-existing skip) and the root suite 128 PASS.
+- **P7** — 2026-11-19, the package guide bounded: measured 1,178 lines / 16,057 est, its budget row and one-hop index row landed, the overlap measurement recorded (`PE-015` · `D11`).
+- **P8** — 2026-11-19, the gate registered in `docs/workflow/GATE_INVENTORY.md` with the `inviolable-rules` surface claimed; no `scripts/local-gate.mjs` step was added because the gate's suite rides the `root-suite` step already — the gate runs on every push through that carrier, and `G3` is the evidence.
+- **P9** — 2026-11-19, close: ledgers flipped to `verified`, the projection regenerated, the session entry written as a journal fragment · `09cfe44b1`.
 
 ## Next
 
