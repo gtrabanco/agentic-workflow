@@ -312,6 +312,13 @@ Open rows only (carrier grammar: `findings-table@1`).
   hand-written, which `docs/ROADMAP.md` § Fixes declares as the mechanism ("fix
   rows stay owner-managed end to end"); the defect is reported, not repaired
   here (it is its own unit's scope), and O16 records it as `n/a`.
+- **G3** — 2026-11-19, HEAD `f1168c637`, `node scripts/run-root-suite.mjs` · exit 0 ·
+  `root gate: 127 suite(s)`, 127 PASS / 0 FAIL — the final tree, after the state
+  commit. The full gate's own last run was `ed5283dfa` (G1); the two commits after
+  it change `docs/` only (`docs-generate --check`, `roadmap check` and the five
+  doc-reading suites re-ran green at `f1168c637`), and the temporary measurement
+  worktrees the wall-clock section used are removed (the guard reads three
+  worktrees, none of them a leftover).
 - **P6** — 2026-11-19, the surfaces registered: the tag grammar block in the
   tests-step reference, the two normative rows, the gate-inventory row, the
   product-audit pointer, the re-pinned budgets and the changeset · `6d8c9eadf`.
