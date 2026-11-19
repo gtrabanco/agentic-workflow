@@ -25,7 +25,7 @@ test("the crate README declares the inventory block with the published columns",
   const parsed = parseInventory(README);
   assert.deepEqual(parsed.errors, []);
   assert.deepEqual(parsed.columns, ["id", "what", "why", "requirement", "detected-by", "alternative", "install-route"]);
-  assert.equal(parsed.rows.length, 14, "one row per checked surface");
+  assert.equal(parsed.rows.length, 15, "one row per checked surface");
 });
 
 test("documented → probed: every documented row has a probe, in registry order", () => {

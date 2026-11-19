@@ -90,6 +90,11 @@ AGENTIC_WORKFLOW_RUNNER="bun /absolute/path/to/packages/agentic-workflow/bin/age
   command instead of the closed set, and says so in its output.
 - Unset, the closed set decides. The repository's own suite sets it to the
   working tree's bin, which is how the crate is dogfooded before a cut.
+- **This repository's authoring checkout arms the override by default**:
+  `scripts/setup-env.mjs` writes a gitignored `.pi/vehicle.env` naming this
+  checkout's bin, and the tool doctor's `dogfooding-vehicle` row reports the state
+  (owner: `docs/workflow/SETUP.md` § The vehicle). This file stays the only home
+  of the value's shape and of what honours it.
 - A canary cut stages its version into this file for the duration of the publish
   and restores it, so the committed pin always names a stable release. A project
   that never upgrades keeps the pair (skills at vX, package at vX) coherent with
