@@ -24,6 +24,11 @@ import {
   FINDING_CODES as FINDING_CODES_MJS,
   OUTCOMES as OUTCOMES_MJS,
 } from "../packages/agentic-workflow/src/materialize/materialize.mjs";
+import { UNIT_DOC_SECTION_SHAPES } from "../packages/agentic-workflow/src/edit/schema.mjs";
+import {
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+} from "../packages/agentic-workflow/src/index-document.mjs";
 import {
   CEREMONY_PROFILE_CONTRACT_ID as CEREMONY_PROFILE_CONTRACT_ID_MJS,
   CEREMONY_PROFILE_PIECES as CEREMONY_PROFILE_PIECES_MJS,
@@ -376,4 +381,228 @@ test("#358 the checker reads the published sets instead of a local copy", () => 
   for (const literal of ["[\"kill\", \"confirm\"]", "[\"keep\", \"drop\"]", "[\"stable\", \"unstable\"]"]) {
     assert.ok(!checker.includes(literal), `the checker declares no local ${literal} list`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// #643 — vocabulary residency: one owner, one pin carrier
+//
+// The invariant (owner: `vocabulary-residency@1` in
+// docs/architecture/ARCHITECTURAL_INVARIANTS.md) says the schema package owns
+// every closed vocabulary a published contract names, consumers import it, and a
+// literal copy is legal only inside a named pre-build entrypoint whose header
+// carries the guarantee. This section is the rule's whole enforcement:
+//
+//   class 1 — the crate declares a literal under a name the schema publishes:
+//             the copy must become an import (or the file must be the named
+//             exception, and then this suite is its only pin);
+//   class 2 — an inventory row's `schema-export:` const is not published by the
+//             schema package: the vocabulary belongs there, not in the runner;
+//   class 3 — neither: a runner-internal enum the rule leaves in place, counted
+//             and reported so the audit is a measurement, not a claim.
+// ---------------------------------------------------------------------------
+
+const CRATE_SRC = "packages/agentic-workflow/src";
+const PI_SRC = "packages/pi-agentic-workflow/src";
+const INVARIANTS = "docs/architecture/ARCHITECTURAL_INVARIANTS.md";
+const INVARIANT_MARKER = "vocabulary-residency@1";
+const SCHEMA_SPECIFIER = "@gtrabanco/agentic-workflow-schema";
+
+/** Every source file under `relative` with one of `extensions`, repo-relative, sorted. */
+function sourceFiles(relative, extensions) {
+  const out = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === "dist") continue;
+      const child = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(child);
+      else if (extensions.some((extension) => entry.name.endsWith(extension))) out.push(child);
+    }
+  };
+  walk(relative);
+  return out.sort();
+}
+
+/** `export const NAME = <array|object literal>` — the shape a vocabulary copy takes. */
+const LITERAL_DECLARATION = /^export const ([A-Z][A-Z0-9_]+)[^=\n]*=\s*(Object\.freeze\(\s*)?([[{])/gmu;
+
+/** The names the schema package publishes from committed source (never `dist`: a
+ *  drift gate that depended on a build would fail a fresh clone). */
+function schemaPublishedNames() {
+  const names = new Set();
+  for (const file of sourceFiles("packages/agentic-workflow-schema/src", [".ts"])) {
+    for (const match of read(file).matchAll(/^export const ([A-Z][A-Z0-9_]+)/gmu)) names.add(match[1]);
+  }
+  return names;
+}
+
+/** A module's import/export clause naming `name` from the schema package. */
+const importsFromSchema = (text, name) =>
+  new RegExp(`(?:import|export)\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*"${SCHEMA_SPECIFIER.replace(/[/.]/g, "\\$&")}"`, "su").test(text);
+
+/** Literal declarations of a schema-published name, split by the named exception. */
+function literalCopies(relative, extensions, published) {
+  const defects = [];
+  const exempt = [];
+  for (const file of sourceFiles(relative, extensions)) {
+    const text = read(file);
+    const header = text.split("\n").slice(0, 40).join("\n");
+    for (const match of text.matchAll(LITERAL_DECLARATION)) {
+      if (!published.has(match[1])) continue;
+      const row = { file, name: match[1] };
+      (header.includes(INVARIANT_MARKER) ? exempt : defects).push(row);
+    }
+  }
+  return { defects, exempt };
+}
+
+/** The `normative-surfaces@1` rows: `surface | file | grammar | machine | must-name`. */
+function inventoryRows() {
+  const fenced = /```text\nnormative-surfaces@1\n([\s\S]*?)```/u.exec(read("AGENTS.md"));
+  assert.ok(fenced, "AGENTS.md declares the normative-surfaces@1 inventory");
+  return fenced[1]
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && !line.startsWith("#") && !line.startsWith("surface |"))
+    .map((line) => {
+      const cells = line.split("|").map((cell) => cell.trim());
+      return { surface: cells[0], file: cells[1], grammar: cells[2], machine: cells[3], mustName: cells[4] };
+    });
+}
+
+test("#643 class 1 — no runner module declares a literal under a schema-published name", () => {
+  const published = schemaPublishedNames();
+  const { defects } = literalCopies(CRATE_SRC, [".mjs"], published);
+  const named = defects.map((row) => `${row.file}: ${row.name}`);
+  assert.deepEqual(named, [],
+    `${named.length} mirror(s) still declare a second copy — import the published const, or name the pre-build guarantee in the file header (owner: ${INVARIANT_MARKER})`);
+});
+
+test("#643 class 1 — the named pre-build exception is a pinned, imported-parity list (empty today)", async () => {
+  // The invariant's only legal exception. A file opts in by naming the invariant in
+  // its header; that opt-in is not self-certifying — this case is the pin the rule
+  // demands, and it compares the standing copy with the published one by import.
+  const published = schemaPublishedNames();
+  const { exempt } = literalCopies(CRATE_SRC, [".mjs"], published);
+  const runtime = await import(schemaRuntimePath);
+  for (const row of exempt) {
+    const module = await import(new URL(`../${row.file}`, import.meta.url).href);
+    assert.ok(row.name in module, `${row.file}: the exempt copy ${row.name} is exported`);
+    assert.ok(row.name in runtime, `the schema publishes ${row.name}`);
+    assert.deepEqual(
+      JSON.parse(JSON.stringify(module[row.name])),
+      JSON.parse(JSON.stringify(runtime[row.name])),
+      `${row.file}: the exempt copy of ${row.name} drifted from the published const`,
+    );
+  }
+});
+
+test("#643 class 2 — every schema-export inventory row points at the schema package", () => {
+  const published = schemaPublishedNames();
+  const offenders = [];
+  for (const row of inventoryRows()) {
+    const exported = /^schema-export:([A-Z][A-Z0-9_]+)$/u.exec(row.grammar);
+    if (!exported) continue;
+    assert.ok(published.has(exported[1]),
+      `${row.surface}: the machine surface ${exported[1]} is published by no schema module`);
+    for (const file of row.file.split("+").map((cell) => cell.trim())) {
+      if (!file.startsWith("packages/agentic-workflow-schema/")) offenders.push(`${row.surface} → ${file}`);
+    }
+  }
+  assert.deepEqual(offenders, [],
+    `${offenders.length} vocabulary row(s) still name the runner as the const's home — move the const to the schema package and re-point the row`);
+});
+
+test("#643 the pi package carries no second copy of a schema-published vocabulary", () => {
+  const published = schemaPublishedNames();
+  const { defects } = literalCopies(PI_SRC, [".ts", ".mjs"], published);
+  assert.deepEqual(defects.map((row) => `${row.file}: ${row.name}`), [],
+    "the companion package is a consumer of the published vocabularies, never a second owner");
+});
+
+test("#643 the invariant has one home and the marker is not restated", () => {
+  const owners = ["AGENTS.md", INVARIANTS, ...sourceFiles("docs/architecture", [".md"]), ...sourceFiles("docs/workflow", [".md"])]
+    .filter((file) => existsSync(path.join(ROOT, file)) && read(file).includes(INVARIANT_MARKER));
+  assert.deepEqual([...new Set(owners)], [INVARIANTS],
+    `the residency rule is stated in ${owners.join(", ")} — one home, every other surface cites it`);
+});
+
+test("#643 the gate-rejection vocabulary is published by the schema package, not by the prose", async () => {
+  assert.ok(schemaPublishedNames().has("GATE_REJECTION_TYPES"),
+    "GATE_REJECTION_TYPES is a schema-published const (a `must-name: yes` vocabulary needs a machine surface that is not the prose naming it)");
+  const runtime = await import(schemaRuntimePath);
+  assert.deepEqual([...(runtime.GATE_REJECTION_TYPES ?? [])], [
+    "dependency",
+    "status",
+    "phase-lint",
+    "path-protection",
+    "stale-or-missing-receipt",
+    "stale-unit-doc",
+  ], "the six types the executor's gates print");
+});
+
+test("#643 the residency receipt classifies every runner const (class 3 stays, counted)", () => {
+  const published = schemaPublishedNames();
+  const files = sourceFiles(CRATE_SRC, [".mjs"]);
+  let total = 0;
+  const class3 = [];
+  for (const file of files) {
+    for (const match of read(file).matchAll(LITERAL_DECLARATION)) {
+      total += 1;
+      if (!published.has(match[1])) class3.push(`${file}: ${match[1]}`);
+    }
+  }
+  assert.ok(total > 0, "the classifier reads the crate's declared vocabularies");
+  assert.ok(class3.length > 0, "class 3 exists by construction — an unnamed internal enum stays in the runner");
+  // The receipt is a measurement a reviewer re-runs, never a number a reader trusts.
+  process.stdout.write(`--- vocabulary residency receipt ---\nclass 1+2 declarations: ${total - class3.length}\nclass 3 (stays): ${class3.length}\n${class3.join("\n")}\n--- end receipt ---\n`);
+});
+
+// ---------------------------------------------------------------------------
+// #643 — the prose drift audit (S9), seeded with the issue's four suspects
+// ---------------------------------------------------------------------------
+
+test("#643 audit seed 1 — the severity projection is a projection, not a second ladder", async () => {
+  const { SEVERITY_VOCABULARY } = await import("../packages/agentic-workflow/src/runner/sensors/workflow-status.mjs");
+  const envelopeSeverities = new Set(["high", "med", "low"]);
+  for (const [token, projected] of SEVERITY_VOCABULARY) {
+    assert.ok(envelopeSeverities.has(projected), `${token} projects onto an envelope severity, never a new one`);
+  }
+  for (const token of FINDINGS_TABLE_SEVERITIES) {
+    assert.ok(SEVERITY_VOCABULARY.has(token), `the ladder token ${token} is projected rather than dropped`);
+  }
+});
+
+test("#643 audit seed 2 — a unit *type* set is never a section model", async () => {
+  const { UNIT_DOC_TYPES } = await import("../packages/agentic-workflow/src/doc/structure.mjs");
+  const sections = new Set(Object.values(UNIT_DOC_SECTION_SHAPES).flat());
+  for (const type of UNIT_DOC_TYPES) {
+    assert.ok(!sections.has(type), `${type} is a unit type, not a document section`);
+  }
+  for (const section of sections) {
+    assert.ok(!UNIT_DOC_TYPES.includes(section), `${section} is a document section, not a unit type`);
+  }
+});
+
+test("#643 audit seed 3 — the index constants are the headings the index really carries", () => {
+  const roadmap = read("docs/ROADMAP.md");
+  assert.match(roadmap, new RegExp(`^## ${ROADMAP_FEATURES_HEADING}$`, "m"), "the features table's heading is the published constant");
+  assert.match(roadmap, new RegExp(`^## ${ROADMAP_FIXES_HEADING}$`, "m"), "the fixes table's heading is the published constant");
+});
+
+test("#643 audit seed 4 — the Future-status tokens are the published ones and `deferred` is not one", () => {
+  for (const copy of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    assert.doesNotMatch(read(copy), /\|\s*`?deferred`?\s*\|/, `${copy}: \`deferred\` is a ledger status, never a Future row status`);
+  }
+  assert.ok(!FUTURE_STATUS_KINDS.includes("deferred"), "the published Future-status set carries no `deferred` token");
+});
+
+test("#643 the stale dependency rationale is gone from source, suites and scripts", () => {
+  const phrases = ["does not depend on the schema package", "until issue #427 unifies the reading"];
+  const offenders = [];
+  for (const file of [...sourceFiles(CRATE_SRC, [".mjs"]), ...sourceFiles("packages/agentic-workflow/test", [".mjs"]), ...sourceFiles("scripts", [".mjs"])]) {
+    const text = read(file);
+    for (const phrase of phrases) if (text.includes(phrase)) offenders.push(`${file}: ${phrase}`);
+  }
+  assert.deepEqual(offenders, [],
+    `${offenders.length} file(s) still justify a mirror with a premise that stopped being true on 2026-11-09 (#427 added the dependency)`);
 });
