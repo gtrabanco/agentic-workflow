@@ -197,9 +197,9 @@ export type GuardRejectionReason = (typeof GUARD_REJECTION_REASONS)[number];
  *  classifier and the debt transform. `passes.default` is deliberately NOT a
  *  member: it is the config-layer escape that resolves the cheap tier for
  *  unlisted passes (owner decision 2026-10-12), never a spawned pass itself.
- *  The pi package's config validator imports this set; the runner crate
- *  mirrors it with a provenance comment until issue #427 unifies the reading —
- *  extending this list updates the mirror in the same PR. */
+ *  The pi package's config validator and the runner crate both import this set
+ *  (owner: `vocabulary-residency@1`, issue #643); extending it is a schema-const
+ *  change here plus the `AGENTS.md` inventory row, never a second edit. */
 export const PASS_NAMES = Object.freeze([
   "review-code",
   "review-security",
