@@ -355,6 +355,12 @@ The frozen ledger is `planning-obligations.md` beside this document (M/L shape).
   present here, absent from an archived tree; `tagsVisible` 0 vs N).
 - **E12** — 2026-11-19, `bun scripts/prose-gate-inventory.mjs` · exit 0 · PASS, the
   two new surface ids claimed by the drift row.
+- **E14** — 2026-11-19, `bun scripts/dimension-regression.mjs --base origin/main` ·
+  first run refused `missing-reverification-evidence` — the range touches
+  `docs/workflow/GATE_INVENTORY.md` (the two surface ids this unit claims), and no
+  unit doc recorded a run of that gate; this line is the record it asks for, and
+  the re-run is clean (`verdict clean`, 18 dimensions at both ends, 1 changed
+  review surface). No review dimension was added or dropped by this unit.
 - **E13** — 2026-11-19, `bun scripts/local-gate.mjs --no-bail --json` over every
   applicable step · exit 0 · 18 steps passed in 614s; then
   `bun scripts/local-gate.mjs --only worktree-guard` · exit 0 · PASS. The first
