@@ -288,6 +288,39 @@ Open rows only (carrier grammar: `findings-table@1`).
   This is a **local, unpublished** workflow for changing agentic-workflow itself.
   ```
 
+- **G1** — 2026-11-19, HEAD `ed5283dfa`, `bun scripts/local-gate.mjs` (the full local gate, network
+  steps included) · exit 0 · `local-gate: PASS — 19 step(s) in 634s`; the root
+  step read `root gate: 127 suite(s)` (the base's 126 plus this unit's, exit 0 in
+  133s), the crate suites ran green under both runtimes (`crate-suite-bun`
+  248s, `crate-suite-node` 206s), and `docs-generated-projection`,
+  `version-parity-content`, `journal-carrier-check`, `log-immutability`,
+  `worktree-guard` and `secret-scan` all exited 0.
+- **G2** — 2026-11-19, HEAD `ed5283dfa`, `bun scripts/docs-generate.mjs --check` · `verdict: PASS`
+  (roadmap unchanged), and the roadmap row written through
+  `ceremony roadmap row-upsert` is the one this unit could **not** produce — see
+  D7.
+- **E16** — 2026-11-19, `bun scripts/prose-gate-inventory.mjs` · PASS with the
+  new row resolved; `bun scripts/dimension-regression.mjs --base 176ab984b` ·
+  `verdict | clean` (`18 dimensions` at both ends, evidence
+  `docs/fix/596-test-relevance-sweep/SPEC.md`); `bun scripts/test-obligation-tags.mjs --list | wc -l`
+  · `127`.
+- **D7** — 2026-11-19, `ceremony roadmap row-upsert` cannot write a **fix** row:
+  `packages/agentic-workflow/src/runner/ceremony/roadmap.mjs:55-80` reads the
+  roadmap and hands the resulting *text* to `fixRowUpsert`, which expects the
+  table's *path* (`ENAMETOOLONG: name too long, open '# Roadmap…'`). The feature
+  branch of the same command works. This unit's fix row is therefore
+  hand-written, which `docs/ROADMAP.md` § Fixes declares as the mechanism ("fix
+  rows stay owner-managed end to end"); the defect is reported, not repaired
+  here (it is its own unit's scope), and O16 records it as `n/a`.
+- **P6** — 2026-11-19, the surfaces registered: the tag grammar block in the
+  tests-step reference, the two normative rows, the gate-inventory row, the
+  product-audit pointer, the re-pinned budgets and the changeset · `6d8c9eadf`.
+- **P7** — 2026-11-19, the state written: the roadmap's feature row and its new
+  fix row, the projection re-rendered by the emitter, and the session's
+  narrative journal fragment
+  (`.agentic-workflow/journal/20261119T101521Z-feat-596-test-relevance-sweep-narrative-local.md`,
+  written by `journal write --kind narrative`).
+
 ## Next
 
 The owner's external verdict on the diff. Every obligation row is closed on a
@@ -387,6 +420,12 @@ unit is what makes "tagged" real.
   `node --test scripts/dimension-regression.test.mjs` and
   `node --test scripts/product-audit-rescope.test.mjs` (both green in G1's root
   run), so this unit adds no eighth-C check and removes none.
+- **E17** — 2026-11-19, the wall-clock measurement (`sweep.md` § wall-clock):
+  docs-only `2 s → 1 s` (11 steps, test steps skipped on both sides), script
+  change `598 s → 516 s`, package change `661 s → 478 s`; the change's own cost
+  is one suite, `PASS scripts/test-obligation-tags.test.mjs (0.6 s)`, and the
+  deltas are larger than it and in the other direction — run variance, stated as
+  such in the section.
 - **P1** — 2026-11-19, the unit doc and both planning ledgers frozen · `23950525`.
 - **P2** — 2026-11-19, the closed vocabulary published from the schema package · `c63ea2be`.
 - **P3** — 2026-11-19, the gate's suite landed alone and observed red · `c4c58acaf`.

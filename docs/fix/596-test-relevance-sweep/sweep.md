@@ -216,3 +216,39 @@ measurement instead of from a guess. The rule this file states — a test goes w
 its surface is gone, when the obligation is genuinely duplicated, or when its
 cost exceeds the risk it covers — is untouched by a low kill-rate that names an
 *absent* obligation rather than an unreachable one.
+
+## wall-clock
+
+The three change classes the issue names, measured at the base revision and at
+the change, with the command the installed `pre-push` hook runs:
+
+```
+bun scripts/local-gate.mjs --skip-network --jobs 4 --push-base <revision its own tip>
+```
+
+Each class is one representative change committed in a throwaway worktree of that
+revision (docs-only: one line in `docs/workflow/SETUP.md`; script change: one line
+in `scripts/temp-hygiene.mjs`; package change: one line in
+`packages/agentic-workflow/src/feedback/index.mjs` plus its release intent), and
+`--push-base` is that revision's own tip, so the impact verdict is the class's and
+nothing else. The worktrees and the probe commits were removed after the run.
+
+| change class | base (`176ab984b`) | head (`ed5283dfa`) | the root gate's own step |
+|---|---|---|---|
+| `docs-only` | 2 s · 11 steps | 1 s · 11 steps | test steps skipped (verdict `empty`) on both sides |
+| `script change` | 598 s · 17 steps | 516 s · 17 steps | root suite `206 s` → `155 s` |
+| `package change` | 661 s · 17 steps | 478 s · 17 steps | root suite `212 s` → `133 s` |
+
+**What the measurement says.** The class that changed is the docs-only one, and
+it did not move: an `empty` impact verdict skips the test-bearing steps on both
+sides. For the two test-bearing classes the change's own cost is one suite —
+`PASS scripts/test-obligation-tags.test.mjs (0.6 s)` in both head runs — and the
+totals moved *down* by far more than that (`-82 s` and `-183 s`), in the same
+direction on both classes. That is run-to-run variance on a shared box, not the
+change: the gate's cost per class is dominated by the crate suites (`215–251 s`)
+and the root suite, which this unit does not touch. The honest conclusion is the
+one the measurement supports — **the obligation tags add 0.6 s to a 500 s-class
+verification and no step changes its scope**, and a per-class wall clock measured
+this way is not an instrument that can resolve a change smaller than its own
+variance. That is why the sweep selects suspects by *cost per obligation* from the
+root gate's per-suite lines instead of by any aggregate timer.
