@@ -15,7 +15,7 @@ Notion ("Agentic Workflow").
 | [FEATURE_WORKFLOW.md](FEATURE_WORKFLOW.md) | Idea/issue → SPEC + artifacts → phase execution → hardening → review → audit → PR |
 | [ISSUE_WORKFLOW.md](ISSUE_WORKFLOW.md) | Triage → classify (one-shot / fix-now / fix-in-unit / promote / postpone / wontfix / remove) → route → report |
 | [SKILLS.md](SKILLS.md) | Every skill in the system, what it does, and how they compose |
-| [SKILL_AUTHORING.md](SKILL_AUTHORING.md) | The authoring contract for a skill: frontmatter, body sections, the closing `→ Next:` block, and the hand-off-versus-compose rule across model tiers |
+| [SKILL_AUTHORING.md](SKILL_AUTHORING.md) | The authoring contract for a skill: frontmatter, body sections, the closing `→ Next:` block, the hand-off-versus-compose rule across model tiers, and the guide shape a target project's scaffold must follow |
 | [REVIEW_AND_CLASSIFY.md](REVIEW_AND_CLASSIFY.md) | When & how to review — `review-change` (the right reviews per platform) and its `review-implementation` engine (find → classified decision table) |
 | [RECOMMENDED_SKILLS.md](RECOMMENDED_SKILLS.md) | Agnostic software-quality & architecture skills for good agentic programming — universal vs. conditional-by-project-nature; stack/infra skills out of scope |
 | [REPLICATE.md](REPLICATE.md) | `npx skills` install — replicate the skill system in another project |
@@ -34,6 +34,7 @@ Notion ("Agentic Workflow").
 | [GATE_INVENTORY.md](GATE_INVENTORY.md) | The carrier inventory: every gate the workflow runs, whether it is script-pinned, a per-run CLI check or prose-only, how the ranking derives its tier, and where a stay-prose gate re-derives after a compaction |
 | [FEEDBACK.md](FEEDBACK.md) | Every CLI's feedback contract: the three tiers (`--debug`, `--profile`), the `feedback:` line grammar, the stderr-only invariant, and what a command must report |
 | [DOMAIN_SEPARATION.md](DOMAIN_SEPARATION.md) | Project-only: the product-vs-dogfooding safeguard in detail — the two domains, the classification test, both drift directions, the legitimate exceptions, and the domain-drift sweep this repo's product-audit runs carry |
+| [WORKTREES.md](WORKTREES.md) | Creating, naming, recovering and removing a worktree: where a worktree may live, the branch and worktree naming tables, the six ordered steps, the common failure modes, and the removal order |
 
 ## Data
 

@@ -689,4 +689,66 @@ const runDocuments = (fixture) => spawnSync(process.execPath, [path.join(fixture
   }
 }
 
+// A versioned block pinned by its own line count (issue #645 S6). The guide's
+// always-loaded laws table lives among prose sections, so its pin is its own
+// reading: one added row is a manifest edit with a reason, never silent growth.
+const PINNED_SECTION = [
+  "## Inviolable rules",
+  "",
+  "The laws no session may violate.",
+  "",
+  "```text",
+  "inviolable-rules@1",
+  "rule | statement | owner | state",
+  "IR1-example | a law the guide carries | AGENTS.md | soft-by-design: a reason recorded as prose",
+  "```",
+  "",
+].join(String.fromCharCode(10));
+
+const pinnedFixture = (section, pin) =>
+  documentsFixture((root, files) => {
+    fs.writeFileSync(path.join(root, "AGENTS.md"), GUIDE_FIXTURE + section);
+    fs.writeFileSync(path.join(root, "docs/workflow/REFERENCE.md"), "# Reference" + String.fromCharCode(10));
+    files["docs/workflow/REFERENCE.md"].linesMax = 2;
+    files["AGENTS.md"].linesMax = 60;
+    files["AGENTS.md"].proseLinesMax = 40;
+    files["AGENTS.md"].estimateMax = 2000;
+    files["AGENTS.md"].blockLines = { "inviolable-rules@1": pin };
+  });
+
+// the pinned block at its declared size passes
+{
+  const fixture = pinnedFixture(PINNED_SECTION, 5);
+  try {
+    const result = runDocuments(fixture);
+    assert.equal(result.status, 0, result.stderr + result.stdout);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+// one line more than the pin is refused by name, with both counts
+{
+  const fixture = pinnedFixture(PINNED_SECTION, 4);
+  try {
+    const result = runDocuments(fixture);
+    assert.notEqual(result.status, 0, "a block above its pin fails closed");
+    assert.match(result.stderr, /block "inviolable-rules@1" has 5 lines != the declared 4/);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+// a declared pin whose block the guide does not carry is refused, never skipped
+{
+  const fixture = pinnedFixture("", 5);
+  try {
+    const result = runDocuments(fixture);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /block "inviolable-rules@1" is missing/);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
 console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, route-reference, duplicate-key and guide-layer failures rejected");

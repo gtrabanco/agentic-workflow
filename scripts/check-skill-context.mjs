@@ -73,12 +73,10 @@ const estimate = (text) => Math.ceil(Buffer.byteLength(text, "utf8") / 4);
 const lineCount = (text) => text.split("\n").length - (text.endsWith("\n") ? 1 : 0);
 
 /**
- * The machine region of a document: from the `### …` heading that opens the first
- * declared versioned block to the closing fence of the last one. The region is
- * counted separately from the prose because it is a contract a gate reads, not
- * an instruction an always-loaded session follows.
+ * Every fenced block of a document as `{ marker, open, close }`, where `marker` is
+ * the block's first line. Returns null when a fence never closes.
  */
-const machineRegion = (text, markers) => {
+const fencedBlocks = (text) => {
   const lines = text.split("\n");
   const fences = [];
   for (let index = 0; index < lines.length; index += 1) {
@@ -94,6 +92,18 @@ const machineRegion = (text, markers) => {
     fences.push({ marker: (lines[index + 1] ?? "").trim(), open: index, close });
     index = close;
   }
+  return fences;
+};
+
+/**
+ * The machine region of a document: from the `### …` heading that opens the first
+ * declared versioned block to the closing fence of the last one. The region is
+ * counted separately from the prose because it is a contract a gate reads, not
+ * an instruction an always-loaded session follows.
+ */
+const machineRegion = (text, markers) => {
+  const fences = fencedBlocks(text);
+  if (fences === null) return null;
   const wanted = new Set(markers);
   const found = fences.filter((fence) => wanted.has(fence.marker));
   if (new Set(found.map((fence) => fence.marker)).size !== wanted.size) return null;
@@ -141,7 +151,39 @@ const documentFindings = (spec) => {
         }
       }
     }
-    rows.push({ file: relative, lines, estimate: size, prose, machine, linesMax: budget.linesMax ?? null, proseLinesMax: budget.proseLinesMax ?? null });
+    // One versioned block pinned by its own line count, exactly — the guide's
+    // always-loaded laws table grows by manifest edit with a reason, never by a
+    // silent added row. A block is counted from its opening fence to its closing
+    // fence, so a `## `-looking line inside it can never truncate the count.
+    if (budget.blockLines !== undefined) {
+      if (typeof budget.blockLines !== "object" || budget.blockLines === null) {
+        failures.push(`${relative}: blockLines must map a block marker to a line count`);
+      } else {
+        const fences = fencedBlocks(text);
+        if (fences === null) failures.push(`${relative}: a fenced block never closes`);
+        for (const [marker, pinned] of Object.entries(budget.blockLines)) {
+          if (typeof pinned !== "number" || !Number.isInteger(pinned) || pinned < 1) {
+            failures.push(`${relative}: block "${marker}" declares no integer line count`);
+            continue;
+          }
+          if (fences === null) continue;
+          const found = fences.filter((fence) => fence.marker === marker);
+          if (found.length === 0) {
+            failures.push(`${relative}: block "${marker}" is missing`);
+            continue;
+          }
+          if (found.length > 1) {
+            failures.push(`${relative}: block "${marker}" appears ${found.length} times`);
+            continue;
+          }
+          const counted = found[0].close - found[0].open + 1;
+          if (counted !== pinned) {
+            failures.push(`${relative}: block "${marker}" has ${counted} lines != the declared ${pinned}`);
+          }
+        }
+      }
+    }
+    rows.push({ file: relative, lines, estimate: size, prose, machine, linesMax: budget.linesMax ?? null, proseLinesMax: budget.proseLinesMax ?? null, blockLines: budget.blockLines ?? null });
   }
   for (const relative of spec.requiredFiles ?? []) {
     if (!(relative in spec.files)) failures.push(`${relative}: a required document has no budget row`);

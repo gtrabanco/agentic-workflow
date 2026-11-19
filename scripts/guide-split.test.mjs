@@ -248,6 +248,32 @@ test("the ownership rule is stated, with its gate named (S17)", () => {
 });
 
 // ---------------------------------------------------------------------------
+// 4b. The target-project guide's doctrine (issue #645 S3)
+// ---------------------------------------------------------------------------
+
+test("the authoring reference states the target-project guide's doctrine (S3)", () => {
+  const authoring = read("docs/workflow/SKILL_AUTHORING.md");
+  const body = section(authoring, "The target project's guide");
+  assert.ok(body !== null, "SKILL_AUTHORING.md declares `## The target project's guide`");
+  // The four doctrine elements, each named where the author of a scaffold reads it.
+  assert.match(body, /always-loaded/i, "essentials live in the host guide");
+  assert.match(body, /documentation map/i, "everything else loads through the documentation map");
+  assert.match(body, /Inviolable rules/, "the scaffold's laws section has one name");
+  assert.match(body, /materialization state|enforced by/, "each law carries how it is enforced");
+  assert.match(body, /reduc/i, "the reduction pass is part of the doctrine, not an afterthought");
+  // The two surfaces that carry it are named, so the doctrine is reachable.
+  assert.match(body, /template\/AGENTS\.md/);
+  assert.match(body, /init-workspace/);
+  // It cites the reader instead of restating its rules (the ownership rule).
+  assert.match(body, /scripts\/inviolable-rules\.mjs/, "the doctrine names the gate that reads the section");
+});
+
+test("the doctrine's one name is the name both guides carry (S3)", () => {
+  assert.ok(section(guideText(), "Inviolable rules") !== null, "the repo guide carries the section");
+  assert.ok(section(read("template/AGENTS.md"), "Inviolable rules") !== null, "the scaffold carries the same name");
+});
+
+// ---------------------------------------------------------------------------
 // 5. The budget the guide layer must stay inside
 // ---------------------------------------------------------------------------
 

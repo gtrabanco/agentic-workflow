@@ -12,6 +12,16 @@
    `.agentic-workflow/hooks/` and activate only the adapters explicitly accepted
    in the interview; prune unused doc folders and map rows. Leave honest
    placeholders where the user hasn't decided — never invent values.
+   **The laws section is offered, never assumed** (issue #645 S3): keep the
+   scaffold's `## Inviolable rules` section in the written guide, and ask once
+   whether the project will fill its five rules with its own enforcement (a
+   test, a lint, a CI job) or leave them as declared placeholders. A refusal
+   keeps the section with its placeholders — an absent section is the one answer
+   the doctrine refuses, because the review pack reads it to tell an enforced law
+   from a wish. Upgrade mode adds a missing state cell and never rewrites a rule
+   the project wrote. The shape is owned by
+   `docs/workflow/SKILL_AUTHORING.md` §"The target project's guide"; this step
+   writes it, it never restates the rules.
    The `Docs site` write is **additive**: on a fresh scaffold the block is
    filled in place, and on an existing install it is offered with its consent
    question first and left untouched on a refusal. A declared format is

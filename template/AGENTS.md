@@ -255,7 +255,7 @@ conductor (`unit-lane`) orchestrates the pipeline but does not auto-merge.
 Never grant an agent-wide or session-persistent merge permission. Hooks are
 defense-in-depth — forge branch protection/rulesets remain required.
 
-**Hard rules (always honored).**
+**Workflow rules (always honored).**
 - **Branch & PR:** never work on `main`; one PR per unit against `main`; never
   stack — see [PR & branch workflow](#pr--branch-workflow).
 - **Gate before commit:** the verification gate (type-check + tests + build) is
@@ -269,8 +269,8 @@ defense-in-depth — forge branch protection/rulesets remain required.
   thresholds) and cite paths; don't assert from assumption.
 - **Track, don't inline:** deferred work becomes a tracked issue / known-issue,
   never silently implemented.
-- Plus this project's [Hard rules](#hard-rules) and [Architecture](#architecture)
-  invariants.
+- Plus this project's [Inviolable rules](#inviolable-rules) and
+  [Architecture](#architecture) invariants.
 
 **Question protocol (when a skill must ask the user to decide).** Only ask when the
 answer materially changes the artifact — make routine choices silently and record
@@ -444,24 +444,21 @@ State the invariants explicitly there (e.g. "module X must not import module Y",
 
 ---
 
-## Hard rules
+## Inviolable rules
 
-Generic, stack-independent guardrails. Add your own.
+The laws no session may violate. This section is always loaded, so it stays short:
+what a session must know before it does anything, and a pointer where the
+mechanism lives. One row per law, and every row says how the law is enforced —
+`enforced by: <the check this project runs>`, `soft-by-design: <why no machine
+can decide it>`, or `open: <where the decision is being made>`. A rule with no
+state is a wish, and the review pack reads this section to tell the two apart.
+Add the laws your project actually enforces, and delete the ones it does not.
 
-- **Backward compatibility — `<declare: none | N-1 minor | …>`:** `<one line>
-  saying what the project keeps alive and the mechanism that makes an old
-  surface unnecessary — a project that declares `none` deletes a superseded
-  surface in the change that supersedes it, and a copy of a published artifact
-  (script, schema, helper, prose block) is never a compatibility shim>`. The
-  review pack reads this line to decide whether an obsolete surface is deleted
-  or kept; a blank line is an open question, never an assumed `none`.
-- **Dependencies:** justify every new dependency; prefer the platform/standard
-  library; pin versions. Avoid redundant libraries that duplicate existing ones.
-- **Honesty to the user:** never hide real limitations of the product (limits,
-  reductions, restrictions). Disclose them in the UI/output.
-- **Secrets:** never commit secrets; read them from the environment/secret store.
-- **Docs language:** all committed artifacts in `<your docs language>`,
-  regardless of the language the work was requested in.
+- **Backward compatibility — `<declare: none | N-1 minor | …>`:** `<what this project keeps alive, and the mechanism that makes an old surface unnecessary — a project that declares none deletes a superseded surface in the change that supersedes it, and a copy of a published artifact is never a compatibility shim>`. `enforced by: <the review pack reads this row as the project's compatibility policy>`
+- **Dependencies:** justify every new dependency, prefer the platform and the standard library, and pin versions. `enforced by: <the pin check and the review axis this project runs>`
+- **Honesty to the user:** never hide a real limitation (limits, reductions, restrictions) — disclose it in the output. `soft-by-design: <why no check can decide what a disclosure omits>`
+- **Secrets:** never commit a secret; read it from the environment or the secret store. `enforced by: <the scan this project runs before a push>`
+- **Docs language:** every committed artifact in `<your docs language>`, whatever language the work was requested in. `enforced by: <the check that refuses a translated sibling>`
 
 ---
 
