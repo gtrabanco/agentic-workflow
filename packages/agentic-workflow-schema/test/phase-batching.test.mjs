@@ -85,6 +85,7 @@ function declined(token, overrides = {}) {
   if (token === "tool-harness-xml") doc.capability.tool_harness = "xml";
   if (token === "tool-harness-unmeasured") doc.capability.tool_harness = "unmeasured";
   if (token === "cache-posture-unmeasured") doc.capability.cache_posture = "unmeasured";
+  if (token === "cache-posture-flat") doc.capability.cache_posture = "flat";
   doc.degradations =
     token === "model-unknown"
       ? ["unknown-model"]
@@ -172,6 +173,14 @@ test("every published reason validates in a document of its own", () => {
     const result = validatePhaseBatching(doc);
     assert.deepEqual(result, { ok: true, errors: [] }, `${token}: ${result.errors.join(" | ")}`);
   }
+});
+
+test("a measured cache posture that saves nothing is its own reason", () => {
+  const flat = declined("cache-posture-flat");
+  assert.equal(validatePhaseBatching(flat).ok, true);
+  // the posture is a measurement, so it earns no degradation — unlike `unmeasured`
+  assert.deepEqual(flat.degradations, []);
+  assert.ok(PHASE_BATCHING_REASON_KINDS.includes("cache-posture-unmeasured"), "the unmeasured posture keeps its own reason");
 });
 
 test("the decision, the phase count and the reason cannot disagree", () => {

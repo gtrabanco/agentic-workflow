@@ -76,6 +76,8 @@ export type PhaseBatchingDecision = (typeof PHASE_BATCHING_DECISIONS)[number];
  *  - `tool-harness-unmeasured` — the record states no documented harness.
  *  - `cache-posture-unmeasured` — the record states no cache economics, so a
  *    saving cannot be claimed.
+ *  - `cache-posture-flat` — the provider bills a cached read at the input rate,
+ *    so batching that re-reads a prefix saves nothing.
  *  - `single-phase` — one phase remains; there is nothing to batch.
  *  - `phases-batched` — the answer: N phases in one context.
  */
@@ -88,6 +90,7 @@ export const PHASE_BATCHING_REASON_KINDS = Object.freeze([
   "tool-harness-xml",
   "tool-harness-unmeasured",
   "cache-posture-unmeasured",
+  "cache-posture-flat",
   "single-phase",
   "phases-batched",
 ] as const);
