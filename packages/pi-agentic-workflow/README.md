@@ -694,6 +694,39 @@ not a `grep` inside a script the command executes. This is the recorded
 domain-separation exception that lets the package carry the convention at all —
 see [`docs/workflow/DOMAIN_SEPARATION.md`](../../docs/workflow/DOMAIN_SEPARATION.md).
 
+## Phase batching — the model-aware whole-unit policy (issue #632)
+
+The workflow always allowed running a whole unit in one context instead of one
+phase per turn; it always left that to the operator. The switch below lets the
+*provider preset* say how much of a unit this session's model holds, from the
+model's recorded capability rather than from an assumption.
+
+```json
+{
+  "phaseBatching": { "enabled": false }
+}
+```
+
+One optional boolean, shipped `false`, and no second knob: the thresholds are
+preset data, because this package knows nothing about any vendor's context
+windows. **Absent or `false` is byte-identical to the workflow before the key
+existed** — the policy inspects nothing and answers one phase per turn.
+
+- **The policy lives where the model knowledge lives.**
+  `@gtrabanco/pi-nan-agentic-workflow` carries the capability record and the
+  `phase-batching@1` recommendation; with only this package installed the key is
+  a documented no-op, and nothing in the kernel names a provider (the same
+  additive seam as `tierRouting`, #388).
+- **The recommendation is not a route.** It answers a question and touches no
+  dispatch: the command that prints it is the preset's `/nan-phase-batching`, and
+  the gates are untouched — one phase is still one commit, the diff guard still
+  runs per phase, and the evidence rows are the same rows.
+- **Unknown keys are refused**, like every other key in this section, and
+  `agentic-workflow config validate` reports a misspelling by path.
+- **The default flips only on measurement**: the tier-cost corpus (#631) showing,
+  over at least three real units per tier, a measured saving at equal first-review
+  PASS parity. Until then the operator decides.
+
 ## Memory substrate — Engram (optional, ask-first)
 
 The workflow's units save and recall their decisions through Engram, the memory

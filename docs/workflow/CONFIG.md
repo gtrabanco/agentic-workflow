@@ -62,11 +62,42 @@ project can never silently drop a global glob or lower a requirement.
 | `gitIdentity` | base | `{ "enforce": "off", "approved": {}, "agentGuard": { "allow": [] } }` | `enforce` = `off`/`commit`/`push`/`push-upstream`/`commit-and-push`/`commit-and-push-upstream` (`push` judges a push to any remote, `push-upstream` only the branch's tracked upstream remote); `approved` = `name`, `email`, `fullName`, `format` (`openpgp`/`ssh`), `signingKey`, `signingKeys` (per-machine keys), `signing` (`required`/`allowed`/`off` — `off` is a sign-off workflow) — only the declared facts are verified; `agentGuard.allow` = config keys the agent may write without asking. The guard's own disposition is `guard.gitIdentity.mode`, never a second `mode` here |
 | `pathProtection` | base | `{}` | `protectedGlobs` plus `requirements.<pre-freeze\|post-freeze\|always>.<create\|modify\|delete\|rename>` = `none`/`justification`/`approval` |
 | `contentGuard` | base | `{ "trustedRoles": ["OWNER", "MEMBER", "COLLABORATOR"], "allowLogins": [], "denyLogins": [] }` | `trustedRoles` = the author associations whose forge content may be ingested (any value `packages/agentic-workflow-schema/src/content-guard.ts` publishes); `allowLogins` admits a login regardless of association, `denyLogins` refuses one regardless of role. There is no `enabled` switch: the layer is always active and an unconfigured project runs the strictest policy. The merge between scopes tightens only — roles intersect, the login lists union — and a list that is not the declared shape (a wrong type, or an entry that is not a string) is never narrowed into an empty one: the section is refused whole, the caller gets the shipped strictest policy and the refusal is declared (`malformed-config`) |
-| `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing) |
+| `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing), `phaseBatching` (`enabled: false` — the model-aware phase-batching switch; see [Phase batching](#phase-batching)) |
 
 Unknown keys are refused, never merged or coerced. `config validate` reports
 each one by path; `--sanitize` removes them; `--no-warn-unknown` suppresses only
 that class.
+
+## Phase batching
+
+The `phaseBatching` switch asks the provider preset to recommend how many
+execute-phase steps one context holds on the model the session is running — the
+whole-unit mode that has always been an operator choice, now backed by the
+model's recorded capability instead of an assumption. It is one optional
+boolean and there is no second knob: the thresholds are preset data, because the
+kernel has no business knowing a vendor's context windows.
+
+```jsonc
+{ "phaseBatching": { "enabled": true } }
+```
+
+- **Absent or `false` is the shipped posture, and it is byte-identical to the
+  workflow before the key existed**: the policy inspects nothing and answers one
+  phase per turn. Nothing else moves — one phase is still one commit, the diff
+  guard still runs per phase, and the evidence rows are the same rows.
+- **The policy lives where the model knowledge lives.** `@gtrabanco/pi-nan-agentic-workflow`
+  owns the capability record and the recommendation
+  (`phase-batching@1`); with only `@gtrabanco/pi-agentic-workflow` installed the
+  key is a documented no-op, and `/nan-phase-batching` is the command that
+  prints the document from a live session.
+- **A misspelled key is refused by name** (`unknown phaseBatching key`), never
+  resolved to the shipped default, so an operator cannot believe batching is on
+  while `false` runs.
+- **Default OFF until the measurement says otherwise.** The default flips only
+  when the tier-cost corpus (issue #631's surface) shows, over at least three
+  real units per tier, a measured saving at equal first-review PASS parity. The
+  trigger is a measurement contract, not a roadmap note: flipping the default
+  without that evidence is the change this paragraph forbids.
 
 ## Guards
 
