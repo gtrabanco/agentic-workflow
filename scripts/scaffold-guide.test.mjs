@@ -146,6 +146,26 @@ test("a dated id is refused by the same reader", () => {
 });
 
 // ---------------------------------------------------------------------------
+// 2b. The laws section, with a state per rule (issue #645 S3)
+// ---------------------------------------------------------------------------
+
+test("the scaffold's laws section is named once and every rule says how it is enforced", () => {
+  const body = section(guide(), "Inviolable rules");
+  assert.ok(body !== null, "the template declares `## Inviolable rules`");
+  assert.equal(section(guide(), "Hard rules"), null, "the old heading is gone — one name for one section");
+  // The three declarative states, stated where a project fills them in.
+  assert.match(body, /enforced by/, "a rule a machine decides says which one");
+  assert.match(body, /soft-by-design/, "a rule no machine can decide records its reason");
+  assert.match(body, /open:/, "a rule without a carrier yet says where the decision is made");
+  // Every rule row carries a state, so the section cannot be half-filled silently.
+  const rules = body.split("\n").filter((line) => /^- \*\*/.test(line));
+  assert.ok(rules.length >= 5, `the section carries ${rules.length} rule rows`);
+  for (const rule of rules) {
+    assert.match(rule, /`(enforced by|soft-by-design|open):/u, `a rule row states its state: ${rule.slice(0, 60)}`);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 3. The shape the template declares is the shape it ships (T4's precondition)
 // ---------------------------------------------------------------------------
 
