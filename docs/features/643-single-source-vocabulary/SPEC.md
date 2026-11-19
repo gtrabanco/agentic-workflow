@@ -412,7 +412,7 @@ The frozen ledger is `planning-obligations.md` beside this document (M/L shape).
   base control at `176ab984b` → matches (the amendment discriminates head from
   base); `bun test scripts/vocabulary-parity.test.mjs` · exit 0 · 35 pass.
 - **E19** — 2026-11-19, `bun scripts/local-gate.mjs` · exit 0 · **PASS — 19 steps
-  in 486s** on the correction batch's final tree: root-suite 126/126
+  in 638s at the committed head `0d7a0ff1f`** (clean tree): root-suite 126/126
   (roadmap-settle green on the settled row, findings-corpus green on its 1162
   pin), both crate runtimes, schema and pi legs, projection, log-immutability.
   Replaces E13's superseded receipt; the doc-sensitive validators (phase-lint,

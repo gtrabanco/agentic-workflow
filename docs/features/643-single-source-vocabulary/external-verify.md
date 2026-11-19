@@ -187,7 +187,7 @@ this receipt is the record that makes the next run a delta verdict.
   findings-corpus pin 1153 → 1162 (the pin follows the ledger by design), and a
   stale header count (1147/373) was brought to the asserted truth (1162/229).
 - **Recheck evidence** — root-suite 126/126; `bun scripts/local-gate.mjs` →
-  **PASS, 19 steps in 486s** (`E19`, replaces E13); the three captured CLI
+  **PASS, 19 steps in 638s at committed head `0d7a0ff1f`** (`E19`, replaces E13); the three captured CLI
   commands byte-identical to their pre-batch captures; budgets (documents + 30
   skills), prose-gate, log-immutability, docs-generate `--check`, phase-lint all
   green. **Blockers open: 0.** Awaiting the owner's blockers-only recheck.
