@@ -13,6 +13,9 @@ lacks**. Ten ordered steps:
 2. **Diff the substrate.** Compare the project's agent guide (`AGENTS.md`,
    or a legacy `CLAUDE.md`) (and the `docs/`
    blocks its documentation map references) against the fetched template.
+   Run `runner substrate check --workspace <dir>` first: its `absent` rows are
+   the substrate classes this project has no document for, and each is offered
+   additively in step 6 — never written unasked.
    Produce the list of blocks/conventions the template carries that this
    project's substrate lacks, or still holds as a raw, unfilled placeholder —
    e.g. a `Docs site` block, a `Performance commands` block, a `Git workflow`

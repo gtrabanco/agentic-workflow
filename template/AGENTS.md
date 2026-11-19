@@ -294,7 +294,7 @@ place:
 ```text
 open-questions@1
 id | date | type | question | blocks | search-receipt | options | route
-example Q1 | 2026-10-19 | open-question | <the decision being asked> | <why nothing proceeds without it> | <where the repository was searched: file:line, grep, unit folder, prior units> | <2–3 options, each with its trade-off; `none` when the answer is free-form> | <design | unit-lane>
+example Q1 | 2026-10-19 | open-question | <the decision being asked> | <why nothing proceeds without it> | <where the repository was searched: file:line, grep, unit folder, prior units> | <2–3 options, each with its trade-off; `none` when the answer is free-form> | <design | unit-lane | init-workspace:<class>>
 example D1 | 2026-10-19 | decision | Q1 | human-owner | <where the human's answer is recorded: chat paste, issue comment> | <what was chosen> | <what was discarded and why>
 ```
 
@@ -303,7 +303,10 @@ the tier-0 provenance search receipt (`<path:line>` hits, the greps run, the
 prior units of the same area — a "not found" without it is a defect), the
 options researched when the gap was external, and the `route` back to the stage
 that owns the fact (`design` for scope/architecture, `unit-lane` for plan-owned
-facts). The `decision` row reads the same columns per type: `question` carries
+facts, `init-workspace:<class>` when the search found no owning doc because the
+workspace has none scaffolded to own it — the route names the class it claims
+and the dispatcher verifies that claim against the workspace before granting
+it). The `decision` row reads the same columns per type: `question` carries
 the id it closes, `blocks` the authority (`human-owner`), `search-receipt`
 where the human's answer is recorded — a chat paste, an issue comment;
 validated non-`none`, so a decision without a receipt fails closed — `options`
@@ -328,6 +331,24 @@ Rules the ledger enforces:
 - **Halt, do not ask.** The consumed block is printed by the deterministic
   dispatcher (`agentic-workflow needs-input`), so a malformed ledger fails closed
   instead of silently dropping a question.
+
+**Substrate declines (the coverage gate's one record).** An install may leave a
+substrate section absent only with a recorded decline, never by silence: the
+architecture document, the charter's decision-records and API-posture slots, and
+the documentation map are the four classes `/init-workspace` asks about, and
+`agentic-workflow substrate check --workspace .` refuses an install that leaves
+one absent without a row here. One row per declined class, written only after
+the owner says yes to the decline (never auto-written), and the block ships
+empty — a populated example would read as a real decline:
+
+```text
+substrate-declines@1
+class | date | owner
+```
+
+A decline is reversible: the next question that reveals the class was needed
+routes back to `/init-workspace` (`open-questions@1`'s third route,
+`init-workspace:<class>`) and the owner decides again.
 
 **Adaptive lane (unit-driven workflow).** Every NEW unit (feature
 or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/`, in one

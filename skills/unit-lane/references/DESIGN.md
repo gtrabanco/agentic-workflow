@@ -7,7 +7,12 @@ infer. The order is fixed: search the repository's own docs first and append an
 `open-question` row to the unit folder's `decisions.md` recording where; research
 an external gap into 2–3 concrete options. A gap surviving both runs
 `runner needs-input <unit-dir>`, pastes the `open-questions@1` block
-and stops — route `design` for scope/architecture questions. "Decide for me" is
+and stops — route `design` for scope/architecture questions. When the search
+found nothing because **no document is scaffolded to own the fact**, the route is
+`init-workspace:<class>` instead: the dispatcher verifies that claim against the
+workspace's substrate census (`runner substrate check`), and a claim on a surface
+that already exists is refused (`substrate-present`), so the scaffold route is
+never a way around an owner. "Decide for me" is
 a legitimate answer: the lane chooses and records the choice with its reason.
 Cheap-to-change defaults are recorded as assumptions, never silent.
 
@@ -51,6 +56,41 @@ repository has been asked.
 
    `confirmed` = verifiable by a command or documented; `inferred` = deduced,
    not yet verified; `unknown` = no evidence found (→ the orient stage must ask).
+
+### A tree claim is evidence with an expiry
+
+A claim read out of tree prose — a comment, a doc paragraph, a sentence in the
+code that states a fact about the code — is evidence of the day it was written,
+never of the tree it currently sits in. It is the class that produced #643: a
+header comment asserting *"this crate does not depend on the schema package"*
+stayed in the tree after the dependency landed, and its false premise kept
+justifying a mirror for weeks because nothing re-read the claim against the fact.
+
+```text
+evidence-staleness@1
+cell | shape | what it orders
+claim | <the sentence, quoted> | the prose claim used as decision evidence, verbatim
+citation | <path:line> | where the claim lives — a claim with no citation is model memory, not evidence
+neighbourhood | <path:line or command> | the fact the claim asserts about, read now: the import list, the dependency manifest, the config key, the file's own bytes
+recheck | agree | contradict | unknown | what the neighbourhood says about the claim today
+```
+
+`recheck` decides how the claim may be used, in this order:
+
+- **`agree`** — usable as `repository` provenance, and the row records the
+  command that agreed (the suite, the grep, the import walk).
+- **`contradict`** — **not** evidence. The contradiction is surfaced to the owner
+  **before** the decision the claim was supporting, as a `## Log` line (and a
+  finding row when it changes the decision). The misleading prose is repaired in
+  the change that found it, or the unit records why not. Believing a contradicted
+  claim and discounting it silently are the same defect seen from two sides.
+- **`unknown`** — the neighbourhood cannot be read (a generated file, an external
+  system): the claim drops to `inferred`, and the row names the owner who can
+  settle it.
+
+A check that materializes this rule is a *candidate*, not a default: it needs a
+measured corpus of more than one instance before it may ship as a script
+(receipt-neutrality), and the unit that finds the second instance owns filing it.
 
 ### Provenance — model memory is never tier-0
 

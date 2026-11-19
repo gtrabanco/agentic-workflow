@@ -180,6 +180,24 @@ step 4:
   [materialization](references/MATERIALIZATION.md); the check that keeps it true
   is `runner materialize check`, run by `audit-docs` check 17.
 
+## Substrate coverage gate — the answers must land
+
+Asking the interview is not the deliverable; the answer must exist as a written
+scaffold section. One deterministic gate says so:
+`runner substrate check --workspace <dir>` prints one row per substrate class —
+`architecture` (the architecture document), `decision-records` and `api-posture`
+(the charter's slots) and `documentation-map` (the guide's table) — each
+`present`, `declined` or `absent`, and exits 0 only when nothing is absent.
+
+**Bootstrap:** the gate runs before the closing `→ Next:` block. An `absent`
+class is a refused install: write the section, or record an explicit decline —
+ask first, one question per class, and a yes writes nothing but a dated row in
+the guide's `substrate-declines@1` block. A silent skip is the defect.
+
+**Upgrade:** the same gate names the classes a workspace lacks, and each one is
+offered additively (never written unasked) beside the other missing blocks —
+one offer per class, resolved as written, declined, or left as a residual.
+
 ## Guardrails
 
 - **Seam hooks are consent-gated and opt-in per seam (issue #413).** The pi
@@ -382,7 +400,9 @@ OpenCode adapter does not load this fallback.
   the `urgent`/`fix-next` labels are seeded (scaffold) or additively reconciled
   (upgrade),
   and every accepted safety adapter is active and fixture-tested — or explicitly
-  listed as a residual when its hook API/dependency was unavailable.
+  listed as a residual when its hook API/dependency was unavailable,
+  and `runner substrate check --workspace <dir>` reports `Verdict: complete` (or
+  every absent class carries a recorded decline).
   The adaptive lane conventions (unit document, triage, catalog steps, guards,
   evidence, commit formats) are written into AGENTS.md.
 - Serena is provisioned and reported: the one consent question was asked, the

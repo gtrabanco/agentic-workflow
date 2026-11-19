@@ -20,7 +20,9 @@
  *
  * The question block's column set is not restated here: it is imported from the
  * crate's `needs-input` reader, which owns the `open-questions@1` grammar, so the
- * layer and the mechanism it feeds cannot drift apart.
+ * layer and the mechanism it feeds cannot drift apart. The route cell's grammar
+ * is read through that same owner (`parseRoute`), never re-derived: the
+ * pre-spec accepts exactly the cells the dispatcher accepts (#644 F2).
  *
  * Read-only, no clock, no network, no git: every value comes from the two files
  * the caller names, so two runs over the same bytes report the same findings.
@@ -29,7 +31,14 @@
 import { readFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 
-import { LEDGER_COLUMNS, LEDGER_HEADER, ROUTES } from "../runner/sensors/needs-input.mjs";
+import { LEDGER_COLUMNS, LEDGER_HEADER, ROUTES, SUBSTRATE_ROUTE, parseRoute } from "../runner/sensors/needs-input.mjs";
+
+/** The published route cells as the linter states them — a bare stage, or the
+ *  scaffolder route qualified with the class it claims. Derived from the
+ *  reader's own sets, so the message cannot outlive the grammar. */
+const ROUTE_CELL_SHAPES = ROUTES
+  .map((entry) => (entry === SUBSTRATE_ROUTE ? `${entry}:<class>` : entry))
+  .join(" | ");
 
 /** The bank's cell contract, and the artifact's. */
 export const BANK_CONTRACT_ID = "elicitation-checklist@1";
@@ -283,8 +292,8 @@ export function checkSpec({ bankText, specText, specPath }) {
       continue;
     }
     const route = (row.route ?? "").trim();
-    if (route !== "" && !ROUTES.includes(route)) {
-      findings.push({ code: "questions-route-unknown", detail: `question row "${row.id ?? "?"}" routes to "${route}", which is not one of ${ROUTES.join("/")}` });
+    if (route !== "" && !parseRoute(route).ok) {
+      findings.push({ code: "questions-route-unknown", detail: `question row "${row.id ?? "?"}" routes to "${route}", which is not one of ${ROUTE_CELL_SHAPES}` });
     }
   }
 

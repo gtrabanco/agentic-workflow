@@ -481,3 +481,122 @@ test("the disabled guard: a box that omits the scratch unit is caught", () => {
   assert.ok(legacyBox.includes("needs-input.mjs"));
   assert.equal(/scratch/i.test(legacyBox), false);
 });
+
+// ---------------------------------------------------------------------------
+// #644 · the substrate route — a gap no document could own routes to the
+// scaffolder, and the claim is verified against the workspace, never trusted
+// ---------------------------------------------------------------------------
+
+/** A guide carrying the four substrate surfaces the census reads. */
+const SCAFFOLD_GUIDE = `# Fixture project
+
+## Documentation map
+
+| Task | Required docs |
+|---|---|
+| Any change | \`docs/architecture/ARCHITECTURE.md\` |
+
+## Project charter
+
+- **Decision records:** one ADR per irreversible decision
+- **API posture:** safer-API
+`;
+
+/**
+ * Write a workspace root and return it. `architecture` is the architecture
+ * doc's body, or `null` for a workspace that has none.
+ */
+function workspaceRoot({ guide = SCAFFOLD_GUIDE, architecture = "# Architecture\n\nOne boundary.\n", declines = null } = {}) {
+  const dir = path.join(TMP, `workspace-${++counter}`);
+  fs.mkdirSync(path.join(dir, "docs", "architecture"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "AGENTS.md"), declines === null ? guide : `${guide}${declines}`);
+  if (architecture !== null) fs.writeFileSync(path.join(dir, "docs", "architecture", "ARCHITECTURE.md"), architecture);
+  return dir;
+}
+
+/** A unit folder inside a workspace, so discovery walks up to the marker. */
+function unitIn(root, body = SPEC, entries = null) {
+  const dir = path.join(root, "docs", "features", `unit-${++counter}`);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "SPEC.md"), body);
+  if (entries !== null) fs.writeFileSync(path.join(dir, "decisions.md"), entries);
+  return dir;
+}
+
+/** A ledger row routed at the scaffolder, with the class it claims. */
+function substrateRow(route) {
+  return `Q2 | 2026-11-19 | open-question | Which architecture boundary owns the runner? | P3 cannot cut the map | `
+    + "`rg -n 'architecture' docs/ AGENTS.md` → no owning doc; docs/architecture/ARCHITECTURE.md absent | "
+    + `add the doc at bootstrap | add it in this unit, inventing the home | ${route}`;
+}
+
+test("#644 a substrate gap routes to the scaffolder and the block carries that route", () => {
+  const root = workspaceRoot({ architecture: null });
+  const result = run(unitIn(root, SPEC, ledger(substrateRow("init-workspace:architecture"))));
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^- Q2 · init-workspace:architecture · Which architecture boundary owns the runner\?$/m);
+  assert.match(result.stdout, /^Route back: init-workspace:architecture$/m);
+});
+
+test("#644 the same claim on a workspace that owns the surface is refused, not granted", () => {
+  const root = workspaceRoot();
+  const result = run(unitIn(root, SPEC, ledger(substrateRow("init-workspace:architecture"))));
+
+  assert.equal(result.status, 1, "a route around an existing owner is a defect");
+  assert.match(result.stdout, /^Reason: substrate-present$/m);
+  assert.match(result.stdout, /^Where: decisions\.md:\d+$/m);
+});
+
+test("#644 a declined class still routes to the scaffolder: a decline is reversible, ask-first", () => {
+  const declines = `
+\`\`\`text
+substrate-declines@1
+class | date | owner
+architecture | 2026-11-19 | human-owner
+\`\`\`
+`;
+  const root = workspaceRoot({ architecture: null, declines });
+  const result = run(unitIn(root, SPEC, ledger(substrateRow("init-workspace:architecture"))));
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^Route back: init-workspace:architecture$/m);
+});
+
+test("#644 a bare init-workspace route has no class to verify and is refused", () => {
+  const result = run(unit({ spec: SPEC, ledger: ledger(substrateRow("init-workspace")) }));
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /^Reason: unknown-route$/m);
+});
+
+test("#644 a substrate class outside the published set is refused", () => {
+  const result = run(unit({ spec: SPEC, ledger: ledger(substrateRow("init-workspace:billing")) }));
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /^Reason: unknown-route$/m);
+});
+
+test("#644 a substrate claim with no discoverable workspace fails closed", () => {
+  const result = run(unit({ spec: SPEC, ledger: ledger(substrateRow("init-workspace:architecture")) }));
+
+  assert.equal(result.status, 1, "no workspace means the claim cannot be verified");
+  assert.match(result.stdout, /^Reason: missing-workspace$/m);
+});
+
+test("#644 --workspace re-points the census when the unit lives outside the scaffold", () => {
+  const root = workspaceRoot({ architecture: null });
+  const result = run(unit({ spec: SPEC, ledger: ledger(substrateRow("init-workspace:architecture")) }), "--workspace", root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^Route back: init-workspace:architecture$/m);
+});
+
+test("#644 a design route never reads the workspace: the census is lazy", () => {
+  // The unrelated-behaviour invariant: adding a census must not make an ordinary
+  // halt depend on a workspace, a marker or a readable guide.
+  const result = run(unit({ spec: SPEC, ledger: ledger(OPEN_Q1) }), "--workspace", path.join(TMP, "absent-workspace"));
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^Route back: design$/m);
+});

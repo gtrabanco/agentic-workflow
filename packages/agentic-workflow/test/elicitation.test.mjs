@@ -383,6 +383,43 @@ test("a question block whose header differs from the published columns is refuse
   assert.deepEqual(codes(result), ["questions-header-drift"]);
 });
 
+// ── 4b. The route cell matches the dispatcher's grammar (#644 F2) ─────────
+
+const substrateQuestion = {
+  questions: "Q1",
+  rows: [
+    { field: "user-scenario", value: "unknown", provenance: "unknown", receipt: "Q1" },
+    { field: "observation", value: "the report command", provenance: "request", receipt: "—" },
+    { field: "reversibility", value: "a revert undoes it", provenance: "request", receipt: "—" },
+  ],
+};
+
+test("#644 a pre-spec accepts the qualified substrate route the dispatcher grants", () => {
+  const result = checkSpec({
+    bankText: toyBank,
+    specText: specFixture({
+      ...substrateQuestion,
+      questionBlock: questionBlock([openQuestion("Q1", { route: "init-workspace:architecture" })]),
+    }),
+    specPath: "2026-11-17-toy.md",
+  });
+  assert.deepEqual(codes(result), [], JSON.stringify(result.findings));
+});
+
+test("#644 a bare init-workspace route has no class to verify and is refused in the pre-spec too", () => {
+  const result = checkSpec({
+    bankText: toyBank,
+    specText: specFixture({
+      ...substrateQuestion,
+      questionBlock: questionBlock([openQuestion("Q1", { route: "init-workspace" })]),
+    }),
+    specPath: "2026-11-17-toy.md",
+  });
+  const finding = result.findings.find((entry) => entry.code === "questions-route-unknown");
+  assert.ok(finding, JSON.stringify(result.findings));
+  assert.match(finding.detail, /init-workspace:<class>/, "the refusal states the published cell shape");
+});
+
 // ── 5. Cross-family elicitation ───────────────────────────────────────────
 
 const oneOpenQuestion = {

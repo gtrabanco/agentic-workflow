@@ -466,3 +466,32 @@ export const GATE_REJECTION_TYPES = Object.freeze([
   "stale-unit-doc",
 ]);
 export type GateRejectionType = (typeof GATE_REJECTION_TYPES)[number];
+
+/** The needs-input routes (`needs-input-route`, issue #644 S3): the stages that
+ *  own a fact and may receive it back through the `open-questions@1` block.
+ *  `design` owns scope and architecture questions, `unit-lane` owns the
+ *  plan-owned facts, and `init-workspace` owns a *substrate* gap — a question
+ *  the workspace has no document scaffolded to own, so the scaffold is the
+ *  stage that creates its home. A substrate row qualifies the route with the
+ *  class it claims (`init-workspace:<substrate-class>`), and the dispatcher
+ *  verifies that claim against the workspace's census instead of trusting the
+ *  cell — that verification is what makes the third route structural rather
+ *  than an escape hatch. */
+export const NEEDS_INPUT_ROUTES = Object.freeze(["design", "unit-lane", "init-workspace"]);
+export type NeedsInputRoute = (typeof NEEDS_INPUT_ROUTES)[number];
+
+/** The substrate classes (`substrate-class`, issue #644 S3/S4): the four
+ *  answers `init-workspace`'s engineering interview asks and must land in a
+ *  written scaffold section. Each class names the surface that would own it —
+ *  the architecture document, the charter's `Decision records` slot, the
+ *  charter's `API posture` slot, and the guide's documentation map — so the
+ *  census reads one declared owner per class instead of guessing where a fact
+ *  "should" live. A class the project declines is a recorded row
+ *  (`substrate-declines@1`), never a silent skip. */
+export const SUBSTRATE_CLASSES = Object.freeze([
+  "architecture",
+  "decision-records",
+  "api-posture",
+  "documentation-map",
+]);
+export type SubstrateClass = (typeof SUBSTRATE_CLASSES)[number];
