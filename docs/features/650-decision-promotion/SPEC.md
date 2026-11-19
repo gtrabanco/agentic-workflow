@@ -1,6 +1,7 @@
 ---
 type: feature
 scope: medium
+ac-hash: 02f5cf98f744c73239d41b78e4424a0cef858701d36a766b2f32ccdb7102c81e
 roadmap_summary: Cross-cutting decision promotion — a decision whose scope is cross-unit is promoted to the ONE permanent owner doc that owns that scope (the guide's laws, `ARCHITECTURE.md`, `ARCHITECTURAL_INVARIANTS.md`), with the unit ledger linking it and never copying it; the scope is recorded in the decision row at capture time, `product-audit` gains the detection dimension with its deterministic producer, and a one-time backfill sweep audits the existing ledgers.
 ---
 
@@ -113,7 +114,7 @@ proves it. Frozen at the plan cut; a criterion is never rewritten at close.
 | AC-S4 | S4 | the `decision` row's scope cell is a machine vocabulary in the schema package, the reader exposes it, and the lane records it | `bun packages/agentic-workflow/bin/agentic-workflow.mjs needs-input docs/fix/384-capability-risk-detection --json` exits 0 · `bun test scripts/decision-promotion.test.mjs` exits 0 |
 | AC-S5 | S5 | the procedure is documented in the architecture doc, referenced from the lane's capture guidance and from the audit dimension, and the new grammar is registered in `normative-surfaces@1` with its vocabulary in the schema package | `bun test scripts/normative-drift.test.mjs` exits 0 · `rg -c 'decision-scope' AGENTS.md` matches ≥ 2 |
 | AC-S6 | S6 | `product-audit` carries the dimension row, the pass-only-if section, the receipt grammar and the seeded/clean fixture, and the producer emits one finding per unpromoted cross-unit decision | `bun test scripts/decision-promotion.test.mjs` exits 0 · `rg -c 'Decision promotion' skills/product-audit/references/AUDIT_DIMENSIONS.md` matches 1 |
-| AC-S7 | S7 | the sweep ran over its declared sample, its findings table is persisted, and every promoted statement lives in exactly one owner doc cited by its row | `rg -c '^- \\| ' docs/features/650-decision-promotion/backfill-sweep.md` matches ≥ 80 · `bun scripts/decision-promotion.mjs --root .` exits 0 |
+| AC-S7 | S7 | the sweep ran over its declared sample, its findings table is persisted, and every promoted statement lives in exactly one owner doc cited by its row | `rg -c '^\\| B[0-9]+ \\|' docs/features/650-decision-promotion/backfill-sweep.md` matches ≥ 12 · `bun scripts/decision-promotion.mjs --root .` exits 0 and prints `verdict \\| clean` |
 | AC-S8 | S8 | the re-analysis is in this document with a per-element verdict and a `PE-*` citation each | `rg -c 'confirmed, \\|amended: \\|superseded by design\\|confirmed out of scope' docs/features/650-decision-promotion/SPEC.md` matches ≥ 6 |
 | AC-S9 | S9 | no change to `resolve-repository-state`, and the producer writes nothing (read-only, no auto-promotion) | `git diff --stat origin/main -- skills/resolve-repository-state/` prints nothing · `bun test scripts/decision-promotion.test.mjs` exits 0 (its read-only case) |
 | AC-S10 | S10 | all six issue criteria are delivered and covered | AC-S2 … AC-S7 all pass |
@@ -437,6 +438,57 @@ token from `log-kind@1`.
   on mechanical promotion is honoured by construction, and the unit's read-only
   case in `scripts/decision-promotion.test.mjs` is the pin.
 - **E1** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --base origin/main` · exit 0 · `tier: standard`, `reason: 1 path(s) carry executable content: docs/features/650-decision-promotion/`, `task_size.ceremony: unit-doc`, `signals: []`.
+- **D10** — 2026-11-19, `D7`'s plan-time estimate is corrected by the sweep's own
+  measurement: the pass found **one** promotable statement, not four. Only 17 of
+  the 57 recorded `decision` rows sit inside a block the dispatcher can read (116
+  of the 128 ledgers carry no `open-questions@1` marker at all and 4 carry it
+  where the parser cannot reach it), so the prose sample — not the row count —
+  decided the promotion set, and eleven other statements the sample surfaced were
+  `already-owned` or `unit-only` with their owner cited. Authority: the receipt
+  quoted in [`backfill-sweep.md`](backfill-sweep.md) (§ Method), which is the
+  measurement `D7` was written before.
+- **E2** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/650-decision-promotion/SPEC.md` · exit 0 · `verdict PASS`, 13 phase findings clean, fingerprint `2a6638a0…`.
+- **E3** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap read docs/ROADMAP.md --nn 650 --json` · exit 0 · revision `8759ef0a…`, status `idea`.
+- **E4** — 2026-11-19, `bun scripts/decision-promotion.mjs --root .` · exit 0 · `ledgers | read 128 · no-block 116 · unreadable 4 · decisions 17 · scoped 0 · cross-unit 0 · promoted 0` · `verdict | clean` — the pre-change state the sweep reports (`scoped 0` is the rule shipping after every existing row).
+- **E5** — 2026-11-19, `bun scripts/decision-promotion.mjs --root . --json` · exit 0 · the four `unreadable` entries: `644-substrate-gap-alarm`, `82-relay-lane-execution`, `331-authoring-setup` (`malformed-ledger-header`), `84-published-vocabulary-sweep-gate` (`invalid-authority at decisions.md:12`) — the sweep's `B1`–`B4` findings.
+- **E6** — 2026-11-19, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md 619 188 431 12986` and `docs/workflow/GATE_INVENTORY.md 181 86 95 8165` against the re-based ceilings 681 / 475 / 14,285 and 200 / 8,982.
+- **E7** — 2026-11-19, `bun scripts/check-skill-context.mjs --skill unit-lane` and `--skill product-audit` · exit 0 · `unit-lane 5166 est` inside 5,246; `product-audit 3883 est` inside 4,264, with `AUDIT_DIMENSIONS.md` 7,395 est / 325 lines against the re-based 8,135 / 358.
+- **E8** — 2026-11-19, `rg -c 'Promoting a decision' template/docs/architecture/ARCHITECTURE.md` · exit 0 · `1`; `rg -c 'unit-only|cross-unit' template/docs/architecture/ARCHITECTURE.md` · `3` — `O10`'s evidence.
+- **E9** — 2026-11-19, `rg -c 'decision-scope@1' skills/unit-lane/references/DESIGN.md` · exit 0 · `2` (the block marker and the checklist row); `rg -c 'ARCHITECTURE.md' skills/unit-lane/references/DESIGN.md` · `2` — the procedure is one hop from the capture guidance.
+- **E10** — 2026-11-19, `rg -c 'Decision promotion' skills/product-audit/references/AUDIT_DIMENSIONS.md` · exit 0 · `2` (the applicability row and the pass-only-if heading); `rg -c 'decision-promotion@1' …` · `2`.
+- **E11** — 2026-11-19, `rg -c 'Decision records' template/AGENTS.md` · exit 0 · `1`; `rg -c 'cross-unit' template/AGENTS.md` · `2` — the scaffold's ledger contract carries the cell.
+- **E12** — 2026-11-19, `bun scripts/residual-classify.mjs --inventory --base origin/main` · exit 0 · every added surface carries its consumer in this change; the two scripts, the fixture generator, the const and the three prose blocks are each consumed by the suite, the dimension or the reader, so nothing lands `orphan` (`## Retirements`).
+- **E13** — 2026-11-19, `rg -c '^justification \| ' docs/features/650-decision-promotion/decisions.md` · exit 0 · `5` — one path-protection record per protected path this unit touches (`O3`), including the two suite pins a frozen inventory update requires.
+- **E14** — 2026-11-19, `rg -c '^\| B[0-9]+ \|' docs/features/650-decision-promotion/backfill-sweep.md` · exit 0 · `12` — the sweep's findings table, twelve rows with a disposition each (`O16`).
+- **E15** — 2026-11-19, `git diff --stat origin/main -- skills/resolve-repository-state/` · exit 0 · no output (`S9`'s boundary; `O17`).
+- **E16** — 2026-11-19, `rg -c '^- \*\*D[0-9]' docs/features/650-decision-promotion/SPEC.md` · exit 0 · `10` — `D1`–`D10`, the issue's four open questions among them (`O19`).
+- **E17** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal write --kind narrative` then `journal aggregate` · exit 0 · `appended 1 · removed 1 · fragments 1` — the session entry, and only that entry (the 123 pre-existing pending fragments this worktree's carrier held were left untouched; the first aggregation attempt consumed them and was reverted byte-for-byte, `docs/LOGS.md` +7 lines only).
+- **E18** — 2026-11-19, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap docs/ROADMAP.md rowUpsert <json> --expect 8759ef0a…` · exit 0 · `Receipt: pass`, `Before: 8759ef0a · After: 2b0301bf`, status `idea → in-progress` through the writer, never a hand edit.
+- **G1** — 2026-11-19, `bun test scripts/decision-promotion.test.mjs` · exit 0 · 14 pass / 0 fail — the receipt contract, the three finding classes, the legacy row, the lookalike tail, the named-unreadable ledger, the calibration pair, read-only + determinism, the CLI's two exits, and the prose the dimension ships.
+- **G2** — 2026-11-19, `bun test scripts/needs-input.test.mjs` · exit 0 · 47 pass / 0 fail — the five additive scope cases plus every pre-existing ledger case.
+- **G3** — 2026-11-19, `bun test scripts/normative-drift.test.mjs` · exit 0 · 22 pass / 0 fail — the three new rows resolve; the drafted `restates:` row is absent by design (`D3`).
+- **G4** — 2026-11-19, `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · 22 pass / 0 fail — the `decision-promotion-sweep` row's carrier and token resolve, and the claimed surface ids match.
+- **G5** — 2026-11-19, `bun test scripts/vocabulary-parity.test.mjs` · exit 0 · 35 pass / 0 fail — the new const has one owner.
+- **G6** — 2026-11-19, `bun test packages/agentic-workflow/test/runner.sensors.test.mjs` · exit 0 · 9 pass / 0 fail — the sensor's printed block is unchanged by a scoped row.
+- **G7** — 2026-11-19, `bun test packages/agentic-workflow-schema/test/index.test.mjs` · exit 0 · 19 pass / 0 fail — `DECISION_SCOPES` is published from the package root and frozen.
+- **G8** — 2026-11-19, `cd packages/agentic-workflow && bun test` · exit 0 · 1,324 pass / 0 fail across 72 files.
+- **G9** — 2026-11-19, `cd packages/agentic-workflow-schema && bun test` · exit 0 · 915 pass / 0 fail across 52 files.
+- **G10** — 2026-11-19, `bun test scripts/check-skill-context.test.mjs`, `scripts/scaffold-parity.test.mjs`, `scripts/residue-dimensions.test.mjs` · exit 0 · 1 / 17 / 30 pass / 0 fail.
+- **G13** — 2026-11-19, `bun scripts/run-root-suite.mjs` · exit 0 · 130 suites PASS, no FAIL line — the pre-change failures this batch first met are folded: the frozen dimension set (`Decision promotion` appended last, `deepEqual` kept), the ownership map's eight sanctioned (script, ledger) pairs, the budget narration's `ceil(7395 x 1.10) = 8135` formulas, and the scaffold's 22 charter slots (the promotion pointer is a continuation line, so the slot's `- **Key:** `<...>`` shape is untouched).
+- **G11** — 2026-11-19, `bun scripts/docs-generate.mjs` then `--check` · exit 0 · `Files: 2 written · 0 deleted · 1 unchanged`, `Roadmap: updated`, then `3 checked · 0 missing · 0 stale · 0 orphaned` — the projection regenerated, never hand-written.
+- **P2** — 2026-11-19, the producer's suite lands alone and is observed red on the missing module · `94ffe5310`.
+- **P3** — 2026-11-19, `DECISION_SCOPES` published, the package-root export pinned, the crate's sensor case lands red then green · `baac8db31`.
+- **P4** — 2026-11-19, the ledger reader reads the trailing scope cell without refusing a historical ledger (eight existing rows carry nine cells) · `baac8db31`.
+- **P5** — 2026-11-19, `scripts/decision-promotion.mjs` implemented: the receipt, the three finding codes, the named unreadable ledgers, the charter slot's decision home, and the read-only guarantee · `4f34fdb10`.
+- **P6** — 2026-11-19, the seeded/clean fixture generator lands and the calibration case goes green · `4f34fdb10`.
+- **P7** — 2026-11-19, the procedure documented in the scaffold's architecture doc: the owner-doc map, the precedence, the link-never-copy consequence.
+- **P8** — 2026-11-19, the capture-time guidance: the `decision-scope@1` block, the scope cell on the row, the promotion pointer, the checklist row and the forbidden line.
+- **P9** — 2026-11-19, the detection dimension: the applicability row, the pass-only-if section, the `decision-promotion@1` grammar and the two routes.
+- **P10** — 2026-11-19, the scaffold carries the contract: the `decision` row's scope cell, the ledger rule list's new bullet, and the charter slot naming the procedure.
+- **P11** — 2026-11-19, the grammar and the gate registered: three `normative-surfaces@1` rows, the guide's promotion law, the inventory row with its claimed surfaces, and the ceiling re-pins measured rather than guessed.
+- **G12** — 2026-11-19, `bun scripts/dimension-regression.mjs --base origin/main` · exit 0 · after this line: `19 dimensions` at the head against 18 at the base, `changed review surfaces 1`, no `dimension-dropped` finding, this document the evidence carrier. The dimension change is `Decision promotion` appended to the applicability table, and `scripts/dimension-regression.test.mjs`'s frozen set carries the same last row.
+- **P12** — 2026-11-19, the backfill sweep ran over its declared sample; `B5` promoted into `DESIGN.md` + `template/AGENTS.md`, `B1`–`B4` persisted as findings, and `D10` corrected the plan-time estimate.
+
 - **P1** — 2026-11-19, plan frozen: this document with the `S8` re-analysis,
   `planning-evidence.md` (18 rows), `planning-obligations.md` (20 rows),
   `decisions.md` (three path-protection records) and the sweep carrier.
