@@ -304,14 +304,57 @@ Open rows only (carrier grammar: `findings-table@1`).
   `verdict | clean` (`18 dimensions` at both ends, evidence
   `docs/fix/596-test-relevance-sweep/SPEC.md`); `bun scripts/test-obligation-tags.mjs --list | wc -l`
   · `127`.
-- **D7** — 2026-11-19, `ceremony roadmap row-upsert` cannot write a **fix** row:
+- **D7** — 2026-11-19, `ceremony roadmap row-upsert` cannot write a **fix** row —
+  and the L3 correction batch verified the defect's full shape: the wrapper
   `packages/agentic-workflow/src/runner/ceremony/roadmap.mjs:55-80` reads the
-  roadmap and hands the resulting *text* to `fixRowUpsert`, which expects the
-  table's *path* (`ENAMETOOLONG: name too long, open '# Roadmap…'`). The feature
-  branch of the same command works. This unit's fix row is therefore
-  hand-written, which `docs/ROADMAP.md` § Fixes declares as the mechanism ("fix
-  rows stay owner-managed end to end"); the defect is reported, not repaired
-  here (it is its own unit's scope), and O16 records it as `n/a`.
+  roadmap and hands the resulting *text* to writers that take the table's
+  *path*, and **Both arms** die (`ENAMETOOLONG: name too long, open '# Roadmap…'`):
+  `fixRowUpsert` through `Roadmap.mjs:412-417`, the feature arm through
+  `rowUpsert` at `Roadmap.mjs:166-171`, each observed at base `fdd39ccc` in a
+  `mktemp` scratch (fix slug `615-…`, feature slug `610-…`, exit 1 each;
+  PE-014). This unit's fix row is therefore hand-written, which
+  `docs/ROADMAP.md` § Fixes declares as the mechanism ("fix rows stay
+  owner-managed end to end"); the defect is reported, not repaired here (it is
+  its own unit's scope), and O16 records it as `n/a`. Superseded by the L3
+  batch: an earlier revision of this record asserted the feature arm worked —
+  false (A1 of the external-verify receipt).
+- **E18** — 2026-11-19, the batch's frozen-failure corpus, red before the edits
+  and green after (the probe is recorded with its bracketed spelling
+  `work[s]` — a character class, so this record never self-matches when the
+  probe is re-run against this file): `rg -n 'branch of the same command
+  work[s]' docs/fix/596-test-relevance-sweep/SPEC.md` · matched `:311` before
+  the fix (exit 0), then exit 1 (absent);
+  `rg -c 'not committed' docs/fix/596-test-relevance-sweep/sweep.md`
+  · no match (exit 1) → prints `1` (exit 0).
+- **E19** — 2026-11-19, O20's validator after the D7 correction: `rg -c 'Both
+  arms' docs/fix/596-test-relevance-sweep/SPEC.md` · prints `1`; the superseded
+  clause probe exits 1 (absent). The same-file collateral counts hold:
+  AC-S3 `3`, AC-S5 `3`, O12 `1`/`2`, `roadmap check` · `violations: 0`, and the
+  sweep cluster table still carries its 125 rows plus the 6-row duplicate
+  table.
+- **E20** — 2026-11-19, O21's validator after the sweep disclosure: `rg -c
+  'not committed' docs/fix/596-test-relevance-sweep/sweep.md` · prints `1`.
+- **E21** — 2026-11-19, the L3 batch's recheck (correction bounds), every touched
+  obligation row's validator re-run in the foreground: `node
+  scripts/run-root-suite.mjs` · exit 0 · `127 PASS / 0 FAIL` in 4m06s (calm
+  load); `bun scripts/test-obligation-tags.mjs` · `127 suite(s) · 0 finding(s)` ·
+  PASS; `--sweep` · exit 0 · 125 clusters; `--sweep --cost <this run's log>` ·
+  rule printed · 5 selected ≤ 5 (65 suspects — the log-dependence PE-015
+  documents); `bun scripts/prose-gate-inventory.mjs` · PASS; `node --test
+  scripts/normative-drift.test.mjs` · 21/0; `bun scripts/check-skill-context.mjs`
+  and `--documents` · PASS / PASS; `bun scripts/dimension-regression.mjs --base
+  main` · clean; `bun scripts/docs-generate.mjs --check` · PASS (roadmap
+  unchanged); `roadmap check …SPEC.md` · `violations: 0`; `agentic-workflow
+  verify …SPEC.md` · ok (receipt-marks, log-kinds, cited-paths, cited-gates);
+  `bun scripts/promise-coherence.mjs <SPEC + both ledgers>` · PASS (0 checked ·
+  7 disclosed skips); O13's diff empty; corpus R1/R2 green (E18). One check
+  failed and is reported, not chased: `agentic-workflow phase-lint …SPEC.md` ·
+  exit 1 · BLOCKED on P1/P2/P5 `box-8: (validator: …) carries no expected
+  outcome`, fingerprint `e98ba691…` — byte-identical verdict and fingerprint on
+  pristine HEAD in a `mktemp` scratch, i.e. pre-existing at the delivered head
+  (the inline route never ran the plan-step lint — the #507 F3 class), not
+  introduced by this batch. The batch broke no checked surface — S3's loop did
+  not fire.
 - **G3** — 2026-11-19, HEAD `f1168c637`, `node scripts/run-root-suite.mjs` · exit 0 ·
   `root gate: 127 suite(s)`, 127 PASS / 0 FAIL — the final tree, after the state
   commit. The full gate's own last run was `ed5283dfa` (G1); the two commits after
@@ -449,3 +492,29 @@ unit is what makes "tagged" real.
 - **P4** — 2026-11-19, the gate plus all 127 root suites tagged · `eff444d2e`.
 - **P5** — 2026-11-19, the sweep: the cluster table, the duplicate evidence read
   pair by pair, and the selective kill-rate · commit that carries `sweep.md`.
+- **L3** — 2026-11-19, the owner's correction-batch instruction, verbatim
+  (numbered for this batch: S1, S2, S3):
+  ```text
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  S1 = "triage and fix those that deserve to fix", S2 = "understand the context
+  before fix", S3 = "check you haven't broke another different thing, if you
+  have done, start the loop again until you fixed full symbol/related stuff";
+  "those" resolves per the apply workflow's state-first rule to the three
+  advisories of the 2026-11-19 `EXTERNAL VERIFY` receipt
+  ([`external-verify.md`](external-verify.md)) — there were no blockers.
+- **D8** — 2026-11-19, the batch's triage of the three advisories (L3):
+  **A1 confirmed, fixed** — D7's feature-arm clause was false and is corrected
+  to the observed shape (both arms `ENAMETOOLONG` at base in scratch, PE-014);
+  the claim's family was surveyed: #595's P6 records the same wrapper defect
+  consistently, while #470's D8 carries the contrary clause ("the fix branch's
+  `fixRowUpsert` is text-based and unaffected" — refuted at `78d65dd7b`, where
+  `fixRowUpsert` already takes a path) and is a dated record in a closed unit:
+  frozen history, not edited here. The underlying CLI defect stays routed to
+  its own unit as D7 already decided, now with both-arms evidence. **A2
+  disposition `wontfix`** — the `phase-lint` suite timeout was host load on an
+  untouched body (base/head standalone green, rerun green; the same episode
+  class is recorded at #470's G11); neither the suite bound nor the allowlist
+  may gain headroom from a load transient. **A3 confirmed, fixed** — the cost
+  log behind the `43`-suspect figure is a run artifact and the sweep record now
+  says so (PE-015); the figure and E13 stand as dated measurements.

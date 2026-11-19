@@ -35,7 +35,11 @@ wall-clock of the three change classes.
 
 Measured against the base revision's own root-suite log
 (`bun scripts/run-root-suite.mjs` at `176ab984b`, 126 suites, each suite's wall
-clock as the gate prints it). One row per protected surface: the suites that
+clock as the gate prints it). That log is a run artifact and is not committed:
+the `43`-suspect count below is a dated measurement — a fresh log re-derives a
+suspect set of its own exactly as the rule intends, while the rule, the
+`125`-cluster set and the at-most-five cap re-derive under every log. One row
+per protected surface: the suites that
 protect it, the obligations they cover there, the slowest one's measured cost,
 the cost per obligation value, and the decision the declarations support.
 
