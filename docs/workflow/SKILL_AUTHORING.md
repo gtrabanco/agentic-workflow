@@ -167,3 +167,48 @@ skill may compose only what it synthesizes at or below its own tier:
 `review-change` → `review-implementation` + companions; `product-audit` → its
 sub-checks; the `unit-lane` conductor → its catalog steps. Everything else hands
 off.
+
+## The target project's guide
+
+`init-workspace` writes the guide a target project's sessions read first, and that
+guide follows the same doctrine as this repository's: **essentials in the
+always-loaded file, everything else one hop away through a documentation map.**
+The scaffold is [`template/AGENTS.md`](../../template/AGENTS.md), and four
+properties make it work — each is a slot the interview fills, never a paragraph a
+skill composes on the project's behalf.
+
+- **Essentials only.** Identity, the layout, the documentation map, the
+  instruction-precedence ladder and the verification command are what a session
+  needs before any task. A rule that only matters while doing one kind of work
+  belongs in the page that names that work, and the guide carries the pointer.
+- **One documentation map.** Every long-lived rule is reachable in one hop: the
+  guide carries the row, the page carries the detail. A second copy is allowed
+  only where a consumer cannot reach the owner, and it must say whose it is.
+- **An inviolable-rules section where every rule states its enforcement.** The
+  scaffold's `## Inviolable rules` section is always loaded and each row ends with
+  `enforced by: <the check the project runs>`, `soft-by-design: <why no machine
+  can decide it>` or `open: <where the decision is being made>` — so the review
+  pack can tell an enforced law from a wish. This repository's reader for its own
+  table is `scripts/inviolable-rules.mjs`; a target project gets the section shape
+  and the state vocabulary, not these rows.
+- **The reduction pass is part of authoring.** When a rule is duplicated,
+  contradicted or superseded, the losing copy is deleted in the change that
+  introduces the winner, and the ceilings the project declares move **down** after
+  a reduction — a pass that re-bases upward has not reduced anything.
+
+`init-workspace` offers the section in its interview (never as a default), and its
+upgrade path adds a missing section to an existing guide instead of rewriting the
+project's own rules.
+
+### Repo maintenance skill — `skill-lint`
+
+`skill-lint` (formerly `bump-skill`, renamed when the per-skill bump ledger
+retired) lints this repository's authoring rules and runs the content checks
+(`bun scripts/skill-lint.mjs`) after any `SKILL.md` edit. It **reports and repairs
+nothing**, and it bumps nothing: the train version is stamped by
+`scripts/release.mjs apply` at cut time and a skill change ships as a
+`.changeset/` intent file. It is `user-invocable: false` — invoke it through the
+Skill tool or by following its `SKILL.md` directly — and it carries
+`metadata.internal: true`, the `skills` CLI's own gate that keeps `npx skills add`
+from offering repo-internal skills to target projects (owner:
+`docs/fix/74-bump-skill-discovery-exclusion/`).

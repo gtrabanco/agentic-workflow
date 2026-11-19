@@ -167,9 +167,10 @@
         }
       },
       "docs/workflow/SKILL_AUTHORING.md": {
-        "linesMax": 189,
-        "estimateMax": 2897,
+        "linesMax": 236,
+        "estimateMax": 3635,
         "sources": {
+          "issue #645 (guide minimalism, 2026-11-19)": "the authoring reference becomes the doctrine's owner (S3): `## The target project's guide` states the four properties a scaffolded guide must satisfy (essentials only, one documentation map, an inviolable-rules section with a state per rule, the reduction pass), and `### Repo maintenance skill — skill-lint` absorbs the paragraph the always-loaded guide used to carry. Measured at the change: 214 lines / 3,304 est; ceilings re-set to ceil(measured x 1.10) = 236 / 3,635, growth source = issue #645's doctrine section plus the moved `skill-lint` paragraph.",
           "issue #332 (unit 332-agents-md-split)": "verbatim relocation of the guide's authoring rules (frontmatter contract, body sections, the closing `Next` block, hand-off versus compose across model tiers). Measured 171 lines / 2633 est; ceilings ceil(171 x 1.10) = 189 and ceil(2633 x 1.10) = 2897."
         }
       },

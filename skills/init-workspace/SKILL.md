@@ -219,6 +219,17 @@ step 4:
   project is asked for it and an existing one is offered it additively, with
   consent, in upgrade mode. Declining writes nothing; no format means markdown
   with the degradation reported, never a silent default.
+- **The guide it writes is minimal, and its laws state their enforcement (issue
+  #645 S3).** The scaffold follows the doctrine owned by
+  [`docs/workflow/SKILL_AUTHORING.md`](../../docs/workflow/SKILL_AUTHORING.md)
+  §"The target project's guide": essentials in the always-loaded guide,
+  everything else one hop away through a documentation map, and a
+  `## Inviolable rules` section where every rule ends with `enforced by:`,
+  `soft-by-design:` or `open:`. Offer that section as one consented question
+  (bootstrap or upgrade) — a project that answers no keeps the section as
+  declared placeholders rather than losing it, and a project whose guide already
+  carries its own laws keeps them: upgrade mode adds the missing state cells, it
+  never rewrites a rule the project wrote.
 - **Never overwrite an existing agent guide (`AGENTS.md`, or a legacy
   `CLAUDE.md`) or `docs/` without explicit consent.**
 - **One guide, one name.** `AGENTS.md` is the guide; a legacy `CLAUDE.md` is
