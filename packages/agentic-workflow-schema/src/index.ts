@@ -4137,6 +4137,41 @@ export type {
   GuardRejectionReason,
   PassName,
 } from "./vocabularies.js";
+
+// ── The vocabulary residency set (issue #643) ───────────────────────────────
+// The sets that were runner-resident until #643; the invariant
+// `vocabulary-residency@1` makes this package their home and the crate imports
+// them, re-exporting each name from its historical path.
+export {
+  FEEDBACK_TIERS,
+  WRITER_REFUSAL_REASONS,
+  SHARED_MERGE_CLASSES,
+  SHARED_MERGE_REFUSAL_REASONS,
+  PATH_GUARD_REASONS,
+  DOCTOR_CHECK_STATUSES,
+  INSTALL_ROUTES,
+  WIZARD_MOVES,
+  SKILL_SCREEN_VERDICTS,
+  SKILL_CONSENT_ANSWERS,
+  SKILL_EXTRA_STATES,
+  NODE_SANCTIONED_SCRIPTS,
+  GATE_REJECTION_TYPES,
+} from "./vocabularies.js";
+export type {
+  FeedbackTier,
+  WriterRefusalReason,
+  SharedMergeClass,
+  SharedMergeRefusalReason,
+  PathGuardReason,
+  DoctorCheckStatus,
+  InstallRoute,
+  WizardMove,
+  SkillScreenVerdict,
+  SkillConsentAnswer,
+  SkillExtraState,
+  NodeSanctionedScript,
+  GateRejectionType,
+} from "./vocabularies.js";
 export {
   PROJECTION_MANIFEST_CONTRACT_ID,
   PROJECTION_MANIFEST_VERSION,

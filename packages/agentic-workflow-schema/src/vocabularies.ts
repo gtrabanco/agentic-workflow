@@ -298,3 +298,144 @@ export const ARTIFACT_EVIDENCE_KINDS = Object.freeze([
   "state-snapshot",
 ]);
 export type ArtifactEvidenceKind = (typeof ARTIFACT_EVIDENCE_KINDS)[number];
+
+// ── The vocabulary residency set (issue #643) ──────────────────────────────
+// Every closed set below was runner-resident until #643. They are machine
+// vocabularies of normative surfaces (`normative-surfaces@1` carries their
+// rows), so the invariant `vocabulary-residency@1` (owner:
+// docs/architecture/ARCHITECTURAL_INVARIANTS.md) makes this package their home
+// and the runner imports them. The runner keeps exporting each name from its
+// historical module path, so a consumer's import does not move.
+//
+// One block, one rule: adding a token is a const change here plus the
+// consumer's use of it, in the same PR — never a second literal in the runner.
+
+/** The CLI feedback tiers (`feedback-tier`, issue #424): the closed set
+ *  `--debug` / `--profile` select from, in precedence order. Published by
+ *  `docs/workflow/FEEDBACK.md`; emitted by the crate's feedback channel. */
+export const FEEDBACK_TIERS = Object.freeze(["regular", "debug", "profile"]);
+export type FeedbackTier = (typeof FEEDBACK_TIERS)[number];
+
+/** The shared writer-driver's refusal vocabulary (`writer-refusal-reason`,
+ *  issue #498): a write refusal is a value the caller reads, never an exception
+ *  it guesses at. Published by the crate README's `writer-driver-contract@1`. */
+export const WRITER_REFUSAL_REASONS = Object.freeze([
+  "stale-read",
+  "missing-file",
+  "unreadable",
+  "invalid-document",
+]);
+export type WriterRefusalReason = (typeof WRITER_REFUSAL_REASONS)[number];
+
+/** The shared-document merge classes (`shared-merge-class`, issue #498/#630):
+ *  one git merge driver per class, named `agentic-shared-<class>` in
+ *  `.gitattributes`. Published by the crate README's
+ *  `writer-driver-contract@1`. */
+export const SHARED_MERGE_CLASSES = Object.freeze(["roadmap", "budgets", "repo-state", "logs", "telemetry"]);
+export type SharedMergeClass = (typeof SHARED_MERGE_CLASSES)[number];
+
+/** The shared merge driver's refusal vocabulary (`shared-merge-refusal-reason`):
+ *  what stderr names and why the driver exited nonzero. A merge the driver
+ *  cannot perform is a named refusal, never a silent textual resolution. */
+export const SHARED_MERGE_REFUSAL_REASONS = Object.freeze([
+  "unknown-path",
+  "generated-projection",
+  "class-mismatch",
+  "unreadable-side",
+  "invalid-document",
+  "not-append-only",
+  "non-append-union",
+  "refused-install",
+  "usage",
+]);
+export type SharedMergeRefusalReason = (typeof SHARED_MERGE_REFUSAL_REASONS)[number];
+
+/** The path-protection gate's verdict reasons (`path-protection-reason`,
+ *  feature 60): the closed set the Tier 1 gate prints after `PATH-GUARD
+ *  <pass|fail> — <code>`. Adding a reason is a SPEC change, never a new code
+ *  path. */
+export const PATH_GUARD_REASONS = Object.freeze([
+  "clean",
+  "justified",
+  "approved",
+  "protected-modification",
+  "approval-required",
+  "undeclared-test",
+  "unmatched-record",
+  "malformed-declaration",
+  "missing-config",
+  "malformed-config",
+]);
+export type PathGuardReason = (typeof PATH_GUARD_REASONS)[number];
+
+/** What one tool observation can conclude (`doctor-check-status`, issue #537):
+ *  `ok` healthy, `missing` absent, `mismatch` two versions that disagree,
+ *  `unarmed` a declared contract never applied, `unreachable` present but
+ *  silent, and `not-applicable` a surface the project does not declare — never
+ *  a defect. Owner: the crate README's `tool-inventory@1`. */
+export const DOCTOR_CHECK_STATUSES = Object.freeze([
+  "ok",
+  "missing",
+  "mismatch",
+  "unarmed",
+  "unreachable",
+  "not-applicable",
+]);
+export type DoctorCheckStatus = (typeof DOCTOR_CHECK_STATUSES)[number];
+
+/** How a tool is installed (`install-route`, issue #537), in the order a
+ *  reader picks one: a package manager, the project's own binary download, or
+ *  an operator command this CLI never runs. */
+export const INSTALL_ROUTES = Object.freeze(["npm", "bun", "pip-uv", "brew", "binary", "instruct-only"]);
+export type InstallRoute = (typeof INSTALL_ROUTES)[number];
+
+/** What the setup wizard may do with one check row (`wizard-move`, issue #537):
+ *  report it, ask consent and run the project's installer, print the exact
+ *  command for the operator, or leave it alone as a residual. */
+export const WIZARD_MOVES = Object.freeze(["report-only", "ask-consent-write", "instruct-only", "residual"]);
+export type WizardMove = (typeof WIZARD_MOVES)[number];
+
+/** A discovered skill candidate's screening verdict (`skill-screen-verdict`,
+ *  issue #537): the deterministic screen either accepts it for consent or
+ *  excludes it with a reason. Owner: the crate README's `skill-discovery@1`. */
+export const SKILL_SCREEN_VERDICTS = Object.freeze(["screened", "excluded"]);
+export type SkillScreenVerdict = (typeof SKILL_SCREEN_VERDICTS)[number];
+
+/** A candidate's consent answer (`skill-consent-answer`): `pending` until the
+ *  owner answers, then `yes` or `no`. An install without a recorded `yes` is
+ *  the defect this set exists to make unrepresentable. */
+export const SKILL_CONSENT_ANSWERS = Object.freeze(["pending", "yes", "no"]);
+export type SkillConsentAnswer = (typeof SKILL_CONSENT_ANSWERS)[number];
+
+/** The state of one extra skill on the installed register (`skill-extra-state`,
+ *  feature 75): `ok`, `unpinned` (no pin declared), `stale` (past the declared
+ *  decay window) or `incomplete` (extras absent from the manifest). */
+export const SKILL_EXTRA_STATES = Object.freeze(["ok", "unpinned", "stale", "incomplete"]);
+export type SkillExtraState = (typeof SKILL_EXTRA_STATES)[number];
+
+/** The scripts sanctioned to run under `node` (`node-sanctioned-script`, issue
+ *  #329/#331): the bootstrap pair that must run before bun exists, plus the
+ *  root suite runner. One declaration, two readers — the tool-choice policy and
+ *  the invocation-drift gate — so a script added here is sanctioned on both
+ *  layers. Owner: `AGENTS.md` §Runtime convention. */
+export const NODE_SANCTIONED_SCRIPTS = Object.freeze([
+  "scripts/setup-env.mjs",
+  "scripts/update-tools.mjs",
+  "scripts/run-root-suite.mjs",
+]);
+export type NodeSanctionedScript = (typeof NODE_SANCTIONED_SCRIPTS)[number];
+
+/** The gate-rejection types (`gate-rejection-type`, issue #643 S7): what the
+ *  executor's gates print as `GATE REJECTION — <type>` and what an agent
+ *  chooses between at the end of a turn. This const is the vocabulary's machine
+ *  surface; `gate-rejection-vocabulary@1` in POLICY.md §8 is a rendered
+ *  restatement of it, recomputed by `rendered-facts@1` rather than trusted. */
+export const GATE_REJECTION_TYPES = Object.freeze([
+  "dependency",
+  "status",
+  "phase-lint",
+  "path-protection",
+  "stale-or-missing-receipt",
+  "stale-unit-doc",
+]);
+export type GateRejectionType = (typeof GATE_REJECTION_TYPES)[number];
