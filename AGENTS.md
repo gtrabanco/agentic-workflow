@@ -71,7 +71,9 @@ while doing one kind of work is one hop away and read on demand:
 
 | Reference | Read it when you are… |
 |---|---|
-| [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md) | authoring or editing a skill: frontmatter contract, body sections, the closing `→ Next:` block, hand-off vs compose across a model/effort boundary |
+| [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md) | authoring or editing a skill: frontmatter contract, body sections, the closing `→ Next:` block, hand-off vs compose across a model/effort boundary, and the guide shape a target project's scaffold must follow |
+| [`docs/workflow/WORKTREES.md`](docs/workflow/WORKTREES.md) | creating, naming, recovering or removing a worktree: the namespace law's procedure and its failure modes |
+| [`packages/pi-agentic-workflow/README.md`](packages/pi-agentic-workflow/README.md) | installing or configuring the package, or asking what the plugin's commands and config keys are |
 | [`docs/workflow/PACKAGES.md`](docs/workflow/PACKAGES.md) | touching `packages/`: the bun workspace, the single lockfile, pin rules, the version-parity gate, changesets, publish channels |
 | [`docs/workflow/GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md) | smoke-testing a wording change to an executor-path skill |
 | [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) | asking whether a gate survives a compaction, and where its carrier lives |
@@ -96,28 +98,55 @@ A lower rung never overrides a higher one. Where the same rule lives below this
 file, this guide **links** it instead of restating it (see the ownership rule
 under [Working rules](#working-rules)).
 
+## Inviolable rules
+
+The laws no session may violate — always loaded, never behind a pointer, and
+pinned by their own line count (`blockLines` in the budgets manifest) so a law
+enters by manifest edit with its reason. `owner` names the surface that owns the
+law's mechanism, never a restatement of it; `state` says how the law is enforced,
+and `bun scripts/inviolable-rules.mjs` refuses a row whose owner or state does not
+resolve:
+
+- `materialized: <gate-id|path>` — a gate of the [gate inventory](docs/workflow/GATE_INVENTORY.md), or the suite that pins it.
+- `soft-by-design: <reason>` — prose because no offline check can decide it, with the reason recorded.
+- `materializable: #<issue>` — the carrier is a filed unit, and the row names it.
+
+A genuinely new law is its own unit; this section structures the laws that exist.
+
+```text
+inviolable-rules@1
+rule | statement | owner | state
+IR1-vocabulary-residency | a closed vocabulary has one owner and every consumer imports it | docs/architecture/ARCHITECTURAL_INVARIANTS.md#block:vocabulary-residency@1 | materialized: published-vocabulary-parity
+IR2-force-push-ban | an agent never rewrites published history; the owner does, and the PR records why the hashes moved | AGENTS.md#Working rules | soft-by-design: the mechanical enforcement was tried and deliberately removed (issue #346), so the owner's merge is the check
+IR3-test-immutability | a failing test is repaired by the code it judges, never by weakening, deleting or skipping the assertion | skills/unit-lane/references/TESTS.md#Obligation tags | soft-by-design: a weakened assertion is indistinguishable from a legitimate test edit without reading intent, so a reviewer decides it
+IR4-red-first | a new script's suite lands in its own commit before its implementation | skills/unit-lane/references/TESTS.md#Red-first commits | materialized: red-first-ordering
+IR5-human-revision-hold | nothing is planned, implemented or merged for an item carrying `human-revision-needed`, and an agent may apply that label but never remove it | skills/triage-issue/references/LABELS.md#Review-gate label vocabulary (human-owned) | soft-by-design: host-owned — the label lives on the forge, so no offline suite can read it
+IR6-no-backward-compat | **No backward-compatibility support**: a superseded surface is deleted in the change that supersedes it, and a copy of a published artifact is never a compatibility shim | AGENTS.md#Working rules | soft-by-design: an owner decision the review pack reads as its compatibility policy, and no gate can separate a kept surface from a deleted one
+IR7-domain-separation | a project decision never enters a product surface unrequested, and a product rule never enters a project surface | docs/workflow/DOMAIN_SEPARATION.md#The product-audit dimension (this repo only) | soft-by-design: carried by product-audit's project-only domain-drift sweep, which a person runs rather than a gate
+IR8-worktree-namespace | a worktree never lives under git's `.git/worktrees/` namespace, where `git worktree prune` destroys it silently | docs/workflow/WORKTREES.md#Where they live | materialized: worktree-audit
+IR9-english-only | every committed artifact is English, permanently, and no translated sibling is created | AGENTS.md#Working rules | materialized: docs-language
+IR10-no-assumption | a fact the tree, the docs and a prior owner decision do not evidence is asked, never guessed | skills/unit-lane/references/DESIGN.md#block:ask-dont-infer@1 | materializable: #644
+IR11-one-owner-per-rule | a rule, contract or vocabulary names the surface that owns it before it enters a doc, and a second copy cites that owner | AGENTS.md#Working rules | materializable: #646
+IR12-stderr-only | a command's progress goes to stderr while stdout and the envelope stay the machine receipt | docs/workflow/FEEDBACK.md#The invariants (never trade one away) | materialized: packages/agentic-workflow/test/feedback.test.mjs
+IR13-no-secrets | no secret-shaped value enters the tree, and a benign shape is answered by a narrow allowlist entry rather than by silence | template/AGENTS.md#Inviolable rules | materialized: secret-scan
+IR14-tool-choice | the preferred tool is re-checked every turn and the documented fallback is never assumed absent | docs/workflow/SETUP.md#The toolchain, per tool | materialized: invocation-drift
+```
+
 ## Working rules
 
-- **Docs language is English-only (permanent).** Every committed artifact (skills,
-  docs, templates, `README`, `CHANGELOG`, commits, PR descriptions) is in English,
-  regardless of the language used to request the work; reply to the user in the
-  user's language. The bilingual `.es.md` siblings were removed repo-wide
-  (2026-09-15). Owner decision 2026-10-27 (issue
-  [#232](https://github.com/gtrabanco/agentic-workflow/issues/232)): the package
-  ships **English-only permanently** — bilingualism is a rendering concern of the
-  project's upcoming web layer (#295 direction), never a committed artifact. Do
-  **not** create or update any `.es.md` sibling, add a language-switcher link, or
-  translate any package surface.
-- **Vendored third-party code carries its provenance.** Any code copied from a
-  third party into this repository — into a package's `src/`, a script, or a
-  skill reference — keeps a header comment naming the **source URL, the author,
-  the version copied, and the license name**. A copy without those four is a
-  provenance defect: an upstream relicensing or an attribution obligation cannot
-  be audited later. Vendoring is a real alternative to adding a
-  dependency and it is weighed as one (unit 28's D36 rejected a 1,419-line
-  copied `sha256` closure on measured cost and kept the package's own core, and
-  AC21 keeps the schema package dependency-free); whichever route a change
-  takes, the provenance header is mandatory for the first.
+- **Docs language is English-only (permanent).** Every committed artifact is in
+  English, regardless of the language the work was requested in; reply to the user
+  in the user's language. Owner decision 2026-10-27 (issue
+  [#232](https://github.com/gtrabanco/agentic-workflow/issues/232)): bilingualism is
+  a rendering concern of the project's web layer (#295), never a committed
+  artifact — do **not** create a `.es.md` sibling, add a language-switcher link, or
+  translate a package surface.
+- **Vendored third-party code carries its provenance.** Code copied from a third
+  party — into a package's `src/`, a script, or a skill reference — keeps a header
+  naming the **source URL, the author, the version copied, and the license name**.
+  A copy without those four is a provenance defect: an upstream relicensing or an
+  attribution obligation cannot be audited later. Vendoring is weighed against
+  adding the dependency on measured cost, and it never waives the header.
 - **Stack/architecture agnostic.** Do not introduce references to any specific
   product, stack, framework, ORM, runtime, or architecture pattern into the
   skills or the shared docs. Generic phrasing ("the project's architecture")
@@ -148,18 +177,13 @@ under [Working rules](#working-rules)).
   or any recorded reason) live in the `## Dependencies` prose section only, are
   completed at issue creation and revisited at triage — owner:
   [docs/workflow/ISSUE_WORKFLOW.md §Relationships](docs/workflow/ISSUE_WORKFLOW.md).
-- **Published history is owner-written.** When `main` moves and the PR conflicts, the
-  branch is brought up to date by integrating `main` and resolving the conflicted
-  files on the branch: the agent resolves the files and hands the branch back,
-  and the owner runs the integration. Pushed commits are a shared surface — a
-  reviewer's checkout, another session, a CI artifact — so the owner rewrites
-  them when genuinely needed, and the PR then notes why the hashes changed. Only the owner may rewrite published history: an agent must
-  never run `git push --force` (or any command with the identical result — a
-  rebase/amend of already-pushed commits followed by a push, a ref delete plus
-  re-push, or any force spelling) unless the owner explicitly authorizes it in
-  the same turn and no non-rewriting alternative exists. Soft rule by design:
-  the mechanical enforcement of this line was tried and removed (issue #346) —
-  the discipline lives here, in review and in the owner's merge.
+- **Integrating `main` into a branch.** The agent resolves the conflicted files on
+  the branch and hands it back; the owner runs the integration and, when it is
+  genuinely needed, the rewrite — with the PR noting why the hashes changed. An
+  agent must never run `git push --force` (or a rebase/amend of pushed commits
+  followed by a push, a ref delete plus re-push — any force spelling) unless the
+  owner explicitly authorizes it in the same turn and no non-rewriting alternative
+  exists (`IR2`).
 - **Commit format:** conventional commits, e.g. `feat(skills): add execute-phase`,
   `docs(workflow): clarify replicate steps`, `chore(template): add brand stub`.
 - **Tests first for a non-empty test impact set.** A change derives the tests
@@ -176,49 +200,37 @@ under [Working rules](#working-rules)).
   module or the failing assertion (the red commit), then the implementation
   lands observed green — the unit doc's `## Log` records both runs as `E`
   lines naming both SHAs, and `scripts/red-first.mjs` enforces the ordering
-  in the root suite (pairs introduced after the gate's own commit; earlier
-  pairs are grandfathered). `scripts/structural-sibling-pins.test.mjs` reads
-  the tree, so an unpaired file fails the gate. A failing test is repaired by changing the code it judges —
+  (`IR4`). `scripts/structural-sibling-pins.test.mjs` reads the tree, so an
+  unpaired file fails the gate. A failing test is repaired by changing the code it judges —
   never by relaxing, deleting or skipping the assertion, and never by narrowing
-  its input until it passes. A case that genuinely cannot hold is `n/a` with its
-  reason recorded, not quietly removed. A suite also declares its **obligation
-  tag** at its head — the surface it protects and the obligations it asserts
-  there (owner: [`skills/unit-lane/references/TESTS.md`](skills/unit-lane/references/TESTS.md)
-  § Obligation tags; this repository's gate is
-  `bun scripts/test-obligation-tags.mjs`), which is what lets a deletion be
-  obligation-level evidence instead of line coverage.
+  its input until it passes (`IR3`). A case that genuinely cannot hold is `n/a` with
+  its reason recorded. A suite also declares its **obligation tag** at its head —
+  the surface it protects and the obligations it asserts there (owner:
+  [`skills/unit-lane/references/TESTS.md`](skills/unit-lane/references/TESTS.md)
+  § Obligation tags; gate: `bun scripts/test-obligation-tags.mjs`).
 - **`human-revision-needed` blocks development.** An issue or PR carrying that
   label is on hold: nothing is planned, implemented, committed or merged for it
   until a human removes the label. It means "a plan is waiting for human review",
-  so an agent may apply it — and must then stop — but may never remove it, not
-  even when its own work looks finished. Vocabulary and semantics are owned by
-  `skills/triage-issue/references/LABELS.md`; this guide is the only place that
-  states the hold, and every skill honors it before acting.
+  so an agent may apply it — and must then stop — but may never remove it (`IR5`).
+  Vocabulary and semantics are owned by `skills/triage-issue/references/LABELS.md`.
 - **No backward-compatibility support (owner decision).** This repository ships
   one version at a time and never keeps an old surface alive for an older
   consumer: every dependency is pinned, the skills and the four packages carry
   one train version (D-40-14), and the version-parity gate plus the pin-watch job
-  keep the pair aligned. A superseded helper, script, doc, flag or prose block is
-  deleted in the change that supersedes it; a copy of a published artifact is
-  never a compatibility shim. A project that needs an older line keeps an older
+  keep the pair aligned. A project that needs an older line keeps an older
   **pin**, not a fork. If a real external consumer ever needs a surface kept, that
-  is a new unit with a recorded decision — never a default. The review pack reads
-  this rule (its compatibility policy) when classifying an obsolete surface.
+  is a new unit with a recorded decision — never a default (`IR6`).
 - **Domain separation — product vs dogfooding (owner decision 2026-11-07).**
   The product ships only what it can build deterministically with its own code
-  and prose; the classification test lives on issue 435. This project's
-  decisions (forge publication, papers sweeps, label semantics, scheduling)
-  never enter a product surface unrequested, either direction. Exceptions:
-  owner-requested dual landing (e.g. #405's journal) and this safeguard itself
-  (project-domain, here only). product-audit runs here add a **project-only
-  domain-drift sweep**: product surfaces checked for dogfooding claims, project
-  surfaces for product rules. Never ships in `skills/product-audit/`.
+  and prose; the classification test lives on issue 435. The exceptions are an
+  owner-requested dual landing and this safeguard itself (project-domain, here
+  only); the sweep that reads the rule is the product-audit dimension `IR7` names.
 - **Every repetition names its owner.** Before a rule, contract or vocabulary
   enters this guide — or any doc — find the surface that owns it and link it.
   A second copy is allowed only where a consumer cannot reach the owner, and it
-  must say whose it is. This is the rule that keeps the file from growing back
-  after the split: `scripts/residue-dimensions.test.mjs` refuses a rule name that
-  appears outside its owner without a pointer.
+  must say whose it is (`IR11`). The detector that exists today covers one rule:
+  `scripts/residue-dimensions.test.mjs` refuses a restatement of the no-assumption
+  rule outside its owner; the general sweep is #646's.
 
 ## Verification
 
@@ -274,32 +286,16 @@ the merge-base for a single new branch — as `--push-base`, and a `test-impact`
 path changed — prose and assets only) skips the test-bearing steps; a `targeted`
 verdict, a refusal or an absent script runs the full gate, never a silent skip. A push that sends no ref update — an up-to-date branch, a dry run — or only deletions publishes nothing, so the hook exits 0 before any range step instead of inventing a merge-base range; several publishable refs, or a ref git cannot prove a base for, leaves the base unproven and the range-bound steps stay dropped. A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook` (which asks git where the hooks live, so it works from a worktree, where `.git` is a file); the installed hook passes `--jobs auto` (load-sized, overridable with `AGENTIC_WORKFLOW_GATE_JOBS`), so a push never claims the whole box while other sessions work.
 The shared-document classes (issue #498, plus #630's telemetry class) arm the
-same way and are documented here because the arming is the same per-checkout
-limitation: `.gitattributes` names `docs/ROADMAP.md`,
-`docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `docs/workflow/REPOSITORY_STATE.md`,
-`docs/LOGS.md`, `docs/workflow/TIER_COST.md` and `.pi/.telemetry/sessions.jsonl`,
-and `bun scripts/shared-doc-merge.mjs --install` writes the driver config a clone
-never inherits; arming is optional — an unarmed clone degrades to git's textual
-merge, and each armed driver adds the semantic layer its own class's contract
-states, which the [crate README](packages/agentic-workflow/README.md) owns.
-The write-path half of the contract lives
-in the crate: `writer-driver-contract@1` in
-[`packages/agentic-workflow/README.md`](packages/agentic-workflow/README.md) is
-the contract's one home.
-**The generated projection carries no per-regeneration line**, so two concurrent
-regenerations merge as plain text and no checkout has to be armed for that. For
-the residual case — two branches inserting a row at the same position in one
-sorted table (the projection's tables, and `docs/ROADMAP.md`'s since fix #507,
-whose generated half appends a row per unit folder while every hand-owned cell
-passes through untouched) — `.gitattributes` names `docs/generated/**`
-(`merge=docs-generated`, armed by `bun scripts/docs-generated-merge.mjs --install`)
-while the `docs/ROADMAP.md` attribute stays with the shared-document class
-registry above — one claim per path, the registry stated once — and
-`bun scripts/docs-generated-merge.mjs --install` writes the driver config a
-clone never inherits; arming it is optional. Either way the gate's
-`docs-generated-projection` step runs `docs-generate --check` on every push —
-offline and not test-gated, because a prose-only push is exactly the push that
-stales the projection.
+same way: `.gitattributes` names each class's paths, `bun scripts/shared-doc-merge.mjs
+--install` writes the driver config a clone never inherits, and arming is optional —
+an unarmed clone degrades to git's textual merge. The write-path contract is
+[`writer-driver-contract@1`](packages/agentic-workflow/README.md); the generated
+projection carries no per-regeneration line, so two regenerations merge as plain
+text, and the residual case (two branches inserting a row in one sorted table)
+is `docs/generated/**`'s driver, armed by `bun scripts/docs-generated-merge.mjs
+--install`. Either way the gate's `docs-generated-projection` step runs
+`docs-generate --check` on every push — offline and not test-gated, because a
+prose-only push is exactly the push that stales the projection.
 The remote
 gate is manual only — `gh workflow run root-suite.yml --ref <branch>` — for a
 branch you cannot run locally.
@@ -399,6 +395,7 @@ normative-surfaces@1
 surface | file | grammar | machine | must-name
 skill-declared-arguments | skills/*/SKILL.md | frontmatter:argument-hint | n/a | no
 vocabulary-residency | docs/architecture/ARCHITECTURAL_INVARIANTS.md | block:vocabulary-residency@1 | n/a | no
+inviolable-rules | AGENTS.md | block:inviolable-rules@1 | n/a | no
 closing-hand-offs | skills/*/SKILL.md | fenced:→ Next: | skill | no
 gate-rejection-types | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:GATE_REJECTION_TYPES | gate-rejection-type | yes
 gate-rejection-vocabulary | skills/pre-execution-review/references/POLICY.md | block:gate-rejection-vocabulary@1 | gate-rejection-type | yes
@@ -542,15 +539,14 @@ skill may keep a second copy of this list.
 
 ## Docs site
 
-The generated documentation projection (`docs/generated/**` — the reverse edge
-of "docs drive the work", issue #396) is plain markdown, rendered only by the
+The generated documentation projection (`docs/generated/**` — the reverse edge of
+"docs drive the work", issue #396) is plain markdown, rendered only by the
 repository's own emitter (`bun scripts/docs-generate.mjs`), never hand-written.
-The same emitter syncs the two roadmap tables (fix #507): a feature folder
-without a row gains one, every hand-owned cell passes through untouched, and a
-unit doc's `roadmap_summary:` overrides its row's summary cell — edit the unit
-doc, never the table.
-The declaration the emitter reads; omitting `content-dir`, `build` and `map`
-keeps the emitter's defaults (`docs/generated`, no build step, no map script):
+The same emitter syncs the two roadmap tables (fix #507): a feature folder without
+a row gains one, every hand-owned cell passes through untouched, and a unit doc's
+`roadmap_summary:` overrides its row's summary cell — edit the unit doc, never the
+table. The declaration the emitter reads (omitting the other keys keeps its
+defaults: `docs/generated`, no build step, no map script):
 
 ```
 - format: md
@@ -558,28 +554,12 @@ keeps the emitter's defaults (`docs/generated`, no build step, no map script):
 
 ## Config policy for new features
 
-The unified config (issue #427) is the only place a user-tunable setting lives.
-Before a new key enters it, the four questions are asked in order — owner:
-[`docs/workflow/CONFIG.md`](docs/workflow/CONFIG.md).
-
-1. **Is it really configurable?** A flag, a derived default or a value inferred
-   from context is not config. Only an intentionally user-tunable setting is.
-2. **Which section?** Cross-tool behaviour goes in a base feature section
-   (`agentic-workflow.json`); behaviour that only makes sense inside this
-   package goes in its extension section (`pi-agentic-workflow.json`). The two
-   never overlap.
-3. **Schema first.** Define the type, the JSON Schema fragment and the shipped
-   default together in the section owner (`packages/agentic-workflow-schema/src/config.ts`
-   for a base section; the package's descriptor for an extension). New keys are
-   optional; no coercion; unknown keys are refused, never merged. Regenerate
-   `config.schema.json` with the generator, never by hand.
-4. **Docs, init, changeset, roadmap.** Update the human doc, offer the value in
-   `init-workspace` when it has a meaningful default, add a `.changeset/` entry
-   (`feat` for a new key), and record the section in the roadmap when it ships.
-
-A key that no runtime reads is not shipped: publish the consumer or keep the key
-out. A section's defaults are read from the section owner (the schema package)
-by the runtime, so the CLI and the extension cannot disagree about "absent".
+The unified config (issue #427) is the only place a user-tunable setting lives,
+and a new key answers four questions in order before it enters it — owner:
+[`docs/workflow/CONFIG.md`](docs/workflow/CONFIG.md) §"Adding a config key to a
+feature". A key that no runtime reads is not shipped: publish the consumer or keep
+the key out, with the section's defaults read from the section owner so the CLI and
+the extension cannot disagree about "absent".
 
 ## Conventions
 
@@ -593,149 +573,26 @@ by the runtime, so the CLI and the extension cannot disagree about "absent".
 
 ## Worktree creation
 
-This repo uses git worktrees under `.worktrees/<flat-name>` at the repository
-root (gitignored). The path must stay **inside the repository tree** — Serena
-and other MCPs detect worktrees as separate project paths and break when
-worktrees live outside the repo tree — but **never inside `.git/worktrees/`**.
+Worktrees live under `.worktrees/<flat-name>` at the repository root — one flat
+leaf, the branch name with `/` replaced by `-` — and **never** under
+`.git/worktrees/`, which `git worktree prune` deletes recursively with the working
+tree and its uncommitted work inside it (`IR8`; the guard is
+`scripts/worktree-guard.mjs`, which reports an `ADMIN_NAMESPACE` finding).
 
-⚠️ **CRITICAL: `.git/worktrees/` is git's private worktree-administration
-namespace, not a place for working trees.** `git worktree prune` deletes any
-container directory under it **recursively — with the working tree and its
-uncommitted work inside it** — exit 0, no warning. A path like
-`.git/worktrees/fix/493-x` also collides with git's basename-named admin dirs
-(`feat/493-x` and `fix/493-x` become `493-x` and `493-x1`), leaving an
-admin-to-tree mapping no tool can follow. The guard
-(`scripts/worktree-guard.mjs`) flags any worktree under `.git/worktrees/` as
-`ADMIN_NAMESPACE`. **Never create, move or restore a worktree into
-`.git/worktrees/`.**
-
-When asked to create a worktree for an issue or branch, always follow the
-steps below **in order** — they are not optional and have no shortcuts.
-
-### Step 1 — Determine the branch name
-
-Read the target issue (or existing remote branch) to find the branch naming
-convention. This repo uses:
-
-| Unit kind | Branch format |
-|---|---|
-| Feature | `feat/<issue-number>-<topic-slug>` |
-| Fix | `fix/<issue-number>-<topic-slug>` |
-
-Examples: `feat/432-model-memory-tier-0`, `fix/429-log-session-extension`.
-
-If a remote branch already exists on the correct name (`origin/feat/…`), use it
-as the source and preserve its full history (do not create a new branch from
-`main` unless the issue is brand new with no commits yet).
-
-### Step 2 — Derive the flat worktree name
-
-The worktree directory is the branch name with `/` replaced by `-` — one flat
-leaf, no nested slash:
-
-| Branch | Worktree path |
-|---|---|
-| `feat/432-model-memory` | `.worktrees/feat-432-model-memory` |
-| `fix/429-log-session-extension` | `.worktrees/fix-429-log-session-extension` |
-
-The flat leaf keeps git's admin dir (named after the basename) 1:1 with the
-working tree — no basename collisions, ever.
-
-### Step 3 — Remove the local branch if it exists
-
-The local branch is recreated by the worktree creation. If it already exists,
-git will refuse to create it again:
-
-```bash
-git branch -D <branch-name> 2>/dev/null
-```
-
-### Step 4 — Create the worktree (one step)
-
-```bash
-git worktree add -b <branch-name> .worktrees/<flat-name> <branch-name-or-sha>
-```
-
-Or, when the branch already exists (e.g. a remote branch checked out in
-Step 1):
-
-```bash
-git worktree add .worktrees/<flat-name> <branch-name>
-```
-
-`.worktrees/` is gitignored, so the checkout never shows up in `git status`.
-**Never** use `/tmp` or any path outside the repo, and **never** a path under
-`.git/` — see the warning above.
-
-For a **new issue with no remote branch yet**, `-b <branch-name>` creates the
-branch from the current HEAD (run it from `main` when the unit must start
-there).
-
-### Step 5 — Copy Serena configuration
-
-Every worktree must have a working `.serena/project.yml` (the one Serena
-readability gate in `packages/pi-agentic-workflow/src/routing/serena-readiness.ts`
-parses to announce `language_servers`). Copy from the repo root:
-
-```bash
-cp -n .serena/project.yml .worktrees/<flat-name>/.serena/project.yml
-cp -n .serena/project.local.yml .worktrees/<flat-name>/.serena/project.local.yml
-```
-
-The `.project.yml` file is gitignored and gets regenerated by `init-workspace`,
-but copying it ensures Serena starts with language servers from the first
-second.
-
-### Step 6 — Verify
-
-```bash
-git worktree list  # should show the new entry under .worktrees/
-git log -1           # should show the correct branch head
-```
-
-**Common failure modes (always check these):**
-- Worktree created at `/tmp/...` → Serena fails to detect it.
-- Worktree created under `.git/worktrees/` → `git worktree prune` destroys it
-  (and every sibling tree in the same container) silently; move it out with
-  `git worktree move <path> .worktrees/<flat-name>` — never prune it.
-- Branch deleted then re-created from `main` → loses all remote history.
-- Missing `.serena/project.yml` copy → Serena reports "no language_servers".
-- `fatal: '<path>' is a missing but already registered worktree` → the
-  worktree's directory is gone; recover with `git worktree repair` or remove
-  the stale entry with `git worktree remove <path>` / `git worktree prune`.
-  **Prune only removes registrations whose directories are already gone** —
-  never run it to "fix" a worktree that still exists on disk, and never point
-  a recovery at a path under `.git/worktrees/`.
-
-### Worktree removal
-
-When a worktree is no longer needed, remove it **before** deleting the branch:
-
-```bash
-git worktree remove .worktrees/<flat-name>
-git branch -D <branch-name>
-```
+The branch naming table, the six ordered steps, the Serena configuration copy, the
+failure modes and the removal order are one hop away in
+[`docs/workflow/WORKTREES.md`](docs/workflow/WORKTREES.md) — read it before
+creating, moving or recovering a worktree, and follow its steps in order.
 
 ## Skills available in this repo
 
-When repeated searches or documentation lookups happen here,
-prefer creating or refining a skill over re-deriving the knowledge. Store
-reusable operational knowledge as a skill under `skills/`; the authoring contract
-is [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md).
-
-**Repo maintenance skill (specific to this repo):**
-
-- **`skill-lint`** (was `bump-skill` — renamed when the per-skill bump ledger
-  retired, D-40-14) — after editing any SKILL.md, run this before committing.
-  It lints the repo's authoring rules and runs the content checks
-  (`bun scripts/skill-lint.mjs`), and reports; it repairs nothing and
-  bumps nothing — the train version is stamped by `scripts/release.mjs apply`
-  at cut time, and a skill change ships via a `.changeset/` intent file.
-  `skill-lint` is `user-invocable: false` — invoke it via the Skill
-  tool / by following its `SKILL.md` directly, not the slash-command menu.
-  It also carries `metadata.internal: true`, the `skills` CLI's own gate
-  that keeps `npx skills add` from discovering/offering repo-internal
-  skills to target projects (see `docs/fix/74-bump-skill-discovery-exclusion/`).
+The authoring contract is
+[`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md), which also
+carries the repo-maintenance skill's rules (`skill-lint`: run it after editing any
+`SKILL.md`, it reports and repairs nothing, and it is `user-invocable: false` with
+`metadata.internal: true` so the `skills` CLI never offers it to a target project).
+When repeated searches or documentation lookups happen here, prefer creating or
+refining a skill over re-deriving the knowledge.
 
 ## Distribution
 
