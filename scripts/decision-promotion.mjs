@@ -251,6 +251,9 @@ export function renderReceipt(result) {
   for (const row of result.rows) {
     lines.push(`row — ${row.unit} · ${row.id} · ${row.scope ?? "—"} · ${row.ownerDoc ?? "—"} · ${row.status}`);
   }
+  for (const skipped of result.unreadable) {
+    lines.push(`skipped — ${skipped.unit} · ${skipped.reason}`);
+  }
   for (const finding of result.findings) {
     lines.push(`finding — ${finding.code} · ${finding.unit} · ${finding.id} · ${finding.detail}`);
   }

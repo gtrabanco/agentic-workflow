@@ -225,6 +225,16 @@ IR14-tool-choice | the preferred tool is re-checked every turn and the documente
   and prose; the classification test lives on issue 435. The exceptions are an
   owner-requested dual landing and this safeguard itself (project-domain, here
   only); the sweep that reads the rule is the product-audit dimension `IR7` names.
+- **A cross-unit decision is promoted, not buried (issue #650).** A decision
+  recorded in a unit's `decisions.md` (or a `## Log` `D` line) declares its scope:
+  `unit-only` stays in the unit, `cross-unit` lands in exactly ONE permanent owner
+  doc — this guide's `## Inviolable rules` row when it is a law, `ARCHITECTURE.md`
+  when it is structure, `ARCHITECTURAL_INVARIANTS.md` when it is a checkable
+  property — and the unit row cites that doc, never a copy. The procedure is
+  `template/docs/architecture/ARCHITECTURE.md` § Promoting a decision (product
+  surface) applied to this repository's own docs; `product-audit`'s `Decision
+  promotion` dimension reports a cross-unit decision that names no owner doc
+  (`bun scripts/decision-promotion.mjs .`).
 - **Every repetition names its owner.** Before a rule, contract or vocabulary
   enters this guide — or any doc — find the surface that owns it and link it.
   A second copy is allowed only where a consumer cannot reach the owner, and it
@@ -514,6 +524,9 @@ skill-discovery-envelope | packages/agentic-workflow/README.md | block:skill-dis
 review-extras-grammar | packages/agentic-workflow/README.md | block:review-extras@1 | n/a | no
 test-obligation-kind-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TEST_OBLIGATION_KINDS | test-obligation-kind | no
 test-obligation-tag-grammar | skills/unit-lane/references/TESTS.md | block:test-obligation-tag@1 | test-obligation-kind | no
+decision-scope-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DECISION_SCOPES | decision-scope | no
+decision-scope-grammar | skills/unit-lane/references/DESIGN.md | block:decision-scope@1 | n/a | no
+decision-promotion-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | fenced:decision-promotion@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

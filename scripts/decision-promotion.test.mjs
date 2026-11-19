@@ -294,7 +294,7 @@ test("the schema publishes the scope vocabulary as a closed const", () => {
   assert.match(published, /\bDECISION_SCOPES\b/);
 });
 
-test("the prose the dimension ships is where its pass-only-if says it is", () => {
+test("the prose the dimension ships is where its pass-only-if says it is", async () => {
   const dimensions = fs.readFileSync(path.join(ROOT, "skills/product-audit/references/AUDIT_DIMENSIONS.md"), "utf8");
   assert.match(dimensions, /^\| \*\*Decision promotion\*\* \|/m);
   assert.match(dimensions, /decision-promotion@1/);
@@ -310,9 +310,21 @@ test("the prose the dimension ships is where its pass-only-if says it is", () =>
   assert.match(architecture, /cross-unit/);
 
   const guide = fs.readFileSync(path.join(ROOT, "AGENTS.md"), "utf8");
-  const markers = [...guide.matchAll(/^\| ([a-z0-9-]+) \| [^|]+ \| [^|]+ \| [^|]+ \| [^|]+ \|$/gm)].map((m) => m[1]);
+  const markers = [...guide.matchAll(/^([a-z0-9-]+) \| [^|\n]+ \| [^|\n]+ \| [^|\n]+ \| [^|\n]+$/gm)].map((m) => m[1]);
   for (const surface of ["decision-scope-grammar", "decision-scope-vocabulary", "decision-promotion-grammar"]) {
     assert.ok(markers.includes(surface), `${surface} is not registered in normative-surfaces@1`);
   }
-  assert.match(guide, /restates:decision-scope@1:decision-scope/);
+  assert.doesNotMatch(guide, /restates:decision-scope@1/, "a non-gate block cannot carry a rendered-fact claim");
+
+  // The pin the drift gate cannot carry: the prose block lists exactly the
+  // published set, recomputed in both directions against the schema source.
+  const { DECISION_SCOPES } = await import("../packages/agentic-workflow-schema/dist/index.js");
+  const block = /```text\ndecision-scope@1\n([\s\S]*?)```/.exec(design);
+  assert.ok(block, "DESIGN.md lost its decision-scope@1 block");
+  const declared = block[1]
+    .split("\n")
+    .slice(1)
+    .map((line) => line.split("|")[0].trim())
+    .filter(Boolean);
+  assert.deepEqual(declared, [...DECISION_SCOPES]);
 });

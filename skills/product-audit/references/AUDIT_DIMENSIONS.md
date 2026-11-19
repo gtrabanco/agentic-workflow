@@ -46,6 +46,7 @@ invents profile slots or waives a verification contract.
 | **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope; every row the project registered in its `review-extras@1` note is reported with its decay state (`unpinned`, `stale`, `incomplete`), so an extra that rotted is a finding rather than a memory | `agentic-workflow skills inventory --guide AGENTS.md` — receipt-quoted for the registered set; the MCP half is the agent's own inventory, stated plainly when it cannot be enumerated | all |
 | **Coverage gaps** | Declared verification criteria with no detector, admitted recurring finding classes with no preventive gate, and declared detectors consuming no criterion — the forward-looking half the findings corpus (#437) does not cover | `bun scripts/coverage-gap.mjs <repo>` receipt-quoted (`coverage-gap@1`, § Coverage-gap sweep) | all |
 | **Journal signals** | The corrections a session had to make, the sessions each unit consumed (rework), and the findings its own reviewers refuted — cross-joined to the findings corpus, so a class the journal alone records still arrives with the corpus row it belongs to | `bun scripts/journal-corpus.mjs <repo>` receipt-quoted (`journal-corpus@1`, § Journal-signal sweep) | all |
+| **Decision promotion** | A decision whose scope is cross-unit must land in exactly ONE permanent owner doc — the guide's laws, `ARCHITECTURE.md` or `ARCHITECTURAL_INVARIANTS.md` — with the unit ledger citing it and never restating it; the sweep reports every cross-unit decision that names no owner doc, every decision captured after the rule landed with no scope cell, and every ledger the dispatcher cannot read | `bun scripts/decision-promotion.mjs <repo>` receipt-quoted (`decision-promotion@1`, § Decision-promotion sweep) | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
 **say which you skipped and why**. Every axis is covered by the workflow's own
@@ -211,6 +212,65 @@ verdict | clean | signals <n> | the receipt's own verdict: no row at all is clea
   nothing
 
 **Routes** — every journal finding's `route:` cell is the `finding-route@1` hand-off owned by `SKILL.md`, and the destination is one of three: a recurring class with a named preventive gate routes to that gate's repair (`fix — <unit>`), a rework cluster with no cause named routes to the unit's own review (`review — <unit>`), and a class the journal records with no possible detector routes to a proposal (`audit — <audit id>`) — never a bespoke route, never an automatic fix. Journal signals are **emission only**: this audit proposes, and the owner decides.
+
+## Decision-promotion sweep (pass-only-if)
+
+Decisions die with the unit that took them. A convention, a boundary, a ceremony
+or a tooling rule recorded only in a unit's `decisions.md` stops being an active
+reference the day that unit closes, and the next session re-derives it or
+contradicts it. The rule (owner: `docs/architecture/ARCHITECTURE.md` § Promoting a
+decision, recorded at capture time by `decision-scope@1` in
+`skills/unit-lane/references/DESIGN.md`) is that a decision whose scope is
+`cross-unit` lands in exactly ONE permanent owner doc, with the unit ledger
+linking it.
+
+This sweep consumes ONE deterministic receipt — `bun scripts/decision-promotion.mjs
+<repo>` — quoted like every other producer and never re-derived by inspection.
+
+### The receipt grammar (`decision-promotion@1`)
+
+```text
+decision-promotion@1
+kind | shape | what it orders
+receipt | decision-promotion@1 … verdict | one fixed block: the root and `since` lines, the ledger totals, one row per decision read, one skipped ledger, one finding per defect, the verdict
+ledgers | ledger totals | `read <n> · no-block <n> · unreadable <n> · decisions <n> · scoped <n> · cross-unit <n> · promoted <n>`; `no-block` is a records-only ledger (no `open-questions@1` marker) and `unreadable` is one the dispatcher's own parser refuses — both are named, never guessed at
+row | row — <unit> · <id> · <scope> · <owner-doc> · <status> | one per decision row read; `status` is `promoted \| unit-only \| legacy`, and `legacy` is a decision captured before the rule landed
+skipped | skipped — <unit> · <reason> | one per ledger the parser could not read, with the parser's own reason — the sweep never drops a ledger silently
+finding | unpromoted-decision · scope-unrecorded · owner-doc-missing | the three closed codes: a cross-unit decision citing no owner doc, a decision captured on or after `since` with no scope cell, and a promotion citing a doc that is neither an owner doc nor present in the tree
+verdict | clean \| findings <n> | `clean` only when the sweep found nothing
+```
+
+**Pass only if:**
+
+- ✓ every `finding —` line became exactly one finding, citing that receipt line
+  as its evidence
+- ✓ every `skipped —` line became exactly one finding: a ledger the dispatcher
+  cannot read is a ledger whose decisions nothing can check, and the repair is
+  the ledger's own shape (the `open-questions@1` block where the parser reads
+  it), never a rewording of the sweep
+- ✓ a `row —` line is evidence, not a finding: a `legacy` row is a decision
+  captured before the rule landed and is reported honestly, never back-filled by
+  this audit
+- ✓ a `cross-unit` row's finding names the owner doc the decision should have
+  reached, so the promotion is executable without re-deriving the scope
+- ✓ the run over the seeded fixture (`bun scripts/product-audit-promotion-fixture.mjs
+  <dir>`) yields exactly one finding per class on `seeded/` and zero on its
+  `clean/` twin
+- ✓ the dimension is reported `n/a — no unit ledger` when no ledger carries a
+  decision, instead of a clean sweep of nothing
+- ✓ every promotion the audit proposes is emission only: the audit names the doc
+  and the row, and the owner lands the prose (`S9`'s no-auto-promotion rule)
+
+**Routes** — every finding's `route:` cell is the `finding-route@1` hand-off
+owned by `SKILL.md`, and the destination is one of two: a promotable decision
+routes to `/unit-lane` (a docs change inside a unit, with its own gate), and a
+ledger the parser cannot read routes to the same lane as a ledger repair — never
+a bespoke route, never an automatic edit of `AGENTS.md`.
+
+This sweep adds a dimension, so the evolution-regression rule governs it:
+`bun scripts/dimension-regression.mjs` re-verifies that the dimensions already
+present still pass.
+
 
 ## Test-surplus sweep (pass-only-if)
 
