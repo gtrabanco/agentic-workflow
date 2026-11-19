@@ -362,10 +362,36 @@ surgery"), read against `E2`'s step list.
 - **E5** — 2026-11-19, `bun test scripts/inviolable-rules.test.mjs` · exit 1 · 17 pass, 1 fail — the live-tree case, red on the guide that does not carry the block yet (P5 closes it).
 - **E6** — 2026-11-19, `bun test scripts/check-skill-context.test.mjs` · exit 1 · red on the checker that ignored `blockLines` (the three new cases); · exit 0 after the implementation — `1 pass, 0 fail`.
 
+- **P1** — 2026-11-19, plan frozen: this document, `planning-evidence.md`
+  (14 rows at the cut, 15 after `PE-015`), `planning-obligations.md` (15 rows),
+  `decisions.md` (D1–D9); `phase-lint` PASS 9/9 · `c463d7c2c`.
+- **P2** — 2026-11-19, the gate's suite lands alone and is observed red on the
+  missing module (18 failures, 0 pass) · `7ab6ce237`.
+- **P3** — 2026-11-19, `scripts/inviolable-rules.mjs` implemented; 17 of 18 cases
+  green, the live-tree case red until the guide carries the block · `e02a1dd23`.
+- **P4** — 2026-11-19, the pinned-block cases land red (`a663e2193`, red on the
+  checker that ignored the pin), then `blockLines` lands in the budgets checker
+  with the fence walk shared with the machine-region measure · `5684f32ec`.
+- **P5** — 2026-11-19, the guide rewritten: the laws section, the reduction, the
+  downward re-base · `64585d99a`.
+- **P6** — 2026-11-19, the doctrine carried into the scaffold and the skill; the
+  cases land red first (`93883d872`, 2 + 1 failures), then the prose ·
+  `9f31b3d15`.
+- **E7** — 2026-11-19, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md 602 181 421 12581` (was 745 / 180 / 565 / 13586) against the re-based ceilings 660 / 461 / 13804; the laws table pinned at `blockLines: 18`.
+- **E8** — 2026-11-19, `bun scripts/inviolable-rules.mjs` · exit 0 · `PASS inviolable rules: 14 rows · 1 home`.
+- **E9** — 2026-11-19, `bun test scripts/inviolable-rules.test.mjs` · exit 0 · 18 pass / 0 fail — the six fixture reds, the path-and-gate state forms, and the live-tree seed list.
+- **E10** — 2026-11-19, `bun test scripts/check-skill-context.test.mjs` · exit 0 · 1 pass / 0 fail — the pin at size, one line over, and a declared pin whose block is gone.
+- **E11** — 2026-11-19, `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS` with the new `inviolable-rules` row claiming the `inviolable-rules` surface.
+- **E12** — 2026-11-19, `git diff --stat origin/main -- docs/architecture/ARCHITECTURAL_INVARIANTS.md` · exit 0 · no output (the invariant document is untouched, `S8`).
+- **E13** — 2026-11-19, the line-identity comparison of the package README against `AGENTS.md` and `docs/workflow/*.md` · 1 shared line — `PE-015`, `D11`.
+- **G1** — 2026-11-19, `bun scripts/run-root-suite.mjs` · exit 0 · 128 suites PASS, no FAIL line.
+- **G2** — 2026-11-19, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, roadmap unchanged.
+
 ## Next
 
-P5 — rewrite the guide: the section, the reductions, the manifest's downward
-re-base.
+The operator's verdict. The unit is closed in this change: every obligation row
+is `verified`, the root suite and the projection are green at the head, and the
+diff is handed over rather than self-approved (`D9`).
 
 ## References
 
