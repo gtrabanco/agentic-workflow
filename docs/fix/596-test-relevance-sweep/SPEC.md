@@ -355,6 +355,14 @@ Open rows only (carrier grammar: `findings-table@1`).
   (the inline route never ran the plan-step lint — the #507 F3 class), not
   introduced by this batch. The batch broke no checked surface — S3's loop did
   not fire.
+- **G6** — 2026-11-19, HEAD `bdf63adfb` (the correction batch committed),
+  `node scripts/run-root-suite.mjs` · exit 0 · `127 PASS / 0 FAIL` in 5m05s
+  (calm load) — the whole gate at the batch's own bytes, the run E21's
+  recheck stands on after this receipt line lands; `bun scripts/docs-generate.mjs
+  --check` · PASS, `roadmap check` · `violations: 0`, and `agentic-workflow
+  verify …SPEC.md` · ok at the same head. The one failed check remains the
+  pre-existing `phase-lint` BLOCKED state E21 names (byte-identical at pristine
+  HEAD, reported in `external-verify.md`, not chased).
 - **G3** — 2026-11-19, HEAD `f1168c637`, `node scripts/run-root-suite.mjs` · exit 0 ·
   `root gate: 127 suite(s)`, 127 PASS / 0 FAIL — the final tree, after the state
   commit. The full gate's own last run was `ed5283dfa` (G1); the two commits after
