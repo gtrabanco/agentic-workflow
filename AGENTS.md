@@ -390,6 +390,7 @@ normative-surfaces@1
 surface | file | grammar | machine | must-name
 skill-declared-arguments | skills/*/SKILL.md | frontmatter:argument-hint | n/a | no
 closing-hand-offs | skills/*/SKILL.md | fenced:→ Next: | skill | no
+gate-rejection-types | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:GATE_REJECTION_TYPES | gate-rejection-type | yes
 gate-rejection-vocabulary | skills/pre-execution-review/references/POLICY.md | block:gate-rejection-vocabulary@1 | gate-rejection-type | yes
 preflight-gate-traces | skills/execute-phase/references/PREFLIGHT.md | fenced:GATE REJECTION — | gate-rejection-type | no
 pre-execution-gate-trace | skills/execute-phase/references/PRE_EXECUTION_GATE.md | fenced:GATE REJECTION — | gate-rejection-type | no
@@ -460,10 +461,10 @@ pass-name-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | sc
 triage-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TRIAGE_VERDICTS | triage-verdict | no
 triage-criteria-provenance-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TRIAGE_CRITERIA_PROVENANCE | triage-criteria-provenance | no
 setup-defect-route | skills/triage-issue/references/ISSUE_PROCESS.md | block:setup-defect-route@1 | n/a | no
-path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
+path-protection-reasons | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
 content-guard-reasons | packages/agentic-workflow-schema/src/content-guard.ts | schema-export:CONTENT_GUARD_REASONS | content-guard-reason | yes
-feedback-tiers | packages/agentic-workflow/src/feedback/index.mjs | schema-export:FEEDBACK_TIERS | feedback-tier | no
-shell-tool-choice-grammar | packages/agentic-workflow/src/tool-choice/policy.mjs | schema-export:NODE_SANCTIONED_SCRIPTS | node-sanctioned-script | no
+feedback-tiers | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:FEEDBACK_TIERS | feedback-tier | no
+shell-tool-choice-grammar | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:NODE_SANCTIONED_SCRIPTS | node-sanctioned-script | no
 risk-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_KINDS | risk-tier | yes
 risk-tier-signals | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_SIGNAL_KINDS | risk-tier-signal | yes
 risk-tier-reasons | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_REASONS | risk-tier-reason | yes
@@ -484,20 +485,20 @@ projection-manifest-grammar | packages/agentic-workflow-schema/README.md | block
 guard-verdict-grammar | packages/agentic-workflow-schema/README.md | block:guard-verdict@1 | n/a | no
 test-impact-verdict | skills/execute-phase/references/TEST_IMPACT.md | fenced:TEST IMPACT — | n/a | no
 writer-driver-contract | packages/agentic-workflow/README.md | block:writer-driver-contract@1 | n/a | no
-writer-refusal-vocabulary | packages/agentic-workflow/src/writer/driver.mjs | schema-export:WRITER_REFUSAL_REASONS | writer-refusal-reason | no
-shared-merge-class-vocabulary | packages/agentic-workflow/src/writer/shared-merge.mjs | schema-export:SHARED_MERGE_CLASSES | shared-merge-class | no
-shared-merge-refusal-vocabulary | packages/agentic-workflow/src/writer/shared-merge.mjs | schema-export:SHARED_MERGE_REFUSAL_REASONS | shared-merge-refusal-reason | no
+writer-refusal-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:WRITER_REFUSAL_REASONS | writer-refusal-reason | no
+shared-merge-class-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SHARED_MERGE_CLASSES | shared-merge-class | no
+shared-merge-refusal-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SHARED_MERGE_REFUSAL_REASONS | shared-merge-refusal-reason | no
 tool-inventory | packages/agentic-workflow/README.md | block:tool-inventory@1 | n/a | no
 tool-doctor-envelope | packages/agentic-workflow/README.md | block:doctor-envelope@1 | n/a | no
-doctor-check-status-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:DOCTOR_CHECK_STATUSES | doctor-check-status | no
-doctor-install-route-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:INSTALL_ROUTES | install-route | no
-doctor-wizard-move-vocabulary | packages/agentic-workflow/src/doctor/vocabulary.mjs | schema-export:WIZARD_MOVES | wizard-move | no
+doctor-check-status-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DOCTOR_CHECK_STATUSES | doctor-check-status | no
+doctor-install-route-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:INSTALL_ROUTES | install-route | no
+doctor-wizard-move-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:WIZARD_MOVES | wizard-move | no
 quality-metric-name-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_METRIC_NAMES | quality-metric-name | no
 quality-confidence-vocabulary | packages/agentic-workflow-schema/src/quality-metrics.ts | schema-export:QUALITY_CONFIDENCES | quality-confidence | no
 quality-metrics-fields | packages/agentic-workflow/README.md | block:quality-metrics@1 | n/a | no
-skill-screen-verdict-vocabulary | packages/agentic-workflow/src/skills/discovery.mjs | schema-export:SKILL_SCREEN_VERDICTS | skill-screen-verdict | no
-skill-consent-answer-vocabulary | packages/agentic-workflow/src/skills/discovery.mjs | schema-export:SKILL_CONSENT_ANSWERS | skill-consent-answer | no
-skill-extra-state-vocabulary | packages/agentic-workflow/src/skills/register.mjs | schema-export:SKILL_EXTRA_STATES | skill-extra-state | no
+skill-screen-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SKILL_SCREEN_VERDICTS | skill-screen-verdict | no
+skill-consent-answer-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SKILL_CONSENT_ANSWERS | skill-consent-answer | no
+skill-extra-state-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SKILL_EXTRA_STATES | skill-extra-state | no
 skill-discovery-envelope | packages/agentic-workflow/README.md | block:skill-discovery@1 | n/a | no
 review-extras-grammar | packages/agentic-workflow/README.md | block:review-extras@1 | n/a | no
 ```
@@ -519,6 +520,7 @@ surface | claim | machine | rule
 docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
 skills/runner-contract/references/RUNNER.md | literal:bunx @gtrabanco/agentic-workflow@4.10.0 | package:version | equals
 CHANGELOG.md | package-versions | package:version | equals-each
+skills/pre-execution-review/references/POLICY.md | restates:gate-rejection-vocabulary@1:gate-rejection-type | const:GATE_REJECTION_TYPES | equals-set
 
 ```
 

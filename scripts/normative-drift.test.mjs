@@ -356,11 +356,11 @@ function buildSurfaceModel() {
     return model;
   }
   model.hostCommands = (inventory.directives.get("hand-off-host-commands") || "").split(/[,\s]+/).filter(Boolean);
-  // The gate-rejection vocabulary is published by a versioned block, not by the
-  // schema: §8 owns it, so that block is this machine surface's only home.
-  const gateVocabulary = versionedBlock(read(POLICY_REL), GATE_VOCABULARY_MARKER);
-  const gateTypes = gateVocabulary ? gateVocabulary.rows.map((r) => r.type).filter(Boolean) : [];
-  model.machine.vocabularies.set("gate-rejection-type", gateTypes);
+  // The gate-rejection vocabulary has a machine home of its own since issue #643:
+  // the `gate-rejection-types` row publishes `GATE_REJECTION_TYPES` from committed
+  // schema source, and the `rendered-facts@1` row below recomputes §8's block
+  // against it. That block is a restatement, never the machine — a `must-name: yes`
+  // vocabulary whose only definition is the prose naming it is self-referential.
 
   const skillDirGlob = /^skills\/\*\/SKILL\.md$/;
   for (const row of inventory.rows) {
@@ -560,7 +560,7 @@ function runDriftChecks(model) {
     }
     for (const vocab of surface.machine) {
       if (vocab === "envelope-field" || vocab.startsWith("envelope-field:")) continue;
-      if (vocab === "skill" || vocab === "flag" || vocab === "gate-rejection-type") continue;
+      if (vocab === "skill" || vocab === "flag") continue;
       if (!machine.vocabularies.has(vocab)) {
         findings.push(refuse("unpublished-vocabulary", surface.surface, vocab, `the inventory names machine vocabulary ${vocab}, which no published surface exports`));
       }
@@ -649,11 +649,9 @@ function runDriftChecks(model) {
   // -- 4c. machine → text.
   for (const surface of model.surfaces.filter((s) => s.mustName && s.ok)) {
     for (const vocab of surface.machine) {
-      const values = vocab === "gate-rejection-type"
-        ? machine.vocabularies.get("gate-rejection-type") || []
-        : vocab.startsWith("envelope-field:")
-          ? machine.fieldsOf(vocab.split(":")[1], "envelope").keys
-          : machine.vocabularies.get(vocab) || [];
+      const values = vocab.startsWith("envelope-field:")
+        ? machine.fieldsOf(vocab.split(":")[1], "envelope").keys
+        : machine.vocabularies.get(vocab) || [];
       const namedBy = new Set();
       if (vocab === "gate-rejection-type") for (const t of model.printedGateTypes) namedBy.add(t);
       if (vocab === "pre-execution-verdict") for (const v of model.verdicts) namedBy.add(v.token);
@@ -721,6 +719,38 @@ function runDriftChecks(model) {
           }
           if (!literal.includes(value)) {
             findings.push(refuse("unrendered-value", surface, literal, `${publisher} recomputes to ${value} but ${surface} restates "${literal}" — the prose is the defect`));
+          }
+        } else if (kind === "restates") {
+          // `restates:<block-marker>:<vocabulary>` — a versioned block that
+          // enumerates a published token set token-for-token (issue #643 S7/S9).
+          // The machine wins in both directions: a token the const publishes and
+          // the block omits is a dropped restatement, and a token the block
+          // declares and the const does not publish is prose outvoting the machine.
+          const [marker, vocabulary] = rest;
+          if (!marker || !vocabulary) {
+            findings.push(refuse("undeclared-grammar", surface, row.claim, `${FACTS_MARKER} restates claim needs <block-marker>:<vocabulary> in ${surface}`));
+            continue;
+          }
+          const block = versionedBlock(text, marker);
+          if (!block) {
+            findings.push(refuse("undeclared-grammar", surface, marker, `${surface} carries no ${marker} block to recompute`));
+            continue;
+          }
+          const published = machine.vocabularies.get(vocabulary) || [];
+          if (published.length === 0) {
+            findings.push(refuse("unpublished-machine", surface, vocabulary, `${FACTS_MARKER} names the vocabulary ${vocabulary}, which the machine does not publish`));
+            continue;
+          }
+          const declared = block.rows.map((blockRow) => blockRow.type).filter(Boolean);
+          for (const value of published) {
+            if (!declared.includes(value)) {
+              findings.push(refuse("unrendered-value", surface, `${vocabulary}:${value}`, `${surface} restates ${marker} without ${value}, which ${vocabulary} publishes — the prose dropped a machine token`));
+            }
+          }
+          for (const value of declared) {
+            if (!published.includes(value)) {
+              findings.push(refuse("unrendered-value", surface, `${vocabulary}:${value}`, `${surface} restates ${marker} with ${value}, which ${vocabulary} does not publish — the prose is the defect`));
+            }
           }
         } else if (kind === "package-versions") {
           for (const pkg of ["packages/agentic-workflow-schema", "packages/pi-agentic-workflow"]) {
@@ -1071,6 +1101,44 @@ test("render-only prose: a restatement that drifts from the machine value is the
       fs.readFileSync = realRead;
     }
   }
+});
+
+test("#643 a restated token set is recomputed in both directions", () => {
+  const marker = "gate-rejection-vocabulary@1";
+  const blockText = read(POLICY_REL);
+
+  /** Run the gate over a tree where POLICY.md reads `mutated`, never writing it. */
+  const findingsFor = (mutated) => {
+    const patched = new Map([[path.resolve(root, POLICY_REL), mutated]]);
+    const realRead = fs.readFileSync;
+    fs.readFileSync = (file, ...rest) => (patched.has(path.resolve(String(file))) ? patched.get(String(file)) : realRead(file, ...rest));
+    try {
+      return runDriftChecks(buildSurfaceModel());
+    } finally {
+      fs.readFileSync = realRead;
+    }
+  };
+
+  const green = runDriftChecks(buildSurfaceModel()).filter((f) => f.surface === POLICY_REL);
+  assert.deepEqual(green, [], `the ${marker} block restates exactly the published set today`);
+
+  // A row dropped from the prose: the machine publishes a token the block no longer names.
+  const dropped = blockText.replace("  path-protection | PREFLIGHT.md\n", "");
+  assert.notEqual(dropped, blockText, "the block carries the row the patch removes");
+  const missing = findingsFor(dropped).filter((f) => f.code === "unrendered-value");
+  assert.equal(missing.length, 1, "a dropped restatement is refused, once");
+  assert.equal(missing[0].token, "gate-rejection-type:path-protection");
+
+  // A token the block invents: the prose outvotes the machine.
+  const invented = blockText.replace("  path-protection | PREFLIGHT.md\n", "  path-protection | PREFLIGHT.md\n  invented-type | PREFLIGHT.md\n");
+  const extra = findingsFor(invented).filter((f) => f.code === "unrendered-value");
+  assert.equal(extra.length, 1, "an invented restatement is refused, once");
+  assert.equal(extra[0].token, "gate-rejection-type:invented-type");
+
+  // The block removed: the restatement has nothing to recompute.
+  const blockless = blockText.replace(marker, "gate-rejection-vocabulary-renamed");
+  const absent = findingsFor(blockless).filter((f) => f.code === "undeclared-grammar" && String(f.message).includes(marker));
+  assert.ok(absent.length >= 1, "a lost block is refused rather than silently unbound");
 });
 
 test("package versions are recomputed, not trusted", () => {
