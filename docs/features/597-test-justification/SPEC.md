@@ -225,6 +225,12 @@ unit and its own commits.
 - **No repository gate executes a review axis**: the finding AC-3 declares is
   emitted by a model pass, so its observation half cannot be proved here. **Affects**
   O14 only, recorded `n/a` with the contract it rests on.
+- **`bun test scripts/red-first.test.mjs` exceeds bun's own 5s per-test default in
+  this checkout**: its shipped-history case walks 60 pairs, and the suite's 60s
+  budget is already declared in `scripts/test-timeout-allowlist.json` with that
+  exact reason. **Affects** O4's validator only, which is the gate's own invocation
+  (`bun scripts/red-first.mjs`) plus the root suite's budgeted run — never the
+  standalone default.
 - **Strictly additive, so `## Retirements` spends its table on the three added
   surfaces** and names one with no consumer of its own (the budget route): the
   checker is its consumer, and a route needs no second one.
@@ -328,6 +334,90 @@ verification instead of a `review-change` pass, which S8 forbids.
   these surfaces — `scripts/normative-drift.test.mjs` (the grammars) and
   `scripts/prose-gate-inventory.mjs` (the anchors) — which fail closed if the
   prose vanishes.
+- **D4** — 2026-11-19, the commit slicing: the registration rows and the owner
+  blocks land in one commit, because the registration alone is red by design
+  (E1) and this repository never commits red — the red observation is the
+  fixture's, not a commit. The cut, the contract and the release intent are three
+  separate commits, each green at its own head.
+- **D5** — 2026-11-19, `bun test scripts/red-first.test.mjs` fails standalone on
+  bun's 5s per-test default in this checkout. The suite's 60s budget is declared
+  with that exact pre-existing reason in `scripts/test-timeout-allowlist.json`,
+  so O4's validator is the gate's own invocation and the root suite's budgeted
+  run; the standalone failure is recorded, never hidden, and never repaired by
+  touching the suite.
+- **P1** — 2026-11-19, the unit doc and both planning ledgers cut · `6f2de432e`.
+- **E1** — 2026-11-19, the fixture pass in a throwaway copy of the base commit
+  (`tmp/aw597`, `git archive bf19d5831`, removed before the handoff): with the two
+  registration rows in place and the owner blocks absent,
+  `bun scripts/prose-gate-inventory.mjs` refused both — `test-justification —
+  missing-section — skills/unit-lane/references/TESTS.md#The justification line`
+  and its `missing-rederive` twin, the same pair for `test-deletion-authority` —
+  and `bun test scripts/normative-drift.test.mjs` failed `AC15 scope` on
+  `surface test-justification-grammar has no test-justification@1 block`. With the
+  blocks written, the same two answer `verdict: PASS` and 22 pass / 0 fail. The
+  same fixture produced the measurements the budget re-pin spends.
+- **P2** — 2026-11-19, the two surfaces registered in the guide and the inventory
+  and the owner blocks written · `314f94db7` (one commit, D4).
+- **E2** — 2026-11-19, `314f94db7`, `bun scripts/prose-gate-inventory.mjs` · exit
+  0 · `verdict: PASS`, `test-deletion-authority — prose ·
+  skills/unit-lane/references/TESTS.md:109 · priority 6 · prose` and
+  `test-justification — prose · …:84`; `bun test scripts/normative-drift.test.mjs`
+  · exit 0 · 22 pass / 0 fail.
+- **E3** — 2026-11-19, `314f94db7`, the wording receipts: `rg -c '^absent \|
+  fix-now \|'` → `1`, `rg -c 'delete ≠ weaken'` → `1`, `rg -c 'test-surplus@1'` →
+  `1`, `rg -c 'nobody-else'` → `1`, `rg -c 'test-justification@1'` → `1` — all four
+  in `skills/unit-lane/references/TESTS.md`.
+- **E4** — 2026-11-19, `314f94db7`, the consumers: `rg -c 'justifies:'` in
+  `skills/execute-phase/references/TEST_IMPACT.md` → `1`, `rg -c 'Deletion
+  authority'` in `…/EXECUTION_CONTRACT.md` → `1`, and `bun scripts/red-first.mjs` ·
+  exit 0 · `red-first — 60 pair(s) · 35 after the cutoff · cutoff 839c2f1`,
+  `0 finding(s)`.
+- **E5** — 2026-11-19, `314f94db7`, `rg -c 'fix-now \(delete\)'` in
+  `skills/fold-findings/SKILL.md` → `2`, and `bun test
+  scripts/review-loop-discipline.test.mjs` · exit 0 · 0 fail (its assertions are
+  module-level, so exit is the receipt).
+- **E6** — 2026-11-19, `314f94db7`, `bun test scripts/guide-split.test.mjs` · exit
+  0 · 17 pass / 0 fail, and `bun scripts/inviolable-rules.mjs` · exit 0 · `PASS
+  inviolable rules: 14 rows · 1 home` — the guide's test-immutability law is
+  untouched.
+- **E7** — 2026-11-19, `314f94db7`, the budgets: `bun
+  scripts/check-skill-context.mjs --documents` · exit 0 · AGENTS.md 614 / 187 /
+  427 / 12876, GATE_INVENTORY.md 182 / 87 / 95 / 8238; `--routes` · exit 0 · 14
+  routes, `execute-phase:feature` 14643 est / 1082 lines against the re-based
+  16108 / 1191; the default mode · exit 0 · 30 skills, `fold-findings` 6308 est /
+  432 lines inside its unchanged 6620 / 448.
+- **P7** — 2026-11-19, the release intent, the emitter's roadmap row and
+  projection · `db288950b`.
+- **E8** — 2026-11-19, `db288950b`, `bun scripts/lint-changeset.mjs
+  .changeset/597-test-justification.md` · exit 0 · `ok`; `bun
+  scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`, `Roadmap:
+  docs/ROADMAP.md — unchanged`; `agentic-workflow roadmap check
+  docs/features/597-test-justification/SPEC.md` · exit 0 · `verdict: PASS`,
+  `violations: 0`; `bun scripts/roadmap-settle.mjs` · exit 0 · `violations: 0`; the
+  session entry is the fragment
+  `.agentic-workflow/journal/20261119T212859Z-feat-597-test-justification-creation-narrative-local.md`
+  and `agentic-workflow journal aggregate --check` · `{"ok":true,"checked":124}`.
+- **E9** — 2026-11-19, the declared non-goals as invariants: `git diff
+  --name-only bf19d5831...HEAD -- packages scripts skills/product-audit
+  skills/review-change` prints nothing — no package, no script, no audit or
+  review surface.
+- **E10** — 2026-11-19, the sibling suites that read the same files, all exit 0:
+  `test-obligation-tags` 15 pass / 0 fail, `test-impact` 21 / 0,
+  `product-audit-surplus` 13 / 0, `residue-dimensions` 30 / 0,
+  `unit-doc-contract` 21 / 0, `pre-execution-quality` 1 / 0, `invocation-drift`
+  13 / 0, `workflow-docs-index` 5 / 0, `promise-coherence` 37 / 0,
+  `docs-generate` 31 / 0, `check-skill-context` 1 / 0, `pre-execution-sensor`
+  25 / 0, `workflow-status-pre-execution` 10 / 0.
+- **E11** — 2026-11-19, a defect in this unit's own cut, found and repaired before
+  the handoff: the 16 obligation rows were written with eight cells while the
+  header declares the nine-column contract, so the status column was absent and
+  the flips had nothing to flip. The status cell was appended to every row and the
+  rows flipped on their own validators' evidence; `bun test
+  scripts/pre-execution-quality.test.mjs` and `bun test
+  scripts/ledger-ownership.test.mjs` re-ran green after the repair, and the defect
+  is recorded here rather than lost in a rewrite.
+- **G1** — 2026-11-19, HEAD `db288950b`, `bun scripts/run-root-suite.mjs --jobs 4`
+  · exit 0 · 129 suites, no failure.
 
 ## Next
 
