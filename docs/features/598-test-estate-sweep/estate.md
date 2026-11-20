@@ -1,4 +1,4 @@
-test-obligation-tags@1 estate — 136 root suite(s) · 227 package suite(s) · 363 row(s) · standards fired: 71 · cost-over-risk: 67 · selected: 5 · adjudications missing: 0
+test-obligation-tags@1 estate — 136 root suite(s) · 227 package suite(s) · 363 row(s) · standards fired: 43 · cost-over-risk: 39 · selected: 5 · adjudications missing: 0
 adjudications: docs/features/598-test-estate-sweep/adjudications.md
 selection rule: a cluster is a suspect when it is an obligation-level duplicate, or when its measured cost per obligation value is at least 1 s (cost = the slowest suite on the surface, read from the root gate's own `PASS <file> (N.Ns)` lines); suspects are ordered by that ratio, descending, and at most 5 run kill-rate — the sweep is never exhaustive.
 
@@ -231,141 +231,167 @@ selection rule: a cluster is a suspect when it is an obligation-level duplicate,
 | `packages/pi-nan-agentic-workflow/test/phase-batching.test.mjs` | packages/pi-nan-agentic-workflow | `packages/pi-nan-agentic-workflow/src/extension.ts`, `packages/pi-nan-agentic-workflow/src/phase-batching-command.ts`, `packages/pi-nan-agentic-workflow/src/phase-batching.ts`, `packages/pi-nan-agentic-workflow/src/preset.ts` | undeclared | unmeasured | undeclared | keep |
 | `packages/pi-nan-agentic-workflow/test/registration.test.mjs` | packages/pi-nan-agentic-workflow | `packages/pi-nan-agentic-workflow/src/extension.ts`, `packages/pi-nan-agentic-workflow/src/preset.ts` | undeclared | unmeasured | undeclared | keep |
 | `packages/pi-nan-agentic-workflow/test/tier-routing.test.mjs` | packages/pi-nan-agentic-workflow | `packages/pi-nan-agentic-workflow/src/preset.ts` | undeclared | unmeasured | undeclared | keep |
-| `scripts/activity-fusion.test.mjs` | root | `packages/agentic-workflow/src/runner/catalog.json`, `skills/unit-lane/references/PLAN.md` | contract,convention | 3.8 | cost-over-risk | keep |
-| `scripts/adversarial-verdict.test.mjs` | root | `scripts/adversarial-verdict.mjs` | contract,failure-path | 0.8 | declared | keep |
-| `scripts/audit-pr-receipt.test.mjs` | root | `scripts/review-receipt.mjs`, `skills/audit-pr/SKILL.md` | contract,failure-path | 3.1 | cost-over-risk | keep |
-| `scripts/batch-scheduler.test.mjs` | root | `scripts/batch-scheduler.mjs` | boundary,contract,failure-path | 3.6 | cost-over-risk | keep |
-| `scripts/capabilities.test.mjs` | root | `packages/agentic-workflow/src/runner/capabilities.mjs` | contract,failure-path | 0.4 | declared | keep |
-| `scripts/capability-inventory.test.mjs` | root | `docs/CAPABILITIES.md`, `skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md` | contract,convention | 0.2 | declared | keep |
-| `scripts/catalog.test.mjs` | root | `packages/agentic-workflow/src/runner/catalog.json` | contract,failure-path | 6.4 | cost-over-risk | keep |
-| `scripts/ceremony-docs.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/docs.mjs` | contract,failure-path | 21.1 | cost-over-risk | keep |
-| `scripts/ceremony-findings-ledger.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/findings.mjs`, `packages/agentic-workflow/src/runner/ceremony/ledger.mjs` | contract,failure-path | 58.7 | cost-over-risk | keep · selected |
-| `scripts/ceremony-passive.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/passive.mjs` | contract,failure-path | 23.4 | cost-over-risk | keep |
-| `scripts/ceremony-profile.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony-profile.mjs` | contract,failure-path | 6.7 | cost-over-risk | keep |
-| `scripts/ceremony-unit-plan.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/plan.mjs`, `packages/agentic-workflow/src/runner/ceremony/unit.mjs` | contract,failure-path | 55.5 | cost-over-risk | keep · selected |
-| `scripts/ceremony-workspace.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/workspace.mjs` | contract,failure-path | 25.2 | cost-over-risk | keep |
-| `scripts/ceremony.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/index.mjs` | contract,failure-path | 6.5 | cost-over-risk | keep |
-| `scripts/changeset-create.test.mjs` | root | `scripts/changeset-create.mjs` | contract,failure-path | 3.9 | cost-over-risk | keep |
-| `scripts/check-changelog-row.test.mjs` | root | `scripts/check-changelog-row.mjs` | contract,failure-path | 0.6 | declared | keep |
-| `scripts/check-skill-context.test.mjs` | root | `scripts/check-skill-context.mjs` | boundary,contract,convention | 17.3 | cost-over-risk | keep |
-| `scripts/cli-coverage.test.mjs` | root | `packages/agentic-workflow/README.md`, `packages/agentic-workflow/bin/agentic-workflow.mjs`, `skills`, `skills/runner-contract/references/RUNNER.md`, `template` | convention,distribution-contract | 2.1 | cost-over-risk | keep |
-| `scripts/config-guards-doc.test.mjs` | root | `docs/workflow/CONFIG.md`, `packages/agentic-workflow-schema/src/config.ts` | contract,convention | 0.3 | declared | keep |
-| `scripts/content-guard-discipline.test.mjs` | root | `packages/agentic-workflow/src/content-guard.mjs` | contract,convention | 1.1 | declared | keep |
-| `scripts/continuation-discipline.test.mjs` | root | `docs/workflow/REPOSITORY_STATE.md`, `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` | contract,failure-path | 5.8 | cost-over-risk | keep |
-| `scripts/correction-budget.test.mjs` | root | `scripts/correction-budget.mjs` | contract,failure-path | 5 | cost-over-risk | keep |
-| `scripts/coverage-gap.test.mjs` | root | `scripts/coverage-gap.mjs` | contract,failure-path | 2.2 | cost-over-risk | keep |
-| `scripts/decision-promotion.test.mjs` | root | `scripts/decision-promotion.mjs` | contract,failure-path,fixture-support | 0.7 | declared | keep |
-| `scripts/dependency-advisory-pass.test.mjs` | root | `scripts/dependency-advisory-pass.mjs` | contract,failure-path | 0.2 | declared | keep |
+| `scripts/activity-fusion.test.mjs` | root | `packages/agentic-workflow/src/runner/catalog.json`, `skills/unit-lane/references/PLAN.md` | contract,convention | 1.7 | declared | keep |
+| `scripts/adversarial-verdict.test.mjs` | root | `scripts/adversarial-verdict.mjs` | contract,failure-path | 0.4 | declared | keep |
+| `scripts/audit-pr-receipt.test.mjs` | root | `scripts/review-receipt.mjs`, `skills/audit-pr/SKILL.md` | contract,failure-path | 1.5 | declared | keep |
+| `scripts/batch-scheduler.test.mjs` | root | `scripts/batch-scheduler.mjs` | boundary,contract,failure-path | 1.5 | declared | keep |
+| `scripts/capabilities.test.mjs` | root | `packages/agentic-workflow/src/runner/capabilities.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/capability-inventory.test.mjs` | root | `docs/CAPABILITIES.md`, `skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md` | contract,convention | 0.1 | declared | keep |
+| `scripts/catalog.test.mjs` | root | `packages/agentic-workflow/src/runner/catalog.json` | contract,failure-path | 2.9 | cost-over-risk | keep |
+| `scripts/ceremony-docs.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/docs.mjs` | contract,failure-path | 10.2 | cost-over-risk | keep |
+| `scripts/ceremony-findings-ledger.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/findings.mjs`, `packages/agentic-workflow/src/runner/ceremony/ledger.mjs` | contract,failure-path | 25.8 | cost-over-risk | keep · selected |
+| `scripts/ceremony-passive.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/passive.mjs` | contract,failure-path | 10.7 | cost-over-risk | keep |
+| `scripts/ceremony-profile.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony-profile.mjs` | contract,failure-path | 3 | cost-over-risk | keep |
+| `scripts/ceremony-unit-plan.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/plan.mjs`, `packages/agentic-workflow/src/runner/ceremony/unit.mjs` | contract,failure-path | 24.2 | cost-over-risk | keep · selected |
+| `scripts/ceremony-workspace.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/workspace.mjs` | contract,failure-path | 11.4 | cost-over-risk | keep |
+| `scripts/ceremony.test.mjs` | root | `packages/agentic-workflow/src/runner/ceremony/index.mjs` | contract,failure-path | 2.9 | cost-over-risk | keep |
+| `scripts/changeset-create.test.mjs` | root | `scripts/changeset-create.mjs` | contract,failure-path | 1.5 | declared | keep |
+| `scripts/check-changelog-row.test.mjs` | root | `scripts/check-changelog-row.mjs` | contract,failure-path | 0.2 | declared | keep |
+| `scripts/check-skill-context.test.mjs` | root | `scripts/check-skill-context.mjs` | boundary,contract,convention | 7.9 | cost-over-risk | keep |
+| `scripts/cli-coverage.test.mjs` | root | `packages/agentic-workflow/README.md`, `packages/agentic-workflow/bin/agentic-workflow.mjs`, `skills`, `skills/runner-contract/references/RUNNER.md`, `template` | convention,distribution-contract | 0.8 | declared | keep |
+| `scripts/config-guards-doc.test.mjs` | root | `docs/workflow/CONFIG.md`, `packages/agentic-workflow-schema/src/config.ts` | contract,convention | 0.1 | declared | keep |
+| `scripts/content-guard-discipline.test.mjs` | root | `packages/agentic-workflow/src/content-guard.mjs` | contract,convention | 0.3 | declared | keep |
+| `scripts/continuation-discipline.test.mjs` | root | `docs/workflow/REPOSITORY_STATE.md`, `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` | contract,failure-path | 2.3 | cost-over-risk | keep |
+| `scripts/correction-budget.test.mjs` | root | `scripts/correction-budget.mjs` | contract,failure-path | 1.9 | declared | keep |
+| `scripts/coverage-gap.test.mjs` | root | `scripts/coverage-gap.mjs` | contract,failure-path | 0.9 | declared | keep |
+| `scripts/decision-promotion.test.mjs` | root | `scripts/decision-promotion.mjs` | contract,failure-path,fixture-support | 0.3 | declared | keep |
+| `scripts/dependency-advisory-pass.test.mjs` | root | `scripts/dependency-advisory-pass.mjs` | contract,failure-path | 0.1 | declared | keep |
 | `scripts/dependency-gate.test.mjs` | root | `scripts/local-gate.mjs` | contract,failure-path | 0.1 | declared | keep |
-| `scripts/diff-guard.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/diff-guard.mjs` | contract,failure-path | 6.4 | cost-over-risk | keep |
-| `scripts/differential-baseline.test.mjs` | root | `scripts/differential-baseline.mjs` | contract,failure-path | 2.2 | cost-over-risk | keep |
-| `scripts/dimension-regression.test.mjs` | root | `scripts/dimension-regression.mjs` | contract,failure-path | 1 | declared | keep |
-| `scripts/doc-discipline.test.mjs` | root | `packages/agentic-workflow/src/doc` | contract,convention | 3 | cost-over-risk | keep |
-| `scripts/docs-generate.test.mjs` | root | `scripts/docs-generate.mjs` | contract,distribution-contract | 8.8 | cost-over-risk | keep |
-| `scripts/docs-generated-merge.test.mjs` | root | `scripts/docs-generated-merge.mjs` | boundary,contract,failure-path | 4 | cost-over-risk | keep |
-| `scripts/findings-corpus.test.mjs` | root | `scripts/findings-corpus.mjs` | contract,failure-path | 1.7 | declared | keep |
-| `scripts/forge-read-drift.test.mjs` | root | `scripts/forge-read-drift.mjs` | contract,failure-path | 0.3 | declared | keep |
-| `scripts/gate-receipt.test.mjs` | root | `scripts/gate-receipt.mjs` | contract,failure-path | 3.9 | cost-over-risk | keep |
-| `scripts/git-config-writes.test.mjs` | root | `scripts/git-config-writes.mjs` | contract,convention,failure-path | 2.5 | declared | keep |
-| `scripts/git-env.test.mjs` | root | `scripts/git-env.mjs` | contract,failure-path | 0.3 | declared | keep |
-| `scripts/golden-fixture.test.mjs` | root | `docs/workflow/GOLDEN_FIXTURE.md`, `scripts/fixtures/golden-fixture` | contract,fixture-support | 2.2 | cost-over-risk | keep |
-| `scripts/guide-split.test.mjs` | root | `AGENTS.md`, `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | convention | 0.3 | declared | keep |
-| `scripts/identity-hook-parity.test.mjs` | root | `scripts/git-config-writes.mjs`, `scripts/push-identity-check.mjs` | contract,failure-path | 22.1 | cost-over-risk | keep |
-| `scripts/index-document.test.mjs` | root | `packages/agentic-workflow/src/index-document.mjs` | contract,failure-path | 0.5 | declared | keep |
-| `scripts/inviolable-rules.test.mjs` | root | `AGENTS.md`, `docs/workflow/GATE_INVENTORY.md` | contract,convention,failure-path | 3.4 | cost-over-risk | keep |
-| `scripts/invocation-drift.test.mjs` | root | `scripts/invocation-drift.mjs` | contract,failure-path | 2.4 | cost-over-risk | keep |
-| `scripts/journal-corpus.test.mjs` | root | `scripts/journal-corpus.mjs` | contract,failure-path | 0.8 | declared | keep |
-| `scripts/knowledge-honesty-contract.test.mjs` | root | `skills/unit-lane/references/RESEARCH.md` | convention | 0.2 | declared | keep |
-| `scripts/lane-era-lineage.test.mjs` | root | `packages/agentic-workflow/src/runner/unit-route.mjs` | contract,failure-path | 15.5 | cost-over-risk | keep |
-| `scripts/ledger-ownership.test.mjs` | root | `skills/pre-execution-review/references/LEDGERS.md` | contract,convention | 1.9 | declared | keep |
-| `scripts/ledger-provenance.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/ledger-provenance.mjs` | contract,failure-path | 45.2 | cost-over-risk | keep |
-| `scripts/lint-changeset.test.mjs` | root | `scripts/lint-changeset.mjs` | contract,failure-path | 1.5 | declared | keep |
-| `scripts/local-config-contract.test.mjs` | root | `packages/agentic-workflow-schema/src/config.ts` | contract,failure-path | 0.4 | declared | keep |
-| `scripts/local-gate.test.mjs` | root | `scripts/local-gate.mjs` | contract,failure-path | 11.6 | obligation-duplicate | keep |
-| `scripts/log-immutability.test.mjs` | root | `scripts/log-immutability.mjs` | contract,failure-path | 12.2 | cost-over-risk | keep |
-| `scripts/needs-input.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/needs-input.mjs` | contract,failure-path | 18.1 | cost-over-risk | keep |
+| `scripts/diff-guard.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/diff-guard.mjs` | contract,failure-path | 3 | cost-over-risk | keep |
+| `scripts/differential-baseline.test.mjs` | root | `scripts/differential-baseline.mjs` | contract,failure-path | 0.8 | declared | keep |
+| `scripts/dimension-regression.test.mjs` | root | `scripts/dimension-regression.mjs` | contract,failure-path | 0.4 | declared | keep |
+| `scripts/doc-discipline.test.mjs` | root | `packages/agentic-workflow/src/doc` | contract,convention | 1.3 | declared | keep |
+| `scripts/docs-generate.test.mjs` | root | `scripts/docs-generate.mjs` | contract,distribution-contract | 3.8 | cost-over-risk | keep |
+| `scripts/docs-generated-merge.test.mjs` | root | `scripts/docs-generated-merge.mjs` | boundary,contract,failure-path | 1.9 | declared | keep |
+| `scripts/findings-corpus.test.mjs` | root | `scripts/findings-corpus.mjs` | contract,failure-path | 0.7 | declared | keep |
+| `scripts/forge-read-drift.test.mjs` | root | `scripts/forge-read-drift.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/gate-receipt.test.mjs` | root | `scripts/gate-receipt.mjs` | contract,failure-path | 1.8 | declared | keep |
+| `scripts/git-config-writes.test.mjs` | root | `scripts/git-config-writes.mjs` | contract,convention,failure-path | 1.1 | declared | keep |
+| `scripts/git-env.test.mjs` | root | `scripts/git-env.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/golden-fixture.test.mjs` | root | `docs/workflow/GOLDEN_FIXTURE.md`, `scripts/fixtures/golden-fixture` | contract,fixture-support | 1 | declared | keep |
+| `scripts/guide-split.test.mjs` | root | `AGENTS.md`, `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | convention | 0.2 | declared | keep |
+| `scripts/identity-hook-parity.test.mjs` | root | `scripts/git-config-writes.mjs`, `scripts/push-identity-check.mjs` | contract,failure-path | 9.7 | cost-over-risk | keep |
+| `scripts/index-document.test.mjs` | root | `packages/agentic-workflow/src/index-document.mjs` | contract,failure-path | 0.2 | declared | keep |
+| `scripts/inviolable-rules.test.mjs` | root | `AGENTS.md`, `docs/workflow/GATE_INVENTORY.md` | contract,convention,failure-path | 1.5 | declared | keep |
+| `scripts/invocation-drift.test.mjs` | root | `scripts/invocation-drift.mjs` | contract,failure-path | 1 | declared | keep |
+| `scripts/journal-corpus.test.mjs` | root | `scripts/journal-corpus.mjs` | contract,failure-path | 0.5 | declared | keep |
+| `scripts/knowledge-honesty-contract.test.mjs` | root | `skills/unit-lane/references/RESEARCH.md` | convention | 0.1 | declared | keep |
+| `scripts/lane-era-lineage.test.mjs` | root | `packages/agentic-workflow/src/runner/unit-route.mjs` | contract,failure-path | 7.1 | cost-over-risk | keep |
+| `scripts/ledger-ownership.test.mjs` | root | `skills/pre-execution-review/references/LEDGERS.md` | contract,convention | 0.9 | declared | keep |
+| `scripts/ledger-provenance.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/ledger-provenance.mjs` | contract,failure-path | 18.4 | cost-over-risk | keep |
+| `scripts/lint-changeset.test.mjs` | root | `scripts/lint-changeset.mjs` | contract,failure-path | 0.7 | declared | keep |
+| `scripts/local-config-contract.test.mjs` | root | `packages/agentic-workflow-schema/src/config.ts` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/local-gate.test.mjs` | root | `scripts/local-gate.mjs` | contract,failure-path | 5.1 | obligation-duplicate | keep |
+| `scripts/log-immutability.test.mjs` | root | `scripts/log-immutability.mjs` | contract,failure-path | 5.3 | cost-over-risk | keep |
+| `scripts/needs-input.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/needs-input.mjs` | contract,failure-path | 8.2 | cost-over-risk | keep |
 | `scripts/next-recommendations.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` | contract | 0.1 | declared | keep |
-| `scripts/next-step-ranking.test.mjs` | root | `packages/agentic-workflow/src/index-document.mjs` | contract | 51.2 | cost-over-risk | keep · selected |
-| `scripts/normative-drift.test.mjs` | root | `AGENTS.md`, `packages/agentic-workflow-schema/src/vocabularies.ts` | contract,failure-path | 4.2 | cost-over-risk | keep |
-| `scripts/npm-availability-wait.test.mjs` | root | `scripts/npm-availability-wait.mjs` | contract,failure-path | 0.2 | declared | keep |
-| `scripts/npm-version-gate.test.mjs` | root | `scripts/npm-version-gate.mjs` | contract,failure-path | 0.5 | declared | keep |
-| `scripts/path-protection.test.mjs` | root | `packages/agentic-workflow/src/path-policy.mjs` | contract,failure-path | 8.7 | cost-over-risk | keep |
-| `scripts/phase-lint.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/phase-lint.mjs` | contract,failure-path | 86.2 | cost-over-risk | keep · selected |
-| `scripts/pi-durable-spike.test.mjs` | root | `scripts/pi-durable-spike.mjs` | contract,failure-path | 0.2 | declared | keep |
-| `scripts/pin-watch.test.mjs` | root | `scripts/pin-watch.mjs` | contract,failure-path | 0.2 | declared | keep |
-| `scripts/pr-evidence-pack.test.mjs` | root | `skills/audit-pr/SKILL.md`, `template/.github/PULL_REQUEST_TEMPLATE.md` | convention,distribution-contract | 0.2 | declared | keep |
-| `scripts/pre-execution-attribution.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs` | contract | 0.4 | declared | keep |
-| `scripts/pre-execution-quality.test.mjs` | root | `skills/pre-execution-review/references/LEDGERS.md`, `skills/pre-execution-review/references/POLICY.md` | contract,convention | 0.3 | declared | keep |
-| `scripts/pre-execution-receipt-parent.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs` | contract,failure-path | 0.2 | declared | keep |
-| `scripts/pre-execution-sensor.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs` | contract,failure-path | 35.7 | cost-over-risk | keep |
-| `scripts/pre-execution-timeline.test.mjs` | root | `packages/agentic-workflow-schema/src/pre-execution.ts` | contract,failure-path | 6.7 | cost-over-risk | keep |
-| `scripts/pre-execution-wording-only-manifest.test.mjs` | root | `packages/agentic-workflow/src/index-document.mjs` | contract,failure-path | 6.1 | obligation-duplicate | keep |
+| `scripts/next-step-ranking.test.mjs` | root | `packages/agentic-workflow/src/index-document.mjs` | contract | 19.7 | cost-over-risk | keep · selected |
+| `scripts/normative-drift.test.mjs` | root | `AGENTS.md`, `packages/agentic-workflow-schema/src/vocabularies.ts` | contract,failure-path | 1.7 | declared | keep |
+| `scripts/npm-availability-wait.test.mjs` | root | `scripts/npm-availability-wait.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/npm-version-gate.test.mjs` | root | `scripts/npm-version-gate.mjs` | contract,failure-path | 0.2 | declared | keep |
+| `scripts/path-protection.test.mjs` | root | `packages/agentic-workflow/src/path-policy.mjs` | contract,failure-path | 3.2 | cost-over-risk | keep |
+| `scripts/phase-lint.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/phase-lint.mjs` | contract,failure-path | 36.6 | cost-over-risk | keep · selected |
+| `scripts/pi-durable-spike.test.mjs` | root | `scripts/pi-durable-spike.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/pin-watch.test.mjs` | root | `scripts/pin-watch.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/pr-evidence-pack.test.mjs` | root | `skills/audit-pr/SKILL.md`, `template/.github/PULL_REQUEST_TEMPLATE.md` | convention,distribution-contract | 0.1 | declared | keep |
+| `scripts/pre-execution-attribution.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs` | contract | 0.1 | declared | keep |
+| `scripts/pre-execution-quality.test.mjs` | root | `skills/pre-execution-review/references/LEDGERS.md`, `skills/pre-execution-review/references/POLICY.md` | contract,convention | 0.1 | declared | keep |
+| `scripts/pre-execution-receipt-parent.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/pre-execution-sensor.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs` | contract,failure-path | 14.4 | cost-over-risk | keep |
+| `scripts/pre-execution-timeline.test.mjs` | root | `packages/agentic-workflow-schema/src/pre-execution.ts` | contract,failure-path | 2.6 | cost-over-risk | keep |
+| `scripts/pre-execution-wording-only-manifest.test.mjs` | root | `packages/agentic-workflow/src/index-document.mjs` | contract,failure-path | 2.5 | obligation-duplicate | keep |
 | `scripts/precondition-closure.test.mjs` | root | `skills/unit-lane/references/DESIGN.md` | convention | 0.1 | declared | keep |
-| `scripts/product-audit-rescope.test.mjs` | root | `skills/product-audit/SKILL.md` | contract,convention | 0.3 | declared | keep |
-| `scripts/product-audit-surplus.test.mjs` | root | `skills/product-audit/references/AUDIT_DIMENSIONS.md` | contract,convention | 0.3 | declared | keep |
-| `scripts/promise-coherence.test.mjs` | root | `scripts/promise-coherence.mjs` | contract,failure-path | 8.3 | cost-over-risk | keep |
-| `scripts/prose-gate-inventory.test.mjs` | root | `scripts/prose-gate-inventory.mjs` | contract,failure-path | 1 | declared | keep |
-| `scripts/published-refs.test.mjs` | root | `scripts/published-refs.mjs` | contract,failure-path | 1.6 | declared | keep |
-| `scripts/push-identity-check.test.mjs` | root | `scripts/push-identity-check.mjs` | contract,failure-path | 9 | cost-over-risk | keep |
-| `scripts/reading-coverage.test.mjs` | root | `docs/fix/646-docs-skills-reconciliation/second-read.md`, `scripts/reading-coverage.mjs` | convention,failure-path | 0.8 | declared | keep |
-| `scripts/red-first.test.mjs` | root | `scripts/red-first.mjs` | contract,failure-path | 34.4 | cost-over-risk | keep |
-| `scripts/relay-packet.test.mjs` | root | `scripts/relay-packet.mjs` | contract,failure-path | 4 | cost-over-risk | keep |
-| `scripts/relay-route.test.mjs` | root | `packages/agentic-workflow/src/relay`, `packages/agentic-workflow/src/runner/catalog.json` | contract,failure-path | 7.3 | cost-over-risk | keep |
-| `scripts/release-workflows.test.mjs` | root | `.github/workflows` | convention,distribution-contract | 0.2 | declared | keep |
-| `scripts/release.test.mjs` | root | `scripts/release.mjs` | contract,distribution-contract,failure-path | 10 | cost-over-risk | keep |
-| `scripts/relevant-files.test.mjs` | root | `scripts/relevant-files.mjs` | contract,failure-path | 1.6 | declared | keep |
-| `scripts/repository-state.test.mjs` | root | `docs/workflow/REPOSITORY_STATE.md`, `skills/resolve-repository-state/references/STATE_CONTRACT.md` | contract,failure-path | 1.3 | declared | keep |
-| `scripts/residual-classify.test.mjs` | root | `scripts/residual-classify.mjs` | contract,failure-path | 7.3 | cost-over-risk | keep |
-| `scripts/residue-dimensions.test.mjs` | root | `AGENTS.md`, `skills/product-audit/references/AUDIT_DIMENSIONS.md` | convention | 0.4 | declared | keep |
-| `scripts/restatement-sweep.test.mjs` | root | `AGENTS.md`, `skills/audit-docs/references/RESTATEMENT.md` | convention,failure-path | 1.1 | declared | keep |
-| `scripts/retention-debt.test.mjs` | root | `scripts/retention-debt.mjs` | contract,failure-path | 0.8 | declared | keep |
-| `scripts/retention-declaration.test.mjs` | root | `scripts/retention-declaration.mjs` | contract,failure-path | 0.3 | declared | keep |
-| `scripts/review-loop-discipline.test.mjs` | root | `skills/execute-phase/references/FOLDING.md` | contract,convention | 3.5 | cost-over-risk | keep |
-| `scripts/review-receipt.test.mjs` | root | `scripts/review-receipt.mjs` | contract,failure-path | 5 | cost-over-risk | keep |
-| `scripts/review-state.test.mjs` | root | `scripts/review-state.mjs` | contract,failure-path | 2.9 | cost-over-risk | keep |
-| `scripts/rigidity-review.test.mjs` | root | `scripts/rigidity-review.mjs` | contract,failure-path | 2 | cost-over-risk | keep |
-| `scripts/risk-tier-ceremony.test.mjs` | root | `skills/execute-phase/references/risk-tiers.md` | contract,failure-path | 4.9 | cost-over-risk | keep |
-| `scripts/risk-tier-classifier.test.mjs` | root | `packages/agentic-workflow/src/runner/risk-tiers.mjs` | boundary,contract,failure-path | 0.2 | declared | keep |
-| `scripts/roadmap-moved.test.mjs` | root | `docs/ROADMAP.md` | convention | 2.7 | cost-over-risk | keep |
-| `scripts/roadmap-settle.test.mjs` | root | `scripts/roadmap-settle.mjs` | contract,failure-path | 4.3 | cost-over-risk | keep |
-| `scripts/run-root-suite.test.mjs` | root | `scripts/run-root-suite.mjs` | boundary,contract,failure-path | 7.2 | cost-over-risk | keep |
+| `scripts/product-audit-rescope.test.mjs` | root | `skills/product-audit/SKILL.md` | contract,convention | 0.1 | declared | keep |
+| `scripts/product-audit-surplus.test.mjs` | root | `skills/product-audit/references/AUDIT_DIMENSIONS.md` | contract,convention | 0.1 | declared | keep |
+| `scripts/promise-coherence.test.mjs` | root | `scripts/promise-coherence.mjs` | contract,failure-path | 3.3 | cost-over-risk | keep |
+| `scripts/prose-gate-inventory.test.mjs` | root | `scripts/prose-gate-inventory.mjs` | contract,failure-path | 0.5 | declared | keep |
+| `scripts/published-refs.test.mjs` | root | `scripts/published-refs.mjs` | contract,failure-path | 0.5 | declared | keep |
+| `scripts/push-identity-check.test.mjs` | root | `scripts/push-identity-check.mjs` | contract,failure-path | 3.2 | cost-over-risk | keep |
+| `scripts/reading-coverage.test.mjs` | root | `docs/fix/646-docs-skills-reconciliation/second-read.md`, `scripts/reading-coverage.mjs` | convention,failure-path | 0.3 | declared | keep |
+| `scripts/red-first.test.mjs` | root | `scripts/red-first.mjs` | contract,failure-path | 14.8 | cost-over-risk | keep |
+| `scripts/relay-packet.test.mjs` | root | `scripts/relay-packet.mjs` | contract,failure-path | 1.4 | declared | keep |
+| `scripts/relay-route.test.mjs` | root | `packages/agentic-workflow/src/relay`, `packages/agentic-workflow/src/runner/catalog.json` | contract,failure-path | 3.4 | cost-over-risk | keep |
+| `scripts/release-workflows.test.mjs` | root | `.github/workflows` | convention,distribution-contract | 0.1 | declared | keep |
+| `scripts/release.test.mjs` | root | `scripts/release.mjs` | contract,distribution-contract,failure-path | 3.8 | cost-over-risk | keep |
+| `scripts/relevant-files.test.mjs` | root | `scripts/relevant-files.mjs` | contract,failure-path | 0.5 | declared | keep |
+| `scripts/repository-state.test.mjs` | root | `docs/workflow/REPOSITORY_STATE.md`, `skills/resolve-repository-state/references/STATE_CONTRACT.md` | contract,failure-path | 0.5 | declared | keep |
+| `scripts/residual-classify.test.mjs` | root | `scripts/residual-classify.mjs` | contract,failure-path | 3.1 | cost-over-risk | keep |
+| `scripts/residue-dimensions.test.mjs` | root | `AGENTS.md`, `skills/product-audit/references/AUDIT_DIMENSIONS.md` | convention | 0.2 | declared | keep |
+| `scripts/restatement-sweep.test.mjs` | root | `AGENTS.md`, `skills/audit-docs/references/RESTATEMENT.md` | convention,failure-path | 0.4 | declared | keep |
+| `scripts/retention-debt.test.mjs` | root | `scripts/retention-debt.mjs` | contract,failure-path | 0.4 | declared | keep |
+| `scripts/retention-declaration.test.mjs` | root | `scripts/retention-declaration.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/review-loop-discipline.test.mjs` | root | `skills/execute-phase/references/FOLDING.md` | contract,convention | 1.8 | declared | keep |
+| `scripts/review-receipt.test.mjs` | root | `scripts/review-receipt.mjs` | contract,failure-path | 1.9 | declared | keep |
+| `scripts/review-state.test.mjs` | root | `scripts/review-state.mjs` | contract,failure-path | 1.1 | declared | keep |
+| `scripts/rigidity-review.test.mjs` | root | `scripts/rigidity-review.mjs` | contract,failure-path | 0.7 | declared | keep |
+| `scripts/risk-tier-ceremony.test.mjs` | root | `skills/execute-phase/references/risk-tiers.md` | contract,failure-path | 2.3 | cost-over-risk | keep |
+| `scripts/risk-tier-classifier.test.mjs` | root | `packages/agentic-workflow/src/runner/risk-tiers.mjs` | boundary,contract,failure-path | 0.1 | declared | keep |
+| `scripts/roadmap-moved.test.mjs` | root | `docs/ROADMAP.md` | convention | 1.3 | cost-over-risk | keep |
+| `scripts/roadmap-settle.test.mjs` | root | `scripts/roadmap-settle.mjs` | contract,failure-path | 1.5 | declared | keep |
+| `scripts/run-root-suite.test.mjs` | root | `scripts/run-root-suite.mjs` | boundary,contract,failure-path | 4.7 | cost-over-risk | keep |
 | `scripts/scaffold-guide.test.mjs` | root | `template/AGENTS.md` | convention,distribution-contract | 0.1 | declared | keep |
-| `scripts/scaffold-parity.test.mjs` | root | `template` | convention,distribution-contract | 0.2 | declared | keep |
-| `scripts/scope-manifest.test.mjs` | root | `scripts/scope-manifest.mjs` | contract,failure-path | 4.4 | cost-over-risk | keep |
-| `scripts/secret-scan.test.mjs` | root | `template/.agentic-workflow/hooks/secret-scan.mjs` | contract,failure-path | 9.5 | cost-over-risk | keep |
-| `scripts/session-close.test.mjs` | root | `scripts/session-close.mjs` | contract,failure-path | 5.6 | cost-over-risk | keep |
-| `scripts/setup-env.test.mjs` | root | `scripts/setup-env.mjs` | contract,failure-path | 14.6 | cost-over-risk | keep |
-| `scripts/shared-doc-merge.test.mjs` | root | `scripts/shared-doc-merge.mjs` | contract,failure-path | 9.4 | cost-over-risk | keep |
-| `scripts/skill-lint.test.mjs` | root | `scripts/skill-lint.mjs` | contract,failure-path | 2 | cost-over-risk | keep |
-| `scripts/spec-by-reference.test.mjs` | root | `docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md` | contract,convention | 5.9 | cost-over-risk | keep |
-| `scripts/structural-sibling-pins.test.mjs` | root | `scripts/structural-sibling-pins.mjs` | convention | 0.5 | declared | keep |
-| `scripts/substrate.test.mjs` | root | `docs/workflow/LANE_FLOW.md`, `packages/agentic-workflow/src/runner/sensors/substrate.mjs`, `skills/orchestration-envelope/references/TURN_CONTRACT.md` | contract,failure-path | 7.8 | cost-over-risk | keep |
-| `scripts/telemetry-coverage.test.mjs` | root | `packages/agentic-workflow/src/telemetry`, `packages/pi-agentic-workflow/src/extension/log-session-command.ts` | contract,convention | 0.2 | declared | keep |
-| `scripts/telemetry-report.test.mjs` | root | `scripts/telemetry-report.mjs` | contract,failure-path | 5.6 | cost-over-risk | keep |
-| `scripts/temp-hygiene.test.mjs` | root | `scripts/temp-hygiene.mjs` | contract,convention | 0.7 | declared | keep |
+| `scripts/scaffold-parity.test.mjs` | root | `template` | convention,distribution-contract | 0.1 | declared | keep |
+| `scripts/scope-manifest.test.mjs` | root | `scripts/scope-manifest.mjs` | contract,failure-path | 1.6 | declared | keep |
+| `scripts/secret-scan.test.mjs` | root | `template/.agentic-workflow/hooks/secret-scan.mjs` | contract,failure-path | 3.6 | cost-over-risk | keep |
+| `scripts/session-close.test.mjs` | root | `scripts/session-close.mjs` | contract,failure-path | 1.6 | declared | keep |
+| `scripts/setup-env.test.mjs` | root | `scripts/setup-env.mjs` | contract,failure-path | 6.9 | cost-over-risk | keep |
+| `scripts/shared-doc-merge.test.mjs` | root | `scripts/shared-doc-merge.mjs` | contract,failure-path | 4 | cost-over-risk | keep |
+| `scripts/skill-lint.test.mjs` | root | `scripts/skill-lint.mjs` | contract,failure-path | 0.7 | declared | keep |
+| `scripts/spec-by-reference.test.mjs` | root | `docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md` | contract,convention | 2.9 | cost-over-risk | keep |
+| `scripts/structural-sibling-pins.test.mjs` | root | `scripts/structural-sibling-pins.mjs` | convention | 0.1 | declared | keep |
+| `scripts/substrate.test.mjs` | root | `docs/workflow/LANE_FLOW.md`, `packages/agentic-workflow/src/runner/sensors/substrate.mjs`, `skills/orchestration-envelope/references/TURN_CONTRACT.md` | contract,failure-path | 3.2 | cost-over-risk | keep |
+| `scripts/telemetry-coverage.test.mjs` | root | `packages/agentic-workflow/src/telemetry`, `packages/pi-agentic-workflow/src/extension/log-session-command.ts` | contract,convention | 0.1 | declared | keep |
+| `scripts/telemetry-report.test.mjs` | root | `scripts/telemetry-report.mjs` | contract,failure-path | 2.3 | cost-over-risk | keep |
+| `scripts/temp-hygiene.test.mjs` | root | `scripts/temp-hygiene.mjs` | contract,convention | 0.3 | declared | keep |
 | `scripts/temp-root.test.mjs` | root | `scripts/temp-root.mjs` | contract,failure-path | 0.1 | declared | keep |
-| `scripts/test-impact.test.mjs` | root | `scripts/test-impact.mjs` | boundary,contract,failure-path | 3.5 | cost-over-risk | keep |
-| `scripts/test-obligation-tags.test.mjs` | root | `scripts/test-obligation-tags.mjs` | contract,convention,failure-path | 1.4 | declared | keep |
-| `scripts/test-route.test.mjs` | root | `scripts/test-route.mjs` | contract,failure-path | 0.5 | declared | keep |
-| `scripts/tier-cost.test.mjs` | root | `scripts/tier-cost.mjs` | contract,distribution-contract,failure-path | 1.5 | declared | keep |
-| `scripts/tmp-gc.test.mjs` | root | `scripts/tmp-gc.mjs` | contract,failure-path | 0.8 | declared | keep |
-| `scripts/tool-choice-parity.test.mjs` | root | `packages/agentic-workflow/src/tool-choice/policy.mjs` | contract,convention | 0.2 | declared | keep |
-| `scripts/triage-rescope.test.mjs` | root | `skills/triage-issue/SKILL.md` | contract,convention | 0.3 | declared | keep |
-| `scripts/triage-setup-defect.test.mjs` | root | `packages/agentic-workflow/src/doctor/vehicle.mjs`, `skills/triage-issue/references/ISSUE_PROCESS.md` | contract,failure-path | 0.2 | declared | keep |
-| `scripts/turn-contract-grammar.test.mjs` | root | `skills/orchestration-envelope/references/TURN_CONTRACT.md` | contract,failure-path | 32.1 | cost-over-risk | keep |
-| `scripts/turn-contract-single-owner.test.mjs` | root | `skills/orchestration-envelope/references/TURN_CONTRACT.md` | convention | 0.2 | declared | keep |
-| `scripts/unit-cycle.test.mjs` | root | `scripts/unit-cycle.mjs` | contract,failure-path | 0.3 | declared | keep |
-| `scripts/unit-doc-contract.test.mjs` | root | `docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md`, `packages/agentic-workflow-schema/src/pre-execution.ts` | contract,convention | 2 | cost-over-risk | keep |
-| `scripts/unit-route.test.mjs` | root | `packages/agentic-workflow/src/runner/unit-route.mjs` | contract,failure-path | 31.5 | obligation-duplicate | keep |
-| `scripts/update-tools.test.mjs` | root | `scripts/update-tools.mjs` | contract,failure-path | 0.2 | declared | keep |
-| `scripts/version-parity-gate.test.mjs` | root | `scripts/version-parity-gate.mjs` | contract,distribution-contract,failure-path | 0.6 | declared | keep |
-| `scripts/vocabulary-parity.test.mjs` | root | `packages/agentic-workflow-schema/src/vocabularies.ts` | contract,convention | 1.2 | declared | keep |
-| `scripts/vocabulary-probe.test.mjs` | root | `scripts/vocabulary-probe.mjs` | contract,failure-path | 0.3 | declared | keep |
+| `scripts/test-impact.test.mjs` | root | `scripts/test-impact.mjs` | boundary,contract,failure-path | 1.5 | declared | keep |
+| `scripts/test-obligation-tags.test.mjs` | root | `scripts/test-obligation-tags.mjs` | contract,convention,failure-path | 0.9 | declared | keep |
+| `scripts/test-route.test.mjs` | root | `scripts/test-route.mjs` | contract,failure-path | 0.3 | declared | keep |
+| `scripts/tier-cost.test.mjs` | root | `scripts/tier-cost.mjs` | contract,distribution-contract,failure-path | 0.6 | declared | keep |
+| `scripts/tmp-gc.test.mjs` | root | `scripts/tmp-gc.mjs` | contract,failure-path | 0.4 | declared | keep |
+| `scripts/tool-choice-parity.test.mjs` | root | `packages/agentic-workflow/src/tool-choice/policy.mjs` | contract,convention | 0.1 | declared | keep |
+| `scripts/triage-rescope.test.mjs` | root | `skills/triage-issue/SKILL.md` | contract,convention | 0.1 | declared | keep |
+| `scripts/triage-setup-defect.test.mjs` | root | `packages/agentic-workflow/src/doctor/vehicle.mjs`, `skills/triage-issue/references/ISSUE_PROCESS.md` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/turn-contract-grammar.test.mjs` | root | `skills/orchestration-envelope/references/TURN_CONTRACT.md` | contract,failure-path | 14.3 | cost-over-risk | keep |
+| `scripts/turn-contract-single-owner.test.mjs` | root | `skills/orchestration-envelope/references/TURN_CONTRACT.md` | convention | 0.1 | declared | keep |
+| `scripts/unit-cycle.test.mjs` | root | `scripts/unit-cycle.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/unit-doc-contract.test.mjs` | root | `docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md`, `packages/agentic-workflow-schema/src/pre-execution.ts` | contract,convention | 1 | declared | keep |
+| `scripts/unit-route.test.mjs` | root | `packages/agentic-workflow/src/runner/unit-route.mjs` | contract,failure-path | 13.3 | obligation-duplicate | keep |
+| `scripts/update-tools.test.mjs` | root | `scripts/update-tools.mjs` | contract,failure-path | 0.1 | declared | keep |
+| `scripts/version-parity-gate.test.mjs` | root | `scripts/version-parity-gate.mjs` | contract,distribution-contract,failure-path | 0.3 | declared | keep |
+| `scripts/vocabulary-parity.test.mjs` | root | `packages/agentic-workflow-schema/src/vocabularies.ts` | contract,convention | 0.5 | declared | keep |
+| `scripts/vocabulary-probe.test.mjs` | root | `scripts/vocabulary-probe.mjs` | contract,failure-path | 0.1 | declared | keep |
 | `scripts/workflow-docs-index.test.mjs` | root | `docs/workflow`, `docs/workflow/README.md` | convention | 0.1 | declared | keep |
-| `scripts/workflow-status-compact.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` | contract | 16.9 | obligation-duplicate | keep |
-| `scripts/workflow-status-pre-execution.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs`, `skills/workflow-status/references/PRE_EXECUTION.md` | contract,failure-path | 2.4 | cost-over-risk | keep |
-| `scripts/workflow-status-sensor.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` | boundary,contract,failure-path | 75.4 | cost-over-risk | keep · selected |
-| `scripts/workspace-lock-policy.test.mjs` | root | `bun.lock`, `package.json` | convention,distribution-contract | 0.2 | declared | keep |
-| `scripts/worktree-guard.test.mjs` | root | `scripts/worktree-guard.mjs` | contract,failure-path | 4.4 | cost-over-risk | keep |
+| `scripts/workflow-status-compact.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` | contract | 7.1 | obligation-duplicate | keep |
+| `scripts/workflow-status-pre-execution.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/pre-execution-contract.mjs`, `skills/workflow-status/references/PRE_EXECUTION.md` | contract,failure-path | 0.8 | declared | keep |
+| `scripts/workflow-status-sensor.test.mjs` | root | `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` | boundary,contract,failure-path | 58.3 | cost-over-risk | keep · selected |
+| `scripts/workspace-lock-policy.test.mjs` | root | `bun.lock`, `package.json` | convention,distribution-contract | 0.1 | declared | keep |
+| `scripts/worktree-guard.test.mjs` | root | `scripts/worktree-guard.mjs` | contract,failure-path | 1.9 | declared | keep |
+
+### adjudication
+
+| suite | standard | derived | adjudicated |
+|---|---|---|---|
+| `scripts/ceremony-findings-ledger.test.mjs` | cost-over-risk | keep | keep |
+| `scripts/ceremony-unit-plan.test.mjs` | cost-over-risk | keep | keep |
+| `scripts/local-gate.test.mjs` | obligation-duplicate | merge | keep |
+| `scripts/next-step-ranking.test.mjs` | cost-over-risk | keep | keep |
+| `scripts/phase-lint.test.mjs` | cost-over-risk | keep | keep |
+| `scripts/pre-execution-wording-only-manifest.test.mjs` | obligation-duplicate | merge | keep |
+| `scripts/unit-route.test.mjs` | obligation-duplicate | merge | keep |
+| `scripts/workflow-status-compact.test.mjs` | obligation-duplicate | merge | keep |
+| `scripts/workflow-status-sensor.test.mjs` | cost-over-risk | keep | keep |
+
+derived non-keep: 4 · selected: 5 · adjudicated: 9 of 9
+
+### wall-clock
+
+budget: 480 s on 6 vCPU shared host; every run records its own load average with the measurement
+
+| change class | before (s) | after (s) | note |
+|---|---|---|---|
+| `docs-only` | 3 | 1 | test-impact answers empty, so the test-bearing steps are skipped on both sides; the offline steps are what a docs-only push spends |
+| `script change` | 538 | 377 | the test-bearing set plus the offline steps: crate-suite-bun 240 s -> 89 s is the delta, the rest is unchanged |
+| `package change` | 538 | 377 | a package change dispatches the same test-bearing set as a script change, so the same two measurements are its own |
 
 verdict: PASS
