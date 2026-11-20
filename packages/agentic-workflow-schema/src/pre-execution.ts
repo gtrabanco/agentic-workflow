@@ -613,10 +613,10 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
 
   if (titleLine === -1) return selectionError("selector-title-missing", "<title>");
 
-  // One contract, two accepted shapes (#308). The required list is resolved from
-  // the headings the document actually carries; a document satisfying neither
-  // shape reports the first missing section of the legacy list, which is the
-  // shape every unit predating the re-cut carries.
+  // One contract, every accepted shape (#308's two plus #651's `settled`). The
+  // required list is resolved from the headings the document actually carries;
+  // a document satisfying no shape reports the first missing section of the
+  // legacy list, which is the shape every unit predating the re-cut carries.
   const names = headings.map((heading) => heading.name);
   const shape = resolveUnitDocShape(names);
   const requiredSections = unitDocSectionsFor(shape);

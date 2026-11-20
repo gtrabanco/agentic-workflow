@@ -299,8 +299,9 @@ export function create(dir, slug) {
  * Returns a receipt.  Throws on unknown section.
  */
 export function setSection(doc, name, body) {
-  // Both accepted shapes are addressable: a migrated document sets its own
-  // sections and a legacy one keeps its own (#308).
+  // Every accepted shape is addressable: the legacy list plus the re-cut list
+  // covers settled's sections too (#308, #651) — a migrated document sets its
+  // own sections and a legacy one keeps its own.
   const addressable = [...new Set([...UNIT_DOC_SECTIONS, ...UNIT_DOC_SPEC_REF_SECTIONS])];
   if (!addressable.includes(name)) {
     throw new Error(`Unknown section "${name}"; allowed: ${addressable.join(", ")}`);
