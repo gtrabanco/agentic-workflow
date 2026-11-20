@@ -18,3 +18,26 @@ Sibling sweep: list — blocker: skills/unit-lane/references/PLAN.md:119 (stale 
 Completeness: S1–S12 resolved — every S# carries tasks with `(Implements: S#)` whose validators re-run green here (phase-lint PASS fingerprint 2a6638a0…, decision-promotion 14, needs-input 47, normative-drift 22, prose-gate-inventory 22, vocabulary-parity 35, scaffold-parity 17, check-skill-context 1 plus --documents/--skill unit-lane/--skill product-audit PASS, ledger-ownership 15, residue-dimensions 30, runner.sensors 9, schema index 19, crate 1324, schema 915, root suite 130, docs-generate --check PASS, producer `verdict | clean`, fixture pair seeded 3 findings / clean 0); out-of-scope dispositions evidenced (resolve-repository-state diff empty, producer tree byte-identical, retention → #651) | open ids: none; obligation ids blocked: O7, O14, O20.
 Spot check: bun scripts/local-gate.mjs --skip-network --jobs 2 → match (reported "PASS — 15 steps"; observed `local-gate: PASS — 15 step(s) in 482s`, exit 0 — identical verdict and step count, wall time 482s vs the reported 603s).
 Verdict: NEEDS-DECISION (6 open blockers)
+
+## Addendum — 2026-11-19 · correction batch (P15), per §9
+
+One batch over the six blockers. Commits: `bbb03e98f` (this receipt) · `12577da5f` (the fold) · `e60f051cf` (unit-log close + session entry, committer pinned to the documented aggregator identity so `log-immutability` passes).
+
+| blocker | smallest action applied | recheck (foreground, after) |
+|---|---|---|
+| 1 — O20 phantom validator | validator → `bun test scripts/doc-discipline.test.mjs` + `residue-dimensions`; carrier grounded in `PE-020` | exit 0 · 21 / 30 pass (`G15`) |
+| 2 — O7 unrun `matches 0` | validator → sensors suite + empty `TURN_CONSTRUCTION`-scope diff (the conjunct its evidence already named) | 9 pass · 0 lines (`E24`) |
+| 3 — O14 / D3 restates cluster | `D12` supersedes: Impact, Future cost, Applicable tests, P11, O14 all corrected to the substitute pin | normative-drift 22 + producer 14 pass (`G16`) |
+| 4 — AC-S4 exit-1 anchor | check re-pointed (650 ledger + sensor suite); criterion untouched; `ac-hash` re-stamped `49001af7…` via `sectionText` | `needs-input …650 --json` exit 0 · sensors 9 · phantom count 0 (`E23`) |
+| 5 — PLAN.md:119 stale example | scope cell + `decision-scope@1` pointer (new row `O21`) | `rg -c '<scope>$'` → 1 (`E24`) |
+| 6 — Retirements vs orphan receipt | done-unit qualification + `PE-019` (new row `O22`); `E12` stands as the open-state record | inventory re-run recorded `E22` · `rg -c 'no-plan-claim'` → ≥ 1 |
+
+Frozen-failure corpus ran RED first (`E21`); fixtures before the real tree (P14-vs-P15 phase shape proven in `mktemp` scratch); producer stdout byte-identical vs `0a28f2e3d` (comment-only); obligations 23/23 `verified`, zero `planned`.
+
+Advisories triaged: **A1 fixed** (exit-code comment now matches behavior); **A2/A3 recorded by append** (`E21`–`E25` correct the inline counts); **A4 not fixed — needs the owner's grammar decision** (the receipt `status` enum has no value for a post-rule unpromoted row; findings still emitted); **A5 not fixed — convention-consistent** (every `roadmap_summary` unit's row drops the hand links the emitter replaces).
+
+New finding for the owner, not folded (§9: a new finding never earns another cycle): `verify docs/features/650-decision-promotion/SPEC.md` exits 2 with **12 pre-existing `receipt-malformed-head` violations (G1–G11, G13)** — reproduced on the base bytes at `0a28f2e3d` (the class predates the batch); the batch's own G receipts are HEAD-pinned and clean, so head and base carry the identical violation set.
+
+Post-batch verification: phase-lint PASS (P15, fingerprint `a4169f19…`) · root suite 130 PASS / 0 FAIL (twice: fold bytes and log-delta bytes) · `local-gate --skip-network` PASS 15 steps in 600s · `log-immutability` PASS 0 violations over the 12-commit range (after the identity fix) · `docs-generate --check` PASS · budgets PASS · golden-fixture 15 pass · AC-S1 zero planned rows.
+
+**Verdict: pending the owner's re-verify** — the batch does not self-approve.
