@@ -610,13 +610,14 @@ authoritative over any memory record.
 
 ## PR & branch workflow
 
-- **One PR per unit of work, always against `main`.** Each PR must be
-  independently mergeable: it passes the verification gate and delivers
-  standalone value.
-- **Never work on `main` directly.** Create a branch first
+- **One PR per unit of work, always against the project's default branch**
+  (`main` unless this project declares another). Each PR must be independently
+  mergeable: it passes the verification gate and delivers standalone value.
+- **Never work on the default branch directly.** Create a branch first
   (`feat/<NN>-<slug>` or `fix/<n>-<topic>`).
-- **Never stack PRs.** A PR's base is always `main`. If a feature is too large,
-  split it into independently shippable slices — never by internal phases.
+- **Never stack PRs.** A PR's base is always the default branch. If a feature is
+  too large, split it into independently shippable slices — never by internal
+  phases.
 
 ## Commit format
 

@@ -153,7 +153,21 @@ test("every in-scope file of this repository is accounted for", () => {
     `unaccounted:\n${result.findings.map((f) => `  [${f.code}] ${f.file}`).join("\n")}`);
   assert.equal(result.verdict, "covered");
   assert.ok(result.counts.files >= 200, `the scope is the tree, not a sample (${result.counts.files} files)`);
-  assert.ok(result.counts.full >= 40, `the files this unit read end-to-end are declared (${result.counts.full})`);
+  // The depth claim is the one a reader can falsify: the files this unit edited
+  // were read end-to-end, and they say so.
+  const body = fs.readFileSync(path.join(ROOT, LEDGER), "utf8");
+  for (const file of [
+    "AGENTS.md",
+    "docs/workflow/LOADING.md",
+    "docs/workflow/REPOSITORY_STATE.md",
+    "docs/workflow/GATE_INVENTORY.md",
+    "docs/workflow/README.md",
+    "skills/audit-docs/references/RESTATEMENT.md",
+    "template/AGENTS.md",
+  ]) {
+    assert.match(body, new RegExp(`^${file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\| [^|]+ \\| full \\| `, "m"), `${file} is declared as read end-to-end`);
+  }
+  assert.ok(result.counts.scanned > 100, `the structurally-scanned remainder is disclosed (${result.counts.scanned})`);
   const cli = run(["--repo", ROOT, "--scope", "docs-skills"]);
   assert.equal(cli.status, 0, `${cli.stdout}${cli.stderr}`);
   assert.match(cli.stdout, /^verdict: covered$/m);

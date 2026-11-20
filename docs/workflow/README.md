@@ -103,5 +103,6 @@ linked, not restated.
 
    # ship-roadmap is retired (feature 61 P9); its deterministic routing lives
    # in `workflow-status` / `unit-lane`.
-   # The unattended-conductor role is deferred to roadmap row 62.
+   # The conductor role shipped as the companion package's `advance` command
+   # (roadmap row 62, done) — see SKILLS.md.
 ```
