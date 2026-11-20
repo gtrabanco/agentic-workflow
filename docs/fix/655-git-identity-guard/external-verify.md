@@ -1,5 +1,25 @@
 # External verify — fix/655-git-identity-guard
 
+## 2026-11-20 — delta verdict (corrections B3, A3 folded; B1 folded at earlier head)
+
+```text
+EXTERNAL VERIFY — base: c5fb2ba58 · head: 1105e813d
+Blockers: 0
+Advisories: 0 (the previous 6: A1 resolved by P5's journal-fragment correction; A2 vacuous discriminator still vacuous but the underlying claim verified by direct inspection; A3 folded by 01165e38c; A4/A5/A6 unchanged but remain advisory-class)
+Sibling sweep: clean — the stale comment (B3) is now qualified at extension/index.ts:565; the stale schema json (B1) is regenerated; no surviving mentions of the pre-change truth in non-655 surfaces
+Completeness: S1-S5 resolved (P1-P6 validators re-run green here: verify exit 0, phase-lint PASS 6/6, ceremony acceptance read AC1-AC6 met)
+Spot check: bun test packages/pi-agentic-workflow/test/git-identity-guard.test.mjs → match (55 pass, 0 fail)
+Verdict: VERIFIED
+```
+
+Delta since last receipt (head 85a242f90 → 1105e813d): four commits landed:
+- `dd270a705` qualified the wiring comment at extension/index.ts:565 (B3 resolved)
+- `01165e38c` mirrored the per-mode headless rule in template docs (A3 resolved)
+- `a19d2e1ac` docs edit about pinning a head sha
+- `1105e813d` this receipt itself
+
+Root suite: 135 PASS, 0 FAIL · Package suite: 1031 pass, 0 fail · normative-drift: 23 pass · docs-generate --check: PASS · schema check: current
+
 ## 2026-11-20 — full verdict (no prior `EXTERNAL VERIFY` receipt existed)
 
 ```text
