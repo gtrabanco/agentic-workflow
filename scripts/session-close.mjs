@@ -22,5 +22,8 @@ export * from "../packages/agentic-workflow/src/session-close/index.mjs";
 // Run only as a program: the sibling suite imports the renderers, and an import
 // must never dispatch this repository's command.
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exit(main(process.argv.slice(2)));
+  // `run` either returns a code or leaves it on `process.exitCode` (the crate's
+  // published dispatch contract); `process.exit(undefined)` would flatten both
+  // to 0 — the same spelling check-skill-context.mjs already uses.
+  process.exit(main(process.argv.slice(2)) ?? process.exitCode ?? 0);
 }
