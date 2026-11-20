@@ -33,10 +33,10 @@
         }
       },
       "packages/pi-agentic-workflow/README.md": {
-        "linesMax": 1296,
+        "linesMax": 1299,
         "estimateMax": 17663,
         "sources": {
-          "issue #645 (guide minimalism, 2026-11-19)": "the package's own guide surface joins the guide layer's budget: it is what an install reads first, and it had no ceiling at all. Measured at the pass: 1,178 lines / 16,057 est, with the eight versioned contract blocks (`tool-inventory@1`, `doctor-envelope@1`, `materialization@1`, the three journal blocks, `quality-metrics@1`, `skill-discovery@1`, `review-extras@1`, `writer-driver-contract@1`) untouched because a gate reads them. Ceilings ceil(measured x 1.10) = 1,296 / 17,663; no prose is deleted from it — the measured overlap with the repo docs is one line (the two-gate seam consent sentence, a different audience's rule), recorded as this unit's D11 instead of cosmetically reworded."
+          "issue #654 (guard layer adoption, 2026-11-20)": "the package README gains one section — the permission layer: the install command, the two policy paths, what the layer decides, the operator's session grants and `promptTimeoutMs`, the `guardPlugins` authoring surface with the `provision permissions` projection, the boundary this package still owns (identity, receipts, Tier 2), and the pointer to init-workspace's verification checklist — plus one sentence in the path-protection section for the OS-temp carve-out Tier 2 gained. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 1,299 lines / 17,547 est, so `linesMax` is re-pinned 1,296 -> 1,299 (the exact boundary the tree measures, the fix #571 precedent); `estimateMax` (17,663) keeps its headroom and is not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one."
         }
       },
       "AGENTS.md": {

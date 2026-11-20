@@ -8,9 +8,11 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { dirname } from "node:path";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   PATH_GLOB_MAX_LENGTH,
@@ -29,6 +31,11 @@ import { BASE_CONFIG_SECTIONS, resolveConfigDocuments, validateSectionValue } fr
 import { SHIPPED_PATH_POLICY as CRATE_SHIPPED } from "../../agentic-workflow/src/path-policy.mjs";
 
 const FLOOR = intersectPathPolicy(SHIPPED_PATH_POLICY, {});
+
+/** A durable, existing path outside every temp root and outside the fixture
+ *  repos: issue #654 carved OS-temp scratch out of Tier 2's containment, so an
+ *  "outside the root" case must name a durable target to mean what it says. */
+const DURABLE_OUTSIDE = fileURLToPath(new URL("../package.json", import.meta.url));
 const ALL_SHIPPED_GLOBS = Object.values(SHIPPED_PATH_POLICY.classes).flatMap((cls) => cls.globs);
 
 function justificationRow(target, phase = "P1", authority = "execute-phase") {
@@ -362,11 +369,11 @@ test("AC4 entry: equivalent path spellings are normalised before matching", asyn
   }
 });
 
-test("AC4 entry: a target escaping the project root is blocked, never silently allowed", async () => {
+test("AC4 entry: a durable target escaping the project root is blocked, never silently allowed", async () => {
   const { root, cwd, agentDir } = tempRoot("outside");
   try {
     const entry = await shippedEntry(cwd, agentDir);
-    const decision = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "../outside.mjs" } }, context(cwd));
+    const decision = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: DURABLE_OUTSIDE } }, context(cwd));
     assert.equal(decision?.block, true);
     assert.match(decision.reason, /outside the project root/);
   } finally {
@@ -378,15 +385,14 @@ test("F19: a symlink alias to a protected file is blocked, and a symlink escape 
   const { root, cwd, agentDir } = tempRoot("symlink");
   try {
     symlinkSync(join("tests", "a.mjs"), join(cwd, "alias.mjs"));
-    const outside = join(root, "outside");
-    mkdirSync(outside, { recursive: true });
-    writeFileSync(join(outside, "secret.mjs"), "secret\n");
-    symlinkSync(outside, join(cwd, "escapeLink"));
+    // A symlink in the fixture repo pointing at a durable directory outside it:
+    // the escape must survive canonicalisation and still be refused.
+    symlinkSync(dirname(DURABLE_OUTSIDE), join(cwd, "escapeLink"));
     const entry = await shippedEntry(cwd, agentDir);
     const aliased = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "alias.mjs" } }, context(cwd));
     assert.equal(aliased?.block, true, "a symlink alias must not defeat the protected-glob match");
     assert.match(aliased.reason, /tests\/a\.mjs/);
-    const escaped = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escapeLink/secret.mjs" } }, context(cwd));
+    const escaped = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escapeLink/package.json" } }, context(cwd));
     assert.equal(escaped?.block, true, "a symlink escape must not defeat the out-of-root refusal");
     assert.match(escaped.reason, /outside the project root/);
   } finally {
@@ -410,12 +416,43 @@ test("F27: a create under a symlinked cwd is not misread as outside the project 
 test("F28: a dangling symlink target cannot route a write outside the project root", async () => {
   const { root, cwd, agentDir } = tempRoot("dangling");
   try {
-    const outside = join(root, "outside");
-    mkdirSync(outside, { recursive: true });
-    symlinkSync(join(outside, "created.ts"), join(cwd, "escape.ts"));
+    symlinkSync(join(dirname(DURABLE_OUTSIDE), "paw-nonexistent-created.ts"), join(cwd, "escape.ts"));
     const entry = await shippedEntry(cwd, agentDir);
     const decision = await entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escape.ts" } }, context(cwd));
     assert.equal(decision?.block, true, "a dangling symlink escaping the root must be blocked");
+    assert.match(decision.reason, /outside the project root/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/* ------------------------------------------- issue #654: the scratch carve-out */
+
+test("issue #654: a write under an OS temp root passes containment without a record", async () => {
+  const { root, cwd, agentDir } = tempRoot("scratch-write");
+  const scratch = mkdtempSync(join(tmpdir(), "paw-scratch-target-"));
+  try {
+    const entry = await shippedEntry(cwd, agentDir);
+    const decision = await entry.handlers.get("tool_call")(
+      { toolName: "write", input: { path: join(scratch, "probe.txt") } },
+      context(cwd),
+    );
+    assert.equal(decision, undefined, "scratch is not durable storage, so it needs no justification record");
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("issue #654: a durable out-of-root write is still refused, scratch or not", async () => {
+  const { root, cwd, agentDir } = tempRoot("scratch-durable");
+  try {
+    const entry = await shippedEntry(cwd, agentDir);
+    const decision = await entry.handlers.get("tool_call")(
+      { toolName: "write", input: { path: join(dirname(DURABLE_OUTSIDE), "paw-durable-probe.ts") } },
+      context(cwd),
+    );
+    assert.equal(decision?.block, true, "the carve-out is scratch-only: durable outside paths stay refused");
     assert.match(decision.reason, /outside the project root/);
   } finally {
     rmSync(root, { recursive: true, force: true });

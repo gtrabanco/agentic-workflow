@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync, existsSync, lstatSync, readlinkSync, realpathSync, statSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { readFileSync, readdirSync, existsSync, lstatSync, readlinkSync, realpathSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -8,9 +8,9 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import type { SelectListTheme } from "@earendil-works/pi-tui";
 
 import { loadConfig } from "../config/load.js";
-import { evaluateToolCall, isProtectedPath, normalizeTarget } from "../config/path-policy.js";
+import { evaluateToolCall, isProtectedPath, isScratchPath, normalizeTarget } from "../config/path-policy.js";
 import { applyGitIdentityGuard, findGitConfigWrites, guardOptions, scratchDirs } from "../guards/git-identity.js";
-import { decideShellWrite, SCRIPT_SCAN_MAX_BYTES } from "../guards/shell-path.js";
+import { startGuardPlugins } from "../guards/plugin-core.js";
 import { enforceToolChoice } from "../guards/tool-choice.js";
 import type { ToolChoiceAvailability, ToolChoiceDecision } from "../guards/tool-choice.js";
 import { resolveToolChoiceAvailability } from "@gtrabanco/agentic-workflow/src/tool-choice/availability.mjs";
@@ -450,6 +450,16 @@ export default function extension(pi: ExtensionAPI): void {
     // and then behaves as the declared no-op.
     void hooksWiring.onSessionStart(toHooksContext(ctx));
 
+    // Issue #654 — the project's own guards. Declared in the extension file,
+    // registered with the operator-level permission layer when it is installed;
+    // an absent package or a session with no id is a stated skip, once, and never
+    // a silent no-op. The call is cheap when nothing is declared.
+    void startGuardPlugins({
+      config: loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() }).config.guardPlugins,
+      sessionId: sessionIdOf(ctx),
+      notify: (message, kind) => ctx.ui.notify(message, kind),
+    });
+
     const projectTrusted = ctx.isProjectTrusted();
     const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted });
     if (loaded.config.telemetry?.enabled === true && telemetry === null) {
@@ -566,48 +576,12 @@ export default function extension(pi: ExtensionAPI): void {
     // Issue #413 — the pre:commit / pre:push seams: a bash `git commit` or
     // `git push` first runs the project's declared, consented, enabled checks,
     // and a failing check blocks the tool call with the requirement quoted.
-    // Issue #567 — the shell write guard runs before the seams: bash carries
-    // write targets too, so a visible durable out-of-root write gets `edit`'s
-    // containment (block headless, owner approval with UI) and an existing
-    // in-root protected target gets the same Tier 2 decision. Only a
-    // non-blocked call reaches the seams; the write/edit prevention below
-    // still serves the structured tools, and bash's own path is this guard.
+    // Issue #654 — bash's own write containment is the operator-level permission
+    // layer's (`pi install npm:@gotgenes/pi-permission-system`), which owns the
+    // shell grammar, the external-directory map and the session grants. This
+    // package no longer parses a command, so a bash call reaches the seams
+    // without a second, differently-shaped gate in front of them.
     if (event.toolName === "bash" && typeof command === "string" && command !== "") {
-      let shellRealRoot = ctx.cwd;
-      try {
-        shellRealRoot = realpathSync(ctx.cwd);
-      } catch {
-        // ctx.cwd always exists; fall back to the lexical root.
-      }
-      const shell = decideShellWrite(command, {
-        cwd: ctx.cwd,
-        realRoot: shellRealRoot,
-        tempRoots: SHELL_TEMP_ROOTS,
-        homedir: SHELL_HOMEDIR,
-        resolveTarget: resolveRealTarget,
-        exists: existsSync,
-        readFile: readScriptBounded,
-        interactive: ctx.hasUI === true,
-        confirm: (question) => ctx.ui.confirm("path protection", question),
-        tier2: (relativePath, targetExists) => {
-          const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() });
-          if (!reportedDegradations && loaded.pathProtectionDegradations.length > 0) {
-            reportedDegradations = true;
-            for (const degradation of loaded.pathProtectionDegradations) {
-              ctx.ui.notify(`pi-agentic-workflow: path protection — ${degradation.code}: ${degradation.detail}`, "warning");
-            }
-          }
-          const decision = evaluateToolCall({
-            toolName: "edit",
-            targetPath: relativePath,
-            targetExists,
-            policy: loaded.config.pathProtection,
-            recordsText: collectRecordTexts(ctx.cwd),
-          });
-          return decision.block ? { block: true, reason: decision.reason } : { block: false };
-        },
-      });
-      if (shell.block) return { block: true, reason: shell.reason };
       return hooksWiring.onToolCall({ toolName: event.toolName, input: { command } }, toHooksContext(ctx));
     }
     // Tier 2 path prevention (feature 60): block a write/edit to an existing
@@ -645,8 +619,13 @@ export default function extension(pi: ExtensionAPI): void {
     }
     const relativeTarget = normalizeTarget(relative(realRoot, resolvedTarget.real));
     // Fail closed on a target that escapes the project root: the policy is
-    // repo-relative, so an out-of-root path cannot be verified (F7).
+    // repo-relative, so an out-of-root path cannot be verified (F7). OS-temp
+    // scratch is the one documented exception (issue #654): a write under the
+    // temp roots is not durable storage, and the permission layer's
+    // `external_directory` surface is where an operator decides about durable
+    // outside paths — refusing scratch here only pushed agents into bash heredocs.
     if (relativeTarget === "" || relativeTarget === ".." || relativeTarget.startsWith("../") || isAbsolute(relativeTarget)) {
+      if (relativeTarget !== "" && isScratchPath(resolvedTarget.real, SCRATCH_ROOTS)) return undefined;
       return {
         block: true,
         reason:
@@ -703,13 +682,12 @@ export default function extension(pi: ExtensionAPI): void {
 }
 
 /**
- * Issue #567 — the shell write guard's environment: canonical scratch roots
- * (the live-tree guard's mktemp mandate), the bounded script reader for the
- * direct interpreter+script scan, and the homedir the tilde form expands with.
- * Computed once at load; the per-call deps (cwd, root, confirm, Tier 2) are
- * built in the handler where the session context lives.
+ * Issue #654 — the OS-temp scratch roots Tier 2's containment excepts, in both
+ * spellings the filesystem may hand back (the `mktemp` mandate writes there).
+ * Computed once at load: a symlinked temp root resolves to one prefix, and the
+ * per-call comparison is a prefix test.
  */
-const SHELL_TEMP_ROOTS = [...new Set(
+const SCRATCH_ROOTS = [...new Set(
   [tmpdir(), "/tmp", "/var/tmp"].flatMap((path) => {
     try {
       return [path, realpathSync(path)];
@@ -718,19 +696,6 @@ const SHELL_TEMP_ROOTS = [...new Set(
     }
   }),
 )];
-
-const SHELL_HOMEDIR = homedir();
-
-/** Reads an executed script's source within the scan bound; absent/huge → null. */
-function readScriptBounded(path: string): string | null {
-  try {
-    const stat = statSync(path);
-    if (!stat.isFile() || stat.size > SCRIPT_SCAN_MAX_BYTES) return null;
-    return readFileSync(path, "utf8");
-  } catch {
-    return null;
-  }
-}
 
 // Exported so the settings console (P4) names the same command without relisting it.
 export { SETTINGS_COMMAND };

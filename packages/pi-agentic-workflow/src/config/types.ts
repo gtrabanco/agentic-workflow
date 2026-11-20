@@ -8,6 +8,8 @@
  *    fully resolved, so no downstream code has to reason about optionality.
  */
 
+import type { GuardPluginDeclarations } from "@gtrabanco/agentic-workflow-schema";
+
 import type { ResolvedPathPolicy } from "./path-policy.js";
 
 /** Pi's thinking levels, mirrored here so the domain layer stays Pi-free. */
@@ -171,6 +173,35 @@ export const DEFAULT_PHASE_BATCHING: PhaseBatchingConfig = {
 };
 
 // ---------------------------------------------------------------------------
+// Guard plugins (issue #654)
+// ---------------------------------------------------------------------------
+
+/** What an operator WRITES under `guardPlugins` in `pi-agentic-workflow.json`:
+ *  the project's own guards, declared as data. This section is the ONE authoring
+ *  surface — the permission layer's own configuration is a projection of it
+ *  (`agentic-workflow provision permissions`), never a second place to write the
+ *  same claim. Declaring a guard is the opt-in; `enabled: false` stands the whole
+ *  chain down without deleting the declarations. */
+export interface GuardPluginsConfigFile {
+  enabled?: boolean;
+  guards?: GuardPluginDeclarations;
+}
+
+/** What the extension READS: the resolved switch and the declared guards. */
+export interface GuardPluginsConfig {
+  enabled: boolean;
+  guards: GuardPluginDeclarations;
+}
+
+/** Declaring a guard is the opt-in, so the switch ships ON: an install with no
+ *  declaration does nothing, and one that declares guards does not have to
+ *  remember a second flag to make them run. */
+export const DEFAULT_GUARD_PLUGINS: GuardPluginsConfig = {
+  enabled: true,
+  guards: {},
+};
+
+// ---------------------------------------------------------------------------
 // Model-profiles fields (feature 63)
 // ---------------------------------------------------------------------------
 
@@ -277,6 +308,9 @@ export interface ConfigFile {
    *  Without the companion preset installed the key is a documented no-op: the
    *  policy lives where the model knowledge lives. */
   phaseBatching?: PhaseBatchingConfigFile;
+  /** Issue #654: the project's own guards, declared as data — the authoring
+   *  surface the permission layer's policy is projected from. */
+  guardPlugins?: GuardPluginsConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -393,6 +427,9 @@ export interface EffectiveConfig {
   toolChoice: ToolChoiceConfig;
   /** Issue #632: the phase-batching switch, resolved (shipped OFF). */
   phaseBatching: PhaseBatchingConfig;
+  /** Issue #654: the declared guards and their switch, merged project over
+   *  global; empty when no scope declares one. */
+  guardPlugins: GuardPluginsConfig;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }

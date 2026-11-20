@@ -17,6 +17,9 @@
 
 import {
   CONFIG_EXTENSION_CONTRACT,
+  GUARD_MODES,
+  GUARD_PLUGIN_KINDS,
+  GUARD_PLUGIN_SURFACES,
   type ConfigExtensionDescriptor,
   type JsonSchema,
 } from "@gtrabanco/agentic-workflow-schema";
@@ -128,6 +131,44 @@ const PI_SCHEMA = {
         mode: { type: "string", enum: [...TOOL_CHOICE_MODES] },
       },
     },
+    // Issue #654 — the project's own guards, declared as data. This section is
+    // the ONE authoring surface; the permission layer's own configuration is a
+    // projection of it (`provision permissions`), so the shape is closed at every
+    // level: an undeclared key is refused rather than read as a policy nobody
+    // declared.
+    guardPlugins: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        enabled: { type: "boolean" },
+        guards: {
+          type: "object",
+          additionalProperties: {
+            type: "object",
+            additionalProperties: false,
+            required: ["kind", "surface", "rules"],
+            properties: {
+              kind: { type: "string", enum: [...GUARD_PLUGIN_KINDS] },
+              surface: { type: "string", enum: [...GUARD_PLUGIN_SURFACES] },
+              rules: {
+                type: "array",
+                minItems: 1,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["match"],
+                  properties: {
+                    match: { type: "string", minLength: 1 },
+                    verdict: { type: "string", enum: [...GUARD_MODES] },
+                    reason: { type: "string", minLength: 1 },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     // Issue #632 — the phase-batching switch the companion preset's policy
     // reads through the seam. One scalar: the policy's thresholds are preset
     // data, so a second knob here would be a setting nothing reads.
@@ -147,7 +188,7 @@ export const PI_CONFIG_EXTENSION: ConfigExtensionDescriptor = {
   contract: CONFIG_EXTENSION_CONTRACT,
   key: "pi",
   file: "pi-agentic-workflow.json",
-  description: "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice, phase batching.",
+  description: "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice, phase batching, guard plugins.",
   schema: PI_SCHEMA,
   defaults: piDefaults,
 };
