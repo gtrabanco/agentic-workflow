@@ -1,0 +1,6 @@
+## 2026-11-20T09:36:05Z — feat/651-doc-retention — narrative
+- **Commits:** 23 (`8f8537a9…fcf0b9da`)
+- **Files:** 58 files
+- **Summary:** Closed both blockers of the 2026-11-20 EXTERNAL VERIFY (NEEDS-DECISION) in one correction batch: roadmap row 651 settled to done [#661] through the #498 CAS writer (roadmap-settle live check 9 pass/1 fail -> 10/0, roadmap check PASS, docs/generated re-rendered by the emitter), advisories A1-A4 folded (the three-accepted-shapes residue in pre-execution.ts, UnitDoc.mjs, unit-doc-contract.test.mjs and MIGRATION.md), and G4's post-merge reading of #316 amended with a dated pointer; local-gate PASS 19 steps (506s) at fcf0b9daf, schema 938/0 and crate 1349/0.
+- **Decisions:** D4 scopes the batch: the status cell is written only by the CAS writer (roadmap read + rowUpsert --expect, fixture-validated in mktemp first), never by hand; advisory A5 (ledger-provenance red only under parallel load, 27/27 standalone) is reported to the owner and left unfixed as pre-existing and outside the correction bounds; the external-verify receipt is committed as the verdict carrier so the next run is a delta verdict.
+- **Next:** Owner delta recheck of external-verify.md blockers 1-2 against the correction head: one recheck, a second only if the same blocker still fails, otherwise Needs your decision; PR #661 merges after the verdict.

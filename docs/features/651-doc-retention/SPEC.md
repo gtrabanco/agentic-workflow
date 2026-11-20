@@ -358,6 +358,7 @@ The ledger lives beside this document: [`planning-obligations.md`](planning-obli
 - **E19** — 2026-11-20, `bun test scripts/roadmap-settle.test.mjs` · exit 0 · `10 pass 0 fail` (blocker 1's reproducer: 9 pass / 1 fail with `pr-url-unsettled` before the batch, green after the settle).
 - **E20** — 2026-11-20, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/features/651-doc-retention/SPEC.md` · exit 0 · `verdict PASS, violations 0`; `bun scripts/docs-generate.mjs --check` · exit 0 · `PASS` (row write receipt `1fc62a58 → 5149385d`, identical to the `mktemp` fixture run; `docs/generated/units.md` re-rendered by the emitter).
 - **E21** — 2026-11-20, the A1–A4 residue edits: `bun test scripts/unit-doc-contract.test.mjs` · exit 0 · `21 pass 0 fail`; `bun run --cwd packages/agentic-workflow-schema test` · exit 0 · `938 pass 0 fail`; `bun run --cwd packages/agentic-workflow test` · exit 0 · `1349 pass 0 fail`.
+- **G5** — 2026-11-20, `HEAD fcf0b9daf`, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 506s` (the external-verify correction head: blockers 1–2 closed — root-suite 132/132 including `roadmap-settle`, both crate legs, both schema legs and both pi legs; the two range-bound steps ran separately: `push-identity` exit 0, `dimension-regression --base origin/main` clean).
 
 ## Next
 
