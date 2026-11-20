@@ -75,6 +75,7 @@ export const RETENTION_STATES = Object.freeze([
   "unstamped",
   "older-format",
   "unknown-carrier",
+  "open-findings",
   "dirty-unit-dir",
 ] as const);
 export type RetentionState = (typeof RETENTION_STATES)[number];
@@ -89,6 +90,8 @@ export interface RetentionCandidate {
   readonly format: string | null;
   /** True when the unit folder carries uncommitted bytes. */
   readonly dirty?: boolean;
+  /** True when a legacy `review-findings.md` still carries an unfoleded row. */
+  readonly openFindings?: boolean;
 }
 
 export interface RetentionVerdict {
@@ -115,6 +118,7 @@ export function classifyUnitRetention(candidate: RetentionCandidate): RetentionV
   if (candidate.format === null || candidate.format === undefined) return state("unstamped");
   if (candidate.format === "unit-doc@1") return state("older-format");
   if (candidate.shape === null) return state("unknown-carrier");
+  if (candidate.openFindings === true) return state("open-findings");
   if (candidate.dirty === true) return state("dirty-unit-dir");
   return state("eligible");
 }
