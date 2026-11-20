@@ -149,6 +149,13 @@ none
   removed by this unit for `deny`/`allow`*: it is the host's unanswered-prompt
   timeout, reachable only while a dialog exists; no new timeout is introduced
   here and `ask` keeps the host's own behaviour.
+- **Stale worktree `.worktrees/feat-553-universal-cli`** (branch
+  `feat/553-universal-cli` at the cut head, merged into `origin/main`, one
+  untracked `docs/features/553-universal-cli/` folder) — *does not affect this
+  unit*: it is a different lane's checkout, so `worktree-guard` reports its one
+  `STALE` finding on every head of this branch. It is not removed here: deleting
+  a worktree with uncommitted content is the owner's call, not a side effect of
+  a guard fix (`IR8`).
 
 ## Acceptance criteria
 
@@ -385,6 +392,15 @@ is the authoritative step list.
   narrative journal fragment · `01ee9f85c`.
 - **P6** — 2026-11-20, verification: `E5`–`E12` run in the foreground; no obligation
   left `planned`, and the AC coverage table reports all six criteria `met`.
+- **G1** — 2026-11-20, HEAD 836f88c30cf0371a7d724ca6af50e2f6d5a14b9c ·
+  `bun scripts/local-gate.mjs --skip-network --jobs 4` · exit 1 · 14 of 15 steps
+  PASS (`schema-build`, `version-parity`,
+  `docs-generated-projection`, `log-immutability` 0 violations over 7 commits,
+  `root-suite` exit 0 in 132s, `journal-carrier-check`, `secret-scan` 0 findings,
+  `temp-hygiene`, `tmp-gc`, `rigidity-review`, …) and one FAIL — `worktree-guard`,
+  whose single finding is the pre-existing stale `feat-553-universal-cli`
+  worktree recorded under `## Known pre-existing issues`, untouched by this unit.
+  Four network steps were skipped by the flag.
 
 ## Next
 
