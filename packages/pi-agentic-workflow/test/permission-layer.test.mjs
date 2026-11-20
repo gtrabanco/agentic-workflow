@@ -76,6 +76,16 @@ test("the package README documents the permission layer: install, scopes, and th
   assert.equal(/decideShellWrite|analyzeShellWrite/u.test(readme), false, "no retired name survives in the README");
 });
 
+test("the event matrix's index.ts cells match what the extension still registers", () => {
+  const config = read("docs/workflow/CONFIG.md");
+  assert.equal(/shell write guard/u.test(config), false, "the retired listener is gone from the tool_call row (external-verify B2)");
+  assert.match(
+    config,
+    /session_start \| index\.ts \([^)]*guard-plugin registration/u,
+    "the session_start row names the guard-plugin registration this unit added (external-verify A2)",
+  );
+});
+
 test("the init-workspace reference carries the consent-gated offer and the operator checklist", () => {
   const reference = read("skills/init-workspace/references/PERMISSIONS.md");
   assert.match(reference, /## Consent/u, "the offer is consent-gated and says so");

@@ -37,6 +37,11 @@ function freshRoot() {
   return root;
 }
 
+/** Every CLI spawn pins the agent dir: the global `pi-agentic-workflow.json` is
+ *  read by the resolved merge, and an operator machine whose own agent file
+ *  declares guards must not flip a suite that is about the project scope. */
+const cliEnv = (root) => ({ ...process.env, PI_CODING_AGENT_DIR: join(root, "empty-agent-dir") });
+
 /* ---------------------------------------------------------------- baseline */
 
 test("the projection carries the documented baseline: fail closed on bash, allow scratch outside the root", () => {
@@ -149,20 +154,78 @@ test("a global-scope projection lands under the agent directory, not the project
 test("the CLI prints the projection with --json and creates it with --write", () => {
   const root = freshRoot();
   try {
-    const printed = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root, "--json"], { encoding: "utf8" });
+    const printed = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root, "--json"], { encoding: "utf8", env: cliEnv(root) });
     assert.equal(printed.status, 0, printed.stderr);
     const document = JSON.parse(printed.stdout);
     assert.equal(document.ok, true);
     assert.equal(document.verdict, "rendered");
     assert.match(document.text, /"permission"/u);
 
-    const written = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root, "--write", "--json"], { encoding: "utf8" });
+    const written = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root, "--write", "--json"], { encoding: "utf8", env: cliEnv(root) });
     assert.equal(written.status, 0, written.stderr);
     assert.equal(JSON.parse(written.stdout).verdict, "written");
 
-    const again = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root, "--write", "--json"], { encoding: "utf8" });
+    const again = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root, "--write", "--json"], { encoding: "utf8", env: cliEnv(root) });
     assert.equal(again.status, 2, "a second write refuses instead of clobbering");
     assert.equal(JSON.parse(again.stdout).verdict, "refused");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/* --------------------------- external-verify B1 (2026-11-20): loud over silent */
+
+test("the CLI refuses a project file that declares guardPlugins the config system cannot resolve", () => {
+  const root = freshRoot();
+  try {
+    mkdirSync(join(root, ".pi"), { recursive: true });
+    writeFileSync(
+      join(root, ".pi", "pi-agentic-workflow.json"),
+      JSON.stringify({ guardPlugins: { guards: { "no-dotenv": DENY_ENV } } }),
+    );
+    const refused = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root], { encoding: "utf8", env: cliEnv(root) });
+    assert.equal(refused.status, 2, `silent baseline is the defect: ${refused.stdout}`);
+    assert.match(refused.stderr, /PROVISION permissions — refused:/u, "the refusal names the command");
+    assert.match(refused.stderr, /guardPlugins/u, "the refusal names what could not be read");
+    assert.match(refused.stderr, /not registered/u, "the reason is the unresolved section, not a generic failure");
+    assert.equal(/verdict: rendered/u.test(refused.stdout), false, "nothing renders when the declarations cannot be read");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("an authoring file without a guardPlugins key keeps the baseline — absence, not mere existence, is the silence", () => {
+  const root = freshRoot();
+  try {
+    mkdirSync(join(root, ".pi"), { recursive: true });
+    writeFileSync(join(root, ".pi", "pi-agentic-workflow.json"), JSON.stringify({ default: { model: "inherit" } }));
+    const rendered = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root, "--json"], { encoding: "utf8", env: cliEnv(root) });
+    assert.equal(rendered.status, 0, rendered.stderr);
+    assert.equal(JSON.parse(rendered.stdout).verdict, "rendered", "routing-only config is not a declaration to drop");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("the CLI refuses an authoring file that fails validation instead of projecting the defaults over it", () => {
+  const root = freshRoot();
+  try {
+    mkdirSync(join(root, ".pi"), { recursive: true });
+    mkdirSync(join(root, "config-extensions"), { recursive: true });
+    writeFileSync(
+      join(root, "config-extensions", "pi.json"),
+      readFileSync(new URL("../../pi-agentic-workflow/agentic-workflow.config.json", import.meta.url)),
+    );
+    writeFileSync(
+      join(root, ".pi", "pi-agentic-workflow.json"),
+      JSON.stringify({ guardPlugins: { guards: { g: { kind: "deterministic", surface: "path", rules: [{ match: "*", verdict: "maybe" }] } } } }),
+    );
+    const refused = spawnSync(process.execPath, [CLI, "provision", "permissions", "--dir", root, "--json"], { encoding: "utf8", env: cliEnv(root) });
+    assert.equal(refused.status, 2, `an invalid declaration must not project as defaults: ${refused.stdout}`);
+    const document = JSON.parse(refused.stdout);
+    assert.equal(document.ok, false);
+    assert.equal(document.verdict, "refused");
+    assert.match(JSON.stringify(document.issues), /verdict/u, "the refusal carries the failing path");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
