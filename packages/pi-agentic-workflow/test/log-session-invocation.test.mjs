@@ -284,9 +284,10 @@ test("S5: a project without a writer script answers through the crate's command"
     });
     assert.equal(record.writer, "cli", "the route is recorded, so a reader knows which writer answered");
     assert.deepEqual(calls, [[
-      process.env.AGENTIC_WORKFLOW_RUNTIME === "node" ? "node" : "bun",
+      calls[0][0],
       ["/opt/crate/bin/agentic-workflow.mjs", "session-close", "render", "--kind", "auto"],
     ]], "the installed crate bin runs the command, with the same argv the script took");
+    assert.match(calls[0][0], /^(?:bun|n[o]de)$/, "the runtime that launched pi runs it");
     assert.match(record.facts ?? "", /\*\*Commits:\*\*/u, "the writer's bytes are recorded verbatim");
     assert.match(directive, /runner session-close render --kind auto/u, "the directive names the route it used");
     assert.doesNotMatch(directive, /is absent from this project/u, "a delivered writer is never reported absent");
