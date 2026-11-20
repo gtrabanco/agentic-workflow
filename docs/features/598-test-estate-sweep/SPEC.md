@@ -200,9 +200,12 @@ proves it.
 - **AC-S2** — every root suite and every package suite carries a recorded verdict
   with the evidence class that produced it, and the obligation class is the
   tag's or the honest `undeclared`. Check:
-  `bun scripts/test-obligation-tags.mjs --estate` exits 0 and its table has one
-  row per suite on disk (its header prints both counts); a row whose obligation
-  class is not a published kind prints `undeclared`.
+  `bun scripts/test-obligation-tags.mjs --estate --adjudications docs/features/598-test-estate-sweep/adjudications.md`
+  exits 0 and its table has one row per suite on disk (its header prints both
+  counts); a row whose obligation class is not a published kind prints
+  `undeclared`. (The flagless form refuses by design — a missing adjudication is
+  `FAIL`, pinned by `scripts/test-obligation-tags.test.mjs` — so the check names
+  the adjudicated invocation; corrected per external-verify B1, `## Log` E13.)
 - **AC-S3** — every deletion records its ground and lands in its own commit, and
   nothing is deleted without one. Check: `git log --oneline main...HEAD --diff-filter=D -- scripts packages/*/test`
   lists exactly the commits named in `estate.md` § Adjudication (zero is a legal
@@ -212,12 +215,17 @@ proves it.
   `rg -c '^\| `(docs-only|script change|package change)` ' docs/features/598-test-estate-sweep/estate.md`
   prints `3`; `rg -c 'pre-push-budget' docs/workflow/GATE_INVENTORY.md` prints `1`.
 - **AC-S5** — no test assertion is weakened for speed. Check:
+  `git log --oneline main...HEAD --diff-filter=D -- scripts packages/*/test`
+  prints nothing (no suite deleted), and
   `git diff main...HEAD --numstat -- scripts/*.test.mjs packages/*/test`
-  reports deletions only for suites named in § Adjudication (zero rows ⇒ no
-  deleted assertion).
+  removes only the two import lines of the edited suites — every other changed
+  line is an addition, so no assertion line is deleted (zero delete-verdict rows
+  ⇒ no deleted assertion). Corrected per external-verify A4, `## Log` E12.
 - **AC-S6** — the baseline is committed as evidence and is the emitter's output,
-  not typed prose. Check: `bun scripts/test-obligation-tags.mjs --estate --cost <log>`
-  reproduces `estate.md`'s table byte-for-byte apart from the dated header.
+  not typed prose. Check: `bun scripts/test-obligation-tags.mjs --estate --cost /tmp/598-head-cost.log --adjudications docs/features/598-test-estate-sweep/adjudications.md --budget scripts/pre-push-budget.json`
+  reproduces `estate.md` byte-for-byte — `diff` prints nothing (the committed
+  baseline is the calm run's, and the adjudication and budget sections are part
+  of the emitter's output). Corrected per external-verify B1, `## Log` E13.
 - **AC-S7** — the issue's acceptance list holds: root suites green, context
   budgets green, gate green, changeset present. Check:
   `node scripts/run-root-suite.mjs` exits 0; `bun scripts/check-skill-context.mjs`
@@ -227,9 +235,14 @@ proves it.
   invented, no target-selection change that lets a push skip a test-bearing step
   beyond the declared `empty` verdict. Check:
   `git diff --name-only main...HEAD -- skills template` prints nothing;
-  `rg -c 'test-obligation:' packages/*/test` prints `0`;
+  `rg -c 'test-obligation:' packages/*/test` matches nothing (no output, exit 1 —
+  `rg -c` prints no zero count without `--include-zero`);
   `git diff main...HEAD -- scripts/local-gate.mjs | rg -c 'pushBase|test-impact'`
-  prints `0`.
+  matches nothing (no output, exit 1) ⇒ no target-selection change;
+  `bun scripts/run-root-suite.mjs --dir does-not-exist` exits 2 and stderr names
+  the directory — a nonexistent test tree can never pass a test-bearing step.
+  (The first three corrected per external-verify A3, the fourth added per B2;
+  `## Log` E13/E14.)
 
 ## Tasks
 
@@ -249,7 +262,7 @@ validator is the command that proves the whole phase.
 - P3 — Emit and commit the baseline `estate.md` from a measured gate log, and
   adjudicate every fired standard: keep or delete per row, a deletion in its own
   commit with its ground recorded
-  (validator: `bun scripts/test-obligation-tags.mjs --estate --cost <log>` exits 0 and prints one row per suite on disk)
+  (validator: `bun scripts/test-obligation-tags.mjs --estate --cost /tmp/598-head-cost.log --adjudications docs/features/598-test-estate-sweep/adjudications.md --budget scripts/pre-push-budget.json` exits 0 and prints one row per suite on disk)
   (Implements: S2, S3, S7)
   - Relevant files: docs/features/598-test-estate-sweep/estate.md
 - P4 — Measure and cut the cost: the three change classes before and after, the
@@ -328,6 +341,12 @@ Open rows only (carrier grammar: `findings-table@1`).
   ```
 - **D7** — 2026-11-20, the correction batch's scope under the owner's `S1` ("triage and fix those that deserve to fix") and the external-verify verdict `NEEDS-DECISION` (`docs/features/598-test-estate-sweep/external-verify.md`, 2026-11-20). Fixed: `B1` — the six declared estate checks (AC-S2, AC-S6, P3, O1, O7, and E2's recorded command corrected by append); `B2` — the missing-`--dir` silent success including the absolute-path facet; `B3` — the default header; `A2`/`A3` — E10's stale numstat, line label and `rg -c` phrasing; `A4` — AC-S5's line-edit miscount; `A6` — G1's step membership. Left with reasons: `A1` — the base-present `session-close` node red (disclosed, out of this unit's domain); `A5` — 591/91's frozen evidence quotes (their claims still hold at head); `A7` — S4's bullet-(a) is an owner scope disposition; `A8` — my `/tmp` scratch artefact, not a repo defect. Authority: the receipt above; corrections append here, never edit an earlier line (`log-kind@1`).
 - **E11** — 2026-11-20, the correction corpus, observed **red** at `334076581` before any fix. The six declared estate checks: `bun scripts/test-obligation-tags.mjs --estate` · exit **1** (`verdict: FAIL`, `adjudications missing: 4`; claimed 0); `bun scripts/test-obligation-tags.mjs --estate --cost /tmp/598-head-cost.log` · exit **1** and `diff docs/features/598-test-estate-sweep/estate.md <out>` · **51 lines** (AC-S6 claims byte-identical); `bun scripts/test-obligation-tags.mjs --estate --cost /tmp/598-root-baseline.log` (E2's recorded command) · exit **1** (E2 claims 0); O7's validator as written (`… --cost /tmp/598-root-baseline.log > /tmp/estate-rerun.md` + `diff <(sed 1,4d …) <(sed 1,4d …)`) · cmd exit **1**, diff **306 lines** (claims nothing); control — the E9 form (`--cost /tmp/598-head-cost.log --adjudications … --budget …`) · exit **0**, `diff` vs the committed `estate.md` empty. The runner: `bun scripts/run-root-suite.mjs --dir does-not-exist` · exit **0** printing `root gate: 0 suite(s) from does-not-exist …` (B2); `bun scripts/run-root-suite.mjs --jobs 2 scripts/workspace-lock-policy.test.mjs` · exit 0 printing `root gate: 1 suite(s) from scripts · …` (B3); `bun scripts/run-root-suite.mjs --dir /tmp/r4tree` (one fixture suite) · exit **0** printing `0 suite(s)` — the absolute value mangled by `path.join`. Path probe, both pinned runtimes: `node --test /tmp/pcheck598.test.mjs` (node v26.13.0) and `bun test /tmp/pcheck598.test.mjs` (bun 1.4.6) · exit 0 · `join(/repo/root, /tmp/x) = /repo/root/tmp/x`, `resolve(/repo/root, /tmp/x) = /tmp/x`.
+- **E12** — 2026-11-20, the stale-receipt corrections the external verify named, each re-run rather than reworded from memory · correcting `E2`: `bun scripts/test-obligation-tags.mjs --estate --cost /tmp/598-root-baseline.log --adjudications docs/features/598-test-estate-sweep/adjudications.md` · exit **0**, `standards fired: 71 · cost-over-risk: 67 · adjudications missing: 0`, `verdict: PASS` — the recorded counts hold; the recorded command lacked `--adjudications`, which is why its claimed exit 0 never reproduced. Correcting `E10`: `git diff --numstat main...HEAD -- scripts/*.test.mjs packages/*/test` at this line's measurement → `34/1`, `117/1`, `179/0` (E10's `148/0` was already wrong at its own commit `4425f5349`, where the value was `179/0`; `117/1` is this batch's four new cases in `scripts/run-root-suite.test.mjs` — additions only); `git diff main...HEAD -- scripts/local-gate.test.mjs scripts/run-root-suite.test.mjs scripts/test-obligation-tags.test.mjs | rg '^-[^-]'` → exactly two lines, both **import statements** (the `./local-gate.mjs` import and the `node:fs` import), each re-asserted with its prior symbols plus one — not a `parseArgs` expectation; `rg -c 'test-obligation:' packages/*/test` → no output, exit **1** (rg prints no zero count without `--include-zero`), not `0`. Correcting `G1`'s membership: G1's own command re-run at the verify pass (`external-verify.md`, spot check) · exit 0 · `local-gate: PASS — 16 step(s) in 377s`, scheduled set = `schema-build, version-parity-content, docs-generated-projection, journal-carrier-check, log-immutability, secret-scan, skill-context-budgets, temp-hygiene, rigidity-review, worktree-guard, tmp-gc, root-suite, crate-suite-bun, crate-suite-node, schema-node-compat, pi-node-compat` — `dimension-regression` and `push-identity` are `pushBase`-gated and drop without `--push-base` (`scripts/local-gate.mjs:976`), so G1's list misattributed `dimension-regression` (its green run is `G3`) and omitted `schema-build`; G1's numeric envelope reproduced.
+- **E13** — 2026-11-20, the corrected declared checks re-run in the foreground, all green · `bun scripts/test-obligation-tags.mjs --estate --adjudications docs/features/598-test-estate-sweep/adjudications.md` · exit **0** · `136 root suite(s) · 227 package suite(s) · 363 row(s) · adjudications missing: 0` · `verdict: PASS` (AC-S2 = O1); the full form `--estate --cost /tmp/598-head-cost.log --adjudications docs/features/598-test-estate-sweep/adjudications.md --budget scripts/pre-push-budget.json` · exit **0** and `diff docs/features/598-test-estate-sweep/estate.md <out>` empty (AC-S6 = P3); O7's validator verbatim (`… > /tmp/estate-rerun.md` + `diff docs/features/598-test-estate-sweep/estate.md /tmp/estate-rerun.md`) · cmd exit **0**, diff **0 lines**; AC-S5: `git log --oneline main...HEAD --diff-filter=D -- scripts packages/*/test` prints nothing, and the numstat's only removed lines are the two imports (`34/1, 117/1, 179/0`, zero assertion lines removed); AC-S8: `git diff --name-only main...HEAD -- skills template` prints nothing, both `rg -c` checks print nothing (exit **1**) ⇒ zero package tags and no targeting lines, `bun scripts/run-root-suite.mjs --dir does-not-exist` exit **2** naming the directory; doc surfaces after the edits: `bun scripts/check-skill-context.mjs` exit 0 `PASS context budgets: 30 skills`, `--documents` exit 0 `PASS context documents: 7 budgeted documents`, `bun scripts/docs-generate.mjs --check` exit 0 `verdict: PASS`, `bun scripts/lint-changeset.mjs` exit 0 `ok`; O10 wall-clock rows → `3`, O11 `pre-push-budget` count → `1`.
+- **E14** — 2026-11-20, the runner corpus green after `6745ee932`, plus the base differential (`fc17d9661` in a `/tmp` shared clone, `bun install --frozen-lockfile`, each command run twice per side and the second run compared, PASS timings normalized) · `bun scripts/run-root-suite.mjs --dir does-not-exist` · exit **2**, stderr `root gate: --dir does-not-exist does not name a directory (resolved …)`, stdout carries no `0 suite(s)` (E11: exit 0); `bun scripts/run-root-suite.mjs --dir ""` and `--cwd ""` · exit **2** (`root gate: --dir needs a directory` / `--cwd needs a directory` — empty values refused at parse time); default run `bun scripts/run-root-suite.mjs --jobs 2 scripts/workspace-lock-policy.test.mjs` · exit 0, header `root gate: 1 suite(s) · 2 worker(s) …` — no tree segment (E11: `from scripts`); absolute tree from a foreign cwd (`--dir <mkdtemp>` with `cwd: <mkdtemp>`) · exit 0 · `1 suite(s) from <tmp> · …` + `PASS …/one.test.mjs`. Differential vs base: default run stdout+stderr byte-identical, exits 0=0; missing-suite run exits 1=1, stderr identical, stdout identical modulo bun's own `3123 vs 3113 files were searched [ms]` line (tree size + child timing); `--suite-timeout 0` usage refusal exits 2=2 with stderr identical modulo 598's own asked-for usage flags, and current vs pre-impl `7c64cba51` byte-identical (the USAGE extraction changed no bytes); `--dir does-not-exist`: base loud exit 1 (`FAIL does-not-exist` — the unknown flag became a suite name) vs head refused exit 2 — the asked-for B2 delta, loud on both sides. Suites: `bun test scripts/run-root-suite.test.mjs` · exit 0 · **56 pass / 0 fail** (red at `7c64cba51`: 52 pass / 4 fail); `node --test scripts/run-root-suite.test.mjs` · exit 0 · **56/56**.
+- **G4** — 2026-11-20, `bun scripts/run-root-suite.mjs` at the correction head · exit 0 · `root gate: 136 suite(s) · 4 worker(s) · fail-fast off · suite bound 120.0s · mem cap 1536 MB` — the default header in its base shape at full scale, no tree segment — **136 PASS / 0 FAIL** in 2m27s, the touched `scripts/run-root-suite.test.mjs` green among them (56 cases).
+- **G5** — 2026-11-20, `bun scripts/local-gate.mjs --skip-network --jobs 4` (G1's exact command) · exit 0 · `local-gate: PASS — 16 step(s) in 367s`, every step exit 0: `schema-build` 1s, `docs-generated-projection` 1s, `version-parity-content` 1s, `log-immutability` 1s, `journal-carrier-check` 1s, `skill-context-budgets` 1s, `secret-scan` 0s, `temp-hygiene` 0s, `tmp-gc` 0s, `worktree-guard` 0s, `rigidity-review` 0s, `root-suite` 148s (136 PASS, header without a tree segment), `crate-suite-bun` 84s and `crate-suite-node` 107s (both dispatch through the touched runner: `root gate: 77 suite(s) from packages/agentic-workflow/test · …`, 154 PASS lines), `schema-node-compat` 6s, `pi-node-compat` 20s — the correction's runner change is exercised by the gate's own dispatch, not only by its unit suite.
+- **P5** — 2026-11-20, the correction batch under `L3`/`D7`: ledgers frozen with `O1`/`O7` reopened · `adc0fa7fc`; the corpus cases landed red (52 pass / 4 fail) · `7c64cba51`; the runner fix green on both runtimes (56/56) · `6745ee932`; corrected checks, receipts and this verification (`E12`–`E14`, `G4`, `G5`) land here with `O1`, `O7`, `O17`, `O18` flipped `verified` on their foreground validators.
 
 ## Next
 
