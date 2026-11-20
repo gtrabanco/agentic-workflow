@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// test-obligation: protects=docs/workflow/REPOSITORY_STATE.md,skills/resolve-repository-state/references/STATE_CONTRACT.md obligations=contract,regression
+// test-obligation: protects=docs/workflow/REPOSITORY_STATE.md,skills/resolve-repository-state/references/STATE_CONTRACT.md obligations=contract,failure-path
 
 /**
  * repository-state.test.mjs — the freshness contract and its reader (issue #646
@@ -135,7 +135,7 @@ test("F-646-4 an expired snapshot answers stale with the age, and the TTL is dec
   const expired = outside.reasons.find((reason) => reason.code === "expired");
   assert.ok(expired, JSON.stringify(outside.reasons));
   assert.match(expired.detail, /193 days/);
-  const result = run(["--ttl-days", "0", LIVE]);
+  const result = run(["--ttl-days", "30", "--today", "2027-06-01", file]);
   assert.equal(result.status, 1);
   assert.match(result.stdout, /REASON expired/);
 });
@@ -180,7 +180,12 @@ test("the committed snapshot is fresh, dated and free of the retired interim cla
   assert.match(state.coversThrough, /^\d{4}-\d{2}-\d{2}$/);
   assert.ok(state.facts.length >= 10, `the snapshot carries its facts: ${state.facts.length}`);
   assert.ok(state.decisions.length >= 8, `the snapshot carries its accepted decisions: ${state.decisions.length}`);
-  assert.ok(!fs.readFileSync(LIVE, "utf8").includes("feature 57 restores"), "the fossil interim claim is gone");
+  // The fossil interim claim survives only where history is recorded — the
+  // superseded-state resolutions table — never as a fact or a live decision.
+  for (const row of [...state.facts, ...state.decisions]) {
+    assert.ok(!/feature 57 restores/i.test(JSON.stringify(row)), `${row.id} still states the retired interim claim`);
+  }
+  assert.match(fs.readFileSync(LIVE, "utf8"), /Superseded-state resolutions/, "the history of the reversal is recorded");
   const result = run([LIVE]);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
   assert.match(result.stdout, /^repository-state — /m);

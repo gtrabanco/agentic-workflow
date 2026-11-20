@@ -539,6 +539,7 @@ test-deletion-authority-grammar | skills/unit-lane/references/TESTS.md | block:t
 decision-scope-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DECISION_SCOPES | decision-scope | no
 decision-scope-grammar | skills/unit-lane/references/DESIGN.md | block:decision-scope@1 | n/a | no
 decision-promotion-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | fenced:decision-promotion@1 | n/a | no
+repository-state | skills/resolve-repository-state/references/STATE_CONTRACT.md | block:repository-state@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

@@ -14,6 +14,12 @@ description: >
 
 Resolve evidence conflicts explicitly and publish the next frozen snapshot.
 
+The snapshot's shape and its freshness rule are one contract —
+[STATE_CONTRACT.md](references/STATE_CONTRACT.md) (`repository-state@1`).
+A re-freeze moves `covers-through`; `bun scripts/repository-state.mjs` is the
+read-only reader that judges it, so a snapshot whose last coverage date predates
+a recorded decision is reported `stale` instead of being consumed as current.
+
 ## Turn contract
 
 Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions:
