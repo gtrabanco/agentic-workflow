@@ -2,12 +2,12 @@
  * UnitDoc — create and edit single-unit SPEC documents.
  *
  * The unit doc is a single Markdown file (docs/features/<NN>-<slug>/SPEC.md)
- * containing one of two accepted closed section sets in a fixed order (#305
- * added `## Impact`; #308 added the `spec-by-reference` shape).  All edits go
- * through typed operations that validate post-state against the file schema
- * before writing, and validation resolves the shape from the headings the
- * document carries — a legacy doc and a migrated one are both valid, never one
- * of them silently upgraded.
+ * containing one of the accepted closed section sets in a fixed order (#305
+ * added `## Impact`; #308 added the `spec-by-reference` shape; #651 added the
+ * `settled` shape).  All edits go through typed operations that validate
+ * post-state against the file schema before writing, and validation resolves
+ * the shape from the headings the document carries — a legacy doc, a migrated
+ * one and a settled one are each valid, never one silently upgraded.
  */
 
 import { readFileSync, writeFileSync, renameSync, existsSync, rename } from "node:fs";
