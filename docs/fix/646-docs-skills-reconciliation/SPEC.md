@@ -408,7 +408,10 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 
 ## Next
 
-P2: commit `scripts/repository-state.test.mjs` alone and observe it red.
+The owner's two calls: approve or decline the `ship-roadmap.png` deletion (R1 in
+`second-read.md`), and run the external verification of this change. The roadmap
+row stays `promoted` — a fix row is written through the crate's writer at
+release, never hand-edited here.
 
 ## References
 
