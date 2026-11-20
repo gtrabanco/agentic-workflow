@@ -10,7 +10,7 @@ import {
   STATE_FLOW_STOP_POLICIES,
   TOOL_CHOICE_MODES,
 } from "./types.js";
-import { PASS_NAMES, parseJsonc } from "@gtrabanco/agentic-workflow-schema";
+import { PASS_NAMES, parseJsonc, validateGuardPlugins } from "@gtrabanco/agentic-workflow-schema";
 import type {
   ConfigFile,
   ConfigIssue,
@@ -22,6 +22,7 @@ import type {
   ProfileFile,
   StateFlowConfigFile,
   ToolChoiceConfigFile,
+  GuardPluginsConfigFile,
   PhaseBatchingConfigFile,
   PassModelSetting,
   PassRouteFile,
@@ -55,6 +56,7 @@ const ROOT_KEYS = new Set([
   "stateFlow",
   "toolChoice",
   "phaseBatching",
+  "guardPlugins",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -642,12 +644,32 @@ function validateConfig(value: unknown): ParseResult {
     if (toolChoice) config.toolChoice = toolChoice;
   }
 
+  if (value.guardPlugins !== undefined) {
+    const guardPlugins = checkGuardPlugins(value.guardPlugins, issues);
+    if (guardPlugins) config.guardPlugins = guardPlugins;
+  }
+
   if (value.phaseBatching !== undefined) {
     const phaseBatching = checkPhaseBatching(value.phaseBatching, "$.phaseBatching", issues);
     if (phaseBatching) config.phaseBatching = phaseBatching;
   }
 
   return issues.length > 0 ? { ok: false, issues } : { ok: true, config };
+}
+
+/**
+ * Strict validator for the `guardPlugins` block (issue #654): a project's own
+ * guards, declared as data. The shape is the published contract's — this
+ * validator delegates to it rather than restating the levels, so the runtime and
+ * the descriptor cannot disagree about what a declaration is. A refusal keeps its
+ * own path (`$.guardPlugins.guards.<name>.rules.<n>`) so the operator sees which
+ * rule is wrong, not that "the section" is.
+ */
+function checkGuardPlugins(value: unknown, issues: ConfigIssue[]): GuardPluginsConfigFile | undefined {
+  const result = validateGuardPlugins(value);
+  if (result.ok) return result.value;
+  issues.push(...result.issues);
+  return undefined;
 }
 
 /**

@@ -1,10 +1,11 @@
 import { DEFAULT_PI_CONFIG, DEFAULT_ROUTE, BASE_EFFECTIVE_DEFAULTS } from "./defaults.js";
-import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW, DEFAULT_TOOL_CHOICE, DEFAULT_PHASE_BATCHING } from "./types.js";
+import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW, DEFAULT_TOOL_CHOICE, DEFAULT_PHASE_BATCHING, DEFAULT_GUARD_PLUGINS } from "./types.js";
 import type {
   ConfigFile,
   EffectiveConfig,
   PassRouteFile,
   PhaseBatchingConfig,
+  GuardPluginsConfig,
   ProfileFile,
   ProfileFallbackConfig,
   Route,
@@ -203,6 +204,7 @@ export function mergeConfigs(
     stateFlow: mergeStateFlow(globalFile.stateFlow, projectFile.stateFlow),
     toolChoice: mergeToolChoice(globalFile.toolChoice, projectFile.toolChoice),
     phaseBatching: mergePhaseBatching(globalFile.phaseBatching, projectFile.phaseBatching),
+    guardPlugins: mergeGuardPlugins(globalFile.guardPlugins, projectFile.guardPlugins),
     declared: { default: declaredDefault, commands: declaredCommands },
   };
 }
@@ -244,6 +246,25 @@ function mergePhaseBatching(
 ): PhaseBatchingConfig {
   return {
     enabled: pick(DEFAULT_PHASE_BATCHING.enabled, projectPhaseBatching?.enabled, globalPhaseBatching?.enabled) === true,
+  };
+}
+
+/**
+ * Issue #654 — project-over-global merge of the `guardPlugins` block: the switch
+ * per field, the guards per name. A name the project declares replaces the global
+ * declaration WHOLE, because a rule list is one ordered policy — a half-merged
+ * list would silently evaluate a different one, and last-match-wins makes the
+ * order the meaning.
+ */
+function mergeGuardPlugins(
+  globalGuardPlugins: ConfigFile["guardPlugins"],
+  projectGuardPlugins: ConfigFile["guardPlugins"],
+): GuardPluginsConfig {
+  const guards: GuardPluginsConfig["guards"] = { ...(globalGuardPlugins?.guards ?? {}) };
+  for (const [name, declaration] of Object.entries(projectGuardPlugins?.guards ?? {})) guards[name] = declaration;
+  return {
+    enabled: pick(DEFAULT_GUARD_PLUGINS.enabled, projectGuardPlugins?.enabled, globalGuardPlugins?.enabled) === true,
+    guards,
   };
 }
 

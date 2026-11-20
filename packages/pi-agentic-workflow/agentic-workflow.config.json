@@ -2,7 +2,7 @@
   "contract": "config-extension@1",
   "key": "pi",
   "file": "pi-agentic-workflow.json",
-  "description": "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice, phase batching.",
+  "description": "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice, phase batching, guard plugins.",
   "schema": {
     "type": "object",
     "additionalProperties": false,
@@ -372,6 +372,75 @@
           }
         }
       },
+      "guardPlugins": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "guards": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "surface",
+                "rules"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "deterministic",
+                    "model-backed"
+                  ]
+                },
+                "surface": {
+                  "type": "string",
+                  "enum": [
+                    "bash",
+                    "path",
+                    "tool",
+                    "skill",
+                    "mcp"
+                  ]
+                },
+                "rules": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "match"
+                    ],
+                    "properties": {
+                      "match": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "verdict": {
+                        "type": "string",
+                        "enum": [
+                          "allow",
+                          "deny",
+                          "ask"
+                        ]
+                      },
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "phaseBatching": {
         "type": "object",
         "additionalProperties": false,
@@ -417,6 +486,10 @@
     },
     "phaseBatching": {
       "enabled": false
+    },
+    "guardPlugins": {
+      "enabled": true,
+      "guards": {}
     }
   }
 }

@@ -4,7 +4,7 @@ import { normalizeGitIdentity } from "../guards/git-identity.js";
 import { SHIPPED_PATH_POLICY, intersectPathPolicy } from "./path-policy.js";
 import type { PathProtectionOverride } from "./path-policy.js";
 import type { AdvanceConfig, GuardConfig, LogSessionConfig, MemoryConfig, TelemetryConfig } from "./types.js";
-import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW, DEFAULT_TOOL_CHOICE, DEFAULT_PHASE_BATCHING } from "./types.js";
+import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW, DEFAULT_TOOL_CHOICE, DEFAULT_PHASE_BATCHING, DEFAULT_GUARD_PLUGINS } from "./types.js";
 import type { EffectiveConfig, Route, RouteDeclaration } from "./types.js";
 
 /**
@@ -33,6 +33,7 @@ export const DEFAULT_PI_CONFIG = {
   stateFlow: { ...DEFAULT_STATE_FLOW, commands: [...DEFAULT_STATE_FLOW.commands] },
   toolChoice: { ...DEFAULT_TOOL_CHOICE },
   phaseBatching: { ...DEFAULT_PHASE_BATCHING },
+  guardPlugins: { ...DEFAULT_GUARD_PLUGINS, guards: {} },
   declared: { default: { model: false, thinking: false } as RouteDeclaration, commands: {} as Record<string, RouteDeclaration> },
 };
 

@@ -98,6 +98,10 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // companion preset's recommendation is opt-in until the tier-cost corpus
     // shows a measured saving at equal PASS parity.
     phaseBatching: { enabled: false },
+    // Issue #654: the project's own guards ship enabled with nothing declared —
+    // declaring a guard IS the opt-in, so an empty section does nothing and a
+    // declared one needs no second flag.
+    guardPlugins: { enabled: true, guards: {} },
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });

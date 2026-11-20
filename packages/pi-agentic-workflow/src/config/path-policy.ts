@@ -338,3 +338,17 @@ export function evaluateToolCall(input: ToolCallGuardInput): ToolCallGuardResult
       `decisions.md, and for a post-freeze change ask the owner for the recorded approval the checkpoint gate requires.`,
   };
 }
+
+/**
+ * Issue #654 — true when a canonical target lives under one of the canonical
+ * scratch roots. Tier 2's containment excepts OS-temp scratch: a write there is
+ * not durable storage, and the permission layer's `external_directory` surface is
+ * where an operator decides about durable outside paths. The predicate is the
+ * retired shell guard's, unchanged — the carve-out moved, the policy did not.
+ */
+export function isScratchPath(realPath: string, tempRoots: readonly string[]): boolean {
+  return tempRoots.some((root) => {
+    const prefix = root.endsWith("/") ? root.slice(0, -1) : root;
+    return realPath === prefix || realPath.startsWith(`${prefix}/`);
+  });
+}
