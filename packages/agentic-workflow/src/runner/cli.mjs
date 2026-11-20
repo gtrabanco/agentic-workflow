@@ -24,6 +24,7 @@ import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runForgeRead } from "../forge-read/index.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 import { run as runSkills } from "./skills.mjs";
+import { main as runRelevantFiles } from "../relevant-files/index.mjs";
 
 /**
  * @typedef {(args: string[]) => void | number} RunnerCommand
@@ -42,6 +43,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "forge-read": runForgeRead,
   ceremony: runCeremony,
   skills: runSkills,
+  "relevant-files": runRelevantFiles,
 });
 
 /**

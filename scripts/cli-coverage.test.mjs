@@ -54,6 +54,7 @@ const TEMPLATE = path.join(ROOT, "template");
 const BIN = path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 const README = path.join(ROOT, "packages", "agentic-workflow", "README.md");
 const RUNNER_DOC = path.join(ROOT, "skills", "runner-contract", "references", "RUNNER.md");
+const RUNNER_TABLE = path.join(ROOT, "packages", "agentic-workflow", "src", "runner", "cli.mjs");
 
 /** The symbol a skill cites instead of a path: RUNNER.md §What a skill cites. */
 export const SYMBOLIC_FORM = "runner";
@@ -126,9 +127,17 @@ export function shims() {
   return out;
 }
 
-/** The router's closed set of first tokens. */
+/**
+ * The router's closed set of first tokens: the bin's own `case` arms plus the
+ * runner dispatch table, which is where the runtime commands live (issue #352 —
+ * one bin, two halves, one closed set).
+ */
 export function routerCommands() {
-  return new Set([...read(BIN).matchAll(/^\s*case "([a-z0-9-]+)":\s*\{/gmu)].map((m) => m[1]));
+  const commands = new Set([...read(BIN).matchAll(/^\s*case "([a-z0-9-]+)":\s*\{/gmu)].map((m) => m[1]));
+  for (const row of read(RUNNER_TABLE).matchAll(/^\s*(?:"([a-z0-9-]+)"|([a-z0-9-]+)):\s*[A-Za-z_$][\w$]*,\s*$/gmu)) {
+    commands.add(row[1] ?? row[2]);
+  }
+  return commands;
 }
 
 /** The RUNNER.md `## Subcommands` rows: the first backticked token of each row. */

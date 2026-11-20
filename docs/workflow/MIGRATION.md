@@ -1,5 +1,36 @@
 # Migration notes
 
+## 2026-11-20 — a shipped skill cites the runner, never a script path (issue #553)
+
+**What changed.** The scaffold ships no `scripts/` tree — it never did, and the
+owner rejected adding one ("template no tiene carpeta scripts porque no lo
+necesita, para eso es el universal cli"). The skills, however, kept telling a
+target agent to run `bun scripts/<name>.mjs`. Every one of those scripts is now
+a subcommand of `@gtrabanco/agentic-workflow`, and every shipped skill that
+cited one names the command instead, in the symbolic form
+`runner <subcommand> [args...]` (the launcher, the pin and the closed candidate
+set are `skills/runner-contract/references/RUNNER.md`'s). The procedure is
+[`CLI.md`](CLI.md).
+
+**What you have to do.** Nothing for a project that installed the release: the
+pin moves with the skills, so `runner <subcommand>` resolves to the same train
+that carries the command. A project that copied a skill's command into its own
+scripts must call the CLI form now — the script names below are gone from the
+shipped prose, and in this repository each `scripts/<name>.mjs` survives only as
+a zero-logic shim for the repository's own gate and suites.
+
+**What degradation you will see.** A project that pinned an older release keeps
+that release's skills, which name scripts its tree does not have; the fix is the
+pin, never a `scripts/` folder.
+
+**How to verify.** `bun test scripts/cli-coverage.test.mjs` — it refuses a
+shipped citation that names a script path, a launcher or a restated version, and
+it is the gate that keeps this table honest.
+
+| Retired citation | Command now |
+|---|---|
+| `bun scripts/relevant-files.mjs` | `runner relevant-files` |
+
 ## 2026-11-17 — the template hooks are shims over the universal CLI (issue #554)
 
 **What changed.** Every hook the scaffold ships under

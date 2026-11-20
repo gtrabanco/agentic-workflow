@@ -134,6 +134,7 @@ shell fallback.
 | `forge-read <issue\|pr> <number> [--comments] [--reviews] [--json]` | the guarded forge read — one issue or pull request, its threads on request, every content field through the content guard and printed as the fenced delivery (or as the `forge-read@1` envelope with `--json`); `forge-read shim <install\|check\|exec>` is the ad-hoc `gh` interceptor the same route drives |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | the unit router and the triage step list |
 | `skills <discover\|register\|inventory> [flags]` | the skill-discovery route's machine half — the screen, the consented install decision and the registration/decay inventory (issue #591; grammars in the crate README) |
+| `relevant-files <unit-doc> [--phase P<k>\|all] [--changed <a,b> \| --base <ref>]` | the phase read-set resolver and its changed-file discipline — the paths a phase must read, and the one failure it reports (issue #269) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 
