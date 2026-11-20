@@ -469,9 +469,10 @@ is the authoritative step list.
 ## Next
 
 PR [#664](https://github.com/gtrabanco/agentic-workflow/pull/664) is open against
-`main` (`Closes #655`) at head `4c564188630445ed69d24c10c712cd2f226dd30f`, and the
-`## Fixes` row is settled. The next action is the owner's review of that PR — this
-unit was applied through the local, unpublished workflow, so the `REVIEW-PASS`
+`main` (`Closes #655`) and the `## Fixes` row is settled to `done · [#664]`. Each
+receipt above names the head it ran at; the PR's head is the authoritative one and
+moves with every correction. The next action is the owner's review of that PR —
+this unit was applied through the local, unpublished workflow, so the `REVIEW-PASS`
 receipt is the owner's step — and then its merge, which removes the row by the
 Fixes lifecycle.
 
