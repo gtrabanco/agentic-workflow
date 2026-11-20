@@ -50,8 +50,11 @@ export const DIMENSION_SURFACES = Object.freeze([
   DIMENSIONS_REL,
   "skills/review-",
   "skills/product-audit/",
-  "scripts/coverage-gap.mjs",
-  "scripts/findings-corpus.mjs",
+  // The producers moved into the package (issue #553): the code that decides a
+  // dimension is a crate module now, so the module directory is the surface and
+  // the `scripts/` shim beside it never stands in for one.
+  "packages/agentic-workflow/src/coverage-gap/",
+  "packages/agentic-workflow/src/findings-corpus/",
   "scripts/product-audit-",
   "docs/workflow/GATE_INVENTORY.md",
 ]);

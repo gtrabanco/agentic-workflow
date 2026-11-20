@@ -105,7 +105,7 @@ Whatever the verdict:
 - **The issue body's `## Surfaces` stays true** — it is what the batch
   scheduler (`batch-scheduler`) routes parallel work on, so a stale section
   plans the wrong lanes and a missing one plans a guess. Triage writes it from
-  the emitter, never by hand: `bun scripts/batch-scheduler.mjs --infer-surfaces
+  the emitter, never by hand: `runner batch-scheduler --infer-surfaces
   <n>` prints the block (or `- surface-unknown`), and an existing declaration is
   never rewritten — a contradiction is reported and the owner changes it. The
   lane vocabulary is the scheduler's (`skills/batch-scheduler/references/PLAN.md`),

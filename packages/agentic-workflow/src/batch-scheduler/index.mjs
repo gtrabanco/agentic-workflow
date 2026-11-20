@@ -45,7 +45,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import { readRoadmapIndex, roadmapTableRows } from "../index-document.mjs";
 // Third-party forge text is untrusted by construction (issue #470): every title
 // and body this planner ingests goes through the content guard, and the guard's

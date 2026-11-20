@@ -77,9 +77,29 @@ const EVIDENCE = "- **G1** — 2026-01-01, `bun scripts/dimension-regression.mjs
 test("the guard publishes its contract id and its closed surface set", () => {
   assert.equal(EVOLUTION_GUARD, "dimension-regression@1");
   assert.ok(DIMENSION_SURFACES.length > 0);
+});
+
+test("the closed surface set follows the producers into the crate (issue #553)", () => {
+  // A producer that moved from `scripts/` into `src/<command>/` must stay a
+  // surface: the gate's whole job is to refuse a review-dimension change that
+  // records no run, and the code that decides a dimension now lives in the
+  // package. A stale row is a surface that silently stopped gating.
+  for (const dir of ["coverage-gap", "findings-corpus"]) {
+    assert.ok(
+      DIMENSION_SURFACES.some((entry) => entry.startsWith(`packages/agentic-workflow/src/${dir}/`)),
+      `the ${dir} producer is a review surface`,
+    );
+  }
+  assert.ok(
+    DIMENSION_SURFACES.some((entry) => entry.startsWith("scripts/product-audit-")),
+    "the seeded fixtures stay surfaces: they are the dimensions' evidence harness",
+  );
   assert.ok(isDimensionSurface("skills/product-audit/references/AUDIT_DIMENSIONS.md"));
   assert.ok(isDimensionSurface("skills/review-code/SKILL.md"));
-  assert.ok(isDimensionSurface("scripts/findings-corpus.mjs"));
+  // The producer moved into the crate (issue #553): the module directory is the
+  // surface now, and the repository shim beside it is not one.
+  assert.ok(isDimensionSurface("packages/agentic-workflow/src/findings-corpus/index.mjs"));
+  assert.equal(isDimensionSurface("scripts/findings-corpus.mjs"), false);
   assert.equal(isDimensionSurface("docs/LOGS.md"), false);
 });
 

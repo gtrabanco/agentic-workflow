@@ -93,6 +93,7 @@ now through the CLI.
 | `bun scripts/prose-gate-inventory.mjs` | `runner prose-gate-inventory` |
 | `bun scripts/test-route.mjs` | `runner test-route` |
 | `bun scripts/setup-env.mjs` | `runner setup-env` |
+| `bun scripts/relay-packet.mjs` | `runner relay` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

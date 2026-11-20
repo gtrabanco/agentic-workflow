@@ -263,7 +263,7 @@ export function evaluateCoverage({ catalogue, detectors, corpus, root }) {
           kind: "class-uncovered",
           subject: `${klass.axis} × ${klass.klass}`,
           detail: `n ${klass.n} · no detector names the axis`,
-          evidence: "scripts/findings-corpus.mjs#classes",
+          evidence: "packages/agentic-workflow/src/findings-corpus/index.mjs#classes",
         });
       }
     }

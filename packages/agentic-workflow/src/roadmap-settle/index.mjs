@@ -41,7 +41,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { checkUnitDoc, ROADMAP_CHECK_CODES } from "../edit/Roadmap.mjs";
-import { FIX_INDEX_DOCUMENT, ROADMAP_DOCUMENT, readFixIndexTable, readRoadmapIndex } from "../index-document.mjs";
+import { ROADMAP_DOCUMENT, readFixIndexTable, readRoadmapIndex } from "../index-document.mjs";
 
 const USAGE = `usage: agentic-workflow roadmap-settle [--root <dir>] [--json]`;
 

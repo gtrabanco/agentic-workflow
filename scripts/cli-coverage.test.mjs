@@ -278,6 +278,40 @@ test("every migrated shim reaches the router and both documentation tables", () 
   );
 });
 
+/** The `## Commands` rows: the command's grammar cell and the description beside it. */
+export function readmeRows() {
+  const text = read(README);
+  const start = text.indexOf("## Commands");
+  const rows = new Map();
+  for (const match of text.slice(start).matchAll(/^\| `([a-z0-9-]+)([^`]*)` \| (.+)$/gmu)) {
+    rows.set(match[1], { grammar: match[2], description: match[3] });
+  }
+  return rows;
+}
+
+/** The crate module a shim forwards to, resolved from the shim's own import. */
+export function moduleOf(script) {
+  const file = path.join(SCRIPTS, `${script}.mjs`);
+  const match = read(file).match(/import \{[^}]*\} from "(\.\.\/packages\/agentic-workflow\/src\/[^"]+)"/u);
+  return match ? path.resolve(path.dirname(file), match[1]) : null;
+}
+
+test("a documented flag is a flag the command actually accepts", () => {
+  const rows = readmeRows();
+  const findings = [];
+  for (const [script, command] of shims()) {
+    const row = rows.get(command);
+    if (!row) continue; // the documentation row itself is the `undocumented-command` case
+    const target = moduleOf(script);
+    if (!target || !fs.existsSync(target)) continue; // the module-existence case owns this
+    const source = read(target);
+    for (const flag of new Set([...row.grammar.matchAll(/--[a-z][a-z0-9-]*/gu)].map((m) => m[0]))) {
+      if (!source.includes(flag)) findings.push(`${command}: README advertises ${flag}, the command never parses it`);
+    }
+  }
+  assert.deepEqual(findings, [], "a documented flag is a promise the command must keep");
+});
+
 test("every migrated shim imports a module the package actually ships", () => {
   const missing = [];
   for (const [script] of shims()) {

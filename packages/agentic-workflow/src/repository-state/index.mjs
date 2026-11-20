@@ -42,7 +42,12 @@ import process from "node:process";
 
 import { sectionBounds } from "../runner/unit-doc-phases.mjs";
 
-const SCRIPT_ROOT = process.cwd();
+let SCRIPT_ROOT = process.cwd();
+
+/** The checkout this reads: `--root`/the caller's root, else the cwd. */
+function setRoot(dir) {
+  if (dir) SCRIPT_ROOT = path.resolve(dir);
+}
 const DEFAULT_SNAPSHOT = "docs/workflow/REPOSITORY_STATE.md";
 
 /** The grammar this reader implements. Published beside the skill that owns the
@@ -232,6 +237,7 @@ function usage(message) {
 }
 
 export function main(argv = process.argv.slice(2), options = {}) {
+  setRoot(options.root);
   let file = null;
   let ttlDays = null;
   let today = null;

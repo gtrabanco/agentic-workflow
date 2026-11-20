@@ -21,7 +21,7 @@ const REPO = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 // Run only as a program: the sibling suite imports the module's bindings, and an
 // import must never dispatch this repository's command.
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const code = main(process.argv.slice(2));
+  const code = main(process.argv.slice(2), { root: REPO });
   if (code && typeof code.then === "function") {
     code.then((value) => process.exit(value ?? process.exitCode ?? 0));
   } else {

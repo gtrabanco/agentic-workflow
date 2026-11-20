@@ -6,10 +6,10 @@
  * that provisions the authoring toolchain that used to be discoverable only by
  * reading logs and AGENTS.md side notes:
  *
- *   node scripts/setup-env.mjs           install what is missing
- *   node scripts/setup-env.mjs --check   verify only — installs nothing,
+ *   agentic-workflow setup-env           install what is missing
+ *   agentic-workflow setup-env --check   verify only — installs nothing,
  *                                        writes nothing; exit 0 / 1
- *   node scripts/setup-env.mjs --doctor  print the crate's `doctor@1` envelope
+ *   agentic-workflow setup-env --doctor  print the crate's `doctor@1` envelope
  *                                        for this checkout (read-only; add
  *                                        `--json` for the machine receipt). The
  *                                        checker has one implementation — issue
@@ -62,7 +62,11 @@
  * failed install; 2 = usage error.
  *
  * Usage:
- *   node scripts/setup-env.mjs [--check | --doctor [--json]]
+ *   agentic-workflow setup-env [--check | --doctor [--json]]
+ *
+ * This repository also ships the bootstrap form as `scripts/setup-env.mjs`: it
+ * provisions bun, so it is the one command that cannot require the CLI to exist
+ * (decision D13 — `docs/workflow/SETUP.md` owns that route).
  */
 
 import { spawnSync } from "node:child_process";
@@ -294,7 +298,7 @@ export function parseYesNo(answer) {
  */
 export function bunOptInNote({ bunPinned } = {}) {
   const installer = bunInstallCommand(bunPinned);
-  return `bun is not installed — it is optional (node is the runtime fallback). To use it later: ${installer}, or re-run node scripts/setup-env.mjs in a terminal to be asked.`;
+  return `bun is not installed — it is optional (node is the runtime fallback). To use it later: ${installer}, or re-run 'agentic-workflow setup-env' in a terminal to be asked.`;
 }
 
 /**
@@ -752,7 +756,7 @@ export function runProvision({ state, execute, verifyAfterPass, advance = () => 
     }
     if (plan.steps.length === 0) {
       if (verifyAfterPass(pass)) {
-        output.push(executed > 0 ? "SETUP — done. Verify with: node scripts/setup-env.mjs --check" : "SETUP — everything is already provisioned; nothing to do (idempotent re-run).");
+        output.push(executed > 0 ? "SETUP — done. Verify with: `agentic-workflow setup-env --check`" : "SETUP — everything is already provisioned; nothing to do (idempotent re-run).");
         return { code: 0, output: output.join("\n"), passes: pass, executed };
       }
       output.push(`SETUP — pass ${pass}: nothing left to fix, but verification is still red.`);
@@ -771,12 +775,12 @@ export function runProvision({ state, execute, verifyAfterPass, advance = () => 
       output.push(`  ✓ ${outcome.message}`);
     }
     if (verifyAfterPass(pass)) {
-      output.push("SETUP — done. Verify with: node scripts/setup-env.mjs --check");
+      output.push("SETUP — done. Verify with: `agentic-workflow setup-env --check`");
       return { code: 0, output: output.join("\n"), passes: pass, executed };
     }
     current = advance(pass, current);
   }
-  output.push("VERDICT: FAIL — the pipeline did not converge after " + maxPasses + " passes; run `node scripts/setup-env.mjs --check` for the remaining rows.");
+  output.push("VERDICT: FAIL — the pipeline did not converge after " + maxPasses + " passes; run `agentic-workflow setup-env --check` for the remaining rows.");
   return { code: 1, output: output.join("\n"), passes: maxPasses, executed };
 }
 
@@ -786,7 +790,7 @@ function renderCheck(result) {
   for (const row of result.results) {
     lines.push(`${row.warn === true ? "warn" : row.ok ? "ok  " : "MISS"} ${row.tool}: ${row.detail}`);
   }
-  lines.push(result.ok ? "VERDICT: PASS" : "VERDICT: FAIL — run `node scripts/setup-env.mjs` to provision, or install the missing tools (docs/workflow/SETUP.md)");
+  lines.push(result.ok ? "VERDICT: PASS" : "VERDICT: FAIL — run `agentic-workflow setup-env` to provision, or install the missing tools (docs/workflow/SETUP.md)");
   return lines.join("\n");
 }
 
@@ -797,15 +801,15 @@ export async function main(argv = process.argv.slice(2), options = {}) {
   const json = argv.includes("--json");
   const unknown = argv.filter((arg) => !["--check", "--doctor", "--json"].includes(arg));
   if (unknown.length > 0) {
-    process.stderr.write(`usage: node scripts/setup-env.mjs [--check | --doctor [--json]]\nunknown argument: ${unknown[0]}\n`);
+    process.stderr.write(`usage: agentic-workflow setup-env [--check | --doctor [--json]]\nunknown argument: ${unknown[0]}\n`);
     return 2;
   }
   if (check && doctor) {
-    process.stderr.write("usage: node scripts/setup-env.mjs [--check | --doctor [--json]]\n--check and --doctor are different readings; pass one\n");
+    process.stderr.write("usage: agentic-workflow setup-env [--check | --doctor [--json]]\n--check and --doctor are different readings; pass one\n");
     return 2;
   }
   if (json && !doctor) {
-    process.stderr.write("usage: node scripts/setup-env.mjs [--check | --doctor [--json]]\n--json only applies to --doctor\n");
+    process.stderr.write("usage: agentic-workflow setup-env [--check | --doctor [--json]]\n--json only applies to --doctor\n");
     return 2;
   }
 

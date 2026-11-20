@@ -47,7 +47,7 @@ must not have one.
 
 | File | Consumed by |
 |---|---|
-| `SKILL_CONTEXT_BUDGETS.json` | `scripts/check-skill-context.mjs` (the enforced per-skill line/token budgets and route budgets) — read by the gate, never by a human, and cited as a claim source by `scripts/promise-coherence.mjs` |
+| `SKILL_CONTEXT_BUDGETS.json` | the `skill-context` command (the enforced per-skill line/token budgets and route budgets) — read by the gate, never by a human, and cited as a claim source by `promise-coherence` |
 
 ## Core principles
 

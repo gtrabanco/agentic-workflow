@@ -108,7 +108,7 @@ Rules that bind the author of the next command:
 - **stdout is not a diagnostics stream**: not one byte of progress goes to fd 1.
 - **A repo-own `scripts/` CLI** imports the same module by relative path
   (`../packages/agentic-workflow/src/feedback/index.mjs`), the way
-  `scripts/session-close.mjs` and `scripts/shared-doc-merge.mjs` already import
+  `src/session-close/index.mjs` and `src/writer/shared-merge.mjs` already import
   crate source. The mechanism is not duplicated there: #352 moved the runtime
   commands into the crate, so a copy under `scripts/` would be an orphan the day
   its neighbours retire.

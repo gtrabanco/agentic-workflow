@@ -146,14 +146,14 @@ empty until the sink writes its first row; an empty table is a corpus of zero,
 and the comparison says so instead of inventing a figure.
 
 **Two branches appending here merge, they do not conflict.** The file is one of
-the shared documents `scripts/shared-doc-merge.mjs` owns (issue #630): `.gitattributes`
+the shared documents the `shared-merge` command owns (issue #630; the mechanics are `src/writer/shared-merge.mjs`): `.gitattributes`
 names it `merge=agentic-shared-telemetry`, and the armed driver unions rows by
 their `source` cell, appending the incoming branch's rows to this table instead of
 rewriting the file — an identical row lands once, and a side that edited a
 committed row instead of appending refuses closed (the row stays as it was and the
 merge is left for a human). Two installation surfaces keep that true: the scaffold
 (`init-workspace`, which appends the registry lines and runs
-`scripts/shared-doc-merge.mjs --install`) and, for a project that had telemetry
+`runner shared-merge --install`) and, for a project that had telemetry
 before the class existed, `agentic-workflow telemetry merge-install`. The
 reconciliation below arms the driver too. An un-armed clone degrades to git's
 textual merge, which is the conflict this exists to prevent — `agentic-workflow

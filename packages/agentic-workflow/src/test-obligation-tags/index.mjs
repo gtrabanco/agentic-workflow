@@ -60,7 +60,12 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const ROOT = process.cwd();
+let ROOT = process.cwd();
+
+/** The tree this gate reads: the caller's root, else the cwd. */
+function setRoot(dir) {
+  if (dir) ROOT = path.resolve(dir);
+}
 
 export const CONTRACT_ID = "test-obligation-tags@1";
 /** The one annotation prefix. A suite's head carries it or the suite is untagged. */
@@ -343,6 +348,7 @@ function usage(message) {
 }
 
 export function main(argv = process.argv.slice(2), context = {}) {
+  setRoot(context.root);
   const options = { root: ROOT, mode: "gate", cost: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];

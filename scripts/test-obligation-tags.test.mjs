@@ -56,6 +56,19 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
 /** The runtime that started this suite runs the CLI too — never a second guess. */
 const run = (args, options = {}) => spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8", ...options });
 
+test("the caller's root wins over the working directory (issue #553)", () => {
+  // `--list` prints one line per tagged suite of THIS tree; a cwd-captured root
+  // would print the suites of whatever directory the command ran in.
+  const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), "tag-gate-"));
+  try {
+    const result = spawnSync(process.execPath, [CLI, "--list"], { cwd: elsewhere, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /scripts\/[a-z-]+\.test\.mjs/u, "the checkout's suites are the ones listed");
+  } finally {
+    fs.rmSync(elsewhere, { recursive: true, force: true });
+  }
+});
+
 /** A throwaway tree with a `scripts/` directory, removed when the case ends. The
  *  two sources the CLI reads from the tree it inspects are seeded too, so a
  *  fixture asserts the refusals rather than the reader's inputs. */

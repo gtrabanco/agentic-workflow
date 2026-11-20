@@ -303,6 +303,24 @@ test("#318 the conductor points at the step instead of keeping a second copy", (
     "the retirement text has one home — the design step — never a stale conductor copy");
 });
 
+test("the repository caller resolves this checkout's root from anywhere (issue #553)", () => {
+  // The script used to derive the repository from its own location. It forwards
+  // to the crate command now, so the caller must pass that root explicitly —
+  // otherwise a run from a subdirectory searches the subdirectory and answers
+  // `unit not found` for a unit that is right there.
+  const here = path.join(repoRoot, "docs");
+  const result = spawnSync(
+    process.execPath,
+    [path.join(repoRoot, "scripts", "unit-lineage.mjs"), "--unit", "553-universal-cli-coverage"],
+    { cwd: here, encoding: "utf8", timeout: 120_000 },
+  );
+  // The contract is resolution, not the verdict: a BLOCKED unit is the gate
+  // doing its job, a missing unit from a subdirectory is the bug this pins.
+  assert.match(result.stdout, /LINEAGE OK|LINEAGE BLOCKED/u, "it answers a lineage verdict, never `unit not found`");
+  assert.doesNotMatch(`${result.stdout}${result.stderr}`, /unit not found/u, "the checkout root is resolved, not the cwd");
+  assert.ok(result.status === 0 || result.status === 1, `a verdict exits 0 or 1, got ${result.status}`);
+});
+
 // ── unit-lineage: the machine surface of audit-pr gate 1 (fold F9–F13) ──────
 
 /** Run the lineage check over a fixture repo. */

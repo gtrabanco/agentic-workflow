@@ -81,6 +81,20 @@ first, observed failing.
 
 const run = (args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8" });
 
+test("the caller's root wins over the working directory (issue #553)", () => {
+  // The repository caller forwards this checkout's root. A run from anywhere
+  // else must still sweep the checkout — the sweep's own default capture is the
+  // cwd, so an ignored root silently measures the wrong tree.
+  const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), "restatement-sweep-"));
+  try {
+    const result = spawnSync(process.execPath, [SCRIPT, "--json"], { cwd: elsewhere, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /agentic-workflow|verdict/u, "it answers a receipt for the checkout, not for an empty directory");
+  } finally {
+    fs.rmSync(elsewhere, { recursive: true, force: true });
+  }
+});
+
 // ── the frozen-failure corpus ───────────────────────────────────────────────
 
 test("F-646-7 a restatement without its owner is refused, with the file and the rule named", () => {

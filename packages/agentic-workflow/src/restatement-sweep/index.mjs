@@ -43,7 +43,9 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-const SCRIPT_ROOT = process.cwd();
+// No root is captured at load: `--repo` or the caller's root decides, else the
+// cwd at call time — a module-level capture reads whatever directory the import
+// happened in.
 
 /** The corpus block's marker. Its home is the audit-docs reference that owns
  *  the sweep: `skills/audit-docs/references/RESTATEMENT.md`. */
@@ -267,7 +269,7 @@ function usage(message) {
 }
 
 export function main(argv = process.argv.slice(2), options = {}) {
-  let repo = SCRIPT_ROOT;
+  let repo = path.resolve(options.root ?? process.cwd());
   let json = false;
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
