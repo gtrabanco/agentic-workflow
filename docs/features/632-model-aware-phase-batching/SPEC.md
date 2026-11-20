@@ -352,6 +352,17 @@ the unit ships every row is `verified`.
   `schema-export` rows, recorded in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`
   with the measurement, the fix #571 precedent (the exact boundary), and no
   ceiling re-based.
+
+- **D8** — 2026-11-19, **the issue Goal's "one-shot suitability" carries no
+  fifth field.** The term appears only in `S2`'s quote; the facts it names are
+  already the record's own — `tool_harness` states whether the executor path
+  drives the model at all (one-shot capability on this harness is exactly
+  `native`) and `max_phases_per_context` states how far one context goes — so
+  a standalone suitability flag would restate two recorded facts instead of
+  reading one (D3's derivation rule). The policy's answer (`batched-phases`
+  vs `one-phase-per-turn`) is the derived verdict. Recorded as the disposition
+  the external verifier's advisory A2 asked for.
+
 - **E1** — 2026-11-19, the RED run of the contract corpus, `390e36f3e`:
   `bun test test/phase-batching.test.mjs` in
   `packages/agentic-workflow-schema` · exit 1 · 0 pass / 1 fail —
@@ -392,7 +403,7 @@ the unit ships every row is `verified`.
   `the command refuses to invent the facts it was not given`, `…refuses an
   unknown flag and an out-of-vocabulary value`, `…prints the typed document`,
   `…reads the config switch`, `…takes --relay and --model` and the five
-  `registration.test.mjs` cases — 63 pass · 0 fail. The extension registers the
+  `registration.test.mjs` cases — 64 pass · 0 fail (63 before `c8500370d` added the glue case). The extension registers the
   command only when the host supplies `registerCommand`, which is why the
   bare-object double the registration suite passes still resolves the preset.
 - **E9** — 2026-11-19, the out-of-scope pins:
@@ -409,12 +420,13 @@ the unit ships every row is `verified`.
   `rg -c 'nan-phase-batching' packages/pi-nan-agentic-workflow/README.md`
   matches 1, and `bun scripts/check-skill-context.mjs --documents` · exit 0 ·
   `PASS context documents: 6 budgeted documents` with `AGENTS.md` at
-  610 lines / 189 machine / 421 prose / 12,760 est.
+  610 lines / 189 machine / 421 prose / 12,877 est.
 - **E11** — 2026-11-19, no test weakened: `git diff main...HEAD -- '*.test.mjs' | rg -c '^-[^-]'`
   matches 0 — the two touched suites only gained cases (the exact-shape
   `DEFAULT_CONFIG` assertion in `default-inherit.test.mjs` gains the resolved
   key, which is the declared behavioural delta of `S6`), and the three package
   suites pass at `E5`/`E6`/`E7`.
+- **E12** — 2026-11-19, O16's three runs, foreground in the correction batch over the 2026-11-19 `EXTERNAL VERIFY` receipt: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/632-model-aware-phase-batching/SPEC.md` · exit 0 · `VERIFY PASS` with `violations: []`, `rg -c '^\| O[0-9]+ \|.*\| (planned\|in-progress) \|$' docs/features/632-model-aware-phase-batching/planning-obligations.md` · matches 0 (exit 1), and `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":125}`.
 - **E13** — 2026-11-19, the differential against `git archive main` in
   `/tmp/632-base-QMWM9F` (`bun install --frozen-lockfile` + the schema build,
   never committed): `config schema --json`, `config validate`,
@@ -426,7 +438,7 @@ the unit ships every row is `verified`.
   `EffectiveConfig` gaining `phaseBatching: { enabled: false }`, which is `S6`
   itself and is pinned in `default-inherit.test.mjs`.
 - **E14** — 2026-11-19, `bun scripts/residual-classify.mjs --inventory --base main`
-  · exit 0 · 6 `andamio` / 34 `used` / 0 `orphan`: every added surface names its
+  · exit 0 · 6 `andamio` / 37 `used` / 0 `orphan`: every added surface names its
   consumer in the unit folder's `residual-promise@1` block, so no retirement is
   claimed and nothing lands unowned.
 - **E15** — 2026-11-19, `bun scripts/dimension-regression.mjs --base origin/main` · exit 0 ·
@@ -435,6 +447,22 @@ the unit ships every row is `verified`.
   `normative-surface-grammar` row now claims the four new `schema-export`
   surfaces), no dimension dropped and no review axis edited. This line is the
   evidence carrier the gate reads.
+- **E16** — 2026-11-19, the correction batch over the 2026-11-19 `EXTERNAL
+  VERIFY` receipt (`external-verify.md`, blockers B1–B4, advisories A1–A2):
+  the frozen reproducers observed red first — `obligationsRows()` parsed 15
+  rows with O11 unparseable, no `E12` line existed, the tree printed 12877
+  est / 37 `used` against the recorded 12,760 / 34, and five evidence cells
+  named E3/E4/E7 — then the repairs: O11's row joined with its `^## Phase
+  batching$` command restored (validator runs 1/1/1), this `E12` line, the
+  three figures corrected to what the tree prints (SPEC E10/E14 plus the
+  budget manifest's #632 narration), O1/O2/O4/O13/O14 repointed (E3→E1,
+  E4→E5, E4→E3, E7→E1, "four"→"three", "both"→"all three"), E8's stale 63
+  corrected to 64 (A1) and D8 dispositioning the Goal's "one-shot
+  suitability" (A2). The seven reopened rows flipped to `planned` before the
+  repairs and back only on foreground re-runs: the `verify` refusal named
+  exactly O16 before its flip and passes after, O1 17 pass, O2+O4 35 pass,
+  O13 `matches 0` plus 931/1023/64 pass, O11 1/1/1, O14's count still 3,
+  `check-skill-context --documents` PASS at 610/189/421/12877.
 - **P1** — 2026-11-19, the contract corpus cut red — `390e36f3e`.
 - **P2** — 2026-11-19, `src/phase-batching.ts` + the `index.ts` re-export —
   `cf248bfa7`, with the `cache-posture-flat` closure in `cf95dd5f3`.
