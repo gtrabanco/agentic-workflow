@@ -33,6 +33,7 @@ This is the versioned, in-repo copy.
 | [GATE_INVENTORY.md](GATE_INVENTORY.md) | The carrier inventory: every gate the workflow runs, whether it is script-pinned, a per-run CLI check or prose-only, how the ranking derives its tier, and where a stay-prose gate re-derives after a compaction |
 | [FEEDBACK.md](FEEDBACK.md) | Every CLI's feedback contract: the three tiers (`--debug`, `--profile`), the `feedback:` line grammar, the stderr-only invariant, and what a command must report |
 | [DOMAIN_SEPARATION.md](DOMAIN_SEPARATION.md) | Project-only: the product-vs-dogfooding safeguard in detail — the two domains, the classification test, both drift directions, the legitimate exceptions, and the domain-drift sweep this repo's product-audit runs carry |
+| [LOADING.md](LOADING.md) | The loading ladder: which tier a document belongs to (always, one-hop, rarely), the balance rule behind tier 0, the stable-first/volatile-last ordering a prefix cache punishes when ignored, and the measurement method |
 | [WORKTREES.md](WORKTREES.md) | Creating, naming, recovering and removing a worktree: where a worktree may live, the branch and worktree naming tables, the six ordered steps, the common failure modes, and the removal order |
 
 ## Data

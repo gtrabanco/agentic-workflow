@@ -81,6 +81,7 @@ while doing one kind of work is one hop away and read on demand:
 | [`docs/workflow/PACKAGES.md`](docs/workflow/PACKAGES.md) | touching `packages/`: the bun workspace, the single lockfile, pin rules, the version-parity gate, changesets, publish channels |
 | [`docs/workflow/GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md) | smoke-testing a wording change to an executor-path skill |
 | [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) | asking whether a gate survives a compaction, and where its carrier lives |
+| [`docs/workflow/LOADING.md`](docs/workflow/LOADING.md) | asking which tier a document belongs to, what a session loads always, or where the volatile machine regions must sit inside a file |
 | [`docs/workflow/SKILLS.md`](docs/workflow/SKILLS.md) | looking up what a skill does, or where it runs in the flow |
 | [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md) | replicating the workflow into another project |
 | [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) | landing a breaking surface, and needing the migration note beside it |
@@ -366,6 +367,77 @@ stay the machine receipt. A second progress convention, a private timer or a
 progress byte on stdout is the defect; the contract and its authoring rules are
 owned by [`docs/workflow/FEEDBACK.md`](docs/workflow/FEEDBACK.md).
 
+## Docs site
+
+The generated documentation projection (`docs/generated/**` — the reverse edge of
+"docs drive the work", issue #396) is plain markdown, rendered only by the
+repository's own emitter (`bun scripts/docs-generate.mjs`), never hand-written.
+The same emitter syncs the two roadmap tables (fix #507): a feature folder without
+a row gains one, every hand-owned cell passes through untouched, and a unit doc's
+`roadmap_summary:` overrides its row's summary cell — edit the unit doc, never the
+table. The declaration the emitter reads (omitting the other keys keeps its
+defaults: `docs/generated`, no build step, no map script):
+
+```
+- format: md
+```
+
+## Config policy for new features
+
+The unified config (issue #427) is the only place a user-tunable setting lives,
+and a new key answers four questions in order before it enters it — owner:
+[`docs/workflow/CONFIG.md`](docs/workflow/CONFIG.md) §"Adding a config key to a
+feature". A key that no runtime reads is not shipped: publish the consumer or keep
+the key out, with the section's defaults read from the section owner so the CLI and
+the extension cannot disagree about "absent".
+
+## Conventions
+
+| Type | Convention |
+|---|---|
+| Skill directories | kebab-case (`execute-phase`) |
+| Markdown docs | kebab-case or SCREAMING_CASE per existing siblings |
+| Skill `name:` | matches the directory name exactly |
+| Machine/config surfaces (`.claude-plugin/plugin.json` `skills` array) | alphabetical |
+| Narrative surfaces (README "The skills" `###` sections, `docs/workflow/SKILLS.md`) | flow order (the stage a skill runs at: Setup, Design, Plan, Execute, Review & audit, Decide, Document, Session, Repo maintenance, Autopilot) — never alphabetized |
+
+## Worktree creation
+
+Worktrees live under `.worktrees/<flat-name>` at the repository root — one flat
+leaf, the branch name with `/` replaced by `-` — and **never** under
+`.git/worktrees/`, which `git worktree prune` deletes recursively with the working
+tree and its uncommitted work inside it (`IR8`; the guard is
+`scripts/worktree-guard.mjs`, which reports an `ADMIN_NAMESPACE` finding).
+
+The branch naming table, the six ordered steps, the Serena configuration copy, the
+failure modes and the removal order are one hop away in
+[`docs/workflow/WORKTREES.md`](docs/workflow/WORKTREES.md) — read it before
+creating, moving or recovering a worktree, and follow its steps in order.
+
+## Skills available in this repo
+
+The authoring contract is
+[`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md), which also
+carries the repo-maintenance skill's rules (`skill-lint`: run it after editing any
+`SKILL.md`, it reports and repairs nothing, and it is `user-invocable: false` with
+`metadata.internal: true` so the `skills` CLI never offers it to a target project).
+When repeated searches or documentation lookups happen here, prefer creating or
+refining a skill over re-deriving the knowledge.
+
+## Distribution
+
+The skills install with the [`skills`](https://github.com/vercel-labs/skills) CLI:
+`npx skills add gtrabanco/agentic-workflow`. There is no build step — adding a
+skill is adding a `skills/<name>/SKILL.md`; replication guidance is
+[`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
+
+## Machine regions (volatile, last)
+
+The three versioned blocks below are the parts of this guide a unit re-pins most
+often. They sit **last** on purpose: a prompt cache keeps a prefix, so a unit that
+adds one `normative-surfaces@1` row invalidates only the bytes after its own change
+instead of everything below it (owner: `docs/workflow/LOADING.md`).
+
 ### Normalizer inventory (this repository)
 
 The rule that orders these steps — and the fact that a post-freeze byte change voids
@@ -577,66 +649,3 @@ The two schema generators show the split: one script rewrites a projection or
 reports on it, and only the reporting mode may run after a freeze. No script or
 skill may keep a second copy of this list.
 
-## Docs site
-
-The generated documentation projection (`docs/generated/**` — the reverse edge of
-"docs drive the work", issue #396) is plain markdown, rendered only by the
-repository's own emitter (`bun scripts/docs-generate.mjs`), never hand-written.
-The same emitter syncs the two roadmap tables (fix #507): a feature folder without
-a row gains one, every hand-owned cell passes through untouched, and a unit doc's
-`roadmap_summary:` overrides its row's summary cell — edit the unit doc, never the
-table. The declaration the emitter reads (omitting the other keys keeps its
-defaults: `docs/generated`, no build step, no map script):
-
-```
-- format: md
-```
-
-## Config policy for new features
-
-The unified config (issue #427) is the only place a user-tunable setting lives,
-and a new key answers four questions in order before it enters it — owner:
-[`docs/workflow/CONFIG.md`](docs/workflow/CONFIG.md) §"Adding a config key to a
-feature". A key that no runtime reads is not shipped: publish the consumer or keep
-the key out, with the section's defaults read from the section owner so the CLI and
-the extension cannot disagree about "absent".
-
-## Conventions
-
-| Type | Convention |
-|---|---|
-| Skill directories | kebab-case (`execute-phase`) |
-| Markdown docs | kebab-case or SCREAMING_CASE per existing siblings |
-| Skill `name:` | matches the directory name exactly |
-| Machine/config surfaces (`.claude-plugin/plugin.json` `skills` array) | alphabetical |
-| Narrative surfaces (README "The skills" `###` sections, `docs/workflow/SKILLS.md`) | flow order (the stage a skill runs at: Setup, Design, Plan, Execute, Review & audit, Decide, Document, Session, Repo maintenance, Autopilot) — never alphabetized |
-
-## Worktree creation
-
-Worktrees live under `.worktrees/<flat-name>` at the repository root — one flat
-leaf, the branch name with `/` replaced by `-` — and **never** under
-`.git/worktrees/`, which `git worktree prune` deletes recursively with the working
-tree and its uncommitted work inside it (`IR8`; the guard is
-`scripts/worktree-guard.mjs`, which reports an `ADMIN_NAMESPACE` finding).
-
-The branch naming table, the six ordered steps, the Serena configuration copy, the
-failure modes and the removal order are one hop away in
-[`docs/workflow/WORKTREES.md`](docs/workflow/WORKTREES.md) — read it before
-creating, moving or recovering a worktree, and follow its steps in order.
-
-## Skills available in this repo
-
-The authoring contract is
-[`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md), which also
-carries the repo-maintenance skill's rules (`skill-lint`: run it after editing any
-`SKILL.md`, it reports and repairs nothing, and it is `user-invocable: false` with
-`metadata.internal: true` so the `skills` CLI never offers it to a target project).
-When repeated searches or documentation lookups happen here, prefer creating or
-refining a skill over re-deriving the knowledge.
-
-## Distribution
-
-The skills install with the [`skills`](https://github.com/vercel-labs/skills) CLI:
-`npx skills add gtrabanco/agentic-workflow`. There is no build step — adding a
-skill is adding a `skills/<name>/SKILL.md`; replication guidance is
-[`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
