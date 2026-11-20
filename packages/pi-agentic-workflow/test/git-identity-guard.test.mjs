@@ -449,7 +449,7 @@ test("M2 — a `deny` refusal names the disposition, so the silence is never rea
   const result = await applyGitIdentityGuard("git config user.name Fixture", BLOCK(), host());
   assert.match(result.reason, /guard\.gitIdentity\.mode/);
   assert.match(result.reason, /deny/);
-  assert.match(result.reason, /--local/, "the underlying reason still teaches the scoped route");
+  assert.match(result.reason, /--show-origin --get-all user\.name/, "the write's own repair survives");
 });
 
 test("M3 — `allow` stands down: no dialog, the write passes, nothing is remembered", async () => {
