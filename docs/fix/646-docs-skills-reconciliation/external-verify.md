@@ -24,3 +24,38 @@ Sibling sweep: not clean — surviving old-truth mentions at packages/agentic-wo
 Completeness: all S# resolved — S1→P1/P2/P3/P4, S2→P1/P5, S3→P1/P10, S3a→P5, S3b→P7/P8, S4→P1/P9, S5→P1/P10, S5a→P10, S6→P1/P6, S6a→P6, S6b→P6; every `(Implements: S#)` task's own validator re-runs green here (repository-state 9 pass, restatement-sweep 9 pass, reading-coverage 6 pass, normative-drift 23, prose-gate-inventory 22, skill-lint 20 + `verdict: PASS`, check-skill-context 3 modes PASS, residue-dimensions 30, guide-split 17, inviolable-rules 18 + `PASS … 14 rows · 1 home`, golden-fixture 15, workflow-docs-index 5, test-obligation-tags 15, structural-sibling-pins 8, O25's seven-suite command exit 0 at 112 pass / 1 skip); open ids: none missing an owner, but the obligations O6/O15/O19/O24 do not reproduce as written (blockers 6-9) and O26 is red (blocker 1); all O1–O26 rows are `verified` — none planned/in-progress/deferred/blank; removal list R1–R4 each carry `evidence:` and a landing state (R1 awaiting owner, R2 declined, R3/R4 landed). Probes I derived from the requirements rather than re-running the writer's suites: `bun scripts/repository-state.mjs <own fixture>` with a decision dated after `covers-through` → `REASON contradicted-by … / verdict: stale`, exit 1 (AC-S1's acceptance reproducer); the same fixture missing `Source revision` → `missing-field` refusal (O3); `bun scripts/restatement-sweep.mjs --repo <mktemp copy>` with a hand-written restatement → `FINDING unowned-restatement — one-pr-per-unit: docs/workflow/PROBE.md … / verdict: FAIL`, and with a bare "never restated" sentence → `FINDING uncovered-claim … / verdict: FAIL` (S3b's two refusal cases).
 Spot check: `bun scripts/local-gate.mjs --skip-network --jobs 4` → mismatch — reported `local-gate: PASS — 15 step(s) in 783s` (G1, SHA-bound to f455bc4250405c4e884c1322906509596ec0947d), observed `local-gate: FAILED at root-suite` / exit 1 at head 9e7904baf, so the gate receipts (G1, G2) do not cover the delivered head and are untrusted at head; the unit's non-gate receipts re-run end-to-end matched verbatim — `bun scripts/restatement-sweep.mjs` → `6 rule(s) · 12 file(s) matched · 0 finding(s)` / `verdict: PASS` (E11), `bun scripts/reading-coverage.mjs --scope docs-skills` → `234 in scope · 40 full · 199 scanned · 0 finding(s)` / `verdict: covered` (E13), `bun scripts/repository-state.mjs docs/workflow/REPOSITORY_STATE.md` → `verdict: fresh` (E2), `bun scripts/prose-gate-inventory.mjs` → `verdict: PASS` (E6), `bun scripts/dimension-regression.mjs --base 8fc204abb` → `verdict | clean` (E20).
 Verdict: NEEDS-DECISION (13 open blockers — 1 delivery blocker (roadmap-settle: the root suite and the gate are red at head), 4 sibling-sweep/pointer blockers (items 2-5), 4 obligation-ledger validators that do not reproduce (items 6-9), 2 AC declared checks that cannot pass (items 10-11), 1 acceptance-requirement gap that needs an owner call on S5a's "complete read" (item 12), 1 AC-S6a classification gap (item 13); no blocker needs a design decision except item 12, and each is named with file:line, reproducer and smallest action for `/aw-local-apply`)
+
+## Correction batch — 2026-11-20 (owner-ordered apply)
+
+Owner instruction S1/S3 ("triage and fix those that deserve to fix … until you
+fixed full symbol/related stuff") ran one correction batch on the block above.
+The block itself is untouched: it stays the point-in-time verdict at base
+`8fc204abb` · head `9e7904baf`.
+
+- **Folded — 12 of 13 blockers**, in `502d7877f` (B1, both roadmap rows settled
+  to `done · [#662]` through `rowUpsert` + `fixrow` with the CAS revision, the
+  write fixture-verified on a `mktemp -d` copy first), `e3f21597c` (B2, B4, B5,
+  B6–B9, B10, B11, B13, advisory 4), `c55db8550` (B3: the three `DENY` refusal
+  reasons, plus `SKILL_AUTHORING`'s row-62 example, with `@gtrabanco/agentic-workflow`
+  added to the unit's changeset) and `012b7008c` (O18's raw-pipe cell, found by
+  the batch's own column check — not one of the 13).
+- **Open — blocker 12** (S5a's "complete read" vs the delivered depth contract,
+  40 `full` / 199 `scanned`): an owner call, not an agent's — either read the
+  amendment's named files and flip their depth rows, or amend AC-S5/S5a to the
+  disclosed depth contract.
+- **Recheck (the batch's own, recorded as `E22`/`E23`/`G3` in the unit log):**
+  every reproducer above re-runs green except blocker 12;
+  `bun scripts/local-gate.mjs --skip-network --jobs 4` → `local-gate: PASS —
+  15 step(s) in 536s` at `2e749674b`; the full root suite → `exit 0`,
+  133/133 PASS at `012b7008c`; the guard differential base↔head → 9/12
+  byte-identical with only the three reason strings changing.
+- **Disclosed, not hidden:** one writer invocation was refused before writing
+  (`roadmap rowUpsert <path> <json>` is a usage error by design — no bytes
+  changed); two root-suite runs hit `scripts/phase-lint.test.mjs` SUITE
+  TIMEOUT at 120s under concurrent load (it passes alone, 57–70s, and passed in
+  the gate at 31.5s — the suite reads only fixtures, so nothing here can slow
+  it); `/tmp/aw646-*` leftovers of the unit's own session were found and left
+  untouched because they are not this session's files.
+
+Next: re-verify at the batch head (`/aw-local-review`) — the delta is blocker 12
+plus this batch's own spots; nothing was pushed by this run.
