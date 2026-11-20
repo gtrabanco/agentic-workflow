@@ -39,7 +39,15 @@ const write = (root, rel, text) => {
   fs.writeFileSync(abs, text);
 };
 
-const SPEC = (format = "unit-doc@2") => `---
+const STAMP = (format, grammars) => `\`\`\`text
+doc-provenance@1
+written_by: agentic-workflow@4.10.0
+schema: @gtrabanco/agentic-workflow-schema@4.10.0
+format: ${format}
+grammars: ${grammars}
+\`\`\``;
+
+const PREAMBLE = `---
 type: feature
 scope: small
 ---
@@ -48,13 +56,74 @@ scope: small
 
 > One-line: an example unit.
 
-\`\`\`text
-doc-provenance@1
-written_by: agentic-workflow@4.10.0
-schema: @gtrabanco/agentic-workflow-schema@4.10.0
-format: ${format}
-grammars: {"log-kind":1,"obligations":1,"unit-doc":1}
-\`\`\`
+`;
+
+/** The full `spec-by-reference` carrier: what a merge leaves behind. */
+const SPEC = () => `${PREAMBLE}${STAMP("unit-doc@2", '{"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}')}
+
+## Specs
+
+**S1 — do the thing.**
+> verbatim ask
+
+## Acceptance criteria
+
+1. **AC1 (S1)** — done.
+
+## Impact
+
+none
+
+## Non-goals
+
+none
+
+## Future cost
+
+none
+
+## Known pre-existing issues
+
+none
+
+## Applicable tests
+
+- \`true\`
+
+## Tasks
+
+- P1 — do it (validator: \`true\` exits 0)
+  (Implements: S1)
+
+## Findings
+
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+
+## Log
+
+- **L1** — 2026-01-01, the request, verbatim:
+  \`\`\`
+  do the thing
+  \`\`\`
+
+## Evidence
+
+| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
+|---|---|---|---|---|
+| AC1 | \`true\` | 0 | ok | phase |
+
+## Next
+
+ship it
+
+## References
+
+none
+`;
+
+/** The settled carrier: the permanent record a settle leaves. */
+const SETTLED = () => `${PREAMBLE}${STAMP("unit-doc@3", '{"log-kind":1,"obligations":1,"unit-doc":1}')}
 
 ## Specs
 
@@ -148,7 +217,7 @@ test("one finding per class: pending, unstamped and unclassified", () => {
 test("a settled tree answers PASS, because a settled unit is not debt", () => {
   const root = tempTree();
   write(root, "docs/ROADMAP.md", ROADMAP(["| 42 | `example` | done | — | shipped |"]));
-  write(root, "docs/features/42-example/SPEC.md", SPEC("unit-doc@3"));
+  write(root, "docs/features/42-example/SPEC.md", SETTLED());
   write(root, "docs/features/42-example/decisions.md", "d");
 
   const result = run([root, "--json"]);

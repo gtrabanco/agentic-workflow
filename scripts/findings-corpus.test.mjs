@@ -105,6 +105,82 @@ const MIGRATED = `## Findings
 - **V1** — scripts/c.mjs:7 · reviewer review-change · HEAD 2222222222222222222222222222222222222222 · recheck direct read · confirmed
 `;
 
+/**
+ * The settled carrier (issue #651): the settle trims `## Findings`, keeps the
+ * whole `## Log` and appends one digest `E` line. Its one-line `F`/`R`/`V` marks
+ * must still reach the corpus — a shipped unit's traceability is the reason the
+ * trimmer never touches a log line.
+ */
+const SETTLED = `---
+
+# 3 — settled unit
+
+> One-line: a settled unit.
+
+\`\`\`text
+doc-provenance@1
+written_by: agentic-workflow@4.10.0
+schema: @gtrabanco/agentic-workflow-schema@4.10.0
+format: unit-doc@3
+grammars: {"log-kind":1,"obligations":1,"unit-doc":1}
+\`\`\`
+
+## Specs
+
+**S1 — do the thing.**
+> verbatim ask
+
+## Acceptance criteria
+
+1. **AC1 (S1)** — done.
+
+## Impact
+
+none
+
+## Non-goals
+
+none
+
+## Future cost
+
+none
+
+## Known pre-existing issues
+
+none
+
+## Log
+
+- **L1** — 2026-01-01, the request, verbatim:
+  \`\`\`
+  do the thing
+  \`\`\`
+- **F1** — 2026-01-01, folded · fold ccccccc.
+- **R1** — 2026-01-02, review at HEAD 3333333333333333333333333333333333333333 · verdict REVIEW-PASS · cycle 3 · gate exit 0.
+- **V1** — scripts/d.mjs:9 · reviewer review-change · HEAD 3333333333333333333333333333333333333333 · recheck direct read · confirmed
+- **E1** — 2026-01-03, the evidence table collapsed at settle — 1 row(s): \`true\` exit 0 — carrier digest \`sha256:000000000000\`.
+
+## References
+
+none
+`;
+
+test("reader reconciliation: a settled carrier keeps its one-line marks and opens no row", () => {
+  const parsed = parseMigratedCarrier(SETTLED, { file: "docs/features/3-z/SPEC.md", unit: "3-z" });
+  assert.deepEqual(parsed.findings, [], "the trimmed table leaves no open row behind");
+  assert.equal(parsed.reviewMarks, 1, "the R line survives the settle");
+  assert.equal(parsed.verifiedMarks, 1, "the V line survives the settle");
+
+  const root = tempTree();
+  write(path.join(root, "docs", "features", "3-z", "SPEC.md"), SETTLED);
+  write(path.join(root, "docs", "ROADMAP.md"), "# Roadmap\n\n## Features\n\n| NN | Slug | Status | Dependencies | Summary |\n|---|---|---|---|---|\n| 3 | `z` | done · merged | — | settled |\n\n## Fixes\n\n| Issue | Topic | Status |\n|---|---|---|\n");
+  const corpus = buildCorpus(root, { resolveFold: () => null });
+  assert.equal(corpus.reviewMarks, 1);
+  assert.equal(corpus.findings.length, 0);
+  assert.deepEqual(corpus.unparsable, []);
+});
+
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
   assert.equal(corpus.findings.length, 1164, "every finding row in either carrier is in the corpus");

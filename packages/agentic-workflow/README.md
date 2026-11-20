@@ -281,6 +281,43 @@ excludes | index.json index.excludes (array of path prefixes, or null) · defaul
 a freshness hook, `/aw-index`, or `doc --sync` — and until then the hybrid pass
 ranks over the chunks that do have vectors while keyword answers the rest.
 
+## `doc archive` / `doc restore` — the retention write path (issue #651)
+
+The `doc` verb also carries the one write path of document retention: a merged
+unit's process artifacts move into a gitignored archive, its carrier settles to
+`unit-doc@3`, and `restore` puts the artifacts back. The vocabulary, the
+procedure and the four versioned blocks live in
+[`docs/workflow/RETENTION.md`](../../docs/workflow/RETENTION.md); this section is
+the CLI's half.
+
+```
+agentic-workflow doc archive [--dry-run] [--unit <id>] [--all-eligible] [--json]
+agentic-workflow doc restore --unit <id> [--json]
+```
+
+- **A target is required.** A bare `archive` is a usage error (exit 1): the
+  irreversible half is never the default, and it never sweeps the tree because
+  nobody named it. `--dry-run` alone prints the whole report, including the
+  `unstamped`/`older-format` documents that are out of scope forever.
+- **The config gates the trim step only.** `docRetention.mode: "keep-all"` (the
+  shipped default) refuses the write with `mode-keep-all` and still reports the
+  plan; it never invalidates a document.
+- **A refusal exits 2** with `DOC REFUSAL — <published reason>` and moves no
+  byte. The reasons are the schema package's `RETENTION_STATES` plus
+  `unknown-unit`, `unclassified-file`, `mode-keep-all`, `archive-not-ignored`,
+  `archive-exists` and `archive-missing`.
+- **The archive binds bytes.** `<archiveDir>/<unit>/manifest.json` carries
+  `doc-retention-archive@1` with one `sha256:<64 hex>` per archived file;
+  `restore` re-hashes every file before the first write and refuses
+  `content-hash-mismatch`, `target-conflict` or `archive-incomplete`. The
+  directory must be gitignored (`archive-not-ignored`), and local pruning is
+  off unless `archiveRetentionDays` names a window.
+- **The seam hook** (`docRetention.seamHook`) runs after the local archive is
+  durable; a non-zero exit is a reported degradation, never a lost record.
+- `--json` prints the receipt (`doc-retention-archive-receipt@1`); without it the
+  run prints one line per unit (`unit · state · trim …`, `archived · …`,
+  `refused · … · <reason>`) and the plan's summary.
+
 ## `journal` — the session-log fragment carrier (issue #405)
 
 One file per journal entry under `.agentic-workflow/journal/`, written by the

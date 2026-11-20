@@ -1,7 +1,6 @@
 ---
 type: feature
 scope: large
-roadmap_summary: settled third unit-doc carrier, stamp-gated trim/archive with restore, retention-debt detection via workflow-status + product-audit
 ---
 
 # 651 — doc retention

@@ -37,13 +37,33 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import {
   DOC_RETENTION_ARCHIVE_CONTRACT,
   DOC_RETENTION_DEFAULTS,
+  RETENTION_DECLARATION_CONTRACT,
+  RETENTION_DECLARATION_DISPOSITIONS,
   RETENTION_DIGEST_PATTERN,
+  RETENTION_STATES,
   UNIT_DOC_KEEP_FILES,
   UNIT_DOC_SETTLED_SECTIONS,
   UNIT_DOC_TRIM_FILES,
   classifyUnitRetention,
+  publishedDisposition,
   validateRetentionArchive,
 } from "@gtrabanco/agentic-workflow-schema";
+
+// The vocabulary is the schema package's; this module re-exports it under the
+// names its consumers already import, so a root script never reaches into the
+// package's TypeScript source (owner: `vocabulary-residency@1`).
+export {
+  DOC_RETENTION_ARCHIVE_CONTRACT,
+  DOC_RETENTION_DEFAULTS,
+  RETENTION_DECLARATION_CONTRACT,
+  RETENTION_DECLARATION_DISPOSITIONS,
+  RETENTION_DIGEST_PATTERN,
+  RETENTION_STATES,
+  UNIT_DOC_KEEP_FILES,
+  UNIT_DOC_TRIM_FILES,
+  publishedDisposition,
+  validateRetentionArchive,
+};
 
 import { createConfigApi } from "../config/api.mjs";
 import { parseProvenance, deriveFormat, headingsOf, stampDocument } from "../edit/Provenance.mjs";

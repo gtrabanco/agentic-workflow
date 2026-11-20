@@ -19,6 +19,30 @@ format: unit-doc@2
 grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 ```
 
+```text
+retention-declaration@1
+path | disposition
+TASKS.md | trimmable
+PLAN.md | trimmable
+progress.md | trimmable
+ACCEPTANCE.md | trimmable
+testing.md | trimmable
+CHECKLIST.md | trimmable
+BRIEF.md | trimmable
+pr-body.md | trimmable
+external-verify.md | trimmable
+review-findings.md | trimmable
+planning-findings.md | trimmable
+SPEC.md | kept
+decisions.md | kept
+known-issues.md | kept
+planning-obligations.md | kept
+planning-evidence.md | kept
+architecture-notes.md | kept
+sources.md | kept
+research.md | kept
+```
+
 ## Specs
 
 Requirements, each numbered `S#` and quoting the requester's own words verbatim

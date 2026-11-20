@@ -46,6 +46,7 @@ invents profile slots or waives a verification contract.
 | **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope; every row the project registered in its `review-extras@1` note is reported with its decay state (`unpinned`, `stale`, `incomplete`), so an extra that rotted is a finding rather than a memory | `agentic-workflow skills inventory --guide AGENTS.md` — receipt-quoted for the registered set; the MCP half is the agent's own inventory, stated plainly when it cannot be enumerated | all |
 | **Coverage gaps** | Declared verification criteria with no detector, admitted recurring finding classes with no preventive gate, and declared detectors consuming no criterion — the forward-looking half the findings corpus (#437) does not cover | `bun scripts/coverage-gap.mjs <repo>` receipt-quoted (`coverage-gap@1`, § Coverage-gap sweep) | all |
 | **Journal signals** | The corrections a session had to make, the sessions each unit consumed (rework), and the findings its own reviewers refuted — cross-joined to the findings corpus, so a class the journal alone records still arrives with the corpus row it belongs to | `bun scripts/journal-corpus.mjs <repo>` receipt-quoted (`journal-corpus@1`, § Journal-signal sweep) | all |
+| **Retention debt** | Merged units still carrying the process artifacts a settle collapses (task lists, phase logs, review ledgers, the evidence table) — and the documents that can never be settled because they carry no provenance stamp — product-wide, so the tree's cost stops growing with every shipped unit | `bun scripts/retention-debt.mjs <repo>` receipt-quoted (`retention-debt@1`, § Retention-debt sweep) | all |
 | **Decision promotion** | A decision whose scope is cross-unit must land in exactly ONE permanent owner doc — the guide's laws, `ARCHITECTURE.md` or `ARCHITECTURAL_INVARIANTS.md` — with the unit ledger citing it and never restating it; the sweep reports every cross-unit decision that names no owner doc, every decision captured after the rule landed with no scope cell, and every ledger the dispatcher cannot read | `bun scripts/decision-promotion.mjs <repo>` receipt-quoted (`decision-promotion@1`, § Decision-promotion sweep) | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
@@ -212,6 +213,35 @@ verdict | clean | signals <n> | the receipt's own verdict: no row at all is clea
   nothing
 
 **Routes** — every journal finding's `route:` cell is the `finding-route@1` hand-off owned by `SKILL.md`, and the destination is one of three: a recurring class with a named preventive gate routes to that gate's repair (`fix — <unit>`), a rework cluster with no cause named routes to the unit's own review (`review — <unit>`), and a class the journal records with no possible detector routes to a proposal (`audit — <audit id>`) — never a bespoke route, never an automatic fix. Journal signals are **emission only**: this audit proposes, and the owner decides.
+
+## Retention-debt sweep (pass-only-if)
+
+The question is the one the feature exists for: **which merged units still pay for
+process noise, and which can never stop?** The producer answers it with the same
+predicate the write path uses — `classifyUnitRetention()` in the schema package,
+consumed through the crate's `planRetention` — so the audit cannot recommend a
+settle `doc archive` would refuse, and it cannot miss a unit the sensor offers.
+
+```text
+retention-debt@1
+row | what it carries
+root · mode | the tree read and the configured posture (`keep-all` still reports debt)
+units · pending · out-of-scope | the counts
+unit | one row per unit folder: its state and the files a settle would trim
+finding | `<code> | <unit> | <detail>` — the closed code set below
+verdict | `PASS` (no debt) or `DEBT` (at least one finding)
+```
+
+| Code | What it means | Route |
+|---|---|---|
+| `pending-trim` | a proved-merged unit with a full carrier and a stamp still carries trimmable files | `agentic-workflow doc archive --unit <id>` (dry-run first), when the project's `docRetention.mode` allows |
+| `unstamped-doc` | the unit carries no `doc-provenance@1` stamp (or an older generation) and is out of scope forever | provenance re-stamp, then the trim; the procedure is `docs/workflow/RETENTION.md` |
+| `unclassified-file` | the unit folder carries a file the published matrix classifies neither trimmable nor kept | declare it in `UNIT_DOC_TRIM_FILES` / `UNIT_DOC_KEEP_FILES` — a matrix edit, never a guess |
+
+Pass only if the receipt reports `verdict | PASS`. A finding is a report, not a
+refusal: the producer exits 0 with findings, and applying the trim stays an
+operator action (the audit never writes). Evolution regression applies — a
+producer that stops naming a class it used to name is the finding.
 
 ## Decision-promotion sweep (pass-only-if)
 
