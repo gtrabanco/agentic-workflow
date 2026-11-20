@@ -154,7 +154,11 @@ IR14-tool-choice | the preferred tool is re-checked every turn and the documente
 - **Stack/architecture agnostic.** Do not introduce references to any specific
   product, stack, framework, ORM, runtime, or architecture pattern into the
   skills or the shared docs. Generic phrasing ("the project's architecture")
-  is the rule.
+  is the rule. The rule scopes to the **target project's** stack: a host agent's
+  name (Claude Code, Cursor, Copilot, OpenCode, Pi) is sanctioned where a
+  portability or adapter feature requires it — a skill's `## Portability`
+  section, the safety-adapter offer, a host-specific hook — and never as a
+  technology recommendation for the project the workflow runs in.
 - **Documentation currency ships with the unit**: the README describing a
   changed surface is updated and its superseded prose deleted in the same PR.
   Step owner: [`skills/unit-lane/references/DOCS.md`](skills/unit-lane/references/DOCS.md);

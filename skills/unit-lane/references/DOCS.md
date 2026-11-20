@@ -72,7 +72,8 @@ Update the unit doc's **`## Log`** and any project docs:
   superseded is deleted rather than left beside the new text
 - The generated projection regenerated (`bun scripts/docs-generate.mjs`), and
   `--check` exiting 0 recorded in the `## Log`
-- Each doc change committed with a conventional commit message
+- Each doc change committed with a conventional commit message (format owner:
+  `AGENTS.md` § Working rules — this line cites it)
 
 ## Checklist (pass only if)
 

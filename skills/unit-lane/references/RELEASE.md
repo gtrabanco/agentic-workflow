@@ -24,7 +24,7 @@ Write into the unit doc's **References** section:
 
 ## Checklist (pass only if)
 
-- [ ] PR created on `main` with `Closes #N` from the References section
+- [ ] PR created against the project's **default branch** (the `Branch` field's base, `main` in this repository) with `Closes #N` from the References section — one PR per unit, the rule the guide owns (`AGENTS.md` § Working rules)
 - [ ] Future sweep: every `## Future` row resolved with the user (planned —
       registered on explicit request only —, kept deferred, or discarded, dated)
 - [ ] Branch follows the project's Workflow conventions
@@ -49,7 +49,7 @@ Write into the unit doc's **References** section:
 
 ## Forbidden
 
-- Never stack PRs — one PR per unit of work, always against `main`
-- Never work on `main` directly
+- Never stack PRs — one PR per unit of work, against the project's **default branch** (owner: `AGENTS.md` § Working rules, including its one exception: an owner-ordered inline correction batch lands straight on the default branch with no branch or PR, and never on an agent's own initiative)
+- Never work on the default branch directly
 - Never close the unit without an opened PR
 - Never alter the unit doc's Evidence or Progress after this step

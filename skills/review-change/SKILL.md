@@ -161,8 +161,10 @@ Each applicable pass, the verification pass (step 6), the classifier (step 8), a
 pass; without those, use a fresh conversation. Pass only scope, its checklist,
 and Step 0 docs; cap full non-diff reads at 10 (targeted ≤50-line reads/greps
 excluded). The orchestrator retains tables, not sources, and fuses them in step
-7. Inline fallback is sequential table reduction. A pass runs at its own tier or
-stronger, never weaker.
+7. Inline fallback is sequential table reduction. A pass never runs weaker than
+the author — the review-authority rule is
+[`ORCHESTRATE.md`](../unit-lane/references/ORCHESTRATE.md)'s and this section
+cites it.
 
 **Pass model routing (issue #201).** Resolve every pass's model **before**
 spawning from the operator's approved table, not the session model:
@@ -170,8 +172,11 @@ spawning from the operator's approved table, not the session model:
 each pass with its row's pinned `model` and record the row's `source` in the
 pass record. `spawn: "auto"` = the operator delegated the choice (record the
 tier justification in the report); `spawn: "inline"` — or a pinned model
-unresolvable at spawn time — runs inline at the orchestrator's model,
-**stated in the report**.
+unresolvable at spawn time — runs inline at the orchestrator's model. That
+degrade is the orchestrator contract's (owner:
+[`ORCHESTRATE.md`](../unit-lane/references/ORCHESTRATE.md) § Degrade inline,
+stated), cited here with the reviewer-pass note that a review pass records it
+**in its own report**, never silently.
 
 
 ## Progressive loading — choose one review route

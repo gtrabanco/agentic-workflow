@@ -70,7 +70,11 @@ ledger before collecting evidence.
 
 ## Portability
 
-Without a slash menu, open this file and follow its process in a fresh turn.
+Preamble + no-slash-menu fallback: owned by
+[`PORTABILITY.md`](../orchestration-envelope/references/PORTABILITY.md) — this
+skill has no fallback of its own beyond it: the process is running evidence
+commands and writing one ledger, and a host without a slash menu runs it as
+written.
 
 ## Relationship to other skills
 

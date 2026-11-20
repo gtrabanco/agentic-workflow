@@ -373,6 +373,9 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **P1** — 2026-11-20, cut the unit doc and both planning ledgers (this commit).
 - **P2** — 2026-11-20, integrated `origin/main` before the cut: `git merge --ff-only origin/main` took 28 commits (unit 632 model-aware phase batching, the W47 journal aggregation). Replan check recorded: no S2/S6 target moved (632 touched `docs/workflow/CONFIG.md`, `GATE_INVENTORY.md`, the budgets and `packages/`), two baselines were re-read (AGENTS.md 631 lines / 194 machine; `GATE_INVENTORY.md` 183 / 88), the snapshot's facts were re-measured post-merge, and S4 gained a citation obligation: `phase-batching@1`'s `PHASE_BATCHING_CACHE_POSTURES` owns *model* cache posture, so the loading ladder cites it instead of defining a second notion.
 
+- **D5** — design decision (S6 D1, the red-first *"UI/adapter glue may test after"* exception): **dropped**. The owner surface (`AGENTS.md` § Working rules) states the obligation with no carve-out, and `TEST_IMPACT.md` states the mechanism; an exception that survives only in a restatement copy is the defect S6 names, and adopting it would add a semantic carve-out to a law with no measured need — the guide already answers the real case with a recorded `empty` test-impact verdict. The clause is deleted from `execute-phase`, and no owner surface gains it.
+- **D6** — owner decision recorded in a rule's own text (S6a): the stack-agnostic rule scopes to the **target project's** stack; a host agent's name is sanctioned where a portability or adapter feature requires it, and never as a technology recommendation. The carve-out lives in `AGENTS.md` § Working rules, and `second-read.md` classifies every host name the tree carries against it.
+
 ## Next
 
 P2: commit `scripts/repository-state.test.mjs` alone and observe it red.

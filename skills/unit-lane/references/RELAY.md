@@ -186,15 +186,17 @@ profile still picks the concrete model:
 bun scripts/relay-packet.mjs tiers <unit>   # execute + coherence-review tiers
 ```
 
-| Leg | Catalog step | Tier |
-|---|---|---|
-| execution phase | `implement` | `cheap` |
-| coherence review | `review` | `strong` |
+The tiers are not declared on this page: they are the **catalog's**, read for the
+unit's `implement` and `review` steps from
+`packages/agentic-workflow/src/runner/catalog.json` by the command above — the
+same source `unit-lane` names.
 
 Pass the tier's model with the dispatch (`model`, `thinkingLevel`) only when the
 operator instructed it; otherwise omit both and inherit. Mechanical phases are
 the cheap tier by decision; the coherence review and any adversarial pass are the
-strong tier, and reviewing with a weaker model than the author stays forbidden.
+strong tier, and the review-authority rule (never weaker than the author, with
+the stated inline degrade as its only escape) is
+[`ORCHESTRATE.md`](ORCHESTRATE.md)'s — cited here, never re-worded.
 
 ## Post-PR
 

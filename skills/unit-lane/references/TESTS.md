@@ -37,9 +37,11 @@ clause rides a cell and never becomes a sixth column.
 - [ ] Every test passed — no test was weakened to pass
 - [ ] Results recorded in the Evidence section with command, exit, output
 - [ ] If no tests step for this unit: `n/a — no tests step for this unit`
-- [ ] A new script+suite pair this unit introduces landed red-first: the
-      suite committed alone and observed failing (the red commit), the
-      implementation committed after, observed green
+- [ ] A new script+suite pair this unit introduces landed red-first — the
+      obligation and the evidence shape are the guide's (`AGENTS.md` § Working
+      rules), the mechanism is [TEST_IMPACT.md](../../execute-phase/references/TEST_IMPACT.md)'s;
+      this cell cites both and adds nothing (§ Red-first commits is that same
+      pointer, kept once)
 - [ ] A suite this unit adds or touches declares its obligation tag, and every
       surface it protects still exists (see § Obligation tags)
 - [ ] Every test this unit authored carries its justification line in the run's
@@ -59,11 +61,12 @@ clause rides a cell and never becomes a sixth column.
 
 ## Red-first commits
 
-A new script+suite pair lands red-first: the suite commits alone, observed
-failing on the missing module or the failing assertion (the red commit), the
-implementation commits after, observed green. The unit doc's `## Log`
-records both runs as `E` lines naming both commit SHAs — the evidence names
-the commits, never just the runs.
+Owned elsewhere, cited here: the obligation and the evidence shape are
+`AGENTS.md` § Working rules (a suite lands alone, observed red, and the unit
+doc's `## Log` records both runs as `E` lines naming **both commit SHAs**), and
+the mechanism — how the test set is derived and what the RED evidence must name —
+is [TEST_IMPACT.md](../../execute-phase/references/TEST_IMPACT.md)'s. No rule in
+this file is a second wording of either.
 
 ## The justification line
 
