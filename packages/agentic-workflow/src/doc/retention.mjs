@@ -359,10 +359,12 @@ const unitBase = (unit) => unit.split("/").pop();
 
 /** The refusal a precondition produces, in evaluation order. */
 function precondition({ root, row, config, plan }) {
-  if (plan.mode !== "archive") return "mode-keep-all";
+  // The unit's own answer comes first: "your unit is not a candidate" is more
+  // useful than the policy's posture, and a refusal names one thing.
   if (row === undefined) return "unknown-unit";
   if (row.state !== "eligible") return row.state;
   if (row.unclassified.length > 0) return "unclassified-file";
+  if (plan.mode !== "archive") return "mode-keep-all";
   if (!isArchiveIgnored(root, relative(root, archiveDirOf(root, config)))) return "archive-not-ignored";
   const target = join(archiveDirOf(root, config), unitBase(row.unit));
   if (existsSync(target)) return "archive-exists";

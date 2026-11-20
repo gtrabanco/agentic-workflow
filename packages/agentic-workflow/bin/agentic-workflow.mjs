@@ -994,6 +994,41 @@ switch (command) {
       }
       break;
     }
+    if (grammar.branch === "retention") {
+      // Issue #651: the one write path of the retention feature. Loaded on
+      // demand — the retrieval half never pays for the carrier readers.
+      const retention = await import("../src/doc/retention.mjs");
+      const root = process.cwd();
+      const config = retention.readRetentionConfig({ root });
+      for (const degradation of config.degradations ?? []) process.stderr.write(`doc: ${degradation}\n`);
+      const receipt = grammar.op === "archive"
+        ? retention.archiveRetention({ root, config, only: grammar.unit, allEligible: grammar.allEligible, dryRun: grammar.dryRun })
+        : retention.restoreRetention({ root, config, unit: grammar.unit });
+      for (const degradation of receipt.degradations ?? []) process.stderr.write(`doc: degradation: ${degradation}\n`);
+      if (grammar.json) {
+        process.stdout.write(`${JSON.stringify(receipt)}\n`);
+      } else {
+        if (receipt.plan !== undefined) {
+          for (const row of receipt.plan.rows) {
+            const trim = row.trim.length > 0 ? ` · trim ${row.trim.join(", ")}` : "";
+            const blocked = row.blocked === null ? "" : ` · blocked ${row.blocked}`;
+            console.log(`${row.unit} · ${row.state}${trim}${blocked}`);
+          }
+          for (const row of receipt.plan.out_of_scope) {
+            console.log(`out of scope · ${row.unit} · ${row.state} (${row.reason})`);
+          }
+          console.log(`doc archive: ${receipt.plan.summary ? Object.entries(receipt.plan.summary).map(([state, count]) => `${state}=${count}`).join(" ") : "-"} · mode=${receipt.plan.mode}`);
+        }
+        for (const unit of receipt.archived ?? []) console.log(`archived · ${unit}`);
+        for (const name of receipt.restored ?? []) console.log(`restored · ${name}`);
+        for (const { unit, reason } of receipt.refused ?? []) console.log(`refused · ${unit} · ${reason}`);
+      }
+      if (!receipt.ok) {
+        const first = receipt.refused?.[0]?.reason ?? "refused";
+        docRefuse(first, `the write path refused before any byte moved (${receipt.refused?.length ?? 0} unit(s))`);
+      }
+      break;
+    }
     let envelope;
     try {
       // The channel is the `doc` half of issue #424: the retrieval ops are the

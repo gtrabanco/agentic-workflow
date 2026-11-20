@@ -23,12 +23,84 @@ export const RETRIEVAL_FLAGS = {
 /** The closed half-A operation set (issue #366). */
 export const DOC_OPS = Object.freeze(["read", "edit", "index"]);
 
+/**
+ * The retention operations (issue #651). They share the `doc` verb and the
+ * `--unit` target with nothing else, so they get their own grammar branch rather
+ * than overload half-A's closed flag set: `archive` reports or collapses a merged
+ * unit's carrier, `restore` puts one back from the gitignored archive.
+ */
+export const RETENTION_OPS = Object.freeze(["archive", "restore"]);
+
 function usageError(msg) {
   const e = new Error(
-    `usage: agentic-workflow doc (--sync [--quiet] | --query <term> [--since <ISO>] [--until <ISO>] [--file <path>] [--mode keyword|hybrid] | --status | --rebuild) [--json-only] — ${msg}`,
+    `usage: agentic-workflow doc (--sync [--quiet] | --query <term> [--since <ISO>] [--until <ISO>] [--file <path>] [--mode keyword|hybrid] | --status | --rebuild) [--json-only] | doc (archive [--unit <id>] [--all-eligible] [--dry-run] | restore --unit <id>) [--json] — ${msg}`,
   );
   e.code = "USAGE";
   return e;
+}
+
+/**
+ * Parse `doc archive|restore` (issue #651).
+ *
+ * `archive` needs an explicit target: `--unit <id>`, or `--all-eligible` for the
+ * units past the configured window, or `--dry-run` for the report alone. A bare
+ * `archive` is a usage error, never a whole-tree sweep: the irreversible half of
+ * the feature is never the default. `restore` has exactly one form.
+ */
+function parseRetentionArgs(argv) {
+  const out = {
+    branch: "retention",
+    op: argv[0],
+    unit: null,
+    allEligible: false,
+    dryRun: false,
+    json: false,
+  };
+  const seen = new Set();
+  let i = 1;
+  while (i < argv.length) {
+    const arg = argv[i];
+    if (arg === "--json") {
+      out.json = true;
+      i++;
+      continue;
+    }
+    if (arg === "--all-eligible") {
+      if (seen.has(arg)) throw usageError(`${arg} given twice`);
+      seen.add(arg);
+      out.allEligible = true;
+      i++;
+      continue;
+    }
+    if (arg === "--dry-run") {
+      if (seen.has(arg)) throw usageError(`${arg} given twice`);
+      seen.add(arg);
+      out.dryRun = true;
+      i++;
+      continue;
+    }
+    if (arg === "--unit") {
+      const value = argv[i + 1];
+      if (value === undefined || value === "" || value.startsWith("--")) throw usageError("--unit requires a unit folder");
+      if (seen.has(arg)) throw usageError(`${arg} given twice`);
+      seen.add(arg);
+      out.unit = value;
+      i += 2;
+      continue;
+    }
+    throw usageError(`unknown flag "${arg}"`);
+  }
+  if (out.op === "restore") {
+    if (out.allEligible) throw usageError("--all-eligible belongs to archive");
+    if (out.dryRun) throw usageError("--dry-run belongs to archive");
+    if (out.unit === null) throw usageError("--unit is required for restore");
+    return out;
+  }
+  if (out.unit !== null && out.allEligible) throw usageError("--unit and --all-eligible are exclusive");
+  if (out.unit === null && !out.allEligible && !out.dryRun) {
+    throw usageError("name a target: --unit <id>, --all-eligible, or --dry-run for the report");
+  }
+  return out;
 }
 
 /**
@@ -125,8 +197,10 @@ export function parseDocArgs(argv) {
   let sawMode = false;
   if (!Array.isArray(argv) || argv.length === 0) throw usageError("no operation given");
 
-  // D2: a positional first token is the half-A branch (issue #366).
+  // D2: a positional first token is the half-A branch (issue #366), or the
+  // retention branch when it names one of its two operations (issue #651).
   if (!argv[0].startsWith("-")) {
+    if (RETENTION_OPS.includes(argv[0])) return parseRetentionArgs(argv);
     return parseDocopArgs(argv);
   }
 

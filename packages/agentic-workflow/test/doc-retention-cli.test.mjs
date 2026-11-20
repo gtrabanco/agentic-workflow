@@ -102,6 +102,8 @@ const fixture = () => {
   const root = tmp();
   mkdirSync(join(root, "docs", "features", "42-example"), { recursive: true });
   writeFileSync(join(root, ".gitignore"), ".agentic-workflow/archive/\n");
+  mkdirSync(join(root, ".pi"), { recursive: true });
+  writeFileSync(join(root, ".pi", "agentic-workflow.json"), JSON.stringify({ docRetention: { mode: "archive" } }));
   writeFileSync(
     join(root, "docs", "ROADMAP.md"),
     [
@@ -205,7 +207,6 @@ test("a refusal exits 2 with a DOC REFUSAL line and moves no byte", () => {
 test("the config section gates the trim step only: keep-all refuses the write, reports the plan, and never invalidates a document", () => {
   const root = fixture();
   try {
-    mkdirSync(join(root, ".pi"), { recursive: true });
     writeFileSync(join(root, ".pi", "agentic-workflow.json"), JSON.stringify({ docRetention: { mode: "keep-all" } }));
 
     const refused = run(root, "archive", "--unit", "docs/features/42-example");
