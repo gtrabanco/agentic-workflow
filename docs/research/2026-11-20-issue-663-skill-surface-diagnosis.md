@@ -254,3 +254,15 @@ interaction with the close-out ladder, the receipt stages and
 
 This section is the resumption evidence for that unit's pre-spec; nothing here
 is a plan yet.
+
+## 8. Trim filed on the forge (2026-11-20)
+
+The two approved trim units are filed as feature issues (labels `feature`,
+`needs-triage`, `## Surfaces` declared, no `blocked-by` edges — none blocks):
+
+- **#667** — review pack: one owner reference for the shared pass preamble; the 9 passes keep their own checklists (D2).
+- **#668** — rendered-facts rows for the skill-surface counts, recomputed from the tree (the counts section 2 measured rotting).
+
+No ordering constraint between them (disjoint surfaces and test-impact sets).
+The unit-lane split (§7) stays parked with the owner; the inline session-close
+fix is already on `main` (`c830b2879`, §Addendum).
