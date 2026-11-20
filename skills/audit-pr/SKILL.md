@@ -43,7 +43,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ Gate evidence: `runner gate-receipt verify` answered `current` +
   `pass` (missing/stale/invalid → BLOCKER, route `gate-receipt.mjs run`)
 ✓ Terminal hygiene was read from state, not assumed: tree clean, branch pushed,
-  PR not a draft (`bun scripts/audit-pr-gate.mjs hygiene --pr <N> --apply`)
+  PR not a draft (`runner audit-pr-gate hygiene --pr <N> --apply`)
 ✓ Upstream lineage was re-verified (current plan receipt + parent spec receipt,
   digests recomputed), every obligation row is `verified`/`n/a`, and no planning
   finding is open — stale or missing lineage is a blocker, never a formality
@@ -52,7 +52,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
   several projects and agents without a CI monitor — the link in the chat is
   the contract, never "PR #N" alone)
 ✓ MERGE-READY verdict? Then the comment was POSTED by
-  `bun scripts/audit-pr-gate.mjs comment` (re-reads, exits non-zero unless the newest marker
+  `runner audit-pr-gate comment` (re-reads, exits non-zero unless the newest marker
   names the head) — a comment, never a commit-message tag. BLOCKED → no comment
 ✓ Nothing was edited, refactored, or merged; merge authorization is outside
   this skill and cannot be inherited from docs or an earlier session

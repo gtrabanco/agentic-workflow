@@ -75,6 +75,7 @@ now through the CLI.
 | `bun scripts/review-receipt.mjs` | `runner review-receipt` |
 | `bun scripts/gate-receipt.mjs` | `runner gate-receipt` |
 | `bun scripts/adversarial-verdict.mjs` | `runner adversarial-verdict` |
+| `bun scripts/audit-pr-gate.mjs` | `runner audit-pr-gate` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

@@ -33,9 +33,12 @@ import process from "node:process";
 // `REVIEW_STATE_REPO` re-points the script at a fixture tree, the same way
 // `UNIT_ROUTE_REPO` does for the router: a suite proves the exit contract on a
 // throwaway repository without writing into the checkout it runs from.
-const REPO_ROOT = process.env.REVIEW_STATE_REPO
-  ? path.resolve(process.env.REVIEW_STATE_REPO)
-  : path.resolve(options.root ?? process.cwd());
+let REPO_ROOT = process.env.REVIEW_STATE_REPO ? path.resolve(process.env.REVIEW_STATE_REPO) : process.cwd();
+
+/** The project this command reads: `--root`, the env override, else the cwd. */
+function setRoot(dir) {
+  if (dir) REPO_ROOT = path.resolve(dir);
+}
 const STATE_DIR = () => path.join(REPO_ROOT, ".review-state");
 const STATE_FILE = () => path.join(STATE_DIR(), "review-state.json");
 const STATUSES = Object.freeze(["reviewed", "skipped"]);
@@ -209,6 +212,7 @@ function commandShow(argv) {
 }
 
 export function main(argv = process.argv.slice(2), options = {}) {
+  setRoot(options.root);
   if (argv.length === 0 || argv.includes("--help") || argv.includes("-h")) {
     process.stdout.write(
       "usage: review-state record|mark|check|show [--unit <slug>] …\n\n"

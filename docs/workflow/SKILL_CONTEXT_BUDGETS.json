@@ -431,12 +431,13 @@
       }
     },
     "runner-contract": {
-      "referenceEstimateMax": 2434,
+      "referenceEstimateMax": 3151,
       "mainSources": {
         "issue #611 (dogfooding vehicle)": "first per-skill ceiling for this skill: SKILL.md is unchanged by issue #611 (it stays on the flat default ceiling 2800, no re-base claimed), and only the reference ceiling is declared because references/RUNNER.md now carries the authoring-default pointer. Measured at the change: SKILL.md 673 est / 62 lines, RUNNER.md 2212 est / 78 lines."
       },
       "referenceSources": {
-        "issue #611 (dogfooding vehicle)": "references/RUNNER.md's override section gains one pointer bullet: this repository's authoring checkout arms the override by default through scripts/setup-env.mjs, and the tool doctor's dogfooding-vehicle row reports the state (owner of the detail: docs/workflow/SETUP.md). The value shape and the consumer list stay in RUNNER.md, so no rule moved. Measured at the change: RUNNER.md 2212 est / 78 lines, ceiling ceil(2212 x 1.10) = 2434; growth source = issue #611's pointer."
+        "issue #611 (dogfooding vehicle)": "references/RUNNER.md's override section gains one pointer bullet: this repository's authoring checkout arms the override by default through scripts/setup-env.mjs, and the tool doctor's dogfooding-vehicle row reports the state (owner of the detail: docs/workflow/SETUP.md). The value shape and the consumer list stay in RUNNER.md, so no rule moved. Measured at the change: RUNNER.md 2212 est / 78 lines, ceiling ceil(2212 x 1.10) = 2434; growth source = issue #611's pointer.",
+        "issue #553 (universal CLI coverage)": "references/RUNNER.md carries one row per migrated subcommand: the runner table is the closed set a skill cites, so every command this unit moves into the crate adds one row. Measured 2864 est / 96 lines at this commit, with 10 of the migrated commands documented; the ceiling is ceil(2864 x 1.10) = 3151 by the manifest's own arithmetic, and it is re-based once more when the sweep completes."
       }
     }
   },

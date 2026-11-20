@@ -14,7 +14,7 @@
    pass / blocker / n-a with the artifact that proves it. The three
    terminal-hygiene gates (`tree-clean`, `branch-pushed`, `pr-ready`) are **read
    from state, never asserted** — hygiene previously had no owner at merge time:
-   `bun scripts/audit-pr-gate.mjs hygiene --pr <N> --apply` (exit `0` clean, `2`
+   `runner audit-pr-gate hygiene --pr <N> --apply` (exit `0` clean, `2`
    blocked). `--apply` performs the only mechanical repair there is (`gh pr
    ready`, so a draft is flipped rather than reported); a dirty tree names its
    paths and an unpushed branch its commit count — those stay the author's to fix.
@@ -51,7 +51,7 @@
    re-appended; a genuinely new blocker gets the next `Fn` id.
 7. **Post the MERGE-READY comment on the PR (MERGE-READY only).** The verdict
    must be visible on the PR itself — as a **comment**, never in a commit
-   message. Run `bun scripts/audit-pr-gate.mjs comment --pr <N> --head <head
+   message. Run `runner audit-pr-gate comment --pr <N> --head <head
    SHA> --gates-json <gate map>`: it builds the fixed body, posts once, re-reads,
    and **exits non-zero unless the newest `<!-- audit-pr:merge-ready sha=… -->`
    marker names the head**. **Idempotent by marker** — same SHA skips, an older

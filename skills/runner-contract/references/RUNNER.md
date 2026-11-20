@@ -149,6 +149,7 @@ shell fallback.
 | `review-receipt` | the SHA-bound review receipt — `emit`, `verify`, `post` (feature 25) |
 | `gate-receipt` | the gate receipt — `run` records the gate's evidence, `verify` re-derives it (fix #338) |
 | `adversarial-verdict` | the adversarial pass's checker over its record and the reviewed diff (issue #358) |
+| `audit-pr-gate <evaluate\|hygiene\|comment> [flags]` | the merge gate — the verdict from the review receipt, the gate receipt and the terminal hygiene, plus its one idempotent marker writer |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 

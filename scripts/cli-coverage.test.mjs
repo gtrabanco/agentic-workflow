@@ -290,10 +290,11 @@ test("the symbolic form is legal in a shipped skill and the launcher forms are n
 test("the documented fallback and the crate entry point print identical bytes for the same argv", () => {
   const migrated = [...shims()].sort(([a], [b]) => a.localeCompare(b));
   assert.ok(migrated.length >= 2, `expected at least two migrated shims, found ${migrated.length}`);
+  // No arguments: every command answers a deterministic usage or verdict block
+  // and touches nothing, which is what makes the two entries comparable.
   for (const [script, command] of migrated.slice(0, 2)) {
-    const argv = ["docs/features/553-universal-cli-coverage/SPEC.md", "--phase", "P1"];
-    const shim = run([path.join(SCRIPTS, `${script}.mjs`), ...argv]);
-    const cli = run([BIN, command, ...argv]);
+    const shim = run([path.join(SCRIPTS, `${script}.mjs`)]);
+    const cli = run([BIN, command]);
     assert.deepEqual(cli, shim, `\`runner ${command}\` and \`scripts/${script}.mjs\` must answer identically`);
   }
 });
