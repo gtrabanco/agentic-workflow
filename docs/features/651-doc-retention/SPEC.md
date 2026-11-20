@@ -345,11 +345,11 @@ The ledger lives beside this document: [`planning-obligations.md`](planning-obli
 - **E12** — 2026-11-22, `bun test scripts/findings-corpus.test.mjs` · exit 0 · `15 pass 0 fail` (O24).
 - **E13** — 2026-11-22, `bun test scripts/normative-drift.test.mjs` · exit 0 · `22 pass 0 fail` (O3).
 - **E14** — 2026-11-22, `bun scripts/lint-changeset.mjs` · exit 0 · `ok 651-doc-retention.md` (O27).
-- **E15** — 2026-11-22, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/651-doc-retention/SPEC.md` · exit 2 before closure (the 30 planned rows), exit 0 after (see `G2`).
+- **E15** — 2026-11-22, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/651-doc-retention/SPEC.md` · exit 0 · `verify@1` receipt, 30 obligations closed, no violations (read live on this working tree).
 - **E16** — 2026-11-22, `rg -c 'retention\.pending_trim' skills/unit-lane/SKILL.md` → `1`; `rg -c 'provenance re-stamp' docs/architecture/ARCHITECTURE.md` → `1`; `rg -c '^## Re-analysis' docs/features/651-doc-retention/SPEC.md` → `1`; `rg -c 'docRetention' skills/init-workspace/SKILL.md` → `1` (O21, O25, O26, O28).
-- **E17** — 2026-11-22, `bun scripts/dimension-regression.mjs --root . --base origin/main` · exit 0 · `clean` after this `## Log` names the run (the guard's own contract).
-- **G1** — 2026-11-22, `bun scripts/local-gate.mjs` · exit 0 · `PASS` (the full offline gate; the block is quoted in the handoff).
-- **R1** — 2026-11-22, `HEAD` at the P6 pass · this unit ran as a local direct application (no `review-change` on its own surgery, per the owner's local workflow) · the gate is the receipt.
+- **E17** — 2026-11-22, `bun scripts/dimension-regression.mjs --root . --base origin/main` · exit 0 · `20 dimensions · changed review surfaces 3 · evidence docs/features/651-doc-retention/SPEC.md · clean` (the guard's own contract, satisfied by this `## Log`).
+- **G1** — 2026-11-22, `HEAD 3a7d8e6ff8a163835aee7a795ebe73971f4bbdb7`, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 829s`.
+- **R1** — 2026-11-22, `HEAD 3a7d8e6ff8a163835aee7a795ebe73971f4bbdb7` · no review run on this change: the owner's local application workflow runs the unit inline and the owner is the external verifier, so the gate is the receipt and no `review-change` receipt is claimed.
 
 ## Next
 
