@@ -508,3 +508,21 @@ export type SubstrateClass = (typeof SUBSTRATE_CLASSES)[number];
  *  architecture document publishes, never a second copy here. */
 export const DECISION_SCOPES = Object.freeze(["unit-only", "cross-unit"]);
 export type DecisionScope = (typeof DECISION_SCOPES)[number];
+
+/** The guard-plugin kinds (`guard-plugin-kind`, issue #654): the two answers to
+ *  "what decides this project's own guard?". `deterministic` is the kind this
+ *  repository ships — an ordered rule list evaluated locally, with no model and
+ *  no network. `model-backed` is the declared slot a case-by-case reviewer
+ *  occupies once its adapter exists; the seam accepts a declaration of that kind
+ *  and registers no link until a handler is supplied, so the slot exists without
+ *  the seam assuming a model. */
+export const GUARD_PLUGIN_KINDS = Object.freeze(["deterministic", "model-backed"]);
+export type GuardPluginKind = (typeof GUARD_PLUGIN_KINDS)[number];
+
+/** The surfaces a declared guard may gate (`guard-plugin-surface`, issue #654):
+ *  the categories a request is decided on — a shell command, a path, a tool
+ *  call, a skill name, an MCP surface. The vocabulary is the seam's own; a
+ *  permission layer's transport names are mapped onto it by that layer's
+ *  adapter, never copied here. */
+export const GUARD_PLUGIN_SURFACES = Object.freeze(["bash", "path", "tool", "skill", "mcp"]);
+export type GuardPluginSurface = (typeof GUARD_PLUGIN_SURFACES)[number];
