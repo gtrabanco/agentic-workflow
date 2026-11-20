@@ -392,6 +392,11 @@ is the authoritative step list.
   narrative journal fragment · `01ee9f85c`.
 - **P6** — 2026-11-20, verification: `E5`–`E12` run in the foreground; no obligation
   left `planned`, and the AC coverage table reports all six criteria `met`.
+- **P7** — 2026-11-20, the branch is published (owner instruction, this session):
+  `fix/655-git-identity-guard` pushed to `origin` with no rewrite — 8 linear
+  commits on `c5fb2ba58156053e539783c3442fe76c97239c39`, `git rev-list
+  --left-right --count origin/main...HEAD` → `0 8` (nothing to integrate, no
+  conflict to resolve), no `--force`, no rebase, no history rewrite.
 - **G1** — 2026-11-20, HEAD 836f88c30cf0371a7d724ca6af50e2f6d5a14b9c ·
   `bun scripts/local-gate.mjs --skip-network --jobs 4` · exit 1 · 14 of 15 steps
   PASS (`schema-build`, `version-parity`,
@@ -404,10 +409,10 @@ is the authoritative step list.
 
 ## Next
 
-The owner's external verify of `fix/655-git-identity-guard`: the diff summary, the
-obligations ledger (13 rows, all `verified`), the verification block and the
-differential receipt above. On the owner's verdict, push the branch and open the
-single PR against `main` with `Closes #655`.
+The owner's external verify of `fix/655-git-identity-guard` at the pushed head:
+the diff summary, the obligations ledger (13 rows, all `verified`), the
+verification block and the differential receipt above. The branch is published;
+the single PR against `main` (`Closes #655`) opens on the owner's verdict.
 
 ## References
 
