@@ -379,6 +379,12 @@ is the authoritative step list.
 - **E12** — 2026-11-20, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint
   docs/fix/655-git-identity-guard/SPEC.md` · exit 0 · `P1`–`P6` `PASS (6/6)`, `verdict PASS`;
   `ceremony acceptance read --slug 655-git-identity-guard` reports all six criteria `met`.
+- **P5** — 2026-11-20, registry state in the same change: the `## Fixes` row through
+  `roadmap fixrow` (twice — the second write repaired the topic the live suite
+  refused, `slug-mismatch`), the projection re-emitted by `docs-generate`, and the
+  narrative journal fragment · `01ee9f85c`.
+- **P6** — 2026-11-20, verification: `E5`–`E12` run in the foreground; no obligation
+  left `planned`, and the AC coverage table reports all six criteria `met`.
 
 ## Next
 
