@@ -186,6 +186,7 @@ import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passe
 import { provisionRg, realOps } from "../src/provision/rg.mjs";
 import { provisionPermissions } from "../src/provision/permissions.mjs";
 import { ConfigError, createConfigApi, renderInitTemplate } from "../src/config/api.mjs";
+import { readConfigDocument, scopeDirectories } from "../src/config/store.mjs";
 import { discoverConfigExtensions } from "../src/config/discovery.mjs";
 import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
@@ -1142,21 +1143,62 @@ switch (command) {
         extensions: discovered.extensions.map((entry) => entry.descriptor),
       });
       let guards = {};
+      // The file the `pi` section owns (its descriptor's `file`), named for the
+      // refusal path below, which must reason about a file whose section is not
+      // registered — the one state the resolved read cannot see.
+      const PI_CONFIG_FILE = "pi-agentic-workflow.json";
+      const refusePermissions = (reason, issues) => {
+        const out = { ok: false, verdict: "refused", exitCode: 2, target: null, text: "", issues };
+        if (parsed.json) process.stdout.write(`${JSON.stringify(out)}\n`);
+        else {
+          process.stderr.write(`PROVISION permissions — refused: ${reason}\n`);
+          for (const issue of issues) process.stderr.write(`  ${issue.path}: ${issue.message}\n`);
+        }
+        process.exit(2);
+      };
       try {
         const section = api.get("resolved", ["pi", "guardPlugins"]);
+        // A present-but-invalid `pi` section is this command's precondition, not
+        // something to project defaults over: `config get … --scope project`
+        // refuses the same file loudly, and silence here would drop its
+        // declarations with success (external-verify B1).
+        const sectionIssues = api
+          .validate("both")
+          .flatMap((result) => result.issues)
+          .filter((issue) => issue.path.startsWith("pi.") || issue.path.endsWith(PI_CONFIG_FILE));
+        if (sectionIssues.length > 0) refusePermissions("the config file is not valid", sectionIssues);
         if (section.value.enabled !== false) guards = section.value.guards ?? {};
       } catch (error) {
         if (!(error instanceof ConfigError)) throw error;
         if (error.code === "INVALID") {
-          const out = { ok: false, verdict: "refused", exitCode: 2, target: null, text: "", issues: error.issues };
-          if (parsed.json) process.stdout.write(`${JSON.stringify(out)}\n`);
-          else {
-            process.stderr.write(`PROVISION permissions — refused: the config file is not valid\n`);
-            for (const issue of error.issues) process.stderr.write(`  ${issue.path}: ${issue.message}\n`);
-          }
-          process.exit(2);
+          refusePermissions("the config file is not valid", error.issues);
         }
-        // NOT_FOUND / UNKNOWN: nothing is declared, so the baseline stands alone.
+        // NOT_FOUND / UNKNOWN: nothing is declared, so the baseline stands alone
+        // — unless a scope file still declares what the unregistered section
+        // cannot resolve: silence there would drop it with success (B1).
+        const { project, global } = scopeDirectories({ projectDir: root, env: process.env });
+        for (const dir of [project, global]) {
+          const file = join(dir, PI_CONFIG_FILE);
+          const read = readConfigDocument(file);
+          if (!read.exists) continue;
+          if (read.issues.length > 0) {
+            refusePermissions("the config file cannot be read", [
+              {
+                path: file,
+                message: `is not valid JSONC (${read.issues[0].message}) and the "pi" section is not registered, so its contents are unresolvable`,
+              },
+            ]);
+          }
+          if (read.value !== null && typeof read.value === "object" && "guardPlugins" in read.value) {
+            refusePermissions("the guard section cannot be resolved", [
+              {
+                path: file,
+                message:
+                  'declares "guardPlugins" but the "pi" config section is not registered — no discoverable config-extension descriptor (docs/workflow/CONFIG.md § Extension contract)',
+              },
+            ]);
+          }
+        }
       }
       const out = provisionPermissions({ root, scope, write: restArgs.includes("--write"), guards });
       if (parsed.json) {

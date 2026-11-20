@@ -309,7 +309,7 @@ gap | what a session loses when the event does not fire
 cells | fires | not-fire | conditional
 reliability-vocabulary | reliable | unreliable | host-dependent
 | event | listeners | fires | tui | web | headless | reliability | effect | gap |
-| session_start | index.ts (readiness notice, hooks session:start seam, wiring registration), telemetry-wiring.ts (session id, accumulator, phase reset), auto-log-session-wiring.ts (marker, stale sweep) | a session runtime starts: startup, /new, /resume, /fork, reload | fires | fires | fires | reliable | the session's marker, its accumulator, and a cleared AG_WF_PHASE | — |
+| session_start | index.ts (readiness notice, hooks session:start seam, wiring registration, guard-plugin registration), telemetry-wiring.ts (session id, accumulator, phase reset), auto-log-session-wiring.ts (marker, stale sweep) | a session runtime starts: startup, /new, /resume, /fork, reload | fires | fires | fires | reliable | the session's marker, its accumulator, and a cleared AG_WF_PHASE | — |
 | agent_settled | index.ts (router and stateflow settle, terminal and /log-session notices), telemetry-wiring.ts (per-run sample), auto-log-session-wiring.ts (the session's journal entry) | a run settles: after retries, compaction and queued follow-ups | fires | fires | fires | reliable | the cost sample reaches its sinks and the journal entry lands, with no teardown involved | — |
 | turn_start | telemetry-wiring.ts (the turn window opens) | each turn begins | fires | fires | fires | reliable | — | — |
 | turn_end | telemetry-wiring.ts (tokens, model, turn count) | each turn ends | fires | fires | fires | reliable | the sample's token, model and turn fields | — |
@@ -317,7 +317,7 @@ reliability-vocabulary | reliable | unreliable | host-dependent
 | session_shutdown | index.ts (hooks session:end seam), telemetry-wiring.ts (final flush, phase clear), auto-log-session-wiring.ts (fallback entry, marker removal) | a runtime is torn down: exit (Ctrl+C/D, SIGHUP, SIGTERM), session replacement (/new, /resume, /fork, /clone), reload, ctx.shutdown() | fires | conditional | fires | unreliable | the final sample, the fallback entry, the marker removal, and the hooks session:end seam | a web session that stays alive between prompts never tears down, so this event does not fire there between prompts — and a hook declared for the session:end seam therefore never runs in it. That is a known-issue, warned about here: the seam cannot move earlier (it reports on a session that has ended), so the sample, the entry and the marker removal were moved to agent_settled instead, and the seam's own gap stays declared rather than silently repaired |
 | model_select | index.ts (routing state note) | the host selects a model | conditional | conditional | conditional | host-dependent | — | a host without model selection never fires it, and no observable effect depends on it |
 | thinking_level_select | index.ts (routing state note) | the thinking level changes | conditional | conditional | conditional | host-dependent | — | the same: a routing note, never a persistence trigger |
-| tool_call | index.ts (path protection, shell write guard, tool-choice carrier, receipt guard; hooks pre:commit and pre:push) | before a tool runs | fires | fires | fires | reliable | block decisions and rewritten inputs | — |
+| tool_call | index.ts (path protection, tool-choice carrier, receipt guard; hooks pre:commit and pre:push) | before a tool runs | fires | fires | fires | reliable | block decisions and rewritten inputs | — |
 | tool_result | index.ts (hooks post:commit notice) | after a tool ran | fires | fires | fires | reliable | the post-commit warning notice | — |
 ```
 
@@ -418,7 +418,7 @@ A package publishes its own section without this repository knowing it:
    ```
 
 3. Or drop the descriptor into `config-extensions/` at either scope
-   (`<project>/.agentic-workflow/config-extensions/`,
+   (`<project>/config-extensions/`,
    `<globalDir>/config-extensions/`).
 
 Discovery reads data only — it never executes extension code. A key may be
