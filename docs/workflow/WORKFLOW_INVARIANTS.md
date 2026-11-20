@@ -26,22 +26,16 @@ repository invariant. Architecture evolution is not implementation evolution.
 ## Project invariant document
 
 The optional project document lists stable rules with enough evidence for an
-agent to check them. Use one entry per rule:
-
-```markdown
-## AI-001 — <short rule>
-
-- Rule: <property that must remain true>
-- Rationale: <why it protects the repository>
-- Applies to: <modules, public contracts, or change types>
-- Evidence: <paths, tests, commands, or diagrams that establish the rule>
-- Change authority: <decision record or named approval path>
-```
+agent to check them, one entry per rule. Its **shape** — the `## AI-001` entry
+and its five fields — is owned by
+[`docs/architecture/ARCHITECTURAL_INVARIANTS.md`](../architecture/ARCHITECTURAL_INVARIANTS.md)
+§ How to use this document, together with the classification each field demands;
+this page does not carry a second copy of it.
 
 Good rules describe ownership, dependency direction, layer isolation, public
 contract compatibility, extension boundaries, or repository organisation. Do
-not use this document for style preferences, a feature backlog, a technology
-choice without a stable boundary, or an implementation checklist.
+not use the project document for style preferences, a feature backlog, a
+technology choice without a stable boundary, or an implementation checklist.
 
 ## Evaluation protocol
 
@@ -51,10 +45,15 @@ architectural change:
 1. Discover the declared invariant document from the project documentation map.
    If it is absent, record `n/a: no project invariants declared` and continue;
    existing repositories remain compatible.
-2. When a frozen `docs/workflow/REPOSITORY_STATE.md` exists, consume its
-   evidence-backed facts and accepted decisions first. Inspect the repository
-   directly only for an absent fact. The repository remains the source of truth;
-   contradictory evidence is routed to `resolve-repository-state`.
+2. When a frozen `docs/workflow/REPOSITORY_STATE.md` exists, check its
+   freshness **first** — `bun scripts/repository-state.mjs` answers `fresh` or
+   `stale` from the snapshot's `covers-through` date, the decision dates and the
+   declared TTL (owner: `skills/resolve-repository-state/references/STATE_CONTRACT.md`).
+   Consume its evidence-backed facts and accepted decisions only while it is
+   fresh. A stale snapshot, or an accepted decision dated after its coverage date,
+   is a contradiction to report and route to `resolve-repository-state` — never
+   current truth. Inspect the repository directly for an absent fact; the
+   repository remains the source of truth.
 3. For every applicable invariant, classify the proposed change as exactly one
    of: `preserves`, `violates`, `introduces`, or `changes`.
 4. Cite the invariant ID and repository evidence. Never infer a rule from an

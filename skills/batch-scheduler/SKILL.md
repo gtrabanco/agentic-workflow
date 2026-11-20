@@ -165,10 +165,12 @@ to interpret a field the script emitted.
 - **A deleted worktree whose branch survives still reads in flight** — the
   branch is the work; only a claim with nothing left on disk expires.
 
-## Portability (agents other than Claude Code)
+## Portability
 
-- *no slash menu* → open this `SKILL.md` and follow it literally in a fresh
-  conversation; the skill is one script run plus interpretation.
+Preamble + no-slash-menu fallback: owned by
+[`PORTABILITY.md`](../orchestration-envelope/references/PORTABILITY.md) — this
+section keeps only this skill's own fallbacks:
+
 - *no bun* → run the script with `node` (the shebang's fallback).
 - *no forge access* → run with `--issues-file` carrying a cached issue export;
   the envelope then degrades on the relation source only when the cache lacks

@@ -350,12 +350,15 @@ into the lane; `workflow-status` computes the next lane invocation.
 `init-workspace` seeds the unit doc template and catalog conventions into
 target projects.
 
-## Portability (agents other than Claude Code)
+## Portability
 
-- **No slash menu** — open this `SKILL.md` and follow it literally in a fresh
-  conversation. Where it says `run`, execute the shell command directly.
+Preamble + no-slash-menu fallback: owned by
+[`PORTABILITY.md`](../orchestration-envelope/references/PORTABILITY.md) — this
+section keeps only its own fallbacks:
+
 - **No model tiers** — triage and review use the strongest model; execution
-  steps may use cheaper. Never review with a weaker model than the author.
+  steps may use cheaper. The review-authority rule is
+  [`ORCHESTRATE.md`](references/ORCHESTRATE.md)'s; this bullet cites it.
 - **No `/loop`/subagents** — re-invoke manually and follow the closing `→ Next:`
   block at each step boundary.
 
