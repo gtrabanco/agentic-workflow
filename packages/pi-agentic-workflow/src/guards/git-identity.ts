@@ -11,7 +11,11 @@
  *
  * The guard is a decision, not a sandbox: it reads the command a model asked
  * bash to run, finds the `git config` invocations in it, and answers allow /
- * ask / block. It deliberately preserves git's own identity layering — the
+ * ask / block. The project's `guard.gitIdentity.mode` (issue #626) decides how
+ * an asking write is answered — `deny` refuses it without opening a dialog,
+ * `allow` stands it down — and a headless session blocks in every mode except
+ * `allow`, because an unanswered prompt is not consent (issue #655). It
+ * deliberately preserves git's own identity layering — the
  * global default, `includeIf` per-project blocks, a consented repo-local value
  * and `-c` per invocation all keep working; only the *write* is questioned, and
  * a project can allow named writes in `gitIdentity.agentGuard.allow` without
@@ -473,10 +477,29 @@ function reasonFor(write: GitConfigWrite): string {
  */
 export function decideGitConfigCall(command: string, options: GitIdentityGuardOptions): GuardVerdict {
   for (const write of findGitConfigWrites(command)) {
-    if (questionFor(write, options) === null) continue;
-    return { action: options.mode === "allow" ? "allow" : options.mode === "deny" ? "block" : "ask", write, reason: reasonFor(write) };
+    const verdict = dispositionFor(write, options);
+    if (verdict !== null) return verdict;
   }
   return { action: "allow" };
+}
+
+/**
+ * The disposition of one write, or null when the write needs no consent
+ * (issue #655).
+ *
+ * This is the one home of the mode→action mapping. `decideGitConfigCall`
+ * projects it without a host and `applyGitIdentityGuard` consumes it for the
+ * consent lifecycle, so a configured `deny` or `allow` cannot be honoured by one
+ * reader and ignored by the other — the defect the disposition shipped with
+ * (issue #626): the applier never read `options.mode`, so a deny-always project
+ * kept seeing the dialog and an allow-mode one kept being asked. The verdict
+ * carries the write and its reason in every mode, not only in `ask`/`deny`,
+ * because the reason is the record of what the mode answered.
+ */
+function dispositionFor(write: GitConfigWrite, options: GitIdentityGuardOptions): GuardVerdict | null {
+  const reason = questionFor(write, options);
+  if (reason === null) return null;
+  return { action: options.mode === "allow" ? "allow" : options.mode === "deny" ? "block" : "ask", write, reason };
 }
 
 /**
@@ -503,6 +526,18 @@ export function consentKey(write: GitConfigWrite): string {
   return `${write.scope}:${write.key ?? write.verb}`;
 }
 
+/**
+ * The refusal a `deny` disposition returns: the write's own teaching reason plus
+ * the fact that no question was asked, because a refusal that reads like a
+ * dialog the operator missed is the failure this disposition exists to end.
+ */
+function deniedReason(reason: string): string {
+  return (
+    `${reason} \`guard.gitIdentity.mode\` is \`deny\`, so this write is refused without asking — no dialog opens. ` +
+    `Set the disposition to \`ask\` to decide per write, or allow the key in \`gitIdentity.agentGuard.allow\`.`
+  );
+}
+
 /** What the guard needs from a host to apply a decision (no Pi import here). */
 export interface GuardHost {
   /** Whether the session can ask a human (`ctx.hasUI`). */
@@ -523,18 +558,24 @@ export interface AppliedGuardVerdict {
 }
 
 /**
- * Apply the decision: a remembered approval passes, a headless session blocks
- * (fail closed — an unanswered prompt is not consent), and an interactive one
- * asks once and remembers the answer for this project.
+ * Apply the decision: `deny` refuses without asking (issue #655), `allow` stands
+ * down, and `ask` is the consent lifecycle — a remembered approval passes, a
+ * headless session blocks (fail closed: an unanswered prompt is not consent), and
+ * an interactive one asks once and remembers the answer for this project.
+ *
+ * The disposition is the project's posture and the store answers the `ask`
+ * question only, so a consent recorded under `ask` never reopens a `deny`: the
+ * alternative would let a past approval outrank the configuration it predates.
  */
 export async function applyGitIdentityGuard(command: string, options: GitIdentityGuardOptions, host: GuardHost): Promise<AppliedGuardVerdict> {
   for (const write of findGitConfigWrites(command)) {
-    const question = questionFor(write, options);
-    if (question === null) continue;
+    const verdict = dispositionFor(write, options);
+    if (verdict === null || verdict.action === "allow") continue;
+    const reason = verdict.reason;
+    if (verdict.action === "block") return { block: true, reason: deniedReason(reason) };
 
     const consent = consentKey(write);
     if (host.approved(consent)) continue;
-    const reason = question;
     if (!host.interactive) {
       return {
         block: true,
