@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: 6cbeafd36383554c3fcb6a90643c85a9fe39f16ecfc390ed538dfa19ed1dd05b
+ac-hash: 12240e8e1d6d0179c01066a2e6073379a806d20e19a2652dc9bc43eafee935a8
 roadmap_summary: Issue [#655](https://github.com/gtrabanco/agentic-workflow/issues/655) (S, high): the wired git identity guard never read its own disposition, so a configured `deny` still showed the approval dialog (and allowed the write when approved) and `allow` still asked — the mode was inert on the only path that runs. One disposition function now decides per write, `decideGitConfigCall` reads it instead of duplicating it, and a headless session blocks in every mode except `allow`. SPEC: [SPEC](fix/655-git-identity-guard/SPEC.md)
 ---
 
@@ -79,9 +79,10 @@ it must also be able to answer without a host. The duplication that retires is
 the *decision body*, not the function: the mode→action mapping moves out of
 `decideGitConfigCall` into the shared `dispositionFor`.
 
-`rg -c 'mode === "allow" ? "allow"' packages/pi-agentic-workflow/src/guards/git-identity.ts`
-→ `0` after the change (the inline ternary is gone; the mapping lives in one
-function).
+`rg -c 'mode === "allow"' packages/pi-agentic-workflow/src/guards/git-identity.ts`
+→ `1` after the change: the single mapping occurrence sits inside
+`dispositionFor`, which `decideGitConfigCall` calls — a second home would make
+this count `2`.
 
 ## Non-goals
 
@@ -198,7 +199,7 @@ it.
   `rg -n 'in every mode except `allow`' docs/workflow/CONFIG.md
   packages/pi-agentic-workflow/README.md
   packages/agentic-workflow-schema/src/config.ts` matches 3 and
-  `bun scripts/version-parity-gate.mjs` exits 0.
+  `bun scripts/version-parity-gate.mjs --content` exits 0.
 
 The coverage receipt the manifest reads (`ceremony acceptance read`): each row is
 `criterion | check | exit | output`, and the run it cites is a `## Log` line.
@@ -233,9 +234,10 @@ The coverage receipt the manifest reads (`ceremony acceptance read`): each row i
   (Implements: S1, S2, S3, S4)
   - Relevant files: docs/workflow/CONFIG.md, packages/pi-agentic-workflow/README.md, packages/agentic-workflow-schema/src/config.ts, .changeset/655-git-identity-guard.md
 - P5 — state: the `## Fixes` row through the crate's writer, the generated
-  projection re-emitted, the session entry in `docs/LOGS.md` (validator: `bun scripts/docs-generate.mjs --check` exits 0)
+  projection re-emitted, the session entry as the narrative journal fragment (the
+  merge-to-main aggregation workflow is the only writer of `docs/LOGS.md`) (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3, S4, S5)
-  - Relevant files: docs/ROADMAP.md, docs/generated/, docs/LOGS.md
+  - Relevant files: docs/ROADMAP.md, docs/generated/, .agentic-workflow/journal/
 - P6 — verification: the package suite under both runtimes, the type-check and
   the root gate (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5)
@@ -277,7 +279,7 @@ cut time and `verified` only against a foreground validator run.
 | O9 | S3 · PE-005 · AC-S3 | No pre-existing assertion is deleted, relaxed or narrowed: the suite's 46 cut-head cases still pass, and the diff of the test file adds assertions only | P2 | P2 | direct application (this session) | `git diff c5fb2ba58 -- packages/pi-agentic-workflow/test/git-identity-guard.test.mjs` shows no removed assertion line, and the suite exits 0 | `E` line with the removal count (0) and the final pass count | verified — E6 line (2 removed lines, both inside the shared `wiredContext` helper: its signature gains `asked` and its `confirm` records; no assertion deleted, relaxed or narrowed) |
 | O10 | S1, S2, S3 · PE-006 · AC-S6 | The three dispositions are documented where an operator configures them: the `guard-reference@1` table row states the headless rule per mode, the package README's verdict table and two-key paragraph name what `deny`/`allow` do, and `CONFIG.md` §Guards stays the one home of the mode semantics | P4 | P4 | direct application (this session) | `rg -n 'in every mode except `allow`' docs/workflow/CONFIG.md packages/pi-agentic-workflow/README.md packages/agentic-workflow-schema/src/config.ts` matches 3 | `E` line with the command and its three matches | verified — E7 line (the three files match once each) |
 | O11 | S1, S2 · PE-006 · AC-S6 | The published schema description tells the truth in all three modes: `gitIdentity`'s description no longer claims headless is always denied, so a `config` reader and the runtime agree | P4 | P4 | direct application (this session) | `bun test scripts/normative-drift.test.mjs` exits 0 | `E` line with the drift verdict | verified — E8 line (`23 pass, 0 fail`) |
-| O12 | S1, S2, S3, S4, S5 · AC-S5, AC-S6 | Repository state ships in the same change: the unit doc with its closed ledger, the `## Fixes` row written through the crate's writer (never a hand edit), the re-emitted projection, the release intent declaring the touched packages, and the session entry | P5 | P5 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/version-parity-gate.mjs` exits 0 | `E` line with both verdicts | verified — E9 line (`docs-generate --check` PASS and `version-parity-gate --content` PASS, both changesets resolved) |
+| O12 | S1, S2, S3, S4, S5 · AC-S5, AC-S6 | Repository state ships in the same change: the unit doc with its closed ledger, the `## Fixes` row written through the crate's writer (never a hand edit), the re-emitted projection, the release intent declaring the touched packages, and the session entry | P5 | P5 | direct application (this session) | `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/version-parity-gate.mjs --content` exits 0 | `E` line with both verdicts | verified — E9 line (`docs-generate --check` PASS and `version-parity-gate --content` PASS, both changesets resolved) |
 | O13 | S1, S2, S3, S4, S5 · PE-005 · AC-S1, AC-S2, AC-S3, AC-S4, AC-S5, AC-S6 | The whole gate passes with the change in place, under the package suite and the root suite | P6 | P6 | direct application (this session) | `node scripts/run-root-suite.mjs` exits 0 and `cd packages/pi-agentic-workflow && bun run test` exits 0 | `E` lines with both verdicts and the test counts | verified — E10/E4 lines (root suite exit 0, 135 suites PASS; package suite 1031 pass, 0 fail; the node leg 55 pass) |
 
 ## Path protection
@@ -420,6 +422,15 @@ is the authoritative step list.
   dispatch, so `G1`/`G2` reported the pre-fix state as green for that step. The
   masks were both pre-existing conditions in this checkout, which is why the
   regression survived two receipts.
+- **G4** — 2026-11-20, HEAD 2e1feac3c49a018a269b76c5d5629ce843525995 (clean tree — the fix and the settle
+  committed) · `bun scripts/local-gate.mjs --skip-network --jobs 4` · **exit 0** ·
+  **15 of 15 steps PASS in 525 s**, with the step that hid the regression now
+  green: `root-suite` 138 s, `crate-suite-bun` 216 s, `crate-suite-node` 120 s,
+  `schema-node-compat` 15 s, `pi-node-compat` 36 s, plus `schema-build`,
+  `version-parity-content`, `docs-generated-projection`, `log-immutability`,
+  `journal-carrier-check`, `secret-scan`, `temp-hygiene`, `tmp-gc`,
+  `worktree-guard` (`0 finding(s)`) and `rigidity-review`. This is the head the
+  PR reports, and the push ran the pre-push hook normally — no hatch.
 - **P10** — 2026-11-20, the projection regenerated through its own writer —
   `bun run generate:config-schema` in `packages/agentic-workflow-schema` wrote the
   one changed line, and `bun run check:config-schema` answers `config.schema.json:
