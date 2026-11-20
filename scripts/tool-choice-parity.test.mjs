@@ -73,5 +73,12 @@ test("F30 — the sanctioned forms are pinned in both directions and the gate's 
 test("F31 — the gate's own run still passes with the shared allowlist in place", () => {
   const result = scan(ROOT);
   assert.deepEqual(result.violations, [], "the shipped tree is drift-free");
-  assert.ok(result.allowed.length >= SHARED_BOOTSTRAP_SCRIPTS.size, "every blessed usage string is reported as allowed");
+  // Every blessed script that still lives in `scripts/` and prints a usage
+  // string must be reported as allowed. `setup-env` moved into the crate
+  // (issue #553) and its shim prints none, so the population is the blessed set
+  // intersected with the scripts this tree carries — the invariant, not a count.
+  const carrying = [...SHARED_BOOTSTRAP_SCRIPTS.keys()].filter((rel) =>
+    fs.existsSync(path.join(ROOT, rel)) && /usage:\s*node/u.test(fs.readFileSync(path.join(ROOT, rel), "utf8")),
+  );
+  assert.ok(result.allowed.length >= carrying.length, "every blessed usage string is reported as allowed");
 });

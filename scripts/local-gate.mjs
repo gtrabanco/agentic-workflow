@@ -383,7 +383,8 @@ export const STEPS = [
     id: "dependency-advisories",
     title: "Dependency advisories (OSV — report-only, never fails the gate)",
     cwd: ".",
-    argv: [NODE, "scripts/dependency-advisory-pass.mjs"],
+    // The step calls the command, not the repository shim (issue #553).
+    argv: [NODE, "packages/agentic-workflow/bin/agentic-workflow.mjs", "dependency-advisory-pass"],
     network: true,
     mirrors: "dependency-pin-gate job",
   },
@@ -414,6 +415,9 @@ export const DEPS = {
   "root-suite": ["workspace-install", "schema-build"],
   "version-parity-content": [],
   "docs-generated-projection": [],
+  // The budget sweep reads the crate's own module, whose workspace import
+  // resolves the schema dist — same edge as journal-carrier-check.
+  "skill-context-budgets": ["workspace-install", "schema-build"],
   // journal-carrier-check spawns the crate CLI, whose workspace import resolves
   // the schema's dist — without the edge it raced schema-build's tsc and read
   // a stale or half-written dist ('does not provide an export named ...').

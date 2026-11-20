@@ -507,7 +507,7 @@ test("unit-lineage: a stale legacy receipt on a doc without lane-era surface sta
 
 test("audit-pr gate 1 routes through the machine surface and retracts the phantom digest (F9)", () => {
   const gates = read("skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md");
-  assert.match(gates, /unit-lineage\.mjs/, "gate 1 must name its machine surface");
+  assert.match(gates, /runner unit-lineage/, "gate 1 must name its machine surface");
   assert.match(gates, /LINEAGE OK/, "the fixed verdict vocabulary the gate reads must be named");
   assert.ok(!/digest of the triage block/.test(gates), "F9: the paragraph claiming a triage digest is retracted");
   assert.match(gates, /pre-execution-snapshot verify --stage/, "the legacy verify recipe stays named (F1-fold regression pin)");

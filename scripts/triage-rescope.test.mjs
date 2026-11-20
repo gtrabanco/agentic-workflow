@@ -135,7 +135,7 @@ test("#441 a one-shot leaves no unit doc and pays no review pass", () => {
 
 test("#441 remove is measured: three named inputs, no measurement no removal, orphan only", () => {
   const text = read(ISSUE_PROCESS);
-  assert.match(text, /residual-classify\.mjs --receipt/u,
+  assert.match(text, /runner residual-classify --receipt/u,
     "the removal verdict cites the deterministic retire receipt");
   assert.match(text, /code-net|ARW/u, "the removal verdict cites the code-net ratio the corpus owns");
   assert.match(text, /impact sweep/i, "the removal verdict cites the impact sweep");

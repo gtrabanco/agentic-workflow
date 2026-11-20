@@ -170,6 +170,7 @@ docs/research/papers-sweep-2026-11-02.md | 2-rarely | scanned | structural scan:
 docs/research/papers-sweep-2026-11-06-merge-gates.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/telemetry/schema.json | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/CONFIG.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+docs/workflow/CLI.md | 1-on-demand | full | written and read end-to-end by unit 553 (this page is that unit's own deliverable, so the read is the author's)
 docs/workflow/DOMAIN_SEPARATION.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/FEATURE_WORKFLOW.md | 1-on-demand | full | read end-to-end this session
 docs/workflow/FEEDBACK.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns

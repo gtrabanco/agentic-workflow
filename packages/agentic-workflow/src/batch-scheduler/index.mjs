@@ -77,12 +77,15 @@ export const CLAIM_TTL_MS = 48 * 60 * 60 * 1000;
 const STATE_VERSION = 3;
 
 /**
- * The labels that make an issue unlaunchable (issue #509, S11): `postponed` and
+ * The labels that make an issue unlaunchable (issue #509, S11) — the published
+ * set, imported rather than restated (`vocabulary-residency@1`): `postponed` and
  * `backlog` as the issue names them, plus `human-revision-needed` because this
  * workflow's guide holds it as "nothing is planned, implemented, committed or
- * merged" — recommending a launch would violate that hold.
+ * merged", and recommending a launch would violate that hold.
  */
-export const BATCH_BLOCKING_LABELS = ["postponed", "backlog", "human-revision-needed"];
+import { BATCH_BLOCKING_LABELS } from "@gtrabanco/agentic-workflow-schema";
+
+export { BATCH_BLOCKING_LABELS };
 
 /** The explicit triage verdicts a body may state (issue #509, S12, decision D12). */
 const BODY_TRIAGE_RE = /\b(fix-now|postponed|promoted|wontfix)\b/iu;

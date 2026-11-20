@@ -15,7 +15,7 @@
  */
 
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import fs, { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -32,11 +32,22 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPTS = path.join(ROOT, "scripts");
 /** The runner's home: the shared readers the pin guards live there since #352. */
 const RUNNER = path.join(ROOT, "packages", "agentic-workflow", "src", "runner");
+/**
+ * The crate's migrated commands (issue #553): a reader that used to live in
+ * `scripts/` now sits under `src/<command>/`, so the pin scans those modules —
+ * one directory per command, not the whole `src/` tree, because the crate's
+ * other modules are outside this pin's declared roots.
+ */
+const CRATE = path.join(ROOT, "packages", "agentic-workflow", "src");
+const CRATE_COMMANDS = fs
+  .readdirSync(CRATE, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(CRATE, entry.name, "index.mjs")))
+  .map((entry) => path.join(CRATE, entry.name));
 
 /* ------------------------------------------------------------------ pin A */
 
 test("pin A — every inline `## `-heading search lives in an allowlisted reader, with a reason", () => {
-  const violations = headingSearchViolations(SCRIPTS, RUNNER);
+  const violations = headingSearchViolations(SCRIPTS, RUNNER, ...CRATE_COMMANDS);
   assert.deepEqual(violations, [], "the current tree carries fence-blind `## ` readers — refactor them onto the shared sectionBounds reader or record the reason");
 });
 
@@ -73,7 +84,7 @@ test("pin A — reintroducing the F37/F38/F39 pattern under an allowlisted file 
 });
 
 test("pin A — the pin is not vacuous: every allowlisted reader really carries the pattern", () => {
-  const hits = [...headingSearchHits(SCRIPTS), ...headingSearchHits(RUNNER)];
+  const hits = [...headingSearchHits(SCRIPTS), ...headingSearchHits(RUNNER), ...CRATE_COMMANDS.flatMap((dir) => headingSearchHits(dir))];
   // Keyed by repository-relative path, so a prunable entry is one nothing
   // needs any more — and an entry nobody carries is a hole, not a hedge.
   const carried = new Set(hits.map((hit) => hit.repoFile));
