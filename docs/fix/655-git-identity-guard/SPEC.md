@@ -397,6 +397,24 @@ is the authoritative step list.
   commits on `c5fb2ba58156053e539783c3442fe76c97239c39`, `git rev-list
   --left-right --count origin/main...HEAD` → `0 8` (nothing to integrate, no
   conflict to resolve), no `--force`, no rebase, no history rewrite.
+- **G2** — 2026-11-20, HEAD 9a9bc3ffd492024a1e98817598c3dac236541186 ·
+  `bun scripts/local-gate.mjs --skip-network --jobs 4` at the publication head ·
+  exit 1 · 14 of 15 steps PASS (`root-suite` exit 0 in 135s, `version-parity`,
+  `docs-generated-projection`, `log-immutability` 0 violations, `secret-scan`
+  0 findings, `temp-hygiene`, `tmp-gc`, `journal-carrier-check`,
+  `rigidity-review`, `schema-build`, …) and the same single `worktree-guard`
+  FAIL recorded under `## Known pre-existing issues` — the stale
+  `.worktrees/feat-553-universal-cli` checkout this unit does not own and must
+  not delete with work inside it. Four network steps skipped by the flag.
+- **P8** — 2026-11-20, the push itself used the hook's own documented hatch
+  (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`, `scripts/local-gate.mjs:794`): the
+  hook's offline subset is exactly the `G2` run above, and its one red step is
+  the pre-existing worktree finding the owner must clear by hand (`--prune`
+  refuses a dirty worktree). The hatch was chosen over `--no-verify` because it
+  is the documented route and it announces itself on stderr; why it was needed
+  is recorded here, which is what the hatch's own line asks for. Nothing else
+  about the gate changes: the 14 PASS steps ran in the foreground at this head,
+  and the commits after it are this document's own Log lines.
 - **G1** — 2026-11-20, HEAD 836f88c30cf0371a7d724ca6af50e2f6d5a14b9c ·
   `bun scripts/local-gate.mjs --skip-network --jobs 4` · exit 1 · 14 of 15 steps
   PASS (`schema-build`, `version-parity`,
