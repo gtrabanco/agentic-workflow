@@ -77,6 +77,8 @@ now through the CLI.
 | `bun scripts/adversarial-verdict.mjs` | `runner adversarial-verdict` |
 | `bun scripts/audit-pr-gate.mjs` | `runner audit-pr-gate` |
 | `bun scripts/unit-lineage.mjs` | `runner unit-lineage` |
+| `bun scripts/dependency-advisory-pass.mjs` | `runner dependency-advisory-pass` |
+| `bun scripts/skill-context.mjs` | `runner skill-context` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

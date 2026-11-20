@@ -10,6 +10,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const BIN = path.join(repoRoot, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
 
 const tmpBase = process.env.TMPDIR || "/var/tmp";
 const mktemp = (prefix) => fs.mkdtempSync(path.join(tmpBase, prefix));
@@ -22,8 +23,6 @@ const createFixture = () => {
     path.join(repoRoot, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"),
     path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"),
   );
-  fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
-  fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
   return fixture;
 };
 
@@ -31,7 +30,10 @@ const runFixture = (label, setup, expected) => {
   const fixture = createFixture();
   try {
     setup(fixture);
-    const result = spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), "--skill", "review-change"], {
+    // The command runs over the fixture through its own `--root` (issue #553):
+    // the sweep now lives in the crate, so a copied script would prove nothing
+    // about a target project — the CLI over a fixture is the real route.
+    const result = spawnSync(process.execPath, [BIN, "skill-context", "--root", fixture, "--skill", "review-change"], {
       encoding: "utf8",
     });
     assert.notEqual(result.status, 0, `${label} should fail closed`);
@@ -151,7 +153,7 @@ const runFixtureRouteBudgets = (label, setup, expected) => {
   const fixture = createFixture();
   try {
     setup(fixture);
-    const result = spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), "--routes", "--budgets"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [BIN, "skill-context", "--root", fixture, "--routes", "--budgets"], { encoding: "utf8" });
     assert.notEqual(result.status, 0, `${label} should fail closed`);
     assert.match(`${result.stdout}\n${result.stderr}`, expected, label);
   } finally {
@@ -174,12 +176,10 @@ const runFixtureRoute = (label, setup, expected) => {
   try {
     fs.cpSync(path.join(repoRoot, "skills"), path.join(fixture, "skills"), { recursive: true });
     fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
-    fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
-    fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     setup(manifest);
     fs.writeFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), JSON.stringify(manifest, null, 2));
-    const result = spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), "--routes"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [BIN, "skill-context", "--root", fixture, "--routes"], { encoding: "utf8" });
     assert.notEqual(result.status, 0, `${label} should fail closed`);
     assert.match(`${result.stdout}\n${result.stderr}`, expected, label);
   } finally {
@@ -272,8 +272,6 @@ runFixtureRoute(
   try {
     fs.cpSync(path.join(repoRoot, "skills"), path.join(fixture, "skills"), { recursive: true });
     fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
-    fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
-    fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     manifest.policy = { name: "relative-headroom", headroom: 0.1 };
     const route = manifest.routes["execute-phase:feature"];
@@ -281,7 +279,7 @@ runFixtureRoute(
     route.routeLinesMax = Number.MAX_SAFE_INTEGER;
     const write = () => fs.writeFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), JSON.stringify(manifest, null, 2));
     write();
-    const cli = (args) => spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), ...args], { encoding: "utf8" });
+    const cli = (args) => spawnSync(process.execPath, [BIN, "skill-context", "--root", fixture, ...args], { encoding: "utf8" });
     const probe = cli(["--routes", "--json"]);
     assert.equal(probe.status, 0, `unbounded fixture must pass: ${probe.stdout}\n${probe.stderr}`);
     const measured = JSON.parse(probe.stdout).routes.find((r) => r.route === "execute-phase:feature").totalEstimate;
@@ -598,7 +596,6 @@ const documentsFixture = (setup) => {
   fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
   fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
   fs.mkdirSync(path.join(fixture, "skills"), { recursive: true });
-  fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
   const files = {
     "AGENTS.md": { linesMax: 20, proseLinesMax: 8, estimateMax: 400, machineBlocks: ["normalizer-inventory@1", "normative-surfaces@1", "rendered-facts@1"], machineLines: 14 },
     "docs/workflow/REFERENCE.md": { linesMax: 10, estimateMax: 200 },
@@ -609,7 +606,7 @@ const documentsFixture = (setup) => {
   return fixture;
 };
 
-const runDocuments = (fixture) => spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), "--documents"], { encoding: "utf8" });
+const runDocuments = (fixture) => spawnSync(process.execPath, [BIN, "skill-context", "--root", fixture, "--documents"], { encoding: "utf8" });
 
 // the fixture itself is green, so every refusal below is the mutation and nothing else
 {

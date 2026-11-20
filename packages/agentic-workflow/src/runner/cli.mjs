@@ -24,6 +24,8 @@ import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runForgeRead } from "../forge-read/index.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 import { run as runSkills } from "./skills.mjs";
+import { main as runSkillContext } from "../skill-context/index.mjs";
+import { main as runDependencyAdvisoryPass } from "../dependency-advisory-pass/index.mjs";
 import { main as runUnitLineage } from "../unit-lineage/index.mjs";
 import { main as runAuditPrGate } from "../audit-pr-gate/index.mjs";
 import { main as runAdversarialVerdict } from "../adversarial-verdict/index.mjs";
@@ -59,6 +61,8 @@ export const RUNNER_COMMANDS = Object.freeze({
   "forge-read": runForgeRead,
   ceremony: runCeremony,
   skills: runSkills,
+  "skill-context": runSkillContext,
+  "dependency-advisory-pass": runDependencyAdvisoryPass,
   "unit-lineage": runUnitLineage,
   "audit-pr-gate": runAuditPrGate,
   "adversarial-verdict": runAdversarialVerdict,

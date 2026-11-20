@@ -239,6 +239,17 @@ export const STEPS = [
     mirrors: "no former remote job — the projection staleness has no remote twin",
   },
   {
+    id: "skill-context-budgets",
+    title: "Skill context budgets (offline)",
+    cwd: ".",
+    argv: [NODE, "packages/agentic-workflow/bin/agentic-workflow.mjs", "skill-context"],
+    // Not a `tests:` step on purpose: the budget sweep is prose-shaped, and a
+    // prose-only push is exactly the push that outgrows a skill's ceiling. It
+    // had no caller at all before unit 553 — a red budget could merge green.
+    tests: false,
+    mirrors: "no former remote job — the budget sweep had no caller (issue #553)",
+  },
+  {
     id: "journal-carrier-check",
     title: "Journal fragment carrier is conforming (offline)",
     cwd: ".",

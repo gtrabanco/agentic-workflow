@@ -86,6 +86,12 @@ import {
 } from "./version-parity-gate.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+// The lock reader is the crate's (issue #553): the shipped dependency advisory
+// pass reads a target project's lock with the same rule this watch uses.
+import { lockFileFor, parseLock, resolvedVersion } from "../packages/agentic-workflow/src/dependency/lock.mjs";
+
+export { lockFileFor, parseLock, resolvedVersion };
 const REPO = "gtrabanco/agentic-workflow";
 
 /**
@@ -142,36 +148,7 @@ export function watchedPyPI() {
 }
 
 /** The committed lock, parsed. `bun.lock` is JSONC (trailing commas). */
-export function parseLock(text) {
-  return JSON.parse(String(text).replace(/,(\s*[}\]])/g, "$1"));
-}
 
-/**
- * The lock that governs `dir`: the workspace root's — scripts/
- * workspace-lock-policy.test.mjs owns that location, one lock for every member
- * — or the package's own in a repository that has no workspace root.
- */
-export function lockFileFor({ root = REPO_ROOT, dir }) {
-  for (const candidate of [path.join(root, "bun.lock"), path.join(root, dir, "bun.lock")]) {
-    if (fs.existsSync(candidate)) return candidate;
-  }
-  return null;
-}
-
-/**
- * The version the committed lock resolved for `dependency` in `dir`, or null.
- * A workspace link (`name@workspace:packages/x`) is not a version, and a
- * dependency the lock does not carry is not a silent pass either: the caller
- * reports that the watch cannot tell whether the pin has moved.
- */
-export function resolvedVersion({ root = REPO_ROOT, dir, dependency }) {
-  const file = lockFileFor({ root, dir });
-  if (!file) return null;
-  const entry = parseLock(fs.readFileSync(file, "utf8")).packages?.[dependency];
-  const spec = Array.isArray(entry) ? String(entry[0] ?? "") : "";
-  const version = spec.slice(spec.lastIndexOf("@") + 1);
-  return /^\d/u.test(version) ? version : null;
-}
 
 /** The newest of a version list, or null. */
 function newestOf(versions) {
