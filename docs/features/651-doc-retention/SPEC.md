@@ -349,6 +349,7 @@ The ledger lives beside this document: [`planning-obligations.md`](planning-obli
 - **E16** — 2026-11-22, `rg -c 'retention\.pending_trim' skills/unit-lane/SKILL.md` → `1`; `rg -c 'provenance re-stamp' docs/architecture/ARCHITECTURE.md` → `1`; `rg -c '^## Re-analysis' docs/features/651-doc-retention/SPEC.md` → `1`; `rg -c 'docRetention' skills/init-workspace/SKILL.md` → `1` (O21, O25, O26, O28).
 - **E17** — 2026-11-22, `bun scripts/dimension-regression.mjs --root . --base origin/main` · exit 0 · `20 dimensions · changed review surfaces 3 · evidence docs/features/651-doc-retention/SPEC.md · clean` (the guard's own contract, satisfied by this `## Log`).
 - **G1** — 2026-11-22, `HEAD 3a7d8e6ff8a163835aee7a795ebe73971f4bbdb7`, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 829s`.
+- **G2** — 2026-11-22, `HEAD 3e724794a922466f3248802fe16c89263f02042a`, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 840s` (the receipt head; the run covers every step, `root-suite`, both crate legs, the schema and pi node-compat legs included).
 - **R1** — 2026-11-22, `HEAD 3a7d8e6ff8a163835aee7a795ebe73971f4bbdb7` · no review run on this change: the owner's local application workflow runs the unit inline and the owner is the external verifier, so the gate is the receipt and no `review-change` receipt is claimed.
 
 ## Next
