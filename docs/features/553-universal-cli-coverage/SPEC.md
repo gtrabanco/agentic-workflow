@@ -283,7 +283,11 @@ M/L unit: the ledger is the unit folder's `planning-obligations.md`.
 
 ## Next
 
-P1: land `scripts/cli-coverage.test.mjs` red.
+The owner's external verification of this branch: the delivery is the 33
+commands the sweep migrated, the citation sweep, the carrier step and the
+docs — every obligation row is closed by its own validator, and the gate receipt
+is `local-gate: PASS — 20 step(s)`. After the verdict: review the delivered head,
+open the PR, and the merge-time `roadmap-settle` marks the row `done`.
 
 ## References
 
