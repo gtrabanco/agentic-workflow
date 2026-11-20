@@ -188,3 +188,13 @@ Recent sessions (`docs/LOGS.md`, journal fragments of 2026-11-16 → 11-20) show
 #598, #634, #613/#614, #444, #295 are open features. The plan-approval ritual
 the owner asked about in D3 is practiced informally but written nowhere as a
 lane requirement — the one place where practice and contract visibly diverge.
+
+## Addendum — disposition of the disclosed node-runtime defect (2026-11-20)
+
+The finding in the passive record's readback (node exits 0 on a dirty close;
+introduced by #553 at `fc17d9661`) was repaired the same day as an owner-directed
+inline batch on `main` per AGENTS.md §Working rules: commit `c830b2879` adopts
+the dispatch spelling `check-skill-context.mjs` already used
+(`main(...) ?? process.exitCode ?? 0`); `scripts/session-close.test.mjs` is
+30/30 under node and bun, and `main` was pushed. The crate's own dispatch path
+(`runRunnerCommand`) needed no change — it already honored the contract.
