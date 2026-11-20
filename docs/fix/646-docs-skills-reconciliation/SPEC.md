@@ -403,6 +403,8 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **E16** — 2026-11-20, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale` / `verdict: PASS`.
 - **E17** — 2026-11-20, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":1,"refusals":[]}`; `bun scripts/log-immutability.mjs` · exit 0 · `0 violations · base 8fc204abb · range 11 commits`.
 - **E18** — 2026-11-20, `bun scripts/promise-coherence.mjs` · exit 0 · `claims: 45 checked · 24 skipped` / `verdict: PASS`.
+- **E19** — 2026-11-20, `bun scripts/dimension-regression.mjs --base 8fc204abb` · exit 0 · `dimension-regression@1` / `head | 19 dimensions · changed review surfaces 3` / `finding — missing-reverification-evidence` — the gate's own first pass, recorded because it refused: the range touches three review surfaces and no changed unit doc carried the re-verification run yet.
+- **E20** — 2026-11-20, `bun scripts/dimension-regression.mjs --base 8fc204abb` · exit 0 · `verdict | clean` — the same three surfaces, no `dimension-dropped` finding: the duplication dimension gained a deterministic producer and a re-stated check, and no dimension id left the table.
 - **G1** — HEAD `f455bc4250405c4e884c1322906509596ec0947d`, 2026-11-20, `bun scripts/local-gate.mjs --jobs 4 --skip-network` · exit 0 · `local-gate: PASS — 15 step(s) in 783s`.
 - **G2** — HEAD `f455bc4250405c4e884c1322906509596ec0947d`, 2026-11-20, `bun scripts/local-gate.mjs --only pi-compat-guard,dependency-pin-gate,dependency-advisories --jobs 2` · exit 0 · `local-gate: PASS — 3 step(s) in 51s`.
 
