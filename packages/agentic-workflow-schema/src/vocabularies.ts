@@ -495,3 +495,16 @@ export const SUBSTRATE_CLASSES = Object.freeze([
   "documentation-map",
 ]);
 export type SubstrateClass = (typeof SUBSTRATE_CLASSES)[number];
+
+/** The scope a recorded decision declares (`decision-scope`, issue #650 S3/S4):
+ *  the one fact that decides whether the decision stays in the unit ledger or
+ *  is promoted to a permanent owner doc. A `unit-only` decision binds the unit
+ *  that took it and dies with the unit's folder; a `cross-unit` decision binds
+ *  work beyond that unit, so it is promoted to exactly ONE owner doc — the
+ *  guide's laws, the architecture document, or the architectural invariants —
+ *  and the unit row cites that doc instead of restating it. The vocabulary is
+ *  the closed set a `decision` row's trailing `scope` cell may carry; the
+ *  mapping from a scope's subject to its owner doc is the procedure the
+ *  architecture document publishes, never a second copy here. */
+export const DECISION_SCOPES = Object.freeze(["unit-only", "cross-unit"]);
+export type DecisionScope = (typeof DECISION_SCOPES)[number];

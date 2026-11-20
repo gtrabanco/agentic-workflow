@@ -123,6 +123,11 @@ layer's **Dependency policy** slot above — one home, never a second slot.
   `artifact: screenshot|video|state-snapshot` fails closed with a `manual:` label
   instead of passing on prose (`skills/verification-contract/SKILL.md`).
 - **Decision records:** `<where architecture decisions live and which ones need a record before a unit plans work>`
+
+  A `cross-unit` decision is promoted by the procedure in
+  `docs/architecture/ARCHITECTURE.md` § Promoting a decision; the value above
+  names this project's own home, in addition to the three owner docs that
+  procedure maps.
 - **API posture:** `<safer-API over exception-first, or the team's own error contract>`
 
 **Verification-criteria catalogue.** What "done" means *at this project*,
@@ -295,7 +300,7 @@ place:
 open-questions@1
 id | date | type | question | blocks | search-receipt | options | route
 example Q1 | 2026-10-19 | open-question | <the decision being asked> | <why nothing proceeds without it> | <where the repository was searched: file:line, grep, unit folder, prior units> | <2–3 options, each with its trade-off; `none` when the answer is free-form> | <design | unit-lane | init-workspace:<class>>
-example D1 | 2026-10-19 | decision | Q1 | human-owner | <where the human's answer is recorded: chat paste, issue comment> | <what was chosen> | <what was discarded and why>
+example D1 | 2026-10-19 | decision | Q1 | human-owner | <where the human's answer is recorded: chat paste, issue comment> | <what was chosen> | <what was discarded and why> | <unit-only | cross-unit>
 ```
 
 The `open-question` row records the question **and the evidence behind it**:
@@ -310,8 +315,16 @@ it). The `decision` row reads the same columns per type: `question` carries
 the id it closes, `blocks` the authority (`human-owner`), `search-receipt`
 where the human's answer is recorded — a chat paste, an issue comment;
 validated non-`none`, so a decision without a receipt fails closed — `options`
-what was chosen, and `route` what was discarded. A dismissed option stays
-dismissed.
+what was chosen, `route` what was discarded, and the trailing cell is the
+decision's **scope** (`unit-only` or `cross-unit`, the closed set published by
+the schema package). A dismissed option stays dismissed. The scope is recorded
+once, when the decision is taken, because it decides where the decision lives: a
+`unit-only` row binds this unit alone, while a `cross-unit` row is **promoted**
+to the one permanent doc that owns its subject — this guide's laws, the project's
+architecture doc, or its architectural invariants — and the row cites that doc's
+path instead of restating it. The procedure is
+`docs/architecture/ARCHITECTURE.md` § Promoting a decision; the row never
+carries a second copy of the promoted rule.
 
 Rules the ledger enforces:
 
@@ -328,6 +341,11 @@ Rules the ledger enforces:
   carries the `Decide for me` records, the path-protection
   `path-protection-records@1` block, and the planning ledgers — one file, one
   owner, several typed blocks side by side.
+- **The block is readable only where the reader looks.** The `open-questions@1`
+  marker row opens the file's first block — before any prose paragraph and
+  outside any fenced example. A marker under prose, or inside a ```` ```text ````
+  example, makes the whole ledger unreadable (`malformed-ledger-header`) and its
+  questions silently none; documentation and examples belong below the entries.
 - **Halt, do not ask.** The consumed block is printed by the deterministic
   dispatcher (`agentic-workflow needs-input`), so a malformed ledger fails closed
   instead of silently dropping a question.

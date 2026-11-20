@@ -283,6 +283,15 @@ id | date | type | question | blocks | search-receipt | options | route
 Q1 | <YYYY-MM-DD> | open-question | <the decision being asked> | <why nothing proceeds without it> | <where the repository was searched: path:line, greps, prior units> | <option A — trade-off> \| <option B — trade-off> \| Decide for me \| Explain the options | design
 ```
 
+The block is the file's **readable** span, and only one thing decides that: the
+`open-questions@1` marker row opens the file's first block, before any prose
+paragraph and outside any fenced example. A ledger whose marker sits under a
+prose paragraph, or inside a ```` ```text ```` example, is unreadable
+(`malformed-ledger-header`) and its questions are silently none — the reader
+stops at the first line it cannot place. Documentation, a table of contents and
+fenced examples of *other* blocks belong below the entries, never above the
+marker.
+
 ## Stage 4 — decide
 
 Record every answer — the user's, and every "Decide for me" choice with its
@@ -291,8 +300,28 @@ closes a question; the row carries where the answer is recorded (a chat paste, a
 issue comment) and what was discarded:
 
 ```text
-D1 | <YYYY-MM-DD> | decision | Q1 | human-owner | <where the answer is recorded> | <what was chosen> | <what was discarded and why>
+D1 | <YYYY-MM-DD> | decision | Q1 | human-owner | <where the answer is recorded> | <what was chosen> | <what was discarded and why> | <scope>
 ```
+
+The trailing `scope` cell is the decision's **scope**, decided once, with the
+decision — never excavated at close. Its closed set is the schema package's
+(`DECISION_SCOPES`), and the promotion consequence of each value is the procedure
+`docs/architecture/ARCHITECTURE.md` publishes:
+
+```text
+decision-scope@1
+scope | what it orders
+unit-only | the decision binds this unit alone: nothing is promoted, the row stays the only statement, and the unit folder carries it when it closes
+cross-unit | the decision binds work beyond this unit: the statement is promoted to the ONE owner doc its subject belongs to (the guide's laws, `ARCHITECTURE.md`, `ARCHITECTURAL_INVARIANTS.md`), and the row cites that doc's path — the ledger links it, never copies it
+```
+
+A `cross-unit` row names the owner doc it was promoted to in its own cells (a
+backticked path); a row that does not is what `product-audit`'s `Decision
+promotion` dimension reports. A promotion is the owner's documentation change —
+the lane records the scope and the pointer, and never moves a rule into the guide
+or the architecture doc on its own initiative. Recapturing a decision whose scope
+is `cross-unit` while the owner doc is not yet updated keeps the row honest: the
+promotion is a task in the same unit, not a later one.
 
 A cheap default taken in stage 2 goes to the file's `## Assumptions` as a dated
 row, correctable by the user. Then fill the unit doc's **Acceptance criteria**
@@ -359,6 +388,7 @@ rewrites `ac-hash:` — review never edits either side.
 - [ ] Every question asked was recorded with its resolution — or the questions pane says `none` explicitly
 - [ ] No expensive-to-undo blocking claim remains unanswered
 - [ ] Every "Decide for me" choice is recorded with its reason in `decisions.md`
+- [ ] Every `decision` row carries its scope cell, and each `cross-unit` row names the owner doc it was promoted to (`decision-scope@1`)
 - [ ] Cheap defaults are recorded as dated assumptions, correctable by the user
 - [ ] Entity closure: every entity mentioned has its role in the unit stated
 - [ ] Role closure: every actor/role that interacts with the unit is listed
@@ -385,6 +415,7 @@ rewrites `ac-hash:` — review never edits either side.
 - Do not install a missing tool without explicit user consent
 - Do not build a separate DESIGN.md — one SPEC, all in the unit doc
 - Do not coin a name, field or endpoint without an owner answer and a named place its consumer will read it
+- Do not leave a `cross-unit` decision in the unit ledger: promote it to its owner doc in the same change, or record what blocks the promotion
 - Do not answer the retirement question with silence: “nothing can be removed” is a stated reason, not an omission
 - Do not pre-fill engineering content (phases, tests, architecture)
 - Do not stamp "designed" with an incomplete closure row

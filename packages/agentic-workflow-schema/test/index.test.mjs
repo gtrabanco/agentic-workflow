@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  DECISION_SCOPES,
   extractLastJsonBlock,
   parseEnvelope,
   validateEnvelope,
@@ -186,4 +187,9 @@ test("terminal + run-halt helpers", () => {
 
 test("enum export is complete (11 states)", () => {
   assert.equal(ENVELOPE_STATES.length, 11);
+});
+
+test("the decision scope vocabulary is published closed (issue #650)", () => {
+  assert.deepEqual([...DECISION_SCOPES], ["unit-only", "cross-unit"]);
+  assert.ok(Object.isFrozen(DECISION_SCOPES), "DECISION_SCOPES must be frozen");
 });

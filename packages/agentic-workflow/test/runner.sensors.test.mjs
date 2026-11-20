@@ -125,6 +125,28 @@ test("needs-input: a clean ledger answers the open-questions block with exit 0, 
   assert.equal(parsed.block, "open-questions@1");
 });
 
+test("needs-input: a scoped decision row keeps the printed block byte-identical (issue #650)", (t) => {
+  const { root } = makeRepo(t);
+  const dir = join(root, "docs", "fix", "78-scoped");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "SPEC.md"), "## Tasks\n\n- P1 — toy (validator: `true` exits 0)\n");
+  writeFileSync(
+    join(dir, "decisions.md"),
+    [
+      "open-questions@1",
+      "id | date | type | question | blocks | search-receipt | options | route",
+      "Q1 | 2026-11-20 | open-question | where does it live | nothing proceeds | `rg -n decisions docs/` → no owner | one home | the copy | design",
+      "D1 | 2026-11-20 | decision | Q1 | human-owner | chat paste | one home | the alternative | cross-unit",
+      "",
+    ].join("\n"),
+  );
+  const text = run(root, "needs-input", "docs/fix/78-scoped");
+  assert.equal(text.code, 0, text.stderr);
+  assert.match(text.stdout, /^open-questions@1$/mu);
+  assert.match(text.stdout, /Open questions: 0/u);
+  assert.doesNotMatch(text.stdout, /cross-unit/u, "the scope is not a question and never enters the hand-off block");
+});
+
 test("ledger-provenance: --check on a document with no findings rows passes, a missing path is not a pass", (t) => {
   const { root } = makeRepo(t);
   const check = run(root, "ledger-provenance", "docs/fix/77-toy/SPEC.md", "--check");
