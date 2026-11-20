@@ -1,9 +1,10 @@
 import { DEFAULT_PI_CONFIG, DEFAULT_ROUTE, BASE_EFFECTIVE_DEFAULTS } from "./defaults.js";
-import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW, DEFAULT_TOOL_CHOICE } from "./types.js";
+import { DEFAULT_PROFILE_FALLBACK, DEFAULT_STATE_FLOW, DEFAULT_TOOL_CHOICE, DEFAULT_PHASE_BATCHING } from "./types.js";
 import type {
   ConfigFile,
   EffectiveConfig,
   PassRouteFile,
+  PhaseBatchingConfig,
   ProfileFile,
   ProfileFallbackConfig,
   Route,
@@ -201,6 +202,7 @@ export function mergeConfigs(
     subagents: mergeSubagents(globalFile.subagents, projectFile.subagents),
     stateFlow: mergeStateFlow(globalFile.stateFlow, projectFile.stateFlow),
     toolChoice: mergeToolChoice(globalFile.toolChoice, projectFile.toolChoice),
+    phaseBatching: mergePhaseBatching(globalFile.phaseBatching, projectFile.phaseBatching),
     declared: { default: declaredDefault, commands: declaredCommands },
   };
 }
@@ -228,6 +230,20 @@ function mergeToolChoice(globalToolChoice: ConfigFile["toolChoice"], projectTool
   return {
     enabled: pick(DEFAULT_TOOL_CHOICE.enabled, projectToolChoice?.enabled, globalToolChoice?.enabled) === true,
     mode: pick(DEFAULT_TOOL_CHOICE.mode, projectToolChoice?.mode, globalToolChoice?.mode),
+  };
+}
+
+/**
+ * Issue #632 — project-over-global merge of the `phaseBatching` block: one
+ * scalar, resolved project first. An absent section is the shipped OFF, so a
+ * config that predates the key resolves to exactly the posture it ran before.
+ */
+function mergePhaseBatching(
+  globalPhaseBatching: ConfigFile["phaseBatching"],
+  projectPhaseBatching: ConfigFile["phaseBatching"],
+): PhaseBatchingConfig {
+  return {
+    enabled: pick(DEFAULT_PHASE_BATCHING.enabled, projectPhaseBatching?.enabled, globalPhaseBatching?.enabled) === true,
   };
 }
 

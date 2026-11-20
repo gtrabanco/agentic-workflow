@@ -22,6 +22,7 @@ import type {
   ProfileFile,
   StateFlowConfigFile,
   ToolChoiceConfigFile,
+  PhaseBatchingConfigFile,
   PassModelSetting,
   PassRouteFile,
   PassesConfigFile,
@@ -53,6 +54,7 @@ const ROOT_KEYS = new Set([
   "subagents",
   "stateFlow",
   "toolChoice",
+  "phaseBatching",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -640,7 +642,46 @@ function validateConfig(value: unknown): ParseResult {
     if (toolChoice) config.toolChoice = toolChoice;
   }
 
+  if (value.phaseBatching !== undefined) {
+    const phaseBatching = checkPhaseBatching(value.phaseBatching, "$.phaseBatching", issues);
+    if (phaseBatching) config.phaseBatching = phaseBatching;
+  }
+
   return issues.length > 0 ? { ok: false, issues } : { ok: true, config };
+}
+
+/**
+ * Strict validator for the `phaseBatching` block (issue #632). One optional
+ * scalar and no coercion: the policy's thresholds are preset data, so a second
+ * knob here would be a setting nothing reads. A misspelled key is refused at its
+ * own path — an operator who writes `"enable": true` must not be left believing
+ * batching is on while the shipped OFF posture runs.
+ */
+function checkPhaseBatching(value: unknown, path: string, issues: ConfigIssue[]): PhaseBatchingConfigFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
+    return undefined;
+  }
+  let refused = false;
+  for (const key of Object.keys(value)) {
+    if (key !== "enabled") {
+      refused = true;
+      issues.push({
+        path: `${path}.${displayKey(key)}`,
+        message: `unknown phaseBatching key "${key}" (allowed: enabled)`,
+      });
+    }
+  }
+  const out: PhaseBatchingConfigFile = {};
+  if (value.enabled !== undefined) {
+    if (typeof value.enabled !== "boolean") {
+      issues.push({ path: `${path}.enabled`, message: `must be a boolean, got ${describe(value.enabled)}` });
+      refused = true;
+    } else {
+      out.enabled = value.enabled;
+    }
+  }
+  return refused && Object.keys(out).length === 0 ? undefined : out;
 }
 
 /**

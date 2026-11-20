@@ -1,6 +1,0 @@
-## 2026-11-18T23:15:54Z — feat/616-journal-carrier — narrative
-- **Commits:** 10 (`7ad2e3ae…2ad99b42`)
-- **Files:** 22 files
-- **Summary:** Issue #616 done: journal carrier (scripts/journal-corpus.mjs) parses the session journal into corrections per class, sessions per unit, admitted false positives — cross-joined to the findings corpus. One pass-only-if Journal signals dimension in product-audit consumes the receipt. PR #640 opened against main, merged through the crate's writer (row 616 done). Local gate passed (17 steps, 1367 s); publish used AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1 because --jobs auto on this box reds three load-bound pre-existing assertions. Two protected-path justification rows in decisions.md for owner approval.
-- **Decisions:** buildCorpus reuse from findings-corpus.mjs (no second parser); class = corpus row (unjoined if not resolved, never guessed); no thrashing threshold shipped; fold resolution off (needs rows, not admission); stale roadmap row 616 blockedBy=444 reported not edited; two protected-path assertion additions for owner approval
-- **Next:** Owner review of PR #640: approve protected-path justifications in docs/features/616-journal-carrier/decisions.md, resolve the stale roadmap row 616 (second entry, 444 hard blocked), then merge

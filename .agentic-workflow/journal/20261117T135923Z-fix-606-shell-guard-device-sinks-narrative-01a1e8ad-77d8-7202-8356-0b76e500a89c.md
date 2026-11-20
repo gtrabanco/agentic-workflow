@@ -1,6 +1,0 @@
-## 2026-11-17T13:59:23Z — fix/606-shell-guard-device-sinks — narrative
-- **Commits:** 7 (`41ec3377…c3e9219b`)
-- **Files:** 10 files
-- **Summary:** Applied issue #606 (shell write guard device-sink false-positives) inline through the owner's local workflow. The #567 guard judged every literal redirect operand by containment, so >/dev/null 2>&1 fired the path-protection prompt or blocked headless. decideShellWrite now skips the named device set before resolution: the contract paragraph states the carve-out, nine cases pin the three reproducers plus the ordering, exactness and the shipped handler. PR #608 created, roadmap row settled via the writer.
-- **Decisions:** D1: carve-out in decideShellWrite, never in analyzeShellWrite (analysis reports the operand, verdict judges durability). D2: match before resolveTarget — /dev/std* are /proc/self/fd/… symlinks the resolver refuses. D3: exact equality on normalized path, never a prefix/glob match, so /dev/nullx and relative dev/null stay judged. D4: TURN_CONTRACT.md trimmed to fit the declared ceiling (3016 <= 3020) instead of re-basing the budget.
-- **Next:** Owner reviews and merges PR #608; after merge: the fixes row leaves ## Fixes by convention and #606 auto-closes.

@@ -45,6 +45,9 @@
     "@earendil-works/pi-coding-agent": ">=1.1.0",
     "@gtrabanco/pi-agentic-workflow": ">=4.10.0"
   },
+  "dependencies": {
+    "@gtrabanco/agentic-workflow-schema": "4.10.0"
+  },
   "devDependencies": {
     "@types/node": "26.6.6",
     "typescript": "7"
