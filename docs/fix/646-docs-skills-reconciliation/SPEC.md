@@ -406,6 +406,7 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **E19** — 2026-11-20, `bun scripts/dimension-regression.mjs --base 8fc204abb` · exit 0 · `dimension-regression@1` / `head | 19 dimensions · changed review surfaces 3` / `finding — missing-reverification-evidence` — the gate's own first pass, recorded because it refused: the range touches three review surfaces and no changed unit doc carried the re-verification run yet.
 - **E20** — 2026-11-20, `bun scripts/dimension-regression.mjs --base 8fc204abb` · exit 0 · `verdict | clean` — the same three surfaces, no `dimension-dropped` finding: the duplication dimension gained a deterministic producer and a re-stated check, and no dimension id left the table.
 - **G1** — HEAD `f455bc4250405c4e884c1322906509596ec0947d`, 2026-11-20, `bun scripts/local-gate.mjs --jobs 4 --skip-network` · exit 0 · `local-gate: PASS — 15 step(s) in 783s`.
+- **P12** — 2026-11-20, the branch is pushed and the PR opened: [pull/662](https://github.com/gtrabanco/agentic-workflow/pull/662) (`Closes #646`), and both roadmap rows were settled through the writers — the Features row by `rowUpsert`, the Fixes row by `fixrow` — with the generated projection re-emitted over them, never a hand edit.
 - **G2** — HEAD `f455bc4250405c4e884c1322906509596ec0947d`, 2026-11-20, `bun scripts/local-gate.mjs --only pi-compat-guard,dependency-pin-gate,dependency-advisories --jobs 2` · exit 0 · `local-gate: PASS — 3 step(s) in 51s`.
 
 ## Next
@@ -418,6 +419,7 @@ release, never hand-edited here.
 ## References
 
 - Issue [#646](https://github.com/gtrabanco/agentic-workflow/issues/646) — `Closes #646`.
+- Pull request [#662](https://github.com/gtrabanco/agentic-workflow/pull/662) — this unit's delivery; the verdict is the owner's.
 - [Second full read](second-read.md) — the S5/S5a findings, the removal list and the measurements.
 - [Decisions](decisions.md) — the path-protection records and residual promises.
 - `docs/workflow/GATE_INVENTORY.md` — the two new gate rows this unit claims.
