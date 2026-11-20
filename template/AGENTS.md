@@ -156,9 +156,9 @@ documentation generator renders — never a hand-written page:
                            # TypeDoc, tree-sitter, LSP…); or `none`
 ```
 
-`bun scripts/docs-generate.mjs` writes the projection into
+`runner docs-generate` writes the projection into
 `<content-dir>/generated/` (`docs/generated/` without a content dir), and
-`bun scripts/docs-generate.mjs --check` is the drift receipt a verification
+`runner docs-generate --check` is the drift receipt a verification
 gate can call. A project that declares no format gets markdown **and a
 reported degradation**; the generator never guesses a format silently.
 

@@ -161,13 +161,13 @@ test("empty Relevant files entries are refused, not silently dropped", () => {
 
 test("the three skills carry the consumption + forward-propagation + affected-set contracts", () => {
   const executePhase = readRepo("skills/execute-phase/SKILL.md");
-  assert.match(executePhase, /relevant-files\.mjs/);
+  assert.match(executePhase, /runner\s+relevant-files/);
   assert.match(executePhase, /read set/is);
   assert.match(executePhase, /forward-propagat/i);
   assert.match(executePhase, /phase-contract/);
 
   const review = readRepo("skills/review-change/SKILL.md");
-  assert.match(review, /relevant-files\.mjs|Relevant files/);
+  assert.match(review, /relevant-files|Relevant files/);
   assert.match(review, /read set/i);
 
   const triage = readRepo("skills/triage-issue/SKILL.md");

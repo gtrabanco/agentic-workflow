@@ -113,7 +113,7 @@ test("the rule this run implements cites the run, never a pending check", () => 
   // cited from here" — is the superseded text this case freezes out.
   const rule = fs.readFileSync(path.join(ROOT, "skills/review-implementation/references/CLASSIFY.md"), "utf8");
   assert.ok(fs.existsSync(CLI), "the cited run exists at scripts/differential-baseline.mjs");
-  assert.match(rule, /scripts\/differential-baseline\.mjs/, "the rule cites the baseline run");
+  assert.match(rule, /runner differential-baseline/, "the rule cites the baseline run");
   assert.doesNotMatch(rule, /until it exists/, "the rule no longer calls the baseline check pending");
 });
 

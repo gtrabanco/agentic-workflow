@@ -1,7 +1,7 @@
 # The plan grammar — `batch-plan@4`
 
 The batch scheduler's machine envelope: one fixed JSON document, produced only
-by `scripts/batch-scheduler.mjs` and validated against the schema package's
+by `runner batch-scheduler` and validated against the schema package's
 `agentic-workflow/batch-plan` contract before printing. The inventory below is
 the document's closed field set (grammar `table:batch-fields@1`, pinned in the
 guide's normative-surfaces inventory); the schema package owns the closed
@@ -180,10 +180,10 @@ supplies, so the same inputs produce a byte-identical envelope.
 ## CLI
 
 ```
-bun scripts/batch-scheduler.mjs [--root <dir>] [--issues-file <json>]
+runner batch-scheduler [--root <dir>] [--issues-file <json>]
                                 [--state <path> | --no-state]
                                 [--remote <url>] [--mark-launched <n>] [--json-only]
-bun scripts/batch-scheduler.mjs --infer-surfaces <n> [--issues-file <json>]
+runner batch-scheduler --infer-surfaces <n> [--issues-file <json>]
 ```
 
 `node` is the fallback. `--remote <url>` names the forge for the three reads

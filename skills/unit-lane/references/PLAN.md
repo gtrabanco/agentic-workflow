@@ -138,7 +138,7 @@ P<n+1> — release settle, when the unit opens a PR: after the PR exists, settle
   the roadmap row via the crate's writer (`agentic-workflow roadmap rowUpsert`,
   status `done · [#N](<pr-url>)`, every other cell preserved; a fix unit's
   `## Fixes` row goes through `agentic-workflow roadmap fixrow`) — validator:
-  `bun scripts/roadmap-settle.mjs` exits 0 (#316: the settle is a task the
+  `runner roadmap-settle` exits 0 (#316: the settle is a task the
   executor owns, never a missing courtesy)
 ```
 
@@ -176,7 +176,7 @@ pieces per retirement task:
   measured rather than asserted.
 
 No declared retirements → a **strictly additive** unit answers with its
-computed surface inventory — `bun scripts/residual-classify.mjs --inventory
+computed surface inventory — `runner residual-classify --inventory
 --base <rev>`, the anti-divergence receipt its `## Retirements` section
 carries — and any other empty answer writes exactly
 ``none — the design states why nothing can be removed``. The anti-gaming rule

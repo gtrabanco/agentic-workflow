@@ -16,7 +16,7 @@ Resolve evidence conflicts explicitly and publish the next frozen snapshot.
 
 The snapshot's shape and its freshness rule are one contract —
 [STATE_CONTRACT.md](references/STATE_CONTRACT.md) (`repository-state@1`).
-A re-freeze moves `covers-through`; `bun scripts/repository-state.mjs` is the
+A re-freeze moves `covers-through`; `runner repository-state` is the
 read-only reader that judges it, so a snapshot whose last coverage date predates
 a recorded decision is reported `stale` instead of being consumed as current.
 

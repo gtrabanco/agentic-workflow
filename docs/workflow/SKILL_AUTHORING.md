@@ -57,6 +57,16 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > in a SPEC is a `## Specs` requirement id, never a step in `## Tasks` (which is also
 > where a task links the `S#` it delivers).
 
+> **A runtime command is a CLI subcommand, never a script path.** A skill that
+> runs a deterministic command cites the symbolic form `runner <subcommand>`
+> (the launcher, the pin and the closed candidate set are
+> [`runner-contract`](../../skills/runner-contract/SKILL.md)'s) and never
+> `bun scripts/<name>.mjs`: the scaffold ships no `scripts/` tree, so a script
+> path names a file the target project does not have. A new deterministic job is
+> born as a subcommand — `docs/workflow/CLI.md` owns the procedure — and
+> `scripts/cli-coverage.test.mjs` refuses a shipped citation that names a path, a
+> launcher or a version.
+
 > **Checklists over heuristics; fixed output formats.** Skills are executed by
 > models of any strength, not only frontier ones — write instructions a weaker
 > model cannot misread: (a) heuristics become **checklists** ("pass only if: ✓ …"),
@@ -211,4 +221,8 @@ nothing**, and it bumps nothing: the train version is stamped by
 Skill tool or by following its `SKILL.md` directly — and it carries
 `metadata.internal: true`, the `skills` CLI's own gate that keeps `npx skills add`
 from offering repo-internal skills to target projects (owner:
-`docs/fix/74-bump-skill-discovery-exclusion/`).
+`docs/fix/74-bump-skill-discovery-exclusion/`). This is also the **one skill
+allowed to cite `bun scripts/*.mjs`**: the exemption
+`scripts/cli-coverage.test.mjs` grants is exactly that frontmatter flag, so a
+second internal skill arrives as a declared exemption, never as a path the
+scanner special-cases.

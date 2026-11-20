@@ -45,10 +45,10 @@ returned table.
 ✓ **Unit-route triage currency.** Re-run `runner unit-route --triage
   <slug>` and compare the `Steps:` line against the unit doc's Evidence section.
   Mismatch → stale triage.
-✓ **Gate evidence is consumed, not re-run.** Run `bun scripts/gate-receipt.mjs verify`; it answers the receipt's state: `current` + `pass` (exit 0) means the
+✓ **Gate evidence is consumed, not re-run.** Run `runner gate-receipt verify`; it answers the receipt's state: `current` + `pass` (exit 0) means the
   declared closure has not moved — cite its `checks[]` ids and `manifest.digest`
   as the gate evidence; `missing` (3), `stale` (4) or `invalid` (5) is a finding
-  routed to `bun scripts/gate-receipt.mjs run`, never a prompt to run the gate
+  routed to `runner gate-receipt run`, never a prompt to run the gate
   from this review and never an implicit pass; a current `fail`/`degraded`
   receipt fails the review with the failing check ids and their fragments
 ✓ The change's primary claimed behavior was exercised for real (run the

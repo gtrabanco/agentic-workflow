@@ -54,7 +54,7 @@ const FORGE_FIELD_PROPERTY = /[A-Za-z0-9_$\])]\.(?:title|body)\b/u;
  */
 const SEAMS = [
   {
-    file: "scripts/batch-scheduler.mjs",
+    file: "packages/agentic-workflow/src/batch-scheduler/index.mjs",
     entry: "collectIssues",
     readers: ["normalizeIssues"],
     why: "the planner's forge collection: issue titles and bodies reach the batch-plan envelope",

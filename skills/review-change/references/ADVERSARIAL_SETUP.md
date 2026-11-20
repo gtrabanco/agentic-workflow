@@ -141,7 +141,7 @@ spawn. An agent with one family runs N same-family reviewers and says so.
 arbitration and the conductor runs one command over it and the reviewed diff:
 
 ```text
-bun scripts/adversarial-verdict.mjs --record <record.json> --diff <diff.patch>
+runner adversarial-verdict --record <record.json> --diff <diff.patch>
 ```
 
 It prints the persist set — `| id | claim | verdict | evidence | stability |

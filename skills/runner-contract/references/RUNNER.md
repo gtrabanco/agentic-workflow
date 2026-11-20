@@ -9,9 +9,9 @@
 ## The invocation
 
 Copy this line, replace `<subcommand>` with the command the skill names, and
-append its arguments. The pin is stamped at release time by
-`scripts/release.mjs`; `scripts/normative-drift.test.mjs` recomputes it against
-the crate's own `package.json` and fails closed on a mismatch.
+append its arguments. The pin is stamped at release time by this repository's release tool;
+`scripts/normative-drift.test.mjs` recomputes it against the crate's own
+`package.json` and fails closed on a mismatch.
 
 ```text
 runner-pin@1
@@ -134,6 +134,39 @@ shell fallback.
 | `forge-read <issue\|pr> <number> [--comments] [--reviews] [--json]` | the guarded forge read — one issue or pull request, its threads on request, every content field through the content guard and printed as the fenced delivery (or as the `forge-read@1` envelope with `--json`); `forge-read shim <install\|check\|exec>` is the ad-hoc `gh` interceptor the same route drives |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | the unit router and the triage step list |
 | `skills <discover\|register\|inventory> [flags]` | the skill-discovery route's machine half — the screen, the consented install decision and the registration/decay inventory (issue #591; grammars in the crate README) |
+| `relevant-files <unit-doc> [--phase P<k>\|all] [--changed <a,b> \| --base <ref>]` | the phase read-set resolver and its changed-file discipline — the paths a phase must read, and the one failure it reports (issue #269) |
+| `roadmap-settle [--root <dir>] [--json]` | the offline roadmap done-settle gate — a doc carrying a PR URL must have its row settled to `done` with the same link (issue #316) |
+| `docs-generate [--root <dir>] [--check\|--dry-run]` | the generated documentation projection — the pages, plus the roadmap tables it keeps in sync, and the drift report `--check` prints |
+| `docs-generated-merge [--install [--repo <dir>]] \| <base> <ours> <theirs> [marker-size] [path]` | the generated-projection merge driver — the incoming side, or a fail-closed refusal on a path it does not cover |
+| `shared-merge [--install [--repo <dir>]] \| <class> <base> <ours> <theirs> [marker-size] [path]` | the shared-document merge drivers — one class registry for the roadmap, the budgets, the frozen repository state, the journal and the telemetry ledger |
+| `test-impact --base <rev> [--paths <p>…] [--references <file>]` | the test impact set — the suites a change can affect, or `empty`, with the reason (issue #356) |
+| `session-close render \| close` | the session's mechanical half — the entry's facts, the append-only proof and the alone-commit (issue #182) |
+| `findings-corpus` | the retrospective findings corpus — the one join `coverage-gap` and `dimension-regression` build on (issue #437) |
+| `correction-budget` | the correction budget as a measurement — batch size, bounded budget and the typed stop (issue #437) |
+| `differential-baseline` | the differential baseline — the base revision materialized for a real comparison (issue #301) |
+| `review-state` | the per-unit review-state ledger — which axes ran, at which head (feature 32) |
+| `scope-manifest` | the digest-bound scope manifest — `sign` and `verify` (feature 25) |
+| `review-receipt` | the SHA-bound review receipt — `emit`, `verify`, `post` (feature 25) |
+| `gate-receipt` | the gate receipt — `run` records the gate's evidence, `verify` re-derives it (fix #338) |
+| `adversarial-verdict` | the adversarial pass's checker over its record and the reviewed diff (issue #358) |
+| `audit-pr-gate <evaluate\|hygiene\|comment> [flags]` | the merge gate — the verdict from the review receipt, the gate receipt and the terminal hygiene, plus its one idempotent marker writer |
+| `unit-lineage --unit <slug> [--root <dir>] [--json]` | the lane-era lineage gate — the triage re-derived from the facts, `BLOCKED` when the reason no longer follows (issue #305) |
+| `dependency-advisory-pass [--root <dir>] [--json]` | the dependency advisory scan — pins drifted from the registry, with a declared degradation when the registry cannot be read (feature 67) |
+| `skill-context [<skill>…] [--routes] [--documents] [--manifest-only] [--json]` | the context-budget sweep — every skill and reference measured against its declared ceiling (issue #471) |
+| `promise-coherence [<path>…] [--json]` | the promise-coherence pass — a "measured at the head" claim re-measured, never assumed (issue #305) |
+| `batch-scheduler [--root <dir>] [--issues-file <json>] [--json-only]` | the batch planner — the parallel-execution batches as the `batch-plan@4` envelope (feature 88) |
+| `test-route (--check <path> \| --list) [--map <path>]` | the bounded gate planner — which suites a changed path needs, or the full suite when it cannot prove less (issue #318) |
+| `prose-gate-inventory [--root <dir>] [--json]` | the gate-inventory reader — the carriers, reasons, tiers and priorities the audit joins over (issue #441) |
+| `coverage-gap [--root <dir>] [--json]` | the forward-looking coverage join — criterion, class and detector gaps as one typed receipt (issue #590) |
+| `decision-promotion [--root <dir>] [--json]` | the decision-promotion sweep — a cross-unit decision that names no owner doc is a finding (issue #650) |
+| `dimension-regression [--base <ref>] [--root <dir>] [--json]` | the dimension-regression gate — a review surface touched without a recorded run (issue #590) |
+| `journal-corpus [--root <dir>] [--json]` | the journal corpus reader — the session journal joined into the audit's corpus (issue #616) |
+| `repository-state [--root <dir>] [--json]` | the Normalized Repository State reader — what is frozen and what a contradiction is (feature 18) |
+| `residual-classify <surface> [--inventory --base <rev>] [--root <dir>] [--json]` | the residual classifier — consumed, promised, orphan or half-built, with the consuming line named (issue #340) |
+| `restatement-sweep [--root <dir>] [--json]` | the restatement sweep — a seeded rule worded a second time outside its owner (issue #646) |
+| `test-obligation-tags [--root <dir>] [--sweep] [--json]` | the test-obligation tag gate — every suite declares what it protects and what it proves (issue #596) |
+| `retention-debt [--root <dir>] [--json]` | the retention debt sensor — proved-merged units still carrying the full carrier (issue #651) |
+| `setup-env [--check] [--root <dir>]` | the authoring toolchain check and its consent-gated install (the bootstrap form stays `scripts/setup-env.mjs`: it provisions bun, so it cannot require the CLI) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 

@@ -34,7 +34,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 
 ```
 ✓ The entry was WRITTEN with accurate git facts: appended to docs/LOGS.md, or — when the fragment carrier `.agentic-workflow/journal/` exists (issue #405) — written as a new fragment there (the aggregator owns the journal; a direct append is refused)
-✓ `bun scripts/session-close.mjs close` RAN and exited 0 (or 2, with the leftover paths named) — the entry is committed, not left riding along
+✓ `runner session-close close` RAN and exited 0 (or 2, with the leftover paths named) — the entry is committed, not left riding along
 ✓ No past entry was edited
 ```
 
@@ -110,7 +110,7 @@ the HEAD sha and start time at session open.
    commit count and range, files touched) are computed for you:
 
    ```
-   bun scripts/session-close.mjs render --summary "<what this session did>" \
+   runner session-close render --summary "<what this session did>" \
      --decisions "<key choices + why>" --next "<the concrete next step>"
    ```
 
@@ -146,7 +146,7 @@ the HEAD sha and start time at session open.
 5. **Close the session** — commit the entry and prove the tree is clean:
 
    ```
-   bun scripts/session-close.mjs close
+   runner session-close close
    ```
 
    It refuses unless the entry was written the way the project opted in —

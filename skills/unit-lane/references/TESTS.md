@@ -13,8 +13,8 @@ never inline.
 - The unit's Applicable tests section (filled by triage)
 - The project's test runner command from Workflow conventions
 - The change's **test impact set** — the tests it can affect, derived before the
-  first run (owner: `skills/execute-phase/references/TEST_IMPACT.md`; this
-  repository's implementation is `bun scripts/test-impact.mjs --base <rev>`)
+  first run (owner: `skills/execute-phase/references/TEST_IMPACT.md`; the
+  command is `runner test-impact --base <rev>`)
 
 ## Fixed output contract
 
@@ -132,7 +132,7 @@ correlation with fault detection once suite size is controlled.
 One annotation line per suite, beside the suite and never in a central
 registry — a registry rots away from what it describes, and an orphaned suite
 keeps passing while nothing notices. Consumed by the project's obligation-tag
-gate (this repository's implementation: `bun scripts/test-obligation-tags.mjs`)
+gate (this repository's implementation: `runner test-obligation-tags`)
 and by the audit's test-surplus sweep, which reads the tag as its dead-surface
 evidence.
 

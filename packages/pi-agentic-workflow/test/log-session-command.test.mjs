@@ -36,6 +36,9 @@ const PKG_DIR = resolve(import.meta.dirname, "..");
 const BUNDLE_SKILLS = join(PKG_DIR, "skills");
 const WRITER_SOURCE = resolve(PKG_DIR, "..", "..", "scripts", "session-close.mjs");
 const WRITER_MODULES = [
+  // The writer's own module (issue #553): the repository script is a shim over
+  // the crate command, so a fixture that copies it copies what it resolves.
+  "packages/agentic-workflow/src/session-close/index.mjs",
   "packages/agentic-workflow/src/journal/fragment.mjs",
   "packages/agentic-workflow/src/journal/block.mjs",
   "packages/agentic-workflow/src/log/render.mjs",
@@ -314,7 +317,8 @@ test("O9: the directive names the skill's own writer commands", async () => {
     const sent = calls.send[0].content;
 
     const skill = readFileSync(join(BUNDLE_SKILLS, "log-session", "SKILL.md"), "utf8");
-    const ops = (text) => [...text.matchAll(/scripts\/session-close\.mjs (\w+)/g)].map((match) => match[1]).sort();
+    const ops = (text) =>
+      [...text.matchAll(/(?:runner session-close|scripts\/session-close\.mjs) (\w+)/g)].map((match) => match[1]).sort();
     const skillOps = [...new Set(ops(skill))];
     const directiveOps = [...new Set(ops(sent))];
     assert.ok(skillOps.includes("render") && skillOps.includes("close"), `the prose door names ${skillOps.join(", ")}`);

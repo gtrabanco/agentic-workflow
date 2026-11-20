@@ -132,9 +132,9 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    - **remove** — the deletion decision is a measurement, never a free judgment
      (design note 11 of the direction). The verdict carries its inputs as
      receipts and fails closed: **no measured verdict, no removal.**
-     - **residual state** — `bun scripts/residual-classify.mjs --receipt
+     - **residual state** — `runner residual-classify --receipt
        <surface|symbol> --date <YYYY-MM-DD>`; for the surfaces the unit itself
-       adds, `bun scripts/residual-classify.mjs --inventory --base <rev>`. An
+       adds, `runner residual-classify --inventory --base <rev>`. An
        **orphan** is the only retire-legitimate state: a scaffold (`andamio`)
        requires the recorded planned-consumer promise, and `half-built` routes
        to resume instead of removal.
@@ -174,7 +174,7 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    **Declare the surfaces (issue #574).** The batch scheduler routes parallel
    work on the issue body's `## Surfaces`, and a missing one is planned as a
    guess:
-   - `bun scripts/batch-scheduler.mjs --infer-surfaces <n>` prints the block to
+   - `runner batch-scheduler --infer-surfaces <n>` prints the block to
      paste (fences inert, `## Where`/`## In scope` honored) or
      `- surface-unknown`. `--issues-file <cache>` works offline. Never hand-write
      the lane keys: the six the project resolves are the script's vocabulary.

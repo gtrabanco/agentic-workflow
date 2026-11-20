@@ -368,7 +368,7 @@ function resolveMerge(argv) {
     const named = argv[5] !== undefined ? namedPath(argv[5]) : argv[4] !== undefined ? namedPath(argv[4]) : null;
     const inferred = named === null ? null : classForPath(named);
     if (inferred === "generated") {
-      refuse(`generated-projection — ${named} is the docs-generated projection; arm scripts/docs-generated-merge.mjs (fix #420) for it`, 1);
+      refuse(`generated-projection — ${named} is the docs-generated projection; arm its driver with \`bin/docs-generated-merge.mjs --install\` (fix #420)`, 1);
     }
     if (inferred === null) {
       refuse(`unknown-path — ${named ?? argv[0]} belongs to no shared-document class; add it to the class map or resolve by hand`, 1);
@@ -382,7 +382,7 @@ function resolveMerge(argv) {
     named = namedPath(relPath);
     const pathClass = classForPath(named);
     if (pathClass === "generated") {
-      refuse(`generated-projection — ${named} is the docs-generated projection; arm scripts/docs-generated-merge.mjs (fix #420) for it`, 1);
+      refuse(`generated-projection — ${named} is the docs-generated projection; arm its driver with \`bin/docs-generated-merge.mjs --install\` (fix #420)`, 1);
     }
     if (pathClass === null) {
       refuse(`unknown-path — ${named} belongs to no shared-document class; add it to the class map or resolve by hand`, 1);

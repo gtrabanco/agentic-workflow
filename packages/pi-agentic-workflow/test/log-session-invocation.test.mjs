@@ -254,15 +254,66 @@ test("O12: with no session id the fallback path is named, not left anonymous", (
 // O11 — a project that ships no writer script
 // ---------------------------------------------------------------------------
 
-test("O11: with no writer script the absence is named, never papered over", () => {
+test("O11: with neither writer route the absence is named, never papered over", () => {
   const { root } = project({ journal: true });
   try {
-    const { record, directive } = planInvocation({ root, sessionId: SESSION, now: NOW });
+    const { record, directive } = planInvocation({ root, sessionId: SESSION, now: NOW, crateBin: null });
     assert.equal(record.writer, "absent");
     assert.equal(record.facts, null, "no facts are claimed for a writer that is not there");
     assert.match(directive, new RegExp(WRITER_SCRIPT.replace(".mjs", "\\.mjs")), "the missing script is named by path");
     assert.match(directive, /Process step 2|Process step 2/, "and the prose door's own step is pointed at");
     assert.match(directive, /not computed/, "never a silent gap in the entry's facts");
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("S5: a project without a writer script answers through the crate's command", () => {
+  const { root } = project({ journal: true });
+  const calls = [];
+  try {
+    const { record, directive } = planInvocation({
+      root,
+      sessionId: SESSION,
+      now: NOW,
+      crateBin: "/opt/crate/bin/agentic-workflow.mjs",
+      run: (bin, args) => {
+        calls.push([bin, [...args]]);
+        return { status: 0, stdout: "## 2026-11-20T00:00:00Z — feat/x — narrative\n- **Commits:** 0\n", stderr: "" };
+      },
+    });
+    assert.equal(record.writer, "cli", "the route is recorded, so a reader knows which writer answered");
+    assert.deepEqual(calls, [[
+      calls[0][0],
+      ["/opt/crate/bin/agentic-workflow.mjs", "session-close", "render", "--kind", "auto"],
+    ]], "the installed crate bin runs the command, with the same argv the script took");
+    assert.match(calls[0][0], /^(?:bun|n[o]de)$/, "the runtime that launched pi runs it");
+    assert.match(record.facts ?? "", /\*\*Commits:\*\*/u, "the writer's bytes are recorded verbatim");
+    assert.match(directive, /runner session-close render --kind auto/u, "the directive names the route it used");
+    assert.doesNotMatch(directive, /is absent from this project/u, "a delivered writer is never reported absent");
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("S5: a project that ships its own writer script keeps using it", () => {
+  const { root } = project({ journal: true });
+  fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
+  fs.writeFileSync(path.join(root, WRITER_SCRIPT), "// fixture writer\n");
+  const calls = [];
+  try {
+    const { record } = planInvocation({
+      root,
+      sessionId: SESSION,
+      now: NOW,
+      crateBin: "/opt/crate/bin/agentic-workflow.mjs",
+      run: (bin, args) => {
+        calls.push([...args]);
+        return { status: 0, stdout: "## facts\n", stderr: "" };
+      },
+    });
+    assert.equal(record.writer, "script");
+    assert.equal(calls[0][0], path.join(root, WRITER_SCRIPT), "the project's own copy is the first route, byte for byte");
   } finally {
     cleanup(root);
   }

@@ -397,7 +397,7 @@ test("the remote gate delegates to the local one instead of transcribing it", ()
   assert.match(gate, /node scripts\/local-gate\.mjs/, "the job runs the same script a contributor runs");
   // A second copy of the step list is the drift the decision exists to prevent.
   const job = jobBlock(gate, "local-gate");
-  assert.doesNotMatch(job, /bun run test|run-root-suite\.mjs|version-parity-gate\.mjs|dependency-advisory-pass\.mjs/,
+  assert.doesNotMatch(job, /bun run test|run-root-suite\.mjs|version-parity-gate\.mjs|dependency-advisory-pass/,
     "the workflow carries no step of its own — it calls the local gate");
 });
 
@@ -412,6 +412,7 @@ test("every former remote check survives as a step of the local gate", () => {
     "root-suite",
     "version-parity-content",
     "docs-generated-projection",
+    "skill-context-budgets",
     "journal-carrier-check",
     "log-immutability",
     "push-identity",
@@ -427,7 +428,7 @@ test("every former remote check survives as a step of the local gate", () => {
     "dependency-pin-gate",
     "dependency-advisories",
   ], "a check that disappears with the job that carried it is the defect this list prevents");
-  for (const needle of ["--frozen-lockfile", "run-root-suite.mjs", "version-parity-gate.mjs", "--content", "--pins", "dependency-advisory-pass.mjs"]) {
+  for (const needle of ["--frozen-lockfile", "run-root-suite.mjs", "version-parity-gate.mjs", "--content", "--pins", "dependency-advisory-pass"]) {
     assert.ok(local.includes(needle), `${LOCAL_GATE} still runs ${needle}`);
   }
 });

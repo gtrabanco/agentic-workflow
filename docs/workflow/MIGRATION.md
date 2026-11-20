@@ -1,5 +1,36 @@
 # Migration notes
 
+## 2026-11-20 — a shipped skill cites the runner, never a script path (issue #553)
+
+**What changed.** The scaffold ships no `scripts/` tree — it never did, and the
+owner rejected adding one ("template no tiene carpeta scripts porque no lo
+necesita, para eso es el universal cli"). The skills, however, kept telling a
+target agent to run `bun scripts/<name>.mjs`. Every one of those scripts is now
+a subcommand of `@gtrabanco/agentic-workflow`, and every shipped skill that
+cited one names the command instead, in the symbolic form
+`runner <subcommand> [args...]` (the launcher, the pin and the closed candidate
+set are `skills/runner-contract/references/RUNNER.md`'s). The procedure is
+[`CLI.md`](CLI.md).
+
+**What you have to do.** Nothing for a project that installed the release: the
+pin moves with the skills, so `runner <subcommand>` resolves to the same train
+that carries the command. A project that copied a skill's command into its own
+scripts must call the CLI form now — the script names below are gone from the
+shipped prose, and in this repository each `scripts/<name>.mjs` survives only as
+a zero-logic shim for the repository's own gate and suites.
+
+**What degradation you will see.** A project that pinned an older release keeps
+that release's skills, which name scripts its tree does not have; the fix is the
+pin, never a `scripts/` folder.
+
+**How to verify.** `bun test scripts/cli-coverage.test.mjs` — it refuses a
+shipped citation that names a script path, a launcher or a restated version, and
+it is the gate that keeps this table honest.
+
+| Retired citation | Command now |
+|---|---|
+| `bun scripts/relevant-files.mjs` | `runner relevant-files` |
+
 ## 2026-11-17 — the template hooks are shims over the universal CLI (issue #554)
 
 **What changed.** Every hook the scaffold ships under
@@ -30,6 +61,39 @@ the shim shape and each capability's answer without the CLI; the per-capability
 suites (`test-command-guard.sh`, `test-turn-contract.sh`,
 `test-git-identity-check.sh`, `test-fullauto-merge.sh`) still run the same cases,
 now through the CLI.
+| `bun scripts/roadmap-settle.mjs` | `runner roadmap-settle` |
+| `bun scripts/docs-generate.mjs` | `runner docs-generate` |
+| `bun scripts/docs-generated-merge.mjs` | `runner docs-generated-merge` |
+| `bun scripts/shared-doc-merge.mjs` | `runner shared-merge` |
+| `bun scripts/test-impact.mjs` | `runner test-impact` |
+| `bun scripts/session-close.mjs` | `runner session-close` |
+| `bun scripts/findings-corpus.mjs` | `runner findings-corpus` |
+| `bun scripts/correction-budget.mjs` | `runner correction-budget` |
+| `bun scripts/differential-baseline.mjs` | `runner differential-baseline` |
+| `bun scripts/review-state.mjs` | `runner review-state` |
+| `bun scripts/scope-manifest.mjs` | `runner scope-manifest` |
+| `bun scripts/review-receipt.mjs` | `runner review-receipt` |
+| `bun scripts/gate-receipt.mjs` | `runner gate-receipt` |
+| `bun scripts/adversarial-verdict.mjs` | `runner adversarial-verdict` |
+| `bun scripts/audit-pr-gate.mjs` | `runner audit-pr-gate` |
+| `bun scripts/unit-lineage.mjs` | `runner unit-lineage` |
+| `bun scripts/dependency-advisory-pass.mjs` | `runner dependency-advisory-pass` |
+| `bun scripts/skill-context.mjs` | `runner skill-context` |
+| `bun scripts/promise-coherence.mjs` | `runner promise-coherence` |
+| `bun scripts/batch-scheduler.mjs` | `runner batch-scheduler` |
+| `bun scripts/restatement-sweep.mjs` | `runner restatement-sweep` |
+| `bun scripts/residual-classify.mjs` | `runner residual-classify` |
+| `bun scripts/repository-state.mjs` | `runner repository-state` |
+| `bun scripts/coverage-gap.mjs` | `runner coverage-gap` |
+| `bun scripts/journal-corpus.mjs` | `runner journal-corpus` |
+| `bun scripts/dimension-regression.mjs` | `runner dimension-regression` |
+| `bun scripts/decision-promotion.mjs` | `runner decision-promotion` |
+| `bun scripts/test-obligation-tags.mjs` | `runner test-obligation-tags` |
+| `bun scripts/retention-debt.mjs` | `runner retention-debt` |
+| `bun scripts/prose-gate-inventory.mjs` | `runner prose-gate-inventory` |
+| `bun scripts/test-route.mjs` | `runner test-route` |
+| `bun scripts/setup-env.mjs` | `runner setup-env` |
+| `bun scripts/relay-packet.mjs` | `runner relay` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

@@ -183,7 +183,7 @@ test("plan reference names the strictly-additive inventory answer (438 S5)", () 
   // Blocker B3 of the 2026-11-13 external verify: the templates answer a
   // strictly additive unit with the computed inventory, and the plan step must
   // order the same act — the sibling that kept the superseded prose-only answer.
-  assert.match(plan, /scripts\/residual-classify\.mjs --inventory/);
+  assert.match(plan, /runner residual-classify --inventory/);
 });
 
 // ── 5. Design reference: third-party before homemade (S7) ───────────────────

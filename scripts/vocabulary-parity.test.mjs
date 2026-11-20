@@ -374,8 +374,8 @@ test("#358 the grammar block orders exactly the published tokens, in both direct
 });
 
 test("#358 the checker reads the published sets instead of a local copy", () => {
-  const checker = read("scripts/adversarial-verdict.mjs");
-  assert.match(checker, /loadSchemaRuntime/, "the checker loads the schema runtime");
+  const checker = read("packages/agentic-workflow/src/adversarial-verdict/index.mjs");
+  assert.match(checker, /schemaRuntime\(|loadSchemaRuntime/, "the checker loads the schema runtime");
   for (const name of ["ADVERSARIAL_VERDICTS", "ADVERSARIAL_REFLECTOR_VERDICTS", "ADVERSARIAL_STABILITY_VERDICTS"]) {
     assert.ok(checker.includes(`runtime.${name}`), `the checker reads ${name} from the built package`);
   }

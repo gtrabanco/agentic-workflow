@@ -449,7 +449,7 @@ test("--json emits the machine view with the same decisions", async () => {
 
 test("the review pack names the carrier, not a self-report", () => {
   const skill = fs.readFileSync(path.join(ROOT, "skills/review-security/SKILL.md"), "utf8");
-  assert.match(skill, /dependency-advisory-pass\.mjs/u, "the checklist names the runnable pass");
+  assert.match(skill, /runner dependency-advisory-pass/u, "the checklist names the runnable pass");
   assert.match(skill, /adds or\s+updates/u, "the scope rule limits findings to the dependencies the change touches");
   assert.match(skill, /report-only/u, "the materiality rule is stated where the pass is invoked");
   assert.ok(!/bun\.lock|packages\/\*/u.test(skill), "the skill stays stack-agnostic: no lockfile or workspace layout");
@@ -464,7 +464,7 @@ test("the local gate runs the pass in the degraded-not-failed step", () => {
   const gate = fs.readFileSync(path.join(ROOT, "scripts/local-gate.mjs"), "utf8");
   const step = gate.slice(gate.indexOf(`id: "dependency-advisories"`));
   const block = step.slice(0, step.indexOf("},"));
-  assert.match(block, /scripts\/dependency-advisory-pass\.mjs/u, "the registry step carries the advisory pass");
+  assert.match(block, /agentic-workflow\.mjs", "dependency-advisory-pass"/u, "the registry step carries the advisory pass");
   assert.match(block, /report-only/iu, "the step says the pass cannot fail the gate");
   assert.match(block, /never fails/iu, "the degraded-not-failed contract is stated in the step");
   assert.match(block, /network: true/u, "the pass is the online half, so the pre-push subset skips it");

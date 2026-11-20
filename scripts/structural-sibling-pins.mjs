@@ -36,7 +36,7 @@ const HEADING_SEARCH = /\/\^##\s?/;
  */
 export const HEADING_READER_ALLOWLIST = new Map([
   [
-    "scripts/session-close.mjs",
+    "packages/agentic-workflow/src/session-close/index.mjs",
     "the fragment close reads an entry heading out of a fragment's own bytes to build a commit subject — it never bounds a document section; the fragment grammar's one-entry-per-file shape is enforced by the crate's journal module (#405)",
   ],
   [
@@ -48,7 +48,7 @@ export const HEADING_READER_ALLOWLIST = new Map([
     "the legacy TASKS.md phase reader is fence-aware since unit 84 (S3 pin); its remaining `^##` literal only labels boundaries inside the fence-aware walk, never bounds a section on its own",
   ],
   [
-    "scripts/promise-coherence.mjs",
+    "packages/agentic-workflow/src/promise-coherence/index.mjs",
     "its own sectionsOf is a fence-aware reader (it collects every section, not one); the remaining literals are `## Turn contract` presence probes, never section bounds",
   ],
   [
@@ -56,7 +56,7 @@ export const HEADING_READER_ALLOWLIST = new Map([
     "receipt chunk parser: versioned titled headings (## Pre-execution review receipt v1 — …) that the exact-name shared reader cannot match; machine-generated receipts carry no fenced blocks",
   ],
   [
-    "scripts/journal-corpus.mjs",
+    "packages/agentic-workflow/src/journal-corpus/index.mjs",
     "the journal carrier bounds entries, never a document section: a level-2 heading whose stamp the entry grammar accepts opens one journal entry, and every journal entry carries a different name, so the exact-name section reader cannot serve it. The walk is fence-aware through the runner's own openFence/closesFence (#616)",
   ],
 ]);

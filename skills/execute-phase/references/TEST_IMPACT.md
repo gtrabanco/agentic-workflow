@@ -25,10 +25,10 @@ a tier never narrows what another found.
 
 ## The block
 
-Run the project's hint. This repository ships one —
-`bun scripts/test-impact.mjs --base <rev>` (the node fallback is the same argv) —
-and it prints this block, in this order (the trailing `fallback:` and `lsp:`
-lines appear only when they apply):
+Run the hint: `runner test-impact --base <rev>` (issue #553 decided the seam
+S4 left open — a CLI subcommand, never a project-local script, because the
+scaffold ships no `scripts/` tree). It prints this block, in this order (the
+trailing `fallback:` and `lsp:` lines appear only when they apply):
 
 ```text
 TEST IMPACT — <verdict>

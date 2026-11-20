@@ -18,7 +18,7 @@ The snapshot's shape and its freshness rule are one contract, owned by the sole
 writer that may replace a frozen row:
 [STATE_CONTRACT.md](../resolve-repository-state/references/STATE_CONTRACT.md)
 (`repository-state@1`). Write `covers-through` and a `decided` date per accepted
-decision, because `bun scripts/repository-state.mjs` judges the snapshot by them.
+decision, because `runner repository-state` judges the snapshot by them.
 
 ## Turn contract
 

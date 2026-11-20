@@ -36,7 +36,7 @@ requirement, a step, a gate or an evidence row.
 
 ## Packet
 
-`scripts/relay-packet.mjs check <unit>` validates what follows; the mode is
+`runner relay check <unit>` validates what follows; the mode is
 read-only and names the fault it found. pi-web validates the same three
 documents on dispatch with its own bounds (a non-empty UTF-8 regular file of at
 most 262,144 bytes each), so a packet the checker passes is a packet the tool can
@@ -44,7 +44,7 @@ read.
 
 The checker has one owner — `packages/agentic-workflow/src/relay/Packet.mjs` —
 and two entry points that print the identical block: the workspace's script
-(`bun scripts/relay-packet.mjs …`, present in a project that adopted the
+(`runner relay …`, present in a project that adopted the
 workflow) and the crate (`agentic-workflow relay …`, present wherever
 `@gtrabanco/agentic-workflow` is installed). A project carrying only the crate
 runs the same four modes and needs no `scripts/` at all.
@@ -109,7 +109,7 @@ carrier and gates. Then:
    pointer above; the baton is `State: Draft — awaiting approval`, `Legs: none →
    1`, `Phase: P<n>` for the first unfinished phase; the log carries the
    bootstrap entry.
-2. Validate it: `bun scripts/relay-packet.mjs check <unit>` exits 0 (and
+2. Validate it: `runner relay check <unit>` exits 0 (and
    `budget <unit>` for the handover ceiling).
 3. **Human approval** is required before any dispatch. The baton moves to
    `State: Active` and leg 1 is seeded; drafting a packet is allowed before
@@ -174,7 +174,7 @@ The coherence verdict is evidence, not a receipt: it **emits no receipt**,
 because a receipt binds an open PR's head and the lane gate runs before the PR
 exists. After the PR opens, the lane's close-out is unchanged — `/review-change`
 posts the SHA-bound receipt and `/audit-pr` is the terminal merge gate; a
-`REVIEW-VERDICT: PASS` never satisfies `bun scripts/review-receipt.mjs verify
+`REVIEW-VERDICT: PASS` never satisfies `runner review-receipt verify
 --pr <N>`.
 
 ## Model routing
@@ -183,7 +183,7 @@ The leg's tier comes from the catalog — one source — and the operator's mode
 profile still picks the concrete model:
 
 ```sh
-bun scripts/relay-packet.mjs tiers <unit>   # execute + coherence-review tiers
+runner relay tiers <unit>   # execute + coherence-review tiers
 ```
 
 The tiers are not declared on this page: they are the **catalog's**, read for the
@@ -233,11 +233,11 @@ read-only checker rather than by a dispatcher.
 
 | What | Command | Outcome |
 |---|---|---|
-| packet valid, charter a pointer, baton a position | `bun scripts/relay-packet.mjs check <unit>` | exit 0, `verdict: PASS` |
-| handover within the ceiling | `bun scripts/relay-packet.mjs budget <unit>` | exit 0, `measured` under `ceiling` |
-| leg tiers from the catalog | `bun scripts/relay-packet.mjs tiers <unit>` | exit 0, `execute` + `coherence-review` |
-| obligations closed before handoff | `bun scripts/relay-packet.mjs obligations <unit>` | exit 0, `open: 0` |
-| the lane's context stays inside its budgets | `bun scripts/check-skill-context.mjs` | exit 0 |
+| packet valid, charter a pointer, baton a position | `runner relay check <unit>` | exit 0, `verdict: PASS` |
+| handover within the ceiling | `runner relay budget <unit>` | exit 0, `measured` under `ceiling` |
+| leg tiers from the catalog | `runner relay tiers <unit>` | exit 0, `execute` + `coherence-review` |
+| obligations closed before handoff | `runner relay obligations <unit>` | exit 0, `open: 0` |
+| the lane's context stays inside its budgets | `runner skill-context` | exit 0 |
 
 ## Forbidden
 

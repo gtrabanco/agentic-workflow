@@ -30,7 +30,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
   owning stage.
 ✓ Tool choice re-made this turn — `bun` before `node` on manual invocation,
   `rg` before `grep` on search; availability checked once with
-  `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)
+  `runner setup-env --check` (node and grep stay the documented fallback)
 ✓ Every claim the SPEC or the plan asserts (objective, why, ACs, tasks) cites
   its source — `path:line`, a doc, or an owner answer in the unit folder's
   `sources.md`. A claim with none is a question, never a default.
@@ -303,7 +303,7 @@ When all triaged steps are done, in order:
    the row's own `doc archive` command (dry-run first); report it otherwise,
    never apply it silently (owner: [`docs/workflow/RETENTION.md`](../../docs/workflow/RETENTION.md)).
 4. **Receipt stage.** The in-doc verdict is not the machine receipt. Verify
-   the PR's review receipt (`bun scripts/review-receipt.mjs verify --pr <N>`):
+   the PR's review receipt (`runner review-receipt verify --pr <N>`):
    - **exit 0** (a current `review-change:pass` receipt at the settled head) →
      the closing `→ Next:` recommends `/audit-pr <PR-url>` as the terminal
      stage, with the receipt stated as its precondition.

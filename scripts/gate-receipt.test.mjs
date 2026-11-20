@@ -277,7 +277,7 @@ test("gate-receipt: a missing or invalid receipt is a blocker, not an assumption
   assert.equal(judgement.consumed, false);
   assert.equal(judgement.verdict, "fail");
   assert.ok(judgement.blockers.length > 0);
-  assert.match(judgement.route, /gate-receipt\.mjs run/u);
+  assert.match(judgement.route, /runner gate-receipt run/u);
 
   fs.mkdirSync(path.join(root, path.dirname(GATE_RECEIPT_PATH)), { recursive: true });
   fs.writeFileSync(path.join(root, GATE_RECEIPT_PATH), '{"contract":"nope"}\n');

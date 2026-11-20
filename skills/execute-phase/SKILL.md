@@ -42,13 +42,13 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
   `open-questions@1` block is pasted, then the run stops.
 ✓ Tool choice re-made this turn — `bun` before `node` on manual invocation,
   `rg` before `grep` on search; availability checked once with
-  `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)
+  `runner setup-env --check` (node and grep stay the documented fallback)
 ✓ Triage verified — unit doc Evidence section header matches
   `runner unit-route --triage <slug>` output block (PREFLIGHT.md)
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
 ✓ Step executed and committed (one commit per step, conventional format)
 ✓ Phase read set consumed — the phase read its `Relevant files:` targets
-  (`bun scripts/relevant-files.mjs <unit-doc> --phase P<k>`) instead of
+  (`runner relevant-files <unit-doc> --phase P<k>`) instead of
   surveying the repo, and discovered-file appends landed at phase close
 ✓ Test impact derived — the phase's test set came from the hint's block
   (TEST_IMPACT.md), and a prose-only phase recorded its `empty` verdict
@@ -162,8 +162,8 @@ obligation is the guide's (`AGENTS.md` § Working rules), the mechanism is
 wording.
 
 **Context targeting (issue #269).** The phase's read set is the unit doc's
-nested `Relevant files:` metadata — resolve it with `bun
-scripts/relevant-files.mjs <unit-doc> --phase P<k>` and read those files plus
+nested `Relevant files:` metadata — resolve it with `runner
+relevant-files <unit-doc> --phase P<k>` and read those files plus
 the step's one-hop references before the first edit, instead of surveying the
 repository. A missing or empty list degrades to a scoped survey, recorded in
 the Progress entry — never a silent repo-wide read. The sub-section is metadata
@@ -211,7 +211,7 @@ The row shape is published grammar (`evidence-row@1` in
 observed output or a ✓/✗ verdict is a shape violation rather than a style nit.
 
 **Bounded checkpoint (S13/S14).** The claim-evidence loop is only paid if it is
-cheap: `bun scripts/test-route.mjs --check <changed path>` names the minimal
+cheap: `runner test-route --check <changed path>` names the minimal
 suite a path needs, so an intermediate verification costs seconds instead of the
 full gate. An unmatched path answers `route: full-suite` — never fewer tests —
 and the full gate stays what the merge gate and CI run.
@@ -222,8 +222,8 @@ and the full gate stays what the merge gate and CI run.
    <last-step-commit> --unit <unit>` — paste the block verbatim. **BREACH → STOP**
    (re-triage or record exception). Anti-gaming: **NEVER shrink a diff by deleting
    comments, blank lines, docs or tests.**
-2. **Relevant-files discipline** (issue #269): run `bun
-   scripts/relevant-files.mjs <unit-doc> --base <last-step-commit>` and require
+2. **Relevant-files discipline** (issue #269): run `runner
+   relevant-files <unit-doc> --base <last-step-commit>` and require
    exit 0 — the one failure it reports is a changed file neither listed in any
    phase's `Relevant files:` nor logged in the unit doc (exit 1 names it: add
    the file to a phase's list, or log the discovery on the spot — an unlisted
@@ -284,7 +284,7 @@ References, and settle the index row with `agentic-workflow roadmap
 <index> rowUpsert '<json>'` (`docs/ROADMAP.md`; a fix unit writes its `## Fixes`
 row with `agentic-workflow roadmap <index> fixrow '<json>'` — keyed by the issue
 number in its `[#N](url)` cell, never a hand edit).
-`bun scripts/roadmap-settle.mjs` exits 0 (#316).
+`runner roadmap-settle` exits 0 (#316).
 Terminal:
 
 ```text

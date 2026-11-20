@@ -492,7 +492,7 @@ test("#305 the fold and implement steps state the batch as the change plus its d
     assert.ok(!/scope: only the routed findings/.test(text), `${file} no longer narrows the batch to the findings alone`);
   }
   for (const file of ["skills/execute-phase/references/FOLDING.md", "skills/unit-lane/references/IMPLEMENT.md"]) {
-    assert.match(readFileSync(path.join(ROOT, file), "utf8"), /bun scripts\/promise-coherence\.mjs/, `${file} runs the guard`);
+    assert.match(readFileSync(path.join(ROOT, file), "utf8"), /runner promise-coherence/, `${file} runs the guard`);
   }
 });
 

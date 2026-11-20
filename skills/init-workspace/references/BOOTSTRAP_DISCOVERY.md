@@ -212,7 +212,7 @@
      falls back to markdown **and reports the degradation**. Never scaffold the
      website itself.
      - **A new project** gets the format's output from its first unit: the
-       declared slot is what `bun scripts/docs-generate.mjs` renders.
+       declared slot is what `runner docs-generate` renders.
      - **An existing project** is offered the block **additively and with
        explicit consent**: the offer names the block, the four targets and the
        generator, and a refusal writes nothing and leaves the tree as it was —

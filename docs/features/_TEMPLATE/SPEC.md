@@ -97,7 +97,7 @@ What this unit makes obsolete: every surface, token, pane, helper, contract or
 narrative it **retires**, each with its replacement or its no-consumer evidence
 (`rg -c '<the removed name>' <scope>` → 0; `grep -c` is the fallback when rg is
 absent). A **strictly additive** unit answers with its computed surface
-inventory instead — `bun scripts/residual-classify.mjs --inventory --base <rev>`
+inventory instead — `runner residual-classify --inventory --base <rev>`
 prints one row per added surface (manifest, diff-derived) with the state the
 plan decides for it, and that table is the anti-divergence receipt. A
 retirement is legitimate only in the `orphan` state: `andamio` binds it behind

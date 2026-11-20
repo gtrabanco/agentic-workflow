@@ -37,7 +37,7 @@ Write into the unit doc's **References** section:
       `agentic-workflow roadmap docs/ROADMAP.md fixrow
       '{"issue":"<N>","url":"<issue-url>","topic":"<slug>","status":"done · [#<pr>](<pr-url>)"}'`
       — the `## Fixes` writer keys the row by the issue number in its
-      `[#N](url)` cell (issue #498: a Fixes row is never a hand edit). `bun scripts/roadmap-settle.mjs` exits 0 afterwards (issue
+      `[#N](url)` cell (issue #498: a Fixes row is never a hand edit). `runner roadmap-settle` exits 0 afterwards (issue
       #316: the settle is code, never prose)
 - [ ] `git status --porcelain` is empty
 

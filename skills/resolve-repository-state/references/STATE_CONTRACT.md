@@ -3,7 +3,7 @@
 The owner of the snapshot's shape and of its freshness rule. Both repository-state
 skills cite this file — `discover-repository-state` writes the first snapshot
 through it, `resolve-repository-state` is the only writer that replaces a frozen
-fact or an accepted decision — and `scripts/repository-state.mjs` implements it.
+fact or an accepted decision — and `runner repository-state` implements it.
 
 The snapshot stays a frozen, reviewable representation of observed truth; the
 repository remains the source of truth. What this contract adds is the one thing
@@ -43,7 +43,7 @@ re-freeze | a unit that reverses or supersedes an accepted decision | the record
 
 ## How it is read
 
-`bun scripts/repository-state.mjs [<snapshot>] [--ttl-days <n>] [--json]` prints
+`runner repository-state [<snapshot>] [--ttl-days <n>] [--json]` prints
 one deterministic block and exits `0` when the verdict is `fresh`, `1` when it is
 `stale` or the document is refused, and `2` on a usage error.
 

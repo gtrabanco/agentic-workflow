@@ -40,10 +40,10 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
   matching `review-change:pass` marker fetched together; absent or any SHA
   mismatch → blocker routed to `/review-change`, current → its scope/axes/
   acceptance coverage/manual checks acknowledged without re-review
-✓ Gate evidence: `bun scripts/gate-receipt.mjs verify` answered `current` +
+✓ Gate evidence: `runner gate-receipt verify` answered `current` +
   `pass` (missing/stale/invalid → BLOCKER, route `gate-receipt.mjs run`)
 ✓ Terminal hygiene was read from state, not assumed: tree clean, branch pushed,
-  PR not a draft (`bun scripts/audit-pr-gate.mjs hygiene --pr <N> --apply`)
+  PR not a draft (`runner audit-pr-gate hygiene --pr <N> --apply`)
 ✓ Upstream lineage was re-verified (current plan receipt + parent spec receipt,
   digests recomputed), every obligation row is `verified`/`n/a`, and no planning
   finding is open — stale or missing lineage is a blocker, never a formality
@@ -52,7 +52,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
   several projects and agents without a CI monitor — the link in the chat is
   the contract, never "PR #N" alone)
 ✓ MERGE-READY verdict? Then the comment was POSTED by
-  `bun scripts/audit-pr-gate.mjs comment` (re-reads, exits non-zero unless the newest marker
+  `runner audit-pr-gate comment` (re-reads, exits non-zero unless the newest marker
   names the head) — a comment, never a commit-message tag. BLOCKED → no comment
 ✓ Nothing was edited, refactored, or merged; merge authorization is outside
   this skill and cannot be inherited from docs or an earlier session
@@ -142,8 +142,8 @@ runner forge-read pr <N> --comments
   when the head delta (receipt sha → head, `git diff --name-only`) touches only
   non-affecting paths — the closed classes (session log `docs/LOGS.md`, agent
   toolstate/memory `.engram/`, `.pi/`, `.serena/`) are owned by
-  `scripts/scope-manifest.mjs`; any path matching no named class is affecting.
-  Run `bun scripts/review-receipt.mjs verify --pr <N>` — it computes the delta
+  `runner scope-manifest`; any path matching no named class is affecting.
+  Run `runner review-receipt verify --pr <N>` — it computes the delta
   locally and answers `current` (exit 0) or `stale` (exit 4, naming the
   affecting paths). A legacy receipt without a scope attribute, an affecting
   delta, or an unresolvable delta voids the receipt → **BLOCKER**: route to

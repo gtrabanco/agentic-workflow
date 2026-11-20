@@ -120,7 +120,7 @@ be worked on from any agent:
 - The version-parity gate (`scripts/version-parity-gate.mjs`) is the CI half:
   a skills change must ship with a `.changeset/` intent file (or a package
   bump + companion row).
-- Context budgets are not this skill's: `scripts/check-skill-context.mjs` owns
+- Context budgets are not this skill's: `runner skill-context` owns
   them, and `references/CHECKS.md` records that as a deliberate skip.
 - Renames and other breaking surfaces feed `docs/workflow/MIGRATION.md`,
   which `init-workspace` reads when installing.

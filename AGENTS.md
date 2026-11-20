@@ -313,13 +313,13 @@ the merge-base for a single new branch — as `--push-base`, and a `test-impact`
 path changed — prose and assets only) skips the test-bearing steps; a `targeted`
 verdict, a refusal or an absent script runs the full gate, never a silent skip. A push that sends no ref update — an up-to-date branch, a dry run — or only deletions publishes nothing, so the hook exits 0 before any range step instead of inventing a merge-base range; several publishable refs, or a ref git cannot prove a base for, leaves the base unproven and the range-bound steps stay dropped. A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook` (which asks git where the hooks live, so it works from a worktree, where `.git` is a file); the installed hook passes `--jobs auto` (load-sized, overridable with `AGENTIC_WORKFLOW_GATE_JOBS`), so a push never claims the whole box while other sessions work.
 The shared-document classes (issue #498, plus #630's telemetry class) arm the
-same way: `.gitattributes` names each class's paths, `bun scripts/shared-doc-merge.mjs
+same way: `.gitattributes` names each class's paths, `runner shared-merge
 --install` writes the driver config a clone never inherits, and arming is optional —
 an unarmed clone degrades to git's textual merge. The write-path contract is
 [`writer-driver-contract@1`](packages/agentic-workflow/README.md); the generated
 projection carries no per-regeneration line, so two regenerations merge as plain
 text, and the residual case (two branches inserting a row in one sorted table)
-is `docs/generated/**`'s driver, armed by `bun scripts/docs-generated-merge.mjs
+is `docs/generated/**`'s driver, armed by `runner docs-generated-merge
 --install`. Either way the gate's `docs-generated-projection` step runs
 `docs-generate --check` on every push — offline and not test-gated, because a
 prose-only push is exactly the push that stales the projection.

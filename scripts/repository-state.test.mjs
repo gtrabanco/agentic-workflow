@@ -26,6 +26,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { test } from "node:test";
@@ -89,6 +90,19 @@ const FRESH = FOSSIL.replace("Covers through | 2026-08-30", "Covers through | 20
   .replace("| AD-011 | Documentation is English-only permanently; bilingualism moved to the web layer. | 2026-11-19", "| AD-011 | Documentation is English-only permanently; bilingualism moved to the web layer. | 2026-11-20");
 
 const run = (args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8", env: { ...process.env, TZ: "UTC" } });
+
+test("the caller's root wins over the working directory (issue #553)", () => {
+  // The repository caller forwards this checkout's root; the snapshot path is
+  // resolved against that root, so a run from anywhere else still finds it.
+  const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), "repository-state-"));
+  try {
+    const result = spawnSync(process.execPath, [SCRIPT], { cwd: elsewhere, encoding: "utf8", env: { ...process.env, TZ: "UTC" } });
+    assert.notEqual(result.status, 2, `it never answers a usage refusal because the snapshot looks absent:\n${result.stderr}`);
+    assert.doesNotMatch(result.stderr, /ENOENT|no such file/u, "the checkout's snapshot is the one it reads");
+  } finally {
+    fs.rmSync(elsewhere, { recursive: true, force: true });
+  }
+});
 
 // ── the frozen-failure corpus ───────────────────────────────────────────────
 

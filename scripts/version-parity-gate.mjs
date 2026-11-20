@@ -66,6 +66,13 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+
+import { packageDirs, parseSemver, semverGt } from "../packages/agentic-workflow/src/dependency/versions.mjs";
+
+// This gate and the shipped dependency advisory pass read ONE rule (issue #553):
+// the comparison lives in the crate and is re-exported here for the suites and
+// callers that already import it from this module.
+export { packageDirs, parseSemver, semverGt };
 import { parseChangeset } from "./lint-changeset.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -94,15 +101,6 @@ export const TRIGGER_PREFIXES = Object.freeze(contentTriggerPrefixes(PACKAGE_DIR
  * per directory under `packages/` carrying a `package.json`. A new package
  * inherits the gate by existing — no list to extend, no trigger set to amend.
  */
-export function packageDirs(root = REPO_ROOT) {
-  const dir = path.join(root, "packages");
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && fs.existsSync(path.join(dir, e.name, "package.json")))
-    .map((e) => `packages/${e.name}`)
-    .sort();
-}
 
 // ---------------------------------------------------------------------------
 // semver comparison (dependency-free; prerelease sorts below its release)
@@ -111,49 +109,7 @@ export function packageDirs(root = REPO_ROOT) {
 const SEMVER_RE =
   /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/;
 
-function parseSemver(version) {
-  const m = SEMVER_RE.exec(String(version ?? "").trim());
-  if (!m) return null;
-  return {
-    major: Number(m[1]),
-    minor: Number(m[2]),
-    patch: Number(m[3]),
-    prerelease: m[4] ?? null,
-  };
-}
 
-/** True when `a` is strictly newer than `b`. Non-parsable input sorts lowest. */
-export function semverGt(a, b) {
-  const pa = parseSemver(a);
-  const pb = parseSemver(b);
-  if (!pa || !pb) return false;
-  for (const key of ["major", "minor", "patch"]) {
-    if (pa[key] !== pb[key]) return pa[key] > pb[key];
-  }
-  // Same numeric triple: a release outranks any prerelease; two prereleases
-  // compare dot-separated identifier-wise (numeric identifiers numerically).
-  if (pa.prerelease === pb.prerelease) return false;
-  if (pa.prerelease === null) return true;
-  if (pb.prerelease === null) return false;
-  const left = pa.prerelease.split(".");
-  const right = pb.prerelease.split(".");
-  for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
-    const l = left[i];
-    const r = right[i];
-    if (l === undefined) return false; // shorter prefix sorts lower
-    if (r === undefined) return true;
-    const ln = /^\d+$/.test(l);
-    const rn = /^\d+$/.test(r);
-    if (ln && rn) {
-      if (Number(l) !== Number(r)) return Number(l) > Number(r);
-    } else if (ln !== rn) {
-      return rn; // numeric identifiers sort lower than alphanumeric
-    } else if (l !== r) {
-      return l > r;
-    }
-  }
-  return false;
-}
 
 /** Exact pin = a bare semver version, no range operator, tag, path or shorthand. */
 export function isExactSemver(spec) {

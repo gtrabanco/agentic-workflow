@@ -256,7 +256,7 @@ one offer per class, resolved as written, declined, or left as a residual.
   is that package's own documentation and this skill never restates it.
 - **The docs-site format is a declared choice.** The `Docs site` block's
   `format` slot (`markdown`/`md`, `mdx`/`starlight`/`docusaurus`, `html`,
-  `latex`/`tex`) decides what `bun scripts/docs-generate.mjs` renders, so a new
+  `latex`/`tex`) decides what `runner docs-generate` renders, so a new
   project is asked for it and an existing one is offered it additively, with
   consent, in upgrade mode. Declining writes nothing; no format means markdown
   with the degradation reported, never a silent default.

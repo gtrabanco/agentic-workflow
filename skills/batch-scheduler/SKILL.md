@@ -18,7 +18,7 @@ description: >
 One pass that answers the parallel question the single-next sensor cannot:
 **which open issues can run together right now, in which lane, in which
 order** — emitted as the fixed `batch-plan@4` machine envelope. The **script is
-the deterministic producer**: `scripts/batch-scheduler.mjs` reads the live work
+the deterministic producer**: `runner batch-scheduler` reads the live work
 graph and prints the document. This skill runs the script, reads the JSON, and
 interprets it against [the plan grammar](references/PLAN.md) — it never
 assembles the envelope by hand.
@@ -28,7 +28,7 @@ assembles the envelope by hand.
 Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) before ending every turn; the **read-only profile** substitutes boxes 1–5 (the one sanctioned side effect is the planner's own untracked state file, declared here). Skill-specific additions:
 
 ```
-✓ The script was RUN — `bun scripts/batch-scheduler.mjs [--json-only] [--root
+✓ The script was RUN — `runner batch-scheduler [--json-only] [--root
   <dir>] [--issues-file <json>] [--no-state] [--remote <url>]` (node is the
   fallback when bun is absent); the envelope is the script's stdout, never
   assembled by the model

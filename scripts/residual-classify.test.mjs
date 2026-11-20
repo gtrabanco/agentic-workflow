@@ -477,7 +477,7 @@ test("T1 — all four templates teach the additive inventory and the orphan-only
     assert.notEqual(start, -1, `${rel} carries ## Retirements`);
     const body = text.slice(start, text.indexOf("\n## ", start + 1));
     assert.match(body, /strictly additive/, `${rel} names the strictly-additive unit`);
-    assert.match(body, /scripts\/residual-classify\.mjs --inventory/, `${rel} names the inventory command`);
+    assert.match(body, /runner residual-classify --inventory/, `${rel} names the inventory command`);
     assert.match(body, /orphan/, `${rel} names the only retire-legitimate state`);
     assert.match(body, /why nothing can be removed/, `${rel} keeps the empty-answer reason`);
     assert.doesNotMatch(body, /^## REMOVED/m, `${rel} adds no standing REMOVED section`);

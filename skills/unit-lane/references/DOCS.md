@@ -37,9 +37,9 @@ The declared format is a **projection**, never an authored surface (feature 65:
 Markdown is the single source of truth). Render it, never hand-write it:
 
 ```text
-bun scripts/docs-generate.mjs            # write the projection
-bun scripts/docs-generate.mjs --check    # the drift receipt: exit 0, or the drift
-bun scripts/docs-generate.mjs --dry-run  # the plan, writes nothing
+runner docs-generate            # write the projection
+runner docs-generate --check    # the drift receipt: exit 0, or the drift
+runner docs-generate --dry-run  # the plan, writes nothing
 ```
 
 The run is deterministic: two consecutive runs are byte-identical, so
@@ -70,7 +70,7 @@ Update the unit doc's **`## Log`** and any project docs:
   shipped state — the root `README.md` for workflow-facing changes, the touched
   `packages/<pkg>/README.md` for a package's own surface — and the prose it
   superseded is deleted rather than left beside the new text
-- The generated projection regenerated (`bun scripts/docs-generate.mjs`), and
+- The generated projection regenerated (`runner docs-generate`), and
   `--check` exiting 0 recorded in the `## Log`
 - Each doc change committed with a conventional commit message (format owner:
   `AGENTS.md` § Working rules — this line cites it)
@@ -89,7 +89,7 @@ Update the unit doc's **`## Log`** and any project docs:
       is named in the `## Log` entry
 - [ ] A user-facing flow this unit added, changed or removed is reflected in
       `docs/workflow/FEATURE_MAP.md` — or the unit states that it touched none
-- [ ] The generated projection is fresh: `bun scripts/docs-generate.mjs --check`
+- [ ] The generated projection is fresh: `runner docs-generate --check`
       exits 0, and no generated file was hand-edited
 - [ ] Changelog/templates follow the project's declared conventions
 - [ ] Documentation map references resolve (no broken links)

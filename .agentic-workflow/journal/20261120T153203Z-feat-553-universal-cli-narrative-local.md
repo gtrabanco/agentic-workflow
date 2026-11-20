@@ -1,0 +1,6 @@
+## 2026-11-20T15:32:03Z — feat/553-universal-cli — Applied issue #553 (universal CLI coverage)
+- **Commits:** 15 (`26d17a68…e2dc18f5`)
+- **Files:** 176 files
+- **Summary:** Hard-applied #553 locally on feat/553-universal-cli: 31 deterministic commands migrated from scripts/*.mjs into @gtrabanco/agentic-workflow subcommands, every shipped skill citation re-pointed to the symbolic runner <form>, docs/workflow/CLI.md published as the procedure, check-skill-context given its missing local-gate carrier, and pi's /log-session writer resolution moved onto the CLI. Root suite 136 PASS, crate 1361 pass, pi 1024 both legs, local-gate PASS 20 steps.
+- **Decisions:** D1 migrate = logic to src/<cmd>/ + zero-logic shim behind // cli-command:; D2 citations use the symbolic runner form (RUNNER.md owns the launcher and pin); D7 the three product-audit fixtures stay repo-authoring and their citations were reworded (the --fixture fold was attempted and reverted); D12/D16 the repository's own gates pin script bytes, so eleven suites were re-pointed where the code moved; D15 the citation scanner reads prose only (a fenced value block is a published carrier).
+- **Next:** Owner external verification of the branch; then review-change on the delivered head, the PR, and the merge-time roadmap settle.

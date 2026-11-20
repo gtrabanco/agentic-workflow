@@ -90,7 +90,7 @@ verdict:
 
 1. **Upstream lineage is current** — run the machine check and read its fixed
    verdict; the gate never re-implements the check by hand:
-   `bun scripts/unit-lineage.mjs --unit <unit>` prints exactly one of
+   `runner unit-lineage --unit <unit>` prints exactly one of
    `LINEAGE OK — legacy …` / `LINEAGE OK — lane-era …` (pass) or
    `LINEAGE BLOCKED — <reason>` followed by a `→ Next:` route (**BLOCKED** —
    that route). The check keys the lane-era/legacy split on evidence, not on an

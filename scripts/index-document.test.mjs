@@ -244,7 +244,7 @@ test("O8: every live reader and writer goes through the published constant", () 
     "packages/agentic-workflow/src/runner/sensors/workflow-status.mjs",
     "scripts/unit-cycle.mjs",
     "packages/agentic-workflow/src/runner/unit-doc-phases.mjs",
-    "scripts/roadmap-settle.mjs",
+    "packages/agentic-workflow/src/roadmap-settle/index.mjs",
     "packages/agentic-workflow/src/runner/ceremony/unit.mjs",
     "packages/agentic-workflow/bin/agentic-workflow.mjs",
     "packages/agentic-workflow/src/edit/Roadmap.mjs",

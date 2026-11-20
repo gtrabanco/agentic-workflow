@@ -47,7 +47,7 @@ its work landed in the unit doc before continuing:
       callers of what changed, consumers of what it delivers, and every mention
       that stops being true; a surviving mention is part of the same phase, not
       a finding for the next review
-- [ ] `bun scripts/promise-coherence.mjs` RUN at the lane's resume → `verdict
+- [ ] `runner promise-coherence` RUN at the lane's resume → `verdict
       PASS` (the unit doc's declared validators reproduce at the head)
 
 ## Allowed

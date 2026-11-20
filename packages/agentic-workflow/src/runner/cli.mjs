@@ -24,6 +24,39 @@ import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runForgeRead } from "../forge-read/index.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 import { run as runSkills } from "./skills.mjs";
+import { main as runSetupEnv } from "../setup-env/index.mjs";
+import { main as runTestRoute } from "../test-route/index.mjs";
+import { main as runProseGateInventory } from "../prose-gate-inventory/index.mjs";
+import { main as runRetentionDebt } from "../retention-debt/index.mjs";
+import { main as runTestObligationTags } from "../test-obligation-tags/index.mjs";
+import { main as runDecisionPromotion } from "../decision-promotion/index.mjs";
+import { main as runDimensionRegression } from "../dimension-regression/index.mjs";
+import { main as runJournalCorpus } from "../journal-corpus/index.mjs";
+import { main as runCoverageGap } from "../coverage-gap/index.mjs";
+import { main as runRepositoryState } from "../repository-state/index.mjs";
+import { main as runResidualClassify } from "../residual-classify/index.mjs";
+import { main as runRestatementSweep } from "../restatement-sweep/index.mjs";
+import { main as runBatchScheduler } from "../batch-scheduler/index.mjs";
+import { runCli as runPromiseCoherence } from "../promise-coherence/index.mjs";
+import { main as runSkillContext } from "../skill-context/index.mjs";
+import { main as runDependencyAdvisoryPass } from "../dependency-advisory-pass/index.mjs";
+import { main as runUnitLineage } from "../unit-lineage/index.mjs";
+import { main as runAuditPrGate } from "../audit-pr-gate/index.mjs";
+import { main as runAdversarialVerdict } from "../adversarial-verdict/index.mjs";
+import { main as runGateReceipt } from "../gate-receipt/index.mjs";
+import { main as runReviewReceipt } from "../review-receipt/index.mjs";
+import { main as runScopeManifest } from "../scope-manifest/index.mjs";
+import { main as runReviewState } from "../review-state/index.mjs";
+import { main as runDifferentialBaseline } from "../differential-baseline/index.mjs";
+import { main as runCorrectionBudget } from "../correction-budget/index.mjs";
+import { main as runFindingsCorpus } from "../findings-corpus/index.mjs";
+import { main as runSessionClose } from "../session-close/index.mjs";
+import { main as runTestImpact } from "../test-impact/index.mjs";
+import { main as runSharedMerge } from "../shared-merge/index.mjs";
+import { main as runDocsGeneratedMerge } from "../docs-generated-merge/index.mjs";
+import { main as runDocsGenerate } from "../docs-generate/index.mjs";
+import { main as runRoadmapSettle } from "../roadmap-settle/index.mjs";
+import { main as runRelevantFiles } from "../relevant-files/index.mjs";
 
 /**
  * @typedef {(args: string[]) => void | number} RunnerCommand
@@ -42,6 +75,39 @@ export const RUNNER_COMMANDS = Object.freeze({
   "forge-read": runForgeRead,
   ceremony: runCeremony,
   skills: runSkills,
+  "setup-env": runSetupEnv,
+  "test-route": runTestRoute,
+  "prose-gate-inventory": runProseGateInventory,
+  "retention-debt": runRetentionDebt,
+  "test-obligation-tags": runTestObligationTags,
+  "decision-promotion": runDecisionPromotion,
+  "dimension-regression": runDimensionRegression,
+  "journal-corpus": runJournalCorpus,
+  "coverage-gap": runCoverageGap,
+  "repository-state": runRepositoryState,
+  "residual-classify": runResidualClassify,
+  "restatement-sweep": runRestatementSweep,
+  "batch-scheduler": runBatchScheduler,
+  "promise-coherence": runPromiseCoherence,
+  "skill-context": runSkillContext,
+  "dependency-advisory-pass": runDependencyAdvisoryPass,
+  "unit-lineage": runUnitLineage,
+  "audit-pr-gate": runAuditPrGate,
+  "adversarial-verdict": runAdversarialVerdict,
+  "gate-receipt": runGateReceipt,
+  "review-receipt": runReviewReceipt,
+  "scope-manifest": runScopeManifest,
+  "review-state": runReviewState,
+  "differential-baseline": runDifferentialBaseline,
+  "correction-budget": runCorrectionBudget,
+  "findings-corpus": runFindingsCorpus,
+  "session-close": runSessionClose,
+  "test-impact": runTestImpact,
+  "shared-merge": runSharedMerge,
+  "docs-generated-merge": runDocsGeneratedMerge,
+  "docs-generate": runDocsGenerate,
+  "roadmap-settle": runRoadmapSettle,
+  "relevant-files": runRelevantFiles,
 });
 
 /**

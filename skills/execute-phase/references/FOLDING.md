@@ -36,7 +36,7 @@ findings end up "solved" locally but absent from the merged PR:
   bound tripped. Name the literal stale form, never a program. A fold that
   changes a token/claim-shaped surface and emits no declaration is a `workflow`
   finding at review.
-✓ `bun scripts/promise-coherence.mjs` RUN → `verdict PASS` (the repaired claims
+✓ `runner promise-coherence` RUN → `verdict PASS` (the repaired claims
   reproduce at the head; every declared sweep re-runs to its expected count and
   an over-bound pattern is refused by name; a skipped line is read, never
   assumed, and a document whose tally says nothing was machine-checked is not a
@@ -98,7 +98,7 @@ lines) and closes the unit's tracked issues via `Closes #N`.
 
 ## The sweep declaration grammar
 
-The one statement of the fields the checklist box names. `scripts/promise-coherence.mjs`
+The one statement of the fields the checklist box names. `runner promise-coherence`
 parses the line and re-runs it; `AGENTS.md`'s `normative-surfaces@1` inventory
 declares this block as the grammar's owner, and the schema package's
 `SWEEP_CLAIM_KINDS` const cites it as its home.

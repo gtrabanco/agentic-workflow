@@ -68,8 +68,21 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
   assert.equal(isRunnerCommand("invented-command"), false, "a name outside the table is not a runner command");
   assert.deepEqual(
     Object.keys(RUNNER_COMMANDS),
-    ["unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input", "substrate", "ledger-provenance", "quality-metrics", "forge-read", "ceremony", "skills"],
-    "the shell-visible half of the runner is exactly these commands: the router, the six sensors, the substrate census, the quality sensor, the guarded forge read (issue #612), the ceremony registry, and the skill-discovery route (issue #591)",
+    [
+      "unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input",
+      "substrate", "ledger-provenance", "quality-metrics", "forge-read", "ceremony", "skills",
+      // The #553 migration: every deterministic command a shipped skill used to
+      // reach through `scripts/` is a subcommand, so the table is the whole
+      // surface the executable prose can name.
+      "setup-env", "test-route", "prose-gate-inventory", "retention-debt", "test-obligation-tags",
+      "decision-promotion", "dimension-regression", "journal-corpus", "coverage-gap", "repository-state",
+      "residual-classify", "restatement-sweep", "batch-scheduler", "promise-coherence", "skill-context",
+      "dependency-advisory-pass", "unit-lineage", "audit-pr-gate", "adversarial-verdict", "gate-receipt",
+      "review-receipt", "scope-manifest", "review-state", "differential-baseline", "correction-budget",
+      "findings-corpus", "session-close", "test-impact", "shared-merge", "docs-generated-merge",
+      "docs-generate", "roadmap-settle", "relevant-files",
+    ],
+    "the shell-visible half of the runner is exactly these commands: the router, the six sensors, the substrate census, the quality sensor, the guarded forge read (issue #612), the ceremony registry, the skill-discovery route (issue #591), and the commands the #553 coverage sweep moved out of `scripts/`",
   );
   for (const [name, handler] of Object.entries(RUNNER_COMMANDS)) {
     assert.equal(typeof handler, "function", `${name} is a function`);

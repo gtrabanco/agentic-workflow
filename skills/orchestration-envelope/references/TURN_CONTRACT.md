@@ -17,11 +17,10 @@
 ```
 
 **A box that runs a command discloses what the command needs.** When a box
-invokes a script with a placeholder (`bun scripts/x.mjs <unit-dir>`; node fallback
-if bun is not installed), the same
+invokes a command with a placeholder (`runner <command> <unit-dir>`), the same
 skill's text must name the artifact that placeholder requires — the script
 declares it (`PREREQUISITES` in `agentic-workflow needs-input`) and
-`scripts/promise-coherence.mjs` checks the disclosure. A box that instructs a
+`runner promise-coherence` checks the disclosure. A box that instructs a
 run the skill never equips reproduces the failure it was written to prevent
 (fix #258 F45/F53: `missing-unit-doc`).
 
