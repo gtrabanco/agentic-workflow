@@ -94,7 +94,11 @@ export function readDeclaration(text) {
       errors.push(`malformed declaration row: ${trimmed}`);
       continue;
     }
-    rows.push({ path: cells[0], disposition: cells[1] });
+    // The disposition cell may carry a trailing note after a middle dot — the
+    // retired-carrier marker the scaffold gate requires on a line naming
+    // `TASKS.md`, `progress.md` or `ACCEPTANCE.md` (`scaffold-parity`, #355).
+    const [disposition, ...note] = cells[1].split("·").map((part) => part.trim());
+    rows.push({ path: cells[0], disposition, note: note.join(" · ") });
   }
   return { rows, errors };
 }

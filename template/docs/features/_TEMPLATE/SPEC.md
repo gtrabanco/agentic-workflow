@@ -22,10 +22,10 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 ```text
 retention-declaration@1
 path | disposition
-TASKS.md | trimmable
+TASKS.md | trimmable · legacy carrier
 PLAN.md | trimmable
-progress.md | trimmable
-ACCEPTANCE.md | trimmable
+progress.md | trimmable · legacy carrier
+ACCEPTANCE.md | trimmable · legacy carrier
 testing.md | trimmable
 CHECKLIST.md | trimmable
 BRIEF.md | trimmable
