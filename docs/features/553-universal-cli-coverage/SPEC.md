@@ -299,7 +299,8 @@ M/L unit: the ledger is the unit folder's `planning-obligations.md`.
   - **R1** — the commands disagree on how a project is named (`--repo`, a positional `<dir>`, or `--root`). Pre-existing; a normalizing unit of its own, and the docs now state each command's truth instead of a uniform lie.
   - **R2** — the doctor's `merge-drivers` installer only offers a project-local `scripts/*-merge.mjs`; a target mounts the crate's `bin/shared-merge.mjs` with no proposed action. Route: #630's owner surface.
   - **R3** — `docs/workflow/REPOSITORY_STATE.md` AD-008 cites `scripts/correction-budget.mjs`. It is a **frozen facts** document: only `resolve-repository-state` may replace it, so a prose repair here would be the domain violation it forbids.
-- **G2** — 2026-11-20, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 20 step(s) in 527s`, run at the fixes head `bd1c8d6a0`; the commit after it is this record only.
+- **G2** — 2026-11-20, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 20 step(s) in 527s`, run at the first correction batch's head `bd1c8d6a0`.
+- **G3** — 2026-11-20, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 20 step(s) in 524s`, run at the second sweep's head `2480f15b5` (F13); the commit after it is this record only.
 
 ## Next
 
