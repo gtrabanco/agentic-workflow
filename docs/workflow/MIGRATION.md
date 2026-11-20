@@ -79,6 +79,8 @@ now through the CLI.
 | `bun scripts/unit-lineage.mjs` | `runner unit-lineage` |
 | `bun scripts/dependency-advisory-pass.mjs` | `runner dependency-advisory-pass` |
 | `bun scripts/skill-context.mjs` | `runner skill-context` |
+| `bun scripts/promise-coherence.mjs` | `runner promise-coherence` |
+| `bun scripts/batch-scheduler.mjs` | `runner batch-scheduler` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

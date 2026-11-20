@@ -21,7 +21,7 @@ strengthen coverage but cannot move it; review checks the same bytes.
 ## Executable claims
 
 An acceptance criterion or Evidence row that states a count, an exit code or a
-length is a promise, not a description: `scripts/promise-coherence.mjs` re-runs
+length is a promise, not a description: `runner promise-coherence` re-runs
 it. Write the outcome a command must produce (`` `cmd` matches <N> ``,
 `` `cmd` exits <N> ``) or, for a shape promise, name the file and the
 `## Section` the count is about (`` … a 3–5 line `## Inputs` in

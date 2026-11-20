@@ -300,8 +300,7 @@ inventory-declared siblings, never a repo-wide sweep. The pattern body carries
 the bounds the gate refuses outside — at most 200 characters, and never a
 quantified group whose own body is quantified — because the gate runs that body
 once per line of the whole `<glob>` corpus, so an over-bound declaration is
-refused by name instead of compiled (`bun
-scripts/promise-coherence.mjs`, node fallback if bun is not installed) re-runs
+refused by name instead of compiled (`runner promise-coherence`, node fallback if bun is not installed) re-runs
 every declared grep and fails closed with `sweep-mismatch`, naming
 `file:line`, the regex and the observed count. A fold that changes such a
 surface and emits no declaration is a `workflow` finding at review.

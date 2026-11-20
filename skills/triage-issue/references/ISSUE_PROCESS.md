@@ -174,7 +174,7 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    **Declare the surfaces (issue #574).** The batch scheduler routes parallel
    work on the issue body's `## Surfaces`, and a missing one is planned as a
    guess:
-   - `bun scripts/batch-scheduler.mjs --infer-surfaces <n>` prints the block to
+   - `runner batch-scheduler --infer-surfaces <n>` prints the block to
      paste (fences inert, `## Where`/`## In scope` honored) or
      `- surface-unknown`. `--issues-file <cache>` works offline. Never hand-write
      the lane keys: the six the project resolves are the script's vocabulary.

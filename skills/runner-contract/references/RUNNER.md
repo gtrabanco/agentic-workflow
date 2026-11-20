@@ -153,6 +153,8 @@ shell fallback.
 | `unit-lineage --unit <slug> [--root <dir>] [--json]` | the lane-era lineage gate — the triage re-derived from the facts, `BLOCKED` when the reason no longer follows (issue #305) |
 | `dependency-advisory-pass [--root <dir>] [--json]` | the dependency advisory scan — pins drifted from the registry, with a declared degradation when the registry cannot be read (feature 67) |
 | `skill-context [<skill>…] [--routes] [--documents] [--manifest-only] [--json]` | the context-budget sweep — every skill and reference measured against its declared ceiling (issue #471) |
+| `promise-coherence [<path>…] [--json]` | the promise-coherence pass — a "measured at the head" claim re-measured, never assumed (issue #305) |
+| `batch-scheduler [--root <dir>] [--issues-file <json>] [--json-only]` | the batch planner — the parallel-execution batches as the `batch-plan@4` envelope (feature 88) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 
