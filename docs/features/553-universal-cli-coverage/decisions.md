@@ -1,0 +1,19 @@
+# 553 — decisions
+
+Recorded at cut. Each row states its **scope** (`unit-only` keeps it here,
+`cross-unit` names the permanent owner doc it was promoted to) per
+`skills/unit-lane/references/DESIGN.md` §`decision-scope@1`.
+
+| id | date | scope | decision | authority / rationale |
+|---|---|---|---|---|
+| D1 | 2026-11-20 | unit-only | **Migrate = move the logic into `src/<cmd>/`, register one router case, and leave `scripts/<x>.mjs` as a zero-logic shim.** The shim exists because this repository's own gate and suites are its callers (`local-gate` steps, `run-root-suite`), not for an older consumer — the crate, not the script, is the shipped surface. | PE-003 (the crate ships only `bin`/`src`), PE-004 (the `relay-packet` precedent), IR6 (no compatibility surface for a superseded *published* artifact; a repo-side caller is not one) |
+| D2 | 2026-11-20 | cross-unit → `skills/runner-contract/references/RUNNER.md` | **The citation form is the symbolic `runner <subcommand>`, not a literal `bunx @gtrabanco/agentic-workflow@<pin> <sub>`.** S2 says "the pinned invocation"; RUNNER.md (issue #555, later than the issue text) owns what that is, and it forbids a skill to spell a launcher or restate the pin. This unit cites the owner instead of restating it. | PE-002 (`runner-pin@1`, §What a skill cites) |
+| D3 | 2026-11-20 | unit-only | **The workspace root enters the crate as an input** (`process.cwd()`, an explicit `--root`, or the caller's value); a migrated module may not derive it from `import.meta.url`, which inside the package names the package directory. The shim passes the path it always computed, so the repository's suites see the identical behaviour. | PE-005 |
+| D4 | 2026-11-20 | unit-only | **A citation edit is never paid for by compressing prose.** If a skill crosses its ceiling, the ceiling is re-based through `budgets` with a declared growth source; deleting spaces, blank lines or comments to fit is the defect. | PE-008, `AGENTS.md` §Working rules |
+| D5 | 2026-11-20 | unit-only | **`check-skill-context` ships as `runner skill-context` and arrives with a `local-gate` step** (S8). The gate stays repo-side; what migrates is the command the step calls. | PE-007, the owner's #553 comment (L3) |
+| D6 | 2026-11-20 | unit-only | **pi resolves its writer through the crate's `session-close` command**, keeping the repository-script route as the authoring checkout's fallback and keeping an explicit `writer: "absent"`+reason for a project that has neither. The answer is never silent. | PE-010 |
+| D7 | 2026-11-20 | unit-only | **Each product-audit fixture folds into its check as `--fixture <dir>`.** The fixture is the dimension's own evidence harness, so it belongs behind a flag of the command the skill already names — one command, one home, nothing for a target to keep in a `scripts/` tree. | PE-011 |
+| D8 | 2026-11-20 | unit-only | **S4 is decided: `test-impact` is a CLI subcommand** whose route map is the project's (`scripts/test-route-map.json` in this repository, `--map` elsewhere). The "the project's hint… this repository ships one" prose is retired. | PE-012 |
+| D9 | 2026-11-20 | unit-only | **`metadata.internal: true` is the only exemption the citation rule grants**, and it has one member at cut (`skill-lint`). A new exemption is a frontmatter change with a reason, never a path the scanner special-cases. | PE-013 |
+| D10 | 2026-11-20 | unit-only | **This unit doc is verified with `--no-git` until its last phase**, because the ordinary check cross-checks cited paths and refuses `docs/workflow/CLI.md` before P2 writes it — a real check doing its job, not a violation to work around by weakening the citation. | PE-014 |
+| D11 | 2026-11-20 | unit-only | **The roadmap row and `docs/generated/**` are written by the emitter**, and the unit folder is named after the row's link (`553-universal-cli-coverage`), not after the draft folder the earlier triage session created. | PE-017, PE-018 |
