@@ -40,7 +40,7 @@ to 16,046 estimated tokens while preserving their contracts behind explicit
 routes. Validate the catalog with:
 
 ```sh
-bun scripts/check-skill-context.mjs   # node scripts/check-skill-context.mjs — fallback when bun is absent
+runner skill-context   # the context-budget sweep (launcher and fallback forms: the runner contract)
 ```
 
 Prompt caching may reduce repeated latency or billed input on a supporting

@@ -113,9 +113,12 @@ without a check that can fail is a defect here, not a finding later.
   constant as the only resolution path.
 - **What must be asked before touching.** The scripts are this repository's own
   gate carriers (`local-gate` steps, `run-root-suite` entries): a migration may
-  not change their behaviour, so the shim keeps argv, exit code and bytes
-  identical and every sibling suite runs unmodified — a suite that has to change
-  to keep passing is a behaviour change and is a different unit.
+  not change their behaviour, so the shim keeps argv and exit codes identical,
+  both doors print byte-identical output for the same argv (the usage line names
+  the entry — `usage: agentic-workflow <sub>` — in both, D12's recorded re-points
+  covering every spelling the move touches), and every sibling suite keeps its
+  assertions: an assertion that has to weaken or disappear to keep passing is a
+  behaviour change and is a different unit.
 
 ## Surfaces
 

@@ -172,7 +172,7 @@ two readers of it, never a second copy.
 | Surface | What it says |
 |---|---|
 | `workflow-status` | `detail.retention.pending_trim[]` — one row per candidate past the window, with the archive command it would run — and `detail.retention.out_of_scope[]` for the documents that can never be settled. The command reaches `next.continuation` only when the resolver has nothing actionable to recommend and `docRetention.mode` is `archive`. |
-| `product-audit` | the **Retention debt** dimension, whose producer is `bun scripts/retention-debt.mjs` (`retention-debt@1`, codes `pending-trim`, `unstamped-doc`, `unclassified-file`). |
+| `product-audit` | the **Retention debt** dimension, whose producer is `runner retention-debt` (`retention-debt@1`, codes `pending-trim`, `unstamped-doc`, `unclassified-file`). |
 | `unit-lane` close-out | reads `pending_trim[]` and offers the archive command when the project allows the trim step. |
 
 ```text

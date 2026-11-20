@@ -46,7 +46,7 @@ architectural change:
    If it is absent, record `n/a: no project invariants declared` and continue;
    existing repositories remain compatible.
 2. When a frozen `docs/workflow/REPOSITORY_STATE.md` exists, check its
-   freshness **first** — `bun scripts/repository-state.mjs` answers `fresh` or
+   freshness **first** — `runner repository-state` answers `fresh` or
    `stale` from the snapshot's `covers-through` date, the decision dates and the
    declared TTL (owner: `skills/resolve-repository-state/references/STATE_CONTRACT.md`).
    Consume its evidence-backed facts and accepted decisions only while it is
