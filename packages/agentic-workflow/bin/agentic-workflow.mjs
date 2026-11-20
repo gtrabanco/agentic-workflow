@@ -184,6 +184,7 @@ import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
 import { provisionRg, realOps } from "../src/provision/rg.mjs";
+import { provisionPermissions } from "../src/provision/permissions.mjs";
 import { ConfigError, createConfigApi, renderInitTemplate } from "../src/config/api.mjs";
 import { discoverConfigExtensions } from "../src/config/discovery.mjs";
 import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
@@ -1122,11 +1123,53 @@ switch (command) {
   case "provision": {
     const tool = rawArgs[0];
     if (!tool || tool.startsWith("--")) {
-      process.stderr.write("usage: agentic-workflow provision rg [--yes] [--dir <root>] [--json]\n");
+      process.stderr.write("usage: agentic-workflow provision <rg|permissions> [--yes|--write] [--dir <root>] [--scope project|global] [--json]\n");
       process.exit(2);
     }
+    if (tool === "permissions") {
+      // Issue #654 — the guard-plugin policy projection. The declared guards are
+      // read from the resolved `pi.guardPlugins` section, so the CLI needs the
+      // package's own descriptor and nothing else from it.
+      const root = flagValue(restArgs, "--dir") ? resolve(flagValue(restArgs, "--dir")) : process.cwd();
+      const scope = flagValue(restArgs, "--scope") ?? "project";
+      if (scope !== "project" && scope !== "global") {
+        process.stderr.write(`PROVISION REFUSAL — unknown scope "${scope}": expected project or global\n`);
+        process.exit(2);
+      }
+      const discovered = discoverConfigExtensions({ projectDir: root });
+      const api = createConfigApi({
+        projectDir: root,
+        extensions: discovered.extensions.map((entry) => entry.descriptor),
+      });
+      let guards = {};
+      try {
+        const section = api.get("resolved", ["pi", "guardPlugins"]);
+        if (section.value.enabled !== false) guards = section.value.guards ?? {};
+      } catch (error) {
+        if (!(error instanceof ConfigError)) throw error;
+        if (error.code === "INVALID") {
+          const out = { ok: false, verdict: "refused", exitCode: 2, target: null, text: "", issues: error.issues };
+          if (parsed.json) process.stdout.write(`${JSON.stringify(out)}\n`);
+          else {
+            process.stderr.write(`PROVISION permissions — refused: the config file is not valid\n`);
+            for (const issue of error.issues) process.stderr.write(`  ${issue.path}: ${issue.message}\n`);
+          }
+          process.exit(2);
+        }
+        // NOT_FOUND / UNKNOWN: nothing is declared, so the baseline stands alone.
+      }
+      const out = provisionPermissions({ root, scope, write: restArgs.includes("--write"), guards });
+      if (parsed.json) {
+        process.stdout.write(`${JSON.stringify(out)}\n`);
+      } else {
+        console.log(`PROVISION provision-permissions@1 — verdict: ${out.verdict} · target: ${out.target}`);
+        for (const issue of out.issues) console.error(`  ${issue.path}: ${issue.message}`);
+        if (out.text) process.stdout.write(out.text);
+      }
+      process.exit(out.exitCode);
+    }
     if (tool !== "rg") {
-      process.stderr.write(`PROVISION REFUSAL — unknown tool "${tool}": this command ships the rg bootstrap only\n`);
+      process.stderr.write(`PROVISION REFUSAL — unknown tool "${tool}": this command ships the rg bootstrap and the permissions projection only\n`);
       process.exit(2);
     }
     const root = flagValue(restArgs, "--dir") ? resolve(flagValue(restArgs, "--dir")) : process.cwd();
