@@ -19,7 +19,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, utimesSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, utimesSync, writeFileSync } from "node:fs";
 import path, { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -33,7 +33,9 @@ import {
   prepareSchemaRuntime,
   readAllowlist,
   readSchemaDistState,
+  relativeToCwd,
   runSuites,
+  suites,
   SCHEMA_PACKAGE_DIR,
   schemaBuildManager,
   testBudgetFor,
@@ -89,8 +91,11 @@ test("parseArgs: no arguments means every suite, no bail, the default worker cou
     bail: false,
     jobs: null,
     selected: [],
+    dir: "scripts",
+    cwd: ".",
     suiteTimeoutMs: 120_000,
     suiteMemCapMb: 1536,
+    testTimeoutMs: 10_000,
   });
 });
 
@@ -100,8 +105,11 @@ test("parseArgs: --bail, --jobs and a suite subset are all read", () => {
     bail: true,
     jobs: 4,
     selected: ["scripts/a.test.mjs", "scripts/b.test.mjs"],
+    dir: "scripts",
+    cwd: ".",
     suiteTimeoutMs: 120_000,
     suiteMemCapMb: 1536,
+    testTimeoutMs: 10_000,
   });
 });
 
@@ -637,4 +645,55 @@ test("end-to-end: a suite that does not exist fails the gate verbatim", () => {
   });
   assert.notEqual(result.status, 0);
   assert.match(result.stdout + result.stderr, /FAIL scripts\/no-such-suite\.test\.mjs/);
+});
+
+/* ------------------------------------------------- the pooled package suite */
+
+// Issue #598 S4: the crate suite is the gate's dominant cost and it ran its 77
+// files through one process. The pool, the per-test budget and the external
+// bounds are the same instrument the root gate already uses, so the second
+// suite tree is a flag — never a second runner.
+
+test("--dir, --cwd and --test-timeout select a second suite tree, and the defaults keep the root gate as it was", () => {
+  const defaults = parseArgs([]);
+  assert.equal(defaults.dir, "scripts", "the root gate's tree is the default");
+  assert.equal(defaults.cwd, ".", "the root gate spawns from the repository root");
+  assert.equal(defaults.testTimeoutMs, 10_000);
+
+  const crate = parseArgs(["--dir", "packages/agentic-workflow/test", "--cwd", "packages/agentic-workflow", "--test-timeout", "30"]);
+  assert.equal(crate.dir, "packages/agentic-workflow/test");
+  assert.equal(crate.cwd, "packages/agentic-workflow");
+  assert.equal(crate.testTimeoutMs, 30_000, "the crate's suites declare 30 s per test");
+});
+
+test("--test-timeout refuses zero, negatives, non-numbers and a missing value", () => {
+  for (const value of ["0", "-1", "ten", undefined]) {
+    assert.throws(() => parseArgs(value === undefined ? ["--test-timeout"] : ["--test-timeout", value]), undefined, `expected a refusal for ${value}`);
+  }
+});
+
+test("suites() reads the tree it is given, sorted, and only that tree's suites", () => {
+  const root = suites("scripts");
+  assert.ok(root.length >= 100, "the root tree is the one the gate dispatches");
+  assert.ok(root.every((file) => file.startsWith("scripts/") && file.endsWith(".test.mjs")));
+  assert.deepEqual(root, [...root].sort());
+
+  const dir = "packages/agentic-workflow/test";
+  const crate = suites(dir);
+  const onDisk = readdirSync(path.join(ROOT, dir)).filter((name) => name.endsWith(".test.mjs")).sort();
+  assert.deepEqual(crate, onDisk.map((name) => `${dir}/${name}`), "one entry per suite file, no helper and no fixture");
+  assert.ok(crate.length > 50);
+});
+
+test("a suite is spawned from the declared cwd with the path relative to it", () => {
+  assert.equal(relativeToCwd("packages/agentic-workflow/test/a.test.mjs", "packages/agentic-workflow"), "test/a.test.mjs");
+  assert.equal(relativeToCwd("scripts/a.test.mjs", "."), "scripts/a.test.mjs");
+  assert.equal(relativeToCwd("packages/a/test/x.test.mjs", "packages/a"), "test/x.test.mjs");
+});
+
+test("the declared per-test budget is the child's own flag, on both runtimes", () => {
+  assert.equal(testBudgetFor("packages/a/test/x.test.mjs", new Map(), 30_000), 30_000, "a caller's budget is the default for a tree with no allowlist entry");
+  assert.equal(testBudgetFor("scripts/x.test.mjs", new Map([["scripts/x.test.mjs", { timeoutMs: 60_000 }]]), 30_000), 60_000, "an allowlisted suite keeps its own budget");
+  assert.deepEqual(argvFor("test/x.test.mjs", false, 30_000, "bun"), ["test", "--timeout=30000", "test/x.test.mjs"]);
+  assert.deepEqual(argvFor("test/x.test.mjs", false, 30_000, "node"), ["--test", "--test-timeout=30000", "test/x.test.mjs"]);
 });

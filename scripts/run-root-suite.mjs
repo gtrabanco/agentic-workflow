@@ -72,6 +72,11 @@ export const DEFAULT_SUITE_MEM_CAP_MB = 1536;
 export const DEFAULT_TEST_TIMEOUT_MS = 10_000;
 export const ALLOWLIST_PATH = path.join(REPO_ROOT, "scripts", "test-timeout-allowlist.json");
 
+/** The root gate's own suite tree and spawn directory (issue #598 S4: the same
+ *  pool runs a package's tree through `--dir`/`--cwd`). */
+export const SUITE_DIR = "scripts";
+export const REPO_ROOT_DIR = ".";
+
 /** The schema package whose gitignored build the contract suites read (issue #571). */
 export const SCHEMA_PACKAGE_DIR = path.join(REPO_ROOT, "packages", "agentic-workflow-schema");
 
@@ -235,13 +240,24 @@ export function dispatchReport(decision) {
   return { lines, stop: true };
 }
 
-/** Every root suite, discovered the same way the shell glob does. */
-function suites() {
+/** Every suite of one tree, discovered the same way the shell glob does. The
+ *  root tree (`scripts/`) is the default; a package's tree is the same run over
+ *  its own directory (issue #598 S4), never a second runner. */
+export function suites(dir = SUITE_DIR) {
+  const base = path.join(REPO_ROOT, dir);
+  if (!fs.existsSync(base)) return [];
   return fs
-    .readdirSync(path.join(REPO_ROOT, "scripts"))
+    .readdirSync(base)
     .filter((name) => name.endsWith(".test.mjs"))
     .sort()
-    .map((name) => path.join("scripts", name));
+    .map((name) => path.posix.join(dir, name));
+}
+
+/** Where a suite is spawned from and what it is called there: a package's suite
+ *  runs with the package as its cwd, exactly as `bun test test/` did, so the
+ *  pooled dispatch changes the process count and nothing a suite observes. */
+export function relativeToCwd(file, cwd = REPO_ROOT_DIR) {
+  return path.posix.relative(cwd === "." ? "" : cwd, file);
 }
 
 /** The default worker count: one worker per CPU, never fewer than one. */
@@ -256,8 +272,11 @@ export function parseArgs(argv) {
     bail: false,
     jobs: null,
     selected: [],
+    dir: SUITE_DIR,
+    cwd: REPO_ROOT_DIR,
     suiteTimeoutMs: DEFAULT_SUITE_TIMEOUT_MS,
     suiteMemCapMb: DEFAULT_SUITE_MEM_CAP_MB,
+    testTimeoutMs: DEFAULT_TEST_TIMEOUT_MS,
   };
   const positiveInteger = (flag, value) => {
     if (value === undefined || !/^\d+$/.test(value) || Number(value) < 1) {
@@ -274,6 +293,19 @@ export function parseArgs(argv) {
       index += 1;
     } else if (arg === "--suite-timeout") {
       parsed.suiteTimeoutMs = positiveInteger("--suite-timeout", argv[index + 1]) * 1000;
+      index += 1;
+    } else if (arg === "--dir") {
+      const value = argv[index + 1];
+      if (value === undefined || value.startsWith("--")) throw new Error("--dir needs a directory");
+      parsed.dir = value.replace(/\/+$/, "");
+      index += 1;
+    } else if (arg === "--cwd") {
+      const value = argv[index + 1];
+      if (value === undefined || value.startsWith("--")) throw new Error("--cwd needs a directory");
+      parsed.cwd = value;
+      index += 1;
+    } else if (arg === "--test-timeout") {
+      parsed.testTimeoutMs = positiveInteger("--test-timeout", argv[index + 1]) * 1000;
       index += 1;
     } else if (arg === "--suite-mem-cap") {
       parsed.suiteMemCapMb = positiveInteger("--suite-mem-cap", argv[index + 1]);
@@ -364,8 +396,8 @@ export function readAllowlist(file = ALLOWLIST_PATH) {
 
 /** The per-test budget a suite's runner receives: its allowlist entry's own
  *  budget, or the 10 s default. */
-export function testBudgetFor(file, allowlist) {
-  return allowlist.get(file)?.timeoutMs ?? DEFAULT_TEST_TIMEOUT_MS;
+export function testBudgetFor(file, allowlist, defaultMs = DEFAULT_TEST_TIMEOUT_MS) {
+  return allowlist.get(file)?.timeoutMs ?? defaultMs;
 }
 
 // `-c commit.gpgsign=false` applies to commands this process spawns only; the
@@ -435,14 +467,14 @@ export function rssOfTree(pid) {
 
 const WATCHDOG_INTERVAL_MS = 250;
 
-function spawnReal(file, bail, signal, bounds, testTimeoutMs) {
+function spawnReal(file, bail, signal, bounds, testTimeoutMs, cwd = REPO_ROOT_DIR) {
   const suiteTimeoutMs = bounds?.suiteTimeoutMs ?? DEFAULT_SUITE_TIMEOUT_MS;
   const suiteMemCapMb = bounds?.suiteMemCapMb ?? DEFAULT_SUITE_MEM_CAP_MB;
   // `detached` gives the suite its own process group, so a bound-kill takes the
   // whole tree down — node's runner spawns a child per file, and killing only
   // the runner would orphan the hung one (issue #493).
-  const child = spawn(process.execPath, argvFor(file, bail, testTimeoutMs), {
-    cwd: REPO_ROOT,
+  const child = spawn(process.execPath, argvFor(relativeToCwd(file, cwd), bail, testTimeoutMs), {
+    cwd: path.resolve(REPO_ROOT, cwd),
     env: childEnv,
     signal,
     detached: true,
@@ -508,7 +540,9 @@ async function main(argv) {
     parsed = parseArgs(argv);
   } catch (error) {
     process.stderr.write(`root gate: ${error.message}\n`);
-    process.stderr.write("usage: bun scripts/run-root-suite.mjs [--bail] [--jobs <n>] [--suite-timeout <s>] [--suite-mem-cap <mb>] [<suite…>]\n");
+    process.stderr.write(
+      "usage: bun scripts/run-root-suite.mjs [--bail] [--jobs <n>] [--dir <dir>] [--cwd <dir>] [--test-timeout <s>] [--suite-timeout <s>] [--suite-mem-cap <mb>] [<suite…>]\n",
+    );
     return 2;
   }
   let allowlist;
@@ -525,19 +559,20 @@ async function main(argv) {
   const report = dispatchReport(decision);
   for (const line of report.lines) process.stderr.write(`${line}\n`);
   if (report.stop) return 1;
-  const selected = parsed.selected.length > 0 ? parsed.selected : suites();
+  const selected = parsed.selected.length > 0 ? parsed.selected : suites(parsed.dir);
   const jobs = parsed.jobs ?? Math.max(1, Math.min(defaultJobs(), selected.length));
   const seconds = (ms) => `${(ms / 1000).toFixed(1)}s`;
 
   process.stdout.write(
-    `root gate: ${selected.length} suite(s) · ${jobs} worker(s) · fail-fast ${parsed.bail ? "on" : "off"} · ` +
+    `root gate: ${selected.length} suite(s) from ${parsed.dir} · ${jobs} worker(s) · fail-fast ${parsed.bail ? "on" : "off"} · ` +
       `suite bound ${seconds(parsed.suiteTimeoutMs)} · mem cap ${parsed.suiteMemCapMb} MB\n`,
   );
   return runSuites({
     suites: selected,
     jobs,
     bail: parsed.bail,
-    spawnSuite: (file, signal) => spawnReal(file, parsed.bail, signal, parsed, testBudgetFor(file, allowlist)),
+    spawnSuite: (file, signal) =>
+      spawnReal(file, parsed.bail, signal, parsed, testBudgetFor(file, allowlist, parsed.testTimeoutMs), parsed.cwd),
     onResult: (file, result) => {
       if ((result.status ?? 1) === 0) {
         process.stdout.write(`PASS ${file} (${seconds(result.ms)})\n`);
