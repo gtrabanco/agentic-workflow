@@ -187,6 +187,7 @@ docs/workflow/README.md | 1-on-demand | full | read end-to-end this session
 docs/workflow/RECOMMENDED_SKILLS.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/REPLICATE.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/REPOSITORY_STATE.md | 1-on-demand | full | read end-to-end this session
+docs/workflow/RETENTION.md | 1-on-demand | full | read end-to-end this session (the #660 integration)
 docs/workflow/REVIEW_AND_CLASSIFY.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/SEAM_HOOKS.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/SETUP.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
@@ -228,6 +229,7 @@ skills/init-workspace/references/CONFIG.md | 2-rarely | scanned | structural sca
 skills/init-workspace/references/ENGINEERING_INTERVIEW.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/init-workspace/references/ENGRAM.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/init-workspace/references/MATERIALIZATION.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+skills/init-workspace/references/PERMISSIONS.md | 2-rarely | full | read end-to-end this session (the #660 integration; this row repairs origin/main shipping the file unrowed)
 skills/init-workspace/references/PORTABILITY.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/init-workspace/references/SERENA.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/init-workspace/references/UPGRADE.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
