@@ -376,6 +376,36 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **D5** — design decision (S6 D1, the red-first *"UI/adapter glue may test after"* exception): **dropped**. The owner surface (`AGENTS.md` § Working rules) states the obligation with no carve-out, and `TEST_IMPACT.md` states the mechanism; an exception that survives only in a restatement copy is the defect S6 names, and adopting it would add a semantic carve-out to a law with no measured need — the guide already answers the real case with a recorded `empty` test-impact verdict. The clause is deleted from `execute-phase`, and no owner surface gains it.
 - **D6** — owner decision recorded in a rule's own text (S6a): the stack-agnostic rule scopes to the **target project's** stack; a host agent's name is sanctioned where a portability or adapter feature requires it, and never as a technology recommendation. The carve-out lives in `AGENTS.md` § Working rules, and `second-read.md` classifies every host name the tree carries against it.
 
+- **D7** — design decision (S3b, the detector): the seed set is a **declared corpus**, not a heuristic — each row names the rule, its one owner, the identifying phrase, the scopes, the declared exceptions and the claimant — and the sweep reads it, so a rule enters by editing a table instead of by editing a script. A claim of "never restated" is measured by the same run, and a rule whose phrase matches nothing is reported as a dead seed instead of passing quietly.
+- **P3/P4** — 2026-11-20, `8208c4018`: the reader, the `repository-state@1` contract, the re-frozen snapshot, the amended invariant protocol and the registration (normative surface, gate row, budgets). The two tasks landed in one commit because the frozen acceptance couples them: the suite's live-tree case cannot pass before the snapshot is re-frozen, so splitting them would have committed a red implementation. **E3**–**E7** below are its receipts.
+- **P5** — 2026-11-20, `6ecb20d41`: the docs/ conversions (B1–B7, A2), the two mirror citations (S3a) and the `count:packages` claim kind with its case.
+- **P6** — 2026-11-20, `d161e9d2a`: the skills D-table, the two owner decisions it raised (`D5`, `D6`) and the vacation of the five bare portability sections. **E8**–**E9** are its receipts.
+- **P7/P8** — 2026-11-20, suite `0c05e889d` red then `297643f11` green: the corpus, the sweep, the `audit-docs` check 18 and the `product-audit` dimension. **E10**, **E11**.
+- **P9** — 2026-11-20, `6a7d50d2e`: `docs/workflow/LOADING.md`, the map row and the guide's machine regions moved last. The measurement is `docs/fix/646-docs-skills-reconciliation/second-read.md` § Measurements.
+- **P10** — 2026-11-20, suite `dc0d21cae` red then `6f816372b` green: the second read, its ledger and `scripts/reading-coverage.mjs`. **E12**, **E13**.
+- **P11** — 2026-11-20, `f455bc425` and the state commit: the projection re-emitted, the changeset, the journal fragment, the ledgers closed and the gate. **E14**–**G2**.
+
+- **E1** — 2026-11-20, `bun test scripts/repository-state.test.mjs` at `24c664234` · exit 1 · `0 pass · 1 fail` — `Cannot find module './repository-state.mjs'` (the red commit).
+- **E2** — 2026-11-20, `bun scripts/repository-state.mjs` · exit 0 · `repository-state — 2026-11-20-reconciliation-refreeze · covers-through 2026-11-20 · 13 facts · 9 decisions` / `verdict: fresh`.
+- **E3** — 2026-11-20, `bun test scripts/repository-state.test.mjs` · exit 0 · 9 pass, 0 fail — `F-646-1`…`F-646-6` plus the contract-parity and live-snapshot cases.
+- **E4** — 2026-11-20, `bun scripts/repository-state.mjs --ttl-days 30 --today 2027-06-01 docs/workflow/REPOSITORY_STATE.md` · exit 1 · `verdict: stale` with `REASON expired — … is 193 days old (ttl 30)` — expiry is computed, not assumed.
+- **E5** — 2026-11-20, `bun test scripts/normative-drift.test.mjs` · exit 0 · 23 pass (22 at `8fc204abb`; the new case is the `count:packages` refusal).
+- **E6** — 2026-11-20, `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS` — both new gate rows and the two new surface ids resolve.
+- **E7** — 2026-11-20, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 6 budgeted documents`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills`; `--routes` · exit 0 · `PASS route budgets: 14 routes`.
+- **E8** — 2026-11-20, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s) in 0 file(s)` — `verdict: PASS` after every skills edit.
+- **E9** — 2026-11-20, `bun test scripts/guide-split.test.mjs` 17 pass, `bun test scripts/residue-dimensions.test.mjs` 30 pass, `bun test scripts/inviolable-rules.test.mjs` 18 pass, `bun scripts/inviolable-rules.mjs` → `PASS inviolable rules: 14 rows · 1 home`.
+- **E10** — 2026-11-20, `bun test scripts/restatement-sweep.test.mjs` at `0c05e889d` · exit 1 · `0 pass · 1 fail` (missing module), then at `297643f11` · exit 0 · 9 pass.
+- **E11** — 2026-11-20, `bun scripts/restatement-sweep.mjs` · exit 0 · `6 rule(s) · 12 file(s) matched · 0 finding(s)` / `verdict: PASS`; the same command on the pre-fix bytes is `F-646-7`/`F-646-9` in the suite.
+- **E12** — 2026-11-20, `bun test scripts/reading-coverage.test.mjs` at `dc0d21cae` · exit 1 · `0 pass · 1 fail` (missing module), then at `6f816372b` · exit 0 · 6 pass.
+- **E13** — 2026-11-20, `bun scripts/reading-coverage.mjs --scope docs-skills` · exit 0 · `234 in scope · 40 full · 199 scanned · 0 finding(s)` / `verdict: covered`.
+- **E14** — 2026-11-20, the differential run against `git archive 8fc204abb`: `bun test scripts/normative-drift.test.mjs` 22 pass at base (23 at head — the added case is this unit's), `bun scripts/check-skill-context.mjs --documents` PASS at both, `bun scripts/skill-lint.mjs` PASS at both, `bun scripts/prose-gate-inventory.mjs` PASS at both; the touched skills' estimates moved by the pointer sentences recorded in the manifest's `mainSources`. No unasked difference.
+- **E15** — 2026-11-20, `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `VERDICT: PASS` (the changeset route); `bun scripts/lint-changeset.mjs` · exit 0 · `ok 646-docs-skills-reconciliation.md`.
+- **E16** — 2026-11-20, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale` / `verdict: PASS`.
+- **E17** — 2026-11-20, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":1,"refusals":[]}`; `bun scripts/log-immutability.mjs` · exit 0 · `0 violations · base 8fc204abb · range 11 commits`.
+- **E18** — 2026-11-20, `bun scripts/promise-coherence.mjs` · exit 0 · `claims: 45 checked · 24 skipped` / `verdict: PASS`.
+- **G1** — HEAD `f455bc4250405c4e884c1322906509596ec0947d`, 2026-11-20, `bun scripts/local-gate.mjs --jobs 4 --skip-network` · exit 0 · `local-gate: PASS — 15 step(s) in 783s`.
+- **G2** — HEAD `f455bc4250405c4e884c1322906509596ec0947d`, 2026-11-20, `bun scripts/local-gate.mjs --only pi-compat-guard,dependency-pin-gate,dependency-advisories --jobs 2` · exit 0 · `local-gate: PASS — 3 step(s) in 51s`.
+
 ## Next
 
 P2: commit `scripts/repository-state.test.mjs` alone and observe it red.

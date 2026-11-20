@@ -237,7 +237,8 @@ audit-docs ───── audits docs ↔ READMEs ↔ roadmap ↔ code ↔ fix 
 One home, cited here. The rules are [`AGENTS.md`](../../AGENTS.md) § Working rules
 and § Inviolable rules; [`README.md`](README.md) § Core principles is the
 tutorial's reading summary, and a skill that needs a rule reads its owner rather
-than a copy that can drift from it. This page words none of them a second time.
+than a copy that can drift from it. This page words none of them a second time —
+including the one `inline-batch` exception the branch rule carries.
 
 ## Skill anatomy
 

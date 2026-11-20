@@ -211,7 +211,7 @@
       "mainSources": {
         "issue #435 (project charter, unit 435-project-charter)": "check 16 lands: project-charter coverage audited mechanically (the CAPABILITIES pattern) — declared map row's file exists, charter section present, no unfilled identity slot, no raw catalogue placeholder, closed provenance set per criterion — plus the description gains the charter-coverage trigger and the report template counts 16 checks. Measured at the change by `bun scripts/check-skill-context.mjs`: 3116 est / 228 lines; ceiling re-based to ceil(3116 x 1.10) = 3428 (lines stay under the flat default), reason declared (issue #435 charter check). The 2026-11-07 external-verify repair batch re-measured the same skill at 3246 est / 238 lines — the check-16 slot scan is now bounded to the `## Project charter` section and declares one `awk` line instead of an inline escaped regex; still under this ceiling, so no re-base",
         "feature 91 / issue #352 (runner prose)": "measured 3483 est / 244 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(3483 x 1.10) = 3832 / ceil(244 x 1.10) = 269",
-        "issue #646 (restatement sweep, 2026-11-20)": "check 18 joins the audit: the deterministic restatement sweep (corpus `restatement-corpus@1`, script `scripts/restatement-sweep.mjs`) with its five finding codes and their severities, so `audit-docs` measures 4,114 est / 291 lines against the previous ceilings 3,832 / 269. Ceilings re-based by the manifest's own arithmetic, ceil(measured x 1.10) = 4,526 / 321, and the growth source is named: a new mechanical check, not prose padding."
+        "issue #646 (restatement sweep, 2026-11-20)": "check 18 joins the audit: the deterministic restatement sweep (corpus `restatement-corpus@1`, script `scripts/restatement-sweep.mjs`) with its five finding codes and their severities, so `audit-docs` measures 4114 est / 291 lines at this head. ceilings re-based to ceil(4114 x 1.10) = 4526 / ceil(291 x 1.10) = 321, the manifest's own arithmetic, and the growth source is named: a new mechanical check, not prose padding."
       },
       "mainLinesMax": 321
     },
@@ -435,8 +435,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11409,
-      "routeLinesMax": 686,
+      "routeEstimateMax": 11432,
+      "routeLinesMax": 688,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -455,7 +455,8 @@
         "fix 440 (external-verify correction batch)": "the cadence wording the six blockers required — audit-pr’s relationship bullet now names the measured trigger where it stated the retired periodic cadence — grew these routes by two rounding units; measured with `bun scripts/check-skill-context.mjs --routes --json`: 10161 est / 686 lines; ceilings re-based to the exact ceil(10161 x 1.10) = 11178 est, lines unchanged",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 11178 -> 11206 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feature 108 / issue #409 (machine gate receipts)": "the Turn contract gains one box that reads the verification gate's machine envelope (bun scripts/gate-receipt.mjs verify) and treats anything but current + pass as a BLOCKER routed to a re-run, replacing the prose claim that the suite is green; the verification row of references/01_MERGE_GATES.md states the same rule. Measured 10273 est / 619 lines at this re-basis; ceilings re-based to ceil(10273 x 1.10) = 11301 est and ceil(619 x 1.10) = 681 lines. Growth source = feature 409's gate-receipt box.",
-        "feature 91 / issue #352 (runner prose)": "measured 10361 est / 623 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(10361 x 1.10) = 11398 / ceil(623 x 1.10) = 686"
+        "feature 91 / issue #352 (runner prose)": "measured 10361 est / 623 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(10361 x 1.10) = 11398 / ceil(623 x 1.10) = 686",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "audit-pr:fix": {
@@ -463,8 +464,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11409,
-      "routeLinesMax": 686,
+      "routeEstimateMax": 11432,
+      "routeLinesMax": 688,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -483,7 +484,8 @@
         "fix 440 (external-verify correction batch)": "the cadence wording the six blockers required — audit-pr’s relationship bullet now names the measured trigger where it stated the retired periodic cadence — grew these routes by two rounding units; measured with `bun scripts/check-skill-context.mjs --routes --json`: 10161 est / 686 lines; ceilings re-based to the exact ceil(10161 x 1.10) = 11178 est, lines unchanged",
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 11178 -> 11206 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feature 108 / issue #409 (machine gate receipts)": "the Turn contract gains one box that reads the verification gate's machine envelope (bun scripts/gate-receipt.mjs verify) and treats anything but current + pass as a BLOCKER routed to a re-run, replacing the prose claim that the suite is green; the verification row of references/01_MERGE_GATES.md states the same rule. Measured 10273 est / 619 lines at this re-basis; ceilings re-based to ceil(10273 x 1.10) = 11301 est and ceil(619 x 1.10) = 681 lines. Growth source = feature 409's gate-receipt box.",
-        "feature 91 / issue #352 (runner prose)": "measured 10361 est / 623 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(10361 x 1.10) = 11398 / ceil(623 x 1.10) = 686"
+        "feature 91 / issue #352 (runner prose)": "measured 10361 est / 623 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(10361 x 1.10) = 11398 / ceil(623 x 1.10) = 686",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "execute-phase:descope": {
@@ -501,8 +503,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16823,
-      "routeLinesMax": 1240,
+      "routeEstimateMax": 16935,
+      "routeLinesMax": 1247,
       "sources": {
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
@@ -536,7 +538,8 @@
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
-        "feature 91 / issue #352 (runner prose)": "measured 15163 est / 1121 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(15163 x 1.10) = 16680 / ceil(1121 x 1.10) = 1234"
+        "feature 91 / issue #352 (runner prose)": "measured 15163 est / 1121 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(15163 x 1.10) = 16680 / ceil(1121 x 1.10) = 1234",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 15395 est / 1133 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "execute-phase:feature": {
@@ -553,8 +556,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16108,
-      "routeLinesMax": 1191,
+      "routeEstimateMax": 16220,
+      "routeLinesMax": 1197,
       "sources": {
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
@@ -587,7 +590,8 @@
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
-        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184"
+        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 14745 est / 1088 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "execute-phase:final-pr": {
@@ -605,8 +609,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16671,
-      "routeLinesMax": 1217,
+      "routeEstimateMax": 16783,
+      "routeLinesMax": 1224,
       "sources": {
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
@@ -640,7 +644,8 @@
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
-        "feature 91 / issue #352 (runner prose)": "measured 15026 est / 1100 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(15026 x 1.10) = 16529 / ceil(1100 x 1.10) = 1210"
+        "feature 91 / issue #352 (runner prose)": "measured 15026 est / 1100 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(15026 x 1.10) = 16529 / ceil(1100 x 1.10) = 1210",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 15257 est / 1112 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "execute-phase:finding": {
@@ -657,8 +662,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16108,
-      "routeLinesMax": 1191,
+      "routeEstimateMax": 16220,
+      "routeLinesMax": 1197,
       "sources": {
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
@@ -690,7 +695,8 @@
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
-        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184"
+        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 14745 est / 1088 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "execute-phase:fix": {
@@ -707,8 +713,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16108,
-      "routeLinesMax": 1191,
+      "routeEstimateMax": 16220,
+      "routeLinesMax": 1197,
       "sources": {
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
@@ -740,7 +746,8 @@
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
-        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184"
+        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 14745 est / 1088 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "execute-phase:legacy": {
@@ -757,8 +764,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16108,
-      "routeLinesMax": 1191,
+      "routeEstimateMax": 16220,
+      "routeLinesMax": 1197,
       "sources": {
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
@@ -790,7 +797,8 @@
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
-        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184"
+        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 14745 est / 1088 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "execute-phase:small": {
@@ -807,8 +815,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16108,
-      "routeLinesMax": 1191,
+      "routeEstimateMax": 16220,
+      "routeLinesMax": 1197,
       "sources": {
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
@@ -841,7 +849,8 @@
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
-        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184"
+        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 14745 est / 1088 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "execute-phase:unit-loop": {
@@ -858,8 +867,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16108,
-      "routeLinesMax": 1191,
+      "routeEstimateMax": 16220,
+      "routeLinesMax": 1197,
       "sources": {
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
@@ -889,7 +898,8 @@
         "issue #498 residue fix 6ab7f31c": "issue #498 residue fix (2026-11-11, commit 6ab7f31c): retiring the stale 'no NN column' clause beside fixrow moved +estimate on every route loading execute-phase/SKILL.md; each route re-based to the exact floor the checker demands (ceil(measured x 1.10), zero headroom), declared here. Hand edit under the disclosed precedent - no emitter owns routes.* keys (units 201/260 finding).",
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
-        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184"
+        "feature 91 / issue #352 (runner prose)": "measured 14513 est / 1076 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(14513 x 1.10) = 15965 / ceil(1076 x 1.10) = 1184",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 14745 est / 1088 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       }
     },
     "review-change:adversarial": {
@@ -909,8 +919,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 27104,
-      "routeLinesMax": 1862,
+      "routeEstimateMax": 27119,
+      "routeLinesMax": 1863,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -941,7 +951,8 @@
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
-        "feature 91 / issue #352 (runner prose)": "measured 24638 est / 1692 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(24638 x 1.10) = 27102 / ceil(1692 x 1.10) = 1862"
+        "feature 91 / issue #352 (runner prose)": "measured 24638 est / 1692 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(24638 x 1.10) = 27102 / ceil(1692 x 1.10) = 1862",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 24653 est / 1693 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       },
       "linesMax": 1842
     },
@@ -961,8 +972,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 23557,
-      "routeLinesMax": 1636,
+      "routeEstimateMax": 23571,
+      "routeLinesMax": 1637,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -991,7 +1002,8 @@
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
-        "feature 91 / issue #352 (runner prose)": "measured 21413 est / 1487 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(21413 x 1.10) = 23555 / ceil(1487 x 1.10) = 1636"
+        "feature 91 / issue #352 (runner prose)": "measured 21413 est / 1487 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(21413 x 1.10) = 23555 / ceil(1487 x 1.10) = 1636",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 21428 est / 1488 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       },
       "linesMax": 1616
     },
@@ -1011,8 +1023,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 23557,
-      "routeLinesMax": 1636,
+      "routeEstimateMax": 23571,
+      "routeLinesMax": 1637,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -1041,7 +1053,8 @@
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
-        "feature 91 / issue #352 (runner prose)": "measured 21413 est / 1487 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(21413 x 1.10) = 23555 / ceil(1487 x 1.10) = 1636"
+        "feature 91 / issue #352 (runner prose)": "measured 21413 est / 1487 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(21413 x 1.10) = 23555 / ceil(1487 x 1.10) = 1636",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 21428 est / 1488 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       },
       "linesMax": 1616
     },
@@ -1061,8 +1074,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 24314,
-      "routeLinesMax": 1675,
+      "routeEstimateMax": 24328,
+      "routeLinesMax": 1676,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -1093,7 +1106,8 @@
         "ceilingRebase": "issue #201 pass model routing: the SKILL.md isolation-rule routing paragraph and ADVERSARIAL_SETUP.md spawn-tier + cross-family sentences",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
-        "feature 91 / issue #352 (runner prose)": "measured 22101 est / 1522 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(22101 x 1.10) = 24312 / ceil(1522 x 1.10) = 1675"
+        "feature 91 / issue #352 (runner prose)": "measured 22101 est / 1522 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(22101 x 1.10) = 24312 / ceil(1522 x 1.10) = 1675",
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 22116 est / 1523 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
       },
       "linesMax": 1655
     }

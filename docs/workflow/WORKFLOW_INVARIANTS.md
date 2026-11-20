@@ -50,7 +50,7 @@ architectural change:
    `stale` from the snapshot's `covers-through` date, the decision dates and the
    declared TTL (owner: `skills/resolve-repository-state/references/STATE_CONTRACT.md`).
    Consume its evidence-backed facts and accepted decisions only while it is
-   fresh. A stale snapshot, or an accepted decision dated after `covers-through`,
+   fresh. A stale snapshot, or an accepted decision dated after its coverage date,
    is a contradiction to report and route to `resolve-repository-state` — never
    current truth. Inspect the repository directly for an absent fact; the
    repository remains the source of truth.

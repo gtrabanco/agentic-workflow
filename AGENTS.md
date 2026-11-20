@@ -155,7 +155,7 @@ IR14-tool-choice | the preferred tool is re-checked every turn and the documente
 - **Stack/architecture agnostic.** Do not introduce references to any specific
   product, stack, framework, ORM, runtime, or architecture pattern into the
   skills or the shared docs. Generic phrasing ("the project's architecture")
-  is the rule. The rule scopes to the **target project's** stack: a host agent's
+  is the rule. The rule scopes to the **target project's** stack: a host-agent
   name (Claude Code, Cursor, Copilot, OpenCode, Pi) is sanctioned where a
   portability or adapter feature requires it — a skill's `## Portability`
   section, the safety-adapter offer, a host-specific hook — and never as a

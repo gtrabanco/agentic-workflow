@@ -27,7 +27,7 @@ red-first | AGENTS.md | script+suite pair | skills/** | - | skills/execute-phase
 weaker-than-author | skills/unit-lane/references/ORCHESTRATE.md | weaker than the author | skills/** | - | -
 no-slash-menu | skills/orchestration-envelope/references/PORTABILITY.md | follow it literally | skills/** | - | -
 inline-degrade | skills/unit-lane/references/ORCHESTRATE.md | degrade inline | skills/** | - | -
-runner-pin | skills/runner-contract/references/RUNNER.md | bunx @gtrabanco/agentic-workflow | skills/**,docs/workflow/** | - | skills/runner-contract/SKILL.md
+runner-pin | skills/runner-contract/references/RUNNER.md | @gtrabanco/agentic-workflow@ | skills/**,docs/workflow/** | - | skills/runner-contract/SKILL.md
 ```
 
 ## What a copy is allowed to be

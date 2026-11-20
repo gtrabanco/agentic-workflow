@@ -20,6 +20,7 @@ restatement machine-checkable instead of hand-typed.
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/normative-drift.test.mjs | P5 | 2026-11-20 | execute-phase | additive: one new `count:packages` publisher kind, its case, and one `rendered-facts@1` row — no existing assertion, kind or fixture changes
+justification | scripts/review-loop-discipline.test.mjs | P8 | 2026-11-20 | execute-phase | tracks its owner: the pin is that audit-docs' report contract names every check it runs, and the skill gained check 18, so the declared count follows it (17 -> 18) exactly as checks 16 and 17 did — no assertion loosened, none removed
 justification | scripts/repository-state.test.mjs,scripts/restatement-sweep.test.mjs,scripts/reading-coverage.test.mjs | P2 | 2026-11-20 | execute-phase | the three suites this unit authors red-first are refined inside the same phase before their implementation lands — a case the red run proved wrong is repaired by correcting the case, never by weakening an assertion (`IR3`)
 ```
 

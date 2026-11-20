@@ -65,7 +65,7 @@ linked, not restated.
    committed separately (owner: [`skills/execute-phase/SKILL.md`](../../skills/execute-phase/SKILL.md)).
 4. **One PR per unit, against the project's default branch.** Never work on
    `main` directly; never stack PRs. The one exception is the owner-applied
-   inline batch the guide records — a correction the owner orders lands straight
+   inline-batch the guide records — a correction the owner orders lands straight
    on the default branch with no branch or PR, and it is never a licence an agent
    takes on its own initiative.
 5. **Decisions are evidence-backed.** Issue triage verifies triggers against the

@@ -224,7 +224,8 @@ the corpus and the sweep are one declared pair
       scope restates it, or while the claim sentence is gone — is **HIGH**: an
       assertion the tree disproves;
     - `uncovered-claim` (a "never restated" sentence naming no resolvable owner)
-      is **MEDIUM**, and a `REFUSED` verdict (`unresolved-owner`,
+      is **HIGH** — the assertion is unverifiable by construction — and a
+      `REFUSED` verdict (`unresolved-owner`,
       `malformed-corpus`, `empty-corpus`) is **HIGH** — a corpus that cannot be
       resolved proves nothing;
     - `NOTE <rule> — the seed's phrase matches no file` is **LOW**: a dead seed
@@ -242,11 +243,11 @@ say so.
    ```
    AUDIT DOCS — scope: <docs tree / roadmap / fix index / issues checked>
 
-   | # | Check (1-17) | Finding | Sev | Evidence | Proposed fix |
+   | # | Check (1-18) | Finding | Sev | Evidence | Proposed fix |
    |---|-------------|---------|-----|----------|--------------|
    | 1 | <which>     | <what>  | high|low | <path:line / #issue> | <smallest action> |
 
-   Checks run: <n>/17 (skipped: <which + why — absent structures only>)
+   Checks run: <n>/18 (skipped: <which + why — absent structures only>)
    Summary: <1-2 sentences>
    Decision: PASS | FAIL   (FAIL if any high-severity finding is open)
    ```
