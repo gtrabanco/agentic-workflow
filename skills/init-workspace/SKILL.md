@@ -68,8 +68,8 @@ and runs the dispatcher against that. Grammar and exit codes:
 Identity hardening (#514) — the pre-commit `git-identity-check.sh` hook and an
 empty `gitIdentity` block — is offered once; a no installs nothing.
 
-Document retention (#651) is offered the same way: a `docRetention` block whose
-shipped default is `keep-all` (detection only). Saying yes writes
+Document retention (#651) is offered the same way: a section whose shipped
+default is `keep-all` (detection only). Saying yes writes
 `"docRetention": { "mode": "archive" }`, which lets a merged unit's process
 artifacts settle into the gitignored archive; the offer also adds the archive
 directory to `.gitignore`, because `doc archive` refuses an archive git does not

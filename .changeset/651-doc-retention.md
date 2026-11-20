@@ -1,6 +1,7 @@
 ---
 "@gtrabanco/agentic-workflow-schema": minor
 "@gtrabanco/agentic-workflow": minor
+"@gtrabanco/pi-agentic-workflow": minor
 ---
 
 feat: document retention — the settled carrier, the stamp-gated trim, and its detection (issue #651)

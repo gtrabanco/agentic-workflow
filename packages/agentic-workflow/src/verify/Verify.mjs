@@ -384,11 +384,11 @@ export function verifyUnitDoc({ text, path, headExists = null, now = null, sibli
       : kind === "Duplicate section" ? "section-duplicate"
       : kind === "Misordered section" ? "section-misordered"
       : "section-shape";
-    // The fix-lane templates keep `## Acceptance criteria` (feature 61 made it
-    // the canonical acceptance source) while the re-cut shape list predates
-    // that — the section is tolerated, never a half-migration signal; the
-    // receipt-carrying legacy sections (Evidence, Progress log) are not.
-    if (code === "section-shape" && rest.join(":").includes("Acceptance criteria belongs to the other accepted shape")) continue;
+    // A section two accepted carriers share is not a half-migration signal, and
+    // the writer says so itself (issue #651: `## Acceptance criteria` is required
+    // by `legacy` and by `settled`); the receipt-carrying legacy sections
+    // (Evidence, Progress log) are still refused here because only one carrier
+    // requires them.
     violations.push(violation(code, rest.join(":").trim() || v));
   }
 

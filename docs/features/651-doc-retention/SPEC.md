@@ -318,11 +318,43 @@ The ledger lives beside this document: [`planning-obligations.md`](planning-obli
   ```
   Apply to this repository: issue #651
   ```
+- **L2** — 2026-11-22, mid-cut correction, verbatim:
+  ```
+  Ha habido un merge nuevo que está en origin/main, añadelo y revisa por si tienes que replanificar
+  ```
+- **D1** — 2026-11-19, the issue's binding owner decisions (kept as the issue records them): the settled `## Log` keeps the one-line `F`/`R`/`V` marks; no GitHub Action and no extra PR per merge; `architecture-notes.md` and `planning-evidence.md` are KEEP; unversioned docs are out of scope forever (stamp-gated); detection is sensor + product-audit in this iteration.
+- **D2** — 2026-11-22, this cut's own decisions — the settled carrier is `unit-doc@3` with the section set and the shared-section tolerance, the reader generation advances, the matrix has one owner, proved-merged has an offline and an online proof, the archive layout and restore contract, the `docRetention` shape, `detail.retention` as the sensor surface, the declaration block, and `G`-line survival by construction: [`decisions.md`](decisions.md).
+- **D3** — 2026-11-22, mid-cut replan (L2): unit 632 (`#658`) landed on `origin/main` and was integrated at `8f8537a98`; it is additive for this plan, and its four new normative rows, its `CONFIG.md` section and the obligation-tag rule are folded into P5/P7 by the `## Re-analysis` section. No objective, obligation or acceptance criterion changed.
+- **P1** — 2026-11-22 09:10, froze the unit doc, its decisions and both planning ledgers (30 obligations, 18 evidence rows) · `48d92be7e`.
+- **P2** — 2026-11-22 09:20, cut the schema corpus red, then published the settled carrier, `unit-doc@3`, the trim matrix, the eligibility predicate, the archive manifest and the `docRetention` section; regenerated `config.schema.json` · `e25a140ac` → `aed627b0c`.
+- **P3** — 2026-11-22 09:40, cut the write-path suite red, then implemented the settle projection, the assessment, the dry-run report and the archive/restore write path; wired `doc archive|restore` after cutting its own CLI suite red · `9a12de354`, `ef0cee2ac` → `8b655bcff`.
+- **P4** — 2026-11-22 10:05, projected `detail.retention.pending_trim[]`, the declared out-of-scope rows and the nothing-to-do continuation in the sensor · `36808f35f`.
+- **P5** — 2026-11-22 10:40, reconciled the readers (`docs-generate` settled status derivation, `findings-corpus` log marks without a findings table), cut the audit producer and the declaration gate red, then shipped both, the four template declarations, the four normative rows, the two gate-inventory rows, the workflow page, the CLI section, the config row, the four skill surfaces, the changeset and the roadmap status · `ba2a8f217` → `56fe60f40`.
+- **P6** — 2026-11-22 11:05, the P8 pass: added the missing `settled-carrier.test.mjs` (parity, mixed state, half-state fail-closed), fixed the writer to tolerate a section two accepted carriers share (`## Acceptance criteria`, which the settled carrier requires) and deleted the verifier's string-matched carve-out it supersedes, pointed `ARCHITECTURE.md` at the procedure and the re-stamp path, and extended the frozen dimension set with `Retention debt`.
+- **E1** — 2026-11-22, `bun test packages/agentic-workflow-schema/test/doc-retention.test.mjs` · exit 0 · `6 pass 0 fail` (O1, O4, O8, O17).
+- **E2** — 2026-11-22, `bun test packages/agentic-workflow/test/settled-carrier.test.mjs` · exit 0 · `4 pass 0 fail` (O2, O15, O30).
+- **E3** — 2026-11-22, `bun test packages/agentic-workflow-schema/test/doc-provenance.test.mjs` · exit 0 · `15 pass 0 fail` (O5).
+- **E4** — 2026-11-22, `bun test packages/agentic-workflow/test/doc-retention.test.mjs` · exit 0 · `12 pass 0 fail` (O6, O7, O9, O10, O11, O12, O13, O14).
+- **E5** — 2026-11-22, `bun test packages/agentic-workflow/test/doc-retention-cli.test.mjs` · exit 0 · `5 pass 0 fail` (O10, O11, O13, O16, O17).
+- **E6** — 2026-11-22, `bun test packages/agentic-workflow/test/workflow-status-retention.test.mjs` · exit 0 · `4 pass 0 fail` (O18, O19).
+- **E7** — 2026-11-22, `bun run --cwd packages/agentic-workflow-schema check:config-schema` · exit 0 · `config.schema.json: current` (O16).
+- **E8** — 2026-11-22, `bun test scripts/retention-debt.test.mjs` · exit 0 · `4 pass 0 fail` (O20).
+- **E9** — 2026-11-22, `bun test scripts/retention-declaration.test.mjs` · exit 0 · `6 pass 0 fail` (O22).
+- **E10** — 2026-11-22, `bun scripts/retention-declaration.mjs --check` · exit 0 · `4 templates, 19 rows each, verdict PASS` (O22).
+- **E11** — 2026-11-22, `bun test scripts/docs-generate.test.mjs` · exit 0 · `31 pass 0 fail` (O23).
+- **E12** — 2026-11-22, `bun test scripts/findings-corpus.test.mjs` · exit 0 · `15 pass 0 fail` (O24).
+- **E13** — 2026-11-22, `bun test scripts/normative-drift.test.mjs` · exit 0 · `22 pass 0 fail` (O3).
+- **E14** — 2026-11-22, `bun scripts/lint-changeset.mjs` · exit 0 · `ok 651-doc-retention.md` (O27).
+- **E15** — 2026-11-22, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/651-doc-retention/SPEC.md` · exit 2 before closure (the 30 planned rows), exit 0 after (see `G2`).
+- **E16** — 2026-11-22, `rg -c 'retention\.pending_trim' skills/unit-lane/SKILL.md` → `1`; `rg -c 'provenance re-stamp' docs/architecture/ARCHITECTURE.md` → `1`; `rg -c '^## Re-analysis' docs/features/651-doc-retention/SPEC.md` → `1`; `rg -c 'docRetention' skills/init-workspace/SKILL.md` → `1` (O21, O25, O26, O28).
+- **E17** — 2026-11-22, `bun scripts/dimension-regression.mjs --root . --base origin/main` · exit 0 · `clean` after this `## Log` names the run (the guard's own contract).
+- **G1** — 2026-11-22, `bun scripts/local-gate.mjs` · exit 0 · `PASS` (the full offline gate; the block is quoted in the handoff).
+- **R1** — 2026-11-22, `HEAD` at the P6 pass · this unit ran as a local direct application (no `review-change` on its own surgery, per the owner's local workflow) · the gate is the receipt.
 
 ## Next
 
-P1 — publish the settled carrier, format token, trim matrix, retention predicate
-and `docRetention` section in the schema package.
+The owner's external verification (`/aw-local-review` on the head); nothing is
+self-approved here.
 
 ## References
 

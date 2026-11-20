@@ -510,11 +510,19 @@ export function validate(text) {
   // A half-migrated document carries a section from the other shape: its
   // Evidence rows and its Log would both claim to be the receipt, so it is
   // refused rather than read two ways (the #308 §Scope 4 migration rule).
+  //
+  // The exception is a section two accepted carriers share — `## Acceptance
+  // criteria` is required by `legacy` and by `settled`, and the fix templates
+  // keep it beside `Specs` because feature 61 made it the canonical acceptance
+  // source. A shared section is evidence of no migration, so it is tolerated;
+  // a section only one other carrier requires is the half-migration signal.
   if (shape !== null) {
+    const carrierCount = (section) =>
+      Object.values(UNIT_DOC_SECTION_SHAPES).filter((sections) => sections.includes(section)).length;
     const foreign = Object.entries(UNIT_DOC_SECTION_SHAPES)
       .filter(([name]) => name !== shape)
       .flatMap(([, sections]) => sections)
-      .filter((section) => !required.includes(section) && foundHeadings.includes(section));
+      .filter((section) => !required.includes(section) && foundHeadings.includes(section) && carrierCount(section) < 2);
     for (const section of new Set(foreign)) {
       violations.push(`Half-migrated section: ${section} belongs to the other accepted shape`);
     }
