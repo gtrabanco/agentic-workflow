@@ -60,7 +60,7 @@ import { collectAssociations, guardForgeContent, readContentGuardPolicy } from "
 // Issue #651: the retention projection. The carrier/stamp half is the schema
 // package's predicate, shared with `doc archive`, so the sensor and the write
 // path cannot disagree about which unit is a candidate.
-import { assessUnit, logAgeDays, readRetentionConfig } from "../../doc/retention.mjs";
+import { assessUnit, logAgeDays, readRetentionConfig } from "../../retention/retention.mjs";
 
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
 /** The repository being sensed. Defaults to the process working directory. */

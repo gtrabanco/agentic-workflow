@@ -29,7 +29,7 @@ import {
   planRetention,
   restoreRetention,
   settleUnitDoc,
-} from "../src/doc/retention.mjs";
+} from "../src/retention/retention.mjs";
 
 import { newRepo, commitFile, git } from "./fixtures.mjs";
 

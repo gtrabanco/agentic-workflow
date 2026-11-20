@@ -28,7 +28,7 @@ import {
 } from "../src/edit/schema.mjs";
 import { validate } from "../src/edit/UnitDoc.mjs";
 import { verifyUnitDoc } from "../src/verify/Verify.mjs";
-import { assessUnit } from "../src/doc/retention.mjs";
+import { assessUnit } from "../src/retention/retention.mjs";
 
 const STAMP = (format, grammars) => `\`\`\`text
 doc-provenance@1

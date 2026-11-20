@@ -36,7 +36,7 @@ import {
   UNIT_DOC_KEEP_FILES,
   UNIT_DOC_TRIM_FILES,
   publishedDisposition,
-} from "../packages/agentic-workflow/src/doc/retention.mjs";
+} from "../packages/agentic-workflow/src/retention/retention.mjs";
 
 export const RECEIPT = "retention-declaration@1";
 

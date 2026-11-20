@@ -231,7 +231,7 @@ none
   owners.
 - **The archive manifest is the restore contract.** Changing its shape is a
   projection-manifest generation change, never a silent extension. Binds anyone
-  touching `src/doc/retention.mjs`.
+  touching `src/retention/retention.mjs`.
 
 ## Applicable tests
 
@@ -268,11 +268,11 @@ none
 - P2 — Implement the pure settle projection and the eligibility report in the crate, with its suite.
   (Implements: S3, S4, S6)
   (validator: `bun test packages/agentic-workflow/test/doc-retention.test.mjs` exits 0)
-  - Relevant files: packages/agentic-workflow/src/doc/retention.mjs
+  - Relevant files: packages/agentic-workflow/src/retention/retention.mjs
 - P3 — Wire `doc archive [--dry-run] [--unit] [--all-eligible]` and `doc restore`, the archive manifest and the refuse-before-write path, with its suite.
   (Implements: S5, S7)
   (validator: `bun test packages/agentic-workflow/test/doc-retention.test.mjs` exits 0)
-  - Relevant files: packages/agentic-workflow/src/doc/retention.mjs, packages/agentic-workflow/src/doc/grammar.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs
+  - Relevant files: packages/agentic-workflow/src/retention/retention.mjs, packages/agentic-workflow/src/doc/grammar.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs
 - P4 — Project `detail.retention.pending_trim[]` and the nothing-to-do continuation in the workflow-status sensor, with its suite.
   (Implements: S8)
   (validator: `bun test packages/agentic-workflow/test/workflow-status-retention.test.mjs` exits 0)

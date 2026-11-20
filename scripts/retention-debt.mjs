@@ -10,7 +10,7 @@
  * `agentic-workflow doc archive`, run by an operator.
  *
  * The predicate is not re-implemented here. `planRetention` (the crate's
- * `src/doc/retention.mjs`) answers eligibility and the carrier split from the
+ * `src/retention/retention.mjs`) answers eligibility and the carrier split from the
  * schema package's published matrix, so the audit, the sensor and the write path
  * cannot disagree about which unit is debt.
  *
@@ -29,7 +29,7 @@
 import path from "node:path";
 import process from "node:process";
 
-import { planRetention, readRetentionConfig } from "../packages/agentic-workflow/src/doc/retention.mjs";
+import { planRetention, readRetentionConfig } from "../packages/agentic-workflow/src/retention/retention.mjs";
 
 export const RECEIPT = "retention-debt@1";
 

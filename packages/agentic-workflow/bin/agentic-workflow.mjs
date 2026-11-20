@@ -997,7 +997,7 @@ switch (command) {
     if (grammar.branch === "retention") {
       // Issue #651: the one write path of the retention feature. Loaded on
       // demand — the retrieval half never pays for the carrier readers.
-      const retention = await import("../src/doc/retention.mjs");
+      const retention = await import("../src/retention/retention.mjs");
       const root = process.cwd();
       const config = retention.readRetentionConfig({ root });
       for (const degradation of config.degradations ?? []) process.stderr.write(`doc: ${degradation}\n`);

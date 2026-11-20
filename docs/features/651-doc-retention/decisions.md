@@ -156,10 +156,10 @@ None. Every surface this unit adds has a shipped consumer in the same change:
 
 | surface | consumer |
 |---|---|
-| `UNIT_DOC_TRIM_FILES` / `UNIT_DOC_KEEP_FILES` | `packages/agentic-workflow/src/doc/retention.mjs`, `scripts/retention-declaration.mjs` |
-| `classifyUnitRetention()` | `src/doc/retention.mjs`, `scripts/retention-debt.mjs`, `src/runner/sensors/workflow-status.mjs` |
+| `UNIT_DOC_TRIM_FILES` / `UNIT_DOC_KEEP_FILES` | `packages/agentic-workflow/src/retention/retention.mjs`, `scripts/retention-declaration.mjs` |
+| `classifyUnitRetention()` | `src/retention/retention.mjs`, `scripts/retention-debt.mjs`, `src/runner/sensors/workflow-status.mjs` |
 | `UNIT_DOC_SETTLED_SECTIONS` | `resolveUnitDocShape()` → `UnitDoc.mjs`, `unit-route.mjs`, `Verify.mjs`, the sensor, `findings-corpus.mjs` |
 | `unit-doc@3` | `deriveFormat()`, `readDocProvenance()`, `Verify.mjs` |
-| `docRetention` config section | `src/doc/retention.mjs` (the trim gate), `config` CLI (generated), `init-workspace` |
+| `docRetention` config section | `src/retention/retention.mjs` (the trim gate), `config` CLI (generated), `init-workspace` |
 | `detail.retention` | the `unit-lane` close-out and the `workflow-status` consumer |
 | `retention-declaration@1` | `scripts/retention-declaration.mjs`, the four templates |
