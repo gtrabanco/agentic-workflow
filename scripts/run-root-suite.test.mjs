@@ -697,3 +697,60 @@ test("the declared per-test budget is the child's own flag, on both runtimes", (
   assert.deepEqual(argvFor("test/x.test.mjs", false, 30_000, "bun"), ["test", "--timeout=30000", "test/x.test.mjs"]);
   assert.deepEqual(argvFor("test/x.test.mjs", false, 30_000, "node"), ["--test", "--test-timeout=30000", "test/x.test.mjs"]);
 });
+
+/* ------------------------------------------ the --dir and header contract */
+
+// Issue #598, external-verify B2/B3 (correction corpus, `## Log` E11): an
+// explicit `--dir` that names nothing must be refused before dispatch — a
+// green gate that ran zero suites is the silent skip AC-S8 forbids — the
+// default invocation's header keeps the base shape byte-for-byte, and an
+// absolute `--dir` runs its tree from wherever the runner is invoked.
+
+test("--dir naming a missing directory is a usage error, never a zero-suite success", () => {
+  const result = spawnSync(process.execPath, [SCRIPT, "--dir", "does-not-exist"], {
+    cwd: ROOT,
+    encoding: "utf8",
+    timeout: 120_000,
+  });
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stderr, /--dir does-not-exist/);
+  assert.doesNotMatch(result.stdout, /0 suite\(s\)/, "a missing tree never reports a run");
+});
+
+test("the default header carries no tree segment, and --dir scripts keeps the base shape", () => {
+  const plain = spawnSync(process.execPath, [SCRIPT, "--jobs", "2", "scripts/workspace-lock-policy.test.mjs"], {
+    cwd: ROOT,
+    encoding: "utf8",
+    timeout: 120_000,
+  });
+  assert.equal(plain.status, 0, plain.stdout + plain.stderr);
+  assert.ok(plain.stdout.startsWith("root gate: 1 suite(s) · "), `the default header stays base-shaped: ${plain.stdout.slice(0, 100)}`);
+  assert.doesNotMatch(plain.stdout, /suite\(s\) from/, "no tree segment for the default tree");
+
+  const explicit = spawnSync(process.execPath, [SCRIPT, "--dir", "scripts", "--jobs", "2", "scripts/workspace-lock-policy.test.mjs"], {
+    cwd: ROOT,
+    encoding: "utf8",
+    timeout: 120_000,
+  });
+  assert.equal(explicit.status, 0, explicit.stdout + explicit.stderr);
+  assert.ok(explicit.stdout.startsWith("root gate: 1 suite(s) · "), `--dir scripts prints the default tree: ${explicit.stdout.slice(0, 100)}`);
+  assert.doesNotMatch(explicit.stdout, /suite\(s\) from/);
+});
+
+test("an absolute --dir runs that tree, from any invocation cwd, and the header names it", () => {
+  const dir = tempRoot("run-root-suite-abs-");
+  writeFileSync(join(dir, "one.test.mjs"), 'import { test } from "node:test";\ntest("ok", () => {});\n');
+  const result = spawnSync(process.execPath, [SCRIPT, "--dir", dir], {
+    cwd: dir,
+    encoding: "utf8",
+    timeout: 120_000,
+  });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.ok(result.stdout.includes(`1 suite(s) from ${dir} · `), `the header names the absolute tree: ${result.stdout.slice(0, 120)}`);
+  assert.match(result.stdout, /PASS .*one\.test\.mjs/);
+});
+
+test("--dir and --cwd refuse an empty value at parse time", () => {
+  assert.throws(() => parseArgs(["--dir", ""]), /--dir needs a directory/);
+  assert.throws(() => parseArgs(["--cwd", ""]), /--cwd needs a directory/);
+});
