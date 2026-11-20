@@ -172,3 +172,82 @@ test("catalog snapshot: the README documents the embedding profile and its key-g
   assert.match(doc, /per (API )?key|key-global/iu, "the README states that the 60 rpm cap is key-global");
   assert.match(doc, /shared with|chat traffic/iu, "and that chat traffic shares it");
 });
+
+// ── The phase-batching capability record (issue #632) ────────────────────
+//
+// The record is preset data — the runtime never reads this snapshot — so the
+// same walk that pins the tier map and the ladders pins the record: every cell
+// is a fact the snapshot states, re-derived here from the recorded fields the
+// provider published. The *policy* numbers (how many phases a native harness
+// earns) are the preset's declared thresholds and are pinned by
+// `phase-batching.test.mjs`; this suite only refuses a record that disagrees
+// with the catalog it claims to mirror.
+
+/** The harness the snapshot documents: its own `capabilities[]` distinction. */
+function impliedHarness(model) {
+  const capabilities = model.capabilities ?? [];
+  if (capabilities.includes("Tool calling (XML)")) return "xml";
+  if (capabilities.includes("Tool calling")) return "native";
+  return "unmeasured";
+}
+
+/** The cache posture the snapshot's own rate pair implies — never `flat` by
+ *  default: a model that publishes no pair has stated no economics at all. */
+function impliedCachePosture(model) {
+  const source = model.credits_when_exceeded ?? model.rates;
+  const input = source?.input?.credits_per_1m;
+  const cached = source?.cached?.credits_per_1m;
+  if (typeof input !== "number" || typeof cached !== "number") return "unmeasured";
+  return cached < input ? "discounted" : "flat";
+}
+
+test("catalog snapshot: the capability record mirrors the context window the snapshot records", async () => {
+  const { NAN_MODEL_CAPABILITIES } = await import("../dist/phase-batching.js");
+  for (const model of CHAT_MODELS) {
+    const capability = NAN_MODEL_CAPABILITIES[model.slug];
+    assert.ok(capability, `${model.slug}: the record carries every chat model`);
+    assert.equal(
+      capability.context_window,
+      model.context,
+      `${model.slug}: the record's window must be the snapshot's recorded context`,
+    );
+  }
+});
+
+test("catalog snapshot: the capability record mirrors the tool harness the snapshot documents", async () => {
+  const { NAN_MODEL_CAPABILITIES } = await import("../dist/phase-batching.js");
+  for (const model of CHAT_MODELS) {
+    assert.equal(
+      NAN_MODEL_CAPABILITIES[model.slug].tool_harness,
+      impliedHarness(model),
+      `${model.slug}: the snapshot documents ${impliedHarness(model)} tool calling`,
+    );
+  }
+});
+
+test("catalog snapshot: the capability record mirrors the cache posture its rate pair implies", async () => {
+  const { NAN_MODEL_CAPABILITIES } = await import("../dist/phase-batching.js");
+  for (const model of CHAT_MODELS) {
+    assert.equal(
+      NAN_MODEL_CAPABILITIES[model.slug].cache_posture,
+      impliedCachePosture(model),
+      `${model.slug}: the snapshot's cached/input pair implies ${impliedCachePosture(model)}`,
+    );
+  }
+});
+
+test("catalog snapshot: the record names exactly the routed fleet, and no model without a harness batches", async () => {
+  const { NAN_MODEL_CAPABILITIES } = await import("../dist/phase-batching.js");
+  const { NAN_MODELS } = await import("../dist/preset.js");
+  assert.deepEqual(Object.keys(NAN_MODEL_CAPABILITIES).sort(), Object.keys(NAN_MODELS).sort(), "one record per billed model");
+  for (const [slug, capability] of Object.entries(NAN_MODEL_CAPABILITIES)) {
+    assert.equal(capability.tool_harness === "native", capability.max_phases_per_context > 1, `${slug}: a model without the executor harness batches nothing`);
+  }
+});
+
+test("catalog snapshot: the declared window thresholds are the fleet's own extremes", async () => {
+  const { NAN_PHASE_THRESHOLDS } = await import("../dist/phase-batching.js");
+  const contexts = CHAT_MODELS.map((model) => model.context);
+  assert.equal(NAN_PHASE_THRESHOLDS.largeContextWindow, Math.max(...contexts), "the large window is the fleet's largest");
+  assert.equal(NAN_PHASE_THRESHOLDS.smallContextWindow, Math.min(...contexts), "the small window is the fleet's smallest");
+});

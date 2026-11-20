@@ -46,6 +46,9 @@
     "packages/pi-nan-agentic-workflow": {
       "name": "@gtrabanco/pi-nan-agentic-workflow",
       "version": "4.10.0",
+      "dependencies": {
+        "@gtrabanco/agentic-workflow-schema": "4.10.0",
+      },
       "devDependencies": {
         "@types/node": "26.6.6",
         "typescript": "7",

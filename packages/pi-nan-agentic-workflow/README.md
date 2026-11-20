@@ -161,6 +161,79 @@ Reasoning traces arrive in `message.reasoning_content`. Cap any agentic loop's
 stream is closed by the platform (a `finish_reason: "length"` on an empty
 delta, not billed) if a model plans without converging.
 
+## Phase batching — how much of a unit one context holds
+
+The workflow always allowed running a whole unit in one context instead of one
+phase per turn, and always left it to the operator. This package now carries the
+model half of that decision as **data**, and one deterministic policy reads it.
+It ships **off**: with the key off nothing is inspected and the answer is
+today's posture, one phase per turn.
+
+**The capability record.** One entry per billed model, each cell a fact the
+recorded catalog already publishes (the section is pinned by
+`test/catalog-parity.test.mjs`, so a provider change fails mechanically here
+first):
+
+| Model | Context window | Tool harness | Cache posture | Phases per context |
+|---|---|---|---|---|
+| **glm5.3** | 1M | OpenAI `tools` | discounted | 4 |
+| **glm5.3-flash** | 1M | OpenAI `tools` | discounted | 4 |
+| **deepseek-v4-flash** | 1M | OpenAI `tools` | discounted | 4 |
+| **mimo-v2.6-flash** | 1M | OpenAI `tools` | discounted | 4 |
+| **qwen3.8-flash** | 1M | XML | discounted | 1 |
+| **kimi-k3.1-pro** | 1M | not documented | discounted | 1 |
+| **qwen3.8-max** | 1M | not documented | discounted | 1 |
+| **deepseek-v4-pro** | 1M | not documented | discounted | 1 |
+| **hy4** | 1M | not documented | discounted | 1 |
+| **qwen3.6** | 262K | XML | not measured | 1 |
+| **gemma4** | 262K | XML | not measured | 1 |
+
+- **Tool harness** is the catalog's own `capabilities[]` distinction: the four
+  models that document OpenAI `tools` are the executor rungs, and XML-only tool
+  calling is what [the fleet table](#the-fleet) already says it is — fine for
+  single-shot text work, not for the executor path's harness.
+- **Cache posture** is derived from each model's own rate pair: a `cached` rate
+  below the `input` rate is `discounted`, an equal one is `flat`, and a model
+  that publishes no pair is `unmeasured`. The two cluster models bill nothing,
+  so they state no cache economics — `unmeasured` is a value, never a zero.
+- **Phases per context** applies the preset's declared thresholds to those two
+  facts: the executor harness plus the fleet's largest window reaches four, the
+  smaller window reaches two, and a model without the harness batches nothing.
+
+**The policy.** A unit is eligible when its risk tier is `passive` or
+`standard`, its size tier is `prose` or `small`, and it carries no Relay leg.
+On an eligible unit the recommendation is the smallest of the model's ceiling
+and the phases that remain; everything else answers one phase per turn, and says
+which fact decided it — an unknown model, a `high` tier, a `large` unit, a Relay
+leg, an XML-only or undocumented harness, an unmeasured cache, a `flat` one (a
+cached read billed at the input rate saves nothing), or a single remaining
+phase. **Every one of those is a fail-closed answer**: no fact, no batching.
+
+```jsonc
+// pi-agentic-workflow.json — the switch, OFF until you say otherwise
+{ "phaseBatching": { "enabled": true } }
+```
+
+```sh
+# what a whole unit would do on this session's model
+/nan-phase-batching --risk-tier standard --size-tier small --phases 4
+```
+
+The command prints the typed document (`phase-batching@1`, owned by
+`@gtrabanco/agentic-workflow-schema`) and nothing beside it — the decision, the
+phase count, the reason, the record it read, and the eligibility it was given.
+`--relay` marks a Relay leg in the flow, `--model provider/modelId` asks about a
+model other than the session's, and a missing or out-of-vocabulary flag is
+refused with the supported syntax instead of guessed.
+
+**The gates do not move.** One phase is still one commit, the diff guard still
+runs per phase, and the evidence rows are the same rows: batching changes who
+runs where, never which gates run. The key also stays **off by default until the
+tier-cost corpus (#631) shows, over at least three real units per tier, a
+measured saving at equal first-review PASS parity** — the trigger is recorded in
+`docs/workflow/CONFIG.md` beside the key, and flipping the default without that
+evidence is the change the trigger forbids.
+
 ## The doc-index embedding profile
 
 The agentic workflow's retrieval index embeds your project's markdown so a query
