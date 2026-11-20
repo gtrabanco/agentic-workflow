@@ -262,6 +262,24 @@ M/L unit: the ledger is the unit folder's `planning-obligations.md`.
   ```
   the migrated subcommand arrives with its carrier — one `local-gate` step (or one live full-sweep assertion in its sibling suite) so a red budget cannot merge again. Migrating the command without a caller only relocates the hole.
   ```
+- **P1** — 2026-11-20, the unit doc and both ledgers cut before the first line of code, and the folder renamed to the roadmap row's link · `26d17a6`.
+- **E1** — 2026-11-20, `bun test scripts/cli-coverage.test.mjs` · exit 1 · 4 of 6 cases red, 101 shipped-skill citations and 6 template citations named with the command each must become.
+- **E2** — 2026-11-20, `bun test scripts/cli-coverage.test.mjs` · exit 0 · 6/6 green after the sweep: `no-script-citation`, `launcher`, `pin`, `repo-authoring`, `template-citation` and `undocumented-command` all empty, and the shim-parity case green.
+- **P2** — 2026-11-20, `docs/workflow/CLI.md` and the authoring rule published · `fb8680d`.
+- **P3..P7** — 2026-11-20, the migration in five families: lane/docs (`f7b1ed1`, `b948a5f`), receipts (`d176e4f`), audit and lane graph (`e785957`, `d8780bb`, `5ce3d7b`), product-audit and platform (`9016eaf`).
+- **D16** — 2026-11-20, this repository's own gates pin a script's *bytes* as often as its behaviour: eleven suites and three gates read the source they judge, so every migration re-points them where the code now lives (`84c1a11`). Two of them gained a real contract with the move: the crate's dispatch table is pinned to the 45 commands the sweep delivers, and `BATCH_BLOCKING_LABELS` is imported from the schema package instead of restated (`vocabulary-residency@1`).
+- **D17** — 2026-11-20, the pi bundle's projection rule binds the exact bytes it removes, so the re-derived digest is the rule obeyed, not silenced (`88109b7`).
+- **E3** — 2026-11-20, `bun test scripts/release-workflows.test.mjs` · exit 0 · 26/26 green with the new `skill-context-budgets` step in the pinned id list.
+- **E4** — 2026-11-20, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 30 skills`; `references/RUNNER.md` was re-based twice by the manifest's own arithmetic (measured 2864, then 3628, each with its growth source).
+- **E5** — 2026-11-20, `bun test scripts/normative-drift.test.mjs` · exit 0 · 23/23 green.
+- **E6** — 2026-11-20, `bun scripts/docs-generate.mjs --check` · exit 0 · `Roadmap: docs/ROADMAP.md — unchanged`, `verdict: PASS`; `roadmap check` on this unit doc `verdict: PASS`, 0 violations.
+- **E7** — 2026-11-20, `bun run --cwd packages/agentic-workflow test` · exit 0 · 1361 pass across 77 files.
+- **E8** — 2026-11-20, `bun run --cwd packages/pi-agentic-workflow test` and `test:node` · exit 0 on both legs · 1024 tests, 1023 pass 1 skipped.
+- **E9** — 2026-11-20, `bun scripts/run-root-suite.mjs` · exit 0 · 136 suites PASS.
+- **G1** — 2026-11-20, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 20 step(s) in 531s` at HEAD `88109b7a8`.
+- **E10** — 2026-11-20, a scratch scaffold with no `scripts/` tree: `docs-generate` wrote the projection and `docs-generate --check` then exited 0 (`Files: 3 checked · 0 missing`, `verdict: PASS`).
+- **E11** — 2026-11-20, the end state the issue names: the citation scan over `skills/` matches only `skills/skill-lint/**` (the declared internal skill, 6 lines) and zero outside it; the coverage suite's `pin-in-skill` findings are empty because the pin lives in RUNNER.md's fenced `runner-pin@1` carrier (D15).
+- **E12** — 2026-11-20, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/553-universal-cli-coverage/SPEC.md` · exit 0 · `VERIFY PASS`, obligations closed.
 
 ## Next
 
