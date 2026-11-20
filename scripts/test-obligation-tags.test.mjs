@@ -363,7 +363,12 @@ test("estate verdicts: a dead surface deletes, an obligation duplicate merges in
     ["scripts/cheap.test.mjs", 0.2],
     ["scripts/busy.test.mjs", 30],
   ]);
-  const root = makeTree({ "scripts/a.mjs": "export const a = 1;\n", "scripts/c.mjs": "", "scripts/b.mjs": "" });
+  const root = makeTree({
+    "scripts/a.mjs": "export const a = 1;\n",
+    "scripts/c.mjs": "",
+    "scripts/b.mjs": "",
+    "packages/toy/src/thing.ts": "export const thing = 1;\n",
+  });
   try {
     const rows = estateRows({ root, rows: entries, costs });
     const at = (suite) => rows.find((row) => row.suite === suite);
@@ -418,7 +423,7 @@ test("estate: the machine document carries the same rows and tallies as the tabl
     assert.equal(parsed.scope.root, 2);
     assert.equal(parsed.scope.packages, 2);
     assert.equal(parsed.rows.length, 4);
-    const tableRows = table.stdout.split("\n").filter((line) => line.startsWith("| ") && line.includes(" — "));
+    const tableRows = table.stdout.split("\n").filter((line) => line.startsWith("| `"));
     assert.equal(tableRows.length, parsed.rows.length, "one table row per document row");
     assert.deepEqual(Object.keys(parsed.tallies).sort(), ["delete", "keep", "merge"]);
   } finally {

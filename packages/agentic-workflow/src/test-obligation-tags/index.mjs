@@ -339,17 +339,278 @@ function sweepReport(rows) {
   return lines.join("\n");
 }
 
+/* ---------------------------------------------------------------- the estate */
+
+/** The package trees' suite suffix. A package suite is any `*.test.*` file
+ *  under `packages/<name>/test/` — the same "beside the suite" rule the root
+ *  gate applies, read from the tree instead of a registry (issue #598). */
+export const PACKAGE_TEST_FILE = /\.test\.(?:mjs|js|ts|tsx)$/;
+
+/** What a resolved import may be, in resolution order. */
+const RESOLVE_EXTENSIONS = [".mjs", ".ts", ".tsx", ".js", ".json"];
+
+const isFile = (target) => {
+  try {
+    return fs.statSync(target).isFile();
+  } catch {
+    return false;
+  }
+};
+
+const exists = (target) => fs.existsSync(target);
+
+/** The packages that carry a `test/` tree, in name order. */
+function packagesWithTests(root) {
+  const base = path.join(root, "packages");
+  if (!exists(base)) return [];
+  return fs
+    .readdirSync(base, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && exists(path.join(base, entry.name, "test")))
+    .map((entry) => entry.name)
+    .sort();
+}
+
+/** Every suite file under one package's `test/` tree, repo-relative and sorted. */
+function packageSuites(root, pkg) {
+  const found = [];
+  const walk = (dir, prefix) => {
+    for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(rel, prefix);
+      else if (PACKAGE_TEST_FILE.test(entry.name)) found.push(rel);
+    }
+  };
+  walk(`packages/${pkg}/test`);
+  return found.sort();
+}
+
+/**
+ * The surfaces a package suite protects, read from its own imports: a relative
+ * import that resolves inside the same package and outside the suite's own
+ * `test/` tree names code the suite exercises. `../dist/x.js` — how the shipped
+ * packages' suites reach the build — maps back to the source it was compiled
+ * from, because the source is the surface and the build output is not.
+ *
+ * A specifier that resolves nowhere (a gitignored build before `tsc`) is
+ * ignored rather than guessed, and a helper under `test/` is a fixture, never a
+ * protected surface: a suite whose imports all land there protects `undeclared`.
+ */
+export function resolveImportedSurfaces({ root, file }) {
+  const text = fs.readFileSync(path.join(root, file), "utf8");
+  const specifiers = [...text.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)].map((match) => match[1]);
+  const pkgRoot = file.split("/").slice(0, 2).join("/");
+  const testPrefix = `${pkgRoot}/test/`;
+  const surfaces = new Set();
+  for (const specifier of specifiers) {
+    if (!specifier.startsWith(".")) continue;
+    const target = path.posix.normalize(path.posix.join(path.posix.dirname(file), specifier));
+    const stripped = target.replace(/\.[^./]+$/, "");
+    // A build output is not a surface: `../dist/x.js` names the source it was
+    // compiled from, so the source mapping is asked first and `dist/` never
+    // answers.
+    const candidates = [];
+    if (target.includes("/dist/")) {
+      const source = stripped.replace("/dist/", "/src/");
+      for (const extension of RESOLVE_EXTENSIONS) candidates.push(`${source}${extension}`);
+      candidates.push(source);
+    }
+    candidates.push(target);
+    for (const extension of RESOLVE_EXTENSIONS) candidates.push(`${target}${extension}`);
+    for (const extension of RESOLVE_EXTENSIONS) candidates.push(`${stripped}${extension}`);
+    const hit = candidates.find((candidate) => isFile(path.join(root, candidate)));
+    if (hit === undefined) continue;
+    if (!hit.startsWith(`${pkgRoot}/`) || hit.startsWith(testPrefix) || hit.includes(`${pkgRoot}/dist/`)) continue;
+    surfaces.add(hit);
+  }
+  return [...surfaces].sort();
+}
+
+/**
+ * The estate: every root suite (its declaration, read from the tag at its head)
+ * and every package suite (its surface, resolved from its imports, and no
+ * obligation class, because no tag declares one).
+ */
+export function discoverEstate({ root }) {
+  const rows = [];
+  const rootDir = path.join(root, SUITE_DIR);
+  if (exists(rootDir)) {
+    for (const name of fs.readdirSync(rootDir).filter((entry) => entry.endsWith(SUITE_SUFFIX)).sort()) {
+      const file = `${SUITE_DIR}/${name}`;
+      const lines = fs.readFileSync(path.join(root, file), "utf8").split("\n");
+      const head = headIndex(lines);
+      const parsed = lines[head]?.startsWith(TAG_PREFIX) ? parseTag(lines[head]) : { protects: [], obligations: [] };
+      rows.push({
+        suite: file,
+        scope: "root",
+        surfaces: [...parsed.protects].sort(),
+        obligations: [...parsed.obligations].sort(),
+        declared: parsed.protects.length > 0 && parsed.obligations.length > 0,
+      });
+    }
+  }
+  for (const pkg of packagesWithTests(root)) {
+    for (const file of packageSuites(root, pkg)) {
+      const lines = fs.readFileSync(path.join(root, file), "utf8").split("\n");
+      const head = headIndex(lines);
+      const tagged = lines[head]?.startsWith(TAG_PREFIX);
+      const parsed = tagged ? parseTag(lines[head]) : { protects: [], obligations: [] };
+      rows.push({
+        suite: file,
+        scope: `packages/${pkg}`,
+        surfaces: tagged ? [...parsed.protects].sort() : resolveImportedSurfaces({ root, file }),
+        obligations: tagged ? [...parsed.obligations].sort() : [],
+        declared: tagged && parsed.protects.length > 0 && parsed.obligations.length > 0,
+      });
+    }
+  }
+  return rows.sort((left, right) => left.suite.localeCompare(right.suite));
+}
+
+/**
+ * The owner's adjudications, one row each:
+ *
+ *     suite | standard | what was read | verdict
+ *
+ * A line beginning with `#` is prose, the header row is skipped, and the last
+ * cell is the verdict (`keep` or `delete`). This is the only hand-authored input
+ * in the estate: a standard that would change the tree is a measurement, and the
+ * ruling on it is the owner's (issue #598, `S3`).
+ */
+export function readAdjudications(text) {
+  const rows = new Map();
+  for (const line of String(text).split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed === "" || trimmed.startsWith("#") || trimmed.startsWith("```")) continue;
+    const cells = trimmed.split("|").map((cell) => cell.trim());
+    if (cells.length < 4) continue;
+    if (cells[0] === "suite") continue;
+    rows.set(cells[0], { standard: cells[1], read: cells.slice(2, -1).join(" | "), verdict: cells[cells.length - 1] });
+  }
+  return rows;
+}
+
+/**
+ * One row per suite with the standard its evidence fires and the verdict that
+ * standard supports. Three standards, never line coverage (owner rule
+ * 2026-11-16):
+ *
+ *   dead-surface          a declared protected path no longer exists ⇒ `delete`
+ *   obligation-duplicate  identical protected surfaces AND identical obligation
+ *                         set on at least two suites ⇒ one `keep` survivor (the
+ *                         cheapest measured one) and `merge` for the rest
+ *   cost-over-risk        measured cost per obligation value at or above the
+ *                         declared limit ⇒ the standard fires, the verdict stays
+ *                         `keep` and the row is a `suspect` until adjudicated
+ *
+ * An adjudication replaces the verdict of a row that fires; a `delete`/`merge`
+ * that no adjudication rules on is reported as missing, never silently applied.
+ */
+export function estateRows({ root, rows, costs = new Map(), adjudications = new Map() }) {
+  const withEvidence = rows.map((row) => {
+    const cost = costs.get(row.suite) ?? null;
+    const dead = row.surfaces.some((surface) => !exists(path.join(root, surface)));
+    return { ...row, cost, dead };
+  });
+  const groups = new Map();
+  for (const row of withEvidence) {
+    if (row.dead || !row.declared || row.surfaces.length === 0 || row.obligations.length === 0) continue;
+    const key = `${row.surfaces.join(",")}|${row.obligations.join(",")}`;
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+  const survivorOf = new Map();
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    const ordered = [...group].sort((left, right) => (left.cost ?? Number.POSITIVE_INFINITY) - (right.cost ?? Number.POSITIVE_INFINITY) || left.suite.localeCompare(right.suite));
+    for (const row of ordered.slice(1)) survivorOf.set(row.suite, ordered[0].suite);
+  }
+  const rows_ = withEvidence.map((row) => {
+    let evidence = row.declared ? "declared" : "undeclared";
+    let verdict = "keep";
+    let survivor = null;
+    if (row.dead) {
+      evidence = "dead-surface";
+      verdict = "delete";
+    } else if (survivorOf.has(row.suite)) {
+      evidence = "obligation-duplicate";
+      verdict = "merge";
+      survivor = survivorOf.get(row.suite);
+    } else if (
+      row.obligations.length > 0 &&
+      row.cost !== null &&
+      row.cost / row.obligations.length >= COST_PER_OBLIGATION_LIMIT
+    ) {
+      evidence = "cost-over-risk";
+    }
+    const adjudication = adjudications.get(row.suite);
+    const adjudicated = adjudication !== undefined;
+    if (adjudication !== undefined && (adjudication.verdict === "keep" || adjudication.verdict === "delete")) {
+      verdict = adjudication.verdict;
+      survivor = adjudication.verdict === "keep" ? null : survivor;
+    }
+    return { suite: row.suite, scope: row.scope, surfaces: row.surfaces, obligations: row.obligations, cost: row.cost, evidence, verdict, survivor, adjudicated, selected: false };
+  });
+  // The cost-over-risk standard fires as a measurement; the bounded instrument
+  // is the declared selection (at most `SUSPECT_LIMIT`, highest cost per
+  // obligation first), exactly as the sweep's kill-rate list is capped.
+  const overRisk = rows_
+    .filter((row) => row.evidence === "cost-over-risk")
+    .sort(
+      (left, right) =>
+        (right.cost ?? 0) / Math.max(1, right.obligations.length) - (left.cost ?? 0) / Math.max(1, left.obligations.length) ||
+        left.suite.localeCompare(right.suite),
+    );
+  const selected = new Set(overRisk.slice(0, SUSPECT_LIMIT).map((row) => row.suite));
+  return rows_.map((row) => ({ ...row, selected: selected.has(row.suite) }));
+}
+
+/** The rows whose standard wants a ruling the estate does not have yet. */
+export function missingAdjudications(rows) {
+  return rows.filter((row) => (row.verdict === "delete" || row.verdict === "merge") && row.adjudicated !== true);
+}
+
+function estateReport(rows, scope, source = null) {
+  const fired = rows.filter((row) => row.evidence !== "declared" && row.evidence !== "undeclared");
+  const suspects = rows.filter((row) => row.evidence === "cost-over-risk");
+  const selected = suspects.filter((row) => row.selected);
+  const missing = missingAdjudications(rows);
+  const tallies = { delete: 0, keep: 0, merge: 0 };
+  for (const row of rows) tallies[row.verdict] += 1;
+  const lines = [
+    `${CONTRACT_ID} estate — ${scope.root} root suite(s) · ${scope.packages} package suite(s) · ${rows.length} row(s) · standards fired: ${fired.length} · cost-over-risk: ${suspects.length} · selected: ${selected.length} · adjudications missing: ${missing.length}${source === null ? "" : `\nadjudications: ${source}`}`,
+    `selection rule: ${SELECTION_RULE}`,
+    "",
+    "| suite | scope | surface | obligations | cost (s) | evidence | verdict |",
+    "|---|---|---|---|---|---|---|",
+  ];
+  for (const row of rows) {
+    const surfaces = row.surfaces.length === 0 ? "-" : row.surfaces.map((surface) => `\`${surface}\``).join(", ");
+    const obligations = row.obligations.length === 0 ? "undeclared" : row.obligations.join(",");
+    const cost = row.cost === null ? "unmeasured" : round(row.cost);
+    const verdict = row.survivor !== null ? `${row.verdict} → \`${row.survivor}\`` : row.selected ? `${row.verdict} · selected` : row.verdict;
+    lines.push(`| \`${row.suite}\` | ${row.scope} | ${surfaces} | ${obligations} | ${cost} | ${row.evidence} | ${verdict} |`);
+  }
+  if (missing.length > 0) {
+    lines.push("", "missing adjudication (a standard that would change the tree needs its ground recorded):");
+    for (const row of missing) lines.push(`  ${row.suite} — ${row.evidence}`);
+  }
+  const predicted = missing.length > 0 ? "FAIL" : "PASS";
+  lines.push("", `verdict: ${predicted}`);
+  return { text: lines.join("\n"), tallies, missing };
+}
+
 /* --------------------------------------------------------------------- the CLI */
 
 function usage(message) {
   process.stderr.write(`test-obligation-tags: ${message}\n`);
-  process.stderr.write("usage: test-obligation-tags [--root <dir>] [--list|--json|--vocabulary|--sweep [--cost <log|->]]\n");
+  process.stderr.write(
+    "usage: test-obligation-tags [--root <dir>] [--list|--json|--vocabulary|--sweep|--estate [--cost <log|->] [--adjudications <file>]]\n",
+  );
   process.exit(2);
 }
 
 export function main(argv = process.argv.slice(2), context = {}) {
   setRoot(context.root);
-  const options = { root: ROOT, mode: "gate", cost: null };
+  const options = { root: ROOT, mode: "gate", cost: null, estate: false, adjudications: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--root") {
@@ -361,6 +622,13 @@ export function main(argv = process.argv.slice(2), context = {}) {
         value === "-"
           ? fs.readFileSync(0, "utf8")
           : fs.readFileSync(path.resolve(value), "utf8");
+    } else if (arg === "--estate") {
+      options.estate = true;
+    } else if (arg === "--adjudications") {
+      const value = argv[++index];
+      if (value === undefined) usage("--adjudications needs a path");
+      options.adjudicationPath = path.relative(options.root, path.resolve(value)).split(path.sep).join("/");
+      options.adjudications = fs.readFileSync(path.resolve(value), "utf8");
     } else if (["--list", "--json", "--vocabulary", "--sweep"].includes(arg)) {
       options.mode = arg.slice(2);
     } else {
@@ -397,6 +665,25 @@ export function main(argv = process.argv.slice(2), context = {}) {
   if (options.mode === "list") {
     for (const suite of suites) process.stdout.write(`${suite.file} protects=${suite.protects.join(",")} obligations=${suite.obligations.join(",")}\n`);
     process.exit(findings.length === 0 ? 0 : 1);
+  }
+
+  if (options.estate) {
+    const rows = discoverEstate({ root: options.root });
+    const scope = {
+      root: rows.filter((row) => row.scope === "root").length,
+      packages: rows.filter((row) => row.scope !== "root").length,
+    };
+    const costs = options.cost === null ? new Map() : parseCostLog(options.cost);
+    const adjudications = options.adjudications === null ? new Map() : readAdjudications(options.adjudications);
+    const estate = estateRows({ root: options.root, rows, costs, adjudications });
+    const { text, tallies, missing } = estateReport(estate, scope, options.adjudicationPath);
+    const verdict = missing.length > 0 ? "FAIL" : "PASS";
+    if (options.mode === "json") {
+      process.stdout.write(`${JSON.stringify({ contract: CONTRACT_ID, scope, rows: estate, tallies, missing: missing.map((row) => row.suite), verdict }, null, 2)}\n`);
+    } else {
+      process.stdout.write(`${text}\n`);
+    }
+    process.exit(verdict === "PASS" ? 0 : 1);
   }
 
   if (options.mode === "sweep") {
