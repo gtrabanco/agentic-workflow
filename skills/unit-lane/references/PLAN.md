@@ -116,8 +116,12 @@ Record every answer as a `decision` row of the same block (newest last), and a
 `Decide for me` choice with its reason — then cut the tasks:
 
 ```text
-D2 | <YYYY-MM-DD> | decision | Q2 | human-owner | <where the answer is recorded> | <what was chosen> | <what was discarded and why>
+D2 | <YYYY-MM-DD> | decision | Q2 | human-owner | <where the answer is recorded> | <what was chosen> | <what was discarded and why> | <scope>
 ```
+
+The trailing cell is the decision's **scope** — its closed set and the
+promotion consequence of each value are published by `decision-scope@1` in
+`skills/unit-lane/references/DESIGN.md` § Stage 4.
 
 ## Fixed output contract
 

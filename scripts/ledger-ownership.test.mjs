@@ -421,6 +421,17 @@ const DECISION_BACKED_WRITERS = new Map([
   // is pinned by script AND ledger name, so every other script writing SPEC.md
   // still fails, and the block list stays intact for the repository within.
   ["SPEC.md", "scripts/product-audit-gap-fixture.mjs"],
+  // Issue #650: the promotion sweep's fixture materializes a throwaway tree — a
+  // guide, the two owner docs and one unit ledger — into a caller-supplied
+  // directory (`seeded/` and `clean/`, always outside this repository), because
+  // the producer's three finding classes can only be demonstrated against a tree
+  // that carries the owner docs a promotion cites. It never writes the live
+  // record: every pair is pinned by script AND ledger name, so any other script
+  // writing these four still fails and the block list stays intact within.
+  ["AGENTS.md", "scripts/product-audit-promotion-fixture.mjs"],
+  ["ARCHITECTURE.md", "scripts/product-audit-promotion-fixture.mjs"],
+  ["ARCHITECTURAL_INVARIANTS.md", "scripts/product-audit-promotion-fixture.mjs"],
+  ["decisions.md", "scripts/product-audit-promotion-fixture.mjs"],
 ]);
 
 function writePathScan({ patterns, blocked, sources, label }) {
@@ -758,10 +769,14 @@ test("scan 2 passes the real tree and still recognises its declared annotator", 
     [
       `${PROVENANCE_REL} → review-findings.md`,
       "scripts/product-audit-gap-fixture.mjs → SPEC.md",
+      "scripts/product-audit-promotion-fixture.mjs → AGENTS.md",
+      "scripts/product-audit-promotion-fixture.mjs → ARCHITECTURAL_INVARIANTS.md",
+      "scripts/product-audit-promotion-fixture.mjs → ARCHITECTURE.md",
+      "scripts/product-audit-promotion-fixture.mjs → decisions.md",
       "scripts/release.mjs → RUNNER.md",
       "scripts/release.mjs → SKILL.md",
     ],
-    "four non-test script writes are sanctioned today: the map's annotator, issue #590's throwaway-tree generator, the D-40-14 train stamp and the runner pin stamp",
+    "eight non-test script writes are sanctioned today, each a (script, ledger) pair: the map's annotator, issue #590's throwaway-tree generator, issue #650's throwaway-tree generator (the guide and the two owner docs a promotion cites, plus the unit ledger) and the two D-40-14 stamps",
   );
 });
 

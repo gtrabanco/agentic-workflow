@@ -48,7 +48,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-import { NEEDS_INPUT_ROUTES, SUBSTRATE_CLASSES } from "@gtrabanco/agentic-workflow-schema";
+import { DECISION_SCOPES, NEEDS_INPUT_ROUTES, SUBSTRATE_CLASSES } from "@gtrabanco/agentic-workflow-schema";
 
 import { census, discoverWorkspace, stateOf } from "./substrate.mjs";
 
@@ -250,6 +250,14 @@ export function parseLedger(text) {
       // recorded, `options` what was chosen, and everything from `route` on
       // what was discarded (a stray separator cannot lose the tail).
       if (cells.length < 8) return { ok: false, reason: "malformed-entry", where };
+      // The tail is `discarded`, optionally followed by the decision's `scope`
+      // cell (issue #650 S4): the scope is read only when the last cell is a
+      // member of the published set, because a discarded sentence may carry an
+      // unescaped pipe and a nine-cell row predates the cell. A tail that only
+      // looks like one stays in `discarded`, so no historical ledger is refused.
+      const tail = cells.slice(7);
+      const trailing = tail.length > 1 ? tail[tail.length - 1] : null;
+      const scoped = trailing !== null && DECISION_SCOPES.includes(trailing);
       const entry = {
         id: cells[0],
         date: cells[1],
@@ -263,7 +271,8 @@ export function parseLedger(text) {
         authority: cells[4],
         receipt: cells[5],
         chosen: cells[6],
-        discarded: cells.slice(7).join(OPTIONS_JOIN),
+        discarded: (scoped ? tail.slice(0, -1) : tail).join(OPTIONS_JOIN),
+        scope: scoped ? trailing : null,
       };
       const row = classifyRow(entry, where);
       if (!row.ok) return row;
