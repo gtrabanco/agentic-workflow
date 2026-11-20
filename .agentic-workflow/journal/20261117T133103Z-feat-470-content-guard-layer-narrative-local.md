@@ -1,6 +1,0 @@
-## 2026-11-17T13:31:03Z — feat/470-content-guard-layer — narrative
-- **Commits:** 20 (`bbb124c5…f5dff835`)
-- **Files:** 31 files
-- **Summary:** External-verify correction batch: triaged and applied all 4 blockers (B1 budget union restored, B2 O10/AC13 parity fixed, B3 O11 range corrected, B4 retracted as receipt premise error) plus 2 advisories (A1 AC1 count aligned, A2 false SPEC citation removed via path-protection record) plus G-line header repairs and G11 host-load documentation. All affected validators re-run green. Concurrent session pushed the branch and handled the worktree-guard block; PR #605 now open but CONFLICTING (shared-doc conflicts on GATE_INVENTORY.json and SKILL_CONTEXT_BUDGETS.json after a 4th main advance).
-- **Decisions:** B1: restored missing main-side provenance notes and ceiling to 5071 (byte-equal to base); B4: do not append to LOGS.md directly because fragment carrier owns it — added dated correction instead; A2: edited test only after path-protection-records@1 justification; G-line: add HEAD sha to satisfy receipt-marks validation.
-- **Next:** Owner must: (1) run delta external-verify on the corrected head to recheck B1-B4/A1-A2; (2) integrate main to resolve the shared-doc conflicts; (3) decide on the path-guard malformed-declaration finding (declare path-protection-plan@1 or waive for this unit).
