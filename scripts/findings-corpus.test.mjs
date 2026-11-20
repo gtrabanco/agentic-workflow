@@ -186,7 +186,9 @@ test("harvest: the real tree yields the counts the planning ledger froze", () =>
   assert.equal(corpus.findings.length, 1164, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  assert.equal(corpus.reviewMarks, 173);
+  // 174 = 173 + this unit's own `R1` line (issue #651): the corpus counts the
+  // review marks the tree actually carries, so a unit that records one raises it.
+  assert.equal(corpus.reviewMarks, 174);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));
