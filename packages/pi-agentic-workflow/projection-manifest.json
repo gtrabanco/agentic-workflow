@@ -8,7 +8,7 @@
       "source": "skills/runner-contract/references/RUNNER.md",
       "selector": { "path": ["The runner — one invocation, one pin, one closed set", "The invocation"] },
       "enforcingCommand": "runner resolve",
-      "contentHash": "sha256:2d843205ba4f383a4a8d31e41d2147d68b2f725c8e9fe7136523586534528279"
+      "contentHash": "sha256:549e648038f7a8b476699fdc9e7fa5022d540ecb7cf2db7c9a6388f04e47a808"
     }
   ]
 }
