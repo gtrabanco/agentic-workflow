@@ -49,6 +49,49 @@ export function closesFence(trimmed, fence) {
 const H2_HEADING = /^## /;
 
 /**
+ * Partition a unit doc into its preamble and its level-2 sections, fence-aware.
+ *
+ * `sectionBounds` answers "where is section X" for one reader; a projection that
+ * rewrites a document needs the whole partition *and* the raw bytes of every
+ * section, so a kept section is re-emitted verbatim rather than re-rendered (a
+ * re-render is how a projection silently rewrites prose nobody asked it to
+ * touch). A `## ` line inside a fence is content, never a boundary — the same
+ * grammar `sectionBounds` uses, which is why both live here.
+ *
+ * @param {string} text — the full unit doc text.
+ * @returns {{ preamble: string, sections: { heading: string, raw: string }[] }}
+ */
+export function splitSections(text) {
+  const sections = [];
+  let preambleEnd = text.length;
+  let fence = null;
+  let start = null;
+  let heading = "";
+  let offset = 0;
+  while (offset < text.length) {
+    const eol = text.indexOf("\n", offset);
+    const lineEnd = eol === -1 ? text.length : eol;
+    const line = text.slice(offset, lineEnd);
+    const trimmed = line.trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+    } else {
+      const opened = openFence(trimmed);
+      if (opened) fence = opened;
+      else if (H2_HEADING.test(trimmed)) {
+        if (start === null) preambleEnd = offset;
+        else sections.push({ heading, raw: text.slice(start, offset) });
+        start = offset;
+        heading = line.replace(/^\s*## /u, "").trim();
+      }
+    }
+    offset = lineEnd + 1;
+  }
+  if (start !== null) sections.push({ heading, raw: text.slice(start) });
+  return { preamble: text.slice(0, preambleEnd), sections };
+}
+
+/**
  * Locate the real `## Tasks` section, ignoring headings that sit inside a
  * fenced code block.
  *

@@ -74,6 +74,10 @@ const specRefDoc = (extra = {}) => {
     "**S1 — do the thing.**",
     "> verbatim ask",
     "",
+    "## Acceptance criteria",
+    "",
+    "1. **AC1 (S1)** — the thing is done.",
+    "",
     "## Impact",
     "",
     "none",
@@ -216,7 +220,7 @@ test("the settle projection keeps the permanent record and collapses the rest", 
   assert.equal(text.includes("| AC | What was run |"), false, "the evidence table itself is gone");
 });
 
-test("the settle projection is idempotent and never mistakes a fenced heading for a section", () => {
+test("the settle projection never mistakes a fenced heading for a section, and refuses a settled document", () => {
   const fenced = specRefDoc({
     Log: [
       "- **L1** — 2026-11-20, the request, verbatim:",
@@ -230,8 +234,8 @@ test("the settle projection is idempotent and never mistakes a fenced heading fo
   assert.equal(once.ok, true, JSON.stringify(once.errors));
   assert.match(once.text, /## Tasks\n  kept inside the quote/, "a fenced heading is not a section");
   const twice = settleUnitDoc(once.text);
-  assert.equal(twice.ok, true, JSON.stringify(twice.errors));
-  assert.equal(twice.text, once.text, "settling a settled document is byte-identical");
+  assert.equal(twice.ok, false);
+  assert.equal(twice.reason, "already-settled", "a settled carrier is refused, never re-settled");
 });
 
 test("the settle projection refuses a document it cannot settle, by name", () => {
@@ -253,11 +257,13 @@ test("the settle projection refuses a document it cannot settle, by name", () =>
   }
 });
 
-test("the settle projection refuses a document with no Log to carry the digest", () => {
+test("the settle projection refuses a document that no longer satisfies the full carrier", () => {
+  // `## Log` is required by `spec-by-reference`, so dropping it leaves a body no
+  // carrier resolves: the projection refuses instead of stamping a lie.
   const text = specRefDoc().replace(/## Log[\s\S]*?## Evidence/u, "## Evidence");
   const result = settleUnitDoc(text);
   assert.equal(result.ok, false);
-  assert.equal(result.reason, "no-log-section");
+  assert.equal(result.reason, "unknown-carrier");
 });
 
 /* ---------------------------------------------------------- the assessment */
@@ -304,6 +310,7 @@ test("assessUnit refuses a legacy review-findings.md that still carries an open 
       status: "done",
       files: readdirSync(open).sort(),
       dirty: false,
+      reviewFindings: readFileSync(join(open, "review-findings.md"), "utf8"),
     });
     assert.equal(row.state, "open-findings");
     assert.equal(row.eligible, false);
@@ -318,6 +325,7 @@ test("assessUnit refuses a legacy review-findings.md that still carries an open 
       status: "done",
       files: readdirSync(folded).sort(),
       dirty: false,
+      reviewFindings: readFileSync(join(folded, "review-findings.md"), "utf8"),
     });
     assert.equal(ok.state, "eligible");
     assert.deepEqual(ok.trim, ["review-findings.md"]);
@@ -447,6 +455,7 @@ test("the write path refuses a dirty unit folder and a non-ignored archive direc
   const repo = newRepo(tmp(), "retention-repo", "main");
   try {
     writeFileSync(join(repo, ".gitignore"), "");
+    mkdirSync(join(repo, "docs"), { recursive: true });
     writeRoadmap(repo, ["| 42 | `example` | done | — | shipped |"]);
     commitFile(repo, "docs/ROADMAP.md", readFileSync(join(repo, "docs/ROADMAP.md"), "utf8"));
     commitFile(repo, "docs/features/42-example/SPEC.md", specRefDoc());
@@ -482,8 +491,8 @@ test("the seam hook runs after the archive is durable and its failure is a degra
       only: "docs/features/42-example",
     });
     assert.equal(ok.ok, true, JSON.stringify(ok.refused));
-    assert.equal(ok.hook.ran, true);
-    assert.equal(ok.hook.exit, 0);
+    assert.equal(ok.hooks[0].ran, true);
+    assert.equal(ok.hooks[0].exit, 0);
 
     const dir2 = root();
     writeRoadmap(dir2, ["| 43 | `example` | done | — | shipped |"]);
@@ -494,8 +503,8 @@ test("the seam hook runs after the archive is durable and its failure is a degra
       only: "docs/features/43-example",
     });
     assert.equal(failed.ok, true, "the local archive is durable even when the offsite copy fails");
-    assert.equal(failed.hook.ran, true);
-    assert.notEqual(failed.hook.exit, 0);
+    assert.equal(failed.hooks[0].ran, true);
+    assert.notEqual(failed.hooks[0].exit, 0);
     assert.match(failed.degradations.join(" "), /seam-hook/);
     assert.equal(existsSync(join(unitDir2, "progress.md")), false);
     assert.equal(existsSync(join(unitDir, "progress.md")), false);
