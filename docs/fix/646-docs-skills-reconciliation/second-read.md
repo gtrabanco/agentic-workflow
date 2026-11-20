@@ -155,6 +155,7 @@ docs/fix/646-docs-skills-reconciliation/second-read.md | 1-on-demand | full | re
 docs/passive/2026-11-09-declare-docs-site.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/passive/2026-11-10-park-269-verify-findings.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/passive/2026-11-15-settle-odd-hybrid-direction.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+docs/passive/2026-11-20-issue-663-skill-surface-diagnosis.md | 2-rarely | full | the ceremony CLI's own record of this session's passive unit; read back as written
 docs/pre-spec/2026-11-17-526-elicitation-layer.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-12-input-quality-and-editing/README.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-12-input-quality-and-editing/papers-sweep.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
@@ -162,6 +163,7 @@ docs/research/2026-11-13-tool-doctor-inventory.md | 2-rarely | scanned | structu
 docs/research/2026-11-15-all-code-is-slop-mapping.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-16-product-audit-extensibility.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-17-issue-621-claimed-surface-verification.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+docs/research/2026-11-20-issue-663-skill-surface-diagnosis.md | 2-rarely | full | authored this session as the issue #663 diagnosis; read end-to-end as written
 docs/research/284-pi-durable-spike.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/ATTRIBUTION.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/agentic-workflow-machine-contract-options.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
