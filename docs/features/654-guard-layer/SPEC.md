@@ -100,6 +100,25 @@ adopts. Every later decision cites the `S#` it serves.
 > - pi-web RPC rendering of the plugin's TUI keybind dialog (the session-grant option must survive as a select option) — verify early in the unit.
 > - The plugin is an operator-level pi package, not an npm dependency of our packages — pin/verify guidance must follow the pin and vendor-provenance rules.
 
+## Acceptance criteria
+
+One observable, testable criterion per requirement, each naming the check that
+proves it.
+
+| AC | Criterion | Check |
+|---|---|---|
+| AC-1 (S1) | The unit was applied inline: its ledgers froze before code, the RED corpus was observed failing first, and no review or fold machinery ran on it | `rg -c '^- \*\*R[0-9]' docs/features/654-guard-layer/SPEC.md` matches 0 and `## Log` carries `E2` (the red run) before `P3` |
+| AC-2 (S2) | The plugin is the documented bash/path owner and the guard-plugin seam exists beside it | `bun test packages/pi-agentic-workflow/test/permission-layer.test.mjs` exits 0 |
+| AC-3 (S3) | The guard configuration lives in the extension file only: no key of this change entered the base `agentic-workflow.json` | `git diff --name-only origin/main...HEAD -- packages/agentic-workflow-schema/src/config.ts` prints nothing |
+| AC-4 (S4) | The six verified failures cannot recur through this package: the surface that produced each is gone, and the surviving asymmetry is fixed | `rg -c 'decideShellWrite\|analyzeShellWrite' packages/ --glob '!**/permission-layer.test.mjs'` exits 1 and `bun test packages/pi-agentic-workflow/test/path-protection.test.mjs` exits 0 |
+| AC-5 (S5) | The adoption documentation states what the plugin decides — grammar, indirection floors to ask, external-directory map, session grants, prompt timeout — and names no guarantee it does not have | `bun test packages/pi-agentic-workflow/test/permission-layer.test.mjs` exits 0 (its README pins) |
+| AC-6 (S6) | The #606 removal list is retired in full, Tier 2 stays, and the guard-plugin core ships: config section, decision contract and projection command | `rg -c 'shell-bound writes' skills/orchestration-envelope/` exits 1; `bun test packages/agentic-workflow-schema/test/guard-plugin.test.mjs packages/pi-agentic-workflow/test/guard-plugin-config.test.mjs` exits 0 |
+| AC-7 (S7) | Nothing of the out-of-scope list shipped: no model call, no SystemOne adapter, no dependency, no git-identity change | `rg -c 'from "@gotgenes' packages/` exits 1, `rg -ci 'systemone' packages/` exits 1, and `git diff --name-only origin/main...HEAD -- packages/pi-agentic-workflow/src/guards/git-identity.ts` prints nothing |
+| AC-8 (S8) | Every declared surface was touched and each was reached through its owner doc | `git diff --name-only origin/main...HEAD` names `packages/agentic-workflow-schema`, `packages/pi-agentic-workflow`, `packages/agentic-workflow`, `skills/init-workspace`, `skills/orchestration-envelope` and `docs` |
+| AC-9 (S9) | Every acceptance bullet is either proven by a suite here or stated as the operator checklist the environment cannot run: the retirement pins, the strict config, the seam's vendor-free stub, the projection, the green suites and the changeset | `bun scripts/run-root-suite.mjs` exits 0 and the `## Log` `G` lines name each package suite; `O23` is the evidenced `n/a` |
+| AC-10 (S10) | The unit waited on nothing: no blocker was consulted, and no model call, provider or judge name entered the package — the `model-backed` slot is recorded in the unit's own `D` rows instead | `rg -ci 'systemone\|model-judge\|openai\|anthropic' packages/` exits 1 |
+| AC-11 (S11) | Each of the issue's five open questions is closed by a recorded decision row | `rg -c '^- \*\*D[0-9]' docs/features/654-guard-layer/SPEC.md` matches ≥ 9 |
+
 ## Impact
 
 - **Consumers of the retired surface.** `packages/pi-agentic-workflow/src/extension/index.ts` loses one import, the bash branch's shell-guard block and the three module-scope helpers (`SHELL_TEMP_ROOTS`, `SHELL_HOMEDIR`, `readScriptBounded`); `test/shell-write-guard.test.mjs` disappears with its module. The bash branch keeps exactly its seam dispatch (`hooksWiring.onToolCall`), so the pre:commit/pre:push seams still see every bash call — pinned by the hooks suites.
@@ -251,7 +270,33 @@ The ledger lives in [`planning-obligations.md`](planning-obligations.md) (M/L un
 - **D8** — 2026-11-20, the pi-web/RPC half of `S9` is an operator checklist: the plugin is not installed here (`PE-006`), so `O23` closes `n/a` with that citation and the reference carries the three observations to make on a machine that has it. No self-granted exception: the row is `n/a` on evidence, never `verified` on assumption.
 - **D9** — 2026-11-20, registration happens at `session_start` through the two verified facts (`getPermissionsService(sessionId)` + `registerAuthorizer(name, authorize)`, `PE-003`): a session with no id, or a machine with no service, skips every declared guard with its reason and notifies once — the fail-safe direction the plugin's own contract states ("absence of a judge means more prompting, never less").
 
+- **E3** — 2026-11-20, the retirement validators: `rg -c 'decideShellWrite|analyzeShellWrite|SHELL_TEMP_ROOTS|SHELL_HOMEDIR|readScriptBounded|shell-path' packages/ --glob '!**/permission-layer.test.mjs'` · exit 1 · 0 matches; `ls packages/pi-agentic-workflow/src/guards/shell-path.ts packages/pi-agentic-workflow/test/shell-write-guard.test.mjs` · exit 2 · both absent; `rg -c 'shell-bound writes' skills/orchestration-envelope/` · exit 1 · 0 matches.
+- **E4** — 2026-11-20, the remaining obligation validators: `rg -c 'from "@gotgenes' packages/` · exit 1 · 0 matches; `rg -ci 'openai|anthropic|systemone|model-judge' packages/pi-agentic-workflow/src/guards/plugin-core.ts` · exit 1 · 0 matches; `git diff --name-only origin/main -- packages/pi-agentic-workflow/package.json` · 0 lines (no dependency added); `rg -c 'references/PERMISSIONS.md' skills/init-workspace/SKILL.md` · 2; `rg -c 'promptTimeoutMs' skills/init-workspace/references/PERMISSIONS.md` · 2; `rg -c '^- \*\*R[0-9]' docs/features/654-guard-layer/SPEC.md` · exit 1 · 0.
+- **E5** — 2026-11-20, the base-copy differential (§6): a checkout of `origin/main` with the worktree's dependencies (`node_modules` and the per-member links a `git archive` does not carry) against this head. `provision rg --json` · identical bytes both sides; `config validate --scope project` · identical bytes both sides; `config schema` and `config list --json` · identical (57 nodes) in a fixture project where no pi package is installed, which is the invariant the new key must keep; `provision permissions` · base prints `PROVISION REFUSAL — unknown tool "permissions"`, head answers `{"ok":true,"verdict":"rendered",…}`. No unrequested stdout, stderr or exit-code difference was observed on any shared command.
+- **G1** — 2026-11-20, `bun scripts/run-root-suite.mjs` · exit 0 · 130 suites `PASS`, no failure line.
+- **G2** — 2026-11-20, `cd packages/agentic-workflow-schema && bun run test` · exit 0 · 944 pass / 0 fail across 54 files.
+- **G3** — 2026-11-20, `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 1021 pass / 0 fail across 89 files.
+- **G4** — 2026-11-20, `cd packages/agentic-workflow && bun test --timeout=10000 test/*.test.mjs` · exit 0 · 1333 pass / 0 fail across 73 files.
+- **G5** — 2026-11-20, `bun test scripts/normative-drift.test.mjs` · exit 0 · 22 pass / 0 fail (the registry still resolves; this unit adds no surface row — `D7`).
+- **G6** — 2026-11-20, `bun scripts/check-skill-context.mjs` · exit 0 · 30 skills; `bun scripts/check-skill-context.mjs --documents` · exit 0 · 6 documents after the one re-pin recorded in the manifest.
+- **G7** — 2026-11-20, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 files checked, 0 stale; the roadmap row was written by the emitter at `bun scripts/docs-generate.mjs`.
+- **G8** — 2026-11-20, `bun scripts/test-obligation-tags.mjs` · exit 0 · 130 suites, 0 findings.
+- **P2** — 2026-11-20, the RED corpus committed alone at `70020641`; every new suite observed failing before its implementation (`E2`).
+- **P3** — 2026-11-20, the schema package publishes the contract, the decision function, the matcher and the projection; suite green at `1b3359adb`.
+- **P4** — 2026-11-20, the `guardPlugins` section lands beside `phaseBatching` (the pattern `origin/main`'s unit 632 established), with the descriptor and its committed copy regenerated from the module at `41264ebce`.
+- **P5** — 2026-11-20, the kind seam, the link registration, the tolerant ask reader, the optional service loader and the session-start wiring land at `73ac836e7`; a `model-backed` declaration registers nothing and says so.
+- **P6** — 2026-11-20, the shell guard and its suite are deleted, the bash branch keeps only its seam dispatch, and Tier 2 gains the OS-temp carve-out — `isScratchPath` moved into `config/path-policy.ts` rather than dying with the module — at `695ef67dd`. Two existing path-protection cases were re-anchored to a durable out-of-root path (the same obligation, now that scratch is carved out) and the carve-out got its own pair.
+- **P7** — 2026-11-20, `provision permissions` ships with its renderer, its collision refusal and its create-only-when-absent rule at `cb7706208`.
+- **P8** — 2026-11-20, the prose surfaces follow through their owners: the pi README's permission-layer section, `CONFIG.md`'s `## Guard plugins` and its `pi` row, the `path-protection@1` paragraph (file tools only, the plugin owns bash), init-workspace's new `references/PERMISSIONS.md` and its two links, the crate README's new row, and the changeset, at `4d6524a3b`.
+- **P9** — 2026-11-20, the verification below ran in the foreground; the bookkeeping (this section, the ledgers) closes at the hand- off commit.
+- **D10** — 2026-11-20, three obligation validators were amended before their runs and the amendment is recorded rather than applied silently: `O2`/`O6` exclude the pin suite's own literals, `O14` states the two checks that mean "no vendor, no model" without forbidding the word inside `model-backed`, `O18` counts `≥ 1` link. No obligation changed scope.
+- **D11** — 2026-11-20, the session journal entry is a **fragment**, not a `docs/LOGS.md` append: the pre-push `log-immutability` gate refused the direct append (`log-hand-appended — docs/LOGS.md: touched by non-aggregator commit …`), the file was restored to its base bytes, and the entry was written through the owner instead (`agentic-workflow journal write --kind narrative`, fragment `20261120T024456Z-feat-654-guard-layer-narrative-local.md`) for the aggregator to consume. The gate was right and the first attempt was wrong; the refusal is recorded as observed (`E6`).
+- **E6** — 2026-11-20, `bun scripts/local-gate.mjs` (the pre-push hook) · exit 1 · `log-immutability: exit 1 in 1s` with `Log-immutability: log-hand-appended — docs/LOGS.md: touched by non-aggregator commit 6d471da1b …, base 8fc204abb, range 10 commits`. Repaired at `D11`; the same gate re-ran green before the push.
+- **V1** — 2026-11-20, the obligation rows re-ran against the head after `D10`: 22 `verified` on foreground runs, `O23` `n/a` with `PE-006` as its evidence. No row is `planned`, `in-progress`, blank or `deferred`.
+
 ## Next
 
-Run `P2`: land the RED suites alone and observe each one fail on the absent
-surface before any implementation.
+The external verifier's verdict on the diff. Nothing is claimed done here: `O23`
+is `n/a` on evidence (the permission package is not installed in this
+environment), and the pi-web/RPC half of the issue's acceptance criteria stays the
+operator checklist `skills/init-workspace/references/PERMISSIONS.md` carries.
