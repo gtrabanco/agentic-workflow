@@ -242,10 +242,11 @@ export function dispatchReport(decision) {
 
 /** Every suite of one tree, discovered the same way the shell glob does. The
  *  root tree (`scripts/`) is the default; a package's tree is the same run over
- *  its own directory (issue #598 S4), never a second runner. */
+ *  its own directory (issue #598 S4), never a second runner. An absolute `--dir`
+ *  resolves against the repository root, and a tree that does not exist is
+ *  `main`'s usage error (external-verify B2) — never an empty green run. */
 export function suites(dir = SUITE_DIR) {
-  const base = path.join(REPO_ROOT, dir);
-  if (!fs.existsSync(base)) return [];
+  const base = path.resolve(REPO_ROOT, dir);
   return fs
     .readdirSync(base)
     .filter((name) => name.endsWith(".test.mjs"))
@@ -255,9 +256,13 @@ export function suites(dir = SUITE_DIR) {
 
 /** Where a suite is spawned from and what it is called there: a package's suite
  *  runs with the package as its cwd, exactly as `bun test test/` did, so the
- *  pooled dispatch changes the process count and nothing a suite observes. */
+ *  pooled dispatch changes the process count and nothing a suite observes. Both
+ *  ends resolve against the repository root, so an absolute `--dir` stays
+ *  correct whatever directory the runner itself was invoked from. */
 export function relativeToCwd(file, cwd = REPO_ROOT_DIR) {
-  return path.posix.relative(cwd === "." ? "" : cwd, file);
+  const spawnDir = path.resolve(REPO_ROOT, cwd);
+  const target = path.resolve(REPO_ROOT, file);
+  return path.relative(spawnDir, target).split(path.sep).join("/");
 }
 
 /** The default worker count: one worker per CPU, never fewer than one. */
@@ -296,12 +301,16 @@ export function parseArgs(argv) {
       index += 1;
     } else if (arg === "--dir") {
       const value = argv[index + 1];
-      if (value === undefined || value.startsWith("--")) throw new Error("--dir needs a directory");
+      // `!value`, not `value === undefined`: `--dir ""` would silently mean
+      // the repository root — an empty value is a missing value.
+      if (!value || value.startsWith("--")) throw new Error("--dir needs a directory");
       parsed.dir = value.replace(/\/+$/, "");
       index += 1;
     } else if (arg === "--cwd") {
       const value = argv[index + 1];
-      if (value === undefined || value.startsWith("--")) throw new Error("--cwd needs a directory");
+      // `!value`, not `value === undefined`: `--cwd ""` would silently spawn
+      // from the repository root — an empty value is a missing value.
+      if (!value || value.startsWith("--")) throw new Error("--cwd needs a directory");
       parsed.cwd = value;
       index += 1;
     } else if (arg === "--test-timeout") {
@@ -534,15 +543,33 @@ function spawnReal(file, bail, signal, bounds, testTimeoutMs, cwd = REPO_ROOT_DI
   });
 }
 
+/** The one usage line every CLI refusal prints. */
+const USAGE =
+  "usage: bun scripts/run-root-suite.mjs [--bail] [--jobs <n>] [--dir <dir>] [--cwd <dir>] [--test-timeout <s>] [--suite-timeout <s>] [--suite-mem-cap <mb>] [<suite…>]\n";
+
 async function main(argv) {
   let parsed;
   try {
     parsed = parseArgs(argv);
   } catch (error) {
     process.stderr.write(`root gate: ${error.message}\n`);
-    process.stderr.write(
-      "usage: bun scripts/run-root-suite.mjs [--bail] [--jobs <n>] [--dir <dir>] [--cwd <dir>] [--test-timeout <s>] [--suite-timeout <s>] [--suite-mem-cap <mb>] [<suite…>]\n",
-    );
+    process.stderr.write(USAGE);
+    return 2;
+  }
+  // An explicit `--dir` must name a real tree: a typo or a renamed directory
+  // can never reach dispatch as `0 suite(s)` and a green gate (issue #598;
+  // external-verify B2). The default `scripts/` passes the same line; an
+  // existing-but-empty tree stays legal — it is an empty tree, not a missing one.
+  const dirRoot = path.resolve(REPO_ROOT, parsed.dir);
+  let isTree = false;
+  try {
+    isTree = fs.statSync(dirRoot).isDirectory();
+  } catch {
+    isTree = false;
+  }
+  if (!isTree) {
+    process.stderr.write(`root gate: --dir ${parsed.dir} does not name a directory (resolved ${dirRoot})\n`);
+    process.stderr.write(USAGE);
     return 2;
   }
   let allowlist;
@@ -563,8 +590,12 @@ async function main(argv) {
   const jobs = parsed.jobs ?? Math.max(1, Math.min(defaultJobs(), selected.length));
   const seconds = (ms) => `${(ms / 1000).toFixed(1)}s`;
 
+  // The tree segment names non-default trees only: the default invocation's
+  // header stays byte-identical to the base gate's machine receipt
+  // (issue #598; external-verify B3).
+  const treeSegment = parsed.dir === SUITE_DIR ? "" : ` from ${parsed.dir}`;
   process.stdout.write(
-    `root gate: ${selected.length} suite(s) from ${parsed.dir} · ${jobs} worker(s) · fail-fast ${parsed.bail ? "on" : "off"} · ` +
+    `root gate: ${selected.length} suite(s)${treeSegment} · ${jobs} worker(s) · fail-fast ${parsed.bail ? "on" : "off"} · ` +
       `suite bound ${seconds(parsed.suiteTimeoutMs)} · mem cap ${parsed.suiteMemCapMb} MB\n`,
   );
   return runSuites({
