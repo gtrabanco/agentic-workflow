@@ -314,6 +314,7 @@ open the PR, and the merge-time `roadmap-settle` marks the row `done`.
 
 ## References
 
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/665 — opened 2026-11-20, base `main`, head `3d1c89c9b`.
 - #424 (delivered the feedback channel; its Non-goals deferred exactly this adoption sweep)
 - #555 (the symbolic `runner <sub>` citation and the closed candidate set this unit cites)
 - #554 (the hook shims — the same one-implementation pattern applied to shell)
