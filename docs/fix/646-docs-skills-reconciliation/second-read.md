@@ -55,6 +55,7 @@ requires it. Every occurrence in the skills tree, classified:
 | `skills/review-change/references/ADVERSARIAL_SETUP.md` | host-specific paste blocks | sanctioned — portability of an adversarial setup |
 | `skills/skill-lint/SKILL.md` | the `## Portability` requirement for a user-facing skill | sanctioned — the authoring rule about the section |
 | `skills/log-session/SKILL.md`, `skills/product-audit/SKILL.md` | the no-hooks fallback | sanctioned — host hooks are the feature being replaced |
+| `skills/{audit-pr,review-change,workflow-status}/references/PORTABILITY.md` | the per-skill portability reference: the `## Portability (agents other than Claude Code)` heading, plus `review-change`'s Claude Code subagent-tier note and `workflow-status`'s no-dependency sentence | sanctioned — a skill's portability surface, the carve-out's own category |
 | no other site | — | — |
 
 No unsanctioned product naming survives: every occurrence is a portability or

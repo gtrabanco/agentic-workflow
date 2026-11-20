@@ -2,7 +2,8 @@
 
 > **The repository's single agent guide** — one copy of these rules. There is no
 > `CLAUDE.md` here: a host that reads only that name is pointed at this file by
-> the rule below, and the `init-workspace` skill applies the same rule to target
+> the `init-workspace` rule “one guide, one name”
+> (`skills/init-workspace/SKILL.md`), which applies the same rule to target
 > projects.
 
 Guidance for AI coding agents working in **this** repository (`agentic-workflow`).

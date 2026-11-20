@@ -261,8 +261,8 @@ Never grant an agent-wide or session-persistent merge permission. Hooks are
 defense-in-depth — forge branch protection/rulesets remain required.
 
 **Workflow rules (always honored).**
-- **Branch & PR:** never work on `main`; one PR per unit against `main`; never
-  stack — see [PR & branch workflow](#pr--branch-workflow).
+- **Branch & PR:** never work on the default branch directly; one PR per unit
+  against the default branch; never stack — see [PR & branch workflow](#pr--branch-workflow).
 - **Gate before commit:** the verification gate (type-check + tests + build) is
   green — see [Commands](#commands).
 - **Docs language:** every committed artifact (issues, PRs, commits, SPECs,

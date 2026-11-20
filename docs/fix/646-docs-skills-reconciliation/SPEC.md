@@ -94,8 +94,11 @@ proves it (owner: the issue, quoted in `## Specs`).
   closed. The fossil rows (F004, F006, F007, F010, F011, AD-002) are replaced by
   current verified facts. Check: `bun scripts/repository-state.mjs docs/workflow/REPOSITORY_STATE.md`
   prints `verdict: fresh` and exits 0; `bun test scripts/repository-state.test.mjs`
-  exits 0 with cases `F-646-1`…`F-646-5`; `rg -c 'feature 57 restores' docs/workflow/REPOSITORY_STATE.md`
-  matches 0.
+  exits 0 with cases `F-646-1`…`F-646-5`; `rg -c '^\| F[0-9]+ \|.*feature 57 restores|^\| AD-[0-9]+ \|.*feature 57 restores' docs/workflow/REPOSITORY_STATE.md`
+  matches 0 (the retired wording survives only in the `C005` superseded-state
+  resolution that records the reversal, which a file-wide count also matches —
+  the check was re-cut there on 2026-11-20 by the external-verify correction
+  batch; the suite case judges the same rule and is unchanged).
 - **AC-S2** — No B-table copy survives as a restatement: each becomes a pointer
   to its owner or is gone, the AI-001 template has exactly one home plus a link,
   the layout names `docs/audits/` and `.claude-plugin/`, the header no longer
@@ -109,7 +112,8 @@ proves it (owner: the issue, quoted in `## Specs`).
   the seeded candidates are decided either way; frozen history is untouched.
   Check: `rg -c '^### R[0-9]+' docs/fix/646-docs-skills-reconciliation/second-read.md`
   matches at least the seeded candidates, and every row carries an
-  `evidence:` cell (`rg -c 'evidence: ' …` matches the row count).
+  `evidence:` cell (`rg -c 'evidence:' …` matches the row count — the rows are
+  written `- **evidence:**`, so the pattern carries no trailing space).
 - **AC-S3a** — Neither the Notion mirror sentence nor its `REDESIGN.md` citation
   survives. Check: `rg -c -i 'notion' docs/workflow/README.md docs/design/REDESIGN.md`
   matches 0 for both files.
@@ -193,7 +197,7 @@ record. The added surfaces are the three scripts with their suites (consumed by
 the root suite and the gate), the two references with their readers, and the
 loading page with its index row; each carries its consumer in `## Impact`. The
 inventory receipt is `bun scripts/residual-classify.mjs --inventory --base origin/main`
-in `## Log` `E2`; no row lands `orphan` — a script the root suite runs and a
+in `## Log` `E21`; no row lands `orphan` — a script the root suite runs and a
 reference a skill cites are both consumers the classifier resolves from the
 diff, and any row it cannot resolve is answered by a `residual-promise@1` row in
 `decisions.md` rather than by a silent claim.
@@ -269,12 +273,12 @@ and each is merged, so nothing is left deferred from this unit.
   `feat-654-guard-layer` are other live sessions' checkouts, not this unit's):
   **does-not-affect** this unit — it is report-only and it names other sessions'
   work, never this change.
-- `docs/ROADMAP.md:198`'s `Unit doc:` cell points at
-  `features/646-docs-skills-reconciliation/SPEC.md`, a path that never existed:
-  **affects** this unit (S2's index-currency class). The cell is owner-managed
-  for a fix row (`docs/ROADMAP.md`'s `## Fixes` writer keys the row), so the
-  correct path is recorded in the row through the writer at the release step or
-  reported to the owner — never hand-edited.
+- `docs/ROADMAP.md:198`'s `Unit doc:` cell pointed at a `features/646-…` folder
+  path — the unit lives under `docs/fix/`:
+  **resolved** — the row was rewritten through the writer (`rowUpsert`, commit
+  `503dc21c4`) and the cell now names
+  `fix/646-docs-skills-reconciliation/SPEC.md`; never hand-edited. Kept in this
+  list because PE-014 reported it at cut, not because it is still open.
 - `docs/workflow/SKILL_CONTEXT_BUDGETS.json`'s `documents.sources` carries a
   43-line re-pin history whose entries name merges, not measurements; #632
   pruned its duplicates. **does-not-affect** this unit beyond appending one
@@ -411,10 +415,12 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 
 ## Next
 
-The owner's two calls: approve or decline the `ship-roadmap.png` deletion (R1 in
-`second-read.md`), and run the external verification of this change. The roadmap
-row stays `promoted` — a fix row is written through the crate's writer at
-release, never hand-edited here.
+The owner's calls: approve or decline the `ship-roadmap.png` deletion (R1 in
+`second-read.md`), and act on the external verification — 2026-11-20, base
+`8fc204abb` · head `9e7904baf`, verdict `NEEDS-DECISION`, receipt in
+[`external-verify.md`](external-verify.md). The roadmap row is settled through
+the crate's writers (`rowUpsert` + `fixrow`) to `done · [#662]`, never
+hand-edited here.
 
 ## References
 
