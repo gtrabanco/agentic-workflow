@@ -98,7 +98,7 @@
         "gitIdentity": {
           "type": "object",
           "additionalProperties": false,
-          "description": "The agent-side `git config` write guard (issue #514). `ask` can really ask; a headless session is denied.",
+          "description": "The agent-side `git config` write guard (issue #514). `ask` can really ask; a session with no UI is refused in every mode except `allow`.",
           "properties": {
             "mode": {
               "type": "string",

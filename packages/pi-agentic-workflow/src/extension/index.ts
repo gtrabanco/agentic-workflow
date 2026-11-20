@@ -562,8 +562,9 @@ export default function extension(pi: ExtensionAPI): void {
         command,
         guardOptions(loaded.config.gitIdentity, ctx.cwd, scratchDirs(), loaded.config.guard.gitIdentity),
         {
-          // A session with no UI cannot ask, so it blocks: an unanswered prompt
-          // is not consent, and guessing one is how attribution was lost before.
+          // A session with no UI cannot ask, so it blocks in every mode except
+          // `allow`, which never asks: an unanswered prompt is not consent, and
+          // guessing one is how attribution was lost before.
           interactive: ctx.hasUI === true,
           approved: (key) => gitIdentityConsent.approved(ctx.cwd, key),
           remember: (key) => gitIdentityConsent.remember(ctx.cwd, key),

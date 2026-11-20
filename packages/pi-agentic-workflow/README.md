@@ -585,21 +585,21 @@ disables or re-enables it, or set `"enabled": false` on the entry in
 
 ## Git identity guard (issue #514)
 
-A signed commit proves *a key signed bytes*, not who the commit is attributed to.
-Three leaks in nine days on the repository this package ships from produced 139
-commits with the wrong author, every one of them signed and every one of them
-accepted by the forge as verified. The guard closes the agent-side half.
+A signed commit proves *a key signed bytes*, not who the commit is attributed
+to. Three leaks in nine days produced 139 commits with the wrong author — signed
+and forge-verified, which is why nothing caught them. The guard closes that half.
 
 On every `bash` call the extension reads the command, finds the `git config`
-writes in it (legacy flags such as `--unset` and modern subcommands such as
-`git config unset`), and answers:
+writes in it (legacy flags such as `--unset`, modern subcommands such as
+`git config unset`), and answers. The rows are the shipped `ask` posture — what
+the guard asks about — and the project's disposition answers them:
 
 | Invocation | Verdict |
 |---|---|
 | read-only (`--get`, `--list`, `--show-origin`, `get`, `list`) | passes |
 | one positional — `git config user.name`, `git config --global user.email` (git prints the value) | passes |
 | per-invocation `-c user.name=…` | passes — it writes nothing |
-| identity or signing write (`user.*`, `commit.gpgsign`, `gpg.*`, `tag.gpgsign`) | asks (headless: blocks) |
+| identity or signing write (`user.*`, `commit.gpgsign`, `gpg.*`, `tag.gpgsign`) | asks |
 | `--unset`, `--unset-all`, `--replace-all`, `remove-section`, `rename-section`, `edit` | asks |
 | `--global`, `--system`, `--worktree`, `--file` outside a scratch directory | asks |
 | a local, non-identity write (`core.autocrlf`, `merge.<driver>.driver`) | passes |
@@ -607,23 +607,23 @@ writes in it (legacy flags such as `--unset` and modern subcommands such as
 An approval is remembered **per project and per scope+key** in
 `git-identity-consent.json` beside the config, so the same question is never
 asked twice and a different project is never covered. Two keys control it:
-`guard.gitIdentity.mode` (issue #626 — `allow`, `deny`, `ask`; `ask` is the
-shipped default and answers as `deny` in a session with no UI) and
-`gitIdentity.agentGuard.allow: ["user.name"]` for the writes a project permits
-without asking (the allow list covers local, non-destructive writes only — a
-removal or a shared file still asks).
+`guard.gitIdentity.mode` (issue #626 — `ask` shows the dialog and remembers the
+answer, `deny` refuses the write without opening one, `allow` stands the guard
+down; a session with no UI is refused in every mode except `allow`, and a stored
+approval never reopens a `deny`) and `gitIdentity.agentGuard.allow:
+["user.name"]` for local, non-destructive writes a project permits without
+asking.
 
-The verdict is about the command bash runs, not the prose a command carries: a
-heredoc body is data (`git config user.email` quoted inside one is a read, never
-a write), and a backtick span is a command substitution, judged wherever it
-stands unquoted.
+The verdict is about the command bash runs, never the prose it carries: a
+heredoc body is data (a `git config user.email` line quoted inside one is a
+read, not a write), and a backtick span is a substitution, judged unquoted.
 
 The profile is the base config section, so the hook and the push check read the
 same one: `gitIdentity.enforce` (`off` by default — an unconfigured install is
 never blocked), `approved` (`name`, `email`, `fullName`, `format`, `signingKey`)
-and `agentGuard.allow`; the guard's disposition is `guard.gitIdentity.mode` in the base file. The boundary is honest: this sees what a model asks the bash
-tool to run — not a script it launches, not a `!` command, not another host.
-That is what the pre-commit hook and the push-range check exist for; see
+and the same two guard keys. The boundary is honest: this sees what a model asks
+the bash tool to run — not a script it launches, not a `!` command, not another
+host. That is what the pre-commit hook and the push-range check exist for; see
 [`docs/workflow/GIT_IDENTITY_HARDENING.md`](../../docs/workflow/GIT_IDENTITY_HARDENING.md).
 
 ## Permission layer — the operator's package (issue #654)

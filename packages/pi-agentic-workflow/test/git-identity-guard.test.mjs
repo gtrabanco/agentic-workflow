@@ -422,6 +422,120 @@ test("the consent key names scope and key, so a value change is the same decisio
   assert.equal(consentKey({ verb: "unset", key: "user.email", scope: "local" }), "local:user.email");
 });
 
+/* ── the disposition on the wired path (issue #655) ───────────────────── */
+
+// The mode is the project's configured posture (issue #626), and the applier is
+// the only path the extension runs: `allow` stands down, `deny` refuses without
+// asking, `ask` keeps the consent lifecycle. A headless session blocks in every
+// mode except `allow` — an unanswered prompt is not consent, but a disposition
+// that never asks has no prompt to wait for.
+const ASKING_WRITES = [
+  "git config user.name Fixture",
+  "git config --global user.email t@example.test",
+  "git config --unset user.signingkey",
+];
+
+test("M1 — `deny` refuses without opening a dialog, for every write that asks", async () => {
+  for (const command of ASKING_WRITES) {
+    const h = host();
+    const result = await applyGitIdentityGuard(command, BLOCK(), h);
+    assert.equal(h.asks.length, 0, `deny never opens a dialog: ${command}`);
+    assert.equal(result.block, true, command);
+    assert.match(result.reason, /show-origin/, `the write's own repair survives: ${command}`);
+  }
+});
+
+test("M2 — a `deny` refusal names the disposition, so the silence is never read as a bug", async () => {
+  const result = await applyGitIdentityGuard("git config user.name Fixture", BLOCK(), host());
+  assert.match(result.reason, /guard\.gitIdentity\.mode/);
+  assert.match(result.reason, /deny/);
+  assert.match(result.reason, /--show-origin --get-all user\.name/, "the write's own repair survives");
+});
+
+test("M3 — `allow` stands down: no dialog, the write passes, nothing is remembered", async () => {
+  const h = host();
+  for (const command of ASKING_WRITES) {
+    const result = await applyGitIdentityGuard(command, ALLOW(), h);
+    assert.equal(result.block, false, command);
+  }
+  assert.equal(h.asks.length, 0, "allow asks nothing");
+  assert.deepEqual(h.remembered, [], "allow stores no consent for a later switch back to ask");
+});
+
+test("M4 — a headless session blocks in every mode except `allow`", async () => {
+  const allowed = { ...host(), interactive: false };
+  const allowedResult = await applyGitIdentityGuard("git config user.email t@example.test", ALLOW(), allowed);
+  assert.equal(allowedResult.block, false, "allow needs no dialog, so the missing UI is irrelevant");
+  assert.equal(allowed.asks.length, 0);
+
+  const denied = { ...host(), interactive: false };
+  const deniedResult = await applyGitIdentityGuard("git config user.email t@example.test", BLOCK(), denied);
+  assert.equal(deniedResult.block, true);
+  assert.doesNotMatch(deniedResult.reason, /cannot ask/, "deny refuses on its own terms, not for want of a UI");
+});
+
+test("M5 — the pure decision and the applied verdict agree for every command × mode", async () => {
+  const corpus = [
+    ...ASKING_WRITES,
+    "git config commit.gpgsign true",
+    "git config user.email t@example.test; git config commit.gpgsign true",
+    "git config core.autocrlf true",
+    "git config --file /tmp/probe.gitconfig user.email t@example.test",
+    "git config user.name",
+    "git status --porcelain",
+    "git config user.name Fixture # core.autocrlf false",
+  ];
+  let checked = 0;
+  for (const command of corpus) {
+    for (const mode of ["allow", "deny", "ask"]) {
+      const options = guardOptions({ agentGuard: { allow: ["commit.gpgsign"] } }, CWD, SCRATCH, mode);
+      const decision = decideGitConfigCall(command, options);
+      const interactive = host();
+      const applied = await applyGitIdentityGuard(command, options, interactive);
+      const label = `${mode} · ${command}`;
+      if (decision.action === "allow") {
+        assert.equal(applied.block, false, label);
+        assert.equal(interactive.asks.length, 0, label);
+      } else if (decision.action === "block") {
+        assert.equal(applied.block, true, label);
+        assert.equal(interactive.asks.length, 0, label);
+      } else {
+        assert.equal(decision.action, "ask", label);
+        assert.equal(applied.block, false, label);
+        assert.equal(interactive.asks.length, 1, label);
+      }
+      const headless = { ...host(), interactive: false };
+      const headlessVerdict = await applyGitIdentityGuard(command, options, headless);
+      assert.equal(headless.asks.length, 0, label);
+      assert.equal(headlessVerdict.block, decision.action !== "allow", label);
+      checked += 1;
+    }
+  }
+  assert.equal(checked, corpus.length * 3);
+});
+
+test("M6 — a stored consent never overrides `deny`", async () => {
+  const h = { ...host(), approved: () => true };
+  const result = await applyGitIdentityGuard("git config user.name Fixture", BLOCK(), h);
+  assert.equal(result.block, true, "the disposition outranks a consent recorded under `ask`");
+  assert.equal(h.asks.length, 0);
+});
+
+test("M7 — a write that needs no consent never reaches the disposition", async () => {
+  const options = guardOptions({ agentGuard: { allow: ["user.name"] } }, CWD, SCRATCH, "deny");
+  for (const command of [
+    "git config user.name Fixture",
+    "git config --file /tmp/probe.gitconfig user.email t@example.test",
+    "git config core.autocrlf true",
+    "git config --get user.name",
+  ]) {
+    const h = host();
+    const result = await applyGitIdentityGuard(command, options, h);
+    assert.equal(result.block, false, `deny changes how an asking write is answered, not which writes ask: ${command}`);
+    assert.equal(h.asks.length, 0, command);
+  }
+});
+
 /* ── the shipped entry's tool_call wiring (S2) ────────────────────────── */
 
 /** A Pi double: the entry registers its handlers here and returns nothing. */
@@ -447,7 +561,7 @@ function piDouble() {
   };
 }
 
-function wiredContext(cwd, { hasUI = false, confirmed = true, notified = [] } = {}) {
+function wiredContext(cwd, { hasUI = false, confirmed = true, notified = [], asked = [] } = {}) {
   return {
     cwd,
     hasUI,
@@ -459,7 +573,10 @@ function wiredContext(cwd, { hasUI = false, confirmed = true, notified = [] } = 
       notify: (message, kind) => notified.push([message, kind]),
       select: () => undefined,
       input: () => undefined,
-      confirm: async () => confirmed,
+      confirm: async (question) => {
+        asked.push(question);
+        return confirmed;
+      },
     },
     modelRegistry: { find: () => undefined, hasConfiguredAuth: () => false, getAll: () => [] },
   };
@@ -571,5 +688,44 @@ test("wiring: a refused prompt blocks and persists nothing", async (t) => {
     wiredContext(cwd, { hasUI: true, confirmed: false }),
   );
   assert.equal(decision.block, true);
+  assert.equal(fs.existsSync(path.join(agentDir, "git-identity-consent.json")), false);
+});
+
+/** A project whose base config file declares one disposition (issue #626/#655). */
+function dispositionProject(t, prefix, mode) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const cwd = path.join(root, "repo");
+  const agentDir = path.join(root, "agent");
+  fs.mkdirSync(path.join(cwd, ".pi"), { recursive: true });
+  fs.mkdirSync(agentDir, { recursive: true });
+  fs.writeFileSync(path.join(cwd, ".pi", "agentic-workflow.json"), JSON.stringify({ guard: { gitIdentity: { mode } } }));
+  return { cwd, agentDir };
+}
+
+test("W1 — wiring: `guard.gitIdentity.mode: deny` blocks without a dialog, even where the host could ask", async (t) => {
+  const { cwd, agentDir } = dispositionProject(t, "identity-wiring-deny-", "deny");
+  const entry = await shippedEntry(cwd, agentDir);
+  const asked = [];
+  const decision = await entry.handler("tool_call")(
+    { toolName: "bash", input: { command: "git config --global user.name Fixture" } },
+    wiredContext(cwd, { hasUI: true, asked }),
+  );
+  assert.equal(decision.block, true);
+  assert.equal(asked.length, 0, "deny opens no dialog");
+  assert.match(decision.reason, /guard\.gitIdentity\.mode/);
+  assert.equal(fs.existsSync(path.join(agentDir, "git-identity-consent.json")), false);
+});
+
+test("W2 — wiring: `guard.gitIdentity.mode: allow` passes the write untouched, with no dialog", async (t) => {
+  const { cwd, agentDir } = dispositionProject(t, "identity-wiring-allow-", "allow");
+  const entry = await shippedEntry(cwd, agentDir);
+  const asked = [];
+  const decision = await entry.handler("tool_call")(
+    { toolName: "bash", input: { command: "git config --global user.name Fixture" } },
+    wiredContext(cwd, { hasUI: true, asked }),
+  );
+  assert.equal(decision, undefined, "the call reaches the tool untouched");
+  assert.equal(asked.length, 0, "allow opens no dialog");
   assert.equal(fs.existsSync(path.join(agentDir, "git-identity-consent.json")), false);
 });
