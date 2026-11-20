@@ -30,6 +30,12 @@
 //                concurrency row for glm5.3 says base 7 / premium 10 — the
 //                docs page confirms 7/10; the model entry's "premium only"
 //                concurrency note was superseded).
+//   Transcription (2026-11-19, issue #632): the four credit-only entries
+//                stated their window only in their own `description` prose
+//                ("…, 1M context"), so the numeric `context` field was added
+//                to each — the fact the file already asserted, made
+//                machine-readable for the preset's capability record. No rate,
+//                allowance or limit was touched.
 //
 // This file is NOT machine-consumed by the runtime: the source of truth for
 // route data stays `src/preset.ts` (NAN_MODELS + PROFILE_LADDERS) and the
@@ -220,6 +226,7 @@
       "name": "Kimi K3.1 Pro",
       "slug": "kimi-k3.1-pro",
       "type": "chat",
+      "context": 1000000,
       "provider": "Moonshot",
       "tags": ["ZDR", "External provider"],
       "description": "Moonshot frontier reasoning model, 1M context",
@@ -237,6 +244,7 @@
       "name": "Qwen3.8 Max",
       "slug": "qwen3.8-max",
       "type": "chat",
+      "context": 1000000,
       "provider": "External",
       "tags": ["ZDR", "External provider"],
       "description": "Largest Qwen 3.8, hard reasoning & agents, 1M context",
@@ -253,6 +261,7 @@
       "name": "DeepSeek V4-Pro",
       "slug": "deepseek-v4-pro",
       "type": "chat",
+      "context": 1000000,
       "provider": "External",
       "tags": ["ZDR", "External provider"],
       "description": "DeepSeek large reasoning & coding, 1M context",
@@ -269,6 +278,7 @@
       "name": "Hy4",
       "slug": "hy4",
       "type": "chat",
+      "context": 1000000,
       "provider": "Tencent (Hunyuan 4)",
       "tags": ["ZDR", "External provider"],
       "description": "Hunyuan 4 agents & long docs, 1M context",

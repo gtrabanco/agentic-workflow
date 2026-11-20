@@ -1,6 +1,0 @@
-## 2026-11-19T21:02:30Z — feat/645-guide-minimalism-doctrine — narrative
-- **Commits:** 17 (`c463d7c2…363492b1`)
-- **Files:** 26 files
-- **Summary:** Applied issue #645 (guide minimalism) inline as the owner's local workflow: no lane machinery, no review-change, no fold cycle — the user is the external verifier. Shipped: ## Inviolable rules in AGENTS.md (14 laws, each with owner pointer and state), a reduction pass (worktree procedure → WORKTREES.md, config → CONFIG.md, skill-lint → SKILL_AUTHORING.md): guide from 745→602 lines, ceilings re-based down. scripts/inviolable-rules.mjs gate validates every row. Doctrine carried to scaffold: SKILL_AUTHORING.md, template/AGENTS.md, init-workspace. Package README budgeted. All gates green (local-gate PASS 17 steps, root-suite 128 PASS, dimension-regression clean). PR #652 opened against main.
-- **Decisions:** D1/D10: pin is block line count (not heading-bounded) because the budgets checker can't load a heading reader inside a copied fixture. D5: materialized state resolves against gate inventory OR repo path because the package's suites aren't inventoried. D11: package guide bounded and not trimmed — measured overlap is one line.
-- **Next:** Owner's external verdict on PR #652 (https://github.com/gtrabanco/agentic-workflow/pull/652); merging settles the roadmap row.

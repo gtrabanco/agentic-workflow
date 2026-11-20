@@ -94,6 +94,10 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // enforced unless an operator opts out, and node stays the documented
     // fallback for the forms `node --test` and the root suite's leg.
     toolChoice: { enabled: true, mode: "block" },
+    // Issue #632: the model-aware phase-batching policy ships OFF — the
+    // companion preset's recommendation is opt-in until the tier-cost corpus
+    // shows a measured saving at equal PASS parity.
+    phaseBatching: { enabled: false },
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });

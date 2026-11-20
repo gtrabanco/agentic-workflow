@@ -1,6 +1,0 @@
-## 2026-11-17T16:48:01Z — chore-615-upgrade-pi-extensible-workflows — fix/615-upgrade-pi-extensible-workflows
-- **Commits:** 4 (`22a726a2…0f8ae579`)
-- **Files:** 7 files
-- **Summary:** Upgraded the pinned pi-extensible-workflows 6.3.0 -> 6.4.0 (issue #615): read the window from the upstream CHANGELOG at the v6.4.0 tag and the two npm tarballs, classified all 9 changelog entries plus the 7 hunks of the loaded entry, inventoried the two new APIs as owner proposals, moved the pin with its lock and a release intent, and repaired the README sentence that stated the old version. The pins half of the parity gate is green again, and the load probes show the 6.4.0 entry registering the same five tools with identical schemas on the Pi 1.1.0 floor and on 1.5.2.
-- **Decisions:** The bump is the last step: classification and proposals land in the unit doc before the pin moves. A changeset declares the package instead of a hand version bump (one train version). worktreeSetup and reviewLoop.sharedReviewer are proposals, not scope; the remaining minimatch 10.2.6 is Pi's own nested resolution, not ours.
-- **Next:** Owner's external verification of the diff; then push, PR with the Closes #615 footer, and the release intent applies at cut.

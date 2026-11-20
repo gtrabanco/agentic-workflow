@@ -1,6 +1,0 @@
-## 2026-11-17T21:45:20Z — feat/554-new-feature-move-the-template-hook-scripts-into — narrative
-- **Commits:** 16 (`2e160663…0057f5b7`)
-- **Files:** 67 files
-- **Summary:** Apply the EXTERNAL VERIFY correction batch for unit 554 (docs/features/554-hook-scripts-to-cli/): triage and fix all 10 blockers (B1–B10), verify no regressions in sibling unit 546 or the root gate, and push the batch.
-- **Decisions:** B1–B5: re-spelled acceptance criterion checks to match actual code, unbolded task bullets to pass phase-lint, linked missing S2/S3/S16 to task phases, verified O17 by anchoring regex on unique tail to avoid self-matching; B6–B9: corrected BOOTSTRAP_DISCOVERY jq claim, updated git-config-writes comments to crate module, fixed parity test comment and shim header; B8 sibling: re-scoped unit 546's O1/O12/O19 to new crate home modules and verified them; B10: obtained owner approval via ask_user (approve-and-record), recorded path-protection-records@1 block with justification + human-owner rows in decisions.md, applied comment-only header fix to identity-hook-parity.test.mjs; push: first attempt blocked by real gate failure (doc.structure test flake), confirmed zero crate bytes in push range, retried and pushed clean
-- **Next:** Your verdict on PR #620 (receipt: VERIFIED, 0 open blockers, 10/10 folded) and the merge; issue #554 closes via the PR

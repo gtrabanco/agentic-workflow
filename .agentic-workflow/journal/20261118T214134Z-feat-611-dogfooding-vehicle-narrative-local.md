@@ -1,6 +1,0 @@
-## 2026-11-18T21:41:34Z — feat-611-dogfooding-vehicle — narrative
-- **Commits:** 5 (`a6fd5231…5f4cffc6`)
-- **Files:** 22 files
-- **Summary:** Applied issue #611 (dogfooding vehicle) inline on feat-611-dogfooding-vehicle: setup-env arms AGENTIC_WORKFLOW_RUNNER through a gitignored .pi/vehicle.env and verifies it read-only; the tool doctor gains the dogfooding-vehicle row (unarmed/stale/ok/unreachable/not-applicable with installed version, target and newest canary tag plus the exact arming or refresh command); triage-issue gains the setup-defect pre-classification, pinned prose-to-code by scripts/triage-setup-defect.test.mjs.
-- **Decisions:** D1 arming is default-on where pi is installed, opt-in elsewhere. D2 AC3's three statuses are ordered once in evaluateVehicle (unarmed when unset, stale when the override does not reach this checkout, unreachable for a missing armed path) with the behind-release fact carried in every branch. D3 the route's vocabulary is setup-defect/code-bug/unresolved and a fully explained report ends as wontfix — no new triage verdict. D4 the arming surface is an env fragment plus the documented source, never a config key or daemon change.
-- **Next:** Owner's external verdict on the handoff; the merge and any published canary cut are the owner's.
