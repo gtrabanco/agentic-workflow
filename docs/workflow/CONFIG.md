@@ -135,7 +135,7 @@ resolved value falls back to the shipped `ask`.
 
 | guard | what it decides | modes | shipped default | can it ask | configured by |
 |---|---|---|---|---|---|
-| `gitIdentity` | an agent's `git config` write (issue #514) | `allow`/`deny`/`ask` | `ask` | yes — the consent store remembers the answer; a session with no UI is denied | `guard.gitIdentity.mode`, plus the per-key exemption list `gitIdentity.agentGuard.allow` |
+| `gitIdentity` | an agent's `git config` write (issue #514) | `allow`/`deny`/`ask` | `ask` | yes — the consent store remembers the answer; a session with no UI is refused in every mode except `allow` | `guard.gitIdentity.mode`, plus the per-key exemption list `gitIdentity.agentGuard.allow` |
 | `toolChoice` | a `grep`-as-search or `node`-as-default command (issue #610) | `allow`/`deny`/`ask` | `ask` | no — `ask` answers as `deny` | `guard.toolChoice.mode`, plus the carrier's own `enabled` and `mode` (`block`/`rewrite`) under `pi.toolChoice` |
 | `receipt` | an inline `gh pr comment` carrying a review marker (issue #182) | `allow`/`deny`/`ask` | `ask` | no — `ask` answers as `deny` | `guard.receipt.mode` |
 | `pathProtection` | a write or rename to a protected path (feature 60), and the out-of-root refusal for the file tools (OS-temp scratch excepted, issue #654) | always on (no disposition) | `approval` per phase/operation | not configurable — the section is tighten-only, so no scope can lower the floor | `pathProtection.protectedGlobs` and `pathProtection.requirements` |

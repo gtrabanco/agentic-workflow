@@ -592,14 +592,16 @@ accepted by the forge as verified. The guard closes the agent-side half.
 
 On every `bash` call the extension reads the command, finds the `git config`
 writes in it (legacy flags such as `--unset` and modern subcommands such as
-`git config unset`), and answers:
+`git config unset`), and answers. The rows below are the shipped `ask`
+posture — what the guard asks about — and the project's disposition decides how
+an asking row is answered:
 
 | Invocation | Verdict |
 |---|---|
 | read-only (`--get`, `--list`, `--show-origin`, `get`, `list`) | passes |
 | one positional — `git config user.name`, `git config --global user.email` (git prints the value) | passes |
 | per-invocation `-c user.name=…` | passes — it writes nothing |
-| identity or signing write (`user.*`, `commit.gpgsign`, `gpg.*`, `tag.gpgsign`) | asks (headless: blocks) |
+| identity or signing write (`user.*`, `commit.gpgsign`, `gpg.*`, `tag.gpgsign`) | asks (headless: blocks, unless the disposition is `deny` or `allow`) |
 | `--unset`, `--unset-all`, `--replace-all`, `remove-section`, `rename-section`, `edit` | asks |
 | `--global`, `--system`, `--worktree`, `--file` outside a scratch directory | asks |
 | a local, non-identity write (`core.autocrlf`, `merge.<driver>.driver`) | passes |
@@ -607,11 +609,18 @@ writes in it (legacy flags such as `--unset` and modern subcommands such as
 An approval is remembered **per project and per scope+key** in
 `git-identity-consent.json` beside the config, so the same question is never
 asked twice and a different project is never covered. Two keys control it:
-`guard.gitIdentity.mode` (issue #626 — `allow`, `deny`, `ask`; `ask` is the
-shipped default and answers as `deny` in a session with no UI) and
+`guard.gitIdentity.mode` (issue #626 — `allow`, `deny`, `ask`) and
 `gitIdentity.agentGuard.allow: ["user.name"]` for the writes a project permits
 without asking (the allow list covers local, non-destructive writes only — a
 removal or a shared file still asks).
+
+The disposition answers the rows that ask and nothing else (issue #655): `ask`
+(the shipped default) shows the dialog and remembers the answer, `deny` refuses
+the write without opening one, and `allow` stands the guard down. A session with
+no UI is refused in every mode except `allow` — `ask` blocks there because an
+unanswered prompt is not consent, while `deny` needs no UI and `allow` asks
+nothing at all. A stored approval answers the `ask` question alone: it never
+reopens a `deny`.
 
 The verdict is about the command bash runs, not the prose a command carries: a
 heredoc body is data (`git config user.email` quoted inside one is a read, never
