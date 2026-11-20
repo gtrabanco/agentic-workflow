@@ -351,6 +351,7 @@ The ledger lives beside this document: [`planning-obligations.md`](planning-obli
 - **G1** — 2026-11-22, `HEAD 3a7d8e6ff8a163835aee7a795ebe73971f4bbdb7`, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 829s`.
 - **E18** — 2026-11-22, differential check against a `git archive origin/main` copy at `/tmp/base-651` (with its own `bun install`, never committed): `verify` on a real spec-ref doc `identical` (both exit 2 on that doc's own open obligations), `doc read --json` `identical`, `docs-generate --check` `identical`, `findings-corpus --repo <base tree>` `identical` after the carrier gate was narrowed to the settled stamp (the first run differed by one `migrated-carriers` count — a `## Log` without a `## Findings` is not a carrier, so the gate reads the stamp, not the section); `doc archive` is absent on the base and present here, which is the asked change.
 - **G2** — 2026-11-22, `HEAD 3e724794a922466f3248802fe16c89263f02042a`, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 840s` (the receipt head; the run covers every step, `root-suite`, both crate legs, the schema and pi node-compat legs included).
+- **G4** — 2026-11-22, `HEAD e3148e00d`, opened pull request [#661](https://github.com/gtrabanco/agentic-workflow/pull/661) and linked the roadmap row; the release-settle step (#316) lands the row's `done · #661` only after the merge.
 - **G3** — 2026-11-22, `HEAD 34f7cf9dc22b7029fddf6642b05fbe7157c50b44`, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 19 step(s) in 887s` (the final code head: the differential fix included).
 - **R1** — 2026-11-22, `HEAD 3a7d8e6ff8a163835aee7a795ebe73971f4bbdb7` · no review run on this change: the owner's local application workflow runs the unit inline and the owner is the external verifier, so the gate is the receipt and no `review-change` receipt is claimed.
 
@@ -363,6 +364,7 @@ self-approved here.
 
 - Issue [#651](https://github.com/gtrabanco/agentic-workflow/issues/651) — the
   feature record (analysis of 2026-11-19).
-- Roadmap row `651 · doc-retention` (`docs/ROADMAP.md`).
+- Roadmap row `651 · doc-retention` (`docs/ROADMAP.md`, linked to the PR).
+- Pull request [#661](https://github.com/gtrabanco/agentic-workflow/pull/661).
 - Companion: issue #650 (decision promotion, shipped).
 - Carrier precedent: issue #308 (`spec-by-reference`), issue #462 (the stamp).
