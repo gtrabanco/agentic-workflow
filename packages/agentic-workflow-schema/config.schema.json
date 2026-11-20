@@ -431,6 +431,47 @@
           "description": "Logins excluded regardless of association; a deny always beats an allow."
         }
       }
+    },
+    "docRetention": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "keep-all",
+            "archive"
+          ],
+          "default": "keep-all"
+        },
+        "pendingTrimAfterDays": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "archiveDir": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*\\.\\.).+$",
+          "default": ".agentic-workflow/archive"
+        },
+        "archiveRetentionDays": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "default": null
+        },
+        "seamHook": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "default": null
+        }
+      }
     }
   }
 }

@@ -575,6 +575,7 @@ const DETAIL_KEYS = [
   "features", "fixes", "startable_now", "blocked_units", "open_prs", "pending_triage",
   "untriaged_issues", "workflow_observations", "degradations", "continuation_refusal",
   "crash_recovery", "urgent", "substrate_notice", "risk_tier", "size_tier",
+  "retention",
 ] as const;
 
 function rejectUnexpectedEnvelopeKeys(value: Record<string, unknown>, errors: string[]): void {
@@ -605,6 +606,27 @@ function rejectUnexpectedEnvelopeKeys(value: Record<string, unknown>, errors: st
   rejectUnexpectedKeys(value.detail, "detail", DETAIL_KEYS, errors);
   if (isObj(value.detail) && isObj(value.detail.size_tier)) {
     rejectUnexpectedKeys(value.detail.size_tier, "detail.size_tier", ["size_tier", "changed_paths"], errors);
+  }
+  // Issue #651: the retention projection. One row per candidate unit, plus the
+  // out-of-scope rows the trimmer must report instead of dropping (S5).
+  if (isObj(value.detail) && isObj(value.detail.retention)) {
+    rejectUnexpectedKeys(value.detail.retention, "detail.retention", ["pending_trim", "out_of_scope"], errors);
+    for (const key of ["pending_trim", "out_of_scope"]) {
+      const rows = value.detail.retention[key];
+      if (rows === undefined) continue;
+      if (!Array.isArray(rows)) {
+        errors.push(`detail.retention.${key} must be an array`);
+        continue;
+      }
+      rows.forEach((row, index) => {
+        rejectUnexpectedKeys(
+          row,
+          `detail.retention.${key}[${index}]`,
+          ["unit", "state", "reason", "command", "files"],
+          errors,
+        );
+      });
+    }
   }
   if (isObj(value.detail) && isObj(value.detail.risk_tier)) {
     rejectUnexpectedKeys(value.detail.risk_tier, "detail.risk_tier", ["tier", "reason", "reason_kind", "signals", "task_size"], errors);
@@ -3959,6 +3981,7 @@ export {
   PRE_EXECUTION_VERDICTS,
   UNIT_DOC_REQUIRED_SECTIONS,
   UNIT_DOC_SECTION_SHAPES,
+  UNIT_DOC_SETTLED_SECTIONS,
   UNIT_DOC_SPEC_REF_SECTIONS,
   isImpossibleReceiptTimeline,
   resolveUnitDocShape,
@@ -4270,6 +4293,39 @@ export type {
   PhaseBatchingToolHarness,
   PhaseBatchingValidationResult,
 } from "./phase-batching.js";
+
+// ── Document retention (issue #651) ──────────────────────────────────────────
+// The trim/keep matrix, the one eligibility predicate the CLI, the sensor and
+// the audit producer share, and the archive manifest a restore re-hashes.
+export {
+  DOC_RETENTION_ARCHIVE_CONTRACT,
+  DOC_RETENTION_ARCHIVE_FIELDS,
+  DOC_RETENTION_ARCHIVE_ROW_FIELDS,
+  DOC_RETENTION_DEFAULTS,
+  DOC_RETENTION_MODES,
+  DOC_RETENTION_SCHEMA,
+  RETENTION_DECLARATION_CONTRACT,
+  RETENTION_DECLARATION_DISPOSITIONS,
+  RETENTION_DIGEST_PATTERN,
+  RETENTION_STATES,
+  UNIT_DOC_KEEP_FILES,
+  UNIT_DOC_TRIM_FILES,
+  classifyUnitRetention,
+  publishedDisposition,
+  validateRetentionArchive,
+} from "./doc-retention.js";
+export type {
+  DocRetentionMode,
+  RetentionArchive,
+  RetentionArchiveRow,
+  RetentionArchiveValidation,
+  RetentionCandidate,
+  RetentionDeclarationDisposition,
+  RetentionState,
+  RetentionVerdict,
+  UnitDocKeepFile,
+  UnitDocTrimFile,
+} from "./doc-retention.js";
 
 // ── The document provenance stamp (issue #462) ──────────────────────────────
 // One versioned grammar, three axes (content grammars, carrier format, forensic

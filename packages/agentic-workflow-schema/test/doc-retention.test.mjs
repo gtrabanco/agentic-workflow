@@ -86,7 +86,6 @@ test("the settled carrier resolves from its own headings and never from another 
     "Acceptance criteria",
     "Impact",
     "Non-goals",
-    "Future",
     "Future cost",
     "Known pre-existing issues",
     "Log",

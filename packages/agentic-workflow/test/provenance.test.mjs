@@ -237,7 +237,7 @@ test("an older document degrades inside the window and refuses outside it", () =
     contract: "doc-provenance@1",
     written_by: "agentic-workflow@9.0.0",
     schema: "@gtrabanco/agentic-workflow-schema@9.0.0",
-    format: "unit-doc@3",
+    format: "unit-doc@4",
     grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 1 },
   })));
   assert.equal(newer.verdict, "refuse");
@@ -284,7 +284,7 @@ test("verify refuses an unpublished format and a newer-than-reader generation", 
     contract: "doc-provenance@1",
     written_by: `agentic-workflow@${PACKAGE.version}`,
     schema: `@gtrabanco/agentic-workflow-schema@${PACKAGE.version}`,
-    format: "unit-doc@3",
+    format: "unit-doc@4",
     grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 1 },
   }));
   const codesB = verifyUnitDoc({ text: newer, path: "docs/features/462-example/SPEC.md" }).violations.map((v) => v.code);
