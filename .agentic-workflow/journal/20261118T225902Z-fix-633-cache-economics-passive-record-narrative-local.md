@@ -1,6 +1,0 @@
-## 2026-11-18T22:58:49Z — fix/633-cache-economics-passive-record — correction batch 1: AC-S3 URL count
-- **Commits:** 1 (`f88e2a47…f88e2a47`)
-- **Files:** docs/fix/633-cache-economics-passive-record/SPEC.md, docs/fix/633-cache-economics-passive-record/external-verify.md
-- **Summary:** Folded the external verify's single blocker (B1) in one correction batch: AC-S3's frozen total-URL count (20) had drifted to 23 at the shipped head because the count reads an append-only document; the repair replaces it with a distinct-source count of the four canonical URLs (sort -u), which cannot drift. Advisories triaged inside the batch: A1 (the emitter truncates the One-line projection cell; pre-existing at base on row 630) is outside S6 — owner's call; A2 already recorded in the doc; A3 the disclosed fragment convention. Recheck green on every touched validator; local gate PASS — 19 steps in 530s at f88e2a47.
-- **Decisions:** D5 in the unit doc records the fold (the findings grammar folds a row into a Log line, the table stays open-rows-only) and each advisory's disposition; E6 carries a dated supersession note instead of a silent rewrite; E13 the blockers-only recheck; G3 the gate receipt at the batch head.
-- **Next:** The owner's delta re-verify — blockers only — then merge; the A1 emitter call is the owner's (a separate unit's scope).

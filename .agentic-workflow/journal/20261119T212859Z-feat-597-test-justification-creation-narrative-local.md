@@ -1,6 +1,0 @@
-## 2026-11-19T21:28:59Z — feat/597-test-justification-creation — manual
-- **Commits:** 3 (`6f2de432…db288950`)
-- **Files:** 13 files
-- **Summary:** Applied issue #597: a new test now carries one justification line naming the independent obligation it covers, and test deletion gained an authority stated where it executes. The tests-step reference owns two versioned blocks (test-justification@1, test-deletion-authority@1); the RED evidence row carries the clause inside its existing five columns; execute-phase's fixed lists admit a plan-marked deletion and refuse the disguised weakening; fold-findings executes a fix-now (delete) row instead of reclassifying it. The guide links the boundary instead of restating it, two normative surfaces and two gate-inventory rows register the prose, and the touched machine regions plus the seven execute-phase routes were re-pinned to their measurements.
-- **Decisions:** D2: the shipped cost-over-value id wins over the issue's cost-over-risk spelling (one owner for the grounds). D3: the no-new-script non-goal is read strictly, so AC-3's observation half is an evidenced n/a rather than a prose pin suite.
-- **Next:** Hand the diff to the owner for external verification, then open the single PR against main (Closes #597).

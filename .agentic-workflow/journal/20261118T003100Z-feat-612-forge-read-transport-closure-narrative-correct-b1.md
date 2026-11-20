@@ -1,6 +1,0 @@
-## 2026-11-18T00:31:00Z — feat/612-forge-read-transport-closure — 612 external verify correction batch
-- **Commits:** 3 (`274644b9…30206efa`)
-- **Files:** 4 files (SPEC.md, planning-evidence.md, external-verify.md, skills/unit-lane/SKILL.md)
-- **Summary:** Ran full EXTERNAL VERIFY on the #612 unit (base 5334f5af, head 274644b9). Found 2 blockers: B1 (unit-lane/SKILL.md:112-117 pointing at deleted README heading "What the layer does not cover" and denying the comment collector the change added) and B2 (R5 detector gap on --jq .body REST reads). Applied one correction batch: fixed B1 by re-pointing the paragraph to the new README heading and clarifying the ad-hoc residual vs guarded path. Re-evaluated B2: no live file in the scanned tree uses --jq .body on a REST endpoint, so R5's gap is unexploited — demoted to advisory A3. Verdict changed to VERIFIED. All validators green (crate 1,273, root suite, drift 7 citations, discipline 9 pass, pin 9 pass, shim 8 pass, context budgets green).
-- **Decisions:** B1 was genuine F51/F53 sibling defect. B2 over-claiming: R5 correctly fires on REST .body/.title property reads but misses --jq .body string form; no in-tree producer uses either. Next: unit VERIFIED, owner to merge PR #612.
-- **Next:** Unit is VERIFIED. Owner to merge PR #612 or continue.
