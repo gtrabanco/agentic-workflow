@@ -446,3 +446,34 @@ test("estate: the cost column is the gate's own measurement and an absent log re
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("estate: the wall-clock section is the budget manifest's own rows, never a typed table", () => {
+  const root = makeTree({
+    "scripts/a.test.mjs": suiteBody(`${TAG_PREFIX}protects=scripts/a.mjs obligations=contract`),
+    "scripts/a.mjs": "export const a = 1;\n",
+  });
+  try {
+    const budget = path.join(root, "budget.json");
+    fs.writeFileSync(
+      budget,
+      JSON.stringify({
+        contract: "pre-push-budget@1",
+        budgetSeconds: 480,
+        host: "fixture host",
+        classes: [
+          { class: "docs-only", before: 12, after: 11, note: "n" },
+          { class: "script change", before: 700, after: 300, note: "n" },
+          { class: "package change", before: 720, after: 310, note: "n" },
+        ],
+      }),
+    );
+    const report = run(["--root", root, "--estate", "--budget", budget]);
+    assert.equal(report.status, 0, report.stderr);
+    const rows = report.stdout.split("\n").filter((line) => /^\| `(docs-only|script change|package change)` /.test(line));
+    assert.equal(rows.length, 3, "one row per change class, read from the manifest");
+    assert.match(rows[1], /\| 700 \| 300 \|/, "the before and after figures are the manifest's");
+    assert.match(report.stdout, /budget: 480 s on fixture host/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

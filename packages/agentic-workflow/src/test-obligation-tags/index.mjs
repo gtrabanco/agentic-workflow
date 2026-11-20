@@ -541,13 +541,14 @@ export function estateRows({ root, rows, costs = new Map(), adjudications = new 
     ) {
       evidence = "cost-over-risk";
     }
+    const derivedVerdict = verdict;
     const adjudication = adjudications.get(row.suite);
     const adjudicated = adjudication !== undefined;
     if (adjudication !== undefined && (adjudication.verdict === "keep" || adjudication.verdict === "delete")) {
       verdict = adjudication.verdict;
       survivor = adjudication.verdict === "keep" ? null : survivor;
     }
-    return { suite: row.suite, scope: row.scope, surfaces: row.surfaces, obligations: row.obligations, cost: row.cost, evidence, verdict, survivor, adjudicated, selected: false };
+    return { suite: row.suite, scope: row.scope, surfaces: row.surfaces, obligations: row.obligations, cost: row.cost, evidence, derived: derivedVerdict, verdict, survivor, adjudicated, selected: false };
   });
   // The cost-over-risk standard fires as a measurement; the bounded instrument
   // is the declared selection (at most `SUSPECT_LIMIT`, highest cost per
@@ -589,13 +590,56 @@ function estateReport(rows, scope, source = null) {
     const verdict = row.survivor !== null ? `${row.verdict} → \`${row.survivor}\`` : row.selected ? `${row.verdict} · selected` : row.verdict;
     lines.push(`| \`${row.suite}\` | ${row.scope} | ${surfaces} | ${obligations} | ${cost} | ${row.evidence} | ${verdict} |`);
   }
+  const adjudicated = rows.filter((row) => row.adjudicated || row.selected);
+  if (adjudicated.length > 0) {
+    lines.push("", "### adjudication", "", "| suite | standard | derived | adjudicated |", "|---|---|---|---|");
+    for (const row of adjudicated) {
+      lines.push(`| \`${row.suite}\` | ${row.evidence} | ${row.derived ?? row.verdict} | ${row.verdict} |`);
+    }
+    const nonKeep = rows.filter((row) => row.derived !== undefined && row.derived !== "keep").length;
+    lines.push(
+      "",
+      `derived non-keep: ${nonKeep} · selected: ${rows.filter((row) => row.selected).length} · adjudicated: ${adjudicated.length} of ${adjudicated.length}`,
+    );
+  }
   if (missing.length > 0) {
     lines.push("", "missing adjudication (a standard that would change the tree needs its ground recorded):");
     for (const row of missing) lines.push(`  ${row.suite} — ${row.evidence}`);
   }
-  const predicted = missing.length > 0 ? "FAIL" : "PASS";
-  lines.push("", `verdict: ${predicted}`);
   return { text: lines.join("\n"), tallies, missing };
+}
+
+/** The declared push budget's receipt (`pre-push-budget@1`), as the estate
+ *  report renders it: the three change classes and their two measurements. The
+ *  numbers live in that manifest and nowhere else — a table typed into a unit
+ *  doc drifts from the run it claims. */
+export function readBudgetManifest(text) {
+  const manifest = JSON.parse(text);
+  if (manifest?.contract !== "pre-push-budget@1") throw new Error("the budget manifest is not pre-push-budget@1");
+  if (!Array.isArray(manifest.classes) || manifest.classes.length === 0) throw new Error("the budget manifest records no change class");
+  for (const row of manifest.classes) {
+    if (typeof row.class !== "string" || !Number.isFinite(row.before) || !Number.isFinite(row.after)) {
+      throw new Error(`the budget manifest's row ${JSON.stringify(row.class)} is missing its class or a measurement`);
+    }
+  }
+  return manifest;
+}
+
+function budgetSection(manifest) {
+  const over = manifest.classes.filter((row) => row.after > manifest.budgetSeconds);
+  const lines = [
+    "### wall-clock",
+    "",
+    `budget: ${manifest.budgetSeconds} s on ${manifest.host}`,
+    "",
+    "| change class | before (s) | after (s) | note |",
+    "|---|---|---|---|",
+    ...manifest.classes.map((row) => `| \`${row.class}\` | ${row.before} | ${row.after} | ${row.note ?? "-"} |`),
+  ];
+  if (over.length > 0) {
+    lines.push("", `over budget: ${over.map((row) => `${row.class} at ${row.after}s`).join(", ")}`);
+  }
+  return { text: lines.join("\n"), over };
 }
 
 /* --------------------------------------------------------------------- the CLI */
@@ -603,14 +647,14 @@ function estateReport(rows, scope, source = null) {
 function usage(message) {
   process.stderr.write(`test-obligation-tags: ${message}\n`);
   process.stderr.write(
-    "usage: test-obligation-tags [--root <dir>] [--list|--json|--vocabulary|--sweep|--estate [--cost <log|->] [--adjudications <file>]]\n",
+    "usage: test-obligation-tags [--root <dir>] [--list|--json|--vocabulary|--sweep|--estate [--cost <log|->] [--adjudications <file>] [--budget <file>]]\n",
   );
   process.exit(2);
 }
 
 export function main(argv = process.argv.slice(2), context = {}) {
   setRoot(context.root);
-  const options = { root: ROOT, mode: "gate", cost: null, estate: false, adjudications: null };
+  const options = { root: ROOT, mode: "gate", cost: null, estate: false, adjudications: null, budget: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--root") {
@@ -624,6 +668,10 @@ export function main(argv = process.argv.slice(2), context = {}) {
           : fs.readFileSync(path.resolve(value), "utf8");
     } else if (arg === "--estate") {
       options.estate = true;
+    } else if (arg === "--budget") {
+      const value = argv[++index];
+      if (value === undefined) usage("--budget needs a path");
+      options.budget = fs.readFileSync(path.resolve(value), "utf8");
     } else if (arg === "--adjudications") {
       const value = argv[++index];
       if (value === undefined) usage("--adjudications needs a path");
@@ -677,11 +725,29 @@ export function main(argv = process.argv.slice(2), context = {}) {
     const adjudications = options.adjudications === null ? new Map() : readAdjudications(options.adjudications);
     const estate = estateRows({ root: options.root, rows, costs, adjudications });
     const { text, tallies, missing } = estateReport(estate, scope, options.adjudicationPath);
-    const verdict = missing.length > 0 ? "FAIL" : "PASS";
+    const budget = options.budget === null ? null : readBudgetManifest(options.budget);
+    const section = budget === null ? null : budgetSection(budget);
+    const over = section === null ? [] : section.over;
+    const verdict = missing.length > 0 || over.length > 0 ? "FAIL" : "PASS";
+    const body = section === null ? text : `${text}\n\n${section.text}`;
     if (options.mode === "json") {
-      process.stdout.write(`${JSON.stringify({ contract: CONTRACT_ID, scope, rows: estate, tallies, missing: missing.map((row) => row.suite), verdict }, null, 2)}\n`);
+      process.stdout.write(
+        `${JSON.stringify(
+          {
+            contract: CONTRACT_ID,
+            scope,
+            rows: estate,
+            tallies,
+            missing: missing.map((row) => row.suite),
+            budget: budget === null ? null : { budgetSeconds: budget.budgetSeconds, host: budget.host, classes: budget.classes },
+            verdict,
+          },
+          null,
+          2,
+        )}\n`,
+      );
     } else {
-      process.stdout.write(`${text}\n`);
+      process.stdout.write(`${body}\n\nverdict: ${verdict}\n`);
     }
     process.exit(verdict === "PASS" ? 0 : 1);
   }
