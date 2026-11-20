@@ -184,7 +184,9 @@ import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passes/resolve.mjs";
 import { provisionRg, realOps } from "../src/provision/rg.mjs";
+import { provisionPermissions } from "../src/provision/permissions.mjs";
 import { ConfigError, createConfigApi, renderInitTemplate } from "../src/config/api.mjs";
+import { readConfigDocument, scopeDirectories } from "../src/config/store.mjs";
 import { discoverConfigExtensions } from "../src/config/discovery.mjs";
 import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
@@ -1157,11 +1159,94 @@ switch (command) {
   case "provision": {
     const tool = rawArgs[0];
     if (!tool || tool.startsWith("--")) {
-      process.stderr.write("usage: agentic-workflow provision rg [--yes] [--dir <root>] [--json]\n");
+      process.stderr.write("usage: agentic-workflow provision <rg|permissions> [--yes|--write] [--dir <root>] [--scope project|global] [--json]\n");
       process.exit(2);
     }
+    if (tool === "permissions") {
+      // Issue #654 — the guard-plugin policy projection. The declared guards are
+      // read from the resolved `pi.guardPlugins` section, so the CLI needs the
+      // package's own descriptor and nothing else from it.
+      const root = flagValue(restArgs, "--dir") ? resolve(flagValue(restArgs, "--dir")) : process.cwd();
+      const scope = flagValue(restArgs, "--scope") ?? "project";
+      if (scope !== "project" && scope !== "global") {
+        process.stderr.write(`PROVISION REFUSAL — unknown scope "${scope}": expected project or global\n`);
+        process.exit(2);
+      }
+      const discovered = discoverConfigExtensions({ projectDir: root });
+      const api = createConfigApi({
+        projectDir: root,
+        extensions: discovered.extensions.map((entry) => entry.descriptor),
+      });
+      let guards = {};
+      // The file the `pi` section owns (its descriptor's `file`), named for the
+      // refusal path below, which must reason about a file whose section is not
+      // registered — the one state the resolved read cannot see.
+      const PI_CONFIG_FILE = "pi-agentic-workflow.json";
+      const refusePermissions = (reason, issues) => {
+        const out = { ok: false, verdict: "refused", exitCode: 2, target: null, text: "", issues };
+        if (parsed.json) process.stdout.write(`${JSON.stringify(out)}\n`);
+        else {
+          process.stderr.write(`PROVISION permissions — refused: ${reason}\n`);
+          for (const issue of issues) process.stderr.write(`  ${issue.path}: ${issue.message}\n`);
+        }
+        process.exit(2);
+      };
+      try {
+        const section = api.get("resolved", ["pi", "guardPlugins"]);
+        // A present-but-invalid `pi` section is this command's precondition, not
+        // something to project defaults over: `config get … --scope project`
+        // refuses the same file loudly, and silence here would drop its
+        // declarations with success (external-verify B1).
+        const sectionIssues = api
+          .validate("both")
+          .flatMap((result) => result.issues)
+          .filter((issue) => issue.path.startsWith("pi.") || issue.path.endsWith(PI_CONFIG_FILE));
+        if (sectionIssues.length > 0) refusePermissions("the config file is not valid", sectionIssues);
+        if (section.value.enabled !== false) guards = section.value.guards ?? {};
+      } catch (error) {
+        if (!(error instanceof ConfigError)) throw error;
+        if (error.code === "INVALID") {
+          refusePermissions("the config file is not valid", error.issues);
+        }
+        // NOT_FOUND / UNKNOWN: nothing is declared, so the baseline stands alone
+        // — unless a scope file still declares what the unregistered section
+        // cannot resolve: silence there would drop it with success (B1).
+        const { project, global } = scopeDirectories({ projectDir: root, env: process.env });
+        for (const dir of [project, global]) {
+          const file = join(dir, PI_CONFIG_FILE);
+          const read = readConfigDocument(file);
+          if (!read.exists) continue;
+          if (read.issues.length > 0) {
+            refusePermissions("the config file cannot be read", [
+              {
+                path: file,
+                message: `is not valid JSONC (${read.issues[0].message}) and the "pi" section is not registered, so its contents are unresolvable`,
+              },
+            ]);
+          }
+          if (read.value !== null && typeof read.value === "object" && "guardPlugins" in read.value) {
+            refusePermissions("the guard section cannot be resolved", [
+              {
+                path: file,
+                message:
+                  'declares "guardPlugins" but the "pi" config section is not registered — no discoverable config-extension descriptor (docs/workflow/CONFIG.md § Extension contract)',
+              },
+            ]);
+          }
+        }
+      }
+      const out = provisionPermissions({ root, scope, write: restArgs.includes("--write"), guards });
+      if (parsed.json) {
+        process.stdout.write(`${JSON.stringify(out)}\n`);
+      } else {
+        console.log(`PROVISION provision-permissions@1 — verdict: ${out.verdict} · target: ${out.target}`);
+        for (const issue of out.issues) console.error(`  ${issue.path}: ${issue.message}`);
+        if (out.text) process.stdout.write(out.text);
+      }
+      process.exit(out.exitCode);
+    }
     if (tool !== "rg") {
-      process.stderr.write(`PROVISION REFUSAL — unknown tool "${tool}": this command ships the rg bootstrap only\n`);
+      process.stderr.write(`PROVISION REFUSAL — unknown tool "${tool}": this command ships the rg bootstrap and the permissions projection only\n`);
       process.exit(2);
     }
     const root = flagValue(restArgs, "--dir") ? resolve(flagValue(restArgs, "--dir")) : process.cwd();

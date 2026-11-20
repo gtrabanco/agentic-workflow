@@ -626,6 +626,87 @@ tool to run — not a script it launches, not a `!` command, not another host.
 That is what the pre-commit hook and the push-range check exist for; see
 [`docs/workflow/GIT_IDENTITY_HARDENING.md`](../../docs/workflow/GIT_IDENTITY_HARDENING.md).
 
+## Permission layer — the operator's package (issue #654)
+
+Bash and file-access gating is **not** this package's job any more. The
+first-party shell write guard is retired: it judged `ctx.ui.confirm` synchronously
+while the wiring supplied an async confirm, so a pending promise read as consent
+and an out-of-root write ran the same second its dialog appeared; its static
+extractor also scanned heredoc bodies as command text, had no session grant, no
+off switch, and passed `python3 -c`, `dd of=`, `sed -i` and computed targets
+silently. The replacement is a maintained specialist, installed by the operator:
+
+```bash
+pi install npm:@gotgenes/pi-permission-system
+```
+
+**What it decides.** A tree-sitter bash grammar (heredocs are data, chained and
+nested commands are decomposed; `bash -c`, `eval`, `sudo`, `env` and `xargs`
+indirection floors to **ask**, never a silent pass), `allow`/`ask`/`deny` per
+surface with omitted asking, a cross-cutting `path` surface over every tool with
+canonical-form matching, an `external_directory` pattern map for what lives
+outside the working tree, `/dev/null` and `/dev/std*` always excluded, and a
+`?`-free single metacharacter: `*`, which is greedy and crosses separators. Within
+one surface map, the last matching rule wins.
+
+**What an operator gets that the first-party guard lacked.** Native session
+grants — the dialog offers "approve for this session" — and `promptTimeoutMs`,
+which denies an unanswered prompt and tells the agent nobody answered. Unattended
+runs set it; a run that leaves it unset waits indefinitely, and pressing any key
+stops the clock.
+
+**Where its policy lives.** Two files, one per scope, and the project one loads
+only once the project is trusted:
+
+| Scope | Path |
+|---|---|
+| global | `~/.pi/agent/extensions/pi-permission-system/config.json` |
+| project | `.pi/extensions/pi-permission-system/config.json` |
+
+The project's policy is a **projection** of this package's own section, never a
+second place to write the same rule:
+
+```jsonc
+// .pi/pi-agentic-workflow.json — the authoring surface
+{
+  "guardPlugins": {
+    "guards": {
+      "no-dotenv": {
+        "kind": "deterministic",
+        "surface": "path",
+        "rules": [{ "match": "**/.env", "verdict": "deny", "reason": "secrets never enter the agent's reach" }]
+      }
+    }
+  }
+}
+```
+
+```bash
+agentic-workflow provision permissions --write   # creates the policy file when absent
+```
+
+`provision permissions` prints the block (baseline plus your declarations, in
+last-match-wins order) and creates the file only when it does not exist: an
+existing policy is refused with the block to merge, because two writers on one
+policy file is how a policy becomes unknown. `kind: "model-backed"` is accepted
+and registers nothing until an adapter for that kind exists; the seam names no
+model and no vendor. The declaration shape, the merge rules and the two carriers
+are owned by [`docs/workflow/CONFIG.md`](../../docs/workflow/CONFIG.md) § Guard
+plugins.
+
+**What this package still refuses**, because it is not a permission question:
+the agent-side `git config` write guard (§ Git identity guard) and the inline
+receipt guard (issue #182) run before the permission layer's own verdicts. The
+boundary is honest — this layer decides, it does not isolate: a script the model
+launches is judged by the layer, not by this package, and a sandbox is another
+package's job.
+
+**Verify it on your machine.** The three observations that matter need a live
+session with the package installed: a prompt renders and resolves over
+`extension_ui_request`/`extension_ui_response`, a declined prompt blocks the call,
+and `promptTimeoutMs` denies an unanswered one instead of hanging. The
+checklist is [init-workspace's permission reference](../../skills/init-workspace/references/PERMISSIONS.md).
+
 ## Path protection (optional)
 
 The Tier 2 preventive guard blocks a `write` / `edit` tool call to an existing
@@ -641,6 +722,13 @@ key in the same config files:
   }
 }
 ```
+
+Tier 2 is the **file tools'** guard, and the out-of-root refusal has one
+carve-out: a canonical target under an OS temp root passes, because scratch is not
+durable storage and `mktemp` depends on it (issue #654 moved that rule here from
+the retired shell guard). Everything durable outside the tree is still refused.
+`pathProtection` is always on: it has no disposition and no off switch, which is
+the deliberate asymmetry with the guards above.
 
 The override is **tighten-only**: `protectedGlobs` are unioned with the shipped
 globs, and each `requirements` entry takes the stricter of the two — so a removal

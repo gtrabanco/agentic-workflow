@@ -103,7 +103,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
 ## Progressive loading — bootstrap or upgrade, never both
 
-The reference allowlist is exactly the eight linked paths below. Never invent or
+The reference allowlist is exactly the nine linked paths below. Never invent or
 read another `references/` path. Step 0 selects exactly one route:
 
 **Hard rule for an existing Claude Code, Cursor, Copilot, or OpenCode
@@ -133,6 +133,11 @@ or portability unless the runtime platform has no named adapter at all.
   [Engram provisioning](references/ENGRAM.md) — detect, ask, register or
   instruct, report. Loaded by the bootstrap write route only (the pi package
   provisions itself, feature 66).
+- Offering the permission layer, or a project's own guards: read
+  [the permission layer](references/PERMISSIONS.md) — one consented question for
+  the operator-level package, one for the project's policy file, the authoring
+  section a project declares its guards in, and the five observations to make on a
+  machine that has the package. Loaded by either route, on demand.
 - No named adapter exists for the detected runtime platform: add
   [portability](references/PORTABILITY.md) only for that fallback. Claude Code,
   Cursor, Copilot, and OpenCode are named supported adapters; a missing adapter
@@ -239,6 +244,16 @@ one offer per class, resolved as written, declined, or left as a residual.
   the project's own workflow, so it is offered as text, never written for it.
   The naming grammar has one owner (`journal-fragment-grammar@1` in
   `@gtrabanco/agentic-workflow`'s README); this skill never restates it.
+- **The permission layer is an operator-level package, offered with consent
+  (issue #654).** Bash and file-access gating is `@gotgenes/pi-permission-system`,
+  installed by the operator, never by this skill on its own initiative: a yes runs
+  the package's installer, a no writes nothing and records the residual, and the
+  project's policy file is created through `agentic-workflow provision permissions`
+  only when it does not exist (an existing one is the operator's). The offer, the
+  authoring section a project declares its own guards in, and the verification
+  checklist are
+  [the permission reference](references/PERMISSIONS.md); the enforcement contract
+  is that package's own documentation and this skill never restates it.
 - **The docs-site format is a declared choice.** The `Docs site` block's
   `format` slot (`markdown`/`md`, `mdx`/`starlight`/`docusaurus`, `html`,
   `latex`/`tex`) decides what `bun scripts/docs-generate.mjs` renders, so a new

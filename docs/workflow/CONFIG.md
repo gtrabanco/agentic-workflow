@@ -63,7 +63,7 @@ project can never silently drop a global glob or lower a requirement.
 | `pathProtection` | base | `{}` | `protectedGlobs` plus `requirements.<pre-freeze\|post-freeze\|always>.<create\|modify\|delete\|rename>` = `none`/`justification`/`approval` |
 | `contentGuard` | base | `{ "trustedRoles": ["OWNER", "MEMBER", "COLLABORATOR"], "allowLogins": [], "denyLogins": [] }` | `trustedRoles` = the author associations whose forge content may be ingested (any value `packages/agentic-workflow-schema/src/content-guard.ts` publishes); `allowLogins` admits a login regardless of association, `denyLogins` refuses one regardless of role. There is no `enabled` switch: the layer is always active and an unconfigured project runs the strictest policy. The merge between scopes tightens only — roles intersect, the login lists union — and a list that is not the declared shape (a wrong type, or an entry that is not a string) is never narrowed into an empty one: the section is refused whole, the caller gets the shipped strictest policy and the refusal is declared (`malformed-config`) |
 | `docRetention` | base | `{ "mode": "keep-all", "pendingTrimAfterDays": 0, "archiveDir": ".agentic-workflow/archive", "archiveRetentionDays": null, "seamHook": null }` | `mode` = `keep-all` (detection only — the shipped posture) or `archive` (the trim step may run); `pendingTrimAfterDays` is the window `workflow-status` waits before offering a merge, measured from the unit's last `## Log` entry; `archiveDir` is the repo-relative, gitignored archive (`doc archive` refuses a directory git does not ignore); `archiveRetentionDays` = `null` never prunes the archive, a number prunes it after that many days; `seamHook` is the project-declared offsite copy, run after the local archive is durable with `AGENTIC_WORKFLOW_UNIT` and `AGENTIC_WORKFLOW_ARCHIVE_DIR` in its environment. The section gates the trim step only — it never makes a document invalid (see [RETENTION.md](RETENTION.md)) |
-| `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing), `phaseBatching` (`enabled: false` — the model-aware phase-batching switch; see [Phase batching](#phase-batching)) |
+| `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing), `phaseBatching` (`enabled: false` — the model-aware phase-batching switch; see [Phase batching](#phase-batching)), `guardPlugins` (`enabled: true`, `guards: {}` — the project's own guards, declared as data; see [Guard plugins](#guard-plugins)) |
 
 Unknown keys are refused, never merged or coerced. `config validate` reports
 each one by path; `--sanitize` removes them; `--no-warn-unknown` suppresses only
@@ -138,7 +138,7 @@ resolved value falls back to the shipped `ask`.
 | `gitIdentity` | an agent's `git config` write (issue #514) | `allow`/`deny`/`ask` | `ask` | yes — the consent store remembers the answer; a session with no UI is denied | `guard.gitIdentity.mode`, plus the per-key exemption list `gitIdentity.agentGuard.allow` |
 | `toolChoice` | a `grep`-as-search or `node`-as-default command (issue #610) | `allow`/`deny`/`ask` | `ask` | no — `ask` answers as `deny` | `guard.toolChoice.mode`, plus the carrier's own `enabled` and `mode` (`block`/`rewrite`) under `pi.toolChoice` |
 | `receipt` | an inline `gh pr comment` carrying a review marker (issue #182) | `allow`/`deny`/`ask` | `ask` | no — `ask` answers as `deny` | `guard.receipt.mode` |
-| `pathProtection` | a write or rename to a protected path (feature 60) | always on (no disposition) | `approval` per phase/operation | not configurable — the section is tighten-only, so no scope can lower the floor | `pathProtection.protectedGlobs` and `pathProtection.requirements` |
+| `pathProtection` | a write or rename to a protected path (feature 60), and the out-of-root refusal for the file tools (OS-temp scratch excepted, issue #654) | always on (no disposition) | `approval` per phase/operation | not configurable — the section is tighten-only, so no scope can lower the floor | `pathProtection.protectedGlobs` and `pathProtection.requirements` |
 | `contentGuard` | who may be ingested from forge content (issue #470) | always on (no disposition) | the strictest role set | not configurable — there is no bypass switch on purpose | `contentGuard.trustedRoles`, `.allowLogins`, `.denyLogins` |
 
 The last two rows are the deliberate boundary: a global `allow` that reached
@@ -169,6 +169,63 @@ Three worked examples:
   "guard": { "default": "ask" }
 }
 ```
+
+## Guard plugins
+
+A project's restrictions are its own, so the extension accepts guards as **data**:
+`guardPlugins` in `pi-agentic-workflow.json` declares them, and the same
+declaration is enforced by whichever carrier is installed. The section is the one
+authoring surface — `agentic-workflow provision permissions` projects it into the
+operator-level permission layer's own policy file, so a rule is written once.
+
+```jsonc
+{
+  "guardPlugins": {
+    "guards": {
+      "no-dotenv": {
+        "kind": "deterministic",
+        "surface": "path",
+        "rules": [
+          { "match": "**/.env", "verdict": "deny", "reason": "secrets never enter the agent's reach" }
+        ]
+      }
+    }
+  }
+}
+```
+
+- **Surfaces** — `bash`, `path`, `tool`, `skill`, `mcp`. **Verdicts** — `allow`,
+  `ask`, `deny` (the published disposition vocabulary), with an omitted verdict
+  asking. **Order** — the LAST matching rule wins, so a specific rule belongs
+  after its catch-all; patterns use `*` as the only metacharacter, and it crosses
+  separators.
+- **Kinds** — `deterministic` is evaluated locally with no model and no network.
+  `model-backed` is accepted and enforced only once an adapter supplies that
+  kind's handler (a case-by-case reviewer); until then it registers nothing and
+  the extension says so once per session rather than pretending.
+- **Two carriers, one decision.** The deterministic kind reaches the permission
+  layer's static policy (projected by the command above) and its authorizer chain
+  (an ask the static policy left open). The chain is only consulted for an `ask`,
+  so a declared `ask` rule answers exactly like the prompt it defers to.
+- **Strict, never merged.** An unknown section key, guard key or rule key, a
+  malformed guard name, an unknown kind or surface, and a malformed verdict are
+  each refused by path; nothing is coerced into a shipped default.
+- **Merge between scopes.** `enabled` resolves per field, project over global; the
+  guards resolve per name, and a project's declaration replaces the global one
+  WHOLE — a rule list is one ordered policy, and a half-merged list would silently
+  evaluate a different one.
+- **`enabled: false` stands the whole chain down** without deleting the
+  declarations, which is the off switch a project needs to try a rule safely.
+
+The command writes the projection; it never owns the file:
+
+```bash
+agentic-workflow provision permissions [--scope project|global] [--write] [--json]
+```
+
+`--write` creates the policy file only when it does not exist; an existing file is
+refused with the block printed for a hand merge. Without `--write` it prints the
+block and touches nothing.
 
 ## A complete example file
 
@@ -253,7 +310,7 @@ gap | what a session loses when the event does not fire
 cells | fires | not-fire | conditional
 reliability-vocabulary | reliable | unreliable | host-dependent
 | event | listeners | fires | tui | web | headless | reliability | effect | gap |
-| session_start | index.ts (readiness notice, hooks session:start seam, wiring registration), telemetry-wiring.ts (session id, accumulator, phase reset), auto-log-session-wiring.ts (marker, stale sweep) | a session runtime starts: startup, /new, /resume, /fork, reload | fires | fires | fires | reliable | the session's marker, its accumulator, and a cleared AG_WF_PHASE | — |
+| session_start | index.ts (readiness notice, hooks session:start seam, wiring registration, guard-plugin registration), telemetry-wiring.ts (session id, accumulator, phase reset), auto-log-session-wiring.ts (marker, stale sweep) | a session runtime starts: startup, /new, /resume, /fork, reload | fires | fires | fires | reliable | the session's marker, its accumulator, and a cleared AG_WF_PHASE | — |
 | agent_settled | index.ts (router and stateflow settle, terminal and /log-session notices), telemetry-wiring.ts (per-run sample), auto-log-session-wiring.ts (the session's journal entry) | a run settles: after retries, compaction and queued follow-ups | fires | fires | fires | reliable | the cost sample reaches its sinks and the journal entry lands, with no teardown involved | — |
 | turn_start | telemetry-wiring.ts (the turn window opens) | each turn begins | fires | fires | fires | reliable | — | — |
 | turn_end | telemetry-wiring.ts (tokens, model, turn count) | each turn ends | fires | fires | fires | reliable | the sample's token, model and turn fields | — |
@@ -261,7 +318,7 @@ reliability-vocabulary | reliable | unreliable | host-dependent
 | session_shutdown | index.ts (hooks session:end seam), telemetry-wiring.ts (final flush, phase clear), auto-log-session-wiring.ts (fallback entry, marker removal) | a runtime is torn down: exit (Ctrl+C/D, SIGHUP, SIGTERM), session replacement (/new, /resume, /fork, /clone), reload, ctx.shutdown() | fires | conditional | fires | unreliable | the final sample, the fallback entry, the marker removal, and the hooks session:end seam | a web session that stays alive between prompts never tears down, so this event does not fire there between prompts — and a hook declared for the session:end seam therefore never runs in it. That is a known-issue, warned about here: the seam cannot move earlier (it reports on a session that has ended), so the sample, the entry and the marker removal were moved to agent_settled instead, and the seam's own gap stays declared rather than silently repaired |
 | model_select | index.ts (routing state note) | the host selects a model | conditional | conditional | conditional | host-dependent | — | a host without model selection never fires it, and no observable effect depends on it |
 | thinking_level_select | index.ts (routing state note) | the thinking level changes | conditional | conditional | conditional | host-dependent | — | the same: a routing note, never a persistence trigger |
-| tool_call | index.ts (path protection, shell write guard, tool-choice carrier, receipt guard; hooks pre:commit and pre:push) | before a tool runs | fires | fires | fires | reliable | block decisions and rewritten inputs | — |
+| tool_call | index.ts (path protection, tool-choice carrier, receipt guard; hooks pre:commit and pre:push) | before a tool runs | fires | fires | fires | reliable | block decisions and rewritten inputs | — |
 | tool_result | index.ts (hooks post:commit notice) | after a tool ran | fires | fires | fires | reliable | the post-commit warning notice | — |
 ```
 
@@ -362,7 +419,7 @@ A package publishes its own section without this repository knowing it:
    ```
 
 3. Or drop the descriptor into `config-extensions/` at either scope
-   (`<project>/.agentic-workflow/config-extensions/`,
+   (`<project>/config-extensions/`,
    `<globalDir>/config-extensions/`).
 
 Discovery reads data only — it never executes extension code. A key may be

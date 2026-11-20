@@ -4515,3 +4515,34 @@ export {
   telemetrySampleJsonSchema,
 } from "./telemetry.js";
 export type { TelemetrySampleJsonSchema } from "./telemetry.js";
+
+// ── The guard-plugin contract (issue #654) ──────────────────────────────────
+// One seam, two guard kinds: a project declares its own guards as data, and the
+// published decision function is what both enforcement carriers read — the
+// permission layer's static policy (projected by `renderGuardPluginPolicy`) and
+// the authorizer chain (a link per declaration). The contract names no model and
+// no vendor; `model-backed` is a declared slot an adapter fills later.
+export {
+  GUARD_PLUGIN_KINDS,
+  GUARD_PLUGIN_SURFACES,
+} from "./vocabularies.js";
+export type { GuardPluginKind, GuardPluginSurface } from "./vocabularies.js";
+export {
+  GUARD_PLUGIN_CONTRACT,
+  decideGuardPlugin,
+  decideGuardPluginChain,
+  matchesGuardPattern,
+  renderGuardPluginPolicy,
+  validateGuardPluginDeclaration,
+  validateGuardPlugins,
+} from "./guard-plugin.js";
+export type {
+  GuardPluginDeclaration,
+  GuardPluginDeclarations,
+  GuardPluginDecision,
+  GuardPluginIssue,
+  GuardPluginProjectionResult,
+  GuardPluginRequest,
+  GuardPluginRule,
+  GuardPluginVerdict,
+} from "./guard-plugin.js";
