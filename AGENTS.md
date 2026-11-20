@@ -194,6 +194,9 @@ IR14-tool-choice | the preferred tool is re-checked every turn and the documente
   recorded in the phase's evidence, the ceremony is skipped, and no test is
   invented. The mechanism and the block belong to
   [`skills/execute-phase/references/TEST_IMPACT.md`](skills/execute-phase/references/TEST_IMPACT.md).
+  A test the unit adds also carries its **justification line** — the independent
+  obligation it covers, never the implementation under test (owner: same file
+  § The justification line); a test without one is a finding, not a silent pass.
 - **A new script ships its sibling suite — red commit before green — and a
   test is never edited to pass.** Every `scripts/x.mjs` arrives with `scripts/x.test.mjs`
   as two commits: the suite lands alone, observed failing on the missing
@@ -207,7 +210,10 @@ IR14-tool-choice | the preferred tool is re-checked every turn and the documente
   its reason recorded. A suite also declares its **obligation tag** at its head —
   the surface it protects and the obligations it asserts there (owner:
   [`skills/unit-lane/references/TESTS.md`](skills/unit-lane/references/TESTS.md)
-  § Obligation tags; gate: `bun scripts/test-obligation-tags.mjs`).
+  § Obligation tags; gate: `bun scripts/test-obligation-tags.mjs`). A test is
+  deleted only through the authority that same file states (§ Deletion
+  authority): a scheduled task or a `fix-now (delete)` row, each citing its
+  ground — never as a repair to a red suite (`IR3`).
 - **`human-revision-needed` blocks development.** An issue or PR carrying that
   label is on hold: nothing is planned, implemented, committed or merged for it
   until a human removes the label. It means "a plan is waiting for human review",
@@ -524,6 +530,8 @@ skill-discovery-envelope | packages/agentic-workflow/README.md | block:skill-dis
 review-extras-grammar | packages/agentic-workflow/README.md | block:review-extras@1 | n/a | no
 test-obligation-kind-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:TEST_OBLIGATION_KINDS | test-obligation-kind | no
 test-obligation-tag-grammar | skills/unit-lane/references/TESTS.md | block:test-obligation-tag@1 | test-obligation-kind | no
+test-justification-grammar | skills/unit-lane/references/TESTS.md | block:test-justification@1 | n/a | no
+test-deletion-authority-grammar | skills/unit-lane/references/TESTS.md | block:test-deletion-authority@1 | n/a | no
 decision-scope-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DECISION_SCOPES | decision-scope | no
 decision-scope-grammar | skills/unit-lane/references/DESIGN.md | block:decision-scope@1 | n/a | no
 decision-promotion-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | fenced:decision-promotion@1 | n/a | no

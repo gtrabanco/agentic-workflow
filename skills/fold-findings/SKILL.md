@@ -63,6 +63,31 @@ reports `VERDICT: BLOCKED` (every blocker is fix-now). If the ledger is absent o
 incomplete, reconstruct rows from the verdict in Step 0. Never process
 postpone/wontfix/promote/documented-tradeoff rows; those belong to `/triage-issue`.
 
+## The `fix-now (delete)` row
+
+A row typed `fix-now (delete)` is **executed, not repaired**: the fold deletes the
+test the row names, and nothing else. The row already carries the finding's
+evidence at classification time, so executing it adds no judgment — the commit
+states what was removed, and the `folded: yes` flip (a migrated carrier's `F`
+line) is the record. Who may delete, on which ground, and the line between
+deleting and weakening are
+`skills/unit-lane/references/TESTS.md` § Deletion authority's; this section is
+only what the fold does with a row that reaches it.
+
+Three rules bound it, because a fold is the one path where a test can disappear
+without a plan ever naming it:
+
+- **The row must say delete.** A `fix-now` row without the `(delete)` modifier is
+  repaired as code; a test is never removed as a side effect of another repair.
+- **The deletion is the whole fix.** A row whose deletion leaves a red suite has
+  found the planning error that authority names: report it `BLOCKED <the guard
+  the deletion needs>` and stop — never delete the rest of the guard to reach
+  green, which is the weakening the contract forbids.
+- **The classification stays frozen.** Deleting a test because the row "looks
+  wrong" is a reclassification: the row goes `DISPUTED` with evidence and its
+  frozen fields stay, exactly as [frozen classification](references/FOLD_POLICY.md)
+  requires.
+
 ## Step 0 — Discover the project (always first)
 
 Per Workflow conventions, read:

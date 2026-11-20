@@ -72,6 +72,12 @@ targeted one:
 Then green on the same set. A phase that changed a test set it did not expect to
 touch says why in the same row.
 
+The row that introduces a test carries that test's justification clause in its
+`What was run` cell — `` `<command>` — justifies: `<the obligation>` `` — because
+the failing first run is the moment the obligation is named; the clause's content
+rules are `skills/unit-lane/references/TESTS.md` § The justification line's, and a
+row without one is a review finding, never a silent pass.
+
 ## Degradation, declared
 
 - no `rg` → `grep`, and the block's `fallback:` line says so. Same answer, slower.
@@ -88,3 +94,7 @@ touch says why in the same row.
   run pass.
 - Never edit a test to go green: the set says which tests judge the change, not
   which tests agree with it.
+- Never delete a test to turn a red run green: a deletion executes only through
+  the authority its owner states (`skills/unit-lane/references/TESTS.md`
+  § Deletion authority), and a red suite the deletion caused is a planning error
+  routed back to the owner.
