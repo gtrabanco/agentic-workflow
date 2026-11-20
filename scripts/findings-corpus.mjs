@@ -45,6 +45,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { sectionBounds } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+import { readProvenance } from "../packages/agentic-workflow/src/edit/Provenance.mjs";
 
 export const CORPUS_CONTRACT = "findings-corpus@1";
 export const DEFAULT_MIN_RECURRENCE = 2;
@@ -563,10 +564,12 @@ export function buildCorpus(root, { resolveFold = () => null, minRecurrence = DE
     }
     if (entry.hasSpec) {
       const text = fs.readFileSync(entry.spec, "utf8");
-      // Either accepted receipt carrier counts: the migrated `## Findings` table
-      // and the settled carrier's `## Log` (a settle leaves no table at all), so a
-      // shipped unit keeps contributing its marks to the corpus (#651 S10).
-      if (sectionBounds(text, "Findings") !== null || sectionBounds(text, "Log") !== null) {
+      // Either accepted receipt carrier counts: the migrated `## Findings` table,
+      // or the settled carrier — which has no table by construction and is
+      // recognized by its stamp, never by "has a Log" (a Log without a Findings
+      // table is not a carrier this reader knows). A shipped unit keeps
+      // contributing its marks either way (#651 S10).
+      if (sectionBounds(text, "Findings") !== null || readProvenance(text).stamp?.format === "unit-doc@3") {
         migratedCarriers += 1;
         const parsed = parseMigratedCarrier(text, { file: path.relative(root, entry.spec), unit: entry.unit });
         findings.push(...parsed.findings);
