@@ -281,6 +281,26 @@ M/L unit: the ledger is the unit folder's `planning-obligations.md`.
 - **E11** — 2026-11-20, the end state the issue names: the citation scan over `skills/` matches only `skills/skill-lint/**` (the declared internal skill, 6 lines) and zero outside it; the coverage suite's `pin-in-skill` findings are empty because the pin lives in RUNNER.md's fenced `runner-pin@1` carrier (D15).
 - **E12** — 2026-11-20, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/553-universal-cli-coverage/SPEC.md` · exit 0 · `VERIFY PASS`, obligations closed.
 
+- **F1..F12** — 2026-11-20, the correction batch triaged after the owner's "fix those that deserve to fix" request (`bd1c8d6`). Twelve rows, each with its reproducer landed first:
+  - **F1** (blocking, source) — `dimension-regression`'s closed surface set still named `scripts/coverage-gap.mjs` and `scripts/findings-corpus.mjs`; a change to the crate module that decides a dimension therefore recorded no run. Reproducer: the surface-set case; fix + D19.
+  - **F2** (docs-only, source) — `coverage-gap`'s evidence cell cited `scripts/findings-corpus.mjs#classes`. Reproducer: the evidence assertion; fix names the crate owner.
+  - **F3** (docs-only, source) — `shared-merge`'s generated-projection refusal told the reader to arm `scripts/docs-generated-merge.mjs`, a file a target does not ship. Fix names `bin/docs-generated-merge.mjs --install`.
+  - **F4** (blocking for a reader, docs-only) — ten README rows advertised `--root`/`--json` their command never parses (`coverage-gap`, `journal-corpus`, `residual-classify`, `adversarial-verdict`, `prose-gate-inventory`, `dimension-regression`, `findings-corpus`, `repository-state`, `restatement-sweep`, `review-state`). Reproducer: the new `documented-flag` case in `scripts/cli-coverage.test.mjs`; fix + D18.
+  - **F5** (docs-only, source) — `setup-env`'s runtime messages named the bootstrap script even when the CLI is the entry; D13's own consequence.
+  - **F6** (docs-only, source) — the repository-side docs named retired commands: `README` (×2), `AGENTS.md` (×2), `ISSUE_WORKFLOW`, `FEEDBACK`, `TIER_COST`, `docs/workflow/README`.
+  - **F7** (convention, source) — four imports the move left unused (`fileURLToPath` in batch-scheduler, `pathToFileURL` in promise-coherence and residual-classify, `FIX_INDEX_DOCUMENT` in roadmap-settle).
+  - **F8** (blocking, runtime) — `unit-lineage`'s repository caller forwarded no root, so a run from a subdirectory answered `unit not found` for a unit that was there. Reproducer: the caller case in `lane-era-lineage.test.mjs`; fix forwards this checkout's root.
+  - **F9** (blocking, runtime) — `restatement-sweep`, `repository-state` and `test-obligation-tags` ignored the injected root. Three reproducers (each suite now runs its caller from a scratch cwd); fix + D20.
+  - **F10** (docs-only, source) — `relay` had no `MIGRATION.md` row although its citation was retired by this sweep.
+  - **F11** (convention, source) — `restatement-sweep` still captured the cwd at module load. Fix + D20.
+  - **F12** (docs-only, source) — two live-doc cells still named moved scripts (`README`'s relay cell, `docs/workflow/README`'s budget-manifest row).
+- **F13** (blocking, runtime) — `runner promise-coherence` printed nothing and exited 0: the runner table pointed at the module's `main` (which returns `{lines, exitCode}`) while the repository shim calls `runCli` (which prints). A caller cannot tell that from success. Found on the second sweep, after F1–F12 were already green — reproducer: the new wiring case; fix + D21.
+- **R1..R3** — 2026-11-20, reported, not fixed — each names its owner rather than being absorbed here:
+  - **R1** — the commands disagree on how a project is named (`--repo`, a positional `<dir>`, or `--root`). Pre-existing; a normalizing unit of its own, and the docs now state each command's truth instead of a uniform lie.
+  - **R2** — the doctor's `merge-drivers` installer only offers a project-local `scripts/*-merge.mjs`; a target mounts the crate's `bin/shared-merge.mjs` with no proposed action. Route: #630's owner surface.
+  - **R3** — `docs/workflow/REPOSITORY_STATE.md` AD-008 cites `scripts/correction-budget.mjs`. It is a **frozen facts** document: only `resolve-repository-state` may replace it, so a prose repair here would be the domain violation it forbids.
+- **G2** — 2026-11-20, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 20 step(s) in 527s`, run at the fixes head `bd1c8d6a0`; the commit after it is this record only.
+
 ## Next
 
 The owner's external verification of this branch: the delivery is the 33

@@ -296,6 +296,30 @@ export function moduleOf(script) {
   return match ? path.resolve(path.dirname(file), match[1]) : null;
 }
 
+test("the shim and the runner table call the same module export", () => {
+  // One entry, two doors. `promise-coherence` shipped a table entry pointing at
+  // `main` (which returns a verdict) while the repository shim called `runCli`
+  // (which prints it), so `runner promise-coherence` answered nothing and exited
+  // 0 — the one failure a caller cannot distinguish from success. The wiring is
+  // what is pinned here, because a bare-invocation sweep costs a subprocess per
+  // command and `setup-env` alone spends eight seconds.
+  const table = read(RUNNER_TABLE);
+  const findings = [];
+  for (const [script, command] of shims()) {
+    const shim = read(path.join(SCRIPTS, `${script}.mjs`));
+    // Every export the shim imports from the crate module — a shim may bind
+    // more than one (a driver line beside the entry), so the rule is membership.
+    const imports = [...shim.matchAll(/import \{ ([^}]+) \} from "\.\.\/packages\/agentic-workflow\/src\/[^"]+"/gu)]
+      .flatMap((match) => match[1].split(",").map((part) => part.trim().split(/\s+as\s+/u)[0]));
+    const row = new RegExp(`import \\{ ([A-Za-z0-9_$]+) as [A-Za-z0-9_$]+ \\} from "\\.\\.\/${command}\\/index\\.mjs"`, "u").exec(table)?.[1];
+    if (imports.length === 0 || row === undefined) continue; // the module-existence case owns a missing module
+    if (!imports.includes(row)) {
+      findings.push(`${command}: the table runs ${row}, the repository caller imports ${imports.join(", ")}`);
+    }
+  }
+  assert.deepEqual(findings, [], "one entry, two doors: the shim and the table name the same export");
+});
+
 test("a documented flag is a flag the command actually accepts", () => {
   const rows = readmeRows();
   const findings = [];

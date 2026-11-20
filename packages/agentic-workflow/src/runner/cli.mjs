@@ -37,7 +37,7 @@ import { main as runRepositoryState } from "../repository-state/index.mjs";
 import { main as runResidualClassify } from "../residual-classify/index.mjs";
 import { main as runRestatementSweep } from "../restatement-sweep/index.mjs";
 import { main as runBatchScheduler } from "../batch-scheduler/index.mjs";
-import { main as runPromiseCoherence } from "../promise-coherence/index.mjs";
+import { runCli as runPromiseCoherence } from "../promise-coherence/index.mjs";
 import { main as runSkillContext } from "../skill-context/index.mjs";
 import { main as runDependencyAdvisoryPass } from "../dependency-advisory-pass/index.mjs";
 import { main as runUnitLineage } from "../unit-lineage/index.mjs";
