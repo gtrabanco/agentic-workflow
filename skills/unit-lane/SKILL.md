@@ -30,7 +30,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
   owning stage.
 ✓ Tool choice re-made this turn — `bun` before `node` on manual invocation,
   `rg` before `grep` on search; availability checked once with
-  `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)
+  `runner setup-env --check` (node and grep stay the documented fallback)
 ✓ Every claim the SPEC or the plan asserts (objective, why, ACs, tasks) cites
   its source — `path:line`, a doc, or an owner answer in the unit folder's
   `sources.md`. A claim with none is a question, never a default.

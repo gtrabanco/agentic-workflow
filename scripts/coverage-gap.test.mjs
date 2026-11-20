@@ -328,7 +328,7 @@ const inventory = () => read("docs/workflow/GATE_INVENTORY.md");
 
 test("product-audit carries the dimension row with its producer pre-pass (S3/S8)", () => {
   assert.match(dimensions(), /^\| \*\*Coverage gaps\*\* \|/m);
-  assert.match(dimensions(), /`bun scripts\/coverage-gap\.mjs <repo>`/);
+  assert.match(dimensions(), /`runner coverage-gap <repo>`/);
   assert.match(dimensions(), /coverage-gap@1/);
 });
 
@@ -336,7 +336,7 @@ test("the pass-only-if contract states the evidenced-surface rule and the clean 
   const text = dimensions();
   assert.match(text, /## Coverage-gap sweep \(pass-only-if\)/);
   assert.match(text, /a gap is a finding only when its surface is evidenced/i);
-  assert.match(text, /scripts\/product-audit-gap-fixture\.mjs/);
+  assert.match(text, /seeded twin trees/);
   assert.match(text, /clean/i);
 });
 
@@ -350,12 +350,12 @@ test("the three routes are the published hand-offs and no bespoke route exists (
 
 test("AUDIT_PROCESS consumes the receipt as a step, never re-derived by inspection (S3)", () => {
   assert.match(auditProcess(), /coverage-gap@1/);
-  assert.match(auditProcess(), /coverage-gap\.mjs/);
+  assert.match(auditProcess(), /coverage-gap/);
 });
 
 test("the evolution-regression rule names its gate and its source (S4)", () => {
   const text = dimensions();
-  assert.match(text, /dimension-regression\.mjs/);
+  assert.match(text, /dimension-regression/);
   assert.match(text, /2605\.09315/);
   assert.match(text, /previously present dimensions still pass/i);
 });

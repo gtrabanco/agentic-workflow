@@ -1,7 +1,7 @@
 # Gate inventory — which gates survive compaction, and how each is carried
 
 > One table, one owner, machine-checked: every gate the workflow runs names its
-> enforcement carrier. `scripts/prose-gate-inventory.mjs` fails the root suite
+> enforcement carrier. `packages/agentic-workflow/src/prose-gate-inventory/index.mjs` fails the root suite
 > when a carrier stops resolving, when a gate suite enters the tree uncited, when
 > a `normative-surfaces@1` id is claimed by no row, or when a top-tier gate is
 > left in prose. The issue that owns this surface is
@@ -122,16 +122,16 @@ writer-driver-conformance | a writer driver that rewrites foreign bytes, drops l
 relay-status-grammar | the Relay baton carries the closed state set and its leg, phase and evidence cursors | script | scripts/relay-packet.test.mjs | - | a baton whose state is outside the closed set | relay-status-grammar | 2 | 3 | 3 | script | - | -
 phase-lint-rules | the eight phase grammar rules, refused at the first breach | cli | packages/agentic-workflow/src/runner/sensors/phase-lint.mjs | - | lintPlan | - | 2 | 3 | 2 | cli | judgment-needed | skills/phase-contract/SKILL.md#-
 diff-guard-unit-size | a unit's aggregate diff stays inside the declared bound | cli | packages/agentic-workflow/src/runner/sensors/diff-guard.mjs | - | formatBreach | - | 2 | 2 | 2 | cli | judgment-needed | skills/execute-phase/references/FOLDING.md#-
-test-impact-verdict | the test set is derived from the touched symbols | cli | scripts/test-impact.mjs | - | TEST IMPACT — | test-impact-verdict | 2 | 2 | 2 | cli | judgment-needed | skills/execute-phase/references/TEST_IMPACT.md#-
-promise-coherence-claims | every executable claim in a document reproduces | cli | scripts/promise-coherence.mjs | - | CLAIM_KINDS | - | 3 | 3 | 2 | cli | judgment-needed | skills/execute-phase/references/FOLDING.md#-
-sweep-declarations | a fold declares its survivor sweep and the gate re-runs it | cli | scripts/promise-coherence.mjs | - | sweep-mismatch | sweep-declaration-grammar | 2 | 2 | 2 | cli | judgment-needed | skills/execute-phase/references/FOLDING.md#-
+test-impact-verdict | the test set is derived from the touched symbols | cli | packages/agentic-workflow/src/test-impact/index.mjs | - | TEST IMPACT — | test-impact-verdict | 2 | 2 | 2 | cli | judgment-needed | skills/execute-phase/references/TEST_IMPACT.md#-
+promise-coherence-claims | every executable claim in a document reproduces | cli | packages/agentic-workflow/src/promise-coherence/index.mjs | - | CLAIM_KINDS | - | 3 | 3 | 2 | cli | judgment-needed | skills/execute-phase/references/FOLDING.md#-
+sweep-declarations | a fold declares its survivor sweep and the gate re-runs it | cli | packages/agentic-workflow/src/promise-coherence/index.mjs | - | sweep-mismatch | sweep-declaration-grammar | 2 | 2 | 2 | cli | judgment-needed | skills/execute-phase/references/FOLDING.md#-
 charter-bank-shape | the engineering interview's bank is checked against its own cell contract and the guide it lands in: every question cites its bibliography source, toggles two behaviours, states the condition that earns it and lands in a slot the guide carries, and every declared boundary records its enforcement | cli | packages/agentic-workflow/src/charter/interview.mjs | - | checkBank | interview-bank | 2 | 3 | 2 | cli | judgment-needed | skills/init-workspace/references/ENGINEERING_INTERVIEW.md#The bank
 materialization-check | a declared boundary is never silently prose-only: every `prose-only` charter entry ends as a scaffolded rule, a filed forge issue or a recorded decline, every invariant section names its enforcement, and a rule the record claims is carried by the tree | cli | packages/agentic-workflow/src/materialize/materialize.mjs | - | checkMaterialization | materialization-outcome-vocabulary,materialization-finding-code-vocabulary,artifact-evidence-kind-vocabulary,materialization-grammar | 2 | 3 | 2 | cli | judgment-needed | skills/init-workspace/references/MATERIALIZATION.md#Where the check runs
 unit-route-triage | a unit's step list is derived, never chosen | cli | packages/agentic-workflow/src/runner/unit-route.mjs | - | --triage | - | 2 | 2 | 2 | cli | judgment-needed | skills/unit-lane/SKILL.md#-
 pre-execution-snapshot | the planning ledgers are bound into a snapshot and re-verified | cli | packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs | - | parseWordingOnlyDeterminations | snapshot-commands | 3 | 3 | 2 | cli | judgment-needed | skills/pre-execution-review/references/SNAPSHOT.md#-
 commit-format | commit subjects are conventional at the reviewed head | cli | packages/agentic-workflow/src/runner/ceremony/docs.mjs | - | CONVENTIONAL_RE | - | 2 | 3 | 2 | cli | judgment-needed | skills/execute-phase/references/FOLDING.md#-
-roadmap-row-settlement | a landed unit's roadmap row is settled through the writer | cli | scripts/roadmap-settle.mjs | - | pr-url-unsettled | - | 2 | 2 | 2 | cli | judgment-needed | skills/audit-docs/SKILL.md#-
-session-close-entry | the session log entry shape is rendered mechanically | cli | scripts/session-close.mjs | - | renderEntry | - | 1 | 2 | 2 | cli | judgment-needed | skills/log-session/SKILL.md#-
+roadmap-row-settlement | a landed unit's roadmap row is settled through the writer | cli | packages/agentic-workflow/src/roadmap-settle/index.mjs | - | pr-url-unsettled | - | 2 | 2 | 2 | cli | judgment-needed | skills/audit-docs/SKILL.md#-
+session-close-entry | the session log entry shape is rendered mechanically | cli | packages/agentic-workflow/src/session-close/index.mjs | - | renderEntry | - | 1 | 2 | 2 | cli | judgment-needed | skills/log-session/SKILL.md#-
 journal-carrier-check | a journal fragment name or body the aggregator would refuse fails its own PR | script | scripts/local-gate.mjs | - | journal-carrier-check | journal-fragment-grammar,journal-write-grammar,journal-headless-grammar | 3 | 3 | 3 | script | - | -
 log-immutability | docs/LOGS.md and the fragment carrier are aggregator-only over a push range: byte-prefix appends only (against the published journal tip or the range base — issue #539), one grammar owner, one writer identity | script | scripts/log-immutability.test.mjs | - | log-hand-appended | - | 3 | 3 | 3 | script | - | -
 union-never-majority | findings are a union; no quorum or threshold exists | prose | skills/pre-execution-review/references/POLICY.md | 2. Findings | Union, never majority. | - | 3 | 3 | 1 | prose | judgment-needed | skills/pre-execution-review/references/POLICY.md#2. Findings
@@ -179,7 +179,7 @@ row records that instead of pretending.
 
 ## Where it is consumed
 
-`scripts/prose-gate-inventory.mjs` runs in the root suite through
+`packages/agentic-workflow/src/prose-gate-inventory/index.mjs` runs in the root suite through
 `scripts/prose-gate-inventory.test.mjs`, so every push re-derives the table.
 `execute-phase` and `fold-findings` executors read it after a compaction to learn
 which gates still bind and how they are carried; #227's deterministic unit-doc

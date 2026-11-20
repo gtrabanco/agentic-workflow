@@ -59,4 +59,4 @@ ship, and no skill cites them.
 - The crate's README: `packages/agentic-workflow/README.md` (one Commands row
   per subcommand, asserted by `test/cli.surface.test.mjs`).
 - The pin: [RUNNER.md](references/RUNNER.md), stamped by
-  `scripts/release.mjs` at cut time.
+  this repository's release tool at cut time.

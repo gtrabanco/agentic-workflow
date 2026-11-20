@@ -1,6 +1,6 @@
 # The restatement corpus — one rule, one owner, one sweep
 
-The seed set for `scripts/restatement-sweep.mjs`. A rule restated where its owner
+The seed set for `runner restatement-sweep`. A rule restated where its owner
 already says it is the defect class this repository keeps paying for — a copy
 loses nuance silently (the one-PR rule lost its inline-batch exception; the
 tests step restated red-first twice inside one file and one copy dropped the
@@ -54,9 +54,9 @@ trusted, which is the generalization `TEST_IMPACT.md` needed.
 ## Running it
 
 ```sh
-bun scripts/restatement-sweep.mjs                 # the repository this file lives in
-bun scripts/restatement-sweep.mjs --repo <dir>    # another tree (fixtures, a checkout)
-bun scripts/restatement-sweep.mjs --json          # the machine document
+runner restatement-sweep                 # the repository this file lives in
+runner restatement-sweep --repo <dir>    # another tree (fixtures, a checkout)
+runner restatement-sweep --json          # the machine document
 ```
 
 The block is fixed: a header, one `FINDING <code> — <rule>: <file> — <detail>`

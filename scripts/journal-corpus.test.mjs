@@ -438,13 +438,13 @@ test("the seeded fixture yields one signal per class and its clean twin yields z
 test("the dimension table carries the Journal signals row and its producer", () => {
   const dimensions = read("skills/product-audit/references/AUDIT_DIMENSIONS.md");
   assert.match(dimensions, /\*\*Journal signals\*\*/);
-  assert.match(dimensions, /bun scripts\/journal-corpus\.mjs <repo>/);
+  assert.match(dimensions, /runner journal-corpus <repo>/);
   assert.match(dimensions, /journal-corpus@1/);
   assert.match(dimensions, /## Journal-signal sweep \(pass-only-if\)/);
   assert.match(dimensions, /receipt-quoted/i);
   assert.match(dimensions, /non-mechanizable remainder/i);
   assert.match(dimensions, /unjoined/);
-  assert.match(dimensions, /product-audit-journal-fixture\.mjs/);
+  assert.match(dimensions, /seeded twin trees/);
 });
 
 test("the grammar block is published once, with its closed shapes", () => {
@@ -462,7 +462,7 @@ test("the grammar block is published once, with its closed shapes", () => {
 
 test("the audit process consumes the producer in its pre-pass", () => {
   const process = read("skills/product-audit/references/AUDIT_PROCESS.md");
-  assert.match(process, /bun scripts\/journal-corpus\.mjs/);
+  assert.match(process, /runner journal-corpus/);
 });
 
 test("the grammar is a registered normative surface, claimed by a gate row", () => {

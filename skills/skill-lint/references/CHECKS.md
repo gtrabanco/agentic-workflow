@@ -43,7 +43,7 @@ decision, never an oversight.
 | smell | reason | disposition |
 |---|---|---|
 | a per-skill `version:` that must be bumped with the change | unified train versioning (D-40-14): `scripts/release.mjs apply` stamps every skill from the accumulated changesets, and a hand bump is a second writer | skipped |
-| a SKILL.md length / progressive-disclosure smell | context budgets are owned by `scripts/check-skill-context.mjs` and `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; a second ceiling would be a second owner of the same fact | skipped |
+| a SKILL.md length / progressive-disclosure smell | context budgets are owned by `runner skill-context` and `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; a second ceiling would be a second owner of the same fact | skipped |
 | a missing-localization / translation smell | the package ships English-only permanently (owner decision 2026-10-27, issue #232): a locale smell has no target here | skipped |
 
 ### Report and next step

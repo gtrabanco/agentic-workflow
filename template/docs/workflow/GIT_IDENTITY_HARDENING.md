@@ -143,15 +143,14 @@ configuration: `user.signingKey` (or the keyring default) is what the check read
 
 ## The push-range check
 
-The same check exists as a standalone script (`scripts/push-identity-check.mjs`
-in this repository); a project that wires its own pre-push step calls it with the
-range it is about to publish and fails the push on a non-zero exit. The command
+The same check exists in the workflow repository as a standalone gate over the
+range a push is about to publish; a project that wires its own pre-push step
+calls that gate with the range and fails the push on a non-zero exit. It
 verifies every author **and** committer of the never-published commits of
 `<base>..HEAD`:
 
 ```sh
-bun scripts/push-identity-check.mjs --base origin/main   # by hand (node runs it too)
-git push --no-verify                                     # the escape hatch; record why
+git push --no-verify   # the escape hatch; record why
 ```
 
 A run without a range is a usage error by design: a step with nothing to verify
@@ -182,9 +181,8 @@ keeps the check**. The scope can only ever skip a push whose remote is explicitl
 named and differs from the upstream one, so a caller that forgets the flag loses
 convenience, never the guard.
 
-```sh
-bun scripts/push-identity-check.mjs --base origin/main --remote fork   # by hand (node runs it too)
-```
+The workflow repository's gate takes the same range plus a `--remote` naming the
+remote whose publishes define reachability.
 
 What the range is respects reachability (issue #539): a commit already reachable
 from a published ref — the remote mainline, and your pushed branch's own remote

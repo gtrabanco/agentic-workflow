@@ -9,9 +9,9 @@
 ## The invocation
 
 Copy this line, replace `<subcommand>` with the command the skill names, and
-append its arguments. The pin is stamped at release time by
-`scripts/release.mjs`; `scripts/normative-drift.test.mjs` recomputes it against
-the crate's own `package.json` and fails closed on a mismatch.
+append its arguments. The pin is stamped at release time by this repository's release tool;
+`scripts/normative-drift.test.mjs` recomputes it against the crate's own
+`package.json` and fails closed on a mismatch.
 
 ```text
 runner-pin@1
@@ -155,6 +155,18 @@ shell fallback.
 | `skill-context [<skill>…] [--routes] [--documents] [--manifest-only] [--json]` | the context-budget sweep — every skill and reference measured against its declared ceiling (issue #471) |
 | `promise-coherence [<path>…] [--json]` | the promise-coherence pass — a "measured at the head" claim re-measured, never assumed (issue #305) |
 | `batch-scheduler [--root <dir>] [--issues-file <json>] [--json-only]` | the batch planner — the parallel-execution batches as the `batch-plan@4` envelope (feature 88) |
+| `test-route (--check <path> \| --list) [--map <path>]` | the bounded gate planner — which suites a changed path needs, or the full suite when it cannot prove less (issue #318) |
+| `prose-gate-inventory [--root <dir>] [--json]` | the gate-inventory reader — the carriers, reasons, tiers and priorities the audit joins over (issue #441) |
+| `coverage-gap [--root <dir>] [--json]` | the forward-looking coverage join — criterion, class and detector gaps as one typed receipt (issue #590) |
+| `decision-promotion [--root <dir>] [--json]` | the decision-promotion sweep — a cross-unit decision that names no owner doc is a finding (issue #650) |
+| `dimension-regression [--base <ref>] [--root <dir>] [--json]` | the dimension-regression gate — a review surface touched without a recorded run (issue #590) |
+| `journal-corpus [--root <dir>] [--json]` | the journal corpus reader — the session journal joined into the audit's corpus (issue #616) |
+| `repository-state [--root <dir>] [--json]` | the Normalized Repository State reader — what is frozen and what a contradiction is (feature 18) |
+| `residual-classify <surface> [--inventory --base <rev>] [--root <dir>] [--json]` | the residual classifier — consumed, promised, orphan or half-built, with the consuming line named (issue #340) |
+| `restatement-sweep [--root <dir>] [--json]` | the restatement sweep — a seeded rule worded a second time outside its owner (issue #646) |
+| `test-obligation-tags [--root <dir>] [--sweep] [--json]` | the test-obligation tag gate — every suite declares what it protects and what it proves (issue #596) |
+| `retention-debt [--root <dir>] [--json]` | the retention debt sensor — proved-merged units still carrying the full carrier (issue #651) |
+| `setup-env [--check] [--root <dir>]` | the authoring toolchain check and its consent-gated install (the bootstrap form stays `scripts/setup-env.mjs`: it provisions bun, so it cannot require the CLI) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 

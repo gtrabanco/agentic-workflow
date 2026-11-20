@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// cli-command: relay
 /**
  * relay-packet.mjs — the read-only checker for a lane unit's Relay packet.
  *

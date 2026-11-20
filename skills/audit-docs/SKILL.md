@@ -213,7 +213,7 @@ the corpus and the sweep are one declared pair
 `restatement-corpus@1`), so the check is run, never re-derived:
 
     ```text
-    bun scripts/restatement-sweep.mjs        # node scripts/restatement-sweep.mjs — fallback when bun is absent
+    runner restatement-sweep        # runner restatement-sweep — fallback when bun is absent
     ```
 
     - exit 0 is the only pass. `unowned-restatement` — a scope file restating a

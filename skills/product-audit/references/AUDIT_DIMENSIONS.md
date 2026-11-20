@@ -37,17 +37,17 @@ invents profile slots or waives a verification contract.
 | **SEO** | Indexability, metadata, structured data | none — model sweep (the `review-seo` pass) | web |
 | **Brand / voice** | User-facing copy vs. the brand guide | none — model sweep (the `review-brand` pass) | surfaces with copy |
 | **Tech debt** | Accumulated shortcuts, TODO/FIXME, stale abstractions | per-language dead-code linters when the profile declares them (#436 slot) — receipt-quoted; the accumulated-debt remainder is model | all |
-| **Residue — duplication** | Duplicate content across code **and skill/docs prose** — a grammar block, checklist, table, contract or paragraph copied where a reference should carry it; the duplication check today diff-scoped in `review-code`, re-swept product-wide (see § Residue sweeps) | `bun scripts/restatement-sweep.mjs` receipt-quoted for the seeded rules (`restatement-corpus@1`); the diff-scoped `review-code` check is consumed where a diff exists; the unseeded remainder is model | all |
+| **Residue — duplication** | Duplicate content across code **and skill/docs prose** — a grammar block, checklist, table, contract or paragraph copied where a reference should carry it; the duplication check today diff-scoped in `review-code`, re-swept product-wide (see § Residue sweeps) | `runner restatement-sweep` receipt-quoted for the seeded rules (`restatement-corpus@1`); the diff-scoped `review-code` check is consumed where a diff exists; the unseeded remainder is model | all |
 | **Residue — unused code** | Code — and skill prose, same rule — that nothing consumes, classified two ways per the classifier's rule (§ Residue sweeps): delivered-feature-without-consumer → bug finding; orphaned-by-requested-replacement/removal → deletion candidate; the dead-code check today diff-scoped in `review-code`, re-swept product-wide | per-language dead-code linters when the profile declares them (#436 slot) — receipt-quoted | all |
 | **Residue — documentation** | Obsolete docs (they describe surfaces that no longer exist) and missing docs (a live **consumer-facing** surface with no consumer-facing doc — the document-or-don't-coin residue); composes `audit-docs` and never restates its axes (see § Residue sweeps) | `audit-docs` output — receipt-quoted, never restated (see § Residue sweeps) | all |
 | **Process & docs** | Incomplete phases, aging open issues, **solvable known-issues**, doc completeness, missing/optimizable workflow docs, capability-inventory freshness (`docs/CAPABILITIES.md` ↔ code drift) | `audit-docs` mechanical checks — receipt-quoted | all |
 | **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks mechanically** (cite the count from `audit-docs`; never restated in the dimension table); never assume a rule held because it "should". **Scope-export recurrence:** across the most recent units (merged or in-flight), each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) counts as one scope-exporting unit — **≥ 2 consecutive** such units is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (**#64**), not re-litigated as a per-unit defect | `audit-docs` mechanical checks — receipt-quoted (already the contract of this row) | all |
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | `audit-docs` script-first index checks — receipt-quoted where they cover the row set; the gap/opportunity judgment is model | all |
 | **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope; every row the project registered in its `review-extras@1` note is reported with its decay state (`unpinned`, `stale`, `incomplete`), so an extra that rotted is a finding rather than a memory | `agentic-workflow skills inventory --guide AGENTS.md` — receipt-quoted for the registered set; the MCP half is the agent's own inventory, stated plainly when it cannot be enumerated | all |
-| **Coverage gaps** | Declared verification criteria with no detector, admitted recurring finding classes with no preventive gate, and declared detectors consuming no criterion — the forward-looking half the findings corpus (#437) does not cover | `bun scripts/coverage-gap.mjs <repo>` receipt-quoted (`coverage-gap@1`, § Coverage-gap sweep) | all |
-| **Journal signals** | The corrections a session had to make, the sessions each unit consumed (rework), and the findings its own reviewers refuted — cross-joined to the findings corpus, so a class the journal alone records still arrives with the corpus row it belongs to | `bun scripts/journal-corpus.mjs <repo>` receipt-quoted (`journal-corpus@1`, § Journal-signal sweep) | all |
-| **Retention debt** | Merged units still carrying the process artifacts a settle collapses (task lists, phase logs, review ledgers, the evidence table) — and the documents that can never be settled because they carry no provenance stamp — product-wide, so the tree's cost stops growing with every shipped unit | `bun scripts/retention-debt.mjs <repo>` receipt-quoted (`retention-debt@1`, § Retention-debt sweep) | all |
-| **Decision promotion** | A decision whose scope is cross-unit must land in exactly ONE permanent owner doc — the guide's laws, `ARCHITECTURE.md` or `ARCHITECTURAL_INVARIANTS.md` — with the unit ledger citing it and never restating it; the sweep reports every cross-unit decision that names no owner doc, every decision captured after the rule landed with no scope cell, and every ledger the dispatcher cannot read | `bun scripts/decision-promotion.mjs <repo>` receipt-quoted (`decision-promotion@1`, § Decision-promotion sweep) | all |
+| **Coverage gaps** | Declared verification criteria with no detector, admitted recurring finding classes with no preventive gate, and declared detectors consuming no criterion — the forward-looking half the findings corpus (#437) does not cover | `runner coverage-gap <repo>` receipt-quoted (`coverage-gap@1`, § Coverage-gap sweep) | all |
+| **Journal signals** | The corrections a session had to make, the sessions each unit consumed (rework), and the findings its own reviewers refuted — cross-joined to the findings corpus, so a class the journal alone records still arrives with the corpus row it belongs to | `runner journal-corpus <repo>` receipt-quoted (`journal-corpus@1`, § Journal-signal sweep) | all |
+| **Retention debt** | Merged units still carrying the process artifacts a settle collapses (task lists, phase logs, review ledgers, the evidence table) — and the documents that can never be settled because they carry no provenance stamp — product-wide, so the tree's cost stops growing with every shipped unit | `runner retention-debt <repo>` receipt-quoted (`retention-debt@1`, § Retention-debt sweep) | all |
+| **Decision promotion** | A decision whose scope is cross-unit must land in exactly ONE permanent owner doc — the guide's laws, `ARCHITECTURE.md` or `ARCHITECTURAL_INVARIANTS.md` — with the unit ledger citing it and never restating it; the sweep reports every cross-unit decision that names no owner doc, every decision captured after the rule landed with no scope cell, and every ledger the dispatcher cannot read | `runner decision-promotion <repo>` receipt-quoted (`decision-promotion@1`, § Decision-promotion sweep) | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
 **say which you skipped and why**. Every axis is covered by the workflow's own
@@ -69,7 +69,7 @@ never restated or forked here.
 **Duplicate content** — pass only if:
 
 - ✓ every duplicated grammar block, checklist, table, contract or paragraph found is either a reference to a single owner or carries its declared reason for the copy
-- ✓ a restatement of a **seeded** rule carries its owner pointer: the sweep the corpus declares runs first and its receipt is quoted (`bun scripts/restatement-sweep.mjs`, corpus `restatement-corpus@1` in `skills/audit-docs/references/RESTATEMENT.md`), so the seeded half is deterministic and the unseeded remainder is what the model reads
+- ✓ a restatement of a **seeded** rule carries its owner pointer: the sweep the corpus declares runs first and its receipt is quoted (`runner restatement-sweep`, corpus `restatement-corpus@1` in `skills/audit-docs/references/RESTATEMENT.md`), so the seeded half is deterministic and the unseeded remainder is what the model reads
 - ✓ a **shadow copy** — a file, script, schema, helper or prose block whose original lives in a pinned dependency or a published package — is a duplicate of that artifact, not a local convenience: one finding citing the copy, the artifact and its pin; vendoring is legitimate only with its provenance header and a recorded reason, never as a silent fork
 - ✓ each confirmed duplicate is one finding citing both locations
 - ✓ the same sweep run over the clean fixture twin (below) yields zero findings
@@ -97,7 +97,7 @@ must yield exactly one finding per seed on `seeded/` and zero on `clean/`.
 
 The forward-looking half the findings corpus does not cover: #437 attributes what
 already went wrong, this join asks what the project declared against what could
-catch it. It consumes ONE deterministic receipt — `bun scripts/coverage-gap.mjs
+catch it. It consumes ONE deterministic receipt — `runner coverage-gap
 <repo>` — quoted like every other producer and never re-derived by inspection.
 The receipt crosses three committed carriers: the project's verification-criteria
 catalogue (`docs/workflow/VERIFICATION_CRITERIA.md`; its shape and closed
@@ -132,9 +132,9 @@ judges it.
 - ✓ a gap is a finding only when its surface is evidenced — a declared criterion or
   an admitted corpus class; a speculative "this might be uncovered" is not a
   finding and never enters the report
-- ✓ the run over the seeded fixture (`bun scripts/product-audit-gap-fixture.mjs
-  <dir>`) yields exactly one gap per class on `seeded/` and zero on its `clean/`
-  twin
+- ✓ the run over the seeded twin trees — this repository's own harness writes
+  `seeded/` and `clean/`, and the join yields exactly one gap per class on the
+  first and zero on the second
 - ✓ the dimension is reported `n/a — no catalogue and no corpus` when the project
   carries neither, instead of a clean sweep of nothing
 
@@ -156,7 +156,7 @@ introduced here:
 A unit that adds or changes a review dimension, a review skill or an audit producer
 re-verifies that the previously present dimensions still pass — the workflow-side
 analogue of the residue sweeps' features-preserved-without-it check. The gate is
-`scripts/dimension-regression.mjs`: over a push range it refuses a dropped
+`runner dimension-regression`: over a push range it refuses a dropped
 dimension with no recorded owner decision (`dimension-dropped`) and a review-surface
 change with no recorded run (`missing-reverification-evidence`), and its sibling
 suite re-asserts the frozen dimension set on every push. Unconstrained
@@ -206,9 +206,9 @@ verdict | clean | signals <n> | the receipt's own verdict: no row at all is clea
 - ✓ the model's remainder is exactly the non-mechanizable part: the named
   agent-error class and the `why` behind a rework cluster. The counts, the join
   and the phase are the receipt's, never re-derived by inspection
-- ✓ the run over the seeded fixture (`bun scripts/product-audit-journal-fixture.mjs
-  <dir>`) yields exactly one signal per class on `seeded/` and zero on its
-  `clean/` twin
+- ✓ the run over the seeded twin trees — this repository's own harness writes
+  `seeded/` and `clean/`, and the join yields exactly one signal per class on the
+  first and zero on the second
 - ✓ the dimension is reported `n/a — no journal carrier` when the project carries
   neither `docs/LOGS.md` nor the fragment directory, instead of a clean sweep of
   nothing
@@ -255,7 +255,7 @@ decision, recorded at capture time by `decision-scope@1` in
 `cross-unit` lands in exactly ONE permanent owner doc, with the unit ledger
 linking it.
 
-This sweep consumes ONE deterministic receipt — `bun scripts/decision-promotion.mjs
+This sweep consumes ONE deterministic receipt — `runner decision-promotion
 <repo>` — quoted like every other producer and never re-derived by inspection.
 
 ### The receipt grammar (`decision-promotion@1`)
@@ -284,9 +284,9 @@ verdict | clean \| findings <n> | `clean` only when the sweep found nothing
   this audit
 - ✓ a `cross-unit` row's finding names the owner doc the decision should have
   reached, so the promotion is executable without re-deriving the scope
-- ✓ the run over the seeded fixture (`bun scripts/product-audit-promotion-fixture.mjs
-  <dir>`) yields exactly one finding per class on `seeded/` and zero on its
-  `clean/` twin
+- ✓ the run over the seeded twin trees — this repository's own harness writes
+  `seeded/` and `clean/`, and the join yields exactly one finding per class on the
+  first and zero on the second
 - ✓ the dimension is reported `n/a — no unit ledger` when no ledger carries a
   decision, instead of a clean sweep of nothing
 - ✓ every promotion the audit proposes is emission only: the audit names the doc
@@ -299,7 +299,7 @@ ledger the parser cannot read routes to the same lane as a ledger repair — nev
 a bespoke route, never an automatic edit of `AGENTS.md`.
 
 This sweep adds a dimension, so the evolution-regression rule governs it:
-`bun scripts/dimension-regression.mjs` re-verifies that the dimensions already
+`runner dimension-regression` re-verifies that the dimensions already
 present still pass.
 
 
@@ -352,5 +352,5 @@ authority.
   this sweep at all
 
 This sweep changes a dimension, so the evolution-regression rule governs it:
-`bun scripts/dimension-regression.mjs` re-verifies that the dimensions already
+`runner dimension-regression` re-verifies that the dimensions already
 present still pass (see § Evolution regression (anti-erosion)).

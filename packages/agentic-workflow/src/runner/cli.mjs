@@ -24,6 +24,18 @@ import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runForgeRead } from "../forge-read/index.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 import { run as runSkills } from "./skills.mjs";
+import { main as runSetupEnv } from "../setup-env/index.mjs";
+import { main as runTestRoute } from "../test-route/index.mjs";
+import { main as runProseGateInventory } from "../prose-gate-inventory/index.mjs";
+import { main as runRetentionDebt } from "../retention-debt/index.mjs";
+import { main as runTestObligationTags } from "../test-obligation-tags/index.mjs";
+import { main as runDecisionPromotion } from "../decision-promotion/index.mjs";
+import { main as runDimensionRegression } from "../dimension-regression/index.mjs";
+import { main as runJournalCorpus } from "../journal-corpus/index.mjs";
+import { main as runCoverageGap } from "../coverage-gap/index.mjs";
+import { main as runRepositoryState } from "../repository-state/index.mjs";
+import { main as runResidualClassify } from "../residual-classify/index.mjs";
+import { main as runRestatementSweep } from "../restatement-sweep/index.mjs";
 import { main as runBatchScheduler } from "../batch-scheduler/index.mjs";
 import { main as runPromiseCoherence } from "../promise-coherence/index.mjs";
 import { main as runSkillContext } from "../skill-context/index.mjs";
@@ -63,6 +75,18 @@ export const RUNNER_COMMANDS = Object.freeze({
   "forge-read": runForgeRead,
   ceremony: runCeremony,
   skills: runSkills,
+  "setup-env": runSetupEnv,
+  "test-route": runTestRoute,
+  "prose-gate-inventory": runProseGateInventory,
+  "retention-debt": runRetentionDebt,
+  "test-obligation-tags": runTestObligationTags,
+  "decision-promotion": runDecisionPromotion,
+  "dimension-regression": runDimensionRegression,
+  "journal-corpus": runJournalCorpus,
+  "coverage-gap": runCoverageGap,
+  "repository-state": runRepositoryState,
+  "residual-classify": runResidualClassify,
+  "restatement-sweep": runRestatementSweep,
   "batch-scheduler": runBatchScheduler,
   "promise-coherence": runPromiseCoherence,
   "skill-context": runSkillContext,

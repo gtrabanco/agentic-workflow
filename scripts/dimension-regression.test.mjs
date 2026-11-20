@@ -118,7 +118,7 @@ test("adding a dimension without the recorded run is refused", () => {
   });
   assert.equal(result.verdict, "refused");
   assert.deepEqual(result.findings.map((row) => row.code), ["missing-reverification-evidence"]);
-  assert.match(result.findings[0].detail, /scripts\/dimension-regression\.mjs/);
+  assert.match(result.findings[0].detail, /runner dimension-regression/);
 });
 
 test("dropping a prior dimension is refused unless a D line names it", () => {

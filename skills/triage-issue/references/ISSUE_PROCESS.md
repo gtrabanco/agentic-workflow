@@ -132,9 +132,9 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    - **remove** — the deletion decision is a measurement, never a free judgment
      (design note 11 of the direction). The verdict carries its inputs as
      receipts and fails closed: **no measured verdict, no removal.**
-     - **residual state** — `bun scripts/residual-classify.mjs --receipt
+     - **residual state** — `runner residual-classify --receipt
        <surface|symbol> --date <YYYY-MM-DD>`; for the surfaces the unit itself
-       adds, `bun scripts/residual-classify.mjs --inventory --base <rev>`. An
+       adds, `runner residual-classify --inventory --base <rev>`. An
        **orphan** is the only retire-legitimate state: a scaffold (`andamio`)
        requires the recorded planned-consumer promise, and `half-built` routes
        to resume instead of removal.

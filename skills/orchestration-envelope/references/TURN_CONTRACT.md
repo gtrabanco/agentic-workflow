@@ -17,8 +17,7 @@
 ```
 
 **A box that runs a command discloses what the command needs.** When a box
-invokes a script with a placeholder (`bun scripts/x.mjs <unit-dir>`; node fallback
-if bun is not installed), the same
+invokes a command with a placeholder (`runner <command> <unit-dir>`), the same
 skill's text must name the artifact that placeholder requires — the script
 declares it (`PREREQUISITES` in `agentic-workflow needs-input`) and
 `runner promise-coherence` checks the disclosure. A box that instructs a

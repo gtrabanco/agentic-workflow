@@ -176,7 +176,7 @@ pieces per retirement task:
   measured rather than asserted.
 
 No declared retirements → a **strictly additive** unit answers with its
-computed surface inventory — `bun scripts/residual-classify.mjs --inventory
+computed surface inventory — `runner residual-classify --inventory
 --base <rev>`, the anti-divergence receipt its `## Retirements` section
 carries — and any other empty answer writes exactly
 ``none — the design states why nothing can be removed``. The anti-gaming rule

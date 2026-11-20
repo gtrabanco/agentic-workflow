@@ -132,7 +132,7 @@ correlation with fault detection once suite size is controlled.
 One annotation line per suite, beside the suite and never in a central
 registry — a registry rots away from what it describes, and an orphaned suite
 keeps passing while nothing notices. Consumed by the project's obligation-tag
-gate (this repository's implementation: `bun scripts/test-obligation-tags.mjs`)
+gate (this repository's implementation: `runner test-obligation-tags`)
 and by the audit's test-surplus sweep, which reads the tag as its dead-surface
 evidence.
 

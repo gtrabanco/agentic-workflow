@@ -65,7 +65,7 @@ export const GUIDE_LINE =
 
 /** S2 — the per-turn box both executor skills must carry. */
 export const TURN_BOX =
-  "✓ Tool choice re-made this turn — `bun` before `node` on manual invocation, `rg` before `grep` on search; availability checked once with `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)";
+  "✓ Tool choice re-made this turn — `bun` before `node` on manual invocation, `rg` before `grep` on search; availability checked once with `runner setup-env --check` (node and grep stay the documented fallback)";
 
 /** S10/S11 — the suite facts the sweep must carry, never move. */
 const SUITE_CARVE_OUT = [

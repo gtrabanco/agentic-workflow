@@ -81,6 +81,18 @@ now through the CLI.
 | `bun scripts/skill-context.mjs` | `runner skill-context` |
 | `bun scripts/promise-coherence.mjs` | `runner promise-coherence` |
 | `bun scripts/batch-scheduler.mjs` | `runner batch-scheduler` |
+| `bun scripts/restatement-sweep.mjs` | `runner restatement-sweep` |
+| `bun scripts/residual-classify.mjs` | `runner residual-classify` |
+| `bun scripts/repository-state.mjs` | `runner repository-state` |
+| `bun scripts/coverage-gap.mjs` | `runner coverage-gap` |
+| `bun scripts/journal-corpus.mjs` | `runner journal-corpus` |
+| `bun scripts/dimension-regression.mjs` | `runner dimension-regression` |
+| `bun scripts/decision-promotion.mjs` | `runner decision-promotion` |
+| `bun scripts/test-obligation-tags.mjs` | `runner test-obligation-tags` |
+| `bun scripts/retention-debt.mjs` | `runner retention-debt` |
+| `bun scripts/prose-gate-inventory.mjs` | `runner prose-gate-inventory` |
+| `bun scripts/test-route.mjs` | `runner test-route` |
+| `bun scripts/setup-env.mjs` | `runner setup-env` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

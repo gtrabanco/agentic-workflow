@@ -97,16 +97,33 @@ export function readSkills() {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/**
+ * The prose lines of a markdown file. A fenced block is a value or grammar
+ * carrier — the same convention the document verifier applies to cited paths
+ * ("fenced verbatim quotes are not claims") — so a published `runner-pin@1`
+ * value or a candidate table inside one is never read as a skill's citation.
+ */
+export function proseLines(file) {
+  const lines = [];
+  let fenced = false;
+  for (const [index, line] of read(file).split("\n").entries()) {
+    if (/^\s*```/u.test(line)) {
+      fenced = !fenced;
+      continue;
+    }
+    if (!fenced) lines.push([index + 1, line]);
+  }
+  return lines;
+}
+
 /** Every `scripts/<stem>.mjs` a markdown file cites, with its file and line. */
 export function citations(file) {
   const found = [];
-  read(file)
-    .split("\n")
-    .forEach((line, index) => {
-      for (const match of line.matchAll(CITATION)) {
-        found.push({ script: match[2], runner: match[1], file, line: index + 1, text: line.trim() });
-      }
-    });
+  for (const [index, line] of proseLines(file)) {
+    for (const match of line.matchAll(CITATION)) {
+      found.push({ script: match[2], runner: match[1], file, line: index, text: line.trim() });
+    }
+  }
   return found;
 }
 
@@ -194,21 +211,19 @@ export function shippedFindings() {
           fix: command ? `${SYMBOLIC_FORM} ${command}` : `the script is not migrated yet — migrate it, or drop the citation if it is repo-only`,
         });
       }
-      read(file)
-        .split("\n")
-        .forEach((line, index) => {
-          for (const match of line.matchAll(LAUNCHER)) {
-            findings.push({ code: "launcher-in-skill", skill: skill.name, file, line: index + 1, text: match[0] });
+      for (const [index, line] of proseLines(file)) {
+        for (const match of line.matchAll(LAUNCHER)) {
+          findings.push({ code: "launcher-in-skill", skill: skill.name, file, line: index, text: match[0] });
+        }
+        for (const match of line.matchAll(PIN)) {
+          findings.push({ code: "pin-in-skill", skill: skill.name, file, line: index, text: match[0] });
+        }
+        for (const name of REPO_AUTHORING) {
+          if (new RegExp(`scripts/${name}\\.mjs|\\b${name}\\.mjs\\b`, "u").test(line)) {
+            findings.push({ code: "repo-authoring", skill: skill.name, file, line: index, text: line.trim() });
           }
-          for (const match of line.matchAll(PIN)) {
-            findings.push({ code: "pin-in-skill", skill: skill.name, file, line: index + 1, text: match[0] });
-          }
-          for (const name of REPO_AUTHORING) {
-            if (new RegExp(`scripts/${name}\\.mjs|\\b${name}\\.mjs\\b`, "u").test(line)) {
-              findings.push({ code: "repo-authoring", skill: skill.name, file, line: index + 1, text: line.trim() });
-            }
-          }
-        });
+        }
+      }
     }
   }
   return findings;
@@ -264,11 +279,21 @@ test("every migrated shim reaches the router and both documentation tables", () 
 });
 
 test("every migrated shim imports a module the package actually ships", () => {
-  const missing = [...shims()].filter(([, command]) => {
-    const dir = path.join(ROOT, "packages", "agentic-workflow", "src", command);
-    return !fs.existsSync(path.join(dir, "index.mjs"));
-  });
-  assert.deepEqual(missing, [], "a shim's target module must exist under src/<command>/index.mjs");
+  const missing = [];
+  for (const [script] of shims()) {
+    const file = path.join(SCRIPTS, `${script}.mjs`);
+    // The shim names the crate module it forwards to; that file must exist and
+    // live under the package's `src/`, which is what `files` publishes.
+    const match = read(file).match(/import \{[^}]*\} from "(\.\.\/packages\/agentic-workflow\/src\/[^"]+)"/u);
+    if (!match) {
+      missing.push(`${script}: no crate import`);
+      continue;
+    }
+    const target = path.resolve(path.dirname(file), match[1]);
+    const inside = path.join(ROOT, "packages", "agentic-workflow", "src") + path.sep;
+    if (!fs.existsSync(target) || !target.startsWith(inside)) missing.push(`${script} → ${match[1]}`);
+  }
+  assert.deepEqual(missing, [], "a shim forwards to a real module under the package's src/");
 });
 
 test("the symbolic form is legal in a shipped skill and the launcher forms are not", () => {

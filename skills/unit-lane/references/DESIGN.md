@@ -178,7 +178,7 @@ still uses it, asked before breaking (the sweep `fold-findings` runs on a defect
 *why nothing can be removed*. Retirements are a design deliverable, not a
 review-time discovery — the plan step turns each into a planned task. A
 **strictly additive** unit answers with its computed surface inventory instead:
-`bun scripts/residual-classify.mjs --inventory --base <rev>` prints one row per
+`runner residual-classify --inventory --base <rev>` prints one row per
 added surface (manifest, diff-derived) with the state the plan decides for it,
 and that table is the anti-divergence receipt. A surface that lands with no
 consumer yet records its **named planned consumer** — the only thing that turns
