@@ -139,6 +139,8 @@ shell fallback.
 | `docs-generate [--root <dir>] [--check\|--dry-run]` | the generated documentation projection — the pages, plus the roadmap tables it keeps in sync, and the drift report `--check` prints |
 | `docs-generated-merge [--install [--repo <dir>]] \| <base> <ours> <theirs> [marker-size] [path]` | the generated-projection merge driver — the incoming side, or a fail-closed refusal on a path it does not cover |
 | `shared-merge [--install [--repo <dir>]] \| <class> <base> <ours> <theirs> [marker-size] [path]` | the shared-document merge drivers — one class registry for the roadmap, the budgets, the frozen repository state, the journal and the telemetry ledger |
+| `test-impact --base <rev> [--paths <p>…] [--references <file>]` | the test impact set — the suites a change can affect, or `empty`, with the reason (issue #356) |
+| `session-close render \| close` | the session's mechanical half — the entry's facts, the append-only proof and the alone-commit (issue #182) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 

@@ -37,13 +37,22 @@ import { fragmentName, JOURNAL_DIR } from "@gtrabanco/agentic-workflow/src/journ
 
 import { FRAGMENT_DIR, JOURNAL_PATH, MARKER_DIR, sandboxGitEnv } from "./auto-log-session.js";
 import { runtimeBin, runtimeEnv } from "./runtime.js";
+import { runnerBin } from "./runner-bin.js";
 import type { GitReader } from "./auto-log-session.js";
 
 /** The contract id of the record this module writes and reads. */
 export const LOG_SESSION_INVOCATION_CONTRACT = "log-session-invocation@1";
 
-/** The script the prose door already names, relative to the project root. */
+/**
+ * The project's own writer, relative to its root. Resolved **first** so an
+ * authoring checkout keeps judging its own copy, and never the only route: the
+ * scaffold ships no `scripts/` tree, so a target project answers through the
+ * crate's `session-close` command instead (issue #553 S5).
+ */
 export const WRITER_SCRIPT = "scripts/session-close.mjs";
+
+/** The crate subcommand that replaces the script in a project without one. */
+export const WRITER_COMMAND = "session-close";
 
 /** The key the record falls back to when the host named no session id (O12). */
 export const NO_SESSION_ID = "unknown";
@@ -54,9 +63,10 @@ export const WRITER_TIMEOUT_MS = 5000;
 /** The record's own suffix, beside #394's `.start` marker in the same directory. */
 const RECORD_SUFFIX = ".log-session";
 
-/** The shape the writer answered with. */
+/** The shape the writer answered with: which route ran, and its bytes. */
 export type WriterAnswer =
   | { writer: "script"; facts: string }
+  | { writer: "cli"; facts: string }
   | { writer: "absent"; facts: null; reason: string };
 
 /** The transport the carrier decided, and the exact file the entry must land at. */
@@ -76,7 +86,7 @@ export interface InvocationRecord extends InvocationTarget {
   readonly session: string;
   /** UTC second of the invocation (`YYYY-MM-DDTHH:MM:SSZ`). */
   readonly invokedAt: string;
-  readonly writer: "script" | "absent";
+  readonly writer: "script" | "cli" | "absent";
   /** The writer's own stdout, byte for byte — `null` when it is not there. */
   readonly facts: string | null;
   readonly reason?: string;
@@ -205,7 +215,8 @@ export function resolveInvocationTarget(options: {
 
 /**
  * The writer's own answer for this session (S3, AC2): run
- * `session-close.mjs render --kind auto`, which prints the heading and the
+ * `session-close render --kind auto` — the project's own script when it carries
+ * one, else the crate's command — which prints the heading and the
  * `Commits`/`Files` lines and requires no prose. The bytes are returned
  * untouched — the handler is a caller of the writer, never a second renderer,
  * and an absence is reported with the reason that produced it.
@@ -215,29 +226,46 @@ export function readWriterFacts(options: {
   bin?: string;
   run?: WriterSpawn;
   timeoutMs?: number;
+  /** The installed crate bin; omitted means "resolve it" (`runnerBin`). */
+  crateBin?: string | null;
 }): WriterAnswer {
   const root = options.root;
-  const script = path.join(root, WRITER_SCRIPT);
-  if (!fs.existsSync(script)) {
-    return { writer: "absent", facts: null, reason: `no writer script at ${WRITER_SCRIPT}` };
-  }
   const run = options.run ?? defaultSpawn;
   const bin = options.bin ?? runtimeBin();
   const timeoutMs = options.timeoutMs ?? WRITER_TIMEOUT_MS;
-  const result = run(bin, [script, "render", "--kind", "auto"], {
-    cwd: root,
-    encoding: "utf8",
-    timeout: timeoutMs,
-    env: { ...sandboxGitEnv(), ...runtimeEnv() },
-  });
-  if (result?.error) {
-    return { writer: "absent", facts: null, reason: `${WRITER_SCRIPT} could not run: ${result.error.message}` };
+  const script = path.join(root, WRITER_SCRIPT);
+
+  const spawnWriter = (route: "script" | "cli", program: string, argv: string[]): WriterAnswer => {
+    const label = route === "cli" ? `runner ${WRITER_COMMAND}` : WRITER_SCRIPT;
+    const result = run(program, argv, {
+      cwd: root,
+      encoding: "utf8",
+      timeout: timeoutMs,
+      env: { ...sandboxGitEnv(), ...runtimeEnv() },
+    });
+    if (result?.error) {
+      return { writer: "absent", facts: null, reason: `${label} could not run: ${result.error.message}` };
+    }
+    if (result.status !== 0) {
+      const detail = String(result.stderr ?? "").trim() || String(result.stdout ?? "").trim();
+      return { writer: "absent", facts: null, reason: `${label} exited ${result.status}${detail ? `: ${detail}` : ""}` };
+    }
+    return { writer: route, facts: String(result.stdout ?? "") };
+  };
+
+  // The project's own writer wins where it exists, so an authoring checkout
+  // keeps judging its own copy — byte for byte, the answer it always gave.
+  if (fs.existsSync(script)) return spawnWriter("script", bin, [script, "render", "--kind", "auto"]);
+
+  const crateBin = options.crateBin === undefined ? runnerBin() : options.crateBin;
+  if (crateBin === null) {
+    return {
+      writer: "absent",
+      facts: null,
+      reason: `no writer at ${WRITER_SCRIPT} and the runner crate is not resolvable`,
+    };
   }
-  if (result.status !== 0) {
-    const detail = String(result.stderr ?? "").trim() || String(result.stdout ?? "").trim();
-    return { writer: "absent", facts: null, reason: `${WRITER_SCRIPT} exited ${result.status}${detail ? `: ${detail}` : ""}` };
-  }
-  return { writer: "script", facts: String(result.stdout ?? "") };
+  return spawnWriter("cli", bin, [crateBin, WRITER_COMMAND, "render", "--kind", "auto"]);
 }
 
 function defaultSpawn(
@@ -348,18 +376,20 @@ export function composeDirective(record: InvocationRecord): string {
     lines.push(record.path);
   }
   lines.push("");
-  if (record.writer === "script" && record.facts !== null) {
-    lines.push("Session facts, from the project's own writer at invocation (`" + WRITER_SCRIPT + " render --kind auto`):");
+  if (record.writer !== "absent" && record.facts !== null) {
+    const label = record.writer === "cli" ? `runner ${WRITER_COMMAND}` : WRITER_SCRIPT;
+    lines.push("Session facts, from the project's own writer at invocation (`" + label + " render --kind auto`):");
     lines.push(record.facts.trimEnd());
     lines.push("");
+    const close = record.writer === "cli" ? `runner ${WRITER_COMMAND} close` : `${WRITER_SCRIPT} close`;
     lines.push(
       fragment
-        ? `Run the skill's Process steps 3 and 5 with these values: write the entry with your Summary, Decisions and Next through the command above, then run \`${WRITER_SCRIPT} close\`.`
-        : `Run the skill's Process steps 3–5 with these values: render the entry with your Summary, Decisions and Next, save it at the exact target path above, then run \`${WRITER_SCRIPT} close\`.`,
+        ? `Run the skill's Process steps 3 and 5 with these values: write the entry with your Summary, Decisions and Next through the command above, then run \`${close}\`.`
+        : `Run the skill's Process steps 3–5 with these values: render the entry with your Summary, Decisions and Next, save it at the exact target path above, then run \`${close}\`.`,
     );
   } else {
     lines.push(
-      `Writer: \`${WRITER_SCRIPT}\` is absent from this project${record.reason ? ` (${record.reason})` : ""}, so its facts were not computed here.`,
+      `Writer: neither \`${WRITER_SCRIPT}\` nor the crate's \`${WRITER_COMMAND}\` command could run here${record.reason ? ` (${record.reason})` : ""}, so its facts were not computed here.`,
     );
     lines.push(
       fragment
@@ -384,12 +414,19 @@ export function planInvocation(options: {
   git?: GitReader;
   bin?: string;
   run?: WriterSpawn;
+  /** The crate bin the writer route resolves; `null` forces the absent answer. */
+  crateBin?: string | null;
 }): { record: InvocationRecord; directive: string } {
   const session = sessionIdOf(options.sessionId);
   const nowFn = options.now ?? Date.now;
   const instant = nowFn();
   const target = resolveInvocationTarget({ root: options.root, sessionId: session, now: nowFn, git: options.git });
-  const answer = readWriterFacts({ root: options.root, bin: options.bin, run: options.run });
+  const answer = readWriterFacts({
+    root: options.root,
+    bin: options.bin,
+    run: options.run,
+    crateBin: options.crateBin,
+  });
   const record: InvocationRecord = {
     contract: LOG_SESSION_INVOCATION_CONTRACT,
     session,

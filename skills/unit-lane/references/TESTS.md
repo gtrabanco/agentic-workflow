@@ -13,8 +13,8 @@ never inline.
 - The unit's Applicable tests section (filled by triage)
 - The project's test runner command from Workflow conventions
 - The change's **test impact set** — the tests it can affect, derived before the
-  first run (owner: `skills/execute-phase/references/TEST_IMPACT.md`; this
-  repository's implementation is `bun scripts/test-impact.mjs --base <rev>`)
+  first run (owner: `skills/execute-phase/references/TEST_IMPACT.md`; the
+  command is `runner test-impact --base <rev>`)
 
 ## Fixed output contract
 

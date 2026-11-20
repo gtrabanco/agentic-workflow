@@ -65,6 +65,8 @@ now through the CLI.
 | `bun scripts/docs-generate.mjs` | `runner docs-generate` |
 | `bun scripts/docs-generated-merge.mjs` | `runner docs-generated-merge` |
 | `bun scripts/shared-doc-merge.mjs` | `runner shared-merge` |
+| `bun scripts/test-impact.mjs` | `runner test-impact` |
+| `bun scripts/session-close.mjs` | `runner session-close` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

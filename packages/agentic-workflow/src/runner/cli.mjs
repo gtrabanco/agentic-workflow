@@ -24,6 +24,8 @@ import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runForgeRead } from "../forge-read/index.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 import { run as runSkills } from "./skills.mjs";
+import { main as runSessionClose } from "../session-close/index.mjs";
+import { main as runTestImpact } from "../test-impact/index.mjs";
 import { main as runSharedMerge } from "../shared-merge/index.mjs";
 import { main as runDocsGeneratedMerge } from "../docs-generated-merge/index.mjs";
 import { main as runDocsGenerate } from "../docs-generate/index.mjs";
@@ -47,6 +49,8 @@ export const RUNNER_COMMANDS = Object.freeze({
   "forge-read": runForgeRead,
   ceremony: runCeremony,
   skills: runSkills,
+  "session-close": runSessionClose,
+  "test-impact": runTestImpact,
   "shared-merge": runSharedMerge,
   "docs-generated-merge": runDocsGeneratedMerge,
   "docs-generate": runDocsGenerate,
