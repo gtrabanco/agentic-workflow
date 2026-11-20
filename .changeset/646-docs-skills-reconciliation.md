@@ -1,4 +1,5 @@
 ---
+"@gtrabanco/agentic-workflow": patch
 "@gtrabanco/pi-agentic-workflow": patch
 "unit-lane": patch
 "execute-phase": patch
