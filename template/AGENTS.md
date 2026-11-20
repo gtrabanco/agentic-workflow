@@ -370,7 +370,9 @@ routes back to `/init-workspace` (`open-questions@1`'s third route,
 
 **Adaptive lane (unit-driven workflow).** Every NEW unit (feature
 or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/`, in one
-of two accepted shapes. The **`spec-by-reference` shape** (the template's shape)
+of the accepted shapes — `legacy`, `spec-by-reference`, or `settled` (a merged
+unit's collapsed permanent record; a new unit is written `spec-by-reference`).
+The **`spec-by-reference` shape** (the template's shape)
 has 11 sections: `Specs` (numbered `S#`, each quoting the
 requester's own words verbatim; a correction appends under its own id like
 `S1a`), Impact, Non-goals, Future cost, Applicable tests, Known pre-existing

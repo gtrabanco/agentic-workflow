@@ -2,12 +2,12 @@
  * UnitDoc — create and edit single-unit SPEC documents.
  *
  * The unit doc is a single Markdown file (docs/features/<NN>-<slug>/SPEC.md)
- * containing one of two accepted closed section sets in a fixed order (#305
- * added `## Impact`; #308 added the `spec-by-reference` shape).  All edits go
- * through typed operations that validate post-state against the file schema
- * before writing, and validation resolves the shape from the headings the
- * document carries — a legacy doc and a migrated one are both valid, never one
- * of them silently upgraded.
+ * containing one of the accepted closed section sets in a fixed order (#305
+ * added `## Impact`; #308 added the `spec-by-reference` shape; #651 added the
+ * `settled` shape).  All edits go through typed operations that validate
+ * post-state against the file schema before writing, and validation resolves
+ * the shape from the headings the document carries — a legacy doc, a migrated
+ * one and a settled one are each valid, never one silently upgraded.
  */
 
 import { readFileSync, writeFileSync, renameSync, existsSync, rename } from "node:fs";
@@ -299,8 +299,9 @@ export function create(dir, slug) {
  * Returns a receipt.  Throws on unknown section.
  */
 export function setSection(doc, name, body) {
-  // Both accepted shapes are addressable: a migrated document sets its own
-  // sections and a legacy one keeps its own (#308).
+  // Every accepted shape is addressable: the legacy list plus the re-cut list
+  // covers settled's sections too (#308, #651) — a migrated document sets its
+  // own sections and a legacy one keeps its own.
   const addressable = [...new Set([...UNIT_DOC_SECTIONS, ...UNIT_DOC_SPEC_REF_SECTIONS])];
   if (!addressable.includes(name)) {
     throw new Error(`Unknown section "${name}"; allowed: ${addressable.join(", ")}`);
@@ -510,11 +511,19 @@ export function validate(text) {
   // A half-migrated document carries a section from the other shape: its
   // Evidence rows and its Log would both claim to be the receipt, so it is
   // refused rather than read two ways (the #308 §Scope 4 migration rule).
+  //
+  // The exception is a section two accepted carriers share — `## Acceptance
+  // criteria` is required by `legacy` and by `settled`, and the fix templates
+  // keep it beside `Specs` because feature 61 made it the canonical acceptance
+  // source. A shared section is evidence of no migration, so it is tolerated;
+  // a section only one other carrier requires is the half-migration signal.
   if (shape !== null) {
+    const carrierCount = (section) =>
+      Object.values(UNIT_DOC_SECTION_SHAPES).filter((sections) => sections.includes(section)).length;
     const foreign = Object.entries(UNIT_DOC_SECTION_SHAPES)
       .filter(([name]) => name !== shape)
       .flatMap(([, sections]) => sections)
-      .filter((section) => !required.includes(section) && foundHeadings.includes(section));
+      .filter((section) => !required.includes(section) && foundHeadings.includes(section) && carrierCount(section) < 2);
     for (const section of new Set(foreign)) {
       violations.push(`Half-migrated section: ${section} belongs to the other accepted shape`);
     }

@@ -45,6 +45,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { sectionBounds } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+import { readProvenance } from "../packages/agentic-workflow/src/edit/Provenance.mjs";
 
 export const CORPUS_CONTRACT = "findings-corpus@1";
 export const DEFAULT_MIN_RECURRENCE = 2;
@@ -271,12 +272,13 @@ export function parseMigratedCarrier(text, { file, unit }) {
   // The one fence-aware reader owns section bounds (#308 F28/F39); this parser
   // never searches for a heading itself.
   const range = sectionBounds(source, "Findings");
-  if (range === null) {
-    return { findings, reviewMarks, verifiedMarks, unparsable, migratedRows: 0 };
-  }
   const lineOf = (offset) => source.slice(0, offset).split("\n").length - 1;
-  const startLine = lineOf(range[0]);
-  const endLine = lineOf(range[1]);
+  // A settled carrier (issue #651) has no `## Findings` — the settle trims it —
+  // but its `## Log` still carries the one-line `F`/`R`/`V` marks. The section
+  // bounds are read once and the marks below are scanned whether the table is
+  // there or not; only the table loop is conditional.
+  const startLine = range === null ? 0 : lineOf(range[0]);
+  const endLine = range === null ? -1 : lineOf(range[1]);
 
   let columns = null;
   for (let index = startLine + 1; index < endLine; index += 1) {
@@ -562,7 +564,12 @@ export function buildCorpus(root, { resolveFold = () => null, minRecurrence = DE
     }
     if (entry.hasSpec) {
       const text = fs.readFileSync(entry.spec, "utf8");
-      if (sectionBounds(text, "Findings") !== null) {
+      // Either accepted receipt carrier counts: the migrated `## Findings` table,
+      // or the settled carrier — which has no table by construction and is
+      // recognized by its stamp, never by "has a Log" (a Log without a Findings
+      // table is not a carrier this reader knows). A shipped unit keeps
+      // contributing its marks either way (#651 S10).
+      if (sectionBounds(text, "Findings") !== null || readProvenance(text).stamp?.format === "unit-doc@3") {
         migratedCarriers += 1;
         const parsed = parseMigratedCarrier(text, { file: path.relative(root, entry.spec), unit: entry.unit });
         findings.push(...parsed.findings);

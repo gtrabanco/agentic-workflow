@@ -14,6 +14,7 @@
  */
 
 import { CONTENT_AUTHOR_ASSOCIATIONS } from "./content-guard.js";
+import { DOC_RETENTION_DEFAULTS, DOC_RETENTION_MODES, DOC_RETENTION_SCHEMA } from "./doc-retention.js";
 
 export type ConfigCategory = "feature" | "pi";
 
@@ -518,6 +519,15 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     schema: CONTENT_GUARD_SCHEMA,
     defaults: { trustedRoles: ["OWNER", "MEMBER", "COLLABORATOR"], allowLogins: [], denyLogins: [] },
     merge: mergeContentGuardOverrides,
+  },
+  {
+    key: "docRetention",
+    category: "feature",
+    file: BASE_CONFIG_FILE,
+    path: ["docRetention"],
+    description: "Document retention: whether a merged unit's process artifacts are trimmed into the gitignored archive, and how the archive is kept (issue #651).",
+    schema: DOC_RETENTION_SCHEMA,
+    defaults: DOC_RETENTION_DEFAULTS,
   },
 ];
 

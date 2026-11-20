@@ -19,7 +19,7 @@
       "description": "The forensic half's schema package: the version whose grammar table the writer spoke."
     },
     "format": {
-      "enum": ["unit-doc@1", "unit-doc@2"],
+      "enum": ["unit-doc@1", "unit-doc@2", "unit-doc@3"],
       "description": "The carrier layout generation the document was written under — the axis a major re-cut rewrites wholesale."
     },
     "grammars": {

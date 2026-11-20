@@ -53,6 +53,7 @@ import {
   tableCells,
 } from "../packages/agentic-workflow/src/index-document.mjs";
 import { sectionBounds, sectionText } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+import { readProvenance } from "../packages/agentic-workflow/src/edit/Provenance.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.dirname(SCRIPTS_DIR);
@@ -225,6 +226,13 @@ function unitFacts(specText) {
       .find((value) => value !== "") ?? "",
     /** A `## Tasks` section carrying a `P<n>` task line — the plan step's own mark. */
     hasTasks: /(^|\n)\s*[-*]\s+P\d+\b/.test(sectionText(bodyText, "Tasks") ?? ""),
+    /**
+     * Whether the document carries the settled carrier (issue #651). A settled
+     * unit has no `## Tasks` — the settle trims it — so reading `hasTasks` alone
+     * would derive a shipped unit back to `defined`. The carrier is read through
+     * the published reader, never a private `format:` literal.
+     */
+    settled: readProvenance(specText).stamp?.format === "unit-doc@3",
     /** The goal's first paragraph line — the summary chain's last doc-derived rung. */
     goalFirst: (sectionText(bodyText, "Goal") ?? "")
       .split("\n")
@@ -278,6 +286,7 @@ export function collectSources(root) {
         oneLine: facts.oneLine,
         roadmapSummary: facts.roadmapSummary,
         hasTasks: facts.hasTasks,
+        settled: facts.settled,
         goalFirst: facts.goalFirst,
         dependsOn: facts.dependsOn,
         status: (kind === "feature" ? featureStatus : fixStatus).get(slug) ?? "—",
@@ -392,8 +401,13 @@ function roadmapSummaryFor(unit) {
   return mdCell(unit.roadmapSummary || unit.oneLine || unit.goalFirst || unit.title || "—");
 }
 
-/** The status a rowless feature folder derives: planned once Tasks carry a P-line. */
+/**
+ * The status a rowless feature folder derives: `done` once it is settled (a
+ * settle only happens after the merge), `planned` once Tasks carry a P-line,
+ * else `defined`.
+ */
 function derivedFeatureStatus(unit) {
+  if (unit.settled) return "done";
   return unit.hasTasks ? "planned" : "defined";
 }
 

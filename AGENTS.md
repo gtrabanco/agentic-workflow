@@ -89,6 +89,7 @@ while doing one kind of work is one hop away and read on demand:
 | [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md) | provisioning this repo's own authoring toolchain |
 | [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) | running product-audit here (the domain-drift sweep's method), or when unsure which domain a decision belongs to |
 | [`docs/workflow/FEEDBACK.md`](docs/workflow/FEEDBACK.md) | writing or changing a CLI command, script or engine: the three feedback flags, the stderr-only invariant, and what a command must report |
+| [`docs/workflow/RETENTION.md`](docs/workflow/RETENTION.md) | trimming, settling or restoring a merged unit, or changing the trim matrix: the settled carrier, the eligibility predicate, the archive manifest, the trim declaration and the reader contract |
 
 ## Instruction precedence
 
@@ -617,6 +618,10 @@ test-obligation-kind-vocabulary | packages/agentic-workflow-schema/src/vocabular
 test-obligation-tag-grammar | skills/unit-lane/references/TESTS.md | block:test-obligation-tag@1 | test-obligation-kind | no
 test-justification-grammar | skills/unit-lane/references/TESTS.md | block:test-justification@1 | n/a | no
 test-deletion-authority-grammar | skills/unit-lane/references/TESTS.md | block:test-deletion-authority@1 | n/a | no
+settled-carrier-grammar | docs/workflow/RETENTION.md | block:settled-carrier@1 | n/a | no
+retention-declaration-grammar | docs/workflow/RETENTION.md | block:retention-declaration@1 | n/a | no
+retention-archive-contract | docs/workflow/RETENTION.md | block:retention-archive@1 | n/a | no
+retention-debt-receipt | docs/workflow/RETENTION.md | block:retention-debt@1 | n/a | no
 decision-scope-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DECISION_SCOPES | decision-scope | no
 decision-scope-grammar | skills/unit-lane/references/DESIGN.md | block:decision-scope@1 | n/a | no
 decision-promotion-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | fenced:decision-promotion@1 | n/a | no

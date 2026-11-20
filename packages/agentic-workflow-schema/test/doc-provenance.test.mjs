@@ -50,11 +50,20 @@ const schema = JSON.parse(readFileSync(`${packageRoot}/doc-provenance.schema.jso
 const ajv = new Ajv({ strict: true });
 const schemaValidates = ajv.compile(schema);
 
-/** The canonical vector: a spec-by-reference unit doc written by the crate. */
+/** The canonical vector: a settled unit doc written by the crate (issue #651
+ *  advanced the published generation; the @2 vector stays pinned below as the
+ *  degradation case, because an older document is never refused for age). */
 const CANONICAL = {
   contract: "doc-provenance@1",
   written_by: "agentic-workflow@4.10.0",
   schema: "@gtrabanco/agentic-workflow-schema@4.10.0",
+  format: "unit-doc@3",
+  grammars: { "log-kind": 1, "obligations": 1, "unit-doc": 1 },
+};
+
+/** The pre-#651 canonical vector: the full `spec-by-reference` carrier. */
+const SPEC_REF_STAMP = {
+  ...CANONICAL,
   format: "unit-doc@2",
   grammars: { "findings-table": 1, "log-kind": 1, "obligations": 1, "unit-doc": 1 },
 };
@@ -142,8 +151,8 @@ test("the carried block round-trips through parse and serialize deterministicall
       "doc-provenance@1",
       "written_by: agentic-workflow@4.10.0",
       "schema: @gtrabanco/agentic-workflow-schema@4.10.0",
-      "format: unit-doc@2",
-      'grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}',
+      "format: unit-doc@3",
+      'grammars: {"log-kind":1,"obligations":1,"unit-doc":1}',
     ].join("\n"),
   );
   const doc = ["# 462 — example", "", "> one line", "", "```text", block, "```", "", "## Specs", "x", ""].join("\n");
@@ -151,11 +160,11 @@ test("the carried block round-trips through parse and serialize deterministicall
   assert.deepEqual(parsed.errors, []);
   assert.deepEqual(parsed.value, CANONICAL);
   // Canonical (sorted) key order, whatever order the document used.
-  const shuffled = doc.replace(/"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1/, '"unit-doc":1,"obligations":1,"log-kind":1,"findings-table":1');
+  const shuffled = doc.replace(/"log-kind":1,"obligations":1,"unit-doc":1/, '"unit-doc":1,"obligations":1,"log-kind":1');
   assert.equal(serializeDocProvenance(parseDocProvenance(shuffled).value), block);
   assert.equal(parseDocProvenance("# no stamp here\n").value, null);
   assert.deepEqual(parseDocProvenance("# no stamp here\n").errors, []);
-  const bad = parseDocProvenance(doc.replace("format: unit-doc@2", "format: unit-doc-spec-by-reference"));
+  const bad = parseDocProvenance(doc.replace("format: unit-doc@3", "format: unit-doc-spec-by-reference"));
   assert.equal(bad.value, null);
   assert.match(bad.errors.join(" "), /unpublished-format/);
 });
@@ -178,6 +187,10 @@ test("a current stamp is current for the published reader", () => {
   assert.equal(reading.verdict, "current");
   assert.equal(reading.reason, "stamp-current");
   assert.deepEqual(reading.stamp, CANONICAL);
+  // The generation that preceded it is readable, and the reading says so.
+  const older = readDocProvenance(`\`\`\`text\n${serializeDocProvenance(SPEC_REF_STAMP)}\n\`\`\`\n`);
+  assert.equal(older.verdict, "degrade");
+  assert.equal(older.reason, "format-older-compatible");
 });
 
 test("an absent stamp degrades and derives the format from the carrier, never an error", () => {
@@ -221,12 +234,14 @@ test("an unknown carrier family refuses instead of guessing", () => {
 });
 
 test("a newer grammar refuses; an older one degrades; an unknown family refuses", () => {
-  const reader = { format: "unit-doc@2", grammars: { ...DOC_GRAMMAR_VERSIONS } };
+  // The grammar axis is reached only once the format axis passes, so the reader
+  // speaks the document's own carrier generation (D2).
+  const reader = { format: "unit-doc@3", grammars: { ...DOC_GRAMMAR_VERSIONS } };
   const newer = readDocProvenance(`\`\`\`text\n${serializeDocProvenance(mutate({ grammars: { "unit-doc": 2 } }))}\n\`\`\``, reader);
   assert.equal(newer.verdict, "refuse");
   assert.equal(newer.reason, "grammar-newer-than-reader");
 
-  const futureReader = { format: "unit-doc@2", grammars: { ...DOC_GRAMMAR_VERSIONS, "unit-doc": 2 } };
+  const futureReader = { format: "unit-doc@3", grammars: { ...DOC_GRAMMAR_VERSIONS, "unit-doc": 2 } };
   const older = readDocProvenance(`\`\`\`text\n${serializeDocProvenance(clone())}\n\`\`\``, futureReader);
   assert.equal(older.verdict, "degrade");
   assert.equal(older.reason, "grammar-older-compatible");

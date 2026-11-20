@@ -63,10 +63,16 @@ export const DOC_PROVENANCE_SCHEMA_PACKAGE = "@gtrabanco/agentic-workflow-schema
 
 /** The closed carrier-format vocabulary: `<family>@<generation>`. The family is
  *  what a reader dispatches on; the generation is what semver orders. Adding a
- *  carrier layout (a re-cut) is a new member, never a free string. */
+ *  carrier layout (a re-cut) is a new member, never a free string.
+ *
+ *  `unit-doc@3` is the settled carrier (issue #651): a merged unit collapsed to
+ *  its permanent record. It is a layout, not a grammar bump — the carrier keeps
+ *  every `log-kind` mark and drops the section set a closed unit no longer
+ *  carries. */
 export const DOC_PROVENANCE_FORMATS = [
   "unit-doc@1",
   "unit-doc@2",
+  "unit-doc@3",
 ] as const;
 export type DocProvenanceFormat = (typeof DOC_PROVENANCE_FORMATS)[number];
 
@@ -88,6 +94,7 @@ export const DOC_GRAMMAR_VERSIONS = Object.freeze({
 export const DOC_FORMAT_GRAMMARS: Readonly<Record<string, readonly DocGrammarFamily[]>> = Object.freeze({
   "unit-doc@1": Object.freeze(["obligations", "unit-doc"] as const),
   "unit-doc@2": Object.freeze(["findings-table", "log-kind", "obligations", "unit-doc"] as const),
+  "unit-doc@3": Object.freeze(["log-kind", "obligations", "unit-doc"] as const),
 });
 
 /** The unit-doc carrier shape each format names — the derivation source an
@@ -95,6 +102,7 @@ export const DOC_FORMAT_GRAMMARS: Readonly<Record<string, readonly DocGrammarFam
 export const DOC_FORMAT_SHAPES: Readonly<Record<string, string>> = Object.freeze({
   "unit-doc@1": "legacy",
   "unit-doc@2": "spec-by-reference",
+  "unit-doc@3": "settled",
 });
 
 /** The reader verdicts (`doc-provenance-reader-verdict`). */
@@ -442,9 +450,14 @@ export function parseDocProvenance(text: string): { value: DocProvenance | null;
   return { value: candidate as DocProvenance, errors: [] };
 }
 
-/** The published reader: this package's own generation, window at generation 1. */
+/** The published reader: this package's own generation, window at generation 1.
+ *
+ *  The generation advances with the carrier vocabulary (#651 added the settled
+ *  layout), and `readable_from` stays `0`: an older document degrades and is
+ *  never refused for age, so `unit-doc@1` and `unit-doc@2` stay readable
+ *  forever — the same rule that keeps a pre-#462 unit in scope for nothing. */
 export const CURRENT_READER: DocProvenanceReader = Object.freeze({
-  format: "unit-doc@2",
+  format: "unit-doc@3",
   grammars: DOC_GRAMMAR_VERSIONS,
   readable_from: 0,
 });

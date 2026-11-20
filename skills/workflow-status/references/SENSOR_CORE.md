@@ -161,4 +161,21 @@ detail.risk_tier.task_size | ceremony
 detail.risk_tier.task_size | verification
 detail.size_tier | size_tier
 detail.size_tier | changed_paths
+detail.retention | pending_trim
+detail.retention | out_of_scope
 ```
+
+### `detail.retention` — the retention projection (issue #651)
+
+`pending_trim[]` carries one row per unit the shared eligibility predicate calls a
+candidate (`proved-merged` + a full carrier + a stamp, past
+`docRetention.pendingTrimAfterDays`): `unit`, `id`, `state`, `reason`, the
+`command` that would settle it, and the `files` a settle would trim. `out_of_scope[]`
+declares the documents that can never be settled (`unstamped`, `older-format`) —
+reported, never skipped, because an unversioned unit's manual provenance re-stamp
+is the documented path into the matrix (owner: `docs/workflow/RETENTION.md`).
+
+The command reaches `next.continuation` only when the resolver answered its
+nothing-to-do fallback **and** `docRetention.mode` is `archive`: housekeeping never
+outranks an actionable decision, and `keep-all` (the shipped posture) still
+reports the debt without offering the trim.

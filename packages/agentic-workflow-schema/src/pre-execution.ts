@@ -264,15 +264,45 @@ export const UNIT_DOC_SPEC_REF_SECTIONS = Object.freeze([
 ] as const);
 
 /**
+ * The settled (`settled`) required-section list — the third accepted carrier
+ * (issue #651). A merged unit collapses to its permanent record: what it asked
+ * for, what it promised, what it decided, what it learned, and its one-line
+ * receipts. `## Tasks`, `## Findings`, `## Next` and `## Applicable tests` are
+ * gone by construction — a settled unit has no open work — and the evidence
+ * table collapses into one `E` `## Log` line, which `log-kind@1` already
+ * carries. `## Acceptance criteria` is required here because it is also a
+ * legacy section: the validator refuses a section belonging to another shape
+ * unless the resolved shape requires it, and a settled unit keeps its criteria.
+ * `## Future` is deliberately NOT required: the trimmer keeps it when present
+ * (S3), but requiring it would make it a foreign section for every
+ * `spec-by-reference` document that carries it — a tolerated extra stays
+ * tolerated, which is how `## Surfaces` and `## Risk tier` already work.
+ */
+export const UNIT_DOC_SETTLED_SECTIONS = Object.freeze([
+  "Specs",
+  "Acceptance criteria",
+  "Impact",
+  "Non-goals",
+  "Future cost",
+  "Known pre-existing issues",
+  "Log",
+  "References",
+] as const);
+
+/**
  * The accepted shapes, keyed by the name the readers report. Migration is
  * additive (issue #308 §Scope 4): a closed unit keeps `legacy` and is never
- * rewritten, an open unit picks up `spec-by-reference` at its next touch, and
- * both resolve through the same selector — one shape table, never two lists a
- * reader has to choose between by guesswork.
+ * rewritten, an open unit picks up `spec-by-reference` at its next touch, and a
+ * merged unit may settle to `settled` (issue #651) — all three resolve through
+ * the same selector, one shape table, never a list a reader chooses between by
+ * guesswork. The insertion order is the selector's precedence: a heading set
+ * that satisfies several shapes resolves to the richest one, and no accepted
+ * set satisfies two.
  */
 export const UNIT_DOC_SECTION_SHAPES = Object.freeze({
   legacy: UNIT_DOC_REQUIRED_SECTIONS,
   "spec-by-reference": UNIT_DOC_SPEC_REF_SECTIONS,
+  settled: UNIT_DOC_SETTLED_SECTIONS,
 } as const);
 
 export type UnitDocShape = keyof typeof UNIT_DOC_SECTION_SHAPES;
@@ -583,10 +613,10 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
 
   if (titleLine === -1) return selectionError("selector-title-missing", "<title>");
 
-  // One contract, two accepted shapes (#308). The required list is resolved from
-  // the headings the document actually carries; a document satisfying neither
-  // shape reports the first missing section of the legacy list, which is the
-  // shape every unit predating the re-cut carries.
+  // One contract, every accepted shape (#308's two plus #651's `settled`). The
+  // required list is resolved from the headings the document actually carries;
+  // a document satisfying no shape reports the first missing section of the
+  // legacy list, which is the shape every unit predating the re-cut carries.
   const names = headings.map((heading) => heading.name);
   const shape = resolveUnitDocShape(names);
   const requiredSections = unitDocSectionsFor(shape);

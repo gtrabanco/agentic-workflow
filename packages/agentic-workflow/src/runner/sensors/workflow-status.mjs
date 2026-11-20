@@ -57,6 +57,10 @@ import { classifyTier, taskSizeOf, sizeTierOf } from "../risk-tiers.mjs";
 // the guarded value: no title reaches the envelope without passing the sanitizer
 // and the author-provenance policy, and nothing is excluded silently.
 import { collectAssociations, guardForgeContent, readContentGuardPolicy } from "../../content-guard.mjs";
+// Issue #651: the retention projection. The carrier/stamp half is the schema
+// package's predicate, shared with `doc archive`, so the sensor and the write
+// path cannot disagree about which unit is a candidate.
+import { assessUnit, logAgeDays, readRetentionConfig } from "../../retention/retention.mjs";
 
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
 /** The repository being sensed. Defaults to the process working directory. */
@@ -685,6 +689,19 @@ function computeDependencies(units, mergeResolver) {
  */
 function newestReceipt(progressText, stage) {
   return parseReceipts(progressText).filter((receipt) => receipt.stage === stage).pop() ?? null;
+}
+
+/** The regular files of one unit folder (issue #651's matrix classification). */
+function unitFiles(dir) {
+  const abs = path.join(PROJECT, dir);
+  try {
+    return fs
+      .readdirSync(abs, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name);
+  } catch {
+    return [];
+  }
 }
 
 function unitDirFor(unit) {
@@ -1392,6 +1409,24 @@ function continuationClassFor(verb, label) {
   return null;
 }
 
+/**
+ * The retention continuation (issue #651): the archive command of the first
+ * `pending_trim` row, with its two emit-time preconditions. Returns `null` when
+ * the emitter refuses, which leaves the resolver's own answer in place.
+ */
+function buildRetentionContinuation({ schema, row }) {
+  if (!schema || typeof schema.emitContinuation !== "function") return null;
+  const result = schema.emitContinuation({
+    command: row.command,
+    convergence: "detail.retention.pending_trim",
+    preconditions: [
+      { id: "retention-configured", check: "docRetention.mode is archive", satisfied: true },
+      { id: "unit-eligible", check: `${row.unit} is proved-merged with a full carrier and a stamp`, satisfied: true },
+    ],
+  });
+  return result.ok ? result : null;
+}
+
 /** The convergence field each class must advance (E-59-6 / D-59-8). */
 function convergenceForClass(kind, stage) {
   return kind === "status-refresh" ? "next.recommended" : `detail.pre_execution.${stage}.label`;
@@ -1613,6 +1648,7 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
   const marks = new Map();
   const fixNow = [];
   const nextSuggested = [];
+  const retentionAssessed = [];
   for (const unit of units) {
     const dir = unitDirFor(unit);
     if (!dir) continue; // an unsafe slug was already reported by the readiness pass
@@ -1629,7 +1665,51 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
     observations.push(...readLogMarks(unit, dir));
     fixNow.push(...readFixNow(dir, observations));
     nextSuggested.push(...readSuggestions(unit, dir));
+    // Issue #651 — the retention row: a `done` row the merge resolver proves
+    // shipped, a full carrier, a stamp and a committed folder (decision D4).
+    const specText = readProject(path.join(dir, "SPEC.md"));
+    if (specText !== null) {
+      const findingsText = readProject(path.join(dir, "review-findings.md"));
+      const row = assessUnit({
+        unit: dir,
+        text: specText,
+        status: dependencies.merged.has(unit.id) ? "done" : (unit.status ?? null),
+        files: unitFiles(dir),
+        dirty: (gitState.dirtyFiles ?? []).some((line) => line.slice(3).trim().startsWith(`${dir}/`)),
+        reviewFindings: findingsText,
+      });
+      row.id = unit.id;
+      row.age_days = logAgeDays(specText);
+      retentionAssessed.push(row);
+    }
   }
+
+  // Issue #651 — the retention projection (S8). Detection always reports: a
+  // proved-merged unit whose full carrier carries a stamp, past the configured
+  // window, is a `pending_trim` row; a document with no stamp or an older
+  // generation is declared out of scope rather than skipped. The config gates the
+  // OFFER (the continuation), never the detection.
+  const retentionConfig = readRetentionConfig({ root: PROJECT });
+  const retentionRows = retentionAssessed
+    .map((row) => ({
+      ...row,
+      offered: row.writable && (row.age_days ?? 0) >= (retentionConfig.pendingTrimAfterDays ?? 0),
+    }))
+    .sort((left, right) => left.unit.localeCompare(right.unit));
+  const pendingTrim = retentionRows
+    .filter((row) => row.offered)
+    .map((row) => ({
+      unit: row.unit,
+      id: row.id,
+      state: row.state,
+      reason: row.reason,
+      command: `agentic-workflow doc archive --unit ${row.unit}`,
+      files: row.trim,
+    }));
+  const outOfScope = retentionRows
+    .filter((row) => row.state === "unstamped" || row.state === "older-format")
+    .map((row) => ({ unit: row.unit, id: row.id, state: row.state, reason: row.reason, files: [] }));
+  const retention = { pending_trim: pendingTrim, ...(outOfScope.length > 0 ? { out_of_scope: outOfScope } : {}) };
 
   const urgentIssues = readUrgency(forge.openIssues);
   const untriagedNumbers = (forge.openIssues ?? [])
@@ -1707,7 +1787,15 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
   next.suggested = nextSuggested;
   // Feature 59 — project the resolved decision into `next.continuation`. The
   // fallback branch is "nothing to do": no continuation, only the refusal.
-  const continuation = buildContinuation({
+  // Issue #651 — the retention offer. It is projected only when the project
+  // configured the trim step AND the deterministic resolver answered the
+  // nothing-to-do fallback: housekeeping never outranks an actionable decision.
+  const retentionOffer = nextResolution.kind === "fallback"
+    && retentionConfig.mode === "archive"
+    && pendingTrim.length > 0
+    ? buildRetentionContinuation({ schema, row: pendingTrim[0] })
+    : null;
+  const continuation = retentionOffer ?? buildContinuation({
     schema,
     next,
     receiptRows,
@@ -1804,6 +1892,7 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
       },
     },
     ...(substrateNotice ? { substrate_notice: substrateNotice } : {}),
+    retention,
   };
 
   const envelope = {

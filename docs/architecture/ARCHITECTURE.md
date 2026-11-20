@@ -29,6 +29,22 @@ For long-lived constraints that apply beyond dependency direction, use the
 optional companion `ARCHITECTURAL_INVARIANTS.md`. It records one checkable rule,
 its repository evidence, and the authority required to change it.
 
+## Document retention
+
+A unit's carrier is part of the structure this document describes: `legacy`,
+`spec-by-reference` and `settled` are the three accepted layouts, and a merged
+unit may settle to the third. The procedure — what a settle keeps, the one
+eligibility predicate, the byte-bound archive and its restore — is owned by
+[`docs/workflow/RETENTION.md`](../workflow/RETENTION.md); this section only
+records the rule that a structure change must respect: **a settle removes no
+traceability**, so the `## Log` survives verbatim and the trimmable files are
+restorable.
+
+A unit written before the provenance stamp (#462) is out of scope for the trimmer
+forever. The documented path to make it a candidate is a **provenance re-stamp**
+(`agentic-workflow unit-doc <slug> provenance`, which writes the format the
+carrier derives), never a synthesized stamp and never a forced settle.
+
 ## Diagram
 
 ```

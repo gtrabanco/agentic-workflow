@@ -792,9 +792,10 @@ function unitFacts(doc, unitDir) {
     }
     scope = fm.scope;
   } else {
-    // #398 B1: read both accepted shapes — the legacy Objective/Acceptance
-    // criteria pair and the spec-by-reference ## Specs requirements. The count
-    // comes from the one reader that owns that grammar (parseSpecs, whose
+    // #398 B1: read the requirement grammar of every accepted shape — the
+    // legacy Objective/Acceptance criteria pair and the spec-by-reference
+    // ## Specs requirements (settled shares `Specs`). The count comes from the
+    // one reader that owns that grammar (parseSpecs, whose
     // fence-aware scan is what keeps a quoted example from counting); a doc
     // carrying >= 3 requirements is never trivial (real work: design, plan,
     // tests, review).

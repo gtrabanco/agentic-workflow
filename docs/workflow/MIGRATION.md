@@ -39,7 +39,8 @@ edit. It declares three axes that are never merged (owner:
 `packages/agentic-workflow-schema/README.md`, block `doc-provenance@1`):
 
 - `format` — the **carrier layout** generation (`unit-doc@1` is the legacy
-  14-section carrier, `unit-doc@2` the re-cut `spec-by-reference` one);
+  14-section carrier, `unit-doc@2` the re-cut `spec-by-reference` one,
+  `unit-doc@3` the settled one added by #651);
 - `grammars` — the **content** vocabularies the document speaks;
 - `written_by` / `schema` — the **forensic** pair: which tool and schema version
   wrote it, so a breakage is reproduced and bisected across the train instead of

@@ -298,7 +298,10 @@ When all triaged steps are done, in order:
 2. Resolve every `## Future` row with the user (planned now — registered on
    explicit request only —, kept deferred, or discarded, dated).
 3. Update the unit doc's status and the index row (release step: branch
-   hygiene, PR creation, forge reconciliation).
+   hygiene, PR creation, forge reconciliation). Then read this unit's
+   `detail.retention.pending_trim[]` row: when `docRetention.mode` allows, offer
+   the row's own `doc archive` command (dry-run first); report it otherwise,
+   never apply it silently (owner: [`docs/workflow/RETENTION.md`](../../docs/workflow/RETENTION.md)).
 4. **Receipt stage.** The in-doc verdict is not the machine receipt. Verify
    the PR's review receipt (`bun scripts/review-receipt.mjs verify --pr <N>`):
    - **exit 0** (a current `review-change:pass` receipt at the settled head) →

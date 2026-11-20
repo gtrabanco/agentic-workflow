@@ -188,12 +188,13 @@ for (const template of [
 }
 
 // ---------------------------------------------------------------------------
-// #308 — two accepted shapes, one contract
+// #308 — its two accepted shapes, one contract (#651's `settled` is the table's
+// third member; its parity is pinned in packages/agentic-workflow/test/settled-carrier.test.mjs)
 //
 // The re-cut shape replaces `Evidence` / `Progress log` with `Specs` / `Log` and
 // adds `Findings`. Migration is additive: closed units keep the current 14-section
 // set and are never rewritten, migrated units carry the re-cut set, and both
-// resolve through the same selector. The two sets below are the contract; the
+// resolve through the same selector. The two sets below are #308's contract; the
 // surfaces that must agree (constant, SDK copy, producer skeleton, router copy,
 // templates) follow in P2/P3.
 // ---------------------------------------------------------------------------
@@ -213,7 +214,7 @@ const SPEC_REF_SECTIONS = Object.freeze([
   "References",
 ]);
 
-test("#308 the owner constant publishes both accepted shapes", () => {
+test("#308 the owner constant publishes its two accepted shapes in the one table", () => {
   const source = read(OWNER_FILE);
   assert.match(source, /UNIT_DOC_SECTION_SHAPES = Object\.freeze\(\{/,
     `${OWNER_FILE} must publish the shape table beside the current list — one list cannot accept two shapes`);

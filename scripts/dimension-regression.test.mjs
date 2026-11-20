@@ -66,6 +66,7 @@ const FROZEN = [
   "Installed tooling",
   "Coverage gaps",
   "Journal signals",
+  "Retention debt",
   "Decision promotion",
 ];
 
