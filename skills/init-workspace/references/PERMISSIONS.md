@@ -62,7 +62,11 @@ The command renders the documented baseline (bash asks, `rm -rf *` denies,
 outside-the-tree asks with `/tmp/*` and `~/.cache/*` allowed as scratch) plus the
 guards the project declared, in last-match-wins order, and creates the file **only
 when it does not exist**. An existing file is refused with the block printed for a
-hand merge: two writers on one policy file is how a policy becomes unknown.
+hand merge: two writers on one policy file is how a policy becomes unknown. The
+command also refuses — exit 2, nothing written — when it cannot honestly project
+your declarations: an authoring file whose `guardPlugins` the config system
+cannot resolve (the owning package is not discoverable) or that fails validation
+prints the refusal instead of a baseline that would silently omit your rules.
 
 Without `--write` the same command prints the block and touches nothing — use that
 form when the operator wants to see the policy before it exists. `--scope global`
