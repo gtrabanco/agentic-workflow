@@ -53,7 +53,7 @@ ${CORPUS_MARKER}
 # claim-scope: skills/**
 rule | owner | phrase | scope | allow | claim
 one-pr-per-unit | AGENTS.md | One PR per unit | docs/** | template/AGENTS.md | -
-red-first | AGENTS.md | Red-first commits | skills/** | - | skills/x/SKILL.md
+red-first | AGENTS.md | Red-first commits | skills/** | - | -
 \`\`\`
 `;
 
@@ -127,7 +127,7 @@ test("F-646-9 the D1 intra-file duplicate is refused: two copies in one file is 
     const findings = sweep(repo).findings;
     const restatements = findings.filter((finding) => finding.code === "unowned-restatement")
       .map((finding) => finding.file).sort();
-    assert.deepEqual(restatements, ["skills/y/references/TESTS.md", "skills/x/SKILL.md"]);
+    assert.deepEqual(restatements, ["skills/x/SKILL.md", "skills/y/references/TESTS.md"]);
   } finally {
     fs.rmSync(repo, { recursive: true, force: true });
   }
@@ -136,9 +136,13 @@ test("F-646-9 the D1 intra-file duplicate is refused: two copies in one file is 
 test("F-646-10 a claim of 'never restated' is machine-verified, never trusted", () => {
   // skills/x/SKILL.md claims the rule is cited, never restated; a sibling restates
   // it — the claim is false and the sweep must say so rather than read the sentence.
+  const claiming = CORPUS.replace(
+    "red-first | AGENTS.md | Red-first commits | skills/** | - | -",
+    "red-first | AGENTS.md | Red-first commits | skills/** | - | skills/x/SKILL.md",
+  );
   const repo = toyRepo({
     "AGENTS.md": OWNER,
-    [CORPUS_FILE]: CORPUS,
+    [CORPUS_FILE]: claiming,
     "skills/x/SKILL.md": "# X\n\nRed-first is cited from `AGENTS.md`, never restated here.\n",
     "skills/z/references/DEEP.md": "Red-first commits: the suite lands alone, then the implementation.\n",
   });
@@ -216,7 +220,10 @@ test("the closed finding set is published and the sweep is deterministic", () =>
     const second = run(["--repo", repo, "--json"]);
     assert.equal(first.stdout, second.stdout, "the same tree prints the same block");
     assert.equal(first.status, 1);
-    assert.match(first.stdout, /verdict: FAIL/);
+    assert.match(first.stdout, /"verdict": "FAIL"/);
+    const text = run(["--repo", repo]);
+    assert.match(text.stdout, /^restatement-sweep — /m);
+    assert.match(text.stdout, /^verdict: FAIL$/m);
   } finally {
     fs.rmSync(repo, { recursive: true, force: true });
   }
@@ -229,7 +236,7 @@ test("the live tree carries no unowned restatement and no unverified claim", () 
   assert.deepEqual(result.findings, [],
     `restatements:\n${result.findings.map((f) => `  [${f.code}] ${f.rule}: ${f.file} — ${f.detail}`).join("\n")}`);
   assert.equal(result.verdict, "PASS");
-  const rows = corpusRows(fs.readFileSync(path.join(ROOT, CORPUS_FILE), "utf8"));
+  const rows = corpusRows(fs.readFileSync(path.join(ROOT, CORPUS_FILE), "utf8")).rows;
   assert.ok(rows.length >= 5, `the corpus is seeded from the B/D tables (${rows.length} rules)`);
   for (const rule of ["one-pr-per-unit", "red-first", "weaker-than-author", "no-slash-menu"]) {
     assert.ok(rows.some((row) => row.rule === rule), `the corpus declares ${rule}`);

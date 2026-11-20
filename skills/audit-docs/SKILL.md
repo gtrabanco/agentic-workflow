@@ -207,6 +207,29 @@ run the command shown, don't infer.
       (the unit's own evidence carrier is `verification-contract`'s finding at
       review time), and the finding's `route` cell says where it resolves.
 
+18. **Unowned restatements of an owned rule (issue #646 A6).** Always applies:
+the corpus and the sweep are one declared pair
+([`references/RESTATEMENT.md`](references/RESTATEMENT.md), block
+`restatement-corpus@1`), so the check is run, never re-derived:
+
+    ```text
+    bun scripts/restatement-sweep.mjs        # node scripts/restatement-sweep.mjs — fallback when bun is absent
+    ```
+
+    - exit 0 is the only pass. `unowned-restatement` — a scope file restating a
+      seeded rule without naming its owner — is **HIGH** (the copy has already
+      lost whatever nuance the owner adds, which is how the one-PR rule dropped
+      its inline-batch exception);
+    - `stale-claim` — a file asserting a rule is "never restated" while its
+      scope restates it, or while the claim sentence is gone — is **HIGH**: an
+      assertion the tree disproves;
+    - `uncovered-claim` (a "never restated" sentence naming no resolvable owner)
+      is **MEDIUM**, and a `REFUSED` verdict (`unresolved-owner`,
+      `malformed-corpus`, `empty-corpus`) is **HIGH** — a corpus that cannot be
+      resolved proves nothing;
+    - `NOTE <rule> — the seed's phrase matches no file` is **LOW**: a dead seed
+      describes a tree that no longer exists.
+
 Adapt the list to what the project has; skip checks for absent structures and
 say so.
 
