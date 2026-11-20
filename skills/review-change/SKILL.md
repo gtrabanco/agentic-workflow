@@ -29,7 +29,7 @@ For a final PR review, the turn is incomplete until this additional box passes:
 
 ```text
 ✓ Decision: REVIEW-PASS + PR exists →
-  `bun scripts/review-receipt.mjs emit --pr <N> --head "$(git rev-parse HEAD)" …`
+  `runner review-receipt emit --pr <N> --head "$(git rev-parse HEAD)" …`
   RUN and exited 0 — the script posts the SHA-bound comment, re-reads the PR
   comments, and exits non-zero unless the newest exact-HEAD
   `review-change:pass` marker is confirmed, so its exit code IS this box

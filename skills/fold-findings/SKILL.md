@@ -328,11 +328,11 @@ as F49, then F50, then F51 costs a full review cycle each time when grouped by
 file:line; grouped by mechanism, one class escalation fixes all three.
 
 **Per-file review state (S10 6, from #218; shipped as S16).** `review-state.json`
-per unit, single writer = `scripts/review-state.mjs`, model passes read-only: each
+per unit, single writer = `runner review-state`, model passes read-only: each
 file in the affecting-path inventory ends a cycle `reviewed@<sha>` or
 `skipped@<sha>` with a concrete reason; skips auto-invalidate when a later diff
 touches the file; coverage closure `inventory − reviewed − skipped = 0` is a
-mechanical receipt check. Run `bun scripts/review-state.mjs check --unit <slug>`
+mechanical receipt check. Run `runner review-state check --unit <slug>`
 and paste the block — `closure: complete` exits 0, `closure: open(n)` exits 1 and
 is a blocker, never a note.
 
@@ -355,7 +355,7 @@ a re-trigger condition in the unit's `known-issues.md` and opens no correction
 round — it never becomes a `fix-now` row and never spends the budget. The floor,
 the note shape and the exclusions are stated once in
 [`references/NIMIO.md`](references/NIMIO.md); the machine reading is
-`bun scripts/correction-budget.mjs --unit <unit-dir>`, whose `nimio` count is
+`runner correction-budget --unit <unit-dir>`, whose `nimio` count is
 already subtracted from the computed budget.
 
 ## Relationship to other skills

@@ -34,8 +34,8 @@
  * does is answer `empty` because it could not look.
  *
  * Usage
- *   bun scripts/test-impact.mjs --base <rev> [--paths <p>…] [--references <file>]
- *   bun scripts/test-impact.mjs --paths <p>… [--references <file>]
+ *   agentic-workflow test-impact --base <rev> [--paths <p>…] [--references <file>]
+ *   agentic-workflow test-impact --paths <p>… [--references <file>]
  *
  * Read-only: it writes nothing outside a `mktemp -d` scratch file it removes on
  * exit, calls no network, has no dependency, and holds no state between runs.
@@ -377,7 +377,7 @@ function parseArgs(argv) {
 }
 
 const USAGE = `usage: agentic-workflow test-impact --base <rev> [--paths <p>…] [--references <file>]
-       bun scripts/test-impact.mjs --paths <p>… [--references <file>]
+       agentic-workflow test-impact --paths <p>… [--references <file>]
 
 Prints the tests a change can affect: the touched symbols resolved to the test
 files that reference them, the suite beside each changed file, and any

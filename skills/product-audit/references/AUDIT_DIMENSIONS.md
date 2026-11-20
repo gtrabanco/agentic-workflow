@@ -105,7 +105,7 @@ provenance set are owned by `template/docs/workflow/VERIFICATION_CRITERIA.md` an
 `audit-docs` check 16), the installed detectors (`docs/workflow/GATE_INVENTORY.md`
 through its one reader, plus the review surfaces the guide's
 `ceremony-profile@1` leaves paid — #436's consumption-side rule), and the corpus
-(`scripts/findings-corpus.mjs`'s own `buildCorpus`, never a second parser). A
+(`runner findings-corpus`'s own `buildCorpus`, never a second parser). A
 carrier the project does not carry is named in the receipt and its edge reads
 `n/a` — never guessed.
 

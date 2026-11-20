@@ -9,9 +9,9 @@ outcome the ACs would miss, or a contract violation.
 
 The in-doc `REVIEW-VERDICT` is prose evidence, **not** the machine receipt
 `/audit-pr` consumes. The receipt's sole owner is `/review-change`
-(`bun scripts/review-receipt.mjs emit`). At close-out, with the PR open:
+(`runner review-receipt emit`). At close-out, with the PR open:
 
-- `bun scripts/review-receipt.mjs verify --pr <N>` exit 0 → the closing block
+- `runner review-receipt verify --pr <N>` exit 0 → the closing block
   recommends `/audit-pr <PR-url>` as the terminal stage.
 - otherwise → the closing block is `→ Next: /review-change <NN-slug>` and
   `/audit-pr` is never printed first. `n/a: no PR` is not a silent pass — the

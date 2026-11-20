@@ -8,7 +8,7 @@ disposition that ends that: **it records, and it opens no round.**
 ## The floor
 
 A finding is `nimio` when it is below the materiality floor, which is the
-machine condition `scripts/correction-budget.mjs` reads — never a judgement made
+machine condition `runner correction-budget` reads — never a judgement made
 while folding:
 
 - its severity band is `below-floor` (the `SUGGESTION` end of the ladder — the
@@ -44,7 +44,7 @@ floor is a reclassification, which `fold-findings` never does.
 ## The machine surface
 
 ```text
-bun scripts/correction-budget.mjs --unit <unit-dir> [--rounds-spent <n>]
+runner correction-budget --unit <unit-dir> [--rounds-spent <n>]
 ```
 
 prints `nimio | <n>` and one line per note to write:

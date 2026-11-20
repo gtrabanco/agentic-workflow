@@ -24,6 +24,14 @@ import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runForgeRead } from "../forge-read/index.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 import { run as runSkills } from "./skills.mjs";
+import { main as runAdversarialVerdict } from "../adversarial-verdict/index.mjs";
+import { main as runGateReceipt } from "../gate-receipt/index.mjs";
+import { main as runReviewReceipt } from "../review-receipt/index.mjs";
+import { main as runScopeManifest } from "../scope-manifest/index.mjs";
+import { main as runReviewState } from "../review-state/index.mjs";
+import { main as runDifferentialBaseline } from "../differential-baseline/index.mjs";
+import { main as runCorrectionBudget } from "../correction-budget/index.mjs";
+import { main as runFindingsCorpus } from "../findings-corpus/index.mjs";
 import { main as runSessionClose } from "../session-close/index.mjs";
 import { main as runTestImpact } from "../test-impact/index.mjs";
 import { main as runSharedMerge } from "../shared-merge/index.mjs";
@@ -49,6 +57,14 @@ export const RUNNER_COMMANDS = Object.freeze({
   "forge-read": runForgeRead,
   ceremony: runCeremony,
   skills: runSkills,
+  "adversarial-verdict": runAdversarialVerdict,
+  "gate-receipt": runGateReceipt,
+  "review-receipt": runReviewReceipt,
+  "scope-manifest": runScopeManifest,
+  "review-state": runReviewState,
+  "differential-baseline": runDifferentialBaseline,
+  "correction-budget": runCorrectionBudget,
+  "findings-corpus": runFindingsCorpus,
   "session-close": runSessionClose,
   "test-impact": runTestImpact,
   "shared-merge": runSharedMerge,

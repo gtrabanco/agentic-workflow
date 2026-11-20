@@ -141,6 +141,14 @@ shell fallback.
 | `shared-merge [--install [--repo <dir>]] \| <class> <base> <ours> <theirs> [marker-size] [path]` | the shared-document merge drivers — one class registry for the roadmap, the budgets, the frozen repository state, the journal and the telemetry ledger |
 | `test-impact --base <rev> [--paths <p>…] [--references <file>]` | the test impact set — the suites a change can affect, or `empty`, with the reason (issue #356) |
 | `session-close render \| close` | the session's mechanical half — the entry's facts, the append-only proof and the alone-commit (issue #182) |
+| `findings-corpus` | the retrospective findings corpus — the one join `coverage-gap` and `dimension-regression` build on (issue #437) |
+| `correction-budget` | the correction budget as a measurement — batch size, bounded budget and the typed stop (issue #437) |
+| `differential-baseline` | the differential baseline — the base revision materialized for a real comparison (issue #301) |
+| `review-state` | the per-unit review-state ledger — which axes ran, at which head (feature 32) |
+| `scope-manifest` | the digest-bound scope manifest — `sign` and `verify` (feature 25) |
+| `review-receipt` | the SHA-bound review receipt — `emit`, `verify`, `post` (feature 25) |
+| `gate-receipt` | the gate receipt — `run` records the gate's evidence, `verify` re-derives it (fix #338) |
+| `adversarial-verdict` | the adversarial pass's checker over its record and the reviewed diff (issue #358) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
 | `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 

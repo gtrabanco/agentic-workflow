@@ -303,7 +303,7 @@ When all triaged steps are done, in order:
    the row's own `doc archive` command (dry-run first); report it otherwise,
    never apply it silently (owner: [`docs/workflow/RETENTION.md`](../../docs/workflow/RETENTION.md)).
 4. **Receipt stage.** The in-doc verdict is not the machine receipt. Verify
-   the PR's review receipt (`bun scripts/review-receipt.mjs verify --pr <N>`):
+   the PR's review receipt (`runner review-receipt verify --pr <N>`):
    - **exit 0** (a current `review-change:pass` receipt at the settled head) →
      the closing `→ Next:` recommends `/audit-pr <PR-url>` as the terminal
      stage, with the receipt stated as its precondition.

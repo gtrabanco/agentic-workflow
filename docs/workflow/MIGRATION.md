@@ -67,6 +67,14 @@ now through the CLI.
 | `bun scripts/shared-doc-merge.mjs` | `runner shared-merge` |
 | `bun scripts/test-impact.mjs` | `runner test-impact` |
 | `bun scripts/session-close.mjs` | `runner session-close` |
+| `bun scripts/findings-corpus.mjs` | `runner findings-corpus` |
+| `bun scripts/correction-budget.mjs` | `runner correction-budget` |
+| `bun scripts/differential-baseline.mjs` | `runner differential-baseline` |
+| `bun scripts/review-state.mjs` | `runner review-state` |
+| `bun scripts/scope-manifest.mjs` | `runner scope-manifest` |
+| `bun scripts/review-receipt.mjs` | `runner review-receipt` |
+| `bun scripts/gate-receipt.mjs` | `runner gate-receipt` |
+| `bun scripts/adversarial-verdict.mjs` | `runner adversarial-verdict` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

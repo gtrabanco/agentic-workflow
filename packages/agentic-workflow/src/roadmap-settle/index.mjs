@@ -20,7 +20,7 @@
  *   agentic-workflow roadmap-settle [--root <dir>] [--json]
  *
  * `--root` defaults to the working directory, so the command senses the project
- * it is run in; the repository script `scripts/roadmap-settle.mjs` passes this
+ * it is run in; this repository's `scripts/roadmap-settle.mjs` passes this
  * checkout's root instead.
  *
  * stdout: one fixed block — a `Roadmap-settle:` line per violation with its

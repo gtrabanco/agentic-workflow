@@ -36,7 +36,7 @@ evidence and stability-checked per `ADVERSARIAL_SETUP.md`; the survivors are
 fused here (dedupe, `Reviewers n/N`, threshold ≥1); the diff-only reflector then
 answers `keep | drop` per synthesized row; and the whole pass's record
 (`adversarial-verdict@1`) is checked by
-`bun scripts/adversarial-verdict.mjs --record <record.json> --diff <diff.patch>`
+`runner adversarial-verdict --record <record.json> --diff <diff.patch>`
 before anything is persisted. A `kill` or a reflector `drop` is therefore a
 **recorded verdict with its evidence and its reason** — reported in the same
 report, never a silent removal — and the forbidden list above still binds every

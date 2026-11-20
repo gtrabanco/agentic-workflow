@@ -19,8 +19,8 @@
  * set), 2 usage and argument refusals.
  *
  * Read-only: it reads the unit document and the git range, and writes nothing.
- * The repository script `scripts/relevant-files.mjs` is the same module's caller
- * for this repository's own gate.
+ * This repository's `scripts/relevant-files.mjs` is the same module's caller for
+ * its own gate and suites.
  */
 
 import { readFileSync } from "node:fs";

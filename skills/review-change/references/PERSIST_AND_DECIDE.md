@@ -80,7 +80,7 @@ exact command tokens.
    which is a precondition of the report, not a follow-up:
 
    ```
-   bun scripts/review-receipt.mjs emit --pr <N> \
+   runner review-receipt emit --pr <N> \
      --head "$(git rev-parse HEAD)" --scope "<reviewed surface>" \
      --axes "<axes run and skipped>" --coverage "<criterion-to-evidence>" \
      --invariants pass|n/a --proposals <n> --manual "<items or none>" \
@@ -106,7 +106,7 @@ exact command tokens.
    status and continue to step 13. No PR → the documented pre-PR path, and the
    receipt box reads `n/a: no PR`.
 
-   Read-only check, any time: `bun scripts/review-receipt.mjs verify --pr <N>`
+   Read-only check, any time: `runner review-receipt verify --pr <N>`
    prints `current | absent | stale` and exits `0 | 3 | 4`.
 
 13. **Report block — Return exactly this structure** after step 12 succeeds

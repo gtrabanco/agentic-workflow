@@ -174,7 +174,7 @@ The coherence verdict is evidence, not a receipt: it **emits no receipt**,
 because a receipt binds an open PR's head and the lane gate runs before the PR
 exists. After the PR opens, the lane's close-out is unchanged — `/review-change`
 posts the SHA-bound receipt and `/audit-pr` is the terminal merge gate; a
-`REVIEW-VERDICT: PASS` never satisfies `bun scripts/review-receipt.mjs verify
+`REVIEW-VERDICT: PASS` never satisfies `runner review-receipt verify
 --pr <N>`.
 
 ## Model routing

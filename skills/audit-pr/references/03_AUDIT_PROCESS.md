@@ -3,7 +3,7 @@
 1. **Gather** — Step 0: project contract, PR, SPEC + artifacts, CI status.
 2. **Consume the review receipt** — Step 1: run the receipt verifier, which
    fetches `headRefOid` + comments and applies the currency rule itself:
-   `bun scripts/review-receipt.mjs verify --pr <N>` — exit `0` current, `3`
+   `runner review-receipt verify --pr <N>` — exit `0` current, `3`
    absent, `4` stale. Its `headRefOid` is the current head SHA: a marker for any
    other SHA is stale, never preserved from a local diff.
    - **current (0)** → acknowledge scope/axes, acceptance coverage, invariant
