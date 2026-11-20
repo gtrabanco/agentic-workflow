@@ -31,9 +31,9 @@ const POLICY_PREFIX = "Blocked by agentic-workflow safety policy:";
 
 /** The refused sentences, so a caller and a suite cite one string. */
 export const DENY = Object.freeze({
-  merge: "direct pull-request merge; the unattended-conductor role is deferred to roadmap row 62",
-  mr: "direct merge-request merge; the unattended-conductor role is deferred to roadmap row 62",
-  gitea: "direct pull-request merge through a Gitea CLI; the unattended-conductor role is deferred to roadmap row 62",
+  merge: "direct pull-request merge; merge stays owner-only or runs through fullauto-merge and its preconditions",
+  mr: "direct merge-request merge; merge stays owner-only or runs through fullauto-merge and its preconditions",
+  gitea: "direct pull-request merge through a Gitea CLI; merge stays owner-only or runs through fullauto-merge and its preconditions",
   hub: "direct pull-request merge through hub",
   git: "direct git merge",
   api: "merge through a forge API",

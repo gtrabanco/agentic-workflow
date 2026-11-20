@@ -62,8 +62,8 @@ its work landed in the unit doc before continuing:
 - No unrelated refactors in the same commit
 - No new abstractions or dependencies beyond what the unit doc demands
 - Never commit red (test failure) — the one sanctioned exception is the
-  red-first commit: a new suite lands alone, observed failing on the missing
-  module or the failing assertion, before its implementation commits green
-  (see the tests step)
+  red-first commit: a new suite lands alone, observed failing, before its
+  implementation commits green (owner: `AGENTS.md` § Working rules; mechanism:
+  [TEST_IMPACT.md](../../execute-phase/references/TEST_IMPACT.md))
 - Never shrink a diff by deleting comments, blank lines, docs, or tests
 - Do not expand scope beyond the unit's non-goals

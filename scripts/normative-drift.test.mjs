@@ -676,6 +676,14 @@ function runDriftChecks(model) {
   } else {
     const counts = {
       "count:user-facing": () => [...model.hints.values()].filter((h) => h.userInvocable).length,
+      // The workspace's package count (issue #646 A2): "the three companion npm
+      // packages" was a prose count with no publisher, so it drifted the moment
+      // a fourth landed. The machine is the tree itself — a directory under
+      // `packages/` that carries a manifest.
+      "count:packages": () =>
+        fs
+          .readdirSync(path.join(root, "packages"), { withFileTypes: true })
+          .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(root, "packages", entry.name, "package.json"))).length,
       // The runner's train version (feature 91): the crate that carries the bin
       // is the machine, and the skill that cites it restates the same literal.
       // A cut that stamps one side alone is exactly the drift this recomputes.
@@ -1101,6 +1109,27 @@ test("render-only prose: a restatement that drifts from the machine value is the
     } finally {
       fs.readFileSync = realRead;
     }
+  }
+});
+
+test("#646 a workspace count restated in prose is recomputed, so a new package cannot leave it stale", () => {
+  const surface = "docs/workflow/README.md";
+  const green = runDriftChecks(buildSurfaceModel()).filter((f) => f.surface === surface);
+  assert.deepEqual(green, [], "the prose count agrees with the tree today");
+
+  const original = read(surface);
+  const mutated = original.replace(/The \d+ companion npm packages/, "The 3 companion npm packages");
+  assert.notEqual(mutated, original, "the pinned count is present in the prose");
+  const patched = new Map([[path.join(root, surface), mutated]]);
+  const realRead = fs.readFileSync;
+  fs.readFileSync = (file, ...rest) => (patched.has(String(file)) ? patched.get(String(file)) : realRead(file, ...rest));
+  try {
+    const findings = runDriftChecks(buildSurfaceModel()).filter((f) => f.code === "unrendered-value" || f.code === "unpublished-machine");
+    assert.equal(findings.length, 1, `the stale count is refused once: ${JSON.stringify(findings)}`);
+    assert.equal(findings[0].surface, surface);
+    assert.match(findings[0].message, /recomputes to 4/);
+  } finally {
+    fs.readFileSync = realRead;
   }
 });
 

@@ -30,6 +30,14 @@ Never improvised at spawn time. One brief per atomic work unit, with:
    → `passes.default` → the configured cheap tier → inline). Never re-derived
    by the orchestrator; `auto` only when the operator wrote it.
 
+**The review-authority rule — owned here.** A pass that *judges* work (a review
+axis, the verification pass, the classifier, any adversarial or coherence pass)
+runs at the **author's tier or stronger, never weaker**. When the host cannot
+honour that floor, the pass runs inline at the orchestrator's own tier **with the
+degrade stated in the report** — it never silently downgrades, and it is never
+skipped. Every skill that routes or degrades a review pass cites this paragraph
+rather than wording the rule again (owner decision, issue #646 `D4`).
+
 ## Spawn, verify, check in
 
 - **Spawn** — `subagents_run` (the durable-subagent substrate the package

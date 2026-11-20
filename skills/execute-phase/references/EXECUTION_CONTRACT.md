@@ -118,7 +118,7 @@ a box you didn't verify.
 | unit step | `feat/<NN-slug>` |
 | fix unit | `fix/<issue-number>-<topic>` |
 
-Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/ambiguous, ask. Never commit, amend, or force-push on `main`.
+Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/ambiguous, ask. Never commit, amend, or force-push on the project's **default branch**, and never force-push **any published history** at all — the ban is the guide's (`AGENTS.md` `IR2`), and it is not scoped to one branch name.
 
 **Honor the project's declared Git workflow** (Workflow conventions — `branches`
 or `worktrees`). Default and assumption everywhere: **`branches`** — one active

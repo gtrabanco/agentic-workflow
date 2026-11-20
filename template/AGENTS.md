@@ -261,8 +261,8 @@ Never grant an agent-wide or session-persistent merge permission. Hooks are
 defense-in-depth — forge branch protection/rulesets remain required.
 
 **Workflow rules (always honored).**
-- **Branch & PR:** never work on `main`; one PR per unit against `main`; never
-  stack — see [PR & branch workflow](#pr--branch-workflow).
+- **Branch & PR:** never work on the default branch directly; one PR per unit
+  against the default branch; never stack — see [PR & branch workflow](#pr--branch-workflow).
 - **Gate before commit:** the verification gate (type-check + tests + build) is
   green — see [Commands](#commands).
 - **Docs language:** every committed artifact (issues, PRs, commits, SPECs,
@@ -610,13 +610,14 @@ authoritative over any memory record.
 
 ## PR & branch workflow
 
-- **One PR per unit of work, always against `main`.** Each PR must be
-  independently mergeable: it passes the verification gate and delivers
-  standalone value.
-- **Never work on `main` directly.** Create a branch first
+- **One PR per unit of work, always against the project's default branch**
+  (`main` unless this project declares another). Each PR must be independently
+  mergeable: it passes the verification gate and delivers standalone value.
+- **Never work on the default branch directly.** Create a branch first
   (`feat/<NN>-<slug>` or `fix/<n>-<topic>`).
-- **Never stack PRs.** A PR's base is always `main`. If a feature is too large,
-  split it into independently shippable slices — never by internal phases.
+- **Never stack PRs.** A PR's base is always the default branch. If a feature is
+  too large, split it into independently shippable slices — never by internal
+  phases.
 
 ## Commit format
 

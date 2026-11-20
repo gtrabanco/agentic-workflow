@@ -156,9 +156,10 @@ Follow the unit-lane reference for this step (`references/STEPS.md` catalog):
 one line — read the step's reference file, perform its checklist, commit the
 work. For `implement` steps: derive the test set first ([TEST_IMPACT.md](references/TEST_IMPACT.md)
 owns the block and the RED-evidence shape) and write tests-first where they pay
-(core/domain, orchestration) — a new script+suite pair lands red-first: suite
-commits red (observed failing, naming the targeted suite), implementation green;
-UI/adapter glue may test after.
+(core/domain, orchestration). A new script+suite pair lands red-first — the
+obligation is the guide's (`AGENTS.md` § Working rules), the mechanism is
+`TEST_IMPACT.md`'s, and this paragraph cites both instead of carrying a third
+wording.
 
 **Context targeting (issue #269).** The phase's read set is the unit doc's
 nested `Relevant files:` metadata — resolve it with `bun
@@ -276,8 +277,10 @@ step: gates, execute, diff guard (if implement), evidence/progress update,
 commit. Skip intermediate review checkpoints; the mandatory end review covers
 the full accumulated diff. On gate red at any step: repair that step (up to
 `--max-attempts`), then continue the loop. The close-out is part of the last
-step's completion: open the PR on `main` with `Closes #N`, write `- PR: <url>`
-into References, and settle the index row with `agentic-workflow roadmap
+step's completion: open the PR against the project's **default branch** with
+`Closes #N` (owner: `AGENTS.md` § Working rules — one PR per unit, never stacked,
+and the one owner-ordered inline exception), write `- PR: <url>` into
+References, and settle the index row with `agentic-workflow roadmap
 <index> rowUpsert '<json>'` (`docs/ROADMAP.md`; a fix unit writes its `## Fixes`
 row with `agentic-workflow roadmap <index> fixrow '<json>'` — keyed by the issue
 number in its `[#N](url)` cell, never a hand edit).
@@ -365,12 +368,15 @@ here. `triage-issue` feeds issues into the lane. This skill is the **step
 executor** a turn invokes to perform one triaged step of a unit under the full
 gate machinery.
 
-## Portability (agents other than Claude Code)
+## Portability
 
-- **No slash menu** — open this `SKILL.md` and follow it literally in a fresh
-  conversation. Where it says `run`, execute the shell command directly.
-- **No model tiers** — triage and review use the strongest model; execution
-  steps may use cheaper. Never review with a weaker model than the author.
+Preamble + no-slash-menu fallback: owned by
+[`PORTABILITY.md`](../orchestration-envelope/references/PORTABILITY.md) — this
+section keeps only this skill's own fallbacks:
+
+- **No model tiers** — resolve each step's model from the operator's table; a
+  reviewing pass never runs weaker than the author
+  ([`ORCHESTRATE.md`](../unit-lane/references/ORCHESTRATE.md) owns that rule).
 - **No `/loop`/subagents** — invoke `<NN-slug>` for all remaining steps (the
   built-in loop), or `<NN-slug> P<k>` for individual steps.
 - **No fresh workers** — execute inline and reduce state to the unit doc after

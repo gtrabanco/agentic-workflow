@@ -336,12 +336,16 @@ mechanical receipt check. Run `bun scripts/review-state.mjs check --unit <slug>`
 and paste the block — `closure: complete` exits 0, `closure: open(n)` exits 1 and
 is a blocker, never a note.
 
-## Portability (agents other than Claude Code)
+## Portability
+
+Preamble + no-slash-menu fallback: owned by
+[`PORTABILITY.md`](../orchestration-envelope/references/PORTABILITY.md) — this
+section keeps only this skill's own fallbacks:
 
 Use explicit fallbacks when a primitive is absent: open named `SKILL.md` files in
-a fresh context; use the strongest model for subtle logic/security and never
-weaker than the author; process the compatible queue once and re-run only after
-new review evidence.
+a fresh context; a repairing pass never runs weaker than the author
+([`ORCHESTRATE.md`](../unit-lane/references/ORCHESTRATE.md) owns the rule);
+process the compatible queue once and re-run only after new review evidence.
 
 ## The `nimio` disposition (below the floor)
 
