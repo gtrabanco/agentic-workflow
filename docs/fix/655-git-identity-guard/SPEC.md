@@ -150,12 +150,14 @@ none
   timeout, reachable only while a dialog exists; no new timeout is introduced
   here and `ask` keeps the host's own behaviour.
 - **Stale worktree `.worktrees/feat-553-universal-cli`** (branch
-  `feat/553-universal-cli` at the cut head, merged into `origin/main`, one
-  untracked `docs/features/553-universal-cli/` folder) — *does not affect this
-  unit*: it is a different lane's checkout, so `worktree-guard` reports its one
-  `STALE` finding on every head of this branch. It is not removed here: deleting
-  a worktree with uncommitted content is the owner's call, not a side effect of
-  a guard fix (`IR8`).
+  `feat/553-universal-cli`, merged into `origin/main`, one untracked
+  `docs/features/553-universal-cli/` folder) — *did not affect this unit's code*,
+  but it was the whole `worktree-guard` finding at `G1`/`G2`: a different lane's
+  checkout, so it was never removed here — deleting a worktree with uncommitted
+  content is the owner's call, not a side effect of a guard fix (`IR8`). **Cleared
+  by the owner on 2026-11-20**: the checkout is gone from `git worktree list`, so
+  `bun scripts/worktree-guard.mjs` answers `0 finding(s) · PASS` and the pre-push
+  gate no longer needs the `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` hatch `P8` used.
 
 ## Acceptance criteria
 
@@ -406,6 +408,30 @@ is the authoritative step list.
   FAIL recorded under `## Known pre-existing issues` — the stale
   `.worktrees/feat-553-universal-cli` checkout this unit does not own and must
   not delete with work inside it. Four network steps skipped by the flag.
+- **G3** — 2026-11-20, HEAD 4c564188630445ed69d24c10c712cd2f226dd30f (the tree
+  carrying the PR-settle edits uncommitted, which is how the run was fired) ·
+  `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 1 · 14 of 15 steps PASS (this time `worktree-guard` included, since the
+  stale checkout was gone) and one **real regression of this unit's own docs
+  commit**: `schema-node-compat` exit 1 on `the committed config.schema.json is
+  exactly the generated projection` — `e3a9e1ac2` rewrote the `gitIdentity`
+  description in `packages/agentic-workflow-schema/src/config.ts` without
+  regenerating the committed projection, and the earlier two runs never reached
+  that step: fail-fast stopped at `worktree-guard` (step 10 of 15) and killed the
+  dispatch, so `G1`/`G2` reported the pre-fix state as green for that step. The
+  masks were both pre-existing conditions in this checkout, which is why the
+  regression survived two receipts.
+- **P10** — 2026-11-20, the projection regenerated through its own writer —
+  `bun run generate:config-schema` in `packages/agentic-workflow-schema` wrote the
+  one changed line, and `bun run check:config-schema` answers `config.schema.json:
+  current`; the schema package then runs `950 pass, 0 fail` on bun **and** on the
+  node leg. Sibling projections checked with their own writers:
+  `check:pre-execution-schemas` and `check:verification-schemas` both answer
+  drift-free (2 files each), so no other generated artifact tracks that string.
+- **P9** — 2026-11-20, the PR is opened against `main`:
+  [#664](https://github.com/gtrabanco/agentic-workflow/pull/664) (`Closes #655`)
+  at head `4c564188630445ed69d24c10c712cd2f226dd30f`, through the crate's
+  `ceremony pr create`; the `## Fixes` row settled to `done · [#664]` through
+  `roadmap fixrow`, and the projection re-emitted.
 - **P8** — 2026-11-20, the push itself used the hook's own documented hatch
   (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`, `scripts/local-gate.mjs:794`): the
   hook's offline subset is exactly the `G2` run above, and its one red step is
@@ -414,7 +440,11 @@ is the authoritative step list.
   is the documented route and it announces itself on stderr; why it was needed
   is recorded here, which is what the hatch's own line asks for. Nothing else
   about the gate changes: the 14 PASS steps ran in the foreground at this head,
-  and the commits after it are this document's own Log lines.
+  and the commits after it are this document's own Log lines. Note `G3`: the
+  fail-fast stop at that step is what hid `schema-node-compat` from `G1`/`G2`, so
+  the hatch did not merely skip one unrelated audit — it also skipped four steps
+  the gate would otherwise have run. With the worktree cleared the hatch is no
+  longer needed and the last push before this line ran the gate normally.
 - **G1** — 2026-11-20, HEAD 836f88c30cf0371a7d724ca6af50e2f6d5a14b9c ·
   `bun scripts/local-gate.mjs --skip-network --jobs 4` · exit 1 · 14 of 15 steps
   PASS (`schema-build`, `version-parity`,
@@ -427,14 +457,17 @@ is the authoritative step list.
 
 ## Next
 
-The owner's external verify of `fix/655-git-identity-guard` at the pushed head:
-the diff summary, the obligations ledger (13 rows, all `verified`), the
-verification block and the differential receipt above. The branch is published;
-the single PR against `main` (`Closes #655`) opens on the owner's verdict.
+PR [#664](https://github.com/gtrabanco/agentic-workflow/pull/664) is open against
+`main` (`Closes #655`) at head `4c564188630445ed69d24c10c712cd2f226dd30f`, and the
+`## Fixes` row is settled. The next action is the owner's review of that PR — this
+unit was applied through the local, unpublished workflow, so the `REVIEW-PASS`
+receipt is the owner's step — and then its merge, which removes the row by the
+Fixes lifecycle.
 
 ## References
 
 - Issue: [#655](https://github.com/gtrabanco/agentic-workflow/issues/655)
+- PR: [#664](https://github.com/gtrabanco/agentic-workflow/pull/664)
 - Relates to: [#626](https://github.com/gtrabanco/agentic-workflow/issues/626)
   (the disposition vocabulary and its documented semantics),
   [#514](https://github.com/gtrabanco/agentic-workflow/issues/514) (the guard
