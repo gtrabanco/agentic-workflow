@@ -465,6 +465,37 @@ is the authoritative step list.
   whose single finding is the pre-existing stale `feat-553-universal-cli`
   worktree recorded under `## Known pre-existing issues`, untouched by this unit.
   Four network steps were skipped by the flag.
+- **E13** — 2026-11-20, the external verify of this unit at base `c5fb2ba58` /
+  head `4c5641886` → `docs/fix/655-git-identity-guard/external-verify.md` ·
+  `NEEDS-DECISION` · 3 blockers (the stale `config.schema.json`, the flagless
+  `version-parity-gate` citations at AC-S6/O12, the unqualified wiring comment)
+  and 6 advisories; triage fixed B2/B3/A1/A2/A3 and declined A4/A5/A6 with each
+  ground recorded in the receipt.
+- **E14** — 2026-11-20, the correction batch ran its red corpus first, then green
+  in the foreground: the projection's fixed-point suite `2 pass, 0 fail` with
+  `check:config-schema` `current` (B1, folded by `2e1feac3c`); the cited
+  `bun scripts/version-parity-gate.mjs` answering exit 2 (usage) was the red,
+  and after AC-S6's check and O12's validator cell gained `--content` the gate
+  answers `VERDICT: PASS` — both repairs landed inside `85a242f90` together with
+  P5's carrier repair (the narrative fragment, never a `docs/LOGS.md` hand edit)
+  and the live Retirements discriminator
+  `rg -c 'mode === "allow"' packages/pi-agentic-workflow/src/guards/git-identity.ts`
+  → `1` (B2, A1, A2); the wiring comment now carries the `allow` exception at
+  `packages/pi-agentic-workflow/src/extension/index.ts:565`, the old
+  unconditional string is gone (`dd270a705`, B3); the template hardening guide
+  mirrors the repo's per-mode clause (`01165e38c`, A3).
+- **E15** — 2026-11-20, the batch's full recheck in the foreground, all green:
+  `verify` exit 0 (the AC edit was a plan repair: `ac-hash` recomputed through
+  `sectionText` to `12240e8e…`), `phase-lint` PASS 6/6 (fingerprint unchanged),
+  `ceremony acceptance read` AC1–AC6 `met`, schema `bun run test` `950 pass,
+  0 fail`, pi `bun run test` `1031 pass, 0 fail`,
+  `bun scripts/test-impact.mjs --base c5fb2ba58` → 4 suites all `0 fail`,
+  `normative-drift` `23 pass`, `docs-generate --check` PASS,
+  `check-skill-context --documents` PASS, `worktree-guard` `0 finding(s)` PASS,
+  and `node scripts/run-root-suite.mjs --jobs 4` exit 0 · 135 PASS — after one
+  earlier attempt red on `phase-lint.test.mjs` `SUITE TIMEOUT`, which solo runs
+  `162 pass` in 26 s (parallel-load contention: the suite builds its own
+  fixtures and reads no unit doc).
 
 ## Next
 
