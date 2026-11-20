@@ -112,8 +112,8 @@ lacks**. Ten ordered steps:
    `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `docs/workflow/REPOSITORY_STATE.md`,
    `docs/LOGS.md`, and the telemetry pair `docs/workflow/TIER_COST.md` +
    `.pi/.telemetry/sessions.jsonl` (issue #630) — each path claimed once), and both
-   driver families are armed — `bun scripts/docs-generated-merge.mjs --install`
-   and `bun scripts/shared-doc-merge.mjs --install` — with
+   driver families are armed — `runner docs-generated-merge --install`
+   and `runner shared-merge --install` — with
    `git config --get merge.docs-generated.driver` and
    `git config --get merge.agentic-shared-roadmap.driver` verifying non-empty (the
    other class keys arm in the same loop; the shared-driver suite pins them

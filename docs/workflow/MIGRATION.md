@@ -61,6 +61,10 @@ the shim shape and each capability's answer without the CLI; the per-capability
 suites (`test-command-guard.sh`, `test-turn-contract.sh`,
 `test-git-identity-check.sh`, `test-fullauto-merge.sh`) still run the same cases,
 now through the CLI.
+| `bun scripts/roadmap-settle.mjs` | `runner roadmap-settle` |
+| `bun scripts/docs-generate.mjs` | `runner docs-generate` |
+| `bun scripts/docs-generated-merge.mjs` | `runner docs-generated-merge` |
+| `bun scripts/shared-doc-merge.mjs` | `runner shared-merge` |
 
 ## 2026-11-09 — a unit doc declares its provenance, so a major bump is dispatched per document (issue #462)
 

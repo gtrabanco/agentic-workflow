@@ -24,6 +24,10 @@ import { run as runQualityMetrics } from "./sensors/quality-metrics.mjs";
 import { run as runForgeRead } from "../forge-read/index.mjs";
 import { run as runCeremony } from "./ceremony/index.mjs";
 import { run as runSkills } from "./skills.mjs";
+import { main as runSharedMerge } from "../shared-merge/index.mjs";
+import { main as runDocsGeneratedMerge } from "../docs-generated-merge/index.mjs";
+import { main as runDocsGenerate } from "../docs-generate/index.mjs";
+import { main as runRoadmapSettle } from "../roadmap-settle/index.mjs";
 import { main as runRelevantFiles } from "../relevant-files/index.mjs";
 
 /**
@@ -43,6 +47,10 @@ export const RUNNER_COMMANDS = Object.freeze({
   "forge-read": runForgeRead,
   ceremony: runCeremony,
   skills: runSkills,
+  "shared-merge": runSharedMerge,
+  "docs-generated-merge": runDocsGeneratedMerge,
+  "docs-generate": runDocsGenerate,
+  "roadmap-settle": runRoadmapSettle,
   "relevant-files": runRelevantFiles,
 });
 

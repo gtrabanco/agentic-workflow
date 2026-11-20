@@ -142,7 +142,7 @@ test("the driver answers the incoming side, byte for byte", () => {
       "the incoming bytes land on the local side, untouched",
     );
     assert.match(result.stderr, /resolved to the incoming projection/);
-    assert.match(result.stderr, /scripts\/docs-generate\.mjs/, "the note names the regeneration command");
+    assert.match(result.stderr, /runner docs-generate/, "the note names the regeneration command");
   } finally {
     repo.cleanup();
   }
@@ -412,8 +412,8 @@ test("init-workspace arms both driver families and verifies both config keys", (
   const bootstrap = fs.readFileSync(path.join(REPO, "skills", "init-workspace", "references", "BOOTSTRAP_WRITE.md"), "utf8");
   const upgrade = fs.readFileSync(path.join(REPO, "skills", "init-workspace", "references", "UPGRADE.md"), "utf8");
   for (const [name, text] of [["BOOTSTRAP_WRITE.md", bootstrap], ["UPGRADE.md", upgrade]]) {
-    assert.match(text, /docs-generated-merge\.mjs --install/, `${name} arms the projection driver`);
-    assert.match(text, /shared-doc-merge\.mjs --install/, `${name} arms the shared-document classes`);
+    assert.match(text, /docs-generated-merge --install/, `${name} arms the projection driver`);
+    assert.match(text, /shared-merge --install/, `${name} arms the shared-document classes`);
     assert.match(text, /merge\.agentic-shared-roadmap\.driver/, `${name} verifies the class driver's config key`);
     assert.doesNotMatch(text, /docs\/ROADMAP\.md merge=docs-generated/, `${name} never re-claims the roadmap attribute for the projection driver`);
   }

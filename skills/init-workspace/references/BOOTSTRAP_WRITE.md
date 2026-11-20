@@ -25,7 +25,7 @@
    The `Docs site` write is **additive**: on a fresh scaffold the block is
    filled in place, and on an existing install it is offered with its consent
    question first and left untouched on a refusal. A declared format is
-   rendered by `bun scripts/docs-generate.mjs`; the project's first unit's docs
+   rendered by `runner docs-generate`; the project's first unit's docs
    step cites the same command, so never hand-write a generated page.
    **Write the charter answers where tier-0 reads reach them** (issue #435):
    the identity layer fills the guide's `## Project charter` section verbatim —
@@ -84,7 +84,7 @@
    in the closing report.
 5. **Install the generated-surfaces and shared-document merge drivers (fix #507 on the #498 base).** The generated
    projection and the roadmap tables are functions of the tree
-   (`scripts/docs-generate.mjs`), and the shared documents the concurrent
+   (`runner docs-generate`), and the shared documents the concurrent
    sessions write are covered by #498's file-class registry, so two branches
    that regenerate or append must never conflict by hand. In bootstrap and
    upgrade alike, after the template write: (a) keep `template/.gitattributes`
@@ -102,8 +102,8 @@
    the class vocabulary) and never
    touching unrelated entries — each path is claimed once, so a
    project never carries two `merge=` claims on one path; (b) arm the drivers in
-   the checkout's git config: `bun scripts/docs-generated-merge.mjs --install`
-   and `bun scripts/shared-doc-merge.mjs --install` (node fallback, same argv),
+   the checkout's git config: `runner docs-generated-merge --install`
+   and `runner shared-merge --install`,
    and verify `git config --get merge.docs-generated.driver` and
    `git config --get merge.agentic-shared-roadmap.driver` are non-empty (the
    other class keys arm in the same loop; the shared-driver suite pins them

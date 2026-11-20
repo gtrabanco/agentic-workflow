@@ -62,7 +62,7 @@ export const SYMBOLIC_FORM = "runner";
 export const REPO_AUTHORING = Object.freeze(["skill-lint", "release", "version-parity-gate", "lint-changeset"]);
 
 const CITATION = /\b(bun|node)\s+scripts\/([a-z0-9-]+)\.mjs/g;
-const LAUNCHER = /\b(bunx|npx|pnpm\s+dlx)\s+@?[\w@/.-]*agentic-workflow/g;
+const LAUNCHER = /\b(bunx|npx|pnpm\s+dlx)\s+(?:--?\S+\s+)*@?[\w@/.-]*agentic-workflow/g;
 const PIN = /@gtrabanco\/agentic-workflow@(\d+\.\d+\.\d+|latest)/g;
 
 function read(file) {
@@ -275,13 +275,13 @@ test("the symbolic form is legal in a shipped skill and the launcher forms are n
   // The rule is asserted by its own counter-example: the detector must catch the
   // three shapes, so a green run above means something (never a vacuous scan).
   const corpus = [
-    "bunx @gtrabanco/agentic-workflow@4.10.0 phase-lint x",
-    "npx --yes @gtrabanco/agentic-workflow@latest phase-lint x",
-    "pnpm dlx @gtrabanco/agentic-workflow phase-lint x",
+    ["bunx @gtrabanco/agentic-workflow@4.10.0 phase-lint x", true],
+    ["npx --yes @gtrabanco/agentic-workflow@latest phase-lint x", true],
+    ["pnpm dlx @gtrabanco/agentic-workflow phase-lint x", false],
   ];
-  for (const line of corpus) {
+  for (const [line, pinned] of corpus) {
     assert.ok([...line.matchAll(LAUNCHER)].length > 0, `the launcher detector misses: ${line}`);
-    assert.ok([...line.matchAll(PIN)].length > 0, `the pin detector misses: ${line}`);
+    assert.equal([...line.matchAll(PIN)].length > 0, pinned, `the pin detector misses: ${line}`);
   }
   assert.deepEqual([...`Use the \`runner phase-lint <plan>\` form.`.matchAll(LAUNCHER)], []);
   assert.deepEqual([...`Use the \`runner phase-lint <plan>\` form.`.matchAll(PIN)], []);

@@ -12,10 +12,16 @@
  *   bun scripts/relevant-files.mjs <unit-doc> [--changed a,b | --base <ref>]
  */
 
+import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 import { main } from "../packages/agentic-workflow/src/relevant-files/index.mjs";
 
 export * from "../packages/agentic-workflow/src/relevant-files/index.mjs";
 
-process.exit(main(process.argv.slice(2)));
+// Run only as a program: the sibling suite imports the module's bindings, and an
+// import must never dispatch this repository's command.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  process.exit(main(process.argv.slice(2)));
+}

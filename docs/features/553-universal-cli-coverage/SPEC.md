@@ -1,7 +1,7 @@
 ---
 type: feature
 scope: large
-roadmap_summary: "Issue [#553](https://github.com/gtrabanco/agentic-workflow/issues/553) (M): migrate every `scripts/*.mjs` a shipped skill cites into the universal CLI — re-point the citations to the symbolic `runner <sub>` form, close the `template/AGENTS.md` self-contradiction, and leave zero `bun scripts/` citations outside `metadata.internal` skills. The deferred half of #424. Owner decision 2026-11-14."
+roadmap_summary: Issue [#553](https://github.com/gtrabanco/agentic-workflow/issues/553) (M) — migrate every `scripts/*.mjs` a shipped skill cites into the universal CLI, re-point the citations to the symbolic `runner <sub>` form, close the `template/AGENTS.md` self-contradiction, and leave zero `bun scripts/` citations outside `metadata.internal` skills. The deferred half of #424. Owner decision 2026-11-14.
 ---
 
 # 553 — universal-cli-coverage
