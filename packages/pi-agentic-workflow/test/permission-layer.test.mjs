@@ -34,8 +34,12 @@ test("the first-party shell guard is gone: module, suite and helpers", () => {
 test("no source in the package names the retired guard, its helpers or its module", () => {
   const retired = /decideShellWrite|analyzeShellWrite|SHELL_TEMP_ROOTS|SHELL_HOMEDIR|readScriptBounded|guards\/shell-path/;
   const offenders = [];
+  // This suite names the retired identifiers on purpose, so it is the one file
+  // the scan skips: a pin that flags itself is a pin nobody keeps.
+  const self = fileURLToPath(import.meta.url);
   for (const dir of ["src", "test", "scripts"]) {
     for (const entry of walk(join(packageRoot, dir))) {
+      if (entry === self) continue;
       if (/\.(?:ts|mjs|js)$/u.test(entry) && retired.test(readFileSync(entry, "utf8"))) offenders.push(entry);
     }
   }
