@@ -302,6 +302,8 @@ M/L unit: the ledger is the unit folder's `planning-obligations.md`.
 - **G2** — 2026-11-20, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 20 step(s) in 527s`, run at the first correction batch's head `bd1c8d6a0`.
 - **G3** — 2026-11-20, `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 20 step(s) in 524s`, run at the second sweep's head `2480f15b5` (F13); the commit after it is this record only.
 
+- **E13** — 2026-11-20, `runner dimension-regression --base c5fb2ba58` · exit 1 · `base c5fb2ba · 20 dimensions`, `head 20 dimensions · changed review surfaces 13`, `evidence none`, `verdict refused` — the first push attempt, and the gate refusing itself: F1's repair made the crate producers real surfaces, so this unit's own change now owes a recorded run. That refusal is the receipt that the fix works.
+
 ## Next
 
 The owner's external verification of this branch: the delivery is the 33
