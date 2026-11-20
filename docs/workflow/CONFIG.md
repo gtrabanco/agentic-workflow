@@ -62,7 +62,7 @@ project can never silently drop a global glob or lower a requirement.
 | `gitIdentity` | base | `{ "enforce": "off", "approved": {}, "agentGuard": { "allow": [] } }` | `enforce` = `off`/`commit`/`push`/`push-upstream`/`commit-and-push`/`commit-and-push-upstream` (`push` judges a push to any remote, `push-upstream` only the branch's tracked upstream remote); `approved` = `name`, `email`, `fullName`, `format` (`openpgp`/`ssh`), `signingKey`, `signingKeys` (per-machine keys), `signing` (`required`/`allowed`/`off` — `off` is a sign-off workflow) — only the declared facts are verified; `agentGuard.allow` = config keys the agent may write without asking. The guard's own disposition is `guard.gitIdentity.mode`, never a second `mode` here |
 | `pathProtection` | base | `{}` | `protectedGlobs` plus `requirements.<pre-freeze\|post-freeze\|always>.<create\|modify\|delete\|rename>` = `none`/`justification`/`approval` |
 | `contentGuard` | base | `{ "trustedRoles": ["OWNER", "MEMBER", "COLLABORATOR"], "allowLogins": [], "denyLogins": [] }` | `trustedRoles` = the author associations whose forge content may be ingested (any value `packages/agentic-workflow-schema/src/content-guard.ts` publishes); `allowLogins` admits a login regardless of association, `denyLogins` refuses one regardless of role. There is no `enabled` switch: the layer is always active and an unconfigured project runs the strictest policy. The merge between scopes tightens only — roles intersect, the login lists union — and a list that is not the declared shape (a wrong type, or an entry that is not a string) is never narrowed into an empty one: the section is refused whole, the caller gets the shipped strictest policy and the refusal is declared (`malformed-config`) |
-| `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing), `phaseBatching` (`enabled: false` — the model-aware phase-batching switch; see [Phase batching](#phase-batching)) |
+| `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing), `phaseBatching` (`enabled: false` — the model-aware phase-batching switch; see [Phase batching](#phase-batching)), `guardPlugins` (`enabled: true`, `guards: {}` — the project's own guards, declared as data; see [Guard plugins](#guard-plugins)) |
 
 Unknown keys are refused, never merged or coerced. `config validate` reports
 each one by path; `--sanitize` removes them; `--no-warn-unknown` suppresses only
@@ -137,7 +137,7 @@ resolved value falls back to the shipped `ask`.
 | `gitIdentity` | an agent's `git config` write (issue #514) | `allow`/`deny`/`ask` | `ask` | yes — the consent store remembers the answer; a session with no UI is denied | `guard.gitIdentity.mode`, plus the per-key exemption list `gitIdentity.agentGuard.allow` |
 | `toolChoice` | a `grep`-as-search or `node`-as-default command (issue #610) | `allow`/`deny`/`ask` | `ask` | no — `ask` answers as `deny` | `guard.toolChoice.mode`, plus the carrier's own `enabled` and `mode` (`block`/`rewrite`) under `pi.toolChoice` |
 | `receipt` | an inline `gh pr comment` carrying a review marker (issue #182) | `allow`/`deny`/`ask` | `ask` | no — `ask` answers as `deny` | `guard.receipt.mode` |
-| `pathProtection` | a write or rename to a protected path (feature 60) | always on (no disposition) | `approval` per phase/operation | not configurable — the section is tighten-only, so no scope can lower the floor | `pathProtection.protectedGlobs` and `pathProtection.requirements` |
+| `pathProtection` | a write or rename to a protected path (feature 60), and the out-of-root refusal for the file tools (OS-temp scratch excepted, issue #654) | always on (no disposition) | `approval` per phase/operation | not configurable — the section is tighten-only, so no scope can lower the floor | `pathProtection.protectedGlobs` and `pathProtection.requirements` |
 | `contentGuard` | who may be ingested from forge content (issue #470) | always on (no disposition) | the strictest role set | not configurable — there is no bypass switch on purpose | `contentGuard.trustedRoles`, `.allowLogins`, `.denyLogins` |
 
 The last two rows are the deliberate boundary: a global `allow` that reached
@@ -168,6 +168,63 @@ Three worked examples:
   "guard": { "default": "ask" }
 }
 ```
+
+## Guard plugins
+
+A project's restrictions are its own, so the extension accepts guards as **data**:
+`guardPlugins` in `pi-agentic-workflow.json` declares them, and the same
+declaration is enforced by whichever carrier is installed. The section is the one
+authoring surface — `agentic-workflow provision permissions` projects it into the
+operator-level permission layer's own policy file, so a rule is written once.
+
+```jsonc
+{
+  "guardPlugins": {
+    "guards": {
+      "no-dotenv": {
+        "kind": "deterministic",
+        "surface": "path",
+        "rules": [
+          { "match": "**/.env", "verdict": "deny", "reason": "secrets never enter the agent's reach" }
+        ]
+      }
+    }
+  }
+}
+```
+
+- **Surfaces** — `bash`, `path`, `tool`, `skill`, `mcp`. **Verdicts** — `allow`,
+  `ask`, `deny` (the published disposition vocabulary), with an omitted verdict
+  asking. **Order** — the LAST matching rule wins, so a specific rule belongs
+  after its catch-all; patterns use `*` as the only metacharacter, and it crosses
+  separators.
+- **Kinds** — `deterministic` is evaluated locally with no model and no network.
+  `model-backed` is accepted and enforced only once an adapter supplies that
+  kind's handler (a case-by-case reviewer); until then it registers nothing and
+  the extension says so once per session rather than pretending.
+- **Two carriers, one decision.** The deterministic kind reaches the permission
+  layer's static policy (projected by the command above) and its authorizer chain
+  (an ask the static policy left open). The chain is only consulted for an `ask`,
+  so a declared `ask` rule answers exactly like the prompt it defers to.
+- **Strict, never merged.** An unknown section key, guard key or rule key, a
+  malformed guard name, an unknown kind or surface, and a malformed verdict are
+  each refused by path; nothing is coerced into a shipped default.
+- **Merge between scopes.** `enabled` resolves per field, project over global; the
+  guards resolve per name, and a project's declaration replaces the global one
+  WHOLE — a rule list is one ordered policy, and a half-merged list would silently
+  evaluate a different one.
+- **`enabled: false` stands the whole chain down** without deleting the
+  declarations, which is the off switch a project needs to try a rule safely.
+
+The command writes the projection; it never owns the file:
+
+```bash
+agentic-workflow provision permissions [--scope project|global] [--write] [--json]
+```
+
+`--write` creates the policy file only when it does not exist; an existing file is
+refused with the block printed for a hand merge. Without `--write` it prints the
+block and touches nothing.
 
 ## A complete example file
 
