@@ -50,7 +50,9 @@ The approved identity lives in the unified config, base file, section
     },
   },
   // The guard's disposition lives in the `guard` section (issue #626): allow,
-  // deny or ask. `deny` is the retired `block` — it refuses without prompting.
+  // deny or ask. `deny` is the retired `block` — it refuses without prompting;
+  // `allow` stands the guard down (headless included); `ask` asks when the host
+  // has a UI and refuses when it cannot.
   "guard": {
     "gitIdentity": { "mode": "ask" },
   },
