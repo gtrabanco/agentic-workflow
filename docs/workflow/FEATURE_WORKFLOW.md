@@ -64,11 +64,11 @@ Example outputs:
 Execution order: research → design → plan → implement → tests → evidence →
 review → docs → release. The catalog returns a filtered, ordered subset.
 
-A new script and its sibling suite land red-first: the suite is committed
-alone and observed failing (the red commit), the implementation is committed
-after, observed green — the unit doc's `## Log` records both runs as `E`
-lines naming both commit SHAs, and `scripts/red-first.mjs` enforces the
-pair ordering in the root suite.
+A new script and its sibling suite land red-first. The obligation and the
+evidence shape are the guide's ([`AGENTS.md`](../../AGENTS.md) § Working rules)
+and the mechanism is `execute-phase`'s
+([`TEST_IMPACT.md`](../../skills/execute-phase/references/TEST_IMPACT.md)): this
+page cites them, and adds nothing to either.
 
 ## Stage 1 — Catalog steps
 

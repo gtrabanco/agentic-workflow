@@ -1,8 +1,9 @@
 # AGENTS.md
 
-> **The repository's single agent guide** — one copy of these rules. A host that
-> reads only `CLAUDE.md` points at this file instead of duplicating it (the
-> `init-workspace` skill applies the same rule to target projects).
+> **The repository's single agent guide** — one copy of these rules. There is no
+> `CLAUDE.md` here: a host that reads only that name is pointed at this file by
+> the rule below, and the `init-workspace` skill applies the same rule to target
+> projects.
 
 Guidance for AI coding agents working in **this** repository (`agentic-workflow`).
 
@@ -29,10 +30,13 @@ docs/architecture/       ARCHITECTURE.md and ARCHITECTURAL_INVARIANTS.md
 docs/design/             design notes (REDESIGN.md)
 docs/research/           research notes and their evidence
 docs/CAPABILITIES.md     the capability inventory (roles + cross-cutting subsystems)
+docs/audits/             product-audit's carrier — one dated file per audit
+.agentic-workflow/       this repo's own workflow state: the journal fragment carrier (journal.md, journal/), the index and hooks
 docs/LOGS.md             the session journal (`log-session` writes it)
 docs/features/_TEMPLATE  feature SPEC template
 docs/fix/                fix SPEC template + one folder per fix unit
 .changeset/              per-PR release intent files
+.claude-plugin/          the plugin/marketplace manifests the skills CLI and the Pi package read
 .github/                 issue + PR templates the workflow expects
 skills.sh.json           the skills-CLI manifest
 README.md                project overview
@@ -560,6 +564,7 @@ docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-
 skills/runner-contract/references/RUNNER.md | literal:bunx @gtrabanco/agentic-workflow@4.10.0 | package:version | equals
 CHANGELOG.md | package-versions | package:version | equals-each
 skills/pre-execution-review/references/POLICY.md | restates:gate-rejection-vocabulary@1:gate-rejection-type | const:GATE_REJECTION_TYPES | equals-set
+docs/workflow/README.md | pattern:The (\d+) companion npm packages | count:packages | equals
 
 ```
 

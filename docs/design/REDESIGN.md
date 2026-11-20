@@ -1,8 +1,12 @@
 # Skills v2 — redesign design doc
 
-> Status: **draft for review**. Pin this down before touching any skill. Captures
-> the target architecture for consolidating entry points, automating the middle of
-> the workflow, and adding manager-grade, platform-adaptive quality gates.
+> Status: **historical design record — not a plan, not normative.** The redesign
+> it scoped has shipped: the router plus internal composition it proposes, the
+> audit skills, and the entry-point consolidation are live. What it says about
+> them is a record of the reasoning, never a rule — where it disagrees with the
+> shipped tree (per-skill `model:`/`effort:`, the retired external mirror) the
+> shipped tree wins and the live contract is
+> [`docs/workflow/SKILLS.md`](../workflow/SKILLS.md).
 
 ## 1. Goals
 
@@ -234,5 +238,5 @@ no stack leak) → commit → (push) → your review.
 - **Docs sync on completion.** When the build finishes, update **all**
   documentation to the new skill set: `README.md`,
   `docs/workflow/*` (SKILLS, FEATURE_WORKFLOW, ISSUE_WORKFLOW, REVIEW_AND_CLASSIFY,
-  REPLICATE, PORTABLE_PROMPT), `AGENTS.md`, and the **Notion** mirror.
+  REPLICATE, PORTABLE_PROMPT) and `AGENTS.md`.
 ```

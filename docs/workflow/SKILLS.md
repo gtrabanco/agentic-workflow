@@ -234,18 +234,10 @@ audit-docs ───── audits docs ↔ READMEs ↔ roadmap ↔ code ↔ fix 
 
 ## Design rules every skill follows
 
-1. **Discover first.** Read the agent guide, documentation map, architecture,
-   roadmap, and relevant domain/style docs before acting. Adapt to the project.
-2. **Respect architecture & style.** Layer rules, domain/i18n/SEO/a11y rules,
-   runtime/platform limits, naming conventions — all honored, not bypassed.
-3. **Plan before code; isolate phase contexts; one PR per unit against the
-   default branch; never `main`, never stacked.**
-4. **Evidence over reflex.** Verify triggers, cite paths/counts.
-5. **Track, don't inline-implement, deferred work.** Keep issues and docs
-   coherent and reported.
-6. **Gate before commit.** Type-check + tests + build green.
-7. **Docs-language discipline.** Artifacts in the project's docs language (this
-   repo: English), regardless of the request's language.
+One home, cited here. The rules are [`AGENTS.md`](../../AGENTS.md) § Working rules
+and § Inviolable rules; [`README.md`](README.md) § Core principles is the
+tutorial's reading summary, and a skill that needs a rule reads its owner rather
+than a copy that can drift from it. This page words none of them a second time.
 
 ## Skill anatomy
 
