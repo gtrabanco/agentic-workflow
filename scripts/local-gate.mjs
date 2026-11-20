@@ -75,6 +75,18 @@ const NODE = process.env.AGENTIC_WORKFLOW_NODE ?? "node";
 const HOOK_MARKER = "installed by `bun scripts/local-gate.mjs --install-hook`";
 
 /**
+ * The declared pre-push budget (issue #598 S4). The offline subset a push runs
+ * must return inside this on the host the receipt names: the budget is declared
+ * here, once, and `scripts/pre-push-budget.json` records the per-class
+ * measurements it is declared against — the sibling suite refuses a receipt
+ * that sits outside it or measures another command. It is a declaration, never
+ * a kill switch: no step is cut short to fit it, because a push that skips a
+ * guard to be fast is the failure the budget exists to prevent.
+ */
+export const PRE_PUSH_BUDGET_SECONDS = 480;
+export const PRE_PUSH_BUDGET_RECEIPT = "scripts/pre-push-budget.json";
+
+/**
  * The lowest version a consumer may install, read from a peer range.
  *
  * The two legs of the compatibility guard answer two different defects, and

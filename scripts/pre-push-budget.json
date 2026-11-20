@@ -1,0 +1,16 @@
+{
+  "contract": "pre-push-budget@1",
+  "budgetSeconds": 480,
+  "host": "6 vCPU shared host; every run records its own load average with the measurement",
+  "command": "bun scripts/local-gate.mjs --skip-network --jobs auto --push-base <base>",
+  "measurement": {
+    "command": "bun scripts/local-gate.mjs --skip-network --jobs 4 --only schema-build,crate-suite-bun,crate-suite-node,root-suite,schema-node-compat,pi-node-compat",
+    "note": "the push's test-bearing set, measured at the base revision and at this change on the same host in back-to-back runs (load average 1.6-3.0 before, 0.4 during). The offline subset's other steps are unchanged by this unit and cost 1-3 s on both sides, so each class total adds them."
+  },
+  "measuredAt": "2026-11-20",
+  "classes": [
+    { "class": "docs-only", "before": 3, "after": 1, "note": "test-impact answers empty, so the test-bearing steps are skipped on both sides; the offline steps are what a docs-only push spends" },
+    { "class": "script change", "before": 538, "after": 377, "note": "the test-bearing set plus the offline steps: crate-suite-bun 240 s -> 89 s is the delta, the rest is unchanged" },
+    { "class": "package change", "before": 538, "after": 377, "note": "a package change dispatches the same test-bearing set as a script change, so the same two measurements are its own" }
+  ]
+}

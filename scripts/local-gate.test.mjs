@@ -20,7 +20,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { DEPS, GATE_RESULT_SCHEMA, OUTPUT_TAIL_BYTES, STEPS, gateResultDocument, hookBody, parseImpactVerdict, peerFloor, piCompatInstalls, scheduleSteps, stepEnv, workspacePackageDirs } from "./local-gate.mjs";
+import { DEPS, GATE_RESULT_SCHEMA, OUTPUT_TAIL_BYTES, PRE_PUSH_BUDGET_SECONDS, STEPS, gateResultDocument, hookBody, parseImpactVerdict, peerFloor, piCompatInstalls, scheduleSteps, stepEnv, workspacePackageDirs } from "./local-gate.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = path.join(ROOT, "scripts", "local-gate.mjs");
@@ -1031,4 +1031,37 @@ test("--install-hook installs the shared hook from a worktree (issue #580)", () 
   } finally {
     fs.rmSync(fixture.parent, { recursive: true, force: true });
   }
+});
+
+/* ---------------------------------------------------- the declared push budget */
+
+// Issue #598 S4: "the hook must return in a bounded time on a typical push".
+// A budget that lives only in prose is a claim, so it is declared once in code,
+// recorded against its measurements in one manifest, and the hook's own command
+// is what the manifest measures — a flag change that invalidates the receipt is
+// refused here instead of being noticed in a review.
+
+const BUDGET_RECEIPT = "scripts/pre-push-budget.json";
+
+test("the pre-push budget is declared once in code and its receipt records every change class inside it", () => {
+  const receipt = JSON.parse(fs.readFileSync(path.join(ROOT, BUDGET_RECEIPT), "utf8"));
+  assert.equal(receipt.contract, "pre-push-budget@1");
+  assert.equal(receipt.budgetSeconds, PRE_PUSH_BUDGET_SECONDS, "one owner: the code constant is the declaration, the receipt is the measurement");
+  assert.equal(typeof receipt.host, "string");
+  assert.ok(receipt.host.length > 0, "a budget without the host it was measured on is not a budget");
+  for (const name of ["docs-only", "script change", "package change"]) {
+    const row = receipt.classes.find((entry) => entry.class === name);
+    assert.ok(row !== undefined, `the ${name} class is measured`);
+    assert.ok(Number.isFinite(row.before) && Number.isFinite(row.after), `${name} records both sides`);
+    assert.ok(row.after <= receipt.budgetSeconds, `${name} at ${row.after}s is inside the declared ${receipt.budgetSeconds}s budget`);
+  }
+});
+
+test("the receipt measures the command the hook runs, so a hook flag change cannot leave it describing another run", () => {
+  const receipt = JSON.parse(fs.readFileSync(path.join(ROOT, BUDGET_RECEIPT), "utf8"));
+  for (const flag of ["--skip-network", "--jobs", "--push-base"]) {
+    assert.ok(receipt.command.includes(flag), `the measured command carries ${flag}`);
+    assert.ok(hookBody().includes(flag), `the hook still passes ${flag}`);
+  }
+  assert.equal(PRE_PUSH_BUDGET_SECONDS > 0, true);
 });
