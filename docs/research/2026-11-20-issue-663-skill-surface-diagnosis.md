@@ -198,3 +198,59 @@ the dispatch spelling `check-skill-context.mjs` already used
 (`main(...) ?? process.exitCode ?? 0`); `scripts/session-close.test.mjs` is
 30/30 under node and bun, and `main` was pushed. The crate's own dispatch path
 (`runRunnerCommand`) needed no change — it already honored the contract.
+
+## 7. Owner verdicts, second round (2026-11-20) — and the parked unit-lane split sketch
+
+Verdicts over §4's decision points:
+
+- **D2** (review pack shape): approved — extract the shared preamble into one
+  owner reference; the 9 passes stay separate.
+- **D3** (`unit-lane`): superseded by a larger direction (below). The small
+  approval-stop proposal is folded into it — do not file separately.
+- **D4** (prose → CLI): **no superseed** of #603; it keeps its roadmap row with
+  no hard ordering against the trim — no dependency either direction (the
+  preamble and the count pins touch judgment prose, not CLI usage knowledge).
+  For the split's pi mechanism specifically, #603's self-documenting help is
+  complementary and slightly ahead of it: new commands want a discoverable
+  usage surface.
+- **D1** (big restructure): declined — bounded trim only.
+- Trim items 2 and 3 may ride as separate units; no ordering constraint between
+  them (the preamble extraction changes no count the facts rows would pin).
+
+### The unit-lane split — parked sketch (owner direction; mechanics open)
+
+The owner's frame: the split lives in the **pi layer** — the friendly command is
+a pi-agentic-workflow surface, not a portable skill boundary. Desired shape:
+
+- One command runs the whole ceremony to done — guardrails intact:
+  ask-don't-infer, the design interview when answers are unknown, halts on open
+  questions; it never invents what it does not know.
+- A second command runs design + plan only and stops for owner approval.
+- Resume **in the same conversation** by re-invoking with `--yes`
+  (pi-durable for one-shot units that load no other context); fresh-context
+  paths (Relay legs) remain for big or isolated units. Per-command model
+  routing (already in the pi config) is a driver for two commands: the strong
+  model for design+plan, cheaper tiers for execution phases.
+
+Mechanical options for the future unit to decide:
+
+1. **Two pi commands over ONE skill via a command-preset feature** (config:
+   command → skill + fixed args + optional model route). New small mechanism —
+   the pi package today derives commands strictly from skill names ("there is
+   no alias table to keep in sync"). A preset keeps the portable skill name
+   untouched (no 731-mention rename) while giving the owner's `/unit` +
+   `/define-unit` typing surface — the option that matches the owner's "it is
+   a pi subcommand" frame at the lowest cost.
+2. Flags on one command (`--define-only`, `--yes`) — zero machinery, but no
+   per-command model routing.
+3. Two skills — rejected: forks the closed catalog (feature 61's absorption).
+
+Open questions parked with it: command names; whether define-only is a triage
+profile of the closed catalog or a flag; `--yes` provenance (owner-typed only,
+recorded in `decisions.md` as a human-owner D row, never agent-supplied);
+same-conversation resume via pi-durable vs a plain session continue; the
+interaction with the close-out ladder, the receipt stages and
+`--retriage`/`--fix`/`--from-issue`.
+
+This section is the resumption evidence for that unit's pre-spec; nothing here
+is a plan yet.
