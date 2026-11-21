@@ -60,16 +60,19 @@ export function readScopeDocuments(dir, sections) {
 }
 
 /** Atomic write: a crash never leaves a half-written config an operator must repair. */
-export function writeConfigDocument(path, value) {
+function writeAtomic(path, text) {
   mkdirSync(dirname(path), { recursive: true });
   const temporary = `${path}.${process.pid}.${Date.now()}.tmp`;
-  writeFileSync(temporary, stringifyJsoncValue(value), "utf8");
+  writeFileSync(temporary, text, "utf8");
   renameSync(temporary, path);
 }
 
+export function writeConfigDocument(path, value) {
+  writeAtomic(path, stringifyJsoncValue(value));
+}
+
 export function writeConfigText(path, text) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, text, "utf8");
+  writeAtomic(path, text);
 }
 
 export { BASE_CONFIG_FILE, BASE_CONFIG_SECTIONS, PROJECT_CONFIG_DIR };

@@ -88,6 +88,7 @@ every bootstrap, never a silent default:
 - **Documentation policy:** `<generated vs authored, serving, audit cadence, captures>`
 - **Required tooling:** `<tools every session must have available>`
 - **Data / PII:** `<what data the project handles and its handling rules, or "none">`
+- **Config posture:** `<every option materialized explicitly into the config files, or a minimal file relying on the documented defaults>`
 - **i18n:** `<locales and the translation policy, or "none">`
 
 **Objectives layer — filled at bootstrap, open-with-defaults.** Layer 3 asks

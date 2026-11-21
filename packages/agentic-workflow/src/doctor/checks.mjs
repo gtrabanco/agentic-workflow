@@ -18,6 +18,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { BASE_CONFIG_SECTIONS, effectiveSections } from "@gtrabanco/agentic-workflow-schema";
+
+import { discoverConfigExtensions } from "../config/discovery.mjs";
+import { divergenceForText } from "../config/materialize.mjs";
+import { sectionFiles } from "../config/store.mjs";
 import { RUNNER_CANDIDATES, renderInvocation } from "../runner/resolve.mjs";
 import { COMPANION_PAIRINGS, NODE_ENGINE } from "./vocabulary.mjs";
 import { evaluateVehicle, piAgentDir, vehicleEvidence } from "./vehicle.mjs";
@@ -439,5 +444,43 @@ export const CHECK_PROBES = Object.freeze([
       evidence.authoring
         ? { status: "ok", advisory: null, instruction: null }
         : { status: "not-applicable", advisory: null, instruction: null },
+  },
+  {
+    // Issue #600: the schema moves and a file does not, so an operator keeps an
+    // invisible option and a removed key. The probe is `config default`'s own
+    // plan, read over the host seam, so the two can never disagree about what a
+    // materialization would change.
+    id: "config-files",
+    probe: (ops) => {
+      const discovered = discoverConfigExtensions({ projectDir: ops.root });
+      const selected = effectiveSections(BASE_CONFIG_SECTIONS, discovered.extensions.map((entry) => entry.descriptor));
+      const files = sectionFiles(selected.sections).map((file) => {
+        const path = at(ops, ".pi", file);
+        const text = ops.readText(path);
+        const fileSections = selected.sections.filter((section) => section.file === file);
+        if (text === null) return { file, path, exists: false, missing: [], removed: [], converged: true };
+        return { file, path, ...divergenceForText(fileSections, text) };
+      });
+      return { files, extensions: discovered.extensions.length };
+    },
+    evaluate: (evidence) => {
+      const existing = evidence.files.filter((file) => file.exists);
+      if (existing.length === 0) return { status: "not-applicable", advisory: null, instruction: null };
+      const broken = existing.filter((file) => file.error !== undefined);
+      const diverged = existing.filter((file) => file.error === undefined && !file.converged);
+      if (broken.length === 0 && diverged.length === 0) return { status: "ok", advisory: null, instruction: null };
+      const parts = [];
+      if (diverged.length > 0) {
+        const missing = diverged.reduce((total, file) => total + file.missing.length, 0);
+        const removed = diverged.reduce((total, file) => total + file.removed.length, 0);
+        parts.push(`${diverged.map((file) => file.file).join(", ")}: ${missing} new options available, ${removed} removed keys — run config default`);
+      }
+      for (const file of broken) parts.push(`${file.file} is not valid JSONC (${file.error}) — fix it by hand; config default refuses to rewrite it`);
+      return {
+        status: "mismatch",
+        advisory: parts.join("; "),
+        instruction: broken.length === 0 ? "agentic-workflow config default" : null,
+      };
+    },
   },
 ]);

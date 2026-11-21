@@ -72,17 +72,18 @@ function deepDelete(value, path) {
   return root;
 }
 
-function typeOf(schema) {
+/** The type a node reports — one spelling for `config list` and the materialized comment. */
+export function schemaTypeName(schema) {
   if (schema.type !== undefined) return Array.isArray(schema.type) ? schema.type.join("|") : schema.type;
-  if (schema.anyOf !== undefined) return schema.anyOf.map(typeOf).join("|");
-  if (schema.oneOf !== undefined) return schema.oneOf.map(typeOf).join("|");
+  if (schema.anyOf !== undefined) return schema.anyOf.map(schemaTypeName).join("|");
+  if (schema.oneOf !== undefined) return schema.oneOf.map(schemaTypeName).join("|");
   return "object";
 }
 
 function walkSchema(schema, path, defaultValue, category, out) {
   out.push({
     path,
-    type: typeOf(schema),
+    type: schemaTypeName(schema),
     writable: true,
     defaultValue: clone(defaultValue),
     description: schema.description ?? "",

@@ -87,7 +87,7 @@ one side alone is a finding rather than a silent drift.
 ```text
 interview-bank@1
 cell | shape | what it orders
-id | <AREA>-<nn> | the stable row id a later unit cites (`OBJ`, `TST`, `ARC`, `DEP`, `VER`, `DEC`, `API`)
+id | <AREA>-<nn> | the stable row id a later unit cites (`OBJ`, `TST`, `ARC`, `DEP`, `VER`, `DEC`, `API`, `CFG`)
 layer | objectives \| technical | which half of the round the question belongs to
 question | <one interrogative sentence> | the question as it is asked, never a topic label
 applies-when | <condition> | the condition that earns the question; no condition means no question
@@ -116,6 +116,7 @@ lands-in | <keyed slot> | the `## Project charter` slot the answer is written to
 | VER-03 | technical | How are artifact captures produced — which command the project runs, and who runs it? | the project has a user-facing surface whose evidence is a capture | Humble & Farley, *Continuous Delivery* (2010) — evidence as a pipeline artifact; the mapping note's artifact-evidence point | a declared driver → a capture criterion records its digest and the command that produced it; no driver → the criterion fails closed with `manual:` instead of passing on prose | n/a — no artifact evidence required | Evidence driver |
 | DEC-01 | technical | Where do architecture decisions live, and which decisions must be recorded before a unit plans work? | the project makes structural decisions | Nygard, *Documenting Architecture Decisions* (2011) — the ADR | ADRs kept → the design step cites the ADR it continues; none → decisions land as the charter's dated assumptions | one ADR per irreversible decision | Decision records |
 | API-01 | technical | Is the API designed for misuse — are errors contracts at the boundary — or is exception-first the team's style? | the project exposes an API, a CLI or a module surface | Meyer, *Object-Oriented Software Construction* (1988) — design by contract | safer-API → review-code checks signatures that invite misuse; exception-first → errors surface at the boundary with their cause | safer-API: reject the misuse at the boundary | API posture |
+| CFG-01 | technical | Should every configurable option be written explicitly into the config files, with its shipped default and a comment, or should the files stay minimal and rely on the documented defaults? | an agentic-workflow config is installed, or the project declares its own tunable options | Humble & Farley, *Continuous Delivery* (2010) — configuration is reviewable state, not a reader's memory | explicit → init-workspace offers the materialization after install and every file carries each option with its default; minimal → the files keep only what the operator wrote and the defaults resolve in code | minimal: the file carries only what the operator wrote, and the documented defaults resolve in code | Config posture |
 
 `Users` reuses the identity layer's answer when it has one: layer 3 records it
 at this slot because the later steps read the slot, and never re-asks the same

@@ -26,7 +26,8 @@
                 "minItems": 1,
                 "maxItems": 4
               }
-            ]
+            ],
+            "description": "The model: a provider/modelId reference, a 1-4 reference chain, or inherit."
           },
           "thinking": {
             "type": "string",
@@ -39,9 +40,11 @@
               "xhigh",
               "max",
               "inherit"
-            ]
+            ],
+            "description": "The thinking level for this route; inherit keeps the host's."
           }
-        }
+        },
+        "description": "The default model route for a command with no override of its own."
       },
       "commands": {
         "type": "object",
@@ -64,7 +67,8 @@
                   "minItems": 1,
                   "maxItems": 4
                 }
-              ]
+              ],
+              "description": "The model: a provider/modelId reference, a 1-4 reference chain, or inherit."
             },
             "thinking": {
               "type": "string",
@@ -77,27 +81,32 @@
                 "xhigh",
                 "max",
                 "inherit"
-              ]
+              ],
+              "description": "The thinking level for this route; inherit keeps the host's."
             }
           }
-        }
+        },
+        "description": "Per-command route overrides; a command not named here uses the default route."
       },
       "onUnavailableRoute": {
         "type": "string",
         "enum": [
           "stop",
           "inherit"
-        ]
+        ],
+        "description": "What a routed command does when its model is unavailable: stop, fall back, or ask."
       },
       "onSettle": {
         "type": "string",
         "enum": [
           "keep",
           "restore"
-        ]
+        ],
+        "description": "What happens to the model after a routed command settles: keep or restore."
       },
       "recommendedModels": {
-        "type": "boolean"
+        "type": "boolean",
+        "description": "Offer the recommended built-in model references in pickers."
       },
       "profiles": {
         "type": "object",
@@ -124,7 +133,8 @@
                       "minItems": 1,
                       "maxItems": 4
                     }
-                  ]
+                  ],
+                  "description": "The model: a provider/modelId reference, a 1-4 reference chain, or inherit."
                 },
                 "thinking": {
                   "type": "string",
@@ -137,7 +147,8 @@
                     "xhigh",
                     "max",
                     "inherit"
-                  ]
+                  ],
+                  "description": "The thinking level for this route; inherit keeps the host's."
                 }
               }
             },
@@ -162,7 +173,8 @@
                         "minItems": 1,
                         "maxItems": 4
                       }
-                    ]
+                    ],
+                    "description": "The model: a provider/modelId reference, a 1-4 reference chain, or inherit."
                   },
                   "thinking": {
                     "type": "string",
@@ -175,20 +187,23 @@
                       "xhigh",
                       "max",
                       "inherit"
-                    ]
+                    ],
+                    "description": "The thinking level for this route; inherit keeps the host's."
                   }
                 }
               }
             }
           }
-        }
+        },
+        "description": "Named route profiles a session can rotate to."
       },
       "profileOrder": {
         "type": "array",
         "items": {
           "type": "string",
           "minLength": 1
-        }
+        },
+        "description": "The order profiles rotate through; the first is the default profile."
       },
       "profileFallback": {
         "type": "object",
@@ -199,20 +214,24 @@
             "enum": [
               "flow",
               "command"
-            ]
+            ],
+            "description": "Which surface the fallback applies to: flow, command, or both."
           },
           "resume": {
             "type": "string",
             "enum": [
               "continue",
               "restart"
-            ]
+            ],
+            "description": "How the interrupted work resumes: continue or restart."
           },
           "retryAfterSeconds": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "How long to wait before retrying a demoted profile."
           }
-        }
+        },
+        "description": "How a profile fallback resumes and how long it waits before retrying."
       },
       "presetProfile": {
         "anyOf": [
@@ -229,7 +248,8 @@
             "minItems": 1,
             "maxItems": 8
           }
-        ]
+        ],
+        "description": "A provider preset's contributed profile; omitted when no preset registers one."
       },
       "tierRouting": {
         "anyOf": [
@@ -251,7 +271,8 @@
               }
             }
           }
-        ]
+        ],
+        "description": "A provider preset's tier routing table; omitted when no preset registers one."
       },
       "passes": {
         "type": "object",
@@ -274,7 +295,8 @@
                   "minItems": 1,
                   "maxItems": 4
                 }
-              ]
+              ],
+              "description": "The model: a provider/modelId reference, a 1-4 reference chain, or inherit."
             },
             "thinking": {
               "type": "string",
@@ -287,10 +309,12 @@
                 "xhigh",
                 "max",
                 "inherit"
-              ]
+              ],
+              "description": "The thinking level for this route; inherit keeps the host's."
             }
           }
-        }
+        },
+        "description": "Model routing for the review passes, keyed by the published pass name plus default."
       },
       "subagents": {
         "type": "object",
@@ -309,75 +333,89 @@
                 "type": "integer",
                 "minimum": 1
               }
-            ]
+            ],
+            "description": "How many subagents may run at once."
           },
           "memoryCap": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "The memory cap a subagent may use, as the harness spells it."
           },
           "threadCap": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "The thread cap a subagent may use, as the harness spells it."
           }
-        }
+        },
+        "description": "Limits for spawned subagents: parallelism and the resource caps."
       },
       "stateFlow": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Start and stop a state-flow episode per routed command."
           },
           "backend": {
             "type": "string",
             "enum": [
               "pi-state-flow"
-            ]
+            ],
+            "description": "The state-flow backend the episode is opened on."
           },
           "commands": {
             "type": "array",
             "items": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "description": "The commands that run inside an episode (the allowlist)."
           },
           "stopOn": {
             "type": "string",
             "enum": [
               "command_settled"
-            ]
+            ],
+            "description": "When the episode is stopped: success, failure, or always."
           },
           "onBackendMissing": {
             "type": "string",
             "enum": [
               "noop",
               "refuse"
-            ]
+            ],
+            "description": "What a command does when the state-flow backend is missing."
           }
-        }
+        },
+        "description": "The opt-in execution-state episode around the longest workflow commands."
       },
       "toolChoice": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Arm the tool-choice carrier."
           },
           "mode": {
             "type": "string",
             "enum": [
               "block",
               "rewrite"
-            ]
+            ],
+            "description": "block refuses the unpreferred tool; rewrite forwards the preferred one."
           }
-        }
+        },
+        "description": "The command-time search/run tool carrier: rg before grep, bun before node."
       },
       "guardPlugins": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Arm the guard-plugin chain without deleting its declarations."
           },
           "guards": {
             "type": "object",
@@ -437,18 +475,22 @@
                   }
                 }
               }
-            }
+            },
+            "description": "One entry per declared guard, keyed by the guard name."
           }
-        }
+        },
+        "description": "The project's own guards, declared as data and enforced by the installed carrier."
       },
       "phaseBatching": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Arm model-aware phase batching; false is the shipped one-phase posture."
           }
-        }
+        },
+        "description": "Ask the provider preset how many execute-phase steps one context holds."
       }
     }
   },

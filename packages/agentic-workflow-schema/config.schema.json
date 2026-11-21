@@ -33,27 +33,37 @@
               "description": "Append the mechanical entry to docs/LOGS.md."
             },
             "publisher": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "command"
-              ],
-              "properties": {
-                "command": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "minItems": 1,
-                  "maxItems": 32
+              "description": "The publisher command run at the session boundary; null means no publisher.",
+              "anyOf": [
+                {
+                  "type": "null"
                 },
-                "timeoutMs": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 60000
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command"
+                  ],
+                  "properties": {
+                    "command": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "minItems": 1,
+                      "maxItems": 32,
+                      "description": "The command and its arguments, run without a shell."
+                    },
+                    "timeoutMs": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 60000,
+                      "description": "How long the publisher may run before it is abandoned, in milliseconds."
+                    }
+                  }
                 }
-              }
+              ]
             }
           }
         }
@@ -64,7 +74,8 @@
       "additionalProperties": false,
       "properties": {
         "engram": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Opt in to the Engram MCP registration; false writes nothing."
         }
       }
     },
@@ -73,11 +84,13 @@
       "additionalProperties": false,
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Measure the per-unit cost sample locally; false opts the project out."
         },
         "jsonFile": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Per-session JSONL destination, relative to the project root."
         }
       }
     },
@@ -106,7 +119,8 @@
                 "allow",
                 "deny",
                 "ask"
-              ]
+              ],
+              "description": "This guard's disposition; absent falls back to guard.default."
             }
           }
         },
@@ -121,7 +135,8 @@
                 "allow",
                 "deny",
                 "ask"
-              ]
+              ],
+              "description": "This guard's disposition; absent falls back to guard.default."
             }
           }
         },
@@ -136,7 +151,8 @@
                 "allow",
                 "deny",
                 "ask"
-              ]
+              ],
+              "description": "This guard's disposition; absent falls back to guard.default."
             }
           }
         }
@@ -156,7 +172,8 @@
             "push-upstream",
             "commit-and-push",
             "commit-and-push-upstream"
-          ]
+          ],
+          "description": "When the identity check runs: off, commit, push, push-upstream, or the commit-and-push pair."
         },
         "approved": {
           "type": "object",
@@ -183,7 +200,8 @@
               "enum": [
                 "openpgp",
                 "ssh"
-              ]
+              ],
+              "description": "The signing key format: openpgp or ssh."
             },
             "signingKey": {
               "type": "string",
@@ -234,25 +252,29 @@
       "properties": {
         "iterationsCap": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "description": "The conductor's iteration ceiling per run."
         },
         "sensitivePaths": {
           "type": "array",
           "items": {
             "type": "string",
             "minLength": 1
-          }
+          },
+          "description": "Globs that raise the conductor's caution for a touched path."
         },
         "securityPaths": {
           "type": "array",
           "items": {
             "type": "string",
             "minLength": 1
-          }
+          },
+          "description": "Globs that join the conductor's security path set."
         },
         "runLogPath": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "The advance run log, relative to the project root."
         }
       }
     },
@@ -267,15 +289,18 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 512
-          }
+          },
+          "description": "Extra globs to protect, on top of the shipped floor."
         },
         "requirements": {
           "type": "object",
           "additionalProperties": false,
+          "description": "Per phase and operation requirement overrides; a value raises the floor, never lowers it.",
           "properties": {
             "pre-freeze": {
               "type": "object",
               "additionalProperties": false,
+              "description": "Requirements for pre-freeze writes (none, justification or approval).",
               "properties": {
                 "create": {
                   "type": "string",
@@ -283,7 +308,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a create in the pre-freeze phase."
                 },
                 "modify": {
                   "type": "string",
@@ -291,7 +317,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a modify in the pre-freeze phase."
                 },
                 "delete": {
                   "type": "string",
@@ -299,7 +326,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a delete in the pre-freeze phase."
                 },
                 "rename": {
                   "type": "string",
@@ -307,13 +335,15 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a rename in the pre-freeze phase."
                 }
               }
             },
             "post-freeze": {
               "type": "object",
               "additionalProperties": false,
+              "description": "Requirements for post-freeze writes (none, justification or approval).",
               "properties": {
                 "create": {
                   "type": "string",
@@ -321,7 +351,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a create in the post-freeze phase."
                 },
                 "modify": {
                   "type": "string",
@@ -329,7 +360,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a modify in the post-freeze phase."
                 },
                 "delete": {
                   "type": "string",
@@ -337,7 +369,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a delete in the post-freeze phase."
                 },
                 "rename": {
                   "type": "string",
@@ -345,13 +378,15 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a rename in the post-freeze phase."
                 }
               }
             },
             "always": {
               "type": "object",
               "additionalProperties": false,
+              "description": "Requirements for always writes (none, justification or approval).",
               "properties": {
                 "create": {
                   "type": "string",
@@ -359,7 +394,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a create at any phase."
                 },
                 "modify": {
                   "type": "string",
@@ -367,7 +403,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a modify at any phase."
                 },
                 "delete": {
                   "type": "string",
@@ -375,7 +412,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a delete at any phase."
                 },
                 "rename": {
                   "type": "string",
@@ -383,7 +421,8 @@
                     "none",
                     "justification",
                     "approval"
-                  ]
+                  ],
+                  "description": "The requirement for a rename at any phase."
                 }
               }
             }
@@ -442,18 +481,21 @@
             "keep-all",
             "archive"
           ],
-          "default": "keep-all"
+          "default": "keep-all",
+          "description": "keep-all detects only; archive lets the trim step run."
         },
         "pendingTrimAfterDays": {
           "type": "integer",
           "minimum": 0,
-          "default": 0
+          "default": 0,
+          "description": "How long the sensor waits before offering a merge, from the unit's last log entry."
         },
         "archiveDir": {
           "type": "string",
           "minLength": 1,
           "pattern": "^(?!/)(?!.*\\.\\.).+$",
-          "default": ".agentic-workflow/archive"
+          "default": ".agentic-workflow/archive",
+          "description": "The repo-relative, gitignored archive directory."
         },
         "archiveRetentionDays": {
           "type": [
@@ -461,7 +503,8 @@
             "null"
           ],
           "minimum": 1,
-          "default": null
+          "default": null,
+          "description": "Prune the archive after this many days; null never prunes it."
         },
         "seamHook": {
           "type": [
@@ -469,7 +512,8 @@
             "null"
           ],
           "minLength": 1,
-          "default": null
+          "default": null,
+          "description": "The project-declared offsite copy, run after the local archive is durable."
         }
       }
     }

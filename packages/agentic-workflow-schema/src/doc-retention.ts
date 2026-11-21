@@ -264,10 +264,36 @@ export const DOC_RETENTION_SCHEMA = Object.freeze({
   type: "object",
   additionalProperties: false,
   properties: {
-    mode: { type: "string", enum: DOC_RETENTION_MODES, default: "keep-all" },
-    pendingTrimAfterDays: { type: "integer", minimum: 0, default: 0 },
-    archiveDir: { type: "string", minLength: 1, pattern: "^(?!/)(?!.*\\.\\.).+$", default: ".agentic-workflow/archive" },
-    archiveRetentionDays: { type: ["integer", "null"], minimum: 1, default: null },
-    seamHook: { type: ["string", "null"], minLength: 1, default: null },
+    mode: {
+      type: "string",
+      enum: DOC_RETENTION_MODES,
+      default: "keep-all",
+      description: "keep-all detects only; archive lets the trim step run.",
+    },
+    pendingTrimAfterDays: {
+      type: "integer",
+      minimum: 0,
+      default: 0,
+      description: "How long the sensor waits before offering a merge, from the unit's last log entry.",
+    },
+    archiveDir: {
+      type: "string",
+      minLength: 1,
+      pattern: "^(?!/)(?!.*\\.\\.).+$",
+      default: ".agentic-workflow/archive",
+      description: "The repo-relative, gitignored archive directory.",
+    },
+    archiveRetentionDays: {
+      type: ["integer", "null"],
+      minimum: 1,
+      default: null,
+      description: "Prune the archive after this many days; null never prunes it.",
+    },
+    seamHook: {
+      type: ["string", "null"],
+      minLength: 1,
+      default: null,
+      description: "The project-declared offsite copy, run after the local archive is durable.",
+    },
   },
 });

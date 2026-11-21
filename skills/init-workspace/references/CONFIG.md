@@ -43,6 +43,35 @@ runner config set pi.model.default provider/model-id --scope project
 (Replace `model.default` with the path `config list` prints; the pi package
 publishes its own section.)
 
+## Materializing the explicit defaults (one consented question)
+
+The bank's `CFG-01` row owns why this is asked; this section owns how it runs.
+After `config init`, and again on an existing install whose files drifted, ask
+**one** consented question, worded so the answer is informed:
+
+> Every tunable option currently lives in code as a default, so your config file
+> shows only what you wrote. Materializing writes **every** option into
+> `.pi/agentic-workflow.json` (project) and the agent directory's
+> `agentic-workflow.json` (global), each with its shipped default and an English
+> comment that documents it. Values you already set are preserved; an option you
+> left undefined gains its default; an option the schema no longer declares is
+> dropped — after the existing file is copied to `<file>.bak-<timestamp>`.
+> Materialize the defaults now?
+
+The answer runs the package's own engine — never a hand-written file:
+
+```bash
+runner config default [--scope global|project|both]
+```
+
+- **Yes** ⇒ run it, print the receipt (files written, keys materialized, keys
+  removed, backup paths) and let the project's `CFG-01` answer record the
+  posture.
+- **No** ⇒ writes nothing and records the residual; the defaults still resolve in
+  code, so the project loses no behaviour. Nothing rewrites config in the
+  background: the operator, this question, the console, or a `doctor` advisory
+  is what starts a run.
+
 ## Verification
 
 ```bash
