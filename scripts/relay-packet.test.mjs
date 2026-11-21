@@ -30,6 +30,8 @@ import path from "node:path";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { RELAY_MODES } from "../packages/agentic-workflow/src/relay/Packet.mjs";
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(ROOT, "scripts", "relay-packet.mjs");
 const CORPUS = path.join(ROOT, "scripts", "fixtures", "relay-packet");
@@ -376,4 +378,171 @@ test("obligations: an escaped pipe inside a cell is one cell, not a malformed ro
   const result = run(["obligations", "86-escaped-unit"], { root });
   assert.equal(result.status, 0, result.stdout);
   assert.equal(line(result.stdout, "rows"), "1");
+});
+
+/* ------------------------------------------------- check: receipt boundary */
+
+/**
+ * Issue #680. The coherence verdict is evidence, not a receipt: a `Complete`
+ * baton whose PR carries no current `review-change:pass` receipt leaves the
+ * whole review-receipt lane orphaned (`RELAY.md` §Receipt boundary). The checker
+ * used to accept it — `state: Complete` / `verdict: PASS` / exit 0 — because the
+ * baton grammar never parsed the `Review:` line it publishes.
+ *
+ * The corpus is the accepted packet with the baton moved to Complete; the
+ * evidence is the baton's own `Review:` line, in the closed form the contract
+ * publishes. No forge call: the checker stays offline (PE-009).
+ */
+
+const COMPLETE = "State: Complete";
+const SHA = "0123456789abcdef0123456789abcdef01234567";
+
+/** The accepted packet with its baton in the given state and review line. */
+const completeTree = (reviewLine) => {
+  const root = tree();
+  const baton = path.join(root, PACKET, "status.md");
+  const lines = fs.readFileSync(baton, "utf8").split("\n").map((entry) => (entry.startsWith("State: ") ? COMPLETE : entry));
+  const kept = lines.filter((entry) => !entry.startsWith("Review:"));
+  kept.splice(kept.length - 1, 0, ...(reviewLine === null ? [] : [`Review: ${reviewLine}`]));
+  fs.writeFileSync(baton, kept.join("\n"));
+  return root;
+};
+
+test("check CO1: a Complete baton with no current receipt is refused, naming the receipt", () => {
+  const root = completeTree(`attempted 1 — REVIEW-VERDICT: PASS (evidence, not a receipt)`);
+  const result = run(["check", UNIT], { root });
+  assert.equal(result.status, 1, result.stdout);
+  assert.equal(line(result.stdout, "state"), "Complete");
+  assert.equal(line(result.stdout, "verdict"), "FAIL");
+  assert.match(result.stdout, /no current review receipt/i);
+});
+
+test("check CO2: a Complete baton with no Review line at all is refused — silence is never current", () => {
+  const root = completeTree(null);
+  const result = run(["check", UNIT], { root });
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stdout, /Review:/);
+  assert.match(result.stdout, /no current review receipt/i);
+});
+
+test("check CO3: a Complete baton whose PR receipt is current passes", () => {
+  const root = completeTree(`receipt current at ${SHA}`);
+  const result = run(["check", UNIT], { root });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(line(result.stdout, "state"), "Complete");
+  assert.equal(line(result.stdout, "verdict"), "PASS");
+});
+
+test("check CO4: a hand-authored receipt heading in the unit doc never clears the fault", () => {
+  const root = completeTree("pending");
+  fs.appendFileSync(path.join(root, "docs", "features", UNIT, "SPEC.md"), [
+    "",
+    "## Final review receipt",
+    "",
+    "REVIEW-VERDICT: PASS — coherence review done, awaiting owner decision, /audit-pr outside the relay.",
+    "",
+  ].join("\n"));
+  const result = run(["check", UNIT], { root });
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stdout, /no current review receipt/i);
+});
+
+test("check CO5: a non-Complete baton is never asked for a receipt", () => {
+  const root = tree();
+  const baton = path.join(root, PACKET, "status.md");
+  const lines = fs.readFileSync(baton, "utf8").split("\n").map((entry) => (entry.startsWith("State: ") ? "State: Active" : entry));
+  lines.splice(lines.length - 1, 0, "Review: pending");
+  fs.writeFileSync(baton, lines.join("\n"));
+  const result = run(["check", UNIT], { root });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(line(result.stdout, "verdict"), "PASS");
+});
+
+/* ---------------------------------------------------- closeout: the ladder */
+
+/**
+ * Issue #680 S2. The relay's last leg ends by running the close-out ladder and
+ * printing the mandated `→ Next:` block: `/review-change <NN-slug>` while the
+ * receipt is missing or stale, `/audit-pr <PR-url>` only once it is current —
+ * and never "awaiting owner decision" as a substitute.
+ */
+
+const CLOSE = "closeout";
+
+test("closeout CO6: an absent receipt routes the leg to /review-change and never names /audit-pr", () => {
+  const root = completeTree("pending");
+  const result = run([CLOSE, UNIT], { root });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(line(result.stdout, "receipt"), "absent");
+  assert.match(result.stdout, /^→ Next: \/review-change 20-relay-unit$/m);
+  assert.doesNotMatch(result.stdout, /\/audit-pr /);
+});
+
+test("closeout CO7: a current receipt routes the leg to /audit-pr with the PR url and states the precondition", () => {
+  const root = completeTree(`receipt current at ${SHA} · pr https://github.com/o/r/pull/335`);
+  const result = run([CLOSE, UNIT], { root });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(line(result.stdout, "receipt"), "current");
+  assert.match(result.stdout, /^→ Next: \/audit-pr https:\/\/github\.com\/o\/r\/pull\/335$/m);
+  assert.match(result.stdout, /^precondition: .*review receipt$/m);
+});
+
+test("closeout CO8: a stale receipt routes back to /review-change, never forward to the merge gate", () => {
+  const root = completeTree(`receipt current at ${"f".repeat(40)}`);
+  const result = run([CLOSE, UNIT], { root });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(line(result.stdout, "receipt"), "stale");
+  assert.match(result.stdout, /^→ Next: \/review-change 20-relay-unit$/m);
+  assert.doesNotMatch(result.stdout, /\/audit-pr /);
+});
+
+test("closeout CO9: an Active baton is refused — the ladder runs when the relay is complete", () => {
+  const root = tree();
+  const result = run([CLOSE, UNIT], { root });
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stdout, /Complete/);
+  assert.doesNotMatch(result.stdout, /^→ Next:/m);
+});
+
+test("closeout CO10: the mode is a member of the closed list on both entry points, and an unknown mode still refuses", () => {
+  const help = run(["bogus", UNIT]);
+  assert.equal(help.status, 2);
+  assert.match(help.stderr, /names the mode/);
+  assert.equal(RELAY_MODES.includes("closeout"), true, "the crate's closed mode list carries closeout");
+});
+
+test("closeout CO11: the crate entry point prints the identical close-out block", () => {
+  const root = completeTree("pending");
+  const scripted = run(["closeout", UNIT], { root });
+  const crate = spawnSync(process.execPath, [path.join(ROOT, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs"), "relay", "closeout", UNIT], {
+    encoding: "utf8",
+    cwd: root,
+    env: { ...process.env, RELAY_PACKET_REPO: root },
+  });
+  assert.equal(crate.status, scripted.status, crate.stderr || crate.stdout);
+  assert.equal(crate.stdout, scripted.stdout, "the two entry points print one block");
+});
+
+/* ------------------------------------------- closeout: the published grammar */
+
+/**
+ * #680 S5 — the close-out shape is a published machine grammar, not a sentence:
+ * `block:relay-closeout@1` on the relay contract, and its `→ Next:` line uses
+ * the same tokens the runtime prints.
+ */
+test("closeout CO12: relay-closeout@1 is published on the relay contract and its rows resolve", async () => {
+  const relayDoc = fs.readFileSync(path.join(ROOT, "skills", "unit-lane", "references", "RELAY.md"), "utf8");
+  assert.match(relayDoc, /^relay-closeout@1$/m, "the block id is published");
+  const block = relayDoc.split("```text").map((chunk) => chunk.split("```")[0]).find((chunk) => chunk.includes("relay-closeout@1"));
+  assert.ok(block, "the block is fenced");
+  const rows = block.split("\n").filter((line) => line.trim() !== "" && !line.startsWith("relay-closeout@1") && !line.startsWith("#"));
+  assert.ok(rows.length >= 3, "the block carries a header and its rows");
+  const header = rows[0];
+  assert.match(header, /^field \| shape \| what it orders$/);
+  for (const field of ["receipt", "next", "precondition"]) {
+    assert.ok(rows.some((row) => row.startsWith(`${field} |`)), `the block orders the \`${field}\` field`);
+  }
+  const { closeoutNext } = await import("../packages/agentic-workflow/src/relay/Packet.mjs");
+  assert.equal(closeoutNext({ slug: UNIT, receipt: "absent", pr: null }), `→ Next: /review-change ${UNIT}`);
+  assert.equal(closeoutNext({ slug: UNIT, receipt: "current", pr: "https://github.com/o/r/pull/335" }), "→ Next: /audit-pr https://github.com/o/r/pull/335");
 });
