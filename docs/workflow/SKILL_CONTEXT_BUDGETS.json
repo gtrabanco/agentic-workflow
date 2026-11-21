@@ -396,7 +396,7 @@
       }
     },
     "unit-lane": {
-      "mainEstimateMax": 5246,
+      "mainEstimateMax": 5894,
       "mainLinesMax": 403,
       "mainSources": {
         "fix/258 harden-needs-input": "the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and the no-silent-feature-default rule has one home — measured 3112 est / 246 lines; ceiling ceil(3112 x 1.10) = 3424 / ceil(246 x 1.10) = 271 (down from 3464/280, the body shrank)",
@@ -409,7 +409,8 @@
         "issue #294 (unit 82 relay-lane-execution)": "the relay hand-off paragraph and close-out pointer grew this entry; measured 4317 est / 331 lines at this cut, so the ceilings are ceil(4317 x 1.10) = 4749 and ceil(331 x 1.10) = 365",
         "fix 434 (tier-fused design/plan, delta provenance)": "the conductor's step-contract paragraph gains the fused-pass rule with its owner pointer (the normative block lives in references/PLAN.md — one pointer in main, never a restatement); measured 4769 est / 353 lines at this cut, so the estimate ceiling re-bases to exact ceil(4769 x 1.10) = 5246 while the line ceiling stays 365 (353 < 365). Growth source = fix 434's SKILL.md fused-pass paragraph",
         "feature 526 (evidence-backed elicitation, Layer 0)": "the lane's entry gains the Layer-0 pre-spec step (before triage) and its turn-contract box, both pointing at references/ELICITATION.md; measured 4946 est / 366 lines against the previous 365 line ceiling, so the line ceiling is re-set to ceil(366 x 1.10) = 403 and the estimate ceiling stands (4946 of 5246). Growth source = feature 526's Layer-0 step, one box and one four-line section.",
-        "issue #646 (docs + skills reconciliation, 2026-11-20)": "pointer conversion (S6): the duplicated rule becomes a citation of the one surface that owns it, so the citation sentence is what moves the bytes — 5,166 est / 377 machine -> 5,173 / 380. Named growth, never a silent one: the same change deletes a second wording of the rule from the tree, and every measurement stays inside its unchanged mainEstimateMax, so no ceiling is re-based. Measured with `bun scripts/check-skill-context.mjs` at this unit's head against a `git archive` of `8fc204abb`."
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "pointer conversion (S6): the duplicated rule becomes a citation of the one surface that owns it, so the citation sentence is what moves the bytes — 5,166 est / 377 machine -> 5,173 / 380. Named growth, never a silent one: the same change deletes a second wording of the rule from the tree, and every measurement stays inside its unchanged mainEstimateMax, so no ceiling is re-based. Measured with `bun scripts/check-skill-context.mjs` at this unit's head against a `git archive` of `8fc204abb`.",
+        "issue #680 (relay close-out owns the receipt ladder)": "step 1 states that `REVIEW-VERDICT` is the verdict, not the receipt, and step 4's receipt stage gains the relay sub-bullet: a unit that ran as relay legs runs the ladder in its last leg and records the outcome on the baton's `Review:` line, which is what `relay check` reads to accept a `Complete` verdict. Growth source = issue #680's close-out ownership; measured at the change with `bun scripts/check-skill-context.mjs`: 5358 est / 390 lines, so the estimate ceiling re-bases to exact ceil(5358 x 1.10) = 5894 while the line ceiling stays 403 (390 < 403)."
       },
       "referenceEstimateMax": 6209,
       "referenceLinesMax": 429,

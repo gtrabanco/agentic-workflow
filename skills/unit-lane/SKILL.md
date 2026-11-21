@@ -293,8 +293,9 @@ follow [the memory protocol](references/MEMORY.md).
 When all triaged steps are done, in order:
 
 1. Run the review step (the in-doc `REVIEW-VERDICT` per
-   [review](references/REVIEW.md)); a unit that ran as Relay legs already had it
-   performed by a fresh leg ([relay legs](references/RELAY.md) §Coherence review).
+   [review](references/REVIEW.md)); a unit that ran as Relay legs already had the
+   *verdict* performed by a fresh leg ([relay legs](references/RELAY.md)
+   §Coherence review) — the verdict is evidence, and step 4 stays owed.
 2. Resolve every `## Future` row with the user (planned now — registered on
    explicit request only —, kept deferred, or discarded, dated).
 3. Update the unit doc's status and the index row (release step: branch
@@ -310,6 +311,12 @@ When all triaged steps are done, in order:
    - **otherwise** → the closing block is `→ Next: /review-change <NN-slug>`
      (the receipt's sole owner) and `/audit-pr` is not printed — the gate is
      never named before its precondition exists.
+   - **a unit that ran as Relay legs runs this stage in its last leg**, because
+     this session has already ended by the time the relay completes: that leg
+     records the outcome on the baton's `Review:` line and prints the same
+     block (`runner relay closeout <unit>`), which is what `relay check` reads
+     to accept a `Complete` verdict ([relay legs](references/RELAY.md)
+     §Receipt boundary).
 
 A turn that ends with an unchecked ladder step is not done.
 

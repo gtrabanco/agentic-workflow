@@ -421,8 +421,8 @@ test("check CO2: a Complete baton with no Review line at all is refused — sile
   const root = completeTree(null);
   const result = run(["check", UNIT], { root });
   assert.equal(result.status, 1, result.stdout);
-  assert.match(result.stdout, /Review:/);
-  assert.match(result.stdout, /no current review receipt/i);
+  assert.match(result.stdout, /Review: receipt current at/);
+  assert.match(result.stdout, /a Complete verdict needs the receipt boundary/i);
 });
 
 test("check CO3: a Complete baton whose PR receipt is current passes", () => {
@@ -473,7 +473,7 @@ test("closeout CO6: an absent receipt routes the leg to /review-change and never
   const root = completeTree("pending");
   const result = run([CLOSE, UNIT], { root });
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  assert.equal(line(result.stdout, "receipt"), "absent");
+  assert.equal(line(result.stdout, "receipt"), "not-current");
   assert.match(result.stdout, /^→ Next: \/review-change 20-relay-unit$/m);
   assert.doesNotMatch(result.stdout, /\/audit-pr /);
 });
@@ -484,16 +484,16 @@ test("closeout CO7: a current receipt routes the leg to /audit-pr with the PR ur
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(line(result.stdout, "receipt"), "current");
   assert.match(result.stdout, /^→ Next: \/audit-pr https:\/\/github\.com\/o\/r\/pull\/335$/m);
-  assert.match(result.stdout, /^precondition: .*review receipt$/m);
+  assert.match(result.stdout, /^precondition: a current review-change receipt/m);
 });
 
 test("closeout CO8: a stale receipt routes back to /review-change, never forward to the merge gate", () => {
-  const root = completeTree(`receipt current at ${"f".repeat(40)}`);
+  const root = completeTree(`receipt stale at ${SHA} · pr https://github.com/o/r/pull/335`);
   const result = run([CLOSE, UNIT], { root });
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(line(result.stdout, "receipt"), "stale");
   assert.match(result.stdout, /^→ Next: \/review-change 20-relay-unit$/m);
-  assert.doesNotMatch(result.stdout, /\/audit-pr /);
+  assert.doesNotMatch(result.stdout, /^→ Next: \/audit-pr /m);
 });
 
 test("closeout CO9: an Active baton is refused — the ladder runs when the relay is complete", () => {

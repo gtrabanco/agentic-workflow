@@ -70,7 +70,7 @@ Progress: <one line: what the last leg finished and left>
 Evidence: `<unit dir>/SPEC.md` · its `## Log` `E` lines, never copied here
 Gaps: <what remains until the finish line>
 Checks: `<command>` · exit <code>
-Review: pending | attempted <n> — <result>
+Review: pending | Review: receipt current at <40-hex>[ · pr <url>] | Review: receipt stale at <40-hex>
 Blockers: none | <the human-dependent blocker>
 ```
 
@@ -88,6 +88,7 @@ line | shape | what it orders
 State | State: <Draft — awaiting approval; not dispatched | Active | Complete | Needs help> | pi-web relay-runner's closed state set; the head is the value
 Legs | Legs: <leg> → <leg> | the last completed leg and the next one; `none` before leg 1
 Phase | Phase: P<n> | done | the lane's phase cursor: this leg's phase, or the unit has none left
+Review | Review: receipt current at <40-hex>[ · pr <url>] | the receipt boundary's only input: `current` binds the PR head, `receipt stale at`/`pending`/absent never does
 Evidence | Evidence: <path> · <section> | a pointer to the unit doc's evidence carrier, never a copy
 ```
 
@@ -168,14 +169,51 @@ Attempts are bounded by `relay-runner`: the initial review plus at most two
 post-correction reviews. If the third attempt still has blockers, the baton
 records `Needs help` and the chain stops — no further review or correction leg.
 
-### Receipt boundary
+### Receipt boundary — the leg that ends the relay owes the ladder
 
 The coherence verdict is evidence, not a receipt: it **emits no receipt**,
 because a receipt binds an open PR's head and the lane gate runs before the PR
-exists. After the PR opens, the lane's close-out is unchanged — `/review-change`
-posts the SHA-bound receipt and `/audit-pr` is the terminal merge gate; a
-`REVIEW-VERDICT: PASS` never satisfies `runner review-receipt verify
---pr <N>`.
+exists. A `REVIEW-VERDICT: PASS` never satisfies `runner review-receipt verify
+--pr <N>`, and a `## Final review receipt` heading written into the unit doc is
+not a receipt either — it is prose about one.
+
+So the review-receipt lane needs an owner after the lane session has ended, and
+that owner is **the relay's last leg** (or the leg that opens the PR): it ends by
+running the lane's close-out ladder, and never records "awaiting owner decision"
+in place of it. Coherence PASS is a *state of the evidence*; a receipt current at
+the PR head is a *state of the receipt*. Two states, two names, never one word
+for both.
+
+```sh
+runner relay closeout <unit>   # the ladder: the receipt verdict + the → Next: block
+```
+
+The mode is read-only and offline — it reads the baton, never the forge — and its
+block is the machine shape below:
+
+```text
+relay-closeout@1
+# produced-by: `runner relay closeout <unit>` (and `agentic-workflow relay closeout <unit>`)
+# input: the packet's status.md — `State:` and `Review:`
+field | shape | what it orders
+receipt | current | stale | not-current | absent | the receipt's state, read from the `Review:` line; `stale` names another head, `not-current` records no receipt, `absent` means the line is missing
+precondition | a current review-change receipt at the PR head | none — the review receipt is missing or stale | what the merge gate rests on, stated before the gate is named
+next | → Next: /review-change <NN-slug> | → Next: /audit-pr <PR-url> | the one closing block: the receipt's owner while it is not current, the merge gate only once it is
+```
+
+Rules the block encodes:
+
+- A `Complete` baton **must** carry a current receipt or `relay check` refuses it
+  (`status.md: a Complete verdict carries no current review receipt`). Silence is
+  never current: a missing `Review:` line is a fault, not a default.
+- `/audit-pr` is never printed before its precondition exists. The `→ Next:` line
+  carries `/review-change` alone while the receipt is missing, stale or
+  unrecorded, and `/audit-pr <PR-url>` only when the receipt verifies current —
+  the PR url comes from the same `Review:` line the leg recorded.
+- The ladder runs when the relay is `Complete`. Before that a leg still owes its
+  phase, so the mode refuses rather than routing one.
+- The receipt itself is `/review-change`'s to post at the PR head; this boundary
+  reads the state it recorded, and never posts, edits or clears a receipt.
 
 ## Model routing
 
@@ -237,6 +275,7 @@ read-only checker rather than by a dispatcher.
 | handover within the ceiling | `runner relay budget <unit>` | exit 0, `measured` under `ceiling` |
 | leg tiers from the catalog | `runner relay tiers <unit>` | exit 0, `execute` + `coherence-review` |
 | obligations closed before handoff | `runner relay obligations <unit>` | exit 0, `open: 0` |
+| the close-out ladder, and the receipt the merge gate rests on | `runner relay closeout <unit>` | exit 0, one `→ Next:` line and its `precondition` |
 | the lane's context stays inside its budgets | `runner skill-context` | exit 0 |
 
 ## Forbidden

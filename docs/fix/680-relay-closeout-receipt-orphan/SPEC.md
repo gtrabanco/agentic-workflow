@@ -1,8 +1,7 @@
 ---
 type: fix
 scope: medium
-roadmap_summary: |
-  Triaged fix-now (M) 2026-11-21: when a unit runs as Relay legs, the closing leg ends with coherence PASS but never runs `runner review-receipt verify --pr <N>` nor emits the mandated `→ Next:` block — the review-receipt lane is orphaned between relay ends and lane closes. Merge was NOT attempted. Route: /unit-lane --fix 680
+n: Triaged fix-now (M) 2026-11-21: when a unit runs as Relay legs, the closing leg ends with coherence PASS but never runs `runner review-receipt verify --pr <N>` nor emits the mandated `→ Next:` block — the review-receipt lane is orphaned between relay ends and lane closes. Merge was NOT attempted. Route: /unit-lane --fix 680
 ---
 
 # fix/680-relay-closeout-receipt-orphan

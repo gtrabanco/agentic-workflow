@@ -553,6 +553,7 @@ evidence-staleness-rule | skills/unit-lane/references/DESIGN.md | block:evidence
 activity-fusion | skills/unit-lane/references/PLAN.md | block:activity-fusion@1 | n/a | no
 residual-promise-grammar | skills/unit-lane/references/DESIGN.md | block:residual-promise@1 | n/a | no
 relay-status-grammar | skills/unit-lane/references/RELAY.md | block:relay-status@1 | n/a | no
+relay-closeout-grammar | skills/unit-lane/references/RELAY.md | block:relay-closeout@1 | n/a | no
 journal-fragment-grammar | packages/agentic-workflow/README.md | block:journal-fragment-grammar@1 | n/a | no
 journal-write-grammar | packages/agentic-workflow/README.md | block:journal-write-grammar@1 | n/a | no
 journal-headless-grammar | packages/agentic-workflow/README.md | block:journal-headless-grammar@1 | n/a | no
