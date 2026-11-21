@@ -226,6 +226,16 @@ gate exception. The `## Tasks` list above is the frozen step list for this unit.
   whole invocation), not one budget per package: a canary cut publishes all
   declared packages near-simultaneously, and a per-package budget could multiply
   the runner cost by the member count. A timed-out package is named in the error.
+- **D3** — 2026-11-21, owner decision after canary run 44849041090: a healthy
+  cut lost its tag and pre-release because one packument stayed cache-stale past
+  the whole 10-minute budget (the CDN served it later, shasum intact) while the
+  three siblings were available within minutes. Two contract changes supersede
+  O6's "timeout exits non-zero" reading: every packument probe carries a
+  distinct cache-buster query, and a TIMEOUT degrades to a WARNING (exit 0) so
+  the run keeps its announcement — real corruption still fails the run (exit 1):
+  a shasum mismatch surviving the budget and a malformed dist are FATAL, and a
+  warned package is never reported available. The #481 guarantee survives as
+  "a signal never follows unavailable bytes", not as "a timeout kills the run".
 - **E1** — 2026-11-11, `bun test scripts/npm-availability-wait.test.mjs` at the
   red commit `92c55aa6` · exit 1 · `Cannot find module
   './npm-availability-wait.mjs'` — 0 pass / 1 fail / 1 error (module-absent red).
