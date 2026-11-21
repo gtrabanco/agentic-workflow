@@ -660,6 +660,8 @@ docs/workflow/REPLICATE.md | pattern:\+ (\d+) internal, including | count:workfl
 docs/workflow/REPLICATE.md | pattern:installable set is \*\*(\d+) user-facing | count:user-facing | equals
 docs/workflow/REPLICATE.md | pattern:user-facing \+ (\d+) internal\*\* | count:workflow-internals | equals
 docs/workflow/REPLICATE.md | pattern:internal\*\* \((\d+) total\) | count:discoverable | equals
+docs/workflow/REPLICATE.md | pattern:\*\*User-facing \((\d+)\) | count:user-facing | equals
+docs/workflow/REPLICATE.md | pattern:\*\*Internal \((\d+)\) | count:workflow-internals | equals
 skills/runner-contract/references/RUNNER.md | literal:bunx @gtrabanco/agentic-workflow@4.10.0 | package:version | equals
 CHANGELOG.md | package-versions | package:version | equals-each
 skills/pre-execution-review/references/POLICY.md | restates:gate-rejection-vocabulary@1:gate-rejection-type | const:GATE_REJECTION_TYPES | equals-set
