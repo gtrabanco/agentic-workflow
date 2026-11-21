@@ -328,6 +328,12 @@ skip.
   (validator: `node scripts/run-root-suite.mjs` exits 0 and `cd packages/agentic-workflow && bun run test` exits 0 and `cd packages/pi-agentic-workflow && bun run test` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11)
   - Relevant files: docs/fix/600-config-default-materialization/SPEC.md
+- P10 — Correction batch 1 on the 2026-11-21 EXTERNAL VERIFY: the cross-scope
+  refusal corpus and the two-pass engine, the O14/O15 evidence corrections, the
+  disclosed-delta claims, and the Features-row settle
+  (validator: `bun test packages/agentic-workflow/test/config-cli.test.mjs` exits 0 with the `config default refuses before any byte moves in any scope` case and `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap read docs/ROADMAP.md --nn 600 --json` matches `done · [#671]`)
+  (Implements: S1, S3, S6, S10, S11)
+  - Relevant files: packages/agentic-workflow/src/config/materialize.mjs, packages/agentic-workflow/test/config-cli.test.mjs, docs/ROADMAP.md, docs/workflow/CONFIG.md
 
 ## Triaged steps
 
