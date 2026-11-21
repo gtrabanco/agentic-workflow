@@ -638,12 +638,28 @@ once here and the test **recomputes** the value: `claim` is a fixed form
 joins surfaces carrying the same fact; `literal:` compares the number or id inside
 the quoted text, the table kinds compare every row the same way. A restatement
 found in review but not pinned here is a known-issue with its re-trigger
-condition, never a silent gap.
+condition, never a silent gap. The skill-surface counters this block cites are
+derived by `bun scripts/skill-surface-counts.mjs`, the one owner of the
+derivation the drift gate imports; `count:skill-references` is derived and
+printed there with no committed rendering today, so the first surface that
+renders it earns a row here.
 
 ```text
 rendered-facts@1
 surface | claim | machine | rule
-docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
+README.md | pattern:(\d+) source skills | count:skill-files | equals
+README.md | pattern:source skills \((\d+) user-facing | count:user-facing | equals
+README.md | pattern:(\d+) workflow internals | count:workflow-internals | equals
+README.md+docs/workflow/SKILLS.md | pattern:(\d+) metadata-internal | count:metadata-internal | equals
+README.md | pattern:(\d+) discoverable | count:discoverable | equals
+README.md+docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
+docs/workflow/SKILLS.md | pattern:The (\d+)\s+user-facing skills cover | count:user-facing | equals
+docs/workflow/REPLICATE.md | pattern:The (\d+) installable skills | count:discoverable | equals
+docs/workflow/REPLICATE.md | pattern:The \d+ installable skills \((\d+) user-facing | count:user-facing | equals
+docs/workflow/REPLICATE.md | pattern:\+ (\d+) internal, including | count:workflow-internals | equals
+docs/workflow/REPLICATE.md | pattern:installable set is \*\*(\d+) user-facing | count:user-facing | equals
+docs/workflow/REPLICATE.md | pattern:user-facing \+ (\d+) internal\*\* | count:workflow-internals | equals
+docs/workflow/REPLICATE.md | pattern:internal\*\* \((\d+) total\) | count:discoverable | equals
 skills/runner-contract/references/RUNNER.md | literal:bunx @gtrabanco/agentic-workflow@4.10.0 | package:version | equals
 CHANGELOG.md | package-versions | package:version | equals-each
 skills/pre-execution-review/references/POLICY.md | restates:gate-rejection-vocabulary@1:gate-rejection-type | const:GATE_REJECTION_TYPES | equals-set

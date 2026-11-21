@@ -6,11 +6,11 @@ The skills that make up the agentic workflow, grouped by role.
 composed for you: `pre-execution-review` (the planning-ledger shapes and
 ownership, ledger-only after feature 61), the `review-change` findings engine
 `review-implementation`, the `phase-contract` lint contract, the
-`verification-contract` acceptance guard, and the workflow's own 9-skill
-internal review pack: `review-code`, `review-security`, `review-verify`,
+`verification-contract` acceptance guard, and the workflow's own internal
+review pack: `review-code`, `review-security`, `review-verify`,
 `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
-`review-seo`. Additionally, **one metadata-internal** contract not discoverable
-by the `skills` CLI (`orchestration-envelope`; it carries `metadata.internal: true`
+`review-seo`. Additionally, **1 metadata-internal** contract not discoverable
+by the `skills` CLI (`skill-lint`; it carries `metadata.internal: true`
 which the CLI respects to exclude from `npx skills add` discovery). The 14
 user-facing skills cover setup, repository-state discovery/resolution, the
 adaptive unit lane, execution, review, audit, finding folds, docs generation,
