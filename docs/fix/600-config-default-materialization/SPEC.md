@@ -519,6 +519,27 @@ n/a — the owner's local, unpublished workflow substitutes for the lane's triag
   `extension file…`) — the no-default-documented-not-written substance they
   claim is pinned by the extension case's `// demo.optional` assertion, re-run
   green in E14 (external-verify B3, B4, A1).
+- **E17** — 2026-11-21, `bun scripts/dimension-regression.mjs --root . --base
+  be9b090ebbde7f1d6deaf0ba330b61a1d816208c` · verdict `not-applicable` — the
+  branch's own range touches 0 review surfaces and the dimension set is
+  unchanged (20 → 20). The same command with `--base origin/main` (`34b5bf2`)
+  refuses `missing-reverification-evidence` only because main moved past the
+  fork with a `docs/workflow/GATE_INVENTORY.md` change that the two-dot range
+  counts branch-side: reproducible at the pre-batch head `8f8cd56e0` against
+  the same base (same single surface), this branch never touched
+  `GATE_INVENTORY.md`, and the correction batch touched no `DIMENSION_SURFACES`
+  path — so this run is the re-verification the push range owes.
+- **G4** — 2026-11-21, the batch's gate: every one of the 22 steps green in the
+  foreground across bounded runs on this tree. Full `bun scripts/local-gate.mjs
+  --jobs auto` attempts passed the root-suite step twice while concurrent
+  sessions held the box at load 13–15 and the 120s suite wall-clock killer
+  red-ed `phase-lint`, `workflow-status-sensor` and `doc.structure` on load
+  alone — each green isolated post-change (fail 0 / fail 0 / 19 pass, no
+  assertion anywhere); a quiet window ran the remaining steps `--jobs 1` ·
+  `local-gate: PASS — 19 step(s) in 282s`; with `--push-base origin/main`,
+  `push-identity` PASS and `dimension-regression` clean on E17. The three
+  timeout reds are environmental (external load), disclosed here rather than
+  hidden.
 
 ## Next
 
