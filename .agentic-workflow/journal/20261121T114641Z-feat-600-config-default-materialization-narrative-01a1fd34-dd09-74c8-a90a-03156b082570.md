@@ -1,0 +1,6 @@
+## 2026-11-21T11:46:41Z — feat/600-config-default-materialization — narrative
+- **Commits:** 21 (`87d5154f…4469e56b`)
+- **Files:** 36 files
+- **Summary:** Completed the correction batch for the 2026-11-21 EXTERNAL VERIFY of fix/600-config-default-materialization (issue #600). All four blockers (B1–B4) and three advisories (A1–A3) were fixed in one batch, test-first: B1 (two-pass materializeConfig to guarantee run-wide refusal before any write), B2 (Features row settled to done), B3/B4 (documentation claims and evidence corrected), A1/A2/A3 (CONFIG.md refusal guarantee and test naming). Gate passed fully, push succeeded. One real defect caught by the hook: log-immutability refused a hand-append to docs/LOGS.md; repaired by soft-reset and writing the session entry as a journal fragment instead.
+- **Decisions:** D8: refusal contract is per-run, not per-file (two-pass engine). D9: claim corrections are wording-to-reality. log-immutability repair: soft-reset unpublished tip, restore LOGS byte-identical, fragment carry instead of inline append — the aggregator owns the journal per issue #468.
+- **Next:** Owner's external verdict on the correction batch (B1–B4 recheck only). Open for the owner: the D5 D5 split question and the dimension-regression stale-base advisory recorded in E17.
