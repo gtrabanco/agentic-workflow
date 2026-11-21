@@ -80,15 +80,20 @@ it via `Closes #600`.
   `validate --sanitize`) that mutates. `get/set/list/show/validate/init/reset/
   schema` keep their exact output — `config-cli.test.mjs` is the regression
   suite and is not edited for them.
-- **The store**: a backup is a byte copy beside the file. `writeConfigDocument`
-  stays the atomic writer; the renderer is new (`renderConfigFile`) and is the
+- **The store**: a backup is a byte copy beside the file. Both file writers
+  share one atomic temp-plus-rename path — this change folds `writeConfigText`
+  into `writeConfigDocument`'s helper, so a crash never leaves a half-written
+  file — and the renderer is new (`renderConfigFile`) and is the
   only writer that emits comments, so `set/reset/validate --sanitize` keep
   writing comment-free pretty JSON exactly as today.
 - **The schema package**: `typeOf` becomes exported (`schemaTypeName`) so the
   renderer names a type the same way `config list` does; missing key
   descriptions are filled for the base sections and the pi extension descriptor
   so a materialized comment documents the option instead of repeating the
-  section sentence. No schema shape, default, enum or validation rule changes.
+  section sentence. Beyond D5's two disclosed repairs — `logSession.publisher`
+  widened to accept the `null` the shipped default already used, and the retired
+  `gitIdentity.agentGuard.mode` key leaving the section default — no schema
+  shape, default, enum or validation rule changes.
 - **The doctor**: a probe without a documented inventory row refuses the whole
   run, so the new `config-files` row and its probe land together. Two suites pin
   the row count (15); adding a documented surface moves those pins to 16 — the
@@ -436,11 +441,15 @@ n/a — the owner's local, unpublished workflow substitutes for the lane's triag
 - **E10** — 2026-11-21, the differential run against `git archive be9b090eb` in
   `mktemp -d`: `config get` (both scopes), `config set` (valid + refused),
   `config reset`, `config validate` (strict and `--sanitize`) · byte-identical
-  stdout/stderr/exit; `config list --json` differs only in
-  `logSession.publisher.type` (`object` → `null|object`), `config show --json`
+  stdout/stderr/exit; `config list --json` differs in
+  `logSession.publisher.type` (`object` → `null|object`), the S1 description
+  fills (empty → the option's own sentence) and the D5 `mode: "ask"` default
+  removals; `config show --json`
   only by the removed `gitIdentity.agentGuard.mode`, `config schema` only by the
   `publisher` `anyOf`, and `config init` only by the same removed default key —
-  the four deltas D5 names, nothing else.
+  the deltas D5 and the description fill name, nothing else (amended
+  2026-11-21, correction batch 1: the original line said `differs only in
+  logSession.publisher.type`, which understated this run — external-verify A1).
 - **E11** — 2026-11-21, the doctor differential over the same base: the only delta
   is the new `config-files` row (`mismatch`, move `instruct-only`, instruction
   `agentic-workflow config default`, advisory naming 21 new options and 1 removed
@@ -468,6 +477,48 @@ n/a — the owner's local, unpublished workflow substitutes for the lane's triag
 - **G3** — 2026-11-21, HEAD 02e98921fbefb259d0b4a2ca3dbfb6e1d2d7d3a8 · `bun scripts/local-gate.mjs --jobs 4` · exit 0 · PASS, 20 steps in 367s, at the head that carries every code and documentation change; the commits after it add only this receipt, and `bun scripts/test-impact.mjs --base 02e98921fbefb259d0b4a2ca3dbfb6e1d2d7d3a8` answers `empty` for them.
 - **V1** — 2026-11-21, the obligations ledger closes: O1–O16 all `verified` on the
   foreground runs E2–E12; no row is deferred and none is `n/a`.
+- **P8** — 2026-11-21, correction batch 1 cut on the 2026-11-21 EXTERNAL VERIFY
+  (NEEDS-DECISION, 4 blockers + 3 advisories): O14/O15 flipped back, O17/O18 and
+  PE-015/PE-016 frozen, task P10 linked · `90b2cd378`.
+- **E13** — 2026-11-21, blocker B1's reproducer frozen as a failing check ·
+  `bun test packages/agentic-workflow/test/config-cli.test.mjs` at the freeze +
+  corpus · 14 pass / 1 fail — `config default refuses before any byte moves in
+  any scope` fails at the global-file assertion (the refusal wrote the global
+  file) · corpus commit `248d18a48`.
+- **P9** — 2026-11-21, the two-pass engine: every file of the run planned and
+  validated before the first write, then backed up and written · `3d018c1fe`.
+- **E14** — 2026-11-21, foreground runs after the fix: `bun test
+  packages/agentic-workflow/test/config-cli.test.mjs
+  packages/agentic-workflow/test/config-materialize.test.mjs` · 26 pass / 0 fail
+  (the corpus case green; the pre-existing cases unedited); the doctor trio ·
+  35 pass / 0 fail; `cd packages/pi-agentic-workflow && bun run test` · 1035 pass
+  / 0 fail; charter + scaffold-guide · 34 pass / 0 fail; normative-drift +
+  cli.surface · 27 pass / 0 fail; `bun test scripts/roadmap-settle.test.mjs` ·
+  10 pass / 0 fail (live tree green); `bun scripts/docs-generate.mjs --check` ·
+  PASS; `bun scripts/lint-changeset.mjs` · exit 0.
+- **E15** — 2026-11-21, blocker B2's settle through the #498 CAS writer ·
+  `roadmap read --nn 600` revision `8df959e9` → `roadmap docs/ROADMAP.md
+  rowUpsert --expect 8df959e9…` receipt `before 8df959e9 / after 6d2c8a7e / ok`
+  → re-read status `done · [#671](…/pull/671)` matches; one line changed, every
+  other cell byte-preserved · `c3356a011`.
+- **E16** — 2026-11-21, the batch differential against `git archive 8f8cd56e0`
+  in `mktemp -d` (both schema packages rebuilt): success-path human receipt,
+  `--json` receipt and both file byte-sets identical; the refusal path changes
+  only as B1 asked (exit 2 and message identical, the global file no longer
+  written); `config get` and `config schema` byte-identical.
+- **D8** — 2026-11-21, the refusal contract is per RUN, not per file:
+  `materializeConfig` plans and validates every file of every scope before the
+  first write (two passes), which is what makes the message's `nothing was
+  written` and the README's `before any byte moves` true for the default
+  `--scope both`; the success-path receipt order and bytes are unchanged (E16).
+- **D9** — 2026-11-21, three claims corrected to what the tree ships, none a
+  behaviour change: the Impact sentence and O14 now name D5's two repairs and
+  the S1 description fills (the deltas E10 records), E10's `config list` line
+  lists those deltas instead of `differs only in publisher.type`, and O15's
+  validator cell cites the two cases that exist (`the renderer…`,
+  `extension file…`) — the no-default-documented-not-written substance they
+  claim is pinned by the extension case's `// demo.optional` assertion, re-run
+  green in E14 (external-verify B3, B4, A1).
 
 ## Next
 
