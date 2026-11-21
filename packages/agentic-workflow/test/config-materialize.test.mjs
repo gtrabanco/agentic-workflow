@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { BASE_CONFIG_SECTIONS, resolveConfigDocuments } from "@gtrabanco/agentic-workflow-schema";
+import { BASE_CONFIG_SECTIONS, parseJsonc, resolveConfigDocuments } from "@gtrabanco/agentic-workflow-schema";
 
 import { configDivergence, materializeConfig, renderConfigFile } from "../src/config/materialize.mjs";
 import { readConfigDocument } from "../src/config/store.mjs";
@@ -23,6 +23,13 @@ const AT = new Date("2026-11-21T01:30:00Z");
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "aw-config-materialize-"));
   return { root, global: join(root, "global"), project: join(root, "project"), projectFile: join(root, "project", ".pi", "agentic-workflow.json") };
+}
+
+/** The file is JSONC: comments are the point, so every read parses JSONC. */
+function readJsonc(path) {
+  const parsed = parseJsonc(readFileSync(path, "utf8"));
+  assert.equal(parsed.ok, true, `the materialized file parses: ${JSON.stringify(parsed.error ?? {})}`);
+  return parsed.value;
 }
 
 function baseDefaults() {
@@ -73,7 +80,7 @@ test("a fresh scope writes every base section explicitly, with a comment per key
     assert.equal(file.backup, null, "nothing exists, so there is nothing to back up");
 
     const text = readFileSync(projectFile, "utf8");
-    const parsed = JSON.parse(text);
+    const parsed = readJsonc(projectFile);
     assert.deepEqual(parsed, baseDefaults(), "every declared section is explicit");
     // Each materialized key names itself, its type and its shipped default.
     for (const key of ["logSession.enabled", "memory.engram", "telemetry.enabled", "advance.iterationsCap", "guard.default", "pathProtection.protectedGlobs"]) {
@@ -99,7 +106,7 @@ test("merge preserves user values and drops schema-absent keys", () => {
     );
     const receipt = materializeConfig({ projectDir: project, globalDir: global, scope: "project", now: AT });
     const file = receipt.files.find((entry) => entry.file === "agentic-workflow.json");
-    const parsed = JSON.parse(readFileSync(projectFile, "utf8"));
+    const parsed = readJsonc(projectFile);
     assert.equal(parsed.logSession.enabled, true, "a user value is never overwritten by its default");
     assert.equal(parsed.logSession.publisher, null, "an undefined key gains its explicit default");
     assert.deepEqual(parsed.memory, { engram: true }, "an unknown leaf is dropped");
@@ -156,10 +163,12 @@ test("backup before modification: the copy carries the pre-run bytes", () => {
 test("second run is a no-op: identical bytes and no second backup", () => {
   const { root, global, project, projectFile } = fixture();
   try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    writeFileSync(projectFile, JSON.stringify({ memory: { engram: true } }));
     materializeConfig({ projectDir: project, globalDir: global, scope: "project", now: AT });
     const first = readFileSync(projectFile, "utf8");
     const backups = readdirSync(join(project, ".pi")).filter((name) => name.includes(".bak-"));
-    assert.equal(backups.length, 1, "the first run backed up nothing (no file existed) — the count is the run's own");
+    assert.equal(backups.length, 1, "the first run backed the existing file up once");
     const second = materializeConfig({ projectDir: project, globalDir: global, scope: "project", now: new Date("2026-11-21T02:00:00Z") });
     const file = second.files.find((entry) => entry.file === "agentic-workflow.json");
     assert.equal(file.written, false, "no byte changed");
@@ -180,7 +189,7 @@ test("extension file follows discovery: its own schema and defaults drive the fi
     const file = receipt.files.find((entry) => entry.file === "demo.json");
     assert.ok(file, "the discovered extension file is materialized");
     const text = readFileSync(extensionFile, "utf8");
-    assert.deepEqual(JSON.parse(text), { alpha: "a", beta: { gamma: 3 } }, "the schema-only key is documented, never written");
+    assert.deepEqual(readJsonc(extensionFile), { alpha: "a", beta: { gamma: 3 } }, "the schema-only key is documented, never written");
     assert.match(text, /\/\/ demo\.alpha — The alpha switch the demo package reads\./);
     assert.match(text, /\/\/ demo\.optional\b/);
     assert.match(text, /\/\/ demo\.beta\.gamma — The gamma ceiling\./);
@@ -223,7 +232,7 @@ test("refuses an invalid merge and leaves the file untouched", () => {
       () => materializeConfig({ projectDir: project, globalDir: global, scope: "project", now: AT }),
       (error) => error.code === "INVALID" && error.issues.length > 0,
     );
-    assert.deepEqual(JSON.parse(readFileSync(projectFile, "utf8")), before);
+    assert.deepEqual(readJsonc(projectFile), before);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
