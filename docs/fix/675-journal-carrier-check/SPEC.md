@@ -2,7 +2,7 @@
 type: fix
 scope: small
 roadmap_summary: Issue [#675](https://github.com/gtrabanco/agentic-workflow/issues/675) (S, high): `journal aggregate --check` gains the read-side half of #468 S3 — two conforming fragments whose parsed identity collides on `(sessionSlug, kind)` are now a lint refusal naming every file, while the aggregator stops depending on byte coincidence and consumes the newest of a colliding pair, naming the superseded fragment in its receipt. Applied through the owner's local inline workflow (ledgers frozen at cut). SPEC: [SPEC](fix/675-journal-carrier-check/SPEC.md)
-ac-hash: cc1f99d11280732ce943953c2452848ac75dfdd3
+ac-hash: 451a78df0606c474cdad75c55941b4ec410864625fd98beda9efb4a7bb00aa34
 ---
 
 # fix/675-journal-carrier-check
@@ -53,7 +53,7 @@ label and the triage verdict filed it as `fix-now (high)` on 2026-11-21.
 
 ## Specs
 
-`S1` is the owner's instruction; `S2`–`S11` are the issue's own words, one
+`S1` is the owner's instruction; `S2`–`S13` are the issue's own words, one
 requirement per distinct ask, in the order the issue states them.
 
 **S1 — Apply issue #675 to this repository.**
@@ -112,7 +112,7 @@ criterion per requirement, each naming the check that proves it.
 10. **S10 — the crash-safe re-run still holds.** The pre-existing `an already-present entry is consumed without being appended again` case stays green in the same run.
 11. **S11 — non-colliding carriers stay green.** The same suite exits 0 with `checkJournal keeps non-colliding carriers green`, covering `.gitkeep`-only, mechanical+narrative of one session, two sessions of one kind and one fragment.
 12. **S12 — the straggler is refused.** The same suite exits 0 with `two writes that raced past the writer's already-registered check are refused by the lint`.
-13. **S13 — the gate and the sibling pin.** `bun scripts/local-gate.mjs --list` names no new script, `bun scripts/structural-sibling-pins.test.mjs` exits 0 (nothing unpaired was added), and the gate's per-step verdict is recorded verbatim — see `## Known pre-existing issues` for the one step the repository's own carrier holds red and `## Next` for its sanctioned clearing step.
+13. **S13 — the gate and the sibling pin.** `bun scripts/local-gate.mjs --list` names no new script, `bun test scripts/structural-sibling-pins.test.mjs` exits 0 (nothing unpaired was added), and the gate's per-step verdict is recorded verbatim — see `## Known pre-existing issues` for the one step the repository's own carrier holds red and `## Next` for its sanctioned clearing step.
 
 ## Impact
 
@@ -123,12 +123,25 @@ code:
   the cross-fragment pass; `aggregateJournal` gains the supersede decision and
   the receipt's `superseded` list. Both read one shared predicate for "this
   session slug names a conversation" instead of a second copy of the `local`
-  exemption.
+  exemption. `packages/agentic-workflow/src/journal/aggregate.d.mts` declares
+  the same receipt shape — `superseded` included — for TypeScript consumers.
 - `packages/agentic-workflow/src/journal/fragment.mjs` — exports that predicate
   (`SHARED_SESSION_SLUG`, `isConversationSession`); the name/content grammar
   does not move.
 - `packages/agentic-workflow/src/journal/write.mjs` — keeps its behaviour and
   reads the shared predicate, so the write rule and the read rule cannot drift.
+- `packages/agentic-workflow/bin/agentic-workflow.mjs` — the CLI header states
+  the entry-slot rule beside the aggregate description, and the refusal line
+  counts the refused files, so a colliding slot's count matches the files it
+  names (the external verify's correction batch, 2026-11-21).
+- The unit's own carriers — `docs/fix/675-journal-carrier-check/SPEC.md` (this
+  doc) with its `external-verify.md`, and the two suites that pin the invariant,
+  `packages/agentic-workflow/test/journal.test.mjs` and
+  `scripts/local-gate.test.mjs` — carry the request, its evidence and its gate
+  coverage, not new behaviour.
+- `template/.agentic-workflow/journal.md` — the scaffold's carrier doc states
+  the entry-slot rule next to the aggregate description and cites
+  `journal-fragment-grammar@1` as its owner instead of restating it.
 - `packages/agentic-workflow/README.md` — `journal-fragment-grammar@1`'s
   `aggregate` row (the supersede rule) and `journal-write-grammar@1`'s
   `carrier-check` row (the cross-fragment half) stay truthful; both are the
@@ -152,6 +165,8 @@ code:
 
 - `packages/agentic-workflow`
 - `docs`
+- `template`
+- `scripts`
 
 ## Retirements
 
@@ -199,7 +214,7 @@ none
 - `bun test packages/agentic-workflow/test/journal.write.test.mjs`
 - `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs`
 - `bun test scripts/local-gate.test.mjs` (the step's fixture carrier)
-- `bun scripts/structural-sibling-pins.test.mjs`
+- `bun test scripts/structural-sibling-pins.test.mjs`
 
 ## Known pre-existing issues
 
@@ -273,7 +288,7 @@ none
 | O7 | S4 | the suite lands red-first: the test-only commit is observed failing, the implementation commit observed green | P1 | P1 | execute-phase | `git show 675d383da:packages/agentic-workflow/src/journal/aggregate.mjs \| rg -c "superseded"` matches 0 | the `E` line naming the red commit, its exit and the green commit | verified |
 | O8 | S8 | `log-immutability`'s attribution model is untouched | P4 | P4 | execute-phase | `git diff --name-only 278dff6c..HEAD -- scripts/log-immutability.mjs` matches 0 lines | the `E` line with the empty diff | verified |
 | O9 | S12 | a concurrent-writer straggler (two writes, different seconds, one session+kind, both landed) is refused by the lint | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `two writes that raced past the writer's already-registered check are refused by the lint` | the `E` line naming the case and its exit | verified |
-| O10 | S13, PE-008 | no new script is added, so `scripts/structural-sibling-pins.test.mjs` has nothing unpaired | P4 | P4 | execute-phase | `bun scripts/structural-sibling-pins.test.mjs` exits 0 | the `E` line with the suite's exit | verified |
+| O10 | S13, PE-008 | no new script is added, so `scripts/structural-sibling-pins.test.mjs` has nothing unpaired | P4 | P4 | execute-phase | `bun test scripts/structural-sibling-pins.test.mjs` exits 0 | the `E` line with the suite's exit | verified |
 | O11 | S13, PE-009 | the gate step still fails a malformed fixture carrier with `JOURNAL REFUSAL` and moves no byte, now also on an identity collision | P5 | P5 | execute-phase | `bun test scripts/local-gate.test.mjs` exits 0 | the `E` line with the suite's exit | verified |
 | O12 | S7 | no fixed vocabulary moves and the schema package is untouched | P4 | P4 | execute-phase | `git diff --name-only 278dff6c..HEAD -- packages/agentic-workflow-schema` matches 0 lines | the `E` line with the empty diff | verified |
 | O13 | S1, S13 | the changed surfaces are green: the three journal suites and the drift gate pass at the implementation head | P5 | P5 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 and `bun test scripts/normative-drift.test.mjs` exits 0 | the `E` line with both exits | verified |
