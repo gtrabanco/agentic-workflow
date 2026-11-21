@@ -43,8 +43,12 @@ The aggregator is `agentic-workflow journal aggregate` (shipped with
 `@gtrabanco/agentic-workflow`): it appends the pending fragments to
 `docs/LOGS.md` newest-first (ties: branch, kind, session ascending), deletes
 the consumed fragments, and refuses anything ambiguous with exit 2 before the
-first byte moves. It knows no forge: the GitHub workflow and the `post-receive`
-hook below call the same command unchanged.
+first byte moves. Two fragments of **one conversation and kind** are one entry
+slot — the lint refuses the pair naming both files, and the aggregator keeps
+the newest one, naming the superseded fragment in its receipt (the rule is the
+package README's `journal-fragment-grammar@1`, not a second copy here). It
+knows no forge: the GitHub workflow and the `post-receive` hook below call the
+same command unchanged.
 
 ### GitHub Actions example
 

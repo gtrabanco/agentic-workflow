@@ -26,6 +26,9 @@
  *  - **Routing is the opt-in.** The local journal publisher writes a fragment
  *    when `.agentic-workflow/journal/` exists and appends to `docs/LOGS.md`
  *    exactly as before when it does not (AC1/O10).
+ *  - **The entry slot is the conversation per kind.** A second conforming fragment
+ *    of one `(sessionId, kind)` is a lint refusal naming every file, and the
+ *    aggregator keeps the newest, naming the superseded one (issue #675).
  */
 
 import { test } from "node:test";
@@ -47,7 +50,8 @@ import {
   slug,
   writeFragment,
 } from "../src/journal/fragment.mjs";
-import { JournalAggregateError, aggregateJournal } from "../src/journal/aggregate.mjs";
+import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
+import { isoSecond } from "../src/journal/block.mjs";
 import { GIT_CONFIG, git, sandboxGitEnv } from "./fixtures.mjs";
 
 /** A complete, valid payload: the one every other case varies from. */
@@ -259,7 +263,7 @@ test("the same fragment set always yields byte-identical docs/LOGS.md (declared 
     { branch: "feat/b", session: "s2", second: "01", minute: "01" },
     { branch: "feat/b", session: "s1", second: "01", minute: "01" }, // tie on timestamp → branch, then session ascending
     { branch: "feat/a", session: "s3", second: "01", minute: "01" }, // tie on timestamp → branch ascending
-    { branch: "feat/c", session: "s1", second: "00", minute: "00" }, // older timestamp → appended later
+    { branch: "feat/c", session: "s4", second: "00", minute: "00" }, // older timestamp → appended later; a distinct slot (issue #675)
   ];
 
   const aggregate = () => {
@@ -278,7 +282,7 @@ test("the same fragment set always yields byte-identical docs/LOGS.md (declared 
   const second = aggregate();
   assert.equal(first, second);
   // Newest timestamp first; ties break branch, then session, ascending.
-  const order = [first.indexOf("feat/a/s3"), first.indexOf("feat/b/s1"), first.indexOf("feat/b/s2"), first.indexOf("feat/c/s1")];
+  const order = [first.indexOf("feat/a/s3"), first.indexOf("feat/b/s1"), first.indexOf("feat/b/s2"), first.indexOf("feat/c/s4")];
   assert.deepEqual([...order].sort((a, b) => a - b), order, "newest-first, then branch, then session ascending");
 });
 
@@ -471,4 +475,199 @@ test("any other non-fragment file in the carrier is still refused", () => {
   fs.rmSync(path.join(repo, JOURNAL_DIR, "README.md"));
   fs.writeFileSync(path.join(repo, JOURNAL_DIR, ".keep"), "");
   assert.throws(() => aggregateJournal({ root: repo }), /unparseable fragment name/u, "the placeholder set is exactly .gitkeep");
+});
+
+// ── The cross-fragment identity rule (issue #675) ────────────────────────
+//
+// The frozen-failure corpus is the live pair from 2026-11-21, published on
+// `feat/600-config-default-materialization`: one conversation (session
+// `01a1fbaf-…`), one kind, two fragments with different bytes. The per-fragment
+// lint passed both and the aggregator appended both, because dedupe only ever
+// asked whether the *bytes* were already in the journal.
+//
+// The rule the pairs below pin: the grammar's unit is the conversation per
+// kind, so `(sessionId, kind)` is the entry slot. The lint refuses a slot with
+// more than one conforming fragment, naming every file; the aggregator never
+// appends two of them — it keeps the newest and records the superseded one in
+// its receipt. The shared `local` slug is not a conversation
+// (`journal-write-grammar@1`) and stays exempt on both sides.
+
+/** The published pair, frozen with the names and the bytes' shape they carried. */
+const LIVE_PAIR = [
+  {
+    name: "20261121T020442Z-feat-600-config-default-materialization-narrative-01a1fbaf-0b4f-74c8-a90a-030e00929f08.md",
+    content:
+      "## 2026-11-21T02:04:42Z — feat/600-config-default-materialization — config default materialization (issue #600)\n- **Summary:** the unit as of 02:04Z — commits unpushed, gate PASS, awaiting the owner's verdict\n",
+  },
+  {
+    name: "20261121T114851Z-feat-600-config-default-materialization-narrative-01a1fbaf-0b4f-74c8-a90a-030e00929f08.md",
+    content:
+      "## 2026-11-21T11:48:51Z — feat/600-config-default-materialization — config default materialization (issue #600) — unit complete, PR opened\n- **Summary:** the corrected entry\n",
+  },
+];
+
+/** Write a fixture carrier from `{ name, content }` rows. */
+function carrier(repo, fragments) {
+  const dir = path.join(repo, JOURNAL_DIR);
+  fs.mkdirSync(dir, { recursive: true });
+  for (const { name, content } of fragments) fs.writeFileSync(path.join(dir, name), content);
+  return dir;
+}
+
+/** One conforming narrative fragment, landed through the library's own writer. */
+function narrative(repo, { branch, sessionId, at, label = "narrative" }) {
+  return writeFragment({
+    root: repo,
+    kind: "narrative",
+    branch,
+    sessionId,
+    now: () => at,
+    content: `## ${isoSecond(at)} — ${branch} — ${label}\n- **Summary:** ${label}\n`,
+  });
+}
+
+/** The literal name as a regex, so a reason assertion names the file it means. */
+const literal = (text) => text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+
+function carrierBytes(repo) {
+  const dir = path.join(repo, JOURNAL_DIR);
+  return fs.readdirSync(dir).sort().map((name) => [name, fs.readFileSync(path.join(dir, name), "utf8")]);
+}
+
+test("checkJournal refuses two fragments of one conversation+kind, naming both files", () => {
+  const repo = newRepo("identity-collision");
+  carrier(repo, LIVE_PAIR);
+  const before = carrierBytes(repo);
+
+  const receipt = checkJournal({ root: repo });
+  assert.equal(receipt.ok, false);
+  assert.equal(receipt.checked, 2);
+  assert.equal(receipt.refusals.length, 1, "one refusal per colliding identity slot");
+  const reason = receipt.refusals[0].reason;
+  for (const { name } of LIVE_PAIR) assert.match(reason, new RegExp(literal(name)), `the refusal names ${name}`);
+  assert.match(reason, /one entry per conversation per kind/u);
+  assert.deepEqual(carrierBytes(repo), before, "the lint is a reporter: no fragment moved");
+});
+
+test("journal aggregate --check refuses the live pair, names both and moves no byte", () => {
+  const repo = newRepo("identity-collision-cli");
+  carrier(repo, LIVE_PAIR);
+  const before = carrierBytes(repo);
+
+  const run = runCli(["journal", "aggregate", "--check", "--dir", repo], repo);
+  assert.equal(run.status, 2);
+  assert.match(run.stderr, /^JOURNAL REFUSAL — 1 non-conforming fragment/u);
+  for (const { name } of LIVE_PAIR) assert.match(run.stderr, new RegExp(literal(name)), `stderr names ${name}`);
+  assert.deepEqual(carrierBytes(repo), before, "validate-only: nothing consumed, appended or rewritten");
+});
+
+test("checkJournal keeps non-colliding carriers green", () => {
+  const empty = newRepo("green-empty");
+  fs.mkdirSync(path.join(empty, JOURNAL_DIR), { recursive: true });
+  fs.writeFileSync(path.join(empty, JOURNAL_DIR, ".gitkeep"), "");
+  const placeholder = checkJournal({ root: empty });
+  assert.equal(placeholder.ok, true);
+  assert.equal(placeholder.checked, 0, "the placeholder is skipped, never counted as an entry");
+
+  const one = newRepo("green-one");
+  narrative(one, { branch: "feat/x", sessionId: "s1", at: NOW });
+  assert.equal(checkJournal({ root: one }).ok, true);
+
+  const bothKinds = newRepo("green-kinds");
+  writeFragment({ root: bothKinds, facts: FACTS, kind: "mechanical", sessionId: "s1", now: () => NOW });
+  narrative(bothKinds, { branch: "feat/405-journal-fragments", sessionId: "s1", at: NOW + 1000 });
+  const kinds = checkJournal({ root: bothKinds });
+  assert.equal(kinds.ok, true, "the auto-log's mechanical entry and /log-session's narrative one coexist");
+  assert.equal(kinds.checked, 2);
+
+  const twoSessions = newRepo("green-sessions");
+  narrative(twoSessions, { branch: "feat/x", sessionId: "s1", at: NOW });
+  narrative(twoSessions, { branch: "feat/x", sessionId: "s2", at: NOW });
+  assert.equal(checkJournal({ root: twoSessions }).ok, true);
+});
+
+test("checkJournal keeps the shared local identity legal", () => {
+  const repo = newRepo("green-local");
+  narrative(repo, { branch: "feat/668-x", sessionId: "local", at: NOW });
+  narrative(repo, { branch: "feat/668-x", sessionId: "local", at: NOW + 1000 });
+
+  const receipt = checkJournal({ root: repo });
+  assert.equal(receipt.ok, true, "the shared slug is not a conversation — journal-write-grammar@1's own sentence");
+
+  const aggregated = aggregateJournal({ root: repo });
+  assert.equal(aggregated.appended.length, 2, "two unflagged conversations stay two entries");
+  assert.deepEqual(aggregated.superseded, []);
+});
+
+test("two writes that raced past the writer's already-registered check are refused by the lint", () => {
+  const repo = newRepo("straggler");
+  const first = narrative(repo, { branch: "feat/x", sessionId: "s1", at: NOW, label: "first" });
+  const second = narrative(repo, { branch: "feat/x", sessionId: "s1", at: NOW + 1000, label: "second" });
+  assert.ok(first.ok && second.ok, "the exclusive create cannot see the racing writer: both land");
+
+  const receipt = checkJournal({ root: repo });
+  assert.equal(receipt.ok, false, "the read side nets the write-time TOCTOU");
+  assert.equal(receipt.refusals.length, 1);
+  assert.match(receipt.refusals[0].reason, new RegExp(literal(first.name)));
+  assert.match(receipt.refusals[0].reason, new RegExp(literal(second.name)));
+});
+
+test("the aggregator consumes the newest of a colliding pair and names the superseded fragment", () => {
+  const repo = newRepo("identity-supersede");
+  carrier(repo, LIVE_PAIR);
+  const [older, newest] = LIVE_PAIR;
+
+  const receipt = aggregateJournal({ root: repo });
+  assert.equal(receipt.ok, true, receipt.reason);
+  assert.deepEqual(receipt.appended, [newest.name]);
+  assert.deepEqual(receipt.superseded, [{ name: older.name, supersededBy: newest.name }]);
+  assert.deepEqual([...receipt.removed].sort(), [older.name, newest.name].sort());
+
+  const log = fs.readFileSync(path.join(repo, "docs/LOGS.md"), "utf8");
+  assert.equal(log.split(newest.content.trim()).length - 1, 1, "the kept entry appears exactly once");
+  assert.equal(log.includes(older.content.trim()), false, "the superseded bytes never reach the journal");
+  assert.deepEqual(fs.readdirSync(path.join(repo, JOURNAL_DIR)), [], "both fragments are consumed");
+});
+
+test("three fragments of one slot keep only the newest, each supersede named", () => {
+  const repo = newRepo("identity-triple");
+  const at = (second) => NOW + second * 1000;
+  const rows = [narrative(repo, { branch: "feat/x", sessionId: "s1", at: at(0), label: "first" }),
+    narrative(repo, { branch: "feat/x", sessionId: "s1", at: at(1), label: "second" }),
+    narrative(repo, { branch: "feat/x", sessionId: "s1", at: at(2), label: "third" })];
+  assert.ok(rows.every((row) => row.ok));
+
+  const receipt = aggregateJournal({ root: repo });
+  assert.deepEqual(receipt.appended, [rows[2].name]);
+  assert.deepEqual(receipt.superseded, [
+    { name: rows[1].name, supersededBy: rows[2].name },
+    { name: rows[0].name, supersededBy: rows[2].name },
+  ]);
+});
+
+test("the supersede decision depends on the identity slot, not on byte coincidence", () => {
+  const aggregate = () => {
+    const repo = newRepo("identity-determinism");
+    carrier(repo, LIVE_PAIR);
+    return { receipt: aggregateJournal({ root: repo }), log: fs.readFileSync(path.join(repo, "docs/LOGS.md"), "utf8") };
+  };
+  const first = aggregate();
+  const second = aggregate();
+  assert.deepEqual(first.receipt.superseded, second.receipt.superseded);
+  assert.deepEqual(first.receipt.appended, [LIVE_PAIR[1].name]);
+  assert.equal(first.log, second.log, "two runs over one corpus are byte-identical");
+});
+
+test("journal aggregate: a colliding pair appends one entry, consumes both and names the superseded one", () => {
+  const repo = newRepo("identity-cli");
+  carrier(repo, LIVE_PAIR);
+  const [older, newest] = LIVE_PAIR;
+
+  const run = runCli(["journal", "aggregate", "--dir", repo], repo);
+  assert.equal(run.status, 0, run.stderr);
+  const receipt = JSON.parse(run.stdout);
+  assert.deepEqual(receipt.appended, [newest.name]);
+  assert.deepEqual(receipt.superseded, [{ name: older.name, supersededBy: newest.name }]);
+  const log = fs.readFileSync(path.join(repo, "docs/LOGS.md"), "utf8");
+  assert.equal(log.split(newest.content.trim()).length - 1, 1, "one copy, never two");
 });

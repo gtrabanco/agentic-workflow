@@ -28,6 +28,7 @@ import {
   FragmentError,
   JOURNAL_DIR,
   fragmentName,
+  isConversationSession,
   parseFragmentName,
   slug,
   writeFragment,
@@ -169,7 +170,7 @@ export function writeJournal(options) {
   // slot), never an "already registered"; and a fragment this conversation and
   // kind already hold (the SessionEnd hook names its own) is the entry being
   // rewritten, so it is never the reason to refuse a new one.
-  if (options?.session !== undefined && slug(options.session) !== "local") {
+  if (options?.session !== undefined && isConversationSession(slug(options.session))) {
     const registered = registeredSessions(root, carrier).find(
       (entry) => entry.parsed.sessionId === slug(options.session) && entry.parsed.kind === kind && entry.name !== name,
     );
