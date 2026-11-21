@@ -270,8 +270,9 @@ This repo has no application build. "Green" means:
   references it indexes) are within the ceilings the same manifest declares.
 - No stack/real-project references leaked into the skills or shared docs.
 - Root suites pass: `node scripts/run-root-suite.mjs` (the same
-  `scripts/*.test.mjs`, git signing neutralized for throwaway fixtures so an
-  operator's `commit.gpgsign=true` cannot fail a suite that commits nothing
+  `scripts/*.test.mjs`, git signing and a stable fixture identity neutralized
+  for throwaway fixtures so an operator's `commit.gpgsign=true` — or a runner
+  with no ambient identity — cannot fail a suite that commits nothing
   real, and the schema package's gitignored `dist/` rebuilt first when it is
   stale — no contract suite reads another source set's build); per file,
   `bun test scripts/<file>.test.mjs` runs the identical suite bun-first
