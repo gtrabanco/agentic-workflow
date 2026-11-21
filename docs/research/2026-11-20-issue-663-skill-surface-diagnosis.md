@@ -314,3 +314,13 @@ Over #669 as filed, the owner refined (issue body updated to match):
   rejected `define`, `plan`, `design`; candidates: `spec`, `blueprint`,
   `sketch`, `brief`, `outline` (no collision with crate/pi command names,
   checked 2026-11-20).
+
+### §7 naming closure (2026-11-20) — /flow + /draft
+
+Owner decision after two rejected candidate frames (authoring verbs:
+`define`/`plan`/`design`; artifact nouns: `spec`/`blueprint`/`sketch`/`brief`/
+`outline`; second frame: `prep`/`propose`/`draft`/`scope`): **`/flow`** (full
+command) + **`/draft`** (design+plan command, always stops). The lifecycle pair
+reads naturally — draft it, review it, flow it. Naming is closed; #669's design
+step interviews config shape and grammar, not names. Issue body and title
+updated to match.
