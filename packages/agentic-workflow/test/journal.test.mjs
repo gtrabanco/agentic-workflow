@@ -556,7 +556,7 @@ test("journal aggregate --check refuses the live pair, names both and moves no b
 
   const run = runCli(["journal", "aggregate", "--check", "--dir", repo], repo);
   assert.equal(run.status, 2);
-  assert.match(run.stderr, /^JOURNAL REFUSAL — 1 non-conforming fragment/u);
+  assert.match(run.stderr, new RegExp(`^JOURNAL REFUSAL — ${LIVE_PAIR.length} non-conforming fragment`, "u"));
   for (const { name } of LIVE_PAIR) assert.match(run.stderr, new RegExp(literal(name)), `stderr names ${name}`);
   assert.deepEqual(carrierBytes(repo), before, "validate-only: nothing consumed, appended or rewritten");
 });
