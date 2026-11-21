@@ -253,13 +253,15 @@ none
   **Does not affect this unit**: #663 delivered a research note
   (`docs/research/2026-11-20-issue-663-skill-surface-diagnosis.md`) and no unit
   doc; the stale link is the roadmap owner's to settle.
-- **Two suites sit at the 120 s suite wall-clock killer on a loaded box** —
-  `packages/agentic-workflow/test/doc.structure.test.mjs` (19 pass standalone,
-  57–105 s) and `scripts/phase-lint.test.mjs` (0 fail standalone, 65 s under
-  node) exceed the killer only while the box carries unrelated sessions (load
-  average 5.6–9.0 on 6 cores). **Does not affect this unit**: neither suite reads
-  this unit's inputs beyond the one added unit doc, both pass standalone at this
-  head, and the same legs passed at the cut head earlier the same day.
+- **Two suites sit at the 120 s suite wall-clock killer inside a 6-worker pool on
+  this shared box** — `packages/agentic-workflow/test/doc.structure.test.mjs` (19
+  pass standalone, 57–105 s) and `scripts/phase-lint.test.mjs` (0 fail
+  standalone, 65 s under node, 61.6 s one-at-a-time under the gate) exceed the
+  killer on some runs while other sessions share the host (load average 1.5–15
+  across the attempts). **Does not affect this unit**: neither suite reads this
+  unit's inputs (one added unit doc, no case walks the tree), both pass
+  standalone and one-at-a-time at this head, and both passed in the pool earlier
+  the same day at the cut head.
 - **`docs/workflow/SKILLS.md:10` names `orchestration-envelope` as the
   `metadata.internal: true` skill** — the tree carries exactly one
   (`skills/skill-lint/SKILL.md`). **Affects this unit**: the sentence is the
@@ -426,6 +428,7 @@ Append-only; kinds are the closed set in `log-kind@1` (the template's).
 - **G4** — 2026-11-21, HEAD d682aab4d3f6a86600c9d470ffb43678a4045064 + working tree, `bun scripts/local-gate.mjs --jobs 1` · exit 0 · `local-gate: PASS — 20 step(s) in 437s`. The default-jobs invocation was run three times over the same bytes and each stopped on a different load-sensitive suite (`crate-suite-bun` twice on `packages/agentic-workflow/test/doc.structure.test.mjs`, once `crate-suite-node`), while the box carried unrelated sessions at load average 5.6–9.0 on 6 cores; `--jobs 1` removes the gate's own contention and the same steps pass.
 - **G5** — 2026-11-21, HEAD d682aab4d3f6a86600c9d470ffb43678a4045064 + working tree, `bun scripts/run-root-suite.mjs` · exit 0 · 137 suites, all `PASS` (run twice at this head).
 - **G6** — 2026-11-21, HEAD d682aab4d3f6a86600c9d470ffb43678a4045064 + working tree, `node scripts/run-root-suite.mjs` · exit 1 · 136 pass / 1 fail: `scripts/phase-lint.test.mjs (120.1s) — SUITE TIMEOUT`, reproduced on three attempts (`--jobs 2` included) with the box at load average 5.6–8.7. Standalone at the same head: `node --test scripts/phase-lint.test.mjs` · exit 0 · 0 fail in 65.1 s, and the same node leg passed 137/137 earlier the same day at `1a19cc3b4` (identical source bytes).
+- **G7** — 2026-11-21, HEAD 93976bcb8 + working tree (clean), `bun scripts/local-gate.mjs --jobs 1` · exit 0 · `local-gate: PASS — 20 step(s) in 545s`, with `scripts/phase-lint.test.mjs` PASS in 61.6 s; the default-jobs invocation at the same head stopped on that suite's 120 s killer with the box at load average 15.
 - **P1** — 2026-11-21, the unit doc and its two embedded ledgers were frozen before the first line of code (`a3ed50c2f`), then the derivation suite landed alone and was observed red (`c260e4165`).
 - **P2** — 2026-11-21, the counter landed and the drift gate bound every `count:` machine to it, observed green · `2fd9d4054`.
 - **P3** — 2026-11-21, the thirteen rows, the corrected renderings and the re-pinned budget landed, observed red on the stale prose first · `1a19cc3b4`.
