@@ -36,6 +36,22 @@ export const JOURNAL_DIR = ".agentic-workflow/journal";
 /** The closed kind set. A fragment of another kind does not exist. */
 export const FRAGMENT_KINDS = Object.freeze(["mechanical", "narrative"]);
 
+/** The shared session slug: every writer without a session id uses it. */
+export const SHARED_SESSION_SLUG = "local";
+
+/**
+ * Whether a session slug names one conversation — the one predicate both sides
+ * of "one entry per conversation per kind" read (the writer's
+ * `already-registered` refusal, issue #468 S3; the carrier lint's
+ * cross-fragment invariant, issue #675). The shared slug names no conversation:
+ * every unflagged write on the machine lands under it, so a match there
+ * identifies nothing and the two distinct conversations it is standing in for
+ * keep their entries (`journal-write-grammar@1`, the `already-registered` row).
+ */
+export function isConversationSession(sessionId) {
+  return sessionId !== SHARED_SESSION_SLUG;
+}
+
 /** A refused fragment write. Named so a caller can tell a refusal from a bug. */
 export class FragmentError extends Error {
   constructor(reason) {
