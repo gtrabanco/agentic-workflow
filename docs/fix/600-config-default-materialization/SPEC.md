@@ -128,13 +128,13 @@ computed surface inventory is the anti-divergence receipt:
 runner residual-classify --inventory --base main
 ```
 
-Expected: every added surface resolves to a consumer — `config default` → the
-CLI dispatch, the console and CONFIG.md; `renderConfigFile`/`materializeConfig`/
-`configDivergence` → the CLI, the console and the doctor probe;
-`materializeConfigDefaults` (the console import) → `src/settings/console.ts`;
-the `CFG-01` bank row → the interview-bank check (`charter check`) and
-`skills/init-workspace/references/CONFIG.md`; the `config-files` doctor row →
-`src/doctor/checks.mjs`.
+Receipt: 18 added surfaces · 16 `used` (live consumer) · 2 `andamio` with a
+recorded planned consumer (`decisions.md` §`residual-promise@1`) · 0 `orphan` ·
+0 `ambiguous`. The two recorded ones are the hand-written `.d.mts` (its consumer
+is the console's TypeScript import, which the scan cannot follow through the
+type-only import) and the new suite (its consumer is this unit's declared test
+step); every other added surface is found by the executable scan — the CLI
+dispatch, the doctor probe, the console, the bank check.
 
 ## Non-goals
 
@@ -379,10 +379,93 @@ n/a — the owner's local, unpublished workflow substitutes for the lane's triag
   comment-free `writeConfigDocument` stays the only writer for
   `set`/`reset`/`validate --sanitize`, so their output is byte-identical to
   today's.
+- **P2** — 2026-11-21, the RED corpus lands alone: the engine suite (11 cases), three
+  `config default` CLI cases, two doctor cases, two console cases · `3a28ff8f1`.
+- **E1** — 2026-11-21, the cut-head red, all four in one run · `bun test
+  packages/agentic-workflow/test/config-materialize.test.mjs` · exit 1 · 1 error
+  (`Cannot find module '../src/config/materialize.mjs'`); `…/config-cli.test.mjs`
+  · 11 pass / 3 fail; `…/doctor.checks.test.mjs` · 21 pass / 2 fail; the pi
+  package's suite · 1033 pass / 2 fail.
+- **P3** — 2026-11-21, the engine, the renderer, the backup, the divergence report and
+  the two schema-default repairs · `be9ddc102`.
+- **E2** — 2026-11-21, `bun test packages/agentic-workflow/test/config-materialize.test.mjs`
+  · exit 0 · 11 pass / 0 fail (fresh write with a comment per key, merge + stale
+  removal, resolution parity, backup bytes, second-run no-op, extension discovery,
+  broken-file and invalid-merge refusals, `--no-backup`, divergence, renderer).
+- **P4** — 2026-11-21, the CLI operation and the doctor probe · `45fcc0263`.
+- **E3** — 2026-11-21, `bun test packages/agentic-workflow/test/config-cli.test.mjs`
+  · exit 0 · 14 pass / 0 fail (the ten pre-existing cases unedited plus the four
+  `config default` cases: both scopes, merge + backup, `--no-backup`, refusals).
+- **E4** — 2026-11-21, the config, doctor and surface suites together · `bun test
+  config-materialize config-cli doctor.checks doctor.inventory doctor.cli
+  doctor.vehicle doctor.wizard cli.surface` · exit 0 · 84 pass / 0 fail.
+- **P5** — 2026-11-21, the console entry, the pre-run explanation and the pi
+  descriptor's descriptions · `be149d642`.
+- **E5** — 2026-11-21, `cd packages/agentic-workflow-schema && bun run test` · exit 0
+  · 950 pass / 0 fail (55 files) — the `publisher: null` and `agentGuard.mode`
+  repairs included.
+- **E6** — 2026-11-21, `cd packages/pi-agentic-workflow && bun run test` · exit 0 ·
+  1035 pass / 0 fail (89 files) — the committed descriptor is byte-equal to the
+  module's published section again, and the console cases pass.
+- **E7** — 2026-11-21, `bun run test` in `packages/agentic-workflow` · exit 0 · 78
+  suites PASS (run-root-suite, 4 workers).
+- **D5** — 2026-11-21, the two shipped defaults the schema refused are repaired, not
+  worked around: `logSession.publisher` gains a `null` branch and
+  `gitIdentity.agentGuard.mode` leaves the section default. The differential run
+  (`E10`) is the evidence that the only visible deltas are those two facts.
+- **D6** — 2026-11-21, the settings console imports the crate engine in-process and
+  accepts it as an optional seam; the console test drives the seam, so the
+  behaviour under test is the console's flow, while the engine's own suite owns
+  the writes.
+- **E8** — 2026-11-21, `bun test packages/agentic-workflow/test/charter.test.mjs
+  scripts/scaffold-guide.test.mjs` · exit 0 · 34 pass / 0 fail — the shipped bank
+  (18 rows, `CFG-01` included) still lands every answer in a slot the template
+  carries.
+- **E9** — 2026-11-21, the eight script suites the change touches · `bun test
+  normative-drift prose-gate-inventory promise-coherence pre-execution-quality
+  invocation-drift test-obligation-tags structural-sibling-pins
+  version-parity-gate` · exit 0 · 179 pass / 1 skip / 0 fail; the review-loop
+  count pin (22→23 charter slots) moved with the template and the suite passes
+  on its own.
+- **E10** — 2026-11-21, the differential run against `git archive be9b090eb` in
+  `mktemp -d`: `config get` (both scopes), `config set` (valid + refused),
+  `config reset`, `config validate` (strict and `--sanitize`) · byte-identical
+  stdout/stderr/exit; `config list --json` differs only in
+  `logSession.publisher.type` (`object` → `null|object`), `config show --json`
+  only by the removed `gitIdentity.agentGuard.mode`, `config schema` only by the
+  `publisher` `anyOf`, and `config init` only by the same removed default key —
+  the four deltas D5 names, nothing else.
+- **E11** — 2026-11-21, the doctor differential over the same base: the only delta
+  is the new `config-files` row (`mismatch`, move `instruct-only`, instruction
+  `agentic-workflow config default`, advisory naming 21 new options and 1 removed
+  key); every pre-existing row keeps its status, and the summary moves by exactly
+  one.
+- **P6** — 2026-11-21, the bank row, the template slot, the checklist, the guide, the
+  runner pin, the changeset and the regenerated roadmap/units projection ·
+  `fd1b0efd6`.
+- **D7** — 2026-11-21, the Fixes intake row is hand-written (`docs-generate` never
+  appends fix rows — a folder cannot distinguish a merged fix from an unregistered
+  one), and the three count pins the new surfaces extend move with them (doctor
+  15→16, template charter slots 22→23, bank rows 17→18). Each pin's own case
+  states that its count follows the shipped surface, and no per-row assertion was
+  relaxed.
+- **E12** — 2026-11-21, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 checked,
+  0 missing, 0 stale, 0 orphaned · `bun scripts/check-skill-context.mjs` (30
+  skills) and `--documents` (7 documents) · PASS · `bun scripts/lint-changeset.mjs`
+  · exit 0.
+- **G1** — 2026-11-21, HEAD fd1b0efd6ce61de1121a957da1bc4bdb2af89cb1 · `bun scripts/local-gate.mjs --jobs 4` at that commit · exit 0 ·
+  PASS, 20 steps in 367s (root suite, both package test legs, node-compat and the
+  projection steps included).
+- **G2** — 2026-11-21, HEAD fd1b0efd6ce61de1121a957da1bc4bdb2af89cb1 · the gate's `pi-node-compat` leg · exit 0 · 1035 tests, 1034
+  pass, 1 skip, 0 fail.
+- **V1** — 2026-11-21, the obligations ledger closes: O1–O16 all `verified` on the
+  foreground runs E2–E12; no row is deferred and none is `n/a`.
 
 ## Next
 
-Run P1's suites red, then implement P2–P9.
+The owner's external verdict on the diff: the obligations ledger (16 rows, all
+verified), the verification block below and the one open question — whether the
+two stale-default repairs (D5) are accepted as part of this unit or split out.
 
 ## References
 
