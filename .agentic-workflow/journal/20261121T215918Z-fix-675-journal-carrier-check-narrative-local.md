@@ -1,0 +1,6 @@
+## 2026-11-21T21:59:18Z — fix/675-journal-carrier-check — narrative
+- **Commits:** 19 (`0c719711…9239b2bf`)
+- **Files:** 18 files
+- **Summary:** External-verify correction batch: folded all fixable blockers and advisories from the external-verify receipt (refusal header counts files, AC1/O10/AC13 unit-doc repairs with ac-hash plan repair, evidence + addendum), ran 4ff94dee7..767306017 through two full gates (only the two disclosed reds, no new one), then pushed the 19-commit linear branch via the pre-push hook's documented hatch AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1, recorded the reason in the unit doc (P10) and in the PR body. O14 (post-merge workflow) and advisory 1 (stale sibling worktree) remain open.
+- **Decisions:** Used AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1 — required by the known journal-carrier-check red (O14 — the published pair this unit's lint now refuses). ac-hash re-pinned through DESIGN's sectionText command for plan repairs. No self-granted hatch: the unit doc's P6 precedent names the hatch with the reason recorded in the PR.
+- **Next:** After merge: run gh workflow run agentic-workflow-journal.yml --ref main to clear the published pair (O14), re-run the gate, flip O14 to verified. Remove the stale sibling worktree (advisory 1).
