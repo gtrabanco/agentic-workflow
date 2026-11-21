@@ -426,7 +426,12 @@ export const DEPS = {
   "crate-suite-node": ["workspace-install", "schema-build", "crate-suite-bun"],
   "root-suite": ["workspace-install", "schema-build"],
   "version-parity-content": [],
-  "docs-generated-projection": [],
+  // The projection check imports the crate's docs-generate module, whose
+  // workspace import resolves the schema package and its dist — same edges as
+  // journal-carrier-check. Observed red in CI (run 44892151680):
+  // ERR_MODULE_NOT_FOUND for the schema package, because the step started
+  // before workspace-install linked the workspace on a clean checkout.
+  "docs-generated-projection": ["workspace-install", "schema-build"],
   // The budget sweep reads the crate's own module, whose workspace import
   // resolves the schema dist — same edge as journal-carrier-check.
   "skill-context-budgets": ["workspace-install", "schema-build"],
