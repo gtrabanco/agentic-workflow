@@ -57,6 +57,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { tempRoot } from "./temp-root.mjs";
+import { SKILL_SURFACE_COUNT_MACHINES, deriveSkillSurfaceCounts } from "./skill-surface-counts.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 /** Re-pointable so the suite runs red against an injected tree (P9's gotcha 3). */
@@ -674,8 +675,12 @@ function runDriftChecks(model) {
   if (!facts) {
     findings.push(refuse("undeclared-grammar", "rendered-facts", FACTS_MARKER, `${GUIDE_REL} lost its ${FACTS_MARKER} block, so a restatement could go unpinned`));
   } else {
+    // The skill-surface counters have one owner — `scripts/skill-surface-counts.mjs`
+    // (issue #668). The gate imports that derivation and keeps no second copy of a
+    // number, so the prose a row pins can never disagree with the surface it counts.
+    const derived = deriveSkillSurfaceCounts(root);
     const counts = {
-      "count:user-facing": () => [...model.hints.values()].filter((h) => h.userInvocable).length,
+      ...Object.fromEntries(SKILL_SURFACE_COUNT_MACHINES.map((name) => [name, () => derived[name]])),
       // The workspace's package count (issue #646 A2): "the three companion npm
       // packages" was a prose count with no publisher, so it drifted the moment
       // a fourth landed. The machine is the tree itself — a directory under
