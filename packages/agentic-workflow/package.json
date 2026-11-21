@@ -18,8 +18,8 @@
     "bun": ">=1.4"
   },
   "scripts": {
-    "test": "bun run --cwd ../agentic-workflow-schema build && bun test --timeout=30000 test/",
-    "test:node": "bun run --cwd ../agentic-workflow-schema build && node --test"
+    "test": "bun run --cwd ../agentic-workflow-schema build && bun ../../scripts/run-root-suite.mjs --dir packages/agentic-workflow/test --cwd packages/agentic-workflow --test-timeout 30",
+    "test:node": "bun run --cwd ../agentic-workflow-schema build && node ../../scripts/run-root-suite.mjs --dir packages/agentic-workflow/test --cwd packages/agentic-workflow --test-timeout 30"
   },
   "files": [
     "bin",

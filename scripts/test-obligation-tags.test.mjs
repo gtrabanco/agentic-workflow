@@ -40,6 +40,8 @@ import {
   SUSPECT_LIMIT,
   TAG_PREFIX,
   clusterRows,
+  discoverEstate,
+  estateRows,
   obligationBlockKinds,
   parseCostLog,
   parseTag,
@@ -297,4 +299,181 @@ test("the report is deterministic: two runs of the same tree print the same byte
   const first = run(["--json"]);
   const second = run(["--json"]);
   assert.equal(first.stdout, second.stdout);
+});
+
+/* ------------------------------------------------------------------- estate */
+
+// Issue #598: the #596 trailing half, applied. The estate is every root suite
+// AND every package suite, each with the surface it protects, the obligation
+// class it declares, its measured cost and a verdict from the three owner
+// standards. A package suite carries no tag (the gate scopes `scripts/`), so its
+// obligation class is `undeclared` — the honest reading — and its surface is
+// resolved from the suite's own imports.
+
+const ESTATE_FIXTURE = {
+  "scripts/a.test.mjs": suiteBody(`${TAG_PREFIX}protects=scripts/a.mjs obligations=contract`),
+  "scripts/a.mjs": "export const a = 1;\n",
+  "scripts/dup-a.test.mjs": suiteBody(`${TAG_PREFIX}protects=scripts/a.mjs obligations=contract`),
+  "packages/toy/src/thing.ts": "export const thing = 1;\n",
+  "packages/toy/dist/thing.js": "export const thing = 1;\n",
+  "packages/toy/test/thing.test.mjs": 'import { thing } from "../dist/thing.js";\nimport { helper } from "./helpers.mjs";\n\nconsole.log(thing, helper);\n',
+  "packages/toy/test/helpers.mjs": "export const helper = 1;\n",
+  "packages/toy/test/untargeted.test.mjs": 'import { helper } from "./helpers.mjs";\n\nconsole.log(helper);\n',
+};
+
+test("estate: every root suite and every package suite is discovered, one row each, by its own declaration", () => {
+  const root = makeTree(ESTATE_FIXTURE);
+  try {
+    const estate = discoverEstate({ root });
+    const scopes = estate.map((row) => row.scope);
+    assert.deepEqual(
+      estate.map((row) => row.suite).sort(),
+      [
+        "packages/toy/test/thing.test.mjs",
+        "packages/toy/test/untargeted.test.mjs",
+        "scripts/a.test.mjs",
+        "scripts/dup-a.test.mjs",
+      ],
+      "both scopes are read, and only suites are rows",
+    );
+    assert.deepEqual([...new Set(scopes)].sort(), ["packages/toy", "root"]);
+    const toy = estate.find((row) => row.suite === "packages/toy/test/thing.test.mjs");
+    assert.deepEqual(toy.surfaces, ["packages/toy/src/thing.ts"], "`../dist/x.js` names the source it was built from, never the build output");
+    assert.deepEqual(toy.obligations, [], "a package suite declares no obligation value");
+    assert.equal(toy.declared, false);
+    const untargeted = estate.find((row) => row.suite === "packages/toy/test/untargeted.test.mjs");
+    assert.deepEqual(untargeted.surfaces, [], "an import that stays inside the suite's own `test/` tree protects no surface");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("estate verdicts: a dead surface deletes, an obligation duplicate merges into its cheapest survivor, cost over risk stays a suspect", () => {
+  const entries = [
+    { suite: "scripts/fast.test.mjs", scope: "root", surfaces: ["scripts/a.mjs"], obligations: ["contract"], declared: true },
+    { suite: "scripts/slow.test.mjs", scope: "root", surfaces: ["scripts/a.mjs"], obligations: ["contract"], declared: true },
+    { suite: "scripts/dead.test.mjs", scope: "root", surfaces: ["scripts/gone.mjs"], obligations: ["contract"], declared: true },
+    { suite: "scripts/cheap.test.mjs", scope: "root", surfaces: ["scripts/c.mjs"], obligations: ["contract"], declared: true },
+    { suite: "scripts/busy.test.mjs", scope: "root", surfaces: ["scripts/b.mjs"], obligations: ["contract"], declared: true },
+    { suite: "packages/toy/test/thing.test.mjs", scope: "packages/toy", surfaces: ["packages/toy/src/thing.ts"], obligations: [], declared: false },
+  ];
+  const costs = new Map([
+    ["scripts/fast.test.mjs", 0.4],
+    ["scripts/slow.test.mjs", 9],
+    ["scripts/cheap.test.mjs", 0.2],
+    ["scripts/busy.test.mjs", 30],
+  ]);
+  const root = makeTree({
+    "scripts/a.mjs": "export const a = 1;\n",
+    "scripts/c.mjs": "",
+    "scripts/b.mjs": "",
+    "packages/toy/src/thing.ts": "export const thing = 1;\n",
+  });
+  try {
+    const rows = estateRows({ root, rows: entries, costs });
+    const at = (suite) => rows.find((row) => row.suite === suite);
+    assert.equal(at("scripts/dead.test.mjs").verdict, "delete");
+    assert.equal(at("scripts/dead.test.mjs").evidence, "dead-surface");
+    assert.equal(at("scripts/slow.test.mjs").verdict, "merge", "the duplicate pair keeps exactly one survivor");
+    assert.equal(at("scripts/slow.test.mjs").survivor, "scripts/fast.test.mjs", "the survivor is the cheapest measured suite on the obligation");
+    assert.equal(at("scripts/fast.test.mjs").verdict, "keep");
+    assert.equal(at("scripts/busy.test.mjs").evidence, "cost-over-risk");
+    assert.equal(at("scripts/busy.test.mjs").verdict, "keep", "a measurement is not a verdict: the standard fires and the row is adjudicated");
+    assert.equal(at("packages/toy/test/thing.test.mjs").evidence, "undeclared");
+    assert.equal(at("packages/toy/test/thing.test.mjs").verdict, "keep");
+    assert.equal(at("scripts/cheap.test.mjs").evidence, "declared");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("estate: a verdict that would change the tree is refused until an adjudication row records the ground it rests on", () => {
+  const root = makeTree({
+    "scripts/a.test.mjs": suiteBody(`${TAG_PREFIX}protects=scripts/a.mjs obligations=contract`),
+    "scripts/a.mjs": "export const a = 1;\n",
+    "scripts/dead.test.mjs": suiteBody(`${TAG_PREFIX}protects=scripts/gone.mjs obligations=contract`),
+  });
+  try {
+    const refused = run(["--root", root, "--estate"]);
+    assert.equal(refused.status, 1, "a delete verdict with no adjudication is not a decision");
+    assert.match(refused.stdout, /missing adjudication/);
+
+    const adjudications = path.join(root, "adjudications.md");
+    fs.writeFileSync(adjudications, [
+      "# suite | standard | what was read | verdict",
+      "scripts/dead.test.mjs | dead-surface | the surface was renamed; the suite asserts the old one | delete",
+    ].join("\n"));
+    const accepted = run(["--root", root, "--estate", "--adjudications", adjudications]);
+    assert.equal(accepted.status, 0, accepted.stderr);
+    assert.match(accepted.stdout, /delete/);
+    assert.doesNotMatch(accepted.stdout, /missing adjudication/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("estate: the machine document carries the same rows and tallies as the table it prints", () => {
+  const root = makeTree(ESTATE_FIXTURE);
+  try {
+    const table = run(["--root", root, "--estate"]);
+    const document = run(["--root", root, "--estate", "--json"]);
+    assert.equal(table.status, document.status);
+    const parsed = JSON.parse(document.stdout);
+    assert.equal(parsed.contract, "test-obligation-tags@1");
+    assert.equal(parsed.scope.root, 2);
+    assert.equal(parsed.scope.packages, 2);
+    assert.equal(parsed.rows.length, 4);
+    const tableRows = table.stdout.split("\n").filter((line) => line.startsWith("| `"));
+    assert.equal(tableRows.length, parsed.rows.length, "one table row per document row");
+    assert.deepEqual(Object.keys(parsed.tallies).sort(), ["delete", "keep", "merge"]);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("estate: the cost column is the gate's own measurement and an absent log reads unmeasured, never zero", () => {
+  const root = makeTree(ESTATE_FIXTURE);
+  try {
+    const log = path.join(root, "root.log");
+    fs.writeFileSync(log, "PASS scripts/a.test.mjs (1.5s)\n");
+    const rows = JSON.parse(run(["--root", root, "--estate", "--cost", log, "--json"]).stdout).rows;
+    const at = (suite) => rows.find((row) => row.suite === suite);
+    assert.equal(at("scripts/a.test.mjs").cost, 1.5);
+    assert.equal(at("packages/toy/test/thing.test.mjs").cost, null, "a package suite's cost is per package, not invented per file");
+    const unmeasured = JSON.parse(run(["--root", root, "--estate", "--json"]).stdout).rows;
+    assert.equal(unmeasured.find((row) => row.suite === "scripts/a.test.mjs").cost, null);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("estate: the wall-clock section is the budget manifest's own rows, never a typed table", () => {
+  const root = makeTree({
+    "scripts/a.test.mjs": suiteBody(`${TAG_PREFIX}protects=scripts/a.mjs obligations=contract`),
+    "scripts/a.mjs": "export const a = 1;\n",
+  });
+  try {
+    const budget = path.join(root, "budget.json");
+    fs.writeFileSync(
+      budget,
+      JSON.stringify({
+        contract: "pre-push-budget@1",
+        budgetSeconds: 480,
+        host: "fixture host",
+        classes: [
+          { class: "docs-only", before: 12, after: 11, note: "n" },
+          { class: "script change", before: 700, after: 300, note: "n" },
+          { class: "package change", before: 720, after: 310, note: "n" },
+        ],
+      }),
+    );
+    const report = run(["--root", root, "--estate", "--budget", budget]);
+    assert.equal(report.status, 0, report.stderr);
+    const rows = report.stdout.split("\n").filter((line) => /^\| `(docs-only|script change|package change)` /.test(line));
+    assert.equal(rows.length, 3, "one row per change class, read from the manifest");
+    assert.match(rows[1], /\| 700 \| 300 \|/, "the before and after figures are the manifest's");
+    assert.match(report.stdout, /budget: 480 s on fixture host/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
