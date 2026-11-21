@@ -1,0 +1,6 @@
+## 2026-11-21T16:23:30Z — feat/600-config-default-materialization — narrative
+- **Commits:** 24 (`87d5154f…74df8328`)
+- **Files:** 38 files
+- **Summary:** Executed S-A (escape hatch push) for the feat/600 log-immutability blocker and audited journal write: push 4469e56b7..74df8328a published via AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1, reason recorded on PR #671. Opened issue #675 (bug: carrier lint misses cross-fragment duplicate detection) and #676 (enhancement: no sanctioned errata path for stale journal entries).
+- **Decisions:** 1) No rebase ever — owner directive: merge-only, timeline inviolable. 2) Used the hook's own escape hatch (AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1) — documented in PR #671. 3) journal write has no bug (exclusive-create wx, already-registered S3 enforced at write time); the hand edit was a writer-bypass, caught correctly by log-immutability. 4) Filed two issues to close the enforcement gap: #675 reads cross-fragment invariants at lint time, #676 provides an errata path so agents aren't boxed into hand-edits.
+- **Next:** Owner triages #675 (bug) and #676 (enhancement); then merges PR #671 (feat/600 config default materialization). If the worktree has a stale entry needing correction, use the sanctioned errata path once #676 lands.

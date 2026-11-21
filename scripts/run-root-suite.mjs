@@ -15,12 +15,18 @@
  *    and appears in whichever suite happens to be running.
  *  - A caller-provided `GIT_CONFIG_*` / `GIT_AUTHOR_*` set that would pin the
  *    fixtures to the caller's identity or signing key.
+ *  - A runner with no ambient git identity at all. The end-to-end fixtures of
+ *    suites like session-close commit through the script under test, which
+ *    inherits the environment; a CI runner carries no identity, so every one
+ *    of those commits died with `Author identity unknown` (observed in
+ *    root-suite run 44895748471) — the CI-side twin of the gpgsign fact.
  *
- * A fixture repository is disposable: it has no business signing. The gate
- * therefore runs the suites with signing disabled for anything that does not
- * opt in, and leaves `GIT_DEFAULT_BRANCH`, the identity and the rest of the
- * environment alone — a suite that wants to prove signing behaviour can set
- * `commit.gpgsign` itself.
+ * A fixture repository is disposable: it has no business signing, and it has no
+ * business wearing the operator's name either. The gate therefore runs the
+ * suites with signing disabled AND a stable, non-routable fixture identity
+ * (command-scope config, overridable by a suite's own `-c user.name`), and
+ * leaves `GIT_DEFAULT_BRANCH` and the rest of the environment alone — a suite
+ * that wants to prove signing or identity behaviour can set them itself.
  *
  * Usage
  *   bun scripts/run-root-suite.mjs            # every suite, one worker per CPU
@@ -386,11 +392,14 @@ export function readAllowlist(file = ALLOWLIST_PATH) {
   const allowlist = new Map();
   for (const entry of entries) {
     const where = `${path.basename(file)}: entry ${JSON.stringify(entry.path ?? entry)}`;
-    if (typeof entry.path !== "string" || !/^scripts\/[\w./-]+\.test\.mjs$/u.test(entry.path)) {
-      throw new Error(`${where} — path must be a scripts/*.test.mjs relative path`);
+    if (typeof entry.path !== "string" || !/^(?:scripts|packages\/[\w.-]+\/test)\/[\w./-]+\.test\.mjs$/u.test(entry.path)) {
+      throw new Error(`${where} — path must be a scripts/*.test.mjs or packages/*/test/*.test.mjs relative path`);
     }
     if (!Number.isInteger(entry.timeoutMs) || entry.timeoutMs < 1) {
       throw new Error(`${where} — timeoutMs must be a positive integer`);
+    }
+    if (entry.suiteTimeoutMs !== undefined && (!Number.isInteger(entry.suiteTimeoutMs) || entry.suiteTimeoutMs < 1)) {
+      throw new Error(`${where} — suiteTimeoutMs, when declared, must be a positive integer`);
     }
     if (typeof entry.reason !== "string" || entry.reason.trim() === "") {
       throw new Error(`${where} — reason is required; a slow test is justified in writing`);
@@ -398,9 +407,22 @@ export function readAllowlist(file = ALLOWLIST_PATH) {
     if (typeof entry.measured !== "string" || entry.measured.trim() === "") {
       throw new Error(`${where} — measured is required; the cost is recorded, never assumed`);
     }
-    allowlist.set(entry.path, { timeoutMs: entry.timeoutMs, reason: entry.reason, measured: entry.measured });
+    allowlist.set(
+      entry.path,
+      entry.suiteTimeoutMs === undefined
+        ? { timeoutMs: entry.timeoutMs, reason: entry.reason, measured: entry.measured }
+        : { timeoutMs: entry.timeoutMs, suiteTimeoutMs: entry.suiteTimeoutMs, reason: entry.reason, measured: entry.measured },
+    );
   }
   return allowlist;
+}
+
+/** The suite wall-clock bound a suite is killed by: its allowlist entry's own
+ * `suiteTimeoutMs`, or the shared default. A spawn-heavy suite that only fails
+ * the shared bound under concurrent load declares its own cost here instead of
+ * weakening the bound for every suite. */
+export function suiteBudgetFor(file, allowlist, defaultMs = DEFAULT_SUITE_TIMEOUT_MS) {
+  return allowlist.get(file)?.suiteTimeoutMs ?? defaultMs;
 }
 
 /** The per-test budget a suite's runner receives: its allowlist entry's own
@@ -417,21 +439,32 @@ export function testBudgetFor(file, allowlist, defaultMs = DEFAULT_TEST_TIMEOUT_
 // carries the suites that measured above it, with the reason and the cost.
 const isBun = process.execPath.includes("bun");
 
+/** The fixture identity every suite child inherits: deterministic, clearly not
+ * a person, non-routable — a fixture commit is a fixture commit everywhere. */
+export const FIXTURE_IDENTITY_NAME = "agentic-workflow-gate-fixture";
+export const FIXTURE_IDENTITY_EMAIL = "gate-fixture@example.invalid";
+
 /**
  * The environment a suite is spawned with: the caller's repository locators and
  * ambient git tracing stripped (`scripts/git-env.mjs` owns both vocabularies),
- * the gate's own `commit.gpgsign=false` layer added, and the parent's
- * test-runner context dropped (issue #493: with `NODE_TEST_CONTEXT` set,
- * `node --test <file>` skips the file entirely and exits 0). Published so its
- * contract is pinnable, mirroring the gate's `stepEnv`.
+ * the gate's own `commit.gpgsign=false` layer plus the stable fixture identity
+ * added, and the parent's test-runner context dropped (issue #493: with
+ * `NODE_TEST_CONTEXT` set, `node --test <file>` skips the file entirely and
+ * exits 0). Published so its contract is pinnable, mirroring the gate's
+ * `stepEnv`.
  * @returns {Record<string, string | undefined>}
  */
 export function suiteChildEnv() {
+  const base = Number(process.env.GIT_CONFIG_COUNT ?? 0);
   return scrubGitEnv({
     ...process.env,
-    GIT_CONFIG_COUNT: String(Number(process.env.GIT_CONFIG_COUNT ?? 0) + 1),
-    [`GIT_CONFIG_KEY_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "commit.gpgsign",
-    [`GIT_CONFIG_VALUE_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "false",
+    GIT_CONFIG_COUNT: String(base + 3),
+    [`GIT_CONFIG_KEY_${base}`]: "commit.gpgsign",
+    [`GIT_CONFIG_VALUE_${base}`]: "false",
+    [`GIT_CONFIG_KEY_${base + 1}`]: "user.name",
+    [`GIT_CONFIG_VALUE_${base + 1}`]: FIXTURE_IDENTITY_NAME,
+    [`GIT_CONFIG_KEY_${base + 2}`]: "user.email",
+    [`GIT_CONFIG_VALUE_${base + 2}`]: FIXTURE_IDENTITY_EMAIL,
     NODE_TEST_CONTEXT: undefined,
   });
 }
@@ -603,7 +636,14 @@ async function main(argv) {
     jobs,
     bail: parsed.bail,
     spawnSuite: (file, signal) =>
-      spawnReal(file, parsed.bail, signal, parsed, testBudgetFor(file, allowlist, parsed.testTimeoutMs), parsed.cwd),
+      spawnReal(
+        file,
+        parsed.bail,
+        signal,
+        { ...parsed, suiteTimeoutMs: suiteBudgetFor(file, allowlist, parsed.suiteTimeoutMs) },
+        testBudgetFor(file, allowlist, parsed.testTimeoutMs),
+        parsed.cwd,
+      ),
     onResult: (file, result) => {
       if ((result.status ?? 1) === 0) {
         process.stdout.write(`PASS ${file} (${seconds(result.ms)})\n`);

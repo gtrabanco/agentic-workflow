@@ -426,8 +426,12 @@ export const DEPS = {
   "crate-suite-node": ["workspace-install", "schema-build", "crate-suite-bun"],
   "root-suite": ["workspace-install", "schema-build"],
   "version-parity-content": [],
-  "docs-generated-projection": [],
-  // The budget sweep reads the crate's own module, whose workspace import
+  // The projection check imports the crate's docs-generate module, whose
+  // workspace import resolves the schema package and its dist — same edges as
+  // journal-carrier-check. Observed red in CI (run 44892151680):
+  // ERR_MODULE_NOT_FOUND for the schema package, because the step started
+  // before workspace-install linked the workspace on a clean checkout.
+  "docs-generated-projection": ["workspace-install", "schema-build"],  // The budget sweep reads the crate's own module, whose workspace import
   // resolves the schema dist — same edge as journal-carrier-check.
   "skill-context-budgets": ["workspace-install", "schema-build"],
   // journal-carrier-check spawns the crate CLI, whose workspace import resolves
@@ -446,7 +450,12 @@ export const DEPS = {
   "pi-node-compat": ["workspace-install", "schema-node-compat"],
   "pi-compat-guard": ["schema-build", "schema-node-compat"],
   "dependency-pin-gate": [],
-  "dependency-advisories": [],
+  // The advisory pass spawns the crate bin, whose import chain reaches the
+  // schema package and its dist — same edges as journal-carrier-check.
+  // Observed red in CI (run 44894795525): ERR_MODULE_NOT_FOUND for the schema
+  // dist because the step started before the install linked the workspace and
+  // schema-build emitted dist/.
+  "dependency-advisories": ["workspace-install", "schema-build"],
 };
 
 /** The default worker count: one per CPU, capped at 4 — the steps are full

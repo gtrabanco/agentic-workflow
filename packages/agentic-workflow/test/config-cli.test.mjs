@@ -4,13 +4,22 @@
 // is the contract an operator and a `runner <subcommand>` citation use.
 
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
+import { parseJsonc } from "@gtrabanco/agentic-workflow-schema";
+
 const CLI = new URL("../bin/agentic-workflow.mjs", import.meta.url).pathname;
+
+/** `config default` writes JSONC; these three cases read the file it wrote. */
+function readJsoncFile(path) {
+  const parsed = parseJsonc(readFileSync(path, "utf8"));
+  assert.equal(parsed.ok, true, `the materialized file parses: ${JSON.stringify(parsed.error ?? {})}`);
+  return parsed.value;
+}
 
 function run(args, options = {}) {
   return spawnSync(process.execPath, [CLI, "config", ...args], { encoding: "utf8", ...options });
@@ -192,6 +201,106 @@ test("schema prints the composed contract", () => {
     assert.equal(schema.type, "object");
     assert.equal(schema.additionalProperties, false);
     assert.equal(schema.properties.logSession !== undefined, true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── config default — materialize explicit documented defaults (issue #600) ──
+
+test("config default materializes every file of the requested scopes", () => {
+  const { root, global, project } = fixture();
+  try {
+    const run1 = run(["default", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(run1.status, 0, run1.stderr);
+    const receipt = JSON.parse(run1.stdout);
+    assert.equal(receipt.contract, "config-materialize@1");
+    assert.equal(receipt.scope, "both");
+    const files = receipt.files.map((entry) => `${entry.scope}/${entry.file}`).sort();
+    assert.deepEqual(files, ["global/agentic-workflow.json", "project/agentic-workflow.json"]);
+    const text = readFileSync(join(project, ".pi", "agentic-workflow.json"), "utf8");
+    assert.match(text, /\/\/ memory\.engram\b/);
+    assert.equal(readJsoncFile(join(project, ".pi", "agentic-workflow.json")).memory.engram, false);
+    // stdout is the receipt; the progress channel never writes it.
+    assert.equal(run1.stderr.includes("config-materialize@1"), false, "the receipt is stdout-only");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("config default preserves a user value and backs the file up first", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json");
+    writeFileSync(file, JSON.stringify({ telemetry: { enabled: false }, guards: { merge: false } }));
+    const run1 = run(["default", "--scope", "project", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(run1.status, 0, run1.stderr);
+    const receipt = JSON.parse(run1.stdout);
+    const row = receipt.files[0];
+    assert.equal(readJsoncFile(file).telemetry.enabled, false);
+    assert.equal(readJsoncFile(file).guards, undefined);
+    assert.ok(row.backup, "the backup path is on the receipt");
+    assert.equal(readFileSync(row.backup, "utf8"), JSON.stringify({ telemetry: { enabled: false }, guards: { merge: false } }));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("config default --no-backup keeps the write and skips the copy", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json");
+    writeFileSync(file, JSON.stringify({ memory: { engram: true } }));
+    const run1 = run(["default", "--scope", "project", "--no-backup", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(run1.status, 0, run1.stderr);
+    const row = JSON.parse(run1.stdout).files[0];
+    assert.equal(row.backup, null);
+    assert.equal(readdirSync(join(project, ".pi")).some((name) => name.includes(".bak-")), false);
+    assert.equal(readJsoncFile(file).memory.engram, true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("config default refuses an unknown scope and a broken file without touching bytes", () => {
+  const { root, global, project } = fixture();
+  try {
+    const badScope = run(["default", "--scope", "resolved", "--project", project, "--global-dir", global]);
+    assert.equal(badScope.status, 2);
+    assert.match(badScope.stderr, /CONFIG REFUSAL/);
+    assert.equal(existsSync(join(project, ".pi", "agentic-workflow.json")), false);
+
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json");
+    writeFileSync(file, '{ "logSession": ');
+    const broken = run(["default", "--scope", "project", "--project", project, "--global-dir", global]);
+    assert.equal(broken.status, 2);
+    assert.match(broken.stderr, /CONFIG REFUSAL/);
+    assert.equal(readFileSync(file, "utf8"), '{ "logSession": ');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("config default refuses before any byte moves in any scope", () => {
+  const { root, global, project } = fixture();
+  try {
+    // The default scope runs global first: a refusal must still leave every
+    // file of the run untouched, because the message says `nothing was written`
+    // and the crate README promises a refusal lands before any byte moves
+    // (external-verify 2026-11-21, blocker B1).
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json");
+    const broken = '{ "logSession": ';
+    writeFileSync(file, broken);
+    const refused = run(["default", "--project", project, "--global-dir", global]);
+    assert.equal(refused.status, 2, refused.stderr);
+    assert.match(refused.stderr, /CONFIG REFUSAL — .*nothing was written/u);
+    assert.equal(readFileSync(file, "utf8"), broken, "the refusing file keeps its bytes");
+    assert.equal(existsSync(join(global, "agentic-workflow.json")), false, "no scope is written before the refusal");
+    assert.equal(readdirSync(join(project, ".pi")).some((name) => name.includes(".bak-")), false, "a refused run takes no backup");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

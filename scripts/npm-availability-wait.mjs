@@ -13,11 +13,27 @@
  * correct — the shasum matched once the tarball propagated — so the defect is
  * WHEN the pipeline signals "the cut is out".
  *
+ * Owner decision 2026-11-21 (canary run 44849041090): a healthy cut lost its
+ * tag and pre-release because ONE packument stayed cache-stale past the whole
+ * 10-minute budget (the CDN eventually served it, shasum intact) while the
+ * three siblings were available within minutes. Two contract changes:
+ *   - every packument probe carries a distinct cache-buster query — the
+ *     registry's own recommendation for fresh reads — so CDN staleness stops
+ *     being the wait's dominant failure mode;
+ *   - a TIMEOUT is a WARNING (exit 0): the lag is self-healing and the run must
+ *     not lose its announcement to it. Real corruption still fails the run
+ *     (exit 1): a shasum mismatch that survives the budget and a malformed dist
+ *     are FATAL. A warned package is never reported available.
+ *
  * The gate reads the packument, resolves `versions[<v>].dist.tarball` and
  * `dist.shasum`, and polls the tarball until it returns 200 AND the downloaded
  * bytes hash to that shasum — availability plus integrity, never a bare HEAD.
- * A timeout exits non-zero naming every package that never became available, so
- * the run fails visibly instead of announcing an uninstallable release.
+ * On timeout every package that never became available is named on stderr as a
+ * WARNING and the run exits 0 (the announcement may proceed); a FATAL (malformed
+ * dist, or a shasum mismatch that survives the budget) names its package and
+ * exits 1 so the run fails visibly instead of announcing a corrupted release.
+ * The timeout verdict follows the package's LAST probe reason: only an
+ * integrity mismatch escalates to FATAL, every other stale reason is lag.
  *
  * Usage
  *   node scripts/npm-availability-wait.mjs [--plan <publish-plan.tsv>]
@@ -85,6 +101,16 @@ export function packumentUrl(name) {
   return `${REGISTRY}/${name.replaceAll("/", "%2F")}`;
 }
 
+/** A distinct query per packument request: a CDN cannot serve a stale cached
+ * packument to a URL it has never seen (the registry's recommendation for
+ * fresh reads). The query is opaque to routing — the tarball URL, which comes
+ * from the packument itself, is never cache-busted. */
+let probeSequence = 0;
+export function cacheBust(url) {
+  probeSequence += 1;
+  return `${url}?cb=${Date.now().toString(36)}-${probeSequence}`;
+}
+
 export function sha1Hex(bytes) {
   return createHash("sha1").update(Buffer.from(bytes)).digest("hex");
 }
@@ -124,7 +150,7 @@ async function probe(pkg, fetchImpl) {
 
   let packumentResponse;
   try {
-    packumentResponse = await fetchImpl(packumentUrl(pkg.name));
+    packumentResponse = await fetchImpl(cacheBust(packumentUrl(pkg.name)));
   } catch (error) {
     return wait(`packument request failed: ${error?.message ?? error}`);
   }
@@ -186,6 +212,7 @@ export async function waitForAvailability({
   const deadline = startedAt + timeoutMs;
   const unique = [...new Map(packages.map((pkg) => [label(pkg), { ...pkg, attempts: 0, reason: null }])).values()];
   const available = [];
+  const warnings = [];
   const failures = [];
   let pending = unique;
 
@@ -216,12 +243,19 @@ export async function waitForAvailability({
   }
 
   for (const pkg of pending) {
-    failures.push({ ...pkg, timedOut: true, message: `${label(pkg)}: ${pkg.reason ?? "no attempt completed"}` });
+    const entry = { ...pkg, timedOut: true, message: `${label(pkg)}: ${pkg.reason ?? "no attempt completed"}` };
+    // The timeout verdict follows the LAST probe reason: a surviving shasum
+    // mismatch is corruption, not lag — FATAL. Every other stale reason (a
+    // tarball still 404ing, a packument that never listed the version, a
+    // network hiccup) is self-healing CDN/cache lag — WARNING.
+    if (/shasum mismatch/.test(pkg.reason ?? "")) failures.push(entry);
+    else warnings.push(entry);
   }
 
   return {
     ok: failures.length === 0,
     available,
+    warnings,
     failures,
     elapsedMs: now() - startedAt,
   };
@@ -271,9 +305,11 @@ export async function main(argv, deps = {}) {
   for (const pkg of result.available) {
     writeErr(`npm-availability-wait: ${label(pkg)} available (shasum ${pkg.shasum}, ${pkg.attempts} attempt(s))`);
   }
+  for (const warning of result.warnings) {
+    writeErr(`npm-availability-wait: WARNING (TIMEOUT after ${Math.round(result.elapsedMs / 1000)}s) — ${warning.message}`);
+  }
   for (const failure of result.failures) {
-    const prefix = failure.timedOut ? `TIMEOUT after ${Math.round(result.elapsedMs / 1000)}s` : "FAILED";
-    writeErr(`npm-availability-wait: ${prefix} — ${failure.message}`);
+    writeErr(`npm-availability-wait: FAILED — ${failure.message}`);
   }
   return result.ok ? 0 : 1;
 }

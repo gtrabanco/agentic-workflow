@@ -13,6 +13,10 @@
 // profile it is `profiles.<name>`). The profile defaults to "default", so
 // existing tests that never answer a profile prompt keep working unchanged.
 
+import { dirname } from "node:path";
+
+import { materializeConfig } from "@gtrabanco/agentic-workflow/src/config/materialize.mjs";
+
 import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
 import type { StateFlowConfig } from "../config/types.js";
@@ -54,6 +58,27 @@ export interface SettingsDeps {
    * "restart Pi", and the console is the only surface with room to explain it.
    */
   routing?: RoutingControls;
+  /**
+   * The materialization engine, injectable for a test. The default is the
+   * crate's own `config default` engine, so the console and the CLI share one
+   * implementation, one backup rule and one extension coverage.
+   */
+  materializeDefaults?: (options: { projectDir: string; globalDir: string; scope: "both"; backup: true }) => MaterializeReceipt;
+}
+
+interface MaterializeReceipt {
+  contract: string;
+  scope: string;
+  files: {
+    scope: string;
+    file: string;
+    path: string;
+    existed: boolean;
+    written: boolean;
+    backup: string | null;
+    materialized: string[];
+    removed: string[];
+  }[];
 }
 
 export type ConsoleOutcome =
@@ -117,6 +142,19 @@ export const prompts = {
   embedProfile: "Doc index embedding profile",
   embedProfileProvider: "Which preset's embedding profile?",
   embedProfileConfirm: "Write the preset's embedding profile into .agentic-workflow/index.json?",
+  materialize: "Materialize default values into the config files",
+  materializeConfirm: "Materialize the explicit defaults now?",
+  materializeConfirmDetail: "The existing files are copied to <file>.bak-<timestamp> before anything changes.",
+  materializeExplanation: (projectDir: string, globalDir: string): string =>
+    [
+      "This writes every declared config option explicitly, with its shipped default and a comment that documents it.",
+      `Directories: ${projectDir} (project) and ${globalDir} (global) — every config file there, and a missing one is created.`,
+      "Values you already set are preserved exactly — only options you left undefined gain their default.",
+      "A key the schema no longer declares is dropped, after the existing file is copied to <file>.bak-<timestamp>.",
+      "The existing file is backed up first; this console has no opt-out.",
+    ].join("\n"),
+  materializeUntrusted: "The project config (.pi/) is not writable while this project is untrusted — trust the project, or run `agentic-workflow config default --scope global` yourself.",
+  materializeDeclined: "Nothing was written.",
 } as const;
 
 const GLOBAL_LABEL = "Global";
@@ -158,6 +196,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       prompts.settle,
       prompts.stateFlow,
       prompts.embedProfile,
+      prompts.materialize,
       ...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),
       prompts.save,
       prompts.cancel,
@@ -353,6 +392,12 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
     // unified config and vice versa.
     if (choice === prompts.embedProfile) {
       await editEmbedProfile(deps);
+      continue;
+    }
+    // Issue #600: the same engine as `config default`, both scopes, a backup
+    // always. It is not part of the draft: declining leaves the draft untouched.
+    if (choice === prompts.materialize) {
+      await materializeDefaults(deps);
       continue;
     }
     if (choice === prompts.save) {
@@ -839,6 +884,44 @@ async function discard(ui: SettingsUi): Promise<boolean> {
  * the unified config this console edits, so the write is its own consented step
  * and never rides the draft/save flow.
  */
+/**
+ * Materialize every declared default into the config files (issue #600 S7).
+ *
+ * The console runs the crate's own engine in-process — one implementation for
+ * the CLI and the console, so the merge/backup contract cannot drift. It always
+ * backs up (`backup: true`); the CLI's `--no-backup` has no counterpart here.
+ */
+async function materializeDefaults(deps: SettingsDeps): Promise<void> {
+  if (!deps.projectTrusted) {
+    deps.ui.notify(prompts.materializeUntrusted, "warning");
+    return;
+  }
+  const paths = configFilePaths(deps.agentDir, deps.cwd);
+  deps.ui.notify(prompts.materializeExplanation(dirname(paths.project), dirname(paths.global)), "info");
+  const confirmed = await deps.ui.confirm(prompts.materializeConfirm, prompts.materializeConfirmDetail);
+  if (!confirmed) {
+    deps.ui.notify(prompts.materializeDeclined, "info");
+    return;
+  }
+  const run = deps.materializeDefaults ?? ((options: { projectDir: string; globalDir: string; scope: "both"; backup: true }) => materializeConfig(options));
+  let receipt: MaterializeReceipt;
+  try {
+    receipt = run({ projectDir: deps.cwd, globalDir: deps.agentDir, scope: "both", backup: true });
+  } catch (error) {
+    deps.ui.notify(`Nothing was written — ${error instanceof Error ? error.message : String(error)}`, "error");
+    return;
+  }
+  const written = receipt.files.filter((file) => file.written).length;
+  const lines = [`config default — ${written} file(s) written, ${receipt.files.length - written} unchanged.`];
+  for (const file of receipt.files) {
+    const backup = file.backup === null ? "" : ` · backup ${file.backup}`;
+    const names = file.materialized.slice(0, 6).join(", ") + (file.materialized.length > 6 ? ", …" : "");
+    const detail = names === "" ? "" : ` (${names})`;
+    lines.push(`${file.scope} ${file.file}: ${file.written ? "written" : "unchanged"} · ${file.materialized.length} materialized${detail} · ${file.removed.length} removed${backup}`);
+  }
+  deps.ui.notify(lines.join("\n"), "info");
+}
+
 async function editEmbedProfile(deps: SettingsDeps): Promise<void> {
   const available = getEmbedProfiles();
   if (available.length === 0) {

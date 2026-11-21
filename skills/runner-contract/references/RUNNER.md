@@ -168,7 +168,7 @@ shell fallback.
 | `retention-debt [--root <dir>] [--json]` | the retention debt sensor — proved-merged units still carrying the full carrier (issue #651) |
 | `setup-env [--check] [--root <dir>]` | the authoring toolchain check and its consent-gated install (the bootstrap form stays `scripts/setup-env.mjs`: it provisions bun, so it cannot require the CLI) |
 | `ceremony <object> <op> [flags...]` | the closed ceremony CLI — `workspace`, `docs`, `findings`, `ledger`, `unit`, `plan`, `tier`, `passive`, `review`, `acceptance`, `refutation`, `fusion`, `delta`, `progress`, `evidence`, `commit`, `roadmap`, `pr` (see the crate README's ceremony row for the live object set) |
-| `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config`, `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
+| `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `config` (including `config default`, the materialization the console and `init-workspace` run — issue #600), `doc`, `section`, `relay`, `memory`, `log`, `journal`, `resolve-passes`, `verify`, `resources`, `provision` | the typed file services and the other guards (see the crate README) |
 
 ## Exit codes
 

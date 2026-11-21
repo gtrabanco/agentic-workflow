@@ -124,14 +124,34 @@ const LOG_SESSION_SCHEMA: JsonSchema = publish({
       additionalProperties: false,
       properties: {
         enabled: { type: "boolean", description: "Append the mechanical entry to docs/LOGS.md." },
+        // `null` is the shipped "no publisher": the resolver normalizes any
+        // non-object to null, so the schema accepts exactly what the default
+        // materializes and what `config list` reports.
         publisher: {
-          type: "object",
-          additionalProperties: false,
-          required: ["command"],
-          properties: {
-            command: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: LOG_SESSION_MAX_ARGV },
-            timeoutMs: { type: "integer", minimum: 1, maximum: LOG_SESSION_MAX_TIMEOUT_MS },
-          },
+          description: "The publisher command run at the session boundary; null means no publisher.",
+          anyOf: [
+            { type: "null" },
+            {
+              type: "object",
+              additionalProperties: false,
+              required: ["command"],
+              properties: {
+                command: {
+                  type: "array",
+                  items: { type: "string", minLength: 1 },
+                  minItems: 1,
+                  maxItems: LOG_SESSION_MAX_ARGV,
+                  description: "The command and its arguments, run without a shell.",
+                },
+                timeoutMs: {
+                  type: "integer",
+                  minimum: 1,
+                  maximum: LOG_SESSION_MAX_TIMEOUT_MS,
+                  description: "How long the publisher may run before it is abandoned, in milliseconds.",
+                },
+              },
+            },
+          ],
         },
       },
     },
@@ -146,18 +166,28 @@ const PATH_PROTECTION_SCHEMA: JsonSchema = publish({
     protectedGlobs: {
       type: "array",
       items: { type: "string", minLength: 1, maxLength: PATH_GLOB_MAX_LENGTH },
+      description: "Extra globs to protect, on top of the shipped floor.",
     },
     requirements: {
       type: "object",
       additionalProperties: false,
+      description: "Per phase and operation requirement overrides; a value raises the floor, never lowers it.",
       properties: Object.fromEntries(
         PATH_PHASE_STATES.map((state) => [
           state,
           {
             type: "object",
             additionalProperties: false,
+            description: `Requirements for ${state} writes (none, justification or approval).`,
             properties: Object.fromEntries(
-              PATH_OPERATIONS.map((operation) => [operation, { type: "string", enum: [...PATH_REQUIREMENTS] }]),
+              PATH_OPERATIONS.map((operation) => [
+                operation,
+                {
+                  type: "string",
+                  enum: [...PATH_REQUIREMENTS],
+                  description: `The requirement for a ${operation} ${state === "always" ? "at any phase" : `in the ${state} phase`}.`,
+                },
+              ]),
             ),
           } satisfies JsonSchema,
         ]),
@@ -189,6 +219,7 @@ const GIT_IDENTITY_SCHEMA: JsonSchema = publish({
     enforce: {
       type: "string",
       enum: ["off", "commit", "push", "push-upstream", "commit-and-push", "commit-and-push-upstream"],
+      description: "When the identity check runs: off, commit, push, push-upstream, or the commit-and-push pair.",
     },
     approved: {
       type: "object",
@@ -198,7 +229,7 @@ const GIT_IDENTITY_SCHEMA: JsonSchema = publish({
         name: { type: "string", minLength: 1, description: "git user.name, matched case-insensitively." },
         email: { type: "string", minLength: 3, description: "git user.email, matched case-insensitively." },
         fullName: { type: "string", minLength: 1, description: "The legal name a signing key's UID must carry." },
-        format: { type: "string", enum: ["openpgp", "ssh"] },
+        format: { type: "string", enum: ["openpgp", "ssh"], description: "The signing key format: openpgp or ssh." },
         signingKey: { type: "string", minLength: 1, description: "The resolved signing key: key id, fingerprint or path." },
         signingKeys: {
           type: "array",
@@ -252,19 +283,19 @@ const GUARD_SECTION_SCHEMA: JsonSchema = publish({
       additionalProperties: false,
       description:
         "The agent-side `git config` write guard (issue #514). `ask` can really ask; a session with no UI is refused in every mode except `allow`.",
-      properties: { mode: { type: "string", enum: [...GUARD_MODES] } },
+      properties: { mode: { type: "string", enum: [...GUARD_MODES], description: "This guard's disposition; absent falls back to guard.default." } },
     },
     toolChoice: {
       type: "object",
       additionalProperties: false,
       description: "The command-time `rg`/`bun` carrier (issue #610). This guard cannot ask, so `ask` answers as `deny`.",
-      properties: { mode: { type: "string", enum: [...GUARD_MODES] } },
+      properties: { mode: { type: "string", enum: [...GUARD_MODES], description: "This guard's disposition; absent falls back to guard.default." } },
     },
     receipt: {
       type: "object",
       additionalProperties: false,
       description: "The inline PR-receipt guard (issue #182). This guard cannot ask, so `ask` answers as `deny`.",
-      properties: { mode: { type: "string", enum: [...GUARD_MODES] } },
+      properties: { mode: { type: "string", enum: [...GUARD_MODES], description: "This guard's disposition; absent falls back to guard.default." } },
     },
   },
 });
@@ -436,7 +467,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     schema: {
       type: "object",
       additionalProperties: false,
-      properties: { engram: { type: "boolean" } },
+      properties: { engram: { type: "boolean", description: "Opt in to the Engram MCP registration; false writes nothing." } },
     },
     defaults: { engram: false },
   },
@@ -450,11 +481,15 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
       type: "object",
       additionalProperties: false,
       properties: {
-        enabled: { type: "boolean" },
+        enabled: { type: "boolean", description: "Measure the per-unit cost sample locally; false opts the project out." },
         // #504 S3: the per-session JSONL destination, relative to the project
         // root. One switch (`enabled`) and one path — a consent gate, a sampling
         // rate or a remote destination is not a key this section carries.
-        jsonFile: { type: "string", minLength: 1 },
+        jsonFile: {
+          type: "string",
+          minLength: 1,
+          description: "Per-session JSONL destination, relative to the project root.",
+        },
       },
     },
     defaults: { enabled: true, jsonFile: ".pi/.telemetry/sessions.jsonl" },
@@ -476,7 +511,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     path: ["gitIdentity"],
     description: "Approved commit identity (name, email, legal name, signing key) and the agent config-write guard.",
     schema: GIT_IDENTITY_SCHEMA,
-    defaults: { enforce: "off", approved: {}, agentGuard: { mode: "ask", allow: [] } },
+    defaults: { enforce: "off", approved: {}, agentGuard: { allow: [] } },
   },
   {
     key: "advance",
@@ -488,10 +523,18 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
       type: "object",
       additionalProperties: false,
       properties: {
-        iterationsCap: { type: "integer", minimum: 1 },
-        sensitivePaths: { type: "array", items: { type: "string", minLength: 1 } },
-        securityPaths: { type: "array", items: { type: "string", minLength: 1 } },
-        runLogPath: { type: "string", minLength: 1 },
+        iterationsCap: { type: "integer", minimum: 1, description: "The conductor's iteration ceiling per run." },
+        sensitivePaths: {
+          type: "array",
+          items: { type: "string", minLength: 1 },
+          description: "Globs that raise the conductor's caution for a touched path.",
+        },
+        securityPaths: {
+          type: "array",
+          items: { type: "string", minLength: 1 },
+          description: "Globs that join the conductor's security path set.",
+        },
+        runLogPath: { type: "string", minLength: 1, description: "The advance run log, relative to the project root." },
       },
     },
     defaults: {
