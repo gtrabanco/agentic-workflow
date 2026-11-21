@@ -263,7 +263,7 @@ test("the same fragment set always yields byte-identical docs/LOGS.md (declared 
     { branch: "feat/b", session: "s2", second: "01", minute: "01" },
     { branch: "feat/b", session: "s1", second: "01", minute: "01" }, // tie on timestamp → branch, then session ascending
     { branch: "feat/a", session: "s3", second: "01", minute: "01" }, // tie on timestamp → branch ascending
-    { branch: "feat/c", session: "s1", second: "00", minute: "00" }, // older timestamp → appended later
+    { branch: "feat/c", session: "s4", second: "00", minute: "00" }, // older timestamp → appended later; a distinct slot (issue #675)
   ];
 
   const aggregate = () => {
@@ -282,7 +282,7 @@ test("the same fragment set always yields byte-identical docs/LOGS.md (declared 
   const second = aggregate();
   assert.equal(first, second);
   // Newest timestamp first; ties break branch, then session, ascending.
-  const order = [first.indexOf("feat/a/s3"), first.indexOf("feat/b/s1"), first.indexOf("feat/b/s2"), first.indexOf("feat/c/s1")];
+  const order = [first.indexOf("feat/a/s3"), first.indexOf("feat/b/s1"), first.indexOf("feat/b/s2"), first.indexOf("feat/c/s4")];
   assert.deepEqual([...order].sort((a, b) => a - b), order, "newest-first, then branch, then session ascending");
 });
 

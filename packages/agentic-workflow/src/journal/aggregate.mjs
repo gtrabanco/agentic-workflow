@@ -157,10 +157,16 @@ export function checkJournal(options) {
 /**
  * Aggregate the pending fragments into the journal.
  *
- * Returns `{ ok: true, appended, alreadyPresent, removed, log, fragments }` —
- * names, not paths, in every list — or throws `JournalAggregateError` with the
- * refusal reason. A missing or empty carrier directory is a no-op receipt, not
- * an error: there is nothing to aggregate.
+ * Returns `{ ok: true, appended, alreadyPresent, superseded, removed, log,
+ * fragments }` — names, not paths, in every list — or throws
+ * `JournalAggregateError` with the refusal reason. A missing or empty carrier
+ * directory is a no-op receipt, not an error: there is nothing to aggregate.
+ *
+ * A colliding identity slot is consumed newest-first (issue #675, decision D1):
+ * the set is already sorted newest-first, so the first fragment of a slot is
+ * appended and every later one is consumed without appending and named in
+ * `superseded` with the fragment that superseded it. The rule is the slot's,
+ * never byte coincidence, and it consumes nothing when `docs/LOGS.md` is absent.
  */
 export function aggregateJournal(options) {
   const root = options?.root;
@@ -204,10 +210,32 @@ export function aggregateJournal(options) {
       return a.name < b.name ? -1 : 1;
     });
 
+  // Issue #675: one entry per conversation per kind. The sorted set is
+  // newest-first, so the first fragment of a slot is the entry and the rest are
+  // superseded — a differing timestamp is not a second entry slot, and the
+  // decision never depends on the bytes (the old accidental rule).
+  const kept = [];
+  const superseded = [];
+  const winners = new Map();
+  for (const fragment of fragments) {
+    if (!isConversationSession(fragment.sessionId)) {
+      kept.push(fragment);
+      continue;
+    }
+    const slot = entrySlot(fragment);
+    const winner = winners.get(slot);
+    if (winner === undefined) {
+      winners.set(slot, fragment);
+      kept.push(fragment);
+      continue;
+    }
+    superseded.push({ name: fragment.name, supersededBy: winner.name });
+  }
+
   const log = fs.readFileSync(logPath, "utf8");
   const appended = [];
   const alreadyPresent = [];
-  for (const fragment of fragments) {
+  for (const fragment of kept) {
     if (log.includes(fragment.content)) {
       // A crash between the append and the delete re-presents this fragment;
       // consuming it keeps the re-run a no-op instead of duplicating an entry.
@@ -218,11 +246,13 @@ export function aggregateJournal(options) {
     }
     fs.rmSync(path.join(dir, fragment.name));
   }
+  for (const fragment of superseded) fs.rmSync(path.join(dir, fragment.name));
 
   return {
     ok: true,
     appended,
     alreadyPresent,
+    superseded,
     removed: fragments.map((fragment) => fragment.name),
     log: options?.logPath ?? DEFAULT_LOG,
     fragments: fragments.length,
