@@ -21,6 +21,13 @@
  *  - **Already-present is not duplicated.** A fragment whose bytes are already
  *    in the journal is consumed without being appended — a crash between the
  *    append and the delete re-runs as a no-op instead of duplicating an entry.
+ *  - **One entry per conversation per kind.** The entry slot is
+ *    `(sessionId, kind)`, never the bytes (issue #675). The lint refuses a slot
+ *    holding more than one conforming fragment, naming every file; the
+ *    aggregator keeps the newest of the set and records the fragments it
+ *    superseded in its receipt, so a duplicate can neither pass the carrier
+ *    nor append twice. The shared `local` slug names no conversation
+ *    (`journal-write-grammar@1`), so it never collides.
  *  - **The journal is never created.** A missing `docs/LOGS.md` is a refusal:
  *    the project creates its journal once (from the template's shape), the
  *    aggregator never invents one.
@@ -29,7 +36,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { JOURNAL_DIR, fragmentFault } from "./fragment.mjs";
+import { JOURNAL_DIR, fragmentFault, isConversationSession } from "./fragment.mjs";
 
 /** A refused aggregation. The CLI maps this to exit 2, "JOURNAL REFUSAL — <reason>". */
 export class JournalAggregateError extends Error {
@@ -41,6 +48,54 @@ export class JournalAggregateError extends Error {
 
 /** The project journal, relative to the project root. */
 export const DEFAULT_LOG = "docs/LOGS.md";
+
+/**
+ * The entry slot the grammar names: one conversation, one kind. The timestamp
+ * and the branch are not part of it — a second entry for the slot is a
+ * duplicate however it is written (issue #468 S3, read side #675).
+ */
+function entrySlot(parsed) {
+  return `${parsed.kind}\u0000${parsed.sessionId}`;
+}
+
+/** `"a"`, `"a" and "b"`, `"a", "b" and "c"` — a refusal that names every file. */
+function namedList(names) {
+  const quoted = names.map((name) => `"${name}"`);
+  if (quoted.length === 1) return quoted[0];
+  return `${quoted.slice(0, -1).join(", ")} and ${quoted[quoted.length - 1]}`;
+}
+
+/** The lint's one line for one colliding slot. */
+function identityCollisionReason({ sessionId, kind, names }) {
+  return `fragments ${namedList(names)} carry the same identity — session ${JSON.stringify(sessionId)}'s ${kind} entry; timestamps and branches do not distinguish an entry slot, and the grammar's unit is one entry per conversation per kind`;
+}
+
+/**
+ * The lint's cross-fragment half (issue #675): group conforming fragments by
+ * their entry slot and answer one refusal per slot that holds more than one.
+ * The shared `local` slug is not a conversation, so it is never grouped — the
+ * same predicate the writer reads, never a second copy of the exemption.
+ */
+function identityCollisions(fragments) {
+  const slots = new Map();
+  for (const fragment of fragments) {
+    if (!isConversationSession(fragment.sessionId)) continue;
+    const slot = entrySlot(fragment);
+    if (!slots.has(slot)) slots.set(slot, []);
+    slots.get(slot).push(fragment);
+  }
+  const refusals = [];
+  for (const group of slots.values()) {
+    if (group.length < 2) continue;
+    const names = group.map((fragment) => fragment.name).sort();
+    refusals.push({
+      name: names[0],
+      names,
+      reason: identityCollisionReason({ sessionId: group[0].sessionId, kind: group[0].kind, names }),
+    });
+  }
+  return refusals;
+}
 
 /** One pending fragment: parsed identity + bytes, validated by the one predicate. */
 function loadFragment(dir, name) {
@@ -80,6 +135,7 @@ export function checkJournal(options) {
     .filter((name) => fs.statSync(path.join(dir, name)).isFile() && name !== ".gitkeep")
     .sort();
   const refusals = [];
+  const conforming = [];
   for (const name of names) {
     let content;
     try {
@@ -90,7 +146,11 @@ export function checkJournal(options) {
     }
     const fault = fragmentFault(name, content);
     if (!fault.ok) refusals.push({ name, reason: fault.reason });
+    else conforming.push({ name, ...fault.parsed });
   }
+  // The second half (issue #675): the entry slot is compared across fragments,
+  // which the per-fragment loop can never see.
+  refusals.push(...identityCollisions(conforming));
   return { ok: refusals.length === 0, checked: names.length, refusals, journalDir };
 }
 
