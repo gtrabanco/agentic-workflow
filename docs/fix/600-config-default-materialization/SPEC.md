@@ -458,6 +458,7 @@ n/a — the owner's local, unpublished workflow substitutes for the lane's triag
   projection steps included).
 - **G2** — 2026-11-21, HEAD fd1b0efd6ce61de1121a957da1bc4bdb2af89cb1 · the gate's `pi-node-compat` leg · exit 0 · 1035 tests, 1034
   pass, 1 skip, 0 fail.
+- **G3** — 2026-11-21, HEAD 02e98921fbefb259d0b4a2ca3dbfb6e1d2d7d3a8 · `bun scripts/local-gate.mjs --jobs 4` · exit 0 · PASS, 20 steps in 367s, at the head that carries every code and documentation change; the commits after it add only this receipt, and `bun scripts/test-impact.mjs --base 02e98921fbefb259d0b4a2ca3dbfb6e1d2d7d3a8` answers `empty` for them.
 - **V1** — 2026-11-21, the obligations ledger closes: O1–O16 all `verified` on the
   foreground runs E2–E12; no row is deferred and none is `n/a`.
 
