@@ -11,7 +11,8 @@
 //  - value-preserving — a written default resolves exactly like the absent key
 //    it replaced, and a defined value is returned untouched;
 //  - refuse-before-write — a file that does not parse, and a merge that fails
-//    validation, refuse with the file's bytes intact (no backup, no write);
+//    validation, refuse before the run's first write: every file of the run
+//    keeps its bytes and no backup is taken, in any scope;
 //  - one writer for comments — this renderer is the only one that emits them, so
 //    `config set`/`reset`/`validate --sanitize` keep their comment-free output.
 
@@ -267,8 +268,10 @@ function validateFile(fileSections, document) {
  * Materialize every declared default into the files of `scope`.
  *
  * `scope` is `both` by default: this operation reconciles every file the install
- * owns, which is the affordance the issue asks for. `backup: false` is the CLI's
- * opt-out and skips only the copy, never the write.
+ * owns, which is the affordance the issue asks for. Every file is planned and
+ * validated before the first write, so a refusal anywhere leaves the whole run
+ * untouched. `backup: false` is the CLI's opt-out and skips only the copy,
+ * never the write.
  */
 export function materializeConfig({
   projectDir = process.cwd(),
@@ -283,7 +286,11 @@ export function materializeConfig({
   const sections = resolveSections({ projectDir, globalDir, extensions });
   const directories = scopeDirectories({ projectDir, globalDir, env });
   const scopes = scope === "both" ? ["global", "project"] : [scope];
-  const files = [];
+  // Two passes: every file of the run is read, planned and validated before
+  // the first byte moves, so a refusal in any scope leaves every file intact —
+  // the message's `nothing was written` and the README's "before any byte
+  // moves" hold across scopes, not merely per file (external-verify B1).
+  const planned = [];
   for (const current of scopes) {
     const read = readScopeDocuments(directories[current], sections);
     if (read.issues.length > 0) {
@@ -297,15 +304,28 @@ export function materializeConfig({
       const { value, materialized, removed } = planFile(fileSections, read.documents[file]);
       validateFile(fileSections, value);
       const text = renderConfigFile(fileSections, value);
-      const written = text !== before;
-      let backupPath = null;
-      if (written && existed && backup) {
-        backupPath = backupPathFor(path, now);
-        copyFileSync(path, backupPath);
-      }
-      if (written) writeConfigText(path, text);
-      files.push({ scope: current, file, path, existed, written, backup: backupPath, materialized, removed });
+      planned.push({ scope: current, file, path, existed, before, text, materialized, removed });
     }
+  }
+  const files = [];
+  for (const item of planned) {
+    const written = item.text !== item.before;
+    let backupPath = null;
+    if (written && item.existed && backup) {
+      backupPath = backupPathFor(item.path, now);
+      copyFileSync(item.path, backupPath);
+    }
+    if (written) writeConfigText(item.path, item.text);
+    files.push({
+      scope: item.scope,
+      file: item.file,
+      path: item.path,
+      existed: item.existed,
+      written,
+      backup: backupPath,
+      materialized: item.materialized,
+      removed: item.removed,
+    });
   }
   return { contract: MATERIALIZE_CONTRACT_ID, scope, files };
 }
