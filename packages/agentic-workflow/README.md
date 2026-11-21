@@ -223,6 +223,7 @@ agent-adapters | the detected agent adapters' config | the scaffold installs per
 git-hooks | the project's git hooks | the local gate's offline subset runs before a push | optional | `git rev-parse --git-path hooks` and the files there | run the gate by hand before pushing | instruct-only
 merge-drivers | the shared-document merge drivers | `.gitattributes` declares semantic merges, and an un-armed driver silently falls back to a textual merge | optional | `merge.<driver>.driver` for every driver `.gitattributes` names | text merges, resolved by hand | instruct-only
 skills-cli | the skills CLI manifest | an authoring tree publishes and lists its skills through it | optional | `skills.sh.json` at the project root | authoring-only; a consuming project needs none | instruct-only
+config-files | the project config files | the schema moves and a written file does not, so a new option stays invisible and a removed key lingers | optional | each existing `.pi/<file>` key set against the registered schema, using `config default`'s own plan | run `agentic-workflow config default` by hand | instruct-only
 ```
 
 The routes are the published `INSTALL_ROUTES`: a package manager (`npm`, `bun`,

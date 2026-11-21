@@ -15,6 +15,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import { BASE_CONFIG_SECTIONS } from "@gtrabanco/agentic-workflow-schema";
+
 import { DoctorRefusal, renderDoctor, runDoctor } from "../src/doctor/doctor.mjs";
 import { CHECK_PROBES } from "../src/doctor/checks.mjs";
 import {
@@ -453,7 +455,7 @@ test("a converged config file is ok, and absent files are not-applicable (issue 
   const absent = check(await runDoctor({ ops: healthyOps(), inventoryText: README }), "config-files");
   assert.equal(absent.status, "not-applicable", "a project with no config file has nothing to reconcile");
 
-  const converged = JSON.stringify({ logSession: { enabled: false, publisher: null }, memory: { engram: false } });
+  const converged = JSON.stringify(Object.fromEntries(BASE_CONFIG_SECTIONS.map((section) => [section.key, section.defaults])));
   const base = healthyOps();
   const ops = { ...base, readText: (path) => (path === `${ROOT}/.pi/agentic-workflow.json` ? converged : base.readText(path)), exists: (path) => path === `${ROOT}/.pi/agentic-workflow.json` || base.exists(path) };
   const row = check(await runDoctor({ ops, inventoryText: README }), "config-files");

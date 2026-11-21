@@ -10,7 +10,16 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
+import { parseJsonc } from "@gtrabanco/agentic-workflow-schema";
+
 const CLI = new URL("../bin/agentic-workflow.mjs", import.meta.url).pathname;
+
+/** `config default` writes JSONC; these three cases read the file it wrote. */
+function readJsoncFile(path) {
+  const parsed = parseJsonc(readFileSync(path, "utf8"));
+  assert.equal(parsed.ok, true, `the materialized file parses: ${JSON.stringify(parsed.error ?? {})}`);
+  return parsed.value;
+}
 
 function run(args, options = {}) {
   return spawnSync(process.execPath, [CLI, "config", ...args], { encoding: "utf8", ...options });
@@ -211,7 +220,7 @@ test("config default materializes every file of the requested scopes", () => {
     assert.deepEqual(files, ["global/agentic-workflow.json", "project/agentic-workflow.json"]);
     const text = readFileSync(join(project, ".pi", "agentic-workflow.json"), "utf8");
     assert.match(text, /\/\/ memory\.engram\b/);
-    assert.equal(JSON.parse(text).memory.engram, false);
+    assert.equal(readJsoncFile(join(project, ".pi", "agentic-workflow.json")).memory.engram, false);
     // stdout is the receipt; the progress channel never writes it.
     assert.equal(run1.stderr.includes("config-materialize@1"), false, "the receipt is stdout-only");
   } finally {
@@ -229,8 +238,8 @@ test("config default preserves a user value and backs the file up first", () => 
     assert.equal(run1.status, 0, run1.stderr);
     const receipt = JSON.parse(run1.stdout);
     const row = receipt.files[0];
-    assert.equal(JSON.parse(readFileSync(file, "utf8")).telemetry.enabled, false);
-    assert.equal(JSON.parse(readFileSync(file, "utf8")).guards, undefined);
+    assert.equal(readJsoncFile(file).telemetry.enabled, false);
+    assert.equal(readJsoncFile(file).guards, undefined);
     assert.ok(row.backup, "the backup path is on the receipt");
     assert.equal(readFileSync(row.backup, "utf8"), JSON.stringify({ telemetry: { enabled: false }, guards: { merge: false } }));
   } finally {
@@ -249,7 +258,7 @@ test("config default --no-backup keeps the write and skips the copy", () => {
     const row = JSON.parse(run1.stdout).files[0];
     assert.equal(row.backup, null);
     assert.equal(readdirSync(join(project, ".pi")).some((name) => name.includes(".bak-")), false);
-    assert.equal(JSON.parse(readFileSync(file, "utf8")).memory.engram, true);
+    assert.equal(readJsoncFile(file).memory.engram, true);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

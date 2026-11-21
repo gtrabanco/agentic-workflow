@@ -585,16 +585,18 @@ Usage:
   agentic-workflow config validate                  [--scope global|project|both] [--sanitize] [--no-warn-unknown]
   agentic-workflow config init                      [--scope global|project]
   agentic-workflow config reset <path>              [--scope global|project]
+  agentic-workflow config default                   [--scope global|project|both] [--no-backup]
   agentic-workflow config schema
 
 Options:
   --project <dir>       Project root (default: cwd).
   --global-dir <dir>    Global scope directory (default: $PI_CODING_AGENT_DIR or ~/.pi/agent).
   --json                Machine receipt.
+  --no-backup           config default: skip the <file>.bak-<timestamp> copy.
 `;
 
 function parseConfigArgs(args) {
-  const flags = { json: false, sanitize: false, noWarnUnknown: false, help: false, scope: undefined, category: undefined, projectDir: process.cwd(), globalDir: undefined };
+  const flags = { json: false, sanitize: false, noWarnUnknown: false, help: false, backup: true, scope: undefined, category: undefined, projectDir: process.cwd(), globalDir: undefined };
   const positional = [];
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -614,6 +616,7 @@ function parseConfigArgs(args) {
     if (arg === "--json") flags.json = true;
     else if (arg === "--sanitize") flags.sanitize = true;
     else if (arg === "--no-warn-unknown") flags.noWarnUnknown = true;
+    else if (arg === "--no-backup") flags.backup = false;
     else if (arg === "--help" || arg === "-h") flags.help = true;
     else positional.push(arg);
   }
@@ -1877,6 +1880,28 @@ switch (command) {
         const result = api.reset(flags.scope ?? "project", path);
         if (flags.json) process.stdout.write(`${JSON.stringify(result)}\n`);
         else console.log(`CONFIG reset ${result.path.join(".")} — ${result.file}`);
+      } else if (op === "default") {
+        const { materializeConfig } = await import("../src/config/materialize.mjs");
+        const result = feedback.stage("materialize the config defaults", () => materializeConfig({
+          projectDir: flags.projectDir,
+          globalDir: flags.globalDir,
+          scope: flags.scope ?? "both",
+          backup: flags.backup,
+          extensions: discovered.extensions.map((entry) => entry.descriptor),
+        }));
+        if (flags.json) process.stdout.write(`${JSON.stringify(result)}\n`);
+        else {
+          const written = result.files.filter((row) => row.written).length;
+          const materialized = result.files.reduce((total, row) => total + row.materialized.length, 0);
+          const removed = result.files.reduce((total, row) => total + row.removed.length, 0);
+          const backups = result.files.filter((row) => row.backup !== null).length;
+          console.log(`CONFIG default — ${written} file(s) written · ${materialized} key(s) materialized · ${removed} key(s) removed · ${backups} backup(s)`);
+          for (const row of result.files) {
+            const state = row.written ? "written" : "unchanged";
+            const backup = row.backup === null ? "" : ` · backup ${row.backup}`;
+            console.log(`  ${row.scope} ${row.path} — ${state} · ${row.materialized.length} materialized · ${row.removed.length} removed${backup}`);
+          }
+        }
       } else if (op === "schema") {
         const schema = api.schema({ merged: true });
         process.stdout.write(`${JSON.stringify(schema, null, 2)}\n`);
