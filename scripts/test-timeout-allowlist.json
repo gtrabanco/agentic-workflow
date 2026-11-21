@@ -40,5 +40,12 @@
     "timeoutMs": 30000,
     "reason": "the suite drives the shipped workflow-status sensor end to end six times per case (a fixture git walk, a shimmed gh and a full envelope parse per spawn), so the six real spawns are the behaviour under test; under the root-gate pool while five concurrent local-gates ran on the box its per-test wall-clock crossed the 10s default while the whole 29-test file measures 18.2s in a green jobs-4 gate run",
     "measured": "10026.89ms (node leg, pre-push gate run, 2026-11-16 at load average 15.9 with five concurrent local-gates) and 5009.80ms (bun leg standalone, same load); 18.2s for the whole 29-test file in the green jobs-4 gate run the same day"
+  },
+  {
+    "path": "packages/agentic-workflow/test/doc.structure.test.mjs",
+    "timeoutMs": 30000,
+    "suiteTimeoutMs": 240000,
+    "reason": "the suite's e2e cases spawn the shipped doc-index CLI per case (real tsc-free node spawns over a fixture tree), so the spawn cost is the behaviour under test; standalone it measures ~64s, but under the gate pool with concurrent sessions on the box it inflates to 110-163s and dies with SUITE TIMEOUT at the shared 120s bound while every case inside passes (runs 44894795525 and 44895748471) — the per-suite bound carries the load, and the per-test budget covers the same load inflating the CLI spawns toward the 10s default",
+    "measured": "64.2s suite standalone (2026-11-21); 110.7s in a green jobs-1 gate run, 120.2s SUITE TIMEOUT under concurrent gates (load 14.5), and 163.2s in a green explicit --suite-timeout 240 run the same day"
   }
 ]

@@ -346,7 +346,9 @@ rule extends to the gate.** Per file, tests are bun-first —
 guaranteed fallback — and the whole gate runs under either runtime:
 `scripts/run-root-suite.mjs` adapts the invocation per runtime (`bun test`
 subcommand vs `node --test` flag), wraps every suite process in two external bounds
-— a 120s suite wall-clock killer and a sampled 1.5 GB memory cap, both
+— a 120s suite wall-clock killer (a suite declares its own higher bound in
+  `scripts/test-timeout-allowlist.json` when load alone pushes it past the
+  shared one) and a sampled 1.5 GB memory cap, both
 signal-based because a microtask-starved loop never fires a runner's own timer
 (issue #493) — and the per-test budget defaults to 10s per test; a suite that
 measured above it is named, with its reason and cost, in

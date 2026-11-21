@@ -392,11 +392,14 @@ export function readAllowlist(file = ALLOWLIST_PATH) {
   const allowlist = new Map();
   for (const entry of entries) {
     const where = `${path.basename(file)}: entry ${JSON.stringify(entry.path ?? entry)}`;
-    if (typeof entry.path !== "string" || !/^scripts\/[\w./-]+\.test\.mjs$/u.test(entry.path)) {
-      throw new Error(`${where} — path must be a scripts/*.test.mjs relative path`);
+    if (typeof entry.path !== "string" || !/^(?:scripts|packages\/[\w.-]+\/test)\/[\w./-]+\.test\.mjs$/u.test(entry.path)) {
+      throw new Error(`${where} — path must be a scripts/*.test.mjs or packages/*/test/*.test.mjs relative path`);
     }
     if (!Number.isInteger(entry.timeoutMs) || entry.timeoutMs < 1) {
       throw new Error(`${where} — timeoutMs must be a positive integer`);
+    }
+    if (entry.suiteTimeoutMs !== undefined && (!Number.isInteger(entry.suiteTimeoutMs) || entry.suiteTimeoutMs < 1)) {
+      throw new Error(`${where} — suiteTimeoutMs, when declared, must be a positive integer`);
     }
     if (typeof entry.reason !== "string" || entry.reason.trim() === "") {
       throw new Error(`${where} — reason is required; a slow test is justified in writing`);
@@ -404,9 +407,22 @@ export function readAllowlist(file = ALLOWLIST_PATH) {
     if (typeof entry.measured !== "string" || entry.measured.trim() === "") {
       throw new Error(`${where} — measured is required; the cost is recorded, never assumed`);
     }
-    allowlist.set(entry.path, { timeoutMs: entry.timeoutMs, reason: entry.reason, measured: entry.measured });
+    allowlist.set(
+      entry.path,
+      entry.suiteTimeoutMs === undefined
+        ? { timeoutMs: entry.timeoutMs, reason: entry.reason, measured: entry.measured }
+        : { timeoutMs: entry.timeoutMs, suiteTimeoutMs: entry.suiteTimeoutMs, reason: entry.reason, measured: entry.measured },
+    );
   }
   return allowlist;
+}
+
+/** The suite wall-clock bound a suite is killed by: its allowlist entry's own
+ * `suiteTimeoutMs`, or the shared default. A spawn-heavy suite that only fails
+ * the shared bound under concurrent load declares its own cost here instead of
+ * weakening the bound for every suite. */
+export function suiteBudgetFor(file, allowlist, defaultMs = DEFAULT_SUITE_TIMEOUT_MS) {
+  return allowlist.get(file)?.suiteTimeoutMs ?? defaultMs;
 }
 
 /** The per-test budget a suite's runner receives: its allowlist entry's own
@@ -620,7 +636,14 @@ async function main(argv) {
     jobs,
     bail: parsed.bail,
     spawnSuite: (file, signal) =>
-      spawnReal(file, parsed.bail, signal, parsed, testBudgetFor(file, allowlist, parsed.testTimeoutMs), parsed.cwd),
+      spawnReal(
+        file,
+        parsed.bail,
+        signal,
+        { ...parsed, suiteTimeoutMs: suiteBudgetFor(file, allowlist, parsed.suiteTimeoutMs) },
+        testBudgetFor(file, allowlist, parsed.testTimeoutMs),
+        parsed.cwd,
+      ),
     onResult: (file, result) => {
       if ((result.status ?? 1) === 0) {
         process.stdout.write(`PASS ${file} (${seconds(result.ms)})\n`);

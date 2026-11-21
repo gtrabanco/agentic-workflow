@@ -38,6 +38,7 @@ import {
   suites,
   SCHEMA_PACKAGE_DIR,
   schemaBuildManager,
+  suiteBudgetFor,
   testBudgetFor,
 } from "./run-root-suite.mjs";
 import { tempRoot } from "./temp-root.mjs";
@@ -274,7 +275,7 @@ test("testBudgetFor: an allowlisted suite gets its own budget, everything else t
   assert.equal(testBudgetFor("scripts/fast.test.mjs", new Map()), 10_000);
 });
 
-test("suiteBudgetFor: an allowlisted suite gets its own wall-clock bound, everything else the shared 120s default", () => {
+test("suiteBudgetFor: an allowlisted suite gets its own wall-clock bound, everything else the shared 120s default", async () => {
   const { suiteBudgetFor } = await import("./run-root-suite.mjs");
   const allowlist = new Map([
     ["scripts/slow.test.mjs", { timeoutMs: 60_000, reason: "r", measured: "m" }],
