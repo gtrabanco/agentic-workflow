@@ -291,3 +291,26 @@ with the guardrails intact; the define command halts after design+plan behind an
 owner-typed `--yes` recorded as a human-owner D row. The `--stop-after`
 capability moved from skill prose (§7's layer 1) into the driver's flag — the
 portable `unit-lane` skill changes only its `argument-hint:` if at all.
+
+### §7 verdict revision (fourth round, 2026-11-20, same day) — stop rules, state reconciliation, --yes override
+
+Over #669 as filed, the owner refined (issue body updated to match):
+
+- **Post-plan stop rules belong to the decision layer.** v1: fixed defaults
+  (tier `high` stops, `standard` does not). After #444 (decision-substrate)
+  lands, the owner sets the rules via SystemOne — e.g. no plan review for fixes
+  or docs-only changes, or any rule they establish. Soft-order dependency on
+  #444; the unit may start before it, the policy phase cannot land first.
+- **`/flow` reconciles state and implements directly on planned units** — the
+  closed catalog never re-runs done steps; re-planning is `--retriage`'s
+  explicit job.
+- **`--yes` on `/flow`** = owner-typed "under no circumstance stop after plan"
+  override, including the high-tier default; **supersedes** the third-round
+  ruling ("high stops even with `--yes`"). Recorded as a human-owner D row —
+  the audit trail is the compensating control. The resume-`--yes` is dropped:
+  continuation after the define stop = invoking `/flow` (that redundancy is why
+  two commands kill the flag).
+- **Names**: `/flow` decided for the full command; define name open — owner
+  rejected `define`, `plan`, `design`; candidates: `spec`, `blueprint`,
+  `sketch`, `brief`, `outline` (no collision with crate/pi command names,
+  checked 2026-11-20).
