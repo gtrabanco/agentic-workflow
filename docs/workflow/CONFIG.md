@@ -379,8 +379,8 @@ runner config default --json
   any other extension the same way, through `config-extension@1` discovery — the
   mechanism is generic, never a per-package case.
 - **Refuse before writing.** A file that does not parse, and a merge that fails
-  validation, exit 2 with `CONFIG REFUSAL — <reason>` and leave the file (and its
-  backup directory) untouched.
+  validation, exit 2 with `CONFIG REFUSAL — <reason>` and leave every file of the
+  run untouched — no write, no backup, in any scope.
 - **A written default resolves exactly like the absent key.** Materializing is a
   visibility change, never a resolution change.
 - **The divergence check.** `doctor` compares each existing project config file's
