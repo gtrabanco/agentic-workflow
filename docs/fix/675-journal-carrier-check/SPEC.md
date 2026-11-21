@@ -309,6 +309,7 @@ none
 - **D4** — 2026-11-21, rider repair `3a963d934`: the guide's `estimateMax` re-pinned 14,285 → 14,337 (the exact measured boundary, the fix #571 precedent) because the #668 integration merge left the base commit red; recorded in the manifest's `sources`, no headroom granted.
 - **P4** — 2026-11-21 19:58, the grammar rows, gate inventory, changeset, roadmap row and regenerated projection · `7d4cf1219`, `8023e44e9`, `0a2726599`.
 - **P5** — 2026-11-21 20:10, verification (E1–E11, G1) and the session journal fragment (`6c19318ba`, `20261121T201051Z-fix-675-journal-carrier-check-narrative-01a1ff9d-…`).
+- **P6** — 2026-11-21 20:34, branch pushed at `23e08ddca` and PR [#677](https://github.com/gtrabanco/agentic-workflow/pull/677) opened against `main` (the pre-push hook's documented escape hatch, recorded in the body for the two disclosed reds; the branch's own `journal-carrier-check` is O14, and `worktree-guard` is another live session's worktree).
 
 ## Next
 
@@ -321,6 +322,7 @@ green on `main`.
 ## References
 
 - Issue [#675](https://github.com/gtrabanco/agentic-workflow/issues/675) — `Closes #675`.
+- Pull request [#677](https://github.com/gtrabanco/agentic-workflow/pull/677) — the delivery carrier; its body carries the AC table, the decisions and the two disclosed gate reds.
 - Companion issue [#676](https://github.com/gtrabanco/agentic-workflow/issues/676) — the write-side errata path; this unit owns only the read side and publishes no marker for it.
 - Issue [#468](https://github.com/gtrabanco/agentic-workflow/issues/468) S3 — "one entry per conversation per kind", the rule this unit makes readable.
 - Issue [#452](https://github.com/gtrabanco/agentic-workflow/issues/452) S3 — the carrier lint as a reporter.
