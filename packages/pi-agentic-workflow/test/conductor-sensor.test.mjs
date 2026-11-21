@@ -74,3 +74,24 @@ test("AC3: valid envelope with merge_ready → ok", async () => {
   const result = await runSensor("/fixture", tmp);
   assert.ok(result.ok); assert.ok(result.envelope.pr.merge_ready); fs.unlinkSync(tmp);
 });
+
+// ---------------------------------------------------------------------------
+// Issue #678 O6 — an unreadable cwd is a refusal, never a silent stand-in
+// ---------------------------------------------------------------------------
+
+test("an unreadable cwd refuses instead of sampling the process cwd", async () => {
+  // The frozen failure (issue #678): `resolveCwd` swallowed an unreadable path
+  // and returned `process.cwd()`, so the sensor reported another project's
+  // counts as if they were this project's.
+  const missing = "/nonexistent/issue-678-unreadable-cwd";
+  const tmp = writeSensor("console.log('ran-in:' + process.cwd());");
+  try {
+    const result = await runSensor(missing, tmp);
+    assert.equal(result.ok, false, "the run refuses");
+    assert.equal(result.refusal, "sensor-degraded");
+    assert.match(result.detail, /nonexistent/, "the refusal names the cwd it could not resolve");
+    assert.doesNotMatch(result.detail, /ran-in/, "the sensor never ran in the process cwd");
+  } finally {
+    fs.unlinkSync(tmp);
+  }
+});
