@@ -228,6 +228,38 @@ test("journal-carrier-check fails on a malformed fixture carrier and moves no by
   }
 });
 
+test("journal-carrier-check fails a colliding entry slot, naming every file, and moves no byte", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "journal-carrier-slot-"));
+  try {
+    const carrier = path.join(dir, ".agentic-workflow", "journal");
+    fs.mkdirSync(carrier, { recursive: true });
+    const first = "20261108T121830Z-main-narrative-sess-collision.md";
+    const second = "20261108T121845Z-main-narrative-sess-collision.md";
+    fs.writeFileSync(path.join(carrier, first), "## 2026-11-08T12:18:30Z — main — first\n- **Summary:** first entry\n");
+    fs.writeFileSync(path.join(carrier, second), "## 2026-11-08T12:18:45Z — main — second\n- **Summary:** second entry\n");
+    const step = STEPS.find((candidate) => candidate.id === "journal-carrier-check");
+    assert.ok(step, "the carrier check is a declared gate step");
+    const result = spawnSync(step.argv[0], [...step.argv.slice(1), "--dir", dir], {
+      cwd: ROOT,
+      encoding: "utf8",
+      env: stepEnv(),
+    });
+    assert.equal(result.status, 2, result.stderr);
+    // The refusal line counts the refused files — a colliding slot refuses two —
+    // and the reason names every one of them (issue #675's read-side invariant).
+    assert.match(result.stderr, /^JOURNAL REFUSAL — 2 non-conforming fragment/u);
+    for (const name of [first, second]) assert.ok(result.stderr.includes(name), `stderr names ${name}`);
+    assert.match(result.stderr, /one entry per conversation per kind/u);
+    assert.deepEqual(
+      fs.readdirSync(carrier).sort(),
+      [first, second].sort(),
+      "validate-only: nothing consumed",
+    );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 /* ------------------------------------------------------- the secret scan step */
 
 test("the secret-scan step is offline, non-test-bearing and never dropped for want of a range", () => {

@@ -15,7 +15,9 @@ export declare const DEFAULT_LOG: string;
  * Aggregate the pending fragments under `<root>/<journalDir?>` into
  * `<root>/<logPath?>`: append newest-first (ties: branch, kind, session
  * ascending), delete the consumed fragments, consume already-present bytes
- * without appending. Refuses before the first byte moves.
+ * without appending, and keep only the newest fragment of an identity slot
+ * (`(sessionId, kind)`), naming each superseded fragment it drops (issue #675).
+ * Refuses before the first byte moves.
  */
 export declare function aggregateJournal(options: {
   root: string;
@@ -25,6 +27,7 @@ export declare function aggregateJournal(options: {
   ok: true;
   appended: string[];
   alreadyPresent: string[];
+  superseded: { name: string; supersededBy: string }[];
   removed: string[];
   log: string;
   fragments: number;

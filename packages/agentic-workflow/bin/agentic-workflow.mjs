@@ -123,11 +123,14 @@
  * `journal` (issue #405) is the session-log fragment carrier's CLI, forge-free
  * by contract (AC5): `aggregate` appends the pending fragments under
  * `.agentic-workflow/journal/` to `docs/LOGS.md` newest-first (ties: branch,
- * kind, session ascending), deletes the consumed fragments and refuses anything
- * ambiguous with exit 2 and "JOURNAL REFUSAL — <reason>" — re-running on an
- * aggregated set is a no-op. `aggregate --check` is the same validation as a
- * read-only lint: it lists every non-conforming entry and moves no byte (issue
- * #452 S3). `write` is the programmatic writer (issue #452 S1): the caller
+ * kind, session ascending), deletes the consumed fragments, keeps the newest
+ * fragment of a colliding entry slot (naming each superseded one in the
+ * receipt, issue #675) and refuses anything ambiguous with exit 2 and "JOURNAL
+ * REFUSAL — <reason>" — re-running on an aggregated set is a no-op. `aggregate
+ * --check` is the same validation as a read-only lint: it lists every
+ * non-conforming entry — a bad name or body, and an entry slot holding more
+ * than one fragment, with every file named — and moves no byte (issues #452 S3,
+ * #675). `write` is the programmatic writer (issue #452 S1): the caller
  * supplies prose fields or a rendered block on stdin, and the name, timestamp,
  * branch and bytes are computed — a caller never composes a filename. `name`
  * prints the deterministic fragment name for a reader, never writing anything.
@@ -1329,8 +1332,11 @@ switch (command) {
         if (!receipt.ok) {
           // The refusal line leads (the block contract's first line), then the
           // lint's whole job: one line per fault, so a PR author sees all of it.
+          // The count is the refused FILES: a colliding slot is one refusal
+          // naming several fragments, and every one of them is non-conforming.
+          const refusedFiles = receipt.refusals.reduce((total, refusal) => total + (refusal.names?.length ?? 1), 0);
           process.stderr.write(
-            `JOURNAL REFUSAL — ${receipt.refusals.length} non-conforming fragment(s) in ${receipt.journalDir} — a malformed fragment never reaches main\n`,
+            `JOURNAL REFUSAL — ${refusedFiles} non-conforming fragment(s) in ${receipt.journalDir} — a malformed fragment never reaches main\n`,
           );
           for (const refusal of receipt.refusals) process.stderr.write(`  ${refusal.reason}\n`);
           process.exit(2);
