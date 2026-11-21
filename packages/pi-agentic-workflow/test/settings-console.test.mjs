@@ -1769,8 +1769,8 @@ test("the console offers the materialize action, explains it, and runs the same 
   assert.equal(outcome.status, "cancelled");
   assert.deepEqual(called, { projectDir: cwd, globalDir: agentDir, scope: "both", backup: true }, "same engine, both scopes, no opt-out");
   const explanation = harness.notify.map((entry) => entry.message).join("\n");
-  assert.match(explanation, /back up/u, "the pre-run explanation says a backup is made");
-  assert.match(explanation, new RegExp(paths.project.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), "it names where the files live");
+  assert.match(explanation, /backed up/u, "the pre-run explanation says a backup is made");
+  assert.match(explanation, new RegExp(join(paths.project, "..").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), "it names where the files live");
   assert.match(explanation, /preserved/u, "it says existing values are preserved");
   assert.match(explanation, /memory\.engram/u, "the receipt reports what was materialized");
   assert.equal(harness.notify.some((entry) => entry.kind === "error"), false);
