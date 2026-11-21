@@ -266,3 +266,28 @@ The two approved trim units are filed as feature issues (labels `feature`,
 No ordering constraint between them (disjoint surfaces and test-impact sets).
 The unit-lane split (§7) stays parked with the owner; the inline session-close
 fix is already on `main` (`c830b2879`, §Addendum).
+
+### §7 verdict revision (third round, 2026-11-20) — the preset is out, the program is in
+
+Over the §7 sketch, the owner ruled:
+
+- **The command must be programmatic and deterministic, not a skill prompt.**
+  Option 1 (presets injecting the skill) is **rejected**; option 3 (two skills)
+  was already rejected. The surviving shape: one deterministic loop over the
+  closed catalog — sense (machine envelope) → decide (next step + stop
+  conditions from `catalog.json`) → invoke (the step's bounded work) → receipt —
+  with the model executing handed steps, never deciding what is next. The
+  `sensor → decide → invoke` shape is what #284's spike validated; pi-durable
+  adoption stays #284's flip-condition decision.
+- **Session composition is the program's call, derived from the unit's recorded
+  verdict** (tier/size): one session for one-shot units; phase-per-turn,
+  orchestrate subagents, or Relay legs where the existing verdicts route to
+  them. Not a human choice at the keyboard.
+- **Tier `high` always stops after plan, under both commands** — decided yes.
+- **Names deferred** to the design step.
+
+Filed as **#669** (feature, `needs-triage`): the full command completes a unit
+with the guardrails intact; the define command halts after design+plan behind an
+owner-typed `--yes` recorded as a human-owner D row. The `--stop-after`
+capability moved from skill prose (§7's layer 1) into the driver's flag — the
+portable `unit-lane` skill changes only its `argument-hint:` if at all.
