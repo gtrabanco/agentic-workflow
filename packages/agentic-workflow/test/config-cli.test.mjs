@@ -283,3 +283,25 @@ test("config default refuses an unknown scope and a broken file without touching
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("config default refuses before any byte moves in any scope", () => {
+  const { root, global, project } = fixture();
+  try {
+    // The default scope runs global first: a refusal must still leave every
+    // file of the run untouched, because the message says `nothing was written`
+    // and the crate README promises a refusal lands before any byte moves
+    // (external-verify 2026-11-21, blocker B1).
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json");
+    const broken = '{ "logSession": ';
+    writeFileSync(file, broken);
+    const refused = run(["default", "--project", project, "--global-dir", global]);
+    assert.equal(refused.status, 2, refused.stderr);
+    assert.match(refused.stderr, /CONFIG REFUSAL — .*nothing was written/u);
+    assert.equal(readFileSync(file, "utf8"), broken, "the refusing file keeps its bytes");
+    assert.equal(existsSync(join(global, "agentic-workflow.json")), false, "no scope is written before the refusal");
+    assert.equal(readdirSync(join(project, ".pi")).some((name) => name.includes(".bak-")), false, "a refused run takes no backup");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
