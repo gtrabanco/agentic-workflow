@@ -57,6 +57,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { tempRoot } from "./temp-root.mjs";
+import { SKILL_SURFACE_COUNT_MACHINES, deriveSkillSurfaceCounts } from "./skill-surface-counts.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 /** Re-pointable so the suite runs red against an injected tree (P9's gotcha 3). */
@@ -674,8 +675,12 @@ function runDriftChecks(model) {
   if (!facts) {
     findings.push(refuse("undeclared-grammar", "rendered-facts", FACTS_MARKER, `${GUIDE_REL} lost its ${FACTS_MARKER} block, so a restatement could go unpinned`));
   } else {
+    // The skill-surface counters have one owner — `scripts/skill-surface-counts.mjs`
+    // (issue #668). The gate imports that derivation and keeps no second copy of a
+    // number, so the prose a row pins can never disagree with the surface it counts.
+    const derived = deriveSkillSurfaceCounts(root);
     const counts = {
-      "count:user-facing": () => [...model.hints.values()].filter((h) => h.userInvocable).length,
+      ...Object.fromEntries(SKILL_SURFACE_COUNT_MACHINES.map((name) => [name, () => derived[name]])),
       // The workspace's package count (issue #646 A2): "the three companion npm
       // packages" was a prose count with no publisher, so it drifted the moment
       // a fourth landed. The machine is the tree itself — a directory under
@@ -1130,6 +1135,49 @@ test("#646 a workspace count restated in prose is recomputed, so a new package c
     assert.match(findings[0].message, /recomputes to 4/);
   } finally {
     fs.readFileSync = realRead;
+  }
+});
+
+test("#668 a hand-rendered skill-surface count is recomputed from the tree, never trusted", () => {
+  const surfaces = ["README.md", "docs/workflow/SKILLS.md", "docs/workflow/REPLICATE.md"];
+  const green = runDriftChecks(buildSurfaceModel()).filter((f) => surfaces.includes(f.surface));
+  assert.deepEqual(green, [], "every rendered skill-surface count agrees with the tree today");
+
+  /** Run the gate over a tree where `rel` reads `mutated`, never writing it. */
+  const findingsFor = (rel, mutated) => {
+    const patched = new Map([[path.resolve(root, rel), mutated]]);
+    const realRead = fs.readFileSync;
+    fs.readFileSync = (file, ...rest) => (patched.has(path.resolve(String(file))) ? patched.get(path.resolve(String(file))) : realRead(file, ...rest));
+    try {
+      return runDriftChecks(buildSurfaceModel());
+    } finally {
+      fs.readFileSync = realRead;
+    }
+  };
+
+  // A stale total: the sentence lost the number the tree recomputes.
+  const readme = read("README.md");
+  const stale = readme.replace(/(\d+) source skills/, "31 source skills");
+  assert.notEqual(stale, readme, "the pinned total is present in the prose");
+  const staleFindings = findingsFor("README.md", stale).filter((f) => f.code === "unrendered-value" && f.surface === "README.md");
+  assert.equal(staleFindings.length, 1, `the stale total is refused once: ${JSON.stringify(staleFindings)}`);
+  assert.match(staleFindings[0].message, /recomputes to \d+/);
+
+  // An enumeration that contradicts its own count is the same defect (the #663 shape).
+  const replicate = read("docs/workflow/REPLICATE.md");
+  const drifted = replicate.replace(/The (\d+) installable skills/, "The 27 installable skills");
+  assert.notEqual(drifted, replicate, "the pinned installable total is present in the prose");
+  const driftFindings = findingsFor("docs/workflow/REPLICATE.md", drifted).filter((f) => f.code === "unrendered-value" && f.surface === "docs/workflow/REPLICATE.md");
+  assert.equal(driftFindings.length, 1, `the stale installable total is refused once: ${JSON.stringify(driftFindings)}`);
+  assert.match(driftFindings[0].message, /recomputes to \d+/);
+
+  // Every `count:` row over a skill surface cites a machine the counter publishes —
+  // a row naming a number nobody derives would read as green forever.
+  const facts = versionedBlock(read(GUIDE_REL), FACTS_MARKER);
+  const skillCountRows = facts.rows.filter((row) => row.machine.startsWith("count:") && row.machine !== "count:packages");
+  assert.ok(skillCountRows.length >= 13, `the skill-surface renderings are pinned (${skillCountRows.length} rows)`);
+  for (const row of skillCountRows) {
+    assert.ok(SKILL_SURFACE_COUNT_MACHINES.includes(row.machine), `${row.machine} is published by the counter`);
   }
 });
 
