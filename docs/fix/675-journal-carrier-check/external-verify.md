@@ -30,3 +30,49 @@ Completeness: S1–S13 resolved — S1→P5, S2→P2, S3→P3+P4, S4→P1, S5→
 Spot check: `bun test packages/agentic-workflow/test/journal.test.mjs` → 35 pass / 0 fail → match (E2 verbatim); companion re-run: `bun scripts/local-gate.mjs --jobs 4 --no-bail` → exit 1 with 18/20 and the same two disclosed reds as G1 (:308), live carrier + docs/LOGS.md sha256 byte-identical before/after the run.
 Verdict: NEEDS-DECISION (3 open blockers — O14's clearing is an owner/forge step after merge; O10/AC13 and AC1 are unit-doc re-spellings for /aw-local-apply; no code behaviour is in question: every S2–S13 probe, my own and the suites', is green at head with its base side proven in mktemp -d scratch)
 ```
+
+## Correction batch — 2026-11-21 (owner-ordered apply)
+
+Owner instruction (verbatim): "Apply to this repository: triage and fix those
+that deserve to fix but understand the context before fix and check you haven't
+broke another different thing, if you have done, start the loop again until you
+fixed full symbol/related stuff". The block above stays the point-in-time
+verdict at base `278dff6c` · head `c012113b6`.
+
+- **Folded — blockers 1-2, advisories 2-7.**
+  - Blocker 1 (AC1) → `fbbc00cf0`: ## Impact names all 17 diff paths (the unit
+doc + this receipt, `aggregate.d.mts`, the two suites, `bin/`, `template/`),
+`## Surfaces` gains `template` + `scripts`; recheck `E14` → 17/17.
+  - Blocker 2 (O10/AC13/Applicable tests) → `fbbc00cf0`: the validator is
+re-spelled to `bun test scripts/structural-sibling-pins.test.mjs`, the command
+E6 always recorded; recheck `E14` → exit 0 · 8 pass / 0 fail. `ac-hash`
+re-pinned `cc1f99d1…` → `451a78df…` (AC change after freeze = plan repair,
+DESIGN §Acceptance — command from that section).
+  - Advisory 2 (E11) → folded as appended `E15` (the Log is append-only:
+E11 keeps its record, the delta is declared; the 7th derived entry is a
+non-suite fixture, the six runnable suites were green, 19/27 are green now).
+  - Advisory 3 (AC4 green-run SHA) → `E16` binds the green run to `59de2b270`.
+  - Advisory 4 (O11's uncovered half) → `4ff94dee7` adds the gate's
+colliding-slot case; red at base (`0 !== 2`, `E12`), red pre-fix on the count,
+green at head (`63 pass`, `E16`).
+  - Advisory 5 (CLI docblock) + 6 (refusal count) → `4ff94dee7`: docblock
+states the slot rule; the header counts refused FILES (malformed output
+byte-identical vs base — `E13`; `journal.test`'s collision expectation moved
+`1` → `${LIVE_PAIR.length}`, the contract the fix corrects, behavioural pins
+untouched).
+  - Advisory 7 (Specs intro range) → `fbbc00cf0`: `S2`–`S13`.
+  - Session entry per §7 → `59de2b270` (mechanical fragment — the
+conversation's narrative slot is this unit's own rule; `log-immutability`
+PASS, 0 violations over the batch's range).
+- **Not folded — blocker 3 (O14) and advisory 1.** O14's validator needs the
+post-merge `gh workflow run agentic-workflow-journal.yml --ref main` to land its
+aggregation PR; dispatching pre-merge would mutate the forge without an order
+and a local consumption would violate `log-immutability`'s attribution model
+(PE-006), so the row stays `in-progress` for the owner. Advisory 1 is another
+session's stale worktree — the removal order is the owner's
+(`docs/workflow/WORKTREES.md`).
+- **Recheck (blockers-only, `E14` + `E16` + `G2`):** AC1 17/17 named ·
+O10's validator 8/0 · full gate at `59de2b270` → 18/20 with only the two
+disclosed reds, no new one; live carrier + `docs/LOGS.md` byte-identical across
+the run; derived set 537/0 (19 suites) + 10 hook tests exit 0.
+- **Open:** blocker 3 (O14) — owner/forge, after merge; advisory 1 — owner.
