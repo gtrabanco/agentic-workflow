@@ -230,8 +230,10 @@ block and touches nothing.
 ## A complete example file
 
 `runner config init --scope project` writes this template, every value commented
-out so the file starts at the shipped defaults. It is reproduced here as the
-reference the issue asked for: every section, every option this repository
+out so the file starts at the shipped defaults. `runner config default` is the
+other half: it writes those values out explicitly, each with the same
+documentation, keeping whatever the operator already set. The template is
+reproduced here as the reference: every section, every option this repository
 publishes, and the default each one resolves to.
 
 ```jsonc
@@ -349,6 +351,53 @@ What the wiring does with this table:
   is older than seven days. The sweep dates each file by the epoch it records and
   never adopts one.
 
+## Materialize the explicit defaults — `config default`
+
+Resolution fills defaults in code, so a config file shows only what the operator
+wrote and the rest of the surface is invisible. `config default` makes every
+declared option explicit: each key is written with its shipped default, and an
+English comment naming the option, its type and that default — the same data
+`config list` exposes, so neither can drift.
+
+```bash
+runner config default                 # every file of both scopes
+runner config default --scope project
+runner config default --no-backup
+runner config default --json
+```
+
+- **Merge, never clobber.** A value the operator set is preserved exactly; only
+  an `undefined` key gains its default. A key the schema no longer declares is
+  dropped.
+- **Backup first.** An existing file is copied to `<file>.bak-<timestamp>` beside
+  it before anything changes. `--no-backup` skips the copy, never the write; the
+  settings console has no opt-out.
+- **Idempotent.** A second run changes no byte and takes no second backup, so the
+  operation is safe to re-run after every upgrade.
+- **Every installed file.** The base `agentic-workflow.json` always;
+  `pi-agentic-workflow.json` only while `pi-agentic-workflow` is installed, and
+  any other extension the same way, through `config-extension@1` discovery — the
+  mechanism is generic, never a per-package case.
+- **Refuse before writing.** A file that does not parse, and a merge that fails
+  validation, exit 2 with `CONFIG REFUSAL — <reason>` and leave the file (and its
+  backup directory) untouched.
+- **A written default resolves exactly like the absent key.** Materializing is a
+  visibility change, never a resolution change.
+- **The divergence check.** `doctor` compares each existing project config file's
+  key set with the schema and reports "new options available … run config
+  default" or the removed keys, so an upgrade that adds or retires an option has
+  a reporter. The doctor only observes: it writes nothing.
+
+The receipt is JSON on stdout and the progress lines are stderr only:
+
+```json
+{ "contract": "config-materialize@1", "scope": "both",
+  "files": [ { "scope": "project", "file": "agentic-workflow.json",
+               "path": ".pi/agentic-workflow.json", "existed": true,
+               "written": true, "backup": ".pi/agentic-workflow.json.bak-20261121T013000Z",
+               "materialized": ["logSession.publisher"], "removed": [] } ] }
+```
+
 ## CLI
 
 ```bash
@@ -370,6 +419,7 @@ runner config validate --scope both
 runner config validate --sanitize
 runner config reset logSession.publisher
 runner config init --scope project
+runner config default [--scope global|project|both] [--no-backup]
 runner config schema
 ```
 
@@ -390,6 +440,16 @@ config.set("project", ["pi", "model", "default"], "nan/qwen3-32b");
 config.list({ scope: "resolved", category: "feature" });
 config.showResolved();
 config.validate("both", { sanitize: false, noWarnUnknown: false });
+```
+
+The materialization engine is exported beside the API, because it is not a
+single-path operation — it reconciles every file of a scope:
+
+```js
+import { configDivergence, materializeConfig } from "@gtrabanco/agentic-workflow/src/config/materialize.mjs";
+
+const receipt = materializeConfig({ projectDir, globalDir, scope: "both", backup: true });
+const divergence = configDivergence({ projectDir, globalDir, scope: "project" });
 ```
 
 Every write validates first. `list` returns `{ path, type, writable,
