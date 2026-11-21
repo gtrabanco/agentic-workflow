@@ -270,8 +270,9 @@ This repo has no application build. "Green" means:
   references it indexes) are within the ceilings the same manifest declares.
 - No stack/real-project references leaked into the skills or shared docs.
 - Root suites pass: `node scripts/run-root-suite.mjs` (the same
-  `scripts/*.test.mjs`, git signing neutralized for throwaway fixtures so an
-  operator's `commit.gpgsign=true` cannot fail a suite that commits nothing
+  `scripts/*.test.mjs`, git signing and a stable fixture identity neutralized
+  for throwaway fixtures so an operator's `commit.gpgsign=true` — or a runner
+  with no ambient identity — cannot fail a suite that commits nothing
   real, and the schema package's gitignored `dist/` rebuilt first when it is
   stale — no contract suite reads another source set's build); per file,
   `bun test scripts/<file>.test.mjs` runs the identical suite bun-first
@@ -345,7 +346,9 @@ rule extends to the gate.** Per file, tests are bun-first —
 guaranteed fallback — and the whole gate runs under either runtime:
 `scripts/run-root-suite.mjs` adapts the invocation per runtime (`bun test`
 subcommand vs `node --test` flag), wraps every suite process in two external bounds
-— a 120s suite wall-clock killer and a sampled 1.5 GB memory cap, both
+— a 120s suite wall-clock killer (a suite declares its own higher bound in
+  `scripts/test-timeout-allowlist.json` when load alone pushes it past the
+  shared one) and a sampled 1.5 GB memory cap, both
 signal-based because a microtask-starved loop never fires a runner's own timer
 (issue #493) — and the per-test budget defaults to 10s per test; a suite that
 measured above it is named, with its reason and cost, in

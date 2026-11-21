@@ -38,6 +38,7 @@ import {
   suites,
   SCHEMA_PACKAGE_DIR,
   schemaBuildManager,
+  suiteBudgetFor,
   testBudgetFor,
 } from "./run-root-suite.mjs";
 import { tempRoot } from "./temp-root.mjs";
@@ -223,14 +224,21 @@ test("readAllowlist: every entry carries its own budget, reason and measured cos
     file,
     JSON.stringify([
       { path: "scripts/slow.test.mjs", timeoutMs: 60_000, reason: "full-history git walks", measured: "41.2s max per test, 2026-11-10" },
+      { path: "packages/pkg/test/heavy.test.mjs", timeoutMs: 10_000, suiteTimeoutMs: 240_000, reason: "spawn-heavy e2e", measured: "163.2s suite under load" },
     ]),
   );
   const allowlist = readAllowlist(file);
-  assert.equal(allowlist.size, 1);
+  assert.equal(allowlist.size, 2, "a package suite path is a legitimate allowlist entry");
   assert.deepEqual(allowlist.get("scripts/slow.test.mjs"), {
     timeoutMs: 60_000,
     reason: "full-history git walks",
     measured: "41.2s max per test, 2026-11-10",
+  });
+  assert.deepEqual(allowlist.get("packages/pkg/test/heavy.test.mjs"), {
+    timeoutMs: 10_000,
+    suiteTimeoutMs: 240_000,
+    reason: "spawn-heavy e2e",
+    measured: "163.2s suite under load",
   });
 });
 
@@ -243,6 +251,7 @@ test("readAllowlist: malformed JSON, a bare entry, a missing reason or measured 
     ["missing-measured", JSON.stringify([{ path: "scripts/a.test.mjs", timeoutMs: 60_000, reason: "git walks" }])],
     ["missing-timeout", JSON.stringify([{ path: "scripts/a.test.mjs", reason: "git walks", measured: "41s" }])],
     ["not-a-suite", JSON.stringify([{ path: "src/index.ts", timeoutMs: 60_000, reason: "git walks", measured: "41s" }])],
+    ["bad-suite-timeout", JSON.stringify([{ path: "scripts/a.test.mjs", timeoutMs: 60_000, suiteTimeoutMs: 0, reason: "git walks", measured: "41s" }])],
   ];
   for (const [name, content] of refusals) {
     const file = join(dir, `${name}.json`);
@@ -264,6 +273,35 @@ test("testBudgetFor: an allowlisted suite gets its own budget, everything else t
   assert.equal(testBudgetFor("scripts/slow.test.mjs", allowlist), 60_000);
   assert.equal(testBudgetFor("scripts/fast.test.mjs", allowlist), 10_000);
   assert.equal(testBudgetFor("scripts/fast.test.mjs", new Map()), 10_000);
+});
+
+test("suiteBudgetFor: an allowlisted suite gets its own wall-clock bound, everything else the shared 120s default", async () => {
+  const { suiteBudgetFor } = await import("./run-root-suite.mjs");
+  const allowlist = new Map([
+    ["scripts/slow.test.mjs", { timeoutMs: 60_000, reason: "r", measured: "m" }],
+    ["packages/pkg/test/heavy.test.mjs", { timeoutMs: 10_000, suiteTimeoutMs: 240_000, reason: "r", measured: "m" }],
+  ]);
+  assert.equal(suiteBudgetFor("packages/pkg/test/heavy.test.mjs", allowlist), 240_000, "the declared suite bound wins");
+  assert.equal(suiteBudgetFor("scripts/slow.test.mjs", allowlist), 120_000, "an entry without suiteTimeoutMs keeps the shared bound");
+  assert.equal(suiteBudgetFor("scripts/fast.test.mjs", allowlist), 120_000);
+  assert.equal(suiteBudgetFor("scripts/fast.test.mjs", new Map()), 120_000);
+  assert.equal(suiteBudgetFor("scripts/fast.test.mjs", new Map(), 60_000), 60_000, "an explicit --suite-timeout still wins over the default");
+});
+
+test("S15: the load-marginal crate suite carries its declared suite bound in the shipped allowlist", () => {
+  // doc.structure's e2e cases spawn the doc-index CLI per case: ~64s suite
+  // standalone, but 110–163s under the gate pool with concurrent sessions on
+  // the box (SUITE TIMEOUT at the shared 120s bound, every case inside in
+  // pass) — observed in root-suite runs 44894795525 and 44895748471. The
+  // per-suite bound is the fix; the per-test budget stays declared too, since
+  // the same load inflates the CLI spawns toward the 10s default.
+  const file = "packages/agentic-workflow/test/doc.structure.test.mjs";
+  const allowlist = readAllowlist();
+  const entry = allowlist.get(file);
+  assert.ok(entry, `${file} must be in the shipped allowlist`);
+  assert.equal(suiteBudgetFor(file, allowlist), 240_000, "the suite carries its own 240s wall-clock bound");
+  assert.ok(entry.reason.trim(), "the entry declares why it needs the bound");
+  assert.ok(entry.measured.trim(), "the entry declares what was measured");
 });
 
 test("S9: the two measured spawn-heavy suites carry their declared budget in the shipped allowlist", () => {
@@ -311,6 +349,9 @@ test("the suite spawned by the runner inherits no ambient git tracing (owner-rou
     assert.equal(env.GIT_DIR, undefined, "the locator contract still holds through this builder");
     assert.equal(env[`GIT_CONFIG_KEY_${index}`], "commit.gpgsign", "the gate's own config still lands");
     assert.equal(env[`GIT_CONFIG_VALUE_${index}`], "false");
+    assert.equal(env[`GIT_CONFIG_KEY_${Number(index) + 1}`], "user.name", "the fixture identity lands after the signing layer");
+    assert.equal(env[`GIT_CONFIG_KEY_${Number(index) + 2}`], "user.email", "the fixture identity carries a non-routable email");
+    assert.ok(env[`GIT_CONFIG_VALUE_${Number(index) + 2}`].endsWith(".invalid"), "the fixture email is non-routable");
     assert.equal(env.NODE_TEST_CONTEXT, undefined, "a suite never inherits its parent's test-runner context");
     assert.equal(env.PATH, process.env.PATH, "the rest of the environment is inherited");
   } finally {
