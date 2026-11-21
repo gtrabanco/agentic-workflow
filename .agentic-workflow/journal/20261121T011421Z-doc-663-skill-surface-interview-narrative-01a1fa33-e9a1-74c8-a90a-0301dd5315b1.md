@@ -1,6 +1,0 @@
-## 2026-11-21T01:14:21Z — doc/663-skill-surface-interview — narrative
-- **Commits:** 7 (`e5e28a72…bf3c42a4`)
-- **Files:** docs/fix/646-docs-skills-reconciliation/second-read.md, docs/passive/2026-11-20-issue-663-skill-surface-diagnosis.md, docs/research/2026-11-20-issue-663-skill-surface-diagnosis.md
-- **Summary:** Issue #663: skill-surface interview, diagnosis and trim planning
-- **Decisions:** Owner wanted evidence-based diagnosis before any decision; ran measured tree audit (skill counts, review-pack duplication, unit-lane gap). Found pre-existing session-close exit-code bug on main (#553): fixed inline, pushed c830b2879 (node exits 0 on dirty close, bun honored exitCode). Filed 3 issues: #667 (review-pack shared preamble extraction, one owner reference), #668 (rendered-facts for skill counts from tree), #669 (deterministic lane driver: /draft stops after design+plan with approval block, /flow reconciles state and completes unit; stop rules via #444 SystemOne, --yes on /flow overrides any stop; naming closed after two rejected frames: /draft + /flow; loop is sensor->decide->invoke over closed catalog, model executes, never decides). Owner rejected preset mechanism, chose programmatic driver. #663 closed.
-- **Next:** Triaging #667, #668, or #669: /unit-lane --from-issue 667 | 668 | 669
