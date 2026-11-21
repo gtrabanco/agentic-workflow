@@ -399,11 +399,16 @@ test("the dist producer and every step that reads or rebuilds dist depend on sch
   // what keeps them apart. journal-carrier-check spawns the crate CLI, whose
   // workspace import resolves the same dist — observed red: 'does not provide
   // an export named QUALITY_METRICS_CONTRACT_ID' when it ran beside schema-build.
-  for (const consumer of ["schema-node-compat", "crate-suite-bun", "crate-suite-node", "root-suite", "pi-compat-guard", "journal-carrier-check"]) {
+  // docs-generated-projection imports the crate's docs-generate module, whose
+  // workspace import resolves the schema package itself — observed red in CI
+  // (run 44892151680): ERR_MODULE_NOT_FOUND for the schema package, because the
+  // step started before workspace-install linked the workspace on a clean
+  // checkout, and its dist before schema-build's tsc emitted it.
+  for (const consumer of ["schema-node-compat", "crate-suite-bun", "crate-suite-node", "root-suite", "pi-compat-guard", "journal-carrier-check", "docs-generated-projection"]) {
     assert.ok(DEPS[consumer].includes("schema-build"), `${consumer} must wait for schema-build`);
   }
   assert.deepEqual(DEPS["schema-build"], ["workspace-install"], "the build itself waits only for the install");
-  for (const consumer of ["schema-build", "crate-suite-bun", "crate-suite-node", "schema-node-compat", "pi-node-compat"]) {
+  for (const consumer of ["schema-build", "crate-suite-bun", "crate-suite-node", "schema-node-compat", "pi-node-compat", "docs-generated-projection"]) {
     assert.ok(DEPS[consumer].includes("workspace-install"), `${consumer} must wait for the frozen-lockfile install`);
   }
 });
