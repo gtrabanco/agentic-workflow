@@ -446,3 +446,31 @@ test("the documented inventory is the declaration: a drift refuses in both direc
     (error) => error instanceof DoctorRefusal && error.code === "inventory-missing",
   );
 });
+
+// ── config-files — the schema-divergence report (issue #600 S8) ──────────────
+
+test("a converged config file is ok, and absent files are not-applicable (issue #600)", async () => {
+  const absent = check(await runDoctor({ ops: healthyOps(), inventoryText: README }), "config-files");
+  assert.equal(absent.status, "not-applicable", "a project with no config file has nothing to reconcile");
+
+  const converged = JSON.stringify({ logSession: { enabled: false, publisher: null }, memory: { engram: false } });
+  const base = healthyOps();
+  const ops = { ...base, readText: (path) => (path === `${ROOT}/.pi/agentic-workflow.json` ? converged : base.readText(path)), exists: (path) => path === `${ROOT}/.pi/agentic-workflow.json` || base.exists(path) };
+  const row = check(await runDoctor({ ops, inventoryText: README }), "config-files");
+  assert.equal(row.status, "ok", JSON.stringify(row.evidence));
+  assert.deepEqual(row.evidence.files.find((file) => file.file === "agentic-workflow.json").removed, []);
+});
+
+test("a diverged config file names the new options and the removed keys (issue #600 S8)", async () => {
+  const base = healthyOps();
+  const text = JSON.stringify({ logSession: { enabled: true }, guards: { merge: false } });
+  const ops = { ...base, readText: (path) => (path === `${ROOT}/.pi/agentic-workflow.json` ? text : base.readText(path)), exists: (path) => path === `${ROOT}/.pi/agentic-workflow.json` || base.exists(path) };
+  const row = check(await runDoctor({ ops, inventoryText: README }), "config-files");
+  assert.equal(row.status, "mismatch");
+  assert.match(row.advisory, /new options available/u);
+  assert.match(row.advisory, /removed keys/u);
+  assert.match(row.instruction, /\bconfig default\b/u);
+  const file = row.evidence.files.find((entry) => entry.file === "agentic-workflow.json");
+  assert.equal(file.missing.includes("logSession.publisher"), true);
+  assert.equal(file.removed.includes("guards"), true);
+});

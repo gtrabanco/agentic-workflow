@@ -203,7 +203,7 @@ test("the row rides the doctor envelope with its documented requirement, route a
   assert.equal(CHECK_PROBES.filter((probe) => probe.id === "dogfooding-vehicle").length, 1);
   assert.match(README, /^dogfooding-vehicle \|/mu, "the inventory documents the row");
   assert.match(renderDoctor(envelope), /dogfooding-vehicle\s+vehicle /u);
-  assert.equal(envelope.rows.length, 15, "one row per documented surface");
+  assert.equal(envelope.rows.length, 16, "one row per documented surface");
 });
 
 test("an unarmed row is instruct-only in the wizard's vocabulary, and prints the exact command", async () => {

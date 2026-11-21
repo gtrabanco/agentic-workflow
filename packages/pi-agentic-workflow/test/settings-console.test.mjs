@@ -1734,3 +1734,67 @@ test("#174: the missing-backend policy is editable", async () => {
   assert.equal(outcome.status, "saved");
   assert.equal(JSON.parse(written.get(paths.global)).stateFlow.onBackendMissing, "refuse");
 });
+
+// ── Materialize default values into the config files (issue #600 S7) ────────
+
+test("the console offers the materialize action, explains it, and runs the same engine with a backup", async () => {
+  const harness = scriptedUi({
+    [prompts.scope]: "Project",
+    [prompts.menu]: [prompts.materialize, prompts.cancel],
+    [prompts.materializeConfirm]: true,
+  });
+  let called = null;
+  const receipt = {
+    contract: "config-materialize@1",
+    scope: "both",
+    files: [
+      { scope: "project", file: "agentic-workflow.json", path: paths.project, existed: true, written: true, backup: `${paths.project}.bak-20261121T013000Z`, materialized: ["memory.engram"], removed: [] },
+      { scope: "global", file: "agentic-workflow.json", path: paths.global, existed: false, written: true, backup: null, materialized: ["logSession.enabled"], removed: [] },
+    ],
+  };
+  const deps = {
+    ui: harness.ui,
+    agentDir,
+    cwd,
+    projectTrusted: true,
+    commands,
+    readFile: readFrom({ [paths.project]: "{}" }),
+    writeFile: () => {},
+    materializeDefaults: (options) => {
+      called = options;
+      return receipt;
+    },
+  };
+  const outcome = await runSettingsConsole(deps);
+  assert.equal(outcome.status, "cancelled");
+  assert.deepEqual(called, { projectDir: cwd, globalDir: agentDir, scope: "both", backup: true }, "same engine, both scopes, no opt-out");
+  const explanation = harness.notify.map((entry) => entry.message).join("\n");
+  assert.match(explanation, /back up/u, "the pre-run explanation says a backup is made");
+  assert.match(explanation, new RegExp(paths.project.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), "it names where the files live");
+  assert.match(explanation, /preserved/u, "it says existing values are preserved");
+  assert.match(explanation, /memory\.engram/u, "the receipt reports what was materialized");
+  assert.equal(harness.notify.some((entry) => entry.kind === "error"), false);
+});
+
+test("declining the materialize consent writes nothing, and an untrusted project never runs it", async () => {
+  const declined = scriptedUi({ [prompts.scope]: "Project", [prompts.menu]: [prompts.materialize, prompts.cancel], [prompts.materializeConfirm]: false });
+  let calls = 0;
+  const base = {
+    agentDir,
+    cwd,
+    commands,
+    readFile: readFrom({ [paths.project]: "{}" }),
+    writeFile: () => {},
+    materializeDefaults: () => {
+      calls += 1;
+      return { contract: "config-materialize@1", scope: "both", files: [] };
+    },
+  };
+  assert.equal((await runSettingsConsole({ ...base, ui: declined.ui, projectTrusted: true })).status, "cancelled");
+  assert.equal(calls, 0, "a no writes nothing");
+
+  const untrusted = scriptedUi({ [prompts.scope]: "Global", [prompts.menu]: [prompts.materialize, prompts.cancel] });
+  assert.equal((await runSettingsConsole({ ...base, ui: untrusted.ui, projectTrusted: false })).status, "cancelled");
+  assert.equal(calls, 0, "an untrusted project is refused before the engine runs");
+  assert.equal(untrusted.notify.some((entry) => entry.kind === "warning" && /untrusted/u.test(entry.message)), true);
+});
