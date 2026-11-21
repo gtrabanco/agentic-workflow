@@ -139,6 +139,9 @@ code:
   region (no emitter exists for the `documents` section).
 - `docs/ROADMAP.md` + `docs/generated/units.md` — the fix row settles and the
   projection regenerates through the emitter, never by hand.
+- `.changeset/675-journal-carrier-check.md` — the crate's shipped content moved,
+  so the version-parity gate needs the release intent the release applies; the
+  train bump stays the release's job (`D-40-14`).
 - The repository's own carrier (`.agentic-workflow/journal/`) — its published
   contents carry the live pair; the change makes that state a refusal, and the
   sanctioned consumer (`journal aggregate`, run by the aggregation workflow with
@@ -208,6 +211,18 @@ none
   consumer is the aggregator run by `.github/workflows/agentic-workflow-journal.yml`
   with the bot identity — it consumes both, appends the newest, and names the
   superseded one. `## Next` carries the command and the ordering.
+- **The guide's estimate ceiling was already red at the base commit** — the
+  #668 integration merge (`dd5e4d37c`) unioned nine `AGENTS.md` lines after
+  `estimateMax` had been pinned exactly to the measurement, so `check-skill-context
+  --documents` measured 14,337 against 14,285 and `scripts/check-skill-context.test.mjs`
+  failed before this unit wrote a line. `affects` the gate: repaired as a rider
+  (`3a963d934`), pinning the exact measurement with its own `sources` row, no
+  headroom granted (`D4`).
+- **A stale sibling worktree** — `.worktrees/feat-667-review-pack-preamble-extraction`
+  holds a branch already merged into `origin/main`, so `scripts/worktree-guard.mjs`
+  reports `STALE` and the gate's `worktree-guard` step exits 1. `does-not-affect`
+  this unit: the finding is about another session's workspace, not this branch,
+  and the removal order is the owner's (`docs/workflow/WORKTREES.md`).
 - **Two `local` narrative fragments on `feat/668-rendered-facts-skill-counts`** —
   same branch and kind, different conversations. `does-not-affect` this unit:
   `journal-write-grammar@1` states the shared slug "is not a conversation", and
@@ -249,19 +264,19 @@ none
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2 | two conforming fragments whose parsed identity collides on `(sessionSlug, kind)` are a lint refusal naming every file in the group | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `checkJournal refuses two fragments of one conversation+kind, naming both files` | the `E` line naming the case, its exit and the two names in the reason | planned |
-| O2 | S6 | the lint moves no byte: a refused carrier keeps every fragment and the journal byte-identical | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with the builder's before/after byte comparison | the `E` line naming the case and its exit | planned |
-| O3 | S3 | aggregation never appends an identity-colliding duplicate: the newest fragment is appended, the older is consumed and named in the receipt's `superseded` row (`{ name, supersededBy }`) | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `the aggregator consumes the newest of a colliding pair and names the superseded fragment` | the `E` line naming the case, the receipt fields and the log's single copy | planned |
-| O4 | S3 | the aggregation decision is deterministic from the identity and the declared newest-first sort, never from byte coincidence | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with the same case run twice producing one receipt shape | the `E` line naming both runs | planned |
-| O5 | S2, PE-004 | the shared `local` slug is exempt on both sides: the lint and the writer read one predicate, so `local` fragments never collide while two conversations of one kind without `--session` stay legal | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `checkJournal keeps the shared local identity legal` and `git diff 278dff6c..HEAD -- packages/agentic-workflow/src/journal/write.mjs` shows only the predicate call | the `E` line plus the diff receipt | planned |
-| O6 | S5 | `journal write`'s `--session` semantics and its `already-registered` refusal are unchanged | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits 0 with 23 pass | the `E` line with the pass count | planned |
-| O7 | S4 | the suite lands red-first: the test-only commit is observed failing, the implementation commit observed green | P1 | P1 | execute-phase | `git show P1:packages/agentic-workflow/src/journal/aggregate.mjs \| rg -c 'superseded'` matches 0 | the `E` line naming the red commit, its exit and the green commit | planned |
-| O8 | S8 | `log-immutability`'s attribution model is untouched | P4 | P4 | execute-phase | `git diff --name-only 278dff6c..HEAD -- scripts/log-immutability.mjs` matches 0 lines | the `E` line with the empty diff | planned |
-| O9 | S12 | a concurrent-writer straggler (two writes, different seconds, one session+kind, both landed) is refused by the lint | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `two writes that raced past the writer's already-registered check are refused by the lint` | the `E` line naming the case and its exit | planned |
-| O10 | S13, PE-008 | no new script is added, so `scripts/structural-sibling-pins.test.mjs` has nothing unpaired | P4 | P4 | execute-phase | `bun scripts/structural-sibling-pins.test.mjs` exits 0 | the `E` line with the suite's exit | planned |
-| O11 | S13, PE-009 | the gate step still fails a malformed fixture carrier with `JOURNAL REFUSAL` and moves no byte, now also on an identity collision | P5 | P5 | execute-phase | `bun test scripts/local-gate.test.mjs` exits 0 | the `E` line with the suite's exit | planned |
-| O12 | S7 | no fixed vocabulary moves and the schema package is untouched | P4 | P4 | execute-phase | `git diff --name-only 278dff6c..HEAD -- packages/agentic-workflow-schema` matches 0 lines | the `E` line with the empty diff | planned |
-| O13 | S1, S13 | the changed surfaces are green: the three journal suites and the drift gate pass at the implementation head | P5 | P5 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 and `bun test scripts/normative-drift.test.mjs` exits 0 | the `E` line with both exits | planned |
+| O1 | S2 | two conforming fragments whose parsed identity collides on `(sessionSlug, kind)` are a lint refusal naming every file in the group | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `checkJournal refuses two fragments of one conversation+kind, naming both files` | the `E` line naming the case, its exit and the two names in the reason | verified |
+| O2 | S6 | the lint moves no byte: a refused carrier keeps every fragment and the journal byte-identical | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with the builder's before/after byte comparison | the `E` line naming the case and its exit | verified |
+| O3 | S3 | aggregation never appends an identity-colliding duplicate: the newest fragment is appended, the older is consumed and named in the receipt's `superseded` row (`{ name, supersededBy }`) | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `the aggregator consumes the newest of a colliding pair and names the superseded fragment` | the `E` line naming the case, the receipt fields and the log's single copy | verified |
+| O4 | S3 | the aggregation decision is deterministic from the identity and the declared newest-first sort, never from byte coincidence | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with the same case run twice producing one receipt shape | the `E` line naming both runs | verified |
+| O5 | S2, PE-004 | the shared `local` slug is exempt on both sides: the lint and the writer read one predicate, so `local` fragments never collide while two conversations of one kind without `--session` stay legal | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `checkJournal keeps the shared local identity legal` and `git diff 278dff6c..HEAD -- packages/agentic-workflow/src/journal/write.mjs` shows only the predicate call | the `E` line plus the diff receipt | verified |
+| O6 | S5 | `journal write`'s `--session` semantics and its `already-registered` refusal are unchanged | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/journal.write.test.mjs` exits 0 with 23 pass | the `E` line with the pass count | verified |
+| O7 | S4 | the suite lands red-first: the test-only commit is observed failing, the implementation commit observed green | P1 | P1 | execute-phase | `git show P1:packages/agentic-workflow/src/journal/aggregate.mjs \| rg -c 'superseded'` matches 0 | the `E` line naming the red commit, its exit and the green commit | verified |
+| O8 | S8 | `log-immutability`'s attribution model is untouched | P4 | P4 | execute-phase | `git diff --name-only 278dff6c..HEAD -- scripts/log-immutability.mjs` matches 0 lines | the `E` line with the empty diff | verified |
+| O9 | S12 | a concurrent-writer straggler (two writes, different seconds, one session+kind, both landed) is refused by the lint | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 with `two writes that raced past the writer's already-registered check are refused by the lint` | the `E` line naming the case and its exit | verified |
+| O10 | S13, PE-008 | no new script is added, so `scripts/structural-sibling-pins.test.mjs` has nothing unpaired | P4 | P4 | execute-phase | `bun scripts/structural-sibling-pins.test.mjs` exits 0 | the `E` line with the suite's exit | verified |
+| O11 | S13, PE-009 | the gate step still fails a malformed fixture carrier with `JOURNAL REFUSAL` and moves no byte, now also on an identity collision | P5 | P5 | execute-phase | `bun test scripts/local-gate.test.mjs` exits 0 | the `E` line with the suite's exit | verified |
+| O12 | S7 | no fixed vocabulary moves and the schema package is untouched | P4 | P4 | execute-phase | `git diff --name-only 278dff6c..HEAD -- packages/agentic-workflow-schema` matches 0 lines | the `E` line with the empty diff | verified |
+| O13 | S1, S13 | the changed surfaces are green: the three journal suites and the drift gate pass at the implementation head | P5 | P5 | execute-phase | `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0 and `bun test scripts/normative-drift.test.mjs` exits 0 | the `E` line with both exits | verified |
 | O14 | S13, PE-005, PE-006 | the repository's own carrier is refused by the new lint until its published pair is consumed, and only the aggregation workflow (bot identity) may consume it | P5 | P5 | owner (external verifier) | `bun scripts/local-gate.mjs` exits 0 after `gh workflow run agentic-workflow-journal.yml --ref main` lands its aggregation PR | the gate's `journal-carrier-check` verdict before and after the aggregation PR | in-progress |
 
 ## Findings
@@ -275,6 +290,25 @@ none
 - **D1** — 2026-11-21, **the aggregation rule is "consume newest-first, record the superseded fragment"**, not "refuse" (S3's second option). Authority: S3 lets the unit decide; S8 makes the aggregator the only legal consumer of a pending fragment, so a refusal would leave a published colliding pair permanently unresolvable — the repository's own carrier holds exactly that pair today (`## Known pre-existing issues`). The record is the receipt's `superseded` row, which names the dropped fragment and the fragment that superseded it, so nothing is silently lost (the dropped bytes stay in git history).
 - **D2** — 2026-11-21, **the shared `local` slug is exempt from the cross-fragment invariant**, matching `journal-write-grammar@1`'s published sentence "the shared identity `local` … is not a conversation and never fires" (PE-004). Both sides read one predicate (`isConversationSession`) instead of a second copy. Rationale beyond consistency: two unflagged sessions on one branch are legitimately distinct conversations, so grouping them would drop one entry — silent loss — on the repository's own `feat/668` carrier.
 - **D3** — 2026-11-21, **no vocabulary is published**: the supersede record is a CLI receipt field, not a fragment marker, so `vocabulary-residency@1` is not engaged and the schema package is untouched (S7).
+
+- **E1** — 2026-11-21, the frozen corpus at `675d383da` (`bun test packages/agentic-workflow/test/journal.test.mjs`) · 27 pass / 8 fail · the eight red cases are the collision refusal, its CLI half, the supersede receipt, the three-fragment slot, determinism, the CLI aggregate and the shared-`local` receipt field; `git show 675d383da:packages/agentic-workflow/src/journal/aggregate.mjs | rg -c superseded` · 0.
+- **P1** — 2026-11-21 19:47, the test-only commit `675d383da` (frozen corpus, observed red).
+- **P2** — 2026-11-21 19:49, `checkJournal`'s cross-fragment pass and the shared conversation predicate · `10337fd9a`.
+- **P3** — 2026-11-21 19:56, the aggregator's newest-wins consume and the receipt's `superseded` row · `fd9e11a26`.
+- **E2** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.test.mjs` · exit 0 · 35 pass / 0 fail.
+- **E3** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.write.test.mjs` · exit 0 · 23 pass / 0 fail (the writer's `--session` semantics and `already-registered` refusal unchanged).
+- **E4** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` · exit 0 · 11 pass / 0 fail.
+- **E5** — 2026-11-21, `bun test scripts/local-gate.test.mjs` · exit 0 · 62 pass / 0 fail (the malformed fixture carrier still exits 2 and moves no byte).
+- **E6** — 2026-11-21, `bun test scripts/structural-sibling-pins.test.mjs` · exit 0 · 8 pass / 0 fail (no script added, nothing unpaired).
+- **E7** — 2026-11-21, `bun test scripts/normative-drift.test.mjs` · exit 0 · 24 pass / 0 fail (both grammar blocks still resolve as declared surfaces).
+- **E8** — 2026-11-21, the derived set: `bun test scripts/check-skill-context.test.mjs` · exit 0 · 1 pass; `bun test scripts/guide-split.test.mjs` · exit 0 · 17 pass; `bun test scripts/promise-coherence.test.mjs` · exit 0 · 37 pass; `bun test scripts/shared-doc-merge.test.mjs` · exit 0 · 18 pass; the two pi suites (`log-session-command`, `skill-parity`) · exit 0 · 12 and 8 pass.
+- **E9** — 2026-11-21, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 7 budgeted documents`; `bun scripts/prose-gate-inventory.mjs` · exit 0 · `verdict: PASS`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs docs-generate --check` · exit 0 · `verdict: PASS`.
+- **E10** — 2026-11-21, the differential against `278dff6c` in a `/tmp` archive pair (same fixtures, same commands, `journal aggregate`, `journal aggregate --check`, `journal write`, `journal name`, missing journal, empty carrier, malformed carrier) · the only differences are the asked-for ones: the collision refusal naming both files, the receipt's `superseded` field, and the superseded pair appending one entry; the writer's refusals, the `local` writes, the malformed refusals and the missing-journal refusal are byte-identical.
+- **E11** — 2026-11-21, `bun scripts/test-impact.mjs --base origin/main` · verdict `targeted` · 7 suites derived from 6 executable paths and the two symbols (`SHARED_SESSION_SLUG`, `isConversationSession`); all 7 ran green (E8).
+- **G1** — 2026-11-21, `bun scripts/local-gate.mjs --jobs 4 --no-bail` at HEAD 0a2726599c578901525c859ebbe64ebf5745f1b0 · exit 1 · 18 of 20 steps `exit 0` (secret-scan, temp-hygiene, tmp-gc, version-parity-content, rigidity-review, log-immutability, workspace-install, schema-build, skill-context-budgets, docs-generated-projection, dependency-advisories, dependency-pin-gate, root-suite 148s, crate-suite-bun 89s, crate-suite-node 115s, schema-node-compat, pi-compat-guard, pi-node-compat); two reds, both named in `## Known pre-existing issues` — `worktree-guard` exit 1 (stale sibling worktree) and `journal-carrier-check` exit 2 (the published pair this unit's lint now refuses).
+- **D4** — 2026-11-21, rider repair `3a963d934`: the guide's `estimateMax` re-pinned 14,285 → 14,337 (the exact measured boundary, the fix #571 precedent) because the #668 integration merge left the base commit red; recorded in the manifest's `sources`, no headroom granted.
+- **P4** — 2026-11-21 19:58, the grammar rows, gate inventory, changeset, roadmap row and regenerated projection · `7d4cf1219`, `8023e44e9`, `0a2726599`.
+- **P5** — 2026-11-21 20:10, verification (E1–E11, G1) and the session journal fragment (`6c19318ba`, `20261121T201051Z-fix-675-journal-carrier-check-narrative-01a1ff9d-…`).
 
 ## Next
 
