@@ -16,14 +16,33 @@
  * Every case below injects the network, the clock and the sleeper: the suite
  * makes no live registry call.
  *
+ * Owner decision 2026-11-21 (run 44849041090): the packument of a published
+ * canary stayed cache-stale past the whole 10-minute budget while three
+ * siblings were available within minutes, so a healthy cut failed its wait and
+ * the tag/pre-release never got created. Two contract changes:
+ *   - the packument probe carries a cache-buster query (the registry's own
+ *     recommendation for fresh reads), so CDN staleness stops being the wait's
+ *     dominant failure;
+ *   - a TIMEOUT degrades to a WARNING (exit 0) — the lag is self-healing and
+ *     the run must not lose its announcement to it — while real corruption
+ *     still fails the run: a shasum mismatch that survives the budget and a
+ *     malformed dist are FATAL (exit 1).
+ *
  * Covers:
  *   - REPRODUCER: a 404 tarball while the packument lists the version is never
  *     "available", and the availability signal follows the 200 + shasum match
  *   - a version that appears in the packument late is waited for
  *   - two packages: one available early never short-circuits the other
  *   - integrity: 200 with wrong bytes never passes; mismatch is retried
- *   - timeout: non-zero, names the package and the last reason
+ *   - integrity: 200 with wrong bytes never passes; mismatch is retried and
+ *     becomes FATAL at the timeout (corruption, not lag)
+ *   - TIMEOUT is a WARNING: exit 0, the package named on stderr, the cut may
+ *     proceed — the packument cache lag is self-healing
+ *   - FATAL: malformed dist (immediate) and a mismatch that survives the
+ *     budget exit non-zero
+ *   - every packument probe carries a distinct cache-buster query
  *   - fail closed: a version the packument never lists never reads available
+ *     (reported as a timeout warning, never as available)
  *   - malformed dist (no tarball/shasum) fails immediately
  *   - `--plan publish-plan.tsv` and explicit `name@version` inputs
  *   - scoped-name URL encoding, default 20 s interval and 10 min timeout
@@ -99,17 +118,21 @@ const makeClock = (start = 0) => {
   };
 };
 
-/** A fetch double: a URL → responder map plus an ordered call log. */
+/** A fetch double: a URL → responder map plus an ordered call log.
+ * The cache-buster query is opaque to routing (a CDN serves the same packument
+ * for any query string), so routes match on the URL path only; the raw URL,
+ * query included, stays in the call log for the cache-bust assertions. */
 const makeFetch = (routes, calls = []) => {
   const fn = async (url) => {
-    const key = String(url);
+    const raw = String(url);
+    const key = raw.split("?")[0];
     const route = routes[key];
     if (route === undefined) {
       calls.push({ url: key, status: 404 });
       return response({ status: 404 });
     }
-    const answer = typeof route === "function" ? route(calls.filter((c) => c.url === key).length) : route;
-    calls.push({ url: key, status: answer.status });
+    const answer = typeof route === "function" ? route(calls.filter((c) => c.url.split("?")[0] === key).length) : route;
+    calls.push({ url: raw, status: answer.status });
     return answer;
   };
   fn.calls = calls;
@@ -226,27 +249,73 @@ test("integrity: a 200 with bytes that do not hash to the shasum never reads ava
   assert.ok(events.every((event) => event.type !== "available"), "no availability signal for corrupted bytes");
 });
 
-test("timeout: non-zero, and the message names the package that never became available", async () => {
+test("integrity: a 200 with bytes that do not hash to the shasum never reads available, and a mismatch that survives the budget is FATAL", async () => {
+  const name = "@fixture/corrupt";
+  const version = "2.0.0";
+  const fetchImpl = makeFetch({
+    [registryOf(name)]: response({ json: packument(name, version, { shasum: digestOf("the real bytes") }) }),
+    [tarballOf(name, version)]: response({ body: "the wrong bytes" }),
+  });
+  const clock = makeClock();
+  const { result, events } = await runGate([{ name, version }], {
+    fetchImpl,
+    clock,
+    timeoutMs: 100,
+    intervalMs: 40,
+  });
+  assert.equal(result.ok, false, "a mismatch that survives the budget must fail the run, not warn");
+  assert.match(result.failures[0].reason, /shasum mismatch/);
+  assert.ok(events.every((event) => event.type !== "available"), "no availability signal for corrupted bytes");
+  assert.equal(result.warnings.length, 0, "integrity corruption is never degraded to a warning");
+});
+
+test("timeout is a WARNING: the package is named, never reads available, and the run may proceed", async () => {
   const name = "@fixture/missing-tarball";
   const version = "3.0.0";
   const fetchImpl = makeFetch({
     [registryOf(name)]: response({ json: packument(name, version) }),
     [tarballOf(name, version)]: response({ status: 404 }),
   });
-  const { result } = await runGate([{ name, version }], {
+  const { result, events } = await runGate([{ name, version }], {
     fetchImpl,
     clock: makeClock(),
     timeoutMs: 100,
     intervalMs: 40,
   });
-  assert.equal(result.ok, false);
-  assert.equal(result.failures[0].name, name);
-  assert.match(result.failures[0].reason, /404/);
-  assert.match(result.failures[0].message, /@fixture\/missing-tarball@3\.0\.0/);
-  assert.match(result.failures[0].message, /404/);
+  assert.equal(result.ok, true, "a timeout after a healthy publish is CDN lag, not corruption");
+  assert.equal(result.failures.length, 0);
+  assert.equal(result.warnings.length, 1);
+  assert.equal(result.warnings[0].name, name);
+  assert.equal(result.warnings[0].timedOut, true);
+  assert.match(result.warnings[0].reason, /404/);
+  assert.match(result.warnings[0].message, /@fixture\/missing-tarball@3\.0\.0/);
+  assert.match(result.warnings[0].message, /404/);
+  assert.ok(events.every((event) => event.type !== "available"), "a timed-out package is never announced as available");
 });
 
-test("fail closed: a version the packument never lists never reads available", async () => {
+test("the timeout verdict follows the last reason: only an integrity mismatch escalates to FATAL", async () => {
+  const lagging = { name: "@fixture/lagging-packument", version: "1.0.0" };
+  const corrupting = { name: "@fixture/mismatch-at-timeout", version: "1.0.0" };
+  const fetchImpl = makeFetch({
+    [registryOf(lagging.name)]: response({ json: { versions: {} } }),
+    [registryOf(corrupting.name)]: response({ json: packument(corrupting.name, corrupting.version, { shasum: digestOf("real") }) }),
+    [tarballOf(corrupting.name, corrupting.version)]: response({ body: "served bytes" }),
+  });
+  const { result } = await runGate([lagging, corrupting], {
+    fetchImpl,
+    clock: makeClock(),
+    timeoutMs: 90,
+    intervalMs: 30,
+  });
+  assert.equal(result.ok, false, "the surviving mismatch fails the run");
+  assert.equal(result.failures.length, 1);
+  assert.equal(result.failures[0].name, corrupting.name);
+  assert.match(result.failures[0].reason, /shasum mismatch/);
+  assert.equal(result.warnings.length, 1);
+  assert.equal(result.warnings[0].name, lagging.name);
+});
+
+test("fail closed: a version the packument never lists never reads available (a timeout warning, never an availability signal)", async () => {
   const name = "@fixture/unlisted";
   const version = "4.0.0";
   const fetchImpl = makeFetch({
@@ -258,8 +327,10 @@ test("fail closed: a version the packument never lists never reads available", a
     timeoutMs: 90,
     intervalMs: 30,
   });
-  assert.equal(result.ok, false);
-  assert.match(result.failures[0].reason, /does not list 4\.0\.0/);
+  assert.equal(result.ok, true, "the unlisted version degrades to a warning by the 2026-11-21 decision");
+  assert.equal(result.available.length, 0);
+  assert.equal(result.warnings.length, 1);
+  assert.match(result.warnings[0].reason, /does not list 4\.0\.0/);
 });
 
 test("a malformed dist (no tarball or shasum) fails immediately instead of polling forever", async () => {
@@ -278,6 +349,27 @@ test("a malformed dist (no tarball or shasum) fails immediately instead of polli
   assert.equal(result.ok, false);
   assert.match(result.failures[0].reason, /dist\.tarball/);
   assert.equal(clock.now(), 0, "no polling budget was spent: the registry state is malformed, not late");
+});
+
+test("every packument probe carries a distinct cache-buster query (CDN staleness is not a wait state)", async () => {
+  const name = "@fixture/cache-bust";
+  const version = "1.0.0";
+  const body = "cache-busted";
+  const calls = [];
+  const fetchImpl = makeFetch({
+    // The version lands on the packument only after the first poll.
+    [registryOf(name)]: (seen) =>
+      seen < 1 ? response({ json: { versions: {} } }) : response({ json: packument(name, version, { shasum: digestOf(body) }) }),
+    [tarballOf(name, version)]: response({ body }),
+  }, calls);
+  const { result } = await runGate([{ name, version }], { fetchImpl, clock: makeClock(), intervalMs: 50 });
+  assert.equal(result.ok, true);
+  const packumentUrls = calls.map((call) => call.url).filter((url) => url.startsWith(`${REGISTRY}/${name.replace("/", "%2F")}`) && !url.includes("/-/"));
+  assert.equal(packumentUrls.length, 2, "one packument request per poll");
+  assert.ok(packumentUrls.every((url) => url.includes("?")), "each packument request busts the CDN cache with a query");
+  assert.notEqual(packumentUrls[0], packumentUrls[1], "the cache-buster is distinct per attempt");
+  const tarballUrls = calls.map((call) => call.url).filter((url) => url.includes("/-/"));
+  assert.ok(tarballUrls.every((url) => !url.includes("?")), "the tarball URL stays the packument's canonical one");
 });
 
 // ---------------------------------------------------------------------------
@@ -367,7 +459,7 @@ test("main: --plan waits for every row; explicit pairs work for a publish job", 
   assert.equal(await main(["plain@1.0.0"], pairDeps), 0);
 });
 
-test("main: a timeout exits non-zero with the package named on stderr", async () => {
+test("main: a timeout exits 0 with a WARNING naming the package on stderr", async () => {
   const { main } = await import("./npm-availability-wait.mjs");
   const name = "@fixture/never";
   const version = "9.9.9";
@@ -383,8 +475,28 @@ test("main: a timeout exits non-zero with the package named on stderr", async ()
     writeErr: (line) => err.push(line),
     writeOut: () => {},
   });
-  assert.equal(code, 1);
-  assert.ok(err.some((line) => line.includes(`${name}@${version}`) && line.includes("TIMEOUT")));
+  assert.equal(code, 0, "the timeout degrades to a warning (owner decision 2026-11-21)");
+  assert.ok(err.some((line) => line.includes(`${name}@${version}`) && line.includes("TIMEOUT") && line.includes("WARNING")));
+});
+
+test("main: a fatal (malformed dist) exits non-zero and names the package", async () => {
+  const { main } = await import("./npm-availability-wait.mjs");
+  const name = "@fixture/broken-dist";
+  const version = "1.0.0";
+  const err = [];
+  const clock = makeClock();
+  const code = await main([`${name}@${version}`, "--timeout", "1s", "--interval", "20ms"], {
+    fetchImpl: makeFetch({
+      [registryOf(name)]: response({ json: packument(name, version, { dist: false }) }),
+    }),
+    sleepImpl: clock.sleep,
+    now: clock.now,
+    writeErr: (line) => err.push(line),
+    writeOut: () => {},
+  });
+  assert.equal(code, 1, "malformed registry state still fails the run");
+  assert.ok(err.some((line) => line.includes(`${name}@${version}`) && line.includes("FAILED")));
+  assert.equal(clock.now(), 0, "the fatal is immediate: no polling budget was spent");
 });
 
 test("main: usage errors exit 2 (no input, bad duration, unreadable plan)", async () => {
