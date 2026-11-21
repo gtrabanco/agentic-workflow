@@ -311,6 +311,9 @@ test("the suite spawned by the runner inherits no ambient git tracing (owner-rou
     assert.equal(env.GIT_DIR, undefined, "the locator contract still holds through this builder");
     assert.equal(env[`GIT_CONFIG_KEY_${index}`], "commit.gpgsign", "the gate's own config still lands");
     assert.equal(env[`GIT_CONFIG_VALUE_${index}`], "false");
+    assert.equal(env[`GIT_CONFIG_KEY_${Number(index) + 1}`], "user.name", "the fixture identity lands after the signing layer");
+    assert.equal(env[`GIT_CONFIG_KEY_${Number(index) + 2}`], "user.email", "the fixture identity carries a non-routable email");
+    assert.ok(env[`GIT_CONFIG_VALUE_${Number(index) + 2}`].endsWith(".invalid"), "the fixture email is non-routable");
     assert.equal(env.NODE_TEST_CONTEXT, undefined, "a suite never inherits its parent's test-runner context");
     assert.equal(env.PATH, process.env.PATH, "the rest of the environment is inherited");
   } finally {
