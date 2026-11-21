@@ -14,9 +14,13 @@
  *
  * This module is Pi-free: a spec's `execute(params, cwd)` returns a
  * `WorkflowToolRun`, and the adapter (`index.ts`) translates to
- * `pi.registerTool`. The scripts run from the **project's own checkout** (the
- * spawn cwd), the same path the conductor sensor takes — the package's pinned
- * copy is never an import shortcut for a receipt about a tree being worked on.
+ * `pi.registerTool`. That translation is not decoration (issue #678): pi calls
+ * a tool as `execute(toolCallId, params, signal, onUpdate, ctx)`, so the adapter
+ * turns the host's five arguments into this seam's two — `params` and
+ * `ctx.cwd` — and a spec registered raw would read the toolCallId as its
+ * params. The scripts run from the **project's own checkout** (the spawn cwd),
+ * the same path the conductor sensor takes — the package's pinned copy is never
+ * an import shortcut for a receipt about a tree being worked on.
  */
 
 import { spawn } from "node:child_process";

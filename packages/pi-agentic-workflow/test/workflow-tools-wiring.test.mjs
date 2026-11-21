@@ -33,12 +33,16 @@ after(() => {
 });
 
 /**
- * The tools exactly as the extension registers them. The factory's
- * `toolRegistrar` seam is what the shipped adapter passes to `pi.registerTool`,
- * so a recorder here observes the same objects a host receives.
+ * The tools exactly as the extension registers them. `hostTool` is the shipped
+ * adapter's own translation (`src/extension/index.ts`), and the factory's
+ * `toolRegistrar` seam is what that adapter passes to `pi.registerTool` — so a
+ * recorder here observes the same objects a host receives.
  */
 async function registeredTools(workflowTools = {}) {
-  const { createExtension } = await import("../dist/extension/factory.js");
+  const [{ createExtension }, { hostTool }] = await Promise.all([
+    import("../dist/extension/factory.js"),
+    import("../dist/extension/index.js"),
+  ]);
   const registered = [];
   createExtension({
     registrar: { registerCommand: () => {} },
@@ -49,6 +53,7 @@ async function registeredTools(workflowTools = {}) {
     hint: { shouldShow: () => false, markShown: () => {} },
     settings: () => {},
     workflowTools,
+    toolShipping: hostTool,
   });
   return registered;
 }
