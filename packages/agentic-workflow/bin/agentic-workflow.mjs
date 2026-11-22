@@ -21,7 +21,7 @@
  *   agentic-workflow journal write --kind <mechanical|narrative> [fields] [--session <id>]
  *   agentic-workflow journal headless --workflow <w> --run-id <id> --actor <a> (--summary <t> | --block <path|->) [fields]
  *   agentic-workflow journal name --kind <mechanical|narrative> [--dir <root>] [--branch <b>] [--session <id>]
- *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
+ *   agentic-workflow relay <check|budget|tiers|obligations|closeout> <unit> [--repo <dir>] [--packet <dir>]
  *   agentic-workflow resolve-passes [--global <path>] [--project <path>] [--command <name>]
  *   agentic-workflow verify <unit-doc-path>
  *   agentic-workflow charter <state|land|check> --guide <path> [--answers <path|->] [--bank <path>]
@@ -44,8 +44,10 @@
  *
  * `relay` (unit 82) is the lane's offline half of pi-web's Relay packet
  * contract: `check` validates the packet, `budget` measures the leg handover
- * against the declared ceiling, `tiers` reads each leg's tier from the catalog
- * and `obligations` verifies the unit's obligations ledger is closed. It is the
+ * against the declared ceiling, `tiers` reads each leg's tier from the catalog,
+ * `obligations` verifies the unit's obligations ledger is closed, and `closeout`
+ * runs the lane's close-out ladder (the receipt verdict plus the `→ Next:` block,
+ * issue #680). It is the
  * same module `scripts/relay-packet.mjs` runs, so a project that carries only
  * the crate gets the identical block. Read-only: it writes nothing.
  *
@@ -381,11 +383,13 @@ function logRefuse(reason, receipt) {
   process.exit(2);
 }
 
-const RELAY_USAGE = `usage: agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
-  check        validate the packet: documents, charter pointer, baton grammar, verdict grammar
+const RELAY_USAGE = `usage: agentic-workflow relay <check|budget|tiers|obligations|closeout> <unit> [--repo <dir>] [--packet <dir>]
+  check        validate the packet: documents, charter pointer, baton grammar, verdict grammar,
+               and—on a Complete verdict—the review-receipt boundary
   budget       measure the leg handover (charter + baton) against the declared ceiling
   tiers        print each leg's tier from the bundled catalog (src/runner/catalog.json)
   obligations  verify the unit's obligations ledger is closed
+  closeout     the lane's close-out ladder: the receipt verdict plus the → Next: block
   <unit>       an NN-slug unit token, or a unit directory path
   --repo       read the workspace from this directory (default: this project)
   --packet     read the packet from this directory instead of .pi-web/relays/<slug>

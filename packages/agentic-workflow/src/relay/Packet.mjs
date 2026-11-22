@@ -8,6 +8,7 @@
  *   budget       does the leg handover (charter + baton) fit the declared ceiling?
  *   tiers        which tier does each leg run at, read from the catalog?
  *   obligations  is the unit's obligations ledger closed?
+ *   closeout     the lane's close-out ladder: the receipt verdict and `→ Next:`
  *
  * The packet contract (three documents, pi-web's names and bounds) and the
  * division of ownership are published in `skills/unit-lane/references/RELAY.md`;
@@ -44,8 +45,10 @@ export const BATON_STATES = Object.freeze(["Draft — awaiting approval", "Activ
 export const LEG_ID = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,31}$/u;
 /** The phase cursor: one phase label or `done` (the lane's own `P<n>` grammar). */
 export const PHASE_CURSOR = /^(?:P\d+|done)$/u;
-/** The four modes, in the order the usage strings list them. */
-export const RELAY_MODES = Object.freeze(["check", "budget", "tiers", "obligations"]);
+/** The five modes, in the order the usage strings list them. */
+export const RELAY_MODES = Object.freeze(["check", "budget", "tiers", "obligations", "closeout"]);
+/** Modes that read the packet; `tiers` reads only the catalog. */
+const PACKET_MODES = Object.freeze(["check", "budget", "closeout"]);
 /** pi-web's `RELAY_ANCHOR_DOCUMENTS` order, so a reader sees status first. */
 const BUDGET_DOCUMENTS = Object.freeze(["charter.md", "status.md"]);
 
@@ -140,6 +143,7 @@ export function batonOf(statusText) {
   const legsCell = /^Legs:[ \t]*(.+?)[ \t]*$/m.exec(text)?.[1] ?? "";
   const legsMatch = /^(none|[a-zA-Z0-9][a-zA-Z0-9._-]{0,31})[ \t]*→[ \t]*([a-zA-Z0-9][a-zA-Z0-9._-]{0,31})$/u.exec(legsCell);
   const phaseCell = /^Phase:[ \t]*(.+?)[ \t]*$/m.exec(text)?.[1] ?? "";
+  const review = reviewStateOf(text);
   return {
     state,
     stateCell,
@@ -148,7 +152,57 @@ export function batonOf(statusText) {
     legsCell,
     phase: PHASE_CURSOR.test(phaseCell) ? phaseCell : null,
     phaseCell,
+    review: review.state,
+    reviewSha: review.sha,
+    reviewPr: review.pr,
+    reviewCell: review.cell,
   };
+}
+
+/* ------------------------------------------------------------------- review */
+
+/**
+ * The baton's `Review:` line — the receipt boundary's only input (issue #680).
+ * The contract publishes one current form and leaves every other value
+ * non-current, so an unreadable, absent, `pending`, `attempted <n> — <result>`
+ * or sha-less line can never read as "receipt current". No forge call: the line
+ * is what the leg recorded, and `check` stays offline and host-free.
+ *
+ *   Review: receipt current at <40-hex>[ · pr <url>]
+ */
+export const REVIEW_CURRENT_RE = /^receipt current at ([0-9a-f]{40})(?:[ \t]*·[ \t]*pr[ \t]+(\S+))?$/u;
+/** A stale-but-readable receipt: the leg recorded a receipt at another head. */
+export const REVIEW_STALE_RE = /^receipt stale at ([0-9a-f]{40})(?:[ \t]*·[ \t]*pr[ \t]+(\S+))?$/u;
+
+/**
+ * The three answers the boundary accepts: `current` (the receipt binds the
+ * PR's head), `stale` (a receipt exists but names another head) and
+ * `not-current` (a line that records no receipt — `pending`, `attempted <n> —
+ * <result>`, or anything else). `absent` means the line is not there at all.
+ */
+export function reviewStateOf(statusText) {
+  const cell = /^Review:[ \t]*(.*?)[ \t]*$/m.exec(String(statusText ?? ""))?.[1] ?? null;
+  if (cell === null || cell === "") return { state: "absent", sha: null, pr: null, cell };
+  const current = REVIEW_CURRENT_RE.exec(cell);
+  if (current !== null) return { state: "current", sha: current[1], pr: current[2] ?? null, cell };
+  const stale = REVIEW_STALE_RE.exec(cell);
+  if (stale !== null) return { state: "stale", sha: stale[1], pr: stale[2] ?? null, cell };
+  return { state: "not-current", sha: null, pr: null, cell };
+}
+
+/**
+ * The receipt boundary: a `Complete` verdict is refused unless its baton records
+ * a current receipt (issue #680, S1). A non-Complete baton is never asked — the
+ * boundary binds the verdict that ends the relay, not every state of it.
+ * Returns `null` when the state does not bind, or the fault to push.
+ */
+export function receiptBoundaryFault(baton) {
+  if (baton.state !== "Complete" || baton.review === "current") return null;
+  if (baton.review === "absent") {
+    return "status.md: a Complete verdict needs the receipt boundary — add `Review: receipt current at <40-hex>` (no Review line is never current)";
+  }
+  const shown = String(baton.reviewCell ?? "").replace(/\s+/gu, " ").slice(0, 60);
+  return `status.md: a Complete verdict carries no current review receipt (got \`${shown}\`); a coherence verdict is evidence, not a receipt — run \`runner review-receipt verify --pr <N>\` and record \`Review: receipt current at <40-hex>\``;
 }
 
 /* ------------------------------------------------------------------- verdict */
@@ -277,6 +331,11 @@ export function checkPacket({ workspace, unit, packet }) {
     if (baton.phase === null) {
       faults.push("status.md: phase cursor must read `Phase: P<n>` (the phase this leg starts) or `Phase: done`");
     }
+    // The receipt boundary (issue #680): a Complete verdict names a current
+    // review receipt, or it is refused. The state that ends the relay is the
+    // one that owes the close-out ladder, and this is its mechanical half.
+    const receiptFault = receiptBoundaryFault(baton);
+    if (receiptFault !== null) faults.push(receiptFault);
     const duplicated = firstMatch(documents["status.md"], EVIDENCE_IN_BATON);
     if (duplicated !== null) faults.push(`baton duplicates the unit doc's evidence: ${duplicated.label} at status.md:${duplicated.line}`);
   }
@@ -463,6 +522,63 @@ export function obligationsOf({ workspace, unit }) {
   return { lines, exit: open.length === 0 ? 0 : 1 };
 }
 
+/* ------------------------------------------------------------------ closeout */
+
+/**
+ * The close-out ladder's `→ Next:` line — the single owner of that block's shape
+ * (issue #680, S2; grammar `relay-closeout@1` in `RELAY.md`). A missing or stale
+ * receipt routes back to `/review-change`, the receipt's only owner, and the
+ * merge gate is **never named before its precondition exists**. Only a current
+ * receipt whose line carries the PR url reaches `/audit-pr`, and it carries that
+ * url — a current receipt recorded without one is not routable to the gate.
+ */
+export function closeoutNext({ slug, receipt, pr }) {
+  if (receipt === "current" && typeof pr === "string" && pr !== "") return `→ Next: /audit-pr ${pr}`;
+  return `→ Next: /review-change ${slug}`;
+}
+
+/**
+ * The lane's close-out ladder, run by the relay's last leg because the lane
+ * session has already ended (issue #680): the receipt verdict, the `→ Next:`
+ * block, and the precondition the gate rests on. The ladder runs when the relay
+ * is `Complete` — before that there is no PR to bind and no close-out to owe —
+ * so any other state is a refusal, never a silently routed leg.
+ */
+export function closeoutPacket({ workspace, unit, packet }) {
+  const status = readOrNull(workspace, path.join(packet.relative, "status.md"));
+  if (status === null) throw new RelayUsageError(`status.md is missing: ${path.join(packet.relative, "status.md")}`);
+  const baton = batonOf(status);
+  if (baton.state === null) {
+    throw new RelayUsageError(`status.md: state must be one of ${BATON_STATES.join(", ")} (got \`${baton.stateCell.slice(0, 40)}\`)`);
+  }
+  const lines = [
+    `RELAY-CLOSEOUT — ${unit.slug}`,
+    `state: ${baton.state}`,
+    `receipt: ${baton.review}`,
+    `receipt-sha: ${baton.reviewSha ?? "-"}`,
+  ];
+  if (baton.state !== "Complete") {
+    lines.push(
+      "faults:",
+      `  - the close-out ladder runs when the relay is Complete (state is \`${baton.state}\`); a leg still owes its phase`,
+      "verdict: FAIL",
+    );
+    return { lines, exit: 1 };
+  }
+  // One condition decides both the precondition line and the route (external
+  // verify B4): the gate rests on a current receipt *and* the PR url its
+  // `Review:` line records, so the block can never claim the precondition is
+  // met while routing the leg to produce it.
+  const current = baton.review === "current";
+  const gate = current && typeof baton.reviewPr === "string" && baton.reviewPr !== "";
+  lines.push(
+    `precondition: ${gate ? "a current review-change receipt at the PR head" : current ? "none — the Review line records no PR url" : "none — the review receipt is missing or stale"}`,
+    closeoutNext({ slug: unit.slug, receipt: gate ? "current" : "absent", pr: baton.reviewPr }),
+    "verdict: PASS",
+  );
+  return { lines, exit: 0 };
+}
+
 /* ---------------------------------------------------------------------- mode */
 
 /**
@@ -494,7 +610,7 @@ export function parseRelayArgs(args, { defaultWorkspace }) {
     }
   }
   if (positional.length !== 1) throw new RelayUsageError("exactly one unit token is required");
-  if (packet !== null && args[0] !== "check" && args[0] !== "budget") {
+  if (packet !== null && !PACKET_MODES.includes(args[0])) {
     throw new RelayUsageError(`--packet does not apply to ${args[0]}`);
   }
   return { mode: args[0], unitToken: positional[0], packet, workspace };
@@ -507,5 +623,6 @@ export function runRelayMode({ mode, workspace, unitToken, packet, catalogPath, 
   if (mode === "check") return checkPacket({ workspace, unit, packet: resolved });
   if (mode === "budget") return budgetPacket({ workspace, unit, packet: resolved, budgetsPath, budgetsLabel });
   if (mode === "tiers") return tiersOf({ unit, catalogPath, catalogLabel });
+  if (mode === "closeout") return closeoutPacket({ workspace, unit, packet: resolved });
   return obligationsOf({ workspace, unit });
 }

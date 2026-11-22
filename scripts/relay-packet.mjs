@@ -14,6 +14,7 @@
  *   bun scripts/relay-packet.mjs budget <unit> [--packet <dir>]
  *   bun scripts/relay-packet.mjs tiers <unit>
  *   bun scripts/relay-packet.mjs obligations <unit>
+ *   bun scripts/relay-packet.mjs closeout <unit> [--packet <dir>]
  *   (node fallback, same argv)
  *
  * stdout: one fixed block per mode, ending with `verdict: PASS|FAIL`.
@@ -43,11 +44,13 @@ const BUDGETS_PATH = process.env.RELAY_PACKET_BUDGETS
 /** The catalog is this repository's own manifest: the block names it the way the docs do. */
 const CATALOG_LABEL = "packages/agentic-workflow/src/runner/catalog.json";
 
-const USAGE = `usage: bun scripts/relay-packet.mjs <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
-  check        validate the packet: documents, charter pointer, baton grammar, verdict grammar
+const USAGE = `usage: bun scripts/relay-packet.mjs <check|budget|tiers|obligations|closeout> <unit> [--repo <dir>] [--packet <dir>]
+  check        validate the packet: documents, charter pointer, baton grammar, verdict grammar,
+               and—on a Complete verdict—the review-receipt boundary
   budget       measure the leg handover (charter + baton) against the declared ceiling
   tiers        print each leg's tier from packages/agentic-workflow/src/runner/catalog.json
   obligations  verify the unit's obligations ledger is closed
+  closeout     the lane's close-out ladder: the receipt verdict plus the → Next: block
   <unit>       an NN-slug unit token, or a unit directory path
   --repo       read the workspace from this directory (default: this repository)
   --packet     read the packet from this directory instead of .pi-web/relays/<slug>
