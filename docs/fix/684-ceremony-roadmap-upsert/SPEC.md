@@ -377,6 +377,14 @@ Budget: strong
   `PASS — 3 step(s)`, one `REPORT-ONLY` verdict by design. The first attempt was red
   at `version-parity-content` because a shipped package changed with no release
   intent; `D5`'s changeset is what closed it.
+- **G4** — 2026-11-22, HEAD 0043a875c72fa9f11fc61233002a58254383165f ·
+  `bun scripts/local-gate.mjs --skip-network --jobs 2` · exit 0 ·
+  `PASS — 16 step(s) in 834s` — every offline step, `crate-suite-bun`,
+  `crate-suite-node` and `root-suite` included, at two workers. The node leg alone
+  at the same budget · exit 0 · `78 suite(s)`, `78 PASS`. So `G2`'s red is the
+  four-worker dispatch, not the tree: the same suites, the same head, green as soon
+  as the box is not four suites deep. The working tree carried this receipt's own
+  uncommitted prose.
 - **D1** — 2026-11-22, the fix shape: the writer takes the path and owns the write,
   so the arm hands it `roadmapPath()` and reports the writer's own post-state (`ok`)
   as `upserted`. The arm's local read and its `next`/`written` write-back are deleted
