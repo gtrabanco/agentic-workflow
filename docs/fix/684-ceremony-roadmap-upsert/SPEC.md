@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-roadmap_summary: Issue [#684](https://github.com/gtrabanco/agentic-workflow/issues/684) (S): `ceremony roadmap row-upsert` handed the roadmap *document* to the writer where the writer takes a *path*, so both arms died before writing a byte — established while closing #680 (PR #683), whose row could only be settled by hand. The path is now passed to both arms, the row-upsert arm's local read and its `next`/`written` double-write are gone, and the fix row is settled end to end by a case that asserts the row, the receipt and every other byte.
+roadmap_summary: Issue [#684](https://github.com/gtrabanco/agentic-workflow/issues/684) (S): `ceremony roadmap row-upsert` handed the roadmap *document* to the writer where the writer takes a *path*, so both arms died before writing a byte — established while closing #680 (PR #683), whose row could only be settled by hand. The path is now passed to both arms, the row-upsert arm's local read and its `next`/`written` double-write are gone, and the fix row is settled end to end by a case that asserts the row, the receipt and every other byte. Owner-ordered extension: the `## Fixes` row writer derives the table's own header words, column count and issue-keyed column, so a consumer table shaped `Folder | Topic | Status | Depends on | Issue` settles instead of being refused as a missing table, and every refusal names the constraint that failed.
 ---
 
 # fix/684-ceremony-roadmap-upsert
@@ -196,7 +196,11 @@ none
 - `packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` — the roadmap
   case, strengthened from a tautology to the end-to-end settle (fix arm and
   feature arm) plus the byte-identity differential over the four untouched
-  operations.
+  operations; and, for the extension, the consumer-shaped `## Fixes` table
+  settled end to end with its whole document byte-checked.
+- `packages/agentic-workflow/test/edit.test.mjs` — the writer's own cases (the
+  extension's `SHAPE-1..SHAPE-6` and the CLI `fixrow` route), which is where the
+  shape rule's accepted forms and its four refusals are pinned.
 
 ## Known pre-existing issues
 
@@ -205,7 +209,11 @@ none
   and `fixRowUpsertEdits` use the four-column `| Issue | Topic | Status | Notes |`
   — **does-not-affect** this unit's diagnosis (the path bug fires before any
   table shape is read) but **affects** the fix arm's reachability, so `P1`
-  repairs the fixture to the shape the writer targets.
+  repairs the fixture to the shape the writer targets. **Superseded by the
+  extension**: the writer now derives the table's own shape (`PE-012`,
+  `E13`), so that original five-column header would settle too — the fixture's
+  repaired four-column form is kept because it is the shape this repository
+  uses and the one `S12` must keep byte-compatible.
 - `ceremony roadmap check --slug <slug>` reports `row-missing` for a row that
   exists, because it compares the row's *second* cell to the issue number
   (`E4`) — **does-not-affect** this unit; `P4` verifies the registered row with
@@ -228,16 +236,16 @@ none
 - [x] P5 — Verification: the strengthened suite and the repository gate (validator: `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 and `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4)
   - Relevant files: docs/fix/684-ceremony-roadmap-upsert/SPEC.md
-- [ ] P6 — The extension's frozen ledgers: S5–S12 verbatim, PE-011–PE-018, O9–O18, AC-S5–AC-S12 and the phases that deliver them (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/684-ceremony-roadmap-upsert/SPEC.md` answers `PASS`)
+- [x] P6 — The extension's frozen ledgers: S5–S12 verbatim, PE-011–PE-018, O9–O18, AC-S5–AC-S12 and the phases that deliver them (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/684-ceremony-roadmap-upsert/SPEC.md` answers `PASS`)
   (Implements: S5, S6, S7, S8, S9, S10, S11, S12)
   - Relevant files: docs/fix/684-ceremony-roadmap-upsert/SPEC.md
-- [ ] P7 — The extension's RED corpus: the consumer-shaped fixture settles at the writer level, through the CLI route and through the ceremony, and fails at the cut head with the S2 refusal (validator: `bun test packages/agentic-workflow/test/edit.test.mjs` exits non-zero at `80724abbb`)
+- [x] P7 — The extension's RED corpus: the consumer-shaped fixture settles at the writer level, through the CLI route and through the ceremony, and fails at the cut head with the S2 refusal (validator: `bun test packages/agentic-workflow/test/edit.test.mjs` exits non-zero at `80724abbb`)
   (Implements: S6, S10)
   - Relevant files: packages/agentic-workflow/test/edit.test.mjs, packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs
-- [ ] P8 — The shape-validation layer: the header words, column count and issue-keyed column are derived from the table, the refusal names the constraint that failed, and the spliced row carries the table's column count (validator: `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0)
+- [x] P8 — The shape-validation layer: the header words, column count and issue-keyed column are derived from the table, the refusal names the constraint that failed, and the spliced row carries the table's column count (validator: `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0)
   (Implements: S5, S7, S8, S11)
   - Relevant files: packages/agentic-workflow/src/edit/Roadmap.mjs
-- [ ] P9 — The compatibility differential: the repository's own four-column table and every untouched caller answer byte-identically, and the ceremony's two arms stay green (validator: `bun test packages/agentic-workflow/test/edit.test.mjs` and `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exit 0)
+- [x] P9 — The compatibility differential: the repository's own four-column table and every untouched caller answer byte-identically, and the ceremony's two arms stay green (validator: `bun test packages/agentic-workflow/test/edit.test.mjs` and `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exit 0)
   (Implements: S9, S12)
   - Relevant files: packages/agentic-workflow/test/edit.test.mjs, packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs, docs/ROADMAP.md
 - [ ] P10 — Documentation and state: the release intent, the unit doc's evidence and log, the roadmap summary through the emitter, the session journal, and the repository gate (validator: `bun scripts/run-root-suite.mjs` exits 0)
@@ -293,16 +301,16 @@ required failure state (shape owned by
 | O6 | S2 | Affected use cases that must not regress: `roadmap read`, `list`, `settle` and `check` answer byte-identical stdout and exit at base and at the change | P3 | P3 | execute-phase | a `diff` of the four captured runs against the base copy answers empty | the four captured outputs and the empty `diff`, `## Log` `E6` | verified |
 | O7 | S1 | Required failure state: a writer refusal still exits non-zero and leaves the tree byte-clean, so the repair never turns a refusal into a silent success | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the case's refusal assertion (a roadmap with no `## Fixes` table refuses and changes nothing); `## Log` `E5` | verified |
 | O8 | S1, S4 | The documented close-out route for a fix unit is executable: the repository's own row 684 is registered through the repaired command rather than by hand | P4 | P4 | execute-phase | `rg -c 'issues/684' docs/ROADMAP.md` matches 1 | the row in `docs/ROADMAP.md` and the command's receipt, `## Log` `E9` | verified |
-| O9 | S5, S7 | A `## Fixes` table whose issue-keyed cell is not the first column settles its row: the consumer's five-column header — `Folder`, `Topic`, `Status`, `Depends on`, `Issue`, in that order — answers exit 0, `"upserted": true`, a status cell holding the requested token and an issue link in its own last cell | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the ceremony case's consumer-shape assertions green; `## Log` `E13` | planned |
-| O10 | S5, S7 | The row is found by the issue number inside the key column's link **or** bare numeric cell, in any column order, and is updated in place — never duplicated | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the writer case's bare-key and reordered-header assertions green; `## Log` `E13` | planned |
-| O11 | S7, S11 | Invariant: the spliced line carries exactly the header's column count; the columns the writer knows are rewritten, the columns it does not know keep the row's own cells, and every other byte is carried through | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the case's whole-document byte equality against the fixture; `## Log` `E13` | planned |
-| O12 | S8 | Required failure state: a table carrying no issue-keyed header cell is refused with that constraint named — never `table not found` — exit non-zero and not one byte written | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the refusal case's message assertion plus the untouched-file assertion; `## Log` `E13` | planned |
-| O13 | S8 | Required failure state: a shape that is otherwise unresolvable — a separator whose cell count disagrees with the header, or a `## Fixes` heading whose section carries no header row — refuses naming that mismatch | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the mismatch cases' message assertions; `## Log` `E13` | planned |
-| O14 | S6 | The extension's RED corpus is frozen before the implementation: the consumer-shape fixture runs the writer's settle and fails at the extension's cut head `80724abbb` with the `S2` refusal | P7 | P7 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits non-zero at `80724abbb` | the red run captured in a throwaway copy of that head; `## Log` `E13` | planned |
-| O15 | S9 | The first fix is unchanged: `12c8c2add`'s path hand-off, its receipt reading and its green cases survive the extension | P9 | P9 | execute-phase | `rg -c 'typeof next === "string"' packages/agentic-workflow/src/runner/ceremony/roadmap.mjs` matches 1 | the `rg` line plus `git diff 80724abbb -- packages/agentic-workflow/src/runner/ceremony/roadmap.mjs` empty; `## Log` `E14` | planned |
-| O16 | S8 | Compatibility invariant: this repository's own `## Fixes` table keeps its four header words — `Issue`, `Topic`, `Status`, `Notes` — and the writer emits its row byte-for-byte as before | P9 | P9 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the FF-2 emitted-row assertion green plus the header readback recorded at `## Log` `E14`; AC-S12's `rg` line in `E14` | planned |
-| O17 | S5, S8 | Affected use case: the documented close-out route `agentic-workflow roadmap fixrow <path> <json>` settles a consumer-shaped row and reports `ok: true` | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the CLI case's receipt and written row; `## Log` `E13` | planned |
-| O18 | S7, S12 | Affected use cases that must not regress: the ceremony's fix and feature arms settle their rows and touch no other byte, and a roadmap with no Fixes table still refuses and writes nothing | P9 | P9 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the existing roadmap case green at the extension head; `## Log` `E14` | planned |
+| O9 | S5, S7 | A `## Fixes` table whose issue-keyed cell is not the first column settles its row: the consumer's five-column header — `Folder`, `Topic`, `Status`, `Depends on`, `Issue`, in that order — answers exit 0, `"upserted": true`, a status cell holding the requested token and an issue link in its own last cell | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the ceremony case's consumer-shape assertions green; `## Log` `E13` | verified |
+| O10 | S5, S7 | The row is found by the issue number inside the key column's link **or** bare numeric cell, in any column order, and is updated in place — never duplicated | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the writer case's bare-key and reordered-header assertions green; `## Log` `E13` | verified |
+| O11 | S7, S11 | Invariant: the spliced line carries exactly the header's column count; the columns the writer knows are rewritten, the columns it does not know keep the row's own cells, and every other byte is carried through | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the case's whole-document byte equality against the fixture; `## Log` `E13` | verified |
+| O12 | S8 | Required failure state: a table carrying no issue-keyed header cell is refused with that constraint named — never `table not found` — exit non-zero and not one byte written | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the refusal case's message assertion plus the untouched-file assertion; `## Log` `E13` | verified |
+| O13 | S8 | Required failure state: a shape that is otherwise unresolvable — a separator whose cell count disagrees with the header, or a `## Fixes` heading whose section carries no header row — refuses naming that mismatch | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the mismatch cases' message assertions; `## Log` `E13` | verified |
+| O14 | S6 | The extension's RED corpus is frozen before the implementation: the consumer-shape fixture runs the writer's settle and fails at the extension's cut head `80724abbb` with the `S2` refusal | P7 | P7 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits non-zero at `80724abbb` | the red run captured in a throwaway copy of that head; `## Log` `E13` | verified |
+| O15 | S9 | The first fix is unchanged: `12c8c2add`'s path hand-off, its receipt reading and its green cases survive the extension | P9 | P9 | execute-phase | `rg -c 'typeof next === "string"' packages/agentic-workflow/src/runner/ceremony/roadmap.mjs` matches 1 | the `rg` line plus `git diff 80724abbb -- packages/agentic-workflow/src/runner/ceremony/roadmap.mjs` empty; `## Log` `E14` | verified |
+| O16 | S8 | Compatibility invariant: this repository's own `## Fixes` table keeps its four header words — `Issue`, `Topic`, `Status`, `Notes` — and the writer emits its row byte-for-byte as before | P9 | P9 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the FF-2 emitted-row assertion green plus the header readback recorded at `## Log` `E14`; AC-S12's `rg` line in `E14` | verified |
+| O17 | S5, S8 | Affected use case: the documented close-out route `agentic-workflow roadmap fixrow <path> <json>` settles a consumer-shaped row and reports `ok: true` | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the CLI case's receipt and written row; `## Log` `E13` | verified |
+| O18 | S7, S12 | Affected use cases that must not regress: the ceremony's fix and feature arms settle their rows and touch no other byte, and a roadmap with no Fixes table still refuses and writes nothing | P9 | P9 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the existing roadmap case green at the extension head; `## Log` `E14` | verified |
 
 ## Acceptance criteria
 
@@ -575,6 +583,59 @@ Budget: strong
   every phase · the ceremony arm asked for the same decorated status → `bad-status`,
   exit 1, no byte written (`D6`).
 
+- **P6** — 2026-11-22, the extension's ledgers cut at the owner's order ·
+  `phase-lint` → `PASS (6/6)` on every phase, `P6`–`P10` included; the
+  requirement numbering is `S5`–`S12` with the owner's own labels kept inside
+  each quote (`L3`), so the issue's frozen `S1`–`S4` stay citable.
+- **P7** — 2026-11-22, the extension's RED corpus frozen before the writer
+  moved (`E12`): six writer cases and one ceremony case, all red at `80724abbb`
+  for the reason the consumer reported.
+- **P8** — 2026-11-22, the shape layer (`1b709afa8`): `fixTableShape` reads the
+  `## Fixes` section, its header words, its column count and the issue-keyed
+  column; the splice, the refusal and the receipt's verdict all read it.
+- **P9** — 2026-11-22, the differential (`E14`): five operations on a copy of
+  this repository's own roadmap answer byte-identical receipts and documents at
+  `80724abbb` and at the fix.
+- **E12** — 2026-11-22, the extension's cut head `80724abbb` in a throwaway copy
+  (`git archive` into `/tmp/pe684x-red-*` + the two committed test files) ·
+  `bun test test/edit.test.mjs` → `31 pass / 7 fail`, every failure the
+  consumer-shape corpus, the CLI case's message
+  `EDIT REFUSAL — Roadmap Fixes table not found (expected an | Issue | table under '## Fixes')` ·
+  `bun test test/runner.ceremony-p1p2.test.mjs` → `12 pass / 1 fail` (the
+  consumer-shape settle) · both exit non-zero.
+- **E13** — 2026-11-22, the same corpus at `1b709afa8` ·
+  `bun test test/edit.test.mjs` → `38 pass / 0 fail` (the six `SHAPE-*` cases and
+  the CLI route green) · `bun test test/runner.ceremony-p1p2.test.mjs` →
+  `13 pass / 0 fail` · the consumer row after the settle:
+  `| 77-toy | toy | done | — | [#77](https://github.com/gtrabanco/agentic-workflow/issues/77) |`,
+  five cells against five columns, whole document equal to the fixture with only
+  that line's status and issue cells moved.
+- **E14** — 2026-11-22, the compatibility differential on a copy of this
+  repository's own `docs/ROADMAP.md`, base `80724abbb` vs the fix · `roadmap
+  fixrow` (existing row 684, then a new issue 9999), `roadmap rowUpsert` (row
+  684) and `roadmap annotate 684` → receipts identical at both heads
+  (`before/after` `0fe1f02c → a0faaa34 → f642689e → 0e294847 → fdb6b685`), the
+  two documents `diff`-empty after every step · `rg -c '^\| Issue \| Topic \| Status \| Notes \|$'
+  docs/ROADMAP.md` → `1` · `git diff 80724abbb --
+  packages/agentic-workflow/src/runner/ceremony/roadmap.mjs` → empty ·
+  `rg -c 'typeof next === "string"' …/roadmap.mjs` → `1` · the live worktree
+  stayed read-only (`git status --porcelain` showed only the writer edit).
+- **E15** — 2026-11-22, the package suite at `1b709afa8` ·
+  `cd packages/agentic-workflow && bun test test/` → `1396 pass / 0 fail`, 78
+  files (1388 before this change + the 8 new cases).
+- **D7** — 2026-11-22, the shape rule is header-derived and closed: the issue key
+  is a header cell worded `Issue`, `Issues` or `#` (one only — two is
+  `2 issue-keyed columns`, none is `no issue-keyed column`), values map by the
+  same words (`topic`/`summary`/`title`, `status`, `notes`/`note`), unknown
+  columns keep the row's own cells on an update and stay empty on an insert, and
+  a missing `url` leaves the bare number instead of inventing a link. Deriving
+  the key column from the data cells was refused: it is a guess about a column's
+  meaning, and `IR10` asks rather than guesses.
+- **D8** — 2026-11-22, one branch, one PR: the extension lands on
+  `fix/684-ceremony-roadmap-upsert` on top of PR #686's verified state (owner
+  order `S9`), as its own commits — ledgers, RED corpus, fix — rather than a
+  second unit or a second pull request.
+
 ## Next
 
 PR [#686](https://github.com/gtrabanco/agentic-workflow/pull/686) is open with
@@ -613,3 +674,6 @@ Independent.
 | `ceremony roadmap check` still answers its own verdict | the same differential (`O6`) |
 | A writer refusal still exits non-zero and writes nothing | the refusal assertion of the roadmap case (`O7`) |
 | The rest of the ceremony surface is untouched | `bun test packages/agentic-workflow/test/runner.ceremony-p0.test.mjs` and `...-p1p2.test.mjs` exit 0 |
+| This repository's own four-column `## Fixes` row is emitted byte-for-byte | the base-vs-head differential over `fixrow` (update and insert), `rowUpsert` and `annotate` on a copy of `docs/ROADMAP.md` (`E14`) |
+| A consumer-shaped table (five columns, issue key last) settles instead of refusing | the writer's `SHAPE-1` case and the ceremony's consumer-shape case (`E13`) |
+| `rowUpsert`, `annotate` and the `NN`-lookup family keep their contract | the same differential (`E14`) and `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 |
