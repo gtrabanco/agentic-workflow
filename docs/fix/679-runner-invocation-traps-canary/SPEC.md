@@ -319,16 +319,18 @@ Budget: strong
 - **G5** — 2026-11-22, HEAD ada7e54634982a88bfc877e4756df782e580b202, `bun scripts/run-root-suite.mjs` · exit 0 · 140 suites PASS, 0 FAIL.
 - **G6** — 2026-11-22, HEAD ada7e54634982a88bfc877e4756df782e580b202, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/679-runner-invocation-traps-canary/SPEC.md` · exit 0 · VERIFY PASS, every check green.
 - **G7** — 2026-11-22, HEAD a0493de58db8c83fe437ade01816e28b9965151c, `bun run test` in `packages/agentic-workflow` · exit 0 · 78 suites PASS, 0 FAIL (the two package suites read the scoped usage anchor).
+- **P6** — 2026-11-22, the branch was pushed (local gate `PASS — 18 step(s)`) and PR [#689](https://github.com/gtrabanco/agentic-workflow/pull/689) opened against `main`; no merge, no approval · 86f58432d.
 
 ## Next
 
-The owner's external verdict on the diff and the closed obligations ledger; the
-canary publish path itself is exercised by the owner's next canary cut (no
-publish is run by this local unit).
+The owner's external verdict on PR [#689](https://github.com/gtrabanco/agentic-workflow/pull/689)
+and the closed obligations ledger; the canary publish path itself is exercised
+by the owner's next canary cut (no publish is run by this local unit).
 
 ## References
 
 - Issue [#679](https://github.com/gtrabanco/agentic-workflow/issues/679)
+- PR [#689](https://github.com/gtrabanco/agentic-workflow/pull/689)
 - Contract owner: `skills/runner-contract/references/RUNNER.md`
 - Related: issue [#678](https://github.com/gtrabanco/agentic-workflow/issues/678) (same
   incident family, independent fix)
