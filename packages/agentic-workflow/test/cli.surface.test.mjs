@@ -9,14 +9,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const read = (...parts) => readFileSync(fileURLToPath(new URL(`../${parts.join("/")}`, import.meta.url)), "utf8");
 
-/** The subcommands inside the one `usage: agentic-workflow <a|b|…>` line. */
+/** The subcommands inside the one scoped, pinned usage line. */
 function usageTokens(text, label) {
-  const match = text.match(/usage: agentic-workflow <([^>]+)>/u);
-  assert.ok(match, `${label} declares its usage line`);
+  const match = text.match(/usage: bunx @gtrabanco\/agentic-workflow@<pin> <([^>]+)>/u);
+  assert.ok(match, `${label} declares its scoped usage line`);
   return match[1].split("|");
 }
 
@@ -36,6 +37,15 @@ test("every dispatched subcommand has a Commands row in the crate README", () =>
   for (const token of BIN) {
     assert.ok(documented.has(token), `the Commands table documents \`${token}\``);
   }
+});
+
+test("the no-command run names the scoped package at its pin, never the scope-less npm name", () => {
+  const bin = fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url));
+  const result = spawnSync(process.execPath, [bin], { encoding: "utf8" });
+  assert.equal(result.status, 1, "no subcommand is a usage error");
+  assert.match(result.stderr, /^usage: bunx @gtrabanco\/agentic-workflow@<pin> </mu, "the scoped package and its pin source are named");
+  assert.match(result.stderr, /skills\/runner-contract\/references\/RUNNER\.md/u, "the reader is pointed at the pin's owner");
+  assert.doesNotMatch(result.stderr, /usage: agentic-workflow </u, "the scope-less spelling that resolves to the placeholder is gone");
 });
 
 test("the bin dispatches `provision` (issue #269's ask-first rg bootstrap)", () => {

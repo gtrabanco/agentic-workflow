@@ -460,8 +460,10 @@ keeps one ref per skill name (the last `add` wins). `pi update --extensions`
 then follows whichever tag is recorded. The `@canary` dist-tag is repointed at
 every stable cut, so an install left on `@canary` lands on the stable version at
 the next one; a skills install pinned to a `#v…` tag is frozen and follows the
-branch only after the `#stable` re-add. Every release page repeats these
-commands for its own channel.
+branch only after the `#stable` re-add. A canary tag records the tree it
+published, so a `#v…` skills install at that tag carries the canary's own pin;
+an install at `#main` can be ahead of the last cut until the next canary. Every
+release page repeats these commands for its own channel.
 
 ## Uninstall
 

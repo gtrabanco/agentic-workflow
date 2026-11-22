@@ -24,8 +24,12 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...
+usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...
 ```
+
+`<pin>` is the exact version `skills/runner-contract/references/RUNNER.md`
+carries; the scope-less `agentic-workflow` npm name is a `0.0.0` placeholder, so
+`npx agentic-workflow` never launches this crate.
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
 as JSON). A refused operation exits **2** with `EDIT REFUSAL — <reason>` **before

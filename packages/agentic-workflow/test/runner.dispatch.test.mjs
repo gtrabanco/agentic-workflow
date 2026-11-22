@@ -120,3 +120,16 @@ test("the bin answers the router and refuses an unknown service in the closed wo
   assert.equal(refused.status, 2, "an unknown service is the closed-world exit 2");
   assert.match(refused.stderr, /Unknown service: invented-command/u);
 });
+
+// Issue #679 S2: the refusal a stale canary install produces must name the
+// running version and the two repairs, so an agent does not improvise.
+test("the unknown-service refusal names the running crate and the pin/override repairs", () => {
+  const bin = here("../bin/agentic-workflow.mjs");
+  const version = JSON.parse(readFileSync(here("../package.json"), "utf8")).version;
+  const refused = spawnSync(process.execPath, [bin, "invented-command"], { encoding: "utf8" });
+  assert.equal(refused.status, 2);
+  assert.match(refused.stderr, /^EDIT REFUSAL — Unknown service: invented-command/u, "the published refusal prefix is unchanged");
+  assert.match(refused.stderr, new RegExp(`@gtrabanco/agentic-workflow@${version.replaceAll(".", "\\.")}`, "u"), "the refusal names the crate it ran");
+  assert.match(refused.stderr, /skills\/runner-contract\/references\/RUNNER\.md/u, "the repair points at the pin's owner");
+  assert.match(refused.stderr, /AGENTIC_WORKFLOW_RUNNER/u, "the override repair is named too");
+});

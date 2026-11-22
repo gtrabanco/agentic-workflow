@@ -177,7 +177,7 @@ export function readmeCommands() {
   assert.ok(start !== -1, "the crate README carries no `## Commands` section");
   const rows = new Set();
   for (const token of text.slice(start).matchAll(/^\| `([a-z0-9-]+)/gmu)) rows.add(token[1]);
-  for (const token of text.slice(start).matchAll(/^usage: agentic-workflow <([^>]+)>/gmu)) {
+  for (const token of text.slice(start).matchAll(/^usage: bunx @gtrabanco\/agentic-workflow@<pin> <([^>]+)>/gmu)) {
     for (const name of token[1].split("|")) rows.add(name);
   }
   return rows;

@@ -143,9 +143,11 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    workspace, gates every declared package on its own test suite against the
    committed tree, stages the channel versions plus the pins pointing at a
    sibling cut in the same canary (`scripts/release.mjs publish-stage`),
-   publishes with lifecycle scripts off, restores the worktree, and records
-   the cut as a git tag + a GitHub **pre-release** (never `latest` on either
-   surface). The repo is untouched, the changesets are NOT consumed (only the
+   snapshots the staged tree for the tag (`scripts/canary-tag.mjs`), publishes
+   with lifecycle scripts off, restores the worktree, and records the cut as a
+   git tag on that staged tree + a GitHub **pre-release** (never `latest` on
+   either surface), so a skills install at the tag cites the crate it shipped
+   with. The repo is untouched, the changesets are NOT consumed (only the
    stable train consumes them), and canaries are grouped by you. `mode: suggest`
    is the read-only preview (stable + canary suggestions + every changeset's
    semver annotation).

@@ -100,8 +100,8 @@ test("cut + canary publishes the declared packages at the canary version, gated 
   assert.match(block, /release\.mjs publish-stage --channel/);
   assert.match(block, /npm-version-gate\.mjs/, "the exact-version gate guards every publish");
   assert.match(block, /npm publish --ignore-scripts --access public --provenance --tag "\$tag"/);
-  assert.match(block, /git checkout -- packages\/\*\/package\.json/, "the repo is restored after the temp version");
-  assert.match(block, /git tag "v\$V"/, "the tag is the canary counter's input");
+  assert.match(block, /git checkout HEAD -- packages\/\*\/package\.json/, "the repo is restored after the temp version");
+  assert.match(block, /canary-tag\.mjs record --tag "v\$V"/, "the tag is the canary counter's input");
 });
 
 // The canary job runs the same never-publish-red gate a push publish runs, but
@@ -120,8 +120,31 @@ test("cut + canary installs the workspace, gates the commit, stages and restores
   assert.doesNotMatch(block, /--date "\$\(date/, "plan and stage read the pinned date, never a second clock read");
   assert.doesNotMatch(block, /npm version/, "no per-package npm version: the stage step owns the temp state");
   assert.match(block, /npm publish --ignore-scripts/, "lifecycle scripts never re-run the gate against the staged version");
-  assert.match(block, /if: always\(\)[\s\S]{0,120}git checkout -- packages\/\*\/package\.json/);
+  assert.match(block, /if: always\(\)[\s\S]{0,120}git checkout HEAD -- packages\/\*\/package\.json/);
   assert.match(block, /gh release create "v\$V"[^\n]*--prerelease/, "the channel cut is visible as a GitHub pre-release");
+});
+
+// Issue #679: a canary tag must carry the pin the cut publishes. The stage
+// writes the pin into the worktree and the restore used to throw it away while
+// the tag was recorded at HEAD, so `npx skills add …#v<tag>` installed skills
+// whose cited services could be younger than the stable pin. The tag now names
+// the staged tree, captured before the restore.
+test("cut + canary records the tag on the staged tree and restores the staged pin", () => {
+  const block = jobBlock(read(PUBLISH), "cut-prerelease");
+  const stage = block.indexOf("publish-stage --channel");
+  const snapshot = block.indexOf("canary-tag.mjs snapshot");
+  const restore = block.indexOf("git checkout HEAD --");
+  const record = block.indexOf("canary-tag.mjs record");
+  const push = block.indexOf('git push origin "v$V"');
+  assert.ok(stage !== -1 && snapshot !== -1 && restore !== -1 && record !== -1 && push !== -1, "the five steps exist");
+  assert.ok(stage < snapshot, "the snapshot reads the staged pin");
+  assert.ok(snapshot < restore, "the staged tree is captured before the worktree is restored");
+  assert.ok(restore < record, "the tag is recorded after the restore, from the captured commit");
+  assert.ok(record < push, "the recorded tag is what is pushed");
+  assert.match(block, /RELEASE_COMMIT=\$\(bun scripts\/canary-tag\.mjs snapshot\)/, "the snapshot's commit is carried to the tag step");
+  assert.match(block, /canary-tag\.mjs record --tag "v\$V" --commit "\$TARGET"/, "the tag records the staged tree");
+  assert.match(block, /TARGET="\$\{RELEASE_COMMIT:-\$\(git rev-parse HEAD\)\}"/, "the tag step defaults to HEAD only when the snapshot published nothing");
+  assert.match(block, /git checkout HEAD -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the staged pin is restored with the manifests");
 });
 
 test("cut + canary accepts the version input as the canary base (a variable, never a literal)", () => {

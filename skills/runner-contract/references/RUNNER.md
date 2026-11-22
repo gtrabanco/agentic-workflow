@@ -95,10 +95,22 @@ AGENTIC_WORKFLOW_RUNNER="bun /absolute/path/to/packages/agentic-workflow/bin/age
   checkout's bin, and the tool doctor's `dogfooding-vehicle` row reports the state
   (owner: `docs/workflow/SETUP.md` § The vehicle). This file stays the only home
   of the value's shape and of what honours it.
-- A canary cut stages its version into this file for the duration of the publish
-  and restores it, so the committed pin always names a stable release. A project
+- A canary cut stages its version into this file for the duration of the publish,
+  records the staged tree as the canary tag, and restores the worktree
+  afterwards, so the committed pin always names a stable release. The skills
+  installed at that tag therefore cite the canary they shipped with. A project
   that never upgrades keeps the pair (skills at vX, package at vX) coherent with
   zero maintenance: the pin is exact, so vX stays installable forever.
+
+### When the pin is older than the command
+
+An install at a branch ref (`#main`) can be ahead of the last canary cut: the
+skills cite a service the pinned stable does not carry. The pin is exact and
+immutable by contract, so the run is refused rather than silently resolved —
+`EDIT REFUSAL — Unknown service: <name>` names the crate it ran and the two
+repairs: install the canary tag at or after the service
+(`npx skills add …#v<canary tag>`), or point `AGENTIC_WORKFLOW_RUNNER` at a crate
+that carries it. The next canary cut makes the branch tree coherent again.
 
 ## In a pi session
 

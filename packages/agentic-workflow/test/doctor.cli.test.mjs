@@ -133,7 +133,7 @@ test("an unknown flag is a refusal naming the usage, exit 2", { timeout: 30_000 
 
 test("the bin dispatches both subcommands and the usage line names them", () => {
   const bin = readFileSync(BIN, "utf8");
-  const usage = bin.match(/usage: agentic-workflow <([^>]+)>/u);
+  const usage = bin.match(/usage: bunx @gtrabanco\/agentic-workflow@<pin> <([^>]+)>/u);
   assert.ok(usage, "the bin declares its usage line");
   const tokens = usage[1].split("|");
   assert.ok(tokens.includes("doctor"), "the usage line dispatches doctor");
