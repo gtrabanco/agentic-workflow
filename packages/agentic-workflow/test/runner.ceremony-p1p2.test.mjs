@@ -381,6 +381,43 @@ test("roadmap: row-upsert settles a fix row and a feature row, and touches no ot
   assert.equal(roadmap(), refusedBefore, "a refusal writes no byte");
 });
 
+test("roadmap: a consumer-shaped Fixes table settles by its own issue column", (t) => {
+  const { root, write } = makeRepo(t);
+  // The shape a consumer project reported (issue #684 extension): the issue key
+  // is the *last* cell, and the columns the writer does not know (`Folder`,
+  // `Depends on`) must survive the splice.
+  const consumer = [
+    "# Roadmap",
+    "",
+    "## Features",
+    "",
+    "| NN | Slug | Status | Depends on | Summary |",
+    "| --- | --- | --- | --- | --- |",
+    "| 91 | `toy` | in-progress | — | a toy feature |",
+    "",
+    "## Fixes",
+    "",
+    "| Folder | Topic | Status | Depends on | Issue |",
+    "| --- | --- | --- | --- | --- |",
+    "| 77-toy | toy | in-progress | — | [#77](https://example.invalid/issues/77) |",
+    "",
+  ].join("\n");
+  write("docs/ROADMAP.md", consumer);
+
+  const settled = ceremony(root, "roadmap", "row-upsert", "--slug", "77-toy", "--status", "done");
+  assert.equal(settled.code, 0, settled.stdout + settled.stderr);
+  assert.equal(settled.json.upserted, true, "the receipt reports the write it made");
+
+  const after = readFileSync(join(root, "docs/ROADMAP.md"), "utf8");
+  const expected = consumer.replace(
+    "| 77-toy | toy | in-progress | — | [#77](https://example.invalid/issues/77) |",
+    "| 77-toy | toy | done | — | [#77](https://github.com/gtrabanco/agentic-workflow/issues/77) |",
+  );
+  assert.equal(after, expected, "the keyed row's status and issue cells move, every other byte is carried through");
+  const row = after.split("\n").find((line) => line.includes("[#77]"));
+  assert.equal(row.split("|").slice(1, -1).length, 5, "the spliced row carries the table's column count");
+});
+
 test("pr: the degradation contract — a missing gh and an unauthenticated gh are blocks, never stack traces", (t) => {
   const { root } = makeRepo(t);
   const bin = process.execPath;
