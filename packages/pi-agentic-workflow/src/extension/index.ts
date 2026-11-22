@@ -419,6 +419,11 @@ export default function extension(pi: ExtensionAPI): void {
     // Issue #274: the deferred workflow tools register alongside the commands,
     // through the one structural read above — absent on a host without the API.
     toolRegistrar: toolRegistrar(pi) ?? undefined,
+    // Issue #690: the same attribution gate the command registrar feeds, handed
+    // to the deferred tools — the runner door is the only path a unit-scoped
+    // subcommand takes when the model dispatches the work, so a session that
+    // never types a slash command still learns which unit it is working on.
+    workflowTools: { onRunnerCommand: noteCommand },
     // Issue #678: the host convention belongs here, not in the Pi-free specs —
     // the factory hands `registerTool` what this adapter says a tool is.
     toolShipping: hostTool,

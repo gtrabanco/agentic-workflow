@@ -95,6 +95,21 @@ export interface WorkflowToolsDeps {
    * reports its exit code and captured streams. Injectable for tests.
    */
   spawnScript?: SpawnScript;
+  /**
+   * Issue #690 — the attribution seam: the session hears the subcommand the
+   * generic door is about to run, so it can resolve the unit that command names.
+   *
+   * It exists because this door is the only path a unit-scoped subcommand takes
+   * in a session whose work runs through the deferred tools: the slash-command
+   * registrar notes the commands a person types, and the work itself is dispatched
+   * by the model through `agentic_workflow_run`. Without the seam the session's
+   * accumulator is never built, so no telemetry sink ever receives a sample.
+   *
+   * Injectable for the same reason the spawn is: a suite proves the ordering and
+   * the arguments without a live session, and a host with telemetry off simply
+   * passes nothing.
+   */
+  onRunnerCommand?: (subcommand: string, args: readonly string[]) => void;
 }
 
 /**
@@ -692,6 +707,13 @@ const RUNNER_RUN_RESULT_SCHEMA: Record<string, unknown> = {
  * every other — the same spawn path, the same resolver, no new authority. Its
  * text is the command's own output, so the block a skill asks the agent to
  * paste arrives unparaphrased; a non-zero exit is an error carrying it.
+ *
+ * It is also the session's attribution door (issue #690): `onRunnerCommand`
+ * hears the subcommand before anything spawns, because the unit a `runner
+ * execute-phase <n>`-shaped call names is what the telemetry sample is
+ * attributed to, and because `AG_WF_PHASE` has to be in the environment the
+ * child inherits. The seam is bookkeeping — a failure there is reported by its
+ * own owner and never costs the operator the command they asked for.
  */
 function runnerRunSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
   return {
@@ -721,6 +743,15 @@ function runnerRunSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
     async execute(params, cwd) {
       const subcommand = requireString(params, "subcommand");
       const forwarded = Array.isArray(params.args) ? params.args.filter((arg): arg is string => typeof arg === "string") : [];
+      // Before the spawn, never after it: the child inherits this environment,
+      // so the phase in flight has to be set by now, and an attributed session
+      // that then fails to spawn was still working on the unit it named.
+      try {
+        deps.onRunnerCommand?.(subcommand, forwarded);
+      } catch {
+        // The seam is diagnostic. A broken reporter costs the session its sample;
+        // it never costs the operator the command they asked for.
+      }
       const doSpawn = deps.spawnScript ?? spawnScript;
       let outcome: SpawnOutcome;
       try {
