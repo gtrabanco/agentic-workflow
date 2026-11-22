@@ -241,6 +241,13 @@ function refuse(reason) {
   process.exit(2);
 }
 
+/** This crate's own version, read once and only when a refusal needs it. */
+let crateVersion;
+function runningCrateVersion() {
+  crateVersion ??= JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+  return crateVersion;
+}
+
 /** The first occurrence's value (`--flag <value>`) or undefined. */
 function flagValue(args, flag) {
   const index = args.indexOf(flag);
@@ -644,7 +651,8 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...",
+    "usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...\n" +
+      "       (bin: agentic-workflow · pin: skills/runner-contract/references/RUNNER.md · the scope-less `npx agentic-workflow` is a 0.0.0 placeholder, never this package)",
   );
   process.exit(1);
 }
@@ -2016,5 +2024,7 @@ switch (command) {
       }
       break;
     }
-    refuse(`Unknown service: ${command}`);
+    refuse(
+      `Unknown service: ${command} — this install is @gtrabanco/agentic-workflow@${runningCrateVersion()}; a service added after that version is not in it. Check the pin in skills/runner-contract/references/RUNNER.md, or set AGENTIC_WORKFLOW_RUNNER to a crate that carries the service.`,
+    );
 }
