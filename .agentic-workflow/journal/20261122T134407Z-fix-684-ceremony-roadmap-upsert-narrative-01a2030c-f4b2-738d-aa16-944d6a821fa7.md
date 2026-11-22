@@ -1,0 +1,4 @@
+## 2026-11-22T13:44:07Z — fix/684-ceremony-roadmap-upsert — narrative
+- **Commits:** 6 (`1518d561…54203da7`)
+- **Files:** 7 files
+- **Summary:** Apply issue #684 inline through the owner's local workflow: `ceremony roadmap row-upsert` handed the roadmap document to both writers where they take a path, so both arms died before writing a byte. The repair passes `roadmapPath()` to both arms, drops the local read and the `next`/written write-back (a receipt carries no text field, so that second write was the next crash), reports the writer's own ok as upserted, and a regression case settles a fix row AND a feature row end to end. Six commits landed; pre-push gate green at two workers (the load class that flaked at four) then pushed with SSH keepalive; PR #686 created, MERGEABLE, CLEAN, Closes #684. All obligations verified on foreground runs; all gates green.

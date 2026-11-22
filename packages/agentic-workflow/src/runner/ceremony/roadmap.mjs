@@ -59,25 +59,33 @@ export function roadmap(op, argv) {
       const unit = resolveUnit(flags.slug);
       const nn = /^(\d+)/u.exec(flags.slug)?.[1];
       if (nn === undefined) fail("bad-slug", { slug: flags.slug, expected: "<nn>-<topic>" });
-      const text = readFileSync(roadmapPath(), "utf8");
-      const next = unit.type === "fix"
-        ? fixRowUpsert(text, {
+      // The flag list above is the union of both arms; each arm honours only
+      // its own subset — an option is either honoured or an error, never
+      // silently swallowed (`onlyFlags`, lib.mjs). The fix arm has no
+      // depends-on semantics and the feature arm has no issue key
+      // (external-verify run 2, B2).
+      onlyFlags(flags, unit.type === "fix" ? ["status", "summary", "issue"] : ["status", "depends-on", "summary"]);
+      // Both writers take the roadmap's *path* and write it themselves —
+      // `writeShared` splices the one row and every other byte is carried through
+      // — and re-read it to validate the row they left. Handing them the document
+      // instead (issue #684) opened the whole body as a filename, and writing
+      // their receipt back afterwards would have written a second time.
+      const receipt = unit.type === "fix"
+        ? fixRowUpsert(roadmapPath(), {
           issue: flags.issue ?? nn,
           url: `https://github.com/gtrabanco/agentic-workflow/issues/${flags.issue ?? nn}`,
           topic: flags.slug.replace(/^\d+-/u, ""),
           status: String(flags.status),
           notes: flags.summary ?? "",
         })
-        : rowUpsert(text, {
+        : rowUpsert(roadmapPath(), {
           nn,
           slug: flags.slug.replace(/^\d+-/u, ""),
           status: String(flags.status),
           dependsOn: flags["depends-on"] ?? "—",
           description: flags.summary ?? "",
         });
-      const written = typeof next === "string" ? next : next.text;
-      write(written);
-      out({ upserted: true, slug: flags.slug, status: flags.status, sha: git(["hash-object", roadmapPath()]) });
+      out({ upserted: receipt.ok, slug: flags.slug, status: flags.status, sha: git(["hash-object", roadmapPath()]) });
     }
     case "settle": {
       const flags = parseFlags(argv, [], []);

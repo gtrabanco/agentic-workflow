@@ -640,6 +640,249 @@ describe("Roadmap on the writer driver (issue #498)", () => {
     ok(content.includes("| 12 | feature-unit | idea | — | a feature row |"));
   });
 
+  // ── The shape layer (issue #684 extension) ─────────────────────────────
+  //
+  // The writer used to accept exactly one Fixes shape: a header whose first
+  // cell was `Issue`, and a four-cell row literal. A project whose table puts
+  // the issue cell elsewhere (the consumer reported `Folder | Topic | Status |
+  // Depends on | Issue`) was refused as "table not found" and had to settle its
+  // row by hand. These cases freeze the shape the writer must derive from the
+  // table it is handed.
+
+  /** The consumer's five-column Fixes table, issue cell last (S2's header). */
+  const CONSUMER_DOC = [
+    "# Index",
+    "",
+    "## Fixes",
+    "",
+    "| Folder | Topic | Status | Depends on | Issue |",
+    "| --- | --- | --- | --- | --- |",
+    "| 101-toy | toy | in-progress | — | [#101](https://example.invalid/issues/101) |",
+    "",
+  ].join("\n");
+
+  it("SHAPE-1 — a Fixes table with the issue cell last settles its row, byte-checkable", () => {
+    const shapePath = join(dir, "CONSUMER.md");
+    writeFileSync(shapePath, CONSUMER_DOC, "utf8");
+    const receipt = fixRowUpsert(shapePath, {
+      issue: 101,
+      url: "https://example.invalid/issues/101",
+      topic: "toy",
+      status: "done",
+      notes: "no Notes column here",
+    });
+    strictEqual(receipt.ok, true);
+    const expected = CONSUMER_DOC.replace(
+      "| 101-toy | toy | in-progress | — | [#101](https://example.invalid/issues/101) |",
+      "| 101-toy | toy | done | — | [#101](https://example.invalid/issues/101) |",
+    );
+    strictEqual(readFileSync(shapePath, "utf8"), expected);
+    // The row carries the header's column count, not the writer's own four.
+    const row = expected.split("\n").find((line) => line.includes("[#101]"));
+    strictEqual(row.split("|").slice(1, -1).length, 5);
+  });
+
+  it("SHAPE-2 — the key cell may be a bare number in any column, and holds no invented link", () => {
+    const barePath = join(dir, "BARE.md");
+    const doc = [
+      "# Index",
+      "",
+      "## Fixes",
+      "",
+      "| Status | Folder | # | Topic |",
+      "| --- | --- | --- | --- |",
+      "| in-progress | 102-toy | 102 | toy |",
+      "",
+    ].join("\n");
+    writeFileSync(barePath, doc, "utf8");
+    const receipt = fixRowUpsert(barePath, { issue: 102, topic: "renamed-toy", status: "done", notes: "" });
+    strictEqual(receipt.ok, true);
+    strictEqual(
+      readFileSync(barePath, "utf8"),
+      doc.replace("| in-progress | 102-toy | 102 | toy |", "| done | 102-toy | 102 | renamed-toy |"),
+      "the bare key stays bare: the writer never invents a link, and unknown cells keep their values",
+    );
+  });
+
+  it("SHAPE-3 — a table with no issue-keyed cell refuses by naming that constraint", () => {
+    const noKeyPath = join(dir, "NO-KEY.md");
+    const doc = [
+      "# Index",
+      "",
+      "## Fixes",
+      "",
+      "| Folder | Topic | Status |",
+      "| --- | --- | --- |",
+      "| 103-toy | toy | in-progress |",
+      "",
+    ].join("\n");
+    writeFileSync(noKeyPath, doc, "utf8");
+    throws(
+      () => fixRowUpsert(noKeyPath, { issue: 103, topic: "toy", status: "done", notes: "" }),
+      (error) => {
+        strictEqual(error.name, "WriterError");
+        ok(error.message.includes("no issue-keyed column"), error.message);
+        ok(!error.message.includes("not found"), `a table that exists is never reported missing: ${error.message}`);
+        return true;
+      },
+    );
+    strictEqual(readFileSync(noKeyPath, "utf8"), doc, "a refusal writes no byte");
+  });
+
+  it("SHAPE-4 — a separator whose cell count disagrees with its header names that mismatch", () => {
+    const mismatchPath = join(dir, "MISMATCH.md");
+    const doc = [
+      "# Index",
+      "",
+      "## Fixes",
+      "",
+      "| Folder | Topic | Status | Depends on | Issue |",
+      "| --- | --- | --- |",
+      "",
+    ].join("\n");
+    writeFileSync(mismatchPath, doc, "utf8");
+    throws(
+      () => fixRowUpsert(mismatchPath, { issue: 104, topic: "toy", status: "done", notes: "" }),
+      (error) => {
+        ok(error.message.includes("separator has 3 cells"), error.message);
+        ok(error.message.includes("header has 5"), error.message);
+        return true;
+      },
+    );
+    strictEqual(readFileSync(mismatchPath, "utf8"), doc);
+  });
+
+  it("SHAPE-5 — a Fixes section carrying no header row names the missing header", () => {
+    const noHeaderPath = join(dir, "NO-HEADER.md");
+    const doc = ["# Index", "", "## Fixes", "", "No table here yet.", "", "## Features", "", "| NN | Slug | Status |", "| --- | --- | --- |", ""].join("\n");
+    writeFileSync(noHeaderPath, doc, "utf8");
+    throws(
+      () => fixRowUpsert(noHeaderPath, { issue: 105, topic: "toy", status: "done", notes: "" }),
+      (error) => {
+        ok(error.message.includes("no table header"), error.message);
+        ok(!error.message.includes("not found"), error.message);
+        return true;
+      },
+    );
+    strictEqual(readFileSync(noHeaderPath, "utf8"), doc);
+  });
+
+  it("SHAPE-6 — two issue-keyed columns are refused as ambiguous, naming both", () => {
+    const ambiguousPath = join(dir, "AMBIGUOUS.md");
+    const doc = [
+      "# Index",
+      "",
+      "## Fixes",
+      "",
+      "| Issue | Topic | Status | Issue |",
+      "| --- | --- | --- | --- |",
+      "",
+    ].join("\n");
+    writeFileSync(ambiguousPath, doc, "utf8");
+    throws(
+      () => fixRowUpsert(ambiguousPath, { issue: 106, topic: "toy", status: "done", notes: "" }),
+      (error) => {
+        ok(error.message.includes("2 issue-keyed columns"), error.message);
+        return true;
+      },
+    );
+    strictEqual(readFileSync(ambiguousPath, "utf8"), doc);
+  });
+
+  // ── the escaped-pipe corpus (external-verify run 2, 2026-11-22, blocker B1, O19) ──
+  // The live defect: `rowCells` split every `|`, so a markdown-escaped pipe
+  // (`\|`) inside a cell counted as a column — the post-write verdict failed a
+  // good write (this repository's own row 684 carries
+  // `Folder \| Topic \| Status \| Depends on \| Issue` in its Notes) and a key
+  // column sitting after such a cell never matched, so the writer inserted a
+  // duplicate row while reporting success. Added red, observed failing before
+  // the fix; each case writes its own throwaway table.
+
+  it("SHAPE-7 — an escaped pipe in an earlier cell is content: the keyed row updates in place, never duplicated (O19)", () => {
+    const pipePath = join(dir, "PIPE-KEY.md");
+    const doc = [
+      "# Index",
+      "",
+      "## Fixes",
+      "",
+      "| Folder | Topic | Status | Depends on | Issue |",
+      "| --- | --- | --- | --- | --- |",
+      "| 101-toy | toy | in-progress | #12 \\| #13 | [#101](https://example.invalid/issues/101) |",
+      "",
+    ].join("\n");
+    writeFileSync(pipePath, doc, "utf8");
+    const receipt = fixRowUpsert(pipePath, {
+      issue: 101,
+      url: "https://example.invalid/issues/101",
+      topic: "toy",
+      status: "done",
+      notes: "settled",
+    });
+    strictEqual(receipt.ok, true);
+    const expected = doc.replace(
+      "| 101-toy | toy | in-progress | #12 \\| #13 | [#101](https://example.invalid/issues/101) |",
+      "| 101-toy | toy | done | #12 \\| #13 | [#101](https://example.invalid/issues/101) |",
+    );
+    strictEqual(
+      readFileSync(pipePath, "utf8"),
+      expected,
+      "the keyed row updates in place, the escaped-pipe cell keeps its bytes, and no second row appears",
+    );
+    strictEqual(expected.split("\n").filter((line) => line.includes("[#101]")).length, 1);
+  });
+
+  it("SHAPE-8 — the post-write verdict counts markdown cells: escaped-pipe notes answer ok (O19)", () => {
+    const verdictPath = join(dir, "VERDICT.md");
+    const notes = "shaped `Folder \\| Topic \\| Status` settles";
+    const doc = [
+      "# Index",
+      "",
+      "## Fixes",
+      "",
+      "| Issue | Topic | Status | Notes |",
+      "| --- | --- | --- | --- |",
+      `| [#684](https://example.invalid/issues/684) | ceremony-upsert | in-progress | ${notes} |`,
+      "",
+    ].join("\n");
+    writeFileSync(verdictPath, doc, "utf8");
+    const receipt = fixRowUpsert(verdictPath, {
+      issue: 684,
+      url: "https://example.invalid/issues/684",
+      topic: "ceremony-upsert",
+      status: "done",
+      notes,
+    });
+    strictEqual(receipt.ok, true, "the written row carries the header's cells; an escaped pipe is content, not a column");
+    const expected = doc.replace(
+      "| [#684](https://example.invalid/issues/684) | ceremony-upsert | in-progress |",
+      "| [#684](https://example.invalid/issues/684) | ceremony-upsert | done |",
+    );
+    strictEqual(readFileSync(verdictPath, "utf8"), expected);
+  });
+
+  it("CLI: roadmap fixrow settles a consumer-shaped Fixes row", async () => {
+    const cliDir = mkdtempSync(join(tmpdir(), "aw-fixrow-shape-"));
+    try {
+      const cliPath = join(cliDir, "ROADMAP.md");
+      writeFileSync(cliPath, CONSUMER_DOC, "utf8");
+      const agwoPath = join(fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url)));
+      const payload = JSON.stringify({ issue: 101, url: "https://example.invalid/issues/101", topic: "toy", status: "done", notes: "" });
+      const run = await new Promise((resolve) => {
+        const proc = spawn("node", [agwoPath, "roadmap", "fixrow", cliPath, payload, "--json"], { cwd: cliDir, timeout: 10000 });
+        let stdout = "";
+        let stderr = "";
+        proc.stdout.on("data", (d) => { stdout += d.toString(); });
+        proc.stderr.on("data", (d) => { stderr += d.toString(); });
+        proc.on("close", (code) => resolve({ code, stdout, stderr }));
+      });
+      strictEqual(run.code, 0, run.stderr);
+      strictEqual(JSON.parse(run.stdout).ok, true);
+      ok(readFileSync(cliPath, "utf8").includes("| 101-toy | toy | done | — | [#101](https://example.invalid/issues/101) |"));
+    } finally {
+      rmSync(cliDir, { recursive: true, force: true });
+    }
+  });
+
   it("CLI: roadmap read answers a revision receipt; stale writes refuse with exit 2", (t, done) => {
     const cliDir = mkdtempSync(join(tmpdir(), "aw-roadmap-cli-"));
     const cliPath = join(cliDir, "ROADMAP.md");
