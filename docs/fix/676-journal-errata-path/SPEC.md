@@ -500,12 +500,58 @@ ships, every row is `verified` or an evidenced `n/a`.
   #685 opened against
   `main` with `Closes #676`; the roadmap row moves to `in review` at the owner's
   request, emitted into the projection by `runner docs-generate`.
+- **P9** — 2026-11-22, the correction batch for this unit's 2026-11-22
+  `EXTERNAL VERIFY` (receipt beside this document): the ledgers froze first —
+  `O15`–`O20`, `PE-015`–`PE-018`, `D7` — then the frozen-failure corpus landed
+  observed red (`6bbb3229b`: the flagless link, the published refusal's
+  sentence, the prose pins, the lone declaring fragment, the sibling surfaces —
+  five cases, plus the pre-existing `roadmap-settle` live-tree red the receipt
+  names B1).
+- **P10** — 2026-11-22, the code slice (`606a6637b`): the writer refuses a
+  correction link the flag did not declare, the lint refuses a lone fragment
+  that declares a correction, the published duplicate refusal keeps #468's
+  sentence with the routing appended, and the module doc states the chain rule.
+- **P11** — 2026-11-22, the prose slice (`474ccdc33`): README's `journal
+  aggregate` command row and `refusal` row, the skill's `when one existed`
+  condition, this doc's settle conflict (the own-PR URLs leave `Log`/`Next`
+  while the owner's `in review` cell stands) and the Impact's entries. The
+  corpus's two regexes were repaired for markdown/comment line-wrap before
+  first green — assertion intent unchanged, the same class as E2.
+- **E19** — 2026-11-22, the blockers-only recheck, foreground: `bun test
+  packages/agentic-workflow/test/journal.write.test.mjs` · exit 0 · 34 pass /
+  0 fail (O15/O19/O20); `…journal.test.mjs` · exit 0 · 41 pass / 0 fail (O16);
+  `…journal.surfaces.test.mjs` · exit 0 · 13 pass / 0 fail (O18);
+  `roadmap-settle` · exit 0 · `verdict: PASS`, 0 violations (O17);
+  `phase-lint docs/fix/676-journal-errata-path/SPEC.md` · exit 0 · `PASS (6/6)`.
+- **E20** — 2026-11-22, the don't-break sweep: `bun scripts/run-root-suite.mjs`
+  · exit 0 · 137/137 PASS; the crate's bun and node legs · exit 0 · 78 + 78
+  suites; the Pi package's node leg · exit 0 · 1040 pass / 0 fail / 1 skip;
+  `skill-lint` · PASS (0 findings); `check-skill-context` · PASS (log-session
+  3142 est / 238 lines against 3452/240) and `--documents` · PASS;
+  `prose-gate-inventory`, `test-obligation-tags` (137/0), the
+  `normative-drift`+`vocabulary-parity`+`structural-sibling-pins`+`log-immutability`
+  suites (90 pass / 0 fail), `lint-changeset`, `version-parity --content`,
+  `test-impact` (13 paths + 4 symbols, 42 suites), `docs-generate --check`,
+  `log-immutability --base 55525abad` (0 violations, 15 commits), the live
+  carrier `journal aggregate --check` (ok, 11) and `secret-scan` — all exit 0.
+- **E21** — 2026-11-22, the differential in `mktemp -d` scratch (removed
+  after): `55525abad` (base), `6f546ae03` (pre-batch) and the batch head, same
+  fixtures, same commands (`D1`–`D9`): the plain write and the plain
+  `--content` write are byte-identical everywhere; the only differences are the
+  asked-for ones — the refusal carries #468's sentence byte-identical with the
+  routing appended (base→head) and the tail restored (pre→head), the flagless
+  cell refuses 0 → 2, the lone declaring fragment refuses 0 → 2,
+  `roadmap-settle` goes pre 1 → head 0; the errata pair's check 2 (base) → 0
+  and the undeclared pair's exit 2 are the original change's asks, unchanged by
+  the batch.
+- **G2** — 2026-11-22, `bun scripts/local-gate.mjs --jobs 4 --no-bail` · exit 0
+  · `PASS — 20 step(s) in 507s` — the gate B1 reddened at `6f546ae03` is green.
 
 ## Next
 
 The owner's delta verdict on the 2026-11-22 correction batch (PR #685): the
 `EXTERNAL VERIFY` receipt's blockers B1–B4 and advisories A1–A3 are folded, A4/A5
-carry their recorded dispositions, and the batch's recheck is the `C`/`E` lines
+carry their recorded dispositions, and the batch's recheck is the `P`/`E` lines
 below. Open owner question: the `in review` status cell sits outside the
 `## Status legend`'s machine (`done` is the PR-open state and `unit-route`
 refuses close-out while the status is not `done`) — flagged, never resolved
