@@ -2,7 +2,7 @@
 type: fix
 scope: medium
 roadmap_summary: Issue [#676](https://github.com/gtrabanco/agentic-workflow/issues/676) (M, high): a stale journal entry now has a sanctioned errata path — `journal write --supersedes <fragment>` lands the correction as a NEW fragment whose block declares the one it corrects, the carrier lint reads a slot as one entry plus its declared chain, and the aggregator lands the correction once. Applied through the owner's local inline workflow (ledgers frozen at cut). SPEC: [SPEC](fix/676-journal-errata-path/SPEC.md)
-ac-hash: PENDING
+ac-hash: 0da05f505299353f278e547d4c4edd6414643adcd5261fd516c58259e7e3b1cd
 ---
 
 # fix/676-journal-errata-path
@@ -235,11 +235,19 @@ none
 
 ## Known pre-existing issues
 
+- **`scripts/phase-lint.test.mjs` crosses its suite wall-clock bound under gate
+  load** — the gate's `root-suite` step kills a suite at 120s; this one measured
+  73s standalone at this head and 94s standalone at the base commit (`55525abad`,
+  measured by checking the base out in this worktree and running it), so its 4-worker
+  load, not this unit, is what pushes it over. `does-not-affect` the change: the
+  suite reads phase fixtures and this unit touches none of them; the evidence run
+  is `G1` and the suite itself is green standalone.
 - **A stale sibling worktree** — a session other than this one owns another
   worktree, and `scripts/worktree-guard.mjs` reports it `STALE` when the branch
   is already merged. `does-not-affect` this unit: the finding is about another
   session's workspace, not this branch, and the removal order is the owner's
-  (`docs/workflow/WORKTREES.md`).
+  (`docs/workflow/WORKTREES.md`). The gate's `worktree-guard` step exited 0 in
+  this unit's run.
 - **`scripts/version-parity-gate.mjs --content` needed the third package in the
   changeset** — `skills/log-session/SKILL.md` is content of
   `packages/pi-agentic-workflow`, so the changeset declares all three shipped
@@ -250,8 +258,9 @@ none
 
 - P1 — Land the frozen-failure corpus alone: the errata cases in the writer
   suite and the carrier suite, observed red against the unchanged modules.
-  (validator: `git show 8aa89f03e --stat` names only the two test files, and the
-  `E` line records the observed failures)
+  (validator: `git show --stat --format= 8aa89f03e` names only the two journal
+  test files, and `bun test packages/agentic-workflow/test/journal.test.mjs` at
+  that commit matches 4 failing cases)
   (Implements: S4, S6, S7, S11, S12)
   - Relevant files: packages/agentic-workflow/test/journal.test.mjs, packages/agentic-workflow/test/journal.write.test.mjs
 - P2 — Publish the marker's closed set in the schema package, render and read
@@ -275,8 +284,10 @@ none
   - Relevant files: packages/agentic-workflow/README.md, template/.agentic-workflow/journal.md, skills/log-session/SKILL.md, AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/676-journal-errata-path.md
 - P6 — Verify like a writer: the derived test-impact set, the differential
   against the base commit, the gate's per-step verdict and the session entry
-  through the carrier. (validator: `bun scripts/test-impact.mjs --base origin/main` prints the set and `bun scripts/local-gate.mjs` records every step's verdict)
-  (Implements: S1, S10)
+  through the carrier. (validator: `bun scripts/test-impact.mjs --base
+  origin/main` exits 0, and `bun scripts/local-gate.mjs --jobs 4 --no-bail`
+  records every step's verdict)
+  (Implements: S1, S3, S10)
   - Relevant files: packages/agentic-workflow/src/journal, packages/agentic-workflow/test
 
 ### Planning evidence
@@ -359,8 +370,106 @@ ships, every row is `verified` or an evidenced `n/a`.
   the assertion is unchanged.
 - **P1** — 2026-11-21 21:12, the test-only commit `8aa89f03e` (frozen corpus,
   observed red).
-- **P2** — 2026-11-21 21:31, the marker's vocabulary, the block cell and the
-  shared predicate · (this commit's slice, see the commit list in `## Next`).
+- **P2** — 2026-11-21 21:44, the marker's closed set in the schema package, the
+  block cell (render + read) and the shared predicate's declared link · `73ab1035d`.
+- **P3** — 2026-11-21 21:44, the writer's `--supersedes`, the routed refusal and
+  the slot-head/ordering refusals · `73ab1035d`.
+- **P4** — 2026-11-21 21:44, the carrier lint's declared chain and the one
+  comparator for the batch order and the chain · `73ab1035d`.
+- **P5** — 2026-11-21 21:47, the prose, the inventory rows, the re-pinned
+  budgets, the changeset, the roadmap/projection sync and this unit doc · `1e1fe4571`.
+- **E3** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.test.mjs` ·
+  exit 0 · 40 pass / 0 fail (the green half of the corpus: the chain acceptance,
+  the broken chain, the two-cell ambiguity, the CLI's green half).
+- **E4** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.write.test.mjs` ·
+  exit 0 · 31 pass / 0 fail (the six errata cases in, the pre-existing writer
+  cases unchanged).
+- **E5** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` ·
+  exit 0 · 12 pass / 0 fail (the marker's residency + the block owner's render).
+- **E6** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.headless.test.mjs packages/agentic-workflow/test/journal.driver.test.mjs` ·
+  exit 0 · 51 pass / 0 fail (the two other writers and the driver contract).
+- **E7** — 2026-11-21, `bun test scripts/log-immutability.test.mjs` · exit 0 ·
+  23 pass / 0 fail; `bun scripts/log-immutability.mjs` · exit 0 · 0 violations on
+  the range (the writer and the journal stay aggregator-only).
+- **E8** — 2026-11-21, `bun test scripts/session-close.test.mjs` · exit 0 ·
+  30 pass / 0 fail; `bun test scripts/local-gate.test.mjs` · exit 0 · 63 pass /
+  0 fail (the gate's journal-carrier fixture and the new `log-immutability` edge).
+- **E9** — 2026-11-21, `bun test scripts/normative-drift.test.mjs` · exit 0 ·
+  24 pass / 0 fail; `bun test scripts/vocabulary-parity.test.mjs` · exit 0 ·
+  35 pass / 0 fail; `bun test scripts/structural-sibling-pins.test.mjs` · exit 0 ·
+  8 pass / 0 fail; `bun scripts/test-obligation-tags.mjs` · exit 0 ·
+  `137 suite(s) · 0 finding(s)`.
+- **E10** — 2026-11-21, the schema package: `bun test test/journal-entry.test.mjs test/index.test.mjs` ·
+  exit 0 · 32 pass / 0 fail; `bun run test:node` · exit 0 (the published
+  vocabulary reaches the built runtime).
+- **E11** — 2026-11-21, the Pi package's node leg: `bun run --cwd packages/pi-agentic-workflow test:node` ·
+  exit 0 · 1040 pass / 0 fail / 1 pre-existing skip (the writer fixture now
+  links the dependency the writer has).
+- **E12** — 2026-11-21, the differential in `mktemp -d` scratch (removed after):
+  `55525abad` (base) and the change tree, same fixtures, same commands —
+  `journal aggregate --check` on one fragment, the malformed carrier, the
+  undeclared #675 pair and the errata pair; `journal aggregate` on three of
+  them; `journal write` (fields, an unlinked second write, `--supersedes`);
+  `journal name`. The only differences are the asked-for ones: the declared
+  pair exits 0 instead of 2, the duplicate refusal appends the chain clause and
+  keeps the #675 sentence byte-identical, the writer's refusal routes to
+  `--supersedes`, the flag lands where the base answers `unknown flag`, and the
+  correction lands 173 bytes with `supersedes` in the receipt. `journal name`
+  differs only in the clock's second (both sides read `Date.now()`).
+- **E13** — 2026-11-21, `bun scripts/test-impact.mjs --base origin/main` · exit 0 ·
+  verdict derived from 13 executable paths + 4 symbols (`JOURNAL_ERRATA_MARKERS`,
+  `JournalErrataMarker`, `errataLinks`, `supersedesOf`) · 42 suites + 6 hook
+  scripts — every one ran green in this unit's verification (the six hook
+  scripts: `template/.agentic-workflow/hooks/tests/*.sh`, all exit 0).
+- **E14** — 2026-11-21, `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 30 skills`, `log-session 3138 est / 238 lines` against
+  the re-pinned 3452/240; `bun scripts/check-skill-context.mjs --documents` ·
+  exit 0 · `PASS context documents: 7 budgeted documents`, guide 680 lines /
+  221 machine / 459 prose / 14,396 est against `machineLines` 221.
+- **E15** — 2026-11-21, `bun scripts/prose-gate-inventory.mjs` · exit 0 ·
+  `87 row(s) … verdict: PASS`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs docs-generate --check` ·
+  exit 0 after the emitter wrote the page and synced the roadmap row;
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/676-journal-errata-path/SPEC.md` ·
+  exit 0 · six phases `PASS (6/6)`.
+- **E16** — 2026-11-21, `bun scripts/version-parity-gate.mjs --content` · exit 0
+  (the changeset declares the three shipped packages); `bun scripts/lint-changeset.mjs` ·
+  exit 0.
+- **E17** — 2026-11-21, the corpus' ordering case was corrected before the green
+  commit (E2 above) and the writer suite gained the slot-head case while the
+  code landed: `journal write --supersedes must name the entry slot's newest
+  fragment` · exit 0 · 31 pass. No assertion was relaxed; the base's own
+  `already registered` case still asserts exit 2 and the untouched bytes.
+- **D5** — 2026-11-21, **the Pi writer fixture links the schema package.** The
+  writer's block owner publishes the errata marker from the schema package, so a
+  fixture that copies the writer's modules into a bare temp tree has to resolve
+  that package the way the shipped install does. The fixture was not runnable
+  without it — this is a fixture-completeness repair, no assertion changed
+  (`97713b6d8`).
+- **D6** — 2026-11-21, **the slot-head and ordering rules are writer-side.** A
+  correction must name the slot's newest fragment and carry a newer second, so a
+  chain can neither fork nor reorder. The lint does not repeat these rules: it
+  reads the chain the writer can only produce correctly, which keeps one owner
+  per rule (`IR11`) and leaves the lint's job the read-side ambiguity.
+- **G1** — 2026-11-21, `bun scripts/local-gate.mjs --jobs 4 --no-bail` at HEAD
+  `97713b6d8` · exit 1 · 15 of 20 steps `exit 0` (temp-hygiene, secret-scan,
+  tmp-gc, worktree-guard, rigidity-review, version-parity-content,
+  workspace-install, schema-build, skill-context-budgets,
+  docs-generated-projection, journal-carrier-check, log-immutability,
+  dependency-advisories, dependency-pin-gate and the first crate leg in the
+  earlier run); `root-suite` exit 1 on `scripts/phase-lint.test.mjs` alone — the
+  suite's 120s wall-clock bound, measured 73s standalone at this head and 94s at
+  the base commit, so load crosses it and this unit does not touch that suite.
+  The five dependent steps were run individually at the same head and all exit
+  0: `bun run --cwd packages/agentic-workflow test` (78 suites),
+  `bun run --cwd packages/agentic-workflow test:node` (78 suites),
+  `bun run --cwd packages/agentic-workflow-schema test:node`,
+  `bun run --cwd packages/pi-agentic-workflow test:node` (E11) and the
+  `pi-compat-guard` legs (peer floor 1.1.0 + latest, `tsc --noEmit` clean in the
+  second gate run at `0a001a4f1`, whose tree differs only by a test fixture).
+  Nothing is excused silently: this paragraph is the disclosure, and
+  `## Known pre-existing issues` names the class.
+
+## Next`).
 - **P3** — 2026-11-21 21:31, the writer's `--supersedes` and the routed refusal.
 - **P4** — 2026-11-21 21:31, the lint's declared chain and the one comparator.
 - **P5** — 2026-11-21 21:31, the prose, the inventory rows, the re-pinned
@@ -369,4 +478,6 @@ ships, every row is `verified` or an evidenced `n/a`.
 ## Next
 
 Hand the diff to the owner — the external verifier — with `## Obligations`
-closed and the verification block recorded.
+closed and the verification block recorded. The branch is local and unpushed on
+purpose (the owner's local inline workflow); no pull request was opened, so the
+roadmap row stays `pending` and the issue stays open until the owner's verdict.
