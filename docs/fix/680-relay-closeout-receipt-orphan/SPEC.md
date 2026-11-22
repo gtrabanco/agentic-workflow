@@ -197,8 +197,9 @@ The ledger is `planning-obligations.md` in this folder (M unit).
   receipt check, and gives `relay closeout` as the leg's own close-out command;
   `unit-lane`'s §8 names the relay leg as the receipt stage's owner for a unit
   that ran as legs. Proved by:
-  `rg -c 'REVIEW-VERDICT: PASS never satisfies' skills/unit-lane/references/RELAY.md`
-  matches 1 or more and `bun scripts/skill-lint.mjs` exits 0.
+  `rg -U -c 'REVIEW-VERDICT: PASS` never satisfies' skills/unit-lane/references/RELAY.md`
+  matches 1 (the sentence wraps across two source lines, so a per-line grep reads
+  0) and `bun scripts/skill-lint.mjs` exits 0.
 - **AC-S4** — A baton whose `Review:` line records `pending`, and a `Complete`
   baton whose packet declares no PR, are both refused with a fault naming the
   state; a hand-authored `## Final review receipt` heading in the unit doc never
@@ -212,12 +213,13 @@ The ledger is `planning-obligations.md` in this folder (M unit).
 
 ## Triaged steps
 
-> Registry: `docs/ROADMAP.md` `## Fixes` row for #680. The authoritative block
-> is produced by `runner unit-route --triage 680` once this folder exists; the
-> run is recorded as an `E` line in `## Log`. This unit's steps, in the
-> catalog's terms: `design` (this doc), `implement` (P2/P3), `test` (P1/P5),
-> `docs` (P4), `verify` (P5) — a code fix with no UI surface, so no design or
-> a11y step applies.
+```
+TRIAGE — 680 (fix)
+Steps: plan, implement, tests, evidence, review, docs
+Tiers: plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap
+Skipped: research: trivial scope, design: trivial scope, release: not a feature
+Budget: strong
+```
 
 ## Findings
 
@@ -237,10 +239,28 @@ The ledger is `planning-obligations.md` in this folder (M unit).
   - `relay check` refuses a Complete verdict whose open PR carries no review receipt (the same way it refuses other unmet contract pieces).
   - Unit-doc status wording distinguishes "coherence review PASS (evidence)" from "review receipt current (receipt)".
   ```
+- **E1** — 2026-11-21, `bun scripts/run-root-suite.mjs` · exit 0 · 137 suites PASS.
+- **E2** — 2026-11-21, `cd packages/agentic-workflow && bun test test/` · exit 0 · 1388 pass / 0 fail.
+- **E3** — 2026-11-21, `bun test scripts/relay-packet.test.mjs` · exit 0 · 44 pass / 0 fail (the `CO1`–`CO12` cases plus every pre-existing case).
+- **E4** — 2026-11-21, differential on the accepted fixture at `3f749feeb` and at the change: `check`, `budget` and `obligations` print byte-identical blocks and exit identically (`diff` empty on all three).
+- **E5** — 2026-11-21, `bun test scripts/relay-route.test.mjs` · exit 0 · 13 pass / 0 fail.
+- **E6** — 2026-11-21, `bun scripts/skill-lint.mjs` · exit 0 · 0 findings; `bun scripts/check-skill-context.mjs` · exit 0 · PASS 30 skills.
+- **E7** — 2026-11-21, `rg -U -c 'REVIEW-VERDICT: PASS` never satisfies' skills/unit-lane/references/RELAY.md` · exit 0 · 1.
+- **E8** — 2026-11-21, `bun packages/agentic-workflow/bin/agentic-workflow.mjs relay closeout --help` · exit 2 (the unit token is required; `--help` is not a relay flag).
+- **E9** — 2026-11-21, `bun test scripts/normative-drift.test.mjs` · exit 0 · 24 pass / 0 fail.
+- **E10** — 2026-11-21, the frozen reproducer of the issue: a `Complete` baton whose packet names no receipt at the cut head printed `verdict: PASS` / exit 0; against the change it prints `verdict: FAIL` / exit 1 with `a Complete verdict needs the receipt boundary`.
+- **E11** — 2026-11-21, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 checked, 0 stale.
+- **E12** — 2026-11-21, `bun packages/agentic-workflow/bin/agentic-workflow.mjs unit-route --triage 680` · exit 0 · `Steps: plan, implement, tests, evidence, review, docs`.
+- **E13** — 2026-11-21, `cd packages/pi-agentic-workflow && bun run bundle:skills && bun test` · exit 0 · 1035 pass / 0 fail.
+- **P1** — 2026-11-21, the RED reproducers frozen beside the ledgers · 5620efcec.
+- **P2** — 2026-11-21, the receipt boundary in `checkPacket` plus the `closeout` mode · 485f0c720.
+- **P3** — 2026-11-21, the `relay-closeout@1` contract prose and the close-out ownership in `unit-lane` · 485f0c720.
+- **P4** — 2026-11-21, the surface registered in the gate inventory and both guide ceilings re-based · cbccbb273.
+- **D1** — 2026-11-21, owner decision by the issue itself (S1/S2): the receipt state is read from the baton's published `Review:` line rather than from the forge, so `relay check` stays offline and host-free (PE-009, PE-011).
 
 ## Next
 
-P1 — the RED reproducers in `scripts/relay-packet.test.mjs`.
+Hand the diff to the external verifier; on approval, open the PR with `Closes #680`.
 
 ## References
 
