@@ -171,7 +171,7 @@ none
 - P7 — The correction fixes: the three stale mode-count mentions, `closeout`'s single-condition precondition/route, and `RELAY.md`'s published `Review:` values (validator: `bun test scripts/relay-packet.test.mjs` exits 0, 46 cases)
   (Implements: S2, S5)
   - Relevant files: packages/agentic-workflow/src/relay/Packet.mjs, packages/agentic-workflow/src/promise-coherence/index.mjs, skills/unit-lane/references/RELAY.md
-- P8 — The receipt-text corrections: AC-S2's url clause, AC-S5/PE-003's mirror claim, E8's recorded refusal, and the obligation rows the batch adds or amends (validator: `rg -c 'attempted <n> — <result>' skills/unit-lane/references/RELAY.md` matches 1 and `bun scripts/check-skill-context.mjs` exits 0)
+- P8 — The receipt-text corrections: AC-S2's url clause, AC-S5/PE-003's mirror claim, E8's recorded refusal, and the obligation rows this batch updates (validator: `rg -c 'by name, not by import' docs/fix/680-relay-closeout-receipt-orphan/planning-evidence.md` matches 1 and `bun scripts/check-skill-context.mjs` exits 0)
   (Implements: S2, S3, S5)
   - Relevant files: docs/fix/680-relay-closeout-receipt-orphan/SPEC.md, docs/fix/680-relay-closeout-receipt-orphan/planning-evidence.md, docs/fix/680-relay-closeout-receipt-orphan/planning-obligations.md
 
@@ -277,10 +277,26 @@ Budget: strong
 - **P3** — 2026-11-21, the `relay-closeout@1` contract prose and the close-out ownership in `unit-lane` · 485f0c720.
 - **P4** — 2026-11-21, the surface registered in the gate inventory and both guide ceilings re-based · cbccbb273.
 - **D1** — 2026-11-21, owner decision by the issue itself (S1/S2): the receipt state is read from the baton's published `Review:` line rather than from the forge, so `relay check` stays offline and host-free (PE-009, PE-011).
+- **L2** — 2026-11-22, the correction request, verbatim: "Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff" — resolved against the 2026-11-22 `EXTERNAL VERIFY` block (NEEDS-DECISION: B1–B4, A1–A4) as one correction batch. Triage: B1–B4 and A1–A3 fix-now; A4 wontfix (fail-closed by design — an uppercase 40-hex sha reads as `not-current` and git SHAs are lowercase).
+- **P6** — 2026-11-22, the correction RED cases frozen from the receipt's reproducers (CO13 mode-count, CO14 url-less current receipt) · observed 44 pass / 2 fail · 1a88f1383.
+- **P7** — 2026-11-22, the fixes: the three stale `four modes` mentions refreshed, `closeout` gated on one condition (current receipt AND its PR url), `RELAY.md`'s fence and machine row carrying every `Review:` value the runtime parses · 77e565021.
+- **P8** — 2026-11-22, the receipt-text corrections (AC-S2's url clause, AC-S5/PE-003's mirror claim, E8's recorded refusal) and the ledger cut (tasks P6–P8, obligations O14–O18) · b7097ebe2.
+- **F1** — folded (external verify B1–B3): `skills/unit-lane/references/RELAY.md:50`, `packages/agentic-workflow/src/relay/Packet.mjs:48` and `packages/agentic-workflow/src/promise-coherence/index.mjs:175` still said "four modes" after `RELAY_MODES` grew to five · fold 77e565021 · verified by CO13 green (46 pass / 0 fail).
+- **F2** — folded (external verify B4): `closeout`'s precondition line and `→ Next:` route derived from different conditions, so a current receipt without a PR url claimed the gate's precondition was met while routing the leg to `/review-change` · fold 77e565021 · verified by CO14 green; AC-S2 and O7 amended to the url-carrying case in b7097ebe2.
+- **F3** — folded (external verify A1–A3): E8's misrecorded refusal reason and AC-S5/PE-003's phantom import claim (b7097ebe2), the baton fence's dropped `attempted <n> — <result>` value and repeated `Review:` prefix (77e565021) · verified by the O16–O18 validators (E17).
+- **D2** — 2026-11-22, correction decision (B4): AC-S2's "when the receipt is current" clause is amended to the url-carrying case, because the original was unsatisfiable — a receipt with no url has no `/audit-pr <PR-url>` to print. The alternative (requiring ` · pr <url>` for `current` everywhere, so `check` refuses a url-less current receipt) would move `check`'s boundary and CO3's accepted packet, which the receipt did not ask for; the ladder, not the packet contract, is where the url is needed.
+- **G1** — 2026-11-22, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/680-relay-closeout-receipt-orphan/SPEC.md` · exit 0 · PASS 8/8 (the first run BLOCKED P8's "adds or amends" either-or wording — the task text was reworded, never the rule).
+- **E16** — 2026-11-22, `bun test scripts/relay-packet.test.mjs` · exit 0 · 46 pass / 0 fail (CO13 and CO14 green beside every pre-existing case).
+- **E17** — 2026-11-22, the O16–O18 validators · `rg -c 'attempted <n> — <result>' skills/unit-lane/references/RELAY.md` → 2 · `rg -c 'RELAY REFUSAL — unknown flag: --help' docs/fix/680-relay-closeout-receipt-orphan/SPEC.md` → 1 · `rg -c 'mirror' docs/fix/680-relay-closeout-receipt-orphan/SPEC.md` → 3 · `rg -c 'by name, not by import' docs/fix/680-relay-closeout-receipt-orphan/planning-evidence.md` → 1 (all exit 0).
+- **E18** — 2026-11-22, the differential at `3f749feeb` vs the change in `mktemp -d` scratch (removed after): `check`/`budget`/`tiers`/`obligations` byte-identical on the accepted fixture and `check` byte-identical on Complete + `receipt current at <sha> · pr <url>`; the only differences are the asked-for ones — Complete without a receipt base PASS/exit 0 → head FAIL/exit 1, and `closeout` absent at base (usage, exit 2).
+- **E19** — 2026-11-22, the batch's full gate re-run · `node scripts/run-root-suite.mjs` 137 PASS exit 0 · `cd packages/agentic-workflow && bun test test/` 1388 pass / 0 fail · `cd packages/pi-agentic-workflow && bun run bundle:skills && bun test` 1035 pass / 0 fail · `bun scripts/skill-lint.mjs` 0 findings · `bun scripts/check-skill-context.mjs` PASS 30 skills and `--documents` PASS 7 documents · `bun test scripts/normative-drift.test.mjs` 24 pass · `bun test scripts/relay-route.test.mjs` 13 pass · `bun test scripts/review-receipt.test.mjs` 30 pass · `bun scripts/promise-coherence.mjs` PASS (45 checked / 24 skipped) · `bun scripts/docs-generate.mjs --check` PASS (3 checked, 0 stale).
 
 ## Next
 
-Hand the diff to the external verifier; on approval, open the PR with `Closes #680`.
+PR [#683](https://github.com/gtrabanco/agentic-workflow/pull/683) is open with
+`Closes #680`. The owner's external verify of the 2026-11-22 correction batch
+(B1–B4 fixed, A1–A3 corrected, A4 wontfix) follows; the verdict and any further
+correction come from `/aw-local-review`'s owner, never from this session.
 
 ## References
 
