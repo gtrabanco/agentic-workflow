@@ -52,15 +52,19 @@ function makeRepo(t) {
     "",
     "## Features",
     "",
-    "| # | Slug | Status | Depends on | Summary |",
+    // Both tables carry the header the writer keys on, not a lookalike: the
+    // features writer refuses a table with no `| NN |` cell and the fixes
+    // writer refuses one with no `| Issue |` cell, so a fixture that drifts
+    // from these shapes can never reach the behaviour under test (issue #684).
+    "| NN | Slug | Status | Depends on | Summary |",
     "| --- | --- | --- | --- | --- |",
     "| 91 | `toy` | in-progress | — | a toy feature |",
     "",
     "## Fixes",
     "",
-    "| # | Slug | Status | Depends on | Summary |",
-    "| --- | --- | --- | --- | --- |",
-    "| 77 | `toy` | in-progress | — | a toy fix |",
+    "| Issue | Topic | Status | Notes |",
+    "| --- | --- | --- | --- |",
+    "| [#77](https://github.com/gtrabanco/agentic-workflow/issues/77) | toy | in-progress | a toy fix |",
     "",
   ].join("\n"));
   write("docs/fix/77-toy/SPEC.md", [
@@ -319,7 +323,7 @@ test("commit: verify-format judges the subject, create refuses a bad one, list a
   assert.equal(git("log", "-1", "--format=%s"), "feat(77): add one");
 });
 
-test("roadmap: read answers both tables, list groups by status, row-upsert answers the writer", (t) => {
+test("roadmap: row-upsert settles a fix row and a feature row, and touches no other byte", (t) => {
   const { root, write } = makeRepo(t);
   write("docs/features/91-toy/SPEC.md", "# feature/91-toy\n\n## Log\n\n");
   const read = ceremony(root, "roadmap", "read");
@@ -329,8 +333,52 @@ test("roadmap: read answers both tables, list groups by status, row-upsert answe
   const list = ceremony(root, "roadmap", "list");
   assert.ok(list.json["by-status"], "the answer groups the work list by status");
 
-  const upsert = ceremony(root, "roadmap", "row-upsert", "--slug", "91-toy", "--status", "planned", "--summary", "the toy row");
-  assert.ok(upsert.code === 0 || upsert.code === 1, "row-upsert answers a receipt or a refusal, never a stack trace");
+  const roadmap = () => readFileSync(join(root, "docs/ROADMAP.md"), "utf8");
+  /** The cells of one table row, header-agnostic. */
+  const cells = (line) => line.split("|").slice(1, -1).map((cell) => cell.trim());
+  /** The line indexes that differ between two revisions of one document. */
+  const moved = (before, after) => {
+    const a = before.split("\n");
+    const b = after.split("\n");
+    assert.equal(a.length, b.length, "a row upsert splices one line, it never adds or drops one");
+    return a.map((line, i) => (line === b[i] ? -1 : i)).filter((i) => i !== -1);
+  };
+
+  // The fix arm — the use case of issue #684: on a fix unit the writer received
+  // the roadmap *document* where it takes a *path*, so the command died before
+  // writing a byte (`WriterError`, exit 1, empty tree).
+  const fixBefore = roadmap();
+  const fix = ceremony(root, "roadmap", "row-upsert", "--slug", "77-toy", "--status", "done");
+  assert.equal(fix.code, 0, `the fix arm settles its row: ${fix.stderr}`);
+  assert.equal(fix.json.upserted, true, "the receipt reports the write it made");
+  assert.equal(fix.json.slug, "77-toy");
+  const fixAfter = roadmap();
+  const fixMoved = moved(fixBefore, fixAfter);
+  assert.equal(fixMoved.length, 1, "only the target row's line moves");
+  assert.deepEqual(cells(fixAfter.split("\n")[fixMoved[0]]), [
+    "[#77](https://github.com/gtrabanco/agentic-workflow/issues/77)",
+    "toy",
+    "done",
+    "",
+  ]);
+
+  // The feature arm — the same contract, the other table (S2's "both arms").
+  const featureBefore = roadmap();
+  const feature = ceremony(root, "roadmap", "row-upsert", "--slug", "91-toy", "--status", "planned", "--summary", "the toy row");
+  assert.equal(feature.code, 0, `the feature arm settles its row: ${feature.stderr}`);
+  assert.equal(feature.json.upserted, true);
+  const featureAfter = roadmap();
+  const featureMoved = moved(featureBefore, featureAfter);
+  assert.equal(featureMoved.length, 1, "only the target row's line moves");
+  assert.deepEqual(cells(featureAfter.split("\n")[featureMoved[0]]), ["91", "toy", "planned", "—", "the toy row"]);
+
+  // The failure state the repair must not erase: a map with no Fixes table is
+  // still refused, and the refusal still writes nothing.
+  write("docs/ROADMAP.md", "# Roadmap\n\n## Features\n\n| NN | Slug | Status | Depends on | Summary |\n| --- | --- | --- | --- | --- |\n| 91 | `toy` | planned | — | a toy feature |\n");
+  const refusedBefore = roadmap();
+  const refused = ceremony(root, "roadmap", "row-upsert", "--slug", "77-toy", "--status", "done");
+  assert.notEqual(refused.code, 0, "a map with no Fixes table is refused");
+  assert.equal(roadmap(), refusedBefore, "a refusal writes no byte");
 });
 
 test("pr: the degradation contract — a missing gh and an unauthenticated gh are blocks, never stack traces", (t) => {
