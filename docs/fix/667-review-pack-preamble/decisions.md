@@ -144,3 +144,17 @@ The probe shows the floor model asserting tallies it cannot count (1/3 coherent 
 the control). A unit could make the tally machine-derivable from the pass's own
 `n/a` markers, but that changes the output contract all nine passes share — out of
 this unit's scope, and the owner's case to schedule.
+
+## Path protection
+
+The suite this unit lands is a protected path. Its one post-red amendment narrows
+an over-broad assertion the transform variant cannot satisfy — `review-debt` has no
+`## Checklist` to read before, so the scope imperative it must honour is "before the
+transform" — while the obligation (a fail-closed imperative scope pointer in every
+pass) is unchanged and still asserted.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/review-pack-preamble.test.mjs | P4 | 2026-11-22 | execute-phase | the transform pass has no checklist, so its scope imperative is the transform; the assertion is narrowed to the requirement, never dropped
+```

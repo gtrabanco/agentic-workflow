@@ -13,17 +13,21 @@ description: >
 
 # Review SEO (internal)
 
-Composed by `review-change` / `product-audit` within their conversation — on any
-agent, follow this file inline as the routed step. **Findings only; never edits,
-never refactors.**
+Review-pack pass: follow this file inline as the routed step — findings only,
+never edits, never refactors (identity and guardrails owned by
+`skills/review-implementation/references/FINDER_CONTRACT.md` §Pass identity).
 
 ## Scope
 
-The caller's diff or path/glob — the shape is the finder contract's
-(`skills/review-implementation/references/FINDER_CONTRACT.md`, this section's owner). State the scope at the top of the
-returned table.
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md` (§Scope):
+read it before the checklist and apply it as written, stating the scope at the
+top of the returned table. Missing reference → STOP.
 
-## Checklist (evaluate EVERY item — none is optional; n/a must be stated)
+## Checklist
+
+The tally is `skills/review-implementation/references/FINDER_CONTRACT.md`
+§Checklist discipline's contract: `evaluated` equals this list's item count, and
+`pass + findings + n/a` equals it — a count above the item count is fabricated.
 
 - ✓ Read the project's SEO doc first (e.g. `docs/frontend/SEO.md`) — n/a all
   items with the reason if the product has no public web surface
@@ -43,8 +47,9 @@ returned table.
 
 ## Materiality bar
 
-The bar is owned by `skills/review-implementation/references/FINDER_CONTRACT.md` —
-apply it as written: cite the rule it violates beside the evidence; never pad the table.
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md`
+(§Materiality bar): read it before the checklist and apply it as written — cite the rule it violates beside the evidence; never pad the table.
+Missing reference → STOP.
 
 ## Return exactly
 

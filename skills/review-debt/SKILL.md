@@ -14,19 +14,23 @@ description: >
 
 # Review Tech Debt (internal)
 
-Composed by `review-change` / `product-audit` within their conversation — on any
-agent, follow this file inline as the routed step. **Findings only; never edits,
-never refactors.**
+Review-pack pass: follow this file inline as the routed step — findings only,
+never edits, never refactors (identity and guardrails owned by
+`skills/review-implementation/references/FINDER_CONTRACT.md` §Pass identity).
 
 ## Scope
 
-The caller's **synthesized findings table** (the fused, classified decision
-table). This pass does **not** rescan the diff: debt-shaped findings are already
-in the table, and every ownership decision already happened in the finder axes
-(`review-code`, `review-verify`, …). State the scope — the change the table was
-synthesized over — at the top of the returned table.
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md`
+(§Transform discipline): the caller's synthesized findings table is this pass's
+scope. Read the section before the transform — it owns the no-rescan rule and the
+ownership decision the table already carries — and state the scope, the change
+the table was synthesized over, at the top of the returned table.
+Missing reference → STOP.
 
-## Transform (evaluate EVERY row — none is optional; n/a must be stated)
+## Transform
+
+The `Rows:` tally is `skills/review-implementation/references/FINDER_CONTRACT.md`
+§Checklist discipline's contract applied to the table it was handed: every transform item below is evaluated, and each debt row is transformed or marked `n/a` with the reason it does not apply.
 
 Turn the table's tech-debt-shaped rows (TODO/FIXME/HACK, duplication, stale or
 orphaned abstractions, dead code, complexity hotspots, missing tests,

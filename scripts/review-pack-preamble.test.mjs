@@ -146,7 +146,13 @@ for (const pass of PASSES) {
   const scope = section(text, "## Scope");
   assert.ok(scope !== null, `review-${pass}: carries ## Scope`);
   assert.ok(scope.includes(OWNER_REF), `review-${pass}: the scope pointer names the owner`);
-  assert.match(scope, /before the checklist/, `review-${pass}: the scope pointer is imperative`);
+  // The transform pass has no checklist to read before: its imperative step is
+  // the transform itself, and the requirement binds the same fail-closed shape.
+  assert.match(
+    scope,
+    pass === "debt" ? /before the transform/ : /before the checklist/,
+    `review-${pass}: the scope pointer is imperative`,
+  );
   assert.ok(scope.includes(STOP), `review-${pass}: the scope pointer stops on a missing reference`);
   assert.doesNotMatch(
     scope,

@@ -18,9 +18,9 @@ description: >
 > [references/RUNNER.md](../runner-contract/references/RUNNER.md): read it before the
 > first command, then keep it for the whole unit — nowhere else spells either.
 
-Composed by `review-change` / `product-audit` within their conversation — on any
-agent, follow this file inline as the routed step. **Findings only; never edits,
-never refactors.**
+Review-pack pass: follow this file inline as the routed step — findings only,
+never edits, never refactors (identity and guardrails owned by
+`skills/review-implementation/references/FINDER_CONTRACT.md` §Pass identity).
 
 **Shift from discoverer to auditor of recorded evidence (S5).** The implementer's
 claim-evidence loop is the primary verification. This review *audits* the
@@ -30,11 +30,15 @@ dig into code only when evidence is absent or contradicts.
 
 ## Scope
 
-The caller's diff or path/glob — the shape is the finder contract's
-(`skills/review-implementation/references/FINDER_CONTRACT.md`, this section's owner). State the scope at the top of the
-returned table.
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md` (§Scope):
+read it before the checklist and apply it as written, stating the scope at the
+top of the returned table. Missing reference → STOP.
 
-## Checklist (evaluate EVERY item — none is optional; n/a must be stated)
+## Checklist
+
+The tally is `skills/review-implementation/references/FINDER_CONTRACT.md`
+§Checklist discipline's contract: `evaluated` equals this list's item count, and
+`pass + findings + n/a` equals it — a count above the item count is fabricated.
 
 ✓ **Evidence audit.** Sample the unit doc's Evidence rows: re-run ≥ 3 of the
   recorded commands and compare observed output against what the implementer
@@ -68,8 +72,9 @@ returned table.
 
 ## Materiality bar
 
-The bar is owned by `skills/review-implementation/references/FINDER_CONTRACT.md` —
-apply it as written: cite the rule it violates beside the evidence; never pad the table.
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md`
+(§Materiality bar): read it before the checklist and apply it as written — cite the rule it violates beside the evidence; never pad the table.
+Missing reference → STOP.
 
 ## Return exactly
 
