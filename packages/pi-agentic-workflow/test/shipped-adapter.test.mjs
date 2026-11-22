@@ -776,7 +776,12 @@ test("issue #274 through the adapter: the shipped entry registers the deferred w
       assert.equal(tool.exposure, "deferred", `${tool.name} is deferred`);
       assert.equal(tool.namespace.name, "agentic-workflow");
       assert.equal(tool.annotations.readOnlyHint, true, `${tool.name} is read-only`);
-      assert.ok(typeof tool.execute === "function", `${tool.name} carries an execute`);
+      // Issue #678: pi calls `execute(toolCallId, params, signal, onUpdate, ctx)`.
+      // Asserting the function existed was not enough — the registered object
+      // was the Pi-free spec, whose two-argument `execute(params, cwd)` read the
+      // toolCallId as its params, so five tools threw and the sixth sampled a
+      // non-path cwd. The arity is the assertion that fails on that regression.
+      assert.equal(tool.execute.length, 5, `${tool.name} is called the way pi calls a tool`);
     }
     assert.deepEqual(
       entry.calls.registerTool.map((tool) => tool.name).sort(),

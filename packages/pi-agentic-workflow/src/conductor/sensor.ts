@@ -6,7 +6,8 @@
  * schema, and checks for degradations.
  *
  * Any failure path (spawn error, non-JSON, invalid JSON, schema invalid,
- * degradations present) returns `{ ok: false, refusal: "sensor-degraded", detail }`.
+ * degradations present, unreadable cwd) returns `{ ok: false, refusal:
+ * "sensor-degraded", detail }`.
  * A run that parsed and validated an envelope but carries degradations also
  * returns that envelope as an additive `envelope` field, so a consumer (issue
  * #274's tool surface) can attach the data to the error instead of losing it;
@@ -40,16 +41,32 @@ export type DegradedSensorResult = {
   envelope?: EnvelopeLike;
 };
 
-function resolveCwd(cwd: string): string {
+/**
+ * The directory the sensor samples, or the reason it cannot be sampled. The
+ * silent `process.cwd()` fallback is gone (issue #678): it answered with the
+ * process's directory — the daemon's, in a pi session — and reported another
+ * project's counts as if they were the caller's. An unreadable cwd refuses.
+ */
+type CwdResolution = { ok: true; cwd: string } | { ok: false; cwd: string };
+
+function resolveCwd(cwd: string): CwdResolution {
   try {
     accessSync(cwd, constants.R_OK | constants.X_OK);
-    return cwd;
+    return { ok: true, cwd };
   } catch {
-    return process.cwd();
+    return { ok: false, cwd };
   }
 }
 
 export async function runSensor(cwd: string, bin: "bun" | "node"): Promise<SensorResult> {
+  const resolved = resolveCwd(cwd);
+  if (!resolved.ok) {
+    return {
+      ok: false,
+      refusal: "sensor-degraded",
+      detail: `cwd-unresolved: ${JSON.stringify(resolved.cwd)} is not a readable directory; the sensor never samples another project`,
+    };
+  }
   // The runner is composed, never typed: the crate bin this package resolves
   // under the runtime that launched pi, and the crate's closed set only when
   // that dependency is missing (issue #555).
@@ -64,12 +81,11 @@ export async function runSensor(cwd: string, bin: "bun" | "node"): Promise<Senso
     };
   }
   return new Promise((resolve) => {
-    const resolvedCwd = resolveCwd(cwd);
     const child = spawn(
       command.argv[0],
       command.argv.slice(1),
       {
-        cwd: resolvedCwd,
+        cwd: resolved.cwd,
         stdio: ["ignore", "pipe", "pipe"],
         timeout: TIMEOUT_MS,
       },

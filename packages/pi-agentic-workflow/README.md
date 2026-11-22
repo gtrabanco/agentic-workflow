@@ -280,6 +280,18 @@ Two properties hold for every tool:
   structured result still attached, so a programmatic consumer reads findings
   as data instead of re-parsing an exit code.
 
+Two properties guard the call itself (issue #678):
+
+- **The host's signature is the adapter's job.** pi calls a tool as
+  `execute(toolCallId, params, signal, onUpdate, ctx)`; the tools' own module is
+  Pi-free and declares `execute(params, cwd)`, and the adapter translates the
+  host's five arguments into that pair. The project a tool runs against is
+  `ctx.cwd` — the session's project, never the process's directory.
+- **An unreadable project refuses loudly.** When the cwd cannot be read, the
+  run returns `isError: true` with a `sensor-degraded` record whose `detail`
+  names the unresolved path (`cwd-unresolved: …`). It never falls back to
+  `process.cwd()` and never reports another project's numbers as this one's.
+
 The model-facing text of a successful run is the same JSON, so nothing is lost
 for a consumer that ignores structured content. Skills never change: the bash
 wording stays the portable path across agents, and these tools are the

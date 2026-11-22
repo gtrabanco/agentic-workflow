@@ -318,6 +318,27 @@ function toolRegistrar(pi: ExtensionAPI): { registerTool(tool: unknown): void } 
   };
 }
 
+/**
+ * The tool a host receives (issue #678). `workflow-tools.ts` is Pi-free and
+ * declares `execute(params, cwd)`; pi calls a tool as
+ * `execute(toolCallId, params, signal, onUpdate, ctx)`, and this adapter is the
+ * one place that knows it. Registering the spec unchanged handed the spec the
+ * toolCallId as `params` — every params-reading tool threw its own argument
+ * check, and the one tool that read no params forwarded the abort signal as its
+ * cwd. The translation is total: the host's `cwd` is the project root the spec
+ * runs in, and every other field rides along untouched.
+ */
+export function hostTool(tool: unknown): unknown {
+  const spec = tool as { execute?: unknown };
+  if (typeof spec?.execute !== "function") return tool;
+  const run = spec.execute as (params: Record<string, unknown>, cwd: string) => Promise<unknown>;
+  return {
+    ...(tool as object),
+    execute: (_toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: { cwd: string }) =>
+      run.call(tool, params, ctx.cwd),
+  };
+}
+
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
@@ -398,6 +419,9 @@ export default function extension(pi: ExtensionAPI): void {
     // Issue #274: the deferred workflow tools register alongside the commands,
     // through the one structural read above — absent on a host without the API.
     toolRegistrar: toolRegistrar(pi) ?? undefined,
+    // Issue #678: the host convention belongs here, not in the Pi-free specs —
+    // the factory hands `registerTool` what this adapter says a tool is.
+    toolShipping: hostTool,
     // Issue #174: the episode lifecycle, bound to the shipped backend.
     stateFlow,
     // Resolved per call: the router must never hold a session-bound object

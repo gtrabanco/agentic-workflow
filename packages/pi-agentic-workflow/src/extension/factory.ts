@@ -12,6 +12,7 @@ import { registerAdvanceCommand } from "./conductor-command.js";
 import { LOG_SESSION_COMMAND, registerLogSessionCommand } from "./log-session-command.js";
 import type { PlanInvocation } from "./log-session-command.js";
 import { createWorkflowTools } from "./workflow-tools.js";
+import type { WorkflowToolSpec, WorkflowToolsDeps } from "./workflow-tools.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
 import { createProfileStateStore, stateFilePath } from "../routing/state.js";
@@ -51,9 +52,24 @@ export interface ExtensionDeps<M extends ModelRef = ModelRef> {
   /**
    * Issue #274: the deferred workflow-tool registrar. Optional so a session
    * that registers no tools (and every existing double) is unaffected; when
-   * present it receives the Pi-free specs from `workflow-tools.ts`.
+   * present it receives the tool objects the adapter builds from the Pi-free
+   * specs of `workflow-tools.ts`.
    */
   toolRegistrar?: { registerTool(tool: unknown): void };
+  /**
+   * Issue #678: the workflow tools' own seams (spawn, sensor, runtime bin),
+   * threaded to `createWorkflowTools` so a suite can drive the registered tools
+   * without a live spawn. Production passes none and the module's defaults run.
+   */
+  workflowTools?: WorkflowToolsDeps;
+  /**
+   * Issue #678: the tool-object builder — the host-convention translation the
+   * adapter owns (`index.ts` turns the Pi-free `execute(params, cwd)` into
+   * `execute(toolCallId, params, signal, onUpdate, ctx)`). Defaults to the
+   * identity, so a suite that registers the specs raw observes exactly what it
+   * always did; the shipped adapter always passes its own.
+   */
+  toolShipping?: (tool: WorkflowToolSpec) => unknown;
   /** Pi's API is session-bound, so the router resolves the surface per call. */
   surface: (ctx: InvocationContext<M>) => ExtensionSurface<M>;
   /** Directory holding the bundled `skills/` tree. */
@@ -210,10 +226,14 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
   // Issue #274 — the deferred tool surface: the envelope-emitting scripts as
   // thin wrappers over the same spawns the skills take. Deferred exposure
   // means registration costs the session nothing until `tool_search` or a
-  // codemode script reaches for one.
+  // codemode script reaches for one. Issue #678: the object each spec is
+  // registered as comes from `toolShipping` — the adapter's host-convention
+  // translation, which reads `ctx.cwd`; the factory's default is the identity,
+  // so nothing about a spec-only double changes.
   if (deps.toolRegistrar) {
-    for (const tool of createWorkflowTools()) {
-      deps.toolRegistrar.registerTool(tool);
+    const ship = deps.toolShipping ?? ((tool: WorkflowToolSpec) => tool);
+    for (const tool of createWorkflowTools(deps.workflowTools ?? {})) {
+      deps.toolRegistrar.registerTool(ship(tool));
     }
   }
 
