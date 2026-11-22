@@ -252,6 +252,8 @@ Budget: strong
 - **E11** — 2026-11-21, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 checked, 0 stale.
 - **E12** — 2026-11-21, `bun packages/agentic-workflow/bin/agentic-workflow.mjs unit-route --triage 680` · exit 0 · `Steps: plan, implement, tests, evidence, review, docs`.
 - **E13** — 2026-11-21, `cd packages/pi-agentic-workflow && bun run bundle:skills && bun test` · exit 0 · 1035 pass / 0 fail.
+- **E14** — 2026-11-21, `runner dimension-regression --base 3f749fe` · exit 1 (the first run, before its own record existed) · `base 20 dimensions · head 20 dimensions · changed review surfaces 1 · finding missing-reverification-evidence`. The one changed surface is this unit's `docs/workflow/GATE_INVENTORY.md` row, a pure `+1` line with no dimension, review skill or audit producer touched and no dimension dropped (20 → 20); the re-run after this record is `E15`.
+- **E15** — 2026-11-21, `bun packages/agentic-workflow/bin/agentic-workflow.mjs dimension-regression --base 3f749fe` · exit 0 · `base 20 dimensions · head 20 dimensions · changed review surfaces 1 · verdict clean`, this record being the evidence it reads.
 - **P1** — 2026-11-21, the RED reproducers frozen beside the ledgers · 5620efcec.
 - **P2** — 2026-11-21, the receipt boundary in `checkPacket` plus the `closeout` mode · 485f0c720.
 - **P3** — 2026-11-21, the `relay-closeout@1` contract prose and the close-out ownership in `unit-lane` · 485f0c720.
