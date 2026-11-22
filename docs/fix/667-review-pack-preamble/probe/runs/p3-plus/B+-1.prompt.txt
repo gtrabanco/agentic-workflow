@@ -1,0 +1,318 @@
+You are the review-code review pass of an internal review pack, running isolated and context-clean.
+SCOPE: the branch diff of a TypeScript config-loader change vs main (provided below at REVIEWED CHANGE).
+Follow the pass file below inline as the routed step, then return ONLY the pass's fixed-format output block.
+
+===== PASS FILE =====
+---
+name: review-code
+user-invocable: false
+version: 4.10.0
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
+license: MIT
+description: >
+  Internal correctness + simplification review pass of the agentic-workflow
+  review pack — composed in-turn by review-change and product-audit; not a menu
+  entry. Checks correctness, error handling, duplication, dead code, and
+  simplification opportunities against the project's own conventions. Findings
+  only; never edits code.
+---
+
+# Review Code (internal)
+
+Review-pack pass: follow this file inline as the routed step — findings only,
+never edits, never refactors (identity and guardrails owned by
+`skills/review-implementation/references/FINDER_CONTRACT.md` §Pass identity).
+
+Questions an unclear expectation raises obey the all-stages
+no-assumption rule — **ask-don't-infer**, owner
+`skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`).
+
+## Scope
+
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md` (§Scope):
+read it before the checklist and apply it as written, stating the scope at the
+top of the returned table. Missing reference → STOP.
+
+--- BEGIN read: skills/review-implementation/references/FINDER_CONTRACT.md ---
+# Finder contract — the internal review pack's shared preamble
+
+Single owner of the whole shared preamble every internal review-pack pass
+carries. The nine passes — `review-code`, `review-security`, `review-verify`,
+`review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo` and
+the `review-debt` transform — cite this file instead of copying it. Their axis
+checklists, their `Return exactly` block and their `Done when` body stay in each
+pass's own SKILL.md: this file owns the preamble, never the axis.
+
+## Pass identity
+
+`review-change` and `product-audit` compose these passes within their own
+conversation. Each pass file is the routed step and the isolated reviewer's whole
+brief: it is followed inline, it emits findings only, and it never edits,
+refactors or fixes anything it reviews. A pass that cannot read this file stops
+and says so — it never reconstructs the contract from memory.
+
+## Scope
+
+The diff or path/glob the caller passes; default the current change vs the
+default branch. State the scope at the top of the returned table. The
+`review-debt` transform's scope is the transform discipline's, never the diff's.
+
+## Checklist discipline
+
+Evaluate EVERY checklist item — none is optional. Every item is evaluated with evidence (file:line or command output), or marked `n/a` with the reason it does not apply.
+
+The tally line is a contract, not a courtesy: the `evaluated` count equals the
+number of items the pass's own checklist lists, and `pass + findings + n/a`
+equals it. A count above the item count is fabricated and fails the pass by
+itself; a silently skipped item fails it too.
+
+**Why this stays inline in every pass instead of travelling by reference.** The
+2026-11-21 probe (issue #667) put the same content in front of the floor model in
+four compositions: the one fabricated tally it produced (`28 evaluated` of 19
+items) happened in the cell that carried this protocol **only** as a pointer the
+model never dereferenced, and no fabrication occurred in the cells where the
+content was physically present. Anti-padding bars are negative instructions and
+held as pointers in every run; this protocol is evaluated in the pass's own
+output on every run and does not. So each pass states it, cites this section as
+the rule's owner, and binds it into its own output shape.
+
+## Transform discipline (`review-debt`)
+
+`review-debt` transforms a table instead of checking a diff, and it is scoped by
+what it is handed: the caller's **synthesized findings table** — the fused,
+classified decision table. It never rescans the diff: debt-shaped findings are
+already in the table, and every ownership decision already happened in the finder
+axes. It states the scope — the change the table was synthesized over — at the
+top of the returned table.
+
+Its transform rules are the pass's own (`skills/review-debt/SKILL.md`
+§Transform): this file owns the scope contract above and the checklist discipline
+every pass shares, and adds nothing to the transform's rows.
+
+## Materiality bar
+
+Report a row only when a competent user's outcome changes or a rule the project
+explicitly declares is violated — cite the rule it violates beside the evidence.
+Not findings: comment/punctuation typos, formatting-only drift, style preference
+with no cited rule, hypothetical robustness beyond the SPEC's named scenarios.
+An empty table with `Decision: PASS` is the expected result for a well-formed
+change — never pad the table.
+--- END read ---
+
+## Checklist
+
+The tally is `skills/review-implementation/references/FINDER_CONTRACT.md`
+§Checklist discipline's contract: `evaluated` equals this list's item count, and
+`pass + findings + n/a` equals it — a count above the item count is fabricated.
+
+✓ No logic errors on the changed paths (trace each modified function's inputs →
+  outputs, including boundary values)
+✓ Every error path is handled — no swallowed exceptions, no empty catch, no
+  silently-ignored return codes
+✓ No duplicated logic (a changed block does not re-implement an existing
+  helper — cite the existing one if it does), **including a shadow copy**: a
+  file, schema, helper or prose block whose original lives outside the reviewed
+  tree, in a pinned dependency or a published package, is a duplicate of that
+  artifact — cite the artifact and its pin, or the recorded reason the copy must
+  exist; the vendoring rule demands provenance, never a second implementation
+✓ No dead code introduced (unused functions, params, imports, unreachable
+  branches)
+✓ No leftover TODO/FIXME/HACK markers in the diff
+✓ Naming and file conventions match the project's docs (read them first; cite
+  the convention violated)
+✓ No new abstraction beyond what the SPEC requires (an interface/base class
+  with one implementation is a finding)
+✓ No new dependency not justified in the SPEC
+✓ Simplification: any changed block that can lose lines without losing
+  behavior (cite before/after)
+✓ Reference trace: every changed symbol/API got a reference search —
+  un-updated callers are findings
+✓ Sweep declaration present: a changed token- or claim-shaped surface (a
+  published vocabulary token, a claim kind, a phrase a surface asserted, a
+  reader/echo pattern) carries its `swept: /<pattern>/<flags> → expected <n> in
+  <glob>` line on the fold's `## Log` entry — class `workflow`, the project's
+  own survivors rule, and `runner promise-coherence` re-runs it as
+  `sweep-mismatch`
+✓ Edge cases the SPEC's dev scenarios name are actually handled in code, not
+  just in tests
+✓ **Is deleting the surface the complete fix? (S8)** — before any edit is
+  proposed, check: does removing the surface entirely achieve the goal more
+  reliably than repairing it? If yes → route `fix-now (delete)`, not
+  `fix-now (repair)`. This is the deletion mandate: design and plan produce
+  retirements as first-class deliverables.
+✓ **Unused code routes two ways (#340)** — every unconsumed symbol (or
+  unreferenced prose block) is a deletion candidate routed through the
+  classifier's two-way rule (`review-implementation`, `CLASSIFY.md`):
+  delivered-feature-without-consumer → bug finding; orphaned by a requested
+  replacement/removal → `fix-now (delete)`. The row cites what requested the
+  feature and what replaced it — the two classes are never conflated
+✓ **Duplication is a deletion candidate (#340)** — a duplicated block,
+  checklist or contract (code or prose) proposes its own deletion, or carries
+  the recorded reason the copy must exist; a silent duplicate is a finding
+✓ **Obsolete by an available mechanism is a deletion, code and docs (#353)** —
+  a changed or neighbouring surface the project already supersedes (a helper a
+  pinned dependency owns, a doc describing a replaced flow, a local script the
+  runner provides) is `fix-now (delete)`; the deciding rule is the project's
+  **compatibility policy**, read from its `AGENTS.md` before classifying — when
+  nothing in it requires keeping the old surface, keeping it is the finding and
+  deleting it is the fix
+✓ **A citation is not a consumer (#353)** — prose (`AGENTS.md`, a skill, a
+  comment, a docs page) naming a symbol, file or block never makes it used; the
+  consumer test is executable or explicitly declared, and every citation is part
+  of what the deletion removes
+✓ **Features-preserved-without-it (#340)** — after any proposed deletion
+  (code or skill prose; "code" includes prose), verify every requested
+  feature still works without the removed part before merge; a deletion that
+  breaks a requested feature is a finding, not a cleanup
+✓ **Removal-feature cascade (#340)** — a change whose purpose is to remove a
+  feature deletes the code **and** its documentation **and** every sibling
+  mention the context makes necessary, with one sweep declaration per deleted
+  truth (`swept: /<pattern>/<flags> → expected <n> in <glob>`); when the
+  cascade's extent is unclear, the reviewer researches, understands and
+  contrasts — it does not guess the cascade's extent
+
+## Materiality bar
+
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md`
+(§Materiality bar): read it before the checklist and apply it as written — cite the rule it violates beside the evidence; never pad the table.
+Missing reference → STOP.
+
+## Return exactly
+
+`Sev` and `Impact` are the two published closed sets (`BLOCKER | CRITICAL |
+WARNING | SUGGESTION` and `blocking | docs-only | report-only`); their meanings
+are owned by `review-implementation` (`CLASSIFY.md` §Severity ladder) — assign a
+token, never a prose grade.
+
+```
+REVIEW CODE — scope: <scope>
+
+| # | Finding | Sev | Impact | Evidence | Suggested fix |
+|---|---------|-----|--------|----------|---------------|
+| 1 | <what>  | BLOCKER|CRITICAL|WARNING|SUGGESTION | blocking|docs-only|report-only | <file:line> | <smallest action> |
+
+Checklist: <n> evaluated, <n> pass, <n> findings, <n> n/a (<which + why>)
+Summary: <1-2 sentences>
+Decision: PASS | FAIL
+```
+
+FAIL if any `BLOCKER`, `CRITICAL` or `WARNING` finding is open; PASS otherwise.
+`SUGGESTION` findings never block — they route to the caller's triage step.
+
+## Done when
+
+- Every checklist item was evaluated with evidence (file:line or command output)
+  or explicitly marked n/a with the reason.
+- The fixed-format block above is returned — nothing more, nothing less — and
+  no code was changed.
+
+===== REVIEWED CHANGE =====
+## Context file (unchanged): src/config/util.ts
+
+```ts
+// Shared string + misc helpers for the config subsystem.
+// Convention (project docs, docs/conventions.md): every exported helper keeps
+// camelCase; config keys destined for external files use kebab-case.
+export function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function clampInt(value: number, lo: number, hi: number): number {
+  if (value < lo) return lo;
+  if (value > hi) return hi;
+  return value;
+}
+
+// Recieve new keys from the operator and merge them (kept for compatibility).
+export function mergeDefaults(base: Record<string, string>, extra: Record<string, string>) {
+  return { ...base, ...extra };
+}
+```
+
+## Diff (branch feature/config-batch-loader vs main)
+
+```diff
+--- a/src/config/loader.ts
++++ b/src/config/loader.ts
+@@ -1,12 +1,64 @@
+-import { readFileSync } from "node:fs";
++import { readFileSync } from "node:fs";
++import { clamp } from "lodash-es";
++import { mergeDefaults } from "./util";
++
++interface ConfigParserFactory {
++  create(section: string): Parser;
++}
++
++class SingleConfigParserFactory implements ConfigParserFactory {
++  create(section: string): Parser {
++    return new Parser(section);
++  }
++}
++
++class Parser {
++  constructor(private section: string) {}
++  parse(raw: string) {
++    return JSON.parse(raw)[this.section];
++  }
++}
++
++export function slugifyTitle(title: string): string {
++  return title
++    .toLowerCase()
++    .trim()
++    .replace(/[^a-z0-9]+/g, "-")
++    .replace(/^-+|-+$/g, "");
++}
++
++export function deepFreeze<T>(obj: T): T {
++  for (const k of Object.keys(obj as object)) {
++    Object.freeze((obj as Record<string, unknown>)[k]);
++  }
++  return obj;
++}
+ 
+ export function loadConfig(path: string, legacy?: string) {
+-  const raw = readFileSync(path, "utf8");
+-  return JSON.parse(raw);
++  const parts = path.split("/");
++  const chunks: string[] = [];
++  for (let i = 0; i <= parts.length; i++) {
++    chunks.push(parts[i]);
++  }
++  // TODO: cache this later
++  const parsed = JSON.parse(readFileSync(path, "utf8"));
++  try {
++    parsed.scope = clamp(parsed.scope, 0, 100);
++  } catch (e) {
++    return null;
++  }
++  const isEnabled = parsed.enabled;
++  if (isEnabled === true) {
++    parsed.mode = "on";
++  } else if (isEnabled === false) {
++    parsed.mode = "off";
++  }
++  parsed.merge = mergeDefaults(parsed.defaults ?? {}, parsed.overrides ?? {});
++  if (legacy) {
++    console.warn(`legacy key ignored: ${legacy}`);
++  }
++  return parsed;
+ }
+```
+
+## Context file (unchanged): src/worker/task.ts
+
+```ts
+import { readConfig } from "../config/loader";
+import { slugify } from "../config/util";
+
+export function describeTask(name: string) {
+  const cfg = readConfig("config/app.json");
+  return slugify(cfg.title ?? name);
+}
+```

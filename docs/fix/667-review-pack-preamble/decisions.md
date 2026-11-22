@@ -72,14 +72,22 @@ it is the pass's own output discipline, and the probe's pointer-only cell is
 evidence that an always-on negative instruction is not worth the risk even where
 the 2026-11-21 bar held.
 
-## D6 — No budget re-pin, no new gate, no grammar block
+## D6 — One declared route re-basis, no new gate, no grammar block
 
 `scope: unit-only` · serves S5, O14, O15, O18.
 
-The nine passes ride the flat defaults (2 800 est / 240 lines) and this change
-shrinks them; `FINDER_CONTRACT.md` rides the reference default (2 200 est) and
-stays well under it. A re-pin without a bound ceiling would be a faked receipt, so
-none is written. No versioned grammar block lands — the new contract text is prose,
+The nine passes ride the flat defaults (2 800 est / 240 lines) and stay under it,
+and `FINDER_CONTRACT.md` rides the reference default (2 200 est) at 867. But the
+four `review-change:*` **route** ceilings do bind: every review-change route loads
+`review-implementation`'s references — this file among them — plus `review-debt`,
+so the owner's growth moved all four (25 323 est / 1 739 lines at the head,
+against ceilings of 27 119 / 1 863). `check-skill-context.mjs --routes` caught it
+on the first run, so the four rows are re-based to exactly
+`ceil(measured x 1.10)` — 27 856 / 1 913 for `adversarial`, 24 314 / 1 688 for the
+two defaults, 25 067 / 1 726 for `synthesize` — each carrying a `sources` row that
+names the growth source, the same arithmetic every previous re-basis used. A
+re-pin without a bound ceiling would be a faked receipt; a bound ceiling left
+un-re-pinned would be a hidden cost. No versioned grammar block lands — the new contract text is prose,
 and `review-loop-discipline` (the reader that already pins the bar) keeps reading
 it — so `normative-drift` and `AGENTS.md`'s `normative-surfaces@1` are untouched.
 
