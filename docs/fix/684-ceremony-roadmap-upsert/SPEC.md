@@ -405,12 +405,37 @@ Budget: strong
 - **D5** — 2026-11-22, release intent: one `patch` changeset for
   `@gtrabanco/agentic-workflow`. `version-parity-content` refuses a shipped package
   whose content changed with no bump or changeset, and the train stamps the version.
+- **D6** — 2026-11-22, the settle form this issue's `## Impact` names —
+  `done · [#PR](url)` — belongs to `roadmap fixrow`, not to the repaired
+  `ceremony roadmap row-upsert`: the ceremony validates the *token* against
+  `ROADMAP_STATUSES` (bare `done`), so the PR decoration is not its grammar and it
+  refuses that status (`bad-status`, exit 1, no byte written — measured, `E11`).
+  `roadmap fixrow` is the fix row's writer that `execute-phase` documents and the one
+  that carries the link; the ceremony arm stays the route for a bare status. Both are
+  the owner — neither is a hand edit.
+- **E11** — 2026-11-22, the settle form of `## Impact`, written by the owner writer
+  on this worktree after the session was resumed · the row's own cells with the
+  status cell rewritten to `done · [#686](https://github.com/gtrabanco/agentic-workflow/pull/686)`,
+  handed to `agentic-workflow roadmap fixrow docs/ROADMAP.md '<json>'` → exit 0,
+  receipt `ok: true`, `before 7f8a27c8 / after 0fe1f02c`, `1+/1-` on
+  `docs/ROADMAP.md` — the status cell only, every other byte carried through · then
+  `roadmap check docs/fix/684-ceremony-roadmap-upsert/SPEC.md` → `PASS`,
+  `violations: 0`, **with the settle armed** (this doc now carries #686, so a row
+  still reading `in-progress` would answer `pr-url-unsettled`) ·
+  `bun scripts/docs-generate.mjs` → `PASS`, `1 written · 0 deleted · 2 unchanged`,
+  then `--check` → `PASS`, `3 checked · 0 stale` · `agentic-workflow verify` →
+  `ok: true`, `violations: []` · `agentic-workflow phase-lint` → `PASS`, `6/6` on
+  every phase · the ceremony arm asked for the same decorated status → `bad-status`,
+  exit 1, no byte written (`D6`).
 
 ## Next
 
-Hand the diff to the owner as the external verifier: `12c8c2add` (the fix),
-`fe1eaaa61` (the RED case), the unit doc and its registered roadmap row. Two
-things are reported, not fixed: the raft of sibling defects in the same module
+PR [#686](https://github.com/gtrabanco/agentic-workflow/pull/686) is open with
+`Closes #684`, and the `## Fixes` row reads the settle form that URL implies
+(`E11`). The owner's external verify of the diff — `12c8c2add` (the fix),
+`fe1eaaa61` (the RED case), this unit doc — is the remaining step, and any
+correction comes from that verdict, never from this session. Two things are
+reported, not fixed: the raft of sibling defects in the same module
 (`## Non-goals`, `E4`) and the load-induced `doc.structure` suite timeout (`G2`).
 
 ## References
