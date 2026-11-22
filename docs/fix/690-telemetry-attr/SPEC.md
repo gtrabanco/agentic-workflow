@@ -72,7 +72,11 @@ nothing else:
   session already builds `noteCommand` (the closure over the live telemetry
   wiring) before `createExtension` runs; the tool deps only have to carry it
   (`PE-004`). The secondary repair adds the operator's `notify` as the degraded
-  report channel at the same resolution site.
+  report channel at the same resolution site, and the third defect this unit
+  found lives three lines below it: the configured JSONL path was resolved as
+  `resolve(relative, root)`, which answers with the root directory itself, so the
+  sink was pointed at a directory and every write failed with `EISDIR`
+  (`PE-011`, `O10`).
 - `packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts` — the
   accumulator's attachment. It grows one option (`onDegraded`), a per-sink latch
   so a broken destination is reported once per session instead of once per
@@ -135,6 +139,26 @@ contract or sink is removed, so no `orphan` retirement exists to classify.
 - **Tier** — `standard` · **Task Size** — understood + contained risk + resumable from diff
 - **Named high-risk item** — none — not a high-tier unit
 
+The verdict, `runner ceremony tier classify` at the head this unit's last commit
+was taken from, verbatim:
+
+```json
+{
+  "contract": "risk-tier-verdict@1",
+  "tier": "standard",
+  "reason": "8 path(s) carry executable content: packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts, packages/pi-agentic-workflow/src/extension/workflow-tools.ts, …",
+  "reason_kind": "executable-content",
+  "task_size": {
+    "understood": true,
+    "contained_risk": "contained",
+    "resumable_from_diff": true,
+    "ceremony": "unit-doc",
+    "verification": "gates"
+  },
+  "signals": []
+}
+```
+
 ## Future
 
 none
@@ -186,6 +210,15 @@ none
   discarded the unit's first, uncommitted draft of these ledgers — **affects**
   the session, not the change: the ledgers were re-cut and committed before any
   source edit, so the branch is the durable record.
+- `bun test scripts/roadmap-settle.test.mjs` is red at this branch's head with
+  one violation, inherited from `main`'s `7951c17c1` (a concurrent triage
+  session): `docs/features/98-deterministic-tool-doctor/SPEC.md:1 slug-mismatch
+  — doc folder says 'deterministic-tool-doctor', row says
+  'finding-severity-ladder'`, because that commit added a second feature row
+  numbered `98` while `98` was already `finding-severity-ladder` — **does-not-affect**
+  this unit (it touches no `docs/features/` row and no roadmap feature row), and
+  it is not repaired here: renumbering another unit's triage rows and folders is
+  that unit's change, so it is reported to the owner in the handoff instead.
 
 ## Tasks
 
@@ -200,7 +233,7 @@ none
   - Relevant files: packages/pi-agentic-workflow/src/session-telemetry.ts, packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts, packages/pi-agentic-workflow/src/extension/index.ts
 - [ ] P4 — Documentation and state: the README's telemetry section names both attribution doors and the degraded report, the changeset, the roadmap row through its writer, the generated projection and the journal entry (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3)
-  - Relevant files: packages/pi-agentic-workflow/README.md, .changeset/690-telemetry-attribution.md, docs/ROADMAP.md, docs/generated/units.md, docs/LOGS.md
+  - Relevant files: packages/pi-agentic-workflow/README.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/690-telemetry-attribution.md, docs/ROADMAP.md, docs/generated/units.md, docs/LOGS.md
 - [ ] P5 — Verification: the package suite, the root suite and the declared gates in the foreground (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0)
   (Implements: S1, S2, S3)
   - Relevant files: docs/fix/690-telemetry-attr/SPEC.md
@@ -229,6 +262,7 @@ claim carried from training is never `confirmed`, and an unsampled assumption is
 | PE-008 | measured-run | A `spawn()` without an `env` option inherits `process.env`, so the phase the wiring exports reaches the spawned runner | `/tmp/pe690/probe.mjs`: `AG_WF_PHASE=execute-phase` in the parent, child printed `{"phase":"execute-phase"}` · exit 0 | measured 2026-11-22 (this session) | O4; AC-S2 |
 | PE-009 | committed-source | The adapter already captures one session-scoped value from the live `session_start` context and holds the closure for the instance's life, so a captured `notify` is the same shape rather than a new risk | `packages/pi-agentic-workflow/src/extension/index.ts:481-508` (`sessionId` read once, `createTelemetryWiring` built with it) | read 2026-11-22 (this session) | O5, O6; AC-S3 |
 | PE-010 | unknown | An operator whose Pi host replaces the session context before the degraded report fires is not sampled: the assumption is that one extension instance serves one session, which the adapter states in its own comment but no gate proves. Owner: the next Pi-host compatibility verification | `packages/pi-agentic-workflow/src/extension/index.ts:494-497` (the stated assumption) | unsampled 2026-11-22 | O6 |
+| PE-011 | measured-run | The configured JSONL path never resolved to a file: `resolve(relative, root)` answers with the ROOT itself, so the adapter pointed the JSONL sink at the project directory and every write failed with `EISDIR` — silently, because of the bare `catch` | `bun -e 'console.log(require("node:path").resolve(".pi/.telemetry/sessions.jsonl", "/tmp/repo"))'` → `/tmp/repo`; the same expression in `packages/pi-agentic-workflow/src/extension/index.ts:508` before this unit's fix; a shipped-entry run wrote the ledger row while `.pi/.telemetry/sessions.jsonl` was never created (scratch `/tmp/pe690dbg`) | measured 2026-11-22 (this session) | O10; AC-S1 |
 
 ## Obligations
 
@@ -238,15 +272,16 @@ required failure state (shape owned by
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2 | A unit-scoped runner subcommand dispatched through `agentic_workflow_run` attributes the session: the sample lands in the sink the accumulator was built with, with the unit and the phase the command names | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | the attributed-door case's sample assertion; `## Log` `E3` | planned |
-| O2 | S1 | End to end through the shipped entry, a runner-door unit command produces the automatic `pi:session=…` row both destinations receive: the `tier-cost@2` ledger row and the JSONL line | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | the shipped-entry case's ledger-row and JSONL-line assertions; `## Log` `E3` | planned |
-| O3 | S2 | Invariant: a subcommand outside `UNIT_COMMANDS`, or one whose arguments name no unit directory, attributes nothing and writes no row — the no-invented-row rule survives the new door | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | the unattributed-subcommand cases' empty-write assertions; `## Log` `E3` | planned |
-| O4 | S2 | The phase in flight follows the door: the seam runs before the spawn, so the child inherits `AG_WF_PHASE` set to the subcommand's label, and the subcommand plus its arguments arrive verbatim | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | the before-spawn case's ordering, argv and environment assertions; `## Log` `E3` | planned |
-| O5 | S3 | A sink that refuses its sample is reported, once per sink per session, while every other sink still receives the sample | P3 | P3 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs` exits 0 | the refusing-sink case's one-report and healthy-sink assertions; `## Log` `E4` | planned |
-| O6 | S3 | Required failure state: with no injected channel the report is one stderr line naming the sink and the reason, and `enabled: false` still reports nothing at all | P3 | P3 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs` exits 0 | the stderr-default case's captured line and the off case's silence; `## Log` `E4` | planned |
-| O7 | S3 | Required failure state: a reporter that throws itself costs no other sink its sample, and a failed write is never re-attempted as a duplicate row | P3 | P3 | execute-phase | `bun test packages/pi-agentic-workflow/test/session-telemetry.test.mjs` exits 0 | the throwing-reporter case's per-sink assertions; `## Log` `E4` | planned |
-| O8 | S1, S2, S3 | Affected use case that must not regress: the six deferred tools keep their names, schemas, `deferred` exposure and host arity, and the wiring keeps its unit/phase/emission rules | P5 | P5 | execute-phase | `bun run test` in `packages/pi-agentic-workflow` exits 0 | the whole package suite green, the sibling suites included; `## Log` `E6` | planned |
-| O9 | S1, S2, S3 | Documentation currency: the package README's telemetry section names both attribution doors and the degraded report, and the generated projection is the emitter's own | P4 | P4 | execute-phase | `bun scripts/docs-generate.mjs --check` exits 0 | the check's PASS verdict plus the README paragraph it reads; `## Log` `E5` | planned |
+| O1 | S2 | A unit-scoped runner subcommand dispatched through `agentic_workflow_run` attributes the session: the sample lands in the sink the accumulator was built with, with the unit and the phase the command names | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | the attributed-door case's sample assertion; `## Log` `E3` | verified |
+| O2 | S1 | End to end through the shipped entry, a runner-door unit command produces the automatic `pi:session=…` row both destinations receive: the `tier-cost@2` ledger row and the JSONL line | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | the shipped-entry case's ledger-row and JSONL-line assertions; `## Log` `E4` | verified |
+| O3 | S2 | Invariant: a subcommand outside `UNIT_COMMANDS`, or one whose arguments name no unit directory, attributes nothing and writes no row — the no-invented-row rule survives the new door | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | the unattributed-subcommand cases' empty-write assertions; `## Log` `E3` | verified |
+| O4 | S2 | The phase in flight follows the door: the seam runs before the spawn, so the child inherits `AG_WF_PHASE` set to the subcommand's label, and the subcommand plus its arguments arrive verbatim | P2 | P2 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | the before-spawn case's ordering, argv and environment assertions; `## Log` `E3` | verified |
+| O5 | S3 | A sink that refuses its sample is reported, once per sink per session, while every other sink still receives the sample | P3 | P3 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs` exits 0 | the refusing-sink case's one-report and healthy-sink assertions; `## Log` `E4` | verified |
+| O6 | S3 | Required failure state: with no injected channel the report is one stderr line naming the sink and the reason, and `enabled: false` still reports nothing at all | P3 | P3 | execute-phase | `bun test packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs` exits 0 | the stderr-default case's captured line and the off case's silence; `## Log` `E4` | verified |
+| O7 | S3 | Required failure state: a reporter that throws itself costs no other sink its sample, and a failed write is never re-attempted as a duplicate row | P3 | P3 | execute-phase | `bun test packages/pi-agentic-workflow/test/session-telemetry.test.mjs` exits 0 | the throwing-reporter case's per-sink assertions; `## Log` `E4` | verified |
+| O8 | S1, S2, S3 | Affected use case that must not regress: the six deferred tools keep their names, schemas, `deferred` exposure and host arity, and the wiring keeps its unit/phase/emission rules | P5 | P5 | execute-phase | `bun run test` in `packages/pi-agentic-workflow` exits 0 | the whole package suite green, the sibling suites included; `## Log` `E6` | verified |
+| O9 | S1, S2, S3 | Documentation currency: the package README's telemetry section names both attribution doors and the degraded report, its context budget is re-pinned with its reason, and the generated projection is the emitter's own | P4 | P4 | execute-phase | `bun scripts/docs-generate.mjs --check` exits 0 | the check's PASS verdict plus the README paragraph it reads; `## Log` `E7` | verified |
+| O10 | S1 | The JSONL destination is the project's own configured path: a relative `telemetry.jsonFile` resolves under the project root, so the sample reaches the file the configuration names instead of being aimed at the root directory | P2 | P3 | execute-phase | `bun test packages/pi-agentic-workflow/test/shipped-adapter.test.mjs` exits 0 | the shipped-entry case's JSONL-line assertion at `<project>/.pi/.telemetry/sessions.jsonl`; `## Log` `E4` | verified |
 
 ## Acceptance criteria
 
@@ -354,10 +389,23 @@ relay-next: create .pi-web/relays/690-telemetry-attr/ (charter → docs/fix/690-
 - **D4** — 2026-11-22, the degraded report is latched per sink `name` for the session's life, and its channel is the wiring's `onDegraded` — the adapter passes the operator's `notify`, and a caller that names none gets one stderr line. A report per settled run would be noise; silence is the defect being repaired.
 - **D5** — 2026-11-22, the accumulator's "one broken sink costs the others nothing" rule is preserved unchanged; only the silence is removed.
 - **D6** — 2026-11-22, the triage block's `review` step and its relay addendum are copied verbatim as the machine printed them; this owner-directed local workflow runs no `review-change`/`audit-pr` pass and bootstraps no relay packet on this branch.
+- **D7** — 2026-11-22, the inverted JSONL path (`resolve(relative, root)`, `PE-011`) is repaired inside this unit rather than reported for a follow-up: S1 names the JSONL file as one of the two destinations that never received a row, so a unit that fixed attribution and left the sink aimed at a directory would satisfy its own reproduction and still fail its requirement. `O10` carries it.
+- **D8** — 2026-11-22, the package README's context budget is re-pinned to its exact measurement with its reason recorded in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (README at 1,311/17,726 lines/estimate, the change measures 1,324/17,944) — the fix #571 precedent, and that section has no emitter, so the row is a recorded hand edit.
+- **P1** — 2026-11-22, the ledgers frozen and the RED corpus landed · ef96e9b26.
+- **E1** — 2026-11-22, the cut-head baseline: `bun test --timeout=20000 test/telemetry-wiring.test.mjs test/session-telemetry.test.mjs test/workflow-tools.test.mjs test/workflow-tools-wiring.test.mjs` · exit 0 · 59 pass, 0 fail.
+- **E2** — 2026-11-22, the corpus before the implementation at `ef96e9b26`: `bun test test/telemetry-attribution.test.mjs` · 3 pass, 3 fail (the attributed-door case wrote no sample, the seam was never called, the door noted nothing); `test/session-telemetry.test.mjs` 22 pass, 2 fail (no report of a refusing sink); `test/telemetry-wiring.test.mjs` 19 pass, 2 fail (no `onDegraded` report); `test/shipped-adapter.test.mjs` 28 pass, 1 fail (no JSONL line and no ledger row through the shipped entry).
+- **P2** — 2026-11-22, the runner door notes its subcommand before the spawn · 795023247.
+- **E3** — 2026-11-22, `bun test test/telemetry-attribution.test.mjs` · exit 0 · 6 pass, 0 fail (the attributed-door, before-spawn/verbatim/`AG_WF_PHASE`, no-invented-row and throwing-seam cases).
+- **E4** — 2026-11-22, `bun test test/shipped-adapter.test.mjs` · exit 0 · 29 pass, 0 fail (the end-to-end case writes the ledger row and the JSONL line at the project's own `.pi/.telemetry/sessions.jsonl`).
+- **P3** — 2026-11-22, the degraded report and the JSONL path · 51c241f5e.
+- **E5** — 2026-11-22, `bun test test/session-telemetry.test.mjs test/telemetry-wiring.test.mjs` · exit 0 · 47 pass, 0 fail (the per-sink report, the stderr default, the throwing-channel fallback, the one-report latch and the off switch's silence).
+- **E6** — 2026-11-22, `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 1055 pass, 0 fail across 91 files.
+- **E7** — 2026-11-22, `bun scripts/docs-generate.mjs --check` · exit 0 · verdict PASS, 3 files, 0 stale; `bun scripts/check-skill-context.mjs --documents` · exit 0 · PASS, 7 budgeted documents; `bun scripts/check-skill-context.mjs` · exit 0 · PASS, 30 skills.
 
 ## Next
 
-`P1`'s RED corpus, observed failing, then `P2` (the attribution seam).
+The owner's external verification of the branch diff and the closed obligations
+ledger; then the PR against `main` (no merge, no approval by this unit).
 
 ## References
 

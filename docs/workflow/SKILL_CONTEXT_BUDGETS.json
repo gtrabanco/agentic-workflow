@@ -33,9 +33,10 @@
         }
       },
       "packages/pi-agentic-workflow/README.md": {
-        "linesMax": 1311,
-        "estimateMax": 17726,
+        "linesMax": 1324,
+        "estimateMax": 17944,
         "sources": {
+          "issue #690 (telemetry attribution, 2026-11-22)": "the package README's telemetry section names the two doors a session learns its unit from — the slash command a person types and the deferred `agentic_workflow_run` a model drives — states that a command naming no unit produces no sample, and says that a destination refusing its sample is reported once (the operator's `notify`, stderr when a caller named none) instead of failing into silence. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 1,324 lines / 17,944 est, so both ceilings move to the exact measurement (the fix #571 precedent: no headroom granted). The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #654 (guard layer adoption, 2026-11-20)": "the package README gains one section — the permission layer: the install command, the two policy paths, what the layer decides, the operator's session grants and `promptTimeoutMs`, the `guardPlugins` authoring surface with the `provision permissions` projection, the boundary this package still owns (identity, receipts, Tier 2), and the pointer to init-workspace's verification checklist — plus one sentence in the path-protection section for the OS-temp carve-out Tier 2 gained. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 1,299 lines / 17,547 est, so `linesMax` is re-pinned 1,296 -> 1,299 (the exact boundary the tree measures, the fix #571 precedent); `estimateMax` (17,663) keeps its headroom and is not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #678 (deferred tool call convention, 2026-11-21)": "the package README states the two properties that guard the tool call — the adapter owns pi's `execute(toolCallId, params, signal, onUpdate, ctx)` and runs every tool against `ctx.cwd`, and an unreadable project is a `sensor-degraded` refusal naming the path instead of a silent `process.cwd()` sample. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 1,311 lines / 17,726 est, so both ceilings move to the exact measurement (the fix #571 precedent: no headroom granted). The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one."
         }

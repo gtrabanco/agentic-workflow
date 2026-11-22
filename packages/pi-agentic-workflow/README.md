@@ -921,6 +921,19 @@ do not want it in the repository:
 .pi/.telemetry/
 ```
 
+**Where the unit comes from.** A sample needs a unit, and the unit is the
+command's own argument — resolved against `docs/fix/` and `docs/features/`. The
+session notes every command it dispatches, through both doors it has: the slash
+command a person types (`/execute-phase 690`) and the deferred runner door a
+model drives (`agentic_workflow_run` with `execute-phase 690`), which is the path
+every `runner <subcommand> [args…]` citation takes. A command that names no unit
+— a sensor, a `runner roadmap read` — is noted for the phase it sets and produces
+no sample: a row the ledger cannot attribute is worse than no row.
+
+A destination that refuses its sample says so once — the operator's `notify` in a
+session, stderr for a caller that named no channel — naming the sink and the
+writer's own reason, instead of failing into silence on every settled run.
+
 Read it back with the report, which answers JSON by default and a markdown table
 on request — filters by model, unit and observed day, and aggregates by phase or
 unit:
