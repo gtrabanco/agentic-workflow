@@ -26,6 +26,11 @@
  *    and what keeps the shutdown from adding a second copy of the last run's row.
  *  - **Off means absent.** A disabled accumulator emits nothing and reports
  *    nothing; it never estimates the sample it did not take.
+ *  - **A refusal is reported, never swallowed (#690 S3).** A sink that refuses
+ *    its sample costs the others nothing — and costs nobody their silence: the
+ *    failure travels to `onSinkError` with the sink's name and the refusal's
+ *    reason, so a destination that fails on every emission is a stated defect
+ *    instead of an empty file nobody hears about.
  *
  * The log writer (#394) consumes this module as a second sink, which is why the
  * interface here is a sink and not a hardcoded writer.
@@ -79,6 +84,17 @@ export interface TelemetrySink {
   write(sample: TelemetrySample): void;
 }
 
+/**
+ * One sink's refusal: which destination lost the sample, and why (#690 S3).
+ * `error` is the sink's own throw, passed through untouched so the report can
+ * carry the reason the writer itself chose — a ledger that refuses a missing
+ * grammar and one that refuses a full disk read very differently.
+ */
+export interface TelemetrySinkFailure {
+  readonly sink: string;
+  readonly error: unknown;
+}
+
 export interface SessionTelemetryOptions {
   /** The telemetry switch; `false` disables counting and emission entirely. */
   readonly enabled: boolean;
@@ -103,6 +119,12 @@ export interface SessionTelemetryOptions {
    */
   readonly changedPaths?: number | (() => number);
   readonly sinks?: readonly TelemetrySink[];
+  /**
+   * Where a sink's refusal is reported. Absent means the caller has no channel
+   * to report through, which is an honest absence for a caller with none; the
+   * wiring that owns the session supplies one.
+   */
+  readonly onSinkError?: (failure: TelemetrySinkFailure) => void;
   /** Milliseconds since the epoch; injected so the suite owns the clock. */
   readonly now?: () => number;
   /** `YYYY-MM-DD`; injected for the same reason. */
@@ -262,9 +284,17 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
     for (const sink of sinks) {
       try {
         sink.write(payload);
-      } catch {
+      } catch (error) {
         // One broken destination must not cost the others their sample, and a
-        // shutdown must never be blocked by a writer.
+        // shutdown must never be blocked by a writer. The refusal is reported
+        // instead of vanishing (#690 S3): a sink that refuses on every emission
+        // used to be an empty destination nobody was told about.
+        try {
+          options.onSinkError?.({ sink: sink.name, error });
+        } catch {
+          // The reporter belongs to the caller; a broken one must not cost the
+          // remaining sinks their sample either.
+        }
       }
     }
     return payload;

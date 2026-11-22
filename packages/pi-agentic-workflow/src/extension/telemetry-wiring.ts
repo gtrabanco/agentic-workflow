@@ -30,6 +30,10 @@
  *  - **Off registers no listener at all.** A listener that wakes up to find itself
  *    disabled is a cost with no feature, so `enabled: false` means `pi.on` is
  *    never called.
+ *  - **A broken destination is said out loud (#690 S3).** The accumulator reports
+ *    every sink refusal; this file owns the channel (`onDegraded`, the operator's
+ *    `notify` in a session, stderr for a caller that named none) and the latch
+ *    that keeps it to one line per sink per session instead of one per run.
  */
 
 import { randomUUID } from "node:crypto";
@@ -80,6 +84,12 @@ export interface TelemetryWiringOptions {
    * caller already holds the live context when it builds the wiring.
    */
   readonly sessionId?: () => string | undefined;
+  /**
+   * Where a sink's refusal is reported (#690 S3). The adapter passes the
+   * operator's own `notify`, so a broken destination is said out loud; a caller
+   * that names none gets one stderr line, the one channel every host has.
+   */
+  readonly onDegraded?: (message: string) => void;
   readonly now?: () => number;
   readonly date?: () => string;
   readonly source?: string;
@@ -177,6 +187,29 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
   let phase: string | null = null;
   let accumulator: ReturnType<typeof createSessionTelemetry> | null = null;
 
+  /**
+   * The degraded report (#690 S3). A broken sink fails on **every** emission, so
+   * the latch is what keeps a repair request audible without turning it into one
+   * line per settled run: the first failure per sink `name` is reported, and the
+   * rest of the session's are already represented by it.
+   */
+  const report = options.onDegraded ?? ((message: string) => void process.stderr.write(`${message}\n`));
+  const reportedSinks = new Set<string>();
+
+  function reportSinkFailure(failure: { readonly sink: string; readonly error: unknown }): void {
+    if (reportedSinks.has(failure.sink)) return;
+    reportedSinks.add(failure.sink);
+    const reason = failure.error instanceof Error ? failure.error.message : String(failure.error);
+    const message = `pi-agentic-workflow: telemetry sink "${failure.sink}" could not write the sample — ${reason}`;
+    try {
+      report(message);
+    } catch {
+      // The caller's channel died under us. The failure is still not silent: the
+      // one channel every host has carries it.
+      process.stderr.write(`${message}\n`);
+    }
+  }
+
   function build(): ReturnType<typeof createSessionTelemetry> | null {
     if (unit === null) return null;
     start = startSha();
@@ -189,6 +222,7 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
       now,
       date,
       source,
+      onSinkError: reportSinkFailure,
     });
   }
 

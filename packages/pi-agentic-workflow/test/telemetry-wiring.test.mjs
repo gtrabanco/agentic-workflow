@@ -402,6 +402,35 @@ test("with no injected channel the report is one stderr line naming the sink", (
   assert.ok(chunks[0].endsWith("\n"), "the line ends, so a terminal or a log file stays readable");
 });
 
+test("a report channel that throws falls back to stderr, so the failure is never silent", () => {
+  const chunks = [];
+  const original = process.stderr.write;
+  process.stderr.write = (chunk) => {
+    chunks.push(String(chunk));
+    return true;
+  };
+  try {
+    const live = wiring({
+      changedPaths: () => 1,
+      sinks: BROKEN_AND_WORKING,
+      onDegraded: () => {
+        throw new Error("the operator channel is gone");
+      },
+    }).instance;
+    const { pi, fire } = fakePi();
+    live.register(pi);
+    live.noteCommand("execute-phase", ["383"]);
+    fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+    fire("agent_settled");
+  } finally {
+    process.stderr.write = original;
+  }
+
+  assert.equal(chunks.length, 1);
+  assert.match(chunks[0], /tier-cost-ledger/);
+  assert.match(chunks[0], /no tier-cost@2 block/);
+});
+
 test("off reports nothing at all — the switch is absence, not a silenced listener", () => {
   const reports = [];
   const { pi, registered } = fakePi();
