@@ -63,3 +63,17 @@ overwrote it with the subcommand's label — the head-side O4 claim is proven
 regardless. `node` invocation of the probe was refused by the repo's invocation
 guard (sanctioned runtime), so the probe ran under `bun`; no live-tree mutation
 in any probe.
+
+## Addendum — 2026-11-22 — correction batch (owner order)
+
+Owner instruction, verbatim: "Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff"
+
+Resolved as fix-findings against this receipt: 1 blocker + 6 advisories triaged; all 7 deserved the fix (each is a change-caused text/ledger/gate defect with a named smallest action), all folded in `41e5a389c` with the unit Log's `F1`–`F4` lines as the fold record. **Blockers: 1 → 0** — the verdict above stands as the pre-batch state; this batch awaits the owner's blockers-only recheck (§9).
+
+- **Blocker 1 folded (F1)** — the 690 fix row's Status is now `done · [#692](https://github.com/gtrabanco/agentic-workflow/pull/692)` (written by `agentic-workflow roadmap fixrow` with `--expect` CAS after a `mktemp` rehearsal proved a partial payload empties Topic/Notes; the live diff is the Status cell only). Recheck: `bun scripts/roadmap-settle.mjs` → exit 1, `violations: 1` — feature-98 only, byte-identical to base; `bun scripts/run-root-suite.mjs` → 139 PASS / 1 FAIL, the pre-batch baseline, and the failing assertion now prints only the feature-98 slug-mismatch. `docs/generated/units.md` re-rendered by `bun scripts/docs-generate.mjs` (status cell only).
+- **Advisories 1–2 folded (F2)** — superseding counts recorded in F2 (46 and 153, both exit 0); E5/G3 lines untouched per `log-kind@1` append-only.
+- **Advisory 3 folded (F3)** — O5/O6/O7 required-evidence repointed to `E5`; validators re-ran green: `bun test test/telemetry-wiring.test.mjs` → 22/0 exit 0, `bun test test/session-telemetry.test.mjs` → 24/0 exit 0; statuses stay `verified`.
+- **Advisories 4–6 folded (F4)** — README sentence fixed (sensor example dropped), `decisions.md` D3 reworded (the SPEC Log's D3 claim corrected by F4, append-only), runnerRunSpec comment clause dropped. The README edit moved the estimate (17944 → 17942), so `SKILL_CONTEXT_BUDGETS.json` was re-pinned to the exact re-measurement with the reason recorded (D8's rule).
+- **S2 not-broken sweep (foreground)** — `bun run test` in `packages/pi-agentic-workflow` → exit 0 · 1055 pass / 91 files; test-impact nine suites → exit 0 · 153 pass / 0 fail; `docs-generate --check` → exit 0; `check-skill-context --documents` and `check-skill-context` → exit 0; `verify` → exit 0 `ok: true`; `phase-lint` → exit 0 PASS 6/6 (fingerprints unchanged); `test-obligation-tags --root .` → exit 0 · 140 suites · 0 findings; root suite baseline 139/1 unchanged (the one red is main's feature-98 row, untouched).
+- **Disclosures** — the fixture rehearsal's empty-argument incident produced a junk `| undefined |` row only in the discarded `mktemp` copy (cleaned); no live-tree side effect beyond the declared writes. No obligation status changed; no `S#` reopens.
+- **Concurrent-commit disclosure** — `fb847877a` (the apply session's own `docs(log):` commit, dated 22:31:38) landed on this branch mid-verification, after the receipt's `head:` pin `a3d304a13` was taken and before this batch's first commit; it adds one journal fragment file and nothing else, so every measurement above holds for both heads (the 509 receipt's mid-run-commit class).
