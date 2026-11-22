@@ -378,7 +378,7 @@ jobs:
       # read. The tag already recorded the snapshot commit above.
       - name: Restore the repo (temp versions are never committed)
         if: always()
-        run: git checkout -- packages/*/package.json skills/runner-contract/references/RUNNER.md
+        run: git checkout HEAD -- packages/*/package.json skills/runner-contract/references/RUNNER.md
 
       # Release visible = installable (issue #481): the tag and the pre-release
       # must not appear while the CDN still 404s a tarball the run just published.

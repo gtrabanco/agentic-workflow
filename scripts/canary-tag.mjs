@@ -11,18 +11,21 @@
  * This script is the deterministic half of the repair:
  *
  *   snapshot  materializes the staged tracked tree as a commit whose parent is
- *             `HEAD`. It never moves a branch and never restores the worktree;
- *             untracked files never enter the tree, so build output and the
- *             plan TSV stay out. The commit's tree — never its timestamp — is
- *             the identity a caller compares.
+ *             `HEAD`, through `git stash create` — it never touches the index,
+ *             never moves a branch and never restores the worktree; untracked
+ *             files never enter the tree, so build output and the plan TSV stay
+ *             out. The commit's tree — never its timestamp — is the identity a
+ *             caller compares.
  *   record    puts the tag on that commit. A tag already recorded on the same
  *             tree is a no-op (`already-recorded`); one recorded on another
  *             tree is refused, so a published cut is never retargeted silently.
  *
  * Stdout is the machine receipt (the commit before the tag is recorded, the
  * tag receipt after); progress and every refusal go to stderr. Exit 0 success,
- * 1 usage, 2 refusal before a tag or a commit is written. The only mutations are
- * the index (`snapshot`, via `git add -u`) and one tag ref (`record`).
+ * 1 usage, 2 refusal before a tag or a commit is written. The only mutation is
+ * one tag ref (`record`); `snapshot` leaves the index and the worktree exactly
+ * as it found them, so the cut's `git checkout -- <paths>` still restores from
+ * `HEAD`.
  *
  * Usage:
  *   bun scripts/canary-tag.mjs snapshot [--root <dir>]
@@ -88,25 +91,21 @@ function snapshot(root) {
   requireRepo(root);
   const head = requireHead(root);
 
-  const staged = git(root, ["add", "-u"]);
-  if (!staged.ok) refuse(`could not stage the tracked worktree: ${staged.err}`);
-
-  const tree = git(root, ["write-tree"]);
-  if (!tree.ok) refuse(`could not write the staged tree: ${tree.err}`);
-
-  const headTree = git(root, ["rev-parse", "HEAD^{tree}"]);
-  if (!headTree.ok) refuse(`could not read HEAD's tree: ${headTree.err}`);
-
-  if (tree.out === headTree.out) {
+  // `stash create` writes a commit object from the worktree's tracked changes
+  // and touches neither the index nor the worktree, so the cut's later
+  // `git checkout -- <paths>` restores from HEAD exactly as it did before.
+  const snap = git(root, ["stash", "create"], RELEASE_IDENTITY);
+  if (!snap.ok) refuse(`could not materialize the staged tree: ${snap.err}`);
+  if (snap.out === "") {
     process.stderr.write(`canary-tag: ${head} (clean tree — HEAD)\n`);
     process.stdout.write(`${head}\n`);
     return;
   }
 
-  const commit = git(root, ["commit-tree", tree.out, "-p", head, "-m", "release: the staged canary tree"], RELEASE_IDENTITY);
-  if (!commit.ok) refuse(`could not materialize the staged tree: ${commit.err}`);
-  process.stderr.write(`canary-tag: ${commit.out} (staged tree ${tree.out})\n`);
-  process.stdout.write(`${commit.out}\n`);
+  const tree = git(root, ["rev-parse", `${snap.out}^{tree}`]);
+  if (!tree.ok) refuse(`could not read the staged tree: ${tree.err}`);
+  process.stderr.write(`canary-tag: ${snap.out} (staged tree ${tree.out})\n`);
+  process.stdout.write(`${snap.out}\n`);
 }
 
 /** Record `tag` on `commit`; a same-tree tag is a no-op, another tree refuses. */
