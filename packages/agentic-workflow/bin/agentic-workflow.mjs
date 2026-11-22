@@ -1627,9 +1627,11 @@ switch (command) {
     }
 
     // `roadmap fixrow <table-path> <json>` (issue #498) — the `## Fixes` row
-    // writer: a Fixes row is keyed by the issue number in its leading
-    // `[#N](url)` cell, the link is passed in explicitly, and the row is
-    // written as one splice — a Fixes row is never a hand edit again.
+    // writer: the row is keyed by the issue number in the table's own
+    // issue-keyed column (`Issue`, `Issues` or `#`, in any position) as a
+    // `[#N](url)` link or a bare number, the link is passed in explicitly,
+    // and the row is written as one splice — a Fixes row is never a hand edit
+    // again.
     if (rawArgs[0] === "fixrow" || (rawArgs[0] && rawArgs[1] === "fixrow")) {
       const filePath = rawArgs[0] === "fixrow" ? resolve(rawArgs[1] ?? join(process.cwd(), "ROADMAP.md")) : resolve(rawArgs[0]);
       const data = JSON.parse(rawArgs[2] || "{}");
