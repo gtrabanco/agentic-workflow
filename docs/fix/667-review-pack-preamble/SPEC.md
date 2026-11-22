@@ -100,9 +100,12 @@ correction | **S<n><letter> — <title>.** | an appended amendment to requiremen
   `decisions.md` D4: `review-code`'s ask-don't-infer sentence, `review-verify`'s
   RUNNER pointer and its S5 discoverer→auditor paragraph.
 - **`scripts/review-loop-discipline.test.mjs` block 5** pins the materiality bar's
-  coordinator phrases *inside each finder* — the very duplication this unit
-  removes. The pin moves to the owner (D8), so the suite keeps its obligation and
-  stops forcing a copy.
+  coordinator phrases *inside each finder*, and the suite is **byte-unchanged**
+  (D8): the extraction retires the bar's *rule set* from the finders — it exists
+  only at the owner, asserted by this unit's new suite — while the two operative
+  phrases stay the pass's own binding, so the pin now matches the pointer instead
+  of a body copy. The plan's move of the pin to the owner was not needed and did
+  not happen.
 - **`docs/workflow/SKILL_CONTEXT_BUDGETS.json`** carries one declared re-basis:
   the nine passes and `FINDER_CONTRACT.md` stay under their own ceilings, but the
   four `review-change:*` route ceilings bind because every route loads the owner,
@@ -148,8 +151,10 @@ What this unit retires, each with its replacement:
   by the inline checklist-discipline sentence + tally protocol that cites the
   owner (S3(b), AC2). It is a replacement, never a deletion: the probe's
   citation-only cell is the failure this shape precludes.
-- **`scripts/review-loop-discipline.test.mjs` block 5's copy-pin** — replaced by a
-  pin that asserts the pointer plus the owner's assertion (D8).
+- **`scripts/review-loop-discipline.test.mjs` block 5's copy-pin** — retired as a
+  *body-copy* pin without editing the suite: the pin is byte-unchanged and now
+  asserts the pointer's phrases, and the owner's rule-set assertion lands in
+  `scripts/review-pack-preamble.test.mjs` instead (D8).
 
 Not retired: the nine axis checklists, every `Return exactly` block, every
 `Done when` body, every frontmatter block. Their bytes are unchanged and pinned
@@ -230,7 +235,7 @@ verification phase (`E` row), never asserted from memory.
 
 ## Tasks
 
-- P1 — The probe harness materialized under the unit folder with the pre-change control stored (validator: `rg -c 'A-1' docs/fix/667-review-pack-preamble/probe/results-p1-baseline.md` matches 1)
+- P1 — The probe harness materialized under the unit folder with the pre-change control stored (validator: `rg -c 'A-1' docs/fix/667-review-pack-preamble/probe/results-p1-baseline.md` matches 2 — corrected 2026-11-22 by the external-verify batch: the seeded-defect row names A-1 too, and the count was 2 since the cut)
   (Implements: S4)
   - Relevant files: docs/fix/667-review-pack-preamble/probe/runner.mjs, docs/fix/667-review-pack-preamble/probe/fixture.md, docs/fix/667-review-pack-preamble/probe/CELLS.md, docs/fix/667-review-pack-preamble/probe/RUBRIC.md, docs/fix/667-review-pack-preamble/probe/results-p1-baseline.md
 - P2 — The contract suite lands alone and is observed red on the missing owner section (validator: `bun test scripts/review-pack-preamble.test.mjs` exits non-zero, observed before P3)
