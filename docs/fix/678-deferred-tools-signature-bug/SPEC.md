@@ -148,6 +148,11 @@ codemode script and `tool_search` reach for, and three suites read it.
   entry's tool assertion gains the adapter-level shape it was missing (the tool
   a host receives carries a 5-arg `execute`), which is the assertion whose
   absence let this ship.
+- `packages/pi-agentic-workflow/test/conductor-sensor.test.mjs` — the sensor
+  suite gains the loud-refusal case, and its `/fixture` placeholder became a
+  real temp directory because only the removed fallback made the placeholder
+  pass (named here after the 2026-11-22 batch found AC1's enumeration had
+  missed it — § E11).
 - `packages/pi-agentic-workflow/README.md` — the tool table's "Two properties"
   block states the host convention and the loud refusal beside the cwd rule.
 - The unit's own carriers — `docs/fix/678-deferred-tools-signature-bug/`
@@ -437,6 +442,13 @@ frozen plan (owner instruction, `S1`). No triage block is claimed here.
   named; the outside-tree clause scoped), E10 (`tsc`, the recipe and `verify`),
   E4/E6 (AC13's quantifier over the params-reading results, the pre-fix
   reproduction in E1) · pass.
+- **E11** — 2026-11-22, the AC1 enumeration re-run at
+  224b1071f2329f38285f17f47e23162ea1ec869d, correcting E9's "every one named":
+  `git diff --name-only 3f749feebcefd67f6b72d1be418822b687df4559..HEAD` · 19
+  paths — `packages/pi-agentic-workflow/test/conductor-sensor.test.mjs` was NOT
+  named in `## Impact` (it rode only in P3's relevant-files); it is named now,
+  and a per-path check over the whole enumeration (full path, the carriers
+  bullet's basename, or the journal class clause) answers for all 19.
 
 ## Next
 
@@ -477,7 +489,7 @@ and is the only ceremony claimed here.
 - **V1** — 2026-11-21, the acceptance rows and their receipts (the re-cut carrier
   keeps them under `log-kind@1`'s `V` token; the `## Evidence` table is the legacy
   carrier's):
-  | AC1 (S1) | `git diff --name-only 3f749feeb..HEAD` | every diff path named in `## Impact` — unit carriers, code, tests, README, changeset, roadmap + projection, the budgets manifest and the unit's journal fragments (enumeration in § E9; G1's `secret-scan` range) | pass |
+  | AC1 (S1) | `git diff --name-only 3f749feeb..HEAD` | every diff path named in `## Impact` — unit carriers, code, tests, README, changeset, roadmap + projection, the budgets manifest and the unit's journal fragments (enumeration in § E9, corrected in § E11; G1's `secret-scan` range) | pass |
   | AC2 (S2) | the wiring suite's two title cases | E3 (5 pass / 0 fail); E1 is their red counterpart | pass |
   | AC3 (S3) | `bunx tsc --noEmit` in the package; the spec seam's shape | `tsc` clean in E6 and G1's `pi-compat-guard`; `WorkflowToolSpec.execute(params, cwd)` unchanged, the translation is `hostTool` | pass |
   | AC4 (S4) | the sensor's refusal case + the call-site count | E4 (`cwd-unresolved: "…" is not a readable directory`; `rg -c` = 1, the header comment) | pass |
