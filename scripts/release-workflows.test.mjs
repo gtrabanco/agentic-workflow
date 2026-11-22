@@ -124,6 +124,28 @@ test("cut + canary installs the workspace, gates the commit, stages and restores
   assert.match(block, /gh release create "v\$V"[^\n]*--prerelease/, "the channel cut is visible as a GitHub pre-release");
 });
 
+// Issue #679: a canary tag must carry the pin the cut publishes. The stage
+// writes the pin into the worktree and the restore used to throw it away while
+// the tag was recorded at HEAD, so `npx skills add …#v<tag>` installed skills
+// whose cited services could be younger than the stable pin. The tag now names
+// the staged tree, captured before the restore.
+test("cut + canary records the tag on the staged tree and restores the staged pin", () => {
+  const block = jobBlock(read(PUBLISH), "cut-prerelease");
+  const stage = block.indexOf("publish-stage --channel");
+  const snapshot = block.indexOf("canary-tag.mjs snapshot");
+  const restore = block.indexOf("git checkout --");
+  const record = block.indexOf("canary-tag.mjs record");
+  const push = block.indexOf('git push origin "v$V"');
+  assert.ok(stage !== -1 && snapshot !== -1 && restore !== -1 && record !== -1 && push !== -1, "the five steps exist");
+  assert.ok(stage < snapshot, "the snapshot reads the staged pin");
+  assert.ok(snapshot < restore, "the staged tree is captured before the worktree is restored");
+  assert.ok(restore < record, "the tag is recorded after the restore, from the captured commit");
+  assert.ok(record < push, "the recorded tag is what is pushed");
+  assert.match(block, /RELEASE_COMMIT=\$\(bun scripts\/canary-tag\.mjs snapshot\)/, "the snapshot's commit is carried to the tag step");
+  assert.match(block, /canary-tag\.mjs record --tag "v\$V" --commit "\$RELEASE_COMMIT"/, "the tag records the staged tree");
+  assert.match(block, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the staged pin is restored with the manifests");
+});
+
 test("cut + canary accepts the version input as the canary base (a variable, never a literal)", () => {
   const text = read(PUBLISH);
   const block = jobBlock(text, "cut-prerelease");
