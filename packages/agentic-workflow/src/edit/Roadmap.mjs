@@ -12,8 +12,10 @@
  * **CAS**: `expected` (the `revision` a `readShared` answered) refuses with a
  * named `stale-read` rejection instead of last-write-wins. Receipts keep
  * their published shape (`service/op/path/schema/before/after/ok`, 8-char
- * hashes); `fixRowUpsert` adds the missing writer for the `## Fixes` table
- * (4 columns, keyed by the issue link's number).
+ * hashes); `fixRowUpsert` adds the missing writer for the `## Fixes` table, and
+ * derives that table's own shape — its header words, its column count and the
+ * column carrying the issue key — instead of matching one literal header, so a
+ * project whose row shape differs is written, never asked to hand-edit its row.
  */
 
 import { readFileSync } from "node:fs";
@@ -362,61 +364,157 @@ export function annotate(table, nn, note, { expected } = {}) {
   );
 }
 
-/** The Fixes-table row key: the issue number inside the leading `[#N](url)`
- * link cell (a bare `| N |` first cell is accepted for link-less rows). */
-function fixRowKey(line) {
-  const linked = /^\|\s*\[#(\d+)\]/.exec(line);
+/** Header words that name the Fixes table's issue-keyed cell. */
+const FIX_ISSUE_HEADERS = Object.freeze(["issue", "issues", "#"]);
+
+/** Header word → the writer argument whose value that column carries. */
+const FIX_COLUMN_VALUES = Object.freeze({
+  topic: "topic",
+  summary: "topic",
+  title: "topic",
+  status: "status",
+  notes: "notes",
+  note: "notes",
+});
+
+/** A header cell as compared: emphasis and backticks dropped, case folded. */
+function headerWord(cell) {
+  return cell.replace(/[`*_]/g, "").trim().toLowerCase();
+}
+
+/** A row's cells between its outer pipes: `| a | b |` answers ["a", "b"]. */
+function rowCells(line) {
+  return line.split("|").slice(1, -1).map((cell) => cell.trim());
+}
+
+/** The issue number a Fixes cell keys: `[#N](url)` inside it, or the bare number. */
+function issueKeyInCell(cell) {
+  const linked = /\[#(\d+)\]/.exec(cell);
   if (linked) return linked[1];
-  const bare = /^\|\s*(\d+)\s*\|/.exec(line);
+  const bare = /^(\d+)$/.exec(cell.trim());
   return bare ? bare[1] : null;
 }
 
-/** The splice declaration for `fixRowUpsert`: scope the `## Fixes` table, key
- * the row by issue number, declare one range. */
-function fixRowUpsertEdits(content, { issue, url, topic, status, notes }) {
+/** The refusal every reader of the shape answers with. */
+function shapeRefusal(detail) {
+  return { ok: false, reason: "invalid-document", detail };
+}
+
+/**
+ * Resolve a document's `## Fixes` table: its header cells (column count and
+ * words), the column that carries the issue key, and the separator that opens
+ * the rows. Every constraint a shape can miss is a refusal that names it — a
+ * table that exists is never reported as missing (issue #684 extension, S4).
+ */
+function fixTableShape(content) {
   const { lines, offsets, total } = lineOffsets(content);
   const fixesIdx = lines.findIndex((l) => l.trim() === `## ${ROADMAP_FIXES_HEADING}`);
   if (fixesIdx === -1) {
-    return { ok: false, reason: "invalid-document", detail: `Roadmap Fixes table not found (expected '## ${ROADMAP_FIXES_HEADING}')` };
+    return shapeRefusal(`Roadmap Fixes table not found (expected '## ${ROADMAP_FIXES_HEADING}')`);
   }
-  const headerIdx = lines.findIndex((l, i) => i > fixesIdx && /^\|\s*Issue\s*\|/.test(l.trim()));
-  if (headerIdx === -1 || headerIdx < fixesIdx) {
-    return { ok: false, reason: "invalid-document", detail: `Roadmap Fixes table not found (expected an | Issue | table under '## ${ROADMAP_FIXES_HEADING}')` };
+  // The section ends at the next `#`/`##` heading: a `###` legend inside it is
+  // prose about the table, not the end of the table (this repository's own
+  // roadmap carries one between `## Fixes` and the header).
+  const nextHeading = lines.findIndex((l, i) => i > fixesIdx && /^#{1,2}\s/.test(l));
+  const end = nextHeading === -1 ? lines.length : nextHeading;
+  const headerIdx = lines.findIndex((l, i) => i > fixesIdx && i < end && /^\s*\|/.test(l));
+  if (headerIdx === -1) {
+    return shapeRefusal(`Roadmap Fixes section carries no table header (expected a header row under '## ${ROADMAP_FIXES_HEADING}')`);
   }
-  const sepIdx = lines.findIndex((l, i) => i > headerIdx && isSeparatorLine(l));
+  if (isSeparatorLine(lines[headerIdx])) {
+    return shapeRefusal(`Roadmap Fixes table header missing above its separator (expected a header row under '## ${ROADMAP_FIXES_HEADING}')`);
+  }
+  const columns = rowCells(lines[headerIdx]);
+  const keyColumns = columns
+    .map((cell, i) => (FIX_ISSUE_HEADERS.includes(headerWord(cell)) ? i : -1))
+    .filter((i) => i !== -1);
+  if (keyColumns.length === 0) {
+    return shapeRefusal(
+      `Roadmap Fixes table has no issue-keyed column (header: ${columns.map((cell) => `'${cell}'`).join(" | ")}; expected one cell named 'Issue' or '#')`,
+    );
+  }
+  if (keyColumns.length > 1) {
+    return shapeRefusal(`Roadmap Fixes table has ${keyColumns.length} issue-keyed columns (expected exactly one)`);
+  }
+  const sepIdx = lines.findIndex((l, i) => i > headerIdx && i < end && isSeparatorLine(l));
   if (sepIdx === -1) {
-    return { ok: false, reason: "invalid-document", detail: "Roadmap Fixes table separator not found (expected line with |---|)" };
+    return shapeRefusal("Roadmap Fixes table separator not found (expected line with |---|)");
   }
+  const separatorCells = rowCells(lines[sepIdx]).length;
+  if (separatorCells !== columns.length) {
+    return shapeRefusal(
+      `Roadmap Fixes table separator has ${separatorCells} cells, its header has ${columns.length} (expected one cell per column)`,
+    );
+  }
+  return { ok: true, lines, offsets, total, end, sepIdx, columns, keyColumn: keyColumns[0] };
+}
 
-  const newRow = `| [#${issue}](${url || ""}) | ${topic || ""} | ${status || ""} | ${notes || ""} |`;
-  for (let i = sepIdx + 1; i < lines.length && lines[i].startsWith("|"); i += 1) {
-    if (fixRowKey(lines[i]) === String(issue)) {
-      return { ok: true, edits: [{ start: offsets[i], end: offsets[i] + lines[i].length, replacement: newRow }] };
+/**
+ * The splice declaration for `fixRowUpsert`: resolve the table's shape, key the
+ * row by the issue number in its issue-keyed column, declare one range. The
+ * replacement carries the table's column count: the columns the writer knows are
+ * rewritten from its arguments, the columns it does not know keep the row's own
+ * cells (or stay empty on an insert) — a value the writer was never given is
+ * never invented.
+ */
+function fixRowUpsertEdits(content, { issue, url, topic, status, notes }) {
+  const shape = fixTableShape(content);
+  if (!shape.ok) return shape;
+  const { lines, offsets, total, end, sepIdx, columns, keyColumn } = shape;
+  const values = { topic, status, notes };
+  const issueCell = url ? `[#${issue}](${url})` : String(issue);
+  const rowLine = (existing) =>
+    `| ${columns
+      .map((cell, i) => {
+        if (i === keyColumn) return issueCell;
+        const bound = FIX_COLUMN_VALUES[headerWord(cell)];
+        return bound === undefined ? existing[i] ?? "" : values[bound] ?? "";
+      })
+      .join(" | ")} |`;
+
+  for (let i = sepIdx + 1; i < end && /^\s*\|/.test(lines[i]); i += 1) {
+    const cells = rowCells(lines[i]);
+    if (issueKeyInCell(cells[keyColumn] ?? "") === String(issue)) {
+      return { ok: true, edits: [{ start: offsets[i], end: offsets[i] + lines[i].length, replacement: rowLine(cells) }] };
     }
   }
-  return { ok: true, edits: [insertAfterLineEdit(lines, offsets, total, sepIdx, newRow)] };
+  return { ok: true, edits: [insertAfterLineEdit(lines, offsets, total, sepIdx, rowLine([]))] };
 }
 
 /**
  * fixRowUpsert(table, { issue, url, topic, status, notes, expected }) — the
  * writer for the `## Fixes` table (issue #498: the rows RELEASE.md said were
  * edited by hand because "no `NN` column, so `rowUpsert` does not apply"). The
- * row is keyed by the issue number in the leading `[#N](url)` cell; the link
- * is passed in explicitly — the writer never invents issue links. Upserts:
- * an existing row is updated in place, a new one inserts after the table's
- * separator. The write is a one-line splice; `expected` closes the CAS loop.
+ * table's own shape decides everything the old literal header decided: the issue
+ * key may sit in any column (a header word `Issue`, `Issues` or `#`), the row is
+ * keyed by the issue number in that column's `[#N](url)` or bare numeric cell,
+ * and the spliced row carries the table's column count. The link is passed in
+ * explicitly — the writer never invents issue links, and an absent `url` leaves
+ * the bare number. Upserts: an existing row is updated in place, a new one
+ * inserts after the table's separator. The write is a one-line splice;
+ * `expected` closes the CAS loop.
  *
- * Returns a receipt. Throws a WriterError when the `## Fixes` table is absent
- * or malformed.
+ * Returns a receipt. Throws a WriterError naming the exact constraint a missing
+ * or malformed `## Fixes` table failed.
  */
 export function fixRowUpsert(table, { issue, url, topic, status, notes, expected }) {
   const result = writeShared({ path: table, expected, apply: (content) => fixRowUpsertEdits(content, { issue, url, topic, status, notes }) });
   if (!result.ok) throwRefusal(result);
 
-  const content = readFileSync(table, "utf8");
-  const dataLine = content.split("\n").find((l) => fixRowKey(l) === String(issue) && l.includes(`[#${issue}]`));
-  const pipeCount = dataLine ? (dataLine.match(/\|/g) || []).length : 0;
-  const ok = pipeCount >= 5;
+  // The post-state is judged by the same shape rule that wrote it: the row is
+  // there, keyed by the issue in the table's own key column, and carries as many
+  // cells as the table has columns. A fixed pipe count would misjudge a bare key
+  // and any table that is not four columns wide (issue #684 extension).
+  const written = fixTableShape(readFileSync(table, "utf8"));
+  let ok = false;
+  if (written.ok) {
+    for (let i = written.sepIdx + 1; i < written.end && /^\s*\|/.test(written.lines[i]); i += 1) {
+      const cells = rowCells(written.lines[i]);
+      if (issueKeyInCell(cells[written.keyColumn] ?? "") !== String(issue)) continue;
+      ok = cells.length === written.columns.length;
+      break;
+    }
+  }
 
   return makeReceipt(
     "roadmap",
