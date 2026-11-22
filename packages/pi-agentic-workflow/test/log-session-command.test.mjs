@@ -13,7 +13,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync, readdirSync, symlinkSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -118,8 +118,7 @@ function skillsTree(names = ["log-session", "review-code"]) {
 }
 
 /** A throwaway git project; `writer` copies this repository's own script in. */
-function project({ journal = false, carrier = false, writer = false } = {}) {
-  const root = mkdtempSync(join(tmpdir(), "log-session-command-"));
+function project({ journal = false, carrier = false, writer = false } = {}) {  const root = mkdtempSync(join(tmpdir(), "log-session-command-"));
   const git = (args) => execFileSync("git", ["-c", "user.name=suite", "-c", "user.email=suite@example.test", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
   git(["init", "-q", "-b", "test-branch"]);
   mkdirSync(join(root, "docs"), { recursive: true });
@@ -135,6 +134,12 @@ function project({ journal = false, carrier = false, writer = false } = {}) {
       mkdirSync(join(root, dirname(rel)), { recursive: true });
       writeFileSync(join(root, rel), readFileSync(resolve(PKG_DIR, "..", "..", rel), "utf8"));
     }
+    // The writer's block owner publishes the errata marker's vocabulary from the
+    // schema package (issue #676), and the shipped install resolves that package
+    // from `node_modules` — so does the fixture, or the copy is not runnable.
+    const scope = join(root, "node_modules", "@gtrabanco");
+    mkdirSync(scope, { recursive: true });
+    symlinkSync(resolve(PKG_DIR, "..", "agentic-workflow-schema"), join(scope, "agentic-workflow-schema"), "dir");
   }
   writeFileSync(join(root, "seed.txt"), "seed\n");
   git(["add", "."]);

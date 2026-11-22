@@ -4233,6 +4233,7 @@ export {
   JOURNAL_ENTRY_CONTRACT_ID,
   JOURNAL_ENTRY_VERSION,
   JOURNAL_ENTRY_KINDS,
+  JOURNAL_ERRATA_MARKERS,
   validateJournalEntry,
 } from "./journal.js";
 export type {
@@ -4240,6 +4241,7 @@ export type {
   JournalEntryCommits,
   JournalEntry,
   JournalEntryResult,
+  JournalErrataMarker,
 } from "./journal.js";
 export {
   BATCH_PLAN_CONTRACT_ID,

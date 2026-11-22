@@ -29,6 +29,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { renderEntry } from "../log/render.mjs";
+import { errataLinks } from "./block.mjs";
 
 /** The fragment root, relative to the project root — the owner decision of 2026-11-05. */
 export const JOURNAL_DIR = ".agentic-workflow/journal";
@@ -163,8 +164,13 @@ function checkedContent(content) {
     case "heading":
       throw new FragmentError("fragment content must be one entry block starting with '## '");
     default:
-      return content;
+      break;
   }
+  const links = errataLinks(content);
+  if (links.length > 1) {
+    throw new FragmentError(`fragment content declares ${links.length} correction cells — one entry corrects at most one fragment`);
+  }
+  return content;
 }
 
 /** The read-side wording of one content fault, carrying the fragment's name. */
@@ -223,7 +229,12 @@ export function fragmentFault(name, content, options = {}) {
   if (parsed === null) return { ok: false, reason: `unparseable fragment name "${name}" — a fragment's name is its identity` };
   const fault = contentFault(content);
   if (fault !== null) return { ok: false, reason: contentFaultReason(name, fault) };
-  if (options.identity === false) return { ok: true, parsed };
+  // The errata link (issue #676): at most one, because the slot's chain is read
+  // from it and an entry naming two predecessors has no chain to read.
+  const links = errataLinks(content);
+  if (links.length > 1) return { ok: false, reason: `fragment "${name}" declares ${links.length} correction cells — one entry corrects at most one fragment` };
+  const supersedes = links[0] ?? null;
+  if (options.identity === false) return { ok: true, parsed, supersedes };
   try {
     checkedIdentity(content, parsed);
   } catch (error) {
@@ -232,7 +243,7 @@ export function fragmentFault(name, content, options = {}) {
     if (error instanceof FragmentError) return { ok: false, reason: `fragment "${name}": ${error.message}` };
     throw error;
   }
-  return { ok: true, parsed };
+  return { ok: true, parsed, supersedes };
 }
 
 /** `fragmentFault` as a thrower: a caller that must refuse uses one call, not a branch. */

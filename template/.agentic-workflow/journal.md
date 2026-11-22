@@ -157,7 +157,12 @@ name` stays the read-only answer for a caller that wants to inspect the name.
 One entry per conversation per kind: a second entry of the same kind from
 one session is refused (`already registered`, exit 2) — the auto-log's
 mechanical entry and this skill's narrative one are the same conversation's
-two kinds and both land. An existing target is refused, never overwritten;
+two kinds and both land. A **stale** entry is corrected, never edited or
+deleted: re-run the writer with `--supersedes <the fragment it corrects>` and
+it lands the correction as a new fragment whose block names the one it
+corrects (`journal-fragment-grammar@1`'s `errata` row) — the lint accepts the
+two as one entry plus its correction and the aggregator lands the correction
+once. An existing target is refused, never overwritten;
 the narrative rules (append-only, git-facts, refusal) hold at fragment level.
 
 ## Where this slots into the pluggable journal contract

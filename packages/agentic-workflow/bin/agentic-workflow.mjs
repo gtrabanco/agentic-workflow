@@ -18,7 +18,7 @@
  *   agentic-workflow memory probe [--json]
  *   agentic-workflow log render --facts <path|-> [--raw]
  *   agentic-workflow journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--check] [--json]
- *   agentic-workflow journal write --kind <mechanical|narrative> [fields] [--session <id>]
+ *   agentic-workflow journal write --kind <mechanical|narrative> [fields] [--session <id>] [--supersedes <fragment>]
  *   agentic-workflow journal headless --workflow <w> --run-id <id> --actor <a> (--summary <t> | --block <path|->) [fields]
  *   agentic-workflow journal name --kind <mechanical|narrative> [--dir <root>] [--branch <b>] [--session <id>]
  *   agentic-workflow relay <check|budget|tiers|obligations|closeout> <unit> [--repo <dir>] [--packet <dir>]
@@ -1406,6 +1406,7 @@ switch (command) {
           content,
           facts,
           base: flags.base,
+          supersedes: flags.supersedes,
           journalDir: flags["journal-dir"],
         });
       } catch (error) {

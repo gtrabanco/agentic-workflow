@@ -30,6 +30,19 @@ export const JOURNAL_ENTRY_VERSION = 1;
 export const JOURNAL_ENTRY_KINDS = ["mechanical", "narrative"] as const;
 export type JournalEntryKind = (typeof JOURNAL_ENTRY_KINDS)[number];
 
+/**
+ * The errata marker vocabulary (issue #676): the entry block's correction cell.
+ *
+ * A stale journal entry is corrected, never rewritten, so the correcting entry
+ * carries one cell naming the fragment it corrects — and the carrier lint reads
+ * that declared link instead of guessing from bytes. Closed on purpose: a
+ * correction is declared by exactly these markers, spelled this way, so one
+ * reader (`src/journal/block.mjs`) serves the writer, the lint and the
+ * aggregator without a second spelling anywhere.
+ */
+export const JOURNAL_ERRATA_MARKERS = ["Supersedes"] as const;
+export type JournalErrataMarker = (typeof JOURNAL_ERRATA_MARKERS)[number];
+
 /** UTC minute (`YYYY-MM-DDTHH:MMZ`, the mechanical form) or second (`…:SSZ`, the narrative form). */
 const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$/u;
 
