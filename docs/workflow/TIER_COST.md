@@ -168,3 +168,6 @@ trailing prose would land outside it.
 
 | unit | phase | version | model | changed_paths | tokens | turns | input_tokens | output_tokens | cache_read_tokens | cache_write_tokens | reasoning_tokens | model_ms | tool_ms | observed | source |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| null | null | null | qwen3.6 | 0 | 14807559 | 95 | 2059966 | 39593 | 12708000 | 0 | 13597 | 1119486 | 0 | 2026-11-20 | pi:reconstruct=01a1f83e-3635-7286-a21a-2bd682cd5a94 |
+| null | null | null | qwen3.6 | 0 | 8467946 | 83 | 2785633 | 29401 | 5652912 | 0 | 10392 | 839016 | 0 | 2026-11-21 | pi:reconstruct=01a1fef7-d2b1-7521-b641-36d733bbf88a |
+| null | null | null | qwen3.6 | 0 | 523797 | 9 | 142763 | 1658 | 379376 | 0 | 0 | 30138 | 0 | 2026-11-22 | pi:reconstruct=01a204d0-6010-738d-aa16-947293bd9f0f |
