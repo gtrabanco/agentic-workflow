@@ -248,7 +248,7 @@ none
 - [x] P9 — The compatibility differential: the repository's own four-column table and every untouched caller answer byte-identically, and the ceremony's two arms stay green (validator: `bun test packages/agentic-workflow/test/edit.test.mjs` and `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exit 0)
   (Implements: S9, S12)
   - Relevant files: packages/agentic-workflow/test/edit.test.mjs, packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs, docs/ROADMAP.md
-- [ ] P10 — Documentation and state: the release intent, the unit doc's evidence and log, the roadmap summary through the emitter, the session journal, and the repository gate (validator: `bun scripts/run-root-suite.mjs` exits 0)
+- [x] P10 — Documentation and state: the release intent, the unit doc's evidence and log, the roadmap summary through the emitter, the session journal, and the repository gate (validator: `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S5, S6, S7, S8, S9, S10, S11, S12)
   - Relevant files: .changeset/684-ceremony-roadmap-upsert.md, docs/ROADMAP.md, docs/generated/units.md, docs/LOGS.md, docs/fix/684-ceremony-roadmap-upsert/SPEC.md
 
@@ -635,16 +635,31 @@ Budget: strong
   `fix/684-ceremony-roadmap-upsert` on top of PR #686's verified state (owner
   order `S9`), as its own commits — ledgers, RED corpus, fix — rather than a
   second unit or a second pull request.
+- **G5** — 2026-11-22, HEAD cbfff034a597ea5e657c3e86c109de1ab7e45cd8 ·
+  `bun scripts/run-root-suite.mjs` → exit 0 · `137 suite(s)`, `137 PASS`,
+  `0 FAIL` · `bun scripts/local-gate.mjs --skip-network --jobs 2` → exit 0 ·
+  `PASS — 16 step(s) in 661s`, the node leg alone `1040 pass / 0 fail /
+  1 skipped` · `agentic-workflow verify <SPEC>` → `ok: true`,
+  `violations: []` · `roadmap check <SPEC>` → `PASS`, `violations: 0` ·
+  `promise-coherence <SPEC>` → `PASS`, `4 checked · 24 skipped` (the skipped
+  ones are the suite runners and the scratch `diff`, which that reader never
+  executes) · `phase-lint <SPEC>` → `PASS`, `6/6` on every phase, `P10`
+  included. The working tree carried this receipt's own uncommitted prose.
 
 ## Next
 
 PR [#686](https://github.com/gtrabanco/agentic-workflow/pull/686) is open with
-`Closes #684`, and the `## Fixes` row reads the settle form that URL implies
-(`E11`). The owner's external verify of the diff — `12c8c2add` (the fix),
-`fe1eaaa61` (the RED case), this unit doc — is the remaining step, and any
-correction comes from that verdict, never from this session. Two things are
+`Closes #684` and now also carries the owner-ordered extension
+(`S5`–`S12`): the ledgers extended at the cut, the RED corpus at `80724abbb`,
+the shape layer at `1b709afa8`, and the state, evidence and gate receipts after
+them. The owner's external verify of the extension's diff is the remaining
+step — any correction comes from that verdict, never from this session
+(`## Log` `G5` is the gate's own receipt, not a verdict). Two things stay
 reported, not fixed: the raft of sibling defects in the same module
 (`## Non-goals`, `E4`) and the load-induced `doc.structure` suite timeout (`G2`).
+
+The `## Fixes` row still reads `done · [#686]` (`E11`): the extension lands in
+the same PR, so the settle form does not change.
 
 ## References
 
