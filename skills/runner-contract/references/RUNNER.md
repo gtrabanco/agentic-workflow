@@ -17,7 +17,7 @@ append its arguments. The pin is stamped at release time by this repository's re
 runner-pin@1
 # channel: stable
 field | value
-invocation | bunx @gtrabanco/agentic-workflow@4.10.0 <subcommand> [args...]
+invocation | bunx @gtrabanco/agentic-workflow@5.0.0-canary.20261122.1 <subcommand> [args...]
 ```
 
 ```text
