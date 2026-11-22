@@ -234,7 +234,7 @@ none
 - [x] P4 — Documentation and state: the README's telemetry section names both attribution doors and the degraded report, the changeset, the roadmap row through its writer, the generated projection and the journal entry (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3)
   - Relevant files: packages/pi-agentic-workflow/README.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/690-telemetry-attribution.md, docs/ROADMAP.md, docs/generated/units.md, docs/LOGS.md
-- [ ] P5 — Verification: the package suite, the root suite and the declared gates in the foreground (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0)
+- [x] P5 — Verification: the package suite, the root suite and the declared gates in the foreground (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0)
   (Implements: S1, S2, S3)
   - Relevant files: docs/fix/690-telemetry-attr/SPEC.md
 
