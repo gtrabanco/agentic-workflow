@@ -165,6 +165,15 @@ none
 - P5 — Verification: the repository gate and the differential baseline (validator: `node scripts/run-root-suite.mjs` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3, S4, S5)
   - Relevant files: docs/fix/680-relay-closeout-receipt-orphan/SPEC.md
+- P6 — The correction RED cases from the 2026-11-22 `EXTERNAL VERIFY` reproducers: the mode-count case (CO13) and the url-less current-receipt case (CO14) in the packet suite (validator: `bun test scripts/relay-packet.test.mjs` exits non-zero on the missing behaviour, observed before P7)
+  (Implements: S2, S5)
+  - Relevant files: scripts/relay-packet.test.mjs
+- P7 — The correction fixes: the three stale mode-count mentions, `closeout`'s single-condition precondition/route, and `RELAY.md`'s published `Review:` values (validator: `bun test scripts/relay-packet.test.mjs` exits 0, 46 cases)
+  (Implements: S2, S5)
+  - Relevant files: packages/agentic-workflow/src/relay/Packet.mjs, packages/agentic-workflow/src/promise-coherence/index.mjs, skills/unit-lane/references/RELAY.md
+- P8 — The receipt-text corrections: AC-S2's url clause, AC-S5/PE-003's mirror claim, E8's recorded refusal, and the obligation rows the batch adds or amends (validator: `rg -c 'attempted <n> — <result>' skills/unit-lane/references/RELAY.md` matches 1 and `bun scripts/check-skill-context.mjs` exits 0)
+  (Implements: S2, S3, S5)
+  - Relevant files: docs/fix/680-relay-closeout-receipt-orphan/SPEC.md, docs/fix/680-relay-closeout-receipt-orphan/planning-evidence.md, docs/fix/680-relay-closeout-receipt-orphan/planning-obligations.md
 
 ```text
 task-spec-link@1
@@ -189,9 +198,13 @@ The ledger is `planning-obligations.md` in this folder (M unit).
   `bun test scripts/relay-packet.test.mjs` exits 0.
 - **AC-S2** — `relay closeout <unit>` prints the ladder's verdict and, when the
   receipt is absent or stale, exactly one `→ Next: /review-change <NN-slug>`
-  line and no `/audit-pr`; when the receipt is current, exactly one
-  `→ Next: /audit-pr <PR-url>` line. Proved by: the `CO` close-out cases in
-  `bun test scripts/relay-packet.test.mjs` exits 0.
+  line and no `/audit-pr`; when the receipt is current **and its `Review:` line
+  records the PR url**, exactly one `→ Next: /audit-pr <PR-url>` line — a current
+  receipt that records no url states `precondition: none — the Review line
+  records no PR url` and routes to `/review-change` (amended 2026-11-22 by the
+  `EXTERNAL VERIFY` B4 correction: the original clause was unsatisfiable for a
+  url-less receipt, which has no url to print). Proved by: the `CO` close-out
+  cases (CO7, CO14) in `bun test scripts/relay-packet.test.mjs` exits 0.
 - **AC-S3** — `RELAY.md` names the coherence verdict as evidence and the receipt
   as the receipt, states that a `REVIEW-VERDICT: PASS` never satisfies the
   receipt check, and gives `relay closeout` as the leg's own close-out command;
@@ -206,8 +219,13 @@ The ledger is `planning-obligations.md` in this folder (M unit).
   clears the fault. Proved by: the `CO` refusal cases in
   `bun test scripts/relay-packet.test.mjs` exits 0.
 - **AC-S5** — The close-out shape is published as a machine grammar on the relay
-  contract (`block:relay-closeout@1`) and its tokens resolve against the same
-  receipt grammar the runtime imports. Proved by: the `relay-closeout@1` parse
+  contract (`block:relay-closeout@1`) and its tokens mirror the receipt states
+  `receiptStatus` publishes (`current`/`stale`/`absent`, owner
+  `packages/agentic-workflow/src/review-receipt/index.mjs`), with `not-current`
+  for a line that records no receipt — mirrored by name, never re-implemented as
+  a second marker regex (corrected 2026-11-22 by the `EXTERNAL VERIFY` A2 finding:
+  the original wording claimed an import the relay path never makes; it reads
+  the baton, not the forge). Proved by: the `relay-closeout@1` parse
   case in `bun test scripts/relay-packet.test.mjs` exits 0 and
   `bun scripts/check-skill-context.mjs` exits 0.
 
@@ -246,7 +264,7 @@ Budget: strong
 - **E5** — 2026-11-21, `bun test scripts/relay-route.test.mjs` · exit 0 · 13 pass / 0 fail.
 - **E6** — 2026-11-21, `bun scripts/skill-lint.mjs` · exit 0 · 0 findings; `bun scripts/check-skill-context.mjs` · exit 0 · PASS 30 skills.
 - **E7** — 2026-11-21, `rg -U -c 'REVIEW-VERDICT: PASS` never satisfies' skills/unit-lane/references/RELAY.md` · exit 0 · 1.
-- **E8** — 2026-11-21, `bun packages/agentic-workflow/bin/agentic-workflow.mjs relay closeout --help` · exit 2 (the unit token is required; `--help` is not a relay flag).
+- **E8** — 2026-11-21, `bun packages/agentic-workflow/bin/agentic-workflow.mjs relay closeout --help` · exit 2 (`RELAY REFUSAL — unknown flag: --help`; corrected 2026-11-22 by the `EXTERNAL VERIFY` A1 finding — the original parenthetical misattributed the refusal to the missing unit token).
 - **E9** — 2026-11-21, `bun test scripts/normative-drift.test.mjs` · exit 0 · 24 pass / 0 fail.
 - **E10** — 2026-11-21, the frozen reproducer of the issue: a `Complete` baton whose packet names no receipt at the cut head printed `verdict: PASS` / exit 0; against the change it prints `verdict: FAIL` / exit 1 with `a Complete verdict needs the receipt boundary`.
 - **E11** — 2026-11-21, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 checked, 0 stale.
