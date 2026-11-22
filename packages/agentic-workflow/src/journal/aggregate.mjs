@@ -23,7 +23,7 @@
  *    append and the delete re-runs as a no-op instead of duplicating an entry.
  *  - **One entry per conversation per kind.** The entry slot is
  *    `(sessionId, kind)`, never the bytes (issue #675). The lint refuses a slot
- *    holding more than one conforming fragment, naming every file; the
+ *    that is not one entry plus its declared corrections, naming every file; the
  *    aggregator keeps the newest of the set and records the fragments it
  *    superseded in its receipt, so a duplicate can neither pass the carrier
  *    nor append twice. The shared `local` slug names no conversation
@@ -121,10 +121,22 @@ function identityFaults(fragments) {
   }
   const refusals = [];
   for (const group of slots.values()) {
-    if (group.length < 2) continue;
     const ordered = [...group].sort(newestFirst);
     const names = ordered.map((fragment) => fragment.name).sort();
     const identity = { sessionId: ordered[0].sessionId, kind: ordered[0].kind, names };
+    // A lone fragment chains against nothing: the oldest names nothing, so a
+    // lone declared link dangles or points outside the slot (D2/D7).
+    if (group.length < 2) {
+      const only = ordered[0];
+      if (only.supersedes !== null) {
+        refusals.push({
+          name: names[0],
+          names,
+          reason: chainReason({ identity, fragment: only.name, declared: only.supersedes, expected: null }),
+        });
+      }
+      continue;
+    }
     for (const [index, fragment] of ordered.entries()) {
       const expected = index + 1 < ordered.length ? ordered[index + 1].name : null;
       if (fragment.supersedes === expected) continue;

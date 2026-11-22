@@ -243,7 +243,7 @@ export function writeJournal(options) {
   } else if (slot.some((entry) => entry.name !== name)) {
     const head = slot.find((entry) => entry.name !== name);
     throw new JournalWriteError(
-      `already registered: ${carrier}/${head.name} already carries session ${JSON.stringify(sessionSlug)}'s ${kind} entry — one entry per conversation per kind; a second ${kind} entry for this conversation is a duplicate. To correct a stale entry, re-run with --supersedes ${head.name} — the writer marks the correction and the aggregator lands the newest, never a rewrite of the stale bytes`,
+      `already registered: ${carrier}/${head.name} already carries session ${JSON.stringify(sessionSlug)}'s ${kind} entry — one entry per conversation per kind; a second ${kind} entry for this conversation is a duplicate, and another --session id is a different conversation. To correct a stale entry, re-run with --supersedes ${head.name} — the writer marks the correction and the aggregator lands the newest, never a rewrite of the stale bytes`,
     );
   }
 
@@ -275,6 +275,14 @@ export function writeJournal(options) {
       const declared = supersedesOf(content);
       throw new JournalWriteError(
         `--supersedes ${JSON.stringify(correction)} but the block declares ${declared === null ? "no correction" : JSON.stringify(declared)} — the flag and the bytes must agree`,
+      );
+    }
+    // The flag is the only producer of a correction link (D1/D7): a supplied
+    // block that declares one without it would land a link none of the flag's
+    // rules — slot head, newer second, same conversation — ever checked.
+    if (correction === undefined && supersedesOf(content) !== null) {
+      throw new JournalWriteError(
+        `the block declares Supersedes "${supersedesOf(content)}" but --supersedes was not given — a correction link is produced by --supersedes only, which validates the target`,
       );
     }
   } else if (options?.facts === undefined || options?.facts === null || typeof options.facts !== "object") {
