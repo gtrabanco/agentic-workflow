@@ -586,6 +586,137 @@ test("checkJournal keeps non-colliding carriers green", () => {
   assert.equal(checkJournal({ root: twoSessions }).ok, true);
 });
 
+// ── The sanctioned errata chain (issue #676) ───────────────────────────────
+//
+// A stale entry is corrected by a NEW fragment that declares the one it
+// corrects, never by editing the stale bytes. The lint reads a slot as one
+// entry plus its corrections: newest first, every fragment but the oldest
+// declares the one immediately older than it in its `Supersedes` cell, and the
+// oldest (the entry being corrected) declares nothing. Anything else is still
+// the duplicate #675 refuses, naming every file.
+
+/** A stale narrative entry and the correction that declares it. */
+function errataPair(repo, { at = NOW, branch = "feat/x", sessionId = "s1" } = {}) {
+  const stale = narrative(repo, { branch, sessionId, at, label: "the stale entry" });
+  const correction = writeFragment({
+    root: repo,
+    kind: "narrative",
+    branch,
+    sessionId,
+    now: () => at + 1000,
+    content: `## ${isoSecond(at + 1000)} — ${branch} — the corrected entry\n- **Summary:** the corrected entry\n- **Supersedes:** ${stale.name}\n`,
+  });
+  return { stale, correction };
+}
+
+test("checkJournal accepts a slot that is one entry plus its declared correction", () => {
+  const repo = newRepo("errata-chain");
+  const { stale, correction } = errataPair(repo);
+  const before = carrierBytes(repo);
+
+  const receipt = checkJournal({ root: repo });
+  assert.deepEqual(receipt.refusals, [], "an entry and the correction that declares it are one slot");
+  assert.equal(receipt.ok, true);
+  assert.equal(receipt.checked, 2);
+  assert.deepEqual(carrierBytes(repo), before, "the lint is a reporter: no fragment moved");
+  assert.ok([stale.name, correction.name].every((name) => before.some(([held]) => held === name)));
+});
+
+test("checkJournal refuses a slot whose correction names the wrong predecessor", () => {
+  const repo = newRepo("errata-wrong-predecessor");
+  const { stale } = errataPair(repo);
+  const middle = writeFragment({
+    root: repo,
+    kind: "narrative",
+    branch: "feat/x",
+    sessionId: "s1",
+    now: () => NOW + 2000,
+    content: `## ${isoSecond(NOW + 2000)} — feat/x — the middle correction\n- **Summary:** second\n- **Supersedes:** ${stale.name}\n`,
+  });
+  // The newest correction declares the oldest fragment, skipping the one the
+  // chain requires: the slot is no longer one entry plus its corrections.
+  const newest = writeFragment({
+    root: repo,
+    kind: "narrative",
+    branch: "feat/x",
+    sessionId: "s1",
+    now: () => NOW + 3000,
+    content: `## ${isoSecond(NOW + 3000)} — feat/x — a correction that skips one\n- **Summary:** third\n- **Supersedes:** ${stale.name}\n`,
+  });
+
+  const receipt = checkJournal({ root: repo });
+  assert.equal(receipt.ok, false);
+  assert.equal(receipt.refusals.length, 1, "one refusal per broken slot");
+  const reason = receipt.refusals[0].reason;
+  for (const name of [stale.name, middle.name, newest.name]) assert.match(reason, new RegExp(literal(name)), `the refusal names ${name}`);
+  assert.match(reason, /one entry per conversation per kind/u);
+  assert.match(reason, /immediately older/u, "the refusal states the chain rule it broke");
+});
+
+test("checkJournal refuses a fragment that declares two corrections", () => {
+  const repo = newRepo("errata-two-cells");
+  const stale = narrative(repo, { branch: "feat/x", sessionId: "s1", at: NOW, label: "first" });
+  const other = narrative(repo, { branch: "feat/x", sessionId: "s2", at: NOW, label: "second conversation" });
+  carrier(repo, [
+    {
+      name: "20261105T100500Z-feat-x-narrative-s1.md",
+      content: `## 2026-11-05T10:05:00Z — feat/x — two links\n- **Summary:** ambiguous\n- **Supersedes:** ${stale.name}\n- **Supersedes:** ${other.name}\n`,
+    },
+  ]);
+
+  const receipt = checkJournal({ root: repo });
+  assert.equal(receipt.ok, false);
+  const reason = receipt.refusals.map((refusal) => refusal.reason).join("\n");
+  assert.match(reason, /declares 2 correction cells/u, "two links are an ambiguity, never a guess");
+});
+
+test("checkJournal refuses a lone fragment that declares a correction", () => {
+  const repo = newRepo("errata-lone");
+  const name = "20261105T100500Z-feat-x-narrative-s9.md";
+  carrier(repo, [
+    {
+      name,
+      content:
+        "## 2026-11-05T10:05:00Z — feat/x — lone\n" +
+        "- **Summary:** a link to nothing\n" +
+        "- **Supersedes:** 20200101T000000Z-feat-x-narrative-s9.md\n",
+    },
+  ]);
+
+  const receipt = checkJournal({ root: repo });
+  assert.equal(receipt.ok, false, "the oldest fragment names nothing — a lone link dangles or points outside the slot");
+  assert.equal(receipt.refusals.length, 1, "one refusal");
+  const reason = receipt.refusals[0].reason;
+  assert.match(reason, new RegExp(literal(name)), `the refusal names ${name}`);
+  assert.match(reason, /the oldest fragment is the entry a correction names/u, "the chain rule it broke");
+  assert.match(reason, /declares Supersedes/u, "the refusal quotes the declared link");
+});
+
+test("the aggregator integrates a declared correction once and names the superseded fragment", () => {
+  const repo = newRepo("errata-aggregate");
+  const { stale, correction } = errataPair(repo);
+
+  const receipt = aggregateJournal({ root: repo });
+  assert.deepEqual(receipt.appended, [correction.name], "the correction is the entry that lands");
+  assert.deepEqual(receipt.superseded, [{ name: stale.name, supersededBy: correction.name }]);
+  const log = fs.readFileSync(path.join(repo, "docs/LOGS.md"), "utf8");
+  assert.equal(log.includes("the corrected entry"), true, "the correction reached the journal");
+  assert.equal(log.includes("the stale entry"), false, "the stale bytes never reach the journal");
+  assert.deepEqual(fs.readdirSync(path.join(repo, JOURNAL_DIR)), [], "both fragments are consumed");
+});
+
+test("journal aggregate --check is green on the errata pair and moves no byte", () => {
+  const repo = newRepo("errata-chain-cli");
+  errataPair(repo);
+  const before = carrierBytes(repo);
+
+  const run = runCli(["journal", "aggregate", "--check", "--dir", repo], repo);
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(JSON.parse(run.stdout).ok, true);
+  assert.deepEqual(carrierBytes(repo), before, "validate-only: nothing consumed or rewritten");
+});
+
+
 test("checkJournal keeps the shared local identity legal", () => {
   const repo = newRepo("green-local");
   narrative(repo, { branch: "feat/668-x", sessionId: "local", at: NOW });
@@ -593,7 +724,6 @@ test("checkJournal keeps the shared local identity legal", () => {
 
   const receipt = checkJournal({ root: repo });
   assert.equal(receipt.ok, true, "the shared slug is not a conversation — journal-write-grammar@1's own sentence");
-
   const aggregated = aggregateJournal({ root: repo });
   assert.equal(aggregated.appended.length, 2, "two unflagged conversations stay two entries");
   assert.deepEqual(aggregated.superseded, []);

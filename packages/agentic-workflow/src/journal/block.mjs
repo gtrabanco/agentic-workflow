@@ -19,6 +19,8 @@
 
 import { spawnSync } from "node:child_process";
 
+import { JOURNAL_ERRATA_MARKERS } from "@gtrabanco/agentic-workflow-schema";
+
 /** `YYYY-MM-DDTHH:MM:SSZ` — the entry heading's second precision, UTC. */
 export function isoSecond(timestamp) {
   const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
@@ -32,6 +34,10 @@ export function isoSecond(timestamp) {
  * narrative entry carries Summary (always, so the cell is never silently
  * dropped) and Decisions/Next only when they hold something real — an empty
  * `**Decisions:**` line reads as a decision that was never made.
+ *
+ * `supersedes` is the errata link (issue #676): a correcting entry names the
+ * fragment it corrects, in the one cell the vocabulary publishes, so the
+ * carrier lint can read the slot's chain from the bytes instead of guessing.
  */
 export function renderEntryBlock({
   timestamp,
@@ -42,6 +48,7 @@ export function renderEntryBlock({
   summary,
   decisions,
   next,
+  supersedes,
   prose = true,
 }) {
   const lines = [`## ${timestamp} — ${branch} — ${label}`];
@@ -52,7 +59,25 @@ export function renderEntryBlock({
     if (String(decisions ?? "").trim()) lines.push(`- **Decisions:** ${String(decisions).trim()}`);
     if (String(next ?? "").trim()) lines.push(`- **Next:** ${String(next).trim()}`);
   }
+  if (String(supersedes ?? "").trim()) lines.push(`- **${JOURNAL_ERRATA_MARKERS[0]}:** ${String(supersedes).trim()}`);
   return `${lines.join("\n")}\n`;
+}
+
+/**
+ * Every correction link a block declares — the `- **<marker>:** <fragment>`
+ * cells, in the order they appear. The writer renders at most one, and the
+ * carrier's one predicate refuses more (an entry that names two predecessors
+ * has no chain to read).
+ */
+export function errataLinks(content) {
+  const markers = JOURNAL_ERRATA_MARKERS.join("|");
+  const pattern = new RegExp(`^- \\*\\*(${markers}):\\*\\* (\\S+)$`, "gmu");
+  return [...String(content ?? "").matchAll(pattern)].map((match) => match[2]);
+}
+
+/** The fragment a block corrects, or null — the first (and only) declared link. */
+export function supersedesOf(content) {
+  return errataLinks(content)[0] ?? null;
 }
 
 /** `git` in one project root; the journal is a durable file, so the buffer is generous. */

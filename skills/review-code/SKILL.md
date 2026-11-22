@@ -14,19 +14,25 @@ description: >
 
 # Review Code (internal)
 
-Composed by `review-change` / `product-audit` within their conversation — on any
-agent, follow this file inline as the routed step. **Findings only; never edits,
-never refactors.** Questions an unclear expectation raises obey the all-stages
+Review-pack pass: follow this file inline as the routed step — findings only,
+never edits, never refactors (identity and guardrails owned by
+`skills/review-implementation/references/FINDER_CONTRACT.md` §Pass identity).
+
+Questions an unclear expectation raises obey the all-stages
 no-assumption rule — **ask-don't-infer**, owner
 `skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`).
 
 ## Scope
 
-The caller's diff or path/glob — the shape is the finder contract's
-(`skills/review-implementation/references/FINDER_CONTRACT.md`, this section's owner). State the scope at the top of the
-returned table.
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md` (§Scope):
+read it before the checklist and apply it as written, stating the scope at the
+top of the returned table. Missing reference → STOP.
 
-## Checklist (evaluate EVERY item — none is optional; n/a must be stated)
+## Checklist
+
+The tally is `skills/review-implementation/references/FINDER_CONTRACT.md`
+§Checklist discipline's contract: `evaluated` equals this list's item count, and
+`pass + findings + n/a` equals it — a count above the item count is fabricated.
 
 ✓ No logic errors on the changed paths (trace each modified function's inputs →
   outputs, including boundary values)
@@ -96,8 +102,9 @@ returned table.
 
 ## Materiality bar
 
-The bar is owned by `skills/review-implementation/references/FINDER_CONTRACT.md` —
-apply it as written: cite the rule it violates beside the evidence; never pad the table.
+Owned by `skills/review-implementation/references/FINDER_CONTRACT.md`
+(§Materiality bar): read it before the checklist and apply it as written — cite the rule it violates beside the evidence; never pad the table.
+Missing reference → STOP.
 
 ## Return exactly
 

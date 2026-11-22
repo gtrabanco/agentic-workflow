@@ -559,6 +559,7 @@ journal-write-grammar | packages/agentic-workflow/README.md | block:journal-writ
 journal-headless-grammar | packages/agentic-workflow/README.md | block:journal-headless-grammar@1 | n/a | no
 runner-set | skills/runner-contract/references/RUNNER.md | block:runner-set@1 | n/a | no
 journal-entry-contract | packages/agentic-workflow-schema/src/journal.ts | schema-export:JOURNAL_ENTRY_KINDS | journal-entry | no
+journal-errata-marker | packages/agentic-workflow-schema/src/journal.ts | schema-export:JOURNAL_ERRATA_MARKERS | journal-errata-marker | no
 journal-driver-contract | packages/agentic-workflow/README.md | block:journal-driver-contract@1 | n/a | no
 turn-contract-fields | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-fields@1 | envelope-field:next | yes
 turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-transitions@1 | workflow-intent | no

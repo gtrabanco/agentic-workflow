@@ -25,6 +25,7 @@ import path from "node:path";
 
 import {
   FRAGMENT_KINDS,
+  SHARED_SESSION_SLUG,
   FragmentError,
   JOURNAL_DIR,
   fragmentName,
@@ -33,7 +34,7 @@ import {
   slug,
   writeFragment,
 } from "./fragment.mjs";
-import { currentBranch, isoSecond, readSessionFacts, renderEntryBlock, resolveBase } from "./block.mjs";
+import { currentBranch, isoSecond, readSessionFacts, renderEntryBlock, resolveBase, supersedesOf } from "./block.mjs";
 import { LogFactsError } from "../log/render.mjs";
 
 /** A refused write. The CLI maps this to exit 2, "JOURNAL REFUSAL — <reason>". */
@@ -58,6 +59,7 @@ const VALUE_FLAGS = new Set([
   "base",
   "journal-dir",
   "dir",
+  "supersedes",
 ]);
 
 /**
@@ -111,6 +113,22 @@ function registeredSessions(root, carrier) {
 }
 
 /**
+ * The carrier's fragments of one entry slot, newest first — the aggregator's
+ * own order (timestamp descending, then branch, then name), so the writer and
+ * the aggregator cannot disagree about which fragment the entry is and which
+ * are its corrections.
+ */
+function slotFragments(root, carrier, sessionSlug, kind) {
+  return registeredSessions(root, carrier)
+    .filter((entry) => entry.parsed.sessionId === sessionSlug && entry.parsed.kind === kind)
+    .sort((a, b) => {
+      if (a.parsed.timestamp !== b.parsed.timestamp) return a.parsed.timestamp < b.parsed.timestamp ? 1 : -1;
+      if (a.parsed.branch !== b.parsed.branch) return a.parsed.branch < b.parsed.branch ? -1 : 1;
+      return a.name < b.name ? -1 : 1;
+    });
+}
+
+/**
  * Write one fragment from fields.
  *
  * `kind: "narrative"` needs `content` or at least `summary`; the block is
@@ -118,8 +136,15 @@ function registeredSessions(root, carrier) {
  * absent. `kind: "mechanical"` needs `facts` (`log-facts@1`) and nothing else —
  * its bytes stay `renderEntry`'s.
  *
- * Returns `{ ok, kind, name, path, bytes, branch, session }`; every failure is
- * one of the named refusals above, never a partial write.
+ * `supersedes: <fragment-name>` is the sanctioned errata path (issue #676): a
+ * stale entry is corrected by a NEW fragment whose block declares the one it
+ * corrects, never by rewriting the stale bytes. It names the slot's newest
+ * fragment, must belong to the same conversation and kind, and applies to a
+ * narrative entry only — a mechanical fragment's bytes are the renderer's.
+ *
+ * Returns `{ ok, kind, name, path, bytes, branch, session }` plus `supersedes`
+ * when the write is a correction; every failure is one of the named refusals
+ * above, never a partial write.
  */
 export function writeJournal(options) {
   const root = options?.root;
@@ -147,6 +172,8 @@ export function writeJournal(options) {
     throw new JournalWriteError(error.message);
   }
   const session = options?.session ?? "local";
+  const sessionSlug = slug(session);
+  const correction = options?.supersedes;
   const branch = kind === "mechanical" ? options?.facts?.branch : options?.branch ?? currentBranch(root);
   const name = fragmentName({ timestamp, branch, kind, sessionId: session });
   // S1's self-check: a name the aggregator could not parse back is never written.
@@ -170,15 +197,54 @@ export function writeJournal(options) {
   // slot), never an "already registered"; and a fragment this conversation and
   // kind already hold (the SessionEnd hook names its own) is the entry being
   // rewritten, so it is never the reason to refuse a new one.
-  if (options?.session !== undefined && isConversationSession(slug(options.session))) {
-    const registered = registeredSessions(root, carrier).find(
-      (entry) => entry.parsed.sessionId === slug(options.session) && entry.parsed.kind === kind && entry.name !== name,
-    );
-    if (registered !== undefined) {
+  //
+  // The refusal routes to the sanctioned errata path (issue #676): a stale
+  // entry is corrected by a NEW fragment that declares the one it corrects,
+  // never by rewriting the stale bytes — so `--supersedes` is the door, and it
+  // must name the slot's head (the fragment a correction supersedes is always
+  // the newest one, because corrections are ordered).
+  const slot = isConversationSession(sessionSlug) && options?.session !== undefined
+    ? slotFragments(root, carrier, sessionSlug, kind)
+    : [];
+  if (correction !== undefined) {
+    if (options?.session === undefined) {
       throw new JournalWriteError(
-        `already registered: ${carrier}/${registered.name} already carries session ${JSON.stringify(slug(options.session))}'s ${kind} entry — one entry per conversation per kind; a second ${kind} entry for this conversation is a duplicate, and another --session id is a different conversation`,
+        `--supersedes needs an explicit --session — the shared ${SHARED_SESSION_SLUG} slug is not a conversation, so it holds no entry slot a correction could name`,
       );
     }
+    if (!isConversationSession(sessionSlug)) {
+      throw new JournalWriteError(
+        `--supersedes cannot correct the shared ${SHARED_SESSION_SLUG} identity — it is not a conversation, and an errata corrects one conversation's entry (journal-write-grammar@1)`,
+      );
+    }
+    if (kind !== "narrative") {
+      throw new JournalWriteError(
+        "--supersedes applies to a narrative entry — a mechanical fragment's bytes are log render's, so it cannot carry the correction link",
+      );
+    }
+    const target = slot.find((entry) => entry.name === correction);
+    if (target === undefined) {
+      const held = slot.length === 0 ? "the carrier holds no fragment" : `the carrier holds ${slot.map((entry) => entry.name).join(", ")}`;
+      throw new JournalWriteError(
+        `--supersedes ${JSON.stringify(correction)}: ${held} for session ${JSON.stringify(sessionSlug)}'s ${kind} entry — a correction names a fragment of its own conversation and kind that is still in the carrier`,
+      );
+    }
+    if (slot[0].name !== target.name) {
+      throw new JournalWriteError(
+        `--supersedes must name the entry slot's newest fragment — ${slot[0].name}; ${target.name} is already corrected, so a correction of it would be a second entry in the chain`,
+      );
+    }
+    const second = isoSecond(timestamp).replace(/[-:]/gu, "");
+    if (second <= target.parsed.timestamp) {
+      throw new JournalWriteError(
+        `the correction's second ${second} is not newer than ${target.name} — a correction follows the fragment it corrects, and the aggregator consumes newest-first`,
+      );
+    }
+  } else if (slot.some((entry) => entry.name !== name)) {
+    const head = slot.find((entry) => entry.name !== name);
+    throw new JournalWriteError(
+      `already registered: ${carrier}/${head.name} already carries session ${JSON.stringify(sessionSlug)}'s ${kind} entry — one entry per conversation per kind; a second ${kind} entry for this conversation is a duplicate, and another --session id is a different conversation. To correct a stale entry, re-run with --supersedes ${head.name} — the writer marks the correction and the aggregator lands the newest, never a rewrite of the stale bytes`,
+    );
   }
 
   let content;
@@ -200,7 +266,24 @@ export function writeJournal(options) {
         summary: options?.summary,
         decisions: options?.decisions,
         next: options?.next,
+        supersedes: correction,
       });
+    }
+    // A supplied block cannot silently disagree with the flag: the link the lint
+    // reads must be the one the caller declared.
+    if (correction !== undefined && supersedesOf(content) !== correction) {
+      const declared = supersedesOf(content);
+      throw new JournalWriteError(
+        `--supersedes ${JSON.stringify(correction)} but the block declares ${declared === null ? "no correction" : JSON.stringify(declared)} — the flag and the bytes must agree`,
+      );
+    }
+    // The flag is the only producer of a correction link (D1/D7): a supplied
+    // block that declares one without it would land a link none of the flag's
+    // rules — slot head, newer second, same conversation — ever checked.
+    if (correction === undefined && supersedesOf(content) !== null) {
+      throw new JournalWriteError(
+        `the block declares Supersedes "${supersedesOf(content)}" but --supersedes was not given — a correction link is produced by --supersedes only, which validates the target`,
+      );
     }
   } else if (options?.facts === undefined || options?.facts === null || typeof options.facts !== "object") {
     throw new JournalWriteError("a mechanical write needs --facts <path|-> (a log-facts@1 payload)");
@@ -216,5 +299,5 @@ export function writeJournal(options) {
     sessionId: session,
     timestamp,
   });
-  return { ...receipt, kind, branch, session };
+  return { ...receipt, kind, branch, session, ...(correction === undefined ? {} : { supersedes: correction }) };
 }

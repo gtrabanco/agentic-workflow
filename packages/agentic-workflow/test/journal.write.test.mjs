@@ -387,6 +387,211 @@ test("journal write: the fallback session is not a conversation identity — unf
   assert.equal(names(repo).length, 2, "both unflagged writes land — the check never fires on the fallback slug");
 });
 
+// ── the sanctioned errata path — a stale entry is corrected, never rewritten
+// (issue #676) ────────────────────────────────────────────────────────────
+//
+// The live incident (2026-11-21, `feat/600-config-default-materialization`):
+// the session's narrative fragment went stale, the writer refused the rewrite,
+// `log-immutability` refused the hand edit, and the refusal routed nowhere —
+// so the entry was hand-edited and then hand-added as a second fragment. The
+// door is the writer's own flag: `--supersedes <fragment>` lands the correction
+// as a NEW fragment whose block declares the one it corrects. Nothing is
+// rewritten, the slot stays one entry plus its corrections, and the lint reads
+// the declared link instead of guessing from bytes.
+
+/** First write of one conversation's narrative entry, at the pinned second. */
+function staleEntry(repo, session = "s1") {
+  const run = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "The stale entry.", "--session", session, "--timestamp", PINNED],
+    repo,
+  );
+  assert.equal(run.status, 0, run.stderr);
+  return JSON.parse(run.stdout).name;
+}
+
+test("journal write --supersedes lands the correction as a new fragment declaring the stale one", () => {
+  const repo = newRepo("errata");
+  const stale = staleEntry(repo);
+  const staleBytes = fs.readFileSync(path.join(repo, JOURNAL_DIR, stale), "utf8");
+
+  const run = runCli(
+    [
+      "journal", "write", "--kind", "narrative", "--summary", "The corrected entry.", "--session", "s1",
+      "--supersedes", stale, "--timestamp", "2026-11-08T13:30:00Z",
+    ],
+    repo,
+  );
+  assert.equal(run.status, 0, run.stderr);
+  const receipt = JSON.parse(run.stdout);
+  assert.equal(receipt.supersedes, stale, "the receipt names the fragment the correction supersedes");
+  assert.deepEqual(names(repo), [stale, receipt.name].sort(), "the correction is its own fragment");
+  assert.equal(
+    fs.readFileSync(path.join(repo, JOURNAL_DIR, stale), "utf8"),
+    staleBytes,
+    "the stale fragment's bytes are never rewritten — the correction is a new entry",
+  );
+  const body = fs.readFileSync(path.join(repo, JOURNAL_DIR, receipt.name), "utf8");
+  assert.match(body, new RegExp(`^- \\*\\*Supersedes:\\*\\* ${stale}$`, "mu"), "the block declares the fragment it corrects");
+  assert.match(body, /Summary:\*\* The corrected entry\./u);
+});
+
+test("journal write: the already-registered refusal routes to --supersedes, naming the entry's newest fragment", () => {
+  const repo = newRepo("errata-route");
+  const stale = staleEntry(repo);
+  const second = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "An unlinked second entry.", "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(second.status, 2, second.stdout);
+  assert.match(second.stderr, /already registered/u);
+  assert.match(second.stderr, /one entry per conversation per kind/u);
+  assert.match(second.stderr, new RegExp(`--supersedes ${stale.replace(/[.]/gu, "\\.")}`, "u"), "the refusal routes to the sanctioned path by name");
+  assert.deepEqual(names(repo), [stale], "no byte written for the unlinked duplicate");
+});
+
+test("journal write --supersedes refuses a target outside its own conversation and kind", () => {
+  const repo = newRepo("errata-foreign");
+  const foreign = staleEntry(repo, "s2");
+  const run = runCli(
+    [
+      "journal", "write", "--kind", "narrative", "--summary", "A correction of another conversation.", "--session", "s1",
+      "--supersedes", foreign, "--timestamp", "2026-11-08T13:30:00Z",
+    ],
+    repo,
+  );
+  assert.equal(run.status, 2, run.stdout);
+  assert.match(run.stderr, /--supersedes/u);
+  assert.match(run.stderr, /narrative entry/u, "the refusal names the slot it can correct");
+  assert.deepEqual(names(repo), [foreign], "no byte written");
+});
+
+test("journal write --supersedes needs an explicit conversation session", () => {
+  const repo = newRepo("errata-session");
+  const stale = staleEntry(repo);
+  const run = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "A correction with no conversation.", "--supersedes", stale, "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(run.status, 2, run.stdout);
+  assert.match(run.stderr, /--supersedes needs an explicit --session/u);
+  assert.deepEqual(names(repo), [stale], "no byte written");
+});
+
+test("journal write --supersedes refuses a correction older than the fragment it corrects", () => {
+  const repo = newRepo("errata-older");
+  const stale = staleEntry(repo);
+  const run = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "A correction from before the entry.", "--session", "s1", "--supersedes", stale, "--timestamp", "2026-11-08T12:29:00Z"],
+    repo,
+  );
+  assert.equal(run.status, 2, run.stdout);
+  assert.match(run.stderr, /not newer than/u, "the refusal states the ordering rule, not a bare duplicate");
+  assert.deepEqual(names(repo), [stale], "no byte written");
+});
+
+test("journal write --supersedes must name the entry slot's newest fragment", () => {
+  const repo = newRepo("errata-head");
+  const stale = staleEntry(repo);
+  const first = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "First correction.", "--session", "s1", "--supersedes", stale, "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(first.status, 0, first.stderr);
+  const correction = JSON.parse(first.stdout).name;
+  // The chain's head is now the correction: correcting the stale fragment again
+  // would fork the chain instead of extending it.
+  const fork = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "A second link to the same entry.", "--session", "s1", "--supersedes", stale, "--timestamp", "2026-11-08T14:30:00Z"],
+    repo,
+  );
+  assert.equal(fork.status, 2, fork.stdout);
+  assert.match(fork.stderr, new RegExp(`must name the entry slot's newest fragment — ${correction.replace(/[.]/gu, "\\.")}`, "u"));
+  assert.deepEqual(names(repo), [stale, correction].sort(), "no byte written");
+});
+
+test("journal write --supersedes applies to a narrative entry — a mechanical fragment's bytes are the renderer's", () => {
+  const repo = newRepo("errata-mechanical");
+  const mechanical = runCli(
+    ["journal", "write", "--kind", "mechanical", "--facts", factsFile(repo, "errata"), "--session", "s1"],
+    repo,
+  );
+  assert.equal(mechanical.status, 0, mechanical.stderr);
+  const run = runCli(
+    [
+      "journal", "write", "--kind", "mechanical", "--facts", factsFile(repo, "errata"), "--session", "s1",
+      "--supersedes", JSON.parse(mechanical.stdout).name, "--timestamp", "2026-11-08T13:30:00Z",
+    ],
+    repo,
+  );
+  assert.equal(run.status, 2, run.stdout);
+  assert.match(run.stderr, /applies to a narrative entry/u);
+});
+
+test("the declared prose states the errata path — the writer's flag, the block cell and the skill's checklist", () => {
+  const readme = fs.readFileSync(path.join(repoRoot, "packages", "agentic-workflow", "README.md"), "utf8");
+  const writeRow = /^supersedes \| ([^\n]+)$/mu.exec(readme);
+  assert.ok(writeRow, "journal-write-grammar@1 carries the errata flag's own row");
+  assert.match(writeRow[1], /--supersedes <fragment-name>/u, "the row names the flag and its argument");
+  assert.match(writeRow[1], /narrative/iu, "the row states the kind the flag applies to");
+  const registered = /^already-registered \| ([^\n]+)$/mu.exec(readme);
+  assert.match(registered[1], /--supersedes/u, "the writer's refusal routes to the sanctioned path");
+  const errataRow = /^errata \| ([^\n]+)$/mu.exec(readme);
+  assert.ok(errataRow, "journal-fragment-grammar@1 states the slot's chain rule");
+  assert.match(errataRow[1], /immediately older/u, "the row states which fragment a correction names");
+
+  const doc = fs.readFileSync(path.join(repoRoot, "template", ".agentic-workflow", "journal.md"), "utf8");
+  assert.match(doc, /--supersedes/u, "a target project's carrier doc names the errata path, not only the refusal");
+
+  const skill = fs.readFileSync(path.join(repoRoot, "skills", "log-session", "SKILL.md"), "utf8");
+  assert.match(skill, /--supersedes/u, "the skill documents the stale-entry recipe");
+  assert.match(skill, /stale entry/iu, "the checklist names the stale entry it corrects");
+});
+
+// ── the 2026-11-22 correction batch's corpus (EXTERNAL VERIFY B4a/A1) ───
+
+test("journal write refuses a correction link the flag did not declare", () => {
+  const repo = newRepo("errata-flagless");
+  const block =
+    "## 2026-11-08T13:00:00Z — main — crafted correction\n" +
+    "- **Summary:** a link no flag declared\n" +
+    "- **Supersedes:** 20200101T000000Z-main-narrative-s9.md\n";
+  const run = runCli(
+    ["journal", "write", "--kind", "narrative", "--content", block, "--session", "s9", "--timestamp", "2026-11-08T13:00:00Z"],
+    repo,
+  );
+  assert.equal(run.status, 2, run.stdout);
+  assert.match(run.stderr, /a correction link is produced by --supersedes only/u, "the refusal names the flag that produces a link");
+  assert.deepEqual(names(repo), [], "no byte written");
+});
+
+test("journal write: the published duplicate refusal keeps its sentence and appends the routing", () => {
+  const repo = newRepo("errata-published-refusal");
+  const stale = staleEntry(repo);
+  const second = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "An unlinked second entry.", "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(second.status, 2, second.stdout);
+  assert.match(
+    second.stderr,
+    /is a duplicate, and another --session id is a different conversation/u,
+    "#468's published sentence stays byte-identical — the batch appends, never rewrites",
+  );
+  assert.match(
+    second.stderr,
+    new RegExp(`To correct a stale entry, re-run with --supersedes ${stale.replace(/[.]/gu, "\\.")}`, "u"),
+    "the routing clause follows the published sentence",
+  );
+  assert.deepEqual(names(repo), [stale], "no byte written");
+});
+
+test("the correction batch's prose pins — the skill's condition and the Impact's entries", () => {
+  const skill = fs.readFileSync(path.join(repoRoot, "skills", "log-session", "SKILL.md"), "utf8");
+  assert.match(skill, /A stale entry, when one existed, was CORRECTED/u, "the checklist states the condition a correction answers");
+  const spec = fs.readFileSync(path.join(repoRoot, "docs", "fix", "676-journal-errata-path", "SPEC.md"), "utf8");
+  assert.match(spec, /its session entries as narrative fragments\s+under/u, "the Impact names every session entry the diff carries");
+});
+
 // ── aggregate --check — the carrier lint (S3) ────────────────────────────
 
 test("journal aggregate --check: every fault is listed and no byte moves", () => {

@@ -438,7 +438,10 @@ export const DEPS = {
   // the schema's dist — without the edge it raced schema-build's tsc and read
   // a stale or half-written dist ('does not provide an export named ...').
   "journal-carrier-check": ["workspace-install", "schema-build"],
-  "log-immutability": [],
+  // log-immutability reads the carrier's one block predicate; that module now
+  // imports the schema package's published marker vocabulary, so the step holds
+  // the same edges as journal-carrier-check (issue #676).
+  "log-immutability": ["workspace-install", "schema-build"],
   "push-identity": [],
   "secret-scan": [],
   "temp-hygiene": [],
