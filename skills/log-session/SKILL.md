@@ -35,7 +35,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ```
 ✓ The entry was WRITTEN with accurate git facts: appended to docs/LOGS.md, or — when the fragment carrier `.agentic-workflow/journal/` exists (issue #405) — written as a new fragment there (the aggregator owns the journal; a direct append is refused)
 ✓ `runner session-close close` RAN and exited 0 (or 2, with the leftover paths named) — the entry is committed, not left riding along
-✓ A stale entry was CORRECTED through `journal write --supersedes <fragment>` — never edited and never deleted; an entry already in `docs/LOGS.md` is a new append, because the journal is append-only
+✓ A stale entry, when one existed, was CORRECTED through `journal write --supersedes <fragment>` — never edited and never deleted; an entry already in `docs/LOGS.md` is a new append, because the journal is append-only
 ```
 
 Missing reference → STOP. About to end the turn with any box unchecked? The

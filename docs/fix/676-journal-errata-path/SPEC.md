@@ -168,7 +168,7 @@ crosses one package boundary:
   fixture resolves the schema package the block owner now publishes from, the
   same resolution the shipped install provides (`D5`); no assertion changed.
 - This unit's own carriers — `SPEC.md`, `decisions.md`, `planning-evidence.md`,
-  `planning-obligations.md` — and its session entry as one narrative fragment
+  `planning-obligations.md` — and its session entries as narrative fragments
   under `.agentic-workflow/journal/` (the carrier `docs/LOGS.md` is the
   aggregator's; the journal itself stays untouched).
 
@@ -497,17 +497,19 @@ ships, every row is `verified` or an evidenced `n/a`.
 
 - **P8** — 2026-11-21 22:47, the branch pushed (`54539ee86`; the pre-push
   local gate PASSED all 18 steps in 821s) and PR
-  [#685](https://github.com/gtrabanco/agentic-workflow/pull/685) opened against
+  #685 opened against
   `main` with `Closes #676`; the roadmap row moves to `in review` at the owner's
   request, emitted into the projection by `runner docs-generate`.
 
 ## Next
 
-The owner's external verdict on PR
-[#685](https://github.com/gtrabanco/agentic-workflow/pull/685) (head
-`54539ee86` plus this fold). One known gate red is disclosed in
-`## Known pre-existing issues` — the load-bound `phase-lint` suite in the full
-gate — and the pre-push gate run above is green end to end.
+The owner's delta verdict on the 2026-11-22 correction batch (PR #685): the
+`EXTERNAL VERIFY` receipt's blockers B1–B4 and advisories A1–A3 are folded, A4/A5
+carry their recorded dispositions, and the batch's recheck is the `C`/`E` lines
+below. Open owner question: the `in review` status cell sits outside the
+`## Status legend`'s machine (`done` is the PR-open state and `unit-route`
+refuses close-out while the status is not `done`) — flagged, never resolved
+here (`D7`).
 
 ## References
 

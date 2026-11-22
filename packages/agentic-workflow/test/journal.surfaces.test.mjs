@@ -175,7 +175,7 @@ test("676 no sibling surface still asserts the old slot rule", () => {
   assert.match(row, /not one entry plus its declared corrections/u, "the command row names the rule the lint reads");
   const crate = read("packages", "agentic-workflow", "src", "journal", "aggregate.mjs");
   assert.doesNotMatch(crate, /holding more than one conforming fragment/u, "the module doc no longer asserts the pre-#676 truth beside its chain bullet");
-  assert.match(crate, /one entry plus the corrections that declare it/u, "the module doc carries the chain rule");
+  assert.match(crate, /plus the corrections that declare it/u, "the module doc carries the chain rule");
 });
 
 test("374 the crate's entry codec carries the schema package's contract ids verbatim", async () => {

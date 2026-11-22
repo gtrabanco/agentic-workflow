@@ -589,7 +589,7 @@ test("the correction batch's prose pins — the skill's condition and the Impact
   const skill = fs.readFileSync(path.join(repoRoot, "skills", "log-session", "SKILL.md"), "utf8");
   assert.match(skill, /A stale entry, when one existed, was CORRECTED/u, "the checklist states the condition a correction answers");
   const spec = fs.readFileSync(path.join(repoRoot, "docs", "fix", "676-journal-errata-path", "SPEC.md"), "utf8");
-  assert.match(spec, /its session entries as narrative fragments under/u, "the Impact names every session entry the diff carries");
+  assert.match(spec, /its session entries as narrative fragments\s+under/u, "the Impact names every session entry the diff carries");
 });
 
 // ── aggregate --check — the carrier lint (S3) ────────────────────────────
