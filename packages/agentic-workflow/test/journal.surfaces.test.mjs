@@ -148,6 +148,23 @@ test("374 AC9 the carrier doc's forward note names the landed owner, not the fut
   assert.doesNotMatch(doc, /When the workflow's pluggable store-driver contract for the journal lands/u, "the landed contract is not described as pending");
 });
 
+// ── issue #676 — the errata marker's one owner ───────────────────────────
+
+test("676 the errata marker is resident in the schema package and declared as a normative surface", async () => {
+  assert.match(
+    read("AGENTS.md"),
+    /journal-errata-marker \| packages\/agentic-workflow-schema\/src\/journal\.ts \| schema-export:JOURNAL_ERRATA_MARKERS \| journal-errata-marker/u,
+    "the inventory declares the block cell's vocabulary under its published owner",
+  );
+  const schema = await import("../../agentic-workflow-schema/dist/index.js");
+  const { renderEntryBlock, supersedesOf } = await import("../src/journal/block.mjs");
+  assert.deepEqual(schema.JOURNAL_ERRATA_MARKERS, ["Supersedes"], "the marker's closed set is the schema package's, never a second copy");
+  const facts = { timestamp: "2026-11-05T10:00:00Z", branch: "feat/x", label: "narrative", summary: "the correction" };
+  assert.equal(supersedesOf(renderEntryBlock(facts)), null, "an entry that corrects nothing carries no cell");
+  const stale = "20261105T100000Z-feat-x-narrative-s1.md";
+  assert.equal(supersedesOf(renderEntryBlock({ ...facts, supersedes: stale })), stale, "the block owner renders the cell the vocabulary publishes");
+});
+
 test("374 the crate's entry codec carries the schema package's contract ids verbatim", async () => {
   const schema = await import("../../agentic-workflow-schema/dist/index.js");
   const crate = await import("../src/journal/entry.mjs");

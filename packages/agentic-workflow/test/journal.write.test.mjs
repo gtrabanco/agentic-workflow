@@ -481,12 +481,32 @@ test("journal write --supersedes refuses a correction older than the fragment it
   const repo = newRepo("errata-older");
   const stale = staleEntry(repo);
   const run = runCli(
-    ["journal", "write", "--kind", "narrative", "--summary", "A correction from before the entry.", "--session", "s1", "--supersedes", stale, "--timestamp", PINNED],
+    ["journal", "write", "--kind", "narrative", "--summary", "A correction from before the entry.", "--session", "s1", "--supersedes", stale, "--timestamp", "2026-11-08T12:29:00Z"],
     repo,
   );
   assert.equal(run.status, 2, run.stdout);
   assert.match(run.stderr, /not newer than/u, "the refusal states the ordering rule, not a bare duplicate");
   assert.deepEqual(names(repo), [stale], "no byte written");
+});
+
+test("journal write --supersedes must name the entry slot's newest fragment", () => {
+  const repo = newRepo("errata-head");
+  const stale = staleEntry(repo);
+  const first = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "First correction.", "--session", "s1", "--supersedes", stale, "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(first.status, 0, first.stderr);
+  const correction = JSON.parse(first.stdout).name;
+  // The chain's head is now the correction: correcting the stale fragment again
+  // would fork the chain instead of extending it.
+  const fork = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "A second link to the same entry.", "--session", "s1", "--supersedes", stale, "--timestamp", "2026-11-08T14:30:00Z"],
+    repo,
+  );
+  assert.equal(fork.status, 2, fork.stdout);
+  assert.match(fork.stderr, new RegExp(`must name the entry slot's newest fragment — ${correction.replace(/[.]/gu, "\\.")}`, "u"));
+  assert.deepEqual(names(repo), [stale, correction].sort(), "no byte written");
 });
 
 test("journal write --supersedes applies to a narrative entry — a mechanical fragment's bytes are the renderer's", () => {
@@ -511,8 +531,8 @@ test("the declared prose states the errata path — the writer's flag, the block
   const readme = fs.readFileSync(path.join(repoRoot, "packages", "agentic-workflow", "README.md"), "utf8");
   const writeRow = /^supersedes \| ([^\n]+)$/mu.exec(readme);
   assert.ok(writeRow, "journal-write-grammar@1 carries the errata flag's own row");
-  assert.match(writeRow[1], /--supersedes <fragment>/u, "the row names the flag and its argument");
-  assert.match(writeRow[1], /narrative/u, "the row states the kind the flag applies to");
+  assert.match(writeRow[1], /--supersedes <fragment-name>/u, "the row names the flag and its argument");
+  assert.match(writeRow[1], /narrative/iu, "the row states the kind the flag applies to");
   const registered = /^already-registered \| ([^\n]+)$/mu.exec(readme);
   assert.match(registered[1], /--supersedes/u, "the writer's refusal routes to the sanctioned path");
   const errataRow = /^errata \| ([^\n]+)$/mu.exec(readme);

@@ -28,6 +28,12 @@
  *    superseded in its receipt, so a duplicate can neither pass the carrier
  *    nor append twice. The shared `local` slug names no conversation
  *    (`journal-write-grammar@1`), so it never collides.
+ *  - **A stale entry is corrected, not rewritten.** A slot may hold one entry
+ *    plus the corrections that declare it (issue #676): read newest-first,
+ *    every fragment but the oldest names the one immediately older than it in
+ *    its `Supersedes` cell, and the oldest (the entry) names nothing. The lint
+ *    accepts exactly that chain and refuses every other multi-fragment slot;
+ *    the aggregator's newest-wins consume then lands the correction once.
  *  - **The journal is never created.** A missing `docs/LOGS.md` is a refusal:
  *    the project creates its journal once (from the template's shape), the
  *    aggregator never invents one.
@@ -35,6 +41,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
+
+import { JOURNAL_ERRATA_MARKERS } from "@gtrabanco/agentic-workflow-schema";
 
 import { JOURNAL_DIR, fragmentFault, isConversationSession } from "./fragment.mjs";
 
@@ -65,18 +73,45 @@ function namedList(names) {
   return `${quoted.slice(0, -1).join(", ")} and ${quoted[quoted.length - 1]}`;
 }
 
-/** The lint's one line for one colliding slot. */
-function identityCollisionReason({ sessionId, kind, names }) {
-  return `fragments ${namedList(names)} carry the same identity — session ${JSON.stringify(sessionId)}'s ${kind} entry; timestamps and branches do not distinguish an entry slot, and the grammar's unit is one entry per conversation per kind`;
+/**
+ * The order a slot is read and consumed in: newest first, ties broken branch,
+ * then kind, then session, then name, all ascending. One comparator for the
+ * aggregator's batch order and the lint's chain, so the two cannot disagree
+ * about which fragment is newer.
+ */
+function newestFirst(a, b) {
+  if (a.timestamp !== b.timestamp) return a.timestamp < b.timestamp ? 1 : -1;
+  if (a.branch !== b.branch) return a.branch < b.branch ? -1 : 1;
+  if (a.kind !== b.kind) return a.kind < b.kind ? -1 : 1;
+  if (a.sessionId !== b.sessionId) return a.sessionId < b.sessionId ? -1 : 1;
+  return a.name < b.name ? -1 : 1;
+}
+
+/** What a slot's fragments have in common, in every chain refusal's wording. */
+function slotIdentity({ sessionId, kind, names }) {
+  return `fragments ${namedList(names)} carry the same identity — session ${JSON.stringify(sessionId)}'s ${kind} entry; the grammar's unit is one entry per conversation per kind`;
+}
+
+/** The lint's one line for one slot whose fragments are not a correction chain. */
+function chainReason({ identity, fragment, declared, expected }) {
+  const marker = JOURNAL_ERRATA_MARKERS[0];
+  if (expected === null) {
+    return `${slotIdentity(identity)}; "${fragment}" is the oldest fragment of the slot and declares ${marker} "${declared}" — the oldest fragment is the entry a correction names, never a correction itself`;
+  }
+  if (declared === null) {
+    return `${slotIdentity(identity)}; "${fragment}" declares no ${marker} cell, but "${expected}" is the fragment immediately older than it — a slot is one entry plus the corrections that name their immediate predecessor, so an undeclared second fragment is a duplicate`;
+  }
+  return `${slotIdentity(identity)}; "${fragment}" declares ${marker} "${declared}", but "${expected}" is the fragment immediately older than it — a slot is one entry plus the corrections that name their immediate predecessor, in order`;
 }
 
 /**
- * The lint's cross-fragment half (issue #675): group conforming fragments by
- * their entry slot and answer one refusal per slot that holds more than one.
- * The shared `local` slug is not a conversation, so it is never grouped — the
- * same predicate the writer reads, never a second copy of the exemption.
+ * The lint's cross-fragment half (issues #675 and #676): group conforming
+ * fragments by their entry slot and answer one refusal per slot that is not a
+ * correction chain. The shared `local` slug is not a conversation, so it is
+ * never grouped — the same predicate the writer reads, never a second copy of
+ * the exemption.
  */
-function identityCollisions(fragments) {
+function identityFaults(fragments) {
   const slots = new Map();
   for (const fragment of fragments) {
     if (!isConversationSession(fragment.sessionId)) continue;
@@ -87,12 +122,19 @@ function identityCollisions(fragments) {
   const refusals = [];
   for (const group of slots.values()) {
     if (group.length < 2) continue;
-    const names = group.map((fragment) => fragment.name).sort();
-    refusals.push({
-      name: names[0],
-      names,
-      reason: identityCollisionReason({ sessionId: group[0].sessionId, kind: group[0].kind, names }),
-    });
+    const ordered = [...group].sort(newestFirst);
+    const names = ordered.map((fragment) => fragment.name).sort();
+    const identity = { sessionId: ordered[0].sessionId, kind: ordered[0].kind, names };
+    for (const [index, fragment] of ordered.entries()) {
+      const expected = index + 1 < ordered.length ? ordered[index + 1].name : null;
+      if (fragment.supersedes === expected) continue;
+      refusals.push({
+        name: names[0],
+        names,
+        reason: chainReason({ identity, fragment: fragment.name, declared: fragment.supersedes, expected }),
+      });
+      break;
+    }
   }
   return refusals;
 }
@@ -146,11 +188,11 @@ export function checkJournal(options) {
     }
     const fault = fragmentFault(name, content);
     if (!fault.ok) refusals.push({ name, reason: fault.reason });
-    else conforming.push({ name, ...fault.parsed });
+    else conforming.push({ name, ...fault.parsed, supersedes: fault.supersedes });
   }
-  // The second half (issue #675): the entry slot is compared across fragments,
-  // which the per-fragment loop can never see.
-  refusals.push(...identityCollisions(conforming));
+  // The second half (issues #675/#676): the entry slot is compared across
+  // fragments, which the per-fragment loop can never see.
+  refusals.push(...identityFaults(conforming));
   return { ok: refusals.length === 0, checked: names.length, refusals, journalDir };
 }
 
@@ -201,14 +243,7 @@ export function aggregateJournal(options) {
   // Validate everything before the first byte moves.
   const fragments = pending
     .map((name) => loadFragment(dir, name))
-    .sort((a, b) => {
-      // Newest first; ties break branch, then kind, then session, ascending.
-      if (a.timestamp !== b.timestamp) return a.timestamp < b.timestamp ? 1 : -1;
-      if (a.branch !== b.branch) return a.branch < b.branch ? -1 : 1;
-      if (a.kind !== b.kind) return a.kind < b.kind ? -1 : 1;
-      if (a.sessionId !== b.sessionId) return a.sessionId < b.sessionId ? -1 : 1;
-      return a.name < b.name ? -1 : 1;
-    });
+    .sort(newestFirst);
 
   // Issue #675: one entry per conversation per kind. The sorted set is
   // newest-first, so the first fragment of a slot is the entry and the rest are
