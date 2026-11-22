@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-roadmap_summary: Issue [#690](https://github.com/gtrabanco/agentic-workflow/issues/690) (S): automatic session samples never landed because unit attribution had exactly one door — the slash-command registrar — while the work itself flows through the deferred `agentic_workflow_run` tool. The runner door now notes its subcommand before spawning, so a unit-scoped runner command attributes the session exactly as the same command dispatched as a slash command does, and the secondary defect is repaired too: a sink that refuses its sample is reported once through the operator's own `notify` channel instead of being swallowed by a bare `catch {}`.
+roadmap_summary: Issue [#690](https://github.com/gtrabanco/agentic-workflow/issues/690) (S): automatic session samples never landed because unit attribution had exactly one door — the slash-command registrar — while the work itself flows through the deferred `agentic_workflow_run` tool. The runner door now notes its subcommand before spawning, so a unit-scoped runner command attributes the session exactly as the same command dispatched as a slash command does, and the secondary defect is repaired too: a sink that refuses its sample is reported once through the operator's own `notify` channel instead of being swallowed by a bare `catch {}`. PR [#692](https://github.com/gtrabanco/agentic-workflow/pull/692).
 ---
 
 # fix/690-telemetry-attr
@@ -409,6 +409,7 @@ relay-next: create .pi-web/relays/690-telemetry-attr/ (charter → docs/fix/690-
 - **G5** — 2026-11-22, HEAD `3b644e90a`, `bun scripts/run-root-suite.mjs` · 140 suites · 139 PASS, 1 FAIL — `scripts/roadmap-settle.test.mjs`, the duplicate feature-`98` row inherited from `main`'s `7951c17c1` (see `## Known pre-existing issues`), touching no path this unit changed.
 - **G6** — 2026-11-22, HEAD `3b644e90a`, `bun scripts/docs-generate.mjs --check` · exit 0 · verdict PASS; `bun scripts/check-skill-context.mjs --documents` · exit 0 · PASS; `bun scripts/check-skill-context.mjs` · exit 0 · PASS; `bun scripts/test-obligation-tags.mjs --root .` · exit 0 · 140 suites, 0 findings, verdict PASS.
 - **G7** — 2026-11-22, HEAD `3b644e90a`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs diff-guard --base origin/main` · exit 1 · `DIFF-GUARD BREACH — Lines: 1210 > 400 · Files: 15 > 8`. Reported, not trimmed: the only honest split does not exist here, because the ranges are not interchangeable. What this unit authored is 15 files, +1165 −45 — source +112 −4 across four files (the seam, the thread, the report, the resolution), tests +513 −0 across four suites, and the rest the frozen ledgers, the README paragraph and the writer's own roadmap/projection output. Deleting prose or tests to fit would be the anti-gaming breach the guard itself names.
+- **P6** — 2026-11-22, the branch was pushed and PR [#692](https://github.com/gtrabanco/agentic-workflow/pull/692) opened against `main`; no merge, no approval · eef874a06, 0e29e89bf. The push used the gate's documented `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` escape hatch, whose contract is "record why in the PR": the offline subset is 17/18 with `root-suite` red on the duplicate feature-`98` row inherited from `main`'s `7951c17c1`, and the PR body carries that record.
 
 ## Next
 
