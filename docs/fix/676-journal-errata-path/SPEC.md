@@ -471,6 +471,11 @@ ships, every row is `verified` or an evidenced `n/a`.
   chain can neither fork nor reorder. The lint does not repeat these rules: it
   reads the chain the writer can only produce correctly, which keeps one owner
   per rule (`IR11`) and leaves the lint's job the read-side ambiguity.
+- **E18** — 2026-11-21, `runner dimension-regression` (= `bun packages/agentic-workflow/bin/agentic-workflow.mjs dimension-regression --base origin/main`) ·
+  20 dimensions at the base, 20 at the head, 1 changed review surface
+  (`docs/workflow/GATE_INVENTORY.md` — the `journal-carrier-check` row's reason
+  text), no dimension dropped · verdict `clean`. The pre-push hook's
+  `dimension-regression` step required this line and is what this run answers.
 - **G1** — 2026-11-21, `bun scripts/local-gate.mjs --jobs 4 --no-bail` at HEAD
   `97713b6d8` · exit 1 · 15 of 20 steps `exit 0` (temp-hygiene, secret-scan,
   tmp-gc, worktree-guard, rigidity-review, version-parity-content,
