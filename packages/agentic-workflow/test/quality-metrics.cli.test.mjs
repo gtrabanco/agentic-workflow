@@ -365,7 +365,7 @@ test("--version prints the contract's package version and exits 0", () => {
 
 test("the command is listed in the bin's own usage line", () => {
   const bin = readFileSync(BIN, "utf8");
-  const usage = /usage: agentic-workflow <([^>]+)>/u.exec(bin);
+  const usage = /usage: bunx @gtrabanco\/agentic-workflow@<pin> <([^>]+)>/u.exec(bin);
   assert.ok(usage, "the bin declares its usage line");
   assert.ok(usage[1].split("|").includes("quality-metrics"), usage[1]);
 });
