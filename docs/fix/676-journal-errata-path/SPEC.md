@@ -158,8 +158,19 @@ crosses one package boundary:
   `docs/workflow/SKILL_CONTEXT_BUDGETS.json` re-pins `log-session`'s ceiling and
   the guide's `machineLines`.
 - `.changeset/676-journal-errata-path.md` — the three shipped packages' release
-  intent; the train bump stays the release's job (`D-40-14`).
-- This unit's own carriers and `docs/LOGS.md`'s session entry.
+  intent (the skill is content of `packages/pi-agentic-workflow`); the train bump
+  stays the release's job (`D-40-14`).
+- `docs/ROADMAP.md` + `docs/generated/units.md` — the deterministic emitter's
+  sync (the row's summary cell from `roadmap_summary:`, the unit page), written
+  by `runner docs-generate`, never by hand; the row's status cell stays the
+  owner's.
+- `packages/pi-agentic-workflow/test/log-session-command.test.mjs` — the writer
+  fixture resolves the schema package the block owner now publishes from, the
+  same resolution the shipped install provides (`D5`); no assertion changed.
+- This unit's own carriers — `SPEC.md`, `decisions.md`, `planning-evidence.md`,
+  `planning-obligations.md` — and its session entry as one narrative fragment
+  under `.agentic-workflow/journal/` (the carrier `docs/LOGS.md` is the
+  aggregator's; the journal itself stays untouched).
 
 ## Surfaces
 
@@ -383,6 +394,11 @@ ships, every row is `verified` or an evidenced `n/a`.
 - **P6** — 2026-11-21 22:02, the verification commit (`a58f443f0`) and the
   session entry through the carrier, closed by `session-close close`
   (`2b75dff15`, fragment `20261122T130233Z-fix-676-journal-errata-path-narrative-local`).
+- **P7** — 2026-11-21 22:10, the unit-doc fold: the frozen S4 quote gains its
+  wall-three sentence, `D6` records the `S12` reading, `## Impact` names every
+  path the diff touches (the emitter's two, the Pi fixture, this doc's carriers)
+  and `## Known pre-existing issues` names the load-bound suite with its base
+  measurement (`e9624f67e` and this line's own commit).
 - **E3** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.test.mjs` ·
   exit 0 · 40 pass / 0 fail (the green half of the corpus: the chain acceptance,
   the broken chain, the two-cell ambiguity, the CLI's green half).
