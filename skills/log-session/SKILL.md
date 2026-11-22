@@ -35,7 +35,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ```
 ✓ The entry was WRITTEN with accurate git facts: appended to docs/LOGS.md, or — when the fragment carrier `.agentic-workflow/journal/` exists (issue #405) — written as a new fragment there (the aggregator owns the journal; a direct append is refused)
 ✓ `runner session-close close` RAN and exited 0 (or 2, with the leftover paths named) — the entry is committed, not left riding along
-✓ No past entry was edited
+✓ A stale entry was CORRECTED through `journal write --supersedes <fragment>` — never edited and never deleted; an entry already in `docs/LOGS.md` is a new append, because the journal is append-only
 ```
 
 Missing reference → STOP. About to end the turn with any box unchecked? The
@@ -138,6 +138,17 @@ the HEAD sha and start time at session open.
      `journal-fragment-grammar@1` + `journal-write-grammar@1` in
      `@gtrabanco/agentic-workflow`'s README; long prose: `… render … | …
      journal write --kind narrative --content -`.
+
+     **The entry went stale mid-session** (push state, gate verdict or merge
+     state moved since it was written): correct it, never edit it —
+     `log-immutability` refuses a fragment edit or delete and the journal is
+     append-only. Re-run the same writer with
+     `--supersedes <the fragment it corrects>`: it lands the correction as a
+     NEW fragment whose block names the one it corrects, the lint reads the
+     pair as one entry plus its correction, and the aggregator lands the
+     correction once. The `already registered` refusal names that flag when you
+     forget it. Once the entry is already in `docs/LOGS.md` there is no
+     fragment left to name — a new entry is the append the journal allows.
 
    Omit `--decisions` / `--next` when there is nothing real to record — the script drops the line
    rather than emitting an empty one. A user-supplied note is prepended to the
