@@ -103,6 +103,13 @@ test("ripgrep upgrades through brew when it exists and honestly refuses a channe
   assert.equal(unmanaged.command, null);
 });
 
+test("engram refreshes through the brew tap on a brew-managed machine", () => {
+  const row = rowOf(updatePlan({ ...unixBase(), platform: "darwin", brew: { present: true } }), "engram");
+  assert.equal(row.action, "upgrade");
+  assert.equal(row.kind, "shell");
+  assert.equal(row.command, "brew upgrade gentleman-programming/tap/engram");
+});
+
 test("win32 is refused closed before any step is planned (WSL-only)", () => {
   const plan = updatePlan({ ...unixBase(), platform: "win32" });
   assert.notEqual(plan.refused, null);

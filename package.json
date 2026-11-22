@@ -3,6 +3,13 @@
   "private": true,
   "description": "Workspace root for the published packages under packages/. Members link each other from the folder, so a sibling pin can name the version the same commit ships instead of waiting for a publish. Nothing here is published.",
   "license": "MIT",
+  "scripts": {
+    "setup:env": "node scripts/setup-env.mjs",
+    "setup:env:check": "node scripts/setup-env.mjs --check",
+    "setup:env:doctor": "node scripts/setup-env.mjs --doctor --json",
+    "update:tools": "bun scripts/update-dev-tools.mjs",
+    "update:tools:plan": "bun scripts/update-dev-tools.mjs --plan"
+  },
   "workspaces": [
     "packages/*"
   ],

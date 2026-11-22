@@ -7,15 +7,36 @@ archaeology through logs and side notes is two scripts plus this page
 (issue #331).
 
 ```sh
-node scripts/setup-env.mjs            # provision everything that is missing
-node scripts/setup-env.mjs --check    # verify only — installs nothing, writes nothing
-node scripts/setup-env.mjs --doctor   # the tool doctor's evidence, per surface
+bun run setup:env            # provision everything that is missing
+bun run setup:env:check      # verify only — installs nothing, writes nothing
+bun run setup:env:doctor     # the tool doctor's evidence, per surface (JSON envelope)
 ```
+
+The root `package.json` scripts forward to `node scripts/setup-env.mjs`; the direct
+forms are the same:
 
 All three run with `node`; bun runs them too. The first two are this repository's
 provisioner; `--doctor` is the deterministic **checker** (feature 537,
 `agentic-workflow doctor`) and prints the same `doctor@1` envelope the bin and
-`init-workspace` read, so a state is never re-derived by hand. Supported on macOS and Linux. **Windows is WSL-only** — not a supported
+`init-workspace` read, so a state is never re-derived by hand.
+
+When the tools are already present and only stale, `update-dev-tools` is the
+one-shot refresher — the mirror image of the provisioner: it upgrades only what
+exists (an absent tool is an honest skip naming `setup-env`), runs the same
+routes the table below pins, and never installs bun, node, pi or a package
+manager. It is the blanket counterpart of `update-tools`'s deliberate,
+drift-driven close for the two watched tools: the refresher borrows that
+script's upgrade constants, so the two surfaces cannot drift apart:
+
+```sh
+bun scripts/update-dev-tools.mjs           # refresh the installed toolchain (installs nothing)
+bun scripts/update-dev-tools.mjs --plan    # plan only — print what a refresh would run
+```
+
+Every step's progress goes to stderr; the exit code (0 ok · 1 a step failed ·
+2 a refusal) is the receipt. ripgrep is the honest edge: it refreshes through
+Homebrew when a brew channel exists and reports the package-manager hand-off
+otherwise. Supported on macOS and Linux. Supported on macOS and Linux. **Windows is WSL-only** — not a supported
 target: run everything inside WSL (the scripts refuse `win32` with this note).
 
 ## Prerequisites
