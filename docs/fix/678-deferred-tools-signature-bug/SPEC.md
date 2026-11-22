@@ -329,7 +329,7 @@ Land P1: the wiring suite alone, observed red.
 
 ## References
 
-- Issue [#678](https://github.com/gtrabanco/agentic-workflow/issues/678) — the request. The PR closes it via `Closes #678`.
+- Issue [#678](https://github.com/gtrabanco/agentic-workflow/issues/678) — the request. PR [#682](https://github.com/gtrabanco/agentic-workflow/pull/682) closes it (`Closes #678`).
 - Issue [#274](https://github.com/gtrabanco/agentic-workflow/issues/274) — `docs/features/70-pi-tool-surface/SPEC.md`, the unit that introduced the tool surface.
 - Issue [#555](https://github.com/gtrabanco/agentic-workflow/issues/555) — `docs/features/555-programmatic-runner/SPEC.md`, the runner door `agentic_workflow_run`.
 - `packages/pi-agentic-workflow/README.md` § Workflow tools (deferred).
