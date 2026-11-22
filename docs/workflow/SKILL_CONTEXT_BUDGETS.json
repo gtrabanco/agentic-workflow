@@ -942,9 +942,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 27119,
-      "routeLinesMax": 1863,
+      "routeEstimateMax": 27856,
+      "routeLinesMax": 1913,
       "sources": {
+        "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -995,9 +996,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 23571,
-      "routeLinesMax": 1637,
+      "routeEstimateMax": 24314,
+      "routeLinesMax": 1688,
       "sources": {
+        "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -1046,9 +1048,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 23571,
-      "routeLinesMax": 1637,
+      "routeEstimateMax": 24314,
+      "routeLinesMax": 1688,
       "sources": {
+        "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -1097,9 +1100,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 24328,
-      "routeLinesMax": 1676,
+      "routeEstimateMax": 25067,
+      "routeLinesMax": 1726,
       "sources": {
+        "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
