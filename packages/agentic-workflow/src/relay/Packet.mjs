@@ -45,7 +45,7 @@ export const BATON_STATES = Object.freeze(["Draft — awaiting approval", "Activ
 export const LEG_ID = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,31}$/u;
 /** The phase cursor: one phase label or `done` (the lane's own `P<n>` grammar). */
 export const PHASE_CURSOR = /^(?:P\d+|done)$/u;
-/** The four modes, in the order the usage strings list them. */
+/** The five modes, in the order the usage strings list them. */
 export const RELAY_MODES = Object.freeze(["check", "budget", "tiers", "obligations", "closeout"]);
 /** Modes that read the packet; `tiers` reads only the catalog. */
 const PACKET_MODES = Object.freeze(["check", "budget", "closeout"]);
@@ -529,7 +529,8 @@ export function obligationsOf({ workspace, unit }) {
  * (issue #680, S2; grammar `relay-closeout@1` in `RELAY.md`). A missing or stale
  * receipt routes back to `/review-change`, the receipt's only owner, and the
  * merge gate is **never named before its precondition exists**. Only a current
- * receipt reaches `/audit-pr`, and it carries the PR url that receipt binds.
+ * receipt whose line carries the PR url reaches `/audit-pr`, and it carries that
+ * url — a current receipt recorded without one is not routable to the gate.
  */
 export function closeoutNext({ slug, receipt, pr }) {
   if (receipt === "current" && typeof pr === "string" && pr !== "") return `→ Next: /audit-pr ${pr}`;
@@ -564,10 +565,15 @@ export function closeoutPacket({ workspace, unit, packet }) {
     );
     return { lines, exit: 1 };
   }
+  // One condition decides both the precondition line and the route (external
+  // verify B4): the gate rests on a current receipt *and* the PR url its
+  // `Review:` line records, so the block can never claim the precondition is
+  // met while routing the leg to produce it.
   const current = baton.review === "current";
+  const gate = current && typeof baton.reviewPr === "string" && baton.reviewPr !== "";
   lines.push(
-    `precondition: ${current ? "a current review-change receipt at the PR head" : "none — the review receipt is missing or stale"}`,
-    closeoutNext({ slug: unit.slug, receipt: current ? "current" : "absent", pr: baton.reviewPr }),
+    `precondition: ${gate ? "a current review-change receipt at the PR head" : current ? "none — the Review line records no PR url" : "none — the review receipt is missing or stale"}`,
+    closeoutNext({ slug: unit.slug, receipt: gate ? "current" : "absent", pr: baton.reviewPr }),
     "verdict: PASS",
   );
   return { lines, exit: 0 };

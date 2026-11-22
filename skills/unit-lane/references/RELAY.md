@@ -47,7 +47,7 @@ and two entry points that print the identical block: the workspace's script
 (`runner relay …`, present in a project that adopted the
 workflow) and the crate (`agentic-workflow relay …`, present wherever
 `@gtrabanco/agentic-workflow` is installed). A project carrying only the crate
-runs the same four modes and needs no `scripts/` at all.
+runs the same five modes and needs no `scripts/` at all.
 
 ### Charter — a pointer, never a copy
 
@@ -70,7 +70,7 @@ Progress: <one line: what the last leg finished and left>
 Evidence: `<unit dir>/SPEC.md` · its `## Log` `E` lines, never copied here
 Gaps: <what remains until the finish line>
 Checks: `<command>` · exit <code>
-Review: pending | Review: receipt current at <40-hex>[ · pr <url>] | Review: receipt stale at <40-hex>
+Review: pending | attempted <n> — <result> | receipt current at <40-hex>[ · pr <url>] | receipt stale at <40-hex>
 Blockers: none | <the human-dependent blocker>
 ```
 
@@ -88,7 +88,7 @@ line | shape | what it orders
 State | State: <Draft — awaiting approval; not dispatched | Active | Complete | Needs help> | pi-web relay-runner's closed state set; the head is the value
 Legs | Legs: <leg> → <leg> | the last completed leg and the next one; `none` before leg 1
 Phase | Phase: P<n> | done | the lane's phase cursor: this leg's phase, or the unit has none left
-Review | Review: receipt current at <40-hex>[ · pr <url>] | the receipt boundary's only input: `current` binds the PR head, `receipt stale at`/`pending`/absent never does
+Review | Review: receipt current at <40-hex>[ · pr <url>] | the receipt boundary's only input: `current` binds the PR head, `receipt stale at`/`pending`/`attempted <n> — <result>`/absent never does
 Evidence | Evidence: <path> · <section> | a pointer to the unit doc's evidence carrier, never a copy
 ```
 
@@ -197,8 +197,8 @@ relay-closeout@1
 # input: the packet's status.md — `State:` and `Review:`
 field | shape | what it orders
 receipt | current | stale | not-current | absent | the receipt's state, read from the `Review:` line; `stale` names another head, `not-current` records no receipt, `absent` means the line is missing
-precondition | a current review-change receipt at the PR head | none — the review receipt is missing or stale | what the merge gate rests on, stated before the gate is named
-next | → Next: /review-change <NN-slug> | → Next: /audit-pr <PR-url> | the one closing block: the receipt's owner while it is not current, the merge gate only once it is
+precondition | a current review-change receipt at the PR head | none — the review receipt is missing or stale | none — the Review line records no PR url | what the merge gate rests on, stated before the gate is named
+next | → Next: /review-change <NN-slug> | → Next: /audit-pr <PR-url> | the one closing block: the receipt's owner while the gate's precondition is unmet (receipt not current, or its line records no PR url), the merge gate only once it is
 ```
 
 Rules the block encodes:
@@ -209,7 +209,10 @@ Rules the block encodes:
 - `/audit-pr` is never printed before its precondition exists. The `→ Next:` line
   carries `/review-change` alone while the receipt is missing, stale or
   unrecorded, and `/audit-pr <PR-url>` only when the receipt verifies current —
-  the PR url comes from the same `Review:` line the leg recorded.
+  the PR url comes from the same `Review:` line the leg recorded. A receipt that
+  verifies current but records no url is not routable either: the block states
+  `precondition: none — the Review line records no PR url` and still routes to
+  `/review-change`.
 - The ladder runs when the relay is `Complete`. Before that a leg still owes its
   phase, so the mode refuses rather than routing one.
 - The receipt itself is `/review-change`'s to post at the PR head; this boundary
