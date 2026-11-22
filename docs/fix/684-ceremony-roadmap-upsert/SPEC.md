@@ -355,24 +355,28 @@ Budget: strong
   which that reader executes); `bun packages/agentic-workflow/bin/agentic-workflow.mjs
   phase-lint docs/fix/684-ceremony-roadmap-upsert/SPEC.md` → `PASS`, `6/6` on every
   phase.
-- **G1** — 2026-11-22, the root gate · `bun scripts/run-root-suite.mjs` → exit 0 ·
-  `137 suite(s)`, `137 PASS`, `0 FAIL`.
-- **G2** — 2026-11-22, the crate's node leg · `bun scripts/local-gate.mjs --skip-network`
-  ran `crate-suite-bun` green, then `crate-suite-node` red with
+- **G1** — 2026-11-22, HEAD 12c8c2add6f64e5af49ea97b1079672d9542931a ·
+  `bun scripts/run-root-suite.mjs` · exit 0 · `137 suite(s)`, `137 PASS`, `0 FAIL`.
+  The working tree carried this receipt's own uncommitted prose.
+- **G2** — 2026-11-22, HEAD 12c8c2add6f64e5af49ea97b1079672d9542931a ·
+  `bun scripts/local-gate.mjs --skip-network` · exit 1, on one suite in a change it
+  does not touch: `crate-suite-bun` exit 0, then `crate-suite-node` red with
   `packages/agentic-workflow/test/doc.structure.test.mjs — SUITE TIMEOUT` at 240.4s.
-  Not this change: the suite is in `scripts/test-timeout-allowlist.json` at a 240s
-  bound with this exact load class recorded as its reason, and standalone it is
-  green — `node --test test/doc.structure.test.mjs` → `19 pass / 0 fail` in 171.9s,
-  `bun test test/doc.structure.test.mjs` → `19 pass / 0 fail` in 206.5s.
-- **G3** — 2026-11-22, the remaining gate steps ·
+  The suite is in `scripts/test-timeout-allowlist.json` at a 240s bound with this
+  exact load class as its recorded reason, and it is green standalone —
+  `node --test test/doc.structure.test.mjs` → `19 pass / 0 fail` in 171.9s,
+  `bun test test/doc.structure.test.mjs` → `19 pass / 0 fail` in 206.5s. This host
+  ran it 240s+ while the same gate dispatched four suites at once.
+- **G3** — 2026-11-22, HEAD 12c8c2add6f64e5af49ea97b1079672d9542931a ·
   `bun scripts/local-gate.mjs --skip-network --jobs 2 --only version-parity-content,
   docs-generated-projection,skill-context-budgets,journal-carrier-check,
   log-immutability,push-identity,secret-scan,temp-hygiene,tmp-gc,worktree-guard,
   rigidity-review,dimension-regression,schema-node-compat,pi-node-compat,
-  pi-compat-guard,dependency-pin-gate,dependency-advisories` → `PASS — 12 step(s)`;
-  the three network steps separately → `PASS — 3 step(s)`, one `REPORT-ONLY` verdict
-  by design. The first attempt was red at `version-parity-content` because a shipped
-  package changed with no release intent; `D5`'s changeset is what closed it.
+  pi-compat-guard,dependency-pin-gate,dependency-advisories` · exit 0 ·
+  `PASS — 12 step(s)`; the three network steps run on their own → exit 0 ·
+  `PASS — 3 step(s)`, one `REPORT-ONLY` verdict by design. The first attempt was red
+  at `version-parity-content` because a shipped package changed with no release
+  intent; `D5`'s changeset is what closed it.
 - **D1** — 2026-11-22, the fix shape: the writer takes the path and owns the write,
   so the arm hands it `roadmapPath()` and reports the writer's own post-state (`ok`)
   as `upserted`. The arm's local read and its `next`/`written` write-back are deleted
