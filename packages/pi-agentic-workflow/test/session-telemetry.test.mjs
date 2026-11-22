@@ -176,6 +176,81 @@ test("one broken sink costs the others nothing, and never blocks shutdown", () =
   assert.equal(sample.unit, "383-measured-acceptance");
 });
 
+// --- the degraded report (#690 S3) -----------------------------------------
+//
+// The broken-sink case above proved the accumulator survives a refusal; it could
+// not prove anyone heard it, because `writeCurrent` swallowed the failure in a
+// bare `catch {}`. These cases pin the report: which sink refused, why, and that
+// reporting it costs no other destination its sample.
+
+test("a sink that refuses its sample is reported with its name and the reason", () => {
+  const clock = clockAt(0);
+  const good = [];
+  const failures = [];
+  const telemetry = createSessionTelemetry({
+    enabled: true,
+    unit: "690-telemetry-attr",
+    sinks: [
+      { name: "tier-cost-ledger", write: () => { throw new Error("no tier-cost@2 block"); } },
+      { name: "jsonl", write: (sample) => good.push(sample) },
+    ],
+    onSinkError: (failure) => failures.push(failure),
+    now: clock.now,
+    date: () => DATE,
+  });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  telemetry.flush();
+
+  assert.deepEqual(failures.map((failure) => failure.sink), ["tier-cost-ledger"], "the refusal names the sink that lost the sample");
+  assert.match(String(failures[0].error.message), /no tier-cost@2 block/, "and carries the refusal's own reason");
+  assert.equal(good.length, 1, "the destination that could write still received the sample");
+});
+
+test("a reporter that throws itself costs no other sink its sample", () => {
+  const clock = clockAt(0);
+  const good = [];
+  const telemetry = createSessionTelemetry({
+    enabled: true,
+    unit: "690-telemetry-attr",
+    sinks: [
+      { name: "broken", write: () => { throw new Error("publisher down"); } },
+      { name: "recording", write: (sample) => good.push(sample) },
+    ],
+    onSinkError: () => {
+      throw new Error("the report channel is down too");
+    },
+    now: clock.now,
+    date: () => DATE,
+  });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+
+  assert.equal(telemetry.flush().unit, "690-telemetry-attr", "the emission still answers the sample it took");
+  assert.equal(good.length, 1, "one broken destination, one broken reporter — the healthy sink is untouched");
+});
+
+test("every refusing sink is reported, once per sink, and none is invented", () => {
+  const clock = clockAt(0);
+  const failures = [];
+  const written = [];
+  const telemetry = createSessionTelemetry({
+    enabled: true,
+    unit: "690-telemetry-attr",
+    sinks: [
+      { name: "first", write: () => { throw new Error("refused"); } },
+      { name: "recording", write: (sample) => written.push(sample) },
+      { name: "second", write: () => { throw new Error("refused too"); } },
+    ],
+    onSinkError: (failure) => failures.push(failure.sink),
+    now: clock.now,
+    date: () => DATE,
+  });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  telemetry.flush();
+
+  assert.deepEqual(failures, ["first", "second"], "one report per refusing sink, in declaration order");
+  assert.equal(written.length, 1, "a sink that wrote is never reported");
+});
+
 test("the sample is content-free: a unit id and numbers, nothing a model said", () => {
   const { telemetry } = accumulator();
   telemetry.onTurnEnd({ message: { usage: { totalTokens: 10, input: 4, output: 6 } } });
