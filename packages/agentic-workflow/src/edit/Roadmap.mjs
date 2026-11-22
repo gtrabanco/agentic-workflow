@@ -382,9 +382,29 @@ function headerWord(cell) {
   return cell.replace(/[`*_]/g, "").trim().toLowerCase();
 }
 
-/** A row's cells between its outer pipes: `| a | b |` answers ["a", "b"]. */
+/** A row's cells between its outer pipes: `| a | b |` answers ["a", "b"].
+ *  A pipe escaped with an odd number of backslashes (`\|`) is content, never
+ *  a column boundary — the markdown cell rule this repository's own Fixes
+ *  rows carry (`Folder \| Topic \| …`); a backslash-escaped backslash before
+ *  a pipe (`\\|`) leaves that pipe a delimiter. */
 function rowCells(line) {
-  return line.split("|").slice(1, -1).map((cell) => cell.trim());
+  const parts = [];
+  let current = "";
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch === "|") {
+      let backslashes = 0;
+      for (let j = i - 1; j >= 0 && line[j] === "\\"; j -= 1) backslashes += 1;
+      if (backslashes % 2 === 0) {
+        parts.push(current);
+        current = "";
+        continue;
+      }
+    }
+    current += ch;
+  }
+  parts.push(current);
+  return parts.slice(1, -1).map((cell) => cell.trim());
 }
 
 /** The issue number a Fixes cell keys: `[#N](url)` inside it, or the bare number. */
