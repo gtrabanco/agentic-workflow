@@ -154,19 +154,19 @@ none
 
 ## Tasks
 
-- P1 — The RED corpus: the fix-arm and feature-arm settle cases plus the four-operation differential in the ceremony suite, and the fixture's `## Fixes` table moved to the writer's four-column shape (validator: `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits non-zero, observed before P2)
+- [x] P1 — The RED corpus: the fix-arm and feature-arm settle cases plus the four-operation differential in the ceremony suite, and the fixture's `## Fixes` table moved to the writer's four-column shape (validator: `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits non-zero, observed before P2)
   (Implements: S1, S2, S4)
   - Relevant files: packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs
-- P2 — The fix: `roadmapPath()` to both writer arms, the arm's local read and its `next`/`written` double-write removed, `upserted` read from the writer's own `ok` (validator: `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0)
+- [x] P2 — The fix: `roadmapPath()` to both writer arms, the arm's local read and its `next`/`written` double-write removed, `upserted` read from the writer's own `ok` (validator: `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0)
   (Implements: S1, S2, S3)
   - Relevant files: packages/agentic-workflow/src/runner/ceremony/roadmap.mjs
-- P3 — The differential over the base commit in a throwaway copy: `read`, `list`, `settle` and `check` answer byte-identical stdout/exit before and after (validator: `diff /tmp/pe684-base /tmp/pe684-change` answers empty, one file per operation)
+- [x] P3 — The differential over the base commit in a throwaway copy: `read`, `list`, `settle` and `check` answer byte-identical stdout/exit before and after (validator: `diff /tmp/pe684-base /tmp/pe684-change` answers empty, one file per operation)
   (Implements: S2)
   - Relevant files: docs/fix/684-ceremony-roadmap-upsert/SPEC.md
-- P4 — Documentation and state: the unit doc's ledgers and log, the `## Fixes` row registered through the repaired command, and the `docs/LOGS.md` session entry (validator: `rg -c 'issues/684' docs/ROADMAP.md` matches 1)
+- [x] P4 — Documentation and state: the unit doc's ledgers and log, the `## Fixes` row registered through the repaired command, and the `docs/LOGS.md` session entry (validator: `rg -c 'issues/684' docs/ROADMAP.md` matches 1)
   (Implements: S1, S4)
   - Relevant files: docs/ROADMAP.md, docs/LOGS.md, docs/fix/684-ceremony-roadmap-upsert/SPEC.md
-- P5 — Verification: the strengthened suite and the repository gate (validator: `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 and `bun scripts/run-root-suite.mjs` exits 0)
+- [x] P5 — Verification: the strengthened suite and the repository gate (validator: `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 and `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4)
   - Relevant files: docs/fix/684-ceremony-roadmap-upsert/SPEC.md
 
@@ -203,14 +203,14 @@ required failure state (shape owned by
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S1 | A fix unit settles its own `## Fixes` row through the owner: exit 0, `"upserted": true`, and the row's status cell reads the requested status — the use case #684 was filed for (row 680) | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the `roadmap` case's fix-arm assertions green in that file; `## Log` `E5` | planned |
-| O2 | S2 | The feature arm settles a `## Features` row the same way, so the repair is one contract for both tables, never a fix-only patch | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the same case's feature-arm assertions green; `## Log` `E5` | planned |
-| O3 | S2, S3 | One writer per write: the arm hands the path to the writer and writes nothing itself, so the file cannot be written twice and no `undefined` can reach `writeFileSync` | P2 | P2 | execute-phase | `rg -c 'typeof next === "string"' packages/agentic-workflow/src/runner/ceremony/roadmap.mjs` matches 1 (only the untouched `settle` arm's own `write`) | the `rg` line and the case's single-write assertion, `## Log` `E5` | planned |
-| O4 | S4 | The regression case this issue asks for exists and fails at the base commit: it asserts the row, the receipt and every other byte, so the tautology that let the defect through is gone | P1 | P1 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits non-zero at `55525abad` | the red run captured at base in a throwaway copy; `## Log` `E5` | planned |
-| O5 | S4 | Invariant: no byte outside the spliced row moves — the roadmap's other tables, prose and separators are copied through untouched | P1 | P1 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the case's whole-file diff assertion (exactly one line differs); `## Log` `E5` | planned |
-| O6 | S2 | Affected use cases that must not regress: `roadmap read`, `list`, `settle` and `check` answer byte-identical stdout and exit at base and at the change | P3 | P3 | execute-phase | a `diff` of the four captured runs against the base copy reports no difference | the four captured outputs and the empty `diff`, `## Log` `E6` | planned |
-| O7 | S1 | Required failure state: a writer refusal still exits non-zero and leaves the tree byte-clean, so the repair never turns a refusal into a silent success | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the case's refusal assertion (a roadmap with no `## Fixes` table refuses and changes nothing); `## Log` `E5` | planned |
-| O8 | S1, S4 | The documented close-out route for a fix unit is executable: the repository's own row 684 is registered through the repaired command rather than by hand | P4 | P4 | execute-phase | `rg -c 'issues/684' docs/ROADMAP.md` matches 1 | the row in `docs/ROADMAP.md` and the command's receipt, `## Log` `E9` | planned |
+| O1 | S1 | A fix unit settles its own `## Fixes` row through the owner: exit 0, `"upserted": true`, and the row's status cell reads the requested status — the use case #684 was filed for (row 680) | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the `roadmap` case's fix-arm assertions green in that file; `## Log` `E5` | verified |
+| O2 | S2 | The feature arm settles a `## Features` row the same way, so the repair is one contract for both tables, never a fix-only patch | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the same case's feature-arm assertions green; `## Log` `E5` | verified |
+| O3 | S2, S3 | One writer per write: the arm hands the path to the writer and writes nothing itself, so the file cannot be written twice and no `undefined` can reach `writeFileSync` | P2 | P2 | execute-phase | `rg -c 'typeof next === "string"' packages/agentic-workflow/src/runner/ceremony/roadmap.mjs` matches 1 (only the untouched `settle` arm's own `write`) | the `rg` line and the case's single-write assertion, `## Log` `E5` | verified |
+| O4 | S4 | The regression case this issue asks for exists and fails at the base commit: it asserts the row, the receipt and every other byte, so the tautology that let the defect through is gone | P1 | P1 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits non-zero at `55525abad` | the red run captured at base in a throwaway copy; `## Log` `E5` | verified |
+| O5 | S4 | Invariant: no byte outside the spliced row moves — the roadmap's other tables, prose and separators are copied through untouched | P1 | P1 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the case's whole-file diff assertion (exactly one line differs); `## Log` `E5` | verified |
+| O6 | S2 | Affected use cases that must not regress: `roadmap read`, `list`, `settle` and `check` answer byte-identical stdout and exit at base and at the change | P3 | P3 | execute-phase | a `diff` of the four captured runs against the base copy answers empty | the four captured outputs and the empty `diff`, `## Log` `E6` | verified |
+| O7 | S1 | Required failure state: a writer refusal still exits non-zero and leaves the tree byte-clean, so the repair never turns a refusal into a silent success | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the case's refusal assertion (a roadmap with no `## Fixes` table refuses and changes nothing); `## Log` `E5` | verified |
+| O8 | S1, S4 | The documented close-out route for a fix unit is executable: the repository's own row 684 is registered through the repaired command rather than by hand | P4 | P4 | execute-phase | `rg -c 'issues/684' docs/ROADMAP.md` matches 1 | the row in `docs/ROADMAP.md` and the command's receipt, `## Log` `E9` | verified |
 
 ## Acceptance criteria
 
@@ -317,10 +317,89 @@ Budget: strong
   strings as members; `ceremony roadmap check --slug 77-toy` → `row-missing`;
   `ceremony roadmap settle` → `settled: 0` · three independent pre-existing
   defects, recorded in `## Non-goals` (`PE-009`).
+- **E5** — 2026-11-22, the regression corpus, red then green · at `55525abad`
+  with the case of `fe1eaaa61` in place:
+  `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` →
+  `11 pass / 1 fail`, the failure `1 !== 0` at the fix arm's `assert.equal(fix.code, 0)`
+  with the stack naming `fixRowUpsert` and the document as the path; at the change
+  (`12c8c2add`) the same command → `12 pass / 0 fail`. The `rg` validator of `O3`
+  reads `1` at the change (it read `3` at base, the file's own count).
+- **E6** — 2026-11-22, the untouched-operation differential · the base tree
+  (`git archive 55525abad` into `/tmp/pe684-diff/base`, workspace links pointing at
+  the same `node_modules`) and the change, each against its own copy of one
+  fixture repo: `ceremony roadmap read`, `list`, `settle` and
+  `check --slug 77-toy`, stdout + stderr + exit captured ·
+  `diff -r /tmp/pe684-diff/runs/base /tmp/pe684-diff/runs/change` → empty; exits
+  `read 0/0`, `list 0/0`, `settle 0/0`, `check 2/2`; both fixture trees clean after
+  the run (`settle` matched nothing at either head, so it wrote nothing).
+- **E7** — 2026-11-22, the requested difference, same harness ·
+  `ceremony roadmap row-upsert --slug 77-toy --status done` at base → exit 1, no
+  byte written (`git diff --numstat` empty on the fixture); at the change → exit 0,
+  `{"upserted": true, "slug": "77-toy"}`, `1+/1-` on `docs/ROADMAP.md`, the row
+  `| [#77](https://github.com/gtrabanco/agentic-workflow/issues/77) | toy | done |  |`.
+- **E8** — 2026-11-22, the package suite · `cd packages/agentic-workflow && bun test test/`
+  → exit 0 · `1388 pass / 0 fail` across 78 files.
+- **E9** — 2026-11-22, this unit's own row, registered through the repaired command
+  on the live worktree · `ceremony roadmap row-upsert --slug 684-ceremony-roadmap-upsert
+  --status in-progress --summary <the unit doc's roadmap_summary>` → exit 0,
+  `{"upserted": true, "slug": "684-ceremony-roadmap-upsert", "status": "in-progress"}`,
+  `1+/0-` on `docs/ROADMAP.md`; then `bun scripts/docs-generate.mjs` → `PASS`,
+  `1 written · 0 deleted · 2 unchanged`, which re-synced the Notes cell from the
+  unit doc's `roadmap_summary:` (edit the unit doc, never the table).
+  `rg -c 'issues/684' docs/ROADMAP.md` → 1.
+- **E10** — 2026-11-22, the projection and the budgets ·
+  `bun scripts/docs-generate.mjs --check` → `PASS`, `3 checked · 0 stale`;
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs promise-coherence
+  docs/fix/684-ceremony-roadmap-upsert/SPEC.md` → `PASS`, `3 checked · 10 skipped`
+  (the skipped ones are the suite validators and the scratch `diff`, neither of
+  which that reader executes); `bun packages/agentic-workflow/bin/agentic-workflow.mjs
+  phase-lint docs/fix/684-ceremony-roadmap-upsert/SPEC.md` → `PASS`, `6/6` on every
+  phase.
+- **G1** — 2026-11-22, the root gate · `bun scripts/run-root-suite.mjs` → exit 0 ·
+  `137 suite(s)`, `137 PASS`, `0 FAIL`.
+- **G2** — 2026-11-22, the crate's node leg · `bun scripts/local-gate.mjs --skip-network`
+  ran `crate-suite-bun` green, then `crate-suite-node` red with
+  `packages/agentic-workflow/test/doc.structure.test.mjs — SUITE TIMEOUT` at 240.4s.
+  Not this change: the suite is in `scripts/test-timeout-allowlist.json` at a 240s
+  bound with this exact load class recorded as its reason, and standalone it is
+  green — `node --test test/doc.structure.test.mjs` → `19 pass / 0 fail` in 171.9s,
+  `bun test test/doc.structure.test.mjs` → `19 pass / 0 fail` in 206.5s.
+- **G3** — 2026-11-22, the remaining gate steps ·
+  `bun scripts/local-gate.mjs --skip-network --jobs 2 --only version-parity-content,
+  docs-generated-projection,skill-context-budgets,journal-carrier-check,
+  log-immutability,push-identity,secret-scan,temp-hygiene,tmp-gc,worktree-guard,
+  rigidity-review,dimension-regression,schema-node-compat,pi-node-compat,
+  pi-compat-guard,dependency-pin-gate,dependency-advisories` → `PASS — 12 step(s)`;
+  the three network steps separately → `PASS — 3 step(s)`, one `REPORT-ONLY` verdict
+  by design. The first attempt was red at `version-parity-content` because a shipped
+  package changed with no release intent; `D5`'s changeset is what closed it.
+- **D1** — 2026-11-22, the fix shape: the writer takes the path and owns the write,
+  so the arm hands it `roadmapPath()` and reports the writer's own post-state (`ok`)
+  as `upserted`. The arm's local read and its `next`/`written` write-back are deleted
+  rather than repaired: a receipt carries no `text` field, so repairing only the path
+  would have moved the crash one line down.
+- **D2** — 2026-11-22, the issue's second root-cause clause is false and is not
+  repeated: `roadmap.mjs` imports no `text` helper (`PE-005`), so nothing was
+  shadowed. The local is dropped for the reason that is true — the document never had
+  a place in that arm once the writer reads the file itself.
+- **D3** — 2026-11-22, scope held: `settle`, `list` and `check` are broken on their
+  own (`PE-009`) and an uncaught writer refusal prints a stack trace (`PE-008`).
+  All four are reported with reproducers in `## Non-goals`; a new finding never earns
+  a correction cycle in this unit.
+- **D4** — 2026-11-22, the fixture's two tables are repaired to the headers the
+  writers key on (`| NN |` and `| Issue |`) in the same commit as the RED case:
+  without them the fix arm refuses as `invalid-document` before it reaches the defect,
+  so the case could not have been red for the right reason.
+- **D5** — 2026-11-22, release intent: one `patch` changeset for
+  `@gtrabanco/agentic-workflow`. `version-parity-content` refuses a shipped package
+  whose content changed with no bump or changeset, and the train stamps the version.
 
 ## Next
 
-P1 — the RED corpus in `packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs`.
+Hand the diff to the owner as the external verifier: `12c8c2add` (the fix),
+`fe1eaaa61` (the RED case), the unit doc and its registered roadmap row. Two
+things are reported, not fixed: the raft of sibling defects in the same module
+(`## Non-goals`, `E4`) and the load-induced `doc.structure` suite timeout (`G2`).
 
 ## References
 
