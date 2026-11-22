@@ -495,15 +495,45 @@ ships, every row is `verified` or an evidenced `n/a`.
   Nothing is excused silently: this paragraph is the disclosure, and
   `## Known pre-existing issues` names the class.
 
-## Next`).
-- **P3** — 2026-11-21 21:31, the writer's `--supersedes` and the routed refusal.
-- **P4** — 2026-11-21 21:31, the lint's declared chain and the one comparator.
-- **P5** — 2026-11-21 21:31, the prose, the inventory rows, the re-pinned
-  budgets and the changeset.
+- **P8** — 2026-11-21 22:47, the branch pushed (`54539ee86`; the pre-push
+  local gate PASSED all 18 steps in 821s) and PR
+  [#685](https://github.com/gtrabanco/agentic-workflow/pull/685) opened against
+  `main` with `Closes #676`; the roadmap row moves to `in review` at the owner's
+  request, emitted into the projection by `runner docs-generate`.
 
 ## Next
 
-Hand the diff to the owner — the external verifier — with `## Obligations`
-closed and the verification block recorded. The branch is local and unpushed on
-purpose (the owner's local inline workflow); no pull request was opened, so the
-roadmap row stays `pending` and the issue stays open until the owner's verdict.
+The owner's external verdict on PR
+[#685](https://github.com/gtrabanco/agentic-workflow/pull/685) (head
+`54539ee86` plus this fold). One known gate red is disclosed in
+`## Known pre-existing issues` — the load-bound `phase-lint` suite in the full
+gate — and the pre-push gate run above is green end to end.
+
+## References
+
+- Issue [#676](https://github.com/gtrabanco/agentic-workflow/issues/676) — `Closes #676`.
+- Pull request [#685](https://github.com/gtrabanco/agentic-workflow/pull/685) — the delivery carrier; its body carries the AC/observed table, the decisions and the gate record.
+- Companion issue [#675](https://github.com/gtrabanco/agentic-workflow/issues/675) — the read-side slot rule this unit reads the declared link through.
+- Issue [#468](https://github.com/gtrabanco/agentic-workflow/issues/468) S3 — "one entry per conversation per kind", the rule the errata path keeps.
+- Issue [#452](https://github.com/gtrabanco/agentic-workflow/issues/452) S3 — the carrier lint as a reporter.
+- Issue [#405](https://github.com/gtrabanco/agentic-workflow/issues/405) — the fragment carrier and its merge-to-main aggregator.
+
+## Branch
+
+`fix/676-journal-errata-path`
+
+## Depends on
+
+none — soft-related to #675, no `blocked-by` either way.
+
+## Regression scope
+
+| Scenario | Verification |
+|---|---|
+| A plain second entry of one conversation and kind is still refused, and the first entry's bytes survive | `bun test packages/agentic-workflow/test/journal.write.test.mjs` — `an explicit session already registered is refused, never duplicated` |
+| The #675 undeclared duplicate pair is still refused, naming both files | `bun test packages/agentic-workflow/test/journal.test.mjs` — `checkJournal refuses two fragments of one conversation+kind, naming both files` |
+| Two unflagged `local` conversations stay two entries (the shared slug is not a conversation) | the same suite — `checkJournal keeps the shared local identity legal` |
+| A crash between the append and the delete still re-runs as a no-op | the same suite — `an already-present entry is consumed without being appended again` |
+| The mechanical writer's bytes stay exactly `log render`'s, and `session-close` renders the same block | `bun test packages/agentic-workflow/test/journal.write.test.mjs` — the parity case; `bun test scripts/session-close.test.mjs` |
+| The journal and the carrier stay aggregator-only over a push range | `bun scripts/log-immutability.mjs` — 0 violations on `55525abad..HEAD` |
+| A malformed fragment still fails its own PR and moves no byte | `bun test scripts/local-gate.test.mjs` — the carrier fixture |
