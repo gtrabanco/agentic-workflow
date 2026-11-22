@@ -165,22 +165,22 @@ none
 
 ## Tasks
 
-- [ ] P1 — Freeze the ledgers and the RED corpus: S1–S3 verbatim, PE/O/AC rows, and the failing cases in the four suites plus `scripts/canary-tag.test.mjs` (validator: `bun test scripts/canary-tag.test.mjs` exits non-zero)
+- [x] P1 — Freeze the ledgers and the RED corpus: S1–S3 verbatim, PE/O/AC rows, and the failing cases in the four suites plus `scripts/canary-tag.test.mjs` (validator: `bun test scripts/canary-tag.test.mjs` exits non-zero)
   (Implements: S1, S2, S3)
   - Relevant files: docs/fix/679-runner-invocation-traps-canary/SPEC.md, scripts/canary-tag.test.mjs, scripts/release-workflows.test.mjs, packages/agentic-workflow/test/cli.surface.test.mjs, packages/agentic-workflow/test/runner.dispatch.test.mjs
-- [ ] P2 — `scripts/canary-tag.mjs`: snapshot the staged tracked tree as a commit and record a tag on it, idempotent by tree and fail-closed (validator: `bun test scripts/canary-tag.test.mjs` exits 0)
+- [x] P2 — `scripts/canary-tag.mjs`: snapshot the staged tracked tree as a commit and record a tag on it, idempotent by tree and fail-closed (validator: `bun test scripts/canary-tag.test.mjs` exits 0)
   (Implements: S1)
   - Relevant files: scripts/canary-tag.mjs, scripts/canary-tag.test.mjs
-- [ ] P3 — The crate surface: the top-level usage names the scoped package at `<pin>`, the refusal names the running version and the two repairs, and the README's usage line moves with it (validator: `bun test packages/agentic-workflow/test/cli.surface.test.mjs packages/agentic-workflow/test/runner.dispatch.test.mjs` exits 0)
+- [x] P3 — The crate surface: the top-level usage names the scoped package at `<pin>`, the refusal names the running version and the two repairs, and the README's usage line moves with it (validator: `bun test packages/agentic-workflow/test/cli.surface.test.mjs packages/agentic-workflow/test/runner.dispatch.test.mjs` exits 0)
   (Implements: S2, S3)
   - Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/README.md, packages/agentic-workflow/test/cli.surface.test.mjs, packages/agentic-workflow/test/runner.dispatch.test.mjs, scripts/cli-coverage.test.mjs
-- [ ] P4 — The release path: the canary cut snapshots the staged tree before the restore, records the tag on it, and restores the pin too (validator: `bun test scripts/release-workflows.test.mjs` exits 0)
+- [x] P4 — The release path: the canary cut snapshots the staged tree before the restore, records the tag on it, and restores the pin too (validator: `bun test scripts/release-workflows.test.mjs` exits 0)
   (Implements: S1)
   - Relevant files: .github/workflows/publish.yml, scripts/release-workflows.test.mjs
-- [ ] P5 — Documentation and state: the contract's canary and branch-install paragraphs, the flow/README wording, the changeset, the roadmap row through its writer, the emitter's projection, the journal entry and this document's ledgers (validator: `bun scripts/docs-generate.mjs --check` exits 0)
+- [x] P5 — Documentation and state: the contract's canary and branch-install paragraphs, the flow/README wording, the changeset, the roadmap row through its writer, the emitter's projection, the journal entry and this document's ledgers (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3)
   - Relevant files: skills/runner-contract/references/RUNNER.md, docs/workflow/FEATURE_WORKFLOW.md, README.md, .changeset/679-runner-invocation-traps-canary.md, docs/ROADMAP.md, docs/generated/units.md, docs/LOGS.md
-- [ ] P6 — Verification: the four suites and the repository gate in the foreground (validator: `bun scripts/run-root-suite.mjs` exits 0)
+- [x] P6 — Verification: the four suites and the repository gate in the foreground (validator: `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3)
   - Relevant files: docs/fix/679-runner-invocation-traps-canary/SPEC.md
 
@@ -217,14 +217,14 @@ required failure state (shape owned by
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S1 | A skills install at a canary tag cites the canary it shipped with: the tag's tree carries the staged pin, so a manual closed-set run of the tag's cited services resolves a crate that has them | P4 | P4 | execute-phase | `bun test scripts/release-workflows.test.mjs` exits 0 | the workflow cases' order and tag-target assertions; `## Log` `E5` | planned |
-| O2 | S1 | Invariant: the committed pin stays stable and no branch moves — the tag records a synthetic commit whose parent is `HEAD`, so `#stable` and `#vX.Y.Z` installs are byte-unchanged | P2 | P2 | execute-phase | `bun test scripts/canary-tag.test.mjs` exits 0 | the snapshot case's `HEAD`-unchanged assertion plus `git status` readback; `## Log` `E4` | planned |
-| O3 | S1 | Affected use case that must not regress: the canary cut still publishes the staged package versions, restores the worktree afterwards, and the tag still names the published cut | P4 | P4 | execute-phase | `bun test scripts/release-workflows.test.mjs` exits 0 | the existing canary cases green in that file; `## Log` `E5` | planned |
-| O4 | S3 | No top-level doc or usage string spells the scope-less package name as an invocation: the bin and the crate README state `bunx @gtrabanco/agentic-workflow@<pin>` and the no-command run prints it | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/cli.surface.test.mjs` exits 0 | the no-command case's stderr assertion; `## Log` `E3` | planned |
-| O5 | S2 | Required failure state: an unknown service names the running crate version and both repairs (the pin contract and `AGENTIC_WORKFLOW_RUNNER`), while exit 2 and the `EDIT REFUSAL —` prefix stay | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/runner.dispatch.test.mjs` exits 0 | the refusal case's version/hint assertions; `## Log` `E3` | planned |
-| O6 | S3 | Affected use case that must not regress: the bin still dispatches every documented subcommand and the README restates the list token for token | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/cli.surface.test.mjs scripts/cli-coverage.test.mjs` exits 0 | both suites green; `## Log` `E3` | planned |
-| O7 | S1, S3 | Required failure state: a tag recorded on a different tree is refused, and a missing git repository is refused, never silently tagged | P2 | P2 | execute-phase | `bun test scripts/canary-tag.test.mjs` exits 0 | the two refusal cases' exit 2 and unchanged-tag assertions; `## Log` `E4` | planned |
-| O8 | S1 | Affected use case that must not regress: the stable apply still stamps the pin and the canary stage still stages it, so the release plan and its printed restore keep their behavior | P6 | P6 | execute-phase | `bun test scripts/release.test.mjs` exits 0 | the pin cases green in that file; `## Log` `E6` | planned |
+| O1 | S1 | A skills install at a canary tag cites the canary it shipped with: the tag's tree carries the staged pin, so a manual closed-set run of the tag's cited services resolves a crate that has them | P4 | P4 | execute-phase | `bun test scripts/release-workflows.test.mjs` exits 0 | the workflow cases' order and tag-target assertions; `## Log` `E5` | verified |
+| O2 | S1 | Invariant: the committed pin stays stable and no branch moves — the tag records a synthetic commit whose parent is `HEAD`, so `#stable` and `#vX.Y.Z` installs are byte-unchanged | P2 | P2 | execute-phase | `bun test scripts/canary-tag.test.mjs` exits 0 | the snapshot case's `HEAD`-unchanged assertion plus `git status` readback; `## Log` `E4` | verified |
+| O3 | S1 | Affected use case that must not regress: the canary cut still publishes the staged package versions, restores the worktree afterwards, and the tag still names the published cut | P4 | P4 | execute-phase | `bun test scripts/release-workflows.test.mjs` exits 0 | the existing canary cases green in that file; `## Log` `E5` | verified |
+| O4 | S3 | No top-level doc or usage string spells the scope-less package name as an invocation: the bin and the crate README state `bunx @gtrabanco/agentic-workflow@<pin>` and the no-command run prints it | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/cli.surface.test.mjs` exits 0 | the no-command case's stderr assertion; `## Log` `E3` | verified |
+| O5 | S2 | Required failure state: an unknown service names the running crate version and both repairs (the pin contract and `AGENTIC_WORKFLOW_RUNNER`), while exit 2 and the `EDIT REFUSAL —` prefix stay | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/runner.dispatch.test.mjs` exits 0 | the refusal case's version/hint assertions; `## Log` `E3` | verified |
+| O6 | S3 | Affected use case that must not regress: the bin still dispatches every documented subcommand and the README restates the list token for token | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/cli.surface.test.mjs scripts/cli-coverage.test.mjs` exits 0 | both suites green; `## Log` `E3` | verified |
+| O7 | S1, S3 | Required failure state: a tag recorded on a different tree is refused, and a missing git repository is refused, never silently tagged | P2 | P2 | execute-phase | `bun test scripts/canary-tag.test.mjs` exits 0 | the two refusal cases' exit 2 and unchanged-tag assertions; `## Log` `E4` | verified |
+| O8 | S1 | Affected use case that must not regress: the stable apply still stamps the pin and the canary stage still stages it, so the release plan and its printed restore keep their behavior | P6 | P6 | execute-phase | `bun test scripts/release.test.mjs` exits 0 | the pin cases green in that file; `## Log` `E6` | verified |
 
 ## Acceptance criteria
 
@@ -294,9 +294,35 @@ Budget: strong
   - Changing the closed-set contract itself.
   ~~~
 
+- **D1** — 2026-11-22, the canary tag records the staged tree through `scripts/canary-tag.mjs`, never a branch move; see `docs/fix/679-runner-invocation-traps-canary/decisions.md`.
+- **D2** — 2026-11-22, the pi bundle is untouched: its projection pointerizes the invocation section, so it never carries a pin (`PE-005`).
+- **D3** — 2026-11-22, a `#main` tree ahead of the last canary is documented and refusal-guided, not auto-resolved; the exact-pin invariant stays.
+- **D4** — 2026-11-22, no scope-less alias package (the issue's out-of-scope call).
+- **D5** — 2026-11-22, subcommand usage lines keep the bin's own name; only the top-level invocation names the scoped package.
+- **P1** — 2026-11-22, the ledgers were frozen and the RED corpus landed · 15d265a7a, 0fc9e14cc.
+- **E1** — 2026-11-22, the cut-head baseline: `bun test packages/agentic-workflow/test/cli.surface.test.mjs` and the three sibling suites · exit 0 · 4/0, 6/0, 27/0, 21/0 pass/fail.
+- **E2** — 2026-11-22, the corpus before implementation: `bun test scripts/canary-tag.test.mjs` · exit non-zero · 0 pass, 6 fail (missing module); `cli.surface` 0/1 error, `runner.dispatch` 6/1, `release-workflows` 26/1.
+- **P2** — 2026-11-22, `scripts/canary-tag.mjs`: snapshot and record · 636c1d193.
+- **E4** — 2026-11-22, `bun test scripts/canary-tag.test.mjs` · exit 0 · 6 pass, 0 fail.
+- **P3** — 2026-11-22, the scoped usage and the version-aware refusal · c8cffcc27.
+- **E3** — 2026-11-22, `bun test packages/agentic-workflow/test/cli.surface.test.mjs packages/agentic-workflow/test/runner.dispatch.test.mjs scripts/cli-coverage.test.mjs` · exit 0 · 20 pass, 0 fail (the no-command and refusal cases included).
+- **P4** — 2026-11-22, the canary cut snapshots and tags the staged tree · 6d6194940, ada7e5463.
+- **E5** — 2026-11-22, `bun test scripts/release-workflows.test.mjs scripts/release.test.mjs` · exit 0 · 102 pass, 0 fail (the tag-order case and the pin cases included).
+- **P5** — 2026-11-22, the contract prose, the changeset and the roadmap row · 7cf9a8bc9, d54653a67.
+- **E6** — 2026-11-22, the differential over the base bin at `b5997ba82`: `phase-lint`, `unit-route --triage`, `needs-input`, `roadmap read` and `verify` against the same tree · exit 0 each · stdout byte-identical; only the two asked surfaces differ (no-command usage 994 → 1183 bytes, unknown-service refusal 51 → 286 bytes).
+- **E7** — 2026-11-22, `bun test packages/pi-agentic-workflow/test/runner-prose.test.mjs` · exit 0 · 4 pass, 0 fail (the pi projection still pointerizes the invocation section).
+- **G1** — 2026-11-22, HEAD ada7e54634982a88bfc877e4756df782e580b202, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/679-runner-invocation-traps-canary/SPEC.md` · exit 0 · PASS (6/6) for every phase.
+- **G2** — 2026-11-22, HEAD ada7e54634982a88bfc877e4756df782e580b202, `bun scripts/docs-generate.mjs --check` · exit 0 · verdict PASS.
+- **G3** — 2026-11-22, HEAD ada7e54634982a88bfc877e4756df782e580b202, `bun scripts/check-skill-context.mjs` · exit 0 · PASS, 30 skills.
+- **G4** — 2026-11-22, HEAD ada7e54634982a88bfc877e4756df782e580b202, `bun test scripts/normative-drift.test.mjs` · exit 0 · 24 pass, 0 fail.
+- **G5** — 2026-11-22, HEAD ada7e54634982a88bfc877e4756df782e580b202, `bun scripts/run-root-suite.mjs` · exit 0 · 140 suites PASS, 0 FAIL.
+- **G6** — 2026-11-22, HEAD ada7e54634982a88bfc877e4756df782e580b202, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/679-runner-invocation-traps-canary/SPEC.md` · exit 0 · VERIFY PASS, every check green.
+
 ## Next
 
-The owner's external verdict on the diff and the closed obligations ledger.
+The owner's external verdict on the diff and the closed obligations ledger; the
+canary publish path itself is exercised by the owner's next canary cut (no
+publish is run by this local unit).
 
 ## References
 
