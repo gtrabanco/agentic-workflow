@@ -789,6 +789,77 @@ describe("Roadmap on the writer driver (issue #498)", () => {
     strictEqual(readFileSync(ambiguousPath, "utf8"), doc);
   });
 
+  // ── the escaped-pipe corpus (external-verify run 2, 2026-11-22, blocker B1, O19) ──
+  // The live defect: `rowCells` split every `|`, so a markdown-escaped pipe
+  // (`\|`) inside a cell counted as a column — the post-write verdict failed a
+  // good write (this repository's own row 684 carries
+  // `Folder \| Topic \| Status \| Depends on \| Issue` in its Notes) and a key
+  // column sitting after such a cell never matched, so the writer inserted a
+  // duplicate row while reporting success. Added red, observed failing before
+  // the fix; each case writes its own throwaway table.
+
+  it("SHAPE-7 — an escaped pipe in an earlier cell is content: the keyed row updates in place, never duplicated (O19)", () => {
+    const pipePath = join(dir, "PIPE-KEY.md");
+    const doc = [
+      "# Index",
+      "",
+      "## Fixes",
+      "",
+      "| Folder | Topic | Status | Depends on | Issue |",
+      "| --- | --- | --- | --- | --- |",
+      "| 101-toy | toy | in-progress | #12 \\| #13 | [#101](https://example.invalid/issues/101) |",
+      "",
+    ].join("\n");
+    writeFileSync(pipePath, doc, "utf8");
+    const receipt = fixRowUpsert(pipePath, {
+      issue: 101,
+      url: "https://example.invalid/issues/101",
+      topic: "toy",
+      status: "done",
+      notes: "settled",
+    });
+    strictEqual(receipt.ok, true);
+    const expected = doc.replace(
+      "| 101-toy | toy | in-progress | #12 \\| #13 | [#101](https://example.invalid/issues/101) |",
+      "| 101-toy | toy | done | #12 \\| #13 | [#101](https://example.invalid/issues/101) |",
+    );
+    strictEqual(
+      readFileSync(pipePath, "utf8"),
+      expected,
+      "the keyed row updates in place, the escaped-pipe cell keeps its bytes, and no second row appears",
+    );
+    strictEqual(expected.split("\n").filter((line) => line.includes("[#101]")).length, 1);
+  });
+
+  it("SHAPE-8 — the post-write verdict counts markdown cells: escaped-pipe notes answer ok (O19)", () => {
+    const verdictPath = join(dir, "VERDICT.md");
+    const notes = "shaped `Folder \\| Topic \\| Status` settles";
+    const doc = [
+      "# Index",
+      "",
+      "## Fixes",
+      "",
+      "| Issue | Topic | Status | Notes |",
+      "| --- | --- | --- | --- |",
+      `| [#684](https://example.invalid/issues/684) | ceremony-upsert | in-progress | ${notes} |`,
+      "",
+    ].join("\n");
+    writeFileSync(verdictPath, doc, "utf8");
+    const receipt = fixRowUpsert(verdictPath, {
+      issue: 684,
+      url: "https://example.invalid/issues/684",
+      topic: "ceremony-upsert",
+      status: "done",
+      notes,
+    });
+    strictEqual(receipt.ok, true, "the written row carries the header's cells; an escaped pipe is content, not a column");
+    const expected = doc.replace(
+      "| [#684](https://example.invalid/issues/684) | ceremony-upsert | in-progress |",
+      "| [#684](https://example.invalid/issues/684) | ceremony-upsert | done |",
+    );
+    strictEqual(readFileSync(verdictPath, "utf8"), expected);
+  });
+
   it("CLI: roadmap fixrow settles a consumer-shaped Fixes row", async () => {
     const cliDir = mkdtempSync(join(tmpdir(), "aw-fixrow-shape-"));
     try {

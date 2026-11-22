@@ -418,6 +418,46 @@ test("roadmap: a consumer-shaped Fixes table settles by its own issue column", (
   assert.equal(row.split("|").slice(1, -1).length, 5, "the spliced row carries the table's column count");
 });
 
+// The flag contract (external-verify run 2, 2026-11-22, blocker B2, O20): the
+// operation's flag list is the union of both arms, so a flag the chosen arm
+// cannot honour was accepted, swallowed and answered `upserted: true` — against
+// `onlyFlags`' own rule ("an option is either honoured or an error, never
+// silently swallowed"). Added red, observed failing before the fix.
+test("roadmap: row-upsert refuses the flag its arm cannot honour and keeps its own (O20)", (t) => {
+  const { root } = makeRepo(t);
+  const roadmap = () => readFileSync(join(root, "docs/ROADMAP.md"), "utf8");
+  const before = roadmap();
+
+  // The fix arm has no depends-on semantics: the option is an error, not a
+  // silent success, and the refusal moves no byte.
+  const fixDepends = ceremony(root, "roadmap", "row-upsert", "--slug", "77-toy", "--status", "done", "--depends-on", "#99");
+  assert.notEqual(fixDepends.code, 0, `the fix arm refuses --depends-on: ${fixDepends.stdout}`);
+  assert.equal(fixDepends.json.error, "unknown-flag");
+  assert.equal(fixDepends.json.flag, "--depends-on");
+  assert.equal(roadmap(), before, "a refused flag writes no byte");
+
+  // The feature arm has no issue key: same contract, other direction.
+  const featIssue = ceremony(root, "roadmap", "row-upsert", "--slug", "91-toy", "--status", "planned", "--issue", "55");
+  assert.notEqual(featIssue.code, 0, `the feature arm refuses --issue: ${featIssue.stdout}`);
+  assert.equal(featIssue.json.error, "unknown-flag");
+  assert.equal(featIssue.json.flag, "--issue");
+  assert.equal(roadmap(), before, "a refused flag writes no byte");
+
+  // Each arm's own flags stay honoured — the differential pin for this contract.
+  const featDepends = ceremony(root, "roadmap", "row-upsert", "--slug", "91-toy", "--status", "planned", "--summary", "probe", "--depends-on", "#99");
+  assert.equal(featDepends.code, 0, featDepends.stderr);
+  assert.equal(featDepends.json.upserted, true);
+  assert.match(roadmap(), /^\| 91 \| toy \| planned \| #99 \| probe \|$/m);
+
+  const fixIssue = ceremony(root, "roadmap", "row-upsert", "--slug", "77-toy", "--status", "done", "--issue", "88");
+  assert.equal(fixIssue.code, 0, fixIssue.stderr);
+  assert.equal(fixIssue.json.upserted, true);
+  assert.ok(
+    roadmap().includes("[#88](https://github.com/gtrabanco/agentic-workflow/issues/88)"),
+    "the given issue keys the written row",
+  );
+});
+
 test("pr: the degradation contract — a missing gh and an unauthenticated gh are blocks, never stack traces", (t) => {
   const { root } = makeRepo(t);
   const bin = process.execPath;
