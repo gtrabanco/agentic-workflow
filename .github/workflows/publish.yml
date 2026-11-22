@@ -28,13 +28,15 @@ name: Publish packages
 #       suggestion computes, or the `version` input when given) under the
 #       canary dist-tag. The declared packages are gated on the COMMITTED
 #       tree first; the repo is otherwise untouched (the channel versions and
-#       their in-cut pins are staged for packing and restored after); the cut
-#       is recorded as a git tag and a GitHub pre-release carrying the
-#       changeset BACKLOG (the pending changesets, rendered: grouped by kind,
-#       breaking first, with this cut's new changes separated from the ones an
-#       earlier canary already carried), and the changesets are NOT consumed —
-#       only the stable train consumes them. Canaries are grouped by you —
-#       changesets accumulate until you decide to cut.
+#       their in-cut pins are staged for packing, snapshotted, and restored
+#       after); the cut is recorded as a git tag on the STAGED tree and a
+#       GitHub pre-release carrying the changeset BACKLOG (the pending
+#       changesets, rendered: grouped by kind, breaking first, with this
+#       cut's new changes separated from the ones an earlier canary already
+#       carried), so a skills install at that tag cites the crate it shipped
+#       with (issue #679), and the changesets are NOT consumed — only the
+#       stable train consumes them. Canaries are grouped by you — changesets
+#       accumulate until you decide to cut.
 #
 #   Promotion: the stable suggestion is the base of the highest canary already
 #       cut whenever it sits above the changeset-derived version — so after a
@@ -338,6 +340,14 @@ jobs:
           if [ -n "$VERSION" ]; then args+=(--version "$VERSION"); fi
           node scripts/release.mjs publish-stage --channel "$CHANNEL" --date "$CUT_DATE" "${args[@]}" >/dev/null
 
+      # Issue #679: the tag must record the tree this cut publishes. The stage
+      # above wrote the canary pin into RUNNER.md; the restore below would throw
+      # it away, and a tag at HEAD would install skills citing services younger
+      # than their stable pin. Snapshot the staged tracked tree now, before the
+      # publish and the restore; the tag step records that commit.
+      - name: Snapshot the published tree for the tag
+        run: echo "RELEASE_COMMIT=$(bun scripts/canary-tag.mjs snapshot)" >> "$GITHUB_ENV"
+
       # Per declared package: run the exact-version gate (a canary already on
       # the registry skips) and publish under the channel dist-tag. Lifecycle
       # scripts are OFF: the gate above already ran, and `prepublishOnly` would
@@ -364,10 +374,11 @@ jobs:
           done < publish-plan.tsv
 
       # Always: a publish that fails halfway must not leave the staged versions
-      # in the worktree the tag/release step and any retry read.
+      # or the staged pin in the worktree the tag/release step and any retry
+      # read. The tag already recorded the snapshot commit above.
       - name: Restore the repo (temp versions are never committed)
         if: always()
-        run: git checkout -- packages/*/package.json
+        run: git checkout -- packages/*/package.json skills/runner-contract/references/RUNNER.md
 
       # Release visible = installable (issue #481): the tag and the pre-release
       # must not appear while the CDN still 404s a tarball the run just published.
@@ -395,14 +406,9 @@ jobs:
         run: |
           if [ -s publish-plan.tsv ]; then
             V=$(awk -F'\t' '{print $3; exit}' publish-plan.tsv)
-            if git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
-              [ "$(git rev-parse "v$V^{commit}")" = "$(git rev-parse HEAD)" ] \
-                || { echo "::error::v$V is already recorded on another commit"; exit 1; }
-              echo "tag v$V already recorded at HEAD"
-            else
-              git tag "v$V"
-              git push origin "v$V"
-            fi
+            TARGET="${RELEASE_COMMIT:-$(git rev-parse HEAD)}"
+            bun scripts/canary-tag.mjs record --tag "v$V" --commit "$TARGET"
+            git push origin "v$V"
             gh release view "v$V" >/dev/null 2>&1 \
               || gh release create "v$V" --prerelease --verify-tag --title "v$V" --notes-file release-notes.txt
             echo "recorded cut v$V ($CHANNEL)"
