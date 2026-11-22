@@ -36,3 +36,13 @@ fails closed, but the refusal now names the constraint: no issue-keyed column,
 two of them, a separator whose width disagrees with the header, or a section
 with no header row. This repository's own four-column table is emitted
 byte-for-byte as before.
+
+The correction batch after the owner's external verify widens the cell parse
+the shape layer rests on: a markdown-escaped pipe (`\|`) inside a cell is
+content, not a column, so a row this repository's own roadmap carries
+(`Folder \| Topic \| …`) answers `ok` on a good write and a key column sitting
+after such a cell still finds its row — never a duplicate. The ceremony's
+`row-upsert` also stops swallowing the flag the chosen arm cannot honour:
+`--depends-on` on a fix unit and `--issue` on a feature unit are refused
+`unknown-flag` before any byte moves, while each arm's own flags stay
+honoured.

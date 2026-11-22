@@ -197,9 +197,10 @@ none
   case, strengthened from a tautology to the end-to-end settle (fix arm and
   feature arm) plus the byte-identity differential over the four untouched
   operations; and, for the extension, the consumer-shaped `## Fixes` table
-  settled end to end with its whole document byte-checked.
+  settled end to end with its whole document byte-checked; and, for the
+  correction batch, the arm-scoped flag contract (`O20`).
 - `packages/agentic-workflow/test/edit.test.mjs` — the writer's own cases (the
-  extension's `SHAPE-1..SHAPE-6` and the CLI `fixrow` route), which is where the
+  extension's `SHAPE-1..SHAPE-8` and the CLI `fixrow` route), which is where the
   shape rule's accepted forms and its four refusals are pinned.
 
 ## Known pre-existing issues
@@ -315,10 +316,10 @@ required failure state (shape owned by
 | O16 | S8 | Compatibility invariant: this repository's own `## Fixes` table keeps its four header words — `Issue`, `Topic`, `Status`, `Notes` — and the writer emits its row byte-for-byte as before | P9 | P9 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the FF-2 emitted-row assertion green plus the header readback recorded at `## Log` `E14`; AC-S12's `rg` line in `E14` | verified |
 | O17 | S5, S8 | Affected use case: the documented close-out route `agentic-workflow roadmap fixrow <path> <json>` settles a consumer-shaped row and reports `ok: true` | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the CLI case's receipt and written row; `## Log` `E13` | verified |
 | O18 | S7, S12 | Affected use cases that must not regress: the ceremony's fix and feature arms settle their rows and touch no other byte, and a roadmap with no Fixes table still refuses and writes nothing | P9 | P9 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the existing roadmap case green at the extension head; `## Log` `E14` | verified |
-| O19 | external-verify run 2 (B1) | An escaped pipe `\|` inside a Fixes-table cell is markdown content, not a column: the writer keys the row by the table's own issue column, updates it in place (never a duplicate) and judges the written row's cell count against the header — the receipt answers `ok: true` for the row this repository's own roadmap carries | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the `SHAPE-7`/`SHAPE-8` cases green plus the row-684 scratch `roadmap fixrow` probe answering `Receipt: pass`; `## Log` `E17` | planned |
-| O20 | external-verify run 2 (B2) | `ceremony roadmap row-upsert` never swallows an option: the flag the chosen arm cannot honour (`--depends-on` on a fix unit, `--issue` on a feature unit) is refused `unknown-flag` with exit 1 before any byte moves, while each arm's own flags stay honoured | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the flag-contract case's four assertions green (both rejections, both honoured pins); `## Log` `E17` | planned |
-| O21 | external-verify run 2 (B3) | The unit doc's own gate receipts satisfy `verify`'s receipt grammar: every `G` line carries `HEAD <40-hex>` on the receipt line itself | P10 | P10 | execute-phase | `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/684-ceremony-roadmap-upsert/SPEC.md` exits 0 | the command's `ok: true` run recorded; `## Log` `E17` | planned |
-| O22 | external-verify run 2 (B4) | Every surface that states the Fixes-row keying states the derived rule (the issue-keyed column `Issue`/`Issues`/`#` in any position, link or bare number), never the superseded leading-cell claim | P10 | P10 | execute-phase | `rg -c 'issue-keyed column' packages/agentic-workflow/bin/agentic-workflow.mjs` matches 1 | that `rg` line plus the clean sibling sweep (`rg 'leading `\[#N`'` over the tree returns no live-surface hit); `## Log` `E17` | planned |
+| O19 | external-verify run 2 (B1) | An escaped pipe `\|` inside a Fixes-table cell is markdown content, not a column: the writer keys the row by the table's own issue column, updates it in place (never a duplicate) and judges the written row's cell count against the header — the receipt answers `ok: true` for the row this repository's own roadmap carries | P8 | P8 | execute-phase | `bun test packages/agentic-workflow/test/edit.test.mjs` exits 0 | the `SHAPE-7`/`SHAPE-8` cases green plus the row-684 scratch `roadmap fixrow` probe answering `Receipt: pass`; `## Log` `E17` | verified |
+| O20 | external-verify run 2 (B2) | `ceremony roadmap row-upsert` never swallows an option: the flag the chosen arm cannot honour (`--depends-on` on a fix unit, `--issue` on a feature unit) is refused `unknown-flag` with exit 1 before any byte moves, while each arm's own flags stay honoured | P2 | P2 | execute-phase | `bun test packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` exits 0 | the flag-contract case's four assertions green (both rejections, both honoured pins); `## Log` `E17` | verified |
+| O21 | external-verify run 2 (B3) | The unit doc's own gate receipts satisfy `verify`'s receipt grammar: every `G` line carries `HEAD <40-hex>` on the receipt line itself | P10 | P10 | execute-phase | `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/684-ceremony-roadmap-upsert/SPEC.md` exits 0 | the command's `ok: true` run recorded; `## Log` `E17` | verified |
+| O22 | external-verify run 2 (B4) | Every surface that states the **writer's** Fixes-row keying (the writer's docblocks, the `fixrow` CLI comment and live prose) states the derived rule — the issue-keyed column `Issue`/`Issues`/`#` in any position, link or bare number — never the superseded leading-cell claim; the shared-merge driver's own `issueRowKey` comment describes that driver's unchanged leading-cell logic and is A1's reachability note, not this rule | P10 | P10 | execute-phase | `rg -c 'issue-keyed column' packages/agentic-workflow/bin/agentic-workflow.mjs` matches 1 | that `rg` line plus the multiline-aware sweep `rg -U 'leading\s+`\[#N`'` over the writer's live surfaces returning no hit; `## Log` `E17` | verified |
 
 ## Acceptance criteria
 
@@ -662,6 +663,82 @@ Budget: strong
   (190s) and at its default dispatch (171s), and the retry's 18-step run
   covers it — the load class `G2` already records for this unit, not a failure
   of a case.
+- **L4** — 2026-11-22, the owner's correction-batch instruction for
+  external-verify run 2, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **E16** — 2026-11-22, the correction RED corpus, red then green · at
+  `141b0e491` with the new cases in place: `bun test
+  packages/agentic-workflow/test/edit.test.mjs` → `38 pass / 2 fail`
+  (`SHAPE-7`, `SHAPE-8`) and `bun test
+  packages/agentic-workflow/test/runner.ceremony-p1p2.test.mjs` → `13 pass /
+  1 fail` (the flag case), both exit non-zero; `verify <SPEC>` → exit 2
+  (`receipt-malformed-head` on G6); `rg -c 'issue-keyed column'
+  …/bin/agentic-workflow.mjs` → no match. The flag case's first attempt also
+  exposed its own fixture gap (`makeRepo` carries no feature SPEC — completed
+  after the first green run; no assertion changed), and at the fixes
+  (`418dedb9b`, `3569083f5`) the same suites answer `40 pass / 0 fail` and
+  `14 pass / 0 fail`. justifies: O19, O20 — the independent obligations (the
+  receipt verdict, the in-place key, the flag contract), never the
+  implementation under test.
+- **E17** — 2026-11-22, the four blockers' foreground validators after the fix
+  · `verify <SPEC>` → exit 0, `violations: []` (O21); `rg -c 'issue-keyed
+  column' …/bin/agentic-workflow.mjs` → `1` and the multiline-aware sweep
+  `rg -U 'leading\s+`\[#N`'` over the writer's live surfaces (bin,
+  `Roadmap.mjs`, `skills/`, `docs/workflow/`, the READMEs, `.changeset/`) →
+  no hit — the whole-tree survivors are this receipt's own quotation and
+  `merges.mjs:52`, the merge driver's unchanged logic under A1 (O22; the row's
+  invariant and evidence cells were scoped to the writer's surfaces when
+  frozen this batch, after the first tree-wide sweep showed the driver's
+  honest comment as a counterexample); the row-684 scratch probe → base
+  `Receipt: pass`, current `Receipt: pass`, written documents byte-identical,
+  and the C2 consumer probe → base exit 2 byte-clean, current exit 0
+  `Receipt: pass` with exactly one `[#101]` row updated in place (O19); the
+  flag contract's four assertions green (O20). justifies: O19, O20, O21, O22.
+- **E18** — 2026-11-22, the correction differential · three archives in
+  `/tmp/pe684fix-*` (base `55525abad`, pre-correction `141b0e491`, current —
+  every `row-upsert`/`fixrow` run scratch-only): the four-operation
+  differential `diff -r` → EMPTY with exits `0/0/0/2` at both ends; the
+  canonical fix arm, feature arm and consumer settle byte-identical between
+  `141b0e491` and current (stdout, exit, document); the no-key refusal message
+  and the `--bogus` JSON byte-identical; the honoured flag sides
+  (`--depends-on` on a feature, `--issue` on a fix) byte-identical; the only
+  deltas are the asked ones — C1's receipt restored to `pass`, C2 settling in
+  place instead of refusing (base) or duplicating (pre-fix head), and the
+  wrong-arm flag changing swallow (exit 0 `upserted: true`) → refusal (exit 1
+  `unknown-flag`, no byte). `git status --porcelain` carried only this unit's
+  own prose.
+- **E19** — 2026-11-22, the gates at the batch tip · `bun
+  scripts/run-root-suite.mjs` → exit 0, `137 PASS / 0 FAIL`; `cd
+  packages/agentic-workflow && bun test test/` → exit 0, `1399 pass / 0 fail /
+  78 files` (1396 + the three new cases); `bun scripts/local-gate.mjs
+  --skip-network --jobs 2` → `PASS — 16 step(s) in 399s`; `phase-lint` →
+  PASS `6/6`; `promise-coherence` → PASS, `5 checked · 27 skipped` (O22's
+  claim green); `roadmap check <SPEC>` → PASS, `violations: 0`;
+  `docs-generate --check` → PASS, projection unchanged;
+  `journal aggregate --check` → `ok: true`; `bun scripts/test-impact.mjs
+  --base 141b0e491` → `targeted`, 22 suites — the six template hook suites
+  run directly, all PASS, the rest covered by the two suites above.
+- **D9** — 2026-11-22, the wrong-arm flag is rejected, not wired: `--depends-on`
+  on a fix unit errors `unknown-flag` instead of being honoured through a new
+  writer argument, because D7 closed the column→argument mapping
+  (`topic`/`summary`/`title`, `status`, `notes`/`note`) and the owner's `S7`
+  asked for shape acceptance, not new writer arguments; the rejection reuses
+  `onlyFlags` exactly as `findings.mjs` already narrows its own union flag list
+  per case, and adds no schema vocabulary (`PE-020`).
+- **D10** — 2026-11-22, G6's receipt line was reworded to `verify`'s grammar
+  (`HEAD <40-hex>` on the `- **G6** —` line itself, the G1–G5 shape) while
+  attesting the same head that run carried
+  (`0a946e7211a05b0caa2d2b726debab69fa272f57`); no receipt claim moved
+  (`PE-022`).
+- **D11** — 2026-11-22, the escaped-pipe repair is parse-side only: `rowCells`
+  counts markdown cells (an odd number of backslashes escapes the pipe), while
+  written values stay byte-passed-through exactly as the base writer passed
+  them — no escaping was added on write, so no output differs from base for
+  any input (`E18`); a raw unescaped `|` inside a value still writes raw as at
+  base, an out-of-domain input that already broke the table's own rendering —
+  reported, not widened.
 
 ## Next
 
@@ -669,10 +746,12 @@ PR [#686](https://github.com/gtrabanco/agentic-workflow/pull/686) is open with
 `Closes #684` and now also carries the owner-ordered extension
 (`S5`–`S12`): the ledgers extended at the cut, the RED corpus at `80724abbb`,
 the shape layer at `1b709afa8`, and the state, evidence and gate receipts after
-them. The owner's external verify of the extension's diff is the remaining
-step — any correction comes from that verdict, never from this session
-(`## Log` `G5` is the gate's own receipt, not a verdict). Two things stay
-reported, not fixed: the raft of sibling defects in the same module
+them. The owner's external verify run 2 returned NEEDS-DECISION on four
+blockers (`external-verify.md`), and the correction batch landed all four in
+one pass (`L4`, `E16`–`E19`, `D9`–`D11`); the remaining step is the owner's
+delta recheck of those four blockers (§9 bounds: one batch done, one recheck
+owed — a new finding goes to the owner, never into a second batch). Two things
+stay reported, not fixed: the raft of sibling defects in the same module
 (`## Non-goals`, `E4`) and the load-induced `doc.structure` suite timeout (`G2`).
 
 The `## Fixes` row still reads `done · [#686]` (`E11`): the extension lands in
