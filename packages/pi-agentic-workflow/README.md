@@ -927,8 +927,8 @@ session notes every command it dispatches, through both doors it has: the slash
 command a person types (`/execute-phase 690`) and the deferred runner door a
 model drives (`agentic_workflow_run` with `execute-phase 690`), which is the path
 every `runner <subcommand> [args…]` citation takes. A command that names no unit
-— a sensor, a `runner roadmap read` — is noted for the phase it sets and produces
-no sample: a row the ledger cannot attribute is worse than no row.
+— a `runner roadmap read` — is noted for the phase it sets and produces no
+sample: a row the ledger cannot attribute is worse than no row.
 
 A destination that refuses its sample says so once — the operator's `notify` in a
 session, stderr for a caller that named no channel — naming the sink and the

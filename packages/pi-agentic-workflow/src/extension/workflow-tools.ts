@@ -712,8 +712,8 @@ const RUNNER_RUN_RESULT_SCHEMA: Record<string, unknown> = {
  * hears the subcommand before anything spawns, because the unit a `runner
  * execute-phase <n>`-shaped call names is what the telemetry sample is
  * attributed to, and because `AG_WF_PHASE` has to be in the environment the
- * child inherits. The seam is bookkeeping — a failure there is reported by its
- * own owner and never costs the operator the command they asked for.
+ * child inherits. The seam is bookkeeping — a failure there never costs the
+ * operator the command they asked for.
  */
 function runnerRunSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
   return {

@@ -33,9 +33,12 @@ the session was still working on that unit.
 
 ## D3 — the five typed gate tools get no seam
 
-None of them runs a `UNIT_COMMANDS` subcommand (`PE-003`): the status tool runs
-the sensor, and the four gate tools run `diff-guard`, `phase-lint`,
-`audit-pr-gate` and `pre-execution-snapshot`. A seam with nothing to resolve
+None of them runs a unit-scoped invocation (`PE-003`): the status tool takes no
+parameters, so its `workflow-status --json-only` sensor spawn can never carry a
+unit argument — the subcommand name is in `UNIT_COMMANDS`, which is exactly why
+the claim is about the invocation, not the name — and the four gate tools run
+`diff-guard`, `phase-lint`, `audit-pr-gate` and `pre-execution-snapshot`, none
+of them a `UNIT_COMMANDS` name. A seam with nothing to resolve
 would be a second door that silently does nothing, which is the defect this unit
 repairs rather than duplicates.
 
