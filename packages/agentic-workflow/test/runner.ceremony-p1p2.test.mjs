@@ -424,7 +424,8 @@ test("roadmap: a consumer-shaped Fixes table settles by its own issue column", (
 // `onlyFlags`' own rule ("an option is either honoured or an error, never
 // silently swallowed"). Added red, observed failing before the fix.
 test("roadmap: row-upsert refuses the flag its arm cannot honour and keeps its own (O20)", (t) => {
-  const { root } = makeRepo(t);
+  const { root, write } = makeRepo(t);
+  write("docs/features/91-toy/SPEC.md", "# feature/91-toy\n\n## Log\n\n");
   const roadmap = () => readFileSync(join(root, "docs/ROADMAP.md"), "utf8");
   const before = roadmap();
 

@@ -59,6 +59,12 @@ export function roadmap(op, argv) {
       const unit = resolveUnit(flags.slug);
       const nn = /^(\d+)/u.exec(flags.slug)?.[1];
       if (nn === undefined) fail("bad-slug", { slug: flags.slug, expected: "<nn>-<topic>" });
+      // The flag list above is the union of both arms; each arm honours only
+      // its own subset — an option is either honoured or an error, never
+      // silently swallowed (`onlyFlags`, lib.mjs). The fix arm has no
+      // depends-on semantics and the feature arm has no issue key
+      // (external-verify run 2, B2).
+      onlyFlags(flags, unit.type === "fix" ? ["status", "summary", "issue"] : ["status", "depends-on", "summary"]);
       // Both writers take the roadmap's *path* and write it themselves —
       // `writeShared` splices the one row and every other byte is carried through
       // — and re-read it to validate the row they left. Handing them the document
