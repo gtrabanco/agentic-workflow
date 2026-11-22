@@ -670,6 +670,28 @@ test("checkJournal refuses a fragment that declares two corrections", () => {
   assert.match(reason, /declares 2 correction cells/u, "two links are an ambiguity, never a guess");
 });
 
+test("checkJournal refuses a lone fragment that declares a correction", () => {
+  const repo = newRepo("errata-lone");
+  const name = "20261105T100500Z-feat-x-narrative-s9.md";
+  carrier(repo, [
+    {
+      name,
+      content:
+        "## 2026-11-05T10:05:00Z — feat/x — lone\n" +
+        "- **Summary:** a link to nothing\n" +
+        "- **Supersedes:** 20200101T000000Z-feat-x-narrative-s9.md\n",
+    },
+  ]);
+
+  const receipt = checkJournal({ root: repo });
+  assert.equal(receipt.ok, false, "the oldest fragment names nothing — a lone link dangles or points outside the slot");
+  assert.equal(receipt.refusals.length, 1, "one refusal");
+  const reason = receipt.refusals[0].reason;
+  assert.match(reason, new RegExp(literal(name)), `the refusal names ${name}`);
+  assert.match(reason, /the oldest fragment is the entry a correction names/u, "the chain rule it broke");
+  assert.match(reason, /declares Supersedes/u, "the refusal quotes the declared link");
+});
+
 test("the aggregator integrates a declared correction once and names the superseded fragment", () => {
   const repo = newRepo("errata-aggregate");
   const { stale, correction } = errataPair(repo);

@@ -547,6 +547,51 @@ test("the declared prose states the errata path — the writer's flag, the block
   assert.match(skill, /stale entry/iu, "the checklist names the stale entry it corrects");
 });
 
+// ── the 2026-11-22 correction batch's corpus (EXTERNAL VERIFY B4a/A1) ───
+
+test("journal write refuses a correction link the flag did not declare", () => {
+  const repo = newRepo("errata-flagless");
+  const block =
+    "## 2026-11-08T13:00:00Z — main — crafted correction\n" +
+    "- **Summary:** a link no flag declared\n" +
+    "- **Supersedes:** 20200101T000000Z-main-narrative-s9.md\n";
+  const run = runCli(
+    ["journal", "write", "--kind", "narrative", "--content", block, "--session", "s9", "--timestamp", "2026-11-08T13:00:00Z"],
+    repo,
+  );
+  assert.equal(run.status, 2, run.stdout);
+  assert.match(run.stderr, /a correction link is produced by --supersedes only/u, "the refusal names the flag that produces a link");
+  assert.deepEqual(names(repo), [], "no byte written");
+});
+
+test("journal write: the published duplicate refusal keeps its sentence and appends the routing", () => {
+  const repo = newRepo("errata-published-refusal");
+  const stale = staleEntry(repo);
+  const second = runCli(
+    ["journal", "write", "--kind", "narrative", "--summary", "An unlinked second entry.", "--session", "s1", "--timestamp", "2026-11-08T13:30:00Z"],
+    repo,
+  );
+  assert.equal(second.status, 2, second.stdout);
+  assert.match(
+    second.stderr,
+    /is a duplicate, and another --session id is a different conversation/u,
+    "#468's published sentence stays byte-identical — the batch appends, never rewrites",
+  );
+  assert.match(
+    second.stderr,
+    new RegExp(`To correct a stale entry, re-run with --supersedes ${stale.replace(/[.]/gu, "\\.")}`, "u"),
+    "the routing clause follows the published sentence",
+  );
+  assert.deepEqual(names(repo), [stale], "no byte written");
+});
+
+test("the correction batch's prose pins — the skill's condition and the Impact's entries", () => {
+  const skill = fs.readFileSync(path.join(repoRoot, "skills", "log-session", "SKILL.md"), "utf8");
+  assert.match(skill, /A stale entry, when one existed, was CORRECTED/u, "the checklist states the condition a correction answers");
+  const spec = fs.readFileSync(path.join(repoRoot, "docs", "fix", "676-journal-errata-path", "SPEC.md"), "utf8");
+  assert.match(spec, /its session entries as narrative fragments under/u, "the Impact names every session entry the diff carries");
+});
+
 // ── aggregate --check — the carrier lint (S3) ────────────────────────────
 
 test("journal aggregate --check: every fault is listed and no byte moves", () => {

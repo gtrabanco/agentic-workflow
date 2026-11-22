@@ -165,6 +165,19 @@ test("676 the errata marker is resident in the schema package and declared as a 
   assert.equal(supersedesOf(renderEntryBlock({ ...facts, supersedes: stale })), stale, "the block owner renders the cell the vocabulary publishes");
 });
 
+// ── the 2026-11-22 correction batch (EXTERNAL VERIFY B2/B3) ──────────────
+
+test("676 no sibling surface still asserts the old slot rule", () => {
+  const readme = read("packages", "agentic-workflow", "README.md");
+  const row = readme.split("\n").find((line) => line.startsWith("| `journal aggregate "));
+  assert.ok(row, "the command table carries the journal aggregate row");
+  assert.doesNotMatch(row, /holding more than one fragment/u, "the command row states the chain rule, not the pre-#676 slot rule");
+  assert.match(row, /not one entry plus its declared corrections/u, "the command row names the rule the lint reads");
+  const crate = read("packages", "agentic-workflow", "src", "journal", "aggregate.mjs");
+  assert.doesNotMatch(crate, /holding more than one conforming fragment/u, "the module doc no longer asserts the pre-#676 truth beside its chain bullet");
+  assert.match(crate, /one entry plus the corrections that declare it/u, "the module doc carries the chain rule");
+});
+
 test("374 the crate's entry codec carries the schema package's contract ids verbatim", async () => {
   const schema = await import("../../agentic-workflow-schema/dist/index.js");
   const crate = await import("../src/journal/entry.mjs");
