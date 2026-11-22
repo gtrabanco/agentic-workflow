@@ -43,6 +43,10 @@ const USAGE = [
 const RELEASE_IDENTITY = ["-c", "user.name=agentic-workflow-release", "-c", "user.email=release@localhost"];
 const TAG_SHAPE = /^v?[0-9A-Za-z][0-9A-Za-z._-]*$/u;
 
+/** The options each operation declares in its USAGE line — a flag of the
+ * other operation is a usage error, never a flag read and ignored. */
+const OPERATION_OPTIONS = { snapshot: ["root"], record: ["root", "tag", "commit"] };
+
 function refuse(reason) {
   process.stderr.write(`CANARY-TAG REFUSAL — ${reason}\n`);
   process.exit(2);
@@ -71,17 +75,39 @@ function requireHead(root) {
   return head.out;
 }
 
-function parse(args) {
+/** Parse `args` for `operation` against its declared option set. A value that
+ * never arrives is usage (exit 1) — it used to read as the default and
+ * succeed silently (valueless `--commit` tagged HEAD, valueless/empty
+ * `--root` ran at cwd). A value that arrives but is empty still falls through
+ * to the caller's own check, so those observed refusals stay byte-identical:
+ * `record`'s missing-tag message, `--commit ""`'s unknown-commit refusal. */
+function parse(operation, args) {
+  const allowed = OPERATION_OPTIONS[operation] ?? [];
   const parsed = { root: process.cwd(), tag: null, commit: null };
   for (let i = 0; i < args.length; i += 1) {
     const flag = args[i];
-    if (flag === "--root") parsed.root = resolve(args[++i] ?? "");
-    else if (flag === "--tag") parsed.tag = args[++i] ?? null;
-    else if (flag === "--commit") parsed.commit = args[++i] ?? null;
-    else if (flag.startsWith("--root=")) parsed.root = resolve(flag.slice("--root=".length));
-    else if (flag.startsWith("--tag=")) parsed.tag = flag.slice("--tag=".length);
-    else if (flag.startsWith("--commit=")) parsed.commit = flag.slice("--commit=".length);
-    else throw new Error(`unknown argument "${flag}"`);
+    if (flag === "--root" || flag === "--tag" || flag === "--commit") {
+      const key = flag.slice(2);
+      if (!allowed.includes(key)) usageError(`${flag} is not an option of ${operation}`);
+      const value = args[i + 1];
+      if (key === "root" && (value === undefined || value === "")) usageError("--root needs a value");
+      if (key === "commit" && value === undefined) usageError("--commit needs a value");
+      if (value !== undefined) i += 1;
+      if (key === "root") parsed.root = resolve(value);
+      else parsed[key] = value ?? null;
+    } else if (flag.startsWith("--root=")) {
+      const value = flag.slice("--root=".length);
+      if (value === "") usageError("--root needs a value");
+      parsed.root = resolve(value);
+    } else if (flag.startsWith("--tag=")) {
+      if (!allowed.includes("tag")) usageError(`--tag is not an option of ${operation}`);
+      parsed.tag = flag.slice("--tag=".length);
+    } else if (flag.startsWith("--commit=")) {
+      if (!allowed.includes("commit")) usageError(`--commit is not an option of ${operation}`);
+      parsed.commit = flag.slice("--commit=".length);
+    } else {
+      throw new Error(`unknown argument "${flag}"`);
+    }
   }
   return parsed;
 }
@@ -143,10 +169,11 @@ function main(argv) {
     process.stdout.write(`${USAGE}\n`);
     process.exit(operation ? 0 : 1);
   }
+  if (!OPERATION_OPTIONS[operation]) usageError(`unknown operation "${operation}"`);
 
   let args;
   try {
-    args = parse(rest);
+    args = parse(operation, rest);
   } catch (error) {
     usageError(error.message);
   }
