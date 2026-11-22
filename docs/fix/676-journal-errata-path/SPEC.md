@@ -65,6 +65,8 @@ requirement per distinct ask, in the order the issue states them.
 > **Editing or deleting** the stale fragment (pending or published) is refused by `log-immutability` (fragment-hand-edited / fragment-hand-deleted / log-hand-appended) — correctly: the journal is aggregator-only.
 
 **S4 — The refusal routes nowhere and the skill documents no procedure.**
+> The skill (`log-session`) forbids editing past entries and documents no stale-entry procedure; the refusal message routes only to wall 1's non-answer.
+>
 > An agent with genuinely obsolete claims (push state, merge state, gate results that moved mid-unit) is boxed into either writing an unlinked correction under a fresh session id or **hand-editing** — the second happened live.
 
 **S5 — A sanctioned errata path, decided in the unit among candidates.**
@@ -378,6 +380,9 @@ ships, every row is `verified` or an evidenced `n/a`.
   comparator for the batch order and the chain · `73ab1035d`.
 - **P5** — 2026-11-21 21:47, the prose, the inventory rows, the re-pinned
   budgets, the changeset, the roadmap/projection sync and this unit doc · `1e1fe4571`.
+- **P6** — 2026-11-21 22:02, the verification commit (`a58f443f0`) and the
+  session entry through the carrier, closed by `session-close close`
+  (`2b75dff15`, fragment `20261122T130233Z-fix-676-journal-errata-path-narrative-local`).
 - **E3** — 2026-11-21, `bun test packages/agentic-workflow/test/journal.test.mjs` ·
   exit 0 · 40 pass / 0 fail (the green half of the corpus: the chain acceptance,
   the broken chain, the two-cell ambiguity, the CLI's green half).
