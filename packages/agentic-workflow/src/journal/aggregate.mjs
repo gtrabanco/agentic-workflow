@@ -89,7 +89,7 @@ function newestFirst(a, b) {
 
 /** What a slot's fragments have in common, in every chain refusal's wording. */
 function slotIdentity({ sessionId, kind, names }) {
-  return `fragments ${namedList(names)} carry the same identity — session ${JSON.stringify(sessionId)}'s ${kind} entry; the grammar's unit is one entry per conversation per kind`;
+  return `fragments ${namedList(names)} carry the same identity — session ${JSON.stringify(sessionId)}'s ${kind} entry; timestamps and branches do not distinguish an entry slot, and the grammar's unit is one entry per conversation per kind`;
 }
 
 /** The lint's one line for one slot whose fragments are not a correction chain. */
