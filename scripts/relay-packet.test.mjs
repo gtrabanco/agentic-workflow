@@ -546,3 +546,45 @@ test("closeout CO12: relay-closeout@1 is published on the relay contract and its
   assert.equal(closeoutNext({ slug: UNIT, receipt: "absent", pr: null }), `→ Next: /review-change ${UNIT}`);
   assert.equal(closeoutNext({ slug: UNIT, receipt: "current", pr: "https://github.com/o/r/pull/335" }), "→ Next: /audit-pr https://github.com/o/r/pull/335");
 });
+
+/* --------------------------------------- external-verify correction corpus */
+
+/**
+ * The 2026-11-22 `EXTERNAL VERIFY` reproducers (docs/fix/680-relay-closeout-
+ * receipt-orphan/external-verify.md), frozen as failing checks before the
+ * correction batch: B1–B3 (three stale mode-count mentions) and B4 (a current
+ * receipt with no PR url routed as if the gate's precondition were met).
+ */
+
+const MODE_COUNT_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+
+test("closeout CO13: every cardinal mode-count mention matches RELAY_MODES (external verify B1-B3)", () => {
+  const surfaces = [
+    "skills/unit-lane/references/RELAY.md",
+    "packages/agentic-workflow/src/relay/Packet.mjs",
+    "packages/agentic-workflow/src/promise-coherence/index.mjs",
+  ];
+  let seen = 0;
+  for (const relative of surfaces) {
+    const text = fs.readFileSync(path.join(ROOT, relative), "utf8");
+    for (const match of text.matchAll(/\b(one|two|three|four|five|six|seven|eight|nine|ten)\b[ \t]+modes\b/giu)) {
+      seen += 1;
+      assert.equal(
+        MODE_COUNT_WORDS[match[1].toLowerCase()],
+        RELAY_MODES.length,
+        `${relative}: \`${match[0]}\` vs RELAY_MODES.length ${RELAY_MODES.length}`,
+      );
+    }
+  }
+  assert.ok(seen >= 3, `the three known mode-count mentions are scanned (saw ${seen})`);
+});
+
+test("closeout CO14: a current receipt that records no PR url is not routable to the gate (external verify B4)", () => {
+  const root = completeTree(`receipt current at ${SHA}`);
+  const result = run([CLOSE, UNIT], { root });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(line(result.stdout, "receipt"), "current");
+  assert.equal(line(result.stdout, "precondition"), "none — the Review line records no PR url");
+  assert.match(result.stdout, /^→ Next: \/review-change 20-relay-unit$/m);
+  assert.doesNotMatch(result.stdout, /\/audit-pr /);
+});
