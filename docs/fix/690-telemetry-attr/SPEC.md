@@ -222,16 +222,16 @@ none
 
 ## Tasks
 
-- [ ] P1 — Freeze these ledgers and land the RED corpus: the new suite and the added cases, observed failing on the unwired seam and the swallowed sink error (validator: `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits non-zero)
+- [x] P1 — Freeze these ledgers and land the RED corpus: the new suite and the added cases, observed failing on the unwired seam and the swallowed sink error (validator: `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits non-zero)
   (Implements: S1, S2, S3)
   - Relevant files: docs/fix/690-telemetry-attr/SPEC.md, packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs, packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs, packages/pi-agentic-workflow/test/session-telemetry.test.mjs, packages/pi-agentic-workflow/test/shipped-adapter.test.mjs
-- [ ] P2 — The attribution seam: `WorkflowToolsDeps.onRunnerCommand` called by `runnerRunSpec.execute` before the spawn, threaded from the adapter's `noteCommand` (validator: `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0)
+- [x] P2 — The attribution seam: `WorkflowToolsDeps.onRunnerCommand` called by `runnerRunSpec.execute` before the spawn, threaded from the adapter's `noteCommand` (validator: `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0)
   (Implements: S1, S2)
   - Relevant files: packages/pi-agentic-workflow/src/extension/workflow-tools.ts, packages/pi-agentic-workflow/src/extension/index.ts
-- [ ] P3 — The degraded report: `SessionTelemetryOptions.onSinkError` reports every failed sink write, and the wiring turns it into one report per sink per session through `onDegraded`, wired to the operator's `notify` (validator: `bun test packages/pi-agentic-workflow/test/session-telemetry.test.mjs packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs` exits 0)
+- [x] P3 — The degraded report: `SessionTelemetryOptions.onSinkError` reports every failed sink write, and the wiring turns it into one report per sink per session through `onDegraded`, wired to the operator's `notify` (validator: `bun test packages/pi-agentic-workflow/test/session-telemetry.test.mjs packages/pi-agentic-workflow/test/telemetry-wiring.test.mjs` exits 0)
   (Implements: S3)
   - Relevant files: packages/pi-agentic-workflow/src/session-telemetry.ts, packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts, packages/pi-agentic-workflow/src/extension/index.ts
-- [ ] P4 — Documentation and state: the README's telemetry section names both attribution doors and the degraded report, the changeset, the roadmap row through its writer, the generated projection and the journal entry (validator: `bun scripts/docs-generate.mjs --check` exits 0)
+- [x] P4 — Documentation and state: the README's telemetry section names both attribution doors and the degraded report, the changeset, the roadmap row through its writer, the generated projection and the journal entry (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3)
   - Relevant files: packages/pi-agentic-workflow/README.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/690-telemetry-attribution.md, docs/ROADMAP.md, docs/generated/units.md, docs/LOGS.md
 - [ ] P5 — Verification: the package suite, the root suite and the declared gates in the foreground (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0)
@@ -401,6 +401,14 @@ relay-next: create .pi-web/relays/690-telemetry-attr/ (charter → docs/fix/690-
 - **E5** — 2026-11-22, `bun test test/session-telemetry.test.mjs test/telemetry-wiring.test.mjs` · exit 0 · 47 pass, 0 fail (the per-sink report, the stderr default, the throwing-channel fallback, the one-report latch and the off switch's silence).
 - **E6** — 2026-11-22, `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 1055 pass, 0 fail across 91 files.
 - **E7** — 2026-11-22, `bun scripts/docs-generate.mjs --check` · exit 0 · verdict PASS, 3 files, 0 stale; `bun scripts/check-skill-context.mjs --documents` · exit 0 · PASS, 7 budgeted documents; `bun scripts/check-skill-context.mjs` · exit 0 · PASS, 30 skills.
+- **P4** — 2026-11-22, the README paragraph, the budget re-pin, the changeset, the roadmap row through its writer, the emitter's projection and the ledgers' closure · 3b644e90a.
+- **G1** — 2026-11-22, HEAD `3b644e90a`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/690-telemetry-attr/SPEC.md` · exit 0 · PASS (6/6) for each of P1–P5.
+- **G2** — 2026-11-22, HEAD `3b644e90a`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/690-telemetry-attr/SPEC.md` · exit 0 · VERIFY PASS, seven checks, no violations.
+- **G3** — 2026-11-22, HEAD `3b644e90a`, `bun scripts/test-impact.mjs --base origin/main` · exit 0 · verdict `targeted`, 9 executable path(s), 1 symbol (`TelemetrySinkFailure`), 9 suites; those nine ran in the foreground · exit 0 · 145 pass, 0 fail.
+- **G4** — 2026-11-22, HEAD `3b644e90a`, the four touched suites `bun test test/telemetry-attribution.test.mjs test/telemetry-wiring.test.mjs test/session-telemetry.test.mjs test/shipped-adapter.test.mjs` · exit 0 · 81 pass, 0 fail; `bun run test` in the package · exit 0 · 1055 pass, 0 fail across 91 files.
+- **G5** — 2026-11-22, HEAD `3b644e90a`, `bun scripts/run-root-suite.mjs` · 140 suites · 139 PASS, 1 FAIL — `scripts/roadmap-settle.test.mjs`, the duplicate feature-`98` row inherited from `main`'s `7951c17c1` (see `## Known pre-existing issues`), touching no path this unit changed.
+- **G6** — 2026-11-22, HEAD `3b644e90a`, `bun scripts/docs-generate.mjs --check` · exit 0 · verdict PASS; `bun scripts/check-skill-context.mjs --documents` · exit 0 · PASS; `bun scripts/check-skill-context.mjs` · exit 0 · PASS; `bun scripts/test-obligation-tags.mjs --root .` · exit 0 · 140 suites, 0 findings, verdict PASS.
+- **G7** — 2026-11-22, HEAD `3b644e90a`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs diff-guard --base origin/main` · exit 1 · `DIFF-GUARD BREACH — Lines: 1210 > 400 · Files: 15 > 8`. Reported, not trimmed: the only honest split does not exist here, because the ranges are not interchangeable. What this unit authored is 15 files, +1165 −45 — source +112 −4 across four files (the seam, the thread, the report, the resolution), tests +513 −0 across four suites, and the rest the frozen ledgers, the README paragraph and the writer's own roadmap/projection output. Deleting prose or tests to fit would be the anti-gaming breach the guard itself names.
 
 ## Next
 
