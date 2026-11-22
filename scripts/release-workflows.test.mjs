@@ -101,7 +101,7 @@ test("cut + canary publishes the declared packages at the canary version, gated 
   assert.match(block, /npm-version-gate\.mjs/, "the exact-version gate guards every publish");
   assert.match(block, /npm publish --ignore-scripts --access public --provenance --tag "\$tag"/);
   assert.match(block, /git checkout -- packages\/\*\/package\.json/, "the repo is restored after the temp version");
-  assert.match(block, /git tag "v\$V"/, "the tag is the canary counter's input");
+  assert.match(block, /canary-tag\.mjs record --tag "v\$V"/, "the tag is the canary counter's input");
 });
 
 // The canary job runs the same never-publish-red gate a push publish runs, but
@@ -142,7 +142,8 @@ test("cut + canary records the tag on the staged tree and restores the staged pi
   assert.ok(restore < record, "the tag is recorded after the restore, from the captured commit");
   assert.ok(record < push, "the recorded tag is what is pushed");
   assert.match(block, /RELEASE_COMMIT=\$\(bun scripts\/canary-tag\.mjs snapshot\)/, "the snapshot's commit is carried to the tag step");
-  assert.match(block, /canary-tag\.mjs record --tag "v\$V" --commit "\$RELEASE_COMMIT"/, "the tag records the staged tree");
+  assert.match(block, /canary-tag\.mjs record --tag "v\$V" --commit "\$TARGET"/, "the tag records the staged tree");
+  assert.match(block, /TARGET="\$\{RELEASE_COMMIT:-\$\(git rev-parse HEAD\)\}"/, "the tag step defaults to HEAD only when the snapshot published nothing");
   assert.match(block, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the staged pin is restored with the manifests");
 });
 
