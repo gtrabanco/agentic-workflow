@@ -4,6 +4,8 @@
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/cli-coverage.test.mjs | P3 | 2026-11-22 | execute-phase | The usage anchor moves from the scope-less `usage: agentic-workflow <…>` to the scoped, pinned `usage: bunx @gtrabanco/agentic-workflow@<pin> <…>`; the README parser must read the shape the bin and the crate README now carry. The token set, the citation rules and every refusal are unchanged, so this is a contract-anchor update, never a relaxed assertion.
+justification | scripts/canary-tag.test.mjs | P7 | 2026-11-22 | execute-phase | The 2026-11-22 EXTERNAL VERIFY advisory 2's smallest action is a parser fix in `scripts/canary-tag.mjs`; its RED corpus (valueless `--commit`/`--root`, empty `--root`, `snapshot` rejecting `record`'s options) is appended to this suite as the fold's proof, every pre-existing case keeps its exact expectations (an added contract, never a weakened assertion), and the batch also appends the differential pin for `record`'s missing-tag message.
+approval | scripts/canary-tag.test.mjs | P7 | 2026-11-22 | human-owner | owner instruction 2026-11-22 (external-verify correction round), verbatim: "Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff" — the recorded owner order for this post-freeze addition to the protected suite; advisory 2 names this file's module, and its own parser cases are how the fold proves.
 ```
 
 ## D1 — the canary tag records the staged tree

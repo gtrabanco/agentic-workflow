@@ -129,3 +129,50 @@ test("usage is exit 1 and names both operations", () => {
   assert.match(usage.stdout, /snapshot/);
   assert.match(usage.stdout, /record --tag/);
 });
+
+// F1 — EXTERNAL VERIFY 2026-11-22 advisory 2, folded: a flag that never
+// received its value used to read as absent and succeed — valueless `--commit`
+// tagged HEAD, valueless/empty `--root` ran at cwd. The USAGE text is the
+// declared grammar and it names a value for both; a missing one is usage
+// (exit 1), never a silent default.
+test("a valueless or empty --root, and a valueless --commit, are usage errors", () => {
+  const root = fixture();
+
+  const noCommit = run(["record", "--root", root, "--tag", "v8.8.8-canary.20260101.8", "--commit"]);
+  assert.equal(noCommit.status, 1, noCommit.stderr);
+  assert.match(noCommit.stderr, /--commit needs a value/u);
+  assert.equal(git(root, ["tag", "-l", "v8.8.8-canary.20260101.8"]), "", "a usage error never writes a tag");
+
+  const noRoot = run(["snapshot", "--root"], { cwd: root });
+  assert.equal(noRoot.status, 1, "a valueless --root never falls back to cwd");
+  assert.match(noRoot.stderr, /--root needs a value/u);
+
+  const emptyRoot = run(["record", "--root=", "--tag", "v8.8.8-canary.20260101.8"], { cwd: root });
+  assert.equal(emptyRoot.status, 1, "an empty --root is not a directory");
+  assert.match(emptyRoot.stderr, /--root needs a value/u);
+  assert.equal(git(root, ["tag", "-l", "v8.8.8-canary.20260101.8"]), "", "the cwd repo is never tagged");
+});
+
+// F1 — same fold: the USAGE text scopes the options per operation, so
+// `record`'s options on `snapshot` are usage errors, never ignored flags.
+test("snapshot rejects record's options instead of ignoring them", () => {
+  const root = fixture();
+
+  const tagged = run(["snapshot", "--root", root, "--tag", "v1.0.0-canary.20260101.1"]);
+  assert.equal(tagged.status, 1, "--tag is not an option of snapshot");
+  assert.match(tagged.stderr, /not an option of snapshot/u);
+
+  const committed = run(["snapshot", "--root", root, "--commit", "HEAD"]);
+  assert.equal(committed.status, 1, "--commit is not an option of snapshot");
+  assert.match(committed.stderr, /not an option of snapshot/u);
+});
+
+// Differential pin on the touched parse path: `record` without `--tag` keeps
+// its own usage message byte for byte — the fix changes only paths that used
+// to succeed silently.
+test("record without --tag keeps its own usage message", () => {
+  const root = fixture();
+  const refused = run(["record", "--root", root]);
+  assert.equal(refused.status, 1);
+  assert.match(refused.stderr, /^record needs --tag <tag>$/mu);
+});
