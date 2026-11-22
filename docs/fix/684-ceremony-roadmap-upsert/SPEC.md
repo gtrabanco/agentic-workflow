@@ -645,6 +645,15 @@ Budget: strong
   ones are the suite runners and the scratch `diff`, which that reader never
   executes) · `phase-lint <SPEC>` → `PASS`, `6/6` on every phase, `P10`
   included. The working tree carried this receipt's own uncommitted prose.
+- **G6** — 2026-11-22, the pre-push hook's own gate over the pushed range at
+  `0a946e721`, the head it carried · `git push origin
+  fix/684-ceremony-roadmap-upsert` → hook run `local-gate: PASS — 18 step(s) in
+  692s`, then `80724abbb..0a946e721` published · the first attempt at the same
+  range failed `crate-suite-bun` (exit 1 in 249s) while two gates ran
+  concurrently on this box; the same step is green standalone at one worker
+  (190s) and at its default dispatch (171s), and the retry's 18-step run
+  covers it — the load class `G2` already records for this unit, not a failure
+  of a case.
 
 ## Next
 
