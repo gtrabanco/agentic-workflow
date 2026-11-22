@@ -330,6 +330,113 @@ frozen plan (owner instruction, `S1`). No triage block is claimed here.
   refuses an unreadable cwd instead of falling back to `process.cwd()`. The
   refusal reuses the existing `sensor-degraded` contract, so no vocabulary
   moves.
+- **L3** — 2026-11-22, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **D3** — 2026-11-22, the owner instruction (L3) decides the batch's scope:
+  external-verify blockers B1–B7 all fold; advisories A1/A2/A4 fold with them
+  (the evidence ledger's cut-base sampling sentence, AC13's quantifier, AC9's
+  outside-tree scope), while A3 (`workflow-tools.test.mjs`'s seam title) and A5
+  (the worktree's `setup-env` verdict) stand as recorded advisories — the title
+  is true of the case it drives, and the environment is not this tree's state
+  (authority: `external-verify.md` beside this document).
+- **P1** — 2026-11-22 02:25, the correction batch: AC2/AC11 repointed to the
+  wiring suite, AC3 checked against the real translation, AC9/AC13 scoped to
+  what they prove, P3/P5 and O3's validators corrected to their observed
+  outcomes, `## Impact` naming every diff path, V1's stale cells corrected, the
+  evidence ledger's sampling point stated, `ac-hash` re-stamped with the
+  DESIGN.md `sectionText` recipe · 3da5ee0883e4870dca8666e48ab619d3209e5e65.
+- **E1** — 2026-11-22, red corpus at the test-only commit
+  `9abeb4b67252838de54a3767818544a9c06b263a` (mktemp `git archive`, src byte-
+  identical to base): `bun test test/workflow-tools-wiring.test.mjs` · exit 1 ·
+  `0 pass / 5 fail`, the argument check `subcommand is required and must be a
+  non-empty string` named — the green run of the same suite is
+  `3da5ee0883e4870dca8666e48ab619d3209e5e65` (E3).
+- **E2** — 2026-11-22, the same red tree: `bun test test/conductor-sensor.test.mjs`
+  · exit 1 · `7 pass / 1 fail` — `AssertionError: the refusal names the cwd it
+  could not resolve` (the pre-fix sensor ran in the process cwd).
+- **E3** — 2026-11-22, head `3da5ee0883e4870dca8666e48ab619d3209e5e65`:
+  `bun test packages/pi-agentic-workflow/test/workflow-tools-wiring.test.mjs` ·
+  exit 0 · `5 pass / 0 fail` over the six registered names
+  (`agentic_workflow_status`, `agentic_workflow_diff_guard`,
+  `agentic_workflow_phase_lint`, `agentic_workflow_audit_pr_gate`,
+  `agentic_workflow_snapshot_verify`, `agentic_workflow_run`) — cases:
+  `every tool runs through the host's 5-arg convention` (`execute.length === 5`
+  for all six), `every params-reading tool answers when the host calls it with
+  the 5-arg convention`, `status: the host's ctx.cwd is the project the sensor
+  samples` (the double recorded exactly the scratch project dir, never the
+  process cwd), `a gate tool spawns in the host's ctx.cwd`,
+  `agentic_workflow_run answers the issue's quoted reproducer`
+  (`{ subcommand: "setup-env", stdout, stderr, exitCode: 0 }`);
+  `bunx tsc --noEmit` · exit 0; `rg -c 'execute\(params'
+  packages/pi-agentic-workflow/src/extension/workflow-tools.ts` → 7 (the
+  corrected count: seam sentence + interface + five params-reading
+  implementations).
+- **E4** — 2026-11-22, head: `bun test
+  packages/pi-agentic-workflow/test/conductor-sensor.test.mjs` · exit 0 ·
+  `8 pass / 0 fail` — `an unreadable cwd refuses instead of sampling the process
+  cwd`, `detail: cwd-unresolved: "/nonexistent/issue-678-unreadable-cwd" is not
+  a readable directory; the sensor never samples another project`;
+  `rg -c 'process\.cwd\(' packages/pi-agentic-workflow/src/conductor/sensor.ts`
+  → 1 (the comment, no call site).
+- **E5** — 2026-11-22, head: `bun test
+  packages/pi-agentic-workflow/test/shipped-adapter.test.mjs` · exit 0 ·
+  `28 pass / 0 fail`, each registered tool asserting
+  `tool.execute.length === 5`.
+- **E6** — 2026-11-22, head: `bun run test` in `packages/pi-agentic-workflow` ·
+  exit 0 · `1041 pass / 0 fail` across 90 files (wiring suite included);
+  `bunx tsc --noEmit` · exit 0.
+- **E7** — 2026-11-22, the differential (mktemp; base side = `9abeb4b67…` src,
+  byte-identical to base; head side = this branch): `runSensor("/nonexistent/
+  issue-678-e7", <fake sensor>)` · base → `ok:true` with
+  `summary:"sampled:<process cwd>"`; head → `ok:false`,
+  `refusal:"sensor-degraded"`, `detail:"cwd-unresolved:
+  \"/nonexistent/issue-678-e7\" is not a readable directory; the sensor never
+  samples another project"`, no envelope.
+- **E8** — 2026-11-22: `bun scripts/test-impact.mjs --base origin/main` · exit 0 ·
+  `verdict: targeted`, changed 19 / executable 8 / suites 9 (the wiring suite,
+  receipt-guard, skill-parity, check-skill-context, guide-split,
+  promise-coherence, shared-doc-merge, version-parity-gate, tool-choice-corpus);
+  `bun scripts/local-gate.mjs --jobs 4` · exit 0 · `local-gate: PASS — 20
+  step(s) in 384s` — the per-step receipt is G1.
+- **E9** — 2026-11-22, at `3da5ee0883e4870dca8666e48ab619d3209e5e65`:
+  `git diff --name-only 3f749feebcefd67f6b72d1be418822b687df4559..HEAD` · 18
+  paths, every one named in `## Impact` (both journal fragments,
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` and `external-verify.md` among
+  them); the resolver-pairing scope → 0 lines; `--
+  packages/pi-agentic-workflow/package.json` → 0 lines; `git stash list` →
+  empty. The count is point-in-time: `## Impact` names journal fragments by
+  class, so a session fragment written later is still named.
+- **E10** — 2026-11-22: `bun scripts/docs-generate.mjs --check` · exit 0 ·
+  `verdict: PASS`, 3 files · 0 stale; `bun test
+  packages/pi-agentic-workflow/test/runner-prose.test.mjs` · exit 0 · `4 pass /
+  0 fail`; the DESIGN.md `sectionText` recipe →
+  `afcd2748bd33854ba68696cfcafe2bb198b7271374caae8e6b7e4b25fc3ebdc2` equals the
+  frontmatter `ac-hash` (and on the pre-edit section it reproduces the frozen
+  `48efe141ee4b578519598ce2c26fe51ba9992aeeecd3648598557bb05749a95d`);
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify
+  docs/fix/678-deferred-tools-signature-bug/SPEC.md` · exit 0 · `VERIFY PASS`,
+  violations `[]`.
+- **G1** — 2026-11-22, HEAD 3da5ee0883e4870dca8666e48ab619d3209e5e65 (clean tree) · `bun scripts/local-gate.mjs --jobs 4` · exit 0 · `local-gate: PASS — 20 step(s) in 384s`, every selected step exit 0, zero reds:
+  workspace-install 2s, version-parity-content 1s, log-immutability 1s,
+  secret-scan 0s, temp-hygiene 0s, tmp-gc 0s, worktree-guard 0s, rigidity-review
+  0s, dependency-pin-gate 5s, schema-build 0s, root-suite 151s,
+  docs-generated-projection 1s, skill-context-budgets 1s, journal-carrier-check
+  1s, dependency-advisories 1s, crate-suite-bun 88s, crate-suite-node 111s,
+  schema-node-compat 7s, pi-node-compat 25s, pi-compat-guard 25s.
+- **F1** — 2026-11-22, external-verify blockers B1–B7 folded at
+  3da5ee0883e4870dca8666e48ab619d3209e5e65 (advisories A1/A2/A4 folded with
+  them; A3/A5 stand per D3) · verified by E1–E10 and G1: the corpus that
+  reproduces every blocker is red on the pre-fix tree (E1/E2 and the readings in
+  `external-verify.md`) and green after the batch, and `verify` exits 0 with
+  `violations: []`.
+- **V2** — 2026-11-22, the six acceptance rows this batch corrected (AC1, AC2,
+  AC3, AC9, AC11, AC13) · recheck = their repointed commands re-run — E3 (wiring
+  `5 pass / 0 fail` under the corrected AC2/AC11 command), E9 (every diff path
+  named; the outside-tree clause scoped), E10 (`tsc`, the recipe and `verify`),
+  E4/E6 (AC13's quantifier over the params-reading results, the pre-fix
+  reproduction in E1) · pass.
 
 ## Next
 
