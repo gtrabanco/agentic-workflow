@@ -2,7 +2,7 @@
 type: fix
 scope: large
 roadmap_summary: Issue [#678](https://github.com/gtrabanco/agentic-workflow/issues/678) (L, high): the six deferred workflow tools are rebuilt on pi's real tool contract — the adapter translates `execute(toolCallId, params, signal, onUpdate, ctx)` into the Pi-free `execute(params, cwd)`, `ctx.cwd` is the project root, and an unreadable cwd refuses loudly with `sensor-degraded` instead of sampling `process.cwd()`. A wiring suite calls every tool the way the host does, which is what turns a future signature regression red. SPEC: [SPEC](fix/678-deferred-tools-signature-bug/SPEC.md)
-ac-hash: 48efe141ee4b578519598ce2c26fe51ba9992aeeecd3648598557bb05749a95d
+ac-hash: afcd2748bd33854ba68696cfcafe2bb198b7271374caae8e6b7e4b25fc3ebdc2
 ---
 
 # fix/678-deferred-tools-signature-bug
@@ -105,18 +105,18 @@ Frozen at the cut; `ac-hash:` in the frontmatter is this section's SHA-256. One
 criterion per requirement, each naming the check that proves it.
 
 1. **S1 — the issue is applied, not reinterpreted.** `git diff --name-only $(git merge-base origin/main HEAD)..HEAD` lists only the paths `## Impact` names, and every `S#` above appears verbatim in this document.
-2. **S2 — both halves of the title are gone: the params-reading tools answer, and the status tool samples the calling project.** `bun test packages/pi-agentic-workflow/test/workflow-tools.test.mjs` exits 0 with `every params-reading tool answers when the host calls it with the 5-arg convention` and `status: the host's ctx.cwd is the project the sensor samples`.
-3. **S3 — the adapter, not a Pi-free spec, owns the host signature.** `bunx tsc --noEmit` in `packages/pi-agentic-workflow` exits 0 with `tool.execute(toolCallId, params, signal, undefined, ctx)` in the adapter's translation, and the `WorkflowToolSpec.execute` seam keeps its two arguments.
+2. **S2 — both halves of the title are gone: the params-reading tools answer, and the status tool samples the calling project.** `bun test packages/pi-agentic-workflow/test/workflow-tools-wiring.test.mjs` exits 0 with `every params-reading tool answers when the host calls it with the 5-arg convention` and `status: the host's ctx.cwd is the project the sensor samples`.
+3. **S3 — the adapter, not a Pi-free spec, owns the host signature.** `bunx tsc --noEmit` in `packages/pi-agentic-workflow` exits 0, `rg -F 'run.call(tool, params, ctx.cwd)' packages/pi-agentic-workflow/src/extension/index.ts` matches 1 — the adapter's five-into-two translation, whose declared shape is `execute: (_toolCallId, params, _signal, _onUpdate, ctx) => run.call(tool, params, ctx.cwd)` — and the `WorkflowToolSpec.execute` seam keeps its two arguments.
 4. **S4 — an absent or unreadable cwd refuses loudly.** `bun test packages/pi-agentic-workflow/test/conductor-sensor.test.mjs` exits 0 with `an unreadable cwd refuses instead of sampling the process cwd`, and `rg -c 'process\.cwd\(' packages/pi-agentic-workflow/src/conductor/sensor.ts` matches 1 — only the header comment that records the removal.
 5. **S5 — all six tools reach the host convention.** The wiring suite exits 0 with `every tool runs through the host's 5-arg convention` over the six registered names, and every registered tool carries a 5-arg `execute`.
 6. **S6 — `runSensor` never falls back to `process.cwd()`.** `bun test packages/pi-agentic-workflow/test/conductor-sensor.test.mjs` exits 0 with `an unreadable cwd refuses instead of sampling the process cwd`, and `rg -c 'process\.cwd\(' packages/pi-agentic-workflow/src/conductor/sensor.ts` matches 1 — only the header comment that records the removal.
 7. **S7 — the wiring suite calls every tool the way the host does.** `bun test packages/pi-agentic-workflow/test/workflow-tools-wiring.test.mjs` exits 0, and the pre-fix modules fail it (the red run in `## Log`).
 8. **S8 — the resolver is untouched.** `git diff --name-only <base>..HEAD -- packages/pi-agentic-workflow/src/runner-bin.ts packages/agentic-workflow/src/runner` matches 0 lines.
-9. **S9 — the harness is not edited.** `git diff --name-only <base>..HEAD -- packages/pi-agentic-workflow/package.json` shows no peer-dependency move, and no file outside this repository's tree is touched.
+9. **S9 — the harness is not edited.** `git diff --name-only <base>..HEAD -- packages/pi-agentic-workflow/package.json` shows no peer-dependency move, and the diff reaches no file outside this repository's tree (a session's disclosed out-of-tree global-install residue was reverted and ships nothing).
 10. **S10 — the quoted reproducer answers with data instead of the argument check.** The wiring suite's `agentic_workflow_run` case calls with `{ subcommand: "setup-env", args: ["--check"] }` under the host convention and asserts the result carries `{ subcommand, stdout, stderr, exitCode }` — never `Error: subcommand is required and must be a non-empty string`.
-11. **S11 — the status tool samples the calling project.** `bun test packages/pi-agentic-workflow/test/workflow-tools.test.mjs` exits 0 with the `ctx.cwd` case, where a sensor double records the cwd it received and it equals the host's `ctxLike.cwd` (not the process cwd).
+11. **S11 — the status tool samples the calling project.** `bun test packages/pi-agentic-workflow/test/workflow-tools-wiring.test.mjs` exits 0 with the `ctx.cwd` case, where a sensor double records the cwd it received and it equals the host's `ctxLike.cwd` (not the process cwd).
 12. **S12 — the package's own suite is green.** `bun run test` in `packages/pi-agentic-workflow` exits 0 with the new call-convention suite in the run.
-13. **S13 — the exact live message never comes from the package path again.** The wiring suite asserts the string is absent from every tool result, and `## Log` records the pre-fix reproduction of it.
+13. **S13 — the exact live message never comes from the package path again.** The wiring suite asserts the string is absent from every params-reading tool's result — `agentic_workflow_status` reads no params, so it cannot emit it — and `## Log` records the pre-fix reproduction of it.
 
 ## Impact
 
@@ -158,6 +158,13 @@ codemode script and `tool_search` reach for, and three suites read it.
 - `.changeset/678-deferred-tools-signature-bug.md` — the package's shipped
   content moved, so the version-parity gate needs the release intent the
   release applies; the train bump stays the release's job (`D-40-14`).
+- The diff paths the session workflow appends on its own: every narrative
+  journal fragment this unit's sessions write under `.agentic-workflow/journal/`
+  (currently `20261122T003003Z-fix-678-deferred-tool-cwd-trap-narrative-local.md`
+  and
+  `20261122T014758Z-fix-678-deferred-tool-cwd-trap-narrative-01a2007e-0409-738d-aa16-9416534df253.md`),
+  and `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — the package README's
+  context-budget re-pin from this unit's prose commit.
 
 ## Surfaces
 
@@ -250,8 +257,8 @@ none
 - P3 — Drop the silent cwd fallback in the sensor: an unreadable cwd is a
   `sensor-degraded` refusal naming the path. (validator:
   `bun test packages/pi-agentic-workflow/test/conductor-sensor.test.mjs` exits 0
-  and `rg -c 'process\.cwd\(\)' packages/pi-agentic-workflow/src/conductor/sensor.ts`
-  matches 0)
+  and `rg -c 'process\.cwd\(' packages/pi-agentic-workflow/src/conductor/sensor.ts`
+  matches 1 — only the comment that records the removal, no call site)
   (Implements: S4, S6)
   - Relevant files: packages/pi-agentic-workflow/src/conductor/sensor.ts, packages/pi-agentic-workflow/test/conductor-sensor.test.mjs
 - P4 — Pin the shipped adapter's tool shape and run the package's whole suite.
@@ -262,7 +269,8 @@ none
 - P5 — Ship the prose and the state: the README's tool-contract paragraph, the
   changeset, the settle pair (roadmap row + unit doc) and the regenerated
   projection. (validator: `bun scripts/docs-generate.mjs --check` exits 0 and
-  `bun scripts/npm-version-gate.mjs` reports the changeset covers the package)
+  `bun scripts/version-parity-gate.mjs --content --base origin/main` reports the
+  changeset route declaring `@gtrabanco/pi-agentic-workflow`, `VERDICT: PASS`)
   (Implements: S1, S12)
   - Relevant files: packages/pi-agentic-workflow/README.md, .changeset/678-deferred-tools-signature-bug.md, docs/ROADMAP.md
 - P6 — Verify like a writer: the derived test-impact set, the differential
@@ -362,7 +370,7 @@ and is the only ceremony claimed here.
 - **V1** — 2026-11-21, the acceptance rows and their receipts (the re-cut carrier
   keeps them under `log-kind@1`'s `V` token; the `## Evidence` table is the legacy
   carrier's):
-  | AC1 (S1) | `git diff --name-only 3f749feeb..HEAD` | 15 paths, every one named in `## Impact` (§ E9, G1's `secret-scan` range) | pass |
+  | AC1 (S1) | `git diff --name-only 3f749feeb..HEAD` | every diff path named in `## Impact` — unit carriers, code, tests, README, changeset, roadmap + projection, the budgets manifest and the unit's journal fragments (enumeration in § E9; G1's `secret-scan` range) | pass |
   | AC2 (S2) | the wiring suite's two title cases | E3 (5 pass / 0 fail); E1 is their red counterpart | pass |
   | AC3 (S3) | `bunx tsc --noEmit` in the package; the spec seam's shape | `tsc` clean in E6 and G1's `pi-compat-guard`; `WorkflowToolSpec.execute(params, cwd)` unchanged, the translation is `hostTool` | pass |
   | AC4 (S4) | the sensor's refusal case + the call-site count | E4 (`cwd-unresolved: "…" is not a readable directory`; `rg -c` = 1, the header comment) | pass |
@@ -370,8 +378,14 @@ and is the only ceremony claimed here.
   | AC6 (S6) | `runSensor` never reaches `process.cwd()` | E4; E7's differential shows the base sampling the process cwd and the head refusing | pass |
   | AC7 (S7) | the wiring suite lands red | E1/E2 at `9abeb4b67`, 5 and 1 failures respectively | pass |
   | AC8 (S8) | the resolver pairing's diff | E9 (0 lines; `package.json` empty) | pass |
-  | AC9 (S9) | the peer floor and the harness surface | E9 (`package.json` diff empty); no file outside the tree is touched by the change | pass |
+  | AC9 (S9) | the peer floor and the harness surface | E9 (`package.json` diff empty); the diff reaches no file outside the tree (the disclosed global-install residue was reverted) | pass |
   | AC10 (S10) | the issue's quoted reproducer | E3's `agentic_workflow_run` case answers `{ subcommand, stdout, stderr, exitCode }`; E1 shows the pre-fix `THROW` | pass |
   | AC11 (S11) | the status tool samples `ctx.cwd` | E3's `status: the host's ctx.cwd is the project the sensor samples` | pass |
   | AC12 (S12) | the package's own suite | E6 (1041 pass / 0 fail, the wiring suite included); G1's `pi-node-compat` and `pi-compat-guard` | pass |
-  | AC13 (S13) | the quoted message never comes from the package path | E1 (pre-fix, reproduced) vs E3 (post-fix, absent); the wiring suite asserts its absence on every tool | pass |
+  | AC13 (S13) | the quoted message never comes from the package path | E1 (pre-fix, reproduced) vs E3 (post-fix, absent); the wiring suite asserts its absence on every params-reading tool (status reads no params) | pass |
+
+  2026-11-22 external-verify batch: the AC1, AC9 and AC13 cells above were
+  corrected in place — their earlier readings carried a stale path count, an
+  unscoped outside-tree absolute and an "every tool" quantifier the suite does
+  not assert; `external-verify.md` beside this document holds the verdict, and
+  the correction's own receipts are `E`/`G` lines in `## Log`.

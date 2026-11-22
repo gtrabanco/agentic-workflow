@@ -4,6 +4,11 @@ One row per Engineering claim the change rests on (`id | authority-kind | claim 
 source | freshness | affected-decision-or-obligation`). An unsampled assumption
 is `unknown` with an owner, never a silent citation.
 
+Every row was sampled at the cut base (`3f749feeb`, `main` tip when this unit
+was frozen): the rows record why the change was needed, so a `current` claim
+describes the pre-fix tree rather than the head — the fix's own readings live in
+the unit doc's `## Log`.
+
 | id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
 |---|---|---|---|---|---|
 | PE-001 | version-pinned doc | pi's custom-tool contract is `execute(toolCallId, params, signal, onUpdate, ctx)` — the documented example spells exactly that parameter list | `docs/extensions.md` § Custom tools / § Tool Definition, `@earendil-works/pi-coding-agent` 1.6.0 (the version the host here runs; the package's peer floor is `>=1.1.0`) | current | O1, O3, O4 |
