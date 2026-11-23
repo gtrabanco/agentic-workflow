@@ -1,5 +1,0 @@
-## 2026-11-22T23:28:38Z — main — narrative
-- **Commits:** 4 (`651977a7…591fcf17`)
-- **Files:** .agentic-workflow/journal/20261122T215456Z-main-narrative-01a20529-9758-738d-aa16-947fa49cc436.md, .agentic-workflow/journal/20261122T232318Z-main-narrative-01a20568-e910-70fb-82a0-a0722587c6ef.md, .agentic-workflow/journal/20261122T232421Z-main-narrative-01a2055d-abfa-70fb-82a0-a067b1bd57fc.md, .agentic-workflow/journal/20261122T232429Z-main-narrative-01a20515-97ae-738d-aa16-947a1d7a4222.md
-- **Summary:** Diagnosed the runner citation delivery bug: sessions executing workflow skills in a pi environment run 'runner <subcommand>' literally in bash, getting exit 127, because the pi pack's bundle-skills.mjs never injects the 'In a pi session' runner mapping at the point of execution — created issue #696 with ACs to fix via canon block injection in bundle-skills.mjs
-- **Next:** Apply the patch to bundle-skills.mjs: add canon block runner-mapping@1 to RUNNER.md and bundle-skills.mjs to inject it into every skill staging, with drift gate enforcement and bundler test
