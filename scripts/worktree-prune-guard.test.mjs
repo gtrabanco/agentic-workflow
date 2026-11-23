@@ -223,7 +223,7 @@ test("--dry-run lists the candidates and prunes nothing under allow", () => {
     const vanished = addVanishedWorktree(root, git, "gone");
     const { status, stdout } = runGuard(root, ["--dry-run"]);
     assert.equal(status, 0);
-    assert.match(stdout, new RegExp(`PRUNE ${path.basename(vanished)}`));
+    assert.ok(stdout.includes(`PRUNE ${vanished}`), `the candidate ${vanished} is listed before the decision`);
     const listed = spawnSync("git", ["worktree", "list", "--porcelain"], { cwd: root, encoding: "utf8" });
     assert.ok(listed.stdout.includes(path.basename(vanished)), "--dry-run must not prune");
   });

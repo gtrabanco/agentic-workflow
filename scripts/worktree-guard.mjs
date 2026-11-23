@@ -34,9 +34,13 @@
  *              unit nobody removed; a dirty tree appends a dirty marker
  *
  * `--prune` fixes what it can: `git worktree repair` for corrupted links,
- * `git worktree prune` for vanished entries, `git worktree remove` for clean
- * leftovers, and a `SKIP — dirty; remove manually` line for a dirty worktree
- * (never removed, never forced). Branches are never deleted — a removed
+ * `git worktree remove` for clean leftovers, and a `SKIP — dirty; remove
+ * manually` line for a dirty worktree (never removed, never forced). The one
+ * `git worktree prune` it needs — to reclaim the vanished entries — goes
+ * through `scripts/worktree-prune-guard.mjs`, so `aw.worktreePrunePolicy`
+ * governs it like every other prune the workflow performs (issue #693): a
+ * `deny` leaves the PRUNABLE findings in place and prints one `GATE <reason>`
+ * line. Branches are never deleted — a removed
  * branch worktree prints `SUGGEST git branch -D <branch>` instead. The
  * primary checkout is never a finding and never touched.
  *
@@ -54,6 +58,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const PRUNE_GUARD = path.join(path.dirname(fileURLToPath(import.meta.url)), "worktree-prune-guard.mjs");
 
 const USAGE = `usage: worktree-guard [--repo <dir>] [--home <dir>] [--prune] [--json]
 
@@ -289,6 +294,7 @@ function main(argv) {
   let pruned = [];
   let skipped = [];
   let suggestions = [];
+  let gateRefused = [];
 
   if (prune) {
     for (const finding of first.findings) {
@@ -333,7 +339,14 @@ function main(argv) {
       if (finding.branch) suggestions.push(`SUGGEST git branch -D ${finding.branch}`);
     }
     if (first.findings.some((finding) => finding.code === "PRUNABLE")) {
-      git(["worktree", "prune"], root);
+      // Every prune this guard performs goes through the policy gate (issue
+      // #693), so one `aw.worktreePrunePolicy` governs the workflow's own
+      // prunes. A `deny` refuses here and the vanished entries stay flagged —
+      // reported, never silently reclaimed behind the operator's back.
+      const gate = spawnSync(process.execPath, [PRUNE_GUARD, "--repo", root], { cwd: root, encoding: "utf8" });
+      if (gate.status !== 0) {
+        gateRefused = (gate.stderr ?? "").trim().split("\n").filter((line) => line.length > 0);
+      }
     }
   }
 
@@ -362,6 +375,7 @@ function main(argv) {
     for (const report of reports) console.log(`REPORT ${report.path} — ${report.code}: ${report.detail}`);
     for (const finding of pruned) console.log(`PRUNED ${finding.path}`);
     for (const finding of skipped) console.log(`SKIP ${finding.path} — ${finding.detail}`);
+    for (const line of gateRefused) console.log(`GATE ${line}`);
     for (const line of suggestions) console.log(line);
     console.log(`worktree-guard: ${remaining.length} finding(s)`);
     console.log(`verdict: ${verdict}`);
