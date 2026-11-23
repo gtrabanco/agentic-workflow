@@ -162,6 +162,29 @@ test("#701 authoring accepts the separate-ledger shape a large unit writes", () 
   assert.equal(result.ok, true, "a sibling ledger is a tolerated extra, not a shape defect");
 });
 
+// Justification (docs/fix/701-init-workspace-scaffold-v2/decisions.md): AC3 names
+// a duplicate and an out-of-order section as reported defects, and O3's evidence
+// claims both cases in this run — without them those two selector codes would go
+// unguarded here. Nothing existing is edited, relaxed or removed.
+test("#701 authoring reports a duplicate section and an out-of-order section", () => {
+  assert.ok(hasEngine(), "the engine exports both operations");
+  const root = scratch({ "docs/fix/902-shape/SPEC.md": referenceUnitDoc() });
+
+  const base = referenceUnitDoc();
+  fs.writeFileSync(path.join(root, "docs/fix/902-shape/SPEC.md"), `${base}\n## Non-goals\n\na second one\n`);
+  const duplicate = engine.authoring({ workspace: root, unitDoc: "docs/fix/902-shape/SPEC.md" });
+  assert.equal(duplicate.ok, false, "a duplicated section is reported");
+  assert.match(duplicate.rows.map((row) => row.code).join(","), /heading-duplicate/u);
+
+  // Impact before Specs: every section present, only the contract order broken.
+  const impact = base.match(/^## Impact$[\s\S]*?(?=^## Non-goals$)/mu)[0];
+  const outOfOrder = base.replace(impact, "").replace(/^## Specs$/mu, `${impact.trimEnd()}\n\n## Specs`);
+  fs.writeFileSync(path.join(root, "docs/fix/902-shape/SPEC.md"), outOfOrder);
+  const order = engine.authoring({ workspace: root, unitDoc: "docs/fix/902-shape/SPEC.md" });
+  assert.equal(order.ok, false, "an out-of-order section is reported");
+  assert.match(order.rows.map((row) => row.code).join(","), /heading-order/u);
+});
+
 test("#701 authoring refuses a unit doc path that is not there", () => {
   assert.ok(hasEngine(), "the engine exports both operations");
   const root = scratch({ "docs/ROADMAP.md": "# Roadmap\n" });
@@ -245,4 +268,8 @@ test("#701 the command is dispatched by the bin, not a closed-world refusal", ()
   const root = scratch({ "docs/fix/_TEMPLATE/SPEC.md": referenceUnitDoc() });
   const stdout = execFileSync(process.execPath, [BIN, "scaffold-contract", "check", "--workspace", root], { encoding: "utf8" });
   assert.match(stdout, /SCAFFOLD (OK|MISMATCH|ABSENT)/u, "the fixed vocabulary reaches stdout");
+  // AC1's own quoted observable, pinned where it is proved: the per-surface row
+  // and the closing verdict the command actually prints.
+  assert.match(stdout, /^SURFACE docs\/fix\/_TEMPLATE\/SPEC\.md — MATCH$/mu, "AC1's per-surface row reaches stdout");
+  assert.match(stdout, /^verdict SCAFFOLD OK$/mu, "AC1's closing verdict reaches stdout");
 });
