@@ -254,18 +254,41 @@ none
 
 ## Known pre-existing issues
 
+- **`workspace-install` is red on `main` and on this branch alike** —
+  `packages/pi-agentic-workflow/package.json` pins `@gtrabanco/agentic-workflow:
+  4.10.0` while the crate's local version is `4.10.1`, so the workspace link
+  resolves the registry copy and the pi package's `prepare` (`tsc`) cannot see
+  the source modules (`error TS2307: Cannot find module
+  '@gtrabanco/agentic-workflow/src/…'`). Verified at the base commit
+  (`6dcfa53ad`, exported to `/tmp` and installed there): `bun
+  scripts/local-gate.mjs --only workspace-install` → `exit 2`, the same line.
+  `affects` the gate (12 dependants skipped, every one run by hand and recorded
+  in `G1`) and `pi-node-compat`, which fails on the identical link at the base
+  commit too. Not repaired here: the train version and the sibling pin are the
+  release machinery's owner decision, not this unit's.
+- **`scripts/unit-doc-contract.test.mjs`'s `#462 every unit-doc template stamps
+  its own carrier and the train version` is red on `main` and on this branch
+  alike** — the templates stamp `4.10.0` while the train is `4.10.1`. Verified
+  at the base commit (`bun test scripts/unit-doc-contract.test.mjs` → 20 pass /
+  1 fail, the same case). `does-not-affect` any path this change touches.
 - **The roadmap's Features table carries two `98` rows** — the `idea` row for
   `deterministic-tool-doctor` and fix #361's `done` row for
   `finding-severity-ladder`, so `roadmap-settle` reports one `slug-mismatch`.
-  Verified pre-existing at the base commit (`6dcfa53ad`) and reported by fix
-  #696's ledger as well. `does-not-affect` any path this change touches; left
-  alone — the row is the owner-managed index, and no emitter deletes a row.
+  Verified pre-existing at the base commit and reported by fix #696's ledger as
+  well. `does-not-affect` any path this change touches; left alone — the row is
+  the owner-managed index, and no emitter deletes a row.
+- **The Features table also carries a `702` row for this fix** — the triage
+  sweep (`0c0e2718a`) registered four triaged *fixes* as `idea` feature rows
+  beside their `## Fixes` rows. `affects` the index's honesty, not this change's
+  tests: reported, never hand-deleted (no emitter deletes a feature row, and the
+  same artifact is on `main` for #703/#704/#706).
 - **`docs/fix/353-residue-shadow-copies/SPEC.md` carries a `## Findings` table in
   the ledger grammar with `folded` rows still in it** — the exact mixed carrier
   `S4` describes, in a merged unit. `affects` the corpus reading (its two rows
-  are read as open rows with `impact: ""` today) and is reported, never
-  repaired: rewriting a settled unit's history is out of this unit's scope, and
-  the new reader states the grammar it found instead of pretending it is current.
+  are reported as `wrong-carrier-grammar` now and still counted) and is reported,
+  never repaired: rewriting a settled unit's history is out of this unit's
+  scope, and the new reader states the grammar it found instead of pretending it
+  is current.
 - **`scripts/audit-pr-receipt.test.mjs`'s gh-subprocess cases flake under load**
   (recorded by fix #435): `does-not-affect` the four cases this change adds,
   which are pure `auditVerdict`/`gateReceiptGate` calls over fixtures.
@@ -351,12 +374,148 @@ this change (it would be a second, competing step list).`
   unpublished inline workflow: the §5 ledger freeze is the plan, only the
   repository's deterministic gates run, and the diff is handed to the owner as
   the external verifier.
+- **L3** — 2026-11-23, the reproducers the issue reports, re-run before any
+  implementation in `mktemp -d` scratch: a report-only prose line under the
+  table was **gone** after one `findings update --folded true`; closing `F1`+
+  `F2` and then appending with a `## Log` line citing `F9`/`F14` wrote `F15`;
+  `evaluate` over a current receipt and no gate map printed **14** `gate <name>
+  failed` blockers for gates nobody read.
+- **E1** — 2026-11-23, the frozen corpus alone at `77b0eeceb`, red against the
+  unchanged tree: `bun test packages/agentic-workflow/test/runner.ceremony-findings.test.mjs`
+  · exit 1 · **0 pass / 12 fail**; `…/findings-carrier.test.mjs` · exit 1 ·
+  `Cannot find module '../src/runner/findings-carrier.mjs'`;
+  `bun test scripts/audit-pr-receipt.test.mjs` · exit 1 · `Export named
+  'GATE_OUTCOMES' not found`; `bun test scripts/findings-corpus.test.mjs` ·
+  exit 1 · 15 pass / 2 fail; `bun run --cwd packages/agentic-workflow-schema test`
+  · exit 1 · 950 pass / 1 fail (`the check status family publishes
+  unevaluatable`).
+- **E2** — 2026-11-23, the published status (`fa969ca78`): `bun run --cwd
+  packages/agentic-workflow-schema test` · exit 0 · **951 pass / 0 fail**; the
+  same suite on the node leg · exit 0 · 951 pass / 0 fail.
+- **E3** — 2026-11-23, the carrier and its ceremony writer (`7ee4b0662`):
+  `bun test packages/agentic-workflow/test/runner.ceremony-findings.test.mjs` ·
+  exit 0 · **12 pass**; `…/findings-carrier.test.mjs` · exit 0 · **7 pass**
+  (the two `unit-route` row cases and the sensor's carrier observation
+  included).
+- **E4** — 2026-11-23, the carrier's untouched behaviour: `bun test
+  packages/agentic-workflow/test/runner.ceremony-p0.test.mjs` · exit 0 · 9 pass;
+  `…/runner.ceremony-p1p2.test.mjs` · exit 0 · 14 pass; `bun test
+  scripts/ceremony-findings-ledger.test.mjs` · exit 0 · **19 pass** (the legacy
+  1,208-row carrier still answers every one of its tables).
+- **E5** — 2026-11-23, the crate's own gate on both runtimes: `bun run test` in
+  `packages/agentic-workflow` · exit 0 · **1474 pass / 0 fail / 82 files**;
+  `bun run test:node` · exit 0 · 82 suites pass.
+- **E6** — 2026-11-23, the merge gate's own contract: `bun test
+  scripts/audit-pr-receipt.test.mjs` · exit 0 · **32 pass** (the four new cases
+  and the restated omitted-gate assertion); `bun test
+  scripts/gate-receipt.test.mjs` · exit 0 · 10 pass (the receipt gate's split
+  outcome).
+- **E7** — 2026-11-23, the corpus: `bun test scripts/findings-corpus.test.mjs` ·
+  exit 0 · **17 pass**, its live-tree case still `1165` findings / `56` legacy
+  ledgers / `229` fold annotations.
+- **E8** — 2026-11-23, the differential (§6): a `mktemp` fixture (a migrated
+  unit with prose, a legacy unit, a dual unit, a roadmap row, a current receipt)
+  built twice — once against `git archive origin/main` and once against this
+  branch — and driven through **18 commands** (`findings read/summarize/append/
+  update` on both carriers, `unit read`, `ledger read`, `audit-pr-gate
+  evaluate` with a full map / a partial map / no map and its `hygiene`,
+  `roadmap read`, `workflow-status --json-only`). Every remaining difference is
+  the requested surface: the reported `grammar`/`defects`, the dual-carrier
+  refusal, the prose that survives a fold, the gate outcomes and the additive
+  `gates`/`unevaluatable` report. `hygiene`, `roadmap read`, `workflow-status`
+  and the write receipts are byte-identical.
+- **E9** — 2026-11-23, the declared state: `bun
+  packages/agentic-workflow/bin/agentic-workflow.mjs docs-generate --check` ·
+  exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`; `… roadmap fixrow
+  docs/ROADMAP.md '<payload>' --json` · `ok: true` · `ce777cf2 → 21006f62`;
+  `… roadmap check docs/fix/702-ceremony-state-misreport/SPEC.md --json` ·
+  `violations: []`; `bun scripts/roadmap-settle.mjs` · exit 1 · 1 violation
+  (the base-present duplicate feature-98 row, A3).
+- **E10** — 2026-11-23, the two field reproducers, re-run at the head: after
+  folding `F1`+`F2`, an append answers **`F3`**, never `F15`; the `F` fold lines
+  read `**F1**` and `**F3**`, each naming the id it closed; `evaluate` over a
+  current receipt and no gate map prints **13** `gate <name> unevaluatable:
+  not-evaluated` and one `gate gate-receipt failed: missing` — no gate is
+  accused of a failure nobody observed.
+- **E11** — 2026-11-23, S6's coverage verified rather than assumed: `bun test
+  packages/agentic-workflow/test/edit.test.mjs` · exit 0 · 40 pass, including
+  `CLI: roadmap fixrow settles a consumer-shaped Fixes row` (the five-column
+  `Folder | Topic | Status | Depends on | Issue` table) and `CLI: roadmap fixrow
+  writes a Fixes row — no hand edit`; `git diff --name-only
+  $(git merge-base origin/main HEAD)..HEAD -- packages/agentic-workflow/src/edit`
+  · 0 lines.
+- **E12** — 2026-11-23, the branch's own subjects (`git log --format=%s
+  6dcfa53ad..HEAD`): two `docs(702)`, three `fix(702)`, one `test(702)` and one
+  `feat(schema)` — no review, fold or audit commit; the red commit
+  (`77b0eeceb`) touches test files only.
+- **G1** — 2026-11-23, GATE-RAN · HEAD 194e67199 · `bun scripts/local-gate.mjs --jobs 4
+  --no-bail` · exit 1 · 20 steps; the offline steps green (`temp-hygiene`,
+  `secret-scan`, `tmp-gc`, `worktree-guard`, `rigidity-review`,
+  `version-parity-content`, `dependency-pin-gate`); the sole red
+  `workspace-install` (**A1**, verified at the base commit) skipped 12
+  dependants, every one run by hand at this head: `schema-build` exit 0,
+  `crate-suite-bun` exit 0 (82 suites, 0 fail), `crate-suite-node` exit 0 (82
+  suites, 0 fail), `root-suite` **139 PASS / 2 FAIL** (`roadmap-settle` = A3,
+  `unit-doc-contract` = A2, both base-present), `docs-generated-projection` exit
+  0, `skill-context-budgets` exit 0, `journal-carrier-check` exit 0 (14 checked,
+  0 refusals), `log-immutability` exit 0 (0 violations, 8 commits in range),
+  `schema-node-compat` exit 0 (951 pass / 0 fail), `pi-node-compat` **exit 1 —
+  A1, base-identical**, `pi-compat-guard` exit 0, `dependency-advisories` exit 0
+  (0 advisories).
+- **D1** — 2026-11-23, a fold line's number **is** the finding id it closed: two
+  counters sharing the `F` namespace is what made a reader map a fold line to a
+  different finding. Authority: S3, S8.
+- **D2** — 2026-11-23, finding ids are allocated from the carrier's own open rows
+  **and** its fold lines, so a closed id is never reused; `append --id` names one
+  explicitly and refuses a used id. Authority: S3, S8.
+- **D3** — 2026-11-23, a write splices the table block and keeps every other byte
+  of the section; a section with no table is refused (`carrier-table-missing`)
+  instead of having one invented over its prose. Authority: S2, S7.
+- **D4** — 2026-11-23, four grammar states, three policies: `findings-table@1` is
+  writable, `findings-table@0` is readable and write-refused (a write would shift
+  every cell after the missing `impact`), the ledger grammar is readable in a
+  side ledger and a typed defect in a doc table, and a unit carrying both is a
+  typed defect. Authority: S4, S9.
+- **D5** — 2026-11-23, the new check status is additive: `unevaluatable` joins the
+  published family and `gate-receipt@1`'s core fields, version and token are
+  unchanged, so no receipt that validates today stops validating. The version
+  bump travels with the changeset (the release applies it), never as a silent
+  code-only change. Authority: S5, S10.
+- **D6** — 2026-11-23, an absent gate value is `unevaluatable: not-evaluated`,
+  never `failed`; a supplied failure is still a content failure, and the verdict
+  still fails closed (blocked) — what changes is what the verdict *claims*.
+  Authority: S5, S10.
+- **D7** — 2026-11-23, defect 5 (`roadmap fixrow`) is verified covered and not
+  re-fixed: `fixTableShape` derives the header words, the column count and the
+  issue-keyed column, and both cases pass at the base commit. Authority: S6.
+- **D8** — 2026-11-23, two existing assertions were restated to the wider
+  contract, never weakened (records in `decisions.md`): the omitted-gate blocker
+  (`gate pr-ready failed` → `unevaluatable: not-evaluated`, still blocked and
+  still naming the gate) and `gateReceiptGate`'s return (a string → the
+  structured outcome, the same pass/blocks meaning). A third file's fixture
+  became a real legacy unit because the dual-carrier rule makes its old fixture a
+  defect. Authority: S1, S5.
+- **D9** — 2026-11-23, two ceilings were re-based at the declared growth source
+  and one reference line cap got a declared override, rather than trimming the
+  contract text they bound (`docs/workflow/SKILL_CONTEXT_BUDGETS.json`, entries
+  named `issue #702`). Authority: S1.
+- **P1** — 2026-11-23, the frozen corpus alone · `77b0eeceb`.
+- **P2** — 2026-11-23, the published status · `fa969ca78`.
+- **P3** — 2026-11-23, the carrier owner and the writers/readers rewired ·
+  `7ee4b0662`.
+- **P4** — 2026-11-23, the byte-identical differential repair and the multi-table
+  legacy read · `b1c2cdd06`.
+- **P5** — 2026-11-23, the merge gate's outcomes · `5d90071ce`.
+- **P6** — 2026-11-23, the declared prose, the changeset, the `## Fixes` row and
+  the projection · `dc4b3ad4d`.
+- **P7** — 2026-11-23, the re-based ceilings and their declared growth source ·
+  `194e67199`.
 
 ## Next
 
-The owner's review of this branch: the diff, the obligations ledger, the
-verification block, the two field reproducers re-run, and the verdict on the
-contract change `D8` restates.
+The owner's verdict on this diff: the obligations ledger, the verification block
+and the pre-existing issues named above — four proven at the base commit, and
+every skipped gate step run by hand with its result recorded in `G1`.
 
 ## References
 
