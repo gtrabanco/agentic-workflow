@@ -499,6 +499,23 @@ No machine step list was produced.
   issues. No roadmap, units or generated row was hand-edited in this batch;
   `AGENTS.md`'s rendered-facts literal moved only to follow its machine
   (`package:version`), the repair the drift gate itself names.
+- L16 — `gate` — the owner ordered the branch published: `origin/main` was
+  integrated by the merge `971042c0d` (no rebase, published history intact).
+  Three conflicts resolved as unions — the bin and README usage lines carry
+  both `help` and `scaffold-contract`, the README Commands table keeps both
+  rows, and `docs/ROADMAP.md` was human-resolved (the shared-merge driver
+  refused it on the pre-existing duplicate key 98, advisory 2: row 603 takes
+  main's `done · #700`, row 701 keeps this branch's `in-progress`, every other
+  byte ours) — plus the `scaffold-contract` help row main's registry cannot
+  know and a `runner docs-generate` re-projection of `docs/generated/units.md`.
+  Post-merge: crate suite 1473 pass / 0 fail; root suite 139 PASS / 2 FAIL =
+  exactly the two declared wontfix reds (roadmap-settle, #462), no new
+  failure; `check-skill-context` PASS (31 skills) and `--documents` PASS (7);
+  `docs-generate --check` PASS; `normative-drift` 24 pass / 0 fail;
+  `runner verify <SPEC>` → `ok: true`. The push rides the pre-push hook's
+  documented `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` escape hatch over those two
+  base-identical reds — the same record fix/690's PR #692 carries — owed to
+  the PR note when #701's PR opens.
 
 ## Next
 
