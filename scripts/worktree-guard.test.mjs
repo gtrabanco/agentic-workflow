@@ -57,6 +57,10 @@ function withRepo(run) {
     fs.writeFileSync(path.join(root, "README.md"), "# fixture\n");
     git(["add", "."]);
     git(["commit", "-m", "chore: fixture seed"]);
+    // These cases audit and repair the finding vocabulary itself, so the prune
+    // policy gate (issue #693) is set open here; the gate has its own suite
+    // and its own deny/ask cases in `scripts/worktree-prune-guard.test.mjs`.
+    git(["config", "aw.worktreePrunePolicy", "allow"]);
     return run({ root, git });
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -295,4 +299,50 @@ test("a target that is not a git repository is a usage error", () => {
 
 test("os.tmpdir() is a real directory this suite may rely on", () => {
   assert.equal(fs.existsSync(os.tmpdir()), true);
+});
+
+test("--prune under a deny policy reclaims nothing and reports the refusal", () => {
+  withRepo(({ root, git }) => {
+    // The fixture opens the gate; this case is the one that closes it.
+    git(["config", "aw.worktreePrunePolicy", "deny"]);
+    const vanished = path.join(root, "vanished-wt");
+    git(["worktree", "add", "-b", "feat/vanished", vanished]);
+    fs.rmSync(vanished, { recursive: true, force: true });
+
+    const result = guard(root, ["--prune"]);
+    assert.equal(result.status, 1, "the PRUNABLE finding survives the refused prune");
+    assert.match(result.stdout, /FINDING .* — PRUNABLE/);
+    assert.match(result.stdout, /GATE ERROR: git worktree prune is blocked by policy "deny"/);
+
+    const registered = spawnSync("git", ["worktree", "list", "--porcelain"], { cwd: root, encoding: "utf8" });
+    assert.ok(registered.stdout.includes("vanished-wt"), "the refusal reached git: nothing was pruned");
+  });
+});
+
+test("--prune under ask with no answer on stdin refuses instead of hanging", () => {
+  withRepo(({ root, git }) => {
+    git(["config", "aw.worktreePrunePolicy", "ask"]);
+    const vanished = path.join(root, "vanished-wt");
+    git(["worktree", "add", "-b", "feat/vanished", vanished]);
+    fs.rmSync(vanished, { recursive: true, force: true });
+
+    // The gate the guard spawns must reach the operator's answer channel and
+    // refuse when none arrives (external verify B3) — the 10 s bound turns a
+    // hang into a red assertion instead of a wedged suite.
+    const result = spawnSync(
+      process.execPath,
+      [GUARD, "--repo", root, "--home", path.join(root, "wts"), "--prune"],
+      { encoding: "utf8", timeout: 10_000 },
+    );
+    assert.equal(
+      result.status,
+      1,
+      `exit 1 — the refusal reaches the caller, never a hang (status=${result.status}, signal=${result.signal})`,
+    );
+    assert.match(result.stdout, /FINDING .* — PRUNABLE/);
+    assert.match(result.stdout, /GATE/);
+
+    const registered = spawnSync("git", ["worktree", "list", "--porcelain"], { cwd: root, encoding: "utf8" });
+    assert.ok(registered.stdout.includes("vanished-wt"), "the refusal left the entry for the operator");
+  });
 });

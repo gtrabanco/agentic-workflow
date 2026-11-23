@@ -26,9 +26,10 @@
     ],
     "files": {
       "docs/workflow/WORKTREES.md": {
-        "linesMax": 139,
-        "estimateMax": 1443,
+        "linesMax": 159,
+        "estimateMax": 1758,
         "sources": {
+          "issue #693 (worktree prune policy correction, 2026-11-23)": "the prune-policy section states the corrected contract (the S6/S7 verbatim texts, list-before-decision, refuse-never-hang, the NO-OP verdict) and the ⚠️ block restores the measured destruction inside `.git/worktrees/` that the first cut deleted (external verify B1), with the failure-modes bullet and its recovery note reconciled to the same mechanism. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 144 lines / 1,598 est, so both ceilings re-base by this row's own arithmetic: ceil(144 x 1.10) = 159 and ceil(1598 x 1.10) = 1,758. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #645 (guide minimalism, 2026-11-19)": "the worktree procedure moved out of the always-loaded guide, verbatim, so the guide keeps the law (`IR8`) and this page keeps the six steps, the naming tables, the failure modes and the removal order. Measured at the move: 126 lines / 1,311 est; ceilings set to ceil(measured x 1.10) = 139 / 1,443, the same arithmetic every other guide-layer document uses."
         }
       },
@@ -43,7 +44,7 @@
         }
       },
       "AGENTS.md": {
-        "linesMax": 681,
+        "linesMax": 683,
         "proseLinesMax": 475,
         "estimateMax": 15798,
         "machineBlocks": [
@@ -56,6 +57,7 @@
           "inviolable-rules@1": 18
         },
         "sources": {
+          "issue #693 (worktree prune policy correction, 2026-11-23)": "the Worktree creation section restores the measured destruction sentence (`git worktree prune` deletes non-registration entries under `.git/worktrees/` recursively, with the working tree and its uncommitted work inside it — external verify B1) and the read-first trigger (A5), so the guide measures 683 lines / 222 machine / 461 prose / 14,470 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` re-pins 681 -> 683 (the exact boundary the tree spends, the fix #571 precedent); `proseLinesMax` (475) and `estimateMax` (15,798) keep their headroom and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #696 (runner mapping delivery, 2026-11-22)": "issue #696 (runner mapping delivery, 2026-11-22): one `normative-surfaces@1` row (`runner-mapping`, bound to the block `RUNNER.md` publishes and the pi bundle injects) joins the machine region, so the guide measures 681 lines / 222 machine / 459 prose / 14421 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 221 -> 222 (the exact boundary the row spends, the fix #571 precedent) and `linesMax` (681) is spent exactly, so it is not re-based. `estimateMax` (15798) and `proseLinesMax` (475) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #676 (journal errata path, 2026-11-21)": "one `normative-surfaces@1` row (`journal-errata-marker`, bound to the `JOURNAL_ERRATA_MARKERS` export `packages/agentic-workflow-schema/src/journal.ts` publishes) joins the machine region, so the guide measures 680 lines / 221 machine / 459 prose / 14,396 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 220 -> 221 (the exact boundary the row spends, the fix #571 precedent). `linesMax` (681), `proseLinesMax` (475) and `estimateMax` (15,798) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #680 (the relay close-out owns the receipt ladder, 2026-11-21)": "one `normative-surfaces@1` row (`relay-closeout-grammar`, bound to the block `RELAY.md` publishes for the `closeout` mode) joins the machine region, so the guide measures 679 lines / 220 machine / 459 prose / 14,361 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 219 -> 220 (the exact boundary the row spends, the fix #571 precedent). `estimateMax` re-bases to exact ceil(14,361 x 1.10) = 15,798 — the previous ceiling sat at zero headroom by the #668 batch's own note, and the row is the next guide addition it predicted. `linesMax` (681) and `proseLinesMax` (475) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
