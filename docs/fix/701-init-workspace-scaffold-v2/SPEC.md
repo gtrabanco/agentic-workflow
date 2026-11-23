@@ -253,7 +253,8 @@ none
 
 - `packages/agentic-workflow/test/scaffold-contract.test.mjs` (new) — the
   reproducer corpus: a drifted template is reported, a current template is
-  clean, a template missing its acceptance section is reported under `authoring`
+  clean, a duplicate and an out-of-order section are reported at emission, a
+  template missing its acceptance section is reported under `authoring`
   only when it asserts one, an unknown workspace is a refusal, and both
   operations are read-only.
 - `packages/agentic-workflow/test/cli.surface.test.mjs` — the untouched half:
@@ -282,6 +283,13 @@ none
   `packages/agentic-workflow-schema` is `4.10.0` (D-40-14). **does-not-affect** —
   this unit touches no template stamp and no `packages/*/package.json` version;
   the split reproduces on a pristine `origin/main` archive.
+- A consumer install resolves the published
+  `@gtrabanco/agentic-workflow-schema@4.10.0`, which lacks the `settled` key the
+  workspace source at the same version carries (`npm pack` read 2026-11-23), so
+  `authoring`'s shape-fall diagnosis — a document that satisfies no accepted
+  shape — words differently there than here. **does-not-affect** — same D-40-14
+  train split as above; every mainstream `check`/`authoring` outcome is identical
+  on both builds, and this unit publishes no schema version.
 
 ## Acceptance criteria
 
@@ -290,9 +298,11 @@ every AC is the requirement it discharges.
 
 - **AC1 (S3)** — `runner scaffold-contract check --workspace <dir>` reads the
   installed release's section contract from the schema package and prints one
-  `MISMATCH <surface> — <reason>` row per disagreeing exported template, or
-  `SCAFFOLD OK — <n> surface(s) match` when they agree; a workspace with no
-  templates is `absent`, never a pass it did not measure. Proved by
+  `SURFACE <path> — MATCH|MISMATCH|ABSENT` row per exported template plus one
+  `MISMATCH <surface> — <reason>` line per disagreement, ending in
+  `verdict SCAFFOLD OK` when every present template matches or
+  `verdict SCAFFOLD ABSENT` when the workspace carries none — a workspace with
+  no templates is `absent`, never a pass it did not measure. Proved by
   `bun test packages/agentic-workflow/test/scaffold-contract.test.mjs` exits 0.
 - **AC2 (S3)** — The command travels: it ships in the crate's closed dispatch
   table and its bin, so a consumer installs one package and gets it, and the
@@ -449,6 +459,46 @@ No machine step list was produced.
   blanked row 701's cells. It was reverted with `git checkout docs/ROADMAP.md`
   before anything else, and the real write carried every cell plus the CAS
   revision it had read. The damage never reached a commit.
+- L12 — `request` — the owner's correction request, verbatim: "Apply to this
+  repository: triage and fix those that deserve to fix but understand the
+  context before fix and check you haven't broke another different thing, if
+  you have done, start the loop again until you fixed full symbol/related
+  stuff" — applied against this unit's 2026-11-23 `EXTERNAL VERIFY` receipt (3
+  blockers, 4 advisories): three blockers fixed, advisory 1 fixed at its single
+  root, advisories 2–4 reported or wontfix with their grounds (L15).
+- L13 — `evidence` — the batch: B1 the frozen harvest count 1165 → 1166 with
+  its header comment and the `decisions.md` justification row → `bun test
+  scripts/findings-corpus.test.mjs` 15 pass / 0 fail (its base count); B2 the
+  duplicate/out-of-order corpus case added — five authoring cases now, the
+  count O3's validator names — and AC1's dispatch lines pinned → `bun test
+  packages/agentic-workflow/test/scaffold-contract.test.mjs` 18 pass / 0 fail,
+  the seven `scaffold-contract suite` evidence cells re-frozen 17 → 18; B3
+  AC1's quoted observable rewritten to the block the command actually prints;
+  A1 the one stale pin literal behind all four `normative-drift` failures
+  (`AGENTS.md` rendered-facts row 4.10.0 → the crate's 4.10.1) → `bun test
+  scripts/normative-drift.test.mjs` 24 pass / 0 fail.
+- L14 — `gate` — batch recheck: root suite 139 PASS / 2 FAIL (receipt
+  baseline 137 PASS / 4 FAIL — findings-corpus and normative-drift flipped
+  green, no PASS→FAIL movement); the two remaining reds are the declared
+  wontfixes (roadmap-settle's 98/99/100 collision, unit-doc-contract #462's
+  D-40-14 split). Crate suite 1441 pass / 0 fail; `cli.surface` +
+  `runner.dispatch` + `runner.distribution` 16 pass / 0 fail (O2);
+  `scaffold-parity` 17 / 0 and `unit-doc-contract` 20 / 1 = the L5 baseline
+  (O8); `promise-coherence` 37 / 0; `check-skill-context` PASS (30 skills) and
+  `--documents` PASS (7 documents); `docs-generate --check` PASS;
+  `bun scripts/test-impact.mjs --base origin/main` → targeted, 288 suites,
+  covered by the root + crate runs above.
+- L15 — `disclosure` — advisory triage, reported not repaired: the roadmap
+  98/99/100 collision (commit `7951c17c1` against `ad63aa1b1`'s registrations,
+  the stub folder duplicating the `done` row+folder `537-…` from `a1e83d5de`,
+  row 654 vs row 99's opposed statuses for one scope) — the `roadmap` CLI has
+  no delete/renumber operation and AGENTS §7 forbids a hand-edited index, so
+  which registration wins is the owner's decision (reasons in `decisions.md`
+  D1); #462's train split stays wontfix under D-40-14, and the
+  published-schema `settled` divergence now sits under Known pre-existing
+  issues. No roadmap, units or generated row was hand-edited in this batch;
+  `AGENTS.md`'s rendered-facts literal moved only to follow its machine
+  (`package:version`), the repair the drift gate itself names.
 
 ## Next
 
