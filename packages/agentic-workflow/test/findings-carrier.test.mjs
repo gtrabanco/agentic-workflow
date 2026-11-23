@@ -84,6 +84,16 @@ test("two carriers are one defect naming both paths, never a silent preference",
   assert.match(report.defects[0].detail, /review-findings\.md/u);
 });
 
+test("a table whose header nobody publishes is an unknown grammar, never \"no table\"", () => {
+  const report = readCarrier({ docText: DOC("| id | where | axis |\n|---|---|---|", ["| F1 | a.mjs:3 | code |"]) });
+  assert.equal(report.carrier, "doc");
+  assert.equal(report.grammar, null);
+  assert.deepEqual(report.defects.map((defect) => defect.code), ["unknown-grammar"]);
+  assert.match(report.defects[0].detail, /id \| where \| axis/u);
+  const bare = readCarrier({ docText: DOC("", []) });
+  assert.deepEqual(bare.defects.map((defect) => defect.code), ["carrier-table-missing"], "a section with no table at all is the other defect");
+});
+
 test("the legacy ledger reader is unchanged: folded rows are closed, marks are not rows", () => {
   const ledger = `# Findings\n\n${TABLE_LEDGER}
 | F1 | src/a.mjs:3 | code | WARNING | source | fold | no |

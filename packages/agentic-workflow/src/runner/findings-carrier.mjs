@@ -141,11 +141,6 @@ export function tableBlocksOf(body) {
   return blocks;
 }
 
-/** The first carrier table in a body, or `null`. */
-export function tableBlockOf(body) {
-  return tableBlocksOf(body)[0] ?? null;
-}
-
 /** One row's fields, mapped by the header that declares them. */
 function rowOf(grammar, header, cells) {
   const fields = header.map((cell) => FIELD_OF_HEADER[headerCell(cell)] ?? null);
@@ -170,7 +165,13 @@ function rowOf(grammar, header, cells) {
 export function parseCarrierBody(body) {
   const blocks = tableBlocksOf(body);
   if (blocks.length === 0) {
-    return { grammar: null, rows: [], defects: [{ code: "carrier-table-missing", detail: "the carrier section has no findings table" }] };
+    // A table that is present but carries a header nobody publishes is its own
+    // defect: reporting it as "no table" would blame the section for a shape.
+    const header = String(body ?? "").split("\n").map((line) => line.trim()).find((line) => line.startsWith("|") && !SEPARATOR.test(line));
+    if (header === undefined) {
+      return { grammar: null, rows: [], defects: [{ code: "carrier-table-missing", detail: "the carrier section has no findings table" }] };
+    }
+    return { grammar: null, rows: [], defects: [{ code: "unknown-grammar", detail: `no carrier publishes the header '${rowCells(header).join(" | ")}'` }] };
   }
   const defects = [];
   const grammars = [...new Set(blocks.map((block) => block.grammar))];
@@ -220,12 +221,13 @@ export function readCarrier({ docText = null, ledgerText = null, docPath = "SPEC
   }
   if (hasDoc) {
     const parsed = parseCarrierBody(body);
-    const defect = grammarDefect(parsed.grammar, CURRENT_FINDINGS_GRAMMAR);
+    // The body already named an unreadable shape; a second guess adds nothing.
+    const defect = parsed.grammar === null ? null : grammarDefect(parsed.grammar, CURRENT_FINDINGS_GRAMMAR);
     return { carrier: "doc", grammar: parsed.grammar, rows: parsed.rows, defects: [...parsed.defects, ...(defect ? [defect] : [])] };
   }
   if (hasLedger) {
     const parsed = parseCarrierBody(ledgerText);
-    const defect = grammarDefect(parsed.grammar, LEDGER_FINDINGS_GRAMMAR);
+    const defect = parsed.grammar === null ? null : grammarDefect(parsed.grammar, LEDGER_FINDINGS_GRAMMAR);
     return { carrier: "legacy", grammar: parsed.grammar, rows: parsed.rows, defects: [...parsed.defects, ...(defect ? [defect] : [])] };
   }
   return { carrier: "none", grammar: null, rows: [], defects: [] };
