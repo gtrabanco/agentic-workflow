@@ -411,6 +411,48 @@ Fill in your project's real commands. The agentic workflow refers to the
 <type-check> && <test> && <build>
 ```
 
+**Gate integrity floor.** Two properties a green receipt must actually have, or
+it is not a receipt:
+
+- **No masking of truncation.** A gate step may not pass while executing a
+  fraction of its suite. A test runner invoked with a flag that tolerates an
+  empty selection (`--pass-with-no-tests`), a module-level
+  `process.exit(0)` short-circuit, a swallowed spawn failure, or a `|| true` in
+  the chained command turns "29 of 1244 tests ran" into "the gate is green" — and
+  the fraction is exactly what the failure hid. Judge a step by the count it
+  reports, not by its exit code alone: the gate prints how many tests it ran and
+  a step whose count drops is a defect even when its exit is 0.
+- **Runtime and environment parity with CI is declared, not assumed.** State the
+  gate's runtime version and the environment it runs in beside the CI job's, and
+  keep them equal: a local canary against a CI release (or a different config
+  cascade) is how a class of leak stays invisible locally for a week while CI
+  stays green. If they differ, say so here and name the class the difference
+  hides.
+
+```text
+gate integrity floor
+runtime | local <version> | CI <version> | equal
+dependency cascade | local <how resolved> | CI <how resolved> | equal
+test count guard | <how the gate reports the count it ran> | <the step that fails on a drop>
+```
+
+**Bypassing the gate.** `--no-verify` (or any hook skip) is sanctioned only as
+"run the gate yourself, then commit". That rule is incomplete unless it names
+what the hook runs **beyond** the gate — a pre-commit hook routinely also runs a
+formatter, a lint-staged pass, or an indexer, and none of those is a gate step.
+Name every such step here, so a bypass that skips it is a decision instead of a
+review finding:
+
+```text
+hook step | in the gate? | what a bypass silently skips
+<e.g. formatter> | no | <e.g. every reformatted line lands unreviewed>
+```
+
+A step the hook runs and the gate lacks is named at bypass time. A bypassed hook
+whose missing step nobody named is where the N1/N2 class is born: the review
+finds unformatted code weeks later and proposes "add formatting to
+pre-commit" — which was already there.
+
 ## Performance commands *(optional — filled by `init-workspace`; read by `review-perf`)*
 
 When declared, the workflow's performance review **runs** these and cites real
@@ -479,6 +521,7 @@ Add the laws your project actually enforces, and delete the ones it does not.
 - **Dependencies:** justify every new dependency, prefer the platform and the standard library, and pin versions. `enforced by: <the pin check and the review axis this project runs>`
 - **Honesty to the user:** never hide a real limitation (limits, reductions, restrictions) — disclose it in the output. `soft-by-design: <why no check can decide what a disclosure omits>`
 - **Secrets:** never commit a secret; read it from the environment or the secret store. `enforced by: <the scan this project runs before a push>`
+- **Worktree namespace:** a worktree never lives under git's `.git/worktrees/` namespace, the layout `git worktree prune` deletes **recursively, with the working tree and its uncommitted work inside it** (exit 0, no warning); keep them in one legal home — `<this repo>/.worktrees/<flat-branch-name>`, the branch name with `/` replaced by `-` — and audit the layout before pruning, where `ADMIN_NAMESPACE` is the finding that names the illegal one. `enforced by: <the worktree audit this project runs>`
 - **Docs language:** every committed artifact in `<your docs language>`, whatever language the work was requested in. `enforced by: <the check that refuses a translated sibling>`
 
 ---

@@ -213,7 +213,7 @@ test("#701 the exported guide carries the worktree namespace law and its measure
   const guide = fs.readFileSync(path.join(REPO, "template", "AGENTS.md"), "utf8");
   assert.match(guide, /\.git\/worktrees\//u, "the forbidden namespace is named");
   assert.match(guide, /worktree prune/u, "the actor that destroys it is named");
-  assert.match(guide, /worktree-guard/u, "the guard a project can call is named");
+  assert.match(guide, /ADMIN_NAMESPACE/u, "the finding that names the illegal layout is named");
   assert.match(guide, /IR8|inviolable/u, "the law is stated as a law, not a suggestion");
 });
 
