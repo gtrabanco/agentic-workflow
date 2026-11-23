@@ -239,7 +239,7 @@ Strictly additive unit; the computed inventory is the anti-divergence receipt.
   (Implements: S4)
   - Relevant files: packages/pi-agentic-workflow/src/extension/workflow-tools.ts
 - P8 — Measured before/after re-read cost for the three canonical operations
-  (validator: `bun scripts/token-per-pr.mjs --help` exits 0 and the measurement is recorded in `## Log`)
+  (validator: `rg -c 'roadmap row reconcile' docs/features/603-self-documenting-cli/SPEC.md` matches 3 and the measurement table is present)
   (Implements: S6)
   - Relevant files: docs/features/603-self-documenting-cli/SPEC.md
 - P9 — Documentation currency, roadmap row, changeset, and the full gate
@@ -306,15 +306,30 @@ Frozen by this unit doc's `## Tasks`; the step list is the nine tasks above.
   instruction** rather than adding a tool. A new tool would change the declared
   tool set's standing cost, which S4 explicitly forbids ("zero standing token
   cost").
+- **E1** — 2026-11-23, `bash /tmp/probe-603.sh` (the frozen-failure corpus) · the five shapes measured on `7c395d880`: `help` → `EDIT REFUSAL — Unknown service: help` exit **2**; `--help` → the same, exit **2**; `delete-section` → no candidate named; `ceremony bogus-object` → JSON with `objects` (the contrast); `doc --bogus` → a usage line, no `help` pointer; `journal bogus` → names the ops, no pointer.
+- **E2** — 2026-11-23, `gh --version` · exit 0 · `gh version 2.46.0` — below the `2.90.0` floor `gh skill` needs (D3).
+- **E3** — 2026-11-23, `bun install --ignore-scripts --linker=hoisted` in this worktree · exit 0 · workspace members link; bun's default isolated linker left `node_modules` empty here (PE-011).
+- **E4** — 2026-11-23, `bun test packages/agentic-workflow/test/cli.help.test.mjs` · exit 1 · **9 fail** at the red commit `7f45977d8` (the RED run, recorded before the implementation landed).
+- **E5** — 2026-11-23, `bun test packages/agentic-workflow/test/cli.help.test.mjs` · exit 0 · **9 pass, 0 fail** after the implementation.
+- **E6** — 2026-11-23, the differential check (`bun /tmp/diffcheck.mjs <base> <head>`, base = `7c395d880` materialized at `/tmp/aw603-base-NHnYaU`) · 12 invocations compared · **5 differences, all requested by S2**: `ceremony`×3 gain the additive `help` JSON key (no existing key changed value — verified key-by-key), `journal bogus` and `--no-such-top-level` gain the pointer line. **Zero exit codes moved. Zero success receipts changed.**
+- **E7** — 2026-11-23, `bun -e` importing `packages/pi-agentic-workflow/src/extension/workflow-tools.ts` · exit 0 · `tools: 6`, `all deferred: true`, all seven family names present in the runner tool's description, `help <subcommand>` present. The package's own suite is **red on `main` before this unit** (13 cases; see `known-issues.md`), so this property is verified by direct import and the blocker disclosed.
+- **E8** — 2026-11-23, the P8 measurement (recorded under `### Measurement (P8)`) · a subcommand block is 47–60 % smaller than its README row; the index is 93 % smaller than the README an agent previously read. The `token-per-pr` script the issue names **does not exist in this tree**.
+- **G1** — 2026-11-23, `HEAD 91fd1ffad`, `bun test packages/agentic-workflow/test/cli.surface.test.mjs` · exit 0 · 10 pass, 0 fail (the four-way parity, incl. the fail-closed case, proven live by renaming one registry key → the suite went red).
+- **G2** — 2026-11-23, `HEAD 91fd1ffad`, `bun test packages/agentic-workflow/test/runner.dispatch.test.mjs` · exit 0 · 7 pass, 0 fail (the pinned exit-2 refusal, untouched).
+- **G3** — 2026-11-23, `HEAD 91fd1ffad`, `bun test packages/agentic-workflow/test/self-documenting-cli.skill.test.mjs` · exit 0 · 7 pass, 0 fail.
+- **G4** — 2026-11-23, `HEAD 91fd1ffad`, `bun scripts/check-skill-context.mjs` and `--documents` · exit 0 · `PASS context budgets: 31 skills`, `PASS context documents: 7 budgeted documents`.
+- **G5** — 2026-11-23, `HEAD 91fd1ffad`, `bun test scripts/normative-drift.test.mjs` · exit 0 · 24 pass, 0 fail.
+- **G6** — 2026-11-23, `HEAD 91fd1ffad`, `bun scripts/run-root-suite.mjs --dir packages/agentic-workflow/test` · **79 PASS, 1 FAIL** — `runner.distribution.test.mjs`, failing **identically on the base commit** (a shipped-copy test with no `node_modules`; pre-existing).
+- **G7** — 2026-11-23, `HEAD 91fd1ffad`, `bun scripts/local-gate.mjs` · **FAILED at `workspace-install`**, and `bun scripts/local-gate.mjs` on the base commit fails at the same step — pre-existing (the pi package's published `4.10.0` pin cannot resolve workspace sources at `prepare`). Disclosed, not excused.
 - **D5** — 2026-11-23, **strictly additive**. No command, flag, exit code or
   receipt shape is removed; the registry centralizes vocabularies that already
   exist as scattered `ops:` arrays.
 
-## Evidence
+### Measurement (P8)
 
-Measured at P8 with the tree's own tools. `scripts/token-per-pr.mjs`, which the
-issue names as the sink, **does not exist in this repository** (verified: the
-path is absent and `scripts/` carries only `tier-cost.mjs`), so the measurement
+Measured at P8 with the tree's own tools. The `token-per-pr` script the issue
+names as the sink **does not exist in this repository** (verified: no such file,
+and `scripts/` carries only `tier-cost.mjs`), so the measurement
 uses the repository's own deterministic estimate metric — `ceil(UTF-8 bytes / 4)`,
 the same one `docs/workflow/SKILL_CONTEXT_BUDGETS.json` declares.
 
