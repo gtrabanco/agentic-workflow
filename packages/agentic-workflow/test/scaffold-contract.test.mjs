@@ -70,7 +70,7 @@ function digestTree(root) {
 
 /** A unit doc satisfying the `spec-by-reference` shape, cut from the repo template. */
 function referenceUnitDoc() {
-  return fs.readFileSync(path.join(REPO, "docs", "fix", "693-worktree-prune-guard", "SPEC.md"), "utf8");
+  return fs.readFileSync(path.join(REPO, "docs", "fix", "690-telemetry-attr", "SPEC.md"), "utf8");
 }
 
 const hasEngine = () => typeof engine.check === "function" && typeof engine.authoring === "function";
@@ -84,7 +84,7 @@ test("#701 check reports a drifted template against the installed contract", () 
   });
   const result = engine.check({ workspace: root });
   assert.equal(result.ok, false, "a demoted section is a mismatch, never a pass");
-  const reasons = result.rows.map((row) => row.reason).join("\n");
+  const reasons = result.rows.map((row) => row.detail).join("\n");
   assert.match(reasons, /Non-goals/u, "the mismatch names the section that drifted");
   assert.equal(result.rows.length, 1, "one row per disagreeing surface");
 });
@@ -172,7 +172,10 @@ test("#701 authoring refuses a unit doc path that is not there", () => {
 
 test("#701 a declared ac-hash whose section is absent is reported", () => {
   assert.ok(hasEngine(), "the engine exports both operations");
-  const doc = `---\ntype: fix\nac-hash: ${"a".repeat(64)}\n---\n\n${referenceUnitDoc()}`;
+  // A conforming `spec-by-reference` document that carries no acceptance section:
+  // exactly the shape the templates ship, so the promise has nothing to bind.
+  const noAcceptance = fs.readFileSync(path.join(REPO, "docs", "features", "91-distributable-ceremony-runner", "SPEC.md"), "utf8");
+  const doc = `---\ntype: feature\nac-hash: ${"a".repeat(64)}\n---\n\n${noAcceptance}`;
   const root = scratch({ "docs/fix/900-probe/SPEC.md": doc });
   const result = engine.authoring({ workspace: root, unitDoc: "docs/fix/900-probe/SPEC.md" });
   assert.equal(result.ok, false, "the template promises a section the hash cannot find");
@@ -181,8 +184,10 @@ test("#701 a declared ac-hash whose section is absent is reported", () => {
 
 test("#701 a declared ac-hash that does not re-derive is reported", () => {
   assert.ok(hasEngine(), "the engine exports both operations");
-  const body = referenceUnitDoc();
-  const withSection = `${body}\n## Acceptance criteria\n\n- AC1 — x\n`;
+  const base = referenceUnitDoc().replace(/^## Acceptance criteria$[\s\S]*?(?=^## )/m, "");
+  const withSection = `${base}\n## Acceptance criteria\n\n- AC1 — x\n`;
+  // The hash binds the section body exactly as the parser reads it: the heading
+  // excluded, the next `## ` heading excluded (`unit-doc-phases.mjs` §sectionText).
   const good = createHash("sha256").update("\n- AC1 — x\n").digest("hex");
   const root = scratch({ "docs/fix/901-hash/SPEC.md": `---\nac-hash: ${good}\n---\n\n${withSection}` });
   const matched = engine.authoring({ workspace: root, unitDoc: "docs/fix/901-hash/SPEC.md" });
