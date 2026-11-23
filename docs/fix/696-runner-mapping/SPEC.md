@@ -156,11 +156,12 @@ Three delivery layers and the prose that declares them:
 - `.changeset/696-runner-mapping.md` — the two shipped packages' patch intent.
 - `docs/ROADMAP.md` + `docs/generated/units.md` — the deterministic emitter's
   sync from `roadmap_summary:`, never a hand edit.
-- `.agentic-workflow/journal/20261122T*.md` — the ten pending journal
-  fragments (`main-narrative` ×6, `fix-690` ×4) consumed into the
-  `docs/LOGS.md` session entries by this unit's closing session's log-session
-  aggregation (commit `bdcb80bb9`); the fragment carrier is the repository's
-  own volatile state, and none survives at head.
+- `.agentic-workflow/journal/*.md` — the fragment carrier's delta on this
+  branch: the ten pending fragments (`20261122T*`: `main-narrative` ×6,
+  `fix-690` ×4) consumed into the `docs/LOGS.md` session entries by this unit's
+  closing session's log-session aggregation (commit `bdcb80bb9`), plus this
+  correction batch's own session fragment; the carrier is the repository's own
+  volatile state, and the aggregator consumes it on merge.
 - This unit's own carriers and the session entry in `docs/LOGS.md`.
 
 ## Surfaces
