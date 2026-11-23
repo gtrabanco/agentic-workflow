@@ -107,6 +107,24 @@ test("gate-receipt: the closed vocabularies are exactly the published sets", () 
   assert.deepEqual([...GATE_RECEIPT_FRESHNESS_CODES], ["current", "missing", "invalid", "stale-manifest"]);
 });
 
+test("gate-receipt: the check status family publishes unevaluatable", () => {
+  // issue #702 S5/S10 — a check the environment made unreadable is its own
+  // status, not a failure: the merge gate imports this value instead of
+  // spelling a second vocabulary of its own.
+  assert.ok(GATE_CHECK_STATUSES.includes("unevaluatable"), `the family publishes the merge gate's outcome: ${GATE_CHECK_STATUSES.join(", ")}`);
+  const doc = clone(CANONICAL);
+  doc.verdict = "degraded";
+  doc.degraded = ["gate-not-evaluated"];
+  doc.checks[1].status = "unevaluatable";
+  assert.equal(validateGateReceipt(doc).ok, true, validateGateReceipt(doc).errors?.join("\n"));
+  assert.equal(schemaValidates(doc), true, ajv.errorsText(schemaValidates.errors));
+  // A pass can never hide it: the value is not a passing check.
+  const pass = clone(doc);
+  pass.verdict = "pass";
+  pass.degraded = [];
+  assert.equal(validateGateReceipt(pass).ok, false);
+});
+
 test("gate-receipt: an unknown top-level key is refused (core is closed)", () => {
   const bad = { ...clone(CANONICAL), metadata: {} };
   const result = validateGateReceipt(bad);

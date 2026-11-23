@@ -347,3 +347,22 @@ test("usage: an unknown flag is exit 2, never a silent run", () => {
   assert.equal(result.status, 2);
   assert.match(result.stderr, /usage/);
 });
+
+test("issue #702 S4: a doc table in the ledger grammar is reported, and its rows still read", () => {
+  // The live tree carries one such unit (`docs/fix/353-residue-shadow-copies`):
+  // a `## Findings` table whose header is the side ledger's. Reading it by
+  // position would turn its `class` into `impact` and its `folded` into `route`;
+  // the carrier defect is what makes the drift loud without dropping history.
+  const doc = `# 2-y\n\n## Findings\n\n| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n| F1 | a.mjs:3 | code | high | fix-now | fold | no |\n| F2 | a.mjs:9 | code | high | fix-now | fold | yes |\n\n## Log\n`;
+  const parsed = parseMigratedCarrier(doc, { file: "docs/features/2-y/SPEC.md", unit: "2-y" });
+  assert.deepEqual(parsed.defects.map((defect) => defect.code), ["wrong-carrier-grammar"]);
+  assert.equal(parsed.defects[0].grammar, "findings-ledger@1");
+  assert.equal(parsed.findings.length, 2, "every row is still in the corpus — a defect never deletes history");
+});
+
+test("issue #702 S4: a superseded doc table is reported as superseded, and the live tree's counts hold", () => {
+  const doc = `# 3-z\n\n## Findings\n\n| id | S# / file:line | axis | severity | class | route |\n|---|---|---|---|---|---|\n| F1 | a.mjs:3 | code | WARNING | source | fold |\n\n## Log\n`;
+  const parsed = parseMigratedCarrier(doc, { file: "docs/features/3-z/SPEC.md", unit: "3-z" });
+  assert.deepEqual(parsed.defects.map((defect) => defect.code), ["superseded-grammar"]);
+  assert.equal(parsed.findings.length, 1);
+});
