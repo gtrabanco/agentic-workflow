@@ -145,6 +145,14 @@ Three delivery layers and the prose that declares them:
   and, if the block outgrows it, `runner-contract`'s reference ceiling;
   `packages/pi-agentic-workflow/README.md` states the delivered mapping, the
   seam's refusal and the grounded repair.
+- `packages/pi-agentic-workflow/src/extension/index.ts` `hostTool` — discovered
+  during the AC5 end-to-end run and repaired in-unit: the adapter translated the
+  *call* (issue #678) but passed the spec's `{ text, structuredContent, isError }`
+  result straight through, while pi 1.6's `AgentToolResult` carries the
+  model-facing text as `content` and reserves `structuredContent` for
+  programmatic callers — so every deferred tool answered the model with an empty
+  result. `hostToolResult` translates it; `workflow-tools-wiring.test.mjs` gains
+  the result-convention cases.
 - `.changeset/696-runner-mapping.md` — the two shipped packages' patch intent.
 - `docs/ROADMAP.md` + `docs/generated/units.md` — the deterministic emitter's
   sync from `roadmap_summary:`, never a hand edit.
@@ -241,6 +249,24 @@ none
   the by-name call instead (recorded as `PE-003`). `affects` the block's wording
   only, and the choice is evidenced in the ledger.
 
+- **The roadmap's Features table carries a duplicate `98` row, so
+  `roadmap-settle` is red on `main` and on this branch alike** — the settled #537
+  row (`98 · \`deterministic-tool-doctor\` · idea`) and fix #361's carried row
+  (`98 · \`finding-severity-ladder\` · done`) both claim unit 98, and
+  `runner roadmap-settle` reports `docs/features/98-deterministic-tool-doctor/SPEC.md:1
+  slug-mismatch`. Verified pre-existing at the base commit
+  (`fe4003e96`): a \`git archive\` of the base plus this worktree's
+  `node_modules` reports the same single violation (267 docs vs 268 here, the
+  extra one being this unit). `affects` the gate: `scripts/local-gate.mjs` reports
+  `root-suite` red and skips its five dependants (run by hand, all green). Left
+  alone on purpose — the row is the owner-managed index, no emitter deletes a
+  row, and removing another unit's row is not this change's scope. `IR3`-safe:
+  the suite's own fixture cases stay green, and only its live-tree case is red.
+- **The pi bundle's `RUNNER.md` keeps the mapping block after the projection** —
+  the projection pointerizes `## The invocation` only, so the packaged contract
+  still states the pi mapping; that is intended (the block is the mapping), and
+  `runner-prose.test.mjs` pins it. `does-not-affect` any consumer.
+
 ## Tasks
 
 - P1 — Land the frozen-failure corpus alone: the injection suite, the citation
@@ -271,6 +297,12 @@ none
   (validator: `bun test scripts/normative-drift.test.mjs` exits 0 and `bun scripts/check-skill-context.mjs --documents` exits 0)
   (Implements: S2, S4, S9)
   - Relevant files: AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, packages/pi-agentic-workflow/README.md, .changeset/696-runner-mapping.md
+- P7 — Translate the tool result into the host's convention, so a deferred
+  tool's output reaches the model rather than stopping at `structuredContent`
+  (discovered by P6's AC5 run; required by S6).
+  (validator: `bun test packages/pi-agentic-workflow/test/workflow-tools-wiring.test.mjs` exits 0 with `every tool answers the host's result convention, not the spec's`)
+  (Implements: S6)
+  - Relevant files: packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/test/workflow-tools-wiring.test.mjs
 - P6 — Verify like a writer: the derived test-impact set, the differential
   against the base commit, the two end-to-end receipts (S6, S9), the local gate
   and the session entry.
@@ -310,10 +342,33 @@ this change (it would be a second, competing step list).`
   unpublished inline workflow: the §5 ledger freeze is the plan, only the
   repository's deterministic gates run, and the diff is handed to the owner as
   the external verifier.
+- **E1** — 2026-11-22, the frozen corpus at `273c5a306`, red against the unchanged tree: `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` · exit 1 · 0 pass / 7 fail; `…/runner-citation.test.mjs` · exit 1 · 0 pass / 4 fail; `…/skill-parity.test.mjs` · exit 1 · `Export named 'projectSkillFile' not found`; `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs` · exit 1 · 22 pass / 2 fail (F22, F24); `…/tool-choice-guard.test.mjs` · exit 1 · 13 pass / 1 fail (F30 red, F31 green — today's behaviour pinned).
+- **E2** — 2026-11-22, the injection lands (`a52c7b1de`): `bun run bundle:skills` · exit 0 · `bundled 29 skills (105 files) · projected: 22 files · excluded: skill-lint`; `bun test …/runner-mapping-injection.test.mjs` · exit 0 · 7 pass; `…/skill-parity.test.mjs` · exit 0 · 8 pass; `…/runner-prose.test.mjs` + `…/projection.test.mjs` · exit 0 · 23 pass.
+- **E3** — 2026-11-22, the block measures 120 est (ceiling 132 declared after it); `bun scripts/check-skill-context.mjs --skill runner-contract` · exit 0 · `runner-contract 676 / 62 lines / 1 ref`; RUNNER.md 3985 est against its re-based 4384.
+- **E4** — 2026-11-22, the seam and the grounded repair (`a5e91ad6d`): `bun test …/runner-citation.test.mjs` · exit 0 · 4 pass; `…/tool-choice-guard.test.mjs` · exit 0 · 14 pass; `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs` · exit 0 · 24 pass.
+- **E5** — 2026-11-22, the result-shape repair (`S6`'s model-facing half, found by E8): `bun test packages/pi-agentic-workflow/test/workflow-tools-wiring.test.mjs` · exit 0 · 7 pass, including `every tool answers the host's result convention, not the spec's` and `a non-zero exit stays an error result with its output`.
+- **E6** — 2026-11-22, the differential: base `policy.mjs` (`fe4003e96`) vs this branch over 88 commands (the frozen drift corpus plus the new cases), `analyzeToolChoice` and `forwardCommand` with no probe · 0 difference(s).
+- **E7** — 2026-11-22, the derived set and the boundaries: `bun scripts/test-impact.mjs --base fe4003e96` · `verdict: targeted` · 13 suites, 15 symbols; `git diff --name-only fe4003e96..HEAD -- skills` · one line (`skills/runner-contract/references/RUNNER.md`); `… -- packages/agentic-workflow/src/runner` · 0 lines.
+- **E8** — 2026-11-22, **S6/AC5 end to end in a fresh pi session** (headless, `mktemp` project that is not this repository, the staged `batch-scheduler` skill loaded, `--tools "+tool_search"`, the workflow tools never declared at start): `TOOL SEARCH: tool_search | RUNNER TOOL: agentic_workflow_run | EXIT: 0 | SCHEMA: batch-plan@4`. Before E5's fix the same session reached the tool and saw no output — the envelope sat in `structuredContent` while pi reads `content`.
+- **E9** — 2026-11-22, **S7/AC6 end to end in a fresh pi session**: the session ran the literal `runner workflow-status` once and answered `REFUSED: yes | SUBCOMMAND NAMED: workflow-status | TOOL NAMED: agentic_workflow_run` — the seam refused the call before the shell saw it, and the refusal carried the canon block.
+- **E10** — 2026-11-22, **S9/AC8's discovery surface verified at the pinned version**: `pi-coding-agent@1.6.0` `dist/extensions/tool-search/tool.js` publishes `TOOL_SEARCH_TOOL_NAME = "tool_search"` and `isSearchable` accepts `codemode` and `deferred` — the exposures `workflow-tools.ts` registers — so the block's instruction resolves to a real, findable surface, and E8 is the session that used it.
+- **E11** — 2026-11-22, the declared prose and surfaces (`bfd0471fa`): `bun scripts/check-skill-context.mjs --documents` · exit 0 · 7 budgeted documents (guide 681 lines / 222 machine / 459 prose / 14,421 est); `bun test scripts/normative-drift.test.mjs` · exit 0 · 24 pass; `bun packages/agentic-workflow/bin/agentic-workflow.mjs docs-generate --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`.
+- **E12** — 2026-11-22, the packages' own suites: `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 1070 pass / 0 fail (93 files); in `packages/agentic-workflow` · exit 0 · 78 suites; `bun run test:node` in the pi package · exit 0 · 1 skipped; in the crate · exit 0; in `packages/agentic-workflow-schema` · exit 0.
+- **G1** — 2026-11-22, `bun scripts/local-gate.mjs --jobs 4 --no-bail` · the only red is `root-suite` → `scripts/roadmap-settle.test.mjs`, pre-existing at the base commit (see Known pre-existing issues); its five dependants were skipped and run by hand: `crate-suite-bun` exit 0, `crate-suite-node` exit 0, `schema-node-compat` exit 0, `pi-node-compat` exit 0, `pi-compat-guard` clean on both legs (`--only pi-compat-guard` · exit 0 · 25s).
+- **D1** — 2026-11-22, the injected block carries no codemode search global: the pinned pi build spells it `n` in `docs/codemode.md` and `searchTools` in this session's codemode description, so the block names the pi tool plus the by-name call, both verified (`PE-003`). Authority: S3.
+- **D2** — 2026-11-22, the seam refuses only a bare `runner` head: a path-qualified spelling is a real binary a project may ship, and refusing it would be an accusation the carrier cannot answer (`PE-011`). Authority: S7.
+- **D3** — 2026-11-22, **in-unit discovery and repair:** E8's first run showed the envelope arriving in `structuredContent` but not in the model-facing channel, because the adapter translated the call (issue #678) and passed the spec's result through while pi 1.6 reads `content`. Repaired here under `O15`/`P7` — `S6` cannot be satisfied without it — and disclosed rather than folded into the plan.
+- **P1** — 2026-11-22, the frozen corpus alone · `273c5a306`.
+- **P2** — 2026-11-22, the canon block and the bundle injection · `a52c7b1de`.
+- **P3** — 2026-11-22, the bash seam and the project-grounded repair · `a5e91ad6d`.
+- **P4** — 2026-11-22, the declared prose, the inventory row and the re-pinned ceilings · `bfd0471fa`.
+- **P5** — 2026-11-22, the result-shape translation and its wiring cases · the handoff's head.
+
 
 ## Next
 
-P1 — land the frozen-failure corpus alone and observe it red.
+The owner's external verification of the handoff: the diff, the obligations
+ledger, the verification block and the two end-to-end receipts.
 
 ## References
 
