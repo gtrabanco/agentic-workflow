@@ -40,7 +40,9 @@
  * through `scripts/worktree-prune-guard.mjs`, so `aw.worktreePrunePolicy`
  * governs it like every other prune the workflow performs (issue #693): a
  * `deny` leaves the PRUNABLE findings in place and prints one `GATE <reason>`
- * line. Branches are never deleted — a removed
+ * line, and an `ask` prompt reaches this command's own stdin — the operator
+ * answers at their terminal, and a run with no answer channel refuses instead
+ * of hanging. Branches are never deleted — a removed
  * branch worktree prints `SUGGEST git branch -D <branch>` instead. The
  * primary checkout is never a finding and never touched.
  *
@@ -342,8 +344,15 @@ function main(argv) {
       // Every prune this guard performs goes through the policy gate (issue
       // #693), so one `aw.worktreePrunePolicy` governs the workflow's own
       // prunes. A `deny` refuses here and the vanished entries stay flagged —
-      // reported, never silently reclaimed behind the operator's back.
-      const gate = spawnSync(process.execPath, [PRUNE_GUARD, "--repo", root], { cwd: root, encoding: "utf8" });
+      // reported, never silently reclaimed behind the operator's back. The
+      // gate inherits this command's stdin so an `ask` prompt reaches the
+      // operator's terminal, and a run without an answer channel refuses
+      // instead of hanging (external verify B3).
+      const gate = spawnSync(process.execPath, [PRUNE_GUARD, "--repo", root], {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["inherit", "pipe", "pipe"],
+      });
       if (gate.status !== 0) {
         gateRefused = (gate.stderr ?? "").trim().split("\n").filter((line) => line.length > 0);
       }

@@ -9,10 +9,12 @@
  *                     policy knob. An absent key and an unrecognised value
  *                     both land here — the vocabulary is closed and the
  *                     permissive branches are never reached by accident
- *   ask               print `Prune <N> stale worktree(s)? [y/N]: ` on stderr
+ *   ask               print `Prune <N> stale worktrees? [y/N]: ` on stderr
  *                     with the true candidate count and proceed only on an
- *                     affirmative answer. Without an interactive terminal it
- *                     refuses rather than hang on a prompt nobody reads
+ *                     affirmative answer. When no answer can arrive — a stdin
+ *                     that already ended, a closed device, or the explicit
+ *                     no-TTY opt-out — it refuses rather than hang on a
+ *                     prompt nobody reads
  *   allow             delegate to `git worktree prune` and return its status
  *
  * What this guard can and cannot do — the reason issue #693's two proposed
@@ -25,18 +27,28 @@
  * from git's own automatic prune during `git gc`, which runs `git worktree prune
  * --expire 3.months.ago` (`gc.worktreePruneExpire`).
  *
- * It is also never a working-tree remover. `git worktree prune` reclaims
- * administration metadata for a worktree whose directory is already gone; a
- * present tree, its uncommitted files included, is untouched, so lost work means
- * the directory vanished first — the `CORRUPTED` finding, whose fix is
- * `git worktree repair`. Every candidate is listed before the policy decision so
- * the operator sees what the decision is about.
+ * It never *targets* a working tree: the candidate list is directories that are
+ * already gone, so `git worktree prune` reclaims administration metadata and a
+ * present tree outside git's admin namespace — its uncommitted files included —
+ * is untouched by every policy. One measured limit the policy does not cover:
+ * an entry under `.git/worktrees/` that is not a valid registration (a checkout
+ * dropped into git's private namespace) is deleted recursively by git's own
+ * prune, live tree and files included. The docs record exactly that, and
+ * `IR8`/the `ADMIN_NAMESPACE` finding — never this policy — is what keeps
+ * worktrees out of there. Every candidate is listed before the policy decision
+ * so the operator sees what the decision is about; lost work outside that
+ * namespace means the directory vanished first — the `CORRUPTED` finding,
+ * whose fix is `git worktree repair`.
  *
- * stdout: the `worktree-prune-guard —` header, one `PRUNE <path>` line as the
- * operator's instruction (there is no path flag: `git worktree remove` reads
- * that as its argument in the deny text), and the verdict. `--json` emits one
- * envelope instead. exit: 0 the prune ran (or there was nothing to prune) ·
- * 1 refused by policy or declined at the prompt · 2 usage.
+ * stdout: the `worktree-prune-guard —` header, one `PRUNE <path>` line per
+ * candidate (the listing precedes the decision; there is no path flag:
+ * `git worktree remove` reads its argument from the deny text), and the
+ * verdict — `DENIED` · `DECLINED` · `DRY-RUN` · `NO-OP` · `PRUNED`. The refusal
+ * or abort text is written once, on stderr; `--json` emits exactly one envelope
+ * on stdout (its listing goes to stderr) instead of the text block.
+ * exit: 0 the prune ran, there was nothing to prune, or a dry run · git's own
+ * status when the delegate fails · 1 refused by policy or declined at the
+ * prompt · 2 usage.
  *
  * Its sibling suite is `scripts/worktree-prune-guard.test.mjs`.
  */
@@ -60,7 +72,8 @@ const USAGE = `usage: worktree-prune-guard [--repo <dir>] [--dry-run] [--json]
 
 policy: git config ${POLICY_KEY} deny|ask|allow   (default deny)
 stdout: the header, the PRUNE candidate lines, the verdict.
-exit: 0 pruned · 1 refused by policy · 2 usage`;
+exit: 0 prune ran / nothing to prune · git's own status on a failed prune ·
+1 refused by policy · 2 usage`;
 
 function usage(message) {
   process.stderr.write(`worktree-prune-guard: ${message}\n`);
@@ -130,22 +143,33 @@ function mainRepoRoot(repo) {
 }
 
 /** Whether the process can genuinely ask. A piped stdin is an answer like any
- *  other (that is how a script or a CI job says yes), so only a stdin that is
- *  empty or a closed device — neither a terminal nor a pipe carrying bytes —
- *  refuses; the explicit no-TTY opt-out wins over all of it. */
+ *  other (that is how a script or a CI job says yes), so only a stdin that
+ *  already ended, is destroyed, or is the explicit no-TTY opt-out refuses; an
+ *  answer channel that may still deliver bytes is worth waiting for. */
 function canPrompt() {
   if (process.env.WORKTREE_PRUNE_GUARD_NO_TTY === "1") return false;
-  return !process.stdin.destroyed;
+  return !process.stdin.destroyed && !process.stdin.readableEnded;
 }
 
+/** The `[y/N]` question. Resolves `true`/`false` for an explicit answer and
+ *  `null` when the input closes without one — a question whose stream ends must
+ *  settle the promise (external verify B3 froze the hang it caused otherwise),
+ *  so the caller refuses instead of waiting on a prompt nobody reads. */
 function ask(candidates) {
   return new Promise((resolve) => {
-    const question = `Prune ${candidates.length} stale worktree(s)? [y/N]: `;
+    const question = `Prune ${candidates.length} stale worktrees? [y/N]: `;
     const reader = createInterface({ input: process.stdin, output: process.stderr, terminal: false });
+    let settled = false;
+    const finish = (answer) => {
+      if (settled) return;
+      settled = true;
+      resolve(answer);
+    };
     reader.question(question, (answer) => {
+      finish(/^y(es)?$/i.test(answer.trim()));
       reader.close();
-      resolve(/^y(es)?$/i.test(answer.trim()));
     });
+    reader.on("close", () => finish(null));
   });
 }
 
@@ -153,6 +177,17 @@ async function main(argv) {
   const { repo, dryRun, json } = parseArgs(argv);
   const policy = resolvePolicy(repo);
   const candidates = pruneCandidates(repo);
+
+  // AC5: every path the guard may prune is listed before the policy decision,
+  // so the operator sees what the decision is about. Text mode keeps the
+  // receipt on stdout; the machine envelope keeps stdout to exactly one JSON
+  // object and carries its listing on stderr.
+  if (json) {
+    for (const candidate of candidates) process.stderr.write(`PRUNE ${candidate}\n`);
+  } else {
+    console.log(`worktree-prune-guard — policy "${policy}" · ${candidates.length} candidate(s)`);
+    for (const candidate of candidates) console.log(`PRUNE ${candidate}`);
+  }
 
   let verdict;
   let pruned = false;
@@ -162,45 +197,50 @@ async function main(argv) {
     verdict = "DENIED";
     message = [
       `ERROR: git worktree prune is blocked by policy "${policy}".`,
-      "To remove a worktree manually: git worktree remove <path>",
+      "To remove a worktree manually: git worktree remove /path/to/worktree",
       `To change this policy: git config ${POLICY_KEY} ask|allow|deny`,
     ].join("\n");
   } else if (policy === "ask" && candidates.length > 0 && !dryRun) {
+    const NO_ANSWER = `no interactive terminal: policy "ask" cannot prompt, refusing. Run --dry-run to list the candidates, or set policy to allow.`;
     if (!canPrompt()) {
       verdict = "DENIED";
-      message = `no interactive terminal: policy "ask" cannot prompt, refusing. Run --dry-run to list the candidates, or set policy to allow.`;
-    } else if (!(await ask(candidates))) {
-      verdict = "DECLINED";
-      message = "aborted — nothing pruned.";
+      message = NO_ANSWER;
+    } else {
+      const answer = await ask(candidates);
+      if (answer === null) {
+        verdict = "DENIED";
+        message = NO_ANSWER;
+      } else if (!answer) {
+        verdict = "DECLINED";
+        message = "aborted — nothing pruned.";
+      }
     }
   }
 
   if (verdict === undefined) {
     if (dryRun) {
       verdict = "DRY-RUN";
+    } else if (candidates.length === 0) {
+      verdict = "NO-OP";
     } else {
-      if (candidates.length > 0) {
-        const result = git(["worktree", "prune"], repo);
-        if (result.status !== 0) {
-          process.stderr.write(`worktree-prune-guard: git worktree prune failed (${(result.stderr ?? "").trim()})\n`);
-          process.exit(1);
-        }
-        pruned = true;
+      const result = git(["worktree", "prune"], repo);
+      if (result.status !== 0) {
+        process.stderr.write(`worktree-prune-guard: git worktree prune failed (${(result.stderr ?? "").trim()})\n`);
+        // AC4: the delegate's own status passes through, never a mapped code.
+        process.exit(result.status ?? 1);
       }
+      pruned = true;
       verdict = "PRUNED";
     }
   }
 
   const failed = verdict === "DENIED" || verdict === "DECLINED";
+  if (failed) process.stderr.write(`${message}\n`);
   if (json) {
     console.log(JSON.stringify({ policy, candidates, pruned, verdict }));
   } else {
-    console.log(`worktree-prune-guard — policy "${policy}" · ${candidates.length} candidate(s)`);
-    for (const candidate of candidates) console.log(`PRUNE ${candidate}`);
-    if (message) console.log(message);
     console.log(`verdict: ${verdict}`);
   }
-  if (failed) process.stderr.write(`${message}\n`);
   process.exit(failed ? 1 : 0);
 }
 
