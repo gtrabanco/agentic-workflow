@@ -423,3 +423,70 @@ No machine step list was produced.
   scripts/scaffold-parity.test.mjs` 17 pass / 0 fail; `bun test
   scripts/unit-doc-contract.test.mjs` 20 pass / 1 fail (`#462 …train version`,
   D-40-14, `4.10.0` vs `4.10.1`). This is AC9's comparison point.
+- L6 — `gate` — red at `4084680f6`: `bun test
+  packages/agentic-workflow/test/scaffold-contract.test.mjs` 0 pass / 17 fail,
+  every case failing on the missing engine module and the undispatched service.
+- L7 — `gate` — green at `c46ee9a55`: the same suite 17 pass / 0 fail after the
+  engine landed; two real defects the red corpus caught in the first cut are
+  recorded in the rows above (a resolver that could not read
+  `<unit-dir>/SPEC.md`, and an acceptance hash parsed by a second reader instead
+  of the owner's `sectionText`, which reported every correct hash stale).
+- L8 — `gate` — the export texts at `3a97f4a45`: `scripts/scaffold-guide.test.mjs`
+  refused the first cut of the worktree law (`a rule row states its state`) because
+  the law spanned several lines; it is one row now, and the suite is 9 pass /
+  0 fail beside `scaffold-parity` 17 / 0 (untouched) and the six suites that read
+  `template/AGENTS.md` green.
+- L9 — `gate` — `promise-coherence` refused the first budget re-basis because the
+  `mainSources` row stated the new ceilings without the derivation form the reader
+  re-computes; the row now reads `ceil(7177 x 1.10) = 7895 est / ceil(463 x 1.10)
+  = 510 lines`, and the suite is 37 pass / 0 fail. The test was never edited.
+- L10 — `gate` — `runner.dispatch` and `runner.distribution` refused the new
+  command until both pins were updated at their owners: the closed table list in
+  the crate's own suite, and the command table in
+  `skills/runner-contract/references/RUNNER.md` (a normative surface). Both are
+  11 pass / 0 fail after.
+- L11 — `disclosure` — a probe `roadmap rowUpsert` run with a partial payload
+  blanked row 701's cells. It was reverted with `git checkout docs/ROADMAP.md`
+  before anything else, and the real write carried every cell plus the CAS
+  revision it had read. The damage never reached a commit.
+
+## Next
+
+`/review-change` is not this unit's route (S10 forbids running the repository's
+own review machinery on its own surgery). The next step is the owner's external
+verify over this diff, then the PR that closes #701 (S9).
+
+## References
+
+- Issue [#701](https://github.com/gtrabanco/agentic-workflow/issues/701) — the
+  request, verbatim in `## Specs`.
+- Issue [#355](https://github.com/gtrabanco/agentic-workflow/issues/355) and
+  `scripts/scaffold-parity.test.mjs` — the vendor-side comparator this unit
+  teaches to travel; its behaviour is pinned unchanged by O8.
+- `packages/agentic-workflow-schema/src/pre-execution.ts` — the section
+  contract's owner (`UNIT_DOC_SECTION_SHAPES`, `resolveUnitDocShape`,
+  `selectSpecProduct`), and `packages/agentic-workflow/src/runner/unit-doc-phases.mjs`
+  for `sectionText`, the `ac-hash` section reader.
+- Issue [#693](https://github.com/gtrabanco/agentic-workflow/issues/693) /
+  `docs/fix/693-worktree-prune-guard/` — the measured prune destruction and the
+  `ADMIN_NAMESPACE` finding the export's law cites.
+- `docs/fix/690-telemetry-attr/SPEC.md` — the conforming `spec-by-reference`
+  document the unit's corpus uses as its clean reference.
+
+## Branch
+
+`feat/701-init-workspace-scaffold-v2` — one PR against `main` (S9).
+
+## Depends on
+
+None. The schema package's section contract and `sectionText` predate this unit
+and are consumed as published.
+
+## Regression scope
+
+- The crate's closed dispatch table and its two pins (`runner.dispatch`,
+  `runner.distribution`, `cli.surface`) — a new command, no removed one.
+- The export's guide, whose budgets (`skill-context --documents`), shape
+  (`scaffold-guide`) and restatement sweeps read every line this unit added.
+- The two suites the issue names as prior art, kept at their cut-head counts
+  (O8).

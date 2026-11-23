@@ -80,7 +80,7 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
       "dependency-advisory-pass", "unit-lineage", "audit-pr-gate", "adversarial-verdict", "gate-receipt",
       "review-receipt", "scope-manifest", "review-state", "differential-baseline", "correction-budget",
       "findings-corpus", "session-close", "test-impact", "shared-merge", "docs-generated-merge",
-      "docs-generate", "roadmap-settle", "relevant-files",
+      "docs-generate", "roadmap-settle", "relevant-files", "scaffold-contract",
     ],
     "the shell-visible half of the runner is exactly these commands: the router, the six sensors, the substrate census, the quality sensor, the guarded forge read (issue #612), the ceremony registry, the skill-discovery route (issue #591), and the commands the #553 coverage sweep moved out of `scripts/`",
   );
