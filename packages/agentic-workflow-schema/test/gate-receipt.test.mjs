@@ -103,7 +103,7 @@ test("gate-receipt: contract id, version and schema token agree", () => {
 
 test("gate-receipt: the closed vocabularies are exactly the published sets", () => {
   assert.deepEqual([...GATE_RECEIPT_VERDICTS], ["pass", "fail", "degraded"]);
-  assert.deepEqual([...GATE_CHECK_STATUSES], ["passed", "failed", "skipped"]);
+  assert.deepEqual([...GATE_CHECK_STATUSES], ["passed", "failed", "skipped", "unevaluatable"]);
   assert.deepEqual([...GATE_RECEIPT_FRESHNESS_CODES], ["current", "missing", "invalid", "stale-manifest"]);
 });
 

@@ -270,7 +270,8 @@
           "enum": [
             "passed",
             "failed",
-            "skipped"
+            "skipped",
+            "unevaluatable"
           ]
         },
         "exit_code": {
