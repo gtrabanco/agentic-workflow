@@ -125,7 +125,7 @@ Three delivery layers and the prose that declares them:
 - `packages/pi-agentic-workflow/test/skill-parity.test.mjs` — the parity
   expectation becomes the declared projection *including* the injection, read
   through those helpers (a contract change, never a weakened assertion).
-- `packages/pi-agentic-workflow/src/guards/runner-citation.ts` (new) — the pure
+- `packages/pi-agentic-workflow/src/extension/runner-citation.ts` (new) — the pure
   classifier and refusal text; `src/extension/index.ts` wires it into the
   `tool_call` bash seam and reads the canon block once from the staged bundle.
 - `packages/agentic-workflow/src/tool-choice/policy.mjs` and its type
@@ -194,7 +194,7 @@ existing 21 cases.
 
 Copied verbatim from `runner ceremony tier classify` over the executable paths
 (`packages/pi-agentic-workflow/scripts/bundle-skills.mjs`,
-`packages/pi-agentic-workflow/src/guards/runner-citation.ts`,
+`packages/pi-agentic-workflow/src/extension/runner-citation.ts`,
 `packages/agentic-workflow/src/tool-choice/policy.mjs`): `tier: standard`,
 `reason_kind: executable-content`, `signals: []`, `task_size: { understood:
 true, contained_risk: contained, resumable_from_diff: true }`.
@@ -243,7 +243,7 @@ none
   box. `does-not-affect` this unit: the suite reads plan fixtures this change
   never touches.
 - **The codemode lookup's global name is inconsistent inside the pinned pi
-  build** — `docs/codemode.md` of the pinned version names `n(query, …)` while
+  build** — the pinned package's own codemode doc names `n(query, …)` while
   this session's own codemode tool description names `searchTools`, so the block
   refuses to spell a codemode search global at all and names the pi tool plus
   the by-name call instead (recorded as `PE-003`). `affects` the block's wording
@@ -285,7 +285,7 @@ none
   canon block.
   (validator: `bun test packages/pi-agentic-workflow/test/runner-citation.test.mjs` exits 0)
   (Implements: S7)
-  - Relevant files: packages/pi-agentic-workflow/src/guards/runner-citation.ts, packages/pi-agentic-workflow/src/extension/index.ts
+  - Relevant files: packages/pi-agentic-workflow/src/extension/runner-citation.ts, packages/pi-agentic-workflow/src/extension/index.ts
 - P4 — Ground the tool-choice repair in the session's project through an
   injected existence probe.
   (validator: `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs` exits 0 and `bun test packages/pi-agentic-workflow/test/tool-choice-guard.test.mjs` exits 0)
@@ -354,8 +354,8 @@ this change (it would be a second, competing step list).`
 - **E10** — 2026-11-22, **S9/AC8's discovery surface verified at the pinned version**: `pi-coding-agent@1.6.0` `dist/extensions/tool-search/tool.js` publishes `TOOL_SEARCH_TOOL_NAME = "tool_search"` and `isSearchable` accepts `codemode` and `deferred` — the exposures `workflow-tools.ts` registers — so the block's instruction resolves to a real, findable surface, and E8 is the session that used it.
 - **E11** — 2026-11-22, the declared prose and surfaces (`bfd0471fa`): `bun scripts/check-skill-context.mjs --documents` · exit 0 · 7 budgeted documents (guide 681 lines / 222 machine / 459 prose / 14,421 est); `bun test scripts/normative-drift.test.mjs` · exit 0 · 24 pass; `bun packages/agentic-workflow/bin/agentic-workflow.mjs docs-generate --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`.
 - **E12** — 2026-11-22, the packages' own suites: `bun run test` in `packages/pi-agentic-workflow` · exit 0 · 1070 pass / 0 fail (93 files); in `packages/agentic-workflow` · exit 0 · 78 suites; `bun run test:node` in the pi package · exit 0 · 1 skipped; in the crate · exit 0; in `packages/agentic-workflow-schema` · exit 0.
-- **G1** — 2026-11-22, `bun scripts/local-gate.mjs --jobs 4 --no-bail` · the only red is `root-suite` → `scripts/roadmap-settle.test.mjs`, pre-existing at the base commit (see Known pre-existing issues); its five dependants were skipped and run by hand: `crate-suite-bun` exit 0, `crate-suite-node` exit 0, `schema-node-compat` exit 0, `pi-node-compat` exit 0, `pi-compat-guard` clean on both legs (`--only pi-compat-guard` · exit 0 · 25s).
-- **D1** — 2026-11-22, the injected block carries no codemode search global: the pinned pi build spells it `n` in `docs/codemode.md` and `searchTools` in this session's codemode description, so the block names the pi tool plus the by-name call, both verified (`PE-003`). Authority: S3.
+- **G1** — 2026-11-22, HEAD `bdcb80bb9` (`bun scripts/local-gate.mjs --jobs 4 --no-bail`) · the only red is `root-suite` → `scripts/roadmap-settle.test.mjs`, pre-existing at the base commit (see Known pre-existing issues); its five dependants were skipped and run by hand: `crate-suite-bun` exit 0, `crate-suite-node` exit 0, `schema-node-compat` exit 0, `pi-node-compat` exit 0, `pi-compat-guard` clean on both legs (`--only pi-compat-guard` · exit 0 · 25s).
+- **D1** — 2026-11-22, the injected block carries no codemode search global: the pinned pi build spells it `n` in its own codemode doc and `searchTools` in this session's codemode description, so the block names the pi tool plus the by-name call, both verified (`PE-003`). Authority: S3.
 - **D2** — 2026-11-22, the seam refuses only a bare `runner` head: a path-qualified spelling is a real binary a project may ship, and refusing it would be an accusation the carrier cannot answer (`PE-011`). Authority: S7.
 - **D3** — 2026-11-22, **in-unit discovery and repair:** E8's first run showed the envelope arriving in `structuredContent` but not in the model-facing channel, because the adapter translated the call (issue #678) and passed the spec's result through while pi 1.6 reads `content`. Repaired here under `O15`/`P7` — `S6` cannot be satisfied without it — and disclosed rather than folded into the plan.
 - **P1** — 2026-11-22, the frozen corpus alone · `273c5a306`.
