@@ -410,13 +410,16 @@ the extension cannot disagree about "absent".
 
 Worktrees live under `.worktrees/<flat-name>` at the repository root — one flat
 leaf, the branch name with `/` replaced by `-` — and **never** under
-`.git/worktrees/`, git's private worktree-administration namespace where a
-container's basename collides with git's admin directories (`IR8`; the guard
+`.git/worktrees/`, git's private worktree-administration namespace: a container
+there collides with git's admin directories, and `git worktree prune` deletes
+entries there that are not registrations — recursively, with the working tree
+and its uncommitted work inside it (`IR8`; the guard
 `scripts/worktree-guard.mjs` reports `ADMIN_NAMESPACE`). The branch naming table,
 the ordered steps, the Serena configuration copy, the failure modes, the removal
 order and the prune policy (gated by `aw.worktreePrunePolicy`, `deny` by default)
 are one hop away in [`docs/workflow/WORKTREES.md`](docs/workflow/WORKTREES.md) —
-follow its steps in order.
+read it before creating, moving or recovering a worktree, and follow its steps in
+order.
 
 ## Skills available in this repo
 
