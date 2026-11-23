@@ -454,6 +454,12 @@ this change (it would be a second, competing step list).`
   restatement, the `## Impact` journal scope, the two AC witness quotes and the
   `ac-hash` plan repair · `d169f3d71`; the session's journal fragment rides the
   next commit.
+- **P8** — 2026-11-23, the batch's own loop (S4): the recheck caught O14's
+  cell still carrying the `exits 0` claim — only its status had been reopened
+  and flipped — and the Impact journal bullet's `20261122T*` pattern not
+  naming this batch's own session fragment (AC1 fired at n=1); the cell now
+  mirrors P6's restated outcome and the bullet names the carrier's
+  `.agentic-workflow/journal/*.md` pattern · `2637f69f9`.
 
 ## Next
 
