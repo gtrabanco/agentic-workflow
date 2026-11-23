@@ -15,7 +15,7 @@
  *               metric and the ARW code-net ratio with its band.
  *
  * Fixtures are throwaway trees under the OS temp dir; the real tree is read
- * once to prove the counts the planning ledger froze (1164 findings, 56 legacy
+ * once to prove the counts the planning ledger froze (1165 findings, 56 legacy
  * ledgers, 229 fold-annotated rows).
  */
 
@@ -183,7 +183,7 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  assert.equal(corpus.findings.length, 1164, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1165, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
   // 174 = 173 + this unit's own `R1` line (issue #651): the corpus counts the

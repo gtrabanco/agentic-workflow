@@ -11,15 +11,32 @@ root (gitignored). The path must stay **inside the repository tree** — Serena 
 other MCPs detect worktrees as separate project paths and break when worktrees
 live outside the repo tree — but **never inside `.git/worktrees/`**.
 
-⚠️ **CRITICAL: `.git/worktrees/` is git's private worktree-administration
-namespace, not a place for working trees.** `git worktree prune` deletes any
-container directory under it **recursively — with the working tree and its
-uncommitted work inside it** — exit 0, no warning. A path like
-`.git/worktrees/fix/493-x` also collides with git's basename-named admin dirs
-(`feat/493-x` and `fix/493-x` become `493-x` and `493-x1`), leaving an
-admin-to-tree mapping no tool can follow. The guard (`scripts/worktree-guard.mjs`)
-flags any worktree under `.git/worktrees/` as `ADMIN_NAMESPACE`. **Never create,
+⚠️ **`.git/worktrees/` is git's private worktree-administration namespace, not a
+place for working trees.** A container there collides with git's basename-named
+admin dirs (`feat/493-x` and `fix/493-x` become `493-x` and `493-x1`), leaving a
+mapping no tool can follow; worse, `git worktree prune` deletes any entry there
+that is not a valid registration — recursively, with the working tree and its
+uncommitted work inside it (exit 0, no warning, measured on git 2.47.3), so a
+checkout dropped into the namespace dies at the next prune or at `git gc`'s
+automatic one. The guard flags the layout as `ADMIN_NAMESPACE`. **Never create,
 move or restore a worktree into `.git/worktrees/`.**
+
+## The prune policy
+
+`git worktree prune` is gated by a key read by
+`scripts/worktree-prune-guard.mjs`: `git config aw.worktreePrunePolicy
+ask|deny|allow`. `deny` (also the absent-key and unrecognised-value default)
+refuses with exit 1, naming `git worktree remove /path/to/worktree`; `ask`
+prints `Prune <N> stale worktrees? [y/N]: ` with the real count, lists every
+candidate before the question, and refuses — never hangs — when no answer can
+arrive (an ended stdin, a closed device, or `WORKTREE_PRUNE_GUARD_NO_TTY=1`);
+`allow` delegates and returns git's own status (`NO-OP` when there is nothing
+to prune). `scripts/worktree-guard.mjs --prune` routes its own prune here, so
+the prompt reaches that command's own stdin. **Git offers no way to intercept
+the `worktree` builtin** — an `alias.worktree` entry never runs and no `prune`
+hook exists — so the policy binds the prunes that go through the guard, and
+`git worktree lock` prevents `git gc`'s automatic prune of a registration.
+See the guard's own header.
 
 ## Branch name and flat worktree name
 
@@ -111,10 +128,11 @@ order** — they are not optional and have no shortcuts.
 - Missing `.serena/project.yml` copy → Serena reports "no language_servers".
 - `fatal: '<path>' is a missing but already registered worktree` → the worktree's
   directory is gone; recover with `git worktree repair` or remove the stale entry
-  with `git worktree remove <path>` / `git worktree prune`. **Prune only removes
-  registrations whose directories are already gone** — never run it to "fix" a
-  worktree that still exists on disk, and never point a recovery at a path under
-  `.git/worktrees/`.
+  with `git worktree remove <path>` / `git worktree prune`. **Prune removes a
+  registration only when its directory is already gone — and, inside
+  `.git/worktrees/`, any entry that is not a registration at all, recursively**
+  — never run it to "fix" a worktree that still exists on disk, and never point
+  a recovery at a path under `.git/worktrees/`.
 
 ## Removal
 
