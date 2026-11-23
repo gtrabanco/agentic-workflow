@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: large
-roadmap_summary: Issue [#696](https://github.com/gtrabanco/agentic-workflow/issues/696) (L, high): the runner's pi mapping now reaches the point of execution — `bundle-skills.mjs` injects one canon block owned by `RUNNER.md` into every staged `SKILL.md` that cites `runner <subcommand>`, the extension's bash seam turns a literal `runner …` shell call into the same teaching, and the tool-choice guard stops suggesting a `scripts/…` path the session's project does not have.
+roadmap_summary: Issue [#696](https://github.com/gtrabanco/agentic-workflow/issues/696) (L, high): the runner's pi mapping now reaches the point of execution — `bundle-skills.mjs` injects one canon block owned by `RUNNER.md` into every staged `SKILL.md` that cites `runner <subcommand>`, the extension's bash seam turns a literal `runner …` shell call into the same teaching, and the tool-choice guard stops suggesting a `scripts/…` path the session's project does not have, and a deferred tool's result reaches the model through pi's `content` channel. Applied through the owner's local inline workflow (ledgers frozen at cut). PR [#697](https://github.com/gtrabanco/agentic-workflow/pull/697).
 ac-hash: 549b5ba2742c917b176fbdfd55479f7f4767ba2aa1ed874a8f7aa3857c1cc175
 ---
 
@@ -262,6 +262,17 @@ none
   alone on purpose — the row is the owner-managed index, no emitter deletes a
   row, and removing another unit's row is not this change's scope. `IR3`-safe:
   the suite's own fixture cases stay green, and only its live-tree case is red.
+- **`ceremony roadmap settle` cannot settle a fix row** — found while closing this
+  unit (2026-11-22). The op reads a row's PR URL from `row.summary ?? row[4]` and
+  its status from `row.status ?? row[3]`, both of which are the *Features* table's
+  five-column shape: `roadmapTableRows` returns positional cells, so on the
+  four-column Fixes table `row[3]` is the Notes cell and `row[4]` does not exist.
+  A fix row is therefore never settled by the op (`settled: 0`), which is the
+  same class as fix #684's path/document defect. `does-not-affect` what this unit
+  changes, but `affects` its close-out: the row was settled by invoking the crate's
+  own writer (`fixRowUpsert`) with the settled cell the op's feature branch
+  produces, never by editing prose by hand (`D4`). Reported, not repaired — the
+  op belongs to the ceremony CLI's owner.
 - **The pi bundle's `RUNNER.md` keeps the mapping block after the projection** —
   the projection pointerizes `## The invocation` only, so the packaged contract
   still states the pi mapping; that is intended (the block is the mapping), and
@@ -365,14 +376,31 @@ this change (it would be a second, competing step list).`
 - **P5** — 2026-11-22, the result-shape translation and its wiring cases · the handoff's head.
 
 
+- **D4** — 2026-11-22, the fix row settles to `done · [#697](…)` through
+  `fixRowUpsert` directly, because `ceremony roadmap settle` cannot read a fix
+  row's cells at all (see Known pre-existing issues). The status cell is the one
+  the op's own feature branch writes and the summary cell stays the unit doc's
+  `roadmap_summary:`, so no hand-written prose enters the index and
+  `roadmap-settle` is green for this unit.
+- **P6** — 2026-11-22, the PR opens at
+  [#697](https://github.com/gtrabanco/agentic-workflow/pull/697) and the roadmap
+  row settles to `done` through the ceremony CLI; the push used the pre-push
+  hook's own documented escape hatch (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`),
+  recorded with its reason in the PR body and here: the only red is main's
+  duplicate feature-98 row (`roadmap-settle`), verified pre-existing at the base
+  commit and reported, never repaired, and the five steps the bail skipped ran by
+  hand green (`G1`).
+
 ## Next
 
-The owner's external verification of the handoff: the diff, the obligations
-ledger, the verification block and the two end-to-end receipts.
+The owner's review of [#697](https://github.com/gtrabanco/agentic-workflow/pull/697):
+the diff, the obligations ledger, the verification block, the two end-to-end
+receipts, and the verdict on the one in-unit discovery (`D3`/`O15`).
 
 ## References
 
-- Issue [#696](https://github.com/gtrabanco/agentic-workflow/issues/696).
+- Issue [#696](https://github.com/gtrabanco/agentic-workflow/issues/696) — the PR
+  closes it: [#697](https://github.com/gtrabanco/agentic-workflow/pull/697).
 - `skills/runner-contract/references/RUNNER.md` — the mapping's owner.
 - [fix #679](../679-runner-invocation-traps-canary/SPEC.md) and
   [fix #678](../678-deferred-tools-signature-bug/SPEC.md) — the same contract's
