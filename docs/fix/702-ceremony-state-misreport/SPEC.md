@@ -529,17 +529,27 @@ this change (it would be a second, competing step list).`
 - **P7** — 2026-11-23, the re-based ceilings and their declared growth source ·
   `194e67199`.
 - **P8** — 2026-11-23, the unpublished-header defect and its case · `c6b134bca`.
+- **P9** — 2026-11-23, the branch pushed and the PR opened at
+  [#709](https://github.com/gtrabanco/agentic-workflow/pull/709) (the pre-push
+  hook refused on `workspace-install`, A1, so the push used the documented
+  `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` hatch on the owner's instruction, every
+  skipped step already run by hand and recorded in `G1`/`G2`); the `## Fixes`
+  row settled to `done · [#709]` through the roadmap writer (`ec71f4a9 →
+  faa04f11`), and the generated projection re-rendered by the emitter.
 
 ## Next
 
-The owner's verdict on this diff: the obligations ledger, the verification block
-and the pre-existing issues named above — four proven at the base commit, and
-every skipped gate step run by hand with its result recorded in `G1`.
+The owner's merge verdict on
+[#709](https://github.com/gtrabanco/agentic-workflow/pull/709): the diff, the
+obligations ledger, the verification block and the pre-existing issues named
+above — four proven at the base commit, and every skipped gate step run by hand
+with its result recorded in `G1`/`G2`. The `## Fixes` row is `done · [#709]`
+and is removed only after the merge.
 
 ## References
 
 - Issue [#702](https://github.com/gtrabanco/agentic-workflow/issues/702) — the PR
-  closes it.
+  closes it: [#709](https://github.com/gtrabanco/agentic-workflow/pull/709).
 - [fix #684](../684-ceremony-roadmap-upsert/SPEC.md) — the `## Fixes` row writer's
   owner-ordered shape extension this unit verifies (`O13`).
 - [fix #361](../361-finding-severity-ladder/SPEC.md) — `findings-table@1`'s
