@@ -342,6 +342,14 @@ function toolRegistrar(pi: ExtensionAPI): { registerTool(tool: unknown): void } 
  * check, and the one tool that read no params forwarded the abort signal as its
  * cwd. The translation is total: the host's `cwd` is the project root the spec
  * runs in, and every other field rides along untouched.
+ *
+ * The result is translated too (issue #696's AC5): a spec answers
+ * `{ text, structuredContent, isError }`, while pi's `AgentToolResult` carries
+ * the model-facing text as `content: [{ type: "text", text }]` and reserves
+ * `structuredContent` for programmatic callers. Returning the spec's shape
+ * unchanged therefore reached the model as an *empty* tool result — the command
+ * ran, printed its envelope, and the session saw nothing — which is how the
+ * incident's own `/batch-scheduler` run could report exit 0 with no plan.
  */
 export function hostTool(tool: unknown): unknown {
   const spec = tool as { execute?: unknown };
@@ -349,9 +357,35 @@ export function hostTool(tool: unknown): unknown {
   const run = spec.execute as (params: Record<string, unknown>, cwd: string) => Promise<unknown>;
   return {
     ...(tool as object),
-    execute: (_toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: { cwd: string }) =>
-      run.call(tool, params, ctx.cwd),
+    execute: async (
+      _toolCallId: string,
+      params: Record<string, unknown>,
+      _signal: unknown,
+      _onUpdate: unknown,
+      ctx: { cwd: string },
+    ) => {
+      const result = await run.call(tool, params, ctx.cwd);
+      return hostToolResult(result);
+    },
   };
+}
+
+/**
+ * Translate one Pi-free tool result into the host's result shape, or pass it
+ * through untouched when it already is one (a foreign tool, or an error thrown
+ * before the spec produced a result).
+ */
+export function hostToolResult(result: unknown): unknown {
+  if (result === null || typeof result !== "object") return result;
+  const spec = result as { text?: unknown; structuredContent?: unknown; isError?: unknown };
+  if (typeof spec.text !== "string") return result;
+  const translated: Record<string, unknown> = {
+    content: spec.text === "" ? [] : [{ type: "text", text: spec.text }],
+    details: spec.structuredContent ?? null,
+  };
+  if (spec.structuredContent !== undefined) translated.structuredContent = spec.structuredContent;
+  if (spec.isError === true) translated.isError = true;
+  return translated;
 }
 
 export default function extension(pi: ExtensionAPI): void {

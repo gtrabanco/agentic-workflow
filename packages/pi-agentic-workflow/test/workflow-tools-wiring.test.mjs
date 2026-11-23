@@ -11,6 +11,13 @@
 // This suite therefore calls every tool the way the host does, off the object
 // the extension registers, so a future signature regression turns red here
 // instead of shipping.
+//
+// Issue #696 added the other half of the same convention: the *result*. The
+// Pi-free spec answers `{ text, structuredContent, isError }`, while pi's
+// `AgentToolResult` carries the model-facing text as `content` and reserves
+// `structuredContent` for programmatic callers — so a result passed through
+// unchanged reached the model as empty. Every case here reads the model-facing
+// channel the host reads.
 
 import { after, test } from "node:test";
 import assert from "node:assert/strict";
@@ -79,6 +86,19 @@ function makeValidEnv() {
 }
 
 /** The arguments pi hands a tool, in pi's order. */
+/**
+ * The model-facing text of a host result: pi 1.6's `content` blocks, joined.
+ * The spec-side `text` field is deliberately not read here — the adapter's job
+ * is to stop that shape at the seam (issue #696).
+ */
+function hostText(result) {
+  const blocks = Array.isArray(result?.content) ? result.content : [];
+  return blocks
+    .filter((block) => block?.type === "text")
+    .map((block) => block.text)
+    .join("\n");
+}
+
 function hostCall(args, cwd) {
   const signal = new AbortController().signal;
   const ctx = { cwd, sessionManager: {}, ui: { notify: () => {} } };
@@ -129,7 +149,7 @@ test("every params-reading tool answers when the host calls it with the 5-arg co
     const result = await tool.execute(...hostCall(ARGS_BY_TOOL[tool.name], project));
     assert.equal(typeof result, "object", `${tool.name} resolved instead of throwing`);
     assert.ok(
-      !String(result?.text ?? "").includes(ARGUMENT_CHECK),
+      !hostText(result).includes(ARGUMENT_CHECK),
       `${tool.name} never answers "${ARGUMENT_CHECK}" for correctly shaped params`,
     );
   }
@@ -191,5 +211,42 @@ test("agentic_workflow_run answers the issue's quoted reproducer", async () => {
     { subcommand: "setup-env", stdout: "setup-env: ok\n", stderr: "", exitCode: 0 },
     "the call answers `{ subcommand, stdout, stderr, exitCode }`",
   );
-  assert.ok(!String(result.text).includes(ARGUMENT_CHECK), "the argument check never fires on shaped params");
+  assert.ok(!hostText(result).includes(ARGUMENT_CHECK), "the argument check never fires on shaped params");
+  // Issue #696 AC5: the model-facing half of the result is pi's `content`, and it
+  // carries the command's own output — the envelope a session asks for.
+  assert.deepEqual(result.content, [{ type: "text", text: "setup-env: ok" }], "the host's content carries the command's stdout");
+  assert.equal(result.isError, undefined, "a clean exit is not an error result");
+});
+
+test("every tool answers the host's result convention, not the spec's", async () => {
+  // The failure this pins: the adapter translated the call and passed the result
+  // through, so `{ text, structuredContent }` reached a host that reads
+  // `content` — the command ran, printed its envelope, and the session saw an
+  // empty tool result.
+  const project = scratchDir("paw-wiring-result-");
+  const registered = await registeredTools({
+    bin: () => "bun",
+    spawnScript: () => Promise.resolve({ code: 0, stdout: "print me", stderr: "" }),
+    runSensor: () => Promise.resolve({ ok: true, envelope: makeValidEnv() }),
+  });
+  for (const tool of registered) {
+    const result = await tool.execute(...hostCall(ARGS_BY_TOOL[tool.name], project));
+    assert.ok(Array.isArray(result.content), `${tool.name} answers pi's \`content\` array`);
+    assert.equal(result.text, undefined, `${tool.name} does not leak the spec's \`text\` field to the host`);
+    assert.ok(hostText(result).length > 0, `${tool.name} says something to the model`);
+    assert.notEqual(result.details, undefined, `${tool.name} keeps its structured half as \`details\``);
+  }
+});
+
+test("a non-zero exit stays an error result with its output", async () => {
+  const project = scratchDir("paw-wiring-result-error-");
+  const registered = await registeredTools({
+    bin: () => "bun",
+    spawnScript: () => Promise.resolve({ code: 2, stdout: "", stderr: "runner: refused\n" }),
+  });
+  const runner = registered.find((tool) => tool.name === "agentic_workflow_run");
+  const result = await runner.execute(...hostCall({ subcommand: "needs-input", args: [] }, project));
+  assert.equal(result.isError, true);
+  assert.deepEqual(result.content, [{ type: "text", text: "runner: refused" }], "the refusal text reaches the model");
+  assert.equal(result.structuredContent?.exitCode, 2);
 });
