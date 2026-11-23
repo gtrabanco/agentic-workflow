@@ -449,6 +449,10 @@ this change (it would be a second, competing step list).`
   cited-gates); docs gates: `docs-generate --check` · PASS,
   `check-skill-context --documents` · PASS (7 documents), `normative-drift` ·
   24 pass.
+- **P7** — 2026-11-23, the four-blocker correction batch: O14/P6's validator
+  restatement, the `## Impact` journal scope, the two AC witness quotes and the
+  `ac-hash` plan repair · `d169f3d71`; the session's journal fragment rides the
+  next commit.
 
 ## Next
 
