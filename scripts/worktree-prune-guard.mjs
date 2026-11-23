@@ -22,13 +22,15 @@
  * the invocations that go through it — the workflow's own, via
  * `scripts/worktree-guard.mjs --prune` — and nothing else. A prune typed by hand
  * elsewhere is not intercepted; `git worktree lock` is what protects a worktree
- * from git's own automatic prune during `git gc`.
+ * from git's own automatic prune during `git gc`, which runs `git worktree prune
+ * --expire 3.months.ago` (`gc.worktreePruneExpire`).
  *
  * It is also never a working-tree remover. `git worktree prune` reclaims
  * administration metadata for a worktree whose directory is already gone; a
- * present tree, its uncommitted files included, is untouched, and every
- * candidate is listed before the policy decision so the operator sees what the
- * decision is about.
+ * present tree, its uncommitted files included, is untouched, so lost work means
+ * the directory vanished first — the `CORRUPTED` finding, whose fix is
+ * `git worktree repair`. Every candidate is listed before the policy decision so
+ * the operator sees what the decision is about.
  *
  * stdout: the `worktree-prune-guard —` header, one `PRUNE <path>` line as the
  * operator's instruction (there is no path flag: `git worktree remove` reads

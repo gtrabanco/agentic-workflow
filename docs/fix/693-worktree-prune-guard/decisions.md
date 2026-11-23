@@ -4,6 +4,7 @@
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/worktree-prune-guard.test.mjs | P2 | 2026-11-23 | execute-phase | One assertion's matcher is repaired, never relaxed: it built `new RegExp("PRUNE " + path.basename(path))`, and once the guard prints the full candidate path — the path the deny message must name, since `git worktree remove` takes one — a basename inside a longer path cannot match under a regex's `/` boundary. The replacement asserts the stronger fact (`stdout.includes(`PRUNE ${vanished}`)`, the whole path), so the property it proves is unchanged and its input is broader, not narrower. The other ten cases keep their exact expectations.
+justification | scripts/findings-corpus.test.mjs | P4 | 2026-11-23 | execute-phase | The tree's frozen finding count follows the tree, not a contract: this unit appends one OPEN row (F1) to its own unit doc, so `corpus.findings.length` moves 1164 → 1165. That is the same mechanism the suite documents at its own `reviewMarks` line 190 ("a unit that records one raises it"), and the fixture cases and every other pinned count are untouched.
 ```
 
 ## D1 — the policy binds the workflow's own prunes, and locking is the prevention

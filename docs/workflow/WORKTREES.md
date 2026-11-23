@@ -11,16 +11,25 @@ root (gitignored). The path must stay **inside the repository tree** — Serena 
 other MCPs detect worktrees as separate project paths and break when worktrees
 live outside the repo tree — but **never inside `.git/worktrees/`**.
 
-⚠️ **CRITICAL: `.git/worktrees/` is git's private worktree-administration
-namespace, not a place for working trees.** `git worktree prune` deletes any
-container directory under it **recursively — with the working tree and its
-uncommitted work inside it** — exit 0, no warning. A path like
-`.git/worktrees/fix/493-x` also collides with git's basename-named admin dirs
-(`feat/493-x` and `fix/493-x` become `493-x` and `493-x1`), leaving an
-admin-to-tree mapping no tool can follow. The guard (`scripts/worktree-guard.mjs`)
-flags any worktree under `.git/worktrees/` as `ADMIN_NAMESPACE`. **Never create,
-move or restore a worktree into `.git/worktrees/`.**
+⚠️ **`.git/worktrees/` is git's private worktree-administration namespace, not a
+place for working trees.** A container there collides with git's basename-named
+admin dirs (`feat/493-x` and `fix/493-x` become `493-x` and `493-x1`), leaving a
+mapping no tool can follow; the guard flags it as `ADMIN_NAMESPACE`. **Never
+create, move or restore a worktree into `.git/worktrees/`.**
 
+## The prune policy
+
+`git worktree prune` is gated by a key read by
+`scripts/worktree-prune-guard.mjs`: `git config aw.worktreePrunePolicy
+ask|deny|allow`. `deny` (also the absent-key and unrecognised-value default)
+refuses with exit 1, naming `git worktree remove <path>`; `ask` prints
+`Prune <N> stale worktree(s)? [y/N]: ` with the real count, refusing with no
+readable stdin; `allow` delegates and returns its status.
+`scripts/worktree-guard.mjs --prune` routes its own prune here. **Git offers no
+way to intercept the `worktree` builtin** — an `alias.worktree` entry never runs
+and no `prune` hook exists — so the policy binds the prunes that go through the
+guard, and `git worktree lock` prevents `git gc`'s automatic prune. See the guard's
+own header.
 ## Branch name and flat worktree name
 
 Branch names follow the unit kind:

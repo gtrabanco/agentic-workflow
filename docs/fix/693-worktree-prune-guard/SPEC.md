@@ -1,6 +1,7 @@
 ---
 type: fix
 scope: small
+roadmap_summary: `git worktree prune` is now gated by `aw.worktreePrunePolicy` (`deny` default / `ask` / `allow`) in `scripts/worktree-prune-guard.mjs`, which `worktree-guard --prune` routes through so one policy governs the workflow's own prunes. Git offers no interception point for the builtin (an `alias.worktree` entry never runs, no `prune` hook exists), so the unit records the corrected mechanism instead of promising one: prune reclaims metadata only for an already-absent directory, `git gc` is the silent actor, and `git worktree lock` is the prevention — stated in AGENTS.md and WORKTREES.md. SPEC: [SPEC](fix/693-worktree-prune-guard/SPEC.md)
 ---
 
 # fix/693-worktree-prune-guard
@@ -182,6 +183,12 @@ sibling `bun test scripts/worktree-guard.test.mjs` for the delegated prune path.
   writes, which states the corrected mechanism.
 - The pre-push `worktree-audit` step remains `in-progress` in the roadmap under
   #505. **does-not-affect** — this unit adds no step and touches no finding class.
+- `scripts/normative-drift.test.mjs` reports 4 failures on `origin/main` itself
+  (measured on an untouched `git archive` of `origin/main`: 20 pass / 4 fail,
+  identical on this branch), rooted in `skills/runner-contract/references/RUNNER.md`
+  pinning `@gtrabanco/agentic-workflow@4.10.0` while the package is `4.10.1`.
+  **does-not-affect** — this unit touches neither the file nor the version pin;
+  the drift is the pin watch's to repair.
 
 ## Acceptance criteria
 
@@ -253,13 +260,13 @@ PE-006 | measured | `git config --get <key>` exits 1 when the key is absent, 0 w
 ```text
 obligations@1
 obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status
-O1 | S2, S3, AC1 | an absent or unrecognised `aw.worktreePrunePolicy` resolves to `deny` — the closed default is the safe one | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the resolution case matches 5 | test names in the suite; the resolution assertions in the run output | planned
-O2 | S3, S6, AC2 | `deny` refuses the prune with exit 1 and the exact blocked message, naming the manual-removal command and the policy-change hint | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the deny-message case matches 1 | the assertion text in the suite; the captured stderr in the run output | planned
-O3 | S4, S7, AC3 | `ask` prints `Prune <N> stale worktree(s)? [y/N]: ` to stderr with the true candidate count and proceeds only on an affirmative answer | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the ask cases match 2 | the prompt-with-count assertion and the y/n pair in the run output | planned
-O4 | S5, AC4 | `allow` delegates to `git worktree prune` and returns its exit status unchanged | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the allow case matches 1 | the exit-status passthrough assertion in the run output | planned
-O5 | S11, AC5, PE-001, PE-005 | the guard never removes a working tree; a live worktree's uncommitted file survives a prune under every policy | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the live-tree case matches 1 | the planted-file survival assertion in the run output | planned
-O6 | S8, S9, AC6 | `worktree-guard`'s prune path goes through the policy guard, so one policy governs every workflow prune and a `deny` stops it without touching git | P1 | P3 | execute-phase | `rg -c '"worktree", "prune"' scripts/worktree-guard.mjs` exits 1 and `bun test scripts/worktree-guard.test.mjs` exits 0 | the rg count (no hits) and the delegated-path case in the run output | planned
-O7 | S10, AC7 | the docs state the measured mechanism and name neither the alias nor the hook as a protection | P4 | P4 | execute-phase | `rg -c 'alias\.worktree|hooks/prune' AGENTS.md docs/workflow/WORKTREES.md` exits 1 | the rg output (no hits) and the WORKTREES.md policy section | planned
+O1 | S2, S3, AC1 | an absent or unrecognised `aw.worktreePrunePolicy` resolves to `deny` — the closed default is the safe one | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the resolution case matches 5 | test names in the suite; the resolution assertions in the run output | verified
+O2 | S3, S6, AC2 | `deny` refuses the prune with exit 1 and the exact blocked message, naming the manual-removal command and the policy-change hint | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the deny-message case matches 1 | the assertion text in the suite; the captured stderr in the run output | verified
+O3 | S4, S7, AC3 | `ask` prints `Prune <N> stale worktree(s)? [y/N]: ` to stderr with the true candidate count and proceeds only on an affirmative answer | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the ask cases match 2 | the prompt-with-count assertion and the y/n pair in the run output | verified
+O4 | S5, AC4 | `allow` delegates to `git worktree prune` and returns its exit status unchanged | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the allow case matches 1 | the exit-status passthrough assertion in the run output | verified
+O5 | S11, AC5, PE-001, PE-005 | the guard never removes a working tree; a live worktree's uncommitted file survives a prune under every policy | P1 | P2 | execute-phase | `bun test scripts/worktree-prune-guard.test.mjs` exits 0 and the live-tree case matches 1 | the planted-file survival assertion in the run output | verified
+O6 | S8, S9, AC6 | `worktree-guard`'s prune path goes through the policy guard, so one policy governs every workflow prune and a `deny` stops it without touching git | P1 | P3 | execute-phase | `rg -c '"worktree", "prune"' scripts/worktree-guard.mjs` exits 1 and `bun test scripts/worktree-guard.test.mjs` exits 0 | the rg count (no hits) and the delegated-path case in the run output | verified
+O7 | S10, AC7 | the docs state the measured mechanism, and every mention of the alias or hook route is a negation (naming it as impossible) — never a protection | P4 | P4 | execute-phase | `rg -n 'alias\.worktree\|hooks/prune' AGENTS.md docs/workflow/WORKTREES.md | rg -v 'never runs\|no way to intercept\|no .prune. hook'` exits 1 | the empty filtered output and the WORKTREES.md policy section | verified
 O8 | n/a: no package consumes `aw.worktreePrunePolicy` — the key is a git config read by this repository's own scripts, not a unified-config feature key (docs/workflow/CONFIG.md governs package-level keys) | S2 | n/a | n/a | execute-phase | `rg -c 'worktreePrunePolicy' packages/` exits 1 | the empty package scan | n/a
 ```
 
@@ -290,3 +297,11 @@ No machine step list was produced.
 - L5 — `evidence` — the scratch probes PE-001, PE-003, PE-005 and PE-006 run
   under `mktemp -d /tmp/wtred*`, removed after each run; nothing executed against
   the live tree.
+- L6 — `gate` — `bun scripts/worktree-prune-guard.test.mjs` (11 pass),
+  `bun scripts/worktree-guard.test.mjs` (16 pass), `bun scripts/findings-corpus.test.mjs`
+  (15 pass), `check-skill-context --documents` PASS, `docs-generate --check` PASS,
+  and a differential run of `worktree-guard` against `origin/main` whose only
+  difference is the fixture path. The full local gate is green apart from
+  `normative-drift`, which fails identically on `origin/main` (4 failures,
+  measured) for the `RUNNER.md` 4.10.0/4.10.1 pin — recorded in
+  `## Known pre-existing issues`.
