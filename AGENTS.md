@@ -666,6 +666,7 @@ docs/workflow/REPLICATE.md | pattern:The (\d+) installable skills | count:discov
 docs/workflow/REPLICATE.md | pattern:The \d+ installable skills \((\d+) user-facing | count:user-facing | equals
 docs/workflow/REPLICATE.md | pattern:\+ (\d+) internal, including | count:workflow-internals | equals
 docs/workflow/REPLICATE.md | pattern:installable set is \*\*(\d+) user-facing | count:user-facing | equals
+docs/workflow/PORTABLE_PROMPT.md | pattern:user-facing skills \+ (\d+) internal steps | count:workflow-internals | equals
 docs/workflow/REPLICATE.md | pattern:user-facing \+ (\d+) internal\*\* | count:workflow-internals | equals
 docs/workflow/REPLICATE.md | pattern:internal\*\* \((\d+) total\) | count:discoverable | equals
 docs/workflow/REPLICATE.md | pattern:\*\*User-facing \((\d+)\) | count:user-facing | equals

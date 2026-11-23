@@ -120,6 +120,31 @@ test("registration: six deferred tools in the agentic-workflow namespace, readOn
   }
 });
 
+// Issue #603 S4: a session that never loads the usage skill still learns which
+// family solves which problem, because the index rides the deferred runner
+// tool's own description — the text `tool_search` surfaces, at no standing cost
+// (the tool set is unchanged and every tool stays deferred).
+test("the deferred runner tool's description carries the subcommand family index (issue #603 S4)", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const tools = createWorkflowTools();
+  const run = tools.find((tool) => tool.name === "agentic_workflow_run");
+  assert.ok(run, "the generic runner door exists");
+  for (const family of ["editing", "sensor", "guard", "lane", "forge", "knowledge", "tooling"]) {
+    assert.match(run.description, new RegExp(`\\b${family}\\b`, "u"), `the index names the \`${family}\` family`);
+  }
+  assert.match(run.description, /help <subcommand>/u, "the index points at the CLI's own help for exact flags");
+  // The index rides an existing description: it adds no tool, so the declared
+  // set — and therefore the standing token cost — is unchanged.
+  assert.deepEqual(
+    tools.map((tool) => tool.name).sort(),
+    [...TOOL_NAMES].sort(),
+    "no tool was added to carry the index",
+  );
+  for (const tool of tools) {
+    assert.equal(tool.exposure, "deferred", `${tool.name} stays deferred, so nothing is declared standing`);
+  }
+});
+
 test("registration: the factory's toolRegistrar seam receives the specs", async () => {
   const { createExtension } = await import("../dist/extension/factory.js");
   const registered = [];

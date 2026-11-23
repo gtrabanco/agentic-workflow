@@ -25,20 +25,20 @@ Two ways to install the skills into a repo. They're complementary.
 
 | Method | What you get | When to use |
 |---|---|---|
-| **`skills` CLI** | The 29 installable skills (14 user-facing + 15 internal, including the `orchestration-envelope` contract) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
+| **`skills` CLI** | The 30 installable skills (14 user-facing + 16 internal, including the `orchestration-envelope` contract) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
 | **Portable prompt** | The skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
 
-The installable set is **14 user-facing + 15 internal** (29 total):
+The installable set is **14 user-facing + 16 internal** (30 total):
 
 - **User-facing (14):** `init-workspace`, `discover-repository-state`,
   `resolve-repository-state`, `unit-lane`, `execute-phase`, `review-change`,
   `audit-pr`, `audit-docs`, `product-audit`, `fold-findings`, `triage-issue`,
   `log-session`, `workflow-status`, `batch-scheduler`.
-- **Internal (15):** `orchestration-envelope`, `pre-execution-review`,
+- **Internal (16):** `orchestration-envelope`, `pre-execution-review`,
   `phase-contract`, `verification-contract`, `runner-contract`,
-  `review-implementation`, `review-code`, `review-security`, `review-verify`,
-  `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
-  and `review-seo`. These are
+  `self-documenting-cli`, `review-implementation`, `review-code`,
+  `review-security`, `review-verify`, `review-debt`, `review-design`,
+  `review-a11y`, `review-brand`, `review-perf`, and `review-seo`. These are
   hidden from the menu and dispatched by the user-facing workflow routers.
   The repo-only `skill-lint` helper is excluded from the installable count.
 

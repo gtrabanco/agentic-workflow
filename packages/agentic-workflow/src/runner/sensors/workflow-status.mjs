@@ -1968,7 +1968,7 @@ function parseArgs(argv) {
   const opts = { jsonOnly: false, lastEnvelope: null, compact: false };
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
-    if (token === "--help") return { help: true };
+    if (token === "--help" || token === "-h") return { help: true };
     if (token === "--version") return { version: true };
     if (token === "--json-only") { opts.jsonOnly = true; continue; }
     if (token === "--compact") { opts.compact = true; continue; }

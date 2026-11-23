@@ -421,9 +421,12 @@ describe("option grammar (S11)", () => {
     const file = fixture(UNIQUE_DOC);
     const res = run(["doc", "read", "--file", file, "--section", "Nonexistent"]);
     assert.equal(res.status, 2);
+    // Exact bytes still: the refusal's own two lines, plus the one `help` pointer
+    // every refusal carries since issue #603 S2 (the pointer adds a line, never a
+    // second `doc:` prefix — that is exactly what this case pins).
     assert.equal(
       res.stderr,
-      'DOC REFUSAL — NO_MATCH\ndoc: no section matches --section "Nonexistent"\n',
+      'DOC REFUSAL — NO_MATCH\ndoc: no section matches --section "Nonexistent"\nRun `agentic-workflow help doc` for this command\'s usage, ops and flags.\n',
     );
   });
 });

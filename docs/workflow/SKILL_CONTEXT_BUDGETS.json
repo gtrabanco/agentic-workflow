@@ -44,7 +44,7 @@
         }
       },
       "AGENTS.md": {
-        "linesMax": 683,
+        "linesMax": 684,
         "proseLinesMax": 475,
         "estimateMax": 15798,
         "machineBlocks": [
@@ -52,11 +52,12 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 222,
+        "machineLines": 223,
         "blockLines": {
           "inviolable-rules@1": 18
         },
         "sources": {
+          "issue #603 (self-documenting-cli correction, 2026-11-23)": "one `rendered-facts@1` row pins docs/workflow/PORTABLE_PROMPT.md's internal-steps count (the external-verify receipt's sibling-sweep finding B3), so the guide measures 682 lines / 223 machine with `bun scripts/check-skill-context.mjs --documents`. `machineLines` 222 -> 223 and `linesMax` 681 -> 682 are re-pinned to the exact boundary the row spends (fix #571 precedent); `proseLinesMax` (475) and `estimateMax` (15798) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #693 (worktree prune policy correction, 2026-11-23)": "the Worktree creation section restores the measured destruction sentence (`git worktree prune` deletes non-registration entries under `.git/worktrees/` recursively, with the working tree and its uncommitted work inside it — external verify B1) and the read-first trigger (A5), so the guide measures 683 lines / 222 machine / 461 prose / 14,470 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` re-pins 681 -> 683 (the exact boundary the tree spends, the fix #571 precedent); `proseLinesMax` (475) and `estimateMax` (15,798) keep their headroom and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #696 (runner mapping delivery, 2026-11-22)": "issue #696 (runner mapping delivery, 2026-11-22): one `normative-surfaces@1` row (`runner-mapping`, bound to the block `RUNNER.md` publishes and the pi bundle injects) joins the machine region, so the guide measures 681 lines / 222 machine / 459 prose / 14421 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 221 -> 222 (the exact boundary the row spends, the fix #571 precedent) and `linesMax` (681) is spent exactly, so it is not re-based. `estimateMax` (15798) and `proseLinesMax` (475) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #676 (journal errata path, 2026-11-21)": "one `normative-surfaces@1` row (`journal-errata-marker`, bound to the `JOURNAL_ERRATA_MARKERS` export `packages/agentic-workflow-schema/src/journal.ts` publishes) joins the machine region, so the guide measures 680 lines / 221 machine / 459 prose / 14,396 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 220 -> 221 (the exact boundary the row spends, the fix #571 precedent). `linesMax` (681), `proseLinesMax` (475) and `estimateMax` (15,798) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
