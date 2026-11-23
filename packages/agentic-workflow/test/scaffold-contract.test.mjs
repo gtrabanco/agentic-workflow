@@ -36,6 +36,8 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { tempRoot } from "../../../scripts/temp-root.mjs";
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PKG = path.resolve(HERE, "..");
 const REPO = path.resolve(PKG, "..", "..");
@@ -45,7 +47,7 @@ const engine = await import("../src/runner/sensors/scaffold-contract.mjs").catch
 
 /** A scratch tree that never outlives its test. */
 function scratch(files) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "scaffold-contract-"));
+  const root = tempRoot("scaffold-contract-");
   for (const [rel, body] of Object.entries(files)) {
     const full = path.join(root, rel);
     fs.mkdirSync(path.dirname(full), { recursive: true });
