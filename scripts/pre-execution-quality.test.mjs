@@ -46,6 +46,19 @@ const fromIssue = safeRead("skills/plan-feature-from-issue/SKILL.md");
 const plugin = JSON.parse(read(".claude-plugin/plugin.json"));
 const skillsSh = JSON.parse(read("skills.sh.json"));
 
+// The manifest's skills array is a machine surface, so its order is a contract:
+// AGENTS.md § Conventions pins it to alphabetical, and issue #603's correction
+// found the array out of order with no gate reading it (B4). This assertion is
+// deliberately outside the deleted-skills guard below — it depends on no
+// deleted fixture, so it must run in every tree.
+test("the plugin's skills array is alphabetical (AGENTS.md § Conventions)", () => {
+  assert.deepEqual(
+    [...plugin.skills],
+    [...plugin.skills].sort(),
+    `.claude-plugin/plugin.json skills must read in sorted order (first disorder at index ${[...plugin.skills].findIndex((entry, index, all) => index > 0 && entry < all[index - 1])})`,
+  );
+});
+
 // P8b: guard — most assertions in this file depend on deleted skills. When none
 // of the key deleted skills exist, register a skip the runner counts (issue #329
 // S8: `bun test`/`node --test` must report it, never a bare green) and keep the

@@ -26,11 +26,13 @@
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { parseUnitDocPhases, locateTasksSection } from "../runner/unit-doc-phases.mjs";
+import { helpPointer } from "../runner/help.mjs";
 
 const usage = `usage: agentic-workflow relevant-files <unit-doc> [--phase P<k>|all] | [--changed <path,path…> | --base <ref>]`;
 
 function refuse(reason) {
   process.stderr.write(`RELEVANT FILES REFUSAL — ${reason}\n${usage}\n`);
+  process.stderr.write(`${helpPointer("relevant-files")}\n`);
   process.exit(2);
 }
 

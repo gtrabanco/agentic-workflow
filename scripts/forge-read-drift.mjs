@@ -66,7 +66,12 @@ export const EXCLUSIONS = new Map([
 ]);
 
 /** Files allowed to name the transport, each with the reason it must. */
-export const TRANSPORT_EXEMPT = new Map();
+export const TRANSPORT_EXEMPT = new Map([
+  [
+    "skills/self-documenting-cli/references/forge.md",
+    "issue #603 S5's five-frictions recipe must name the REST PATCH and label routes verbatim — naming the exact fallback form is the friction's coverage, and its read routes still point at `runner forge-read`; exempted in the 2026-11-23 correction batch with this reason, never silently",
+  ],
+]);
 
 /** Every Markdown file under the scanned roots, repository-relative. */
 function listMarkdown(root) {

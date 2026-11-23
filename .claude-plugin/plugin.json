@@ -43,6 +43,7 @@
     "./skills/review-seo",
     "./skills/review-verify",
     "./skills/runner-contract",
+    "./skills/self-documenting-cli",
     "./skills/triage-issue",
     "./skills/unit-lane",
     "./skills/verification-contract",

@@ -725,7 +725,16 @@ function runnerRunSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
       "`pre-execution-snapshot`, …) in the project and return its stdout, " +
       "stderr and exit code. Every `runner <subcommand>` citation in the " +
       "packaged skills means this tool in a pi session; the package composes " +
-      "the command. A non-zero exit arrives as an error carrying the output.",
+      "the command. A non-zero exit arrives as an error carrying the output. " +
+      "The families: editing (typed document writes — unit-doc, roadmap, " +
+      "section, verify); sensor (read-only state — workflow-status, phase-lint, " +
+      "needs-input, test-impact, coverage-gap); guard (diff-guard, " +
+      "git-identity-check, guard-command); lane (the unit's own state machine — " +
+      "unit-route, ceremony, relay, audit-pr-gate, gate-receipt); forge " +
+      "(forge-read, fullauto-merge, turn-contract); knowledge (doc, journal, " +
+      "findings-corpus, repository-state); tooling (doctor, setup, setup-env, " +
+      "runner, config). Run `help <subcommand>` here for its exact ops and " +
+      "flags — it answers from the CLI's own registry, so it never drifts.",
     parameters: {
       type: "object",
       required: ["subcommand"],

@@ -33,6 +33,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { helpPointer } from "../runner/help.mjs";
+
 import {
   ARTIFACT_EVIDENCE_KINDS,
   MATERIALIZATION_FINDING_CODES,
@@ -792,6 +794,7 @@ export function run(args) {
   } catch (error) {
     if (!(error instanceof MaterializeRefusal)) throw error;
     process.stderr.write(`EDIT REFUSAL — ${error.message}\n`);
+    process.stderr.write(`${helpPointer("materialize")}\n`);
     return 2;
   }
 }

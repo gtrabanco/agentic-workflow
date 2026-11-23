@@ -666,11 +666,12 @@ docs/workflow/REPLICATE.md | pattern:The (\d+) installable skills | count:discov
 docs/workflow/REPLICATE.md | pattern:The \d+ installable skills \((\d+) user-facing | count:user-facing | equals
 docs/workflow/REPLICATE.md | pattern:\+ (\d+) internal, including | count:workflow-internals | equals
 docs/workflow/REPLICATE.md | pattern:installable set is \*\*(\d+) user-facing | count:user-facing | equals
+docs/workflow/PORTABLE_PROMPT.md | pattern:user-facing skills \+ (\d+) internal steps | count:workflow-internals | equals
 docs/workflow/REPLICATE.md | pattern:user-facing \+ (\d+) internal\*\* | count:workflow-internals | equals
 docs/workflow/REPLICATE.md | pattern:internal\*\* \((\d+) total\) | count:discoverable | equals
 docs/workflow/REPLICATE.md | pattern:\*\*User-facing \((\d+)\) | count:user-facing | equals
 docs/workflow/REPLICATE.md | pattern:\*\*Internal \((\d+)\) | count:workflow-internals | equals
-skills/runner-contract/references/RUNNER.md | literal:bunx @gtrabanco/agentic-workflow@4.10.0 | package:version | equals
+skills/runner-contract/references/RUNNER.md | literal:bunx @gtrabanco/agentic-workflow@4.10.1 | package:version | equals
 CHANGELOG.md | package-versions | package:version | equals-each
 skills/pre-execution-review/references/POLICY.md | restates:gate-rejection-vocabulary@1:gate-rejection-type | const:GATE_REJECTION_TYPES | equals-set
 docs/workflow/README.md | pattern:The (\d+) companion npm packages | count:packages | equals

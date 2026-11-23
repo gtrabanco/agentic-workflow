@@ -273,6 +273,13 @@ skills/review-seo/SKILL.md | 2-rarely | scanned | structural scan: headings, own
 skills/review-verify/SKILL.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/runner-contract/SKILL.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/runner-contract/references/RUNNER.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+skills/self-documenting-cli/SKILL.md | 1-on-demand | full | read end-to-end this session
+skills/self-documenting-cli/references/editing.md | 1-on-demand | full | read end-to-end this session
+skills/self-documenting-cli/references/forge.md | 1-on-demand | full | read end-to-end this session
+skills/self-documenting-cli/references/knowledge.md | 1-on-demand | full | read end-to-end this session
+skills/self-documenting-cli/references/lane.md | 1-on-demand | full | read end-to-end this session
+skills/self-documenting-cli/references/sensors.md | 1-on-demand | full | read end-to-end this session
+skills/self-documenting-cli/references/tooling.md | 1-on-demand | full | read end-to-end this session
 skills/skill-lint/SKILL.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/skill-lint/references/CHECKS.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/skill-lint/references/DISCOVERY_AND_LINT.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
