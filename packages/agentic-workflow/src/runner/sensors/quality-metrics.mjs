@@ -31,6 +31,8 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+import { helpPointer } from "../help.mjs";
+
 import {
   QUALITY_METRICS_CONTRACT_ID,
   QUALITY_METRICS_LIMITS,
@@ -757,6 +759,7 @@ function parseArgs(argv) {
 /** One refusal line on stderr, the usage after it: nothing was measured. */
 function refuse(reason) {
   process.stderr.write(`QUALITY REFUSAL — ${reason}\n\n${USAGE}\n`);
+  process.stderr.write(`${helpPointer("quality-metrics")}\n`);
   return REFUSAL_EXIT_CODE;
 }
 

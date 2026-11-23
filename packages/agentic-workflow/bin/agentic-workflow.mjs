@@ -237,25 +237,29 @@ function parseArgs(args) {
   return result;
 }
 
-function refuse(reason) {
-  process.stderr.write(`EDIT REFUSAL — ${reason}\n`);
-  process.exit(2);
-}
-
 /**
- * The repair a closed-world refusal gained (issue #603).
+ * The repair every refusal carries (issue #603 S2, receipt B1).
  *
- * The refusal's exit code and prefix are published and pinned by
- * `test/runner.dispatch.test.mjs`, so a mistyped subcommand cannot be renumbered
- * to exit 1. What it *can* do — and now does — is name the nearest legal
- * candidate it actually meant and one line pointing at that command's own help,
- * both on the same stderr stream. A candidate is a repair; a bare refusal is a
- * dead end the next session re-derives.
+ * The refusal's exit code and prefix are published and pinned, so nothing here
+ * renumbers them. What every refusal adds is exactly one
+ * `agentic-workflow help <sub>` line — plus, where the caller names them, the
+ * legal candidates, and, for the closed world, the nearest subcommand it
+ * actually meant. A bare refusal is a dead end the next session re-derives.
+ *
+ * @param {string} reason
+ * @param {{candidates?: readonly string[], suggest?: boolean, help?: string}} [opts]
  */
-function suggestionSuffix(command) {
-  const candidates = suggestSubcommands(command);
-  if (candidates.length === 0) return `\n${helpPointer()}`;
-  return `\nDid you mean: ${candidates.join(", ")}?\n${helpPointer(candidates[0])}`;
+function refuse(reason, opts = {}) {
+  process.stderr.write(`EDIT REFUSAL — ${reason}\n`);
+  if (opts.candidates?.length) process.stderr.write(`Legal operations: ${opts.candidates.join(", ")}\n`);
+  if (opts.suggest) {
+    const candidates = suggestSubcommands(command);
+    if (candidates.length === 0) process.stderr.write(`${helpPointer()}\n`);
+    else process.stderr.write(`Did you mean: ${candidates.join(", ")}?\n${helpPointer(candidates[0])}\n`);
+  } else {
+    process.stderr.write(`${helpPointer(opts.help ?? command)}\n`);
+  }
+  process.exit(2);
 }
 
 /** This crate's own version, read once and only when a refusal needs it. */
@@ -272,15 +276,19 @@ function flagValue(args, flag) {
 }
 
 /** A refusal with a non-EDIT prefix (the read-only sensors refuse with their
- *  own vocabulary, e.g. `PASSES REFUSAL`). */
+ *  own vocabulary, e.g. `PASSES REFUSAL`) — each prefix maps to the
+ *  subcommand whose help repairs it (the map is pinned by cli.help's suite). */
+const SENSOR_HELP = Object.freeze({ PASSES: "resolve-passes", RESOURCES: "resources", VERIFY: "verify" });
 function sensorRefuse(prefix, reason) {
   process.stderr.write(`${prefix} REFUSAL — ${reason}\n`);
+  process.stderr.write(`${helpPointer(SENSOR_HELP[prefix])}\n`);
   process.exit(2);
 }
 
 /** The doctor family's refusal (issue #537): exit 2, stdout empty, nothing written. */
 function doctorRefuse(reason) {
   process.stderr.write(`DOCTOR REFUSAL — ${reason}\n`);
+  process.stderr.write(`${helpPointer("doctor")}\n`);
   process.exit(2);
 }
 
@@ -404,6 +412,7 @@ function publishedGates(root) {
 function logRefuse(reason, receipt) {
   process.stderr.write(`LOG REFUSAL — ${reason}\n`);
   if (receipt) process.stdout.write(`${JSON.stringify(receipt)}\n`);
+  process.stderr.write(`${helpPointer("log")}\n`);
   process.exit(2);
 }
 
@@ -489,6 +498,7 @@ function parseJournalArgs(args) {
 function docRefuse(code, message) {
   process.stderr.write(`DOC REFUSAL — ${code}\n`);
   if (message) process.stderr.write(`doc: ${String(message).replace(/^doc:\s*/, "")}\n`);
+  process.stderr.write(`${helpPointer("doc")}\n`);
   process.exit(2);
 }
 
@@ -658,7 +668,9 @@ function parseConfigArgs(args) {
 function configRefusal(message, issues, json) {
   process.stderr.write(`CONFIG REFUSAL — ${message}\n`);
   for (const issue of issues ?? []) process.stderr.write(`  ${issue.path}: ${issue.message}\n`);
+  if (/^unknown config operation/u.test(message)) process.stderr.write(`Legal operations: ${HELP_REGISTRY.config.ops.join(", ")}\n`);
   if (json) process.stdout.write(`${JSON.stringify({ ok: false, service: "config", message, issues: issues ?? [] })}\n`);
+  process.stderr.write(`${helpPointer("config")}\n`);
   process.exit(2);
 }
 
@@ -666,38 +678,50 @@ function configRefusal(message, issues, json) {
 // every grammar downstream is closed, so `doc` would call `--debug` an unknown
 // flag. One strip here makes the tiers universal.
 const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(2));
-const command = argv[0];
+let command = argv[0];
 if (!command) {
   console.error(
     "usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|help|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...\n" +
       "       (bin: agentic-workflow · pin: skills/runner-contract/references/RUNNER.md · the scope-less `npx agentic-workflow` is a 0.0.0 placeholder, never this package)",
   );
+  console.error(helpPointer());
   process.exit(1);
 }
 
-const restArgs = argv.slice(1);
+let restArgs = argv.slice(1);
 
 // `help` is the CLI's own grammar (issue #603): it answers from one registry the
 // dispatch tables and the refusal below both read, so the surface never has to
 // be re-learned from the crate README. `--help`/`-h` at the top level are the
-// same door — a person who types them is asking the identical question.
+// same door — a person who types them is asking the identical question. The
+// three subcommands that own a richer hand-written block keep it through every
+// door: `help <sub>` re-dispatches to their own `--help`, so the bytes never
+// diverge (receipt B2), and `--json` always answers machine data (receipt B8).
 if (command === "help" || command === "--help" || command === "-h") {
   const target = restArgs.find((arg) => !arg.startsWith("-"));
   const wantsJson = restArgs.includes("--json");
-  if (target && !HELP_REGISTRY[target]) {
-    const candidates = suggestSubcommands(target);
-    process.stderr.write(`Unknown subcommand: ${target}${candidates.length ? ` — did you mean ${candidates.join(" or ")}?` : ""}\n`);
+  const selfDoor = !wantsJson && restArgs.some((arg) => arg === "--help" || arg === "-h");
+  const door = target ?? (selfDoor ? "help" : undefined);
+  if (door && !HELP_REGISTRY[door]) {
+    const candidates = suggestSubcommands(door);
+    process.stderr.write(`Unknown subcommand: ${door}${candidates.length ? ` — did you mean ${candidates.join(" or ")}?` : ""}\n`);
     process.stderr.write(`${helpPointer()}\n`);
     process.exit(1);
   }
-  if (wantsJson && !target) {
-    process.stdout.write(`${JSON.stringify(helpEnvelope(), null, 2)}\n`);
-  } else if (target) {
-    process.stdout.write(renderSubcommandHelp(target));
+  if (wantsJson) {
+    process.stdout.write(`${JSON.stringify(helpEnvelope(door), null, 2)}\n`);
+    process.exit(0);
+  }
+  if (door && ownsItsHelp(door)) {
+    command = door;
+    restArgs = ["--help"];
+  } else if (door) {
+    process.stdout.write(renderSubcommandHelp(door));
+    process.exit(0);
   } else {
     process.stdout.write(renderHelpIndex());
+    process.exit(0);
   }
-  process.exit(0);
 }
 
 // `--help`/`-h` on any declared subcommand prints that subcommand's block and
@@ -780,6 +804,7 @@ switch (command) {
       if (!(e instanceof RelayUsageError)) throw e;
       process.stderr.write(`RELAY REFUSAL — ${e.message}\n`);
       process.stderr.write(RELAY_USAGE);
+      process.stderr.write(`${helpPointer("relay")}\n`);
       process.exit(2);
     }
     let result;
@@ -797,6 +822,7 @@ switch (command) {
     } catch (e) {
       if (!(e instanceof RelayUsageError)) throw e;
       process.stderr.write(`RELAY REFUSAL — ${e.message}\n`);
+      process.stderr.write(`${helpPointer("relay")}\n`);
       process.exit(2);
     }
     process.stdout.write(`${result.lines.join("\n")}\n`);
@@ -840,6 +866,7 @@ switch (command) {
     } catch (e) {
       if (!(e instanceof PassesError)) throw e;
       process.stderr.write(`PASSES REFUSAL — ${e.message}\n`);
+      process.stderr.write(`${helpPointer("resolve-passes")}\n`);
       process.exit(2);
     }
     process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
@@ -892,6 +919,7 @@ switch (command) {
           result.violations.map((v) => `  ${v.code}: ${v.message}`).join("\n") +
           "\n",
       );
+      process.stderr.write(`${helpPointer("verify")}\n`);
       process.exit(2);
     }
     process.stdout.write(`VERIFY PASS — ${JSON.stringify({ ...result, violations: [] }, null, 2)}\n`);
@@ -1034,6 +1062,7 @@ switch (command) {
           `RESOURCES REFUSAL — ${verdict.reason}\n` +
             `  receipt: ${JSON.stringify(verdict.receipt)}\n`,
         );
+        process.stderr.write(`${helpPointer("resources")}\n`);
         process.exit(2);
       }
       process.stdout.write(`${JSON.stringify(verdict, null, 2)}\n`);
@@ -1052,6 +1081,7 @@ switch (command) {
       grammar = parseDocArgs(restArgs);
     } catch (e) {
       process.stderr.write(`doc: ${e.message}\n`);
+      process.stderr.write(`${helpPointer("doc")}\n`);
       process.exit(1);
     }
     if (grammar.branch === "docop") {
@@ -1060,6 +1090,7 @@ switch (command) {
       } catch (e) {
         if (e instanceof SectionLocatorError) docRefuse(e.code, e.message);
         process.stderr.write(`doc: ${e.message}\n`);
+        process.stderr.write(`${helpPointer("doc")}\n`);
         process.exit(1);
       }
       break;
@@ -1110,6 +1141,7 @@ switch (command) {
       // IO/store failures are usage/IO territory (exit 1, D3); the message
       // goes to stderr and stdout stays empty.
       process.stderr.write(`doc: ${e.message}\n`);
+      process.stderr.write(`${helpPointer("doc")}\n`);
       process.exit(1);
     }
     if (grammar.jsonOnly) {
@@ -1238,6 +1270,7 @@ switch (command) {
       const scope = flagValue(restArgs, "--scope") ?? "project";
       if (scope !== "project" && scope !== "global") {
         process.stderr.write(`PROVISION REFUSAL — unknown scope "${scope}": expected project or global\n`);
+        process.stderr.write(`${helpPointer("provision")}\n`);
         process.exit(2);
       }
       const discovered = discoverConfigExtensions({ projectDir: root });
@@ -1315,6 +1348,7 @@ switch (command) {
     }
     if (tool !== "rg") {
       process.stderr.write(`PROVISION REFUSAL — unknown tool "${tool}": this command ships the rg bootstrap and the permissions projection only\n`);
+      process.stderr.write(`${helpPointer("provision")}\n`);
       process.exit(2);
     }
     const root = flagValue(restArgs, "--dir") ? resolve(flagValue(restArgs, "--dir")) : process.cwd();
@@ -1401,6 +1435,7 @@ switch (command) {
             `JOURNAL REFUSAL — ${refusedFiles} non-conforming fragment(s) in ${receipt.journalDir} — a malformed fragment never reaches main\n`,
           );
           for (const refusal of receipt.refusals) process.stderr.write(`  ${refusal.reason}\n`);
+          process.stderr.write(`${helpPointer("journal")}\n`);
           process.exit(2);
         }
         process.stdout.write(`${JSON.stringify(receipt, null, parsed.json ? 2 : 0)}\n`);
@@ -1620,7 +1655,7 @@ switch (command) {
         refuse(e.message);
       }
     } else {
-      refuse(`Unknown unit-doc operation: ${op}`);
+      refuse(`Unknown unit-doc operation: ${op}`, { candidates: HELP_REGISTRY["unit-doc"].ops });
     }
     break;
   }
@@ -1633,6 +1668,7 @@ switch (command) {
     // with ENOENT, which reads as a missing table instead of a usage error.
     if (rawArgs[0] === "rowUpsert" || rawArgs[0] === "annotate") {
       process.stderr.write(`usage: agentic-workflow roadmap <table-path> ${rawArgs[0]} <json>\n`);
+      process.stderr.write(`${helpPointer("roadmap")}\n`);
       process.exit(2);
     }
 
@@ -1655,6 +1691,7 @@ switch (command) {
     if (rawArgs[0] === "read") {
       if (!rawArgs[1]) {
         process.stderr.write("usage: agentic-workflow roadmap read <table-path> [--nn <n>] [--json]\n");
+        process.stderr.write(`${helpPointer("roadmap")}\n`);
         process.exit(2);
       }
       const filePath = resolve(rawArgs[1]);
@@ -1741,6 +1778,7 @@ switch (command) {
       const docArg = rawArgs[1] === "check" ? rawArgs[2] : rawArgs[1];
       if (!docArg) {
         process.stderr.write("usage: agentic-workflow roadmap check <unit-doc-path> [--roadmap <file>] [--index <file>] [--json]\n");
+        process.stderr.write(`${helpPointer("roadmap")}\n`);
         process.exit(2);
       }
       const flag = (name) => {
@@ -1813,7 +1851,7 @@ switch (command) {
         refuse(e.message);
       }
     } else {
-      refuse(`Unknown roadmap operation`);
+      refuse(`Unknown roadmap operation`, { candidates: HELP_REGISTRY.roadmap.ops });
     }
     break;
   }
@@ -1878,7 +1916,7 @@ switch (command) {
         refuse(e.message);
       }
     } else {
-      refuse(`Unknown manifest operation: ${op}`);
+      refuse(`Unknown manifest operation: ${op}`, { candidates: HELP_REGISTRY.manifest.ops });
     }
     break;
   }
@@ -1993,6 +2031,7 @@ switch (command) {
       args = parseSectionArgs(restArgs);
     } catch (e) {
       process.stderr.write(`section: ${e.message}\n`);
+      process.stderr.write(`${helpPointer("section")}\n`);
       process.exit(1);
     }
     const readTarget = (target) => (target === "-" ? readFileSync(0, "utf8") : readFileSync(target, "utf8"));
@@ -2003,6 +2042,7 @@ switch (command) {
       if (args.op === "replace") replacement = readTarget(args.replacement);
     } catch (e) {
       process.stderr.write(`section: ${e.message}\n`);
+      process.stderr.write(`${helpPointer("section")}\n`);
       process.exit(1);
     }
 
@@ -2015,9 +2055,11 @@ switch (command) {
       if (!(e instanceof SectionLocatorError)) throw e;
       if (e.code === "BAD_SELECTOR") {
         process.stderr.write(`section: ${e.message}\n`);
+        process.stderr.write(`${helpPointer("section")}\n`);
         process.exit(1);
       }
       process.stderr.write(`SECTION REFUSAL — ${e.code} — ${e.message}\n`);
+      process.stderr.write(`${helpPointer("section")}\n`);
       if (args.json) {
         process.stdout.write(
           `${JSON.stringify({ ok: false, service: "section", op: args.op, path: args.file, code: e.code, matches: e.matches, selector: e.selector, message: e.message })}\n`,
@@ -2075,6 +2117,7 @@ switch (command) {
       break;
     }
     refuse(
-      `Unknown service: ${command} — this install is @gtrabanco/agentic-workflow@${runningCrateVersion()}; a service added after that version is not in it. Check the pin in skills/runner-contract/references/RUNNER.md, or set AGENTIC_WORKFLOW_RUNNER to a crate that carries the service.${suggestionSuffix(command)}`,
+      `Unknown service: ${command} — this install is @gtrabanco/agentic-workflow@${runningCrateVersion()}; a service added after that version is not in it. Check the pin in skills/runner-contract/references/RUNNER.md, or set AGENTIC_WORKFLOW_RUNNER to a crate that carries the service.`,
+      { suggest: true },
     );
 }

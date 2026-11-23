@@ -32,6 +32,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { HELP_REGISTRY, helpPointer } from "./help.mjs";
+
 import {
   SkillDiscoveryRefusal,
   buildDiscoveryReport,
@@ -46,7 +48,7 @@ import {
   renderInventory,
 } from "../skills/register.mjs";
 
-const USAGE = "usage: agentic-workflow skills <discover|register|inventory> [flags] — see the crate README's `skills` row";
+const USAGE = "usage: agentic-workflow skills <discover|register|inventory> [flags]";
 
 /** The flags each verb accepts (besides `--json`, which all three take). */
 const VERB_FLAGS = Object.freeze({
@@ -172,14 +174,18 @@ export function run(argv) {
     if (verb === "register") return register(rest);
     if (verb === "inventory") return inventory(rest);
     process.stderr.write(`${USAGE}\n`);
+    process.stderr.write(`${helpPointer("skills")}\n`);
     return 2;
   } catch (error) {
     if (error instanceof UsageError) {
       process.stderr.write(`usage: agentic-workflow skills ${verb ?? "<verb>"} — ${error.message}\n`);
+      process.stderr.write(`Legal operations: ${HELP_REGISTRY.skills.ops.join(", ")}\n`);
+      process.stderr.write(`${helpPointer("skills")}\n`);
       return 2;
     }
     if (error instanceof SkillDiscoveryRefusal || error instanceof SkillExtrasRefusal) {
       process.stderr.write(`SKILLS REFUSAL — ${error.message}\n`);
+      process.stderr.write(`${helpPointer("skills")}\n`);
       return 2;
     }
     throw error;

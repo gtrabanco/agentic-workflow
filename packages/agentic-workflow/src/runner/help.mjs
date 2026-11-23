@@ -23,6 +23,8 @@
  * answer `help` or refuse a bad argument, and nothing here is model-facing.
  */
 
+import { CEREMONY_OBJECTS } from "./ceremony/index.mjs";
+
 /** The families a subcommand belongs to; `help` groups its index by these. */
 export const HELP_FAMILIES = Object.freeze({
   editing: "Typed file services — read and write the project's documents through a schema-checked receipt",
@@ -50,7 +52,7 @@ export const HELP_REGISTRY = Object.freeze({
   ceremony: {
     family: "lane",
     summary: "the closed ceremony CLI: one object, one op, JSON on stdout, and the uniform 0/1/2 exit contract",
-    ops: ["workspace", "docs", "findings", "ledger", "unit", "plan", "tier", "passive", "progress", "evidence", "acceptance", "delta", "refutation", "fusion", "review", "commit", "roadmap", "pr"],
+    ops: [...CEREMONY_OBJECTS],
     usage: "<object> <op> [flags...]",
   },
   "unit-route": {
@@ -67,6 +69,7 @@ export const HELP_REGISTRY = Object.freeze({
   "unit-doc": {
     family: "editing",
     summary: "the typed unit-document service: create, setSection, evidence, progress, validate, provenance",
+    ops: ["create", "setSection", "evidence", "progress", "validate", "provenance"],
     usage: "<NN-slug> <op> [args...]",
   },
   "unit-lineage": {
@@ -534,21 +537,25 @@ export function renderHelpIndex() {
 }
 
 /**
- * The machine envelope a bare `help --json` prints.
+ * The machine envelope a `help --json` prints — the whole index, or exactly the
+ * row one `help <sub> --json` asks for (receipt B8): the shape is one envelope,
+ * filtered, never a second format.
  *
  * One row per subcommand carrying the same facts the rendered block does, so a
  * programmatic consumer (a pi tool, a codemode script) reads the grammar
  * without parsing prose. The shape is additive-only: a later field never
  * renames one of these.
  *
+ * @param {string} [name] when given, only that subcommand's row is carried
  * @returns {{ subcommands: Array<{name: string, family: string, summary: string, ops: string[]|null, flags: string[]|null, usage: string|null}> }}
  */
-export function helpEnvelope() {
+export function helpEnvelope(name) {
+  const names = name === undefined ? HELP_NAMES : [name];
   return {
-    subcommands: HELP_NAMES.map((name) => {
-      const entry = HELP_REGISTRY[name];
+    subcommands: names.map((entryName) => {
+      const entry = HELP_REGISTRY[entryName];
       return {
-        name,
+        name: entryName,
         family: entry.family,
         summary: entry.summary,
         ops: entry.ops ? [...entry.ops] : null,

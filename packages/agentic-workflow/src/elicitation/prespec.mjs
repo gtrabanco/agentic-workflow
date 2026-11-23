@@ -31,6 +31,8 @@
 import { readFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 
+import { helpPointer } from "../runner/help.mjs";
+
 import { LEDGER_COLUMNS, LEDGER_HEADER, ROUTES, SUBSTRATE_ROUTE, parseRoute } from "../runner/sensors/needs-input.mjs";
 
 /** The published route cells as the linter states them — a bare stage, or the
@@ -453,6 +455,7 @@ export function run(args) {
   } catch (error) {
     if (!(error instanceof ElicitationRefusal)) throw error;
     process.stderr.write(`EDIT REFUSAL — ${error.message}\n`);
+    process.stderr.write(`${helpPointer("elicitation")}\n`);
     return 2;
   }
 }
