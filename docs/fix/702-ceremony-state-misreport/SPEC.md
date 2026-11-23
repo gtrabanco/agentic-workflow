@@ -462,6 +462,24 @@ this change (it would be a second, competing step list).`
   `schema-node-compat` exit 0 (951 pass / 0 fail), `pi-node-compat` **exit 1 —
   A1, base-identical**, `pi-compat-guard` exit 0, `dependency-advisories` exit 0
   (0 advisories).
+- **E13** — 2026-11-23, the refinement's own head (`c6b134bca`, an
+  unpublished table header named as `unknown-grammar`): `bun test
+  packages/agentic-workflow/test/findings-carrier.test.mjs` · exit 0 · 8 pass;
+  `bun test packages/agentic-workflow/test/runner.ceremony-findings.test.mjs`,
+  `scripts/ceremony-findings-ledger.test.mjs` and `scripts/findings-corpus.test.mjs`
+  · exit 0 · 48 pass / 0 fail; `bun run test` in `packages/agentic-workflow` ·
+  exit 0 · 82 suites, 0 fail; `bun run test:node` · exit 0 · 82 suites, 0 fail;
+  `bun scripts/run-root-suite.mjs --jobs 4` · exit 1 · **139 PASS / 2 FAIL**
+  (A2, A3); `docs-generate --check`, `skill-context`, `journal aggregate
+  --check` (15 fragments, 0 refusals) and `log-immutability` · all exit 0.
+- **G2** — 2026-11-23, GATE-RAN · HEAD c6b134bca · `bun scripts/local-gate.mjs
+  --jobs 4 --no-bail` · exit 1 · 20 steps; the offline set green, the sole red
+  `workspace-install` (**A1**) and its 12 dependants run by hand at this head:
+  `crate-suite-bun`/`crate-suite-node` exit 0 (82 suites each), `root-suite`
+  139 PASS / 2 FAIL (A2, A3), `docs-generated-projection` / `skill-context-budgets`
+  / `journal-carrier-check` / `log-immutability` / `schema-node-compat` /
+  `pi-compat-guard` / `dependency-advisories` exit 0, `pi-node-compat` exit 1
+  (A1, base-identical).
 - **D1** — 2026-11-23, a fold line's number **is** the finding id it closed: two
   counters sharing the `F` namespace is what made a reader map a fold line to a
   different finding. Authority: S3, S8.
@@ -510,6 +528,7 @@ this change (it would be a second, competing step list).`
   the projection · `dc4b3ad4d`.
 - **P7** — 2026-11-23, the re-based ceilings and their declared growth source ·
   `194e67199`.
+- **P8** — 2026-11-23, the unpublished-header defect and its case · `c6b134bca`.
 
 ## Next
 
