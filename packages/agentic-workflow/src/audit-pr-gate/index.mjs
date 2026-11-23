@@ -45,6 +45,21 @@ export const AUDIT_CONTRACT = "v1";
 export const AUDIT_MARKER_RE = /<!-- audit-pr:merge-ready sha=([0-9a-f]{40}) -->/;
 
 /**
+ * The merge gate's per-gate outcome vocabulary (issue #702 S5/S10).
+ *
+ * `pass` and `fail` are this report's own spellings of the receipt family's
+ * `passed`/`failed`; `skipped` and `unevaluatable` are the same values the
+ * published gate-check-status family carries, and `unevaluatable` is the one a
+ * gate nobody could read must answer: an ambiguous `HEAD`, an unprovable
+ * merge-base, a forge this checkout cannot reach. Folding that into `failed`
+ * accuses content nobody observed and misroutes the diagnosis.
+ *
+ * One owner: the value is declared by `GATE_CHECK_STATUSES` in
+ * `@gtrabanco/agentic-workflow-schema`, and no second copy of that set lives here.
+ */
+export const GATE_OUTCOMES = Object.freeze(["pass", "fail", "skipped", "unevaluatable"]);
+
+/**
  * The closed gate set. Every name must be present with value `pass` for a
  * MERGE-READY verdict; an omitted gate fails closed. The first ten are the
  * gates `audit-pr` has always evaluated; the last three are the terminal-hygiene
@@ -83,13 +98,49 @@ export function newestAuditComment(comments) {
 }
 
 /**
+ * One gate's outcome and the reason it holds it, for every gate in the closed
+ * set. A gate the caller never supplied was **not evaluated** — its own outcome
+ * with its own reason, never a content failure (issue #702 S5).
+ *
+ * A value may be the outcome string or `{ outcome, reason }`, so a caller that
+ * knows why a gate could not be read says so instead of implying a failure.
+ */
+export function gateReport(gates = {}) {
+  const report = {};
+  for (const name of GATE_NAMES) {
+    const value = gates[name];
+    const stated = value !== null && typeof value === "object" ? value.outcome : value;
+    const reason = value !== null && typeof value === "object" ? value.reason : undefined;
+    if (stated === undefined || stated === null || stated === "") {
+      report[name] = { outcome: "unevaluatable", reason: "not-evaluated" };
+    } else if (stated === "pass" || stated === "fail" || stated === "skipped") {
+      report[name] = { outcome: stated, ...(reason ? { reason } : {}) };
+    } else if (stated === "unevaluatable") {
+      report[name] = { outcome: "unevaluatable", reason: typeof reason === "string" && reason !== "" ? reason : "reported" };
+    } else {
+      // Fail closed on a value outside the vocabulary: a gate that is not exactly
+      // a pass did not pass, and the reason names the value nobody published.
+      report[name] = { outcome: "unevaluatable", reason: `unknown-outcome:${String(stated)}` };
+    }
+  }
+  return report;
+}
+
+/** The blocker line for one gate: the outcome and, when it has one, its reason. */
+export function gateBlocker(name, { outcome, reason }) {
+  if (outcome === "unevaluatable") return `gate ${name} unevaluatable: ${reason ?? "not-evaluated"}`;
+  if (outcome === "fail") return reason ? `gate ${name} failed: ${reason}` : `gate ${name} failed`;
+  return `gate ${name} ${outcome}`;
+}
+
+/**
  * The merge verdict.
  *
  * Precedence is deliberate and tested: an absent/stale receipt blocks *before*
  * any gate is read (`gatesEvaluated: false`) so the audit never re-reviews and
  * never implies a gate result it did not compute. Only once the receipt is
  * current does each gate get read, and every gate that is not exactly `pass`
- * blocks.
+ * blocks — with the outcome it actually holds (`gateReport`).
  */
 export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
   let status = receiptStatus(comments, headSha);
@@ -115,9 +166,18 @@ export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
       ...(scopeJudge && !scopeJudge.current ? { scopeJudge } : {}),
     };
   }
-  const blockers = GATE_NAMES.filter((name) => gates[name] !== "pass").map((name) => `gate ${name} failed`);
-  if (blockers.length > 0) {
-    return { verdict: "BLOCKED", reason: blockers.join("; "), route: null, gatesEvaluated: true, blockers };
+  const report = gateReport(gates);
+  const blocking = GATE_NAMES.filter((name) => report[name].outcome !== "pass");
+  if (blocking.length > 0) {
+    return {
+      verdict: "BLOCKED",
+      reason: blocking.map((name) => gateBlocker(name, report[name])).join("; "),
+      route: null,
+      gatesEvaluated: true,
+      blockers: blocking.map((name) => gateBlocker(name, report[name])),
+      gates: report,
+      unevaluatable: GATE_NAMES.filter((name) => report[name].outcome === "unevaluatable"),
+    };
   }
   return {
     verdict: "MERGE-READY",
@@ -125,6 +185,8 @@ export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
     route: null,
     gatesEvaluated: true,
     blockers: [],
+    gates: report,
+    unevaluatable: [],
     ...(scopeJudge?.current ? { scopeJudge } : {}),
   };
 }
@@ -231,14 +293,34 @@ function aheadCount() {
 }
 
 /**
+ * The `gate-receipt` gate's own truth (issue #409, split by issue #702):
+ *
+ * - the judge answered and the receipt is current + passing → `pass`;
+ * - the judge answered anything else → `fail`, naming the freshness status it
+ *   reported (`missing`, `stale-manifest`, `invalid`) — a missing receipt is a
+ *   genuinely failed gate;
+ * - the judge could not be read at all (no output, not JSON) → `unevaluatable`,
+ *   because nothing about the gate's content was observed.
+ */
+export function receiptGateOutcome(result) {
+  try {
+    const report = JSON.parse(result.stdout ?? "");
+    if (report.status === "current" && report.verdict === "pass") return { outcome: "pass" };
+    return { outcome: "fail", reason: typeof report.status === "string" && report.status !== "" ? report.status : "receipt-not-current" };
+  } catch {
+    return { outcome: "unevaluatable", reason: "judge-unreadable" };
+  }
+}
+
+/**
  * The `gate-receipt` gate (issue #409): the merge gate reads the machine
  * envelope instead of trusting a prose claim that the suite is green.
  *
  * The judgment is delegated to `scripts/gate-receipt.mjs verify --json` — one
  * implementation of the freshness rule, never a second copy here. A subprocess
  * that cannot run, prints no verdict, or answers anything but
- * `status: current` + `verdict: pass` fails the gate closed: a missing or stale
- * envelope is a blocker routed to a re-run, never an assumption.
+ * `status: current` + `verdict: pass` never passes: a judged miss is a `fail`
+ * with its status, and an unreadable judge is `unevaluatable`.
  */
 export function gateReceiptGate({ receipt = null, root = process.cwd() } = {}) {
   // The judge is this package's own bin (issue #553): `--root` names the project
@@ -246,12 +328,7 @@ export function gateReceiptGate({ receipt = null, root = process.cwd() } = {}) {
   const args = [BIN, "gate-receipt", "verify", "--json", "--root", root];
   if (receipt) args.push("--receipt", receipt);
   const result = spawnSync(process.execPath, args, { encoding: "utf8" });
-  try {
-    const report = JSON.parse(result.stdout);
-    return report.status === "current" && report.verdict === "pass" ? "pass" : "fail";
-  } catch {
-    return "fail";
-  }
+  return receiptGateOutcome(result);
 }
 
 const USAGE = `usage: audit-pr-gate <command> [options]
@@ -306,6 +383,24 @@ function readJson(flag, opts) {
   return JSON.parse(raw);
 }
 
+/**
+ * Refuse a gate value outside `GATE_OUTCOMES`, naming the gate, the value and
+ * the closed set. A value the merge gate cannot classify is a usage error; the
+ * alternative — classifying it as a failure — is the misreport issue #702 S5
+ * removes.
+ */
+function assertGateValues(stated) {
+  for (const [name, value] of Object.entries(stated ?? {})) {
+    const outcome = value !== null && typeof value === "object" ? value.outcome : value;
+    if (!GATE_OUTCOMES.includes(outcome)) {
+      throw new Error(`gate ${name} has outcome ${JSON.stringify(outcome)}; the closed set is ${GATE_OUTCOMES.join(", ")}`);
+    }
+    if (value !== null && typeof value === "object" && value.reason !== undefined && typeof value.reason !== "string") {
+      throw new Error(`gate ${name}'s reason is not a string`);
+    }
+  }
+}
+
 function dispatch(argv, options) {
   const command = argv[0];
   if (!command || command === "--help" || command === "-h") {
@@ -344,6 +439,9 @@ function dispatch(argv, options) {
   }
 
   const stated = readJson("gates-json", opts);
+  // The caller's gate map walks a closed vocabulary (issue #702 S5/S10): an
+  // outcome nobody publishes is a usage error naming it, never a silent `fail`.
+  assertGateValues(stated);
   const inline = readJson("comments-json", opts);
   const forge = inline ? { comments: inline.comments ?? inline, head: opts.head, number: Number(opts.pr) || null } : stateFromForge(opts.pr, repo);
   const head = opts.head ?? forge.head;
@@ -394,8 +492,8 @@ function dispatch(argv, options) {
   if (action.action === "post") {
     const body = renderMergeReadyBody({
       sha: head,
-      gates: GATE_NAMES.filter((name) => gates[name] === "pass"),
-      hygiene: HYGIENE_GATES.map((name) => `${name}=${gates[name] ?? "n/a"}`),
+      gates: GATE_NAMES.filter((name) => verdict.gates?.[name]?.outcome === "pass"),
+      hygiene: HYGIENE_GATES.map((name) => `${name}=${verdict.gates?.[name]?.outcome ?? "n/a"}`),
       mergeability: forge.mergeable ?? "unknown",
     });
     const scope = repo ? ["-R", repo] : [];
