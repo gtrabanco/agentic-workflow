@@ -106,3 +106,35 @@ test("a mistyped subcommand suggests the nearest declared name", () => {
   assert.ok(suggestSubcommands("jurnal").includes("journal"));
   assert.deepEqual(suggestSubcommands("zzzzzzzz"), [], "a token with no close match suggests nothing rather than a wrong guess");
 });
+
+// ── correction batch 2026-11-23: the registry edge the parity never read ─────
+// S1/S7 name four participants: the dispatch registry (the bin's `case` arms
+// plus `RUNNER_COMMANDS`), the rendered usage line, the crate README and the
+// help output. The pre-existing cases compared the last three; these cases
+// make the dispatch tables themselves a participant (O1's evidence, A3) and
+// pin the ceremony object set to its one home (O2: read, never restated).
+
+test("the dispatch tables, the usage line and the help registry name one set", async () => {
+  const binText = read("bin", "agentic-workflow.mjs");
+  const { RUNNER_COMMANDS } = await import("../src/runner/cli.mjs");
+  const caseArms = [...binText.matchAll(/^\s+case "([^"]+)":/gmu)].map((m) => m[1]);
+  assert.ok(caseArms.length > 0, "the bin's switch declares its arms");
+  const dispatch = new Set([...caseArms, ...Object.keys(RUNNER_COMMANDS), "help"]);
+  assert.equal(BIN.length, dispatch.size, "the usage line names exactly the dispatched set");
+  for (const name of BIN) assert.ok(dispatch.has(name), `${name} is in the usage line but dispatches nowhere`);
+  for (const name of dispatch) assert.ok(BIN.includes(name), `${name} dispatches but is absent from the usage line`);
+  assert.deepEqual([...HELP_NAMES].sort(), [...dispatch].sort(), "the help registry covers the dispatch set both ways");
+  assert.deepEqual([...README].sort(), [...HELP_NAMES].sort(), "the README usage row is the same set");
+});
+
+test("the ceremony row is read from the dispatch registry, never restated (O2)", async () => {
+  const helpSource = read("src", "runner", "help.mjs");
+  assert.match(
+    helpSource,
+    /import \{ CEREMONY_OBJECTS \} from "\.\/ceremony\/index\.mjs";/u,
+    "help.mjs imports the dispatch's object set instead of copying it",
+  );
+  const { CEREMONY_OBJECTS } = await import("../src/runner/ceremony/index.mjs");
+  const { HELP_REGISTRY } = await import("../src/runner/help.mjs");
+  assert.deepEqual([...HELP_REGISTRY.ceremony.ops], [...CEREMONY_OBJECTS], "the rendered row is the dispatch set");
+});
