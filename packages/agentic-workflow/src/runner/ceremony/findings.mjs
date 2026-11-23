@@ -89,7 +89,7 @@ function requireCarrier(c, { write = false, legacy = false } = {}) {
   const fatal = write ? FATAL_ON_WRITE : FATAL_ON_READ;
   const defect = c.defects.find((entry) => fatal.has(entry.code));
   if (defect) refuse(defect, c);
-  if (write && legacy && c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: path.basename(c.dir), path: path.relative(c.root ?? process.cwd(), c.legacyPath) });
+  if (write && legacy && c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: path.basename(c.dir), path: c.legacyPath });
   if (write && c.grammar !== CURRENT_FINDINGS_GRAMMAR) {
     const mismatch = grammarDefect(c.grammar, CURRENT_FINDINGS_GRAMMAR) ?? { code: "carrier-table-missing", detail: "the carrier carries no findings table" };
     refuse(mismatch, c);
@@ -141,7 +141,20 @@ function nextId(c, rows) {
 /** The fold line's own words: the id it closed, its axis, its target, its cells. */
 function foldLineText(row, cells) {
   const edited = cells.length ? ` · ${cells.map((key) => `${key}: ${row[key]}`).join(" · ")}` : "";
-  return `folded (${row.axis}): ${row.target} — folded: yes${edited}`;
+  return `folded ${row.id} (${row.axis}): ${row.target} — folded: yes${edited}`;
+}
+
+/**
+ * One row as the CLI reports it. The carrier's own shape is the answer: a
+ * migrated row carries `impact` and no `folded` cell, a legacy row carries its
+ * `folded` flag as the boolean it always was. The grammar is reported beside
+ * them, never inferred by the reader.
+ */
+function reportedRow(row, carrier) {
+  if (carrier === "legacy") {
+    return { id: row.id, target: row.target, axis: row.axis, severity: row.severity, class: row.class, route: row.route, folded: String(row.folded ?? "").trim() === "yes" };
+  }
+  return { id: row.id, target: row.target, axis: row.axis, severity: row.severity, impact: row.impact, class: row.class, route: row.route };
 }
 
 export function findings(op, argv, cwd = process.cwd()) {
@@ -170,15 +183,16 @@ export function findings(op, argv, cwd = process.cwd()) {
       const target = flags.target ?? `${flags.file}${flags.line ? `:${flags.line}` : ""}`;
       const row = { id, target, axis: flags.axis, severity: flags.severity, impact: flags.impact, class: flags.class, route: flags.route };
       writeRows(c, [...rows, row]);
-      out({ appended: true, slug: flags.slug, finding: row, carrier: c.carrier, grammar: c.grammar });
+      out({ appended: true, slug: flags.slug, finding: row, carrier: c.carrier === "doc" ? "unit-doc" : c.carrier, grammar: c.grammar });
     }
     case "read": {
       onlyFlags(flags, []);
       requireCarrier(c);
+      const findings = c.rows.map((row) => reportedRow(row, c.carrier));
       if (c.carrier === "legacy") {
-        out({ slug: flags.slug, carrier: "legacy", grammar: c.grammar, path: "review-findings.md", defects: c.defects, findings: c.rows });
+        out({ slug: flags.slug, carrier: "legacy", grammar: c.grammar, path: "review-findings.md", defects: c.defects, findings });
       }
-      out({ slug: flags.slug, carrier: c.carrier, grammar: c.grammar, defects: c.defects, findings: c.rows });
+      out({ slug: flags.slug, carrier: c.carrier === "doc" ? "unit-doc" : c.carrier, grammar: c.grammar, defects: c.defects, findings });
     }
     case "update": {
       onlyFlags(flags, ["id", "severity", "impact", "class", "route", "folded"]);
@@ -202,7 +216,7 @@ export function findings(op, argv, cwd = process.cwd()) {
         // The fold line's number IS the id it closed: one identity, one namespace.
         const md = appendLogLine(replaceSection(c.md, "findings", spliced.body), "F", foldLineText(row, cells), today(), Number(row.id.replace(/^F/u, "")));
         fs.writeFileSync(c.specPath, md);
-        out({ updated: true, slug: flags.slug, id: row.id, folded: true, ...applied, log: `F${row.id.replace(/^F/u, "")}-line appended` });
+        out({ updated: true, slug: flags.slug, id: row.id, folded: true, ...applied, log: "F-line appended" });
       }
       if (flags.folded === "false") fail("fold-flip-unsupported", { note: "a folded row left the table; re-append instead (findings-table@1)" });
       if (row.severity === "BLOCKER" && row.impact === "report-only") {
@@ -275,7 +289,7 @@ export function findings(op, argv, cwd = process.cwd()) {
       onlyFlags(flags, []);
       const rows = c.rows;
       const group = (key) => rows.reduce((acc, r) => ({ ...acc, [r[key]]: (acc[r[key]] ?? 0) + 1 }), {});
-      out({ slug: flags.slug, carrier: c.carrier, grammar: c.grammar, total: rows.length, byAxis: group("axis"), bySeverity: group("severity"), byClass: group("class") });
+      out({ slug: flags.slug, carrier: c.carrier === "doc" ? "unit-doc" : c.carrier, grammar: c.grammar, total: rows.length, byAxis: group("axis"), bySeverity: group("severity"), byClass: group("class") });
     }
     default:
       fail("unknown-subcommand", { object: "findings", subcommand: op });

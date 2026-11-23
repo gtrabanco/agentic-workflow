@@ -77,14 +77,16 @@ export function rowCells(line) {
   let current = "";
   for (let index = 0; index < line.length; index += 1) {
     const char = line[index];
+    if (char === "\\" && line[index + 1] === "|") {
+      // An escaped pipe is content, never a boundary: the cell carries the pipe.
+      current += "|";
+      index += 1;
+      continue;
+    }
     if (char === "|") {
-      let backslashes = 0;
-      for (let back = index - 1; back >= 0 && line[back] === "\\"; back -= 1) backslashes += 1;
-      if (backslashes % 2 === 0) {
-        parts.push(current);
-        current = "";
-        continue;
-      }
+      parts.push(current);
+      current = "";
+      continue;
     }
     current += char;
   }
@@ -109,20 +111,22 @@ export function findingsSectionBody(docText) {
 }
 
 /**
- * Locate the carrier table inside a section body (or a whole ledger text).
+ * Locate every carrier table inside a section body (or a whole ledger text):
+ * each block is a header line and the contiguous separator + row lines under it.
+ * Prose above, below and between them belongs to the carrier and is never part
+ * of a block — a legacy side ledger interleaves cycle prose between tables, and
+ * all of them are findings.
  *
- * The block is the header line and the contiguous separator + row lines under
- * it; prose above and below it belongs to the carrier and is never part of it.
- *
- * @returns {{ grammar: string|null, headerIndex: number, endIndex: number, header: string[], rows: Array<{cells: string[], index: number}> } | null}
+ * @returns {Array<{ grammar: string, headerIndex: number, endIndex: number, header: string[], rows: Array<{cells: string[], index: number}> }>}
  */
-export function tableBlockOf(body) {
+export function tableBlocksOf(body) {
   const lines = String(body ?? "").split("\n");
+  const blocks = [];
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     if (!line.trimStart().startsWith("|") || SEPARATOR.test(line)) continue;
-    const cells = rowCells(line);
-    const grammar = grammarOf(cells);
+    const header = rowCells(line);
+    const grammar = grammarOf(header);
     if (grammar === null) continue;
     let endIndex = index + 1;
     if (endIndex < lines.length && SEPARATOR.test(lines[endIndex])) endIndex += 1;
@@ -131,9 +135,15 @@ export function tableBlockOf(body) {
       rows.push({ cells: rowCells(lines[endIndex]), index: endIndex });
       endIndex += 1;
     }
-    return { grammar, headerIndex: index, endIndex, header: cells, rows };
+    blocks.push({ grammar, headerIndex: index, endIndex, header, rows });
+    index = endIndex - 1;
   }
-  return null;
+  return blocks;
+}
+
+/** The first carrier table in a body, or `null`. */
+export function tableBlockOf(body) {
+  return tableBlocksOf(body)[0] ?? null;
 }
 
 /** One row's fields, mapped by the header that declares them. */
@@ -158,24 +168,27 @@ function rowOf(grammar, header, cells) {
  * @returns {{ grammar: string|null, rows: Array<object>, defects: Array<{code: string, detail: string, grammar?: string, expected?: string, line?: number}> }}
  */
 export function parseCarrierBody(body) {
-  const block = tableBlockOf(body);
-  if (block === null) {
+  const blocks = tableBlocksOf(body);
+  if (blocks.length === 0) {
     return { grammar: null, rows: [], defects: [{ code: "carrier-table-missing", detail: "the carrier section has no findings table" }] };
   }
   const defects = [];
-  if (block.grammar === null) {
-    defects.push({ code: "unknown-grammar", detail: `no carrier publishes the header '${block.header.join(" | ")}'` });
+  const grammars = [...new Set(blocks.map((block) => block.grammar))];
+  if (grammars.length > 1) {
+    defects.push({ code: "mixed-grammar", grammar: grammars[0], detail: `the carrier holds ${grammars.join(" and ")} tables; one grammar is in force` });
   }
-  const width = block.header.length;
   const rows = [];
-  for (const row of block.rows) {
-    if (row.cells.length !== width) {
-      defects.push({ code: "row-width", detail: `row has ${row.cells.length} cells, its header declares ${width}`, line: row.index + 1 });
-      continue;
+  for (const block of blocks) {
+    const width = block.header.length;
+    for (const row of block.rows) {
+      if (row.cells.length !== width) {
+        defects.push({ code: "row-width", detail: `row has ${row.cells.length} cells, its header declares ${width}`, line: row.index + 1 });
+        continue;
+      }
+      rows.push(rowOf(block.grammar, block.header, row.cells));
     }
-    rows.push(rowOf(block.grammar, block.header, row.cells));
   }
-  return { grammar: block.grammar, rows, defects };
+  return { grammar: blocks[0].grammar, rows, defects };
 }
 
 /** The defect a grammar carries when it is not the one this carrier must hold. */
@@ -235,10 +248,14 @@ export function renderFindingsTable(rows) {
  * writer that invents a table over prose owns prose nobody asked it to own.
  */
 export function spliceFindingsTable(body, rows) {
-  const block = tableBlockOf(body);
-  if (block === null) {
+  const blocks = tableBlocksOf(body);
+  if (blocks.length === 0) {
     return { ok: false, defect: { code: "carrier-table-missing", detail: "the carrier section has no findings table to splice" } };
   }
+  if (blocks.length > 1) {
+    return { ok: false, defect: { code: "multiple-carrier-tables", detail: `the carrier section holds ${blocks.length} findings tables; a write names exactly one` } };
+  }
+  const block = blocks[0];
   const lines = String(body).split("\n");
   const before = lines.slice(0, block.headerIndex);
   const after = lines.slice(block.endIndex);

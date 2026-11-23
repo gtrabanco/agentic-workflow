@@ -139,8 +139,8 @@ test("O3 a fold writes the F log line under the finding's own id", (t) => {
   const second = run(root, "findings", "update", "--slug", "77-toy", "--id", "F3", "--folded", "true");
   assert.equal(second.code, 0, second.stdout + second.stderr);
   const log = logOf(spec());
-  assert.match(log, /^- \*\*F1\*\* — \d{4}-\d{2}-\d{2}, folded \(code\): src\/a1\.mjs:1/mu, log);
-  assert.match(log, /^- \*\*F3\*\* — \d{4}-\d{2}-\d{2}, folded \(code\): src\/a3\.mjs:1/mu, `a fold line's number is the id it closed, never an independent counter:\n${log}`);
+  assert.match(log, /^- \*\*F1\*\* — \d{4}-\d{2}-\d{2}, folded F1 \(code\): src\/a1\.mjs:1/mu, log);
+  assert.match(log, /^- \*\*F3\*\* — \d{4}-\d{2}-\d{2}, folded F3 \(code\): src\/a3\.mjs:1/mu, `a fold line's number is the id it closed, never an independent counter:\n${log}`);
   assert.doesNotMatch(log, /\*\*F2\*\*/u, "no fold counter invents an id nobody closed");
 });
 
@@ -227,7 +227,7 @@ test("O8 the legacy side ledger stays readable and is never rewritten", (t) => {
   assert.equal(json(read).carrier, "legacy");
   assert.equal(json(read).grammar, "findings-ledger@1");
   assert.deepEqual(json(read).defects, []);
-  assert.deepEqual(json(read).findings.map((row) => [row.id, row.folded]), [["F1", "no"], ["F2", "yes"]], "the raw carrier answers both rows with their own folded cell — the open-row filter is the router's, not the carrier's");
+  assert.deepEqual(json(read).findings.map((row) => [row.id, row.folded]), [["F1", false], ["F2", true]], "the raw carrier answers both rows with its own folded flag — the open-row filter is the router's, not the carrier's");
   const append = run(root, "findings", "append", "--slug", "77-toy", "--file", "src/c.mjs", "--line", "3", "--axis", "code", "--severity", "WARNING", "--impact", "blocking", "--class", "source", "--route", "fold");
   assert.equal(append.code, 1);
   assert.equal(json(append).error, "legacy-carrier-readonly");
