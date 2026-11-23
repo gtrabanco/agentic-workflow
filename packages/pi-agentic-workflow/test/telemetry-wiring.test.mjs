@@ -49,6 +49,8 @@ function wiring(overrides = {}) {
     enabled: overrides.enabled ?? true,
     sinks: [{ name: "recording", write: (sample) => written.push(sample) }],
     ...("changedPaths" in overrides ? { changedPaths: overrides.changedPaths } : {}),
+    ...("sinks" in overrides ? { sinks: overrides.sinks } : {}),
+    ...("onDegraded" in overrides ? { onDegraded: overrides.onDegraded } : {}),
     sessionStartSha: overrides.sessionStartSha ?? (() => "abc123"),
     sessionId: overrides.sessionId,
     now: clock,
@@ -340,4 +342,111 @@ test("a session start clears the phase in flight, so one session cannot inherit 
     if (before === undefined) delete process.env.AG_WF_PHASE;
     else process.env.AG_WF_PHASE = before;
   }
+});
+
+// --- the degraded report (#690 S3) -----------------------------------------
+//
+// A sink that refuses its sample used to vanish into the accumulator's bare
+// `catch {}`. The wiring owns the channel the operator can actually read, and
+// the latch: a broken destination fails on every emission, so an unlatched
+// report would be one line per settled run.
+
+const BROKEN_AND_WORKING = [
+  { name: "tier-cost-ledger", write: () => { throw new Error("no tier-cost@2 block"); } },
+];
+
+test("a refusing sink is reported once per sink per session, and the healthy sink receives every sample", () => {
+  const written = [];
+  const reports = [];
+  const live = wiring({
+    changedPaths: () => 1,
+    sinks: [...BROKEN_AND_WORKING, { name: "recording", write: (sample) => written.push(sample) }],
+    onDegraded: (message) => reports.push(message),
+  }).instance;
+  const { pi, fire } = fakePi();
+  live.register(pi);
+  live.noteCommand("execute-phase", ["383"]);
+
+  for (const tokens of [10, 20]) {
+    fire("turn_end", { message: { usage: { totalTokens: tokens } } });
+    fire("agent_settled");
+  }
+
+  assert.equal(written.length, 2, "the healthy sink took both settled runs");
+  assert.equal(reports.length, 1, "the broken sink failed twice and is reported once: the latch is the point");
+  assert.match(reports[0], /tier-cost-ledger/, "the report names the sink that lost the sample");
+  assert.match(reports[0], /no tier-cost@2 block/, "and the refusal's own reason");
+});
+
+test("with no injected channel the report is one stderr line naming the sink", () => {
+  const chunks = [];
+  const original = process.stderr.write;
+  process.stderr.write = (chunk) => {
+    chunks.push(String(chunk));
+    return true;
+  };
+  try {
+    const live = wiring({ changedPaths: () => 1, sinks: BROKEN_AND_WORKING }).instance;
+    const { pi, fire } = fakePi();
+    live.register(pi);
+    live.noteCommand("execute-phase", ["383"]);
+    fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+    fire("agent_settled");
+  } finally {
+    process.stderr.write = original;
+  }
+
+  assert.equal(chunks.length, 1, "one line, not one per settled run");
+  assert.match(chunks[0], /tier-cost-ledger/);
+  assert.match(chunks[0], /no tier-cost@2 block/);
+  assert.ok(chunks[0].endsWith("\n"), "the line ends, so a terminal or a log file stays readable");
+});
+
+test("a report channel that throws falls back to stderr, so the failure is never silent", () => {
+  const chunks = [];
+  const original = process.stderr.write;
+  process.stderr.write = (chunk) => {
+    chunks.push(String(chunk));
+    return true;
+  };
+  try {
+    const live = wiring({
+      changedPaths: () => 1,
+      sinks: BROKEN_AND_WORKING,
+      onDegraded: () => {
+        throw new Error("the operator channel is gone");
+      },
+    }).instance;
+    const { pi, fire } = fakePi();
+    live.register(pi);
+    live.noteCommand("execute-phase", ["383"]);
+    fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+    fire("agent_settled");
+  } finally {
+    process.stderr.write = original;
+  }
+
+  assert.equal(chunks.length, 1);
+  assert.match(chunks[0], /tier-cost-ledger/);
+  assert.match(chunks[0], /no tier-cost@2 block/);
+});
+
+test("off reports nothing at all — the switch is absence, not a silenced listener", () => {
+  const reports = [];
+  const { pi, registered } = fakePi();
+  const instance = createTelemetryWiring({
+    root: project(),
+    enabled: false,
+    sinks: BROKEN_AND_WORKING,
+    onDegraded: (message) => reports.push(message),
+    changedPaths: () => 1,
+    sessionStartSha: () => "abc123",
+    now: () => 1_000,
+    date: () => "2026-11-03",
+  });
+  instance.register(pi);
+  instance.noteCommand("execute-phase", ["383"]);
+
+  assert.deepEqual(reports, [], "an off switch reports nothing: there is no sample to lose");
+  assert.deepEqual(registered(), [], "and registers no listener that could report later");
 });

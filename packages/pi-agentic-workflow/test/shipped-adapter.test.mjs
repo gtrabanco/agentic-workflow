@@ -799,6 +799,73 @@ test("issue #274 through the adapter: the shipped entry registers the deferred w
   }
 });
 
+test("issue #690 through the adapter: a runner-door unit command writes the automatic sample both destinations receive", async () => {
+  const entry = await shippedEntry({ projectConfig: { telemetry: { enabled: true } } });
+  const before = process.env.AGENTIC_WORKFLOW_RUNNER;
+  try {
+    // The unit the command names, and a ledger whose grammar the sink can write
+    // into: without the block the ledger refuses, which is what the degraded
+    // report covers, not what this case is about.
+    mkdirSync(join(entry.cwd, "docs", "fix", "690-telemetry-attr"), { recursive: true });
+    writeFileSync(join(entry.cwd, "docs", "fix", "690-telemetry-attr", "SPEC.md"), "# fix/690-telemetry-attr\n");
+    mkdirSync(join(entry.cwd, "docs", "workflow"), { recursive: true });
+    writeFileSync(join(entry.cwd, "docs", "workflow", "TIER_COST.md"), ledgerText());
+
+    // The crate is never spawned by a suite: `AGENTIC_WORKFLOW_RUNNER` is the
+    // resolver's first candidate, so the door runs this stand-in instead.
+    const fake = join(entry.cwd, "fake-runner.mjs");
+    writeFileSync(fake, 'process.stdout.write("ran");\n');
+    process.env.AGENTIC_WORKFLOW_RUNNER = `${process.execPath} ${fake}`;
+
+    entry.handlers.get("session_start")(undefined, entry.context());
+    const runner = entry.calls.registerTool.find((tool) => tool.name === "agentic_workflow_run");
+    const ctx = entry.context();
+    const signal = new AbortController().signal;
+    const result = await runner.execute(
+      "call-01HX",
+      { subcommand: "execute-phase", args: ["690"] },
+      signal,
+      () => {},
+      ctx,
+    );
+    assert.equal(result.structuredContent.exitCode, 0, "the stand-in runner answered");
+
+    entry.handlers.get("turn_end")({ message: { usage: { totalTokens: 900 } } }, ctx);
+    entry.handlers.get("agent_settled")(undefined, ctx);
+
+    const jsonl = readFileSync(join(entry.cwd, ".pi", ".telemetry", "sessions.jsonl"), "utf8").trim().split("\n");
+    assert.equal(jsonl.length, 1, "the JSONL destination received one automatic line — no reconstruction");
+    const sample = JSON.parse(jsonl[0]);
+    assert.equal(sample.unit, "690-telemetry-attr");
+    assert.equal(sample.phase, "execute-phase");
+    assert.equal(sample.tokens, 900);
+    assert.match(sample.source, /^pi:session=/, "the producer prefix the ledger's session guard reads");
+
+    const ledger = readFileSync(join(entry.cwd, "docs", "workflow", "TIER_COST.md"), "utf8");
+    const row = ledger.trim().split("\n").at(-1);
+    assert.match(row, /\| 690-telemetry-attr \|/, "the ledger received the same sample as a row");
+    assert.match(row, /pi:session=/, "and the row carries the live producer's provenance");
+  } finally {
+    if (before === undefined) delete process.env.AGENTIC_WORKFLOW_RUNNER;
+    else process.env.AGENTIC_WORKFLOW_RUNNER = before;
+    delete process.env.AG_WF_PHASE;
+    entry.cleanup();
+  }
+});
+
+/** The published `tier-cost@2` row, so the ledger sink can write into a fresh fixture. */
+const LEDGER_COLUMNS = [
+  "unit", "phase", "version", "model", "changed_paths", "tokens", "turns",
+  "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens",
+  "model_ms", "tool_ms", "observed", "source",
+];
+
+function ledgerText() {
+  const block = LEDGER_COLUMNS.map((column) => `${column} | \`x\` | what it holds`).join("\n");
+  const header = `| ${LEDGER_COLUMNS.join(" | ")} |\n|${LEDGER_COLUMNS.map(() => "---").join("|")}|`;
+  return `# Tier cost\n\n\`\`\`text\ntier-cost@2\ncolumn | shape | what it holds\n${block}\n\`\`\`\n\n## Samples\n\nOne row per measured session.\n\n${header}\n`;
+}
+
 // --- Issue #174: the State Flow episode lifecycle through the shipped adapter ---
 
 /** The command list a session with `@llblab/pi-state-flow` installed could see. */

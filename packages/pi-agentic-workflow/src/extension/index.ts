@@ -419,6 +419,11 @@ export default function extension(pi: ExtensionAPI): void {
     // Issue #274: the deferred workflow tools register alongside the commands,
     // through the one structural read above — absent on a host without the API.
     toolRegistrar: toolRegistrar(pi) ?? undefined,
+    // Issue #690: the same attribution gate the command registrar feeds, handed
+    // to the deferred tools — the runner door is the only path a unit-scoped
+    // subcommand takes when the model dispatches the work, so a session that
+    // never types a slash command still learns which unit it is working on.
+    workflowTools: { onRunnerCommand: noteCommand },
     // Issue #678: the host convention belongs here, not in the Pi-free specs —
     // the factory hands `registerTool` what this adapter says a tool is.
     toolShipping: hostTool,
@@ -495,13 +500,21 @@ export default function extension(pi: ExtensionAPI): void {
       // #504 S3: the same switch writes the per-session JSONL beside the ledger,
       // at the path the base feature section resolves (`.pi/.telemetry/…` by
       // default). A relative path is the project's, never the process's cwd of
-      // the moment — the sample belongs to the tree it measured.
+      // the moment — the sample belongs to the tree it measured — so the project
+      // root is the BASE, never the second segment (issue #690: `resolve(relative,
+      // root)` answered with the root itself, which pointed the sink at a
+      // directory and made every JSONL write fail).
       telemetry = createTelemetryWiring({
         root: ctx.cwd,
         enabled: true,
         jsonFile: typeof loaded.config.telemetry.jsonFile === "string"
-          ? resolve(loaded.config.telemetry.jsonFile, ctx.cwd)
+          ? resolve(ctx.cwd, loaded.config.telemetry.jsonFile)
           : undefined,
+        // Issue #690 S3: a destination that refuses its sample is the operator's
+        // business, and `notify` is where this extension already says things a
+        // person has to act on. The wiring latches it to one line per sink per
+        // session, so a permanently broken ledger asks once instead of per run.
+        onDegraded: (message) => ctx.ui.notify(message, "warning"),
         sessionId: () => sessionId,
       });
       telemetry.register(pi);
