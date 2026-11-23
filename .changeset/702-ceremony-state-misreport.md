@@ -1,6 +1,7 @@
 ---
 "@gtrabanco/agentic-workflow": patch
 "@gtrabanco/agentic-workflow-schema": patch
+"@gtrabanco/pi-agentic-workflow": patch
 ---
 
 fix(702): the ceremony-state writers and the merge verdict stop misreporting

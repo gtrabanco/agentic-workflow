@@ -934,7 +934,10 @@ function findingsCarrier(unitDir) {
 }
 
 /** The open rows of a legacy `review-findings.md`, in file order — through the
- *  carrier's one grammar owner, so a cell is never read by position. */
+ *  carrier's one grammar owner, so a cell is never read by position.
+ *  Mark rows (`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`) carry no destination of their
+ *  own, and a folded row (`folded: yes`, or its `yes · fold <sha>` annotation)
+ *  is closed. */
 function rowsFromLedger(ledger) {
   const rows = [];
   for (const row of parseCarrierBody(ledger).rows) {
