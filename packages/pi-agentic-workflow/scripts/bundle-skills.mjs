@@ -5,14 +5,15 @@
 // `--clean` once the tarball exists.
 //
 // Projection contract (issue #410 — deliberately rewritten from "nothing here
-// edits skill prose"): the staged copy is a *projection* of the canonical tree
-// driven by `projection-manifest.json` at the package root. Each manifest rule
-// removes or pointerizes one declared prose section, resolved through the
-// #407 section locator and hash-bound to the exact bytes it removes
-// (`scripts/projection.mjs`). Files no rule names are byte-identical to their
-// source — always. The standalone `skills/` tree is never edited: rules read
-// it and write only into the staged copy. The manifest ships EMPTY (no rules),
-// which makes this a byte-identical no-op until the first entries land.
+// edits skill prose"): the staged copy is a *projection* of the canonical tree.
+// Two declared transforms write into it: the manifest's own rules
+// (`projection-manifest.json` at the package root), each of which removes or
+// pointerizes one declared prose section, resolved through the #407 section
+// locator and hash-bound to the exact bytes it removes
+// (`scripts/projection.mjs`); and the runner mapping (issue #696, below). A file
+// neither transform reaches is byte-identical to its source — always. The
+// standalone `skills/` tree is never edited: both read it and write only into the
+// staged copy.
 //
 // Lifecycle (package.json): `prepare` stages it for local work, `test` stages it
 // before asserting, `prepublishOnly` stages it before the gate, and `postpack`
@@ -26,6 +27,16 @@
 // `user-invocable: false` ARE bundled: they are composed internals that
 // user-facing skills load in-turn, so the bundle must stay self-contained.
 //
+// Runner mapping (issue #696): a bundled `SKILL.md` that cites the symbolic
+// `runner <subcommand>` form carries the pi mapping AT THE POINT OF EXECUTION —
+// otherwise a session that follows the skill literally runs `runner …` in bash and
+// gets exit 127, because no such executable exists. The wording is not composed
+// here: `runnerMappingText()` reads the `runner-mapping@1` block out of its one
+// owner (`skills/runner-contract/references/RUNNER.md`), so there is no second
+// hand-maintained copy (`IR11`) and no drift between owner and injection. The
+// block is spliced after the frontmatter — never before it, because a `SKILL.md`
+// whose first bytes are not `---` stops being a skill for every reader.
+//
 // The frontmatter reader below is a tolerant scanner for the three fields this
 // rule needs (`name`, `user-invocable`, `metadata.internal`), not a YAML parser:
 // folded scalars (`description: >`) are skipped because every continuation line
@@ -38,6 +49,92 @@ import { fileURLToPath } from "node:url";
 import { ProjectionError, applyProjection, loadProjectionManifest, rulesFor } from "./projection.mjs";
 
 const SKILL_FILE = "SKILL.md";
+
+/** The id the runner mapping's one owner publishes (issue #696). */
+export const RUNNER_MAPPING_MARKER = "runner-mapping@1";
+
+/**
+ * The injected block's ceiling in the repository's own measure (`ceil(UTF-8
+ * bytes / 4)`), fixed AFTER the block was written — AC1's rule — with the
+ * manifest's arithmetic: `ceil(measured x 1.10)`. Measured 120 est at the cut.
+ * A longer block is a contract change, not a wording tweak: it rides in every
+ * packaged skill that cites a runner command.
+ */
+export const RUNNER_MAPPING_ESTIMATE_MAX = 132;
+
+/** Where the mapping's owner lives inside a skills tree. */
+const RUNNER_MAPPING_OWNER = join("runner-contract", "references", "RUNNER.md");
+
+/**
+ * A `runner <subcommand>` citation: a backticked span carrying the symbolic form
+ * (the subcommand is a name or a `<placeholder>`), or a line whose first word is
+ * `runner` inside a fenced block. Prose that mentions a runner ("a narrower
+ * runner later") is not a citation, and neither is the `runner-set@1` table,
+ * whose rows start with a launcher. The closing backtick is optional because a
+ * skill may open a long span and close it lines later.
+ */
+const RUNNER_CITATION = /`runner (?:<[a-z][a-z0-9-]*>|[a-z][a-z0-9-]*)(?: [^`\n]*)?`?|^runner [a-z<]/mu;
+
+
+/**
+ * Read the runner mapping from its one owner inside a skills tree.
+ *
+ * `null` when the tree carries no runner contract at all (a fixture); a
+ * `stale-rule` failure when the contract exists but publishes no block — a
+ * projection whose owner text vanished must never silently deliver nothing.
+ *
+ * @param {string} skillsRoot
+ * @returns {string | null} the fenced block, byte for byte
+ */
+export function runnerMappingText(skillsRoot) {
+  const owner = join(resolve(skillsRoot), RUNNER_MAPPING_OWNER);
+  if (!existsSync(owner)) return null;
+  const text = readFileSync(owner, "utf8");
+  const opening = `\`\`\`text\n${RUNNER_MAPPING_MARKER}\n`;
+  const at = text.indexOf(opening);
+  if (at === -1) {
+    throw new ProjectionError("stale-rule", `${owner} publishes no ${RUNNER_MAPPING_MARKER} block; a staged skill would ship its citation unmapped`);
+  }
+  const end = text.indexOf("\n```", at + opening.length);
+  if (end === -1) {
+    throw new ProjectionError("stale-rule", `${owner}: the ${RUNNER_MAPPING_MARKER} block is unterminated`);
+  }
+  return text.slice(at, end + 4);
+}
+
+/**
+ * Whether a `SKILL.md` cites the symbolic `runner <subcommand>` form.
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function citesRunnerCitation(text) {
+  return RUNNER_CITATION.test(typeof text === "string" ? text : "");
+}
+
+/** The offset just after a leading `---` frontmatter block's closing line, or null. */
+const FRONTMATTER = /^---\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/;
+function frontmatterEndOffset(text) {
+  const bom = text.charCodeAt(0) === 0xfeff ? 1 : 0;
+  const match = FRONTMATTER.exec(bom === 1 ? text.slice(1) : text);
+  return match === null ? null : bom + match[0].length;
+}
+
+/**
+ * The declared projection of one staged skill file: the manifest rules that name
+ * it, then — for a `SKILL.md` whose source cites the symbolic runner form — the
+ * mapping block spliced in after the frontmatter. Both the bundler and the parity
+ * suite call this, so the expectation and the build cannot disagree.
+ *
+ * @param {{ source: string, rel: string, rules?: readonly object[], mapping?: string | null, context?: string }} options
+ * @returns {string}
+ */
+export function projectSkillFile({ source, rel, rules = [], mapping = null, context = "source" }) {
+  const projected = rules.length > 0 ? applyProjection(source, rules, context) : source;
+  if (rel !== SKILL_FILE || mapping === null || !citesRunnerCitation(source)) return projected;
+  const at = frontmatterEndOffset(projected);
+  if (at === null) return `${mapping}\n\n${projected}`;
+  return `${projected.slice(0, at)}\n${mapping}\n${projected.slice(at)}`;
+}
 
 /**
  * Return the leading `---` frontmatter block of a SKILL.md, or null if absent.
@@ -129,23 +226,25 @@ export function listFiles(dir, prefix = "") {
 }
 
 /**
- * Apply the declared projection to one staged skill directory: for every file
- * a manifest rule names, the rule is applied to the *source* bytes and the
- * result replaces the staged copy's file. A file no rule names is left exactly
- * as copied. Any projection failure aborts the build — fail-closed, never a
- * partial bundle.
+ * Stage one skill directory into the bundle, then apply its declared projection:
+ * for every file a manifest rule names the rule is applied to the *source* bytes,
+ * and a `SKILL.md` that cites a runner command carries the mapping block. Any
+ * projection failure aborts the build — fail-closed, never a partial bundle.
  * @param {{ dir: string, slug: string }} skill the source skill
  * @param {string} stagedDir the copied skill directory in the bundle
  * @param {readonly object[]} rules the whole validated manifest rule list
+ * @param {string | null} mapping the runner mapping, read once per build
  * @returns {number} how many files were projected
  */
-function projectSkill(skill, stagedDir, rules) {
+function projectSkill(skill, stagedDir, rules, mapping) {
   let projected = 0;
   for (const rel of listFiles(stagedDir)) {
     const fileRules = rulesFor(rules, `skills/${skill.slug}/${rel}`);
-    if (fileRules.length === 0) continue;
     const source = readFileSync(join(skill.dir, rel), "utf8");
-    const out = applyProjection(source, fileRules, `skills/${skill.slug}/${rel}`);
+    const replaced = fileRules.length > 0 || (rel === SKILL_FILE && mapping !== null && citesRunnerCitation(source));
+    if (!replaced) continue;
+    const out = projectSkillFile({ source, rel, rules: fileRules, mapping, context: `skills/${skill.slug}/${rel}` });
+    if (out === source) continue;
     writeFileSync(join(stagedDir, rel), out);
     projected += 1;
   }
@@ -170,6 +269,10 @@ export function bundleSkills({ sourceDir, targetDir, manifestPath }) {
   const rules = manifestPath !== undefined && existsSync(manifestPath)
     ? loadProjectionManifest(manifestPath).rules
     : [];
+  // Read once per build, from its one owner: a skills tree without a runner
+  // contract stages nothing (a fixture), and an owner without its block fails
+  // closed instead of shipping an unmapped citation.
+  const mapping = runnerMappingText(source);
   let projected = 0;
 
   // Wipe first: a rebuild must never merge over a stale copy.
@@ -189,7 +292,7 @@ export function bundleSkills({ sourceDir, targetDir, manifestPath }) {
         return !rel.some((part) => part.startsWith(".") || part === "node_modules");
       },
     });
-    if (rules.length > 0) projected += projectSkill(skill, join(target, skill.slug), rules);
+    if (rules.length > 0 || mapping !== null) projected += projectSkill(skill, join(target, skill.slug), rules, mapping);
     included.push(skill.slug);
   }
 

@@ -1,10 +1,14 @@
-// skill-parity.test.mjs — AC2 (SPEC S2, D-E3; redefined by issue #410)
+// skill-parity.test.mjs — AC2 (SPEC S2, D-E3; redefined by issue #410, and by
+// issue #696 for the runner mapping the bundle now delivers)
 //
 // Bundled skills are build copies, never sources: the staged bundle is the
 // *declared projection* of the canonical repository `skills/` tree. Every file
-// no projection rule names must be byte-identical to its source — always;
-// every file a rule names must equal the rule's declared projection applied to
-// the source (recomputed here, never trusted from the build). Every
+// must equal the projection `bundle-skills.mjs` declares for it — recomputed
+// here, never trusted from the build: the manifest rules a file's own entry names,
+// plus the runner-mapping injection (issue #696) for a `SKILL.md` whose source
+// cites the symbolic `runner <subcommand>` form, with the block read from its one
+// owner (`RUNNER.md`) by the same helper the bundler uses. A file nothing applies
+// to must be byte-identical to its source — always. Every
 // `user-invocable: true` skill and every internal composed skill must be
 // present, every `metadata.internal: true` skill must be absent, and the
 // projection must never grow a skill (context budget). This suite is the drift
@@ -20,13 +24,15 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { bundleSkills, listFiles, listSkills } from "../scripts/bundle-skills.mjs";
-import { applyProjection, loadProjectionManifest, rulesFor } from "../scripts/projection.mjs";
+import { bundleSkills, listFiles, listSkills, projectSkillFile, runnerMappingText } from "../scripts/bundle-skills.mjs";
+import { loadProjectionManifest, rulesFor } from "../scripts/projection.mjs";
 
 const PKG_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const REPO_SKILLS = join(PKG_DIR, "..", "..", "skills");
 const BUNDLE_SKILLS = join(PKG_DIR, "skills");
 const MANIFEST = loadProjectionManifest(join(PKG_DIR, "projection-manifest.json"));
+/** The runner mapping the bundle injects, read from its one owner (issue #696). */
+const RUNNER_MAPPING = runnerMappingText(REPO_SKILLS);
 
 const readSourceSkills = () => listSkills(REPO_SKILLS);
 const expectedSlugs = () => readSourceSkills().filter((s) => !s.internal).map((s) => s.slug);
@@ -88,11 +94,12 @@ test("AC2: internal composed skills are bundled, metadata.internal skills are no
   }
 });
 
-test("AC2: every bundled file equals its declared projection — byte-identical when no rule names it", () => {
+test("AC2: every bundled file equals its declared projection — byte-identical when nothing applies to it", () => {
   // Issue #410: the parity contract is declared projection, not unconditional
-  // byte-identity. With the EMPTY manifest this is byte-identity everywhere,
-  // proven by recomputation; the first real manifest entries re-drive this test
-  // without touching it.
+  // byte-identity. Issue #696 adds one transform to that declaration — the
+  // runner mapping, spliced into a `SKILL.md` whose source cites the symbolic
+  // form — read here through the bundler's own helper, so the expectation and
+  // the build cannot disagree about the wording or its owner.
   for (const slug of expectedSlugs()) {
     const sourceDir = join(REPO_SKILLS, slug);
     const bundleDir = join(BUNDLE_SKILLS, slug);
@@ -103,10 +110,11 @@ test("AC2: every bundled file equals its declared projection — byte-identical 
       const a = readFileSync(join(sourceDir, rel), "utf8");
       const b = readFileSync(join(bundleDir, rel), "utf8");
       const rules = rulesFor(MANIFEST.rules, `skills/${slug}/${rel}`);
-      if (rules.length === 0) {
-        assert.equal(b, a, `${slug}/${rel}: bundle bytes drifted from skills/ source with no rule naming it`);
+      const expected = projectSkillFile({ source: a, rel, rules, mapping: RUNNER_MAPPING, context: `skills/${slug}/${rel}` });
+      if (rules.length === 0 && !(rel === "SKILL.md" && expected !== a)) {
+        assert.equal(b, a, `${slug}/${rel}: bundle bytes drifted from skills/ source with nothing applying to it`);
       } else {
-        assert.equal(b, applyProjection(a, rules, `skills/${slug}/${rel}`), `${slug}/${rel}: bundle is not the declared projection of its source`);
+        assert.equal(b, expected, `${slug}/${rel}: bundle is not the declared projection of its source`);
       }
     }
   }

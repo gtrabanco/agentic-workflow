@@ -297,6 +297,33 @@ for a consumer that ignores structured content. Skills never change: the bash
 wording stays the portable path across agents, and these tools are the
 pi-native shortcut — not a second source of truth for any receipt.
 
+### The symbolic `runner` citation reaches the session (issue #696)
+
+A packaged skill states its command as `runner <subcommand> [args...]` and never
+spells a launcher, so a session that has not read
+`runner-contract/references/RUNNER.md` used to take the citation literally:
+`runner batch-scheduler` in bash, exit 127, and then a hunt through this
+package's tree for a binary the contract never installs. Three surfaces close
+that gap, and exactly one of them owns the words:
+
+- **The bundle delivers the mapping.** `scripts/bundle-skills.mjs` splices the
+  `runner-mapping@1` block — owned by `RUNNER.md` — into every staged `SKILL.md`
+  that cites the symbolic form, immediately after the frontmatter, so the
+  mapping arrives with the skill and the first plausible reading is the tool.
+  A skill that cites nothing is untouched; the block's cost is declared (`132`
+  est, measured after the block was written, never before); and the parity suite
+  recomputes the injection from the owner text instead of trusting the build, so
+  a hand-edited copy fails its suite.
+- **The bash seam refuses the shell form.** A bare `runner` head is refused
+  before anything runs (`dist/extension/runner-citation.js`), with the same
+  block the bundle carries and the subcommand named. A path-qualified spelling
+  (`./runner …`) is a real binary a project may ship, and is never judged.
+- **The repair never leaves the project.** See the shell-tool-choice section
+  below.
+
+Outside a pi session nothing changes: the closed set and the pin stay in the
+standalone `RUNNER.md`, and no skill spells a launcher.
+
 ## The `/log-session` code door (issue #429)
 
 A skill invocation is a context injection: nothing executes behind the slash, so
@@ -769,12 +796,25 @@ On every `bash` call the extension reads the command *before* it runs and answer
 | `grep` behind a pipe (`… \| grep -v x`), or reading stdin | passes — a filter is not search |
 | `node -e …`, `node -p …`, `node <script>` | blocked, with the `bun` form in the reason |
 | `node --test …`, `node scripts/run-root-suite.mjs`, the bootstrap pair, `node --version` | passes — node is the guaranteed fallback |
+| a `node` command naming a `scripts/…` file the project does not have (issue #696) | blocked, with no path in the reason: the repair is the pi tool surface |
 | anything else | passes |
 
 A preferred tool that is not on `PATH` stands the carrier down for its class, so
 the documented fallback is never blocked. Availability is the tool doctor's own
 resolver — one answer, no second `PATH` probe. The reason names the rule's owner
 rather than restating it, so the carrier cannot become a second prose home.
+
+**A repair hint is a claim about the session's project** (issue #696). The
+incident sessions ran `node scripts/batch-scheduler.mjs` in a consumer project
+that has no `scripts/` tree, and the guard's repair pointed at
+`bun scripts/batch-scheduler.mjs` — a second command that cannot run either,
+which is how one session ended up executing an authoring checkout's working copy
+against that project. The classifier now takes an injected existence answer (it
+reads no disk itself) and answers three ways: the file resolves, and today's
+`bun` advice stands; it does not, and the violation stops being rewritable while
+the reason names no path and points at `agentic_workflow_run` (or the runner
+contract outside a session); or the caller supplies no answer, and the wording
+is the pre-change one byte for byte.
 
 ```json
 {

@@ -557,6 +557,7 @@ relay-closeout-grammar | skills/unit-lane/references/RELAY.md | block:relay-clos
 journal-fragment-grammar | packages/agentic-workflow/README.md | block:journal-fragment-grammar@1 | n/a | no
 journal-write-grammar | packages/agentic-workflow/README.md | block:journal-write-grammar@1 | n/a | no
 journal-headless-grammar | packages/agentic-workflow/README.md | block:journal-headless-grammar@1 | n/a | no
+runner-mapping | skills/runner-contract/references/RUNNER.md | block:runner-mapping@1 | n/a | no
 runner-set | skills/runner-contract/references/RUNNER.md | block:runner-set@1 | n/a | no
 journal-entry-contract | packages/agentic-workflow-schema/src/journal.ts | schema-export:JOURNAL_ENTRY_KINDS | journal-entry | no
 journal-errata-marker | packages/agentic-workflow-schema/src/journal.ts | schema-export:JOURNAL_ERRATA_MARKERS | journal-errata-marker | no

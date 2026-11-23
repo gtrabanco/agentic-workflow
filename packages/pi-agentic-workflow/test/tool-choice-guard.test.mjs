@@ -255,3 +255,32 @@ test("F29 — the shipped handler reads the disposition from the base file's gua
     rmSync(denied.root, { recursive: true, force: true });
   }
 });
+
+test("F30 — the shipped handler names no scripts path from a cwd without it", async () => {
+  // Issue #696's third trap: from a consumer project the repair pointed into a
+  // `scripts/` tree that only exists in this repository's authoring checkout.
+  const project = scratch("no-scripts");
+  try {
+    const entry = await shippedEntry(project);
+    const decision = await callInProcess(project, entry, { toolName: "bash", input: { command: "node scripts/batch-scheduler.mjs" } });
+    assert.equal(decision.block, true, "the runtime choice is still refused");
+    assert.doesNotMatch(decision.reason, /scripts\/batch-scheduler\.mjs/u, "the reason names no path the project lacks");
+    assert.match(decision.reason, /agentic_workflow_run/u, "it points at the pi tool surface instead");
+  } finally {
+    rmSync(project.root, { recursive: true, force: true });
+  }
+});
+
+test("F31 — the shipped handler keeps the path when the project has it", async () => {
+  const project = scratch("has-scripts");
+  try {
+    mkdirSync(join(project.cwd, "scripts"), { recursive: true });
+    writeFileSync(join(project.cwd, "scripts", "batch-scheduler.mjs"), "// project-local\n");
+    const entry = await shippedEntry(project);
+    const decision = await callInProcess(project, entry, { toolName: "bash", input: { command: "node scripts/batch-scheduler.mjs" } });
+    assert.equal(decision.block, true);
+    assert.match(decision.reason, /bun scripts\/batch-scheduler\.mjs/u, "the authoring checkout keeps today's repair");
+  } finally {
+    rmSync(project.root, { recursive: true, force: true });
+  }
+});

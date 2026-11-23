@@ -280,3 +280,51 @@ test("F21 — a quoted glob value is de-quoted before the -g value is re-quoted"
   // double-quoted value class moves.
   assert.equal(forwardGrepSegment(["grep", "-r", "--include=*.mjs", "x", "."]), "rg -g '*.mjs' x .");
 });
+
+test("F22 — a scripts path the session's project lacks never appears in the reason, and the rewrite stands down", () => {
+  // Issue #696's third trap: the incident session ran `node
+  // scripts/batch-scheduler.mjs` in a consumer project that has no `scripts/`
+  // tree, and the guard's repair pointed at `bun scripts/batch-scheduler.mjs` —
+  // a second command that cannot run either, which is how the session ended up
+  // executing this repository's working copy against that project.
+  const missing = () => false;
+  const command = "node scripts/batch-scheduler.mjs --json";
+  const decision = classifySegment({ operator: "", text: command }, { exists: missing });
+  assert.equal(decision.kind, "node-default", "the runtime choice is still the violation");
+  assert.equal(decision.rewritable, false, "a translation into a file that is not here is not a repair");
+  assert.doesNotMatch(decision.reason, /scripts\/batch-scheduler\.mjs/u, "the reason names no path the project lacks");
+  assert.match(decision.reason, /agentic_workflow_run/u, "it points at the pi tool surface");
+  assert.match(decision.reason, /runner <subcommand>/u, "and at the runner contract for a session outside pi");
+  assert.match(decision.reason, /AGENTS\.md/u, "the convention keeps its owner");
+
+  // A rewrite cannot quietly emit the dead command either: the command-level
+  // forwarder skips a violation the classifier refused to translate.
+  assert.equal(forwardCommand(command, new Set(["node-default"]), { exists: missing }), command);
+});
+
+test("F23 — a scripts path the session's project has keeps today's suggestion", () => {
+  const present = (rel) => rel === "scripts/batch-scheduler.mjs";
+  const decision = classifySegment({ operator: "", text: "node scripts/batch-scheduler.mjs --json" }, { exists: present });
+  assert.equal(decision.rewritable, true);
+  assert.equal(decision.suggestion, "bun scripts/batch-scheduler.mjs --json");
+  assert.match(decision.reason, /bun scripts\/batch-scheduler\.mjs --json/u);
+
+  // No probe injected is the unchanged contract: the classifier never claims a
+  // file is absent, so every pre-existing caller sees its verdicts byte for byte.
+  assert.equal(classifySegment({ operator: "", text: "node scripts/batch-scheduler.mjs --json" }).suggestion, "bun scripts/batch-scheduler.mjs --json");
+  // A path outside `scripts/` is not this rule's business.
+  const other = classifySegment({ operator: "", text: "node tools/build.mjs" }, { exists: () => false });
+  assert.equal(other.rewritable, true, "only a `scripts/…` operand is grounded against the project");
+  assert.equal(other.suggestion, "bun tools/build.mjs");
+});
+
+test("F24 — the probe reaches the command-level entry points unchanged", () => {
+  // `analyzeToolChoice` and `forwardCommand` take the same options object, so a
+  // caller injects the probe once; the no-probe call is the pre-existing path.
+  const { violations } = analyzeToolChoice("node scripts/batch-scheduler.mjs", { exists: () => false });
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0].rewritable, false);
+  const { violations: unchanged } = analyzeToolChoice("node scripts/batch-scheduler.mjs");
+  assert.equal(unchanged[0].rewritable, true, "no probe, no claim about the project");
+  assert.equal(forwardCommand("node scripts/x.mjs && ls", new Set(["node-default"]), { exists: () => false }), "node scripts/x.mjs && ls");
+});
