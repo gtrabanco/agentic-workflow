@@ -216,7 +216,7 @@ test("allow with nothing to prune is a no-op and exits 0", () => {
   });
 });
 
-// --- O5: the guard never removes a working tree ---------------------------
+// --- O5: the guard never targets a working tree ---------------------------
 
 test("a live worktree's uncommitted file survives a prune under allow", () => {
   withRepo(({ root, git }) => {
