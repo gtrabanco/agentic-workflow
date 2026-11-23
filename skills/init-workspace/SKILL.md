@@ -211,6 +211,25 @@ the guide's `substrate-declines@1` block. A silent skip is the defect.
 offered additively (never written unasked) beside the other missing blocks —
 one offer per class, resolved as written, declined, or left as a residual.
 
+## Scaffold contract parity — the templates must match the release
+
+The census above asks whether a section exists; this asks whether the unit-doc
+templates still carry the shape the installed release requires, where a drifted
+one makes every unit the lane cuts reject at audit. `runner scaffold-contract check
+--workspace <dir>` prints one `SURFACE <path> — MATCH|MISMATCH|ABSENT` row per
+exported template and one `MISMATCH` line per disagreement, exiting 0 only when
+every present template matches; a workspace with none answers `SCAFFOLD ABSENT`,
+never a pass it did not measure.
+
+**Upgrade:** `check` runs in step 2 beside the census and again after the
+additive writes — a drifted template is a named repair block, and parity stays
+idempotent (a tailored template is a residual).
+
+**Authoring:** `runner scaffold-contract authoring <unit-doc> --workspace <dir>`
+runs the same comparison on a staged unit doc — wrong heading level, missing or
+duplicated section, an `ac-hash` the section cannot re-derive — so the defect
+surfaces at emission; run it before the unit doc's first commit.
+
 ## Guardrails
 
 - **Seam hooks are consent-gated and opt-in per seam (issue #413).** The pi
