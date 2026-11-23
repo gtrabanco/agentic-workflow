@@ -45,15 +45,21 @@ export declare function forwardGrepSegment(tokens: string[]): string | null;
 /** The `bun` equivalent of a node segment, or null when it is not one, or is sanctioned. */
 export declare function forwardNodeSegment(tokens: string[]): string | null;
 
+/** The caller's answer for "does this repo-relative path resolve in the
+ *  session's project" — injected, never probed here (issue #696). */
+export interface ToolChoiceProjectProbe {
+  exists?: (rel: string) => boolean;
+}
+
 /** Classify one command segment. */
-export declare function classifySegment(segment: { operator?: string; text?: string }): ToolChoiceViolation;
+export declare function classifySegment(segment: { operator?: string; text?: string }, options?: ToolChoiceProjectProbe): ToolChoiceViolation;
 
 /** Every tool-choice violation in a command, in command order. */
-export declare function analyzeToolChoice(command: string): {
+export declare function analyzeToolChoice(command: string, options?: ToolChoiceProjectProbe): {
   parsed: boolean;
   violations: ToolChoiceViolation[];
   segments: ToolChoiceSegment[];
 };
 
 /** The command with the named violation kinds forwarded in place. */
-export declare function forwardCommand(command: string, kinds: Iterable<string>): string;
+export declare function forwardCommand(command: string, kinds: Iterable<string>, options?: ToolChoiceProjectProbe): string;

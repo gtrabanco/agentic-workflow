@@ -22,7 +22,7 @@ import { test } from "node:test";
 const PKG_DIR = resolve(import.meta.dirname, "..");
 const RUNNER_MD = resolve(PKG_DIR, "..", "..", "skills", "runner-contract", "references", "RUNNER.md");
 
-const guard = () => import("../dist/guards/runner-citation.js");
+const guard = () => import("../dist/extension/runner-citation.js");
 
 /** The canon block's own text, read from the owner file — never re-typed here. */
 function ownerMapping() {

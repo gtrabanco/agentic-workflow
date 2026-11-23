@@ -10,6 +10,7 @@ import type { SelectListTheme } from "@earendil-works/pi-tui";
 import { loadConfig } from "../config/load.js";
 import { evaluateToolCall, isProtectedPath, isScratchPath, normalizeTarget } from "../config/path-policy.js";
 import { applyGitIdentityGuard, findGitConfigWrites, guardOptions, scratchDirs } from "../guards/git-identity.js";
+import { parseRunnerCitation, readRunnerMapping, runnerCitationRefusal } from "./runner-citation.js";
 import { startGuardPlugins } from "../guards/plugin-core.js";
 import { enforceToolChoice } from "../guards/tool-choice.js";
 import type { ToolChoiceAvailability, ToolChoiceDecision } from "../guards/tool-choice.js";
@@ -49,6 +50,20 @@ import { SETTINGS_COMMAND } from "../routing/types.js";
  */
 
 const skillsDir = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "skills");
+
+/**
+ * The runner mapping the packaged skills carry (issue #696), read once from the
+ * staged bundle's own `RUNNER.md` — the same owner text `bundle-skills.mjs`
+ * injects. Lazy and tolerant: a package without the bundle still refuses the
+ * shell citation, it just points at the contract instead of quoting it.
+ */
+let runnerMapping: string | null | undefined;
+function canonRunnerMapping(): string | null {
+  if (runnerMapping === undefined) {
+    runnerMapping = readRunnerMapping(join(skillsDir, "runner-contract", "references", "RUNNER.md"));
+  }
+  return runnerMapping;
+}
 
 type PiModel = NonNullable<ExtensionContext["model"]>;
 type PiThinkingLevel = Parameters<ExtensionAPI["setThinkingLevel"]>[0];
@@ -571,6 +586,16 @@ export default function extension(pi: ExtensionAPI): void {
   // one tool name would make the block unreachable for the calls it exists for.
   pi.on("tool_call", async (event, ctx) => {
     let command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
+    // Issue #696 — the symbolic runner citation is never a shell command. The
+    // mapping usually reaches the session with the skill itself (the bundle
+    // injects it); a session that skimmed both still reaches bash with
+    // `runner <subcommand>`, which can only answer 127 and send it hunting for a
+    // binary the contract never installs. The seam refuses that form and states
+    // the same canon block, so one failure becomes one lesson.
+    if (event.toolName === "bash" && typeof command === "string" && command !== "") {
+      const citation = parseRunnerCitation(command);
+      if (citation !== null) return { block: true, reason: runnerCitationRefusal(citation, canonRunnerMapping()) };
+    }
     // Issue #610 — the shell-tool-choice carrier: the cheapest decision, taken
     // before anything reads the command text, so the convention is re-made at
     // command time instead of relied on from prose read once. A rewrite lands on
@@ -578,10 +603,12 @@ export default function extension(pi: ExtensionAPI): void {
     // command that will actually run.
     if (event.toolName === "bash" && typeof command === "string" && command !== "") {
       const posture = resolveToolChoicePosture(ctx);
-      const choice: ToolChoiceDecision = enforceToolChoice(
-        command,
-        posture ?? { availability: { rg: false, bun: false } },
-      );
+      const choice: ToolChoiceDecision = enforceToolChoice(command, {
+        ...(posture ?? { availability: { rg: false, bun: false } }),
+        // Issue #696 — a repair hint is a claim about the session's project, so
+        // the existence answer is the caller's (the classifier stays pure).
+        existsPath: (rel) => existsSync(resolve(ctx.cwd, rel)),
+      });
       if (choice.block) return { block: true, reason: choice.reason };
       if (typeof choice.command === "string" && choice.command !== command) {
         event.input.command = choice.command;

@@ -32,6 +32,14 @@
  *     the counterpart; an unknown flag keeps its text and marks the segment
  *     *not rewritable*, which forces the blocking posture instead of a silent
  *     rewrite into a different command.
+ *   * **a repair hint is a claim about the reader's project** (issue #696). A
+ *     `node` command naming a `scripts/…` file the caller's project does not have
+ *     is not forwarded into `bun <that file>`: that is a second command that
+ *     cannot run, and it is how a session ended up executing this repository's
+ *     working copy against a consumer project. The reason names the tool surface
+ *     instead and carries no path. The answer is injected (`exists`), never
+ *     probed here — the module keeps its no-filesystem contract, and a caller
+ *     that injects nothing gets today's verdicts byte for byte.
  */
 
 /** The contract this module implements, versioned for the coverage tools. */
@@ -478,13 +486,56 @@ function nodeReason(suggestion) {
   ].join(" ");
 }
 
+/** A workflow script a `node` command names, as a repo-relative path. */
+const PROJECT_SCRIPT = /^(?:\.\/)?scripts\/[\w.@/-]+$/u;
+
+/**
+ * The `scripts/…` operands of a node segment whose file the caller's project does
+ * not have. Empty when the caller injects no probe: an unknown project is never
+ * an accusation (issue #696 S8).
+ *
+ * @param {string[]} tokens
+ * @param {((rel: string) => boolean) | undefined} exists
+ * @returns {string[]} the paths that do not resolve
+ */
+function missingProjectScripts(tokens, exists) {
+  if (typeof exists !== "function") return [];
+  const headIndex = commandIndex(tokens);
+  return tokens
+    .slice(headIndex + 1)
+    .map((token) => token.replace(/^['"]|['"]$/gu, ""))
+    .filter((token) => PROJECT_SCRIPT.test(token))
+    .filter((token) => exists(token.replace(/^\.\//u, "")) !== true);
+}
+
+/**
+ * The reason for a `node` command that names a workflow script the session's
+ * project does not have (issue #696): the repair is not a runtime swap into a
+ * file that is not there — it is the pi tool surface, or the runner contract for
+ * a session outside pi. It names no path, because naming one the reader cannot
+ * open is what sent a session hunting through this repository's tree.
+ */
+function missingScriptReason() {
+  return [
+    `\`node\` is the fallback runtime (owner: ${CONVENTION_OWNER}) and the workflow script this command names is not in this project, so there is no translation to forward to.`,
+    "A workflow command runs through the pi tool surface (`agentic_workflow_run`), or — outside a pi session — through the runner contract's symbolic form (`runner <subcommand>`, owner: `runner-contract/references/RUNNER.md`).",
+    "The sanctioned forms — `node --test <paths>`, `node scripts/run-root-suite.mjs`, the bootstrap pair — stay untouched.",
+  ].join(" ");
+}
+
 /**
  * Classify one command segment.
  *
+ * `options.exists` is the caller's answer for "does this repo-relative path
+ * resolve in the session's project" (issue #696): the policy never reads a disk,
+ * so the probe is injected, and an absent probe means "cannot answer" — today's
+ * verdict, byte for byte.
+ *
  * @param {{operator?: string, text?: string}} segment
+ * @param {{exists?: (rel: string) => boolean}} [options]
  * @returns {{kind: "pass" | "grep-search" | "node-default", head: string, segment: string, suggestion: string | null, rewritable: boolean, reason: string | null}}
  */
-export function classifySegment(segment) {
+export function classifySegment(segment, options = {}) {
   const text = typeof segment?.text === "string" ? segment.text.trim() : "";
   const operator = typeof segment?.operator === "string" ? segment.operator : "";
   const tokens = segmentTokens(text);
@@ -506,6 +557,11 @@ export function classifySegment(segment) {
   }
   if (NODE_HEADS.has(head)) {
     if (isSanctionedNode(tokens)) return pass;
+    // A workflow script the project does not have is not a runtime choice: there
+    // is nothing to forward into, and the repair is the tool surface.
+    if (missingProjectScripts(tokens, options?.exists).length > 0) {
+      return { kind: "node-default", head, segment: text, suggestion: null, rewritable: false, reason: missingScriptReason() };
+    }
     const suggestion = forwardNodeSegment(tokens) ?? rebuild(tokens, "bun");
     return {
       kind: "node-default",
@@ -556,15 +612,16 @@ function isQuotedBalanced(command) {
  * command would be an accusation the tool choice cannot answer.
  *
  * @param {string} command
+ * @param {{exists?: (rel: string) => boolean}} [options] the project probe (issue #696)
  * @returns {{parsed: boolean, violations: ReturnType<typeof classifySegment>[], segments: {operator: string, text: string}[]}}
  */
-export function analyzeToolChoice(command) {
+export function analyzeToolChoice(command, options = {}) {
   const text = typeof command === "string" ? command : "";
   if (!isQuotedBalanced(text)) return { parsed: false, violations: [], segments: [] };
   const segments = splitCommandSegments(text);
   const violations = [];
   for (const segment of segments) {
-    const decision = classifySegment(segment);
+    const decision = classifySegment(segment, options);
     if (decision.kind !== "pass") violations.push(decision);
   }
   return { parsed: true, violations, segments };
@@ -580,19 +637,20 @@ export function analyzeToolChoice(command) {
  *
  * @param {string} command
  * @param {Iterable<string>} kinds the kinds to forward (`grep-search`, `node-default`)
+ * @param {{exists?: (rel: string) => boolean}} [options] the project probe (issue #696)
  * @returns {string}
  */
-export function forwardCommand(command, kinds) {
+export function forwardCommand(command, kinds, options = {}) {
   const wanted = new Set(kinds);
   const text = typeof command === "string" ? command : "";
   if (!isQuotedBalanced(text)) return text;
   const spliced = splitCommandSegments(text).filter((segment) => {
-    const decision = classifySegment(segment);
+    const decision = classifySegment(segment, options);
     return wanted.has(decision.kind) && decision.suggestion !== null && decision.rewritable;
   });
   let rebuilt = text;
   for (const segment of [...spliced].reverse()) {
-    const decision = classifySegment(segment);
+    const decision = classifySegment(segment, options);
     rebuilt = `${rebuilt.slice(0, segment.start)}${decision.suggestion}${rebuilt.slice(segment.end)}`;
   }
   return rebuilt;

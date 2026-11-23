@@ -56,6 +56,9 @@ export interface EnforceOptions {
   disposition?: "allow" | "deny" | "ask";
   /** The tools the host has; a missing preferred tool stands the carrier down. */
   availability: ToolChoiceAvailability;
+  /** The session's project, for the repair reasons that name a path (issue #696).
+   *  `undefined` means "cannot answer": the reason then keeps today's wording. */
+  existsPath?: (rel: string) => boolean;
 }
 
 /**
@@ -73,7 +76,7 @@ export function enforceToolChoice(command: string, options: EnforceOptions): Too
   if (options.disposition === "allow") return { block: false };
   if (config.enabled !== true) return { block: false };
   if (typeof command !== "string" || command.trim() === "") return { block: false };
-  const analysis = analyzeToolChoice(command);
+  const analysis = analyzeToolChoice(command, { exists: options.existsPath });
   if (!analysis.parsed) return { block: false };
   const actionable = analysis.violations.filter((violation) => {
     const required = KIND_REQUIRES[violation.kind];
@@ -81,7 +84,7 @@ export function enforceToolChoice(command: string, options: EnforceOptions): Too
   });
   if (actionable.length === 0) return { block: false };
   if (config.mode === "rewrite" && actionable.every((violation) => violation.rewritable)) {
-    const forwarded = forwardCommand(command, new Set(actionable.map((violation) => violation.kind)));
+    const forwarded = forwardCommand(command, new Set(actionable.map((violation) => violation.kind)), { exists: options.existsPath });
     if (forwarded !== command) return { block: false, command: forwarded };
   }
   const [first] = actionable;
