@@ -1,11 +1,22 @@
 /**
- * findings.mjs — ceremony `findings` module (issue #338 P0).
+ * findings.mjs — ceremony `findings` module (issue #338 P0; rewired by #702).
  *
  * CRUD on the findings carrier. Two carriers, one read path (LEDGERS.md): a
- * unit doc with a `## Findings` section is the migrated seven-column
- * `findings-table@1` carrier (read + write); a unit without one falls back to
- * the legacy `review-findings.md` side ledger (read-only — a legacy unit is
- * never rewritten).
+ * unit doc with a `## Findings` section is the migrated `findings-table@1`
+ * carrier (read + write); a unit without one falls back to the legacy
+ * `review-findings.md` side ledger (read-only — a legacy unit is never
+ * rewritten). The grammars themselves have one owner —
+ * `../findings-carrier.mjs` — and this module reads through it, so no cell is
+ * ever mapped by position.
+ *
+ * **A write splices the table, never the section.** The carrier keeps
+ * report-only material as prose beside its table (`findings-table@1`), and a
+ * rebuilt section is exactly how that prose used to disappear (issue #702 S2).
+ *
+ * **A closed row keeps its identity.** A fold appends an `F` line numbered with
+ * the finding it closed, `append` accepts an explicit `--id`, and the next id is
+ * allocated from the carrier's own rows and fold lines — never from prose that
+ * merely cites an older id (issue #702 S3).
  *
  * The severity and impact cells are closed vocabularies and this module is one
  * of their writers, so both are validated against the published sets before a
@@ -17,9 +28,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  out, fail, onlyFlags, parseFlags, resolveUnit, splitSections, replaceSection, deleteSection,
-  parseFindings, renderFindings, appendLogLine, today,
+  out, fail, onlyFlags, parseFlags, resolveUnit, replaceSection, deleteSection,
+  parseFindings, parseLog, readSection, appendLogLine, today,
 } from "../lib.mjs";
+import {
+  readCarrier, parseCarrierBody, spliceFindingsTable, grammarDefect,
+  CURRENT_FINDINGS_GRAMMAR, LEDGER_FINDINGS_GRAMMAR,
+} from "../findings-carrier.mjs";
 import { FINDINGS_TABLE_SEVERITIES, FINDINGS_TABLE_IMPACTS } from "@gtrabanco/agentic-workflow-schema";
 
 /** Highest-first merge order across both carriers: the ladder, then the legacy
@@ -34,32 +49,99 @@ function requireVocabulary(value, set, flag) {
   if (!set.includes(value)) fail("unknown-vocabulary", { flag: `--${flag}`, value, allowed: set.join("|") });
 }
 
-/** Resolve the unit's findings carrier: migrated unit-doc table or legacy side file. */
+/** Resolve the unit's findings carrier: the migrated doc table or the legacy side file. */
 export function findingsCarrier(slug, cwd) {
   const unit = resolveUnit(slug, cwd);
   const md = fs.readFileSync(unit.specPath, "utf8");
-  const hasDoc = splitSections(md).sections.some((s) => s.heading === "Findings" && s.level === 2);
   const legacyPath = path.join(unit.dir, "review-findings.md");
-  if (hasDoc || !fs.existsSync(legacyPath)) return { ...unit, md, carrier: "unit-doc" };
-  return { ...unit, md, carrier: "legacy", legacyPath };
+  const ledgerText = fs.existsSync(legacyPath) ? fs.readFileSync(legacyPath, "utf8") : null;
+  const carrier = readCarrier({
+    docText: md,
+    ledgerText,
+    docPath: path.relative(cwd, unit.specPath) || unit.specPath,
+    ledgerPath: path.relative(cwd, legacyPath) || legacyPath,
+  });
+  return { ...unit, root: cwd, md, legacyPath, ledgerText, ...carrier };
 }
 
-function nextId(md) {
-  const seen = [...md.matchAll(/\bF(\d+)\b/g)].map((m) => Number(m[1]));
-  return seen.reduce((a, n) => Math.max(a, n), 0) + 1;
+/** A defect this surface refuses to answer past. */
+const FATAL_ON_READ = new Set(["dual-carrier", "wrong-carrier-grammar", "unknown-grammar"]);
+const FATAL_ON_WRITE = new Set(["dual-carrier", "wrong-carrier-grammar", "unknown-grammar", "carrier-table-missing", "superseded-grammar"]);
+
+/** The defect's own code, with the carrier's facts — one refusal shape for every op. */
+function refuse(defect, c) {
+  const root = c.root ?? process.cwd();
+  const code = defect.code === "dual-carrier" ? "dual-findings-carrier" : defect.code;
+  fail(code, {
+    slug: path.basename(c.dir),
+    path: code === "dual-findings-carrier" ? undefined : path.relative(root, c.specPath),
+    ...(defect.grammar === null || defect.grammar === undefined ? {} : { grammar: defect.grammar }),
+    ...(defect.expected === undefined ? {} : { expected: defect.expected }),
+    ...(defect.line === undefined ? {} : { line: defect.line }),
+    detail: defect.detail,
+    ...(code === "carrier-table-missing" ? { section: "Findings" } : {}),
+    ...(code === "dual-findings-carrier" ? { paths: [path.relative(root, c.specPath), path.relative(root, c.legacyPath)] } : {}),
+  });
 }
 
+/** Stop before reading or writing a carrier whose shape cannot be trusted. */
+function requireCarrier(c, { write = false, legacy = false } = {}) {
+  const fatal = write ? FATAL_ON_WRITE : FATAL_ON_READ;
+  const defect = c.defects.find((entry) => fatal.has(entry.code));
+  if (defect) refuse(defect, c);
+  if (write && legacy && c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: path.basename(c.dir), path: path.relative(c.root ?? process.cwd(), c.legacyPath) });
+  if (write && c.grammar !== CURRENT_FINDINGS_GRAMMAR) {
+    const mismatch = grammarDefect(c.grammar, CURRENT_FINDINGS_GRAMMAR) ?? { code: "carrier-table-missing", detail: "the carrier carries no findings table" };
+    refuse(mismatch, c);
+  }
+}
+
+/** The rows of a writable carrier, through the one parser. */
+function carrierRows(c) {
+  const body = readSection(c.md, "findings");
+  if (body == null) return [];
+  return parseCarrierBody(body).rows;
+}
+
+/**
+ * Write the carrier's rows back, splicing the table and keeping every other byte
+ * of the section. A section whose table is missing is refused before any write.
+ */
 function writeRows(c, rows) {
-  fs.writeFileSync(c.specPath, replaceSection(c.md, "findings", renderFindings(rows)));
+  const body = readSection(c.md, "findings");
+  const root = c.root ?? process.cwd();
+  if (body == null) fail("carrier-table-missing", { path: path.relative(root, c.specPath), section: "Findings" });
+  const spliced = spliceFindingsTable(body, rows);
+  if (!spliced.ok) fail("carrier-table-missing", { path: path.relative(root, c.specPath), section: "Findings", detail: spliced.defect.detail });
+  fs.writeFileSync(c.specPath, replaceSection(c.md, "findings", spliced.body));
 }
 
-function parseLegacyFindings(text) {
-  return text.split("\n")
-    .filter((l) => /^\s*\| F\d+\s*\|/.test(l))
-    .map((l) => {
-      const c = l.split("|").map((s) => s.trim());
-      return { id: c[1], target: c[2], axis: c[3], severity: c[4], class: c[5], route: c[6], folded: c[7] === "yes" };
-    });
+/** A finding id as the carrier writes it: `F<n>`. */
+const normalizeId = (value) => (String(value).match(/^F/u) ? String(value) : `F${value}`);
+
+/** Every id the carrier has already used: its open rows and its fold lines. */
+function usedIds(c, rows) {
+  const ids = new Set(rows.map((row) => row.id));
+  for (const mark of parseLog(c.md)) {
+    if (mark.kind === "F") ids.add(`F${mark.n}`);
+  }
+  return ids;
+}
+
+/** The next free id: one past the highest the carrier ever used, never a prose mention. */
+function nextId(c, rows) {
+  let highest = 0;
+  for (const id of usedIds(c, rows)) {
+    const numeric = Number(String(id).replace(/^F/u, ""));
+    if (Number.isInteger(numeric) && numeric > highest) highest = numeric;
+  }
+  return `F${highest + 1}`;
+}
+
+/** The fold line's own words: the id it closed, its axis, its target, its cells. */
+function foldLineText(row, cells) {
+  const edited = cells.length ? ` · ${cells.map((key) => `${key}: ${row[key]}`).join(" · ")}` : "";
+  return `folded (${row.axis}): ${row.target} — folded: yes${edited}`;
 }
 
 export function findings(op, argv, cwd = process.cwd()) {
@@ -68,8 +150,8 @@ export function findings(op, argv, cwd = process.cwd()) {
 
   switch (op) {
     case "append": {
-      onlyFlags(flags, ["file", "line", "target", "axis", "severity", "impact", "class", "route"]);
-      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
+      onlyFlags(flags, ["id", "file", "line", "target", "axis", "severity", "impact", "class", "route"]);
+      requireCarrier(c, { write: true, legacy: true });
       for (const r of ["axis", "severity", "impact", "class", "route"]) {
         if (!flags[r]) fail("missing-flag", { flag: `--${r}` });
       }
@@ -79,26 +161,31 @@ export function findings(op, argv, cwd = process.cwd()) {
         fail("blocker-cannot-be-advisory", { severity: flags.severity, impact: flags.impact });
       }
       if (!flags.target && !flags.file) fail("missing-flag", { flag: "--target | --file" });
-      const rows = parseFindings(c.md);
-      const id = `F${nextId(c.md)}`;
+      const rows = carrierRows(c);
+      const requested = flags.id === undefined ? null : normalizeId(flags.id);
+      if (requested !== null && !/^F\d+$/u.test(String(requested))) fail("invalid-finding-id", { id: String(flags.id), expected: "F<n>" });
+      const used = usedIds(c, rows);
+      if (requested !== null && used.has(requested)) fail("duplicate-finding-id", { id: requested, used: [...used].sort((left, right) => Number(left.slice(1)) - Number(right.slice(1))) });
+      const id = requested ?? nextId(c, rows);
       const target = flags.target ?? `${flags.file}${flags.line ? `:${flags.line}` : ""}`;
       const row = { id, target, axis: flags.axis, severity: flags.severity, impact: flags.impact, class: flags.class, route: flags.route };
       writeRows(c, [...rows, row]);
-      out({ appended: true, slug: flags.slug, finding: row, carrier: c.carrier });
+      out({ appended: true, slug: flags.slug, finding: row, carrier: c.carrier, grammar: c.grammar });
     }
     case "read": {
       onlyFlags(flags, []);
+      requireCarrier(c);
       if (c.carrier === "legacy") {
-        out({ slug: flags.slug, carrier: "legacy", path: "review-findings.md", findings: parseLegacyFindings(fs.readFileSync(c.legacyPath, "utf8")) });
+        out({ slug: flags.slug, carrier: "legacy", grammar: c.grammar, path: "review-findings.md", defects: c.defects, findings: c.rows });
       }
-      out({ slug: flags.slug, carrier: c.carrier, findings: parseFindings(c.md) });
+      out({ slug: flags.slug, carrier: c.carrier, grammar: c.grammar, defects: c.defects, findings: c.rows });
     }
     case "update": {
       onlyFlags(flags, ["id", "severity", "impact", "class", "route", "folded"]);
-      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
+      requireCarrier(c, { write: true, legacy: true });
       if (!flags.id) fail("missing-flag", { flag: "--id" });
-      const rows = parseFindings(c.md);
-      const row = rows.find((r) => r.id === (String(flags.id).match(/^F/) ? flags.id : `F${flags.id}`));
+      const rows = carrierRows(c);
+      const row = rows.find((r) => r.id === normalizeId(flags.id));
       if (!row) fail("unknown-finding", { id: flags.id, slug: flags.slug });
       // Every cell flag applies, folded or not: the issue's own example passes
       // `--severity` and `--folded true` together, so folding after the edit and
@@ -109,11 +196,13 @@ export function findings(op, argv, cwd = process.cwd()) {
       for (const k of cells) row[k] = flags[k];
       const applied = Object.fromEntries(cells.map((k) => [k, row[k]]));
       if (flags.folded === "true") {
-        let md = replaceSection(c.md, "findings", renderFindings(rows.filter((r) => r !== row)));
-        const edited = cells.length ? ` · ${cells.map((k) => `${k}: ${row[k]}`).join(" · ")}` : "";
-        md = appendLogLine(md, "F", `folded ${row.id} (${row.axis}): ${row.target} — folded: yes${edited}`, today());
+        const body = readSection(c.md, "findings");
+        const spliced = body == null ? { ok: false } : spliceFindingsTable(body, rows.filter((r) => r !== row));
+        if (!spliced.ok) fail("carrier-table-missing", { path: path.relative(c.root ?? process.cwd(), c.specPath), section: "Findings" });
+        // The fold line's number IS the id it closed: one identity, one namespace.
+        const md = appendLogLine(replaceSection(c.md, "findings", spliced.body), "F", foldLineText(row, cells), today(), Number(row.id.replace(/^F/u, "")));
         fs.writeFileSync(c.specPath, md);
-        out({ updated: true, slug: flags.slug, id: row.id, folded: true, ...applied, log: "F-line appended" });
+        out({ updated: true, slug: flags.slug, id: row.id, folded: true, ...applied, log: `F${row.id.replace(/^F/u, "")}-line appended` });
       }
       if (flags.folded === "false") fail("fold-flip-unsupported", { note: "a folded row left the table; re-append instead (findings-table@1)" });
       if (row.severity === "BLOCKER" && row.impact === "report-only") {
@@ -125,12 +214,12 @@ export function findings(op, argv, cwd = process.cwd()) {
     }
     case "delete": {
       onlyFlags(flags, ["id", "axis", "severity"]);
-      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
-      const rows = parseFindings(c.md);
+      requireCarrier(c, { write: true, legacy: true });
+      const rows = carrierRows(c);
       let kept;
       let removed;
       if (flags.id) {
-        const id = String(flags.id).match(/^F/) ? flags.id : `F${flags.id}`;
+        const id = normalizeId(flags.id);
         kept = rows.filter((r) => r.id !== id);
         removed = rows.length - kept.length;
       } else if (flags.axis) {
@@ -147,24 +236,24 @@ export function findings(op, argv, cwd = process.cwd()) {
     }
     case "delete-all": {
       onlyFlags(flags, []);
-      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
-      const removed = parseFindings(c.md).length;
+      requireCarrier(c, { write: true, legacy: true });
+      const removed = carrierRows(c).length;
       writeRows(c, []);
       out({ deleted: true, "deleted-count": removed, slug: flags.slug });
     }
     case "delete-section": {
       onlyFlags(flags, ["section"]);
-      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
+      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: "review-findings.md" });
       if (!flags.section) fail("missing-flag", { flag: "--section" });
       fs.writeFileSync(c.specPath, deleteSection(c.md, flags.section));
       out({ deleted: true, slug: flags.slug, section: flags.section });
     }
     case "merge": {
       onlyFlags(flags, ["ids"]);
-      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
+      requireCarrier(c, { write: true, legacy: true });
       if (!flags.ids) fail("missing-flag", { flag: "--ids <n,m,o>" });
-      const ids = String(flags.ids).split(",").map((s) => s.trim()).map((s) => (s.match(/^F/) ? s : `F${s}`));
-      const rows = parseFindings(c.md);
+      const ids = String(flags.ids).split(",").map((s) => s.trim()).map((s) => normalizeId(s));
+      const rows = carrierRows(c);
       const merged = rows.filter((r) => ids.includes(r.id));
       if (merged.length < 2) fail("merge-needs-two", { ids });
       const kept = rows.filter((r) => !ids.includes(r.id));
@@ -184,14 +273,9 @@ export function findings(op, argv, cwd = process.cwd()) {
     }
     case "summarize": {
       onlyFlags(flags, []);
-      let rows;
-      if (c.carrier === "legacy") {
-        rows = parseLegacyFindings(fs.readFileSync(c.legacyPath, "utf8"));
-      } else {
-        rows = parseFindings(c.md);
-      }
+      const rows = c.rows;
       const group = (key) => rows.reduce((acc, r) => ({ ...acc, [r[key]]: (acc[r[key]] ?? 0) + 1 }), {});
-      out({ slug: flags.slug, carrier: c.carrier, total: rows.length, byAxis: group("axis"), bySeverity: group("severity"), byClass: group("class") });
+      out({ slug: flags.slug, carrier: c.carrier, grammar: c.grammar, total: rows.length, byAxis: group("axis"), bySeverity: group("severity"), byClass: group("class") });
     }
     default:
       fail("unknown-subcommand", { object: "findings", subcommand: op });

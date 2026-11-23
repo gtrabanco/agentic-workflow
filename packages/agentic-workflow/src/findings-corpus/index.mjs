@@ -43,6 +43,7 @@ import path from "node:path";
 import process from "node:process";
 
 import { sectionBounds } from "../runner/unit-doc-phases.mjs";
+import { CURRENT_FINDINGS_GRAMMAR, LEDGER_FINDINGS_GRAMMAR, grammarDefect, grammarOf, rowCells } from "../runner/findings-carrier.mjs";
 import { readProvenance } from "../edit/Provenance.mjs";
 
 export const CORPUS_CONTRACT = "findings-corpus@1";
@@ -158,15 +159,6 @@ function cellOf(line) {
   return line.split("|").slice(1, -1).map((cell) => cell.trim());
 }
 
-/** Split a table row into trimmed cells, honouring escaped pipes (`\\|`). */
-function rowCells(line) {
-  return line
-    .replace(/\\\|/g, "\\u0000")
-    .split("|")
-    .slice(1, -1)
-    .map((cell) => cell.replace(/\\u0000/g, "|").trim());
-}
-
 /** Column map from a table's own header row: `<normalized name> -> index`. */
 function columnsOf(headerLine) {
   const cells = rowCells(headerLine);
@@ -195,6 +187,7 @@ function columnsOf(headerLine) {
 export function parseLegacyLedger(text, { file, unit }) {
   const findings = [];
   const unparsable = [];
+  const defects = [];
   let reviewMarks = 0;
   let verifiedMarks = 0;
   let malformed = 0;
@@ -205,6 +198,12 @@ export function parseLegacyLedger(text, { file, unit }) {
     const cycleMatch = line.match(CYCLE_LINE);
     if (cycleMatch) cycle = Number(cycleMatch[1]);
     if (!line.startsWith("|")) return;
+    // Which grammar the table declares is its header's fact, and a side ledger
+    // holding the doc carrier's header is a typed defect (issue #702 S4).
+    if (/^\|\s*id\s*\|/i.test(line)) {
+      const defect = grammarDefect(grammarOf(rowCells(line)), LEDGER_FINDINGS_GRAMMAR);
+      if (defect) defects.push({ ...defect, file, unit });
+    }
     if (MARK_REVIEW.test(line)) {
       reviewMarks += 1;
       return;
@@ -253,7 +252,7 @@ export function parseLegacyLedger(text, { file, unit }) {
     unparsable.push({ file, line: 1, reason: `findings table has no parseable F row (${malformed} malformed)` });
   }
 
-  return { findings, reviewMarks, verifiedMarks, unparsable };
+  return { findings, reviewMarks, verifiedMarks, unparsable, defects };
 }
 
 /** Parse a migrated unit doc: its `## Findings` table and its `## Log` marks. */
@@ -262,6 +261,7 @@ export function parseMigratedCarrier(text, { file, unit }) {
   const lines = source.split("\n");
   const findings = [];
   const unparsable = [];
+  const defects = [];
   const foldByFinding = new Map();
   let reviewMarks = 0;
   let verifiedMarks = 0;
@@ -287,6 +287,11 @@ export function parseMigratedCarrier(text, { file, unit }) {
     }
     if (columns === null) {
       columns = columnsOf(line);
+      // The header names the grammar; a table carrying another carrier's header
+      // (or the one before the mandatory `impact` cell) is reported, never read
+      // as if it were current (issue #702 S4). Its rows still enter the corpus.
+      const defect = grammarDefect(grammarOf(rowCells(line)), CURRENT_FINDINGS_GRAMMAR);
+      if (defect) defects.push({ ...defect, file, unit });
       continue;
     }
     if (TABLE_SEPARATOR.test(line)) continue;
@@ -350,7 +355,7 @@ export function parseMigratedCarrier(text, { file, unit }) {
     }
   }
 
-  return { findings, reviewMarks, verifiedMarks, unparsable, migratedRows: findings.length };
+  return { findings, reviewMarks, verifiedMarks, unparsable, defects, migratedRows: findings.length };
 }
 
 /** The unit directories that carry bytes this reader understands. */
@@ -543,6 +548,7 @@ export function buildCorpus(root, { resolveFold = () => null, minRecurrence = DE
   const units = discoverUnits(root);
   const findings = [];
   const unparsable = [];
+  const defects = [];
   const marksByUnit = new Map();
   let legacyLedgers = 0;
   let migratedCarriers = 0;
@@ -559,6 +565,7 @@ export function buildCorpus(root, { resolveFold = () => null, minRecurrence = DE
       reviewMarks += parsed.reviewMarks;
       marksByUnit.set(entry.unit, (marksByUnit.get(entry.unit) || 0) + parsed.reviewMarks);
       unparsable.push(...parsed.unparsable);
+      defects.push(...(parsed.defects ?? []));
     }
     if (entry.hasSpec) {
       const text = fs.readFileSync(entry.spec, "utf8");
@@ -574,6 +581,7 @@ export function buildCorpus(root, { resolveFold = () => null, minRecurrence = DE
         reviewMarks += parsed.reviewMarks;
         marksByUnit.set(entry.unit, (marksByUnit.get(entry.unit) || 0) + parsed.reviewMarks);
         unparsable.push(...parsed.unparsable);
+        defects.push(...(parsed.defects ?? []));
       }
     }
   }
@@ -631,6 +639,7 @@ export function buildCorpus(root, { resolveFold = () => null, minRecurrence = DE
     units,
     findings: rows,
     unparsable,
+    defects,
     legacyLedgers,
     migratedCarriers,
     reviewMarks,
@@ -656,6 +665,7 @@ function block(corpus) {
     `legacy-ledgers | ${corpus.legacyLedgers}`,
     `migrated-carriers | ${corpus.migratedCarriers}`,
     `findings | ${corpus.findings.length}`,
+    `carrier-defects | ${corpus.defects.length}`,
     `review-marks | ${corpus.reviewMarks}`,
     `fold-annotated | ${corpus.foldAnnotated}`,
     `admitted | ${corpus.admitted.length}`,
@@ -668,6 +678,10 @@ function block(corpus) {
     `severity-band — material · n ${corpus.findings.filter((row) => row.band === "material").length}`,
     `severity-band — below-floor · n ${corpus.findings.filter((row) => row.band === "below-floor").length}`,
   ];
+
+  for (const defect of corpus.defects) {
+    lines.push(`carrier-defect — ${defect.file} · ${defect.code} · holds ${defect.grammar ?? "no published grammar"}${defect.expected === undefined ? "" : ` · expected ${defect.expected}`}`);
+  }
 
   for (const row of corpus.classes) {
     lines.push(

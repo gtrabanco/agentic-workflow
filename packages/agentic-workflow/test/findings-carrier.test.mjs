@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { FINDINGS_GRAMMARS, carrierDefects, grammarOf } from "../src/runner/findings-carrier.mjs";
+import { FINDINGS_GRAMMARS, readCarrier, grammarOf } from "../src/runner/findings-carrier.mjs";
 import { findingsRows, openRows, isOpen, routeOfRow } from "../src/runner/unit-route.mjs";
 
 const BIN = fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url));
@@ -58,7 +58,7 @@ test("a ledger-grammar doc table keeps its folded cell and reports the grammar",
   assert.equal(isOpen(rows[0].folded), true);
   assert.equal(isOpen(rows[1].folded), false, "a folded ledger row is closed, never routed again");
 
-  const report = carrierDefects({ docText: doc });
+  const report = readCarrier({ docText: doc });
   assert.equal(report.carrier, "doc");
   assert.equal(report.grammar, "findings-ledger@1");
   assert.deepEqual(report.defects.map((defect) => defect.code), ["wrong-carrier-grammar"]);
@@ -69,13 +69,13 @@ test("a superseded six-column doc table is read, and reported as superseded", ()
   const rows = findingsRows(doc);
   assert.equal(rows[0].file, "src/a.mjs:3", "the target cell is read where its header puts it");
   assert.equal(rows[0].severity, "WARNING");
-  const report = carrierDefects({ docText: doc });
+  const report = readCarrier({ docText: doc });
   assert.equal(report.grammar, "findings-table@0");
   assert.deepEqual(report.defects.map((defect) => defect.code), ["superseded-grammar"]);
 });
 
 test("two carriers are one defect naming both paths, never a silent preference", () => {
-  const report = carrierDefects({
+  const report = readCarrier({
     docText: DOC(TABLE_V1, ["| F1 | src/a.mjs:3 | code | WARNING | blocking | source | fold |"]),
     ledgerText: `# Findings\n\n${TABLE_LEDGER}\n| F1 | src/a.mjs:3 | code | WARNING | source | fold | no |\n`,
   });
@@ -103,6 +103,26 @@ test("the sensor surfaces a carrier defect as an observation", (t) => {
     writeFileSync(abs, text);
   };
   write("docs/fix/77-toy/SPEC.md", DOC(TABLE_LEDGER, ["| F1 | src/a.mjs:3 | code | WARNING | source | fold | no |"]));
+  // The index registers the fix unit: the sensor projects the units the roadmap
+  // names, so a fixture without its row would never reach the carrier at all.
+  write(
+    "docs/ROADMAP.md",
+    [
+      "# Roadmap",
+      "",
+      "## Features",
+      "",
+      "| NN | Slug | Status | Depends on | Summary |",
+      "|----|------|--------|------------|---------|",
+      "",
+      "## Fixes",
+      "",
+      "| Issue | Topic | Status | Notes |",
+      "|---|---|---|---|",
+      "| [#77](https://github.com/o/r/issues/77) | toy | pending | — |",
+      "",
+    ].join("\n"),
+  );
   write("NOTES.md", "prose\n");
   const GIT_ID = ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false"];
   const git = (...args) => execFileSync("git", [...GIT_ID, ...args], { cwd: root, encoding: "utf8" }).trim();
@@ -112,7 +132,7 @@ test("the sensor surfaces a carrier defect as an observation", (t) => {
 
   const envelope = execFileSync(process.execPath, [BIN, "workflow-status", "--json-only"], { cwd: root, encoding: "utf8" });
   const parsed = JSON.parse(envelope);
-  const observations = parsed.workflow_observations ?? [];
+  const observations = parsed.detail?.workflow_observations ?? [];
   assert.ok(
     observations.some((line) => line.includes("docs/fix/77-toy") && line.includes("wrong-carrier-grammar")),
     `the sensor names the carrier it could not read as current:\n${observations.join("\n")}`,

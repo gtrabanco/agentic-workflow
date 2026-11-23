@@ -11,6 +11,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import process from "node:process";
 import { openFence, closesFence, sectionBounds } from "./unit-doc-phases.mjs";
+import { parseCarrierBody, renderFindingsTable } from "./findings-carrier.mjs";
 
 /**
  * The one line every ceremony failure carries (issue #603).
@@ -297,23 +298,16 @@ export function readSection(md, token) {
   return lines.slice(sec.bodyStart, end).join("\n").replace(/^\n+|\s+$/g, "");
 }
 
-/** Parse the `## Findings` seven-column table (findings-table@1) → [{id,target,axis,severity,impact,class,route}]. */
+/** Parse the `## Findings` seven-column table (`findings-table@1`) → [{id,target,axis,severity,impact,class,route}] — through the carrier's one grammar owner, which maps every cell by the table's own header. */
 export function parseFindings(md) {
   const body = readSection(md, "findings");
   if (body == null) return [];
-  return body.split("\n")
-    .filter((l) => /^\| F\d+/.test(l.trim()))
-    .map((l) => {
-      const c = l.split("|").map((s) => s.trim());
-      return { id: c[1], target: c[2], axis: c[3], severity: c[4], impact: c[5], class: c[6], route: c[7] };
-    });
+  return parseCarrierBody(body).rows;
 }
 
-/** Render the findings table with the given rows (header + separator preserved). */
+/** Render the findings table with the given rows (header + separator preserved) — the carrier's own renderer. */
 export function renderFindings(rows) {
-  const head = "| id | S# / file:line | axis | severity | impact | class | route |\n|---|---|---|---|---|---|---|";
-  const body = rows.map((r) => `| ${r.id} | ${r.target} | ${r.axis} | ${r.severity} | ${r.impact} | ${r.class} | ${r.route} |`).join("\n");
-  return rows.length ? `${head}\n${body}` : head;
+  return renderFindingsTable(rows);
 }
 
 const LOG_KINDS = ["L", "E", "G", "F", "D", "P", "R", "V"];
@@ -337,10 +331,10 @@ export function parseLog(md) {
   return marks;
 }
 
-/** Append a log line `- **<kind><next>** — <YYYY-MM-DD>, <text>` to `## Log`. Returns the new markdown. */
-export function appendLogLine(md, kind, text, today) {
+/** Append a log line `- **<kind><next>** — <YYYY-MM-DD>, <text>` to `## Log`. Returns the new markdown. An explicit `number` is the caller's own identity — a fold line is numbered with the finding it closed (issue #702), never with an independent counter. */
+export function appendLogLine(md, kind, text, today, number) {
   const marks = parseLog(md);
-  const next = marks.filter((m) => m.kind === kind).reduce((a, m) => Math.max(a, m.n), 0) + 1;
+  const next = Number.isInteger(number) ? number : marks.filter((m) => m.kind === kind).reduce((a, m) => Math.max(a, m.n), 0) + 1;
   const body = readSection(md, "log");
   if (body == null) fail("missing-section", { section: "log" });
   const line = `- **${kind}${next}** — ${today}, ${text}`;

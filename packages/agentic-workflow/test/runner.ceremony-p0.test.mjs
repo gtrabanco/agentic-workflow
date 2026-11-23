@@ -141,10 +141,16 @@ test("passive: add records the passive readback, and an unknown op refuses", (t)
 
 test("a legacy side ledger is read, never rewritten (the annotator stays the only writer)", (t) => {
   const { root, write } = makeRepo(t);
-  write("docs/fix/77-toy/review-findings.md", "# Findings\n\n| id | file | route | folded |\n| --- | --- | --- | --- |\n| F1 | a.mjs | fold | no |\n");
+  // A legacy unit is one opened before the carrier collapse (#308): its doc
+  // carries no `## Findings` section, so the side ledger is the one carrier.
+  // A doc holding both is the `dual-findings-carrier` defect issue #702 S4 makes
+  // loud, and that case lives in `runner.ceremony-findings.test.mjs`.
+  write("docs/fix/77-toy/SPEC.md", "# 77-toy\n\n## Log\n\n- **L1** — 2026-11-23, request\n\n## Next\n\nnone\n");
+  write("docs/fix/77-toy/review-findings.md", "# Findings\n\n| id | file:line | axis | severity | class | route | folded |\n| --- | --- | --- | --- | --- | --- | --- |\n| F1 | a.mjs:3 | code | high | fix-now | fold | no |\n");
   const before = readFileSync(join(root, "docs/fix/77-toy/review-findings.md"), "utf8");
   const read = ceremony(root, "findings", "read", "--slug", "77-toy");
   assert.equal(read.code, 0, "a legacy carrier is readable");
+  assert.equal(json(read).carrier, "legacy");
   assert.equal(readFileSync(join(root, "docs/fix/77-toy/review-findings.md"), "utf8"), before, "and is never written by a ceremony op");
 });
 

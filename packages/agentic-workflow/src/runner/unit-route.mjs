@@ -30,6 +30,7 @@ import process from "node:process";
 import { UNIT_DOC_SECTION_SHAPES } from "@gtrabanco/agentic-workflow-schema";
 
 import { parseUnitDocPhases, loggedPhases, parseLog, parseSpecs, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
+import { findingsSectionBody, parseCarrierBody } from "./findings-carrier.mjs";
 import { readCeremonyProfile, charterSectionOf, CEREMONY_PROFILE_CONTRACT_ID, CEREMONY_REVIEW_SURFACES } from "./ceremony-profile.mjs";
 import { recordedTier } from "./ceremony/tier.mjs";
 import { batonOf } from "../relay/Packet.mjs";
@@ -182,29 +183,40 @@ export function openRows(ledgerText) {
 
 /**
  * The OPEN rows of a migrated unit doc's `## Findings` section (#308). A folded
- * row leaves that table for a `## Log` line, so every row it carries is open by
- * definition and has no `folded` cell — the shape is normalized to the legacy
+ * row leaves that table for a `## Log` line — in the current grammar. The cells
+ * are mapped by the table's own header (one grammar owner,
+ * `findings-carrier.mjs`), never by position: a doc table carrying the ledger's
+ * shape answered `impact = class, class = route, route = folded` under the old
+ * positional read (issue #702 S4). The shape is normalized to the legacy
  * ledger's record so `routeOfRow` and the read set work on either carrier.
  *
  * @param {string} doc — the full unit doc text.
- * @returns {Array<{id, file, axis, severity, klass, route, folded}>}
+ * @returns {Array<{id, file, axis, severity, impact, klass, route, folded, carrier, grammar}>}
  */
 export function findingsRows(doc) {
-  const body = sectionText(doc, "Findings");
+  const body = findingsSectionBody(doc);
   if (body === null) return [];
-  const rows = [];
-  for (const line of body.split("\n")) {
-    if (!line.startsWith("|")) continue;
-    const cells = cellsOf(line).slice(1, -1);
-    if (cells.length < 7) continue;
-    const [id, target, axis, severity, impact, klass] = cells;
-    const route = cells.slice(6).join(" | ");
-    if (/^id$/i.test(id) || isSeparator(id) || isMarkRow(id)) continue;
-    // `carrier: "doc"` selects the collapsed carrier's column grammar in
-    // `routeOfRow`; the legacy `openRows` rows carry no marker and keep prose matching.
-    rows.push({ id, file: target, axis, severity, impact, klass, route, folded: "no", carrier: "doc" });
-  }
-  return rows;
+  const parsed = parseCarrierBody(body);
+  return parsed.rows
+    .filter((row) => row.id !== undefined && !/^id$/i.test(row.id) && !isSeparator(row.id) && !isMarkRow(row.id))
+    .map((row) => ({
+      id: row.id,
+      file: row.target ?? "",
+      axis: row.axis ?? "",
+      severity: row.severity ?? "",
+      impact: row.impact ?? "",
+      klass: row.class ?? "",
+      route: row.route ?? "",
+      // The current grammars publish no `folded` cell: a row in the table is open
+      // by construction. A ledger-shaped table in a doc keeps its own cell.
+      folded: row.folded ?? "no",
+      // `carrier: "doc"` selects the collapsed carrier's column grammar in
+      // `routeOfRow`; the legacy `openRows` rows carry no marker and keep prose
+      // matching. `grammar` says which header answered, so a table in the other
+      // shape routes by that shape's own columns instead of the doc's.
+      carrier: "doc",
+      grammar: parsed.grammar,
+    }));
 }
 
 /**
@@ -234,7 +246,11 @@ const DOC_DECISION_ROUTE = /^(?:decision[- ]required|surface (the )?decision|nee
 export function routeOfRow(row) {
   const klass = String(row.klass ?? "");
   const route = String(row.route ?? "");
-  if (row.carrier === "doc") {
+  // A doc-carrier row in a `findings-table@*` grammar names its owner and its
+  // destination; a doc table in the ledger's shape carries the ledger's columns
+  // and keeps the ledger's matchers (issue #702 S4).
+  const docGrammar = row.grammar === undefined || String(row.grammar).startsWith("findings-table@");
+  if (row.carrier === "doc" && docGrammar) {
     // Both collapsed-carrier columns are closed vocabularies: `class` names the
     // owner that repairs the row, `route` names where the row goes.
     if (DOC_PLAN_ROUTE.test(route)) return "replan";

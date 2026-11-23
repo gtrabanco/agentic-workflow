@@ -227,7 +227,7 @@ test("O8 the legacy side ledger stays readable and is never rewritten", (t) => {
   assert.equal(json(read).carrier, "legacy");
   assert.equal(json(read).grammar, "findings-ledger@1");
   assert.deepEqual(json(read).defects, []);
-  assert.deepEqual(json(read).findings.map((row) => row.id), ["F1"], "a folded legacy row is closed, never an open finding");
+  assert.deepEqual(json(read).findings.map((row) => [row.id, row.folded]), [["F1", "no"], ["F2", "yes"]], "the raw carrier answers both rows with their own folded cell — the open-row filter is the router's, not the carrier's");
   const append = run(root, "findings", "append", "--slug", "77-toy", "--file", "src/c.mjs", "--line", "3", "--axis", "code", "--severity", "WARNING", "--impact", "blocking", "--class", "source", "--route", "fold");
   assert.equal(append.code, 1);
   assert.equal(json(append).error, "legacy-carrier-readonly");
