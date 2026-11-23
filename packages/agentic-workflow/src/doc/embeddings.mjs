@@ -251,6 +251,10 @@ export async function embeddingStats(root, model = null) {
  * `pacing` (a partial merged over the resolved policy), `maxRequestChars` (the
  * request budget), `sleep`, `now` and `random`; production resolves the policy
  * and the budget from the config + environment and sleeps for real.
+ *
+ * `onProgress(done, total)` — optional callback invoked after each batch
+ * completes and at the end with the final totals, so callers can report
+ * progress over the wall-clock duration of the embed pass.
  */
 export async function embedPendingChunks(root, provider, opts = {}) {
   const config = loadConfig(root);
@@ -261,6 +265,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
   const sleep = opts.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const now = opts.now ?? (() => Date.now());
   const random = opts.random ?? Math.random;
+  const onProgress = typeof opts.onProgress === "function" ? opts.onProgress : null;
 
   const { db } = await openDatabase(storePath(root));
   try {
@@ -280,9 +285,11 @@ export async function embedPendingChunks(root, provider, opts = {}) {
       .all();
     if (pending.length === 0) {
       pin();
+      if (onProgress) onProgress(0, 0);
       return { embedded: 0, calls: 0, model: provider.model, rejected: [] };
     }
 
+    const totalPending = pending.length;
     let calls = 0;
     let embedded = 0;
     let lastStart = null;
@@ -354,6 +361,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
         );
         embedded += 1;
       }
+      if (onProgress) onProgress(embedded, totalPending);
     };
 
     let currentPath = null;
@@ -374,6 +382,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     await flush();
 
     pin();
+    if (onProgress) onProgress(embedded, totalPending);
     return { embedded, calls, model: provider.model, rejected };
   } finally {
     db.close();

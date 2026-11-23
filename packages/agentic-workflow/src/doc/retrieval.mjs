@@ -77,9 +77,10 @@ function rejectionRecord(rejected) {
  * failure whose ladder is exhausted still answers
  * `unavailable-embeddings-provider-down` and keeps the run `ok: true` (AC17);
  * a rejected request answers `embeddings-request-rejected` and keeps the count of
- * what did land.
+ * what did land. `onProgress(done, total)` is an optional callback the caller
+ * uses to report progress over the wall-clock duration of the embed pass.
  */
-async function embedPass(root, { embedCfg, embedder, declareKeywordOnly }) {
+async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgress }) {
   const provider = embedder !== undefined ? embedder : embedCfg.configured ? makeOpenAIProvider(embedCfg) : null;
   if (provider === null) {
     // AC17's root: keyword-only is a declared state, never a silent one. A
@@ -89,7 +90,7 @@ async function embedPass(root, { embedCfg, embedder, declareKeywordOnly }) {
     return { embedded: 0, degradations: declareKeywordOnly ? ["unavailable-embeddings-not-configured"] : [], rejected: null };
   }
   try {
-    const result = await embedPendingChunks(root, provider);
+    const result = await embedPendingChunks(root, provider, { onProgress });
     if (result.skipped === true) {
       // Model mismatch: keep the frozen key and declare the cause (AC18, D3).
       return { embedded: 0, degradations: ["embeddings-model-mismatch"], rejected: null };
@@ -148,6 +149,9 @@ export async function runDocOp(grammar, ctx = {}) {
         embedCfg,
         embedder: ctx.embedder,
         declareKeywordOnly: grammar.op === "rebuild",
+        onProgress: grammar.op === "sync"
+          ? (done, total) => feedback.progress({ done, total, unit: "chunks" })
+          : undefined,
       }),
     );
     feedback.detail(
