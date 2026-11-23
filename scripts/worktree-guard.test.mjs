@@ -318,3 +318,31 @@ test("--prune under a deny policy reclaims nothing and reports the refusal", () 
     assert.ok(registered.stdout.includes("vanished-wt"), "the refusal reached git: nothing was pruned");
   });
 });
+
+test("--prune under ask with no answer on stdin refuses instead of hanging", () => {
+  withRepo(({ root, git }) => {
+    git(["config", "aw.worktreePrunePolicy", "ask"]);
+    const vanished = path.join(root, "vanished-wt");
+    git(["worktree", "add", "-b", "feat/vanished", vanished]);
+    fs.rmSync(vanished, { recursive: true, force: true });
+
+    // The gate the guard spawns must reach the operator's answer channel and
+    // refuse when none arrives (external verify B3) — the 10 s bound turns a
+    // hang into a red assertion instead of a wedged suite.
+    const result = spawnSync(
+      process.execPath,
+      [GUARD, "--repo", root, "--home", path.join(root, "wts"), "--prune"],
+      { encoding: "utf8", timeout: 10_000 },
+    );
+    assert.equal(
+      result.status,
+      1,
+      `exit 1 — the refusal reaches the caller, never a hang (status=${result.status}, signal=${result.signal})`,
+    );
+    assert.match(result.stdout, /FINDING .* — PRUNABLE/);
+    assert.match(result.stdout, /GATE/);
+
+    const registered = spawnSync("git", ["worktree", "list", "--porcelain"], { cwd: root, encoding: "utf8" });
+    assert.ok(registered.stdout.includes("vanished-wt"), "the refusal left the entry for the operator");
+  });
+});
