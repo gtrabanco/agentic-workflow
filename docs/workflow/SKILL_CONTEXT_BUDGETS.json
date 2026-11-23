@@ -50,11 +50,12 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 221,
+        "machineLines": 222,
         "blockLines": {
           "inviolable-rules@1": 18
         },
         "sources": {
+          "issue #696 (runner mapping delivery, 2026-11-22)": "issue #696 (runner mapping delivery, 2026-11-22): one `normative-surfaces@1` row (`runner-mapping`, bound to the block `RUNNER.md` publishes and the pi bundle injects) joins the machine region, so the guide measures 681 lines / 222 machine / 459 prose / 14,421 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 221 -> 222 (the exact boundary the row spends, the fix #571 precedent) and `linesMax` (681) is spent exactly, so it is not re-based. `estimateMax` (15,798) and `proseLinesMax` (475) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #676 (journal errata path, 2026-11-21)": "one `normative-surfaces@1` row (`journal-errata-marker`, bound to the `JOURNAL_ERRATA_MARKERS` export `packages/agentic-workflow-schema/src/journal.ts` publishes) joins the machine region, so the guide measures 680 lines / 221 machine / 459 prose / 14,396 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 220 -> 221 (the exact boundary the row spends, the fix #571 precedent). `linesMax` (681), `proseLinesMax` (475) and `estimateMax` (15,798) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #680 (the relay close-out owns the receipt ladder, 2026-11-21)": "one `normative-surfaces@1` row (`relay-closeout-grammar`, bound to the block `RELAY.md` publishes for the `closeout` mode) joins the machine region, so the guide measures 679 lines / 220 machine / 459 prose / 14,361 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 219 -> 220 (the exact boundary the row spends, the fix #571 precedent). `estimateMax` re-bases to exact ceil(14,361 x 1.10) = 15,798 — the previous ceiling sat at zero headroom by the #668 batch's own note, and the row is the next guide addition it predicted. `linesMax` (681) and `proseLinesMax` (475) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #668 correction batch (external verify, 2026-11-21)": "two `rendered-facts@1` rows pin `docs/workflow/REPLICATE.md`'s enumeration labels (`**User-facing (14):**` and `**Internal (15):**` — the cut sweep's \"2 enumerations\" that the Impact table claimed pinned but no row carried), so the machine region moves 217 -> 219 lines and the guide measures 675 lines / 219 machine / 456 prose / 14,285 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned to the exact boundary the tree measures (the fix #571 precedent); `linesMax` (681), `proseLinesMax` (475) and `estimateMax` (14,285) are not re-based — the estimate now sits at its ceiling with zero headroom, so the next guide addition re-bases it with its own note. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
@@ -442,14 +443,15 @@
       }
     },
     "runner-contract": {
-      "referenceEstimateMax": 3991,
+      "referenceEstimateMax": 4384,
       "mainSources": {
         "issue #611 (dogfooding vehicle)": "first per-skill ceiling for this skill: SKILL.md is unchanged by issue #611 (it stays on the flat default ceiling 2800, no re-base claimed), and only the reference ceiling is declared because references/RUNNER.md now carries the authoring-default pointer. Measured at the change: SKILL.md 673 est / 62 lines, RUNNER.md 2212 est / 78 lines."
       },
       "referenceSources": {
         "issue #611 (dogfooding vehicle)": "references/RUNNER.md's override section gains one pointer bullet: this repository's authoring checkout arms the override by default through scripts/setup-env.mjs, and the tool doctor's dogfooding-vehicle row reports the state (owner of the detail: docs/workflow/SETUP.md). The value shape and the consumer list stay in RUNNER.md, so no rule moved. Measured at the change: RUNNER.md 2212 est / 78 lines, ceiling ceil(2212 x 1.10) = 2434; growth source = issue #611's pointer.",
         "issue #553 (universal CLI coverage)": "references/RUNNER.md carries one row per migrated subcommand: the runner table is the closed set a skill cites, so every command this unit moves into the crate adds one row. Measured 2864 est / 96 lines at this commit, with 10 of the migrated commands documented; the ceiling is ceil(2864 x 1.10) = 3151 by the manifest's own arithmetic, and it is re-based once more when the sweep completes.",
-        "issue #553 (universal CLI coverage) — final re-base at the sweep's close": "references/RUNNER.md now carries one row per command the sweep migrated (25 new rows across P3-P7). Measured 3628 est at the closed sweep; the ceiling is ceil(3628 x 1.10) = 3991, the manifest's own arithmetic, and it is the last re-base this unit makes."
+        "issue #553 (universal CLI coverage) — final re-base at the sweep's close": "references/RUNNER.md now carries one row per command the sweep migrated (25 new rows across P3-P7). Measured 3628 est at the closed sweep; the ceiling is ceil(3628 x 1.10) = 3991, the manifest's own arithmetic, and it is the last re-base this unit makes.",
+        "issue #696 (runner mapping delivery, 2026-11-22)": "references/RUNNER.md gains the `runner-mapping@1` canon block in `## In a pi session` — the one owner of the mapping the pi bundle injects into every staged SKILL.md that cites the symbolic form — and its prose stops restating what the block says. Measured at the change: RUNNER.md 3,985 est / 209 lines, so the ceiling re-bases to ceil(3985 x 1.10) = 4,384 by the manifest own arithmetic; the block itself is declared at 132 est (ceil(120 x 1.10)) in `packages/pi-agentic-workflow/scripts/bundle-skills.mjs`. No emitter exists for the skills section, so this row is a hand edit recorded here rather than a silent one."
       }
     }
   },

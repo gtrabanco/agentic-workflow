@@ -114,17 +114,27 @@ that carries it. The next canary cut makes the branch tree coherent again.
 
 ## In a pi session
 
+```text
+runner-mapping@1
+field | value
+in-pi | in a pi session `runner <subcommand>` is the `agentic_workflow_run` tool (or its typed twin), never a shell command — no `runner` executable exists to call
+discovery | the tools are deferred: surface them with `tool_search` over the `agentic-workflow` namespace, or call one by name from a codemode script
+outside-pi | outside a pi session the launcher and pin come from the standalone `runner-contract/references/RUNNER.md`
+```
+
+This block is the mapping's one owner (issue #696). A pi session that never opens
+this file still gets it: `packages/pi-agentic-workflow/scripts/bundle-skills.mjs`
+injects it after the frontmatter of every staged `SKILL.md` that cites the
+symbolic form, and the pi extension's bash seam answers a literal `runner …`
+shell call with the same bytes. Nothing else owns the wording — an edit here
+reaches the bundle at the next build, and a hand-edited copy fails its suite.
+
 Pi resolves the runner for you, so nothing here asks a session to pick one. The
 crate ships as this package's own dependency and the extension spawns its bin
 under the runtime that launched pi (`createRequire`, never a download); the
-resolver above is the fallback for a tree where that dependency is missing.
-
-The package's workflow tools are **deferred** (`tool_search` finds the
-`agentic-workflow` namespace), and `agentic_workflow_run` runs any subcommand
-with its arguments in the session's project, returning stdout, stderr and the
-exit code. In a pi session `runner <subcommand>` means that tool — or the typed
-tool for the commands that carry one. The closed set exists for the standalone
-skills and for code without an installed crate.
+resolver above is the fallback for a tree where that dependency is missing. The
+closed set exists for the standalone skills and for code without an installed
+crate.
 
 ## Subcommands
 
