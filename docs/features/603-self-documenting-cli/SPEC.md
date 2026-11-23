@@ -102,8 +102,15 @@ quoted verbatim from its `## In scope` and `## Acceptance criteria` sections.
 - **AC-S8** — an unknown subcommand exits 2 with a candidate suggestion and
   never prints a stack; proven by a suite case asserting the absence of
   `at ` frames in stderr.
-- **AC-S8b** — the gates are green: root suite, crate suite, `check-skill-context`,
-  and a `.changeset/` entry exists; proven by the P9 gate run.
+- **AC-S8b** — no gate is red **by this change's hand**: the crate suite,
+  `check-skill-context`, `normative-drift` and a `.changeset/` entry run green,
+  and the root suite's failure set is exactly the two reds reproduced at the
+  base commit (`roadmap-settle`'s row-98 drift and `unit-doc-contract`'s train
+  parity — both in `known-issues.md`); `bun scripts/local-gate.mjs` fails at
+  `workspace-install` identically at base (the pi pin train, recorded).
+  Amended 2026-11-23 by the correction batch over `external-verify.md` B6: the
+  original "gates are green" wording was unmeetable for reasons that predate
+  this unit; proven by the `## Log` G8–G10 runs.
 
 ## Impact
 
@@ -122,9 +129,11 @@ quoted verbatim from its `## In scope` and `## Acceptance criteria` sections.
 - **`packages/pi-agentic-workflow/src/extension/workflow-tools.ts`** — the
   namespace `instructions` (already model-facing, already deferred) gains the
   family index. Zero new tool, zero standing cost (D4).
-- **`skills/<new>/`** — a new skill directory, its budget row in
-  `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, and discoverability through the
-  skills CLI.
+- **`skills/<new>/`** — a new skill directory, its coverage under
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json`'s declared defaults (no override
+  row — the row schema carries ceilings, so the measurement and its growth
+  source are recorded in O8's evidence instead; corrected 2026-11-23, A7), and
+  discoverability through the skills CLI.
 - **`.claude-plugin/plugin.json`** `skills` array — alphabetical insertion of
   the new skill (machine surface, `manifest skillAdd`).
 - **Nothing stops being true**: no command, flag, receipt shape or exit code is
@@ -206,6 +215,18 @@ Strictly additive unit; the computed inventory is the anti-divergence receipt.
   isolated linker in this worktree — **does not affect** the unit; resolved with
   `bun install --linker=hoisted` (E1), which is an environment fact, not a code
   change.
+- The root suite carries two reds **reproduced at the base commit**:
+  `roadmap-settle` (row 98 slug-mismatch — folder `deterministic-tool-doctor`,
+  row `finding-severity-ladder`; a known main red since fix/690's log) and
+  `unit-doc-contract` (schema `4.10.0` vs crate train `4.10.1` from `0e07ca804`).
+  **Affects AC-S8b only**; both fail identically at `7c395d880`, recorded with
+  their runs in `known-issues.md`. Not repaired here: row 98's renumbering
+  belongs to its unit, the train parity to the release cut.
+- `bun scripts/local-gate.mjs` cannot pass on **any** checkout: its
+  `workspace-install` step runs `bun install --frozen-lockfile`, whose pi
+  `prepare` compiles against the published `4.10.0` registry copy and fails —
+  identically at base (G7, re-run G10). The pin-train repair belongs to the
+  release unit; recorded rather than repaired here, same scope as D3.
 
 ## Tasks
 
@@ -231,7 +252,8 @@ Strictly additive unit; the computed inventory is the anti-divergence receipt.
   (Implements: S7)
   - Relevant files: packages/agentic-workflow/test/cli.surface.test.mjs
 - P6 — The carrier usage skill: `SKILL.md` index + `references/<family>.md`
-  recipes, budget row, plugin manifest, discoverability (validator: `bun scripts/check-skill-context.mjs` exits 0)
+  recipes, budget coverage under the manifest's defaults, plugin manifest,
+  discoverability (validator: `bun scripts/check-skill-context.mjs` exits 0)
   (Implements: S3, S8)
   - Relevant files: skills/self-documenting-cli/SKILL.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
 - P7 — The pi deferred tools' namespace carries the family index at zero
@@ -239,7 +261,7 @@ Strictly additive unit; the computed inventory is the anti-divergence receipt.
   (Implements: S4)
   - Relevant files: packages/pi-agentic-workflow/src/extension/workflow-tools.ts
 - P8 — Measured before/after re-read cost for the three canonical operations
-  (validator: `rg -c 'roadmap row reconcile' docs/features/603-self-documenting-cli/SPEC.md` matches 3 and the measurement table is present)
+  (validator: `rg -c 'roadmap row reconcile' docs/features/603-self-documenting-cli/SPEC.md` matches 4 and the measurement table is present)
   (Implements: S6)
   - Relevant files: docs/features/603-self-documenting-cli/SPEC.md
 - P9 — Documentation currency, roadmap row, changeset, and the full gate
@@ -324,6 +346,59 @@ Frozen by this unit doc's `## Tasks`; the step list is the nine tasks above.
 - **D5** — 2026-11-23, **strictly additive**. No command, flag, exit code or
   receipt shape is removed; the registry centralizes vocabularies that already
   exist as scattered `ops:` arrays.
+- **D6** — 2026-11-23, **correction batch** over the `EXTERNAL VERIFY` receipt
+  (`external-verify.md`, blockers B1–B8, on head `b8bfeecd2`): every blocker was
+  triaged and repaired in place; advisories A1/A2/A3/A7 were discharged with
+  their artifacts (the P8 validator string, the dispatch-parity and
+  delete-reproducer suite cases, the budget-coverage evidence), A4/A5 stay as
+  other units' base-reproduced reds, A6 was an environment artifact (repaired:
+  a real, gitignored `packages/agentic-workflow/node_modules` directory of
+  symlinks to the hoisted root graph — the same gap made `workflow-status-sensor`,
+  `doc-discipline` and `runner.distribution` fail **identically at base**).
+  Two carve-outs are recorded here rather than hidden: the `forge.md` transport
+  exemption is a reasoned `TRANSPORT_EXEMPT` entry (the five-frictions recipe
+  must name the `gh api` fallback verbatim — that naming *is* its coverage), and
+  the `doc.docops` exact-bytes pin was extended by the one S2-authorized pointer
+  line (the assertion stays exact-equality, never weakened). O11/AC-S8b/O2/O8
+  were amended inline with this reason (the `fix/331` amendment shape); the
+  frozen `S#` quotes were not touched.
+- **E8** — 2026-11-23, **red corpus first** (the receipt's reproducers, run at
+  head `b8bfeecd2` before any repair): `cli.help` 10 pass / 8 fail (the new
+  B1/B2/B8 cases), `cli.surface`'s ceremony-import case red,
+  `pre-execution-quality`'s alphabetical-order case red,
+  `normative-drift` refusing `PORTABLE_PROMPT.md`'s 15 (machine: 16), and the
+  three B5 suites — `forge-read-drift` 8 pass / 1 fail (`forge.md:26`
+  transport-leak), `reading-coverage` 5/1 (seven unrowed files),
+  `review-loop-discipline` crashing on `version: 4.10.1 ≠ 4.10.0`.
+- **G8** — 2026-11-23, `HEAD ef3fdafcd841b7e5baef16f5b6a00d91c3bee044` (correction code head), after the batch: `bun test packages/agentic-workflow/test/cli.help.test.mjs` · 18 pass / 0 fail · `cli.surface.test.mjs` · 12/0 ·
+  `pre-execution-quality.test.mjs` · 2 pass / 1 skip / 0 fail ·
+  `forge-read-drift` 9/0 · `reading-coverage` 6/0 ·
+  `review-loop-discipline` PASS · `normative-drift` 24/0 ·
+  `doc.docops` 37/0 · the three-door byte sweep over all 73 subcommands
+  (`help <sub>` = `<sub> --help` = `<sub> -h`, all exit 0) · 0 mismatches ·
+  `bun scripts/run-root-suite.mjs --dir packages/agentic-workflow/test` ·
+  **80 PASS / 0 FAIL** · `node scripts/run-root-suite.mjs` · **138 PASS /
+  2 FAIL** — exactly the two base-reproduced reds named above ·
+  `bun scripts/check-skill-context.mjs` (+`--documents`) · PASS 31 / PASS 7 ·
+  `bun scripts/skill-lint.mjs` · PASS 0 findings ·
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/features/603-self-documenting-cli/SPEC.md` · PASS ·
+  `docs-generate --check` · PASS.
+- **G9** — 2026-11-23, `HEAD ef3fdafcd841b7e5baef16f5b6a00d91c3bee044`, differential vs base `7c395d880` (scratch clone,
+  36 probes: 13 deterministic successes + 23 refusal/usage paths): every
+  stdout/stderr delta is an S1/S2-requested addition — one `help` pointer, a
+  `Legal operations:` line, a `Did you mean:` pair, the ceremony `help` key, the
+  usage-line `help|` token, or the skills usage line's README-hint swapped for
+  the pointer — **all exit codes identical, all success receipts byte-identical,
+  zero unrequested differences**.
+- **G10** — 2026-11-23, `HEAD ef3fdafcd841b7e5baef16f5b6a00d91c3bee044`, `bun scripts/local-gate.mjs` · FAILED at
+  `workspace-install` (the pi `prepare` against the published `4.10.0` copy —
+  pre-existing, reproduced identically at base); every gate step the run
+  reaches is green (`secret-scan` PASS 0 findings, dependency-pin-gate PASS
+  with its 4.10.0-behind-4.10.1 notice, …).
+- **O2/O8/O11** — 2026-11-23, the three ledger amendments above, each inline
+  with this date and the receipt blocker it discharges (B7/B6/A7+A2); every
+  other obligation row keeps its cut text and its `verified` status with the
+  foreground validator re-run in G8/G9.
 
 ### Measurement (P8)
 
