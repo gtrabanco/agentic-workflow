@@ -43,7 +43,7 @@
         }
       },
       "AGENTS.md": {
-        "linesMax": 681,
+        "linesMax": 682,
         "proseLinesMax": 475,
         "estimateMax": 15798,
         "machineBlocks": [
@@ -51,11 +51,12 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 222,
+        "machineLines": 223,
         "blockLines": {
           "inviolable-rules@1": 18
         },
         "sources": {
+          "issue #603 (self-documenting-cli correction, 2026-11-23)": "one `rendered-facts@1` row pins docs/workflow/PORTABLE_PROMPT.md's internal-steps count (the external-verify receipt's sibling-sweep finding B3), so the guide measures 682 lines / 223 machine with `bun scripts/check-skill-context.mjs --documents`. `machineLines` 222 -> 223 and `linesMax` 681 -> 682 are re-pinned to the exact boundary the row spends (fix #571 precedent); `proseLinesMax` (475) and `estimateMax` (15798) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #696 (runner mapping delivery, 2026-11-22)": "issue #696 (runner mapping delivery, 2026-11-22): one `normative-surfaces@1` row (`runner-mapping`, bound to the block `RUNNER.md` publishes and the pi bundle injects) joins the machine region, so the guide measures 681 lines / 222 machine / 459 prose / 14421 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 221 -> 222 (the exact boundary the row spends, the fix #571 precedent) and `linesMax` (681) is spent exactly, so it is not re-based. `estimateMax` (15798) and `proseLinesMax` (475) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #676 (journal errata path, 2026-11-21)": "one `normative-surfaces@1` row (`journal-errata-marker`, bound to the `JOURNAL_ERRATA_MARKERS` export `packages/agentic-workflow-schema/src/journal.ts` publishes) joins the machine region, so the guide measures 680 lines / 221 machine / 459 prose / 14,396 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 220 -> 221 (the exact boundary the row spends, the fix #571 precedent). `linesMax` (681), `proseLinesMax` (475) and `estimateMax` (15,798) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #680 (the relay close-out owns the receipt ladder, 2026-11-21)": "one `normative-surfaces@1` row (`relay-closeout-grammar`, bound to the block `RELAY.md` publishes for the `closeout` mode) joins the machine region, so the guide measures 679 lines / 220 machine / 459 prose / 14,361 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 219 -> 220 (the exact boundary the row spends, the fix #571 precedent). `estimateMax` re-bases to exact ceil(14,361 x 1.10) = 15,798 — the previous ceiling sat at zero headroom by the #668 batch's own note, and the row is the next guide addition it predicted. `linesMax` (681) and `proseLinesMax` (475) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",

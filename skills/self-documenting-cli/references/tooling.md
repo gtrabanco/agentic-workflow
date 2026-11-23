@@ -24,7 +24,8 @@ elsewhere* and does not work here.
 
 - **`help`** — the grammar. A bare `help` prints the index by family;
   `help <sub>` prints one subcommand's usage, ops and flags; `help --json` prints
-  machine data. **This is the owner of every flag spelling in the crate**, and the
+  machine data, and `help <sub> --json` answers the same envelope with just that
+  row. **This is the owner of every flag spelling in the crate**, and the
   reason this skill does not restate any.
 - **`runner`** — answers which launcher runs this package at its own pin (the
   closed set, the per-candidate attempts, and which one won). Read-only and
