@@ -54,11 +54,20 @@ test("`help` answers, exits 0, and names every dispatched subcommand", () => {
   }
 });
 
-test("`help <sub>` answers for every dispatched subcommand", () => {
+test("`help <sub>` answers for every dispatched subcommand", async () => {
+  const { renderSubcommandHelp } = await import("../src/runner/help.mjs");
   for (const name of SUBCOMMANDS) {
+    const block = renderSubcommandHelp(name);
+    assert.ok(block.length > 0, `the registry renders a block for \`${name}\``);
+    assert.match(block, new RegExp(`agentic-workflow ${name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}`, "u"), `the block for \`${name}\` names the subcommand`);
+  }
+  // The registry renders every block; two real spawns prove the bin actually
+  // serves that block (one editor-service arm, one runner-table arm) without
+  // paying 73 process launches inside a single test's budget.
+  for (const name of ["ceremony", "journal"]) {
     const result = run("help", name);
     assert.equal(result.status, 0, `\`help ${name}\` exits 0`);
-    assert.match(result.stdout, new RegExp(`agentic-workflow ${name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}`, "u"), `\`help ${name}\` names the subcommand`);
+    assert.equal(result.stdout, renderSubcommandHelp(name), `\`help ${name}\` serves the registry's own block`);
   }
 });
 

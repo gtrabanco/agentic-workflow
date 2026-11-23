@@ -12,6 +12,16 @@ import { execFileSync } from "node:child_process";
 import process from "node:process";
 import { openFence, closesFence, sectionBounds } from "./unit-doc-phases.mjs";
 
+/**
+ * The one line every ceremony failure carries (issue #603).
+ *
+ * A closed registry's refusal already names the legal ops and objects; what it
+ * never said was where to read the whole grammar. One pointer, the same bytes on
+ * every failure, so a model that hits `unknown-op` learns the repair without
+ * opening the crate README.
+ */
+const HELP_POINTER = "agentic-workflow help ceremony";
+
 /** Run git in the repo (cwd), args array → trimmed stdout. Throws on failure (stderr captured, never echoed). */
 export function git(args, cwd = process.cwd()) {
   return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
@@ -40,7 +50,7 @@ export function out(obj) {
 
 /** Usage error (bad flags, unknown op, missing slug) → JSON on stdout, exit 1 (S6: output is always JSON on stdout). */
 export function fail(error, extra = {}) {
-  process.stdout.write(JSON.stringify({ error, ...extra }, null, 2) + "\n");
+  process.stdout.write(JSON.stringify({ error, ...extra, help: HELP_POINTER }, null, 2) + "\n");
   process.exit(1);
 }
 

@@ -179,6 +179,7 @@ import {
 } from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
 import { isRunnerCommand, runRunnerCommand } from "../src/runner/cli.mjs";
+import { renderHelpIndex, renderSubcommandHelp, helpEnvelope, suggestSubcommands, helpPointer, ownsItsHelp, HELP_REGISTRY } from "../src/runner/help.mjs";
 import { run as runRunnerService } from "../src/runner/runner.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
 import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
@@ -239,6 +240,22 @@ function parseArgs(args) {
 function refuse(reason) {
   process.stderr.write(`EDIT REFUSAL — ${reason}\n`);
   process.exit(2);
+}
+
+/**
+ * The repair a closed-world refusal gained (issue #603).
+ *
+ * The refusal's exit code and prefix are published and pinned by
+ * `test/runner.dispatch.test.mjs`, so a mistyped subcommand cannot be renumbered
+ * to exit 1. What it *can* do — and now does — is name the nearest legal
+ * candidate it actually meant and one line pointing at that command's own help,
+ * both on the same stderr stream. A candidate is a repair; a bare refusal is a
+ * dead end the next session re-derives.
+ */
+function suggestionSuffix(command) {
+  const candidates = suggestSubcommands(command);
+  if (candidates.length === 0) return `\n${helpPointer()}`;
+  return `\nDid you mean: ${candidates.join(", ")}?\n${helpPointer(candidates[0])}`;
 }
 
 /** This crate's own version, read once and only when a refusal needs it. */
@@ -443,6 +460,7 @@ function findUpIndex(docPath, relativeIndex) {
 
 function journalRefuse(reason) {
   process.stderr.write(`JOURNAL REFUSAL — ${reason}\n`);
+  process.stderr.write(`${helpPointer("journal")}\n`);
   process.exit(2);
 }
 
@@ -651,13 +669,45 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 const command = argv[0];
 if (!command) {
   console.error(
-    "usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...\n" +
+    "usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|help|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...\n" +
       "       (bin: agentic-workflow · pin: skills/runner-contract/references/RUNNER.md · the scope-less `npx agentic-workflow` is a 0.0.0 placeholder, never this package)",
   );
   process.exit(1);
 }
 
 const restArgs = argv.slice(1);
+
+// `help` is the CLI's own grammar (issue #603): it answers from one registry the
+// dispatch tables and the refusal below both read, so the surface never has to
+// be re-learned from the crate README. `--help`/`-h` at the top level are the
+// same door — a person who types them is asking the identical question.
+if (command === "help" || command === "--help" || command === "-h") {
+  const target = restArgs.find((arg) => !arg.startsWith("-"));
+  const wantsJson = restArgs.includes("--json");
+  if (target && !HELP_REGISTRY[target]) {
+    const candidates = suggestSubcommands(target);
+    process.stderr.write(`Unknown subcommand: ${target}${candidates.length ? ` — did you mean ${candidates.join(" or ")}?` : ""}\n`);
+    process.stderr.write(`${helpPointer()}\n`);
+    process.exit(1);
+  }
+  if (wantsJson && !target) {
+    process.stdout.write(`${JSON.stringify(helpEnvelope(), null, 2)}\n`);
+  } else if (target) {
+    process.stdout.write(renderSubcommandHelp(target));
+  } else {
+    process.stdout.write(renderHelpIndex());
+  }
+  process.exit(0);
+}
+
+// `--help`/`-h` on any declared subcommand prints that subcommand's block and
+// exits 0 — help is a question, never a failure. This arm runs before the
+// subcommand's own grammar so a `--help` beside other flags still answers
+// rather than refusing the flags it was asked alongside.
+if (restArgs.length === 1 && (restArgs[0] === "--help" || restArgs[0] === "-h") && HELP_REGISTRY[command] && !ownsItsHelp(command)) {
+  process.stdout.write(renderSubcommandHelp(command));
+  process.exit(0);
+}
 /**
  * The process-wide feedback channel: one attachment covers every subcommand
  * (the editor services below and the runner family through `RUNNER_COMMANDS`).
@@ -2025,6 +2075,6 @@ switch (command) {
       break;
     }
     refuse(
-      `Unknown service: ${command} — this install is @gtrabanco/agentic-workflow@${runningCrateVersion()}; a service added after that version is not in it. Check the pin in skills/runner-contract/references/RUNNER.md, or set AGENTIC_WORKFLOW_RUNNER to a crate that carries the service.`,
+      `Unknown service: ${command} — this install is @gtrabanco/agentic-workflow@${runningCrateVersion()}; a service added after that version is not in it. Check the pin in skills/runner-contract/references/RUNNER.md, or set AGENTIC_WORKFLOW_RUNNER to a crate that carries the service.${suggestionSuffix(command)}`,
     );
 }

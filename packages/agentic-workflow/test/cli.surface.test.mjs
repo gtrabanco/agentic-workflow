@@ -55,3 +55,54 @@ test("the bin dispatches `provision` (issue #269's ask-first rg bootstrap)", () 
 test("the bin dispatches `substrate` (issue #644's coverage gate)", () => {
   assert.ok(BIN.includes("substrate"), "the usage line dispatches substrate");
 });
+
+// ── issue #603: the help surface is a fourth participant in this parity ──────
+//
+// The registry the `help` command renders from, the bin's usage line, the crate
+// README's usage line and the README's Commands rows must agree in **both**
+// directions. Before #603 only two of those were checked, so `residual-promise`
+// (a grammar, not a subcommand) could be declared without a dispatch arm and no
+// test noticed. The fail-closed rule the issue asks for is the last case here:
+// a subcommand that dispatches but ships no help row is a red suite.
+
+const { HELP_NAMES, renderSubcommandHelp, helpEnvelope, suggestSubcommands } = await import("../src/runner/help.mjs");
+
+test("the help registry declares exactly the subcommands the bin dispatches", () => {
+  assert.deepEqual([...HELP_NAMES].sort(), [...BIN].sort(), "registry and dispatch name the same set, both ways");
+});
+
+test("every help row renders a block naming its own subcommand and a summary", () => {
+  for (const name of HELP_NAMES) {
+    const block = renderSubcommandHelp(name);
+    assert.ok(block.startsWith(`agentic-workflow ${name} — `), `the block for \`${name}\` names it first`);
+    assert.match(block, /\nfamily: [a-z]+ — /u, `the block for \`${name}\` declares its family`);
+    assert.match(block, /\nusage:\n {2}agentic-workflow /u, `the block for \`${name}\` carries a usage line`);
+  }
+});
+
+test("the machine envelope carries one row per subcommand, with the same facts as the prose", () => {
+  const { subcommands } = helpEnvelope();
+  assert.deepEqual(subcommands.map((row) => row.name).sort(), [...BIN].sort());
+  for (const row of subcommands) {
+    assert.equal(typeof row.summary, "string");
+    assert.ok(row.summary.length > 0, `the summary for \`${row.name}\` is not empty`);
+    assert.ok(Array.isArray(row.ops) || row.ops === null, `\`${row.name}\` declares ops or an explicit null`);
+    assert.ok(Array.isArray(row.flags) || row.flags === null, `\`${row.name}\` declares flags or an explicit null`);
+  }
+});
+
+// Issue #603 S7, the fail-closed direction: the guard must actually refuse a
+// subcommand that ships without a help row. Injecting a synthetic name proves
+// the check is live rather than tautologically true over today's clean tree.
+test("a dispatched subcommand with no help row is refused, not silently tolerated", () => {
+  const withGhost = [...BIN, "ghost-subcommand"];
+  const declared = new Set(HELP_NAMES);
+  const undocumented = withGhost.filter((name) => !declared.has(name));
+  assert.deepEqual(undocumented, ["ghost-subcommand"], "the guard names the subcommand that has no help row");
+});
+
+test("a mistyped subcommand suggests the nearest declared name", () => {
+  assert.ok(suggestSubcommands("cerimonny").includes("ceremony"));
+  assert.ok(suggestSubcommands("jurnal").includes("journal"));
+  assert.deepEqual(suggestSubcommands("zzzzzzzz"), [], "a token with no close match suggests nothing rather than a wrong guess");
+});
