@@ -1155,9 +1155,12 @@ test("#668 a hand-rendered skill-surface count is recomputed from the tree, neve
     }
   };
 
-  // A stale total: the sentence lost the number the tree recomputes.
+  // A stale total: the sentence lost the number the tree recomputes. The
+  // mutation derives from the number the prose carries rather than hardcoding
+  // today's, so a unit that legitimately changes the skill count cannot turn
+  // this case into a no-op — the assertion stays exactly as strong.
   const readme = read("README.md");
-  const stale = readme.replace(/(\d+) source skills/, "31 source skills");
+  const stale = readme.replace(/(\d+) source skills/, (_, n) => `${Number(n) + 1} source skills`);
   assert.notEqual(stale, readme, "the pinned total is present in the prose");
   const staleFindings = findingsFor("README.md", stale).filter((f) => f.code === "unrendered-value" && f.surface === "README.md");
   assert.equal(staleFindings.length, 1, `the stale total is refused once: ${JSON.stringify(staleFindings)}`);

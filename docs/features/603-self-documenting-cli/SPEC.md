@@ -310,6 +310,29 @@ Frozen by this unit doc's `## Tasks`; the step list is the nine tasks above.
   receipt shape is removed; the registry centralizes vocabularies that already
   exist as scattered `ops:` arrays.
 
+## Evidence
+
+Measured at P8 with the tree's own tools. `scripts/token-per-pr.mjs`, which the
+issue names as the sink, **does not exist in this repository** (verified: the
+path is absent and `scripts/` carries only `tier-cost.mjs`), so the measurement
+uses the repository's own deterministic estimate metric — `ceil(UTF-8 bytes / 4)`,
+the same one `docs/workflow/SKILL_CONTEXT_BUDGETS.json` declares.
+
+The three canonical operations the issue names, before vs after:
+
+| operation | before (crate README, the only home) | after (`agentic-workflow help <sub>`) | reduction |
+|---|---|---|---|
+| roadmap row reconcile | 962 chars / ~240 est | 421 chars / ~105 est | **−56%** |
+| ceremony `pr` routing | 1,019 chars / ~254 est | 543 chars / ~135 est | **−47%** |
+| `doc --query` | 1,213 chars / ~303 est | 480 chars / ~120 est | **−60%** |
+| **the whole grammar re-read** | 132,054 chars (the README) | 8,958 chars (`help` index) | **−93%** |
+
+The honest reading: a subcommand's block is roughly **half** the README row that
+described it, and the index is an order of magnitude smaller than the README an
+agent previously had to find and read. What is *not* claimed: that a session
+reads less in total — it reads `help <sub>` instead of the README row, which is a
+strict reduction per operation, measured above.
+
 ## Next
 
 P2 — build the one declarative registry (`src/runner/help.mjs`) and the
