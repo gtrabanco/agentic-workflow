@@ -2,7 +2,7 @@
 type: fix
 scope: large
 roadmap_summary: Issue [#696](https://github.com/gtrabanco/agentic-workflow/issues/696) (L, high): the runner's pi mapping now reaches the point of execution — `bundle-skills.mjs` injects one canon block owned by `RUNNER.md` into every staged `SKILL.md` that cites `runner <subcommand>`, the extension's bash seam turns a literal `runner …` shell call into the same teaching, and the tool-choice guard stops suggesting a `scripts/…` path the session's project does not have, and a deferred tool's result reaches the model through pi's `content` channel. Applied through the owner's local inline workflow (ledgers frozen at cut). PR [#697](https://github.com/gtrabanco/agentic-workflow/pull/697).
-ac-hash: 549b5ba2742c917b176fbdfd55479f7f4767ba2aa1ed874a8f7aa3857c1cc175
+ac-hash: ef54108d8baa7097bc0a785f313c972ab7be172f7ffd1944e56efab21e8946a8
 ---
 
 # fix/696-runner-mapping
@@ -104,9 +104,9 @@ naming the check that proves it.
 2. **S2 — the injection is delivered, owned once and drift-gated.** `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` exits 0 with `the block is injected after the frontmatter of every skill that cites the symbolic form`, `the injected text is byte-equal to RUNNER.md's canon block` and `the injected block is inside its declared ceiling`; `bun test scripts/normative-drift.test.mjs` exits 0 with the `runner-mapping` row resolved from `AGENTS.md`'s inventory.
 3. **S3 — the block is executable advice.** The same suite exits 0 with `the block names the tool, the deferred discovery path and the outside-pi pointer`.
 4. **S4 — the standalone tree and the crate's runner modules are untouched.** `git diff --name-only $(git merge-base origin/main HEAD)..HEAD -- skills` matches exactly `skills/runner-contract/references/RUNNER.md`, and `git diff --name-only $(git merge-base origin/main HEAD)..HEAD -- packages/agentic-workflow/src/runner` matches 0 lines.
-5. **S5 — present, absent and recomputed, never trusted.** `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` exits 0 with `a skill that does not cite the symbolic form carries no block`, and `bun test packages/pi-agentic-workflow/test/skill-parity.test.mjs` exits 0 with `every bundled file equals its declared projection — byte-identical when no rule names it` — the injection recomputed from the same owner text, not read back from the build.
+5. **S5 — present, absent and recomputed, never trusted.** `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` exits 0 with `a skill that does not cite the symbolic form carries no block`, and `bun test packages/pi-agentic-workflow/test/skill-parity.test.mjs` exits 0 with `every bundled file equals its declared projection — byte-identical when nothing applies to it` — the injection recomputed from the same owner text, not read back from the build.
 6. **S6 — the incident's command answers with its envelope.** The unit doc's `## Log` records the `batch-scheduler` run in a `mktemp` project through the runner door the block names, printing `batch-plan@4` with exit 0 and no `command not found`.
-7. **S7 — the shell form is refused as a lesson.** `bun test packages/pi-agentic-workflow/test/runner-citation.test.mjs` exits 0 with `the classifier reads a runner head and preserves its arguments`, `the refusal names the subcommand and states the canon block` and `non-runner commands are untouched`.
+7. **S7 — the shell form is refused as a lesson.** `bun test packages/pi-agentic-workflow/test/runner-citation.test.mjs` exits 0 with `the classifier reads a runner head and preserves its arguments`, `the refusal names the subcommand and states the canon block` and `non-runner and path-qualified commands are untouched`.
 8. **S8 — the repair is project-grounded.** `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs` exits 0 with `a scripts path the session's project lacks never appears in the reason, and the rewrite stands down`; `bun test packages/pi-agentic-workflow/test/tool-choice-guard.test.mjs` exits 0 with `the shipped handler names no scripts path from a cwd without it` and `the shipped handler keeps the path when the project has it`.
 9. **S9 — the discovery path resolves.** `## Log` records the pinned pi build's own `tool_search` declaration (`TOOL_SEARCH_TOOL_NAME` in `packages/…/pi-coding-agent/dist/extensions/tool-search/tool.js` at the pinned version) plus the fresh headless session that reached `agentic_workflow_run` from the injected block alone.
 
@@ -156,6 +156,11 @@ Three delivery layers and the prose that declares them:
 - `.changeset/696-runner-mapping.md` — the two shipped packages' patch intent.
 - `docs/ROADMAP.md` + `docs/generated/units.md` — the deterministic emitter's
   sync from `roadmap_summary:`, never a hand edit.
+- `.agentic-workflow/journal/20261122T*.md` — the ten pending journal
+  fragments (`main-narrative` ×6, `fix-690` ×4) consumed into the
+  `docs/LOGS.md` session entries by this unit's closing session's log-session
+  aggregation (commit `bdcb80bb9`); the fragment carrier is the repository's
+  own volatile state, and none survives at head.
 - This unit's own carriers and the session entry in `docs/LOGS.md`.
 
 ## Surfaces
@@ -317,7 +322,7 @@ none
 - P6 — Verify like a writer: the derived test-impact set, the differential
   against the base commit, the two end-to-end receipts (S6, S9), the local gate
   and the session entry.
-  (validator: `bun scripts/local-gate.mjs --jobs 4` exits 0 and `bun scripts/test-impact.mjs --base origin/main` exits 0)
+  (validator: `bun scripts/local-gate.mjs --jobs 4 --no-bail` exits 1 with every runnable step's output recorded, its only red `root-suite → scripts/roadmap-settle.test.mjs` (the base-present `A1`) and the five dependants skipped — those five exit 0 by hand — and `bun scripts/test-impact.mjs --base origin/main` exits 0 printing the derived set)
   (Implements: S1, S6, S9)
   - Relevant files: docs/fix/696-runner-mapping, docs/LOGS.md
 
@@ -390,6 +395,60 @@ this change (it would be a second, competing step list).`
   duplicate feature-98 row (`roadmap-settle`), verified pre-existing at the base
   commit and reported, never repaired, and the five steps the bail skipped ran by
   hand green (`G1`).
+- **L3** — 2026-11-23, the owner's correction request, verbatim: "Apply to this
+  repository: triage and fix those that deserve to fix but understand the
+  context before fix and check you haven't broke another different thing, if
+  you have done, start the loop again until you fixed full symbol/related
+  stuff" — one correction batch over the 2026-11-23 external-verify receipt
+  (`external-verify.md`, `Verdict: NEEDS-DECISION (B1, B2, B3, B4)`); triaged
+  one-for-one: all four are this unit's own frozen claims, all four deserve the
+  fix, and no code, test or gate changes.
+- **F1** — 2026-11-23, B1 folded: O14's validator cell and P6's span no longer
+  claim `local-gate` exits 0 — both now state the outcome the foreground run
+  produces (`--no-bail` exit 1, only red `root-suite →
+  scripts/roadmap-settle.test.mjs`, the base-present A1, five dependants exit 0
+  by hand). O14 was flipped `planned` before the restatement and back to
+  `verified` only on the re-run (`G2`, `E13`); the underlying red stays advisory
+  A1 — the duplicate #98 row is another unit's owner-managed index row,
+  untouched.
+- **F2** — 2026-11-23, B2 folded: `## Impact` names the ten
+  `.agentic-workflow/journal/20261122T*.md` fragments consumed into
+  `docs/LOGS.md` by `bdcb80bb9`, so AC1's path check passes (0 unnamed journal
+  paths; 10 unnamed at the batch head).
+- **F3** — 2026-11-23, B3 folded: AC5's quoted witness re-spelled to the case
+  the suite prints — `every bundled file equals its declared projection —
+  byte-identical when nothing applies to it` — the name this branch landed at
+  `273c5a306` (the frozen quote was the base-era name); the quote now occurs
+  in `skill-parity.test.mjs` (absent at the batch head).
+- **F4** — 2026-11-23, B4 folded: AC7's quoted witness re-spelled to
+  `non-runner and path-qualified commands are untouched`, the name
+  `runner-citation.test.mjs` carries since `273c5a306` (absent at the batch
+  head). Disclosed with the repair: the recorded `ac-hash` never matched
+  `sectionText` on any committed state — recomputed `66ecb56c…` at every
+  commit `fa6f3e070..8ce62fa96`, and heading-inclusive variants plus the issue
+  body miss too — so the freeze-era draft bytes are unrecoverable; the
+  frontmatter now carries the owner procedure's recomputation over the amended
+  section (`skills/unit-lane/references/DESIGN.md` §acceptance):
+  `ef54108d8baa7097bc0a785f313c972ab7be172f7ffd1944e56efab21e8946a8`,
+  round-trip verified.
+- **E13** — 2026-11-23, the batch's foreground re-runs: the journal-path check
+  vs `## Impact` · 0 unnamed (10 at the batch head); AC5's quote in
+  `skill-parity.test.mjs` · present; AC7's quote in `runner-citation.test.mjs` ·
+  present; `ac-hash` round-trip through `sectionText` · match;
+  `bun scripts/test-impact.mjs --base origin/main` · exit 0 · `verdict:
+  targeted` · 16 paths / 15 symbols; the five gate dependants by hand · all
+  exit 0 (`crate-suite-bun`, `crate-suite-node`, `schema-node-compat`,
+  `pi-node-compat`, `pi-compat-guard`).
+- **G2** — 2026-11-23, the batch head (`bun scripts/local-gate.mjs --jobs 4
+  --no-bail`) · exit 1 · 20 steps, sole red `root-suite →
+  scripts/roadmap-settle.test.mjs` (A1, base-present), 5 dependants skipped —
+  the restated O14/P6 outcome; full root suite (`node
+  scripts/run-root-suite.mjs`) · 139 pass / 1 fail — the same A1 only;
+  `bin verify docs/fix/696-runner-mapping/SPEC.md` · `VERIFY PASS` (sections,
+  obligations-closure, provenance-stamp, receipt-marks, log-kinds, cited-paths,
+  cited-gates); docs gates: `docs-generate --check` · PASS,
+  `check-skill-context --documents` · PASS (7 documents), `normative-drift` ·
+  24 pass.
 
 ## Next
 
