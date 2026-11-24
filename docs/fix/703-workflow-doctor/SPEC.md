@@ -336,6 +336,14 @@ fused pass are this document's `## Specs` closure and
 
   No `review-change`, no `audit-pr`, no fold cycle, no self-granted gate exceptions on this change. Direct application: the §5 ledger freeze **is** the plan; implement against it, hand the diff to me. The one exception is the repo's deterministic gates (tests, lints) — run those always.
   ```
+- **L3** — 2026-11-24, the operator's external cross-check and its second order:
+  first a diagnosis-only request — whether this implementation repeats the
+  #716/#717 defect class (a project/product distinction leaking a single-repo
+  layout assumption into shipped code); then, once the diagnosis named the
+  battery's `<root>/skills` hard-read, the repair order into this unit, with the
+  placement rule: the pi-opinionated part lives in the `pi-agentic-workflow`
+  package, everything else is generic and belongs to the crate. The finding and
+  the split are D11; the receipts are E18/E19.
 - **E1** — 2026-12-23, the corpus, measured by the shipped miner over this tree
   (read-only): `runner workflow-doctor mine` · exit 0 · `549 row(s) · 243 unit(s)`
   — `gate-red 55 · evidence-red 241 · review-fail 4 · fold-over-budget 26 ·
@@ -424,6 +432,8 @@ fused pass are this document's `## Specs` closure and
 - **E17** — 2026-11-24, the S2 loop's one iteration: the first post-batch `bun scripts/check-skill-context.mjs` was **red** (`agentic-workflow-doctor: main estimate 2817 > 2800` — the two corrected SKILL lines spent the flat default), repaired by the recorded per-skill ceiling `3099 / 264` = ceil(measured × 1.10) with its growth source declared in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (the `skills` section has no emitter — hand edit recorded in `mainSources`), then `PASS context budgets: 33 skills` and `--documents` PASS 7/0.
 - **F1** — 2026-11-24, folded in `dbf8b8843`: external-verify blockers **B1–B4** and advisories **A1–A3** — O1's validator cell (now read on `log-kind@1`'s own run record), the Done-when identity, the step-0.3 refusal claim, AC2's declared command + the `ac-hash` re-pin, the README row split, the dated S5 disposition in Non-goals, P6's file list — each verified by the 7/7 corpus (E15 → E16) and the gate (G2). Not folded: **A4** (E1/E9 dated receipts — frozen history, the #668 "dated records are not rewritten" boundary; their verdicts still reproduce) and **A5** (`setup-env` misses — worktree-local environment, absent at base as at head).
 - **G2** — 2026-11-24, HEAD `dbf8b8843`, `bun scripts/local-gate.mjs` · exit 0 · **`local-gate: PASS — 20 step(s) in 446s`** — the correction batch's full gate: root-suite pool, crate suites, `pi-node-compat` (1,074 / 0 / 1), `skill-context-budgets` with the re-pinned ceiling, `secret-scan`, `docs-generated-projection`, `red-first`.
+- **E18** — 2026-11-24, RED before the skills-location correction batch (`#716`/`#717` defect class, found by the operator's external cross-check): `bun test scripts/workflow-doctor.test.mjs` **19 pass / 4 fail** — every new consumer-shaped case red because the battery hard-read `<root>/skills` (`SKILLS_REL`) and `<root>/skills/runner-contract/references/RUNNER.md` (`RUNNER_PIN_REL`), so the pin check and the skill count are structurally `unknown`/zero on every consumer tree — and `bun test packages/pi-agentic-workflow/test/runtime.test.mjs` **8 pass / 2 fail** (`publishSkillsRoot` absent). The defect: shipped code written against this repository's own layout, degrading silently on a foreign tree — the exact class #716 filed against `batch-scheduler` and #717 audited.
+- **E19** — 2026-11-24, GREEN after the batch: the same suites **23/0** and **10/0**; the located-tree contract verified (`source` `agents`/`claude-code`/`host`/`declared`, the pin read inside the located tree, the `skills-absent` degradation naming the declare routes). Targeted: `bun test packages/agentic-workflow/test/cli.surface.test.mjs` 12/0, `cli.help.test.mjs` 18/0, `runner.dispatch.test.mjs` 7/0, `bun test scripts/cli-coverage.test.mjs` 8/0, `bun run --cwd packages/pi-agentic-workflow test` 1,077/0, `bun scripts/check-skill-context.mjs` PASS (33 skills), `bun scripts/skill-lint.mjs` PASS, `bun scripts/docs-generate.mjs --check` unchanged, `bun test scripts/workflow-doctor.test.mjs` 23/0 as the crate's suite of record.
 
 ## Next
 
