@@ -23,10 +23,13 @@ const auditProcess = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/refere
 // workflow actually runs now fails here (#182).
 import {
   GATE_NAMES,
+  GATE_OUTCOMES,
   auditVerdict,
+  gateReceiptGate,
   hygieneFromState,
   mergeCommentAction,
   newestAuditComment,
+  receiptGateOutcome,
 } from "./audit-pr-gate.mjs";
 import { receiptStatus, renderReceiptBody } from "./review-receipt.mjs";
 import { tempRoot } from "./temp-root.mjs";
@@ -214,9 +217,11 @@ test("hygiene gates are part of the closed gate set, so an unread one fails clos
   const dirty = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, "tree-clean": "fail" } });
   assert.equal(dirty.verdict, "BLOCKED");
   assert.deepEqual(dirty.blockers, ["gate tree-clean failed"]);
-  // Omitting hygiene entirely is the same failure, never a silent pass.
+  // Omitting hygiene entirely is the same blocker, never a silent pass — and it
+  // says what it is (issue #702 S5): the gate was not evaluated, so no content
+  // failure is claimed on its behalf.
   const omitted = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, "pr-ready": undefined } });
-  assert.deepEqual(omitted.blockers, ["gate pr-ready failed"]);
+  assert.deepEqual(omitted.blockers, ["gate pr-ready unevaluatable: not-evaluated"]);
 });
 
 test("hygieneFromState: a clean, pushed, ready terminal state passes every hygiene gate", () => {
@@ -400,4 +405,81 @@ test("CLI flags: --flag=value is accepted and -R resolves to the forge scope (F5
   });
   assert.equal(result.status, 0, result.stderr);
   assert.match(fs.readFileSync(log, "utf8"), /-R owner\/name/, "the documented -R alias must reach the forge call");
+});
+
+// ---------------------------------------------------------------------------
+// The gate's own outcome (issue #702 S5/S10) — an unevaluatable gate says so
+// ---------------------------------------------------------------------------
+
+test("an unevaluated gate is its own outcome with its own reason, never a content failure", () => {
+  const sha = "a".repeat(40);
+  const reviews = [{ body: reviewBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }];
+  const gates = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
+  delete gates.closure;
+  const result = auditVerdict({ comments: reviews, headSha: sha, gates });
+  assert.equal(result.verdict, "BLOCKED", "fail-closed: an unread gate still blocks");
+  assert.deepEqual(result.blockers, ["gate closure unevaluatable: not-evaluated"]);
+  assert.equal(result.gates.closure.outcome, "unevaluatable");
+  assert.equal(result.gates.closure.reason, "not-evaluated");
+  assert.deepEqual(result.unevaluatable, ["closure"]);
+
+  // The field reproducer: `evaluate` with no gate map at all reported fourteen
+  // `gate <name> failed` lines while nothing had failed. Every one of them is
+  // now the truth — the gate was never evaluated.
+  const bare = auditVerdict({ comments: reviews, headSha: sha, gates: {} });
+  assert.equal(bare.blockers.length, GATE_NAMES.length);
+  assert.ok(bare.blockers.every((blocker) => / unevaluatable: not-evaluated$/u.test(blocker)), bare.blockers.join("; "));
+  assert.ok(!bare.blockers.some((blocker) => /\bfailed\b/u.test(blocker)), "no gate is accused of a failure nobody observed");
+});
+
+test("a supplied unevaluatable gate keeps the caller's reason and still blocks", () => {
+  const sha = "a".repeat(40);
+  const reviews = [{ body: reviewBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }];
+  const allPass = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
+  const reason = "the checkout cannot read the forge's check runs";
+  const unreadable = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, ci: { outcome: "unevaluatable", reason } } });
+  assert.equal(unreadable.verdict, "BLOCKED");
+  assert.deepEqual(unreadable.blockers, [`gate ci unevaluatable: ${reason}`]);
+  assert.equal(unreadable.gates.ci.reason, reason);
+
+  const failed = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, ci: "fail" } });
+  assert.deepEqual(failed.blockers, ["gate ci failed"], "a supplied failure is still a content failure");
+  assert.equal(failed.gates.ci.outcome, "fail");
+
+  const skipped = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, ci: "skipped" } });
+  assert.deepEqual(skipped.blockers, ["gate ci skipped"], "a gate the run skipped did not pass");
+});
+
+test("the gates map's outcome vocabulary is closed", () => {
+  assert.deepEqual([...GATE_OUTCOMES], ["pass", "fail", "skipped", "unevaluatable"]);
+  const dir = tempRoot("audit-pr-outcome-");
+  const comments = path.join(dir, "comments.json");
+  fs.writeFileSync(comments, JSON.stringify([{ body: reviewBody({ sha: SHA_A, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }]));
+  for (const value of ["maybe", "PASS", 1]) {
+    const gatesPath = path.join(dir, `gates-${String(value)}.json`);
+    fs.writeFileSync(gatesPath, JSON.stringify({ ci: value }));
+    const result = spawnSync(process.execPath, [script, "evaluate", "--comments-json", comments, "--head", SHA_A, "--gates-json", gatesPath], { encoding: "utf8" });
+    assert.equal(result.status, 1, `${JSON.stringify(value)} is refused, not classified`);
+    assert.match(result.stderr, /gate ci/u);
+    assert.match(result.stderr, /pass, fail, skipped, unevaluatable/u, result.stderr);
+  }
+});
+
+test("the receipt judge's unreadable subprocess is unevaluatable, a judged receipt failure is not", () => {
+  assert.deepEqual(receiptGateOutcome({ stdout: "" }), { outcome: "unevaluatable", reason: "judge-unreadable" });
+  assert.deepEqual(receiptGateOutcome({ stdout: "audit-pr-gate: boom" }), { outcome: "unevaluatable", reason: "judge-unreadable" });
+  assert.deepEqual(receiptGateOutcome({ stdout: JSON.stringify({ status: "missing", verdict: "fail", blockers: ["gate receipt is missing: .agentic-workflow/gate/gate-receipt.json"] }) }), {
+    outcome: "fail",
+    reason: "missing",
+  });
+  assert.deepEqual(receiptGateOutcome({ stdout: JSON.stringify({ status: "stale-manifest", verdict: "fail" }) }), { outcome: "fail", reason: "stale-manifest" });
+  assert.deepEqual(receiptGateOutcome({ stdout: JSON.stringify({ status: "current", verdict: "pass" }) }), { outcome: "pass" });
+  // The shipped gate is that pure mapping over the judge's own answer: a
+  // project with no receipt is a judged failure naming its status.
+  const dir = tempRoot("audit-pr-gate-judge-");
+  const root = path.join(dir, "project");
+  fs.mkdirSync(root);
+  const judged = gateReceiptGate({ root });
+  assert.equal(judged.outcome, "fail");
+  assert.equal(judged.reason, "missing");
 });

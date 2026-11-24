@@ -26,9 +26,19 @@
    - **MERGE-READY** — every applicable gate passes (including a current receipt);
      list the few things the human should still eyeball (the manual-verification
      items the receipt surfaced).
-   - **BLOCKED** — one or more gates fail; output the ranked blocker list.
+   - **BLOCKED** — one or more gates do not pass; output the ranked blocker list.
+     Each blocker names the outcome the gate actually holds (issue #702):
+     `gate <name> failed` (the gate read a content failure), `gate <name>
+     skipped` (the run did not execute it), or `gate <name> unevaluatable:
+     <why>` (the environment — an ambiguous `HEAD`, an unprovable merge-base, a
+     forge this checkout cannot reach — made it unreadable). A gate you never
+     supplied is `unevaluatable: not-evaluated`: report it as a route to the
+     checkout that can read it, never as a content failure nobody observed.
 6. **Persist blockers to the fold ledger (BLOCKED verdict only).** Every blocker
-   on a **BLOCKED** verdict is, by definition, fix-now — merge is gated on it.
+   on a **BLOCKED** verdict **whose outcome is `fail`** is, by definition,
+   fix-now — merge is gated on it. An `unevaluatable` blocker is not a finding
+   about the change: it routes to the environment (re-run the gate where it can
+   be read, then re-audit) and persists nothing to the ledger.
    Append each to the unit's fix-now fold ledger — its `## Findings` section for
    a migrated unit (issue #308), `review-findings.md` for a legacy one; probe the
    doc first and write to exactly one carrier, in that carrier's own schema

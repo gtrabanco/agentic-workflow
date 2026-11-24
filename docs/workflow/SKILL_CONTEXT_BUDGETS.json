@@ -329,13 +329,15 @@
         "triage 32 F29 fold": "the owner-entry wording correction grew LEDGERS.md from the measured 3930 to 3931; ceiling re-based to ceil(3931 x 1.10) = 4325",
         "feature 32 (P4)": "the gate-ran@1 appended-text mark section in LEDGERS.md grew the reference from the measured 3462 (main) to 3930 (re-measured at this re-basis, after the F4 gate-ran edit); ceiling re-based to ceil(3930 x 1.10) = 4323. This single per-skill referenceEstimateMax bounds every reference file this skill loads (LEDGERS.md 3930, POLICY.md 3529, SNAPSHOT.md 1981 as measured at this re-basis), so the smaller references carry declared sibling headroom under the per-skill schema; no per-reference ceiling exists in schemaVersion 1.",
         "issue #308 (unit 79 review fold)": "LEDGERS.md states the collapsed carrier's mark grammar per truth class — `review-mark@1` row ↔ `## Log` R line, `gate-ran@1` ↔ G, `finding-mark@1` ↔ V, the folded flip ↔ the F line, seven-column row ↔ six-column `findings-table@1` — so the side-file mandate cannot be read as the only mandate (F5's fold). Grew from 3932 to 4526; ceiling re-based to ceil(4526 × 1.10) = 4979, reason declared; POLICY.md and SNAPSHOT.md stay under it."
-      }
+      },
+      "referenceLinesMax": 316
     },
     "product-audit": {
       "mainEstimateMax": 4264,
       "mainLinesMax": 317,
       "mainSources": {
         "feature 69 / issue #270": "the repo-wide-sweep ownership claim (frontmatter description + the `## When to use` bullet) grew SKILL.md from the measured 2799 (one estimate unit under the 2800 default) to 2901; ceiling re-based to ceil(2901 x 1.10) = 3192",
+        "issue #702 (the carrier grammar is exclusive)": "LEDGERS.md states the two carrier grammars are exclusive and a fold keeps identity — a row is read by its table's own header, the other shape is a typed defect, and an `F` line is numbered with the id it closed. Measured at the change with `bun scripts/check-skill-context.mjs`: LEDGERS.md 4842 est / 287 lines, inside the unchanged 4979 estimate ceiling; the shared 280-line cap is the only ceiling it crosses, so this skill declares `referenceLinesMax: 316` = ceil(287 x 1.10) with that growth as its reason.",
         "fix 440 (product-audit re-scope)": "the measured-trigger cadence replaces the periodic one: the audit-trigger@1 grammar block + the insufficient-corpus verdict block + the finding-route@1 resolver-hand-off grammar (S4/S5 of the unit doc). Measured by `scripts/check-skill-context.mjs` at this re-basis: 3876 est / 288 lines; ceilings re-based to ceil(3876 x 1.10) = 4264 and ceil(288 x 1.10) = 317"
       },
       "referenceEstimateMax": 8135,
@@ -466,8 +468,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11432,
-      "routeLinesMax": 688,
+      "routeEstimateMax": 11616,
+      "routeLinesMax": 699,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -487,7 +489,8 @@
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 11178 -> 11206 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feature 108 / issue #409 (machine gate receipts)": "the Turn contract gains one box that reads the verification gate's machine envelope (bun scripts/gate-receipt.mjs verify) and treats anything but current + pass as a BLOCKER routed to a re-run, replacing the prose claim that the suite is green; the verification row of references/01_MERGE_GATES.md states the same rule. Measured 10273 est / 619 lines at this re-basis; ceilings re-based to ceil(10273 x 1.10) = 11301 est and ceil(619 x 1.10) = 681 lines. Growth source = feature 409's gate-receipt box.",
         "feature 91 / issue #352 (runner prose)": "measured 10361 est / 623 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(10361 x 1.10) = 11398 / ceil(623 x 1.10) = 686",
-        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
+        "issue #702 (the merge gate's own outcomes)": "the audit route loads `audit-pr`'s process, whose BLOCKED verdict now names the outcome each gate holds (failed · skipped · unevaluatable with its reason) and persists only a `failed` one as a finding, so an environment the checkout cannot read routes instead of accusing content nobody observed; measured at this change with `bun scripts/check-skill-context.mjs --routes --json`: 10560 est / 635 lines; ceilings re-based to the exact ceil(10560 x 1.10) = 11616 est and ceil(635 x 1.10) = 699 lines, growth source = skills/audit-pr/references/03_AUDIT_PROCESS.md"
       }
     },
     "audit-pr:fix": {
@@ -495,8 +498,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11432,
-      "routeLinesMax": 688,
+      "routeEstimateMax": 11616,
+      "routeLinesMax": 699,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -570,7 +573,8 @@
         "issue #436 (ceremony-profile receipt)": "issue #436 (ceremony-profile receipt): execute-phase/SKILL.md gains the ceremony-profile receipt paragraph (a profile discard is a recorded n/a route, never an error, never an expansion path); route re-measured at this re-basis, ceilings = the checker's ceil(measured x 1.10); growth source = #436's receipt prose",
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "feature 91 / issue #352 (runner prose)": "measured 15163 est / 1121 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(15163 x 1.10) = 16680 / ceil(1121 x 1.10) = 1234",
-        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 15395 est / 1133 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 15395 est / 1133 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
+        "issue #702 (the merge gate's own outcomes)": "the audit route loads `audit-pr`'s process, whose BLOCKED verdict now names the outcome each gate holds (failed · skipped · unevaluatable with its reason) and persists only a `failed` one as a finding, so an environment the checkout cannot read routes instead of accusing content nobody observed; measured at this change with `bun scripts/check-skill-context.mjs --routes --json`: 10560 est / 635 lines; ceilings re-based to the exact ceil(10560 x 1.10) = 11616 est and ceil(635 x 1.10) = 699 lines, growth source = skills/audit-pr/references/03_AUDIT_PROCESS.md"
       }
     },
     "execute-phase:feature": {

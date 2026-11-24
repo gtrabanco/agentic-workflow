@@ -59,8 +59,10 @@ Missing reference → STOP. Any unchecked box means the turn is not done.
 ## When to use
 
 After `/review-change` reports `REVIEW-FAIL` with fix-now rows, or `/audit-pr`
-reports `VERDICT: BLOCKED` (every blocker is fix-now). If the ledger is absent or
-incomplete, reconstruct rows from the verdict in Step 0. Never process
+reports `VERDICT: BLOCKED` — every blocker whose outcome is `fail` is fix-now;
+an `unevaluatable` blocker routes to the environment and is never a row
+(`audit-pr`'s process reference owns the outcome split). If the ledger is absent
+or incomplete, reconstruct those rows from the verdict in Step 0. Never process
 postpone/wontfix/promote/documented-tradeoff rows; those belong to `/triage-issue`.
 
 ## The `fix-now (delete)` row
@@ -108,8 +110,8 @@ Per Workflow conventions, read:
      flip, and `class` here is the repairing owner (`product`/`plan`/`source`/
      `environment`/`runtime`), not a disposition.
 
-   Never write one carrier's row into the other's grammar. After `VERDICT: BLOCKED`,
-   append missing rows in the carrier's own schema (next free `Fn`, dedupe
+   Never write one carrier's row into the other's grammar. After `VERDICT: BLOCKED`
+   with `fail`-outcome blockers, append missing rows in the carrier's own schema (next free `Fn`, dedupe
    `file:line`+axis; legacy `class: fix-now`, `folded: no`), commit as
    `docs(<unit>): reconstruct fold ledger from audit-pr blockers`, then fold; never
    report “no findings”.

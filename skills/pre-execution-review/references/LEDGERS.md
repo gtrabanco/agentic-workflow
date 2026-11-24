@@ -40,6 +40,17 @@ ladder plus the `impact` cell (`id | S# / file:line | axis | severity | impact |
 | route`, owned by the two unit-doc templates); the legacy row keeps its own
 `| id | file:line | axis | severity | class | route | folded |`.
 
+**The grammars are exclusive, and a fold keeps identity.** A carrier holds exactly
+one of those two headers: a row is read by the table's own header, never by
+position, and a carrier parsed in the other shape — or in a superseded generation
+of its own shape — is a loud, typed defect that names the grammar it found, never
+a silent read of one grammar as the other. A unit carrying both the doc table and
+a side ledger is that same class: two carriers are two truths. A row closes by
+leaving for an `F` line whose number **is** the id it closed and whose text names
+it, so a fold line is never an independent counter a reader could map to a
+different finding; ids are never reused, and an id the carrier ever used (an open
+row or a fold line) is refused rather than silently reallocated.
+
 ### 1. Planning evidence
 
 Row shape — the base row, the closed `authority-kind` / `freshness` vocabularies,

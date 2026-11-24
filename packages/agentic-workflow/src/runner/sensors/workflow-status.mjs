@@ -43,6 +43,7 @@ import { deriveReviewLoopCycles } from "./pre-execution-contract.mjs";
 // vocabularies let the same ledger row answer `route: execute` from the router and
 // `/fold-findings` from the sensor (#224 fold F13/F2/F15).
 import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows, flattenCell } from "../unit-route.mjs";
+import { readCarrier, parseCarrierBody } from "../findings-carrier.mjs";
 // Shared section parser (fence-aware, issue #308 F28) — avoids re-defining
 // sectionBounds (fence-blind) in workflow-status and ledger-provenance. The
 // sensor reads `## Log` through `parseLog`, never through its own line grammar
@@ -909,37 +910,39 @@ export const SEVERITY_VOCABULARY = new Map([
  * doc wins when it has the section, which is what makes the collapse real rather
  * than a second place to look.
  *
- * @returns {{ rows: Array<object>, carrier: "doc" | "ledger" | "none", text: string }}
+ * @returns {{ rows: Array<object>, carrier: "doc" | "ledger" | "none", text: string, defects: Array<object> }}
  */
 function findingsCarrier(unitDir) {
   const doc = readProject(path.join(unitDir, "SPEC.md"));
+  const ledger = readProject(path.join(unitDir, "review-findings.md"));
+  // One resolution, one defect list (issue #702 S4): the reader says which
+  // grammar each carrier holds, and a unit carrying both is a named defect —
+  // reported as an observation below, never resolved silently.
+  const report = readCarrier({
+    docText: doc,
+    ledgerText: ledger,
+    docPath: `${unitDir}/SPEC.md`,
+    ledgerPath: `${unitDir}/review-findings.md`,
+  });
   // The same fence-aware predicate as `reviewMark`: one section, read once, decides
   // the carrier for the rows and the marks alike (F45).
   if (doc !== null && sectionBounds(doc, "Findings") !== null) {
-    return { rows: findingsRows(doc), carrier: "doc", text: doc };
+    return { rows: findingsRows(doc), carrier: "doc", text: doc, defects: report.defects };
   }
-  const ledger = readProject(path.join(unitDir, "review-findings.md"));
-  if (!ledger) return { rows: [], carrier: "none", text: "" };
-  return { rows: rowsFromLedger(ledger), carrier: "ledger", text: ledger };
+  if (!ledger) return { rows: [], carrier: "none", text: "", defects: report.defects };
+  return { rows: rowsFromLedger(ledger), carrier: "ledger", text: ledger, defects: report.defects };
 }
 
-/** The open rows of a legacy `review-findings.md`, in file order — the router's own
- *  predicate and mark-row guard, so the two surfaces cannot disagree on a row. */
+/** The open rows of a legacy `review-findings.md`, in file order — through the
+ *  carrier's one grammar owner, so a cell is never read by position.
+ *  Mark rows (`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`) carry no destination of their
+ *  own, and a folded row (`folded: yes`, or its `yes · fold <sha>` annotation)
+ *  is closed. */
 function rowsFromLedger(ledger) {
   const rows = [];
-  for (const line of ledger.split("\n")) {
-    if (!line.startsWith("|")) continue;
-    const cells = cellsOf(line).slice(1, -1);
-    if (cells.length < 7) continue;
-    const [id, file, axis, severity, klass, route, folded] = cells;
-    if (/^id$/i.test(id) || !isOpen(folded)) continue;
-    // A separator row in any dash spelling (`|---|`, `| --- |`, `|-----|`) projects a
-    // bogus finding whose id is the dash run: the guard is the id's shape, not one
-    // separator's spelling.
-    if (/^[-:\s]*$/.test(id)) continue;
-    // Mark rows (`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`) carry no destination of their own.
-    if (isMarkRow(id)) continue;
-    rows.push({ id, file, axis, severity, klass, route });
+  for (const row of parseCarrierBody(ledger).rows) {
+    if (row.id === undefined || isMarkRow(row.id) || !isOpen(row.folded)) continue;
+    rows.push({ id: row.id, file: row.target ?? "", axis: row.axis ?? "", severity: row.severity ?? "", klass: row.class ?? "", route: row.route ?? "" });
   }
   return rows;
 }
@@ -983,6 +986,12 @@ function readOpenRows(unitDir) {
 function readFixNow(unitDir, observations = []) {
   const items = [];
   const carrier = findingsCarrier(unitDir);
+  // A carrier the reader could not read as current is loud, never silent: the
+  // sensor's own observation channel names the defect and the grammar it found
+  // (issue #702 S4). The rows still project — history is not deleted by a defect.
+  for (const defect of carrier.defects ?? []) {
+    observations.push(`${unitDir}: carrier defect ${flattenCell(defect.code)} — ${flattenCell(defect.detail)}`);
+  }
   for (const { id, file, axis, severity, klass, route } of carrier.rows) {
     // The ladder's tokens are case-sensitive (a mixed carrier is a defect, never a
     // silent accept); the legacy aliases below it are matched case-insensitively,

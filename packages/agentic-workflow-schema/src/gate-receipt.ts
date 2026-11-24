@@ -48,8 +48,16 @@ export const GATE_RECEIPT_SCHEMA = "gate-receipt@1";
 export const GATE_RECEIPT_VERDICTS = ["pass", "fail", "degraded"] as const;
 export type GateReceiptVerdict = (typeof GATE_RECEIPT_VERDICTS)[number];
 
-/** The closed per-check status set. */
-export const GATE_CHECK_STATUSES = ["passed", "failed", "skipped"] as const;
+/**
+ * The closed per-check status set.
+ *
+ * `unevaluatable` is the honest answer for a check the environment made
+ * unreadable — an ambiguous `HEAD`, an unprovable merge-base, a forge the
+ * checkout cannot reach. It is never a pass and never a failure: folding it
+ * into `failed` accuses content nobody observed (issue #702). The merge gate
+ * reports its own per-gate outcome in this same family's spelling.
+ */
+export const GATE_CHECK_STATUSES = ["passed", "failed", "skipped", "unevaluatable"] as const;
 export type GateCheckStatus = (typeof GATE_CHECK_STATUSES)[number];
 
 /** The closed freshness vocabulary a consumer routes on. */

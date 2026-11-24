@@ -295,8 +295,9 @@ test("gate-receipt: the audit-pr gate blocks on a missing or stale receipt", asy
   const missing = await judgeGateReceipt({ root });
   assert.equal(missing.verdict, "fail");
 
-  // The CLI helper reads the envelope and fails closed on the missing file.
-  assert.equal(gateReceiptGate({ root, receipt: null }), "fail");
+  // The CLI helper reads the envelope and fails closed on the missing file —
+  // naming the judge's own freshness status, never a generic failure (#702).
+  assert.deepEqual(gateReceiptGate({ root, receipt: null }), { outcome: "fail", reason: "missing" });
 
   const sha = "a".repeat(40);
   const receipt = renderReceiptBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" });
@@ -313,5 +314,5 @@ test("gate-receipt: the audit-pr gate blocks on a missing or stale receipt", asy
   const root2 = toyProject();
   const gate = writeGate(root2, [{ id: "root-suite", status: "passed" }]);
   assert.equal(run(root2, ["run", "--gate", gate, "--root", root2]).status, 0);
-  assert.equal(gateReceiptGate({ root: root2 }), "pass");
+  assert.deepEqual(gateReceiptGate({ root: root2 }), { outcome: "pass" });
 });

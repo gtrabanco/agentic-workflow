@@ -983,7 +983,7 @@ describe one run and freshness never compares them.
 | Export | Values | Meaning |
 | --- | --- | --- |
 | `GATE_RECEIPT_VERDICTS` | `pass` · `fail` · `degraded` | What the run's evidence says; `pass` requires every check to have passed |
-| `GATE_CHECK_STATUSES` | `passed` · `failed` · `skipped` | One gate step's terminal state |
+| `GATE_CHECK_STATUSES` | `passed` · `failed` · `skipped` · `unevaluatable` | One gate step's terminal state: `unevaluatable` is a check the environment made unreadable (ambiguous `HEAD`, an unprovable merge-base, an unreachable forge) — never a pass, never a content failure |
 | `GATE_RECEIPT_FRESHNESS_CODES` | `current` · `missing` · `invalid` · `stale-manifest` | What a consumer routes on when it reads a receipt |
 
 ## Document provenance stamps (issue #462)

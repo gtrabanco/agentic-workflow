@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// test-obligation: protects=skills/execute-phase/references/FOLDING.md obligations=convention,contract
+// test-obligation: protects=skills/execute-phase/references/FOLDING.md,skills/fold-findings/SKILL.md obligations=convention,contract
 
 // Fix #159 — the review→fold loop must terminate. Pins the four loop killers
 // to their owning skill text:
@@ -443,6 +443,24 @@ assert.match(foldSkill, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole
 assert.match(persist, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
 // IS-1: FOLDING.md cites the map
 assert.match(folding, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
+
+// ── 13.5c. #702 B3 — the audit-pr outcome split reaches its sibling ─────────
+//
+// `audit-pr`'s process reference scopes fix-now persistence to blockers whose
+// outcome is `fail` and routes `unevaluatable` blockers to the environment
+// (they persist nothing). The fold skill is where a session reconstructs rows
+// "from the verdict", so the pre-#702 absolute would rebuild environment
+// problems as fix-now findings — the sibling must carry the scoped rule.
+assert.match(
+  foldSkill,
+  /outcome is `fail`/,
+  "fold-findings scopes the fix-now persistence rule to `fail`-outcome blockers (#702)"
+);
+assert.doesNotMatch(
+  foldSkill,
+  /every blocker is fix-now/,
+  "the pre-#702 absolute 'every blocker is fix-now' is gone from the fold sibling (#702)"
+);
 
 // ── 13.5b. #308 review F30/F31/F32 — triage-issue routes, never folds ───────
 //
