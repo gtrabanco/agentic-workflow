@@ -58,6 +58,22 @@ export class JournalAggregateError extends Error {
 export const DEFAULT_LOG = "docs/LOGS.md";
 
 /**
+ * The aggregator's execution context: the forge's merge-to-main job, never a
+ * local shell (issue #706). A local run consumes every pending fragment —
+ * including other sessions' work — and each session used to improvise the
+ * identity and the filter. The CLI refuses before the first byte moves; the
+ * library stays callable so a test or an embedding job can drive it directly.
+ *
+ * `CI` is the generic convention every forge's runner sets (GitHub Actions sets
+ * `CI=true` by default); naming a specific forge here would break the crate's
+ * forge-free contract (issue #405 AC5).
+ */
+export function isCiRun(env = process.env) {
+  const value = String(env?.CI ?? "").toLowerCase();
+  return value === "true" || value === "1";
+}
+
+/**
  * The entry slot the grammar names: one conversation, one kind. The timestamp
  * and the branch are not part of it — a second entry for the slot is a
  * duplicate however it is written (issue #468 S3, read side #675).

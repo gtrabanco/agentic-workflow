@@ -182,7 +182,7 @@ import { isRunnerCommand, runRunnerCommand } from "../src/runner/cli.mjs";
 import { renderHelpIndex, renderSubcommandHelp, helpEnvelope, suggestSubcommands, helpPointer, ownsItsHelp, HELP_REGISTRY } from "../src/runner/help.mjs";
 import { run as runRunnerService } from "../src/runner/runner.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
-import { JournalAggregateError, aggregateJournal, checkJournal } from "../src/journal/aggregate.mjs";
+import { JournalAggregateError, aggregateJournal, checkJournal, isCiRun } from "../src/journal/aggregate.mjs";
 import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragment.mjs";
 import { JournalWriteError, WRITE_REFUSALS, parseWriteArgs, writeJournal } from "../src/journal/write.mjs";
 import { JournalHeadlessError, parseHeadlessArgs, writeHeadlessJournal } from "../src/journal/headless.mjs";
@@ -1427,6 +1427,16 @@ switch (command) {
     if (op === "aggregate") {
       const { flags } = parseJournalArgs(restArgs);
       const checkOnly = restArgs.includes("--check");
+      // The merge-to-main aggregator is the only writer of docs/LOGS.md (issue
+      // #405), and it runs in the forge's job (issue #706). A local run would
+      // consume every pending fragment — other sessions' work included — and
+      // improvise the identity, so the CLI refuses before the first byte moves.
+      // `--check` is validate-only and stays legal locally.
+      if (!checkOnly && !isCiRun(process.env)) {
+        journalRefuse(
+          "journal aggregate is the merge-to-main job and runs in CI only (issue #706) — a local run would consume every pending fragment; set CI=true in the sanctioned job",
+        );
+      }
       if (checkOnly) {
         let receipt;
         try {

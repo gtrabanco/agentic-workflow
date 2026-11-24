@@ -48,7 +48,8 @@ slot — the lint refuses the pair naming both files, and the aggregator keeps
 the newest one, naming the superseded fragment in its receipt (the rule is the
 package README's `journal-fragment-grammar@1`, not a second copy here). It
 knows no forge: the GitHub workflow and the `post-receive` hook below call the
-same command unchanged.
+same command in the same CI context (`CI=true`); the command refuses a local
+run before the first byte moves (issue #706).
 
 ### GitHub Actions example
 
@@ -82,7 +83,7 @@ cd "$GIT_WORK_TREE" || exit 0
 # the next push, and an unconsumed fragment is never lost — only delayed.
 exec 9>.agentic-workflow/journal/.aggregate.lock
 flock -n 9 || { echo "journal aggregate already running; the next push retries" >&2; exit 0; }
-runner journal aggregate || exit 1   # refusal: fragments stay, nothing is lost
+CI=true runner journal aggregate || exit 1   # refusal: fragments stay, nothing is lost
 git add .agentic-workflow/journal docs/LOGS.md
 git -c user.name="journal-bot" -c user.email="journal-bot@$(hostname)" \
   commit -m "docs(log): aggregate journal fragments" -- .agentic-workflow/journal docs/LOGS.md || exit 0
@@ -90,7 +91,10 @@ git -c user.name="journal-bot" -c user.email="journal-bot@$(hostname)" \
 
 No concurrency group exists on a bare receive hook — the `flock` above is the
 retry/lock story: a second simultaneous push declines, and the fragments it
-carried are aggregated by its own push's run or the next one.
+carried are aggregated by its own push's run or the next one. The `CI=true`
+prefix is the aggregator's only execution context (issue #706): a local run is
+refused before the first byte moves, while `journal aggregate --check` stays
+legal locally because it moves no byte.
 
 ### Headless runs: the journal action (issue #471)
 
