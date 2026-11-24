@@ -641,6 +641,10 @@ decision-scope-grammar | skills/unit-lane/references/DESIGN.md | block:decision-
 decision-promotion-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | fenced:decision-promotion@1 | n/a | no
 repository-state | skills/resolve-repository-state/references/STATE_CONTRACT.md | block:repository-state@1 | n/a | no
 restatement-corpus | skills/audit-docs/references/RESTATEMENT.md | block:restatement-corpus@1 | n/a | no
+workflow-doctor-mine-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-mine@1 | n/a | no
+workflow-doctor-bundle-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-bundle@1 | n/a | no
+workflow-doctor-route-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-route@1 | n/a | no
+doctor-triage-rubric | skills/agentic-workflow-doctor/references/RUBRIC.md | block:doctor-triage-rubric@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
