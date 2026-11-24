@@ -20,7 +20,7 @@ import { resolveToolChoiceAvailability } from "@gtrabanco/agentic-workflow/src/t
 import { createGitIdentityConsentStore, gitIdentityConsentPath } from "../guards/git-identity-consent.js";
 import { DEFAULT_TOOL_CHOICE, THINKING_LEVELS } from "../config/types.js";
 import type { EffectiveConfig, GuardMode } from "../config/types.js";
-import { createExtension } from "./factory.js";
+import { createExtension, applyEmbedDefaultOnAtLoad } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
 import { readGitStatusBounded } from "./receipt-guard.js";
 import type { InvocationContext, SettingsUi } from "../routing/types.js";
@@ -396,6 +396,15 @@ export default function extension(pi: ExtensionAPI): void {
   // session so every crate command the session spawns (the workflow-doctor
   // battery among them) declares it instead of guessing a layout.
   publishSkillsRoot();
+  // Issue #719 S1/S4 — the doc-index embedding provider resolves by default when
+  // an installed preset ships a profile, its key variable is present and the
+  // project's committed `index.json` carries no provider block. Pi loads a
+  // package's extension in the session's project process, so `process.cwd()` is
+  // that project; the export lands in this process's environment, so every
+  // runner child the session spawns inherits it. Nothing is written, and an
+  // operator's block still wins. Silent when the default does not apply — a
+  // keyword-only session is a supported state, not a fault to announce per load.
+  applyEmbedDefaultOnAtLoad({ root: process.cwd() });
   const hint = createHintStore({ path: stateFilePath(agentDir) });
   // One gate for both entry points (AC9): session start says it first, and a
   // session that begins by running a command says it there instead. The
