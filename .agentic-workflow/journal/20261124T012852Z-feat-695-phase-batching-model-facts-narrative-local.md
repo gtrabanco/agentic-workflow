@@ -1,0 +1,6 @@
+## 2026-11-24T01:28:52Z — feat/695-phase-batching-model-facts — feat/695-derived-capability-record — the capability record is generated
+- **Commits:** 6 (`da12ac4c…4dd04d2c`)
+- **Files:** 16 files
+- **Summary:** Applied issue #695 through the owner's local workflow: the preset's phase-batching capability record is generated from @gtrabanco/pi-nan-provider's exported NAN_MODEL_FACTS instead of hand-transcribed (per-cell provenance, the exact provider version recorded beside the cells, a materiality rule so an immaterial provider release lights no package), max_phases_per_context stays policy-owned in NAN_PHASE_THRESHOLDS, and the four paid entries gain the harness the provider documents.
+- **Decisions:** D1 the unit home is docs/features (the emitter owns that index); D2 the derivation imports the provider's facts-only module, never its entry; D3 cache_posture is cacheMode crossed with this repo's credit tariff (the provider's cost pair is all-zero by the credit-pool decision); D4 the pin advances only when a recorded cell moves; D5 the recorded snapshot is corrected to the provider's exact cells, not forked; D6 the threshold claim is re-cut to the band floor the policy states.
+- **Next:** Owner review of the branch: the differential shows 84/84 OFF-and-refusal invocations byte-identical and four paid models flipping to batched-phases only with the key on.

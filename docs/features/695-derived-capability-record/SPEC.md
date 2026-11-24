@@ -1,7 +1,8 @@
 ---
 type: feature
 scope: medium
-ac-hash: c1c2d6873549a261f6166cf088066b24065166067eb1738d1a1f651b1862d311
+roadmap_summary: Issue [#695](https://github.com/gtrabanco/agentic-workflow/issues/695) (M): the preset's phase-batching capability record is generated from `@gtrabanco/pi-nan-provider`'s exported model facts instead of hand-transcribed — per-cell provenance, the exact provider version recorded beside the cells, a materiality check so an immaterial provider release lights no package, and `max_phases_per_context` still policy-owned.
+ac-hash: 688faa755715944e21d14aec3b17d3ed8a0e09f70d0c6d48f9b35457420db946
 ---
 
 # 695 — derived-capability-record
@@ -36,7 +37,7 @@ issue #695"), so `S1` is the turn's instruction and `S2…S13` quote the issue.
 > The upstream issue exports, per model, typed facts with per-cell provenance: `contextWindow`, the `cost` pair (input/cacheRead), `toolCalling` (`openai-tools` | `xml` | `unmeasured`), `maxTokensSemantics`, `thinkingBudget`, `coldCeilingTokens`, `cacheMode`, `billingClass`, `parallelToolCalls`, `structuredOutput`. This unit consumes them.
 
 **S4 — Why the hand snapshot cannot stay: it is churn-bound.**
-> - **The hand-transcribed snapshot is churn-bound.** `catalog/nan-catalog-2026-11.jsonc` (feature #632) froze four facts per model by hand. NaN changes its catalog every one-to-three weeks; most of those changes do not move any decision (fail-closed keeps the answer identical), but a change touching one of the four executor rungs (`glm5.3`, `glm5.3-flash`, `deepseek-v4-flash`, `mimo-v2.6-flash`) forces a patch release across all four packages of the single version train — manual transcription included.
+> - **The hand-transcribed snapshot is churn-bound.** `packages/pi-nan-agentic-workflow/catalog/nan-catalog-2026-11.jsonc` (feature #632) froze four facts per model by hand. NaN changes its catalog every one-to-three weeks; most of those changes do not move any decision (fail-closed keeps the answer identical), but a change touching one of the four executor rungs (`glm5.3`, `glm5.3-flash`, `deepseek-v4-flash`, `mimo-v2.6-flash`) forces a patch release across all four packages of the single version train — manual transcription included.
 
 **S5 — The derivation step and its provenance contract.**
 > - A **derivation step** in `pi-nan-agentic-workflow` (build/publish-time, like the provider's own `generate-models`) that reads the exported facts and emits the perishable snapshot: `context_window`, `cache_posture`, and `tool_harness` per billed model, each cell carrying its inherited provenance (source URL, author, version copied, license name — the vendored-code header rule applies to generated data too).
@@ -84,7 +85,7 @@ proves it.
 | AC | Criterion | Check |
 |---|---|---|
 | AC-1 (S1) | The unit is applied on `feat/695-phase-batching-model-facts` with its ledgers frozen here and beside this document, and every obligation row is closed before hand-off | `rg -c '^\| O[0-9]+ \|.*\| (planned\|in-progress) \|$' docs/features/695-derived-capability-record/planning-obligations.md` matches 0 |
-| AC-2 (S2) | The runtime record is the generated artifact: `src/phase-batching.ts` declares no capability fact of its own and the hand map no longer exists | `rg -c 'RECORDED_FACTS' packages/pi-nan-agentic-workflow/src` matches 0 and `bun test test/model-facts.test.mjs` exits 0 (the record-from-artifact case) |
+| AC-2 (S2) | The runtime record is the generated artifact: `packages/pi-nan-agentic-workflow/src/phase-batching.ts` declares no capability fact of its own and the hand map no longer exists | `rg -c 'RECORDED_FACTS' packages/pi-nan-agentic-workflow/src` matches 0 and `bun test test/model-facts.test.mjs` exits 0 (the record-from-artifact case) |
 | AC-3 (S3) | Only the three cells the policy reads reach the artifact; the other exported facts are ignored rather than carried or refused | `bun test test/model-facts.test.mjs` exits 0 (the cell-set and unknown-fact cases) |
 | AC-4 (S4) | The recorded snapshot stops being a second capability source: it is corrected to the provider's own values and the harness residue is closed by the provider's documented fact | `bun test test/catalog-parity.test.mjs` exits 0 in `packages/pi-nan-agentic-workflow` |
 | AC-5 (S5) | Every generated cell inherits its provenance — provider package, version, upstream source class, author and license at the module level, one source id per cell — and the generator refuses to write an artifact without it | `bun test test/model-facts.test.mjs` exits 0 (the provenance case) |
@@ -93,29 +94,29 @@ proves it.
 | AC-8 (S8) | An immaterial catalog change rewrites nothing and lights no package, while a material one is named and blocks: `--check` exits 0 on the committed artifact and 1 on a moved cell | `bun test test/model-facts.test.mjs` exits 0 (the materiality matrix) and `bun scripts/derive-model-facts.mjs --check` exits 0 |
 | AC-9 (S9) | `catalog-parity` is anchored to the generated artifact and the recorded provider pin, so a stale artifact reds the suite | `bun test test/catalog-parity.test.mjs` exits 0 and `bun test test/model-facts.test.mjs` exits 0 |
 | AC-10 (S10) | The docs the change owes are current: `CONFIG.md`'s phase-batching section states the derivation and the pin, and the README's capability table matches the generated record | `rg -c 'generated artifact' docs/workflow/CONFIG.md` matches 1 and `bun test test/model-facts.test.mjs` exits 0 (the README-table case) |
-| AC-11 (S11) | Nothing reads the provider at runtime and nothing outside the preset's `devDependencies` names it: `src/` carries no provider import, the shipped `dist/` carries no provider specifier | `rg -c 'pi-nan-provider' packages/pi-nan-agentic-workflow/src` matches 0 and `rg -c 'pi-nan-provider' packages/pi-nan-agentic-workflow/package.json` matches 1 |
+| AC-11 (S11) | Nothing reads the provider at runtime and nothing outside the preset's `devDependencies` names it: `src/` carries no provider import, the shipped `dist/` carries no provider specifier | `rg -c 'from "@gtrabanco/pi-nan-provider' packages/pi-nan-agentic-workflow/src packages/pi-nan-agentic-workflow/dist` matches 0 and `rg -c '@gtrabanco/pi-nan-provider' packages/pi-nan-agentic-workflow/package.json` matches 1 |
 | AC-12 (S12) | The change occupies the surfaces it declared and no others: the schema package is untouched, so the mapping targets vocabularies that already exist | `git diff --name-only main...HEAD \| rg -c 'packages/agentic-workflow-schema/'` matches 0 |
 | AC-13 (S13) | Every fail-closed reason stays reachable, the shipped OFF posture is byte-identical, and the repository gate passes with the change in the tree | `bun run test` exits 0 in `packages/pi-nan-agentic-workflow` and `bun scripts/local-gate.mjs` exits 0 |
 
 ## Impact
 
 **What consumes this unit's deliverable.** The phase-batching policy
-(`src/phase-batching.ts`) and, through it, `/nan-phase-batching` and the lane
+(`packages/pi-nan-agentic-workflow/src/phase-batching.ts`) and, through it, `/nan-phase-batching` and the lane
 driver #669's model-ceiling input read one capability record. After this unit
-that record is `src/model-capabilities.generated.ts`, produced by
-`scripts/derive-model-facts.mjs` from `@gtrabanco/pi-nan-provider`'s exported
+that record is `packages/pi-nan-agentic-workflow/src/model-capabilities.generated.ts`, produced by
+`packages/pi-nan-agentic-workflow/scripts/derive-model-facts.mjs` from `@gtrabanco/pi-nan-provider`'s exported
 `NAN_MODEL_FACTS`; nothing else in the tree reads it.
 
 **What this unit consumes.** The provider's exported facts module
 (`@gtrabanco/pi-nan-provider@1.6.1`, `src/model-facts.ts`) at build time only;
 the recorded credit tariff snapshot
-(`catalog/nan-catalog-2026-11.jsonc`) for the cache-discount comparison; the
+(`packages/pi-nan-agentic-workflow/catalog/nan-catalog-2026-11.jsonc`) for the cache-discount comparison; the
 schema package's two closed vocabularies (`PHASE_BATCHING_TOOL_HARNESSES`,
 `PHASE_BATCHING_CACHE_POSTURES`); the preset's own `NAN_MODELS` routed fleet and
 `NAN_PHASE_THRESHOLDS`.
 
 **What stops being true when the change lands.** The comment in
-`src/phase-batching.ts` that says the record is "transcribed here because the
+`packages/pi-nan-agentic-workflow/src/phase-batching.ts` that says the record is "transcribed here because the
 runtime reads `src/` and never the snapshot" retires with `RECORDED_FACTS`; the
 README's per-model harness column ("not documented" on the four paid entries)
 retires; the parity claim "the capability record mirrors the recorded snapshot's
@@ -144,8 +145,8 @@ Two surfaces retire, each with its replacement:
 
 | Retired | Replacement | No-consumer evidence |
 |---|---|---|
-| `RECORDED_FACTS` (the hand map in `src/phase-batching.ts`) | `src/model-capabilities.generated.ts`, written by `scripts/derive-model-facts.mjs` | `rg -c 'RECORDED_FACTS' packages/pi-nan-agentic-workflow/src` → 0 after the change |
-| the parity claim "the record mirrors the snapshot's `capabilities[]`" | the record ↔ artifact ↔ provider-pin parity in `test/model-facts.test.mjs` plus the `--check` run | `rg -c 'impliedHarness' packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs` → 0 after the change |
+| `RECORDED_FACTS` (the hand map in `packages/pi-nan-agentic-workflow/src/phase-batching.ts`) | `packages/pi-nan-agentic-workflow/src/model-capabilities.generated.ts`, written by `packages/pi-nan-agentic-workflow/scripts/derive-model-facts.mjs` | `rg -c 'RECORDED_FACTS' packages/pi-nan-agentic-workflow/src` → 0 after the change |
+| the parity claim "the record mirrors the snapshot's `capabilities[]`" | the record ↔ artifact ↔ provider-pin parity in `packages/pi-nan-agentic-workflow/test/model-facts.test.mjs` plus the `--check` run | `rg -c 'impliedHarness' packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs` → 0 after the change |
 
 Nothing else is retired: the policy, the vocabulary, the config key, the
 command and the thresholds all stay exactly as they are.
@@ -189,17 +190,17 @@ none
   session that touches the preset.
 - The generator requires bun, because the provider publishes TypeScript sources
   and node refuses type stripping under `node_modules` (`PE-008`). Binds whoever
-  changes `scripts/derive-model-facts.mjs`.
+  changes `packages/pi-nan-agentic-workflow/scripts/derive-model-facts.mjs`.
 
 ## Applicable tests
 
-- `test/model-facts.test.mjs` — the derivation matrix, the materiality rule, the
+- `packages/pi-nan-agentic-workflow/test/model-facts.test.mjs` — the derivation matrix, the materiality rule, the
   provenance contract and the record-from-artifact equality (new).
-- `test/catalog-parity.test.mjs` — the recorded snapshot ↔ record parity, with
+- `packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs` — the recorded snapshot ↔ record parity, with
   the threshold claim re-cut to the band floor it actually states.
-- `test/phase-batching.test.mjs`, `test/docs-parity.test.mjs`,
-  `test/tier-routing.test.mjs`, `test/registration.test.mjs`,
-  `test/embed-profile.test.mjs` — unchanged, run to prove the policy's previous
+- `packages/pi-nan-agentic-workflow/test/phase-batching.test.mjs`, `packages/pi-nan-agentic-workflow/test/docs-parity.test.mjs`,
+  `packages/pi-nan-agentic-workflow/test/tier-routing.test.mjs`, `packages/pi-nan-agentic-workflow/test/registration.test.mjs`,
+  `packages/pi-nan-agentic-workflow/test/embed-profile.test.mjs` — unchanged, run to prove the policy's previous
   behaviour still holds.
 
 ## Known pre-existing issues
@@ -311,7 +312,22 @@ is not embedded here.
   policy states. `largeContextWindow` remains `1_000_000` and is pinned as the
   fleet's largest window rounded down to a whole million, instead of asserting
   equality with the fleet maximum that the provider's exact 2^20 values no
-  longer satisfy.
+  longer satisfy (elaborated in `decisions.md` §D6).
+- **E1** — 2026-11-23, the risk tier over the planned path set (`classifyTier` from `packages/agentic-workflow/src/runner/risk-tiers.mjs`, existing paths read from the tree and the four new files forced) · exit 0 · `standard` / `standard`, reason `9 path(s) carry executable content`.
+- **E2** — 2026-11-23, `bun install` in this worktree · exit 0 · one `bun.lock` entry: `@gtrabanco/pi-nan-provider@1.6.1` (sha512 recorded) and the preset's `devDependencies` line — the build-time pin, never a runtime dependency.
+- **E3** — 2026-11-23, `bun -e 'import("@gtrabanco/pi-nan-provider/src/model-facts.ts")' · exit 0 · 13 models, facts build `2026-11-23T00:46:05.244Z`; windows `1048576`×8 routed, `1000000` for the two `max` entries, `262144`×2; `toolCalling` `openai-tools`×9 / `xml`×3 on the routed fleet; `cacheMode` `automatic`×9 / `unmeasured`×2; `cost` all-zero.
+- **E4** — 2026-11-23, the recorded snapshot read through `packages/pi-nan-agentic-workflow/scripts/jsonc.mjs` · exit 0 · `context 1000000` on the eight non-cluster routed models and no `capabilities` key on the four paid entries (the drift `D5` corrects).
+- **E5** — 2026-11-23, `node --test` on a throwaway `/tmp` probe importing the installed provider subpath · exit 0 with `PROBE-FAIL ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` printed · node refuses type stripping under `node_modules` on every version, so the generator's bun boundary is measured, not assumed (`PE-006`).
+- **E6** — 2026-11-23, `bun test test/model-facts.test.mjs` at the RED commit `b28a3b53a` · exit 1 · `0 pass, 1 fail, 1 error — Cannot find module '../scripts/derive-model-facts.mjs'` (the corpus landed alone, before any implementation).
+- **E7** — 2026-11-23, `bun test test/model-facts.test.mjs` in `packages/pi-nan-agentic-workflow` at `10ab0008a`/`0ba0182e4` · exit 0 · 21 pass, 0 fail.
+- **E8** — 2026-11-23, `bun run test` in `packages/pi-nan-agentic-workflow` · exit 0 · 85 pass, 0 fail across 7 files, then `derive-model-facts: identical — src/model-capabilities.generated.ts matches @gtrabanco/pi-nan-provider@1.6.1`.
+- **E9** — 2026-11-23, the differential run of `phaseBatchingCommand` over 162 invocations (every routed model × the key OFF/ON × six eligibility shapes, plus three refusals) against a `git archive 15bcab21c` copy in `/tmp` and against the change · exit 0 · **84/84 OFF-and-refusal cases byte-identical**; the 10 ON cases that differ change only `capability.context_window` (the exact 2^20 value); four models flip `one-phase-per-turn → batched-phases` with reason `tool-harness-unmeasured → phases-batched` (`kimi-k3.1-pro`, `qwen3.8-max`, `deepseek-v4-pro`, `hy4` — the requested residue closing); **0 unexplained differences**.
+- **E10** — 2026-11-23, `bun test test/catalog-parity.test.mjs` · exit 0 · 12 pass, 0 fail; `bun test test/phase-batching.test.mjs` · exit 0 · 23 pass, 0 fail.
+- **E11** — 2026-11-23, the retirement and boundary counts · exit 0 · `rg -c 'RECORDED_FACTS' packages/pi-nan-agentic-workflow/src` matches 0; `rg -c 'from "@gtrabanco/pi-nan-provider' src dist` matches 0; `rg -c '@gtrabanco/pi-nan-provider' package.json` matches 1; `rg -c 'generated artifact' docs/workflow/CONFIG.md` matches 1.
+- **E12** — 2026-11-23, `bun scripts/docs-generate.mjs` · exit 0 · `PASS`, the Features row for 695 appended by the emitter (never hand-written) and the `docs/generated` projection refreshed.
+- **G1** — 2026-11-23, GATE-RAN · HEAD 4dd04d2c1 · `bun scripts/local-gate.mjs` · exit 0 · `PASS — 20 step(s) in 675s`, 1070 pass / 1 skipped across the suite-bearing steps.
+- **E13** — 2026-11-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/695-derived-capability-record/SPEC.md` · exit 0 · the `verify@1` receipt reports no violation.
+- **E14** — 2026-11-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · the carrier is conforming.
 
 ## Next
 

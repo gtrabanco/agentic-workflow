@@ -11,6 +11,9 @@ kind | paths | phase | date | authority | justification
 justification | packages/pi-nan-agentic-workflow/test/model-facts.test.mjs | P1 | 2026-11-23 | execute-phase | the RED corpus for the derivation; O7/O9 need its cases fixed before the core exists
 justification | packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs | P5 | 2026-11-23 | execute-phase | the threshold claim is re-cut to its band floor and the capability cases re-anchored to the generated artifact (O6/O10, D5/D6)
 justification | packages/pi-nan-agentic-workflow/src/phase-batching.ts | P4 | 2026-11-23 | execute-phase | the hand map retires and the record reads the generated artifact (O1/O4/O11)
+justification | packages/pi-nan-agentic-workflow/test/phase-batching.test.mjs | P4 | 2026-11-23 | execute-phase | two cases encode the retired hand facts (which models batch, which one is `unmeasured`); the claims are re-cut to the generated record and the failure state stays proven through the policy (O5/O6)
+justification | packages/pi-nan-agentic-workflow/catalog/nan-catalog-2026-11.jsonc | P5 | 2026-11-23 | execute-phase | the snapshot is corrected to the provider's exact `context` values and its documented harness for the four paid entries, under a dated provenance note (D5)
+justification | packages/pi-nan-agentic-workflow/README.md | P6 | 2026-11-23 | execute-phase | the capability table quotes the generated record and the section states where it comes from (O13)
 ```
 
 ## D1 — the unit's home is the feature carrier
