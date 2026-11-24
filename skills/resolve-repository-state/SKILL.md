@@ -1,7 +1,7 @@
 ---
 name: resolve-repository-state
 user-invocable: true
-version: 4.10.0
+version: 4.10.1
 argument-hint: <contradiction-id>
 description: >
   Resolve an explicit Normalized Repository State contradiction. This is the

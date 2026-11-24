@@ -205,6 +205,13 @@ export const HELP_REGISTRY = Object.freeze({
     summary: "resolves a phase's read set and checks a changed set against it",
     flags: ["--phase", "--changed", "--base"],
   },
+  "scaffold-contract": {
+    family: "sensor",
+    summary: "the scaffold contract that travels: exported unit-doc templates against the installed release's contract, and the same check on a staged unit doc",
+    ops: ["check", "authoring"],
+    usage: "<check|authoring> [<unit-doc>] [--workspace <dir>] [--json]",
+    flags: ["--workspace", "--json"],
+  },
   "test-impact": {
     family: "sensor",
     summary: "the set of tests a change can affect, unioned from four static sources, never a guess",

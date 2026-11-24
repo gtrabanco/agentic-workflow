@@ -27,7 +27,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@gtrabanco/agentic-workflow-schema": "4.10.0",
+    "@gtrabanco/agentic-workflow-schema": "4.10.1",
     "mdast-util-from-markdown": "2.1.0",
     "typebox": "1.4.7"
   }

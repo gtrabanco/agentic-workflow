@@ -20,8 +20,8 @@
 
 ```text
 doc-provenance@1
-written_by: agentic-workflow@4.10.0
-schema: @gtrabanco/agentic-workflow-schema@4.10.0
+written_by: agentic-workflow@4.10.1
+schema: @gtrabanco/agentic-workflow-schema@4.10.1
 format: unit-doc@2
 grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
 ```

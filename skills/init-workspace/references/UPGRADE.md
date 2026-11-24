@@ -16,6 +16,13 @@ lacks**. Ten ordered steps:
    Run `runner substrate check --workspace <dir>` first: its `absent` rows are
    the substrate classes this project has no document for, and each is offered
    additively in step 6 — never written unasked.
+   Then run `runner scaffold-contract check --workspace <dir>`: its `MISMATCH`
+   rows are the exported unit-doc templates this project keeps at a shape the
+   installed release's contract no longer accepts, and each is a block to
+   repair in step 6 — a drifted template makes every unit the lane cuts reject
+   for shape at audit. Its `ABSENT` surfaces are templates this project never
+   had, offered like any other missing block; a project that tailored its
+template is a residual, never clobbered.
    Produce the list of blocks/conventions the template carries that this
    project's substrate lacks, or still holds as a raw, unfilled placeholder —
    e.g. a `Docs site` block, a `Performance commands` block, a `Git workflow`
@@ -85,7 +92,10 @@ lacks**. Ten ordered steps:
    is never rewritten, only new blocks are inserted where missing.
 6. **Write additively.** Insert accepted blocks, including a missing
    `docs/workflow/REPOSITORY_STATE.md`; fill raw, still-placeholder
-   blocks with the confirmed values. A placeholder-only `docs/CAPABILITIES.md`
+   blocks with the confirmed values. A template `scaffold-contract check`
+   reported `MISMATCH` is repaired here from the fetched export's current bytes
+   (a tailored one is a residual, never clobbered), and `check` re-runs after the
+   writes to prove the install is idempotent about contract parity. A placeholder-only `docs/CAPABILITIES.md`
    is the one raw block the user is never asked to fill by hand: it is written by
    `capability-inventory@1`'s moves and refused by `BOOTSTRAP_WRITE.md` step 6
    until every row carries a state, so the result is never a trimmed template.
@@ -161,7 +171,12 @@ lacks**. Ten ordered steps:
    rule.
 10. **Report + hand off.** Summarize blocks added, filled, and skipped
    (residuals), the legacy `CLAUDE.md` outcome (folded items and removed, or kept
-   with the reason), the urgency labels seeded (or already present), then print the
+   with the reason), the urgency labels seeded (or already present), then run
+   `runner scaffold-contract check --workspace <dir>` one last time: a
+   `MISMATCH` row here means this run wrote a template the contract rejects and
+   the install is not finished — repair it before reporting, or list it as a
+   residual with its reason. Report the parity result as `SCAFFOLD OK` (every
+   present template matches) or name each remaining mismatch. Then print the
    recommendation to run `product-audit` next to see which newly-available
    *capabilities* apply to the code (upgrade mode migrates the substrate only,
    never the code).
