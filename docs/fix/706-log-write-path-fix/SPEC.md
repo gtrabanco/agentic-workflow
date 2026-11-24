@@ -331,6 +331,14 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   first difference at byte 19` · `1 violations · base ed260303a · range 6
   commits · verdict: FAIL`. This is the authorized red, not a defect: the gate
   is untouched and every later push is still byte-prefix strict.
+- **E4** — the P5 closure, measured: `bun scripts/git-config-writes.mjs` · exit
+  0 · `394 carriers scanned · 0 findings · verdict: PASS`; `bun test
+  scripts/push-identity-check.test.mjs` · exit 0 · 20 pass / 0 fail (the LEAK
+  fixture at `:94-115` is the unpublished refusal, and `:197` is the published
+  skip); `git log origin/main..HEAD --format='%ae|%ce' | rg
+  't@example\.test'` · no match; `git log --all --format='%ae' | rg -c
+  '^t@example\.test$'` · 99 historical commits, all reachable only from the
+  release tags/old refs, never rewritten by this unit.
 
 ## Next
 
