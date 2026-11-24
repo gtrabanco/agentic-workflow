@@ -1147,7 +1147,8 @@ test("publish-stage stages the canary pin and prints the restore that includes i
   const prerelease = / at (\d+\.\d+\.\d+-canary\.\d{8}\.\d+)/u.exec(staged.stderr)?.[1];
   assert.ok(prerelease, staged.stderr);
   assert.match(fs.readFileSync(file, "utf8"), new RegExp(`agentic-workflow@${prerelease.replace(/\./gu, "\\.")} `), "the staged tree cites the canary it publishes");
-  assert.match(staged.stderr, new RegExp(`1 runner pin\\(s\\) at ${prerelease.replace(/\./gu, "\\.")}`), "the stage reports what it wrote");
+  assert.match(staged.stderr, new RegExp(`\\+ 1 runner pin\\(s\\)`), "the stage reports what it wrote");
+  assert.match(staged.stderr, new RegExp(`at ${prerelease.replace(/\./gu, "\\.")}`), "and at the version it wrote");
 
   const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
   assert.equal(planned.status, 0, planned.stderr || planned.stdout);
@@ -1163,7 +1164,9 @@ test("the restore publish-stage prints covers the skill stamps it just wrote", (
   withRunnerPin(root, "1.0.0");
   const staged = run(["publish-stage", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
   assert.equal(staged.status, 0, staged.stderr || staged.stdout);
-  assert.match(fs.readFileSync(path.join(root, "skills/alpha/SKILL.md"), "utf8"), /^version: 1\.1\.0-canary\.20261112\.1$/m, "the skill is stamped before the restore is printed");
+  const canary = "1.0.0-canary.20261112.1";
+  assert.match(fs.readFileSync(path.join(root, "skills/alpha/SKILL.md"), "utf8"), new RegExp(`^version: ${canary.replace(/\./gu, "\\.")}$`, "m"), "the skill is stamped before the restore is printed");
+  assert.match(staged.stderr, /\+ 2 skill frontmatter\(s\)/u, "the stage reports the third family it wrote");
   const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
   assert.equal(planned.status, 0, planned.stderr || planned.stdout);
   assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md skills\/\*\/SKILL\.md/, "the restore names every path the stage wrote");

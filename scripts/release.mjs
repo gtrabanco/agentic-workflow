@@ -1104,7 +1104,13 @@ function main() {
         // manifests are: the published canary must cite its own version. Both
         // are restored by the same checkout, so the committed pin stays stable.
         const stagedRunner = stampRunnerPin(root, prerelease);
-        console.error(`staged: ${staged} package.json version(s) + ${stagedRunner} runner pin(s) at ${prerelease} — the publish job restores them, nothing is committed`);
+        // The skill frontmatter is the third stamped family (D-40-14), and the
+        // stable path has always written it — the canary path skipped it, so a
+        // tag recorded the skills of the train before the one it published
+        // (issue #710 S2). Same helper, same one-line transform: the field a
+        // consumer reads must name the train that ships it.
+        const stagedSkills = stampSkillVersions(root, prerelease);
+        console.error(`staged: ${staged} package.json version(s) + ${stagedRunner} runner pin(s) + ${stagedSkills} skill frontmatter(s) at ${prerelease} — the publish job restores them, nothing is committed`);
       }
       for (const pkg of listed) {
         console.log(`${pkg.name}\t${pkg.dirName}\t${prerelease}\t${args.channel}`);
@@ -1121,7 +1127,7 @@ function main() {
     for (const pkg of listed) {
       console.log(`  cd packages/${pkg.dirName} && npm publish --tag ${args.channel} --ignore-scripts --provenance`);
     }
-    console.log(`  git checkout -- packages/*/package.json ${RUNNER_PIN_FILE}`);
+    console.log(`  git checkout -- packages/*/package.json ${RUNNER_PIN_FILE} skills/*/SKILL.md`);
     console.log("note: canary never moves the latest dist-tag; --ignore-scripts is required because `publish-stage` writes the temp versions (the gate ran on the committed tree, and `prepublishOnly` would re-run it against the prerelease)");
   }
 

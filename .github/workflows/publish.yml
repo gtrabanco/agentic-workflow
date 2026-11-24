@@ -340,6 +340,15 @@ jobs:
           if [ -n "$VERSION" ]; then args+=(--version "$VERSION"); fi
           node scripts/release.mjs publish-stage --channel "$CHANNEL" --date "$CUT_DATE" "${args[@]}" >/dev/null
 
+      # Issue #710: the stage stamps the train version into the skill frontmatter,
+      # but the pi tarball's `skills/` copy is build output the gate step produced
+      # BEFORE that stamp — and the publish runs with --ignore-scripts, so nothing
+      # rebuilds it. Re-stage after the stage: the tag then carries the train
+      # version and so does the published bundle, instead of one lying a train
+      # behind the other.
+      - name: Re-stage the skill bundle at the staged train
+        run: bun run --cwd packages/pi-agentic-workflow bundle:skills
+
       # Issue #679: the tag must record the tree this cut publishes. The stage
       # above wrote the canary pin into RUNNER.md; the restore below would throw
       # it away, and a tag at HEAD would install skills citing services younger
@@ -347,7 +356,6 @@ jobs:
       # publish and the restore; the tag step records that commit.
       - name: Snapshot the published tree for the tag
         run: echo "RELEASE_COMMIT=$(bun scripts/canary-tag.mjs snapshot)" >> "$GITHUB_ENV"
-
       # Per declared package: run the exact-version gate (a canary already on
       # the registry skips) and publish under the channel dist-tag. Lifecycle
       # scripts are OFF: the gate above already ran, and `prepublishOnly` would
@@ -378,7 +386,7 @@ jobs:
       # read. The tag already recorded the snapshot commit above.
       - name: Restore the repo (temp versions are never committed)
         if: always()
-        run: git checkout HEAD -- packages/*/package.json skills/runner-contract/references/RUNNER.md
+        run: git checkout HEAD -- packages/*/package.json skills/runner-contract/references/RUNNER.md skills/*/SKILL.md
 
       # Release visible = installable (issue #481): the tag and the pre-release
       # must not appear while the CDN still 404s a tarball the run just published.
