@@ -1,0 +1,7 @@
+## 2026-11-24T12:26:29Z — fix/710-canary-stale-skills — narrative
+- **Commits:** 17 (`5a95fcea…52a9e457`)
+- **Files:** 84 files
+- **Summary:** External verify and fix of unit 710: the canary stale-stamp invocation blocker was resolved by a correction batch over the external review. Triage found 13 missing/incorrect test case references in SPEC/obligations, retired runner-prose claims, and stale P8/P9 narratives. The batch: closed the case-quote corpus (0/20 missing), re-cut AC5/AC7 and obligations O10/O11/O14 to the D11 ruling (pi prints no launcher), corrected E23's review-pack tally and the RUNNER.md cross-reference, and re-pinned ac-hash. Foreground: all validators green, local-gate PASS 20/20 in 449s. Two local commits pushed via fast-forward to origin/fix/710-canary-stale-skills. Session also handled state mutation detection — detected concurrent modification by another session (commit 36c975ee2), which fixed the specific runner-prose failure found.
+- **Decisions:** D14 records the re-cut: current-truth surfaces follow the ruling; planning-evidence rows stay as read-time receipts. Session closed on mutation by detecting another session's commit at 11:42:35 UTC that fixed the blocker found mid-verify.
+- **Next:** External verifier's verdict on the pushed batch (a8d9c7e8a), then PR #713 merge.
+- **Supersedes:** 20261124T121250Z-fix-710-canary-stale-skills-narrative-01a20d2e-c104-7493-9282-acbd5d3dcf65.md
