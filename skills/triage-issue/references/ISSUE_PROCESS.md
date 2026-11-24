@@ -171,6 +171,25 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    closed, remove any stale index entry. Any **other** GitHub state mutation
    (closing, unrelated labels) still needs confirmation when ambiguous.
 
+   **A close is checked before it is written (issue #704).** A delivery
+   condition is never prose: if the issue records one — `closed as covered by
+   #N`, `reopen when #N lands`, `proceeds when #N`, `waits for #N`, `retire when
+   #N` — the machine re-checks the issue it cites, and the close-time guard is
+   what you run before proposing or writing the close:
+
+   ```
+   runner delivery-conditions --close-check <n> [--issues-file <cache>]
+   ```
+
+   Exit 0 passes; exit 1 is `REFUSAL covered-by-open` and the block names the
+   route — deliver the cover first, or leave the issue open and record the
+   dependency as a native `blocked-by` relation (the forge already tracks it, so
+   the block is not a promise, it is a link). Exit 2 is a usage or input error
+   and proves nothing, so it is never read as a pass. The follow-up families
+   (`reopen-when`, `waits-for`, `retire-when`) do **not** block a close — a
+   recorded follow-up is the correct shape — and the scheduled sweep re-checks
+   them; the table and the state rules are § *Delivery conditions* below.
+
    **Declare the surfaces (issue #574).** The batch scheduler routes parallel
    work on the issue body's `## Surfaces`, and a missing one is planned as a
    guess:
@@ -228,3 +247,78 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    listed beneath), with any issue that matched no open unit listed last under
    a plain "no member unit" heading — this is the signal that surfaces N
    issues sharing one open unit at a glance, not N separate rows.
+
+## Delivery conditions — the carrier a close and a sweep re-check
+
+A condition that gates delivery names **a carrier the machine re-checks**, and
+that carrier is the issue it cites: `closed as covered by #N` is only true when
+#N is delivered, and `reopen when #N lands` is only a record when something
+notices #N landing. Nothing here asks you to write differently; it asks the
+condition to cite the issue it waits for, because an uncited condition is exactly
+the prose that stalled #301 — recorded in a comment, fulfilled four months later,
+and noticed only two consumer units after that.
+
+This section is the owner of the lifecycle and of the recognisable phrasings. The
+implementation is `judgeCondition` / `extractConditions` in
+`packages/agentic-workflow/src/delivery-conditions/index.mjs` and the vocabulary
+is `@gtrabanco/agentic-workflow-schema`'s `DELIVERY_CONDITION_*` consts; the
+`stalled-when` column below states the rule that function implements, so a change
+to one is a change to both.
+
+```text
+delivery-condition@1
+id | kind | phrase | stalled-when | move
+DC1 | covered-by | closed as covered by #N · covered by #N · cerrada como cubierta por #N · cubierta por #N | the citing issue is closed and a cited issue is still open — the close-time guard refuses it as `covered-by-open` | deliver the cover, or keep the issue open with a `blocked-by` link to #N
+DC2 | reopen-when | reopen when #N · reopen once #N · reabrir cuando #N | the citing issue is closed and a cited issue has closed — the recorded follow-up is due | reopen it, or record the audit that closes the follow-up
+DC3 | proceeds-when | proceeds when #N · proceeds once #N · continúa cuando #N | the citing issue is closed and a cited issue is still open | deliver the prerequisite, or keep the issue open with a `blocked-by` link
+DC4 | waits-for | waits for #N · waiting for #N · espera a #N | the citing issue is closed and a cited issue is still open | as `proceeds-when`: the cited issue is the link, not the sentence
+DC5 | retire-when | retire when #N · retirar cuando #N | a cited issue has closed — the retirement is due in either state of the citing issue | retire the surface (or record why it stays), then drop the condition
+```
+
+**The citation is the whole rule.** Every row above is read as "phrase, then
+the `#N` in the clause that follows it" — one clause, never the next sentence, at
+most three citations. A condition-shaped sentence that names no issue is
+reported as `ADVISORY condition-uncarried`, because the honest answer to "the
+machine cannot check this" is to say so. Advisories never fail a run; a stall
+does.
+
+**Two mechanisms, one command.**
+
+```
+runner delivery-conditions --close-check <n> [--issues-file <cache>] [--repo <owner/name>] [--json]
+runner delivery-conditions --sweep [--issues-file <cache>] [--repo <owner/name>] [--root <dir>] [--limit <n>] [--json]
+```
+
+- `--close-check <n>` is the guard: run it before proposing or writing a close.
+  One refusal class (`covered-by-open`), because a coverage claim against an
+  undelivered cover is wrong by construction; the follow-up families are
+  post-close by nature, and refusing those closes would forbid the correct
+  behaviour.
+- `--sweep` is the backstop: the issue corpus (bodies **and** comments — the
+  #301 condition was a comment) plus the roadmap's `## Fixes` rows, judged, with
+  the due conditions as `FINDING` lines and the uncarried ones as `ADVISORY`
+  lines. A scheduled workflow runs it weekly and fails visibly on a finding
+  (`.github/workflows/delivery-conditions.yml`), which is what "noticed within
+  one sweep" means.
+
+**The verdicts.** `satisfied` — the cited delivery landed and nothing is due;
+`pending` — it has not landed and the record is consistent; `stalled` — the
+cited state moved past the condition and the follow-up is due; `unresolved` —
+the machine could not read the cited issue, so it refuses to guess. The report's
+own verdict is `PASS` (exit 0), `VIOLATION` (exit 1, a stall or a refusal) or
+`UNRESOLVED` (exit 1, the corpus or a citation could not be read). The block is
+byte-stable for a given corpus and carries no third-party text: numbers, kinds,
+verdicts and fixed sentences only.
+
+**Offline and degraded-declared.** `--issues-file <json>` reads a cached
+`[{number, state, body, comments}]` array and performs no forge call, which is
+what makes a run deterministic and testable. An unreadable cache is exit 2 — the
+input the caller named does not exist, and a check that did not run is never a
+pass — while a forge that cannot be reached is a named
+`DEGRADED unavailable-forge-…` line with exit 1, never an empty corpus presented
+as truth.
+
+**Where the condition is owed.** A unit whose work is genuinely held by another
+issue records that as the forge's native `blocked-by` relation (authoritative,
+per the relationships rule above) and, when it also writes a condition, cites the
+same `#N`. The sweep reads the prose; the forge enforces the link.
