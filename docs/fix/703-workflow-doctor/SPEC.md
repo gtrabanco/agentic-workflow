@@ -391,6 +391,14 @@ fused pass are this document's `## Specs` closure and
   `workflow-doctor bogus` · exit 2 with the op list and its candidates ·
   `publish` without `--yes` · exit 2.
 
+- **G1** — 2026-12-23, HEAD `6db674a7f`, `bun scripts/local-gate.mjs` · exit 0 ·
+  **`local-gate: PASS — 20 step(s) in 724s`** — every step green, including
+  `root-suite` (the bun-first pool), `crate-suite-bun`, `pi-node-compat`
+  (1,074 pass / 0 fail / 1 skipped after the doctor joined the telemetry
+  vocabulary), `skill-context-budgets`, `secret-scan`, `docs-generated-projection`
+  and `red-first`. This line is the post-gate receipt, docs-only over the gated
+  bytes.
+
 ## Next
 
 Owner verdict on the diff.
