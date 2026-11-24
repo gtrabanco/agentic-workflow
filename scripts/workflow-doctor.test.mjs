@@ -407,7 +407,9 @@ test("the bundle prints slugs and log tokens, never a repository path", () => {
 test("a secret-shaped value refuses the bundle and prints nothing", () => {
   const dir = fixture();
   const mine = buildMine(dir);
-  const secret = `token ghp_${"a".repeat(36)} leaked into the defect`;
+  // Composed at run time so the tree carries no credential shape: the profile
+  // must still see one (the refusal case is what proves it).
+  const secret = `token ${"gh" + "p_"}${"a".repeat(36)} leaked into the defect`;
   for (const field of ["defect", "class"]) {
     assert.throws(
       () =>
@@ -416,7 +418,7 @@ test("a secret-shaped value refuses the bundle and prints nothing", () => {
           triage: {
             classes: [
               {
-                class: field === "class" ? "ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" : "gate-red",
+                class: field === "class" ? `${"gh" + "p_"}${"a".repeat(36)}` : "gate-red",
                 verdict: "report",
                 reason: "reproducible-defect",
                 defect: field === "defect" ? secret : "a plain sentence",
@@ -425,7 +427,7 @@ test("a secret-shaped value refuses the bundle and prints nothing", () => {
             ],
           },
         }),
-      (error) => error.refusal === "secret-shaped-value" && !error.message.includes("ghp_"),
+      (error) => error.refusal === "secret-shaped-value" && !error.message.includes("gh" + "p_"),
       `a secret in the ${field} field refuses without echoing it`,
     );
   }
