@@ -331,6 +331,42 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   first difference at byte 19` · `1 violations · base ed260303a · range 6
   commits · verdict: FAIL`. This is the authorized red, not a defect: the gate
   is untouched and every later push is still byte-prefix strict.
+- **P2** — 2026-11-24, the product guard and its tests: `a2a62a77b` (the CI-only
+  refusal, the `post-receive` `CI=true` recipe and the README) and `5d31a8f23`
+  (the aggregator comment kept host-neutral for `journal.surfaces` AC9).
+- **P3** — 2026-11-24, the project guard and its tests: `945b86a29`
+  (`log-local-push` for a local push that changes `docs/LOGS.md` under the bot
+  identity).
+- **P4** — 2026-11-24, the skill description: `557bc5c74`.
+- **P5** — 2026-11-24, the journal header: `39cecced4`, under D1.
+- **P6** — 2026-11-24, the fixture-identity closure record: `1753ecfb3`.
+- **P7** — 2026-11-24, the state surfaces: `ab701bc8f` (changeset, roadmap row
+  through the writer, generated projection).
+- **P8** — 2026-11-24, verification: the runs below; the only red is the
+  authorized `log-rewritten` (D1).
+- **E5** — targeted verification, all foreground: `bun test
+  packages/agentic-workflow/test/journal.test.mjs` · exit 0 · 43 pass; `bun test
+  scripts/log-immutability.test.mjs` · exit 0 · 25 pass; `bun test
+  scripts/push-identity-check.test.mjs` · exit 0 · 20 pass; `bun test
+  scripts/git-config-writes.test.mjs` · exit 0 · 10 pass; `bun test
+  scripts/skill-lint.test.mjs` · exit 0 · 20 pass; `bun scripts/skill-lint.mjs`
+  · exit 0 · 0 findings; `bun scripts/check-skill-context.mjs` · exit 0 · PASS;
+  `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/docs-generate.mjs
+  --check` · exit 0; `scaffold-contract authoring` · exit 0 · SCAFFOLD OK;
+  `phase-lint` · exit 0 · PASS; `journal aggregate --check` · exit 0 · checked
+  53.
+- **E6** — the full gate: `bun scripts/local-gate.mjs --no-bail` · exit 1 · 20
+  steps · only `log-immutability` failed with `log-rewritten` (the D1 authorized
+  exception). The first run also caught the aggregator comment's forge word
+  (`journal.surfaces` AC9); `5d31a8f23` removed it, and the rerun's crate suite
+  is green. No other red.
+- **E7** — the state owners: `roadmap fixrow` receipt `82de4412 → 857d499c`;
+  `docs-generate` · `Files: 2 written · 0 deleted · 1 unchanged`; `docs-generate
+  --check` · PASS; `lint-changeset` · ok.
+- **E8** — the session entry: `journal write --kind narrative` wrote
+  `.agentic-workflow/journal/20261124T232327Z-fix-706-logs-write-path-narrative-local.md`
+  (8 commits, 18 files); `journal aggregate --check` · exit 0 · checked 53 · no
+  refusals. The entry is a fragment, never a hand append.
 - **E4** — the P5 closure, measured: `bun scripts/git-config-writes.mjs` · exit
   0 · `394 carriers scanned · 0 findings · verdict: PASS`; `bun test
   scripts/push-identity-check.test.mjs` · exit 0 · 20 pass / 0 fail (the LEAK
