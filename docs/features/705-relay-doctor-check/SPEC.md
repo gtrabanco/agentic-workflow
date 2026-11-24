@@ -299,16 +299,18 @@ none.
 ```text
 TRIAGE — 705 (feature)
 Steps: research, design, plan, implement, tests, evidence, review, docs, release
-Tiers: research: cheap, design: cheap, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: cheap
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
 Skipped: none
 Budget: strong
+relay: bootstrap-needed — no packet at .pi-web/relays/705-relay-doctor-check
+relay-next: create .pi-web/relays/705-relay-doctor-check/ (charter → docs/features/705-relay-doctor-check/SPEC.md) then dispatch_relay(packet: ".pi-web/relays/705-relay-doctor-check", leg: "1") · legs: 9 = 8 phases + 1 coherence review
 ```
 
-The `relay:` addendum line that command prints belongs to this pi-web session's
-own packet state, not to a triaged step: this unit is applied inline by the
-operator's workflow (`## Log` L2), so no Relay packet is dispatched. The `review`
-step is replaced by that same workflow's external verification, and the
-`release` step is the changeset that ships with the code.
+The `relay:` / `relay-next:` pair belongs to this pi-web session's own packet
+state, not to a triaged step: this unit is applied inline by the operator's
+workflow (`## Log` L2), so no Relay packet is dispatched. The `review` step is
+replaced by that same workflow's external verification, and the `release` step is
+the changeset that ships with the code.
 
 ## Findings
 
@@ -331,6 +333,36 @@ step is replaced by that same workflow's external verification, and the
   ```
   Then run the declared verification commands in the foreground and report each as `command: observed result`. Then stop and present: the diff summary, the obligations ledger state (rows × status), the verification block, the §7 documentation state, and every failed/skipped/pending check honestly — **I am the external verifier**. Do not self-approve, do not claim done before my verdict.
   ```
+- **E1** — 2026-11-24, the frozen-failure reproducer, run against a copy of the base commit (`git archive main` into `/tmp`, the workspace `node_modules` linked): `bun packages/agentic-workflow/bin/agentic-workflow.mjs doctor --check relay` · exit **2** · `DOCTOR REFUSAL — unknown argument "--check" (usage: doctor [--json] [--root <dir>] | setup …)` — the capability was unreportable, which is the defect `S2` describes.
+- **E2** — 2026-11-24, the suite landing alone at `c4c6dab4b` · `bun test test/doctor.relay.test.mjs` exit **1** (`Cannot find module '../src/doctor/relay.mjs'`, 0 pass / 1 fail / 1 error) · `bun test test/doctor.cli.test.mjs` exit 1 (3 fail: the two `--check` cases and the two-carrier case) · `bun test test/doctor.inventory.test.mjs` exit 1 (17 expected, 16 documented).
+- **E3** — 2026-11-24, `bun test packages/agentic-workflow/test/doctor.relay.test.mjs` · exit 0 · **15 pass / 0 fail** — the five environments, the two halves, the installed set and the zero-spawn invariant.
+- **E4** — 2026-11-24, `bun test test/doctor.inventory.test.mjs test/doctor.checks.test.mjs test/doctor.vehicle.test.mjs test/doctor.wizard.test.mjs` · exit 0 · **49 pass / 0 fail**.
+- **E5** — 2026-11-24, `bun test test/doctor.cli.test.mjs test/cli.surface.test.mjs` · exit 0 · **21 pass / 0 fail** (`--check` narrows in 0.36s, the unknown id refuses with the documented ids, the two carriers print one identical row).
+- **E6** — 2026-11-24, the router's differential: `bun test scripts/relay-route.test.mjs` · exit 0 · **13 pass / 0 fail**, and `unit-route --triage 705` run from the base copy and from this head over the same repository prints **byte-identical** blocks with `PI_WEB_SESSION` set (7 lines) and unset (6 lines).
+- **E7** — 2026-11-24, the three observed environments of `S6 AC1`, against one scratch root: PI WEB present → `ok  relay  PI WEB session · daemon /home/agent/.pi-web/sessiond.sock · @jmfederico/pi-relay 0.1.0 · skills relay, relay-runner`, exit 0; without the marker → `N/A  relay  no PI WEB session · … · → Next: /execute-phase <NN-slug> P<k>`, exit 0; marker set with no daemon (`PI_WEB_SESSIOND_SOCKET=/tmp/not-a-daemon.sock`) → `UNREACHABLE  relay  … daemon absent at /tmp/not-a-daemon.sock … dispatch_relay requires PI WEB's session dispatch bridge (pi-web:session-dispatch:v1) …`, exit 0 with one advisory.
+- **E8** — 2026-11-24, the differential check (base copy vs this head, same scratch root and env): `doctor --json` — ids `16 → 17`, **added: relay, removed: none, rows whose bytes moved: none**, `inventory` `{rows:16} → {rows:17, check:null}`, `summary` `ok 9 → 10` with every other cell unchanged; the human block differs in exactly three lines (the header count, the added row, the summary) and `help doctor` in exactly one (`--check`).
+- **E9** — 2026-11-24, the cost the filter buys: `bun … doctor --json` **3,272 ms** (17 rows, version batch + engram health) against `bun … doctor --check relay --json` **240 ms** (1 row) — the same host, three runs each, before `D12` the narrowed read was 2,529 ms.
+- **E10** — 2026-11-24, `bun run --cwd packages/agentic-workflow test` · exit 0 · **84/84 suites PASS**; `node --test test/doctor.relay.test.mjs test/doctor.inventory.test.mjs test/doctor.vehicle.test.mjs test/doctor.checks.test.mjs` · **58 pass / 0 fail**; `node --test test/doctor.cli.test.mjs test/cli.surface.test.mjs test/doctor.wizard.test.mjs` · **27 pass / 0 fail**.
+- **E11** — 2026-11-24, `bun scripts/run-root-suite.mjs --jobs 4` · exit 0 · **143/143 PASS**.
+- **E12** — 2026-11-24, `bun scripts/skill-lint.mjs` · `0 finding(s) · verdict: PASS`; `bun scripts/check-skill-context.mjs` · `PASS context budgets: 31 skills` (init-workspace 7,219 est inside its 7,895 ceiling, unit-lane unchanged at 5,350); `--documents` · `PASS context documents: 7 budgeted documents` — no re-pin was needed.
+- **E13** — 2026-11-24, `bun test scripts/normative-drift.test.mjs scripts/prose-gate-inventory.test.mjs scripts/invocation-drift.test.mjs` · exit 0 · **59 pass / 0 fail** — the `tool-inventory@1` and `tool-doctor-envelope@1` blocks still resolve as normative surfaces.
+- **E14** — 2026-11-24, `bun … docs-generate --check` · **DRIFT** (roadmap + `docs/generated/units.md` stale) → `bun … docs-generate` · `1 written · 0 deleted · 2 unchanged · verdict: PASS` — the summary cell and the unit index came from the emitter (`D10`).
+- **E15** — 2026-11-24, `bun scripts/lint-changeset.mjs .changeset/705-relay-doctor-check.md` · `ok`; `bun scripts/version-parity-gate.mjs --content` · `VERDICT: PASS` (the changeset declares the crate and the pi package).
+- **E16** — 2026-11-24, `bun … journal write --kind narrative …` · `{"ok":true, "name":"20261124T130149Z-feat-705-tool-doctor-relay-check-narrative-local.md", "bytes":3429}` and `journal aggregate --check` · `ok: 39 checked, 0 refusals` — the session entry is the fragment the aggregator owns, never a `LOGS.md` append.
+- **E17** — 2026-11-24, the `ac-hash` recompute after the `## Triaged steps` and ledger corrections (`D13`, `D11`, `D14`): `sha256` of the `## Acceptance criteria` section reads `152edac2c4d2b7f8c999f41b53aa92d6e9b8e723663fd2ea88649ff5aa195f40`, unchanged from the cut — no correction touched a criterion.
+- **G1** — 2026-11-24, HEAD `feaea16a7`, `bun scripts/local-gate.mjs --jobs 4` · exit 0 · **`local-gate: PASS — 20 step(s) in 853s`**, including `root-suite` (143/143), `crate-suite-bun`, `crate-suite-node`, `pi-node-compat` (1074 pass / 1 skipped / 0 fail), `schema-node-compat`, `docs-generated-projection`, `version-parity-content`, `skill-context-budgets`, `journal-carrier-check`, `log-immutability`, `secret-scan`, `worktree-guard`, `red-first`.
+- **P1** — 2026-11-24, unit doc + the two standalone ledgers + decisions + known-issues cut; the roadmap row moved through `roadmap rowUpsert` · `6144d9d33`.
+- **P2** — 2026-11-24, the suite alone, observed red (E2) · `c4c6dab4b`.
+- **P3** — 2026-11-24, `src/runner/pi-web.mjs` and the router's import (byte-identical output, E6) · `4c192c8a4`.
+- **P4** — 2026-11-24, the probe module · `cb0893f10`.
+- **P5** — 2026-11-24, the registry entry, the filter, the flag and the README row · `3879c4e34`.
+- **P6** — 2026-11-24, the lane's reference and the interview's tool-evidence step · `714b7725f`.
+- **P7** — 2026-11-24, the changeset, the emitted projection and the journal fragment · `feaea16a7`.
+- **P8** — 2026-11-24, the differential, the gate (G1) and the ledger closure · this commit.
+- **D11** — 2026-11-24, the absent-capability answer carries no advisory (the route lives in evidence and is rendered), so a healthy host's `summary.advisories` stays zero; O3's cell corrected before verification.
+- **D12** — 2026-11-24, shared facts are read only when the selected rows declare them (`probe.needs`), amending D4's “same cost” with the measured 3.3s → 0.24s.
+- **D13** — 2026-11-24, the `## Triaged steps` block replaced with the command's own bytes after the plan's reconstruction differed in two tiers and the absent addendum.
+- **D14** — 2026-11-24, O11's validator narrowed to `PI_WEB_SESSION_ENV` (the marker's one definition), since the router's usage prose names the variable it documents.
 
 ## Next
 

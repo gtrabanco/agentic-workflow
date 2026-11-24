@@ -17,3 +17,18 @@ rules, not this ledger.
 | D8 | The two row-count literals (16 → 17) in `doctor.inventory.test.mjs` and `doctor.vehicle.test.mjs` are re-cut, not relaxed: the population they count grew by one documented surface, the documented↔probed bijection stays the case that enforces the pair, and the literal stays a tripwire against a silently dropped row. | unit-only | S2, S4; `PE-011`; `IR3` (a re-cut count names its reason) |
 | D9 | The wizard gains nothing: a `relay` row that is `ok`/`not-applicable` is `report-only`, `missing` with an instruction is `instruct-only`, and with no resolvable path it is `residual`. The doctor never runs an installer and `S5` forbids one for this package, so no `action` is ever attached to the row. | unit-only | S5, S6 AC2; `PE-002`, `PE-006` |
 | D10 | The docs move through their owners: the inventory row is a hand edit inside the crate README's block (the block is the declaration, no emitter writes it), the roadmap row moves through `roadmap rowUpsert`, the summary cell through the unit doc's `roadmap_summary:`, and the session entry through the journal writer. No projection is hand-written. | unit-only | S4; `PE-016`; the crate README's `tool-inventory@1` |
+| D11 | The absent-capability answer carries **no advisory**: `not-applicable` means the by-design route, so the per-phase hand-off lives in the row's `evidence.degradation` and is printed in the block's detail line, while a healthy host keeps `summary.advisories` at zero (the doctor's own S9 invariant). O3's cell said "advisory" and was corrected to the evidence carrier **before** its verification, never after. | unit-only | S3, S6 AC1; `PE-002`, `PE-018`; `doctor.checks.test.mjs`'s `a healthy host yields zero advisories` |
+| D12 | The shared facts a run computes are read only when the rows it selected declare them (`probe.needs`), colocated with the probe rather than kept in a second list of ids: the version batch runs on a full run and per-access on a narrowed one, and the engram health read happens only when an engram row is selected. This amends D4's "one code path at the same cost" with the measurement that made the cost visible: 3.3s for the full inventory, 0.24s for `--check relay`. | unit-only | S6 AC1, S4; `PE-018`; the `grouped`/`needs` declaration in `checks.mjs` |
+| D13 | `## Tasks`' `## Triaged steps` block is the command's own bytes: the plan wrote a plausible block from the catalog and `runner unit-route --triage 705` printed a different one (two tier cells and the `relay:` addendum), so the command's output replaced it verbatim. A machine block is copied, never reconstructed. | unit-only | S1, S4; the `## Triaged steps` section; `PE-001` |
+| D14 | O11's validator reads `PI_WEB_SESSION_ENV`, not the bare variable name: `unit-route.mjs`'s usage prose legitimately names the marker it documents, and the law is that no *second resolution* exists — which the constant's single definition proves. The validator was narrowed to the fact it asks about before verification. | unit-only | S4, S7 (row 1); `IR11`; `PE-003`, `PE-014` |
+
+## Open questions
+
+The ledger the `needs-input` sensor reads (`open-questions@1`, grammar owned by
+`skills/orchestration-envelope/references/TURN_CONTRACT.md`). None is open: the one
+question the plan carried was the issue's own open risk about probing the bridge
+(`S8`), resolved by the issue's scope decision (`S7`, `D2`) with the host's bytes
+as evidence (`PE-004`).
+
+open-questions@1
+id | date | type | question | blocks | search-receipt | options | route
