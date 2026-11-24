@@ -342,6 +342,8 @@ ledgers it does not consume.
 - **E15** — 2026-12-24, `bun packages/agentic-workflow/bin/agentic-workflow.mjs dimension-regression --base 15bcab21c4100f96c624bbffd4486cd0d521f969` · exit 0 · `verdict | clean` — the range touches one review surface (`docs/workflow/GATE_INVENTORY.md`, the gate row this unit adds) and the dimension set is unchanged at 20, so the new row re-verifies rather than drops a dimension.
 - **E16** — 2026-12-24, `runner dimension-regression --base 15bcab21c4100f96c624bbffd4486cd0d521f969` (locally the same run as `bun packages/agentic-workflow/bin/agentic-workflow.mjs dimension-regression --base <sha>`) · exit 0 · `verdict | clean` — a correcting line for E15, which cited the bin path and so could not satisfy the gate's canonical `runner dimension-regression` form; the run, the base and the result are the same.
 
+- **P2** — 2026-12-24, PR opened: [#712](https://github.com/gtrabanco/agentic-workflow/pull/712) on `fix/704-prose-only-delivery-stall`. The `## Fixes` row settled to `done · [#712]` through its writer (`runner roadmap fixrow`, receipt `pass`, `e571f83b → 58fa1fc9`) and `docs-generate`, and `runner roadmap-settle` reports `PASS · 273 unit docs · 0 violations`. The row is removed after the merge.
+
 ## Next
 
 P1 — the ledgers are frozen in this cut; the suite lands red next.
@@ -349,7 +351,8 @@ P1 — the ledgers are frozen in this cut; the suite lands red next.
 ## References
 
 - Issue [#704](https://github.com/gtrabanco/agentic-workflow/issues/704) — the
-  request, its field record and its surface list.
+  request, its field record and its surface list; the PR closes it:
+  [#712](https://github.com/gtrabanco/agentic-workflow/pull/712).
 - [fix #301](https://github.com/gtrabanco/agentic-workflow/issues/301) — the
   confirmed silent stall (closed; its reopen condition lived in a comment).
 - [fix #260](https://github.com/gtrabanco/agentic-workflow/issues/260) — the
