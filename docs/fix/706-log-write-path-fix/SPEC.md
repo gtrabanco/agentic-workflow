@@ -356,14 +356,14 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   --check` · exit 0; `scaffold-contract authoring` · exit 0 · SCAFFOLD OK;
   `phase-lint` · exit 0 · PASS; `journal aggregate --check` · exit 0 · checked
   53.
-- **E6** — the full gate: `bun scripts/local-gate.mjs --no-bail` · exit 1 · 20
-  steps · two reds. `log-immutability` fails with `log-rewritten` — the D1
-  authorized exception. `worktree-guard` fails with `STALE:
-  .worktrees/feat-719-nan-embedding-default-index-tool`, another session's
-  worktree; this unit touches no worktree and leaves the finding to its owner
-  (K6). The first run also caught the aggregator comment's forge word
-  (`journal.surfaces` AC9); `5d31a8f23` removed it, and the rerun's crate suite
-  is green. No other red.
+- **E6** — the full gate at `546b9f5e0`: `bun scripts/local-gate.mjs --no-bail` ·
+  exit 1 · 20 steps · one red, `log-immutability` with `log-rewritten` — the D1
+  authorized exception. An earlier run also caught `worktree-guard` on another
+  session's stale `feat-719-nan-embedding-default-index-tool` worktree; that
+  worktree was removed externally and the final run is clean of it (K6). The
+  first run also caught the aggregator comment's forge word (`journal.surfaces`
+  AC9); `5d31a8f23` removed it, and the rerun's crate suite is green. No other
+  red.
 - **E7** — the state owners: `roadmap fixrow` receipt `82de4412 → 857d499c`;
   `docs-generate` · `Files: 2 written · 0 deleted · 1 unchanged`; `docs-generate
   --check` · PASS; `lint-changeset` · ok.
