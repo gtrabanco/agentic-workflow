@@ -55,7 +55,7 @@ Offer to create `<root>/.pi/extensions/pi-permission-system/config.json` through
 the command, never by hand:
 
 ```bash
-agentic-workflow provision permissions --write
+runner provision permissions --write
 ```
 
 The command renders the documented baseline (bash asks, `rm -rf *` denies,

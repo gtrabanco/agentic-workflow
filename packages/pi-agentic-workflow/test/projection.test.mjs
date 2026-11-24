@@ -23,11 +23,13 @@ import {
   CRATE_COMMANDS,
   applyProjection,
   loadProjectionManifest,
+  pointerLine,
   rulesFor,
 } from "../scripts/projection.mjs";
 
 const PKG_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const CRATE_BIN = join(PKG_DIR, "..", "agentic-workflow", "bin", "agentic-workflow.mjs");
+
 
 const sha256 = (text) => `sha256:${createHash("sha256").update(text, "utf8").digest("hex")}`;
 
@@ -99,7 +101,7 @@ const pointerizeOther = (over = {}) => ({
   ...over,
 });
 
-const POINTER_LINE = `> Enforced by \`doc read\` — this section's prose is not shipped in the pi bundle; the standalone skills/ tree carries the full text.`;
+const POINTER_LINE = `> Enforced by \`doc read\` — this section's prose is not shipped in the pi bundle; the standalone skills/ tree carries the full text. In a pi session the pin is the crate this package installs and the extension spawns it at that exact version; outside pi, cite \`runner <subcommand>\` and let the standalone contract resolve it.`;
 
 test("projection: the empty rule list is a byte-identical no-op", () => {
   assert.equal(applyProjection(TOY_SKILL, []), TOY_SKILL);
@@ -192,6 +194,19 @@ test("projection: pointerize keeps the heading and replaces the body with one po
     out,
     TOY_SKILL.replace(`## Other section\n\nUntouched body.\n`, `## Other section\n${POINTER_LINE}\n`),
   );
+});
+
+// Issue #710 S5/S7: the pointerized section is where the contract's pin lived, so
+// the pointer line is the only place a pi-bundle reader can learn where the pin
+// went — without it "at the pin above" survives with no referent. It says where
+// the pin lives and never prints a launcher: pi resolves the runtime in code
+// (issue #555), and the invocation prose stays in the standalone contract.
+test("projection: the pointer line names where the pin lives, and prints no launcher", () => {
+  const out = applyProjection(TOY_SKILL, [pointerizeOther()]);
+  assert.match(out, /the pin is the crate this package installs and the extension spawns it at that exact version/u);
+  assert.match(out, /outside pi, cite `runner <subcommand>`/u);
+  assert.doesNotMatch(out, /(?:bunx|npx(?:\s+--yes)?|pnpm\s+dlx)\s+@gtrabanco\/agentic-workflow/u, "no launcher is printed, and no version literal is left behind");
+  assert.equal(pointerLine, pointerLine, "the pointer text is composed from the rule alone — no pin argument to keep in sync");
 });
 
 test("projection: rules apply sequentially and each hash binds the bytes it removes", () => {

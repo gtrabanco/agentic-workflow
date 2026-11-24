@@ -4,7 +4,7 @@ Every write in this crate goes through a service that validates before it moves
 a byte. The point is not ceremony: a write that refuses is cheaper than a write
 that lands wrong and is discovered three phases later.
 
-**Flag spelling is not here.** It is `agentic-workflow help <subcommand>`.
+**Flag spelling is not here.** It is `runner help <subcommand>`.
 
 ## The read → compare → write loop (the CAS pattern)
 

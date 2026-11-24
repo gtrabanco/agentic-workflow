@@ -98,11 +98,23 @@ export const CRATE_COMMANDS = Object.freeze([
   "verify",
 ]);
 
-/** The one-line pointer a `pointerize` rule leaves behind. Naming the
- *  enforcing command is the contract: the prose is gone, the enforcement is
- *  not. */
-const pointerLine = (rule) =>
-  `> Enforced by \`${rule.enforcingCommand}\` — this section's prose is not shipped in the pi bundle; the standalone skills/ tree carries the full text.`;
+/**
+ * The one-line pointer a `pointerize` rule leaves behind. Naming the enforcing
+ * command is the contract: the prose is gone, the enforcement is not.
+ *
+ * Since issue #710 (S5) the pointer also closes the hole the pointerisation
+ * opened: the section it replaces is where the contract's pin lived, so a reader
+ * was left with "at the pin above" and nothing above it. The pointer now says
+ * where the pin actually is in a pi session — the extension spawns its own
+ * exact, installed crate — and where the standalone form lives, without printing
+ * a launcher: pi resolves the runtime in code, and the invocation prose belongs
+ * to the skills alone (issue #555).
+ *
+ * @param {{enforcingCommand: string}} rule
+ */
+export function pointerLine(rule) {
+  return `> Enforced by \`${rule.enforcingCommand}\` — this section's prose is not shipped in the pi bundle; the standalone skills/ tree carries the full text. In a pi session the pin is the crate this package installs and the extension spawns it at that exact version; outside pi, cite \`runner <subcommand>\` and let the standalone contract resolve it.`;
+}
 
 const sha256Digest = (text) => createHash("sha256").update(text, "utf8").digest("hex");
 const sha256Hex = (text) => `sha256:${sha256Digest(text)}`;

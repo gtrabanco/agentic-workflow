@@ -1,7 +1,7 @@
 # Boundary enforcement record
 
 > **Written by the materialization round, never by hand.** `/init-workspace`
-> creates this file from the template and `agentic-workflow materialize apply`
+> creates this file from the template and `runner materialize apply`
 > maintains it: one row per boundary the charter declares, recording which route
 > the team chose for a `prose-only` answer and what that route produced. The
 > column contract is `materialization@1` in the runner crate's README — this file

@@ -267,7 +267,7 @@ surfaces at emission; run it before the unit doc's first commit.
   (issue #654).** Bash and file-access gating is `@gotgenes/pi-permission-system`,
   installed by the operator, never by this skill on its own initiative: a yes runs
   the package's installer, a no writes nothing and records the residual, and the
-  project's policy file is created through `agentic-workflow provision permissions`
+  project's policy file is created through `runner provision permissions`
   only when it does not exist (an existing one is the operator's). The offer, the
   authoring section a project declares its own guards in, and the verification
   checklist are
@@ -385,7 +385,7 @@ Conventions written into the project's AGENTS.md:
 - **Triage**: the lane conductor (`/unit-lane` / `workflow-status`) returns a
   deterministic ordered list of steps (research, design, plan, implement,
   tests, evidence, review, docs, release).
-- **Guards**: `agentic-workflow diff-guard` measures `git diff --stat` at boundaries;
+- **Guards**: `runner diff-guard` measures `git diff --stat` at boundaries;
   overflow → mandatory re-triage. Anti-gaming: "NEVER shrink a diff by deleting
   comments, blank lines, docs or tests."
 - **Evidence rows**: one per AC — what was run, exit/digest, output (≤2 lines),

@@ -56,7 +56,7 @@ snapshot.
 | Condition now | LOAD |
 |---|---|
 | Running or repairing a pre-execution review | [references/POLICY.md](references/POLICY.md) — independence, union, dismissal, diversity labels, author exclusion, untrusted content, critique/synthesis/arbitration bounds, no quorum, no-progress, batch repair, `CONVERGENCE-ANOMALY`, write-then-report |
-| Building or re-checking a snapshot digest | [references/SNAPSHOT.md](references/SNAPSHOT.md) — the one executable recipe (`agentic-workflow pre-execution-snapshot`), what each stage binds, how a consumer re-verifies a receipt, and why a snapshot digest is not a git blob id |
+| Building or re-checking a snapshot digest | [references/SNAPSHOT.md](references/SNAPSHOT.md) — the one executable recipe (`runner pre-execution-snapshot`), what each stage binds, how a consumer re-verifies a receipt, and why a snapshot digest is not a git blob id |
 | Writing or validating a Plan-stage artifact | [references/LEDGERS.md](references/LEDGERS.md) — the planning-evidence table, the obligation ledger, the stage-aware `planning-findings.md`, the durable review mark, and who may write each |
 
 ## Guardrails

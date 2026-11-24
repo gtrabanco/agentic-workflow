@@ -153,7 +153,10 @@ export const prompts = {
       "A key the schema no longer declares is dropped, after the existing file is copied to <file>.bak-<timestamp>.",
       "The existing file is backed up first; this console has no opt-out.",
     ].join("\n"),
-  materializeUntrusted: "The project config (.pi/) is not writable while this project is untrusted — trust the project, or run `agentic-workflow config default --scope global` yourself.",
+  // The refusal names the operation, never a launcher: pi resolves and spawns the
+  // runner itself, and the invocation prose lives in the skills (issue #555).
+  materializeUntrusted:
+    "The project config (.pi/) is not writable while this project is untrusted — trust the project, then run the config materialization from this console (or the crate's own `config default --scope global` outside pi).",
   materializeDeclined: "Nothing was written.",
 } as const;
 

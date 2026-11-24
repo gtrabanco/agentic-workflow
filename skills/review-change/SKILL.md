@@ -125,7 +125,7 @@ Per Workflow conventions + documentation map, decide axes from:
 2. **Footprint:** what the diff touches (UI, API, infra, domain). An axis applies
    only when both project and footprint support it.
 3. **Prior findings (optional retrieval aid, never authoritative):** when the
-   index entry point exists, `agentic-workflow doc --query "<change topic>"
+   index entry point exists, `runner doc --query "<change topic>"
    --json-only` may surface earlier findings, decisions and session-log entries
    on the same surface before the passes run. A missing index, an absent entry
    point, or an empty answer changes nothing — grep stays the exhaustive
@@ -168,7 +168,7 @@ cites it.
 
 **Pass model routing (issue #201).** Resolve every pass's model **before**
 spawning from the operator's approved table, not the session model:
-`agentic-workflow resolve-passes` (the `resolve-passes@1` receipt) → launch
+`runner resolve-passes` (the `resolve-passes@1` receipt) → launch
 each pass with its row's pinned `model` and record the row's `source` in the
 pass record. `spawn: "auto"` = the operator delegated the choice (record the
 tier justification in the report); `spawn: "inline"` — or a pinned model

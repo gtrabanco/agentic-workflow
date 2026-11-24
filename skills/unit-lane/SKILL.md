@@ -62,7 +62,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 - Force re-triage: `unit-lane <NN-slug> --retriage`
 
 Both `--fix <n>` and `--from-issue <n>` are the exact forms
-`agentic-workflow unit-route` prints for a tracked issue with no unit folder
+`runner unit-route` prints for a tracked issue with no unit folder
 (`route: plan-from-issue`) — never invent a different spelling.
 
 ## Inputs — never inferred, never defaulted
@@ -134,7 +134,7 @@ The template carries the unit doc's **provenance stamp**
 writer/schema versions; owner: the schema package's README block). Keep it. It
 is written at creation and at a re-cut only, never per edit, so its version
 lines are never hand-edited: a re-cut re-stamps with
-`agentic-workflow unit-doc <slug> provenance`. A unit doc without a stamp stays
+`runner unit-doc <slug> provenance`. A unit doc without a stamp stays
 readable — its generation is derived from the sections it carries — and a
 closed unit is never backstamped.
 
@@ -279,7 +279,7 @@ Before every commit:
 Engram is the required memory substrate; a down layer never blocks a unit —
 follow [the memory protocol](references/MEMORY.md).
 
-- **Probe once**, before the first memory read: `agentic-workflow memory probe`
+- **Probe once**, before the first memory read: `runner memory probe`
   → paste the verdict into Evidence; `degraded` is recorded and said once.
 - **Save at unit start, each phase transition, and close** under
   `topic_key: "unit/<NN-slug>/doc"`, with explicit `project` and explicit

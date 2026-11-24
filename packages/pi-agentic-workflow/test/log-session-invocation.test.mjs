@@ -296,6 +296,42 @@ test("S5: a project without a writer script answers through the crate's command"
   }
 });
 
+// Issue #710 S6/S7: the composed instruction used to name the scope-less, unversioned
+// launcher — nothing resolves to it (the npm name is a `0.0.0` placeholder with no
+// bin), so a session that followed the directive byte for byte hit exit 127. The
+// extension already spawns the crate at its own version, so the directive hands the
+// model a tool call and never a command to resolve.
+test("S7: the directive names the tool the extension spawns, never a launcher to resolve", () => {
+  const { root } = project({ journal: true, carrier: true });
+  try {
+    const { record, directive } = planInvocation({ root, sessionId: SESSION, now: NOW });
+    assert.equal(record.target, "fragment", "the fragment branch is the one that composed the launcher");
+    assert.match(directive, /agentic_workflow_run \{ "subcommand": "journal write"/u, "the entry is handed to the tool");
+    assert.match(directive, new RegExp(`"--session", "${SESSION}"`, "u"), "with the session the record names");
+    assert.match(directive, /The extension spawns the runner itself, at this package's own version/u, "and says so, so the model never looks for a binary");
+    assert.doesNotMatch(directive, /(?:^|[\s`])agentic-workflow\s+[a-z]/mu, "no bare launcher survives anywhere in the composed bytes");
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("S7: a crate-route close is handed to the same tool, never composed as a shell command", () => {
+  const { root } = project({ journal: true, carrier: true });
+  try {
+    const { directive } = planInvocation({
+      root,
+      sessionId: SESSION,
+      now: NOW,
+      crateBin: "/opt/crate/bin/agentic-workflow.mjs",
+      run: () => ({ status: 0, stdout: "## 2026-11-20T00:00:00Z — test-branch — narrative\n- **Commits:** 0\n", stderr: "" }),
+    });
+    assert.match(directive, /agentic_workflow_run \{ "subcommand": "session-close close" \}/u, "the close is the tool's own subcommand");
+    assert.doesNotMatch(directive, /`runner session-close close`/u, "never a symbolic citation the bash seam must refuse");
+  } finally {
+    cleanup(root);
+  }
+});
+
 test("S5: a project that ships its own writer script keeps using it", () => {
   const { root } = project({ journal: true });
   fs.mkdirSync(path.join(root, "scripts"), { recursive: true });

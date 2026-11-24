@@ -135,7 +135,7 @@ A generation the schema package does not publish is red at `verify`
   frozen evidence would falsify the record it describes.
 - **A re-cut of the carrier** (a section-set change) adds a `format` generation
   and its row above, and re-stamps the in-flight units with
-  `agentic-workflow unit-doc <slug> provenance`. One generation per layout: two
+  `runner unit-doc <slug> provenance`. One generation per layout: two
   layouts sharing a generation is exactly the silent misparse this contract
   removes.
 - **Consuming the stamp from another language?** Read the four fields as the

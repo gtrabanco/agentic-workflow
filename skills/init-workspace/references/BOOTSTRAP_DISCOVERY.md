@@ -92,7 +92,7 @@
         it, so the guide carries its source, pin, install date and axis:
         `runner skills register --guide AGENTS.md --name <n> --source <s>
         --pin <p> --axis <a>`.
-     The commands are `agentic-workflow skills`; the crate README's `skills`
+     The commands are `runner skills`; the crate README's `skills`
      section owns the flags and both grammars. Declining every candidate leaves
      the tree byte-identical.
    - **Project** — name + one-line purpose.

@@ -19,7 +19,7 @@
 **A box that runs a command discloses what the command needs.** When a box
 invokes a command with a placeholder (`runner <command> <unit-dir>`), the same
 skill's text must name the artifact that placeholder requires — the script
-declares it (`PREREQUISITES` in `agentic-workflow needs-input`) and
+declares it (`PREREQUISITES` in `runner needs-input`) and
 `runner promise-coherence` checks the disclosure. A box that instructs a
 run the skill never equips reproduces the failure it was written to prevent
 (fix #258 F45/F53: `missing-unit-doc`).
@@ -32,7 +32,7 @@ run the skill never equips reproduces the failure it was written to prevent
 
 Boxes 1–5 are mechanical. Demonstrate them by running the verifier and pasting
 its one-line receipt beside the git/forge evidence. It is one implementation with
-two faces: `agentic-workflow turn-contract` (the universal CLI), which the
+two faces: `runner turn-contract` (the universal CLI), which the
 scaffold shim `template/.agentic-workflow/hooks/turn-contract.sh` resolves and
 execs, and the crate's `bin/turn-contract.mjs`. It needs bash + git + the
 remote's forge CLI (`gh`, `glab` or `gt`), with `--remote`/`--forge` naming what
@@ -119,14 +119,14 @@ next | continuation
 
 An input a step cannot resolve is never inferred: the step stops and hands the
 questions back. The block below is that hand-off — printed by
-`agentic-workflow needs-input`, never hand-authored — so a weaker model copies it
+`runner needs-input`, never hand-authored — so a weaker model copies it
 instead of paraphrasing the questions away. Interactive, the block is the pause
 point and the run waits for a user decision; unattended, it is a hard fail
 carrying the same block.
 
 ```text
 open-questions@1
-# produced-by: `agentic-workflow needs-input` <unit-dir> [--workspace <dir>] [--json]
+# produced-by: `runner needs-input` <unit-dir> [--workspace <dir>] [--json]
 # input:       <unit-dir>/SPEC.md + <unit-dir>/decisions.md (the ledger's own grammar is
 #              published by the template agent guide, template/AGENTS.md) +, for a
 #              substrate route, the workspace's substrate census

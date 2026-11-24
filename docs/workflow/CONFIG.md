@@ -56,7 +56,7 @@ project can never silently drop a global glob or lower a requirement.
 |---|---|---|---|
 | `logSession` | base | `false` | `true`/`1`/`"on"` enable the mechanical LOGS.md entry; `false`/`0`/`"off"` disable it; `{ "publisher": { "command": [...], "timeoutMs": 5000 }, "enabled": true }` runs the publisher and (when `enabled`) appends too |
 | `memory` | base | `{ "engram": false }` | `{ "engram": true }` opts in to Engram MCP registration |
-| `telemetry` | base | `{ "enabled": true, "jsonFile": ".pi/.telemetry/sessions.jsonl" }` | measures the per-unit cost sample by default — the sample stays local and anonymized (no prompt text, no model output, no diff, no file content); `"enabled": false` opts a project out. `jsonFile` is the per-session JSONL path, resolved against the project root (issue #504). A sample the wiring never flushed (`session_shutdown` does not fire while a pi-web session stays alive) is recovered by hand with `agentic-workflow telemetry reconstruct write` (issue #624), which reads Pi's own transcripts and merges only the sessions a store does not already carry |
+| `telemetry` | base | `{ "enabled": true, "jsonFile": ".pi/.telemetry/sessions.jsonl" }` | measures the per-unit cost sample by default — the sample stays local and anonymized (no prompt text, no model output, no diff, no file content); `"enabled": false` opts a project out. `jsonFile` is the per-session JSONL path, resolved against the project root (issue #504). A sample the wiring never flushed (`session_shutdown` does not fire while a pi-web session stays alive) is recovered by hand with `runner telemetry reconstruct write` (issue #624), which reads Pi's own transcripts and merges only the sessions a store does not already carry |
 | `guard` | base | `{ "default": "ask" }` | one disposition per guard — `allow`, `deny` or `ask` — with a global fallback; see [Guards](#guards) for the reference table, the resolution order and the guards that are always on. Issue #626 replaced the retired `guards` section and the `gitIdentity.agentGuard.mode` pair |
 | `advance` | base | `{ "iterationsCap": 12, "sensitivePaths": [], "securityPaths": [], "runLogPath": ".agentic-workflow/advance-run.log" }` | conductor knobs |
 | `gitIdentity` | base | `{ "enforce": "off", "approved": {}, "agentGuard": { "allow": [] } }` | `enforce` = `off`/`commit`/`push`/`push-upstream`/`commit-and-push`/`commit-and-push-upstream` (`push` judges a push to any remote, `push-upstream` only the branch's tracked upstream remote); `approved` = `name`, `email`, `fullName`, `format` (`openpgp`/`ssh`), `signingKey`, `signingKeys` (per-machine keys), `signing` (`required`/`allowed`/`off` — `off` is a sign-off workflow) — only the declared facts are verified; `agentGuard.allow` = config keys the agent may write without asking. The guard's own disposition is `guard.gitIdentity.mode`, never a second `mode` here |
@@ -186,7 +186,7 @@ Three worked examples:
 A project's restrictions are its own, so the extension accepts guards as **data**:
 `guardPlugins` in `pi-agentic-workflow.json` declares them, and the same
 declaration is enforced by whichever carrier is installed. The section is the one
-authoring surface — `agentic-workflow provision permissions` projects it into the
+authoring surface — `runner provision permissions` projects it into the
 operator-level permission layer's own policy file, so a rule is written once.
 
 ```jsonc
@@ -231,7 +231,7 @@ operator-level permission layer's own policy file, so a rule is written once.
 The command writes the projection; it never owns the file:
 
 ```bash
-agentic-workflow provision permissions [--scope project|global] [--write] [--json]
+runner provision permissions [--scope project|global] [--write] [--json]
 ```
 
 `--write` creates the policy file only when it does not exist; an existing file is

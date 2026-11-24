@@ -57,7 +57,7 @@ conversion target**: it is assigned by evidence (a reproducer), so no row of thi
 table reaches it. The table replaces the ad-hoc mapping that lived at
 `PERSIST_AND_DECIDE.md`.
 
-The sensor's own `SEVERITY_VOCABULARY` map (`agentic-workflow workflow-status`, pinned by `scripts/vocabulary-parity.test.mjs`)
+The sensor's own `SEVERITY_VOCABULARY` map (`runner workflow-status`, pinned by `scripts/vocabulary-parity.test.mjs`)
 is a direct projection of this table onto the envelope schema's `high|med|low`
 enum, not a competing converter; it always produces a value listed here.
 

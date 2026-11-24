@@ -4,7 +4,7 @@ A delivery unit has a state, and the lane's commands read that state instead of
 you inferring it. The single most useful habit: **ask the router what is next
 rather than deciding yourself.**
 
-**Flag spelling is not here.** It is `agentic-workflow help <subcommand>`.
+**Flag spelling is not here.** It is `runner help <subcommand>`.
 
 ## Ask the router first
 

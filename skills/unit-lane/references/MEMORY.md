@@ -13,8 +13,8 @@ a thin instruction plus a pointer here; they never restate it.
 Run the bounded health probe once per session, before the first read:
 
 ```sh
-agentic-workflow memory probe        # human block
-agentic-workflow memory probe --json # memory-probe@1 verdict
+runner memory probe        # human block
+runner memory probe --json # memory-probe@1 verdict
 ```
 
 It is bounded (4 s / 10 s per check, 30 s ceiling), writes nothing, issues no

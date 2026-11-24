@@ -4,7 +4,7 @@ Two different stores answer two different questions: `doc` indexes the project's
 **documents** for retrieval, and the corpus readers derive **findings and
 patterns** from what the workflow already wrote down.
 
-**Flag spelling is not here.** It is `agentic-workflow help <subcommand>`.
+**Flag spelling is not here.** It is `runner help <subcommand>`.
 
 ## The retrieval index (`doc`)
 

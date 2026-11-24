@@ -4,7 +4,7 @@ These commands answer questions about the machine the workflow runs on and about
 the CLI's own surface. They are the ones to reach for when something *works
 elsewhere* and does not work here.
 
-**Flag spelling is not here.** It is `agentic-workflow help <subcommand>`.
+**Flag spelling is not here.** It is `runner help <subcommand>`.
 
 ## Diagnose before improvising
 

@@ -6,14 +6,14 @@ author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   The universal CLI's usage layer: which subcommand family solves which problem,
-  and the recipes that chain them. Point at `agentic-workflow help` for grammar —
+  and the recipes that chain them. Point at `runner help` for grammar —
   this skill carries the conduct rule and the recipes, never a restated flag.
 ---
 
 # Self-documenting CLI (the usage layer)
 
 The universal CLI (`@gtrabanco/agentic-workflow`) ships 73 subcommands behind one
-pin. Its **grammar** has exactly one owner: `agentic-workflow help`. This skill
+pin. Its **grammar** has exactly one owner: `runner help`. This skill
 owns the other half — *when to reach for which family, in what order* — because
 that is the part a model gets wrong repeatedly and the part no flag list answers.
 
@@ -21,11 +21,11 @@ that is the part a model gets wrong repeatedly and the part no flag list answers
 
 **Before guessing a flag, query the CLI's own help.** A guessed flag does not
 fail quietly and it does not fail memorably: it produces a refusal the next
-session must re-derive. `agentic-workflow help <subcommand>` costs one command
+session must re-derive. `runner help <subcommand>` costs one command
 and answers with the subcommand's usage, its closed `ops` and its `flags`.
 
-- A bare `agentic-workflow help` prints the index grouped by family.
-- `agentic-workflow help --json` prints the same facts as machine data.
+- A bare `runner help` prints the index grouped by family.
+- `runner help --json` prints the same facts as machine data.
 - Every subcommand answers `--help` and `-h` with the identical block.
 
 Never cite a flag from memory. Never read the crate README to learn a signature
@@ -53,7 +53,7 @@ them stops fighting the CLI:
 - **A refusal is exit 2 and names its repair.** `EDIT REFUSAL — <reason>`, a
   sensor's own prefix, or a ceremony JSON error — each carries the legal
   candidates where the subcommand is a closed registry, and one
-  `agentic-workflow help <sub>` pointer. Exit 1 is a usage error; exit 0 is an
+  `runner help <sub>` pointer. Exit 1 is a usage error; exit 0 is an
   answer, including a sensor that says "degraded". **A degraded answer is not a
   failure** — it is a fact to report.
 - **Success receipts are byte-stable.** A command's stdout on success is a

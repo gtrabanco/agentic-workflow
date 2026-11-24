@@ -39,7 +39,7 @@ idea → pre-spec → unit doc → triage → catalog steps → evidence → rev
    phase.
    Every one of those boundaries is also a **memory boundary**: the lane's
    `references/MEMORY.md` protocol probes the substrate once per session
-   (`agentic-workflow memory probe`), then saves the unit's goal, numbered
+   (`runner memory probe`), then saves the unit's goal, numbered
    acceptance criteria, Evidence outcomes and discoveries under
    `unit/<NN-slug>/doc` at unit start, at each phase transition and at close.
    Required substrate, never a hard dependency — a `degraded` verdict is said
@@ -276,17 +276,17 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `runner unit-route --triage <NN> [--json]` | Triage a unit |
 | `runner needs-input <unit-dir> [--workspace <dir>]` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
 | `runner diff-guard --base <ref>` | Diff-size guard check |
-| `agentic-workflow memory probe [--json]` | Bounded memory-substrate health verdict (`memory-probe@1`), once per session before the first memory read; always exits 0 |
-| `agentic-workflow unit-doc create` | Create a unit doc (SDK) |
-| `agentic-workflow unit-doc setSection` | Replace a section (SDK) |
-| `agentic-workflow unit-doc evidence_addRow` | Append evidence row (SDK) |
-| `agentic-workflow unit-doc progress_logEntry` | Add progress entry (SDK) |
-| `agentic-workflow unit-doc validate` | Validate the doc schema (SDK) |
-| `agentic-workflow roadmap rowUpsert` | Upsert a roadmap row (SDK) |
-| `agentic-workflow roadmap check` | Cross-document settle check: a unit doc that carries a PR URL must have its row `done · [#N](<same url>)` — named codes, exit 1 fail-closed (issue #316) |
-| `agentic-workflow changelog rowAdd` | Add a changelog row (SDK) |
-| `agentic-workflow budgets ceilingRebase` | Rebase budget ceiling (SDK) |
-| `agentic-workflow manifest skillAdd` / `skillRemove` | Update manifest (SDK) |
+| `runner memory probe [--json]` | Bounded memory-substrate health verdict (`memory-probe@1`), once per session before the first memory read; always exits 0 |
+| `runner unit-doc create` | Create a unit doc (SDK) |
+| `runner unit-doc setSection` | Replace a section (SDK) |
+| `runner unit-doc evidence_addRow` | Append evidence row (SDK) |
+| `runner unit-doc progress_logEntry` | Add progress entry (SDK) |
+| `runner unit-doc validate` | Validate the doc schema (SDK) |
+| `runner roadmap rowUpsert` | Upsert a roadmap row (SDK) |
+| `runner roadmap check` | Cross-document settle check: a unit doc that carries a PR URL must have its row `done · [#N](<same url>)` — named codes, exit 1 fail-closed (issue #316) |
+| `runner changelog rowAdd` | Add a changelog row (SDK) |
+| `runner budgets ceilingRebase` | Rebase budget ceiling (SDK) |
+| `runner manifest skillAdd` / `skillRemove` | Update manifest (SDK) |
 
 ---
 

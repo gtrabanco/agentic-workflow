@@ -135,9 +135,9 @@ P2 — <task description> (validator: <backticked command> <expected outcome>)
 …
 Pn — last task is verification when the unit has behavior
 P<n+1> — release settle, when the unit opens a PR: after the PR exists, settle
-  the roadmap row via the crate's writer (`agentic-workflow roadmap rowUpsert`,
+  the roadmap row via the crate's writer (`runner roadmap rowUpsert`,
   status `done · [#N](<pr-url>)`, every other cell preserved; a fix unit's
-  `## Fixes` row goes through `agentic-workflow roadmap fixrow`) — validator:
+  `## Fixes` row goes through `runner roadmap fixrow`) — validator:
   `runner roadmap-settle` exits 0 (#316: the settle is a task the
   executor owns, never a missing courtesy)
 ```

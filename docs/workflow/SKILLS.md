@@ -83,7 +83,7 @@ pre-PR gate — and `references/RELAY.md` owns that packet and leg contract;
 without pi-web the per-phase hand-off is unchanged. Every step
 boundary is also a memory boundary: `unit-lane`'s `references/MEMORY.md` is the
 single home of the Engram protocol — the bounded probe
-(`agentic-workflow memory probe`) before a session's first read, the saves at
+(`runner memory probe`) before a session's first read, the saves at
 unit start / each phase transition / close under `unit/<NN-slug>/doc`, the fixed
 recall order, and the rule that a degraded layer is recorded and never blocks.
 The `execute-phase` and `log-session` texts carry a pointer, never a restatement.

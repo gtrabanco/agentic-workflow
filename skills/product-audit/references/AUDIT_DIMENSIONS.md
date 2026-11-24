@@ -43,7 +43,7 @@ invents profile slots or waives a verification contract.
 | **Process & docs** | Incomplete phases, aging open issues, **solvable known-issues**, doc completeness, missing/optimizable workflow docs, capability-inventory freshness (`docs/CAPABILITIES.md` ↔ code drift) | `audit-docs` mechanical checks — receipt-quoted | all |
 | **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks mechanically** (cite the count from `audit-docs`; never restated in the dimension table); never assume a rule held because it "should". **Scope-export recurrence:** across the most recent units (merged or in-flight), each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) counts as one scope-exporting unit — **≥ 2 consecutive** such units is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (**#64**), not re-litigated as a per-unit defect | `audit-docs` mechanical checks — receipt-quoted (already the contract of this row) | all |
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | `audit-docs` script-first index checks — receipt-quoted where they cover the row set; the gap/opportunity judgment is model | all |
-| **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope; every row the project registered in its `review-extras@1` note is reported with its decay state (`unpinned`, `stale`, `incomplete`), so an extra that rotted is a finding rather than a memory | `agentic-workflow skills inventory --guide AGENTS.md` — receipt-quoted for the registered set; the MCP half is the agent's own inventory, stated plainly when it cannot be enumerated | all |
+| **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope; every row the project registered in its `review-extras@1` note is reported with its decay state (`unpinned`, `stale`, `incomplete`), so an extra that rotted is a finding rather than a memory | `runner skills inventory --guide AGENTS.md` — receipt-quoted for the registered set; the MCP half is the agent's own inventory, stated plainly when it cannot be enumerated | all |
 | **Coverage gaps** | Declared verification criteria with no detector, admitted recurring finding classes with no preventive gate, and declared detectors consuming no criterion — the forward-looking half the findings corpus (#437) does not cover | `runner coverage-gap <repo>` receipt-quoted (`coverage-gap@1`, § Coverage-gap sweep) | all |
 | **Journal signals** | The corrections a session had to make, the sessions each unit consumed (rework), and the findings its own reviewers refuted — cross-joined to the findings corpus, so a class the journal alone records still arrives with the corpus row it belongs to | `runner journal-corpus <repo>` receipt-quoted (`journal-corpus@1`, § Journal-signal sweep) | all |
 | **Retention debt** | Merged units still carrying the process artifacts a settle collapses (task lists, phase logs, review ledgers, the evidence table) — and the documents that can never be settled because they carry no provenance stamp — product-wide, so the tree's cost stops growing with every shipped unit | `runner retention-debt <repo>` receipt-quoted (`retention-debt@1`, § Retention-debt sweep) | all |
@@ -143,7 +143,7 @@ by `SKILL.md` (`<verb> — <target>`, never a command invocation); the three
 destinations below are what each gap class resolves to, and no bespoke route is
 introduced here:
 
-- a recommended external skill covers the gap → `agentic-workflow skills discover`
+- a recommended external skill covers the gap → `runner skills discover`
   (#591's route: trusted registries → the seven `skill-lint` checks → per-candidate
   owner consent), with the install and its registration as separate decisions
 - an own skill or gate is warranted → a proposal: `/unit-lane` builds it under its
@@ -235,7 +235,7 @@ verdict | `PASS` (no debt) or `DEBT` (at least one finding)
 
 | Code | What it means | Route |
 |---|---|---|
-| `pending-trim` | a proved-merged unit with a full carrier and a stamp still carries trimmable files | `agentic-workflow doc archive --unit <id>` (dry-run first), when the project's `docRetention.mode` allows |
+| `pending-trim` | a proved-merged unit with a full carrier and a stamp still carries trimmable files | `runner doc archive --unit <id>` (dry-run first), when the project's `docRetention.mode` allows |
 | `unstamped-doc` | the unit carries no `doc-provenance@1` stamp (or an older generation) and is out of scope forever | provenance re-stamp, then the trim; the procedure is `docs/workflow/RETENTION.md` |
 | `unclassified-file` | the unit folder carries a file the published matrix classifies neither trimmable nor kept | declare it in `UNIT_DOC_TRIM_FILES` / `UNIT_DOC_KEEP_FILES` — a matrix edit, never a guess |
 

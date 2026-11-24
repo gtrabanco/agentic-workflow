@@ -145,6 +145,23 @@ test("cut + canary records the tag on the staged tree and restores the staged pi
   assert.match(block, /canary-tag\.mjs record --tag "v\$V" --commit "\$TARGET"/, "the tag records the staged tree");
   assert.match(block, /TARGET="\$\{RELEASE_COMMIT:-\$\(git rev-parse HEAD\)\}"/, "the tag step defaults to HEAD only when the snapshot published nothing");
   assert.match(block, /git checkout HEAD -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the staged pin is restored with the manifests");
+  assert.match(block, /skills\/\*\/SKILL\.md/, "the staged skill stamps are restored with them (issue #710 S2)");
+});
+
+// Issue #710 S2/S4: a canary cut now stamps the skill frontmatter, but the pi
+// tarball's `skills/` copy is build output the gate step produced BEFORE the
+// stamp — and `npm publish --ignore-scripts` never rebuilds it. Without the
+// re-stage the tag carries the train version and the tarball carries the
+// previous one, which is the defect #710 filed with the other half repaired.
+test("cut + canary re-stages the skill bundle at the staged train before publishing", () => {
+  const block = jobBlock(read(PUBLISH), "cut-prerelease");
+  const stage = block.indexOf("publish-stage --channel");
+  const bundle = block.indexOf("bundle:skills");
+  const publish = block.indexOf("npm publish --ignore-scripts");
+  assert.ok(stage !== -1 && bundle !== -1 && publish !== -1, "the three steps exist");
+  assert.ok(stage < bundle, "the bundle is rebuilt after the stage wrote the train version into the skills");
+  assert.ok(bundle < publish, "and before the tarball is packed");
+  assert.match(block, /bun run --cwd packages\/pi-agentic-workflow bundle:skills/, "the rebuild is the package's own script, never a second copy of the projection");
 });
 
 test("cut + canary accepts the version input as the canary base (a variable, never a literal)", () => {

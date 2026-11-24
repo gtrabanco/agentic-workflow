@@ -1798,3 +1798,26 @@ test("declining the materialize consent writes nothing, and an untrusted project
   assert.equal(calls, 0, "an untrusted project is refused before the engine runs");
   assert.equal(untrusted.notify.some((entry) => entry.kind === "warning" && /untrusted/u.test(entry.message)), true);
 });
+
+// Issue #710 S7 / #555: the refusal used to spell the scope-less launcher — the
+// name that resolves to nothing — in a package whose whole point is that the
+// runtime is resolved in code. It now names the operation and points at the
+// console, and it carries no launcher and no version literal.
+test("S7: the untrusted-project notice names the operation, never a launcher", async () => {
+  const untrusted = scriptedUi({ [prompts.scope]: "Global", [prompts.menu]: [prompts.materialize, prompts.cancel] });
+  await runSettingsConsole({
+    agentDir,
+    cwd,
+    commands,
+    readFile: readFrom({ [paths.project]: "{}" }),
+    writeFile: () => {},
+    materializeDefaults: () => ({ contract: "config-materialize@1", scope: "both", files: [] }),
+    ui: untrusted.ui,
+    projectTrusted: false,
+  });
+  const notice = untrusted.notify.map((entry) => entry.message).join("\n");
+  assert.match(notice, /untrusted/u, "it still says why nothing was written");
+  assert.match(notice, /config default --scope global/u, "and names the operation a reader outside pi can run");
+  assert.doesNotMatch(notice, /(?:bunx|npx(?:\s+--yes)?|pnpm\s+dlx)\s+@gtrabanco\/agentic-workflow/u, "no launcher: pi never prints one (issue #555)");
+  assert.doesNotMatch(notice, /(?:^|[^@/\w-])agentic-workflow config default/u, "and never the scope-less name, which resolves to nothing");
+});

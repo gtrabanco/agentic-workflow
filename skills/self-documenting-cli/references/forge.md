@@ -4,7 +4,7 @@ The forge is where this crate's re-derivation cost was highest: the same five
 workarounds were rediscovered across sessions because nobody wrote them down
 where the next session looks. This file is that record.
 
-**Flag spelling is not here.** It is `agentic-workflow help <subcommand>`. What
+**Flag spelling is not here.** It is `runner help <subcommand>`. What
 *is* here is the shape of the five frictions, because each one is a trap that a
 flag list does not warn you about.
 
