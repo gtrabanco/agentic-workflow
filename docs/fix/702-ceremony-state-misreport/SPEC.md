@@ -137,23 +137,29 @@ Four surfaces, one vocabulary, and the prose that declares them:
   line; `findingsCarrier` refuses a dual carrier and reports the grammar it read;
   every write refuses a carrier it cannot round-trip.
 - `packages/agentic-workflow/src/runner/unit-route.mjs` and
-  `src/runner/sensors/workflow-status.mjs` — the row reader and the sensor read
-  the grammar through the new owner (no positional misread), and the sensor's
-  existing `observations` channel carries a carrier defect. `src/findings-corpus/`
-  reports the same defect without changing what it counts.
+  `packages/agentic-workflow/src/runner/sensors/workflow-status.mjs` — the row
+  reader and the sensor read the grammar through the new owner (no positional
+  misread), and the sensor's existing `observations` channel carries a carrier
+  defect. `packages/agentic-workflow/src/findings-corpus/index.mjs` reports the
+  same defect without changing what it counts.
 - `packages/agentic-workflow/src/audit-pr-gate/index.mjs` — `GATE_OUTCOMES`, a
   per-gate report carrying its own reason, blockers that name the outcome, and a
   `gate-receipt` judge that separates "the receipt is missing/stale" from "the
   judge could not be read". The CLI refuses a gate value outside the vocabulary.
 - `packages/agentic-workflow-schema/src/gate-receipt.ts` +
-  `gate-receipt.schema.json` — `GATE_CHECK_STATUSES` gains `unevaluatable`; the
-  value enters once, in the published family the `normative-surfaces@1` row
-  binds to the gate-receipt grammar.
+  `packages/agentic-workflow-schema/gate-receipt.schema.json` —
+  `GATE_CHECK_STATUSES` gains `unevaluatable`; the value enters once, in the
+  published family the `normative-surfaces@1` row binds to the gate-receipt
+  grammar. `packages/agentic-workflow-schema/README.md` carries the published-
+  family row's currency.
 - Tests and their receipts: `packages/agentic-workflow/test/runner.ceremony-findings.test.mjs`
   and `packages/agentic-workflow/test/findings-carrier.test.mjs` (**new**),
   `scripts/audit-pr-receipt.test.mjs` (four new cases; one restated assertion, D8),
-  `packages/agentic-workflow-schema/test/gate-receipt.test.mjs`, and
-  `scripts/findings-corpus.test.mjs`.
+  `packages/agentic-workflow-schema/test/gate-receipt.test.mjs`,
+  `scripts/findings-corpus.test.mjs`, `packages/agentic-workflow/test/runner.ceremony-p0.test.mjs`
+  and `scripts/gate-receipt.test.mjs` (D8's restatements, P9 path records), and —
+  the correction batch (L4) — `scripts/review-loop-discipline.test.mjs` (B3's
+  outcome-split pin).
 - The declared prose: `packages/agentic-workflow/README.md` (the findings
   grammar and the gate outcomes it reports), `skills/audit-pr/references/03_AUDIT_PROCESS.md`
   (the blocker the verdict persists and the outcome vocabulary it reads), and
@@ -164,7 +170,21 @@ Four surfaces, one vocabulary, and the prose that declares them:
 - `docs/ROADMAP.md` — the `## Fixes` row, written through
   `agentic-workflow roadmap fixrow`, never by hand; `docs/generated/units.md`
   follows the emitter.
-- This unit's own carriers and the session entry in `docs/LOGS.md`.
+- This unit's own carriers: `docs/fix/702-ceremony-state-misreport/SPEC.md`,
+  `docs/fix/702-ceremony-state-misreport/decisions.md`,
+  `docs/fix/702-ceremony-state-misreport/planning-evidence.md`,
+  `docs/fix/702-ceremony-state-misreport/planning-obligations.md` and
+  `docs/fix/702-ceremony-state-misreport/external-verify.md`.
+- The session's entry through this repository's carrier (issue #405 — the
+  aggregator owns `docs/LOGS.md`, so no hand append ships here):
+  `.agentic-workflow/journal/20261123T224526Z-fix-702-ceremony-state-misreport-narrative-local.md`,
+  `.agentic-workflow/journal/20261124T002554Z-fix-702-ceremony-state-misreport-narrative-01a20a51-333c-7493-9282-ac693394fa13.md`
+  and `.agentic-workflow/journal/20261124T003449Z-fix-702-ceremony-state-misreport-narrative-local.md`.
+- The correction batch's sibling (B3, L4): `skills/fold-findings/SKILL.md` —
+  the fold-persist rule scoped to `fail`-outcome blockers beside its owner
+  `skills/audit-pr/references/03_AUDIT_PROCESS.md`.
+- `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — the two ceilings re-based at the
+  change's declared growth source and one reference-line override (D9).
 - Nothing live on the other side: every mutating path introduced here was
   exercised in `mktemp -d` trees first (§3 of the apply order), never against the
   live repository or a shared worktree.
@@ -181,11 +201,16 @@ Four surfaces, one vocabulary, and the prose that declares them:
 
 Nothing is retired. `findings-table@1`, `log-kind@1`, `gate-receipt@1`,
 `findings-ledger`-shaped side ledgers, the ceremony's object/subcommand set, its
-flag set and its receipts all keep their bytes and their readers. Two narrower
+flag set and its receipts all keep their bytes and their readers. Four narrower
 outcomes are stated, not silent: an `append` that used to accept a silently
-skipped id now refuses an id already used (the requested identity), and a gate
+skipped id now refuses an id already used (the requested identity); a gate
 value outside the merge gate's vocabulary is a usage error instead of a silent
-`failed`. `gate-receipt@1`'s core fields and token are unchanged — the added
+`failed`; a gate whose outcome is `skipped` names it in its blocker line
+(`gate <name> skipped`, still blocking) instead of the pre-fix blanket
+`gate <name> failed`; and `audit-pr`'s fold-persist rule reads `fail`-outcome
+blockers only — an `unevaluatable` blocker persists nothing
+(`skills/audit-pr/references/03_AUDIT_PROCESS.md` step 6, mirrored in the
+fold-findings sibling). `gate-receipt@1`'s core fields and token are unchanged — the added
 check status is additive to the published set, so no receipt that validates today
 stops validating (D5).
 
@@ -380,6 +405,18 @@ this change (it would be a second, competing step list).`
   `F2` and then appending with a `## Log` line citing `F9`/`F14` wrote `F15`;
   `evaluate` over a current receipt and no gate map printed **14** `gate <name>
   failed` blockers for gates nobody read.
+- **L4** — 2026-11-24, the correction batch over the `EXTERNAL VERIFY` receipt
+  of 2026-11-23 (§9 bounds): B1 re-declared the shipped surface in `## Impact`
+  (every path named literally; the false `docs/LOGS.md` entry replaced by the
+  journal-fragment carrier), B2 restated O16's validator cell to the working
+  command (opened to `planned`, flipped back on the foreground run), B3 scoped
+  the fold-findings sibling beside its owner and pinned it red-first
+  (`ee1e28733`); advisories dispositioned — A1 `wontfix` (settled units' frozen
+  history; the non-goals bar rewriting legacy carriers), A2 and A3 fixed by
+  declaring both output changes in `## Retirements` (the requested surface),
+  A4 `n/a` (a run-condition disclosure of the verifier). One red commit, one
+  batch commit, both local; no `docs/LOGS.md` append (the fragment carrier owns
+  the session entry — issue #405).
 - **E1** — 2026-11-23, the frozen corpus alone at `77b0eeceb`, red against the
   unchanged tree: `bun test packages/agentic-workflow/test/runner.ceremony-findings.test.mjs`
   · exit 1 · **0 pass / 12 fail**; `…/findings-carrier.test.mjs` · exit 1 ·
@@ -480,6 +517,23 @@ this change (it would be a second, competing step list).`
   / `journal-carrier-check` / `log-immutability` / `schema-node-compat` /
   `pi-compat-guard` / `dependency-advisories` exit 0, `pi-node-compat` exit 1
   (A1, base-identical).
+- **E14** — 2026-11-24, the correction batch over the `EXTERNAL VERIFY`
+  receipt (L4): the three blocker reproducers red at the pre-fix head (AC1's
+  path check named 13 undeclared paths plus a `docs/LOGS.md` claim the range
+  never shipped; O16's third validator refused exit 2 `Unknown roadmap
+  operation`; the fold sibling carried the pre-#702 absolute), the pin red
+  first at `ee1e28733` (0 pass / 1 fail), then green at the batch head —
+  `bun test scripts/review-loop-discipline.test.mjs` · exit 0 — justifies: a
+  fold session reading an audit-pr verdict never rebuilds an `unevaluatable`
+  blocker as a fix-now row (sibling skill text → the scoped persistence rule);
+  O16's three validators · `docs-generate --check` exit 0 (3 checked · 0
+  stale), `lint-changeset` exit 0 (ok), `roadmap read docs/ROADMAP.md --nn 702`
+  exit 0 (row reported); `skill-lint` 0 findings; `check-skill-context` PASS (31
+  skills); `test-obligation-tags` PASS (141 suites); `bun test
+  scripts/path-protection.test.mjs` · 21 pass; `test-impact --base 893dad14c`
+  · targeted → project gate `bun scripts/run-root-suite.mjs --jobs 4` · **139
+  PASS / 2 FAIL** (A2, A3, base-present); `journal aggregate --check` · 16
+  fragments · 0 refusals.
 - **D1** — 2026-11-23, a fold line's number **is** the finding id it closed: two
   counters sharing the `F` namespace is what made a reader map a fold line to a
   different finding. Authority: S3, S8.
