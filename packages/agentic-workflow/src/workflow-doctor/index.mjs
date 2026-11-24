@@ -22,7 +22,6 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { buildBattery, renderBattery } from "./battery.mjs";
 import { buildBundle, renderBundle } from "./bundle.mjs";
 import { buildMine, renderMine } from "./mine.mjs";
 import { buildRoute, publishReceipt, renderPublish, renderRoute } from "./upstream.mjs";
@@ -165,10 +164,20 @@ export function main(argv = process.argv.slice(2), options = {}) {
     }
 
     if (op === "battery") {
-      return buildBattery(root, { ...(options.doctor === undefined ? {} : { doctor: options.doctor }), unit: flags.unit }).then((receipt) => {
-        emit(flags, receipt, renderBattery);
-        return 0;
-      });
+      // The battery is the one op that loads the tool doctor's graph — its probe
+      // modules read the crate manifest at import time — so it is imported here
+      // rather than at module load: the other four ops cost nothing for it, and a
+      // host that mirrors this graph without the manifest still runs them.
+      return import("./battery.mjs")
+        .then(async ({ buildBattery, renderBattery }) => {
+          const receipt = await buildBattery(root, {
+            ...(options.doctor === undefined ? {} : { doctor: options.doctor }),
+            unit: flags.unit,
+          });
+          emit(flags, receipt, renderBattery);
+          return 0;
+        })
+        .catch((error) => refuseWith(error));
     }
 
     if (op === "bundle") {
@@ -207,8 +216,13 @@ export function main(argv = process.argv.slice(2), options = {}) {
     emit(flags, receipt, renderPublish);
     return 0;
   } catch (error) {
-    if (!(error instanceof DoctorRefusal)) throw error;
-    process.stderr.write(`WORKFLOW-DOCTOR REFUSAL — ${error.refusal}: ${error.message}\n`);
-    return STATE_REFUSALS.has(error.refusal) ? 1 : 2;
+    return refuseWith(error);
   }
+}
+
+/** One refusal path for both the synchronous ops and the battery's promise. */
+function refuseWith(error) {
+  if (!(error instanceof DoctorRefusal)) throw error;
+  process.stderr.write(`WORKFLOW-DOCTOR REFUSAL — ${error.refusal}: ${error.message}\n`);
+  return STATE_REFUSALS.has(error.refusal) ? 1 : 2;
 }
