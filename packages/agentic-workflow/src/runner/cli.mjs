@@ -57,6 +57,7 @@ import { main as runSharedMerge } from "../shared-merge/index.mjs";
 import { main as runDocsGeneratedMerge } from "../docs-generated-merge/index.mjs";
 import { main as runDocsGenerate } from "../docs-generate/index.mjs";
 import { main as runRoadmapSettle } from "../roadmap-settle/index.mjs";
+import { main as runWorkflowDoctor } from "../workflow-doctor/index.mjs";
 import { main as runRelevantFiles } from "../relevant-files/index.mjs";
 import { run as runScaffoldContract } from "./sensors/scaffold-contract.mjs";
 
@@ -112,6 +113,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "relevant-files": runRelevantFiles,
   "scaffold-contract": runScaffoldContract,
   "delivery-conditions": runDeliveryConditions,
+  "workflow-doctor": runWorkflowDoctor,
 });
 
 /**
