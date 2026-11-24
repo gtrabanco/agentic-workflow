@@ -65,7 +65,7 @@ the form sanctioned here, so a subcommand added to the crate is covered the day
 it lands and a contract that stops declaring this form fails the pin closed. The
 scope-less npm name resolves to nothing — a `0.0.0` placeholder without a `bin`
 — which is why the ban is absolute for an instruction and why the exact-version
-spelling below stays legal.
+spelling in **The invocation** (above) stays legal.
 
 `<pin>` is read from this file — never restated, never guessed, never replaced by
 `latest`. A skill that hard-codes a version re-opens the per-release maintenance
