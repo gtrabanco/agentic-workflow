@@ -91,6 +91,17 @@ kernel has no business knowing a vendor's context windows.
   (`phase-batching@1`); with only `@gtrabanco/pi-agentic-workflow` installed the
   key is a documented no-op, and `/nan-phase-batching` is the command that
   prints the document from a live session.
+- **The record is a generated artifact, not a transcription** (issue #695). The
+  preset derives each model's `context_window`, `tool_harness` and
+  `cache_posture` from the provider's exported model-facts catalog
+  (`@gtrabanco/pi-nan-provider`'s `NAN_MODEL_FACTS`) at build time —
+  `bun run derive:model-facts` writes `src/model-capabilities.generated.ts`,
+  `bun run check:model-facts` proves the committed copy, and the file records the
+  exact provider version and the source class of every cell. Nothing reads the
+  provider at runtime, and a provider release that moves no recorded cell
+  rewrites nothing: an immaterial catalog change lights no package. The phase
+  counts stay policy-owned — `max_phases_per_context` is computed here from the
+  preset's declared thresholds and never enters the generated file.
 - **A misspelled key is refused by name** (`unknown phaseBatching key`), never
   resolved to the shipped default, so an operator cannot believe batching is on
   while `false` runs.
