@@ -98,7 +98,10 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
   version or a hook by hand. An `instruct-only` row is the exact command to
   print, an `ask-consent-write` row is the project's own installer and still
   needs this skill's consent, and a `residual` row names what another owner
-  decides. The row contract is the crate README's `tool-inventory@1` block.
+  decides. The row contract is the crate README's `tool-inventory@1` block. The
+  `relay` row is the one answer to "can this workspace chain Relay legs" — read
+  it (`runner doctor --check relay`) instead of probing the session marker or a
+  package path by hand.
 
 
 ## Progressive loading — bootstrap or upgrade, never both

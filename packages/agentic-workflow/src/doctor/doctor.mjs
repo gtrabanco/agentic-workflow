@@ -77,7 +77,8 @@ function withCommand(advisory, instruction) {
   return `${advisory} — run: ${instruction}`;
 }
 
-/** A compact, evidence-only detail line for the human block. */function describe(row) {
+/** A compact, evidence-only detail line for the human block. */
+function describe(row) {
   const evidence = row.evidence ?? {};
   const bits = [];
   if (evidence.path) bits.push(evidence.path);
@@ -85,6 +86,27 @@ function withCommand(advisory, instruction) {
   if (evidence.pin) bits.push(`pin ${evidence.pin}`);
   if (evidence.source) bits.push(`from ${evidence.source}`);
   if (evidence.url) bits.push(evidence.url);
+  if (evidence.piWeb) {
+    // The relay row: what the session probes saw, and the route that stays when
+    // nothing is wrong — the advisory carries it when something is.
+    bits.push(evidence.piWeb.present ? "PI WEB session" : "no PI WEB session");
+    const daemon = evidence.sessiond ?? {};
+    if (daemon.kind === "tcp") bits.push(`daemon tcp ${daemon.endpoint}`);
+    else if (daemon.present === true) bits.push(`daemon ${daemon.endpoint}`);
+    else if (daemon.present === false) bits.push(`daemon absent at ${daemon.endpoint}`);
+    if (evidence.package?.declared) {
+      const skills = Object.entries(evidence.package.skills ?? {})
+        .map(([name, present]) => `${name}${present ? "" : " (absent)"}`)
+        .join(", ");
+      bits.push(`${evidence.package.name} ${evidence.package.version ?? "?"}${skills ? ` · skills ${skills}` : ""}`);
+    } else {
+      bits.push(`${evidence.package?.name ?? "relay package"} not registered`);
+      if (evidence.embedded?.present) bits.push(`shipped at ${evidence.embedded.path}`);
+    }
+    // The route belongs to the absent-capability answer: an `ok` row is not a
+    // hand-off, and the dead ends carry it in their advisory already.
+    if (evidence.degradation && !row.advisory && row.status === "not-applicable") bits.push(evidence.degradation);
+  }
   if (evidence.pair) {
     const left = evidence.pair.binary ?? `${evidence.pair.companionLine}.x`;
     const right = evidence.pair.served ?? `${evidence.pair.coreLine}.x`;
@@ -116,7 +138,7 @@ function withCommand(advisory, instruction) {
  * never disagree.
  */
 export function renderDoctor(envelope) {
-  const lines = [`DOCTOR — tool doctor (${envelope.contract}) · ${envelope.rows.length} surfaces · ${envelope.host.platform}/${envelope.host.arch}`];
+  const lines = [`DOCTOR — tool doctor (${envelope.contract}) · ${envelope.rows.length} surface${envelope.rows.length === 1 ? "" : "s"} · ${envelope.host.platform}/${envelope.host.arch}`];
   for (const row of envelope.rows) {
     const label = STATUS_LABELS[row.status] ?? row.status;
     const detail = describe(row);
@@ -142,10 +164,15 @@ export function renderDoctor(envelope) {
 
 /**
  * Run the checker. `ops` is the host seam (`realOps()` by default), `root`
- * re-points what it observes, and `inventoryText` exists for the drift fixtures —
- * production always reads the shipped README.
+ * re-points what it observes, `inventoryText` exists for the drift fixtures —
+ * production always reads the shipped README — and `check` narrows the printed
+ * rows to one documented id (issue #705: a caller that wants one answer should
+ * not parse every documented row).
+ *
+ * The documented↔probed bijection is checked over the whole document whatever the
+ * filter is: a drift is a drift, and a narrowed run must not hide one.
  */
-export async function runDoctor({ ops = null, root, inventoryText = null } = {}) {
+export async function runDoctor({ ops = null, root, inventoryText = null, check = null } = {}) {
   const o = ops ?? realOps({ root });
   const text = inventoryText ?? shippedInventoryText();
   const parsed = parseInventory(text);
@@ -166,19 +193,39 @@ export async function runDoctor({ ops = null, root, inventoryText = null } = {})
     throw new DoctorRefusal("inventory-drift", `${INVENTORY_SOURCE}: ${parts.join("; ")}`);
   }
 
-  // The two facts two rows share, read once: the resolved core binary and what
-  // its server answers. A second read would let the pair disagree with itself.
+  // A filter that names nothing is a usage error, never an empty envelope: an
+  // empty answer would read as "this surface is fine".
+  if (check !== null && !documented.includes(check)) {
+    throw new DoctorRefusal("unknown-check", `${INVENTORY_SOURCE} documents no \`${check}\` row — documented ids: ${documented.join(", ")}`);
+  }
+  const selected = check === null ? parsed.rows : parsed.rows.filter((row) => row.id === check);
+
+  // The facts more than one row shares, read once: the resolved core binary and
+  // what its server answers. A second read would let the pair disagree with
+  // itself. A narrowed run (`--check`) pays only for what its selection declares
+  // it reads (`probe.needs`), so one row costs one probe — issue #705.
+  const needs = new Set(
+    CHECK_PROBES.filter((probe) => selected.some((row) => row.id === probe.id)).flatMap((probe) => probe.needs ?? []),
+  );
   const engramUrl = String(o.env?.ENGRAM_URL ?? "").trim() || DEFAULT_ENGRAM_URL;
-  const health = await o.httpJson(`${engramUrl}/health`);
-  // Every version in one concurrent pass: the sum of these probes is seconds of
-  // wall time, the slowest one is what a run pays.
-  const versions = typeof o.versionMany === "function" ? await o.versionMany([...PROBED_BINARIES]) : null;
+  const health = needs.has("engram") ? await o.httpJson(`${engramUrl}/health`) : { ok: false, body: null };
+  // Every version in one concurrent pass on a full run: the sum of these probes
+  // is seconds of wall time, the slowest one is what a run pays. A narrowed run
+  // resolves the few it actually reads, memoized, in the same shape.
+  const versions =
+    check === null && typeof o.versionMany === "function" ? await o.versionMany([...PROBED_BINARIES]) : null;
+  const single = new Map();
+  const versionOf = (name) => {
+    if (versions && versions.has(name)) return versions.get(name);
+    if (!single.has(name)) single.set(name, o.version(name));
+    return single.get(name);
+  };
   const ctx = {
     ops: o,
-    version: (name) => (versions && versions.has(name) ? versions.get(name) : o.version(name)),
+    version: versionOf,
     engram: {
       path: o.binaryPath("engram", "ENGRAM_BIN"),
-      version: versions && versions.has("engram") ? versions.get("engram") : o.version("engram"),
+      version: versionOf("engram"),
       url: engramUrl,
       reachable: health.ok,
       status: health.body?.status ?? null,
@@ -186,7 +233,7 @@ export async function runDoctor({ ops = null, root, inventoryText = null } = {})
     },
   };
 
-  const rows = parsed.rows.map((documented) => {
+  const rows = selected.map((documented) => {
     const probe = CHECK_PROBES.find((candidate) => candidate.id === documented.id);
     const evidence = probe.probe(o, ctx);
     const verdict = probe.evaluate(evidence, ctx) ?? {};
@@ -233,7 +280,10 @@ export async function runDoctor({ ops = null, root, inventoryText = null } = {})
   return {
     contract: DOCTOR_CONTRACT_ID,
     host: { platform: o.platform, arch: o.arch, node: o.nodeVersion, root: o.root },
-    inventory: { source: INVENTORY_SOURCE, rows: rows.length },
+    // `rows` is the documented population, `check` names the filter: a narrowed
+    // envelope says both, so "one row printed" and "the inventory's size" are
+    // never the same number read twice.
+    inventory: { source: INVENTORY_SOURCE, rows: documented.length, check },
     rows,
     summary,
     verdict: summary.advisories === 0 ? "pass" : "attention",

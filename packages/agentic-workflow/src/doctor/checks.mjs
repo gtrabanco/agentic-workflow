@@ -25,6 +25,7 @@ import { divergenceForText } from "../config/materialize.mjs";
 import { sectionFiles } from "../config/store.mjs";
 import { RUNNER_CANDIDATES, renderInvocation } from "../runner/resolve.mjs";
 import { COMPANION_PAIRINGS, NODE_ENGINE } from "./vocabulary.mjs";
+import { evaluateRelay, relayEvidence } from "./relay.mjs";
 import { evaluateVehicle, piAgentDir, vehicleEvidence } from "./vehicle.mjs";
 import { releaseLine, versionAtLeast } from "./probes.mjs";
 
@@ -273,6 +274,7 @@ export const CHECK_PROBES = Object.freeze([
   },
   {
     id: "engram-server",
+    needs: ["engram"],
     probe: (ops, ctx) => ({
       url: ctx.engram.url,
       reachable: ctx.engram.reachable,
@@ -300,6 +302,7 @@ export const CHECK_PROBES = Object.freeze([
   },
   {
     id: "gentle-engram",
+    needs: ["engram"],
     probe: (ops, ctx) => {
       const dir = piAgentDir(ops);
       const manifest = ops.readText(path.join(dir, "npm", "node_modules", "gentle-engram", "package.json"));
@@ -358,6 +361,14 @@ export const CHECK_PROBES = Object.freeze([
             advisory: "the pi host is not installed — the workflow's skills and commands run inside it; another supported adapter is the alternative",
             instruction: null,
           },
+  },
+  {
+    // Issue #705: can this session chain Relay legs? The generic half only — the
+    // marker, the daemon endpoint and the installed package — because the bridge
+    // is a host event no separate process can observe (the evidence names it).
+    id: "relay",
+    probe: (ops) => relayEvidence(ops),
+    evaluate: (evidence) => evaluateRelay(evidence),
   },
   {
     id: "dogfooding-vehicle",

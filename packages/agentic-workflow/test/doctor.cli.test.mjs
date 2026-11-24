@@ -32,6 +32,22 @@ function run(...args) {
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
+/** The same spawn with an explicit cwd and env — the carriers agree only over one root. */
+function runIn({ cwd, env = process.env }, ...args) {
+  const result = spawnSync(process.execPath, [BIN, ...args], { encoding: "utf8", cwd, env });
+  return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+}
+
+/** The environment without a PI WEB session: the relay row's deterministic floor. */
+function withoutPiWeb() {
+  const env = { ...process.env };
+  delete env.PI_WEB_SESSION;
+  delete env.PI_WEB_SESSIOND_SOCKET;
+  delete env.PI_WEB_SESSIOND_PORT;
+  delete env.PI_WEB_DATA_DIR;
+  return env;
+}
+
 /** Every file under `root` with its bytes, so a write of any kind shows up. */
 function snapshot(root) {
   const out = {};
@@ -139,4 +155,62 @@ test("the bin dispatches both subcommands and the usage line names them", () => 
   assert.ok(tokens.includes("doctor"), "the usage line dispatches doctor");
   assert.ok(tokens.includes("setup"), "the usage line dispatches setup");
   assert.ok(statSync(BIN).isFile());
+});
+
+/* --------------------------------------------------- one row, on demand (705) */
+
+test("--check narrows the envelope to one row and keeps the exit contract", { timeout: 30_000 }, () => {
+  const root = scratchProject();
+  try {
+    const result = runIn({ cwd: root, env: withoutPiWeb() }, "doctor", "--check", "relay", "--json");
+    assert.equal(result.status, 0, result.stderr);
+    const envelope = JSON.parse(result.stdout);
+    assert.equal(envelope.rows.length, 1, "one row, never the whole inventory");
+    assert.equal(envelope.rows[0].id, "relay");
+    assert.equal(envelope.inventory.rows, CHECK_PROBES.length, "the inventory's size stays the documented population");
+    assert.equal(envelope.inventory.check, "relay", "the envelope says which id it was narrowed to");
+    assert.equal(result.status, envelope.exitCode, "the exit code is the narrowed envelope's own");
+    const sum =
+      envelope.summary.ok +
+      envelope.summary.missing +
+      envelope.summary.mismatch +
+      envelope.summary.unarmed +
+      envelope.summary.unreachable +
+      envelope.summary.notApplicable;
+    assert.equal(sum, 1, "the summary counts the one row");
+    assert.ok(envelope.summary.advisories <= 1);
+
+    const block = runIn({ cwd: root, env: withoutPiWeb() }, "doctor", "--check", "relay");
+    const lines = block.stdout.split("\n").filter(Boolean);
+    assert.match(lines[0], /^DOCTOR — tool doctor \(doctor@1\) · 1 surface · /u);
+    assert.equal(lines.filter((line) => /^(ok|MISS|MISMATCH|UNARMED|UNREACHABLE|N\/A)\s{2,}/u.test(line)).length, 1);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("an unknown --check id refuses with the documented ids", { timeout: 30_000 }, () => {
+  const root = scratchProject();
+  try {
+    const result = run("doctor", "--check", "nope", "--root", root);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /DOCTOR REFUSAL — /u);
+    assert.match(result.stderr, /relay/u, "the refusal prints the documented ids it will accept");
+    assert.equal(result.stdout, "", "a refusal prints no envelope");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("setup-env --doctor and doctor --json print the same relay row", { timeout: 30_000 }, () => {
+  const root = scratchProject();
+  try {
+    const env = withoutPiWeb();
+    const doctor = JSON.parse(runIn({ cwd: root, env }, "doctor", "--json").stdout).rows.find((row) => row.id === "relay");
+    const carrier = JSON.parse(runIn({ cwd: root, env }, "setup-env", "--doctor", "--json").stdout).rows.find((row) => row.id === "relay");
+    assert.ok(doctor, "doctor prints the relay row");
+    assert.deepEqual(carrier, doctor, "one checker, two carriers: the row is byte-identical");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
