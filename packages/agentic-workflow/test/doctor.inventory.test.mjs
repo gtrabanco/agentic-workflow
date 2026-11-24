@@ -65,3 +65,19 @@ test("a duplicate id is a parse error", () => {
   const parsed = parseInventory(duplicated);
   assert.ok(parsed.errors.some((error) => /duplicate/u.test(error.message)));
 });
+
+// Justification: the independent obligation is the rendered-facts rule over the
+// doctor's own usage row — the count is the inventory literal above (`17`), so
+// the prose must not restate a figure that drifts the moment a row is added
+// (issue #705 external-verify blocker 1: the row said "instead of sixteen").
+test("the doctor usage row restates no row count — the inventory literal owns it", () => {
+  const row = README.split("\n").find((line) => line.startsWith("| `doctor ["));
+  assert.ok(row, "the doctor usage row exists");
+  const wordNumbers =
+    "zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety";
+  const rowFigures = wordNumbers.replace("one|", ""); // "one row per surface" is shape prose, not a count claim
+  const contrast = new RegExp(`\\binstead of (?:\\d+|${wordNumbers})\\b`, "u");
+  const figure = new RegExp(`\\b(?:\\d+|${rowFigures})\\s+rows?\\b`, "u");
+  assert.ok(!contrast.test(row), `no "instead of <count>" claim: ${row.match(contrast)?.[0]}`);
+  assert.ok(!figure.test(row), `no "<count> rows" claim: ${row.match(figure)?.[0]}`);
+});
