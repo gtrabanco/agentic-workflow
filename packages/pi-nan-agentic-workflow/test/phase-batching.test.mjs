@@ -65,12 +65,25 @@ test("capability record: the declared thresholds are the published ceiling and t
 });
 
 test("capability record: only the models that document the executor harness batch, and they reach four", () => {
+  // Re-cut by issue #695: the provider documents OpenAI `tools` for the four
+  // paid entries too, so the derived record states nine native harnesses where
+  // the retired hand transcription stated five (D5, O6).
   const batching = Object.entries(NAN_MODEL_CAPABILITIES).filter(([, record]) => record.max_phases_per_context > 1);
   assert.deepEqual(
     batching.map(([slug]) => slug).sort(),
-    ["deepseek-v4-flash", "glm5.3", "glm5.3-flash", "mimo-v2.6-flash"],
+    [
+      "deepseek-v4-flash",
+      "deepseek-v4-pro",
+      "glm5.3",
+      "glm5.3-flash",
+      "hy4",
+      "kimi-k3.1-pro",
+      "mimo-v2.6-flash",
+      "qwen3.8-max",
+    ],
   );
   for (const [, record] of batching) assert.equal(record.max_phases_per_context, 4);
+  assert.equal(batching.length, 8, "the record's native harnesses are the batching ones and nothing else");
 });
 
 test("capability record: a model is looked up by its exact `provider/modelId` reference", () => {
@@ -127,7 +140,18 @@ test("a model without the executor harness never batches", () => {
   assert.equal(xml.reason, "tool-harness-xml");
   assert.equal(xml.phases_per_context, 1);
 
-  const unmeasured = assertValid(recommend({ model: `${PROVIDER}/kimi-k3.1-pro` }), "unmeasured harness");
+  // Re-cut by issue #695: the provider documents a harness for every routed
+  // model, so the `unmeasured` failure state is proven at the policy level (as
+  // the unmeasured-cache case already is) instead of through a fleet accident.
+  const unmeasured = assertValid(
+    decidePhaseBatching({
+      model: MODEL,
+      capability: { ...NAN_MODEL_CAPABILITIES["glm5.3-flash"], tool_harness: "unmeasured" },
+      eligibility: ELIGIBLE,
+      enabled: true,
+    }),
+    "unmeasured harness",
+  );
   assert.equal(unmeasured.reason, "tool-harness-unmeasured");
   assert.deepEqual(unmeasured.degradations, ["unmeasured-capability"]);
 });

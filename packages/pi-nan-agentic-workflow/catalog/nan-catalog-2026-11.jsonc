@@ -36,6 +36,17 @@
 //                to each — the fact the file already asserted, made
 //                machine-readable for the preset's capability record. No rate,
 //                allowance or limit was touched.
+//   Transcription (2026-11-23, issue #695): the preset's capability record is
+//                now generated from the provider's exported model facts, so
+//                two cells are re-aligned to the source they had been rounded
+//                from — `context` takes the exact 2^20 window the docs state
+//                ("1M token context (1,048,576 tokens)", qwen3.8-flash's own
+//                card; the provider exports 1,048,576 for eight routed models
+//                and 1,000,000 for the two `max` entries, which is what this
+//                file now records), and the four credit-only entries gain the
+//                `capabilities` cell the same docs publish (function calling).
+//                No rate, allowance or limit was touched, and qwen3.8-max's
+//                window stays the provider's own 1,000,000.
 //
 // This file is NOT machine-consumed by the runtime: the source of truth for
 // route data stays `src/preset.ts` (NAN_MODELS + PROFILE_LADDERS) and the
@@ -121,7 +132,7 @@
       "slug": "deepseek-v4-flash",
       "type": "chat",
       "size": "305B MoE (Vision-Exp)",
-      "context": 1000000,
+      "context": 1048576,
       "modalities": { "input": ["text", "image"], "output": ["text"] },
       "free_quota": 3000000000,
       "cost": 0,
@@ -142,7 +153,7 @@
       "slug": "glm5.3-flash",
       "type": "chat",
       "size": "320B MoE (18B active)",
-      "context": 1000000,
+      "context": 1048576,
       "modalities": { "input": ["text", "image"], "output": ["text"] },
       "free_quota": 2000000000,
       "cost": 0,
@@ -162,7 +173,7 @@
       "slug": "qwen3.8-flash",
       "type": "chat",
       "size": "125B MoE (6B active)",
-      "context": 1000000,
+      "context": 1048576,
       "max_output": 131072,
       "modalities": { "input": ["text", "image"], "output": ["text"] },
       "free_quota": 500000000,
@@ -184,7 +195,7 @@
       "slug": "mimo-v2.6-flash",
       "type": "chat",
       "description": "Xiaomi omni-modal",
-      "context": 1000000,
+      "context": 1048576,
       "modalities": { "input": ["text", "image", "audio"], "output": ["text"] },
       "free_quota": 1000000000,
       "cost": 0,
@@ -203,7 +214,7 @@
       "slug": "glm5.3",
       "type": "chat",
       "size": "~753B MoE",
-      "context": 1000000,
+      "context": 1048576,
       "modalities": { "input": ["text", "image", "audio", "video"], "output": ["text"] },
       "premium_required": true,
       "free_quota": 3000000000,
@@ -226,10 +237,11 @@
       "name": "Kimi K3.1 Pro",
       "slug": "kimi-k3.1-pro",
       "type": "chat",
-      "context": 1000000,
+      "context": 1048576,
       "provider": "Moonshot",
       "tags": ["ZDR", "External provider"],
       "description": "Moonshot frontier reasoning model, 1M context",
+      "capabilities": ["Tool calling"],
       "cost": "pay per token — ver rates abajo",
       "rates": {
         "input":       { "usd_per_1m": 2.81, "credits_per_1m": 100.00 },
@@ -248,6 +260,7 @@
       "provider": "External",
       "tags": ["ZDR", "External provider"],
       "description": "Largest Qwen 3.8, hard reasoning & agents, 1M context",
+      "capabilities": ["Tool calling"],
       "cost": "pay per token — ver rates abajo",
       "rates": {
         "input":  { "usd_per_1m": 2.81, "credits_per_1m": 100.00 },
@@ -261,10 +274,11 @@
       "name": "DeepSeek V4-Pro",
       "slug": "deepseek-v4-pro",
       "type": "chat",
-      "context": 1000000,
+      "context": 1048576,
       "provider": "External",
       "tags": ["ZDR", "External provider"],
       "description": "DeepSeek large reasoning & coding, 1M context",
+      "capabilities": ["Tool calling"],
       "cost": "pay per token — ver rates arriba",
       "rates": {
         "input":  { "usd_per_1m": 1.85, "credits_per_1m": 66.00  },
@@ -278,10 +292,11 @@
       "name": "Hy4",
       "slug": "hy4",
       "type": "chat",
-      "context": 1000000,
+      "context": 1048576,
       "provider": "Tencent (Hunyuan 4)",
       "tags": ["ZDR", "External provider"],
       "description": "Hunyuan 4 agents & long docs, 1M context",
+      "capabilities": ["Tool calling"],
       "cost": "pay per token — ver rates arriba",
       "rates": {
         "input":  { "usd_per_1m": 1.17, "credits_per_1m": 41.70 },
