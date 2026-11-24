@@ -2,7 +2,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**14 user-facing skills** (one menu entry each) + the internal steps
+**16 user-facing skills** (one menu entry each) + the internal steps
 composed for you: `pre-execution-review` (the planning-ledger shapes and
 ownership, ledger-only after feature 61), the `review-change` findings engine
 `review-implementation`, the `phase-contract` lint contract, the
@@ -11,11 +11,11 @@ review pack: `review-code`, `review-security`, `review-verify`,
 `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
 `review-seo`. Additionally, **1 metadata-internal** contract not discoverable
 by the `skills` CLI (`skill-lint`; it carries `metadata.internal: true`
-which the CLI respects to exclude from `npx skills add` discovery). The 14
+which the CLI respects to exclude from `npx skills add` discovery). The 16
 user-facing skills cover setup, repository-state discovery/resolution, the
 adaptive unit lane, execution, review, audit, finding folds, docs generation,
-issue triage, session logging, workflow status, and the batch scheduler. The
-former fixed pipeline
+issue triage, session logging, workflow status, the batch scheduler and the
+ceremony-failure doctor. The former fixed pipeline
 (`design-feature` → `review-spec` → `plan-feature` → `review-plan`) and the
 autopilot role (`ship-roadmap`) are retired (feature 61): their work lives in
 `unit-lane`'s catalog steps and the companion pi package's deterministic
@@ -133,6 +133,7 @@ roadmap registration are the lane's `plan` catalog step, reached from
 | `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges | `execute-phase` / `unit-lane` / `triage-issue` |
 | `product-audit` | the **product** | Measured-trigger full-spectrum health check (`audit-trigger@1`: drift signal, threshold debt, or explicit owner request — under-threshold invocation returns `insufficient-corpus`); every dimension starts at its deterministic producer's receipt, only the non-mechanizable remainder is model-swept; dimensions the project's ceremony profile does not declare are `n/a` (#436, consumption-side); mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); findings typed 1:1 with review's vocabulary, route cells are resolver hand-offs (`finding-route@1`); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `unit-lane` |
 | `audit-docs` | the **docs** | Audit docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
+| `agentic-workflow-doctor` | the **workflow's own failures** | User-initiated batch triage over the project's own record: mine the journal and the unit docs for ceremony failures, apply the fixed `doctor-triage-rubric@1` lookup, render one anonymized bundle, and route it upstream to the issue that already covers the family or a new one — with consent. Read-only about the code; the alias `aw-doctor` is a pointer to the same skill | the proposed issue numbers (filed only after an explicit yes) |
 
 > `review-change`'s findings engine is the internal `review-implementation`
 > (`user-invocable: false`) — the synthesized-table classifier it composes, and
@@ -168,6 +169,7 @@ with no arguments uses the default stated here.
 
 | Skill | Invocation | Arguments & flags |
 |---|---|---|
+| `agentic-workflow-doctor` | `/agentic-workflow-doctor [--unit <slug>] [--search "<words>"] [--candidate <n>]` | No args: one project-wide pass. `--unit <slug>`: the unit whose recorded tier the battery reads. `--search "<words>"`: a search phrase for the upstream tracker. `--candidate <n>` (repeatable): an issue number to check first — the known corpus is #170, #301, #260, #698, #701, #702. The alias `/aw-doctor` takes the same arguments. |
 | `audit-docs` | `/audit-docs [--fix]` | No args: report-only, findings ranked by severity. `--fix`: additionally applies the **low-risk** fixes — docs are never rewritten without it (or an explicit user go-ahead). |
 | `batch-scheduler` | `/batch-scheduler [--json-only] [--issues-file <json>] [--no-state] [--remote <url>]` | Default: human summary + the machine envelope, and the claimed-lane state persisted to `.agentic-workflow/batches.json`. `--json-only` → envelope only (driver/panel mode). `--issues-file` → run from a cached issue export instead of the forge (a cache without native relations fetches them, or degrades declared). `--no-state` → pure read. `--remote <url>` → name the forge when `origin` is not a GitHub URL (a scratch clone) — it names it for the issue list, the relations and the PR read. `--mark-launched <n>` → record an out-of-band launch under its lane. |
 | `audit-pr` | `/audit-pr [pr-number]` | Defaults to the current branch's PR. A number targets another PR. |

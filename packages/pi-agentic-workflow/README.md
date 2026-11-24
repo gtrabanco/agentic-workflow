@@ -26,7 +26,9 @@ pi install npm:@gtrabanco/pi-agentic-workflow
 Restart Pi. `/agentic-workflow-settings` and the workflow commands are then
 available in any project. If you previously copied the skills into
 `~/.pi/agent/skills` by hand, delete that copy — the package provides them, and
-two copies means two versions of the same method.
+two copies means two versions of the same method. The installed skills tree is
+published once per session as `AGENTIC_WORKFLOW_SKILLS_ROOT`, so the crate's
+sensors resolve it by declaration, never a guessed layout.
 
 ## Commands
 
@@ -39,8 +41,10 @@ their own — they are composed by the ones above:
 
 | Command | Use it for |
 | --- | --- |
+| `/agentic-workflow-doctor` | Batch-triage the ceremony failures this project's own record carries, anonymized and routed upstream with consent. |
 | `/audit-docs` | Check that docs, roadmap, code and the fix index agree. |
 | `/audit-pr` | The merge gate: is this PR ready? |
+| `/aw-doctor` | The short name for `/agentic-workflow-doctor`. |
 | `/batch-scheduler` | Plan parallel-execution batches over the open work graph. |
 | `/discover-repository-state` | Freeze verified repository facts. |
 | `/execute-phase` | Implement the remaining phases of a planned unit. |

@@ -31,9 +31,11 @@ import {
 
 /** The command surface the labels must equal, read from the repository tree. */
 const COMMANDS = [
-  // The fourteen user-invocable skills at the cut (skills/<name>/SKILL.md).
+  // The sixteen user-invocable skills at the cut (skills/<name>/SKILL.md).
+  "agentic-workflow-doctor",
   "audit-docs",
   "audit-pr",
+  "aw-doctor",
   "batch-scheduler",
   "discover-repository-state",
   "execute-phase",

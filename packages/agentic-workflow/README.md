@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|delivery-conditions|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|help|scaffold-contract|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...
+usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|delivery-conditions|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|help|scaffold-contract|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry|workflow-doctor> [--debug|--profile] ...
 ```
 
 `<pin>` is the exact version `skills/runner-contract/references/RUNNER.md`
@@ -106,6 +106,7 @@ writing anything**.
 | `decision-promotion [--root <dir>] [--json]` | The **decision-promotion sweep** (issue #650, in the CLI since unit 553): a decision recorded in a unit's `decisions.md` declares its scope, and a `cross-unit` row must name the permanent owner doc it was promoted to — a cross-unit decision with no owner is a finding, never a buried note. Read-only · exit 0 clean · 1 a finding · 2 usage |
 | `dimension-regression [--base <ref>] [--root <dir>] [--remote <name>]` | The **dimension-regression gate** (issue #590, in the CLI since unit 553): a change that touches a review surface must record a `runner dimension-regression` run in a changed unit doc's log — otherwise the dimension the audit rests on was silently skipped for that range. A range touching no review surface is `not-applicable`, never a pass. Read-only · exit 0 clean or not-applicable · 1 a finding · 2 usage |
 | `journal-corpus [<dir> \| --repo <dir>] [--recurrence <n>]` | The **journal corpus reader** (issue #616, in the CLI since unit 553): it joins the session journal's entries into the corpus `product-audit`'s journal dimension reads, with the closed shapes it publishes, and validates the carrier's own grammar before it counts anything. Read-only · exit 0 a receipt · 1 a defective entry · 2 usage |
+| `workflow-doctor <mine\|battery\|bundle\|route\|publish> [--root <dir>] [--skills-root <dir>] [--json]` | The **ceremony-failure doctor** (issue #703): one user-initiated pass over the project's own durable record. `mine` joins the journal and the unit docs' `## Log` into one stable row per ceremony event; `battery` carries the tool doctor's `doctor@1` envelope as-is beside the runner version and the pin read inside the **located** skills tree — resolved declared-over-discovered (`--skills-root`, then the host's `AGENTIC_WORKFLOW_SKILLS_ROOT`, then the documented install dirs `.agents/skills` and `.claude/skills`, the authoring/source `skills/` tree last; no tree found is the named `skills-absent` degradation that says how to declare one) — beside the ceremony profile/tier; `bundle` validates a triage file against the closed discard/report rubric and renders the anonymized bundle; `route` matches each report class against the guarded forge read and proposes an existing issue or a new one; `publish` is the only write, consent-gated by `--yes`. Read-only apart from `publish` · exit 0 a receipt · 1 a required input or the forge is unavailable · 2 a usage or contract refusal |
 | `repository-state [<snapshot>] [--ttl-days <n>] [--today <YYYY-MM-DD>] [--json]` | The **Normalized Repository State reader** (feature 18, in the CLI since unit 553): it reads the frozen state document and answers what is frozen, what a contradiction is, and which facts a later decision may not silently move — `discover-repository-state` writes it, `resolve-repository-state` alone may replace it, and everything else reads it through this command. Read-only · exit 0 answered · 1 a contradiction · 2 usage |
 | `residual-classify <surface> [--root <dir>] \| --receipt <surface> --date <YYYY-MM-DD> \| --inventory --base <rev>` | The **residual classifier** (issue #340, in the CLI since unit 553): an added surface is classified by what actually consumes it — `used` (live consumer, with the consuming line named), `andamio` (a recorded planned-consumer promise), `orphan`, or `half-built` — so a retirement is legitimate only in the `orphan` state. `--inventory --base <rev>` prints one row per added surface of a change, the anti-divergence receipt a plan decides. Read-only · exit 0 classified · 1 a refusal · 2 usage |
 | `delivery-conditions --close-check <issue> \| --sweep [--issues-file <json>] [--repo <owner/name>] [--root <dir>] [--limit <n>] [--json]` | The **delivery-condition carrier** (issue #704): a condition that gates delivery names an issue the machine re-checks, and this is the machine. `--close-check <n>` is the guard you run before writing a close: a coverage claim (`closed as covered by #N`) against an issue that is still OPEN is refused as `covered-by-open`, and the refusal names the route — deliver the cover, or keep the issue open with a native `blocked-by` link. `--sweep` is the scheduled backstop: it reads the issue corpus (bodies **and** comments — #301's reopen condition lived in a comment) plus the roadmap's `## Fixes` rows, extracts the five families (`covered-by`, `reopen-when`, `proceeds-when`, `waits-for`, `retire-when`), judges each against the cited issues' states and reports the ones whose follow-up came due. Report-only: it writes nothing, mutates no forge state, and prints no third-party text. `--issues-file` reads a cached `[{number, state, body, comments}]` array offline, which is what makes a run deterministic; an unreadable cache is exit 2, an unreachable forge is a named `DEGRADED unavailable-forge-…` line with exit 1. The block is `delivery-conditions@1` below · exit 0 PASS · 1 VIOLATION or UNRESOLVED · 2 usage |
@@ -256,6 +257,68 @@ config-files | the project config files | the schema moves and a written file do
 The routes are the published `INSTALL_ROUTES`: a package manager (`npm`, `bun`,
 `pip-uv`, `brew`), the project's own `binary` download, or `instruct-only`. No
 row of this table is a promise that the CLI installs anything.
+
+## `workflow-doctor` — the ceremony-failure doctor (issue #703)
+
+One user-initiated pass over the project's own durable record: `mine` joins the
+session journal and the unit docs' `## Log` into one stable row per ceremony
+event, `battery` carries the tool doctor's `doctor@1` envelope as-is beside the
+runner version/pin, the installed skill set and the ceremony profile/tier,
+`bundle` validates the model's triage against the skill's closed rubric and
+renders one anonymized receipt, `route` matches each report class against the
+guarded forge read, and `publish` is the only write (consent-gated by `--yes`).
+The command decides nothing: the markers are shapes a machine already owns, the
+rubric is data in `skills/agentic-workflow-doctor/references/RUBRIC.md`, and a
+class outside it is refused by name.
+
+Exit: 0 a receipt · 1 a required input or the forge is unavailable · 2 a usage
+or contract refusal (`WORKFLOW-DOCTOR REFUSAL — <token>: <sentence>` on stderr,
+no receipt on stdout). Read-only except `publish`; no clock, no network (the
+route reaches the forge only through `forge-read`'s guarded transport).
+
+```text
+workflow-doctor-mine@1
+field | shape | what it holds
+contract | workflow-doctor-mine@1 | the receipt's id
+carrier | journal · fragments · units | every carrier read, with its path and whether it is present
+row | W<n> · kind · unit · token · handle · anchor · detail | one ceremony event: the stable id, the closed marker kind, the unit slug, the `## Log` token (null for a journal or aggregate row), the redaction handle the bundle prints, the repository-relative anchor, and a one-line detail
+group | kind · count · rows | one group per marker kind, in the published order; the counts add up to the receipt's row count
+budget | folds · cycles | the correction-budget thresholds the two aggregate kinds apply
+totals | rows · units | the receipt's own counts
+verdict | clean · rows <n> | `clean` is a real answer over a carrier that exists, never an absent one; no carrier at all is the `insufficient-input` refusal (exit 1)
+```
+
+```text
+workflow-doctor-battery@1
+field | shape | what it holds
+contract | workflow-doctor-battery@1 | the receipt's id
+runner | version · pin · pinMatch | the crate's own version beside the launcher pin read inside the located skills tree — `match`/`mismatch`/`unknown`, never assumed
+skills | source · path · count · invocable · names | the installed skill set, located declared-over-discovered: `declared` (`--skills-root`), `host` (`AGENTIC_WORKFLOW_SKILLS_ROOT`, the pi package publishes its mounted tree there at session start), then the documented install dirs `.agents/skills` and `.claude/skills`, and the authoring/source `skills/` tree last — no project-root layout is assumed (#716/#717's defect class); `path` is project-relative when the tree is inside the project, absolute when the host mounts it elsewhere, and `source: null` means no tree was found
+skills-absent | degradation | no candidate tree exists; the detail names the declare routes (`--skills-root <dir>`, the env key) and every probed location — the honest absence, never a fabricated zero
+ceremony | guide · adoption · reviewPasses · unit · tier | the guide's `ceremony-profile@1` block through its reader and the named unit's recorded tier through `recordedTier`
+receipts | state · reason | `n/a` until the typed receipt carriers land (#698): naming the absence is the honest cell
+```
+
+```text
+workflow-doctor-bundle@1
+field | shape | what it holds
+contract | workflow-doctor-bundle@1 | the receipt's id
+header | runner version/pin/match · skills count/invocable · doctor verdict/summary · ceremony profile/tier | the allowlisted battery cells (issue #698's bundle field list); each reads `n/a — no battery receipt attached` when none is given
+class | class · verdict · reason · defect · occurrences · evidence | a report class: the slug, `report`, the closed reason, the one-sentence defect shape, the corpus count and its `unit:<slug> <handle>` anchors
+discarded | class · reason · occurrences | a discard: counted, never filed, and citing no row — the asymmetry the rubric declares
+unclassified | <n> | the rows no report class claims, counted instead of guessed
+redactions | <n> | the e-mail and path replacements the profile applied to the model-authored fields
+```
+
+```text
+workflow-doctor-route@1
+field | shape | what it holds
+contract | workflow-doctor-route@1 | the receipt's id
+candidate | <n> | every candidate read, sorted; a candidate the forge reports as absent is a named degradation, never a silent skip
+class | class · action · issue · score · matched | one line per report class: `existing-issue` with the issue number and the tokens that matched, or `new-issue`
+degradation | issue · code · detail | a candidate the forge could not answer for, named with its refusal class
+consent | the consent line | filing needs an explicit yes; the line names the `publish` invocation that performs it
+```
 
 ## `setup` — the consent-gated wizard (issue #537)
 

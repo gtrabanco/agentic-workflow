@@ -198,6 +198,7 @@ shell fallback.
 | `repository-state [--root <dir>] [--json]` | the Normalized Repository State reader — what is frozen and what a contradiction is (feature 18) |
 | `residual-classify <surface> [--inventory --base <rev>] [--root <dir>] [--json]` | the residual classifier — consumed, promised, orphan or half-built, with the consuming line named (issue #340) |
 | `restatement-sweep [--root <dir>] [--json]` | the restatement sweep — a seeded rule worded a second time outside its owner (issue #646) |
+| `workflow-doctor <mine\|battery\|bundle\|route\|publish> [--root <dir>] [--json]` | the ceremony-failure doctor — the project's own record mined, anonymized and routed upstream with consent (issue #703) |
 | `test-obligation-tags [--root <dir>] [--sweep] [--json]` | the test-obligation tag gate — every suite declares what it protects and what it proves (issue #596) |
 | `retention-debt [--root <dir>] [--json]` | the retention debt sensor — proved-merged units still carrying the full carrier (issue #651) |
 | `setup-env [--check] [--root <dir>]` | the authoring toolchain check and its consent-gated install (the bootstrap form stays `scripts/setup-env.mjs`: it provisions bun, so it cannot require the CLI) |

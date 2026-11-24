@@ -18,8 +18,10 @@
     "spec-driven"
   ],
   "skills": [
+    "./skills/agentic-workflow-doctor",
     "./skills/audit-docs",
     "./skills/audit-pr",
+    "./skills/aw-doctor",
     "./skills/batch-scheduler",
     "./skills/discover-repository-state",
     "./skills/execute-phase",

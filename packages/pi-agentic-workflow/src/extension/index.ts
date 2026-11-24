@@ -4,6 +4,8 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 import { fileURLToPath } from "node:url";
 
 import { getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
+
+import { publishSkillsRoot } from "../runtime.js";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { SelectListTheme } from "@earendil-works/pi-tui";
 
@@ -390,6 +392,10 @@ export function hostToolResult(result: unknown): unknown {
 
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
+  // The installed skills tree is this package's own fact, published once per
+  // session so every crate command the session spawns (the workflow-doctor
+  // battery among them) declares it instead of guessing a layout.
+  publishSkillsRoot();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
   // One gate for both entry points (AC9): session start says it first, and a
   // session that begins by running a command says it there instead. The

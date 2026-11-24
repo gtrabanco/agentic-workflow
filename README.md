@@ -26,7 +26,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  31 source skills (14 user-facing + 16 workflow internals + 1 metadata-internal; 30 discoverable — skill-lint is repo-only)
+skills/                  33 source skills (16 user-facing + 16 workflow internals + 1 metadata-internal; 32 discoverable — skill-lint is repo-only)
 packages/                four companion npm packages: @gtrabanco/agentic-workflow (the runner crate —
                          `agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log>`, typed file
                          services, guards and the `doc` retrieval index), @gtrabanco/agentic-workflow-schema
@@ -84,7 +84,7 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**14 user-facing skills** (one menu entry each) + internal contracts composed
+**16 user-facing skills** (one menu entry each) + internal contracts composed
 for you: the lane's triage-driven step selection (`unit-lane`), the executor
 (`execute-phase`), the internal review pack (`review-code`, `review-security`,
 `review-verify`, `review-debt`, `review-design`, `review-a11y`, `review-brand`,
@@ -130,6 +130,7 @@ review the change → audit → merge.**
 | `audit-pr`      | the **PR**      | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (a missing/stale receipt is a blocker routed to `/review-change`, never re-reviewed) and evaluates only the delivery contract: phases/docs complete, CI, mergeability, traceability, capability closure, descope integrity, and the receipt's invariant/manual-check result → **MERGE-READY or evidenced blockers**, always with the full URL. A stale-by-sha receipt that recorded a scope manifest stays current across a non-affecting head delta (session log, agent toolstate); any affecting-path delta still voids it (fix/286). The pre-execution lineage gate keys on the unit surface: lane-era units verify their pasted triage block by re-derivation and close obligations from the unit doc; legacy units keep the progress.md receipt path (fix/285). MERGE-READY posts a dated SHA-bound PR comment; BLOCKED persists blockers to the shared fold ledger. |
 | `product-audit` | the **product** | Explicit-invocation-only, measured-trigger full-spectrum health check persisted as `docs/audits/<id>-<date>.md` — it fires on a drift signal, threshold debt, or an explicit owner request (`audit-trigger@1`), and an under-threshold invocation returns the `insufficient-corpus` verdict instead of inventing findings or figures; every dimension starts at its deterministic producer's receipt (never re-run by the model — only the non-mechanizable remainder is model-swept) and dimensions the project's ceremony profile does not declare are recorded `n/a` (#436, consumption-side); mines code and feature history into severity-ranked findings typed 1:1 with review's finding vocabulary (route cells are `finding-route@1` resolver hand-offs) plus issue/roadmap/tooling proposals, checks capability-inventory freshness and repeated scope export, gates every claim on evidence provenance and reports the delta vs the prior audit of equivalent scope, and never auto-fixes; it **owns the repo-wide open-ended bug hunt, security research and broken-version investigation** (scoped, sampled and budgeted per dimension) while `review-change` owns the same hunt against one change. |
 | `audit-docs`    | the **docs**    | Audits docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index for drift                                                        |
+| `agentic-workflow-doctor` | the **workflow's own failures** | User-initiated batch triage: mines this project's journal and unit docs for ceremony failures, applies a fixed discard/report rubric, renders one anonymized bundle and routes it upstream to an existing or new issue — with consent. Read-only about the code; the alias `/aw-doctor` reaches the same skill. |
 
 `review-change` and `audit-pr` also evaluate the optional project
 `ARCHITECTURAL_INVARIANTS.md` document: every applicable rule needs repository
