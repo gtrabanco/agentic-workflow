@@ -90,6 +90,8 @@ const TOOL_NAMES = [
   "agentic_workflow_phase_lint",
   "agentic_workflow_audit_pr_gate",
   "agentic_workflow_snapshot_verify",
+  // Issue #719 S2: the doc index as a first-class tool.
+  "doc_search",
   // Issue #555's generic door: the subcommands the skills cite symbolically
   // and no typed tool wraps.
   "agentic_workflow_run",
@@ -99,7 +101,7 @@ const TOOL_NAMES = [
 // Registration shape (AC2, O3)
 // ---------------------------------------------------------------------------
 
-test("registration: six deferred tools in the agentic-workflow namespace, readOnly", async () => {
+test("registration: seven deferred tools in the agentic-workflow namespace, readOnly", async () => {
   const { createWorkflowTools, WORKFLOW_TOOLS_NAMESPACE } = await loadModule();
   const tools = createWorkflowTools();
   assert.deepEqual(
@@ -703,7 +705,22 @@ test("doc_search: a spawn that cannot answer degrades with a record instead of t
 
 test("doc_search: a missing query is an argument error, never a silent empty search", async () => {
   const { createWorkflowTools } = await loadModule();
-  const tools = createWorkflowTools({ bin: () => "bun", spawnScript: () => Promise.resolve({ code: 0, stdout: "{}", stderr: "" }) });
+  const spawned = [];
+  const tools = createWorkflowTools({
+    bin: () => "bun",
+    spawnScript: (request) => {
+      spawned.push(request);
+      return Promise.resolve({ code: 0, stdout: "{}", stderr: "" });
+    },
+  });
   const search = tools.find((tool) => tool.name === "doc_search");
-  await assert.rejects(() => search.execute({}, "/fixture"), /query is required/);
+  const result = await search.execute({}, "/fixture");
+
+  // The shared gate-tool body turns a refused argument into a degraded record
+  // rather than letting it escape to the host — and, crucially, nothing spawns:
+  // an empty `--query` would answer the whole corpus, which is worse than no
+  // answer at all.
+  assert.equal(spawned.length, 0, "no query runs without a term");
+  assert.equal(result.isError, true);
+  assert.match(result.structuredContent.detail, /query is required/);
 });
