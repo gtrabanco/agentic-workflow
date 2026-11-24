@@ -1,0 +1,358 @@
+---
+type: fix
+scope: medium
+ac-hash: e994bd3d0875a0d0bb350fa933069e7d89e79aa932118479f7d6a320d1c57833
+roadmap_summary: Issue [#706](https://github.com/gtrabanco/agentic-workflow/issues/706) (M): five instruction-chain gaps let sessions hand-append to the journal — the LOGS.md header, the log-session description, the local aggregate door, and the fixture-identity leak path now agree on one writer.
+---
+
+# fix/706-log-write-path-fix
+
+> One-line: make every instruction a session can read agree that the fragment
+> carrier's writer and the CI aggregator own `docs/LOGS.md` — and close the
+> local doors that let a session publish a journal change by hand.
+
+```text
+doc-provenance@1
+written_by: agentic-workflow@4.10.1
+schema: @gtrabanco/agentic-workflow-schema@4.10.1
+format: unit-doc@2
+grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
+```
+
+```text
+retention-declaration@1
+path | disposition
+SPEC.md | kept
+decisions.md | kept
+known-issues.md | kept
+planning-obligations.md | kept
+planning-evidence.md | kept
+external-verify.md | trimmable
+review-findings.md | trimmable
+```
+
+## Issue
+
+`#706` — tracked issue in the project's forge. The PR closes it via
+`Closes #706`. Roadmap row `706 | log-write-path-fix`. The unit lives under
+`docs/fix/` because it is applied through the owner's local fix-lane workflow
+(`## Log` L2), the same home units 436/667/701/703 took.
+
+## Specs
+
+Requirements, each numbered `S#` and quoting the requester's own words verbatim
+between the quote markers. `S1` is the operator's order; `S2`–`S10` quote the
+issue's own words, which that order adopts as the work.
+
+**S1 — the order: apply #706 to this repository, inline.**
+> Apply to this repository: issue #706
+
+**S2 — verify every evidence claim before planning; report what fails.**
+> **Verify every evidence claim below first.** Each has a reproduction command (read-only). The forensic sources are git, `scripts/log-immutability.mjs`, and the pi transcripts — note that many transcripts live **only** in `~/.pi-web/archived-sessions/` (347 files); many directories under `~/.pi/agent/sessions/` are empty (12+ sampled). Report any claim that does not reproduce back on this issue before planning; do not drop it silently.
+
+**S3 — review the candidates; where the repository docs are silent, ask, never invent.**
+> **Review the candidate solutions; do not adopt them as given.** They are one diagnosis's proposals. Where the repository documentation already answers a question, cite that answer; where it does not, the decision is the owner's.
+>
+> **Never invent behaviour the repository does not document** (AGENTS.md → Inviolable rules `IR10` — a fact the tree, the docs and a prior owner decision do not evidence is asked, never guessed). Two decisions here are explicitly **not** answered by repo docs today and must be asked, not invented: (a) whether a *local* `journal aggregate` run that commits with the `journal-bot` committer is sanctioned at all (the gate judges identity only; the workflow docs only describe the merge-to-main job); (b) what wording replaces the owner's local workflow prompt §7 (that prompt lives outside this repository — see P1).
+
+**S4 — P1: the owner's §7 stops offering a manual append.**
+> **P1 — the owner's local workflow prompt §7 says "(auto log-session flow *or manual append*)"**. […] This instruction ranks above AGENTS.md and the skill body, and it contradicts the gate.
+>
+> Candidate: owner edits §7 to the fragment-only wording (no manual-append clause); the issue records it so the fix SPEC can evidence the owner decision.
+
+Owner decision (D3, 2026-11-24): the replacement wording is
+> docs/LOGS.md: the session entry is written through `journal write` as a fragment when `.agentic-workflow/journal/` exists; never hand-append it.
+
+The owner applies it to the local prompt, which lives outside this repository;
+this unit records the decision and quotes it here.
+
+**S5 — P2: the log-session description and line 9 state both doors.**
+> **P2 — `skills/log-session/SKILL.md` frontmatter description (and line 9) say "Append a structured entry to the project's session log (`docs/LOGS.md`)" without the carrier condition.** […] The body (`:119-122`, `:144-151`) is correct, so description and body disagree, and agents acting on the listing append.
+>
+> Candidate: reword the description/line 9 to state both doors ("appends … or, with the fragment carrier, writes a fragment — never `docs/LOGS.md`"), keeping body and `docs/workflow/SKILLS.md` in sync.
+
+**S6 — P3: the LOGS.md header leads with the fragment rule.**
+> **P3 — `docs/LOGS.md` header, paragraph 1 says "`/log-session` appends the narrative one"; the fragment rule only appears in paragraph 2.** […] a reader that stops at paragraph 1 gets the forbidden instruction, well above the gate's own contract.
+>
+> Candidate: lead with the fragment rule (or make paragraph 1 conditional), paragraph 2 keeps the no-carrier case.
+
+The header edit is a rewrite of published bytes, which `log-immutability`
+refuses by design (PE-002). Owner decision (D1, 2026-11-24): land it under an
+explicit one-time owner exception; the gate stays untouched and its
+`log-rewritten` verdict over this branch is the authorized exception.
+
+**S7 — P4: a local `journal aggregate` run is refused; a local journal push is refused.**
+> **P4 — `journal aggregate` runs locally without filter, without refusal, and each session improvises a different consequence.** […] Whether a local run at all — with any identity — is sanctioned is **not documented** → ask the owner (obligation 3).
+>
+> Candidate: either the CLI refuses a local run unless an explicit owner-decided flag is passed, or the docs prescribe one exact local recipe (identity + no-filter handling); both need an owner decision first.
+
+Owner decision (D2, 2026-11-24): the **product** CLI refuses every non-CI run,
+with no local exception; and this **project** adds a local-push guard that
+refuses any push changing `docs/LOGS.md` unless it comes from the GitHub Action
+and its PR. The product guard is generic (`CI`); the project guard is this
+repository's only.
+
+**S8 — P5: the fixture-identity leak path is identified and closed.**
+> **P5 — a fixture identity `t <t@example.test>` is present in published history on `docs/LOGS.md` commits, and it recurred after a prior repair.** […] The leak *path* (how a session shell acquires the test identity) is not answered anywhere → ask/investigate, do not assume.
+>
+> Candidate: find and close the env/config leak (a session running the hook tests inherits the identity), and record an owner decision for how already-published fixture-identity commits are treated (leave + record vs. documented exception).
+
+The tree answers the path: identity-less fixture spawns / failed fixture
+resolution writing shared config (#529 decisions; `git-config-writes.mjs`
+header), and the `-c`-only gate plus `push-identity-check` close it. This unit
+records the evidence and the current published state; it never rewrites
+published history.
+
+**S9 — the verification contract the fix must leave green.**
+> - `docs/LOGS.md` is only ever extended by the closed aggregator identity (the contract `scripts/log-immutability.mjs` already enforces) — no session, at push time or earlier, needs to hand-append.
+> - Every instruction a session can read agrees on one rule: with `.agentic-workflow/journal/` present the entry is written by `journal write` as a fragment; the aggregator is the only writer of `docs/LOGS.md`. That means the owner's local workflow §7, the `log-session` skill description, and the `docs/LOGS.md` header all say the same thing (the skill body already does).
+> - A local `journal aggregate` run is either refused or governed by one documented, owner-decided recipe — never an improvised per-session variant (identity adoption, foreign-fragment pulls, parked backup branches).
+> - No commit authored in this repository's sessions carries a test/fixture identity; the leak path of `t <t@example.test>` is closed and the recurrence recorded.
+
+**S10 — rollback: revert the commits, never rewrite history.**
+> All changes are documentation wording, one CLI guard and test-side identity hygiene; revert the PR (or revert the single commit per problem — they are independent). The gate itself is untouched, so rolling back restores the previous state exactly; no data migration. The already-published history (fixture-identity commits, old hand-appends) is never rewritten by this work — #539 keeps it out of judgement by design.
+
+## Acceptance criteria
+
+1. **S2** — every issue evidence claim is re-verified and every non-reproducing claim is recorded with its observed value. Check: the `## Evidence` table in `## Log` names each repro and the `## Known pre-existing issues` section carries the drift; `rg -n 'does not reproduce|drifted' docs/fix/706-log-write-path-fix/SPEC.md` matches.
+2. **S3** — each of the five candidates is recorded as adopted or rejected with its reason, and the three owner decisions the issue reserves are quoted. Check: `rg -n 'D1|D2|D3' docs/fix/706-log-write-path-fix/decisions.md` names them; `rg -n 'adopted|rejected' docs/fix/706-log-write-path-fix/decisions.md` covers P1–P5.
+3. **S4** — the SPEC quotes the fragment-only §7 wording and records it as owner-side. Check: `rg -n 'never hand-append it' docs/fix/706-log-write-path-fix/SPEC.md` matches; no repository edit claims to have changed the local prompt.
+4. **S5** — `skills/log-session/SKILL.md`'s frontmatter description states both doors, the body still owns the rule, and `docs/workflow/SKILLS.md` stays in sync. Check: `rg -n '\.agentic-workflow/journal/' skills/log-session/SKILL.md` matches inside the frontmatter; `bun scripts/skill-lint.mjs` exits 0; `bun scripts/check-skill-context.mjs` exits 0.
+5. **S6** — the `docs/LOGS.md` header leads with the fragment rule and keeps the no-carrier append rule after it. Check: `sed -n '1,20p' docs/LOGS.md | rg -n 'Fragment rule|Append-only rule'` lists the fragment rule first; the owner exception is recorded in `decisions.md` and the `## Log`.
+6. **S7** — the product `journal aggregate` refuses a non-CI run before moving a byte and still aggregates in CI; the project `log-immutability` refuses a local bot-identity push that changes `docs/LOGS.md` and allows the GitHub Action's push. Check: `bun test packages/agentic-workflow/test/journal.test.mjs` exits 0; `bun test scripts/log-immutability.test.mjs` exits 0.
+7. **S8** — the fixture-identity leak path is identified with its source, the current unpublished range carries none, and the repository-wide checks pass. Check: `bun scripts/git-config-writes.mjs` exits 0; `bun test scripts/push-identity-check.test.mjs` exits 0; `git log origin/main..HEAD --format='%ae|%ce' | rg 't@example\.test'` matches nothing.
+8. **S9** — every instruction surface agrees and the append-only grammar is untouched. Check: the three wording surfaces (`docs/LOGS.md`, `skills/log-session/SKILL.md`, `docs/workflow/SKILLS.md`) all name the fragment door; `bun scripts/docs-generate.mjs --check` exits 0.
+9. **S10** — the change is revertible per problem and rewrites no published history. Check: `git log --oneline main..HEAD` lists the independent commits; `git log --all --format='%ae' | rg 't@example\.test'` still finds only the historical refs/tags, and none of this branch's commits carries it.
+
+## Impact
+
+- **The product CLI** — `journal aggregate` gains a CI-only precondition in
+  `packages/agentic-workflow/bin/agentic-workflow.mjs` and a documented
+  `CI=true` requirement for the documented `post-receive` hook. The GitHub
+  workflow already sets `CI`, so it needs no edit.
+- **The product docs** — `packages/agentic-workflow/README.md` and
+  `template/.agentic-workflow/journal.md` must stop claiming the local and CI
+  runs are identical without the CI context.
+- **The project gate** — `scripts/log-immutability.mjs` gains the
+  `log-local-push` rule and its suite; the pre-push hook and `local-gate` read
+  it automatically.
+- **The skill listing** — the `log-session` frontmatter description is a
+  context-budgeted surface; a growth re-pins `SKILL_CONTEXT_BUDGETS.json`.
+- **The journal** — the header rewrite is a one-time owner exception; the gate
+  itself is not changed, so every later push is still byte-prefix strict.
+
+## Surfaces
+
+- `skills/log-session`
+- `docs`
+- `packages/agentic-workflow`
+- `scripts`
+- `template`
+
+## Retirements
+
+Strictly additive: no surface is renamed or deleted. The only prose the unit
+supersedes is the `docs/LOGS.md` header order and the `log-session` description,
+both updated in place. The product's `journal aggregate` contract is not
+retired; it gains a precondition.
+
+## Non-goals
+
+- No history rewrite: the fixture-identity commits already in tags/old refs are
+  recorded, never rewritten (`S10`).
+- No gate weakening: `log-immutability` keeps its byte-prefix check; the P3
+  header lands under the owner exception, not a new allowance.
+- No local aggregate exception: the product refuses every non-CI run (`D2`).
+- No forge-specific product rule: the product guard uses `CI`, not
+  `GITHUB_ACTIONS`; only this repository's project guard names the GitHub Action.
+- No second writer and no second grammar: the fragment writer and aggregator
+  remain the owners.
+
+## Risk tier
+
+- **Tier** — `standard` · **Task Size** — `{understood: true, contained_risk: "named", resumable_from_diff: true}`
+- **Named high-risk item** — none — not a high-tier unit. The planned paths touch
+  the crate CLI and the project gate, both covered by their sibling suites; the
+  classifier re-derives the final tier at P8.
+
+## Future
+
+- A generic post-receive/CI recipe for non-GitHub forges that sets `CI=true` is
+  documented in `template/.agentic-workflow/journal.md` by this unit; a second
+  forge's wiring is a new unit.
+
+## Future cost
+
+- The project local-push guard requires any future journal change to arrive
+  through the GitHub Action and its PR; a local `journal-aggregate-*` branch is
+  refused by `log-local-push`.
+- The product CI-only guard requires the documented post-receive hook to keep
+  `CI=true`; a future wiring that forgets it fails closed with a named refusal.
+
+## Applicable tests
+
+- `bun test packages/agentic-workflow/test/journal.test.mjs`
+- `bun test scripts/log-immutability.test.mjs`
+- `bun test scripts/push-identity-check.test.mjs`
+- `bun test scripts/git-config-writes.test.mjs`
+- `bun test scripts/skill-lint.test.mjs`
+- `bun scripts/check-skill-context.mjs`
+- `bun scripts/lint-changeset.mjs`
+- `bun scripts/docs-generate.mjs --check`
+- `bun scripts/local-gate.mjs --no-bail`
+
+## Known pre-existing issues
+
+- **Issue step 3 does not reproduce as written** — the pair
+  `t <t@example.test>` is not only in
+  `template/.agentic-workflow/hooks/tests/test-git-identity-check.sh`: 23 files
+  carry it, including ten package suites that pass it with `-c` per invocation.
+  `does-not-affect`: the `-c` forms are the sanctioned convention; the gate and
+  the `push-identity-check` suite pin the unsafe form.
+- **The issue's published-history claim has moved** — `origin/main` now carries
+  0 commits with `t@example.test` (the owner's earlier force-push repair removed
+  them); the tags (`v5.0.0-canary.20261112.1`, …) still reach them.
+  `does-not-affect`: this unit records the state and rewrites nothing.
+- **P3 cannot coexist with `log-immutability`'s PASS verdict** — the byte-prefix
+  check refuses any header edit (proven at byte 19). The owner chose the
+  one-time exception (D1); the gate remains strict and the authorized
+  `log-rewritten` is reported in `## Log`, not hidden.
+- **The owner's §7 lives outside this repository** — the SPEC quotes the
+  replacement; applying it is the owner's action (`S4`).
+
+## Tasks
+
+- P1 — Cut this unit doc and its planning ledgers — the decision record, the
+  known issues, the planning evidence and the obligations ledger — and register
+  the roadmap row through the writer (validator: `bun
+  packages/agentic-workflow/bin/agentic-workflow.mjs scaffold-contract authoring
+  docs/fix/706-log-write-path-fix` exits 0 with `verdict: SCAFFOLD OK`)
+  (Implements: S1, S2, S3, S4, S9)
+
+- P2 — Make the product `journal aggregate` refuse every non-CI run before the
+  first byte moves, and document the `CI=true` requirement for the documented
+  post-receive hook (validator: `bun test
+  packages/agentic-workflow/test/journal.test.mjs` exits 0)
+  (Implements: S7, S9)
+  - Relevant files: packages/agentic-workflow/src/journal/aggregate.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/test/journal.test.mjs, packages/agentic-workflow/README.md, template/.agentic-workflow/journal.md
+
+- P3 — Add the project-only `log-local-push` rule: a local push that changes
+  `docs/LOGS.md` is refused even under the bot identity; the GitHub Action's
+  push is allowed (validator: `bun test scripts/log-immutability.test.mjs` exits
+  0)
+  (Implements: S7, S9)
+  - Relevant files: scripts/log-immutability.mjs, scripts/log-immutability.test.mjs
+
+- P4 — State both doors in the `log-session` frontmatter description and keep
+  the body and `docs/workflow/SKILLS.md` in sync (validator: `bun
+  scripts/skill-lint.mjs` exits 0 and `bun scripts/check-skill-context.mjs`
+  exits 0)
+  (Implements: S5, S9)
+  - Relevant files: skills/log-session/SKILL.md, docs/workflow/SKILLS.md
+
+- P5 — Lead the `docs/LOGS.md` header with the fragment rule and record the
+  owner exception (validator: `sed -n '1,20p' docs/LOGS.md | rg -n 'Fragment rule|Append-only rule'` matches 2 with `Fragment rule` first)
+  (Implements: S6, S9)
+  - Relevant files: docs/LOGS.md, docs/fix/706-log-write-path-fix/decisions.md, docs/fix/706-log-write-path-fix/SPEC.md
+
+- P6 — Record the fixture-identity leak path and its closure with the
+  repository-wide checks (validator: `bun scripts/git-config-writes.mjs` exits 0
+  and `bun test scripts/push-identity-check.test.mjs` exits 0)
+  (Implements: S8, S10)
+  - Relevant files: docs/fix/706-log-write-path-fix/SPEC.md, docs/fix/706-log-write-path-fix/known-issues.md
+
+- P7 — Ship the state through the owners: roadmap row, changeset, docs
+  projection, and the session fragment (validator: `bun
+  scripts/docs-generate.mjs --check` exits 0 and `bun scripts/lint-changeset.mjs`
+  exits 0)
+  (Implements: S1, S9)
+  - Relevant files: docs/ROADMAP.md, .changeset/706-log-write-path-fix.md, docs/generated, .agentic-workflow/journal
+
+- P8 — Run the declared verification commands in the foreground and report
+  every result, including the authorized `log-rewritten` (validator: `bun scripts/local-gate.mjs --no-bail` exits 1 with exactly one `log-immutability` red — the owner exception — and every other step green)
+  (Implements: S9, S10)
+  - Relevant files: docs/fix/706-log-write-path-fix/SPEC.md
+
+### Planning evidence
+
+The ledger lives in `planning-evidence.md` (§1 shape owned by
+`skills/pre-execution-review/references/LEDGERS.md`), because this is an M unit.
+
+### Obligations
+
+The ledger lives in `planning-obligations.md` (§2 shape owned by the same
+reference), because this is an M unit. Every row is `planned` at cut and flips
+to `verified` only on its foreground validator (or an evidenced `n/a`).
+
+## Findings
+
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+
+## Log
+
+- **L1** — 2026-11-24, operator's order, verbatim:
+  ```
+  Apply to this repository: issue #706
+  ```
+- **L2** — 2026-11-24, the issue, verbatim in `## Specs` (`S2`–`S10`), with the
+  candidate solutions reviewed rather than adopted.
+- **L3** — 2026-11-24, the three owner decisions before code: P3 one-time owner
+  exception (D1), P4 product CI-only + project local-push guard (D2), P1
+  fragment-only wording (D3). The questions were asked under `IR10`; no
+  behaviour was invented.
+- **L4** — 2026-11-24, evidence verification at `2780f79a7`: step 1 reproduced
+  (`aggregator:24 non-aggregator:176`); step 2 reproduced in `--all` but
+  `origin/main` now carries 0 fixture identities after the owner's earlier
+  rewrite; step 3 does not reproduce (23 files, not one); step 4 `PASS`; step 5
+  drifted (34 sessions / 14 appending / 198 archived vs 36 / 12); steps 6–7
+  reproduced; step 8 reproduced (`2026-11-16 11:53:42`).
+- **D1** — 2026-11-24, P3: the header reorder lands under the owner's explicit
+  one-time exception; `scripts/log-immutability.mjs` is not changed and its
+  `log-rewritten` verdict over this branch is authorized, not repaired.
+- **D2** — 2026-11-24, P4: the product `journal aggregate` refuses every
+  non-CI run (`CI`), with no local flag; this repository adds a project-only
+  `log-local-push` guard for `docs/LOGS.md` that only the GitHub Action's push
+  may pass.
+- **D3** — 2026-11-24, P1: the replacement §7 wording is the fragment-only
+  sentence quoted in `S4`; the owner applies it outside this repository.
+- **P1** — 2026-11-24, ledgers frozen: this SPEC, `decisions.md`,
+  `known-issues.md`, `planning-evidence.md`, `planning-obligations.md`.
+- **E1** — baseline at the cut head `2780f79a7`: `bun scripts/log-immutability.mjs`
+  · exit 0 · `0 violations · base ed260303a · range 2 commits · verdict: PASS`;
+  `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)`; `bun
+  scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`.
+- **E2** — the P3 contradiction, measured: `logShapeViolations(HEAD's
+  docs/LOGS.md, the same bytes with only the first header paragraph reworded)`
+  · `[{ code: "log-rewritten", detail: "… first difference at byte 19" }]`.
+
+## Next
+
+Owner external verification of branch `fix/706-logs-write-path`; no push. The
+only expected red is the authorized `log-rewritten` from the P3 header (D1);
+every other declared check is green. The owner applies the §7 sentence outside
+this repository (D3).
+
+## References
+
+- Issue [#706](https://github.com/gtrabanco/agentic-workflow/issues/706)
+- `scripts/log-immutability.mjs` — the project write-path gate
+- `packages/agentic-workflow/src/journal/aggregate.mjs` — the product aggregator
+- `docs/fix/529-journal-merge-identity/decisions.md` — the fixture-identity leak path
+- `docs/workflow/DOMAIN_SEPARATION.md` — the product/project split D2 and D5 rest on
+
+## Branch
+
+`fix/706-logs-write-path`
+
+## Depends on
+
+None.
+
+## Regression scope
+
+`docs/LOGS.md`, `skills/log-session/SKILL.md`, `docs/workflow/SKILLS.md`,
+`packages/agentic-workflow/src/journal/aggregate.mjs`,
+`packages/agentic-workflow/bin/agentic-workflow.mjs`,
+`packages/agentic-workflow/README.md`, `scripts/log-immutability.mjs`,
+`template/.agentic-workflow/journal.md`.
