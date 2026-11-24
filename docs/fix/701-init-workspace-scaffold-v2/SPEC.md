@@ -515,8 +515,14 @@ No machine step list was produced.
   `runner verify <SPEC>` → `ok: true`. The push rides the pre-push hook's
   documented `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` escape hatch over those two
   base-identical reds — the same record fix/690's PR #692 carries — owed to
-  the PR note when #701's PR opens.
-
+  the PR note when #701's PR opens. Both reds were subsequently repaired
+  (the 98-100 row-order fix and the train alignment) rather than skipped.
+- **E1** — `dimension-regression` — RAN `bun scripts/dimension-regression.mjs
+  --base d671007ca` (push range d671007ca..HEAD): base 20 dimensions, head
+  20 dimensions, 12 changed review surfaces (the skill frontmatter version
+  stamps), no dimension dropped, verdict clean; recorded as the
+  re-verification evidence the push-range gate requires.
+  
 ## Next
 
 `/review-change` is not this unit's route (S10 forbids running the repository's
