@@ -34,6 +34,7 @@ import { findingsSectionBody, parseCarrierBody } from "./findings-carrier.mjs";
 import { readCeremonyProfile, charterSectionOf, CEREMONY_PROFILE_CONTRACT_ID, CEREMONY_REVIEW_SURFACES } from "./ceremony-profile.mjs";
 import { recordedTier } from "./ceremony/tier.mjs";
 import { batonOf } from "../relay/Packet.mjs";
+import { RELAY_BRIDGE, piWebPresent } from "./pi-web.mjs";
 import { gitRoot } from "./root.mjs";
 import {
   FIX_INDEX_DOCUMENT,
@@ -546,13 +547,17 @@ script writes nothing, and UNIT_ROUTE_REPO re-points it at a fixture tree.
 
 /** pi-web's Relay packet root, relative to the workspace. */
 export const RELAY_ROOT = ".pi-web/relays";
-/** The exact wording pi-web's dispatch tool fails with when the host cannot dispatch. */
-export const RELAY_BRIDGE = "dispatch_relay requires PI WEB's session dispatch bridge";
-/** The coherence-review leg the lane always owes; legs = phases + this one. */
+/**
+ * The coherence-review leg the lane always owes; legs = phases + this one.
+ */
 export const RELAY_REVIEW_LEGS = 1;
-
-/** A pi-web session is the only deterministic presence marker this process can read. */
-const piWebPresent = () => process.env.PI_WEB_SESSION === "1";
+/**
+ * The session marker, its daemon endpoint and the host's bridge wording have
+ * one owner (`pi-web.mjs`), because the doctor's `relay` row asks the same
+ * question (issue #705, `IR11`). Re-exported here so the router's contract keeps
+ * naming them where a reader of this block looks for them.
+ */
+export { RELAY_BRIDGE, piWebPresent };
 
 /** A docs unit has no execution leg: `implement` never applies to it (catalog). */
 function emitsLegs(doc) {
