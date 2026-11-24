@@ -328,6 +328,7 @@ is not embedded here.
 - **G1** — 2026-11-23, GATE-RAN · HEAD 4dd04d2c1 · `bun scripts/local-gate.mjs` · exit 0 · `PASS — 20 step(s) in 675s`, 1070 pass / 1 skipped across the suite-bearing steps.
 - **E13** — 2026-11-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/695-derived-capability-record/SPEC.md` · exit 0 · the `verify@1` receipt reports no violation.
 - **E14** — 2026-11-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":26,"refusals":[]}`.
+- **E15** — 2026-11-24, `bun run test:node` in `packages/pi-nan-agentic-workflow` · exit 0 · 85 pass, 0 fail under node — the suites stay runtime-neutral; only the generator is bun-bound;
 - **G4** — 2026-11-24, GATE-RAN · HEAD dda3f7454 · `bun scripts/local-gate.mjs` · exit 0 · `PASS — 20 step(s) in 857s` on the final tree (the run G1 records re-confirmed after the docs landed).
 
 ## Next
