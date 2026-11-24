@@ -409,7 +409,7 @@ export const HELP_REGISTRY = Object.freeze({
   doctor: {
     family: "tooling",
     summary: "one read-only check per documented tool surface, printing the doctor@1 envelope",
-    flags: ["--json", "--root"],
+    flags: ["--check", "--json", "--root"],
   },
   setup: {
     family: "tooling",

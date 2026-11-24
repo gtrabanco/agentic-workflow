@@ -118,7 +118,7 @@ writing anything**.
 | `turn-contract [--finished] [--remote <name>] [--forge <name>]` | The **turn contract's mechanical verifier** (feature 52, in the CLI since unit 554): box1 an agent inside a git repository off its default branch, box2 the unit document at HEAD for a unit-shaped branch (plus `scripts/phase-lint.mjs` when the unit carries a `TASKS.md`), box3 at least one own commit, box4 (`--finished`) a pushed branch with an open pull request whose head is local HEAD, box5 a clean tree not ahead of its upstream. The forge is a fact about the checked remote, so box4 asks `--forge`/`--remote` (default `origin`) instead of naming `gh`; an invalid `--forge` is a usage error, never a verdict. Prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>` · exit 0 pass · 1 fail · 2 usage. Read-only: its reads are lock-free, so not even `.git/index` is rewritten |
 | `guard-command [--command <text>] [--path <text>] [--allowlist <file>] [--payload] [--format plain\|copilot\|json]` | The **safety hooks' one decision** (unit 554), moved out of the template shell scripts so a target project installs shims instead of rules: the per-project literal allowlist, the merge families of every forge the workflow can drive, environment-variable disclosure and `.env` reads. `--payload` reads a platform hook payload from stdin; `--format` names the platform seam — `plain` (silent pass, refusals on stderr, exit 2), `copilot` (its `{continue, stopReason}` document, exit 0) or `json` (the normalized `[command, path]` an adapter formats itself). Read-only: it decides and writes nothing · exit 0 pass · 2 blocked, unusable payload or usage |
 | `telemetry merge-install [--repo <dir>]` | The **telemetry merge driver's installation gate** (issue #630): appends the two `.gitattributes` registry lines the `telemetry` class needs (`docs/workflow/TIER_COST.md` and `.pi/.telemetry/sessions.jsonl`, both `merge=agentic-shared-telemetry`) — additively, so a line already claiming the path is left alone — and arms `merge.agentic-shared-telemetry.driver` in the checkout's git config, naming the project's `scripts/shared-doc-merge.mjs` when it replicated the workflow, else this package's `bin/shared-merge.mjs`. Idempotent: a second run answers `unchanged`. Prints the `telemetry-merge-install@1` receipt on stdout; exit 0 answered · 2 refused (`MERGE-INSTALL REFUSAL —`, nothing written: not a checkout, or no runnable driver entry). `telemetry reconstruct write` arms the same key as part of its reconciliation (config only, never the tracked declaration) and reports it as `merge_driver` |
-| `doctor [--json] [--root <dir>]` | The **tool doctor** (issue #537): one read-only check per documented tool surface, printing the fixed `doctor@1` envelope — the host, one row per surface with its real evidence (resolved path, version, version pair, health probe, config state), the derived move, and the summary/verdict. Exit 0 when no required surface is broken · 1 when one is. A missing optional tool is an advisory that never fails the run. `--root` re-points the project it observes. It writes nothing, and it never runs a package manager: an install is text an operator pastes. The documented inventory it validates is `tool-inventory@1` below, and a documented row without a probe (or a probe without a documented row) is a `DOCTOR REFUSAL`, exit 2 |
+| `doctor [--check <id>] [--json] [--root <dir>]` | The **tool doctor** (issue #537): one read-only check per documented tool surface, printing the fixed `doctor@1` envelope — the host, one row per surface with its real evidence (resolved path, version, version pair, health probe, config state), the derived move, and the summary/verdict. Exit 0 when no required surface is broken · 1 when one is. A missing optional tool is an advisory that never fails the run. `--root` re-points the project it observes, and `--check <id>` prints one documented row instead of sixteen (an id the inventory does not document is a refusal, never an empty envelope — issue #705). It writes nothing, and it never runs a package manager: an install is text an operator pastes. The documented inventory it validates is `tool-inventory@1` below, and a documented row without a probe (or a probe without a documented row) is a `DOCTOR REFUSAL`, exit 2 |
 | `setup [--yes <ids>] [--dry-run] [--json] [--root <dir>]` | The **consent-gated setup wizard** (issue #537) over the same envelope. Each row maps to one move: `report-only` (healthy), `ask-consent-write` (the project's own installer repairs it), `instruct-only` (the exact operator command is printed) and `residual` (another owner decides). Nothing is written without an explicit yes — a non-interactive run without `--yes` prints the plan, writes nothing and says so; each applied action is recorded once in `.agentic-workflow/provision-log.jsonl`, then the same checker re-reads the envelope so a repaired row leaves the plan. The second run is a no-op. Exit 0 clean · 1 an applied action failed · 2 usage |
 
 Two sibling binaries ship in the same package and are invoked by the skills:
@@ -188,7 +188,8 @@ does not declare a surface has no defect there.
 doctor-envelope@1
 contract   "doctor@1"
 host       platform · arch · node · root
-inventory  source (packages/agentic-workflow/README.md) · rows
+inventory  source (packages/agentic-workflow/README.md) · rows (the documented
+           population) · check (the id `--check` narrowed to, or null)
 row        id · requirement (required|optional) · route (INSTALL_ROUTES) ·
            status (DOCTOR_CHECK_STATUSES) · move (WIZARD_MOVES) ·
            evidence{} · advisory|null · instruction|null · action|null
@@ -203,6 +204,24 @@ The human block is fixed: `DOCTOR — tool doctor (doctor@1) · <n> surfaces`, o
 move is derived, never declared a second time: `ok`/`not-applicable` is
 `report-only`, a row carrying an `action` is `ask-consent-write`, a row carrying
 an `instruction` is `instruct-only`, and a row with neither is `residual`.
+
+### The `relay` row — capability, never a dispatch
+
+The lane composes Relay legs when PI WEB is present, and before issue #705 the
+operator learned a leg could not dispatch only at the hand-off. The row answers
+it up front, and the delimitation rule splits the answer: the session marker
+(`PI_WEB_SESSION`), the session-daemon endpoint PI WEB itself resolves and the
+`@jmfederico/pi-relay` package as Pi's settings declare it are **generic**
+readings a plain process can take; the `pi-web:session-dispatch:v1` bridge is a
+**session** event, so the evidence names the protocol and its owner
+(`observable: false`) instead of claiming a probe, and nothing here dispatches,
+connects or spawns. `agentic-workflow doctor --check relay` prints that one row:
+with no PI WEB session it is `not-applicable` and states the per-phase hand-off
+the lane keeps; a marker with no answering daemon is `unreachable`; an
+unregistered package is `missing` with the shipped path and the documented local
+install, and an install that is the wrong half is refused in words —
+`@jmfederico/pi-relay` is `private: true` and only dispatches through PI WEB's
+bridge, so npm is never the route.
 
 ### The documented inventory
 
@@ -225,6 +244,7 @@ engram-binary | the core memory binary | the memory substrate's server is this b
 engram-server | the running memory server | a server started from an older binary keeps serving after an upgrade — the 2026-11-13 incident | optional | `GET $ENGRAM_URL/health` (default `http://127.0.0.1:7437`) version compared with the binary's | point `ENGRAM_URL` at a server you manage | instruct-only
 gentle-engram | the Pi companion package | the memory tools reach Engram through it, over the server, with no MCP registration | optional | the `packages` pin in Pi's `settings.json` plus the installed package version, against the curated pair | none — it is the MCP-free path | npm
 pi | the agent host | the workflow's skills and commands run inside it | optional | `pi --version` and the agent directory | another supported adapter | instruct-only
+relay | the Relay dispatch capability — PI WEB's session marker, its session daemon and the `@jmfederico/pi-relay` package with its two skills | the lane composes Relay legs when PI WEB is present, and without this row the operator learns a leg cannot dispatch only at the hand-off | optional | `PI_WEB_SESSION`, the daemon endpoint PI WEB resolves (`PI_WEB_SESSIOND_SOCKET`, else `<PI_WEB_DATA_DIR>/sessiond.sock`), and the `@jmfederico/pi-relay` declaration in Pi's `packages` with its `pi.skills` carrying `relay` and `relay-runner` | the per-phase hand-off `→ Next: /execute-phase <NN-slug> P<k>` (owner: `skills/unit-lane/references/RELAY.md` §Degradation) | instruct-only
 dogfooding-vehicle | the authoring checkout's own vehicle — the working tree this session runs instead of the installed release | a merged-but-unreleased unit is invisible to an installed release, and that confusion has produced false bug reports | optional | the `AGENTIC_WORKFLOW_RUNNER` override, the installed pi package version and the newest canary tag (`git tag --list "*canary*"`) | the installed release, at the cost of dogfooding the checkout | instruct-only
 agent-adapters | the detected agent adapters' config | the scaffold installs per-adapter safety config; the doctor only observes it | optional | a read-only scan of each adapter's MCP or settings file | none — an undetected adapter is scaffolded by `init-workspace` | instruct-only
 git-hooks | the project's git hooks | the local gate's offline subset runs before a push | optional | `git rev-parse --git-path hooks` and the files there | run the gate by hand before pushing | instruct-only

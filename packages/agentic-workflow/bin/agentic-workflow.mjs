@@ -1186,7 +1186,7 @@ switch (command) {
     // subcommand's startup exactly what it was.
     const { DoctorRefusal, renderDoctor, runDoctor } = await import("../src/doctor/doctor.mjs");
     const { planSetup, realSetupOps, renderSetup, runSetup } = await import("../src/doctor/wizard.mjs");
-    const flags = { root: process.cwd(), json: false, yes: new Set(), dryRun: false };
+    const flags = { root: process.cwd(), json: false, yes: new Set(), dryRun: false, check: null };
     for (let i = 0; i < restArgs.length; i++) {
       const arg = restArgs[i];
       if (arg === "--json") {
@@ -1195,6 +1195,13 @@ switch (command) {
       }
       if (arg === "--dry-run") {
         flags.dryRun = true;
+        continue;
+      }
+      if (arg === "--check") {
+        // Issue #705: one row, on demand — a caller that wants the Relay answer
+        // should not parse sixteen. The wizard narrows with `--yes <ids>`.
+        if (i + 1 >= restArgs.length) doctorRefuse("--check requires one documented check id");
+        flags.check = String(restArgs[++i]).trim();
         continue;
       }
       if (arg === "--root") {
@@ -1207,11 +1214,14 @@ switch (command) {
         for (const id of String(restArgs[++i]).split(",").map((value) => value.trim()).filter(Boolean)) flags.yes.add(id);
         continue;
       }
-      doctorRefuse(`unknown argument "${arg}" (usage: doctor [--json] [--root <dir>] | setup [--yes <ids>] [--dry-run] [--json] [--root <dir>])`);
+      doctorRefuse(`unknown argument "${arg}" (usage: doctor [--check <id>] [--json] [--root <dir>] | setup [--yes <ids>] [--dry-run] [--json] [--root <dir>])`);
+    }
+    if (command === "setup" && flags.check !== null) {
+      doctorRefuse("--check narrows doctor's report; setup narrows with --yes <ids>");
     }
     const readEnvelope = async () => {
       try {
-        return await runDoctor({ root: flags.root });
+        return await runDoctor({ root: flags.root, check: flags.check });
       } catch (error) {
         if (error instanceof DoctorRefusal) doctorRefuse(error.message);
         throw error;
@@ -1220,7 +1230,7 @@ switch (command) {
     const envelope = await readEnvelope();
     if (command === "doctor") {
       process.stdout.write(flags.json ? `${JSON.stringify(envelope, null, 2)}\n` : `${renderDoctor(envelope)}\n`);
-      feedback.done(`${envelope.rows.length} surfaces · ${envelope.verdict} · ${envelope.summary.advisories} advisories`);
+      feedback.done(`${envelope.rows.length} surface${envelope.rows.length === 1 ? "" : "s"} · ${envelope.verdict} · ${envelope.summary.advisories} advisories`);
       process.exit(envelope.exitCode);
     }
     // The wizard asks only where a write or a real decision exists: an
