@@ -13,9 +13,10 @@ the gate to allow header edits would trade the invariant away permanently for a
 one-time wording repair. The owner chose the exception; the gate keeps its
 teeth for every later push.
 
-**Cost:** the branch's `log-immutability` step is red with `log-rewritten` until
-the owner pushes under the authorized exception. The handoff reports it; it is
-never hidden or reclassified as a pass.
+**Cost:** the branch's `log-immutability` step is red with `log-rewritten` and
+`log-hand-appended` on the same header commit (`39cecced4`) until the owner
+pushes under the authorized exception. The handoff reports both; they are never
+hidden or reclassified as a pass.
 
 ## D2 — P4: product refuses non-CI runs; only this project refuses local journal pushes
 

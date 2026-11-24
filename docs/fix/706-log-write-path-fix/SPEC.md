@@ -326,11 +326,13 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   docs/LOGS.md, the same bytes with only the first header paragraph reworded)`
   · `[{ code: "log-rewritten", detail: "… first difference at byte 19" }]`.
 - **E3** — the P3 header landed under the owner exception (D1):
-  `bun scripts/log-immutability.mjs` · exit 1 ·
-  `log-rewritten — docs/LOGS.md: not a byte-prefix extension of the baseline —
-  first difference at byte 19` · `1 violations · base ed260303a · range 6
-  commits · verdict: FAIL`. This is the authorized red, not a defect: the gate
-  is untouched and every later push is still byte-prefix strict.
+  `bun scripts/log-immutability.mjs` · exit 1 · `log-rewritten — docs/LOGS.md:
+  not a byte-prefix extension of the baseline — first difference at byte 19`
+  plus `log-hand-appended — docs/LOGS.md: touched by non-aggregator commit
+  39cecced4 "docs(logs): lead the header with the fragment rule"` · the final
+  run reads `2 violations · base 2780f79a7 · range 14 commits · verdict: FAIL`.
+  Both are the same authorized header commit (`39cecced4`), not defects: the
+  gate is untouched and every later push is still byte-prefix strict.
 - **P2** — 2026-11-24, the product guard and its tests: `a2a62a77b` (the CI-only
   refusal, the `post-receive` `CI=true` recipe and the README) and `5d31a8f23`
   (the aggregator comment kept host-neutral for `journal.surfaces` AC9).
@@ -356,14 +358,15 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   --check` · exit 0; `scaffold-contract authoring` · exit 0 · SCAFFOLD OK;
   `phase-lint` · exit 0 · PASS; `journal aggregate --check` · exit 0 · checked
   53.
-- **E6** — the full gate at `546b9f5e0`: `bun scripts/local-gate.mjs --no-bail` ·
-  exit 1 · 20 steps · one red, `log-immutability` with `log-rewritten` — the D1
-  authorized exception. An earlier run also caught `worktree-guard` on another
-  session's stale `feat-719-nan-embedding-default-index-tool` worktree; that
-  worktree was removed externally and the final run is clean of it (K6). The
-  first run also caught the aggregator comment's forge word (`journal.surfaces`
-  AC9); `5d31a8f23` removed it, and the rerun's crate suite is green. No other
-  red.
+- **E6** — the full gate at `ab49dddf7`: `bun scripts/local-gate.mjs --no-bail` ·
+  exit 1 · 20 steps · one failed step, `log-immutability`, carrying the two
+  violations of the same authorized header commit (`log-rewritten` and
+  `log-hand-appended` on `39cecced4`; D1). An earlier run also caught
+  `worktree-guard` on another session's stale
+  `feat-719-nan-embedding-default-index-tool` worktree; that worktree was
+  removed externally and the final run is clean of it (K6). The first run also
+  caught the aggregator comment's forge word (`journal.surfaces` AC9);
+  `5d31a8f23` removed it, and the rerun's crate suite is green. No other red.
 - **E7** — the state owners: `roadmap fixrow` receipt `82de4412 → 857d499c`;
   `docs-generate` · `Files: 2 written · 0 deleted · 1 unchanged`; `docs-generate
   --check` · PASS; `lint-changeset` · ok.

@@ -24,10 +24,12 @@ state; it rewrites nothing (`S10`).
 
 The gate's shape contract is a byte-prefix extension; the header reorder is a
 rewrite. Measured: `logShapeViolations` returns
-`log-rewritten — first difference at byte 19`. The issue's AC says the
-byte-prefix check must stay unaffected, so the header edit lands under the
-owner's one-time exception (D1). The authorized red is reported in the `## Log`
-and the handoff; it is not a hidden failure.
+`log-rewritten — first difference at byte 19`. Once the header commit exists,
+the range half also reports `log-hand-appended` for `39cecced4` because the
+commit is not the aggregator identity. Both violations are the same authorized
+header commit (D1). The issue's AC says the byte-prefix check must stay
+unaffected, so the edit lands under the owner's one-time exception. Both reds
+are reported in the `## Log` and the handoff; neither is a hidden failure.
 
 ## K4 — the owner's §7 lives outside this repository
 
