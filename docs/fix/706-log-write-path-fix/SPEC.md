@@ -325,6 +325,12 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
 - **E2** — the P3 contradiction, measured: `logShapeViolations(HEAD's
   docs/LOGS.md, the same bytes with only the first header paragraph reworded)`
   · `[{ code: "log-rewritten", detail: "… first difference at byte 19" }]`.
+- **E3** — the P3 header landed under the owner exception (D1):
+  `bun scripts/log-immutability.mjs` · exit 1 ·
+  `log-rewritten — docs/LOGS.md: not a byte-prefix extension of the baseline —
+  first difference at byte 19` · `1 violations · base ed260303a · range 6
+  commits · verdict: FAIL`. This is the authorized red, not a defect: the gate
+  is untouched and every later push is still byte-prefix strict.
 
 ## Next
 

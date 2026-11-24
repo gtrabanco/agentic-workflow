@@ -1,19 +1,19 @@
 # Session log
 
-> **Append-only rule (S9 4b, fix/318; the writer landed in #394):** LOGS.md is
-> pure code output — no model writes it. The pi extension's `autoLogSession:
-> mechanical` (#394) and the template's session hooks (#186) append the
-> mechanical git-facts block; `/log-session` appends the narrative one. A wrong
-> past line gets a *new correcting line*, never an edit. Machine-authored
-> git-facts entries kill the "hand-tallied figure" class.
->
 > **Fragment rule (#405, opted in here):** with `.agentic-workflow/journal/`
-> present, those three writers write **fragments** there instead, and
+> present, the three writers write **fragments** there instead, and
 > `agentic-workflow journal aggregate` (`.github/workflows/agentic-workflow-journal.yml`)
 > is the **only** writer of this file: it appends the consumed fragments
 > newest-first and deletes them. A direct append is refused by
 > `session-close close` in carrier mode. Without the carrier directory the
-> direct append above is unchanged.
+> append-only rule below applies.
+>
+> **Append-only rule (S9 4b, fix/318; the writer landed in #394):** LOGS.md is
+> append-only: a wrong past line gets a *new correcting line*, never an edit.
+> Without the carrier, the pi extension's `autoLogSession: mechanical` (#394)
+> and the template's session hooks (#186) append the mechanical git-facts
+> block, and `/log-session` appends the narrative one. Machine-authored
+> git-facts entries kill the "hand-tallied figure" class.
 
 Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
