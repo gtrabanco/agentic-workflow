@@ -344,9 +344,18 @@ ledgers it does not consume.
 
 - **P2** — 2026-12-24, PR opened: [#712](https://github.com/gtrabanco/agentic-workflow/pull/712) on `fix/704-prose-only-delivery-stall`. The `## Fixes` row settled to `done · [#712]` through its writer (`runner roadmap fixrow`, receipt `pass`, `e571f83b → 58fa1fc9`) and `docs-generate`, and `runner roadmap-settle` reports `PASS · 273 unit docs · 0 violations`. The row is removed after the merge.
 
+- **L3** — 2026-12-24, the owner's correction request on the verification receipt, verbatim: `Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff` — one correction batch over the EXTERNAL VERIFY's three advisories (`external-verify.md`), triaged first: two applied (E17, F3), one wontfix with its ground (F2).
+- **F1** — 2026-12-24, advisory 1 folded (evidence precision): the G1 delta sentence named no code change after `5b33cdd2e`, but `80e1d7f93` also added `scripts/vocabulary-parity.test.mjs` (+36: three #704 one-home parity cases) and the `scripts/content-guard-discipline.test.mjs` `EXEMPT` row (+4) under a `docs(704)` type — recorded by the appended E17, not by editing G1 (a correction appends, never rewrites).
+- **F2** — 2026-12-24, advisory 2 wontfix: the red-first O4 timeout under bare `bun test` is pre-existing and already owned by exactly one surface — the `scripts/test-timeout-allowlist.json` row whose reason states the 5s default "already failed this suite standalone before this unit (pre-existing, measured at f349d7b5)". A repair would either duplicate that declared fact (IR11) or edit the test to pass (IR3); the gate's own 60s bound is the sanctioned invocation.
+- **F3** — 2026-12-24, advisory 3 folded (residual disclosure): known-issues.md gains KI-6 — a tree without the roadmap Fixes table sweeps as `DEGRADED unavailable-roadmap-index-absent` and exits 1, so a project that does not ship that table keeps a red scheduled run; the fail-closed verdict is the reviewed design, the named row is what was missing.
+- **E17** — 2026-12-24, correcting line for G1: `git show --stat 80e1d7f93` · exit 0 — the post-gate delta also carries the two test-file changes G1's sentence omitted; both blocks re-ran green at head in the verifying session (`bun test scripts/vocabulary-parity.test.mjs scripts/content-guard-discipline.test.mjs` · exit 0 · 46 pass, 0 fail; both additive, no existing assertion weakened), so the runs above stand as their receipt.
+- **E18** — 2026-12-24, `bun packages/agentic-workflow/bin/agentic-workflow.mjs scaffold-contract authoring docs/fix/704-prose-conditions-stall/SPEC.md` · exit 0 · `ACCEPTANCE MATCH` / `verdict SCAFFOLD OK` after the batch appended L3, F1–F3 and E17 (the frozen acceptance section, and with it `ac-hash`, is untouched).
+- **E19** — 2026-12-24, `bun packages/agentic-workflow/bin/agentic-workflow.mjs docs-generate --check` · exit 0 · `verdict: PASS` after the batch (the prose-only corrections touch no cell the projection renders).
+- **E20** — 2026-12-24, `bun test scripts/delivery-conditions.test.mjs` · exit 0 · `20 pass, 0 fail` after the batch — the loop check: nothing the corrections share moved.
+
 ## Next
 
-P1 — the ledgers are frozen in this cut; the suite lands red next.
+The owner merges PR [#712](https://github.com/gtrabanco/agentic-workflow/pull/712); the unit is EXTERNAL-VERIFY VERIFIED with zero blockers, and the `## Fixes` row is removed after the merge. (The previous `## Next` — "the suite lands red next" — was frozen at the cut and superseded by P1–P2; this line replaces it.)
 
 ## References
 
