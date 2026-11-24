@@ -335,6 +335,8 @@ The `review` step is replaced by that same workflow's external verification.
 - **E23** — 2026-11-24, HEAD `ebd7b35fe`+E22, `rg --pcre2 -n '(?<![\w/@.-])agentic-workflow\s+[a-z]' skills/` · 16 lines over 12 pages, every one a prose noun phrase and none an instruction: `review pack` ×9 (`review-verify`, `review-design`, `review-brand`, `review-a11y`, `review-perf`, `review-seo`, `review-debt`, `review-security` descriptions, all frontmatter), `agentic-workflow drivers` (`orchestration-envelope` description), `agentic-workflow owns the plan` (`RELAY.md:23`), `an agentic-workflow config is installed` (`ENGINEERING_INTERVIEW.md:119`, an interview cell), `An agentic-workflow install reads` (`CONFIG.md:9`), `agentic-workflow scaffold` ×3 (`init-workspace/SKILL.md:85,128`, `UPGRADE.md:3`), `agentic-workflow maintenance` (`skill-lint/SKILL.md:8`).
 - **E24** — 2026-11-24, the re-run after E22/D12/D13 · `bun scripts/runner-launcher-drift.mjs` exit 0 (`bare-launcher: 0 · ordered: 75 · citations: 83 · files: 173`) · `bun test scripts/runner-launcher-drift.test.mjs` **10 pass / 0 fail** · `bun scripts/run-root-suite.mjs --jobs 4` **143/143 PASS** · `bun run --cwd packages/agentic-workflow test` all PASS · `…-schema test` **953/0** · `skill-lint` PASS · `check-skill-context` PASS (31 skills / 7 documents) · `invocation-drift`, `forge-read-drift`, `docs-generate --check` PASS · `bun run --cwd packages/pi-agentic-workflow test` **1074 pass / 2 fail** (D11's two cases, unchanged).
 - **G4** — 2026-11-24, HEAD `8112cfb05`, `bun scripts/local-gate.mjs --jobs 4 --no-bail` · **19 of 20 steps exit 0** (`root-suite` 174s, `crate-suite-bun` 139s, `crate-suite-node` 289s, `schema-node-compat` 15s, `pi-compat-guard` 56s, `docs-generated-projection`, `version-parity-content`, `secret-scan`, `temp-hygiene`, `skill-context-budgets`, `journal-carrier-check`, `log-immutability`, `dependency-pin-gate`, `dependency-advisories`, `workspace-install`, `schema-build`, `worktree-guard`, `rigidity-review`, `tmp-gc`) · `pi-node-compat` exit 1 on D11's two cases.
+- **L3** — 2026-11-24, the operator's ruling on D11, verbatim in substance: in the **skills** the runtime detection is prose (a standalone skills install has nothing else) and pointing at the wrong version is exactly what makes an agent hunt for workarounds when a subcommand is missing; in **pi-agentic-workflow** the launcher makes no sense because those calls happen in code — which also keeps them out of the context the model pays for, and lets the session stop, run the command and add its output when it must run anyway. #555 stands; the skills keep their prose.
+- **E25** — 2026-11-24, after D11: `bun run --cwd packages/pi-agentic-workflow test` · exit 0 · **1075 pass / 0 fail** (the two `runner-prose` cases now pass **unamended**); `bun test test/projection.test.mjs` · 20 pass; `bun test test/settings-console.test.mjs` · 71 pass; the staged bundle's pointer line reads `In a pi session the pin is the crate this package installs and the extension spawns it at that exact version; outside pi, cite \`runner <subcommand>\``.
 - **P1** — 2026-11-24, unit doc + ledgers cut; the roadmap row moved to `in-progress` through `runner roadmap … fixrow` · `5a95fcea5`.
 - **P2** — 2026-11-24, the launcher-drift suite alone, observed red · `999edf66c`.
 - **P3** — 2026-11-24, the four reproducers, observed red · `f6c9c2643`.
@@ -348,15 +350,13 @@ The `review` step is replaced by that same workflow's external verification.
 - **D1** — 2026-11-24, owner order (L2): the unit is applied inline; the operator is the external verifier; the repository's deterministic gates are the only ceremony.
 - **D2** — 2026-11-24, the sweep's scope and classifier are the ones `docs/fix/710-canary-stale-stamp-invocation/decisions.md` D2 states (`skills`, `template`, `docs/workflow`; code context only).
 - **D12** — 2026-11-24, the acceptance reading of S8 is amended by **S8a**: the issue's own words are "no *unresolved invocation instruction*", and the criterion I froze used a raw occurrence grep that also matches the framework's name in prose (`the agentic-workflow review pack`). S8 is untouched — S8a appends the reading, criterion 8 is restated against it, and `ac-hash` is recomputed (`edbac7c2…`). The amendment narrows nothing: the gate is stricter than the raw grep (110 sites it found, 16 residual prose lines it proves are not commands).
-- **D11** — PENDING: two owner decisions disagree on the pi package's two documentation sites (`decisions.md` D11, `known-issues.md`'s blocker). Reported to the operator; no self-granted re-cut of #555's acceptance.
+- **D11** — 2026-11-24, the operator's ruling closed it: the pi package resolves the runtime in code (no launcher prose, no context cost), the **skills** keep theirs (a standalone install has no code to resolve anything, and an exact pin is what stops the agent hunting for a workaround). #555 stands unamended; both pi documentation sites were repaired without printing a launcher.
 
 ## Next
 
-The operator resolves D11 (`decisions.md`): amend issue #555's grep-clean
-acceptance for the two declared documentation sites, or revert them and satisfy
-S5 without printing a launcher. Either answer closes obligation O17 and the two
-`runner-prose.test.mjs` cases; nothing else is open — every other local-gate
-step, the 143 root suites, both package suites and the schema suite are green.
+Nothing in the unit is open: 18/18 obligations verified, every local-gate step
+green. The next action is the merge gate on PR #713, then the release note the
+changeset declares.
 
 ## References
 

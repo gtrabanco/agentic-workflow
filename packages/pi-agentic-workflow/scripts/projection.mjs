@@ -98,49 +98,22 @@ export const CRATE_COMMANDS = Object.freeze([
   "verify",
 ]);
 
-/** The crate this bundle ships against — the specifier a printed instruction names. */
-const CRATE = "@gtrabanco/agentic-workflow";
-
-/** The package's own manifest: the file the release stages before packing. */
-function ownManifest() {
-  return JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-}
-
-/**
- * The train this bundle ships (issue #710 S5/S7), read from the one place that
- * carries it: the package's own exact dependency pin on the crate. A release
- * stages that pin to the version it publishes (`stageChannelVersions`), so the
- * value moves with the cut and needs no literal here. The package's own version
- * is the fallback — the unified train keeps the two equal — and a tree that
- * carries neither is a refusal, never a printed instruction nobody can resolve.
- *
- * @returns {string}
- */
-export function shippedPin() {
-  const manifest = ownManifest();
-  const pin = manifest?.dependencies?.[CRATE];
-  if (typeof pin === "string" && /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u.test(pin)) return pin;
-  const version = manifest?.version;
-  if (typeof version === "string" && /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) return version;
-  throw new ProjectionError(
-    "manifest-invalid",
-    `this package declares no exact dependency pin on ${CRATE} and no train version — a pointerized section cannot name the launcher its reader must run`,
-  );
-}
-
 /**
  * The one-line pointer a `pointerize` rule leaves behind. Naming the enforcing
- * command is the contract: the prose is gone, the enforcement is not. Since
- * issue #710 (S5/S7) the pointer also names the exact-version launcher, because
- * the section it replaces is where the contract's pin lived: without it the
- * surviving "at the pin above" has no referent in the bundle, and a printed
- * instruction that resolves to nothing is the defect the issue filed.
+ * command is the contract: the prose is gone, the enforcement is not.
+ *
+ * Since issue #710 (S5) the pointer also closes the hole the pointerisation
+ * opened: the section it replaces is where the contract's pin lived, so a reader
+ * was left with "at the pin above" and nothing above it. The pointer now says
+ * where the pin actually is in a pi session — the extension spawns its own
+ * exact, installed crate — and where the standalone form lives, without printing
+ * a launcher: pi resolves the runtime in code, and the invocation prose belongs
+ * to the skills alone (issue #555).
  *
  * @param {{enforcingCommand: string}} rule
- * @param {string} [pin] the train to name; defaults to this bundle's own
  */
-export function pointerLine(rule, pin = shippedPin()) {
-  return `> Enforced by \`${rule.enforcingCommand}\` — this section's prose is not shipped in the pi bundle; the standalone skills/ tree carries the full text. Outside a pi session the launcher is the exact train this bundle ships: \`bunx ${CRATE}@${pin} <subcommand> [args...]\`.`;
+export function pointerLine(rule) {
+  return `> Enforced by \`${rule.enforcingCommand}\` — this section's prose is not shipped in the pi bundle; the standalone skills/ tree carries the full text. In a pi session the pin is the crate this package installs and the extension spawns it at that exact version; outside pi, cite \`runner <subcommand>\` and let the standalone contract resolve it.`;
 }
 
 const sha256Digest = (text) => createHash("sha256").update(text, "utf8").digest("hex");

@@ -112,34 +112,6 @@ function crateManifest(): unknown {
 }
 
 /**
- * The crate's own version, or `null` when this package cannot resolve its
- * dependency. This is the train a printed instruction must name: the dependency
- * pin rides the same train (D-40-14), so the version read here is the one an
- * install of this package fetches — no literal to rot, no `latest` to drift.
- */
-export function crateVersion(): string | null {
-  try {
-    const manifest = crateManifest() as { version?: unknown };
-    const version = typeof manifest.version === "string" ? manifest.version.trim() : "";
-    return version === "" ? null : version;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * The exact-version launcher for a printed instruction (issue #710 S7):
- * `bunx @gtrabanco/agentic-workflow@<version> <args…>`, or `null` when no version
- * can be read. A caller that gets `null` must say what to run without naming a
- * package it cannot version — never fall back to the scope-less name, which
- * resolves to nothing.
- */
-export function exactVersionLauncher(args: readonly string[]): string | null {
-  const version = crateVersion();
-  return version === null ? null : `bunx ${CRATE}@${version} ${args.join(" ")}`;
-}
-
-/**
  * Compose the command that runs one runner subcommand.
  *
  * Order (the resolver's, not pi's): the documented `AGENTIC_WORKFLOW_RUNNER`

@@ -13,7 +13,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { readConfigFile, writeConfigFile } from "../dist/settings/store.js";
-import { crateVersion } from "../dist/runner-bin.js";
 
 import { runSettingsConsole, prompts } from "../dist/settings/console.js";
 import { PAGED_SELECT_NEXT, PAGED_SELECT_PREV, SELECT_OPTION_LIMIT } from "../dist/settings/picker.js";
@@ -1800,11 +1799,11 @@ test("declining the materialize consent writes nothing, and an untrusted project
   assert.equal(untrusted.notify.some((entry) => entry.kind === "warning" && /untrusted/u.test(entry.message)), true);
 });
 
-// Issue #710 S7: the refusal told the operator to run the scope-less launcher, which
-// resolves to nothing — the same defect the /log-session directive carried. The
-// notice now spells the exact-version form, derived from the installed crate's own
-// manifest so no source file has to carry a version literal.
-test("S7: the untrusted-project notice spells the exact-version launcher, never the bare name", async () => {
+// Issue #710 S7 / #555: the refusal used to spell the scope-less launcher — the
+// name that resolves to nothing — in a package whose whole point is that the
+// runtime is resolved in code. It now names the operation and points at the
+// console, and it carries no launcher and no version literal.
+test("S7: the untrusted-project notice names the operation, never a launcher", async () => {
   const untrusted = scriptedUi({ [prompts.scope]: "Global", [prompts.menu]: [prompts.materialize, prompts.cancel] });
   await runSettingsConsole({
     agentDir,
@@ -1817,10 +1816,8 @@ test("S7: the untrusted-project notice spells the exact-version launcher, never 
     projectTrusted: false,
   });
   const notice = untrusted.notify.map((entry) => entry.message).join("\n");
-  const version = crateVersion();
-  assert.ok(version, "the installed crate is resolvable from this package, so the notice can name its train");
-  assert.match(notice, new RegExp(`bunx @gtrabanco/agentic-workflow@${version.replace(/\./gu, "\\.")} config default --scope global`, "u"));
-  assert.doesNotMatch(notice, /(?:^|[^@/\w-])agentic-workflow config default/u, "the bare launcher is never printed");
-  const manifest = JSON.parse(readFileSync(new URL("../../agentic-workflow/package.json", import.meta.url), "utf8"));
-  assert.equal(version, manifest.version, "the printed version is the crate's own, read and not typed");
+  assert.match(notice, /untrusted/u, "it still says why nothing was written");
+  assert.match(notice, /config default --scope global/u, "and names the operation a reader outside pi can run");
+  assert.doesNotMatch(notice, /(?:bunx|npx(?:\s+--yes)?|pnpm\s+dlx)\s+@gtrabanco\/agentic-workflow/u, "no launcher: pi never prints one (issue #555)");
+  assert.doesNotMatch(notice, /(?:^|[^@/\w-])agentic-workflow config default/u, "and never the scope-less name, which resolves to nothing");
 });

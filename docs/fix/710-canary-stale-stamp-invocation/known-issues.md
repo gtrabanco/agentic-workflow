@@ -24,15 +24,12 @@
 - **`--version` on the canary channel is rejected by design** (D-40-3).
   `does-not-affect`: this unit's suite drives `publish-stage` with `--date` only.
 
-- **BLOCKER (open, needs the owner): two owner decisions disagree on one
-  surface.** [Issue #555](https://github.com/gtrabanco/agentic-workflow/issues/555)
-  requires `packages/pi-agentic-workflow` to be grep-clean of `bunx`/`npx`
-  invocation prose and pins it with
-  `packages/pi-agentic-workflow/test/runner-prose.test.mjs`; this unit's S5/S7
-  (issue #710) file the pointerised pin as a defect and require the exact-version
-  form wherever a printed instruction is unavoidable — which is the bundled
-  `RUNNER.md` pointer line and the settings console's operator notice. Both are
-  implemented as #710 prescribes, so that suite reports
-  `1074 pass / 2 fail` (`the packaged skills carry no runner invocation`, `the
-  package's own files carry no runner invocation`) until the owner resolves D11.
-  `affects` this unit's delivery only; every other suite is green.
+- **RESOLVED (2026-11-24, `decisions.md` D11): the two owner decisions no longer
+  disagree.** [Issue #555](https://github.com/gtrabanco/agentic-workflow/issues/555)
+  requires `packages/pi-agentic-workflow` to be free of launcher prose — the
+  runtime there is resolved in code — and this unit's S5/S7 required the
+  pointerised pin to have a referent. The operator's ruling settled it: #555
+  stands unamended, and both sites were repaired **without printing a launcher**
+  (the pointer line says where the pin lives in a pi session; the console's
+  refusal names the operation). `runner-prose.test.mjs` passes unamended and the
+  pi suite reads 1075 pass / 0 fail.
