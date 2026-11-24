@@ -1,7 +1,13 @@
-# Unit — 719-nan-default-embed: decisions
+```text
+open-questions@1
+no open-question rows — the ask backlog was empty: every claim was settled by
+provenance or by the issue's own words (S1–S4 quote the owner); the boundaries
+the issue leaves open were cheap-to-change and defaulted below, never asked
+```
 
-Append-only question protocol; owner: `skills/unit-lane/SKILL.md` §Inputs.
-The pre-spec (`docs/pre-spec/2026-11-24-719-nan-default-embed.md`) closed every
-applicable checklist row with `questions: none` — no open question entered
-planning through this layer (checked 2026-11-24). Design-tier decision rows are
-appended by the design step.
+| id | date | kind | about | authority | recorded | chosen | discarded | scope |
+|---|---|---|---|---|---|---|---|---|
+| D1 | 2026-11-24 | decision | default-on mechanism | issue S1+S4 + INV-002/003/010 | here | withhold-or-inject: when the extension loads, read the project's real `index.json`; if its provider block is absent entirely and the preset's `envVar` key is present in the environment, export the three direct env vars (baseUrl/model/apiKey) into the host process so spawned runner children resolve the provider env-only; a present provider block withholds the default wholesale | auto-materialization into the committed `index.json` (INV-003 forbids rewrites of a committed surface; S1 keeps the write opt-in) and per-key merging into a partial block (reads like operator intent = the materialization route) | unit-only |
+| D2 | 2026-11-24 | decision | where the logic lives | extension.ts no-crate-rule (INV-004) + CLAIM-001 | here | the resolver module and the injection wiring live in `packages/pi-agentic-workflow` (it already depends on the crate and owns the settings/extension seam); the companion keeps donating pure data (`NAN_EMBED_PROFILE`) and gains no code | a resolver inside pi-nan (breaks its no-crate-dependency rule) or a crate-side provider presets seam (breaks INV-011's provider-neutrality) | unit-only |
+| D3 | 2026-11-24 | decision | tuning parity on default-on | issue S1 (out-of-the-box quality) + INV-006 | here | default-on also exports `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS=36000` (the preset's measured 6000×6 pair expressed through the budget var the crate already supports), only on the exact all-or-nothing condition of D1 | leaving the crate's 90,000 default (functionally safe, silently worse fit) or adding a `chunk_limit` env var to the crate (crate change, contradicts CLAIM-003) | unit-only |
+| D4 | 2026-11-24 | decision | tool shape | issue S2 (INV-009) + INV-007/008 | here | a read-only, deferred pi tool `doc_search` in the `agentic-workflow` namespace registered by the pi package: params `{ query: string, mode?: "hybrid" \| "keyword" }` (absent → the crate's auto resolution), typed result rendered from the crate's own doc-query JSON envelope, executed by spawning the pinned runner `doc --query … --json-only` | the `akiko-index` name the issue floated (no owner answer backs it, and the crate's envelope vocabulary already names what the tool wraps — `doc_search` reads true) and a keyword-only thin re-implementation of query inside the pi package (a second retrieval copy; INV-007's envelope is the one authority) | unit-only |

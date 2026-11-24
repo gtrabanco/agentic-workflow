@@ -1,6 +1,7 @@
 ---
 type: feature
 scope: standard
+ac-hash: 8e1863ca94125efa56191a39f66e5118c7d0631e9681472e0ced5b9373c18201
 # ac-hash: <sha256 of the ## Acceptance criteria section — the design step writes it>
 # roadmap_summary: <one line shown in the roadmap's Summary/Notes cell; unset falls back to the One-line>
 ---
@@ -95,9 +96,11 @@ unit's PR closes it via `Closes #719`.
 Nothing can be removed: the shell paths (`agentic-workflow doc --query`,
 `/aw-index`) are deliberately kept alive by S4 ("existing shell paths are
 untouched"), and the preset-plus-consent materialization path stays the
-operator's explicit route. A strictly additive unit — the surface inventory
-receipt is recorded at plan time via
-`runner residual-classify --inventory --base <rev>`.
+operator's explicit route. The unit is strictly additive, so the answer is its
+computed surface inventory: `runner residual-classify --inventory --base
+<merge-base>` at the unit's head (O7/P4) — every added surface has a named
+consumer from load (the loaded extension consumes both), and no `orphan` row
+is expected.
 
 ## Non-goals
 
@@ -140,31 +143,89 @@ none — no idea was deferred by the requester.
 Per the triage block: a `tests` step runs (tier `strong`) — consistent with
 the sibling packages' suite patterns (e.g.
 `packages/pi-agentic-workflow/test/embed-profile-e2e.test.mjs`). Concrete
-suites are pinned at the plan step.
+suites are pinned by the Tasks section's validators.
+
+## Acceptance criteria
+
+Induced from the issue's own scenarios (S1–S4); each is command-verified.
+
+- **AC1** — Default-on: in a fixture project whose `index.json` carries no
+  provider block, with the preset loaded and `NAN_API_KEY` present, the
+  resolved embedding configuration is the NaN profile verbatim (`baseUrl`,
+  `model`, key resolved from `NAN_API_KEY`) and a spawned runner `doc` child
+  inherits the resolution *(S1; validator: `bun test
+  packages/pi-agentic-workflow/test/embed-profile-default-on.test.mjs` exits
+  0 — PE-001)*.
+- **AC2** — Withhold: the same fixture with an explicit provider block gets
+  zero injection, and the committed `index.json` is byte-identical after the
+  resolution ran *(S4 + INV-003; validator: the withhold rows of the same
+  suite exit 0, plus a byte-identity assertion — PE-002)*.
+- **AC3** — Absent key: with no `NAN_API_KEY` the resolver injects nothing
+  and the shipped keyword-only behaviour with its
+  `unavailable-embeddings-not-configured` degradation is unchanged *(S4;
+  validator: PE-003's suite row exits 0)*.
+- **AC4** — Tuning parity: on the default-on path the exported request budget
+  is `36000`, so with no explicit `chunk_limit` the effective chunk limit is
+  that budget — the preset's measured pair, no crate change *(D3; validator:
+  PE-004's suite row exits 0)*.
+- **AC5** — The tool: `doc_search` is registered deferred in the
+  `agentic-workflow` namespace, accepts `{ query, mode? }`, returns typed
+  results rendered from the crate's doc-query envelope, and never writes
+  *(S2; validator: the workflow-tools suite exits 0 parsing a recorded
+  envelope — PE-005)*.
+- **AC6** — End-to-end: from a fixture project with the extension loaded,
+  key present, no provider block, a query through the tool seam resolves the
+  provider (hybrid answers, no `unavailable-embeddings-not-configured`)
+  *(S1+S2; validator: `bun test
+  packages/pi-agentic-workflow/test/embed-profile-e2e.test.mjs` exits 0 —
+  PE-006)*.
+- **AC7** — Scope honesty: the unit's diff touches neither `rg`/serena paths
+  nor the runner crate's tree *(S3; validator: at the unit's head
+  `git diff --stat <merge-base>..HEAD -- packages/agentic-workflow` prints
+  nothing — PE-007)*.
 
 ## Known pre-existing issues
 
 - `unavailable-embeddings-not-configured` is the current honest degradation
   for a keyword-only store (`packages/agentic-workflow/src/doc/config.mjs:10`);
-  #718's fixes (silent embed stage, fetch timeout, 600 s cap, sync lease,
-  inert hook) are pre-existing on the same embed pass — recorded `affects`
-  only if this unit needs a sync during acceptance runs, else
-  `does-not-affect` (they live in the companion unit).
+  #718's five fixes (silent embed stage, fetch timeout, 600 s cap, sync lease,
+  inert hook) are pre-existing on the same embed pass — **does-not-affect**:
+  they live in the companion fix unit (`docs/ROADMAP.md:244`) and this unit
+  changes no embed-pass behaviour; the one touch point is that a default-on
+  session will now reach the embed path AC1 depends on, which the e2e fixture
+  exercises without depending on any #718 fix.
 
 ## Tasks
 
-Cut at the plan step from the triage block — this section stays
-`n/a — tasks are cut at plan` until then.
+Cut by the fused pass; dependency-topological, smallest within a ready set.
+Each bullet carries its validator, its `(Implements: …)` link and its read set
+(metadata, never task text).
+
+- P1 — Add the default-on embed-profile resolver to `packages/pi-agentic-workflow/src/config`: read the project's real config through the crate seam and emit the withhold-or-inject record for the preset registry's embed profiles (D1/D2/D3), pure and injectable; the suite lands before the module, red then green (validator: `bun test packages/pi-agentic-workflow/test/embed-profile-default-on.test.mjs` exits 0)
+  (Implements: S1, S4)
+  - Relevant files: packages/pi-agentic-workflow/src/config/embed-profile.ts, packages/pi-agentic-workflow/src/config/presets.ts, packages/pi-agentic-workflow/test/embed-profile-default-on.test.mjs
+- P2 — Wire the resolver into the pi extension's startup seam as one idempotent call with the process surface injected, so every spawned runner child inherits the resolved env (validator: `bun test packages/pi-agentic-workflow/test/embed-profile-default-on.test.mjs` — the wiring rows — exits 0)
+  (Implements: S1)
+  - Relevant files: packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/src/extension/factory.ts, packages/pi-agentic-workflow/test/embed-profile-default-on.test.mjs
+- P3 — Register the `doc_search` read-only deferred tool in the workflow-tools spec set: params `{ query, mode? }`, spawning the pinned runner `doc --query … --json-only` and rendering the crate's typed envelope; the suite lands before the spec, red then green (validator: `bun test packages/pi-agentic-workflow/test/workflow-tools.test.mjs` exits 0)
+  (Implements: S2)
+  - Relevant files: packages/pi-agentic-workflow/src/extension/workflow-tools.ts, packages/pi-agentic-workflow/test/workflow-tools.test.mjs, packages/pi-agentic-workflow/test/shipped-adapter.test.mjs
+- P4 — Unit verification: run the touched packages' full suites, the local gate, the no-crate-diff pin and the `residual-classify` inventory receipt (O5/O7, PE-007/PE-008) (validator: `bun scripts/local-gate.mjs` exits 0)
+  (Implements: S3)
+  - Relevant files: packages/pi-agentic-workflow/, packages/pi-nan-agentic-workflow/, docs/features/719-nan-default-embed/
+- P5 — Release settle: open the PR closing #719, then upsert the roadmap row via the crate's writer (`agentic-workflow roadmap rowUpsert`, status `done · [#N](<pr-url>)`, every other cell preserved) (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap-settle` exits 0)
+  (Implements: S1, S2)
+  - Relevant files: docs/ROADMAP.md, CHANGELOG.md
 
 ### Planning evidence
 
-For M/L: `planning-evidence.md` in the unit folder — named here, never
-duplicated. Cut at the plan step.
+Lives in [planning-evidence.md](planning-evidence.md) (M-sized carrier;
+never duplicated here).
 
 ### Obligations
 
-For M/L: `planning-obligations.md` in the unit folder — named here, never
-duplicated. Cut at the plan step.
+Lives in [planning-obligations.md](planning-obligations.md) (M-sized carrier;
+never duplicated here).
 
 ## Triaged steps
 
@@ -210,6 +271,8 @@ ledger (grammar: `findings-table@1`).
   > shell commands. … Scope honesty: replace `rg`-style search with embeddings
   > only for prose retrieval (docs, SPECs, skills, decisions). Keep `rg` for
   > exact strings/regex in code and LSP (serena) for symbols.
+- **P2** — 2026-11-24 23:5x UTC (design+plan fused pass) · research receipts journalled (`sources.md` INV-001…013 + CLAIM-001…004), boundaries closed (D1–D4), ACs AC1–AC7 frozen with their `ac-hash`, tasks P1–P5 cut, both planning ledgers cut as unit-folder carriers, `## Future` stays `none` · commit `docs(features): design and plan feature 719`.
+- **G1** — 2026-11-24, `phase-lint docs/features/719-nan-default-embed/SPEC.md` · exit 0 · `verdict PASS (6/6 per phase) · fingerprint 10a0522a…`.
 - **E1** — 2026-11-24, `runner ceremony tier classify` · exit 0 · `tier: standard` (`empty-change` — the branch names no path yet; re-read at the implement step).
 - **E2** — 2026-11-24, `runner memory probe` · exit 0 · `MEMORY PROBE — degraded` (`session-ambiguity`: 21 findings across `ambiguous_active_runtime_sessions`/`sync_target_closed_space`). Recorded once; memory writes proceed per `references/MEMORY.md`.
 - **E3** — 2026-11-24, `agentic-workflow elicitation check --bank … --spec …` · exit 0 · `ELICITATION CHECK PASS · 5 row(s) · 0 question(s) · feature`.
@@ -218,8 +281,7 @@ ledger (grammar: `findings-table@1`).
 
 ## Next
 
-Run the fused design+plan pass (activity-fusion@1) over the four uncertainties
-in [research.md](research.md).
+Hand off execution: `→ Next: /execute-phase 719-nan-default-embed P1 (tier: cheap)`
 
 ## References
 
