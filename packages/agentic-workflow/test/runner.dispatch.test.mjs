@@ -83,6 +83,8 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
       "docs-generate", "roadmap-settle", "relevant-files", "scaffold-contract",
       // #704: the delivery-condition carrier adds its guard and its sweep.
       "delivery-conditions",
+      // #703: the ceremony-failure doctor joins the surface its skill cites.
+      "workflow-doctor",
     ],
     "the shell-visible half of the runner is exactly these commands: the router, the six sensors, the substrate census, the quality sensor, the guarded forge read (issue #612), the ceremony registry, the skill-discovery route (issue #591), and the commands the #553 coverage sweep moved out of `scripts/`",
   );
