@@ -129,19 +129,20 @@ as an order of magnitude, not a quote.
 | **qwen3.8-max** | 2.4T-class Qwen (external) | 1M | paid · ZDR | 100 / 12.5 / 300 | 20.2 cr |
 | **deepseek-v4-pro** | DeepSeek large (external) | 1M | paid · ZDR | 66 / 2.2 / 198 | 7.7 cr |
 | **hy4** | Tencent Hunyuan 4 (external) | 1M | paid · ZDR | 41.7 / 2.1 / 125.05 | 5.5 cr |
-| **deepseek-v4-flash** | 305B MoE | 1M | 3B free/mo · ZDR · JSON mode + `json_schema` (no tools) | 10.5 / 0.21 / 42 | 1.1 cr |
+| **deepseek-v4-flash** | 305B MoE | 1M | 3B free/mo · ZDR · JSON mode + `json_schema` + OpenAI `tools` | 10.5 / 0.21 / 42 | 1.1 cr |
 | **glm5.3-flash** | 320B (18B active) · MIT | 1M | 2B free/mo · ZDR | 5.25 / 1.05 / 17.5 | 1.4 cr |
 | **qwen3.8-flash** | 125B (6B active) · qwen license | 1M | 500M free/mo · ZDR · XML tools | 7.5 / 0.8 / 23.5 | 1.9 cr |
 | **mimo-v2.6-flash** | Xiaomi omni-modal (external) | 1M | 1B free/mo · ZDR | 7 / 0.14 / 14 | 0.6 cr |
 | **qwen3.6** | 35B (3B active) — previous generation | 262K | unlimited cluster model | 0 | 0 |
 | **gemma4** | 26B (4B active) | 262K | unlimited cluster model | 0 | 0 |
 
-**Tool calling is OpenAI-`tools`-native only on `glm5.3`, `glm5.3-flash`,
-`deepseek-v4-flash` and `mimo-v2.6-flash`.** `qwen3.6`, `qwen3.8-flash` and
+**Tool calling is OpenAI-`tools`-native on `glm5.3`, `glm5.3-flash`,
+`deepseek-v4-flash` and `mimo-v2.6-flash` — and, per the provider's facts, on
+the four paid external entries `kimi-k3.1-pro`, `qwen3.8-max`,
+`deepseek-v4-pro` and `hy4`.** `qwen3.6`, `qwen3.8-flash` and
 `gemma4` document tool calling in XML format — fine for single-shot text
 work, not for the executor path's OpenAI-tools harness unless the harness is
-XML-aware. The executor rungs therefore stay on the four function-calling
-models. Run the tool-calling smoke test in
+XML-aware. Run the tool-calling smoke test in
 [`docs/workflow/GOLDEN_FIXTURE.md`](../../docs/workflow/GOLDEN_FIXTURE.md)
 before promoting any model into that path.
 

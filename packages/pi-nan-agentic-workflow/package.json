@@ -1,7 +1,7 @@
 {
   "name": "@gtrabanco/pi-nan-agentic-workflow",
   "version": "4.10.1",
-  "description": "Pi companion package: the NaN.builders preset for agentic-workflow model routing \u2014 provider profile, per-skill model ladder, and quota-tier routing.",
+  "description": "Pi companion package: the NaN.builders preset for agentic-workflow model routing — provider profile, per-skill model ladder, and quota-tier routing.",
   "keywords": [
     "pi-package",
     "agentic-workflow",

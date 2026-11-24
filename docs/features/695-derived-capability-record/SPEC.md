@@ -119,9 +119,11 @@ schema package's two closed vocabularies (`PHASE_BATCHING_TOOL_HARNESSES`,
 `packages/pi-nan-agentic-workflow/src/phase-batching.ts` that says the record is "transcribed here because the
 runtime reads `src/` and never the snapshot" retires with `RECORDED_FACTS`; the
 README's per-model harness column ("not documented" on the four paid entries)
-retires; the parity claim "the capability record mirrors the recorded snapshot's
-`capabilities[]`" is replaced by "the record equals the generated artifact and
-the artifact equals the provider's facts at the recorded pin". The four paid
+retires; the record ↔ artifact ↔ provider-pin parity ("the record equals the
+generated artifact and the artifact equals the provider's facts at the recorded
+pin") is added on top of the retained record↔snapshot mirror parity, which stays
+a true cross-check of the corrected snapshot (D5) — nothing about the mirror
+tests themselves was removed. The four paid
 models (`kimi-k3.1-pro`, `qwen3.8-max`, `deepseek-v4-pro`, `hy4`) move from
 `tool_harness: unmeasured` to the provider's documented `openai-tools` — with
 the key ON they now earn four phases instead of one. That is the gap closing,
@@ -141,12 +143,22 @@ performs no network call.
 
 ## Retirements
 
-Two surfaces retire, each with its replacement:
+One surface retires, with its replacement:
 
 | Retired | Replacement | No-consumer evidence |
 |---|---|---|
 | `RECORDED_FACTS` (the hand map in `packages/pi-nan-agentic-workflow/src/phase-batching.ts`) | `packages/pi-nan-agentic-workflow/src/model-capabilities.generated.ts`, written by `packages/pi-nan-agentic-workflow/scripts/derive-model-facts.mjs` | `rg -c 'RECORDED_FACTS' packages/pi-nan-agentic-workflow/src` → 0 after the change |
-| the parity claim "the record mirrors the snapshot's `capabilities[]`" | the record ↔ artifact ↔ provider-pin parity in `packages/pi-nan-agentic-workflow/test/model-facts.test.mjs` plus the `--check` run | `rg -c 'impliedHarness' packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs` → 0 after the change |
+
+Considered for retirement and **retained**: the snapshot-mirror parity
+(`impliedHarness` with its three record↔snapshot tests in
+`packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs`). D5 corrected
+the recorded snapshot to the provider's values rather than forking it, so the
+mirror remains a true cross-check of the record against the snapshot, and the
+record ↔ artifact ↔ provider-pin parity adds on top in
+`test/model-facts.test.mjs` plus the `--check` run. The 2026-11-24
+`EXTERNAL VERIFY` blocker 1 named this row's stale "→ 0" count; the correction
+batch re-cut it (Log E16–E18). Evidence: `rg -c 'impliedHarness'
+packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs` matches 3.
 
 Nothing else is retired: the policy, the vocabulary, the config key, the
 command and the thresholds all stay exactly as they are.
@@ -210,12 +222,13 @@ none
   this unit: the package's suite is run in the foreground by this unit's own
   evidence, exactly as #632 ran it, and adding a gate step edits the id set a
   different unit pins.
-- The README's fleet table still describes `deepseek-v4-flash` as
+- The README's fleet table described `deepseek-v4-flash` as
   "JSON mode + `json_schema` (no tools)" while the recorded snapshot and the
-  provider both attest `Tool calling` for it — `does-not-affect` this unit: that
-  row describes the fleet's abilities, not the capability record, and the two
-  facts already disagree on `main`. It is disclosed here rather than silently
-  rewritten, and it is a one-row docs repair for the owner to schedule.
+  provider both attest `Tool calling` for it — pre-existing at base, disclosed
+  on 2026-11-23, and repaired in the 2026-11-24 corrections batch (P9, Log
+  E16–E18) together with the tool-calling paragraph's stale "only on the four
+  rungs" scope: the row now carries `OpenAI \`tools\`` and the provider's
+  documented harness for the four paid entries is named.
 - `.worktrees/fix-704-prose-only-delivery-stall` exists on the same commit —
   `does-not-affect`: different branch, different files.
 
@@ -264,6 +277,20 @@ none
   (validator: `bun run test` exits 0 in
   `packages/pi-nan-agentic-workflow` and `bun scripts/local-gate.mjs` exits 0)
   (Implements: S13)
+
+- P9 — Correction batch (2026-11-24) against this unit's `external-verify.md`
+  receipt: re-cut the Retirements row's stale no-consumer count (blocker 1),
+  repair the README fleet prose the snapshot and provider refute (advisory 1,
+  row cell + tool-calling paragraph scope), and restore the package
+  description's base em-dash bytes (advisory 2) (validator:
+  `rg -c 'impliedHarness' packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs`
+  matches 3 with the Retirements table carrying no count claim against it, and
+  `bun run test` exits 0 in `packages/pi-nan-agentic-workflow`)
+  (Implements: S1)
+  - Relevant files: docs/features/695-derived-capability-record/SPEC.md,
+    docs/features/695-derived-capability-record/planning-obligations.md,
+    packages/pi-nan-agentic-workflow/README.md,
+    packages/pi-nan-agentic-workflow/package.json
 
 ### Planning evidence
 
@@ -336,6 +363,12 @@ is not embedded here.
 - **E14** — 2026-11-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":26,"refusals":[]}`.
 - **E15** — 2026-11-24, `bun run test:node` in `packages/pi-nan-agentic-workflow` · exit 0 · 85 pass, 0 fail under node — the suites stay runtime-neutral; only the generator is bun-bound;
 - **G4** — 2026-11-24, GATE-RAN · HEAD dda3f7454 · `bun scripts/local-gate.mjs` · exit 0 · `PASS — 20 step(s) in 857s` on the final tree (the run G1 records re-confirmed after the docs landed).
+
+- **E16** — 2026-11-24, the correction batch's RED corpus at head `51f7a129`, observed before any edit · the three findings reproduce: `rg -c 'impliedHarness' packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs` → 3 against the receipt row's claimed 0; `rg -n '\(no tools\)|-native only on' packages/pi-nan-agentic-workflow/README.md` → lines 132 and 139; `rg -c 'u2014' packages/pi-nan-agentic-workflow/package.json` → 1. Triage: blocker 1 fix, advisory 1 fix (same defect class, one symbol — the row cell plus the paragraph's stale exclusivity, the latter refuted further by the quality profile's rung 1 being `kimi-k3.1-pro`), advisory 2 fix (an unrequested encoding retouch).
+- **E17** — 2026-11-24, the batch's validators, foreground: `rg -c 'impliedHarness' packages/pi-nan-agentic-workflow/test/catalog-parity.test.mjs` matches 3 with the Retirements table's one remaining count claim (`RECORDED_FACTS`) satisfied by the tree; `rg -c '\(no tools\)' README.md` and `rg -c 'native only on' README.md` both match 0; `rg -c 'u2014' package.json` matches 0 and the branch diff no longer touches `description`; `bun run test` in `packages/pi-nan-agentic-workflow` · exit 0 · 85 pass / 0 fail across 7 files ending `derive-model-facts: identical — src/model-capabilities.generated.ts matches @gtrabanco/pi-nan-provider@1.6.1` (the README-pinning suites green with the corrected prose).
+- **E18** — 2026-11-24, the batch's cross-checks, foreground: `bun scripts/docs-generate.mjs --check` · PASS, roadmap unchanged; `bun scripts/lint-changeset.mjs` · ok; `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · `{"ok":true,"checked":26,"refusals":[]}`; the fleet-prose agreement probe over the snapshot and provider facts — the `deepseek-v4-flash` row carries `OpenAI \`tools\`` where the snapshot attests `Tool calling`, the paragraph names all four paid entries, the exclusivity claim is gone (0 mismatches); `verify@1` on the unit doc run after the ledger flip (E19 records it).
+- **E19** — 2026-11-24, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/695-derived-capability-record/SPEC.md` redo: the first run refused on O17–O19 (`planned`, plus an O18 validator cell whose alternation `|` broke the 9-column shape — repaired in this batch), the rerun with all three rows closed · exit 0 · the receipt reports one violation class cured, none open.
+- **G5** — pending: the repository gate at the batch's head once the owner commands the push (the O14/G4 posture holds for the code the batch does not touch; the delta is docs + one manifest string).
 
 ## Next
 
