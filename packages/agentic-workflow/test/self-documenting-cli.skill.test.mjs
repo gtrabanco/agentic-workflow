@@ -62,7 +62,7 @@ test("the references directory carries no file SKILL.md does not link", () => {
 
 test("the skill carries the conduct rule: query help before guessing a flag", () => {
   const body = read("SKILL.md");
-  assert.match(body, /agentic-workflow help/u, "it names the help command");
+  assert.match(body, /runner help/u, "it names the help command, in the symbolic form the runner contract sanctions");
   assert.match(body, /before guessing|before guessing a flag|query the CLI/iu, "it states the conduct rule");
 });
 
@@ -77,6 +77,6 @@ test("the skill restates no command grammar: no usage line of its own", () => {
 test("every reference names `help` as the owner of flag spelling", () => {
   for (const file of readdirSync(`${SKILL_DIR}references`)) {
     const text = read("references", file);
-    assert.match(text, /agentic-workflow help/u, `references/${file} points at the grammar's owner`);
+    assert.match(text, /runner help/u, `references/${file} points at the grammar's owner`);
   }
 });

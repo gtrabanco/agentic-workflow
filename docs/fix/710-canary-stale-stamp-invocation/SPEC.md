@@ -294,9 +294,61 @@ The `review` step is replaced by that same workflow's external verification.
   No `review-change`, no `audit-pr`, no fold cycle, no self-granted gate exceptions on this change. Direct application: the §5 ledger freeze **is** the plan; implement against it, hand the diff to me. The one exception is the repo's deterministic gates (tests, lints) — run those always.
   ```
 
+- **L1** — 2026-11-24, the operator's order, verbatim:
+  ```
+  Apply to this repository: issue #710
+  ```
+- **L2** — 2026-11-24, the operator's governing workflow for this application, verbatim (the part that binds the procedure):
+  ```
+  4. Work inline — never run this repo's own machinery on its own surgery
+
+  No `review-change`, no `audit-pr`, no fold cycle, no self-granted gate exceptions on this change. Direct application: the §5 ledger freeze **is** the plan; implement against it, hand the diff to me. The one exception is the repo's deterministic gates (tests, lints) — run those always.
+  ```
+- **E1** — 2026-11-24, `bun test scripts/runner-launcher-drift.test.mjs` at `999edf66c` · exit 1 · `Cannot find module './runner-launcher-drift.mjs'`, 0 pass / 1 fail — the red commit before the gate existed.
+- **E2** — 2026-11-24, `bun test scripts/release.test.mjs` at `f6c9c2643` · exit 1 · 2 fail (`publish-stage stamps every skill frontmatter…`, `the restore publish-stage prints…`), 75 pass.
+- **E3** — 2026-11-24, `bun test scripts/release-workflows.test.mjs` at `f6c9c2643` · exit 1 · 2 fail (the restore path set, the bundle re-stage), 26 pass.
+- **E4** — 2026-11-24, `bun test test/projection.test.mjs test/settings-console.test.mjs test/log-session-invocation.test.mjs` in `packages/pi-agentic-workflow` at `f6c9c2643` · exit 1 · `Export named 'pointerLine' not found`, `Export named 'crateVersion' not found`, and the two directive cases red.
+- **E5** — 2026-11-24, the frozen-failure corpus, measured with a code-context scanner over the three roots (subcommand set read from `HELP_REGISTRY`) · **101 sites / 52 files** — 57 under `skills/`, 14 under `template/`, 30 under `docs/workflow/`.
+- **E6** — 2026-11-24, `bun scripts/runner-launcher-drift.mjs` after the sweep · exit 0 · `bare-launcher: 0` · `roots: skills,template,docs/workflow · sanctioned: runner · ordered: 75 · citations: 83 · files: 173` · `verdict: PASS`.
+- **E7** — 2026-11-24, `npx --yes agentic-workflow workflow-status` in an empty `/tmp` directory (the A2 reproducer) · exit 1 · `npm error could not determine executable to run`.
+- **E8** — 2026-11-24, `npx --yes @gtrabanco/agentic-workflow@4.10.0 unit-doc` in the same directory (the exact-version form resolves) · exit 2 · `EDIT REFUSAL — unit-doc requires <slug> <operation> [args...]` — the crate ran; `journal`, `verify`, `doctor`, `help` and `relay` are refused by name at that published version.
+- **E9** — 2026-11-24, `npm view @gtrabanco/agentic-workflow version` → `4.10.0`; `npm view @gtrabanco/agentic-workflow versions --json` last row `5.0.0-canary.20261122.1` — the tree's pin (`4.10.1`) is not published yet (known-issues).
+- **E10** — 2026-11-24, `bun -e '… Object.keys(HELP_REGISTRY).length'` · `75` — the ordered set the gate derives.
+- **E11** — 2026-11-24, `rg --no-filename '^version:' skills/*/SKILL.md | sort | uniq -c` · `31 version: 4.10.1` — the stamp's target and its current state.
+- **E12** — 2026-11-24, `bun test scripts/release.test.mjs` · exit 0 · **77 pass / 0 fail**.
+- **E13** — 2026-11-24, `bun test scripts/release-workflows.test.mjs` · exit 0 · **28 pass / 0 fail**.
+- **E14** — 2026-11-24, `bun run --cwd packages/pi-agentic-workflow bundle:skills` · `bundled 30 skills (112 files) · projected: 24 files`; the staged `runner-contract/references/RUNNER.md` carries the pointer line with `bunx @gtrabanco/agentic-workflow@4.10.1`.
+- **E15** — 2026-11-24, `bun test test/projection.test.mjs` · exit 0 · **21 pass / 0 fail**; `bun test test/log-session-invocation.test.mjs` · exit 0 · **17 pass / 0 fail**.
+- **E16** — 2026-11-24, `bun scripts/skill-lint.mjs` · `skill-lint: 0 finding(s) in 0 file(s)· verdict: PASS`; `bun scripts/check-skill-context.mjs` · `PASS context budgets: 31 skills`; `--documents` · `PASS context documents: 7 budgeted documents` after the re-pin.
+- **E17** — 2026-11-24, `bun scripts/invocation-drift.mjs` · `verdict: PASS`; `bun scripts/forge-read-drift.mjs` · `verdict: PASS`; `bun scripts/red-first.mjs` · `0 finding(s) · verdict: PASS`.
+- **E18** — 2026-11-24, `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · **22 pass**; `bun test scripts/normative-drift.test.mjs` · exit 0 · **24 pass**; `bun test scripts/test-obligation-tags.test.mjs` · exit 0 · **22 pass**.
+- **E19** — 2026-11-24, `bun run --cwd packages/agentic-workflow test` · exit 0 · every suite PASS; `bun run --cwd packages/agentic-workflow-schema test` · exit 0 · **953 pass / 0 fail**.
+- **E20** — 2026-11-24, `bun run --cwd packages/pi-agentic-workflow test` · exit 1 · **1074 pass / 2 fail** — both failures are `runner-prose.test.mjs` (`the packaged skills carry no runner invocation`, `the package's own files carry no runner invocation`), which pins issue #555's grep-clean AC against the two documentation sites this unit's S5/S7 fill (D11, known-issues' blocker).
+- **E21** — 2026-11-24, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` (changeset declares the crate and the pi package); `bun scripts/lint-changeset.mjs` · `ok 710-canary-stale-launcher-spelling.md`.
+- **G1** — 2026-11-24, HEAD `09ef2959e`, `bun scripts/run-root-suite.mjs --jobs 4` · exit 0 · **143/143 PASS**.
+- **G2** — 2026-11-24, HEAD `09ef2959e`, `bun scripts/local-gate.mjs --jobs 4 --no-bail` · 19 of 20 steps exit 0 (`root-suite` 166s, `crate-suite-bun` 100s, `crate-suite-node` 133s, `schema-node-compat`, `pi-compat-guard`, `docs-generated-projection`, `version-parity-content`, …); `pi-node-compat` exits 1 on the two `runner-prose` cases above.
+- **G3** — 2026-11-24, HEAD `09ef2959e`, `rg -n '^\- \*\*R[0-9]' docs/fix/710-canary-stale-stamp-invocation/SPEC.md` matches nothing and no review receipt exists: no review pack ran on this unit (criterion 1's substance; the two textual mentions of `review-change`/`audit-pr` are the prohibition quoted as L2 and D1, never a run record).
+- **P1** — 2026-11-24, unit doc + ledgers cut; the roadmap row moved to `in-progress` through `runner roadmap … fixrow` · `5a95fcea5`.
+- **P2** — 2026-11-24, the launcher-drift suite alone, observed red · `999edf66c`.
+- **P3** — 2026-11-24, the four reproducers, observed red · `f6c9c2643`.
+- **P4** — 2026-11-24, the gate (`scripts/runner-launcher-drift.mjs`) · `9ff8681ee`.
+- **P5** — 2026-11-24, the sweep: 100 code-context sites over 51 pages + the contract's enforcement sentence + two superseded expectations · `44ec8c8e0`.
+- **P6** — 2026-11-24, canary parity in `publishStage` and the printed restore · `f94e4ce87`.
+- **P7** — 2026-11-24, the workflow's restore path set and the post-stage bundle rebuild · `f94e4ce87`.
+- **P8** — 2026-11-24, the `/log-session` tool call, the exact-version launcher helper and the console notice · `0c4fdb801`.
+- **P9** — 2026-11-24, the pointer line's referent and its derived pin · `0c4fdb801`.
+- **P10** — 2026-11-24, the gate-inventory row, the re-pinned budget, the release intent, the roadmap row and projection · `09ef2959e`.
+- **D1** — 2026-11-24, owner order (L2): the unit is applied inline; the operator is the external verifier; the repository's deterministic gates are the only ceremony.
+- **D2** — 2026-11-24, the sweep's scope and classifier are the ones `docs/fix/710-canary-stale-stamp-invocation/decisions.md` D2 states (`skills`, `template`, `docs/workflow`; code context only).
+- **D11** — PENDING: two owner decisions disagree on the pi package's two documentation sites (`decisions.md` D11, `known-issues.md`'s blocker). Reported to the operator; no self-granted re-cut of #555's acceptance.
+
 ## Next
 
-P2 — land `scripts/runner-launcher-drift.test.mjs` alone and record its red run.
+The operator resolves D11 (`decisions.md`): amend issue #555's grep-clean
+acceptance for the two declared documentation sites, or revert them and satisfy
+S5 without printing a launcher. Either answer closes obligation O17 and the two
+`runner-prose.test.mjs` cases; nothing else is open — every other local-gate
+step, the 143 root suites, both package suites and the schema suite are green.
 
 ## References
 

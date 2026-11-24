@@ -23,3 +23,16 @@
   job, not this fix's.
 - **`--version` on the canary channel is rejected by design** (D-40-3).
   `does-not-affect`: this unit's suite drives `publish-stage` with `--date` only.
+
+- **BLOCKER (open, needs the owner): two owner decisions disagree on one
+  surface.** [Issue #555](https://github.com/gtrabanco/agentic-workflow/issues/555)
+  requires `packages/pi-agentic-workflow` to be grep-clean of `bunx`/`npx`
+  invocation prose and pins it with
+  `packages/pi-agentic-workflow/test/runner-prose.test.mjs`; this unit's S5/S7
+  (issue #710) file the pointerised pin as a defect and require the exact-version
+  form wherever a printed instruction is unavoidable — which is the bundled
+  `RUNNER.md` pointer line and the settings console's operator notice. Both are
+  implemented as #710 prescribes, so that suite reports
+  `1074 pass / 2 fail` (`the packaged skills carry no runner invocation`, `the
+  package's own files carry no runner invocation`) until the owner resolves D11.
+  `affects` this unit's delivery only; every other suite is green.
