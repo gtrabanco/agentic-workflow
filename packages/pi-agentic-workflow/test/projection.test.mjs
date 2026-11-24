@@ -23,11 +23,17 @@ import {
   CRATE_COMMANDS,
   applyProjection,
   loadProjectionManifest,
+  pointerLine,
   rulesFor,
+  shippedPin,
 } from "../scripts/projection.mjs";
 
 const PKG_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const CRATE_BIN = join(PKG_DIR, "..", "agentic-workflow", "bin", "agentic-workflow.mjs");
+
+/** The train the bundle ships, read from the manifest the release stages — never
+ *  from the module, so the expected pointer line is an independent expectation. */
+const SHIPPED_TRAIN = JSON.parse(readFileSync(join(PKG_DIR, "package.json"), "utf8")).dependencies["@gtrabanco/agentic-workflow"];
 
 const sha256 = (text) => `sha256:${createHash("sha256").update(text, "utf8").digest("hex")}`;
 
@@ -99,7 +105,7 @@ const pointerizeOther = (over = {}) => ({
   ...over,
 });
 
-const POINTER_LINE = `> Enforced by \`doc read\` — this section's prose is not shipped in the pi bundle; the standalone skills/ tree carries the full text.`;
+const POINTER_LINE = `> Enforced by \`doc read\` — this section's prose is not shipped in the pi bundle; the standalone skills/ tree carries the full text. Outside a pi session the launcher is the exact train this bundle ships: \`bunx @gtrabanco/agentic-workflow@${SHIPPED_TRAIN} <subcommand> [args...]\`.`;
 
 test("projection: the empty rule list is a byte-identical no-op", () => {
   assert.equal(applyProjection(TOY_SKILL, []), TOY_SKILL);
@@ -192,6 +198,25 @@ test("projection: pointerize keeps the heading and replaces the body with one po
     out,
     TOY_SKILL.replace(`## Other section\n\nUntouched body.\n`, `## Other section\n${POINTER_LINE}\n`),
   );
+});
+
+// Issue #710 S5/S7: the pointerized section is where the contract's pin lived, so
+// the pointer line is the only place a pi-bundle reader can learn the train —
+// without it "at the pin above" survives with no referent. The clause is
+// composed from the shipped pin (the manifest the release stages), never typed.
+test("projection: the pointer line names the exact-version launcher at the shipped pin", () => {
+  const out = applyProjection(TOY_SKILL, [pointerizeOther()]);
+  assert.match(out, /Outside a pi session the launcher is the exact train this bundle ships/u);
+  assert.ok(
+    out.includes(`\`bunx @gtrabanco/agentic-workflow@${SHIPPED_TRAIN} <subcommand> [args...]\``),
+    `the pointer line spells the exact-version form at ${SHIPPED_TRAIN}:\n${out}`,
+  );
+  assert.equal(shippedPin(), SHIPPED_TRAIN, "the pin is the manifest's dependency pin, the one a cut stages");
+});
+
+test("projection: the pointer line follows the pin it is given", () => {
+  assert.match(pointerLine({ enforcingCommand: "doc read" }, "9.9.9"), /agentic-workflow@9\.9\.9 <subcommand>/u);
+  assert.doesNotMatch(pointerLine({ enforcingCommand: "doc read" }, "9.9.9"), new RegExp(SHIPPED_TRAIN.replace(/\./gu, "\\."), "u"));
 });
 
 test("projection: rules apply sequentially and each hash binds the bytes it removes", () => {

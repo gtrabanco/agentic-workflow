@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { readConfigFile, writeConfigFile } from "../dist/settings/store.js";
+import { crateVersion } from "../dist/runner-bin.js";
 
 import { runSettingsConsole, prompts } from "../dist/settings/console.js";
 import { PAGED_SELECT_NEXT, PAGED_SELECT_PREV, SELECT_OPTION_LIMIT } from "../dist/settings/picker.js";
@@ -1797,4 +1798,29 @@ test("declining the materialize consent writes nothing, and an untrusted project
   assert.equal((await runSettingsConsole({ ...base, ui: untrusted.ui, projectTrusted: false })).status, "cancelled");
   assert.equal(calls, 0, "an untrusted project is refused before the engine runs");
   assert.equal(untrusted.notify.some((entry) => entry.kind === "warning" && /untrusted/u.test(entry.message)), true);
+});
+
+// Issue #710 S7: the refusal told the operator to run the scope-less launcher, which
+// resolves to nothing — the same defect the /log-session directive carried. The
+// notice now spells the exact-version form, derived from the installed crate's own
+// manifest so no source file has to carry a version literal.
+test("S7: the untrusted-project notice spells the exact-version launcher, never the bare name", async () => {
+  const untrusted = scriptedUi({ [prompts.scope]: "Global", [prompts.menu]: [prompts.materialize, prompts.cancel] });
+  await runSettingsConsole({
+    agentDir,
+    cwd,
+    commands,
+    readFile: readFrom({ [paths.project]: "{}" }),
+    writeFile: () => {},
+    materializeDefaults: () => ({ contract: "config-materialize@1", scope: "both", files: [] }),
+    ui: untrusted.ui,
+    projectTrusted: false,
+  });
+  const notice = untrusted.notify.map((entry) => entry.message).join("\n");
+  const version = crateVersion();
+  assert.ok(version, "the installed crate is resolvable from this package, so the notice can name its train");
+  assert.match(notice, new RegExp(`bunx @gtrabanco/agentic-workflow@${version.replace(/\./gu, "\\.")} config default --scope global`, "u"));
+  assert.doesNotMatch(notice, /(?:^|[^@/\w-])agentic-workflow config default/u, "the bare launcher is never printed");
+  const manifest = JSON.parse(readFileSync(new URL("../../agentic-workflow/package.json", import.meta.url), "utf8"));
+  assert.equal(version, manifest.version, "the printed version is the crate's own, read and not typed");
 });

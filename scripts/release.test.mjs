@@ -721,7 +721,24 @@ test("publish-stage versions the declared packages and pins only the siblings cu
   // A channel cut writes nothing durable: no changelog row, no consumed intent.
   assert.doesNotMatch(fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8"), /canary/);
   assert.equal(fs.existsSync(path.join(root, ".changeset", "all.md")), true);
-  assert.doesNotMatch(fs.readFileSync(path.join(root, "skills/alpha/SKILL.md"), "utf8"), /canary/);
+});
+
+// #710 S2 (frozen-failure A1): the canary stage stamped the manifests and the
+// runner pin and never the skills, so the tree a canary tag recorded carried
+// `version:` one train behind the package it shipped. The stage now runs the
+// same stamp the stable path runs, and reports it, because a silent stamp is a
+// stamp nobody can audit in the job log.
+test("publish-stage stamps every skill frontmatter at the canary it publishes, and reports the count", () => {
+  const root = fixture({ changesets: { "all.md": ["pi:patch", "schema:patch", "agentic:patch"] } });
+  const result = run(["publish-stage", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const canary = "1.0.1-canary.20260916.1";
+  for (const name of ["alpha", "beta"]) {
+    const md = fs.readFileSync(path.join(root, "skills", name, "SKILL.md"), "utf8");
+    assert.match(md, new RegExp(`^version: ${canary.replace(/\./gu, "\\.")}$`, "m"), `${name} cites the canary it ships with`);
+    assert.doesNotMatch(md, /^version: 0\.9\.0$/m, "the previous train is gone, not kept beside the new one");
+  }
+  assert.match(result.stderr, new RegExp(`2 skill frontmatter\\(s\\) at ${canary.replace(/\./gu, "\\.")}`), "the stage reports what it wrote");
 });
 
 test("publish-stage leaves an undeclared sibling's version and its pin alone", () => {
@@ -1135,4 +1152,19 @@ test("publish-stage stages the canary pin and prints the restore that includes i
   const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
   assert.equal(planned.status, 0, planned.stderr || planned.stdout);
   assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the restore the cut prints covers the staged pin");
+});
+
+// #710 S2/S4: the restore the stage prints is the operator's and the publish
+// job's copy of the same fact. A skill stamped by the stage but missing from the
+// restore line would be committed as a prerelease — the stamp would bound the
+// cut in code and leak into the repository in practice.
+test("the restore publish-stage prints covers the skill stamps it just wrote", () => {
+  const root = fixture({ changesets: { "a.md": ["agentic:minor"] } });
+  withRunnerPin(root, "1.0.0");
+  const staged = run(["publish-stage", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
+  assert.equal(staged.status, 0, staged.stderr || staged.stdout);
+  assert.match(fs.readFileSync(path.join(root, "skills/alpha/SKILL.md"), "utf8"), /^version: 1\.1\.0-canary\.20261112\.1$/m, "the skill is stamped before the restore is printed");
+  const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
+  assert.equal(planned.status, 0, planned.stderr || planned.stdout);
+  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md skills\/\*\/SKILL\.md/, "the restore names every path the stage wrote");
 });
