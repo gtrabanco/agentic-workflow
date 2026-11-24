@@ -206,7 +206,7 @@ it a row of its own in the unit's `review-findings.md` ledger, under
 `review-change:review-mark`. [POLICY.md](POLICY.md) §8 owns *when* an act marks;
 this owns the shape. A **migrated** unit writes the same mark as a `## Log` `R` line —
 `- **R<n>** — <date>, review at HEAD <40-hex> · verdict <verdict> · cycle <n> · gate
-exit <code>` — and `agentic-workflow workflow-status` reads either carrier, never both:
+exit <code>` — and `runner workflow-status` reads either carrier, never both:
 
 ```text
 review-mark@1

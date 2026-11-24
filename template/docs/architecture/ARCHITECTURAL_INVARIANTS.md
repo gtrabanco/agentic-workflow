@@ -24,7 +24,7 @@ are declared; workflow skills must remain compatible with that state.
 - Change authority: <decision record or named approval path>
 ```
 
-The `Enforcement` bullet is the one a reader (and `agentic-workflow materialize
+The `Enforcement` bullet is the one a reader (and `runner materialize
 check`) can decide: `machine: <mechanism>` names the lint rule, dependency
 analysis or CI job that fails a violation, and `prose-only` is the honest
 admission that nothing does. A section without the bullet is reported as a typed

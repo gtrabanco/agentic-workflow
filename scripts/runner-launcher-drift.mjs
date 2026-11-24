@@ -157,24 +157,36 @@ export function sanctionedHeads(text) {
 
 /**
  * The contexts a reader executes from, with the 1-based line each sits on:
- * fenced-block lines (the fence rows themselves excluded), inline code spans, and
- * a line whose first token is the bare launcher (an indented block or a bare
- * command line, both of which are how a page shows a command outside a fence).
+ *
+ *   - a fenced block's content lines (the fence rows themselves excluded);
+ *   - an inline code span — including the spans that wrap across a line break,
+ *     which is how a long command is written in a narrow column (a span never
+ *     crosses a blank line, so the paragraph is its bound);
+ *   - a line whose first token is the bare launcher (an indented block or a bare
+ *     command line, both of which are how a page shows a command outside a fence).
+ *
+ * Fenced content is masked out before the span scan so a backtick inside a fence
+ * never pairs with one outside it, and the mask keeps every offset, so a span's
+ * line is computed from the document itself.
  *
  * @param {string} text
  * @returns {Array<{line: number, text: string, kind: "fence"|"span"|"line"}>}
  */
 export function codeContexts(text) {
+  const source = String(text);
+  const lines = source.split("\n");
+  const masked = [...lines];
   const contexts = [];
-  const lines = String(text).split("\n");
   let fence = null;
   for (const [index, line] of lines.entries()) {
     const opening = /^\s*(`{3,}|~{3,})/u.exec(line);
     if (fence === null && opening !== null) {
       fence = opening[1];
+      masked[index] = "";
       continue;
     }
     if (fence !== null) {
+      masked[index] = "";
       if (line.trimStart().startsWith(fence)) {
         fence = null;
         continue;
@@ -182,9 +194,27 @@ export function codeContexts(text) {
       contexts.push({ line: index + 1, text: line, kind: "fence" });
       continue;
     }
-    for (const span of line.matchAll(/`([^`\n]+)`/gu)) contexts.push({ line: index + 1, text: span[1], kind: "span" });
     const head = line.replace(/^\s+/u, "");
     if (head.startsWith(`${BARE_LAUNCHER} `)) contexts.push({ line: index + 1, text: head, kind: "line" });
+  }
+
+  const prose = masked.join("\n");
+  const lineStarts = [0];
+  for (let at = prose.indexOf("\n"); at !== -1; at = prose.indexOf("\n", at + 1)) lineStarts.push(at + 1);
+  const lineOf = (offset) => {
+    let low = 0;
+    let high = lineStarts.length - 1;
+    while (low < high) {
+      const mid = (low + high + 1) >> 1;
+      if (lineStarts[mid] <= offset) low = mid;
+      else high = mid - 1;
+    }
+    return low + 1;
+  };
+  for (const span of prose.matchAll(/`([^`]*)`/gu)) {
+    const inner = span[1];
+    if (inner.trim() === "" || /\n[ \t]*\n/u.test(inner)) continue;
+    contexts.push({ line: lineOf(span.index), text: inner, kind: "span" });
   }
   return contexts;
 }

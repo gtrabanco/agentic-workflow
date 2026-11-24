@@ -20,6 +20,8 @@ owner, which is where a future unit reads it).
 
 | D11 | The two documentation sites #710 names are implemented as S5/S7 prescribe — the bundled contract's pointer line and the settings console's operator notice spell `bunx @gtrabanco/agentic-workflow@<train> <subcommand>` — and this is where a prior owner decision conflicts: issue [#555](https://github.com/gtrabanco/agentic-workflow/issues/555) requires the pi package to be **grep-clean of `bunx`/`npx` invocation prose** (`packages/pi-agentic-workflow/test/runner-prose.test.mjs` enforces it), while #710 files the pointerised pin as a defect and prescribes exactly that form for an unavoidable printed instruction. #710 is the later decision and the one this unit applies, but re-cutting another unit's acceptance pin is not an agent's call, so the conflict is reported with its evidence and the owner decides: amend #555's AC for the two declared documentation sites, or revert both sites and satisfy S5 without printing a launcher. | unit-only (blocked on the owner) | S5, S7, S9; `PE-011`, `PE-012`, `PE-022`; `packages/pi-agentic-workflow/test/runner-prose.test.mjs:41-46,62-70` |
 
+| D13 | The projection rule `runner-invocation-not-shipped` keeps its op, its selector and its meaning; its `contentHash` was re-derived because this unit edits bytes inside the range the rule removes (`agentic-workflow runner resolve` → `runner resolve`, in the same sweep E22 added). The re-bind is the engine's own digest of the exact new bytes (`sha256:25d83dba…`, printed by the bundle's refusal), never a hand-computed value, and the rule's audit trail is the pair of digests in this line. | unit-only | S3, S9; `PE-011`, `PE-012` |
+
 ```text
 path-protection-records@1
 kind | paths | phase | date | authority | justification

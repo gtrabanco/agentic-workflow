@@ -37,8 +37,7 @@ node is present. `npx` carries `--yes` because a skill is non-interactive: the
 install prompt would be a hang, not a question.
 
 The same order is implemented **once**, in
-`packages/agentic-workflow/src/runner/resolve.mjs`: `agentic-workflow runner
-resolve` prints the answer a caller spawns, and
+`packages/agentic-workflow/src/runner/resolve.mjs`: `runner resolve` prints the answer a caller spawns, and
 `packages/agentic-workflow/test/runner.resolve.test.mjs` refuses a drift between
 this table and that module. A new candidate is one row here plus one entry there,
 in the same change — the set is a contract, not a list of habits.

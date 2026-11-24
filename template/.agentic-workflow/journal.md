@@ -152,7 +152,7 @@ The naming grammar and the content rules have **one owner**:
 the name, the timestamp and the bytes — a writer never composes a filename:
 `runner journal write --kind <mechanical|narrative>` takes the prose
 fields (or `--facts` for the mechanical kind), and its own field contract is
-`journal-write-grammar@1` in the same owner file. `agentic-workflow journal
+`journal-write-grammar@1` in the same owner file. `runner journal
 name` stays the read-only answer for a caller that wants to inspect the name.
 One entry per conversation per kind: a second entry of the same kind from
 one session is refused (`already registered`, exit 2) — the auto-log's

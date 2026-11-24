@@ -125,7 +125,7 @@ Per Workflow conventions + documentation map, decide axes from:
 2. **Footprint:** what the diff touches (UI, API, infra, domain). An axis applies
    only when both project and footprint support it.
 3. **Prior findings (optional retrieval aid, never authoritative):** when the
-   index entry point exists, `agentic-workflow doc --query "<change topic>"
+   index entry point exists, `runner doc --query "<change topic>"
    --json-only` may surface earlier findings, decisions and session-log entries
    on the same surface before the passes run. A missing index, an absent entry
    point, or an empty answer changes nothing — grep stays the exhaustive

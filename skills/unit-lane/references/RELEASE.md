@@ -31,10 +31,10 @@ Write into the unit doc's **References** section:
 - [ ] Commit messages follow conventional format (`type(scope): description`)
 - [ ] PR body includes the Evidence section as verification record
 - [ ] Index row settled via the crate's writer — feature: re-emit the row with
-      `agentic-workflow roadmap docs/ROADMAP.md rowUpsert
+      `runner roadmap docs/ROADMAP.md rowUpsert
       '{"nn":"<NN>","slug":"<slug>","status":"done · [#<pr>](<pr-url>)"}'`,
       every other cell as it is; fix: write the row with
-      `agentic-workflow roadmap docs/ROADMAP.md fixrow
+      `runner roadmap docs/ROADMAP.md fixrow
       '{"issue":"<N>","url":"<issue-url>","topic":"<slug>","status":"done · [#<pr>](<pr-url>)"}'`
       — the `## Fixes` writer keys the row by the issue number in its
       `[#N](url)` cell (issue #498: a Fixes row is never a hand edit). `runner roadmap-settle` exits 0 afterwards (issue

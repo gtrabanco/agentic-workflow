@@ -155,6 +155,19 @@ test("L8 — a file outside the declared roots is not this pin's answer", () => 
   assert.deepEqual(scanLauncherDrift({ files }).findings, [], "the roots are the declaration, not a guess");
 });
 
+// The corpus's second half: a long command in a narrow column wraps inside its
+// code span, so a line-based span scan sees no closing backtick and the launcher
+// slips past. Eleven of the corpus's sites were exactly this shape.
+test("L10 — a code span that wraps across a line break is still a code context", () => {
+  const text = ["Settle the row with `agentic-workflow roadmap", "docs/ROADMAP.md fixrow ...` and nothing else."].join("\n");
+  const findings = scanLauncherDrift(model(text)).findings;
+  assert.deepEqual(
+    findings.map((finding) => [finding.code, finding.line]),
+    [["bare-launcher", 1]],
+    "a wrapped span is an instruction, and it is reported on the line it opens",
+  );
+});
+
 test("L9 — the exact-version launcher is sanctioned, not punished", () => {
   const text = [
     "```sh",

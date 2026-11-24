@@ -698,7 +698,7 @@ never a dependency: `review-change` and `product-audit` run one **in addition**
 to the pack, and nothing is installed without an explicit yes. Every installed
 extra is registered in the block below with where it came from, the version it
 is pinned to, when it was installed and the review axis it covers —
-`agentic-workflow skills register --guide AGENTS.md --name <n> --source <s>
+`runner skills register --guide AGENTS.md --name <n> --source <s>
 --pin <p> --axis <a>` appends the row, and
 `runner skills inventory --guide AGENTS.md` reports a row that has
 gone unpinned, stale or incomplete, so an extra that rots surfaces as an audit

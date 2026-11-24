@@ -224,7 +224,7 @@
    ([BOOTSTRAP_DISCOVERY](BOOTSTRAP_DISCOVERY.md) step 3) is recorded by that
    route's own command, one `review-extras@1` row per skill carrying source,
    pin, install date and axis:
-   `agentic-workflow skills register --guide AGENTS.md --name <n> --source <s>
+   `runner skills register --guide AGENTS.md --name <n> --source <s>
    --pin <p> --axis <a>`. The scaffolded `AGENTS.md` already carries the note
    and an empty block, so registration appends a row and never invents a
    section; `runner skills inventory --guide AGENTS.md` reads the

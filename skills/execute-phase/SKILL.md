@@ -280,7 +280,7 @@ the full accumulated diff. On gate red at any step: repair that step (up to
 step's completion: open the PR against the project's **default branch** with
 `Closes #N` (owner: `AGENTS.md` § Working rules — one PR per unit, never stacked,
 and the one owner-ordered inline exception), write `- PR: <url>` into
-References, and settle the index row with `agentic-workflow roadmap
+References, and settle the index row with `runner roadmap
 <index> rowUpsert '<json>'` (`docs/ROADMAP.md`; a fix unit writes its `## Fixes`
 row with `runner roadmap <index> fixrow '<json>'` — keyed by the issue
 number in its `[#N](url)` cell, never a hand edit).
