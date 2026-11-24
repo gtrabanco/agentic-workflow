@@ -222,11 +222,12 @@ with `no filing`.
 
 ## Portability (agents other than Claude Code)
 
-- **No slash-command menu** — open this `SKILL.md` and follow it literally; the
-  commands are plain `runner` invocations.
+Preamble + no-slash-menu fallback: owned by
+[`PORTABILITY.md`](../orchestration-envelope/references/PORTABILITY.md):
+
 - **No per-skill `model:`/`effort:`** — the rubric is a lookup table and the
-  commands are deterministic, so a small model is enough. Use a stronger model
-  only if the user asks for a judgment on a class the table does not cover.
+  commands are deterministic, so a small model is enough; use a stronger one only
+  if the user asks for a judgment the table does not cover.
 - **No subagents or `/loop`** — one pass, then the closing block. A second pass is
   a new invocation the user asks for.
 - **No `bun`/`node` assumption** — the launcher and the pin are the runner

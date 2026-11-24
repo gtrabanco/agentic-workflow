@@ -201,6 +201,8 @@ docs/workflow/SKILL_CONTEXT_BUDGETS.json | 1-on-demand | full | read end-to-end 
 docs/workflow/TIER_COST.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/WORKFLOW_INVARIANTS.md | 1-on-demand | full | read end-to-end this session
 docs/workflow/WORKTREES.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+skills/agentic-workflow-doctor/SKILL.md | 1-on-demand | full | read end-to-end (issue #703): the invocation chain over the five `workflow-doctor` ops, the read-only profile and the closing hand-off
+skills/agentic-workflow-doctor/references/RUBRIC.md | 2-rarely | full | read end-to-end (issue #703): the `doctor-triage-rubric@1` table, the defect-sentence rules and the filing procedure
 skills/audit-docs/SKILL.md | 1-on-demand | full | read end-to-end this session
 skills/audit-docs/references/RESTATEMENT.md | 1-on-demand | full | read end-to-end this session
 skills/audit-pr/SKILL.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
@@ -210,6 +212,7 @@ skills/audit-pr/references/03_AUDIT_PROCESS.md | 2-rarely | scanned | structural
 skills/audit-pr/references/04_VERDICT.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/audit-pr/references/05_ROUTING_AND_GUARDRAILS.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/audit-pr/references/PORTABILITY.md | 1-on-demand | full | read end-to-end this session
+skills/aw-doctor/SKILL.md | 1-on-demand | full | read end-to-end (issue #703): the short-name pointer, which orders nothing of its own
 skills/batch-scheduler/SKILL.md | 1-on-demand | full | read end-to-end this session
 skills/batch-scheduler/references/PLAN.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/discover-repository-state/SKILL.md | 1-on-demand | full | read end-to-end this session

@@ -62,8 +62,10 @@ edit in one file.
 
 ## Portability (agents other than Claude Code)
 
-- **No slash-command menu** — open `agentic-workflow-doctor/SKILL.md` beside this
-  file and follow it; that is the whole fallback.
+Preamble + no-slash-menu fallback: owned by
+[`PORTABILITY.md`](../orchestration-envelope/references/PORTABILITY.md) — this
+section keeps only this page's own fallback:
+
 - **No per-skill `model:`/`effort:`** — irrelevant here: this page runs nothing.
 - **No `bun`/`node` assumption** — no command is cited here.
 
