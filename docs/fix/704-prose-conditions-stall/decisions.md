@@ -1,5 +1,11 @@
 # 704 — prose-conditions-stall · decisions
 
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/delivery-conditions.test.mjs | P2 | 2026-12-24 | execute-phase | The "#301 while #260 is still open stays pending" case used the whole #301 comment as its fixture, and that comment carries a coverage claim (`Cerrada como cubierta por #260`) as well as the reopen condition. With #260 OPEN, that coverage claim is exactly the `covered-by-open` violation the module must report, so the fixture contradicted the case's own premise. The fixture now carries the reopen condition alone; every assertion (verdict `pending`, no findings, corpus verdict `PASS`) is unchanged, so this is a fixture correction, never a relaxed assertion.
+```
+
 Each row is an owner decision this unit's plan rests on (`decision-scope@1`:
 every row here is `unit-only` — the cross-cutting half, the carrier rule itself,
 is promoted to the issue process and the `delivery-conditions@1` grammar, which

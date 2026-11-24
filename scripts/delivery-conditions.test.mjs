@@ -113,8 +113,11 @@ test("the same shape in English is the same stall", () => {
 });
 
 test("#301 while #260 is still open stays pending: the follow-up is simply not due yet", () => {
+  // The recorded follow-up alone: a condition whose cited landing has not happened
+  // is a correct record, never a stall. (The full comment also carries a coverage
+  // claim, which with #260 OPEN is the `covered-by-open` violation itself.)
   const report = dc.evaluate({
-    issues: [issue(301, "CLOSED", S301.body, S301.comments), issue(260, "OPEN")],
+    issues: [issue(301, "CLOSED", "Reopen when #260 lands."), issue(260, "OPEN")],
   });
   assert.equal(report.conditions.find((row) => row.issue === 301)?.verdict, "pending");
   assert.deepEqual(report.findings, []);
