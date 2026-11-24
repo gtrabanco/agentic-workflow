@@ -88,6 +88,12 @@ issue's own words, which that order adopts as the work.
 **S14 — two planning questions the issue leaves open; both are answered here.**
 > **Needs more evidence before planning freezes.** (a) the marker vocabulary the history miner greps for — gate-failure names, receipt-failure shapes, E-row failure codes — must be enumerated counts-first from a real `LOGS.md` corpus before the miner's patterns freeze; (b) whether the battery reads the ceremony tier through the config read-through or leaves it to the triage rubric — a planning decision, not assumed now.
 
+**S14a — the marker vocabulary is enumerated counts-first before it freezes.**
+> (a) the marker vocabulary the history miner greps for — gate-failure names, receipt-failure shapes, E-row failure codes — must be enumerated counts-first from a real `LOGS.md` corpus before the miner's patterns freeze
+
+**S14b — the battery reads the ceremony tier (answered at planning).**
+> (b) whether the battery reads the ceremony tier through the config read-through or leaves it to the triage rubric — a planning decision, not assumed now.
+
 ## Acceptance criteria
 
 One observable criterion per requirement, each naming the check that proves it.
@@ -177,13 +183,17 @@ is a new unit with its own recorded decision — never a silent guess.
 
 ## Risk tier
 
-Copied verbatim from `runner ceremony tier classify` at the cut head over the
-planned paths (the paths do not exist yet, so the classifier answers its
-fail-closed `empty-change` row — the tier is re-derived at P8 over the real
-diff with `--base main`):
+Copied verbatim from `runner ceremony tier classify` re-derived at P8 over the
+real diff (`--base main`):
 
-- **Tier** — `standard` · **Task Size** — `{understood: true, contained_risk: "contained", resumable_from_diff: true, ceremony: "unit-doc", verification: "gates"}`
-- **Reason kind** — `empty-change` · **Signals** — none
+- **Tier** — `high` · **Task Size** — `{understood: true, contained_risk: "named", resumable_from_diff: true, ceremony: "unit-doc+review-change", verification: "review-change"}`
+- **Reason kind** — `named-high-risk` · **Signals** — `destructive` on `packages/agentic-workflow/bin/agentic-workflow.mjs` (the one usage line a new subcommand joins)
+
+`reason`: `6 path(s) touch a named high-risk surface: destructive (packages/agentic-workflow/bin/agentic-workflow.mjs · ../src/doc/retrieval.mjs · (module-level))`.
+The `review-change` half of the ceremony is replaced by the operator's own
+external verification (S1's inline workflow, `## Log` L2/D1). At the cut the
+classifier answered `standard` / `empty-change` because the planned paths did
+not exist yet — the fail-closed row, recorded as `PE-016`.
 
 ## Future
 
@@ -238,8 +248,8 @@ diff with `--base main`):
 
 ## Tasks
 
-- P1 — Cut this unit doc and its ledgers; register the roadmap row through the writer (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs scaffold-contract authoring docs/fix/703-workflow-doctor` exits 0 with `verdict: SCAFFOLD OK`)
-  (Implements: S1)
+- P1 — Cut this unit doc and its ledgers, answer the two planning questions the issue leaves open, and register the roadmap row through the writer (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs scaffold-contract authoring docs/fix/703-workflow-doctor` exits 0 with `verdict: SCAFFOLD OK`)
+  (Implements: S1, S14)
   - Relevant files: docs/fix/703-workflow-doctor/SPEC.md, docs/fix/703-workflow-doctor/planning-evidence.md, docs/fix/703-workflow-doctor/planning-obligations.md, docs/fix/703-workflow-doctor/decisions.md, docs/fix/703-workflow-doctor/known-issues.md, docs/ROADMAP.md
 - P2 — RED: the command's contract suite lands alone and is observed failing on the missing module (validator: `bun test scripts/workflow-doctor.test.mjs` exits 1 with the module-resolution failure recorded as an `E` line)
   (Implements: S2, S3, S4, S5, S6, S7, S8, S9)
@@ -318,6 +328,68 @@ fused pass are this document's `## Specs` closure and
 
   No `review-change`, no `audit-pr`, no fold cycle, no self-granted gate exceptions on this change. Direct application: the §5 ledger freeze **is** the plan; implement against it, hand the diff to me. The one exception is the repo's deterministic gates (tests, lints) — run those always.
   ```
+- **E1** — 2026-12-23, the corpus, measured by the shipped miner over this tree
+  (read-only): `runner workflow-doctor mine` · exit 0 · `549 row(s) · 243 unit(s)`
+  — `gate-red 55 · evidence-red 241 · review-fail 4 · fold-over-budget 26 ·
+  review-cycles-over-budget 2 · correction 3 · refuted-finding 27 · rework 191`;
+  carriers `docs/LOGS.md` 1,279 entries · `.agentic-workflow/journal/` 38 files ·
+  277 unit docs (166 with a `## Log`). This is the counts-first enumeration
+  `S14a` asked for; the pre-freeze probes that froze the marker set are `PE-001`
+  and `PE-002` (a lexical probe over the same tree matched 1,510 `phase-lint`
+  mentions, almost all of them the unit that built phase-lint — the noise that
+  kept the miner on declared line kinds).
+- **E2** — 2026-12-23, the tool-choice guard rewrote this session's first
+  `node -e` into its `bun -e` form; every one-liner recorded in this unit uses
+  the bun form (`PE-022`).
+- **E3** — 2026-12-23, RED: `bun test scripts/workflow-doctor.test.mjs` at
+  `f1ffed84d` · exit 1 · `0 pass / 1 fail` · `Cannot find module
+  .../workflow-doctor/vocabulary.mjs` — the suite landed alone and was observed
+  failing on the missing module before any implementation (`IR4`).
+- **E4** — 2026-12-23, the suite: `bun test scripts/workflow-doctor.test.mjs` ·
+  exit 0 · **19 pass / 0 fail** — the miner's carriers and anchors, the group
+  tally, `insufficient-input`, the rubric refusals, the report/discard asymmetry,
+  the redaction, the secret refusal, determinism, the battery with the doctor
+  envelope as-is, the absent doctor, the ceremony profile and recorded tier, the
+  route match, the named forge refusal, the consent gate, the forge-family
+  refusal, the read-only boundary, the CLI help/refusal, and the published
+  rubric + skill prose.
+- **E5** — 2026-12-23, CLI parity: `bun test
+  packages/agentic-workflow/test/cli.surface.test.mjs
+  packages/agentic-workflow/test/cli.help.test.mjs` · exit 0 · **30 pass / 0**.
+- **E6** — 2026-12-23, the prose gates: `bun test scripts/normative-drift.test.mjs`
+  · exit 0 · **24/0** · `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 ·
+  **22/0** · `bun test scripts/cli-coverage.test.mjs` · exit 0 · **8/0** ·
+  `bun test scripts/structural-sibling-pins.test.mjs` · exit 0 · **8/0**.
+- **E7** — 2026-12-23, the package: `bun run --cwd packages/pi-agentic-workflow
+  test` · exit 0 · **1075 pass / 0 fail** — alias coverage registers exactly one
+  command per user-invocable skill, both new directories included, and the
+  parity suite reads both skill trees.
+- **E8** — 2026-12-23, authoring: `bun scripts/skill-lint.mjs --skill
+  agentic-workflow-doctor --skill aw-doctor` · exit 0 · `PASS` (0 findings) ·
+  `bun scripts/check-skill-context.mjs` · exit 0 (the doctor 2,796 est / 238
+  lines; the pointer 718 / 71) · `bun scripts/check-skill-context.mjs
+  --documents` · exit 0 · `PASS context documents: 7 budgeted documents`.
+- **E9** — 2026-12-23, the pair ordering: `bun scripts/red-first.mjs` · exit 0 ·
+  `72 pair(s) · 47 after the cutoff · 0 finding(s)` · `verdict: PASS` — the
+  suite commit precedes the implementation commit.
+- **E10** — 2026-12-23, the projection and the intent file:
+  `bun scripts/docs-generate.mjs` · exit 0 · `2 written · 0 deleted · 1
+  unchanged`; `--check` · exit 0 (3 checked, 0 stale) · `bun
+  scripts/lint-changeset.mjs` · exit 0 · `ok workflow-doctor.md`.
+- **E11** — 2026-12-23, the live chain on this tree, read-only (every receipt
+  written under `/tmp`, removed after): `runner workflow-doctor battery --unit
+  703-workflow-doctor --json` · exit 0 · doctor `attention · ok 13 · missing 0 ·
+  advisories 2` · runner `4.10.1` vs pin `4.10.1` · `match`; `bundle --triage
+  <tmp> --mine <tmp> --battery <tmp>` · exit 0 · `1 report class(es) · 1
+  discarded · 494 unclassified` · evidence `unit:107-mechanization-inventory
+  lg:G1` and `lg:G3`, no path in the receipt; `route --bundle <tmp> --candidate
+  698 --candidate 170` · exit 0 · `gate-red · new-issue`; `publish --issue 698
+  --bundle <tmp>` · exit 2 · `consent-required`; `publish --forge gitlab
+  --yes` · exit 2 · `unsupported-upstream-forge`.
+- **E12** — 2026-12-23, the exit contracts on the shipped bin: `workflow-doctor
+  mine --root <empty dir>` · exit 1 (`insufficient-input`, no receipt) ·
+  `workflow-doctor bogus` · exit 2 with the op list and its candidates ·
+  `publish` without `--yes` · exit 2.
 
 ## Next
 
