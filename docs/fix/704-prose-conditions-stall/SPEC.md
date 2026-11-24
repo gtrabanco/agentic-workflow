@@ -339,6 +339,7 @@ ledgers it does not consume.
 - **D5** — 2026-12-24, the reading-coverage ledger (`docs/fix/646-docs-skills-reconciliation/second-read.md`) gains the new workflow's row: every in-scope file must be accounted for, and the gate refuses an unrowed one.
 - **D9** — 2026-12-24, O16's validator amended at close from `docs/LOGS.md` to the fragment carrier, with its reason recorded in `decisions.md` D9; the rule the row states is unchanged.
 - **P1** — 2026-12-24 01:59, the unit applied inline against its frozen ledgers; the cut at `44fd26b49`, the suite red at `d66ea67c0`, the green head at `5b33cdd2e`.
+- **E15** — 2026-12-24, `bun packages/agentic-workflow/bin/agentic-workflow.mjs dimension-regression --base 15bcab21c4100f96c624bbffd4486cd0d521f969` · exit 0 · `verdict | clean` — the range touches one review surface (`docs/workflow/GATE_INVENTORY.md`, the gate row this unit adds) and the dimension set is unchanged at 20, so the new row re-verifies rather than drops a dimension.
 
 ## Next
 
