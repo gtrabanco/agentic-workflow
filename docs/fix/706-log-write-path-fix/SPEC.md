@@ -341,7 +341,8 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
 - **P5** — 2026-11-24, the journal header: `39cecced4`, under D1.
 - **P6** — 2026-11-24, the fixture-identity closure record: `1753ecfb3`.
 - **P7** — 2026-11-24, the state surfaces: `ab701bc8f` (changeset, roadmap row
-  through the writer, generated projection).
+  through the writer, generated projection) and `6b96e2c86` (the template
+  journal header states the fragment door for consumer projects).
 - **P8** — 2026-11-24, verification: the runs below; the only red is the
   authorized `log-rewritten` (D1).
 - **E5** — targeted verification, all foreground: `bun test
