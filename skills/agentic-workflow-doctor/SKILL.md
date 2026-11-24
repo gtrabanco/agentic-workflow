@@ -67,8 +67,8 @@ Missing reference → STOP. About to end the turn with any box unchecked? The tu
    or `docs/{features,fix}/*/SPEC.md`. None of them → report `insufficient-input`
    and stop: there is nothing to mine, and a clean receipt would be a lie.
 3. Take the facts the user named: the unit slug, the PR and issue numbers. Never
-   invent one — a bundle that cites a number the user did not give is refused by
-   the routing stage.
+   invent one — no command validates them: an invented number would aim the
+   filing at an issue the user never chose.
 
 ## Process
 
@@ -213,7 +213,8 @@ with `no filing`.
 
 - The five commands that apply ran, each exit code recorded in the hand-off.
 - The bundle and the routing receipt were shown, and the counts add up
-  (`report + discard + unclassified = the mine receipt's rows`).
+  (`report occurrences + unclassified = the mine receipt's rows` — a discard
+  cites no rows, so its occurrences are counted inside `unclassified`).
 - Either the filing happened after an explicit yes — with the issue URL — or the
   draft was handed over and the run says `no filing`.
 - The project tree is byte-identical to the run's start and the scratch directory

@@ -236,6 +236,13 @@
     }
   },
   "skills": {
+    "agentic-workflow-doctor": {
+      "mainEstimateMax": 3099,
+      "mainLinesMax": 264,
+      "mainSources": {
+        "issue #703 external-verify correction batch (2026-11-24)": "the batch rewords two SKILL lines — the Done-when count identity (report occurrences + unclassified = rows, with the discard note) and step 0.3's no-validation rule — measured 2817 est / 240 lines with `bun scripts/check-skill-context.mjs`, past the flat default 2800 / 240; ceilings re-based to ceil(2817 x 1.10) = 3099 est / ceil(240 x 1.10) = 264 lines, growth source = the two blocker fixes (B2/B3). Recorded hand edit: the `skills` section has no emitter."
+      }
+    },
     "audit-docs": {
       "descriptionEstimateMax": 240,
       "mainEstimateMax": 4526,

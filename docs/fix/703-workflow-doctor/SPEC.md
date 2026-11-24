@@ -2,7 +2,7 @@
 type: feature
 scope: large
 roadmap_summary: Issue [#703](https://github.com/gtrabanco/agentic-workflow/issues/703) (L): the `/agentic-workflow-doctor` skill (alias `/aw-doctor`) — one user-initiated invocation mines the project's own ceremony-failure record, applies a fixed discard/report rubric, emits one anonymized bundle, and routes it upstream to an existing-or-new issue with consent.
-ac-hash: b2e86cc9c665e13aa82a290382dc7471306de96a7e8f076677d638f6c8f2b111
+ac-hash: e3bd7709cbd34330008bfb5ac2c6c39b15d9d8844f6e566b3860985ea0394f27
 ---
 
 # fix/703-workflow-doctor
@@ -100,7 +100,7 @@ One observable criterion per requirement, each naming the check that proves it.
 `ac-hash` is the SHA-256 of this section's bytes.
 
 1. **S2/S10** — `runner workflow-doctor mine`, `bundle`, `route` exist as one closed subcommand family with a documented `--help`, and a single documented invocation chain (mine → triage → bundle → route → consent) is printed in `skills/agentic-workflow-doctor/SKILL.md`; check: `bun packages/agentic-workflow/bin/agentic-workflow.mjs help workflow-doctor` exits 0 and lists the five ops, and `bun test scripts/workflow-doctor.test.mjs` exits 0.
-2. **S3** — every mechanical step is a subcommand: the skill body cites only `runner workflow-doctor …` / `runner forge-read …` forms and no `bun scripts/…` or bare launcher; check: `bun scripts/cli-coverage.test.mjs` (the shipped-citation gate) exits 0 and `rg -n 'bun scripts/' skills/agentic-workflow-doctor` matches nothing.
+2. **S3** — every mechanical step is a subcommand: the skill body cites only `runner workflow-doctor …` / `runner forge-read …` forms and no `bun scripts/…` or bare launcher; check: `bun test scripts/cli-coverage.test.mjs` (the shipped-citation gate) exits 0 and `rg -n 'bun scripts/' skills/agentic-workflow-doctor` matches nothing.
 3. **S4/S14a** — the miner emits one row per ceremony event over the declared carriers (`docs/LOGS.md` + fragments via `journal-corpus`, unit-doc `## Log` lines via the shared `parseLog`) with a stable `W<n>` id and a `file:line` anchor; check: `bun test scripts/workflow-doctor.test.mjs` exits 0 (the miner cases), and `bun scripts/workflow-doctor.mjs mine --root . --json` exits 0 on this tree with a non-empty row set.
 4. **S5/S11/S14b** — the battery embeds the `doctor@1` envelope verbatim and reports the runner version + pin, the installed skill set, and the ceremony tier + profile; check: `bun test scripts/workflow-doctor.test.mjs` exits 0 (the battery cases, which drive an injected doctor and transport) and `bun scripts/workflow-doctor.mjs battery --root . --json` exits 0 with `doctor.contract = "doctor@1"`.
 5. **S6** — the triage file is validated against the closed rubric (two verdicts, four discard reasons, three report reasons) and an unknown token refuses by name; check: `bun test scripts/workflow-doctor.test.mjs` exits 0 (the triage-validation cases).
@@ -180,6 +180,14 @@ is a new unit with its own recorded decision — never a silent guess.
   journal's own carriers; a receipt-specific row is the #698 typed-receipt unit's
   seam, not invented here. Recorded as a known pre-existing gap rather than
   silently dropped.
+- **No PR/issue-number cell and no stderr-tail capture in the battery** (S5's
+  two bullets, disposed 2026-11-24 on the external-verify advisory A2): the unit
+  slug and issue numbers the user names are collected by the skill and consumed
+  by `route` (`--candidate`) and `publish` (`--issue`), the failing checks and
+  their details ride the `doctor@1` envelope, and the historical failing
+  commands with their exit codes are mined from the record; live stderr tails
+  are captured nowhere, and the typed receipt carrier (which needs the PR
+  number) stays #698's seam (known issue K1).
 
 ## Risk tier
 
@@ -265,7 +273,7 @@ not exist yet — the fail-closed row, recorded as `PE-016`.
   - Relevant files: packages/agentic-workflow/src/workflow-doctor/battery.mjs
 - P6 — The route and the consent-gated publish: candidate discovery through the guarded transport, the per-class match, and the `--yes` refusal (validator: `bun test scripts/workflow-doctor.test.mjs` exits 0 for the route, read-only and consent cases)
   (Implements: S8, S9, S13)
-  - Relevant files: packages/agentic-workflow/src/workflow-doctor/route.mjs, packages/agentic-workflow/src/workflow-doctor/publish.mjs
+  - Relevant files: packages/agentic-workflow/src/workflow-doctor/upstream.mjs
 - P7 — The skill and its registrations: `skills/agentic-workflow-doctor/` with its rubric reference, the `/aw-doctor` pointer, the plugin + grouping manifests, the derived counts, the three normative-surface rows with their gate-inventory claim, the budget re-pin and the changeset (validator: `bun test scripts/normative-drift.test.mjs` and `bun test scripts/prose-gate-inventory.test.mjs` exit 0; `bun scripts/skill-lint.mjs` exits 0)
   (Implements: S2, S3, S6, S10)
   - Relevant files: skills/agentic-workflow-doctor/SKILL.md, skills/agentic-workflow-doctor/references/RUBRIC.md, skills/aw-doctor/SKILL.md, .claude-plugin/plugin.json, skills.sh.json, README.md, docs/workflow/SKILLS.md, docs/workflow/REPLICATE.md, AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/703-workflow-doctor.md
@@ -411,6 +419,9 @@ fused pass are this document's `## Specs` closure and
   vocabulary), `skill-context-budgets`, `secret-scan`, `docs-generated-projection`
   and `red-first`. This line is the post-gate receipt, docs-only over the gated
   bytes.
+- **E15** — 2026-11-24, RED before the correction batch: the external-verify receipt's seven reproducers (B1–B4, A1–A3), run from a `mktemp -d` scratch corpus outside the worktree · **0 pass / 7 fail** — O1's cell claimed prose-occurrences-only while `rg -c "review-change" docs/fix/703-workflow-doctor/` returned five (SPEC 3, this ledger 1, the receipt 1); B2's identity on a live bundle → 55 + 191 + 494 = 740 against 549 rows; B3's routing-refusal claim matched the skill with no implementing code path; B4's declared `bun scripts/cli-coverage.test.mjs` exited 1; A1's README doctor row carried 4 cells against the table's 3-column header with the audit-docs closer missing; A2's Non-goals carried no S5 disposition; A3's P6 named two paths that do not exist.
+- **E16** — 2026-11-24, GREEN after the batch: the same corpus · **7 pass / 0 fail**, and O1's reworded validator reproduces in the foreground (15 commits all conventional; 0 `R` lines, `log-kind@1`'s run record; `## Findings` empty). Targeted runs: `bun test scripts/workflow-doctor.test.mjs` 19/0 (pre-existing cases untouched), `bun test scripts/cli-coverage.test.mjs` 8/0, `bun scripts/skill-lint.mjs --skill agentic-workflow-doctor --skill aw-doctor` PASS 0 findings, `bun test scripts/normative-drift.test.mjs` 24/0, `bun test scripts/prose-gate-inventory.test.mjs` 22/0, `bun test scripts/ledger-ownership.test.mjs` 15/0, `bun test scripts/retention-declaration.test.mjs` 6/0, `bun scripts/docs-generate.mjs --check` PASS, `bun scripts/lint-changeset.mjs` ok, `phase-lint docs/fix/703-workflow-doctor/SPEC.md` PASS with fingerprint `e4783102…` unchanged by the P6 file correction, `scaffold-contract authoring` ACCEPTANCE MATCH (`ac-hash` re-derived over the edited acceptance section), `bun scripts/test-impact.mjs --base bc13a54b0` → `targeted` and its six suites green (1/0, 17/0, 37/0, 18/0, 4/0, pi package 1075/0).
+- **E17** — 2026-11-24, the S2 loop's one iteration: the first post-batch `bun scripts/check-skill-context.mjs` was **red** (`agentic-workflow-doctor: main estimate 2817 > 2800` — the two corrected SKILL lines spent the flat default), repaired by the recorded per-skill ceiling `3099 / 264` = ceil(measured × 1.10) with its growth source declared in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (the `skills` section has no emitter — hand edit recorded in `mainSources`), then `PASS context budgets: 33 skills` and `--documents` PASS 7/0.
 
 ## Next
 
