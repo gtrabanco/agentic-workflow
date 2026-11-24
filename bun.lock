@@ -50,6 +50,7 @@
         "@gtrabanco/agentic-workflow-schema": "4.10.1",
       },
       "devDependencies": {
+        "@gtrabanco/pi-nan-provider": "1.6.1",
         "@types/node": "26.6.6",
         "typescript": "7",
       },
@@ -128,6 +129,8 @@
     "@gtrabanco/pi-agentic-workflow": ["@gtrabanco/pi-agentic-workflow@workspace:packages/pi-agentic-workflow"],
 
     "@gtrabanco/pi-nan-agentic-workflow": ["@gtrabanco/pi-nan-agentic-workflow@workspace:packages/pi-nan-agentic-workflow"],
+
+    "@gtrabanco/pi-nan-provider": ["@gtrabanco/pi-nan-provider@1.6.1", "", { "peerDependencies": { "@earendil-works/pi-ai": "^1.4.0", "@earendil-works/pi-coding-agent": "^1.4.0" } }, "sha512-GZuP7JX7bNynMIPw2Tp8dj4yutP5eFL4VH8L8M85DI7WuzPQ8WO1OjtFcUs2GNqreMN7tUAdIXecgK93hx6unA=="],
 
     "@isaacs/nonrecursive-glob-match": ["@isaacs/nonrecursive-glob-match@1.1.0", "", {}, "sha512-GPm/Dbvk5RLmhRnxXIa7nTpK0xtl4E0wj0MslsuNiJ1FIROU+2+9lgUC/dgF7Ey4QCWhfEsgxilMRMCdHPfDfw=="],
 

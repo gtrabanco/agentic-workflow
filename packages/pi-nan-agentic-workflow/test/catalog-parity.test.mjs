@@ -245,9 +245,23 @@ test("catalog snapshot: the record names exactly the routed fleet, and no model 
   }
 });
 
-test("catalog snapshot: the declared window thresholds are the fleet's own extremes", async () => {
+test("catalog snapshot: the declared window thresholds are the fleet's own bounds", async () => {
   const { NAN_PHASE_THRESHOLDS } = await import("../dist/phase-batching.js");
   const contexts = CHAT_MODELS.map((model) => model.context);
-  assert.equal(NAN_PHASE_THRESHOLDS.largeContextWindow, Math.max(...contexts), "the large window is the fleet's largest");
-  assert.equal(NAN_PHASE_THRESHOLDS.smallContextWindow, Math.min(...contexts), "the small window is the fleet's smallest");
+  const largest = Math.max(...contexts);
+  const smallest = Math.min(...contexts);
+  // Re-cut by issue #695: the policy states a *band floor* ("a window of at
+  // least one million tokens holds four phases"), so the claim is the rule the
+  // constant's own doc states rather than equality with an exact 2^20 maximum
+  // the policy never needed.
+  assert.equal(NAN_PHASE_THRESHOLDS.smallContextWindow, smallest, "the small floor is the fleet's smallest window");
+  assert.equal(
+    NAN_PHASE_THRESHOLDS.largeContextWindow,
+    Math.floor(largest / 1_000_000) * 1_000_000,
+    "the large floor is the fleet's largest window rounded down to a whole million",
+  );
+  assert.ok(
+    NAN_PHASE_THRESHOLDS.largeContextWindow > NAN_PHASE_THRESHOLDS.smallContextWindow,
+    "and the two floors are ordered, so no window sits between them by accident",
+  );
 });

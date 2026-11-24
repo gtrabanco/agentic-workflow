@@ -129,19 +129,20 @@ as an order of magnitude, not a quote.
 | **qwen3.8-max** | 2.4T-class Qwen (external) | 1M | paid · ZDR | 100 / 12.5 / 300 | 20.2 cr |
 | **deepseek-v4-pro** | DeepSeek large (external) | 1M | paid · ZDR | 66 / 2.2 / 198 | 7.7 cr |
 | **hy4** | Tencent Hunyuan 4 (external) | 1M | paid · ZDR | 41.7 / 2.1 / 125.05 | 5.5 cr |
-| **deepseek-v4-flash** | 305B MoE | 1M | 3B free/mo · ZDR · JSON mode + `json_schema` (no tools) | 10.5 / 0.21 / 42 | 1.1 cr |
+| **deepseek-v4-flash** | 305B MoE | 1M | 3B free/mo · ZDR · JSON mode + `json_schema` + OpenAI `tools` | 10.5 / 0.21 / 42 | 1.1 cr |
 | **glm5.3-flash** | 320B (18B active) · MIT | 1M | 2B free/mo · ZDR | 5.25 / 1.05 / 17.5 | 1.4 cr |
 | **qwen3.8-flash** | 125B (6B active) · qwen license | 1M | 500M free/mo · ZDR · XML tools | 7.5 / 0.8 / 23.5 | 1.9 cr |
 | **mimo-v2.6-flash** | Xiaomi omni-modal (external) | 1M | 1B free/mo · ZDR | 7 / 0.14 / 14 | 0.6 cr |
 | **qwen3.6** | 35B (3B active) — previous generation | 262K | unlimited cluster model | 0 | 0 |
 | **gemma4** | 26B (4B active) | 262K | unlimited cluster model | 0 | 0 |
 
-**Tool calling is OpenAI-`tools`-native only on `glm5.3`, `glm5.3-flash`,
-`deepseek-v4-flash` and `mimo-v2.6-flash`.** `qwen3.6`, `qwen3.8-flash` and
+**Tool calling is OpenAI-`tools`-native on `glm5.3`, `glm5.3-flash`,
+`deepseek-v4-flash` and `mimo-v2.6-flash` — and, per the provider's facts, on
+the four paid external entries `kimi-k3.1-pro`, `qwen3.8-max`,
+`deepseek-v4-pro` and `hy4`.** `qwen3.6`, `qwen3.8-flash` and
 `gemma4` document tool calling in XML format — fine for single-shot text
 work, not for the executor path's OpenAI-tools harness unless the harness is
-XML-aware. The executor rungs therefore stay on the four function-calling
-models. Run the tool-calling smoke test in
+XML-aware. Run the tool-calling smoke test in
 [`docs/workflow/GOLDEN_FIXTURE.md`](../../docs/workflow/GOLDEN_FIXTURE.md)
 before promoting any model into that path.
 
@@ -169,10 +170,14 @@ model half of that decision as **data**, and one deterministic policy reads it.
 It ships **off**: with the key off nothing is inspected and the answer is
 today's posture, one phase per turn.
 
-**The capability record.** One entry per billed model, each cell a fact the
-recorded catalog already publishes (the section is pinned by
-`test/catalog-parity.test.mjs`, so a provider change fails mechanically here
-first):
+**The capability record.** One entry per billed model, **generated** from the
+provider's exported model-facts catalog
+(`@gtrabanco/pi-nan-provider`'s `NAN_MODEL_FACTS`, gtrabanco/pi-nan-provider#47)
+— never transcribed here. `bun run derive:model-facts` writes
+`src/model-capabilities.generated.ts`; `bun run check:model-facts` proves the
+committed copy is what the pinned provider facts derive; `test/model-facts.test.mjs`
+pins the table below and `test/catalog-parity.test.mjs` pins the record against
+the recorded snapshot, so a provider change fails mechanically here first:
 
 | Model | Context window | Tool harness | Cache posture | Phases per context |
 |---|---|---|---|---|
@@ -180,25 +185,36 @@ first):
 | **glm5.3-flash** | 1M | OpenAI `tools` | discounted | 4 |
 | **deepseek-v4-flash** | 1M | OpenAI `tools` | discounted | 4 |
 | **mimo-v2.6-flash** | 1M | OpenAI `tools` | discounted | 4 |
+| **kimi-k3.1-pro** | 1M | OpenAI `tools` | discounted | 4 |
+| **qwen3.8-max** | 1M | OpenAI `tools` | discounted | 4 |
+| **deepseek-v4-pro** | 1M | OpenAI `tools` | discounted | 4 |
+| **hy4** | 1M | OpenAI `tools` | discounted | 4 |
 | **qwen3.8-flash** | 1M | XML | discounted | 1 |
-| **kimi-k3.1-pro** | 1M | not documented | discounted | 1 |
-| **qwen3.8-max** | 1M | not documented | discounted | 1 |
-| **deepseek-v4-pro** | 1M | not documented | discounted | 1 |
-| **hy4** | 1M | not documented | discounted | 1 |
 | **qwen3.6** | 262K | XML | not measured | 1 |
 | **gemma4** | 262K | XML | not measured | 1 |
 
-- **Tool harness** is the catalog's own `capabilities[]` distinction: the four
-  models that document OpenAI `tools` are the executor rungs, and XML-only tool
-  calling is what [the fleet table](#the-fleet) already says it is — fine for
-  single-shot text work, not for the executor path's harness.
-- **Cache posture** is derived from each model's own rate pair: a `cached` rate
-  below the `input` rate is `discounted`, an equal one is `flat`, and a model
-  that publishes no pair is `unmeasured`. The two cluster models bill nothing,
-  so they state no cache economics — `unmeasured` is a value, never a zero.
+- **Tool harness** is the provider's `toolCalling` fact: `openai-tools` is the
+  OpenAI `tools` harness the executor path drives, XML-only tool calling is fine
+  for single-shot text work but not for that harness, and a model whose protocol
+  nobody has stated says `unmeasured` — a value, never "probably fine".
+- **Cache posture** crosses the provider's `cacheMode` with this package's own
+  credit tariff: an automatic cache at a `cached` rate below the `input` rate is
+  `discounted`, opt-in or unsupported caching bills the input rate (`flat`), and
+  a model that states neither is `unmeasured`. The provider's `cost` pair is
+  pinned to zero by NaN's credit pool, which is why the credit comparison uses
+  the recorded tariff ([`catalog/`](catalog/nan-catalog-2026-11.jsonc)).
 - **Phases per context** applies the preset's declared thresholds to those two
-  facts: the executor harness plus the fleet's largest window reaches four, the
-  smaller window reaches two, and a model without the harness batches nothing.
+  facts: the executor harness plus a window at or above one million tokens
+  reaches four, the smaller window reaches two, and a model without the harness
+  batches nothing. The thresholds are **policy**, owned by
+  `src/phase-batching.ts` — they are not provider data and never enter the
+  generated file.
+- **Every cell carries its provenance.** The generated file opens with the
+  upstream source, author, the exact provider version those facts were first
+  read from, and the license; each cell names the provider's own source id for
+  the fact it came from. Regenerating at a newer provider release that moved no
+  recorded cell rewrites nothing and keeps that pin, so an immaterial catalog
+  change lights no package — only a cell that moved does.
 
 **The policy.** A unit is eligible when its risk tier is `passive` or
 `standard`, its size tier is `prose` or `small`, and it carries no Relay leg.
