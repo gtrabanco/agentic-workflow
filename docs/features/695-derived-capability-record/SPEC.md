@@ -210,6 +210,12 @@ none
   this unit: the package's suite is run in the foreground by this unit's own
   evidence, exactly as #632 ran it, and adding a gate step edits the id set a
   different unit pins.
+- The README's fleet table still describes `deepseek-v4-flash` as
+  "JSON mode + `json_schema` (no tools)" while the recorded snapshot and the
+  provider both attest `Tool calling` for it — `does-not-affect` this unit: that
+  row describes the fleet's abilities, not the capability record, and the two
+  facts already disagree on `main`. It is disclosed here rather than silently
+  rewritten, and it is a one-row docs repair for the owner to schedule.
 - `.worktrees/fix-704-prose-only-delivery-stall` exists on the same commit —
   `does-not-affect`: different branch, different files.
 
