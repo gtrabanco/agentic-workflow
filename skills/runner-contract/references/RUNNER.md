@@ -157,6 +157,7 @@ shell fallback.
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | the unit router and the triage step list |
 | `skills <discover\|register\|inventory> [flags]` | the skill-discovery route's machine half — the screen, the consented install decision and the registration/decay inventory (issue #591; grammars in the crate README) |
 | `relevant-files <unit-doc> [--phase P<k>\|all] [--changed <a,b> \| --base <ref>]` | the phase read-set resolver and its changed-file discipline — the paths a phase must read, and the one failure it reports (issue #269) |
+| `scaffold-contract <check\|authoring> [<unit-doc>] [--workspace <dir>] [--json]` | the scaffold contract that travels — a project's exported unit-doc templates compared with the installed release's section contract, and the same check on a staged unit doc at emission (issue #701) |
 | `roadmap-settle [--root <dir>] [--json]` | the offline roadmap done-settle gate — a doc carrying a PR URL must have its row settled to `done` with the same link (issue #316) |
 | `docs-generate [--root <dir>] [--check\|--dry-run]` | the generated documentation projection — the pages, plus the roadmap tables it keeps in sync, and the drift report `--check` prints |
 | `docs-generated-merge [--install [--repo <dir>]] \| <base> <ours> <theirs> [marker-size] [path]` | the generated-projection merge driver — the incoming side, or a fail-closed refusal on a path it does not cover |

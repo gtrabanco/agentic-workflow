@@ -1,7 +1,7 @@
 ---
 name: skill-lint
 user-invocable: false
-version: 4.10.0
+version: 4.10.1
 metadata:
   internal: true
 description: >

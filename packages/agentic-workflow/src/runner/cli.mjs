@@ -57,6 +57,7 @@ import { main as runDocsGeneratedMerge } from "../docs-generated-merge/index.mjs
 import { main as runDocsGenerate } from "../docs-generate/index.mjs";
 import { main as runRoadmapSettle } from "../roadmap-settle/index.mjs";
 import { main as runRelevantFiles } from "../relevant-files/index.mjs";
+import { run as runScaffoldContract } from "./sensors/scaffold-contract.mjs";
 
 /**
  * @typedef {(args: string[]) => void | number} RunnerCommand
@@ -108,6 +109,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "docs-generate": runDocsGenerate,
   "roadmap-settle": runRoadmapSettle,
   "relevant-files": runRelevantFiles,
+  "scaffold-contract": runScaffoldContract,
 });
 
 /**
