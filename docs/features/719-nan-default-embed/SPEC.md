@@ -213,12 +213,13 @@ ledger (grammar: `findings-table@1`).
 - **E1** — 2026-11-24, `runner ceremony tier classify` · exit 0 · `tier: standard` (`empty-change` — the branch names no path yet; re-read at the implement step).
 - **E2** — 2026-11-24, `runner memory probe` · exit 0 · `MEMORY PROBE — degraded` (`session-ambiguity`: 21 findings across `ambiguous_active_runtime_sessions`/`sync_target_closed_space`). Recorded once; memory writes proceed per `references/MEMORY.md`.
 - **E3** — 2026-11-24, `agentic-workflow elicitation check --bank … --spec …` · exit 0 · `ELICITATION CHECK PASS · 5 row(s) · 0 question(s) · feature`.
+- **E4** — 2026-11-24, research receipts (skipped-research exit) · repo-answered — R1–R8 in [research.md](research.md): the crate already resolves an env-only provider (`embeddings.mjs:138`), but that precedence makes env beat an explicit `index.json` block, so the S4 override semantics need a read-then-inject decision (design); four uncertainties stated, none guessed.
 - **P1** — 2026-11-24 23:30 UTC, pre-spec written and checked; unit doc created from template with Specs/Non-goals/Impact from issue #719; triage block pasted verbatim; relay route recorded inline (no legs dispatched without owner approval); commit `docs(features): open feature 719 nan-default-embed from issue #719`.
 
 ## Next
 
-Run the triaged `research` step, then the fused design+plan pass
-(activity-fusion@1).
+Run the fused design+plan pass (activity-fusion@1) over the four uncertainties
+in [research.md](research.md).
 
 ## References
 
