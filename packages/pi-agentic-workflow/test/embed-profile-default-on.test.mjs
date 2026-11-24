@@ -262,3 +262,97 @@ test("integration: with no key the crate reports keyword-only", async () => {
 
   assert.deepEqual(resolveEmbedConfig({ config: {}, env: processEnv }), { configured: false });
 });
+
+// ---------------------------------------------------------------------------
+// The startup seam (S1 wiring, AC1's inheritance half)
+// ---------------------------------------------------------------------------
+//
+// The extension load is the one place the decision is made, and the seam that
+// carries it is injectable so this suite owns the process surface instead of
+// mutating the test runner's own environment.
+
+test("wiring: the extension's load seam exports the profile into the process surface it is handed", async () => {
+  const { applyEmbedDefaultOnAtLoad } = await import("../dist/extension/factory.js");
+  const { registerProviderPreset, clearProviderPresets } = await import("../dist/config/presets.js");
+  clearProviderPresets();
+  registerProviderPreset({ provider: "nan", embedProfile: NAN_PROFILE, resolveProfile: () => ({ default: { model: "nan/big", thinking: "inherit" } }) });
+
+  const root = projectWith(null);
+  const processEnv = { NAN_API_KEY: "sk-nan" };
+  const result = applyEmbedDefaultOnAtLoad({ root, processEnv });
+
+  assert.equal(result.applied, true, "the load applies the default");
+  assert.equal(result.plan.provider, "nan", "for the profile the presets registered");
+  assert.equal(processEnv[EMBED_DIRECT_ENV.baseUrl], NAN_PROFILE.baseUrl);
+  assert.equal(processEnv[EMBED_DIRECT_ENV.apiKey], "sk-nan", "the key came from the process surface itself");
+});
+
+test("wiring: a second load is idempotent, and a session with no registered profile is a no-op", async () => {
+  const { applyEmbedDefaultOnAtLoad } = await import("../dist/extension/factory.js");
+  const { registerProviderPreset, clearProviderPresets } = await import("../dist/config/presets.js");
+  const root = projectWith(null);
+  const processEnv = { NAN_API_KEY: "sk-nan" };
+
+  clearProviderPresets();
+  assert.equal(applyEmbedDefaultOnAtLoad({ root, processEnv }).applied, false, "no preset, no default");
+  assert.deepEqual(Object.keys(processEnv), ["NAN_API_KEY"], "and nothing is exported");
+
+  registerProviderPreset({ provider: "nan", embedProfile: NAN_PROFILE, resolveProfile: () => ({ default: { model: "nan/big", thinking: "inherit" } }) });
+  assert.equal(applyEmbedDefaultOnAtLoad({ root, processEnv }).applied, true);
+  assert.equal(applyEmbedDefaultOnAtLoad({ root, processEnv }).applied, false, "the second load changes nothing");
+  clearProviderPresets();
+});
+
+test("wiring: an explicit provider block withholds the default through the load seam too", async () => {
+  const { applyEmbedDefaultOnAtLoad } = await import("../dist/extension/factory.js");
+  const { registerProviderPreset, clearProviderPresets } = await import("../dist/config/presets.js");
+  clearProviderPresets();
+  registerProviderPreset({ provider: "nan", embedProfile: NAN_PROFILE, resolveProfile: () => ({ default: { model: "nan/big", thinking: "inherit" } }) });
+
+  const root = projectWith({ version: 1, provider: { baseUrl: "https://acme.example/v1", model: "acme-embed-1", envVar: "ACME_API_KEY" } });
+  const processEnv = { NAN_API_KEY: "sk-nan" };
+  const result = applyEmbedDefaultOnAtLoad({ root, processEnv });
+
+  assert.equal(result.applied, false);
+  assert.equal(result.plan.reason, "explicit-provider-block");
+  assert.deepEqual(Object.keys(processEnv), ["NAN_API_KEY"]);
+  clearProviderPresets();
+});
+
+test("wiring: the shipped extension entry applies the default at load", async () => {
+  const { registerProviderPreset, clearProviderPresets } = await import("../dist/config/presets.js");
+  clearProviderPresets();
+  registerProviderPreset({ provider: "nan", embedProfile: NAN_PROFILE, resolveProfile: () => ({ default: { model: "nan/big", thinking: "inherit" } }) });
+  const root = projectWith(null);
+  const previousCwd = process.cwd();
+  const previousKey = process.env.NAN_API_KEY;
+  process.chdir(root);
+  process.env.NAN_API_KEY = "sk-nan";
+  try {
+    const extension = (await import("../dist/extension/index.js")).default;
+    extension(piStub());
+    assert.equal(
+      process.env[EMBED_DIRECT_ENV.model],
+      NAN_PROFILE.model,
+      "loading the shipped entry resolved the preset's profile",
+    );
+  } finally {
+    process.chdir(previousCwd);
+    if (previousKey === undefined) delete process.env.NAN_API_KEY;
+    else process.env.NAN_API_KEY = previousKey;
+    for (const name of Object.values(EMBED_DIRECT_ENV)) delete process.env[name];
+    delete process.env[EMBED_MAX_REQUEST_CHARS_ENV];
+    clearProviderPresets();
+  }
+});
+
+/** The smallest host the entry survives: no commands, no tools, no session. */
+function piStub() {
+  return {
+    registerCommand: () => {},
+    on: () => {},
+    registerTool: () => {},
+    getCommands: () => [],
+    getMcpServers: () => [],
+  };
+}
