@@ -20,7 +20,7 @@ description: >
 One read-only pass that answers, in a single fixed JSON envelope: **what exists,
 what is blocked on what, what is startable right now, and what the recommended
 next command is.** The **script is the deterministic producer**:
-`agentic-workflow workflow-status` executes the published `SENSOR_CORE` sequence
+`runner workflow-status` executes the published `SENSOR_CORE` sequence
 (steps 1–9 including 6a) and prints the envelope. This skill runs the script,
 reads the JSON, interprets it against the references below, and prints the human
 report — it never assembles the envelope by hand.

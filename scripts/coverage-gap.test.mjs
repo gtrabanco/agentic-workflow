@@ -343,7 +343,7 @@ test("the pass-only-if contract states the evidenced-surface rule and the clean 
 test("the three routes are the published hand-offs and no bespoke route exists (S3/S8)", () => {
   const text = dimensions();
   assert.match(text, /finding-route@1/);
-  assert.match(text, /agentic-workflow skills discover/, "an external skill routes to the discovery route");
+  assert.match(text, /runner skills discover/, "an external skill routes to the discovery route");
   assert.match(text, /unit-lane/, "an own gate is a proposal, never auto-built");
   assert.match(text, /init-workspace upgrade route|references\/UPGRADE\.md/, "an obsolete criterion re-triages the catalogue");
 });

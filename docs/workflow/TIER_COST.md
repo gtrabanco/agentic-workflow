@@ -29,7 +29,7 @@ line, one line per settled run and cumulative, for a consumer that streams
 instead of reading this document (a consumer differences consecutive lines; the
 ledger holds the session's latest totals).
 
-**The one reconstruction row.** `agentic-workflow telemetry reconstruct write`
+**The one reconstruction row.** `runner telemetry reconstruct write`
 (issue #624) is the second writer, and it is manual: when the sink never flushed
 (a pi-web session stays alive between prompts, so `session_shutdown` never fires),
 the command rebuilds the session from Pi's own transcript and appends it here. The
@@ -154,7 +154,7 @@ committed row instead of appending refuses closed (the row stays as it was and t
 merge is left for a human). Two installation surfaces keep that true: the scaffold
 (`init-workspace`, which appends the registry lines and runs
 `runner shared-merge --install`) and, for a project that had telemetry
-before the class existed, `agentic-workflow telemetry merge-install`. The
+before the class existed, `runner telemetry merge-install`. The
 reconciliation below arms the driver too. An un-armed clone degrades to git's
 textual merge, which is the conflict this exists to prevent — `agentic-workflow
 doctor` reports that state.

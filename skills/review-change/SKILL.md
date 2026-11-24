@@ -168,7 +168,7 @@ cites it.
 
 **Pass model routing (issue #201).** Resolve every pass's model **before**
 spawning from the operator's approved table, not the session model:
-`agentic-workflow resolve-passes` (the `resolve-passes@1` receipt) → launch
+`runner resolve-passes` (the `resolve-passes@1` receipt) → launch
 each pass with its row's pinned `model` and record the row's `source` in the
 pass record. `spawn: "auto"` = the operator delegated the choice (record the
 tier justification in the report); `spawn: "inline"` — or a pinned model

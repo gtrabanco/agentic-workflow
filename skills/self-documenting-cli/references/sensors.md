@@ -4,7 +4,7 @@ A sensor **computes** and prints; a guard **decides** and exits. Neither writes.
 That is the whole contract, and it is what makes them safe to run on a tree you
 are in the middle of changing.
 
-**Flag spelling is not here.** It is `agentic-workflow help <subcommand>`.
+**Flag spelling is not here.** It is `runner help <subcommand>`.
 
 ## The exit codes that are not errors
 

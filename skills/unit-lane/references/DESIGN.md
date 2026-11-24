@@ -273,7 +273,7 @@ Mechanics — one batched form-turn, never one-question-per-turn:
   when no questions remain.
 
 The questions are the `open-questions@1` block of the unit folder's
-`decisions.md` — the grammar `agentic-workflow needs-input` reads, published in the
+`decisions.md` — the grammar `runner needs-input` reads, published in the
 template agent guide's question protocol. Append the block (never a table of
 your own invention) and carry a search receipt on every question:
 

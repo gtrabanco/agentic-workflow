@@ -102,7 +102,7 @@ what THIS skill needs: the location index (e.g. `docs/ROADMAP.md`, whose
 `## Fixes` table is the fix index) and fix SPEC template, and the roadmap
 tables. **Retrieval aid (optional, never authoritative):**
 when the index entry point exists, run it once before the forge read —
-`agentic-workflow doc --query "<topic terms>" --json-only` — to surface prior
+`runner doc --query "<topic terms>" --json-only` — to surface prior
 findings, decisions and session-log entries on this topic. It is a fast path
 over the same corpus grep covers: a missing index, an absent entry point, or an
 empty answer changes nothing (grep stays the exhaustive fallback — AC21), and

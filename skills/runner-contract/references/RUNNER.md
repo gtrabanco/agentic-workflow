@@ -57,6 +57,17 @@ eligible, at the pin above". A skill never spells a launcher and never restates
 the order: the words live here, the choice lives in code, and the two cannot
 drift apart.
 
+The ban is enforced, not remembered (issue #710): `scripts/runner-launcher-drift.mjs`
+reads the shipped pages under `skills/`, `template/` and `docs/workflow/`, and a
+code context that spells the scope-less launcher — a fenced line, an inline span,
+a line beginning with it — is a `bare-launcher` finding naming the file and the
+line. What the spelling names is the CLI's own registry (`HELP_REGISTRY`) and
+the form sanctioned here, so a subcommand added to the crate is covered the day
+it lands and a contract that stops declaring this form fails the pin closed. The
+scope-less npm name resolves to nothing — a `0.0.0` placeholder without a `bin`
+— which is why the ban is absolute for an instruction and why the exact-version
+spelling below stays legal.
+
 `<pin>` is read from this file — never restated, never guessed, never replaced by
 `latest`. A skill that hard-codes a version re-opens the per-release maintenance
 this contract exists to remove, and `scripts/normative-drift.test.mjs` fails

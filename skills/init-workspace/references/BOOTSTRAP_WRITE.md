@@ -227,7 +227,7 @@
    `agentic-workflow skills register --guide AGENTS.md --name <n> --source <s>
    --pin <p> --axis <a>`. The scaffolded `AGENTS.md` already carries the note
    and an empty block, so registration appends a row and never invents a
-   section; `agentic-workflow skills inventory --guide AGENTS.md` reads the
+   section; `runner skills inventory --guide AGENTS.md` reads the
    block back and is what `product-audit`'s Installed tooling dimension
    reports. A `no` writes no row.
 16. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the

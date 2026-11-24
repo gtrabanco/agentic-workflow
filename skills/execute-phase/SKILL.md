@@ -101,7 +101,7 @@ unit doc at `docs/features/<NN-slug>/SPEC.md`. Verify it carries `## Tasks` (P1�
 the legacy shape carries `## Evidence` + `## Progress log`, a re-cut unit doc carries
 `## Specs`, `## Findings` + `## Log` (its evidence and gate runs are `E`/`G` log
 lines, its progress is `P` lines). If neither pair is present, the unit is not ready —
-stop and suggest `unit-lane` triage first. `agentic-workflow unit-route` resolves the
+stop and suggest `unit-lane` triage first. `runner unit-route` resolves the
 shape; never judge a re-cut unit by the legacy headings and stop it.
 
 ## Process
@@ -175,7 +175,7 @@ propagation.
 #260): the step dispatches instead of executing in-orchestrator — freeze the
 delegate brief (exact files, exact gate command, exact expected values,
 `expected_duration` + resource requirements, the model from
-`agentic-workflow resolve-passes`), pass `resources admit` before spawning,
+`runner resolve-passes`), pass `resources admit` before spawning,
 then verify by running the gate and reading the diff — never by trusting the
 subagent's summary. [Orchestrate](../../unit-lane/references/ORCHESTRATE.md)
 owns the contract; a refused admission or an unresolvable model degrades
@@ -239,7 +239,7 @@ and the full gate stays what the merge gate and CI run.
    `YYYY-MM-DD HH:MM — <what was done> → <commit sha> — next: <what is next>`.
 5. **Memory boundary** — this step is a phase transition. Follow
    [the memory protocol](../unit-lane/references/MEMORY.md): before the first
-   memory read run `agentic-workflow memory probe` once and record its verdict
+   memory read run `runner memory probe` once and record its verdict
    in Evidence; after the step, save the phase id, what it changed, its Evidence
    outcome and any discovery under `topic_key: "unit/<NN-slug>/doc"`, an explicit
    `project` and explicit session attribution (§5). A `degraded` verdict is
@@ -282,7 +282,7 @@ step's completion: open the PR against the project's **default branch** with
 and the one owner-ordered inline exception), write `- PR: <url>` into
 References, and settle the index row with `agentic-workflow roadmap
 <index> rowUpsert '<json>'` (`docs/ROADMAP.md`; a fix unit writes its `## Fixes`
-row with `agentic-workflow roadmap <index> fixrow '<json>'` — keyed by the issue
+row with `runner roadmap <index> fixrow '<json>'` — keyed by the issue
 number in its `[#N](url)` cell, never a hand edit).
 `runner roadmap-settle` exits 0 (#316).
 Terminal:

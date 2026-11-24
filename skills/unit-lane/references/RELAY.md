@@ -45,7 +45,7 @@ read.
 The checker has one owner — `packages/agentic-workflow/src/relay/Packet.mjs` —
 and two entry points that print the identical block: the workspace's script
 (`runner relay …`, present in a project that adopted the
-workflow) and the crate (`agentic-workflow relay …`, present wherever
+workflow) and the crate (`runner relay …`, present wherever
 `@gtrabanco/agentic-workflow` is installed). A project carrying only the crate
 runs the same five modes and needs no `scripts/` at all.
 
@@ -193,7 +193,7 @@ block is the machine shape below:
 
 ```text
 relay-closeout@1
-# produced-by: `runner relay closeout <unit>` (and `agentic-workflow relay closeout <unit>`)
+# produced-by: `runner relay closeout <unit>` (the same command the crate's own bin dispatches)
 # input: the packet's status.md — `State:` and `Review:`
 field | shape | what it orders
 receipt | current | stale | not-current | absent | the receipt's state, read from the `Review:` line; `stale` names another head, `not-current` records no receipt, `absent` means the line is missing

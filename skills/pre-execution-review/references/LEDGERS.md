@@ -156,7 +156,7 @@ The one-owner rule, stated once so every skill and template can cite it here:
 declared mechanical annotator, which may append only the token its own row
 names.** Nobody else writes a row — not a reviewer, not a later phase, not a
 script. So `fold-findings` flips only the `folded:` flag per the map's `fold-findings:folded-flag` owner entry,
-and `agentic-workflow ledger-provenance` appends only the marker it really emits:
+and `runner ledger-provenance` appends only the marker it really emits:
 its `· fold <sha>` (or `· ticked <sha>` on a row that scores 1) plus the
 `· REOPENED — provenance unproven` note when a tick has no matching
 annotation — never a `yes` of its own.

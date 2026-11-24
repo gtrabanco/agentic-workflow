@@ -39,7 +39,7 @@ asking for `init-workspace`:
 
 ## The merge wiring
 
-The aggregator is `agentic-workflow journal aggregate` (shipped with
+The aggregator is `runner journal aggregate` (shipped with
 `@gtrabanco/agentic-workflow`): it appends the pending fragments to
 `docs/LOGS.md` newest-first (ties: branch, kind, session ascending), deletes
 the consumed fragments, and refuses anything ambiguous with exit 2 before the
@@ -82,7 +82,7 @@ cd "$GIT_WORK_TREE" || exit 0
 # the next push, and an unconsumed fragment is never lost — only delayed.
 exec 9>.agentic-workflow/journal/.aggregate.lock
 flock -n 9 || { echo "journal aggregate already running; the next push retries" >&2; exit 0; }
-agentic-workflow journal aggregate || exit 1   # refusal: fragments stay, nothing is lost
+runner journal aggregate || exit 1   # refusal: fragments stay, nothing is lost
 git add .agentic-workflow/journal docs/LOGS.md
 git -c user.name="journal-bot" -c user.email="journal-bot@$(hostname)" \
   commit -m "docs(log): aggregate journal fragments" -- .agentic-workflow/journal docs/LOGS.md || exit 0
@@ -150,7 +150,7 @@ The naming grammar and the content rules have **one owner**:
 (`packages/agentic-workflow/README.md`, implemented in
 `src/journal/fragment.mjs`). Hand the entry to the writer and let it compute
 the name, the timestamp and the bytes — a writer never composes a filename:
-`agentic-workflow journal write --kind <mechanical|narrative>` takes the prose
+`runner journal write --kind <mechanical|narrative>` takes the prose
 fields (or `--facts` for the mechanical kind), and its own field contract is
 `journal-write-grammar@1` in the same owner file. `agentic-workflow journal
 name` stays the read-only answer for a caller that wants to inspect the name.

@@ -84,7 +84,7 @@ stamp half, so the report and the write path never disagree about *candidacy*.
 
 **Unversioned documents never become eligible by accident.** A unit written
 before the provenance stamp (`#462`) carries no `format:`; the documented path is
-a provenance re-stamp — `agentic-workflow unit-doc <slug> provenance` writes the
+a provenance re-stamp — `runner unit-doc <slug> provenance` writes the
 stamp the carrier derives — and only then does the unit enter the matrix.
 
 **The config never invalidates a document.** `docRetention.mode` gates the trim
@@ -94,10 +94,10 @@ does not offer the trim, and it never makes a settled or a full document refuse.
 ## The commands
 
 ```
-agentic-workflow doc archive --dry-run            # the full report, writes nothing
-agentic-workflow doc archive --unit <id>          # settle one unit
-agentic-workflow doc archive --all-eligible       # settle every unit past the window
-agentic-workflow doc restore --unit <id>          # put the trail back
+runner doc archive --dry-run            # the full report, writes nothing
+runner doc archive --unit <id>          # settle one unit
+runner doc archive --all-eligible       # settle every unit past the window
+runner doc restore --unit <id>          # put the trail back
 ```
 
 - **`--dry-run` prints every row**: the candidates with the files it would trim,

@@ -154,7 +154,7 @@ ships a driver, because a capture is always the adopting team's stack. A value o
 `n/a — no artifact evidence required` is a legal answer: with no driver declared,
 a capture criterion fails closed with a `manual:` label instead of passing on
 prose (owner: `skills/verification-contract/SKILL.md`), and
-`agentic-workflow materialize evidence` is the check that reports it.
+`runner materialize evidence` is the check that reports it.
 
 ## Authoring a new question
 

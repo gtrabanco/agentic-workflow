@@ -215,7 +215,7 @@ owner's explicit consent.
 
 ## The check
 
-`agentic-workflow elicitation check --bank <path> --spec <path>` is the layer's
+`runner elicitation check --bank <path> --spec <path>` is the layer's
 deterministic half: it validates the bank's cells against the table that carries
 them, then the pre-spec against the bank. It reads, writes nothing, and exits 0
 with `ELICITATION CHECK PASS` or 1 with a finding per refusal.

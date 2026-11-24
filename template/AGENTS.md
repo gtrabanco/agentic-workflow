@@ -43,7 +43,7 @@ your domains.
 | Project identity, deployment, license & policies | the **Project charter** section (below) — written by `/init-workspace`, read before any design or plan |
 | Acceptance criteria & review passes per surface | `docs/workflow/VERIFICATION_CRITERIA.md` *(the project's criteria catalogue; extended only with a recorded decision)* |
 | User-facing flows, and what demonstrates each one | `docs/workflow/FEATURE_MAP.md` *(seeded at bootstrap, maintained by the lane's docs step)* |
-| Declared boundaries and how each is enforced | `docs/workflow/BOUNDARY_ENFORCEMENT.md` *(written by `agentic-workflow materialize apply`, never by hand)* |
+| Declared boundaries and how each is enforced | `docs/workflow/BOUNDARY_ENFORCEMENT.md` *(written by `runner materialize apply`, never by hand)* |
 | Cross-session memory | Engram, the workflow's memory substrate *(ask-first: provisioned by `/init-workspace` on a non-pi host, or by the pi package's `memory.engram` consent; the save/recall protocol is `unit-lane`'s `references/MEMORY.md`)* |
 | Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
 | Architectural constraints | `docs/architecture/ARCHITECTURAL_INVARIANTS.md` *(optional; explicit rules that architectural changes must preserve)* |
@@ -348,14 +348,14 @@ Rules the ledger enforces:
   example, makes the whole ledger unreadable (`malformed-ledger-header`) and its
   questions silently none; documentation and examples belong below the entries.
 - **Halt, do not ask.** The consumed block is printed by the deterministic
-  dispatcher (`agentic-workflow needs-input`), so a malformed ledger fails closed
+  dispatcher (`runner needs-input`), so a malformed ledger fails closed
   instead of silently dropping a question.
 
 **Substrate declines (the coverage gate's one record).** An install may leave a
 substrate section absent only with a recorded decline, never by silence: the
 architecture document, the charter's decision-records and API-posture slots, and
 the documentation map are the four classes `/init-workspace` asks about, and
-`agentic-workflow substrate check --workspace .` refuses an install that leaves
+`runner substrate check --workspace .` refuses an install that leaves
 one absent without a row here. One row per declined class, written only after
 the owner says yes to the decline (never auto-written), and the block ships
 empty — a populated example would read as a real decline:
@@ -389,7 +389,7 @@ and acceptance criterion at once. The unit's path is decided by a triage
 pass against a closed catalog (research, design, plan, implement, tests,
 evidence, review, docs, release). The lane conductor (`/unit-lane`) orchestrates;
 `execute-phase` runs each step as an atomic gate/commit. A diff-size guard
-(`agentic-workflow diff-guard`) expels units that exceed their budget back to triage.
+(`runner diff-guard`) expels units that exceed their budget back to triage.
 Evidence rows document what was run, exit status, and verified-by. The progress
 log uses dated entries (`YYYY-MM-DD HH:MM`). Commit format: `type(scope):
 description` (conventional commits). Roadmap rows follow `idea → defined →
@@ -633,7 +633,7 @@ Details: `docs/workflow/FEATURE_WORKFLOW.md` → *Context hygiene & cost*.
 concurrent journal appends are the log's recurring merge conflict; the
 fragment carrier removes it by construction. With `.agentic-workflow/journal/`
 present, every writer produces one fragment file per entry and a
-merge-to-main step (`agentic-workflow journal aggregate`, forge-free) is the
+merge-to-main step (`runner journal aggregate`, forge-free) is the
 only writer of `docs/LOGS.md`. The naming grammar has one owner —
 `journal-fragment-grammar@1` in `@gtrabanco/agentic-workflow`'s README; never
 hand-roll it. Install is consent-gated via `/init-workspace`; without the
@@ -700,7 +700,7 @@ extra is registered in the block below with where it came from, the version it
 is pinned to, when it was installed and the review axis it covers —
 `agentic-workflow skills register --guide AGENTS.md --name <n> --source <s>
 --pin <p> --axis <a>` appends the row, and
-`agentic-workflow skills inventory --guide AGENTS.md` reports a row that has
+`runner skills inventory --guide AGENTS.md` reports a row that has
 gone unpinned, stale or incomplete, so an extra that rots surfaces as an audit
 finding instead of quietly staying installed.
 

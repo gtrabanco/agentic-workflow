@@ -26,7 +26,7 @@ Never improvised at spawn time. One brief per atomic work unit, with:
 4. **`expected_duration` and resource `requirements`** — the progress-led
    guard's inputs (see below).
 5. **The model** — resolved from the operator's table by
-   `agentic-workflow resolve-passes` (the fail-closed chain: `passes.<name>`
+   `runner resolve-passes` (the fail-closed chain: `passes.<name>`
    → `passes.default` → the configured cheap tier → inline). Never re-derived
    by the orchestrator; `auto` only when the operator wrote it.
 
@@ -43,7 +43,7 @@ rather than wording the rule again (owner decision, issue #646 `D4`).
 - **Spawn** — `subagents_run` (the durable-subagent substrate the package
   registers; the run gets its own record, model and cost accounting). The
   delegate is context-free: it reads the brief, not the orchestrator's
-  context. Admission is deterministic: `agentic-workflow resources detect`
+  context. Admission is deterministic: `runner resources detect`
   prints the host envelope, `resources admit` checks the brief's expectations
   and requirements against it and against the operator's caps — a refusal is
   a decision to make, never bypassed.

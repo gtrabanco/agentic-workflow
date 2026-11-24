@@ -12,7 +12,7 @@
 > Fix specification — one single unit document. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
 > entry in the `## Fixes` table of `docs/ROADMAP.md`. This is the same closed unit doc
-> `agentic-workflow unit-route --triage` reads for a feature, in the re-cut
+> `runner unit-route --triage` reads for a feature, in the re-cut
 > `spec-by-reference` shape; the fix template keeps four extra sections
 > (`Issue`, `Branch`, `Depends on`, `Regression scope`) on top. A unit opened
 > before the re-cut keeps the legacy 14-section shape — both are accepted, and a
@@ -244,7 +244,7 @@ axis | <axis> | the review axis that found it
 severity | BLOCKER \| CRITICAL \| WARNING \| SUGGESTION | the published ladder (meanings owned by `skills/review-implementation/references/CLASSIFY.md` §Severity ladder): `BLOCKER` requires a reproducer and is never a conversion target
 impact | blocking \| docs-only \| report-only | whether the finding affects behaviour, only documents, or nothing that blocks: `blocking`/`docs-only` for a `BLOCKER`, and `report-only` for a pre-existing advisory, which never earns a correction round
 class | product \| plan \| source \| environment \| runtime | the owner that repairs it
-route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`agentic-workflow unit-route`), and `class` names the owner that repairs it
+route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`runner unit-route`), and `class` names the owner that repairs it
 ```
 
 | id | S# / file:line | axis | severity | impact | class | route |

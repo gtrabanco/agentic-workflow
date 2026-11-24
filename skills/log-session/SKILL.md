@@ -123,7 +123,7 @@ the HEAD sha and start time at session open.
      owns that file):
 
      ```
-     agentic-workflow journal write --kind narrative --summary "<summary>" \
+     runner journal write --kind narrative --summary "<summary>" \
        --decisions "<choices + why>" --next "<next step>" [--session <id>]
      ```
 

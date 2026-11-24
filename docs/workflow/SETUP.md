@@ -17,7 +17,7 @@ forms are the same:
 
 All three run with `node`; bun runs them too. The first two are this repository's
 provisioner; `--doctor` is the deterministic **checker** (feature 537,
-`agentic-workflow doctor`) and prints the same `doctor@1` envelope the bin and
+`runner doctor`) and prints the same `doctor@1` envelope the bin and
 `init-workspace` read, so a state is never re-derived by hand.
 
 When the tools are already present and only stale, `update-dev-tools` is the
@@ -54,7 +54,7 @@ on your machine is fine — node is your prerequisite, not the script's concern
 
 ## The doctor — what the state actually is
 
-`agentic-workflow doctor` (`node scripts/setup-env.mjs --doctor` here) is one
+`runner doctor` (`node scripts/setup-env.mjs --doctor` here) is one
 read-only pass over the **documented** tool inventory — the `tool-inventory@1`
 block of [`packages/agentic-workflow/README.md`](../../packages/agentic-workflow/README.md) —
 and it is the single declaration of what the workflow depends on: each row says
@@ -71,7 +71,7 @@ un-armed shared-merge driver, a missing `pre-push` hook), `unreachable`, or
 defect). A missing **required** surface exits 1; a missing optional one is an
 advisory that never fails the run.
 
-`agentic-workflow setup` is the mutating half and asks only where a write or a
+`runner setup` is the mutating half and asks only where a write or a
 real decision exists: `ask-consent-write` runs the **project's own** installer
 after an explicit yes, `instruct-only` prints the exact command, `residual` names
 a decision another owner makes, and the second run is a no-op. Nothing installs

@@ -253,7 +253,7 @@ ran; it is never the recommendation.
 
 **Freeze-batch (product owner present).** Any taken `fix-now` row whose `Route`
 cell begins `product owner`, `product-owned` or `owned by product` (head-anchored,
-identical to `agentic-workflow unit-route`'s `PRODUCT_ROUTE` regex,
+identical to `runner unit-route`'s `PRODUCT_ROUTE` regex,
 per `#293`) freezes the batch too —
 nothing folds, no `folded: yes` flips, no commits: the fold loop repairs source,
 never authority (`pre-execution-review` POLICY §4, `#293`). The receipt records
