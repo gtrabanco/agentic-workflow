@@ -40,3 +40,11 @@ The aggregator consumes every pending fragment in the carrier; that is how the
 merge-to-main job guarantees no fragment is lost. The defect was the local door,
 not the filter. The product guard refuses the local door (D2); the no-filter
 behaviour stays pinned by the suite.
+
+## K6 — a concurrent session's worktree is stale
+
+`git worktree list` shows
+`.worktrees/feat-719-nan-embedding-default-index-tool` (another session's
+branch); `worktree-guard` reports it `STALE` on the final gate run.
+`does-not-affect`: this unit touches no worktree, and pruning is destructive and
+not this unit's call. The finding is reported for its owner.

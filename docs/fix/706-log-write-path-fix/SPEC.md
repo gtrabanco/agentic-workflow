@@ -357,8 +357,11 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   `phase-lint` · exit 0 · PASS; `journal aggregate --check` · exit 0 · checked
   53.
 - **E6** — the full gate: `bun scripts/local-gate.mjs --no-bail` · exit 1 · 20
-  steps · only `log-immutability` failed with `log-rewritten` (the D1 authorized
-  exception). The first run also caught the aggregator comment's forge word
+  steps · two reds. `log-immutability` fails with `log-rewritten` — the D1
+  authorized exception. `worktree-guard` fails with `STALE:
+  .worktrees/feat-719-nan-embedding-default-index-tool`, another session's
+  worktree; this unit touches no worktree and leaves the finding to its owner
+  (K6). The first run also caught the aggregator comment's forge word
   (`journal.surfaces` AC9); `5d31a8f23` removed it, and the rerun's crate suite
   is green. No other red.
 - **E7** — the state owners: `roadmap fixrow` receipt `82de4412 → 857d499c`;
