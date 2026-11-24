@@ -26,13 +26,9 @@ pi install npm:@gtrabanco/pi-agentic-workflow
 Restart Pi. `/agentic-workflow-settings` and the workflow commands are then
 available in any project. If you previously copied the skills into
 `~/.pi/agent/skills` by hand, delete that copy — the package provides them, and
-two copies means two versions of the same method.
-
-The installed skills tree is this package's own fact, published once per session
-into the `AGENTIC_WORKFLOW_SKILLS_ROOT` environment variable: the crate's
-sensors (the `workflow-doctor` battery among them) read that declaration instead
-of guessing where skills live, so a consumer's tree layout is never assumed. An
-`--skills-root <dir>` you pass explicitly always outranks it.
+two copies means two versions of the same method. The installed skills tree is
+published once per session as `AGENTIC_WORKFLOW_SKILLS_ROOT`, so the crate's
+sensors resolve it by declaration, never a guessed layout.
 
 ## Commands
 
