@@ -10,7 +10,12 @@
  *             unavailable doctor is a refusal — never a fabricated healthy row.
  *   runner    the crate's own version (its manifest) beside the pin the installed
  *             skills cite, classified `match`/`mismatch`/`unknown`.
- *   skills    the installed skill set read from the tree the project carries.
+ *   skills    the installed skill set, located declared-over-discovered: the
+ *             `--skills-root` declaration, the host's `AGENTIC_WORKFLOW_SKILLS_ROOT`
+ *             (the pi package publishes its mounted tree there at session start),
+ *             the documented install dirs `.agents/skills` and `.claude/skills`,
+ *             and the authoring/source `skills/` tree last — never a guessed
+ *             project-root layout (the #716/#717 defect class).
  *   ceremony  the guide's `ceremony-profile@1` block through its reader and, when
  *             the operator names one, the unit's recorded tier through
  *             `recordedTier` (`S14b` answered: the battery reads the tier).
@@ -27,11 +32,26 @@ import { runDoctor } from "../doctor/doctor.mjs";
 import { charterSectionOf, readCeremonyProfile } from "../runner/ceremony-profile.mjs";
 import { recordedTier } from "../runner/ceremony/tier.mjs";
 import { UNIT_HOMES } from "./mine.mjs";
-import { BATTERY_CONTRACT, DoctorRefusal } from "./vocabulary.mjs";
+import { BATTERY_CONTRACT, DoctorRefusal, SKILLS_ROOT_ENV } from "./vocabulary.mjs";
 
-/** Where the skills tree and the pin live, relative to the project root. */
-export const SKILLS_REL = "skills";
-export const RUNNER_PIN_REL = "skills/runner-contract/references/RUNNER.md";
+/** The tree-relative pin path — the launcher pin the installed skills cite. */
+export const PIN_IN_TREE = "runner-contract/references/RUNNER.md";
+
+/**
+ * The convention install roots the battery probes, in precedence order after
+ * the two declarations (`--skills-root`, then the host's env): the skills CLI's
+ * cross-agent target, Claude Code's project target, and the authoring/source
+ * tree last. Every entry is a documented install surface — the single-repo
+ * assumption class (#716/#717) is what this list exists to avoid, so a tree
+ * that lives somewhere else is *declared*, never guessed.
+ */
+export const SKILLS_CONVENTIONS = Object.freeze([
+  { source: "agents", rel: ".agents/skills" },
+  { source: "claude-code", rel: ".claude/skills" },
+  { source: "source", rel: "skills" },
+]);
+
+/** The guide's project-relative home. */
 export const GUIDE_REL = "AGENTS.md";
 
 /** The launcher a pin names, e.g. `@gtrabanco/agentic-workflow@4.10.1`. */
@@ -47,9 +67,9 @@ function crateVersion() {
   }
 }
 
-/** Read the pin the installed skills cite, or `null`. */
-function runnerPin(root) {
-  const file = path.join(root, RUNNER_PIN_REL);
+/** Read the pin the skills in the given tree cite, or `null`. */
+function runnerPin(tree) {
+  const file = path.join(tree, PIN_IN_TREE);
   if (!fs.existsSync(file)) return null;
   const match = PIN.exec(fs.readFileSync(file, "utf8"));
   return match === null ? null : match[1];
@@ -73,21 +93,47 @@ function skillMeta(text) {
   return meta;
 }
 
-/** The installed skill set under `<root>/skills`. */
-function skillSet(root) {
-  const dir = path.join(root, SKILLS_REL);
-  if (!fs.existsSync(dir)) return { present: false, count: 0, userInvocable: 0, names: [] };
+/** The installed skill set under one skills tree. */
+function skillSet(tree) {
   const names = [];
   let userInvocable = 0;
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+  for (const entry of fs.readdirSync(tree, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
     if (!entry.isDirectory()) continue;
-    const file = path.join(dir, entry.name, "SKILL.md");
+    const file = path.join(tree, entry.name, "SKILL.md");
     if (!fs.existsSync(file)) continue;
     const meta = skillMeta(fs.readFileSync(file, "utf8"));
     names.push(meta.name ?? entry.name);
     if (meta.userInvocable) userInvocable += 1;
   }
-  return { present: true, count: names.length, userInvocable, names };
+  return { count: names.length, userInvocable, names };
+}
+
+/** The tree as the receipt spells it: project-relative when under the root, absolute when the host mounts it elsewhere. */
+function receiptPath(root, dir) {
+  const relative = path.relative(root, dir);
+  return relative === "" || relative.startsWith("..") ? dir : relative;
+}
+
+/**
+ * Locate the installed skills tree: declared over discovered, never a guessed
+ * project-root layout (the #716/#717 defect class). An explicit `--skills-root`
+ * wins, then the host's `AGENTIC_WORKFLOW_SKILLS_ROOT` declaration (the pi
+ * package publishes its mounted tree there at session start), then the
+ * documented convention install dirs, the authoring/source tree last.
+ *
+ * @param {{root: string, env?: object, skillsRoot?: string|null}} input
+ * @returns {{source: string, dir: string}|null} the located tree, or `null`
+ */
+export function locateSkillsTree({ root, env = process.env, skillsRoot = null } = {}) {
+  const declared = String(skillsRoot ?? "").trim();
+  const host = String(env?.[SKILLS_ROOT_ENV] ?? "").trim();
+  const anchor = (value) => (path.isAbsolute(value) ? value : path.join(root, value));
+  const candidates = [
+    ...(declared === "" ? [] : [{ source: "declared", dir: anchor(declared) }]),
+    ...(host === "" ? [] : [{ source: "host", dir: anchor(host) }]),
+    ...SKILLS_CONVENTIONS.map((convention) => ({ source: convention.source, dir: path.join(root, convention.rel) })),
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate.dir)) ?? null;
 }
 
 /** The guide's declared ceremony profile, or the refusal it carries. */
@@ -121,7 +167,7 @@ function unitTier(root, unit) {
  * Build the battery for one project.
  *
  * @param {string} root the project root
- * @param {{doctor?: () => Promise<object>, unit?: string, ops?: object}} [options]
+ * @param {{doctor?: () => Promise<object>, unit?: string, env?: object, skillsRoot?: string|null, ops?: object}} [options]
  * @returns {Promise<object>} the `workflow-doctor-battery@1` envelope
  */
 export async function buildBattery(root, options = {}) {
@@ -139,12 +185,20 @@ export async function buildBattery(root, options = {}) {
   }
 
   const version = crateVersion();
-  const pin = runnerPin(projectDir);
+  const located = locateSkillsTree({ root: projectDir, env: options.env ?? process.env, skillsRoot: options.skillsRoot ?? null });
+  const skills = located === null
+    ? { present: false, source: null, path: null, count: 0, userInvocable: 0, names: [] }
+    : { present: true, source: located.source, path: receiptPath(projectDir, located.dir), ...skillSet(located.dir) };
+  const pin = located === null ? null : runnerPin(located.dir);
   const pinMatch = pin === null || version === null ? "unknown" : pin === version ? "match" : "mismatch";
-  if (pin === null) degradations.push({ code: "pin-absent", detail: `${RUNNER_PIN_REL} carries no launcher pin` });
-
-  const skills = skillSet(projectDir);
-  if (!skills.present) degradations.push({ code: "skills-absent", detail: `${SKILLS_REL}/ is not present` });
+  if (located === null) {
+    degradations.push({
+      code: "skills-absent",
+      detail: `no skills tree found; declare one with --skills-root <dir> or ${SKILLS_ROOT_ENV}; probed ${SKILLS_CONVENTIONS.map((convention) => convention.rel).join(", ")}`,
+    });
+  } else if (pin === null) {
+    degradations.push({ code: "pin-absent", detail: `${PIN_IN_TREE} carries no launcher pin under the located tree` });
+  }
 
   const profile = ceremonyProfile(projectDir);
   if (!profile.guide) degradations.push({ code: "guide-absent", detail: `${GUIDE_REL} is not present` });
@@ -181,7 +235,8 @@ export function renderBattery(receipt) {
   const summary = receipt.doctor.summary ?? {};
   const lines = [
     `WORKFLOW DOCTOR BATTERY — runner ${receipt.runner.version ?? "unknown"} · pin ${receipt.runner.pin ?? "unknown"} · ${receipt.runner.pinMatch}`,
-    `skills: ${receipt.skills.count} installed (${receipt.skills.userInvocable} invocable)${receipt.skills.present ? "" : " · skills/ absent"}`,
+    `skills: ${receipt.skills.count} installed (${receipt.skills.userInvocable} invocable)`
+      + `${receipt.skills.present ? ` · from ${receipt.skills.source} at ${receipt.skills.path}` : " · no skills tree found"}`,
     `doctor: ${receipt.doctor.verdict ?? "unknown"} · ok ${summary.ok ?? 0} · missing ${summary.missing ?? 0} · mismatch ${summary.mismatch ?? 0} · advisories ${summary.advisories ?? 0}`,
     `ceremony: profile ${profile} · unit ${receipt.ceremony.unit ?? "none"} tier ${receipt.ceremony.tier ?? "none"}`,
     `receipts: ${receipt.receipts.state} — ${receipt.receipts.reason}`,

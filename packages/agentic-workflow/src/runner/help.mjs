@@ -269,6 +269,7 @@ export const HELP_REGISTRY = Object.freeze({
       "--fold-budget",
       "--cycle-budget",
       "--unit",
+      "--skills-root",
       "--mine",
       "--triage",
       "--battery",

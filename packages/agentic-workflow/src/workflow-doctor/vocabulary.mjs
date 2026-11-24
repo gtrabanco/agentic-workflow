@@ -24,6 +24,17 @@ export const MINE_CONTRACT = "workflow-doctor-mine@1";
 export const BUNDLE_CONTRACT = "workflow-doctor-bundle@1";
 /** The live battery, which carries the tool doctor's `doctor@1` envelope as-is. */
 export const BATTERY_CONTRACT = "workflow-doctor-battery@1";
+
+/**
+ * The env key a host integration declares the installed skills tree through
+ * (the pi package publishes its mounted tree there at session start). The
+ * battery reads it; the crate never guesses a host's layout — the #716/#717
+ * class rule: a location a consumer cannot satisfy is declared, not assumed.
+ */
+export const SKILLS_ROOT_ENV = "AGENTIC_WORKFLOW_SKILLS_ROOT";
+
+/** The skills-tree sources the battery's receipt may name, in precedence order. */
+export const SKILLS_SOURCES = Object.freeze(["declared", "host", "agents", "claude-code", "source"]);
 /** The upstream routing receipt. */
 export const ROUTE_CONTRACT = "workflow-doctor-route@1";
 /** The consent-gated publication receipt. */

@@ -96,7 +96,9 @@ runner workflow-doctor battery --unit <slug>
 `--unit` is optional (the slug the user named); without it the tier cell reads
 `none`. The receipt carries the doctor's `doctor@1` envelope as-is, the runner
 version against the installed pin, and the installed skill set — re-derive none
-of it.
+of it. The skills tree is located, not assumed: a `skills-absent` degradation
+while the skills are installed (a host-mounted or other-layout tree) is answered
+by passing `--skills-root <dir>`, never by re-running with edits.
 
 ### 3. Apply the rubric
 

@@ -41,7 +41,7 @@ const STATE_REFUSALS = new Set([
 /** The flags each op accepts, spelled as the CLI takes them; every op also takes `--json`. */
 const FLAGS = Object.freeze({
   mine: Object.freeze(["--root", "--json", "--fold-budget", "--cycle-budget"]),
-  battery: Object.freeze(["--root", "--json", "--unit"]),
+  battery: Object.freeze(["--root", "--json", "--unit", "--skills-root"]),
   bundle: Object.freeze(["--root", "--json", "--mine", "--triage", "--battery"]),
   route: Object.freeze(["--root", "--json", "--bundle", "--candidate", "--search"]),
   publish: Object.freeze(["--json", "--bundle", "--issue", "--new-title", "--repo", "--forge", "--yes"]),
@@ -53,6 +53,7 @@ const VALUED = new Set([
   "--fold-budget",
   "--cycle-budget",
   "--unit",
+  "--skills-root",
   "--mine",
   "--triage",
   "--battery",
@@ -173,6 +174,7 @@ export function main(argv = process.argv.slice(2), options = {}) {
           const receipt = await buildBattery(root, {
             ...(options.doctor === undefined ? {} : { doctor: options.doctor }),
             unit: flags.unit,
+            skillsRoot: flags["skills-root"] ?? null,
           });
           emit(flags, receipt, renderBattery);
           return 0;

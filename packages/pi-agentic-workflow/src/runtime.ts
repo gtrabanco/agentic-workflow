@@ -18,6 +18,44 @@
  * or `"bun"`.
  */
 
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+/**
+ * The env key a host integration declares the installed workflow skills tree
+ * through. The crate's sensors (the `workflow-doctor` battery among them) read
+ * this declaration instead of guessing where skills live — the single-repo
+ * assumption class (#716/#717) is a host layout guess, and this package owns
+ * the one opinionated location that exists here: its own installed skills
+ * bundle. Publishing it is `publishSkillsRoot()`'s job, at extension start.
+ */
+export const AGENTIC_WORKFLOW_SKILLS_ROOT = "AGENTIC_WORKFLOW_SKILLS_ROOT";
+
+/**
+ * Where this package's canonical skills tree is installed, resolved from this
+ * module's own location (`dist/` → the package root's `skills/`). Returns the
+ * absolute path, or `null` when the tree is absent — never a guess.
+ */
+export function packageSkillsRoot(dir = fileURLToPath(new URL("../skills", import.meta.url))): string | null {
+  return existsSync(dir) ? dir : null;
+}
+
+/**
+ * Publish the installed skills tree into the given environment so every crate
+ * command this session spawns resolves it without re-deriving a layout. The
+ * operator's earlier declaration is never overwritten, and an unresolvable
+ * tree publishes nothing. Returns the published value, or `null`.
+ */
+export function publishSkillsRoot(env: NodeJS.ProcessEnv = process.env, dir?: string): string | null {
+  if (env[AGENTIC_WORKFLOW_SKILLS_ROOT]) {
+    return env[AGENTIC_WORKFLOW_SKILLS_ROOT];
+  }
+  const root = packageSkillsRoot(dir);
+  if (root === null) return null;
+  env[AGENTIC_WORKFLOW_SKILLS_ROOT] = root;
+  return root;
+}
+
 /**
  * Detect the runtime of the *current process* (which is pi).
  * Returns `"bun"` when `globalThis.Bun` exists, or when
