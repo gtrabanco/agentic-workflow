@@ -131,6 +131,7 @@ file | tier | depth | evidence
 .github/ISSUE_TEMPLATE/fix.yml | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 .github/PULL_REQUEST_TEMPLATE.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 .github/workflows/agentic-workflow-journal.yml | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+.github/workflows/delivery-conditions.yml | 2-rarely | full | read end-to-end (issue #704): the weekly schedule, the two read scopes (`contents`, `issues`), the schema build, the summary write and the un-masked exit
 .github/workflows/pin-watch.yml | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 .github/workflows/publish.yml | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 .github/workflows/root-suite.yml | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns

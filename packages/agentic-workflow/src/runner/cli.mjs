@@ -51,6 +51,7 @@ import { main as runDifferentialBaseline } from "../differential-baseline/index.
 import { main as runCorrectionBudget } from "../correction-budget/index.mjs";
 import { main as runFindingsCorpus } from "../findings-corpus/index.mjs";
 import { main as runSessionClose } from "../session-close/index.mjs";
+import { main as runDeliveryConditions } from "../delivery-conditions/index.mjs";
 import { main as runTestImpact } from "../test-impact/index.mjs";
 import { main as runSharedMerge } from "../shared-merge/index.mjs";
 import { main as runDocsGeneratedMerge } from "../docs-generated-merge/index.mjs";
@@ -110,6 +111,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "roadmap-settle": runRoadmapSettle,
   "relevant-files": runRelevantFiles,
   "scaffold-contract": runScaffoldContract,
+  "delivery-conditions": runDeliveryConditions,
 });
 
 /**

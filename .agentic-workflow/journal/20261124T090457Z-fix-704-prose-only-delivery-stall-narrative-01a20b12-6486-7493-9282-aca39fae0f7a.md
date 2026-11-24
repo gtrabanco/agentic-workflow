@@ -1,0 +1,7 @@
+## 2026-11-24T09:04:57Z — fix/704-prose-only-delivery-stall — narrative
+- **Commits:** 14 (`44fd26b4…c6288b41`)
+- **Files:** 34 files
+- **Summary:** Branch fix/704-prose-only-delivery-stall fully committed (12 commits 44fd26b49..HEAD). Local gate PASS 20/20 (636s). PR #712 opened against main with the fix template (AC→command→observed table, decisions, references). The roadmap Fixes row settled to 'done · [#712]' through its writer. One dimension-regression gap fixed at push time by appending E16 (the canonical runner form) to E15's committed line. The prior external-verify fragment (20261124T090317Z) is superseded by this entry — PR opened, push succeeded, unit is EXTERNAL-VERIFY VERIFIED with zero blockers, awaiting owner merge.
+- **Decisions:** E16 appended to E15 (never editing a committed line) to satisfy the pre-push dimension-regression gate; the local gate's dimension-regression step is push-range-only so it skips at the first run but blocks the pre-push hook; a post-freeze test fixture edit needed a path-protection-records@1 justification in decisions.md because the original fixture contradicted the test premise; all advisory advisories from the external verify session already triaged (A1/A2/A3 → E17/wontfix/KI-6).
+- **Next:** Owner merges PR #712, then the roadmap row is removed and the session log fragment is aggregated into docs/LOGS.md by the journal aggregator.
+- **Supersedes:** 20261124T090317Z-fix-704-prose-only-delivery-stall-narrative-01a20b12-6486-7493-9282-aca39fae0f7a.md

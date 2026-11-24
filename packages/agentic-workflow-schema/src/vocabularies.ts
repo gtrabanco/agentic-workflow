@@ -526,3 +526,48 @@ export type GuardPluginKind = (typeof GUARD_PLUGIN_KINDS)[number];
  *  adapter, never copied here. */
 export const GUARD_PLUGIN_SURFACES = Object.freeze(["bash", "path", "tool", "skill", "mcp"]);
 export type GuardPluginSurface = (typeof GUARD_PLUGIN_SURFACES)[number];
+
+/** The delivery-condition families (`delivery-condition-kind`, issue #704): the
+ *  phrasings a project writes when a delivery waits on another delivery. Each is
+ *  a *condition on another issue's landing*, and each names the issue it waits
+ *  for — that citation is the carrier the machine re-checks. `covered-by` is the
+ *  coverage claim ("closed as covered by #N", "cerrada como cubierta por #N");
+ *  `reopen-when` is the recorded follow-up ("reopen when #N lands", "reabrir …
+ *  cuando #N lande"); `proceeds-when` and `waits-for` are the two forward-gating
+ *  spellings; `retire-when` records a retirement its own landing makes due. */
+export const DELIVERY_CONDITION_KINDS = Object.freeze([
+  "covered-by",
+  "reopen-when",
+  "proceeds-when",
+  "waits-for",
+  "retire-when",
+]);
+export type DeliveryConditionKind = (typeof DELIVERY_CONDITION_KINDS)[number];
+
+/** The judgment of one condition against the cited issues' states
+ *  (`delivery-condition-verdict`, issue #704). `satisfied` — the cited delivery
+ *  landed and nothing is due; `pending` — the cited delivery has not landed and
+ *  the record is consistent; `stalled` — the cited state moved past the condition
+ *  and the recorded follow-up is due (the #301 shape); `unresolved` — the machine
+ *  cannot read the cited issue, so it refuses to guess. */
+export const DELIVERY_CONDITION_VERDICTS = Object.freeze(["satisfied", "pending", "stalled", "unresolved"]);
+export type DeliveryConditionVerdict = (typeof DELIVERY_CONDITION_VERDICTS)[number];
+
+/** What a sweep reports (`delivery-condition-finding`, issue #704).
+ *  `covered-by-open` — a closed issue (or a settled roadmap row) claims coverage
+ *  by an issue that is still open; `condition-stalled` — a recorded follow-up
+ *  came due and nobody ran it; `condition-uncarried` — a condition-shaped
+ *  sentence names no issue, so no machine can re-check it. */
+export const DELIVERY_CONDITION_FINDINGS = Object.freeze([
+  "covered-by-open",
+  "condition-stalled",
+  "condition-uncarried",
+]);
+export type DeliveryConditionFinding = (typeof DELIVERY_CONDITION_FINDINGS)[number];
+
+/** What the close-time guard refuses (`delivery-condition-refusal`, issue #704).
+ *  One class, because it is the only close-time violation that is false-positive
+ *  free: a coverage claim against an undelivered cover is wrong by construction.
+ *  The follow-up families are post-close by nature and belong to the sweep. */
+export const DELIVERY_CONDITION_REFUSALS = Object.freeze(["covered-by-open"]);
+export type DeliveryConditionRefusal = (typeof DELIVERY_CONDITION_REFUSALS)[number];

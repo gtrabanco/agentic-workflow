@@ -1,0 +1,80 @@
+# The delivery-condition sweep (issue #704).
+#
+# A condition that gates delivery is prose until something re-checks it: #301
+# closed with `Reabrir #301 cuando #260 lande`, #260 landed four months later and
+# nobody noticed until two consumer units had hit the same gap. The workflow is
+# the backstop for conditions already written — it reads the issue corpus
+# (bodies AND comments) plus the roadmap's `## Fixes` rows, judges every recorded
+# condition against the state of the issue it cites, and FAILS when a follow-up
+# came due. A red scheduled run is the notification.
+#
+# Report-only by contract: the command writes nothing, mutates no forge state and
+# prints no third-party text — issue numbers, condition kinds, verdicts and fixed
+# sentences only. The block lands in the run summary, so an operator reads the
+# whole judgment without opening the log.
+
+name: delivery-conditions
+
+on:
+  schedule:
+    # Mondays 05:00 UTC — one sweep a week, ahead of the journal batch. "Noticed
+    # within one sweep" is the S6 promise this schedule keeps.
+    - cron: "0 5 * * 1"
+  workflow_dispatch: {}
+
+# Two sweeps over the same corpus read the same state; serializing them keeps the
+# summary a single run's judgment rather than a merge of two.
+concurrency:
+  group: delivery-conditions
+  cancel-in-progress: false
+
+# The least the read needs: the tree, and the issues it reads. No write scope is
+# requested anywhere, so a bug in the command cannot move forge state.
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          # Lockstep with the other workflows: 1.4.0 writes lockfile version 2.
+          bun-version: 1.4.0
+
+      - name: Install workspace
+        run: bun install --frozen-lockfile
+
+      # The crate imports @gtrabanco/agentic-workflow-schema, whose main points at
+      # the gitignored dist/. Build it before the command runs, exactly as the
+      # root suite does.
+      - name: Build the schema package
+        run: bun run --cwd packages/agentic-workflow-schema build
+
+      # The command's own exit contract is the verdict: 0 clean, 1 a stall or an
+      # unreadable corpus. It is never masked here — a green run with a red
+      # judgment would be the prose stall this workflow exists to end.
+      - name: Re-check every recorded delivery condition
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          status=0
+          bun packages/agentic-workflow/bin/agentic-workflow.mjs delivery-conditions --sweep >> "$GITHUB_STEP_SUMMARY" || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "::error::delivery-conditions reported a due follow-up, a coverage claim the forge contradicts, or an unreadable corpus (exit $status) — the block is in this run's summary."
+            exit "$status"
+          fi

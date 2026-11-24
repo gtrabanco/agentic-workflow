@@ -91,6 +91,10 @@ const EXEMPT = [
     file: "packages/agentic-workflow/src/runner/ceremony/pr.mjs",
     why: "reads its own HTML-comment receipt grammar (HEAD <sha> / verdict:) out of a PR body and its comments — the sanitizer would delete the marker itself (planning evidence PE-009)",
   },
+  {
+    file: "packages/agentic-workflow/src/delivery-conditions/index.mjs",
+    why: "issue #704: it locates a delivery-condition phrase and its `#N` citation in an issue body or comment and delivers none of the text — every line it prints carries issue numbers, condition kinds, verdicts and fixed sentences, so the sanitizer would delete the one sentence the extraction needs and turn a real condition into a silent miss (unit decision D7, and the suite pins that no corpus text reaches the block)",
+  },
 ];
 
 const FORGE_CONTENT_FIELD = /"[\w,]*(?:title|body)[\w,]*"/u;

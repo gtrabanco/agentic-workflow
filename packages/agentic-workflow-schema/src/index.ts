@@ -4548,3 +4548,21 @@ export type {
   GuardPluginRule,
   GuardPluginVerdict,
 } from "./guard-plugin.js";
+
+// ── The delivery-condition contract (issue #704) ────────────────────────────
+// A condition that gates delivery names a carrier the machine re-checks: the
+// cited issue. The close-time guard refuses covering an issue with one that is
+// still open; the scheduled sweep re-judges every recorded condition and reports
+// the ones whose follow-up came due. Two mechanisms, one vocabulary home.
+export {
+  DELIVERY_CONDITION_KINDS,
+  DELIVERY_CONDITION_VERDICTS,
+  DELIVERY_CONDITION_FINDINGS,
+  DELIVERY_CONDITION_REFUSALS,
+} from "./vocabularies.js";
+export type {
+  DeliveryConditionKind,
+  DeliveryConditionVerdict,
+  DeliveryConditionFinding,
+  DeliveryConditionRefusal,
+} from "./vocabularies.js";
