@@ -2,7 +2,7 @@
 type: feature
 scope: medium
 roadmap_summary: Issue [#705](https://github.com/gtrabanco/agentic-workflow/issues/705) (M): the tool doctor gains a `relay` row that reports Relay dispatch capability up front — PI WEB's session marker, the session daemon endpoint pi-web itself resolves, and the `@jmfederico/pi-relay` package with its `relay` + `relay-runner` skills — plus `doctor --check <id>` to read one row, and the lane's degradation prose and `init-workspace`'s interview cite that row instead of re-deriving presence.
-ac-hash: 152edac2c4d2b7f8c999f41b53aa92d6e9b8e723663fd2ea88649ff5aa195f40
+ac-hash: d9146d4dcb078adbeed71fed46e278a555376ddecc67b55a98f1cc73c934ba4a
 ---
 
 # 705 — relay-doctor-check
@@ -119,7 +119,7 @@ naming the check that proves it.
 11. **S6 AC4 — consent is untouched.** `rg -n 'Never dispatch without' skills/unit-lane/references/RELAY.md` matches the unchanged `Forbidden` bullet, and `git diff main...HEAD -- skills/unit-lane/references/RELAY.md` carries no hunk inside that section's bullets.
 12. **S6 AC5 — the gate is green under both runtimes and no vocabulary moved.** `bun scripts/run-root-suite.mjs` exits 0; `bun run --cwd packages/agentic-workflow test` exits 0 under bun and `node --test` exits 0 for the touched suites; `git diff --name-only main...HEAD` lists no `packages/agentic-workflow-schema/src/` file (no `DOCTOR_CHECK_STATUSES` value was needed).
 13. **S3, S4 — the documented surfaces ship with the code.** `bun test packages/agentic-workflow/test/cli.surface.test.mjs` exits 0 (help registry, usage line and README rows agree); the crate README's `tool-inventory@1` carries the `relay` row and its `doctor-envelope@1` block declares the filter; `.changeset/705-relay-doctor-check.md` lints clean.
-14. **S5, S8 — nothing outside scope moves, and the session's own state is written through its writers.** `git diff --name-only main...HEAD` lists only this unit's declared surfaces; the roadmap row moves through `roadmap rowUpsert`; `docs/LOGS.md` carries the session entry appended by the log-session flow.
+14. **S5, S8 — nothing outside scope moves, and the session's own state is written through its writers.** `git diff --name-only main...HEAD` lists only this unit's declared surfaces; the roadmap row moves through `roadmap rowUpsert`; the session entry lands through the journal writer — the `.agentic-workflow/journal/` fragment the aggregator owns (D10) — and `docs/LOGS.md` receives it at aggregate time.
 
 ## Impact
 
@@ -366,6 +366,9 @@ the changeset that ships with the code.
 - **D12** — 2026-11-24, shared facts are read only when the selected rows declare them (`probe.needs`), amending D4's “same cost” with the measured 3.3s → 0.24s.
 - **D13** — 2026-11-24, the `## Triaged steps` block replaced with the command's own bytes after the plan's reconstruction differed in two tiers and the absent addendum.
 - **D14** — 2026-11-24, O11's validator narrowed to `PI_WEB_SESSION_ENV` (the marker's one definition), since the router's usage prose names the variable it documents.
+- **F1** — 2026-11-24, the correction batch over the `EXTERNAL VERIFY` receipt (`## Correction batch` in `external-verify.md`), one batch per §9: blocker 1 (the "sixteen" row-count claim at README:121, bin:1202, doctor.mjs:170) and advisories 1–3 (AC14's carrier clause, O17's and O1's validator wordings); advisory 4 is disclosure only. Red first: `bd9454250` (the count-claim case alone, observed failing) → `016df6ed7` (the count-free wording). AC14 edited → `ac-hash` recomputed to `d9146d4d…`.
+- **E19** — 2026-11-24, the batch's foreground runs: `bun test packages/agentic-workflow/test/doctor.inventory.test.mjs` · red `bd9454250` **6 pass / 1 fail** (the `instead of sixteen` claim) → **7 pass / 0 fail** after `016df6ed7`; `rg -n 'sixteen' packages/agentic-workflow/{README.md,bin,src/doctor}` · no match; differential over the touched commands: `doctor --json` and `help doctor` sha256 **byte-identical** to the pre-edit baselines; `bun test cli.surface.test.mjs doctor.relay.test.mjs doctor.cli.test.mjs` · **36 pass / 0 fail**.
+- **E20** — 2026-11-24, the batch's recheck: `bun scripts/run-root-suite.mjs --jobs 4` · exit 0 · **143/143 PASS** and `bun run --cwd packages/agentic-workflow test` · exit 0 · **84/84 PASS**, both run **sequentially** — the first attempt red on `scripts/ceremony-findings-ledger.test.mjs` (one case at the 10s per-test bound) and `test/doc.structure.test.mjs` (suite timeout) because this session ran two gate pools concurrently (load 6.3–7.5 on 6 CPUs); each passed **19/0** solo and neither suite reads a touched surface — load contention, disclosed, not change-caused; `node --test` over the touched suites · **59 pass / 0 fail** and over `doctor.cli + cli.surface + doctor.wizard` · **27 pass / 0 fail**; `verify … --no-git` · `ok: true, violations: []` under the recomputed `ac-hash`; `docs-generate --check` PASS · `version-parity --content` PASS · `lint-changeset` ok · `journal aggregate --check` 39 checked / 0 refusals · `check-skill-context` PASS · `skill-lint` PASS · normative/prose/invocation trio **59 pass / 0 fail** · `red-first` PASS (the test commit precedes its fix).
 
 ## Next
 
